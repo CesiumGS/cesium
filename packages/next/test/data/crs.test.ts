@@ -250,6 +250,8 @@ describe("operations that cannot be done", () => {
       proj_as_proj_string: () => "x",
       PJ_PROJ_5: 1,
       proj_create_operation_factory_context: () => ({}),
+      proj_operation_factory_context_set_grid_availability_use: () => undefined,
+      PROJ_GRID_AVAILABILITY_IGNORED: 2,
       proj_create_operations: () => ({ length: () => 0, get: () => ({}) }),
     } as unknown as ProjApi;
     expect(() => resolveOperation(stub, ref("EPSG:2227"), "EPSG:4979")).toThrow(
@@ -380,6 +382,8 @@ describe("Operation candidates (listOperations)", () => {
       proj_normalize_for_visualization: (o: unknown) => o,
       PJ_PROJ_5: 1,
       proj_create_operation_factory_context: () => ({}),
+      proj_operation_factory_context_set_grid_availability_use: () => undefined,
+      PROJ_GRID_AVAILABILITY_IGNORED: 2,
       proj_create_operations: operations,
       proj_coordoperation_get_grid_used_count: () => 0,
       proj_coordoperation_get_accuracy: () => 1,
@@ -566,6 +570,9 @@ describe("an area of interest (ruling F8)", () => {
         proj_as_proj_string: () => "+proj=noop",
         PJ_PROJ_5: 1,
         proj_create_operation_factory_context: () => ({}),
+        proj_operation_factory_context_set_grid_availability_use: () =>
+          undefined,
+        PROJ_GRID_AVAILABILITY_IGNORED: 2,
         proj_operation_factory_context_set_area_of_interest: () => undefined,
         proj_create_operations: () => ({ length: () => 0, get: () => ({}) }),
         ...overrides,

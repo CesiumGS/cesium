@@ -20,12 +20,16 @@ import {
   MOON_GEOGRAPHIC_CRS,
   crsUnits,
   crsDefinition,
+  listOperations,
   resolveOperation,
+  type AreaOfInterest,
   type CrsRef,
   type CrsUnits,
   type RecordedOperation,
 } from "./crs.ts";
-import type { Pipeline } from "./pipeline.ts";
+import type { GridCatalog } from "./gridCatalog.ts";
+import { parsePipeline, pipelineGrids, type Pipeline } from "./pipeline.ts";
+import { loadedGrids, loadGrids, type GridSource } from "./proj.ts";
 import type { ProjApi } from "./projApi.ts";
 import { Alignment, type AlignmentDefinition } from "./alignment.ts";
 
@@ -61,19 +65,92 @@ export interface EngineeringFrameDefinition {
   readonly pipeline?: string | Pipeline;
   /** Accept a ballpark operation; its accuracy is then undefined. */
   readonly allowBallpark?: boolean;
+  /**
+   * Where the design coordinates are, in degrees. PROJ then offers the
+   * operations whose area of use contains it (see `ResolveOptions`).
+   */
+  readonly areaOfInterest?: AreaOfInterest;
 }
 
-/** The PROJ code of the geographic CRS where PROJ stops for a body (R4). */
-function geographicTarget(body: Body): string {
+/** Options for `EngineeringFrame.load`. */
+export interface EngineeringFrameLoadOptions {
+  /** PROJ, from `loadProj`. */
+  readonly proj: ProjApi;
+  /**
+   * Where grids come from. Without it `load` loads nothing and is `create`
+   * (and `gridCredits` is empty).
+   */
+  readonly grids?: GridSource;
+}
+
+/** The geographic CRS where PROJ stops for a body (R4). */
+function geographicTarget(body: Body): CrsRef {
   if (body === EARTH || body.naifId === EARTH.naifId) {
-    return "EPSG:4979";
+    return { format: "wkid", authority: "EPSG", wkid: 4979 };
   }
   if (body === MOON || body.naifId === MOON.naifId) {
-    return MOON_GEOGRAPHIC_CRS;
+    const [authority, code] = MOON_GEOGRAPHIC_CRS.split(":") as [
+      string,
+      string,
+    ];
+    return { format: "wkid", authority, wkid: Number(code) };
   }
   throw new Error(
     `EngineeringFrame: no geographic CRS is known for the body "${body.name}"`,
   );
+}
+
+/** Whether `catalog` has `name` as a current (not removed) grid. */
+function inCatalog(catalog: GridCatalog, name: string): boolean {
+  const entry = catalog.get(name);
+  return entry !== undefined && !entry.removed;
+}
+
+/**
+ * The grids `load` fetches for a frame: a pinned pipeline's (required and
+ * optional) that the catalog has; otherwise the missing grids of the first
+ * non-ballpark candidate, in `listOperations`' order, that has a PROJ string
+ * and whose missing grids the catalog has every one of. A candidate needing a
+ * grid the catalog lacks gets nothing fetched (part of its grids wouldn't
+ * make it usable); `create` then skips it and records it as a better
+ * candidate.
+ */
+function gridsToLoad(
+  definition: EngineeringFrameDefinition,
+  proj: ProjApi,
+  target: CrsRef,
+  catalog: GridCatalog,
+): readonly string[] {
+  const loaded = loadedGrids(proj);
+  const { pipeline } = definition;
+  if (pipeline !== undefined) {
+    const named = pipelineGrids(
+      typeof pipeline === "string" ? parsePipeline(pipeline) : pipeline,
+    ).map((grid) => grid.name);
+    return [...new Set(named)].filter(
+      (name) => !loaded.has(name) && inCatalog(catalog, name),
+    );
+  }
+  const candidates = listOperations(proj, definition.crs, target, {
+    ...(definition.areaOfInterest !== undefined && {
+      areaOfInterest: definition.areaOfInterest,
+    }),
+  });
+  for (const candidate of candidates) {
+    if (candidate.ballpark || candidate.pipeline === "") {
+      continue;
+    }
+    if (candidate.missingGrids.length === 0) {
+      if (candidate.instantiable) {
+        return [];
+      }
+      continue;
+    }
+    if (candidate.missingGrids.every((name) => inCatalog(catalog, name))) {
+      return candidate.missingGrids;
+    }
+  }
+  return [];
 }
 
 const RADIANS_PER_DEGREE = Math.PI / 180;
@@ -103,6 +180,13 @@ export class EngineeringFrame {
   readonly alignments: readonly Alignment[];
   /** Metres per design height unit: the vertical unit, else the horizontal. */
   readonly metersPerHeightUnit: number;
+  /**
+   * Credits for the grids the operation reads (`GridCatalog.credit`: agency,
+   * license and PROJ-data version), each once, in the operation's grid
+   * order, when the frame was made by `load` with a `GridSource`; otherwise
+   * empty.
+   */
+  readonly gridCredits: readonly string[];
   // Metres per design height unit the operation leaves unconverted; 1 where
   // PROJ already returns metres.
   private readonly heightScale: number;
@@ -113,8 +197,10 @@ export class EngineeringFrame {
     operation: RecordedOperation,
     heightScale: number,
     proj: ProjApi,
+    gridCredits: readonly string[],
   ) {
     this.proj = proj;
+    this.gridCredits = gridCredits;
     this.definition = definition;
     this.alignments = (definition.alignments ?? []).map(
       (a) => new Alignment(a),
@@ -137,14 +223,59 @@ export class EngineeringFrame {
   }
 
   /**
-   * Resolves the PROJ operation once (R2). Throws for a body with no known
-   * geographic CRS, and as `resolveOperation` does when no operation has its
-   * grids.
+   * Resolves the PROJ operation once (R2), with the grids loaded now. Throws
+   * for a body with no known geographic CRS, and as `resolveOperation` does
+   * when no operation has its grids. Better candidates it skips for missing
+   * grids are in `operation.betterCandidates`.
    */
   static create(
     definition: EngineeringFrameDefinition,
     proj: ProjApi,
   ): EngineeringFrame {
+    return EngineeringFrame.resolve(
+      definition,
+      proj,
+      EngineeringFrame.checked(definition, proj),
+      undefined,
+    );
+  }
+
+  /**
+   * `create`, after fetching the grids the best operation needs. With
+   * `grids`, it lists PROJ's candidates (within `definition.areaOfInterest`)
+   * and loads, from `grids`, the missing grids of the first non-ballpark one
+   * whose missing grids the catalog has (a pinned pipeline: the grids it
+   * names that the catalog has), then calls `create`. A grid the catalog
+   * lacks is never fetched: `create` then takes the next candidate and
+   * records the better one in `operation.betterCandidates`. Rejects as
+   * `create` throws, before fetching anything for a definition `create`
+   * refuses, and as `loadGrids` rejects.
+   */
+  static async load(
+    definition: EngineeringFrameDefinition,
+    options: EngineeringFrameLoadOptions,
+  ): Promise<EngineeringFrame> {
+    const { proj, grids } = options;
+    const checked = EngineeringFrame.checked(definition, proj);
+    if (grids !== undefined) {
+      const names = gridsToLoad(
+        definition,
+        proj,
+        checked.target,
+        grids.catalog,
+      );
+      if (names.length > 0) {
+        await loadGrids(proj, grids, names);
+      }
+    }
+    return EngineeringFrame.resolve(definition, proj, checked, grids?.catalog);
+  }
+
+  /** The definition's checks, before PROJ resolves anything. */
+  private static checked(
+    definition: EngineeringFrameDefinition,
+    proj: ProjApi,
+  ): { readonly target: CrsRef; readonly units: CrsUnits } {
     const target = geographicTarget(definition.body);
     const { site } = definition;
     if (site !== undefined) {
@@ -170,12 +301,25 @@ export class EngineeringFrame {
         `EngineeringFrame: an engineering frame needs a projected CRS; ${crsDefinition(definition.crs).slice(0, 80)} is geographic or not projected`,
       );
     }
+    return { target, units };
+  }
+
+  private static resolve(
+    definition: EngineeringFrameDefinition,
+    proj: ProjApi,
+    { target: targetRef, units }: { target: CrsRef; units: CrsUnits },
+    catalog: GridCatalog | undefined,
+  ): EngineeringFrame {
+    const target = crsDefinition(targetRef);
     const operation = resolveOperation(proj, definition.crs, target, {
       ...(definition.pipeline !== undefined && {
         pipeline: definition.pipeline,
       }),
       ...(definition.allowBallpark !== undefined && {
         allowBallpark: definition.allowBallpark,
+      }),
+      ...(definition.areaOfInterest !== undefined && {
+        areaOfInterest: definition.areaOfInterest,
       }),
     });
     // PROJ converts a vertical axis's unit on the way to EPSG:4979. Where it
@@ -187,12 +331,21 @@ export class EngineeringFrame {
     const heightScale = projConverts
       ? 1
       : (units.metersPerVerticalUnit ?? units.metersPerUnit);
+    let gridCredits: string[] = [];
+    if (catalog !== undefined) {
+      const loaded = loadedGrids(proj);
+      const credited = operation.grids.filter(
+        (name) => loaded.has(name) && catalog.get(name) !== undefined,
+      );
+      gridCredits = [...new Set(credited.map((name) => catalog.credit(name)))];
+    }
     return new EngineeringFrame(
       definition,
       units,
       operation,
       heightScale,
       proj,
+      gridCredits,
     );
   }
 

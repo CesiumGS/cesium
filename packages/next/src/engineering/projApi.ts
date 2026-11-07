@@ -28,6 +28,9 @@ export type PjProjStringType = number & {
 };
 export type PjWktType = number & { readonly [handle]: "PJ_WKT_TYPE" };
 export type PjLogLevel = number & { readonly [handle]: "PJ_LOG_LEVEL" };
+export type PjGridAvailabilityUse = number & {
+  readonly [handle]: "PROJ_GRID_AVAILABILITY_USE";
+};
 
 /** A PJ_COORD: read it through its accessors (it is not a plain object). */
 export interface PjCoord {
@@ -147,6 +150,15 @@ export interface ProjApi {
     east: number,
     north: number,
   ): void;
+  /**
+   * How grid availability affects the candidates: PROJ's default sorts those
+   * whose grids it finds first. Both of proj.js v0.9.2's builds have it
+   * (checked in the native binding and in proj_capi.wasm, 2026-11-07).
+   */
+  proj_operation_factory_context_set_grid_availability_use(
+    context: PjOperationFactoryContext,
+    use: PjGridAvailabilityUse,
+  ): void;
   proj_create_operations(
     source: PJ,
     target: PJ,
@@ -206,4 +218,9 @@ export interface ProjApi {
   readonly PJ_WKT2_2019: PjWktType;
   /** No log output (PROJ otherwise prints each grid it can't find to stderr). */
   readonly PJ_LOG_NONE: PjLogLevel;
+  /**
+   * Grid availability plays no part: PROJ sorts the candidates on their own
+   * merits (and still lists those whose grids it doesn't find).
+   */
+  readonly PROJ_GRID_AVAILABILITY_IGNORED: PjGridAvailabilityUse;
 }

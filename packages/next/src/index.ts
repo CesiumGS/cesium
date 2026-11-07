@@ -162,6 +162,7 @@ export {
   designPoint,
   type DesignPoint,
   type EngineeringFrameDefinition,
+  type EngineeringFrameLoadOptions,
   type SiteTransform,
 } from "./engineering/EngineeringFrame.ts";
 export {
@@ -193,6 +194,7 @@ export {
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,
   type AreaOfInterest,
+  type BetterCandidate,
   type CrsRef,
   type CrsUnits,
   type ListOperationsOptions,

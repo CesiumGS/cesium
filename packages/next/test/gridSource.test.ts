@@ -147,6 +147,8 @@ describe("gridSource and loadGrids (browser path)", () => {
       proj_as_proj_string: () => "+proj=noop",
       proj_normalize_for_visualization: (o: unknown) => o,
       proj_create_operation_factory_context: () => ({}),
+      proj_operation_factory_context_set_grid_availability_use: () => undefined,
+      PROJ_GRID_AVAILABILITY_IGNORED: 2,
       proj_create_operations: () => {
         if (listFails) {
           throw new Error("out of memory");

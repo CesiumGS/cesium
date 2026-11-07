@@ -26,6 +26,28 @@ describe("pipelineGrids", () => {
       { name: "conus", optional: false, key: "nadgrids" },
     ]);
   });
+
+  it("reads a tinshift's +file (a catalog .json entry)", () => {
+    const grids = pipelineGrids(
+      parsePipeline(
+        "+proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=tinshift +file=fi_nls_ykj_etrs35fin.json +step +proj=axisswap +order=2,1",
+      ),
+    );
+    expect(grids).toEqual([
+      { name: "fi_nls_ykj_etrs35fin.json", optional: false, key: "file" },
+    ]);
+  });
+
+  it("reads a defmodel's +model (a catalog .json entry)", () => {
+    const grids = pipelineGrids(
+      parsePipeline(
+        "+proj=pipeline +step +proj=cart +ellps=GRS80 +step +proj=defmodel +model=nz_linz_nzgd2000-20180701.json +step +inv +proj=cart +ellps=GRS80",
+      ),
+    );
+    expect(grids).toEqual([
+      { name: "nz_linz_nzgd2000-20180701.json", optional: false, key: "model" },
+    ]);
+  });
 });
 
 describe("parsePipeline", () => {

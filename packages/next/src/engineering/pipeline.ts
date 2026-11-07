@@ -20,8 +20,12 @@ export interface Pipeline {
   readonly steps: readonly PipelineStep[];
 }
 
-/** The parameters that name grid files, and so need them loaded. */
-export type GridKey = "grids" | "nadgrids" | "geoidgrids";
+/**
+ * The parameters that name grid files, and so need them loaded: `grids`,
+ * `nadgrids` and `geoidgrids`, a `tinshift`'s `file` and a `defmodel`'s
+ * `model` (the catalog's `.json` entries).
+ */
+export type GridKey = "grids" | "nadgrids" | "geoidgrids" | "file" | "model";
 
 export interface PipelineGrid {
   readonly name: string;
@@ -31,7 +35,13 @@ export interface PipelineGrid {
 }
 
 const KEY = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const GRID_KEYS: readonly GridKey[] = ["grids", "nadgrids", "geoidgrids"];
+const GRID_KEYS: readonly GridKey[] = [
+  "grids",
+  "nadgrids",
+  "geoidgrids",
+  "file",
+  "model",
+];
 
 function shown(text: string): string {
   return JSON.stringify(text.length > 60 ? `${text.slice(0, 57)}...` : text);
@@ -225,8 +235,8 @@ export function formatPipeline(pipeline: Pipeline): string {
 }
 
 /**
- * The grid files a pipeline names (`grids`, `nadgrids`, `geoidgrids`, in
- * steps and globals), in written order. Each value splits on ","; a leading
+ * The grid files a pipeline names (`grids`, `nadgrids`, `geoidgrids`, `file`
+ * and `model`, in steps and globals), in written order. Each value splits on ","; a leading
  * "@" marks the grid optional; PROJ's special name `null` is dropped.
  */
 export function pipelineGrids(pipeline: Pipeline): readonly PipelineGrid[] {

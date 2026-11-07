@@ -17,13 +17,12 @@ export const GRID_SETS = {
     "us_nga_egm96_15.tif",
     "us_noaa_g2018u0.tif",
   ],
-  // The grids the data tests use: NAD27 to NAD83 (NADCON5 and the older
-  // CONUS grid), and a lowest-astronomical-tide grid (Task 7 settles which).
-  tests: [
-    "us_noaa_conus.tif",
-    "us_noaa_nadcon5_nad27_nad83_1986_conus.tif",
-    "nl_nsgi_nllat2018.tif",
-  ],
+  // The grids the data tests use. EPSG:26741 (California CS27 zone I) to
+  // WGS 84: PROJ's best candidate (2.15 m, NAD27 to NAD83 (1) + NAD83 to
+  // WGS 84 (43)) reads the CONUS NADCON grid and California's HPGN grid; the
+  // next (5 m) reads CONUS alone (the names PROJ reports, plan 4b Task 6).
+  // And a lowest-astronomical-tide grid (Task 7 settles which).
+  tests: ["us_noaa_conus.tif", "us_noaa_cnhpgn.tif", "nl_nsgi_nllat2018.tif"],
   // EGM2008 at 2.5 arc-minutes (80,585,622 bytes).
   egm2008: ["us_nga_egm08_25.tif"],
   all: "*",

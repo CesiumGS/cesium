@@ -15,6 +15,8 @@ const stub = (operations: () => unknown): ProjApi =>
     proj_as_proj_string: () => null,
     proj_normalize_for_visualization: (o: unknown) => o,
     proj_create_operation_factory_context: () => ({}),
+    proj_operation_factory_context_set_grid_availability_use: () => undefined,
+    PROJ_GRID_AVAILABILITY_IGNORED: 2,
     proj_create_operations: operations,
     proj_coordoperation_get_grid_used_count: () => 0,
     proj_coordoperation_is_instantiable: () => true,

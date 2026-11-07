@@ -7,6 +7,13 @@
 // module walks the operation list itself and takes only an operation whose
 // grids are all available.
 //
+// The list is in PROJ's order with grid availability ignored
+// (PROJ_GRID_AVAILABILITY_IGNORED): by PROJ's own ranking of the operations
+// (exportable, not approximate, not ballpark, grids its database knows, area
+// of use and accuracy), not by which grids PROJ found when it first looked. So a
+// grid loaded late counts as soon as it is loaded, and the better operations
+// a frame skips for missing grids come before the one it takes.
+//
 // A grid is available when `loadGrids` loaded it (and PROJ then found it
 // where it was put; proj.ts): PROJ's own answer for a candidate's grid isn't
 // enough. PROJ caches that answer per context the first time it looks, so a
@@ -99,8 +106,24 @@ export interface RecordedOperation {
   readonly optionalGrids: readonly string[];
   /** A ballpark transformation: datum differences ignored (accuracy unknown). */
   readonly ballpark: boolean;
+  /**
+   * The candidates before this one, in PROJ's order (grid availability
+   * ignored), that were skipped only because grids they need aren't loaded.
+   * A ballpark is never listed; a pinned pipeline has none.
+   */
+  readonly betterCandidates: readonly BetterCandidate[];
   forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
   inverse(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
+}
+
+/** A candidate operation skipped for missing grids (`betterCandidates`). */
+export interface BetterCandidate {
+  /** PROJ's name for it. */
+  readonly name: string;
+  /** PROJ's stated accuracy in metres; absent when it states none. */
+  readonly accuracy?: number;
+  /** The grids it needs that `loadGrids` hasn't loaded. */
+  readonly missingGrids: readonly string[];
 }
 
 /**
@@ -225,6 +248,7 @@ function record(
   grids: readonly string[],
   optionalGrids: readonly string[],
   ballpark: boolean,
+  betterCandidates: readonly BetterCandidate[],
   epoch: number,
 ): RecordedOperation {
   const operation = fixed(proj, pipeline);
@@ -235,6 +259,7 @@ function record(
     grids,
     optionalGrids,
     ballpark,
+    betterCandidates,
     forward,
     inverse: refinedInverse(
       forward,
@@ -389,7 +414,9 @@ function candidateGrids(
  * Earth's) the binding throws "Error getting list"; that comes back as a
  * null list with the error. The CRSs themselves must exist (else it throws).
  * With an area of interest the list holds the operations whose area of use
- * contains it.
+ * contains it. Grid availability is ignored (see the header): it changes the
+ * order only, not which operations PROJ lists (checked 2026-11-07 on 43
+ * source CRSs, with no grids and with the store's grids loaded).
  */
 function candidateList(
   proj: ProjApi,
@@ -403,6 +430,10 @@ function candidateList(
   const to = create(proj, target, "the target CRS");
   try {
     const context = proj.proj_create_operation_factory_context("");
+    proj.proj_operation_factory_context_set_grid_availability_use(
+      context,
+      proj.PROJ_GRID_AVAILABILITY_IGNORED,
+    );
     if (area !== undefined) {
       proj.proj_operation_factory_context_set_area_of_interest(
         context,
@@ -433,13 +464,14 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  *    (undefined) and it is not marked ballpark. It throws if a grid it names is
  *    missing.
  *  - Otherwise PROJ's candidate list for the pair (within
- *    `options.areaOfInterest`, when given) is walked in PROJ's order (by
- *    accuracy and area of use; PROJ's sort may still count a grid loaded
- *    after it first looked as missing) and the first instantiable operation
- *    whose grids `loadGrids` has all loaded is taken, in its
+ *    `options.areaOfInterest`, when given) is walked in PROJ's order with
+ *    grid availability ignored (by accuracy and area of use, not by which
+ *    grids PROJ found when it first looked) and the first instantiable
+ *    operation whose grids `loadGrids` has all loaded is taken, in its
  *    normalized-for-visualization form. A ballpark operation (PROJ names it
  *    "Ballpark ...") is taken only with `allowBallpark`, and then `accuracy`
- *    is undefined.
+ *    is undefined. The non-ballpark candidates before it that were skipped
+ *    for missing grids are its `betterCandidates`.
  *  - If none qualifies it throws, naming the grids the better candidates need.
  */
 export function resolveOperation(
@@ -479,7 +511,16 @@ export function resolveOperation(
       );
     }
     try {
-      return record(proj, text, undefined, grids, optionalGrids, false, epoch);
+      return record(
+        proj,
+        text,
+        undefined,
+        grids,
+        optionalGrids,
+        false,
+        [],
+        epoch,
+      );
     } catch (error) {
       const needs = grids.length > 0 ? `; it needs ${listed(grids)}` : "";
       throw new Error(
@@ -507,6 +548,8 @@ export function resolveOperation(
       );
     }
     const missing = new Set<string>();
+    // Skipped for missing grids, in order: the chosen one's better candidates.
+    const better: BetterCandidate[] = [];
     let skippedBallpark = false;
     // Candidates PROJ cannot express as a PROJ string, named in the final error.
     const noString: string[] = [];
@@ -520,10 +563,21 @@ export function resolveOperation(
       for (const grid of grids.missing) {
         missing.add(grid);
       }
-      if (grids.missing.length > 0 || !grids.instantiable) {
+      const ballpark = isBallpark(proj, candidate);
+      if (grids.missing.length > 0) {
+        if (!ballpark) {
+          const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
+          better.push({
+            name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
+            ...(accuracy >= 0 && { accuracy }),
+            missingGrids: grids.missing,
+          });
+        }
         continue;
       }
-      const ballpark = isBallpark(proj, candidate);
+      if (!grids.instantiable) {
+        continue;
+      }
       if (ballpark && !allowBallpark) {
         skippedBallpark = true;
         continue;
@@ -547,6 +601,7 @@ export function resolveOperation(
           accuracy: ballpark || accuracy < 0 ? undefined : accuracy,
           grids: grids.needed,
           ballpark,
+          better,
         },
       } as const;
     }
@@ -554,7 +609,7 @@ export function resolveOperation(
   });
 
   if (walk.chosen) {
-    const { string, accuracy, grids, ballpark } = walk.chosen;
+    const { string, accuracy, grids, ballpark, better } = walk.chosen;
     let optionalGrids: string[];
     try {
       optionalGrids = pipelineGrids(parsePipeline(string))
@@ -573,6 +628,7 @@ export function resolveOperation(
       grids,
       optionalGrids,
       ballpark,
+      better,
       epoch,
     );
   }
@@ -632,10 +688,11 @@ export interface OperationCandidate {
 
 /**
  * Every candidate operation PROJ offers from `source` to `target`, in PROJ's
- * order (by accuracy and area of use): the list `resolveOperation` walks, from
- * the same factory context. `resolveOperation` records the first candidate
- * that is instantiable, has no missing grids and a PROJ string, and is not a
- * ballpark (unless `allowBallpark`).
+ * order with grid availability ignored (by accuracy and area of use): the
+ * list `resolveOperation` walks, from the same factory context.
+ * `resolveOperation` records the first candidate that is instantiable, has no
+ * missing grids and a PROJ string, and is not a ballpark (unless
+ * `allowBallpark`).
  *
  * With `options.areaOfInterest` the list holds the operations whose area of
  * use contains that box, as `resolveOperation` walks it with the same option.
