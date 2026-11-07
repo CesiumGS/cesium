@@ -200,6 +200,16 @@ export {
   type RecordedOperation,
   type ResolveOptions,
 } from "./engineering/crs.ts";
+export {
+  formatPipeline,
+  parsePipeline,
+  pipelineGrids,
+  type GridKey,
+  type ParamValue,
+  type Pipeline,
+  type PipelineGrid,
+  type PipelineStep,
+} from "./engineering/pipeline.ts";
 export { gridFactors, type GridFactors } from "./engineering/factors.ts";
 export { eastNorthUpToFixedFrame } from "./math/transforms.ts";
 export * as vec3 from "./math/vec3.ts";

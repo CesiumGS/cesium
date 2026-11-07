@@ -25,6 +25,7 @@ import {
   type CrsUnits,
   type RecordedOperation,
 } from "./crs.ts";
+import type { Pipeline } from "./pipeline.ts";
 import type { ProjApi } from "./projApi.ts";
 import { Alignment, type AlignmentDefinition } from "./alignment.ts";
 
@@ -53,8 +54,11 @@ export interface EngineeringFrameDefinition {
   readonly site?: SiteTransform;
   /** Alignments in this frame's design (site-grid) coordinates, by unique name. */
   readonly alignments?: readonly AlignmentDefinition[];
-  /** A PROJ pipeline to use as is (R2) instead of PROJ's candidate search. */
-  readonly pipeline?: string;
+  /**
+   * A PROJ pipeline to use as is (R2) instead of PROJ's candidate search: a
+   * string, or a structured `Pipeline`.
+   */
+  readonly pipeline?: string | Pipeline;
   /** Accept a ballpark operation; its accuracy is then undefined. */
   readonly allowBallpark?: boolean;
 }

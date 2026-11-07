@@ -13,6 +13,12 @@
 // grid loaded afterwards still reads as unavailable, and the candidate as not
 // instantiable; and PROJ may find a grid of its own outside the loaded set.
 import type { PJ, PjObjList, ProjApi } from "./projApi.ts";
+import {
+  formatPipeline,
+  parsePipeline,
+  pipelineGrids,
+  type Pipeline,
+} from "./pipeline.ts";
 import { loadedGrids } from "./proj.ts";
 
 /**
@@ -86,6 +92,11 @@ export interface RecordedOperation {
   readonly accuracy: number | undefined;
   /** Grid files the operation reads (all available when it was resolved). */
   readonly grids: readonly string[];
+  /**
+   * The grids in `grids` that are written optional (`@name`): PROJ goes on
+   * without them, so one missing from a pinned pipeline is not an error.
+   */
+  readonly optionalGrids: readonly string[];
   /** A ballpark transformation: datum differences ignored (accuracy unknown). */
   readonly ballpark: boolean;
   forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
@@ -104,8 +115,11 @@ export interface AreaOfInterest {
 }
 
 export interface ResolveOptions {
-  /** A PROJ pipeline to use as is, skipping the candidate search. */
-  readonly pipeline?: string;
+  /**
+   * A PROJ pipeline to use as is, skipping the candidate search: a string, or
+   * a structured `Pipeline` (written by `formatPipeline`).
+   */
+  readonly pipeline?: string | Pipeline;
   /** Accept a ballpark operation when no accurate one has its grids. */
   readonly allowBallpark?: boolean;
   /**
@@ -167,22 +181,11 @@ function create(proj: ProjApi, definition: string, what: string): PJ {
 }
 
 const MAX_NAMED = 8;
-function named(names: readonly string[]): string {
+function listed(names: readonly string[]): string {
   const shown = names.slice(0, MAX_NAMED).join(", ");
   return names.length > MAX_NAMED
     ? `${shown} and ${names.length - MAX_NAMED} more`
     : shown;
-}
-
-/** The grid files a PROJ string names (`+grids=a.tif,@b.tif`; "@" marks optional). */
-function gridsOf(pipeline: string): string[] {
-  const grids: string[] = [];
-  for (const match of pipeline.matchAll(/\+grids=([^\s+]+)/g)) {
-    for (const name of match[1]!.split(",")) {
-      grids.push(name.replace(/^@/, ""));
-    }
-  }
-  return grids;
 }
 
 function fixed(proj: ProjApi, pipeline: string): PJ {
@@ -220,6 +223,7 @@ function record(
   pipeline: string,
   accuracy: number | undefined,
   grids: readonly string[],
+  optionalGrids: readonly string[],
   ballpark: boolean,
   epoch: number,
 ): RecordedOperation {
@@ -229,6 +233,7 @@ function record(
     pipeline,
     accuracy,
     grids,
+    optionalGrids,
     ballpark,
     forward,
     inverse: refinedInverse(
@@ -452,11 +457,29 @@ export function resolveOperation(
       ? source.epoch
       : Infinity;
   if (pipeline !== undefined) {
-    const grids = gridsOf(pipeline);
+    // A string is used exactly as given (it is also read, to find its grids).
+    const text =
+      typeof pipeline === "string" ? pipeline : formatPipeline(pipeline);
+    const named = pipelineGrids(
+      typeof pipeline === "string" ? parsePipeline(pipeline) : pipeline,
+    );
+    const grids = [...new Set(named.map((grid) => grid.name))];
+    const optionalGrids = grids.filter((name) =>
+      named.every((grid) => grid.name !== name || grid.optional),
+    );
+    const loaded = loadedGrids(proj);
+    const lacking = grids.filter(
+      (name) => !optionalGrids.includes(name) && !loaded.has(name),
+    );
+    if (lacking.length > 0) {
+      throw new Error(
+        `The pinned PROJ pipeline needs ${listed(lacking)}, which ${lacking.length === 1 ? "is" : "are"} not loaded`,
+      );
+    }
     try {
-      return record(proj, pipeline, undefined, grids, false, epoch);
+      return record(proj, text, undefined, grids, optionalGrids, false, epoch);
     } catch (error) {
-      const needs = grids.length > 0 ? `; it needs ${named(grids)}` : "";
+      const needs = grids.length > 0 ? `; it needs ${listed(grids)}` : "";
       throw new Error(
         `The pinned PROJ pipeline cannot be created${needs} (${(error as Error).message})`,
         { cause: error },
@@ -530,7 +553,18 @@ export function resolveOperation(
 
   if (walk.chosen) {
     const { string, accuracy, grids, ballpark } = walk.chosen;
-    return record(proj, string, accuracy, grids, ballpark, epoch);
+    const optionalGrids = pipelineGrids(parsePipeline(string))
+      .filter((grid) => grid.optional)
+      .map((grid) => grid.name);
+    return record(
+      proj,
+      string,
+      accuracy,
+      grids,
+      optionalGrids,
+      ballpark,
+      epoch,
+    );
   }
   const { missing, skippedBallpark, noString, notCreated } = walk;
   if (missing.size > 0) {
@@ -538,15 +572,15 @@ export function resolveOperation(
       ? "; pass allowBallpark: true to accept a ballpark transformation"
       : "";
     throw new Error(
-      `No PROJ operation ${where} has all its grids; missing: ${named([...missing])}${hint}`,
+      `No PROJ operation ${where} has all its grids; missing: ${listed([...missing])}${hint}`,
     );
   }
   const lacking =
     (noString.length > 0
-      ? `; ${named(noString)} could not be expressed as a PROJ string`
+      ? `; ${listed(noString)} could not be expressed as a PROJ string`
       : "") +
     (notCreated.length > 0
-      ? `; PROJ could not create ${named(notCreated)}`
+      ? `; PROJ could not create ${listed(notCreated)}`
       : "");
   throw new Error(
     skippedBallpark
