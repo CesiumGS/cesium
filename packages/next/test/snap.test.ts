@@ -4,6 +4,8 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   ClientSnapService,
   SNAP_SERVER_FAILED,
+  SNAP_SERVER_REFUSED,
+  SNAP_UPDATE_FAILED,
   refiningSnap,
   type ServiceSnapRequest,
   type SnapResult,
@@ -11,7 +13,10 @@ import {
 } from "../src/engineering/snap.ts";
 import type { PickView } from "../src/engineering/pick.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
-import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
+import {
+  designPoint,
+  type EngineeringFrame,
+} from "../src/engineering/EngineeringFrame.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -52,7 +57,8 @@ function placement(): TilesetPlacement {
   return {
     mode: "rigid",
     frame,
-    displayed: (d) => Float64Array.from(d),
+    // The inverse of designOf.
+    displayed: (d) => Float64Array.from([d[0]! + R, d[1]! / 2, d[2]! / 3]),
     designOf: (p: ArrayLike<number>) =>
       Float64Array.from([p[0]! - R, p[1]! * 2, p[2]! * 3]),
     displayError: () => 0,
@@ -338,7 +344,7 @@ describe("refiningSnap: the client's snap, then the server's", () => {
     snap: (
       r: ServiceSnapRequest,
       s?: AbortSignal,
-    ) => Promise<SnapResult | undefined>,
+    ) => Promise<SnapResult | null | undefined>,
   ) {
     const fn = vi.fn(snap);
     return { service: { snap: fn } as SnapService, fn };
@@ -426,7 +432,190 @@ describe("refiningSnap: the client's snap, then the server's", () => {
       () => {},
     );
     expect(r?.source).toBe("client");
-    expect([...ts.warnings]).toEqual([SNAP_SERVER_FAILED]);
+    expect([...ts.warnings]).toEqual([
+      `${SNAP_SERVER_REFUSED}: snapPoint is not 3 finite numbers`,
+    ]);
+  });
+
+  it("keeps the client snap, with no warning, when the server answers null", async () => {
+    const ts = tileset();
+    const updates: SnapResult[] = [];
+    const r = await refiningSnap(
+      request(),
+      new ClientSnapService([ts]),
+      server(async () => null).service,
+      (u) => updates.push(u),
+    );
+    expect(updates.map((u) => [u.source, u.provisional])).toEqual([
+      ["client", true],
+      ["client", false],
+    ]);
+    expect(r?.source).toBe("client");
+    expect([...ts.warnings]).toEqual([]);
+  });
+
+  it("returns at once for a signal already aborted", async () => {
+    const v = view();
+    const pick = vi.spyOn(v, "pick");
+    const onUpdate = vi.fn();
+    const { service, fn } = server(async () => answer());
+    const a = new AbortController();
+    a.abort();
+    const r = await refiningSnap(
+      { view: v, x: bx + 3, y: by, aperture: 6 },
+      new ClientSnapService([tileset()]),
+      service,
+      onUpdate,
+      a.signal,
+    );
+    expect(r).toBeUndefined();
+    expect(pick).not.toHaveBeenCalled();
+    expect(fn).not.toHaveBeenCalled();
+    expect(onUpdate).not.toHaveBeenCalled();
+  });
+
+  it("catches an onUpdate that throws, and warns once", async () => {
+    const ts = tileset();
+    const client = new ClientSnapService([ts]);
+    const { service } = server(async () => answer());
+    const onUpdate = vi.fn(() => {
+      throw new Error("render failed");
+    });
+    for (let i = 0; i < 2; i++) {
+      const r = await refiningSnap(request(), client, service, onUpdate);
+      expect(r?.source).toBe("server");
+    }
+    expect(onUpdate).toHaveBeenCalledTimes(4);
+    expect([...ts.warnings]).toEqual([SNAP_UPDATE_FAILED]);
+  });
+
+  it("keeps the client's feature, not the server's", async () => {
+    const { service } = server(async () => ({
+      ...answer(),
+      feature: { featureId: 99, name: undefined },
+    }));
+    const r = await refiningSnap(
+      request(),
+      new ClientSnapService([tileset()]),
+      service,
+      () => {},
+    );
+    expect(r?.source).toBe("server");
+    expect(r?.feature?.featureId).toBe(7);
+  });
+
+  it("accepts an exact design point a little inside the drawn mesh", async () => {
+    // 10 cm behind the square's face, under the tile's 0.25 m error.
+    const pl = placement();
+    const snapPoint = Float64Array.from([R - 0.1, 32, 6]);
+    const ts = tileset({ placement: pl });
+    const r = await refiningSnap(
+      { view: view(), x: 517, y: 248, aperture: 6 },
+      new ClientSnapService([ts]),
+      server(async () =>
+        answer({
+          snapPoint,
+          design: designPoint(frame, pl.designOf(snapPoint), {
+            how: "snap",
+            tolerance: 0,
+            kind: "point",
+          }),
+        }),
+      ).service,
+      () => {},
+    );
+    expect(r?.source).toBe("server");
+    expect([...ts.warnings]).toEqual([]);
+  });
+
+  describe("refuses a server answer that doesn't check out", () => {
+    const pl = placement();
+    const behind = Float64Array.from([R - 10, 32.32, 6.06]);
+    const cases: Array<[string, Partial<SnapResult>, string]> = [
+      [
+        "exact with a tolerance",
+        { exact: true, tolerance: 0.01 },
+        "exact with a tolerance other than 0",
+      ],
+      [
+        "a design not where the placement draws snapPoint",
+        {
+          tolerance: 0.001,
+          exact: false,
+          design: designPoint(frame, pl.designOf([R, 40.02, 0]), {
+            how: "snap",
+            tolerance: 0.001,
+            kind: "point",
+          }),
+        },
+        "design coordinates not where the placement draws snapPoint",
+      ],
+      [
+        "an unknown kind",
+        { kind: "vertex" as SnapResult["kind"] },
+        "kind is not a SnapKind",
+      ],
+      [
+        "a non-finite normal",
+        { normal: Float64Array.from([1, NaN, 0]) },
+        "normal is not 3 finite numbers",
+      ],
+      [
+        "a normal of the wrong length",
+        { normal: Float64Array.from([1, 0]) },
+        "normal is not 3 finite numbers",
+      ],
+      [
+        "a curve with a non-finite point",
+        { curve: [designB, Float64Array.from([R, Infinity, 0])] },
+        "curve is not two or more points of 3 finite numbers",
+      ],
+      [
+        "a curve of one point",
+        { curve: [designB] },
+        "curve is not two or more points of 3 finite numbers",
+      ],
+      [
+        "a point behind the camera",
+        { snapPoint: Float64Array.from([R + 2000, 0, 0]) },
+        "snapPoint behind the camera or nearer than its near plane",
+      ],
+      [
+        "a point nearer than the near plane",
+        { snapPoint: Float64Array.from([R + 1000 - 0.05, 0, 0]) },
+        "snapPoint behind the camera or nearer than its near plane",
+      ],
+      [
+        "a point outside the aperture",
+        { snapPoint: Float64Array.from([R, 70, 0]) },
+        "snapPoint outside the aperture",
+      ],
+      [
+        "a point the drawn mesh hides",
+        { snapPoint: behind },
+        "snapPoint hidden from the camera by the drawn mesh",
+      ],
+    ];
+    for (const [name, over, reason] of cases) {
+      it(name, async () => {
+        const ts = tileset({ placement: pl });
+        const updates: SnapResult[] = [];
+        // 3.6 px from B, inside the square on the screen.
+        const r = await refiningSnap(
+          { view: view(), x: 517, y: 248, aperture: 6 },
+          new ClientSnapService([ts]),
+          server(async () => answer(over)).service,
+          (u) => updates.push(u),
+        );
+        expect(updates.map((u) => [u.source, u.provisional])).toEqual([
+          ["client", true],
+          ["client", false],
+        ]);
+        expect(r?.source).toBe("client");
+        expect(Array.from(r!.snapPoint)).toEqual([R, 40, 0]);
+        expect([...ts.warnings]).toEqual([`${SNAP_SERVER_REFUSED}: ${reason}`]);
+      });
+    }
   });
 
   it("ignores a superseded snap's late server answer", async () => {

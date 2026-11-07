@@ -210,6 +210,8 @@ export {
   ClientSnapService,
   GEOMETRY_NOT_RETAINED,
   SNAP_SERVER_FAILED,
+  SNAP_SERVER_REFUSED,
+  SNAP_UPDATE_FAILED,
   refiningSnap,
   type ServiceSnapRequest,
   type SnapCamera,

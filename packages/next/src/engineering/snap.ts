@@ -38,10 +38,12 @@ export interface SnapResult {
   /** The snapped point, the one to use: body-fixed metres, as displayed. */
   readonly snapPoint: Float64Array;
   /**
-   * Where the cursor hit the geometry (body-fixed, displayed). On the
-   * client, the surface under the cursor: on the object and off its edges,
-   * so it seeds a server snap well (1.x's hybrid snapping seeds from
-   * `Scene#snap`'s `surfacePosition` for that reason).
+   * Where the cursor hit the geometry (body-fixed, displayed). From a
+   * server, 1.x's meaning: the nearest edge point within the aperture, else
+   * the surface point under the cursor (the client's when the server gives
+   * none). From the client, always the surface under the cursor, on the
+   * object and off its edges, so it seeds a server snap well (1.x's hybrid
+   * snapping seeds from `Scene#snap`'s `surfacePosition` for that reason).
    */
   readonly hitPoint: Float64Array;
   /** CSS pixels from the cursor to `snapPoint` on the screen (0 on a surface). */
@@ -79,10 +81,14 @@ export interface SnapResult {
   readonly camera?: SnapCamera;
 }
 
-/** A server snap's request, as 1.x's `SnapService.snap` takes it. */
+/**
+ * A server snap's request, as 1.x's `SnapService.snap` takes it: `feature`
+ * stands for 1.x's `elementId` (the element id is the server's to read from
+ * it) and `aperture` for `snapAperture`.
+ */
 export interface ServiceSnapRequest {
   readonly tileset: Tileset3D;
-  /** The element to snap to. */
+  /** The element to snap to (1.x `elementId`). */
   readonly feature?: PickResult;
   /** The point to snap from: body-fixed, displayed. */
   readonly testPoint: Float64Array;
@@ -92,21 +98,21 @@ export interface ServiceSnapRequest {
   /** The view's size in CSS pixels. */
   readonly canvasWidth: number;
   readonly canvasHeight: number;
-  /** The snap tolerance in CSS pixels. */
+  /** The snap tolerance in CSS pixels (1.x `snapAperture`). */
   readonly aperture: number;
 }
 
 /**
  * The server side (1.x `SnapService`): snaps against the source design
- * data, not the drawn mesh. Resolves undefined when no snap is possible.
- * The composer sets `source`, `provisional` and `distance` of what it
- * returns.
+ * data, not the drawn mesh. Resolves undefined (or null) when no snap is
+ * possible. `refiningSnap` checks what it returns before trusting it, and
+ * sets its `source`, `provisional`, `distance`, `feature` and `camera`.
  */
 export interface SnapService {
   snap(
     request: ServiceSnapRequest,
     signal?: AbortSignal,
-  ): Promise<SnapResult | undefined>;
+  ): Promise<SnapResult | null | undefined>;
 }
 
 /** Added once to a tileset's `warnings` when snapping finds no geometry. */
@@ -115,6 +121,17 @@ export const GEOMETRY_NOT_RETAINED = "snap: geometry not retained";
 /** Added once to a tileset's `warnings` when its snap server fails. */
 export const SNAP_SERVER_FAILED =
   "snap: the snap server failed; client snaps stand";
+
+/**
+ * Begins the warning added once per reason when a server snap is refused
+ * (`refiningSnap`): "snap: a server snap was refused: <reason>".
+ */
+export const SNAP_SERVER_REFUSED = "snap: a server snap was refused";
+
+/** Added once to a tileset's `warnings` when `refiningSnap`'s `onUpdate` throws. */
+export const SNAP_UPDATE_FAILED = "snap: onUpdate threw; it must not";
+
+const SNAP_KINDS: readonly SnapKind[] = ["point", "segment", "arc", "surface"];
 
 /**
  * The client side (1.x `Scene#snap`), on the CPU over the triangles tiles
@@ -141,8 +158,34 @@ export class ClientSnapService {
    * of the largest draw snapped to.
    */
   private readonly scratch = new Scratch();
+  /** The hit draw's geometry behind each result, for checking a server's. */
+  private readonly context = new WeakMap<
+    SnapResult,
+    { geometry: TileGeometry; error: number }
+  >();
 
   constructor(readonly tilesets: readonly Tileset3D[]) {}
+
+  /**
+   * @internal Whether the hit draw behind a result of this service hides
+   * `point` from the result's camera, by more than the tile's geometric
+   * error (and a millimetre). False when that draw kept no geometry.
+   */
+  hides(result: SnapResult, point: ArrayLike<number>): boolean {
+    const context = this.context.get(result);
+    const camera = result.camera;
+    return (
+      context !== undefined &&
+      camera !== undefined &&
+      hiddenFrom(
+        context.geometry,
+        camera,
+        point,
+        context.error + 1e-3,
+        this.scratch,
+      )
+    );
+  }
 
   async snap(request: SnapRequest): Promise<SnapResult | undefined> {
     const { view, x, y, aperture } = request;
@@ -202,12 +245,18 @@ export class ClientSnapService {
       geometry === undefined
         ? undefined
         : nearest(geometry, camera, x, y, aperture, this.scratch);
+    const kept = (result: SnapResult): SnapResult => {
+      if (geometry !== undefined) {
+        this.context.set(result, { geometry, error: tile.geometricError });
+      }
+      return result;
+    };
     if (found === undefined) {
-      return surface(surfaceTolerance);
+      return kept(surface(surfaceTolerance));
     }
     const tolerance = tile.geometricError;
     const placement = tileset.placement;
-    return {
+    return kept({
       ...common,
       snapPoint: found.point,
       distance: found.distance,
@@ -223,7 +272,7 @@ export class ClientSnapService {
           ),
         }),
       tolerance,
-    };
+    });
   }
 }
 
@@ -244,20 +293,32 @@ function warnOnce(tileset: Tileset3D, warning: string): void {
 /**
  * Snaps on the client and refines on the server, as 1.x's hybrid snapping
  * does: `onUpdate` gets the client snap at once (provisional while a server
- * was asked), then the server's (`source: "server"`) when it answers, and
- * the promise resolves with the last of them.
+ * was asked), then the server's (`source: "server"`) when it answers and
+ * checks out, and the promise resolves with the last of them.
  *
  * The server is asked when there is one and the client snap hit a listed
  * tileset in one camera frame: with the client's `hitPoint` as `testPoint`,
  * its `snapPoint` as `closePoint`, its feature and its camera. When the
- * server finds no snap, fails (a warning on the tileset, once) or gives a
- * malformed answer, the client snap stands: `onUpdate` gets it again, no
- * longer provisional, and the promise resolves with it.
+ * server finds no snap (undefined or null), fails, or gives an answer that
+ * doesn't check out, the client snap stands: `onUpdate` gets it again, no
+ * longer provisional, and the promise resolves with it. A failure, and each
+ * reason for refusing an answer, adds a warning to the tileset once.
+ *
+ * A server answer is refused when it is malformed (points, tolerance,
+ * `kind`, `normal`, `curve`); when it is `exact` with a tolerance other than
+ * 0; when its `design` isn't where its tileset's placement draws
+ * `snapPoint` (within the tolerance and 1 mm); when `snapPoint` is behind the
+ * client's camera, nearer than its near plane or more than the aperture
+ * and 1 px from the cursor; or when the client's hit draw hides it from that
+ * camera by more than the tile's geometric error (an exact design point a
+ * little inside the drawn mesh still passes).
  *
  * Abort `signal` when a newer snap supersedes this one: the server request
  * is aborted with it, and `onUpdate` is not called again, even if the server
- * answers anyway. The promise then resolves with the client snap, not
- * provisional.
+ * answers anyway; the promise then resolves with the client snap, not
+ * provisional. A signal already aborted resolves undefined at once.
+ * `onUpdate` must not throw: a throw is caught and warned once on the
+ * tileset hit (when there is one).
  */
 export async function refiningSnap(
   request: SnapRequest,
@@ -266,26 +327,36 @@ export async function refiningSnap(
   onUpdate: (result: SnapResult) => void,
   signal?: AbortSignal,
 ): Promise<SnapResult | undefined> {
+  if (signal?.aborted) {
+    return undefined;
+  }
   const found = await client.snap(request);
   if (found === undefined) {
     return undefined;
   }
   const { tileset, camera } = found;
-  const asks =
-    server !== undefined && tileset !== undefined && camera !== undefined;
+  const update = (result: SnapResult) => {
+    try {
+      onUpdate(result);
+    } catch {
+      if (tileset !== undefined) {
+        warnOnce(tileset, SNAP_UPDATE_FAILED);
+      }
+    }
+  };
   const settled: SnapResult = { ...found, provisional: false };
   if (signal?.aborted) {
     return settled;
   }
-  if (!asks) {
-    onUpdate(settled);
+  if (server === undefined || tileset === undefined || camera === undefined) {
+    update(settled);
     return settled;
   }
-  onUpdate({ ...found, provisional: true });
-  let answer: SnapResult | undefined;
-  let failed = false;
+  update({ ...found, provisional: true });
+  let refined: SnapResult | undefined;
+  let warning: string | undefined;
   try {
-    answer = await server.snap(
+    const answer = await server.snap(
       {
         tileset,
         ...(found.feature !== undefined && { feature: found.feature }),
@@ -298,61 +369,236 @@ export async function refiningSnap(
       },
       signal,
     );
+    if (signal?.aborted) {
+      return settled;
+    }
+    if (answer !== undefined && answer !== null) {
+      const reason = refusal(answer, found, client, request, tileset, camera);
+      if (reason !== undefined) {
+        warning = `${SNAP_SERVER_REFUSED}: ${reason}`;
+      } else {
+        // The client's feature and camera, never the server's.
+        const { feature: ignored, ...rest } = answer;
+        void ignored;
+        refined = {
+          ...rest,
+          hitPoint: answer.hitPoint ?? found.hitPoint,
+          distance: cursorDistance(camera, answer.snapPoint, request),
+          tileset: answer.tileset ?? tileset,
+          source: "server",
+          provisional: false,
+          ...(found.feature !== undefined && { feature: found.feature }),
+          camera,
+        };
+      }
+    }
   } catch {
-    failed = true;
+    if (signal?.aborted) {
+      return settled;
+    }
+    warning = SNAP_SERVER_FAILED;
   }
-  if (signal?.aborted) {
-    return settled;
+  if (warning !== undefined) {
+    warnOnce(tileset, warning);
   }
-  if (!failed && answer !== undefined && !wellFormed(answer)) {
-    failed = true;
-  }
-  if (failed) {
-    warnOnce(tileset, SNAP_SERVER_FAILED);
-  }
-  if (failed || answer === undefined) {
-    onUpdate(settled);
-    return settled;
-  }
+  const result = refined ?? settled;
+  update(result);
+  return result;
+}
+
+/** CSS pixels from the cursor to where `camera` shows `point`. */
+function cursorDistance(
+  camera: SnapCamera,
+  point: ArrayLike<number>,
+  cursor: { readonly x: number; readonly y: number },
+): number {
   const at = new Float64Array(2);
   const depth = projectToPixel(
     camera,
     camera.fovy,
     camera.width,
     camera.height,
-    answer.snapPoint,
+    point,
     at,
   );
-  const refined: SnapResult = {
-    ...answer,
-    hitPoint: answer.hitPoint ?? found.hitPoint,
-    distance:
-      depth > 0 ? Math.hypot(at[0]! - request.x, at[1]! - request.y) : NaN,
-    tileset: answer.tileset ?? tileset,
-    source: "server",
-    provisional: false,
-    ...(found.feature !== undefined && { feature: found.feature }),
-    camera,
-  };
-  onUpdate(refined);
-  return refined;
+  return depth > 0 && depth >= camera.near
+    ? Math.hypot(at[0]! - cursor.x, at[1]! - cursor.y)
+    : NaN;
 }
 
-/** A server answer with finite points and a finite, non-negative tolerance. */
-function wellFormed(r: SnapResult): boolean {
-  const finite3 = (p: unknown) =>
-    p instanceof Float64Array &&
-    p.length >= 3 &&
-    Number.isFinite(p[0]) &&
-    Number.isFinite(p[1]) &&
-    Number.isFinite(p[2]);
-  return (
-    finite3(r.snapPoint) &&
-    (r.hitPoint === undefined || finite3(r.hitPoint)) &&
+const finite3 = (p: unknown): boolean =>
+  (p instanceof Float64Array || Array.isArray(p)) &&
+  p.length === 3 &&
+  Number.isFinite(p[0]) &&
+  Number.isFinite(p[1]) &&
+  Number.isFinite(p[2]);
+
+/**
+ * Why a server's answer can't replace the client snap `found`, or undefined
+ * when it checks out.
+ */
+function refusal(
+  r: SnapResult,
+  found: SnapResult,
+  client: ClientSnapService,
+  request: SnapRequest,
+  tileset: Tileset3D,
+  camera: SnapCamera,
+): string | undefined {
+  if (!(r.snapPoint instanceof Float64Array) || !finite3(r.snapPoint)) {
+    return "snapPoint is not 3 finite numbers";
+  }
+  if (r.hitPoint !== undefined && !finite3(r.hitPoint)) {
+    return "hitPoint is not 3 finite numbers";
+  }
+  if (!(
     typeof r.tolerance === "number" &&
     Number.isFinite(r.tolerance) &&
     r.tolerance >= 0
-  );
+  )) {
+    return "tolerance is not a finite number of metres, not negative";
+  }
+  if (typeof r.exact !== "boolean") {
+    return "exact is not a boolean";
+  }
+  if (r.exact && r.tolerance !== 0) {
+    return "exact with a tolerance other than 0";
+  }
+  if (!SNAP_KINDS.includes(r.kind)) {
+    return "kind is not a SnapKind";
+  }
+  if (r.normal !== undefined && !finite3(r.normal)) {
+    return "normal is not 3 finite numbers";
+  }
+  if (
+    r.curve !== undefined &&
+    !(Array.isArray(r.curve) && r.curve.length >= 2 && r.curve.every(finite3))
+  ) {
+    return "curve is not two or more points of 3 finite numbers";
+  }
+  if (r.design !== undefined) {
+    const placement = (r.tileset ?? tileset).placement;
+    if (placement === undefined) {
+      return "design coordinates on a tileset without a placement";
+    }
+    const shown = placement.displayed(r.design.design);
+    const off = Math.hypot(
+      shown[0]! - r.snapPoint[0]!,
+      shown[1]! - r.snapPoint[1]!,
+      shown[2]! - r.snapPoint[2]!,
+    );
+    if (!(off <= r.tolerance + 1e-3)) {
+      return "design coordinates not where the placement draws snapPoint";
+    }
+  }
+  const distance = cursorDistance(camera, r.snapPoint, request);
+  if (Number.isNaN(distance)) {
+    return "snapPoint behind the camera or nearer than its near plane";
+  }
+  if (distance > request.aperture + 1) {
+    return "snapPoint outside the aperture";
+  }
+  if (client.hides(found, r.snapPoint)) {
+    return "snapPoint hidden from the camera by the drawn mesh";
+  }
+  return undefined;
+}
+
+/**
+ * Where triangle `t` (first index into `indices`, vertices eye-relative in
+ * `rel`) crosses the ray from the eye (0) along `p` (Möller–Trumbore), as a
+ * fraction of the way to `p`; NaN when it doesn't.
+ */
+function crossing(
+  rel: Float64Array,
+  indices: Uint32Array,
+  t: number,
+  px: number,
+  py: number,
+  pz: number,
+): number {
+  const i0 = 3 * indices[t]!,
+    i1 = 3 * indices[t + 1]!,
+    i2 = 3 * indices[t + 2]!;
+  const ox = rel[i0]!,
+    oy = rel[i0 + 1]!,
+    oz = rel[i0 + 2]!;
+  const e1x = rel[i1]! - ox,
+    e1y = rel[i1 + 1]! - oy,
+    e1z = rel[i1 + 2]! - oz;
+  const e2x = rel[i2]! - ox,
+    e2y = rel[i2 + 1]! - oy,
+    e2z = rel[i2 + 2]! - oz;
+  const qx = py * e2z - pz * e2y,
+    qy = pz * e2x - px * e2z,
+    qz = px * e2y - py * e2x;
+  const det = e1x * qx + e1y * qy + e1z * qz;
+  if (!(Math.abs(det) > 0)) {
+    return NaN;
+  }
+  const inv = 1 / det;
+  const u = -(ox * qx + oy * qy + oz * qz) * inv;
+  if (u < 0 || u > 1) {
+    return NaN;
+  }
+  const rx = -oy * e1z + oz * e1y,
+    ry = -oz * e1x + ox * e1z,
+    rz = -ox * e1y + oy * e1x;
+  const v = (px * rx + py * ry + pz * rz) * inv;
+  if (v < 0 || u + v > 1) {
+    return NaN;
+  }
+  return (e2x * rx + e2y * ry + e2z * rz) * inv;
+}
+
+/**
+ * Whether a triangle of `g` crosses the camera's line of sight to `point`
+ * (body-fixed) beyond the near plane and more than `epsilon` metres (and a
+ * millionth of the distance) before it.
+ */
+function hiddenFrom(
+  g: TileGeometry,
+  camera: SnapCamera,
+  point: ArrayLike<number>,
+  epsilon: number,
+  s: Scratch,
+): boolean {
+  const { positions, indices, matrix: m } = g;
+  const count = Math.floor(positions.length / 3);
+  s.reserve(count, 0);
+  const rel = s.rel;
+  const e = camera.position;
+  const tx = m[12]! - e[0]!,
+    ty = m[13]! - e[1]!,
+    tz = m[14]! - e[2]!;
+  for (let v = 0; v < count; v++) {
+    const x = positions[3 * v]!,
+      y = positions[3 * v + 1]!,
+      z = positions[3 * v + 2]!;
+    rel[3 * v] = m[0]! * x + m[4]! * y + m[8]! * z + tx;
+    rel[3 * v + 1] = m[1]! * x + m[5]! * y + m[9]! * z + ty;
+    rel[3 * v + 2] = m[2]! * x + m[6]! * y + m[10]! * z + tz;
+  }
+  const px = point[0]! - e[0]!,
+    py = point[1]! - e[1]!,
+    pz = point[2]! - e[2]!;
+  const limit = 1 - Math.max(1e-6, epsilon / Math.hypot(px, py, pz));
+  const d = camera.direction;
+  const first = camera.near / (px * d[0]! + py * d[1]! + pz * d[2]!);
+  for (let t = 0; t + 2 < indices.length; t += 3) {
+    if (
+      indices[t]! >= count ||
+      indices[t + 1]! >= count ||
+      indices[t + 2]! >= count
+    ) {
+      continue;
+    }
+    const along = crossing(rel, indices, t, px, py, pz);
+    if (along >= first && along > 0 && along < limit) {
+      return true;
+    }
+  }
+  return false;
 }
 
 interface Found {
@@ -633,39 +879,7 @@ function nearest(
       if (skip(t)) {
         continue;
       }
-      const i0 = 3 * indices[t]!,
-        i1 = 3 * indices[t + 1]!,
-        i2 = 3 * indices[t + 2]!;
-      const ox = rel[i0]!,
-        oy = rel[i0 + 1]!,
-        oz = rel[i0 + 2]!;
-      const e1x = rel[i1]! - ox,
-        e1y = rel[i1 + 1]! - oy,
-        e1z = rel[i1 + 2]! - oz;
-      const e2x = rel[i2]! - ox,
-        e2y = rel[i2 + 1]! - oy,
-        e2z = rel[i2 + 2]! - oz;
-      // Möller–Trumbore, the ray from the eye (0) along p (p at 1).
-      const qx = py * e2z - pz * e2y,
-        qy = pz * e2x - px * e2z,
-        qz = px * e2y - py * e2x;
-      const det = e1x * qx + e1y * qy + e1z * qz;
-      if (!(Math.abs(det) > 0)) {
-        continue;
-      }
-      const inv = 1 / det;
-      const u = -(ox * qx + oy * qy + oz * qz) * inv;
-      if (u < 0 || u > 1) {
-        continue;
-      }
-      const rx = -oy * e1z + oz * e1y,
-        ry = -oz * e1x + ox * e1z,
-        rz = -ox * e1y + oy * e1x;
-      const v = (px * rx + py * ry + pz * rz) * inv;
-      if (v < 0 || u + v > 1) {
-        continue;
-      }
-      const along = (e2x * rx + e2y * ry + e2z * rz) * inv;
+      const along = crossing(rel, indices, t, px, py, pz);
       if (along >= first && along > 0 && along < limit) {
         return true;
       }
