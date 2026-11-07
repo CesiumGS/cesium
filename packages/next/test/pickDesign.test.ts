@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { Camera } from "../src/scene/Camera.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { pickDesign, type PickView } from "../src/engineering/pick.ts";
 import type { DrawHandle } from "../src/scene/World.ts";
@@ -27,11 +28,24 @@ function tileset(opts: {
   owns?: boolean;
   placement?: TilesetPlacement;
   destroyed?: boolean;
+  /** Center of the hit tile's sphere; default is the hit. */
+  center?: number[];
 }): Tileset3D {
   return {
     placement: opts.placement,
     tileOfDraw: (d: { index: number }) =>
-      (opts.owns ?? true) && d.index === DRAW.index ? ({} as never) : undefined,
+      (opts.owns ?? true) && d.index === DRAW.index
+        ? ({
+            volume: {
+              kind: "sphere",
+              sphere: {
+                center: Float64Array.from(opts.center ?? [6378137, 0, 100]),
+                radius: 50,
+              },
+            },
+            contentVolume: undefined,
+          } as never)
+        : undefined,
     isDestroyed: () => opts.destroyed ?? false,
   } as unknown as Tileset3D;
 }
@@ -44,29 +58,31 @@ function view(
     camera?: [number, number, number];
     rect?: { width: number; height: number };
     fov?: number;
+    /** Runs when a pick is issued (to move the camera mid-flight). */
+    onPick?: (camera: Camera, call: number) => void;
   } = {},
 ) {
-  const pick = vi.fn(async () =>
-    o.feature === false ? undefined : { featureId: 7, name: undefined },
-  );
+  const camera = new Camera();
+  camera.position.set(o.camera ?? [6378137 + 1000, 0, 100]);
+  camera.fov = o.fov ?? Math.PI / 2;
+  let calls = 0;
+  const pick = vi.fn(async () => {
+    o.onPick?.(camera, calls++);
+    return o.feature === false ? undefined : { featureId: 7, name: undefined };
+  });
   const pickPosition = vi.fn(async () =>
     "hit" in o ? o.hit : new Float64Array(HIT),
   );
-  const fov = o.fov ?? Math.PI / 2;
   const v: PickView = {
     pick,
     pickPosition,
     body: EARTH,
-    camera: {
-      position: new Float64Array(o.camera ?? [6378137 + 1000, 0, 100]),
-      fovy: (aspect: number) =>
-        aspect <= 1 ? fov : Math.atan(Math.tan(fov / 2) / aspect) * 2,
-    },
-    target: { width: 1000, pixelRatio: o.ratio ?? 1 },
+    camera,
+    target: { kind: "canvas", width: 1000, pixelRatio: o.ratio ?? 1 },
     pixelRect: () => o.rect ?? { width: 1000, height: 500 },
     world: { feature: () => ({ draw: DRAW }) },
   };
-  return { v, pick, pickPosition };
+  return { v, pick, pickPosition, camera };
 }
 
 describe("pickDesign", () => {
@@ -141,6 +157,67 @@ describe("pickDesign", () => {
     ]);
     expect(r?.tileset).toBeUndefined();
     expect(r?.design).toBeUndefined();
+  });
+});
+
+describe("pickDesign, one frame", () => {
+  const ts = () => tileset({ placement: placement("rigid") });
+
+  it("retries once when the camera moved, then answers", async () => {
+    const { v, pick } = view({
+      onPick: (c, call) => {
+        if (call === 0) {
+          c.version++;
+        }
+      },
+    });
+    const r = await pickDesign(v, 1, 1, [ts()]);
+    expect(pick).toHaveBeenCalledTimes(2);
+    expect(r?.design).toBeDefined();
+  });
+
+  it("returns the position alone when the camera keeps moving", async () => {
+    const { v, pick } = view({ onPick: (c) => c.version++ });
+    const r = await pickDesign(v, 1, 1, [ts()]);
+    expect(pick).toHaveBeenCalledTimes(2);
+    expect(r?.position).toBeDefined();
+    expect(r?.tileset).toBeUndefined();
+    expect(r?.feature).toBeUndefined();
+    expect(r?.design).toBeUndefined();
+  });
+
+  it("notices a camera moved without a version bump", async () => {
+    const { v } = view({
+      onPick: (c) => {
+        c.position[1] = c.position[1]! + 1;
+      },
+    });
+    const r = await pickDesign(v, 1, 1, [ts()]);
+    expect(r?.design).toBeUndefined();
+  });
+
+  it("gives no design when the position is outside the hit tile", async () => {
+    const far = tileset({
+      placement: placement("rigid"),
+      center: [6378137 + 500, 0, 100],
+    });
+    const r = await pickDesign(view().v, 1, 1, [far]);
+    expect(r?.tileset).toBe(far);
+    expect(r?.design).toBeUndefined();
+  });
+
+  it("computes the tolerance from the camera of the position's frame", async () => {
+    const { v } = view({
+      onPick: (c, call) =>
+        (c.position[0] = 6378137 + (call === 0 ? 5000 : 9000)),
+    });
+    // The camera moves during both attempts: the second snapshot saw 5000 m,
+    // the camera ends 9000 m away; the tolerance is the snapshot's.
+    const r = await pickDesign(v, 1, 1, [ts()]);
+    expect(r!.tolerance).toBeCloseTo(
+      (5000 * 2 * Math.tan(Math.atan(0.5))) / 500,
+      9,
+    );
   });
 });
 
