@@ -101,3 +101,23 @@ export const MAST_ACCURACY: EdgeAccuracy = {
   note: "exact by definition: the mast's height as set (the knob)",
   short: "exact by definition: the mast as set",
 };
+
+/** MOON_ME's orientation error, 1σ, rad (estimated, illustrative). */
+export const MOON_ME_RADIANS = 3e-7;
+
+/**
+ * MOON_ME's orientation (DE440's integrated libration), which the library
+ * leaves "not stated": DE440 publishes no orientation uncertainty (Park et
+ * al. 2021, AJ 161:105, §2.4). Estimated, illustrative, from the two
+ * figures that bound its size: DE440's mean-Earth frame differs from
+ * DE421's by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF
+ * moon_de440_250416.tf), and unmodelled tidal libration is a few
+ * milliarcseconds (the DE421 and DE430 memos; 1 mas is about 8 mm at the
+ * surface). 3 × 10⁻⁷ rad is about 0.5 m at the surface. The explorer's
+ * tree and walk state it; the library's MOON_ME still states none.
+ */
+export const MOON_ME_ACCURACY: EdgeAccuracy = {
+  radians: MOON_ME_RADIANS,
+  note: "estimated, illustrative: DE440 publishes no orientation uncertainty for its libration (Park et al. 2021, AJ 161:105, §2.4); its mean-Earth frame differs from DE421's by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf) and unmodelled tidal libration is a few mas (about 8 mm per mas at the surface), so 3 × 10⁻⁷ rad, about 0.5 m at the surface",
+  short: "estimated, illustrative: 3 × 10⁻⁷ rad (about 0.5 m at the surface)",
+};

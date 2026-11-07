@@ -660,20 +660,24 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
   },
   ship: {
     id: "ship",
-    // Over the main ship channel, looking in toward the Golden Gate: the
-    // ship's last legs, the headlands and the lighthouse beyond them, close
-    // enough that the terrain the sight line crosses is drawn at levels
-    // 11 to 13.
+    // Low behind the ship, looking up the sight line through the Golden
+    // Gate to Alcatraz (the coordinator's ruling, 2026-11-07): the ship
+    // above the time bar, the bridge mid-frame, the island left of the
+    // answer's callout; close enough that the Gate's south shore, where the
+    // line passes lowest, is drawn at level 13 (±9.4 m) and the rest of the
+    // line at 12 or finer, so the checked setup's trace is bounded. A view
+    // across the line framed it better but drew the Gate at level 12 (±19
+    // m, a 1 m margin).
     camera: "site",
     flight: 3,
     focus: ["ITRF"],
     triads: () => [SHIP_BODY, MAST_SENSOR],
     look: () => ({
-      longitude: -122.535,
-      latitude: 37.795,
-      range: 17_000,
-      heading: 52,
-      pitch: -42,
+      longitude: -122.503,
+      latitude: 37.802,
+      range: 5_500,
+      heading: 72,
+      pitch: -28,
     }),
     bodies: (frames, k, e) =>
       e?.track

@@ -33,6 +33,7 @@ import type {
   ScenarioId,
 } from "../../examples/frames-explorer/scenarios/spec.ts";
 import { SCENARIOS } from "../../examples/frames-explorer/scenarios/specs.ts";
+import { MOON_ME_RADIANS } from "../../examples/frames-explorer/scenarios/stated.ts";
 import {
   ORION_OEM,
   STATIONS_SPK,
@@ -49,7 +50,7 @@ import {
 import { loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
-import type { Frame } from "../../src/frames/Frame.ts";
+import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
 import { isUnstated } from "../../src/frames/frameAccuracy.ts";
 import { createFrames } from "../../src/frames/frames.ts";
 import { Instant } from "../../src/time/Instant.ts";
@@ -137,8 +138,9 @@ const checkedTdb = (id: ScenarioId) =>
  * so: an answer's path may cross them, and a walk across them is unbounded.
  */
 const STATES_NONE: Readonly<Record<string, string>> = {
-  MOON_ME:
-    "DE440's libration angles carry no published orientation uncertainty (Park et al. 2021, AJ 161:105, §2.4; the explorer's lunar-accuracy research)",
+  // None today: MOON_ME's, which DE440 leaves unstated, the explorer
+  // estimates (stated.ts MOON_ME_ACCURACY, the coordinator's ruling,
+  // 2026-11-07).
 };
 
 /** The page's own frames for a scenario, as the stage builds them (stage.ts `applySceneKnobs`). */
@@ -292,4 +294,50 @@ describe("every frame states its accuracy, and the walk and the answer agree (th
     }
     print(lines.join("\n"));
   }, 600_000);
+});
+
+describe("MOON_ME's orientation, estimated, at a point's lever (the coordinator's ruling, 2026-11-07)", () => {
+  it("adds its rotation error times the lunar site's distance from the Moon's centre to the site's walk, on MOON_ME's edge, and adds nothing at MOON_ME's own origin", async () => {
+    const id: ScenarioId = "stand-on-moon";
+    const knobs = spec(id).checked.knobs;
+    const t = checkedTdb(id);
+    const instant = Instant.fromTdb(t);
+    const e = await client.scenario(id, knobs, t);
+    const tree = pageTree(id, knobs, e, instant);
+    const site = nodes(tree).find((n) => n.id === "Lunar site")!.frame!;
+    const m = frameTransform(site, frames.moonMe, instant);
+    const lever = Math.hypot(m[12]!, m[13]!, m[14]!);
+    expect(lever).toBeGreaterThan(1.73e6);
+    for (const r of ["ITRF", "GCRF"] as const) {
+      const v = composedView(tree, frames, instant, r, "Lunar site")!;
+      const i = v.termEdges.findIndex(
+        (x) => x.length === 1 && x[0] === "MOON_ME",
+      );
+      expect(i, r).toBeGreaterThanOrEqual(0);
+      expect(v.statement.terms[i]!.meters).toBeCloseTo(
+        MOON_ME_RADIANS * lever,
+        9,
+      );
+      expect(v.statement.terms[i]!.note).toMatch(/^estimated, illustrative: /);
+      expect(v.zeroAtOrigin.map((z) => z.edge)).not.toContain("MOON_ME");
+      // The rest is the library's statement for that point, as before.
+      const rest = v.statement.terms
+        .filter((_, k) => k !== i)
+        .map((x) => x.meters ?? 0);
+      expect(v.statement.meters).toBeCloseTo(
+        Math.hypot(...rest, MOON_ME_RADIANS * lever),
+        12,
+      );
+      print(
+        `lunar site against ${r}: ±${v.statement.meters} m (MOON_ME ±${MOON_ME_RADIANS * lever} m at ${lever} m)`,
+      );
+    }
+    // At MOON_ME's own origin (the Moon's centre, MOON_PA's origin), its
+    // rotation adds nothing, and the walk says why.
+    const pa = composedView(tree, frames, instant, "ITRF", "MOON_PA");
+    if (pa) {
+      const z = pa.zeroAtOrigin.find((x) => x.edge === "MOON_ME");
+      expect(z?.why).toMatch(/lever arm is 0 m/);
+    }
+  }, 120_000);
 });

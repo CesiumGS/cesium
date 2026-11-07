@@ -66,6 +66,8 @@ import {
   DSN_STATION_ACCURACY,
   LUNAR_SITE_ACCURACY,
   MAST_ACCURACY,
+  MOON_ME_ACCURACY,
+  MOON_ME_RADIANS,
   SHIP_ACCURACY,
 } from "./stated.ts";
 import {
@@ -457,14 +459,30 @@ export const evaluateEverything: ScenarioEvaluator = async (
           framePoint(x.frames[obj], [0, 0, 0], instant),
           obj === "lunar-site" ? f.moonMe : f.itrf,
         );
-  const ends = [from, to].map((obj) => ({ obj, own: ownOf(obj) }));
+  // MOON_ME's estimated orientation (stated.ts) at the lunar site's lever,
+  // its distance from the Moon's centre: the walk's term for that edge.
+  const moonLever = Math.hypot(...originIn(x.site, f.moonMe, instant));
+  const moonTurn = MOON_ME_RADIANS * moonLever;
+  const ends = [from, to].map((obj) => {
+    const own = ownOf(obj);
+    return {
+      obj,
+      own,
+      meters:
+        own?.meters === undefined
+          ? undefined
+          : obj === "lunar-site"
+            ? Math.hypot(own.meters, moonTurn)
+            : own.meters,
+    };
+  });
   const unboundedEnd = ends.find(
     (e) => e.own !== undefined && e.own.meters === undefined,
   );
   const meters =
     statement.meters === undefined || unboundedEnd !== undefined
       ? undefined
-      : Math.hypot(statement.meters, ...ends.map((e) => e.own?.meters ?? 0));
+      : Math.hypot(statement.meters, ...ends.map((e) => e.meters ?? 0));
   /** Each end's own part in the breakdown: what it states, and where from. */
   const ownRow = (obj: CapstoneObject, own: PointAccuracy) => {
     switch (obj) {
@@ -488,9 +506,11 @@ export const evaluateEverything: ScenarioEvaluator = async (
         };
       default:
         return {
-          label: "The lunar site's own place",
-          ...(own.meters !== undefined && { meters: own.meters }),
-          note: LUNAR_SITE_ACCURACY.note,
+          label: "MOON_ME's orientation at the lunar site (estimated)",
+          ...(own.meters !== undefined && {
+            meters: Math.hypot(own.meters, moonTurn),
+          }),
+          note: `${MOON_ME_ACCURACY.note}; at the site, ${fmt(moonLever / 1000, 5)} km from the Moon's centre (its lever); the site itself is exact by definition`,
         };
     }
   };
@@ -503,9 +523,9 @@ export const evaluateEverything: ScenarioEvaluator = async (
     })),
     // Each end the app defines, with what its own frames state (stated.ts):
     // in the ± as the walk composes it.
-    // An end exact by definition (the lunar site) adds nothing: no row.
+    // An end that adds nothing has no row.
     ...ends.flatMap((e) =>
-      e.own && e.own.meters !== 0 ? [ownRow(e.obj, e.own)] : [],
+      e.own && e.meters !== 0 ? [ownRow(e.obj, e.own)] : [],
     ),
   ].sort(
     // Stated terms largest first; those that state nothing after them.
@@ -868,7 +888,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       },
       {
         title: "How sure",
-        text: "The library's statement for the two origins (accuracyOf: the Earth's orientation at an Earth end, Orion's covariance, DE440 where the two meet at ICRF, the Moon's relativistic terms), and for each end the app defines its frames' own stated accuracies (pointAccuracy): the dish's published position (DSN 810-005), the ship's estimated AIS position and heading, the arm's encoders, links and survey, and the lunar site exact by definition; root-sum-square, as the walk composes each end. A pair is bounded only where both ends are.",
+        text: "The library's statement for the two origins (accuracyOf: the Earth's orientation at an Earth end, Orion's covariance, DE440 where the two meet at ICRF, the Moon's relativistic terms), and for each end the app defines its frames' own stated accuracies (pointAccuracy): the dish's published position (DSN 810-005), the ship's estimated AIS position and heading, the arm's encoders, links and survey, and for the lunar site (exact by definition) MOON_ME's estimated orientation at its distance from the Moon's centre; root-sum-square, as the walk composes each end. A pair is bounded only where both ends are.",
       },
     ],
   };

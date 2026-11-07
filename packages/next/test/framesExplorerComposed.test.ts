@@ -74,7 +74,10 @@ describe("composedView", () => {
     expect(why.get("MOON_PA")).toBe(
       "exact by definition for DE440 (its adopted constants)",
     );
-    expect(why.get("MOON_ME")).toMatch(/^a rotation turns the frame's axes/);
+    // MOON_PA's origin is the Moon's centre, MOON_ME's own: no lever.
+    expect(why.get("MOON_ME")).toBe(
+      "its rotation turns about this point: the lever arm is 0 m",
+    );
     for (const w of why.values()) {
       expect(w).not.toMatch(/ et$|\(Park et$/);
     }
@@ -84,7 +87,7 @@ describe("composedView", () => {
       })
       .find((n) => n.id === "MOON_ME")!;
     expect(me.edge.accuracy.short).toBe(
-      "not stated: no published orientation uncertainty",
+      "estimated, illustrative: 3 × 10⁻⁷ rad (about 0.5 m at the surface)",
     );
   });
 

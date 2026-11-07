@@ -233,7 +233,7 @@ export function Walk({
                   : terms.length > 0 && child.edge.kind === "rotation"
                     ? // A term that is 0 m here (Earth orientation at the
                       // geocentre): the same words as the other rotations.
-                      "Adds nothing at the origin: a rotation turns the frame's axes about its own origin, so it doesn't move that origin."
+                      "Adds nothing at the origin: its rotation turns about this point, so the lever arm is 0 m."
                     : child.edge.accuracy.byDefinition
                       ? "Adds nothing: exact by definition."
                       : "Adds nothing at the origin."}

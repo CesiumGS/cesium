@@ -9,6 +9,7 @@ import type { Frames } from "../../src/frames/frames.ts";
 import type { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
+import { MOON_ME_ACCURACY } from "./scenarios/stated.ts";
 
 /** How a frame is joined to its parent. */
 export type EdgeKind =
@@ -168,13 +169,13 @@ const BUILT_IN: Record<
     detail: "IAU 2006/2000A + EOP",
     accuracy: earthOrientationAccuracy(frames, instant),
   }),
-  MOON_ME: (frames) => ({
+  // The library states none for MOON_ME (DE440 publishes no orientation
+  // uncertainty); the explorer estimates one, labelled so (the owner's
+  // follow-up, 2026-11-07, scenarios/stated.ts), and the walk composes it.
+  MOON_ME: () => ({
     kind: "rotation",
     detail: "lunar PCK libration (DE440)",
-    accuracy: {
-      ...stated(frames.moonMe),
-      short: "not stated: no published orientation uncertainty",
-    },
+    accuracy: MOON_ME_ACCURACY,
   }),
   MOON_PA: (frames) => ({
     kind: "constant",

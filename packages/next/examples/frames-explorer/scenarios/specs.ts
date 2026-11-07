@@ -445,14 +445,17 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       },
       HEIGHT_DATUM,
     ],
-    // 80 minutes along its synthetic track (Task 7), in the main ship
-    // channel's eastbound lane, a 25 m mast, the sea at NAVD88 0 m through
+    // 91 minutes along its synthetic track (Task 7), in the main ship
+    // channel's eastbound lane where the mast's line to Alcatraz Island
+    // Light clears the Golden Gate's south shore (the coordinator's ruling,
+    // 2026-11-07: at 18:20 it grazed it, 16 m over the drawn land), a 25 m
+    // mast, the sea at NAVD88 0 m through
     // GEOID18. Its checks: the body frame's heading and roll and the test
     // hill's sight line by hand, round trips, California zone 3's round trip,
     // and GEOID18's NAVD88 height against NGS's at GU2195. No AIS: the
     // track is synthetic (vehicles.ts), so it needs no ship data.
     checked: {
-      epochUtc: "2026-03-01T18:20:00Z",
+      epochUtc: "2026-03-01T18:31:00Z",
       knobs: { mast: 25, datum: "navd88" },
     },
     needs: ["proj", "geoid", "terrain"],

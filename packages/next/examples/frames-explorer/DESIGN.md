@@ -109,6 +109,7 @@ An expert who finds one thing stated two ways stops trusting the rest. So:
   | Camera mount           | exact by definition: the gimbal as set (the knob)                             | by definition                                     |
   | Ship body              | 10 m; 1° (0.017 rad): an AIS position and a gyrocompass heading               | estimated, illustrative                           |
   | Mast sensor            | exact by definition: the mast as set (the knob)                               | by definition                                     |
+  | MOON_ME (built in)     | 3 × 10⁻⁷ rad, about 0.5 m at the surface (the library states none)            | estimated, illustrative                           |
   | The robot arm's frames | its synthetic spec sheet and NGS mark AK1155's pad (Task 7b)                  | synthetic; published                              |
 
   Where an answer's ± is a length and an end of its path is the app's,
@@ -118,8 +119,11 @@ An expert who finds one thing stated two ways stops trusting the rest. So:
   the spot's distance from the body), the arm's tool, the capstone's ends.
   A data test (`test/data/framesExplorerStated.test.ts`) holds every
   scenario to it at its checked setup, and holds each path's edges to a
-  stated accuracy unless a source truly states none (MOON_ME's libration,
-  Park et al. 2021). Orion's frame is the library's trajectory: its OEM
+  stated accuracy unless a source truly states none. A rotation the
+  `accuracyOf` statement has no term for still moves a point off its
+  frame's origin: the walk adds its stated rotation error times that lever
+  on its edge, or reads unbounded, naming it, where it states none (it
+  says "adds nothing" only at the frame's own origin). Orion's frame is the library's trajectory: its OEM
   covariance is on its edge and `accuracyOf` composes it.
 
 ## On the globe (C1)
@@ -402,13 +406,17 @@ NAVD88 on an island about 500 m long, the line's own ground at that end
 "Headland stops blocking (as drawn)", its tooltip saying the line stays
 within the terrain's error, or "Lighthouse comes into view" only when the
 span traced clear. A moment may set knobs instead of the time (the drone's
-"Over the building"). At the checked setup and the default view the line
-passes about 16 m over the drawn land at the Golden Gate's south shore,
-inside the ±38 m of the level-11 tiles drawn there, so it reads "can't
-tell"; zoomed toward the Gate (level-13 tiles, ±9.4 m) the last minutes of
-the track read "in sight", the line 24 m over the drawn land beyond its
-error (browser check, 2026-11-07; the Coast Pilot leads ships in on 070°
-toward this light). Near the ship, over the sea, a 25 m mast clears a
+"Over the building"). The checked setup is 18:31 UTC, in the last minutes
+of the track (the coordinator's ruling, 2026-11-07), and the scene's camera
+sits low behind the ship looking up the line through the Gate, so the
+Gate's south shore, where the line passes lowest, is drawn at level 13
+(±9.4 m) and the rest at 12 or finer: the default view reads "lighthouse in
+sight", the line 24 m over the drawn land 5.1 km short of the light, beyond
+the terrain's ±9.4 m (browser check). At 18:20, or from further out (the
+old 17 km view, level-11 tiles at ±38 m), the same line read "can't tell",
+16 m over the drawn land; a view across the line framed it better but drew
+the Gate at level 12 (±19 m, a 1 m margin). The Coast Pilot leads ships in
+on 070° toward this light. Near the ship, over the sea, a 25 m mast clears a
 level-12 sea's ±19 m by about 6 m (a data test). The verdict states the
 deciding clearance (`terrainLineOfSight`'s `margin`: away from each end's
 own ground), its error, where it is and whether the drawn ground under it
@@ -1361,7 +1369,14 @@ themselves. The Moon's edges say so instead of inventing one.
   - DE440's realisation of ME differs from the DE421-aligned ME by up to
     3.07 × 10⁻⁷ rad (about 0.53 m) over 2000–2040 (NAIF
     `moon_de440_250416.tf`).
-  - The edge reads "not stated", with those figures as context.
+  - The library's edge reads "not stated", with those figures as context.
+    The explorer estimates one (the owner's follow-up, ruled 2026-11-07):
+    3 × 10⁻⁷ rad, about 0.5 m at the surface, labelled "estimated,
+    illustrative" with that reasoning (`scenarios/stated.ts`
+    `MOON_ME_ACCURACY`). Its tree edge shows it, and the walk composes it
+    at a point's distance from the Moon's centre: the lunar site's walk to
+    ITRF is ±0.52 m, not the ±32 mm it read when nothing gave MOON_ME's
+    rotation a lever.
 - **MOON_PA ↔ MOON_ME** is a constant rotation per ephemeris (Park eq. 19),
   so it is exact by definition for DE440. The ME frame is a convention: its
   longitude is limited by the gravity field to about 1″ (about 8 m) (DE421

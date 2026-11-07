@@ -25,8 +25,14 @@ import {
   type ComposedAccuracy,
   type ComposedView,
   type Reference,
+  type StatedTerm,
+  type WalkStatement,
   type WalkTerm,
 } from "./panel/model.ts";
+import { length } from "./panel/format.ts";
+
+/** Within this of a frame's origin (m), its rotation moves a point by nothing worth stating. */
+const LEVER_AT_ORIGIN = 1e-3;
 import type { TreeNode } from "./tree.ts";
 import { aboutSeparation } from "./warnings.ts";
 
@@ -92,7 +98,7 @@ function whyNothing(node: TreeNode): string {
   }
   switch (node.edge.kind) {
     case "rotation":
-      return "a rotation turns the frame's axes about its own origin, so it doesn't move that origin";
+      return "its rotation turns about this point: the lever arm is 0 m";
     case "constant":
       return "a fixed placement, exact as given";
     case "translation":
@@ -259,16 +265,74 @@ function separationView(
     }
   });
   const used = new Set(termEdges.flat());
-  const zeroAtOrigin = edges
-    .filter((e) => !used.has(e))
-    .map((e) => ({ edge: e, why: whyNothing(byId.get(e)!) }));
+  // A rotation the statement has no term for still moves a point off that
+  // frame's origin (the owner's follow-up, 2026-11-07: the lunar site,
+  // 1,737 km from MOON_ME's): its stated rotation error times that lever
+  // joins the walk, on its edge; a rotation that states none, with a lever,
+  // leaves the walk unbounded, named. Only at its own origin does it add
+  // nothing.
+  const leverAt = (id: string): number | undefined => {
+    const f = byId.get(id)?.frame;
+    if (f === undefined) {
+      return undefined;
+    }
+    try {
+      const p = convertPoint(point, f, instant).position;
+      return Math.hypot(p[0]!, p[1]!, p[2]!);
+    } catch {
+      return undefined;
+    }
+  };
+  const turned: { edge: string; term: StatedTerm }[] = [];
+  let unboundedBy: { edge: string; lever: number } | undefined;
+  const zeroAtOrigin: { edge: string; why: string }[] = [];
+  for (const e of edges.filter((x) => !used.has(x))) {
+    const node = byId.get(e)!;
+    const a = node.edge.accuracy;
+    const lever =
+      node.edge.kind === "rotation" && !a.byDefinition ? leverAt(e) : 0;
+    if (lever === undefined || lever <= LEVER_AT_ORIGIN) {
+      zeroAtOrigin.push({ edge: e, why: whyNothing(node) });
+    } else if (a.radians !== undefined) {
+      turned.push({
+        edge: e,
+        term: {
+          source: "stated",
+          meters: a.radians * lever,
+          note: `${a.note}; at this point, ${length(lever)} from ${e}'s origin (its rotation error times that lever)`,
+        },
+      });
+    } else {
+      unboundedBy ??= { edge: e, lever };
+      turned.push({
+        edge: e,
+        term: { source: "stated", meters: undefined, note: a.note },
+      });
+    }
+  }
+  const terms: WalkTerm[] = [...statement.terms, ...turned.map((x) => x.term)];
+  const meters =
+    statement.meters === undefined || unboundedBy !== undefined
+      ? undefined
+      : Math.hypot(statement.meters, ...turned.map((x) => x.term.meters!));
+  const walkStatement: WalkStatement = { ...statement, meters, terms };
+  const allEdges = [...termEdges, ...turned.map((x) => [x.edge])];
   const unknown = statement.terms.find((t) => t.meters === undefined);
   const note =
     statement.warnings[0] ??
     (unknown !== undefined
       ? `Not bounded: ${unknown.note}.`
-      : "The accuracy of the separation of the two origins: what a distance between them can claim.");
-  return { statement, termEdges, zeroAtOrigin, note };
+      : unboundedBy !== undefined
+        ? `Not bounded: ${unboundedBy.edge} states no accuracy for its rotation, which moves this point (${length(unboundedBy.lever)} from its origin).`
+        : turned.length > 0
+          ? `The accuracy of the separation of the two origins, with ${turned.map((x) => x.edge).join(" and ")}'s stated rotation error at this point's distance from its origin.`
+          : "The accuracy of the separation of the two origins: what a distance between them can claim.");
+  return {
+    statement: walkStatement,
+    termEdges: allEdges,
+    zeroAtOrigin,
+    note,
+  };
 }
 
 /**
@@ -340,6 +404,10 @@ function mixedView(
   }
   const a = appPart.statement;
   const b = builtIn.statement;
+  /** Built-in rotations whose stated error the walk adds at this point's lever. */
+  const turnedEdges = builtIn.termEdges
+    .filter((_, i) => b.terms[i]?.source === "stated")
+    .flat();
   const meters =
     a.meters === undefined || b.meters === undefined
       ? undefined
@@ -349,7 +417,7 @@ function mixedView(
       ? builtIn.note
       : a.meters === undefined
         ? appPart.note
-        : `Root-sum-square of two parts: from ${node.label} up to ${anchorId}, each frame's own stated accuracy (pointAccuracy); from ${anchorId} to ${reference}, the library's statement for that point (accuracyOf).`;
+        : `Root-sum-square of two parts: from ${node.label} up to ${anchorId}, each frame's own stated accuracy (pointAccuracy); from ${anchorId} to ${reference}, the library's statement for that point (accuracyOf)${turnedEdges.length > 0 ? `, with ${turnedEdges.join(" and ")}'s stated rotation error at this point's distance from its origin` : ""}.`;
   return {
     statement: {
       meters,

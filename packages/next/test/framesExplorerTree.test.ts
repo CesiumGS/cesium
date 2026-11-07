@@ -131,17 +131,21 @@ describe("buildTree: the built-in frames", () => {
     expect(find(tree, "EARTH_ICRF")!.edge.kind).toBe("translation");
   });
 
-  it("states lunar orientation as the published sources do: MOON_ME not stated, MOON_PA exact by definition (fix 1, item 8)", () => {
+  it("states lunar orientation as the published sources allow: MOON_ME estimated and labelled (the library states none), MOON_PA exact by definition (fix 1, item 8; the coordinator's ruling, 2026-11-07)", () => {
     const tree = buildTree(frames, {}, Instant.fromTdb(0));
     const me = find(tree, "MOON_ME")!.edge.accuracy;
     expect(me.meters).toBeUndefined();
-    expect(me.radians).toBeUndefined();
+    expect(me.radians).toBe(3e-7);
     expect(me.byDefinition).toBeUndefined();
     expect(me.note).toMatch(
-      /^not stated: .*no published orientation uncertainty/,
+      /^estimated, illustrative: DE440 publishes no orientation uncertainty/,
     );
-    // The LLR residual is context, never the edge's accuracy.
-    expect(me.note).toMatch(/1\.3 cm rms .*not an orientation accuracy/);
+    expect(me.note).toMatch(/3\.07 × 10⁻⁷ rad .*moon_de440_250416\.tf/);
+    // The library's own statement stays "not stated", and the LLR residual
+    // is context there, never the edge's accuracy.
+    const lib = frames.moonMe.accuracy(Instant.fromTdb(0));
+    expect(lib.radians).toBeUndefined();
+    expect(lib.note).toMatch(/1\.3 cm rms .*not an orientation accuracy/);
     const pa = find(tree, "MOON_PA")!.edge.accuracy;
     expect(pa.byDefinition).toBe(true);
     expect(pa.meters).toBeUndefined();
