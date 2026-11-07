@@ -13,6 +13,13 @@
 .fx-knobs-head {
   align-items: center;
 }
+/* The chip and, without moments, Back beside it, at the head's end. */
+.fx-knobs-head > .fx-checked-chip {
+  margin-inline-start: auto;
+}
+.fx-knobs-head > .fx-back-button {
+  margin-inline-start: calc(-1 * var(--stratakit-space-200));
+}
 /* The checked-setup chip: a status, not a button. */
 .fx-checked-chip {
   display: inline-flex;
@@ -94,10 +101,7 @@
 .fx-knob-help {
   margin: 0;
 }
-/* "Jump to": the moments as buttons, then Back, quieter. */
-.fx-jump {
-  align-items: center;
-}
+/* "Jump to": the moments as buttons, then Back, quieter (the label on the first line's baseline when they wrap). */
 .fx-jump-buttons {
   flex-direction: row;
   flex-wrap: wrap;

@@ -433,30 +433,39 @@ export function attachTimeControls(
   };
   const timeAt = (clientX: number) =>
     dayStart(clock.time) + fractionAt(clientX) * (DAY - MINUTE);
-  let dragging = false;
-  // Where a press began, for a click (no drag) in a marked span.
-  let pressX: number | undefined;
+  // The press on the strip, if one is going on: a drag scrubs, a click in a
+  // marked span jumps to its start (`pressStep`).
+  let press: StripPress | undefined;
   /** The marked span under `clientX` on the shown day, if any. */
   const markUnder = (clientX: number) => {
     const rect = strip.getBoundingClientRect();
     return markAt(marks, dayStart(clock.time), rect.width, clientX - rect.left);
   };
+  const step = (phase: "down" | "move" | "up", clientX: number) => {
+    const next = pressStep(
+      press,
+      phase,
+      clientX,
+      phase === "down" ? markUnder(clientX) : undefined,
+    );
+    press = next.press;
+    if (next.time === "pointer") {
+      clock.time = timeAt(clientX);
+    } else if (next.time !== undefined) {
+      clock.time = next.time;
+    }
+  };
   strip.addEventListener("pointerdown", (e) => {
-    dragging = true;
-    pressX = e.clientX;
     strip.setPointerCapture(e.pointerId);
     clock.mode = "paused";
-    clock.time = timeAt(e.clientX);
+    step("down", e.clientX);
   });
   strip.addEventListener("pointermove", (e) => {
-    if (dragging) {
-      if (pressX !== undefined && Math.abs(e.clientX - pressX) > 3) {
-        pressX = undefined;
-      }
-      clock.time = timeAt(e.clientX);
+    if (press) {
+      step("move", e.clientX);
     }
-    // Over a marked span (not dragging): a click jumps to its start.
-    const mark = dragging ? undefined : markUnder(e.clientX);
+    // Over a marked span (not pressing): a click jumps to its start.
+    const mark = press ? undefined : markUnder(e.clientX);
     strip.style.cursor = mark ? "pointer" : "";
     const f = fractionAt(e.clientX);
     preview.textContent = mark
@@ -466,18 +475,13 @@ export function attachTimeControls(
     preview.hidden = false;
   });
   strip.addEventListener("pointerleave", () => {
-    if (!dragging) {
+    if (!press) {
       preview.hidden = true;
     }
   });
   strip.addEventListener("pointerup", (e) => {
-    dragging = false;
-    // A click in a marked span jumps to its start.
-    const mark = pressX !== undefined ? markUnder(e.clientX) : undefined;
-    pressX = undefined;
-    if (mark) {
-      clock.mode = "paused";
-      clock.time = mark.start;
+    if (press) {
+      step("up", e.clientX);
     }
   });
   strip.addEventListener("keydown", (e) => {
@@ -702,6 +706,51 @@ export function markSpans(
     }
   }
   return out;
+}
+
+/** A press on the day strip (`pressStep`). */
+export interface StripPress {
+  /** Where it went down, px. */
+  x: number;
+  /** The marked span it went down in, if any. */
+  mark: TimeMark | undefined;
+  /** It moved more than `CLICK_SLOP` px: a drag, which scrubs. */
+  dragging: boolean;
+}
+
+/** A press that moves no further than this, px, is a click. */
+export const CLICK_SLOP = 3;
+
+/**
+ * One step of a press on the day strip (pure): the press after it, and
+ * the clock's new time, if it changes: "pointer" for the time under the
+ * pointer, or a mark's start. A press outside a mark scrubs from the
+ * start. A press in a mark writes nothing until it either moves past
+ * `CLICK_SLOP` (a drag: it scrubs) or comes up (a click: the mark's
+ * start), so a click writes the clock once.
+ */
+export function pressStep(
+  press: StripPress | undefined,
+  phase: "down" | "move" | "up",
+  x: number,
+  markUnder?: TimeMark,
+): { press: StripPress | undefined; time?: number | "pointer" } {
+  if (phase === "down") {
+    const next = { x, mark: markUnder, dragging: markUnder === undefined };
+    return next.dragging ? { press: next, time: "pointer" } : { press: next };
+  }
+  if (!press) {
+    return { press };
+  }
+  if (phase === "move") {
+    const dragging = press.dragging || Math.abs(x - press.x) > CLICK_SLOP;
+    return dragging
+      ? { press: { ...press, dragging }, time: "pointer" }
+      : { press };
+  }
+  return !press.dragging && press.mark
+    ? { press: undefined, time: press.mark.start }
+    : { press: undefined };
 }
 
 /**

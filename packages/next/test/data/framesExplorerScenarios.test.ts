@@ -41,7 +41,13 @@ import references from "../../examples/frames-explorer/references.json";
 import {
   checkKind,
   checkRows,
+  type CheckRow,
 } from "../../examples/frames-explorer/scenarios/checks.ts";
+import type { ScenarioEvaluation } from "../../examples/frames-explorer/scenarios/evaluate.ts";
+import {
+  checkRowStrings,
+  checkRowText,
+} from "../../examples/frames-explorer/panel/checkText.ts";
 import { extrasOf } from "../../examples/frames-explorer/panelModel.ts";
 import {
   checkedState,
@@ -205,6 +211,41 @@ const PORTED: readonly ScenarioId[] = [
   "corridor",
 ];
 
+/**
+ * Task 6c: only measured-data rows say "validated", across everything a
+ * row renders (checkRowStrings), with the extras the panel gives it: the
+ * catalog's for its results, the live ones' without their group's words,
+ * and the published counterpart's printed value in its summary.
+ */
+function expectValidatedOnlyMeasured(
+  id: ScenarioId,
+  rows: readonly CheckRow[],
+  e: ScenarioEvaluation,
+): void {
+  const pub = e.answer.published;
+  for (const row of rows) {
+    const r =
+      row.status === "checked" || row.status === "live"
+        ? row.result
+        : undefined;
+    const extras = r ? extrasOf(r) : undefined;
+    if (extras && row.status === "live") {
+      delete extras.compared;
+    }
+    const t = checkRowText(
+      row,
+      r && extras ? { [r.id]: extras } : {},
+      "current",
+      pub && { checkId: pub.checkId, printed: pub.printed, unit: pub.unit },
+    );
+    const text = checkRowStrings(row, t, extras).join(" ");
+    expect(text.length, id).toBeGreaterThan(0);
+    if (row.kind !== "measured") {
+      expect(/\bvalidated\b/i.test(text), `${id}: ${t.title}`).toBe(false);
+    }
+  }
+}
+
 const catalog = new Map<string, StressResult>();
 beforeAll(async () => {
   const ids = PORTED.flatMap((id) => spec(id).checks);
@@ -250,20 +291,9 @@ describe("the ported scenarios through the worker's host", () => {
           // and only measured data says "validated".
           if (r.status === "checked") {
             expect(r.kind, r.result.id).toBe(checkKind(spec(id), r.result.id));
-            const x = extrasOf(r.result);
-            const text = [
-              r.result.title,
-              r.result.detail,
-              r.result.accuracyNote,
-              r.note,
-              x.label,
-              x.compared?.text,
-            ].join(" ");
-            if (r.kind !== "measured") {
-              expect(/\bvalidated\b/i.test(text), r.result.id).toBe(false);
-            }
           }
         }
+        expectValidatedOnlyMeasured(id, rows, e);
       }, 60_000);
 
       it("off its checked setup: live covers every check id the catalog checks without a reference, takes none, and passes", async () => {
@@ -298,6 +328,7 @@ describe("the ported scenarios through the worker's host", () => {
         }
         // Off it, nothing reads as verified: reference rows carry no pass.
         const rows = checkRows(spec(id), false, catalog, e);
+        expectValidatedOnlyMeasured(id, rows, e);
         expect(rows.some((r) => r.status === "checked")).toBe(false);
         expect(rows.filter((r) => r.status === "live")).toHaveLength(
           e.live.length,
@@ -632,6 +663,51 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
     expect(t.published).toContain("56.02 µs/day");
     expect(t.comparison).toMatch(/your setting moves the answer by [+−]/);
     expect(t.comparison).not.toMatch(/passes|fails/);
+  }, 60_000);
+
+  it("the dish's headline has plan 3's light time as its published counterpart, checked by the catalog's light-time check (fix 1)", async () => {
+    const s = spec("dish-tracks");
+    const e = await client.scenario(s.id, s.checked.knobs, checkedTdb(s.id));
+    const pub = e.answer.published!;
+    expect(pub.checkId).toBe("space.dss43-orion.light-time");
+    expect(pub.unit).toBe("s");
+    // signal.json's DSS-43 light time at the checked setup's row.
+    const row = signalFixture.rows.find(
+      (r) => r.kind === "spread" && Math.abs(r.tdb - 828752222.2056508) < 1e-6,
+    )!;
+    expect(pub.value).toBe(row.dss43.CN.lt);
+    // Ours agrees with it within plan 3's 0.5 m of light time.
+    expect(Math.abs(e.answer.value! - pub.value) * 299_792_458).toBeLessThan(
+      0.5,
+    );
+    const r = catalog.get(pub.checkId)!;
+    const t = publishedText({
+      printed: pub.printed,
+      document: pub.document,
+      tolerance: pub.tolerance,
+      unit: pub.unit,
+      state: "checked",
+      ours: e.answer.value!,
+      difference: { value: r.value!, unit: r.unit! },
+      pass: r.pass,
+    });
+    expect(t.published).toMatch(
+      /^Published: 1\.3152565\d\d s one way at DSS-43/,
+    );
+    expect(t.comparison).toMatch(
+      /^ours 1\.31525\d s · difference \d+ mm · c·∆lt within 0\.5 m at each of its rows · passes$/,
+    );
+    // Off it (another station): the published value applies at the checked setup.
+    const off = await client.scenario(
+      s.id,
+      { ...s.checked.knobs, station: "DSS-14" },
+      checkedTdb(s.id),
+    );
+    const rows = checkRows(s, false, catalog, off);
+    const ref = rows.find(
+      (x) => x.status === "reference-only" && x.id === pub.checkId,
+    );
+    expect(ref?.status).toBe("reference-only");
   }, 60_000);
 
   it("only stand-on-moon's headline has a published counterpart among the ported three (and the two on the ground)", async () => {

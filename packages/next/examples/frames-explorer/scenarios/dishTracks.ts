@@ -32,6 +32,7 @@ import {
   type StressResult,
 } from "../stress/runner.ts";
 import { overlayMesh, polyline } from "../overlays.ts";
+import signalFixture from "../../../test/fixtures/frames/signal.json";
 import { STATIONS_SPK, orion } from "../stress/shared.ts";
 import {
   registerScenario,
@@ -54,7 +55,7 @@ import {
   pointingByHand,
   pointingText,
 } from "./pointing.ts";
-import { dsnMask } from "./dsnMasks.ts";
+import { MASK_SOURCE, dsnMask } from "./dsnMasks.ts";
 import { maskAt } from "./horizonMask.ts";
 import { DSN_STATIONS, type StationId, stationOf } from "./scenes.ts";
 import type { KnobState } from "./spec.ts";
@@ -124,6 +125,30 @@ function noOrion(ctx: StressContext): string {
       .toISOString()
       .slice(0, 10);
   return `No Orion data at this time: its OEM covers ${day(o.spans[0]![0])} to ${day(o.spans.at(-1)![1])}, with short gaps between segments. Move the clock into that span to see the answer.`;
+}
+
+/**
+ * The headline's published counterpart (Task 6c fix 1, the controller's
+ * ruling): plan 3's SPICE fixture's one-way light time at DSS-43 for the
+ * checked setup's row (signal.json's "spread" row nearest `checkedTdb`),
+ * which space.dss43-orion.light-time compares ours with at every row.
+ */
+function publishedLight(
+  checkedTdb: number,
+): NonNullable<ScenarioEvaluation["answer"]["published"]> {
+  const row = signalFixture.rows.reduce((best, r) =>
+    Math.abs(r.tdb - checkedTdb) < Math.abs(best.tdb - checkedTdb) ? r : best,
+  );
+  const lt = row.dss43.CN.lt;
+  return {
+    value: lt,
+    unit: "s",
+    printed: `${lt.toFixed(9)} s one way at DSS-43 (CN, no Shapiro delay), signal.json's "${row.kind}" row`,
+    document:
+      "Plan 3's SPICE fixture, test/fixtures/frames/signal.json (NAIF SPICE spkpos)",
+    checkId: "space.dss43-orion.light-time",
+    tolerance: "c·∆lt within 0.5 m at each of its rows",
+  };
 }
 
 /** The checked setup's light time, s, once per frame tree. */
@@ -532,6 +557,12 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       ...(!(behindMoon || belowHorizon) && {
         value: leg.lightTime,
         unit: "s",
+        published: publishedLight(
+          Instant.fromUtc(
+            Date.parse(SPEC.checked.epochUtc),
+            f.data.leapSeconds,
+          ).tdb(),
+        ),
       }),
       accuracy:
         statement.meters !== undefined
@@ -583,6 +614,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     ),
     maskCheck: {
       label: `${id}'s published receive mask`,
+      source: MASK_SOURCE,
       from: position,
       samples: MASK_CHECK.map((a) => ({
         azimuth: a,
@@ -636,6 +668,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       .map((w) => ({
         id: "behind-moon",
         label: "Behind the Moon",
+        icon: "moon" as const,
         // A minute before the network loses Orion.
         utcMs: Instant.fromTdb(w.start - 60).toUtc(f.data.leapSeconds),
       })),

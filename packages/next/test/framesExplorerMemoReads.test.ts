@@ -30,6 +30,8 @@ import { scenarioView } from "../examples/frames-explorer/scenarioModel.ts";
 import type { ScenarioEvaluation } from "../examples/frames-explorer/scenarios/evaluate.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
 import { buildTree, type TreeNode } from "../examples/frames-explorer/tree.ts";
+import { equalOn } from "../examples/frames-explorer/panel/memo.ts";
+import { share } from "../examples/frames-explorer/share.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import { Instant } from "../src/time/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
@@ -96,7 +98,16 @@ const evaluation: ScenarioEvaluation = {
   overlays: [],
   live: [result],
   // A moment, so the knobs' "Jump to" renders its button (Task 6c).
-  presets: [{ id: "behind-moon", label: "Behind the Moon", utcMs: 0 }],
+  presets: [
+    { id: "behind-moon", label: "Behind the Moon", utcMs: 0, icon: "moon" },
+  ],
+  // A mask check, so a measured-data row renders (Task 6c fix 1).
+  maskCheck: {
+    label: "DSS-43's published receive mask",
+    source: { document: "DSN 810-005" },
+    from: [0, 0, 0],
+    samples: [{ azimuth: 0, elevation: 6, to: [1, 0, 0] }],
+  },
 } as unknown as ScenarioEvaluation;
 
 function view(over: Partial<ScenarioHostState> = {}): ScenarioPanelView {
@@ -125,6 +136,14 @@ function view(over: Partial<ScenarioHostState> = {}): ScenarioPanelView {
     rate: 3600,
     eop: { kind: "predicted", ageDays: 3.2 },
     sceneNote: "The scene's note.",
+    terrain: [
+      {
+        id: "mask-check",
+        state: "clear",
+        text: "Our terrain against the mask",
+        mask: { azimuths: 1, below: 1, above: 0, unsure: 0 },
+      },
+    ],
     scrub: (t) => t,
   });
 }
@@ -145,6 +164,8 @@ const views = (): ScenarioPanelView[] => [
     staleBy: [],
     knobs: spec.checked.knobs,
   }),
+  // No moments: Back sits in the knobs' head (fix 1).
+  view({ evaluation: { ...evaluation, presets: [] } }),
 ];
 
 const noop = () => {};
@@ -225,6 +246,37 @@ describe("what each memoized part reads is on its compared list (Task 4d)", () =
       ).toEqual([]);
       expect([...rowRec.reads]).toEqual([]);
     }
+  });
+
+  it("Knobs keeps still across a reply whose moments are equal in value (fix 1)", () => {
+    // Each reply's evaluation brings fresh arrays; the model's structural
+    // sharing (share.ts, page.ts) hands back the last ones where equal.
+    const a = view();
+    const fresh = view({
+      evaluation: {
+        ...evaluation,
+        presets: evaluation.presets!.map((p) => ({ ...p })),
+      },
+    });
+    expect(fresh.presets).not.toBe(a.presets);
+    const b = share(a, fresh);
+    expect(b.presets).toBe(a.presets);
+    const same = equalOn<{ scenario: ScenarioPanelView }, "scenario">(
+      "scenario",
+      KNOBS_READS,
+    );
+    expect(same({ scenario: a }, { scenario: b })).toBe(true);
+    // A moment that moved renders it again.
+    const moved = share(
+      a,
+      view({
+        evaluation: {
+          ...evaluation,
+          presets: [{ ...evaluation.presets![0]!, utcMs: 60_000 }],
+        },
+      }),
+    );
+    expect(same({ scenario: a }, { scenario: moved })).toBe(false);
   });
 
   it("a diagram pill's comparator sees a change in every prop", () => {

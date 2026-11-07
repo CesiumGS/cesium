@@ -7,9 +7,25 @@ import type { HorizonMask } from "./horizonMask.ts";
 const ENTRY = (
   references.entries as unknown as Record<
     string,
-    { receive: Record<string, readonly string[]> }
+    {
+      receive: Record<string, readonly string[]>;
+      source: { document: string; revision?: string; figures?: string };
+    }
   >
 )["dsn-horizon-masks"]!;
+
+/** The masks' citation, as the dish's Checks row gives it (Task 6c fix 1). */
+export const MASK_SOURCE: {
+  document: string;
+  publisher: string;
+  locator?: string;
+} = {
+  document: ENTRY.source.document,
+  publisher: "NASA JPL, Deep Space Network",
+  ...(ENTRY.source.figures !== undefined && {
+    locator: ENTRY.source.figures,
+  }),
+};
 
 /** The published receive mask of `station` ("DSS-43"), as numbers. */
 export function dsnMask(station: string): HorizonMask {

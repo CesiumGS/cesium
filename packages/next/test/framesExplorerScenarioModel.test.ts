@@ -90,6 +90,26 @@ describe("publishedView", () => {
     ).toBe("loading");
   });
 
+  it("takes ours from the answer where the check has no effect of its own (the dish's light time, fix 1)", () => {
+    const light = new Map([
+      [
+        PUB.checkId,
+        result({ id: PUB.checkId, pass: true, value: 0.45, unit: "m" }),
+      ],
+    ]);
+    const v = publishedView(PUB, light, true, "current", [], 1.315257);
+    expect(v.published).toMatchObject({
+      state: "checked",
+      ours: 1.315257,
+      difference: { value: 0.45, unit: "m" },
+      pass: true,
+    });
+    // An effect, where there is one, is ours.
+    expect(
+      publishedView(PUB, checked, true, "current", [], 1).published,
+    ).toMatchObject({ ours: 56.03 });
+  });
+
   it("is off, never checked, away from the checked setup", () => {
     const v = publishedView(PUB, checked, false, "current", [
       {
@@ -133,6 +153,75 @@ describe("scenarioView", () => {
     expect(v.checks).toHaveLength(spec.checks.length);
     expect(v).not.toHaveProperty("published");
     expect(v).not.toHaveProperty("route");
+  });
+
+  it("gives the dish a measured-data row from its mask check, on and off the checked setup (fix 1)", () => {
+    const spec = SCENARIOS.find((s) => s.id === "dish-tracks")!;
+    const evaluation = {
+      scenario: "dish-tracks",
+      added: [],
+      answer: {
+        label: "one way",
+        headline: "x",
+        value: 1.3152,
+        unit: "s",
+        accuracy: { meters: 10, note: "n" },
+      },
+      overlays: [],
+      live: [],
+      maskCheck: {
+        label: "DSS-14's published receive mask",
+        source: { document: "DSN 810-005" },
+        from: [0, 0, 0],
+        samples: [0, 45, 90].map((azimuth) => ({
+          azimuth,
+          elevation: 6,
+          to: [1, 0, 0],
+        })),
+      },
+    } as const;
+    for (const atChecked of [true, false]) {
+      const knobs = atChecked
+        ? spec.checked.knobs
+        : { ...spec.checked.knobs, station: "DSS-14" };
+      const at = Date.parse(spec.checked.epochUtc);
+      const v = scenarioView({
+        st: {
+          spec,
+          knobs,
+          epochUtcMs: at,
+          atChecked,
+          changed: atChecked ? [] : ["station"],
+          status: "ready",
+          evaluation: evaluation as never,
+          evaluatedAt: { knobs, epochUtcMs: at },
+          stale: false,
+          staleBy: [],
+          generation: 2,
+        },
+        results: [],
+        tree: undefined,
+        playing: false,
+        rate: 1,
+        terrain: [
+          {
+            id: "mask-check",
+            state: "may-block",
+            text: "Our terrain against DSS-14's mask: can't tell",
+            mask: { azimuths: 3, below: 1, above: 0, unsure: 2 },
+          },
+        ],
+        scrub: (t) => t,
+      });
+      const row = v.checks.at(-1)!;
+      expect(row).toMatchObject({
+        status: "page",
+        kind: "measured",
+        check: { outcome: "unsure" },
+      });
+      // Never "reference applies at the checked setup": the mask is the station's.
+      expect(v.checks.filter((r) => r.status === "page")).toHaveLength(1);
+    }
   });
 });
 

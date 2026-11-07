@@ -13,7 +13,14 @@ import type { ResultExtras } from "./model.ts";
 const rowName = (r: StressResult, extras?: ResultExtras) =>
   extras?.label ?? r.title;
 
-export type CheckTone = "pass" | "fail" | "reference" | "loading" | "stale";
+export type CheckTone =
+  | "pass"
+  | "fail"
+  | "reference"
+  | "loading"
+  | "stale"
+  /** Can't tell (the mask's comparison inside our terrain's error): never the pass tone. */
+  | "unsure";
 
 /** Each kind's tag (short, on a row) and its name (the legend's). */
 export const KIND_TEXT: Readonly<
@@ -62,7 +69,11 @@ export interface CheckRowText {
     | "Not judged here"
     | "Loading"
     | "Updating"
-    | "Following";
+    | "Following"
+    // A check against measured data, judged on the page (the dish's mask).
+    | "Consistent"
+    | "Rises above the mask"
+    | "Can't tell";
   tone: CheckTone;
   /** One short line under the title: the value against its tolerance, or the delta. */
   summary: string;
@@ -98,7 +109,12 @@ export function checkRowText(
   published?: { checkId: string; printed: string; unit: string },
 ): CheckRowText {
   const own = rowText(row, extras, published);
-  if (freshness === "current" || row.status === "pending") {
+  if (
+    freshness === "current" ||
+    row.status === "pending" ||
+    // The mask is the station's: the clock moving doesn't touch it.
+    (row.status === "page" && freshness === "following")
+  ) {
     return own;
   }
   const following = freshness === "following";
@@ -191,6 +207,25 @@ function rowText(
           ? `${REFERENCE_APPLIES}; your setting moves the answer by ${formatDelta(row.delta.value, row.delta.unit)}`
           : `${REFERENCE_APPLIES}; not judged at your setting`,
       };
+    case "page": {
+      const c = row.check;
+      const [status, tone]: [CheckRowText["status"], CheckTone] =
+        c.outcome === "consistent"
+          ? ["Consistent", "pass"]
+          : c.outcome === "above"
+            ? ["Rises above the mask", "fail"]
+            : c.outcome === "unsure"
+              ? ["Can't tell", "unsure"]
+              : ["Loading", "loading"];
+      return {
+        key: `page:${c.id}`,
+        kind: row.kind,
+        title: c.title,
+        status,
+        tone,
+        summary: c.summary,
+      };
+    }
     case "pending":
       return {
         key: `pending:${row.id}`,
@@ -201,4 +236,49 @@ function rowText(
         summary: "the check is running",
       };
   }
+}
+
+/**
+ * Every string a check row can render, collapsed or expanded (Checks.tsx
+ * `CheckItem` and its details): its head, its note, the page check's
+ * comparison and citation, and its result's title, detail, accuracy (note,
+ * terms, warnings), effect, error, label, comparison and reference. The
+ * guard that only measured data says "validated" reads all of it.
+ */
+export function checkRowStrings(
+  row: CheckRow,
+  t: CheckRowText,
+  extras: ResultExtras | undefined,
+): string[] {
+  const out: (string | undefined)[] = [t.title, t.status, t.summary];
+  if (row.status === "checked") {
+    out.push(row.note);
+  }
+  if (row.status === "page") {
+    const c = row.check;
+    out.push(c.title, c.summary, c.text);
+    out.push(c.source.document, c.source.publisher, c.source.locator);
+  }
+  if (row.status === "pending" || row.status === "reference-only") {
+    out.push(row.title);
+  }
+  const r =
+    row.status === "checked" || row.status === "live" ? row.result : t.result;
+  if (r) {
+    out.push(r.title, r.detail, r.accuracyNote, r.error, r.effect?.label);
+    for (const term of r.accuracy?.terms ?? []) {
+      out.push(term.note);
+    }
+    out.push(...(r.accuracy?.warnings ?? []));
+  }
+  if (extras) {
+    out.push(extras.label, extras.accuracyNote, extras.relative);
+    out.push(extras.compared?.text);
+    out.push(
+      extras.source?.document,
+      extras.source?.publisher,
+      extras.source?.locator,
+    );
+  }
+  return out.filter((x): x is string => typeof x === "string" && x !== "");
 }

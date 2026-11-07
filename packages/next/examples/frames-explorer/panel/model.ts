@@ -10,7 +10,7 @@ import type {
   GroupInfo,
   TraceStep,
 } from "../stress/groupInfo.ts";
-import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
+import type { Moment, ScenarioAnswer } from "../scenarios/evaluate.ts";
 import type { CheckRow } from "../scenarios/checks.ts";
 import type { PublishedView } from "./answerText.ts";
 import type { SceneLegendRow } from "./legendRows.ts";
@@ -250,7 +250,7 @@ export interface ScenarioPanelView {
   /** Its lines of sight over the drawn terrain, the local horizon (sightLines.ts, Task 6b). */
   terrain?: readonly TerrainSightView[];
   /** Moments the scenario offers to jump the clock to ("Behind the Moon"), UTC ms. */
-  presets?: readonly { id: string; label: string; utcMs: number }[];
+  presets?: readonly Moment[];
   /** The knob the tree drives (one-path's frame): its nodes are the choices. */
   treeControl?: {
     knob: string;
@@ -283,6 +283,8 @@ export interface TerrainSightView {
   meters?: number;
   /** Share of the path over unknown terrain, 0 to 1. */
   unknownFraction?: number;
+  /** A mask check's counts (sightLines.ts `maskCheckText`). */
+  mask?: { azimuths: number; below: number; above: number; unsure: number };
 }
 
 /** One line of the report's environment (R15). */

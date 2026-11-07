@@ -9,12 +9,18 @@ import type { ScenarioEvaluation } from "../examples/frames-explorer/scenarios/e
 import {
   checkKind,
   checkRows,
+  groupOf,
   isMeasuredReference,
+  maskCheckRow,
+  type MaskView,
   type CheckKind,
   type CheckRow,
 } from "../examples/frames-explorer/scenarios/checks.ts";
 import { extrasOf } from "../examples/frames-explorer/panelModel.ts";
-import { checkRowText } from "../examples/frames-explorer/panel/checkText.ts";
+import {
+  checkRowStrings,
+  checkRowText,
+} from "../examples/frames-explorer/panel/checkText.ts";
 import type { ScenarioSpec } from "../examples/frames-explorer/scenarios/spec.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
 import type { StressResult } from "../examples/frames-explorer/tests.ts";
@@ -126,8 +132,9 @@ describe("checkRows at the checked setup", () => {
     const rows = checkRows(SPEC, true, catalog, evaluation());
     expect(rows).toEqual([
       { status: "checked", kind: "published", result: CATALOG.get("ref.a") },
-      // Not in yet: its kind from its id alone (no group says otherwise).
-      { status: "pending", kind: "roundTrip", id: "ref.b", title: "ref.b" },
+      // Not in yet, and nothing says what it compares with: taken as
+      // reference-backed, as checkRows takes it off the checked setup.
+      { status: "pending", kind: "published", id: "ref.b", title: "ref.b" },
       {
         status: "checked",
         kind: "roundTrip",
@@ -370,24 +377,144 @@ describe("each check's kind (Task 6c)", () => {
     for (const spec of SCENARIOS) {
       for (const id of spec.checks) {
         const kind = checkKind(spec, id);
-        const r = { ...result(id), group: id.slice(0, id.indexOf(".")) };
+        const r = { ...result(id), group: groupOf(id) };
         const extras = extrasOf(r);
-        const row: CheckRow = { status: "checked", kind, result: r };
+        const note = spec.checkNotes?.[id];
+        const row: CheckRow = {
+          status: "checked",
+          kind,
+          result: r,
+          ...(note !== undefined && { note }),
+        };
         const t = checkRowText(row, { [id]: extras });
-        const text = [
-          spec.checkNotes?.[id],
-          extras.label,
-          extras.compared?.text,
-          extras.accuracyNote,
-          t.title,
-          t.status,
-          t.summary,
-        ].join(" ");
+        const text = checkRowStrings(row, t, extras).join(" ");
         if (kind !== "measured") {
           expect(validated.test(text), `${spec.id} ${id}`).toBe(false);
         }
       }
     }
+  });
+});
+
+describe("checkKind's fallbacks (fix 1)", () => {
+  it("takes an id nothing says anything about as reference-backed, as checkRows does off the checked setup", () => {
+    expect(checkKind({}, "nowhere.at-all")).toBe("published");
+    expect(checkKind({}, "nodot")).toBe("published");
+    const spec = { ...SPEC, checks: ["nowhere.at-all"] };
+    const off = checkRows(spec, false, new Map(), evaluation());
+    expect(off[0]).toMatchObject({
+      status: "reference-only",
+      kind: "published",
+    });
+    const at = checkRows(spec, true, new Map(), evaluation());
+    expect(at[0]).toMatchObject({ status: "pending", kind: "published" });
+  });
+
+  it("reads a group from an id without a dot whole, not one character short", () => {
+    expect(groupOf("frame-tree")).toBe("frame-tree");
+    expect(groupOf("frame-tree.compositions.x")).toBe("frame-tree");
+    // A bare group id gets its group's comparison (round trips).
+    expect(checkKind({}, "frame-tree")).toBe("roundTrip");
+  });
+});
+
+describe("the dish's measured-data row (fix 1): our terrain against the DSN's mask", () => {
+  const check = {
+    label: "DSS-43's published receive mask",
+    samples: 8,
+    source: { document: "DSN 810-005, Module 301", publisher: "NASA JPL" },
+  };
+  const view = (
+    state: MaskView["state"],
+    mask?: MaskView["mask"],
+  ): MaskView => ({
+    state,
+    text: `Our terrain against DSS-43's published receive mask (measured data), at 8 azimuths: ${state}`,
+    ...(mask && { mask }),
+    meters: 38,
+  });
+  const words = (row: CheckRow) => checkRowText(row, {});
+  const validated = /\bvalidated\b/i;
+
+  it("is of the measured kind whatever its outcome", () => {
+    for (const v of [
+      undefined,
+      view("waiting"),
+      view("clear", { azimuths: 8, below: 8, above: 0, unsure: 0 }),
+      view("blocked", { azimuths: 8, below: 6, above: 2, unsure: 0 }),
+      view("may-block", { azimuths: 8, below: 0, above: 0, unsure: 8 }),
+      view("unknown"),
+    ]) {
+      const row = maskCheckRow(check, v);
+      expect(row.kind).toBe("measured");
+      expect(row.status).toBe("page");
+    }
+  });
+
+  it("says Consistent, and validated, only where our terrain lies below the mask everywhere", () => {
+    const t = words(
+      maskCheckRow(
+        check,
+        view("clear", { azimuths: 8, below: 8, above: 0, unsure: 0 }),
+      ),
+    );
+    expect(t.status).toBe("Consistent");
+    expect(t.tone).toBe("pass");
+    expect(t.summary).toMatch(validated);
+    expect(t.title).toBe(
+      "Our terrain horizon vs DSS-43's published receive mask, 8 azimuths",
+    );
+  });
+
+  it("never passes when it can't tell, nor over terrain not traced (Review Focus 2), and says what it compared", () => {
+    for (const v of [
+      view("may-block", { azimuths: 8, below: 0, above: 0, unsure: 8 }),
+      view("unknown"),
+    ]) {
+      const row = maskCheckRow(check, v);
+      const t = words(row);
+      expect(t.status).toBe("Can't tell");
+      expect(t.tone).toBe("unsure");
+      expect(checkRowStrings(row, t, undefined).join(" ")).not.toMatch(
+        validated,
+      );
+    }
+    const loading = words(maskCheckRow(check, undefined));
+    expect(loading.status).toBe("Loading");
+    expect(loading.tone).toBe("loading");
+    expect(words(maskCheckRow(check, view("waiting"))).status).toBe("Loading");
+  });
+
+  it("says where our terrain rises above the mask, without validated", () => {
+    const row = maskCheckRow(
+      check,
+      view("blocked", { azimuths: 8, below: 6, above: 2, unsure: 0 }),
+    );
+    const t = words(row);
+    expect(t.status).toBe("Rises above the mask");
+    expect(t.tone).toBe("fail");
+    expect(t.summary).toBe(
+      "our terrain rises above the published mask at 2 of 8 azimuths",
+    );
+    expect(checkRowStrings(row, t, undefined).join(" ")).not.toMatch(validated);
+  });
+
+  it("keeps its verdict while the clock plays (the mask is the station's), and withholds it while a new setup is worked out", () => {
+    const row = maskCheckRow(
+      check,
+      view("clear", { azimuths: 8, below: 8, above: 0, unsure: 0 }),
+    );
+    expect(checkRowText(row, {}, "following").status).toBe("Consistent");
+    const stale = checkRowText(row, {}, "updating");
+    expect(stale.status).toBe("Updating");
+    expect(stale.summary).not.toMatch(validated);
+  });
+
+  it("joins the row's citation into what the guard reads", () => {
+    const row = maskCheckRow(check, undefined);
+    const all = checkRowStrings(row, words(row), undefined);
+    expect(all).toContain("DSN 810-005, Module 301");
+    expect(all).toContain("NASA JPL");
   });
 });
 

@@ -125,6 +125,12 @@ export function maskCheckText(
     id: "mask-check",
     state:
       above.length > 0 ? "blocked" : unsure.length > 0 ? "may-block" : "clear",
+    mask: {
+      azimuths: results.length,
+      below: below.length,
+      above: above.length,
+      unsure: unsure.length,
+    },
     text: `Our terrain against ${label} (measured data), at ${results.length} azimuths: ${below.length} below the mask${below.length ? ` (${at(below)})` : ""}; ${above.length} where it rises above the mask${above.length ? ` (${at(above)})` : ""}; ${unsure.length} it can't tell${unsure.length ? ` (${at(unsure)}: within our terrain's ±${length(err)}, or not drawn)` : ""}.`,
     ...(err > 0 && { meters: err }),
   };
@@ -239,7 +245,18 @@ export function createSightLines(deps: {
         : v;
     });
     const check = deps.maskCheck?.();
-    if (check && target && globe) {
+    if (check && !(target && globe)) {
+      // Not traced: loading while the terrain globe comes, and "can't
+      // tell" (never clear) where this view has none or it failed.
+      views.push({
+        id: "mask-check",
+        state:
+          shown === "ellipsoid" || deps.globeProblem() !== undefined
+            ? "unknown"
+            : "waiting",
+        text: `Our terrain against ${check.label}: not traced, ${why ?? "waiting for the terrain"}.`,
+      });
+    } else if (check && target && globe) {
       const results = check.samples.map((x) => {
         const placed = placeObserver(
           { from: check.from, to: x.to },

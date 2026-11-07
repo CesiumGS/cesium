@@ -79,7 +79,9 @@ function kindOfComparison(c: Comparison | undefined): CheckKind {
  * cites (measured or published) or what it is compared with; without one
  * yet, what its result id says it is compared with (content.ts, its
  * group's). The data test holds the last to the second, so a loading row
- * never changes its kind when its result comes in.
+ * never changes its kind when its result comes in. An id nothing says
+ * anything about is taken as reference-backed, `published`, as `checkRows`
+ * takes it off the checked setup.
  */
 export function checkKind(
   spec: Pick<ScenarioSpec, "checkKinds">,
@@ -94,11 +96,108 @@ export function checkKind(
   if (source !== undefined && source.input !== true) {
     return isMeasuredReference(source.reference) ? "measured" : "published";
   }
-  const group = result?.group ?? id.slice(0, id.indexOf("."));
-  return kindOfComparison(comparedFor(id, groupInfo(group)?.compared ?? NONE));
+  const compared = comparedFor(
+    id,
+    groupInfo(result?.group ?? groupOf(id))?.compared ?? UNKNOWN,
+  );
+  return compared === UNKNOWN ? "published" : kindOfComparison(compared);
 }
 
-const NONE: Comparison = { kind: "independent", text: "" };
+/** A result id's group: the part before its first dot (all of an id without one). */
+export const groupOf = (id: string): string => {
+  const dot = id.indexOf(".");
+  return dot < 0 ? id : id.slice(0, dot);
+};
+
+/** No comparison known for an id: neither its own (content.ts) nor its group's. */
+const UNKNOWN: Comparison = { kind: "independent", text: "" };
+
+/**
+ * A check against measured data that the page judges itself (Fix round 1):
+ * the dish's terrain horizon against the DSN's published receive mask,
+ * traced over the drawn terrain (sightLines.ts `maskCheckText`). The mask
+ * is the station's and doesn't move with the time, so it is judged at any
+ * station that has one, on or off the checked setup.
+ */
+export interface PageCheck {
+  id: string;
+  title: string;
+  /**
+   * Consistent: our terrain lies below the mask at every azimuth. Above:
+   * it rises above the mask somewhere. Unsure: inside our terrain's error,
+   * or over terrain not drawn (never clear, Review Focus 2). Loading: not
+   * traced yet.
+   */
+  outcome: "consistent" | "above" | "unsure" | "loading";
+  /** One short line under the title. */
+  summary: string;
+  /** The whole comparison, for the row's details. */
+  text: string;
+  /** The terrain's error at the levels crossed, m, when known. */
+  meters?: number;
+  /** The published mask's citation. */
+  source: { document: string; publisher?: string; locator?: string };
+}
+
+/** The page's trace of the mask, as `maskCheckText` (sightLines.ts) gives it. */
+export interface MaskView {
+  state: "clear" | "blocked" | "may-block" | "unknown" | "waiting";
+  text: string;
+  meters?: number;
+  mask?: { azimuths: number; below: number; above: number; unsure: number };
+}
+
+/**
+ * The dish's measured-data row from the evaluation's `maskCheck` and the
+ * page's trace of it (`view`, undefined until traced). "Validated" only
+ * when consistent; otherwise it says what was compared.
+ */
+export function maskCheckRow(
+  check: { label: string; samples: number; source: PageCheck["source"] },
+  view: MaskView | undefined,
+): CheckRow {
+  const n = check.samples;
+  const base = {
+    id: "mask-check",
+    title: `Our terrain horizon vs ${check.label}, ${n} azimuths`,
+    source: check.source,
+    ...(view?.meters !== undefined && { meters: view.meters }),
+  };
+  const m = view?.mask;
+  let page: PageCheck;
+  if (view === undefined || view.state === "waiting") {
+    page = {
+      ...base,
+      outcome: "loading",
+      summary: "tracing our terrain along the mask",
+      text: view?.text ?? "Our terrain isn't traced along the mask yet.",
+    };
+  } else if (view.state === "clear") {
+    page = {
+      ...base,
+      outcome: "consistent",
+      summary: `validated against the published mask: our terrain lies below it at all ${m?.azimuths ?? n} azimuths`,
+      text: view.text,
+    };
+  } else if (view.state === "blocked") {
+    page = {
+      ...base,
+      outcome: "above",
+      summary: `our terrain rises above the published mask at ${m?.above ?? "some"} of ${m?.azimuths ?? n} azimuths`,
+      text: view.text,
+    };
+  } else {
+    page = {
+      ...base,
+      outcome: "unsure",
+      summary: m
+        ? `compared at ${m.azimuths} azimuths: ${m.unsure} within our terrain's error or not drawn, ${m.below} below the mask`
+        : view.text,
+      text: view.text,
+    };
+  }
+  return { status: "page", kind: "measured", check: page };
+}
 
 export type CheckRow =
   | {
@@ -111,6 +210,8 @@ export type CheckRow =
   /** At the checked setup: a check id the catalog hasn't given yet. No pass. */
   | { status: "pending"; kind: CheckKind; id: string; title: string }
   | { status: "live"; kind: "live"; result: StressResult }
+  /** Judged on the page, against measured data (`maskCheckRow`). */
+  | { status: "page"; kind: "measured"; check: PageCheck }
   | {
       status: "reference-only";
       kind: CheckKind;

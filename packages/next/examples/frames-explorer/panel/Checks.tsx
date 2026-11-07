@@ -13,6 +13,7 @@
 import { CircularProgress, Link, Typography } from "@mui/material";
 import { svgChevronRight } from "@stratakit/icons/chevron-right";
 import { svgClock } from "@stratakit/icons/clock";
+import { svgHelp } from "@stratakit/icons/help";
 import { svgInfo } from "@stratakit/icons/info";
 import { svgStatusError } from "@stratakit/icons/status-error";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
@@ -22,10 +23,11 @@ import {
   CHECK_KINDS,
   type CheckKind,
   type CheckRow,
+  type PageCheck,
 } from "../scenarios/checks.ts";
 import type { StressResult } from "../tests.ts";
 import { formatDelta } from "./answerText.ts";
-import { quantity } from "./format.ts";
+import { length, quantity } from "./format.ts";
 import { webLink } from "./Inspector.tsx";
 import type { ResultExtras } from "./model.ts";
 import { AccuracyText } from "./parts.tsx";
@@ -75,7 +77,28 @@ function StatusIcon({ tone }: { tone: CheckRowText["tone"] }) {
       return <CircularProgress size={14} className="fx-check-icon" />;
     case "stale":
       return <Icon href={svgClock} className="fx-check-icon" />;
+    case "unsure":
+      return <Icon href={svgHelp} className="fx-check-icon" />;
   }
+}
+
+/** A page check's details: the whole comparison, its terrain's error and the mask's citation. */
+function PageDetails({ check }: { check: PageCheck }) {
+  return (
+    <dl className="fx-check-details">
+      <Detail label="Compared">{check.text}</Detail>
+      <Detail label="Accuracy">
+        {check.meters !== undefined
+          ? `our terrain ±${length(check.meters)} at the levels crossed; terrain not drawn is never taken as clear`
+          : "terrain not drawn is never taken as clear"}
+      </Detail>
+      <Detail label="Reference">
+        {check.source.document}
+        {check.source.publisher && `, ${check.source.publisher}`}
+        {check.source.locator && `; ${check.source.locator}`}
+      </Detail>
+    </dl>
+  );
 }
 
 function Detail({
@@ -263,7 +286,9 @@ export const CheckItem = memo(
             </Typography>
           )}
           {expanded &&
-            (t.result ? (
+            (row.status === "page" ? (
+              <PageDetails check={row.check} />
+            ) : t.result ? (
               <ResultDetails
                 result={t.result}
                 extras={extras}

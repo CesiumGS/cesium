@@ -390,11 +390,13 @@ Nothing opens in a sheet.
   column of one width and its control beside it, wrapping under the label
   at narrow widths (a range's checked value marked on its track, its value
   at the track's end; a rate over three decades on a log track; a choice as
-  a segmented control naming its full label below); then **Jump to**: the
-  scenario's moments as outlined buttons with an icon ("Behind the Moon",
-  the dish's), and **Back to the checked setup** as a quieter text button,
-  disabled at the checked setup. A moment is a button, never a chip: the
-  chip is a status.
+  a segmented control naming its full label below); then, where the
+  scenario has moments, **Jump to**: its moments as outlined buttons with
+  the icon its evaluator declares ("Behind the Moon", the dish's, with the
+  Moon), and **Back to the checked setup** as a quieter text button,
+  disabled at the checked setup. Without moments there is no Jump to row:
+  Back sits in the head beside the chip (fix 1). A moment is a button,
+  never a chip: the chip is a status.
   No time row (the owner, 2026-11-06: redundant with the viewer's timeline,
   the only time control): the time is still part of the checked setup, so
   the marker names it when it moved ("time 2026-04-07 04:00 UTC (checked:
@@ -416,13 +418,27 @@ Nothing opens in a sheet.
   **Round trip** (two routes or a there-and-back that agree) and **Live**
   re-run (off the checked setup). A kind is derived from the result (the
   reference it cites, measured or not, else what it is compared with,
-  content.ts) and named in the spec (`checkKinds`) where it can't be. The
-  statuses: Checked, Failed, Not judged here (its line: "Reference applies
-  at the checked setup; your setting moves the answer by …"), Loading,
-  Updating, Following. Kind and status stay apart: the kind tints
+  content.ts) and named in the spec (`checkKinds`) where it can't be; an
+  id nothing says anything about is taken as published, reference-backed,
+  as off the checked setup. The statuses: Checked, Failed, Not judged here
+  (its line: "Reference applies at the checked setup; your setting moves
+  the answer by …"), Loading, Updating, Following. The dish adds one
+  **Measured** row the page judges itself (fix 1): our terrain horizon
+  against the DSN's published receive mask at eight azimuths
+  (`maskCheckRow`, from sightLines.ts `maskCheckText`), with its own
+  statuses: Consistent (the only words that say "validated"), Rises above
+  the mask, Can't tell (inside our terrain's error, or terrain not drawn:
+  never the pass tone, never clear) and Loading. The mask is the
+  station's, so the row is judged at any station, on or off the checked
+  setup, and keeps its verdict while the clock plays; the answer no longer
+  repeats it. One helper, `checkRowStrings`, joins everything a row
+  renders, and the tests hold "validated" to measured rows at the checked
+  setup and off it. Kind and status stay apart: the kind tints
   (`tokens.css` `--fx-kind-*`, purple, teal, pink, blue, warm grey, each
   6.3:1 or more in both schemes) are none of the pass, fail or warning
-  hues, and neither is colour alone. The row unfolds in place into its
+  hues, and neither is colour alone. They are the panel's second exception
+  to StrataKit's tokens: StrataKit has no categorical palette, its only
+  hues being its statuses. The row unfolds in place into its
   difference against its tolerance, what it is compared against, its
   reference and source, and its accuracy. A catalog row offers one
   labelled "Open in Verification".
@@ -450,7 +466,8 @@ binds over the bullets above where they differ:
 - **The headline answers the question on its own**: "1.40 km/s relative to
   the Moon (MOON_ME)", "357.70° east of GCRF's x axis", "55.99 µs/day fast,
   against a clock on the Earth", the same on the globe's callout. Where it
-  has a published counterpart (stand-on-moon), the value and its citation
+  has a published counterpart (stand-on-moon; the dish, plan 3's SPICE
+  light time at DSS-43, Task 6c fix 1), the value and its citation
   sit under it, with ours, the difference and the verdict at the checked
   setup, or the delta and no verdict off it.
 - **Stale is said**: while the shown evaluation is another setup's, the
@@ -482,8 +499,9 @@ binds over the bullets above where they differ:
 - **Checks below**: a "Checks ↓" pill at the scroller's foot while the
   Checks head is below it (Task 6c; "Knobs and proof ↓" before the knobs
   moved up). The timeline's marked windows (the dish's behind the Moon) are
-  clickable too: a click in one, without a drag, jumps the clock to its
-  start (`TimeControlsHandle.setMarks`, `markAt`).
+  clickable too: a click in one, without a drag past 3 px, jumps the clock
+  to its start, writing the clock once (`TimeControlsHandle.setMarks`,
+  `markAt`, `pressStep`).
 
 **Verification** is the second tab: the catalog's Checks, its Overlays and
 the Report, one segmented control apart. Its inspector's sheet keeps one

@@ -1,7 +1,12 @@
 // The time controls' marked spans (Task 6b): where each band falls on the
 // day strip, clipped to the day, never thinner than a device pixel.
 import { describe, expect, it } from "vitest";
-import { markAt, markSpans } from "../widgets/timeControls.ts";
+import {
+  CLICK_SLOP,
+  markAt,
+  markSpans,
+  pressStep,
+} from "../widgets/timeControls.ts";
 
 const DAY = 86_400_000;
 const start = Date.parse("2026-04-06T00:00:00Z");
@@ -80,5 +85,64 @@ describe("markAt (Task 6c: a click in a marked span jumps to its start)", () => 
     expect(markAt([behind, network], start, 960, 920)).toBe(behind);
     // Only the wider one under this point.
     expect(markAt([network, behind], start, 960, 940)).toBe(network);
+  });
+});
+
+describe("pressStep (fix 1): a click in a marked span jumps once; a drag scrubs", () => {
+  const behind = {
+    start: Date.parse("2026-04-06T22:42:53Z"),
+    end: Date.parse("2026-04-06T23:23:12Z"),
+    title: "Moon",
+  };
+  /** The clock writes a press makes, from down at `xs[0]` through each move to up at the last. */
+  function writes(xs: readonly number[], mark?: typeof behind) {
+    const out: (number | "pointer")[] = [];
+    let r = pressStep(undefined, "down", xs[0]!, mark);
+    if (r.time !== undefined) {
+      out.push(r.time);
+    }
+    for (const x of xs.slice(1, -1)) {
+      r = pressStep(r.press, "move", x);
+      if (r.time !== undefined) {
+        out.push(r.time);
+      }
+    }
+    r = pressStep(r.press, "up", xs.at(-1)!);
+    if (r.time !== undefined) {
+      out.push(r.time);
+    }
+    expect(r.press).toBeUndefined();
+    return out;
+  }
+
+  it("jumps to the mark's start on a click, writing the clock once", () => {
+    expect(writes([920, 920], behind)).toEqual([behind.start]);
+  });
+
+  it("still clicks within the slop", () => {
+    expect(writes([920, 922, 917, 923], behind)).toEqual([behind.start]);
+    expect(CLICK_SLOP).toBe(3);
+  });
+
+  it("scrubs on a drag past the slop that started in a mark, and never jumps", () => {
+    // 921 is inside the slop: nothing yet; 925 and 930 scrub.
+    expect(writes([920, 921, 925, 930, 931], behind)).toEqual([
+      "pointer",
+      "pointer",
+    ]);
+  });
+
+  it("scrubs from the press outside a mark, and doesn't jump on its release", () => {
+    expect(writes([100, 100])).toEqual(["pointer"]);
+    expect(writes([100, 101, 140, 150])).toEqual([
+      "pointer",
+      "pointer",
+      "pointer",
+    ]);
+  });
+
+  it("ignores a move or a release with no press", () => {
+    expect(pressStep(undefined, "move", 5)).toEqual({ press: undefined });
+    expect(pressStep(undefined, "up", 5)).toEqual({ press: undefined });
   });
 });

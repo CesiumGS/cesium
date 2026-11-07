@@ -99,6 +99,12 @@
 .fx-tone-fail .fx-check-icon {
   color: var(--stratakit-color-icon-critical-base);
 }
+.fx-tone-unsure .fx-check-icon {
+  color: var(--stratakit-color-icon-attention-base);
+}
+.fx-tone-unsure .fx-check-status-word {
+  color: var(--stratakit-color-text-attention-base);
+}
 .fx-tone-reference .fx-check-icon,
 .fx-tone-loading .fx-check-icon {
   color: var(--stratakit-color-icon-info-base);

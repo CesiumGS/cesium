@@ -1,9 +1,15 @@
 /*
  * The frames explorer's panel and HUD (examples/frames-explorer/DESIGN.md).
- * StrataKit tokens only, with one exception: the frame-family palette and the
- * axis colors, the 3D viewport's HUD colors (bench/suite/DESIGN.md), each
- * with a tone for light surfaces and one for dark, checked to 4.5:1 on
- * StrataKit's page and elevation surfaces in both schemes.
+ * StrataKit tokens only, with two exceptions, each with a tone for light
+ * surfaces and one for dark:
+ *
+ *  1. the frame-family palette and the axis colors, the 3D viewport's HUD
+ *     colors (bench/suite/DESIGN.md), checked to 4.5:1 on StrataKit's page
+ *     and elevation surfaces in both schemes;
+ *  2. the checks' kind tints (--fx-kind-*, Task 6c): StrataKit has no
+ *     categorical palette (its only hues are its statuses: accent, info,
+ *     positive, attention, critical), so these are the owner's approved
+ *     mockup's, each text 6.3:1 or more on its tint.
  */
 
 .fx-panel,

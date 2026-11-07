@@ -83,6 +83,16 @@ export interface SightLine {
   label: string;
 }
 
+/** A moment a scenario offers to jump the clock to (the knobs' "Jump to"). */
+export interface Moment {
+  id: string;
+  label: string;
+  /** UTC ms. */
+  utcMs: number;
+  /** The button's icon: the Moon for one behind it, else the timeline. */
+  icon?: "moon" | "timeline";
+}
+
 export interface ScenarioEvaluation {
   scenario: ScenarioId;
   /** The frames the scenario adds to the base tree (`buildScenarioTree`). */
@@ -155,6 +165,8 @@ export interface ScenarioEvaluation {
    */
   maskCheck?: {
     label: string;
+    /** The published mask's citation (references.json), for its Checks row. */
+    source: { document: string; publisher?: string; locator?: string };
     from: readonly number[];
     samples: readonly {
       azimuth: number;
@@ -162,8 +174,8 @@ export interface ScenarioEvaluation {
       to: readonly number[];
     }[];
   };
-  /** Moments a button takes the clock to ("Behind the Moon"), UTC ms. */
-  presets?: readonly { id: string; label: string; utcMs: number }[];
+  /** Moments a button takes the clock to ("Behind the Moon"), UTC ms, with the button's icon. */
+  presets?: readonly Moment[];
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).
    * None may carry an id of the scenario's `checks` (the host refuses it),

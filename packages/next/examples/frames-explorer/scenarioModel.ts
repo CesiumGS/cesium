@@ -14,7 +14,12 @@ import { routeSteps } from "./panel/routeSteps.ts";
 import { withTerrain } from "./panel/answerText.ts";
 import type { ScenarioHostState } from "./scenarioHost.ts";
 import type { ScenarioAnswer } from "./scenarios/evaluate.ts";
-import { checkKind, checkRows, type CheckRow } from "./scenarios/checks.ts";
+import {
+  checkKind,
+  checkRows,
+  maskCheckRow,
+  type CheckRow,
+} from "./scenarios/checks.ts";
 import { READY, SCENES } from "./scenarios/scenes.ts";
 import { checkedState } from "./scenarios/spec.ts";
 import { SCENARIOS } from "./scenarios/specs.ts";
@@ -48,6 +53,8 @@ export function publishedView(
   atChecked: boolean,
   freshness: Freshness,
   checks: readonly CheckRow[],
+  /** The answer's own value, ours where the check has no effect of its own (the dish's light time). */
+  answerValue?: number,
 ): Pick<ScenarioPanelView, "published"> {
   if (!pub) {
     return {};
@@ -81,7 +88,9 @@ export function publishedView(
     published: {
       ...base,
       state: "checked" as const,
-      ...(r.effect && { ours: r.effect.value }),
+      ...(r.effect
+        ? { ours: r.effect.value }
+        : answerValue !== undefined && { ours: answerValue }),
       ...(r.value !== undefined && {
         difference: {
           value: r.value,
@@ -142,6 +151,22 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       title: catalog.get(id)?.title ?? id,
     }));
   }
+  // The dish's terrain against the DSN's mask (Task 6c fix 1): judged on
+  // the page at any station, so on and off the checked setup alike.
+  const mask = e?.maskCheck;
+  if (mask) {
+    checks = [
+      ...checks,
+      maskCheckRow(
+        {
+          label: mask.label,
+          samples: mask.samples.length,
+          source: mask.source,
+        },
+        input.terrain?.find((t) => t.id === "mask-check"),
+      ),
+    ];
+  }
   const liveExtras: Record<string, ResultExtras> = {};
   for (const r of e?.live ?? []) {
     // A live re-run is compared with itself by another route, not with
@@ -198,6 +223,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       st.atChecked,
       freshness,
       checks,
+      e?.answer.value,
     ),
     ...(path && { path }),
     checks,

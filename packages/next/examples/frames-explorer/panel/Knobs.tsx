@@ -3,9 +3,10 @@
 // the question (owner: "the knobs are hard to find"), in the approved
 // mockup's shape: a head with "Knobs" and the checked-setup chip, which says
 // whether the setting is the checked setup, where the references apply;
-// one labelled row per knob; then "Jump to": the scenario's moments ("Behind
-// the Moon") as buttons, and "Back to the checked setup" (goal 8). Off the
-// checked setup a line under the head says what moved. Each range knob's
+// one labelled row per knob; then, where the scenario has moments, "Jump
+// to": its moments ("Behind the Moon") as buttons, and "Back to the checked
+// setup" (goal 8); without moments, Back sits in the head beside the chip
+// (fix 1). Off the checked setup a line under the head says what moved. Each range knob's
 // checked value is marked on its track.
 import {
   Button,
@@ -160,9 +161,8 @@ export const KNOBS_READS = [
 
 export const Knobs = memo(KnobsView, equalOn("scenario", KNOBS_READS));
 
-/** A moment's icon: the Moon for one behind it, else the timeline. */
-const momentIcon = (id: string) =>
-  id.includes("moon") ? svgMoon : svgTimeline;
+/** A moment's icon, as its evaluator declares it (Task 6c fix 1). */
+const MOMENT_ICON = { moon: svgMoon, timeline: svgTimeline } as const;
 
 function KnobsView({
   scenario,
@@ -183,6 +183,19 @@ function KnobsView({
   const timeMoved = s.changed.includes("time");
   const eop = s.eop;
   const jumpId = useId();
+  const moments = s.presets && s.presets.length > 0 ? s.presets : undefined;
+  const back = (
+    <Button
+      size="small"
+      variant="text"
+      startIcon={<Icon href={svgUndo} />}
+      disabled={s.atChecked}
+      onClick={onBack}
+      className="fx-back-button"
+    >
+      Back to the checked setup
+    </Button>
+  );
   return (
     <div className="fx-knobs">
       <div className="fx-section-head fx-knobs-head">
@@ -205,6 +218,8 @@ function KnobsView({
           )}
           {s.atChecked ? "At the checked setup" : "Off the checked setup"}
         </span>
+        {/* Without moments, Back sits by the chip (Task 6c fix 1). */}
+        {!moments && back}
       </div>
       {!s.atChecked && (
         <Typography
@@ -243,35 +258,28 @@ function KnobsView({
       {/* The time is set on the timeline under the globe (the owner,
           2026-11-06); the line above names it when it moved, and Back
           restores it. The scenario's moments jump it (Task 6c). */}
-      <div className="fx-knob fx-jump" role="group" aria-labelledby={jumpId}>
-        <span id={jumpId} className="fx-knob-label">
-          Jump to
-        </span>
-        <div className="fx-knob-control fx-jump-buttons">
-          {s.presets?.map((p) => (
-            <Button
-              key={p.id}
-              size="small"
-              variant="outlined"
-              startIcon={<Icon href={momentIcon(p.id)} />}
-              onClick={() => onMoment(p.utcMs)}
-              title={`Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused`}
-            >
-              {p.label}
-            </Button>
-          ))}
-          <Button
-            size="small"
-            variant="text"
-            startIcon={<Icon href={svgUndo} />}
-            disabled={s.atChecked}
-            onClick={onBack}
-            className="fx-back-button"
-          >
-            Back to the checked setup
-          </Button>
+      {moments && (
+        <div className="fx-knob fx-jump" role="group" aria-labelledby={jumpId}>
+          <span id={jumpId} className="fx-knob-label">
+            Jump to
+          </span>
+          <div className="fx-knob-control fx-jump-buttons">
+            {moments.map((p) => (
+              <Button
+                key={p.id}
+                size="small"
+                variant="outlined"
+                startIcon={<Icon href={MOMENT_ICON[p.icon ?? "timeline"]} />}
+                onClick={() => onMoment(p.utcMs)}
+                title={`Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused`}
+              >
+                {p.label}
+              </Button>
+            ))}
+            {back}
+          </div>
         </div>
-      </div>
+      )}
       {/* Its Earth-orientation caution stays here (R8). */}
       {eop && eop.kind !== "measured" && (
         <Typography
