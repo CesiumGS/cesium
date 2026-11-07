@@ -1,5 +1,5 @@
 // The design globe's drawn evidence (plan 4b Task 18; DESIGN.md "Visuals in
-// the viewer"): the error whiskers, the anchor ring, and the camera's moves.
+// the viewer"): the error whiskers and the anchor ring.
 //
 // - Whiskers: every 1,000 ft along the centreline, at the median barrier's
 //   top, a leader from where the rigid placement draws the point to where it
@@ -9,17 +9,19 @@
 //   same exaggeration stretches them.
 // - The anchor ring: a white ring on the ground at the rigid placement's
 //   anchor, where the placements agree.
-// - Flights: eased, on the wall clock, ended by the user taking the camera;
-//   under reduced motion, a cut. "Fly along" runs down the corridor.
+// (The camera's moves are in shots.ts.)
 import type { Alignment } from "../../src/engineering/alignment.ts";
 import type { TilesetPlacement } from "../../src/engineering/placement.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { CustomShader } from "../../src/scene/CustomShader.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
-import type { Viewer } from "../../widgets/index.ts";
 import { visibleRise } from "./exactSnap.ts";
-import { morphEase } from "./page.ts";
-import { PARTNER_SEMANTIC, morphShader, type Rgba } from "./placementPair.ts";
+import {
+  PARTNER_SEMANTIC,
+  morphShader,
+  type PairState,
+  type Rgba,
+} from "./placementPair.ts";
 
 /** One sample along the centreline. */
 export interface SagSample {
@@ -166,10 +168,10 @@ export class Whiskers extends Drawn {
     this.keep(mesh, this.draw);
   }
 
-  /** The morph's `t` and the exaggeration, as the pair's. */
-  set(t: number, exaggeration: number): void {
-    this.shader.setUniform("t", t);
-    this.shader.setUniform("exaggeration", exaggeration);
+  /** The morph's `t` and the exaggeration, as the pair's (morphDriver.ts). */
+  setState(state: PairState): void {
+    this.shader.setUniform("t", state.t);
+    this.shader.setUniform("exaggeration", state.exaggeration);
   }
 
   setVisible(visible: boolean): void {
@@ -231,152 +233,5 @@ export class AnchorRing extends Drawn {
       name: "design globe anchor ring",
     });
     this.keep(mesh, draw);
-  }
-}
-
-// ---------------------------------------------------------------- camera
-
-/** A camera framing: look at `center` from `range` m, heading and pitch in its east-north-up frame. */
-export interface Framing {
-  readonly center: ArrayLike<number>;
-  readonly heading: number;
-  readonly pitch: number;
-  readonly range: number;
-}
-
-/** Whether the viewer asked for less motion. */
-export const reducedMotion = (): boolean =>
-  typeof matchMedia === "function" &&
-  matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/** The camera's moves: one at a time; the user's input ends one. */
-export class CameraMoves {
-  private token = 0;
-  private flying_ = false;
-
-  constructor(
-    private readonly viewer: Viewer,
-    private readonly changed: () => void,
-  ) {}
-
-  get flying(): boolean {
-    return this.flying_;
-  }
-
-  /** Places the camera at `to` at once. */
-  cut(to: Framing): void {
-    this.stop();
-    this.viewer.controller.focus(
-      Float64Array.from(to.center),
-      to.heading,
-      to.pitch,
-      to.range,
-    );
-    this.viewer.engine.requestRender();
-  }
-
-  stop(): void {
-    this.token++;
-    if (this.flying_) {
-      this.flying_ = false;
-      this.changed();
-    }
-  }
-
-  /**
-   * Runs `path(u)` for u from 0 to 1 over `ms` on the wall clock (eased in
-   * and out when `ease`), ending early when the user takes the camera;
-   * under reduced motion, a cut to `path(1)`. `done` is called on arrival.
-   */
-  run(
-    path: (u: number) => Framing,
-    ms: number,
-    options: { ease?: boolean; done?: () => void } = {},
-  ): void {
-    this.stop();
-    if (reducedMotion() || ms <= 0) {
-      this.cut(path(1));
-      options.done?.();
-      return;
-    }
-    const token = this.token;
-    const { controller, engine, view } = this.viewer;
-    const inputs = controller.inputs;
-    const start = performance.now();
-    this.flying_ = true;
-    this.changed();
-    const step = (now: number) => {
-      if (token !== this.token) {
-        return;
-      }
-      if (controller.inputs !== inputs) {
-        this.stop();
-        return;
-      }
-      const u = Math.min(1, (now - start) / ms);
-      const f = path(options.ease === false ? u : morphEase(u));
-      view.camera.lookAt(
-        Float64Array.from(f.center),
-        f.heading,
-        f.pitch,
-        f.range,
-      );
-      engine.requestRender();
-      if (u < 1) {
-        requestAnimationFrame(step);
-        return;
-      }
-      controller.focus(
-        Float64Array.from(f.center),
-        f.heading,
-        f.pitch,
-        f.range,
-      );
-      this.flying_ = false;
-      this.changed();
-      options.done?.();
-    };
-    requestAnimationFrame(step);
-  }
-
-  /**
-   * Flies from where the camera looks now to `to`: the look point and range
-   * eased (range on a log scale), heading and pitch the short way round.
-   */
-  flyTo(to: Framing, done?: () => void): void {
-    const cam = this.viewer.view.camera;
-    const from = this.viewer.controller;
-    const fromCenter = Float64Array.from(from.target);
-    const fromRange = Math.max(1, from.range);
-    const dist = Math.hypot(
-      ...[0, 1, 2].map((k) => to.center[k]! - cam.position[k]!),
-    );
-    const decades = Math.abs(Math.log10(Math.max(fromRange, dist) / to.range));
-    const ms = 1000 * Math.min(3.5, Math.max(1.2, 1.2 + 0.35 * decades));
-    const dh =
-      ((to.heading - from.heading + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
-    // High enough mid-way to see where it goes: the range bows up.
-    const lift = Math.max(fromRange, to.range, dist * 0.6);
-    this.run(
-      (u) => ({
-        center: [0, 1, 2].map(
-          (k) => fromCenter[k]! + (to.center[k]! - fromCenter[k]!) * u,
-        ),
-        heading: from.heading + dh * u,
-        pitch: from.pitch + (to.pitch - from.pitch) * u,
-        range: Math.exp(
-          Math.log(fromRange) * (1 - u) +
-            Math.log(to.range) * u +
-            Math.sin(Math.PI * u) *
-              Math.max(
-                0,
-                Math.log(lift) -
-                  Math.max(Math.log(fromRange), Math.log(to.range)),
-              ),
-        ),
-      }),
-      ms,
-      done === undefined ? {} : { done },
-    );
   }
 }
