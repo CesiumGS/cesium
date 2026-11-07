@@ -37,10 +37,19 @@ export const MOON_RADIUS = 1_737_400;
  * The scan's longest step, s. Each step is as long as the nearest verdict
  * could take to change (fix 2): the smallest margin over every dish (its
  * elevation from its mask, the limb angle) over a bound on how fast that
- * margin can close, at least 1 s. A window of any length is found; only
- * one shorter than 1 s could hide between steps.
+ * margin can close (×1.5, `SAFETY`), at least 1 s. That bound holds while
+ * the rates taken at a step's start hold within 1.5× over the step: then
+ * no verdict changes between two steps unseen, except across a window
+ * shorter than the 1 s floor. The assumption is not checked; the safety
+ * factor is its only margin.
  */
 export const STEP = 600;
+
+/** How much faster than at a step's start the rates may get over the step. */
+export const SAFETY = 1.5;
+
+/** The Earth's mean radius for the rate bound, m. */
+const EARTH_R = 6.4e6;
 
 /** The shortest step, s. */
 export const MIN_STEP = 1;
@@ -150,7 +159,12 @@ export interface Sky {
   orion: ArrayLike<number>;
   /** The Earth's centre's barycentric velocity, m/s. */
   earthVelocity: number[];
-  /** A bound on Orion's angular rate seen from the Earth's surface, degrees per second (its speed over its distance less the Earth's radius). */
+  /**
+   * A bound on Orion's angular rate seen from a dish on the turning Earth,
+   * degrees per second: (|v| + Ω·r)/(r − R), its geocentric speed plus the
+   * dish frame's turn at Orion's distance r, over its least distance from
+   * the dish (fix 3: the turn's Ω·R/(r − R) was left out).
+   */
   orionRate: number;
 }
 
@@ -180,13 +194,14 @@ export function skyAt(
       ).subarray(12, 15);
     const o = orion.state(t);
     const speed = Math.hypot(o[3]!, o[4]!, o[5]!);
-    const away = Math.max(1e5, Math.hypot(o[0]!, o[1]!, o[2]!) - 6.4e6);
+    const r = Math.hypot(o[0]!, o[1]!, o[2]!);
+    const away = Math.max(1e5, r - EARTH_R);
     return {
       toIcrf,
       moon: seen(frames.moonIcrf),
       orion: seen(orion.frame),
       earthVelocity: sub(e(tdb + 0.5), e(tdb - 0.5)),
-      orionRate: ((speed / away) * 180) / Math.PI,
+      orionRate: (((speed + EARTH_ROTATION_RATE * r) / away) * 180) / Math.PI,
     };
   } catch {
     return undefined;
@@ -273,7 +288,8 @@ export function blockedIn(sky: Sky, dish: Dish): Blocked {
     ...(dish.mask && { mask: belowMask(dish.mask, azimuth, elevation) }),
     margin: Math.min(horizon, limbMargin),
     rate:
-      sweep + MOON_RATE + (dish.mask ? slopeOf(dish.mask) * azimuthRate : 0),
+      SAFETY *
+      (sweep + MOON_RATE + (dish.mask ? slopeOf(dish.mask) * azimuthRate : 0)),
   };
 }
 
