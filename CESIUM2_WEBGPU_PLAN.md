@@ -6991,6 +6991,35 @@ the engine." Plan 5 designs this with the catalog and the tree in use:
   the imagery composite and terrain, so the frame tree's work competes fairly
   within one per-frame budget.
 
+**A public API review (owner, 2026-11-06).** Plan 5 is also the time to
+look at the public API as a whole. Decide what belongs on which side of it,
+based on what has been built on top of the engine so far: the frames
+explorer, the realtime-tracks example, the Viewer widgets, the stress catalog
+and the bench. The review has two outputs: a map of today's surface, and
+proposed moves. Questions to answer:
+
+- **Promote.** What did the examples have to build themselves that every app
+  will need? Candidates from the frames explorer:
+  - the accuracy types and their composition (`EdgeAccuracy`, `accuracyOf`,
+    which Task 7b is already moving);
+  - `branchPath` and the tree model;
+  - app-defined frames with their accuracy;
+  - point placement for labels and markers;
+  - camera rigs and orbit controls;
+  - the stale-answer and generation patterns around async work.
+- **Demote.** What is exported only because an example reaches into it, or
+  exposes internals (stress-context getters, renderer state the examples
+  poke)?
+- **Shape.** Check the API's consistency: sync versus async, `AbortSignal`
+  everywhere work can be cancelled, `dispose` lifetimes, events or
+  subscriptions versus polling, units and frames named in types, and errors
+  that say what to do.
+- **Stability tiers.** Which parts are stable and which are experimental, how
+  that is marked, and what the examples are allowed to import, given that
+  the examples are documentation. Bundle size and tree-shaking follow from
+  this split. The Viewer's `skyState` import, carried forward above, is one
+  case.
+
 Camera rigs and render frames are one question from two sides: plan 5 is also
 where the world stops being drawn Earth-fixed (R6 of plans 2 and 3), so
 design them together. Open choices for the brainstorm: what holds still by
