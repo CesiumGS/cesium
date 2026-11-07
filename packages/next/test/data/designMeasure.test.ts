@@ -701,9 +701,13 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
     expect(detail).toMatch(/"CS27 one".*"CS27 two"/);
   });
 
-  it("warns coarser-operation for the plan-4a California frame (NADCON5 candidates, Task 6)", async () => {
+  it("doesn't warn coarser-operation for the plan-4a California frame: PROJ's ±1.14 m candidates swap GEOID18 for GEOID99 or GEOID03", async () => {
     const f = await frame();
-    expect(f.operation.betterCandidates.length).toBeGreaterThan(0);
+    // GEOID18 alone is loaded. The NADCON5 candidates PROJ ranks ahead of it
+    // read another geoid model, so neither counts as better (crs.ts
+    // betterThan): PROJ's figures don't compare geoid models.
+    expect(f.operation.grids).toEqual(["us_noaa_g2018u0.tif"]);
+    expect(f.operation.betterCandidates).toEqual([]);
     const m = measure(
       designPoint(f, [2000, 1000, 0]),
       designPoint(f, [3000, 1000, 0]),
@@ -711,19 +715,13 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
       frames,
       { signal: false },
     );
-    const codes = m.accuracy.warningCodes ?? [];
-    const warning = m.accuracy.warnings[codes.indexOf("coarser-operation")]!;
-    // Under fix 1's rule both NADCON5 candidates still count: PROJ states
-    // ±1.14 m for each, smaller than GEOID18's ±2.015 m. Their grids, once.
-    expect(warning).toBe(
-      'Engineering frame "CA3": PROJ lists 2 operations with a stated ±1.14 m each that need us_noaa_g1999u05.tif, us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif, us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif, us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif, us_noaa_geoid03_conus.tif, not loaded; this frame\'s operation states ±2.015 m.',
-    );
+    expect(m.accuracy.warningCodes ?? []).not.toContain("coarser-operation");
     const projection = m.accuracy.terms.filter(
       (t) => t.source === "projection",
     );
-    expect(projection[0]!.note.length).toBeLessThan(400);
-    expect(projection[1]!.note.length).toBeLessThan(120);
-    // The statement is still bounded: the operation used states its accuracy.
+    expect(projection[0]!.note).not.toMatch(/PROJ lists/);
+    // The statement is bounded: the operation used states its accuracy.
+    expect(projection[0]!.meters).toBe(2.015);
     expect(m.accuracy.meters).toBeDefined();
   });
 });

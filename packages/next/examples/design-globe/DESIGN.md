@@ -26,9 +26,13 @@ and that a measurement on the globe gives the number their CAD gives.
    distances and the combined scale factor sit beside it, labelled; never
    instead of it.
 3. **Units and datums always named.** "ftUS", not "ft"; "NAVD88 via
-   GEOID18", not "height". Where a height system has no grid, the page
-   says what it fell back to and what that costs ("EGM96 fallback: adds its
-   offset, not stated").
+   GEOID18", not "height". The corridor, the site-grid building and the
+   Phoenix site pin GEOID18's operation (`CORRIDOR_PIPELINE`,
+   `PHOENIX_PIPELINE`): PROJ ranks GEOID99 ahead of it, a superseded
+   NAVD88 model. A pinned operation states no accuracy, so their
+   projection term reads "not known". Where a height system has no grid,
+   the page says what it fell back to and what that costs ("EGM96
+   fallback: adds its offset, not stated").
 4. **The sag is the story.** The placement section leads with a small
    chart of the rigid placement's error along the corridor, zero at the
    anchor and growing outward, and the HUD reads the error at the cursor.

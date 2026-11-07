@@ -263,3 +263,29 @@ export function pipelineGrids(pipeline: Pipeline): readonly PipelineGrid[] {
   }
   return out;
 }
+
+/**
+ * The grids a pipeline's height step reads: a `vgridshift` step's `grids`
+ * (how PROJ writes a geoid model, or a vertical-to-vertical offset) and any
+ * `geoidgrids`, each name once, in written order. A horizontal or 3D grid
+ * shift (`hgridshift`, `gridshift`) isn't one, though a NADCON5 grid also
+ * moves the ellipsoidal height.
+ */
+export function pipelineVerticalGrids(pipeline: Pipeline): readonly string[] {
+  const names = new Set<string>();
+  const scan = (
+    params: Readonly<Record<string, ParamValue>> | undefined,
+    vgridshift: boolean,
+  ) => {
+    for (const grid of pipelineGrids({ globals: params, steps: [] })) {
+      if (grid.key === "geoidgrids" || (vgridshift && grid.key === "grids")) {
+        names.add(grid.name);
+      }
+    }
+  };
+  scan(pipeline.globals, false);
+  for (const step of pipeline.steps) {
+    scan(step.params, step.operation === "vgridshift");
+  }
+  return [...names];
+}

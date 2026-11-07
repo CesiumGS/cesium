@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
+import { CORRIDOR_PIPELINE } from "../../examples/design-globe/corridor.ts";
 import {
   listOperations,
   type AreaOfInterest,
@@ -42,11 +43,17 @@ const NLGEO = "nl_nsgi_nlgeo2018.tif";
 const FIN2000 = "fi_nls_fin2000.tif";
 const TIN = "fi_nls_ykj_etrs35fin.json";
 const WGS84_3D: CrsRef = { format: "wkid", authority: "EPSG", wkid: 4979 };
+const CA3: CrsRef = {
+  format: "wkid",
+  authority: "EPSG",
+  wkid: 6420,
+  vcsWkid: 6360,
+};
 
-// The plan-4a California frame's operation with GEOID18 loaded (recorded
-// 2026-11-07 from the code before this task, in a PROJ with only GEOID18).
-const CALIFORNIA_PIPELINE =
-  "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000.0001016 +y_0=500000.0001016 +ellps=GRS80 +step +proj=unitconvert +z_in=us-ft +z_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg";
+// The plan-4a California frame's operation with GEOID18 loaded: the
+// design globe's pinned GEOID18 pipeline for the same CRS (recorded
+// 2026-11-07, in a PROJ with only GEOID18).
+const CALIFORNIA_PIPELINE = CORRIDOR_PIPELINE;
 const CALIFORNIA_ACCURACY = 2.015;
 
 const LONDON: AreaOfInterest = {
@@ -65,7 +72,8 @@ const LONDON_OPERATION =
   "Inverse of British National Grid + OSGB36 to ETRS89 (2) + Inverse of ETRS89 to ODN height (2) + ETRS89 to WGS 84 (1)";
 
 // EPSG:26741, California CS27 zone I (plan 4a): PROJ's three accurate
-// candidates, best first.
+// candidates, best first. A 2D CRS: none reads a vertical grid, so they keep
+// the same vertical handling and the skipped ones still count as better.
 const CS27: CrsRef = { format: "wkid", authority: "EPSG", wkid: 26741 };
 const CS27_NADCON_HPGN =
   "Inverse of California CS27 zone I + NAD27 to NAD83 (1) + NAD83 to WGS 84 (43)";
@@ -89,19 +97,14 @@ function storeWithout(left: string): GridSource {
 
 describe("no regression: the plan-4a California frame", () => {
   // First in the file: only GEOID18 is loaded, as in the explorer.
-  it("with GEOID18 loaded, create records the same pipeline and accuracy, and no credits", async () => {
+  it("with GEOID18 loaded, create records the same pipeline and accuracy, no credits, and no better candidates", async () => {
     const P = await proj();
     await loadGrids(P, await store(), [GEOID18]);
     const frame = EngineeringFrame.create(
       {
         name: "CA3",
         body: EARTH,
-        crs: {
-          format: "wkid",
-          authority: "EPSG",
-          wkid: 6420,
-          vcsWkid: 6360,
-        },
+        crs: CA3,
         site: {
           origin: [6_000_000, 2_100_000, 0],
           rotation: (12.5 * Math.PI) / 180,
@@ -115,24 +118,17 @@ describe("no regression: the plan-4a California frame", () => {
     expect(frame.operation.grids).toEqual([GEOID18]);
     expect(frame.gridCredits).toEqual([]);
     // PROJ ranks two NADCON5 operations (through NAD83(HARN), with GEOID99
-    // or GEOID03 for NAVD88) above it, at its stated 1.14 m.
-    const nadcon5 = [
-      "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
-      "us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif",
-      "us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif",
-    ];
-    expect(frame.operation.betterCandidates).toEqual([
-      {
-        name: "Inverse of SPCS83 California zone 3 (US survey foot) + Inverse of NAD83(HARN) to NAD83(2011) (NADCON5, CONUS) + Conversion from NAVD88 height (ftUS) to NAVD88 height + Inverse of NAD83(HARN) to NAVD88 height (5) + NAD83(HARN) to WGS 84 (3)",
-        accuracy: 1.14,
-        missingGrids: ["us_noaa_g1999u05.tif", ...nadcon5],
-      },
-      {
-        name: "Inverse of SPCS83 California zone 3 (US survey foot) + Inverse of NAD83(FBN) to NAD83(2011) (NADCON5, CONUS) + Conversion from NAVD88 height (ftUS) to NAVD88 height + Inverse of NAD83(FBN) to NAVD88 height (1) + Inverse of NAD83(HARN) to NAD83(FBN) (1) + NAD83(HARN) to WGS 84 (3)",
-        accuracy: 1.14,
-        missingGrids: ["us_noaa_geoid03_conus.tif", ...nadcon5],
-      },
+    // or GEOID03 for NAVD88) above it, at a stated 1.14 m. Neither is
+    // better: each swaps GEOID18 for another geoid model, which PROJ's
+    // figures don't compare (crs.ts `betterThan`).
+    const ahead = listOperations(P, CA3, WGS84_3D).filter(
+      (c) => c.accuracy === 1.14,
+    );
+    expect(ahead.map((c) => c.missingGrids[0])).toEqual([
+      "us_noaa_g1999u05.tif",
+      "us_noaa_geoid03_conus.tif",
     ]);
+    expect(frame.operation.betterCandidates).toEqual([]);
   });
 });
 

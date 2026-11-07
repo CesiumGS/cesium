@@ -49,23 +49,97 @@ describe("resolveOperation errors", () => {
 
 describe("betterThan: which skipped candidates are better (Task 8 fix 1)", () => {
   const skipped = [
-    { name: "A", accuracy: 1.14, missingGrids: ["a.tif"] },
-    { name: "B", accuracy: 2.015, missingGrids: ["b.tif"] },
-    { name: "C", accuracy: 3, missingGrids: ["c.tif"] },
-    { name: "D", missingGrids: ["d.tif"] },
+    { name: "A", accuracy: 1.14, missingGrids: ["a.tif"], verticalGrids: [] },
+    { name: "B", accuracy: 2.015, missingGrids: ["b.tif"], verticalGrids: [] },
+    { name: "C", accuracy: 3, missingGrids: ["c.tif"], verticalGrids: [] },
+    { name: "D", missingGrids: ["d.tif"], verticalGrids: [] },
   ];
+  const chosen = (accuracy: number | undefined) => ({
+    accuracy,
+    verticalGrids: [],
+  });
 
   it("keeps only a strictly smaller stated accuracy: not an equal, larger or unstated one", () => {
-    expect(betterThan(2.015, skipped).map((c) => c.name)).toEqual(["A"]);
-    expect(betterThan(1, skipped)).toEqual([]);
+    expect(betterThan(chosen(2.015), skipped).map((c) => c.name)).toEqual([
+      "A",
+    ]);
+    expect(betterThan(chosen(1), skipped)).toEqual([]);
   });
 
   it("keeps every one, in PROJ's order, when the chosen operation states none", () => {
-    expect(betterThan(undefined, skipped).map((c) => c.name)).toEqual([
+    expect(betterThan(chosen(undefined), skipped).map((c) => c.name)).toEqual([
       "A",
       "B",
       "C",
       "D",
     ]);
+  });
+});
+
+describe("betterThan: a better candidate keeps the chosen operation's geoid", () => {
+  const GEOID18 = "us_noaa_g2018u0.tif";
+  const GEOID99 = "us_noaa_g1999u05.tif";
+  const chosen = { accuracy: 2.015, verticalGrids: [GEOID18] };
+
+  it("isn't better with another geoid grid and a smaller stated accuracy; is with the same grid", () => {
+    const skipped = [
+      {
+        name: "other geoid",
+        accuracy: 1.14,
+        missingGrids: ["nadcon5.tif", GEOID99],
+        verticalGrids: [GEOID99],
+      },
+      {
+        name: "same geoid",
+        accuracy: 1.14,
+        missingGrids: ["nadcon5.tif"],
+        verticalGrids: [GEOID18],
+      },
+    ];
+    expect(betterThan(chosen, skipped).map((c) => c.name)).toEqual([
+      "same geoid",
+    ]);
+  });
+
+  it("isn't better with no geoid grid where the chosen reads one, or with one where it reads none", () => {
+    const none = {
+      name: "none",
+      accuracy: 1,
+      missingGrids: ["a.tif"],
+      verticalGrids: [],
+    };
+    expect(betterThan(chosen, [none])).toEqual([]);
+    expect(
+      betterThan({ accuracy: 2, verticalGrids: [] }, [
+        { ...none, verticalGrids: [GEOID18] },
+      ]),
+    ).toEqual([]);
+  });
+
+  it("compares the grids as a set, and never keeps a ballpark", () => {
+    const two = { accuracy: 2, verticalGrids: ["x.tif", "y.tif"] };
+    const reordered = {
+      name: "reordered",
+      accuracy: 1,
+      missingGrids: ["h.tif"],
+      verticalGrids: ["y.tif", "x.tif"],
+    };
+    expect(betterThan(two, [reordered]).map((c) => c.name)).toEqual([
+      "reordered",
+    ]);
+    expect(betterThan(two, [{ ...reordered, ballpark: true }])).toEqual([]);
+  });
+
+  it("with no stated accuracy for the chosen, still keeps only the same geoid", () => {
+    const skipped = [
+      { name: "other", missingGrids: ["a.tif"], verticalGrids: [GEOID99] },
+      { name: "same", missingGrids: ["b.tif"], verticalGrids: [GEOID18] },
+    ];
+    expect(
+      betterThan(
+        { accuracy: undefined, verticalGrids: [GEOID18] },
+        skipped,
+      ).map((c) => c.name),
+    ).toEqual(["same"]);
   });
 });

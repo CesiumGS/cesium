@@ -247,12 +247,31 @@ const CORRIDOR_AREA: AreaOfInterest = {
   north: 37.88,
 };
 
-/** The corridor's engineering frame: the CRS's own grid, no site transform. */
+/**
+ * EPSG:6420+6360 to WGS 84 (EPSG:4979) through GEOID18
+ * (`us_noaa_g2018u0.tif`), NGS's current model for NAVD88: PROJ's
+ * "Inverse of SPCS83 California zone 3 (US survey foot) + Conversion from
+ * NAVD88 height (ftUS) to NAVD88 height + Inverse of NAD83(2011) to NAVD88
+ * height (3) + NAD83(2011) to WGS 84 (1)", stated ±2.015 m, as proj.db 9.7.1
+ * writes it (recorded 2026-11-07; the same within the corridor's area and
+ * without one). The design globe's California frames pin it: PROJ ranks two
+ * operations ahead of it at ±1.14 m, NADCON5 back to NAD83(HARN) with
+ * GEOID99 or GEOID03, both superseded for NAVD88, and `load` would take the
+ * first (about 95 MB more of grids). A pinned pipeline states no accuracy.
+ */
+export const CORRIDOR_PIPELINE =
+  "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000.0001016 +y_0=500000.0001016 +ellps=GRS80 +step +proj=unitconvert +z_in=us-ft +z_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg";
+
+/**
+ * The corridor's engineering frame: the CRS's own grid, no site transform,
+ * NAVD88 through GEOID18 (`CORRIDOR_PIPELINE`).
+ */
 export function corridorFrame(): EngineeringFrameDefinition {
   return {
     name: "Highway corridor",
     body: EARTH,
     crs: CORRIDOR_CRS,
+    pipeline: CORRIDOR_PIPELINE,
     alignments: [CORRIDOR_ALIGNMENT],
     areaOfInterest: CORRIDOR_AREA,
   };

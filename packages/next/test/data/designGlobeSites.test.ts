@@ -15,16 +15,21 @@ import { GRID_SETS } from "../../scripts/gridSets.mjs";
 import {
   CORRIDOR_ALIGNMENT,
   CORRIDOR_CRS,
+  CORRIDOR_PIPELINE,
   corridorFrame,
 } from "../../examples/design-globe/corridor.ts";
 import {
   ION_SLOTS,
+  PHOENIX_PIPELINE,
   PORTFOLIO,
   SITE_BUILDING,
   type PortfolioSite,
 } from "../../examples/design-globe/sites.ts";
 import { Alignment } from "../../src/engineering/alignment.ts";
-import type { AreaOfInterest } from "../../src/engineering/crs.ts";
+import {
+  listOperations,
+  type AreaOfInterest,
+} from "../../src/engineering/crs.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import {
   gridSource,
@@ -190,6 +195,10 @@ describe("the corridor's frame", () => {
       grids: source,
     });
     expect(sorted(frame.operation.grids)).toEqual(sorted(SITE_BUILDING.grids));
+    // NAVD88 through GEOID18, pinned: not PROJ's GEOID99 or GEOID03 choice.
+    expect(frame.operation.grids).toEqual(["us_noaa_g2018u0.tif"]);
+    expect(frame.operation.pipeline).toBe(CORRIDOR_PIPELINE);
+    expect(frame.operation.betterCandidates).toEqual([]);
     const alignment = new Alignment(CORRIDOR_ALIGNMENT);
     const area = corridorFrame().areaOfInterest!;
     for (
@@ -208,6 +217,33 @@ describe("the corridor's frame", () => {
       true,
     );
   });
+});
+
+describe("the pinned GEOID18 pipelines", () => {
+  const WGS84_3D = { format: "wkid", authority: "EPSG", wkid: 4979 } as const;
+  const GEOID18 = "us_noaa_g2018u0.tif";
+  const phoenix = PORTFOLIO.find((s) => s.id === "phoenix")!;
+  const cases = [
+    ["the corridor", corridorFrame(), CORRIDOR_PIPELINE, 2.015],
+    ["the site-grid building", SITE_BUILDING.frame, CORRIDOR_PIPELINE, 2.015],
+    ["Phoenix", phoenix.frame, PHOENIX_PIPELINE, 2.115],
+  ] as const;
+  for (const [what, frame, pinned, accuracy] of cases) {
+    it(`${what}: pins PROJ's own GEOID18 operation within its area, which PROJ ranks behind a superseded geoid`, async () => {
+      expect(frame.pipeline).toBe(pinned);
+      const { P } = await setup();
+      const candidates = listOperations(P, frame.crs, WGS84_3D, {
+        areaOfInterest: frame.areaOfInterest!,
+      }).filter((c) => !c.ballpark);
+      const geoid18 = candidates.find((c) => c.gridsNeeded.includes(GEOID18));
+      expect(geoid18?.pipeline).toBe(pinned);
+      expect(geoid18?.accuracy).toBe(accuracy);
+      // PROJ's first candidate reads GEOID99 instead.
+      expect(candidates[0]!.gridsNeeded.some((g) => /g1999u0/.test(g))).toBe(
+        true,
+      );
+    });
+  }
 });
 
 describe("setup's portfolio grid set", () => {

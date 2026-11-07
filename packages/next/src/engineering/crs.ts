@@ -16,6 +16,15 @@
 // ones (`betterCandidates`) are those with a smaller stated accuracy: being
 // earlier in PROJ's order is not enough (`betterThan`).
 //
+// A better candidate must also read the same vertical grids as the operation
+// taken (the geoid model, or none), and so differ only in its horizontal
+// steps. PROJ's stated accuracy is mostly the horizontal path to WGS 84's
+// ensemble; it doesn't compare geoid models. A candidate that swaps the
+// height system's geoid for another (GEOID99 or GEOID03 for NAVD88, where
+// the frame took GEOID18, NGS's current model) gives different heights, not
+// better ones, so it is never listed as better, whatever PROJ states for it.
+// The grids are compared by name (`pipelineVerticalGrids`), not by year.
+//
 // A grid is available when `loadGrids` loaded it (and PROJ then found it
 // where it was put; proj.ts): PROJ's own answer for a candidate's grid isn't
 // enough. PROJ caches that answer per context the first time it looks, so a
@@ -26,6 +35,7 @@ import {
   formatPipeline,
   parsePipeline,
   pipelineGrids,
+  pipelineVerticalGrids,
   type Pipeline,
 } from "./pipeline.ts";
 import { loadedGrids } from "./proj.ts";
@@ -133,29 +143,64 @@ export interface RecordedOperation {
   /**
    * The candidates before this one, in PROJ's order (grid availability
    * ignored), that were skipped only because grids they need aren't loaded
-   * (each has a PROJ string) and that are better: PROJ states a strictly
-   * smaller accuracy for them, or this operation states none (`betterThan`).
-   * A ballpark is never listed; a pinned pipeline has none.
+   * (each has a PROJ string) and that are better (`betterThan`): they read
+   * the same vertical grids as this operation, and PROJ states a strictly
+   * smaller accuracy for them, or this operation states none. A ballpark is
+   * never listed; a pinned pipeline has none.
    */
   readonly betterCandidates: readonly BetterCandidate[];
   forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
   inverse(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
 }
 
+/** An operation as `betterThan` compares it. */
+export interface ComparedOperation {
+  /** PROJ's stated accuracy in metres; absent or undefined when it states none. */
+  readonly accuracy?: number | undefined;
+  /** The grids its height step reads (`pipelineVerticalGrids`); empty for none. */
+  readonly verticalGrids: readonly string[];
+  /** A ballpark transformation. */
+  readonly ballpark?: boolean;
+}
+
+/** Whether two lists name the same grids, in any order. */
+function sameGrids(a: readonly string[], b: readonly string[]): boolean {
+  const left = new Set(a);
+  const right = new Set(b);
+  return left.size === right.size && [...left].every((name) => right.has(name));
+}
+
 /**
  * Which of the candidates skipped for missing grids are better than the
- * operation taken, whose stated accuracy is `chosen`: those PROJ states a
- * strictly smaller accuracy for, or all of them when `chosen` is undefined
- * (no figure to compare). An equal, larger or unstated figure is not better,
- * though PROJ lists it first. Order is kept.
+ * operation taken (`chosen`), in order: those that aren't a ballpark, read
+ * the same vertical grids as `chosen` (the same geoid model, or none: they
+ * differ only in horizontal steps), and that PROJ states a strictly smaller
+ * accuracy for, or any figure when `chosen` states none. An equal, larger or
+ * unstated figure is not better, though PROJ lists it first; nor is a
+ * smaller figure for another geoid model, which PROJ's figures don't
+ * compare (see the header).
  */
-export function betterThan<C extends { readonly accuracy?: number }>(
-  chosen: number | undefined,
+export function betterThan<C extends ComparedOperation>(
+  chosen: ComparedOperation,
   skipped: readonly C[],
 ): C[] {
-  return chosen === undefined
-    ? [...skipped]
-    : skipped.filter((c) => c.accuracy !== undefined && c.accuracy < chosen);
+  const stated = chosen.accuracy;
+  return skipped.filter(
+    (c) =>
+      c.ballpark !== true &&
+      sameGrids(c.verticalGrids, chosen.verticalGrids) &&
+      (stated === undefined ||
+        (c.accuracy !== undefined && c.accuracy < stated)),
+  );
+}
+
+/** A pipeline string's vertical grids; undefined when it can't be read. */
+function verticalGridsOf(string: string): readonly string[] | undefined {
+  try {
+    return pipelineVerticalGrids(parsePipeline(string));
+  } catch {
+    return undefined;
+  }
 }
 
 /** A candidate operation skipped for missing grids (`betterCandidates`). */
@@ -576,8 +621,9 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  *    normalized-for-visualization form. A ballpark operation (PROJ names it
  *    "Ballpark ...") is taken only with `allowBallpark`, and then `accuracy`
  *    is undefined. The non-ballpark candidates before it that were skipped
- *    for missing grids, and that state a smaller accuracy than it (any, if
- *    it states none), are its `betterCandidates`.
+ *    for missing grids, read the same vertical grids as it, and state a
+ *    smaller accuracy than it (any, if it states none), are its
+ *    `betterCandidates` (`betterThan`).
  *  - If none qualifies it throws, naming the grids the better candidates need.
  */
 export function resolveOperation(
@@ -657,7 +703,7 @@ export function resolveOperation(
     const missing = new Set<string>();
     // Skipped for missing grids, in order: the chosen one's better
     // candidates are those of them `betterThan` keeps.
-    const better: BetterCandidate[] = [];
+    const skipped: (BetterCandidate & ComparedOperation)[] = [];
     let skippedBallpark = false;
     // Candidates PROJ cannot express as a PROJ string, named in the final error.
     const noString: string[] = [];
@@ -676,18 +722,23 @@ export function resolveOperation(
         // Better only if it could be taken once its grids are loaded: not a
         // ballpark, and with a PROJ string (which needs no grids). The rule
         // `EngineeringFrame.load`'s gridsToLoad mirrors; keep them together.
-        if (
-          !ballpark &&
-          proj.proj_as_proj_string(
-            proj.proj_normalize_for_visualization(candidate),
-            proj.PJ_PROJ_5,
-          ) !== null
-        ) {
+        // Its vertical grids come from that string (one that can't be read
+        // can't be shown to keep the geoid, so it is never better).
+        const string = ballpark
+          ? null
+          : proj.proj_as_proj_string(
+              proj.proj_normalize_for_visualization(candidate),
+              proj.PJ_PROJ_5,
+            );
+        const verticalGrids =
+          string === null ? undefined : verticalGridsOf(string);
+        if (verticalGrids !== undefined) {
           const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
-          better.push({
+          skipped.push({
             name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
             ...(accuracy >= 0 && { accuracy }),
             missingGrids: grids.missing,
+            verticalGrids,
           });
         }
         continue;
@@ -719,7 +770,7 @@ export function resolveOperation(
           accuracy,
           grids: grids.needed,
           ballpark,
-          better: betterThan(accuracy, better),
+          skipped,
         },
       } as const;
     }
@@ -727,12 +778,22 @@ export function resolveOperation(
   });
 
   if (walk.chosen) {
-    const { string, accuracy, grids, ballpark, better } = walk.chosen;
+    const { string, accuracy, grids, ballpark, skipped } = walk.chosen;
     let optionalGrids: string[];
+    let better: BetterCandidate[];
     try {
-      optionalGrids = pipelineGrids(parsePipeline(string))
+      const parsed = parsePipeline(string);
+      optionalGrids = pipelineGrids(parsed)
         .filter((grid) => grid.optional)
         .map((grid) => grid.name);
+      better = betterThan(
+        { accuracy, verticalGrids: pipelineVerticalGrids(parsed) },
+        skipped,
+      ).map((c) => ({
+        name: c.name,
+        ...(c.accuracy !== undefined && { accuracy: c.accuracy }),
+        missingGrids: c.missingGrids,
+      }));
     } catch (error) {
       throw new Error(
         `PROJ's operation ${where} could not be read (${(error as Error).message})`,

@@ -11,11 +11,13 @@ export const GRID_SETS = {
   // Sydney: AUSGeoid2020. Tokyo: JPGEO2024 (proj.db 9.7.1 ranks it, 0.03 m,
   // ahead of GSIGEO2011, no stated accuracy, for JGD2011 (vertical) height;
   // GSI's official geoid since 2025-04-01; Task 9). Amsterdam: RDNAPTRANS2018.
-  // Nairobi, and Jakarta's fallback: EGM96. Phoenix (EPSG:2223+8228): PROJ's
-  // best candidate within its area, 1.1 m, is Arizona's HPGN with GEOID99's
-  // tile 6. The corridor and its site-grid building (EPSG:6420+6360):
-  // PROJ's best, 1.14 m, is NADCON5 back to NAD83(HARN) with GEOID99, ahead
-  // of GEOID18 (2.015 m), which is no longer here (see `tests`).
+  // Nairobi, and Jakarta's fallback: EGM96. NAVD88 heights read GEOID18,
+  // NGS's current model, through a pinned pipeline wherever PROJ ranks a
+  // superseded geoid ahead of it: the corridor and its site-grid building
+  // (EPSG:6420+6360) read GEOID18 alone (PROJ's best, 1.14 m, is NADCON5
+  // with GEOID99); Phoenix (EPSG:2223+8228) reads GEOID18 and NADCON5 from
+  // NAD83 (1986) to NAD83(2011) (PROJ's best within its area, 1.1 m, is
+  // Arizona's HPGN with GEOID99's tile 6).
   portfolio: [
     "uk_os_OSTN15_NTv2_OSGBtoETRS.tif",
     "uk_os_OSGM15_GB.tif",
@@ -24,12 +26,11 @@ export const GRID_SETS = {
     "nl_nsgi_rdtrans2018.tif",
     "nl_nsgi_nlgeo2018.tif",
     "us_nga_egm96_15.tif",
-    "us_noaa_azhpgn.tif",
-    "us_noaa_g1999u06.tif",
-    "us_noaa_g1999u05.tif",
+    "us_noaa_g2018u0.tif",
+    "us_noaa_nadcon5_nad83_1986_nad83_harn_conus.tif",
     "us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif",
-    "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
     "us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif",
+    "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
   ],
   // The grids the data tests use. EPSG:26741 (California CS27 zone I) to
   // WGS 84: PROJ's best candidate (2.15 m, NAD27 to NAD83 (1) + NAD83 to
@@ -41,9 +42,9 @@ export const GRID_SETS = {
   // 7): proj.db 9.7.1 relates Amersfoort / RD New + LAT NL depth only by
   // ballparks, so the Dutch LAT grid isn't used. GSIGEO2011, Japan's geoid
   // before JPGEO2024: geoids.test.ts checks it against GSI's transitional
-  // GSIGEO2011 calculator through its own pinned operation (Task 9). GEOID18:
-  // frameLoad.test.ts loads it from the store for the plan-4a California
-  // frame (it left the portfolio in Task 12).
+  // GSIGEO2011 calculator through its own pinned operation (Task 9).
+  // (frameLoad.test.ts also loads GEOID18 for the plan-4a California frame:
+  // it is in `portfolio`.)
   tests: [
     "us_noaa_conus.tif",
     "us_noaa_cnhpgn.tif",
@@ -51,7 +52,6 @@ export const GRID_SETS = {
     "fi_nls_ykj_etrs35fin.json",
     "dk_sdfi_dklat_2023.tif",
     "jp_gsi_gsigeo2011.tif",
-    "us_noaa_g2018u0.tif",
   ],
   // EGM2008 at 2.5 arc-minutes (80,585,622 bytes).
   egm2008: ["us_nga_egm08_25.tif"],

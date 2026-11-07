@@ -7,9 +7,11 @@
 // `EngineeringFrame.load` resolves it from PROJ-data 1.25.0's catalog and
 // proj.db 9.7.1 (checked by test/data/designGlobeSites.test.ts). Where PROJ
 // ranks a candidate ahead of the one a reader might expect, the site follows
-// PROJ (stated on the site). Origins and models are in each CRS's own units,
-// in normalized axis order (easting first); heights are in the CRS's height
-// system.
+// PROJ (stated on the site), except a NAVD88 height, which reads GEOID18,
+// NGS's current model: where PROJ ranks a superseded geoid (GEOID99,
+// GEOID03) ahead of it, the site pins GEOID18's operation. Origins and
+// models are in each CRS's own units, in normalized axis order (easting
+// first); heights are in the CRS's height system.
 //
 // Erasable TypeScript only (no enums, no parameter properties): the Node
 // generator imports this file directly.
@@ -17,7 +19,11 @@ import type { AreaOfInterest, CrsRef } from "../../src/engineering/crs.ts";
 import type { EngineeringFrameDefinition } from "../../src/engineering/EngineeringFrame.ts";
 import type { PlacementMode } from "../../src/engineering/placement.ts";
 import { EARTH } from "../../src/scene/Body.ts";
-import { CORRIDOR_ALIGNMENT, CORRIDOR_CRS } from "./corridor.ts";
+import {
+  CORRIDOR_ALIGNMENT,
+  CORRIDOR_CRS,
+  CORRIDOR_PIPELINE,
+} from "./corridor.ts";
 
 export interface PortfolioSite {
   /** Unique; names its generated tileset (`portfolio-<id>/`, or `site-building/`). */
@@ -55,6 +61,20 @@ const around = (longitude: number, latitude: number): AreaOfInterest => ({
 });
 
 const EGM96_GRID = "us_nga_egm96_15.tif";
+const GEOID18_GRID = "us_noaa_g2018u0.tif";
+
+/**
+ * NAD83 / Arizona Central (ft) + NAVD88 height (ft), EPSG:2223+8228, to WGS 84
+ * (EPSG:4979) through GEOID18: PROJ's "Inverse of SPCS83 Arizona Central zone
+ * (international foot) + NAD83 to NAD83(2011) (NADCON5, CONUS) + Conversion
+ * from NAVD88 height (ft) to NAVD88 height + Inverse of NAD83(2011) to NAVD88
+ * height (3) + NAD83(2011) to WGS 84 (1)", stated ±2.115 m, as proj.db 9.7.1
+ * writes it within the Phoenix site's area (recorded 2026-11-07). GEOID18 is
+ * defined on NAD83(2011), so NADCON5 first carries the position there from
+ * NAD83 (1986) through HARN, FBN and NSRS2007.
+ */
+export const PHOENIX_PIPELINE =
+  "+proj=pipeline +step +proj=unitconvert +xy_in=ft +xy_out=m +step +inv +proj=tmerc +lat_0=31 +lon_0=-111.916666666667 +k=0.9999 +x_0=213360 +y_0=0 +ellps=GRS80 +step +proj=gridshift +grids=us_noaa_nadcon5_nad83_1986_nad83_harn_conus.tif +step +proj=gridshift +no_z_transform +grids=us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif +step +proj=gridshift +no_z_transform +grids=us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif +step +proj=gridshift +no_z_transform +grids=us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif +step +proj=unitconvert +z_in=ft +z_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg";
 
 /**
  * The site-grid building: 200 × 120 ftUS, three stories of 13 ft, on a site
@@ -62,10 +82,10 @@ const EGM96_GRID = "us_nga_egm96_15.tif";
  * alignment's start, rotated 12.5° and scaled by 1.0000375 (a ground-to-grid
  * factor). Rigid by design: curvature doesn't matter over 200 ft.
  *
- * Its grids are those PROJ's best candidate for EPSG:6420+6360 reads (1.14
- * m): NADCON5 from NAD83(2011) back to NAD83(HARN), and GEOID99 for NAVD88
- * (`us_noaa_g1999u05.tif`). PROJ ranks it ahead of the GEOID18 operation
- * (2.015 m, `us_noaa_g2018u0.tif`) by stated accuracy; `load` takes it.
+ * It pins the corridor's GEOID18 operation (`CORRIDOR_PIPELINE`), so its one
+ * grid is `us_noaa_g2018u0.tif`: PROJ ranks NADCON5 with GEOID99 or GEOID03
+ * (1.14 m) ahead of it by stated accuracy, but both geoids are superseded
+ * for NAVD88.
  */
 export const SITE_BUILDING: PortfolioSite = {
   id: "site-building",
@@ -75,6 +95,7 @@ export const SITE_BUILDING: PortfolioSite = {
     name: "Site-grid building",
     body: EARTH,
     crs: CORRIDOR_CRS,
+    pipeline: CORRIDOR_PIPELINE,
     site: {
       origin: [
         CORRIDOR_ALIGNMENT.start[0] + 2_000,
@@ -88,12 +109,7 @@ export const SITE_BUILDING: PortfolioSite = {
   },
   origin: [0, 0, 0],
   model: { width: 200, depth: 120, stories: 3, storyHeight: 13 },
-  grids: [
-    "us_noaa_g1999u05.tif",
-    "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
-    "us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif",
-    "us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif",
-  ],
+  grids: [GEOID18_GRID],
 };
 
 /** Call 19's seven sites, in its order. */
@@ -192,17 +208,25 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
       // NAD83 / Arizona Central (ft) + NAVD88 height (ft), both in
       // international feet.
       crs: wkid(2223, 8228),
+      pipeline: PHOENIX_PIPELINE,
       areaOfInterest: around(-111.917, 33.419),
     },
     // On the central meridian (the false easting, 700,000 ft), the zone's
     // centre line, at the latitude of the Phoenix metro (33.42° N).
     origin: [700_000, 880_000, 1_160],
     model: { width: 180, depth: 140, stories: 4, storyHeight: 13 },
-    // PROJ's best candidate within the area, 1.1 m: Arizona's HPGN grid
-    // from NAD83 to NAD83(HARN), and GEOID99's tile 6 for NAVD88. PROJ ranks
-    // it ahead of NADCON5 with GEOID03 (1.14 m) and the GEOID18 operation
-    // (2.115 m) by stated accuracy; `load` takes it.
-    grids: ["us_noaa_azhpgn.tif", "us_noaa_g1999u06.tif"],
+    // Pinned to GEOID18 (`PHOENIX_PIPELINE`), as the California frames
+    // are: PROJ's best candidate within the area, 1.1 m, is Arizona's HPGN
+    // grid with GEOID99's tile 6, a superseded NAVD88 geoid, ranked ahead of
+    // NADCON5 with GEOID03 (1.14 m) and the GEOID18 operation (2.115 m) by
+    // stated accuracy. GEOID18 and NADCON5 from NAD83 (1986) to NAD83(2011).
+    grids: [
+      GEOID18_GRID,
+      "us_noaa_nadcon5_nad83_1986_nad83_harn_conus.tif",
+      "us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif",
+      "us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif",
+      "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
+    ],
   },
   {
     id: "jakarta",

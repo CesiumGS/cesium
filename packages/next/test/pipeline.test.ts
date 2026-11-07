@@ -4,6 +4,7 @@ import {
   formatPipeline,
   parsePipeline,
   pipelineGrids,
+  pipelineVerticalGrids,
 } from "../src/engineering/pipeline.ts";
 
 const TWO_GRIDS =
@@ -47,6 +48,25 @@ describe("pipelineGrids", () => {
     expect(grids).toEqual([
       { name: "nz_linz_nzgd2000-20180701.json", optional: false, key: "model" },
     ]);
+  });
+});
+
+describe("pipelineVerticalGrids", () => {
+  it("is a vgridshift's grids and any geoidgrids, once each: not a horizontal or 3D shift's", () => {
+    expect(pipelineVerticalGrids(parsePipeline(TWO_GRIDS))).toEqual([
+      "us_noaa_g2018u0.tif",
+    ]);
+    const nadcon5 =
+      "+proj=pipeline +step +inv +proj=gridshift +no_z_transform +grids=n5.tif +step +proj=vgridshift +grids=us_noaa_g1999u05.tif,@b.tif +multiplier=1 +step +proj=hgridshift +grids=h.tif +step +inv +proj=vgridshift +grids=us_noaa_g1999u05.tif";
+    expect(pipelineVerticalGrids(parsePipeline(nadcon5))).toEqual([
+      "us_noaa_g1999u05.tif",
+      "b.tif",
+    ]);
+    expect(
+      pipelineVerticalGrids(
+        parsePipeline("+proj=pipeline +step +proj=hgridshift +grids=h.tif"),
+      ),
+    ).toEqual([]);
   });
 });
 
