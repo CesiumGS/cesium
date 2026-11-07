@@ -114,6 +114,10 @@ export function createPanelActions(deps: {
     },
     setKnob: (id, value) => host.setKnob(id, value),
     backToChecked: () => host.backToChecked(),
+    goToTime: (ms) => {
+      viewer.clock.time = ms;
+      viewer.clock.mode = "paused";
+    },
     selectQuietly: (id) => deps.selection.selectQuietly(id),
   };
   return { actions, dispose: () => {} };

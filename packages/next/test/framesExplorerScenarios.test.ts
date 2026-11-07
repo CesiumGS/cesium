@@ -49,6 +49,8 @@ import {
   terrainSightText,
 } from "../examples/frames-explorer/sightLines.ts";
 import type { TerrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
+import { moonCut, rayPlacement } from "../examples/frames-explorer/skyRay.ts";
+import { MOON_RADIUS } from "../examples/frames-explorer/scenarios/occultation.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 
 const spec = (id: string) => SCENARIOS.find((s) => s.id === id)!;
@@ -429,5 +431,45 @@ describe("the terrain line of sight's words (Task 6b, Review Focus 2)", () => {
     const above = placeObserver({ from: at(689), to: at(5000) }, () => 600);
     expect(above.lifted).toBe(0);
     expect(placeObserver(line, () => undefined).lifted).toBe(0);
+  });
+});
+
+describe("the dish's lines from orbit (Task 6b, the owner's ask)", () => {
+  it("cuts a line at the Moon's near limb, and leaves one that passes it", () => {
+    const origin = [0, 0, 0];
+    const d = [1, 0, 0];
+    // The Moon 384,400 km along x: a line straight at it stops one radius short.
+    expect(moonCut(origin, d, 4e8, [3.844e8, 0, 0])).toBeCloseTo(
+      3.844e8 - MOON_RADIUS,
+      3,
+    );
+    // Off to the side by more than a radius: clear.
+    expect(moonCut(origin, d, 4e8, [3.844e8, 2e6, 0])).toBeUndefined();
+    // Beyond the line's end (Orion nearer than the Moon): clear.
+    expect(moonCut(origin, d, 3e8, [3.844e8, 0, 0])).toBeUndefined();
+  });
+
+  it("places a unit line along the direction, scaled to its length", () => {
+    const d = [0.6, 0.8, 0];
+    const m = rayPlacement([1, 2, 3], d, 10);
+    // z goes to d × length; the other two axes are square to it.
+    expect([m[8], m[9], m[10]]).toEqual([6, 8, 0]);
+    expect(m[0]! * d[0]! + m[1]! * d[1]! + m[2]! * d[2]!).toBeCloseTo(0, 12);
+    expect(m[4]! * d[0]! + m[5]! * d[1]! + m[6]! * d[2]!).toBeCloseTo(0, 12);
+    expect([m[12], m[13], m[14]]).toEqual([1, 2, 3]);
+  });
+
+  it("has a view knob that switches the camera and Orion's path, and draws every dish from orbit", () => {
+    const dish = SCENES["dish-tracks"]!;
+    expect(dish.cameraFor!({ station: "DSS-43", view: "dish" })).toBe("site");
+    expect(dish.cameraFor!({ station: "DSS-43", view: "orbit" })).toBe(
+      "earthMoon",
+    );
+    expect(dish.orion!({ view: "dish" })).toBeUndefined();
+    expect(dish.orion!({ view: "orbit" })).toBe("GCRF");
+    expect(dish.skyRay!.all!({ view: "orbit" })).toHaveLength(3);
+    expect(dish.skyRay!.all!({ view: "dish" })).toBeUndefined();
+    const view = spec("dish-tracks").knobs.find((k) => k.id === "view")!;
+    expect(view.view).toBe(true);
   });
 });

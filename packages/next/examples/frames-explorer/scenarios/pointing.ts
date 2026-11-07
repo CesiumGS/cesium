@@ -153,6 +153,17 @@ export function rayDirection(
   targetIcrf: (tdb: number) => ArrayLike<number>,
   instant: Instant,
 ): number[] {
+  return rayFrom(frames, site, latitude, targetIcrf, instant).enu;
+}
+
+/** `rayDirection`'s direction, with the light-time range to the target, m. */
+export function rayFrom(
+  frames: Frames,
+  site: Frame,
+  latitude: number,
+  targetIcrf: (tdb: number) => ArrayLike<number>,
+  instant: Instant,
+): { enu: number[]; range: number } {
   const icrf = frames.icrf;
   const t = instant.tdb();
   const m = frameTransform(site, icrf, instant);
@@ -197,5 +208,5 @@ export function rayDirection(
     (j) => rot[j]! * p[0]! + rot[3 + j]! * p[1]! + rot[6 + j]! * p[2]!,
   );
   const l = len(out);
-  return out.map((x) => x / l);
+  return { enu: out.map((x) => x / l), range };
 }

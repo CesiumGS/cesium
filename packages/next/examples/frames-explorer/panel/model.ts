@@ -249,6 +249,8 @@ export interface ScenarioPanelView {
   note?: string;
   /** Its lines of sight over the drawn terrain, the local horizon (sightLines.ts, Task 6b). */
   terrain?: readonly TerrainSightView[];
+  /** Moments the scenario offers to jump the clock to ("Behind the Moon"), UTC ms. */
+  presets?: readonly { id: string; label: string; utcMs: number }[];
   /** The knob the tree drives (one-path's frame): its nodes are the choices. */
   treeControl?: {
     knob: string;
@@ -359,6 +361,8 @@ export interface PanelActions {
   setKnob(id: string, value: KnobValue): void;
   /** Back to the checked setup: its knobs and epoch. */
   backToChecked(): void;
+  /** The clock to a moment the scenario offers (the dish's "Behind the Moon"), paused. */
+  goToTime(utcMs: number): void;
   /** The next selection of result `id` shows it without moving the camera or the overlays. */
   selectQuietly(id: string): void;
 }

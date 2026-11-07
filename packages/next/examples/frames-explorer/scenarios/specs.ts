@@ -152,10 +152,32 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
           { value: "DSS-63", label: "Madrid (DSS-63)" },
         ],
       },
+      {
+        id: "view",
+        label: "View",
+        kind: "choice",
+        view: true,
+        options: [
+          {
+            value: "dish",
+            label: "From the dish: its horizon, on the terrain",
+            short: "From the dish",
+          },
+          {
+            value: "orbit",
+            label:
+              "From orbit: the Earth and the Moon, Orion's path, every dish's line",
+            short: "From orbit",
+          },
+        ],
+      },
     ],
     // space.dss43-orion.*: DSS-43's light time and Doppler against plan 3's
     // SPICE fixture, at signal.json's rows; this is one of them.
-    checked: { epochUtc: SIGNAL_ROW, knobs: { station: "DSS-43" } },
+    checked: {
+      epochUtc: SIGNAL_ROW,
+      knobs: { station: "DSS-43", view: "dish" },
+    },
     // The stations come from the store's NAIF station SPK (the worker loads
     // it with the scenario); terrain is the page's, for the local horizon.
     needs: ["orion", "terrain"],

@@ -126,6 +126,18 @@ export interface ScenarioEvaluation {
   legend?: readonly SceneLegendRow[];
   sightLines?: readonly SightLine[];
   /**
+   * Spans worth marking on the timeline, UTC ms: when the Moon hides Orion
+   * from every dish (Task 6b).
+   */
+  windows?: readonly {
+    id: string;
+    label: string;
+    startUtc: number;
+    endUtc: number;
+  }[];
+  /** Moments a button takes the clock to ("Behind the Moon"), UTC ms. */
+  presets?: readonly { id: string; label: string; utcMs: number }[];
+  /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).
    * None may carry an id of the scenario's `proof` (the host refuses it),
    * and the host strips any `source`: the published references apply at the

@@ -40,6 +40,12 @@ import {
 } from "./evaluate.ts";
 import { SIGHT_LENGTH, POINTING_BY_HAND } from "./moonFromHere.ts";
 import {
+  type OcclusionWindow,
+  commonWindows,
+  limbAngle,
+  moonWindows,
+} from "./occultation.ts";
+import {
   angleBetween,
   azimuthElevation,
   pointingByHand,
@@ -120,6 +126,51 @@ function noOrion(ctx: StressContext): string {
 
 /** The checked setup's light time, s, once per worker. */
 let checkedLight: number | undefined;
+
+/** Each station's windows behind the Moon, and every station's at once: once per Orion. */
+const occultations = new WeakMap<
+  object,
+  {
+    byStation: Record<StationId, OcclusionWindow[]>;
+    common: { start: number; end: number }[];
+    places: Record<StationId, number[]>;
+  }
+>();
+
+/** The windows behind the Moon, from the stations' SPK places at the checked setup (plate motion is millimetres). */
+async function behindTheMoon(ctx: StressContext) {
+  const o = orion(ctx);
+  let w = occultations.get(o);
+  if (w === undefined) {
+    const t = Instant.fromUtc(
+      Date.parse(SPEC.checked.epochUtc),
+      ctx.frames.data.leapSeconds,
+    );
+    const ids = Object.keys(DSN_STATIONS) as StationId[];
+    const places = {} as Record<StationId, number[]>;
+    const byStation = {} as Record<StationId, OcclusionWindow[]>;
+    for (const id of ids) {
+      places[id] = Array.from(
+        (await stationTrajectory(ctx, id)).state(t).subarray(0, 3),
+      );
+      byStation[id] = moonWindows(ctx.frames, o, places[id]);
+    }
+    w = {
+      byStation,
+      common: commonWindows(ids.map((id) => byStation[id])),
+      places,
+    };
+    occultations.set(o, w);
+  }
+  return w;
+}
+
+/** "22:43:18 UTC" for a TDB time. */
+const clockText = (ctx: StressContext, tdb: number) =>
+  `${new Date(Instant.fromTdb(tdb).toUtc(ctx.frames.data.leapSeconds)).toISOString().slice(11, 19)} UTC`;
+
+/** The hand check of the edges: Orion on the Moon's limb there, within this many metres at the Moon. */
+export const LIMB_EDGE = 10;
 
 /** Orion seen from `site` at `instant`: Newtonian light time, as plan 3's SPICE fixture. */
 function look(
@@ -258,6 +309,28 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
   const verdict = sight.clear
     ? "clear of the Earth and the Moon"
     : `hidden by ${by === "Earth" ? "the Earth (below the horizon)" : "the Moon"}`;
+  // Behind the Moon: the windows, the one we're in, and its edges' check.
+  const behind = await behindTheMoon(ctx);
+  const mine = behind.byStation[id];
+  const within = mine.find(
+    (w) => w.start - 1 <= epochTdb && epochTdb <= w.end + 1,
+  );
+  const lost = by === "Moon";
+  const edgeText = (w: OcclusionWindow) =>
+    `loss ${clockText(ctx, w.start)}, acquisition ${clockText(ctx, w.end)}; a kilometre of the real limb's relief (the Moon is taken as a 1,737.4 km sphere) moves them ${fmt(w.secondsPerKm.start, 2)} s and ${fmt(w.secondsPerKm.end, 2)} s`;
+  const moonDistance = (tdb: number) => {
+    const m = frameTransform(f.moonIcrf, f.itrf, Instant.fromTdb(tdb)).subarray(
+      12,
+      15,
+    );
+    const p = behind.places[id];
+    return Math.hypot(m[0]! - p[0]!, m[1]! - p[1]!, m[2]! - p[2]!);
+  };
+  const edgeMisses = mine.flatMap((w) =>
+    [w.start, w.end].map(
+      (t) => Math.abs(limbAngle(f, o, behind.places[id], t)) * moonDistance(t),
+    ),
+  );
   const toItrf = frameTransform(site, f.itrf, instant);
   const along = (length: number) =>
     [0, 1, 2].map(
@@ -269,6 +342,22 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
             toItrf[8 + i]! * apparent[2]!),
     );
   const live: StressResult[] = [
+    {
+      id: "dish-tracks.behind-the-moon.live",
+      group: "space",
+      title: `${id} loses Orion behind the Moon and finds it again where hand geometry puts it on the Moon's limb (the angle from the limb to Orion, times the Moon's distance, within ${LIMB_EDGE} m)`,
+      pass: mine.length > 0,
+      value: Math.max(0, ...edgeMisses),
+      tolerance: LIMB_EDGE,
+      unit: "m",
+      detail:
+        mine.length === 0
+          ? "no window in Orion's data"
+          : mine.map(edgeText).join("; "),
+      accuracyNote:
+        "computed, not published: the library's line of sight against the Moon, its edges bisected to 1 ms, checked by hand limb geometry",
+      instant: instant.tdb(),
+    },
     {
       id: "dish-tracks.pointing.live",
       group: "space",
@@ -321,8 +410,10 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     data,
     answer: {
       label: `one way; point ${pointingText(azimuth, elevation)}`,
-      aside: `${sight.clear ? "In view" : "Not in view"}: ${verdict} · ${fmt(hand.range / 1000, 7)} km · range rate ${fmt(leg.rangeRate / 1000, 4)} km/s`,
-      headline: `${id} at ${station.complex} points ${pointingText(azimuth, elevation)} to receive Orion; the signal takes ${leg.lightTime.toFixed(6)} s on the way down, and the path is ${verdict}. Orion's data comes from EME2000 through EARTH_ICRF up to ICRF, then down through GCRF and the turning Earth (ITRF) into ${station.name}, the dish's own east, north and up.`,
+      aside: lost
+        ? `Signal lost: Orion is behind the Moon${within ? ` · ${edgeText(within)}` : ""}`
+        : `${sight.clear ? "In view" : "Not in view"}: ${verdict} · ${fmt(hand.range / 1000, 7)} km · range rate ${fmt(leg.rangeRate / 1000, 4)} km/s`,
+      headline: `${lost ? "Signal lost: Orion is behind the Moon. " : ""}${id} at ${station.complex} points ${pointingText(azimuth, elevation)} to receive Orion; the signal takes ${leg.lightTime.toFixed(6)} s on the way down, and the path is ${verdict}. Orion's data comes from EME2000 through EARTH_ICRF up to ICRF, then down through GCRF and the turning Earth (ITRF) into ${station.name}, the dish's own east, north and up.`,
       value: leg.lightTime,
       unit: "s",
       accuracy:
@@ -350,6 +441,18 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
         tone: "white",
       },
     ],
+    windows: behind.common.map((w, i) => ({
+      id: `behind-moon-${i}`,
+      label: "Orion behind the Moon from every dish",
+      startUtc: Instant.fromTdb(w.start).toUtc(f.data.leapSeconds),
+      endUtc: Instant.fromTdb(w.end).toUtc(f.data.leapSeconds),
+    })),
+    presets: behind.common.slice(0, 1).map((w) => ({
+      id: "behind-moon",
+      label: "Behind the Moon",
+      // A minute before the last dish loses Orion.
+      utcMs: Instant.fromTdb(w.start - 60).toUtc(f.data.leapSeconds),
+    })),
     sightLines: [
       {
         id: "orion",

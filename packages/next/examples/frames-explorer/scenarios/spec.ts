@@ -32,6 +32,11 @@ export interface KnobSpec {
   max?: number;
   step?: number;
   unit?: string;
+  /**
+   * A way of looking, not a setting (the dish's "From the dish" or "From
+   * orbit"): it never moves the scenario off its checked setup.
+   */
+  view?: boolean;
   /** A choice's options: its value (in the URL), its label, and the button's short text (the value without one). */
   options?: readonly { value: string; label: string; short?: string }[];
 }
@@ -73,7 +78,7 @@ export function checkedState(
   epochUtcMs: number,
 ): { atChecked: boolean; changed: readonly string[] } {
   const changed = spec.knobs
-    .filter((k) => knobs[k.id] !== spec.checked.knobs[k.id])
+    .filter((k) => k.view !== true && knobs[k.id] !== spec.checked.knobs[k.id])
     .map((k) => k.id);
   if (epochUtcMs !== Date.parse(spec.checked.epochUtc)) {
     changed.push("time");

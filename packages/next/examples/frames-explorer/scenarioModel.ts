@@ -202,6 +202,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     liveExtras,
     ...(input.sceneNote !== undefined && { note: input.sceneNote }),
     ...(input.terrain !== undefined && { terrain: input.terrain }),
+    ...(e?.presets && e.presets.length > 0 && { presets: e.presets }),
     focus: SCENES[spec.id]?.focus ?? [],
     ...(() => {
       const c = SCENES[spec.id]?.treeControl;

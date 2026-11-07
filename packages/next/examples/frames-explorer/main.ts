@@ -375,6 +375,17 @@ export function run(context: ExampleContext): ExampleRun {
         treeState.evaluationChanged();
         callouts.refresh();
         sightLines.evaluationChanged();
+        // The scenario's windows on the timeline (the dish's behind the Moon).
+        viewer.timeControls?.setMarks(
+          (stage.scene() !== undefined
+            ? state.evaluation?.windows
+            : undefined
+          )?.map((w) => ({
+            start: w.startUtc,
+            end: w.endUtc,
+            title: `${w.label}: ${new Date(w.startUtc).toISOString().slice(11, 19)} to ${new Date(w.endUtc).toISOString().slice(11, 19)} UTC`,
+          })) ?? [],
+        );
       }
       if (state.generation !== paramsGeneration) {
         // The link follows each asked-for setup, not every clock frame.

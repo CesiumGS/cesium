@@ -41,6 +41,12 @@
   font-size: var(--stratakit-font-size-body-sm);
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/* Moments the scenario offers (the dish's "Behind the Moon"): chips. */
+.fx-answer-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100);
+}
 /* The headline's published counterpart, and ours against it. */
 .fx-answer-published {
   display: flex;

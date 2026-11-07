@@ -522,6 +522,11 @@ export class Viewer {
 
   // ------------------------------------------------------------- globe
 
+  /** The time controls over the view, when the viewer has them. */
+  get timeControls(): TimeControlsHandle | undefined {
+    return this.time_;
+  }
+
   /** The globe's tileset (terrain or the ellipsoid), once built. */
   get globe(): Tileset3D | undefined {
     return this.globe_;

@@ -51,7 +51,21 @@ export interface TimeControlsHandle {
   show(on: boolean): void;
   /** Redraws (the place moved). */
   update(): void;
+  /**
+   * Marks spans of time on the day strip (UTC ms), drawn as bands over the
+   * sky's colors, with their titles in the strip's tooltip: an app's events
+   * (a spacecraft behind the Moon). An empty list clears them.
+   */
+  setMarks(marks: readonly TimeMark[]): void;
   dispose(): void;
+}
+
+/** A span of time marked on the day strip (`TimeControlsHandle.setMarks`). */
+export interface TimeMark {
+  /** UTC ms. */
+  start: number;
+  end: number;
+  title: string;
 }
 
 type Zone = "nominal" | "solar" | "utc" | "local";
@@ -469,6 +483,7 @@ export function attachTimeControls(
   let shownPlaying: boolean | undefined;
   let cachedStrip: ImageData | undefined;
   let sunMarks: SunTimes | undefined;
+  let marks: readonly TimeMark[] = [];
 
   function render(): void {
     const t = clock.time;
@@ -577,6 +592,20 @@ export function attachTimeControls(
       g.putImageData(cachedStrip, 0, 0);
     }
     const xOf = (ms: number) => ((ms - start) / DAY) * width;
+    // The app's marked spans, over the sky (not cached: they change).
+    g.fillStyle = "rgba(255, 112, 84, 0.6)";
+    for (const m of marks) {
+      const x0 = Math.max(0, xOf(m.start));
+      const x1 = Math.min(width, xOf(m.end));
+      if (x1 > x0) {
+        g.fillRect(
+          Math.floor(x0),
+          0,
+          Math.max(ratio, Math.ceil(x1 - x0)),
+          height,
+        );
+      }
+    }
     const wall = Date.now();
     if (wall >= start && wall < start + DAY) {
       g.fillStyle = "rgba(170, 238, 255, 0.95)";
@@ -610,6 +639,11 @@ export function attachTimeControls(
     },
     update() {
       lastDrawn = "";
+      render();
+    },
+    setMarks(next) {
+      marks = next;
+      strip.title = next.map((m) => m.title).join("\n");
       render();
     },
     dispose() {

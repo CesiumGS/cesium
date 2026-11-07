@@ -39,9 +39,10 @@ import { EARTH } from "../../src/scene/Body.ts";
 import { routeSteps } from "../../examples/frames-explorer/panel/routeSteps.ts";
 import references from "../../examples/frames-explorer/references.json";
 import { proofRows } from "../../examples/frames-explorer/scenarios/proof.ts";
-import type {
-  KnobState,
-  ScenarioId,
+import {
+  checkedState,
+  type KnobState,
+  type ScenarioId,
 } from "../../examples/frames-explorer/scenarios/spec.ts";
 import { SCENARIOS } from "../../examples/frames-explorer/scenarios/specs.ts";
 import {
@@ -971,7 +972,9 @@ describe("a dish tracks Orion (Task 6b)", () => {
       { station: "DSS-43" },
       at("2026-04-06T23:04:00Z"),
     );
-    expect(behind.answer.aside).toMatch(/^Not in view: hidden by the Moon/);
+    expect(behind.answer.aside).toMatch(
+      /^Signal lost: Orion is behind the Moon · loss \d\d:\d\d:\d\d UTC, acquisition/,
+    );
     const los = behind.live.find((r) => r.id === "space.line-of-sight.live")!;
     expect(los.pass, los.detail).toBe(true);
     const before = await client.scenario(
@@ -1005,6 +1008,47 @@ describe("a dish tracks Orion (Task 6b)", () => {
       }
     }
   }, 60_000);
+});
+
+describe("Orion behind the Moon (Task 6b, the owner's ask)", () => {
+  it("finds the window when the Moon hides Orion from every dish, its edges on the limb by hand, and offers a jump to just before it", async () => {
+    // The view knob is a way of looking, not a setting.
+    expect(
+      checkedState(
+        spec("dish-tracks"),
+        { station: "DSS-43", view: "orbit" },
+        Date.parse(spec("dish-tracks").checked.epochUtc),
+      ).atChecked,
+    ).toBe(true);
+    const e = await client.scenario(
+      "dish-tracks",
+      { station: "DSS-43" },
+      checkedTdb("dish-tracks"),
+    );
+    const iso = (ms: number) => new Date(ms).toISOString();
+    print(
+      `behind the Moon, every dish: ${(e.windows ?? []).map((w) => `${iso(w.startUtc)} to ${iso(w.endUtc)}`).join("; ")}`,
+    );
+    const edges = e.live.find(
+      (r) => r.id === "dish-tracks.behind-the-moon.live",
+    )!;
+    print(
+      `DSS-43 edges: ${edges.detail}; worst ${edges.value} m off the limb by hand`,
+    );
+    expect(edges.pass, edges.detail).toBe(true);
+    expect(e.windows).toHaveLength(1);
+    expect(e.presets?.[0]?.utcMs).toBe(e.windows![0]!.startUtc - 60_000);
+    // Pinned (computed, not published: no NASA loss-of-signal time is cited
+    // here), within 1 s; a kilometre of the real limb's relief moves an edge
+    // by about 0.8 s, which the Moon as a sphere leaves out.
+    const near = (ms: number, iso: string) =>
+      expect(Math.abs(ms - Date.parse(iso)), iso).toBeLessThan(1000);
+    near(e.windows![0]!.startUtc, "2026-04-06T22:42:53.503Z");
+    near(e.windows![0]!.endUtc, "2026-04-06T23:20:05.140Z");
+    expect(edges.detail).toMatch(
+      /loss 22:42:5[34] UTC, acquisition 23:23:1[12] UTC/,
+    );
+  }, 120_000);
 });
 
 describe("where's the Moon from here (Task 6b)", () => {

@@ -151,6 +151,8 @@ export interface SceneLook {
 export interface SceneSpec {
   id: ScenarioId;
   camera: SceneCamera;
+  /** The camera at these knobs, when a knob chooses it (the dish's view). */
+  cameraFor?(knobs: KnobState): SceneCamera;
   /** The orbit the flight lands in (orbit.ts); none for a view on the ground (the globe controls). */
   rig?: RigKind;
   /** The flight's length, s (the tour's: 3.0 to the plane, 3.5 to the site). */
@@ -171,8 +173,8 @@ export interface SceneSpec {
   dim?: { wide: number; narrow: number };
   /** The clock's rate while it shows, from the knobs; otherwise it is left. */
   clockRate?(knobs: KnobState): number;
-  /** Orion's path, drawn in this frame. */
-  orion?(knobs: KnobState): DrawnFrame;
+  /** Orion's path, drawn in this frame (none at knobs it returns undefined for). */
+  orion?(knobs: KnobState): DrawnFrame | undefined;
   /** The lunar site at this latitude. */
   lunarSite?(knobs: KnobState): number;
   /**
@@ -196,6 +198,12 @@ export interface SceneSpec {
     target: "moon" | "orion";
     label: string;
     site(knobs: KnobState): EarthSite;
+    /**
+     * From orbit (the dish's view knob): a line from each of these sites to
+     * the target while it is above that site's horizon, the knobs' own
+     * emphasized; none below it.
+     */
+    all?(knobs: KnobState): readonly EarthSite[] | undefined;
   };
   /** A limit the scenario says plainly, under its answer and on the globe. */
   note?: string;
@@ -309,7 +317,16 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     triads: (k) => [stationOf(k).name],
     earthSites: (k) => [stationOf(k)],
     look: (k) => ({ ...stationOf(k), range: 40_000, heading: 0, pitch: -25 }),
-    skyRay: { target: "orion", label: "To Orion", site: (k) => stationOf(k) },
+    cameraFor: (k) => (k.view === "orbit" ? "earthMoon" : "site"),
+    // From orbit, Orion's path in GCRF beside the Earth and the Moon.
+    orion: (k) => (k.view === "orbit" ? "GCRF" : undefined),
+    skyRay: {
+      target: "orion",
+      label: "To Orion",
+      site: (k) => stationOf(k),
+      all: (k) =>
+        k.view === "orbit" ? Object.values(DSN_STATIONS) : undefined,
+    },
     drawIn: (k) => stationOf(k).name,
     drawnView: Object.fromEntries(
       Object.values(DSN_STATIONS).map((s) => [

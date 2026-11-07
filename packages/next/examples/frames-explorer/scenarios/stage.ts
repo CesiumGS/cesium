@@ -190,6 +190,9 @@ export function createStage(deps: {
         orion.setFrame(drawIn);
         overlays.drawOn("orion");
       }
+    } else if (scene.orion && overlays.state("orion").on) {
+      // A view without the path (the dish's own): it goes.
+      overlays.set("orion", false);
     }
     deps.rebuildTree();
     deps.refreshTriads();
@@ -249,7 +252,8 @@ export function createStage(deps: {
     const moved =
       scene?.lunarSite?.(knobs) !== scene?.lunarSite?.(sceneKnobs) ||
       JSON.stringify(scene?.look?.(knobs)) !==
-        JSON.stringify(scene?.look?.(sceneKnobs));
+        JSON.stringify(scene?.look?.(sceneKnobs)) ||
+      scene?.cameraFor?.(knobs) !== scene?.cameraFor?.(sceneKnobs);
     if (scene?.orion && scene.orion(knobs) !== scene.orion(sceneKnobs)) {
       reframeOrion = true;
     }
@@ -268,7 +272,10 @@ export function createStage(deps: {
       // The camera follows the site once the slider rests.
       clearTimeout(siteFlight);
       siteFlight = window.setTimeout(() => {
-        if (!disposed() && (scene?.lunarSite || scene?.look)) {
+        if (
+          !disposed() &&
+          (scene?.lunarSite || scene?.look || scene?.cameraFor)
+        ) {
           flyToScene();
         }
       }, 400);

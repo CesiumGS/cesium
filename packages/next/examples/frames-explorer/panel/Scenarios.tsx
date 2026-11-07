@@ -569,7 +569,7 @@ function ScenariosView({
 
             <section className="fx-section" aria-labelledby={ids.answer}>
               <SectionHead id={ids.answer} title="The answer" />
-              <ScenarioAnswer scenario={scenario} />
+              <ScenarioAnswer scenario={scenario} onPreset={actions.goToTime} />
             </section>
 
             <section

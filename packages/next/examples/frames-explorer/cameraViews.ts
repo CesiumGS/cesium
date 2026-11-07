@@ -403,7 +403,7 @@ export function createCameraViews(deps: {
 
   /** A scenario's view: its framing and the orbit it names (scenes.ts). */
   function sceneView(sc: SceneSpec, knobs: KnobState): CameraView | undefined {
-    switch (sc.camera) {
+    switch (sc.cameraFor?.(knobs) ?? sc.camera) {
       case "site": {
         // On the ground at the scene's site (the dish, Sacramento).
         const l = sc.look?.(knobs);
