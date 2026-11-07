@@ -14,6 +14,7 @@ import type { SceneLegendRow } from "../panel/legendRows.ts";
 import type { OverlayGeometry } from "../protocol.ts";
 import type { StressContext, StressResult } from "../tests.ts";
 import type { AddedFrameSpec, EdgeAccuracy } from "../tree.ts";
+import type { CheckKind } from "./checks.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 
 /** The scenario's answer to its question, at the knobs it was evaluated at. */
@@ -69,6 +70,11 @@ export interface ScenarioAnswer {
     checkId: string;
     /** The catalog's tolerance, in words: "within 2%". */
     tolerance: string;
+    /**
+     * Ours, in the published value's unit, where the headline's figure is
+     * another quantity (the capstone's distance, its light time published).
+     */
+    ours?: number;
   };
   value?: number;
   unit?: string;
@@ -161,6 +167,12 @@ export interface SightLine {
    * on the sea it stands over.
    */
   groundRadius?: number;
+  /**
+   * The Earth end it is traced from, by name (the capstone's ship or tool,
+   * Task 8 fix 1): where drawn tiles are too coarse there, the page says
+   * the terrain at it isn't judged from this far out.
+   */
+  end?: string;
 }
 
 /**
@@ -314,6 +326,12 @@ export interface ScenarioEvaluation {
    * at the checked setup only, so the checks don't show them there.
    */
   live: readonly StressResult[];
+  /**
+   * Each live check's kind where the spec shows them at the checked setup
+   * (`ScenarioSpec.liveAtChecked`): a hand formula, a round trip. Off it
+   * they are live re-runs whatever this says.
+   */
+  liveKinds?: Readonly<Record<string, CheckKind>>;
   /**
    * The answer's value at the checked setup, in `answer.unit`: off it, the
    * checks state how far the setting moves the answer from it.

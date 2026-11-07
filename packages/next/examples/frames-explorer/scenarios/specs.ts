@@ -574,40 +574,29 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
         options: CAPSTONE_OBJECTS,
       },
     ],
-    // The ship and the lunar site meet only at ICRF: the longest path
-    // through the tree. At the dish's signal row, while Orion is in
-    // transit: the light-time solver's published check (plan 3's SPICE
-    // fixture, at DSS-43 to Orion) applies at this time. Its checks: that
-    // one, the round trips and compositions between the route's built-in
-    // ends (ITRF and MOON_ME), and the ship's frames' round trip (Task 8).
+    // DSS-43 receiving from Orion at the dish's signal row (Task 8 fix 1,
+    // the controller's ruling): the pair plan 3's SPICE fixture publishes
+    // a light time for, at one of its rows, so space.dss43-orion.light-time
+    // is this answer's own published check. Its route still meets at ICRF
+    // (Orion under EME2000 and EARTH_ICRF, the dish under ITRF and GCRF).
+    // No catalog case checks the distance or the line of sight of a pair,
+    // so the evaluation's own hand formulas and round trips show here too
+    // (`liveAtChecked`). The longest path (the ship and the lunar site) is
+    // a moment.
     checked: {
       epochUtc: SIGNAL_ROW,
-      knobs: { from: "ship", to: "lunar-site" },
+      knobs: { from: "dish", to: "orion" },
     },
     distinct: ["from", "to"],
     // GEOID18 puts the ship's sea at NAVD88 0 m (the ship's checked
     // datum); the dish comes from the store's station SPK (with Orion);
-    // terrain is the page's, for an Earth end's local horizon.
+    // terrain is the page's, for the ship's and the tool's local horizon.
     needs: ["proj", "geoid", "orion", "terrain"],
     globe: "terrain",
-    checks: [
-      "frame-tree.compositions.itrf-moon-me",
-      "frame-tree.body-frame.round-trip",
-      "space.dss43-orion.light-time",
-    ],
-    checkedBy: "round trips and the light time's published check",
-    checkKinds: {
-      "frame-tree.compositions.itrf-moon-me": "roundTrip",
-      "frame-tree.body-frame.round-trip": "roundTrip",
-      "space.dss43-orion.light-time": "published",
-    },
-    checkNotes: {
-      "frame-tree.compositions.itrf-moon-me":
-        "The route's two built-in ends, ITRF (the ship's) and MOON_ME (the lunar site's), through ICRF: round trips and compositions at five instants in 2026, not this one; the frames compose the same way at any instant.",
-      "frame-tree.body-frame.round-trip":
-        "The ship's body and mast frames to ITRF and back, at the ship scenario's checked setup (80 minutes along its track); here it holds off Mile Rocks, built the same way.",
-      "space.dss43-orion.light-time":
-        "The light-time solver every pair's answer uses, checked against plan 3's SPICE fixture for DSS-43 to Orion at signal.json's rows, this time among them; for the ship and the lunar site there is no published value.",
-    },
+    checks: ["space.dss43-orion.light-time"],
+    checkedBy:
+      "the light time's published check, hand formulas and round trips",
+    checkKinds: { "space.dss43-orion.light-time": "published" },
+    liveAtChecked: true,
   },
 ];

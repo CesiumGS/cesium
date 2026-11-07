@@ -257,24 +257,27 @@ describe("the capstone's From and To never name one object (Task 8)", () => {
   const s = SCENARIOS.find((x) => x.id === "everything")!;
   const checked = s.checked.knobs;
 
-  it("offers the five objects at both ends, the checked pair the ship and the lunar site", () => {
+  it("offers the five objects at both ends, the checked pair the dish receiving from Orion (fix 1)", () => {
     for (const id of ["from", "to"]) {
       expect(
         s.knobs.find((k) => k.id === id)!.options!.map((o) => o.value),
       ).toEqual(["dish", "ship", "orion", "lunar-site", "tool"]);
     }
-    expect(checked).toEqual({ from: "ship", to: "lunar-site" });
+    expect(checked).toEqual({ from: "dish", to: "orion" });
     expect(s.distinct).toEqual(["from", "to"]);
+    // Its published check is this pair's own; its own checks show too.
+    expect(s.checks).toEqual(["space.dss43-orion.light-time"]);
+    expect(s.liveAtChecked).toBe(true);
   });
 
   it("falls back to the checked pair for a link that names one object twice", () => {
     expect(clampKnobs(s, { from: "dish", to: "dish" })).toEqual(checked);
-    expect(clampKnobs(s, { from: "orion", to: "nowhere" })).toEqual({
-      from: "orion",
-      to: "lunar-site",
+    expect(clampKnobs(s, { from: "ship", to: "nowhere" })).toEqual({
+      from: "ship",
+      to: "orion",
     });
     // The fallback To is the From: the checked pair, not the same twice.
-    expect(clampKnobs(s, { from: "lunar-site" })).toEqual(checked);
+    expect(clampKnobs(s, { from: "orion" })).toEqual(checked);
     expect(clampKnobs(s, { from: "tool", to: "orion" })).toEqual({
       from: "tool",
       to: "orion",
@@ -282,17 +285,17 @@ describe("the capstone's From and To never name one object (Task 8)", () => {
   });
 
   it("turns the pair round when one end takes the other's object (the swap)", () => {
-    expect(withKnob(s, checked, "to", "ship")).toEqual({
-      from: "lunar-site",
-      to: "ship",
+    expect(withKnob(s, checked, "to", "dish")).toEqual({
+      from: "orion",
+      to: "dish",
     });
-    expect(withKnob(s, checked, "from", "lunar-site")).toEqual({
-      from: "lunar-site",
-      to: "ship",
+    expect(withKnob(s, checked, "from", "orion")).toEqual({
+      from: "orion",
+      to: "dish",
     });
-    expect(withKnob(s, checked, "to", "orion")).toEqual({
-      from: "ship",
-      to: "orion",
+    expect(withKnob(s, checked, "to", "tool")).toEqual({
+      from: "dish",
+      to: "tool",
     });
     // Other scenarios' knobs are set as they were.
     const arm = SCENARIOS.find((x) => x.id === "robot-arm")!;

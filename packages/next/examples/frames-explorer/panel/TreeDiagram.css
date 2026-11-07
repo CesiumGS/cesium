@@ -329,3 +329,10 @@
   align-items: center;
   gap: var(--stratakit-space-200);
 }
+/* The capstone's pair (Task 8 fix 1): which end the next click sets. */
+.fx-pair-next {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}

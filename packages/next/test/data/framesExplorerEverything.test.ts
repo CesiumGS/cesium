@@ -368,13 +368,30 @@ describe("the capstone: every pair of its five objects (Task 8)", () => {
         bounded,
       );
       expect(e.pair!.meters).toBe(e.answer.accuracy.meters);
-      const sizes = e.answer.breakdown!.map((t) => t.meters ?? Infinity);
+      // Stated terms largest first; those that state nothing after them
+      // (the dish's own position, DSN 810-005's centimetres: fix 1, M4).
+      const sizes = e.answer.breakdown!.map((t) => t.meters ?? -1);
       expect(sizes).toEqual([...sizes].sort((p, q) => q - p));
+      const dish = a === "dish" || b === "dish";
+      expect(
+        e.answer.breakdown!.some(
+          (t) => t.meters === undefined && /DSN 810-005/.test(t.label),
+        ),
+      ).toBe(dish);
       if (bounded) {
         expect(e.answer.accuracy.meters).toBeCloseTo(
-          Math.hypot(...e.answer.breakdown!.map((t) => t.meters!)),
+          Math.hypot(
+            ...e.answer.breakdown!.flatMap((t) =>
+              t.meters === undefined ? [] : [t.meters],
+            ),
+          ),
           9,
         );
+        if (dish) {
+          expect(e.answer.accuracy.note).toMatch(
+            /not stated, so it is left out/,
+          );
+        }
       }
     }
   });
@@ -391,32 +408,54 @@ describe("the capstone: every pair of its five objects (Task 8)", () => {
         expect(sky.text).toMatch(/the Earth is in the way \(the straight line/);
         expect(e.sightLines).toEqual([]);
       }
-      if (sky.state === "clear" && (CAPSTONE[a].place || CAPSTONE[b].place)) {
-        // An Earth end's local horizon is traced on the page, for this pair.
-        expect(e.sightLines!.map((l) => [l.id, l.key])).toEqual([
-          ["pair", JSON.stringify([a, b])],
+      const ground = [a, b].find((o) => o === "ship" || o === "tool");
+      if (
+        sky.state === "clear" &&
+        ground !== undefined &&
+        !(CAPSTONE[a].place && CAPSTONE[b].place)
+      ) {
+        // The ship's or the tool's local horizon is traced on the page, for
+        // this pair, from that end.
+        expect(e.sightLines!.map((l) => [l.id, l.key, l.end])).toEqual([
+          ["pair", JSON.stringify([a, b]), CAPSTONE[ground].name],
         ]);
         expect(sky.line).toBe("pair");
         expect(sky.key).toBe(JSON.stringify([a, b]));
+      }
+      if (
+        (a === "dish" || b === "dish") &&
+        !(CAPSTONE[a].place && CAPSTONE[b].place)
+      ) {
+        // The dish's horizon is its published receive mask (fix 1).
+        expect(e.sightLines).toEqual([]);
+        if (los.detail!.startsWith("library: clear")) {
+          expect(sky.text).toMatch(
+            /DSS-43's (published receive )?(horizon )?mask/,
+          );
+        }
       }
     }
   });
 });
 
-describe("the capstone's checks and moments (Task 8)", () => {
-  it("at its checked setup: the round trips and the light time's published check, passing; no published value for the pair, said in one line; none says validated", () => {
-    const e = of("ship", "lunar-site");
-    expect(e.answer.published).toBeUndefined();
-    expect(e.answer.unpublished).toMatch(/^No published value for this pair/);
+describe("the capstone's checks and moments (Task 8, fix 1)", () => {
+  it("at its checked setup, DSS-43 receiving from Orion: its own published light time beside the answer, its own hand formulas and round trips, all passing; none says validated", () => {
+    const e = of("dish", "orion");
+    expect(SPEC.checked.knobs).toEqual({ from: "dish", to: "orion" });
+    expect(e.answer.unpublished).toBeUndefined();
+    const pub = e.answer.published!;
+    expect(pub.checkId).toBe("space.dss43-orion.light-time");
+    // Ours, in seconds, against plan 3's value at this very row.
+    expect(Math.abs(pub.ours! - pub.value) * 299_792_458).toBeLessThan(0.5);
     const rows = checkRows(SPEC, true, catalog, e);
-    expect(rows.map((r) => r.status)).toEqual(SPEC.checks.map(() => "checked"));
-    expect(rows.map((r) => r.kind)).toEqual([
-      "roundTrip",
-      "roundTrip",
-      "published",
+    expect(rows.map((r) => [r.status, r.kind])).toEqual([
+      ["checked", "published"],
+      ["live", "hand"],
+      ["live", "roundTrip"],
+      ["live", "hand"],
     ]);
     for (const r of rows) {
-      if (r.status === "checked") {
+      if (r.status === "checked" || r.status === "live") {
         expect(r.result.pass, `${r.result.id}: ${r.result.detail}`).toBe(true);
         const extras = extrasOf(r.result);
         const t = checkRowText(r, { [r.result.id]: extras }, "current");
@@ -425,11 +464,13 @@ describe("the capstone's checks and moments (Task 8)", () => {
         ).toBe(false);
       }
     }
+    // Its sky leads clear, above DSS-43's published mask.
+    expect(e.answer.sky!.text).toMatch(/above DSS-43's published receive mask/);
   });
 
-  it("off it: live re-runs, passing, under no check's id; the published light time applies at the checked setup", () => {
+  it("off it: live re-runs, passing, under no check's id; the published light time applies at the checked setup, moving the answer only for its own pair", async () => {
     for (const [a, b] of PAIRS.filter(
-      ([x, y]) => !(x === "ship" && y === "lunar-site"),
+      ([x, y]) => !(x === "dish" && y === "orion"),
     )) {
       const e = of(a, b);
       for (const r of e.live) {
@@ -437,11 +478,19 @@ describe("the capstone's checks and moments (Task 8)", () => {
         expect(r.pass, `${a} to ${b}: ${r.id}: ${r.detail}`).toBe(true);
         expect(r.source).toBeUndefined();
       }
+      expect(e.answer.published).toBeUndefined();
+      expect(e.answer.unpublished).toMatch(/^No published value for this pair/);
       const rows = checkRows(SPEC, false, catalog, e);
       expect(rows.some((r) => r.status === "checked")).toBe(false);
+      const ref = rows.filter((r) => r.status === "reference-only");
+      expect(ref.map((r) => r.kind)).toEqual(["published"]);
+      // Another pair's distance is not this one's moved.
+      expect(ref.some((r) => r.status === "reference-only" && r.delta)).toBe(
+        false,
+      );
       expect(
-        rows.filter((r) => r.status === "reference-only").map((r) => r.kind),
-      ).toEqual(["published"]);
+        rows.filter((r) => r.status === "live").map((r) => r.kind),
+      ).toEqual(e.live.map(() => "live"));
       for (const r of rows) {
         const extras = r.status === "live" ? extrasOf(r.result) : undefined;
         if (extras) {
@@ -457,28 +506,54 @@ describe("the capstone's checks and moments (Task 8)", () => {
         ).toBe(false);
       }
     }
-  });
-
-  it("compares the dish and Orion's light time with plan 3's SPICE fixture at the signal row (a live row; the published value is its own)", () => {
-    const e = of("dish", "orion");
-    const row = e.live.find(
-      (r) => r.id === "everything.dss43-orion.light-time.live",
-    )!;
-    expect(row.pass, row.detail).toBe(true);
-    expect(row.value!).toBeLessThan(0.5);
-    expect(e.answer.unpublished).toMatch(/^Published for this pair/);
-    // Not for the pair turned round: that is the uplink's light time.
-    expect(of("orion", "dish").live.some((r) => r.id.includes("dss43"))).toBe(
+    expect(of("orion", "dish").answer.unpublished).toMatch(/turned round/);
+    // The checked pair an hour on: its own distance moved, in km.
+    const later = await evaluate(SPEC.checked.knobs, CHECKED + 3600);
+    const ref = checkRows(SPEC, false, catalog, later).find(
+      (r) => r.status === "reference-only",
+    );
+    expect(ref?.status === "reference-only" && ref.delta?.unit).toBe("km");
+    expect(later.answer.published?.ours).toBeDefined();
+    // No published comparison runs as a live re-run.
+    expect(later.live.some((r) => /dss43|SPICE/.test(r.id + r.title))).toBe(
       false,
     );
   });
 
-  it("offers the longest path (the checked setup itself) and Orion behind the Moon, which the answer then says", async () => {
+  it("agrees with the dish's own scenario on DSS-43's horizon at the same instants (its published mask)", async () => {
+    for (const dt of [0, 3 * 3600, 6 * 3600, 9 * 3600, 12 * 3600, 15 * 3600]) {
+      const tdb = CHECKED + dt;
+      const mine = await evaluate({ from: "dish", to: "orion" }, tdb);
+      const dish = await client.scenario(
+        "dish-tracks",
+        { station: "DSS-43", view: "dish" },
+        tdb,
+      );
+      expect(mine.answer.sky!.state, `+${dt} s`).toBe(dish.answer.sky!.state);
+      if (/^Below DSS-43's/.test(dish.answer.sky!.text)) {
+        expect(mine.answer.sky!.text).toBe(dish.answer.sky!.text);
+      }
+    }
+  }, 300_000);
+
+  it("says plainly when Orion has no data, and rethrows nothing for a pair without it", async () => {
+    const early = Instant.fromUtc(
+      Date.parse("2026-01-01T00:00:00Z"),
+      leap,
+    ).tdb();
+    const none = await evaluate({ from: "ship", to: "orion" }, early);
+    expect(none.answer.label).toBe("No Orion data at this time");
+    expect(none.answer.accuracy.unbounded).toBe(true);
+    const fine = await evaluate({ from: "ship", to: "tool" }, early);
+    expect(fine.answer.value).toBeGreaterThan(3000);
+  });
+
+  it("offers the longest path (the ship and the lunar site) and Orion behind the Moon, which the answer then says", async () => {
     const e = of("dish", "orion");
     const [longest, behind] = e.presets!;
     expect(longest).toMatchObject({
       id: "longest-path",
-      knobs: SPEC.checked.knobs,
+      knobs: { from: "ship", to: "lunar-site" },
       utcMs: Date.parse(SPEC.checked.epochUtc),
     });
     expect(behind).toMatchObject({

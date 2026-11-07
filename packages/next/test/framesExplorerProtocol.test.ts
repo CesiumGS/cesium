@@ -823,11 +823,14 @@ describe("scenario", () => {
     });
     // Every scenario has one since Task 8: one is taken away to ask.
     unregisterScenarioForTests("everything");
-    await expect(client.scenario("everything", {}, 0)).rejects.toMatchObject({
-      name: "RangeError",
-      message: expect.stringMatching(/"everything".*no evaluator/),
-    });
-    registerScenario("everything", evaluateEverything);
+    try {
+      await expect(client.scenario("everything", {}, 0)).rejects.toMatchObject({
+        name: "RangeError",
+        message: expect.stringMatching(/"everything".*no evaluator/),
+      });
+    } finally {
+      registerScenario("everything", evaluateEverything);
+    }
     stubScenario("earth-turns", async () => evaluation());
     await expect(
       client.scenario("earth-turns", { rate: 3600 }, NaN),

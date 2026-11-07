@@ -28,7 +28,6 @@ import { C } from "../../../src/measure/constants.ts";
 import { measure } from "../../../src/measure/measure.ts";
 import { MOON } from "../../../src/scene/Body.ts";
 import { Instant } from "../../../src/time/Instant.ts";
-import signalFixture from "../../../test/fixtures/frames/signal.json";
 import type { FrameCache } from "../frameCache.ts";
 import type { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
 import {
@@ -39,7 +38,13 @@ import {
 import { STATIONS_SPK, orion } from "../stress/shared.ts";
 import { buildTree, type AddedFrameSpec, type TreeNode } from "../tree.ts";
 import { anglesOf, armFrames } from "./arm.ts";
-import { dishAndNetworkWindows, look, stationFrame } from "./dishTracks.ts";
+import {
+  dishAndNetworkWindows,
+  dishHorizon,
+  publishedLight,
+  stationFrame,
+} from "./dishTracks.ts";
+import { azimuthElevation } from "./pointing.ts";
 import {
   registerScenario,
   type Moment,
@@ -59,6 +64,7 @@ import {
   DSN_STATIONS,
   LUNAR_SITE,
   capstoneEnds,
+  frameLabel,
   latitudeText,
   lunarSiteFrame,
   type CapstoneObject,
@@ -81,10 +87,9 @@ const SHIP_DATUM: KnobState = { datum: "navd88" };
 
 /** Within this of an end's horizon or a body's limb (degrees) the hand check leaves the verdict to the library. */
 const HORIZON_GREY = 0.1;
+/** The Earth's mean radius, m: a horizon's dip by hand. */
+const EARTH_MEAN_RADIUS = 6_371_000;
 const LIMB_GREY = 0.01;
-
-/** A signal.json row this close to the clock (s) is the pair's published light time's. */
-const ROW_NEAR = 60;
 
 /** Each frame's origin in `to` at `instant`, m. */
 const originIn = (frame: Frame, to: Frame, instant: Instant): number[] => {
@@ -291,11 +296,12 @@ export const evaluateEverything: ScenarioEvaluator = async (
   const path = { from: A.node, to: B.node };
   const key = JSON.stringify([from, to]);
 
+  const checkedEnds = capstoneEnds(SPEC.checked.knobs);
   let checkedKm = checkedDistances.get(f);
   if (checkedKm === undefined) {
     const t = Instant.fromUtc(Date.parse(SPEC.checked.epochUtc), leap);
     const c = await objects(ctx, cache, t);
-    const ends = capstoneEnds(SPEC.checked.knobs);
+    const ends = checkedEnds;
     checkedKm =
       norm(
         sub(
@@ -322,10 +328,10 @@ export const evaluateEverything: ScenarioEvaluator = async (
       id: "longest-path",
       label: "The longest path",
       icon: "extend",
-      knobs: SPEC.checked.knobs,
+      knobs: { from: "ship", to: "lunar-site" },
       utcMs: Date.parse(SPEC.checked.epochUtc),
       title:
-        "The ship's mast to the lunar site, at the checked time: they meet only at ICRF, the tree's root (the checked setup)",
+        "The ship's mast to the lunar site, at the checked time: the longest route through the tree, seven edges, meeting only at ICRF, the root",
     },
     ...(hidden
       ? [
@@ -360,7 +366,10 @@ export const evaluateEverything: ScenarioEvaluator = async (
     track: { heights: x.heights },
     presets,
     windows,
-    checkedAnswerValue: checkedKm,
+    // How far the setting moves the answer: only for the checked pair
+    // itself (another pair's distance is not this one's moved).
+    ...(from === checkedEnds.from &&
+      to === checkedEnds.to && { checkedAnswerValue: checkedKm }),
   };
 
   const fa = x.frames[from];
@@ -382,16 +391,23 @@ export const evaluateEverything: ScenarioEvaluator = async (
         shapiro: [],
       },
     );
-  } catch {
-    // Outside Orion's data (or in one of its gaps): said, unbounded.
+  } catch (error) {
+    // Outside Orion's data (or in one of its gaps), with Orion an end: said,
+    // unbounded. Anything else is a fault, and the host reports it.
     const o = x.o;
+    if (
+      !(from === "orion" || to === "orion") ||
+      !/outside its data/.test(error instanceof Error ? error.message : "")
+    ) {
+      throw error;
+    }
     const day = (tdb: number) =>
       new Date(Instant.fromTdb(tdb).toUtc(leap)).toISOString().slice(0, 10);
     return {
       ...base,
       answer: {
-        label: "",
-        headline: `No Orion data at this time: its OEM covers ${day(o.spans[0]![0])} to ${day(o.spans.at(-1)![1])}, with short gaps between segments. Move the clock into that span, or pick a pair without Orion.`,
+        label: "No Orion data at this time",
+        headline: `Orion has no place at this time, so neither its distance nor its light time can be given: the Artemis II OEM runs from ${day(o.spans[0]![0])} to ${day(o.spans.at(-1)![1])}, with short gaps between its segments. Move the clock into it, or pick a pair without Orion.`,
         accuracy: {
           note: "not bounded: outside Orion's data",
           unbounded: true,
@@ -448,7 +464,21 @@ export const evaluateEverything: ScenarioEvaluator = async (
           },
         ]
       : []),
-  ].sort((p, q) => (q.meters ?? Infinity) - (p.meters ?? Infinity));
+    // The station's own position uncertainty: neither NAIF's SPK nor
+    // references.json states it (DSN 810-005 quotes centimetres). Named,
+    // left out of the ± as the walk leaves it out (M4).
+    ...(from === "dish" || to === "dish"
+      ? [
+          {
+            label: `${CAPSTONE_DISH}'s own position (DSN 810-005)`,
+            note: "not stated: NAIF's station SPK and references.json give the station's position without its uncertainty (DSN 810-005 quotes centimetres); left out of the ±, as the walk leaves it out",
+          },
+        ]
+      : []),
+  ].sort(
+    // Stated terms largest first; those that state nothing after them.
+    (p, q) => (q.meters ?? -1) - (p.meters ?? -1),
+  );
   const lead = breakdown[0];
   const accuracy: ScenarioAnswer["accuracy"] =
     meters === undefined
@@ -458,7 +488,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
         }
       : {
           meters,
-          note: `the distance between the two origins (1σ), root-sum-square of the terms below; most of it ${lead!.label.replace(/^The /, "the ")}${lead!.meters !== undefined ? ` (±${fmt(lead!.meters, 2)} m)` : ""}`,
+          note: `the distance between the two origins (1σ), root-sum-square of the terms below; most of it ${lead!.label.replace(/^The /, "the ")}${lead!.meters !== undefined ? ` (±${fmt(lead!.meters, 2)} m)` : ""}${from === "dish" || to === "dish" ? `; ${CAPSTONE_DISH}'s own position uncertainty is not stated, so it is left out` : ""}`,
         };
 
   // The line of sight: the library's, against the Earth and the Moon.
@@ -471,8 +501,10 @@ export const evaluateEverything: ScenarioEvaluator = async (
   const km = (m: number) =>
     `${Math.round(m / 1000).toLocaleString("en-US")} km`;
   // An end on the Earth, with the Earth and the Moon clear: its local
-  // horizon toward the other, traced on the page over the drawn terrain.
-  const earthEnd: CapstoneObject | undefined =
+  // horizon toward the other. The dish's is its published receive mask, as
+  // in dish-tracks (`dishHorizon`), so the two agree at one instant; the
+  // ship's and the tool's are traced on the page over the drawn terrain.
+  const groundEnd: CapstoneObject | undefined =
     sight.clear && !bothOnEarth
       ? onEarth(from)
         ? from
@@ -480,6 +512,37 @@ export const evaluateEverything: ScenarioEvaluator = async (
           ? to
           : undefined
       : undefined;
+  // The dish's horizon toward an end off the Earth, as dish-tracks words it
+  // (the Earth, or its mask), whether or not the sky is clear.
+  const dishSees =
+    (from === "dish" || to === "dish") && !bothOnEarth
+      ? (() => {
+          const other = from === "dish" ? fb : fa;
+          const seen =
+            from === "dish"
+              ? m
+              : measure(
+                  framePoint(x.dish.frame, [0, 0, 0]),
+                  framePoint(other, [0, 0, 0]),
+                  instant,
+                  f,
+                  { shapiro: [] },
+                );
+          const { azimuth, elevation: el } = azimuthElevation(
+            seen.signal!.downlink.receiverDirection,
+          );
+          return {
+            elevation: el,
+            ...dishHorizon(
+              CAPSTONE_DISH,
+              azimuth,
+              el,
+              from === "dish" ? B.name : A.name,
+            ),
+          };
+        })()
+      : undefined;
+  const earthEnd = groundEnd === "dish" ? undefined : groundEnd;
   const sightLines: ScenarioEvaluation["sightLines"] =
     earthEnd === undefined
       ? []
@@ -497,6 +560,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
               to: here.map((v, i) => v + (SIGHT_LENGTH / l) * d[i]!),
               label: other.name,
               subject: `${CAPSTONE[earthEnd].title}'s local horizon toward ${other.name}`,
+              end: CAPSTONE[earthEnd].name,
             },
           ];
         })();
@@ -522,14 +586,34 @@ export const evaluateEverything: ScenarioEvaluator = async (
     { grey: [], words: [] };
   /** The other end's elevation from the lunar site, degrees, when it is an end. */
   let siteElevation: number | undefined;
+  /** Each Earth end's grey band, degrees. */
+  const greys: number[] = [];
+  /** The tool's height above its pad, m. */
+  const toolUp = frameTransform(x.arm.tool, x.arm.pad, instant)[14]!;
   for (const [obj, here, there] of [
     [from, pa, pb],
     [to, pb, pa],
   ] as const) {
     if (onEarth(obj)) {
       const el = elevation(here.itrf, there.itrf, upOf(obj, here.itrf));
-      hand.words.push(`${CAPSTONE[obj].name} sees the other ${fmt(el, 4)}° up`);
-      if (Math.abs(el) <= HORIZON_GREY) {
+      // The horizon dips by √(2h/R) from h up: the end's height above the
+      // ellipsoid, or above its own ground (the mast, the arm), whichever
+      // is more (M3).
+      const h = Math.max(
+        Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(here.itrf), {
+          longitude: 0,
+          latitude: 0,
+          height: 0,
+        })?.height ?? 0,
+        obj === "ship" ? CAPSTONE_MAST : obj === "tool" ? toolUp : 0,
+        0,
+      );
+      const grey = HORIZON_GREY + Math.sqrt((2 * h) / EARTH_MEAN_RADIUS) * DEG;
+      greys.push(grey);
+      hand.words.push(
+        `${CAPSTONE[obj].name} sees the other ${fmt(el, 4)}° up (its horizon's dip ${fmt(grey - HORIZON_GREY, 2)}°)`,
+      );
+      if (Math.abs(el) <= grey) {
         hand.grey.push(`${CAPSTONE[obj].name}'s horizon`);
       } else if (el < 0) {
         hand.blocked ??= "Earth";
@@ -581,11 +665,18 @@ export const evaluateEverything: ScenarioEvaluator = async (
   }
   const fromSite = siteElevation;
   const skyText =
-    by === "Earth"
-      ? `Out of sight: the Earth is in the way${dip !== undefined ? ` (the straight line between them passes ${km(-dip)} below the ellipsoid)` : ""}`
-      : by === "Moon"
-        ? `Out of sight: the Moon is in the way${fromSite !== undefined && fromSite < 0 ? ` (from the lunar site the other is ${fmt(-fromSite, 2)}° below the horizon)` : ""}`
-        : "In view: clear of the Earth and the Moon";
+    by === "Earth" && dishSees
+      ? dishSees.text
+      : by === "Earth"
+        ? `Out of sight: the Earth is in the way${dip !== undefined ? ` (the straight line between them passes ${km(-dip)} below the ellipsoid)` : ""}`
+        : by === "Moon"
+          ? `Out of sight: the Moon is in the way${fromSite !== undefined && fromSite < 0 ? ` (from the lunar site the other is ${fmt(-fromSite, 2)}° below the horizon)` : ""}`
+          : dishSees?.below
+            ? dishSees.text
+            : dishSees
+              ? `In view: clear of the Earth and the Moon, and above ${CAPSTONE_DISH}'s published receive mask (${dishSees.elevation.toFixed(2)}° up, the limit there ${dishSees.limit.toFixed(2)}°)`
+              : "In view: clear of the Earth and the Moon";
+  const seen = sight.clear && !dishSees?.below;
   const losPass =
     hand.grey.length > 0
       ? true
@@ -597,7 +688,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
     {
       id: "everything.light-time.live",
       group: "space",
-      title: `${A.title} and ${B.name}: the one-way light time from \`measure\` against the same by hand (fixed-point iteration in ICRF from the tree's positions, Newtonian), within 1 ns`,
+      title: `${A.title} and ${B.name}: the one-way light time from measure against the same by hand (fixed-point iteration in ICRF from the tree's positions, Newtonian), within 1 ns`,
       pass: true,
       value: Math.abs(handLt - lightTime),
       tolerance: 1e-9,
@@ -657,42 +748,28 @@ export const evaluateEverything: ScenarioEvaluator = async (
       group: "space",
       title: `${A.title} and ${B.name}: the library's line of sight (the Earth and the Moon) agrees with hand geometry (each end's horizon, and the bodies' limbs)`,
       pass: losPass,
-      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: ${hand.blocked ? `blocked by the ${hand.blocked}` : "clear"} (${hand.words.join("; ")})${hand.grey.length > 0 ? `; within ${HORIZON_GREY}° of ${hand.grey.join(" and ")}: the library's verdict stands` : ""}`,
+      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: ${hand.blocked ? `blocked by the ${hand.blocked}` : "clear"} (${hand.words.join("; ")})${hand.grey.length > 0 ? `; within ${fmt(Math.max(HORIZON_GREY, ...greys), 2)}° of ${hand.grey.join(" and ")}: the library's verdict stands` : ""}`,
       accuracyNote: "exact arithmetic: hand geometry",
       instant: epochTdb,
     },
   ];
-  // Published for this pair alone: plan 3's SPICE light time at DSS-43, at
-  // signal.json's rows. Near one, ours at that row against it.
-  let unpublished =
-    "No published value for this pair: it is checked by round trips, its light time by hand, and its distance is the difference of the two places in ICRF.";
-  if (from === "dish" && to === "orion") {
-    const row = signalFixture.rows.reduce((best, r) =>
-      Math.abs(r.tdb - epochTdb) < Math.abs(best.tdb - epochTdb) ? r : best,
-    );
-    if (Math.abs(row.tdb - epochTdb) <= ROW_NEAR) {
-      const t = Instant.fromTdb(row.tdb);
-      const s = await stationFrame(ctx, CAPSTONE_DISH, t);
-      const ours = look(ctx, s.frame, t).signal!.downlink.lightTime;
-      const published = row.dss43.CN.lt;
-      live.push({
-        id: "everything.dss43-orion.light-time.live",
-        group: "space",
-        title: `${CAPSTONE_DISH} to Orion at signal.json's "${row.kind}" row (${clockText(ctx, row.tdb)}): our one-way light time against plan 3's SPICE fixture (NAIF spkpos, CN), c·∆lt within 0.5 m`,
-        pass: true,
-        value: Math.abs(ours - published) * C,
-        tolerance: 0.5,
-        unit: "m",
-        detail: `ours ${ours.toFixed(9)} s; published ${published.toFixed(9)} s (test/fixtures/frames/signal.json)`,
-        accuracyNote:
-          "the fixture's own: NAIF SPICE spkpos with the same kernels' station and OEM",
-        instant: row.tdb,
-      });
-      unpublished = `Published for this pair at signal.json's rows: plan 3's SPICE light time at ${CAPSTONE_DISH}, compared in the Checks at the row ${Math.abs(row.tdb - epochTdb) < 0.01 ? "shown" : `${fmt(Math.abs(row.tdb - epochTdb), 2)} s from this time`}.`;
-    } else {
-      unpublished = `Published for this pair at signal.json's rows only (plan 3's SPICE light time at ${CAPSTONE_DISH}); none is within a minute of this time.`;
-    }
-  }
+  // The light time's published counterpart, for the checked pair alone
+  // (DSS-43 receiving from Orion): plan 3's SPICE value at the checked row,
+  // judged by the catalog's space.dss43-orion.light-time there.
+  const checkedPair = from === checkedEnds.from && to === checkedEnds.to;
+  const published: ScenarioAnswer["published"] = checkedPair
+    ? {
+        ...publishedLight(
+          Instant.fromUtc(Date.parse(SPEC.checked.epochUtc), leap).tdb(),
+        ),
+        ours: lightTime,
+      }
+    : undefined;
+  const unpublished = checkedPair
+    ? undefined
+    : from === "orion" && to === "dish"
+      ? `No published value for this pair: plan 3's light time is for ${CAPSTONE_DISH} receiving from Orion, this pair turned round. It is checked by round trips, its light time by hand, and its distance is the difference of the two places in ICRF.`
+      : "No published value for this pair: it is checked by round trips, its light time by hand, and its distance is the difference of the two places in ICRF.";
 
   // Measured in From's own frame the distance reads a little differently
   // where GCRF's relativistic scale is on the route (IERS 2010).
@@ -714,20 +791,21 @@ export const evaluateEverything: ScenarioEvaluator = async (
     label: "apart",
     aside: `Light ${lightText} one way (a signal from ${B.name}, heard at ${A.name} now)`,
     sky: {
-      state: sight.clear ? "clear" : "lost",
-      where,
+      state: seen ? "clear" : "lost",
+      where: dishSees && by !== "Moon" ? `at ${CAPSTONE_DISH}` : where,
       text: skyText,
       line: "pair",
       key,
     },
-    headline: `${A.title} and ${B.name} are ${(distance / 1000).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km apart now, the straight line between the two frames' origins in ICRF. A signal from ${B.name} takes ${lightText} to reach ${A.name}. ${sight.clear ? "The line between them is clear of the Earth and the Moon" : by === "Earth" ? "The Earth is in the way" : "The Moon is in the way"}${earthEnd !== undefined ? `; ${CAPSTONE[earthEnd].name}'s own horizon is the terrain as drawn` : ""}. Their route through the tree goes up from ${A.node} to ${bothOnEarth ? "ITRF, where the two branches meet" : "ICRF, the root, where the two branches meet"}, then down to ${B.node}.`,
+    headline: `${A.title} and ${B.name} are ${(distance / 1000).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km apart now, the straight line between the two frames' origins in ICRF. A signal from ${B.name} takes ${lightText} to reach ${A.name}. ${!sight.clear ? (by === "Earth" ? "The Earth is in the way" : "The Moon is in the way") : dishSees?.below ? `It is below ${CAPSTONE_DISH}'s published receive mask` : "The line between them is clear of the Earth and the Moon"}${dishSees && !dishSees.below ? `, and above ${CAPSTONE_DISH}'s published receive mask` : ""}${earthEnd !== undefined ? `; ${CAPSTONE[earthEnd].name}'s own horizon is the terrain as drawn, judged only where it is drawn finely enough` : ""}. Their route through the tree goes up from ${frameLabel(A)} to ${bothOnEarth ? "ITRF, where the two branches meet" : "ICRF, the root, where the two branches meet"}, then down to ${frameLabel(B)}.`,
     value: distance / 1000,
     unit: "km",
     digits: 1,
     accuracy,
     path,
     breakdown,
-    unpublished,
+    ...(published && { published }),
+    ...(unpublished !== undefined && { unpublished }),
     method: [
       {
         title: "Five objects, five branches",
@@ -743,7 +821,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       },
       {
         title: "Can one see the other",
-        text: "The straight path is tested against the Earth's and the Moon's ellipsoids, each placed when the light passes it. An end on the Earth also has its local horizon toward the other traced on the page over the terrain as drawn: never clear over terrain not drawn, or within its error.",
+        text: `The straight path is tested against the Earth's and the Moon's ellipsoids, each placed when the light passes it. The dish's own horizon is ${CAPSTONE_DISH}'s published receive mask (DSN 810-005 301), as in "A dish tracks Orion". The ship's and the tool's are traced on the page over the terrain as drawn: never clear over terrain not drawn, or within its error, and not judged at all where the drawn tiles there are coarser than ±100 m (zoom to the end to trace it).`,
       },
       {
         title: "How sure",
@@ -772,6 +850,11 @@ export const evaluateEverything: ScenarioEvaluator = async (
       },
     ],
     live,
+    liveKinds: {
+      "everything.light-time.live": "hand",
+      "everything.round-trip.live": "roundTrip",
+      "everything.line-of-sight.live": "hand",
+    },
   };
 };
 

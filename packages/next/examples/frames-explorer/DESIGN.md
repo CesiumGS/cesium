@@ -1633,6 +1633,40 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   windows mark the timeline for that pair). A moment may now set knobs and
   the time.
 
+#### 8 fix round 1 (the controller's rulings on the review)
+
+These bind over the bullets above where they differ.
+
+- **The checked setup is the dish receiving from Orion** at the signal
+  row. `space.dss43-orion.light-time` is this answer's own published
+  check, and plan 3's light time sits beside the answer (dish-tracks'
+  `publishedLight`, with ours in seconds: `published.ours`). The
+  evaluation's own hand formulas and round trips show at the checked
+  setup too, under their kinds (`ScenarioSpec.liveAtChecked`,
+  `ScenarioEvaluation.liveKinds`). The checks' delta is given only for the
+  checked pair, never another pair's distance. No published comparison
+  runs as a live re-run. "The longest path" (the ship and the lunar site)
+  is a moment.
+- **The dish's horizon is DSS-43's published receive mask**, through
+  dish-tracks' own `dishHorizon`, so the two scenarios agree at one
+  instant (a data test holds them to it). The ship's and the tool's are
+  traced over the drawn terrain, but where that trace's error is over
+  `COARSE_TERRAIN_METERS` (100 m) the page says "the terrain at the end
+  isn't judged from this far out: zoom to it to trace": unknown, never
+  clear.
+- **Orion's data gaps** alone give "No Orion data at this time"; any other
+  fault is rethrown.
+- **Picking:** the next end a plain click sets is shown under the key and
+  announced (`aria-live`). It goes back to From when the knobs, Swap or a
+  moment change the pair (`panel/pairPick.ts`, unit-tested).
+- **The hand line of sight's grey band** widens by each Earth end's
+  horizon dip, √(2h/R), h its height above the ellipsoid or its own ground
+  (the mast, the arm).
+- **The dish's own position uncertainty** (DSN 810-005's centimetres; no
+  figure in the SPK or references.json) is named "not stated" in the
+  breakdown, after the stated terms, and left out of the ±, as the walk
+  leaves it out.
+
 ### Carried forward (engine work)
 
 - **X-ray dashes for the geocentric triads inside the globe.** (Meanwhile

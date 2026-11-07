@@ -9,10 +9,13 @@ import {
 } from "../examples/frames-explorer/panelModel.ts";
 import type { ScenarioHostState } from "../examples/frames-explorer/scenarioHost.ts";
 import {
+  COARSE_TERRAIN_METERS,
+  ownTraces,
   publishedView,
   scenarioFreshness,
   scenarioView,
 } from "../examples/frames-explorer/scenarioModel.ts";
+import { checkRows } from "../examples/frames-explorer/scenarios/checks.ts";
 import type { ScenarioAnswer } from "../examples/frames-explorer/scenarios/evaluate.ts";
 import { READY } from "../examples/frames-explorer/scenarios/scenes.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
@@ -249,5 +252,124 @@ describe("the panel model's pure parts", () => {
       kind: "error",
       text: "An error matching /bad/.",
     });
+  });
+});
+
+describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
+  const line = {
+    id: "pair",
+    key: "k",
+    from: [0, 0, 0],
+    to: [1, 0, 0],
+    label: "Orion",
+    subject: "The ship's mast's local horizon toward Orion",
+    end: "the ship's mast",
+  };
+  const trace = (meters: number, state: "clear" | "may-block" = "clear") => ({
+    id: "pair",
+    state,
+    text: "traced",
+    traced: "k",
+    meters,
+  });
+
+  it("never judges an end's horizon over tiles coarser than the threshold, and never says clear there", () => {
+    const far = ownTraces([trace(77_000)], { sightLines: [line] });
+    expect(far).toEqual([
+      expect.objectContaining({
+        state: "unknown",
+        coarse: "the ship's mast",
+        text: "The ship's mast's local horizon toward Orion: the terrain at the ship's mast isn't judged from this far out: zoom to it to trace.",
+      }),
+    ]);
+    const near = ownTraces([trace(COARSE_TERRAIN_METERS / 4)], {
+      sightLines: [line],
+    });
+    expect(near[0]!.state).toBe("clear");
+    // Another pair's trace is tracing, whatever its tiles.
+    expect(
+      ownTraces([{ ...trace(77_000), traced: "other" }], {
+        sightLines: [line],
+      })[0]!.state,
+    ).toBe("waiting");
+  });
+
+  it("compares ours in the published unit where the headline is another quantity, and moves it off the checked setup", () => {
+    const pub = {
+      value: 1.3152,
+      unit: "s",
+      printed: "1.315200000 s",
+      document: "plan 3",
+      checkId: "space.dss43-orion.light-time",
+      tolerance: "within 0.5 m",
+      ours: 1.3153,
+    };
+    const result = {
+      id: pub.checkId,
+      group: "space",
+      title: "",
+      pass: true,
+    } as StressResult;
+    const at = publishedView(
+      pub,
+      new Map([[pub.checkId, result]]),
+      true,
+      "current",
+      [],
+      394_337.4,
+    ).published!;
+    expect(at.ours).toBe(1.3153);
+    expect(at.difference!.value).toBeCloseTo(1e-4, 12);
+    expect(at.difference!.unit).toBe("s");
+    const off = publishedView(
+      pub,
+      new Map([[pub.checkId, result]]),
+      false,
+      "current",
+      [],
+      394_337.4,
+    ).published!;
+    expect(off.state).toBe("off");
+    expect(off.delta).toEqual({ value: expect.closeTo(1e-4, 12), unit: "s" });
+  });
+
+  it("shows the evaluation's own checks at the checked setup under their kinds, and as live re-runs off it", () => {
+    const spec = SCENARIOS.find((x) => x.id === "everything")!;
+    const r = (id: string) =>
+      ({ id, group: "space", title: id, pass: true }) as StressResult;
+    const e = {
+      scenario: "everything" as const,
+      added: [],
+      answer: { label: "", headline: "", accuracy: { note: "" } },
+      overlays: [],
+      live: [r("everything.light-time.live"), r("everything.round-trip.live")],
+      liveKinds: {
+        "everything.light-time.live": "hand" as const,
+        "everything.round-trip.live": "roundTrip" as const,
+      },
+    };
+    const catalog = new Map([
+      [
+        "space.dss43-orion.light-time",
+        {
+          ...r("space.dss43-orion.light-time"),
+          source: { reference: "dsn-dss43" },
+        } as StressResult,
+      ],
+    ]);
+    expect(
+      checkRows(spec, true, catalog, e).map((x) => [x.status, x.kind]),
+    ).toEqual([
+      ["checked", "published"],
+      ["live", "hand"],
+      ["live", "roundTrip"],
+    ]);
+    expect(
+      checkRows(spec, false, catalog, e).map((x) => [x.status, x.kind]),
+    ).toEqual([
+      ["reference-only", "published"],
+      ["live", "live"],
+      ["live", "live"],
+    ]);
   });
 });

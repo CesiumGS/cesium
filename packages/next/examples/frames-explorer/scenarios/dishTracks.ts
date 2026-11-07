@@ -128,12 +128,37 @@ function noOrion(ctx: StressContext): string {
 }
 
 /**
+ * A dish's horizon toward `target` at `azimuth`, `elevation` (degrees,
+ * where it points): its published receive mask (DSN 810-005 301), linear
+ * between whole degrees of azimuth, the owner's choice for the near field.
+ * Below it, why: the Earth itself, or the mask there. The capstone's dish
+ * takes the same verdict (Task 8 fix 1), so the two agree at one instant.
+ */
+export function dishHorizon(
+  id: StationId,
+  azimuth: number,
+  elevation: number,
+  target = "Orion",
+): { below: boolean; limit: number; text: string } {
+  const limit = maskAt(dsnMask(id), azimuth);
+  return {
+    below: elevation <= limit,
+    limit,
+    text:
+      elevation < 0
+        ? `Below ${id}'s horizon: the Earth is in the way (${(-elevation).toFixed(2)}° down)`
+        : `Below ${id}'s horizon mask: ${target} is ${elevation.toFixed(2)}° up, the published receive limit there ${limit.toFixed(2)}° (DSN 810-005 301)`,
+  };
+}
+
+/**
  * The headline's published counterpart (Task 6c fix 1, the controller's
  * ruling): plan 3's SPICE fixture's one-way light time at DSS-43 for the
  * checked setup's row (signal.json's "spread" row nearest `checkedTdb`),
- * which space.dss43-orion.light-time compares ours with at every row.
+ * which space.dss43-orion.light-time compares ours with at every row. The
+ * capstone's dish and Orion take it too (Task 8 fix 1).
  */
-function publishedLight(
+export function publishedLight(
   checkedTdb: number,
 ): NonNullable<ScenarioEvaluation["answer"]["published"]> {
   const row = signalFixture.rows.reduce((best, r) =>
@@ -399,8 +424,8 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
   // The dish's horizon is its published receive mask (DSN 810-005 301),
   // linear between whole degrees of azimuth; the Earth and the Moon stay.
   const myMask = dsnMask(id);
-  const limit = maskAt(myMask, azimuth);
-  const belowHorizon = !behindMoon && (by === "Earth" || elevation <= limit);
+  const horizon = dishHorizon(id, azimuth, elevation);
+  const belowHorizon = !behindMoon && (by === "Earth" || horizon.below);
   const edgeText = (w: MoonWindow) =>
     `loss ${clockText(ctx, w.start)}, acquisition ${clockText(ctx, w.end)}; a kilometre of the real limb's relief (the Moon is taken as a 1,737.4 km sphere) moves them ${fmt(w.secondsPerKm.start, 2)} s and ${fmt(w.secondsPerKm.end, 2)} s`;
   const networkText = (w: Window) =>
@@ -552,10 +577,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
           ? {
               state: "lost",
               where: `at ${id}`,
-              text:
-                elevation < 0
-                  ? `Below ${id}'s horizon: the Earth is in the way (${(-elevation).toFixed(2)}° down)`
-                  : `Below ${id}'s horizon mask: Orion is ${elevation.toFixed(2)}° up, the published receive limit there ${limit.toFixed(2)}° (DSN 810-005 301)`,
+              text: horizon.text,
             }
           : {
               state: "clear",

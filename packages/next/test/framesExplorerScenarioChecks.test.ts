@@ -286,13 +286,14 @@ describe("checkRows off the checked setup (Review Focus 1)", () => {
       expect(rows.map((r) => r.status)).toEqual(
         spec.checks.map(() => "reference-only"),
       );
-      const at = checkRows(
-        spec,
-        true,
-        catalog,
-        evaluation({ scenario: spec.id }),
-      );
-      expect(at.map((r) => r.status)).toEqual(spec.checks.map(() => "checked"));
+      const e = evaluation({ scenario: spec.id });
+      const at = checkRows(spec, true, catalog, e);
+      // The capstone's own checks of its answer show there too (Task 8 fix
+      // 1), as its own rows, never as the catalog's.
+      expect(at.map((r) => r.status)).toEqual([
+        ...spec.checks.map(() => "checked"),
+        ...(spec.liveAtChecked ? e.live.map(() => "live") : []),
+      ]);
     }
   });
 

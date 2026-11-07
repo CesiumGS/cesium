@@ -216,7 +216,12 @@ export type CheckRow =
     }
   /** At the checked setup: a check id the catalog hasn't given yet. No pass. */
   | { status: "pending"; kind: CheckKind; id: string; title: string }
-  | { status: "live"; kind: "live"; result: StressResult }
+  /**
+   * The evaluation's own check: off the checked setup a live re-run
+   * (`live`); at it, for a spec with `liveAtChecked`, its own kind (a hand
+   * formula, a round trip: the capstone's pair, Task 8 fix 1).
+   */
+  | { status: "live"; kind: CheckKind; result: StressResult }
   /** Judged on the page, against measured data (`maskCheckRow`). */
   | { status: "page"; kind: "measured"; check: PageCheck }
   | {
@@ -280,6 +285,17 @@ export function checkRows(
           kind: checkKind(spec, id, result),
           result,
           ...(note !== undefined && { note }),
+        });
+      }
+    }
+    if (spec.liveAtChecked) {
+      // Checks of this very answer at this setup, by another route (no
+      // catalog case can: the capstone's pair); never a published value.
+      for (const result of evaluation.live) {
+        rows.push({
+          status: "live",
+          kind: evaluation.liveKinds?.[result.id] ?? "live",
+          result,
         });
       }
     }

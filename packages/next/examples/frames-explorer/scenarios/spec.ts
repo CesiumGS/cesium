@@ -81,6 +81,12 @@ export interface ScenarioSpec {
    * checked pair (`clampKnobs`).
    */
   distinct?: readonly [string, string];
+  /**
+   * The evaluation's own checks of its answer show at the checked setup
+   * too, under their kinds (`ScenarioEvaluation.liveKinds`): the capstone's
+   * pair, whose answer no catalog case checks (Task 8 fix 1).
+   */
+  liveAtChecked?: true;
 }
 
 /**

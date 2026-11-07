@@ -557,6 +557,25 @@ describe("the verdict joins the terrain's to the sky's (fix 1): the weakest lead
     );
   });
 
+  it("says the terrain at an end isn't judged from far out, never clear (the capstone, fix 1)", () => {
+    const keyed = {
+      ...answer,
+      sky: { ...answer.sky, line: "pair", key: "k" },
+    };
+    const coarse = [
+      {
+        id: "pair",
+        state: "unknown" as const,
+        text: "",
+        traced: "k",
+        coarse: "the ship's mast",
+      },
+    ];
+    expect(withTerrain(keyed, coarse).aside).toBe(
+      "In view: clear of the Earth and the Moon; the terrain at the ship's mast isn't judged from this far out: zoom to it to trace · 394,304 km",
+    );
+  });
+
   it("leads with the terrain when it blocks, without the pointing figure", () => {
     const b = withTerrain(answer, t("blocked"));
     expect(b.label).toBe("Blocked by the terrain at DSS-43");

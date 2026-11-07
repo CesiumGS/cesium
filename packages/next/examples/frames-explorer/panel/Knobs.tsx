@@ -225,11 +225,12 @@ function PairKnobs({
         render={<p />}
         className="fx-knob-help fx-pair-help"
       >
-        {name(from)?.label} to {name(to)?.label.replace(/^The /, "the ")}
+        {/* The buttons' own short names (M7): the long ones read as a list. */}
+        From {name(from)?.short} to {name(to)?.short}
         {from === String(checked[pair.from]) && to === String(checked[pair.to])
           ? ""
           : ` (checked: ${name(String(checked[pair.from]))?.short} to ${name(String(checked[pair.to]))?.short})`}
-        . Or click them in the tree.
+        . Or pick them in the tree.
       </Typography>
     </div>
   );

@@ -184,7 +184,10 @@ export function withTerrain(
         lead = `${sky.text}; the terrain may block it${err}`;
         break;
       case "unknown":
-        lead = `${sky.text}; the terrain is unknown over ${share(t.unknownFraction ?? 1)} of the path near the ground`;
+        lead =
+          t.coarse !== undefined
+            ? `${sky.text}; the terrain at ${t.coarse} isn't judged from this far out: zoom to it to trace`
+            : `${sky.text}; the terrain is unknown over ${share(t.unknownFraction ?? 1)} of the path near the ground`;
         break;
       case "waiting":
         lead = `${sky.text}; the terrain isn't traced yet`;

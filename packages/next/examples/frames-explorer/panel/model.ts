@@ -339,6 +339,12 @@ export interface TerrainSightView {
    * terrain's error under it, and where it is (Earth-fixed).
    */
   margin?: { clearance: number; error: number; at: readonly number[] };
+  /**
+   * The end it was traced from, when the drawn tiles there are too coarse
+   * to judge it (the capstone's ship or tool seen from far out, Task 8 fix
+   * 1): unknown, never clear, with words saying so.
+   */
+  coarse?: string;
 }
 
 /** One line of the report's environment (R15). */

@@ -373,6 +373,10 @@ export const CAPSTONE: Readonly<
   },
 };
 
+/** An object's frame as the tree labels it ("Orion" for the node "orion"). */
+export const frameLabel = (o: { node: string }): string =>
+  o.node === "orion" ? "Orion" : o.node;
+
 /** The capstone's two ends at these knobs (the checked pair for anything else). */
 export function capstoneEnds(knobs: KnobState): {
   from: CapstoneObject;
@@ -751,17 +755,17 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       return {
         start: {
           title: `From ${CAPSTONE[from].name}`,
-          does: `its own frame, ${CAPSTONE[from].node}: the route starts at its origin`,
+          does: `its own frame, ${frameLabel(CAPSTONE[from])}: the route starts at its origin`,
         },
         end: {
           title: `To ${CAPSTONE[to].name}`,
-          does: `its own frame, ${CAPSTONE[to].node}: the distance is between the two origins, compared in ICRF`,
+          does: `its own frame, ${frameLabel(CAPSTONE[to])}: the distance is between the two origins, compared in ICRF`,
         },
       };
     },
     diagramNote:
       "Five objects, each in its own frame on its own branch. Click a frame to set From, then another (or Shift-click) for To; Enter and Shift+Enter do the same from the keyboard. The route lights from one up to where they meet and down to the other.",
-    note: "The ship's track and sea state and the arm are synthetic (the ship holds off Mile Rocks after its track's end on 1 March). The lunar site is on the IAU sphere at the south pole. An Earth end's local horizon is the terrain as drawn; the Earth and the Moon are their ellipsoids; refraction is left out.",
+    note: "The ship's track and sea state and the arm are synthetic (the ship holds off Mile Rocks after its track's end on 1 March). The lunar site is on the IAU sphere at the south pole. The dish's horizon is its published receive mask; the ship's and the tool's are the terrain as drawn, judged only from close enough; the Earth and the Moon are their ellipsoids; refraction is left out.",
   },
 };
 

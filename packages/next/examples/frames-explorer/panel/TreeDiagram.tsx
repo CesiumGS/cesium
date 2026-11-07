@@ -48,6 +48,14 @@ import { EDGE_LABEL, FAMILY_INFO, familyMap, type Family } from "./families.ts";
 import { edgeAccuracyText } from "./FrameTree.tsx";
 import { useStableCallback } from "./memo.ts";
 import { focusTree, layoutTree } from "./treeLayout.ts";
+import {
+  nextAfter,
+  nextText,
+  pairPick,
+  type PairEnd,
+  type PairNodes,
+  type PairPress,
+} from "./pairPick.ts";
 
 /** A pill's height (a 32 px hit target), a depth row's and the gap between pills, px. */
 const PILL = 32;
@@ -563,8 +571,29 @@ export const TreeDiagram = memo(function TreeDiagram({
     () => new Map<string, string>(JSON.parse(tagKey) as [string, string][]),
     [tagKey],
   );
-  /** Which end a plain click picks next: To after a click picked From. */
-  const nextEnd = useRef<"from" | "to">("from");
+  // Which end a plain click sets next (shown and announced under the
+  // diagram), kept while the pair is the one the tree's own last pick
+  // expected; the knobs, Swap or a moment changing it start again at From.
+  const [nextEnd, setNextEnd] = useState<PairEnd>("from");
+  const expected = useRef<PairNodes | undefined>(undefined);
+  const pairFrom = pair?.from;
+  const pairTo = pair?.to;
+  useEffect(() => {
+    if (pairFrom !== undefined && pairTo !== undefined) {
+      setNextEnd((n) =>
+        nextAfter(n, expected.current, { from: pairFrom, to: pairTo }),
+      );
+    }
+  }, [pairFrom, pairTo]);
+  /** A press on a pair's pill: the knob it sets, and the next end. */
+  const press = (id: string, how: PairPress) => {
+    const r = pairPick(pair!, nextEnd, id, how);
+    expected.current = r.expect;
+    setNextEnd(r.next);
+    if (r.end) {
+      pair!.pick(id, r.end);
+    }
+  };
   const layout = useMemo(
     () => diagramLayout(shaped, keep, expanded, width, ends, fullLabels, data),
     [shaped, keep, expanded, width, ends, fullLabels, data],
@@ -720,12 +749,8 @@ export const TreeDiagram = memo(function TreeDiagram({
     const isSelected = selected?.kind === "node" && selected.id === id;
     if (target && pair) {
       // A click picks From, the next one To; Shift-click To at once. A
-      // second click on From's own frame only shows it.
-      const end = shift ? "to" : nextEnd.current;
-      if (!(end === "to" && id === pair.from)) {
-        pair.pick(id, end);
-        nextEnd.current = end === "from" ? "to" : "from";
-      }
+      // second click on From's own frame only shows it (pairPick.ts).
+      press(id, shift ? "shift-click" : "click");
       onSelect({ kind: "node", id });
     } else if (target) {
       // The tree as the control: draw in this frame, and show it.
@@ -740,11 +765,7 @@ export const TreeDiagram = memo(function TreeDiagram({
       if (e.key === "Enter" && pair && targets?.ids.has(id)) {
         // Enter picks From, Shift+Enter To (not the click's alternation).
         e.preventDefault();
-        const end = e.shiftKey ? "to" : "from";
-        if (!(end === "to" && id === pair.from)) {
-          pair.pick(id, end);
-        }
-        nextEnd.current = end === "from" ? "to" : "from";
+        press(id, e.shiftKey ? "shift-enter" : "enter");
         // Focus stays on the pill, so the next pick is a key away.
         return;
       }
@@ -808,214 +829,232 @@ export const TreeDiagram = memo(function TreeDiagram({
   const tipRect = tip?.el.getBoundingClientRect();
 
   return (
-    <div
-      ref={box}
-      className={`fx-diagram${layout.fits ? "" : " fx-diagram-pans"}${fullLabels ? " fx-diagram-full" : ""}`}
-      onScroll={hideTip}
-    >
+    <>
+      {pair && (
+        // Which end the next click sets, read out as it changes (M2).
+        <p className="fx-pair-next" aria-live="polite">
+          {nextText(nextEnd)}
+        </p>
+      )}
       <div
-        className="fx-diagram-canvas"
-        style={{ inlineSize: layout.width, blockSize: layout.height }}
-        role="group"
-        aria-label={label}
+        ref={box}
+        className={`fx-diagram${layout.fits ? "" : " fx-diagram-pans"}${fullLabels ? " fx-diagram-full" : ""}`}
+        onScroll={hideTip}
       >
-        <svg
-          className="fx-diagram-edges"
-          width={layout.width}
-          height={layout.height}
+        <div
+          className="fx-diagram-canvas"
+          style={{ inlineSize: layout.width, blockSize: layout.height }}
+          role="group"
+          aria-label={label}
         >
-          {layout.placed.map((c) => {
-            const p = c.parent !== undefined ? byId.get(c.parent) : undefined;
-            if (!p) {
+          <svg
+            className="fx-diagram-edges"
+            width={layout.width}
+            height={layout.height}
+          >
+            {layout.placed.map((c) => {
+              const p = c.parent !== undefined ? byId.get(c.parent) : undefined;
+              if (!p) {
+                return null;
+              }
+              const family: Family = c.node
+                ? (families.get(c.id) ?? "earth")
+                : "earth";
+              const w = c.node ? words(c) : undefined;
+              return (
+                <DiagramEdge
+                  key={c.id}
+                  id={c.id}
+                  d={elbow(p, c)}
+                  from={`M ${p.x} ${p.y + PILL / 2} V ${p.y + PILL / 2} H ${p.x} V ${p.y + PILL / 2}`}
+                  family={family}
+                  lit={lit.get(c.id)}
+                  chip={c.chip !== undefined}
+                  data={c.data === true}
+                  on={selected?.kind === "edge" && selected.id === c.id}
+                  words={w?.full}
+                  h={handlers}
+                />
+              );
+            })}
+            {route && (
+              <circle
+                key={route.d}
+                className="fx-route-dot"
+                r={4.5}
+                {...(reducedMotion() && { cx: route.end.x, cy: route.end.y })}
+              >
+                {!reducedMotion() && (
+                  <animateMotion
+                    dur="2.2s"
+                    repeatCount="indefinite"
+                    path={route.d}
+                  />
+                )}
+              </circle>
+            )}
+          </svg>
+          {/* Each edge's label, in the lane between rows: the full one in the
+            dialog; docked, the lit path's, as much of it as fits whole. */}
+          {layout.placed.map((p) => {
+            const w = words(p);
+            // Docked, the route's steps are spelled out under the tree.
+            if (!w || !fullLabels) {
               return null;
             }
-            const family: Family = c.node
-              ? (families.get(c.id) ?? "earth")
-              : "earth";
-            const w = c.node ? words(c) : undefined;
+            // Up to the next connector on its right in this row.
+            const next = layout.placed
+              .filter((q) => q.depth === p.depth && q.x > p.x)
+              .reduce((m, q) => Math.min(m, q.x), layout.width - PAD);
+            const room = next - p.x - LABEL_X - 8;
+            const text = fullLabels
+              ? w.labels[0]!
+              : w.labels.find((t) => textWidth(t, "edge") + LABEL_PAD <= room);
+            if (text === undefined) {
+              return null;
+            }
             return (
-              <DiagramEdge
-                key={c.id}
-                id={c.id}
-                d={elbow(p, c)}
-                from={`M ${p.x} ${p.y + PILL / 2} V ${p.y + PILL / 2} H ${p.x} V ${p.y + PILL / 2}`}
-                family={family}
-                lit={lit.get(c.id)}
-                chip={c.chip !== undefined}
-                data={c.data === true}
-                on={selected?.kind === "edge" && selected.id === c.id}
-                words={w?.full}
+              <span
+                key={`edge:${p.id}`}
+                className={`fx-edge-tag${w.unknown ? " fx-unbounded" : ""}`}
+                style={
+                  {
+                    transform: `translate(${p.x + LABEL_X}px, ${p.y - PILL / 2 - 22}px)`,
+                    "--i": lit.get(p.id) ?? 0,
+                  } as React.CSSProperties
+                }
+                aria-hidden
+              >
+                {text}
+              </span>
+            );
+          })}
+          {layout.placed.map((p) => {
+            const parent =
+              p.parent !== undefined ? byId.get(p.parent) : undefined;
+            const transform = `translate(${p.x - p.w / 2}px, ${p.y - PILL / 2}px)`;
+            const from = parent
+              ? `translate(${parent.x - p.w / 2}px, ${parent.y - PILL / 2}px) scale(0.6)`
+              : transform;
+            const style = {
+              transform,
+              inlineSize: p.w,
+              "--fx-from": from,
+            } as React.CSSProperties;
+            if (p.data && data) {
+              return (
+                <div
+                  key={p.id}
+                  className="fx-data-card"
+                  style={style}
+                  role="note"
+                  aria-label={`${data.label}, ${dataLine(data)}: data, not a frame`}
+                >
+                  <span className="fx-data-name">{data.label}</span>
+                  <span className="fx-data-line">{dataLine(data)}</span>
+                </div>
+              );
+            }
+            if (p.chip) {
+              const chip = p.chip;
+              const name = byId.get(chip.parent)?.node?.label ?? chip.parent;
+              return (
+                <button
+                  key={p.id}
+                  ref={remember(p.id)}
+                  type="button"
+                  className="fx-node fx-chip"
+                  style={style}
+                  tabIndex={roving === p.id ? 0 : -1}
+                  aria-label={`Show ${chip.count} more ${chip.count === 1 ? "frame" : "frames"} under ${name}`}
+                  title={`${chip.count} more under ${name}`}
+                  onFocus={() => setFocus(p.id)}
+                  onKeyDown={onKey(p)}
+                  onClick={() =>
+                    setUnfolded((u) => {
+                      const now = unfoldedFor(u, resetKey);
+                      return {
+                        ...now,
+                        ids: new Set([...now.ids, chip.parent]),
+                      };
+                    })
+                  }
+                >
+                  +{chip.count}
+                </button>
+              );
+            }
+            const n = nodeOf(p)!;
+            const family = families.get(n.id) ?? "earth";
+            const w = words(p);
+            const isSelected =
+              selected?.kind === "node" && selected.id === n.id;
+            const onPath = lit.has(n.id) || path?.ancestor === n.id;
+            const target = targets?.ids.has(n.id) === true;
+            const end =
+              pair?.from === n.id
+                ? "From"
+                : pair?.to === n.id
+                  ? "To"
+                  : undefined;
+            const drawing = pair
+              ? end !== undefined
+              : targets?.current === n.id;
+            const routeWords = onPath
+              ? pair?.meet === n.id
+                ? "on the route: where From and To meet"
+                : "on the route"
+              : undefined;
+            return (
+              <DiagramNode
+                key={p.id}
+                id={p.id}
+                label={n.label}
+                className={`fx-node fx-family-${family}${n.added ? " fx-added" : ""}${n.app ? " fx-app" : ""}${onPath ? " fx-on-path" : ""}${target ? " fx-target" : ""}${drawing ? " fx-drawing" : ""}`}
+                style={{
+                  transform,
+                  inlineSize: p.w,
+                  from,
+                  i: lit.get(n.id) ?? 0,
+                }}
+                tabbable={roving === p.id}
+                pressed={target ? drawing : isSelected}
+                ariaLabel={[
+                  target
+                    ? pair
+                      ? `${end ? `${end} now. ` : ""}${targets!.label(n.id)}`
+                      : `${targets!.label(n.id)}${drawing ? ", drawing in it now" : ""}`
+                    : undefined,
+                  `${n.label}, ${FAMILY_INFO[family].label}${n.app ? ", defined by your app" : n.added ? ", added by this scenario" : ""}`,
+                  routeWords,
+                  w ? `Edge from ${w.full}` : "the root",
+                ]
+                  .filter((t) => t !== undefined)
+                  .join(". ")}
+                tag={p.tag}
                 h={handlers}
               />
             );
           })}
-          {route && (
-            <circle
-              key={route.d}
-              className="fx-route-dot"
-              r={4.5}
-              {...(reducedMotion() && { cx: route.end.x, cy: route.end.y })}
-            >
-              {!reducedMotion() && (
-                <animateMotion
-                  dur="2.2s"
-                  repeatCount="indefinite"
-                  path={route.d}
-                />
-              )}
-            </circle>
-          )}
-        </svg>
-        {/* Each edge's label, in the lane between rows: the full one in the
-            dialog; docked, the lit path's, as much of it as fits whole. */}
-        {layout.placed.map((p) => {
-          const w = words(p);
-          // Docked, the route's steps are spelled out under the tree.
-          if (!w || !fullLabels) {
-            return null;
-          }
-          // Up to the next connector on its right in this row.
-          const next = layout.placed
-            .filter((q) => q.depth === p.depth && q.x > p.x)
-            .reduce((m, q) => Math.min(m, q.x), layout.width - PAD);
-          const room = next - p.x - LABEL_X - 8;
-          const text = fullLabels
-            ? w.labels[0]!
-            : w.labels.find((t) => textWidth(t, "edge") + LABEL_PAD <= room);
-          if (text === undefined) {
-            return null;
-          }
-          return (
+        </div>
+        {tipText &&
+          tipRect &&
+          createPortal(
             <span
-              key={`edge:${p.id}`}
-              className={`fx-edge-tag${w.unknown ? " fx-unbounded" : ""}`}
-              style={
-                {
-                  transform: `translate(${p.x + LABEL_X}px, ${p.y - PILL / 2 - 22}px)`,
-                  "--i": lit.get(p.id) ?? 0,
-                } as React.CSSProperties
-              }
-              aria-hidden
-            >
-              {text}
-            </span>
-          );
-        })}
-        {layout.placed.map((p) => {
-          const parent =
-            p.parent !== undefined ? byId.get(p.parent) : undefined;
-          const transform = `translate(${p.x - p.w / 2}px, ${p.y - PILL / 2}px)`;
-          const from = parent
-            ? `translate(${parent.x - p.w / 2}px, ${parent.y - PILL / 2}px) scale(0.6)`
-            : transform;
-          const style = {
-            transform,
-            inlineSize: p.w,
-            "--fx-from": from,
-          } as React.CSSProperties;
-          if (p.data && data) {
-            return (
-              <div
-                key={p.id}
-                className="fx-data-card"
-                style={style}
-                role="note"
-                aria-label={`${data.label}, ${dataLine(data)}: data, not a frame`}
-              >
-                <span className="fx-data-name">{data.label}</span>
-                <span className="fx-data-line">{dataLine(data)}</span>
-              </div>
-            );
-          }
-          if (p.chip) {
-            const chip = p.chip;
-            const name = byId.get(chip.parent)?.node?.label ?? chip.parent;
-            return (
-              <button
-                key={p.id}
-                ref={remember(p.id)}
-                type="button"
-                className="fx-node fx-chip"
-                style={style}
-                tabIndex={roving === p.id ? 0 : -1}
-                aria-label={`Show ${chip.count} more ${chip.count === 1 ? "frame" : "frames"} under ${name}`}
-                title={`${chip.count} more under ${name}`}
-                onFocus={() => setFocus(p.id)}
-                onKeyDown={onKey(p)}
-                onClick={() =>
-                  setUnfolded((u) => {
-                    const now = unfoldedFor(u, resetKey);
-                    return { ...now, ids: new Set([...now.ids, chip.parent]) };
-                  })
-                }
-              >
-                +{chip.count}
-              </button>
-            );
-          }
-          const n = nodeOf(p)!;
-          const family = families.get(n.id) ?? "earth";
-          const w = words(p);
-          const isSelected = selected?.kind === "node" && selected.id === n.id;
-          const onPath = lit.has(n.id) || path?.ancestor === n.id;
-          const target = targets?.ids.has(n.id) === true;
-          const end =
-            pair?.from === n.id ? "From" : pair?.to === n.id ? "To" : undefined;
-          const drawing = pair ? end !== undefined : targets?.current === n.id;
-          const routeWords = onPath
-            ? pair?.meet === n.id
-              ? "on the route: where From and To meet"
-              : "on the route"
-            : undefined;
-          return (
-            <DiagramNode
-              key={p.id}
-              id={p.id}
-              label={n.label}
-              className={`fx-node fx-family-${family}${n.added ? " fx-added" : ""}${n.app ? " fx-app" : ""}${onPath ? " fx-on-path" : ""}${target ? " fx-target" : ""}${drawing ? " fx-drawing" : ""}`}
+              className={`fx-edge-tip${tipText.unknown ? " fx-unbounded" : ""}`}
+              role="tooltip"
               style={{
-                transform,
-                inlineSize: p.w,
-                from,
-                i: lit.get(n.id) ?? 0,
+                left: Math.max(8, Math.min(tipRect.left, innerWidth - 248)),
+                top: tipRect.bottom + 6,
               }}
-              tabbable={roving === p.id}
-              pressed={target ? drawing : isSelected}
-              ariaLabel={[
-                target
-                  ? pair
-                    ? `${end ? `${end} now. ` : ""}${targets!.label(n.id)}`
-                    : `${targets!.label(n.id)}${drawing ? ", drawing in it now" : ""}`
-                  : undefined,
-                `${n.label}, ${FAMILY_INFO[family].label}${n.app ? ", defined by your app" : n.added ? ", added by this scenario" : ""}`,
-                routeWords,
-                w ? `Edge from ${w.full}` : "the root",
-              ]
-                .filter((t) => t !== undefined)
-                .join(". ")}
-              tag={p.tag}
-              h={handlers}
-            />
-          );
-        })}
+            >
+              {tipText.text}
+            </span>,
+            // Inside StrataKit's root, as the Expand dialog is: its tokens and
+            // colour scheme reach the tip (Task 4c item 4).
+            designRoot(tip?.el, document.body),
+          )}
       </div>
-      {tipText &&
-        tipRect &&
-        createPortal(
-          <span
-            className={`fx-edge-tip${tipText.unknown ? " fx-unbounded" : ""}`}
-            role="tooltip"
-            style={{
-              left: Math.max(8, Math.min(tipRect.left, innerWidth - 248)),
-              top: tipRect.bottom + 6,
-            }}
-          >
-            {tipText.text}
-          </span>,
-          // Inside StrataKit's root, as the Expand dialog is: its tokens and
-          // colour scheme reach the tip (Task 4c item 4).
-          designRoot(tip?.el, document.body),
-        )}
-    </div>
+    </>
   );
 });

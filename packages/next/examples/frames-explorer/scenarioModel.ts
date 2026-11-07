@@ -77,13 +77,20 @@ export function publishedView(
     const ref = checks.find(
       (row) => row.status === "reference-only" && row.id === pub.checkId,
     );
+    // Where ours is another quantity than the headline (the capstone's
+    // light time under its distance), how far the setting moves it from
+    // the published value, in its unit.
+    const delta =
+      pub.ours !== undefined
+        ? { value: pub.ours - pub.value, unit: pub.unit }
+        : ref?.status === "reference-only"
+          ? ref.delta
+          : undefined;
     return {
       published: {
         ...base,
         state: "off" as const,
-        ...(freshness === "current" &&
-          ref?.status === "reference-only" &&
-          ref.delta && { delta: ref.delta }),
+        ...(freshness === "current" && delta && { delta }),
       },
     };
   }
@@ -104,14 +111,17 @@ export function publishedView(
               },
             }),
           }
-        : answerValue !== undefined
+        : (pub.ours ?? answerValue) !== undefined
           ? // No effect of its own (the dish's light time, checked at every
             // row of its fixture): ours against this row's published value,
             // at the checked setup's own instant, in the answer's unit
             // (Task 6c fix 1 follow-up), not the check's worst row.
             {
-              ours: answerValue,
-              difference: { value: answerValue - pub.value, unit: pub.unit },
+              ours: pub.ours ?? answerValue!,
+              difference: {
+                value: (pub.ours ?? answerValue!) - pub.value,
+                unit: pub.unit,
+              },
             }
           : r.value !== undefined && {
               difference: {
@@ -125,10 +135,20 @@ export function publishedView(
 }
 
 /**
+ * The drawn terrain's error above which an end's local horizon isn't
+ * judged at all, m (the capstone, Task 8 fix 1): from the Earth–Moon view
+ * the tiles at the ship or the tool are tens of kilometres coarse, and a
+ * "may block it (±77 km)" says nothing. Zoomed to the end, the tiles there
+ * are a few tens of metres, under it.
+ */
+export const COARSE_TERRAIN_METERS = 100;
+
+/**
  * The traces of the evaluation's own sight lines (the capstone's, Task 8):
  * one made for another pair (its `traced` isn't its line's key) reads as
  * tracing, never as this pair's verdict; a line the evaluation no longer
- * has goes.
+ * has goes. A line traced from a named end over tiles coarser than
+ * `COARSE_TERRAIN_METERS` is unknown, never clear (fix 1).
  */
 export function ownTraces(
   terrain: readonly TerrainSightView[],
@@ -138,6 +158,23 @@ export function ownTraces(
   for (const v of terrain) {
     const line = e.sightLines?.find((l) => l.id === v.id);
     if (!line) {
+      continue;
+    }
+    const subject = line.subject ?? `The local horizon toward ${line.label}`;
+    if (
+      line.end !== undefined &&
+      (line.key === undefined || v.traced === line.key) &&
+      v.state !== "waiting" &&
+      v.meters !== undefined &&
+      v.meters > COARSE_TERRAIN_METERS
+    ) {
+      out.push({
+        id: v.id,
+        state: "unknown",
+        coarse: line.end,
+        ...(v.traced !== undefined && { traced: v.traced }),
+        text: `${subject}: the terrain at ${line.end} isn't judged from this far out: zoom to it to trace.`,
+      });
       continue;
     }
     out.push(
