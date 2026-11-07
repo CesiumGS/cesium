@@ -307,10 +307,14 @@ function someOf(names: readonly string[], max = 3): string {
  *  - grids for the vertical datum exist, defined on another geographic CRS
  *    (NAVD88 with WGS 84 / UTM: GEOID18 is on NAD83(2011)): the message names
  *    that CRS and the fix;
- *  - none exist (NOAA's MLLW depth, EPSG:5866, has no transformation): "<the
- *    vertical CRS>: no PROJ-data grid relates it to the ellipsoid".
+ *  - none found (NOAA's MLLW depth, EPSG:5866, has no transformation): "<the
+ *    vertical CRS>: no PROJ-data grid relates it to the ellipsoid", saying
+ *    what proj.db was searched for.
  *
- * Undefined otherwise (the generic message stands).
+ * The search is by name, which is conclusive only for an EPSG vertical CRS;
+ * for any other (ESRI:105703, NAVD88_height_(ftUS), finds nothing although
+ * GEOID18 relates NAVD88 to NAD83(2011)) the generic message stands. So it
+ * does when nothing applies.
  */
 function noVerticalGrid(
   proj: ProjApi,
@@ -338,7 +342,13 @@ function noVerticalGrid(
     "PROJ offers only a ballpark operation, with undefined accuracy (pass allowBallpark: true to accept it)";
   const { name } = parts.vertical;
   const here = parts.horizontal.geodeticName ?? parts.horizontal.name;
-  const { datums, geoidModels } = verticalGridDatums(proj, parts.vertical.ref);
+  const { datums, geoidModels, authority } = verticalGridDatums(
+    proj,
+    parts.vertical.ref,
+  );
+  if (authority?.toUpperCase() !== "EPSG") {
+    return undefined;
+  }
   if (datums.some((datum) => datum.name === here)) {
     // Grids on this very datum, and still only ballparks: not this case.
     return undefined;
@@ -353,10 +363,11 @@ function noVerticalGrid(
     const accuracy = best.accuracy === undefined ? "" : `, ${best.accuracy} m`;
     return `${name}: its grids are defined on ${someOf(datums.map((d) => d.name))}, not on ${here} (from ${from}); use a horizontal CRS on ${best.name}${compoundCode} (best: ${best.transformation}${accuracy}). ${ballpark}`;
   }
+  // What follows is only what the search found: say so.
   if (geoidModels.length > 0) {
-    return `${name}: PROJ's geoid models for it (${someOf(geoidModels)}) aren't defined on ${here} (from ${from}); use a horizontal CRS on the models' datum. ${ballpark}`;
+    return `${name}: proj.db names geoid models for it (${someOf(geoidModels)}) but lists no grid transformation by its name, so which horizontal datum they need isn't known here (from ${from}); ${ballpark}`;
   }
-  return `${name}: no PROJ-data grid relates it to the ellipsoid (from ${from}); ${ballpark}`;
+  return `${name}: no PROJ-data grid relates it to the ellipsoid, as far as proj.db shows: it lists no grid transformation by its name (or by a vertical CRS's on its datum) and no geoid model for it (from ${from}); ${ballpark}`;
 }
 
 /** `f()`, or undefined if it throws. */
@@ -625,12 +636,14 @@ export class EngineeringFrame {
           decided === undefined
             ? ""
             : ` (geoidFallback "${definition.geoidFallback}" doesn't apply: ${decided.reason})`;
-        if (message === undefined && why === "") {
-          throw error;
+        if (message !== undefined) {
+          throw new Error(`${message}${why}`, { cause: error });
         }
-        throw new Error(`${message ?? (error as Error).message}${why}`, {
-          cause: error,
-        });
+        if (why !== "" && error instanceof Error) {
+          // The same error, its class kept, with the reason appended.
+          error.message += why;
+        }
+        throw error;
       }
       const replacement = decided.crs;
       const model = definition.geoidFallback!;

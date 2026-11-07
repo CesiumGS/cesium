@@ -411,6 +411,10 @@ describe("tidal datums with no grid: MLLW depth, EPSG:6347+5866", () => {
   it("create and load throw, naming the datum", async () => {
     const { P, source } = await setup();
     expect(() => EngineeringFrame.create(mllw(), P)).toThrow(MLLW_MESSAGE);
+    // It says what was checked.
+    expect(() => EngineeringFrame.create(mllw(), P)).toThrow(
+      /as far as proj\.db shows: it lists no grid transformation by its name .* and no geoid model for it/,
+    );
     await expect(
       EngineeringFrame.load(mllw(), { proj: P, grids: source }),
     ).rejects.toThrow(MLLW_MESSAGE);
@@ -447,6 +451,40 @@ describe("tidal datums with no grid: MLLW depth, EPSG:6347+5866", () => {
       /^NAVD88 height \(ftUS\): its grids are defined on NAD83\(2011\).*the compound EPSG:6318\+6360/,
     );
     expect(navd88(6360)).not.toThrow(/no PROJ-data grid/);
+  });
+
+  it("a non-EPSG vertical CRS, which the name search can't vouch for, keeps the generic message", async () => {
+    const { P } = await setup();
+    // ESRI:105703 is NAVD88_height_(ftUS) (EPSG's datum 5103): GEOID18
+    // relates it to NAD83(2011), but proj.db names its transformations
+    // after EPSG's CRSs, so a search under ESRI finds none.
+    const wkt = (code: string) =>
+      P.proj_as_wkt(P.proj_create(code), P.PJ_WKT2_2019);
+    const crs: CrsRef = {
+      format: "wkt2",
+      wkt2: `COMPOUNDCRS["WGS 84 / UTM zone 11N + NAVD88_height_(ftUS)",${wkt("EPSG:32611")},${wkt("ESRI:105703")}]`,
+    };
+    const make =
+      (extra: Partial<EngineeringFrameDefinition> = {}) =>
+      () =>
+        EngineeringFrame.create(
+          { name: "UTM 11N + ESRI NAVD88", body: EARTH, crs, ...extra },
+          P,
+        );
+    expect(make()).toThrow(/^PROJ offers only a ballpark operation/);
+    expect(make()).not.toThrow(/no PROJ-data grid/);
+    // A fallback's reason is appended to the same error, its class kept.
+    let thrown: unknown;
+    try {
+      make({ geoidFallback: "EGM96" })();
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toMatch(
+      /^PROJ offers only a ballpark operation.*\(geoidFallback "EGM96" doesn't apply: the CRS isn't an EPSG code with a vcsWkid\)$/s,
+    );
+    expect((thrown as Error).cause).toBeUndefined();
   });
 
   it("allowBallpark still accepts the ballpark, with no accuracy", async () => {

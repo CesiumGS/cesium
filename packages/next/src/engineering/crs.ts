@@ -933,7 +933,10 @@ export interface VerticalGridDatum {
  * What `proj.db` has relating a vertical CRS's datum to an ellipsoid by a
  * grid: the geographic CRSs its grid transformations start from (most
  * accurate first), and the geoid models the database names for it. Both
- * empty for a datum such as MLLW, which has no transformation at all.
+ * empty for a datum such as MLLW, which has no transformation at all. The
+ * search is by name under the vertical CRS's own authority (`authority`, its
+ * identifier's; null when it has none): an empty result says only that none
+ * was found that way, which is conclusive for EPSG's names alone.
  *
  * The transformations are found by name (the vertical CRS's own, and those
  * of the vertical CRSs a conversion relates it to on the same datum, such as
@@ -947,10 +950,13 @@ export function verticalGridDatums(
 ): {
   readonly datums: readonly VerticalGridDatum[];
   readonly geoidModels: readonly string[];
+  /** The vertical CRS's identifier's authority, searched under; null when it has none. */
+  readonly authority: string | null;
 } {
   const crs = unbound(proj, create(proj, crsDefinition(vertical), "the CRS"));
   return quietly(proj, () => {
-    const authority = proj.proj_get_id_auth_name(crs, 0) ?? "EPSG";
+    const identified = proj.proj_get_id_auth_name(crs, 0);
+    const authority = identified ?? "EPSG";
     const code = proj.proj_get_id_code(crs, 0);
     const datum = proj.proj_crs_get_datum_forced(crs);
     const onDatum = (other: PJ) =>
@@ -1057,7 +1063,7 @@ export function verticalGridDatums(
         // None.
       }
     }
-    return { datums, geoidModels };
+    return { datums, geoidModels, authority: identified };
   });
 }
 
