@@ -85,7 +85,7 @@ One line each: what was chosen, then what undoing it costs.
 
 Each of these is expensive to undo or is genuinely the owner's. The task order keeps them at the end or off the path.
 
-1. **The design-globe example's look.** The controller makes the mockup tonight (Task 0), and the owner reviews it in the morning. *Blocks:* Tasks 18–20, the example's UI. Everything else proceeds, including the example's non-visual core (Task 17), Task 21, and Task 22's docs and plan note. Only Task 22's final gates wait for Tasks 18–20.
+1. **The design-globe example's look.** *Resolved 2026-11-07:* no mockup gate (the owner reviews the built page in context). The owner set the story: a viewer audience first, the rigid placement's error as the point, a smooth morph between placements with the other ghosted, the surveyor's numbers secondary, the portfolio as a fly-to list (examples/design-globe/DESIGN.md, "The story"). Originally: the controller makes the mockup tonight (Task 0), and the owner reviews it in the morning. *Blocks:* Tasks 18–20, the example's UI. Everything else proceeds, including the example's non-visual core (Task 17), Task 21, and Task 22's docs and plan note. Only Task 22's final gates wait for Tasks 18–20.
 2. **Metrostation and the owner's real long iModel.** Their CRS, units, site transform and placement mode are needed, and so is the decision whether to use the Sandcastle share key (it expires 2027-01-01; ion's terms apply). *Blocks:* only filling the portfolio's ion slots in Task 20. The slots are built empty.
 3. **NOAA VDatum surfaces (MLLW, MHW and others).** They aren't in PROJ-data, and NOAA distributes them separately. Whether to self-host them, and how, is the owner's call. *Blocks:* nothing; 4b reports them as unavailable.
 4. **Submitting `EXT_engineering_frame` to the 3D Tiles 2.0 draft:** its name, and whether a placement mode belongs in the draft at all. *Blocks:* nothing; locally the name is one constant.
@@ -960,7 +960,7 @@ No UI is in this task.
 - [ ] **Step 4: Run** the tests and confirm they pass.
 - [ ] **Step 5: Commit** with "examples: design globe: exact snapping on the alignment, checks against the generator, the measurement model".
 
-### Task 18 (held: the owner's mockup review): the page, the tilesets and the placement switch
+### Task 18: the page, the tilesets and the placement morph
 
 **Files:**
 
@@ -975,13 +975,18 @@ No UI is in this task.
 - [ ] **Step 2: Implement** to DESIGN.md and the approved mockup:
   - load PROJ and the `GridSource` (`/proj-grids/`) lazily, with progress;
   - add both corridor tilesets with `retainGeometry` and `georeferenceTileset` each;
-  - make the switch toggle their visibility, keeping the camera, and show the sag (`displayError`) under the cursor in rigid mode;
+  - make the switch a smooth morph between the placements (owner, 2026-11-07: the page's centrepiece, "really demonstrating the change in coordinate frames"), keeping the camera. Each vertex moves from its rigid to its reprojected position, partnered by call 15's identical tile ids and vertex order.
+    - Prefer glTF morph targets written by the generator (the reprojected position as a target on the rigid tiles, in the rigid tile's frame) if the engine animates morph weights; otherwise the page builds the morph from both tilesets' retained geometry. Say which.
+    - During the morph, a pick gives no design coordinates (the drawn geometry is between placements), and the HUD says so.
+    - The other placement stays as a ghost (thin, translucent), a secondary visual for the before and after.
+    - Reduced motion switches at once.
+  - show the sag (`displayError`) under the cursor in rigid mode;
   - add the portfolio list, with a fly-to and each site's grid credits.
 - [ ] **Step 3: Run** the tests, tsc, eslint and prettier.
 - [ ] **Step 4: Browser check** on your own port. Both modes draw. A pick on each (Task 15 on the GPU) gives design coordinates within the stated pick tolerance of the vertex under the cursor. A portfolio site in London loads its OS grids from `/proj-grids/`, with byte progress.
 - [ ] **Step 5: Commit** with "examples: design globe: the page, both corridor placements and the portfolio".
 
-### Task 19 (held: the owner's mockup review): measure, snap and alignment readouts
+### Task 19: measure, snap and alignment readouts
 
 **Files:**
 
@@ -1006,7 +1011,7 @@ No UI is in this task.
   - the true distance is shown beside the design distance, labelled, never instead of it.
 - [ ] **Step 5: Commit** with "examples: design globe: the measure tool with exact and geometry snapping".
 
-### Task 20 (held: the owner's mockup review): checks, slots, reviews and browser checks
+### Task 20: checks, slots, reviews and browser checks
 
 **Files:**
 

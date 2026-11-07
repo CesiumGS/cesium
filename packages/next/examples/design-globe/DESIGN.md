@@ -8,6 +8,28 @@ The mockup is [design-mocks/page.html](design-mocks/page.html) (plan 4b,
 Task 0; for the owner's review, 2026-11-07). Screenshots are taken locally
 into `design-screenshots/`, which git ignores.
 
+## The story (owner, 2026-11-07)
+
+The page is for a viewer audience first: it shows that placing a long design
+rigidly on the globe is wrong, and how reprojection fixes it. "The rigid
+placement being wrong is the whole point of the example, and showing how the
+geometry warps to the other frame to give accurate visuals and the ability to
+do accurate measurements at the same time." A surveyor checking numbers is
+the second audience: every number is there and honest, but quieter.
+
+- **The placement switch morphs.** Flipping between rigid and reprojected
+  animates every vertex from one placement to the other, "as this is really
+  demonstrating the change in coordinate frames". The two corridor tilesets
+  share tile ids, trees and vertex order (call 15), so each vertex has a
+  partner. Reduced motion switches at once.
+- **The other placement stays as a ghost**, a secondary visual for the before
+  and after.
+- **Measurement proves the second half of the claim.** The same two points
+  give the same design distance in both placements; the drawn positions and
+  the true distance differ, and reprojected gets both right.
+- **The portfolio is a list to fly through**, each site with its CRS, units
+  and height system.
+
 ## Who it is for
 
 People who work in design coordinates: civil and BIM engineers, surveyors,
