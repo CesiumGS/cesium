@@ -41,9 +41,11 @@ import {
   ANCHOR_STATION,
   BRIDGE,
   CORRIDOR_ALIGNMENT,
+  SURVEY_MARK,
   corridorFrame,
   sectionSurface,
 } from "../examples/design-globe/corridor.ts";
+import { parseAnswers } from "../examples/design-globe/answers.ts";
 import { PORTFOLIO, SITE_BUILDING } from "../examples/design-globe/sites.ts";
 import { Ephemeris } from "../src/ephemeris/Ephemeris.ts";
 import {
@@ -82,6 +84,8 @@ const ANSWER_INTERVAL = 4_000;
 const ANSWER_OFFSETS = [0, -17, 17, -40, 40];
 /** Answer stations nearest these distances from the anchor, metres. */
 const NEAR_DISTANCES = [10_000, 20_000];
+/** The opening self-check's station (owner, 2026-11-07), on the centreline. */
+const MARKER_STATION = 170_000;
 /** Linear RGBA. */
 const CORRIDOR_COLOR = [0.45, 0.45, 0.43, 1];
 const BUILDING_COLOR = [0.62, 0.5, 0.38, 1];
@@ -92,6 +96,7 @@ const root = join(here, "..");
 const INPUTS = [
   "examples/design-globe/corridor.ts",
   "examples/design-globe/sites.ts",
+  "examples/design-globe/answers.ts",
   "scripts/designTiles.mjs",
   "scripts/designTiles/corridorMesh.mjs",
   "scripts/designTiles/siteMesh.mjs",
@@ -608,6 +613,8 @@ function corridorAnswers(frame, alignment, placement, frames) {
   tag(alignment.endStation, "end");
   tag(BRIDGE.fromStation, "bridge start");
   tag(BRIDGE.toStation, "bridge end");
+  tag(alignment.startStation + 10_000, "pair end");
+  tag(MARKER_STATION, "marker");
   // The whole stations nearest each distance on either side of the anchor.
   for (const target of NEAR_DISTANCES) {
     for (const side of [-1, 1]) {
@@ -647,7 +654,7 @@ function corridorAnswers(frame, alignment, placement, frames) {
         ...(nearKm !== undefined && { nearKm }),
         design: Array.from(design),
         bodyFixed: Array.from(frame.toBodyFixed(design)),
-        displayed: Array.from(placement.displayed(design)),
+        rigidDisplayed: Array.from(placement.displayed(design)),
         displayError: placement.displayError(design),
         geodetic: {
           longitude: geodetic.longitude,
@@ -668,77 +675,146 @@ function corridorAnswers(frame, alignment, placement, frames) {
     LeapSeconds.builtIn(),
   );
   const elements = alignment.horizontalElements;
-  const at = (station, offset) => {
-    const design = alignment.pointAt(station, offset);
-    design[2] += sectionSurface(offset);
-    return { station, offset, design: Array.from(design) };
+  const pointIndex = (station, offset) => {
+    const i = points.findIndex(
+      (p) => p.station === station && p.offset === offset,
+    );
+    if (i < 0) {
+      throw new Error(
+        `designTiles: no answer point at station ${station}, offset ${offset}`,
+      );
+    }
+    return i;
   };
+  const measured = (a, b) =>
+    measure(designPoint(frame, a), designPoint(frame, b), instant, frames, {
+      signal: false,
+      alignment: alignment.name,
+    });
   const pairs = [
     {
       id: "first-tangent",
       label: "10,000 ft on the first tangent",
-      a: at(alignment.startStation, 0),
-      b: at(alignment.startStation + 10_000, 0),
+      a: [alignment.startStation, 0],
+      b: [alignment.startStation + 10_000, 0],
     },
     {
       id: "curve",
       label: "Across the 5,000 ft curve, spiral to spiral",
-      a: at(elements[1].station, 0),
-      b: at(elements[4].station, 0),
+      a: [elements[1].station, 0],
+      b: [elements[4].station, 0],
     },
     {
       id: "bridge",
       label: "Across the bridge, in the right lanes",
-      a: at(BRIDGE.fromStation, 17),
-      b: at(BRIDGE.toStation, 17),
+      a: [BRIDGE.fromStation, 17],
+      b: [BRIDGE.toStation, 17],
     },
     {
       id: "end-to-end",
       label: "End to end",
-      a: at(alignment.startStation, 0),
-      b: at(alignment.endStation, 0),
+      a: [alignment.startStation, 0],
+      b: [alignment.endStation, 0],
     },
-  ].map((pair) => {
-    const m = measure(
-      designPoint(frame, pair.a.design),
-      designPoint(frame, pair.b.design),
-      instant,
-      frames,
-      { signal: false, alignment: alignment.name },
-    );
+  ].map(({ id, label, a, b }) => {
+    const from = pointIndex(...a);
+    const to = pointIndex(...b);
+    const m = measured(points[from].design, points[to].design);
     return {
-      ...pair,
-      design: {
-        distance: m.design.distance,
-        horizontalDistance: m.design.horizontalDistance,
-        unitName: m.design.unitName,
+      id,
+      label,
+      from,
+      to,
+      designDistance: m.design.distance,
+      horizontalDistance: m.design.horizontalDistance,
+      trueDistance: m.distance,
+      ends: {
+        a: { station: a[0], offset: a[1] },
+        b: { station: b[0], offset: b[1] },
       },
-      distance: m.distance,
     };
   });
+
+  // The opening self-check: station 170,000's true position and where the
+  // rigid placement draws the same design point.
+  const markerIndex = pointIndex(MARKER_STATION, 0);
+  const markerPoint = points[markerIndex];
+  const marker = {
+    station: MARKER_STATION,
+    offset: 0,
+    point: markerIndex,
+    design: markerPoint.design,
+    bodyFixed: markerPoint.bodyFixed,
+    rigidDisplayed: markerPoint.rigidDisplayed,
+    separation: Math.hypot(
+      ...sub(markerPoint.rigidDisplayed, markerPoint.bodyFixed),
+    ),
+  };
+
+  // The NGS mark: Earth-fixed straight from its published NAD83(2011)
+  // position (on the Earth's ellipsoid, as the frame's operation takes
+  // NAD83(2011)), and into design coordinates through the frame's own
+  // operation (PROJ's zone 3, and NAVD88 through GEOID18).
+  const g = SURVEY_MARK.geodetic;
+  const markFixed = Array.from(
+    frame.body.ellipsoid.cartographicToCartesian(
+      {
+        longitude: g.longitude,
+        latitude: g.latitude,
+        height: g.ellipsoidHeight,
+      },
+      new Float64Array(3),
+    ),
+  );
+  const markDesign = Array.from(frame.fromBodyFixed(markFixed));
+  const nearest = alignment.stationOffset(markDesign);
+  const nearestDesign = Array.from(alignment.pointAt(nearest.station, 0));
+  const toMark = measured(markDesign, nearestDesign);
+  const mark = {
+    pid: SURVEY_MARK.pid,
+    name: SURVEY_MARK.name,
+    datasheetUrl: SURVEY_MARK.datasheetUrl,
+    retrieved: SURVEY_MARK.retrieved,
+    geodetic: { ...g },
+    publishedSpc: { ...SURVEY_MARK.publishedSpc },
+    published: { ...SURVEY_MARK.published },
+    design: markDesign,
+    bodyFixed: markFixed,
+    nearest: { station: nearest.station, offset: nearest.offset },
+    nearestDesign,
+    designDistance: toMark.design.distance,
+    horizontalDistance: toMark.design.horizontalDistance,
+    trueDistance: Math.hypot(
+      ...sub(markFixed, Array.from(frame.toBodyFixed(nearestDesign))),
+    ),
+  };
+
   return {
     version: VERSION,
     instant: DESIGN_TILES_INSTANT,
+    anchorStation: ANCHOR_STATION,
+    alignment: alignment.name,
     frame: {
       name: frame.definition.name,
-      crs: frame.definition.crs,
-      pipeline: frame.definition.pipeline,
+      unitName: frame.units.horizontalUnitName,
+      metersPerUnit: mpu,
+      metersPerHeightUnit: frame.metersPerHeightUnit,
       operation: frame.operation.matchedCandidate ?? null,
       operationAccuracy: frame.operation.accuracy ?? null,
       grids: [...frame.operation.grids],
-      metersPerUnit: mpu,
-      metersPerHeightUnit: frame.metersPerHeightUnit,
     },
-    alignment: alignment.name,
-    anchor: { station: ANCHOR_STATION, design: Array.from(anchor) },
     notes: [
       "Design points are on the section's surface: the profile plus the cross slope at the offset (under the barriers at offsets 0 and ±40).",
-      "bodyFixed and displayed are Earth-fixed metres; geodetic is radians and metres above the ellipsoid; convergence is radians.",
+      "bodyFixed and rigidDisplayed are Earth-fixed metres; geodetic is radians and metres above the ellipsoid; convergence is radians.",
       "distanceFromAnchor is the horizontal design distance from the anchor in metres; nearKm marks the whole stations nearest 10 and 20 km on either side.",
-      "Pairs: design distances are in design units (3D with the height difference converted), distance is the straight line in metres.",
+      "Pairs: from and to index points; designDistance is 3D in design units (the height difference converted), horizontalDistance E and N alone, trueDistance the straight line in metres.",
+      "marker: station 170,000 on the centreline, its true position and the rigid placement's; separation is the distance between them, metres.",
+      "mark: an NGS survey mark from its datasheet. design is its published NAD83(2011) position through the frame's operation; bodyFixed is that position on the ellipsoid, independent of the pipeline; its distances are to the nearest centreline point (on the profile).",
     ],
     points,
     pairs,
+    marker,
+    mark,
   };
 }
 
@@ -892,9 +968,10 @@ export async function ensureDesignTiles(
     });
   }
 
+  // Checked as the page reads it, so the file is the type's shape.
   writeJson(
     join(partial, "answers.json"),
-    corridorAnswers(frame, alignment, placement, frames),
+    parseAnswers(corridorAnswers(frame, alignment, placement, frames)),
   );
   writeJson(join(partial, "manifest.json"), { ...wanted, frames: resolved });
   // Move the old output aside, the new one in, then remove the old.

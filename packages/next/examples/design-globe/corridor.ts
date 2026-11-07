@@ -222,13 +222,16 @@ export const BRIDGE: Bridge = {
 
 /**
  * Station ticks: a mark every 100 ft of station, on each outer shoulder at
- * offset ±35, 0.5 ft along the alignment by 4 ft across it.
+ * offset ±35, 0.5 ft along the alignment by 4 ft across it, drawn 0.03 ft
+ * above the surface (so it doesn't fight the surface for depth). A tick's
+ * point, the one exact snapping gives, is its centre on that raised face.
  */
 export const TICKS = {
   interval: 100,
   offsets: [-35, 35],
   along: 0.5,
   across: 4,
+  raise: 0.03,
 } as const;
 
 /** The rigid placement's anchor: the middle of the alignment. */
@@ -277,3 +280,51 @@ export function corridorFrame(): EngineeringFrameDefinition {
     areaOfInterest: CORRIDOR_AREA,
   };
 }
+
+/** Degrees, minutes and seconds to radians: west and south negative. */
+const dmsRadians = (
+  degrees: number,
+  minutes: number,
+  seconds: number,
+  sign: 1 | -1,
+) => (sign * (degrees + minutes / 60 + seconds / 3600) * Math.PI) / 180;
+
+/**
+ * A real NGS survey mark near the corridor's far end (owner, 2026-11-07),
+ * from its datasheet as NGS published it: GOLD CREEK (HS5109), a 1946
+ * triangulation station disk in a concrete monument on a low hill south of
+ * Dublin, recovered in good condition on 2023-07-28. Its NAD83(2011)
+ * position was adjusted by NGS in June 2012 (epoch 2010.00); its network
+ * accuracy is 0.68 cm horizontal and 2.78 cm ellipsoidal (95%). It is the
+ * only mark with a NAD83(2011) position within 1,500 ftUS of the
+ * centreline from station 137,000 to the end (NGS Data Explorer's radial
+ * searches, 2026-11-07; the others there are NAD 83(1986) bench marks with
+ * scaled positions). It lies about 501 ftUS left of the centreline at about
+ * station 154,395, some 19,650 ftUS before the end.
+ *
+ * The values are the datasheet's, verbatim in `published`; `geodetic` is
+ * the published position in radians, converted exactly from its degrees,
+ * minutes and seconds.
+ */
+export const SURVEY_MARK = {
+  pid: "HS5109",
+  name: "GOLD CREEK",
+  datasheetUrl: "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=HS5109",
+  retrieved: "2026-11-07",
+  geodetic: {
+    latitude: dmsRadians(37, 41, 7.22359, 1),
+    longitude: dmsRadians(121, 55, 59.92453, -1),
+    ellipsoidHeight: 139.916,
+  },
+  /** Zone 3, US survey feet ("sFT" on the datasheet). */
+  publishedSpc: { easting: 6_146_924.9, northing: 2_075_186.11 },
+  /** NAD83(2011) X, Y and Z (metres), as the datasheet computes them. */
+  publishedXyz: [-2_673_203.826, -4_289_120.954, 3_877_949.143],
+  published: {
+    position:
+      "NAD 83(2011) POSITION- 37 41 07.22359(N) 121 55 59.92453(W)   ADJUSTED",
+    ellipsoidHeight:
+      "NAD 83(2011) ELLIP HT-   139.916 (meters)        (06/27/12)   ADJUSTED",
+    spc: "SPC CA 3     - 2,075,186.11  6,146,924.90   sFT  0.99992983   -0 52 39.1",
+  },
+} as const;

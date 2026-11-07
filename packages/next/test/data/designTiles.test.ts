@@ -8,7 +8,11 @@
 //    exact drawn position stands in for the pick);
 //  - the rigid roots are their placements' matrices (`checkRigidTransform`);
 //  - the answers' rigid sag at 10 and 20 km is the spec's, and answers
-//    recomputed with the library are the same numbers.
+//    recomputed with the library are the same numbers;
+//  - answers.json is `Answers`' shape (Task 17): the station 170,000
+//    marker's rigid separation, the survey mark's zone 3 coordinates
+//    through PROJ against NGS's datasheet, and the measurement model on the
+//    library's own measurement of pairs[0].
 // `npm run test:data` runs it.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -28,9 +32,17 @@ vi.mock("../../src/io/decoders.ts", () => ({
 import {
   ANCHOR_STATION,
   CORRIDOR_ALIGNMENT,
+  SURVEY_MARK,
   corridorFrame,
   sectionSurface,
 } from "../../examples/design-globe/corridor.ts";
+import { parseAnswers } from "../../examples/design-globe/answers.ts";
+import {
+  MARK_SPC_TOLERANCE,
+  checkRows,
+} from "../../examples/design-globe/checks.ts";
+import { measurementModel } from "../../examples/design-globe/measureModel.ts";
+import type { SnapResult } from "../../src/engineering/snap.ts";
 import {
   corridorTree,
   largestChordError,
@@ -421,7 +433,7 @@ describe("the design globe's generated tiles", () => {
         point.bodyFixed,
       );
       expect(Array.from(rigid.displayed(point.design))).toEqual(
-        point.displayed,
+        point.rigidDisplayed,
       );
       expect(rigid.displayError(point.design)).toBe(point.displayError);
       const geodetic = frame.toGeodetic(point.design);
@@ -437,15 +449,128 @@ describe("the design globe's generated tiles", () => {
 
     // The pair across the bridge.
     const pair = answers.pairs.find((p: Json) => p.id === "bridge");
+    const ends = [answers.points[pair.from], answers.points[pair.to]];
+    expect(ends.map((p: Json) => [p.station, p.offset])).toEqual([
+      [pair.ends.a.station, pair.ends.a.offset],
+      [pair.ends.b.station, pair.ends.b.offset],
+    ]);
     const m = measure(
-      designPoint(frame, pair.a.design),
-      designPoint(frame, pair.b.design),
+      designPoint(frame, ends[0].design),
+      designPoint(frame, ends[1].design),
       instant,
       frames,
       { signal: false, alignment: CORRIDOR_ALIGNMENT.name },
     );
-    expect(m.design!.distance).toBe(pair.design.distance);
-    expect(m.design!.horizontalDistance).toBe(pair.design.horizontalDistance);
-    expect(m.distance).toBe(pair.distance);
+    expect(m.design!.distance).toBe(pair.designDistance);
+    expect(m.design!.horizontalDistance).toBe(pair.horizontalDistance);
+    expect(m.distance).toBe(pair.trueDistance);
+
+    // The measurement model on pairs[0], 10,000 ft on the first tangent's
+    // +2% grade: the horizontal and 3D design distances, and the true one.
+    const first = answers.pairs[0];
+    const [a, b] = [first.from, first.to].map(
+      (i: number) => answers.points[i].design,
+    );
+    const exact = (design: number[]): SnapResult => ({
+      snapPoint: frame.toBodyFixed(design),
+      hitPoint: frame.toBodyFixed(design),
+      distance: 0,
+      kind: "segment",
+      design: designPoint(frame, design, {
+        how: "snap",
+        tolerance: 0,
+        kind: "segment",
+      }),
+      tolerance: 0,
+      exact: true,
+      source: "server",
+      provisional: false,
+    });
+    const view = measurementModel(
+      exact(a),
+      exact(b),
+      measure(designPoint(frame, a), designPoint(frame, b), instant, frames, {
+        signal: false,
+        alignment: CORRIDOR_ALIGNMENT.name,
+      }),
+    );
+    expect(view.horizontalDistance).toBe("10,000.000 ftUS");
+    expect(view.designDistance).toBe("10,002.000 ftUS");
+    expect(view.trueDistance).toBe(
+      `${first.trueDistance.toLocaleString("en-US", {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+      })} m`,
+    );
+    expect(view.a.station).toBe("100+00.000");
+    expect(view.b.station).toBe("200+00.000");
+  });
+
+  it("writes answers.json as Answers' shape", () => {
+    expect(() => parseAnswers(answers)).not.toThrow();
+    expect(parseAnswers(answers)).toEqual(answers);
+    expect(answers.anchorStation).toBe(ANCHOR_STATION);
+    expect(answers.frame.unitName).toBe("US survey foot");
+  });
+
+  // The owner's "about 31.6 m" is the rigid error at the station nearest 20
+  // km from the anchor (171,255); at station 170,000 it is about 30.6 m.
+  it("records the station 170,000 marker: about 30.6 m between its true and rigid positions", () => {
+    const marker = answers.marker;
+    expect(marker.station).toBe(170_000);
+    const point = answers.points[marker.point];
+    expect([point.station, point.offset]).toEqual([170_000, 0]);
+    expect(Array.from(frame.toBodyFixed(marker.design))).toEqual(
+      marker.bodyFixed,
+    );
+    expect(Array.from(rigid.displayed(marker.design))).toEqual(
+      marker.rigidDisplayed,
+    );
+    expect(marker.separation).toBe(rigid.displayError(marker.design));
+    expect(Math.abs(marker.separation - 30.6)).toBeLessThan(0.1);
+    expect(reprojected.displayError(marker.design)).toBe(0);
+  });
+
+  it("places the NGS mark: PROJ's zone 3 against the datasheet, and its distances to the centreline", () => {
+    const mark = answers.mark;
+    expect(mark.pid).toBe(SURVEY_MARK.pid);
+    // The published position on the ellipsoid against the datasheet's own
+    // X, Y, Z (to the millimetre it publishes; the GRS80 and WGS 84
+    // ellipsoids differ by about 0.1 mm here).
+    for (let k = 0; k < 3; k++) {
+      expect(
+        Math.abs(mark.bodyFixed[k] - SURVEY_MARK.publishedXyz[k]!),
+      ).toBeLessThan(0.0006);
+    }
+    // PROJ's zone 3 from the published position, against the datasheet's.
+    expect(Array.from(frame.fromBodyFixed(mark.bodyFixed))).toEqual(
+      mark.design,
+    );
+    const rows = checkRows(parseAnswers(answers), {
+      points: new Map(),
+      pairs: new Map(),
+      mark: { easting: mark.design[0], northing: mark.design[1] },
+    });
+    for (const id of ["mark.easting", "mark.northing"]) {
+      const row = rows.find((r) => r.id === id)!;
+      expect(row.kind).toBe("published reference");
+      expect(row.tolerance).toBe(MARK_SPC_TOLERANCE);
+      expect(row.status, `${id}: ${row.shown} against ${row.expected}`).toBe(
+        "pass",
+      );
+    }
+    // Its nearest centreline point and the distances to it.
+    const at = alignment.stationOffset(mark.design);
+    expect([at.station, at.offset]).toEqual([
+      mark.nearest.station,
+      mark.nearest.offset,
+    ]);
+    expect(
+      Math.abs(mark.horizontalDistance - Math.abs(mark.nearest.offset)),
+    ).toBeLessThan(1e-6);
+    expect(Math.abs(mark.nearest.offset)).toBeLessThan(600);
+    expect(mark.trueDistance).toBeGreaterThan(
+      mark.horizontalDistance * frame.units.metersPerUnit * 0.99,
+    );
   });
 });

@@ -19,9 +19,6 @@ export const SECTION_REACH = Math.max(
   ...CROSS_SECTION.strips.map((s) => Math.max(-s.from, s.to)),
 );
 
-/** Ticks sit this far above the surface, so they don't fight it for depth. */
-const TICK_RAISE = 0.03;
-
 /** The offsets a chord error is measured at: the centreline and both edges. */
 const MEASURED_OFFSETS = [-SECTION_REACH, 0, SECTION_REACH];
 
@@ -531,7 +528,7 @@ export function corridorMesh(alignment, stations, options = {}) {
         "tick",
       );
       const at = (s, o) =>
-        sectionPoint(alignment, s, o, sectionSurface(o) + TICK_RAISE);
+        sectionPoint(alignment, s, o, sectionSurface(o) + TICKS.raise);
       const o0 = offset - TICKS.across / 2;
       const o1 = offset + TICKS.across / 2;
       builder.quad(
