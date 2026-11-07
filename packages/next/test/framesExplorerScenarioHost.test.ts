@@ -206,6 +206,27 @@ describe("switching scenarios mid-evaluation (Review Focus 3)", () => {
     expect(h.log.filter((l) => l.startsWith("draw"))).toEqual([]);
   });
 
+  it("takes the last setup's overlays off the globe when the new setting fails (Task 9, N8)", async () => {
+    const h = harness();
+    void h.host.show("stand-on-moon");
+    h.pending[0]!.resolve(evaluation("stand-on-moon", ["label", "line"]));
+    await h.settle();
+    expect(h.last().evaluation).toBeDefined();
+    expect(h.log).toContain("draw scenario:stand-on-moon:label");
+    h.host.setKnob("latitude", -10);
+    h.flush();
+    h.pending[1]!.reject(new Error("no answer at -10"));
+    await h.settle();
+    // Its overlays (and so their labels) go; nothing reads the old
+    // evaluation as this setting's.
+    expect(h.log).toContain("remove scenario:stand-on-moon:label");
+    expect(h.log).toContain("remove scenario:stand-on-moon:line");
+    expect(h.last().evaluation).toBeUndefined();
+    expect(h.last().evaluatedAt).toBeUndefined();
+    expect(h.last().status).toBe("error");
+    expect(h.last().problem?.message).toMatch(/no answer at -10/);
+  });
+
   it("shows the wait behind a catalog run as loading (R9)", () => {
     const h = harness({ busy: "Waiting for the catalog run to end" });
     void h.host.show("one-path");

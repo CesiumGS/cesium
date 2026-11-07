@@ -282,6 +282,11 @@ export interface ScenarioPanelView {
    * 9, I8).
    */
   answerDelta?: { value: number; unit: string };
+  /**
+   * Instead of the route's steps, when they can't be given at this
+   * setting (the evaluation failed, Task 9 N8): no figure of the last one.
+   */
+  routeNote?: string;
   /** Its lines of sight over the drawn terrain, the local horizon (sightLines.ts, Task 6b). */
   terrain?: readonly TerrainSightView[];
   /** Moments the scenario offers to jump the clock to ("Behind the Moon"), UTC ms. */

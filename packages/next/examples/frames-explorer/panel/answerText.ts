@@ -56,12 +56,13 @@ export function accuracyWarns(answer: ScenarioAnswer): boolean {
 
 /** "±1.1 m (1σ): measured Earth orientation …", "Within 2% …", or "Not bounded: …". */
 export function accuracyLine(answer: ScenarioAnswer): string {
-  const { meters, note, unbounded, figure } = answer.accuracy;
+  const { meters, note, unbounded, figure, heuristic } = answer.accuracy;
+  const kind = heuristic ? "heuristic, not a bound" : "1σ";
   if (figure !== undefined) {
-    return `${figure} (1σ): ${note}`;
+    return `${figure} (${kind}): ${note}`;
   }
   if (meters !== undefined) {
-    return `±${length(meters)} (1σ): ${note}`;
+    return `±${length(meters)} (${kind}): ${note}`;
   }
   const sentence = note.charAt(0).toUpperCase() + note.slice(1);
   // An unbounded accuracy says so first, unless its note already does.
@@ -386,7 +387,9 @@ function withFootprint(
           .join(" · "),
         accuracy: {
           meters,
-          note: `the terrain's ±${length(err)} along a ray ${fp.tilt}° down moves the spot about ±${length(along)} on level ground (most of it, when it leads); that per-level terrain error is a heuristic, not a bound, and the terrain source's own accuracy isn't stated; ${datumWords}; the local placement's ${length(p.drift)} from PROJ`,
+          // The caveats first, so the globe's two lines keep them (N4).
+          heuristic: true,
+          note: `the terrain source's accuracy isn't stated. The terrain's per-level ±${length(err)} along a ray ${fp.tilt}° down moves the spot about ±${length(along)} on level ground (most of it, when it leads); ${datumWords}; the local placement's ${length(p.drift)} from PROJ`,
         },
       };
     }

@@ -194,6 +194,9 @@ describe("scenarioView", () => {
         },
         overlays: [],
         live: [],
+        presets: [
+          { id: "end", label: "The road's end", knobs: { station: 2000 } },
+        ],
         checkedAnswerValue: 650,
       },
       evaluatedAt: {
@@ -219,6 +222,14 @@ describe("scenarioView", () => {
     expect(after.answer).toBeUndefined();
     expect(after.published).toBeUndefined();
     expect(after.answerDelta).toBeUndefined();
+    // Nor its path, route figures, live rows, presets or data (N8): the
+    // route section says it isn't worked out at this setting.
+    expect(after.path).toBeUndefined();
+    expect(after.route).toBeUndefined();
+    expect(after.routeNote).toMatch(/^Not worked out at this setting/);
+    expect(after.liveExtras).toEqual({});
+    expect(after.presets).toBeUndefined();
+    expect(after.data).toBeUndefined();
     const callout = renderToString(
       createElement(
         Root,
@@ -250,6 +261,9 @@ describe("scenarioView", () => {
       scrub: (t) => t,
     });
     expect(ok.answerDelta).toEqual({ value: 321.25 - 650, unit: "ft" });
+    // What the failure withholds is there after a success.
+    expect(ok.presets?.map((m) => m.id)).toEqual(["end"]);
+    expect(ok.routeNote).toBeUndefined();
     // Loading, it is pending (R9).
     const loading = scenarioView({
       st: { ...st, status: "loading", problem: undefined },

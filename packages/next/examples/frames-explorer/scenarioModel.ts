@@ -271,10 +271,13 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
   const { st, tree, playing } = input;
   const spec = st.spec;
   const catalog = new Map(input.results.map((r) => [r.id, r]));
-  const e = st.evaluation;
   // A failed evaluation is the current setup's outcome: never "updating"
   // for ever over the last answer (Task 9, I10).
   const failed = st.status === "error" && st.problem !== undefined;
+  // After a failure nothing of the last setup's evaluation shows as this
+  // one's (Task 9, N1 and N8): its answer, path, route figures, live rows,
+  // presets, data and mask row all go.
+  const e = failed ? undefined : st.evaluation;
   const freshness = failed ? "current" : scenarioFreshness(st, playing);
   const own =
     input.terrain !== undefined && e?.pair
@@ -412,6 +415,10 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       return delta ? { answerDelta: delta } : {};
     })(),
     ...(path && { path }),
+    ...(failed && {
+      routeNote:
+        "Not worked out at this setting: the route's steps and their accuracies come with an answer.",
+    }),
     ...(APP_CODE[spec.id] && { appCode: APP_CODE[spec.id]! }),
     checks,
     liveExtras,

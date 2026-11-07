@@ -1763,6 +1763,14 @@ These bind over the sections above where they differ.
   about 6 µm/s at Orion's 3.8 × 10⁸ m, against ±31 µm/s and ±0.73 mm/s.
 - **Leaving the explorer** puts back the clock's zone and name that were
   showing.
+- **A failed evaluation leaves nothing of the last one** (round 3, N8): its
+  overlays and their labels come off the globe, the host exposes no
+  evaluation, and the panel withholds its path, route figures (the route
+  section says "Not worked out at this setting"), live rows, presets, data
+  and mask row. The scene's own frames stay.
+- **The drone spot's accuracy** is labelled "heuristic, not a bound", not
+  "1σ", with the terrain caveats leading its words, so the globe card's two
+  lines keep them.
 
 ### Carried forward (engine work)
 

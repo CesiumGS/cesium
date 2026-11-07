@@ -99,6 +99,12 @@ export interface ScenarioAnswer {
      * angle says how sure it is in its own unit (Task 9, I3).
      */
     figure?: string;
+    /**
+     * The size is a heuristic, not a 1σ bound (the drone's spot from the
+     * terrain's per-level error, Task 9 N4): the line says so instead of
+     * "(1σ)".
+     */
+    heuristic?: boolean;
   };
   /** The tree path the answer runs along: node ids for `branchPath`. */
   path?: { from: string; to: string };

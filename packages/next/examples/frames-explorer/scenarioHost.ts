@@ -256,6 +256,13 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
     status = "error";
     queued = undefined;
     problem = { message: messageOf(error), missing: isMissing(error) };
+    // Nothing of the last setup's answer stays on the globe as this one's
+    // (Task 9, N8): its overlays go, and the page's layers that read the
+    // evaluation (the bodies' lines and labels, the legend, the sight
+    // lines) see none. The scene's own frames stay.
+    removeOwned();
+    evaluation = undefined;
+    evaluatedAt = undefined;
     notify();
   }
 

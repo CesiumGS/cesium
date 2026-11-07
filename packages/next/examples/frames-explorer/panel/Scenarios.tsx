@@ -677,10 +677,24 @@ function ScenariosView({
               />
             </section>
 
-            {scenario.route && (
+            {(scenario.route || scenario.routeNote) && (
               <section className="fx-section" aria-labelledby={ids.route}>
                 <SectionHead id={ids.route} title="Route steps" />
-                <RouteSteps steps={scenario.route} legs={scenario.routeLegs} />
+                {scenario.route ? (
+                  <RouteSteps
+                    steps={scenario.route}
+                    legs={scenario.routeLegs}
+                  />
+                ) : (
+                  <Typography
+                    variant="body-sm"
+                    color="textSecondary"
+                    render={<p />}
+                    role="status"
+                  >
+                    {scenario.routeNote}
+                  </Typography>
+                )}
               </section>
             )}
 
