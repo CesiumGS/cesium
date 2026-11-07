@@ -19,5 +19,9 @@ export function dsnMask(station: string): HorizonMask {
       `references.json dsn-horizon-masks has no 361-value receive mask for ${station}`,
     );
   }
-  return printed.map(Number);
+  const mask = printed.map(Number);
+  // North is one direction: the 0° row's value at 360° too (DSS-63's sheet
+  // gives 6 at 0° and 6.1 at 360°; the entry's notes say so, fix 2).
+  mask[360] = mask[0]!;
+  return mask;
 }

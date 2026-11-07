@@ -593,6 +593,16 @@ export function attachTimeControls(
       g.putImageData(cachedStrip, 0, 0);
     }
     const xOf = (ms: number) => ((ms - start) / DAY) * width;
+    // The marks' titles join whatever title the strip had (the shown day's
+    // marks only); never replace it.
+    const titles = marks
+      .filter((m) => m.end > start && m.start < start + DAY)
+      .map((m) => m.title)
+      .join("\n");
+    const title = [baseTitle, titles].filter((x) => x !== "").join("\n");
+    if (strip.title !== title) {
+      strip.title = title;
+    }
     // The app's marked spans, over the sky (not cached: they change).
     g.fillStyle = "rgba(255, 112, 84, 0.6)";
     for (const [x, w] of markSpans(marks, start, width, ratio)) {
@@ -635,9 +645,6 @@ export function attachTimeControls(
     },
     setMarks(next) {
       marks = next;
-      // The marks' titles join whatever title the strip had; never replace it.
-      const titles = next.map((m) => m.title).join("\n");
-      strip.title = [baseTitle, titles].filter((t) => t !== "").join("\n");
       render();
     },
     dispose() {

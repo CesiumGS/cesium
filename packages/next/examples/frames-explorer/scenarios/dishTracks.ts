@@ -489,7 +489,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     },
     {
       title: "Can it see it",
-      text: "The straight path is tested against the Earth and the Moon, each placed when the light passes it. The dish's horizon is its published receive mask (DSN 810-005 Module 301, from SRTM terrain and the neighbouring antennas, at least about 6°), linear between whole degrees of azimuth. The page checks our drawn terrain against that mask at eight azimuths.",
+      text: "The straight path is tested against the Earth and the Moon, each placed when the light passes it. The dish's horizon is its published receive mask (DSN 810-005 Module 301, from SRTM terrain and the neighbouring antennas, at least about 6°), linear between whole degrees of azimuth, compared with Orion's airless elevation: refraction lifts it by about 0.15° at 6°, which can move a mask edge by about half a minute. The page checks our drawn terrain against that mask at eight azimuths.",
     },
   ];
   const evaluation: ScenarioEvaluation = {

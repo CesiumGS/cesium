@@ -55,11 +55,16 @@ import {
 } from "../examples/frames-explorer/sightLines.ts";
 import type { TerrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
 import { moonCut, rayPlacement } from "../examples/frames-explorer/skyRay.ts";
+import { createCameraViews } from "../examples/frames-explorer/cameraViews.ts";
+import { Instant } from "../src/time/Instant.ts";
 import {
   belowMask,
   maskAt,
 } from "../examples/frames-explorer/scenarios/horizonMask.ts";
-import { MOON_RADIUS } from "../examples/frames-explorer/scenarios/occultation.ts";
+import {
+  MOON_RADIUS,
+  windowsOf,
+} from "../examples/frames-explorer/scenarios/occultation.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 
 const spec = (id: string) => SCENARIOS.find((s) => s.id === id)!;
@@ -547,5 +552,59 @@ describe("the DSN's horizon masks, as published (Task 6b)", () => {
     expect(maskAt(m, 361)).toBe(7.2);
     expect(belowMask(m, 1, 7.2)).toBe(true);
     expect(belowMask(m, 1, 7.21)).toBe(false);
+  });
+});
+
+describe("the ground camera faces the line of sight (fix 2)", () => {
+  it("heads along the ray's azimuth at the clock's instant, the look's heading only without one", () => {
+    let azimuth: number | undefined = 104.21;
+    const asked: number[] = [];
+    const views = createCameraViews({
+      core: {
+        viewer: {
+          container: { clientWidth: 800, clientHeight: 600 },
+          view: { camera: { fov: 1 } },
+        } as never,
+        frames: () => undefined,
+        instantNow: () => Instant.fromTdb(828752222),
+      },
+      local: () => [],
+      orionBuilt: () => undefined,
+      orionNodeId: () => undefined,
+      rigidBuilt: () => undefined,
+      engineering: () => undefined as never,
+      skyAzimuth: (at) => {
+        asked.push(at.tdb());
+        return azimuth;
+      },
+    });
+    const dish = SCENES["dish-tracks"]!;
+    const v = views.sceneView(dish, { station: "DSS-43", view: "dish" })!;
+    expect(v.framing.heading).toBeCloseTo((104.21 * Math.PI) / 180, 12);
+    // Asked at the clock's instant, not a frame behind it.
+    expect(asked).toEqual([828752222]);
+    azimuth = undefined;
+    const w = views.sceneView(dish, { station: "DSS-43", view: "dish" })!;
+    expect(w.framing.heading).toBe(0);
+  });
+});
+
+describe("the windows' scan steps by how soon a verdict could change (fix 2)", () => {
+  // A 2-minute gap that a fixed 600 s grid steps straight over.
+  const inGap = (t: number) => t >= 40_000 && t <= 40_120;
+  const spans = [[0, 86_400]] as const;
+
+  it("a fixed 600 s step misses a 2-minute window between its instants", () => {
+    expect(windowsOf(spans, inGap)).toEqual([]);
+  });
+
+  it("an adaptive step (margin over its rate bound) finds it, each edge to a millisecond", () => {
+    // The margin: how far t is from the nearest edge, closing at 1 per second.
+    const stepAt = (t: number) =>
+      Math.min(Math.abs(t - 40_000), Math.abs(t - 40_120));
+    const found = windowsOf(spans, inGap, stepAt);
+    expect(found).toHaveLength(1);
+    expect(found[0]!.start).toBeCloseTo(40_000, 2);
+    expect(found[0]!.end).toBeCloseTo(40_120, 2);
   });
 });

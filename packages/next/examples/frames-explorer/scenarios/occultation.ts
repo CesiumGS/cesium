@@ -6,11 +6,13 @@
 // network's loss is DSS-43's own.
 //
 // The verdicts here are hand geometry from the frame tree's own vectors
-// (cheap enough to scan the whole OEM): each body where it was when its
+// (cheap enough to scan the whole OEM), Orion's direction aberrated as the
+// dish sees it (fix 2): each body where it was when its
 // light left (two light-time passes); the Moon a sphere of 1,737.4 km
 // (IAU 2015, as naif-moon-radius); the Earth the WGS 84 ellipsoid, the
-// path tested against it in ITRF at reception. A 120 s scan finds each
-// change of verdict and bisection pins each edge to a millisecond. The
+// path tested against it in ITRF at reception. A scan whose steps follow
+// how near the nearest verdict is to changing finds each change of verdict
+// (fix 2), and bisection pins each edge to a millisecond. The
 // library's own line of sight (`measure`, against the Earth and the Moon)
 // is then asked just inside and just outside each edge of the chosen
 // dish's windows (dishTracks.ts's live check): the edges are the library's
@@ -21,22 +23,33 @@
 // moves it (`secondsPerKm`), from the crossing's own rate.
 import { type Frame, frameTransform } from "../../../src/frames/Frame.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
-import { C } from "../../../src/measure/constants.ts";
+import { C, EARTH_ROTATION_RATE } from "../../../src/measure/constants.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import type { Trajectory } from "../../../src/trajectory/Trajectory.ts";
-import { type HorizonMask, belowMask } from "./horizonMask.ts";
-import { angleBetween, azimuthElevation } from "./pointing.ts";
+import { type HorizonMask, belowMask, maskAt } from "./horizonMask.ts";
+import { aberrate, angleBetween, azimuthElevation } from "./pointing.ts";
 
 /** The Moon's radius the lines of sight take, m (IAU 2015, NAIF pck00011: naif-moon-radius). */
 export const MOON_RADIUS = 1_737_400;
 
 /**
- * The scan's step, s: the Moon's windows last tens of minutes and a dish's
- * horizon hours; a window shorter than this can be missed (the scan costs
- * about 2 ms an instant, over nine days of OEM).
+ * The scan's longest step, s. Each step is as long as the nearest verdict
+ * could take to change (fix 2): the smallest margin over every dish (its
+ * elevation from its mask, the limb angle) over a bound on how fast that
+ * margin can close, at least 1 s. A window of any length is found; only
+ * one shorter than 1 s could hide between steps.
  */
 export const STEP = 600;
+
+/** The shortest step, s. */
+export const MIN_STEP = 1;
+
+/** The Earth's turn, degrees per second. */
+const SPIN = (EARTH_ROTATION_RATE * 180) / Math.PI;
+
+/** A bound on the Moon's angular rate seen from the Earth, degrees per second (about 1 km/s at 384,000 km is 1.5e-4). */
+const MOON_RATE = 5e-4;
 
 /** Edges are bisected to this, s. */
 const EDGE = 1e-3;
@@ -62,11 +75,15 @@ export interface Blocked {
   limb: number;
   /** The Moon's distance from the dish, m. */
   moonDistance: number;
-  /** Orion's azimuth and elevation at the dish, degrees (light time, no aberration). */
+  /** Orion's apparent azimuth and elevation at the dish, degrees (light time and aberration, as `measure`'s; airless). */
   azimuth: number;
   elevation: number;
   /** At or below the dish's published horizon mask, when it has one. */
   mask?: boolean;
+  /** How far the nearest verdict is from changing, degrees: from the mask (or the horizon) and the Moon's limb. */
+  margin: number;
+  /** A bound on how fast that margin can close, degrees per second. */
+  rate: number;
 }
 
 /** A dish for the scan: where it is (ITRF, m) and its published receive mask, if any. */
@@ -131,6 +148,10 @@ export interface Sky {
   toIcrf: Float64Array;
   moon: ArrayLike<number>;
   orion: ArrayLike<number>;
+  /** The Earth's centre's barycentric velocity, m/s. */
+  earthVelocity: number[];
+  /** A bound on Orion's angular rate seen from the Earth's surface, degrees per second (its speed over its distance less the Earth's radius). */
+  orionRate: number;
 }
 
 export function skyAt(
@@ -151,10 +172,39 @@ export function skyAt(
     return at(tdb - len(sub(first, centre)) / C);
   };
   try {
-    return { toIcrf, moon: seen(frames.moonIcrf), orion: seen(orion.frame) };
+    const e = (x: number) =>
+      frameTransform(
+        frames.earthIcrf,
+        frames.icrf,
+        Instant.fromTdb(x),
+      ).subarray(12, 15);
+    const o = orion.state(t);
+    const speed = Math.hypot(o[3]!, o[4]!, o[5]!);
+    const away = Math.max(1e5, Math.hypot(o[0]!, o[1]!, o[2]!) - 6.4e6);
+    return {
+      toIcrf,
+      moon: seen(frames.moonIcrf),
+      orion: seen(orion.frame),
+      earthVelocity: sub(e(tdb + 0.5), e(tdb - 0.5)),
+      orionRate: ((speed / away) * 180) / Math.PI,
+    };
   } catch {
     return undefined;
   }
+}
+
+/** The steepest a mask gets, degrees of elevation per degree of azimuth. */
+const slopes = new WeakMap<HorizonMask, number>();
+function slopeOf(mask: HorizonMask): number {
+  let s = slopes.get(mask);
+  if (s === undefined) {
+    s = 0;
+    for (let i = 0; i < 360; i++) {
+      s = Math.max(s, Math.abs(mask[i + 1]! - mask[i]!));
+    }
+    slopes.set(mask, s);
+  }
+  return s;
 }
 
 /** What stands between `dish` and Orion under `sky`, by hand. */
@@ -173,20 +223,46 @@ export function blockedIn(sky: Sky, dish: Dish): Blocked {
   const moonDistance = len(moon);
   const limb =
     angleBetween(moon, craft) - Math.asin(MOON_RADIUS / moonDistance);
+  // Where the dish sees Orion, as `measure` does (fix 2): the light-time
+  // direction aberrated by the dish's velocity (the Earth's centre's and the
+  // Earth's turn at the dish), about 20″ at most; the mask and the
+  // ellipsoid are tested along it.
+  const axis = [toIcrf[8]!, toIcrf[9]!, toIcrf[10]!];
+  const la = len(axis);
+  const r0 = sub(s, toIcrf.subarray(12, 15));
+  const spin = [
+    axis[1]! * r0[2]! - axis[2]! * r0[1]!,
+    axis[2]! * r0[0]! - axis[0]! * r0[2]!,
+    axis[0]! * r0[1]! - axis[1]! * r0[0]!,
+  ].map((x) => (x / la) * EARTH_ROTATION_RATE);
+  const beta = sky.earthVelocity.map((v, i) => (v + spin[i]!) / C);
+  const range = len(craft);
+  const seen = aberrate(
+    craft.map((x) => x / range),
+    beta,
+  ).map((x) => x * range);
   // The path in ITRF at reception: ICRF to ITRF is the linear part's
   // transpose (its 1e-9 scale doesn't move a horizon).
   const r = toIcrf;
   const inItrf = [0, 1, 2].map(
     (j) =>
-      r[4 * j]! * craft[0]! +
-      r[4 * j + 1]! * craft[1]! +
-      r[4 * j + 2]! * craft[2]!,
+      r[4 * j]! * seen[0]! +
+      r[4 * j + 1]! * seen[1]! +
+      r[4 * j + 2]! * seen[2]!,
   );
   const far = [0, 1, 2].map((i) => station[i]! + inItrf[i]!);
   const [e, n, u] = enuAt(station);
   const dot = (a: number[]) =>
     a[0]! * inItrf[0]! + a[1]! * inItrf[1]! + a[2]! * inItrf[2]!;
   const { azimuth, elevation } = azimuthElevation([dot(e!), dot(n!), dot(u!)]);
+  // How soon a verdict could change: the margins over their rate bounds.
+  const sweep = SPIN + sky.orionRate;
+  const azimuthRate =
+    sweep / Math.max(0.05, Math.cos((elevation * Math.PI) / 180));
+  const horizon = dish.mask
+    ? Math.abs(elevation - maskAt(dish.mask, azimuth))
+    : Math.abs(elevation);
+  const limbMargin = Math.abs((limb * 180) / Math.PI);
   return {
     moon: limb < 0 && len(craft) > moonDistance,
     earth: throughEarth(Array.from(station), far),
@@ -195,6 +271,9 @@ export function blockedIn(sky: Sky, dish: Dish): Blocked {
     azimuth,
     elevation,
     ...(dish.mask && { mask: belowMask(dish.mask, azimuth, elevation) }),
+    margin: Math.min(horizon, limbMargin),
+    rate:
+      sweep + MOON_RATE + (dish.mask ? slopeOf(dish.mask) * azimuthRate : 0),
   };
 }
 
@@ -213,11 +292,17 @@ export function blockedAt(
   return sky && blockedIn(sky, dish);
 }
 
-/** The windows where `test` holds, over `spans`: a scan every `STEP`, each edge bisected to 1 ms. */
-function windowsOf(
+/**
+ * The windows where `test` holds, over `spans`: a scan whose next step is
+ * `stepAt` the instant just tested (clamped to `MIN_STEP`…`STEP`), each edge
+ * bisected to 1 ms.
+ */
+export function windowsOf(
   spans: readonly (readonly [number, number])[],
   test: (tdb: number) => boolean | undefined,
+  stepAt: (tdb: number) => number = () => STEP,
 ): Window[] {
+  const step = (t: number) => Math.min(STEP, Math.max(MIN_STEP, stepAt(t)));
   const out: Window[] = [];
   const edge = (a: number, b: number, va: boolean) => {
     let lo = a;
@@ -240,7 +325,7 @@ function windowsOf(
     let was = test(a);
     let start = was === true ? a : undefined;
     let openStart = was === true;
-    for (let t = Math.min(b, a + STEP); ; t = Math.min(b, t + STEP)) {
+    for (let t = Math.min(b, a + step(a)); ; t = Math.min(b, t + step(t))) {
       const now = test(t);
       if (now !== undefined && was !== undefined && now !== was) {
         const at = edge(prev, t, was);
@@ -316,25 +401,44 @@ export function scanWindows(
     }
     return v;
   };
+  // The next step from an instant: the soonest any dish's verdict could
+  // change there (every kind of window shares it, and the instants).
+  const stepAt = (t: number) => {
+    let s = STEP;
+    for (const b of at(t)) {
+      if (b) {
+        s = Math.min(s, b.margin / b.rate);
+      }
+    }
+    return s;
+  };
   const dishes = stations.map((station, i) => ({
-    moon: windowsOf(orion.spans, (t) => at(t)[i]?.moon).map((w) => ({
+    moon: windowsOf(orion.spans, (t) => at(t)[i]?.moon, stepAt).map((w) => ({
       ...w,
       secondsPerKm: {
         start: perKm(frames, orion, station, w.start),
         end: perKm(frames, orion, station, w.end),
       },
     })),
-    unavailable: windowsOf(orion.spans, (t) => {
-      const b = at(t)[i];
-      return b && unavailable(b);
-    }),
+    unavailable: windowsOf(
+      orion.spans,
+      (t) => {
+        const b = at(t)[i];
+        return b && unavailable(b);
+      },
+      stepAt,
+    ),
   }));
-  const network = windowsOf(orion.spans, (t) => {
-    const v = at(t);
-    if (v.some((b) => b === undefined)) {
-      return undefined;
-    }
-    return v.every((b) => unavailable(b!));
-  });
+  const network = windowsOf(
+    orion.spans,
+    (t) => {
+      const v = at(t);
+      if (v.some((b) => b === undefined)) {
+        return undefined;
+      }
+      return v.every((b) => unavailable(b!));
+    },
+    stepAt,
+  );
   return { dishes, network };
 }

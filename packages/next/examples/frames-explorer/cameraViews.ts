@@ -116,7 +116,7 @@ export function createCameraViews(deps: {
   /** The engineering overlays' setup (a scenario's, or the default). */
   engineering(): EngineeringSetup;
   /** The azimuth the scene's line of sight leaves its site at now, degrees (skyRay.ts). */
-  skyAzimuth?(): number | undefined;
+  skyAzimuth?(instant: Instant): number | undefined;
 }): CameraViews {
   const { viewer, frames: framesNow, instantNow } = deps.core;
 
@@ -407,18 +407,17 @@ export function createCameraViews(deps: {
   function sceneView(sc: SceneSpec, knobs: KnobState): CameraView | undefined {
     switch (sc.cameraFor?.(knobs) ?? sc.camera) {
       case "site": {
-        // On the ground at the scene's site (the dish, Sacramento).
+        // On the ground at the scene's site (the dish, Sacramento), behind
+        // it and facing the way its line of sight leaves at the clock's
+        // instant (fix 2): the ray rises away from the camera, up the view.
         const l = sc.look?.(knobs);
+        const instant = instantNow();
+        const heading =
+          (instant && deps.skyAzimuth?.(instant)) ?? l?.heading ?? 0;
         return (
           l &&
           surface(
-            framingAt(
-              l.longitude,
-              l.latitude,
-              l.range,
-              l.heading,
-              l.pitch * deg,
-            ),
+            framingAt(l.longitude, l.latitude, l.range, heading, l.pitch * deg),
           )
         );
       }

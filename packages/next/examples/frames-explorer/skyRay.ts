@@ -153,8 +153,8 @@ export interface SkyRay {
   place(): void;
   /** The chosen site's line now (ITRF unit direction), for checks. */
   now(): { origin: number[]; direction: number[] } | undefined;
-  /** The chosen site's azimuth to the target now, degrees: the ground camera faces it. */
-  azimuth(): number | undefined;
+  /** The chosen site's azimuth to the target at `instant` (default the shown one), degrees: the ground camera faces it. */
+  azimuth(instant?: Instant): number | undefined;
   dispose(): void;
 }
 
@@ -421,11 +421,11 @@ export function createSkyRay(deps: {
     }
   }
 
-  function azimuth(): number | undefined {
+  function azimuth(at?: Instant): number | undefined {
     const scene = deps.scene();
     const ray = scene?.skyRay;
     const frames = deps.frames();
-    const instant = globe.shownAt();
+    const instant = at ?? globe.shownAt();
     if (!ray || !frames || !instant) {
       return undefined;
     }

@@ -250,7 +250,7 @@ export function run(context: ExampleContext): ExampleRun {
     orionNodeId: () => orion.info()?.info.node.id,
     rigidBuilt: () => overlays.rigidBuilt(),
     engineering: () => overlays.engineering(),
-    skyAzimuth: () => skyRay.azimuth(),
+    skyAzimuth: (instant) => skyRay.azimuth(instant),
   });
   scope.defer(() => cameraViews.dispose());
   // The pivot marker while the orbit is dragged (HUD); a drag or wheel of

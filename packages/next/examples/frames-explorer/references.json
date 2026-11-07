@@ -728,6 +728,7 @@
         "retrieved": "2026-11-06"
       },
       "notes": "Receive masks: elevation limits (degrees) against azimuth (degrees, 0 to 360 by 1), copied as the spreadsheet stores each cell. The handbook: the receive limits come from the terrain (SRTM, about 1 m in height, 1 arc-second posting) and neighbouring antennas, or the mechanical lower limit of about 6 degrees. It doesn't say how to interpolate between azimuths.",
+      "north": "Each sheet has rows for 0 and 360 degrees. DSS-63's differ (RCV 6 at 0, 6.1 at 360; DSS-14's and DSS-43's agree); the explorer takes the 0-degree value for north, so 6 for DSS-63.",
       "azimuth": {
         "from": "0",
         "to": "360",
