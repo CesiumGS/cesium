@@ -481,6 +481,22 @@ describe("the declared operation: pipeline, geoidFallback, fallbackSigma", () =>
       })),
     }),
   );
+  const withXyz = GridCatalog.parse(
+    JSON.stringify({
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            name: "fr_ign_gr3df97a.tif",
+            url: "https://cdn.proj.org/fr_ign_gr3df97a.tif",
+            sha256sum: "b".repeat(64),
+            file_size: 1,
+          },
+        },
+      ],
+    }),
+  );
   const withPipeline = (pipeline: unknown) => ({ ...rigid(), pipeline });
   /** CORRIDOR_PIPELINE with its geoid grid renamed. */
   const naming = (grid: string) => CORRIDOR_PIPELINE.replace(GEOID18, grid);
@@ -489,6 +505,15 @@ describe("the declared operation: pipeline, geoidFallback, fallbackSigma", () =>
     const g = readGeoreference(tileset(withPipeline(CORRIDOR_PIPELINE)))!;
     expect(g.pipeline).toBe(formatPipeline(parsePipeline(CORRIDOR_PIPELINE)));
     expect(() => checkDeclaredGrids(g, catalog)).not.toThrow();
+  });
+
+  it("reads an xyzgridshift whose grid is in the catalog", () => {
+    const xyz =
+      "+proj=pipeline +step +proj=cart +ellps=GRS80 +step +inv +proj=xyzgridshift +grids=fr_ign_gr3df97a.tif +grid_ref=output_crs +ellps=clrk80ign +step +inv +proj=cart +ellps=clrk80ign";
+    const g = readGeoreference(tileset(withPipeline(xyz)))!;
+    expect(g.pipeline).toBe(formatPipeline(parsePipeline(xyz)));
+    expect(() => checkDeclaredGrids(g, withXyz)).not.toThrow();
+    expect(() => checkDeclaredGrids(g, catalog)).toThrow(GeoreferenceError);
   });
 
   it("reads a geoid fallback and its sigma", () => {
@@ -510,7 +535,52 @@ describe("the declared operation: pipeline, geoidFallback, fallbackSigma", () =>
       ]) {
         const error = failure(withPipeline(naming(grid)));
         expect(error.path, grid).toBe(`${ROOT}.pipeline`);
-        expect(error.message).toMatch(/plain file name/);
+        expect(error.message).toMatch(/a path|plain file name/);
+      }
+    });
+
+    it("a path in any grid parameter, xy_grids and z_grids included", () => {
+      for (const payload of [
+        "+proj=deformation +xy_grids=/etc/hosts +z_grids=../../../etc/passwd +dt=1",
+        "+proj=xyzgridshift +xy_grids=/etc/hosts +z_grids=/etc/hosts",
+        "+proj=pipeline +step +proj=deformation +xy_grids=a.tif +z_grids=sub/b.tif +dt=1",
+      ]) {
+        const error = failure(withPipeline(payload));
+        expect(error.path, payload).toBe(`${ROOT}.pipeline`);
+      }
+    });
+
+    it("a grid name that isn't a plain file name, without a path", () => {
+      const error = failure(withPipeline(naming("@@x.tif")));
+      expect(error.path).toBe(`${ROOT}.pipeline`);
+      expect(error.message).toMatch(/plain file name/);
+    });
+
+    it("a ':', a '..' or a path in any parameter's value", () => {
+      for (const value of ["a:b", "x..y", "/x", "a/b"]) {
+        const error = failure(
+          withPipeline(
+            `+proj=pipeline +step +proj=unitconvert +xy_in=${value} +xy_out=m`,
+          ),
+        );
+        expect(error.path, value).toBe(`${ROOT}.pipeline`);
+      }
+      // A backslash never passes the value allowlist.
+      expect(
+        failure(
+          withPipeline("+proj=pipeline +step +proj=unitconvert +xy_in=a\\b"),
+        ).path,
+      ).toBe(`${ROOT}.pipeline`);
+    });
+
+    it("an operation or a parameter a declaration may not use", () => {
+      for (const payload of [
+        "+proj=pipeline +step +proj=tinshift +file=fi_nls_ykj_etrs35fin.json",
+        "+proj=pipeline +step +proj=unitconvert +xy_in=m +xy_out=m +secret=1",
+      ]) {
+        expect(failure(withPipeline(payload)).message, payload).toMatch(
+          /may not use/,
+        );
       }
     });
 
@@ -560,7 +630,7 @@ describe("the declared operation: pipeline, geoidFallback, fallbackSigma", () =>
       expect(failure({ ...rigid(), geoidFallback: "EGM84" }).path).toBe(
         `${ROOT}.geoidFallback`,
       );
-      for (const sigma of [-1, Number.NaN, "1"]) {
+      for (const sigma of [-1, 0, Number.NaN, "1"]) {
         expect(
           failure({ ...rigid(), geoidFallback: "EGM96", fallbackSigma: sigma })
             .path,

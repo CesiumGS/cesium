@@ -22,10 +22,20 @@ export interface Pipeline {
 
 /**
  * The parameters that name grid files, and so need them loaded: `grids`,
- * `nadgrids` and `geoidgrids`, a `tinshift`'s `file` and a `defmodel`'s
- * `model` (the catalog's `.json` entries).
+ * `nadgrids` and `geoidgrids`, a `tinshift`'s `file`, a `defmodel`'s `model`
+ * (the catalog's `.json` entries), and a `deformation`'s or an
+ * `xyzgridshift`'s `xy_grids` and `z_grids`. These are every file-valued
+ * parameter PROJ 9.7's operations read (the `s`/`t` parameter names in
+ * proj_capi.wasm, 2026-11-07), besides `init`, which reads an init file.
  */
-export type GridKey = "grids" | "nadgrids" | "geoidgrids" | "file" | "model";
+export type GridKey =
+  | "grids"
+  | "nadgrids"
+  | "geoidgrids"
+  | "file"
+  | "model"
+  | "xy_grids"
+  | "z_grids";
 
 export interface PipelineGrid {
   readonly name: string;
@@ -41,6 +51,8 @@ const GRID_KEYS: readonly GridKey[] = [
   "geoidgrids",
   "file",
   "model",
+  "xy_grids",
+  "z_grids",
 ];
 
 function shown(text: string): string {

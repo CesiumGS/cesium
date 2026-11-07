@@ -99,6 +99,142 @@ const MAX_STEPS = 32;
 const PLAIN_FILE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
 /** Parameters a declared pipeline may not use: `init` reads PROJ's init files. */
 const REFUSED_KEYS = ["init"];
+/**
+ * The operations a declared (untrusted) pipeline may use: an allowlist of
+ * PROJ's conversions between units, axes and Cartesian coordinates, Helmert
+ * and grid shifts (their grids checked), and its common projections. Not
+ * `tinshift`, `defmodel`, `ob_tran` or anything else.
+ */
+const DECLARED_OPERATIONS = new Set([
+  "unitconvert",
+  "axisswap",
+  "cart",
+  "helmert",
+  "molodensky",
+  "noop",
+  "push",
+  "pop",
+  "vgridshift",
+  "hgridshift",
+  "xyzgridshift",
+  "deformation",
+  "longlat",
+  "latlong",
+  "lonlat",
+  "latlon",
+  "geocent",
+  "lcc",
+  "tmerc",
+  "etmerc",
+  "utm",
+  "merc",
+  "webmerc",
+  "stere",
+  "sterea",
+  "ups",
+  "omerc",
+  "somerc",
+  "aea",
+  "aeqd",
+  "eqc",
+  "eqdc",
+  "laea",
+  "cass",
+  "poly",
+  "krovak",
+  "mod_krovak",
+  "nzmg",
+  "cea",
+  "ortho",
+  "gnom",
+  "mill",
+  "sinu",
+  "moll",
+  "robin",
+  "eck4",
+  "tcea",
+  "labrd",
+  "bonne",
+]);
+/**
+ * The parameters a declared pipeline may use: those operations' numeric
+ * and named parameters, and the grid keys (held to the catalog). Not
+ * `datum` (it names grids implicitly), `init`, `file` or `model`.
+ */
+const DECLARED_KEYS = new Set([
+  "ellps",
+  "a",
+  "b",
+  "rf",
+  "f",
+  "R",
+  "es",
+  "e",
+  "lat_0",
+  "lon_0",
+  "lat_1",
+  "lat_2",
+  "lat_ts",
+  "lonc",
+  "alpha",
+  "gamma",
+  "k",
+  "k_0",
+  "x_0",
+  "y_0",
+  "h",
+  "zone",
+  "south",
+  "units",
+  "to_meter",
+  "no_uoff",
+  "no_rot",
+  "no_defs",
+  "approx",
+  "over",
+  "pm",
+  "towgs84",
+  "xy_in",
+  "xy_out",
+  "z_in",
+  "z_out",
+  "t_in",
+  "t_out",
+  "order",
+  "x",
+  "y",
+  "z",
+  "rx",
+  "ry",
+  "rz",
+  "s",
+  "dx",
+  "dy",
+  "dz",
+  "drx",
+  "dry",
+  "drz",
+  "ds",
+  "t_epoch",
+  "t_obs",
+  "dt",
+  "convention",
+  "exact",
+  "abridged",
+  "v_1",
+  "v_2",
+  "v_3",
+  "v_4",
+  "grids",
+  "nadgrids",
+  "geoidgrids",
+  "xy_grids",
+  "z_grids",
+  "multiplier",
+  "grid_ref",
+]);
+/** A path, a parent directory, a drive or a scheme, in any value. */
+const PATH_LIKE = /[/\\:]|\.\./;
 const GEOID_MODELS: readonly GeoidModel[] = ["EGM96", "EGM2008"];
 /** A decimal year, as the draft writes `epoch`. */
 const DECIMAL_YEAR = /^\d{1,4}(\.\d+)?$/;
@@ -476,8 +612,11 @@ function readAlignment(value: unknown, path: string): AlignmentDefinition {
  * A declared pipeline, checked before PROJ sees it: a string of at most
  * MAX_PIPELINE characters and MAX_STEPS steps that `parsePipeline` reads and
  * `formatPipeline` writes back (its keys and values in their allowlists),
- * with no `init`, and whose grids are plain file names (a path or a URL
- * never reaches PROJ's file lookup). Returned as `formatPipeline` writes it.
+ * whose operations and parameters are in DECLARED_OPERATIONS and
+ * DECLARED_KEYS (no `init`, `datum`, `file` or `model`), with no "/", "\",
+ * ".." or ":" in any value, and whose grids are plain file names: no path
+ * or URL ever reaches PROJ's file lookup. Returned as `formatPipeline`
+ * writes it.
  */
 function readPipeline(value: unknown, path: string): string {
   if (typeof value !== "string" || value.length === 0) {
@@ -502,13 +641,28 @@ function readPipeline(value: unknown, path: string): string {
         `has ${pipeline.steps.length} steps; at most ${MAX_STEPS} are read`,
       );
     }
+    for (const step of pipeline.steps) {
+      if (!DECLARED_OPERATIONS.has(step.operation)) {
+        throw new GeoreferenceError(
+          path,
+          `may not use +proj=${step.operation} (a declaration may use only ${DECLARED_OPERATIONS.size} common operations)`,
+        );
+      }
+    }
     for (const params of [
       pipeline.globals,
       ...pipeline.steps.map((step) => step.params),
     ]) {
-      const refused = REFUSED_KEYS.find((key) => params && key in params);
-      if (refused !== undefined) {
-        throw new GeoreferenceError(path, `may not use +${refused}`);
+      for (const [key, value] of Object.entries(params ?? {})) {
+        if (REFUSED_KEYS.includes(key) || !DECLARED_KEYS.has(key)) {
+          throw new GeoreferenceError(path, `may not use +${key}`);
+        }
+        if (typeof value === "string" && PATH_LIKE.test(value)) {
+          throw new GeoreferenceError(
+            path,
+            `+${key} has a value with a path, a parent directory or a scheme ("/", "\\", ".." or ":")`,
+          );
+        }
       }
     }
     text = formatPipeline(pipeline);
@@ -653,8 +807,8 @@ export function parseGeoreference(
   if (declaration.fallbackSigma !== undefined) {
     const path = `${ROOT}.fallbackSigma`;
     const sigma = finite(declaration.fallbackSigma, path);
-    if (sigma < 0) {
-      throw new GeoreferenceError(path, `must not be negative (got ${sigma})`);
+    if (!(sigma > 0)) {
+      throw new GeoreferenceError(path, `must be positive (got ${sigma})`);
     }
     if (result.geoidFallback === undefined) {
       throw new GeoreferenceError(path, "applies only with geoidFallback");

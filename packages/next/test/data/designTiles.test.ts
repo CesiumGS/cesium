@@ -45,7 +45,6 @@ import {
   designPoint,
 } from "../../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../src/engineering/factors.ts";
-import { checkDeclaredGrids } from "../../src/engineering/georeference.ts";
 import {
   checkRigidTransform,
   declaredDefinition,
@@ -173,11 +172,13 @@ describe("the design globe's generated tiles", () => {
   /** The frame a tileset's declaration describes, its grids checked first. */
   async function declaredFrame(json: Json, name: string) {
     const declared = readGeoreference(json)!;
-    checkDeclaredGrids(declared, source.catalog);
-    return EngineeringFrame.load(declaredDefinition(declared, name), {
-      proj: P,
-      grids: source,
-    });
+    return EngineeringFrame.load(
+      declaredDefinition(declared, name, source.catalog),
+      {
+        proj: P,
+        grids: source,
+      },
+    );
   }
 
   it("writes a manifest of version 1 with the inputs' hashes", () => {
@@ -301,7 +302,7 @@ describe("the design globe's generated tiles", () => {
     expect(worstReprojected).toBeLessThan(1e-4);
   });
 
-  it("places all nine tilesets by their own declarations", async () => {
+  it("places all ten tilesets by their own declarations", async () => {
     const declared = readGeoreference(rigidJson)!;
     // The corridor's declared operation is its GEOID18 pin, exactly.
     expect(declared.pipeline).toBe(

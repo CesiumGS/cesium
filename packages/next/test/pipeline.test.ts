@@ -20,6 +20,19 @@ describe("pipelineGrids", () => {
     ]);
   });
 
+  it("reads a deformation's or an xyzgridshift's +xy_grids and +z_grids", () => {
+    expect(
+      pipelineGrids(
+        parsePipeline(
+          "+proj=deformation +xy_grids=a.tif +z_grids=@b.tif +dt=1",
+        ),
+      ),
+    ).toEqual([
+      { name: "a.tif", optional: false, key: "xy_grids" },
+      { name: "b.tif", optional: true, key: "z_grids" },
+    ]);
+  });
+
   it("drops PROJ's null grid and reads nadgrids", () => {
     const grids = pipelineGrids(
       parsePipeline("+proj=hgridshift +nadgrids=@null,conus"),

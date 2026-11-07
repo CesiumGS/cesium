@@ -23,6 +23,7 @@ import {
   placeRigid,
   type TilesetPlacement,
 } from "./placement.ts";
+import type { GridCatalog } from "./gridCatalog.ts";
 import type { GridSource } from "./proj.ts";
 import type { ProjApi } from "./projApi.ts";
 
@@ -33,9 +34,11 @@ import type { ProjApi } from "./projApi.ts";
  * format or body, a missing `crs` or `placement`, a non-finite number, a
  * `wkt2` that isn't WKT2 in form (`wkt2Problem`: a PROJ string, AUTH:CODE or
  * PROJJSON) or is over 65,536 characters, more than 64 alignments (or
- * 4,096 elements in one), or a `pipeline` that isn't a plain PROJ pipeline
- * (over 4,096 characters or 32 steps, `+init`, a grid that isn't a plain
- * file name), an unknown `geoidFallback` or a bad `fallbackSigma`. Fields it doesn't know are ignored.
+ * 4,096 elements in one), a `pipeline` the reader refuses (over 4,096
+ * characters or 32 steps, an operation or parameter outside its
+ * allowlists, a value with "/", "\", ".." or ":", a grid that isn't a
+ * plain file name), an unknown `geoidFallback` or a `fallbackSigma` that
+ * isn't positive. Fields it doesn't know are ignored.
  */
 export function readGeoreference(
   tilesetJson: unknown,
@@ -46,13 +49,17 @@ export function readGeoreference(
 /**
  * The engineering frame a declaration describes: its name (else
  * `fallbackName`, such as the tileset's URL), body, CRS, site, alignments,
- * area of interest, and its pinned pipeline or geoid fallback. Check its
- * grids first (`checkDeclaredGrids`).
+ * area of interest, and its pinned pipeline or geoid fallback. A declared
+ * pipeline's grids are held to `catalog` first (`checkDeclaredGrids`), so
+ * nothing gets a loadable definition without that check: throws its
+ * `GeoreferenceError`.
  */
 export function declaredDefinition(
   declared: TilesetGeoreference,
   fallbackName: string,
+  catalog: GridCatalog | undefined,
 ): EngineeringFrameDefinition {
+  checkDeclaredGrids(declared, catalog);
   return {
     name: declared.name ?? fallbackName,
     body: declared.body,
@@ -140,9 +147,10 @@ const isIdentity = (m: ArrayLike<number>) => {
 /**
  * Places a tileset by its `EXT_engineering_frame` declaration: loads the
  * frame (`EngineeringFrame.load`, named by the declaration, else the
- * tileset's URL, with its declared pipeline or geoid fallback), builds the declared placement, checks a rigid one against
- * `tileset.root.transform` (`checkRigidTransform`), and sets
- * `tileset.placement`. PROJ is used here, never by `Tileset3D.load`.
+ * tileset's URL, with its declared pipeline or geoid fallback), builds the
+ * declared placement, checks a rigid one against `tileset.root.transform`
+ * (`checkRigidTransform`), and sets `tileset.placement`. PROJ is used
+ * here, never by `Tileset3D.load`.
  *
  * Every refusal is an error and a `warnings` entry:
  *  - a tileset that declares nothing (no placement is guessed);
@@ -180,9 +188,15 @@ export async function georeferenceTileset(
   if (!isIdentity(tileset.modelMatrix)) {
     return refuse(moved());
   }
-  // A declared pipeline's grids against the catalog, before PROJ sees it.
+  // The frame's definition, a declared pipeline's grids checked against the
+  // catalog: before PROJ sees anything.
+  let definition: EngineeringFrameDefinition;
   try {
-    checkDeclaredGrids(declared, options.grids?.catalog);
+    definition = declaredDefinition(
+      declared,
+      tileset.url,
+      options.grids?.catalog,
+    );
   } catch (error) {
     return refuse(error as Error);
   }
@@ -203,7 +217,7 @@ export async function georeferenceTileset(
   let frame: EngineeringFrame;
   try {
     frame = await EngineeringFrame.load(
-      declaredDefinition(declared, tileset.url),
+      definition,
       options.grids
         ? { proj: options.proj, grids: options.grids }
         : { proj: options.proj },
