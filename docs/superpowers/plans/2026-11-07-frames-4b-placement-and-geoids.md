@@ -961,6 +961,54 @@ No UI is in this task.
 - [ ] **Step 4: Run** the tests and confirm they pass.
 - [ ] **Step 5: Commit** with "examples: design globe: exact snapping on the alignment, checks against the generator, the measurement model".
 
+### Task 17b: The scale ladder: infrastructure of every size, as tilesets (owner, 2026-11-07)
+
+The owner: the portfolio "should show every country done right, and talk about the rigid vs reprojected story", with models "big enough to show that the reprojection error is real and matters … a variety of sizes of infrastructure to tell the story about rigid being an ok approximation at small sizes and reprojection being critical as size of model grows". And: "all of this infrastructure should be loaded as tilesets, so we can also see it interacting correctly with 3d tiles and our tile selection algorithms."
+
+**Files:**
+
+- Modify:
+  - `packages/next/examples/design-globe/sites.ts` (each site's model becomes a `PortfolioModel` union)
+  - `packages/next/scripts/designTiles.mjs` (the portfolio sites as rigid and reprojected tilesets, with answers)
+- Create: `packages/next/scripts/designTiles/{block,solarFarm,airport,campus,poleLine,port}Mesh.mjs`
+- Test: `packages/next/test/designGlobeLadder.test.ts` and an extension of `packages/next/test/data/designTiles.test.ts`
+
+**Interfaces:**
+
+- Consumes: Tasks 12, 13, 14 (and its declaration fix) and 17.
+- **Produces:**
+  - **The ladder, smallest first**, each site on its own country's CRS and height system, as today:
+
+    | Site | Model | Extent |
+    | --- | --- | --- |
+    | Amsterdam | the single building | about 60 m |
+    | Tokyo | a block of buildings | about 1 km |
+    | Jakarta | a port: quay, container yard | about 3 km |
+    | Phoenix | a solar farm: panel rows on one flat design plane | about 4 km |
+    | Sydney | an airport: two runways with markings, taxiways, a terminal | about 4 km |
+    | Nairobi | a campus of buildings on one flat site plan | about 10 km |
+    | London | a utility pole line, poles every 50 m with the spans between | about 30 km |
+    | California | the corridor (Task 14) | about 50 km |
+
+  - **`PortfolioModel`**, a union by kind with each kind's parameters, all in design units. Every model is defined on one flat design plane, so its rigid error grows about d²/2R from the anchor at its centre.
+  - **Each site writes `portfolio-<id>-rigid/` and `portfolio-<id>-reprojected/`.** They follow Task 14's rules:
+    - identical tile ids, trees and vertex order;
+    - a real level-of-detail tree: leaves sized to the model, and parents decimated, with `geometricError` the larger of twice the children's and the measured simplification error;
+    - `EXT_engineering_frame` with the pinned operation or fallback;
+    - Y-up content.
+  - **`answers.sites[id]`:** the extent, the rigid `displayError` at the model's farthest point from the anchor, and three design points with their exact body-fixed positions.
+- [ ] **Step 1: Write the failing tests:**
+  - each model's extent is within 10% of the table;
+  - the rigid error at its edge follows d²/2R within 10%, and grows down the ladder;
+  - both tilesets per site have identical trees, ids and vertex order;
+  - each loads through its own declaration (`georeferenceTileset`) and passes `checkRigidTransform`;
+  - the leaves' round trip holds, as Task 14's does;
+  - the tile trees have at least 3 levels for every model larger than 1 km.
+- [ ] **Step 2: Run** the tests and confirm they fail.
+- [ ] **Step 3: Implement** the meshes (procedural, deterministic, a few hundred lines each, no external data) and the generator's site loop. Generation stays under a minute for everything.
+- [ ] **Step 4: Run** `npm run setup -- --skip-build`, the tests and `npm run test:data`.
+- [ ] **Step 5: Commit** with "setup: the design globe's scale ladder, infrastructure from a building to a 30 km pole line, as tilesets".
+
 ### Task 18: the page, the tilesets and the placement morph
 
 **Files:**
@@ -984,7 +1032,7 @@ No UI is in this task.
   - true scale by default (owner, 2026-11-07): an "Exaggerate the error" toggle, off by default, labelled with its factor while on. The opening shot is at true scale near the far end (about 20 km from the anchor, about 31 m of sag), with a "Fly along" control down the corridor to the anchor;
   - show the sag (`displayError`) under the cursor in rigid mode;
   - draw the error whiskers (a leader every 1,000 ft from each rigid position to its reprojected partner, coloured by length, shrinking with the morph) and the anchor ring (examples/design-globe/DESIGN.md, "Visuals in the viewer");
-  - add the portfolio list, with a fly-to and each site's grid credits.
+  - add the portfolio list (Task 17b's ladder, ordered by size), with a fly-to; each site's panel leads with its CRS, units, height system and grid credits ("every country, done right"), then one line of the story: the model's extent, its rigid error at the edge, and whether rigid is an acceptable approximation there. Every site has the morph, whiskers and ghost.
 - [ ] **Step 3: Run** the tests, tsc, eslint and prettier.
 - [ ] **Step 4: Browser check** on your own port. Both modes draw. A pick on each (Task 15 on the GPU) gives design coordinates within the stated pick tolerance of the vertex under the cursor. A portfolio site in London loads its OS grids from `/proj-grids/`, with byte progress.
 - [ ] **Step 5: Commit** with "examples: design globe: the page, both corridor placements and the portfolio".

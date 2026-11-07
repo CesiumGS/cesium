@@ -78,8 +78,14 @@ the second audience: every number is there and honest, but quieter.
   at the cursor (convergence, about 1° across the corridor), and an error
   ribbon tinting the ground under the corridor by rigid error.
 
-- **The portfolio is a list to fly through**, each site with its CRS, units
-  and height system.
+- **The portfolio is a scale ladder to fly through** (owner, 2026-11-07),
+  ordered by size, from a single building (rigid error under 1 mm) through a
+  block, a port, a solar farm, an airport and a campus, to a 30 km utility
+  pole line, and the 50 km corridor (about 31 m). Each site is "every
+  country, done right" (its CRS, units, height system and national geoid,
+  credited) and tells the story in one line: its extent, its rigid error at
+  the edge, and whether rigid is an acceptable approximation there. All of it
+  loads as tilesets, so tile selection is exercised at every size.
 
 ## Who it is for
 
