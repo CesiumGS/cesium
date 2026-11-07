@@ -311,6 +311,11 @@ export {
   type WarningCode,
 } from "./measure/accuracy.ts";
 export { surfaceDistance, type SurfaceDistance } from "./measure/surface.ts";
+export {
+  terrainLineOfSight,
+  type TerrainLineOfSight,
+  type TerrainLineOfSightOptions,
+} from "./measure/terrainLineOfSight.ts";
 export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";
