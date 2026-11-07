@@ -169,7 +169,8 @@ function fetchable(catalog: GridCatalog, name: string): boolean {
  *
  * This mirrors the candidate rule of `resolveOperation`'s walk (crs.ts): the
  * first non-ballpark, instantiable candidate with a PROJ string and all its
- * grids. Keep the two together.
+ * grids. Keep the two together. It doesn't mirror the better rule
+ * (`betterThan`): it fetches the first candidate's grids, whatever its geoid.
  */
 function gridsToLoad(
   definition: EngineeringFrameDefinition,
@@ -491,8 +492,13 @@ export class EngineeringFrame {
    * Resolves the PROJ operation once (R2), with the grids loaded now. Throws
    * for a body with no known geographic CRS, and as `resolveOperation` does
    * when no operation has its grids. The candidates it skips for missing
-   * grids that state a smaller accuracy than the one taken are in
-   * `operation.betterCandidates`.
+   * grids that are better than the one taken are in
+   * `operation.betterCandidates` (crs.ts `betterThan`): not a ballpark;
+   * reading the same vertical grids as the one taken (the same geoid
+   * model), unless the one taken is a ballpark; and with a strictly smaller
+   * stated accuracy, or any when the one taken states none. A pinned
+   * pipeline has none, and keeps the stated accuracy of the PROJ candidate
+   * it matches (`operation.matchedCandidate`).
    *
    * With `geoidFallback`, a CRS that fails for missing grids resolves the
    * fallback CRS instead (see `EngineeringFrameDefinition.geoidFallback`;
@@ -520,8 +526,11 @@ export class EngineeringFrame {
    * whose missing grids the catalog has (a pinned pipeline: the grids it
    * names that the catalog has), then calls `create`. A grid the catalog
    * lacks is never fetched: `create` then takes the next candidate and
-   * records the skipped one in `operation.betterCandidates` if PROJ states a
-   * smaller accuracy for it. When a
+   * records the skipped one in `operation.betterCandidates` if it is better
+   * by `create`'s rule (not a ballpark; the same vertical grids, unless the
+   * one taken is a ballpark; a strictly smaller stated accuracy). Which
+   * grids `load` fetches doesn't follow that rule: it fetches the first
+   * candidate's. When a
    * `geoidFallback` will apply, it also fetches what the fallback CRS's
    * best operation needs (the model's grid, `us_nga_egm96_15.tif` or
    * `us_nga_egm08_25.tif`). Rejects as `create` throws, before fetching

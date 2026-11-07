@@ -23,7 +23,10 @@
 // height system's geoid for another (GEOID99 or GEOID03 for NAVD88, where
 // the frame took GEOID18, NGS's current model) gives different heights, not
 // better ones, so it is never listed as better, whatever PROJ states for it.
-// The grids are compared by name (`pipelineVerticalGrids`), not by year.
+// The grids are compared by name, with their step's direction and multiplier
+// (`pipelineVerticalShifts`), not by year. A ballpark operation taken has no
+// geoid to keep (its heights aren't corrected at all), so there any
+// non-ballpark candidate skipped counts, as it did before this rule.
 //
 // A grid is available when `loadGrids` loaded it (and PROJ then found it
 // where it was put; proj.ts): PROJ's own answer for a candidate's grid isn't
@@ -35,7 +38,7 @@ import {
   formatPipeline,
   parsePipeline,
   pipelineGrids,
-  pipelineVerticalGrids,
+  pipelineVerticalShifts,
   type Pipeline,
 } from "./pipeline.ts";
 import { loadedGrids } from "./proj.ts";
@@ -154,10 +157,11 @@ export interface RecordedOperation {
   /**
    * The candidates before this one, in PROJ's order (grid availability
    * ignored), that were skipped only because grids they need aren't loaded
-   * (each has a PROJ string) and that are better (`betterThan`): they read
-   * the same vertical grids as this operation, and PROJ states a strictly
-   * smaller accuracy for them, or this operation states none. A ballpark is
-   * never listed; a pinned pipeline has none.
+   * (each has a PROJ string) and that are better (`betterThan`): not a
+   * ballpark; reading the same vertical grids as this operation, applied
+   * the same way, unless this operation is a ballpark; and with a strictly
+   * smaller stated accuracy, or any when this operation states none. A
+   * pinned pipeline has none.
    */
   readonly betterCandidates: readonly BetterCandidate[];
   forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
@@ -168,8 +172,11 @@ export interface RecordedOperation {
 export interface ComparedOperation {
   /** PROJ's stated accuracy in metres; absent or undefined when it states none. */
   readonly accuracy?: number | undefined;
-  /** The grids its height step reads (`pipelineVerticalGrids`); empty for none. */
-  readonly verticalGrids: readonly string[];
+  /**
+   * The grids its height step reads, with each step's direction and
+   * multiplier (`pipelineVerticalShifts`); empty for none.
+   */
+  readonly verticalShifts: readonly string[];
   /** A ballpark transformation. */
   readonly ballpark?: boolean;
 }
@@ -183,13 +190,14 @@ function sameGrids(a: readonly string[], b: readonly string[]): boolean {
 
 /**
  * Which of the candidates skipped for missing grids are better than the
- * operation taken (`chosen`), in order: those that aren't a ballpark, read
- * the same vertical grids as `chosen` (the same geoid model, or none: they
- * differ only in horizontal steps), and that PROJ states a strictly smaller
- * accuracy for, or any figure when `chosen` states none. An equal, larger or
- * unstated figure is not better, though PROJ lists it first; nor is a
- * smaller figure for another geoid model, which PROJ's figures don't
- * compare (see the header).
+ * operation taken (`chosen`), in order: those that aren't a ballpark; that
+ * read the same vertical grids as `chosen`, applied the same way (the same
+ * geoid model, or none: they differ only in horizontal steps), unless
+ * `chosen` is a ballpark, which has no geoid to keep; and that PROJ states
+ * a strictly smaller accuracy for, or any figure when `chosen` states none
+ * (a ballpark states none). An equal, larger or unstated figure is not
+ * better, though PROJ lists it first; nor is a smaller figure for another
+ * geoid model, which PROJ's figures don't compare (see the header).
  */
 export function betterThan<C extends ComparedOperation>(
   chosen: ComparedOperation,
@@ -199,16 +207,17 @@ export function betterThan<C extends ComparedOperation>(
   return skipped.filter(
     (c) =>
       c.ballpark !== true &&
-      sameGrids(c.verticalGrids, chosen.verticalGrids) &&
+      (chosen.ballpark === true ||
+        sameGrids(c.verticalShifts, chosen.verticalShifts)) &&
       (stated === undefined ||
         (c.accuracy !== undefined && c.accuracy < stated)),
   );
 }
 
-/** A pipeline string's vertical grids; undefined when it can't be read. */
-function verticalGridsOf(string: string): readonly string[] | undefined {
+/** A pipeline string's vertical shifts; undefined when it can't be read. */
+function verticalShiftsOf(string: string): readonly string[] | undefined {
   try {
-    return pipelineVerticalGrids(parsePipeline(string));
+    return pipelineVerticalShifts(parsePipeline(string));
   } catch {
     return undefined;
   }
@@ -695,9 +704,9 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  *    normalized-for-visualization form. A ballpark operation (PROJ names it
  *    "Ballpark ...") is taken only with `allowBallpark`, and then `accuracy`
  *    is undefined. The non-ballpark candidates before it that were skipped
- *    for missing grids, read the same vertical grids as it, and state a
- *    smaller accuracy than it (any, if it states none), are its
- *    `betterCandidates` (`betterThan`).
+ *    for missing grids, read the same vertical grids as it (unless it is a
+ *    ballpark), and state a smaller accuracy than it (any, if it states
+ *    none), are its `betterCandidates` (`betterThan`).
  *  - If none qualifies it throws, naming the grids the better candidates need.
  */
 export function resolveOperation(
@@ -812,15 +821,15 @@ export function resolveOperation(
               proj.proj_normalize_for_visualization(candidate),
               proj.PJ_PROJ_5,
             );
-        const verticalGrids =
-          string === null ? undefined : verticalGridsOf(string);
-        if (verticalGrids !== undefined) {
+        const verticalShifts =
+          string === null ? undefined : verticalShiftsOf(string);
+        if (verticalShifts !== undefined) {
           const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
           skipped.push({
             name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
             ...(accuracy >= 0 && { accuracy }),
             missingGrids: grids.missing,
-            verticalGrids,
+            verticalShifts,
           });
         }
         continue;
@@ -869,7 +878,7 @@ export function resolveOperation(
         .filter((grid) => grid.optional)
         .map((grid) => grid.name);
       better = betterThan(
-        { accuracy, verticalGrids: pipelineVerticalGrids(parsed) },
+        { accuracy, ballpark, verticalShifts: pipelineVerticalShifts(parsed) },
         skipped,
       ).map((c) => ({
         name: c.name,

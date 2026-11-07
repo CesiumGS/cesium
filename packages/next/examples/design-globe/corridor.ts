@@ -257,7 +257,8 @@ const CORRIDOR_AREA: AreaOfInterest = {
  * without one). The design globe's California frames pin it: PROJ ranks two
  * operations ahead of it at ±1.14 m, NADCON5 back to NAD83(HARN) with
  * GEOID99 or GEOID03, both superseded for NAVD88, and `load` would take the
- * first (about 95 MB more of grids). A pinned pipeline states no accuracy.
+ * first (about 95 MB more of grids). Pinned, it keeps the ±2.015 m PROJ
+ * states for it: it is PROJ's own candidate (`matchedCandidate`).
  */
 export const CORRIDOR_PIPELINE =
   "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000.0001016 +y_0=500000.0001016 +ellps=GRS80 +step +proj=unitconvert +z_in=us-ft +z_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg";

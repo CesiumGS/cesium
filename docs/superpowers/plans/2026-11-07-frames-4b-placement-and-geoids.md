@@ -733,7 +733,7 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
     - Tokyo (−7,000 E, −35,500 N, in normalized order);
     - Amsterdam (121,000, 487,000);
     - Nairobi (257,000, 9,857,000);
-    - Phoenix (EPSG:2223 at the zone's centre, + 8228);
+    - Phoenix (EPSG:6405, NAD83(2011) / Arizona Central in international feet, at the zone's centre, + 8228, pinned to GEOID18; EPSG:2223 until 2026-11-07);
     - Jakarta (702,000, 9,314,000) on EPSG:9488+9471, Task 7's compound, with `geoidFallback: "EGM96"`.
   - **`ION_SLOTS: readonly { label: string; ionAssetId?: number; frame?: EngineeringFrameDefinition; placement?: PlacementMode }[]`**, with two empty entries labelled "Metrostation (share key)" and "Your long iModel" (held item 2).
 

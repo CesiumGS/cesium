@@ -5,6 +5,7 @@ import {
   parsePipeline,
   pipelineGrids,
   pipelineVerticalGrids,
+  pipelineVerticalShifts,
 } from "../src/engineering/pipeline.ts";
 
 const TWO_GRIDS =
@@ -66,6 +67,33 @@ describe("pipelineVerticalGrids", () => {
       pipelineVerticalGrids(
         parsePipeline("+proj=pipeline +step +proj=hgridshift +grids=h.tif"),
       ),
+    ).toEqual([]);
+  });
+});
+
+describe("pipelineVerticalShifts", () => {
+  it("keys each vertical grid by its step's +inv and +multiplier", () => {
+    const shifts = (text: string) =>
+      pipelineVerticalShifts(parsePipeline(text));
+    const g = "us_noaa_g2018u0.tif";
+    expect(
+      shifts(`+proj=pipeline +step +proj=vgridshift +grids=${g} +multiplier=1`),
+    ).toEqual([`${g} x1`]);
+    expect(shifts(`+proj=pipeline +step +proj=vgridshift +grids=${g}`)).toEqual(
+      [`${g} x1`],
+    );
+    expect(
+      shifts(
+        `+proj=pipeline +step +inv +proj=vgridshift +grids=${g} +multiplier=1`,
+      ),
+    ).toEqual([`inv ${g} x1`]);
+    expect(
+      shifts(
+        `+proj=pipeline +step +proj=vgridshift +grids=${g} +multiplier=-1`,
+      ),
+    ).toEqual([`${g} x-1`]);
+    expect(
+      shifts("+proj=pipeline +step +proj=hgridshift +grids=h.tif"),
     ).toEqual([]);
   });
 });

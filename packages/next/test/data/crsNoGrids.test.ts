@@ -53,6 +53,31 @@ describe("the geoid, when it is not loaded", () => {
     expect(out[2]).toBeCloseTo(100, 4);
   });
 
+  it("with allowBallpark, lists every accurate candidate it skipped as better, whatever its geoid: a ballpark has none to keep", async () => {
+    const P = await load();
+    const op = resolveOperation(P, NAVD88, "EPSG:4979", {
+      allowBallpark: true,
+    });
+    expect(op.ballpark).toBe(true);
+    const better = op.betterCandidates;
+    // PROJ's three best: NADCON5 with GEOID99 or GEOID03 (1.14 m), and GEOID18.
+    expect(better.slice(0, 3).map((c) => c.accuracy)).toEqual([
+      1.14, 1.14, 2.015,
+    ]);
+    const geoids = better.map((c) =>
+      c.missingGrids.find((g) => /g1999|geoid03|g2018|geoid09/.test(g)),
+    );
+    expect(geoids.slice(0, 3)).toEqual([
+      "us_noaa_g1999u05.tif",
+      "us_noaa_geoid03_conus.tif",
+      GEOID,
+    ]);
+    expect(new Set(geoids).size).toBeGreaterThan(3);
+    expect(better.every((c) => !/^Ballpark|\+ Ballpark/.test(c.name))).toBe(
+      true,
+    );
+  });
+
   it("still resolves a pair that needs no grid", async () => {
     const P = await load();
     const op = resolveOperation(

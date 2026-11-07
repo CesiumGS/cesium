@@ -264,6 +264,40 @@ export function pipelineGrids(pipeline: Pipeline): readonly PipelineGrid[] {
   return out;
 }
 
+/** A grid a pipeline's height step reads, with that step's direction and multiplier. */
+interface VerticalShift {
+  readonly name: string;
+  /** The step runs in reverse (`+inv`). */
+  readonly inverse: boolean;
+  /** Its `+multiplier`, as written; "1" when absent. */
+  readonly multiplier: string;
+}
+
+function verticalShifts(pipeline: Pipeline): VerticalShift[] {
+  const out: VerticalShift[] = [];
+  const scan = (
+    params: Readonly<Record<string, ParamValue>> | undefined,
+    vgridshift: boolean,
+    inverse: boolean,
+  ) => {
+    const multiplier = params?.multiplier;
+    for (const grid of pipelineGrids({ globals: params, steps: [] })) {
+      if (grid.key === "geoidgrids" || (vgridshift && grid.key === "grids")) {
+        out.push({
+          name: grid.name,
+          inverse,
+          multiplier: typeof multiplier === "string" ? multiplier : "1",
+        });
+      }
+    }
+  };
+  scan(pipeline.globals, false, false);
+  for (const step of pipeline.steps) {
+    scan(step.params, step.operation === "vgridshift", step.inverse === true);
+  }
+  return out;
+}
+
 /**
  * The grids a pipeline's height step reads: a `vgridshift` step's `grids`
  * (how PROJ writes a geoid model, or a vertical-to-vertical offset) and any
@@ -272,20 +306,23 @@ export function pipelineGrids(pipeline: Pipeline): readonly PipelineGrid[] {
  * moves the ellipsoidal height.
  */
 export function pipelineVerticalGrids(pipeline: Pipeline): readonly string[] {
-  const names = new Set<string>();
-  const scan = (
-    params: Readonly<Record<string, ParamValue>> | undefined,
-    vgridshift: boolean,
-  ) => {
-    for (const grid of pipelineGrids({ globals: params, steps: [] })) {
-      if (grid.key === "geoidgrids" || (vgridshift && grid.key === "grids")) {
-        names.add(grid.name);
-      }
-    }
-  };
-  scan(pipeline.globals, false);
-  for (const step of pipeline.steps) {
-    scan(step.params, step.operation === "vgridshift");
-  }
-  return [...names];
+  return [...new Set(verticalShifts(pipeline).map((shift) => shift.name))];
+}
+
+/**
+ * `pipelineVerticalGrids` with how each is applied, as comparable keys
+ * ("us_noaa_g2018u0.tif x1", "inv us_noaa_g2018u0.tif x1"): the grid's
+ * name, its step's `+inv` and its `+multiplier` ("1" when absent), each key
+ * once, in written order. Two pipelines with the same keys shift heights by
+ * the same grids the same way.
+ */
+export function pipelineVerticalShifts(pipeline: Pipeline): readonly string[] {
+  return [
+    ...new Set(
+      verticalShifts(pipeline).map(
+        (shift) =>
+          `${shift.inverse ? "inv " : ""}${shift.name} x${shift.multiplier}`,
+      ),
+    ),
+  ];
 }
