@@ -6996,6 +6996,19 @@ going to go into space."
   root), so subdividing warped geometry (see "tessellating warped models")
   can be driven from the same information.
 
+_Design input after plan 5: one GPU tessellation engine, for warped models
+and B-reps (owner, 2026-11-07)._ Rendering B-reps (trimmed NURBS and other
+analytic surfaces from CAD) needs view-dependent tessellation too. A CPU
+kernel such as SMLib may tessellate, but the engine wants it on the GPU. One
+engine should serve both cases: evaluate surface patches (Bézier or NURBS)
+and the frame warp together in compute, subdivide by screen-space error,
+handle trim curves (trim textures or signed distance fields), and draw with
+indirect draws (WebGPU has neither tessellation nor mesh shaders). Prior art
+to start from: Guthe et al.'s GPU trimming and tessellation of NURBS (2005),
+feature-adaptive subdivision (OpenSubdiv), and direct ray-casting of trimmed
+NURBS. Plan 5 only keeps the seam open: the warp hook and the frames
+module's per-draw projection are what this engine would consume.
+
 _Plan 5 design input: modules with interfaces (owner, 2026-11-07)._ "We
 should generally be thinking about how to make 2.0 more modular so pieces of
 it can be reused and composed in interesting ways and we can easily plug
