@@ -1,0 +1,786 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Design globe mockup</title>
+<!--
+  Plan 4b, Task 0: the design-globe page, mocked by the controller overnight
+  (2026-11-07) for the owner's review in the morning. Not shipped: a design
+  document. Colours stand in for StrataKit tokens (named in comments); the
+  real page uses the tokens, as the frames explorer does.
+-->
+<style>
+  :root {
+    --bg: #f6f7f8;
+    --panel: #fff;
+    --fg: #1d1f22;
+    --fg2: #5b6068;
+    --fg3: #8a9099;
+    --bd: #e3e5e8;
+    --bd2: #c8ccd2;
+    --acc: #e8f0fe;
+    --acct: #1a56c4;
+    --ok: #1d7a3a;
+    --warn: #9a6200;
+    --bad: #b3261e;
+    --well: #f1f2f4;
+    --rigid: #c2410c;
+    --repro: #0e7490;
+    --globe: #0b1220;
+    --hud: rgba(12, 16, 24, 0.78);
+    --hudfg: #e8eaed;
+    --r: 6px;
+    --k-hand-bg: #fbeaf0;
+    --k-hand: #72243e;
+    --k-trip-bg: #e6f1fb;
+    --k-trip: #0c447c;
+    --k-pub-bg: #eeedfe;
+    --k-pub: #3c3489;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1113;
+      --panel: #17191c;
+      --fg: #e8eaed;
+      --fg2: #a6abb3;
+      --fg3: #7d838c;
+      --bd: #2c3035;
+      --bd2: #41464d;
+      --acc: #1f3354;
+      --acct: #9cc0ff;
+      --ok: #6fd08c;
+      --warn: #f0b54a;
+      --bad: #ff8a80;
+      --well: #202327;
+      --rigid: #fb923c;
+      --repro: #22d3ee;
+      --k-hand-bg: #72243e;
+      --k-hand: #f4c0d1;
+      --k-trip-bg: #0c447c;
+      --k-trip: #b5d4f4;
+      --k-pub-bg: #3c3489;
+      --k-pub: #cecbf6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1113;
+    --panel: #17191c;
+    --fg: #e8eaed;
+    --fg2: #a6abb3;
+    --fg3: #7d838c;
+    --bd: #2c3035;
+    --bd2: #41464d;
+    --acc: #1f3354;
+    --acct: #9cc0ff;
+    --ok: #6fd08c;
+    --warn: #f0b54a;
+    --bad: #ff8a80;
+    --well: #202327;
+    --rigid: #fb923c;
+    --repro: #22d3ee;
+    --k-hand-bg: #72243e;
+    --k-hand: #f4c0d1;
+    --k-trip-bg: #0c447c;
+    --k-trip: #b5d4f4;
+    --k-pub-bg: #3c3489;
+    --k-pub: #cecbf6;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font:
+      13px/1.45 system-ui,
+      -apple-system,
+      "Segoe UI",
+      sans-serif;
+  }
+  h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+  }
+  h2 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--fg2);
+    margin: 0 0 8px;
+  }
+  .note {
+    max-width: 1180px;
+    margin: 16px auto;
+    padding: 0 16px;
+    color: var(--fg2);
+  }
+  .frame {
+    max-width: 1180px;
+    margin: 0 auto 32px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    height: 860px;
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .globe {
+    position: relative;
+    background: radial-gradient(circle at 60% 40%, #1b2a44 0, #0b1220 60%);
+    overflow: hidden;
+  }
+  .globe svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hud {
+    position: absolute;
+    background: var(--hud);
+    color: var(--hudfg);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    backdrop-filter: blur(6px);
+  }
+  .hud b {
+    font-weight: 600;
+  }
+  .panel {
+    background: var(--panel);
+    border-left: 1px solid var(--bd);
+    overflow: auto;
+    padding: 16px 16px 40px;
+  }
+  .sec {
+    padding: 14px 0;
+    border-top: 1px solid var(--bd);
+  }
+  .sec:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--bd2);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .seg span {
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: default;
+  }
+  .seg .on {
+    background: var(--acc);
+    color: var(--acct);
+    font-weight: 500;
+  }
+  .btn {
+    font: inherit;
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--bd2);
+    border-radius: var(--r);
+    background: transparent;
+    color: inherit;
+  }
+  .muted {
+    color: var(--fg2);
+  }
+  .faint {
+    color: var(--fg3);
+  }
+  .sm {
+    font-size: 12px;
+  }
+  .xs {
+    font-size: 11px;
+  }
+  .site {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 8px;
+    padding: 7px 8px;
+    border-radius: var(--r);
+    margin: 0 -8px;
+  }
+  .site.sel {
+    background: var(--acc);
+  }
+  .site .meta {
+    grid-column: 1/-1;
+    font-size: 11px;
+    color: var(--fg2);
+  }
+  .badge {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--bd2);
+    color: var(--fg2);
+    white-space: nowrap;
+  }
+  .badge.warn {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+  .bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bd);
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .bar i {
+    display: block;
+    height: 100%;
+    background: var(--acct);
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 3px 10px;
+    align-items: baseline;
+  }
+  .kv .v {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+  .kv .u {
+    font-size: 11px;
+    color: var(--fg2);
+  }
+  .big {
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .k-hand {
+    background: var(--k-hand-bg);
+    color: var(--k-hand);
+  }
+  .k-trip {
+    background: var(--k-trip-bg);
+    color: var(--k-trip);
+  }
+  .k-pub {
+    background: var(--k-pub-bg);
+    color: var(--k-pub);
+  }
+  .chk {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    padding: 7px 0;
+    border-top: 1px solid var(--bd);
+  }
+  .ok {
+    color: var(--ok);
+  }
+  .warn {
+    color: var(--warn);
+  }
+  .bad {
+    color: var(--bad);
+  }
+  .slot {
+    border: 1px dashed var(--bd2);
+    border-radius: var(--r);
+    padding: 10px;
+    margin-top: 8px;
+  }
+  .well {
+    background: var(--well);
+    border-radius: var(--r);
+    padding: 10px;
+  }
+  code {
+    font:
+      11px ui-monospace,
+      Menlo,
+      monospace;
+    background: var(--well);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  .states {
+    max-width: 1180px;
+    margin: 0 auto 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 16px;
+    padding: 0 0;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .narrow {
+    width: 380px;
+    background: var(--panel);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    padding: 14px;
+    margin: 0 auto 40px;
+  }
+  .legend i {
+    display: inline-block;
+    width: 14px;
+    height: 3px;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  @media (max-width: 900px) {
+    .frame {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    .globe {
+      height: 420px;
+    }
+  }
+</style>
+
+<p class="note">
+  <b>Design globe, plan 4b Task 0.</b> Desktop: the globe and Dyno's side column
+  (400 px). Below it: the states and the 380 px column. The panel's order:
+  placement, then sites, then measure, then checks, then your own models. The
+  globe carries only what's being measured and the placement's legend.
+</p>
+
+<div class="frame">
+  <div
+    class="globe"
+    aria-label="The globe, with the corridor in both placements"
+  >
+    <svg viewBox="0 0 780 860" aria-hidden="true">
+      <defs>
+        <radialGradient id="e" cx="45%" cy="40%">
+          <stop offset="0" stop-color="#2d4a6e" />
+          <stop offset="1" stop-color="#0e1c2f" />
+        </radialGradient>
+      </defs>
+      <ellipse
+        cx="390"
+        cy="470"
+        rx="640"
+        ry="300"
+        fill="url(#e)"
+        opacity=".85"
+      />
+      <!-- corridor: reprojected (true) and rigid (sags away from the anchor) -->
+      <path
+        d="M90 520 C 250 470, 420 455, 700 470"
+        stroke="var(--repro)"
+        stroke-width="5"
+        fill="none"
+        stroke-linecap="round"
+      />
+      <path
+        d="M90 520 C 250 476, 420 470, 700 500"
+        stroke="var(--rigid)"
+        stroke-width="2"
+        fill="none"
+        stroke-dasharray="6 5"
+        stroke-linecap="round"
+      />
+      <circle
+        cx="250"
+        cy="487"
+        r="6"
+        fill="none"
+        stroke="#fff"
+        stroke-width="2"
+      />
+      <text x="232" y="476" fill="#e8eaed" font-size="11" text-anchor="end">
+        rigid anchor
+      </text>
+      <!-- sag callout at the cursor -->
+      <line
+        x1="640"
+        y1="472"
+        x2="640"
+        y2="496"
+        stroke="#fff"
+        stroke-width="1.5"
+      />
+      <circle cx="640" cy="472" r="3" fill="var(--repro)" />
+      <circle cx="640" cy="496" r="3" fill="var(--rigid)" />
+      <!-- measure line -->
+      <line
+        x1="330"
+        y1="462"
+        x2="520"
+        y2="459"
+        stroke="#fde047"
+        stroke-width="2"
+      />
+      <circle cx="330" cy="462" r="5" fill="#fde047" />
+      <circle cx="520" cy="459" r="5" fill="#fde047" />
+      <rect
+        x="365"
+        y="420"
+        width="122"
+        height="24"
+        rx="5"
+        fill="rgba(12,16,24,.82)"
+      />
+      <text x="426" y="436" fill="#fef9c3" font-size="12" text-anchor="middle">
+        1,948.207 ftUS design
+      </text>
+      <!-- bridge -->
+      <rect
+        x="452"
+        y="452"
+        width="40"
+        height="8"
+        fill="none"
+        stroke="#e8eaed"
+        stroke-width="1"
+      />
+    </svg>
+    <div class="hud" style="left: 16px; top: 16px">
+      <div><b>Reprojected</b> · every vertex through EPSG:6420+6360</div>
+      <div class="legend" style="margin-top: 4px">
+        <span><i style="background: var(--repro)"></i>Reprojected (true)</span>
+        &nbsp;
+        <span
+          ><i style="background: var(--rigid)"></i>Rigid, for comparison</span
+        >
+      </div>
+    </div>
+    <div class="hud" style="left: 590px; top: 520px; max-width: 170px">
+      <div>At the cursor, station 1,402+15</div>
+      <div><b>Rigid is 0.84 m low</b> and 0.11 m west</div>
+      <div class="xs" style="opacity: 0.8">
+        sag grows with distance from the anchor
+      </div>
+    </div>
+    <div
+      class="hud"
+      style="left: 16px; bottom: 16px; font-size: 11px; opacity: 0.9"
+    >
+      Grids: us_noaa_g2018u0 (GEOID18) · NOAA, public domain · via PROJ-data
+      1.25.0
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="sec">
+      <h1>Design coordinates on the globe</h1>
+      <p class="muted sm" style="margin: 4px 0 0">
+        A 50 km highway designed in California State Plane, drawn two ways:
+        placed rigidly at one anchor, as most viewers do, or reprojected through
+        its CRS at every vertex.
+      </p>
+    </div>
+
+    <div class="sec">
+      <h2>Placement</h2>
+      <div class="row">
+        <span class="seg"
+          ><span>Rigid at the anchor</span
+          ><span class="on">Reprojected</span></span
+        ><label class="sm muted"
+          ><input type="checkbox" checked /> Show the other</label
+        >
+      </div>
+      <svg
+        viewBox="0 0 360 70"
+        style="width: 100%; height: 70px; margin-top: 10px"
+        role="img"
+        aria-label="Rigid placement error along the corridor: zero at the anchor, growing to 2.9 m at the far end"
+      >
+        <line x1="0" y1="60" x2="360" y2="60" stroke="var(--bd2)" />
+        <path
+          d="M0 52 Q 60 60 72 60 T 360 6"
+          stroke="var(--rigid)"
+          stroke-width="2"
+          fill="none"
+        />
+        <line
+          x1="72"
+          y1="10"
+          x2="72"
+          y2="60"
+          stroke="var(--fg3)"
+          stroke-dasharray="2 3"
+        />
+        <text x="76" y="18" font-size="10" fill="var(--fg2)">anchor</text>
+        <text x="356" y="20" font-size="10" fill="var(--fg2)" text-anchor="end">
+          2.9 m
+        </text>
+        <line
+          x1="290"
+          y1="10"
+          x2="290"
+          y2="60"
+          stroke="var(--fg)"
+          stroke-width="1"
+        />
+        <text x="0" y="69" font-size="10" fill="var(--fg3)">sta 0+00</text>
+        <text x="360" y="69" font-size="10" fill="var(--fg3)" text-anchor="end">
+          1,640+42
+        </text>
+      </svg>
+      <p class="sm" style="margin: 4px 0 0">
+        Rigid placement drifts from the true position by up to <b>2.9 m</b> at
+        the far end, from Earth curvature and the projection's scale.
+        Reprojected is exact to the tile's stated <b>0.9 mm</b>.
+      </p>
+    </div>
+
+    <div class="sec">
+      <h2>Sites</h2>
+      <div class="site sel">
+        <span><b style="font-weight: 500">Highway corridor</b>, California</span
+        ><span class="badge">Selected</span
+        ><span class="meta"
+          >EPSG:6420+6360 · US survey ft · NAVD88 via GEOID18 · 2 grids, 25
+          MB</span
+        >
+      </div>
+      <div class="site">
+        <span>London site</span><button class="btn">Fly to</button
+        ><span class="meta">27700+5701 · m · ODN via OSTN15 + OSGM15</span>
+      </div>
+      <div class="site">
+        <span>Sydney site</span><button class="btn">Fly to</button
+        ><span class="meta">7856+5711 · m · AHD via AUSGeoid2020</span>
+      </div>
+      <div class="site">
+        <span>Tokyo site</span><button class="btn">Fly to</button
+        ><span class="meta">6677+6695 · m · northing first · GSIGEO2011</span>
+      </div>
+      <div class="site">
+        <span>Amsterdam site</span><button class="btn">Fly to</button
+        ><span class="meta">28992+5709 · m · NAP via RDNAPTRANS</span>
+      </div>
+      <div class="site">
+        <span>Nairobi site</span><button class="btn">Fly to</button
+        ><span class="meta">32737+5773 · m · EGM96 heights</span>
+      </div>
+      <div class="site">
+        <span>Phoenix site</span><button class="btn">Fly to</button
+        ><span class="meta">2223+8228 · international ft · NAVD88 in ft</span>
+      </div>
+      <div class="site">
+        <span>São Paulo site</span><span class="badge warn">EGM96 fallback</span
+        ><span class="meta"
+          >SIRGAS 2000 / UTM 23S · m · Imbituba heights: no grid on the CDN,
+          read as EGM96 (adds its offset, not stated)</span
+        >
+      </div>
+      <div class="site">
+        <span>Site-grid building</span><button class="btn">Fly to</button
+        ><span class="meta"
+          >local grid in 6420 · rigid by design: curvature doesn't matter at 80
+          m</span
+        >
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Measure</h2>
+      <div class="row" style="margin-bottom: 10px">
+        <span class="muted sm" style="width: 56px">Snap to</span
+        ><span class="seg"
+          ><span class="on">Alignment (exact)</span><span>Geometry</span
+          ><span>None</span></span
+        >
+      </div>
+      <div class="row xs muted" style="margin-bottom: 8px">
+        Click two points. Esc clears. The first point is pinned at station
+        1,350+00, offset 0.00 ft.
+      </div>
+      <div class="big">
+        1,948.207 ftUS
+        <span class="sm muted" style="font-weight: 400">design distance</span>
+      </div>
+      <div class="kv sm" style="margin-top: 8px">
+        <span>On the ground (true)</span><span></span
+        ><span class="v">1,948.452 <span class="u">ftUS</span></span>
+        <span>On the ellipsoid</span><span></span
+        ><span class="v">1,948.481 <span class="u">ftUS</span></span>
+        <span>Combined scale factor</span><span></span
+        ><span class="v">0.999 874 <span class="u">ratio</span></span>
+        <span>Accuracy</span><span></span
+        ><span class="v">±0.004 <span class="u">ftUS (1σ)</span></span>
+      </div>
+      <div class="well sm" style="margin-top: 10px">
+        <div class="kv">
+          <span class="muted">A</span><span>sta 1,350+00.00 · off 0.00 L</span
+          ><span class="v">el 412.37 <span class="u">ft</span></span>
+          <span class="muted">B</span><span>sta 1,369+48.21 · off 12.00 R</span
+          ><span class="v">el 418.02 <span class="u">ft</span></span>
+        </div>
+        <div class="xs muted" style="margin-top: 6px">
+          Design E, N in EPSG:6420 · heights NAVD88 (ftUS) through GEOID18 · the
+          true distance is shown beside the design one, never instead of it.
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Checks</h2>
+      <div class="row xs" style="margin-bottom: 6px">
+        <span class="tag k-pub">Published reference</span
+        ><span class="tag k-hand">Hand formula</span
+        ><span class="tag k-trip">Round trip</span>
+      </div>
+      <div class="chk">
+        <span class="tag k-hand">Hand</span
+        ><span
+          >Design distance vs the generator's exact answer<br /><span
+            class="xs muted"
+            >1,948.207 vs 1,948.207 ftUS · within 1e-6 ft</span
+          ></span
+        ><span class="ok sm">✓ Checked</span>
+      </div>
+      <div class="chk">
+        <span class="tag k-hand">Hand</span
+        ><span
+          >Station and offset vs the alignment's closed form<br /><span
+            class="xs muted"
+            >clothoid by Fresnel integrals · within 1e-6 ft</span
+          ></span
+        ><span class="ok sm">✓ Checked</span>
+      </div>
+      <div class="chk">
+        <span class="tag k-trip">Round trip</span
+        ><span
+          >Picked vertex → design → ITRF → design<br /><span class="xs muted"
+            >within the pick's 1-pixel footprint, 0.6 mm</span
+          ></span
+        ><span class="ok sm">✓ Checked</span>
+      </div>
+      <div class="chk">
+        <span class="tag k-pub">Published</span
+        ><span
+          >GEOID18 at the anchor vs NGS's online value<br /><span
+            class="xs muted"
+            >−31.402 vs −31.402 m · within 1 mm</span
+          ></span
+        ><span class="ok sm">✓ Checked</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Your own models</h2>
+      <p class="sm muted" style="margin: 0">
+        Cesium ion doesn't record a model's CRS, so your app supplies it.
+      </p>
+      <div class="slot">
+        <b style="font-weight: 500">Empty slot: a long iModel</b>
+        <div class="xs muted" style="margin-top: 4px">
+          Needs: the CRS (EPSG or WKT2), its units, the site transform, rigid or
+          reprojected. Then <code>georeferenceTileset(tileset, frame)</code>.
+        </div>
+      </div>
+      <div class="slot">
+        <b style="font-weight: 500">Empty slot: Metrostation</b>
+        <div class="xs muted" style="margin-top: 4px">
+          Waiting on its frame from the owner.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="note">
+  <b>States</b>, each in the same column. Loading names what it waits for, with
+  bytes; missing data gives the one command; an error says what failed, with
+  Retry.
+</p>
+<div class="states">
+  <div class="card">
+    <h2>Loading</h2>
+    <div class="sm">
+      PROJ <span class="faint">4.1 of 4.1 MB · verified</span>
+      <div class="bar"><i style="width: 100%"></i></div>
+    </div>
+    <div class="sm" style="margin-top: 8px">
+      Grid catalog
+      <span class="faint">331 KB · PROJ-data 1.25.0 · verified</span>
+      <div class="bar"><i style="width: 100%"></i></div>
+    </div>
+    <div class="sm" style="margin-top: 8px">
+      us_noaa_g2018u0.tif (GEOID18) <span class="faint">14.2 of 22.8 MB</span>
+      <div class="bar"><i style="width: 62%"></i></div>
+    </div>
+    <div class="sm" style="margin-top: 8px">
+      Corridor tiles <span class="faint">waiting for GEOID18</span>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Missing data</h2>
+    <p class="sm" style="margin: 0 0 8px">
+      The corridor tilesets aren't in the store yet. Generate them once:
+    </p>
+    <code style="display: block; padding: 8px"
+      >npm run setup -- --design-globe</code
+    >
+    <p class="xs muted" style="margin: 8px 0 0">
+      About 60 MB, written to the store. Nothing is downloaded from ion.
+    </p>
+  </div>
+  <div class="card">
+    <h2>Error</h2>
+    <p class="sm bad" style="margin: 0">
+      Couldn't fetch us_noaa_g2018u0.tif from /proj-grids/ (502 from
+      cdn.proj.org).
+    </p>
+    <p class="xs muted" style="margin: 6px 0 10px">
+      Heights stay unavailable until GEOID18 loads; nothing falls back silently.
+    </p>
+    <button class="btn">Retry</button>
+  </div>
+</div>
+
+<p class="note">
+  <b>The 380 px column</b> (Dyno stacks the panel under the globe below 900 px):
+  the segmented controls wrap, and the readouts stay two columns.
+</p>
+<div class="narrow">
+  <h2>Placement</h2>
+  <div class="row">
+    <span class="seg"
+      ><span>Rigid</span><span class="on">Reprojected</span></span
+    ><label class="sm muted"
+      ><input type="checkbox" checked /> Show the other</label
+    >
+  </div>
+  <h2 style="margin-top: 14px">Measure</h2>
+  <div class="row" style="margin-bottom: 8px">
+    <span class="seg"
+      ><span class="on">Alignment</span><span>Geometry</span
+      ><span>None</span></span
+    >
+  </div>
+  <div class="big">1,948.207 ftUS</div>
+  <div class="kv sm" style="grid-template-columns: 1fr auto; margin-top: 6px">
+    <span>On the ground</span><span class="v">1,948.452 ftUS</span>
+    <span>Scale factor</span><span class="v">0.999 874</span>
+    <span>Accuracy</span><span class="v">±0.004 ftUS</span>
+  </div>
+</div>
