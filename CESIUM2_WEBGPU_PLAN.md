@@ -6899,6 +6899,22 @@ curve). Plan 4b ships the split with a CPU stand-in for the client side
 in for the server. Plan 5 replaces the stand-in with a GPU snap pass, which
 handles occlusion and cost by construction.
 
+_Plan 5 design input: tessellating warped models (owner, 2026-11-07)._ A
+reprojected model's edges are straight chords between reprojected vertices,
+so a large flat face (a runway slab, a panel row) sags below the curved
+Earth by about d²/8R at its middle (2 cm for a 1 km edge, 2 m for 10 km),
+and cuts through terrain. Plan 4b's generator subdivides faces at write time
+until the sag is under the tile's geometric error. Plan 5 designs how the
+engine handles models it didn't generate. WebGPU has no tessellation stage,
+so the options are:
+
+- compute-shader adaptive subdivision with indirect draws;
+- a vertex-shader warp that carries design coordinates and applies the
+  curvature correction per vertex, so the subdivision can be coarse;
+- refinement driven by screen-space error, folded into tile selection;
+- requiring producers to subdivide, and stating the rule in
+  `EXT_engineering_frame`.
+
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`
 works in Earth-fixed coordinates, constrains the camera to the ellipsoid, and

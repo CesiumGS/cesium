@@ -1005,6 +1005,7 @@ The owner: the portfolio "should show every country done right, and talk about t
   - the leaves' round trip holds, as Task 14's does;
   - the tile trees have at least 3 levels for every model larger than 1 km.
 - [ ] **Step 2: Run** the tests and confirm they fail.
+  - **No polygon cuts through the ground** (owner, 2026-11-07). A reprojected edge is a straight chord between reprojected vertices, so a large flat face sags below the curved Earth: about d²/8R at its middle for an edge of length d, which is 2 cm for 1 km and 2 m for 10 km. The generator subdivides every face until each reprojected edge's sag is under the leaf tile's geometric error. Test: on every reprojected leaf, the largest edge's d²/8R is at most the leaf's error.
 - [ ] **Step 3: Implement** the meshes (procedural, deterministic, a few hundred lines each, no external data) and the generator's site loop. Generation stays under a minute for everything.
 - [ ] **Step 4: Run** `npm run setup -- --skip-build`, the tests and `npm run test:data`.
 - [ ] **Step 5: Commit** with "setup: the design globe's scale ladder, infrastructure from a building to a 30 km pole line, as tilesets".
