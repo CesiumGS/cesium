@@ -527,13 +527,19 @@ export class Viewer {
    * day strip, the zone they show and their accessible name.
    */
   get timeControls():
-    Pick<TimeControlsHandle, "setMarks" | "setZone" | "setLabel"> | undefined {
+    | Pick<
+        TimeControlsHandle,
+        "setMarks" | "setZone" | "zone" | "setLabel" | "label"
+      >
+    | undefined {
     const t = this.time_;
     return (
       t && {
         setMarks: (marks) => t.setMarks(marks),
         setZone: (zone) => t.setZone(zone),
+        zone: () => t.zone(),
         setLabel: (label) => t.setLabel(label),
+        label: () => t.label(),
       }
     );
   }

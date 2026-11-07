@@ -259,6 +259,25 @@ export function withTerrain(
 
 type Footprint = NonNullable<ScenarioAnswer["footprint"]>;
 
+/**
+ * Where a camera's ray lands, when the page may say so (Task 9 C1): the
+ * first hit of a blocked trace whose ray up to it is all drawn and clear of
+ * the terrain by more than its error, with a stated error. One rule for the
+ * answer (`withFootprint`) and the globe's ring and label (bodyLines.ts).
+ */
+export function spotOf(
+  v:
+    | Pick<TerrainSightView, "state" | "hitAt" | "meters" | "beforeHit">
+    | undefined,
+): readonly number[] | undefined {
+  return v?.state === "blocked" &&
+    v.hitAt !== undefined &&
+    v.meters !== undefined &&
+    v.beforeHit?.clear === true
+    ? v.hitAt
+    : undefined;
+}
+
 const dist3 = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
@@ -331,9 +350,9 @@ function withFootprint(
       // A spot only where the ray up to it crosses drawn terrain that it
       // clears by more than its error (Task 9 C1): an undrawn or coarse
       // span before the hit may hide an earlier one. The same rule as a
-      // line of sight's: never a figure inside an unbounded band.
+      // line of sight's, and the globe's (`spotOf`).
       const before = v.beforeHit;
-      if (before?.clear !== true || v.meters === undefined) {
+      if (spotOf(v) === undefined || before === undefined) {
         return unbounded(
           "Can't tell yet: the terrain before the spot isn't drawn finely enough",
           before === undefined || v.meters === undefined
@@ -346,7 +365,7 @@ function withFootprint(
       const p = footprintAt(fp, v.hitAt);
       const range = v.from ? dist3(v.hitAt, v.from) : undefined;
       // The coarsest terrain the ray crossed, up to and at the spot.
-      const err = Math.max(v.meters, before.meters ?? 0);
+      const err = Math.max(v.meters!, before.meters ?? 0);
       const tan = Math.tan((Math.max(fp.tilt, 1) * Math.PI) / 180);
       const along = err / tan;
       const datum = fp.datum.meters ?? 0;
@@ -367,7 +386,7 @@ function withFootprint(
           .join(" · "),
         accuracy: {
           meters,
-          note: `the terrain's ±${length(err)} along a ray ${fp.tilt}° down moves the spot about ±${length(along)} on level ground (most of it, when it leads); ${datumWords}; the local placement's ${length(p.drift)} from PROJ`,
+          note: `the terrain's ±${length(err)} along a ray ${fp.tilt}° down moves the spot about ±${length(along)} on level ground (most of it, when it leads); that per-level terrain error is a heuristic, not a bound, and the terrain source's own accuracy isn't stated; ${datumWords}; the local placement's ${length(p.drift)} from PROJ`,
         },
       };
     }

@@ -21,6 +21,7 @@ import type {
   ScenarioEvaluation,
 } from "./scenarios/evaluate.ts";
 import {
+  answerDelta,
   checkKind,
   checkRows,
   maskCheckRow,
@@ -383,23 +384,32 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     ...(st.problem !== undefined && {
       problem: { ...st.problem, message: input.scrub(st.problem.message) },
     }),
-    ...(e && {
-      answer: withTerrain(withTerrainAnswer(e.answer, terrain), terrain),
-    }),
+    // After a failure the last setup's answer isn't this one's: it, its
+    // published comparison and its delta go (Task 9, N1); the panel and
+    // the callout show the error.
+    ...(e &&
+      !failed && {
+        answer: withTerrain(withTerrainAnswer(e.answer, terrain), terrain),
+      }),
+    ...(failed
+      ? {}
+      : publishedView(
+          e?.answer.published,
+          catalog,
+          st.atChecked,
+          freshness,
+          checks,
+          e?.answer.value,
+        )),
+    // How far the setting moves the answer, in the headline's own quantity
+    // (`answerDelta`, Task 9 N3): said once, in the knobs' off-the-checked-
+    // setup line, not on every reference row (I8).
     ...(() => {
-      const pub = publishedView(
-        e?.answer.published,
-        catalog,
-        st.atChecked,
-        freshness,
-        checks,
-        e?.answer.value,
-      );
-      // How far the setting moves the answer: said once, in the knobs'
-      // off-the-checked-setup line, not on every reference row (Task 9, I8).
       const delta =
-        pub.published?.state === "off" ? pub.published.delta : undefined;
-      return { ...pub, ...(delta && { answerDelta: delta }) };
+        e && !failed && !st.atChecked && freshness === "current"
+          ? answerDelta(e)
+          : undefined;
+      return delta ? { answerDelta: delta } : {};
     })(),
     ...(path && { path }),
     ...(APP_CODE[spec.id] && { appCode: APP_CODE[spec.id]! }),

@@ -246,7 +246,7 @@ export type CheckRow =
     };
 
 /** How far the setting moves the answer from the checked setup's, when both are finite. */
-function answerDelta(
+export function answerDelta(
   evaluation: ScenarioEvaluation,
 ): { value: number; unit: string } | undefined {
   const { value, unit } = evaluation.answer;

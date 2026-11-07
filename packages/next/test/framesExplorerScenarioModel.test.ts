@@ -2,11 +2,16 @@
 // scenarioModel.ts) and the panel model's pure parts (panelModel.ts):
 // freshness, the published value against ours (Review Focus 1: nothing off
 // the checked setup reads as checked), and the groups waiting for data.
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+import { Root } from "@stratakit/mui";
 import { describe, expect, it } from "vitest";
+import { ScenarioCallout } from "../examples/frames-explorer/panel/Hud.tsx";
 import {
   extrasOf,
   waitingGroups,
 } from "../examples/frames-explorer/panelModel.ts";
+import { cameraMark } from "../examples/frames-explorer/bodyLines.ts";
 import type { ScenarioHostState } from "../examples/frames-explorer/scenarioHost.ts";
 import {
   COARSE_TERRAIN_METERS,
@@ -17,6 +22,7 @@ import {
   withPending,
 } from "../examples/frames-explorer/scenarioModel.ts";
 import {
+  spotOf,
   withTerrain,
   withTerrainAnswer,
 } from "../examples/frames-explorer/panel/answerText.ts";
@@ -172,23 +178,31 @@ describe("scenarioView", () => {
     });
     // After an earlier success, a failure for the new setting isn't
     // "Updating" for ever over the last answer (Task 9, I10).
+    const failedSt = {
+      ...st,
+      stale: true,
+      staleBy: ["station"],
+      evaluation: {
+        scenario: "corridor",
+        added: [],
+        answer: {
+          label: "along the road",
+          headline: "",
+          value: 321.25,
+          unit: "ft",
+          accuracy: { note: "", meters: 2 },
+        },
+        overlays: [],
+        live: [],
+        checkedAnswerValue: 650,
+      },
+      evaluatedAt: {
+        knobs: spec.checked.knobs,
+        epochUtcMs: Date.parse(spec.checked.epochUtc),
+      },
+    } as ScenarioHostState;
     const after = scenarioView({
-      st: {
-        ...st,
-        stale: true,
-        staleBy: ["station"],
-        evaluation: {
-          scenario: "corridor",
-          added: [],
-          answer: { label: "", headline: "", accuracy: { note: "" } },
-          overlays: [],
-          live: [],
-        },
-        evaluatedAt: {
-          knobs: spec.checked.knobs,
-          epochUtcMs: Date.parse(spec.checked.epochUtc),
-        },
-      } as ScenarioHostState,
+      st: failedSt,
       results: [],
       tree: undefined,
       playing: false,
@@ -200,6 +214,42 @@ describe("scenarioView", () => {
     expect(
       after.checks.map((c) => checkRowText(c, {}, after.freshness).status),
     ).not.toContain("Updating");
+    // The last setup's answer, its comparison and its delta go (Task 9,
+    // N1); the callout says the evaluation failed, with no stale figure.
+    expect(after.answer).toBeUndefined();
+    expect(after.published).toBeUndefined();
+    expect(after.answerDelta).toBeUndefined();
+    const callout = renderToString(
+      createElement(
+        Root,
+        { colorScheme: "dark" },
+        createElement(ScenarioCallout, {
+          scenario: after,
+          narrow: false,
+          onKnob: () => {},
+        }),
+      ),
+    );
+    expect(callout).toContain("Couldn&#x27;t work this out at your setting");
+    expect(callout).not.toContain("321.25");
+    expect(callout).not.toContain("updating");
+    // Had it succeeded, the knobs' line would carry the answer's own delta,
+    // in the headline's unit (N3).
+    const ok = scenarioView({
+      st: {
+        ...failedSt,
+        status: "ready",
+        problem: undefined,
+        stale: false,
+        staleBy: [],
+      },
+      results: [],
+      tree: undefined,
+      playing: false,
+      rate: 1,
+      scrub: (t) => t,
+    });
+    expect(ok.answerDelta).toEqual({ value: 321.25 - 650, unit: "ft" });
     // Loading, it is pending (R9).
     const loading = scenarioView({
       st: { ...st, status: "loading", problem: undefined },
@@ -469,6 +519,44 @@ describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
     }
     // Not traced before the hit at all: no spot either.
     expect(withTerrainAnswer(answer, [hit]).label).toMatch(/^Can't tell yet/);
+  });
+
+  it("gives the globe's ring and label the answer's spot rule (Task 9 C1, round 2)", () => {
+    const blocked = {
+      state: "blocked" as const,
+      hitAt: [1, 2, 3],
+      meters: 2.4,
+    };
+    // A spot only with the ray before it drawn and clear, and an error.
+    expect(
+      spotOf({ ...blocked, beforeHit: { clear: true, unknownFraction: 0 } }),
+    ).toEqual([1, 2, 3]);
+    for (const v of [
+      blocked,
+      { ...blocked, beforeHit: { clear: undefined, unknownFraction: 0.79 } },
+      { ...blocked, beforeHit: { clear: false, unknownFraction: 0 } },
+      {
+        state: "blocked" as const,
+        hitAt: [1, 2, 3],
+        beforeHit: { clear: true, unknownFraction: 0 },
+      },
+      { state: "unknown" as const, hitAt: [1, 2, 3] },
+      undefined,
+    ]) {
+      expect(spotOf(v)).toBeUndefined();
+    }
+    // The globe: no ring and no "Camera looks here" for a blocked trace
+    // whose ray before the hit isn't clear; it says what the panel says.
+    const fp = { line: "camera", key: "k", tilt: 45 } as never;
+    const mark = cameraMark(fp, {
+      id: "camera",
+      text: "",
+      ...blocked,
+      beforeHit: { clear: undefined, unknownFraction: 0.79 },
+    });
+    expect(mark.hit).toBeUndefined();
+    expect(mark.text).toBe("Camera ray · can't tell yet where it lands");
+    expect(mark.text).not.toMatch(/looks here/);
   });
 
   it("prints the band that decided each grey verdict, not the widest (Task 9)", () => {

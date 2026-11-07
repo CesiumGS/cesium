@@ -1739,6 +1739,31 @@ These bind over the sections above where they differ.
   ten are written out everywhere (`fmt`, `powersOfTen`; a data test holds
   every shown string to it).
 
+#### 9, phase B round 2 (the re-review)
+
+- **One spot rule for the panel and the globe** (`spotOf`): the drone's
+  ring and "Camera looks here" label show only where the answer gives a
+  spot; otherwise the globe says "Camera ray · can't tell yet where it
+  lands", as the panel does. The spot's note carries the library's two
+  caveats: the per-level terrain error is a heuristic, not a bound, and the
+  source's own accuracy isn't stated.
+- **After a failure** the last setup's answer, its published comparison
+  and its delta leave the view; the callout says "Couldn't work this out at
+  your setting". The knobs' delta is the evaluation's own
+  (`answerDelta`), in the headline's quantity.
+- **The docked tree pans to the route's From and To first**, then where
+  they meet, then the scenario's added frames, choosing on both axes at
+  once (`panView`). Wherever the two ends can't both be seen whole, docked
+  or in the Expand dialog, the route also shows as one row of pills. Each
+  +N chip names what it unfolds.
+- **One-path's speed bound takes the frames' own motion as exact**, at
+  these sizes rightly: the Moon's DE440 velocity error is well under
+  1 µm/s (its position is at lunar laser ranging's centimetres), and an
+  LOD uncertainty of about 0.02 ms/day turns ITRF by about 2 × 10⁻¹⁴ rad/s,
+  about 6 µm/s at Orion's 3.8 × 10⁸ m, against ±31 µm/s and ±0.73 mm/s.
+- **Leaving the explorer** puts back the clock's zone and name that were
+  showing.
+
 ### Carried forward (engine work)
 
 - **X-ray dashes for the geocentric triads inside the globe.** (Meanwhile

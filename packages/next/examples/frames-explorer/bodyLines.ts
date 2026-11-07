@@ -33,7 +33,7 @@ import type { Frames } from "../../src/frames/frames.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
 import { overlayMesh, polyline } from "./overlays.ts";
-import { footprintLabel } from "./panel/answerText.ts";
+import { footprintLabel, spotOf } from "./panel/answerText.ts";
 import type { TerrainSightView } from "./panel/model.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import { LINE_PX, segmentPlacement } from "./skyRay.ts";
@@ -154,6 +154,31 @@ function ring(p: ArrayLike<number>, radius: number): Float64Array {
     }
   }
   return out;
+}
+
+/**
+ * The drone camera's mark on the globe (Task 9 C1, round 2): the ring and
+ * the spot's label only where the answer gives a spot (`spotOf`, the
+ * panel's rule); otherwise the ray's words, matching the panel's.
+ */
+export function cameraMark(
+  fp: Parameters<typeof footprintLabel>[0],
+  mine: TerrainSightView | undefined,
+): { hit?: readonly number[]; text: string } {
+  const hit = spotOf(mine);
+  if (hit) {
+    return { hit, text: footprintLabel(fp, hit) };
+  }
+  return {
+    text:
+      mine?.state === "clear"
+        ? "Camera ray · no ground within reach"
+        : mine?.state === "blocked"
+          ? "Camera ray · can't tell yet where it lands"
+          : mine
+            ? "Camera ray · can't tell where it lands"
+            : "Camera ray · tracing on the terrain",
+  };
 }
 
 export function createBodyLines(deps: {
@@ -475,7 +500,8 @@ export function createBodyLines(deps: {
         const dir = [m[0]!, m[1]!, m[2]!];
         const v = traces?.find((t) => t.id === fp.line);
         const mine = v?.traced === fp.key ? v : undefined;
-        const hit = mine?.state === "blocked" ? mine.hitAt : undefined;
+        const mark = cameraMark(fp, mine);
+        const hit = mark.hit;
         if (hit) {
           segments.push({
             name: "camera",
@@ -486,7 +512,7 @@ export function createBodyLines(deps: {
           fixedLine("ring", hit.join(), () => ring(hit, 12), "white");
           labels.push({
             id: "bodies:footprint",
-            text: footprintLabel(fp, hit),
+            text: mark.text,
             at: Float64Array.from(hit),
             family: "engineering",
             priority: 4,
@@ -504,12 +530,7 @@ export function createBodyLines(deps: {
           });
           labels.push({
             id: "bodies:footprint",
-            text:
-              mine?.state === "clear"
-                ? "Camera ray · no ground within reach"
-                : mine
-                  ? "Camera ray · can't tell where it lands"
-                  : "Camera ray · tracing on the terrain",
+            text: mark.text,
             at: () => anchor.camera,
             family: "engineering",
             priority: 3,

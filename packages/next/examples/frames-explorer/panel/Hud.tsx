@@ -251,7 +251,9 @@ export const ScenarioCallout = memo(function ScenarioCallout({
         <p className="fx-callout-problem">
           {scenario.problem.missing
             ? "Its data isn't in the frames store: run npm run setup in packages/next, then reload."
-            : `It didn't answer: ${scenario.problem.message}`}
+            : scenario.atChecked
+              ? `It didn't answer: ${scenario.problem.message}`
+              : `Couldn't work this out at your setting: ${scenario.problem.message}`}
         </p>
       ) : a ? (
         <>

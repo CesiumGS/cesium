@@ -68,8 +68,12 @@ export interface TimeControlsHandle {
   setMarks(marks: readonly TimeMark[]): void;
   /** Shows the time in `zone`, as if picked in ⚙. */
   setZone(zone: TimeZoneChoice): void;
+  /** The zone showing now (to put it back later). */
+  zone(): TimeZoneChoice;
   /** Renames the group for assistive technology. */
   setLabel(label: string): void;
+  /** The group's accessible name now. */
+  label(): string;
   dispose(): void;
 }
 
@@ -696,9 +700,11 @@ export function attachTimeControls(
       lastDrawn = "";
       render();
     },
+    zone: () => zone,
     setLabel(label) {
       root.setAttribute("aria-label", label);
     },
+    label: () => root.getAttribute("aria-label") ?? "",
     dispose() {
       unsubscribe();
       resize.disconnect();

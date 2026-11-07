@@ -78,11 +78,18 @@ export function run(context: ExampleContext): ExampleRun {
   // The clock in UTC, as every checked setup, deep link and citation is: a
   // zone by the camera's longitude means nothing over the Moon (Task 9,
   // I1). ⚙ still offers the others. The group is named for what it drives.
+  // On leaving, what was showing before goes back (round 2, N6).
+  const priorZone = viewer.timeControls?.zone();
+  const priorLabel = viewer.timeControls?.label();
   viewer.timeControls?.setZone("utc");
   viewer.timeControls?.setLabel("Scenario time");
   scope.defer(() => {
-    viewer.timeControls?.setZone("nominal");
-    viewer.timeControls?.setLabel("Date and time of the sun");
+    if (priorZone !== undefined) {
+      viewer.timeControls?.setZone(priorZone);
+    }
+    if (priorLabel) {
+      viewer.timeControls?.setLabel(priorLabel);
+    }
   });
 
   // The HUD host over the canvas: the legend, tour captions and labels (R17).

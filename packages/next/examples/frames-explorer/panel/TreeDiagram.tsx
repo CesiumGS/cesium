@@ -182,6 +182,51 @@ export function panWindow(
   return hi - lo > size ? lo : (lo + hi) / 2 - size / 2;
 }
 
+/** A frame to pan to: its extent along each axis, px. */
+export interface PanItem {
+  x: readonly [number, number];
+  y: readonly [number, number];
+}
+
+/**
+ * Where a pan starts on both axes together (pure, Task 9 I6 round 2):
+ * `items` in priority order. It takes as many of them, in order, as fit
+ * the box whole on both axes at once (the first always), then places each
+ * axis as `panWindow` does for that one set.
+ */
+export function panView(
+  items: readonly PanItem[],
+  start: { x: number; y: number },
+  size: { x: number; y: number },
+): { x: number; y: number } {
+  if (items.length === 0) {
+    return start;
+  }
+  const span = (set: readonly PanItem[], axis: "x" | "y") =>
+    Math.max(...set.map((i) => i[axis][1])) -
+    Math.min(...set.map((i) => i[axis][0])) +
+    2 * PAN_MARGIN;
+  const kept: PanItem[] = [items[0]!];
+  for (const item of items.slice(1)) {
+    const next = [...kept, item];
+    if (span(next, "x") <= size.x && span(next, "y") <= size.y) {
+      kept.push(item);
+    }
+  }
+  return {
+    x: panWindow([envelope(kept, "x")], start.x, size.x),
+    y: panWindow([envelope(kept, "y")], start.y, size.y),
+  };
+}
+
+const envelope = (
+  set: readonly PanItem[],
+  axis: "x" | "y",
+): [number, number] => [
+  Math.min(...set.map((i) => i[axis][0])),
+  Math.max(...set.map((i) => i[axis][1])),
+];
+
 /** The meeting frame's tag (the capstone's pair). */
 export const MEET_TAG = "Meets here";
 
@@ -720,17 +765,13 @@ export const TreeDiagram = memo(function TreeDiagram({
 
   // Bring the lit path or the selection into view when it changes (not on
   // every rebuild, so a manual pan holds while the clock plays). What to
-  // show, most important first (Task 9, I6): the selection; the frames the
-  // scenario added, deepest first (the ship's mast sensor, the BIM site
-  // grid, the capstone's pair: what the question is about); the route's
-  // From, its To and where they meet; then the rest of the route.
+  // show, most important first (Task 9, I6, round 2): the selection; the
+  // route's From and To (the answer's own frames) and where they meet; the
+  // frames the scenario added, deepest first (the ship's mast sensor, the
+  // BIM site grid); then the rest of the route.
   const panTo = useMemo(() => {
     const ids = [
       ...(selected ? [selected.id] : []),
-      ...layout.placed
-        .filter((p) => p.node?.added)
-        .sort((a, b) => b.depth - a.depth)
-        .map((p) => p.id),
       ...(path
         ? [
             path.up[0] ?? path.ancestor,
@@ -738,15 +779,19 @@ export const TreeDiagram = memo(function TreeDiagram({
             path.ancestor,
           ]
         : []),
+      ...layout.placed
+        .filter((p) => p.node?.added)
+        .sort((a, b) => b.depth - a.depth)
+        .map((p) => p.id),
       ...lit.keys(),
     ];
-    const at = [...new Set(ids)]
+    return [...new Set(ids)]
       .map((id) => byId.get(id))
-      .filter((p): p is Placed => p !== undefined);
-    return {
-      x: at.map((p): [number, number] => [p.x - p.w / 2, p.x + p.w / 2]),
-      y: at.map((p): [number, number] => [p.y - PILL, p.y + PILL]),
-    };
+      .filter((p): p is Placed => p !== undefined)
+      .map((p): PanItem => ({
+        x: [p.x - p.w / 2, p.x + p.w / 2],
+        y: [p.y - PILL, p.y + PILL],
+      }));
   }, [selected, layout.placed, path, lit, byId]);
   // Keyed on where those frames are, and the box's width: the first pan
   // may come before the box is measured or the pills have their font.
@@ -754,13 +799,18 @@ export const TreeDiagram = memo(function TreeDiagram({
   const shownKey = useRef<string | undefined>(undefined);
   useEffect(() => {
     const el = box.current;
-    if (!el || shownKey.current === viewKey || panTo.x.length === 0) {
+    if (!el || shownKey.current === viewKey || panTo.length === 0) {
       return;
     }
     shownKey.current = viewKey;
+    const to = panView(
+      panTo,
+      { x: el.scrollLeft, y: el.scrollTop },
+      { x: el.clientWidth, y: el.clientHeight },
+    );
     el.scrollTo({
-      left: panWindow(panTo.x, el.scrollLeft, el.clientWidth),
-      top: panWindow(panTo.y, el.scrollTop, el.clientHeight),
+      left: to.x,
+      top: to.y,
       behavior: reducedMotion() ? "auto" : "smooth",
     });
   }, [viewKey, panTo]);
@@ -898,7 +948,9 @@ export const TreeDiagram = memo(function TreeDiagram({
   // seen in the docked box (the capstone at 380 px, Task 9 I6): the
   // diagram still pans under it.
   const routeRow = (() => {
-    if (!pair || !path || fullLabels) {
+    // Any route whose two ends can't both be seen whole, docked or in the
+    // Expand dialog (Task 9 I6 and N7, round 2).
+    if (!path || path.up.length + path.down.length === 0) {
       return undefined;
     }
     const ends = [
@@ -922,12 +974,14 @@ export const TreeDiagram = memo(function TreeDiagram({
       {routeRow && (
         <ol className="fx-route-row" aria-label="The route, From to To">
           {routeRow.map((id, i) => {
+            const first = path!.up[0] ?? path!.ancestor;
+            const last = path!.down.at(-1) ?? path!.ancestor;
             const tag =
-              id === pair?.from
+              id === first
                 ? "From"
-                : id === pair?.to
+                : id === last
                   ? "To"
-                  : id === path?.ancestor
+                  : id === path!.ancestor
                     ? MEET_TAG
                     : undefined;
             return (
@@ -1079,6 +1133,15 @@ export const TreeDiagram = memo(function TreeDiagram({
             if (p.chip) {
               const chip = p.chip;
               const name = byId.get(chip.parent)?.node?.label ?? chip.parent;
+              // What it unfolds, by name (Task 9, round 2): the folded
+              // branches under it.
+              const folded = (nodes.get(chip.parent)?.children ?? [])
+                .filter((c) => !byId.has(c.id))
+                .map((c) => c.label);
+              const what =
+                folded.length > 0
+                  ? `: ${folded.slice(0, 4).join(", ")}${folded.length > 4 ? ` and ${folded.length - 4} more` : ""}`
+                  : "";
               return (
                 <button
                   key={p.id}
@@ -1087,8 +1150,8 @@ export const TreeDiagram = memo(function TreeDiagram({
                   className="fx-node fx-chip"
                   style={style}
                   tabIndex={roving === p.id ? 0 : -1}
-                  aria-label={`Show ${chip.count} more ${chip.count === 1 ? "frame" : "frames"} under ${name}`}
-                  title={`${chip.count} more under ${name}`}
+                  aria-label={`Show ${chip.count} more ${chip.count === 1 ? "frame" : "frames"} under ${name}${what}`}
+                  title={`${chip.count} more under ${name}${what}`}
                   onFocus={() => setFocus(p.id)}
                   onKeyDown={onKey(p)}
                   onClick={() =>

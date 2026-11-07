@@ -7,7 +7,10 @@ import {
   unfoldedFor,
 } from "../examples/frames-explorer/panel/diagramFocus.ts";
 import { routeSteps } from "../examples/frames-explorer/panel/routeSteps.ts";
-import { panWindow } from "../examples/frames-explorer/panel/TreeDiagram.tsx";
+import {
+  panView,
+  panWindow,
+} from "../examples/frames-explorer/panel/TreeDiagram.tsx";
 import { focusTree } from "../examples/frames-explorer/panel/treeLayout.ts";
 import { SCENES } from "../examples/frames-explorer/scenarios/scenes.ts";
 import {
@@ -164,5 +167,23 @@ describe("the docked tree fits the lit route (Task 9, I6)", () => {
     expect(panWindow([from], -16, 400)).toBe(-16);
     // Wider than the view on its own: from its start.
     expect(panWindow([[0, 1000]], 300, 400)).toBe(-16);
+  });
+
+  it("chooses what it shows on both axes together (round 2, N5)", () => {
+    const at = (x: number, y: number) => ({
+      x: [x, x + 100] as const,
+      y: [y, y + 32] as const,
+    });
+    // From and To fit across, but the third is far below: it's dropped on
+    // both axes, so the vertical pan doesn't favour it.
+    const to = panView(
+      [at(0, 0), at(200, 0), at(100, 900)],
+      { x: 500, y: 500 },
+      { x: 400, y: 300 },
+    );
+    expect(to.x).toBeLessThanOrEqual(-16);
+    expect(to.x + 400).toBeGreaterThanOrEqual(316);
+    expect(to.y).toBeLessThanOrEqual(-16);
+    expect(to.y + 300).toBeGreaterThanOrEqual(48);
   });
 });
