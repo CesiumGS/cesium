@@ -5430,6 +5430,8 @@ API: rays in float64 in, hits out (distance, point, normal, draw, feature).
    instance tables, rebuilt per frame (it covers draws, so it is cheap).
    Exact nearest hits for any batch of rays.
 
+Rays and targets across frames of the frame tree, such as the Moon in MOON_ME, moving bodies and design-space models, are plan 5 (§13.14, "Ray queries through the frame tree").
+
 **Path tracing grows out of (2).** The architecture suits it: all geometry
 is in one arena read by index from storage buffers, and materials, draw
 records, transforms and instances are tables, so one compute shader can
@@ -6989,6 +6991,34 @@ we probably don't need the async API". So:
   (`AbortSignal`), progress-reporting operations that run in a worker or
   under the engine's per-frame budget. That is a question about bulk
   operations, not about the frame tree.
+
+**Ray queries through the frame tree (owner, 2026-11-06).** Ray queries
+(§13.10) assume one Earth-fixed world today. Plan 5 makes them frame-aware:
+
+- **Rays in a frame.** A ray is given in some frame at an instant (a dish's
+  ENU, a drone camera's mount, a robot tool, a lunar site), and the library
+  carries it through the tree to each target's frame. It doesn't assume
+  Earth-fixed metres.
+- **Targets in their own frames.** Terrain and tilesets belong to a body
+  frame: Earth terrain in ITRF, the Moon's terrain and imagery in MOON_ME,
+  and an iModel in its design space or placed through its CRS. Moving bodies
+  (a ship, a drone, a spacecraft) carry their geometry in their body frames.
+  A query transforms the ray into each target's frame, not every target into
+  one world.
+- **Time.** Each target is placed at the query's instant. Across long
+  distances, light time can matter: Earth to Orion, or Earth to the Moon. The
+  query states whether it is geometric or light-time corrected, as
+  `lineOfSight` does.
+- **Precision.** Rays and hits stay float64 on the CPU. GPU rays use the same
+  hi/lo, camera-relative origins as the rasterizer, and hits are reported in
+  the frame the caller asked for.
+- **Accuracy.** A hit's position carries the composed accuracy of the route
+  from the ray's frame to the target's frame, through `pointAccuracy`, plus
+  the target geometry's own accuracy.
+- **Links:** the frames example's terrain line of sight (Task 5b) is the
+  Earth-only first step; the dish, ship, drone, robot-arm and "Everything at
+  once" scenarios are the use cases; frame-tagged picking (plan 3 R8) is the
+  same question for the cursor.
 
 **A public API review (owner, 2026-11-06).** Plan 5 is also the time to
 look at the public API as a whole. Decide what belongs on which side of it,
