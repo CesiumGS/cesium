@@ -6,10 +6,12 @@
 import { createHash } from "node:crypto";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { createServer, request, type Server } from "node:http";
@@ -22,6 +24,8 @@ import {
   createGridCache,
   createGridHandler,
   framesDataExcludes,
+  framesDataExclusion,
+  gridAccess,
   gridRequest,
   projGridsPlugin,
 } from "../scripts/projGrids.mjs";
@@ -33,6 +37,8 @@ const filled = (length: number, value: number) =>
 
 const GOOD = filled(4096, 7);
 const TIN = new TextEncoder().encode('{"type":"tin"}');
+const GOOD2 = filled(2048, 5);
+const GOOD3 = filled(1024, 6);
 
 const feature = (
   name: string,
@@ -56,6 +62,8 @@ const CATALOG_JSON = JSON.stringify({
   type: "FeatureCollection",
   features: [
     feature("good.tif", GOOD),
+    feature("good2.tif", GOOD2),
+    feature("good3.tif", GOOD3),
     feature("tin.json", TIN),
     feature("gone.tif", GOOD, { version_removed: "1.20" }),
     feature("elsewhere.tif", GOOD, {
@@ -247,14 +255,80 @@ describe("the grid endpoint", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("answers HEAD with the length and no body", async () => {
-    const { fetcher } = stubFetch(() => new Response(GOOD));
+  it("answers HEAD from the catalog's size, with no body and no fetch", async () => {
+    const { calls, fetcher } = stubFetch(() => new Response(GOOD));
     const base = await serve(fetcher);
     const head = await fetch(`${base}/good.tif`, { method: "HEAD" });
     expect(head.status).toBe(200);
+    expect(head.headers.get("content-type")).toBe("image/tiff");
     expect(head.headers.get("content-length")).toBe(String(GOOD.length));
     expect((await head.arrayBuffer()).byteLength).toBe(0);
+    expect(calls).toHaveLength(0);
+    expect(readdirSync(dir)).toEqual([]);
   });
+
+  it.each(["cross-site", "same-site"])(
+    "refuses a %s request for a grid not stored: a generic 403, nothing fetched",
+    async (site) => {
+      const { calls, fetcher } = stubFetch(() => new Response(GOOD));
+      const base = await serve(fetcher);
+      for (const method of ["GET", "HEAD"]) {
+        const response = await fetch(`${base}/good.tif`, {
+          method,
+          headers: { "Sec-Fetch-Site": site },
+        });
+        expect(response.status).toBe(
+          site === "same-site" && method === "HEAD" ? 200 : 403,
+        );
+        if (response.status === 403 && method === "GET") {
+          expect(await response.text()).toBe("forbidden");
+        }
+      }
+      expect(calls).toHaveLength(0);
+      expect(readdirSync(dir)).toEqual([]);
+    },
+  );
+
+  it("serves a stored grid same-site but not cross-site", async () => {
+    writeFileSync(join(dir, "good.tif"), GOOD);
+    const { calls, fetcher } = stubFetch(() => new Response(GOOD));
+    const base = await serve(fetcher);
+    const sameSite = await fetch(`${base}/good.tif`, {
+      headers: { "Sec-Fetch-Site": "same-site" },
+    });
+    expect(sameSite.status).toBe(200);
+    expect(new Uint8Array(await sameSite.arrayBuffer())).toEqual(GOOD);
+    const crossSite = await fetch(`${base}/good.tif`, {
+      headers: { "Sec-Fetch-Site": "cross-site" },
+    });
+    expect(crossSite.status).toBe(403);
+    expect(await crossSite.text()).toBe("forbidden");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("refuses a same-site request for a stored copy that doesn't match, without fetching", async () => {
+    writeFileSync(join(dir, "good.tif"), filled(GOOD.length, 9));
+    const { calls, fetcher } = stubFetch(() => new Response(GOOD));
+    const base = await serve(fetcher);
+    const response = await fetch(`${base}/good.tif`, {
+      headers: { "Sec-Fetch-Site": "same-site" },
+    });
+    expect(response.status).toBe(403);
+    expect(calls).toHaveLength(0);
+  });
+
+  it.each(["same-origin", "none"])(
+    "fetches on a miss for a %s request",
+    async (site) => {
+      const { calls, fetcher } = stubFetch(() => new Response(GOOD));
+      const base = await serve(fetcher);
+      const response = await fetch(`${base}/good.tif`, {
+        headers: { "Sec-Fetch-Site": site },
+      });
+      expect(response.status).toBe(200);
+      expect(calls).toHaveLength(1);
+    },
+  );
 
   it("serves a TIN grid as JSON, and the catalog and licenses from memory", async () => {
     const { calls, fetcher } = stubFetch(() => new Response(TIN));
@@ -275,7 +349,7 @@ describe("the grid endpoint", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("passes other methods on with a 405", async () => {
+  it("refuses other methods with a 405", async () => {
     const { calls, fetcher } = stubFetch(() => new Response(GOOD));
     const base = await serve(fetcher);
     const post = await fetch(`${base}/good.tif`, { method: "POST" });
@@ -396,7 +470,174 @@ describe("the grid endpoint", () => {
   });
 });
 
+describe("gridAccess", () => {
+  it.each([
+    [undefined, "fetch"],
+    ["same-origin", "fetch"],
+    ["none", "fetch"],
+    ["same-site", "stored"],
+    ["cross-site", "none"],
+    ["", "none"],
+    ["bogus", "none"],
+    [["same-origin", "cross-site"], "none"],
+  ] as const)("%j gives %j", (site, access) => {
+    expect(gridAccess(site as string | string[] | undefined)).toBe(access);
+  });
+});
+
+describe("framesDataExclusion", () => {
+  let store: string;
+  let outside: string;
+  beforeEach(() => {
+    store = join(dir, "store");
+    outside = join(dir, "outside");
+    mkdirSync(join(store, "grids"), { recursive: true });
+    mkdirSync(join(store, "proj"), { recursive: true });
+    mkdirSync(outside);
+    writeFileSync(join(store, "grids", "files.geojson"), "{}");
+    writeFileSync(join(store, "proj", "a.tif"), "a");
+    writeFileSync(join(store, "proj", "x.tif.1234.partial"), "x");
+    writeFileSync(join(store, "manifest.json"), "{}");
+    writeFileSync(join(outside, "secret.txt"), "s");
+  });
+
+  /** Skips the test unless the file system resolves `path` (folding it). */
+  const needs = (path: string, skip: (note: string) => void) => {
+    if (!existsSync(path)) {
+      skip(`this file system doesn't resolve ${path}`);
+    }
+  };
+  const link = (target: string, path: string, skip: (note: string) => void) => {
+    try {
+      symlinkSync(target, path);
+    } catch {
+      skip("this file system can't make a symlink here");
+    }
+  };
+
+  it("keeps the store's other files, and a path that doesn't exist", () => {
+    const exclude = framesDataExclusion(store);
+    expect(exclude(join(store, "manifest.json"))).toBe(false);
+    expect(exclude(join(store, "proj", "a.tif"))).toBe(false);
+    expect(exclude(join(store, "proj", "missing.tif"))).toBe(false);
+  });
+
+  it("refuses grids/ and *.partial by name, existing or not", () => {
+    const exclude = framesDataExclusion(store);
+    expect(exclude(join(store, "grids", "files.geojson"))).toBe(true);
+    expect(exclude(join(store, "grids", "missing.tif"))).toBe(true);
+    expect(exclude(join(store, "proj", "x.tif.1234.partial"))).toBe(true);
+    expect(exclude(join(store, "grids::$INDEX_ALLOCATION", "x"))).toBe(true);
+  });
+
+  it("refuses gridſ/ where the file system folds it to grids/", (ctx) => {
+    const path = join(store, "grid\u017f", "files.geojson");
+    needs(path, (note) => ctx.skip(note));
+    // By name it passes: only the real path catches it.
+    expect(framesDataExcludes("grid\u017f/files.geojson")).toBe(false);
+    expect(framesDataExclusion(store)(path)).toBe(true);
+  });
+
+  it("refuses GRIDS/ where the file system ignores case", (ctx) => {
+    const path = join(store, "GRIDS", "files.geojson");
+    needs(path, (note) => ctx.skip(note));
+    expect(framesDataExclusion(store)(path)).toBe(true);
+  });
+
+  it("refuses a symlink into grids/", (ctx) => {
+    const path = join(store, "proj", "catalog.json");
+    link(join(store, "grids", "files.geojson"), path, (note) => ctx.skip(note));
+    expect(framesDataExclusion(store)(path)).toBe(true);
+  });
+
+  it("refuses a symlinked directory that leads into grids/", (ctx) => {
+    const path = join(store, "g");
+    link(join(store, "grids"), path, (note) => ctx.skip(note));
+    expect(framesDataExclusion(store)(join(path, "files.geojson"))).toBe(true);
+  });
+
+  it("refuses a symlink to a *.partial", (ctx) => {
+    const path = join(store, "proj", "b.tif");
+    link(join(store, "proj", "x.tif.1234.partial"), path, (note) =>
+      ctx.skip(note),
+    );
+    expect(framesDataExclusion(store)(path)).toBe(true);
+  });
+
+  it("refuses a symlink out of the store", (ctx) => {
+    const path = join(store, "proj", "c.txt");
+    link(join(outside, "secret.txt"), path, (note) => ctx.skip(note));
+    expect(framesDataExclusion(store)(path)).toBe(true);
+  });
+});
+
 describe("createGridCache", () => {
+  it("runs at most two upstream fetches at once, queueing the rest", async () => {
+    const bodies: Record<string, Uint8Array<ArrayBuffer>> = {
+      "https://cdn.proj.org/good.tif": GOOD,
+      "https://cdn.proj.org/good2.tif": GOOD2,
+      "https://cdn.proj.org/good3.tif": GOOD3,
+    };
+    let inFlight = 0;
+    let most = 0;
+    const releases: (() => void)[] = [];
+    const { calls, fetcher } = stubFetch(async (url) => {
+      inFlight++;
+      most = Math.max(most, inFlight);
+      await new Promise<void>((resolve) => releases.push(resolve));
+      inFlight--;
+      return new Response(bodies[url]);
+    });
+    const cache = createGridCache({ dir, catalog, fetch: fetcher, log });
+    const all = Promise.all(
+      ["good.tif", "good2.tif", "good3.tif"].map((n) => cache.ensure(n)),
+    );
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+    await settle();
+    expect(calls).toHaveLength(2);
+    releases.shift()!();
+    await settle();
+    expect(calls).toHaveLength(3);
+    while (releases.length > 0) {
+      releases.shift()!();
+      await settle();
+    }
+    expect(await all).toEqual(
+      ["good.tif", "good2.tif", "good3.tif"].map((n) => join(dir, n)),
+    );
+    expect(most).toBe(2);
+  });
+
+  it("frees a fetch's slot when it fails", async () => {
+    const { calls, fetcher } = stubFetch(
+      () => new Response(null, { status: 503 }),
+    );
+    const cache = createGridCache({
+      dir,
+      catalog,
+      fetch: fetcher,
+      log,
+      maxFetches: 1,
+    });
+    await expect(cache.ensure("good.tif")).rejects.toThrow();
+    await expect(cache.ensure("good2.tif")).rejects.toThrow();
+    expect(calls).toHaveLength(2);
+  });
+
+  it("with { fetch: false }, serves a stored copy and refuses a miss", async () => {
+    writeFileSync(join(dir, "good.tif"), GOOD);
+    const { calls, fetcher } = stubFetch(() => new Response(GOOD2));
+    const cache = createGridCache({ dir, catalog, fetch: fetcher, log });
+    expect(await cache.ensure("good.tif", { fetch: false })).toBe(
+      join(dir, "good.tif"),
+    );
+    await expect(cache.ensure("good2.tif", { fetch: false })).rejects.toThrow(
+      /may not fetch/,
+    );
+    expect(calls).toHaveLength(0);
+    expect(existsSync(join(dir, "good2.tif"))).toBe(false);
+  });
+
   it("shares one fetch between concurrent ensure calls", async () => {
     let release!: () => void;
     const gate = new Promise<void>((resolve) => (release = resolve));

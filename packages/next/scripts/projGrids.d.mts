@@ -13,24 +13,46 @@ export function gridRequest(
   catalog: GridCatalog,
 ): { kind: "catalog" | "licenses" | "grid"; name: string } | undefined;
 
-/** Whether the `/frames-data` mount refuses a store path: `grids/` and `*.partial`. */
+/** Whether the `/frames-data` mount refuses a store path by name: `grids/` and `*.partial`. */
 export function framesDataExcludes(relative: string): boolean;
 
 /**
+ * The `/frames-data` exclusion for the store at `root`, given an absolute
+ * path: by name, and by the real path the file resolves to (under the root,
+ * outside its real `grids/`, not a `*.partial`).
+ */
+export function framesDataExclusion(root: string): (path: string) => boolean;
+
+/** The `code` of `ensure`'s rejection when a fetch was needed but not allowed. */
+export const FETCH_NOT_ALLOWED: string;
+
+/** What a request's `Sec-Fetch-Site` lets it have. */
+export function gridAccess(
+  site: string | string[] | undefined,
+): "fetch" | "stored" | "none";
+
+/** A grid cache: `ensure` gives the path of a verified copy. */
+export interface GridCache {
+  ensure(name: string, options?: { fetch?: boolean }): Promise<string>;
+}
+
+/**
  * Verified copies of the catalog's grids in `dir`, fetched from cdn.proj.org
- * on a miss; concurrent calls for one name share one fetch.
+ * on a miss (unless `{ fetch: false }`); concurrent calls for one name share
+ * one fetch, and at most `maxFetches` (default 2) run at once.
  */
 export function createGridCache(options: {
   dir: string;
   catalog: GridCatalog;
   fetch?: typeof fetch;
   log?: (line: string) => void;
-}): { ensure(name: string): Promise<string> };
+  maxFetches?: number;
+}): GridCache;
 
 /** The endpoint's middleware (GET and HEAD), for a path after the prefix. */
 export function createGridHandler(options: {
   catalog: GridCatalog;
-  cache: { ensure(name: string): Promise<string> };
+  cache: GridCache;
   catalogBytes: Uint8Array;
   licensesBytes: Uint8Array;
   log: (line: string) => void;

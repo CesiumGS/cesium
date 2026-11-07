@@ -21,7 +21,7 @@ import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
-import { framesDataExcludes, projGridsPlugin } from "./scripts/projGrids.mjs";
+import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
 import { slangWasmDirectory } from "./scripts/slangTools.mjs";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
@@ -51,12 +51,13 @@ const contentTypes: Record<string, string> = {
  * Serves a local directory at `prefix` without copying it into the package:
  * the 1.x build for the parity harness, and optionally the Slang WASM build
  * (set SLANG_WASM_DIR) for the Slang spike. A path inside `root` that
- * `exclude` refuses (given relative to `root`, platform-separated) is a 404.
+ * `exclude` refuses (given as an absolute path) is a 404, as is a URL that
+ * doesn't decode.
  */
 function serveDirectory(
   prefix: string,
   root: string,
-  { exclude }: { exclude?: (relative: string) => boolean } = {},
+  { exclude }: { exclude?: (path: string) => boolean } = {},
 ): Plugin {
   // Absolute, without a trailing separator, so `base + sep` is the prefix of
   // everything inside it and of nothing beside it (`/a/frames-old`).
@@ -65,14 +66,16 @@ function serveDirectory(
     name: `serve-directory${prefix}`,
     configureServer(server) {
       server.middlewares.use(prefix, (req, res, next) => {
-        const path = normalize(
-          join(base, decodeURIComponent((req.url ?? "/").split("?")[0]!)),
-        );
-        if (
-          exclude &&
-          path.startsWith(base + sep) &&
-          exclude(path.slice(base.length + 1))
-        ) {
+        let decoded: string;
+        try {
+          decoded = decodeURIComponent((req.url ?? "/").split("?")[0]!);
+        } catch {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        const path = normalize(join(base, decoded));
+        if (exclude && path.startsWith(base + sep) && exclude(path)) {
           res.statusCode = 404;
           res.end();
           return;
@@ -416,7 +419,7 @@ export default defineConfig({
     ...(framesData
       ? [
           serveDirectory("/frames-data", framesData, {
-            exclude: framesDataExcludes,
+            exclude: framesDataExclusion(framesData),
           }),
         ]
       : []),

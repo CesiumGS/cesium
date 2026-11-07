@@ -6,8 +6,15 @@
 // traversal, no other origin, no redirects, the catalog's size as a cap, and
 // error bodies that say nothing (the details go to the server log).
 import { createHash } from "node:crypto";
-import { createReadStream, readFileSync, statSync } from "node:fs";
-import { extname, join } from "node:path";
+import {
+  createReadStream,
+  existsSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+} from "node:fs";
+import { extname, join, relative as relativePath, sep } from "node:path";
+import { pipeline } from "node:stream";
 import { GridCatalog } from "../src/engineering/gridCatalog.ts";
 import { RESERVED_NAMES } from "../src/engineering/projNode.ts";
 import { PROJ_DATA_CATALOG } from "../src/engineering/projPins.ts";
@@ -92,10 +99,12 @@ export function gridRequest(urlPath, catalog) {
 }
 
 /**
- * Whether the `/frames-data` mount refuses `relative` (a path inside the
- * store, "/"- or platform-separated): anything under `grids/`, which only
- * `/proj-grids/` serves, and any `*.partial`. In any case, and with the
- * trailing dots and spaces Windows ignores.
+ * Whether the `/frames-data` mount refuses `relative` by its name (a path
+ * inside the store, "/"- or platform-separated): anything under `grids/`,
+ * which only `/proj-grids/` serves, and any `*.partial`. In any case, and
+ * without an NTFS stream suffix (`:…`) or the trailing dots and spaces
+ * Windows ignores. A first filter only: `framesDataExclusion` also checks
+ * the file a path resolves to.
  *
  * @param {string} relative
  */
@@ -103,10 +112,58 @@ export function framesDataExcludes(relative) {
   const segments = relative
     .split(/[\\/]/)
     .filter((s) => s !== "")
-    .map((s) => s.replace(/[. ]+$/, "").toLowerCase());
+    .map((s) =>
+      s
+        .split(":")[0]
+        .replace(/[. ]+$/, "")
+        .toLowerCase(),
+    );
   return (
     segments[0] === "grids" || segments.some((s) => s.endsWith(".partial"))
   );
+}
+
+/**
+ * The `/frames-data` mount's exclusion for the store at `root`, given an
+ * absolute path inside it. A path is refused by its name
+ * (`framesDataExcludes`) and, when it exists, by the file it resolves to
+ * (`realpathSync.native`, which applies the file system's own case and
+ * Unicode folding, and follows links): that must stay under the root's real
+ * path, outside the root's real `grids/`, and not be a `*.partial`. A path
+ * that exists but can't be resolved is refused.
+ *
+ * @param {string} root
+ * @returns {(path: string) => boolean}
+ */
+export function framesDataExclusion(root) {
+  return (path) => {
+    const relative = relativePath(root, path);
+    if (framesDataExcludes(relative)) {
+      return true;
+    }
+    let realRoot;
+    let real;
+    try {
+      realRoot = realpathSync.native(root);
+      real = realpathSync.native(path);
+    } catch {
+      // Missing: nothing to serve, so nothing to refuse; else refuse.
+      return existsSync(path);
+    }
+    if (real !== realRoot && !real.startsWith(realRoot + sep)) {
+      return true;
+    }
+    let realGrids;
+    try {
+      realGrids = realpathSync.native(join(root, "grids"));
+    } catch {
+      realGrids = join(realRoot, "grids");
+    }
+    if (real === realGrids || real.startsWith(realGrids + sep)) {
+      return true;
+    }
+    return framesDataExcludes(relativePath(realRoot, real));
+  };
 }
 
 /** "size:mtime:ctime:inode": a stored file unchanged since it was verified. */
@@ -132,47 +189,85 @@ function hashFile(path) {
   });
 }
 
+/** The `code` of `ensure`'s rejection when a fetch was needed but not allowed. */
+export const FETCH_NOT_ALLOWED = "PROJ_GRIDS_FETCH_NOT_ALLOWED";
+
 /**
  * The store's grids, each verified against its catalog entry: `ensure(name)`
  * gives the path of a verified copy, hashing a stored one (once, until it
  * changes) and fetching a missing or mismatched one from cdn.proj.org.
- * Concurrent calls for one name share one fetch. A name that isn't servable
- * rejects with nothing fetched or written.
+ * Concurrent calls for one name share one fetch, and at most `maxFetches`
+ * (default 2) fetches run at once; the rest wait their turn. With
+ * `{ fetch: false }`, a call that would need a fetch rejects with `code`
+ * FETCH_NOT_ALLOWED instead. A name that isn't servable rejects with nothing
+ * fetched or written.
  *
- * @param {{ dir: string; catalog: GridCatalog; fetch?: typeof fetch; log?: (line: string) => void }} options
+ * @param {{ dir: string; catalog: GridCatalog; fetch?: typeof fetch; log?: (line: string) => void; maxFetches?: number }} options
  */
 export function createGridCache({
   dir,
   catalog,
   fetch: fetcher = fetch,
   log = () => {},
+  maxFetches = 2,
 }) {
   /** @type {Map<string, Promise<string>>} */
   const pending = new Map();
   /** @type {Map<string, string>} */
   const verified = new Map();
 
-  const settle = async (entry, path) => {
+  // A queue of upstream fetches, `maxFetches` at a time.
+  let active = 0;
+  /** @type {(() => void)[]} */
+  const waiting = [];
+  const acquire = () => {
+    if (active < maxFetches) {
+      active++;
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => waiting.push(resolve));
+  };
+  const release = () => {
+    const next = waiting.shift();
+    if (next) {
+      next();
+    } else {
+      active--;
+    }
+  };
+
+  /** The path when the stored copy is verified, else undefined. */
+  const verifyStored = async (entry, path) => {
     const stored = signature(path);
-    if (stored !== undefined) {
-      if (verified.get(entry.name) === stored) {
-        return path;
-      }
-      const size = statSync(path).size;
-      const actual = size === entry.bytes ? await hashFile(path) : undefined;
-      if (actual === entry.sha256 && signature(path) === stored) {
-        verified.set(entry.name, stored);
-        return path;
-      }
-      log(
-        `${entry.name}: the stored copy doesn't match the catalog (${size} bytes, expected ${entry.bytes}; SHA-256 ${actual ?? "not computed"}, expected ${entry.sha256}); fetching it again`,
-      );
+    if (stored === undefined) {
+      return undefined;
+    }
+    if (verified.get(entry.name) === stored) {
+      return path;
+    }
+    const size = statSync(path).size;
+    const actual = size === entry.bytes ? await hashFile(path) : undefined;
+    if (actual === entry.sha256 && signature(path) === stored) {
+      verified.set(entry.name, stored);
+      return path;
     }
     verified.delete(entry.name);
-    log(`${entry.name}: fetching ${ORIGIN}${entry.name}`);
-    await verifiedDownload(`${ORIGIN}${entry.name}`, path, entry, {
-      fetch: fetcher,
-    });
+    log(
+      `${entry.name}: the stored copy doesn't match the catalog (${size} bytes, expected ${entry.bytes}; SHA-256 ${actual ?? "not computed"}, expected ${entry.sha256}); not served`,
+    );
+    return undefined;
+  };
+
+  const fetchGrid = async (entry, path) => {
+    await acquire();
+    try {
+      log(`${entry.name}: fetching ${ORIGIN}${entry.name}`);
+      await verifiedDownload(`${ORIGIN}${entry.name}`, path, entry, {
+        fetch: fetcher,
+      });
+    } finally {
+      release();
+    }
     const fresh = signature(path);
     if (fresh !== undefined) {
       verified.set(entry.name, fresh);
@@ -182,8 +277,11 @@ export function createGridCache({
   };
 
   return {
-    /** @param {string} name */
-    ensure(name) {
+    /**
+     * @param {string} name
+     * @param {{ fetch?: boolean }} [options]
+     */
+    ensure(name, { fetch: mayFetch = true } = {}) {
       const entry = servableGrid(name, catalog);
       if (!entry) {
         return Promise.reject(
@@ -192,16 +290,45 @@ export function createGridCache({
           ),
         );
       }
-      let shared = pending.get(name);
-      if (!shared) {
-        shared = settle(entry, join(dir, entry.name)).finally(() =>
-          pending.delete(name),
-        );
-        pending.set(name, shared);
+      const path = join(dir, entry.name);
+      const shared = pending.get(name);
+      if (shared) {
+        return shared;
       }
-      return shared;
+      if (!mayFetch) {
+        return verifyStored(entry, path).then((found) => {
+          if (found) {
+            return found;
+          }
+          throw Object.assign(
+            new Error(`${name}: not stored, and this request may not fetch it`),
+            { code: FETCH_NOT_ALLOWED },
+          );
+        });
+      }
+      const settled = (async () =>
+        (await verifyStored(entry, path)) ??
+        (await fetchGrid(entry, path)))().finally(() => pending.delete(name));
+      pending.set(name, settled);
+      return settled;
     },
   };
+}
+
+/**
+ * What a request's `Sec-Fetch-Site` lets it have: `fetch` (stored or fetched
+ * on a miss) when the header is absent (curl, Node) or `same-origin` or
+ * `none` (typed in the address bar); `stored` (no upstream fetch) when
+ * `same-site`; else nothing.
+ *
+ * @param {string | string[] | undefined} site
+ * @returns {"fetch" | "stored" | "none"}
+ */
+export function gridAccess(site) {
+  if (site === undefined || site === "same-origin" || site === "none") {
+    return "fetch";
+  }
+  return site === "same-site" ? "stored" : "none";
 }
 
 /** A plain-text response that says nothing about why. */
@@ -215,11 +342,13 @@ function plain(res, status, body) {
 /**
  * The endpoint's middleware, for a request path after the prefix: GET and
  * HEAD only; the catalog and the license table from the verified bytes in
- * memory; a grid through `cache`. An unknown name is a 404; a grid that
- * can't be fetched or verified is a 502 "grid unavailable", the details
- * logged.
+ * memory; a grid through `cache`, as `gridAccess` allows (a cross-site
+ * request, or a same-site one for a grid not stored, is a 403 "forbidden").
+ * HEAD on a grid answers from the catalog's size, fetching nothing. An
+ * unknown name is a 404; a grid that can't be fetched or verified is a 502
+ * "grid unavailable", the details logged.
  *
- * @param {{ catalog: GridCatalog; cache: { ensure(name: string): Promise<string> }; catalogBytes: Uint8Array; licensesBytes: Uint8Array; log: (line: string) => void }} options
+ * @param {{ catalog: GridCatalog; cache: { ensure(name: string, options?: { fetch?: boolean }): Promise<string> }; catalogBytes: Uint8Array; licensesBytes: Uint8Array; log: (line: string) => void }} options
  */
 export function createGridHandler({
   catalog,
@@ -248,25 +377,37 @@ export function createGridHandler({
       res.end(req.method === "HEAD" ? undefined : Buffer.from(bytes));
       return;
     }
+    const access = gridAccess(req.headers["sec-fetch-site"]);
+    if (access === "none") {
+      plain(res, 403, "forbidden");
+      return;
+    }
     const entry = catalog.get(request.name);
+    const headers = () => {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", GRID_TYPES[extname(request.name)]);
+      res.setHeader("Content-Length", entry.bytes);
+    };
+    if (req.method === "HEAD") {
+      headers();
+      res.end();
+      return;
+    }
     cache
-      .ensure(request.name)
+      .ensure(request.name, { fetch: access === "fetch" })
       .then((path) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", GRID_TYPES[extname(request.name)]);
-        res.setHeader("Content-Length", entry.bytes);
-        if (req.method === "HEAD") {
-          res.end();
-          return;
-        }
-        createReadStream(path)
-          .on("error", (error) => {
-            log(`${request.name}: reading the stored copy failed: ${error}`);
-            res.destroy();
-          })
-          .pipe(res);
+        headers();
+        pipeline(createReadStream(path), res, (error) => {
+          if (error && error.code !== "ERR_STREAM_PREMATURE_CLOSE") {
+            log(`${request.name}: sending the stored copy failed: ${error}`);
+          }
+        });
       })
       .catch((error) => {
+        if (error?.code === FETCH_NOT_ALLOWED) {
+          plain(res, 403, "forbidden");
+          return;
+        }
         log(
           `${request.name}: unavailable: ${error instanceof Error ? error.message : String(error)}`,
         );
