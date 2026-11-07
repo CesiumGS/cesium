@@ -25,6 +25,8 @@ import {
   type SiteTransform,
 } from "../../../src/engineering/EngineeringFrame.ts";
 import { frameTransform } from "../../../src/frames/Frame.ts";
+import { framePoint } from "../../../src/frames/local.ts";
+import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { EARTH } from "../../../src/scene/Body.ts";
 import { Instant } from "../../../src/time/Instant.ts";
@@ -59,6 +61,7 @@ import {
   droneFrames,
   onEarth,
 } from "./vehicles.ts";
+import { CAMERA_MOUNT_ACCURACY, DRONE_ACCURACY } from "./stated.ts";
 
 const CA = BIM_CRS["ca-zone-3"];
 
@@ -226,6 +229,11 @@ export const evaluateDrone: ScenarioEvaluator = async (
   const [body, mount] = droneFrames(itrf, heights, knobs);
   const m = frameTransform(mount, itrf, instant);
   const origin = [m[12]!, m[13]!, m[14]!];
+  // The drone's own stated accuracy (stated.ts), as the walk composes it
+  // at the mount (pointAccuracy up to ITRF), and its parts for the spot.
+  const mountWalk = pointAccuracy(framePoint(mount, [0, 0, 0], instant), itrf);
+  const own = body.accuracy(instant);
+  const b = frameTransform(body, itrf, instant);
   const ray = [m[0]!, m[1]!, m[2]!];
   const to = origin.map((x, i) => x + CAMERA_REACH * ray[i]!);
   // The placement is exact where the ray reaches the site's ground, about
@@ -344,11 +352,9 @@ export const evaluateDrone: ScenarioEvaluator = async (
         edge: {
           kind: "trajectory",
           detail: `from its synthetic flight line (labelled synthetic): ${along}% along it, heading along it, level; reported height ${DRONE.reportedHeight} m read as ${knobs.datum === "navd88" ? "NAVD88 through GEOID18" : "an ellipsoidal height"}`,
-          accuracy: {
-            byDefinition: true,
-            note: "exact by definition: a synthetic track, with no positioning error modelled",
-          },
+          accuracy: DRONE_ACCURACY,
         },
+        app: true,
       },
       {
         id: CAMERA_MOUNT,
@@ -357,11 +363,9 @@ export const evaluateDrone: ScenarioEvaluator = async (
         edge: {
           kind: "constant",
           detail: `the gimbal: ${DRONE.gimbal} m below the body's centre, tilted ${tilt}° down about its y axis`,
-          accuracy: {
-            byDefinition: true,
-            note: "exact by definition: the gimbal's angle as set",
-          },
+          accuracy: CAMERA_MOUNT_ACCURACY,
         },
+        app: true,
       },
     ],
     data: {
@@ -379,8 +383,11 @@ export const evaluateDrone: ScenarioEvaluator = async (
       aside: `The drone ${along}% along its line, ${DRONE.reportedHeight} m reported (${knobs.datum === "navd88" ? "NAVD88, through GEOID18" : "read as ellipsoidal"}), the camera ${tilt}° down`,
       headline: `The camera's centre ray leaves the mount ${tilt}° below the horizon, along the drone's heading. Where it first meets the terrain as drawn is what the camera looks at; California zone 3 and the BIM model's map conversion give its place on the design grid. ${datumMoves !== undefined ? `The reported height's datum matters: GEOID18 puts NAVD88's zero ${fmt(Math.abs(N), 4)} m ${N < 0 ? "below" : "above"} the ellipsoid here, so reading the ${DRONE.reportedHeight} m as the other moves the drone that far up or down, and on level ground the spot ${fmt(datumMoves, 4)} m along the ray's way.` : "Looking level, the ray only meets terrain that rises to the drone's height."}`,
       accuracy: {
-        note: "the terrain's, once the ray is traced: its error at the levels the ray crossed, along the ray",
+        note: "the terrain's, once the ray is traced: its error at the levels the ray crossed, along the ray, and the drone's own position and attitude at the spot",
         unbounded: true,
+        ...(mountWalk.meters !== undefined && {
+          walks: [{ frame: CAMERA_MOUNT, meters: mountWalk.meters }],
+        }),
       },
       path: { from: CAMERA_MOUNT, to: BIM_SITE_GRID },
       method: method(),
@@ -403,6 +410,12 @@ export const evaluateDrone: ScenarioEvaluator = async (
         tilt,
         datum: edge.accuracy,
         reach: CAMERA_REACH,
+        carrier: {
+          meters: own.meters ?? 0,
+          radians: own.radians ?? 0,
+          origin: [b[12]!, b[13]!, b[14]!],
+          note: own.note,
+        },
       },
     },
     overlays: [],

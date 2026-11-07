@@ -87,6 +87,40 @@ An expert who finds one thing stated two ways stops trusting the rest. So:
   "±2.8 m placement", and the inspector adds "The site's absolute placement
   is ±2.8 m (1σ); this check measures a distance, which that placement
   doesn't affect."
+- **Every frame the app defines states its accuracy** (the owner's
+  follow-up, 2026-11-07: "even if we have to estimate, as this is
+  illustrative code"). One constant per frame (`scenarios/stated.ts`) goes
+  both to the library (`FrameOptions.accuracy`, through `Frame.constant`,
+  `eastNorthUpFrame` and `trackFrame`) and onto the tree's edge, and the
+  frame is marked the app's, so its walk is the library's composition
+  (`pointAccuracy`, composed.ts `mixedView`) up to its nearest built-in
+  frame and `accuracyOf` beyond. A published figure where one exists, cited
+  in the note ("published: DSN 810-005 …"); otherwise an estimate whose
+  note begins "estimated, illustrative:" with its reasoning in one line; a
+  point or a value the app chooses is exact by definition. Both translation
+  and rotation where the frame has a rotation. Today:
+
+  | Frame                  | Stated (1σ)                                                                   | Kind                                              |
+  | ---------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------- |
+  | DSS-14, -43, -63 ENU   | 0.1 m; 1.6 × 10⁻⁸ rad (0.1 m over the Earth's radius)                         | published: DSN 810-005 301 Rev. P, Table 7's note |
+  | Sacramento ENU         | exact by definition: the point it names, the one Horizons was asked for       | by definition                                     |
+  | Lunar site             | exact by definition: the point the knob names on the IAU sphere               | by definition                                     |
+  | Drone body             | 2 m; 1° (0.017 rad): a consumer GNSS receiver and a consumer drone's attitude | estimated, illustrative                           |
+  | Camera mount           | exact by definition: the gimbal as set (the knob)                             | by definition                                     |
+  | Ship body              | 10 m; 1° (0.017 rad): an AIS position and a gyrocompass heading               | estimated, illustrative                           |
+  | Mast sensor            | exact by definition: the mast as set (the knob)                               | by definition                                     |
+  | The robot arm's frames | its synthetic spec sheet and NGS mark AK1155's pad (Task 7b)                  | synthetic; published                              |
+
+  Where an answer's ± is a length and an end of its path is the app's,
+  the answer carries that end at its walk's figure (`accuracy.walks`): the
+  ship's ±10 m in its grid position's ±10.2 m, the dish's 0.1 m in Orion's
+  range, the drone's ±2 m position and ±1° attitude at the spot (its lever,
+  the spot's distance from the body), the arm's tool, the capstone's ends.
+  A data test (`test/data/framesExplorerStated.test.ts`) holds every
+  scenario to it at its checked setup, and holds each path's edges to a
+  stated accuracy unless a source truly states none (MOON_ME's libration,
+  Park et al. 2021). Orion's frame is the library's trajectory: its OEM
+  covariance is on its edge and `accuracyOf` composes it.
 
 ## On the globe (C1)
 

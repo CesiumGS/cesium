@@ -20,6 +20,8 @@
 // it can. Charts use mean lower low water: plan 4b's work.
 import type { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
 import { frameTransform } from "../../../src/frames/Frame.ts";
+import { framePoint } from "../../../src/frames/local.ts";
+import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";
 import {
@@ -37,6 +39,8 @@ import {
   type ScenarioEvaluator,
 } from "./evaluate.ts";
 import { BIM_CRS, FTUS_PER_M, crsEdge } from "./sites.ts";
+import { MAST_ACCURACY, SHIP_ACCURACY } from "./stated.ts";
+import { length } from "../panel/format.ts";
 import type { KnobState } from "./spec.ts";
 import {
   LIGHTHOUSE,
@@ -125,6 +129,9 @@ export const evaluateShip: ScenarioEvaluator = async (
   const instant = Instant.fromTdb(epochTdb);
   const [body, mast] = shipFrames(itrf, heights, startTdb, mastHeight);
   const b = frameTransform(body, itrf, instant);
+  // The ship's own stated accuracy (stated.ts: its AIS position and
+  // heading, estimated), as the walk composes it up to ITRF.
+  const own = pointAccuracy(framePoint(body, [0, 0, 0], instant), itrf);
   const s = frameTransform(mast, itrf, instant);
   const here = [b[12]!, b[13]!, b[14]!];
   const sensor = [s[12]!, s[13]!, s[14]!];
@@ -233,11 +240,9 @@ export const evaluateShip: ScenarioEvaluator = async (
         edge: {
           kind: "trajectory",
           detail: `from its synthetic track along 33 CFR 167's inbound lanes (labelled synthetic) at 12 knots: heading along the lane; pitch and roll from a modelled sea state (synthetic, ±${SEA_STATE.pitch.amplitude}° and ±${SEA_STATE.roll.amplitude}°); its origin at the waterline, the sea at ${ellipsoidSea ? "the ellipsoid's 0 m" : "NAVD88 0 m through GEOID18"}`,
-          accuracy: {
-            byDefinition: true,
-            note: "exact by definition: a synthetic track and sea state, with no positioning error modelled",
-          },
+          accuracy: SHIP_ACCURACY,
         },
+        app: true,
       },
       {
         id: MAST_SENSOR,
@@ -246,11 +251,9 @@ export const evaluateShip: ScenarioEvaluator = async (
         edge: {
           kind: "constant",
           detail: `${fmt(mastHeight, 3)} m up the body's z axis`,
-          accuracy: {
-            byDefinition: true,
-            note: "exact by definition: the mast's height as set",
-          },
+          accuracy: MAST_ACCURACY,
         },
+        app: true,
       },
     ],
     data: {
@@ -267,12 +270,17 @@ export const evaluateShip: ScenarioEvaluator = async (
       label: `E ${ft(design[0]!)}, N ${ft(design[1]!)} ftUS`,
       aside: `The ship ${where}, heading ${headingText(here, state.velocity)} · ${fmt(range / 1000, 3)} km from ${LIGHTHOUSE.short}`,
       headline: `On California zone 3 the ship's reference point is at ${ft(design[0]!)} ftUS east and ${ft(design[1]!)} ftUS north. Whether the mast sees ${LIGHTHOUSE.name} is the drawn terrain's answer: the sea curving away between them and the headlands of the Golden Gate. Over a smooth sea alone (no refraction), a ${fmt(mastHeight, 3)} m mast and the light, ${fmt(LIGHT_HEIGHT, 3)} m above NAVD88, see each other out to ${fmt(horizons / 1000, 3)} km, and the light is ${fmt(range / 1000, 3)} km away. ${ellipsoidSea ? `Here the sea is taken at the ellipsoid's 0 m: GEOID18 puts it ${fmt(-geoid, 4)} m lower, so the ship and the light float that much too high, and the mast sees over what it can't.` : `The sea is at NAVD88 0 m, ${fmt(-geoid, 4)} m below the ellipsoid through GEOID18.`} Tides, and mean lower low water (the charts' datum), are left out: that is plan 4b's work.`,
-      accuracy: {
-        ...(edge.accuracy.meters !== undefined && {
-          meters: edge.accuracy.meters,
-        }),
-        note: `the ship's place is exact on its synthetic track; its easting and northing carry California zone 3's ${edge.accuracy.meters !== undefined ? `±${edge.accuracy.meters} m datum (PROJ's operation to WGS 84)` : "datum"}; the line of sight carries the terrain's error`,
-      },
+      accuracy:
+        own.meters === undefined || edge.accuracy.meters === undefined
+          ? {
+              note: `not bounded: ${own.unboundedBy !== undefined ? `${own.unboundedBy} states no accuracy` : "California zone 3's datum states no accuracy"}`,
+              unbounded: true,
+            }
+          : {
+              meters: Math.hypot(own.meters, edge.accuracy.meters),
+              note: `the ship's own ±${length(own.meters)} (estimated, illustrative: an AIS position) and California zone 3's ±${edge.accuracy.meters} m datum (PROJ's operation to WGS 84), root-sum-square; the line of sight carries the terrain's error`,
+              walks: [{ frame: SHIP_BODY, meters: own.meters }],
+            },
       path: { from: SHIP_BODY, to: CA.name },
       method: method(),
       sight: { line: "lighthouse", key, target: LIGHTHOUSE.short, sea: geoid },

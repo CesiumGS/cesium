@@ -105,6 +105,14 @@ export interface ScenarioAnswer {
      * "(1σ)".
      */
     heuristic?: boolean;
+    /**
+     * The frames the app defines whose own stated accuracies this ± carries,
+     * each as the walk composes it up to ITRF (`pointAccuracy`): one per
+     * end of the answer's path that the app defines, so the answer and the
+     * walk state one figure (the owner's follow-up, 2026-11-07; a data test
+     * holds them equal).
+     */
+    walks?: readonly { frame: string; meters: number }[];
   };
   /** The tree path the answer runs along: node ids for `branchPath`. */
   path?: { from: string; to: string };
@@ -148,6 +156,19 @@ export interface ScenarioAnswer {
     datum: EdgeAccuracy;
     /** How far the line is traced, m. */
     reach: number;
+    /**
+     * The drone's own stated accuracy (its body frame's, stated.ts): its
+     * position `meters` and its attitude `radians` about the body's
+     * `origin` (ITRF, m). The spot moves with them as the library composes
+     * a point fixed in the body (`pointAccuracy`): root-sum-square of
+     * `meters` and `radians` × the spot's distance from `origin`.
+     */
+    carrier: {
+      meters: number;
+      radians: number;
+      origin: readonly number[];
+      note: string;
+    };
   };
   /**
    * The answer carries a line of sight to a target over the terrain (the

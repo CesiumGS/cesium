@@ -45,6 +45,7 @@ import {
   lunarSiteFrame,
   type CapstoneObject,
 } from "../../examples/frames-explorer/scenarios/scenes.ts";
+import { DSN_STATION_METERS } from "../../examples/frames-explorer/scenarios/stated.ts";
 import type { KnobState } from "../../examples/frames-explorer/scenarios/spec.ts";
 import { SCENARIOS } from "../../examples/frames-explorer/scenarios/specs.ts";
 import {
@@ -372,16 +373,22 @@ describe("the capstone: every pair of its five objects (Task 8)", () => {
         bounded,
       );
       expect(e.pair!.meters).toBe(e.answer.accuracy.meters);
-      // Stated terms largest first; those that state nothing after them
-      // (the dish's own position, DSN 810-005's centimetres: fix 1, M4).
+      // Stated terms largest first; those that state nothing after them.
       const sizes = e.answer.breakdown!.map((t) => t.meters ?? -1);
       expect(sizes).toEqual([...sizes].sort((p, q) => q - p));
+      // The dish's own position is stated now (DSN 810-005 301, Table 7:
+      // the owner's follow-up, 2026-11-07), in the ± as its walk states it.
       const dish = a === "dish" || b === "dish";
+      expect(
+        e.answer.breakdown!.some(
+          (t) => t.meters === DSN_STATION_METERS && /DSN 810-005/.test(t.label),
+        ),
+      ).toBe(dish);
       expect(
         e.answer.breakdown!.some(
           (t) => t.meters === undefined && /DSN 810-005/.test(t.label),
         ),
-      ).toBe(dish);
+      ).toBe(false);
       if (bounded) {
         expect(e.answer.accuracy.meters).toBeCloseTo(
           Math.hypot(
@@ -391,9 +398,12 @@ describe("the capstone: every pair of its five objects (Task 8)", () => {
           ),
           9,
         );
-        if (dish) {
-          expect(e.answer.accuracy.note).toMatch(
-            /not stated, so it is left out/,
+        // Each end the app defines under ITRF, at its walk's figure.
+        for (const w of e.answer.accuracy.walks ?? []) {
+          expect(w.meters).toBeCloseTo(
+            composedView(tree, frames, instant, "ITRF", w.frame)!.statement
+              .meters!,
+            12,
           );
         }
       }

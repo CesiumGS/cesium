@@ -395,7 +395,11 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
       accuracy:
         total === undefined
           ? { note: accuracyNote, unbounded: true }
-          : { meters: total, note: accuracyNote },
+          : {
+              meters: total,
+              note: accuracyNote,
+              walks: [{ frame: ARM.tool, meters: composed.meters! }],
+            },
       path: { from: MARK.frame, to: ARM.tool },
       breakdown,
       method: [

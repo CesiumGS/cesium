@@ -619,7 +619,11 @@ describe("earth-turns adds Sacramento's site under ITRF (owner, fix 1)", () => {
     expect(e.added.map((a) => [a.id, a.parentId])).toEqual([
       ["Sacramento ENU", "ITRF"],
     ]);
-    expect(e.added[0]!.edge.accuracy.note).toMatch(/^not known/);
+    // A site the app names: exact by definition, stated to the library
+    // (the owner's follow-up, 2026-11-07), the app's own frame.
+    expect(e.added[0]!.edge.accuracy.byDefinition).toBe(true);
+    expect(e.added[0]!.edge.accuracy.note).toMatch(/^exact by definition/);
+    expect(e.added[0]!.app).toBe(true);
     expect(e.answer.path).toEqual({ from: "ITRF", to: "GCRF" });
   }, 60_000);
 });

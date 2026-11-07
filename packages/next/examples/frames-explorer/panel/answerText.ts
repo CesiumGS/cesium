@@ -6,7 +6,7 @@ import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
 import type { TerrainSightView } from "./model.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { onGrid } from "../scenarios/placement.ts";
-import { length, quantity, share } from "./format.ts";
+import { length, quantity, radians, share } from "./format.ts";
 
 /** The speed of light, m/s: a light-time difference as a distance. */
 const C_LIGHT = 299_792_458;
@@ -366,7 +366,14 @@ function withFootprint(
       const tan = Math.tan((Math.max(fp.tilt, 1) * Math.PI) / 180);
       const along = err / tan;
       const datum = fp.datum.meters ?? 0;
-      const meters = Math.hypot(along, datum, p.drift);
+      // The drone's own position and attitude, as the library composes a
+      // point fixed in its body (pointAccuracy): the attitude's lever is the
+      // spot's distance from the body's origin.
+      const c = fp.carrier;
+      const lever = dist3(v.hitAt, c.origin);
+      const turn = c.radians * lever;
+      const carried = Math.hypot(c.meters, turn);
+      const meters = Math.hypot(along, datum, p.drift, carried);
       const datumWords =
         fp.datum.meters !== undefined
           ? `the CRS's ±${length(fp.datum.meters)} datum (PROJ's operation to WGS 84)`
@@ -385,7 +392,8 @@ function withFootprint(
           meters,
           // The caveats first, so the globe's two lines keep them (N4).
           heuristic: true,
-          note: `the terrain source's accuracy isn't stated. The terrain's per-level ±${length(err)} along a ray ${fp.tilt}° down moves the spot about ±${length(along)} on level ground (most of it, when it leads); ${datumWords}; the local placement's ${length(p.drift)} from PROJ`,
+          note: `the terrain source's accuracy isn't stated. The terrain's per-level ±${length(err)} along a ray ${fp.tilt}° down moves the spot about ±${length(along)} on level ground (most of it, when it leads); the drone's own ±${length(c.meters)} position and ±${radians(c.radians)} attitude (${c.note.split(":")[0]}), ±${length(carried)} at the spot ${length(lever)} from it; ${datumWords}; the local placement's ${length(p.drift)} from PROJ`,
+          ...(answer.accuracy.walks && { walks: answer.accuracy.walks }),
         },
       };
     }

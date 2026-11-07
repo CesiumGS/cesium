@@ -11,7 +11,7 @@
 // The track gives position and velocity in the parent (Earth-fixed, ITRF)
 // at a TDB time. Light imports only: the page places the triads with it
 // every frame and the worker evaluates the scenario with the same code.
-import { Frame } from "../../../src/frames/Frame.ts";
+import { Frame, type FrameOptions } from "../../../src/frames/Frame.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 
 /** Where a body is, in its parent's coordinates (m, m/s), at a TDB time (s past J2000). */
@@ -114,31 +114,39 @@ export function bodyAxes(
  * the rotation `bodyAxes` gives, from the horizontal velocity's heading and
  * `attitude`'s pitch and roll (level without it). It depends on the
  * instant alone, so the frame keeps the library's one-entry cache.
+ * `options.accuracy` states how well the body knows its place and attitude
+ * (1σ; the library's `FrameOptions`), as the walk and the answer compose it.
  */
 export function trackFrame<N extends string>(
   name: N,
   parent: Frame,
   track: BodyTrack,
   attitude?: (tdb: number) => BodyAttitude,
+  options?: Pick<FrameOptions, "accuracy">,
   ellipsoid: Ellipsoid = Ellipsoid.WGS84,
 ): Frame<N> {
-  return new Frame(name, parent, (instant, out) => {
-    const tdb = instant.tdb();
-    const { position, velocity } = track.at(tdb);
-    const { x, y, z } = bodyAxes(
-      position,
-      velocity,
-      attitude?.(tdb),
-      ellipsoid,
-    );
-    // prettier-ignore
-    out.set([
-      x[0], x[1], x[2], 0,
-      y[0], y[1], y[2], 0,
-      z[0], z[1], z[2], 0,
-      position[0]!, position[1]!, position[2]!, 1,
-    ]);
-  });
+  return new Frame(
+    name,
+    parent,
+    (instant, out) => {
+      const tdb = instant.tdb();
+      const { position, velocity } = track.at(tdb);
+      const { x, y, z } = bodyAxes(
+        position,
+        velocity,
+        attitude?.(tdb),
+        ellipsoid,
+      );
+      // prettier-ignore
+      out.set([
+        x[0], x[1], x[2], 0,
+        y[0], y[1], y[2], 0,
+        z[0], z[1], z[2], 0,
+        position[0]!, position[1]!, position[2]!, 1,
+      ]);
+    },
+    options,
+  );
 }
 
 /** A rotation about the body's y axis by `angle` (radians): a camera tilted down by it looks along the new x. */

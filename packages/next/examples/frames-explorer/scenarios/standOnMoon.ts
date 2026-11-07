@@ -45,6 +45,7 @@ import {
 } from "./scenes.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
+import { LUNAR_SITE_ACCURACY } from "./stated.ts";
 
 const SPEC = SCENARIOS.find((s) => s.id === "stand-on-moon")!;
 
@@ -281,10 +282,9 @@ export const evaluateStandOnMoon: ScenarioEvaluator = async (
         edge: {
           kind: "constant",
           detail: `east-north-up at ${latitudeText(latitude)}, 0° longitude, on the IAU Moon sphere (1,737.4 km)`,
-          accuracy: {
-            note: "not stated: a fixed placement on MOON_ME, exact as built; MOON_ME's own orientation has no stated accuracy",
-          },
+          accuracy: LUNAR_SITE_ACCURACY,
         },
+        app: true,
       },
     ],
     answer: {

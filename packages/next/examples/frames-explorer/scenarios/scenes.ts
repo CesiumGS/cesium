@@ -39,6 +39,12 @@ import type { ScenarioEvaluation } from "./evaluate.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 import {
+  DSN_STATION_ACCURACY,
+  LUNAR_SITE_ACCURACY,
+  SACRAMENTO_ACCURACY,
+} from "./stated.ts";
+import type { EdgeAccuracy } from "../tree.ts";
+import {
   CAMERA_MOUNT,
   DRONE_BODY,
   LIGHTHOUSE,
@@ -62,13 +68,14 @@ export function lunarSitePosition(latitude: number): Float64Array {
   );
 }
 
-/** The site's east-north-up frame on MOON_ME. */
+/** The site's east-north-up frame on MOON_ME, exact by definition (stated.ts). */
 export function lunarSiteFrame(moonMe: Frame, latitude: number): Frame {
   return eastNorthUpFrame(
     LUNAR_SITE,
     moonMe,
     MOON.ellipsoid,
     lunarSitePosition(latitude),
+    { accuracy: LUNAR_SITE_ACCURACY },
   );
 }
 
@@ -85,17 +92,19 @@ export const SACRAMENTO = {
   name: "Sacramento ENU",
   longitude: -121.4944,
   latitude: 38.5816,
+  accuracy: SACRAMENTO_ACCURACY,
 } as const;
 
-/** A site on the Earth: its frame's name, and where it is on WGS 84 (degrees; m, 0 when not given). */
+/** A site on the Earth: its frame's name, where it is on WGS 84 (degrees; m, 0 when not given), and its frame's stated accuracy (stated.ts). */
 export interface EarthSite {
   name: string;
   longitude: number;
   latitude: number;
   height?: number;
+  accuracy: EdgeAccuracy;
 }
 
-/** An east-north-up site on the Earth (WGS 84, at its height or h = 0), under ITRF. */
+/** An east-north-up site on the Earth (WGS 84, at its height or h = 0), under ITRF, as accurate as it states. */
 export function earthSiteFrame(itrf: Frame, site: EarthSite): Frame {
   return eastNorthUpFrame(
     site.name,
@@ -105,6 +114,7 @@ export function earthSiteFrame(itrf: Frame, site: EarthSite): Frame {
       fromDegrees(site.longitude, site.latitude, site.height ?? 0),
       new Float64Array(3),
     ),
+    { accuracy: site.accuracy },
   );
 }
 
@@ -127,6 +137,7 @@ export const DSN_STATIONS: Readonly<
     longitude: -116.889543,
     latitude: 35.4259,
     height: 1001.4,
+    accuracy: DSN_STATION_ACCURACY,
   },
   "DSS-43": {
     name: "DSS-43 ENU",
@@ -135,6 +146,7 @@ export const DSN_STATIONS: Readonly<
     longitude: 148.981273,
     latitude: -35.402414,
     height: 688.8,
+    accuracy: DSN_STATION_ACCURACY,
   },
   "DSS-63": {
     name: "DSS-63 ENU",
@@ -143,6 +155,7 @@ export const DSN_STATIONS: Readonly<
     longitude: -4.248002,
     latitude: 40.431214,
     height: 864.8,
+    accuracy: DSN_STATION_ACCURACY,
   },
 };
 

@@ -18,6 +18,7 @@
 import { ARCSECOND } from "../units.ts";
 import { frameTransform } from "../../../src/frames/Frame.ts";
 import { framePoint } from "../../../src/frames/local.ts";
+import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
 import { measure } from "../../../src/measure/measure.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import references from "../references.json";
@@ -168,7 +169,15 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
       instant: instant.tdb(),
     },
   ];
+  // The site's own stated accuracy (exact by definition, stated.ts), as
+  // the walk composes it up to ITRF, root-sum-square with the library's
+  // statement for the Moon's centre from the site: one figure, the walk's.
+  const own = pointAccuracy(framePoint(site, [0, 0, 0], instant), f.itrf);
   const statement = m.accuracy;
+  const total =
+    statement.meters === undefined || own.meters === undefined
+      ? undefined
+      : Math.hypot(statement.meters, own.meters);
   const method: NonNullable<ScenarioAnswer["method"]> = [
     {
       title: "The Moon's centre",
@@ -197,11 +206,9 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
         edge: {
           kind: "constant",
           detail: `local frame: east-north-up at ${SACRAMENTO.latitude}° N, ${-SACRAMENTO.longitude}° W on WGS 84 (h = 0), a fixed placement in ITRF; the site Horizons was asked for`,
-          accuracy: {
-            byDefinition: true,
-            note: "exact by definition: the site is where it is defined, the point Horizons' table is for",
-          },
+          accuracy: SACRAMENTO.accuracy,
         },
+        app: true,
       },
     ],
     answer: {
@@ -226,10 +233,11 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
       unit: "km",
       published: horizons(),
       accuracy:
-        statement.meters !== undefined
+        total !== undefined
           ? {
-              meters: statement.meters,
-              note: "the Moon's centre from the site, 1σ: DE440's Moon and the Earth's orientation; airless (refraction near the horizon is up to about half a degree)",
+              meters: total,
+              walks: [{ frame: SACRAMENTO.name, meters: own.meters! }],
+              note: "the Moon's centre from the site, 1σ: DE440's Moon and the Earth's orientation (the site itself is exact by definition: the point Horizons was asked for); airless (refraction near the horizon is up to about half a degree)",
             }
           : {
               note: `not bounded: ${statement.terms.find((t) => t.meters === undefined)?.note ?? "a term has no size"}`,

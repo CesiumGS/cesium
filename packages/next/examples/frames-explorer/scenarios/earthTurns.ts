@@ -244,10 +244,9 @@ export const evaluateEarthTurns: ScenarioEvaluator = async (
         edge: {
           kind: "constant",
           detail: `local frame: east-north-up at ${SACRAMENTO.latitude}° N, ${-SACRAMENTO.longitude}° W on WGS 84, a fixed placement in ITRF`,
-          accuracy: {
-            note: "not known: set by the position it was built at (exact as built; its place on the ground has no survey behind it)",
-          },
+          accuracy: SACRAMENTO.accuracy,
         },
+        app: true,
       },
     ],
     answer: {

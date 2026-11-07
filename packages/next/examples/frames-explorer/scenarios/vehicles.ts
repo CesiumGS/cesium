@@ -21,6 +21,12 @@ import {
 } from "./bodyFrame.ts";
 import { BIM_PLACES, offsetPlace } from "./sites.ts";
 import type { KnobState } from "./spec.ts";
+import {
+  CAMERA_MOUNT_ACCURACY,
+  DRONE_ACCURACY,
+  MAST_ACCURACY,
+  SHIP_ACCURACY,
+} from "./stated.ts";
 
 const deg = Math.PI / 180;
 
@@ -137,7 +143,9 @@ export function droneAt(heights: readonly number[], along: number): BodyTrack {
 
 /**
  * The drone's body (level: it hovers) and its camera mount, tilted down by
- * the knob about the body's y, its gimbal below the body's centre.
+ * the knob about the body's y, its gimbal below the body's centre. Each
+ * states its accuracy (stated.ts): the body's estimated GNSS position and
+ * attitude, the mount exact as set.
  */
 export function droneFrames(
   itrf: Frame,
@@ -148,11 +156,14 @@ export function droneFrames(
     DRONE_BODY,
     itrf,
     droneAt(heights, Number(knobs.along)),
+    undefined,
+    { accuracy: DRONE_ACCURACY },
   );
   const mount = Frame.constant(
     CAMERA_MOUNT,
     body,
     tiltDown(Number(knobs.tilt) * deg, [0, 0, -DRONE.gimbal]),
+    { accuracy: CAMERA_MOUNT_ACCURACY },
   );
   return [body, mount];
 }
@@ -247,21 +258,32 @@ export function seaState(tdb: number): { pitch: number; roll: number } {
   };
 }
 
-/** The ship's body (its origin at the waterline amidships, pitching and rolling) and its mast sensor `mast` m above it. */
+/**
+ * The ship's body (its origin at the waterline amidships, pitching and
+ * rolling) and its mast sensor `mast` m above it. Each states its accuracy
+ * (stated.ts): the body's estimated AIS position and heading, the mast
+ * exact as set.
+ */
 export function shipFrames(
   itrf: Frame,
   heights: readonly number[],
   startTdb: number,
   mast: number,
 ): [Frame, Frame] {
-  const body = trackFrame(SHIP_BODY, itrf, shipAt(heights, startTdb), seaState);
+  const body = trackFrame(
+    SHIP_BODY,
+    itrf,
+    shipAt(heights, startTdb),
+    seaState,
+    { accuracy: SHIP_ACCURACY },
+  );
   // prettier-ignore
   const sensor = Frame.constant(MAST_SENSOR, body, [
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, mast, 1,
-  ]);
+  ], { accuracy: MAST_ACCURACY });
   return [body, sensor];
 }
 

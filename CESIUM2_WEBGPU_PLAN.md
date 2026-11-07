@@ -6850,11 +6850,15 @@ asset 2: no access token`, on every example.
   (Task 7b's brief had `accuracyOf` move into `pointAccuracy`; deferred by
   ruling in its fix round 1. Already on `pointAccuracy`: earth-turns' answer
   and the frames explorer's walk wherever the route crosses an app-defined
-  frame. Still on `accuracyOf`: walks over built-in frames only, and over
-  local frames that state no accuracy, Sacramento's, the lunar site's, the
-  DSN dishes', the drone's and the ship's. Moving those needs a stated
-  rotation axis in `FrameAccuracy` (UT1's lever is the distance from the
-  spin axis) and frames that carry the terms on no edge.)
+  frame, which since the owner's follow-up of 2026-11-07 is every frame the
+  example defines: Sacramento's site, the lunar site, the DSN dishes, the
+  drone and the ship state their accuracy (`scenarios/stated.ts`). Still on
+  `accuracyOf`: walks over built-in frames only, and each walk's part past
+  its nearest built-in frame. Moving those needs a stated rotation axis in
+  `FrameAccuracy` (UT1's lever is the distance from the spin axis) and
+  frames that carry the terms on no edge. Until then `accuracyOf` gives a
+  point on the Moon no lever for MOON_ME's unstated orientation: the lunar
+  site walks to ITRF at ±3 cm though MOON_ME states no accuracy.)
 
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`
@@ -7217,7 +7221,8 @@ are left out.
 - **Plan 5 / §13.16: a near-field bounded terrain trace.** Trace 20–50 km
   round each end with tiles at a level chosen for the error, whatever the
   camera is doing. Today a sight line takes the error of the tiles the
-  camera happened to load. That is why the ship's buoy reads "can't tell",
+  camera happened to load. That is why the ship's lighthouse reads "can't
+  tell" at the default view (the buoy it replaced always did),
   why the drone often reads "can't tell yet", and why an Earth end in the
   capstone says "not judged from this far out".
 - **Plan 5 / §13.16: a per-tile terrain error over open water,** or a
@@ -7226,12 +7231,20 @@ are left out.
 - **Plan 5: one ENU convention.** Body frames take "up" at their foot;
   `eastNorthUpFrame` takes it at the point (about 0.13 µrad apart at 250 m).
   Pick one and document it.
-- **Plan 5: move the example's `accuracyOf` onto `pointAccuracy`.** This needs
-  a stated rotation axis on each frame, and a home for terms that sit on no
-  edge (light time, relativity), and it will move catalog numbers. Until then,
-  frames that state no accuracy (Sacramento's site, the lunar site, the DSN dishes,
-  the drone, the ship) use the old composer. Whether they should read
-  "unbounded" instead is the owner's call.
+- **Plan 5: move the example's `accuracyOf` onto `pointAccuracy`.** Partly
+  done (the owner's follow-up, 2026-11-07): every frame the example defines
+  states its accuracy (`scenarios/stated.ts`: published where a source gives
+  one, DSN 810-005 for the dishes; estimated and labelled for the drone and
+  the ship; exact by definition for a chosen site or a knob's value), the
+  walk composes those with `pointAccuracy` up to the nearest built-in frame,
+  and each answer carries its app-defined ends at the walk's figure (a data
+  test holds them). What remains: the built-in part of every walk, from
+  that frame on, is still `accuracyOf` (through `measure`). Moving it needs
+  a stated rotation axis on each frame, a home for terms that sit on no edge
+  (light time, relativity), and a trajectory's covariance as its frame's
+  accuracy (Orion's), and it will move catalog numbers. It would also give
+  MOON_ME's unstated orientation its lever at a point on the Moon, which
+  `accuracyOf` leaves out today.
 - **Plan 5: the API review of this plan's library additions.**
   - Whether `LEVEL_ZERO_ERROR` stays exported (it was exported for the test
     hill).

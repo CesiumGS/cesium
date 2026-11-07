@@ -829,6 +829,39 @@
         "delta": "paraphrased: the light-time (apparent) range of the Moon's centre from the site"
       }
     },
+    "dsn-station-location-uncertainties": {
+      "kind": "input",
+      "source": {
+        "document": "DSN Telecommunications Link Design Handbook, 810-005, Module 301: Coverage and Geometry",
+        "revision": "Rev. P (issue date May 22, 2026)",
+        "tables": "Table 7. DSN Stations Location Uncertainties (p. 18), and its note; section 2.1.5, Station Location Uncertainties (p. 15)",
+        "url": "https://deepspace.jpl.nasa.gov/dsndocs/810-005/301/301P.pdf",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The 70 m stations' own position accuracy, stated on their east-north-up frames (scenarios/stated.ts DSN_STATION_ACCURACY): an input, not an expected value (ruling F6). Table 7 gives each antenna's location uncertainty (m, 1σ) at the time of its VLBI measurements; its note says these have since grown to as much as 0.1 m (1σ), from events such as the 2019 Ridgecrest earthquake and plate velocities integrated over the years. The explorer states 0.1 m.",
+      "units": "m, 1-sigma",
+      "columns": [
+        "spin radius",
+        "longitude",
+        "z"
+      ],
+      "DSS 14": [
+        "0.024",
+        "0.035",
+        "0.030"
+      ],
+      "DSS 43": [
+        "0.026",
+        "0.035",
+        "0.032"
+      ],
+      "DSS 63": [
+        "0.027",
+        "0.035",
+        "0.031"
+      ],
+      "note": "as much as 0.1 meter, 1-sigma, since the VLBI measurements"
+    },
     "dsn-horizon-masks": {
       "source": {
         "document": "DSN Telecommunications Link Design Handbook, 810-005, Module 301: Coverage and Geometry, Section 2.2.4, Horizon Masks and Antenna Limits; the data from its 810-005 Horizon Mask Download Spreadsheet For Module 301 (horizon masks effective as of May 1, 2024)",

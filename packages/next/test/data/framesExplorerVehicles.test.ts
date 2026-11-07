@@ -84,6 +84,8 @@ import { loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
+import { convertPoint, framePoint } from "../../src/frames/local.ts";
+import { pointAccuracy } from "../../src/frames/pointAccuracy.ts";
 import { createFrames } from "../../src/frames/frames.ts";
 import { EARTH } from "../../src/scene/Body.ts";
 import { Instant } from "../../src/time/Instant.ts";
@@ -344,8 +346,29 @@ describe("the drone: what the camera looks at, on the design grid", () => {
     expect(a.aside).toMatch(
       /on the BIM site grid x −?[\d,]+\.\d, y −?[\d,]+\.\d ftUS/,
     );
-    // ±2.4 m along a 45° ray, the ±2 m datum: about ±3.1 m.
-    expect(a.accuracy.meters!).toBeCloseTo(Math.hypot(2.4, 2), 3);
+    // ±2.4 m along a 45° ray, the ±2 m datum, and the drone's own place and
+    // attitude at the spot as the library composes a point fixed in its
+    // body (pointAccuracy: ±2 m and ±1°, estimated, the owner's follow-up).
+    const [, mount] = SCENES.drone!.bodies!(frames, s.checked.knobs, e);
+    const instant = Instant.fromTdb(checkedTdb("drone"));
+    const spot = pointAccuracy(
+      framePoint(
+        mount!,
+        convertPoint(framePoint(frames.itrf, hit, instant), mount!).position,
+        instant,
+      ),
+      frames.itrf,
+    );
+    expect(spot.terms.map((x) => x.kind)).toEqual([
+      "exact",
+      "meters",
+      "angular",
+    ]);
+    expect(a.accuracy.meters!).toBeCloseTo(Math.hypot(2.4, 2, spot.meters!), 3);
+    expect(a.accuracy.note).toMatch(
+      /the drone's own ±2\.0 m position and ±0\.017 rad attitude \(estimated, illustrative\)/,
+    );
+    expect(a.accuracy.walks).toEqual(e.answer.accuracy.walks);
     const stale = withTerrainAnswer(e.answer, [{ ...view, traced: "other" }]);
     expect(stale.label).toBe("Tracing the camera's ray on the terrain");
     expect(stale.accuracy.unbounded).toBe(true);
@@ -372,7 +395,10 @@ describe("the drone: what the camera looks at, on the design grid", () => {
     const coarse = withTerrainAnswer(e.answer, [
       { ...view, beforeHit: { clear: true, unknownFraction: 0, meters: 9 } },
     ]);
-    expect(coarse.accuracy.meters!).toBeCloseTo(Math.hypot(9, 2), 3);
+    expect(coarse.accuracy.meters!).toBeCloseTo(
+      Math.hypot(9, 2, spot.meters!),
+      3,
+    );
   }, 120_000);
 
   it("reads the reported 250 m as NAVD88 through GEOID18 (the drone 32 m lower than as ellipsoidal), and the headline says how far that moves the spot", async () => {

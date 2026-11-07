@@ -17,13 +17,17 @@
 // To)` lights, up to where the two meet and down.
 //
 // The accuracy is the library's: `accuracyOf` for the two origins, and, for
-// the arm's tool, its frames' own stated accuracies up to ITRF
-// (`pointAccuracy`), root-sum-square, as the walk composes each end
-// (composed.ts `mixedView`): a pair is bounded only where both ends are.
+// each end the app defines (the dish, the ship, the lunar site, the arm's
+// tool), its frames' own stated accuracies up to its nearest built-in frame
+// (`pointAccuracy`, stated.ts), root-sum-square, as the walk composes each
+// end (composed.ts `mixedView`): a pair is bounded only where both ends are.
 import { DEG_PER_RAD } from "../units.ts";
 import { frameTransform, type Frame } from "../../../src/frames/Frame.ts";
 import { convertPoint, framePoint } from "../../../src/frames/local.ts";
-import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
+import {
+  pointAccuracy,
+  type PointAccuracy,
+} from "../../../src/frames/pointAccuracy.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { C } from "../../../src/measure/constants.ts";
 import { measure } from "../../../src/measure/measure.ts";
@@ -58,6 +62,12 @@ import {
 import { orionTreeNode } from "./orionData.ts";
 import { SIGHT_LENGTH } from "./moonFromHere.ts";
 import { armAdded } from "./robotArm.ts";
+import {
+  DSN_STATION_ACCURACY,
+  LUNAR_SITE_ACCURACY,
+  MAST_ACCURACY,
+  SHIP_ACCURACY,
+} from "./stated.ts";
 import {
   CAPSTONE,
   CAPSTONE_ARM,
@@ -159,10 +169,9 @@ function addedFrames(
       edge: {
         kind: "constant",
         detail: `local frame: east-north-up at ${CAPSTONE_DISH} (${station.complex}), from NAIF's station SPK (${STATIONS_SPK}: DSN 810-005's ITRF93 position with its plate motion)`,
-        accuracy: {
-          note: "not stated: NAIF's SPK gives the station's position without its uncertainty (DSN 810-005 quotes centimetres)",
-        },
+        accuracy: DSN_STATION_ACCURACY,
       },
+      app: true,
     },
     {
       id: SHIP_BODY,
@@ -171,11 +180,9 @@ function addedFrames(
       edge: {
         kind: "trajectory",
         detail: `from its synthetic track along 33 CFR 167's inbound lanes (labelled synthetic) at 12 knots, holding off Mile Rocks after it ends: heading along the lane; pitch and roll from a modelled sea state (synthetic, ±${SEA_STATE.pitch.amplitude}° and ±${SEA_STATE.roll.amplitude}°); its origin at the waterline, the sea at NAVD88 0 m through GEOID18`,
-        accuracy: {
-          byDefinition: true,
-          note: "exact by definition: a synthetic track and sea state, with no positioning error modelled",
-        },
+        accuracy: SHIP_ACCURACY,
       },
+      app: true,
     },
     {
       id: MAST_SENSOR,
@@ -184,11 +191,9 @@ function addedFrames(
       edge: {
         kind: "constant",
         detail: `${fmt(CAPSTONE_MAST, 3)} m up the body's z axis`,
-        accuracy: {
-          byDefinition: true,
-          note: "exact by definition: the mast's height as set",
-        },
+        accuracy: MAST_ACCURACY,
       },
+      app: true,
     },
     {
       id: orionNode.id,
@@ -206,10 +211,9 @@ function addedFrames(
       edge: {
         kind: "constant",
         detail: `east-north-up at ${latitudeText(CAPSTONE_LATITUDE)}, 0° longitude, on the IAU Moon sphere (1,737.4 km)`,
-        accuracy: {
-          note: "not stated: a fixed placement on MOON_ME, exact as built; MOON_ME's own orientation has no stated accuracy",
-        },
+        accuracy: LUNAR_SITE_ACCURACY,
       },
+      app: true,
     },
     ...armAdded(x.arm, x.angles, instant),
   ];
@@ -430,10 +434,12 @@ export const evaluateEverything: ScenarioEvaluator = async (
     f,
   ).signal!.downlink.lightTime;
 
-  // The accuracy, as the walk composes each end: the arm's tool through
-  // its own frames up to ITRF (pointAccuracy), then the library's statement
-  // for the two origins (accuracyOf, through `measure`, its public face),
-  // with the tool's taken in ITRF.
+  // The accuracy, as the walk composes each end: an end the app defines
+  // through its own frames' stated accuracies up to its nearest built-in
+  // frame (pointAccuracy: ITRF for the dish, the ship and the tool, MOON_ME
+  // for the lunar site), then the library's statement for the two origins
+  // (accuracyOf, through `measure`, its public face), with the tool's taken
+  // in ITRF.
   const anchorPoint = (obj: CapstoneObject, frame: Frame, itrf: number[]) =>
     obj === "tool" ? framePoint(f.itrf, itrf) : framePoint(frame, [0, 0, 0]);
   const statement = measure(
@@ -443,14 +449,51 @@ export const evaluateEverything: ScenarioEvaluator = async (
     f,
     { shapiro: [] },
   ).accuracy;
-  const tool =
-    from === "tool" || to === "tool"
-      ? pointAccuracy(framePoint(x.arm.tool, [0, 0, 0], instant), f.itrf)
-      : undefined;
-  const meters =
-    statement.meters === undefined || (tool && tool.meters === undefined)
+  /** An end's own frames, as the walk composes them up to its anchor. */
+  const ownOf = (obj: CapstoneObject) =>
+    obj === "orion"
       ? undefined
-      : Math.hypot(statement.meters, tool?.meters ?? 0);
+      : pointAccuracy(
+          framePoint(x.frames[obj], [0, 0, 0], instant),
+          obj === "lunar-site" ? f.moonMe : f.itrf,
+        );
+  const ends = [from, to].map((obj) => ({ obj, own: ownOf(obj) }));
+  const unboundedEnd = ends.find(
+    (e) => e.own !== undefined && e.own.meters === undefined,
+  );
+  const meters =
+    statement.meters === undefined || unboundedEnd !== undefined
+      ? undefined
+      : Math.hypot(statement.meters, ...ends.map((e) => e.own?.meters ?? 0));
+  /** Each end's own part in the breakdown: what it states, and where from. */
+  const ownRow = (obj: CapstoneObject, own: PointAccuracy) => {
+    switch (obj) {
+      case "tool":
+        return {
+          label: "The arm's frames (pointAccuracy)",
+          ...(own.meters !== undefined && { meters: own.meters }),
+          note: `the arm's encoders, links and survey up to ITRF, as the library composes what each frame states: ${own.combination}`,
+        };
+      case "dish":
+        return {
+          label: `${CAPSTONE_DISH}'s own position (DSN 810-005)`,
+          ...(own.meters !== undefined && { meters: own.meters }),
+          note: DSN_STATION_ACCURACY.note,
+        };
+      case "ship":
+        return {
+          label: "The ship's own position and heading (estimated)",
+          ...(own.meters !== undefined && { meters: own.meters }),
+          note: `${SHIP_ACCURACY.note}; at the mast, ${CAPSTONE_MAST} m up its body, as the library composes it`,
+        };
+      default:
+        return {
+          label: "The lunar site's own place",
+          ...(own.meters !== undefined && { meters: own.meters }),
+          note: LUNAR_SITE_ACCURACY.note,
+        };
+    }
+  };
   const unknownTerm = statement.terms.find((t) => t.meters === undefined);
   const breakdown = [
     ...statement.terms.map((t) => ({
@@ -458,26 +501,12 @@ export const evaluateEverything: ScenarioEvaluator = async (
       ...(t.meters !== undefined && { meters: t.meters }),
       note: t.note,
     })),
-    ...(tool
-      ? [
-          {
-            label: "The arm's frames (pointAccuracy)",
-            ...(tool.meters !== undefined && { meters: tool.meters }),
-            note: `the arm's encoders, links and survey up to ITRF, as the library composes what each frame states: ${tool.combination}`,
-          },
-        ]
-      : []),
-    // The station's own position uncertainty: neither NAIF's SPK nor
-    // references.json states it (DSN 810-005 quotes centimetres). Named,
-    // left out of the ± as the walk leaves it out (M4).
-    ...(from === "dish" || to === "dish"
-      ? [
-          {
-            label: `${CAPSTONE_DISH}'s own position (DSN 810-005)`,
-            note: "not stated: NAIF's station SPK and references.json give the station's position without its uncertainty (DSN 810-005 quotes centimetres); left out of the ±, as the walk leaves it out",
-          },
-        ]
-      : []),
+    // Each end the app defines, with what its own frames state (stated.ts):
+    // in the ± as the walk composes it.
+    // An end exact by definition (the lunar site) adds nothing: no row.
+    ...ends.flatMap((e) =>
+      e.own && e.own.meters !== 0 ? [ownRow(e.obj, e.own)] : [],
+    ),
   ].sort(
     // Stated terms largest first; those that state nothing after them.
     (p, q) => (q.meters ?? -1) - (p.meters ?? -1),
@@ -486,12 +515,18 @@ export const evaluateEverything: ScenarioEvaluator = async (
   const accuracy: ScenarioAnswer["accuracy"] =
     meters === undefined
       ? {
-          note: `not bounded: ${tool?.unboundedBy !== undefined ? `${tool.unboundedBy} states no accuracy` : (unknownTerm?.note ?? "a term has no size")}`,
+          note: `not bounded: ${unboundedEnd?.own?.unboundedBy !== undefined ? `${unboundedEnd.own.unboundedBy} states no accuracy` : (unknownTerm?.note ?? "a term has no size")}`,
           unbounded: true,
         }
       : {
           meters,
-          note: `the distance between the two origins (1σ), root-sum-square of the terms below; most of it ${lead!.label.replace(/^The /, "the ")}${lead!.meters !== undefined ? ` (±${fmt(lead!.meters, 2)} m)` : ""}${from === "dish" || to === "dish" ? `; ${CAPSTONE_DISH}'s own position uncertainty is not stated, so it is left out` : ""}`,
+          note: `the distance between the two origins (1σ), root-sum-square of the terms below; most of it ${lead!.label.replace(/^The /, "the ")}${lead!.meters !== undefined ? ` (±${fmt(lead!.meters, 2)} m)` : ""}`,
+          // The ends the app defines under ITRF, as their walks state them.
+          walks: ends.flatMap((e) =>
+            e.own?.meters !== undefined && e.obj !== "lunar-site"
+              ? [{ frame: CAPSTONE[e.obj].node, meters: e.own.meters }]
+              : [],
+          ),
         };
 
   // The line of sight: the library's, against the Earth and the Moon.
@@ -833,7 +868,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       },
       {
         title: "How sure",
-        text: "The library's statement for the two origins (accuracyOf: the Earth's orientation at an Earth end, Orion's covariance, DE440 where the two meet at ICRF, the Moon's relativistic terms), and for the arm's tool its frames' own stated accuracies up to ITRF (pointAccuracy), root-sum-square: as the walk composes each end. A pair is bounded only where both ends are.",
+        text: "The library's statement for the two origins (accuracyOf: the Earth's orientation at an Earth end, Orion's covariance, DE440 where the two meet at ICRF, the Moon's relativistic terms), and for each end the app defines its frames' own stated accuracies (pointAccuracy): the dish's published position (DSN 810-005), the ship's estimated AIS position and heading, the arm's encoders, links and survey, and the lunar site exact by definition; root-sum-square, as the walk composes each end. A pair is bounded only where both ends are.",
       },
     ],
   };

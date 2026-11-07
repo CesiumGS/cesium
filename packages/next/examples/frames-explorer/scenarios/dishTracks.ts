@@ -61,6 +61,9 @@ import {
 import { MASK_SOURCE, dsnMask } from "./dsnMasks.ts";
 import { maskAt } from "./horizonMask.ts";
 import { DSN_STATIONS, type StationId, stationOf } from "./scenes.ts";
+import { DSN_STATION_ACCURACY } from "./stated.ts";
+import { length } from "../panel/format.ts";
+import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 
@@ -275,6 +278,7 @@ export async function stationFrame(
       ctx.frames.itrf,
       Ellipsoid.WGS84,
       position,
+      { accuracy: DSN_STATION_ACCURACY },
     ),
   };
 }
@@ -300,10 +304,9 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       edge: {
         kind: "constant" as const,
         detail: `local frame: east-north-up at ${id} (${station.complex}), from NAIF's station SPK (${STATIONS_SPK}: DSN 810-005's ITRF93 position with its plate motion)`,
-        accuracy: {
-          note: "not stated: NAIF's SPK gives the station's position without its uncertainty (DSN 810-005 quotes centimetres)",
-        },
+        accuracy: DSN_STATION_ACCURACY,
       },
+      app: true as const,
     },
   ];
   // The OEM's covariance at this instant, as one-path and the capstone
@@ -537,7 +540,15 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       instant: instant.tdb(),
     },
   ];
+  // The dish's own stated position (DSN 810-005, stated.ts), as the walk
+  // composes it up to ITRF (pointAccuracy), root-sum-square with the
+  // library's statement for the two origins: one figure, the walk's.
+  const own = pointAccuracy(framePoint(site, [0, 0, 0], instant), f.itrf);
   const statement = m.accuracy;
+  const total =
+    statement.meters === undefined || own.meters === undefined
+      ? undefined
+      : Math.hypot(statement.meters, own.meters);
   const method: NonNullable<ScenarioAnswer["method"]> = [
     {
       title: "The dish",
@@ -601,10 +612,11 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
         ),
       }),
       accuracy:
-        statement.meters !== undefined
+        total !== undefined
           ? {
-              meters: statement.meters,
-              note: `Orion from the dish, 1σ: the OEM's covariance and its unstated time scale, DE440 and the Earth's orientation; in light time ±${fmt((statement.meters / 299_792_458) * 1e9, 2)} ns`,
+              meters: total,
+              note: `Orion from the dish, 1σ: the OEM's covariance and its unstated time scale, DE440 and the Earth's orientation, and the dish's own ±${length(own.meters!)} (DSN 810-005); in light time ±${fmt((total / 299_792_458) * 1e9, 2)} ns`,
+              walks: [{ frame: station.name, meters: own.meters! }],
             }
           : {
               note: `not bounded: ${statement.terms.find((t) => t.meters === undefined)?.note ?? "a term has no size"}`,
