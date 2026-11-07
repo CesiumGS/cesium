@@ -1558,8 +1558,18 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   label on the globe composes the tool's part on the page every frame, from
   the page's own frames, and adds the station's and PROJ's from the worker.
 - **The station.** CCV6 (PID DI3564), the nearest CORS that NGS publishes in
-  both NAD83(2011) and ITRF2020, 17 km from the pad; its catalog check is
-  measured data.
+  both NAD83(2011) and ITRF2020, 17 km from the pad. Its catalog check is a
+  published reference, PROJ against NGS's own computation (NGS derived the
+  NAD83(2011) position from the ITRF2020 one), so it never says "validated".
+- **The pad** is defined at NGS mark AK1155, a disk in LC-39A's pad: its
+  datasheet position and height through PROJ to ITRF2020 at a pinned
+  coordinate epoch, the station's too. The answer says the ± is from that
+  point, not a survey of LC-39A. The scene draws on the terrain globe.
+- **The walk** composes any route through app-defined frames with
+  `pointAccuracy` (fix 1), so it states the answer's figure, each term on its
+  edge.
+- **The panel's scroller** keeps a 12 px gutter at its end: an overlay
+  scrollbar drew over right-aligned figures (fix 1).
 - **The camera** looks south-south-east along the line to the station, so
   the line runs into the distance and the arm is seen side on, left of the
   callout; the arm's triads are 2.5% of the camera's distance
