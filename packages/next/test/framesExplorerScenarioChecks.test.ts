@@ -18,8 +18,10 @@ import {
 } from "../examples/frames-explorer/scenarios/checks.ts";
 import { extrasOf } from "../examples/frames-explorer/panelModel.ts";
 import {
+  ROW_COPY,
   checkRowStrings,
   checkRowText,
+  pageAccuracyText,
 } from "../examples/frames-explorer/panel/checkText.ts";
 import type { ScenarioSpec } from "../examples/frames-explorer/scenarios/spec.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
@@ -428,6 +430,7 @@ describe("the dish's measured-data row (fix 1): our terrain against the DSN's ma
     state: MaskView["state"],
     mask?: MaskView["mask"],
   ): MaskView => ({
+    traced: check.label,
     state,
     text: `Our terrain against DSS-43's published receive mask (measured data), at 8 azimuths: ${state}`,
     ...(mask && { mask }),
@@ -508,6 +511,43 @@ describe("the dish's measured-data row (fix 1): our terrain against the DSN's ma
     const stale = checkRowText(row, {}, "updating");
     expect(stale.status).toBe("Updating");
     expect(stale.summary).not.toMatch(validated);
+  });
+
+  it("never takes another check's trace: a new station's row is loading until the page traces it (fix 2)", () => {
+    const old = {
+      ...view("clear", { azimuths: 8, below: 8, above: 0, unsure: 0 }),
+      traced: "DSS-14's published receive mask",
+    };
+    const t = words(maskCheckRow(check, old));
+    expect(t.status).toBe("Loading");
+    expect(t.summary).not.toMatch(validated);
+    // A view with no identity is no one's.
+    const anon: MaskView = {
+      ...view("clear", { azimuths: 8, below: 8, above: 0, unsure: 0 }),
+      traced: undefined,
+    };
+    expect(words(maskCheckRow(check, anon)).status).toBe("Loading");
+    // Its own: judged.
+    expect(
+      words(
+        maskCheckRow(
+          check,
+          view("clear", { azimuths: 8, below: 8, above: 0, unsure: 0 }),
+        ),
+      ).status,
+    ).toBe("Consistent");
+  });
+
+  it("puts the details' fixed words and the page accuracy line under the guard (fix 2)", () => {
+    const row = maskCheckRow(check, view("may-block"));
+    const all = checkRowStrings(row, words(row), undefined);
+    for (const c of Object.values(ROW_COPY)) {
+      expect(all).toContain(c);
+    }
+    expect(all).toContain(pageAccuracyText(38));
+    for (const c of Object.values(ROW_COPY)) {
+      expect(validated.test(c), c).toBe(false);
+    }
   });
 
   it("joins the row's citation into what the guard reads", () => {

@@ -211,6 +211,7 @@ describe("scenarioView", () => {
         terrain: [
           {
             id: "mask-check",
+            traced: "DSS-14's published receive mask",
             state: "may-block",
             text: "Our terrain against DSS-14's mask: can't tell",
             mask: { azimuths: 3, below: 1, above: 0, unsure: 2 },

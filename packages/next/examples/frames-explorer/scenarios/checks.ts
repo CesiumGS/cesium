@@ -141,6 +141,8 @@ export interface PageCheck {
 
 /** The page's trace of the mask, as `maskCheckText` (sightLines.ts) gives it. */
 export interface MaskView {
+  /** The check it was traced for (its label). */
+  traced?: string;
   state: "clear" | "blocked" | "may-block" | "unknown" | "waiting";
   text: string;
   meters?: number;
@@ -157,6 +159,11 @@ export function maskCheckRow(
   view: MaskView | undefined,
 ): CheckRow {
   const n = check.samples;
+  // A trace of another check (the last station's, before the page traces
+  // the new one) is not this one's: loading until it is (fix 2).
+  if (view !== undefined && view.traced !== check.label) {
+    view = undefined;
+  }
   const base = {
     id: "mask-check",
     title: `Our terrain horizon vs ${check.label}, ${n} azimuths`,

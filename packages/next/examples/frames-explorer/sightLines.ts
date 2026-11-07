@@ -123,6 +123,9 @@ export function maskCheckText(
     xs.map((x) => `${x.azimuth}° (${x.elevation.toFixed(1)}°)`).join(", ");
   return {
     id: "mask-check",
+    // What it was traced for: the Checks row takes it only for its own
+    // check (fix 2: a new station's row never reads the last one's trace).
+    traced: label,
     state:
       above.length > 0 ? "blocked" : unsure.length > 0 ? "may-block" : "clear",
     mask: {
@@ -199,6 +202,7 @@ export function createSightLines(deps: {
   const { viewer } = deps;
   let views: TerrainSightView[] | undefined;
   let traced: object | undefined;
+  let tracedMask: object | undefined;
   let subscribed: object | undefined;
   let offHeights: (() => void) | undefined;
   let settle = 0;
@@ -207,8 +211,9 @@ export function createSightLines(deps: {
 
   function trace(): void {
     waitingSince = undefined;
-    const lines = deps.lines();
-    if (!lines || lines.length === 0) {
+    const lines = deps.lines() ?? [];
+    const check = deps.maskCheck?.();
+    if (lines.length === 0 && !check) {
       if (views !== undefined) {
         views = undefined;
         deps.changed();
@@ -244,12 +249,12 @@ export function createSightLines(deps: {
           }
         : v;
     });
-    const check = deps.maskCheck?.();
     if (check && !(target && globe)) {
       // Not traced: loading while the terrain globe comes, and "can't
       // tell" (never clear) where this view has none or it failed.
       views.push({
         id: "mask-check",
+        traced: check.label,
         state:
           shown === "ellipsoid" || deps.globeProblem() !== undefined
             ? "unknown"
@@ -270,9 +275,14 @@ export function createSightLines(deps: {
       });
       views.push(maskCheckText(check.label, results));
     }
-    traced = lines;
+    traced = deps.lines();
+    tracedMask = check;
     deps.changed();
   }
+
+  /** It has something to trace: lines of sight, or a mask to check. */
+  const anything = () =>
+    (deps.lines()?.length ?? 0) > 0 || deps.maskCheck?.() !== undefined;
 
   function schedule(): void {
     clearTimeout(settle);
@@ -294,12 +304,12 @@ export function createSightLines(deps: {
       offHeights?.();
       subscribed = globe;
       offHeights = globe?.onHeightsChanged(() => {
-        if (deps.lines()?.length) {
+        if (anything()) {
           schedule();
         }
       });
     }
-    if (deps.lines()?.length) {
+    if (anything()) {
       schedule();
     }
   }
@@ -309,7 +319,7 @@ export function createSightLines(deps: {
     view: () => views,
     globeChanged,
     evaluationChanged: () => {
-      if (deps.lines() !== traced) {
+      if (deps.lines() !== traced || deps.maskCheck?.() !== tracedMask) {
         schedule();
       }
     },

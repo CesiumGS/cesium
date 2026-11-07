@@ -283,6 +283,8 @@ export interface TerrainSightView {
   meters?: number;
   /** Share of the path over unknown terrain, 0 to 1. */
   unknownFraction?: number;
+  /** The check a mask view was traced for (its label): a row takes only its own. */
+  traced?: string;
   /** A mask check's counts (sightLines.ts `maskCheckText`). */
   mask?: { azimuths: number; below: number; above: number; unsure: number };
 }

@@ -156,7 +156,8 @@ export function withTerrain(
   if (!sky) {
     return answer;
   }
-  const t = terrain?.[0];
+  // The line of sight's own view: the mask's check is a Checks row.
+  const t = terrain?.find((v) => v.id !== "mask-check");
   let lead = sky.text;
   let blocked = false;
   if (sky.state === "clear" && t) {

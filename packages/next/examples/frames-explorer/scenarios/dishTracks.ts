@@ -290,6 +290,37 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     },
   };
   const path = { from: o.reference.name, to: station.name };
+  const toItrf = frameTransform(site, f.itrf, instant);
+  /** A point `length` m from the dish at `az`, `el` degrees, ITRF. */
+  const enuPoint = (az: number, el: number, length: number) => {
+    const [ra, re] = [(az * Math.PI) / 180, (el * Math.PI) / 180];
+    const d = [
+      Math.cos(re) * Math.sin(ra),
+      Math.cos(re) * Math.cos(ra),
+      Math.sin(re),
+    ];
+    return [0, 1, 2].map(
+      (i) =>
+        position[i]! +
+        length *
+          (toItrf[i]! * d[0]! +
+            toItrf[4 + i]! * d[1]! +
+            toItrf[8 + i]! * d[2]!),
+    );
+  };
+  // Our terrain against the station's published mask: the station's, not
+  // the time's, so it is checked with or without Orion's data (fix 2).
+  const stationMask = dsnMask(id);
+  const maskCheck: ScenarioEvaluation["maskCheck"] = {
+    label: `${id}'s published receive mask`,
+    source: MASK_SOURCE,
+    from: Array.from(position),
+    samples: MASK_CHECK.map((a) => ({
+      azimuth: a,
+      elevation: maskAt(stationMask, a),
+      to: enuPoint(a, maskAt(stationMask, a), SIGHT_LENGTH),
+    })),
+  };
   let checkedLight = checkedLights.get(f);
   if (checkedLight === undefined) {
     const t = Instant.fromUtc(
@@ -322,6 +353,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       },
       overlays: [],
       live: [],
+      maskCheck,
       checkedAnswerValue: checkedLight,
     };
   }
@@ -430,24 +462,6 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     }
   }
   const maskMiss = worstMask > MASK_EDGE;
-  const toItrf = frameTransform(site, f.itrf, instant);
-  /** A point `length` m from the dish at `az`, `el` degrees, ITRF. */
-  const enuPoint = (az: number, el: number, length: number) => {
-    const [ra, re] = [(az * Math.PI) / 180, (el * Math.PI) / 180];
-    const d = [
-      Math.cos(re) * Math.sin(ra),
-      Math.cos(re) * Math.cos(ra),
-      Math.sin(re),
-    ];
-    return [0, 1, 2].map(
-      (i) =>
-        position[i]! +
-        length *
-          (toItrf[i]! * d[0]! +
-            toItrf[4 + i]! * d[1]! +
-            toItrf[8 + i]! * d[2]!),
-    );
-  };
   const along = (length: number) =>
     [0, 1, 2].map(
       (i) =>
@@ -612,16 +626,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
         dsnMask(k),
       ]),
     ),
-    maskCheck: {
-      label: `${id}'s published receive mask`,
-      source: MASK_SOURCE,
-      from: position,
-      samples: MASK_CHECK.map((a) => ({
-        azimuth: a,
-        elevation: maskAt(myMask, a),
-        to: enuPoint(a, maskAt(myMask, a), SIGHT_LENGTH),
-      })),
-    },
+    maskCheck,
     legend: [
       ...(knobs.view === "orbit"
         ? []

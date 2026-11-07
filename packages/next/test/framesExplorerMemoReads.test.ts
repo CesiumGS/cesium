@@ -139,6 +139,7 @@ function view(over: Partial<ScenarioHostState> = {}): ScenarioPanelView {
     terrain: [
       {
         id: "mask-check",
+        traced: "DSS-43's published receive mask",
         state: "clear",
         text: "Our terrain against the mask",
         mask: { azimuths: 1, below: 1, above: 0, unsure: 0 },

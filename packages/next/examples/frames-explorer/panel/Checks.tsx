@@ -26,12 +26,18 @@ import {
   type PageCheck,
 } from "../scenarios/checks.ts";
 import type { StressResult } from "../tests.ts";
-import { formatDelta } from "./answerText.ts";
-import { length, quantity } from "./format.ts";
+import { quantity } from "./format.ts";
 import { webLink } from "./Inspector.tsx";
 import type { ResultExtras } from "./model.ts";
 import { AccuracyText } from "./parts.tsx";
-import { KIND_TEXT, checkRowText, type CheckRowText } from "./checkText.ts";
+import {
+  KIND_TEXT,
+  ROW_COPY,
+  checkRowText,
+  movesText,
+  pageAccuracyText,
+  type CheckRowText,
+} from "./checkText.ts";
 
 /** A kind's tag: its short name (the legend's full one) on its colour. */
 export function KindTag({
@@ -87,11 +93,7 @@ function PageDetails({ check }: { check: PageCheck }) {
   return (
     <dl className="fx-check-details">
       <Detail label="Compared">{check.text}</Detail>
-      <Detail label="Accuracy">
-        {check.meters !== undefined
-          ? `our terrain ±${length(check.meters)} at the levels crossed; terrain not drawn is never taken as clear`
-          : "terrain not drawn is never taken as clear"}
-      </Detail>
+      <Detail label="Accuracy">{pageAccuracyText(check.meters)}</Detail>
       <Detail label="Reference">
         {check.source.document}
         {check.source.publisher && `, ${check.source.publisher}`}
@@ -144,7 +146,7 @@ function ResultDetails({
             {result.tolerance !== undefined && (
               <>
                 {" "}
-                against a tolerance of{" "}
+                {ROW_COPY.tolerance}{" "}
                 <span className="fx-num">
                   {quantity(result.tolerance, result.unit, 2)}
                 </span>
@@ -184,17 +186,12 @@ function ResultDetails({
             )}
           </Detail>
         )}
-        {live && (
-          <Detail label="Reference">
-            None at your setting: a live re-run checks the frames&rsquo; own
-            consistency (round trips, routes through the tree).
-          </Detail>
-        )}
+        {live && <Detail label="Reference">{ROW_COPY.liveReference}</Detail>}
         <Detail label="Accuracy">
           {result.accuracy ? (
             <AccuracyText accuracy={result.accuracy} compact />
           ) : (
-            (result.accuracyNote ?? "not stated")
+            (result.accuracyNote ?? ROW_COPY.accuracyNotStated)
           )}
         </Detail>
       </dl>
@@ -205,7 +202,7 @@ function ResultDetails({
           className="fx-check-open"
           onClick={onOpen}
         >
-          Open in Verification
+          {ROW_COPY.open}
         </Link>
       )}
     </>
@@ -301,16 +298,13 @@ export const CheckItem = memo(
               />
             ) : t.tone === "stale" ? (
               <Typography variant="body-sm" render={<p />}>
-                Re-running at your setting: its verdict shows here when
-                it&rsquo;s in, and nothing is claimed until then.
+                {ROW_COPY.stale}
               </Typography>
             ) : row.status === "reference-only" ? (
               <>
                 <Typography variant="body-sm" render={<p />}>
-                  Its reference applies at the checked setup, not at yours, so
-                  it isn&rsquo;t judged here.
-                  {row.delta &&
-                    ` Your setting moves the answer by ${formatDelta(row.delta.value, row.delta.unit)}.`}
+                  {ROW_COPY.referenceOnly}
+                  {row.delta && ` ${movesText(row.delta)}`}
                 </Typography>
                 <Link
                   component="button"
@@ -318,14 +312,12 @@ export const CheckItem = memo(
                   className="fx-check-open"
                   onClick={onBack}
                 >
-                  Back to the checked setup
+                  {ROW_COPY.back}
                 </Link>
               </>
             ) : (
               <Typography variant="body-sm" render={<p />}>
-                {atChecked
-                  ? "The catalog's check runs in the worker; its verdict shows here when it's in."
-                  : "Re-running at your setting; nothing is claimed until it's in."}
+                {atChecked ? ROW_COPY.pendingAtChecked : ROW_COPY.pendingOff}
               </Typography>
             ))}
         </div>

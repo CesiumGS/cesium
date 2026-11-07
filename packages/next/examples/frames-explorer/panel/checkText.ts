@@ -6,7 +6,7 @@
 import type { CheckKind, CheckRow } from "../scenarios/checks.ts";
 import type { StressResult } from "../tests.ts";
 import { formatAnswer, formatDelta } from "./answerText.ts";
-import { quantity } from "./format.ts";
+import { length, quantity } from "./format.ts";
 import type { ResultExtras } from "./model.ts";
 
 /** A row's name: its short label, else its title (QuestionCard's `rowName`). */
@@ -239,6 +239,48 @@ function rowText(
 }
 
 /**
+ * The fixed words a row's details can show (Checks.tsx renders them from
+ * here, so `checkRowStrings` reads them too: fix 2).
+ */
+export const ROW_COPY = {
+  liveReference:
+    "None at your setting: a live re-run checks the frames\u2019 own consistency (round trips, routes through the tree).",
+  stale:
+    "Re-running at your setting: its verdict shows here when it\u2019s in, and nothing is claimed until then.",
+  referenceOnly:
+    "Its reference applies at the checked setup, not at yours, so it isn\u2019t judged here.",
+  back: "Back to the checked setup",
+  open: "Open in Verification",
+  pendingAtChecked:
+    "The catalog's check runs in the worker; its verdict shows here when it's in.",
+  pendingOff: "Re-running at your setting; nothing is claimed until it's in.",
+  accuracyNotStated: "not stated",
+  tolerance: "against a tolerance of",
+} as const;
+
+/** The details' labels (Checks.tsx `Detail`). */
+export const DETAIL_LABELS = [
+  "Difference",
+  "Value",
+  "Computed",
+  "Detail",
+  "Compared against",
+  "Compared",
+  "Reference",
+  "Accuracy",
+] as const;
+
+/** The reference-only row's sentence on how far the setting moves the answer. */
+export const movesText = (delta: { value: number; unit: string }): string =>
+  `Your setting moves the answer by ${formatDelta(delta.value, delta.unit)}.`;
+
+/** A page check's accuracy, in its details. */
+export const pageAccuracyText = (meters: number | undefined): string =>
+  meters !== undefined
+    ? `our terrain \u00b1${length(meters)} at the levels crossed; terrain not drawn is never taken as clear`
+    : "terrain not drawn is never taken as clear";
+
+/**
  * Every string a check row can render, collapsed or expanded (Checks.tsx
  * `CheckItem` and its details): its head, its note, the page check's
  * comparison and citation, and its result's title, detail, accuracy (note,
@@ -250,13 +292,23 @@ export function checkRowStrings(
   t: CheckRowText,
   extras: ResultExtras | undefined,
 ): string[] {
-  const out: (string | undefined)[] = [t.title, t.status, t.summary];
+  const out: (string | undefined)[] = [
+    t.title,
+    t.status,
+    t.summary,
+    // The fixed words of every branch of its details.
+    ...Object.values(ROW_COPY),
+    ...DETAIL_LABELS,
+  ];
+  if (row.status === "reference-only" && row.delta) {
+    out.push(movesText(row.delta));
+  }
   if (row.status === "checked") {
     out.push(row.note);
   }
   if (row.status === "page") {
     const c = row.check;
-    out.push(c.title, c.summary, c.text);
+    out.push(c.title, c.summary, c.text, pageAccuracyText(c.meters));
     out.push(c.source.document, c.source.publisher, c.source.locator);
   }
   if (row.status === "pending" || row.status === "reference-only") {

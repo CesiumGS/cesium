@@ -477,6 +477,19 @@ describe("one-path's frame choice (fix 1: the owner's reports)", () => {
     expect(e.answer.headline).toMatch(/^No Orion data at this time/);
     expect(e.answer.value).toBeUndefined();
   }, 60_000);
+
+  it("keeps the dish's mask check without Orion's data: the mask is the station's (Task 6c fix 2)", async () => {
+    const s = spec("dish-tracks");
+    const e = await client.scenario(
+      s.id,
+      { ...s.checked.knobs, station: "DSS-63" },
+      checkedTdb(s.id) + 30 * 86_400,
+    );
+    expect(e.answer.headline).toMatch(/^No Orion data at this time/);
+    expect(e.maskCheck?.label).toBe("DSS-63's published receive mask");
+    expect(e.maskCheck?.samples).toHaveLength(8);
+    expect(e.maskCheck?.source.document).toMatch(/810-005/);
+  }, 60_000);
 });
 
 describe("Orion's dot, placed on the page's own thread, on the worker's drawn path (Task 4c)", () => {
