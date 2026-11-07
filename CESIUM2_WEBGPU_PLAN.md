@@ -6850,6 +6850,14 @@ asset 2: no access token`, on every example.
   every term (a trajectory's `positionSigma` as its frame's accuracy, the
   Moon's relativity term on its edge), and check the catalog's numbers move
   only where the bound tightens.
+  (Task 7b's brief had `accuracyOf` move into `pointAccuracy`; deferred by
+  ruling in its fix round 1. Already on `pointAccuracy`: earth-turns' answer
+  and the frames explorer's walk wherever the route crosses an app-defined
+  frame. Still on `accuracyOf`: walks over built-in frames only, and over
+  local frames that state no accuracy, Sacramento's, the lunar site's, the
+  DSN dishes', the drone's and the ship's. Moving those needs a stated
+  rotation axis in `FrameAccuracy` (UT1's lever is the distance from the
+  spin axis) and frames that carry the terms on no edge.)
 
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`

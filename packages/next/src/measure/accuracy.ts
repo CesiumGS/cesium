@@ -1,5 +1,5 @@
 import { Frame } from "../frames/Frame.ts";
-import type { Frames } from "../frames/frames.ts";
+import { DE440_EARTH_MOON_METERS, type Frames } from "../frames/frames.ts";
 import { convertPoint, type FramePoint } from "../frames/local.ts";
 import type { Instant } from "../time/Instant.ts";
 import { Trajectory } from "../trajectory/Trajectory.ts";
@@ -53,8 +53,6 @@ export interface AccuracyStatement {
   warningCodes?: WarningCode[];
 }
 
-/** DE440's Earth-Moon fit to lunar laser ranging, m (Park et al. 2021). */
-const EPHEMERIS_M = 0.01;
 /** A trajectory's TDB-versus-TT ambiguity (its `coordinateScale` is "unknown"), as a fraction of the geocentric distance (R7). */
 const COORDINATE_SCALE = 2.5e-8;
 /** The selenocentric relativistic terms left unapplied at the lunar surface, m (R2). */
@@ -176,7 +174,7 @@ export function accuracyOf(
     if (inEarthMoon(a.frame) && inEarthMoon(b.frame)) {
       terms.push({
         source: "ephemeris",
-        meters: EPHEMERIS_M,
+        meters: DE440_EARTH_MOON_METERS,
         note: "DE440 Earth-Moon fit to lunar laser ranging (Park et al. 2021)",
       });
     } else {

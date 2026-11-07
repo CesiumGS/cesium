@@ -4,6 +4,10 @@
 import { describe, expect, it } from "vitest";
 import { Frame } from "../src/frames/Frame.ts";
 import { NOT_STATED } from "../src/frames/frameAccuracy.ts";
+import {
+  BUILT_IN_ACCURACY,
+  DE440_EARTH_MOON_METERS,
+} from "../src/frames/frames.ts";
 import { eastNorthUpFrame, framePoint } from "../src/frames/local.ts";
 import { dominantTerm, pointAccuracy } from "../src/frames/pointAccuracy.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
@@ -66,6 +70,29 @@ describe("Frame's accuracy option", () => {
       accuracy: () => ({ meters: Number.POSITIVE_INFINITY, note: "" }),
     });
     expect(() => late.accuracy(instant)).toThrow(/"Late"/);
+  });
+
+  it("hands out frozen accuracies, never the caller's object or a shared mutable one", () => {
+    const root = Frame.root("R");
+    const given = { meters: 0.002, note: "survey" };
+    const f = Frame.constant("A", root, shift([1, 0, 0]), { accuracy: given });
+    const a = f.accuracy(instant);
+    expect(Object.isFrozen(a)).toBe(true);
+    expect(Object.isFrozen(given)).toBe(false);
+    expect(() => {
+      (a as { meters?: number }).meters = 1;
+    }).toThrow(TypeError);
+    expect(Object.isFrozen(NOT_STATED)).toBe(true);
+    expect(Object.isFrozen(BUILT_IN_ACCURACY)).toBe(true);
+    for (const v of Object.values(BUILT_IN_ACCURACY)) {
+      expect(Object.isFrozen(v)).toBe(true);
+    }
+    // DE440's 0.01 m, defined once.
+    expect(BUILT_IN_ACCURACY.GCRF.meters).toBe(DE440_EARTH_MOON_METERS);
+    const g = new Frame("B", root, () => {}, {
+      accuracy: () => ({ radians: 1e-9, note: "fn" }),
+    });
+    expect(Object.isFrozen(g.accuracy(instant))).toBe(true);
   });
 
   it("passes through eastNorthUpFrame", () => {
@@ -134,7 +161,8 @@ describe("pointAccuracy", () => {
     });
     // A point at the root's origin is 3 m from A's.
     const r = pointAccuracy(framePoint(root, [0, 0, 0], instant), a);
-    expect(r.terms[0]!.lever).toBeCloseTo(3, 12);
+    const t = r.terms[0]!;
+    expect(t.kind === "angular" ? t.lever : NaN).toBeCloseTo(3, 12);
     expect(r.meters).toBeCloseTo(3e-3, 15);
   });
 
@@ -148,10 +176,10 @@ describe("pointAccuracy", () => {
     const r = pointAccuracy(framePoint(c, [0, 0, 0], instant), root);
     expect(r.meters).toBeUndefined();
     expect(r.unboundedBy).toBe("C");
-    expect(r.terms.map((t) => [t.frame, t.meters])).toEqual([
-      ["C", undefined],
-      ["B", undefined],
-      ["A", 0.01],
+    expect(r.terms.map((t) => [t.frame, t.kind, t.meters])).toEqual([
+      ["C", "unstated", undefined],
+      ["B", "unstated", undefined],
+      ["A", "meters", 0.01],
     ]);
   });
 

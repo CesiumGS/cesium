@@ -8,25 +8,44 @@ import type { Frame } from "./Frame.ts";
 import { isUnstated } from "./frameAccuracy.ts";
 import { convertPoint, framePoint, type FramePoint } from "./local.ts";
 
-/** One edge's part of a point's accuracy. */
-export interface PointAccuracyTerm {
-  /** The frame whose edge (to its parent) it comes from. */
-  readonly frame: string;
-  /**
-   * What it is: the edge's position error (`meters`), its rotation error
-   * scaled by the lever arm (`angular`), or nothing to add (`exact`, by
-   * definition).
-   */
-  readonly kind: "meters" | "angular" | "exact";
-  /** 1σ, m: what it moves the point by; `undefined` when not stated. */
-  readonly meters: number | undefined;
-  /** For an angular term: the rotation error, rad (1σ). */
-  readonly radians?: number;
-  /** For an angular term: the point's distance from the frame's origin, m. */
-  readonly lever?: number;
-  /** The edge's own note. */
-  readonly note: string;
-}
+/**
+ * One edge's part of a point's accuracy: what the edge states, as a
+ * distance at the point (1σ, m).
+ *
+ * - `meters`: the edge's position error, as it is.
+ * - `angular`: its rotation error times the lever arm, the point's distance
+ *   from that frame's origin.
+ * - `exact`: exact by definition, 0 m.
+ * - `unstated`: the edge states no accuracy, so the total is unbounded;
+ *   it has no `meters`.
+ */
+export type PointAccuracyTerm =
+  | {
+      /** The frame whose edge (to its parent) it comes from. */
+      readonly frame: string;
+      readonly kind: "meters" | "exact";
+      /** 1σ, m: what it moves the point by (0 for an exact edge). */
+      readonly meters: number;
+      /** The edge's own note. */
+      readonly note: string;
+    }
+  | {
+      readonly frame: string;
+      readonly kind: "angular";
+      readonly meters: number;
+      /** The rotation error, rad (1σ). */
+      readonly radians: number;
+      /** The point's distance from the frame's origin, m. */
+      readonly lever: number;
+      readonly note: string;
+    }
+  | {
+      readonly frame: string;
+      readonly kind: "unstated";
+      /** Not stated: why, in the edge's note. */
+      readonly meters?: undefined;
+      readonly note: string;
+    };
 
 /** What a point's position in another frame can claim (1σ). */
 export interface PointAccuracy {
@@ -83,8 +102,9 @@ function routeEdges(from: Frame, to: Frame): Frame[] {
  *   from that origin (an upper bound; the accuracy names no axis).
  * - An edge exact by definition adds nothing, and says so.
  * - The terms combine as a root sum square: they are taken as independent.
- * - An edge whose accuracy is not stated makes the total unbounded
- *   (`meters` undefined) and is named in `unboundedBy`; it is never dropped.
+ * - An edge whose accuracy is not stated gives an `unstated` term, makes
+ *   the total unbounded (`meters` undefined) and is named in `unboundedBy`;
+ *   it is never dropped.
  *
  * The instant defaults to the point's own (as `convertPoint`). Positions
  * only; correlations, confidence levels and error ellipsoids are not
@@ -112,7 +132,7 @@ export function pointAccuracy(
       continue;
     }
     if (isUnstated(a)) {
-      terms.push({ frame, kind: "meters", meters: undefined, note: a.note });
+      terms.push({ frame, kind: "unstated", note: a.note });
       unboundedBy ??= frame;
       continue;
     }
@@ -135,7 +155,7 @@ export function pointAccuracy(
   return {
     meters:
       unboundedBy === undefined
-        ? Math.hypot(...terms.map((t) => t.meters!))
+        ? Math.hypot(...terms.map((t) => t.meters ?? NaN))
         : undefined,
     terms,
     ...(unboundedBy !== undefined && { unboundedBy }),
@@ -149,8 +169,8 @@ export function dominantTerm(
 ): PointAccuracyTerm | undefined {
   let best: PointAccuracyTerm | undefined;
   for (const t of a.terms) {
-    if (t.meters !== undefined && t.meters > 0) {
-      if (best === undefined || t.meters > best.meters!) {
+    if (t.kind !== "unstated" && t.meters > 0) {
+      if (best === undefined || t.meters > (best.meters ?? 0)) {
         best = t;
       }
     }

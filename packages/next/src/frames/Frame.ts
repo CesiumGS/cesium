@@ -22,7 +22,8 @@ export interface FrameOptions {
    * Left out, the accuracy is not stated, and `pointAccuracy` across the
    * edge is unbounded, naming it.
    */
-  accuracy?: FrameAccuracy | ((instant: Instant) => FrameAccuracy);
+  accuracy?:
+    Readonly<FrameAccuracy> | ((instant: Instant) => Readonly<FrameAccuracy>);
 }
 
 /**
@@ -68,10 +69,10 @@ export class Frame<N extends string = string> {
 
   /**
    * The edge's stated accuracy at `instant` (1σ): as given to the
-   * constructor, or not stated. A function's answer is checked as a fixed
-   * one is.
+   * constructor, or not stated; frozen. A function's answer is checked as a
+   * fixed one is.
    */
-  accuracy(instant: Instant): FrameAccuracy {
+  accuracy(instant: Instant): Readonly<FrameAccuracy> {
     const a = this.stated;
     return typeof a === "function" ? checkedAccuracy(this.name, a(instant)) : a;
   }

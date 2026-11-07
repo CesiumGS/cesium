@@ -28,22 +28,23 @@ export interface FrameAccuracy {
 }
 
 /** A frame built without an accuracy: not stated. */
-export const NOT_STATED: FrameAccuracy = {
+export const NOT_STATED: Readonly<FrameAccuracy> = Object.freeze({
   note: "not stated: the frame was built without an accuracy",
-};
+});
 
 /** Whether `a` states no size at all (not stated, not known). */
 export const isUnstated = (a: FrameAccuracy): boolean =>
   a.byDefinition !== true && a.meters === undefined && a.radians === undefined;
 
 /**
- * `a` checked: each figure finite and positive, and `byDefinition` alone.
+ * `a` checked, as a frozen copy (a shared accuracy can't be changed by a
+ * reader): each figure finite and positive, and `byDefinition` alone.
  * Throws a `RangeError` naming `frame` otherwise.
  */
 export function checkedAccuracy(
   frame: string,
-  a: FrameAccuracy,
-): FrameAccuracy {
+  a: Readonly<FrameAccuracy>,
+): Readonly<FrameAccuracy> {
   for (const key of ["meters", "radians"] as const) {
     const v = a[key];
     if (v !== undefined && !(Number.isFinite(v) && v > 0)) {
@@ -60,5 +61,5 @@ export function checkedAccuracy(
       `Frame "${frame}": an accuracy that is exact by definition states no meters or radians`,
     );
   }
-  return a;
+  return Object.isFrozen(a) ? a : Object.freeze({ ...a });
 }
