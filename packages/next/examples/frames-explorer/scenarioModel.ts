@@ -103,6 +103,8 @@ export interface ScenarioViewInput {
   eop?: ClockView["eop"];
   /** The scene's note, while its scene is on the globe. */
   sceneNote?: string;
+  /** Its lines of sight over the terrain (sightLines.ts). */
+  terrain?: ScenarioPanelView["terrain"];
   scrub(text: string): string;
 }
 
@@ -164,9 +166,13 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     title: spec.title,
     question: spec.question,
     checkedBy: spec.checkedBy ?? "published references",
-    ...(SCENES[spec.id]?.drawIn !== undefined && {
-      drawIn: SCENES[spec.id]!.drawIn!,
-    }),
+    ...(() => {
+      // A scene's drawn-in frame, at the knobs (the dish's station).
+      const d = SCENES[spec.id]?.drawIn;
+      return d === undefined
+        ? {}
+        : { drawIn: typeof d === "function" ? d(st.knobs) : d };
+    })(),
     strip: READY.map((id) => {
       const s = SCENARIOS.find((x) => x.id === id)!;
       return { id, title: s.title, question: s.question };
@@ -195,6 +201,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     proof,
     liveExtras,
     ...(input.sceneNote !== undefined && { note: input.sceneNote }),
+    ...(input.terrain !== undefined && { terrain: input.terrain }),
     focus: SCENES[spec.id]?.focus ?? [],
     ...(() => {
       const c = SCENES[spec.id]?.treeControl;

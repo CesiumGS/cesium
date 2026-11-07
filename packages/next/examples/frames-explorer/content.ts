@@ -59,6 +59,10 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "axes-and-the-antimeridian.antimeridian.zone-1": "UTM 1N at ±179.999°",
   "space.dss43-orion.light-time": "DSS-43 light time to Orion",
   "space.dss43-orion.doppler": "DSS-43 Doppler from Orion",
+  "space.moon-from-sacramento.direction":
+    "The Moon's direction from Sacramento",
+  "space.moon-from-sacramento.range": "The Moon's range from Sacramento",
+  "space.moon-from-sacramento.horizon": "The Moon's azimuth and elevation",
   "space.effects.earth-orientation": "Earth orientation at the flyby",
   "operation-candidates.ed50-north-sea.candidates":
     "ED50 candidates, North Sea",
@@ -122,6 +126,19 @@ const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
     text: "The same distance measured from the design point fixed in ITRF first.",
   },
 
+  // The Moon from Sacramento against JPL Horizons, not plan 3's SPICE fixture (Task 6b).
+  "space.moon-from-sacramento.direction": {
+    kind: "published",
+    text: "JPL Horizons' astrometric R.A. and DEC (ICRF, light time) of the Moon from the same site: within 0.01″.",
+  },
+  "space.moon-from-sacramento.range": {
+    kind: "published",
+    text: "JPL Horizons' delta, the light-time range, from the same site: within 1 m.",
+  },
+  "space.moon-from-sacramento.horizon": {
+    kind: "published",
+    text: "Shown, not judged: JPL Horizons' airless apparent azimuth and elevation, whose horizon turns with the pole of date.",
+  },
   "trajectory.moon-me.distance": {
     kind: "independent",
     text: "Orion's distance from the Moon's centre before the conversion to MOON_ME: a rotation about the centre keeps it.",

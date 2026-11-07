@@ -1,6 +1,11 @@
 // Space: DSS-43 and Orion against plan 3's SPICE fixture, and effect sizes.
-import { frameTransform } from "../../../../src/frames/Frame.ts";
-import { convertPoint, framePoint } from "../../../../src/frames/local.ts";
+import { type Frame, frameTransform } from "../../../../src/frames/Frame.ts";
+import {
+  convertPoint,
+  eastNorthUpFrame,
+  framePoint,
+} from "../../../../src/frames/local.ts";
+import { Ellipsoid, fromDegrees } from "../../../../src/math/ellipsoid.ts";
 import { measure } from "../../../../src/measure/measure.ts";
 import { Instant } from "../../../../src/time/Instant.ts";
 import signalFixture from "../../../../test/fixtures/frames/signal.json";
@@ -398,8 +403,170 @@ const spaceEffectsCase = stressCase(
   },
 );
 
+/** Horizons' observer row for the Moon from a Sacramento site (Task 6b), as references.json copies it. */
+interface HorizonsMoon {
+  site: { longitude: string; latitude: string; heightKm: string };
+  time: string;
+  raIcrf: string;
+  decIcrf: string;
+  azimuth: string;
+  elevation: string;
+  deltaAu: string;
+  au: string;
+}
+
+/** Horizons' astrometric direction against ours, ″: 10 mas, about 19 m at the Moon's distance. */
+export const MOON_DIRECTION = 0.01;
+
+/** Horizons' light-time range against ours, m. */
+export const MOON_RANGE = 1;
+
+/** A unit vector at right ascension `ra` and declination `dec`, degrees. */
+const unitRaDec = (ra: number, dec: number): number[] => [
+  Math.cos(dec * DEGREE) * Math.cos(ra * DEGREE),
+  Math.cos(dec * DEGREE) * Math.sin(ra * DEGREE),
+  Math.sin(dec * DEGREE),
+];
+
+/** An east-north-up unit vector at azimuth `az` (clockwise from north) and elevation `el`, degrees. */
+const unitAzEl = (az: number, el: number): number[] => [
+  Math.cos(el * DEGREE) * Math.sin(az * DEGREE),
+  Math.cos(el * DEGREE) * Math.cos(az * DEGREE),
+  Math.sin(el * DEGREE),
+];
+
+const moonFromSacramentoCase = stressCase(
+  "space.moon-from-sacramento",
+  "space",
+  "The Moon from a Sacramento site against JPL Horizons' observer table: the astrometric direction (ICRF, light time) within 0.01″, the light-time range within 1 m, and the airless apparent azimuth and elevation (display only: Horizons turns its horizon with the pole of date)",
+  ["frames"],
+  async (ctx, base) => {
+    const h = cited<HorizonsMoon>("jpl-horizons-moon-sacramento");
+    const f = ctx.frames;
+    const t = Instant.fromIso(
+      h.time.replace(/Z$/, ""),
+      "UTC",
+      f.data.leapSeconds,
+    );
+    const lon = printed(h.site.longitude).value;
+    const lat = printed(h.site.latitude).value;
+    const position = Ellipsoid.WGS84.cartographicToCartesian(
+      fromDegrees(lon, lat, printed(h.site.heightKm).value * 1000),
+      new Float64Array(3),
+    );
+    const site = eastNorthUpFrame(
+      "Horizons site",
+      f.itrf,
+      Ellipsoid.WGS84,
+      position,
+    );
+    const auKm = printed(h.au.split("=")[1]!.replace("km", "")).value;
+    // Ours: Horizons' light time is Newtonian, as plan 3's SPICE checks, so
+    // the light time leaves out the Shapiro delay (shown in the detail).
+    const m = measure(
+      framePoint(site, [0, 0, 0]),
+      framePoint(f.moonIcrf, [0, 0, 0]),
+      t,
+      f,
+      { shapiro: [] },
+    );
+    const withShapiro = measure(
+      framePoint(site, [0, 0, 0]),
+      framePoint(f.moonIcrf, [0, 0, 0]),
+      t,
+      f,
+    );
+    const leg = m.signal!.downlink;
+    // The astrometric direction: the Moon's centre at emission from the
+    // site at reception, ICRF axes (barycentric positions).
+    const at = (frame: Frame, tdb: number) =>
+      frameTransform(frame, f.icrf, Instant.fromTdb(tdb)).subarray(12, 15);
+    const astrometric = sub3(
+      at(f.moonIcrf, t.tdb() - leg.lightTime),
+      at(site, t.tdb()),
+    );
+    const direction =
+      angle3(
+        astrometric,
+        unitRaDec(printed(h.raIcrf).value, printed(h.decIcrf).value),
+      ) / ARCSECOND;
+    const delta = printed(h.deltaAu).value * auKm * 1000;
+    // The apparent direction in the site's axes, against Horizons' airless
+    // azimuth and elevation; and again with polar motion left out of our
+    // horizon, as Horizons' (its horizon turns with the pole of date).
+    const apparent = leg.receiverDirection;
+    const theirs = unitAzEl(
+      printed(h.azimuth).value,
+      printed(h.elevation).value,
+    );
+    const eop = f.data.eop.atInstant(t, f.data.leapSeconds);
+    const toSite = frameTransform(f.itrf, site, t);
+    // Polar motion takes ITRF's z axis to the pole of date, (x, −y, 1): a
+    // small rotation (y, x, 0) about ITRF's axes; in the site's axes:
+    const pm = [0, 1, 2].map(
+      (i) => toSite[i]! * eop.yp + toSite[4 + i]! * eop.xp,
+    );
+    const turned = sub3(apparent, cross3(pm, apparent));
+    const az = (v: ArrayLike<number>) =>
+      ((Math.atan2(v[0]!, v[1]!) / DEGREE + 360) % 360).toFixed(9);
+    const el = (v: ArrayLike<number>) =>
+      (Math.asin(v[2]! / norm(v)) / DEGREE).toFixed(9);
+    const source = citation("jpl-horizons-moon-sacramento");
+    return [
+      {
+        ...base,
+        id: `${base.id}.direction`,
+        source,
+        title:
+          "The Moon's astrometric direction from a Sacramento site (ICRF, corrected for the light time) against JPL Horizons' R.A. and DEC (ICRF), within 0.01″",
+        pass: true,
+        value: direction,
+        tolerance: MOON_DIRECTION,
+        unit: "″",
+        detail: `Horizons R.A. ${h.raIcrf}°, DEC ${h.decIcrf}°; ours ${fmt(direction * 1000, 3)} mas from it, ${fmt(direction * ARCSECOND * delta, 3)} m at the Moon`,
+        instant: t.tdb(),
+      },
+      {
+        ...base,
+        id: `${base.id}.range`,
+        source,
+        title:
+          "The Moon's light-time range from a Sacramento site against JPL Horizons' delta, within 1 m (Newtonian light time on both sides)",
+        pass: true,
+        value: leg.range - delta,
+        tolerance: MOON_RANGE,
+        unit: "m",
+        detail: `Horizons ${h.deltaAu} au = ${fmt(delta / 1000, 13)} km; ours ${fmt(leg.range / 1000, 13)} km (c·τ, τ ${fmt(leg.lightTime, 10)} s); the Shapiro delay adds ${fmt(withShapiro.signal!.downlink.range - leg.range, 3)} m, left out of both`,
+        effect: {
+          value: leg.range / 1000,
+          unit: "km",
+          label: "the Moon's light-time range from Sacramento",
+        },
+        instant: t.tdb(),
+      },
+      {
+        ...base,
+        id: `${base.id}.horizon`,
+        source,
+        title:
+          "The Moon's airless apparent azimuth and elevation from a Sacramento site against JPL Horizons' (display only: Horizons' horizon turns with the pole of date)",
+        pass: true,
+        displayOnly: true,
+        detail: `Horizons azimuth ${h.azimuth}°, elevation ${h.elevation}°; ours ${az(apparent)}°, ${el(apparent)}°, ${fmt(angle3(apparent, theirs) / ARCSECOND, 3)}″ apart. With polar motion (x ${fmt(eop.xp / ARCSECOND, 4)}″, y ${fmt(eop.yp / ARCSECOND, 4)}″, the EOP table's) taken out of our horizon, ${fmt(angle3(turned, theirs) / ARCSECOND, 3)}″ apart; the rest is a turn about the polar axis that this check doesn't account for. Our light time and aberration match plan 3's SPICE fixture (space.dss43-orion)`,
+        effect: {
+          value: angle3(apparent, theirs) / ARCSECOND,
+          unit: "″",
+          label: "our apparent azimuth and elevation against Horizons'",
+        },
+        instant: t.tdb(),
+      },
+    ];
+  },
+);
+
 export const spaceCases: readonly StressCase[] = [
   signalCase,
   lineOfSightCase,
   spaceEffectsCase,
+  moonFromSacramentoCase,
 ];

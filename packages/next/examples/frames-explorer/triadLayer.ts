@@ -13,7 +13,10 @@ import type { KnobState } from "./scenarios/spec.ts";
 import { pathToRoot, type TreeNode } from "./tree.ts";
 
 /** The labels each part has on the globe, shown with the triads' (the sag, the convergence, contour values). */
-export type LabelBoard = Map<OverlayId | "callouts" | "walk", LabelSpec[]>;
+export type LabelBoard = Map<
+  OverlayId | "callouts" | "walk" | "sky",
+  LabelSpec[]
+>;
 
 export interface TriadLayer {
   /** The triads and every label, again. */

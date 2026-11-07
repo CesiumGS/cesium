@@ -93,14 +93,23 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     title: "Where's the Moon from here?",
     question: "Where is it in the sky, and how far?",
     knobs: [],
-    // frame-tree.compositions.itrf-moon-icrf samples ITRF and MOON_ICRF (the
-    // path from a California site to the Moon, through ICRF) at five
-    // instants; at this one, the June solstice, the Moon is 18° above
-    // Sacramento's horizon.
+    // JPL Horizons' observer table for the Moon from Sacramento's site
+    // (references.json jpl-horizons-moon-sacramento, Task 6b) at the June
+    // solstice, 06:00 UTC, the Moon 18.65° above the horizon: the
+    // astrometric direction and the light-time range against ours. And
+    // frame-tree.compositions.itrf-moon-icrf, which samples ITRF and
+    // MOON_ICRF (the path from the site to the Moon, through ICRF) at five
+    // instants, this one among them. (Horizons' azimuth and elevation are
+    // shown, not judged: space.moon-from-sacramento.horizon.)
     checked: { epochUtc: "2026-06-21T06:00:00Z", knobs: {} },
-    needs: [],
-    globe: "ellipsoid",
-    proof: ["frame-tree.compositions.itrf-moon-icrf"],
+    needs: ["terrain"],
+    // Task 6b: the terrain globe, for the local horizon's line of sight.
+    globe: "terrain",
+    proof: [
+      "space.moon-from-sacramento.range",
+      "space.moon-from-sacramento.direction",
+      "frame-tree.compositions.itrf-moon-icrf",
+    ],
   },
   {
     id: "stand-on-moon",
@@ -129,7 +138,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
   },
   {
     id: "dish-tracks",
-    title: "A dish tracks a spacecraft",
+    title: "A dish tracks Orion",
     question:
       "Where do I point, how long does the signal take, and can I see it?",
     knobs: [
@@ -147,8 +156,10 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // space.dss43-orion.*: DSS-43's light time and Doppler against plan 3's
     // SPICE fixture, at signal.json's rows; this is one of them.
     checked: { epochUtc: SIGNAL_ROW, knobs: { station: "DSS-43" } },
-    needs: ["orion"],
-    globe: "ellipsoid",
+    // The stations come from the store's NAIF station SPK (the worker loads
+    // it with the scenario); terrain is the page's, for the local horizon.
+    needs: ["orion", "terrain"],
+    globe: "terrain",
     proof: ["space.dss43-orion.light-time", "space.dss43-orion.doppler"],
   },
   {

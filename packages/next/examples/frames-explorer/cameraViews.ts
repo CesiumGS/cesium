@@ -32,7 +32,13 @@ import {
   type PageCore,
 } from "./page.ts";
 import type { RigidBuilt } from "./rigidOverlay.ts";
-import { LUNAR_SITE, SITE_GRIDS, type SceneSpec } from "./scenarios/scenes.ts";
+import {
+  DSN_STATIONS,
+  LUNAR_SITE,
+  SITE_GRIDS,
+  type SceneSpec,
+} from "./scenarios/scenes.ts";
+import type { KnobState } from "./scenarios/spec.ts";
 import { offsetPlace } from "./scenarios/sites.ts";
 
 /** A surface view at `lon`, `lat` (degrees), `range` (m), `heading` (degrees) and `pitch` (radians). */
@@ -91,7 +97,7 @@ export interface CameraViews {
   lunarSiteView(): CameraView | undefined;
   earthMoonView(): CameraView | undefined;
   frameView(id: string): CameraView | undefined;
-  sceneView(sc: SceneSpec): CameraView | undefined;
+  sceneView(sc: SceneSpec, knobs: KnobState): CameraView | undefined;
   /** The lunar site's origin in ITRF now, if the scene has the site. */
   lunarSiteOrigin(): Float64Array | undefined;
   dispose(): void;
@@ -368,6 +374,18 @@ export function createCameraViews(deps: {
     if (id === "Sacramento ENU") {
       return { framing: framingAt(-121.4944, 38.5816, 8000, 0, -45 * deg) };
     }
+    const station = Object.values(DSN_STATIONS).find((s) => s.name === id);
+    if (station) {
+      return {
+        framing: framingAt(
+          station.longitude,
+          station.latitude,
+          8000,
+          0,
+          -45 * deg,
+        ),
+      };
+    }
     if (id.startsWith("engineering:")) {
       const f = framing("designGrid");
       return f && { framing: f };
@@ -384,8 +402,24 @@ export function createCameraViews(deps: {
   }
 
   /** A scenario's view: its framing and the orbit it names (scenes.ts). */
-  function sceneView(sc: SceneSpec): CameraView | undefined {
+  function sceneView(sc: SceneSpec, knobs: KnobState): CameraView | undefined {
     switch (sc.camera) {
+      case "site": {
+        // On the ground at the scene's site (the dish, Sacramento).
+        const l = sc.look?.(knobs);
+        return (
+          l &&
+          surface(
+            framingAt(
+              l.longitude,
+              l.latitude,
+              l.range,
+              l.heading,
+              l.pitch * deg,
+            ),
+          )
+        );
+      }
       case "earthMoon":
         return earthMoonView();
       case "lunarSite":

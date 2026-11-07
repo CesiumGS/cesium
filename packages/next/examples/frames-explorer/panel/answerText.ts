@@ -13,6 +13,8 @@ const DIGITS: Readonly<Record<string, number>> = {
   // The BIM site's gap ("31.4 m"), the corridor's station ("650.00 ft").
   m: 1,
   ft: 2,
+  // The dish's light time to the µs (300 m; plan 3's check is 0.5 m).
+  s: 6,
 };
 
 const grouped = (value: number, digits: number): string =>

@@ -6,3 +6,5 @@ import "./earthTurns.ts";
 import "./standOnMoon.ts";
 import "./bimSite.ts";
 import "./corridor.ts";
+import "./moonFromHere.ts";
+import "./dishTracks.ts";

@@ -75,6 +75,8 @@ export interface OrionLayer {
    * statement to wait for. Undefined until the OEM is in, or outside it.
    */
   markerPoint(): Float64Array | undefined;
+  /** Orion's track on this thread, once its OEM is in (the dish's line of sight, skyRay.ts). */
+  track(): OrionTrack | undefined;
   /** Asks for the statement again if the clock moved since the last ask. */
   askIfMoved(now: number, real: number): void;
   /** The legend's line (R8), from the statement at the clock's instant. */
@@ -412,6 +414,7 @@ export function createOrionLayer(deps: {
     },
     info: () => orionInfo,
     error: () => orionInfoError,
+    track: () => track,
     built: () => orionBuilt,
     draw,
     off: () => {

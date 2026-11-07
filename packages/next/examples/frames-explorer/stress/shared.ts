@@ -23,6 +23,9 @@ import type {
 // loads to place Orion's dot itself (orionTrack.ts).
 export { ORION_OEM, orionFromOem } from "../orionTrack.ts";
 
+/** NAIF's DSN station SPK in the frames store (ITRF93 positions with plate motion; Task 6b). */
+export const STATIONS_SPK = "earthstns_itrf93_260814.bsp";
+
 export const DESIGN_ROUND_TRIP = 1e-4;
 
 // m (Global Constraints)

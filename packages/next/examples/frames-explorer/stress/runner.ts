@@ -138,6 +138,12 @@ export interface DataContext {
   loadProj(): Promise<ProjApi>;
   loadOrion(): Promise<Trajectory>;
   /**
+   * The store's NAIF DSN station SPK (`STATIONS_SPK`), its bytes, fetched
+   * once when the dish scenario first asks for a station (Task 6b). Absent,
+   * the scenario says the stations aren't in the store.
+   */
+  loadStations?(): Promise<ArrayBuffer>;
+  /**
    * Makes GEOID18 available to `loadProj`'s PROJ (the browser fetches the
    * grid). Absent when PROJ already finds it (Node reads the grids beside
    * proj.db). The runner then checks that NAVD88 heights resolve through it.
@@ -702,6 +708,7 @@ export class Needs {
       loadProj: () => ctx.loadProj(),
       loadOrion: () => ctx.loadOrion(),
       ...(ctx.loadGeoid && { loadGeoid: () => ctx.loadGeoid!() }),
+      ...(ctx.loadStations && { loadStations: () => ctx.loadStations!() }),
       ...(manifest !== undefined &&
         "value" in manifest &&
         manifest.value !== undefined && { manifest: manifest.value }),

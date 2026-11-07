@@ -56,6 +56,8 @@ import { RunQueue } from "./runQueue.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
 import { scenarioView } from "./scenarioModel.ts";
 import { createStage } from "./scenarios/stage.ts";
+import { createSightLines } from "./sightLines.ts";
+import { createSkyRay } from "./skyRay.ts";
 import { ViewStore, formatParams, parseParams } from "./selection.ts";
 import { createTreeState } from "./treeState.ts";
 import { createTriadLayer, type LabelBoard } from "./triadLayer.ts";
@@ -260,7 +262,7 @@ export function run(context: ExampleContext): ExampleRun {
     core,
     overlays,
     orion,
-    sceneView: (sc) => cameraViews.sceneView(sc),
+    sceneView: (sc, knobs) => cameraViews.sceneView(sc, knobs),
     show: (v, seconds) => cameraRig.show(v, seconds),
     catalog: {
       results: () => catalogRuns.results(),
@@ -317,6 +319,19 @@ export function run(context: ExampleContext): ExampleRun {
     write: () =>
       context.setParams(formatParams({ ...view.get(), ...host.params() })),
   });
+  // The scenario's lines of sight over the drawn terrain (Task 6b): traced
+  // on demand, trailing the terrain's height changes.
+  const sightLines = createSightLines({
+    viewer,
+    lines: () =>
+      stage.scene() !== undefined
+        ? host.state().evaluation?.sightLines
+        : undefined,
+    globeShown: () => stage.globeShown(),
+    globeProblem: () => stage.globeProblem(),
+    changed: () => invalidate(),
+  });
+  scope.defer(() => sightLines.dispose());
   const host = createScenarioHost({
     evaluate: (id, knobs, ms) => {
       const f = frames();
@@ -359,6 +374,7 @@ export function run(context: ExampleContext): ExampleRun {
         shownEvaluation = state.evaluation;
         treeState.evaluationChanged();
         callouts.refresh();
+        sightLines.evaluationChanged();
       }
       if (state.generation !== paramsGeneration) {
         // The link follows each asked-for setup, not every clock frame.
@@ -452,6 +468,8 @@ export function run(context: ExampleContext): ExampleRun {
             overlays.engineering().outside === undefined) && {
             sceneNote: stage.scene()!.note!,
           }),
+        ...(stage.scene() !== undefined &&
+          sightLines.view() !== undefined && { terrain: sightLines.view()! }),
         scrub,
       });
     },
@@ -481,6 +499,17 @@ export function run(context: ExampleContext): ExampleRun {
   scope.defer(() => user.dispose());
 
   // ------------------------------------------------------------- startup
+  // The line of sight up from the scene's site, every frame (Task 6b).
+  const skyRay = createSkyRay({
+    globe,
+    frames,
+    scene: () => stage.scene(),
+    knobs: () => stage.knobs(),
+    orionTrack: () => orion.track(),
+    labels,
+    refreshLabels: () => triads.refresh(),
+  });
+  scope.defer(() => skyRay.dispose());
   const frameLoop = createFrameLoop({
     core,
     refreshTree: () => treeState.refresh(),
@@ -496,6 +525,7 @@ export function run(context: ExampleContext): ExampleRun {
     sceneTick: () => {
       stage.tick();
       pointDrag.tick();
+      skyRay.place();
     },
     walk: walkPath,
   });

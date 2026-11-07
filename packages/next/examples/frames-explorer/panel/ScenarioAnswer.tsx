@@ -55,6 +55,7 @@ export const ANSWER_READS = [
   "queued",
   "published",
   "note",
+  "terrain",
 ] as const;
 
 export const ScenarioAnswer = memo(
@@ -101,6 +102,18 @@ function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
           <p className="fx-answer-figure fx-num">{answerTitle(a)}</p>
         )}
         {a.aside && <p className="fx-answer-aside fx-num">{a.aside}</p>}
+        {scenario.terrain?.map((t) => (
+          <p
+            key={t.id}
+            className={`fx-answer-terrain fx-terrain-${t.state}`}
+            role="status"
+          >
+            {t.text}
+            {t.accuracy && (
+              <span className="fx-answer-terrain-acc"> {t.accuracy}.</span>
+            )}
+          </p>
+        ))}
         {scenario.published && <Published p={scenario.published} />}
         <p className="fx-answer-text">{a.headline}</p>
       </div>

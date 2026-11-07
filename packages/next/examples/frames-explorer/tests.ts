@@ -74,7 +74,7 @@ export {
 export { GROUP_INFO, groupInfo, type GroupInfo } from "./stress/groupInfo.ts";
 export { citation, cited, collectCitations } from "./stress/references.ts";
 export { STRESS_GROUPS, groupResults } from "./stress/stressGroups.ts";
-export { ORION_OEM, orionFromOem } from "./stress/shared.ts";
+export { ORION_OEM, STATIONS_SPK, orionFromOem } from "./stress/shared.ts";
 export {
   boundCrsChecks,
   type BoundCheckOptions,

@@ -247,6 +247,8 @@ export interface ScenarioPanelView {
   liveExtras: Readonly<Record<string, ResultExtras>>;
   /** A limit the scenario says plainly (the backdrop Moon). */
   note?: string;
+  /** Its lines of sight over the drawn terrain, the local horizon (sightLines.ts, Task 6b). */
+  terrain?: readonly TerrainSightView[];
   /** The knob the tree drives (one-path's frame): its nodes are the choices. */
   treeControl?: {
     knob: string;
@@ -267,6 +269,14 @@ export interface ScenarioPanelView {
   rate: number;
   /** Earth orientation at the scenario's time. */
   eop?: ClockView["eop"];
+}
+
+/** One line of sight over the terrain, as the answer shows it (sightLines.ts). */
+export interface TerrainSightView {
+  id: string;
+  state: "clear" | "blocked" | "may-block" | "unknown" | "waiting";
+  text: string;
+  accuracy?: string;
 }
 
 /** One line of the report's environment (R15). */

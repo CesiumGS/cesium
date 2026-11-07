@@ -60,21 +60,68 @@ export const SACRAMENTO = {
   latitude: 38.5816,
 } as const;
 
-/** An east-north-up site on the Earth (WGS 84, at h = 0), under ITRF. */
-export function earthSiteFrame(
-  itrf: Frame,
-  site: { name: string; longitude: number; latitude: number },
-): Frame {
+/** A site on the Earth: its frame's name, and where it is on WGS 84 (degrees; m, 0 when not given). */
+export interface EarthSite {
+  name: string;
+  longitude: number;
+  latitude: number;
+  height?: number;
+}
+
+/** An east-north-up site on the Earth (WGS 84, at its height or h = 0), under ITRF. */
+export function earthSiteFrame(itrf: Frame, site: EarthSite): Frame {
   return eastNorthUpFrame(
     site.name,
     itrf,
     Ellipsoid.WGS84,
     Ellipsoid.WGS84.cartographicToCartesian(
-      fromDegrees(site.longitude, site.latitude, 0),
+      fromDegrees(site.longitude, site.latitude, site.height ?? 0),
       new Float64Array(3),
     ),
   );
 }
+
+/** The dish's stations (Task 6b), by knob value: each one's NAIF id in the store's station SPK. */
+export type StationId = "DSS-14" | "DSS-43" | "DSS-63";
+
+/**
+ * The three 70 m dishes. The worker places each from NAIF's station SPK
+ * (`STATIONS_SPK`, at the scenario's time). The page's triad and camera
+ * use the place below: the SPK's at 2026-04-06, to 1e-6° and 0.1 m
+ * (test/data/framesExplorerScenarios.test.ts holds them to it within 1 m).
+ */
+export const DSN_STATIONS: Readonly<
+  Record<StationId, EarthSite & { naif: number; complex: string }>
+> = {
+  "DSS-14": {
+    name: "DSS-14 ENU",
+    naif: 399014,
+    complex: "Goldstone, California",
+    longitude: -116.889543,
+    latitude: 35.4259,
+    height: 1001.4,
+  },
+  "DSS-43": {
+    name: "DSS-43 ENU",
+    naif: 399043,
+    complex: "Canberra, Australia",
+    longitude: 148.981273,
+    latitude: -35.402414,
+    height: 688.8,
+  },
+  "DSS-63": {
+    name: "DSS-63 ENU",
+    naif: 399063,
+    complex: "Madrid, Spain",
+    longitude: -4.248002,
+    latitude: 40.431214,
+    height: 864.8,
+  },
+};
+
+/** The station the knobs choose (DSS-43 for anything else). */
+export const stationOf = (knobs: KnobState) =>
+  DSN_STATIONS[knobs.station as StationId] ?? DSN_STATIONS["DSS-43"];
 
 /** Orion's draw-in frame (one-path's knob). */
 export type DrawnFrame = "GCRF" | "ITRF" | "MOON_ME";
@@ -85,7 +132,21 @@ export type DrawnFrame = "GCRF" | "ITRF" | "MOON_ME";
  * `engineering` the setup's own look (the corridor's road).
  */
 export type SceneCamera =
-  "northPole" | "earthMoon" | "lunarSite" | "rigidLine" | "engineering";
+  | "northPole"
+  | "earthMoon"
+  | "lunarSite"
+  | "rigidLine"
+  | "engineering"
+  | "site";
+
+/** A ground view (the "site" camera): where it looks, how far, its heading and pitch (degrees). */
+export interface SceneLook {
+  longitude: number;
+  latitude: number;
+  range: number;
+  heading: number;
+  pitch: number;
+}
 
 export interface SceneSpec {
   id: ScenarioId;
@@ -122,8 +183,20 @@ export interface SceneSpec {
     setup(knobs: KnobState, defaults: EngineeringSetup): EngineeringSetup;
     overlays: readonly OverlayId[];
   };
-  /** Sites on the Earth the scene adds (their frames under ITRF). */
-  earthSites?: readonly { name: string; longitude: number; latitude: number }[];
+  /** Sites on the Earth the scene adds at these knobs (their frames under ITRF). */
+  earthSites?(knobs: KnobState): readonly EarthSite[];
+  /** The "site" camera's view at these knobs. */
+  look?(knobs: KnobState): SceneLook;
+  /**
+   * The line of sight up from a site, placed every frame on the page's
+   * thread (skyRay.ts): to the Moon's centre or to Orion (its track), from
+   * the site at these knobs, labelled.
+   */
+  skyRay?: {
+    target: "moon" | "orion";
+    label: string;
+    site(knobs: KnobState): EarthSite;
+  };
   /** A limit the scenario says plainly, under its answer and on the globe. */
   note?: string;
   /**
@@ -132,8 +205,8 @@ export interface SceneSpec {
    * shows the same choice beside the answer.
    */
   treeControl?: { knob: string; verb: string };
-  /** The frame it draws in, when the scene has no choice of it: the diagram tags it. */
-  drawIn?: string;
+  /** The frame it draws in, when the scene has no choice of it (at these knobs): the diagram tags it. */
+  drawIn?: string | ((knobs: KnobState) => string);
   /** A short line under the diagram's key. */
   diagramNote?: string;
   /** The route's last step, by the drawn-in frame: what you see. */
@@ -194,13 +267,59 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
         does: "the frame that doesn't turn: the stars hold still in it",
       },
     },
-    earthSites: [SACRAMENTO],
+    earthSites: () => [SACRAMENTO],
     pinnedAxes: true,
     light: "camera",
     // Lit from the camera, the polar globe washes out behind the axes; at
     // desktop width the eye brightens the small globe on black (F43).
     dim: { wide: -1.5, narrow: -0.6 },
     clockRate: (k) => Number(k.rate),
+  },
+  "moon-from-here": {
+    id: "moon-from-here",
+    // On the ground at Sacramento, looking along the ray to the Moon.
+    camera: "site",
+    flight: 3,
+    focus: ["ITRF", "GCRF", "MOON_ICRF"],
+    triads: () => [SACRAMENTO.name],
+    earthSites: () => [SACRAMENTO],
+    look: () => ({ ...SACRAMENTO, range: 30_000, heading: 0, pitch: -25 }),
+    skyRay: { target: "moon", label: "To the Moon", site: () => SACRAMENTO },
+    drawIn: SACRAMENTO.name,
+    routeEnds: {
+      start: {
+        title: "MOON_ICRF, the Moon's centre",
+        does: "where DE440 puts the Moon, light time before you see it",
+      },
+      end: {
+        title: `${SACRAMENTO.name}, the sky from here`,
+        does: "east, north and up at the site: the Moon's azimuth and elevation",
+      },
+    },
+    diagramNote:
+      "The Moon is a frame of the tree; its centre comes down the route to the site's east-north-up frame.",
+    note: "Airless, as Horizons' table: near the horizon the air lifts the Moon by up to about half a degree. The local horizon is the terrain as drawn.",
+  },
+  "dish-tracks": {
+    id: "dish-tracks",
+    // On the ground at the station, the line of sight rising to Orion.
+    camera: "site",
+    flight: 3,
+    focus: ["EME2000", "GCRF", "ITRF"],
+    triads: (k) => [stationOf(k).name],
+    earthSites: (k) => [stationOf(k)],
+    look: (k) => ({ ...stationOf(k), range: 40_000, heading: 0, pitch: -25 }),
+    skyRay: { target: "orion", label: "To Orion", site: (k) => stationOf(k) },
+    drawIn: (k) => stationOf(k).name,
+    drawnView: Object.fromEntries(
+      Object.values(DSN_STATIONS).map((s) => [
+        s.name,
+        "east, north and up at the dish: where it points, and whether the Earth, the Moon or the ground is in the way",
+      ]),
+    ),
+    diagramNote:
+      "Orion's data stays in EME2000; its route goes up to ICRF and down through GCRF and the turning Earth to the dish's horizon.",
+    note: "The local horizon is the terrain as drawn: it decides only the last part of the line of sight; the Earth and the Moon decide the rest.",
   },
   "stand-on-moon": {
     id: "stand-on-moon",

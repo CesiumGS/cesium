@@ -35,6 +35,10 @@ export interface Stage {
   leave(): void;
   /** The imagery's exposure: the scene's, or dimmed under an engineering result. */
   exposure(): number;
+  /** Why the scene's globe isn't the one it asked for, if it isn't. */
+  globeProblem(): string | undefined;
+  /** The globe the viewer shows now; undefined while it switches. */
+  globeShown(): "ellipsoid" | "terrain" | undefined;
   /** The scene's camera, flown to (one-path in 3.0 s, stand-on-moon in 3.5 s). */
   flyToScene(): void;
   /** Orion's path was drawn: a new frame (a knob) is framed once. */
@@ -59,7 +63,7 @@ export function createStage(deps: {
     engineering(): EngineeringSetup;
   };
   orion: { frame(): OrionFrame; setFrame(frame: OrionFrame): void };
-  sceneView(sc: SceneSpec): CameraView | undefined;
+  sceneView(sc: SceneSpec, knobs: KnobState): CameraView | undefined;
   show(v: CameraView, seconds?: number): void;
   catalog: {
     results(): readonly StressResult[];
@@ -84,6 +88,43 @@ export function createStage(deps: {
   let engineeringRedraw = 0;
   /** The setup outside the scene, restored when it's left. */
   let defaults: EngineeringSetup | undefined;
+  /**
+   * The globe the scene wants (spec.globe: terrain for a local horizon,
+   * Task 6b), and the one asked of the viewer. Leaving asks for the
+   * ellipsoid a microtask later, so a switch from one terrain scene to
+   * another keeps the terrain loaded.
+   */
+  let wantedGlobe: "ellipsoid" | "terrain" = "ellipsoid";
+  let askedGlobe: "ellipsoid" | "terrain" = "ellipsoid";
+  /** The globe the viewer shows: undefined while a switch is on its way. */
+  let shownGlobe: "ellipsoid" | "terrain" | undefined = "ellipsoid";
+  let globeProblem: string | undefined;
+  function applyGlobe(): void {
+    if (disposed() || wantedGlobe === askedGlobe) {
+      return;
+    }
+    askedGlobe = wantedGlobe;
+    globeProblem = undefined;
+    shownGlobe = undefined;
+    const kind = wantedGlobe;
+    viewer.setGlobe(kind).then(
+      () => {
+        if (askedGlobe === kind) {
+          shownGlobe = kind;
+        }
+      },
+      (error: unknown) => {
+        // No ion token, or the terrain endpoint failed: the line of sight
+        // says the terrain is unknown (sightLines.ts), never clear. The
+        // old globe stays.
+        if (askedGlobe === kind) {
+          globeProblem = `the ${kind} globe didn't load (${error instanceof Error ? error.message : String(error)})`;
+          askedGlobe = kind === "terrain" ? "ellipsoid" : "terrain";
+          shownGlobe = askedGlobe;
+        }
+      },
+    );
+  }
 
   const exposure = (): number =>
     sceneExposure(scene, viewer.container.clientWidth, NARROW_VIEW);
@@ -117,7 +158,7 @@ export function createStage(deps: {
   exposureObserver.observe(viewer.container);
 
   function flyToScene(): void {
-    const v = scene && deps.sceneView(scene);
+    const v = scene && deps.sceneView(scene, sceneKnobs);
     if (v) {
       deps.show(v, scene!.flight);
     }
@@ -138,7 +179,9 @@ export function createStage(deps: {
       ...(latitude !== undefined
         ? [lunarSiteFrame(frames.moonMe, latitude)]
         : []),
-      ...(scene.earthSites ?? []).map((s) => earthSiteFrame(itrf, s)),
+      ...(scene.earthSites?.(sceneKnobs) ?? []).map((s) =>
+        earthSiteFrame(itrf, s),
+      ),
     ];
     const drawIn = scene.orion?.(sceneKnobs);
     if (drawIn !== undefined) {
@@ -179,6 +222,8 @@ export function createStage(deps: {
   function enter(id: ScenarioId, knobs: KnobState): void {
     scene = SCENES[id];
     sceneKnobs = knobs;
+    wantedGlobe = SCENARIOS.find((s) => s.id === id)?.globe ?? "ellipsoid";
+    applyGlobe();
     // The overlays no scenario owns (turned on from Verification's results)
     // go with the scene they were drawn over.
     for (const o of OVERLAYS) {
@@ -201,7 +246,10 @@ export function createStage(deps: {
   }
 
   function update(knobs: KnobState): void {
-    const moved = scene?.lunarSite?.(knobs) !== scene?.lunarSite?.(sceneKnobs);
+    const moved =
+      scene?.lunarSite?.(knobs) !== scene?.lunarSite?.(sceneKnobs) ||
+      JSON.stringify(scene?.look?.(knobs)) !==
+        JSON.stringify(scene?.look?.(sceneKnobs));
     if (scene?.orion && scene.orion(knobs) !== scene.orion(sceneKnobs)) {
       reframeOrion = true;
     }
@@ -220,7 +268,7 @@ export function createStage(deps: {
       // The camera follows the site once the slider rests.
       clearTimeout(siteFlight);
       siteFlight = window.setTimeout(() => {
-        if (!disposed() && scene?.lunarSite) {
+        if (!disposed() && (scene?.lunarSite || scene?.look)) {
           flyToScene();
         }
       }, 400);
@@ -254,6 +302,8 @@ export function createStage(deps: {
     reframeOrion = false;
     scene = undefined;
     local = [];
+    wantedGlobe = "ellipsoid";
+    queueMicrotask(applyGlobe);
     globe.dimGround(false);
     deps.rebuildTree();
     deps.refreshTriads();
@@ -279,6 +329,8 @@ export function createStage(deps: {
     update,
     leave,
     exposure,
+    globeProblem: () => globeProblem,
+    globeShown: () => shownGlobe,
     flyToScene,
     reframe: () => {
       clearTimeout(siteFlight);

@@ -69,6 +69,7 @@ import { buildTree, type TreeNode } from "./tree.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import {
   ORION_OEM,
+  STATIONS_SPK,
   STRESS_CASES,
   boundCrsChecks,
   orionFromOem,
@@ -459,6 +460,9 @@ export function createHost(
           loadOrion: () => loadItem(raw, "orion"),
           ...(raw.loadGeoid !== undefined && {
             loadGeoid: () => loadItem(raw, "geoid"),
+          }),
+          ...(raw.loadStations !== undefined && {
+            loadStations: () => raw.loadStations!(),
           }),
         },
       }));
@@ -1168,6 +1172,11 @@ export function browserContext(base = "/frames-data/"): MakeContext {
         await need("GEOID18", [`proj/${GEOID}`]);
         await loadProj({ base: projBase, grids: [GEOID], onProgress: onProj });
       },
+      // 26 kB, checked against the manifest like the rest; fetched once.
+      loadStations: once(async () => {
+        const listed = await need("The DSN stations", [STATIONS_SPK]);
+        return fetchChecked(root, listed.get(STATIONS_SPK)!, () => {});
+      }),
       loadOrion: async () => {
         const listed = await need("The Artemis II trajectory", [ORION_OEM]);
         const frames = await loadFrames();

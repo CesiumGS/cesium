@@ -1,7 +1,9 @@
 // The BIM site's and the corridor's answer math, by hand (Task 6a): the
 // rigid-against-exact gap's formula against textbook radii and the 31.4 m
 // headline, the BIM site's setups per CRS, the corridor's station words, and
-// the dragged point's knobs. Pure: no PROJ (the evaluators through it are
+// the dragged point's knobs; and looking up from the Earth (Task 6b): the
+// pointing's words, the dish's and the Moon's scenes, and the terrain line
+// of sight's words, never "clear" unproven. Pure: no PROJ (the evaluators through it are
 // test/data/framesExplorerScenarios.test.ts's).
 import { describe, expect, it } from "vitest";
 import { Alignment } from "../src/engineering/alignment.ts";
@@ -12,7 +14,12 @@ import {
   stepDigits,
 } from "../examples/frames-explorer/panel/knobText.ts";
 import { knobsAt } from "../examples/frames-explorer/pointDrag.ts";
-import { READY, SCENES } from "../examples/frames-explorer/scenarios/scenes.ts";
+import {
+  DSN_STATIONS,
+  READY,
+  SACRAMENTO,
+  SCENES,
+} from "../examples/frames-explorer/scenarios/scenes.ts";
 import {
   BIM_CRS,
   BIM_LINE,
@@ -31,6 +38,18 @@ import {
   stationText,
 } from "../examples/frames-explorer/scenarios/sites.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
+import {
+  azimuthElevation,
+  compassPoint,
+  pointingText,
+} from "../examples/frames-explorer/scenarios/pointing.ts";
+import {
+  OBSERVER_LIFT,
+  placeObserver,
+  terrainSightText,
+} from "../examples/frames-explorer/sightLines.ts";
+import type { TerrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
+import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 
 const spec = (id: string) => SCENARIOS.find((s) => s.id === id)!;
 
@@ -242,7 +261,9 @@ describe("the strip", () => {
     expect(READY).toEqual([
       "one-path",
       "earth-turns",
+      "moon-from-here",
       "stand-on-moon",
+      "dish-tracks",
       "bim-site",
       "corridor",
     ]);
@@ -266,5 +287,147 @@ describe("the strip", () => {
       "rotation",
       "scale",
     ]);
+  });
+});
+
+describe("looking up from the Earth (Task 6b)", () => {
+  it("reads azimuth clockwise from north and elevation from the horizon, in east-north-up", () => {
+    const r = (az: number, el: number) => {
+      const a = (az * Math.PI) / 180;
+      const e = (el * Math.PI) / 180;
+      return [
+        Math.cos(e) * Math.sin(a),
+        Math.cos(e) * Math.cos(a),
+        Math.sin(e),
+      ];
+    };
+    for (const [az, el] of [
+      [0, 10],
+      [90, 0],
+      [255.765536226, 18.65479342],
+      [359.5, -30],
+    ] as const) {
+      const got = azimuthElevation(r(az, el));
+      expect(got.azimuth).toBeCloseTo(az, 9);
+      expect(got.elevation).toBeCloseTo(el, 9);
+    }
+    // Due east, straight up the elevation's 90°.
+    expect(azimuthElevation([1, 0, 0]).azimuth).toBe(90);
+    expect(azimuthElevation([0, 0, 1]).elevation).toBe(90);
+  });
+
+  it("names the compass point and says below the horizon in words", () => {
+    expect(compassPoint(255.77)).toBe("WSW");
+    expect(compassPoint(359)).toBe("N");
+    expect(compassPoint(74.2)).toBe("ENE");
+    expect(pointingText(255.765536, 18.654793)).toBe(
+      "18.65° up at azimuth 255.77° (WSW)",
+    );
+    expect(pointingText(120, -5.5)).toBe(
+      "5.50° below the horizon at azimuth 120.00° (ESE)",
+    );
+  });
+
+  it("puts the dish on its station and the Moon's view on Sacramento, each on the terrain globe, with the site camera", () => {
+    const dish = SCENES["dish-tracks"]!;
+    for (const id of ["DSS-14", "DSS-43", "DSS-63"] as const) {
+      const k = { station: id };
+      const s = DSN_STATIONS[id];
+      expect(dish.earthSites!(k)).toEqual([s]);
+      expect(dish.triads(k)).toEqual([s.name]);
+      expect(dish.drawIn).toBeTypeOf("function");
+      expect((dish.drawIn as (k: object) => string)(k)).toBe(s.name);
+      expect(dish.look!(k)).toMatchObject({
+        longitude: s.longitude,
+        latitude: s.latitude,
+      });
+    }
+    expect(dish.camera).toBe("site");
+    expect(spec("dish-tracks").globe).toBe("terrain");
+    expect(spec("dish-tracks").title).toBe("A dish tracks Orion");
+    const moon = SCENES["moon-from-here"]!;
+    expect(moon.earthSites!({})).toEqual([SACRAMENTO]);
+    expect(moon.drawIn).toBe(SACRAMENTO.name);
+    expect(moon.routeEnds?.start.title).toMatch(/MOON_ICRF/);
+    expect(spec("moon-from-here").globe).toBe("terrain");
+    expect(spec("moon-from-here").proof).toEqual([
+      "space.moon-from-sacramento.range",
+      "space.moon-from-sacramento.direction",
+      "frame-tree.compositions.itrf-moon-icrf",
+    ]);
+  });
+});
+
+describe("the terrain line of sight's words (Task 6b, Review Focus 2)", () => {
+  const result = (r: Partial<TerrainLineOfSight>): TerrainLineOfSight => ({
+    clear: undefined,
+    unknownFraction: 0,
+    accuracy: { meters: 16, note: "exact against the drawn terrain" },
+    ...r,
+  });
+
+  it("says clear only when the library says clear, with the clearance and the terrain's accuracy", () => {
+    const v = terrainSightText(
+      "o",
+      "Orion",
+      result({ clear: true, minClearance: 1234 }),
+    );
+    expect(v.state).toBe("clear");
+    expect(v.text).toMatch(/clear, by 1\.2 km/);
+    expect(v.accuracy).toBe("exact against the drawn terrain");
+  });
+
+  it("never says clear over unknown terrain, nor within the terrain's error", () => {
+    const unknown = terrainSightText(
+      "o",
+      "Orion",
+      result({ clear: undefined, unknownFraction: 0.3 }),
+    );
+    expect(unknown.state).toBe("unknown");
+    expect(unknown.text).toMatch(/unknown over 30% of the path/);
+    expect(unknown.text).not.toMatch(/is clear/);
+    const close = terrainSightText(
+      "o",
+      "Orion",
+      result({ clear: undefined, minClearance: 4 }),
+    );
+    expect(close.state).toBe("may-block");
+    expect(close.text).toMatch(/may block/);
+    const blocked = terrainSightText("o", "Orion", result({ clear: false }));
+    expect(blocked.state).toBe("blocked");
+    const waiting = terrainSightText(
+      "o",
+      "the Moon",
+      undefined,
+      "this view has no terrain globe",
+    );
+    expect(waiting.state).toBe("waiting");
+    expect(waiting.text).toMatch(/no terrain globe/);
+  });
+
+  it("lifts an observer below the drawn ground onto it, and leaves one above it", () => {
+    const at = (h: number) =>
+      Array.from(
+        Ellipsoid.WGS84.cartographicToCartesian(
+          fromDegrees(148.98, -35.4, h),
+          new Float64Array(3),
+        ),
+      );
+    const line = { from: at(0), to: at(100_000) };
+    const below = placeObserver(line, () => 40);
+    expect(below.lifted).toBeCloseTo(40 + OBSERVER_LIFT, 6);
+    const geo = Ellipsoid.WGS84.cartesianToCartographic(
+      Float64Array.from(below.from),
+      { longitude: 0, latitude: 0, height: 0 },
+    )!;
+    expect(geo.height).toBeCloseTo(40 + OBSERVER_LIFT, 6);
+    // The ray keeps its direction: both ends move together.
+    expect(below.to[2]! - below.from[2]!).toBeCloseTo(
+      line.to[2]! - line.from[2]!,
+      6,
+    );
+    const above = placeObserver({ from: at(689), to: at(5000) }, () => 600);
+    expect(above.lifted).toBe(0);
+    expect(placeObserver(line, () => undefined).lifted).toBe(0);
   });
 });

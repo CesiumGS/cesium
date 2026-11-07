@@ -21,11 +21,13 @@ import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
 const scene = (id: keyof typeof SCENES) => SCENES[id]!;
 
 describe("the strip's scenarios", () => {
-  it("are the three ported from the tour and the two on the ground (Task 6a), in the strip's order, opening on one-path", () => {
+  it("are the three ported from the tour, the two on the ground (Task 6a) and the two looking up (Task 6b), in the strip's order, opening on one-path", () => {
     expect(READY).toEqual([
       "one-path",
       "earth-turns",
+      "moon-from-here",
       "stand-on-moon",
+      "dish-tracks",
       "bim-site",
       "corridor",
     ]);
@@ -41,7 +43,7 @@ describe("earth-turns: the tour's stop 2, GCRF against ITRF over a day", () => {
       "GCRF",
       "Sacramento ENU",
     ]);
-    expect(s.earthSites).toEqual([SACRAMENTO]);
+    expect(s.earthSites!({ rate: 3600 })).toEqual([SACRAMENTO]);
     expect(s.focus).toContain("Sacramento ENU");
   });
 

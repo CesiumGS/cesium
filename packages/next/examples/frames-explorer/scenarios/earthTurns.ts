@@ -74,17 +74,42 @@ export function duration(s: number): string {
  * within 1 mm per 1e9 m and 1e-12 in rotation.
  */
 function compositions(ctx: StressContext, instant: Instant): StressResult {
+  return compositionsAt(
+    ctx,
+    instant,
+    ctx.frames.itrf,
+    ctx.frames.gcrf,
+    PROOF,
+    "ITRF ↔ GCRF at the scenario's time, checked by every route through the tree (including frames this scenario doesn't draw: the six others, the Moon's among them): round trips and compositions agree within 1 mm per 1e9 m and 1e-12 in rotation",
+  );
+}
+
+/**
+ * The catalog's frame-tree.compositions check for the pair `a`, `b` at one
+ * instant, as `<proof>.live`: seeded points through a → b → a and back,
+ * and through each of the six other frames of the tree, within 1 mm per
+ * 1e9 m and 1e-12 in rotation. Earth-turns' ITRF–GCRF, and the Moon from
+ * here's ITRF–MOON_ICRF (Task 6b).
+ */
+export function compositionsAt(
+  ctx: StressContext,
+  instant: Instant,
+  a: Frame,
+  b: Frame,
+  proof: string,
+  title: string,
+): StressResult {
   const f = ctx.frames;
   const others: Frame[] = [
+    f.itrf,
+    f.gcrf,
     f.earthIcrf,
     f.eme2000,
     f.hcrs,
     f.moonIcrf,
     f.moonMe,
     f.moonPa,
-  ];
-  const a = f.itrf;
-  const b = f.gcrf;
+  ].filter((x) => x !== a && x !== b);
   const ab = frameTransform(a, b, instant);
   const ba = frameTransform(b, a, instant);
   const next = random(17);
@@ -134,10 +159,9 @@ function compositions(ctx: StressContext, instant: Instant): StressResult {
     }
   }
   return {
-    id: `${PROOF}.live`,
+    id: `${proof}.live`,
     group: "frame-tree",
-    title:
-      "ITRF ↔ GCRF at the scenario's time, checked by every route through the tree (including frames this scenario doesn't draw: the six others, the Moon's among them): round trips and compositions agree within 1 mm per 1e9 m and 1e-12 in rotation",
+    title,
     pass: worstRotation <= ROTATION,
     value: worst,
     tolerance: worstTolerance,

@@ -299,7 +299,8 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "space",
-    needs: ["orion"],
+    // The Moon from Sacramento needs only the frames (Task 6b).
+    needs: ["frames", "orion"],
     name: "Space",
     question: "Do light time, Doppler and line of sight match the references?",
     lenses: ["space"],

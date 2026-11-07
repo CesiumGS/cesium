@@ -20,6 +20,27 @@
   font-size: var(--stratakit-font-size-body-md);
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/* The local horizon: a line of sight over the drawn terrain (Task 6b). Only
+   a clear verdict reads plainly; unknown, may block and blocked take the
+   warning colour, so nothing unproven reads as clear. */
+.fx-answer-terrain {
+  font-size: var(--stratakit-font-size-body-md);
+  padding-inline-start: var(--stratakit-space-200);
+  border-inline-start: 2px solid var(--stratakit-color-border-neutral-muted);
+  text-wrap: pretty;
+}
+.fx-answer-terrain.fx-terrain-unknown,
+.fx-answer-terrain.fx-terrain-may-block,
+.fx-answer-terrain.fx-terrain-blocked {
+  border-inline-start-color: var(--stratakit-color-border-attention-base);
+}
+.fx-answer-terrain.fx-terrain-waiting {
+  color: var(--stratakit-color-text-info-base);
+}
+.fx-answer-terrain-acc {
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
 /* The headline's published counterpart, and ours against it. */
 .fx-answer-published {
   display: flex;

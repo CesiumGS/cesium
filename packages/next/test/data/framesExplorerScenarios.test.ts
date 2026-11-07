@@ -52,12 +52,34 @@ import {
 import {
   orionFromOem,
   ORION_OEM,
+  STATIONS_SPK,
   runStress,
   type StoreManifest,
   type StressContext,
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
 import { compose, pathPoint } from "../../examples/frames-explorer/orion.ts";
+import signalFixture from "../fixtures/frames/signal.json";
+import {
+  DSN_STATIONS,
+  SACRAMENTO,
+  earthSiteFrame,
+} from "../../examples/frames-explorer/scenarios/scenes.ts";
+import {
+  angleBetween,
+  azimuthElevation,
+  pointingByHand,
+  pointingText,
+  rayDirection,
+} from "../../examples/frames-explorer/scenarios/pointing.ts";
+import { targetPlace } from "../../examples/frames-explorer/skyRay.ts";
+import {
+  MOON_DIRECTION,
+  MOON_RANGE,
+} from "../../examples/frames-explorer/stress/groups/space.ts";
+import { eastNorthUpFrame, framePoint } from "../../src/frames/local.ts";
+import { measure } from "../../src/measure/measure.ts";
+import { Trajectory } from "../../src/trajectory/Trajectory.ts";
 import { adaptivePath } from "../../examples/frames-explorer/overlays.ts";
 import {
   loadOrionTrack,
@@ -96,6 +118,7 @@ const context = (): StressContext => ({
   frames,
   loadProj: () => loadProj({ base: `${join(dir, "proj")}/` }),
   loadOrion: () => Promise.resolve(orion),
+  loadStations: () => Promise.resolve(bytes(STATIONS_SPK)),
   manifest: JSON.parse(
     readFileSync(join(dir, "manifest.json"), "utf8"),
   ) as StoreManifest,
@@ -156,11 +179,15 @@ const OFF: Record<string, { knobs: KnobState; hours: number }> = {
     hours: 1,
   },
   corridor: { knobs: { station: 1210, offset: -25 }, hours: 1 },
+  "moon-from-here": { knobs: {}, hours: 1 },
+  "dish-tracks": { knobs: { station: "DSS-14" }, hours: 1 },
 };
 const PORTED: readonly ScenarioId[] = [
   "one-path",
   "earth-turns",
+  "moon-from-here",
   "stand-on-moon",
+  "dish-tracks",
   "bim-site",
   "corridor",
 ];
@@ -863,4 +890,259 @@ describe("corridor: station and offset on the clothoid road (Task 6a)", () => {
       });
     }
   }, 60_000);
+});
+
+describe("a dish tracks Orion (Task 6b)", () => {
+  const dish = spec("dish-tracks");
+  const station = (naif: number) =>
+    Trajectory.fromSpk([bytes(STATIONS_SPK)], naif, frames, {
+      name: `DSN ${naif}`,
+      accuracy: "precise",
+      j2000: "icrf",
+    });
+  const row = signalFixture.rows.find(
+    (r) => Math.abs(r.tdb - checkedTdb("dish-tracks")) < 1e-3,
+  )!;
+
+  it("finds each of its three stations in the store's NAIF station SPK, in ITRF, where the page's triad and camera put it (within 1 m)", () => {
+    const t = Instant.fromTdb(checkedTdb("dish-tracks"));
+    for (const s of Object.values(DSN_STATIONS)) {
+      const traj = station(s.naif);
+      expect(traj.reference, s.name).toBe(frames.itrf);
+      const p = traj.state(t).subarray(0, 3);
+      const page = Ellipsoid.WGS84.cartographicToCartesian(
+        {
+          longitude: (s.longitude * Math.PI) / 180,
+          latitude: (s.latitude * Math.PI) / 180,
+          height: s.height!,
+        },
+        new Float64Array(3),
+      );
+      expect(
+        Math.hypot(p[0]! - page[0]!, p[1]! - page[1]!, p[2]! - page[2]!),
+        s.name,
+      ).toBeLessThan(1);
+    }
+  });
+
+  it("gives the light time at signal.json's row within plan 3's 0.5 m (c·∆lt), Newtonian as the fixture", async () => {
+    expect(row, "the checked setup is a signal.json row").toBeDefined();
+    const e = await client.scenario("dish-tracks", dish.checked.knobs, row.tdb);
+    expect(e.answer.unit).toBe("s");
+    const c = 299_792_458;
+    const off = Math.abs(e.answer.value! - row.dss43.CN.lt) * c;
+    print(
+      `dish-tracks DSS-43 at the signal row: ${e.answer.value} s, SPICE ${row.dss43.CN.lt} s, c·∆lt ${off.toFixed(4)} m`,
+    );
+    expect(off).toBeLessThan(0.5);
+  }, 60_000);
+
+  it("points DSS-43 where a hand computation from the tree's own vectors says (R11), aberration its effect", async () => {
+    const t = Instant.fromTdb(row.tdb);
+    const e = await client.scenario("dish-tracks", dish.checked.knobs, row.tdb);
+    const p = station(399043).state(t).subarray(0, 3);
+    const site = eastNorthUpFrame(
+      "DSS-43 ENU",
+      frames.itrf,
+      Ellipsoid.WGS84,
+      p,
+    );
+    const hand = pointingByHand(frames, site, orion.frame, t);
+    const { azimuth, elevation } = azimuthElevation(hand.apparent);
+    // The answer's words carry the hand pointing to their 0.01°.
+    expect(e.answer.label).toContain(pointingText(azimuth, elevation));
+    const pointing = e.live.find((r) => r.id === "dish-tracks.pointing.live")!;
+    expect(pointing.pass).toBe(true);
+    expect(pointing.value!).toBeLessThan(1e-9);
+    // The effect: aberration moves the pointing by about the Earth's
+    // orbital speed over c (20″); from where Orion is now, the light time
+    // takes most of it back (Orion moves with the Earth).
+    expect(pointing.effect!.value).toBeGreaterThan(5);
+    expect(pointing.effect!.value).toBeLessThan(40);
+    print(
+      `dish-tracks DSS-43 pointing ${pointingText(azimuth, elevation)}; by hand within ${pointing.value!} rad; aberration ${pointing.effect!.value.toFixed(3)}″`,
+    );
+  }, 60_000);
+
+  it("says Orion is hidden by the Moon from DSS-43 at 23:04 UTC near the flyby, as the library's line of sight and hand limb geometry agree, and clear at 20:00", async () => {
+    const at = (iso: string) => tdbOf(Date.parse(iso));
+    const behind = await client.scenario(
+      "dish-tracks",
+      { station: "DSS-43" },
+      at("2026-04-06T23:04:00Z"),
+    );
+    expect(behind.answer.aside).toMatch(/^Not in view: hidden by the Moon/);
+    const los = behind.live.find((r) => r.id === "space.line-of-sight.live")!;
+    expect(los.pass, los.detail).toBe(true);
+    const before = await client.scenario(
+      "dish-tracks",
+      { station: "DSS-43" },
+      at("2026-04-06T20:00:00Z"),
+    );
+    expect(before.answer.aside).toMatch(
+      /^In view: clear of the Earth and the Moon/,
+    );
+    // The page traces the last part over the terrain: one sight line from the dish.
+    expect(before.sightLines?.map((l) => l.id)).toEqual(["orion"]);
+  }, 60_000);
+
+  it("routes Orion's data from EME2000 up to ICRF and down through GCRF and ITRF to the dish: the tree's EME2000 hangs under EARTH_ICRF, so they meet at ICRF", async () => {
+    for (const id of ["DSS-14", "DSS-43", "DSS-63"] as const) {
+      const e = await client.scenario("dish-tracks", { station: id }, row.tdb);
+      expect(e.data?.frame).toBe("EME2000");
+      const tree = buildScenarioTree(buildTree(frames), e.added);
+      const p = branchPath(tree, e.answer.path!.from, e.answer.path!.to);
+      expect(p.up.map((n) => n.id)).toEqual(["EME2000", "EARTH_ICRF"]);
+      expect(p.ancestor.id).toBe("ICRF");
+      expect(p.down.map((n) => n.id)).toEqual([
+        "GCRF",
+        "ITRF",
+        DSN_STATIONS[id].name,
+      ]);
+      // The answer says the route through each frame on it.
+      for (const n of [...p.up.slice(1), p.ancestor, ...p.down]) {
+        expect(e.answer.headline, n.id).toContain(n.id);
+      }
+    }
+  }, 60_000);
+});
+
+describe("where's the Moon from here (Task 6b)", () => {
+  const moon = spec("moon-from-here");
+  const entry = (
+    references as unknown as {
+      entries: Record<
+        string,
+        {
+          azimuth: string;
+          elevation: string;
+          deltaAu: string;
+          site: { longitude: string; latitude: string };
+        }
+      >;
+    }
+  ).entries["jpl-horizons-moon-sacramento"]!;
+
+  it("asks Horizons about the scenario's own site", () => {
+    expect(Number(entry.site.longitude)).toBe(SACRAMENTO.longitude);
+    expect(Number(entry.site.latitude)).toBe(SACRAMENTO.latitude);
+  });
+
+  it("gives the distance, azimuth and elevation of JPL Horizons' table at its checked setup: the range within 1 m, the direction within 0.01″ (the catalog's), the azimuth and elevation to their printed 0.01°", async () => {
+    const e = await client.scenario(
+      "moon-from-here",
+      {},
+      checkedTdb("moon-from-here"),
+    );
+    const delta = Number(entry.deltaAu) * 149_597_870.7;
+    print(
+      `moon-from-here: ${e.answer.value} km, Horizons ${delta} km; ${e.answer.label}`,
+    );
+    expect(Math.abs(e.answer.value! - delta) * 1000).toBeLessThan(MOON_RANGE);
+    expect(e.answer.published?.proofId).toBe(
+      "space.moon-from-sacramento.range",
+    );
+    expect(e.answer.label).toContain(
+      pointingText(Number(entry.azimuth), Number(entry.elevation)),
+    );
+    const direction = catalog.get("space.moon-from-sacramento.direction")!;
+    expect(direction.pass).toBe(true);
+    expect(direction.value!).toBeLessThan(MOON_DIRECTION);
+    expect(direction.source?.document).toMatch(/Horizons/);
+  }, 60_000);
+
+  it("shows Horizons' apparent azimuth and elevation without a verdict: about half an arcsecond apart, mostly Horizons' horizon turning with the pole of date", async () => {
+    const h = (
+      await runStress(context(), {
+        ids: ["space.moon-from-sacramento.horizon"],
+      })
+    ).find((r) => r.id === "space.moon-from-sacramento.horizon");
+    expect(h!.displayOnly).toBe(true);
+    print(`moon-from-here horizon: ${h!.detail}`);
+    expect(h!.effect!.value).toBeLessThan(1);
+    // Never proof: the scenario's rows leave it out.
+    expect(moon.proof).not.toContain("space.moon-from-sacramento.horizon");
+  }, 60_000);
+
+  it("works the pointing by hand from the tree's vectors (R11) at any time, and the site's frame is Sacramento's", async () => {
+    const t = checkedTdb("moon-from-here") + 5 * 3600;
+    const e = await client.scenario("moon-from-here", {}, t);
+    const site = earthSiteFrame(frames.itrf, SACRAMENTO);
+    const m = measure(
+      framePoint(site, [0, 0, 0]),
+      framePoint(frames.moonIcrf, [0, 0, 0]),
+      Instant.fromTdb(t),
+      frames,
+      { shapiro: [] },
+    );
+    expect(e.answer.value).toBeCloseTo(m.signal!.downlink.range / 1000, 9);
+    const p = e.live.find((r) => r.id === "moon-from-here.pointing.live")!;
+    expect(p.pass).toBe(true);
+    expect(e.added.map((a) => a.id)).toEqual([SACRAMENTO.name]);
+    expect(e.answer.path).toEqual({ from: "MOON_ICRF", to: SACRAMENTO.name });
+  }, 60_000);
+});
+
+describe("the line of sight drawn every frame on the page (Task 6b fix: it followed the worker's replies and stepped)", () => {
+  // The page places the line at the instant the globe shows, from its own
+  // frame tree and Orion's track (skyRay.ts, `rayDirection`); the worker's
+  // evaluation states the answer. At sample instants they agree: the Moon's
+  // within 1e-9 rad (the same site), the dish's within 1e-8 rad (the page's
+  // station is the SPK's to 1 m: under 3e-9 rad at Orion's distance).
+  const cases = [
+    {
+      id: "moon-from-here" as const,
+      knobs: {},
+      site: SACRAMENTO,
+      target: "moon" as const,
+      tolerance: 1e-9,
+    },
+    ...(["DSS-14", "DSS-43", "DSS-63"] as const).map((station) => ({
+      id: "dish-tracks" as const,
+      knobs: { station },
+      site: DSN_STATIONS[station],
+      target: "orion" as const,
+      tolerance: 1e-8,
+    })),
+  ];
+  for (const c of cases) {
+    it(`${c.id} ${JSON.stringify(c.knobs)}: the per-frame line points where the worker's evaluation says, at sample instants`, async () => {
+      const base = checkedTdb(c.id);
+      const site = earthSiteFrame(frames.itrf, c.site);
+      const toItrf = frameTransform(site, frames.itrf, Instant.fromTdb(base));
+      const place = targetPlace(frames, c.target, orion)!;
+      let worst = 0;
+      for (const hours of [0, 0.5, 2, 7.25]) {
+        const t = base + hours * 3600;
+        const e = await client.scenario(c.id, c.knobs, t);
+        const line = e.sightLines![0]!;
+        const w = [0, 1, 2].map((i) => line.to[i]! - line.from[i]!);
+        const lw = Math.hypot(w[0]!, w[1]!, w[2]!);
+        const enu = rayDirection(
+          frames,
+          site,
+          c.site.latitude,
+          place,
+          Instant.fromTdb(t),
+        );
+        const d = [0, 1, 2].map(
+          (i) =>
+            toItrf[i]! * enu[0]! +
+            toItrf[4 + i]! * enu[1]! +
+            toItrf[8 + i]! * enu[2]!,
+        );
+        worst = Math.max(
+          worst,
+          angleBetween(
+            d,
+            w.map((x) => x / lw),
+          ),
+        );
+      }
+      print(
+        `${c.id} ${JSON.stringify(c.knobs)}: per-frame line within ${worst.toExponential(2)} rad of the worker's`,
+      );
+      expect(worst).toBeLessThan(c.tolerance);
+    }, 60_000);
+  }
 });

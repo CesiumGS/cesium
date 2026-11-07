@@ -686,6 +686,38 @@
         "unit": "m/yr"
       }
     },
+    "jpl-horizons-moon-sacramento": {
+      "source": {
+        "document": "JPL Horizons On-Line Ephemeris System, observer table: the Moon (301) from a user-defined site on the Earth",
+        "revision": "Horizons API version 1.2; ephemeris DE441; EOP file eop.261106.p270202 (data-based to 2026-11-06)",
+        "table": "Observer table, quantities 1 (astrometric R.A. and DEC, ICRF), 2 (apparent R.A. and DEC), 4 (airless apparent azimuth and elevation) and 20 (delta, deldot); angles in degrees, extra precision",
+        "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='301'&OBJ_DATA='NO'&MAKE_EPHEM='YES'&EPHEM_TYPE='OBSERVER'&CENTER='coord@399'&COORD_TYPE='GEODETIC'&SITE_COORD='-121.4944,38.5816,0'&TLIST='2026-06-21%2006:00'&TIME_TYPE='UT'&QUANTITIES='1,2,4,20'&ANG_FORMAT='DEG'&EXTRA_PREC='YES'&CSV_FORMAT='YES'&APPARENT='AIRLESS'",
+        "retrieved": "2026-11-06"
+      },
+      "site": {
+        "kind": "input",
+        "siteCoord": "-121.4944,38.5816,0",
+        "header": "Center geodetic : 238.5056, 38.5816, 0.0          {E-lon(deg),Lat(deg),Alt(km)}",
+        "radii": "Center radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}",
+        "longitude": "-121.4944",
+        "latitude": "38.5816",
+        "heightKm": "0"
+      },
+      "columns": "Date__(UT)__HR:MN:SC.fff, , , R.A.___(ICRF), DEC____(ICRF),  R.A.__(a-app), DEC___(a-app), Azimuth_(a-app), Elevation_(a-app),             delta,     deldot,",
+      "row": " 2026-Jun-21 06:00:00.000, ,m, 170.910214278,   1.140603076,  171.250995101,   0.994598918,   255.765536226,      18.654793420,  0.00255716451757,  0.3970274,",
+      "time": "2026-06-21T06:00:00Z",
+      "raIcrf": "170.910214278",
+      "decIcrf": "1.140603076",
+      "azimuth": "255.765536226",
+      "elevation": "18.654793420",
+      "deltaAu": "0.00255716451757",
+      "au": "1 au= 149597870.700 km",
+      "notes": {
+        "astrometric": "Horizons' column notes, paraphrased: the Moon's centre from the site in ICRF axes, corrected for the down-leg light time only",
+        "azimuthElevation": "paraphrased: airless apparent direction (light time, the Sun's light bending, stellar aberration, precession and nutation), azimuth clockwise from north, elevation from the plane square to the reference surface's zenith",
+        "delta": "paraphrased: the light-time (apparent) range of the Moon's centre from the site"
+      }
+    },
     "os-national-grid-example": {
       "source": {
         "document": "A Guide to Coordinate Systems in Great Britain",
