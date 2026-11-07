@@ -72,7 +72,6 @@ describe("TilesetPlacement: rigid", () => {
     const p = placeRigid(frame, anchor);
     const at10 = p.displayError([10_000 / US_FOOT, 0, 0]);
     const at20 = p.displayError([20_000 / US_FOOT, 0, 0]);
-    console.log(`displayError 10 km ${at10} m, 20 km ${at20} m`);
     expect(Math.abs(at10 - 7.8)).toBeLessThan(1.5);
     expect(Math.abs(at20 - 31)).toBeLessThan(3);
     expect(p.displayError(anchor)).toBeLessThan(1e-6);
