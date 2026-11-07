@@ -166,6 +166,12 @@ export {
   type SiteTransform,
 } from "./engineering/EngineeringFrame.ts";
 export {
+  placeReprojected,
+  placeRigid,
+  type PlacementMode,
+  type TilesetPlacement,
+} from "./engineering/placement.ts";
+export {
   Alignment,
   type AlignmentDefinition,
   type HorizontalElement,
