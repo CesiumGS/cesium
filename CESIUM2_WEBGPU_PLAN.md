@@ -6899,6 +6899,62 @@ curve). Plan 4b ships the split with a CPU stand-in for the client side
 in for the server. Plan 5 replaces the stand-in with a GPU snap pass, which
 handles occlusion and cost by construction.
 
+_Upstream proposals, for the owner to take to the right people (owner,
+2026-11-07)._ Prior-art research (2026-11-07) found that the design globe's
+tileset declaration overlaps existing work for its CRS (`ESRI_crs` in 3D
+Tiles 1.1; `EXT_geospatial_crs_source`, an open draft in the 3D Tiles 2.0
+work, CesiumGS/glTF#131) and its body (`3DTILES_ellipsoid`; the 2.0 root
+CRS). The declaration is renamed `CESIUM_engineering_frame` and composes
+with those. What is new, and worth proposing:
+
+- **A placement mode on the source CRS (3D Tiles 2.0, #131):** one field,
+  `"placement": "rigid" | "reprojected"`, saying whether content in a design
+  CRS is meant to be placed rigidly at an anchor or reprojected vertex by
+  vertex. Nothing in 3D Tiles, glTF or OGC can say "reprojected" today.
+- **Alignments (3D Tiles, and possibly glTF):** horizontal and vertical
+  alignment geometry (lines, arcs, clothoid spirals, grades, parabolic vertical
+  curves, stationing) as tileset data, with segment kinds named after IFC
+  4.3's `IfcAlignment`, so exact snapping and station-offset readouts work on
+  streamed content.
+- **A declared coordinate operation (3D Tiles 2.0):** which operation the
+  producer used to reproject, as WKT2 `COORDINATEOPERATION` or `BOUNDCRS`
+  (standard) rather than a PROJ pipeline string, so a consumer can reproduce
+  the producer's placement exactly, with a rule that every grid it names is a
+  published, hashed grid.
+- **A site transform mapped to IFC (3D Tiles 2.0):** our rotation, scale and
+  origin match IFC 4.3's `IfcMapConversionScaled`; proposing that shape (or a
+  reference to it) would let IFC-sourced tilesets carry it unchanged.
+- **Deliberately not proposed:** the geoid fallback (EGM96 or EGM2008 when a
+  national grid is missing), which is application policy, not tileset data.
+
+_Plan 5 design input: animation, starting with camera transitions (owner,
+2026-11-07)._ Flights between rigs need to be configurable: "an instant jump
+vs a linear movement vs something eased in and out". This is the place to lay
+groundwork for animation in general.
+
+- **A small animation core, not camera-specific.** An animation animates a
+  value over a timeline, with timing (duration, delay, easing) and playback
+  controls (play, pause, reverse, playback rate, a `finished` promise), after
+  the Web Animations API. Easing is a named preset, a cubic Bézier, a spring
+  (which keeps its velocity when interrupted) or a function. Keyframed
+  values use glTF's samplers (step, linear, cubic spline). The same core
+  drives camera transitions, the design globe's placement morph, and later
+  any animated property.
+- **Every animation chooses its clock,** the wall clock or the scene clock
+  (owner: "configurable between wall clock and scene clock for all
+  animations").
+- **A camera transition is a blend between two live rigs,** after Unity's
+  Cinemachine: each frame evaluates the source and target rigs at the
+  current time (so a moving target such as Orion is tracked throughout) and
+  blends them by the eased weight in a common frame of the tree. A cut is
+  duration 0.
+- **Path and timing are separate.** The path is the route (straight in the
+  blend frame, an arc over the surface as 1.x's `flyTo` does with its maximum
+  height, or a spline); the easing maps time onto it.
+- **Configurable at three levels:** per call, per pair of rig kinds (a
+  Cinemachine-style table of defaults, such as "globe → ride-along: 3 s
+  ease-in-out"), and app-wide.
+
 _Plan 5 design input: modules with interfaces (owner, 2026-11-07)._ "We
 should generally be thinking about how to make 2.0 more modular so pieces of
 it can be reused and composed in interesting ways and we can easily plug
@@ -6959,9 +7015,13 @@ with a brainstorm first:
   body centre, a site, a selected frame's origin). "Up" is one of its axes (a
   pole, an orbit normal, an engineering frame's up). Heading is measured from
   a reference axis in it (north, grid north, x).
-- **Constraints come from the frame's body, if it has one.** "Stay above the
-  surface" uses that body's ellipsoid or terrain, so the Moon's on the Moon.
-  Free frames (GCRF, a trajectory) have only a range limit.
+- **The rig is only a pose in a frame (owner, 2026-11-07).** It holds no
+  rules about where the camera may go. **Controllers own the constraints:**
+  a globe controller may keep the camera above a body's surface (that body's
+  ellipsoid or terrain, so the Moon's on the Moon) or let it go under;
+  free-fly has only a range limit. Underground visualization is a first-class
+  case, so no constraint lives anywhere a controller can't turn it off
+  (seeing underground, such as translucent terrain, is the renderer's).
 - **Controllers are policies over the rig.** The globe controls are a rig on
   ITRF with Earth's ellipsoid and grab-the-surface input. Orbit is a pivot
   plus an up axis. Free-fly can join them.
@@ -6976,7 +7036,18 @@ with a brainstorm first:
   - in orbit, black space, with the atmosphere drawn only as a shell on the
     body's limb;
   - on the Moon, no atmosphere at all.
-    Blend across the boundary as the camera climbs, so the change doesn't pop.
+
+  **Physically, not by blending (owner, 2026-11-07):** "physically correct as
+  the camera transitions between frames in the same way that zooming out of
+  earth right now shows the atmosphere accurately … a general system there
+  rather than naive blending." Every body declares its atmosphere, or none.
+  Each atmosphere is evaluated from the camera's true position relative to
+  that body, in the body's own frame, whatever frame the rig is attached to,
+  and what is seen through each is composited physically (the Moon seen
+  through Earth's air from the ground; Earth's limb shell against black sky
+  from the Moon). The frames example's orbit scenes showing Earth's sunrise
+  colours in space are a bug in how the camera's position reaches the
+  atmosphere, not a missing blend.
 
 **Design space and the global view, with a morph between them (owner,
 2026-11-06).** An engineering model, such as an iModel in its design CRS,
