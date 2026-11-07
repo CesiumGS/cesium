@@ -368,6 +368,7 @@ Every scenario task from here on follows the patterns Task 4 settled:
   - the `branchPath` route lights up, with a travelling dot;
   - numbered route steps below the tree give each step's physical meaning and its accuracy.
 - **The question and the headline.** The big value answers the question directly. `ScenarioAnswer.label` is required: a value, a unit and a few words. The callout and the panel agree.
+- **Checks, not proof** (Task 6c): each check row names its kind (published reference, measured data, hand formula, round trip, live re-run). Only measured-data rows say "validated".
 - **Published values sit next to the answer.** At the checked setup that's the reference and its citation, the difference and the tolerance. Off it, the reference applies at the checked setup, with the delta and no verdict. Collapsed proof rows show "ours vs published".
 - **Anything that follows the clock is placed on the main thread, every frame,** at the instant actually shown: markers, pointing lines, triads, footprints and their labels. Use the page's frame tree and tracks for this (owner, 2026-11-06, after Orion's dot and the Moon line jumped). The worker only supplies the answer text, statements and proof. These may trail the clock, shown as "Following the clock". Every scenario adds a test that its per-frame geometry agrees with the worker's evaluation at sample instants, within the stated accuracy.
 - **Screenshots are never committed.** design-screenshots/ is git-ignored, so put shots under the SDD workspace.
@@ -435,6 +436,27 @@ Both look up from a site on the Earth into space. Both need Task 5's terrain lin
 - [ ] **Step 4: Run** `npm test` and `npm run test:data`, with the same fingerprint rule as 6a.
 - [ ] **Step 5: Check in the browser:** the knobs, the answer, proof on and off the checked setup, and the route lighting from the DSS frame to Orion. Take screenshots into the SDD workspace.
 - [ ] **Step 6: Commit** with "examples: frames explorer scenarios: a dish tracks Orion, and where the Moon is from here".
+
+### Task 6c: "Proof" becomes "Checks", with each check's kind colour-coded (owner, 2026-11-06)
+
+The owner: "Proof" overclaims. Most checks are verification: they compare the computation with an independent reference calculation, a hand formula or a round trip. A few are validation, against measured data such as NGS survey marks or tracking data. So:
+
+- **Rename.** Each scenario's "Proof" becomes **"Checks"**. That covers the section heading, the copy, the markers ("At the checked setup…"), the "Open in Verification" link text where it applies, and the identifiers: `proof`, `ProofRow`, `proofRows`, `Proof.tsx`, the CSS classes and the tests. The secondary tab stays **"Verification"**, which describes the catalog accurately.
+- **Each row names its kind,** in words and with a colour-coded tag:
+  - **Published reference:** compared with a cited independent computation (Ashby & Patla, JPL Horizons, IERS).
+  - **Measured data:** compared with measurements, such as NGS survey marks or tracking data. Only these rows may say "validated".
+  - **Hand formula:** an independent closed-form check (R11).
+  - **Round trip / consistency:** two routes or a there-and-back that agree.
+  - **Live re-run:** off the checked setup, re-judged at your settings.
+- **Kind and status stay separate.** The kind is a small colour tag with a label. The status keeps its own icon and word (checked, failed, loading, reference applies at the checked setup). Colour never carries meaning alone, and the kind colours never reuse the pass, fail or warning colours.
+- **Colours** come from StrataKit's palette tokens, legible in light and dark at AA contrast. Show a compact legend once, at the top of the Checks section.
+- **The data** gets a `kind` on each catalog result or proof spec, derived where possible: `source` with a measured flag, hand formula, round trip. A test asserts every scenario's check rows have a kind, and that only measured-data rows use the word "validated".
+- **A mockup comes first.** Show the owner a mockup of the coloured rows and legend, in light and dark, before building. The design note is the conventions' "mockups first" rule.
+
+- [ ] Show the mockup, and get the owner's choice.
+- [ ] Rename across code, copy and tests.
+- [ ] Add `kind`, the tags, the legend and the tests.
+- [ ] Run the focused tests and tsc. Take one screenshot per scenario's Checks section. Commit with "examples: frames explorer: Checks, with each check's kind named and colour-coded".
 
 ### Task 7: The drone and the ship
 
