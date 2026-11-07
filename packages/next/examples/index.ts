@@ -55,4 +55,15 @@ export const EXAMPLES: ExampleInfo[] = [
     source: () =>
       import("./frames-explorer/main.ts?raw").then((m) => m.default),
   },
+  {
+    id: "design-globe",
+    title: "Design coordinates on the globe",
+    description:
+      "A 50 km highway designed in California State Plane, placed rigidly at one anchor as most viewers do, then morphed into its reprojected placement, where every vertex is where the design means it; and sites in seven countries, each in its own CRS and height system.",
+    labels: ["Engineering", "Projections", "3D Tiles"],
+    globe: "ellipsoid",
+    layout: "side",
+    load: () => import("./design-globe/main.ts"),
+    source: () => import("./design-globe/main.ts?raw").then((m) => m.default),
+  },
 ];

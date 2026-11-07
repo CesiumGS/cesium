@@ -1,0 +1,442 @@
+/*
+ * The design globe's panel and HUD (examples/design-globe/DESIGN.md).
+ * StrataKit tokens only, with one exception, the placements' colours (the
+ * 3D viewport's colours, which Dyno's guide exempts), each with a tone for
+ * light surfaces and one for dark: orange for rigid, cyan for reprojected,
+ * the frames explorer's trajectory and Earth-fixed tones (its DESIGN.md
+ * "Frame families"), both at least 4.5:1 on StrataKit's surfaces.
+ */
+.dg-panel,
+.dg-hud-host {
+  --dg-rigid: light-dark(#ae5517, #fc9252);
+  --dg-reprojected: light-dark(#02717a, #3bcddc);
+  --dg-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ------------------------------------------------------------ panel */
+
+.dg-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-600);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.dg-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.dg-section h2 {
+  margin: 0;
+}
+.dg-muted {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-strong {
+  font-weight: 600;
+}
+.dg-num {
+  font-variant-numeric: tabular-nums;
+}
+.dg-code-block {
+  display: block;
+  margin: var(--stratakit-space-150) 0;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-mono-muted);
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The status: rows while loading, one quiet line when all is in. */
+.dg-status {
+  margin: 0;
+}
+.dg-status-ready {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.dg-status-head {
+  margin: 0 0 var(--stratakit-space-150);
+  font-weight: 500;
+}
+.dg-status-done {
+  margin: var(--stratakit-space-200) 0 0;
+}
+.dg-load {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.dg-load-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--stratakit-space-300);
+  row-gap: var(--stratakit-space-50);
+}
+.dg-load-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dg-load-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-load-state .MuiCircularProgress-root {
+  color: var(--stratakit-color-icon-info-base);
+}
+.dg-load-bar {
+  grid-column: 1 / -1;
+  background: var(--stratakit-color-bg-info-muted);
+}
+.dg-load-bar .MuiLinearProgress-bar {
+  background: var(--stratakit-color-icon-info-base);
+}
+
+/* The placement switch: each option with its placement's colour. */
+.dg-switch {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+.dg-dot {
+  display: inline-block;
+  inline-size: 8px;
+  block-size: 8px;
+  margin-inline-end: var(--stratakit-space-150);
+  border-radius: 50%;
+}
+.dg-dot.rigid {
+  background: var(--dg-rigid);
+}
+.dg-dot.reprojected {
+  background: var(--dg-reprojected);
+}
+.dg-morph-state {
+  margin: 0;
+  /* Two lines, so the toggles below don't jump as the sentence changes. */
+  min-block-size: 2.9em;
+}
+.dg-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.dg-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  cursor: pointer;
+}
+.dg-factor {
+  font-weight: 600;
+  color: var(--stratakit-color-text-attention-base);
+}
+
+/* The sag chart. */
+.dg-sag {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.dg-sag svg {
+  inline-size: 100%;
+  block-size: auto;
+  overflow: visible;
+}
+.dg-sag figcaption {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-sag-area {
+  fill: color-mix(in oklab, var(--dg-rigid) 14%, transparent);
+}
+.dg-sag-line {
+  fill: none;
+  stroke: var(--dg-rigid);
+  stroke-width: 1.5;
+}
+.dg-sag-base {
+  stroke: var(--dg-reprojected);
+  stroke-width: 1.5;
+}
+.dg-sag-anchor {
+  stroke: var(--stratakit-color-text-neutral-tertiary);
+  stroke-dasharray: 2 3;
+}
+.dg-sag-label {
+  fill: var(--stratakit-color-text-neutral-secondary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.dg-sag-value {
+  fill: var(--dg-rigid);
+  font-weight: 600;
+}
+.dg-sag-max {
+  fill: var(--dg-rigid);
+}
+.dg-sag-now line {
+  stroke: var(--stratakit-color-text-neutral-primary);
+}
+.dg-sag-now circle {
+  fill: var(--stratakit-color-text-neutral-primary);
+}
+.dg-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+}
+.dg-actions-note {
+  flex: 1 1 12em;
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+
+/* The sites: rows with rules, the selected one with an accent bar. */
+.dg-sites {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dg-site {
+  padding: var(--stratakit-space-200) var(--stratakit-space-200)
+    var(--stratakit-space-200) var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-inline-start: 2px solid transparent;
+}
+.dg-site:last-child {
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-site.selected {
+  border-inline-start-color: var(--stratakit-color-border-accent-strong);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.dg-site-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+}
+.dg-site-name {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.dg-site-head .MuiButton-root {
+  flex: none;
+  white-space: nowrap;
+}
+.dg-site-place {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-site-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100);
+  margin-block-start: var(--stratakit-space-50);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.dg-site-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-300);
+}
+.dg-site-wait {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  margin: var(--stratakit-space-200) 0 0;
+}
+.dg-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+  margin: 0;
+}
+.dg-facts dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.dg-fallback {
+  display: flex;
+  gap: var(--stratakit-space-150);
+  margin: 0;
+  color: var(--stratakit-color-text-attention-base);
+}
+.dg-story {
+  margin: 0;
+  padding-block-start: var(--stratakit-space-200);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-story .cesium-icon,
+.dg-story svg {
+  vertical-align: -2px;
+}
+.dg-story.ok svg {
+  color: var(--stratakit-color-icon-positive-base);
+}
+
+/* ------------------------------------------------------------- HUD */
+
+/* Always dark over the scene, as Dyno's inspector and the credits are. */
+.dg-hud-host {
+  color-scheme: dark;
+  --stratakit-color-bg-elevation-base: var(
+    --cesium-ui-surface,
+    oklch(26.92% 0.008 268.32)
+  );
+  --stratakit-color-text-neutral-primary: var(
+    --cesium-ui-text,
+    oklch(99.06% 0.002 247.84)
+  );
+  --stratakit-color-text-neutral-secondary: var(
+    --cesium-ui-text-muted,
+    oklch(79.56% 0.008 241.69)
+  );
+  --stratakit-color-text-attention-base: oklch(80% 0.13 79.75);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.dg-hud {
+  position: absolute;
+  z-index: 3;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  max-inline-size: min(340px, calc(100% - 24px));
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-bg-elevation-base) 90%,
+    transparent
+  );
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow: var(--stratakit-shadow-surface-md);
+  backdrop-filter: blur(6px);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+}
+.dg-hud-muted {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-hud-title {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-hud-cursor {
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
+  inline-size: min(320px, calc(50% - 24px));
+}
+.dg-hud-cursor.muted > span:not(.dg-hud-title) {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-hud-coords {
+  white-space: pre-wrap;
+}
+/* Top left, under Dyno's inspector line: clear of the time controls and the credits at the bottom. */
+.dg-hud-legend {
+  inset-block-start: 44px;
+  inset-inline-start: 12px;
+  max-inline-size: min(300px, calc(50% - 24px));
+}
+.dg-key {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.dg-key-warn {
+  color: var(--stratakit-color-text-attention-base);
+  font-weight: 600;
+}
+.dg-swatch {
+  flex: none;
+  inline-size: 18px;
+  block-size: 6px;
+  border-radius: 2px;
+}
+.dg-swatch.solid.rigid {
+  background: var(--dg-rigid);
+}
+.dg-swatch.solid.reprojected {
+  background: var(--dg-reprojected);
+}
+.dg-swatch.line {
+  block-size: 0;
+  border-block-start: 1px solid;
+  border-radius: 0;
+}
+.dg-swatch.line.rigid {
+  color: var(--dg-rigid);
+}
+.dg-swatch.line.reprojected {
+  color: var(--dg-reprojected);
+}
+.dg-swatch.ring {
+  inline-size: 10px;
+  block-size: 10px;
+  margin-inline: 4px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+}
+.dg-ramp {
+  flex: none;
+  inline-size: 18px;
+  block-size: 6px;
+  border-radius: 2px;
+}
+.dg-globe-label {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.dg-globe-label span {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 14px));
+  padding: 1px var(--stratakit-space-150);
+  border-radius: var(--stratakit-radius-sm);
+  background: color-mix(in oklab, #000 55%, transparent);
+  color: #fff;
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dg-site-detail {
+    animation: dg-open 160ms var(--dg-ease);
+  }
+}
+@keyframes dg-open {
+  from {
+    opacity: 0;
+  }
+}
