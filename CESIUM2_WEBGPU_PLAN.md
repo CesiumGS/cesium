@@ -6961,6 +6961,13 @@ groundwork for animation in general.
   Cinemachine-style table of defaults, such as "globe → ride-along: 3 s
   ease-in-out"), and app-wide.
 
+_Terms (owner, 2026-11-07):_ a draw's **placement** is how its content
+coordinates reach the render space, rigid (affine) or per vertex; the frames
+module computes it from a **coordinate operation** (PROJ's and ISO 19111's
+term), and applying one is **reprojection**. "Warp" and "deformation" are
+avoided (the latter means crustal motion in geodesy, as in PROJ's `defmodel`),
+as is "projection" for this (it is the camera's).
+
 _Plan 5 design input: one flat render space, and frames above it (owner,
 2026-11-07)._ This replaces the question of a default frame tree. "The
 default frame tree that's needed for a scene is application dependent and we
@@ -6971,12 +6978,13 @@ going to go into space."
   Cartesian render space in metres with no meaning attached, a transform per
   draw, and a camera pose in it. Precision stays camera-relative, so one core
   serves a site, the Earth and the Moon. The core's only frame-adjacent
-  feature is a per-draw vertex warp hook, for content that is reprojected,
+  feature is that a draw has a **placement**: affine (a matrix) or per vertex,
+  for content that is reprojected,
   flattened or morphing. Without the frames module, a draw's transform is a
   matrix the application sets.
 - **The frames module is optional and sits above the core.** At each tick's
   time it resolves every frame in use into the render space and hands the
-  core transforms and warps. The render space is one chosen frame, the
+  core each draw's placement. The render space is one chosen frame, the
   **render root**: ITRF for the globe view, the engineering frame for design
   view (so design coordinates are straight axes, and the globe's tiles reach
   it flattened through the frame's projection), MOON_ME on the Moon. Design
@@ -6991,22 +6999,22 @@ going to go into space."
 - **The Viewer picks defaults** (for a globe app: ITRF as the render root,
   the ellipsoid Earth, nothing else); applications on the lower-level APIs
   choose for themselves, or leave the module out.
-- **The warp hook is also where tessellation meets projection:** the frames
-  module knows each draw's warp (its geometric projection into the render
-  root), so subdividing warped geometry (see "tessellating warped models")
+- **A draw's placement is also where tessellation meets the coordinate
+  operation:** the frames module knows each draw's placement into the render
+  root, so subdividing reprojected geometry (see "tessellating reprojected models")
   can be driven from the same information.
 
-_Design input after plan 5: one GPU tessellation engine, for warped models
+_Design input after plan 5: one GPU tessellation engine, for reprojected models
 and B-reps (owner, 2026-11-07)._ Rendering B-reps (trimmed NURBS and other
 analytic surfaces from CAD) needs view-dependent tessellation too. A CPU
 kernel such as SMLib may tessellate, but the engine wants it on the GPU. One
 engine should serve both cases: evaluate surface patches (Bézier or NURBS)
-and the frame warp together in compute, subdivide by screen-space error,
+and the draw's placement together in compute, subdivide by screen-space error,
 handle trim curves (trim textures or signed distance fields), and draw with
 indirect draws (WebGPU has neither tessellation nor mesh shaders). Prior art
 to start from: Guthe et al.'s GPU trimming and tessellation of NURBS (2005),
 feature-adaptive subdivision (OpenSubdiv), and direct ray-casting of trimmed
-NURBS. Plan 5 only keeps the seam open: the warp hook and the frames
+NURBS. Plan 5 only keeps the seam open: per-vertex placement and the frames
 module's per-draw projection are what this engine would consume.
 
 _Plan 5 design input: modules with interfaces (owner, 2026-11-07)._ "We
@@ -7035,7 +7043,7 @@ Plan 5's API review designs the seams:
   or a WebGL 2 backend. Not now: the owner wants no design compromises in
   the WebGPU approach while the prototype is built.
 
-_Plan 5 design input: tessellating warped models (owner, 2026-11-07)._ A
+_Plan 5 design input: tessellating reprojected models (owner, 2026-11-07)._ A
 reprojected model's edges are straight chords between reprojected vertices,
 so a large flat face (a runway slab, a panel row) sags below the curved
 Earth by about d²/8R at its middle (2 cm for a 1 km edge, 2 m for 10 km),
@@ -7045,7 +7053,7 @@ engine handles models it didn't generate. WebGPU has no tessellation stage,
 so the options are:
 
 - compute-shader adaptive subdivision with indirect draws;
-- a vertex-shader warp that carries design coordinates and applies the
+- per-vertex placement in the vertex shader, carrying design coordinates and applying the
   curvature correction per vertex, so the subdivision can be coarse;
 - refinement driven by screen-space error, folded into tile selection;
 - requiring producers to subdivide, and stating the rule in
