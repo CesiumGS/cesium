@@ -305,6 +305,8 @@ export class Globe {
   private readonly labelHost: HTMLElement;
   private emphasis: Emphasis | undefined;
   private flight = 0;
+  /** The instant of the last `update`. */
+  private shown: Instant | undefined;
   /** The flight under way's token (`flight`), until it arrives. */
   private flying_: number | undefined;
   /** The ground's exposure compensation now (stops; 0 undimmed). */
@@ -463,10 +465,22 @@ export class Globe {
   }
 
   /**
+   * The instant the world was last placed at (`update`): what the next frame
+   * renders, and what every label's point is taken at, so a label sits on
+   * what is drawn (Task 4c: labels placed at the clock's newer instant
+   * jittered against the canvas while the clock played).
+   */
+  shownAt(): Instant | undefined {
+    return this.shown;
+  }
+
+  /**
    * Places every triad at `instant` (R4: `frameTransform(frame, itrf, t)`),
-   * its length from the camera's distance. Called every frame.
+   * its length from the camera's distance. Called every frame. The labels
+   * are not placed here: `placeLabels` places them from what was rendered.
    */
   update(itrf: Frame, instant: Instant): void {
+    this.shown = instant;
     const { world, view } = this.viewer;
     const eye = view.camera.position;
     const m = new Float64Array(16);
@@ -519,7 +533,6 @@ export class Globe {
         t.shown = true;
       }
     }
-    this.placeLabels();
   }
 
   // ----------------------------------------------------------- overlays
@@ -731,6 +744,8 @@ export class Globe {
       if (l === undefined) {
         const el = document.createElement("span");
         el.className = "fx-globe-label";
+        // Hidden until it is placed.
+        el.hidden = true;
         this.labelHost.append(el);
         l = { spec, el };
         this.labels.set(spec.id, l);
@@ -743,11 +758,25 @@ export class Globe {
       l.el.classList.toggle("fx-globe-label-marker", spec.marker === true);
     }
     this.retint();
-    this.placeLabels();
+    // While the frame loop runs, it places the labels at the start of the
+    // next frame, against what that frame renders. Placed here, mid-frame
+    // (Orion's minute changes every frame at 1 h/s), they would take the new
+    // instant with the camera not yet carried, and wobble (Task 4c).
+    if (this.shown === undefined) {
+      this.placeLabels();
+    }
   }
 
-  /** Projects each label's point and hides the ones that collide or are out of sight. */
-  private placeLabels(): void {
+  /**
+   * Projects each label's point and hides the ones that collide or are out
+   * of sight. The frame loop calls it first in its frame, before it moves
+   * anything: the canvas shows this frame what the loop placed in the last
+   * one (the engine renders before the loop runs), so the labels are placed
+   * against that same camera and those same points (Task 4c: placed after
+   * the update, they used the new instant with the camera not yet carried,
+   * and wobbled by a frame's motion as frame times varied).
+   */
+  placeLabels(): void {
     const { view } = this.viewer;
     const cam = view.camera;
     const w = this.labelHost.clientWidth || this.viewer.canvas.clientWidth;

@@ -24,7 +24,7 @@ export interface TriadLayer {
 }
 
 export function createTriadLayer(deps: {
-  core: Pick<PageCore, "frames" | "instantNow" | "globe" | "view">;
+  core: Pick<PageCore, "frames" | "globe" | "view">;
   labels: LabelBoard;
   tree(): TreeNode | undefined;
   /** The scene's own frames (the lunar site, Sacramento). */
@@ -36,7 +36,7 @@ export function createTriadLayer(deps: {
   /** The frames the selection highlights. */
   emphasis(): Set<string>;
 }): TriadLayer {
-  const { frames: framesNow, instantNow, globe, view } = deps.core;
+  const { frames: framesNow, globe, view } = deps.core;
 
   const familyOf = (id: string): Family => {
     const tree = deps.tree();
@@ -156,7 +156,8 @@ export function createTriadLayer(deps: {
     axis = 0,
   ): Float64Array | undefined {
     const frames = framesNow();
-    const instant = instantNow();
+    // The instant the globe shows, as the triad's own origin (globe.ts).
+    const instant = globe.shownAt();
     if (!frames || !instant) {
       return undefined;
     }

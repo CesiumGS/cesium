@@ -6,10 +6,8 @@ import type {
   RecordedOperation,
 } from "../../../src/engineering/crs.ts";
 import type { ProjApi } from "../../../src/engineering/proj.ts";
-import type { Frames } from "../../../src/frames/frames.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import { Trajectory } from "../../../src/trajectory/Trajectory.ts";
-import { parseOem } from "../../../src/trajectory/oem.ts";
 import { takeCitations } from "./references.ts";
 import type {
   Fingerprint,
@@ -21,22 +19,9 @@ import type {
   StressResult,
 } from "./runner.ts";
 
-/** The Artemis II OEM's file name in the frames store. */
-export const ORION_OEM = "EM2_FODNAVBET_revF_PUBLIC.oem";
-
-/**
- * Orion from the Artemis II OEM, with the settings the library's data tests
- * use: Hermite degree 11 (NAIF's conversion; the OEM names none) and
- * covariance in m² (the file's actual unit).
- */
-export function orionFromOem(text: string, frames: Frames): Trajectory {
-  return Trajectory.fromOem(parseOem(text, frames.data.leapSeconds), frames, {
-    name: "orion",
-    accuracy: "precise",
-    interpolation: { method: "hermite", degree: 11 },
-    covarianceUnits: "m",
-  });
-}
+// The OEM's name and its Trajectory: one definition, which the page also
+// loads to place Orion's dot itself (orionTrack.ts).
+export { ORION_OEM, orionFromOem } from "../orionTrack.ts";
 
 export const DESIGN_ROUND_TRIP = 1e-4;
 

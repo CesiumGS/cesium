@@ -33,6 +33,7 @@ import { Globe, familyRgba } from "./globe.ts";
 import { createGlobeSelection } from "./globeSelection.ts";
 import { LoadingModel } from "./loading.ts";
 import { createOrionLayer } from "./orionLayer.ts";
+import { loadOrionTrack } from "./orionTrack.ts";
 import { createOverlayControl } from "./overlayControl.ts";
 import { FLYBY, createModelSource, type PageCore } from "./page.ts";
 import { createPageReport } from "./pageReport.ts";
@@ -223,6 +224,8 @@ export function run(context: ExampleContext): ExampleRun {
     refreshCallouts: () => callouts.refresh(),
     rebuildTree: () => treeState.rebuild(),
     drawn: () => stage.orionDrawn(),
+    // The dot's OEM, on this thread (orionTrack.ts).
+    loadTrack: (f) => loadOrionTrack(f, frameData.manifest(), signal),
   });
   scope.defer(() => orion.dispose());
 
@@ -267,6 +270,7 @@ export function run(context: ExampleContext): ExampleRun {
     orionOverlay: overlays.state("orion"),
     lunarSiteOrigin: () => cameraViews.lunarSiteOrigin(),
     refreshTriads: () => triads.refresh(),
+    leapSeconds: () => frames()?.data.leapSeconds,
   });
   scope.defer(() => callouts.dispose());
 

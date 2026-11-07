@@ -1,10 +1,13 @@
 // Orion on the globe (DESIGN.md "Lines", 6c): its path, built in the worker
 // in the frame it's drawn in and moved with that frame as the clock runs,
-// and its node and statements at the clock's instant (the tree, the legend
-// and "Orion now"), each one request in flight with the latest waiting
-// (orion.ts `latestOnly`). The overlay's state is overlayControl.ts's,
-// passed in as the shared object it is.
+// and its node and statements at the clock's instant (the tree and the
+// legend), each one request in flight with the latest waiting (orion.ts
+// `latestOnly`). Its dot ("Orion now") is placed on this thread every frame
+// from the same OEM (orionTrack.ts, Task 4c): it never waits for the worker.
+// The overlay's state is overlayControl.ts's, passed in as the shared object
+// it is.
 import { frameTransform } from "../../src/frames/Frame.ts";
+import type { Frames } from "../../src/frames/frames.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import { familyRgba } from "./globe.ts";
 import { defaultAccuracy, type OverlayState } from "./overlayConfig.ts";
@@ -20,16 +23,8 @@ import {
 } from "./page.ts";
 import type { OrionFrame, OverlayView } from "./panel/model.ts";
 import type { TrajectoryInfo } from "./protocol.ts";
+import { orionPlace, type OrionTrack } from "./orionTrack.ts";
 
-/** "Orion now" shows only for a statement within this much clock time of the clock, ms. */
-const ORION_NOW_SLACK_MS = 120_000;
-/**
- * While the clock plays, a statement is "now" for this much real time of
- * clock, ms: the re-ask's 150 ms and a reply's round trip, with room for a
- * worker busy with a scenario's evaluation. At 1 h/s the clock passes the
- * fixed two minutes in 33 ms, before any reply is in (Task 4c item 2).
- */
-const ORION_NOW_PLAYING_MS = 1500;
 /** The OEM's span, generously: samples it doesn't cover are skipped. */
 const ORION_SPAN = ["2026-04-02T02:00:00", "2026-04-11T00:00:00"] as const;
 
@@ -72,15 +67,14 @@ export interface OrionLayer {
   off(): void;
   /** Moves the path with its drawing frame to the clock's instant. */
   place(): void;
-  /** A point of the drawn path (Earth-fixed when drawn), where it is placed now. */
+  /** A point of the drawn path (Earth-fixed when drawn), where it is placed at the instant the globe shows. */
   pathPoint(p: ArrayLike<number>): Float64Array | undefined;
   /**
-   * Orion's place at the statement's time, carried with the path's drawing
-   * frame to the clock's instant: on the drawn path as the path moves.
+   * Orion's place in ITRF at the instant the globe shows (`Globe.shownAt`),
+   * from the OEM on this thread: on the drawn path in every frame, with no
+   * statement to wait for. Undefined until the OEM is in, or outside it.
    */
   markerPoint(): Float64Array | undefined;
-  /** The statement is for about the clock's time (not one it was scrubbed from). */
-  nowCurrent(): boolean;
   /** Asks for the statement again if the clock moved since the last ask. */
   askIfMoved(now: number, real: number): void;
   /** The legend's line (R8), from the statement at the clock's instant. */
@@ -112,6 +106,8 @@ export function createOrionLayer(deps: {
   rebuildTree(): void;
   /** A path was drawn (the scene may frame it). */
   drawn(): void;
+  /** Loads Orion's OEM on this thread, once the worker has it (orionTrack.ts `loadOrionTrack`). */
+  loadTrack(frames: Frames): Promise<OrionTrack>;
 }): OrionLayer {
   const {
     viewer,
@@ -214,7 +210,7 @@ export function createOrionLayer(deps: {
 
   function orionPathPoint(p: ArrayLike<number>): Float64Array | undefined {
     const frames = framesNow();
-    const instant = instantNow();
+    const instant = globe.shownAt();
     if (!orionBuilt || !frames || !instant) {
       return undefined;
     }
@@ -234,48 +230,50 @@ export function createOrionLayer(deps: {
   }
 
   /**
-   * Orion's place in the drawing frame at its statement's time, kept for
-   * the statement and the frame it was taken in. The path's sample at that
-   * time is the same point, so carried with the frame to now it stays on the
-   * path while the clock runs ahead of the statement (Task 4c item 2: an
-   * ITRF point from a minute ago is off a path that turned since).
+   * Orion's trajectory on this thread (orionTrack.ts): loaded once the
+   * worker has the OEM (so it is in the HTTP cache), tried again on the next
+   * change after a failure. The dot is placed from it every frame.
    */
-  let markerIn:
-    { info: TrajectoryInfo; frame: OrionFrame; at: Float64Array } | undefined;
+  let track: OrionTrack | undefined;
+  let trackLoading = false;
+  function loadTrack(): void {
+    const frames = framesNow();
+    if (
+      track ||
+      trackLoading ||
+      !frames ||
+      loading.get("orion").state !== "ready"
+    ) {
+      return;
+    }
+    trackLoading = true;
+    deps
+      .loadTrack(frames)
+      .then((t) => {
+        if (!disposed()) {
+          track = t;
+          deps.refreshCallouts();
+        }
+      })
+      .catch(() => {
+        // The dot stays off; the worker's path and statement still show.
+      })
+      .finally(() => {
+        trackLoading = false;
+      });
+  }
+
   function markerPoint(): Float64Array | undefined {
     const frames = framesNow();
-    const instant = instantNow();
-    if (!orionInfo || !frames || !instant) {
+    const instant = globe.shownAt();
+    if (!track || !frames || !instant) {
       return undefined;
     }
-    const { info } = orionInfo;
-    const itrf = Float64Array.from(info.itrf);
-    const frame = orionBuilt?.frame ?? "ITRF";
-    if (frame === "ITRF") {
-      return itrf;
-    }
     try {
-      if (markerIn?.info !== info || markerIn.frame !== frame) {
-        markerIn = {
-          info,
-          frame,
-          at: pathPoint(
-            frameTransform(
-              frames.itrf,
-              frames[DRAW_IN[frame]],
-              Instant.fromTdb(info.at),
-            ),
-            itrf,
-          ),
-        };
-      }
-      return pathPoint(
-        frameTransform(frames[DRAW_IN[frame]], frames.itrf, instant),
-        markerIn.at,
-      );
+      return orionPlace(track, frames, instant);
     } catch {
-      // Outside the frame data's span: where the statement put it.
-      return itrf;
+      // Outside the frame data's span.
+      return undefined;
     }
   }
 
@@ -313,6 +311,7 @@ export function createOrionLayer(deps: {
   }
   // When Orion's OEM is in (its overlay or its tests loaded it), the tree
   // and the legend get Orion.
+  // When Orion's OEM is in the worker, this thread loads it too, for the dot.
   const unsubscribe = loading.subscribe(() => {
     if (
       orionInfoAsked === undefined &&
@@ -320,6 +319,7 @@ export function createOrionLayer(deps: {
     ) {
       askOrionInfo();
     }
+    loadTrack();
   });
 
   function draw(): void {
@@ -339,6 +339,7 @@ export function createOrionLayer(deps: {
     }
     orionBuild.drop();
     orionBuild.request({ frame: orionFrame, at: instant.tdb() });
+    loadTrack();
     invalidate();
   }
 
@@ -380,28 +381,10 @@ export function createOrionLayer(deps: {
     place,
     pathPoint: orionPathPoint,
     markerPoint,
-    nowCurrent: () => {
-      if (orionInfo === undefined) {
-        return false;
-      }
-      // Playing, the statement is always a moment behind the clock: as much
-      // clock time as the re-ask and its reply take at the clock's rate.
-      // Paused, a scrub's old statement hides until the new one is in.
-      const { clock } = viewer;
-      const slack =
-        clock.mode === "playing"
-          ? Math.max(
-              ORION_NOW_SLACK_MS,
-              Math.abs(clock.rate) * ORION_NOW_PLAYING_MS,
-            )
-          : ORION_NOW_SLACK_MS;
-      return Math.abs(orionInfo.utc - clock.time) <= slack;
-    },
     askIfMoved: (now, real) => {
-      // Scrubbed or played: "Orion now" and the tree's statements are asked
-      // for again within a moment (one in flight, the latest waiting), so
-      // the marker keeps to the path (fix 1: it lagged a second and a
-      // minute of clock time behind, off the path).
+      // Scrubbed or played: the tree's statements and the legend's accuracy
+      // are asked for again within a moment (one in flight, the latest
+      // waiting). Orion's dot doesn't wait for them (`markerPoint`).
       if (
         orionInfoAsked !== undefined &&
         Math.abs(now - orionInfoAsked.clock) > 1000 &&

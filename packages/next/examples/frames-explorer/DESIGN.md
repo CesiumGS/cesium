@@ -426,12 +426,19 @@ binds over the bullets above where they differ:
 - **Orion's marker** is a dot with a halo on the path at the clock's time,
   "Orion, HH:MM UTC" beside it, an arrow at the view's edge when it is off
   screen; the globe's callout names the drawn-in frame and carries the same
-  GCRF / ITRF / MOON_ME choice. While the clock plays, the statement is a
-  moment behind it (its re-ask and reply take up to 1.5 s of real time at
-  the clock's rate): the dot shows that statement's place, carried with the
-  drawing frame so it stays on the path, and its time (Task 4c). Its text
+  GCRF / ITRF / MOON_ME choice. The dot is placed on the page's own thread
+  every frame, from the same OEM the worker draws the path from
+  (`orionTrack.ts`): Orion at the instant the globe shows, on the path in
+  every drawing frame, never waiting for the worker (Task 4c). The worker
+  keeps the path's mesh, the accuracy statement and the proof. Its text
   moves clear of the HUD's panels; every globe label sits under them, the
   time controls and their popover.
+- **Labels ride with the canvas.** The engine renders a frame before the
+  frame loop runs, so the loop places the labels first, against that frame
+  (its camera and the instant the world was placed at, `Globe.shownAt`),
+  and a label set mid-frame waits for the next placement (Task 4c: placed
+  later, labels far from the Earth wobbled by a frame's motion as frame
+  times varied).
 - **More below**: a fade and a "Knobs and proof ↓" pill at the scroller's
   foot until the end is reached.
 
@@ -1116,6 +1123,7 @@ board, an overlay's `OverlayState`).
 | `overlayControl.ts`  | The overlays' state, worker requests, the 2 km lines, the inset, the legend's view                                          |
 | `rigidOverlay.ts`    | Stop 4's lines: layers and labels from the worker's geometry                                                                |
 | `orionLayer.ts`      | Orion's path, placed with its frame as the clock runs, and its statements                                                   |
+| `orionTrack.ts`      | Orion's OEM on the page's thread: the dot's place every frame (the worker's catalog shares `orionFromOem`)                  |
 | `cameraViews.ts`     | Where each scenario, frame and stop frames the globe, and the orbit it lands in                                             |
 | `cameraRig.ts`       | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                      |
 | `scenarios/stage.ts` | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                             |

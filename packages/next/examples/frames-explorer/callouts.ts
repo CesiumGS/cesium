@@ -1,8 +1,9 @@
 // On-canvas callouts (S-I8, minor 9): the lunar clock's gain at the site
 // while stand-on-moon shows or the site is selected, and Orion at the
-// clock's instant while its path is drawn, with the frame it's drawn in.
-// They go to the globe through the label board, with the triads'.
+// instant the globe shows while its path is drawn, with the frame it's
+// drawn in. They go to the globe through the label board, with the triads'.
 import type { Frame } from "../../src/frames/Frame.ts";
+import type { LeapSeconds } from "../../src/time/leapSeconds.ts";
 import type { LabelSpec } from "./globe.ts";
 import type { OverlayState } from "./overlayConfig.ts";
 import type { OrionLayer } from "./orionLayer.ts";
@@ -13,8 +14,8 @@ import type { LabelBoard } from "./triadLayer.ts";
 
 export interface Callouts {
   refresh(): void;
-  /** "Orion now" became current or stale since the last refresh (the clock moved). */
-  orionNowChanged(): boolean;
+  /** Orion's marker came or went, or its minute changed, since the last refresh (the clock moved). */
+  changed(): boolean;
   dispose(): void;
 }
 
@@ -26,23 +27,38 @@ export function createCallouts(deps: {
   /** The current scenario's evaluation, and whether it's of another setup. */
   evaluation(): ScenarioEvaluation | undefined;
   stale(): boolean;
-  orion: Pick<
-    OrionLayer,
-    "info" | "error" | "built" | "nowCurrent" | "pathPoint" | "markerPoint"
-  >;
+  orion: Pick<OrionLayer, "built" | "pathPoint" | "markerPoint">;
   /** Orion's overlay state. */
   orionOverlay: OverlayState;
   lunarSiteOrigin(): Float64Array | undefined;
   refreshTriads(): void;
+  /** The frame data's leap seconds, once it's in (for the marker's UTC). */
+  leapSeconds(): LeapSeconds | undefined;
 }): Callouts {
   const { globe, view } = deps.core;
   const { orion } = deps;
-  let orionNowShown = false;
+  /** The marker's text as last shown, undefined when it wasn't. */
+  let markerShown: string | undefined;
+
+  /** "Orion, HH:MM UTC" at the instant the globe shows, while its path is drawn and Orion is in its data then. */
+  function markerText(): string | undefined {
+    const o = deps.orionOverlay;
+    const instant = globe.shownAt();
+    const leap = deps.leapSeconds();
+    if (
+      !o.on ||
+      o.state !== "drawn" ||
+      !instant ||
+      !leap ||
+      orion.markerPoint() === undefined
+    ) {
+      return undefined;
+    }
+    const hhmm = new Date(instant.toUtc(leap)).toISOString().slice(11, 16);
+    return `Orion, ${hhmm} UTC`;
+  }
 
   function refresh(): void {
-    orionNowShown = orion.nowCurrent();
-    const orionInfo = orion.info();
-    const orionInfoError = orion.error();
     const orionBuilt = orion.built();
     const scene = deps.scene();
     const out: LabelSpec[] = [];
@@ -70,27 +86,18 @@ export function createCallouts(deps: {
       });
     }
     const o = deps.orionOverlay;
-    // Only while it is Orion's position now: a statement for another time
-    // (the clock was just scrubbed) would hang the marker off the path.
-    if (
-      o.on &&
-      o.state === "drawn" &&
-      orionInfo &&
-      orion.nowCurrent() &&
-      !orionInfoError
-    ) {
+    markerShown = markerText();
+    if (markerShown !== undefined) {
       // One clear indicator (fix 1): a dot on the path at Orion's place at
-      // the statement's time, that time beside it; the accuracy is the
-      // answer's, on the callout. Orion's place is on the drawn path in
-      // every frame: the path is placed by its frame now (orionLayer.ts
-      // `place`), and the marker is carried with that frame too
-      // (`markerPoint`), so it stays on the path while the clock plays
-      // ahead of the statement (Task 4c item 2;
-      // test/data/framesExplorerScenarios, test/framesExplorerOrionMarker).
-      const hhmm = new Date(orionInfo.utc).toISOString().slice(11, 16);
+      // the instant the globe shows, that time beside it; the accuracy is
+      // the answer's, on the callout. The dot comes from the OEM on this
+      // thread every frame (orionLayer.ts `markerPoint`), and Orion's place
+      // is the path's own sample at that instant in every frame the path is
+      // drawn in (test/data/framesExplorerScenarios,
+      // test/framesExplorerOrionMarker).
       out.push({
         id: "marker:orion-now",
-        text: `Orion, ${hhmm} UTC`,
+        text: markerShown,
         at: () => orion.markerPoint(),
         family: "trajectory",
         priority: 5,
@@ -118,7 +125,7 @@ export function createCallouts(deps: {
 
   return {
     refresh,
-    orionNowChanged: () => orion.nowCurrent() !== orionNowShown,
+    changed: () => markerText() !== markerShown,
     dispose: () => {},
   };
 }

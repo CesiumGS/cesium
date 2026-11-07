@@ -41,6 +41,8 @@ import {
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
 import { compose, pathPoint } from "../../examples/frames-explorer/orion.ts";
+import { adaptivePath } from "../../examples/frames-explorer/overlays.ts";
+import { orionPlace } from "../../examples/frames-explorer/orionTrack.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
@@ -351,6 +353,96 @@ describe("one-path's frame choice (fix 1: the owner's reports)", () => {
     expect(e.answer.headline).toMatch(/^No Orion data at this time/);
     expect(e.answer.value).toBeUndefined();
   }, 60_000);
+});
+
+describe("Orion's dot, placed on the page's own thread, on the worker's drawn path (Task 4c)", () => {
+  // The page places the dot from the OEM itself (orionTrack.ts
+  // `orionPlace`), every frame; the worker draws the path (overlays.ts
+  // `adaptivePath`, with orionLayer.ts's settings). They must agree: at each
+  // sample's time the dot is that sample, placed then; between samples it is
+  // within the path's tolerance of the drawn chord.
+  const drawnAt = checkedTdb("one-path");
+  const options = {
+    step: 3600,
+    tolerance: 5e-4,
+    minStep: 5,
+    floor: 100,
+    maxSamples: 8000,
+  };
+  for (const frame of ["GCRF", "ITRF", "MOON_ME"] as const) {
+    it(`agrees with the path drawn in ${frame}, at its samples and between them`, () => {
+      const f =
+        frame === "GCRF"
+          ? frames.gcrf
+          : frame === "ITRF"
+            ? frames.itrf
+            : frames.moonMe;
+      const at = Instant.fromTdb(drawnAt);
+      const g = adaptivePath(
+        orion,
+        f,
+        frames,
+        Instant.fromTdb(drawnAt - 12 * 3600),
+        Instant.fromTdb(drawnAt + 12 * 3600),
+        options,
+        at,
+      );
+      expect(g.sampling.capped).toBeUndefined();
+      const inverse = frameTransform(frames.itrf, f, at);
+      const placedAt = (t: number) =>
+        compose(frameTransform(f, frames.itrf, Instant.fromTdb(t)), inverse);
+      const vertex = (i: number) => g.positions.subarray(3 * i, 3 * i + 3);
+      let worstSample = 0;
+      let worstBetween = 0;
+      for (let k = 0; k < g.times.length; k += 2) {
+        const [ta, tb] = [g.times[k]!, g.times[k + 1]!];
+        // At the segment's first sample, placed at its own time.
+        const dotA = orionPlace(orion, frames, Instant.fromTdb(ta))!;
+        const onPath = pathPoint(placedAt(ta), vertex(k));
+        worstSample = Math.max(
+          worstSample,
+          Math.hypot(...[0, 1, 2].map((i) => dotA[i]! - onPath[i]!)),
+        );
+        // Halfway between, against the chord placed then.
+        const tm = (ta + tb) / 2;
+        const m = placedAt(tm);
+        const a = pathPoint(m, vertex(k));
+        const b = pathPoint(m, vertex(k + 1));
+        const dotM = orionPlace(orion, frames, Instant.fromTdb(tm))!;
+        const ab = [0, 1, 2].map((i) => b[i]! - a[i]!);
+        const am = [0, 1, 2].map((i) => dotM[i]! - a[i]!);
+        const len2 = ab[0]! ** 2 + ab[1]! ** 2 + ab[2]! ** 2;
+        const u = Math.min(
+          1,
+          Math.max(
+            0,
+            (ab[0]! * am[0]! + ab[1]! * am[1]! + ab[2]! * am[2]!) / len2,
+          ),
+        );
+        const off = Math.hypot(...[0, 1, 2].map((i) => am[i]! - u * ab[i]!));
+        const fromOrigin = Math.hypot(
+          ...frameTransform(orion.frame, f, Instant.fromTdb(tm)).subarray(
+            12,
+            15,
+          ),
+        );
+        worstBetween = Math.max(
+          worstBetween,
+          off / Math.max(options.tolerance * fromOrigin, options.floor),
+        );
+      }
+      // The same point, to a millimetre; between samples, within the
+      // path's own tolerance (0.05% of the distance, or its 100 m floor).
+      expect(worstSample, `${frame}: at the samples, m`).toBeLessThan(1e-3);
+      expect(
+        worstBetween,
+        `${frame}: between, of the tolerance`,
+      ).toBeLessThanOrEqual(1);
+      print(
+        `Orion's dot on the ${frame} path: ${g.times.length / 2} segments, ${(worstSample * 1000).toFixed(3)} mm at the samples, ${(worstBetween * 100).toFixed(0)}% of the tolerance between`,
+      );
+    });
+  }
 });
 
 describe("earth-turns adds Sacramento's site under ITRF (owner, fix 1)", () => {

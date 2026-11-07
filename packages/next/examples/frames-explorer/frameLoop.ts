@@ -1,8 +1,10 @@
-// Every frame (R13): the triads at the clock's instant, Orion's path moved
-// with its drawing frame, the orbit carried with its subject, the
-// headlight; now and then, what depends on the clock: the tree's
-// statements, the walk, Orion's statement and the bias triad, each at most
-// so often in real time (at 3,600× the clock passes a minute every frame).
+// Every frame (R13): first the labels, against what the canvas shows this
+// frame (what the last frame placed: the engine renders before this loop
+// runs); then the triads at the clock's instant, Orion's path moved with its
+// drawing frame, the orbit carried with its subject, the headlight; now and
+// then, what depends on the clock: the tree's statements, the walk, Orion's
+// statement and the bias triad, each at most so often in real time (at
+// 3,600× the clock passes a minute every frame).
 import type { PageCore } from "./page.ts";
 
 export interface FrameLoop {
@@ -12,13 +14,12 @@ export interface FrameLoop {
 }
 
 export function createFrameLoop(deps: {
-  core: Pick<
-    PageCore,
-    "viewer" | "globe" | "frames" | "instantNow" | "disposed"
-  >;
+  core: Pick<PageCore, "viewer" | "frames" | "instantNow" | "disposed"> & {
+    globe: Pick<PageCore["globe"], "update" | "placeLabels">;
+  };
   rebuildTree(): void;
   orion: { place(): void; askIfMoved(now: number, real: number): void };
-  callouts: { orionNowChanged(): boolean; refresh(): void };
+  callouts: { changed(): boolean; refresh(): void };
   overlays: {
     updateMinorGrid(): void;
     biasOn(): boolean;
@@ -47,6 +48,8 @@ export function createFrameLoop(deps: {
       if (disposed()) {
         return;
       }
+      // The labels first, against what this frame shows (globe.ts).
+      globe.placeLabels();
       const frames = framesNow();
       const instant = instantNow();
       if (frames && instant) {
@@ -63,7 +66,8 @@ export function createFrameLoop(deps: {
         // statement (the tree and the legend) is asked for again after a
         // minute of clock time, at most once a second (R8).
         deps.orion.place();
-        if (deps.callouts.orionNowChanged()) {
+        if (deps.callouts.changed()) {
+          // Orion's marker came or went, or its minute changed.
           deps.callouts.refresh();
         }
         deps.overlays.updateMinorGrid();
