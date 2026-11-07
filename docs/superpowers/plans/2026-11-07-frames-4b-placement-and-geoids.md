@@ -68,7 +68,7 @@ One line each: what was chosen, then what undoing it costs.
 19. **The portfolio** (Task 12):
     - London: 27700+5701, OSTN15 and OSGM15;
     - Sydney: 7856+5711, AUSGeoid2020;
-    - Tokyo: 6677+6695, GSIGEO2011, whose axes are northing first;
+    - Tokyo: 6677+6695, JPGEO2024 (PROJ ranks it ahead of GSIGEO2011; Task 9, 2026-11-07), whose axes are northing first;
     - Amsterdam: 28992+5709, RDNAPTRANS;
     - Nairobi: 32737+5773, EGM96;
     - Phoenix: 2223+8228, international feet with NAVD88 in feet;
@@ -219,7 +219,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
     - `readonly version: string`;
     - `credit(name: string): string`, as `"<agency> (<license>), via PROJ-data <version>"`.
 - **Produces** (`gridSets.mjs`): `GRID_SETS: Record<"portfolio" | "tests" | "egm2008" | "all", readonly string[] | "*">`.
-  - `portfolio` holds the grids of call 19: `uk_os_OSTN15_NTv2_OSGBtoETRS.tif`, `uk_os_OSGM15_GB.tif`, `au_ga_AUSGeoid2020_20180201.tif`, `jp_gsi_gsigeo2011.tif`, `nl_nsgi_rdtrans2018.tif`, `nl_nsgi_nlgeo2018.tif`, `us_nga_egm96_15.tif` and `us_noaa_g2018u0.tif`.
+  - `portfolio` holds the grids of call 19: `uk_os_OSTN15_NTv2_OSGBtoETRS.tif`, `uk_os_OSGM15_GB.tif`, `au_ga_AUSGeoid2020_20180201.tif`, `jp_gsi_jpgeo2024.tif` (Task 9: was `jp_gsi_gsigeo2011.tif`, now in `tests`), `nl_nsgi_rdtrans2018.tif`, `nl_nsgi_nlgeo2018.tif`, `us_nga_egm96_15.tif` and `us_noaa_g2018u0.tif`.
   - `tests` holds `us_noaa_conus.tif`, the NADCON5 NAD27→NAD83 CONUS grids, and the LAT grid that Task 7 settles on.
   - Tasks 6, 7, 9 and 12 correct these names to what `listOperations` reports, and say so in their commits.
 - **Produces** (`verifiedDownload.mjs`): `verifiedDownload(url: string, path: string, expected: { sha256: string; bytes: number }, options?: { fetch?: typeof fetch; timeoutMs?: number }): Promise<void>`. It is the one verified fetcher; setup and Task 4's cache both use it:
