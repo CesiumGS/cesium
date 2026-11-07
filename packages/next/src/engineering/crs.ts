@@ -108,8 +108,9 @@ export interface RecordedOperation {
   readonly ballpark: boolean;
   /**
    * The candidates before this one, in PROJ's order (grid availability
-   * ignored), that were skipped only because grids they need aren't loaded.
-   * A ballpark is never listed; a pinned pipeline has none.
+   * ignored), that were skipped only because grids they need aren't loaded
+   * (each has a PROJ string). A ballpark is never listed; a pinned pipeline
+   * has none.
    */
   readonly betterCandidates: readonly BetterCandidate[];
   forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
@@ -565,7 +566,16 @@ export function resolveOperation(
       }
       const ballpark = isBallpark(proj, candidate);
       if (grids.missing.length > 0) {
-        if (!ballpark) {
+        // Better only if it could be taken once its grids are loaded: not a
+        // ballpark, and with a PROJ string (which needs no grids). The rule
+        // `EngineeringFrame.load`'s gridsToLoad mirrors; keep them together.
+        if (
+          !ballpark &&
+          proj.proj_as_proj_string(
+            proj.proj_normalize_for_visualization(candidate),
+            proj.PJ_PROJ_5,
+          ) !== null
+        ) {
           const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
           better.push({
             name: proj.proj_get_name(candidate) ?? `candidate ${i}`,

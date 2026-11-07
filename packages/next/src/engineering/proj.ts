@@ -394,6 +394,11 @@ interface GridState {
   /** Loads under way, by name: the SHA-256 being loaded, and the load. */
   readonly pending: Map<string, { sha256: string; load: Promise<void> }>;
   /**
+   * The .json entries put where PROJ looks, confirmed or not: PROJ finding
+   * one of these before a retry installs it again is finding this copy.
+   */
+  readonly staged: Set<string>;
+  /**
    * Reads `entry` from the source, checks it (`checkGrid`) and puts it where
    * PROJ looks; resolves to the path PROJ must find it at.
    */
@@ -414,6 +419,7 @@ const newGridState = (
 ): GridState => ({
   loaded: new Map(),
   pending: new Map(),
+  staged: new Set(),
   install,
   absolute,
 });
@@ -432,6 +438,45 @@ const cappedAt =
     }
     onProgress?.(item, received, total);
   };
+
+/**
+ * The one-step operation that reads a catalog `.json` entry, by its type: a
+ * TIN (`tinshift +file`) or a deformation model (`defmodel +model`). Other
+ * entries are grids, which `proj_grid_info` confirms.
+ */
+function operationReading(entry: GridEntry): string | undefined {
+  // The name is a plain file name (gridEntry), so it is a valid PROJ value.
+  switch (entry.type) {
+    case "TRIANGULATION":
+      return `+proj=tinshift +file=${entry.name}`;
+    case "DEFORMATION_MODEL":
+      return `+proj=defmodel +model=${entry.name}`;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Whether PROJ creates an operation from `definition` now, quietly (PROJ
+ * logs each file it can't open). proj_create doesn't throw for one it can't
+ * build: it returns an object with neither a name nor a PROJ string. The
+ * object isn't kept (ProjApi has no proj_destroy; crs.ts's probes are the
+ * same).
+ */
+function creates(proj: ProjApi, definition: string): boolean {
+  const previous = proj.proj_log_level(proj.PJ_LOG_NONE);
+  try {
+    const object = proj.proj_create(definition);
+    return (
+      (proj.proj_get_name(object) ?? null) !== null ||
+      (proj.proj_as_proj_string(object, proj.PJ_PROJ_5) ?? null) !== null
+    );
+  } catch {
+    return false;
+  } finally {
+    proj.proj_log_level(previous);
+  }
+}
 
 /** The catalog entry for `name`; throws unless it is a plain, current catalog key. */
 function gridEntry(source: GridSource, name: string): GridEntry {
@@ -471,7 +516,9 @@ function gridEntry(source: GridSource, name: string): GridEntry {
  * source's catalog; every name is checked before anything is fetched. Each
  * grid's length and SHA-256 are checked against its entry before it is
  * written to the module's file system (browser) or staged beside `proj.db`
- * (Node), and PROJ must then find it there. Concurrent calls for one name
+ * (Node), and PROJ must then find it there (a TIN or deformation-model
+ * `.json`: PROJ must build the tinshift or defmodel that reads it, and must
+ * not have found one before). Concurrent calls for one name
  * share one fetch; a name loaded already is a no-op (and throws if the
  * source's catalog gives it another hash). A refused grid isn't remembered.
  */
@@ -501,14 +548,35 @@ export async function loadGrids(
       let pending = state.pending.get(name);
       if (!pending) {
         const load = (async () => {
-          const path = await state.install(source, entry, options.onProgress);
-          // PROJ must find it where it was put: not missing, and not a file
-          // of the same name somewhere PROJ searches first.
-          const found = state.absolute(proj.proj_grid_info(name).filename);
-          if (found !== path) {
-            throw new Error(
-              `PROJ: ${name} was loaded at ${path}, but PROJ finds ${found === "" ? "no such grid" : found}`,
-            );
+          const probe = operationReading(entry);
+          if (probe !== undefined) {
+            // A .json (a TIN or a deformation model) isn't a grid to
+            // proj_grid_info, so PROJ is asked to build the operation that
+            // reads it: it must fail before the file is first put where PROJ
+            // looks (else PROJ has a file of that name elsewhere, which it
+            // might read instead), and work after.
+            if (!state.staged.has(name) && creates(proj, probe)) {
+              throw new Error(
+                `PROJ: ${name} is found by PROJ before it is loaded (a file of that name is on PROJ's search path), so the one loaded can't be told from it`,
+              );
+            }
+            const path = await state.install(source, entry, options.onProgress);
+            state.staged.add(name);
+            if (!creates(proj, probe)) {
+              throw new Error(
+                `PROJ: ${name} was loaded at ${path}, but PROJ can't create "${probe}" from it${entry.type === "DEFORMATION_MODEL" ? " (a deformation model's component grids must be loaded first)" : ""}`,
+              );
+            }
+          } else {
+            const path = await state.install(source, entry, options.onProgress);
+            // PROJ must find it where it was put: not missing, and not a file
+            // of the same name somewhere PROJ searches first.
+            const found = state.absolute(proj.proj_grid_info(name).filename);
+            if (found !== path) {
+              throw new Error(
+                `PROJ: ${name} was loaded at ${path}, but PROJ finds ${found === "" ? "no such grid" : found}`,
+              );
+            }
           }
           state.loaded.set(name, sha256);
         })().finally(() => state.pending.delete(name));

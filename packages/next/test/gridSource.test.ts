@@ -38,12 +38,15 @@ const GRIDS: Record<string, Uint8Array> = {
   "g.tif": filled(100, 1),
   "late.tif": filled(50, 2),
   "old.tif": filled(10, 3),
+  "t.json": filled(20, 4),
+  "m.json": filled(30, 5),
 };
 
-const feature = async (name: string, removed = false) => ({
+const feature = async (name: string, removed = false, type?: string) => ({
   type: "Feature",
   properties: {
     name,
+    ...(type !== undefined && { type }),
     url: `https://cdn.proj.org/${name}`,
     sha256sum: await sha256Hex(GRIDS[name]!),
     file_size: GRIDS[name]!.length,
@@ -61,6 +64,8 @@ const CATALOG = encode(
       await feature("g.tif"),
       await feature("late.tif"),
       await feature("old.tif", true),
+      await feature("t.json", false, "TRIANGULATION"),
+      await feature("m.json", false, "DEFORMATION_MODEL"),
     ],
   }),
 );
@@ -121,6 +126,25 @@ describe("gridSource and loadGrids (browser path)", () => {
   let listFails: boolean;
   /** Where the stub's PROJ says it found a grid, when not by its bare name. */
   let foundAs: string | undefined;
+  /** .json files the stub's PROJ finds without their being loaded. */
+  let elsewhere: Set<string>;
+  /** Whether the stub's PROJ builds a deformation model it finds. */
+  let modelBuilds: boolean;
+  /** Each proj_create definition. */
+  let created: string[];
+
+  // The stub builds an operation unless it reads a .json PROJ can't find
+  // (not written to the module's file system, and not elsewhere).
+  const builds = (object: { definition?: string }) => {
+    const read = /\+(file|model)=(\S+)/.exec(object.definition ?? "");
+    if (!read) {
+      return true;
+    }
+    const found =
+      writes.some(([path]) => path === `/${read[2]}`) ||
+      elsewhere.has(read[2]!);
+    return found && (read[1] === "file" || modelBuilds);
+  };
 
   const stubApi = () =>
     ({
@@ -142,9 +166,14 @@ describe("gridSource and loadGrids (browser path)", () => {
           format: found ? "gtiff" : "missing",
         };
       },
-      proj_create: () => ({}),
-      proj_get_name: () => "Candidate",
-      proj_as_proj_string: () => "+proj=noop",
+      proj_create: (definition: string) => {
+        created.push(definition);
+        return { definition };
+      },
+      proj_get_name: (o: { definition?: string }) =>
+        builds(o) ? "Candidate" : null,
+      proj_as_proj_string: (o: { definition?: string }) =>
+        builds(o) ? "+proj=noop" : null,
       proj_normalize_for_visualization: (o: unknown) => o,
       proj_create_operation_factory_context: () => ({}),
       proj_operation_factory_context_set_grid_availability_use: () => undefined,
@@ -183,6 +212,9 @@ describe("gridSource and loadGrids (browser path)", () => {
     projSaysAvailable = false;
     listFails = false;
     foundAs = undefined;
+    elsewhere = new Set();
+    modelBuilds = true;
+    created = [];
     vi.stubGlobal("window", {});
     vi.stubGlobal("__writes", writes);
     vi.stubGlobal("__api", stubApi());
@@ -279,6 +311,49 @@ describe("gridSource and loadGrids (browser path)", () => {
   });
 
   describe("loadGrids", () => {
+    it("confirms a TIN (.json) by PROJ building the tinshift that reads it, quietly", async () => {
+      const P = await load();
+      await loadGrids(P, await source(), ["t.json"]);
+      expect(writes).toContainEqual(["/t.json", 20]);
+      expect(loadedGrids(P).has("t.json")).toBe(true);
+      // Asked before the file is put where PROJ looks, and after.
+      expect(created).toEqual([
+        "+proj=tinshift +file=t.json",
+        "+proj=tinshift +file=t.json",
+      ]);
+      // Quiet while asking, and the level put back each time.
+      expect(logCalls).toEqual([
+        PJ_LOG_NONE,
+        PJ_LOG_ERROR,
+        PJ_LOG_NONE,
+        PJ_LOG_ERROR,
+      ]);
+      expect(level).toBe(PJ_LOG_ERROR);
+    });
+
+    it("refuses a .json PROJ finds before it is loaded, writing nothing", async () => {
+      const P = await load();
+      elsewhere.add("t.json");
+      await expect(loadGrids(P, await source(), ["t.json"])).rejects.toThrow(
+        "PROJ: t.json is found by PROJ before it is loaded (a file of that name is on PROJ's search path), so the one loaded can't be told from it",
+      );
+      expect(writes.filter(([path]) => path === "/t.json")).toEqual([]);
+      expect(loadedGrids(P).has("t.json")).toBe(false);
+    });
+
+    it("confirms a deformation model by defmodel, and refuses one PROJ can't build", async () => {
+      const P = await load();
+      const grids = await source();
+      modelBuilds = false;
+      await expect(loadGrids(P, grids, ["m.json"])).rejects.toThrow(
+        /^PROJ: m\.json was loaded at \/m\.json, but PROJ can't create "\+proj=defmodel \+model=m\.json" from it \(a deformation model's component grids must be loaded first\)$/,
+      );
+      expect(loadedGrids(P).has("m.json")).toBe(false);
+      // Not remembered: once PROJ builds it, it loads.
+      modelBuilds = true;
+      await loadGrids(P, grids, ["m.json"]);
+      expect(loadedGrids(P).has("m.json")).toBe(true);
+    });
     it("loads a catalog grid into the module's file system, once", async () => {
       const P = await load();
       const grids = await source();

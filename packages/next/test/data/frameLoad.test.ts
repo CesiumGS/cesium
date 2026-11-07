@@ -39,6 +39,8 @@ const CONUS = "us_noaa_conus.tif";
 const CNHPGN = "us_noaa_cnhpgn.tif";
 const RDTRANS = "nl_nsgi_rdtrans2018.tif";
 const NLGEO = "nl_nsgi_nlgeo2018.tif";
+const FIN2000 = "fi_nls_fin2000.tif";
+const TIN = "fi_nls_ykj_etrs35fin.json";
 const WGS84_3D: CrsRef = { format: "wkid", authority: "EPSG", wkid: 4979 };
 
 // The plan-4a California frame's operation with GEOID18 loaded (recorded
@@ -112,6 +114,25 @@ describe("no regression: the plan-4a California frame", () => {
     expect(frame.operation.accuracy).toBe(CALIFORNIA_ACCURACY);
     expect(frame.operation.grids).toEqual([GEOID18]);
     expect(frame.gridCredits).toEqual([]);
+    // PROJ ranks two NADCON5 operations (through NAD83(HARN), with GEOID99
+    // or GEOID03 for NAVD88) above it, at its stated 1.14 m.
+    const nadcon5 = [
+      "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
+      "us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif",
+      "us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif",
+    ];
+    expect(frame.operation.betterCandidates).toEqual([
+      {
+        name: "Inverse of SPCS83 California zone 3 (US survey foot) + Inverse of NAD83(HARN) to NAD83(2011) (NADCON5, CONUS) + Conversion from NAVD88 height (ftUS) to NAVD88 height + Inverse of NAD83(HARN) to NAVD88 height (5) + NAD83(HARN) to WGS 84 (3)",
+        accuracy: 1.14,
+        missingGrids: ["us_noaa_g1999u05.tif", ...nadcon5],
+      },
+      {
+        name: "Inverse of SPCS83 California zone 3 (US survey foot) + Inverse of NAD83(FBN) to NAD83(2011) (NADCON5, CONUS) + Conversion from NAVD88 height (ftUS) to NAVD88 height + Inverse of NAD83(FBN) to NAVD88 height (1) + Inverse of NAD83(HARN) to NAD83(FBN) (1) + NAD83(HARN) to WGS 84 (3)",
+        accuracy: 1.14,
+        missingGrids: ["us_noaa_geoid03_conus.tif", ...nadcon5],
+      },
+    ]);
   });
 });
 
@@ -242,6 +263,36 @@ describe("a pinned pipeline", () => {
     expect(frame.gridCredits).toEqual([
       "Nederlandse Samenwerking Geodetische Infrastructuur (NSGI) (CC-BY-4.0), via PROJ-data 1.25.0",
     ]);
+  });
+});
+
+describe("Finland: EPSG:2393+5717, whose best operation reads a TIN (.json)", () => {
+  const KKJ_N60: CrsRef = {
+    format: "wkid",
+    authority: "EPSG",
+    wkid: 2393,
+    vcsWkid: 5717,
+  };
+  it("load fetches the FIN2000 geoid and the TIN, and records the operation that reads them", async () => {
+    const P = await proj();
+    expect(loadedGrids(P).has(TIN)).toBe(false);
+    const frame = await EngineeringFrame.load(
+      { name: "KKJ", body: EARTH, crs: KKJ_N60 },
+      { proj: P, grids: await store() },
+    );
+    expect(loadedGrids(P).has(TIN)).toBe(true);
+    expect(loadedGrids(P).has(FIN2000)).toBe(true);
+    expect(frame.operation.accuracy).toBe(1.06);
+    expect(frame.operation.grids).toEqual([FIN2000, TIN]);
+    expect(frame.operation.pipeline).toContain(`+proj=tinshift +file=${TIN}`);
+    expect(frame.operation.betterCandidates).toEqual([]);
+    expect(frame.gridCredits).toEqual([
+      "National Land Survey of Finland (MML) (CC-BY-4.0), via PROJ-data 1.25.0",
+    ]);
+    // The TIN moves the point: a design point near Helsinki lands there.
+    const at = frame.toGeodetic([3_385_000, 6_673_000, 10]);
+    expect((at.longitude * 180) / Math.PI).toBeCloseTo(24.9, 0);
+    expect((at.latitude * 180) / Math.PI).toBeCloseTo(60.2, 0);
   });
 });
 

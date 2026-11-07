@@ -236,8 +236,9 @@ export function formatPipeline(pipeline: Pipeline): string {
 
 /**
  * The grid files a pipeline names (`grids`, `nadgrids`, `geoidgrids`, `file`
- * and `model`, in steps and globals), in written order. Each value splits on ","; a leading
- * "@" marks the grid optional; PROJ's special name `null` is dropped.
+ * and `model`, in steps and globals), in written order. Each value splits on
+ * ","; a leading "@" marks the grid optional; PROJ's special name `null` is
+ * dropped.
  */
 export function pipelineGrids(pipeline: Pipeline): readonly PipelineGrid[] {
   const out: PipelineGrid[] = [];

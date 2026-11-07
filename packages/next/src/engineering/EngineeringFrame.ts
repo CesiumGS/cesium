@@ -107,13 +107,28 @@ function inCatalog(catalog: GridCatalog, name: string): boolean {
 }
 
 /**
+ * Whether `load` fetches `name`: a current catalog entry that isn't a
+ * deformation model. A model's `.json` names component grids inside it,
+ * which neither the pipeline nor PROJ's list of grids names, and PROJ can't
+ * build the model without them; so `load` leaves it to `create`'s fallback.
+ */
+function fetchable(catalog: GridCatalog, name: string): boolean {
+  return (
+    inCatalog(catalog, name) && catalog.get(name)!.type !== "DEFORMATION_MODEL"
+  );
+}
+
+/**
  * The grids `load` fetches for a frame: a pinned pipeline's (required and
- * optional) that the catalog has; otherwise the missing grids of the first
+ * optional) that are `fetchable`; otherwise the missing grids of the first
  * non-ballpark candidate, in `listOperations`' order, that has a PROJ string
- * and whose missing grids the catalog has every one of. A candidate needing a
- * grid the catalog lacks gets nothing fetched (part of its grids wouldn't
- * make it usable); `create` then skips it and records it as a better
- * candidate.
+ * and whose missing grids are every one `fetchable`. A candidate needing a
+ * grid that isn't gets nothing fetched (part of its grids wouldn't make it
+ * usable); `create` then skips it and records it as a better candidate.
+ *
+ * This mirrors the candidate rule of `resolveOperation`'s walk (crs.ts): the
+ * first non-ballpark, instantiable candidate with a PROJ string and all its
+ * grids. Keep the two together.
  */
 function gridsToLoad(
   definition: EngineeringFrameDefinition,
@@ -128,7 +143,7 @@ function gridsToLoad(
       typeof pipeline === "string" ? parsePipeline(pipeline) : pipeline,
     ).map((grid) => grid.name);
     return [...new Set(named)].filter(
-      (name) => !loaded.has(name) && inCatalog(catalog, name),
+      (name) => !loaded.has(name) && fetchable(catalog, name),
     );
   }
   const candidates = listOperations(proj, definition.crs, target, {
@@ -146,7 +161,7 @@ function gridsToLoad(
       }
       continue;
     }
-    if (candidate.missingGrids.every((name) => inCatalog(catalog, name))) {
+    if (candidate.missingGrids.every((name) => fetchable(catalog, name))) {
       return candidate.missingGrids;
     }
   }
@@ -335,7 +350,7 @@ export class EngineeringFrame {
     if (catalog !== undefined) {
       const loaded = loadedGrids(proj);
       const credited = operation.grids.filter(
-        (name) => loaded.has(name) && catalog.get(name) !== undefined,
+        (name) => loaded.has(name) && inCatalog(catalog, name),
       );
       gridCredits = [...new Set(credited.map((name) => catalog.credit(name)))];
     }

@@ -21,8 +21,16 @@ export const GRID_SETS = {
   // WGS 84: PROJ's best candidate (2.15 m, NAD27 to NAD83 (1) + NAD83 to
   // WGS 84 (43)) reads the CONUS NADCON grid and California's HPGN grid; the
   // next (5 m) reads CONUS alone (the names PROJ reports, plan 4b Task 6).
-  // And a lowest-astronomical-tide grid (Task 7 settles which).
-  tests: ["us_noaa_conus.tif", "us_noaa_cnhpgn.tif", "nl_nsgi_nllat2018.tif"],
+  // EPSG:2393+5717 (KKJ / Finland Uniform + N60): the best candidate reads
+  // the FIN2000 geoid and a TIN, a catalog .json (tinshift). And a
+  // lowest-astronomical-tide grid (Task 7 settles which).
+  tests: [
+    "us_noaa_conus.tif",
+    "us_noaa_cnhpgn.tif",
+    "fi_nls_fin2000.tif",
+    "fi_nls_ykj_etrs35fin.json",
+    "nl_nsgi_nllat2018.tif",
+  ],
   // EGM2008 at 2.5 arc-minutes (80,585,622 bytes).
   egm2008: ["us_nga_egm08_25.tif"],
   all: "*",
