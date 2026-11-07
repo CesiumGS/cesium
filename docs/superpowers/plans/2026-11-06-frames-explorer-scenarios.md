@@ -328,44 +328,83 @@ The library-level design (revisions, cheap synchronous queries and budgeted asyn
 - [ ] **Step 4: Run** the tests and `npm test`, and confirm they pass.
 - [ ] **Step 5: Commit** with "measure: terrain line of sight over a height sampler".
 
-### Task 6: BIM site, corridor, dish tracks and Moon from here
+### Conventions for Tasks 6a–8 (from Task 4 and the owner, 2026-11-06)
 
-These four scenarios are buildable on today's library.
+Every scenario task from here on follows the patterns Task 4 settled:
+
+- **The tree, data and route** (`.superpowers/sdd/<plan>/tree-data-route-design.md`, owner-approved):
+  - only frames are drawn in the tree;
+  - data is a dashed card pinned beside the frame it's expressed in;
+  - the drawn-in frame carries a "Drawing in" tag;
+  - the `branchPath` route lights up, with a travelling dot;
+  - numbered route steps below the tree give each step's physical meaning and its accuracy.
+- **The question and the headline.** The big value answers the question directly. `ScenarioAnswer.label` is required: a value, a unit and a few words. The callout and the panel agree.
+- **Published values sit next to the answer.** At the checked setup that's the reference and its citation, the difference and the tolerance. Off it, the reference applies at the checked setup, with the delta and no verdict. Collapsed proof rows show "ours vs published".
+- **Screenshots are never committed.** design-screenshots/ is git-ignored, so put shots under the SDD workspace.
+- **Mockups come first** for any visual that isn't covered by an existing pattern: show the owner before building.
+- **One or two scenarios per task,** to keep reviews and context small.
+
+### Task 6a: A BIM site on the globe, and surveying a corridor
+
+Both scenarios are engineering frames through PROJ, at ground level.
 
 - **bim-site:**
-  - absorbs tour stops 3–4: the design grid with true north at ×20 with its switch, the 400 km rigid against exact line, and the 20 km inset with its two gap parts;
+  - absorbs tour stops 3–4: the design grid with true north at ×20 with its switch, the 400 km rigid-versus-exact line, and the 20 km inset with its two gap parts. Keep the owner's stop-4 rework: the straight line and the bend at true distances, the picture-in-picture of the gap, and the longer line;
   - adds the site grid (rotation and scale knobs) and the CRS knob (EPSG:6420, UTM 10N, and an Oregon or Wisconsin low-distortion zone from the catalog);
-  - globe: terrain, with overlays lifted to the terrain's height for display and the lift noted in the legend; or the ellipsoid for the rigid-vs-exact view, using `viewer.setGlobe` per scenario. The builder rules on which, and ledgers it.
+  - globe: either terrain, with overlays lifted to the terrain's height for display and the lift noted in the legend, or the ellipsoid for the rigid-vs-exact view, using `viewer.setGlobe` per scenario. The builder rules on which and ledgers it.
+  - Data: the BIM model's site origin is pinned as a data card in its design CRS.
 - **corridor:**
   - the catalog's clothoid alignment under the design grid;
   - knobs: station and offset, with a draggable point;
   - the answer: station and offset with the 1e-9 recovery accuracy.
-- **dish-tracks:**
-  - knobs: the station (DSS-14 Goldstone, DSS-43 Canberra, DSS-63 Madrid, from the setup store's NAIF station SPK; check that each is present) and the time;
-  - the answer: azimuth and elevation, light time and line of sight to Orion, against the Moon and Earth through the existing `lineOfSight`, plus terrain through Task 5 for the local horizon;
-  - proof: plan 3's `signal.json` checks at DSS-43.
-- **moon-from-here:**
-  - a California site's east-north-up frame on ITRF and the Moon;
-  - the answer: the Moon's azimuth, elevation and distance;
-  - knob: time;
-  - proof: a new check of the Moon's topocentric direction against a published reference. Use JPL Horizons observer-table values copied with a citation (R10), or leave it out and report.
 
 **Files:**
 
-- Create: `examples/frames-explorer/scenarios/bimSite.ts`, `corridor.ts`, `dishTracks.ts` and `moonFromHere.ts`.
-- Modify: `scenarios/specs.ts` (proof ids, checked setups), `references.json` (any new reference), and the `stress/` catalog for new checks.
-- Test: `test/framesExplorerScenarios.test.ts`, with pure answer math against hand values; and data tests for evaluators that need PROJ or frames, in `test/data/framesExplorerScenarios.test.ts`.
+- Create: `examples/frames-explorer/scenarios/bimSite.ts` and `corridor.ts`.
+- Modify: `scenarios/specs.ts` (proof ids and checked setups), `scenarios/index.ts`, `references.json` if needed, and the `stress/` catalog for new checks.
+- Test: `test/framesExplorerScenarios.test.ts` (pure answer math against hand values) and `test/data/framesExplorerScenarios.test.ts` (evaluators needing PROJ).
 
-- [ ] **Step 1: Write the failing tests,** one per scenario:
-  - **bim-site:** at the checked setup, its added frames and the answer's 31.4 m figure.
-  - **corridor:** a station and offset round trip through the evaluator matches the catalog's.
-  - **dish-tracks:** the light time at a signal.json row within plan 3's tolerance; the azimuth and elevation of Orion from DSS-43 against a hand computation from the evaluator's own vectors (an R11 effect); line of sight blocked at a time when the Moon occults.
-  - **moon-from-here:** azimuth, elevation and distance against the cited reference, or skipped with a reason if there isn't one.
-- [ ] **Step 2: Run** and confirm they fail.
-- [ ] **Step 3: Implement** the four evaluators and their globe modules, register them, and complete their specs' proof ids. Keep the catalog's existing numbers unchanged; new checks join the catalog with fingerprints only if they use recorded operations.
-- [ ] **Step 4: Run** `npm test` and `npm run test:data`, and confirm they pass with `fingerprints.json` unchanged except for added records. List any additions.
-- [ ] **Step 5: Check in the browser** on 5190: each scenario's knobs, answer, proof both on and off the checked setup, and branch-path lighting for dish-tracks (DSS ENU up to GCRF and down to Orion). Take screenshots.
-- [ ] **Step 6: Commit** with "examples: frames explorer scenarios: BIM site, corridor, dish tracks, Moon from here".
+- [ ] **Step 1: Write the failing tests:**
+  - bim-site at the checked setup: its added frames and the answer's 31.4 m figure;
+  - corridor: a station and offset round trip through the evaluator matches the catalog's.
+- [ ] **Step 2: Run** them and confirm they fail.
+- [ ] **Step 3: Implement** the two evaluators and their scenes, register them, and complete their specs' proof ids. Keep the catalog's existing numbers unchanged.
+- [ ] **Step 4: Run** `npm test` and `npm run test:data`. fingerprints.json must be unchanged except for added records; list any additions.
+- [ ] **Step 5: Check in the browser** on 5190: each scenario's knobs, answer, and proof on and off the checked setup. Take screenshots into the SDD workspace.
+- [ ] **Step 6: Commit** with "examples: frames explorer scenarios: a BIM site on the globe, surveying a corridor".
+
+### Task 6b: A dish tracks Orion, and where the Moon is from here
+
+Both look up from a site on the Earth into space. Both need Task 5's terrain line of sight for the local horizon.
+
+- **dish-tracks:**
+  - knobs: the station (DSS-14 Goldstone, DSS-43 Canberra and DSS-63 Madrid, from the setup store's NAIF station SPK; check that each is present) and the time;
+  - the answer: azimuth and elevation, light time, and line of sight to Orion, checked against the Moon and the Earth through the existing `lineOfSight`, plus terrain through Task 5 for the local horizon;
+  - proof: plan 3's `signal.json` checks at DSS-43;
+  - the route runs from the DSS frame up to GCRF and down to Orion's data card in EME2000.
+- **moon-from-here:**
+  - a California site's east-north-up frame on ITRF, and the Moon;
+  - the answer: the Moon's azimuth, elevation and distance;
+  - knob: time;
+  - proof: a new check of the Moon's topocentric direction against a published reference. Use JPL Horizons observer-table values, copied with a citation (R10), or leave the check out and report why.
+
+**Files:**
+
+- Create: `examples/frames-explorer/scenarios/dishTracks.ts` and `moonFromHere.ts`.
+- Modify: `scenarios/specs.ts`, `scenarios/index.ts`, `references.json`, and the `stress/` catalog for the new check.
+- Test: the same two test files as 6a.
+
+- [ ] **Step 1: Write the failing tests:**
+  - dish-tracks:
+    - the light time at a signal.json row, within plan 3's tolerance;
+    - Orion's azimuth and elevation from DSS-43 against a hand computation from the evaluator's own vectors (an R11 effect);
+    - line of sight blocked at a time when the Moon occults Orion.
+  - moon-from-here: azimuth, elevation and distance against the cited reference, or the test skipped with a reason if there isn't one.
+- [ ] **Step 2: Run** them and confirm they fail.
+- [ ] **Step 3: Implement**, register, and complete the proof ids.
+- [ ] **Step 4: Run** `npm test` and `npm run test:data`, with the same fingerprint rule as 6a.
+- [ ] **Step 5: Check in the browser:** the knobs, the answer, proof on and off the checked setup, and the route lighting from the DSS frame to Orion. Take screenshots into the SDD workspace.
+- [ ] **Step 6: Commit** with "examples: frames explorer scenarios: a dish tracks Orion, and where the Moon is from here".
 
 ### Task 7: The drone and the ship
 
@@ -486,7 +525,7 @@ These four scenarios are buildable on today's library.
 
 **Interfaces:**
 
-- **Consumes:** the dish, ship, Orion, lunar-site and robot-arm tool frames from Tasks 4, 6, 7 and 7b, built together in one tree.
+- **Consumes:** the dish, ship, Orion, lunar-site and robot-arm tool frames from Tasks 4, 6b, 7 and 7b, built together in one tree.
 - **Produces:**
   - knobs: object A, object B (a choice of the five), and time;
   - the answer: distance, light time and line of sight between A and B, through the existing `lightTime` and `lineOfSight`, plus Task 5 when both are on the Earth;
