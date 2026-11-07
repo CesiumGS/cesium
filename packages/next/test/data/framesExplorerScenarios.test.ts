@@ -652,7 +652,7 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
     });
     expect(t.published).toContain("56.02 µs/day");
     expect(t.comparison).toMatch(
-      /^ours 55\.\d\d µs\/day · difference .* · within 2% · passes$/,
+      /^ours 55\.\d\d µs\/day · difference .* · within 2% · Checked$/,
     );
   }, 60_000);
 
@@ -716,9 +716,12 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
     expect(t.published).toMatch(
       /^Published: 1\.3152565\d\d s one way at DSS-43/,
     );
+    // This instant's difference and the check's worst row, apart, with
+    // the Checks row's word (Task 9, I12).
     expect(t.comparison).toMatch(
-      /^ours 1\.31525\d s · difference −?[\d.]+ ns · c·∆lt within 0\.5 m at each of its rows · passes$/,
+      /^ours 1\.31525\d s · difference −?[\d.]+ ns \([\d.]+ mm\) at this instant · the check's worst row [\d.]+ mm, within 500 mm · Checked$/,
     );
+    expect(t.published).not.toMatch(/signal\.json|Plan 3/);
     // Off it (another station): the published value applies at the checked setup.
     const off = await client.scenario(
       s.id,

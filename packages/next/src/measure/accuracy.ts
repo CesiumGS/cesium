@@ -219,7 +219,7 @@ export function accuracyOf(
         terms.push({
           source: "coordinateScale",
           meters: COORDINATE_SCALE * Math.hypot(r[0]!, r[1]!, r[2]!),
-          note: `End ${end}: Trajectory "${trajectory.name}": the scale of its coordinates (TDB or TT) is not stated, taken as TDB-compatible: 2.5e-8 of the geocentric distance`,
+          note: `End ${end}: Trajectory "${trajectory.name}": the scale of its coordinates (TDB or TT) is not stated, taken as TDB-compatible: 2.5 × 10⁻⁸ of the geocentric distance`,
         });
       }
     }

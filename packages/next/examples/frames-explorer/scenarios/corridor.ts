@@ -296,7 +296,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
     {
       id: "measurement.clothoid.live",
       group: "measurement",
-      title: `The point at station ${stationText(station)}, ${offsetText(offset)}, on the clothoid road gives back its station and offset within 1e-9 design units`,
+      title: `The point at station ${stationText(station)}, ${offsetText(offset)}, on the clothoid road gives back its station and offset within 10⁻⁹ design units`,
       pass: true,
       value: alignmentOnly,
       tolerance: ALIGNMENT_RECOVERY,
@@ -309,7 +309,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
       id: "corridor.through-the-ground",
       group: "measurement",
       title:
-        "The point taken to the ground (ITRF) through PROJ and back into the site grid lands where it started, within 1e-4 m",
+        "The point taken to the ground (ITRF) through PROJ and back into the site grid lands where it started, within 10⁻⁴ m",
       pass: true,
       value:
         Math.hypot(back[0]! - design[0]!, back[1]! - design[1]!) / FTUS_PER_M,
@@ -383,7 +383,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
         route.meters !== undefined
           ? {
               meters: route.meters,
-              note: `for a point measured in ITRF or picked on the imagery: ${CA.name}'s operation to WGS 84, ${(route.meters * FTUS_PER_M).toFixed(1)} ft. Relative to the road as placed through that operation, within ${fmt(feet, 2)} ft: the alignment gives a station and offset back to 1e-9 ft (measurement.clothoid's tolerance)${viaGround > ALIGNMENT_RECOVERY ? `, and the trip through PROJ adds ${fmt(viaGround, 2)} ft` : ""}`,
+              note: `for a point measured in ITRF or picked on the imagery: ${CA.name}'s operation to WGS 84, ${(route.meters * FTUS_PER_M).toFixed(1)} ft. Relative to the road as placed through that operation, within ${fmt(feet, 2)} ft: the alignment gives a station and offset back to 10⁻⁹ ft (measurement.clothoid's tolerance)${viaGround > ALIGNMENT_RECOVERY ? `, and the trip through PROJ adds ${fmt(viaGround, 2)} ft` : ""}`,
             }
           : {
               note: `not bounded for a point measured in ITRF: ${route.terms.find((t) => t.meters === undefined)?.note ?? "a term has no size"}. Relative to the road as placed, within ${fmt(feet, 2)} ft`,

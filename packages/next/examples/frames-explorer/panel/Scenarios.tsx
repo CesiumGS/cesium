@@ -323,6 +323,7 @@ export const SCENARIOS_READS = [
   "treeNote",
   "extras",
   "composed",
+  "results",
 ] as const;
 
 export const Scenarios = memo(ScenariosView, equalOn("model", SCENARIOS_READS));
@@ -501,6 +502,10 @@ function ScenariosView({
         : targets,
     [targets, expandedView],
   );
+  // The strip's count, in the Checks section's line (Task 9, I11).
+  const catalogRun = model.results.filter(
+    (r) => !r.displayOnly && !r.userInput,
+  ).length;
   const extras: Record<string, ResultExtras> = useMemo(
     () => ({ ...model.extras, ...scenario.liveExtras }),
     [model.extras, scenario.liveExtras],
@@ -580,7 +585,7 @@ function ScenariosView({
               <ul className="fx-diagram-key" aria-label="Key">
                 <li>
                   <span className="fx-key-glyph fx-key-built" aria-hidden />
-                  frame (no data in it)
+                  frame
                 </li>
                 {(!hasApp || hasPlainAdded) && (
                   <li>
@@ -665,7 +670,11 @@ function ScenariosView({
 
             <section className="fx-section" aria-labelledby={ids.answer}>
               <SectionHead id={ids.answer} title="The answer" />
-              <ScenarioAnswer scenario={scenario} />
+              <ScenarioAnswer
+                scenario={scenario}
+                onRetry={actions.retryScenario}
+                onBack={actions.backToChecked}
+              />
             </section>
 
             {scenario.route && (
@@ -689,6 +698,7 @@ function ScenariosView({
                 published={published}
                 onOpenResult={onOpenResult}
                 onBack={actions.backToChecked}
+                catalogRun={catalogRun}
               />
             </section>
           </div>

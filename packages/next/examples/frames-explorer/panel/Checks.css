@@ -213,3 +213,7 @@
     grid-area: chevron;
   }
 }
+/* How the rows relate to the strip's count (Task 9, I11). */
+.fx-checks-count {
+  margin: 0 0 var(--stratakit-space-150);
+}

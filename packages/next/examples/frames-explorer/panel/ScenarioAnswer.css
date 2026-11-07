@@ -160,3 +160,10 @@
   font-family: var(--stratakit-font-family-mono);
   font-size: var(--stratakit-font-size-caption-md);
 }
+/* A failed answer's way out (Task 9, I10): Retry, and back to the checked setup. */
+.fx-answer-problem-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-150);
+}

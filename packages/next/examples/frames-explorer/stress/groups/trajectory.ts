@@ -33,7 +33,7 @@ const orionGapCase = stressCase(
 const orionMoonCase = stressCase(
   "trajectory.moon-me",
   "trajectory",
-  "Orion at the lunar flyby (2026-04-06T23:00 UTC) in MOON_ME: its distance from the Moon's centre is kept, and it round-trips within 1 mm per 1e9 m",
+  "Orion at the lunar flyby (2026-04-06T23:00 UTC) in MOON_ME: its distance from the Moon's centre is kept, and it round-trips within 1 mm per 10⁹ m",
   ["orion"],
   async (ctx, base) => {
     const o = orion(ctx);
@@ -72,7 +72,7 @@ const orionMoonCase = stressCase(
         ...base,
         id: `${base.id}.distance`,
         title:
-          "Orion at the lunar flyby, converted to MOON_ME, keeps its distance from the Moon's centre (within 1 mm per 1e9 m)",
+          "Orion at the lunar flyby, converted to MOON_ME, keeps its distance from the Moon's centre (within 1 mm per 10⁹ m)",
         pass: true,
         value: kept,
         tolerance,
@@ -85,7 +85,7 @@ const orionMoonCase = stressCase(
         ...base,
         id: `${base.id}.round-trip`,
         title:
-          "Orion at the lunar flyby round-trips through MOON_ME back to its reference frame within 1 mm per 1e9 m",
+          "Orion at the lunar flyby round-trips through MOON_ME back to its reference frame within 1 mm per 10⁹ m",
         pass: true,
         value: distance(back.position, p.position),
         tolerance,

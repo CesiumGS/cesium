@@ -308,7 +308,7 @@ describe("the published comparison under the headline (the owner, fix 1)", () =>
     });
     expect(t.published).toBe("Published: 56.02 µs/day");
     expect(t.comparison).toBe(
-      "ours 55.99 µs/day · difference 0.054% · within 2% · passes",
+      "ours 55.99 µs/day · difference 0.054% · within 2% · Checked",
     );
   });
   it("off it: the value applies at the checked setup, and no verdict; the delta is the knobs' line's (Task 9, I8)", () => {
@@ -320,11 +320,11 @@ describe("the published comparison under the headline (the owner, fix 1)", () =>
     expect(t.published).toBe("Published: 56.02 µs/day");
     expect(t.comparison).toMatch(/applies at the checked setup/);
     expect(t.comparison).not.toMatch(/µs\/day/);
-    expect(t.comparison).not.toMatch(/passes|fails/);
+    expect(t.comparison).not.toMatch(/passes|fails|Checked|Failed/);
   });
   it("loading: no verdict", () => {
     const t = publishedText({ ...base, state: "loading" });
-    expect(t.comparison).not.toMatch(/passes|fails/);
+    expect(t.comparison).not.toMatch(/passes|fails|Checked|Failed/);
   });
 });
 
@@ -391,5 +391,24 @@ describe("the folded callout's short accuracy (Task 9, I5)", () => {
         }),
       ),
     ).toBe("±31 µm/s (1σ): the OEM's velocity covariance");
+  });
+});
+
+describe("the dish's published comparison (Task 9, I12)", () => {
+  it("says which difference is this instant's and which is the check's worst row, with the Checks row's word", () => {
+    const t = publishedText({
+      printed: "1.315256518 s one way at DSS-43",
+      document: "JPL NAIF SPICE",
+      tolerance: "c·∆lt within 0.5 m at each of its rows",
+      unit: "s",
+      state: "checked",
+      ours: 1.315257,
+      difference: { value: -1.2e-9, unit: "s" },
+      worst: { value: 0.45, tolerance: 0.5, unit: "m" },
+      pass: true,
+    });
+    expect(t.comparison).toBe(
+      "ours 1.315257 s · difference −1.2 ns (360 mm) at this instant · the check's worst row 450 mm, within 500 mm · Checked",
+    );
   });
 });

@@ -83,7 +83,7 @@ function compositions(ctx: StressContext, instant: Instant): StressResult {
     ctx.frames.itrf,
     ctx.frames.gcrf,
     CHECK,
-    "ITRF ↔ GCRF at the scenario's time, checked by every route through the tree (including frames this scenario doesn't draw: the six others, the Moon's among them): round trips and compositions agree within 1 mm per 1e9 m and 1e-12 in rotation",
+    "ITRF ↔ GCRF at the scenario's time, checked by every route through the tree (including frames this scenario doesn't draw: the six others, the Moon's among them): round trips and compositions agree within 1 mm per 10⁹ m and 10⁻¹² in rotation",
   );
 }
 
@@ -169,7 +169,7 @@ export function compositionsAt(
     value: worst,
     tolerance: worstTolerance,
     unit: "m",
-    detail: `${samples} samples at the scenario's time; the worst against its own tolerance shown; rotation ${fmt(worstRotation)} (limit ${ROTATION})`,
+    detail: `${samples} samples at the scenario's time; the worst against its own tolerance shown; rotation ${fmt(worstRotation)} (limit ${fmt(ROTATION)})`,
     accuracyNote: "exact arithmetic: round trips and compositions",
     instant: instant.tdb(),
   };

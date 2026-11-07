@@ -193,7 +193,7 @@ const ifcCase = stressCase(
       id: `${base.id}.x-axis`,
       source: citation("ifc43-geographic-referencing-utm"),
       title:
-        "The model's x axis (a point 1 km along it) in grid coordinates against the published direction (XAxisAbscissa 0.270600445976, XAxisOrdinate 0.962691746426): the angle between them, within 1e-12 rad (the opposite rotation would be 148.6° off)",
+        "The model's x axis (a point 1 km along it) in grid coordinates against the published direction (XAxisAbscissa 0.270600445976, XAxisOrdinate 0.962691746426): the angle between them, within 10⁻¹² rad (the opposite rotation would be 148.6° off)",
       pass: Math.abs(Math.hypot(along[0]!, along[1]!) - site.scale) < 1e-9,
       value: Math.abs(angle),
       tolerance: 1e-12,
@@ -205,7 +205,7 @@ const ifcCase = stressCase(
       id: `${base.id}.round-trip`,
       source: citation("ifc43-geographic-referencing-utm"),
       title:
-        "The example's model points (the origin and its tessellation's vertices) round-trip from design to body-fixed and back within 1e-4 m",
+        "The example's model points (the origin and its tessellation's vertices) round-trip from design to body-fixed and back within 10⁻⁴ m",
       pass: true,
       value: worstRoundTrip(frame, MODEL_POINTS),
       tolerance: DESIGN_ROUND_TRIP,

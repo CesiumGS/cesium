@@ -198,7 +198,42 @@ export const messageOf = (error: unknown): string =>
 
 /** A number with `digits` significant figures, without trailing zeros. */
 export const fmt = (x: number, digits = 3): string =>
-  Number.isFinite(x) ? String(Number(x.toPrecision(digits))) : String(x);
+  Number.isFinite(x)
+    ? powersOfTen(String(Number(x.toPrecision(digits))))
+    : String(x);
+
+const SUPERSCRIPT: Readonly<Record<string, string>> = {
+  "0": "⁰",
+  "1": "¹",
+  "2": "²",
+  "3": "³",
+  "4": "⁴",
+  "5": "⁵",
+  "6": "⁶",
+  "7": "⁷",
+  "8": "⁸",
+  "9": "⁹",
+  "-": "⁻",
+};
+
+/**
+ * JavaScript's e-notation written out, as DESIGN.md asks ("3.4 × 10⁻⁹",
+ * never "3.4e-9"; Task 9, I13): "1e-8" is "10⁻⁸", "-2.5e+21" "−2.5 × 10²¹".
+ * Anything else is left as it is.
+ */
+export function powersOfTen(text: string): string {
+  const m = /^(-?)(\d+(?:\.\d+)?)e([+-]?\d+)$/.exec(text);
+  if (!m) {
+    return text;
+  }
+  const power = `10${m[3]!
+    .replace("+", "")
+    .split("")
+    .map((c) => SUPERSCRIPT[c] ?? c)
+    .join("")}`;
+  const sign = m[1] ? "−" : "";
+  return m[2] === "1" ? `${sign}${power}` : `${sign}${m[2]} × ${power}`;
+}
 
 /** An effect's size for display, apart from any verdict (R11). */
 export function formatEffect(effect: NonNullable<StressResult["effect"]>) {

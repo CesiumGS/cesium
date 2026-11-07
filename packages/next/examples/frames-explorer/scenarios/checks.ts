@@ -222,6 +222,18 @@ export type CheckRow =
    * formula, a round trip: the capstone's pair, Task 8 fix 1).
    */
   | { status: "live"; kind: CheckKind; result: StressResult }
+  /**
+   * Off the checked setup, when the evaluation at your setting failed
+   * (Task 9, I10): nothing ran, and the row says so.
+   */
+  | {
+      status: "not-run";
+      kind: CheckKind;
+      id: string;
+      title: string;
+      /** Why it didn't run; without one, the evaluation failed. */
+      reason?: string;
+    }
   /** Judged on the page, against measured data (`maskCheckRow`). */
   | { status: "page"; kind: "measured"; check: PageCheck }
   | {
@@ -319,6 +331,15 @@ export function checkRows(
   }
   for (const result of evaluation.live) {
     rows.push({ status: "live", kind: "live", result });
+  }
+  for (const n of evaluation.notRun ?? []) {
+    rows.push({
+      status: "not-run",
+      kind: "live",
+      id: n.id,
+      title: n.title,
+      reason: n.reason,
+    });
   }
   return rows;
 }

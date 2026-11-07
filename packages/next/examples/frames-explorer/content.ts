@@ -142,15 +142,15 @@ const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
   // The drone's and the ship's frames from their tracks (Task 7).
   "frame-tree.body-frame.heading": {
     kind: "formula",
-    text: "The track's horizontal velocity's azimuth, resolved on east and north from latitude and longitude by hand: within 1e-9°.",
+    text: "The track's horizontal velocity's azimuth, resolved on east and north from latitude and longitude by hand: within 10⁻⁹°.",
   },
   "frame-tree.body-frame.level": {
     kind: "formula",
-    text: "The geodetic normal from latitude and longitude by hand: within 1e-12 rad.",
+    text: "The geodetic normal from latitude and longitude by hand: within 10⁻¹² rad.",
   },
   "frame-tree.body-frame.roll": {
     kind: "formula",
-    text: "The roll angle itself: it turns y about x by that much, within 1e-12 rad.",
+    text: "The roll angle itself: it turns y about x by that much, within 10⁻¹² rad.",
   },
   "frame-tree.body-frame.footprint": {
     kind: "formula",
@@ -163,7 +163,7 @@ const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
   // The robot arm's chain against its hand closed form and lever-arm rule (Task 7b).
   "frame-tree.joint-chain.forward-kinematics": {
     kind: "formula",
-    text: "The closed-form planar solution by hand: the boom, forearm and tool at their summed elevations, turned by the yaw: within 1e-9 m.",
+    text: "The closed-form planar solution by hand: the boom, forearm and tool at their summed elevations, turned by the yaw: within 10⁻⁹ m.",
   },
   "frame-tree.joint-chain.accuracy": {
     kind: "formula",

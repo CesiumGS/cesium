@@ -219,7 +219,7 @@ export const evaluateShip: ScenarioEvaluator = async (
       id: "projections.epsg-6420-6360.live",
       group: "projections",
       title:
-        "California zone 3 (EPSG:6420): the ship's place and a 2 km square round it round-trip through the body-fixed frame within 1e-4 m",
+        "California zone 3 (EPSG:6420): the ship's place and a 2 km square round it round-trip through the body-fixed frame within 10⁻⁴ m",
       pass: true,
       value: worstRoundTrip(
         plain,

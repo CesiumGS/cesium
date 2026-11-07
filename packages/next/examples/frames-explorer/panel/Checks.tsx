@@ -299,6 +299,22 @@ export const CheckItem = memo(
               <Typography variant="body-sm" render={<p />}>
                 {ROW_COPY.stale}
               </Typography>
+            ) : row.status === "not-run" ? (
+              <>
+                <Typography variant="body-sm" render={<p />}>
+                  {row.reason === undefined
+                    ? ROW_COPY.notRun
+                    : ROW_COPY.notRunHere}
+                </Typography>
+                <Link
+                  component="button"
+                  type="button"
+                  className="fx-check-open"
+                  onClick={onBack}
+                >
+                  {ROW_COPY.back}
+                </Link>
+              </>
             ) : row.status === "reference-only" ? (
               <>
                 <Typography variant="body-sm" render={<p />}>
@@ -344,6 +360,7 @@ export const Checks = memo(function Checks({
   published,
   onOpenResult,
   onBack,
+  catalogRun,
 }: {
   rows: readonly CheckRow[];
   freshness: "current" | "updating" | "following";
@@ -353,6 +370,11 @@ export const Checks = memo(function Checks({
   atChecked: boolean;
   onOpenResult: (id: string) => void;
   onBack: () => void;
+  /**
+   * How many catalog results have run (the strip's count), so this list
+   * says how its rows relate to it in the strip's own words (Task 9, I11).
+   */
+  catalogRun?: number;
 }) {
   const uid = useId();
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
@@ -378,8 +400,22 @@ export const Checks = memo(function Checks({
       </Typography>
     );
   }
+  const fromCatalog = rows.filter((r) => r.status === "checked").length;
   return (
     <>
+      {catalogRun !== undefined && catalogRun > 0 && (
+        <Typography
+          variant="caption-lg"
+          color="textSecondary"
+          render={<p />}
+          className="fx-checks-count"
+        >
+          {fromCatalog === 0
+            ? `None of the ${catalogRun} catalog results run are judged here at your setting`
+            : `${fromCatalog} of the ${catalogRun} catalog results run ${fromCatalog === 1 ? "is" : "are"} this scenario's`}
+          ; Verification lists them all.
+        </Typography>
+      )}
       <KindLegend />
       <ul className="fx-checks">
         {rows.map((row) => {

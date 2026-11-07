@@ -234,7 +234,9 @@ export function buildReport(
   } else {
     lines.push(
       `${passed} passed, ${failed} failed, ${skipped} skipped (missing data); ${shown} shown, not judged; ${yours} of your input (not counted).`,
-      `Fingerprints: ${matched} of ${fingerprinted.length} match Node's.`,
+      fingerprinted.length === 0
+        ? "Fingerprints: not compared (run the catalog first)."
+        : `Fingerprints: ${matched} of ${fingerprinted.length} results' fingerprints match the Node test run's.`,
       "",
     );
     if (failed > 0) {

@@ -46,7 +46,9 @@ export function Report({
           <dd className="fx-num">{counts.shown}</dd>
           <dt>Fingerprints</dt>
           <dd className="fx-num">
-            {matched.length} of {fingerprinted.length} match Node&rsquo;s
+            {fingerprinted.length === 0
+              ? "not compared: run the catalog first"
+              : `${matched.length} of ${fingerprinted.length} results' fingerprints match the Node test run's`}
           </dd>
           <dt>Your input</dt>
           <dd className="fx-num">

@@ -451,6 +451,8 @@ export interface PanelActions {
   setKnob(id: string, value: KnobValue): void;
   /** Back to the checked setup: its knobs and epoch. */
   backToChecked(): void;
+  /** Works the answer out again at the setup shown (after it failed, Task 9 I10). */
+  retryScenario(): void;
   /**
    * A moment the scenario offers: the clock to its time, paused (the dish's
    * "Behind the Moon"), or its knobs set (the drone's "Over the building").

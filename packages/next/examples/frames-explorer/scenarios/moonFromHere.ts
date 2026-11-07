@@ -148,13 +148,13 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
       f.itrf,
       f.moonIcrf,
       COMPOSITIONS,
-      "ITRF ↔ MOON_ICRF at the scenario's time, checked by every route through the tree: round trips and compositions agree within 1 mm per 1e9 m and 1e-12 in rotation",
+      "ITRF ↔ MOON_ICRF at the scenario's time, checked by every route through the tree: round trips and compositions agree within 1 mm per 10⁹ m and 10⁻¹² in rotation",
     ),
     {
       id: "moon-from-here.pointing.live",
       group: "space",
       title:
-        "The Moon's apparent direction from Sacramento, from `measure`, against the same worked by hand from the tree's vectors (light time by iteration, aberration by the site's velocity), within 1e-9 rad",
+        "The Moon's apparent direction from Sacramento, from `measure`, against the same worked by hand from the tree's vectors (light time by iteration, aberration by the site's velocity), within 10⁻⁹ rad",
       pass: true,
       value: byHand,
       tolerance: POINTING_BY_HAND,

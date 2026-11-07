@@ -210,7 +210,7 @@ function triadCheck(
   return {
     id: "stand-on-moon.site-triad",
     group: "lunar-time",
-    title: `The site's east-north-up axes at ${latitudeText(latitude)}: finite, unit length, at right angles and right-handed (east × north = up), within 1e-12`,
+    title: `The site's east-north-up axes at ${latitudeText(latitude)}: finite, unit length, at right angles and right-handed (east × north = up), within 10⁻¹²`,
     pass: finite,
     value: worst,
     tolerance: 1e-12,
@@ -236,7 +236,7 @@ function roundTrip(
     id: "stand-on-moon.site-round-trip",
     group: "lunar-time",
     title:
-      "The site's origin from MOON_ME through ICRF and back lands where it started, within 1 mm per 1e9 m",
+      "The site's origin from MOON_ME through ICRF and back lands where it started, within 1 mm per 10⁹ m",
     pass: true,
     value: distance(q, expected),
     tolerance: compositionTolerance(

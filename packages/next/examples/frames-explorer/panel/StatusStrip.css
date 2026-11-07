@@ -102,3 +102,7 @@
   display: block;
   font-weight: 400;
 }
+/* What the counts are (Task 9, I11): the catalog's results run so far. */
+.fx-count-label {
+  color: var(--stratakit-color-text-neutral-secondary);
+}

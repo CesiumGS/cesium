@@ -122,6 +122,15 @@ export function publishedView(
                 value: (pub.ours ?? answerValue!) - pub.value,
                 unit: pub.unit,
               },
+              // The check judges its worst row: said apart (Task 9, I12).
+              ...(r.value !== undefined &&
+                r.tolerance !== undefined && {
+                  worst: {
+                    value: r.value,
+                    tolerance: r.tolerance,
+                    ...(r.unit !== undefined && { unit: r.unit }),
+                  },
+                }),
             }
           : r.value !== undefined && {
               difference: {
@@ -262,14 +271,28 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
   const spec = st.spec;
   const catalog = new Map(input.results.map((r) => [r.id, r]));
   const e = st.evaluation;
-  const freshness = scenarioFreshness(st, playing);
+  // A failed evaluation is the current setup's outcome: never "updating"
+  // for ever over the last answer (Task 9, I10).
+  const failed = st.status === "error" && st.problem !== undefined;
+  const freshness = failed ? "current" : scenarioFreshness(st, playing);
   const own =
     input.terrain !== undefined && e?.pair
       ? ownTraces(input.terrain, e)
       : input.terrain;
   const terrain = e ? withPending(own, e) : own;
   let checks: CheckRow[];
-  if (e && st.evaluatedAt) {
+  if (failed && !st.atChecked) {
+    // The evaluation failed off the checked setup: nothing re-ran, and each
+    // row says so (Task 9, I10).
+    checks = spec.checks
+      .filter((id) => catalog.get(id)?.displayOnly !== true)
+      .map((id) => ({
+        status: "not-run" as const,
+        kind: checkKind(spec, id, catalog.get(id)),
+        id,
+        title: catalog.get(id)?.title ?? id,
+      }));
+  } else if (e && st.evaluatedAt) {
     // The rows of the setup it was made at; `freshness` says whether
     // that is the current one (the panel withholds stale verdicts).
     const at = checkedState(
@@ -280,17 +303,6 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     checks = checkRows(spec, at, catalog, e);
   } else if (st.atChecked) {
     checks = checkRows(spec, true, catalog, {
-      scenario: spec.id,
-      added: [],
-      answer: { label: "", headline: "", accuracy: { note: "" } },
-      overlays: [],
-      live: [],
-    });
-  } else if (st.problem !== undefined) {
-    // The evaluation failed off the checked setup: nothing runs, so no row
-    // says it is running (Task 9); the references still apply at the
-    // checked setup.
-    checks = checkRows(spec, false, catalog, {
       scenario: spec.id,
       added: [],
       answer: { label: "", headline: "", accuracy: { note: "" } },

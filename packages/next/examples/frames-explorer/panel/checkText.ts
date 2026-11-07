@@ -67,6 +67,7 @@ export interface CheckRowText {
     | "Checked"
     | "Failed"
     | "Not judged here"
+    | "Not run"
     | "Loading"
     | "Updating"
     | "Following"
@@ -112,6 +113,7 @@ export function checkRowText(
   if (
     freshness === "current" ||
     row.status === "pending" ||
+    row.status === "not-run" ||
     // The mask is the station's: the clock moving doesn't touch it.
     (row.status === "page" && freshness === "following")
   ) {
@@ -226,6 +228,15 @@ function rowText(
         summary: c.summary,
       };
     }
+    case "not-run":
+      return {
+        key: `not-run:${row.id}`,
+        kind: row.kind,
+        title: extras[row.id]?.label ?? row.title,
+        status: "Not run",
+        tone: "unsure",
+        summary: row.reason ?? ROW_COPY.notRunSummary,
+      };
     case "pending":
       return {
         key: `pending:${row.id}`,
@@ -254,6 +265,11 @@ export const ROW_COPY = {
   pendingAtChecked:
     "The catalog's check runs in the worker; its verdict shows here when it's in.",
   pendingOff: "Re-running at your setting; nothing is claimed until it's in.",
+  notRunSummary: "Not run: the evaluation failed at your setting",
+  notRunHere:
+    "It can't run at your setting, for the reason above; at the checked setup it runs, against its reference.",
+  notRun:
+    "The answer couldn't be worked out at your setting, so nothing re-ran. Retry, or go back to the checked setup, where its reference applies.",
   accuracyNotStated: "not stated",
   tolerance: "against a tolerance of",
 } as const;

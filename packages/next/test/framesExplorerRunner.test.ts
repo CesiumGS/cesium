@@ -23,8 +23,10 @@ import {
 import { createFrames } from "../src/frames/frames.ts";
 import type { ProjApi } from "../src/engineering/proj.ts";
 import {
+  fmt,
   isNeedMissing,
   plainAccuracy,
+  powersOfTen,
   type DataContext,
 } from "../examples/frames-explorer/stress/runner.ts";
 import { MissingDataError } from "../examples/frames-explorer/host.ts";
@@ -928,5 +930,17 @@ describe("plainAccuracy", () => {
     expect(p.warningCodes).not.toBe(a.warningCodes);
     const uncoded = plainAccuracy({ meters: 1, terms: [], warnings: [] });
     expect(uncoded).not.toHaveProperty("warningCodes");
+  });
+});
+
+describe("numbers in words (Task 9, I13)", () => {
+  it("writes JavaScript's e-notation out as powers of ten", () => {
+    expect(fmt(1e-12)).toBe("10⁻¹²");
+    expect(fmt(3.33e-16)).toBe("3.33 × 10⁻¹⁶");
+    expect(fmt(-2.5e21)).toBe("−2.5 × 10²¹");
+    expect(fmt(0.00123)).toBe("0.00123");
+    expect(fmt(123456)).toBe("123000");
+    expect(powersOfTen("1.5e+9")).toBe("1.5 × 10⁹");
+    expect(powersOfTen("not a number")).toBe("not a number");
   });
 });

@@ -437,7 +437,7 @@ async function boundChecks(
     results.push({
       ...base(
         "round-trip",
-        `design to body-fixed and back at h = ${HEIGHTS.join(", ")} design units, within the refined inverse's 1e-6 m`,
+        `design to body-fixed and back at h = ${HEIGHTS.join(", ")} design units, within the refined inverse's 10⁻⁶ m`,
       ),
       pass: true,
       value: worstRoundTrip(frame, designs),
@@ -642,7 +642,7 @@ const boundCase = (
   ...stressCase(
     `bound-crss.${key}`,
     GROUP,
-    `${label} as a WKT2 BOUNDCRS (input exported from a +towgs84 definition): units and factors from the source CRS, the bound Helmert recorded and matching a hand-coded Helmert within 1 mm, round trips within 1e-6 m at three heights, and the shift against PROJ's registry operation`,
+    `${label} as a WKT2 BOUNDCRS (input exported from a +towgs84 definition): units and factors from the source CRS, the bound Helmert recorded and matching a hand-coded Helmert within 1 mm, round trips within 10⁻⁶ m at three heights, and the shift against PROJ's registry operation`,
     ["proj"],
     async (ctx) => {
       const entry = cited<InputEntry>(`input-wkt2-${key}`);
@@ -677,7 +677,7 @@ const epsgHelmertCase = (
   stressCase(
     `bound-crss.epsg-${code}`,
     GROUP,
-    `EPSG:${code} (${label}), whose operation is a geocentric Helmert: the recorded Helmert is EPSG's ${record.slice(5)}, the forward matches it coded by hand within 1 mm, and round trips at h = 0, 100 and 1000 hold within 1e-6 m (guarding plan 4a's refined inverse)`,
+    `EPSG:${code} (${label}), whose operation is a geocentric Helmert: the recorded Helmert is EPSG's ${record.slice(5)}, the forward matches it coded by hand within 1 mm, and round trips at h = 0, 100 and 1000 hold within 10⁻⁶ m (guarding plan 4a's refined inverse)`,
     ["proj"],
     async (ctx, base) => {
       const P = proj(ctx);
@@ -733,7 +733,7 @@ const epsgHelmertCase = (
         {
           ...base,
           id: `${base.id}.round-trip`,
-          title: `EPSG:${code}: design to body-fixed and back at h = 0, 100 and 1000 design units, within the refined inverse's 1e-6 m (plan 4a found up to 2.8 mm before its fix)`,
+          title: `EPSG:${code}: design to body-fixed and back at h = 0, 100 and 1000 design units, within the refined inverse's 10⁻⁶ m (plan 4a found up to 2.8 mm before its fix)`,
           pass: true,
           value: worstRoundTrip(
             frame,

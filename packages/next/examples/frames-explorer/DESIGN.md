@@ -1699,6 +1699,46 @@ These bind over the bullets above where they differ.
   small for the unit's digits is given in significant figures ("+5.0 ×
   10⁻⁴ µs/day"), never "−0.00 µs/day".
 
+#### 9, phase B: the UX review's fixes (2026-11-07)
+
+These bind over the sections above where they differ.
+
+- **The drone's spot** needs the ray up to it drawn and clear of the
+  terrain by more than its error (the ray is traced again up to its first
+  hit, `SightLine.firstHit`); otherwise "Can't tell yet", unbounded. The
+  spot's error is the coarsest level crossed, up to and at the hit.
+- **A sky ray to the Moon** is never blocked by the Moon.
+- **The clock is in UTC** (`attachTimeControls`' `zone`, set on the live
+  viewer), its group named "Scenario time"; ⚙ still offers the others.
+- **One accuracy per thing:** Orion's data is stated at the instant by one
+  helper (`orionData.ts`) in one-path, the dish and the capstone, and the
+  breakdown prints through the route step's formatter. A speed or an angle
+  leads with its own figure (`accuracy.figure`): one-path's from the OEM's
+  velocity covariance and the position turning with the frame
+  (`Trajectory.velocitySigma`), earth-turns' in radians, then its
+  millimetres at the equator.
+- **The callout** keeps a one-sentence limit (`SceneSpec.calloutNote`;
+  the long note stays in the panel), wraps the accuracy to two lines, and
+  has no tooltip. Folded, it keeps the short accuracy and a "1 limit"
+  mark.
+- **The docked tree** for a pair keeps only the lit route (other branches
+  in +N chips) and pans to the scenario's added frames (deepest first),
+  then From, To and the meeting frame, as many as fit whole
+  (`panWindow`). Where From and To still can't both be seen (the capstone
+  at 380 px), the route also shows as one row of pills above it.
+- **Checks:** at 480 px or less, two lines a row. Off the checked setup the
+  answer's delta is said once, in the knobs' line; reference rows say only
+  "Reference applies at the checked setup". A failed evaluation is never
+  "Updating": the answer offers Retry and Back to the checked setup, and
+  the rows say "Not run". A check that can't run at a setting says why
+  (the BIM site where its CRS doesn't reach).
+- **The page's words:** the gallery description is the demo's; the strip's
+  counts are "N catalog results run", the Checks section says how many of
+  them are its own; the dish cites JPL NAIF SPICE, gives this instant's
+  difference and the check's worst row apart, and says "Checked"; powers of
+  ten are written out everywhere (`fmt`, `powersOfTen`; a data test holds
+  every shown string to it).
+
 ### Carried forward (engine work)
 
 - **X-ray dashes for the geocentric triads inside the globe.** (Meanwhile

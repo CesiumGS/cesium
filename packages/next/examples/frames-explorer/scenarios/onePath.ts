@@ -201,7 +201,7 @@ function liveChecks(
     {
       id: "trajectory.moon-me.distance.live",
       group: "trajectory",
-      title: `Orion at the scenario's time in ${name}, directly and through ICRF, lands in one place (within 1 mm per 1e9 m): its distance from ${ORIGIN_NAME[name]} is the same by both routes`,
+      title: `Orion at the scenario's time in ${name}, directly and through ICRF, lands in one place (within 1 mm per 10⁹ m): its distance from ${ORIGIN_NAME[name]} is the same by both routes`,
       pass: true,
       value: distance(viaIcrf.position, there.position),
       tolerance: routeTolerance,
@@ -213,7 +213,7 @@ function liveChecks(
     {
       id: "trajectory.moon-me.round-trip.live",
       group: "trajectory",
-      title: `Orion at the scenario's time round-trips through ${name} back to ${o.reference.name} within 1 mm per 1e9 m`,
+      title: `Orion at the scenario's time round-trips through ${name} back to ${o.reference.name} within 1 mm per 10⁹ m`,
       pass: true,
       value: distance(back.position, p.position),
       tolerance,

@@ -47,7 +47,7 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "frames-explorer",
     title: "Frames and projections",
     description:
-      "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labelled, every result checked against its tolerance.",
+      "One frame tree, eleven real problems: each scenario builds its own tree, answers one question on the globe, and shows how sure it is and how that's checked.",
     labels: ["Frames", "Projections", "Measurement"],
     globe: "ellipsoid",
     layout: "side",

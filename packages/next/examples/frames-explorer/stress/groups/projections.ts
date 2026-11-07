@@ -87,7 +87,7 @@ const PROJECTION_SETS: readonly ProjectionSet[] = [
 function projectionCase(set: ProjectionSet): StressCase {
   const code = crsDefinition(set.crs);
   const id = `projections.${code.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-  const title = `${code} (${set.name}): the origin, a 50 km line, a point 100 km off the central meridian and one at the zone's edge round-trip through the body-fixed frame within 1e-4 m`;
+  const title = `${code} (${set.name}): the origin, a 50 km line, a point 100 km off the central meridian and one at the zone's edge round-trip through the body-fixed frame within 10⁻⁴ m`;
   return stressCase(id, "projections", title, set.needs, async (ctx, base) => {
     const frame = EngineeringFrame.create(
       { name: set.name, body: set.body, crs: set.crs },

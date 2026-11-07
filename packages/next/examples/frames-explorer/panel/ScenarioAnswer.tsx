@@ -6,7 +6,7 @@
 // scenario says plainly (the backdrop Moon) sits under it. Where the answer
 // says how it is worked out (stand-on-moon's clock rates, Task 4c item 1),
 // its steps follow, open, under "How this is worked out".
-import { CircularProgress, Link, Typography } from "@mui/material";
+import { Button, CircularProgress, Link, Typography } from "@mui/material";
 import {
   accuracyLine,
   accuracyWarns,
@@ -53,6 +53,7 @@ export const ANSWER_READS = [
   "freshness",
   "problem",
   "status",
+  "atChecked",
   "queued",
   "published",
   "note",
@@ -65,7 +66,16 @@ export const ScenarioAnswer = memo(
   equalOn("scenario", ANSWER_READS),
 );
 
-function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
+function ScenarioAnswerView({
+  scenario,
+  onRetry,
+  onBack,
+}: {
+  scenario: ScenarioPanelView;
+  /** After a failure: work it out again, or go back to the checked setup (Task 9, I10). */
+  onRetry?: () => void;
+  onBack?: () => void;
+}) {
   const a = scenario.answer;
   // The last setup's answer, dimmed, while the new one is worked out; while
   // the clock plays it follows in place, not dimmed.
@@ -77,13 +87,29 @@ function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
         <p className="fx-strong">
           {scenario.problem.missing
             ? "This scenario's data isn't in the frames store."
-            : "This scenario didn't answer."}
+            : scenario.atChecked
+              ? "This scenario didn't answer."
+              : "Couldn't work this out at your setting."}
         </p>
         <Typography variant="body-sm" color="textSecondary" render={<p />}>
           {scenario.problem.missing
             ? "Run npm run setup in packages/next, then reload."
             : scenario.problem.message}
         </Typography>
+        {!scenario.problem.missing && (onRetry || onBack) && (
+          <div className="fx-answer-problem-actions">
+            {onRetry && (
+              <Button size="small" variant="outlined" onClick={onRetry}>
+                Retry
+              </Button>
+            )}
+            {onBack && !scenario.atChecked && (
+              <Button size="small" variant="text" onClick={onBack}>
+                Back to the checked setup
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     );
   }

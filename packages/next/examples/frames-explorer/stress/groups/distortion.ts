@@ -36,7 +36,7 @@ const webMercatorFrame = (ctx: StressContext) =>
 const webMercatorScaleCase = stressCase(
   "distortion.web-mercator-scale",
   "distortion",
-  "EPSG:3857's parallel scale from gridFactors at latitudes 0°, 45°, 60° and 70° against the hand formula k = sqrt(1 − e² sin² φ) / cos φ within 1e-9, and against IOGP 373-7-2's printed k at its example point",
+  "EPSG:3857's parallel scale from gridFactors at latitudes 0°, 45°, 60° and 70° against the hand formula k = sqrt(1 − e² sin² φ) / cos φ within 10⁻⁹, and against IOGP 373-7-2's printed k at its example point",
   ["proj"],
   async (ctx, base) => {
     const frame = webMercatorFrame(ctx);
@@ -54,7 +54,7 @@ const webMercatorScaleCase = stressCase(
         ...base,
         id: `${base.id}.k-${latitude}`,
         source: citation("epsg-ellipsoid-wgs84"),
-        title: `EPSG:3857's parallel scale at ${latitude}° against sqrt(1 − e² sin² φ) / cos φ (WGS 84), within 1e-9`,
+        title: `EPSG:3857's parallel scale at ${latitude}° against sqrt(1 − e² sin² φ) / cos φ (WGS 84), within 10⁻⁹`,
         pass: true,
         value: Math.abs(k - hand),
         tolerance: HAND_FORMULA,

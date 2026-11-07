@@ -127,7 +127,7 @@ export const CLOTHOID_OFFSETS = [-25, 0, 15] as const;
 const clothoidCase = stressCase(
   "measurement.clothoid",
   "measurement",
-  "Points at stations and offsets along a clothoid alignment (tangent, spiral, arc, spiral, tangent) give back their station and offset within 1e-9 design units",
+  "Points at stations and offsets along a clothoid alignment (tangent, spiral, arc, spiral, tangent) give back their station and offset within 10⁻⁹ design units",
   [],
   async (_ctx, base) => {
     const road = new Alignment(CLOTHOID_ROAD);
@@ -161,7 +161,7 @@ const clothoidCase = stressCase(
 const designVsItrfCase = stressCase(
   "measurement.design-vs-itrf",
   "measurement",
-  "A design point measured to another point gives the same distance as the design point fixed in ITRF, within 1e-9 m",
+  "A design point measured to another point gives the same distance as the design point fixed in ITRF, within 10⁻⁹ m",
   ["frames", "proj", "geoid"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(

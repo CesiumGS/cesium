@@ -79,7 +79,7 @@ const unitsCase = stressCase(
         ...base,
         id: `${base.id}.same-place`,
         title:
-          "3280.84 feet east from the same place in EPSG:6420 (US survey feet) and its international-foot copy: the lengths differ by the foot definitions' ratio, (1200/3937)/0.3048, within 1e-9",
+          "3280.84 feet east from the same place in EPSG:6420 (US survey feet) and its international-foot copy: the lengths differ by the foot definitions' ratio, (1200/3937)/0.3048, within 10⁻⁹",
         pass: unitsRight,
         value: Math.abs(placed / expected - 1),
         tolerance: UNIT_RATIO,
@@ -93,7 +93,7 @@ const unitsCase = stressCase(
         pass: unitsRight,
         value: Math.abs(libraryPpm / handPpm - 1),
         tolerance: EFFECT,
-        detail: `${units}; ${fmt(libraryPpm, 7)} ppm against ${fmt(handPpm, 7)} ppm by hand (the places differ by about 4 m, which moves the scale factor by a few parts in 1e9)`,
+        detail: `${units}; ${fmt(libraryPpm, 7)} ppm against ${fmt(handPpm, 7)} ppm by hand (the places differ by about 4 m, which moves the scale factor by a few parts in 10⁹)`,
         effect: {
           value: libraryPpm,
           unit: "ppm",

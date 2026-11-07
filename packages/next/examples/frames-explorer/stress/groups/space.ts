@@ -87,7 +87,7 @@ type SignalRow = (typeof signalFixture.rows)[number];
 const signalCase = stressCase(
   "space.dss43-orion",
   "space",
-  "DSS-43 to Orion: the downlink's light time against plan 3's SPICE fixture within 0.5 m, and its Doppler ratio against the first-order formula from SPICE's direction within 3e-8",
+  "DSS-43 to Orion: the downlink's light time against JPL NAIF SPICE (spkpos) within 0.5 m, and its Doppler ratio against the first-order formula from SPICE's direction within 3 × 10⁻⁸",
   ["orion"],
   async (ctx, base) => {
     const { c } = iersConstants();
@@ -138,7 +138,7 @@ const signalCase = stressCase(
     const enough = used.length * 2 >= signalFixture.rows.length;
     const gapNote =
       gaps.length > 0
-        ? `; ${gaps.length} rows fall in the OEM's gaps (plan 3 used its SPK gap fill): ${gaps.join(", ")}`
+        ? `; ${gaps.length} rows fall in the OEM's gaps (the SPICE fixture used its SPK gap fill): ${gaps.join(", ")}`
         : "";
     return [
       {
@@ -146,7 +146,7 @@ const signalCase = stressCase(
         id: `${base.id}.light-time`,
         source: citation("dsn-dss43"),
         title:
-          "DSS-43 receiving from Orion: the light time against plan 3's SPICE fixture (spkpos CN, no Shapiro delay), c·∆lt within plan 3's 0.5 m",
+          "DSS-43 receiving from Orion: the light time against JPL NAIF SPICE (spkpos CN, no Shapiro delay), c·∆lt within 0.5 m",
         pass: enough,
         value: worstLight,
         tolerance: SPICE_LIGHT_TIME,
@@ -158,7 +158,7 @@ const signalCase = stressCase(
         id: `${base.id}.doppler`,
         source: citation("dsn-dss43"),
         title:
-          "DSS-43 receiving from Orion: the Doppler ratio against 1 − n·(vO − vS)/c with SPICE's direction and the OEM's velocity, within plan 3's 3e-8",
+          "DSS-43 receiving from Orion: the Doppler ratio against 1 − n·(vO − vS)/c with SPICE's direction and the OEM's velocity, within 3 × 10⁻⁸",
         pass: enough,
         value: worstDoppler,
         tolerance: DOPPLER_RATIO,

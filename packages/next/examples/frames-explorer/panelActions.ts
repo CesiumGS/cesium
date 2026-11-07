@@ -114,6 +114,10 @@ export function createPanelActions(deps: {
     },
     setKnob: (id, value) => host.setKnob(id, value),
     backToChecked: () => host.backToChecked(),
+    retryScenario: () => {
+      const p = host.params();
+      void host.show(p.scenario, p.knobs, p.time);
+    },
     goToMoment: (m) => {
       if (m.knobs) {
         for (const [id, value] of Object.entries(m.knobs)) {

@@ -28,7 +28,7 @@ const SITE_DESIGNS: readonly (readonly number[])[] = [
 const siteGridsCase = stressCase(
   "site-grids.round-trip",
   "site-grids",
-  "Site grids on California zone 3, rotated 0°, 12.5°, 90° and −135° and scaled 1, 1.0000375 and 0.99996: each lands at the site formula's grid point and round-trips within 1e-4 m",
+  "Site grids on California zone 3, rotated 0°, 12.5°, 90° and −135° and scaled 1, 1.0000375 and 0.99996: each lands at the site formula's grid point and round-trips within 10⁻⁴ m",
   ["proj", "geoid"],
   async (ctx, base) => {
     const results: StressResult[] = [];
@@ -61,7 +61,7 @@ const siteGridsCase = stressCase(
         results.push({
           ...base,
           id: `${base.id}.rotation-${degrees}.scale-${scale}`,
-          title: `Site grid rotated ${degrees}° and scaled ${scale}: lands at the site formula's grid point (within 1e-9 m) and round-trips within 1e-4 m`,
+          title: `Site grid rotated ${degrees}° and scaled ${scale}: lands at the site formula's grid point (within 10⁻⁹ m) and round-trips within 10⁻⁴ m`,
           pass: formulaRight,
           value: worst,
           tolerance: DESIGN_ROUND_TRIP,

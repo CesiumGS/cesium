@@ -176,6 +176,10 @@ function StatusStripView({
           <span className="fx-muted">No checks run yet</span>
         ) : (
           <>
+            {/* The same words as the Checks section's line (Task 9, I11). */}
+            <span className="fx-count-label">
+              {judged.length} catalog results run:
+            </span>
             <span className="fx-count fx-count-pass">
               <Icon href={svgStatusSuccess} aria-hidden />
               {passed} passed

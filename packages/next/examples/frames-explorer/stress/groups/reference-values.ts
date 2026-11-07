@@ -128,7 +128,7 @@ function ngsCase(mark: (typeof NGS_MARKS)[number]): StressCase {
         {
           ...sub(
             "scale-factor",
-            `scale factor ${m.spc.scaleFactor}, within 5e-9`,
+            `scale factor ${m.spc.scaleFactor}, within 5 × 10⁻⁹`,
           ),
           pass: true,
           value: Math.abs(factors.pointScale - scaleFactor.value),
@@ -138,7 +138,7 @@ function ngsCase(mark: (typeof NGS_MARKS)[number]): StressCase {
         {
           ...sub(
             "combined-factor",
-            `combined factor ${m.spc.combinedFactor} (elevation factor ${m.spc.elevationFactor} × scale factor) from gridFactors at the datasheet's ellipsoid height, within 5e-9`,
+            `combined factor ${m.spc.combinedFactor} (elevation factor ${m.spc.elevationFactor} × scale factor) from gridFactors at the datasheet's ellipsoid height, within 5 × 10⁻⁹`,
           ),
           pass: true,
           value: Math.abs(factors.combinedFactor - combined.value),

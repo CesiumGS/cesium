@@ -48,7 +48,7 @@ function latitudeOnMeridian(northing: number): number {
 const elevationFactorCase = stressCase(
   "below-the-ellipsoid.elevation-factor",
   "below-the-ellipsoid",
-  "Elevation factors at h = −500 m and −2000 m on UTM zone 31N (the equator and 60°N) against R/(R + h) with R the Gaussian mean radius, within 1e-12, and greater than 1",
+  "Elevation factors at h = −500 m and −2000 m on UTM zone 31N (the equator and 60°N) against R/(R + h) with R the Gaussian mean radius, within 10⁻¹², and greater than 1",
   ["proj"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(
@@ -70,7 +70,7 @@ const elevationFactorCase = stressCase(
         results.push({
           ...base,
           id: `${base.id}.${name}.${-h}`,
-          title: `The elevation factor at h = ${h} m at ${latitude}°N against R/(R + h) = ${fmt(hand, 12)} (R = sqrt(M N) = ${fmt(R, 10)} m), within 1e-12, and above 1`,
+          title: `The elevation factor at h = ${h} m at ${latitude}°N against R/(R + h) = ${fmt(hand, 12)} (R = sqrt(M N) = ${fmt(R, 10)} m), within 10⁻¹², and above 1`,
           pass: f.elevationFactor > 1,
           value: Math.abs(f.elevationFactor - hand),
           tolerance: ELEVATION_FACTOR,
@@ -85,7 +85,7 @@ const elevationFactorCase = stressCase(
 const tunnelCase = stressCase(
   "below-the-ellipsoid.tunnel",
   "below-the-ellipsoid",
-  "A 5 km tunnel along UTM zone 31N's central meridian, portals at h = +300 m and the bore at h = −200 m: the ground distance at tunnel level from the grid distance through the library's combined factor, against k0·R/(R + h) by hand, within 1e-9 relative",
+  "A 5 km tunnel along UTM zone 31N's central meridian, portals at h = +300 m and the bore at h = −200 m: the ground distance at tunnel level from the grid distance through the library's combined factor, against k0·R/(R + h) by hand, within 10⁻⁹ relative",
   ["proj"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(
@@ -121,7 +121,7 @@ const tunnelCase = stressCase(
         ...base,
         id: `${base.id}.ground`,
         title:
-          "The tunnel's ground distance at h = −200 m: grid distance ÷ the library's combined factor, against grid ÷ (k0·R/(R + h)) by hand, within 1e-9 relative",
+          "The tunnel's ground distance at h = −200 m: grid distance ÷ the library's combined factor, against grid ÷ (k0·R/(R + h)) by hand, within 10⁻⁹ relative",
         pass: true,
         value: Math.abs(tunnel / handTunnel - 1),
         tolerance: TUNNEL,

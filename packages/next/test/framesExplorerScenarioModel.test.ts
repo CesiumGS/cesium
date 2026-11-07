@@ -20,6 +20,7 @@ import {
   withTerrain,
   withTerrainAnswer,
 } from "../examples/frames-explorer/panel/answerText.ts";
+import { checkRowText } from "../examples/frames-explorer/panel/checkText.ts";
 import { checkRows } from "../examples/frames-explorer/scenarios/checks.ts";
 import { greyText } from "../examples/frames-explorer/scenarios/everything.ts";
 import type { ScenarioAnswer } from "../examples/frames-explorer/scenarios/evaluate.ts";
@@ -162,8 +163,43 @@ describe("scenarioView", () => {
       scrub: (t) => t,
     });
     expect(v.checks.some((c) => c.status === "pending")).toBe(false);
-    // Without its result the catalog's check is taken as reference-backed.
-    expect(v.checks.every((c) => c.status === "reference-only")).toBe(true);
+    // Nothing ran: each row says so (Task 9, I10).
+    expect(v.checks.length).toBeGreaterThan(0);
+    expect(v.checks.every((c) => c.status === "not-run")).toBe(true);
+    expect(checkRowText(v.checks[0]!, {}, v.freshness)).toMatchObject({
+      status: "Not run",
+      summary: "Not run: the evaluation failed at your setting",
+    });
+    // After an earlier success, a failure for the new setting isn't
+    // "Updating" for ever over the last answer (Task 9, I10).
+    const after = scenarioView({
+      st: {
+        ...st,
+        stale: true,
+        staleBy: ["station"],
+        evaluation: {
+          scenario: "corridor",
+          added: [],
+          answer: { label: "", headline: "", accuracy: { note: "" } },
+          overlays: [],
+          live: [],
+        },
+        evaluatedAt: {
+          knobs: spec.checked.knobs,
+          epochUtcMs: Date.parse(spec.checked.epochUtc),
+        },
+      } as ScenarioHostState,
+      results: [],
+      tree: undefined,
+      playing: false,
+      rate: 1,
+      scrub: (t) => t,
+    });
+    expect(after.freshness).toBe("current");
+    expect(after.checks.every((c) => c.status === "not-run")).toBe(true);
+    expect(
+      after.checks.map((c) => checkRowText(c, {}, after.freshness).status),
+    ).not.toContain("Updating");
     // Loading, it is pending (R9).
     const loading = scenarioView({
       st: { ...st, status: "loading", problem: undefined },

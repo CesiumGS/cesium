@@ -178,7 +178,7 @@ function liveChecks(
       // The case's live stand-in, at whatever rotation and scale (fix 1).
       id: "site-grids.round-trip.live",
       group: "site-grids",
-      title: `The site grid at ${where}: lands at the site formula's grid point (within 1e-9 m) and round-trips within 1e-4 m`,
+      title: `The site grid at ${where}: lands at the site formula's grid point (within 10⁻⁹ m) and round-trips within 10⁻⁴ m`,
       pass: formulaMeters < 1e-9,
       value: worstRoundTrip(frame, designs),
       tolerance: DESIGN_ROUND_TRIP,
@@ -202,7 +202,7 @@ function liveChecks(
     {
       id: "measurement.design-vs-itrf.live",
       group: "measurement",
-      title: `A design point on the site grid at ${where} measured to another point gives the same distance as the design point fixed in ITRF, within 1e-9 m`,
+      title: `A design point on the site grid at ${where} measured to another point gives the same distance as the design point fixed in ITRF, within 10⁻⁹ m`,
       pass: true,
       value: Math.abs(fromDesign.distance - fromItrf.distance),
       tolerance: SAME_DISTANCE,
@@ -214,7 +214,7 @@ function liveChecks(
     {
       id: "projections.epsg-6420-6360.live",
       group: "projections",
-      title: `${crs.code} (${crs.name}): the site origin, a 50 km line north and a point 100 km east round-trip through the body-fixed frame within 1e-4 m`,
+      title: `${crs.code} (${crs.name}): the site origin, a 50 km line north and a point 100 km east round-trip through the body-fixed frame within 10⁻⁴ m`,
       pass: true,
       value: worstRoundTrip(plain, crsDesigns),
       tolerance: DESIGN_ROUND_TRIP,
@@ -289,9 +289,37 @@ function outside(
     },
     overlays: [],
     live: [],
+    // Nothing is placed, so nothing re-runs: each check says why (Task 9,
+    // I9).
+    notRun: OUTSIDE_CHECKS.map((c) => ({
+      ...c,
+      reason: `${crs.name} doesn't cover ${place.where}, so nothing is placed to check: choose a CRS that covers it`,
+    })),
     checkedAnswerValue: checked,
   };
 }
+
+/** The live re-runs that need the model placed (`liveChecks`), by what they check. */
+const OUTSIDE_CHECKS: readonly { id: string; title: string }[] = [
+  {
+    id: "site-grids.round-trip.live",
+    title:
+      "The site grid lands at the site formula's grid point and round-trips",
+  },
+  {
+    id: "measurement.grid-to-ground.live",
+    title: "A design line's distance, from the grid to the ground",
+  },
+  {
+    id: "measurement.design-vs-itrf.live",
+    title:
+      "A design point and the same point fixed in ITRF give the same distance",
+  },
+  {
+    id: "projections.round-trip.live",
+    title: "The CRS round-trips the site through the body-fixed frame",
+  },
+];
 
 export const evaluateBimSite: ScenarioEvaluator = async (
   ctx: StressContext,

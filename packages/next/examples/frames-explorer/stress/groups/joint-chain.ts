@@ -62,7 +62,7 @@ export function forwardKinematicsResult(
   }
   return {
     ...base,
-    title: `${where}: the tool's place in the arm base through the joint frames against the closed-form planar solution by hand, within 1e-9 m`,
+    title: `${where}: the tool's place in the arm base through the joint frames against the closed-form planar solution by hand, within 10⁻⁹ m`,
     pass: true,
     value: worst,
     tolerance: 1e-9,

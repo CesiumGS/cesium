@@ -7,7 +7,7 @@ import { stressCase } from "../shared.ts";
 const verticalCurveCase = stressCase(
   "vertical-profile.parabola",
   "vertical-profile",
-  "A symmetric vertical curve, PVI 10+00.00 at elevation 100.000, g1 = +3%, g2 = −2%, L = 400: elevations, the high point and K match the hand arithmetic within 1e-9",
+  "A symmetric vertical curve, PVI 10+00.00 at elevation 100.000, g1 = +3%, g2 = −2%, L = 400: elevations, the high point and K match the hand arithmetic within 10⁻⁹",
   [],
   async (_ctx, base) => {
     const pvi = 1000;
@@ -82,7 +82,7 @@ const verticalCurveCase = stressCase(
       {
         ...sub(
           "elevations",
-          "Elevations at the BVC (8+00, 94.000), EVC (12+00, 96.000) and stations 8+50, 9+00, 10+00 and 11+00 (95.34375, 96.375, 97.5, 97.375) within 1e-9",
+          "Elevations at the BVC (8+00, 94.000), EVC (12+00, 96.000) and stations 8+50, 9+00, 10+00 and 11+00 (95.34375, 96.375, 97.5, 97.375) within 10⁻⁹",
         ),
         pass: arithmetic < 1e-12,
         value: worstElevation,
@@ -106,7 +106,7 @@ const verticalCurveCase = stressCase(
       {
         ...sub(
           "k",
-          "K = L/|g2 − g1| = 400/5 = 80 (length per percent of grade change), from the profile's rate of change of grade, within 1e-9",
+          "K = L/|g2 − g1| = 400/5 = 80 (length per percent of grade change), from the profile's rate of change of grade, within 10⁻⁹",
         ),
         pass: true,
         value: Math.abs(K - 80),
@@ -120,7 +120,7 @@ const verticalCurveCase = stressCase(
 const gradeToGradeCase = stressCase(
   "vertical-profile.grade-to-grade",
   "vertical-profile",
-  "Grade to grade with no curve: +3% to the PVI at 10+00.00 (elevation 100.000), then −2%: elevations at 7+50 (92.5), 10+00 (100) and 12+50 (95) within 1e-9",
+  "Grade to grade with no curve: +3% to the PVI at 10+00.00 (elevation 100.000), then −2%: elevations at 7+50 (92.5), 10+00 (100) and 12+50 (95) within 10⁻⁹",
   [],
   async (_ctx, base) => {
     const road = new Alignment({

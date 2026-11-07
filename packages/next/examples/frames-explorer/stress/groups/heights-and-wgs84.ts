@@ -133,7 +133,7 @@ const heightsCase = stressCase(
       {
         ...base,
         id: `${base.id}.navd88`,
-        title: `The NAVD88 height from the ellipsoid height ${mark.ellipsoidHeight} m through GEOID18, against the datasheet's h − N = ${fromDatasheet.toFixed(3)} m, within half a unit of each plus 1e-4 m`,
+        title: `The NAVD88 height from the ellipsoid height ${mark.ellipsoidHeight} m through GEOID18, against the datasheet's h − N = ${fromDatasheet.toFixed(3)} m, within half a unit of each plus 10⁻⁴ m`,
         pass: true,
         value: Math.abs(navd88 - fromDatasheet),
         tolerance: h.half + N.half + 1e-4,

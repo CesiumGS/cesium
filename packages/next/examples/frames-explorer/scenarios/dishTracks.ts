@@ -169,9 +169,11 @@ export function publishedLight(
   return {
     value: lt,
     unit: "s",
-    printed: `${lt.toFixed(9)} s one way at DSS-43 (CN, no Shapiro delay), signal.json's "${row.kind}" row`,
+    // Cited by its source and how it was made; the fixture's path and row
+    // are the expanded check's detail (Task 9, I12).
+    printed: `${lt.toFixed(9)} s one way at DSS-43 (converged light time, no Shapiro delay)`,
     document:
-      "Plan 3's SPICE fixture, test/fixtures/frames/signal.json (NAIF SPICE spkpos)",
+      "JPL NAIF SPICE (spkpos, DE440 with NAIF's DSN station SPK), computed for this explorer",
     checkId: "space.dss43-orion.light-time",
     tolerance: "c·∆lt within 0.5 m at each of its rows",
   };
@@ -509,7 +511,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     {
       id: "dish-tracks.pointing.live",
       group: "space",
-      title: `Orion's apparent direction from ${id}, from \`measure\`, against the same worked by hand from the tree's vectors (light time by iteration, aberration by the dish's velocity), within 1e-9 rad`,
+      title: `Orion's apparent direction from ${id}, from \`measure\`, against the same worked by hand from the tree's vectors (light time by iteration, aberration by the dish's velocity), within 10⁻⁹ rad`,
       pass: true,
       value: angleBetween(hand.apparent, apparent),
       tolerance: POINTING_BY_HAND,

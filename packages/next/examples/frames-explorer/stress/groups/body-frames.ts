@@ -82,7 +82,7 @@ export function headingResult(
   );
   return {
     ...base,
-    title: `${where}: the body's heading (its x axis) against the track's horizontal velocity's azimuth, resolved on east and north from the geodetic latitude and longitude by hand, within 1e-9°`,
+    title: `${where}: the body's heading (its x axis) against the track's horizontal velocity's azimuth, resolved on east and north from the geodetic latitude and longitude by hand, within 10⁻⁹°`,
     pass: true,
     value: off / deg,
     tolerance: 1e-9,
@@ -106,7 +106,7 @@ export function levelResult(
   const tilt = angle(z, up);
   return {
     ...base,
-    title: `${where}, level: the body's z axis along the local up (the geodetic normal from latitude and longitude by hand), within 1e-12 rad`,
+    title: `${where}, level: the body's z axis along the local up (the geodetic normal from latitude and longitude by hand), within 10⁻¹² rad`,
     pass: Math.abs(dot(col(m, 0), up)) < 1e-12,
     value: tilt,
     tolerance: 1e-12,
@@ -145,7 +145,7 @@ export function rollResult(
   const xMoved = angle(col(rolled, 0), col(unrolled, 0));
   return {
     ...base,
-    title: `${where}: a roll of ${fmt(attitude.roll / deg, 4)}° turns the body's y about its x by that much, its right side down (y toward z), and leaves x where it was, within 1e-12 rad`,
+    title: `${where}: a roll of ${fmt(attitude.roll / deg, 4)}° turns the body's y about its x by that much, its right side down (y toward z), and leaves x where it was, within 10⁻¹² rad`,
     pass: xMoved < 1e-12 && (attitude.roll === 0 || sense > 0),
     value: Math.abs(turned - Math.abs(attitude.roll)),
     tolerance: 1e-12,

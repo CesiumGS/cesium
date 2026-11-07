@@ -26,7 +26,7 @@ const near: ComposedView = {
       {
         source: "coordinateScale",
         meters: 10.33,
-        note: 'End a: Trajectory "orion": the scale of its coordinates (TDB or TT) is not stated, taken as TDB-compatible: 2.5e-8 of the geocentric distance',
+        note: 'End a: Trajectory "orion": the scale of its coordinates (TDB or TT) is not stated, taken as TDB-compatible: 2.5 × 10⁻⁸ of the geocentric distance',
       },
       { source: "earthOrientation", meters: 0, note: "End b: measured" },
     ],

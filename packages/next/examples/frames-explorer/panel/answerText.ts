@@ -8,6 +8,9 @@ import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { onGrid } from "../scenarios/placement.ts";
 import { length, quantity } from "./format.ts";
 
+/** The speed of light, m/s: a light-time difference as a distance. */
+const C_LIGHT = 299_792_458;
+
 /** Digits after the point that suit a unit's figures. */
 const DIGITS: Readonly<Record<string, number>> = {
   "°": 2,
@@ -130,6 +133,12 @@ export interface PublishedView {
   /** At the checked setup: ours, the difference, and the verdict. */
   ours?: number;
   difference?: { value: number; unit?: string };
+  /**
+   * Where the difference is ours against this instant's value and the
+   * check judges its worst row (the dish's light time, Task 9 I12): that
+   * row's value and tolerance, so the two figures say which is which.
+   */
+  worst?: { value: number; tolerance: number; unit?: string };
   pass?: boolean;
   /** Off it: how far the setting moves the answer (the checks' delta). */
   delta?: { value: number; unit: string };
@@ -153,10 +162,17 @@ export function publishedText(p: PublishedView): {
         comparison: [
           p.ours !== undefined ? `ours ${formatAnswer(p.ours, p.unit)}` : "",
           p.difference
-            ? `difference ${quantity(p.difference.value, p.difference.unit)}`
+            ? `difference ${quantity(p.difference.value, p.difference.unit)}${
+                p.difference.unit === "s"
+                  ? ` (${length(Math.abs(p.difference.value) * C_LIGHT)})`
+                  : ""
+              }${p.worst ? " at this instant" : ""}`
             : "",
-          p.tolerance,
-          p.pass ? "passes" : "fails",
+          p.worst
+            ? `the check's worst row ${quantity(p.worst.value, p.worst.unit)}, within ${quantity(p.worst.tolerance, p.worst.unit)}`
+            : p.tolerance,
+          // The same word as the Checks row's (Task 9, I12).
+          p.pass ? "Checked" : "Failed",
         ]
           .filter((t) => t !== "")
           .join(" · "),

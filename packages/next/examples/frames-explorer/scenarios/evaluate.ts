@@ -344,6 +344,12 @@ export interface ScenarioEvaluation {
    */
   live: readonly StressResult[];
   /**
+   * Checks that can't re-run at this setting, and why (the BIM site where
+   * its CRS doesn't reach, Task 9 I9): rows that say so, never an empty
+   * section.
+   */
+  notRun?: readonly { id: string; title: string; reason: string }[];
+  /**
    * Each live check's kind where the spec shows them at the checked setup
    * (`ScenarioSpec.liveAtChecked`): a hand formula, a round trip. Off it
    * they are live re-runs whatever this says.

@@ -113,7 +113,7 @@ const axesCase = stressCase(
         ...base,
         id: `${base.id}.northing-first`,
         title:
-          "EPSG:31467 (northing first in EPSG): design (3 500 000, 5 540 000) lies on the 9° meridian, and 1 km steps in design E and N move east and north by the hand-computed angles, within 1e-3",
+          "EPSG:31467 (northing first in EPSG): design (3 500 000, 5 540 000) lies on the 9° meridian, and 1 km steps in design E and N move east and north by the hand-computed angles, within 10⁻³",
         pass:
           onMeridian &&
           Math.abs(pe.latitude - p0.latitude) < CROSS_STEP * handLat,
@@ -129,7 +129,7 @@ const axesCase = stressCase(
 const antimeridianCase = stressCase(
   "axes-and-the-antimeridian.antimeridian",
   "axes-and-the-antimeridian",
-  "UTM zones 1 and 60 at ±179.999°: points round-trip within 1e-4 m, a design line across 180° in zone 60 has continuous E, and two equator points either side of 180° are 2a sin(∆λ/2) apart within 1e-9 m",
+  "UTM zones 1 and 60 at ±179.999°: points round-trip within 10⁻⁴ m, a design line across 180° in zone 60 has continuous E, and two equator points either side of 180° are 2a sin(∆λ/2) apart within 10⁻⁹ m",
   ["frames", "proj"],
   async (ctx, base) => {
     const results: StressResult[] = [];
@@ -148,7 +148,7 @@ const antimeridianCase = stressCase(
       results.push({
         ...base,
         id: `${base.id}.zone-${zone}`,
-        title: `UTM zone ${zone}N: points at ±179.999° (latitudes 0° and 45°) round-trip within 1e-4 m`,
+        title: `UTM zone ${zone}N: points at ±179.999° (latitudes 0° and 45°) round-trip within 10⁻⁴ m`,
         pass: true,
         value: worstRoundTrip(frame, designs),
         tolerance: DESIGN_ROUND_TRIP,
@@ -196,7 +196,7 @@ const antimeridianCase = stressCase(
       ...base,
       id: `${base.id}.chord`,
       title:
-        "Equator points at 179.999° and −179.999°: their measured straight-line distance is 2a sin(∆λ/2) for ∆λ = 0.002°, within 1e-9 m",
+        "Equator points at 179.999° and −179.999°: their measured straight-line distance is 2a sin(∆λ/2) for ∆λ = 0.002°, within 10⁻⁹ m",
       pass: true,
       value: Math.abs(m.distance - hand),
       tolerance: SAME_DISTANCE,

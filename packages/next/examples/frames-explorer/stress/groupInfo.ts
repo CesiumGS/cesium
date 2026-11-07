@@ -317,10 +317,10 @@ export const GROUP_INFO: readonly GroupInfo[] = [
         "MOON_PA",
       ],
     },
-    accuracyNote: "SPICE fixture, plan 3's tolerances",
+    accuracyNote: "JPL NAIF SPICE, computed for this explorer",
     compared: {
       kind: "independent",
-      text: "Plan 3's SPICE fixture (spkpos, CN) and hand geometry.",
+      text: "JPL NAIF SPICE (spkpos, CN), computed for this explorer, and hand geometry.",
     },
   },
   // 1c: the industry groups.

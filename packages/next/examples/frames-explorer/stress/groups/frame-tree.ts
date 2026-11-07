@@ -27,7 +27,7 @@ const TREE_INSTANTS = [
 const frameTreeCase = stressCase(
   "frame-tree.compositions",
   "frame-tree",
-  "Seeded points through A → B → A, and A → C → B against A → B, over every pair of ITRF, GCRF, EARTH_ICRF, EME2000, HCRS, MOON_ICRF, MOON_ME and MOON_PA at five instants in 2026: within 1 mm per 1e9 m and 1e-12 in rotation",
+  "Seeded points through A → B → A, and A → C → B against A → B, over every pair of ITRF, GCRF, EARTH_ICRF, EME2000, HCRS, MOON_ICRF, MOON_ME and MOON_PA at five instants in 2026: within 1 mm per 10⁹ m and 10⁻¹² in rotation",
   ["frames"],
   async (ctx, base) => {
     const f = ctx.frames;
@@ -131,12 +131,12 @@ const frameTreeCase = stressCase(
         results.push({
           ...base,
           id: `${base.id}.${a}-${b}`.toLowerCase().replaceAll("_", "-"),
-          title: `${a} and ${b}: round trips, and compositions through the six other frames, agree within 1 mm per 1e9 m and 1e-12 in rotation`,
+          title: `${a} and ${b}: round trips, and compositions through the six other frames, agree within 1 mm per 10⁹ m and 10⁻¹² in rotation`,
           pass: worstRotation <= ROTATION,
           value: worstValue,
           tolerance: worstTolerance,
           unit: "m",
-          detail: `${samples} samples; the worst against its own tolerance shown; rotation ${fmt(worstRotation)} (limit ${ROTATION})`,
+          detail: `${samples} samples; the worst against its own tolerance shown; rotation ${fmt(worstRotation)} (limit ${fmt(ROTATION)})`,
         });
       }
     }
