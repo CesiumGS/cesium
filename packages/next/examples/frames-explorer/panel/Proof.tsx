@@ -176,7 +176,7 @@ interface ProofItemProps {
  * a row renders again only when its text changed, or, expanded, when what
  * its details show did (Task 4d).
  */
-const ProofItem = memo(
+export const ProofItem = memo(
   function ProofItem({
     row,
     t,

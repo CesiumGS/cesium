@@ -13,5 +13,5 @@ export const TimeContext = createContext<TimeSource>(STILL);
 /** The clock's and the scenario's times, now. */
 export function useLiveTime(): LiveTime {
   const source = useContext(TimeContext);
-  return useSyncExternalStore(source.subscribe, source.get);
+  return useSyncExternalStore(source.subscribe, source.get, source.get);
 }

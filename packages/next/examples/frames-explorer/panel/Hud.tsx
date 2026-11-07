@@ -73,9 +73,12 @@ export function useHudLayout(host: HTMLElement): number {
  * swatch, name and accuracy, ellipsized, the full line on hover and focus);
  * unfolded, the full lines and the triads' note.
  */
+/** The model fields the legend reads (Task 4d). */
+export const LEGEND_READS = ["overlays", "triadScale"] as const;
+
 export const GlobeLegend = memo(
   GlobeLegendView,
-  equalOn("model", ["overlays", "triadScale"]),
+  equalOn("model", LEGEND_READS),
 );
 
 function GlobeLegendView({ model }: { model: PanelModel }) {

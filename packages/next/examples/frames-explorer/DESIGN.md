@@ -389,6 +389,10 @@ the answer; the knobs; the proof. Nothing opens in a sheet.
   the only time control): the time is still part of the checked setup, so
   the marker names it when it moved ("time 2026-04-07 04:00 UTC (checked:
   2026-04-06 23:00 UTC)"), Back restores it, and the link carries it as `t`.
+  While the clock plays, the address bar's `t` lags: a re-evaluation that
+  only followed the clock doesn't write the link (each write renders the
+  gallery again), and the link takes the time when the clock stops (Task
+  4d, `createLinkWriter`). Copy link is always the current time.
 - **Proof** (the owner, 2026-11-06: no sheet): each row one full-width
   button, 44 px or taller, with a chevron and `aria-expanded`, that unfolds in
   place into its difference against its tolerance, what it is compared

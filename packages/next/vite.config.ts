@@ -441,5 +441,9 @@ export default defineConfig({
       ? configDefaults.exclude
       : [...configDefaults.exclude, "test/data/**"],
     environment: "node",
+    // StrataKit's icons import their .svg files: inlined, Vite turns those
+    // into URLs, so the frames explorer's panel parts render in Node
+    // (test/framesExplorerMemoReads.test.ts).
+    server: { deps: { inline: [/@stratakit\//] } },
   },
 });

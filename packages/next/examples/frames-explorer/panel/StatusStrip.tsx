@@ -114,9 +114,12 @@ function announcement(model: PanelModel, passed: number, failed: number) {
   return "";
 }
 
+/** The model fields the status strip reads (Task 4d). */
+export const STATUS_READS = ["items", "run", "results", "waiting"] as const;
+
 export const StatusStrip = memo(
   StatusStripView,
-  equalOn("model", ["items", "run", "results", "waiting"]),
+  equalOn("model", STATUS_READS),
 );
 
 function StatusStripView({

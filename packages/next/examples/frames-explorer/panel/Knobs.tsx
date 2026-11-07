@@ -120,24 +120,34 @@ function ChoiceKnob({
   );
 }
 
+/** What `movedText` reads, field by field (a spread would read every field). */
+const movedFrom = (s: ScenarioPanelView, epochUtc: string) => ({
+  changed: s.changed,
+  knobs: s.knobs,
+  values: s.values,
+  checked: s.checked,
+  checkedEpochUtc: s.checkedEpochUtc,
+  epochUtc,
+});
+
 /** What moved off the checked setup, the time as it is now (it moves while the clock plays). */
 function MovedWithTime({ s }: { s: ScenarioPanelView }) {
   const { epochUtc } = useLiveTime();
-  return <>{movedText({ ...s, epochUtc: epochUtc ?? s.checkedEpochUtc })}</>;
+  return <>{movedText(movedFrom(s, epochUtc ?? s.checkedEpochUtc))}</>;
 }
 
-export const Knobs = memo(
-  KnobsView,
-  equalOn("scenario", [
-    "atChecked",
-    "changed",
-    "knobs",
-    "values",
-    "checked",
-    "checkedEpochUtc",
-    "eop",
-  ]),
-);
+/** The scenario fields the knobs read: the only ones they render again for (Task 4d). */
+export const KNOBS_READS = [
+  "atChecked",
+  "changed",
+  "knobs",
+  "values",
+  "checked",
+  "checkedEpochUtc",
+  "eop",
+] as const;
+
+export const Knobs = memo(KnobsView, equalOn("scenario", KNOBS_READS));
 
 function KnobsView({
   scenario,
@@ -173,7 +183,7 @@ function KnobsView({
               {timeMoved ? (
                 <MovedWithTime s={s} />
               ) : (
-                movedText({ ...s, epochUtc: s.checkedEpochUtc })
+                movedText(movedFrom(s, s.checkedEpochUtc))
               )}
               . The proof re-runs here.
             </span>

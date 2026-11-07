@@ -283,7 +283,11 @@ export function shapeKey(tree: TreeNode, fullLabels: boolean): string {
   return JSON.stringify(parts);
 }
 
-/** `tree` while its shape is the last one's: the last tree, so what's laid out from it holds. */
+/**
+ * `tree` while its shape is the last one's: the last tree, so what's laid
+ * out from it holds. It writes a ref during render; that is idempotent (a
+ * repeated or discarded render with the same tree leaves the same value).
+ */
 function useShape(tree: TreeNode, fullLabels: boolean): TreeNode {
   const last = useRef<{ tree: TreeNode; key: string }>(undefined);
   const key = shapeKey(tree, fullLabels);
@@ -378,7 +382,7 @@ const DiagramEdge = memo(function DiagramEdge({
   );
 });
 
-interface NodeProps {
+export interface NodeProps {
   id: string;
   label: string;
   className: string;
@@ -444,7 +448,7 @@ const DiagramNode = memo(function DiagramNode({
   );
 }, sameNodeProps);
 
-function sameNodeProps(a: NodeProps, b: NodeProps): boolean {
+export function sameNodeProps(a: NodeProps, b: NodeProps): boolean {
   return (
     a.id === b.id &&
     a.label === b.label &&

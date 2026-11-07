@@ -311,10 +311,15 @@ function useMoreBelow(
  * results' extras and the composed accuracy, and renders again only when
  * one of those, or the scenario, changed.
  */
-export const Scenarios = memo(
-  ScenariosView,
-  equalOn("model", ["tree", "treeNote", "extras", "composed"]),
-);
+/** The model fields the tab reads, with Detail and Walk (Task 4d). */
+export const SCENARIOS_READS = [
+  "tree",
+  "treeNote",
+  "extras",
+  "composed",
+] as const;
+
+export const Scenarios = memo(ScenariosView, equalOn("model", SCENARIOS_READS));
 
 function ScenariosView({
   model,

@@ -17,9 +17,12 @@ import { equalOn } from "./memo.ts";
 import type { ScenarioId } from "../scenarios/spec.ts";
 import type { ScenarioPanelView } from "./model.ts";
 
+/** The scenario fields the strip reads (Task 4d). */
+export const STRIP_READS = ["id", "title", "strip"] as const;
+
 export const ScenarioStrip = memo(
   ScenarioStripView,
-  equalOn("scenario", ["id", "title", "strip"]),
+  equalOn("scenario", STRIP_READS),
 );
 
 function ScenarioStripView({

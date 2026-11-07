@@ -46,17 +46,20 @@ import { memo } from "react";
 import { equalOn } from "./memo.ts";
 import type { ScenarioPanelView } from "./model.ts";
 
+/** The scenario fields the answer reads (Task 4d). */
+export const ANSWER_READS = [
+  "answer",
+  "freshness",
+  "problem",
+  "status",
+  "queued",
+  "published",
+  "note",
+] as const;
+
 export const ScenarioAnswer = memo(
   ScenarioAnswerView,
-  equalOn("scenario", [
-    "answer",
-    "freshness",
-    "problem",
-    "status",
-    "queued",
-    "published",
-    "note",
-  ]),
+  equalOn("scenario", ANSWER_READS),
 );
 
 function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {

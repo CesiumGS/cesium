@@ -40,7 +40,12 @@ export function useStableCallback<A extends unknown[], R>(
   return useCallback((...args: A) => latest.current(...args), []);
 }
 
-/** `next`, or the last value when `same` says they're equal: a derived value that keeps its identity. */
+/**
+ * `next`, or the last value when `same` says they're equal: a derived value
+ * that keeps its identity. It writes a ref during render; that is
+ * idempotent (the same `next` always leaves the same value), so a render
+ * React throws away or repeats does no harm.
+ */
 export function useStable<T>(next: T, same: (a: T, b: T) => boolean): T {
   const last = useRef(next);
   if (last.current !== next && !same(last.current, next)) {
