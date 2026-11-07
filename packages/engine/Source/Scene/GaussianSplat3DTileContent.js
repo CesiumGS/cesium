@@ -532,47 +532,24 @@ class GaussianSplat3DTileContent {
   }
 
   /**
-   * Returns whether the feature has this property.
-   *
-   * @param {number} batchId The batchId for the feature.
-   * @param {string} name The case-sensitive name of the property.
-   * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
+   * @override
+   * @returns {false}
    */
-  hasProperty(batchId, name) {
+  hasProperty(batchId, name, featureTableId) {
     return false;
   }
 
   /**
-   * Returns the {@link Cesium3DTileFeature} object for the feature with the
-   * given <code>batchId</code>.  This object is used to get and modify the
-   * feature's properties.
-   * <p>
-   * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
-   * </p>
-   *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
-   *
-   * @param {number} batchId The batchId for the feature.
-   * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-   *
-   * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
+   * @override
+   * @returns {undefined}
    */
-  getFeature(batchId) {
+  getFeature(batchId, featureTableId) {
     return undefined;
   }
 
   /**
-       * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
-       * <p>
-       * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-       * not part of the public Cesium API.
-       * </p>
-       *
-       * @param {boolean} enabled Whether to enable or disable debug settings.
-       * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-
-       * @private
-       */
+   * @override
+   */
   applyDebugSettings(enabled, color) {}
 
   /**

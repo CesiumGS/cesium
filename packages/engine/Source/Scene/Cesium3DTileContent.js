@@ -227,9 +227,10 @@ class Cesium3DTileContent {
    *
    * @param {number} batchId The batchId for the feature.
    * @param {string} name The case-sensitive name of the property.
+   * @param {number} [featureTableId] The ID of the feature table to look up the data
    * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
    */
-  hasProperty(batchId, name) {
+  hasProperty(batchId, name, featureTableId) {
     DeveloperError.throwInstantiationError();
   }
 
@@ -244,27 +245,27 @@ class Cesium3DTileContent {
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
    *
    * @param {number} batchId The batchId for the feature.
+   * @param {number} [featureTableId] The ID of the feature table to look up the data.
    * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
    *
    * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
    */
-  getFeature(batchId) {
+  getFeature(batchId, featureTableId) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-       * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
-       * <p>
-       * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-       * not part of the public Cesium API.
-       * </p>
-       *
-       * @param {boolean} enabled Whether to enable or disable debug settings.
-       * @param {Color} color Debug color.
-       * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-
-       * @private
-       */
+   * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @param {boolean} enabled Whether to enable or disable debug settings.
+   * @param {Color} color Debug color.
+   *
+   * @private
+   */
   applyDebugSettings(enabled, color) {
     DeveloperError.throwInstantiationError();
   }

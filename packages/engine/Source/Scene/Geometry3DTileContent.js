@@ -140,11 +140,14 @@ class Geometry3DTileContent {
     }
   }
 
-  hasProperty(batchId, name) {
+  hasProperty(batchId, name, featureTableId) {
     return this._batchTable.hasProperty(batchId, name);
   }
 
-  getFeature(batchId) {
+  /**
+   * @override
+   */
+  getFeature(batchId, featureTableId) {
     //>>includeStart('debug', pragmas.debug);
     const featuresLength = this.featuresLength;
     if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {

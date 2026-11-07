@@ -53,6 +53,10 @@ const scratchTileModelMatrix = new Matrix4();
  * Vector glTF tile content. This path decodes glTF primitives into vector
  * buffers, then renders with dedicated vector primitives.
  *
+ * TODO: This should carry the
+ * implements Cesium3DTileContent
+ * annotation
+ *
  * @ignore
  */
 class VectorGltf3DTileContent {

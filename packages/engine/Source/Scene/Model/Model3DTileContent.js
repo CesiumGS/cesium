@@ -191,9 +191,12 @@ class Model3DTileContent {
     return extension;
   }
 
-  getFeature(featureId) {
+  /**
+   * @override
+   */
+  getFeature(featureId, featureTableId) {
     const model = this._model;
-    const featureTableId = model.featureTableId;
+    const selectedFeatureTableId = featureTableId ?? model.featureTableId;
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(featureTableId)) {
@@ -203,7 +206,7 @@ class Model3DTileContent {
     }
     //>>includeEnd('debug');
 
-    const featureTable = model.featureTables[featureTableId];
+    const featureTable = model.featureTables[selectedFeatureTableId];
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(featureTable)) {
@@ -226,14 +229,16 @@ class Model3DTileContent {
     return featureTable.getFeature(featureId);
   }
 
-  hasProperty(featureId, name) {
+  hasProperty(featureId, name, featureTableId) {
     const model = this._model;
-    const featureTableId = model.featureTableId;
+    const selectedFeatureTableId = featureTableId ?? model.featureTableId;
     if (!defined(featureTableId)) {
       return false;
     }
-
-    const featureTable = model.featureTables[featureTableId];
+    const featureTable = model.featureTables[selectedFeatureTableId];
+    if (!defined(featureTable)) {
+      return false;
+    }
     return featureTable.hasProperty(featureId, name);
   }
 

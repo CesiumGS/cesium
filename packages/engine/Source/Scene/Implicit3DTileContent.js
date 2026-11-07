@@ -296,16 +296,15 @@ class Implicit3DTileContent {
    * always returns <code>false</code> since a tile of this type does not have any features.
    * @private
    */
-  hasProperty(batchId, name) {
+  hasProperty(batchId, name, featureTableId) {
     return false;
   }
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
-   * always returns <code>undefined</code> since a tile of this type does not have any features.
-   * @private
+   * @override
+   * @returns {undefined}
    */
-  getFeature(batchId) {
+  getFeature(batchId, featureTableId) {
     return undefined;
   }
 

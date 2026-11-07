@@ -368,16 +368,15 @@ class Multiple3DTileContent {
    * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a specific inner content
    * @private
    */
-  hasProperty(batchId, name) {
+  hasProperty(batchId, name, featureTableId) {
     return false;
   }
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
-   * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a specific inner content
-   * @private
+   * @override
+   * @returns {undefined}
    */
-  getFeature(batchId) {
+  getFeature(batchId, featureTableId) {
     return undefined;
   }
 

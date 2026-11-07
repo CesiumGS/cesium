@@ -284,15 +284,15 @@ class Composite3DTileContent {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
    * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
    */
-  hasProperty(batchId, name) {
+  hasProperty(batchId, name, featureTableId) {
     return false;
   }
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-   * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
+   * @override
+   * @returns {undefined}
    */
-  getFeature(batchId) {
+  getFeature(batchId, featureTableId) {
     return undefined;
   }
 

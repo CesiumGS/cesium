@@ -126,15 +126,15 @@ class Tileset3DTileContent {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
    * always returns <code>false</code> since a tile of this type does not have any features.
    */
-  hasProperty(batchId, name) {
+  hasProperty(batchId, name, featureTableId) {
     return false;
   }
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
-   * always returns <code>undefined</code> since a tile of this type does not have any features.
+   * @override
+   * @returns {undefined}
    */
-  getFeature(batchId) {
+  getFeature(batchId, featureTableId) {
     return undefined;
   }
 
