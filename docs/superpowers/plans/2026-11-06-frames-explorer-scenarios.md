@@ -437,7 +437,7 @@ Both look up from a site on the Earth into space. Both need Task 5's terrain lin
 - [ ] **Step 5: Check in the browser:** the knobs, the answer, proof on and off the checked setup, and the route lighting from the DSS frame to Orion. Take screenshots into the SDD workspace.
 - [ ] **Step 6: Commit** with "examples: frames explorer scenarios: a dish tracks Orion, and where the Moon is from here".
 
-### Task 6c: "Proof" becomes "Checks", with each check's kind colour-coded (owner, 2026-11-06)
+### Task 6c: "Proof" becomes "Checks", with each check's kind colour-coded, and the knobs move up (owner, 2026-11-06)
 
 The owner: "Proof" overclaims. Most checks are verification: they compare the computation with an independent reference calculation, a hand formula or a round trip. A few are validation, against measured data such as NGS survey marks or tracking data. So:
 
@@ -451,7 +451,17 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
 - **Kind and status stay separate.** The kind is a small colour tag with a label. The status keeps its own icon and word (checked, failed, loading, reference applies at the checked setup). Colour never carries meaning alone, and the kind colours never reuse the pass, fail or warning colours.
 - **Colours** come from StrataKit's palette tokens, legible in light and dark at AA contrast. Show a compact legend once, at the top of the Checks section.
 - **The data** gets a `kind` on each catalog result or proof spec, derived where possible: `source` with a measured flag, hand formula, round trip. A test asserts every scenario's check rows have a kind, and that only measured-data rows use the word "validated".
-- **A mockup comes first.** Show the owner a mockup of the coloured rows and legend, in light and dark, before building. The design note is the conventions' "mockups first" rule.
+- **The knobs move up** (owner: "the knobs are hard to find since you have to scroll way down to find them … maybe right under the question above the frame tree"). The Scenarios tab's order becomes:
+  1. the scenario picker;
+  2. the question;
+  3. the knobs, with the checked-setup marker and "Back to the checked setup" beside them;
+  4. the frame tree;
+  5. the answer, with its published value;
+  6. the route steps;
+  7. Checks.
+
+  Knobs stay compact: a single row of controls where they fit, wrapping at narrow widths. The "Knobs and proof ↓" pill becomes "Checks ↓", or goes away if Checks is reachable without it. The camera and time controls stay on the globe.
+- **A mockup comes first.** Show the owner a mockup of the new order, with the knobs under the question and the coloured check rows and legend, in light and dark, before building. The design note is the conventions' "mockups first" rule.
 
 - [ ] Show the mockup, and get the owner's choice.
 - [ ] Rename across code, copy and tests.
