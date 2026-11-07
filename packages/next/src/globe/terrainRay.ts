@@ -6,8 +6,14 @@
  * caught wherever it sits, and the earth's curvature comes with the
  * Earth-fixed triangles.
  *
- * The traversal goes patch by patch along the segment, asking the target
- * what is drawn at each place (`TerrainRayTarget.patchAt`). Inside a drawn
+ * The segment is first clipped to the height band terrain can occupy (an
+ * ellipsoid `maximumHeight` + 100 m above the surface): outside it the path
+ * is clear by construction, so a ground-to-space segment is traced only
+ * where it is low. Inside, the traversal goes patch by patch, asking the
+ * target what is drawn at each place (`TerrainRayTarget.patchAt`). A
+ * patch at a pole also ends where the segment passes the polar axis, where
+ * every meridian meets; a patch whose footprint strays outside it is
+ * unknown. Inside a drawn
  * tile it steps cell by cell through a uniform grid over the tile's (u, v)
  * (a DDA). A cell's column is bounded by two meridian half-planes and two
  * cones of constant geodetic latitude, so its entry and exit along the
@@ -48,7 +54,11 @@ export interface TerrainRayTile {
 
 /** What is drawn at a place, and the extent over which that answer holds. */
 export interface TerrainRayPatch {
-  /** Contains the point asked about; the answer holds over all of it. */
+  /**
+   * Contains the point asked about; the answer holds over all of it. With
+   * a `tile`, it lies inside `tile.rectangle` (checked: a patch outside its
+   * tile throws).
+   */
   readonly rectangle: Rectangle;
   /** The tile drawn there; undefined where the terrain is unknown. */
   readonly tile?: TerrainRayTile;
@@ -67,6 +77,11 @@ export interface TerrainRayPatch {
 export interface TerrainRayTarget {
   /** The ellipsoid the tiles' heights are geodetic over (of revolution). */
   readonly ellipsoid: Ellipsoid;
+  /**
+   * No terrain stands higher than this above the ellipsoid, m (default
+   * 9,000): above it a segment is clear without looking.
+   */
+  readonly maximumHeight?: number;
   /** What is drawn at a longitude and latitude, radians. */
   patchAt(longitude: number, latitude: number): TerrainRayPatch;
 }
@@ -77,11 +92,20 @@ export interface TerrainRayOptions {
    * block (default 1 mm).
    */
   endTolerance?: number;
+  /** The source's own error, m, added to each tile's in `margin`. */
+  sourceAccuracy?: number;
 }
 
 export interface TerrainRayResult {
   /** The segment's length, m. */
   length: number;
+  /**
+   * The part of the segment (fractions) inside the terrain's height band;
+   * undefined when it never enters it (clear by construction).
+   */
+  band?: [number, number];
+  /** Length outside the band, m: clear by construction. */
+  above: number;
   /**
    * The nearest point (fraction `t` of the way, Earth-fixed `point`) where
    * the segment meets a drawn triangle. Through a crack between tiles
@@ -91,6 +115,14 @@ export interface TerrainRayResult {
   hit?: { t: number; point: Float64Array; level: number };
   /** The lowest clearance over the known spans, m, and where. */
   minClearance?: { meters: number; t: number; level: number };
+  /**
+   * The lowest clearance less the error of the tile under it (its
+   * geometric error plus `sourceAccuracy`), m, leaving out the stretch at
+   * each end where the segment is still within that error of its own
+   * observer's ground. Positive: clear of the true terrain too. When the
+   * segment never rises out of the error, nothing is left out.
+   */
+  margin?: { meters: number; clearance: number; error: number; t: number };
   /** Lengths, m, over which the terrain is unknown, by reason. */
   unknown: { notDrawn: number; notRefined: number };
   /** Levels the known spans crossed, and the largest geometric error. */
@@ -108,6 +140,16 @@ const BELOW = 1e-6;
 /** Barycentric tolerance: edges shared by two triangles let nothing through. */
 const EDGE = 1e-12;
 const MAX_PATCHES = 100_000;
+const DEFAULT_MAXIMUM_HEIGHT = 9000;
+const BAND_PAD = 100;
+/** A footprint this far outside its patch (m) has lost the patch. */
+const OUTSIDE = 1e-6;
+
+// Clearance samples (for the margin), reused across calls.
+let sampleT = new Float64Array(0);
+let sampleD = new Float64Array(0);
+let sampleC = new Float64Array(0);
+let sampleE = new Float64Array(0);
 const MAX_CELLS = 2_000_000;
 
 /** A tile's triangles ready for rays: Earth-fixed, with a (u, v) grid. */
@@ -194,8 +236,19 @@ export function castTerrainRay(
   }
   const result: TerrainRayResult = {
     length,
+    above: 0,
     unknown: { notDrawn: 0, notRefined: 0 },
   };
+  const top = (target.maximumHeight ?? DEFAULT_MAXIMUM_HEIGHT) + BAND_PAD;
+  const band = bandInterval(ray, a + top, radii[2]! + top);
+  if (!band) {
+    result.above = length;
+    return result;
+  }
+  result.band = band;
+  const [bandLo, bandHi] = band;
+  result.above = (bandLo + (1 - bandHi)) * length;
+  const source = options.sourceAccuracy ?? 0;
   const perMeter = length > 0 ? 1 / length : 0;
   const probe = PROBE * perMeter;
   const slack = SLACK * perMeter;
@@ -226,6 +279,21 @@ export function castTerrainRay(
   let bestLo = 0;
   let bestHi = 0;
   let cells = 0;
+  let samples = 0;
+  const addSample = (t: number, c: number, error: number) => {
+    if (samples === sampleT.length) {
+      const grow = Math.max(1024, samples * 2);
+      sampleT = grown(sampleT, grow);
+      sampleD = grown(sampleD, grow);
+      sampleC = grown(sampleC, grow);
+      sampleE = grown(sampleE, grow);
+    }
+    sampleT[samples] = t;
+    sampleD[samples] = c - error;
+    sampleC[samples] = c;
+    sampleE[samples] = error;
+    samples++;
+  };
 
   // A cell's footprint ends: (u, v) and the geodetic normal at each.
   const uv0 = new Float64Array(2);
@@ -290,6 +358,7 @@ export function castTerrainRay(
     t1: number,
     lo: number,
     hi: number,
+    error: number,
   ): void => {
     const { items, offsets, stamp, positions: p } = mesh;
     const hitLo = Math.max(tLo, lo);
@@ -381,6 +450,10 @@ export function castTerrainRay(
         n[1] /= l;
         n[2] /= l;
         const height = clearance(mesh, k, t, n);
+        if (height === Infinity) {
+          continue;
+        }
+        addSample(t, height, error);
         if (height < best) {
           best = height;
           bestT = t;
@@ -416,6 +489,7 @@ export function castTerrainRay(
   const traverse = (tile: TerrainRayTile, ta: number, tb: number): boolean => {
     const mesh = meshFor(tile, ellipsoid);
     const { g } = mesh;
+    const error = tile.geometricError + source;
     segment = (segment + 1) >>> 0;
     let i: number;
     let j: number;
@@ -442,7 +516,7 @@ export function castTerrainRay(
       if (!sample(mesh, t1, uv1, n1)) {
         return false;
       }
-      cell(mesh, tile.level, j * g + i, t, t1, ta, tb);
+      cell(mesh, tile.level, j * g + i, t, t1, ta, tb, error);
       uv0.set(uv1);
       n0.set(n1);
       t = t1;
@@ -452,12 +526,15 @@ export function castTerrainRay(
       const ni = i + (exit.side === 0 ? -1 : exit.side === 1 ? 1 : 0);
       const nj = j + (exit.side === 2 ? -1 : exit.side === 3 ? 1 : 0);
       if (ni < 0 || ni >= g || nj < 0 || nj >= g) {
-        // Left the grid before the patch ends: only rounding can do that.
-        // The rest of the span stays in this edge cell.
-        if (!sample(mesh, tb, uv1, n1)) {
+        // Left the grid before the patch ends. Grazing the tile's edge (in
+        // a boundary's plane, drifting out by rounding) the rest stays in
+        // this edge cell; otherwise the ray is lost and the span unknown
+        // (hits found so far still count).
+        if (!inside(mesh.rectangle, t, tb) || !sample(mesh, tb, uv1, n1)) {
+          carryMesh = undefined;
           return false;
         }
-        cell(mesh, tile.level, j * g + i, t, tb, ta, tb);
+        cell(mesh, tile.level, j * g + i, t, tb, ta, tb, error);
         break;
       }
       i = ni;
@@ -471,19 +548,50 @@ export function castTerrainRay(
   };
 
   let known: TerrainRayResult["known"];
-  let cur = 0;
-  for (let patches = 0; cur < 1; patches++) {
-    const at = cur + Math.min(probe, (1 - cur) / 2);
+  /** Whether the footprint over [t0, t1] stays inside `r`. */
+  const inside = (r: Rectangle, t0: number, t1: number): boolean => {
+    for (const t of [(t0 + t1) / 2, Math.max(t0, t1 - probe)]) {
+      const c = footprint(t);
+      if (!c) {
+        return false;
+      }
+      // Outside by more than OUTSIDE metres: near the polar axis a sliver
+      // of a metre turns the longitude by a lot.
+      const lon = unwrap(c.longitude, r);
+      const rho = Math.sqrt(point[0]! * point[0]! + point[1]! * point[1]!);
+      const across = Math.max(r.west - lon, lon - r.east, 0) * rho;
+      const along = Math.max(r.south - c.latitude, c.latitude - r.north, 0) * a;
+      if (across > OUTSIDE || along > OUTSIDE) {
+        return false;
+      }
+    }
+    return true;
+  };
+  let cur = bandLo;
+  for (let patches = 0; cur < bandHi || patches === 0; patches++) {
+    const at = cur + Math.min(probe, (bandHi - cur) / 2);
     const c = patches < MAX_PATCHES ? footprint(at) : undefined;
     if (!c) {
       // Near the ellipsoid's center, or too many patches: unknown from here.
-      result.unknown.notDrawn += (1 - cur) * length;
+      result.unknown.notDrawn += (bandHi - cur) * length;
       break;
     }
     const patch = target.patchAt(c.longitude, c.latitude);
-    let exit = rectangleExit(ray, patch.rectangle, cur).t;
-    exit = Math.min(1, Math.max(exit, at));
-    if (patch.tile && traverse(patch.tile, cur, exit)) {
+    if (patch.tile && !within(patch.rectangle, patch.tile.rectangle)) {
+      throw new Error(
+        "TerrainRayTarget.patchAt: the patch's rectangle lies outside its tile",
+      );
+    }
+    const leaving = rectangleExit(ray, patch.rectangle, cur);
+    const atAxis = leaving.side === 4;
+    const exit = Math.min(bandHi, Math.max(leaving.t, at));
+    // A footprint that leaves the patch before its exit (a boundary root
+    // lost to rounding) makes the span unknown, never known.
+    const kept = length === 0 || inside(patch.rectangle, cur, exit);
+    if (!kept) {
+      carryMesh = undefined;
+    }
+    if (patch.tile && kept && traverse(patch.tile, cur, exit)) {
       const tile = patch.tile;
       known = known
         ? {
@@ -496,12 +604,18 @@ export function castTerrainRay(
             maxLevel: tile.level,
             geometricError: tile.geometricError,
           };
-    } else if (patch.unknown === "not refined") {
+    } else if (patch.unknown === "not refined" && kept) {
       result.unknown.notRefined += (exit - cur) * length;
     } else {
       result.unknown.notDrawn += (exit - cur) * length;
     }
+    if (atAxis) {
+      carryMesh = undefined; // across the axis the footprint's cell jumps
+    }
     cur = exit;
+    if (length === 0) {
+      break;
+    }
   }
 
   if (bestMesh && length > 0) {
@@ -538,10 +652,97 @@ export function castTerrainRay(
       level: hitT <= belowT ? hitLevel : belowLevel,
     };
   }
+  if (samples > 0) {
+    result.margin = margin(samples, bandLo === 0, bandHi === 1);
+  }
   if (known) {
     result.known = known;
   }
   return result;
+}
+
+/**
+ * The lowest clearance less its error over the samples, leaving out each
+ * end's run while the segment is still within the error of its own ground
+ * (only at the segment's true ends).
+ */
+function margin(
+  count: number,
+  fromGround: boolean,
+  toGround: boolean,
+): NonNullable<TerrainRayResult["margin"]> {
+  // The runs at the ends are the samples before the first with room, and
+  // after the last; with none, nothing is left out.
+  let first = Infinity;
+  let last = -Infinity;
+  for (let i = 0; i < count; i++) {
+    if (sampleD[i]! > 0) {
+      first = Math.min(first, sampleT[i]!);
+      last = Math.max(last, sampleT[i]!);
+    }
+  }
+  const lo = fromGround && first < Infinity ? first : -Infinity;
+  const hi = toGround && last > -Infinity ? last : Infinity;
+  let at = -1;
+  for (let i = 0; i < count; i++) {
+    const t = sampleT[i]!;
+    if (t >= lo && t <= hi && (at < 0 || sampleD[i]! < sampleD[at]!)) {
+      at = i;
+    }
+  }
+  return {
+    meters: sampleD[at]!,
+    clearance: sampleC[at]!,
+    error: sampleE[at]!,
+    t: sampleT[at]!,
+  };
+}
+
+/** `inner` inside `outer`, to rounding. */
+function within(inner: Rectangle, outer: Rectangle): boolean {
+  const e = 1e-12;
+  return (
+    inner.west >= outer.west - e &&
+    inner.east <= outer.east + e &&
+    inner.south >= outer.south - e &&
+    inner.north <= outer.north + e
+  );
+}
+
+/**
+ * The segment's fractions inside the ellipsoid of radii (A, A, B), clipped
+ * to [0, 1]; undefined if it never enters.
+ */
+function bandInterval(
+  ray: Ray,
+  A: number,
+  B: number,
+): [number, number] | undefined {
+  const ia = 1 / (A * A);
+  const ib = 1 / (B * B);
+  const { ox, oy, oz, dx, dy, dz } = ray;
+  const qa = (dx * dx + dy * dy) * ia + dz * dz * ib;
+  const qb = 2 * ((ox * dx + oy * dy) * ia + oz * dz * ib);
+  const qc = (ox * ox + oy * oy) * ia + oz * oz * ib - 1;
+  if (qa === 0) {
+    return qc <= 0 ? [0, 1] : undefined;
+  }
+  const disc = qb * qb - 4 * qa * qc;
+  if (disc < 0) {
+    return undefined;
+  }
+  const q = -0.5 * (qb + (qb >= 0 ? 1 : -1) * Math.sqrt(disc));
+  const r1 = q / qa;
+  const r2 = q !== 0 ? qc / q : r1;
+  const lo = Math.max(0, Math.min(r1, r2));
+  const hi = Math.min(1, Math.max(r1, r2));
+  return lo < hi || (lo === hi && qc <= 0) ? [lo, hi] : undefined;
+}
+
+function grown(a: Float64Array, size: number): Float64Array<ArrayBuffer> {
+  const b = new Float64Array(size);
+  b.set(a);
+  return b;
 }
 
 function clampCell(i: number, g: number): number {
@@ -723,8 +924,9 @@ function polish(
 /**
  * Where the ray leaves the column of a longitude/latitude rectangle after
  * `tMin`: the smallest root, crossed outward, of its two meridian
- * half-planes and two cones of constant geodetic latitude. Side: 0 west,
- * 1 east, 2 south, 3 north; t is Infinity if it never leaves.
+ * half-planes and two cones of constant geodetic latitude, and at a pole
+ * the polar axis. Side: 0 west, 1 east, 2 south, 3 north, 4 the axis; t
+ * is Infinity if it never leaves.
  */
 function rectangleExit(
   ray: Ray,
@@ -735,7 +937,22 @@ function rectangleExit(
   const east = meridianExit(ray, Math.sin(r.east), Math.cos(r.east), 1);
   const south = coneExit(ray, r.south, -1, tMin);
   const north = coneExit(ray, r.north, 1, tMin);
-  return pick(west, east, south, north, tMin);
+  const exit = pick(west, east, south, north, tMin);
+  if (r.north >= Math.PI / 2 - 1e-12 || r.south <= -Math.PI / 2 + 1e-12) {
+    // At a pole every meridian meets the polar axis: where the segment
+    // passes it, the footprint's longitude turns by up to π, and a ray in a
+    // boundary meridian's plane crosses no half-plane at all. Its closest
+    // approach to the axis ends the patch.
+    const h = ray.dx * ray.dx + ray.dy * ray.dy;
+    if (h > 0) {
+      const axis = -(ray.ox * ray.dx + ray.oy * ray.dy) / h;
+      if (axis > tMin && axis < exit.t) {
+        exit.t = axis;
+        exit.side = 4;
+      }
+    }
+  }
+  return exit;
 }
 
 function cellExit(
@@ -987,6 +1204,12 @@ function buildMesh(tile: TerrainRayTile, ellipsoid: Ellipsoid): RayMesh {
   // (u, v) edge (latitude along a chord bulges by about Δλ²·sin 2φ / 16;
   // a quarter of the squared extent covers that with room) and by 0.01
   // unit, far above the footprint's rounding (about 1e-4 unit at level 14).
+  const highest = Math.min(
+    Math.PI / 2,
+    Math.max(Math.abs(r.north), Math.abs(r.south)),
+  );
+  const cosMin = Math.cos(highest);
+  const tanMax = Math.sin(highest) / cosMin;
   const range0 = new Int32Array(triangleCount * 4);
   const boxes = new Float64Array(triangleCount * 4);
   const counts = new Uint32Array(g * g + 1);
@@ -1000,7 +1223,9 @@ function buildMesh(tile: TerrainRayTile, ellipsoid: Ellipsoid): RayMesh {
     const vMax = Math.max(v[i0]!, v[i1]!, v[i2]!);
     const dLon = ((uMax - uMin) / Q) * width;
     const dLat = ((vMax - vMin) / Q) * heightSpan;
-    const bow = (dLon * dLon + dLat * dLat) / 4;
+    // Scaled for latitude: the (u, v) chart stretches toward the poles
+    // (without bound at a pole, where every triangle goes in every cell).
+    const bow = ((dLon * dLon + dLat * dLat) * (1 + tanMax)) / (4 * cosMin);
     const mu = (bow / width) * Q + 0.01;
     const mv = (bow / heightSpan) * Q + 0.01;
     boxes[k * 4] = uMin - mu;

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { castTerrainRay } from "../src/globe/terrainRay.ts";
+import { terrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
 import {
   LEVEL_ZERO_ERROR,
   TerrainSource,
@@ -331,6 +332,110 @@ describe("castTerrainRay", () => {
     expect(r.unknown.notDrawn + r.unknown.notRefined).toBe(0);
   });
 
+  it("never misses a ridge beyond the pole, whatever meridian the ray follows", () => {
+    // Four polar quads. West of the prime meridian, vertex row 15 (latitude
+    // 1.564) stands 1500 m: a ridge just past the pole for rays starting
+    // east of it. From latitude 1.552 at 1300–1500 m they sag below it.
+    const quads = [-Math.PI, -Math.PI / 2, 0, Math.PI / 2].map((west) => ({
+      west,
+      east: west + Math.PI / 2,
+      south: 1.45,
+      north: Math.PI / 2,
+    }));
+    const row = (lat: number) =>
+      Math.round(((lat - 1.45) / (Math.PI / 2 - 1.45)) * 16);
+    const target = stripTarget(
+      quads.map((rectangle) => ({
+        rectangle,
+        tile: gridTile(
+          rectangle,
+          17,
+          (lon, lat) => (rectangle.west < 0 && row(lat) === 15 ? 1500 : 0),
+          3,
+        ),
+      })),
+    );
+    let tried = 0;
+    for (const lon of [
+      Math.PI / 2,
+      Math.PI / 4,
+      0.3,
+      1.2,
+      (3 * Math.PI) / 4,
+      Math.PI - 0.1,
+    ]) {
+      for (let k = 0; k < 5; k++) {
+        const h = 1300 + 50 * k;
+        const r = cast(at(lon, 1.552, h), at(lon + Math.PI, 1.552, h), target);
+        expect(r.hit, `lon ${lon}, ${h} m`).toBeDefined();
+        // Past the pole: on the far, western side.
+        const c = WGS84.cartesianToCartographic(r.hit!.point, {
+          longitude: 0,
+          latitude: 0,
+          height: 0,
+        })!;
+        expect(c.longitude).toBeLessThan(0);
+        expect(r.unknown.notDrawn + r.unknown.notRefined).toBe(0);
+        tried++;
+      }
+    }
+    expect(tried).toBe(30);
+  });
+
+  it("traces only the part of a ground-to-space segment that terrain can reach", () => {
+    // A dish 10 m up at (0, 0) to a point about 2,000 km up, 60° high.
+    const W = 0.001;
+    const rects = strip(-0.0005, 0.0025, 6, -W, W);
+    const tiles = rects.map((rectangle) => ({
+      rectangle,
+      tile: gridTile(rectangle, 9, () => 0),
+    }));
+    const from = at(0, 0, 10);
+    // East is +y at longitude 0, up is +x.
+    const to = Float64Array.of(
+      from[0]! + 2.3e6 * Math.sin(Math.PI / 3),
+      from[1]! + 2.3e6 * Math.cos(Math.PI / 3),
+      from[2]!,
+    );
+    const target = stripTarget(tiles);
+    const r = cast(from, to, target);
+    expect(r.band![0]).toBe(0);
+    expect(r.band![1]).toBeLessThan(0.01);
+    expect(r.above).toBeGreaterThan(0.99 * r.length);
+    expect(r.unknown.notDrawn).toBe(0);
+    const sight = terrainLineOfSight(from, to, target);
+    expect(sight.clear).toBe(true);
+    expect(sight.unknownFraction).toBe(0);
+    expect(sight.accuracy.note).toMatch(
+      /of the path is above 9100 m, clear there/,
+    );
+    // A gap in the band is unknown, but only for its own length.
+    const holed = stripTarget(
+      tiles.map((t, i) =>
+        i === 2 ? { rectangle: t.rectangle, unknown: "not drawn" as const } : t,
+      ),
+    );
+    const g = cast(from, to, holed);
+    expect(g.unknown.notDrawn).toBeGreaterThan(0);
+    expect(g.unknown.notDrawn / g.length).toBeLessThan(0.01);
+    // Wholly above the band: clear without asking.
+    const quiet = stripTarget([]);
+    const high = cast(at(0, 0, 20000), at(0.01, 0, 30000), quiet);
+    expect(high.band).toBeUndefined();
+    expect(quiet.calls).toBe(0);
+  });
+
+  it("rejects a patch that lies outside its tile", () => {
+    const tile = gridTile(SQUARE, 5, () => 0);
+    const wide = { ...SQUARE, east: 2 * D };
+    expect(() =>
+      cast(at(0, 0, 100), at(1.5 * D, 0, 100), {
+        ellipsoid: WGS84,
+        patchAt: () => ({ rectangle: wide, tile }),
+      }),
+    ).toThrow(/outside its tile/);
+  });
+
   it("takes well under a frame for a 40 km ray over loaded level-14 tiles", () => {
     // Level-14 tiles (about 1.2 km) of 65×65 vertices: 8,192 triangles
     // each, more than Cesium World Terrain's at that level.
@@ -377,10 +482,8 @@ describe("castTerrainRay", () => {
     }
     times.sort((a, b) => a - b);
     const warm = times[10]!;
-    console.log(
-      `40 km ray: ${coldMs.toFixed(2)} ms cold (each crossed tile's grid built on first use), ${warm.toFixed(2)} ms warm (median of 20); ${cold.hit ? "blocked" : "clear"}, ${target.calls} patch lookups`,
-    );
     expect(cold.unknown.notDrawn).toBe(0);
+    expect(coldMs).toBeLessThan(250); // includes compiling the traversal
     expect(warm).toBeLessThan(16);
   });
 
@@ -408,10 +511,18 @@ const EMPTY_ASSET = {
 } as unknown as GltfAsset;
 
 /** A terrain source whose tiles "load" flat 9×9 meshes at 50 m. */
-async function terrain(levels: number): Promise<TerrainSource> {
+async function terrain(
+  levels: number,
+  metadata = false,
+): Promise<TerrainSource> {
   const available = Array.from({ length: levels }, (_, l) => [
     { startX: 0, startY: 0, endX: 2 ** (l + 1) - 1, endY: 2 ** l - 1 },
   ]);
+  // With the metadata extension, levels past `available` are listed by
+  // metadata tiles; the fake loader sends none, so they stay pending.
+  const extra = metadata
+    ? { extensions: ["metadata"], metadataAvailability: 10 }
+    : {};
   vi.stubGlobal(
     "fetch",
     async () =>
@@ -420,6 +531,7 @@ async function terrain(levels: number): Promise<TerrainSource> {
           format: "quantized-mesh-1.0",
           tiles: ["{z}/{x}/{y}.terrain"],
           available,
+          ...extra,
         }),
       ),
   );
@@ -615,6 +727,32 @@ describe("globe selections mark stand-ins", () => {
       for (const tile of result.standIns!) {
         expect(result.selected).toContain(tile);
       }
+    });
+
+    it(`${policy}: a loaded tile drawn while its children's availability loads`, async () => {
+      const source = await terrain(1, true);
+      const level0 = source.root.children.find((t) =>
+        contains(t.globe!.rectangle, 0.3, 0.2),
+      )!;
+      await load(source, level0);
+      // Loading expands a tile with the availability known then; as if its
+      // children's were still loading:
+      level0.globe!.expanded = false;
+      const selection =
+        policy === "budgeted"
+          ? new GlobeBudgetedSelection(source, {})
+          : new GlobeStepwiseSelection(source, {});
+      const result = selection.select(
+        source.root,
+        source.geometricError,
+        view(),
+      );
+      expect(result.selected).toContain(level0);
+      expect(result.standIns).toContain(level0);
+      // As the tileset marks it: the ray target calls it not refined.
+      level0.viewMask = 1;
+      level0.standInMask = 1;
+      expect(source.rayTarget().patchAt(0.3, 0.2).unknown).toBe("not refined");
     });
   }
 });

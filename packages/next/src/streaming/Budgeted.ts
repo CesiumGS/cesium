@@ -275,6 +275,14 @@ export class BudgetedSelection extends StepwiseSelection {
           return { tiles: finer, complete: true, holes: NO_HOLES };
         }
       }
+      if (
+        own.length > 0 &&
+        state.sse > this.memoryAdjustedScreenSpaceError &&
+        this.refinementPending(tile)
+      ) {
+        // The view wants it refined, but what lies below isn't known yet.
+        (result.standIns ??= []).push(tile);
+      }
       return { tiles: own, complete: true, holes: NO_HOLES };
     }
 
@@ -518,6 +526,14 @@ export class BudgetedSelection extends StepwiseSelection {
   }
 
   /** Loaded content that can draw now (terrain also waits for imagery). */
+  /**
+   * Whether finer content may exist below a tile whose children aren't
+   * known yet (terrain waiting on availability); none for 3D Tiles.
+   */
+  protected refinementPending(_tile: Tile): boolean {
+    return false;
+  }
+
   protected drawable(tile: Tile, _result: SelectionResult): boolean {
     return tile.contentAvailable;
   }

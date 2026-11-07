@@ -303,6 +303,10 @@ export class GlobeStepwiseSelection implements TileSelection {
 
     // Can't refine (no data below, or availability still unknown).
     this.renderTile(P, tile, last, out);
+    if (!meetsSse && !tile.globe!.expanded) {
+      // Wanted finer, but whether finer data exists is still loading.
+      P.standIns.push(tile);
+    }
     this.queue(P, P.high, tile);
   }
 

@@ -2,20 +2,25 @@ import { castTerrainRay, type TerrainRayTarget } from "../globe/terrainRay.ts";
 
 export interface TerrainLineOfSightOptions {
   /**
-   * The terrain source's own vertical accuracy, m (e.g. from its
-   * documentation), added to the drawn tiles' geometric error. Unstated, the
-   * accuracy covers the drawn mesh's error alone and the note says so.
+   * The terrain source's own vertical accuracy (e.g. from its
+   * documentation): metres and the statistic they are (`"1σ"`, `"LE90"`),
+   * added to the drawn tiles' geometric error. Unstated, the accuracy
+   * covers the drawn mesh's error alone and the note says so.
    */
-  sourceAccuracy?: number;
+  sourceAccuracy?: { meters: number; statistic: string };
 }
 
 export interface TerrainLineOfSight {
   /**
-   * `true` when the whole path is over known terrain and above it, `false`
-   * when it meets the drawn terrain (even if other spans are unknown),
-   * `undefined` when unknown spans could hide an obstruction. Terrain that
-   * isn't drawn, or is drawn only as a coarse stand-in while finer tiles
-   * load, is never clear.
+   * `true` when the whole path is over known terrain and clears it by more
+   * than the terrain's error (each tile's geometric error plus the
+   * source's), leaving out the stretch at each end still within that error
+   * of its observer's own ground; `false` when it meets the drawn terrain
+   * (even if other spans are unknown); `undefined` otherwise: unknown spans
+   * could hide an obstruction, or the true terrain could block within its
+   * error. Terrain that isn't drawn, or is drawn only as a coarse stand-in
+   * while finer tiles load, is never clear. Above the terrain's height band
+   * the path is clear by construction.
    */
   clear: boolean | undefined;
   /**
@@ -46,7 +51,7 @@ export interface TerrainLineOfSight {
  * The accuracy is the terrain's at the levels the path crossed: the largest
  * geometric error among them (the coarsest level's), plus the source's own
  * when given. The answer is exact for the drawn surface; the true terrain
- * may lie that far from it.
+ * may lie that far from it, so `clear` asks for that much room.
  */
 export function terrainLineOfSight(
   from: ArrayLike<number>,
@@ -54,7 +59,13 @@ export function terrainLineOfSight(
   target: TerrainRayTarget,
   options: TerrainLineOfSightOptions = {},
 ): TerrainLineOfSight {
-  const ray = castTerrainRay(from, to, target);
+  const source = options.sourceAccuracy;
+  const ray = castTerrainRay(
+    from,
+    to,
+    target,
+    source ? { sourceAccuracy: source.meters } : {},
+  );
   if (!ray) {
     return {
       clear: undefined,
@@ -62,28 +73,39 @@ export function terrainLineOfSight(
       accuracy: { note: "endpoints are not finite; nothing traced" },
     };
   }
-  const { length, known, unknown } = ray;
+  const { length, known, unknown, band } = ray;
   const unknownLength = unknown.notDrawn + unknown.notRefined;
   const unknownFraction =
-    length === 0 ? (known ? 0 : 1) : Math.min(1, unknownLength / length);
+    length === 0
+      ? known || !band
+        ? 0
+        : 1
+      : Math.min(1, unknownLength / length);
   // Extension point (plan §13.10): buildings and BIM (3D Tiles) keep no CPU
   // triangles, so they are ray cast on the GPU (`World.castRays`, batched and
   // asynchronous). A caller that casts this segment there too would merge
   // its nearest hit with `ray.hit` here, nearest first. Until then this is
   // terrain only.
   const blocked = ray.hit !== undefined;
+  const roomy = ray.margin !== undefined && ray.margin.meters > 0;
   const clear = blocked
     ? false
-    : unknownLength > 0 || !known
-      ? undefined
-      : true;
+    : !band
+      ? true // never enters the height band terrain can occupy
+      : unknownLength > 0 || !known || !roomy
+        ? undefined
+        : true;
 
-  const source = options.sourceAccuracy;
   const meters = known
-    ? known.geometricError + (source !== undefined ? source : 0)
+    ? known.geometricError + (source ? source.meters : 0)
     : undefined;
   const notes: string[] = [];
-  if (known) {
+  const ceiling = (target.maximumHeight ?? 9000) + 100;
+  if (!band) {
+    notes.push(
+      `the path stays above ${ceiling} m, higher than any terrain: clear`,
+    );
+  } else if (known) {
     const levels =
       known.minLevel === known.maxLevel
         ? `level ${known.minLevel}`
@@ -92,36 +114,44 @@ export function terrainLineOfSight(
       `exact against the drawn terrain triangles (${levels}); the drawn surface may lie up to ±${round(known.geometricError)} m from the source's heights (level ${known.minLevel}'s geometric error, the coarsest crossed)`,
     );
     notes.push(
-      source !== undefined
-        ? `plus the source's own ±${source} m`
+      source
+        ? `plus the source's own ±${source.meters} m (${source.statistic})`
         : "the source's own accuracy is not stated",
     );
   } else {
     notes.push("no drawn terrain under the path");
   }
+  if (band && ray.above > 0) {
+    notes.push(
+      `${percent(ray.above / length)}% of the path is above ${ceiling} m, clear there`,
+    );
+  }
   if (unknownLength > 0) {
-    const pct = (x: number) => ((x / length) * 100).toFixed(0);
     const why: string[] = [];
     if (unknown.notDrawn > 0) {
       why.push(
-        `${pct(unknown.notDrawn)}% not drawn (not loaded, or out of view)`,
+        `${percent(unknown.notDrawn / length)}% not drawn (not loaded, or out of view)`,
       );
     }
     if (unknown.notRefined > 0) {
       why.push(
-        `${pct(unknown.notRefined)}% not refined (a coarser tile stands in while finer ones load)`,
+        `${percent(unknown.notRefined / length)}% not refined (a coarser tile stands in while finer ones load)`,
       );
     }
     notes.push(
-      `terrain unknown over ${(unknownFraction * 100).toFixed(0)}% of the path: ${why.join(", ")}${clear === undefined ? ", so clearance is unknown" : ""}`,
+      `terrain unknown over ${percent(unknownFraction)}% of the path: ${why.join(", ")}${clear === undefined ? ", so clearance is unknown" : ""}`,
     );
   }
   const min = ray.minClearance?.meters;
-  if (min !== undefined && meters !== undefined && Math.abs(min) < meters) {
+  if (blocked) {
+    if (min !== undefined && meters !== undefined && -min < meters) {
+      notes.push(
+        `the block (${round(-min)} m deep) is within the terrain's error, so the true terrain may not block`,
+      );
+    }
+  } else if (ray.margin && !roomy) {
     notes.push(
-      clear === false
-        ? `the block (${round(-min)} m deep) is within the terrain's error, so the true terrain may not block`
-        : `the lowest clearance, ${round(min)} m, is within the terrain's error, so the true terrain may block`,
+      `away from the observers' own ground the path passes ${round(ray.margin.clearance)} m above the drawn terrain, within its ±${round(ray.margin.error)} m error, so the true terrain may block`,
     );
   }
   const note = notes.join("; ");
@@ -140,5 +170,14 @@ export function terrainLineOfSight(
 }
 
 function round(x: number): string {
-  return x >= 10 ? x.toFixed(0) : x.toFixed(1);
+  return Math.abs(x) >= 10 ? x.toFixed(0) : x.toFixed(1);
+}
+
+/** A share as a whole percent that is never 0 or 100 unless it is. */
+function percent(fraction: number): string {
+  const p = fraction * 100;
+  if (p <= 0 || p >= 100) {
+    return p <= 0 ? "0" : "100";
+  }
+  return String(Math.min(99, Math.max(1, Math.round(p))));
 }

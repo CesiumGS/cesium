@@ -74,6 +74,11 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     return false;
   }
 
+  /** Not expanded yet: its children's availability is still loading. */
+  protected override refinementPending(tile: Tile): boolean {
+    return tile.globe !== undefined && !tile.globe.expanded;
+  }
+
   /**
    * Expands the tile (its children, where availability is known) first;
    * the ellipsoid within the pass's budget.

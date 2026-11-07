@@ -324,12 +324,13 @@ export class TerrainSource {
    * At a point, the deepest tile on its quadtree path that some view of the
    * mask selected and whose content is loaded is what the screen draws
    * there. It is unknown ("not refined") where that tile only stands in for
-   * finer terrain still loading: drawn whole while its region refines
-   * (`Tile.standInMask`), or as a mixed-LOD placeholder in a hole whose
-   * tile has data. A quadrant without data is drawn by the tile above, the
-   * finest there is, so it is known. Where no such tile exists it is
-   * unknown ("not drawn"). The answer holds over the deepest tile on the
-   * path, which has no children.
+   * finer terrain still loading: drawn whole while its region refines or
+   * while its children's availability loads (`Tile.standInMask`), or as a
+   * mixed-LOD placeholder in a hole whose tile has data. A quadrant without
+   * data is drawn by the tile above, the finest there is, so it is known.
+   * Where no such tile exists it is unknown ("not drawn"). The answer holds
+   * over the deepest tile on the path, which has no children and lies
+   * inside the drawn tile (the patch contract).
    */
   rayTarget(viewMask = 0xffffffff): TerrainRayTarget {
     const mask = viewMask >>> 0;
@@ -382,10 +383,11 @@ export class TerrainSource {
     }
     const shown = path[drawn]!;
     const below = path.slice(drawn + 1);
+    // A stand-in hides finer data unless the quadrant here has none; with
+    // no children yet, their availability is still loading.
     const standIn =
       (shown.standInMask & shown.viewMask & mask) !== 0 &&
-      below.length > 0 &&
-      !below[0]!.fillFromParent;
+      (below.length > 0 ? !below[0]!.fillFromParent : !shown.globe!.expanded);
     const holes = shown.holes;
     const inHole =
       (shown.placeholderMask & mask) !== 0 &&

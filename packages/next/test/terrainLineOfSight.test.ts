@@ -10,6 +10,7 @@ import {
   strip,
   stripTarget,
   trueMinimumClearance,
+  vertex,
 } from "./terrainRayFixtures.ts";
 
 const HALF = 20000 / A; // 20 km either side of the hill
@@ -115,13 +116,13 @@ describe("terrainLineOfSight", () => {
       at(HALF, 0, 2000),
       target,
       {
-        sourceAccuracy: 12.5,
+        sourceAccuracy: { meters: 12.5, statistic: "LE90" },
       },
     );
     const error9 = LEVEL_ZERO_ERROR / 2 ** 9;
     expect(r.accuracy.meters).toBeCloseTo(error9 + 12.5, 9);
     expect(r.accuracy.note).toMatch(/level 9/);
-    expect(r.accuracy.note).toContain("12.5");
+    expect(r.accuracy.note).toContain("±12.5 m (LE90)");
     const unstated = terrainLineOfSight(
       at(-HALF, 0, 2000),
       at(HALF, 0, 2000),
@@ -132,13 +133,72 @@ describe("terrainLineOfSight", () => {
     );
   });
 
-  it("says when the margin is within the terrain's error", () => {
+  it("is not clear when the true terrain could block within its error", () => {
     const { target } = hillTarget({}, 9);
     // 300 m peak; the ray clears it by tens of metres, inside level 9's 150 m.
     const r = terrainLineOfSight(at(-HALF, 0, 360), at(HALF, 0, 360), target);
-    expect(r.clear).toBe(true);
+    expect(r.blockedAt).toBeUndefined();
+    expect(r.minClearance!).toBeGreaterThan(0);
     expect(r.minClearance!).toBeLessThan(r.accuracy.meters!);
-    expect(r.accuracy.note).toMatch(/within the terrain's error/);
+    expect(r.clear).toBeUndefined();
+    expect(r.accuracy.note).toMatch(
+      /within its ±\d+ m error, so the true terrain may block/,
+    );
+    // The source's own error counts too: 120 m of room, 5 m of mesh error.
+    const fine = hillTarget().target;
+    const loose = terrainLineOfSight(
+      at(-HALF, 0, 360),
+      at(HALF, 0, 360),
+      fine,
+      {
+        sourceAccuracy: { meters: 200, statistic: "1σ" },
+      },
+    );
+    expect(loose.clear).toBeUndefined();
+  });
+
+  it("is clear from an observer on the ground: its own ground is not the error band", () => {
+    // Flat drawn terrain, level 14 (±4.7 m): a dish standing on a vertex
+    // looks at a mast top 2 km away.
+    const rects = strip(-0.001, 0.001, 2, -0.0005, 0.0005);
+    const tiles = rects.map((rectangle) => gridTile(rectangle, 33, () => 0));
+    const target = stripTarget(
+      rects.map((rectangle, i) => ({ rectangle, tile: tiles[i]! })),
+    );
+    const dish = vertex(tiles[0]!, 16 * 33 + 20);
+    const r = terrainLineOfSight(dish, at(0.0003, 0.0001, 100), target);
+    expect(Math.abs(r.minClearance!)).toBeLessThan(1e-6);
+    expect(r.clear).toBe(true);
+    expect(r.accuracy.note).not.toMatch(/may block/);
+  });
+
+  it("never rounds a share to 0% or 100% when it isn't", () => {
+    const rects = strip(-0.003, 0.003, 300, -0.0005, 0.0005);
+    const tiles = rects.map((rectangle) => gridTile(rectangle, 3, () => 0));
+    const one = (gap: (i: number) => boolean) =>
+      stripTarget(
+        rects.map((rectangle, i) =>
+          gap(i)
+            ? { rectangle, unknown: "not drawn" as const }
+            : { rectangle, tile: tiles[i]! },
+        ),
+      );
+    const from = at(-0.003, 0, 3000);
+    const to = at(0.003, 0, 3000);
+    const few = terrainLineOfSight(
+      from,
+      to,
+      one((i) => i === 150),
+    );
+    expect(few.unknownFraction).toBeLessThan(0.005);
+    expect(few.accuracy.note).toMatch(/unknown over 1% of the path/);
+    const most = terrainLineOfSight(
+      from,
+      to,
+      one((i) => i !== 150),
+    );
+    expect(most.unknownFraction).toBeGreaterThan(0.995);
+    expect(most.accuracy.note).toMatch(/unknown over 99% of the path/);
   });
 
   it("returns unknown for non-finite input without hanging", () => {
