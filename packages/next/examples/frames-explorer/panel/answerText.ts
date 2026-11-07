@@ -6,7 +6,7 @@ import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
 import type { TerrainSightView } from "./model.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { onGrid } from "../scenarios/placement.ts";
-import { length, quantity } from "./format.ts";
+import { length, quantity, share } from "./format.ts";
 
 /** The speed of light, m/s: a light-time difference as a distance. */
 const C_LIGHT = 299_792_458;
@@ -189,10 +189,6 @@ export function publishedText(p: PublishedView): {
       return { published, comparison: "Checking ours against it…" };
   }
 }
-
-/** "30%", or "under 1%" for a sliver. */
-const share = (x: number) =>
-  x > 0 && x < 0.005 ? "under 1%" : `${Math.round(x * 100)}%`;
 
 /**
  * The answer with the terrain's verdict joined to the sky's (Task 6b fix 1):

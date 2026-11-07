@@ -24,7 +24,7 @@ import { compose, planeFraming } from "./orion.ts";
 import type { OrionBuilt } from "./orionLayer.ts";
 import {
   DRAW_IN,
-  EARTH_RADIUS,
+  EARTH_MEAN_RADIUS,
   FLYBY,
   IDENTITY,
   WGS84,
@@ -59,7 +59,7 @@ export const framingAt = (
 });
 
 /** The opening shot (DESIGN.md): the Pacific face, two Earth radii out. */
-export const OPENING = framingAt(-135, 25, 2 * EARTH_RADIUS);
+export const OPENING = framingAt(-135, 25, 2 * EARTH_MEAN_RADIUS);
 
 /** The stops and sites a view can name. */
 export type CameraName =
@@ -139,7 +139,13 @@ export function createCameraViews(deps: {
         // Stop 2 (S-I10): straight down the pole, so both triads' x and y
         // stay clear of the disc as GCRF's turn against ITRF's, and their
         // z axes point at the camera.
-        return framingAt(0, 90, 5.5 * EARTH_RADIUS, 0, -Math.PI / 2 + 1e-3);
+        return framingAt(
+          0,
+          90,
+          5.5 * EARTH_MEAN_RADIUS,
+          0,
+          -Math.PI / 2 + 1e-3,
+        );
       case "designGrid": {
         const [lon, lat, range] = deps.engineering().look;
         return framingAt(lon, lat, range, 0, -35 * deg);

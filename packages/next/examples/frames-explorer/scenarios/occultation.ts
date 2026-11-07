@@ -31,7 +31,8 @@ import { type HorizonMask, belowMask, maskAt } from "./horizonMask.ts";
 import { aberrate, angleBetween, azimuthElevation } from "./pointing.ts";
 
 /** The Moon's radius the lines of sight take, m (IAU 2015, NAIF pck00011: naif-moon-radius). */
-export const MOON_RADIUS = 1_737_400;
+export { MOON_RADIUS } from "../units.ts";
+import { MOON_RADIUS } from "../units.ts";
 
 /**
  * The scan's longest step, s. Each step is as long as the nearest verdict

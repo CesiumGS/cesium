@@ -18,9 +18,8 @@
 // about 32 m below the ellipsoid here; taken at the ellipsoid's 0 instead,
 // the ship and the buoy float 32 m too high, and the mast sees further than
 // it can. Charts use mean lower low water: plan 4b's work.
-import { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
+import type { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
 import { frameTransform } from "../../../src/frames/Frame.ts";
-import { EARTH } from "../../../src/scene/Body.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";
 import {
@@ -29,9 +28,9 @@ import {
   roundTripResult,
   sightOverHillResult,
 } from "../stress/groups/body-frames.ts";
-import { CALIFORNIA, fmt, type StressContext } from "../stress/runner.ts";
-import { DESIGN_ROUND_TRIP, proj, worstRoundTrip } from "../stress/shared.ts";
-import { geoidHeight } from "./drone.ts";
+import { fmt, type StressContext } from "../stress/runner.ts";
+import { DESIGN_ROUND_TRIP, worstRoundTrip } from "../stress/shared.ts";
+import { caZone3Frame, geoidHeight } from "./drone.ts";
 import {
   registerScenario,
   type ScenarioAnswer,
@@ -57,24 +56,6 @@ import {
 } from "./vehicles.ts";
 
 const CA = BIM_CRS["ca-zone-3"];
-
-/** California zone 3, plain or with NAVD88 heights through GEOID18, from the scenario's cache (the capstone's ship too, Task 8). */
-export function frameOf(
-  ctx: StressContext,
-  cache: FrameCache<EngineeringFrame>,
-  kind: "plain" | "navd88",
-): EngineeringFrame {
-  return cache.get(`ship:${kind}`, () =>
-    EngineeringFrame.create(
-      {
-        name: `${CA.name}${kind === "navd88" ? " (NAVD88)" : ""}`,
-        body: EARTH,
-        crs: kind === "navd88" ? CALIFORNIA : CA.crs,
-      },
-      proj(ctx),
-    ),
-  );
-}
 
 /** The sea's ellipsoidal height at each vertex and at the buoy: NAVD88 0 through GEOID18, or the ellipsoid's 0. */
 export function seaHeights(
@@ -134,8 +115,8 @@ export const evaluateShip: ScenarioEvaluator = async (
   const f = ctx.frames;
   const itrf = f.itrf;
   const leap = f.data.leapSeconds;
-  const plain = frameOf(ctx, cache, "plain");
-  const navd88 = frameOf(ctx, cache, "navd88");
+  const plain = caZone3Frame(ctx, cache, "plain");
+  const navd88 = caZone3Frame(ctx, cache, "navd88");
   const { heights, buoySea, geoid } = seaHeights(navd88, knobs);
   const mastHeight = Number(knobs.mast);
   const startMs = Date.parse(SHIP.startUtc);

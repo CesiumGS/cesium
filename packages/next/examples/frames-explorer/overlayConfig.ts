@@ -2,6 +2,7 @@
 // waits for, the California grid and site, the distortion views, and the
 // line each shows before it draws. Plain data and text, unit-tested
 // (test/framesExplorerOverlayConfig.test.ts); overlayControl.ts draws them.
+import { FTUS_PER_M } from "./units.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import type { SiteTransform } from "../../src/engineering/EngineeringFrame.ts";
 import type { Extent } from "./overlays.ts";
@@ -18,7 +19,8 @@ import { RIGID_FRAME, RIGID_LINE } from "./rigidLine.ts";
 const deg = Math.PI / 180;
 
 /** US survey feet per metre: EPSG:6420 is in ftUS. */
-export const FT = 3937 / 1200;
+/** US survey feet in a metre. */
+export const FT = FTUS_PER_M;
 export const CALIFORNIA: CrsRef = {
   format: "wkid",
   authority: "EPSG",
@@ -29,7 +31,6 @@ export const GRID_EXTENT: Extent = {
   min: [1_910_000 * FT, 560_000 * FT],
   max: [2_090_000 * FT, 740_000 * FT],
 };
-export const GRID_STEP = 10_000 * FT;
 /** The catalog's California site (stress/shared.ts SITE_ORIGIN), θ = 12.5°, s = 1.0000375. */
 export const SITE: SiteTransform = {
   origin: [6_000_000, 2_100_000, 0],

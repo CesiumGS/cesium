@@ -12,6 +12,7 @@
 // reply for the previous scenario never draws, answers or proves in the new
 // one. On a switch, every overlay the old scenario drew is removed, and the
 // old scenario's scene left, before the new one enters or draws.
+import { isMissing, messageOf } from "./errors.ts";
 import type { OverlayGeometry } from "./protocol.ts";
 import { sameData } from "./share.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
@@ -116,14 +117,6 @@ const DEFAULT_SPEC = SCENARIOS[0]!;
 /** An overlay's globe id: the scenario's, so two scenarios' never mix. */
 const overlayId = (scenario: ScenarioId, id: string) =>
   `scenario:${scenario}:${id}`;
-
-const messageOf = (e: unknown): string =>
-  e instanceof Error ? e.message : String(e);
-
-/** A worker error that is data the store doesn't have (R5): shown with the setup hint. */
-const isMissing = (e: unknown): boolean =>
-  (e instanceof Error && e.name === "MissingDataError") ||
-  /npm run setup|isn't in the frames store/.test(messageOf(e));
 
 export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
   const schedule =

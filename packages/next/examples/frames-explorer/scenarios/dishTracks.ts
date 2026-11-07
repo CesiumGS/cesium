@@ -18,6 +18,7 @@
 // are the catalog's against plan 3's SPICE fixture (light time and
 // Doppler). Off it, the pointing is worked out by hand from the tree's own
 // vectors (R11), and the line of sight by hand limb geometry.
+import { ARCSECOND } from "../units.ts";
 import { framePoint, eastNorthUpFrame } from "../../../src/frames/local.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
 import { frameTransform } from "../../../src/frames/Frame.ts";
@@ -53,6 +54,7 @@ import {
 import {
   angleBetween,
   azimuthElevation,
+  horizonGrey,
   pointingByHand,
   pointingText,
 } from "./pointing.ts";
@@ -63,11 +65,6 @@ import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 
 const SPEC = SCENARIOS.find((s) => s.id === "dish-tracks")!;
-
-const ARCSECOND = Math.PI / 648_000;
-
-/** Within this of the horizon (degrees) the hand check leaves the Earth's verdict to the library. */
-const HORIZON_GREY = 1;
 
 /** A store item that isn't there: the host says so as missing data, with the setup hint. */
 function missing(message: string): Error {
@@ -231,8 +228,8 @@ export async function dishAndNetworkWindows(ctx: StressContext) {
   return w;
 }
 
-/** "22:43:18 UTC" for a TDB time. */
-const clockText = (ctx: StressContext, tdb: number) =>
+/** "22:43:18 UTC" for a TDB time (the capstone's too). */
+export const clockText = (ctx: StressContext, tdb: number) =>
   `${new Date(Instant.fromTdb(tdb).toUtc(ctx.frames.data.leapSeconds)).toISOString().slice(11, 19)} UTC`;
 
 /** Just inside and just outside each Moon edge, s, where the library's line of sight is asked. */
@@ -396,12 +393,17 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
   const limb = Math.asin(MOON_RADIUS / moon.range);
   const fromMoon = angleBetween(moon.astrometric, hand.astrometric);
   const handMoon = fromMoon < limb && hand.range > moon.range;
+  // The capstone's rule (pointing.ts `horizonGrey`): the hand geometry's
+  // slack plus the horizon's dip from the dish's height.
+  const grey = horizonGrey(
+    Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(position), {
+      longitude: 0,
+      latitude: 0,
+      height: 0,
+    })?.height ?? 0,
+  );
   const handEarth =
-    elevation < -HORIZON_GREY
-      ? true
-      : elevation > HORIZON_GREY
-        ? false
-        : undefined;
+    elevation < -grey ? true : elevation > grey ? false : undefined;
   const sight = m.lineOfSight!;
   const by = sight.blockedBy?.name;
   const losPass =
@@ -530,7 +532,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       group: "space",
       title: `${id} to Orion at the scenario's time: the library's line of sight (the Earth and the Moon) agrees with hand geometry (the angle to Orion against the Moon's angular radius, and the horizon)`,
       pass: losPass,
-      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: Orion ${fmt(fromMoon / ARCSECOND / 3600, 6)}° from the Moon's centre, limb ${fmt(limb / ARCSECOND / 3600, 6)}°, Orion ${fmt(hand.range / 1000, 7)} km away and the Moon ${fmt(moon.range / 1000, 7)} km; elevation ${fmt(elevation, 5)}°${handEarth === undefined ? ` (within ${HORIZON_GREY}° of the horizon: the Earth's verdict is the library's)` : ""}`,
+      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: Orion ${fmt(fromMoon / ARCSECOND / 3600, 6)}° from the Moon's centre, limb ${fmt(limb / ARCSECOND / 3600, 6)}°, Orion ${fmt(hand.range / 1000, 7)} km away and the Moon ${fmt(moon.range / 1000, 7)} km; elevation ${fmt(elevation, 5)}°${handEarth === undefined ? ` (within ${fmt(grey, 2)}° of the horizon: the Earth's verdict is the library's)` : ""}`,
       accuracyNote: "exact arithmetic: hand geometry",
       instant: instant.tdb(),
     },

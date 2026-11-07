@@ -5,7 +5,7 @@
 // go to the globe with the triads', in one set.
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
 import { SECONDARY, type LabelSpec, type TriadSpec } from "./globe.ts";
-import { EARTH_RADIUS, WGS84, isFrame, type PageCore } from "./page.ts";
+import { EARTH_MEAN_RADIUS, WGS84, isFrame, type PageCore } from "./page.ts";
 import { familyMap, type Family } from "./panel/families.ts";
 import type { OverlayId } from "./panel/model.ts";
 import { LUNAR_SITE, type SceneSpec } from "./scenarios/scenes.ts";
@@ -91,7 +91,7 @@ export function createTriadLayer(deps: {
         continue;
       }
       const geocentric = id === "ITRF" || id === "GCRF" || id === "EME2000";
-      const length = 1.5 * EARTH_RADIUS;
+      const length = 1.5 * EARTH_MEAN_RADIUS;
       out.push({
         id,
         label: id,

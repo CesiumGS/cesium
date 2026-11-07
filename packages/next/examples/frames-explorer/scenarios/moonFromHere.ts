@@ -15,6 +15,7 @@
 // the tree's ITRF–MOON_ICRF compositions. Off it, the compositions re-run
 // live at the scenario's time, and the pointing is worked out by hand from
 // the tree's vectors against `measure`'s (R11).
+import { ARCSECOND } from "../units.ts";
 import { frameTransform } from "../../../src/frames/Frame.ts";
 import { framePoint } from "../../../src/frames/local.ts";
 import { measure } from "../../../src/measure/measure.ts";
@@ -53,8 +54,6 @@ export const POINTING_BY_HAND = 1e-9;
 
 /** How far the sight line runs along the direction, m: far past any terrain. */
 export const SIGHT_LENGTH = 1_000_000;
-
-const ARCSECOND = Math.PI / 648_000;
 
 /** Horizons' row as references.json copies it (the headline's published counterpart). */
 function horizons(): NonNullable<ScenarioAnswer["published"]> {

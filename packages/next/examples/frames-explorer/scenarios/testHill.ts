@@ -6,6 +6,7 @@
 // blocked when it passes the crest's meridian below the crest. The catalog
 // (frame-tree.body-frame.sight-over-hill) and the tests trace the same hill
 // through the library's `terrainLineOfSight`.
+import { EARTH_MEAN_RADIUS } from "../units.ts";
 import type {
   TerrainRayTarget,
   TerrainRayTile,
@@ -49,7 +50,7 @@ export function testHill(options: {
   const span = options.span ?? 30_000;
   const halfWidth = options.halfWidth ?? 600;
   const n = 101;
-  const R = 6_371_000;
+  const R = EARTH_MEAN_RADIUS;
   const lat = options.latitude * deg;
   const dLon = span / (R * Math.cos(lat));
   const dLat = span / R;

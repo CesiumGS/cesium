@@ -12,6 +12,7 @@
 //
 // The messages and the page's side (`createClient`) are in protocol.ts, which
 // the main thread imports without this module's catalog and PROJ.
+import { isMissing } from "./errors.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
@@ -103,10 +104,6 @@ import {
 export class MissingDataError extends Error {
   override name = "MissingDataError";
 }
-
-const isMissing = (error: unknown): boolean =>
-  error instanceof MissingDataError ||
-  (error instanceof Error && error.name === "MissingDataError");
 
 const errorName = (error: unknown): string =>
   error instanceof Error ? error.name : "Error";

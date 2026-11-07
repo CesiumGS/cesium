@@ -23,6 +23,8 @@ export {
   attachTimeControls,
   type TimeControlsHandle,
   type TimeControlsOptions,
+  type TimeMark,
+  type TimeZoneChoice,
 } from "./timeControls.ts";
 export {
   attachCredits,

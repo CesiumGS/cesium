@@ -109,6 +109,10 @@ export function speed(mps: number, digits = 2): string {
   return `${length(mps, digits)}/s`;
 }
 
+/** "30%", or "under 1%" for a sliver (never "0%" for a share that isn't nothing). */
+export const share = (x: number): string =>
+  x > 0 && x < 0.005 ? "under 1%" : `${Math.round(x * 100)}%`;
+
 /** A duration in seconds: 2.0 s, 35 µs, 15 ns. */
 export function seconds(s: number, digits = 2): string {
   return prefixed(s, TIME_UNITS, "s", digits);

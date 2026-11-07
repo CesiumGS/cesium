@@ -430,6 +430,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
       mark,
       markMeters: markSigma.meters,
       ...(projMeters !== undefined && { projMeters }),
+      ...(total !== undefined && { totalMeters: total }),
     },
     presets: [
       {

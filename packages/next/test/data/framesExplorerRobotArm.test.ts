@@ -241,6 +241,8 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
     expect(e.answer.accuracy.note).toMatch(/shoulder/);
     // PROJ's NAD83(2011) to ITRF2020 is exact by definition.
     expect(a.projMeters).toBe(0);
+    // The globe's label reads the answer's own total (final review, 6).
+    expect(a.totalMeters).toBe(e.answer.accuracy.meters);
     expect(e.answer.breakdown!.length).toBeGreaterThan(5);
   }, 120_000);
 

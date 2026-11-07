@@ -20,8 +20,7 @@ import {
 import { type ReactNode, useId } from "react";
 import type { TreeNode } from "../tree.ts";
 import { BudgetBar } from "./BudgetBar.tsx";
-import { EDGE_LABEL, familyMap } from "./families.ts";
-import { edgeAccuracyText } from "./FrameTree.tsx";
+import { EDGE_LABEL, edgeAccuracyText, familyMap } from "./families.ts";
 import { length, sig } from "./format.ts";
 import { useLiveTime } from "./liveTime.ts";
 import {
@@ -112,21 +111,6 @@ export function pathBetween(
     ancestor: a[i - 1]!,
     down: b.slice(i),
   };
-}
-
-/** Every node on the path, with its place along it (for the tree's connector). */
-export function pathSteps(
-  tree: TreeNode,
-  from: string,
-  to: string,
-): Map<string, number> {
-  const p = pathBetween(tree, from, to);
-  const out = new Map<string, number>();
-  if (!p) {
-    return out;
-  }
-  [...p.up, p.ancestor, ...p.down].forEach((n, i) => out.set(n.id, i));
-  return out;
 }
 
 const REFERENCE_LABEL: Record<Reference, string> = {

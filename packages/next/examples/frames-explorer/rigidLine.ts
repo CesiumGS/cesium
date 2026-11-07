@@ -3,6 +3,7 @@
 // in 3D, on the tangent plane there) and exactly (on the ellipsoid), both at
 // true scale, and the words for it. Plain data and functions, imported by the
 // main thread; the geometry is `rigidVsExact` (overlays.ts) in the worker.
+import { FTUS_PER_M } from "./units.ts";
 import { length } from "./panel/format.ts";
 import type { OverlayPart } from "./panel/model.ts";
 import type { FrameParams } from "./protocol.ts";
@@ -19,7 +20,7 @@ export const RIGID_FRAME: FrameParams = {
 };
 
 /** US survey feet per metre: EPSG:6420 is in ftUS. */
-const FT = 3937 / 1200;
+const FT = FTUS_PER_M;
 /** The catalog's California site origin (stress/shared.ts SITE_ORIGIN), ftUS. */
 const FROM = [6_000_000, 2_100_000] as const;
 /**

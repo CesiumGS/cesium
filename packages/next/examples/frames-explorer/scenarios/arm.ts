@@ -11,14 +11,13 @@
 // arm's reach) → Arm base
 // (a fixed placement, its survey stated) → Base yaw → Shoulder → Elbow →
 // Wrist → Tool.
+import { RAD_PER_DEG } from "../units.ts";
 import { Frame } from "../../../src/frames/Frame.ts";
 import type { FrameAccuracy } from "../../../src/frames/frameAccuracy.ts";
 import { eastNorthUpFrame } from "../../../src/frames/local.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import type { KnobState } from "./spec.ts";
 import { jointChain, type Joint } from "./jointChain.ts";
-
-const DEG = Math.PI / 180;
 
 /**
  * Where the pad frame is defined: NGS mark AK1155, "THIRTY NINE A", a disk
@@ -113,7 +112,7 @@ export const anglesOf = (knobs: KnobState): ArmAngles => ({
 });
 
 const encoder = (what: string): FrameAccuracy => ({
-  radians: SPEC_SHEET.encoderDegrees * DEG,
+  radians: SPEC_SHEET.encoderDegrees * RAD_PER_DEG,
   note: `${what} encoder, ±${SPEC_SHEET.encoderDegrees}° (synthetic spec sheet, 1σ)`,
 });
 const encoderAndLink = (what: string, link: string): FrameAccuracy => ({
@@ -135,28 +134,28 @@ export function armJoints(angles: Readonly<ArmAngles>): Joint[] {
       name: ARM.yaw,
       axis: "z",
       offset: [0, 0, g.column],
-      angle: () => angles.yaw * DEG,
+      angle: () => angles.yaw * RAD_PER_DEG,
       accuracy: encoderAndLink("The slewing ring's", "column"),
     },
     {
       name: ARM.shoulder,
       axis: "y",
       offset: [0, 0, 0],
-      angle: () => -angles.shoulder * DEG,
+      angle: () => -angles.shoulder * RAD_PER_DEG,
       accuracy: encoder("The shoulder's"),
     },
     {
       name: ARM.elbow,
       axis: "y",
       offset: [g.boom, 0, 0],
-      angle: () => -angles.elbow * DEG,
+      angle: () => -angles.elbow * RAD_PER_DEG,
       accuracy: encoderAndLink("The elbow's", "boom"),
     },
     {
       name: ARM.wrist,
       axis: "y",
       offset: [g.forearm, 0, 0],
-      angle: () => -angles.wrist * DEG,
+      angle: () => -angles.wrist * RAD_PER_DEG,
       accuracy: encoderAndLink("The wrist's", "forearm"),
     },
     {
@@ -231,9 +230,9 @@ export function toolByHand(
   angles: Readonly<ArmAngles>,
 ): [number, number, number] {
   const g = GEOMETRY;
-  const p1 = angles.shoulder * DEG;
-  const p2 = p1 + angles.elbow * DEG;
-  const p3 = p2 + angles.wrist * DEG;
+  const p1 = angles.shoulder * RAD_PER_DEG;
+  const p2 = p1 + angles.elbow * RAD_PER_DEG;
+  const p3 = p2 + angles.wrist * RAD_PER_DEG;
   const r =
     g.boom * Math.cos(p1) + g.forearm * Math.cos(p2) + g.tool * Math.cos(p3);
   const up =
@@ -241,7 +240,7 @@ export function toolByHand(
     g.boom * Math.sin(p1) +
     g.forearm * Math.sin(p2) +
     g.tool * Math.sin(p3);
-  const yaw = angles.yaw * DEG;
+  const yaw = angles.yaw * RAD_PER_DEG;
   return [r * Math.cos(yaw), r * Math.sin(yaw), up];
 }
 
@@ -257,9 +256,9 @@ export function toolAccuracyByHand(angles: Readonly<ArmAngles>): {
   levers: { yaw: number; shoulder: number; elbow: number; wrist: number };
 } {
   const g = GEOMETRY;
-  const p1 = angles.shoulder * DEG;
-  const p2 = p1 + angles.elbow * DEG;
-  const p3 = p2 + angles.wrist * DEG;
+  const p1 = angles.shoulder * RAD_PER_DEG;
+  const p2 = p1 + angles.elbow * RAD_PER_DEG;
+  const p3 = p2 + angles.wrist * RAD_PER_DEG;
   const fromWrist = g.tool;
   const fromElbow = Math.hypot(
     g.forearm * Math.cos(p2) + g.tool * Math.cos(p3),
@@ -269,7 +268,7 @@ export function toolAccuracyByHand(angles: Readonly<ArmAngles>): {
     g.boom * Math.cos(p1) + g.forearm * Math.cos(p2) + g.tool * Math.cos(p3),
     g.boom * Math.sin(p1) + g.forearm * Math.sin(p2) + g.tool * Math.sin(p3),
   );
-  const e = SPEC_SHEET.encoderDegrees * DEG;
+  const e = SPEC_SHEET.encoderDegrees * RAD_PER_DEG;
   const link = SPEC_SHEET.linkMeters;
   const meters = Math.hypot(
     e * fromShoulder, // yaw

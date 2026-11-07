@@ -13,8 +13,12 @@ import { memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { TreeNode } from "../tree.ts";
 import { ReferenceSelect, Walk, pathFromRoot } from "./Explore.tsx";
-import { EDGE_LABEL, FAMILY_INFO, familyMap } from "./families.ts";
-import { edgeAccuracyText } from "./FrameTree.tsx";
+import {
+  EDGE_LABEL,
+  FAMILY_INFO,
+  edgeAccuracyText,
+  familyMap,
+} from "./families.ts";
 import { Knobs } from "./Knobs.tsx";
 import type {
   PanelActions,

@@ -5,13 +5,29 @@
 // site's barycentric velocity, the textbook way, rotated into the site's
 // axes. The dish and the Moon scenarios check `measure`'s apparent direction
 // against it; the difference from the geometric direction is the effect.
+import { DEG_PER_RAD, EARTH_MEAN_RADIUS } from "../units.ts";
 import { type Frame, frameTransform } from "../../../src/frames/Frame.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
 import { rotationPart } from "../../../src/frames/matrix.ts";
 import { C, EARTH_ROTATION_RATE } from "../../../src/measure/constants.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 
-const DEG = 180 / Math.PI;
+/**
+ * Within this of the horizon (degrees) a hand check leaves the Earth's
+ * verdict to the library: the hand geometry's own slack, before the
+ * horizon's dip (the final review, finding 4: one rule for the dish and the
+ * capstone).
+ */
+export const HORIZON_GREY = 0.1;
+
+/**
+ * The hand check's grey band at an end `h` m above the ellipsoid or its own
+ * ground (degrees): `HORIZON_GREY` plus the horizon's dip √(2h/R). The dish
+ * at about 690 m gets about 0.94°; a ship's mast at 25 m about 0.26°.
+ */
+export const horizonGrey = (h: number): number =>
+  HORIZON_GREY +
+  Math.sqrt((2 * Math.max(h, 0)) / EARTH_MEAN_RADIUS) * DEG_PER_RAD;
 
 /** Azimuth (degrees clockwise from north, in [0, 360)) and elevation (degrees) of an east-north-up vector. */
 export function azimuthElevation(enu: ArrayLike<number>): {
@@ -19,10 +35,10 @@ export function azimuthElevation(enu: ArrayLike<number>): {
   elevation: number;
 } {
   const [e, n, u] = [enu[0]!, enu[1]!, enu[2]!];
-  const azimuth = (Math.atan2(e, n) * DEG + 360) % 360;
+  const azimuth = (Math.atan2(e, n) * DEG_PER_RAD + 360) % 360;
   return {
     azimuth: azimuth === 360 ? 0 : azimuth,
-    elevation: Math.atan2(u, Math.hypot(e, n)) * DEG,
+    elevation: Math.atan2(u, Math.hypot(e, n)) * DEG_PER_RAD,
   };
 }
 

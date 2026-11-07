@@ -38,6 +38,11 @@ import {
   type StressContext,
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
+import {
+  MEASURED_AT,
+  MEASURED_AT_UTC,
+  SIGNAL_ROW_UTC,
+} from "../../examples/frames-explorer/stress/epochs.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
@@ -217,4 +222,54 @@ describe("the BIM site where its CRS doesn't reach (Task 9, I9)", () => {
     expect(utm.live.length).toBeGreaterThanOrEqual(4);
     expect(utm.notRun ?? []).toEqual([]);
   }, 120_000);
+});
+
+/**
+ * Cases whose result holds at any epoch, so a scenario may cite them at its
+ * own: MOON_ME to MOON_PA is a constant rotation (specs.ts, stand-on-moon).
+ */
+const EPOCH_FREE = new Set(["space.effects.moon-me-pa"]);
+
+describe("each scenario's checked setup is its catalog cases' (final review, finding 1)", () => {
+  it("cites cases that ran at the scenario's checked epoch", async () => {
+    const results = await runStress(context());
+    const byId = new Map(results.map((r) => [r.id, r]));
+    const off: string[] = [];
+    let compared = 0;
+    for (const spec of SCENARIOS) {
+      const tdb = Instant.fromUtc(
+        Date.parse(spec.checked.epochUtc),
+        leap,
+      ).tdb();
+      for (const id of spec.checks) {
+        const r = byId.get(id);
+        expect(r, `${spec.id}: ${id} is in the catalog`).toBeDefined();
+        if (r?.instant === undefined || EPOCH_FREE.has(id)) {
+          continue;
+        }
+        compared++;
+        if (Math.abs(r.instant - tdb) > 1e-3) {
+          off.push(`${spec.id}: ${id} at TDB ${r.instant}, checked at ${tdb}`);
+        }
+      }
+    }
+    expect(off).toEqual([]);
+    expect(compared).toBeGreaterThan(5);
+  }, 600_000);
+
+  it("holds the signal row's UTC to the fixture's spread row", () => {
+    const fixture = JSON.parse(
+      readFileSync(join(__dirname, "../fixtures/frames/signal.json"), "utf8"),
+    ) as { rows: { kind: string; tdb: number }[] };
+    // One of the fixture's "spread" rows, to the ms (the epoch's comment
+    // names TDB 828752222.2056508).
+    const tdb = Instant.fromUtc(Date.parse(SIGNAL_ROW_UTC), leap).tdb();
+    const nearest = Math.min(
+      ...fixture.rows
+        .filter((r) => r.kind === "spread")
+        .map((r) => Math.abs(r.tdb - tdb)),
+    );
+    expect(nearest).toBeLessThan(1e-3);
+    expect(MEASURED_AT_UTC).toBe(`${MEASURED_AT}Z`);
+  });
 });

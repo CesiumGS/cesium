@@ -483,8 +483,13 @@ describe("castTerrainRay", () => {
     times.sort((a, b) => a - b);
     const warm = times[10]!;
     expect(cold.unknown.notDrawn).toBe(0);
-    expect(coldMs).toBeLessThan(250); // includes compiling the traversal
-    expect(warm).toBeLessThan(16);
+    // Reported, not gated (the final review): a loaded runner or coverage
+    // slows any wall clock. Only a sanity ceiling, far above the figures.
+    console.log(
+      `40 km cast: ${coldMs.toFixed(1)} ms cold (with compiling the traversal), ${warm.toFixed(2)} ms warm (median of 20)`,
+    );
+    expect(coldMs).toBeLessThan(5000);
+    expect(warm).toBeLessThan(5000);
   });
 
   it("returns unknown for non-finite input", () => {

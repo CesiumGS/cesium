@@ -8,21 +8,12 @@
 // own tasks carry `checks: []` until then (ruling S1). Each check's kind
 // (scenarios/checks.ts) is derived from its result; `checkKinds` names it
 // where it can't be.
+import {
+  FLYBY_UTC as FLYBY,
+  MEASURED_AT_UTC as MEASURED_AT,
+  SIGNAL_ROW_UTC as SIGNAL_ROW,
+} from "../stress/epochs.ts";
 import type { KnobSpec, ScenarioSpec } from "./spec.ts";
-
-/** The catalog's measurement epoch (stress/shared.ts MEASURED_AT). */
-const MEASURED_AT = "2026-03-01T00:00:00Z";
-
-/** The lunar flyby (stress/shared.ts FLYBY). */
-const FLYBY = "2026-04-06T23:00:00Z";
-
-/**
- * signal.json's "spread" row at TDB 828752222.2056508 s past J2000, in UTC
- * (to the ms): Orion 1.315 light-seconds from DSS-43 and 28° above its
- * horizon, so the dish can see it. The catalog's space.dss43-orion uses this
- * row (it isn't in one of the OEM's gaps).
- */
-const SIGNAL_ROW = "2026-04-06T12:55:53.020Z";
 
 const HEIGHT_DATUM: KnobSpec = {
   id: "datum",

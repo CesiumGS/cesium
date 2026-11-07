@@ -23,7 +23,8 @@ import type { KnobState } from "./spec.ts";
 const deg = Math.PI / 180;
 
 /** US survey feet per metre (1200/3937 m to the foot, by definition). */
-export const FTUS_PER_M = 3937 / 1200;
+import { FTUS_PER_M } from "../units.ts";
+export { FTUS_PER_M };
 
 export type BimCrsId = "ca-zone-3" | "utm-10n" | "low-distortion";
 export type BimSiteId = "san-francisco" | "portland";

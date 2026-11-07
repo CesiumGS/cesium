@@ -4,6 +4,7 @@
 // selection by tint and dimming, eased camera flights and the darker ground
 // under an engineering subject. Everything is added through `scope` and
 // removed with the example.
+import { EARTH_POLAR_RADIUS } from "./units.ts";
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
 import type { MeshData } from "../../src/scene/meshes.ts";
 import type {
@@ -292,8 +293,6 @@ export interface Framing {
    */
   from?: { direction: ArrayLike<number>; up: ArrayLike<number> };
 }
-
-const EARTH_RADIUS = 6_356_752;
 
 export class Globe {
   private readonly triads = new Map<string, Triad>();
@@ -831,7 +830,7 @@ export class Globe {
         const height = Math.max(
           1000,
           Math.hypot(cam.position[0]!, cam.position[1]!, cam.position[2]!) -
-            EARTH_RADIUS,
+            EARTH_POLAR_RADIUS,
         );
         const far = Math.hypot(d[0]!, d[1]!, d[2]!) > LABEL_FAR * height;
         if (z <= 0 || far || behindEarth(cam.position, p)) {
@@ -1103,7 +1102,7 @@ const normalize = (v: ArrayLike<number>): Float64Array => {
 export function behindEarth(
   eye: ArrayLike<number>,
   p: ArrayLike<number>,
-  radius = EARTH_RADIUS,
+  radius = EARTH_POLAR_RADIUS,
 ): boolean {
   const d = [p[0]! - eye[0]!, p[1]! - eye[1]!, p[2]! - eye[2]!];
   const len = Math.hypot(d[0]!, d[1]!, d[2]!);

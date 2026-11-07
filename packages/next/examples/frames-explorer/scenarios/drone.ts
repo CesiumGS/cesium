@@ -65,13 +65,17 @@ const CA = BIM_CRS["ca-zone-3"];
 /** How far the camera's centre ray is traced, m. */
 export const CAMERA_REACH = 3500;
 
-/** California zone 3: plain (2D, ellipsoidal heights), with NAVD88 heights (GEOID18), or the BIM site grid on it. */
-function frameOf(
+/**
+ * California zone 3: plain (2D, ellipsoidal heights), with NAVD88 heights
+ * (GEOID18), or the BIM site grid on it; one cache entry each, shared by
+ * the drone, the ship and the capstone (the final review, finding 5).
+ */
+export function caZone3Frame(
   ctx: StressContext,
   cache: FrameCache<EngineeringFrame>,
   kind: "plain" | "navd88" | "site",
 ): EngineeringFrame {
-  return cache.get(`drone:${kind}`, () =>
+  return cache.get(`ca-zone-3:${kind}`, () =>
     EngineeringFrame.create(
       {
         name:
@@ -214,8 +218,8 @@ export const evaluateDrone: ScenarioEvaluator = async (
 ) => {
   const instant = Instant.fromTdb(epochTdb);
   const itrf = ctx.frames.itrf;
-  const plain = frameOf(ctx, cache, "plain");
-  const navd88 = frameOf(ctx, cache, "navd88");
+  const plain = caZone3Frame(ctx, cache, "plain");
+  const navd88 = caZone3Frame(ctx, cache, "navd88");
   const { heights, geoid } = droneHeights(navd88, knobs);
   const tilt = Number(knobs.tilt);
   const along = Number(knobs.along);

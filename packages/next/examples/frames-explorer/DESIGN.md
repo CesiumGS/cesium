@@ -1772,6 +1772,26 @@ These bind over the sections above where they differ.
   "1σ", with the terrain caveats leading its words, so the globe card's two
   lines keep them.
 
+#### Final review fixes (2026-11-07)
+
+- **The checked epochs have one home**, `stress/epochs.ts` (no imports):
+  the catalog's cases and the scenarios' checked setups both read it, and
+  a data test holds every scenario's checks to its checked epoch (and the
+  signal row to the fixture's).
+- **The globe paints no stale verdict:** while the evaluation is the last
+  setup's, the ship's sight line and the drone's ray read "tracing", the
+  capstone's leader is unsure and dashed with "· updating", and the arm's
+  label drops its ± (`createBodyLines`' `stale`, as the callouts').
+- **One hand-check horizon rule** (`pointing.ts` `horizonGrey`): 0.1° plus
+  the horizon's dip from the end's height, for the dish (about 0.94° at
+  DSS-43, where it was a flat 1°) and the capstone.
+- **Units and radii named for what they are** (`units.ts`): `RAD_PER_DEG`,
+  `DEG_PER_RAD`, `ARCSECOND`, `FTUS_PER_M`, and the Earth's mean,
+  equatorial and polar radii; `messageOf` and `isMissing` live in
+  `errors.ts`; one California zone 3 frame (`caZone3Frame`) for the
+  drone, the ship and the capstone; the arm's total is composed once, in
+  the worker (`arm.totalMeters`).
+
 ### Carried forward (engine work)
 
 - **X-ray dashes for the geocentric triads inside the globe.** (Meanwhile

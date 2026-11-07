@@ -245,9 +245,7 @@ export const SITE_ORIGIN: readonly [number, number, number] = [
   6_000_000, 2_100_000, 0,
 ];
 
-export const MEASURED_AT = "2026-03-01T00:00:00";
-
-export const FLYBY = "2026-04-06T23:00:00";
+export { FLYBY, MEASURED_AT } from "./epochs.ts";
 
 export const sub3 = (a: ArrayLike<number>, b: ArrayLike<number>): number[] => [
   a[0]! - b[0]!,

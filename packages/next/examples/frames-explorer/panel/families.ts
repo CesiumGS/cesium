@@ -9,14 +9,6 @@ import { length, radians } from "./format.ts";
 export type Family =
   "celestial" | "earth" | "moon" | "engineering" | "trajectory";
 
-export const FAMILIES: readonly Family[] = [
-  "celestial",
-  "earth",
-  "moon",
-  "engineering",
-  "trajectory",
-];
-
 /** Each family's name and what it holds, as the legend and the tree's detail say it. */
 export const FAMILY_INFO: Record<
   Family,

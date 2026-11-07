@@ -27,8 +27,6 @@
 // The verdicts are the trace's, which trails the clock (on demand,
 // sightLines.ts); the lines' places are this frame's.
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
-import { framePoint } from "../../src/frames/local.ts";
-import { pointAccuracy } from "../../src/frames/pointAccuracy.ts";
 import type { Frames } from "../../src/frames/frames.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
@@ -157,6 +155,36 @@ function ring(p: ArrayLike<number>, radius: number): Float64Array {
 }
 
 /**
+ * The trace a line's verdict is drawn from (the final review, finding 3):
+ * the one traced for its own setup (`key`), and none while the evaluation
+ * is stale, so the globe says "tracing" rather than the last verdict.
+ */
+export function currentTrace(
+  traces: readonly TerrainSightView[] | undefined,
+  line: string,
+  key: string | undefined,
+  stale: boolean,
+): TerrainSightView | undefined {
+  if (stale) {
+    return undefined;
+  }
+  const v = traces?.find((t) => t.id === line);
+  return v?.traced === key ? v : undefined;
+}
+
+/** The capstone leader's words: its length, and its ± only when it is this setup's. */
+export function pairLeaderText(
+  length: number,
+  meters: number | undefined,
+  stale: boolean,
+): string {
+  if (stale) {
+    return `${leaderLength(length)} apart · updating`;
+  }
+  return `${leaderLength(length)} apart ${meters === undefined ? "(not bounded)" : `±${meters < 1 ? `${(meters * 1000).toFixed(0)} mm` : `${meters.toPrecision(2)} m`}`}`;
+}
+
+/**
  * The drone camera's mark on the globe (Task 9 C1, round 2): the ring and
  * the spot's label only where the answer gives a spot (`spotOf`, the
  * panel's rule); otherwise the ray's words, matching the panel's.
@@ -193,6 +221,12 @@ export function createBodyLines(deps: {
   evaluation(): ScenarioEvaluation | undefined;
   /** The page's traces of the evaluation's sight lines (sightLines.ts). */
   traces(): readonly TerrainSightView[] | undefined;
+  /**
+   * Whether the evaluation is the last setup's while the new one is worked
+   * out (the host's `state().stale`, as callouts.ts takes it): no verdict of
+   * it is painted as current (the final review, finding 3).
+   */
+  stale?(): boolean;
   labels: LabelBoard;
   refreshLabels(): void;
   camera?():
@@ -355,6 +389,7 @@ export function createBodyLines(deps: {
     instant: NonNullable<ReturnType<typeof globe.shownAt>>,
     segments: Segment[],
     labels: LabelSpec[],
+    stale: boolean,
   ): void {
     const chain = [ARM.base, ARM.yaw, ARM.elbow, ARM.wrist, ARM.tool].map((n) =>
       byName.get(n),
@@ -382,20 +417,15 @@ export function createBodyLines(deps: {
       dashed: true,
     });
     const length = Math.hypot(...tool.map((x, i) => x - mark[i]!));
-    const composed = pointAccuracy(
-      framePoint(chain[4]!, [0, 0, 0], instant),
-      itrf,
-    );
-    const total =
-      composed.meters === undefined || a.projMeters === undefined
-        ? undefined
-        : Math.hypot(composed.meters, a.markMeters, a.projMeters);
+    // The answer's own ± (the worker's), not composed again here; none
+    // while it is the last setup's (the final review, findings 3 and 6).
+    const total = a.totalMeters;
     // The label 70 m along the line from the tool, clear of the arm and
     // still in the view.
     anchor.leader = tool.map((x, i) => x + (70 / length) * (mark[i]! - x));
     labels.push({
       id: "bodies:leader",
-      text: `${length.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} m ${total === undefined ? "(not bounded)" : `±${(total * 1000).toFixed(1)} mm`} to ${MARK.name} (${PAD_OUTSIDE_SHORT})`,
+      text: `${length.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} m ${stale ? "· updating" : total === undefined ? "(not bounded)" : `±${(total * 1000).toFixed(1)} mm`} to ${MARK.name} (${PAD_OUTSIDE_SHORT})`,
       at: () => anchor.leader,
       family: "earth",
       priority: 4,
@@ -422,6 +452,7 @@ export function createBodyLines(deps: {
     }
     const byName = new Map(deps.local().map((f) => [f.name, f]));
     const traces = deps.traces();
+    const stale = deps.stale?.() === true;
     const segments: Segment[] = [];
     const labels: LabelSpec[] = [];
     const heights = e.track?.heights ?? [];
@@ -435,7 +466,14 @@ export function createBodyLines(deps: {
       );
       if (ends) {
         const [a, b] = [ends.from.itrf, ends.to.itrf];
-        segments.push({ name: "pair", from: a, to: b, color: "white" });
+        segments.push({
+          name: "pair",
+          from: a,
+          to: b,
+          // The last setup's pair while the new one is worked out: unsure.
+          color: stale ? "unsure" : "white",
+          ...(stale && { dashed: true }),
+        });
         const mid = a.map((v, i) => (v + b[i]!) / 2);
         // Both on the Earth, the line runs through it (depth-tested, out of
         // sight, as the answer says): the length goes with From's label.
@@ -446,8 +484,7 @@ export function createBodyLines(deps: {
         const length = Math.hypot(
           ...ends.to.icrf.map((v, i) => v - ends.from.icrf[i]!),
         );
-        const m = e.pair.meters;
-        const apart = `${leaderLength(length)} apart ${m === undefined ? "(not bounded)" : `±${m < 1 ? `${(m * 1000).toFixed(0)} mm` : `${m.toPrecision(2)} m`}`}`;
+        const apart = pairLeaderText(length, e.pair.meters, stale);
         const name = (o: string) =>
           (CAPSTONE as Record<string, { name: string } | undefined>)[o]?.name ??
           o;
@@ -483,7 +520,7 @@ export function createBodyLines(deps: {
         );
       }
     } else if (scene.id === "robot-arm" && e.arm) {
-      placeArm(e.arm, byName, frames.itrf, instant, segments, labels);
+      placeArm(e.arm, byName, frames.itrf, instant, segments, labels, stale);
     } else if (scene.id === "drone") {
       const mount = byName.get(CAMERA_MOUNT);
       const fp = e.answer.footprint;
@@ -498,8 +535,7 @@ export function createBodyLines(deps: {
         const m = frameTransform(mount, frames.itrf, instant);
         const from = at3(m);
         const dir = [m[0]!, m[1]!, m[2]!];
-        const v = traces?.find((t) => t.id === fp.line);
-        const mine = v?.traced === fp.key ? v : undefined;
+        const mine = currentTrace(traces, fp.line, fp.key, stale);
         const mark = cameraMark(fp, mine);
         const hit = mark.hit;
         if (hit) {
@@ -557,8 +593,7 @@ export function createBodyLines(deps: {
           color: "white",
         });
         const light = Array.from(buoyLight(e.track.buoySea));
-        const v = traces?.find((t) => t.id === sight.line);
-        const mine = v?.traced === sight.key ? v : undefined;
+        const mine = currentTrace(traces, sight.line, sight.key, stale);
         const hit = mine?.state === "blocked" ? mine.hitAt : undefined;
         if (hit && mine?.from) {
           // Green to where it met the terrain (as traced), red past it.

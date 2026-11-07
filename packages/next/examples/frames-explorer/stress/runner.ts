@@ -193,8 +193,8 @@ export interface StressGroup extends GroupInfo {
   readonly collects?: (result: StressResult) => boolean;
 }
 
-export const messageOf = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+import { messageOf } from "../errors.ts";
+export { messageOf };
 
 /** A number with `digits` significant figures, without trailing zeros. */
 export const fmt = (x: number, digits = 3): string =>

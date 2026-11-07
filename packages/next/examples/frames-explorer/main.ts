@@ -610,6 +610,7 @@ export function run(context: ExampleContext): ExampleRun {
     evaluation: () =>
       stage.scene() !== undefined ? host.state().evaluation : undefined,
     traces: () => sightLines.view(),
+    stale: () => host.state().stale,
     orionTrack: () => orion.track(),
     labels,
     refreshLabels: () => triads.refresh(),

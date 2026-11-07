@@ -20,6 +20,7 @@
 // the arm's tool, its frames' own stated accuracies up to ITRF
 // (`pointAccuracy`), root-sum-square, as the walk composes each end
 // (composed.ts `mixedView`): a pair is bounded only where both ends are.
+import { DEG_PER_RAD } from "../units.ts";
 import { frameTransform, type Frame } from "../../../src/frames/Frame.ts";
 import { convertPoint, framePoint } from "../../../src/frames/local.ts";
 import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
@@ -40,11 +41,12 @@ import type { AddedFrameSpec } from "../tree.ts";
 import { anglesOf, armFrames } from "./arm.ts";
 import {
   dishAndNetworkWindows,
+  clockText,
   dishHorizon,
   publishedLight,
   stationFrame,
 } from "./dishTracks.ts";
-import { azimuthElevation } from "./pointing.ts";
+import { HORIZON_GREY, azimuthElevation, horizonGrey } from "./pointing.ts";
 import {
   registerScenario,
   type Moment,
@@ -70,7 +72,8 @@ import {
   lunarSiteFrame,
   type CapstoneObject,
 } from "./scenes.ts";
-import { frameOf, seaHeights } from "./ship.ts";
+import { caZone3Frame } from "./drone.ts";
+import { seaHeights } from "./ship.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 import {
@@ -86,10 +89,8 @@ const SPEC = SCENARIOS.find((s) => s.id === "everything")!;
 /** The ship's datum in the capstone: the ship's checked one, the sea at NAVD88 0 m through GEOID18. */
 const SHIP_DATUM: KnobState = { datum: "navd88" };
 
-/** Within this of an end's horizon or a body's limb (degrees) the hand check leaves the verdict to the library. */
-const HORIZON_GREY = 0.1;
+/** Within this of a body's limb (degrees) the hand check leaves the verdict to the library. */
 /** The Earth's mean radius, m: a horizon's dip by hand. */
-const EARTH_MEAN_RADIUS = 6_371_000;
 const LIMB_GREY = 0.01;
 
 /** "0.12° of the Mast sensor's horizon and 0.01° of the Moon's limb": each grey item with its own band. */
@@ -107,12 +108,8 @@ const sub = (a: readonly number[], b: readonly number[]) =>
 const norm = (a: readonly number[]) => Math.hypot(a[0]!, a[1]!, a[2]!);
 const dot = (a: readonly number[], b: readonly number[]) =>
   a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
-const DEG = 180 / Math.PI;
 
 /** "22:43:18 UTC". */
-const clockText = (ctx: StressContext, tdb: number) =>
-  `${new Date(Instant.fromTdb(tdb).toUtc(ctx.frames.data.leapSeconds)).toISOString().slice(11, 19)} UTC`;
-
 /** The five objects' frames at `instant`, and the tree's frames for them. */
 async function objects(
   ctx: StressContext,
@@ -123,7 +120,10 @@ async function objects(
   const leap = f.data.leapSeconds;
   const o = orion(ctx);
   const dish = await stationFrame(ctx, CAPSTONE_DISH, instant);
-  const { heights } = seaHeights(frameOf(ctx, cache, "navd88"), SHIP_DATUM);
+  const { heights } = seaHeights(
+    caZone3Frame(ctx, cache, "navd88"),
+    SHIP_DATUM,
+  );
   const startTdb = Instant.fromUtc(Date.parse(SHIP.startUtc), leap).tdb();
   const [body, mast] = shipFrames(f.itrf, heights, startTdb, CAPSTONE_MAST);
   const site = lunarSiteFrame(f.moonMe, CAPSTONE_LATITUDE);
@@ -277,7 +277,7 @@ function elevation(
   up: readonly number[],
 ): number {
   const d = sub(other, at);
-  return Math.asin(dot(d, up) / (norm(d) * norm(up))) * DEG;
+  return Math.asin(dot(d, up) / (norm(d) * norm(up))) * DEG_PER_RAD;
 }
 
 /** The checked pair's distance at the checked setup, km, once per frame tree. */
@@ -614,7 +614,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
         obj === "ship" ? CAPSTONE_MAST : obj === "tool" ? toolUp : 0,
         0,
       );
-      const grey = HORIZON_GREY + Math.sqrt((2 * h) / EARTH_MEAN_RADIUS) * DEG;
+      const grey = horizonGrey(h);
       hand.words.push(
         `${CAPSTONE[obj].name} sees the other ${fmt(el, 4)}° up (its horizon's dip ${fmt(grey - HORIZON_GREY, 2)}°)`,
       );
@@ -660,8 +660,8 @@ export const evaluateEverything: ScenarioEvaluator = async (
     const toB = sub(pb.icrf, pa.icrf);
     const angle =
       Math.acos(Math.min(1, dot(toBody, toB) / (norm(toBody) * norm(toB)))) *
-      DEG;
-    const limb = Math.asin(Math.min(1, radius / norm(toBody))) * DEG;
+      DEG_PER_RAD;
+    const limb = Math.asin(Math.min(1, radius / norm(toBody))) * DEG_PER_RAD;
     hand.words.push(
       `the ${body}'s centre ${fmt(angle, 6)}° from the line, its limb ${fmt(limb, 6)}°`,
     );

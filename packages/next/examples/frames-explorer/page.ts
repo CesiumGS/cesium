@@ -27,13 +27,14 @@ import type { ModelSource } from "./panel/Panel.tsx";
 import type { Client, DataItem, FrameName } from "./protocol.ts";
 import type { ViewStore } from "./selection.ts";
 import { share } from "./share.ts";
+import { FLYBY_UTC } from "./stress/epochs.ts";
 
 export const deg = Math.PI / 180;
 export const WGS84 = Ellipsoid.WGS84;
-export const EARTH_RADIUS = 6_371_000;
+export { EARTH_MEAN_RADIUS } from "./units.ts";
 
 /** The Artemis II flyby (R4's clock preset), and the instant the page opens at. */
-export const FLYBY = Date.parse("2026-04-06T23:00:00Z");
+export const FLYBY = Date.parse(FLYBY_UTC);
 
 export const IDENTITY = Float64Array.from([
   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
@@ -66,8 +67,7 @@ export const isFrame = (
 ): s is Extract<Selection, { kind: "frame" | "node" | "edge" }> =>
   s.kind === "frame" || s.kind === "node" || s.kind === "edge";
 
-export const messageOf = (e: unknown): string =>
-  e instanceof Error ? e.message : String(e);
+export { messageOf } from "./errors.ts";
 export const isAbort = (e: unknown): boolean =>
   e instanceof DOMException && e.name === "AbortError";
 

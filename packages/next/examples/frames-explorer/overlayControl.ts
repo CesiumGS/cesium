@@ -23,7 +23,7 @@ import {
 } from "./overlayConfig.ts";
 import { overlayMesh, roundTripMarkers, triad } from "./overlays.ts";
 import {
-  EARTH_RADIUS,
+  EARTH_MEAN_RADIUS,
   WGS84,
   isAbort,
   messageOf,
@@ -455,9 +455,15 @@ export function createOverlayControl(deps: {
         if (!frames || !instant) {
           return;
         }
-        const g = triad(frames, frames.eme2000, instant, 1.5 * EARTH_RADIUS, {
-          biasExaggeration: biasFactor,
-        });
+        const g = triad(
+          frames,
+          frames.eme2000,
+          instant,
+          1.5 * EARTH_MEAN_RADIUS,
+          {
+            biasExaggeration: biasFactor,
+          },
+        );
         globe.setOverlay(id, [{ chunks: overlayMesh(g) }]);
         biasAt = viewer.clock.time;
         s.state = "drawn";

@@ -44,8 +44,13 @@ import { createPortal } from "react-dom";
 import type { TreeNode } from "../tree.ts";
 import { designRoot } from "./designRoot.ts";
 import { unfoldedFor } from "./diagramFocus.ts";
-import { EDGE_LABEL, FAMILY_INFO, familyMap, type Family } from "./families.ts";
-import { edgeAccuracyText } from "./FrameTree.tsx";
+import {
+  EDGE_LABEL,
+  FAMILY_INFO,
+  edgeAccuracyText,
+  familyMap,
+  type Family,
+} from "./families.ts";
 import { useStableCallback } from "./memo.ts";
 import { focusTree, layoutTree } from "./treeLayout.ts";
 import {

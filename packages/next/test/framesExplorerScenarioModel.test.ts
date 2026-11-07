@@ -11,7 +11,11 @@ import {
   extrasOf,
   waitingGroups,
 } from "../examples/frames-explorer/panelModel.ts";
-import { cameraMark } from "../examples/frames-explorer/bodyLines.ts";
+import {
+  cameraMark,
+  currentTrace,
+  pairLeaderText,
+} from "../examples/frames-explorer/bodyLines.ts";
 import type { ScenarioHostState } from "../examples/frames-explorer/scenarioHost.ts";
 import {
   COARSE_TERRAIN_METERS,
@@ -662,5 +666,28 @@ describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
       ["live", "live"],
       ["live", "live"],
     ]);
+  });
+});
+
+describe("the globe's verdicts while the evaluation is stale (final review, finding 3)", () => {
+  const traces = [
+    { id: "sight", state: "clear" as const, text: "", traced: "k" },
+  ];
+  it("draws no line's verdict from the last setup's trace", () => {
+    expect(currentTrace(traces, "sight", "k", false)?.state).toBe("clear");
+    expect(currentTrace(traces, "sight", "other", false)).toBeUndefined();
+    // Stale: no trace, so the ship's line reads "tracing" and the drone's
+    // camera "tracing on the terrain".
+    expect(currentTrace(traces, "sight", "k", true)).toBeUndefined();
+    expect(
+      cameraMark({ line: "camera", key: "k", tilt: 45 } as never, undefined)
+        .text,
+    ).toBe("Camera ray · tracing on the terrain");
+  });
+
+  it("gives the capstone's leader no ± from the last setup", () => {
+    expect(pairLeaderText(394_337_400, 10, false)).toMatch(/apart ±10 m$/);
+    expect(pairLeaderText(394_337_400, 10, true)).toMatch(/apart · updating$/);
+    expect(pairLeaderText(394_337_400, 10, true)).not.toMatch(/±/);
   });
 });

@@ -19,7 +19,7 @@ import {
   type TerrainLineOfSight,
 } from "../../src/measure/terrainLineOfSight.ts";
 import type { Viewer } from "../../widgets/index.ts";
-import { length } from "./panel/format.ts";
+import { length, share } from "./panel/format.ts";
 import type { ScenarioEvaluation, SightLine } from "./scenarios/evaluate.ts";
 
 import type { TerrainSightView } from "./panel/model.ts";
@@ -35,9 +35,8 @@ export const HEIGHTS_SETTLE = 300;
 /** While tiles keep loading, it traces at most this long after the first change it waited for, ms. */
 export const HEIGHTS_MAX_WAIT = 1500;
 
-/** "30%", or "under 1%" for a sliver (never "0%" for a share that isn't nothing). */
-export const pct = (x: number) =>
-  x > 0 && x < 0.005 ? "under 1%" : `${Math.round(x * 100)}%`;
+/** "30%", or "under 1%" for a sliver (panel/format.ts `share`). */
+export const pct = share;
 
 /**
  * The answer's words for one line of sight to `label` (pure): the terrain's

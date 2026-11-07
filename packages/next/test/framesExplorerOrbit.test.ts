@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AXES_RIG,
-  EARTH_RADIUS,
+  EARTH_EQUATORIAL_RADIUS,
   MOON_RADIUS,
   SITE_RIG,
   earthMoonRig,
@@ -141,16 +141,16 @@ describe("range limits: zoom can't throw you into deep space or through a body",
 
   it("lets stop 2's geocentric orbit zoom close to the ground, never inside it, and stay within the Moon's distance", () => {
     const r = rangeLimits("geocentric", d);
-    expect(r.minRange).toBeGreaterThan(1.01 * EARTH_RADIUS);
-    expect(r.minRange).toBeLessThanOrEqual(1.03 * EARTH_RADIUS);
+    expect(r.minRange).toBeGreaterThan(1.01 * EARTH_EQUATORIAL_RADIUS);
+    expect(r.minRange).toBeLessThanOrEqual(1.03 * EARTH_EQUATORIAL_RADIUS);
     expect(r.maxRange).toBeLessThanOrEqual(d);
-    expect(r.maxRange).toBeGreaterThan(20 * EARTH_RADIUS);
+    expect(r.maxRange).toBeGreaterThan(20 * EARTH_EQUATORIAL_RADIUS);
   });
 
   it("keeps the Earth–Moon orbit framing both bodies, and short of the Earth", () => {
     const r = rangeLimits("earthMoon", d);
     // The focus is between the two, about d/2 from each.
-    expect(r.minRange).toBeLessThan(0.5 * d - 2 * EARTH_RADIUS);
+    expect(r.minRange).toBeLessThan(0.5 * d - 2 * EARTH_EQUATORIAL_RADIUS);
     expect(r.minRange).toBeGreaterThan(0.1 * d);
     expect(r.maxRange).toBeGreaterThan(2 * d);
     expect(r.maxRange).toBeLessThanOrEqual(5 * d);

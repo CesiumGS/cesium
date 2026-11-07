@@ -18,9 +18,9 @@ import type { Framing } from "./globe.ts";
 import { projectInto } from "./inset.ts";
 
 /** WGS 84's equatorial radius, m. */
-export const EARTH_RADIUS = 6_378_137;
+export { EARTH_EQUATORIAL_RADIUS, MOON_RADIUS } from "./units.ts";
+import { EARTH_EQUATORIAL_RADIUS, MOON_RADIUS } from "./units.ts";
 /** The Moon's mean radius (IAU), m: the sky's lunar disk. */
-export const MOON_RADIUS = 1_737_400;
 
 /**
  * Where an orbit turns and how: its focus, its up (heading turns about it,
@@ -189,7 +189,10 @@ export function rangeLimits(
     case "geocentric":
       // Stop 2: about 130 km above the equator (the ground a zoom away),
       // out to 40 Earth radii.
-      return { minRange: 1.02 * EARTH_RADIUS, maxRange: 40 * EARTH_RADIUS };
+      return {
+        minRange: 1.02 * EARTH_EQUATORIAL_RADIUS,
+        maxRange: 40 * EARTH_EQUATORIAL_RADIUS,
+      };
     case "earthMoon":
       // The focus is between the two: short of either body, out to four
       // Earth–Moon distances.

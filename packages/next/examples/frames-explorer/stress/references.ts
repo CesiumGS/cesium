@@ -1,5 +1,6 @@
 // Published values (R10): references.json read as printed, with half a unit
 // in each value's last printed digit, and the path tolerances beside them.
+import { ARCSECOND } from "../units.ts";
 import { fromDegrees } from "../../../src/math/ellipsoid.ts";
 import { EARTH } from "../../../src/scene/Body.ts";
 import references from "../references.json";
@@ -180,7 +181,7 @@ export function printedStation(text: string): Printed {
 
 export const DEGREE = Math.PI / 180;
 
-export const ARCSECOND = Math.PI / 648_000;
+export { ARCSECOND } from "../units.ts";
 
 export const MILLIARCSECOND = ARCSECOND / 1000;
 

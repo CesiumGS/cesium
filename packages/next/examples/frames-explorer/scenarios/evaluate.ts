@@ -338,6 +338,12 @@ export interface ScenarioEvaluation {
     mark: readonly number[];
     markMeters: number;
     projMeters?: number;
+    /**
+     * The tool-to-mark distance's 1σ, m, as the answer states it: composed
+     * once, here in the worker, and read by the globe's label (the final
+     * review, finding 6). Absent where it isn't bounded.
+     */
+    totalMeters?: number;
   };
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).
