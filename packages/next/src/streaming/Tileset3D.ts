@@ -50,6 +50,12 @@ import {
   type DebugColor,
 } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
+import {
+  GeoreferenceError,
+  readGeoreference,
+  type TilesetGeoreference,
+} from "../engineering/georeference.ts";
+import type { TilesetPlacement } from "../engineering/placement.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import {
@@ -74,6 +80,8 @@ const PIPELINE_WINDOW = 256;
 const LOADING_IMAGERY = 1e15;
 /** Frames without any view touching an in-flight tile before it is cancelled. */
 const CANCEL_AFTER_FRAMES = 30;
+/** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
+const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
 
 /**
  * A hierarchical content source other than a 3D Tiles tileset.json (plan
@@ -155,6 +163,12 @@ export interface TilesetOptions extends BudgetedOptions {
    * 1.x); geometric errors keep the load-time scale. 3D Tiles only.
    */
   modelMatrix?: Mat4;
+  /**
+   * Where its design coordinates are drawn (`Tileset3D.placement`), for a
+   * tileset that declares none: the application supplies the engineering
+   * frame and mode, since the engine never guesses one.
+   */
+  placement?: TilesetPlacement;
 }
 
 export interface TilesetStats {
@@ -236,6 +250,25 @@ const WHITE = [1, 1, 1, 1] as const;
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
   readonly events = new Emitter<TilesetEvents>();
+  /** tileset.json's top-level `extensions` (none for terrain). */
+  readonly extensions: Readonly<Record<string, unknown>>;
+  /**
+   * Its `EXT_engineering_frame` declaration, parsed at load. Undefined when
+   * there is none, or when it is malformed: that adds a `warnings` entry
+   * naming the field, and never fails the load. Nothing is resolved here;
+   * `georeferenceTileset` loads the frame and sets `placement`.
+   */
+  readonly georeference?: TilesetGeoreference;
+  /**
+   * Where the tileset's design coordinates are drawn, and the way back
+   * (`TilesetPlacement`): set by `georeferenceTileset` from the declaration,
+   * or by the application (`TilesetOptions.placement`). Without one, picks on
+   * it have no design coordinates. Unrelated to `Tile.placement`, which is a
+   * tile's loaded content in the world (a `ModelPlacement`). Changing
+   * `modelMatrix` drops it, with a warning: it would no longer describe what
+   * is drawn.
+   */
+  placement?: TilesetPlacement;
   /** The selection policy (`setPolicy` replaces it). */
   get selection(): TileSelection {
     return this.policy;
@@ -298,6 +331,8 @@ export class Tileset3D implements TileTree {
     if (this.source) {
       throw new Error("modelMatrix applies to 3D Tiles, not terrain");
     }
+    const current = this.modelMatrix;
+    const changed = current.some((x, i) => x !== matrix[i]);
     const delta = m4.multiply(
       m4.mat4(),
       matrix,
@@ -313,6 +348,12 @@ export class Tileset3D implements TileTree {
     this.world.setTransform(this.transform, delta);
     this.moveVolumes(this.root, change);
     this.lastChange = this.frame;
+    if (changed && this.placement !== undefined) {
+      this.placement = undefined;
+      this.warnings.add(
+        "modelMatrix changed: the tileset's placement no longer describes what is drawn, and was dropped",
+      );
+    }
   }
   /** Load-time `modelMatrix`, built into tile transforms and volumes. */
   private readonly loadMatrix: Mat4;
@@ -659,6 +700,7 @@ export class Tileset3D implements TileTree {
     public root: Tile,
     readonly geometricError: number,
     source?: TileSource,
+    tilesetJson?: TileJson,
   ) {
     if (options.customShader && options.style) {
       throw new Error("Tileset3D: give a customShader or a style, not both.");
@@ -680,7 +722,43 @@ export class Tileset3D implements TileTree {
     this.stats.budget = this.cacheBytes;
     this.stats.overflow = this.overflowBytes;
     this.stats.adaptive = this.fixedWindow === undefined;
+    const extensions: unknown = tilesetJson?.extensions;
+    this.extensions =
+      typeof extensions === "object" &&
+      extensions !== null &&
+      !Array.isArray(extensions)
+        ? Object.freeze({ ...extensions })
+        : NO_EXTENSIONS;
+    try {
+      const georeference = readGeoreference(tilesetJson);
+      if (georeference !== undefined) {
+        this.georeference = georeference;
+      }
+    } catch (error) {
+      if (!(error instanceof GeoreferenceError)) {
+        throw error;
+      }
+      this.warnings.add(error.message);
+    }
+    if (options.placement !== undefined) {
+      this.placement = options.placement;
+    }
   }
+
+  /**
+   * The tile whose loaded content `draw` is (from `World.feature`'s draw),
+   * or undefined: another tileset's draw, or one whose tile has unloaded
+   * (its slot's generation then no longer matches).
+   */
+  tileOfDraw(draw: DrawHandle): Tile | undefined {
+    const entry = this.drawTiles.get(draw.index);
+    return entry?.generation === draw.generation ? entry.tile : undefined;
+  }
+  /** Loaded tiles by draw slot: kept with placing and unloading content. */
+  private readonly drawTiles = new Map<
+    number,
+    { readonly generation: number; readonly tile: Tile }
+  >();
 
   static async load(
     engine: Engine,
@@ -689,7 +767,7 @@ export class Tileset3D implements TileTree {
     options: TilesetOptions = {},
   ): Promise<Tileset3D> {
     const warnings = new Set<string>();
-    const { root, geometricError } = await loadTilesetJson(
+    const { root, geometricError, json } = await loadTilesetJson(
       url,
       options.headers,
       undefined,
@@ -703,6 +781,8 @@ export class Tileset3D implements TileTree {
       options,
       root,
       geometricError,
+      undefined,
+      json,
     );
     warnings.forEach((w) => tileset.warnings.add(w));
     tileset.stats.tiles = countTiles(root);
@@ -1300,6 +1380,12 @@ export class Tileset3D implements TileTree {
         // The placement holds the model: freed when the tile unloads.
         model.release();
         tile.placement = placement;
+        for (const draw of placement.draws) {
+          this.drawTiles.set(draw.index, {
+            generation: draw.generation,
+            tile,
+          });
+        }
         tile.bytes = model.bytes;
         budget.bytes -= model.bytes;
         budget.uploads++;
@@ -1442,6 +1528,11 @@ export class Tileset3D implements TileTree {
       tile.purpose = undefined;
     }
     if (tile.placement) {
+      for (const draw of tile.placement.draws) {
+        if (this.drawTiles.get(draw.index)?.tile === tile) {
+          this.drawTiles.delete(draw.index);
+        }
+      }
       tile.placement.remove();
       tile.placement = undefined;
     }

@@ -172,6 +172,15 @@ export {
   type TilesetPlacement,
 } from "./engineering/placement.ts";
 export {
+  ENGINEERING_FRAME_EXTENSION,
+  GeoreferenceError,
+  checkRigidTransform,
+  georeferenceTileset,
+  readGeoreference,
+  type DeclaredPlacement,
+  type TilesetGeoreference,
+} from "./engineering/georeference.ts";
+export {
   Alignment,
   type AlignmentDefinition,
   type HorizontalElement,

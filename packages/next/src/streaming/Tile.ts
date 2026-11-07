@@ -100,6 +100,10 @@ export class Tile {
    * finer content under a tile without walking its whole subtree.
    */
   residentBelow = 0;
+  /**
+   * Its loaded content, placed in the world. Unrelated to
+   * `Tileset3D.placement` (where design coordinates are drawn).
+   */
   placement?: ModelPlacement;
   /** Debug tint currently on the draws (linear RGBA; none is white). */
   debugColor?: readonly number[];
