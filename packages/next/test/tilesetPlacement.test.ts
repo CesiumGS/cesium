@@ -128,10 +128,39 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       body: EARTH,
       crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
       placement: { mode: "reprojected" },
+      // Derived from the root's 10 m box at (0°, 0°).
+      areaOfInterest: expect.any(Object),
+      sources: {
+        declaration: "extensions.BENTLEY_engineering_frame",
+        crs: "extensions.BENTLEY_engineering_frame.crs",
+        areaOfInterest: "root.boundingVolume",
+      },
+      warnings: [],
     });
+    const area = tileset.georeference!.areaOfInterest!;
+    for (const degrees of Object.values(area)) {
+      expect(Math.abs(degrees)).toBeLessThan(1e-3);
+    }
+    expect(area.west).toBeLessThan(area.east);
+    expect(area.south).toBeLessThan(area.north);
     // Parsing loads nothing: no placement until georeferenceTileset.
     expect(tileset.placement).toBeUndefined();
     expect([...tileset.warnings]).toEqual([]);
+  });
+
+  it("loads a declaration under the old name, EXT_engineering_frame, with a warning", async () => {
+    const tileset = await load(
+      tilesetJson({
+        EXT_engineering_frame: { name: "Corridor", ...reprojected },
+      }),
+    );
+    expect(tileset.georeference!.name).toBe("Corridor");
+    expect(tileset.georeference!.sources.declaration).toBe(
+      "extensions.EXT_engineering_frame",
+    );
+    expect([...tileset.warnings]).toEqual([
+      "EXT_engineering_frame is renamed BENTLEY_engineering_frame",
+    ]);
   });
 
   it("has no extensions and no declaration when the tileset has none", async () => {
@@ -154,7 +183,7 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
     const warnings = [...tileset.warnings];
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain(
-      "extensions.EXT_engineering_frame.placement.mode",
+      "extensions.BENTLEY_engineering_frame.placement.mode",
     );
     expect(tileset.root).toBeDefined();
   });
@@ -213,7 +242,7 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
     const tileset = await load(tilesetJson());
     await expect(
       georeferenceTileset(tileset, { proj: {} as ProjApi }),
-    ).rejects.toThrow(/EXT_engineering_frame/);
+    ).rejects.toThrow(/BENTLEY_engineering_frame/);
     expect(tileset.placement).toBeUndefined();
   });
 

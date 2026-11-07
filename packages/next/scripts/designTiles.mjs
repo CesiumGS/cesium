@@ -53,6 +53,11 @@ import {
   designPoint,
 } from "../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../src/engineering/factors.ts";
+import {
+  ALIGNMENTS_EXTENSION,
+  ENGINEERING_FRAME_EXTENSION,
+  alignmentsExtension,
+} from "../src/engineering/georeference.ts";
 import { formatPipeline, parsePipeline } from "../src/engineering/pipeline.ts";
 import { placeRigid } from "../src/engineering/placement.ts";
 import { gridSource, loadProj } from "../src/engineering/proj.ts";
@@ -105,6 +110,7 @@ const INPUTS = [
   // The library the tiles and answers come from.
   "src/engineering/alignment.ts",
   "src/engineering/EngineeringFrame.ts",
+  "src/engineering/georeference.ts",
   "src/engineering/placement.ts",
   "src/engineering/factors.ts",
   "src/engineering/pipeline.ts",
@@ -389,7 +395,21 @@ function tileContents(mesh, frame, reprojected) {
   };
 }
 
-/** The `EXT_engineering_frame` declaration of a frame and a placement. */
+/**
+ * The tileset-level extensions of a frame and a placement: the
+ * `BENTLEY_engineering_frame` declaration, and the frame's alignments as
+ * `BENTLEY_alignments` (IFC 4.3's segment types) when it has any.
+ */
+function frameExtensions(definition, placement) {
+  return {
+    [ENGINEERING_FRAME_EXTENSION]: declaration(definition, placement),
+    ...(definition.alignments?.length && {
+      [ALIGNMENTS_EXTENSION]: alignmentsExtension(definition.alignments),
+    }),
+  };
+}
+
+/** The `BENTLEY_engineering_frame` declaration of a frame and a placement. */
 function declaration(definition, placement) {
   const crs = definition.crs;
   const crsJson =
@@ -409,8 +429,6 @@ function declaration(definition, placement) {
           format: "wkt2",
           extensions: { EXT_geospatial_crs_wkt2: { wkt2: crs.wkt2 } },
         };
-  // JSON has no Infinity: a spiral's tangent end is null.
-  const radius = (r) => (Number.isFinite(r) ? r : null);
   return {
     name: definition.name,
     body: definition.body.name === "Moon" ? "MOON" : "EARTH",
@@ -421,21 +439,6 @@ function declaration(definition, placement) {
         rotation: definition.site.rotation,
         scale: definition.site.scale,
       },
-    }),
-    ...(definition.alignments && {
-      alignments: definition.alignments.map((a) => ({
-        ...a,
-        start: [...a.start],
-        horizontal: a.horizontal.map((e) =>
-          e.kind === "spiral"
-            ? {
-                ...e,
-                startRadius: radius(e.startRadius),
-                endRadius: radius(e.endRadius),
-              }
-            : { ...e },
-        ),
-      })),
     }),
     ...(definition.areaOfInterest && {
       areaOfInterest: { ...definition.areaOfInterest },
@@ -564,7 +567,7 @@ function writeTilesets({
   });
   const rigidJson = tilesetJson(rootNode("rigid", 1), {
     transform: Array.from(placement.rigid.matrix),
-    extension: declaration(frame.definition, {
+    extensions: frameExtensions(frame.definition, {
       mode: "rigid",
       anchor: Array.from(placement.rigid.anchor),
     }),
@@ -577,7 +580,7 @@ function writeTilesets({
     // rigid one's errors by its root transform (metersPerUnit), so both state
     // the same error.
     const reprojectedJson = tilesetJson(rootNode("reprojected", mpu), {
-      extension: declaration(frame.definition, { mode: "reprojected" }),
+      extensions: frameExtensions(frame.definition, { mode: "reprojected" }),
     });
     writeJson(join(reprojectedDir, "tileset.json"), reprojectedJson);
   }

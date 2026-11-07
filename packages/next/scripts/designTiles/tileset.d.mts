@@ -9,5 +9,5 @@ export interface TileNode {
 /** A 3D Tiles 1.1 tileset.json object. */
 export function tilesetJson(
   root: TileNode,
-  options?: { extension?: object; transform?: number[] },
+  options?: { extensions?: Record<string, object>; transform?: number[] },
 ): object;

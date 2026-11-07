@@ -12,7 +12,7 @@
   - Node and the browser see exactly the grids loaded, nothing more.
   - `EngineeringFrame.load` is the async step before `resolveOperation`: it fetches the best candidate's grids, then resolves as plan 4a's R2 says. EGM96 and EGM2008 are opt-in, named fallbacks.
 - **Placement.** A `TilesetPlacement` is `rigid` (an iModel's `ecefLocation`: one `RigidPlacement` at an anchor) or `reprojected` (every vertex through the frame's recorded operation). Each has a forward map for display and an exact inverse for measurement.
-  - A tileset declares its placement in a proposed tileset-level extension, `EXT_engineering_frame`, whose `crs` uses the draft's `EXT_geospatial_crs` object shape.
+  - A tileset declares its placement in a vendor tileset-level extension, `BENTLEY_engineering_frame`, whose `crs` uses the draft's `EXT_geospatial_crs` object shape. It composes with `ESRI_crs`, `EXT_geospatial_crs_source` (CesiumGS/glTF#131) and `3DTILES_ellipsoid`; alignments are `BENTLEY_alignments`, beside it.
   - The two placements are the two end states of plan 5's morph between design space and the global view. The morph itself is not built here.
 - **Picking and snapping.** `pickDesign` turns a pixel into a body-fixed point plus, on a placed tileset, its design coordinates. `SnapService` (after 1.x's `SnapService`, view-scoped) has a client-side implementation over retained tile geometry. The example adds an exact one over the corridor's analytic alignment.
   - Every result states its tolerance, and `measure` carries that tolerance as an accuracy term.
@@ -58,7 +58,7 @@ One line each: what was chosen, then what undoing it costs.
 9. **Fallback semantics.** `geoidFallback: "EGM96" | "EGM2008"` applies only when the compound CRS's horizontal part resolves with no missing grids and its vertical part does not. Design heights are then read as that model's heights. The accuracy term `geoidFallback` is undefined (never small) unless the app gives `fallbackSigma`. *Undo:* one function.
 10. **EGM2008 (80.6 MB) is opt-in.** It isn't in setup's default grid set (`--grids egm2008` adds it) and loads whole. Cropped regional tiles aren't built. *Undo:* a setup set; cropping can come later as a setup step.
 11. **Tidal and chart datums are supported where PROJ-data has grids** (Danish, Greenlandic and Dutch LAT and MSL). Depth axes are handled through a new `CrsUnits.verticalDirection`. NOAA's MLLW and the other VDatum surfaces aren't in PROJ-data, and are reported as unavailable, naming the datum. *Undo:* nothing to undo; hosting VDatum is held below.
-12. **The tileset declaration is `EXT_engineering_frame` in `tileset.json`'s `extensions`,** proposed as a draft addition. It holds `crs` in the draft's `EXT_geospatial_crs` object shape (`format` plus a `_wkid` or `_wkt2` companion), `placement` (`mode`, and `anchor` for rigid), `site`, `alignments`, `areaOfInterest` and `body`. The draft's glTF-level `EXT_geospatial_crs` and `EXT_georeference` aren't read: they carry no placement mode. *Undo:* one reader module; the name is a constant.
+12. **The tileset declaration is `BENTLEY_engineering_frame` in `tileset.json`'s `extensions`,** a vendor extension (renamed from `EXT_engineering_frame`, owner, 2026-11-07: Khronos keeps `EXT_` for extensions several vendors implement; the reader still takes the old name, with a warning). It holds `crs` in the draft's `EXT_geospatial_crs` object shape (`format` plus a `_wkid` or `_wkt2` companion), `placement` (`mode`, and `anchor` for rigid), `site`, `areaOfInterest` and `body`. It composes with what exists: the source CRS comes from `EXT_geospatial_crs_source` (CesiumGS/glTF#131) or `ESRI_crs` when present, our `crs` being the fallback (they must agree); the body from `3DTILES_ellipsoid`; the area of interest from the root bounding volume unless `areaOfInterest` overrides it. Alignments are their own extension, `BENTLEY_alignments`, with IFC 4.3's segment types. The draft's glTF-level `EXT_geospatial_crs` and `EXT_georeference` aren't read: they carry no placement mode. *Undo:* one reader module; the name is a constant.
 13. **A rigid tileset uses the standard root `transform`, equal to `RigidPlacement.matrix`.** The reader checks the declared anchor against that transform and refuses a mismatch. A reprojected tileset is plain Earth-fixed tiles. Both are readable by any 3D Tiles 1.1 viewer. *Undo:* the generator and one check.
 14. **PROJ loads on `georeferenceTileset()`,** not on `Tileset3D.load`, which only parses the declaration. *Undo:* one call site.
 15. **Ready for the morph.** The generator writes the rigid and reprojected tilesets with identical tile trees and vertex order, and a test pins it, so plan 5 can pair the vertices. No dual-position attribute is written. *Undo:* the generator.
@@ -88,13 +88,13 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 1. **The design-globe example's look.** *Resolved 2026-11-07:* no mockup gate (the owner reviews the built page in context). The owner set the story: a viewer audience first, the rigid placement's error as the point, a smooth morph between placements with the other ghosted, the surveyor's numbers secondary, the portfolio as a fly-to list (examples/design-globe/DESIGN.md, "The story"). Originally: the controller makes the mockup tonight (Task 0), and the owner reviews it in the morning. *Blocks:* Tasks 18–20, the example's UI. Everything else proceeds, including the example's non-visual core (Task 17), Task 21, and Task 22's docs and plan note. Only Task 22's final gates wait for Tasks 18–20.
 2. **Metrostation and the owner's real long iModel.** Their CRS, units, site transform and placement mode are needed, and so is the decision whether to use the Sandcastle share key (it expires 2027-01-01; ion's terms apply). *Blocks:* only filling the portfolio's ion slots in Task 20. The slots are built empty.
 3. **NOAA VDatum surfaces (MLLW, MHW and others).** They aren't in PROJ-data, and NOAA distributes them separately. Whether to self-host them, and how, is the owner's call. *Blocks:* nothing; 4b reports them as unavailable.
-4. **Submitting `EXT_engineering_frame` to the 3D Tiles 2.0 draft:** its name, and whether a placement mode belongs in the draft at all. *Blocks:* nothing; locally the name is one constant.
+4. **Submitting `BENTLEY_engineering_frame`'s placement mode to the 3D Tiles 2.0 draft (as an addition to #131):** whether a placement mode belongs in the draft at all. *Blocks:* nothing; locally the name is one constant.
 5. **A hosted grid service** (Cesium ion, with CORS and possibly cropped tiles). *Blocks:* nothing; `GridSource` is configurable.
 
 ## Amended rulings
 
 - **4a R2 (recorded operations):** unchanged in its rule. A frame also records the better candidates it skipped for missing grids, and the accuracy statement warns about them (call 8). `EngineeringFrame.load` loads the best candidate's grids from the catalog first.
-- **4a R3 (CRS references):** the tileset-level declaration is `EXT_engineering_frame` (call 12). Its `crs` maps to `CrsRef` unchanged.
+- **4a R3 (CRS references):** the tileset-level declaration is `BENTLEY_engineering_frame` (call 12). Its `crs` maps to `CrsRef` unchanged.
 - **4a R9 (projection term):** a geoid fallback adds a `geoidFallback` term, and the projection term's note names any better candidate that was skipped.
 
 ## Global Constraints
@@ -631,7 +631,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 
 - Consumes: Tasks 6 and 10.
 - **Produces** (`georeference.ts`):
-  - **`ENGINEERING_FRAME_EXTENSION = "EXT_engineering_frame"`.**
+  - **`ENGINEERING_FRAME_EXTENSION = "BENTLEY_engineering_frame"`** (`EXT_engineering_frame` until 2026-11-07, still read with a warning).
   - **`interface TilesetGeoreference`:**
     - `name?: string`, `body: Body` (`"EARTH"` by default, or `"MOON"`);
     - `crs: CrsRef`, `site?: SiteTransform`, `alignments?: AlignmentDefinition[]`, `areaOfInterest?: AreaOfInterest`;
@@ -662,7 +662,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - [ ] **Step 2: Run** the tests and confirm they fail.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** the tests, `npm test` once (Global Constraints' exception), then `npm run test:data`, and confirm they pass.
-- [ ] **Step 5: Commit** with "tiles: EXT_engineering_frame placement declarations, and georeferenceTileset".
+- [ ] **Step 5: Commit** with "tiles: BENTLEY_engineering_frame placement declarations, and georeferenceTileset".
 
 ### Task 12: The corridor and the portfolio, as data
 
@@ -808,7 +808,7 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
     - **Rigid:** the root `transform` is `placeRigid(frame, pointAt(ANCHOR_STATION)).rigid.matrix`, which takes absolute design units to Earth-fixed metres. Each tile's `transform` translates from its parent's centre to its own, in design units; the root's centre is the design origin. Vertices are design units relative to their tile's centre.
     - **Reprojected:** each vertex goes through `frame.toBodyFixed`, relative to the tile's Earth-fixed centre.
     - Content is glTF Y-up, so a tile-space (E, N, U) is written as (E, U, −N), and the same for Earth-fixed offsets.
-    - Both carry `EXT_engineering_frame`. Their tile ids, trees and vertex order are identical (call 15).
+    - Both carry `BENTLEY_engineering_frame` and `BENTLEY_alignments`. Their tile ids, trees and vertex order are identical (call 15).
   - **`answers.json`:**
     - **`points`:** at every 4,000 ft of station, at each join, at the bridge's ends, and at the stations nearest 10 km and 20 km from the anchor; at offsets 0, ±17 and ±40: the design coordinates, `frame.toBodyFixed`, the rigid `displayed`, `displayError`, the geodetic position, the combined factor, the convergence, the station and offset;
     - **`pairs`:** for four pairs (10,000 ft on the first tangent, across the 5,000 ft curve, across the bridge, end to end): `measure`'s `design.distance`, `horizontalDistance` and `distance`, and the stations and offsets.
@@ -994,7 +994,7 @@ The owner: the portfolio "should show every country done right, and talk about t
   - **Each site writes `portfolio-<id>-rigid/` and `portfolio-<id>-reprojected/`.** They follow Task 14's rules:
     - identical tile ids, trees and vertex order;
     - a real level-of-detail tree: leaves sized to the model, and parents decimated, with `geometricError` the larger of twice the children's and the measured simplification error;
-    - `EXT_engineering_frame` with the pinned operation or fallback;
+    - `BENTLEY_engineering_frame` with the pinned operation or fallback;
     - Y-up content.
   - **`answers.sites[id]`:** the extent, the rigid `displayError` at the model's farthest point from the anchor, and three design points with their exact body-fixed positions.
 - [ ] **Step 1: Write the failing tests:**
@@ -1128,7 +1128,7 @@ The owner: the portfolio "should show every country done right, and talk about t
   - `EngineeringFrame.load`, the fallbacks, depth axes and tidal datums;
   - placement modes and `georeferenceTileset`;
   - `pickDesign`, `SnapService` and the pick term;
-  - **"Proposed: `EXT_engineering_frame`"**: its JSON shape, how it builds on `EXT_geospatial_crs`, and what the draft lacks (the placement mode, the site scale, alignments);
+  - **"`BENTLEY_engineering_frame`"**: its JSON shape, how it builds on `EXT_geospatial_crs` and composes with `ESRI_crs`, `EXT_geospatial_crs_source` and `3DTILES_ellipsoid`, and what the draft lacks (the placement mode, the site scale, alignments as `BENTLEY_alignments`);
   - the PROJ-data credits and licenses.
 - [ ] **Step 2: Plan note** in §13.14, "Frames 4b results":
   - the measured agreements (round trips, sag, geoid cases against their references, snapping);

@@ -316,6 +316,18 @@ describe("the design globe's generated tiles", () => {
 
   it("places all ten tilesets by their own declarations", async () => {
     const declared = readGeoreference(rigidJson)!;
+    // BENTLEY_engineering_frame, with the alignments as BENTLEY_alignments:
+    // nothing to warn about, and the corridor's alignment exactly.
+    for (const json of [rigidJson, reprojectedJson]) {
+      expect(json.extensionsUsed).toEqual([
+        "BENTLEY_engineering_frame",
+        "BENTLEY_alignments",
+      ]);
+      const g = readGeoreference(json)!;
+      expect(g.warnings).toEqual([]);
+      expect(g.sources.alignments).toBe("extensions.BENTLEY_alignments");
+      expect(g.alignments).toEqual([CORRIDOR_ALIGNMENT]);
+    }
     // The corridor's declared operation is its GEOID18 pin, exactly.
     expect(declared.pipeline).toBe(
       formatPipeline(parsePipeline(corridorFrame().pipeline as string)),
@@ -338,6 +350,10 @@ describe("the design globe's generated tiles", () => {
         site === SITE_BUILDING ? "site-building" : `portfolio-${site.id}`;
       const json = tileset(dir);
       const georeference = readGeoreference(json)!;
+      expect(json.extensionsUsed, site.id).toEqual([
+        "BENTLEY_engineering_frame",
+      ]);
+      expect(georeference.warnings, site.id).toEqual([]);
       expect(georeference.placement.mode, site.id).toBe("rigid");
       expect(georeference.geoidFallback, site.id).toBe(
         site.frame.geoidFallback,

@@ -82,20 +82,22 @@ const CANCEL_AFTER_FRAMES = 30;
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
 /**
- * georeference.ts's ENGINEERING_FRAME_EXTENSION, written out so the parser
- * is imported only for a tileset.json that has it.
+ * georeference.ts's ENGINEERING_FRAME_EXTENSION and its old name, written
+ * out so the parser is imported only for a tileset.json that has one.
  */
-const ENGINEERING_FRAME = "EXT_engineering_frame";
+const ENGINEERING_FRAME = "BENTLEY_engineering_frame";
+const OLD_ENGINEERING_FRAME = "EXT_engineering_frame";
 
 /** A tileset.json's declaration as read: parsed, or why not. */
 type Declaration =
   { readonly georeference: TilesetGeoreference } | { readonly warning: string };
 
 /**
- * Reads a tileset.json's EXT_engineering_frame, importing the parser only
- * when the extension is there (other tilesets pay nothing). A malformed
- * declaration, or anything else that goes wrong reading it, is a warning:
- * it never fails the load.
+ * Reads a tileset.json's BENTLEY_engineering_frame (or its old name,
+ * EXT_engineering_frame), importing the parser only when one is there
+ * (other tilesets pay nothing). A malformed declaration, or anything else
+ * that goes wrong reading it, is a warning: it never fails the load. What
+ * the parser warns about (the old name, in-frame alignments) is added too.
  */
 async function readDeclaration(
   json: TileJson,
@@ -104,7 +106,7 @@ async function readDeclaration(
   if (
     typeof extensions !== "object" ||
     extensions === null ||
-    !(ENGINEERING_FRAME in extensions)
+    !(ENGINEERING_FRAME in extensions || OLD_ENGINEERING_FRAME in extensions)
   ) {
     return undefined;
   }
@@ -305,7 +307,7 @@ export class Tileset3D implements TileTree {
    */
   readonly extensions: Readonly<Record<string, unknown>>;
   /**
-   * Its `EXT_engineering_frame` declaration, parsed at load. Undefined when
+   * Its `BENTLEY_engineering_frame` declaration, parsed at load. Undefined when
    * there is none, or when it is malformed: that adds a `warnings` entry
    * naming the field, and never fails the load. Nothing is resolved here;
    * `georeferenceTileset` loads the frame and sets `placement`.
@@ -791,6 +793,9 @@ export class Tileset3D implements TileTree {
     if (declaration !== undefined) {
       if ("georeference" in declaration) {
         this.georeference = declaration.georeference;
+        for (const warning of declaration.georeference.warnings) {
+          this.warnings.add(warning);
+        }
       } else {
         this.warnings.add(declaration.warning);
       }

@@ -26,36 +26,106 @@
 // differs from `CrsRef` (a string there, a number here); the reader takes the
 // draft's string and converts it.
 //
-// What the draft lacks, and this design needs (spec section 7.2), is added
-// on top as a proposed tileset-level extension, EXT_engineering_frame, in
-// tileset.json's `extensions`:
+// Composed with what exists (read on 2026-11-07; ext-prior-art.md):
+//
+//   EXT_geospatial_crs_source  CesiumGS/glTF#131, an open Draft PR on the
+//                            3d-tiles-2.0 branch (branch commit 370081df40,
+//                            2026-09-01): document level, the *source*
+//                            (design) CRS beside the geocentric root CRS, in
+//                            EXT_geospatial_crs's shape: { format: string,
+//                            extensions: { EXT_geospatial_crs_wkid |
+//                            EXT_geospatial_crs_wkt2: ... } }. Its per-node
+//                            transforms aren't read.
+//   ESRI_crs                 Esri's released 3D Tiles 1.1 vendor extension
+//                            (Esri/3D-tiles-layer, ESRI_CRS/
+//                            Esri_crs_extension.md, spec commit 8e8b0f349c,
+//                            2025-10-29): on the root tileset { wkid: number
+//                            ("required"), vcsWkid?: number, wkt?: string
+//                            (Esri WKT), wkt2?: string }; "The wkt or wkt2 and
+//                            the definition of wkid and vcsWkid are mutually
+//                            exclusive". So either wkid (and vcsWkid) or wkt2
+//                            is read; Esri's WKT1 `wkt` isn't (a declared CRS
+//                            is a code or WKT2). A wkid of 32767 or less is an
+//                            EPSG code, a larger one an ESRI code (Esri's
+//                            numbering), and the pair must be in one registry.
+//                            Its per-tile transforms aren't read.
+//   3DTILES_ellipsoid        3D Tiles 1.1, status Complete (CesiumGS/3d-tiles,
+//                            extensions/3DTILES_ellipsoid): on the tileset
+//                            { body: string (an IAU name such as "Earth" or
+//                            "Moon", or "none"), radii: [x, y, z] (metres,
+//                            absent for "none") }. The radii pick EARTH or
+//                            MOON within 0.01 m per axis; anything else is
+//                            refused, and so is a body that names the other.
+//
+// The source CRS comes from EXT_geospatial_crs_source, else ESRI_crs, else
+// this declaration's own `crs`, which is now optional (the fallback). Every
+// one present is read and screened (a WKT2 through wkt2Problem and the
+// PARAMETERFILE check here, then PROJ's strict parser in
+// georeferenceTileset), and they must agree: the same format, registry
+// (case aside), codes and epoch, or the same WKT2 text, else a
+// GeoreferenceError naming both paths. ESRI_crs has no epoch, so it agrees on
+// codes alone, and our `crs`'s epoch, if any, is kept. The body comes from
+// 3DTILES_ellipsoid, else `body`; both, disagreeing, are refused. The area of
+// interest is `areaOfInterest` when given (an override), else derived from
+// the root tile's bounding volume: a region's degrees, or a box's or
+// sphere's 27 points (centre, faces, edges, corners) through the root
+// transform onto the body, when they span less than 180 degrees of
+// longitude; otherwise there is none, as before.
+//
+// What the draft lacks, and this design needs (spec section 7.2), is a
+// vendor tileset-level extension, BENTLEY_engineering_frame, in
+// tileset.json's `extensions` (its old name, EXT_engineering_frame, is read
+// for now with a warning: Khronos keeps EXT_ for extensions several vendors
+// implement):
 //
 //   "extensions": {
-//     "EXT_engineering_frame": {
+//     "BENTLEY_engineering_frame": {
 //       "name": "Mainline",                           (optional)
 //       "body": "EARTH",                              (optional; or "MOON")
-//       "crs": {                                      (EXT_geospatial_crs's shape)
+//       "crs": {                                      (optional; EXT_geospatial_crs's shape)
 //         "format": "wkid",
 //         "extensions": {
 //           "EXT_geospatial_crs_wkid": { "authority": "EPSG", "wkid": 6420, "vcsWkid": 6360 }
 //         }
 //       },
 //       "site": { "origin": [E0, N0, U0], "rotation": 0.218, "scale": 1.0000375 },
-//       "alignments": [ AlignmentDefinition, ... ],   (at most 64; a spiral's
-//                                                     null radius is a tangent end)
 //       "areaOfInterest": { "west": -122.5, "south": 37.5, "east": -121.5, "north": 38.2 },
 //       "placement": { "mode": "rigid", "anchor": [e, n, u] }   (or { "mode": "reprojected" }),
 //       "pipeline": "+proj=pipeline +step …",          (optional: the pinned operation)
 //       "geoidFallback": "EGM96", "fallbackSigma": 0.5 (optional; not with pipeline)
+//     },
+//     "BENTLEY_alignments": {                         (optional, beside it)
+//       "alignments": [                               (at most 64)
+//         { "name": "Mainline", "start": [E, N], "startAzimuth": 1.745,
+//           "startStation": 10000,
+//           "horizontal": [                           (at most 4,096 each)
+//             { "type": "LINE", "length": 1000 },
+//             { "type": "CLOTHOID", "length": 500, "startRadius": null, "endRadius": 5000 },
+//             { "type": "CIRCULARARC", "length": 800, "radius": 5000 }
+//           ],
+//           "vertical": { "startStation": 10000, "startElevation": 120,
+//             "segments": [
+//               { "type": "CONSTANTGRADIENT", "length": 1000, "gradient": 0.01 },
+//               { "type": "PARABOLICARC", "length": 800, "startGradient": 0.01, "endGradient": -0.02 }
+//             ] } }
+//       ]
 //     }
 //   }
 //
+// The segment types are IFC 4.3's IfcAlignmentHorizontalSegmentTypeEnum and
+// IfcAlignmentVerticalSegmentTypeEnum values; a radius is signed as IFC's
+// (positive curves left, counter-clockwise), and null is a tangent end.
+// `startAzimuth` is ours (radians clockwise from grid north; IFC's
+// StartDirection is anticlockwise from the x-axis), as are the stations.
+// The old in-frame `alignments` (AlignmentDefinition's shape, kinds "line",
+// "arc", "spiral", "grade", "parabola") is read for now with a warning.
+//
 // A rigid tileset's root `transform` is the rigid placement's matrix (call
-// 13); `checkRigidTransform` (georeferenceTileset.ts) holds the two together. The glTF-level
-// EXT_geospatial_crs and EXT_georeference aren't read: they carry no
-// placement mode. The reader is this one module so it can follow the draft as
-// it changes. Unknown fields are ignored; a malformed one throws a
-// GeoreferenceError naming its JSON path, and nothing is guessed.
+// 13); `checkRigidTransform` (georeferenceTileset.ts) holds the two together.
+// The glTF-level EXT_geospatial_crs and EXT_georeference aren't read: they
+// carry no placement mode. The reader is this one module so it can follow
+// the drafts as they change. Unknown fields are ignored; a malformed one
+// throws a GeoreferenceError naming its JSON path, and nothing is guessed.
 //
 // This module is the parser alone, and imports nothing with side effects:
 // `Tileset3D.load` imports it on demand, only for a tileset.json that has the
@@ -64,6 +134,7 @@
 // (`parseGeoreference`), and `readGeoreference`, which passes EARTH and MOON,
 // is in georeferenceTileset.ts with `georeferenceTileset` and
 // `checkRigidTransform`, which need the engineering modules.
+import type { Cartographic } from "../math/ellipsoid.ts";
 import type { Body } from "../scene/Body.ts";
 import type {
   AlignmentDefinition,
@@ -77,8 +148,21 @@ import type { GridCatalog } from "./gridCatalog.ts";
 import { formatPipeline, parsePipeline, pipelineGrids } from "./pipeline.ts";
 import { wkt2Problem } from "./wkt2.ts";
 
-/** The proposed tileset-level extension (held item 4: its name is the owner's). */
-export const ENGINEERING_FRAME_EXTENSION = "EXT_engineering_frame";
+/** The tileset-level extension (a vendor name, owner, 2026-11-07). */
+export const ENGINEERING_FRAME_EXTENSION = "BENTLEY_engineering_frame";
+/** Its old name, read for now with RENAMED_WARNING. */
+export const OLD_ENGINEERING_FRAME_EXTENSION = "EXT_engineering_frame";
+/** The tileset-level alignments, beside the frame (IFC 4.3's segment types). */
+export const ALIGNMENTS_EXTENSION = "BENTLEY_alignments";
+/** Esri's released 3D Tiles 1.1 CRS extension. */
+export const ESRI_CRS_EXTENSION = "ESRI_crs";
+/** The 3D Tiles 2.0 draft's source CRS (CesiumGS/glTF#131). */
+export const CRS_SOURCE_EXTENSION = "EXT_geospatial_crs_source";
+/** 3D Tiles 1.1's body and ellipsoid. */
+export const ELLIPSOID_EXTENSION = "3DTILES_ellipsoid";
+/** The warning a declaration under the old name loads with. */
+export const RENAMED_WARNING =
+  "EXT_engineering_frame is renamed BENTLEY_engineering_frame";
 
 const WKID_EXTENSION = "EXT_geospatial_crs_wkid";
 const WKT2_EXTENSION = "EXT_geospatial_crs_wkt2";
@@ -310,8 +394,18 @@ const DECIMAL_YEAR = /^\d{1,4}(\.\d+)?$/;
 // A plain literal: a template at the top level would count as a side effect
 // to the bundler, keeping this module in bundles that never parse a
 // declaration.
-export const GEOREFERENCE_PATH = "extensions.EXT_engineering_frame";
-const ROOT = GEOREFERENCE_PATH;
+export const GEOREFERENCE_PATH = "extensions.BENTLEY_engineering_frame";
+const OLD_PATH = "extensions.EXT_engineering_frame";
+const ALIGNMENTS_PATH = "extensions.BENTLEY_alignments";
+const ESRI_PATH = "extensions.ESRI_crs";
+const SOURCE_PATH = "extensions.EXT_geospatial_crs_source";
+const ELLIPSOID_PATH = "extensions.3DTILES_ellipsoid";
+/** Where a derived area of interest comes from. */
+const VOLUME_PATH = "root.boundingVolume";
+/** Metres: how near 3DTILES_ellipsoid's radii must be a body's, per axis. */
+const RADII_TOLERANCE = 0.01;
+/** The largest EPSG code (Esri's numbering: larger wkids are ESRI's). */
+const LAST_EPSG = 32_767;
 
 /** A tileset's placement as declared: the mode, and a rigid one's anchor. */
 export type DeclaredPlacement =
@@ -322,11 +416,31 @@ export type DeclaredPlacement =
     }
   | { readonly mode: "reprojected" };
 
-/** An `EXT_engineering_frame` declaration, read by `readGeoreference`. */
+/** Where a declaration's parts were read from: JSON paths from the root. */
+export interface GeoreferenceSources {
+  /** The frame extension: GEOREFERENCE_PATH, or the old name's. */
+  readonly declaration: string;
+  /**
+   * The CRS object read: extensions.EXT_geospatial_crs_source,
+   * extensions.ESRI_crs, or the declaration's `crs`.
+   */
+  readonly crs: string;
+  /** The WKT2 string's path, when the CRS is WKT2. */
+  readonly wkt2?: string;
+  /** extensions.3DTILES_ellipsoid or the declaration's `body`; none: EARTH. */
+  readonly body?: string;
+  /** The declaration's `areaOfInterest`, or root.boundingVolume (derived). */
+  readonly areaOfInterest?: string;
+  /** extensions.BENTLEY_alignments, or the declaration's old `alignments`. */
+  readonly alignments?: string;
+}
+
+/** A `BENTLEY_engineering_frame` declaration, read by `readGeoreference`. */
 export interface TilesetGeoreference {
   readonly name?: string;
-  /** EARTH unless the declaration says "MOON". */
+  /** 3DTILES_ellipsoid's body, else `body`'s; EARTH when neither says. */
   readonly body: Body;
+  /** EXT_geospatial_crs_source's, else ESRI_crs's, else `crs`'s. */
   readonly crs: CrsRef;
   readonly site?: SiteTransform;
   readonly alignments?: readonly AlignmentDefinition[];
@@ -341,12 +455,15 @@ export interface TilesetGeoreference {
   readonly geoidFallback?: GeoidModel;
   /** The fallback's stated accuracy, metres; only with `geoidFallback`. */
   readonly fallbackSigma?: number;
+  readonly sources: GeoreferenceSources;
+  /** What loads but is out of date: the old name, in-frame alignments. */
+  readonly warnings: readonly string[];
 }
 
 /**
  * A declaration that is malformed, or disagrees with the tileset: `path` is
  * the JSON path of the field at fault (from the tileset's root, such as
- * "extensions.EXT_engineering_frame.placement.anchor").
+ * "extensions.BENTLEY_engineering_frame.placement.anchor").
  */
 export class GeoreferenceError extends Error {
   readonly path: string;
@@ -558,16 +675,24 @@ function readCrs(value: unknown, path: string): CrsRef {
   }
   const at = `${path}.extensions.${WKT2_EXTENSION}`;
   const companion = object(extensions[WKT2_EXTENSION], at);
-  const raw = companion.wkt2;
+  return { format, wkt2: readWkt2(companion.wkt2, `${at}.wkt2`) };
+}
+
+/**
+ * An untrusted WKT2 string, wherever it is declared: at most MAX_WKT2
+ * characters, trimmed, WKT2 in form (`wkt2Problem`), and naming only plain
+ * PARAMETERFILE names (`wkt2Files`). Returned trimmed.
+ */
+function readWkt2(raw: unknown, path: string): string {
   if (typeof raw !== "string") {
     throw new GeoreferenceError(
-      `${at}.wkt2`,
+      path,
       `must be a non-empty string (got ${shown(raw)})`,
     );
   }
   if (raw.length > MAX_WKT2) {
     throw new GeoreferenceError(
-      `${at}.wkt2`,
+      path,
       `is ${raw.length.toLocaleString("en-US")} characters; at most ${MAX_WKT2.toLocaleString("en-US")} are read`,
     );
   }
@@ -576,7 +701,7 @@ function readCrs(value: unknown, path: string): CrsRef {
   const wkt2 = raw.trim();
   if (wkt2.length === 0) {
     throw new GeoreferenceError(
-      `${at}.wkt2`,
+      path,
       `must be a non-empty string (got ${shown(raw)})`,
     );
   }
@@ -586,10 +711,164 @@ function readCrs(value: unknown, path: string): CrsRef {
   // (strictWkt2).
   const problem = wkt2Problem(wkt2);
   if (problem !== undefined) {
-    throw new GeoreferenceError(`${at}.wkt2`, problem);
+    throw new GeoreferenceError(path, problem);
   }
-  wkt2Files(wkt2, `${at}.wkt2`);
-  return { format, wkt2 };
+  wkt2Files(wkt2, path);
+  return wkt2;
+}
+
+/** A CRS as read, and where from. */
+interface ReadCrs {
+  readonly crs: CrsRef;
+  readonly path: string;
+  readonly wkt2Path?: string;
+  /** ESRI_crs can't state an epoch. */
+  readonly hasEpoch: boolean;
+}
+
+const wkt2PathOf = (path: string, crs: CrsRef) =>
+  crs.format === "wkt2"
+    ? `${path}.extensions.${WKT2_EXTENSION}.wkt2`
+    : undefined;
+
+/** A CRS in EXT_geospatial_crs's shape (#131's, and our `crs`). */
+function readCrsAt(value: unknown, path: string): ReadCrs {
+  const crs = readCrs(value, path);
+  const wkt2Path = wkt2PathOf(path, crs);
+  return {
+    crs,
+    path,
+    ...(wkt2Path !== undefined && { wkt2Path }),
+    hasEpoch: true,
+  };
+}
+
+/**
+ * ESRI_crs's root object: `wkid` (and `vcsWkid`), or `wkt2`, never both (the
+ * extension makes them mutually exclusive). Esri's WKT1 `wkt` isn't read. A
+ * wkid up to 32767 is EPSG's, a larger one ESRI's, and a vcsWkid must be in
+ * the same registry (a CrsRef names one).
+ */
+function readEsriCrs(value: unknown, path: string): ReadCrs {
+  const esri = object(value, path);
+  const codes = esri.wkid !== undefined || esri.vcsWkid !== undefined;
+  if (esri.wkt2 !== undefined || esri.wkt !== undefined) {
+    if (codes) {
+      throw new GeoreferenceError(
+        path,
+        `has wkid or vcsWkid and ${esri.wkt2 !== undefined ? "wkt2" : "wkt"}, which ${ESRI_CRS_EXTENSION} makes mutually exclusive`,
+      );
+    }
+    if (esri.wkt2 === undefined) {
+      throw new GeoreferenceError(
+        `${path}.wkt`,
+        "is Esri WKT (WKT1), which isn't read: a declared CRS is a wkid or WKT2",
+      );
+    }
+    const wkt2Path = `${path}.wkt2`;
+    return {
+      crs: { format: "wkt2", wkt2: readWkt2(esri.wkt2, wkt2Path) },
+      path,
+      wkt2Path,
+      hasEpoch: false,
+    };
+  }
+  const wkid = code(esri.wkid, `${path}.wkid`);
+  const authority = wkid <= LAST_EPSG ? "EPSG" : "ESRI";
+  const crs: {
+    format: "wkid";
+    authority: string;
+    wkid: number;
+    vcsWkid?: number;
+  } = { format: "wkid", authority, wkid };
+  if (esri.vcsWkid !== undefined) {
+    const vcsWkid = code(esri.vcsWkid, `${path}.vcsWkid`);
+    if ((vcsWkid <= LAST_EPSG ? "EPSG" : "ESRI") !== authority) {
+      throw new GeoreferenceError(
+        `${path}.vcsWkid`,
+        `is ${vcsWkid <= LAST_EPSG ? "an EPSG" : "an ESRI"} code while wkid ${wkid} is ${authority === "EPSG" ? "an EPSG" : "an ESRI"} code; a pair from two registries isn't read`,
+      );
+    }
+    crs.vcsWkid = vcsWkid;
+  }
+  return { crs, path, hasEpoch: false };
+}
+
+/** A CRS for a message, without echoing untrusted text. */
+function shownCrsRef(crs: CrsRef): string {
+  if (crs.format === "wkt2") {
+    return `a WKT2 of ${crs.wkt2.length} characters`;
+  }
+  const codes = `${crs.authority}:${crs.wkid}${crs.vcsWkid === undefined ? "" : `+${crs.vcsWkid}`}`;
+  return crs.epoch === undefined ? codes : `${codes} at epoch ${crs.epoch}`;
+}
+
+/**
+ * Whether two declared CRSs are the same: the same registry (case aside),
+ * codes and, when both can state one, epoch; or the same WKT2 text. A code
+ * and a WKT2 never agree (telling would take PROJ).
+ */
+function sameCrs(a: ReadCrs, b: ReadCrs): boolean {
+  const x = a.crs;
+  const y = b.crs;
+  if (x.format === "wkt2" || y.format === "wkt2") {
+    return x.format === "wkt2" && y.format === "wkt2" && x.wkt2 === y.wkt2;
+  }
+  return (
+    x.authority.toUpperCase() === y.authority.toUpperCase() &&
+    x.wkid === y.wkid &&
+    x.vcsWkid === y.vcsWkid &&
+    (!a.hasEpoch || !b.hasEpoch || x.epoch === y.epoch)
+  );
+}
+
+/**
+ * The source CRS: EXT_geospatial_crs_source's, else ESRI_crs's, else the
+ * declaration's `crs`. Every one present is read (and so screened), and
+ * each must agree with the one used, else a GeoreferenceError naming both
+ * paths. When ESRI_crs is used, our `crs`'s epoch (it has none) is kept.
+ */
+function readSourceCrs(
+  extensions: Json,
+  declaration: Json,
+  root: string,
+): ReadCrs {
+  const found: ReadCrs[] = [];
+  if (extensions[CRS_SOURCE_EXTENSION] !== undefined) {
+    found.push(readCrsAt(extensions[CRS_SOURCE_EXTENSION], SOURCE_PATH));
+  }
+  if (extensions[ESRI_CRS_EXTENSION] !== undefined) {
+    found.push(readEsriCrs(extensions[ESRI_CRS_EXTENSION], ESRI_PATH));
+  }
+  if (declaration.crs !== undefined) {
+    found.push(readCrsAt(declaration.crs, `${root}.crs`));
+  }
+  const used = found[0];
+  if (used === undefined) {
+    throw new GeoreferenceError(
+      `${root}.crs`,
+      `is required when the tileset has neither ${CRS_SOURCE_EXTENSION} nor ${ESRI_CRS_EXTENSION}`,
+    );
+  }
+  for (const other of found.slice(1)) {
+    if (!sameCrs(used, other)) {
+      throw new GeoreferenceError(
+        other.path,
+        `disagrees with ${used.path}: ${shownCrsRef(other.crs)} against ${shownCrsRef(used.crs)}; declare one CRS`,
+      );
+    }
+  }
+  const epoch = found.find(
+    (f) => f.hasEpoch && f.crs.format === "wkid" && f.crs.epoch !== undefined,
+  );
+  if (
+    !used.hasEpoch &&
+    used.crs.format === "wkid" &&
+    epoch?.crs.format === "wkid"
+  ) {
+    return { ...used, crs: { ...used.crs, epoch: epoch.crs.epoch! } };
+  }
+  return used;
 }
 
 function readSite(value: unknown, path: string): SiteTransform {
@@ -619,6 +898,161 @@ function readArea(value: unknown, path: string): AreaOfInterest {
     south: degrees("south", 90),
     east: degrees("east", 180),
     north: degrees("north", 90),
+  };
+}
+
+/**
+ * 3DTILES_ellipsoid's body: its radii (metres) within RADII_TOLERANCE per
+ * axis of EARTH's or MOON's ellipsoid, and its `body`, if given, naming
+ * that body (case aside). "none", other radii, or a body naming another is
+ * refused, naming the field.
+ */
+function readEllipsoid(
+  value: unknown,
+  path: string,
+  bodies: GeoreferenceBodies,
+): Body {
+  const ellipsoid = object(value, path);
+  const named =
+    ellipsoid.body === undefined
+      ? undefined
+      : name(ellipsoid.body, `${path}.body`);
+  if (named?.toLowerCase() === "none") {
+    throw new GeoreferenceError(
+      `${path}.body`,
+      'is "none": the tileset says it isn\'t referenced to a body, so it has no engineering frame to place',
+    );
+  }
+  const radii = numbers(ellipsoid.radii, 3, `${path}.radii`);
+  const body = [bodies.EARTH, bodies.MOON].find((b) =>
+    radii.every(
+      (r, i) => Math.abs(r - b.ellipsoid.radii[i]!) <= RADII_TOLERANCE,
+    ),
+  );
+  if (body === undefined) {
+    throw new GeoreferenceError(
+      `${path}.radii`,
+      `[${radii.join(", ")}] m are neither the Earth's (WGS 84) nor the Moon's radii within ${RADII_TOLERANCE} m; only those bodies are placed`,
+    );
+  }
+  if (named !== undefined && named.toLowerCase() !== body.name.toLowerCase()) {
+    throw new GeoreferenceError(
+      `${path}.body`,
+      `names ${shown(named)}, but its radii are the ${body.name}'s`,
+    );
+  }
+  return body;
+}
+
+const isNumbers = (value: unknown, length: number): value is number[] =>
+  Array.isArray(value) &&
+  value.length === length &&
+  value.every((x) => typeof x === "number" && Number.isFinite(x));
+
+const DEGREES = 180 / Math.PI;
+/** Degrees wrapped into [-180, 180]. */
+const wrapped = (degrees: number) =>
+  degrees > 180 ? degrees - 360 : degrees < -180 ? degrees + 360 : degrees;
+
+/**
+ * The area of interest the root tile's bounding volume covers on `body`, or
+ * undefined when it can't be told (no or a malformed volume or transform, a
+ * point at the body's centre, or 180 degrees or more of longitude): a
+ * region's own degrees; a box's or sphere's 27 points (centre, face and
+ * edge middles, corners) through the root's transform. It only scopes
+ * PROJ's choice of operation, as `areaOfInterest` does.
+ */
+function derivedArea(
+  tilesetJson: Json,
+  body: Body,
+): AreaOfInterest | undefined {
+  const tile = tilesetJson.root;
+  if (!isObject(tile) || !isObject(tile.boundingVolume)) {
+    return undefined;
+  }
+  const volume = tile.boundingVolume;
+  if (volume.region !== undefined) {
+    if (!isNumbers(volume.region, 6)) {
+      return undefined;
+    }
+    const [west, south, east, north] = volume.region.map((x) => x * DEGREES);
+    const ok =
+      Math.abs(west!) <= 180 &&
+      Math.abs(east!) <= 180 &&
+      -90 <= south! &&
+      south! <= north! &&
+      north! <= 90;
+    return ok
+      ? { west: west!, south: south!, east: east!, north: north! }
+      : undefined;
+  }
+  let centre: number[];
+  let axes: number[][];
+  if (isNumbers(volume.box, 12)) {
+    const b = volume.box;
+    centre = b.slice(0, 3);
+    axes = [b.slice(3, 6), b.slice(6, 9), b.slice(9, 12)];
+  } else if (isNumbers(volume.sphere, 4) && volume.sphere[3]! >= 0) {
+    const r = volume.sphere[3]!;
+    centre = volume.sphere.slice(0, 3);
+    axes = [
+      [r, 0, 0],
+      [0, r, 0],
+      [0, 0, r],
+    ];
+  } else {
+    return undefined;
+  }
+  const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+  let m = IDENTITY;
+  if (tile.transform !== undefined) {
+    if (!isNumbers(tile.transform, 16)) {
+      return undefined;
+    }
+    m = tile.transform;
+  }
+  const lons: number[] = [];
+  const lats: number[] = [];
+  const at: Cartographic = { longitude: 0, latitude: 0, height: 0 };
+  const point = new Float64Array(3);
+  for (const i of [0, -1, 1]) {
+    for (const j of [0, -1, 1]) {
+      for (const k of [0, -1, 1]) {
+        const p = [0, 1, 2].map(
+          (c) =>
+            centre[c]! + i * axes[0]![c]! + j * axes[1]![c]! + k * axes[2]![c]!,
+        );
+        for (let r = 0; r < 3; r++) {
+          point[r] =
+            m[r]! * p[0]! + m[4 + r]! * p[1]! + m[8 + r]! * p[2]! + m[12 + r]!;
+        }
+        const c = body.ellipsoid.cartesianToCartographic(point, at);
+        if (
+          c === undefined ||
+          !Number.isFinite(c.longitude) ||
+          !Number.isFinite(c.latitude)
+        ) {
+          return undefined;
+        }
+        lons.push(c.longitude * DEGREES);
+        lats.push(c.latitude * DEGREES);
+      }
+    }
+  }
+  // Longitudes about the centre's (the first point), so an area across the
+  // antimeridian stays one span (and west > east says so).
+  const middle = lons[0]!;
+  const offsets = lons.map((lon) => wrapped(lon - middle));
+  const low = Math.min(...offsets);
+  const high = Math.max(...offsets);
+  if (!(high - low < 180)) {
+    return undefined;
+  }
+  return {
+    west: wrapped(middle + low),
+    south: Math.max(-90, Math.min(...lats)),
+    east: wrapped(middle + high),
+    north: Math.min(90, Math.max(...lats)),
   };
 }
 
@@ -720,6 +1154,168 @@ function readAlignment(value: unknown, path: string): AlignmentDefinition {
   return definition;
 }
 
+/** Our kinds as IFC 4.3's segment types, and back. */
+const HORIZONTAL_TYPES = {
+  line: "LINE",
+  arc: "CIRCULARARC",
+  spiral: "CLOTHOID",
+} as const;
+const VERTICAL_TYPES = {
+  grade: "CONSTANTGRADIENT",
+  parabola: "PARABOLICARC",
+} as const;
+
+/** A BENTLEY_alignments horizontal segment. */
+function readHorizontalSegment(
+  value: unknown,
+  path: string,
+): HorizontalElement {
+  const segment = object(value, path);
+  const type = oneOf(
+    segment.type,
+    ["LINE", "CIRCULARARC", "CLOTHOID"],
+    `${path}.type`,
+    "IfcAlignmentHorizontalSegment type",
+  );
+  const length = positive(segment.length, `${path}.length`);
+  if (type === "LINE") {
+    return { kind: "line", length };
+  }
+  if (type === "CIRCULARARC") {
+    return {
+      kind: "arc",
+      length,
+      radius: nonZero(segment.radius, `${path}.radius`),
+    };
+  }
+  return {
+    kind: "spiral",
+    length,
+    startRadius: radius(segment.startRadius, `${path}.startRadius`),
+    endRadius: radius(segment.endRadius, `${path}.endRadius`),
+  };
+}
+
+/** A BENTLEY_alignments vertical segment. */
+function readVerticalSegment(value: unknown, path: string): ProfileSegment {
+  const segment = object(value, path);
+  const type = oneOf(
+    segment.type,
+    ["CONSTANTGRADIENT", "PARABOLICARC"],
+    `${path}.type`,
+    "IfcAlignmentVerticalSegment type",
+  );
+  const length = positive(segment.length, `${path}.length`);
+  return type === "CONSTANTGRADIENT"
+    ? {
+        kind: "grade",
+        length,
+        grade: finite(segment.gradient, `${path}.gradient`),
+      }
+    : {
+        kind: "parabola",
+        length,
+        startGrade: finite(segment.startGradient, `${path}.startGradient`),
+        endGrade: finite(segment.endGradient, `${path}.endGradient`),
+      };
+}
+
+/** One BENTLEY_alignments alignment, as an `AlignmentDefinition`. */
+function readIfcAlignment(value: unknown, path: string): AlignmentDefinition {
+  const alignment = object(value, path);
+  const [e, n] = numbers(alignment.start, 2, `${path}.start`);
+  const definition: {
+    -readonly [K in keyof AlignmentDefinition]: AlignmentDefinition[K];
+  } = {
+    name: name(alignment.name, `${path}.name`),
+    start: [e!, n!],
+    startAzimuth: finite(alignment.startAzimuth, `${path}.startAzimuth`),
+    startStation: finite(alignment.startStation, `${path}.startStation`),
+    horizontal: elements(alignment.horizontal, `${path}.horizontal`).map(
+      (h, i) => readHorizontalSegment(h, `${path}.horizontal[${i}]`),
+    ),
+  };
+  if (alignment.vertical !== undefined) {
+    const at = `${path}.vertical`;
+    const profile = object(alignment.vertical, at);
+    definition.vertical = {
+      startStation: finite(profile.startStation, `${at}.startStation`),
+      startElevation: finite(profile.startElevation, `${at}.startElevation`),
+      segments: elements(profile.segments, `${at}.segments`).map((s, i) =>
+        readVerticalSegment(s, `${at}.segments[${i}]`),
+      ),
+    };
+  }
+  return definition;
+}
+
+/** At most MAX_ALIGNMENTS alignments, each read by `read`. */
+function readAlignmentList(
+  value: unknown,
+  path: string,
+  read: (value: unknown, path: string) => AlignmentDefinition,
+): AlignmentDefinition[] {
+  const items = array(value, path);
+  if (items.length > MAX_ALIGNMENTS) {
+    throw new GeoreferenceError(
+      path,
+      `holds ${items.length} alignments; at most ${MAX_ALIGNMENTS} are read`,
+    );
+  }
+  return items.map((a, i) => read(a, `${path}[${i}]`));
+}
+
+/**
+ * The `BENTLEY_alignments` extension object for `alignments`: IFC 4.3's
+ * segment types, a spiral's infinite radius as null (JSON has no Infinity).
+ * `parseGeoreference` reads it back to equal definitions.
+ */
+export function alignmentsExtension(
+  alignments: readonly AlignmentDefinition[],
+): { alignments: Record<string, unknown>[] } {
+  const r = (x: number) => (Number.isFinite(x) ? x : null);
+  return {
+    alignments: alignments.map((a) => ({
+      name: a.name,
+      start: [a.start[0], a.start[1]],
+      startAzimuth: a.startAzimuth,
+      startStation: a.startStation,
+      horizontal: a.horizontal.map((h) =>
+        h.kind === "line"
+          ? { type: HORIZONTAL_TYPES.line, length: h.length }
+          : h.kind === "arc"
+            ? { type: HORIZONTAL_TYPES.arc, length: h.length, radius: h.radius }
+            : {
+                type: HORIZONTAL_TYPES.spiral,
+                length: h.length,
+                startRadius: r(h.startRadius),
+                endRadius: r(h.endRadius),
+              },
+      ),
+      ...(a.vertical && {
+        vertical: {
+          startStation: a.vertical.startStation,
+          startElevation: a.vertical.startElevation,
+          segments: a.vertical.segments.map((v) =>
+            v.kind === "grade"
+              ? {
+                  type: VERTICAL_TYPES.grade,
+                  length: v.length,
+                  gradient: v.grade,
+                }
+              : {
+                  type: VERTICAL_TYPES.parabola,
+                  length: v.length,
+                  startGradient: v.startGrade,
+                  endGradient: v.endGrade,
+                },
+          ),
+        },
+      }),
+    })),
+  };
+}
+
 /**
  * A declared pipeline, checked before PROJ sees it: a string of at most
  * MAX_PIPELINE characters and MAX_STEPS steps that `parsePipeline` reads and
@@ -813,8 +1409,11 @@ export function checkDeclaredGrids(
   georeference: TilesetGeoreference,
   catalog: GridCatalog | undefined,
 ): void {
+  const root = georeference.sources.declaration;
   if (georeference.crs.format === "wkt2") {
-    const path = `${ROOT}.crs.extensions.${WKT2_EXTENSION}.wkt2`;
+    const path =
+      georeference.sources.wkt2 ??
+      `${root}.crs.extensions.${WKT2_EXTENSION}.wkt2`;
     const files = wkt2Files(georeference.crs.wkt2, path);
     if (files.length > 0 && catalog === undefined) {
       throw new GeoreferenceError(
@@ -835,7 +1434,7 @@ export function checkDeclaredGrids(
   if (georeference.pipeline === undefined) {
     return;
   }
-  const path = `${ROOT}.pipeline`;
+  const path = `${root}.pipeline`;
   if (catalog === undefined) {
     throw new GeoreferenceError(
       path,
@@ -878,13 +1477,18 @@ export interface GeoreferenceBodies {
 
 /**
  * `readGeoreference` (georeferenceTileset.ts), with the bodies passed in:
- * the `EXT_engineering_frame` declaration of a parsed tileset.json, or
- * undefined when it has none. Throws a `GeoreferenceError` naming the JSON
- * path for an unknown mode or format, a missing `crs` or `placement`, a
- * non-finite number, a `wkt2` that isn't WKT2 in form (`wkt2Problem`: a PROJ
- * string, AUTH:CODE or PROJJSON) or is over 65,536 characters, or more than
- * 64 alignments (or 4,096 elements in one). Fields it doesn't know are
- * ignored.
+ * the `BENTLEY_engineering_frame` declaration of a parsed tileset.json (or
+ * the old `EXT_engineering_frame`, with RENAMED_WARNING), composed with the
+ * tileset's EXT_geospatial_crs_source, ESRI_crs, 3DTILES_ellipsoid,
+ * BENTLEY_alignments and root bounding volume; undefined when it has none.
+ * Throws a `GeoreferenceError` naming the JSON path for an unknown mode or
+ * format, no CRS anywhere, two CRSs or bodies that disagree, an ellipsoid
+ * that is neither EARTH's nor MOON's, a missing `placement`, a non-finite
+ * number, a `wkt2` (wherever declared) that isn't WKT2 in form
+ * (`wkt2Problem`: a PROJ string, AUTH:CODE or PROJJSON) or is over 65,536
+ * characters, or more than 64 alignments (or 4,096 elements in one), and
+ * for both names, or both places for alignments, at once. Fields it doesn't
+ * know are ignored.
  */
 export function parseGeoreference(
   tilesetJson: unknown,
@@ -894,38 +1498,76 @@ export function parseGeoreference(
   if (!isObject(tilesetJson) || !isObject(tilesetJson.extensions)) {
     return undefined;
   }
-  if (!(ENGINEERING_FRAME_EXTENSION in tilesetJson.extensions)) {
+  const extensions = tilesetJson.extensions;
+  const current = ENGINEERING_FRAME_EXTENSION in extensions;
+  const old = OLD_ENGINEERING_FRAME_EXTENSION in extensions;
+  if (!current && !old) {
     return undefined;
   }
+  if (current && old) {
+    throw new GeoreferenceError(
+      OLD_PATH,
+      `is ${GEOREFERENCE_PATH}'s old name, and both are present; keep only ${ENGINEERING_FRAME_EXTENSION}`,
+    );
+  }
+  const root = current ? GEOREFERENCE_PATH : OLD_PATH;
+  const warnings: string[] = old ? [RENAMED_WARNING] : [];
   const declaration = object(
-    tilesetJson.extensions[ENGINEERING_FRAME_EXTENSION],
-    ROOT,
+    extensions[
+      current ? ENGINEERING_FRAME_EXTENSION : OLD_ENGINEERING_FRAME_EXTENSION
+    ],
+    root,
   );
-  const body =
+  const ours =
     declaration.body === undefined
-      ? EARTH
-      : oneOf(declaration.body, ["EARTH", "MOON"], `${ROOT}.body`, "body") ===
+      ? undefined
+      : oneOf(declaration.body, ["EARTH", "MOON"], `${root}.body`, "body") ===
           "MOON"
         ? MOON
         : EARTH;
-  if (declaration.crs === undefined) {
-    throw new GeoreferenceError(`${ROOT}.crs`, "is required");
+  let body = ours ?? EARTH;
+  let bodyPath = ours === undefined ? undefined : `${root}.body`;
+  if (extensions[ELLIPSOID_EXTENSION] !== undefined) {
+    const theirs = readEllipsoid(
+      extensions[ELLIPSOID_EXTENSION],
+      ELLIPSOID_PATH,
+      bodies,
+    );
+    if (ours !== undefined && ours !== theirs) {
+      throw new GeoreferenceError(
+        `${root}.body`,
+        `says the ${ours.name}, but ${ELLIPSOID_PATH} has the ${theirs.name}'s radii; declare one body`,
+      );
+    }
+    body = theirs;
+    bodyPath = ELLIPSOID_PATH;
   }
+  const crs = readSourceCrs(extensions, declaration, root);
   if (declaration.placement === undefined) {
-    throw new GeoreferenceError(`${ROOT}.placement`, "is required");
+    throw new GeoreferenceError(`${root}.placement`, "is required");
   }
+  const sources: {
+    -readonly [K in keyof GeoreferenceSources]: GeoreferenceSources[K];
+  } = {
+    declaration: root,
+    crs: crs.path,
+    ...(crs.wkt2Path !== undefined && { wkt2: crs.wkt2Path }),
+    ...(bodyPath !== undefined && { body: bodyPath }),
+  };
   const result: {
     -readonly [K in keyof TilesetGeoreference]: TilesetGeoreference[K];
   } = {
     body,
-    crs: readCrs(declaration.crs, `${ROOT}.crs`),
-    placement: readPlacement(declaration.placement, `${ROOT}.placement`),
+    crs: crs.crs,
+    placement: readPlacement(declaration.placement, `${root}.placement`),
+    sources,
+    warnings,
   };
   if (declaration.pipeline !== undefined) {
-    result.pipeline = readPipeline(declaration.pipeline, `${ROOT}.pipeline`);
+    result.pipeline = readPipeline(declaration.pipeline, `${root}.pipeline`);
   }
   if (declaration.geoidFallback !== undefined) {
-    const path = `${ROOT}.geoidFallback`;
+    const path = `${root}.geoidFallback`;
     result.geoidFallback = oneOf(
       declaration.geoidFallback,
       GEOID_MODELS,
@@ -940,7 +1582,7 @@ export function parseGeoreference(
     }
   }
   if (declaration.fallbackSigma !== undefined) {
-    const path = `${ROOT}.fallbackSigma`;
+    const path = `${root}.fallbackSigma`;
     const sigma = finite(declaration.fallbackSigma, path);
     if (!(sigma > 0)) {
       throw new GeoreferenceError(path, `must be positive (got ${sigma})`);
@@ -951,27 +1593,49 @@ export function parseGeoreference(
     result.fallbackSigma = sigma;
   }
   if (declaration.name !== undefined) {
-    result.name = name(declaration.name, `${ROOT}.name`);
+    result.name = name(declaration.name, `${root}.name`);
   }
   if (declaration.site !== undefined) {
-    result.site = readSite(declaration.site, `${ROOT}.site`);
+    result.site = readSite(declaration.site, `${root}.site`);
   }
-  if (declaration.alignments !== undefined) {
-    const path = `${ROOT}.alignments`;
-    const items = array(declaration.alignments, path);
-    if (items.length > MAX_ALIGNMENTS) {
+  const inFrame = `${root}.alignments`;
+  if (extensions[ALIGNMENTS_EXTENSION] !== undefined) {
+    if (declaration.alignments !== undefined) {
       throw new GeoreferenceError(
-        path,
-        `holds ${items.length} alignments; at most ${MAX_ALIGNMENTS} are read`,
+        inFrame,
+        `and ${ALIGNMENTS_PATH} are both present; keep only ${ALIGNMENTS_EXTENSION}`,
       );
     }
-    result.alignments = items.map((a, i) => readAlignment(a, `${path}[${i}]`));
+    const extension = object(extensions[ALIGNMENTS_EXTENSION], ALIGNMENTS_PATH);
+    result.alignments = readAlignmentList(
+      extension.alignments,
+      `${ALIGNMENTS_PATH}.alignments`,
+      readIfcAlignment,
+    );
+    sources.alignments = ALIGNMENTS_PATH;
+  } else if (declaration.alignments !== undefined) {
+    result.alignments = readAlignmentList(
+      declaration.alignments,
+      inFrame,
+      readAlignment,
+    );
+    sources.alignments = inFrame;
+    warnings.push(
+      `${inFrame} is moved to ${ALIGNMENTS_PATH} (IFC 4.3 segment types); read from the old place for now`,
+    );
   }
   if (declaration.areaOfInterest !== undefined) {
     result.areaOfInterest = readArea(
       declaration.areaOfInterest,
-      `${ROOT}.areaOfInterest`,
+      `${root}.areaOfInterest`,
     );
+    sources.areaOfInterest = `${root}.areaOfInterest`;
+  } else {
+    const area = derivedArea(tilesetJson, body);
+    if (area !== undefined) {
+      result.areaOfInterest = area;
+      sources.areaOfInterest = VOLUME_PATH;
+    }
   }
   return result;
 }

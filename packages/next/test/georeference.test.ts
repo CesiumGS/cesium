@@ -1,12 +1,21 @@
-// The tileset declaration, EXT_engineering_frame (plan 4b task 11): parsing
+// The tileset declaration, BENTLEY_engineering_frame (plan 4b task 11, and
+// its composition with ESRI_crs, EXT_geospatial_crs_source,
+// 3DTILES_ellipsoid and BENTLEY_alignments): parsing
 // only. Each malformed case of Review Focus 3 that a parse can find throws a
 // GeoreferenceError naming its JSON path; the anchor case needs PROJ and is
 // test/data/georeferenceTileset.test.ts's.
 import { describe, expect, it } from "vitest";
-import { CORRIDOR_PIPELINE } from "../examples/design-globe/corridor.ts";
 import {
+  CORRIDOR_ALIGNMENT,
+  CORRIDOR_PIPELINE,
+} from "../examples/design-globe/corridor.ts";
+import type { AlignmentDefinition } from "../src/engineering/alignment.ts";
+import {
+  ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
   GeoreferenceError,
+  RENAMED_WARNING,
+  alignmentsExtension,
   checkDeclaredGrids,
 } from "../src/engineering/georeference.ts";
 import { GridCatalog } from "../src/engineering/gridCatalog.ts";
@@ -14,7 +23,7 @@ import { formatPipeline, parsePipeline } from "../src/engineering/pipeline.ts";
 import { readGeoreference } from "../src/engineering/georeferenceTileset.ts";
 import { EARTH, MOON } from "../src/scene/Body.ts";
 
-const ROOT = "extensions.EXT_engineering_frame";
+const ROOT = "extensions.BENTLEY_engineering_frame";
 
 /** A rigid, wkid-format declaration (the corridor's shape). */
 function rigid(): Record<string, unknown> {
@@ -87,8 +96,8 @@ function failure(declaration: unknown): GeoreferenceError {
 }
 
 describe("readGeoreference", () => {
-  it("names the extension EXT_engineering_frame", () => {
-    expect(ENGINEERING_FRAME_EXTENSION).toBe("EXT_engineering_frame");
+  it("names the extension BENTLEY_engineering_frame", () => {
+    expect(ENGINEERING_FRAME_EXTENSION).toBe("BENTLEY_engineering_frame");
   });
 
   it("gives undefined when the extension is absent", () => {
@@ -238,7 +247,9 @@ describe("readGeoreference", () => {
         { origin: [6e6, 2e6, 0], rotation: 0, scale: Number.NaN },
       ]) {
         const e = failure({ ...rigid(), site });
-        expect(e.path).toMatch(/^extensions\.EXT_engineering_frame\.site\./);
+        expect(e.path).toMatch(
+          /^extensions\.BENTLEY_engineering_frame\.site\./,
+        );
         expect(e.message).toContain(e.path);
         expect(e.message).toContain("finite");
       }
@@ -759,5 +770,654 @@ describe("untrusted WKT2 that names files, numeric bounds and empty grid lists",
       });
       expect(error.path, grids).toBe(`${ROOT}.pipeline`);
     }
+  });
+});
+
+describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid and BENTLEY_alignments", () => {
+  const WKID = {
+    format: "wkid",
+    extensions: {
+      EXT_geospatial_crs_wkid: { authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+    },
+  };
+  const UTM_WKT2 =
+    'PROJCRS["WGS 84 / UTM zone 11N",BASEGEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563]]],CONVERSION["UTM zone 11N",METHOD["Transverse Mercator"]],CS[Cartesian,2]]';
+  /** A declaration without its own crs (or the old in-frame alignments). */
+  const withoutCrs = () => {
+    const d = rigid();
+    delete d.crs;
+    delete d.alignments;
+    return d;
+  };
+  /** A tileset with the declaration and other top-level extensions. */
+  const composed = (
+    declaration: unknown,
+    others: Record<string, unknown>,
+    root?: Record<string, unknown>,
+  ) => ({
+    ...tileset(declaration),
+    ...(root && { root }),
+    extensions: { [ENGINEERING_FRAME_EXTENSION]: declaration, ...others },
+  });
+  const refusal = (json: unknown): GeoreferenceError => {
+    try {
+      readGeoreference(json);
+    } catch (error) {
+      expect(error).toBeInstanceOf(GeoreferenceError);
+      return error as GeoreferenceError;
+    }
+    throw new Error("expected a GeoreferenceError");
+  };
+
+  describe("the source CRS", () => {
+    it("reads it from ESRI_crs alone: an EPSG wkid and vcsWkid", () => {
+      const g = readGeoreference(
+        composed(withoutCrs(), { ESRI_crs: { wkid: 6420, vcsWkid: 6360 } }),
+      )!;
+      expect(g.crs).toEqual({
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 6420,
+        vcsWkid: 6360,
+      });
+      expect(g.sources.crs).toBe("extensions.ESRI_crs");
+      expect(g.warnings).toEqual([]);
+    });
+
+    it("reads ESRI_crs's wkids above 32767 as ESRI's, and refuses a mixed pair", () => {
+      expect(
+        readGeoreference(
+          composed(withoutCrs(), { ESRI_crs: { wkid: 102100 } }),
+        )!.crs,
+      ).toEqual({ format: "wkid", authority: "ESRI", wkid: 102100 });
+      expect(
+        refusal(
+          composed(withoutCrs(), { ESRI_crs: { wkid: 6420, vcsWkid: 105703 } }),
+        ).path,
+      ).toBe("extensions.ESRI_crs.vcsWkid");
+      expect(
+        refusal(composed(withoutCrs(), { ESRI_crs: { vcsWkid: 6360 } })).path,
+      ).toBe("extensions.ESRI_crs.wkid");
+      expect(
+        refusal(composed(withoutCrs(), { ESRI_crs: { wkid: 1.5 } })).path,
+      ).toBe("extensions.ESRI_crs.wkid");
+    });
+
+    it("reads ESRI_crs's wkt2 through the same screening, and refuses its WKT1 and both forms", () => {
+      const g = readGeoreference(
+        composed(withoutCrs(), { ESRI_crs: { wkt2: ` ${UTM_WKT2}\n` } }),
+      )!;
+      expect(g.crs).toEqual({ format: "wkt2", wkt2: UTM_WKT2 });
+      expect(g.sources.wkt2).toBe("extensions.ESRI_crs.wkt2");
+      for (const wkt2 of [
+        "+proj=utm +zone=11 +datum=WGS84 +type=crs",
+        "EPSG:32611",
+        'GEOGCS["WGS 84"]',
+        "x".repeat(65_537),
+        "",
+      ]) {
+        expect(
+          refusal(composed(withoutCrs(), { ESRI_crs: { wkt2 } })).path,
+          wkt2.slice(0, 20),
+        ).toBe("extensions.ESRI_crs.wkt2");
+      }
+      expect(
+        refusal(composed(withoutCrs(), { ESRI_crs: { wkt: 'PROJCS["x"]' } }))
+          .path,
+      ).toBe("extensions.ESRI_crs.wkt");
+      const both = refusal(
+        composed(withoutCrs(), { ESRI_crs: { wkid: 32611, wkt2: UTM_WKT2 } }),
+      );
+      expect(both.path).toBe("extensions.ESRI_crs");
+      expect(both.message).toMatch(/mutually exclusive/);
+    });
+
+    it("holds ESRI_crs's WKT2 PARAMETERFILEs to plain names and the catalog", () => {
+      const parameterFile = (file: string) =>
+        `BOUNDCRS[SOURCECRS[VERTCRS["H",VDATUM["V"],CS[vertical,1],AXIS["h",up,LENGTHUNIT["metre",1]]]],TARGETCRS[GEOGCRS["G",DATUM["D",ELLIPSOID["GRS 1980",6378137,298.257222101]],CS[ellipsoidal,3]]],ABRIDGEDTRANSFORMATION["t",METHOD["m"],PARAMETERFILE["Geoid (height correction) model file","${file}"]]]`;
+      expect(
+        refusal(
+          composed(withoutCrs(), {
+            ESRI_crs: { wkt2: parameterFile("/etc/hosts") },
+          }),
+        ).path,
+      ).toBe("extensions.ESRI_crs.wkt2");
+      const g = readGeoreference(
+        composed(withoutCrs(), {
+          ESRI_crs: { wkt2: parameterFile("us_noaa_g2012bu0.tif") },
+        }),
+      )!;
+      const error = (() => {
+        try {
+          checkDeclaredGrids(g, undefined);
+        } catch (e) {
+          return e as GeoreferenceError;
+        }
+        throw new Error("expected a refusal");
+      })();
+      expect(error.path).toBe("extensions.ESRI_crs.wkt2");
+    });
+
+    it("reads it from EXT_geospatial_crs_source alone, in either companion", () => {
+      const g = readGeoreference(
+        composed(withoutCrs(), { EXT_geospatial_crs_source: WKID }),
+      )!;
+      expect(g.crs).toEqual({
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 6420,
+        vcsWkid: 6360,
+      });
+      expect(g.sources.crs).toBe("extensions.EXT_geospatial_crs_source");
+      const w = readGeoreference(
+        composed(withoutCrs(), {
+          EXT_geospatial_crs_source: {
+            format: "wkt2",
+            extensions: { EXT_geospatial_crs_wkt2: { wkt2: UTM_WKT2 } },
+          },
+        }),
+      )!;
+      expect(w.crs).toEqual({ format: "wkt2", wkt2: UTM_WKT2 });
+      expect(w.sources.wkt2).toBe(
+        "extensions.EXT_geospatial_crs_source.extensions.EXT_geospatial_crs_wkt2.wkt2",
+      );
+      expect(
+        refusal(
+          composed(withoutCrs(), {
+            EXT_geospatial_crs_source: {
+              format: "wkt2",
+              extensions: {
+                EXT_geospatial_crs_wkt2: { wkt2: "+proj=longlat" },
+              },
+            },
+          }),
+        ).path,
+      ).toBe(
+        "extensions.EXT_geospatial_crs_source.extensions.EXT_geospatial_crs_wkt2.wkt2",
+      );
+    });
+
+    it("prefers EXT_geospatial_crs_source, then ESRI_crs, when they agree with ours", () => {
+      const g = readGeoreference(
+        composed(rigid(), {
+          EXT_geospatial_crs_source: WKID,
+          ESRI_crs: { wkid: 6420, vcsWkid: 6360 },
+        }),
+      )!;
+      expect(g.sources.crs).toBe("extensions.EXT_geospatial_crs_source");
+      const e = readGeoreference(
+        composed(rigid(), { ESRI_crs: { wkid: 6420, vcsWkid: 6360 } }),
+      )!;
+      expect(e.sources.crs).toBe("extensions.ESRI_crs");
+    });
+
+    it("keeps our epoch beside ESRI_crs, which can't state one", () => {
+      const declaration = rigid();
+      declaration.crs = {
+        format: "wkid",
+        extensions: {
+          EXT_geospatial_crs_wkid: {
+            authority: "EPSG",
+            wkid: 7912,
+            epoch: "2019.81",
+          },
+        },
+      };
+      const g = readGeoreference(
+        composed(declaration, { ESRI_crs: { wkid: 7912 } }),
+      )!;
+      expect(g.crs).toEqual({
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 7912,
+        epoch: 2019.81,
+      });
+    });
+
+    it("refuses a disagreement, naming both paths", () => {
+      const ours = refusal(
+        composed(rigid(), { ESRI_crs: { wkid: 2227, vcsWkid: 6360 } }),
+      );
+      expect(ours.path).toBe(`${ROOT}.crs`);
+      expect(ours.message).toContain(`${ROOT}.crs`);
+      expect(ours.message).toContain("extensions.ESRI_crs");
+      expect(ours.message).toMatch(/EPSG:6420\+6360 against EPSG:2227\+6360/);
+      const draft = refusal(
+        composed(rigid(), {
+          EXT_geospatial_crs_source: {
+            format: "wkt2",
+            extensions: { EXT_geospatial_crs_wkt2: { wkt2: UTM_WKT2 } },
+          },
+        }),
+      );
+      expect(draft.path).toBe(`${ROOT}.crs`);
+      expect(draft.message).toContain("extensions.EXT_geospatial_crs_source");
+      const theirs = refusal(
+        composed(withoutCrs(), {
+          EXT_geospatial_crs_source: WKID,
+          ESRI_crs: { wkid: 6420 },
+        }),
+      );
+      expect(theirs.path).toBe("extensions.ESRI_crs");
+      expect(theirs.message).toContain("extensions.EXT_geospatial_crs_source");
+      // Two epochs that differ disagree too.
+      const epoch = (e: string) => ({
+        format: "wkid",
+        extensions: {
+          EXT_geospatial_crs_wkid: { authority: "EPSG", wkid: 7912, epoch: e },
+        },
+      });
+      expect(
+        refusal(
+          composed(
+            { ...rigid(), crs: epoch("2019.81") },
+            { EXT_geospatial_crs_source: epoch("2010.0") },
+          ),
+        ).path,
+      ).toBe(`${ROOT}.crs`);
+    });
+
+    it("refuses a declaration with no CRS anywhere", () => {
+      expect(refusal(composed(withoutCrs(), {})).path).toBe(`${ROOT}.crs`);
+    });
+  });
+
+  describe("the body", () => {
+    it("reads 3DTILES_ellipsoid for the Earth (WGS 84, and GRS 1980 within 1 cm)", () => {
+      for (const radii of [
+        [6378137.0, 6378137.0, 6356752.3142451793],
+        [6378137.0, 6378137.0, 6356752.314140356],
+      ]) {
+        const g = readGeoreference(
+          composed(withoutCrs(), {
+            ESRI_crs: { wkid: 6420 },
+            "3DTILES_ellipsoid": { body: "Earth", radii },
+          }),
+        )!;
+        expect(g.body).toBe(EARTH);
+        expect(g.sources.body).toBe("extensions.3DTILES_ellipsoid");
+      }
+    });
+
+    it("reads 3DTILES_ellipsoid for the Moon", () => {
+      const declaration = {
+        crs: {
+          format: "wkt2",
+          extensions: {
+            EXT_geospatial_crs_wkt2: {
+              wkt2: 'PROJCRS["Moon local",BASEGEOGCRS["Moon (2015)"]]',
+            },
+          },
+        },
+        placement: { mode: "reprojected" },
+      };
+      const g = readGeoreference(
+        composed(declaration, {
+          "3DTILES_ellipsoid": {
+            body: "Moon",
+            radii: [1737400.0, 1737400.0, 1737400.0],
+          },
+        }),
+      )!;
+      expect(g.body).toBe(MOON);
+      // Agreeing with ours is fine.
+      expect(
+        readGeoreference(
+          composed(
+            { ...declaration, body: "MOON" },
+            {
+              "3DTILES_ellipsoid": {
+                body: "Moon",
+                radii: [1737400, 1737400, 1737400],
+              },
+            },
+          ),
+        )!.body,
+      ).toBe(MOON);
+    });
+
+    it("refuses an unknown ellipsoid, naming it", () => {
+      const mars = refusal(
+        composed(rigid(), {
+          "3DTILES_ellipsoid": {
+            body: "Mars",
+            radii: [3396190, 3396190, 3376200],
+          },
+        }),
+      );
+      expect(mars.path).toBe("extensions.3DTILES_ellipsoid.radii");
+      expect(mars.message).toMatch(/neither the Earth's .* nor the Moon's/);
+      // Clarke 1866: an Earth ellipsoid, but not the engine's.
+      expect(
+        refusal(
+          composed(rigid(), {
+            "3DTILES_ellipsoid": {
+              body: "Earth",
+              radii: [6378206.4, 6378206.4, 6356583.8],
+            },
+          }),
+        ).path,
+      ).toBe("extensions.3DTILES_ellipsoid.radii");
+      expect(
+        refusal(composed(rigid(), { "3DTILES_ellipsoid": { body: "none" } }))
+          .path,
+      ).toBe("extensions.3DTILES_ellipsoid.body");
+      expect(
+        refusal(
+          composed(rigid(), {
+            "3DTILES_ellipsoid": {
+              body: "Moon",
+              radii: [6378137, 6378137, 6356752.3142451793],
+            },
+          }),
+        ).path,
+      ).toBe("extensions.3DTILES_ellipsoid.body");
+      expect(
+        refusal(composed(rigid(), { "3DTILES_ellipsoid": { body: "Earth" } }))
+          .path,
+      ).toBe("extensions.3DTILES_ellipsoid.radii");
+      // Ours says the Moon; theirs has the Earth's radii.
+      const both = refusal(
+        composed(
+          { ...rigid(), body: "MOON" },
+          {
+            "3DTILES_ellipsoid": {
+              radii: [6378137, 6378137, 6356752.3142451793],
+            },
+          },
+        ),
+      );
+      expect(both.path).toBe(`${ROOT}.body`);
+      expect(both.message).toContain("extensions.3DTILES_ellipsoid");
+    });
+  });
+
+  describe("the area of interest", () => {
+    const at = (lon: number, lat: number) => {
+      const l = (lon * Math.PI) / 180;
+      const p = (lat * Math.PI) / 180;
+      const c = EARTH.ellipsoid.cartographicToCartesian(
+        { longitude: l, latitude: p, height: 0 },
+        new Float64Array(3),
+      );
+      return Array.from(c);
+    };
+    const withoutArea = () => {
+      const d = rigid();
+      delete d.areaOfInterest;
+      return d;
+    };
+
+    it("derives it from a root region", () => {
+      const d = Math.PI / 180;
+      const g = readGeoreference(
+        composed(
+          withoutArea(),
+          {},
+          {
+            geometricError: 0,
+            boundingVolume: {
+              region: [-122.5 * d, 37.5 * d, -121.5 * d, 38.2 * d, 0, 100],
+            },
+          },
+        ),
+      )!;
+      expect(g.sources.areaOfInterest).toBe("root.boundingVolume");
+      expect(g.areaOfInterest!.west).toBeCloseTo(-122.5, 12);
+      expect(g.areaOfInterest!.north).toBeCloseTo(38.2, 12);
+    });
+
+    it("derives it from a root box through the root transform", () => {
+      // A 10 km box (half axes 5 km) at (-122°, 37.8°), placed by a translation.
+      const centre = at(-122, 37.8);
+      const g = readGeoreference(
+        composed(
+          withoutArea(),
+          {},
+          {
+            geometricError: 0,
+            transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, ...centre, 1],
+            boundingVolume: {
+              box: [0, 0, 0, 5000, 0, 0, 0, 5000, 0, 0, 0, 5000],
+            },
+          },
+        ),
+      )!;
+      const a = g.areaOfInterest!;
+      expect(a.west).toBeLessThan(-122);
+      expect(a.east).toBeGreaterThan(-122);
+      expect(a.south).toBeLessThan(37.8);
+      expect(a.north).toBeGreaterThan(37.8);
+      expect(a.east - a.west).toBeLessThan(0.3);
+      expect(a.north - a.south).toBeLessThan(0.3);
+    });
+
+    it("keeps one span across the antimeridian, and derives none for a global sphere", () => {
+      const g = readGeoreference(
+        composed(
+          withoutArea(),
+          {},
+          {
+            geometricError: 0,
+            boundingVolume: { sphere: [...at(180, -17), 10_000] },
+          },
+        ),
+      )!;
+      expect(g.areaOfInterest!.west).toBeGreaterThan(179);
+      expect(g.areaOfInterest!.east).toBeLessThan(-179);
+      const global = readGeoreference(
+        composed(
+          withoutArea(),
+          {},
+          { geometricError: 0, boundingVolume: { sphere: [0, 0, 0, 7e6] } },
+        ),
+      )!;
+      expect(global.areaOfInterest).toBeUndefined();
+      expect(global.sources.areaOfInterest).toBeUndefined();
+    });
+
+    it("keeps ours as an override", () => {
+      const g = readGeoreference(
+        composed(
+          rigid(),
+          {},
+          {
+            geometricError: 0,
+            boundingVolume: { region: [0, 0, 0.1, 0.1, 0, 1] },
+          },
+        ),
+      )!;
+      expect(g.areaOfInterest).toEqual({
+        west: -122.5,
+        south: 37.5,
+        east: -121.5,
+        north: 38.2,
+      });
+      expect(g.sources.areaOfInterest).toBe(`${ROOT}.areaOfInterest`);
+    });
+  });
+
+  describe("the old name", () => {
+    it("warns about EXT_engineering_frame but loads it, naming its paths", () => {
+      const json = {
+        ...tileset(rigid()),
+        extensions: { EXT_engineering_frame: rigid() },
+      };
+      const g = readGeoreference(json)!;
+      expect(g.name).toBe("Mainline");
+      expect(g.warnings).toContain(RENAMED_WARNING);
+      expect(RENAMED_WARNING).toBe(
+        "EXT_engineering_frame is renamed BENTLEY_engineering_frame",
+      );
+      expect(g.sources.declaration).toBe("extensions.EXT_engineering_frame");
+      expect(
+        refusal({
+          extensions: {
+            EXT_engineering_frame: { ...rigid(), placement: { mode: "x" } },
+          },
+        }).path,
+      ).toBe("extensions.EXT_engineering_frame.placement.mode");
+    });
+
+    it("refuses both names at once", () => {
+      expect(
+        refusal({
+          extensions: {
+            EXT_engineering_frame: rigid(),
+            BENTLEY_engineering_frame: rigid(),
+          },
+        }).path,
+      ).toBe("extensions.EXT_engineering_frame");
+    });
+  });
+
+  describe("BENTLEY_alignments", () => {
+    const definitions: AlignmentDefinition[] = [
+      CORRIDOR_ALIGNMENT,
+      {
+        name: "Ramp",
+        start: [6_081_000.25, 2_109_500.5],
+        startAzimuth: -0.3,
+        startStation: 0,
+        horizontal: [
+          { kind: "line", length: 100 },
+          {
+            kind: "spiral",
+            length: 50,
+            startRadius: Infinity,
+            endRadius: -300,
+          },
+          { kind: "arc", length: 75.5, radius: -300 },
+          {
+            kind: "spiral",
+            length: 50,
+            startRadius: -300,
+            endRadius: -Infinity,
+          },
+        ],
+        vertical: {
+          startStation: 0,
+          startElevation: 12.5,
+          segments: [
+            { kind: "grade", length: 100, grade: 0.03 },
+            {
+              kind: "parabola",
+              length: 175.5,
+              startGrade: 0.03,
+              endGrade: -0.01,
+            },
+          ],
+        },
+      },
+    ];
+
+    it("round-trips AlignmentDefinitions through IFC 4.3's segment types", () => {
+      const extension = JSON.parse(
+        JSON.stringify(alignmentsExtension(definitions)),
+      );
+      const horizontal = extension.alignments[1].horizontal;
+      expect(horizontal.map((h: { type: string }) => h.type)).toEqual([
+        "LINE",
+        "CLOTHOID",
+        "CIRCULARARC",
+        "CLOTHOID",
+      ]);
+      expect(horizontal[1].startRadius).toBeNull();
+      expect(
+        extension.alignments[1].vertical.segments.map(
+          (v: { type: string }) => v.type,
+        ),
+      ).toEqual(["CONSTANTGRADIENT", "PARABOLICARC"]);
+      const withoutAlignments = rigid();
+      delete withoutAlignments.alignments;
+      const g = readGeoreference(
+        composed(withoutAlignments, { [ALIGNMENTS_EXTENSION]: extension }),
+      )!;
+      expect(g.alignments).toEqual(
+        definitions.map((d) => ({
+          ...d,
+          // A tangent end reads back as +Infinity (JSON's null has no sign);
+          // the alignment treats either as a tangent.
+          horizontal: d.horizontal.map((h) =>
+            h.kind === "spiral"
+              ? {
+                  ...h,
+                  startRadius: Number.isFinite(h.startRadius)
+                    ? h.startRadius
+                    : Infinity,
+                  endRadius: Number.isFinite(h.endRadius)
+                    ? h.endRadius
+                    : Infinity,
+                }
+              : h,
+          ),
+        })),
+      );
+      expect(g.sources.alignments).toBe("extensions.BENTLEY_alignments");
+      expect(g.warnings).toEqual([]);
+    });
+
+    it("reads the old in-frame alignments with a warning, and refuses both", () => {
+      const g = readGeoreference(tileset(rigid()))!;
+      expect(g.alignments).toHaveLength(1);
+      expect(g.sources.alignments).toBe(`${ROOT}.alignments`);
+      expect(g.warnings.join("\n")).toMatch(
+        /alignments is moved to extensions\.BENTLEY_alignments/,
+      );
+      expect(
+        refusal(
+          composed(rigid(), {
+            [ALIGNMENTS_EXTENSION]: alignmentsExtension(definitions),
+          }),
+        ).path,
+      ).toBe(`${ROOT}.alignments`);
+    });
+
+    it("refuses an unknown segment type or a bad field, naming its path, and more than 64", () => {
+      const withoutAlignments = rigid();
+      delete withoutAlignments.alignments;
+      const bad = (mutate: (a: Record<string, unknown>) => void) => {
+        const extension = JSON.parse(
+          JSON.stringify(alignmentsExtension([CORRIDOR_ALIGNMENT])),
+        );
+        mutate(extension.alignments[0]);
+        return refusal(
+          composed(withoutAlignments, { [ALIGNMENTS_EXTENSION]: extension }),
+        ).path;
+      };
+      const A = "extensions.BENTLEY_alignments.alignments[0]";
+      expect(
+        bad((a) => {
+          (a.horizontal as Record<string, unknown>[])[0]!.type = "CUBIC";
+        }),
+      ).toBe(`${A}.horizontal[0].type`);
+      expect(
+        bad((a) => {
+          (a.horizontal as Record<string, unknown>[])[0]!.type = "line";
+        }),
+      ).toBe(`${A}.horizontal[0].type`);
+      expect(
+        bad((a) => {
+          (
+            (a.vertical as Record<string, unknown>).segments as Record<
+              string,
+              unknown
+            >[]
+          )[0]!.type = "CIRCULARARC";
+        }),
+      ).toBe(`${A}.vertical.segments[0].type`);
+      expect(
+        bad((a) => {
+          a.startAzimuth = "north";
+        }),
+      ).toBe(`${A}.startAzimuth`);
+      const many = alignmentsExtension(
+        Array.from({ length: 65 }, () => CORRIDOR_ALIGNMENT),
+      );
+      expect(
+        refusal(composed(withoutAlignments, { [ALIGNMENTS_EXTENSION]: many }))
+          .path,
+      ).toBe("extensions.BENTLEY_alignments.alignments");
+    });
   });
 });

@@ -16,7 +16,10 @@ import { featureName } from "../src/io/features.ts";
 import { splitGlb } from "../src/io/glb.ts";
 import { parseGltf } from "../src/io/gltfParse.ts";
 import { treeFromJson } from "../src/streaming/Tile.ts";
-import { ENGINEERING_FRAME_EXTENSION } from "../src/engineering/georeference.ts";
+import {
+  ALIGNMENTS_EXTENSION,
+  ENGINEERING_FRAME_EXTENSION,
+} from "../src/engineering/georeference.ts";
 
 // A quad of two triangles, one per feature (glTF Y-up).
 const mesh = () => ({
@@ -212,14 +215,24 @@ describe("tilesetJson", () => {
     );
   });
 
-  it("declares EXT_engineering_frame where the reader looks", () => {
+  it("declares BENTLEY_engineering_frame and BENTLEY_alignments where the reader looks", () => {
     const extension = { name: "Mainline", placement: { mode: "reprojected" } };
-    const json = tilesetJson(tree, { extension }) as {
+    const alignments = { alignments: [] };
+    const json = tilesetJson(tree, {
+      extensions: {
+        [ENGINEERING_FRAME_EXTENSION]: extension,
+        [ALIGNMENTS_EXTENSION]: alignments,
+      },
+    }) as {
       extensionsUsed: string[];
       extensions: Record<string, unknown>;
     };
-    expect(json.extensionsUsed).toEqual([ENGINEERING_FRAME_EXTENSION]);
+    expect(json.extensionsUsed).toEqual([
+      "BENTLEY_engineering_frame",
+      "BENTLEY_alignments",
+    ]);
     expect(json.extensions[ENGINEERING_FRAME_EXTENSION]).toBe(extension);
+    expect(json.extensions[ALIGNMENTS_EXTENSION]).toBe(alignments);
     const without = tilesetJson(tree, {}) as Record<string, unknown>;
     expect(without.extensionsUsed).toBeUndefined();
     expect(without.extensions).toBeUndefined();

@@ -49,13 +49,15 @@ function tile(node, transform, seen) {
 
 /**
  * @param {TileNode} root
- * @param {{ extension?: object, transform?: number[] }} options `transform`
- *   is the root tile's transform (a rigid placement's matrix) and
- *   `extension` the `EXT_engineering_frame` declaration.
+ * @param {{ extensions?: Record<string, object>, transform?: number[] }}
+ *   options `transform` is the root tile's transform (a rigid placement's
+ *   matrix) and `extensions` the tileset-level extensions by name (the
+ *   `BENTLEY_engineering_frame` declaration and `BENTLEY_alignments`), each
+ *   listed in `extensionsUsed`.
  * @returns {object}
  */
 export function tilesetJson(root, options = {}) {
-  const { extension, transform } = options;
+  const { extensions, transform } = options;
   if (
     transform !== undefined &&
     root.transform !== undefined &&
@@ -69,9 +71,9 @@ export function tilesetJson(root, options = {}) {
     geometricError: root.geometricError,
     root: tile(root, transform ?? root.transform, new Set()),
   };
-  if (extension !== undefined) {
-    json.extensionsUsed = ["EXT_engineering_frame"];
-    json.extensions = { EXT_engineering_frame: extension };
+  if (extensions !== undefined && Object.keys(extensions).length > 0) {
+    json.extensionsUsed = Object.keys(extensions);
+    json.extensions = { ...extensions };
   }
   return json;
 }

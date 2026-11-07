@@ -1,6 +1,7 @@
 // A rigid declaration checked against the root transform (plan 4b task 11,
 // Review Focus 3's anchor case), on the California zone 3 ftUS + NAVD88
-// frame. `npm run test:data` runs it.
+// frame; and declarations whose CRS comes from ESRI_crs or
+// EXT_geospatial_crs_source alone. `npm run test:data` runs it.
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
@@ -56,12 +57,16 @@ function rotatedAbout(m: m4.Mat4, about: ArrayLike<number>, angle: number) {
  * The parts of a loaded Tileset3D that georeferenceTileset reads, around a
  * parsed declaration (the unit test runs the real class).
  */
-function standIn(rootTransform: m4.Mat4, declaration: unknown): Tileset3D {
+function standIn(
+  rootTransform: m4.Mat4,
+  declaration: unknown,
+  others: Record<string, unknown> = {},
+): Tileset3D {
   return {
     url: "https://tiles.test/corridor/tileset.json",
     warnings: new Set<string>(),
     georeference: readGeoreference({
-      extensions: { [ENGINEERING_FRAME_EXTENSION]: declaration },
+      extensions: { [ENGINEERING_FRAME_EXTENSION]: declaration, ...others },
     }),
     modelMatrix: m4.mat4(),
     root: { transform: rootTransform },
@@ -198,7 +203,7 @@ describe("a wkt2 CRS reference", () => {
     // WKT2 in form, but a node PROJ's grammar doesn't have.
     const bad = declared(good.replace("CS[", 'NOTANODE["x"],CS['));
     await expect(georeferenceTileset(bad, { proj })).rejects.toThrow(
-      /extensions\.EXT_engineering_frame\.crs\.extensions\.EXT_geospatial_crs_wkt2\.wkt2: .*strict WKT2/,
+      /extensions\.BENTLEY_engineering_frame\.crs\.extensions\.EXT_geospatial_crs_wkt2\.wkt2: .*strict WKT2/,
     );
     expect(bad.placement).toBeUndefined();
     expect([...bad.warnings].join("\n")).toContain("strict WKT2");
@@ -220,5 +225,75 @@ describe("a wkt2 CRS reference", () => {
     const placed = await georeferenceTileset(declared(good), { proj });
     expect(placed.mode).toBe("reprojected");
     expect(placed.frame.units.projected).toBe(true);
+  });
+});
+
+describe("a CRS from ESRI_crs or EXT_geospatial_crs_source alone", () => {
+  it("places a rigid tileset whose CRS is only ESRI_crs's", async () => {
+    const proj = await loadProj({ base });
+    const matrix = placeRigid(await californiaFrame(), ANCHOR).rigid!.matrix;
+    const tileset = standIn(
+      matrix,
+      { name: "Corridor", placement: { mode: "rigid", anchor: ANCHOR } },
+      {
+        ESRI_crs: { wkid: 6420, vcsWkid: 6360 },
+        "3DTILES_ellipsoid": {
+          body: "Earth",
+          radii: [6378137.0, 6378137.0, 6356752.3142451793],
+        },
+      },
+    );
+    expect(tileset.georeference!.sources.crs).toBe("extensions.ESRI_crs");
+    const placement = await georeferenceTileset(tileset, { proj });
+    expect(placement.mode).toBe("rigid");
+    expect(placement.frame.definition.crs).toEqual({
+      format: "wkid",
+      authority: "EPSG",
+      wkid: 6420,
+      vcsWkid: 6360,
+    });
+    const back = placement.designOf(placement.displayed(ANCHOR));
+    for (let i = 0; i < 3; i++) {
+      expect(Math.abs(back[i]! - ANCHOR[i]!)).toBeLessThan(1e-9);
+    }
+  });
+
+  it("places a tileset whose CRS is only EXT_geospatial_crs_source's WKT2, through the strict parser", async () => {
+    const proj = await loadProj({ base });
+    const good = proj.proj_as_wkt(
+      proj.proj_create("EPSG:32611"),
+      proj.PJ_WKT2_2019,
+    );
+    const source = (wkt2: string) => ({
+      EXT_geospatial_crs_source: {
+        format: "wkt2",
+        extensions: { EXT_geospatial_crs_wkt2: { wkt2 } },
+      },
+    });
+    const placed = await georeferenceTileset(
+      standIn(m4.mat4(), { placement: { mode: "reprojected" } }, source(good)),
+      { proj },
+    );
+    expect(placed.mode).toBe("reprojected");
+    expect(placed.frame.units.projected).toBe(true);
+    // WKT2 in form, but not PROJ's grammar: refused, naming #131's path.
+    const bad = standIn(
+      m4.mat4(),
+      { placement: { mode: "reprojected" } },
+      source(good.replace("CS[", 'NOTANODE["x"],CS[')),
+    );
+    await expect(georeferenceTileset(bad, { proj })).rejects.toThrow(
+      /extensions\.EXT_geospatial_crs_source\.extensions\.EXT_geospatial_crs_wkt2\.wkt2: .*strict WKT2/,
+    );
+    expect(bad.placement).toBeUndefined();
+    // And ESRI_crs's WKT2 the same way.
+    const esri = standIn(
+      m4.mat4(),
+      { placement: { mode: "reprojected" } },
+      { ESRI_crs: { wkt2: good.replace("CS[", 'NOTANODE["x"],CS[') } },
+    );
+    await expect(georeferenceTileset(esri, { proj })).rejects.toThrow(
+      /extensions\.ESRI_crs\.wkt2: .*strict WKT2/,
+    );
   });
 });

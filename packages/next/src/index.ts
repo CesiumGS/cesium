@@ -174,12 +174,17 @@ export {
   type TilesetPlacement,
 } from "./engineering/placement.ts";
 export {
+  ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
   GEOREFERENCE_PATH,
   GeoreferenceError,
+  OLD_ENGINEERING_FRAME_EXTENSION,
+  RENAMED_WARNING,
+  alignmentsExtension,
   parseGeoreference,
   type DeclaredPlacement,
   type GeoreferenceBodies,
+  type GeoreferenceSources,
   type TilesetGeoreference,
 } from "./engineering/georeference.ts";
 export {

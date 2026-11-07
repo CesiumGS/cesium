@@ -1,4 +1,4 @@
-// Placing a tileset by its EXT_engineering_frame declaration (plan 4b task
+// Placing a tileset by its BENTLEY_engineering_frame declaration (plan 4b task
 // 11): the part that needs the engineering modules (EngineeringFrame, PROJ),
 // kept apart from the parser (georeference.ts) so a page that streams
 // tilesets without georeferencing them doesn't load it.
@@ -28,11 +28,14 @@ import type { GridSource } from "./proj.ts";
 import type { ProjApi } from "./projApi.ts";
 
 /**
- * The `EXT_engineering_frame` declaration of a parsed tileset.json, or
- * undefined when it has none (`parseGeoreference` with EARTH and MOON).
- * Throws a `GeoreferenceError` naming the JSON path for an unknown mode,
- * format or body, a missing `crs` or `placement`, a non-finite number, a
- * `wkt2` that isn't WKT2 in form (`wkt2Problem`: a PROJ string, AUTH:CODE or
+ * The `BENTLEY_engineering_frame` declaration of a parsed tileset.json
+ * (or its old name, `EXT_engineering_frame`, with a warning in `warnings`),
+ * composed with EXT_geospatial_crs_source, ESRI_crs, 3DTILES_ellipsoid and
+ * BENTLEY_alignments, or undefined when it has none (`parseGeoreference`
+ * with EARTH and MOON). Throws a `GeoreferenceError` naming the JSON path
+ * for an unknown mode, format or body, no CRS anywhere, CRSs or bodies that
+ * disagree, an ellipsoid neither EARTH's nor MOON's, a missing `placement`,
+ * a non-finite number, a `wkt2` (wherever declared) that isn't WKT2 in form (`wkt2Problem`: a PROJ string, AUTH:CODE or
  * PROJJSON) or is over 65,536 characters, more than 64 alignments (or
  * 4,096 elements in one), a `pipeline` the reader refuses (over 4,096
  * characters or 32 steps, an operation or parameter outside its
@@ -91,17 +94,19 @@ const MAX_SHOWN = 200;
  * tileset's root transform is its placement's matrix: the root transform
  * must draw the anchor within 1 mm of `placement.displayed(anchor)`, and each
  * of its columns must be within 1e-9 (relative to that column's length) of
- * `rigid.matrix`'s.
+ * `rigid.matrix`'s. `declaration` is the declaration's JSON path (the old
+ * name's, for a tileset that uses it).
  */
 export function checkRigidTransform(
   placement: TilesetPlacement,
   rootTransform: Mat4,
+  declaration: string = GEOREFERENCE_PATH,
 ): void {
   const rigid = placement.rigid;
   if (placement.mode !== "rigid" || rigid === undefined) {
     throw new Error("checkRigidTransform: the placement isn't rigid");
   }
-  const path = `${GEOREFERENCE_PATH}.placement.anchor`;
+  const path = `${declaration}.placement.anchor`;
   const a = rigid.anchor;
   const m = rootTransform;
   const shownAt = placement.displayed(a);
@@ -145,7 +150,7 @@ const isIdentity = (m: ArrayLike<number>) => {
 };
 
 /**
- * Places a tileset by its `EXT_engineering_frame` declaration: loads the
+ * Places a tileset by its `BENTLEY_engineering_frame` declaration: loads the
  * frame (`EngineeringFrame.load`, named by the declaration, else the
  * tileset's URL, with its declared pipeline or geoid fallback), builds the
  * declared placement, checks a rigid one against `tileset.root.transform`
@@ -157,7 +162,8 @@ const isIdentity = (m: ArrayLike<number>) => {
  *  - a declared pipeline naming a grid that isn't a current entry of
  *    `options.grids`' catalog, or any pipeline without `options.grids`
  *    (`checkDeclaredGrids`);
- *  - a declared WKT2 that PROJ's strict WKT parser refuses (`strictWkt2`);
+ *  - a declared WKT2 (ours, ESRI_crs's or EXT_geospatial_crs_source's)
+ *    that PROJ's strict WKT parser refuses (`strictWkt2`);
  *  - one whose `modelMatrix` isn't the identity, before the frame loads or
  *    after (`root.transform` includes it, and a change would leave the
  *    placement no longer what is drawn);
@@ -209,7 +215,8 @@ export async function georeferenceTileset(
     } catch (error) {
       return refuse(
         new GeoreferenceError(
-          `${GEOREFERENCE_PATH}.crs.extensions.EXT_geospatial_crs_wkt2.wkt2`,
+          declared.sources.wkt2 ??
+            `${declared.sources.declaration}.crs.extensions.EXT_geospatial_crs_wkt2.wkt2`,
           (error as Error).message,
         ),
       );
@@ -254,7 +261,11 @@ export async function georeferenceTileset(
   try {
     if (declared.placement.mode === "rigid") {
       placement = placeRigid(frame, declared.placement.anchor);
-      checkRigidTransform(placement, tileset.root.transform);
+      checkRigidTransform(
+        placement,
+        tileset.root.transform,
+        declared.sources.declaration,
+      );
     } else {
       placement = placeReprojected(frame);
     }
@@ -263,7 +274,7 @@ export async function georeferenceTileset(
       error instanceof GeoreferenceError
         ? error
         : new GeoreferenceError(
-            `${GEOREFERENCE_PATH}.placement.anchor`,
+            `${declared.sources.declaration}.placement.anchor`,
             `the frame can't place the anchor (${(error as Error).message.slice(0, MAX_SHOWN)})`,
           ),
     );
