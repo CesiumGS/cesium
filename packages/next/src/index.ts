@@ -134,7 +134,7 @@ export {
   BudgetedSelection,
   type BudgetedOptions,
 } from "./streaming/Budgeted.ts";
-export { Tile, tileHeaderKey } from "./streaming/Tile.ts";
+export { Tile, tileHeaderKey, type TileGeometry } from "./streaming/Tile.ts";
 export {
   createBillboard,
   createBox,
@@ -161,9 +161,11 @@ export {
   RigidPlacement,
   designPoint,
   type DesignPoint,
+  type DesignPointObtained,
   type EngineeringFrameDefinition,
   type EngineeringFrameLoadOptions,
   type SiteTransform,
+  type SnapKind,
 } from "./engineering/EngineeringFrame.ts";
 export {
   placeReprojected,
@@ -202,6 +204,13 @@ export {
   type DesignPick,
   type PickView,
 } from "./engineering/pick.ts";
+export {
+  ClientSnapService,
+  GEOMETRY_NOT_RETAINED,
+  type SnapRequest,
+  type SnapResult,
+  type SnapService,
+} from "./engineering/snap.ts";
 export {
   gridSource,
   loadedGrids,

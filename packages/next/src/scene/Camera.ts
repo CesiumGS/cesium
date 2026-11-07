@@ -192,6 +192,48 @@ export class Camera {
   }
 }
 
+/** Where a camera is and which way it looks (Earth-fixed, float64). */
+export interface CameraPose {
+  readonly position: ArrayLike<number>;
+  readonly direction: ArrayLike<number>;
+  readonly up: ArrayLike<number>;
+  readonly right: ArrayLike<number>;
+}
+
+/**
+ * Projects an Earth-fixed point for a camera pose with vertical field of view
+ * `fovy` onto a view of `width` × `height` pixels: writes x and y (from the
+ * top-left, y down) into `out` and returns the point's depth along the view
+ * direction, in metres. A depth that is not positive means the point is not in
+ * front of the camera, and `out` is then left as it was.
+ */
+export function projectToPixel(
+  pose: CameraPose,
+  fovy: number,
+  width: number,
+  height: number,
+  point: ArrayLike<number>,
+  out: Float64Array,
+): number {
+  const e = pose.position,
+    d = pose.direction,
+    u = pose.up,
+    r = pose.right;
+  const x = point[0]! - e[0]!,
+    y = point[1]! - e[1]!,
+    z = point[2]! - e[2]!;
+  const depth = x * d[0]! + y * d[1]! + z * d[2]!;
+  if (!(depth > 0)) {
+    return depth;
+  }
+  const t = Math.tan(fovy / 2) * depth;
+  const ndcX = (x * r[0]! + y * r[1]! + z * r[2]!) / (t * (width / height));
+  const ndcY = (x * u[0]! + y * u[1]! + z * u[2]!) / t;
+  out[0] = ((ndcX + 1) / 2) * width;
+  out[1] = ((1 - ndcY) / 2) * height;
+  return depth;
+}
+
 const scratchMat = m4.mat4();
 const scratchA = v3.vec3();
 const scratchB = v3.vec3();

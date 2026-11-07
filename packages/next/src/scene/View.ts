@@ -1,4 +1,4 @@
-import { Camera } from "./Camera.ts";
+import { Camera, projectToPixel } from "./Camera.ts";
 import type { World } from "./World.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
 import type { ViewLighting } from "../render/layout.ts";
@@ -482,6 +482,28 @@ export class View {
   get aspect(): number {
     const rect = this.pixelRect();
     return rect.width / rect.height;
+  }
+
+  /**
+   * Where an Earth-fixed position shows in this view with its current camera:
+   * CSS pixels from the view's top-left (as `pickDesign` takes them), or
+   * undefined when the position is behind the camera. Off-screen positions
+   * in front of it give pixels outside the view.
+   */
+  toPixel(position: ArrayLike<number>): Float64Array | undefined {
+    const rect = this.pixelRect();
+    const ratio =
+      this.target instanceof CanvasTarget ? this.target.pixelRatio : 1;
+    const out = new Float64Array(2);
+    const depth = projectToPixel(
+      this.camera,
+      this.camera.fovy(rect.width / rect.height),
+      rect.width / ratio,
+      rect.height / ratio,
+      position,
+      out,
+    );
+    return depth > 0 ? out : undefined;
   }
 
   /** True when a point in target pixels falls inside this view. */

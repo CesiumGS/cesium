@@ -3,7 +3,7 @@
  * bounding volumes in Earth-fixed coordinates (see volumes.ts). Content
  * state lives here too; selection policies only read the tree.
  */
-import type { ClipHandle } from "../scene/World.ts";
+import type { ClipHandle, DrawHandle } from "../scene/World.ts";
 import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
@@ -21,6 +21,19 @@ import {
 } from "./volumes.ts";
 
 export type Refine = "ADD" | "REPLACE";
+
+/**
+ * One draw's triangles as loaded (`TilesetOptions.retainGeometry`):
+ * `positions` (xyz per vertex) and `indices` (three per triangle) in the
+ * draw's model space, and `matrix` its float64 Earth-fixed world matrix
+ * (column-major).
+ */
+export interface TileGeometry {
+  readonly draw: DrawHandle;
+  readonly positions: Float32Array;
+  readonly indices: Uint32Array;
+  readonly matrix: Float64Array;
+}
 
 export type ContentState = "unloaded" | "loading" | "ready" | "failed";
 
@@ -105,6 +118,11 @@ export class Tile {
    * `Tileset3D.placement` (where design coordinates are drawn).
    */
   placement?: ModelPlacement;
+  /**
+   * Its loaded triangles, one entry per draw, kept with
+   * `TilesetOptions.retainGeometry` (for snapping) and released on unload.
+   */
+  geometry?: TileGeometry[];
   /** Debug tint currently on the draws (linear RGBA; none is white). */
   debugColor?: readonly number[];
   /** Bytes of the loaded content (geometry + textures). */

@@ -2569,6 +2569,23 @@ export class World {
   }
 
   /**
+   * A draw's Earth-fixed matrix (float64): its transform's `worldMatrix`,
+   * shared or its own. Undefined once the draw is removed.
+   */
+  drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
+    handle: DrawHandle,
+    out: T = new Float64Array(16) as T,
+  ): T | undefined {
+    if (!this.hasDraw(handle)) {
+      return undefined;
+    }
+    const t = this.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
+    this.resolveTransforms();
+    out.set(this.transformWorld.subarray(t * 16, t * 16 + 16));
+    return out;
+  }
+
+  /**
    * Removes a transform and its descendants. Draws placed by them must be
    * removed first.
    */

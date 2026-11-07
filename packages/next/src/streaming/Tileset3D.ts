@@ -41,6 +41,7 @@ import {
   loadTilesetJson,
   treeFromJson,
   type Tile,
+  type TileGeometry,
   type TileJson,
   type TileTree,
 } from "./Tile.ts";
@@ -209,6 +210,12 @@ export interface TilesetOptions extends BudgetedOptions {
    * frame and mode, since the engine never guesses one.
    */
   placement?: TilesetPlacement;
+  /**
+   * Keeps each loaded tile's triangles on the CPU (`Tile.geometry`) for
+   * client-side snapping (`ClientSnapService`), released when the tile
+   * unloads. Off by default: other tilesets keep no copy.
+   */
+  retainGeometry?: boolean;
 }
 
 export interface TilesetStats {
@@ -289,6 +296,8 @@ const WHITE = [1, 1, 1, 1] as const;
 
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
+  /** Whether loaded tiles keep their triangles (`TilesetOptions.retainGeometry`). */
+  readonly retainGeometry: boolean;
   readonly events = new Emitter<TilesetEvents>();
   /**
    * tileset.json's top-level `extensions` (none for terrain), frozen at the
@@ -389,6 +398,11 @@ export class Tileset3D implements TileTree {
     );
     this.delta = delta;
     this.world.setTransform(this.transform, delta);
+    for (const tile of this.loaded) {
+      for (const g of tile.geometry ?? []) {
+        this.world.drawMatrix(g.draw, g.matrix);
+      }
+    }
     this.moveVolumes(this.root, change);
     this.lastChange = this.frame;
     if (changed && this.placement !== undefined) {
@@ -751,6 +765,7 @@ export class Tileset3D implements TileTree {
     }
     this.options = options;
     this.collision = options.enableCollision ?? false;
+    this.retainGeometry = options.retainGeometry ?? false;
     this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
     this.transform = world.addTransform(m4.mat4());
     this.policy = createSelection(options, source);
@@ -1429,6 +1444,12 @@ export class Tileset3D implements TileTree {
           });
         }
         tile.bytes = model.bytes;
+        if (this.retainGeometry) {
+          tile.geometry = this.retain(asset, placement);
+          for (const g of tile.geometry) {
+            tile.bytes += g.positions.byteLength + g.indices.byteLength;
+          }
+        }
         budget.bytes -= model.bytes;
         budget.uploads++;
         const uploaded = performance.now();
@@ -1470,7 +1491,7 @@ export class Tileset3D implements TileTree {
         }
         this.stats.loaded++;
         this.stats.bytes += tile.bytes;
-        this.stats.bytesTotal += tile.bytes;
+        this.stats.bytesTotal += model.bytes;
       } catch (error) {
         if (isCapacityError(error)) {
           // A pool is full, not the content bad (§13.15): the upload took
@@ -1563,6 +1584,40 @@ export class Tileset3D implements TileTree {
     this.capacityFailed = false;
   }
 
+  /**
+   * A placed asset's triangles for `Tile.geometry`: per draw (placing
+   * keeps the asset's draw order), skipping lines and instanced draws.
+   * Views into a larger buffer are copied so they don't keep it alive.
+   */
+  private retain(asset: GltfAsset, placement: ModelPlacement): TileGeometry[] {
+    const kept: TileGeometry[] = [];
+    if (asset.instances !== undefined) {
+      return kept;
+    }
+    asset.draws.forEach((d, i) => {
+      const mesh = asset.meshes[d.mesh];
+      const draw = placement.draws[i];
+      const matrix = draw && this.world.drawMatrix(draw);
+      if (
+        mesh === undefined ||
+        matrix === undefined ||
+        d.instances !== undefined ||
+        (mesh.topology ?? "triangle-list") !== "triangle-list"
+      ) {
+        return;
+      }
+      const own = <T extends Float32Array | Uint32Array>(a: T): T =>
+        a.byteLength === a.buffer.byteLength ? a : (a.slice() as T);
+      kept.push({
+        draw: draw!,
+        positions: own(mesh.positions),
+        indices: own(mesh.indices),
+        matrix,
+      });
+    });
+    return kept;
+  }
+
   private unload(tile: Tile): void {
     this.source?.unloadTile?.(tile);
     if (tile.purpose) {
@@ -1578,6 +1633,7 @@ export class Tileset3D implements TileTree {
       tile.placement.remove();
       tile.placement = undefined;
     }
+    tile.geometry = undefined;
     this.stats.bytes -= tile.bytes;
     this.stats.loaded--;
     if (tile.summary) {

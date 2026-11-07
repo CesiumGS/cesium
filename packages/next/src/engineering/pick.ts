@@ -1,6 +1,7 @@
 import type { Body } from "../scene/Body.ts";
 import type { PickResult } from "../scene/View.ts";
 import type { DrawHandle } from "../scene/World.ts";
+import type { Tile } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
   sphereDistance,
@@ -8,13 +9,15 @@ import {
   volumeObb,
   type TileVolume,
 } from "../streaming/volumes.ts";
+import type { CameraPose } from "../scene/Camera.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
 
 /**
  * The part of a `View` that `pickDesign` uses, so tests can pass fakes.
  * `pick` and `pickPosition` take target (device) pixels relative to the
  * view's top-left; `camera.fovy` is the vertical field of view for an aspect
- * ratio (the scene's `Camera` stores the larger dimension's).
+ * ratio (the scene's `Camera` stores the larger dimension's), and
+ * `direction`, `up` and `right` its unit axes (Earth-fixed).
  */
 export interface PickView {
   pick(x: number, y: number): Promise<PickResult | undefined>;
@@ -22,6 +25,9 @@ export interface PickView {
   readonly body: Body;
   readonly camera: {
     readonly position: ArrayLike<number>;
+    readonly direction: ArrayLike<number>;
+    readonly up: ArrayLike<number>;
+    readonly right: ArrayLike<number>;
     /** Bumped on every camera change. */
     readonly version: number;
     fovy(aspect: number): number;
@@ -54,6 +60,31 @@ export interface DesignPick {
   readonly design?: DesignPoint;
   /** Metres: one CSS pixel's footprint at the hit. */
   readonly tolerance: number;
+}
+
+/**
+ * @internal The camera a pick's position and feature were read with, for
+ * projecting into that same frame (`projectToPixel`).
+ */
+export interface PickCamera extends CameraPose {
+  readonly position: Float64Array;
+  readonly direction: Float64Array;
+  readonly up: Float64Array;
+  readonly right: Float64Array;
+  readonly fovy: number;
+  /** The view's size in CSS pixels. */
+  readonly width: number;
+  readonly height: number;
+}
+
+/** @internal `pickDesign`'s answer, with what snapping builds on. */
+export interface FramedPick {
+  readonly pick: DesignPick;
+  /** Absent when the camera kept moving (the pick then has no feature). */
+  readonly camera?: PickCamera;
+  /** The hit draw and its tile, on a listed tileset. */
+  readonly draw?: DrawHandle;
+  readonly tile?: Tile;
 }
 
 function targetPixelRatio(target: PickView["target"]): number {
@@ -97,6 +128,24 @@ export async function pickDesign(
   y: number,
   tilesets: readonly Tileset3D[],
 ): Promise<DesignPick | undefined> {
+  return (await pickInFrame(view, x, y, tilesets))?.pick;
+}
+
+const copy3 = (v: ArrayLike<number>) =>
+  Float64Array.from([v[0]!, v[1]!, v[2]!]);
+const same3 = (a: ArrayLike<number>, b: ArrayLike<number>) =>
+  a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+
+/**
+ * @internal `pickDesign`, also giving the camera the answer was read with,
+ * and the hit draw and tile.
+ */
+export async function pickInFrame(
+  view: PickView,
+  x: number,
+  y: number,
+  tilesets: readonly Tileset3D[],
+): Promise<FramedPick | undefined> {
   const ratio = targetPixelRatio(view.target);
   const px = x * ratio;
   const py = y * ratio;
@@ -105,11 +154,10 @@ export async function pickDesign(
   for (let attempt = 0; attempt < 2; attempt++) {
     // The camera of the frame the position is read in.
     const version = cam.version;
-    const eye = Float64Array.from([
-      cam.position[0]!,
-      cam.position[1]!,
-      cam.position[2]!,
-    ]);
+    const eye = copy3(cam.position);
+    const direction = copy3(cam.direction);
+    const up = copy3(cam.up);
+    const right = copy3(cam.right);
     const rect = view.pixelRect();
     const height = rect.height;
     const fovy = cam.fovy(rect.width / height);
@@ -128,18 +176,29 @@ export async function pickDesign(
     const tolerance = (distance * 2 * Math.tan(fovy / 2)) / (height / ratio);
     const moved =
       cam.version !== version ||
-      cam.position[0] !== eye[0] ||
-      cam.position[1] !== eye[1] ||
-      cam.position[2] !== eye[2];
+      !same3(cam.position, eye) ||
+      !same3(cam.direction, direction) ||
+      !same3(cam.up, up);
     if (moved) {
       if (attempt === 0) {
         continue;
       }
-      return { body: view.body, position, tolerance };
+      return { pick: { body: view.body, position, tolerance } };
     }
+    const camera: PickCamera = {
+      position: eye,
+      direction,
+      up,
+      right,
+      fovy,
+      width: rect.width / ratio,
+      height: height / ratio,
+    };
 
     let tileset: Tileset3D | undefined;
     let volume: TileVolume | undefined;
+    let hitDraw: DrawHandle | undefined;
+    let hitTile: Tile | undefined;
     if (feature !== undefined) {
       const draw = view.world.feature(feature.featureId)?.draw;
       if (draw !== undefined) {
@@ -148,6 +207,8 @@ export async function pickDesign(
           if (tile !== undefined) {
             tileset = t;
             volume = tile.contentVolume ?? tile.volume;
+            hitDraw = draw;
+            hitTile = tile;
             break;
           }
         }
@@ -156,7 +217,7 @@ export async function pickDesign(
     const placement = tileset?.placement;
     const inside =
       volume !== undefined && nearVolume(volume, position, tolerance + 1);
-    return {
+    const pick: DesignPick = {
       body: view.body,
       position,
       ...(tileset !== undefined && { tileset }),
@@ -169,6 +230,11 @@ export async function pickDesign(
           }),
         }),
       tolerance,
+    };
+    return {
+      pick,
+      camera,
+      ...(hitDraw !== undefined && { draw: hitDraw, tile: hitTile }),
     };
   }
   throw new Error("unreachable");
