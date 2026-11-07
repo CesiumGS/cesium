@@ -15,12 +15,18 @@ export interface TilesetPlacement {
   /** The rigid transform; rigid placements only. */
   readonly rigid?: RigidPlacement;
   /** Body-fixed metres of a design point, as this placement draws it. */
-  displayed(design: ArrayLike<number>, out?: Float64Array): Float64Array;
+  displayed(
+    design: ArrayLike<number>,
+    out?: Float64Array<ArrayBuffer>,
+  ): Float64Array;
   /**
    * The design coordinates of a drawn position: the exact inverse of
    * `displayed`, so a measurement agrees with the CAD data in either mode.
    */
-  designOf(position: ArrayLike<number>, out?: Float64Array): Float64Array;
+  designOf(
+    position: ArrayLike<number>,
+    out?: Float64Array<ArrayBuffer>,
+  ): Float64Array;
   /**
    * `|displayed(design) - frame.toBodyFixed(design)|` in metres: how far this
    * placement draws the point from where it truly is. 0 when reprojected.
