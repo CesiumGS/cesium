@@ -340,6 +340,26 @@ site. Each scene names its camera and the rig it lands in:
 | earth-turns   | straight down the north pole (stop 2's); `geocentric`; lit from the camera | ITRF and GCRF only, axes named and pinned; exposure −1.5, −0.6 under 560 px (F43)         | the rate knob; paused until Play |
 | stand-on-moon | straight down the site's vertical (stop 6's), 3.5 s; `lunarSite`           | the site's triad at 15% of the camera's distance, and the lunar clock's gain as a callout | paused at 2026-01-01             |
 
+**The drone and the ship (Task 7)** add moving bodies: frames the app
+defines from a track with the library's `Frame` constructor
+(`scenarios/bodyFrame.ts` `trackFrame`: x along the horizontal velocity,
+y left, z up, then pitch and roll). The worker turns the reported heights
+into ellipsoidal ones through GEOID18 (or not: the datum knob) and sends
+them with the evaluation (`track`); the stage builds the same frames on the
+page (`SceneSpec.bodies`), so the triads, the drone's camera ray and the
+ship's mast and sight line are placed every frame from the page's own
+frames (`bodyLines.ts`), and a data test holds them to the worker's at
+sample instants. What the terrain says is the page's: the drone's spot is
+where its camera's ray meets the drawn terrain, read off a local placement
+the worker makes from PROJ (`footprint`); the ship's sight line to Harding
+Rock's buoy is traced on demand, and each minute of its track is traced in
+slices for the timeline's windows and the "Buoy clears the headland"
+moment (`buoyWindow.ts`). A moment may set knobs instead of the time (the
+drone's "Over the building"). Near the water the line passes within the
+drawn terrain's error (its per-level heuristic, ±19 m to ±38 m at the
+levels drawn), so the buoy reads "can't tell", never "in sight", unless the
+tiles are fine enough.
+
 **The panel, top to bottom, one scroll** (`panel/Scenarios.tsx`): the
 strip; the question as the tab's heading (`headline-sm`); the knobs; the
 frame tree; the answer; the route steps; the checks (Task 6c's order: the
@@ -1172,39 +1192,45 @@ reverse). Each part exports a `create…(deps)` that returns its API and a
 given; shared state is passed as an explicit object (`PageCore`, the label
 board, an overlay's `OverlayState`).
 
-| File                    | What it does                                                                                                                 |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `main.ts`               | `run`: the HUD host, the globe, the worker client, the scenario host, the clock's opening; builds and wires the parts below  |
-| `page.ts`               | `PageCore` (what every part is given), the panel model's source (`invalidate`), shared constants and helpers                 |
-| `frameData.ts`          | The frame data and the frames store's manifest, loaded on the main thread                                                    |
-| `treeState.ts`          | The frame tree at the clock's instant, its composed accuracy, the engineering node                                           |
-| `triadLayer.ts`         | The triads and the label board every part's labels go through                                                                |
-| `walkPath.ts`           | The selected frame's dotted walk on the globe                                                                                |
-| `overlayConfig.ts`      | The overlays' names, needs, the California grid and site, default lines (pure)                                               |
-| `overlayControl.ts`     | The overlays' state, worker requests, the 2 km lines, the inset, the legend's view                                           |
-| `rigidOverlay.ts`       | Stop 4's lines: layers and labels from the worker's geometry                                                                 |
-| `orionLayer.ts`         | Orion's path, placed with its frame as the clock runs, and its statements                                                    |
-| `orionTrack.ts`         | Orion's OEM on the page's thread: the dot's place every frame (the worker's catalog shares `orionFromOem`)                   |
-| `cameraViews.ts`        | Where each scenario, frame and stop frames the globe, and the orbit it lands in                                              |
-| `cameraRig.ts`          | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                       |
-| `scenarios/stage.ts`    | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                              |
-| `scenarios/checks.ts`   | A scenario's check rows on and off its checked setup, and each check's kind (pure; Task 6c)                                  |
-| `scenarios/sites.ts`    | The BIM site's CRSs, site grid and line, and the corridor's road and site (pure; shared by the page and the worker, Task 6a) |
-| `pointDrag.ts`          | The corridor's point, dragged on the globe: its hit target and the knobs it sets (Task 6a)                                   |
-| `sightLines.ts`         | A scenario's lines of sight over the drawn terrain: traced on demand, trailing height changes (Task 6b)                      |
-| `skyRay.ts`             | The line of sight up to the Moon or Orion, placed every frame at the shown instant (Task 6b)                                 |
-| `scenarios/pointing.ts` | Azimuth and elevation, and the pointing by hand: light time and aberration (pure; Task 6b)                                   |
-| `callouts.ts`           | The lunar clock's callout, Orion's marker and path label                                                                     |
-| `labelPanels.ts`        | The panels over the view the globe's labels keep clear of (pure placement, Task 4c)                                          |
-| `catalogRuns.ts`        | The stress catalog's runs and results                                                                                        |
-| `userCrs.ts`            | "Try your own": the ion asset and the bound-CRS checks                                                                       |
-| `pageReport.ts`         | The report's environment and the Report tab's lines                                                                          |
-| `panelModel.ts`         | The panel's model, built from every part                                                                                     |
-| `scenarioModel.ts`      | The scenario's part of the model (pure: freshness, published value, checks, route)                                           |
-| `globeSelection.ts`     | The selection on the globe (R14), Frame content (F), the links' known ids                                                    |
-| `deepLinks.ts`          | Back, forward and edited links (R15)                                                                                         |
-| `frameLoop.ts`          | The per-frame work                                                                                                           |
-| `panelActions.ts`       | What the panel asks of the page                                                                                              |
+| File                     | What it does                                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `main.ts`                | `run`: the HUD host, the globe, the worker client, the scenario host, the clock's opening; builds and wires the parts below  |
+| `page.ts`                | `PageCore` (what every part is given), the panel model's source (`invalidate`), shared constants and helpers                 |
+| `frameData.ts`           | The frame data and the frames store's manifest, loaded on the main thread                                                    |
+| `treeState.ts`           | The frame tree at the clock's instant, its composed accuracy, the engineering node                                           |
+| `triadLayer.ts`          | The triads and the label board every part's labels go through                                                                |
+| `walkPath.ts`            | The selected frame's dotted walk on the globe                                                                                |
+| `overlayConfig.ts`       | The overlays' names, needs, the California grid and site, default lines (pure)                                               |
+| `overlayControl.ts`      | The overlays' state, worker requests, the 2 km lines, the inset, the legend's view                                           |
+| `rigidOverlay.ts`        | Stop 4's lines: layers and labels from the worker's geometry                                                                 |
+| `orionLayer.ts`          | Orion's path, placed with its frame as the clock runs, and its statements                                                    |
+| `orionTrack.ts`          | Orion's OEM on the page's thread: the dot's place every frame (the worker's catalog shares `orionFromOem`)                   |
+| `cameraViews.ts`         | Where each scenario, frame and stop frames the globe, and the orbit it lands in                                              |
+| `cameraRig.ts`           | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                       |
+| `scenarios/stage.ts`     | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                              |
+| `scenarios/checks.ts`    | A scenario's check rows on and off its checked setup, and each check's kind (pure; Task 6c)                                  |
+| `scenarios/sites.ts`     | The BIM site's CRSs, site grid and line, and the corridor's road and site (pure; shared by the page and the worker, Task 6a) |
+| `pointDrag.ts`           | The corridor's point, dragged on the globe: its hit target and the knobs it sets (Task 6a)                                   |
+| `sightLines.ts`          | A scenario's lines of sight over the drawn terrain: traced on demand, trailing height changes (Task 6b)                      |
+| `skyRay.ts`              | The line of sight up to the Moon or Orion, placed every frame at the shown instant (Task 6b)                                 |
+| `scenarios/pointing.ts`  | Azimuth and elevation, and the pointing by hand: light time and aberration (pure; Task 6b)                                   |
+| `scenarios/bodyFrame.ts` | A moving body's frame from its track: heading from the velocity, pitch and roll (`trackFrame`; pure, Task 7)                 |
+| `scenarios/vehicles.ts`  | The drone's and the ship's synthetic tracks, frames, sea state and buoy (pure; the page and the worker, Task 7)              |
+| `scenarios/placement.ts` | The design grid read off the worker's local placement on the page (the drone's spot, Task 7)                                 |
+| `scenarios/testHill.ts`  | A drawn test hill (one tile) the line of sight is checked against by hand (the catalog and the tests, Task 7)                |
+| `bodyLines.ts`           | The drone's camera ray and spot, the ship's mast and sight line to the buoy, placed every frame (Task 7)                     |
+| `buoyWindow.ts`          | The ship's sight line traced each minute along its track, on demand: the timeline's windows and the moment (Task 7)          |
+| `callouts.ts`            | The lunar clock's callout, Orion's marker and path label                                                                     |
+| `labelPanels.ts`         | The panels over the view the globe's labels keep clear of (pure placement, Task 4c)                                          |
+| `catalogRuns.ts`         | The stress catalog's runs and results                                                                                        |
+| `userCrs.ts`             | "Try your own": the ion asset and the bound-CRS checks                                                                       |
+| `pageReport.ts`          | The report's environment and the Report tab's lines                                                                          |
+| `panelModel.ts`          | The panel's model, built from every part                                                                                     |
+| `scenarioModel.ts`       | The scenario's part of the model (pure: freshness, published value, checks, route)                                           |
+| `globeSelection.ts`      | The selection on the globe (R14), Frame content (F), the links' known ids                                                    |
+| `deepLinks.ts`           | Back, forward and edited links (R15)                                                                                         |
+| `frameLoop.ts`           | The per-frame work                                                                                                           |
+| `panelActions.ts`        | What the panel asks of the page                                                                                              |
 
 The stylesheet is `panel/panel.css`, an index that imports one file per
 part in cascade order: `tokens.css` (the family palette and axis colors),

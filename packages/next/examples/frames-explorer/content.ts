@@ -100,6 +100,23 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "trajectory.moon-me.round-trip.live": "Orion through your frame and back",
   "stand-on-moon.site-triad": "The site's axes, at your latitude",
   "stand-on-moon.site-round-trip": "The site through ICRF and back",
+  "frame-tree.body-frame.heading": "A track's heading against its hand azimuth",
+  "frame-tree.body-frame.level": "A level body's z along the local up",
+  "frame-tree.body-frame.roll": "A 10° roll turns y about x by 10°",
+  "frame-tree.body-frame.footprint":
+    "The camera's footprint on flat ground, by hand",
+  "frame-tree.body-frame.round-trip":
+    "Camera mount and mast sensor to ITRF and back",
+  "frame-tree.body-frame.sight-over-hill":
+    "Sight line over a test hill: blocked, then clear",
+  "frame-tree.body-frame.heading.live": "The heading at your setting, by hand",
+  "frame-tree.body-frame.level.live": "The drone level at your setting",
+  "frame-tree.body-frame.roll.live": "The sea state's roll now, by hand",
+  "frame-tree.body-frame.footprint.live":
+    "Your tilt's footprint on flat ground, by hand",
+  "frame-tree.body-frame.round-trip.live": "Your frames to ITRF and back",
+  "frame-tree.body-frame.sight-over-hill.live":
+    "Your mast over the test hill, by hand",
 };
 
 /**
@@ -108,6 +125,27 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
  * round trip and an independent route.
  */
 const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
+  // The drone's and the ship's frames from their tracks (Task 7).
+  "frame-tree.body-frame.heading": {
+    kind: "formula",
+    text: "The track's horizontal velocity's azimuth, resolved on east and north from latitude and longitude by hand: within 1e-9°.",
+  },
+  "frame-tree.body-frame.level": {
+    kind: "formula",
+    text: "The geodetic normal from latitude and longitude by hand: within 1e-12 rad.",
+  },
+  "frame-tree.body-frame.roll": {
+    kind: "formula",
+    text: "The roll angle itself: it turns y about x by that much, within 1e-12 rad.",
+  },
+  "frame-tree.body-frame.footprint": {
+    kind: "formula",
+    text: "The ray–plane intersection by hand, (H − gimbal)/tan(tilt) ahead of the nadir: within 1 mm plus d²/2R ÷ sin(tilt).",
+  },
+  "frame-tree.body-frame.sight-over-hill": {
+    kind: "formula",
+    text: "The segment's height over the ridge's crest by hand: blocked below it, clear above it and its tile's error.",
+  },
   // The BIM site's gap in its two parts, not the group's √(2Rε) (Task 6a fix 1).
   "rigid-placement-budget.site-gap.drop": {
     kind: "formula",

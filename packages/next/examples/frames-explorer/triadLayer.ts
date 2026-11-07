@@ -14,7 +14,7 @@ import { pathToRoot, type TreeNode } from "./tree.ts";
 
 /** The labels each part has on the globe, shown with the triads' (the sag, the convergence, contour values). */
 export type LabelBoard = Map<
-  OverlayId | "callouts" | "walk" | "sky",
+  OverlayId | "callouts" | "walk" | "sky" | "bodies",
   LabelSpec[]
 >;
 

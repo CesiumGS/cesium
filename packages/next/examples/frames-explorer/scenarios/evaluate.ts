@@ -13,7 +13,7 @@ import type { FrameCache } from "../frameCache.ts";
 import type { SceneLegendRow } from "../panel/legendRows.ts";
 import type { OverlayGeometry } from "../protocol.ts";
 import type { StressContext, StressResult } from "../tests.ts";
-import type { AddedFrameSpec } from "../tree.ts";
+import type { AddedFrameSpec, EdgeAccuracy } from "../tree.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 
 /** The scenario's answer to its question, at the knobs it was evaluated at. */
@@ -70,6 +70,44 @@ export interface ScenarioAnswer {
    * title and its sentence or two (Task 4c item 1).
    */
   method?: readonly { title: string; text: string }[];
+  /**
+   * The answer is where a sight line meets the terrain, on a design grid
+   * (the drone's camera, Task 7): the page traces sight line `line` and
+   * reads the point it meets off `placement` (drone.ts `onGrid`): moved
+   * along its normal to `placement.height`, then ITRF → design units by
+   * `toDesign` (column-major 4×4), exact at `at` (Earth-fixed m) and
+   * drifting from PROJ by `perSquareMeter` × the squared distance from it. `site` is the site grid's map conversion, for x
+   * and y; `key` names the setup the line was made for (a trace of
+   * another's is not this one's).
+   */
+  footprint?: {
+    line: string;
+    key: string;
+    placement: { toDesign: readonly number[]; height: number };
+    at: readonly number[];
+    perSquareMeter: number;
+    unitsPerMeter: number;
+    unit: string;
+    site: {
+      origin: readonly [number, number];
+      rotation: number;
+      scale: number;
+    };
+    /** The ray's tilt below the horizon, degrees. */
+    tilt: number;
+    /** The design CRS's datum accuracy (its PROJ operation's). */
+    datum: EdgeAccuracy;
+    /** How far the line is traced, m. */
+    reach: number;
+  };
+  /**
+   * The answer carries a line of sight to a target over the terrain (the
+   * ship's mast to the buoy, Task 7): the page's trace of sight line
+   * `line` joins its verdict to the label and the aside. `sea` is the sea's
+   * ellipsoidal height at the target, m, to tell the sea's horizon from
+   * the land where the line meets the terrain.
+   */
+  sight?: { line: string; key: string; target: string; sea: number };
 }
 
 /**
@@ -81,14 +119,35 @@ export interface SightLine {
   from: readonly number[];
   to: readonly number[];
   label: string;
+  /**
+   * The setup it was made for (the knobs that move it, not the time): the
+   * page's view of it carries it as `traced`, so an answer never takes a
+   * trace made for other knobs (Task 6c's rule).
+   */
+  key?: string;
+  /** What the line is, leading the page's sentences about it (default "The local horizon toward <label>"). */
+  subject?: string;
+  /**
+   * How far from each end (m) the path counts as over that end's own
+   * ground (`terrainLineOfSight`'s `groundRadius`): the ship's buoy floats
+   * on the sea it stands over.
+   */
+  groundRadius?: number;
 }
 
-/** A moment a scenario offers to jump the clock to (the knobs' "Jump to"). */
+/**
+ * A moment a scenario offers (the knobs' "Jump to"): a time to jump the
+ * clock to, or knob values to set (the drone's "Over the building").
+ */
 export interface Moment {
   id: string;
   label: string;
   /** UTC ms. */
-  utcMs: number;
+  utcMs?: number;
+  /** The knobs it sets, instead of the time. */
+  knobs?: KnobState;
+  /** The button's tooltip, for one that sets knobs. */
+  title?: string;
   /** The button's icon: the Moon for one behind it, else the timeline. */
   icon?: "moon" | "timeline";
 }
@@ -176,6 +235,13 @@ export interface ScenarioEvaluation {
   };
   /** Moments a button takes the clock to ("Behind the Moon"), UTC ms, with the button's icon. */
   presets?: readonly Moment[];
+  /**
+   * A moving body's track, for the page to build the same frames from
+   * (vehicles.ts): each vertex's ellipsoidal height, m, the datum knob
+   * already applied (GEOID18 is the worker's), and the sea's at the
+   * ship's buoy.
+   */
+  track?: { heights: readonly number[]; buoySea?: number };
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).
    * None may carry an id of the scenario's `checks` (the host refuses it),

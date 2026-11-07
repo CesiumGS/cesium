@@ -56,6 +56,8 @@ import { RunQueue } from "./runQueue.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
 import { scenarioView } from "./scenarioModel.ts";
 import { createStage } from "./scenarios/stage.ts";
+import { createBodyLines } from "./bodyLines.ts";
+import { createBuoyWindow } from "./buoyWindow.ts";
 import { createSightLines } from "./sightLines.ts";
 import { createSkyRay } from "./skyRay.ts";
 import { ViewStore, formatParams, parseParams } from "./selection.ts";
@@ -272,7 +274,11 @@ export function run(context: ExampleContext): ExampleRun {
     rebuildTree: () => treeState.rebuild(),
     refreshTriads: () => triads.refresh(),
     refreshCallouts: () => callouts.refresh(),
-    globeChanged: () => sightLines.globeChanged(),
+    globeChanged: () => {
+      sightLines.globeChanged();
+      buoyWindow.globeChanged();
+    },
+    evaluation: () => host.state().evaluation,
   });
   scope.defer(() => stage.dispose());
   const callouts = createCallouts({
@@ -338,6 +344,38 @@ export function run(context: ExampleContext): ExampleRun {
     changed: () => invalidate(),
   });
   scope.defer(() => sightLines.dispose());
+  // When the ship's mast sees the buoy along its whole track (Task 7):
+  // traced on demand, its spans on the timeline and its moment in the knobs.
+  const buoyWindow = createBuoyWindow({
+    viewer,
+    frames,
+    scenario: () =>
+      stage.scene() !== undefined ? host.state().spec.id : undefined,
+    knobs: () => host.state().knobs,
+    evaluation: () => host.state().evaluation,
+    globeShown: () => stage.globeShown(),
+    changed: () => {
+      refreshMarks();
+      invalidate();
+    },
+  });
+  scope.defer(() => buoyWindow.dispose());
+  /** The scenario's windows on the timeline: the evaluation's (the dish's behind the Moon) and the page's (the ship's buoy). */
+  function refreshMarks(): void {
+    const state = host.state();
+    viewer.timeControls?.setMarks(
+      [
+        ...((stage.scene() !== undefined
+          ? state.evaluation?.windows
+          : undefined) ?? []),
+        ...buoyWindow.windows(),
+      ].map((w) => ({
+        start: w.startUtc,
+        end: w.endUtc,
+        title: `${w.label}: ${new Date(w.startUtc).toISOString().slice(11, 19)} to ${new Date(w.endUtc).toISOString().slice(11, 19)} UTC`,
+      })),
+    );
+  }
   const host = createScenarioHost({
     evaluate: (id, knobs, ms) => {
       const f = frames();
@@ -381,17 +419,9 @@ export function run(context: ExampleContext): ExampleRun {
         treeState.evaluationChanged();
         callouts.refresh();
         sightLines.evaluationChanged();
-        // The scenario's windows on the timeline (the dish's behind the Moon).
-        viewer.timeControls?.setMarks(
-          (stage.scene() !== undefined
-            ? state.evaluation?.windows
-            : undefined
-          )?.map((w) => ({
-            start: w.startUtc,
-            end: w.endUtc,
-            title: `${w.label}: ${new Date(w.startUtc).toISOString().slice(11, 19)} to ${new Date(w.endUtc).toISOString().slice(11, 19)} UTC`,
-          })) ?? [],
-        );
+        stage.evaluationChanged();
+        buoyWindow.evaluationChanged();
+        refreshMarks();
       }
       if (state.generation !== paramsGeneration) {
         // The link follows each asked-for setup, not every clock frame.
@@ -487,6 +517,9 @@ export function run(context: ExampleContext): ExampleRun {
           }),
         ...(stage.scene() !== undefined &&
           sightLines.view() !== undefined && { terrain: sightLines.view()! }),
+        ...(buoyWindow.presets() !== undefined && {
+          pagePresets: buoyWindow.presets()!,
+        }),
         scrub,
       });
     },
@@ -548,6 +581,36 @@ export function run(context: ExampleContext): ExampleRun {
     },
   });
   scope.defer(() => skyRay.dispose());
+  // The drone's and the ship's lines, every frame (Task 7).
+  const bodyLines = createBodyLines({
+    globe,
+    frames,
+    scene: () => stage.scene(),
+    local: () => stage.local(),
+    evaluation: () =>
+      stage.scene() !== undefined ? host.state().evaluation : undefined,
+    traces: () => sightLines.view(),
+    labels,
+    refreshLabels: () => triads.refresh(),
+    camera: () => {
+      const c = viewer.view.camera;
+      const h = viewer.container.clientHeight;
+      if (h <= 0) {
+        return undefined;
+      }
+      const k = (2 * Math.tan(c.fov / 2)) / h;
+      return {
+        position: c.position,
+        pixelAt: (p) =>
+          Math.hypot(
+            p[0]! - c.position[0]!,
+            p[1]! - c.position[1]!,
+            p[2]! - c.position[2]!,
+          ) * k,
+      };
+    },
+  });
+  scope.defer(() => bodyLines.dispose());
   const frameLoop = createFrameLoop({
     core,
     refreshTree: () => treeState.refresh(),
@@ -564,6 +627,7 @@ export function run(context: ExampleContext): ExampleRun {
       stage.tick();
       pointDrag.tick();
       skyRay.place();
+      bodyLines.place();
     },
     walk: walkPath,
   });

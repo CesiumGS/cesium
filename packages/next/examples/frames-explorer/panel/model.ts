@@ -287,6 +287,12 @@ export interface TerrainSightView {
   traced?: string;
   /** A mask check's counts (sightLines.ts `maskCheckText`). */
   mask?: { azimuths: number; below: number; above: number; unsure: number };
+  /** Where a blocked line first meets the drawn terrain (Earth-fixed m): the drone's footprint (Task 7). */
+  hitAt?: readonly number[];
+  /** Where the line was traced from, as placed on the drawn ground (Earth-fixed m). */
+  from?: readonly number[];
+  /** The line's lowest height above the drawn terrain, m, ends included (clear or may block). */
+  clearance?: number;
 }
 
 /** One line of the report's environment (R15). */
@@ -369,8 +375,11 @@ export interface PanelActions {
   setKnob(id: string, value: KnobValue): void;
   /** Back to the checked setup: its knobs and epoch. */
   backToChecked(): void;
-  /** The clock to a moment the scenario offers (the dish's "Behind the Moon"), paused. */
-  goToTime(utcMs: number): void;
+  /**
+   * A moment the scenario offers: the clock to its time, paused (the dish's
+   * "Behind the Moon"), or its knobs set (the drone's "Over the building").
+   */
+  goToMoment(moment: Moment): void;
   /** The next selection of result `id` shows it without moving the camera or the overlays. */
   selectQuietly(id: string): void;
 }

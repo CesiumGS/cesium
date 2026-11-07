@@ -342,6 +342,12 @@ describe("the frames explorer's stress tests, headless", () => {
       "space.moon-from-sacramento.direction": /R\.A\. and DEC/,
       "space.moon-from-sacramento.range": /Horizons' delta/,
       "space.moon-from-sacramento.horizon": /azimuth and elevation/,
+      // The drone's and the ship's body frames (Task 7).
+      "frame-tree.body-frame.heading": /azimuth/,
+      "frame-tree.body-frame.level": /geodetic normal/,
+      "frame-tree.body-frame.roll": /y about (its )?x/,
+      "frame-tree.body-frame.footprint": /ray–plane intersection/,
+      "frame-tree.body-frame.sight-over-hill": /crest/,
       frame: /engineering frame/,
       "source-crs": /axis unit/,
       "recorded-operation": /TOWGS84|registry prints/,

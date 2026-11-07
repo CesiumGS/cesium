@@ -29,9 +29,42 @@ const HEIGHT_DATUM: KnobSpec = {
   label: "Height datum",
   kind: "choice",
   options: [
-    { value: "ellipsoid", label: "Ellipsoid (GRS 80)" },
-    { value: "navd88", label: "NAVD88 (through GEOID18)" },
+    { value: "ellipsoid", label: "Ellipsoid (GRS 80)", short: "Ellipsoid" },
+    {
+      value: "navd88",
+      label: "NAVD88 (through GEOID18)",
+      short: "NAVD88",
+    },
   ],
+};
+
+/**
+ * The drone's and the ship's checks' kinds (Task 7): the body frame's are
+ * hand formulas and round trips (no published value); GEOID18's NAVD88
+ * height is checked against NGS's datasheet value, a cited computation
+ * (the datasheet's geoid height is GEOID18's own), not a measurement.
+ */
+const BODY_CHECK_KINDS: ScenarioSpec["checkKinds"] = {
+  "frame-tree.body-frame.heading": "hand",
+  "frame-tree.body-frame.level": "hand",
+  "frame-tree.body-frame.roll": "hand",
+  "frame-tree.body-frame.footprint": "hand",
+  "frame-tree.body-frame.sight-over-hill": "hand",
+  "frame-tree.body-frame.round-trip": "roundTrip",
+  "projections.epsg-6420-6360": "roundTrip",
+  "heights-and-wgs84.three-heights.navd88": "published",
+};
+
+/** How far the drone's and the ship's catalog checks carry to them. */
+const BODY_CHECK_NOTES: ScenarioSpec["checkNotes"] = {
+  "projections.epsg-6420-6360":
+    "Checked in the compound CRS, California zone 3 with NAVD88 heights through GEOID18, at the BIM site; the scenario reads easting and northing off the 2D CRS, so it carries over in E and N.",
+  "heights-and-wgs84.three-heights.navd88":
+    "Checked at NGS mark GU2195, about 115 km from here: it checks the path through GEOID18 that the height datum knob takes, not the geoid height here.",
+  "frame-tree.body-frame.footprint":
+    "Over flat test ground 150 m below the drone: it checks the camera's ray and the terrain trace by hand; the answer's terrain is the drawn globe's.",
+  "frame-tree.body-frame.sight-over-hill":
+    "Over a drawn test hill: it checks the trace's verdict by hand; the answer's terrain is the drawn globe's.",
 };
 
 /** The capstone's objects, one on each branch of the tree. */
@@ -367,14 +400,28 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       },
       HEIGHT_DATUM,
     ],
-    // Over the BIM site, at its epoch. Its checks come with Task 8.
+    // Over the BIM site, at its epoch: halfway along its line (over the
+    // model's site origin), the camera 45° down, its reported height read
+    // as NAVD88 (Task 7). Its checks are hand formulas and round trips at
+    // that pose (frame-tree.body-frame.*), California zone 3's round trip,
+    // and GEOID18's NAVD88 height against NGS's at GU2195.
     checked: {
       epochUtc: MEASURED_AT,
       knobs: { tilt: 45, along: 50, datum: "navd88" },
     },
     needs: ["proj", "geoid", "terrain"],
     globe: "terrain",
-    checks: [],
+    checks: [
+      "frame-tree.body-frame.heading",
+      "frame-tree.body-frame.level",
+      "frame-tree.body-frame.footprint",
+      "frame-tree.body-frame.round-trip",
+      "projections.epsg-6420-6360",
+      "heights-and-wgs84.three-heights.navd88",
+    ],
+    checkedBy: "hand formulas and round trips",
+    checkKinds: BODY_CHECK_KINDS,
+    checkNotes: BODY_CHECK_NOTES,
   },
   {
     id: "ship",
@@ -393,12 +440,29 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       },
       HEIGHT_DATUM,
     ],
-    // A placeholder epoch: Task 7 pins it to the track's (AIS or
-    // synthetic), and adds its checks.
-    checked: { epochUtc: MEASURED_AT, knobs: { mast: 25, datum: "navd88" } },
-    needs: ["proj", "geoid", "terrain", "ships"],
+    // 80 minutes along its synthetic track (Task 7), in the main ship
+    // channel's eastbound lane, a 25 m mast, the sea at NAVD88 0 m through
+    // GEOID18. Its checks: the body frame's heading and roll and the test
+    // hill's sight line by hand, round trips, California zone 3's round trip,
+    // and GEOID18's NAVD88 height against NGS's at GU2195. No AIS: the
+    // track is synthetic (vehicles.ts), so it needs no ship data.
+    checked: {
+      epochUtc: "2026-03-01T18:20:00Z",
+      knobs: { mast: 25, datum: "navd88" },
+    },
+    needs: ["proj", "geoid", "terrain"],
     globe: "terrain",
-    checks: [],
+    checks: [
+      "frame-tree.body-frame.heading",
+      "frame-tree.body-frame.roll",
+      "frame-tree.body-frame.sight-over-hill",
+      "frame-tree.body-frame.round-trip",
+      "projections.epsg-6420-6360",
+      "heights-and-wgs84.three-heights.navd88",
+    ],
+    checkedBy: "hand formulas and round trips",
+    checkKinds: BODY_CHECK_KINDS,
+    checkNotes: BODY_CHECK_NOTES,
   },
   {
     id: "everything",

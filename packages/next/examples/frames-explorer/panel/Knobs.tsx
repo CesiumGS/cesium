@@ -21,6 +21,7 @@ import { svgTimeline } from "@stratakit/icons/timeline";
 import { svgUndo } from "@stratakit/icons/undo";
 import { Icon } from "@stratakit/mui";
 import { memo, useId } from "react";
+import type { Moment } from "../scenarios/evaluate.ts";
 import type { KnobSpec, KnobValue } from "../scenarios/spec.ts";
 import { knobText, movedText, snapToStep } from "./knobText.ts";
 import { useLiveTime } from "./liveTime.ts";
@@ -176,8 +177,8 @@ function KnobsView({
   headingId: string;
   onKnob: (id: string, value: KnobValue) => void;
   onBack: () => void;
-  /** Takes the clock to one of the scenario's moments, paused. */
-  onMoment: (utcMs: number) => void;
+  /** Takes the clock to one of the scenario's moments, paused, or sets its knobs. */
+  onMoment: (moment: Moment) => void;
 }) {
   const s = scenario;
   const timeMoved = s.changed.includes("time");
@@ -270,8 +271,12 @@ function KnobsView({
                 size="small"
                 variant="outlined"
                 startIcon={<Icon href={MOMENT_ICON[p.icon ?? "timeline"]} />}
-                onClick={() => onMoment(p.utcMs)}
-                title={`Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused`}
+                onClick={() => onMoment(p)}
+                title={
+                  p.utcMs !== undefined
+                    ? `Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused`
+                    : (p.title ?? `Sets the knobs to ${p.label}`)
+                }
               >
                 {p.label}
               </Button>

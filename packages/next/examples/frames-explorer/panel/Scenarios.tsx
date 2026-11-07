@@ -467,7 +467,7 @@ function ScenariosView({
                 headingId={ids.knobs}
                 onKnob={actions.setKnob}
                 onBack={actions.backToChecked}
-                onMoment={actions.goToTime}
+                onMoment={actions.goToMoment}
               />
             </section>
 

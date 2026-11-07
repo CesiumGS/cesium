@@ -1,6 +1,7 @@
 // Frame tree: round trips and compositions over eight frames, five instants.
 import { type Frame, frameTransform } from "../../../../src/frames/Frame.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
+import { bodyFrameCase } from "./body-frames.ts";
 import {
   ROTATION,
   apply,
@@ -142,4 +143,7 @@ const frameTreeCase = stressCase(
   },
 );
 
-export const frameTreeCases: readonly StressCase[] = [frameTreeCase];
+export const frameTreeCases: readonly StressCase[] = [
+  frameTreeCase,
+  bodyFrameCase,
+];

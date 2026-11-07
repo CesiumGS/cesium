@@ -49,12 +49,14 @@ export function terrainSightText(
   label: string,
   r: TerrainLineOfSight | undefined,
   why?: string,
+  /** What the line is, leading each sentence (default "The local horizon toward <label>"). */
+  subject = `The local horizon toward ${label}`,
 ): TerrainSightView {
   if (r === undefined) {
     return {
       id,
       state: "waiting",
-      text: `The local horizon toward ${label}: ${why ?? "waiting for the terrain"}.`,
+      text: `${subject}: ${why ?? "waiting for the terrain"}.`,
     };
   }
   const accuracy = r.accuracy.note;
@@ -67,7 +69,8 @@ export function terrainSightText(
       id,
       state: "blocked",
       ...sizes,
-      text: `The local horizon toward ${label}: the terrain blocks it.`,
+      ...(r.blockedAt && { hitAt: Array.from(r.blockedAt) }),
+      text: `${subject}: the terrain blocks it.`,
       accuracy,
     };
   }
@@ -76,7 +79,8 @@ export function terrainSightText(
       id,
       state: "clear",
       ...sizes,
-      text: `The local horizon toward ${label}: the terrain is clear${r.minClearance !== undefined ? `, by ${length(r.minClearance)} at the closest beyond the observer's own ground` : ""}.`,
+      ...(r.minClearance !== undefined && { clearance: r.minClearance }),
+      text: `${subject}: the terrain is clear${r.minClearance !== undefined ? `, by ${length(r.minClearance)} at the closest beyond the observer's own ground` : ""}.`,
       accuracy,
     };
   }
@@ -85,7 +89,7 @@ export function terrainSightText(
       id,
       state: "unknown",
       ...sizes,
-      text: `The local horizon toward ${label}: unknown over ${pct(r.unknownFraction)} of the path near the ground (terrain not drawn there yet, or only coarsely); not counted as clear.`,
+      text: `${subject}: unknown over ${pct(r.unknownFraction)} of the path near the ground (terrain not drawn there yet, or only coarsely); not counted as clear.`,
       accuracy,
     };
   }
@@ -93,7 +97,8 @@ export function terrainSightText(
     id,
     state: "may-block",
     ...sizes,
-    text: `The local horizon toward ${label}: the terrain may block it: the path passes within the terrain's error${r.minClearance !== undefined ? ` (${length(r.minClearance)} above the drawn surface)` : ""}.`,
+    ...(r.minClearance !== undefined && { clearance: r.minClearance }),
+    text: `${subject}: the terrain may block it: the path passes within the terrain's error${r.minClearance !== undefined ? ` (${length(r.minClearance)} above the drawn surface)` : ""}.`,
     accuracy,
   };
 }
@@ -235,13 +240,26 @@ export function createSightLines(deps: {
           : undefined);
     views = lines.map((l) => {
       if (!target || !globe) {
-        return terrainSightText(l.id, l.label, undefined, why);
+        return {
+          ...terrainSightText(l.id, l.label, undefined, why, l.subject),
+          ...(l.key !== undefined && { traced: l.key }),
+        };
       }
       const placed = placeObserver(l, (lon, lat) =>
         globe.surfaceHeight(lon, lat),
       );
-      const r = terrainLineOfSight(placed.from, placed.to, target);
-      const v = terrainSightText(l.id, l.label, r);
+      const r = terrainLineOfSight(
+        placed.from,
+        placed.to,
+        target,
+        l.groundRadius !== undefined ? { groundRadius: l.groundRadius } : {},
+      );
+      const v: TerrainSightView = {
+        ...terrainSightText(l.id, l.label, r, undefined, l.subject),
+        // What it was traced for: an answer takes only its own (Task 6c's rule).
+        ...(l.key !== undefined && { traced: l.key }),
+        from: placed.from,
+      };
       return placed.lifted > 0
         ? {
             ...v,

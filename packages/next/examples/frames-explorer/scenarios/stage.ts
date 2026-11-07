@@ -21,6 +21,7 @@ import {
   sceneExposure,
   type SceneSpec,
 } from "./scenes.ts";
+import type { ScenarioEvaluation } from "./evaluate.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 
@@ -50,6 +51,8 @@ export interface Stage {
   reframe(): void;
   /** Every frame: the headlight follows the camera through a flight. */
   tick(): void;
+  /** The evaluation changed: a moving body's frames follow its track (Task 7). */
+  evaluationChanged(): void;
   dispose(): void;
 }
 
@@ -74,6 +77,8 @@ export function createStage(deps: {
   refreshCallouts(): void;
   /** The viewer's globe changed (a switch finished or failed): the terrain's lines follow it. */
   globeChanged?(): void;
+  /** The scenario's evaluation now, if any: its moving bodies' tracks (Task 7). */
+  evaluation?(): ScenarioEvaluation | undefined;
 }): Stage {
   const { viewer, globe, frames: framesNow, disposed } = deps.core;
   const { overlays, orion } = deps;
@@ -90,6 +95,8 @@ export function createStage(deps: {
   let engineeringRedraw = 0;
   /** The setup outside the scene, restored when it's left. */
   let defaults: EngineeringSetup | undefined;
+  /** What the moving bodies were built from: their track's heights and the knobs. */
+  let bodiesKey = "";
   /**
    * The globe the scene wants (spec.globe: terrain for a local horizon,
    * Task 6b), and the one asked of the viewer. Leaving asks for the
@@ -187,6 +194,12 @@ export function createStage(deps: {
         earthSiteFrame(itrf, s),
       ),
     ];
+    if (scene.bodies) {
+      const e = deps.evaluation?.();
+      const mine = e?.scenario === scene.id ? e : undefined;
+      bodiesKey = JSON.stringify([mine?.track ?? null, sceneKnobs]);
+      local.push(...scene.bodies(frames, sceneKnobs, mine));
+    }
     const drawIn = scene.orion?.(sceneKnobs);
     if (drawIn !== undefined) {
       const o = overlays.state("orion");
@@ -313,6 +326,7 @@ export function createStage(deps: {
     reframeOrion = false;
     scene = undefined;
     local = [];
+    bodiesKey = "";
     wantedGlobe = "ellipsoid";
     queueMicrotask(applyGlobe);
     globe.dimGround(false);
@@ -355,6 +369,16 @@ export function createStage(deps: {
         // (the ITRF spiral is far larger than the figure-eight).
         reframeOrion = false;
         flyToScene();
+      }
+    },
+    evaluationChanged: () => {
+      if (!scene?.bodies) {
+        return;
+      }
+      const e = deps.evaluation?.();
+      const mine = e?.scenario === scene.id ? e : undefined;
+      if (JSON.stringify([mine?.track ?? null, sceneKnobs]) !== bodiesKey) {
+        applySceneKnobs();
       }
     },
     tick: () => {

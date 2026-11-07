@@ -2365,6 +2365,63 @@
       },
       "description": "WGS 84 / UTM zone 31N (EPSG:32631): no TOWGS84, so the Helmert comparison is skipped",
       "wkt2": "PROJCRS[\"WGS 84 / UTM zone 31N\",\n    BASEGEOGCRS[\"WGS 84\",\n        ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n            MEMBER[\"World Geodetic System 1984 (Transit)\"],\n            MEMBER[\"World Geodetic System 1984 (G730)\"],\n            MEMBER[\"World Geodetic System 1984 (G873)\"],\n            MEMBER[\"World Geodetic System 1984 (G1150)\"],\n            MEMBER[\"World Geodetic System 1984 (G1674)\"],\n            MEMBER[\"World Geodetic System 1984 (G1762)\"],\n            MEMBER[\"World Geodetic System 1984 (G2139)\"],\n            MEMBER[\"World Geodetic System 1984 (G2296)\"],\n            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                LENGTHUNIT[\"metre\",1]],\n            ENSEMBLEACCURACY[2.0]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4326]],\n    CONVERSION[\"UTM zone 31N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",3,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Navigation and medium accuracy spatial referencing.\"],\n        AREA[\"Between 0°E and 6°E, northern hemisphere between equator and 84°N, onshore and offshore. Algeria. Andorra. Belgium. Benin. Burkina Faso. Denmark - North Sea. France. Germany - North Sea. Ghana. Luxembourg. Mali. Netherlands. Niger. Nigeria. Norway. Spain. Togo. United Kingdom (UK) - North Sea.\"],\n        BBOX[0,0,84,6]],\n    ID[\"EPSG\",32631]]"
+    },
+    "cfr-33-167-off-san-francisco": {
+      "kind": "input",
+      "source": {
+        "document": "33 CFR Part 167, Subpart B: Off San Francisco Traffic Separation Scheme, sections 167.400 to 167.406 (geographic coordinates on NAD 83, section 167.400)",
+        "publisher": "U.S. Coast Guard, in the Code of Federal Regulations (read through Cornell LII's copy of the eCFR text)",
+        "locator": "167.401(a) precautionary area; 167.403(a)-(b) southern approach, separation zone and northbound lane; 167.405(a)-(b) main ship channel, separation line and eastbound lane",
+        "url": "https://www.law.cornell.edu/cfr/text/33/167.403",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The inbound lanes the ship's synthetic track follows (scenarios/vehicles.ts SHIP): an input, not an expected value (ruling F6). No AIS extract of one vessel small enough to pin (20 MB) was found: NOAA's daily AIS files are hundreds of megabytes, so the track is synthetic and labelled so.",
+      "precautionaryArea": {
+        "centre": "37-45.00N 122-41.50W",
+        "radius": "6 miles",
+        "eastBoundary": [
+          "37-42.70N 122-34.60W",
+          "37-45.90N 122-38.00W",
+          "37-50.30N 122-38.00W"
+        ]
+      },
+      "southernApproach": {
+        "separationZone": [
+          "37-39.10N 122-40.40W",
+          "37-27.00N 122-40.40W",
+          "37-27.00N 122-43.00W",
+          "37-39.10N 122-43.00W"
+        ],
+        "northboundLaneOuterLine": [
+          "37-39.30N 122-39.20W",
+          "37-27.00N 122-39.20W"
+        ]
+      },
+      "mainShipChannel": {
+        "separationLine": [
+          "37-45.90N 122-38.00W",
+          "37-47.00N 122-34.30W",
+          "37-48.10N 122-31.00W"
+        ],
+        "eastboundLaneOuterLine": [
+          "37-45.80N 122-37.70W",
+          "37-47.80N 122-30.80W"
+        ]
+      },
+      "track": "The explorer's track: the northbound lane's centreline (122-39.80W) from 37-33.00N to 37-39.20N; across the precautionary area to the eastbound lane's start (37-45.85N 122-37.85W, midway between its two lines); along the lane's centreline through 37-46.893N 122-34.30W to 37-47.95N 122-30.90W; at 12 knots."
+    },
+    "uscg-light-list-harding-rock": {
+      "kind": "input",
+      "source": {
+        "document": "USCG Light List, Volume VI, Pacific Coast and Pacific Islands, District 11: Harding Rock Lighted Buoy HR, red and green bands, Fl (2+1)R 6s",
+        "publisher": "U.S. Coast Guard Navigation Center; the position as transcribed by the San Francisco YRA marks compilation (github.com/nkiesel/YRA-Marks, mark YRA-17), which gives the USCG Light List, District 11, as its source",
+        "locator": "YRA-Marks, mark YRA-17 (Harding Rock Lighted Buoy HR)",
+        "url": "https://github.com/nkiesel/YRA-Marks",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The buoy the ship's mast looks for (scenarios/vehicles.ts BUOY): an input, not an expected value. The Light List's own PDF (navcen.uscg.gov) answered HTTP 403 to the fetch, so the position is the compilation's, unchecked against it; its light's height above the water is assumed, 3 m (the Light List gives none for a buoy). Not for navigation.",
+      "latitude": "37.838240",
+      "longitude": "-122.445990"
     }
   }
 }

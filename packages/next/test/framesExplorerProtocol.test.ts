@@ -820,9 +820,9 @@ describe("scenario", () => {
       name: "RangeError",
       message: expect.stringMatching(/"nowhere"/),
     });
-    await expect(client.scenario("ship", {}, 0)).rejects.toMatchObject({
+    await expect(client.scenario("everything", {}, 0)).rejects.toMatchObject({
       name: "RangeError",
-      message: expect.stringMatching(/"ship".*no evaluator/),
+      message: expect.stringMatching(/"everything".*no evaluator/),
     });
     stubScenario("earth-turns", async () => evaluation());
     await expect(

@@ -11,9 +11,9 @@ import type {
   ScenarioPanelView,
 } from "./panel/model.ts";
 import { routeSteps } from "./panel/routeSteps.ts";
-import { withTerrain } from "./panel/answerText.ts";
+import { withTerrain, withTerrainAnswer } from "./panel/answerText.ts";
 import type { ScenarioHostState } from "./scenarioHost.ts";
-import type { ScenarioAnswer } from "./scenarios/evaluate.ts";
+import type { Moment, ScenarioAnswer } from "./scenarios/evaluate.ts";
 import {
   checkKind,
   checkRows,
@@ -131,6 +131,8 @@ export interface ScenarioViewInput {
   sceneNote?: string;
   /** Its lines of sight over the terrain (sightLines.ts). */
   terrain?: ScenarioPanelView["terrain"];
+  /** Moments the page found itself, after the evaluation's (the ship's buoy coming into view, Task 7). */
+  pagePresets?: readonly Moment[];
   scrub(text: string): string;
 }
 
@@ -232,7 +234,12 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     ...(st.problem !== undefined && {
       problem: { ...st.problem, message: input.scrub(st.problem.message) },
     }),
-    ...(e && { answer: withTerrain(e.answer, input.terrain) }),
+    ...(e && {
+      answer: withTerrain(
+        withTerrainAnswer(e.answer, input.terrain),
+        input.terrain,
+      ),
+    }),
     ...publishedView(
       e?.answer.published,
       catalog,
@@ -246,7 +253,10 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     liveExtras,
     ...(input.sceneNote !== undefined && { note: input.sceneNote }),
     ...(input.terrain !== undefined && { terrain: input.terrain }),
-    ...(e?.presets && e.presets.length > 0 && { presets: e.presets }),
+    ...(() => {
+      const presets = [...(e?.presets ?? []), ...(input.pagePresets ?? [])];
+      return presets.length > 0 ? { presets } : {};
+    })(),
     focus: SCENES[spec.id]?.focus ?? [],
     ...(() => {
       const c = SCENES[spec.id]?.treeControl;

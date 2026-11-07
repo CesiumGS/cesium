@@ -111,9 +111,10 @@ describe("the ten scenarios", () => {
     expect(spec("one-path").needs).toContain("orion");
     // GEOID18 is its compound-CRS checks' need, not its own (fix 1).
     expect(spec("bim-site").needs).toEqual(["proj"]);
-    expect(spec("ship").needs).toEqual(
-      expect.arrayContaining(["ships", "terrain"]),
-    );
+    // Task 7: the ship's track is synthetic (no AIS extract to load);
+    // GEOID18 puts its sea at NAVD88 0, as it reads the drone's height.
+    expect(spec("ship").needs).toEqual(["proj", "geoid", "terrain"]);
+    expect(spec("drone").needs).toEqual(["proj", "geoid", "terrain"]);
     expect(spec("ship").globe).toBe("terrain");
     expect(spec("drone").globe).toBe("terrain");
     expect(spec("earth-turns").needs).toEqual([]);

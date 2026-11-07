@@ -4,6 +4,8 @@
 // it from the checked setup's. Pure, unit-tested.
 import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
 import type { TerrainSightView } from "./model.ts";
+import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
+import { onGrid } from "../scenarios/placement.ts";
 import { length, quantity } from "./format.ts";
 
 /** Digits after the point that suit a unit's figures. */
@@ -189,4 +191,201 @@ export function withTerrain(
   delete rest.value;
   delete rest.unit;
   return { ...rest, label: `Blocked by the terrain ${sky.where}`, aside };
+}
+
+type Footprint = NonNullable<ScenarioAnswer["footprint"]>;
+
+const dist3 = (a: ArrayLike<number>, b: ArrayLike<number>) =>
+  Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
+
+/** "6,012,345.6". */
+const tenths = (v: number) => grouped(v, 1).replace("-", "−");
+
+/**
+ * A point the footprint's sight line met (Earth-fixed m) on the design
+ * grid: easting and northing through the local placement, the site grid's
+ * x and y through its map conversion (exact), and how far the placement
+ * has drifted from PROJ there, m (Task 7).
+ */
+export function footprintAt(
+  fp: Footprint,
+  hit: ArrayLike<number>,
+): { e: number; n: number; x: number; y: number; drift: number } {
+  const [e, n] = onGrid(fp.placement, hit);
+  const c = Math.cos(fp.site.rotation);
+  const s = Math.sin(fp.site.rotation);
+  const dx = (e - fp.site.origin[0]) / fp.site.scale;
+  const dy = (n - fp.site.origin[1]) / fp.site.scale;
+  const d = dist3(hit, fp.at);
+  return {
+    e,
+    n,
+    x: c * dx + s * dy,
+    y: -s * dx + c * dy,
+    drift: fp.perSquareMeter * d * d,
+  };
+}
+
+/** "Camera looks here · E 6,012,345.6, N 2,101,234.5 ftUS": the footprint's label on the globe. */
+export function footprintLabel(fp: Footprint, hit: ArrayLike<number>): string {
+  const p = footprintAt(fp, hit);
+  return `Camera looks here · E ${tenths(p.e)}, N ${tenths(p.n)} ${fp.unit}`;
+}
+
+/**
+ * The drone's answer with the page's trace of its camera's ray (Task 7):
+ * where it meets the terrain, on the design grid, with the accuracy that
+ * brings (the terrain's error along the ray, the CRS's datum, the local
+ * placement's drift). A trace made for other knobs is not this one's
+ * (Task 6c's rule): tracing until it is. Never a spot the terrain hasn't
+ * given: over terrain not drawn, or within its error, it says it can't tell.
+ */
+function withFootprint(
+  answer: ScenarioAnswer,
+  fp: Footprint,
+  terrain: readonly TerrainSightView[] | undefined,
+): ScenarioAnswer {
+  const v = terrain?.find((t) => t.id === fp.line);
+  const unbounded = (label: string, note: string): ScenarioAnswer => ({
+    ...answer,
+    label,
+    accuracy: { note, unbounded: true },
+  });
+  if (!v || v.traced !== fp.key || v.state === "waiting") {
+    return unbounded(
+      "Tracing the camera's ray on the terrain",
+      v?.state === "waiting" && v.traced === fp.key
+        ? v.text
+        : "not known until the ray is traced over the terrain",
+    );
+  }
+  switch (v.state) {
+    case "blocked": {
+      if (!v.hitAt) {
+        break;
+      }
+      const p = footprintAt(fp, v.hitAt);
+      const range = v.from ? dist3(v.hitAt, v.from) : undefined;
+      const err = v.meters ?? 0;
+      const tan = Math.tan((Math.max(fp.tilt, 1) * Math.PI) / 180);
+      const along = err / tan;
+      const datum = fp.datum.meters ?? 0;
+      const meters = Math.hypot(along, datum, p.drift);
+      const datumWords =
+        fp.datum.meters !== undefined
+          ? `the CRS's ±${length(fp.datum.meters)} datum (PROJ's operation to WGS 84)`
+          : fp.datum.note;
+      return {
+        ...answer,
+        label: `Looking at E ${tenths(p.e)}, N ${tenths(p.n)} ${fp.unit}`,
+        aside: [
+          `On the terrain${range !== undefined ? ` ${length(range)} from the camera` : ""}`,
+          `on the BIM site grid x ${tenths(p.x)}, y ${tenths(p.y)} ${fp.unit}`,
+          answer.aside,
+        ]
+          .filter((x) => x)
+          .join(" · "),
+        accuracy: {
+          meters,
+          note: `the terrain's ±${length(err)} along a ray ${fp.tilt}° down moves the spot about ±${length(along)} on level ground (most of it, when it leads); ${datumWords}; the local placement's ${length(p.drift)} from PROJ`,
+        },
+      };
+    }
+    case "clear":
+      return unbounded(
+        `No ground within ${(fp.reach / 1000).toFixed(1)} km of the camera`,
+        "the ray clears the drawn terrain by more than its error as far as it is traced",
+      );
+    case "unknown":
+      return unbounded(
+        "Can't tell: the terrain isn't drawn along the ray",
+        v.text,
+      );
+    case "may-block":
+      return unbounded(
+        "Can't tell: the ray grazes the terrain, within its error",
+        v.text,
+      );
+  }
+  return unbounded("Tracing the camera's ray on the terrain", v.text);
+}
+
+/**
+ * The ship's answer with the page's trace of the mast's sight line to the
+ * buoy (Task 7): the verdict joins the label and leads the aside. Where it
+ * meets the terrain, a point within 3 m of the sea's height is the sea's
+ * horizon; higher, the land. Never in sight over terrain not drawn, or
+ * within its error.
+ */
+function withSight(
+  answer: ScenarioAnswer,
+  sight: NonNullable<ScenarioAnswer["sight"]>,
+  terrain: readonly TerrainSightView[] | undefined,
+): ScenarioAnswer {
+  const v = terrain?.find((t) => t.id === sight.line);
+  const join = (verdict: string, lead: string): ScenarioAnswer => ({
+    ...answer,
+    label: `${answer.label} · ${verdict}`,
+    aside: [lead, answer.aside].filter((x) => x).join(" · "),
+  });
+  const err = v?.meters !== undefined ? ` (±${length(v.meters)})` : "";
+  if (!v || v.traced !== sight.key || v.state === "waiting") {
+    return join(
+      "buoy: tracing",
+      `${sight.target}: ${v?.state === "waiting" && v.traced === sight.key ? v.text : "the sight line isn't traced yet"}`,
+    );
+  }
+  switch (v.state) {
+    case "clear":
+      return join(
+        "buoy in sight",
+        `${sight.target} in sight: the line clears the sea and the land as drawn${err}`,
+      );
+    case "blocked": {
+      let what = "the terrain";
+      let far = "";
+      if (v.hitAt) {
+        const h = Ellipsoid.WGS84.cartesianToCartographic(
+          Float64Array.from(v.hitAt),
+          { longitude: 0, latitude: 0, height: 0 },
+        )?.height;
+        what =
+          h !== undefined && h - sight.sea < 3
+            ? "the sea's horizon"
+            : "the land";
+        if (v.from) {
+          far = ` ${length(dist3(v.hitAt, v.from))} out`;
+        }
+      }
+      return join(
+        "buoy hidden",
+        `${sight.target} hidden: the line meets ${what}${far}`,
+      );
+    }
+    case "may-block":
+      return join(
+        "buoy: can't tell",
+        `${sight.target}: the line passes within the terrain's error${err}; not counted as in sight`,
+      );
+    case "unknown":
+      return join(
+        "buoy: can't tell",
+        `${sight.target}: the terrain is unknown over ${share(v.unknownFraction ?? 1)} of the line near the ground; not counted as in sight`,
+      );
+  }
+  return answer;
+}
+
+/** The answer with the page's terrain traces its footprint or sight line asks for (Task 7). */
+export function withTerrainAnswer(
+  answer: ScenarioAnswer,
+  terrain: readonly TerrainSightView[] | undefined,
+): ScenarioAnswer {
+  if (answer.footprint) {
+    return withFootprint(answer, answer.footprint, terrain);
+  }
+  if (answer.sight) {
+    return withSight(answer, answer.sight, terrain);
+  }
+  return answer;
 }

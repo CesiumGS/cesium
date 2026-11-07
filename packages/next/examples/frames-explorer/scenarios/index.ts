@@ -8,3 +8,5 @@ import "./bimSite.ts";
 import "./corridor.ts";
 import "./moonFromHere.ts";
 import "./dishTracks.ts";
+import "./drone.ts";
+import "./ship.ts";

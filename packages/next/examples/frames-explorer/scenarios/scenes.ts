@@ -9,6 +9,8 @@
 // Light imports only: the worker's evaluators import the lunar site from
 // here, and the page never bundles the catalog (protocol.ts's rule).
 import type { Frame } from "../../../src/frames/Frame.ts";
+import type { Frames } from "../../../src/frames/frames.ts";
+import { Instant } from "../../../src/time/Instant.ts";
 import { eastNorthUpFrame } from "../../../src/frames/local.ts";
 import { Ellipsoid, fromDegrees } from "../../../src/math/ellipsoid.ts";
 import { MOON } from "../../../src/scene/Body.ts";
@@ -16,13 +18,28 @@ import type { EngineeringSetup } from "../overlayConfig.ts";
 import type { RigKind } from "../orbit.ts";
 import type { OverlayId } from "../panel/model.ts";
 import {
+  BIM_PLACES,
   BIM_SITE_GRID,
   CORRIDOR_SITE_GRID,
+  offsetPlace,
   bimEngineering,
   corridorEngineering,
 } from "./sites.ts";
+import type { ScenarioEvaluation } from "./evaluate.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
+import {
+  BUOY,
+  CAMERA_MOUNT,
+  DRONE_BODY,
+  MAST_SENSOR,
+  SHIP,
+  SHIP_BODY,
+  droneFrames,
+  shipFrames,
+} from "./vehicles.ts";
+
+const BIM_PLACES_SF = BIM_PLACES["san-francisco"];
 
 /** The lunar site's node id: its triad's, its camera's and the tree's. */
 export const LUNAR_SITE = "Lunar site";
@@ -230,7 +247,21 @@ export interface SceneSpec {
    * compares them (stand-on-moon's two clocks in ICRF, Task 4c item 1).
    */
   routeLegs?: { start: string; end: string };
+  /**
+   * Moving bodies' frames on the page (Task 7: the drone, the ship), built
+   * from the evaluation's track as the worker built them (vehicles.ts):
+   * none until it is in. Their triads follow the clock every frame.
+   */
+  bodies?(
+    frames: Frames,
+    knobs: KnobState,
+    evaluation: ScenarioEvaluation | undefined,
+  ): readonly Frame[];
 }
+
+/** The ship's track's start, TDB s (vehicles.ts `SHIP.startUtc`). */
+export const shipStartTdb = (frames: Frames): number =>
+  Instant.fromUtc(Date.parse(SHIP.startUtc), frames.data.leapSeconds).tdb();
 
 export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
   "one-path": {
@@ -406,6 +437,68 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote:
       "Station and offset are measured along the road, in the site grid; drag the point on the globe, or set it with the knobs.",
+  },
+  drone: {
+    id: "drone",
+    // Beside the site, looking north-west across the drone's line: the
+    // view's centre 150 m to the right of the site origin, so the drone and
+    // its spot sit left of the answer's callout.
+    camera: "site",
+    flight: 3,
+    focus: ["ITRF"],
+    triads: () => [DRONE_BODY, CAMERA_MOUNT],
+    look: () => ({
+      ...offsetPlace(BIM_PLACES_SF.longitude, BIM_PLACES_SF.latitude, 120, 90),
+      range: 900,
+      heading: 323,
+      pitch: -14,
+    }),
+    bodies: (frames, k, e) =>
+      e?.track ? droneFrames(frames.itrf, e.track.heights, k) : [],
+    light: "camera",
+    drawIn: BIM_SITE_GRID,
+    drawnView: {
+      [BIM_SITE_GRID]:
+        "the spot the camera looks at, in the BIM model's own x and y",
+    },
+    diagramNote:
+      "The camera's ray goes up through the drone to ITRF, where it meets the terrain, then through PROJ and the map conversion to the model's grid.",
+    note: "The drone's flight line is synthetic. The spot is where the ray meets the terrain as drawn: only as good as the tiles under it.",
+  },
+  ship: {
+    id: "ship",
+    // Over the main ship channel, looking in toward the Golden Gate: the
+    // ship's last legs, the headlands and the buoy beyond them, close
+    // enough that the terrain the sight line crosses is drawn at levels
+    // 11 to 13.
+    camera: "site",
+    flight: 3,
+    focus: ["ITRF"],
+    triads: () => [SHIP_BODY, MAST_SENSOR],
+    look: () => ({
+      longitude: -122.535,
+      latitude: 37.795,
+      range: 17_000,
+      heading: 52,
+      pitch: -42,
+    }),
+    bodies: (frames, k, e) =>
+      e?.track
+        ? shipFrames(
+            frames.itrf,
+            e.track.heights,
+            shipStartTdb(frames),
+            Number(k.mast),
+          )
+        : [],
+    light: "camera",
+    drawIn: "California zone 3",
+    drawnView: {
+      "California zone 3":
+        "the ship's easting and northing on the port's grid, in US survey feet",
+    },
+    diagramNote: `The ship's place comes from its track; the mast rides its body as it pitches and rolls. ${BUOY.short}'s sight line is traced over the terrain on the globe.`,
+    note: "The track and the sea state are synthetic (along 33 CFR 167's lanes). The sight line is traced over the terrain as drawn: the sea's curve and the headlands; refraction is left out.",
   },
 };
 

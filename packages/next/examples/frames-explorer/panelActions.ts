@@ -114,9 +114,15 @@ export function createPanelActions(deps: {
     },
     setKnob: (id, value) => host.setKnob(id, value),
     backToChecked: () => host.backToChecked(),
-    goToTime: (ms) => {
-      viewer.clock.time = ms;
-      viewer.clock.mode = "paused";
+    goToMoment: (m) => {
+      if (m.knobs) {
+        for (const [id, value] of Object.entries(m.knobs)) {
+          host.setKnob(id, value);
+        }
+      } else if (m.utcMs !== undefined) {
+        viewer.clock.time = m.utcMs;
+        viewer.clock.mode = "paused";
+      }
     },
     selectQuietly: (id) => deps.selection.selectQuietly(id),
   };
