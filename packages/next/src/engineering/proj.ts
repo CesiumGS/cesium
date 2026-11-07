@@ -435,15 +435,18 @@ const cappedAt =
 
 /** The catalog entry for `name`; throws unless it is a plain, current catalog key. */
 function gridEntry(source: GridSource, name: string): GridEntry {
-  // A bare file name: it becomes a path where PROJ looks.
-  if (!/^[A-Za-z0-9_][\w.-]*$/.test(name)) {
+  // A bare file name: it becomes a path where PROJ looks. It ends in a letter
+  // or digit, as Windows drops a trailing dot ("proj.db." is "proj.db").
+  if (!/^(?:[A-Za-z0-9]|[A-Za-z0-9_][\w.-]*[A-Za-z0-9])$/.test(name)) {
     throw new Error(
       `PROJ: ${JSON.stringify(name)} is not a plain grid file name`,
     );
   }
-  // PROJ's own files, the staging directory's and the catalog's: a catalog
-  // (an overridden one, say) listing one of these can't put a grid over it.
-  if (RESERVED_NAMES.has(name) || name.endsWith(".partial")) {
+  // PROJ's own files and the rest of RESERVED_NAMES, in any case (macOS's and
+  // Windows's file systems ignore it): a catalog (an overridden one, say)
+  // listing one of these can't put a grid over it.
+  const lower = name.toLowerCase();
+  if (RESERVED_NAMES.has(lower) || lower.endsWith(".partial")) {
     throw new Error(
       `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`,
     );

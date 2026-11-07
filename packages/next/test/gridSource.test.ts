@@ -297,6 +297,12 @@ describe("gridSource and loadGrids (browser path)", () => {
       ["old.tif", /old\.tif is marked removed/],
       ["https://example.com/g.tif", /not a plain grid file name/],
       [".hidden.tif", /not a plain grid file name/],
+      // Windows drops a trailing dot: this would be proj.db.
+      ["proj.db.", /not a plain grid file name/],
+      ["g.tif.", /not a plain grid file name/],
+      ["PROJ.DB", /PROJ\.DB is the name of one of PROJ's own files/],
+      ["Proj.Ini", /Proj\.Ini is the name of one of PROJ's own files/],
+      ["g.tif.PARTIAL", /is the name of one of PROJ's own files/],
     ])("rejects %s before anything is fetched", async (name, message) => {
       const P = await load();
       const grids = await source();
@@ -389,6 +395,17 @@ describe("gridSource and loadGrids (browser path)", () => {
         "files.geojson",
         "copyright_and_licenses.csv",
         "g.tif.partial",
+        "proj.ini",
+        "ITRF2014",
+        "epsg",
+        "tmp",
+        "dev",
+        // In any case: macOS's and Windows's file systems ignore it.
+        "PROJ.DB",
+        "Owner",
+        "Proj_Capi.node",
+        "g.tif.Partial",
+        "PROJ.INI",
       ];
       const bytes = filled(10, 9);
       const listing = encode(
