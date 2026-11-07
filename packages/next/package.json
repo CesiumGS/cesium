@@ -5,6 +5,9 @@
   "description": "Proof of concept for a WebGPU-native CesiumJS 2.0 engine.",
   "license": "Apache-2.0",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
