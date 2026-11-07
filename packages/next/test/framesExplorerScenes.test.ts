@@ -21,7 +21,7 @@ import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
 const scene = (id: keyof typeof SCENES) => SCENES[id]!;
 
 describe("the strip's scenarios", () => {
-  it("are the three ported from the tour, the two on the ground (Task 6a), the two looking up (Task 6b) the drone and the ship (Task 7) and the robot arm (Task 7b), in the strip's order, opening on one-path", () => {
+  it("are the three ported from the tour, the two on the ground (Task 6a), the two looking up (Task 6b) the drone and the ship (Task 7), the robot arm (Task 7b) and the capstone last (Task 8), in the strip's order, opening on one-path", () => {
     expect(READY).toEqual([
       "one-path",
       "earth-turns",
@@ -33,8 +33,10 @@ describe("the strip's scenarios", () => {
       "drone",
       "ship",
       "robot-arm",
+      "everything",
     ]);
     expect(READY[0]).toBe(SCENARIOS[0]!.id);
+    expect(READY.at(-1)).toBe("everything");
   });
 });
 
@@ -131,5 +133,47 @@ describe("stand-on-moon: the tour's stop 6", () => {
       // Up is the outward vertical: down the Moon's axis at the south pole.
       expect(Math.sign(u[2]!)).toBe(Math.sign(latitude));
     }
+  });
+});
+
+describe("everything at once: the capstone (Task 8)", () => {
+  const s = scene("everything");
+  it("frames the Earth and the Moon when an end is off the Earth, and both Earth ends from above otherwise", () => {
+    expect(s.cameraFor!({ from: "ship", to: "lunar-site" })).toBe("earthMoon");
+    expect(s.cameraFor!({ from: "orion", to: "dish" })).toBe("earthMoon");
+    expect(s.cameraFor!({ from: "dish", to: "tool" })).toBe("site");
+    const look = s.look!({ from: "ship", to: "tool" });
+    // Between San Francisco and Cape Canaveral, high enough for both.
+    expect(look.longitude).toBeGreaterThan(-122);
+    expect(look.longitude).toBeLessThan(-81);
+    expect(look.range).toBeGreaterThan(4e6);
+    expect(look.pitch).toBeLessThan(-89);
+  });
+
+  it("draws Orion's path in GCRF only when Orion is an end, and the two ends' own triads", () => {
+    expect(s.orion!({ from: "orion", to: "dish" })).toBe("GCRF");
+    expect(s.orion!({ from: "ship", to: "lunar-site" })).toBeUndefined();
+    expect(s.triads({ from: "ship", to: "lunar-site" })).toEqual([
+      "Mast sensor",
+      LUNAR_SITE,
+    ]);
+    expect(s.triads({ from: "orion", to: "tool" })).toEqual(["Tool"]);
+  });
+
+  it("drives From and To from the tree, each object a node, and names the route's ends", () => {
+    expect(s.treePair).toMatchObject({ from: "from", to: "to" });
+    expect(Object.keys(s.treePair!.nodes)).toEqual([
+      "dish",
+      "ship",
+      "orion",
+      "lunar-site",
+      "tool",
+    ]);
+    expect(s.focus).toEqual(
+      expect.arrayContaining(["ICRF", ...Object.values(s.treePair!.nodes)]),
+    );
+    const ends = s.routeEndsFor!({ from: "dish", to: "orion" });
+    expect(ends.start.title).toBe("From the dish (DSS-43)");
+    expect(ends.end.title).toBe("To Orion");
   });
 });

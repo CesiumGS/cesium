@@ -9,12 +9,17 @@ import type {
   ClockView,
   ResultExtras,
   ScenarioPanelView,
+  TerrainSightView,
 } from "./panel/model.ts";
 import { APP_CODE } from "./panel/appCode.ts";
 import { routeSteps } from "./panel/routeSteps.ts";
 import { withTerrain, withTerrainAnswer } from "./panel/answerText.ts";
 import type { ScenarioHostState } from "./scenarioHost.ts";
-import type { Moment, ScenarioAnswer } from "./scenarios/evaluate.ts";
+import type {
+  Moment,
+  ScenarioAnswer,
+  ScenarioEvaluation,
+} from "./scenarios/evaluate.ts";
 import {
   checkKind,
   checkRows,
@@ -119,6 +124,35 @@ export function publishedView(
   };
 }
 
+/**
+ * The traces of the evaluation's own sight lines (the capstone's, Task 8):
+ * one made for another pair (its `traced` isn't its line's key) reads as
+ * tracing, never as this pair's verdict; a line the evaluation no longer
+ * has goes.
+ */
+export function ownTraces(
+  terrain: readonly TerrainSightView[],
+  e: Pick<ScenarioEvaluation, "sightLines">,
+): TerrainSightView[] {
+  const out: TerrainSightView[] = [];
+  for (const v of terrain) {
+    const line = e.sightLines?.find((l) => l.id === v.id);
+    if (!line) {
+      continue;
+    }
+    out.push(
+      line.key === undefined || v.traced === line.key
+        ? v
+        : {
+            id: v.id,
+            state: "waiting",
+            text: `${line.subject ?? `The local horizon toward ${line.label}`}: tracing on the terrain.`,
+          },
+    );
+  }
+  return out;
+}
+
 export interface ScenarioViewInput {
   st: ScenarioHostState;
   /** The catalog's results (the scenario's checks). */
@@ -143,6 +177,10 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
   const catalog = new Map(input.results.map((r) => [r.id, r]));
   const e = st.evaluation;
   const freshness = scenarioFreshness(st, playing);
+  const terrain =
+    input.terrain !== undefined && e?.pair
+      ? ownTraces(input.terrain, e)
+      : input.terrain;
   let checks: CheckRow[];
   if (e && st.evaluatedAt) {
     // The rows of the setup it was made at; `freshness` says whether
@@ -236,10 +274,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       problem: { ...st.problem, message: input.scrub(st.problem.message) },
     }),
     ...(e && {
-      answer: withTerrain(
-        withTerrainAnswer(e.answer, input.terrain),
-        input.terrain,
-      ),
+      answer: withTerrain(withTerrainAnswer(e.answer, terrain), terrain),
     }),
     ...publishedView(
       e?.answer.published,
@@ -254,7 +289,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     checks,
     liveExtras,
     ...(input.sceneNote !== undefined && { note: input.sceneNote }),
-    ...(input.terrain !== undefined && { terrain: input.terrain }),
+    ...(terrain !== undefined && { terrain }),
     ...(() => {
       const presets = [...(e?.presets ?? []), ...(input.pagePresets ?? [])];
       return presets.length > 0 ? { presets } : {};
@@ -269,6 +304,27 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
               knob: knob.id,
               verb: c!.verb,
               options: knob.options,
+            },
+          }
+        : {};
+    })(),
+    ...(() => {
+      // The capstone's pair (Task 8): its two knobs, each value's node.
+      const tp = SCENES[spec.id]?.treePair;
+      const knob = tp && spec.knobs.find((k) => k.id === tp.from);
+      return tp && knob?.options
+        ? {
+            pair: {
+              from: tp.from,
+              to: tp.to,
+              options: knob.options
+                .filter((o) => tp.nodes[o.value] !== undefined)
+                .map((o) => ({
+                  value: o.value,
+                  node: tp.nodes[o.value]!,
+                  label: o.label,
+                  short: o.short ?? o.value,
+                })),
             },
           }
         : {};
@@ -291,19 +347,22 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       if (!tree || !path || !p) {
         return {};
       }
+      // The ends as the evaluation's knobs name them (the capstone's pair).
+      const ends =
+        sc?.routeEndsFor?.(st.evaluatedAt?.knobs ?? st.knobs) ?? sc?.routeEnds;
       const start = e.data
         ? {
             title: `${e.data.label}, as delivered`,
             does: `${e.data.describes ?? "position and velocity"}, expressed in ${e.data.frame} (${e.data.source})`,
             accuracy: e.data.accuracy,
           }
-        : (sc?.routeEnds?.start ?? { title: p.from, does: "" });
+        : (ends?.start ?? { title: p.from, does: "" });
       const end = e.data
         ? {
             title: `Drawn in ${p.to}`,
             does: sc?.drawnView?.[p.to] ?? "",
           }
-        : (sc?.routeEnds?.end ?? { title: p.to, does: "" });
+        : (ends?.end ?? { title: p.to, does: "" });
       return {
         route: routeSteps(
           tree,

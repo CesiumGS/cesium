@@ -11,3 +11,4 @@ import "./dishTracks.ts";
 import "./drone.ts";
 import "./ship.ts";
 import "./robotArm.ts";
+import "./everything.ts";

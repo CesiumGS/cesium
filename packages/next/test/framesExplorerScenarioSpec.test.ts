@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   checkedState,
   clampKnobs,
+  withKnob,
   type ScenarioSpec,
 } from "../examples/frames-explorer/scenarios/spec.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
@@ -249,5 +250,52 @@ describe("clampKnobs (Review Focus 4)", () => {
     );
     // A choice is matched exactly, not coerced.
     expect(clampKnobs(s, { crs: "CA-ZONE-3" }).crs).toBe("ca-zone-3");
+  });
+});
+
+describe("the capstone's From and To never name one object (Task 8)", () => {
+  const s = SCENARIOS.find((x) => x.id === "everything")!;
+  const checked = s.checked.knobs;
+
+  it("offers the five objects at both ends, the checked pair the ship and the lunar site", () => {
+    for (const id of ["from", "to"]) {
+      expect(
+        s.knobs.find((k) => k.id === id)!.options!.map((o) => o.value),
+      ).toEqual(["dish", "ship", "orion", "lunar-site", "tool"]);
+    }
+    expect(checked).toEqual({ from: "ship", to: "lunar-site" });
+    expect(s.distinct).toEqual(["from", "to"]);
+  });
+
+  it("falls back to the checked pair for a link that names one object twice", () => {
+    expect(clampKnobs(s, { from: "dish", to: "dish" })).toEqual(checked);
+    expect(clampKnobs(s, { from: "orion", to: "nowhere" })).toEqual({
+      from: "orion",
+      to: "lunar-site",
+    });
+    // The fallback To is the From: the checked pair, not the same twice.
+    expect(clampKnobs(s, { from: "lunar-site" })).toEqual(checked);
+    expect(clampKnobs(s, { from: "tool", to: "orion" })).toEqual({
+      from: "tool",
+      to: "orion",
+    });
+  });
+
+  it("turns the pair round when one end takes the other's object (the swap)", () => {
+    expect(withKnob(s, checked, "to", "ship")).toEqual({
+      from: "lunar-site",
+      to: "ship",
+    });
+    expect(withKnob(s, checked, "from", "lunar-site")).toEqual({
+      from: "lunar-site",
+      to: "ship",
+    });
+    expect(withKnob(s, checked, "to", "orion")).toEqual({
+      from: "ship",
+      to: "orion",
+    });
+    // Other scenarios' knobs are set as they were.
+    const arm = SCENARIOS.find((x) => x.id === "robot-arm")!;
+    expect(withKnob(arm, arm.checked.knobs, "yaw", 400).yaw).toBe(180);
   });
 });

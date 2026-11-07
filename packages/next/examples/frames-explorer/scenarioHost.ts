@@ -18,6 +18,7 @@ import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import {
   checkedState,
   clampKnobs,
+  withKnob,
   type KnobState,
   type KnobValue,
   type ScenarioId,
@@ -338,7 +339,7 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
     if (disposed || !spec.knobs.some((k) => k.id === id)) {
       return;
     }
-    const next = clampKnobs(spec, { ...knobs, [id]: value });
+    const next = withKnob(spec, knobs, id, value);
     if (next[id] === knobs[id]) {
       return;
     }

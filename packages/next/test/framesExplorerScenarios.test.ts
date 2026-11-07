@@ -285,6 +285,7 @@ describe("the strip", () => {
       "drone",
       "ship",
       "robot-arm",
+      "everything",
     ]);
     expect(SCENES["bim-site"]!.engineering!.overlays).toEqual([
       "designGrid",
@@ -533,6 +534,26 @@ describe("the verdict joins the terrain's to the sky's (fix 1): the weakest lead
     expect(withTerrain(answer, t("waiting")).aside).toMatch(/isn't traced yet/);
     expect(withTerrain(answer, t("clear")).aside).toMatch(
       /^In view: clear of the Earth and the Moon, and of the terrain/,
+    );
+  });
+
+  it("takes only a trace made for its own line and setup (the capstone's key, Task 8)", () => {
+    const keyed = {
+      ...answer,
+      sky: { ...answer.sky, line: "pair", key: '["dish","orion"]' },
+    };
+    const trace = (traced: string) => [
+      { id: "pair", state: "clear" as const, text: "", traced },
+    ];
+    expect(withTerrain(keyed, trace('["dish","orion"]')).aside).toMatch(
+      /, and of the terrain/,
+    );
+    // Another pair's trace: not traced yet, never its verdict.
+    expect(withTerrain(keyed, trace('["tool","orion"]')).aside).toMatch(
+      /the terrain isn't traced yet/,
+    );
+    expect(withTerrain(keyed, t("clear")).aside).toBe(
+      "In view: clear of the Earth and the Moon · 394,304 km",
     );
   });
 

@@ -19,6 +19,7 @@ import { svgMinimize } from "@stratakit/icons/minimize";
 import { svgMoon } from "@stratakit/icons/moon";
 import { svgPathExtend } from "@stratakit/icons/path-extend";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
+import { svgSwap } from "@stratakit/icons/swap";
 import { svgTimeline } from "@stratakit/icons/timeline";
 import { svgUndo } from "@stratakit/icons/undo";
 import { Icon } from "@stratakit/mui";
@@ -133,6 +134,107 @@ function ChoiceKnob({
   );
 }
 
+/**
+ * The capstone's pair (Task 8): From and To as two segmented controls,
+ * a swap between them. To's option for the object From already is is
+ * greyed out with a tip; picking From's for To's object turns the pair
+ * round (spec.ts `withKnob`).
+ */
+function PairKnobs({
+  pair,
+  values,
+  checked,
+  labels,
+  onKnob,
+}: {
+  pair: NonNullable<ScenarioPanelView["pair"]>;
+  values: ScenarioPanelView["values"];
+  checked: ScenarioPanelView["checked"];
+  labels: { from: string; to: string };
+  onKnob: (id: string, value: KnobValue) => void;
+}) {
+  const ids = { from: useId(), to: useId() };
+  const from = String(values[pair.from]);
+  const to = String(values[pair.to]);
+  const name = (v: string) => pair.options.find((o) => o.value === v);
+  const row = (end: "from" | "to") => {
+    const value = end === "from" ? from : to;
+    const other = end === "from" ? to : from;
+    return (
+      <div className="fx-knob">
+        <span id={ids[end]} className="fx-knob-label">
+          {labels[end]}
+        </span>
+        <div className="fx-knob-control">
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={value}
+            aria-labelledby={ids[end]}
+            className="fx-knob-choice fx-pair-choice"
+            onChange={(_, v: string | null) =>
+              v !== null && onKnob(pair[end], v)
+            }
+          >
+            {pair.options.map((o) => {
+              // To can't be From's object: greyed out, with why.
+              const taken = end === "to" && o.value === other;
+              return (
+                <ToggleButton
+                  key={o.value}
+                  value={o.value}
+                  disabled={taken}
+                  title={
+                    taken
+                      ? `${o.short} is already From: pick another, or swap`
+                      : end === "from" && o.value === other
+                        ? `${o.label}: swaps From and To`
+                        : o.label
+                  }
+                  render={<Button variant="outlined" />}
+                >
+                  {o.short}
+                  {o.value === String(checked[pair[end]]) && (
+                    <span className="fx-visually-hidden"> (checked setup)</span>
+                  )}
+                </ToggleButton>
+              );
+            })}
+          </ToggleButtonGroup>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div className="fx-pair">
+      {row("from")}
+      <div className="fx-pair-swap">
+        <Button
+          size="small"
+          variant="text"
+          startIcon={<Icon href={svgSwap} />}
+          onClick={() => onKnob(pair.from, to)}
+        >
+          Swap From and To
+        </Button>
+      </div>
+      {row("to")}
+      <Typography
+        variant="caption-lg"
+        color="textSecondary"
+        render={<p />}
+        className="fx-knob-help fx-pair-help"
+      >
+        {name(from)?.label} to {name(to)?.label.replace(/^The /, "the ")}
+        {from === String(checked[pair.from]) && to === String(checked[pair.to])
+          ? ""
+          : ` (checked: ${name(String(checked[pair.from]))?.short} to ${name(String(checked[pair.to]))?.short})`}
+        . Or click them in the tree.
+      </Typography>
+    </div>
+  );
+}
+
 /** What `movedText` reads, field by field (a spread would read every field). */
 const movedFrom = (s: ScenarioPanelView, epochUtc: string) => ({
   changed: s.changed,
@@ -160,6 +262,7 @@ export const KNOBS_READS = [
   "checkedEpochUtc",
   "eop",
   "presets",
+  "pair",
 ] as const;
 
 export const Knobs = memo(KnobsView, equalOn("scenario", KNOBS_READS));
@@ -244,25 +347,39 @@ function KnobsView({
           . The checks re-run here.
         </Typography>
       )}
-      {s.knobs.map((k) =>
-        k.kind === "range" ? (
-          <RangeKnob
-            key={k.id}
-            knob={k}
-            value={Number(s.values[k.id])}
-            checked={Number(s.checked[k.id])}
-            onChange={(v) => onKnob(k.id, v)}
-          />
-        ) : (
-          <ChoiceKnob
-            key={k.id}
-            knob={k}
-            value={String(s.values[k.id])}
-            checked={String(s.checked[k.id])}
-            onChange={(v) => onKnob(k.id, v)}
-          />
-        ),
+      {s.pair && (
+        <PairKnobs
+          pair={s.pair}
+          values={s.values}
+          checked={s.checked}
+          labels={{
+            from: s.knobs.find((k) => k.id === s.pair!.from)?.label ?? "From",
+            to: s.knobs.find((k) => k.id === s.pair!.to)?.label ?? "To",
+          }}
+          onKnob={onKnob}
+        />
       )}
+      {s.knobs
+        .filter((k) => k.id !== s.pair?.from && k.id !== s.pair?.to)
+        .map((k) =>
+          k.kind === "range" ? (
+            <RangeKnob
+              key={k.id}
+              knob={k}
+              value={Number(s.values[k.id])}
+              checked={Number(s.checked[k.id])}
+              onChange={(v) => onKnob(k.id, v)}
+            />
+          ) : (
+            <ChoiceKnob
+              key={k.id}
+              knob={k}
+              value={String(s.values[k.id])}
+              checked={String(s.checked[k.id])}
+              onChange={(v) => onKnob(k.id, v)}
+            />
+          ),
+        )}
       {/* The time is set on the timeline under the globe (the owner,
           2026-11-06); the line above names it when it moved, and Back
           restores it. The scenario's moments jump it (Task 6c). */}

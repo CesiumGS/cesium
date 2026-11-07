@@ -101,6 +101,107 @@ const edgeOf = (a: {
   note: string;
 }): EdgeAccuracy => ({ ...a });
 
+/**
+ * The arm's frames as the tree adds them (pad to tool, defined by the app),
+ * each edge stating its own accuracy at `instant` (the capstone's too,
+ * Task 8).
+ */
+export function armAdded(
+  arm: ReturnType<typeof armFrames>,
+  angles: ReturnType<typeof anglesOf>,
+  instant: Instant,
+): AddedFrameSpec[] {
+  const at = (name: string) => arm.all.find((f) => f.name === name)!;
+  const appEdge = (
+    name: string,
+    kind: AddedFrameSpec["edge"]["kind"],
+    detail: string,
+  ): AddedFrameSpec["edge"] => ({
+    kind,
+    detail,
+    accuracy: edgeOf(at(name).accuracy(instant)),
+  });
+  return [
+    {
+      id: PAD.name,
+      label: PAD.name,
+      parentId: "ITRF",
+      app: true,
+      edge: appEdge(
+        PAD.name,
+        "constant",
+        `east-north-up at NGS mark ${PAD.mark} on LC-39A's pad (${PAD.latitude.toFixed(5)}° N, ${(-PAD.longitude).toFixed(5)}° W, h ${PAD.height.toFixed(3)} m, its datasheet's, its NAD83(1990) position taken as NAD83(2011), an identity PROJ states at 0.1 m (ESRI:108355); carried by CCV6's NAD83(2011) velocity and through PROJ to ITRF2020 at ${COORDINATE_EPOCH.toFixed(1)}): the library's eastNorthUpFrame`,
+      ),
+    },
+    {
+      id: ARM.base,
+      label: ARM.base,
+      parentId: PAD.name,
+      app: true,
+      edge: appEdge(
+        ARM.base,
+        "constant",
+        `a fixed placement ${GEOMETRY.base[0]} m east of the pad's centre (synthetic)`,
+      ),
+    },
+    {
+      id: ARM.yaw,
+      label: ARM.yaw,
+      parentId: ARM.base,
+      app: true,
+      edge: appEdge(
+        ARM.yaw,
+        "translation+rotation",
+        `the slewing ring, ${GEOMETRY.column} m up its column, turned ${deg(angles.yaw)} about its up axis (z)`,
+      ),
+    },
+    {
+      id: ARM.shoulder,
+      label: ARM.shoulder,
+      parentId: ARM.yaw,
+      app: true,
+      edge: appEdge(
+        ARM.shoulder,
+        "rotation",
+        `the boom raised ${deg(angles.shoulder)} about the shoulder's y axis`,
+      ),
+    },
+    {
+      id: ARM.elbow,
+      label: ARM.elbow,
+      parentId: ARM.shoulder,
+      app: true,
+      edge: appEdge(
+        ARM.elbow,
+        "translation+rotation",
+        `${GEOMETRY.boom} m along the boom, the forearm turned ${deg(angles.elbow)} about y`,
+      ),
+    },
+    {
+      id: ARM.wrist,
+      label: ARM.wrist,
+      parentId: ARM.elbow,
+      app: true,
+      edge: appEdge(
+        ARM.wrist,
+        "translation+rotation",
+        `${GEOMETRY.forearm} m along the forearm, the tool turned ${deg(angles.wrist)} about y`,
+      ),
+    },
+    {
+      id: ARM.tool,
+      label: ARM.tool,
+      parentId: ARM.wrist,
+      app: true,
+      edge: appEdge(
+        ARM.tool,
+        "constant",
+        `the tool's point, ${GEOMETRY.tool} m out from the wrist`,
+      ),
+    },
+  ];
+}
+
 export const evaluateRobotArm: ScenarioEvaluator = async (
   ctx: StressContext,
   knobs: KnobState,
@@ -196,94 +297,8 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
           : top.frame === ARM.base
             ? `most of it the base's survey, ${mm(top.meters!)}`
             : `most of it the ${top.frame}'s link, ${mm(top.meters!)}`;
-  const at = (name: string) => arm.all.find((f) => f.name === name)!;
-  const appEdge = (
-    name: string,
-    kind: AddedFrameSpec["edge"]["kind"],
-    detail: string,
-  ): AddedFrameSpec["edge"] => ({
-    kind,
-    detail,
-    accuracy: edgeOf(at(name).accuracy(instant)),
-  });
   const added: AddedFrameSpec[] = [
-    {
-      id: PAD.name,
-      label: PAD.name,
-      parentId: "ITRF",
-      app: true,
-      edge: appEdge(
-        PAD.name,
-        "constant",
-        `east-north-up at NGS mark ${PAD.mark} on LC-39A's pad (${PAD.latitude.toFixed(5)}° N, ${(-PAD.longitude).toFixed(5)}° W, h ${PAD.height.toFixed(3)} m, its datasheet's, its NAD83(1990) position taken as NAD83(2011), an identity PROJ states at 0.1 m (ESRI:108355); carried by CCV6's NAD83(2011) velocity and through PROJ to ITRF2020 at ${COORDINATE_EPOCH.toFixed(1)}): the library's eastNorthUpFrame`,
-      ),
-    },
-    {
-      id: ARM.base,
-      label: ARM.base,
-      parentId: PAD.name,
-      app: true,
-      edge: appEdge(
-        ARM.base,
-        "constant",
-        `a fixed placement ${GEOMETRY.base[0]} m east of the pad's centre (synthetic)`,
-      ),
-    },
-    {
-      id: ARM.yaw,
-      label: ARM.yaw,
-      parentId: ARM.base,
-      app: true,
-      edge: appEdge(
-        ARM.yaw,
-        "translation+rotation",
-        `the slewing ring, ${GEOMETRY.column} m up its column, turned ${deg(angles.yaw)} about its up axis (z)`,
-      ),
-    },
-    {
-      id: ARM.shoulder,
-      label: ARM.shoulder,
-      parentId: ARM.yaw,
-      app: true,
-      edge: appEdge(
-        ARM.shoulder,
-        "rotation",
-        `the boom raised ${deg(angles.shoulder)} about the shoulder's y axis`,
-      ),
-    },
-    {
-      id: ARM.elbow,
-      label: ARM.elbow,
-      parentId: ARM.shoulder,
-      app: true,
-      edge: appEdge(
-        ARM.elbow,
-        "translation+rotation",
-        `${GEOMETRY.boom} m along the boom, the forearm turned ${deg(angles.elbow)} about y`,
-      ),
-    },
-    {
-      id: ARM.wrist,
-      label: ARM.wrist,
-      parentId: ARM.elbow,
-      app: true,
-      edge: appEdge(
-        ARM.wrist,
-        "translation+rotation",
-        `${GEOMETRY.forearm} m along the forearm, the tool turned ${deg(angles.wrist)} about y`,
-      ),
-    },
-    {
-      id: ARM.tool,
-      label: ARM.tool,
-      parentId: ARM.wrist,
-      app: true,
-      edge: appEdge(
-        ARM.tool,
-        "constant",
-        `the tool's point, ${GEOMETRY.tool} m out from the wrist`,
-      ),
-    },
+    ...armAdded(arm, angles, instant),
     {
       id: MARK.frame,
       label: MARK.frame,

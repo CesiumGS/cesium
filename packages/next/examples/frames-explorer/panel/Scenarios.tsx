@@ -417,25 +417,57 @@ function ScenariosView({
   const control = scenario.treeControl;
   const current = control ? String(scenario.values[control.knob]) : undefined;
   const drawIn = scenario.drawIn;
+  // The capstone's pair (Task 8): the tree picks From and To.
+  const pair = scenario.pair;
+  const fromValue = pair ? String(scenario.values[pair.from]) : undefined;
+  const toValue = pair ? String(scenario.values[pair.to]) : undefined;
+  const meet = scenario.path?.ancestor;
   const targets: DiagramTargets | undefined = useMemo(
     () =>
-      control && current !== undefined
-        ? {
-            ids: new Set(control.options.map((o) => o.value)),
-            current,
-            label: (id: string) => `${control.verb} ${id}`,
-            onPick: (id: string) => actions.setKnob(control.knob, id),
-          }
-        : drawIn !== undefined
-          ? // A fixed frame to draw in (Task 6a fix 1): tagged, not a choice.
-            {
-              ids: new Set<string>(),
-              current: drawIn,
-              label: () => "",
+      pair && fromValue !== undefined && toValue !== undefined
+        ? (() => {
+            const node = (v: string) =>
+              pair.options.find((o) => o.value === v)?.node ?? v;
+            const byNode = new Map(pair.options.map((o) => [o.node, o]));
+            return {
+              ids: new Set(byNode.keys()),
+              current: node(fromValue),
+              label: (id: string) =>
+                `${byNode.get(id)?.label ?? id}: click (or Enter) for From, Shift-click (or Shift+Enter) for To`,
               onPick: () => {},
+              pair: {
+                from: node(fromValue),
+                to: node(toValue),
+                ...(meet !== undefined && { meet }),
+                pick: (id: string, end: "from" | "to") => {
+                  const o = byNode.get(id);
+                  if (o) {
+                    actions.setKnob(
+                      end === "from" ? pair.from : pair.to,
+                      o.value,
+                    );
+                  }
+                },
+              },
+            };
+          })()
+        : control && current !== undefined
+          ? {
+              ids: new Set(control.options.map((o) => o.value)),
+              current,
+              label: (id: string) => `${control.verb} ${id}`,
+              onPick: (id: string) => actions.setKnob(control.knob, id),
             }
-          : undefined,
-    [control, current, drawIn, actions],
+          : drawIn !== undefined
+            ? // A fixed frame to draw in (Task 6a fix 1): tagged, not a choice.
+              {
+                ids: new Set<string>(),
+                current: drawIn,
+                label: () => "",
+                onPick: () => {},
+              }
+            : undefined,
+    [control, current, drawIn, actions, pair, fromValue, toValue, meet],
   );
   const extras: Record<string, ResultExtras> = useMemo(
     () => ({ ...model.extras, ...scenario.liveExtras }),
@@ -540,6 +572,12 @@ function ScenariosView({
                   <li>
                     <span className="fx-key-drawing" aria-hidden />
                     the frame you draw in (click a dashed one)
+                  </li>
+                )}
+                {pair && (
+                  <li>
+                    <span className="fx-key-drawing" aria-hidden />
+                    From and To (click a dashed one; Shift-click for To)
                   </li>
                 )}
                 {scenario.path && (

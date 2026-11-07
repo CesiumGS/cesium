@@ -74,6 +74,13 @@ export interface ScenarioSpec {
    * its inputs come from, say.
    */
   checkKinds?: Readonly<Record<string, CheckKind>>;
+  /**
+   * Two choice knobs that never take the same value (the capstone's From
+   * and To, Task 8): setting one to the other's value swaps them
+   * (`withKnob`), and a link that gives both the same falls back to the
+   * checked pair (`clampKnobs`).
+   */
+  distinct?: readonly [string, string];
 }
 
 /**
@@ -149,5 +156,33 @@ export function clampKnobs(
       checked,
     );
   }
+  const pair = spec.distinct;
+  if (pair && out[pair[0]] === out[pair[1]]) {
+    // The same object at both ends answers nothing: the checked pair.
+    out[pair[0]] = spec.checked.knobs[pair[0]]!;
+    out[pair[1]] = spec.checked.knobs[pair[1]]!;
+  }
   return out;
+}
+
+/**
+ * `knobs` with knob `id` set to `value`, clamped (`clampKnobs`). For one of
+ * the spec's `distinct` pair, taking the other's value swaps them: the
+ * capstone's To set to its From turns the pair round.
+ */
+export function withKnob(
+  spec: ScenarioSpec,
+  knobs: KnobState,
+  id: string,
+  value: KnobValue,
+): KnobState {
+  const next: Record<string, KnobValue> = { ...knobs, [id]: value };
+  const pair = spec.distinct;
+  if (pair?.includes(id)) {
+    const other = pair[0] === id ? pair[1] : pair[0];
+    if (knobs[other] === value && knobs[id] !== undefined) {
+      next[other] = knobs[id];
+    }
+  }
+  return clampKnobs(spec, next);
 }

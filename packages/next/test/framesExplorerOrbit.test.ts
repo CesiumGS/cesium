@@ -59,6 +59,9 @@ describe("which views orbit (the owner: stuck out in space)", () => {
       "one-path": "earthMoon",
       "earth-turns": "geocentric",
       "stand-on-moon": "lunarSite",
+      // The capstone frames the Earth and the Moon when an end is off the
+      // Earth (Task 8); both on it, it looks from above (the globe controls).
+      everything: "earthMoon",
     });
   });
 

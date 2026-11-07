@@ -1233,6 +1233,7 @@ board, an overlay's `OverlayState`).
 | `scenarios/jointChain.ts` | A kinematic chain of joint frames, defined by the app through the public `Frame` API, uncached, each with its stated accuracy (Task 7b)                              |
 | `scenarios/arm.ts`        | The robot arm at LC-39A: its pad, synthetic geometry and spec sheet, its frames, the closed form and lever-arm rule by hand (pure; the page and the worker, Task 7b) |
 | `scenarios/robotArm.ts`   | The arm's evaluator: the tool-to-CCV6 distance, its composed accuracy, the station through PROJ (Task 7b)                                                            |
+| `scenarios/everything.ts` | The capstone's evaluator: any two of five objects, their distance in ICRF, light time and line of sight, the pair's accuracy as the walk composes each end (Task 8)  |
 | `panel/appCode.ts`        | The app code under an answer, "How these frames are defined", read from the source's `#region` (Task 7b)                                                             |
 | `callouts.ts`             | The lunar clock's callout, Orion's marker and path label                                                                                                             |
 | `labelPanels.ts`          | The panels over the view the globe's labels keep clear of (pure placement, Task 4c)                                                                                  |
@@ -1574,6 +1575,63 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   the line runs into the distance and the arm is seen side on, left of the
   callout; the arm's triads are 2.5% of the camera's distance
   (`SceneSpec.triadScale`).
+
+### 8: everything at once (2026-11-07)
+
+- **Five objects, one tree.** The dish (DSS-43 from the station SPK, under
+  ITRF), the ship's mast sensor (its body under ITRF, holding off Mile
+  Rocks after its synthetic track ends), Orion (its OEM's own frame under
+  EME2000: the one scenario where Orion is a node, labelled so in its
+  edge's detail), the lunar site (90° S under MOON_ME) and the arm's tool
+  (the app's chain at the robot arm's checked pose). The object table is
+  `scenes.ts` `CAPSTONE`; `everything.ts` evaluates.
+- **The answer.** The distance between the two frames' origins in ICRF
+  (`measure`'s distance in From's own frame differs by GCRF's relativistic
+  transformation where it is on the route: the method says by how much);
+  the one-way light time, a signal from To heard at From now (Newtonian, as
+  plan 3); the line of sight against the Earth's and the Moon's ellipsoids.
+  The three Earth objects are all over each other's horizon, so an Earth
+  pair says how far below the ellipsoid the straight line passes; from the
+  lunar south pole the Earth sits below the horizon at the checked time.
+  An Earth end with a clear sky has its local horizon toward the other
+  traced over the drawn terrain, keyed to the pair (`ownTraces`,
+  `withTerrain`'s `sky.key`): another pair's trace reads as tracing.
+- **Accuracy as the walk composes each end:** `accuracyOf` (through
+  `measure`) for the two origins, with the tool's taken in ITRF, plus the
+  tool's own frames up to ITRF (`pointAccuracy`), root-sum-square, listed
+  largest first. The data test holds it bounded exactly where both ends'
+  walks are.
+- **No published value for a pair** is said in one line under the
+  headline (`ScenarioAnswer.unpublished`). For the dish and Orion at one of
+  signal.json's rows, a live row compares the light time with plan 3's
+  SPICE fixture. At the checked setup the checks are the route's round
+  trips (ITRF and MOON_ME, the ship's frames) and the light-time solver's
+  published check, each with a note on how far it carries.
+- **Knobs.** From and To as segmented controls with a swap between them;
+  To's option for From's object is greyed out with a tip. Setting one end
+  to the other's object swaps them (`spec.ts` `withKnob`, the spec's
+  `distinct`); a link naming one object twice falls back to the checked
+  pair. Below 480 px each control takes its own row, so the five stay on
+  one line (no selects needed).
+- **Picking on the tree** (`DiagramTargets.pair`): a click sets From and
+  the next click To; Shift-click sets To at once. Enter sets From and
+  Shift+Enter To, keeping focus on the pill; a click also opens the
+  frame's detail, as one-path's control does. The two ends carry "From"
+  and "To" tags and the meeting frame "Meets here" (inside the pill, so
+  not "Meets at ICRF").
+- **On the globe.** A line from From to To, placed every frame from the
+  page's own frames (Orion from the page's OEM, `bodyLines.ts`
+  `pairPlaces`), the ends labelled and the length (ICRF) with the
+  worker's accuracy at its middle; with both ends on the Earth the line
+  runs through it, so the length rides with From's label. Off the Earth
+  the camera frames the Earth and the Moon (Orion's path drawn in GCRF
+  when it is an end); both on it, it looks straight down on the middle of
+  the great circle between them. Lit from the camera.
+- **Moments:** "The longest path" (the checked setup: the ship's mast and
+  the lunar site meet only at ICRF) and "Orion behind the Moon" (the dish
+  and Orion, a minute after the Moon hides Orion from DSS-43; the dish's
+  windows mark the timeline for that pair). A moment may now set knobs and
+  the time.
 
 ### Carried forward (engine work)
 

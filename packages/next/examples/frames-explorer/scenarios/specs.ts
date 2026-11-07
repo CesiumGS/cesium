@@ -67,12 +67,26 @@ const BODY_CHECK_NOTES: ScenarioSpec["checkNotes"] = {
     "Over a drawn test hill: it checks the trace's verdict by hand; the answer's terrain is the drawn globe's.",
 };
 
-/** The capstone's objects, one on each branch of the tree. */
+/**
+ * The capstone's five objects (Task 8), each on its own branch of the tree:
+ * the dish under ITRF, the ship's mast under its body under ITRF, Orion
+ * under EME2000, the lunar site under MOON_ME, the arm's tool at the end of
+ * the app's chain under ITRF.
+ */
 const CAPSTONE_OBJECTS: KnobSpec["options"] = [
-  { value: "dish", label: "The dish" },
-  { value: "ship", label: "The ship" },
-  { value: "orion", label: "Orion" },
-  { value: "lunar-site", label: "The lunar site" },
+  { value: "dish", label: "The dish, DSS-43 at Canberra", short: "Dish" },
+  {
+    value: "ship",
+    label: "The ship's mast sensor, off San Francisco",
+    short: "Ship",
+  },
+  { value: "orion", label: "Orion, on its Artemis II OEM", short: "Orion" },
+  {
+    value: "lunar-site",
+    label: "The lunar site, at the Moon's south pole",
+    short: "Lunar site",
+  },
+  { value: "tool", label: "The robot arm's tool, on LC-39A", short: "Tool" },
 ];
 
 export const SCENARIOS: readonly ScenarioSpec[] = [
@@ -562,13 +576,38 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     ],
     // The ship and the lunar site meet only at ICRF: the longest path
     // through the tree. At the dish's signal row, while Orion is in
-    // transit. Its checks come with Task 8.
+    // transit: the light-time solver's published check (plan 3's SPICE
+    // fixture, at DSS-43 to Orion) applies at this time. Its checks: that
+    // one, the round trips and compositions between the route's built-in
+    // ends (ITRF and MOON_ME), and the ship's frames' round trip (Task 8).
     checked: {
       epochUtc: SIGNAL_ROW,
       knobs: { from: "ship", to: "lunar-site" },
     },
-    needs: ["orion", "terrain", "ships"],
+    distinct: ["from", "to"],
+    // GEOID18 puts the ship's sea at NAVD88 0 m (the ship's checked
+    // datum); the dish comes from the store's station SPK (with Orion);
+    // terrain is the page's, for an Earth end's local horizon.
+    needs: ["proj", "geoid", "orion", "terrain"],
     globe: "terrain",
-    checks: [],
+    checks: [
+      "frame-tree.compositions.itrf-moon-me",
+      "frame-tree.body-frame.round-trip",
+      "space.dss43-orion.light-time",
+    ],
+    checkedBy: "round trips and the light time's published check",
+    checkKinds: {
+      "frame-tree.compositions.itrf-moon-me": "roundTrip",
+      "frame-tree.body-frame.round-trip": "roundTrip",
+      "space.dss43-orion.light-time": "published",
+    },
+    checkNotes: {
+      "frame-tree.compositions.itrf-moon-me":
+        "The route's two built-in ends, ITRF (the ship's) and MOON_ME (the lunar site's), through ICRF: round trips and compositions at five instants in 2026, not this one; the frames compose the same way at any instant.",
+      "frame-tree.body-frame.round-trip":
+        "The ship's body and mast frames to ITRF and back, at the ship scenario's checked setup (80 minutes along its track); here it holds off Mile Rocks, built the same way.",
+      "space.dss43-orion.light-time":
+        "The light-time solver every pair's answer uses, checked against plan 3's SPICE fixture for DSS-43 to Orion at signal.json's rows, this time among them; for the ship and the lunar site there is no published value.",
+    },
   },
 ];

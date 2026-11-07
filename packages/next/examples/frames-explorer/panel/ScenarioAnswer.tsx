@@ -119,7 +119,17 @@ function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
               )}
             </p>
           ))}
-        {scenario.published && <Published p={scenario.published} />}
+        {scenario.published ? (
+          <Published p={scenario.published} />
+        ) : (
+          a.unpublished && (
+            // No published value for this answer (the capstone's pairs):
+            // said in one line, with what checks it instead (Task 8).
+            <p className="fx-answer-published fx-published-none">
+              {a.unpublished}
+            </p>
+          )
+        )}
         <p className="fx-answer-text">{a.headline}</p>
       </div>
       <p className={`fx-answer-acc${accuracyWarns(a) ? " fx-unbounded" : ""}`}>

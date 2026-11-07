@@ -19,6 +19,11 @@
 //    and accuracy: the tool's composed here by the library (pointAccuracy)
 //    from the page's frames, the station's and PROJ's from the worker.
 //
+//  - The capstone (Task 8): the straight line from From to To, from the
+//    page's own frames for both ends (Orion from the page's own OEM,
+//    orionTrack.ts), with its length (ICRF, as the answer's) and the
+//    worker's accuracy at its middle.
+//
 // The verdicts are the trace's, which trails the clock (on demand,
 // sightLines.ts); the lines' places are this frame's.
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
@@ -31,10 +36,11 @@ import { overlayMesh, polyline } from "./overlays.ts";
 import { footprintLabel } from "./panel/answerText.ts";
 import type { TerrainSightView } from "./panel/model.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
-import type { SceneSpec } from "./scenarios/scenes.ts";
 import { LINE_PX, segmentPlacement } from "./skyRay.ts";
+import { orionPlace, type OrionTrack } from "./orionTrack.ts";
 import type { LabelBoard } from "./triadLayer.ts";
 import { ARM, MARK, PAD_OUTSIDE_SHORT } from "./scenarios/arm.ts";
+import { CAPSTONE, type SceneSpec } from "./scenarios/scenes.ts";
 import {
   BUOY,
   CAMERA_MOUNT,
@@ -74,6 +80,57 @@ export interface BodyLines {
 }
 
 const at3 = (m: ArrayLike<number>) => [m[12]!, m[13]!, m[14]!];
+
+/**
+ * The capstone's two ends on the page at `instant` (Task 8): each end's
+ * place (ITRF and ICRF, m) from the page's own frames by its node, Orion's
+ * from the page's own OEM; undefined while an end's frame isn't there (the
+ * ship's before its track is in, Orion's outside its data).
+ */
+export function pairPlaces(
+  pair: NonNullable<ScenarioEvaluation["pair"]>,
+  local: readonly Frame[],
+  orion: OrionTrack | undefined,
+  frames: Pick<Frames, "itrf" | "icrf">,
+  instant: NonNullable<ReturnType<Globe["shownAt"]>>,
+):
+  | {
+      from: { itrf: number[]; icrf: number[] };
+      to: { itrf: number[]; icrf: number[] };
+    }
+  | undefined {
+  const place = (node: string) => {
+    if (node === "orion") {
+      const p = orion ? orionPlace(orion, frames, instant) : undefined;
+      if (!p || !orion) {
+        return undefined;
+      }
+      return {
+        itrf: Array.from(p),
+        icrf: at3(frameTransform(orion.frame, frames.icrf, instant)),
+      };
+    }
+    const f = local.find((l) => l.name === node);
+    return f
+      ? {
+          itrf: at3(frameTransform(f, frames.itrf, instant)),
+          icrf: at3(frameTransform(f, frames.icrf, instant)),
+        }
+      : undefined;
+  };
+  const from = place(pair.from.node);
+  const to = place(pair.to.node);
+  return from && to ? { from, to } : undefined;
+}
+
+/** "384,912 km", "12.4 km", "860 m": the leader's length, coarse enough not to flicker as it moves. */
+export function leaderLength(meters: number): string {
+  return meters >= 100_000
+    ? `${Math.round(meters / 1000).toLocaleString("en-US")} km`
+    : meters >= 1000
+      ? `${(meters / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })} km`
+      : `${Math.round(meters)} m`;
+}
 
 /** A ring of `radius` m round `p` (Earth-fixed) in its tangent plane. */
 function ring(p: ArrayLike<number>, radius: number): Float64Array {
@@ -119,6 +176,8 @@ export function createBodyLines(deps: {
         pixelAt(p: ArrayLike<number>): number;
       }
     | undefined;
+  /** Orion on the page's own thread (orionTrack.ts), for the capstone's leader. */
+  orionTrack?(): OrionTrack | undefined;
 }): BodyLines {
   const { globe } = deps;
   /** Each segment overlay drawn, by id, and how (its colour and dash). */
@@ -127,7 +186,13 @@ export function createBodyLines(deps: {
   const fixed = new Map<string, string>();
   let labelKey = "";
   /** Where the moving labels sit this frame: their `at` reads it (the text is set only when it changes). */
-  const anchor: { sight?: number[]; camera?: number[]; leader?: number[] } = {};
+  const anchor: {
+    sight?: number[];
+    camera?: number[];
+    leader?: number[];
+    pairFrom?: number[];
+    pairTo?: number[];
+  } = {};
 
   function clear(): void {
     for (const id of [...shown.keys(), ...fixed.keys()]) {
@@ -322,7 +387,7 @@ export function createBodyLines(deps: {
       !scene?.bodies ||
       !frames ||
       !instant ||
-      !(e?.track || e?.arm) ||
+      !(e?.track || e?.arm || e?.pair) ||
       e.scenario !== scene.id
     ) {
       if (shown.size > 0 || fixed.size > 0 || deps.labels.has("bodies")) {
@@ -335,7 +400,64 @@ export function createBodyLines(deps: {
     const segments: Segment[] = [];
     const labels: LabelSpec[] = [];
     const heights = e.track?.heights ?? [];
-    if (scene.id === "robot-arm" && e.arm) {
+    if (scene.id === "everything" && e.pair) {
+      const ends = pairPlaces(
+        e.pair,
+        deps.local(),
+        deps.orionTrack?.(),
+        frames,
+        instant,
+      );
+      if (ends) {
+        const [a, b] = [ends.from.itrf, ends.to.itrf];
+        segments.push({ name: "pair", from: a, to: b, color: "white" });
+        const mid = a.map((v, i) => (v + b[i]!) / 2);
+        // Both on the Earth, the line runs through it (depth-tested, out of
+        // sight, as the answer says): the length goes with From's label.
+        const inside = Math.hypot(mid[0]!, mid[1]!, mid[2]!) < 6_300_000;
+        anchor.leader = mid;
+        anchor.pairFrom = a;
+        anchor.pairTo = b;
+        const length = Math.hypot(
+          ...ends.to.icrf.map((v, i) => v - ends.from.icrf[i]!),
+        );
+        const m = e.pair.meters;
+        const apart = `${leaderLength(length)} apart ${m === undefined ? "(not bounded)" : `±${m < 1 ? `${(m * 1000).toFixed(0)} mm` : `${m.toPrecision(2)} m`}`}`;
+        const name = (o: string) =>
+          (CAPSTONE as Record<string, { name: string } | undefined>)[o]?.name ??
+          o;
+        labels.push(
+          {
+            id: "bodies:pair-from",
+            text: `From ${name(e.pair.from.object)}${inside ? ` · ${apart}` : ""}`,
+            at: () => anchor.pairFrom,
+            family: "earth",
+            priority: 4,
+            marker: true,
+          },
+          {
+            id: "bodies:pair-to",
+            text: `To ${name(e.pair.to.object)}`,
+            at: () => anchor.pairTo,
+            family: "earth",
+            priority: 3,
+            marker: true,
+          },
+          ...(inside
+            ? []
+            : [
+                {
+                  id: "bodies:pair",
+                  text: apart,
+                  at: () => anchor.leader,
+                  family: "earth" as const,
+                  priority: 4,
+                  pinned: true,
+                },
+              ]),
+        );
+      }
+    } else if (scene.id === "robot-arm" && e.arm) {
       placeArm(e.arm, byName, frames.itrf, instant, segments, labels);
     } else if (scene.id === "drone") {
       const mount = byName.get(CAMERA_MOUNT);

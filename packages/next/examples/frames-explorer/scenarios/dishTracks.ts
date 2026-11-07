@@ -170,7 +170,7 @@ const windowsByOrion = new WeakMap<
  * from the stations' SPK places at the checked setup (plate motion over the
  * mission is millimetres).
  */
-async function dishAndNetworkWindows(ctx: StressContext) {
+export async function dishAndNetworkWindows(ctx: StressContext) {
   const o = orion(ctx);
   let w = windowsByOrion.get(o);
   if (w === undefined) {
@@ -220,7 +220,7 @@ const MASK_CHECK = [0, 45, 90, 135, 180, 225, 270, 315];
 export const MASK_EDGE = 0.001;
 
 /** Orion seen from `site` at `instant`: Newtonian light time, as plan 3's SPICE fixture. */
-function look(
+export function look(
   ctx: StressContext,
   site: ReturnType<typeof eastNorthUpFrame>,
   instant: Instant,
@@ -235,8 +235,8 @@ function look(
   );
 }
 
-/** The station's east-north-up frame at its SPK place at `instant`. */
-async function stationFrame(
+/** The station's east-north-up frame at its SPK place at `instant` (the capstone's dish too, Task 8). */
+export async function stationFrame(
   ctx: StressContext,
   id: StationId,
   instant: Instant,

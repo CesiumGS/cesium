@@ -34,6 +34,7 @@ import {
 } from "../examples/frames-explorer/scenarios/evaluate.ts";
 import { evaluateEarthTurns } from "../examples/frames-explorer/scenarios/earthTurns.ts";
 import { evaluateStandOnMoon } from "../examples/frames-explorer/scenarios/standOnMoon.ts";
+import { evaluateEverything } from "../examples/frames-explorer/scenarios/everything.ts";
 import {
   FRAME_CACHE_LIMIT,
   FrameCache,
@@ -820,10 +821,13 @@ describe("scenario", () => {
       name: "RangeError",
       message: expect.stringMatching(/"nowhere"/),
     });
+    // Every scenario has one since Task 8: one is taken away to ask.
+    unregisterScenarioForTests("everything");
     await expect(client.scenario("everything", {}, 0)).rejects.toMatchObject({
       name: "RangeError",
       message: expect.stringMatching(/"everything".*no evaluator/),
     });
+    registerScenario("everything", evaluateEverything);
     stubScenario("earth-turns", async () => evaluation());
     await expect(
       client.scenario("earth-turns", { rate: 3600 }, NaN),

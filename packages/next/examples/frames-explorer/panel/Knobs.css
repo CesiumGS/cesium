@@ -111,3 +111,40 @@
 .fx-back-button:not(:disabled) {
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/*
+ * The capstone's pair (Task 8): From, a swap, To, each row as a knob's; the
+ * swap sits in the controls' column, between the two segmented controls.
+ */
+.fx-pair {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.fx-pair-swap {
+  padding-inline-start: calc(var(--fx-knob-label) + var(--stratakit-space-300));
+  margin-block: calc(-1 * var(--stratakit-space-50));
+}
+.fx-pair-swap .MuiButton-root {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* A greyed-out option still shows its tip (why it can't be chosen). */
+.fx-pair-choice .Mui-disabled {
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+.fx-pair-help {
+  padding-inline-start: calc(var(--fx-knob-label) + var(--stratakit-space-300));
+}
+/*
+ * At narrow widths each segmented control takes the row under its label,
+ * so its five objects stay on one line rather than wrapping in the column.
+ */
+@container fx-panel (max-width: 480px) {
+  .fx-pair .fx-knob-control {
+    flex-basis: 100%;
+  }
+  .fx-pair-swap,
+  .fx-pair-help {
+    padding-inline-start: 0;
+  }
+}

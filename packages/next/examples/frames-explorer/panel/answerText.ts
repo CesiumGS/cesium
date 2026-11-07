@@ -162,8 +162,16 @@ export function withTerrain(
   if (!sky) {
     return answer;
   }
-  // The line of sight's own view: the mask's check is a Checks row.
-  const t = terrain?.find((v) => v.id !== "mask-check");
+  // The line of sight's own view: the mask's check is a Checks row. A
+  // trace made for another setup (its `traced` isn't the sky's key) isn't
+  // this one's: not traced yet (Task 6c's rule; the capstone, Task 8).
+  const found = terrain?.find((v) =>
+    sky.line !== undefined ? v.id === sky.line : v.id !== "mask-check",
+  );
+  const t: TerrainSightView | undefined =
+    found && sky.key !== undefined && found.traced !== sky.key
+      ? { id: found.id, state: "waiting", text: "" }
+      : found;
   let lead = sky.text;
   let blocked = false;
   if (sky.state === "clear" && t) {

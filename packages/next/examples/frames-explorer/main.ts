@@ -590,6 +590,7 @@ export function run(context: ExampleContext): ExampleRun {
     evaluation: () =>
       stage.scene() !== undefined ? host.state().evaluation : undefined,
     traces: () => sightLines.view(),
+    orionTrack: () => orion.track(),
     labels,
     refreshLabels: () => triads.refresh(),
     camera: () => {

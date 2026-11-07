@@ -78,7 +78,22 @@ export interface DiagramTargets {
   /** What choosing it does, for its name and tip: "Draw Orion's path in MOON_ME". */
   label: (id: string) => string;
   onPick: (id: string) => void;
+  /**
+   * The tree as a pair's control (the capstone's From and To, Task 8): a
+   * click picks From, the next click To (or Shift-click To at once); Enter
+   * and Shift+Enter the same. Its two ends and the frame they meet at carry
+   * "From", "To" and "Meets here" tags.
+   */
+  pair?: {
+    from: string;
+    to: string;
+    meet?: string;
+    pick: (id: string, end: "from" | "to") => void;
+  };
 }
+
+/** The meeting frame's tag (the capstone's pair). */
+export const MEET_TAG = "Meets here";
 
 let measurer: CanvasRenderingContext2D | null | undefined;
 /** The pills' type: the panel's own family at body-sm, semibold; the edge labels' at caption-md. */
@@ -311,7 +326,8 @@ function nodesById(tree: TreeNode): Map<string, TreeNode> {
 /** What the diagram's parts call back, one object for the diagram's life. */
 interface DiagramHandlers {
   edge(id: string, on: boolean): void;
-  node(id: string): void;
+  /** A pill clicked; `shift` held (the pair's To). */
+  node(id: string, shift?: boolean): void;
   key(id: string, e: KeyboardEvent<HTMLElement>): void;
   focus(id: string): void;
   tip(id: string, el: Element): void;
@@ -435,12 +451,15 @@ const DiagramNode = memo(function DiagramNode({
       onPointerEnter={(e) => h.tip(id, e.currentTarget)}
       onPointerLeave={h.hideTip}
       onKeyDown={(e) => h.key(id, e)}
-      onClick={() => h.node(id)}
+      onClick={(e) => h.node(id, e.shiftKey)}
     >
       <span className="fx-node-glyph" aria-hidden />
       <span className="fx-node-label">{label}</span>
       {tag && (
-        <span className="fx-node-tag" aria-hidden>
+        <span
+          className={`fx-node-tag${tag === MEET_TAG ? " fx-tag-meet" : ""}`}
+          aria-hidden
+        >
           {tag}
         </span>
       )}
@@ -524,14 +543,28 @@ export const TreeDiagram = memo(function TreeDiagram({
   const shaped = useShape(tree, fullLabels);
   const nodes = useMemo(() => nodesById(tree), [tree]);
   const families = useMemo(() => familyMap(shaped), [shaped]);
-  // The one tag: the frame you draw in (the owner's design).
-  const ends = useMemo(() => {
-    const out = new Map<string, string>();
-    if (targets) {
-      out.set(targets.current, "Drawing in");
-    }
-    return out;
-  }, [targets]);
+  // The one tag: the frame you draw in (the owner's design); for a pair,
+  // its two ends and where they meet.
+  const pair = targets?.pair;
+  // Laid out from the tags' text, not the targets' identity: a new pair
+  // object with the same ends lays out the same.
+  const tagKey = JSON.stringify(
+    pair
+      ? [
+          ...(pair.meet !== undefined ? [[pair.meet, MEET_TAG]] : []),
+          [pair.from, "From"],
+          [pair.to, "To"],
+        ]
+      : targets
+        ? [[targets.current, "Drawing in"]]
+        : [],
+  );
+  const ends = useMemo(
+    () => new Map<string, string>(JSON.parse(tagKey) as [string, string][]),
+    [tagKey],
+  );
+  /** Which end a plain click picks next: To after a click picked From. */
+  const nextEnd = useRef<"from" | "to">("from");
   const layout = useMemo(
     () => diagramLayout(shaped, keep, expanded, width, ends, fullLabels, data),
     [shaped, keep, expanded, width, ends, fullLabels, data],
@@ -682,10 +715,19 @@ export const TreeDiagram = memo(function TreeDiagram({
   const onEdge = useStableCallback((id: string, on: boolean) =>
     onSelect(on ? undefined : { kind: "edge", id }),
   );
-  const onNode = useStableCallback((id: string) => {
+  const onNode = useStableCallback((id: string, shift?: boolean) => {
     const target = targets?.ids.has(id) === true;
     const isSelected = selected?.kind === "node" && selected.id === id;
-    if (target) {
+    if (target && pair) {
+      // A click picks From, the next one To; Shift-click To at once. A
+      // second click on From's own frame only shows it.
+      const end = shift ? "to" : nextEnd.current;
+      if (!(end === "to" && id === pair.from)) {
+        pair.pick(id, end);
+        nextEnd.current = end === "from" ? "to" : "from";
+      }
+      onSelect({ kind: "node", id });
+    } else if (target) {
       // The tree as the control: draw in this frame, and show it.
       targets!.onPick(id);
       onSelect({ kind: "node", id });
@@ -695,6 +737,17 @@ export const TreeDiagram = memo(function TreeDiagram({
   });
   const onNodeKey = useStableCallback(
     (id: string, e: KeyboardEvent<HTMLElement>) => {
+      if (e.key === "Enter" && pair && targets?.ids.has(id)) {
+        // Enter picks From, Shift+Enter To (not the click's alternation).
+        e.preventDefault();
+        const end = e.shiftKey ? "to" : "from";
+        if (!(end === "to" && id === pair.from)) {
+          pair.pick(id, end);
+        }
+        nextEnd.current = end === "from" ? "to" : "from";
+        // Focus stays on the pill, so the next pick is a key away.
+        return;
+      }
       const p = byId.get(id);
       if (p) {
         onKey(p)(e);
@@ -906,8 +959,14 @@ export const TreeDiagram = memo(function TreeDiagram({
           const isSelected = selected?.kind === "node" && selected.id === n.id;
           const onPath = lit.has(n.id) || path?.ancestor === n.id;
           const target = targets?.ids.has(n.id) === true;
-          const drawing = targets?.current === n.id;
-          const end = onPath ? "on the route" : undefined;
+          const end =
+            pair?.from === n.id ? "From" : pair?.to === n.id ? "To" : undefined;
+          const drawing = pair ? end !== undefined : targets?.current === n.id;
+          const routeWords = onPath
+            ? pair?.meet === n.id
+              ? "on the route: where From and To meet"
+              : "on the route"
+            : undefined;
           return (
             <DiagramNode
               key={p.id}
@@ -924,10 +983,12 @@ export const TreeDiagram = memo(function TreeDiagram({
               pressed={target ? drawing : isSelected}
               ariaLabel={[
                 target
-                  ? `${targets!.label(n.id)}${drawing ? ", drawing in it now" : ""}`
+                  ? pair
+                    ? `${end ? `${end} now. ` : ""}${targets!.label(n.id)}`
+                    : `${targets!.label(n.id)}${drawing ? ", drawing in it now" : ""}`
                   : undefined,
                 `${n.label}, ${FAMILY_INFO[family].label}${n.app ? ", defined by your app" : n.added ? ", added by this scenario" : ""}`,
-                end,
+                routeWords,
                 w ? `Edge from ${w.full}` : "the root",
               ]
                 .filter((t) => t !== undefined)

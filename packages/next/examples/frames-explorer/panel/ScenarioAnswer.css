@@ -53,6 +53,11 @@
 .fx-answer-comparison {
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/* No published value (the capstone's pairs): one quieter line in its place. */
+.fx-published-none {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
 .fx-published-checked .fx-answer-comparison {
   color: var(--stratakit-color-text-neutral-primary);
 }

@@ -58,7 +58,8 @@ import {
 
 const CA = BIM_CRS["ca-zone-3"];
 
-function frameOf(
+/** California zone 3, plain or with NAVD88 heights through GEOID18, from the scenario's cache (the capstone's ship too, Task 8). */
+export function frameOf(
   ctx: StressContext,
   cache: FrameCache<EngineeringFrame>,
   kind: "plain" | "navd88",

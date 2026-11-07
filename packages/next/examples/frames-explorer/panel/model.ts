@@ -284,6 +284,20 @@ export interface ScenarioPanelView {
     verb: string;
     options: readonly { value: string; label: string }[];
   };
+  /**
+   * Two knobs the tree drives as a pair (the capstone's From and To, Task
+   * 8): each knob's id, and each value's node and label.
+   */
+  pair?: {
+    from: string;
+    to: string;
+    options: readonly {
+      value: string;
+      node: string;
+      label: string;
+      short: string;
+    }[];
+  };
   /** A short line under the diagram's key. */
   diagramNote?: string;
   /** Data pinned beside the frame its numbers are in (not a frame of the tree). */

@@ -175,6 +175,12 @@ export interface SceneLook {
   pitch: number;
 }
 
+/** A route's first and last steps, in words. */
+export interface RouteEnds {
+  start: { title: string; does: string };
+  end: { title: string; does: string };
+}
+
 export interface SceneSpec {
   id: ScenarioId;
   camera: SceneCamera;
@@ -249,9 +255,17 @@ export interface SceneSpec {
   /** The route's last step, by the drawn-in frame: what you see. */
   drawnView?: Readonly<Record<string, string>>;
   /** The route's first and last steps, for a scenario with no data (its answer relates two frames). */
-  routeEnds?: {
-    start: { title: string; does: string };
-    end: { title: string; does: string };
+  routeEnds?: RouteEnds;
+  /** The same at these knobs, where the knobs choose the ends (the capstone's pair, Task 8). */
+  routeEndsFor?(knobs: KnobState): RouteEnds;
+  /**
+   * Two choice knobs the tree itself drives as a pair (the capstone's From
+   * and To, Task 8): each knob value's node, which a click on it picks.
+   */
+  treePair?: {
+    from: string;
+    to: string;
+    nodes: Readonly<Record<string, string>>;
   };
   /**
    * The route as two legs that meet at the common ancestor, each end walked
@@ -292,6 +306,125 @@ export function pageArm(itrf: Frame, knobs: KnobState): ArmFrames {
 /** The ship's track's start, TDB s (vehicles.ts `SHIP.startUtc`). */
 export const shipStartTdb = (frames: Frames): number =>
   Instant.fromUtc(Date.parse(SHIP.startUtc), frames.data.leapSeconds).tdb();
+
+// ------------------------------------------------------------- capstone
+
+/** The capstone's objects (Task 8), by its knobs' values. */
+export type CapstoneObject = "dish" | "ship" | "orion" | "lunar-site" | "tool";
+
+/** The dish the capstone uses: DSS-43, the station plan 3's light time is published for. */
+export const CAPSTONE_DISH: StationId = "DSS-43";
+
+/** The arm's pose in the capstone: the robot arm's checked pose. */
+export const CAPSTONE_ARM: KnobState = SCENARIOS.find(
+  (s) => s.id === "robot-arm",
+)!.checked.knobs;
+
+/** The lunar site's latitude in the capstone: stand-on-moon's checked one, the south pole. */
+export const CAPSTONE_LATITUDE = Number(
+  SCENARIOS.find((s) => s.id === "stand-on-moon")!.checked.knobs.latitude,
+);
+
+/** The ship's mast sensor height in the capstone, m: the ship's checked one. */
+export const CAPSTONE_MAST = Number(
+  SCENARIOS.find((s) => s.id === "ship")!.checked.knobs.mast,
+);
+
+/**
+ * Each object: its node in the tree, its name in the answer's words, and
+ * where on the Earth it is (the camera's look), if it is on the Earth.
+ */
+export const CAPSTONE: Readonly<
+  Record<
+    CapstoneObject,
+    {
+      node: string;
+      name: string;
+      /** The answer's short name, capitalised as a sentence's start. */
+      title: string;
+      place?: { longitude: number; latitude: number };
+    }
+  >
+> = {
+  dish: {
+    node: DSN_STATIONS[CAPSTONE_DISH].name,
+    name: `the dish (${CAPSTONE_DISH})`,
+    title: `The dish (${CAPSTONE_DISH})`,
+    place: DSN_STATIONS[CAPSTONE_DISH],
+  },
+  ship: {
+    node: MAST_SENSOR,
+    name: "the ship's mast",
+    title: "The ship's mast",
+    // Off Mile Rocks, where its track ends (it holds there after).
+    place: { longitude: SHIP.vertices[4][0], latitude: SHIP.vertices[4][1] },
+  },
+  orion: { node: "orion", name: "Orion", title: "Orion" },
+  "lunar-site": {
+    node: LUNAR_SITE,
+    name: "the lunar site",
+    title: "The lunar site",
+  },
+  tool: {
+    node: ARM.tool,
+    name: "the arm's tool",
+    title: "The arm's tool",
+    place: { longitude: PAD.longitude, latitude: PAD.latitude },
+  },
+};
+
+/** The capstone's two ends at these knobs (the checked pair for anything else). */
+export function capstoneEnds(knobs: KnobState): {
+  from: CapstoneObject;
+  to: CapstoneObject;
+} {
+  const ok = (v: unknown): v is CapstoneObject =>
+    typeof v === "string" && Object.hasOwn(CAPSTONE, v);
+  return ok(knobs.from) && ok(knobs.to) && knobs.from !== knobs.to
+    ? { from: knobs.from, to: knobs.to }
+    : { from: "ship", to: "lunar-site" };
+}
+
+/**
+ * A view of two places on the Earth from straight above the middle of the
+ * great circle between them, high enough that both are in view with room
+ * (the capstone's Earth pairs).
+ */
+export function pairLook(
+  a: { longitude: number; latitude: number },
+  b: { longitude: number; latitude: number },
+): SceneLook {
+  const unit = (p: { longitude: number; latitude: number }) => {
+    const [lon, lat] = [
+      (p.longitude * Math.PI) / 180,
+      (p.latitude * Math.PI) / 180,
+    ];
+    return [
+      Math.cos(lat) * Math.cos(lon),
+      Math.cos(lat) * Math.sin(lon),
+      Math.sin(lat),
+    ];
+  };
+  const [u, v] = [unit(a), unit(b)];
+  const m = u.map((x, i) => x + v[i]!);
+  const l = Math.hypot(m[0]!, m[1]!, m[2]!) || 1;
+  const half = Math.acos(Math.min(1, l / 2));
+  const R = 6_371_000;
+  const chord = 2 * R * Math.sin(half);
+  return {
+    longitude: (Math.atan2(m[1]!, m[0]!) * 180) / Math.PI,
+    latitude: (Math.asin(m[2]! / l) * 180) / Math.PI,
+    range: Math.max(1.6 * chord, R * (1.35 / Math.cos(half) - 1), 2e6),
+    heading: 0,
+    pitch: -89.9,
+  };
+}
+
+/** Whether the pair has an end off the Earth: the camera frames the Earth and the Moon. */
+const offEarth = (k: KnobState) => {
+  const { from, to } = capstoneEnds(k);
+  return CAPSTONE[from].place === undefined || CAPSTONE[to].place === undefined;
+};
 
 export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
   "one-path": {
@@ -559,6 +692,76 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote: `The arm's frames are defined by your app with the public Frame API, each with its spec sheet's accuracy. ${MARK.name}'s position comes in NAD83(2011) and goes through PROJ to ITRF, then down the arm.`,
     note: `The arm, its spec sheet and its survey are synthetic. Its pad frame is defined at NGS mark AK1155 on LC-39A's pad, at the datasheet's height (NAVD88 14.137 m, 16 m below the ellipsoid in ITRF2020): the ± is from that point, not a survey of LC-39A. About 1 m per metre along the line, 3.4 mm per metre of height, if the point moves. ${PAD_OUTSIDE}`,
+  },
+  everything: {
+    id: "everything",
+    // An end off the Earth: the Earth and the Moon on the orbit plane (Orion's
+    // path drawn in GCRF when it is an end). Both on the Earth: from straight
+    // above the middle of the great circle between them, both in view.
+    camera: "earthMoon",
+    rig: "earthMoon",
+    flight: 3,
+    cameraFor: (k) => (offEarth(k) ? "earthMoon" : "site"),
+    look: (k) => {
+      const { from, to } = capstoneEnds(k);
+      const [a, b] = [CAPSTONE[from].place, CAPSTONE[to].place];
+      return a && b
+        ? pairLook(a, b)
+        : { ...PAD, range: 2e7, heading: 0, pitch: -89.9 };
+    },
+    focus: ["ICRF", ...Object.values(CAPSTONE).map((o) => o.node)],
+    // Small: an Earth pair is framed from thousands of kilometres up.
+    triadScale: 0.03,
+    // The two ends' own frames (Orion's is the worker's: no triad).
+    triads: (k) => {
+      const { from, to } = capstoneEnds(k);
+      return [CAPSTONE[from].node, CAPSTONE[to].node].filter(
+        (n) => n !== CAPSTONE.orion.node,
+      );
+    },
+    orion: (k) => {
+      const { from, to } = capstoneEnds(k);
+      return from === "orion" || to === "orion" ? "GCRF" : undefined;
+    },
+    lunarSite: () => CAPSTONE_LATITUDE,
+    earthSites: () => [DSN_STATIONS[CAPSTONE_DISH]],
+    // Lit from the camera: two Earth ends are often half a world apart, one
+    // of them in the night (the dish and the tool at the checked time).
+    light: "camera",
+    bodies: (frames, _k, e) => [
+      ...(e?.track
+        ? shipFrames(
+            frames.itrf,
+            e.track.heights,
+            shipStartTdb(frames),
+            CAPSTONE_MAST,
+          )
+        : []),
+      ...pageArm(frames.itrf, CAPSTONE_ARM).all,
+    ],
+    treePair: {
+      from: "from",
+      to: "to",
+      nodes: Object.fromEntries(
+        Object.entries(CAPSTONE).map(([k, o]) => [k, o.node]),
+      ),
+    },
+    routeEndsFor: (k) => {
+      const { from, to } = capstoneEnds(k);
+      return {
+        start: {
+          title: `From ${CAPSTONE[from].name}`,
+          does: `its own frame, ${CAPSTONE[from].node}: the route starts at its origin`,
+        },
+        end: {
+          title: `To ${CAPSTONE[to].name}`,
+          does: `its own frame, ${CAPSTONE[to].node}: the distance is between the two origins, compared in ICRF`,
+        },
+      };
+    },
+    diagramNote:
+      "Five objects, each in its own frame on its own branch. Click a frame to set From, then another (or Shift-click) for To; Enter and Shift+Enter do the same from the keyboard. The route lights from one up to where they meet and down to the other.",
+    note: "The ship's track and sea state and the arm are synthetic (the ship holds off Mile Rocks after its track's end on 1 March). The lunar site is on the IAU sphere at the south pole. An Earth end's local horizon is the terrain as drawn; the Earth and the Moon are their ellipsoids; refraction is left out.",
   },
 };
 

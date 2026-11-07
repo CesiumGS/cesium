@@ -119,7 +119,9 @@ export function createPanelActions(deps: {
         for (const [id, value] of Object.entries(m.knobs)) {
           host.setKnob(id, value);
         }
-      } else if (m.utcMs !== undefined) {
+      }
+      // A moment may set both: the pair, then the time (the capstone's).
+      if (m.utcMs !== undefined) {
         viewer.clock.time = m.utcMs;
         viewer.clock.mode = "paused";
       }

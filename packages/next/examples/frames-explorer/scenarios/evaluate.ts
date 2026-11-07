@@ -32,7 +32,18 @@ export interface ScenarioAnswer {
    * three leads (Task 6b fix 1, answerText.ts `withTerrain`). `where` names
    * the observer ("at DSS-43").
    */
-  sky?: { state: "clear" | "lost"; text: string; where: string };
+  sky?: {
+    state: "clear" | "lost";
+    text: string;
+    where: string;
+    /**
+     * The sight line whose trace joins it (its id), and the setup it was
+     * made for: a trace of another's (`traced` differs) is not this one's,
+     * so the terrain reads as not traced yet (the capstone, Task 8).
+     */
+    line?: string;
+    key?: string;
+  };
   /** The paragraph that explains it. */
   headline: string;
   /**
@@ -41,6 +52,11 @@ export interface ScenarioAnswer {
    * references.json; the catalog check `checkId` compares the two at the
    * checked setup, within `tolerance`.
    */
+  /**
+   * Where there is no published value to show (the capstone's pairs, Task
+   * 8): one line saying so, and what checks it instead.
+   */
+  unpublished?: string;
   published?: {
     value: number;
     unit: string;
@@ -149,19 +165,28 @@ export interface SightLine {
 
 /**
  * A moment a scenario offers (the knobs' "Jump to"): a time to jump the
- * clock to, or knob values to set (the drone's "Over the building").
+ * clock to, knob values to set (the drone's "Over the building"), or both
+ * (the capstone's "Orion behind the Moon": the pair, then the time).
  */
 export interface Moment {
   id: string;
   label: string;
   /** UTC ms. */
   utcMs?: number;
-  /** The knobs it sets, instead of the time. */
+  /** The knobs it sets, before the time if it has one. */
   knobs?: KnobState;
   /** What the moment is, in the button's tooltip (after the time a time moment takes the clock to). */
   title?: string;
   /** The button's icon: the Moon for one behind it, the arm's reach or its fold, else the timeline. */
   icon?: "moon" | "timeline" | "extend" | "stow";
+}
+
+/** One end of the capstone's pair, as the worker placed it. */
+export interface PairEnd {
+  object: string;
+  node: string;
+  itrf: readonly number[];
+  icrf: readonly number[];
 }
 
 export interface ScenarioEvaluation {
@@ -244,6 +269,18 @@ export interface ScenarioEvaluation {
       elevation: number;
       to: readonly number[];
     }[];
+  };
+  /**
+   * The capstone's pair (Task 8): each end's object (the knob's value), its
+   * node, and its place at the evaluation's epoch (ITRF and ICRF, m), for
+   * the page's agreement test; and the pair's accuracy (1σ, m; absent when
+   * not bounded) for the leader line's label, which the page places and
+   * measures every frame from its own frames.
+   */
+  pair?: {
+    from: PairEnd;
+    to: PairEnd;
+    meters?: number;
   };
   /** Moments a button takes the clock to ("Behind the Moon"), UTC ms, with the button's icon. */
   presets?: readonly Moment[];
