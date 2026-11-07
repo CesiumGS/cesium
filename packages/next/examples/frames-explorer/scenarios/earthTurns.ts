@@ -10,6 +10,8 @@
 // frame-tree.compositions.itrf-gcrf checks (round trips and compositions
 // through the six other frames) at the scenario's own instant.
 import { type Frame, frameTransform } from "../../../src/frames/Frame.ts";
+import { framePoint } from "../../../src/frames/local.ts";
+import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
 import { earthOrientationSigma } from "../../../src/measure/accuracy.ts";
 import { EARTH_ROTATION_RATE } from "../../../src/measure/constants.ts";
 import { Instant } from "../../../src/time/Instant.ts";
@@ -172,8 +174,13 @@ export function compositionsAt(
   };
 }
 
-/** Earth orientation's accuracy at `instant`, as the answer states it (R8). */
-function orientation(
+/**
+ * Earth orientation's accuracy at `instant`, as the answer states it (R8):
+ * the library's composition (`pointAccuracy`, Task 7b) for a point on the
+ * equator carried from ITRF into GCRF, the ITRF edge's angular sigma times
+ * its distance from the geocentre.
+ */
+export function orientation(
   ctx: StressContext,
   instant: Instant,
 ): ScenarioAnswer["accuracy"] {
@@ -184,12 +191,18 @@ function orientation(
       unbounded: true,
     };
   }
-  const radians = Math.hypot(
-    sigma.ut1Seconds * EARTH_ROTATION_RATE,
-    sigma.polarRadians,
+  const composed = pointAccuracy(
+    framePoint(ctx.frames.itrf, [EQUATOR, 0, 0], instant),
+    ctx.frames.gcrf,
   );
+  if (composed.meters === undefined) {
+    return {
+      note: `not bounded: ${composed.terms.find((t) => t.meters === undefined)?.note ?? "an edge states no accuracy"}`,
+      unbounded: true,
+    };
+  }
   return {
-    meters: radians * EQUATOR,
+    meters: composed.meters,
     note: sigma.predicted
       ? `predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last measured row (IERS Bulletin A): grows with the prediction's age; at the equator`
       : "measured Earth orientation (IERS): UT1 and polar motion, at the equator",

@@ -6,6 +6,24 @@ import {
   type Mat4,
 } from "../math/mat4.ts";
 import type { Instant } from "../time/Instant.ts";
+import {
+  NOT_STATED,
+  checkedAccuracy,
+  type FrameAccuracy,
+} from "./frameAccuracy.ts";
+
+/** A frame's options: its cache, and its edge's stated accuracy. */
+export interface FrameOptions {
+  /** Keep one matrix, keyed by `instant.tt` (the default `true`). */
+  cache?: boolean;
+  /**
+   * How accurate the edge to the parent is (1σ; `FrameAccuracy`), or a
+   * function of the instant for an edge whose accuracy drifts with time.
+   * Left out, the accuracy is not stated, and `pointAccuracy` across the
+   * edge is unbounded, naming it.
+   */
+  accuracy?: FrameAccuracy | ((instant: Instant) => FrameAccuracy);
+}
 
 /**
  * A reference frame: a named coordinate system placed in a parent frame by
@@ -21,6 +39,8 @@ export class Frame<N extends string = string> {
   readonly parent: Frame | undefined;
   private readonly compute: (instant: Instant, out: Mat4) => void;
   private readonly cached: boolean;
+  private readonly stated:
+    FrameAccuracy | ((instant: Instant) => FrameAccuracy);
   private readonly entry = new Float64Array(16);
   private entryTt = NaN;
 
@@ -28,18 +48,32 @@ export class Frame<N extends string = string> {
    * A child of `parent`. `toParent` writes the child-to-parent matrix for
    * an instant. With `cache` (the default) the frame keeps one entry,
    * keyed by `instant.tt`; pass `cache: false` when the matrix depends on
-   * state besides the instant.
+   * state besides the instant. `accuracy` states how accurate the edge is
+   * (1σ); a fixed one is checked here, and throws a `RangeError` naming the
+   * frame when a figure is not a finite positive number.
    */
   constructor(
     name: N,
     parent: Frame,
     toParent: (instant: Instant, out: Mat4) => void,
-    options?: { cache?: boolean },
+    options?: FrameOptions,
   ) {
     this.name = name;
     this.parent = parent;
     this.compute = toParent;
     this.cached = options?.cache ?? true;
+    const a = options?.accuracy ?? NOT_STATED;
+    this.stated = typeof a === "function" ? a : checkedAccuracy(name, a);
+  }
+
+  /**
+   * The edge's stated accuracy at `instant` (1σ): as given to the
+   * constructor, or not stated. A function's answer is checked as a fixed
+   * one is.
+   */
+  accuracy(instant: Instant): FrameAccuracy {
+    const a = this.stated;
+    return typeof a === "function" ? checkedAccuracy(this.name, a(instant)) : a;
   }
 
   /** A frame with no parent. Its `toParent` is the identity. */
@@ -48,15 +82,17 @@ export class Frame<N extends string = string> {
     return new Frame(name, undefined as unknown as Frame, () => {});
   }
 
-  /** A child whose placement in `parent` never changes. */
+  /** A child whose placement in `parent` never changes, as accurate as `options.accuracy` states. */
   static constant<N extends string>(
     name: N,
     parent: Frame,
     toParent: ArrayLike<number>,
+    options?: Pick<FrameOptions, "accuracy">,
   ): Frame<N> {
     const fixed = Float64Array.from(toParent);
     return new Frame(name, parent, (_instant, out) => copy(out, fixed), {
       cache: false,
+      ...(options?.accuracy !== undefined && { accuracy: options.accuracy }),
     });
   }
 

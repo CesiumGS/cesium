@@ -3,7 +3,7 @@ import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { TransformHandle, World } from "../scene/World.ts";
-import { Frame, frameTransform } from "./Frame.ts";
+import { Frame, frameTransform, type FrameOptions } from "./Frame.ts";
 
 /**
  * A position tagged with the frame it is expressed in, in meters. A point
@@ -65,20 +65,23 @@ export function convertPoint<M extends string>(
 
 /**
  * The east-north-up frame at `position` (meters, in `bodyFixed`) on
- * `ellipsoid`: a constant child of `bodyFixed`.
+ * `ellipsoid`: a constant child of `bodyFixed`. "Up" is the ellipsoid's
+ * normal at `position` itself. `options.accuracy` states the placement's
+ * accuracy (1σ); a frame defined at a chosen point is exact by definition.
  */
 export function eastNorthUpFrame<N extends string>(
   name: N,
   bodyFixed: Frame,
   ellipsoid: Ellipsoid,
   position: ArrayLike<number>,
+  options?: Pick<FrameOptions, "accuracy">,
 ): Frame<N> {
   const m = eastNorthUpToFixedFrame(
     Float64Array.from(position),
     ellipsoid,
     mat4(),
   );
-  return Frame.constant(name, bodyFixed, m);
+  return Frame.constant(name, bodyFixed, m, options);
 }
 
 /**

@@ -4,10 +4,9 @@
 // the library objects a node stands for (a worker that builds part of the tree
 // leaves them out, and a structured clone carries no class instances).
 import type { Frame } from "../../src/frames/Frame.ts";
+import type { FrameAccuracy } from "../../src/frames/frameAccuracy.ts";
 import type { Frames } from "../../src/frames/frames.ts";
 import type { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
-import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
-import { EARTH_ROTATION_RATE } from "../../src/measure/constants.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
 
@@ -26,21 +25,13 @@ export type EdgeKind =
   | "proj-operation";
 
 /**
- * An edge's stated model accuracy (R8). `meters` is a 1σ position error and
- * `radians` a 1σ rotation error; an edge states whichever applies. Both are
- * `undefined` when the accuracy is not known, with the reason in `note`. Never
- * 0 and never NaN.
+ * An edge's stated model accuracy (R8): the library's `FrameAccuracy` (one
+ * source of truth, Task 7b), with the note's short form for the walk.
+ * `meters` is a 1σ position error and `radians` a 1σ rotation error; an edge
+ * states whichever applies. Both are `undefined` when the accuracy is not
+ * known, with the reason in `note`. Never 0 and never NaN.
  */
-export interface EdgeAccuracy {
-  meters?: number;
-  radians?: number;
-  /**
-   * The edge is a convention, exact by definition (the IAU 2006 frame bias's
-   * adopted constants): no error to state, and none to compose (6a fix round,
-   * C3). `meters` and `radians` are then undefined.
-   */
-  byDefinition?: true;
-  note: string;
+export interface EdgeAccuracy extends FrameAccuracy {
   /**
    * The note's short form, where prose would be cut badly (fix 2): the
    * walk's "adds nothing" line uses it rather than splitting the note.
@@ -60,14 +51,9 @@ export interface TreeNode {
   children: TreeNode[];
   /** Set on a node a scenario added to the base tree (`buildScenarioTree`). */
   added?: true;
+  /** Set on an added node the app defines itself, through the public Frame API (the robot arm's joints, Task 7b). */
+  app?: true;
 }
-
-/** DE440's stated accuracy for the positions it gives, m (R8). */
-const EPHEMERIS_M = 0.01;
-const ephemerisAccuracy = (): EdgeAccuracy => ({
-  meters: EPHEMERIS_M,
-  note: "DE440 Earth-Moon fit to lunar laser ranging (stated model accuracy)",
-});
 
 /**
  * An accuracy that is a finite positive number, or `undefined` with a note.
@@ -95,15 +81,19 @@ function accuracy(
 
 const unknown = (note: string): EdgeAccuracy => ({ note });
 
+/**
+ * A frame's own stated accuracy, for an edge whose accuracy doesn't depend
+ * on the instant (the instant is then not read; the epoch is a placeholder).
+ */
+const stated = (frame: Frame): EdgeAccuracy => ({
+  ...frame.accuracy(Instant.fromTdb(0)),
+});
+
 type Edge = TreeNode["edge"];
 
 /**
- * The GCRF to ITRF rotation's accuracy at `instant`: the Earth-orientation
- * sigma. UT1 error turns the Earth by `σ_t · ω` radians and polar motion tilts
- * its axis by `σ_p`; the edge states their root sum square in radians (the
- * same terms `accuracyOf` scales to meters by the point's distance). A
- * predicted sample grows with its age past the table's last observed row
- * (IERS Bulletin A: polar 0.00068 · d^0.80 arcsec, UT1 0.00025 · d^0.75 s). It
+ * The GCRF to ITRF rotation's accuracy at `instant`: the library's own
+ * statement on the edge (frames.ts, the Earth-orientation sigma). It
  * depends on the instant, so without one it is not stated.
  */
 function earthOrientationAccuracy(
@@ -115,25 +105,7 @@ function earthOrientationAccuracy(
       "not stated without an instant: Earth orientation depends on time (pass one to buildTree)",
     );
   }
-  const sigma = earthOrientationSigma(frames, instant);
-  if (sigma.degraded) {
-    return unknown(
-      `not known: the instant is outside the EOP table (${sigma.span})`,
-    );
-  }
-  const note = sigma.predicted
-    ? `predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last observed row (IERS Bulletin A)`
-    : "measured Earth orientation (UT1 35 µs, polar motion 0.1 mas)";
-  return accuracy(
-    {
-      radians: Math.hypot(
-        sigma.ut1Seconds * EARTH_ROTATION_RATE,
-        sigma.polarRadians,
-      ),
-    },
-    `${note}. An angular bound: the Earth's spin (UT1) and the tilt of its axis (polar motion) combined, in radians; a point's error in metres is this times its distance from the geocentre`,
-    "not known: Earth orientation is not finite",
-  );
+  return { ...frames.itrf.accuracy(instant) };
 }
 
 /**
@@ -159,35 +131,35 @@ const BUILT_IN: Record<
     detail: "the International Celestial Reference Frame",
     accuracy: unknown("the root defines the frame; there is no edge to bound"),
   }),
-  HCRS: () => ({
+  // Every other edge's accuracy is the library's own statement on the frame
+  // (frames.ts BUILT_IN_ACCURACY, Task 7b), with a short form where the walk
+  // needs one.
+  HCRS: (frames) => ({
     kind: "translation",
     detail: "ephemeris: sun (DE440)",
-    accuracy: unknown(
-      "not stated: heliocentric geometry has no stated absolute accuracy (DE440's 0.01 m is its Earth-Moon fit)",
-    ),
+    accuracy: stated(frames.hcrs),
   }),
-  EARTH_ICRF: () => ({
+  EARTH_ICRF: (frames) => ({
     kind: "translation",
     detail: "ephemeris: earth (DE440)",
-    accuracy: ephemerisAccuracy(),
+    accuracy: stated(frames.earthIcrf),
   }),
-  MOON_ICRF: () => ({
+  MOON_ICRF: (frames) => ({
     kind: "translation",
     detail: "ephemeris: moon (DE440)",
-    accuracy: ephemerisAccuracy(),
+    accuracy: stated(frames.moonIcrf),
   }),
-  GCRF: () => ({
+  GCRF: (frames) => ({
     kind: "iers-affine",
     detail:
       "IERS Conventions 2010 eq. 11.19 (TT to TDB scale and Lorentz term), origin from ephemeris: earth (DE440)",
-    accuracy: ephemerisAccuracy(),
+    accuracy: stated(frames.gcrf),
   }),
-  EME2000: () => ({
+  EME2000: (frames) => ({
     kind: "constant",
     detail: "frame bias (IAU 2006)",
     accuracy: {
-      byDefinition: true,
-      note: "exact by definition: the IAU 2006 frame bias is a set of adopted constants",
+      ...stated(frames.eme2000),
       short: "exact by definition (IAU 2006 adopted constants)",
     },
   }),
@@ -196,27 +168,20 @@ const BUILT_IN: Record<
     detail: "IAU 2006/2000A + EOP",
     accuracy: earthOrientationAccuracy(frames, instant),
   }),
-  // Lunar orientation (lunar-accuracy-research.md): DE440 publishes no
-  // angular uncertainty for its libration angles, so MOON_ME's edge stays
-  // not stated, with the context; the LLR range residual is never its
-  // accuracy. MOON_PA to MOON_ME is a constant of the ephemeris.
-  MOON_ME: () => ({
+  MOON_ME: (frames) => ({
     kind: "rotation",
     detail: "lunar PCK libration (DE440)",
     accuracy: {
+      ...stated(frames.moonMe),
       short: "not stated: no published orientation uncertainty",
-      ...unknown(
-        "not stated: DE440's integrated libration angles have no published orientation uncertainty. Its recent lunar laser ranging range residuals are about 1.3 cm rms (Park et al. 2021, AJ 161:105, §5.1), a fit to ranges, not an orientation accuracy; its mean-Earth frame differs from DE421's by up to 0.53 m over 2000–2040 (NAIF moon_de440_250416.tf)",
-      ),
     },
   }),
-  MOON_PA: () => ({
+  MOON_PA: (frames) => ({
     kind: "constant",
     detail: "principal axes from mean Earth / polar axes (fixed rotation)",
     accuracy: {
-      byDefinition: true,
+      ...stated(frames.moonPa),
       short: "exact by definition for DE440 (its adopted constants)",
-      note: "exact by definition for DE440: adopted constants (Park et al. 2021 §2.4 eq. 19). Its realisation of the mean-Earth frame differs from DE421's by up to 0.53 m (2000–2040) (NAIF moon_de440_250416.tf); the longitude angle is gravity-field limited to about 1″ (about 8 m) (DE421 IOM 335-JW,DB,WF-20080314-001, p. 10)",
     },
   }),
 };
@@ -415,6 +380,8 @@ export interface AddedFrameSpec {
   label: string;
   parentId: string;
   edge: TreeNode["edge"];
+  /** The app defines it itself, through the public Frame API (the diagram says "defined by your app"). */
+  app?: true;
 }
 
 /**
@@ -452,6 +419,7 @@ export function buildScenarioTree(
       edge: spec.edge,
       children: [],
       added: true,
+      ...(spec.app && { app: true as const }),
     };
     nodes.set(spec.id, node);
   }

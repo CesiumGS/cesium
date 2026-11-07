@@ -6828,6 +6828,28 @@ asset 2: no access token`, on every example.
   `test/data/trajectory.test.ts:197` (about 2.0 s) and
   `test/data/sky.test.ts:86` (about 1.2 s). One `test:data` run failed this
   way during the example's final fix wave. Give each an explicit timeout.
+- **Plan 5: a frame's revision (change) signal** (Task 7b, the robot arm).
+  A frame whose matrix depends on state beyond the instant (a joint's angle)
+  must be built with `cache: false`, and nothing tells a renderer or a cache
+  that it moved. A revision counter the frame bumps when its state changes
+  would let it stay cached and let the renderer redraw only then.
+- **Plan 3: velocities through app-defined frames.** `Frame` carries
+  positions only; a joint turning at a rate, or a trajectory under a moving
+  joint, has no velocity until plan 3's rates reach `toParent`.
+- **Plan 5: composed accuracy beyond 1σ, independent terms** (Task 7b,
+  `pointAccuracy`). Confidence levels, correlated terms (two encoders on one
+  shaft, a survey shared by two bases) and per-direction error ellipsoids.
+  Today an angular term scales by the point's distance from the frame's
+  origin, an upper bound, because a `FrameAccuracy` names no axis; a stated
+  axis would give the exact lever (the distance to the axis).
+- **Plan 5: `accuracyOf` on `pointAccuracy`.** `accuracyOf` (measure)
+  composes Earth orientation, ephemeris, trajectory and relativity terms on
+  its own, apart from the edges' stated accuracy. The two agree on the ITRF
+  edge only as an upper bound (`accuracyOf` scales UT1 by the distance from
+  the spin axis). Rebuild `accuracyOf` on `pointAccuracy` once frames state
+  every term (a trajectory's `positionSigma` as its frame's accuracy, the
+  Moon's relativity term on its edge), and check the catalog's numbers move
+  only where the bound tightens.
 
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`
