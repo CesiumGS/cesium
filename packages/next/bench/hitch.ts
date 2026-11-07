@@ -10,6 +10,7 @@ import {
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import "./hitch.css";
+import { NEEDS_TOKEN, userToken } from "./suite/ionToken.ts";
 
 /**
  * Hitch benchmark (plan §15, r27): a live world takes content in and out
@@ -28,7 +29,7 @@ const TEMPLATE = `
   One world rendering continuously into a canvas while tilesets are added
   and removed and the camera jumps into uncached areas. Per step: frames
   over 34 ms, the worst frame, and the browser's long animation frames (over
-  50 ms, with the script that ran longest). Needs VITE_ION_TOKEN.
+  50 ms, with the script that ran longest). Needs an ion token (Dyno's, or VITE_ION_TOKEN in dev).
 </p>
 <div class="status">Run to step through adds, removes and jumps.</div>
 <div class="hitch">
@@ -164,9 +165,9 @@ function stop(run: Run): void {
 
 async function runHitch(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
-  const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
+  const token = userToken();
   if (!token) {
-    throw new Error("needs VITE_ION_TOKEN in packages/next/.env.local");
+    throw new Error(`The hitch benchmark ${NEEDS_TOKEN}`);
   }
   ionDefaults.accessToken = token;
   const run: Run = { unwatch: watchFrames() };

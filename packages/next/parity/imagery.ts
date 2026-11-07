@@ -15,6 +15,7 @@ import { flip } from "./flip.ts";
 import type { Harness } from "../lab/harness.ts";
 import { compareImages } from "./metrics.ts";
 import "./imagery.css";
+import { requireToken } from "../bench/suite/ionToken.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see imagery.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -185,10 +186,7 @@ async function createViewer(token: string, ellipsoid: boolean): Promise<Json> {
 async function runImagery(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
   const images = $("images");
-  const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
-  if (!token) {
-    throw new Error("needs VITE_ION_TOKEN in packages/next/.env.local");
-  }
+  const token = requireToken("The imagery check");
   const only = params.get("only")?.toLowerCase();
   const [terrain, imagery] = await Promise.all([
     resolveIonAsset(1, { accessToken: token }),

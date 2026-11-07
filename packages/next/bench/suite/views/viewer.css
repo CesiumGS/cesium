@@ -146,12 +146,14 @@
 }
 .viewer-token {
   display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-200);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
   margin-block-start: var(--stratakit-space-400);
 }
-.viewer-token h3 {
-  margin: 0;
+.viewer-token > button {
+  flex: none;
+  white-space: nowrap;
 }
 @media (max-width: 900px) {
   .viewer-layout {

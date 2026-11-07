@@ -10,6 +10,7 @@ import {
   type View,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
+import { requireToken } from "../bench/suite/ionToken.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see selection.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -189,7 +190,7 @@ async function runSelection(): Promise<Row[]> {
   }));
   const asset = params.get("asset");
   if (asset) {
-    const token = import.meta.env.VITE_ION_TOKEN as string;
+    const token = requireToken("?asset");
     Cesium.Ion.defaultAccessToken = token;
     const resolved = await resolveIonAsset(Number(asset), {
       accessToken: token,

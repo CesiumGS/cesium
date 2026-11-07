@@ -43,6 +43,7 @@ import { cellKey, cellTitle, runLabel, type Summary } from "./data.ts";
 import logomark from "./assets/cesium-logomark.svg";
 import wordmarkDark from "./assets/Cesium_Logo_Color_Overlay_Light.png";
 import wordmarkLight from "./assets/Cesium_Logo_Color_Overlay.png";
+import { IonTokenRailItem } from "./IonTokenSettings.tsx";
 import { useTheme } from "./theme.tsx";
 import { useRuns } from "./views/common.tsx";
 import { FirstRun } from "./views/FirstRun.tsx";
@@ -53,7 +54,8 @@ import { worksWithoutRuns } from "./withoutRuns.ts";
  * (results, scenes, workbench) with counts of what needs attention, a
  * command palette (Ctrl/⌘ K) over views, scenes, runs and Lab pages,
  * keyboard shortcuts (g then a letter; / to search; ? for the list), the
- * color scheme, and messages after actions. Views render their own page
+ * ion token every view uses (IonTokenSettings.tsx), the color scheme, and
+ * messages after actions. Views render their own page
  * header (views/common.tsx `Page`) into the outlet.
  */
 
@@ -358,6 +360,7 @@ export function Shell() {
                   onClick={() => setShortcuts(true)}
                 />
               </NavigationRail.ListItem>
+              <IonTokenRailItem expanded={expanded} />
               <NavigationRail.ListItem>
                 <NavigationRail.Button
                   icon={scheme === "dark" ? svgMoonLarge : svgSunLarge}

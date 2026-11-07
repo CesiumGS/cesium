@@ -12,6 +12,7 @@ import {
   UNITLESS_SUN_ILLUMINANCE,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
+import { requireToken } from "../bench/suite/ionToken.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see globe.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -269,10 +270,7 @@ async function legacySelection(
 async function runGlobe(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
   const fog = params.get("fog") !== "0";
-  const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
-  if (!token) {
-    throw new Error("needs VITE_ION_TOKEN in packages/next/.env.local");
-  }
+  const token = requireToken("The globe check");
   Cesium.Ion.defaultAccessToken = token;
   const terrain = await resolveIonAsset(TERRAIN_ASSET, { accessToken: token });
   const provider =

@@ -455,11 +455,19 @@ mips, IBL environment), `src/io` (worker pool, glTF parsing),
 `src/render` (frame graph, byte layouts), `src/shaders` (WGSL),
 `src/scene` (Engine, World, View, ViewLink, Camera), `demo/`, `test/`.
 
+The Cesium ion token: paste one in Dyno (ion token, at the foot of the rail;
+kept for the session or remembered on the device), and every view, example,
+Lab page and benchmark uses it. On the dev server `VITE_ION_TOKEN=<token>` in
+`packages/next/.env.local` (gitignored) also works; production builds never
+contain it (`bench/suite/ionToken.ts`, and `scripts/vitePluginEnvSecrets.ts`
+fails a build that would). With neither, public assets load with CesiumJS's
+evaluation token.
+
 Pages on the dev server:
 
 - `/#/viewer` — Dyno's Viewer: one engine at a time (2.0 through
   `widgets/Viewer`, or a 1.x release), with sample glTF models and 3D Tiles,
-  ion assets (`?asset=<id>`; `VITE_ION_TOKEN` in `.env.local`), iModels and
+  ion assets (`?asset=<id>`; the ion token below), iModels and
   a synthetic city; tile selection, globe, split view and overview inset,
   lighting, picking and the inspector
 - `/demo/` — multi-view demo (split, linked overview, second canvas, offscreen)
@@ -475,8 +483,7 @@ Pages on the dev server:
   runner profiles it with the sampling heap profiler)
 - `/parity/tileset.html` — 3D Tiles content (b3dm/glb, feature IDs, batch and
   property tables) vs 1.x `Cesium3DTileset`, including picks
-  (`runTileset()`). Private ion assets: put `VITE_ION_TOKEN=<token>` in
-  `packages/next/.env.local` (gitignored) and open with `?asset=<id>`
+  (`runTileset()`). Private ion assets: with the ion token below, open with `?asset=<id>`
   (`&pick=<property>`, `&zoom=<k>`), or run
   `ION_ASSET=<id> npm run bench -- tileset`
 - `/spikes/slang-kernels.html` — each Slang port against the hand-written

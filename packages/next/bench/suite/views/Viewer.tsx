@@ -46,11 +46,12 @@ import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";
 import { useAvailableReleases } from "../releases.ts";
 import { limitsTier, reloadWithLimits } from "../limitsTier.ts";
 import {
-  DEFAULT_ION_TOKEN,
-  envToken,
-  readToken,
-  TOKEN_KEY,
+  needsToken,
+  openTokenSettings,
+  type TokenSource,
 } from "../ionToken.ts";
+import { TokenPrompt } from "../IonTokenSettings.tsx";
+import { useIonToken } from "../useIonToken.ts";
 import {
   IMODELS,
   ION_ASSETS,
@@ -173,7 +174,8 @@ export function Viewer() {
     [storedLighting],
   );
   const [panelOpen, setPanelOpen] = useStored("dyno.viewer.panel", true);
-  const [pastedToken, setPastedToken] = useState(readToken);
+  // Dyno's ion token (the rail's ion token settings), for both engines.
+  const { token, source: tokenSource } = useIonToken();
   const [host, setHost] = useState<ViewerHost>();
   const [state, setState] = useState<Phase>({ phase: "starting" });
   const [warnings, setWarnings] = useState(0);
@@ -194,16 +196,8 @@ export function Viewer() {
   const lightingRef = useRef(lighting);
   lightingRef.current = lighting;
 
-  // ion token, first found: pasted here, VITE_ION_TOKEN, CesiumJS's
-  // evaluation token (public assets only).
-  const token = pastedToken ?? envToken ?? DEFAULT_ION_TOKEN;
   const tokenRef = useRef(token);
   tokenRef.current = token;
-  const tokenSource = pastedToken
-    ? "pasted here"
-    : envToken
-      ? "VITE_ION_TOKEN from .env.local"
-      : "CesiumJS's evaluation token";
 
   // The engine: one host at a time, rebuilt when the engine changes.
   useEffect(() => {
@@ -290,7 +284,7 @@ export function Viewer() {
       cancelled = true;
     };
     // `source` is keyed by its JSON; `at` only frames a new load.
-  }, [host, sourceKey, pastedToken, attempt]);
+  }, [host, sourceKey, token, attempt]);
 
   useEffect(() => host?.setView(view), [host, view]);
   useEffect(() => host?.setLighting(lighting), [host, lighting]);
@@ -769,19 +763,31 @@ export function Viewer() {
               }
             />
           )}
-          {state.phase === "failed" && (
-            <Alert
-              severity="error"
-              className="viewer-alert"
-              action={
-                <Button size="small" onClick={() => setAttempt(attempt + 1)}>
-                  Try again
-                </Button>
-              }
-            >
-              {state.error}
-            </Alert>
+          {state.phase === "failed" && needsToken(state.error, tokenSource) && (
+            <TokenPrompt className="viewer-alert">
+              {tokenSource === "pasted"
+                ? `${sourceName(source)} didn't load with the token pasted in Dyno.`
+                : `${sourceName(source)} needs your own Cesium ion token: ${
+                    tokenSource === "none"
+                      ? "this build has none"
+                      : "the evaluation token can't load it"
+                  }.`}
+            </TokenPrompt>
           )}
+          {state.phase === "failed" &&
+            !needsToken(state.error, tokenSource) && (
+              <Alert
+                severity="error"
+                className="viewer-alert"
+                action={
+                  <Button size="small" onClick={() => setAttempt(attempt + 1)}>
+                    Try again
+                  </Button>
+                }
+              >
+                {state.error}
+              </Alert>
+            )}
           {state.phase === "ready" && warnings > 0 && (
             <Alert severity="warning" className="viewer-alert">
               Loaded with {warnings} {warnings === 1 ? "warning" : "warnings"}:
@@ -850,14 +856,9 @@ export function Viewer() {
         open={opening}
         source={source}
         tokenSource={tokenSource}
-        pastedToken={pastedToken}
         unsupported={unsupported}
         onClose={() => setOpening(false)}
         onOpen={open}
-        onToken={(t) => {
-          setPastedToken(t);
-          toast(t ? "Token in use for this session" : "Pasted token cleared");
-        }}
       />
     </Page>
   );
@@ -1050,20 +1051,16 @@ function OpenContent({
   open,
   source,
   tokenSource,
-  pastedToken,
   unsupported,
   onClose,
   onOpen,
-  onToken,
 }: {
   open: boolean;
   source: Source;
-  tokenSource: string;
-  pastedToken: string | undefined;
+  tokenSource: TokenSource;
   unsupported: Partial<Record<Capability, string>>;
   onClose: () => void;
   onOpen: (source: Source) => void;
-  onToken: (token: string | undefined) => void;
 }) {
   const kindTab =
     source.kind === "ion"
@@ -1164,10 +1161,12 @@ function OpenContent({
                 item({ kind: "ion", asset: Number(id) }, name, `Asset ${id}`),
               )}
             </List>
-            <TokenSettings
+            <TokenNote
               source={tokenSource}
-              pasted={pastedToken}
-              onChange={onToken}
+              onChange={() => {
+                onClose();
+                openTokenSettings();
+              }}
             />
           </>
         )}
@@ -1212,71 +1211,28 @@ function OpenContent({
   );
 }
 
-function TokenSettings({
+/** Which ion token the assets load with; it's set in Dyno's rail. */
+function TokenNote({
   source,
-  pasted,
   onChange,
 }: {
-  source: string;
-  pasted: string | undefined;
-  onChange: (token: string | undefined) => void;
+  source: TokenSource;
+  onChange: () => void;
 }) {
-  const [remember, setRemember] = useState(() => {
-    try {
-      return localStorage.getItem(TOKEN_KEY) !== null;
-    } catch {
-      return false;
-    }
-  });
-  const save = (token: string | undefined, keep: boolean) => {
-    try {
-      sessionStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(TOKEN_KEY);
-      if (token) {
-        (keep ? localStorage : sessionStorage).setItem(TOKEN_KEY, token);
-      }
-    } catch {
-      // Storage unavailable: the token lasts until reload.
-    }
-    onChange(token);
-  };
+  const inUse = {
+    pasted: "your token",
+    env: "VITE_ION_TOKEN from .env.local (dev server only)",
+    evaluation: "CesiumJS's evaluation token, for public assets",
+    none: "none: ion assets won't load",
+  }[source];
   return (
     <div className="viewer-token">
-      <Typography variant="subtitle-sm" render={<h3 />}>
-        Access token
-      </Typography>
       <Typography variant="body-sm" color="textSecondary">
-        In use: {source}. A token pasted here comes first; with none, public
-        assets load with CesiumJS's evaluation token.
+        Access token in use: {inUse}. Every Dyno view shares it.
       </Typography>
-      <div className="viewer-open-row">
-        <TextField
-          size="small"
-          type="password"
-          label="Paste a token"
-          autoComplete="off"
-          defaultValue={pasted ?? ""}
-          onBlur={(e) => save(e.target.value.trim() || undefined, remember)}
-        />
-        {pasted && (
-          <Button variant="text" onClick={() => save(undefined, false)}>
-            Clear
-          </Button>
-        )}
-      </div>
-      <FormControlLabel
-        control={
-          <Switch
-            size="small"
-            checked={remember}
-            onChange={(e) => {
-              setRemember(e.target.checked);
-              save(pasted, e.target.checked);
-            }}
-          />
-        }
-        label="Remember on this device"
-      />
+      <Button variant="text" size="small" onClick={onChange}>
+        {source === "pasted" ? "Change token" : "Paste a token"}
+      </Button>
     </div>
   );
 }

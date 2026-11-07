@@ -9,8 +9,8 @@ import {
   type View,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
-import ionSource from "../../engine/Source/Core/Ion.js?raw";
 import { createGpuFlip, type GpuFlip } from "./flipGpu.ts";
+import { DEFAULT_ION_TOKEN, requireToken } from "../bench/suite/ionToken.ts";
 
 /**
  * FLIP on the GPU: the JS version took about 0.3 s per comparison on the
@@ -102,7 +102,6 @@ const POLICIES: Policy[] = [
 ];
 
 /** 1.x's public default ion token (Sandcastle's sample assets). */
-const DEFAULT_TOKEN = /defaultAccessToken =\s*"([^"]+)"/.exec(ionSource)?.[1];
 
 type Place = (view: View) => void;
 
@@ -180,9 +179,9 @@ function source(): Promise<Source> {
       // ?token=default: 1.x's public token, for Cesium's sample assets.
       const resolved = await resolveIonAsset(Number(asset), {
         accessToken:
-          params.get("token") === "default" && DEFAULT_TOKEN
-            ? DEFAULT_TOKEN
-            : (import.meta.env.VITE_ION_TOKEN as string),
+          params.get("token") === "default" && DEFAULT_ION_TOKEN
+            ? DEFAULT_ION_TOKEN
+            : requireToken("This LOD check"),
       });
       url = resolved.url;
       headers = resolved.headers;

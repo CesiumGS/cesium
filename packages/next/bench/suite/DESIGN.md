@@ -39,6 +39,7 @@ three groups separated by dividers, then a footer:
 | Workbench | Analysis        | `/analysis`                 | Sweeps and machines (tabs)                           |
 |           | Lab             | `/lab`, `/lab/$id`          | Parity checks, microbenchmarks, spikes               |
 | Footer    | Getting started | `/start`                    | Setup checks and a first run; also shortcuts, theme  |
+|           | ion token       | (popover)                   | The Cesium ion token every view uses; what's in use  |
 
 Compare (`/compare`) is reached from Runs (select two runs), from an
 alert, or a link; it is not in the rail. `/` opens the Overview.

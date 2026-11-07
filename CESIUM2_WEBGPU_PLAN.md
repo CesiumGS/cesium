@@ -6787,8 +6787,22 @@ because none of them changes a result.
   options, and the explorer opens in UTC.
 - **Dyno: the root error alert is misleading.** Any error reads "Dyno could
   not read the results".
-- **Dyno: with no ion token, the default imagery throws** an uncaught `ion
-asset 2: no access token`, on every example.
+- ~~**Dyno: with no ion token, the default imagery throws** an uncaught `ion
+asset 2: no access token`, on every example.~~ Done (ion token setting): the
+  token is a Dyno-wide setting (the rail's ion token popover), an empty
+  `VITE_ION_TOKEN` no longer counts as one, and an example whose ion content
+  is turned away shows "Paste an ion token" with the button that opens the
+  setting. Production builds never contain the `.env.local` token.
+- **Dyno: the other `.env.local` keys still go into builds when set.**
+  `VITE_GOOGLE_MAPS_KEY` (`bench/suite/suite.ts`) and `VITE_ITWIN_SHARE_KEY`
+  (the Viewer's iTwin tab) are inlined as the ion token was. Gate them on
+  `import.meta.env.DEV` and add them to `keepEnvSecretsOut`
+  (`scripts/vitePluginEnvSecrets.ts`), with a paste field where a build
+  needs one.
+- **Dyno: a static host of the built gallery needs `/specs-data/`** for
+  Real-time tracks' truck model (and `/frames-data/` for the frames
+  explorer), which only the dev server provides. The example fails with
+  "Unexpected token '<'".
 - **Dyno: `/favicon.ico` 404s** on every page.
 - **Dyno: a static host of the built gallery needs `/bench-results/index.json`,**
   which only the dev server provides. Without it the gallery shows the

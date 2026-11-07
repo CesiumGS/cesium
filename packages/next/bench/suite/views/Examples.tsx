@@ -33,7 +33,9 @@ import { createPortal } from "react-dom";
 import { EXAMPLES, type ExampleInfo } from "../../../examples/index.ts";
 import { Engine } from "../../../src/index.ts";
 import { Viewer } from "../../../widgets/index.ts";
-import { ionToken } from "../ionToken.ts";
+import { needsToken, tokenSource } from "../ionToken.ts";
+import { TokenPrompt } from "../IonTokenSettings.tsx";
+import { useIonToken } from "../useIonToken.ts";
 import { limitsTier } from "../limitsTier.ts";
 import { Empty, Page, Section } from "./common.tsx";
 import { ExampleSwitcher, ExampleThumbnail } from "./ExampleSwitcher.tsx";
@@ -266,7 +268,15 @@ export function ExamplePage() {
           {leaveError}
         </Alert>
       )}
-      {error && (
+      {error && needsToken(error) && (
+        <TokenPrompt className="examples-error">
+          {tokenSource() === "pasted"
+            ? `${info.title} can't load its Cesium ion content with the token pasted in Dyno.`
+            : `${info.title} loads Cesium ion content that needs your own token.`}{" "}
+          The example runs again with the new one. ({error})
+        </TokenPrompt>
+      )}
+      {error && !needsToken(error) && (
         <Alert severity="error" className="examples-error">
           <AlertTitle>Could not run this example</AlertTitle>
           {error}
@@ -388,6 +398,8 @@ function ExampleRunner({
 }) {
   const navigate = exampleRoute.useNavigate();
   const router = useRouter();
+  // Dyno's ion token: pasting or clearing one runs the example again.
+  const { token } = useIonToken();
   // The URL's params for the running example: they reach it through its
   // store (the first at start, later ones as back and forward).
   const search = searchToParams(exampleRoute.useSearch());
@@ -430,7 +442,6 @@ function ExampleRunner({
       (next) => void navigate({ search: next, replace: true }),
     );
     paramsRef.current = params;
-    const token = ionToken();
     const releaseRun = shared.hold();
     const releaseStart = shared.hold();
     void (async () => {
@@ -452,6 +463,14 @@ function ExampleRunner({
           return;
         }
         viewer = v;
+        // The globe's default imagery and terrain come from ion: a failure
+        // (no token, or one ion turns away) is this run's error, shown
+        // as such, not an unhandled rejection.
+        v.ready.catch((e) => {
+          if (!signal.aborted) {
+            setError(message(e));
+          }
+        });
         // For the console, as the Viewer page's `dynoViewer`.
         Object.assign(globalThis, { dynoExamplesViewer: v });
         const module = await info.load();
@@ -528,6 +547,7 @@ function ExampleRunner({
   }, [
     shared,
     info,
+    token,
     navigate,
     router,
     setError,

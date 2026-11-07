@@ -16,6 +16,7 @@ import {
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
+import { requireToken } from "../bench/suite/ionToken.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see tileset.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -30,7 +31,7 @@ const TEMPLATE = `
   walks the tileset (transforms, REPLACE/ADD refinement, external tilesets)
   and places each content directly. Streaming and tile selection are M2.
   Also compares picks at a grid of pixels on a feature property. Private ion
-  assets: set VITE_ION_TOKEN in .env.local and open with ?asset=&lt;id&gt;.
+  assets: paste an ion token in Dyno (or set VITE_ION_TOKEN in .env.local for the dev server) and open with ?asset=&lt;id&gt;.
 </p>
 <div class="status">Run to render the tileset in both engines.</div>
 <div class="images">
@@ -298,10 +299,7 @@ async function sources(): Promise<Source[]> {
   if (!asset) {
     return PUBLIC;
   }
-  const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
-  if (!token) {
-    throw new Error("?asset needs VITE_ION_TOKEN in packages/next/.env.local");
-  }
+  const token = requireToken("?asset");
   Cesium.Ion.defaultAccessToken = token;
   const resolved = await resolveIonAsset(Number(asset), { accessToken: token });
   return [

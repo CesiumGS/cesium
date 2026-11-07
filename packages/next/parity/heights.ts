@@ -7,6 +7,7 @@ import {
   type Tileset3D,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
+import { requireToken } from "../bench/suite/ionToken.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see heights.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -178,10 +179,7 @@ function createViewer(): Json {
 
 async function runHeights(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
-  const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
-  if (!token) {
-    throw new Error("needs VITE_ION_TOKEN in packages/next/.env.local");
-  }
+  const token = requireToken("The heights check");
   Cesium.Ion.defaultAccessToken = token;
   const osm = await resolveIonAsset(OSM_ASSET, { accessToken: token });
   const viewer = createViewer();

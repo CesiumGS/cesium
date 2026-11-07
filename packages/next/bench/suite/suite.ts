@@ -22,7 +22,6 @@ import {
   type InspectorSnapshot,
   type PickInfo,
 } from "../../widgets/index.ts";
-import ionSource from "../../../engine/Source/Core/Ion.js?raw";
 import publicCatalog from "./catalog/public.json";
 import type {
   CameraScript,
@@ -37,6 +36,7 @@ import type {
   Scene,
 } from "./schema.ts";
 import { limitsTier } from "./limitsTier.ts";
+import { DEFAULT_ION_TOKEN, NEEDS_TOKEN, userToken } from "./ionToken.ts";
 
 // CesiumJS 1.x, a global on 1.x runs' pages only (see suite.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -53,8 +53,6 @@ type Json = any;
  */
 
 const deg = Math.PI / 180;
-/** 1.x's public default ion token (Sandcastle's sample assets). */
-const DEFAULT_TOKEN = /defaultAccessToken =\s*"([^"]+)"/.exec(ionSource)?.[1];
 
 export interface RunSpec {
   scene: Scene;
@@ -158,11 +156,14 @@ async function captureMoment(spec: RunSpec, moment: string): Promise<void> {
 
 function tokenFor(dataset: Dataset): string {
   const source = dataset.source;
-  const env = import.meta.env.VITE_ION_TOKEN as string | undefined;
+  // "env": the person's own token (Dyno's, or .env.local in dev); else
+  // CesiumJS's evaluation token, for Sandcastle's public assets.
   const token =
-    source.kind === "ion" && source.token === "env" ? env : DEFAULT_TOKEN;
+    source.kind === "ion" && source.token === "env"
+      ? userToken()
+      : DEFAULT_ION_TOKEN;
   if (!token) {
-    throw new Error(`${dataset.title}: no ion token`);
+    throw new Error(`${dataset.title} ${NEEDS_TOKEN}`);
   }
   return token;
 }
