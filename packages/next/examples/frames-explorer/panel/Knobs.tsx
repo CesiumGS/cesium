@@ -26,6 +26,7 @@ import { Icon } from "@stratakit/mui";
 import { memo, useId } from "react";
 import type { Moment } from "../scenarios/evaluate.ts";
 import type { KnobSpec, KnobValue } from "../scenarios/spec.ts";
+import { formatDelta } from "./answerText.ts";
 import { knobText, movedText, snapToStep } from "./knobText.ts";
 import { useLiveTime } from "./liveTime.ts";
 import { equalOn } from "./memo.ts";
@@ -264,6 +265,7 @@ export const KNOBS_READS = [
   "eop",
   "presets",
   "pair",
+  "answerDelta",
 ] as const;
 
 export const Knobs = memo(KnobsView, equalOn("scenario", KNOBS_READS));
@@ -345,6 +347,8 @@ function KnobsView({
           ) : (
             movedText(movedFrom(s, s.checkedEpochUtc))
           )}
+          {s.answerDelta &&
+            `: the answer moves by ${formatDelta(s.answerDelta.value, s.answerDelta.unit)}`}
           . The checks re-run here.
         </Typography>
       )}

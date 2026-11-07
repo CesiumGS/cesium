@@ -7,6 +7,7 @@ import {
   unfoldedFor,
 } from "../examples/frames-explorer/panel/diagramFocus.ts";
 import { routeSteps } from "../examples/frames-explorer/panel/routeSteps.ts";
+import { panWindow } from "../examples/frames-explorer/panel/TreeDiagram.tsx";
 import { focusTree } from "../examples/frames-explorer/panel/treeLayout.ts";
 import { SCENES } from "../examples/frames-explorer/scenarios/scenes.ts";
 import {
@@ -109,5 +110,59 @@ describe("the route spelled out (routeSteps)", () => {
     for (const s of steps.filter((x) => x.kind === "edge")) {
       expect(s.accuracy?.text.length, s.title).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("the docked tree fits the lit route (Task 9, I6)", () => {
+  const added = (id: string, ...children: TreeNode[]): TreeNode => ({
+    ...node(id, ...children),
+    added: true,
+  });
+  const tree = node(
+    "ICRF",
+    node("GCRF", node("ITRF", added("Dish"), added("Ship", added("Mast")))),
+    node("MOON_ME", added("Lunar site")),
+    node("EARTH_ICRF", node("EME2000", added("Orion"))),
+  );
+  const path = {
+    up: ["Dish", "ITRF", "GCRF"],
+    ancestor: "ICRF",
+    down: ["EARTH_ICRF", "EME2000", "Orion"],
+  };
+
+  it("keeps only the route for a pair, folding every other branch", () => {
+    const keep = keepSet(
+      tree,
+      {
+        focus: ["ICRF", "Dish", "Ship", "Mast", "Lunar site", "Orion"],
+        path,
+        pair: {},
+      },
+      undefined,
+    );
+    expect([...keep].sort()).toEqual(
+      ["Dish", "EARTH_ICRF", "EME2000", "GCRF", "ICRF", "ITRF", "Orion"].sort(),
+    );
+    // Without a pair, the scenario's added frames all stay.
+    expect(keepSet(tree, { focus: [], path }, undefined).has("Mast")).toBe(
+      true,
+    );
+  });
+
+  it("pans to From, then To, then the meeting frame, as many as fit whole", () => {
+    // From at 0–100, To at 500–600, the meeting frame at 250–350.
+    const from = [0, 100] as const;
+    const to = [500, 600] as const;
+    const meet = [250, 350] as const;
+    // All fit in 700: centred on them, from wherever the view was.
+    expect(panWindow([from, to, meet], 900, 700)).toBe((-16 + 616) / 2 - 350);
+    // In 400 only From fits with the meeting frame, after To is skipped.
+    const start = panWindow([from, to, meet], 900, 400);
+    expect(start).toBeLessThanOrEqual(-16);
+    expect(start + 400).toBeGreaterThanOrEqual(366);
+    // Already in view: no move.
+    expect(panWindow([from], -16, 400)).toBe(-16);
+    // Wider than the view on its own: from its start.
+    expect(panWindow([[0, 1000]], 300, 400)).toBe(-16);
   });
 });

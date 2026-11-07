@@ -24,6 +24,10 @@ import {
   checkRowText,
 } from "../../examples/frames-explorer/panel/checkText.ts";
 import { answerTitle } from "../../examples/frames-explorer/panel/answerText.ts";
+import {
+  accuracyLength,
+  edgeAccuracyText,
+} from "../../examples/frames-explorer/panel/families.ts";
 import { extrasOf } from "../../examples/frames-explorer/panelModel.ts";
 import {
   createClient,
@@ -573,5 +577,35 @@ describe("the capstone's checks and moments (Task 8, fix 1)", () => {
       ),
     ).toBe(true);
     expect(of("ship", "tool").windows).toEqual([]);
+  }, 120_000);
+
+  it("states Orion's data with one accuracy in every scenario that shows it, at the same instant (Task 9, I2)", async () => {
+    const onePath = await client.scenario(
+      "one-path",
+      SCENARIOS.find((x) => x.id === "one-path")!.checked.knobs,
+      CHECKED,
+    );
+    const dish = await client.scenario(
+      "dish-tracks",
+      {
+        ...SCENARIOS.find((x) => x.id === "dish-tracks")!.checked.knobs,
+        station: CAPSTONE_DISH,
+      },
+      CHECKED,
+    );
+    const capstone = await evaluate({ from: "dish", to: "orion" });
+    const node = capstone.added.find((a) => a.label === "Orion")!;
+    const term = capstone.answer.breakdown!.find(
+      (t) => t.label === "Orion's OEM covariance",
+    )!;
+    const meters = node.edge.accuracy.meters!;
+    expect(meters).toBeGreaterThan(0);
+    expect(onePath.data!.accuracy.meters).toBe(meters);
+    expect(dish.data!.accuracy.meters).toBe(meters);
+    expect(term.meters).toBeCloseTo(meters, 9);
+    // And printed alike: the route step and the breakdown.
+    const text = edgeAccuracyText("trajectory", node.edge.accuracy).text;
+    expect(edgeAccuracyText("constant", dish.data!.accuracy).text).toBe(text);
+    expect(`±${accuracyLength(term.meters!)}`).toBe(text);
   }, 120_000);
 });

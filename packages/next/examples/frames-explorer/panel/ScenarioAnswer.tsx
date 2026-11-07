@@ -14,7 +14,7 @@ import {
   publishedText,
   type PublishedView,
 } from "./answerText.ts";
-import { length } from "./format.ts";
+import { accuracyLength } from "./families.ts";
 import { webLink } from "./Inspector.tsx";
 
 /**
@@ -192,7 +192,7 @@ function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
   );
 }
 
-/** A term's size: millimetres to a tenth, or the length's own unit past a metre. */
+/** A term's size, as an edge or a route step prints the same accuracy (Task 9, I2). */
 function breakdownFigure(meters: number): string {
-  return meters < 1 ? `${(meters * 1000).toFixed(1)} mm` : length(meters, 3);
+  return `±${accuracyLength(meters)}`;
 }

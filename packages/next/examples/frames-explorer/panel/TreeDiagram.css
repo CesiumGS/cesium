@@ -336,3 +336,48 @@
   line-height: var(--stratakit-line-height-caption-lg);
   color: var(--stratakit-color-text-neutral-secondary);
 }
+
+/*
+ * The pair's route in one row when From and To can't both be seen in the
+ * docked box (Task 9, I6): pills with arrows between, wrapping.
+ */
+.fx-route-row {
+  list-style: none;
+  margin: 0 0 var(--stratakit-space-150);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) 0;
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.fx-route-row li {
+  display: inline-flex;
+  align-items: center;
+}
+.fx-route-row-arrow {
+  margin-inline: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-route-row-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-50);
+  padding: 1px var(--stratakit-space-100);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: var(--stratakit-radius-round);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-route-row-end {
+  font-weight: 600;
+  border-color: var(--stratakit-color-border-accent-strong);
+}
+.fx-route-row-tag {
+  padding: 0 5px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--stratakit-color-border-accent-strong);
+  color: var(--stratakit-color-bg-page-base);
+  font-size: 10px;
+  line-height: 15px;
+}

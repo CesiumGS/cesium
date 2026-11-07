@@ -34,7 +34,6 @@ import {
   KIND_TEXT,
   ROW_COPY,
   checkRowText,
-  movesText,
   pageAccuracyText,
   type CheckRowText,
 } from "./checkText.ts";
@@ -304,7 +303,6 @@ export const CheckItem = memo(
               <>
                 <Typography variant="body-sm" render={<p />}>
                   {ROW_COPY.referenceOnly}
-                  {row.delta && ` ${movesText(row.delta)}`}
                 </Typography>
                 <Link
                   component="button"

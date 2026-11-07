@@ -116,6 +116,12 @@ export function familyMap(tree: TreeNode): Map<string, Family> {
  * figures are the walk's): a number, "exact by definition" for a
  * convention, or why there isn't one.
  */
+/**
+ * An accuracy's size as a length, wherever one is printed: an edge, a route
+ * step, a breakdown term (Task 9, I2: one thing, one figure).
+ */
+export const accuracyLength = (meters: number): string => length(meters);
+
 export function edgeAccuracyText(
   kind: TreeNode["edge"]["kind"],
   a: EdgeAccuracy,
@@ -128,7 +134,7 @@ export function edgeAccuracyText(
   }
   const parts: string[] = [];
   if (a.meters !== undefined) {
-    parts.push(`±${length(a.meters)}`);
+    parts.push(`±${accuracyLength(a.meters)}`);
   }
   if (a.radians !== undefined) {
     parts.push(`±${radians(a.radians)}`);

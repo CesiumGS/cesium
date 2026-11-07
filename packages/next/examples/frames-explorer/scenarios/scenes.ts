@@ -240,8 +240,13 @@ export interface SceneSpec {
      */
     all?(knobs: KnobState): readonly EarthSite[] | undefined;
   };
-  /** A limit the scenario says plainly, under its answer and on the globe. */
+  /** A limit the scenario says plainly, under its answer in the panel. */
   note?: string;
+  /**
+   * The same limit in one sentence, at most two lines, for the globe's
+   * callout (Task 9, I4): the long note stays in the panel.
+   */
+  calloutNote?: string;
   /**
    * The knob the tree itself drives: its options are nodes you click to
    * choose (one-path: "Draw Orion's path in" this frame), and the globe
@@ -507,6 +512,8 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote:
       "The Moon is a frame of the tree; its centre comes down the route to the site's east-north-up frame.",
+    calloutNote:
+      "Airless, as Horizons' table: refraction near the horizon is left out.",
     note: "Airless, as Horizons' table: near the horizon the air lifts the Moon by up to about half a degree. The local horizon is the terrain as drawn.",
   },
   "dish-tracks": {
@@ -538,6 +545,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     ),
     diagramNote:
       "Orion's data stays in EME2000; its route goes up to ICRF and down through GCRF and the turning Earth to the dish's horizon.",
+    calloutNote: "The dish's local horizon is the terrain as drawn.",
     note: "The local horizon is the terrain as drawn: it decides only the last part of the line of sight; the Earth and the Moon decide the rest.",
   },
   "stand-on-moon": {
@@ -563,6 +571,8 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       end: "The Earth clock's path to ICRF",
     },
     lunarSite: (k) => Number(k.latitude),
+    calloutNote:
+      "The Moon's imagery is a backdrop: it lines up with the site only from straight above.",
     note: "The Moon's imagery is the sky's distant backdrop until plan 5 draws the Moon as a tileset in MOON_ME, so it lines up with the site only from straight above, as here.",
   },
   "bim-site": {
@@ -585,6 +595,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote:
       "The model's numbers are in its site grid; the map conversion and PROJ take them to the Earth.",
+    calloutNote: "Drawn on the WGS 84 ellipsoid, not terrain.",
     note: "Drawn on the WGS 84 ellipsoid, not terrain: the exact line lies at height 0, so its gap from the rigid line reads against the ground it curves with.",
   },
   corridor: {
@@ -630,6 +641,8 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote:
       "The camera's ray goes up through the drone to ITRF, where it meets the terrain, then through PROJ and the map conversion to the model's grid.",
+    calloutNote:
+      "Synthetic flight line; the spot is only as good as the tiles under it.",
     note: "The drone's flight line is synthetic. The spot is where the ray meets the terrain as drawn: only as good as the tiles under it.",
   },
   ship: {
@@ -665,6 +678,8 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
         "the ship's easting and northing on the port's grid, in US survey feet",
     },
     diagramNote: `The ship's place comes from its track; the mast rides its body as it pitches and rolls. ${BUOY.short}'s sight line is traced over the terrain on the globe.`,
+    calloutNote:
+      "Synthetic track and sea state; the sight line is the terrain as drawn, no refraction.",
     note: "The track and the sea state are synthetic (along 33 CFR 167's lanes). The sight line is traced over the terrain as drawn: the sea's curve and the headlands; refraction is left out.",
   },
   "robot-arm": {
@@ -695,6 +710,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       [ARM.tool]: `${MARK.name} seen from the tool: the straight line's length is the answer`,
     },
     diagramNote: `The arm's frames are defined by your app with the public Frame API, each with its spec sheet's accuracy. ${MARK.name}'s position comes in NAD83(2011) and goes through PROJ to ITRF, then down the arm.`,
+    calloutNote: "The arm, its spec sheet and its survey are synthetic.",
     note: `The arm, its spec sheet and its survey are synthetic. Its pad frame is defined at NGS mark AK1155 on LC-39A's pad, at the datasheet's height (NAVD88 14.137 m, 16 m below the ellipsoid in ITRF2020): the ± is from that point, not a survey of LC-39A. About 1 m per metre along the line, 3.4 mm per metre of height, if the point moves. ${PAD_OUTSIDE}`,
   },
   everything: {
@@ -765,6 +781,8 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote:
       "Five objects, each in its own frame on its own branch. Click a frame to set From, then another (or Shift-click) for To; Enter and Shift+Enter do the same from the keyboard. The route lights from one up to where they meet and down to the other.",
+    calloutNote:
+      "The ship, the arm and its survey are synthetic; refraction is left out.",
     note: "The ship's track and sea state and the arm are synthetic (the ship holds off Mile Rocks after its track's end on 1 March). The lunar site is on the IAU sphere at the south pole. The dish's horizon is its published receive mask; the ship's and the tool's are the terrain as drawn, judged only from close enough; the Earth and the Moon are their ellipsoids; refraction is left out.",
   },
 };

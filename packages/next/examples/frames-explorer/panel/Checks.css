@@ -187,3 +187,29 @@
   min-block-size: 32px;
   font-weight: 600;
 }
+/*
+ * A narrow panel (Task 9, I7): each row in two lines, its kind and status
+ * on top and its title and detail at full width under them, never a
+ * two-word column between them.
+ */
+@container fx-panel (max-width: 480px) {
+  .fx-check-head {
+    grid-template-columns: auto minmax(0, 1fr) auto 16px;
+    grid-template-areas:
+      "kind . status chevron"
+      "text text text text";
+    row-gap: var(--stratakit-space-100);
+  }
+  .fx-check-head > .fx-kind {
+    grid-area: kind;
+  }
+  .fx-check-head > .fx-check-text {
+    grid-area: text;
+  }
+  .fx-check-head > .fx-check-status {
+    grid-area: status;
+  }
+  .fx-check-head > .fx-check-chevron {
+    grid-area: chevron;
+  }
+}

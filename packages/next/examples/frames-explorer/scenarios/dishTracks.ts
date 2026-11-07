@@ -40,6 +40,7 @@ import {
   type ScenarioEvaluation,
   type ScenarioEvaluator,
 } from "./evaluate.ts";
+import { orionData } from "./orionData.ts";
 import { SIGHT_LENGTH, POINTING_BY_HAND } from "./moonFromHere.ts";
 import {
   type DishWindows,
@@ -306,14 +307,9 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       },
     },
   ];
-  const data = {
-    label: "Orion's data",
-    frame: o.reference.name,
-    source: "OEM",
-    accuracy: {
-      note: "the OEM's own covariance, 1σ (Orion's node in the tree)",
-    },
-  };
+  // The OEM's covariance at this instant, as one-path and the capstone
+  // state it (Task 9, I2).
+  const data = orionData(f, o, instant);
   const path = { from: o.reference.name, to: station.name };
   const toItrf = frameTransform(site, f.itrf, instant);
   /** A point `length` m from the dish at `az`, `el` degrees, ITRF. */

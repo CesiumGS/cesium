@@ -5,7 +5,7 @@
 // verified that isn't (Review Focus 1).
 import type { CheckKind, CheckRow } from "../scenarios/checks.ts";
 import type { StressResult } from "../tests.ts";
-import { formatAnswer, formatDelta } from "./answerText.ts";
+import { formatAnswer } from "./answerText.ts";
 import { length, quantity } from "./format.ts";
 import type { ResultExtras } from "./model.ts";
 
@@ -203,9 +203,9 @@ function rowText(
         title: extras[row.id]?.label ?? row.title,
         status: "Not judged here",
         tone: "reference",
-        summary: row.delta
-          ? `${REFERENCE_APPLIES}; your setting moves the answer by ${formatDelta(row.delta.value, row.delta.unit)}`
-          : `${REFERENCE_APPLIES}; not judged at your setting`,
+        // The answer's own delta is the knobs' line's, said once: a row
+        // about another quantity never carries it (Task 9, I8).
+        summary: REFERENCE_APPLIES,
       };
     case "page": {
       const c = row.check;
@@ -270,10 +270,6 @@ export const DETAIL_LABELS = [
   "Accuracy",
 ] as const;
 
-/** The reference-only row's sentence on how far the setting moves the answer. */
-export const movesText = (delta: { value: number; unit: string }): string =>
-  `Your setting moves the answer by ${formatDelta(delta.value, delta.unit)}.`;
-
 /** A page check's accuracy, in its details. */
 export const pageAccuracyText = (meters: number | undefined): string =>
   meters !== undefined
@@ -300,9 +296,6 @@ export function checkRowStrings(
     ...Object.values(ROW_COPY),
     ...DETAIL_LABELS,
   ];
-  if (row.status === "reference-only" && row.delta) {
-    out.push(movesText(row.delta));
-  }
   if (row.status === "checked") {
     out.push(row.note);
   }

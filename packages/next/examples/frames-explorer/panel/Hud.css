@@ -219,13 +219,39 @@
   padding-inline-start: var(--stratakit-space-150);
   border-inline-start: 2px solid var(--stratakit-color-text-attention-base);
 }
-/* The callout keeps to a glance: the sentence in two lines, the rest in the panel. */
-.fx-callout .fx-callout-answer,
-.fx-callout .fx-callout-acc {
+/*
+ * The callout keeps to a glance: the sentence in one line; the accuracy
+ * (R8: always on screen) and the short limit in two each, the rest in the
+ * panel (Task 9, I4).
+ */
+.fx-callout .fx-callout-answer {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.fx-callout .fx-callout-acc,
+.fx-callout .fx-callout-note {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Folded: the figure's short ± and a limit marker (Task 9, I5). */
+.fx-callout-short {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-callout-short .fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-callout-limit {
+  padding-inline-start: var(--stratakit-space-100);
+  border-inline-start: 2px solid var(--stratakit-color-text-attention-base);
 }
 .fx-callout-frame {
   display: flex;

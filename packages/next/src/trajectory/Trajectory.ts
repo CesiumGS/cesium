@@ -30,6 +30,10 @@ interface Piece {
   varianceToM2?: number;
 }
 
+/** c11, c22, c33 and c44, c55, c66 in a 6×6 covariance's 21-value lower triangle. */
+const POSITION_DIAGONAL = [0, 2, 5] as const;
+const VELOCITY_DIAGONAL = [9, 14, 20] as const;
+
 /** The unit of OEM covariance values: CCSDS's km, or m when the file says so. */
 export type CovarianceUnits = "km" | "m";
 
@@ -339,37 +343,56 @@ export class Trajectory<N extends string = string> {
    * never throws.
    */
   positionSigma(instant: Instant): number | undefined {
-    const t = instant.tdb();
-    const piece = this.find(t);
-    if (!piece) {
+    if (!this.find(instant.tdb())) {
       return undefined;
     }
-    const cov = piece.covariances;
-    if (cov) {
-      // Binary search: the last epoch <= t.
-      let lo = 0;
-      let hi = cov.epochs.length - 1;
-      let at = -1;
-      while (lo <= hi) {
-        const mid = (lo + hi) >> 1;
-        if (cov.epochs[mid]! <= t) {
-          at = mid;
-          lo = mid + 1;
-        } else {
-          hi = mid - 1;
-        }
-      }
-      if (at >= 0) {
-        // The lower triangle, row by row: c11, c21 c22, c31 c32 c33. Between
-        // two epochs the larger of the two sigmas is the conservative one.
-        const v = cov.values;
-        const variance = (e: number): number =>
-          v[e * 21]! + v[e * 21 + 2]! + v[e * 21 + 5]!;
-        const next = at + 1 < cov.epochs.length ? variance(at + 1) : 0;
-        return Math.sqrt(Math.max(variance(at), next) * piece.varianceToM2!);
+    return this.covarianceSigma(instant, POSITION_DIAGONAL) ?? this.sigma;
+  }
+
+  /**
+   * The 1σ RSS velocity uncertainty in m/s at `instant`, from the same
+   * covariance epochs as `positionSigma` (`sqrt(c44 + c55 + c66)`, the
+   * larger of the two epochs around it); `undefined` where the segment has
+   * no covariance, or outside the data. Never throws.
+   */
+  velocitySigma(instant: Instant): number | undefined {
+    return this.covarianceSigma(instant, VELOCITY_DIAGONAL);
+  }
+
+  /** `sqrt` of the summed diagonal terms `diagonal` (indices into a 21-value lower triangle) at `instant`. */
+  private covarianceSigma(
+    instant: Instant,
+    diagonal: readonly number[],
+  ): number | undefined {
+    const t = instant.tdb();
+    const piece = this.find(t);
+    const cov = piece?.covariances;
+    if (!piece || !cov) {
+      return undefined;
+    }
+    // Binary search: the last epoch <= t.
+    let lo = 0;
+    let hi = cov.epochs.length - 1;
+    let at = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (cov.epochs[mid]! <= t) {
+        at = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
       }
     }
-    return this.sigma;
+    if (at < 0) {
+      return undefined;
+    }
+    // The lower triangle, row by row: c11, c21 c22, c31 c32 c33, … Between
+    // two epochs the larger of the two sigmas is the conservative one.
+    const v = cov.values;
+    const variance = (e: number): number =>
+      diagonal.reduce((sum, i) => sum + v[e * 21 + i]!, 0);
+    const next = at + 1 < cov.epochs.length ? variance(at + 1) : 0;
+    return Math.sqrt(Math.max(variance(at), next) * piece.varianceToM2!);
   }
 
   private find(t: number): Piece | undefined {

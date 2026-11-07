@@ -524,6 +524,9 @@ export function run(context: ExampleContext): ExampleRun {
           (stage.scene()?.engineering === undefined ||
             overlays.engineering().outside === undefined) && {
             sceneNote: stage.scene()!.note!,
+            ...(stage.scene()!.calloutNote !== undefined && {
+              sceneCalloutNote: stage.scene()!.calloutNote!,
+            }),
           }),
         ...(stage.scene() !== undefined &&
           sightLines.view() !== undefined && { terrain: sightLines.view()! }),

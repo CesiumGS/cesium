@@ -148,6 +148,40 @@ export function usePairPicker(
   return { next, press };
 }
 
+/** Room kept beside what the docked diagram pans to, px. */
+const PAN_MARGIN = 16;
+
+/**
+ * Where a pan along one axis starts (pure, Task 9 I6): `spans` in priority
+ * order, each [lo, hi] in the diagram's px. It takes as many of them, in
+ * order, as fit `size` whole (the first always, from its start if it alone
+ * is too big), and moves only if what it took isn't already in view,
+ * centring it then.
+ */
+export function panWindow(
+  spans: readonly (readonly [number, number])[],
+  start: number,
+  size: number,
+): number {
+  if (spans.length === 0) {
+    return start;
+  }
+  let lo = spans[0]![0] - PAN_MARGIN;
+  let hi = spans[0]![1] + PAN_MARGIN;
+  for (const [a, b] of spans.slice(1)) {
+    const nlo = Math.min(lo, a - PAN_MARGIN);
+    const nhi = Math.max(hi, b + PAN_MARGIN);
+    if (nhi - nlo <= size) {
+      lo = nlo;
+      hi = nhi;
+    }
+  }
+  if (lo >= start && hi <= start + size) {
+    return start;
+  }
+  return hi - lo > size ? lo : (lo + hi) / 2 - size / 2;
+}
+
 /** The meeting frame's tag (the capstone's pair). */
 export const MEET_TAG = "Meets here";
 
@@ -685,45 +719,51 @@ export const TreeDiagram = memo(function TreeDiagram({
   }, [path, byId]);
 
   // Bring the lit path or the selection into view when it changes (not on
-  // every rebuild, so a manual pan holds while the clock plays).
-  const viewKey = JSON.stringify([path, selected?.id, resetKey]);
+  // every rebuild, so a manual pan holds while the clock plays). What to
+  // show, most important first (Task 9, I6): the selection; the frames the
+  // scenario added, deepest first (the ship's mast sensor, the BIM site
+  // grid, the capstone's pair: what the question is about); the route's
+  // From, its To and where they meet; then the rest of the route.
+  const panTo = useMemo(() => {
+    const ids = [
+      ...(selected ? [selected.id] : []),
+      ...layout.placed
+        .filter((p) => p.node?.added)
+        .sort((a, b) => b.depth - a.depth)
+        .map((p) => p.id),
+      ...(path
+        ? [
+            path.up[0] ?? path.ancestor,
+            path.down.at(-1) ?? path.ancestor,
+            path.ancestor,
+          ]
+        : []),
+      ...lit.keys(),
+    ];
+    const at = [...new Set(ids)]
+      .map((id) => byId.get(id))
+      .filter((p): p is Placed => p !== undefined);
+    return {
+      x: at.map((p): [number, number] => [p.x - p.w / 2, p.x + p.w / 2]),
+      y: at.map((p): [number, number] => [p.y - PILL, p.y + PILL]),
+    };
+  }, [selected, layout.placed, path, lit, byId]);
+  // Keyed on where those frames are, and the box's width: the first pan
+  // may come before the box is measured or the pills have their font.
+  const viewKey = JSON.stringify([panTo, width, resetKey]);
   const shownKey = useRef<string | undefined>(undefined);
   useEffect(() => {
     const el = box.current;
-    if (!el || shownKey.current === viewKey) {
+    if (!el || shownKey.current === viewKey || panTo.x.length === 0) {
       return;
     }
     shownKey.current = viewKey;
-    const ids = selected
-      ? [selected.id]
-      : [...lit.keys(), ...(path ? [path.ancestor] : [])];
-    const at = ids
-      .map((id) => byId.get(id))
-      .filter((p): p is Placed => p !== undefined);
-    if (at.length === 0) {
-      return;
-    }
-    // Only along an axis where they're out of view, centred there.
-    const fit = (lo: number, hi: number, start: number, size: number) =>
-      lo >= start && hi <= start + size ? start : (lo + hi) / 2 - size / 2;
-    const xs = at.map((p) => p.x);
-    const ys = at.map((p) => p.y);
     el.scrollTo({
-      left: fit(
-        Math.min(...xs) - 60,
-        Math.max(...xs) + 60,
-        el.scrollLeft,
-        el.clientWidth,
-      ),
-      top: fit(
-        Math.min(...ys) - PILL,
-        Math.max(...ys) + PILL,
-        el.scrollTop,
-        el.clientHeight,
-      ),
+      left: panWindow(panTo.x, el.scrollLeft, el.clientWidth),
+      top: panWindow(panTo.y, el.scrollTop, el.clientHeight),
       behavior: reducedMotion() ? "auto" : "smooth",
     });
-  }, [viewKey, byId, lit, path, selected]);
+  }, [viewKey, panTo]);
 
   const roving =
     focus !== undefined && byId.has(focus)
@@ -854,9 +894,60 @@ export const TreeDiagram = memo(function TreeDiagram({
     };
   })();
   const tipRect = tip?.el.getBoundingClientRect();
+  // The pair's route as one row of pills when From and To can't both be
+  // seen in the docked box (the capstone at 380 px, Task 9 I6): the
+  // diagram still pans under it.
+  const routeRow = (() => {
+    if (!pair || !path || fullLabels) {
+      return undefined;
+    }
+    const ends = [
+      path.up[0] ?? path.ancestor,
+      path.down.at(-1) ?? path.ancestor,
+    ]
+      .map((id) => byId.get(id))
+      .filter((p): p is Placed => p !== undefined);
+    if (ends.length < 2) {
+      return undefined;
+    }
+    const lo = Math.min(...ends.map((p) => p.x - p.w / 2));
+    const hi = Math.max(...ends.map((p) => p.x + p.w / 2));
+    return hi - lo + 2 * PAN_MARGIN > width
+      ? [...path.up, path.ancestor, ...path.down]
+      : undefined;
+  })();
 
   return (
     <>
+      {routeRow && (
+        <ol className="fx-route-row" aria-label="The route, From to To">
+          {routeRow.map((id, i) => {
+            const tag =
+              id === pair?.from
+                ? "From"
+                : id === pair?.to
+                  ? "To"
+                  : id === path?.ancestor
+                    ? MEET_TAG
+                    : undefined;
+            return (
+              <li key={id}>
+                {i > 0 && (
+                  <span className="fx-route-row-arrow" aria-hidden>
+                    →
+                  </span>
+                )}
+                <span
+                  className={`fx-route-row-pill${tag ? " fx-route-row-end" : ""}`}
+                >
+                  {nodes.get(id)?.label ?? id}
+                  {tag && <span className="fx-route-row-tag">{tag}</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
       {pair && (
         // Which end the next click sets, read out as it changes (M2).
         <p

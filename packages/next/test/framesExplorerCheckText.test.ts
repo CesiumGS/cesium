@@ -9,6 +9,7 @@ import {
   publishedText,
   formatAnswer,
   formatDelta,
+  shortAccuracy,
 } from "../examples/frames-explorer/panel/answerText.ts";
 import { movedText } from "../examples/frames-explorer/panel/knobText.ts";
 import {
@@ -89,9 +90,8 @@ describe("a check row's words", () => {
     expect(t.status).toBe("Not judged here");
     expect(t.tone).toBe("reference");
     expect(t.result).toBeUndefined();
-    expect(t.summary).toBe(
-      "Reference applies at the checked setup; your setting moves the answer by +0.01 µs/day",
-    );
+    // The answer's delta is the knobs' line's, said once (Task 9, I8).
+    expect(t.summary).toBe("Reference applies at the checked setup");
   });
 
   it("shows a pending row as loading, never a pass (R9)", () => {
@@ -311,7 +311,7 @@ describe("the published comparison under the headline (the owner, fix 1)", () =>
       "ours 55.99 µs/day · difference 0.054% · within 2% · passes",
     );
   });
-  it("off it: the value applies at the checked setup, the delta, and no verdict", () => {
+  it("off it: the value applies at the checked setup, and no verdict; the delta is the knobs' line's (Task 9, I8)", () => {
     const t = publishedText({
       ...base,
       state: "off",
@@ -319,7 +319,7 @@ describe("the published comparison under the headline (the owner, fix 1)", () =>
     });
     expect(t.published).toBe("Published: 56.02 µs/day");
     expect(t.comparison).toMatch(/applies at the checked setup/);
-    expect(t.comparison).toMatch(/\+0\.01 µs\/day/);
+    expect(t.comparison).not.toMatch(/µs\/day/);
     expect(t.comparison).not.toMatch(/passes|fails/);
   });
   it("loading: no verdict", () => {
@@ -363,5 +363,33 @@ describe("the accuracy's warning colour (fix 2; Task 4c item 4: a flag, not the 
     expect(accuracyLine(a("within 2% of the method"))).toBe(
       "Within 2% of the method",
     );
+  });
+});
+
+describe("the folded callout's short accuracy (Task 9, I5)", () => {
+  const a = (accuracy: Record<string, unknown>) =>
+    ({ label: "", headline: "", accuracy }) as never;
+  it("keeps a size, a figure, a relative bound's lead, or says not bounded", () => {
+    expect(shortAccuracy(a({ note: "x", meters: 10 }))).toBe("±10 m");
+    expect(shortAccuracy(a({ note: "x", figure: "±31 µm/s" }))).toBe(
+      "±31 µm/s",
+    );
+    expect(
+      shortAccuracy(a({ note: "within 2% of the method: point masses" })),
+    ).toBe("Within 2% of the method");
+    expect(
+      shortAccuracy(a({ note: "not bounded: no data", unbounded: true })),
+    ).toBe("not bounded");
+  });
+  it("leads the line with an answer's own figure (Task 9, I3)", () => {
+    expect(
+      accuracyLine(
+        a({
+          note: "the OEM's velocity covariance",
+          figure: "±31 µm/s",
+          meters: 10,
+        }),
+      ),
+    ).toBe("±31 µm/s (1σ): the OEM's velocity covariance");
   });
 });

@@ -36,7 +36,7 @@ import {
   type StressResult,
 } from "../stress/runner.ts";
 import { STATIONS_SPK, orion } from "../stress/shared.ts";
-import { buildTree, type AddedFrameSpec, type TreeNode } from "../tree.ts";
+import type { AddedFrameSpec } from "../tree.ts";
 import { anglesOf, armFrames } from "./arm.ts";
 import {
   dishAndNetworkWindows,
@@ -53,6 +53,7 @@ import {
   type ScenarioEvaluation,
   type ScenarioEvaluator,
 } from "./evaluate.ts";
+import { orionTreeNode } from "./orionData.ts";
 import { SIGHT_LENGTH } from "./moonFromHere.ts";
 import { armAdded } from "./robotArm.ts";
 import {
@@ -148,9 +149,7 @@ function addedFrames(
   // Orion's node as the worker's Orion statements name it (host.ts
   // `trajectoryInfo`): its id is the trajectory's own, so the walk merges
   // them.
-  const find = (n: TreeNode): TreeNode | undefined =>
-    n.id === x.o.name ? n : n.children.map(find).find((c) => c);
-  const orionNode = find(buildTree(f, { trajectories: [x.o] }, instant))!;
+  const orionNode = orionTreeNode(f, x.o, instant);
   const station = DSN_STATIONS[CAPSTONE_DISH];
   return [
     {

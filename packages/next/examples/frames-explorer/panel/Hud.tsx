@@ -28,7 +28,12 @@ import { isFrameKey } from "../orbit.ts";
 import { captionFold, foldReducer } from "./fold.ts";
 import { legendRows } from "./legendRows.ts";
 import { equalOn } from "./memo.ts";
-import { accuracyLine, accuracyWarns, answerTitle } from "./answerText.ts";
+import {
+  accuracyLine,
+  accuracyWarns,
+  answerTitle,
+  shortAccuracy,
+} from "./answerText.ts";
 import type { PanelModel, ScenarioPanelView } from "./model.ts";
 
 /** Below this view width the HUD goes compact: legend folded, the caption at the bottom (I18). */
@@ -259,6 +264,20 @@ export const ScenarioCallout = memo(function ScenarioCallout({
               {figure}
             </p>
           )}
+          {fold.bodyHidden && figure !== undefined && (
+            // Folded, the figure keeps its short ± and says a limit is
+            // there (Task 9, I5): never a bare figure.
+            <p className="fx-callout-short">
+              <span
+                className={`fx-num${accuracyWarns(a) ? " fx-unbounded" : ""}`}
+              >
+                {shortAccuracy(a)}
+              </span>
+              {scenario.calloutNote && (
+                <span className="fx-callout-limit">1 limit</span>
+              )}
+            </p>
+          )}
           {a.aside && !fold.bodyHidden && (
             <p className="fx-callout-aside fx-num">{a.aside}</p>
           )}
@@ -272,12 +291,13 @@ export const ScenarioCallout = memo(function ScenarioCallout({
                   grew over the legend on a shorter view). */}
               <p
                 className={`fx-callout-acc${accuracyWarns(a) ? " fx-unbounded" : ""}`}
-                title={accuracyLine(a)}
               >
                 {accuracyLine(a)}
               </p>
-              {scenario.note && (
-                <p className="fx-callout-note fx-hud-muted">{scenario.note}</p>
+              {scenario.calloutNote && (
+                <p className="fx-callout-note fx-hud-muted">
+                  {scenario.calloutNote}
+                </p>
               )}
             </>
           )}

@@ -248,6 +248,8 @@ export interface ScenarioViewInput {
   eop?: ClockView["eop"];
   /** The scene's note, while its scene is on the globe. */
   sceneNote?: string;
+  /** Its short form, for the globe's callout. */
+  sceneCalloutNote?: string;
   /** Its lines of sight over the terrain (sightLines.ts). */
   terrain?: ScenarioPanelView["terrain"];
   /** Moments the page found itself, after the evaluation's (the ship's buoy coming into view, Task 7). */
@@ -372,19 +374,29 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     ...(e && {
       answer: withTerrain(withTerrainAnswer(e.answer, terrain), terrain),
     }),
-    ...publishedView(
-      e?.answer.published,
-      catalog,
-      st.atChecked,
-      freshness,
-      checks,
-      e?.answer.value,
-    ),
+    ...(() => {
+      const pub = publishedView(
+        e?.answer.published,
+        catalog,
+        st.atChecked,
+        freshness,
+        checks,
+        e?.answer.value,
+      );
+      // How far the setting moves the answer: said once, in the knobs'
+      // off-the-checked-setup line, not on every reference row (Task 9, I8).
+      const delta =
+        pub.published?.state === "off" ? pub.published.delta : undefined;
+      return { ...pub, ...(delta && { answerDelta: delta }) };
+    })(),
     ...(path && { path }),
     ...(APP_CODE[spec.id] && { appCode: APP_CODE[spec.id]! }),
     checks,
     liveExtras,
     ...(input.sceneNote !== undefined && { note: input.sceneNote }),
+    ...(input.sceneNote !== undefined && {
+      calloutNote: input.sceneCalloutNote ?? input.sceneNote,
+    }),
     ...(terrain !== undefined && { terrain }),
     ...(() => {
       const presets = [...(e?.presets ?? []), ...(input.pagePresets ?? [])];

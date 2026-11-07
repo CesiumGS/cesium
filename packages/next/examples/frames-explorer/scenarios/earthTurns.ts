@@ -15,6 +15,7 @@ import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
 import { earthOrientationSigma } from "../../../src/measure/accuracy.ts";
 import { EARTH_ROTATION_RATE } from "../../../src/measure/constants.ts";
 import { Instant } from "../../../src/time/Instant.ts";
+import { length, radians } from "../panel/format.ts";
 import {
   fmt,
   type StressContext,
@@ -201,11 +202,14 @@ export function orientation(
       unbounded: true,
     };
   }
+  // The answer is an angle, so it leads with the angle: the ITRF edge's
+  // sigma, as its route step states it, then what that is at the equator
+  // (Task 9, I3).
+  const rad = composed.meters / EQUATOR;
   return {
     meters: composed.meters,
-    note: sigma.predicted
-      ? `predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last measured row (IERS Bulletin A): grows with the prediction's age; at the equator`
-      : "measured Earth orientation (IERS): UT1 and polar motion, at the equator",
+    figure: `±${radians(rad)}`,
+    note: `${sigma.predicted ? `predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last measured row (IERS Bulletin A): grows with the prediction's age` : "measured Earth orientation (IERS): UT1 and polar motion"}; ±${length(composed.meters)} at the equator`,
   };
 }
 

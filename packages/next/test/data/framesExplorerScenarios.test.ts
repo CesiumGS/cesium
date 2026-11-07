@@ -675,7 +675,10 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
       delta: ref?.status === "reference-only" ? ref.delta! : undefined,
     });
     expect(t.published).toContain("56.02 µs/day");
-    expect(t.comparison).toMatch(/your setting moves the answer by [+−]/);
+    // How far the setting moves it is the knobs' line's (Task 9, I8).
+    expect(t.comparison).toBe(
+      "The published value applies at the checked setup. No verdict here.",
+    );
     expect(t.comparison).not.toMatch(/passes|fails/);
   }, 60_000);
 

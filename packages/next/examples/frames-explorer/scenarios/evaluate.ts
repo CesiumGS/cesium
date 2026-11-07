@@ -89,7 +89,17 @@ export interface ScenarioAnswer {
    * the panel says so in its warning colour, from this flag, never from the
    * note's words (Task 4c item 4).
    */
-  accuracy: { meters?: number; note: string; unbounded?: boolean };
+  accuracy: {
+    meters?: number;
+    note: string;
+    unbounded?: boolean;
+    /**
+     * The size in the answer's own quantity where that isn't a length,
+     * leading the line ("±0.42 mm/s", "±2.6 × 10⁻⁹ rad"): a speed or an
+     * angle says how sure it is in its own unit (Task 9, I3).
+     */
+    figure?: string;
+  };
   /** The tree path the answer runs along: node ids for `branchPath`. */
   path?: { from: string; to: string };
   /**

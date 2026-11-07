@@ -12,6 +12,7 @@
 // round trip) in the drawn frame at the scenario's time.
 import { type Frame, frameTransform } from "../../../src/frames/Frame.ts";
 import { convertPoint, framePoint } from "../../../src/frames/local.ts";
+import { EARTH_ROTATION_RATE } from "../../../src/measure/constants.ts";
 import { measure } from "../../../src/measure/measure.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import type { Trajectory } from "../../../src/trajectory/Trajectory.ts";
@@ -29,8 +30,14 @@ import {
   orion,
   translationOf,
 } from "../stress/shared.ts";
-import { branchPath, buildTree, type TreeNode } from "../tree.ts";
-import { registerScenario, type ScenarioEvaluator } from "./evaluate.ts";
+import { branchPath, buildTree } from "../tree.ts";
+import { length, speed } from "../panel/format.ts";
+import {
+  registerScenario,
+  type ScenarioAnswer,
+  type ScenarioEvaluator,
+} from "./evaluate.ts";
+import { orionData } from "./orionData.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 
@@ -67,18 +74,6 @@ export function orionIn(
   };
 }
 
-/** Orion's node, as the tree has it under its reference (plain data). */
-function orionNode(
-  ctx: StressContext,
-  o: Trajectory,
-  instant: Instant,
-): TreeNode {
-  const tree = buildTree(ctx.frames, { trajectories: [o] }, instant);
-  const find = (n: TreeNode): TreeNode | undefined =>
-    n.id === o.name ? n : n.children.map(find).find((x) => x);
-  return find(tree)!;
-}
-
 /**
  * Why there's no answer now, in words: the OEM covers a span (with short
  * gaps between its segments), and the clock is outside it.
@@ -88,6 +83,40 @@ function noPosition(ctx: StressContext, o: Trajectory): string {
   const day = (tdb: number) =>
     new Date(Instant.fromTdb(tdb).toUtc(leap)).toISOString().slice(0, 10);
   return `No Orion data at this time: its OEM covers ${day(o.spans[0]![0])} to ${day(o.spans.at(-1)![1])}, with short gaps between segments. Move the clock into that span to see the answer.`;
+}
+
+/** Each drawn frame's turning against the stars, rad/s: ITRF the Earth's, MOON_ME the Moon's (one turn a sidereal month). */
+const TURNING: Record<DrawnFrame, number> = {
+  GCRF: 0,
+  ITRF: EARTH_ROTATION_RATE,
+  MOON_ME: (2 * Math.PI) / (27.321661 * 86_400),
+};
+
+/**
+ * The speed's own accuracy (Task 9, I3), not its position's: the OEM's
+ * velocity covariance, and the position's error turning with the frame
+ * (ω × δr); the frames' own motion is taken from DE440 and IERS as exact.
+ * Without a velocity covariance it isn't stated, and says so, with the
+ * position's accuracy beside it.
+ */
+export function speedAccuracy(
+  frame: DrawnFrame,
+  velocity: number | undefined,
+  position: number | undefined,
+  positionWhy?: string,
+): ScenarioAnswer["accuracy"] {
+  if (velocity === undefined || position === undefined) {
+    return {
+      note: `the speed's accuracy isn't stated: ${velocity === undefined ? "the OEM gives no velocity covariance here" : `Orion's position isn't bounded (${positionWhy ?? "a term has no size"})`}${position !== undefined ? `; Orion's position is ±${length(position)} (1σ)` : ""}`,
+      unbounded: true,
+    };
+  }
+  const turning = TURNING[frame] * position;
+  const total = Math.hypot(velocity, turning);
+  return {
+    figure: `±${speed(total)}`,
+    note: `Orion's speed in ${frame}: the OEM's velocity covariance (±${speed(velocity)})${turning > 0 ? `, and its position's ±${length(position)} turning with ${frame} (±${speed(turning)})` : ""}; the frames' own motion taken from DE440 and IERS as exact`,
+  };
 }
 
 /** The headline's words after the speed: what it's relative to (fix 1). */
@@ -204,17 +233,11 @@ export const evaluateOnePath: ScenarioEvaluator = async (
   const o = orion(ctx);
   const name = String(knobs.frame) as DrawnFrame;
   const instant = Instant.fromTdb(epochTdb);
-  const node = orionNode(ctx, o, instant);
   // Orion is data, not a frame (the owner's tree design, fix 1): pinned
   // beside the frame its numbers are in, its route through the tree to the
   // drawn frame lit. The tree's shape never changes.
   const added: [] = [];
-  const data = {
-    label: "Orion's data",
-    frame: o.reference.name,
-    source: "OEM",
-    accuracy: node.edge.accuracy,
-  };
+  const data = orionData(ctx.frames, o, instant);
   const path = { from: o.reference.name, to: name };
   const checkedTdb = Instant.fromUtc(
     Date.parse(SPEC.checked.epochUtc),
@@ -269,14 +292,15 @@ export const evaluateOnePath: ScenarioEvaluator = async (
       headline: `The same Orion, the same instant: its speed depends on the frame you measure it in, because the frames move differently. ${WHY[name]} ${routeText(ctx, o, name)} Here Orion is ${km(norm(here.position))} from ${ORIGIN_NAME[name]}.`,
       value: here.speed / 1000,
       unit: "km/s",
-      accuracy: {
-        ...(statement.meters !== undefined && { meters: statement.meters }),
-        note:
-          statement.meters !== undefined
-            ? `Orion's position through the tree to ${name}, 1σ: the OEM's covariance, its unstated time scale (taken as TDB) and DE440`
-            : `not bounded: ${statement.terms.find((t) => t.meters === undefined)?.note ?? "a term has no size"}`,
-        ...(statement.meters === undefined && { unbounded: true }),
-      },
+      accuracy: speedAccuracy(
+        name,
+        o.velocitySigma(instant),
+        statement.meters,
+        statement.meters === undefined
+          ? (statement.terms.find((t) => t.meters === undefined)?.note ??
+              "a term has no size")
+          : undefined,
+      ),
       path,
     },
     overlays: [],

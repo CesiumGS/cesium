@@ -104,6 +104,11 @@ export function length(meters: number, digits = 2): string {
   return prefixed(meters, LENGTH_UNITS, "m", digits);
 }
 
+/** A speed in m/s in the unit that reads best: 1.4 km/s, 0.42 mm/s (a length's prefixes, per second). */
+export function speed(mps: number, digits = 2): string {
+  return `${length(mps, digits)}/s`;
+}
+
 /** A duration in seconds: 2.0 s, 35 µs, 15 ns. */
 export function seconds(s: number, digits = 2): string {
   return prefixed(s, TIME_UNITS, "s", digits);

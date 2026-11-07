@@ -776,6 +776,23 @@ describe("Trajectory accuracy inputs", () => {
     expect(traj.positionSigma(at(600))).toBeCloseTo(2, 9);
   });
 
+  it("gives the velocity's sigma from the same epochs, and none without a covariance (Task 9)", () => {
+    // Each block's velocity diagonal is 1, 1, 1: sqrt(3) m/s.
+    const traj = build(COVS, { covarianceUnits: "m" });
+    expect(traj.velocitySigma(at(120))).toBeCloseTo(Math.sqrt(3), 9);
+    expect(traj.velocitySigma(at(400))).toBeCloseTo(Math.sqrt(3), 9);
+    // In km: km²/s² to m²/s².
+    expect(build(COVS).velocitySigma(at(400))).toBeCloseTo(
+      Math.sqrt(3) * 1000,
+      6,
+    );
+    expect(traj.velocitySigma(at(60))).toBeUndefined();
+    // The positionSigma option is a position's: no velocity from it.
+    expect(
+      build(undefined, { positionSigma: 5 }).velocitySigma(at(300)),
+    ).toBeUndefined();
+  });
+
   it("returns the larger sigma between two epochs of a growing covariance", () => {
     const growing: [string, number, number, number][] = [
       [isoTdb(120), 1, 1, 2], // 2

@@ -53,7 +53,10 @@ export function accuracyWarns(answer: ScenarioAnswer): boolean {
 
 /** "±1.1 m (1σ): measured Earth orientation …", "Within 2% …", or "Not bounded: …". */
 export function accuracyLine(answer: ScenarioAnswer): string {
-  const { meters, note, unbounded } = answer.accuracy;
+  const { meters, note, unbounded, figure } = answer.accuracy;
+  if (figure !== undefined) {
+    return `${figure} (1σ): ${note}`;
+  }
   if (meters !== undefined) {
     return `±${length(meters)} (1σ): ${note}`;
   }
@@ -63,6 +66,26 @@ export function accuracyLine(answer: ScenarioAnswer): string {
     !/^(not bounded|not stated|not known)/i.test(note)
     ? `Not bounded: ${note}`
     : sentence;
+}
+
+/**
+ * The accuracy in a few words, for a figure with no room for the rest (the
+ * folded callout, Task 9 I5): "±0.42 mm/s", "±10 m", a relative bound's
+ * lead ("Within 2% of the method"), or "not bounded".
+ */
+export function shortAccuracy(answer: ScenarioAnswer): string {
+  const { meters, figure, unbounded, note } = answer.accuracy;
+  if (figure !== undefined) {
+    return figure;
+  }
+  if (meters !== undefined) {
+    return `±${length(meters)}`;
+  }
+  if (unbounded === true) {
+    return "not bounded";
+  }
+  const lead = note.split(":")[0]!.trim();
+  return lead.charAt(0).toUpperCase() + lead.slice(1);
 }
 
 /**
@@ -141,11 +164,9 @@ export function publishedText(p: PublishedView): {
     case "off":
       return {
         published,
-        comparison: `The published value applies at the checked setup${
-          p.delta
-            ? `; your setting moves the answer by ${formatDelta(p.delta.value, p.delta.unit)}`
-            : ""
-        }. No verdict here.`,
+        // How far the setting moves it is the knobs' line's (Task 9, I8).
+        comparison:
+          "The published value applies at the checked setup. No verdict here.",
       };
     case "loading":
       return { published, comparison: "Checking ours against it…" };

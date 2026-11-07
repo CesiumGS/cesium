@@ -274,6 +274,14 @@ export interface ScenarioPanelView {
   liveExtras: Readonly<Record<string, ResultExtras>>;
   /** A limit the scenario says plainly (the backdrop Moon). */
   note?: string;
+  /** The same limit in one short sentence, for the globe's callout (Task 9, I4). */
+  calloutNote?: string;
+  /**
+   * Off the checked setup, how far the setting moves the answer from the
+   * checked setup's, in its own unit: said once, in the knobs' line (Task
+   * 9, I8).
+   */
+  answerDelta?: { value: number; unit: string };
   /** Its lines of sight over the drawn terrain, the local horizon (sightLines.ts, Task 6b). */
   terrain?: readonly TerrainSightView[];
   /** Moments the scenario offers to jump the clock to ("Behind the Moon"), UTC ms. */

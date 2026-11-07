@@ -19,9 +19,23 @@ export function keepSet(
       | undefined;
     /** Data pinned to a frame: that frame stays in view. */
     data?: { frame: string } | undefined;
+    /**
+     * A pair picked on the tree (the capstone): only the lit route stays,
+     * every other branch folds into "+N" chips, so the route fits the
+     * column (Task 9, I6). Expand shows the whole tree.
+     */
+    pair?: unknown;
   },
   selected: DiagramSelection | undefined,
 ): Set<string> {
+  const p = scenario.path;
+  if (scenario.pair !== undefined && p) {
+    const route = new Set<string>([...p.up, p.ancestor, ...p.down]);
+    if (selected !== undefined) {
+      route.add(selected.id);
+    }
+    return route;
+  }
   const keep = new Set<string>(scenario.focus);
   if (scenario.data) {
     keep.add(scenario.data.frame);
@@ -33,7 +47,6 @@ export function keepSet(
     n.children.forEach(walk);
   };
   walk(tree);
-  const p = scenario.path;
   if (p) {
     [...p.up, p.ancestor, ...p.down].forEach((id) => keep.add(id));
   }
