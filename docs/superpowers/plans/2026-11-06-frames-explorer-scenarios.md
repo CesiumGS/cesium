@@ -461,6 +461,7 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
   7. Checks.
 
   Knobs stay compact: a single row of controls where they fit, wrapping at narrow widths. The "Knobs and proof ↓" pill becomes "Checks ↓", or goes away if Checks is reachable without it. The camera and time controls stay on the globe.
+- **Moments are easy to find** (owner, 2026-11-06: "where's the 'behind the moon' preset?"). Today the dish's "Behind the Moon" preset is a small chip styled like the "Checked setup" status chip, under the answer and below the tree, so it reads as a status, not a button. Move scenario moments into the knobs row as clearly styled buttons, for example "Jump to: Behind the Moon". Also make the timeline's marked window itself clickable, jumping to its start. Check the mockup covers this.
 - **A mockup comes first.** Show the owner a mockup of the new order, with the knobs under the question and the coloured check rows and legend, in light and dark, before building. The design note is the conventions' "mockups first" rule.
 
 - [ ] Show the mockup, and get the owner's choice.
