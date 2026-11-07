@@ -25,7 +25,8 @@ import { C } from "../../../src/measure/constants.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import type { Trajectory } from "../../../src/trajectory/Trajectory.ts";
-import { angleBetween } from "./pointing.ts";
+import { type HorizonMask, belowMask } from "./horizonMask.ts";
+import { angleBetween, azimuthElevation } from "./pointing.ts";
 
 /** The Moon's radius the lines of sight take, m (IAU 2015, NAIF pck00011: naif-moon-radius). */
 export const MOON_RADIUS = 1_737_400;
@@ -61,6 +62,33 @@ export interface Blocked {
   limb: number;
   /** The Moon's distance from the dish, m. */
   moonDistance: number;
+  /** Orion's azimuth and elevation at the dish, degrees (light time, no aberration). */
+  azimuth: number;
+  elevation: number;
+  /** At or below the dish's published horizon mask, when it has one. */
+  mask?: boolean;
+}
+
+/** A dish for the scan: where it is (ITRF, m) and its published receive mask, if any. */
+export interface Dish {
+  place: ArrayLike<number>;
+  mask?: HorizonMask;
+}
+
+/** East, north and up at an Earth-fixed point (WGS 84 geodetic). */
+function enuAt(p: ArrayLike<number>): number[][] {
+  const g = Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {
+    longitude: 0,
+    latitude: 0,
+    height: 0,
+  })!;
+  const [sl, cl] = [Math.sin(g.longitude), Math.cos(g.longitude)];
+  const [sp, cp] = [Math.sin(g.latitude), Math.cos(g.latitude)];
+  return [
+    [-sl, cl, 0],
+    [-sp * cl, -sp * sl, cp],
+    [cp * cl, cp * sl, sp],
+  ];
 }
 
 const sub = (a: ArrayLike<number>, b: ArrayLike<number>) => [
@@ -129,8 +157,9 @@ export function skyAt(
   }
 }
 
-/** What stands between the dish at `station` (ITRF, m) and Orion under `sky`, by hand. */
-export function blockedIn(sky: Sky, station: ArrayLike<number>): Blocked {
+/** What stands between `dish` and Orion under `sky`, by hand. */
+export function blockedIn(sky: Sky, dish: Dish): Blocked {
+  const station = dish.place;
   const toIcrf = sky.toIcrf;
   const s = [0, 1, 2].map(
     (i) =>
@@ -154,23 +183,34 @@ export function blockedIn(sky: Sky, station: ArrayLike<number>): Blocked {
       r[4 * j + 2]! * craft[2]!,
   );
   const far = [0, 1, 2].map((i) => station[i]! + inItrf[i]!);
+  const [e, n, u] = enuAt(station);
+  const dot = (a: number[]) =>
+    a[0]! * inItrf[0]! + a[1]! * inItrf[1]! + a[2]! * inItrf[2]!;
+  const { azimuth, elevation } = azimuthElevation([dot(e!), dot(n!), dot(u!)]);
   return {
     moon: limb < 0 && len(craft) > moonDistance,
     earth: throughEarth(Array.from(station), far),
     limb,
     moonDistance,
+    azimuth,
+    elevation,
+    ...(dish.mask && { mask: belowMask(dish.mask, azimuth, elevation) }),
   };
 }
+
+/** Unavailable to the dish: the Moon, the Earth or its horizon mask in the way. */
+export const unavailable = (b: Blocked): boolean =>
+  b.moon || b.earth || b.mask === true;
 
 /** What stands between the dish at `station` (ITRF, m) and Orion at `tdb`, by hand. */
 export function blockedAt(
   frames: Frames,
   orion: Trajectory,
-  station: ArrayLike<number>,
+  dish: Dish,
   tdb: number,
 ): Blocked | undefined {
   const sky = skyAt(frames, orion, tdb);
-  return sky && blockedIn(sky, station);
+  return sky && blockedIn(sky, dish);
 }
 
 /** The windows where `test` holds, over `spans`: a scan every `STEP`, each edge bisected to 1 ms. */
@@ -237,11 +277,11 @@ function windowsOf(
 function perKm(
   frames: Frames,
   orion: Trajectory,
-  station: ArrayLike<number>,
+  dish: Dish,
   t: number,
 ): number {
-  const a = blockedAt(frames, orion, station, t - 1);
-  const b = blockedAt(frames, orion, station, t + 1);
+  const a = blockedAt(frames, orion, dish, t - 1);
+  const b = blockedAt(frames, orion, dish, t + 1);
   if (!a || !b) {
     return NaN;
   }
@@ -251,7 +291,7 @@ function perKm(
 export interface DishWindows {
   /** When the Moon hides Orion from the dish. */
   moon: MoonWindow[];
-  /** When the dish can't hear Orion at all: the Moon or the Earth in the way. */
+  /** When the dish can't hear Orion at all: the Moon, the Earth or its horizon mask in the way. */
   unavailable: Window[];
 }
 
@@ -264,7 +304,7 @@ export interface DishWindows {
 export function scanWindows(
   frames: Frames,
   orion: Trajectory,
-  stations: readonly ArrayLike<number>[],
+  stations: readonly Dish[],
 ): { dishes: DishWindows[]; network: Window[] } {
   const memo = new Map<number, (Blocked | undefined)[]>();
   const at = (t: number) => {
@@ -286,7 +326,7 @@ export function scanWindows(
     })),
     unavailable: windowsOf(orion.spans, (t) => {
       const b = at(t)[i];
-      return b && (b.moon || b.earth);
+      return b && unavailable(b);
     }),
   }));
   const network = windowsOf(orion.spans, (t) => {
@@ -294,7 +334,7 @@ export function scanWindows(
     if (v.some((b) => b === undefined)) {
       return undefined;
     }
-    return v.every((b) => b!.moon || b!.earth);
+    return v.every((b) => unavailable(b!));
   });
   return { dishes, network };
 }

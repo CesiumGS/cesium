@@ -20,7 +20,7 @@ import {
 } from "../../src/measure/terrainLineOfSight.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import { length } from "./panel/format.ts";
-import type { SightLine } from "./scenarios/evaluate.ts";
+import type { ScenarioEvaluation, SightLine } from "./scenarios/evaluate.ts";
 
 import type { TerrainSightView } from "./panel/model.ts";
 
@@ -99,6 +99,38 @@ export function terrainSightText(
 }
 
 /**
+ * Our terrain against a published horizon mask (measured data, the DSN's
+ * from SRTM): a ray from the dish at the mask's elevation at each azimuth,
+ * traced over the drawn terrain. Clear: our terrain lies below the mask
+ * there (consistent: the mask is the terrain, the antennas or the dish's
+ * 6° limit). Blocked: our terrain rises above the published mask. Inside
+ * our terrain's error, or over terrain not drawn, it can't tell, and says
+ * so: no pass or fail.
+ */
+export function maskCheckText(
+  label: string,
+  results: readonly {
+    azimuth: number;
+    elevation: number;
+    r: TerrainLineOfSight;
+  }[],
+): TerrainSightView {
+  const below = results.filter((x) => x.r.clear === true);
+  const above = results.filter((x) => x.r.clear === false);
+  const unsure = results.filter((x) => x.r.clear === undefined);
+  const err = Math.max(0, ...results.map((x) => x.r.accuracy.meters ?? 0));
+  const at = (xs: typeof results) =>
+    xs.map((x) => `${x.azimuth}° (${x.elevation.toFixed(1)}°)`).join(", ");
+  return {
+    id: "mask-check",
+    state:
+      above.length > 0 ? "blocked" : unsure.length > 0 ? "may-block" : "clear",
+    text: `Our terrain against ${label} (measured data), at ${results.length} azimuths: ${below.length} below the mask${below.length ? ` (${at(below)})` : ""}; ${above.length} where it rises above the mask${above.length ? ` (${at(above)})` : ""}; ${unsure.length} it can't tell${unsure.length ? ` (${at(unsure)}: within our terrain's ±${length(err)}, or not drawn)` : ""}.`,
+    ...(err > 0 && { meters: err }),
+  };
+}
+
+/**
  * `from` on or above the drawn surface (`surface`, m, at its footprint):
  * an observer the terrain is drawn above is lifted to `OBSERVER_LIFT` over
  * it, and `to` moves with it, so the ray keeps its direction.
@@ -149,6 +181,8 @@ export function createSightLines(deps: {
   viewer: Pick<Viewer, "globe" | "engine" | "view">;
   /** The shown evaluation's lines (none outside a scenario). */
   lines(): readonly SightLine[] | undefined;
+  /** Rays along a published horizon mask, to check our terrain against it (the dish's). */
+  maskCheck?(): ScenarioEvaluation["maskCheck"];
   /** The globe the viewer shows: only "terrain" is traced. */
   globeShown(): "ellipsoid" | "terrain" | undefined;
   /** Why the terrain globe isn't there, if it failed. */
@@ -204,6 +238,21 @@ export function createSightLines(deps: {
           }
         : v;
     });
+    const check = deps.maskCheck?.();
+    if (check && target && globe) {
+      const results = check.samples.map((x) => {
+        const placed = placeObserver(
+          { from: check.from, to: x.to },
+          (lon, lat) => globe.surfaceHeight(lon, lat),
+        );
+        return {
+          azimuth: x.azimuth,
+          elevation: x.elevation,
+          r: terrainLineOfSight(placed.from, placed.to, target),
+        };
+      });
+      views.push(maskCheckText(check.label, results));
+    }
     traced = lines;
     deps.changed();
   }

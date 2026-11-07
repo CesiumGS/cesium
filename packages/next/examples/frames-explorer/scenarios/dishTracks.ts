@@ -31,6 +31,7 @@ import {
   type StressContext,
   type StressResult,
 } from "../stress/runner.ts";
+import { overlayMesh, polyline } from "../overlays.ts";
 import { STATIONS_SPK, orion } from "../stress/shared.ts";
 import {
   registerScenario,
@@ -44,6 +45,7 @@ import {
   type MoonWindow,
   type Window,
   MOON_RADIUS,
+  blockedAt,
   scanWindows,
 } from "./occultation.ts";
 import {
@@ -52,6 +54,8 @@ import {
   pointingByHand,
   pointingText,
 } from "./pointing.ts";
+import { dsnMask } from "./dsnMasks.ts";
+import { maskAt } from "./horizonMask.ts";
 import { DSN_STATIONS, type StationId, stationOf } from "./scenes.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
@@ -160,7 +164,10 @@ async function dishAndNetworkWindows(ctx: StressContext) {
     const scan = scanWindows(
       ctx.frames,
       o,
-      ids.map((id) => places[id]),
+      // Each dish with its published receive mask (fix 2: the owner's
+      // choice for the near field): its horizon is the mask, not the
+      // ellipsoid's.
+      ids.map((id) => ({ place: places[id], mask: dsnMask(id) })),
     );
     ids.forEach((id, i) => {
       byStation[id] = scan.dishes[i]!;
@@ -178,13 +185,14 @@ const clockText = (ctx: StressContext, tdb: number) =>
 /** Just inside and just outside each Moon edge, s, where the library's line of sight is asked. */
 export const EDGE_PROBE = 0.05;
 
-/**
- * The same at a horizon edge, s. The library's Earth verdict changes about
- * a light time (0.9 to 1.3 s) after the hand's, which tests the path in
- * ITRF at reception (measured over the mission's horizon edges, fix 1):
- * the two place the Earth at different instants. Flagged for the library.
- */
-export const HORIZON_PROBE = 2;
+/** How far out the horizon mask is drawn round the dish, m. */
+const MASK_RADIUS = 8000;
+
+/** The azimuths our terrain is checked against the published mask at, degrees. */
+const MASK_CHECK = [0, 45, 90, 135, 180, 225, 270, 315];
+
+/** A horizon edge's elevation against the mask there, degrees: 1 ms of Orion's motion is far less. */
+export const MASK_EDGE = 0.001;
 
 /** Orion seen from `site` at `instant`: Newtonian light time, as plan 3's SPICE fixture. */
 function look(
@@ -331,11 +339,15 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
   const moonNow = inside(mine.moon);
   const networkNow = inside(all.network);
   const behindMoon = by === "Moon";
-  const belowHorizon = by === "Earth";
+  // The dish's horizon is its published receive mask (DSN 810-005 301),
+  // linear between whole degrees of azimuth; the Earth and the Moon stay.
+  const myMask = dsnMask(id);
+  const limit = maskAt(myMask, azimuth);
+  const belowHorizon = !behindMoon && (by === "Earth" || elevation <= limit);
   const edgeText = (w: MoonWindow) =>
     `loss ${clockText(ctx, w.start)}, acquisition ${clockText(ctx, w.end)}; a kilometre of the real limb's relief (the Moon is taken as a 1,737.4 km sphere) moves them ${fmt(w.secondsPerKm.start, 2)} s and ${fmt(w.secondsPerKm.end, 2)} s`;
   const networkText = (w: Window) =>
-    `no dish can hear Orion from ${clockText(ctx, w.start)} to ${clockText(ctx, w.end)} (${fmt((w.end - w.start) / 60, 3)} min)`;
+    `no 70 m dish can hear Orion from ${clockText(ctx, w.start)} to ${clockText(ctx, w.end)} (${fmt((w.end - w.start) / 60, 3)} min)`;
   // The library's line of sight (`measure`, the Earth and the Moon) just
   // inside and just outside each edge of this dish's unavailable windows.
   const stationPoint = framePoint(f.itrf, all.places[id]);
@@ -358,31 +370,59 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       Math.abs(w.end - epochTdb) < 86_400,
   );
   // An end at the edge of Orion's data isn't a change of verdict: not asked.
-  const probe = (t: number) =>
+  // A Moon edge is asked of the library's line of sight; a horizon edge is
+  // the mask's (the library has no masks): Orion on it there, by hand.
+  const isMoonEdge = (t: number) =>
     mine.moon.some(
       (m) => Math.abs(m.start - t) < 0.01 || Math.abs(m.end - t) < 0.01,
-    )
-      ? EDGE_PROBE
-      : HORIZON_PROBE;
-  const probes = near.flatMap((w) => [
-    ...(w.open?.start
-      ? []
-      : ([
-          [w.start - probe(w.start), true],
-          [w.start + probe(w.start), false],
-        ] as const)),
-    ...(w.open?.end
-      ? []
-      : ([
-          [w.end - probe(w.end), false],
-          [w.end + probe(w.end), true],
-        ] as const)),
+    );
+  const edges = near.flatMap((w) => [
+    ...(w.open?.start ? [] : [{ t: w.start, starts: true }]),
+    ...(w.open?.end ? [] : [{ t: w.end, starts: false }]),
   ]);
-  const disagreements = probes.filter(([t, clear]) => {
-    const c = libraryClear(t);
-    return c !== undefined && c !== clear;
-  });
+  const dish = { place: all.places[id], mask: myMask };
+  const disagreements: number[] = [];
+  let worstMask = 0;
+  for (const { t, starts } of edges) {
+    if (isMoonEdge(t)) {
+      for (const [at, clear] of [
+        [t - EDGE_PROBE, starts],
+        [t + EDGE_PROBE, !starts],
+      ] as const) {
+        const c = libraryClear(at);
+        if (c !== undefined && c !== clear) {
+          disagreements.push(at);
+        }
+      }
+    } else {
+      const b = blockedAt(f, o, dish, t);
+      if (b) {
+        worstMask = Math.max(
+          worstMask,
+          Math.abs(b.elevation - maskAt(myMask, b.azimuth)),
+        );
+      }
+    }
+  }
+  const maskMiss = worstMask > MASK_EDGE;
   const toItrf = frameTransform(site, f.itrf, instant);
+  /** A point `length` m from the dish at `az`, `el` degrees, ITRF. */
+  const enuPoint = (az: number, el: number, length: number) => {
+    const [ra, re] = [(az * Math.PI) / 180, (el * Math.PI) / 180];
+    const d = [
+      Math.cos(re) * Math.sin(ra),
+      Math.cos(re) * Math.cos(ra),
+      Math.sin(re),
+    ];
+    return [0, 1, 2].map(
+      (i) =>
+        position[i]! +
+        length *
+          (toItrf[i]! * d[0]! +
+            toItrf[4 + i]! * d[1]! +
+            toItrf[8 + i]! * d[2]!),
+    );
+  };
   const along = (length: number) =>
     [0, 1, 2].map(
       (i) =>
@@ -396,14 +436,14 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     {
       id: "dish-tracks.windows.live",
       group: "space",
-      title: `${id}'s windows without Orion (the Moon or the Earth in the way) within a day of the scenario's time, found by hand geometry and bisected to 1 ms: the library's line of sight agrees ${EDGE_PROBE} s inside and outside each Moon edge, and ${HORIZON_PROBE} s each side of a horizon edge (its Earth verdict comes about a light time later)`,
-      pass: near.length > 0 && disagreements.length === 0,
+      title: `${id}'s windows without Orion (the Moon, or its published horizon mask) within a day of the scenario's time, found by hand geometry and bisected to 1 ms: the library's line of sight agrees ${EDGE_PROBE} s inside and outside each Moon edge, and Orion is on the mask at each horizon edge (within ${MASK_EDGE}°)`,
+      pass: near.length > 0 && disagreements.length === 0 && !maskMiss,
       value: disagreements.length,
       tolerance: 0,
       unit: "edges",
-      detail: `${near.length} windows (${probes.length} edges asked${disagreements.length > 0 ? `; the library disagrees at ${disagreements.map(([t]) => clockText(ctx, t)).join(", ")}` : ""}): ${near.map((w) => `${w.open?.start ? "data from " : ""}${clockText(ctx, w.start)} to ${clockText(ctx, w.end)}${w.open?.end ? " (end of a data segment)" : ""}`).join("; ")}${mine.moon.length > 0 ? `; behind the Moon: ${mine.moon.map(edgeText).join("; ")}` : ""}${all.network.length > 0 ? `; the network: ${all.network.map(networkText).join("; ")}` : ""}`,
+      detail: `${near.length} windows (${edges.length} edges; the worst horizon edge ${fmt(worstMask, 2)}° off the mask${disagreements.length > 0 ? `; the library disagrees at ${disagreements.map((t) => clockText(ctx, t)).join(", ")}` : ""}): ${near.map((w) => `${w.open?.start ? "data from " : ""}${clockText(ctx, w.start)} to ${clockText(ctx, w.end)}${w.open?.end ? " (end of a data segment)" : ""}`).join("; ")}${mine.moon.length > 0 ? `; behind the Moon: ${mine.moon.map(edgeText).join("; ")}` : ""}${all.network.length > 0 ? `; the network: ${all.network.map(networkText).join("; ")}` : ""}`,
       accuracyNote:
-        "computed, not published: hand geometry (the Moon a 1,737.4 km sphere, the Earth WGS 84) checked against the library's line of sight at each edge",
+        "computed, not published: hand geometry (the Moon a 1,737.4 km sphere; DSN 810-005's receive masks, linear between whole degrees) checked against the library's line of sight at each Moon edge",
       instant: instant.tdb(),
     },
     {
@@ -449,7 +489,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     },
     {
       title: "Can it see it",
-      text: "The straight path is tested against the Earth and the Moon, each placed when the light passes it; the page then traces the part near the dish over the drawn terrain, for the local horizon.",
+      text: "The straight path is tested against the Earth and the Moon, each placed when the light passes it. The dish's horizon is its published receive mask (DSN 810-005 Module 301, from SRTM terrain and the neighbouring antennas, at least about 6°), linear between whole degrees of azimuth. The page checks our drawn terrain against that mask at eight azimuths.",
     },
   ];
   const evaluation: ScenarioEvaluation = {
@@ -473,7 +513,10 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
           ? {
               state: "lost",
               where: `at ${id}`,
-              text: `Below ${id}'s horizon: the Earth is in the way (${(-elevation).toFixed(2)}° down)`,
+              text:
+                elevation < 0
+                  ? `Below ${id}'s horizon: the Earth is in the way (${(-elevation).toFixed(2)}° down)`
+                  : `Below ${id}'s horizon mask: Orion is ${elevation.toFixed(2)}° up, the published receive limit there ${limit.toFixed(2)}° (DSN 810-005 301)`,
             }
           : {
               state: "clear",
@@ -503,9 +546,63 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       path,
       method,
     },
-    // The line itself follows the clock on the page (skyRay.ts).
-    overlays: [],
+    // The line itself follows the clock on the page (skyRay.ts); from the
+    // dish, its published horizon mask is drawn round it.
+    overlays:
+      knobs.view === "orbit"
+        ? []
+        : [
+            {
+              id: "mask",
+              geometry: {
+                kind: "scenario",
+                layers: [
+                  {
+                    name: "mask",
+                    chunks: overlayMesh(
+                      polyline(
+                        Float64Array.from(
+                          Array.from({ length: 361 }, (_, a) =>
+                            enuPoint(a, maskAt(myMask, a), MASK_RADIUS),
+                          ).flat(),
+                        ),
+                        [255, 255, 255, 255],
+                      ),
+                    ),
+                  },
+                ],
+                ms: 0,
+              },
+            },
+          ],
+    horizonMasks: Object.fromEntries(
+      (Object.keys(DSN_STATIONS) as StationId[]).map((k) => [
+        DSN_STATIONS[k].name,
+        dsnMask(k),
+      ]),
+    ),
+    maskCheck: {
+      label: `${id}'s published receive mask`,
+      from: position,
+      samples: MASK_CHECK.map((a) => ({
+        azimuth: a,
+        elevation: maskAt(myMask, a),
+        to: enuPoint(a, maskAt(myMask, a), SIGHT_LENGTH),
+      })),
+    },
     legend: [
+      ...(knobs.view === "orbit"
+        ? []
+        : [
+            {
+              key: "mask",
+              label: `${id}'s horizon mask, as DSN 810-005 301 publishes it (receive), drawn ${MASK_RADIUS / 1000} km out`,
+              short: "Horizon mask",
+              accuracy: `${Math.min(...myMask).toFixed(1)}° to ${Math.max(...myMask).toFixed(1)}° above the horizon`,
+              line: "solid" as const,
+              tone: "family" as const,
+            },
+          ]),
       {
         key: "ray",
         label: "The line of sight to Orion, where the dish points",
@@ -518,7 +615,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     windows: [
       ...all.network.map((w, i) => ({
         id: `network-${i}`,
-        label: "No dish can hear Orion",
+        label: "No 70 m dish (DSS-14, DSS-43, DSS-63) can hear Orion",
         startUtc: Instant.fromTdb(w.start).toUtc(f.data.leapSeconds),
         endUtc: Instant.fromTdb(w.end).toUtc(f.data.leapSeconds),
       })),

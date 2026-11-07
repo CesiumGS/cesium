@@ -78,6 +78,9 @@ import {
   createSkyRay,
   targetPlace,
 } from "../../examples/frames-explorer/skyRay.ts";
+import { dsnMask } from "../../examples/frames-explorer/scenarios/dsnMasks.ts";
+import { maskAt } from "../../examples/frames-explorer/scenarios/horizonMask.ts";
+import { blockedAt } from "../../examples/frames-explorer/scenarios/occultation.ts";
 import type { LabelBoard } from "../../examples/frames-explorer/triadLayer.ts";
 import {
   MOON_DIRECTION,
@@ -985,7 +988,7 @@ describe("a dish tracks Orion (Task 6b)", () => {
       /^Signal lost: Orion is behind the Moon · loss \d\d:\d\d:\d\d UTC, acquisition/,
     );
     expect(behind.answer.aside).toMatch(
-      /^no dish can hear Orion from 22:42:5\d UTC to 23:23:1\d UTC/,
+      /^no 70 m dish can hear Orion from 22:42:5\d UTC to 23:23:1\d UTC/,
     );
     const los = behind.live.find((r) => r.id === "space.line-of-sight.live")!;
     expect(los.pass, los.detail).toBe(true);
@@ -1047,8 +1050,8 @@ describe("Orion behind the Moon (Task 6b, the owner's ask)", () => {
       checkedTdb("dish-tracks"),
     );
     const iso = (ms: number) => new Date(ms).toISOString();
-    const network = (e.windows ?? []).filter(
-      (w) => w.label === "No dish can hear Orion",
+    const network = (e.windows ?? []).filter((w) =>
+      w.label.startsWith("No 70 m dish"),
     );
     print(
       `no dish can hear Orion: ${network.map((w) => `${iso(w.startUtc)} to ${iso(w.endUtc)}`).join("; ")}`,
@@ -1072,6 +1075,14 @@ describe("Orion behind the Moon (Task 6b, the owner's ask)", () => {
       expect(Math.abs(ms - Date.parse(iso)), iso).toBeLessThan(1000);
     near(flyby.startUtc, "2026-04-06T22:42:53.503Z");
     near(flyby.endUtc, "2026-04-06T23:23:12.000Z");
+    // With the published masks (fix 2), the three 70 m dishes also leave
+    // short daily gaps: the one before the flyby, pinned the same way.
+    const gap = network.find(
+      (w) => Math.abs(w.startUtc - Date.parse("2026-04-06T07:24:47Z")) < 60_000,
+    );
+    expect(gap, "the 07:25 UTC gap on the flyby day").toBeDefined();
+    near(gap!.startUtc, "2026-04-06T07:24:46.980Z");
+    near(gap!.endUtc, "2026-04-06T07:35:45.296Z");
     expect(edges.detail).toMatch(
       /behind the Moon: loss 22:42:5[34] UTC, acquisition 23:23:1[12] UTC/,
     );
@@ -1299,5 +1310,47 @@ describe("createSkyRay as the page runs it (fix 1): with the page's Orion track,
     }
     sky.dispose();
     expect(g.overlays.size).toBe(0);
+  }, 120_000);
+});
+
+describe("the DSN's published horizon masks (Task 6b, the owner's choice)", () => {
+  it("keeps Orion out of view just above the ellipsoid's horizon but below DSS-43's mask", async () => {
+    const station = Trajectory.fromSpk([bytes(STATIONS_SPK)], 399043, frames, {
+      name: "DSS-43",
+      accuracy: "precise",
+      j2000: "icrf",
+    });
+    const place = Array.from(
+      station.state(Instant.fromTdb(checkedTdb("dish-tracks"))).subarray(0, 3),
+    );
+    const dish = { place, mask: dsnMask("DSS-43") };
+    // Orion rising at DSS-43 the day of the flyby: find where it is between
+    // the ellipsoid's horizon and the mask, by hand.
+    let found: { t: number; el: number; limit: number } | undefined;
+    const start = tdbOf(Date.parse("2026-04-06T00:30:00Z"));
+    for (let t = start; t < start + 4 * 3600 && !found; t += 60) {
+      const b = blockedAt(frames, orion, dish, t)!;
+      const limit = maskAt(dish.mask, b.azimuth);
+      if (b.elevation > 0.5 && b.elevation < limit - 0.5) {
+        found = { t, el: b.elevation, limit };
+      }
+    }
+    expect(
+      found,
+      "a time Orion is between the horizon and the mask",
+    ).toBeDefined();
+    const e = await client.scenario(
+      "dish-tracks",
+      { station: "DSS-43" },
+      found!.t,
+    );
+    print(
+      `DSS-43 at ${new Date(Instant.fromTdb(found!.t).toUtc(frames.data.leapSeconds)).toISOString()}: Orion ${found!.el.toFixed(2)}° up, mask ${found!.limit.toFixed(2)}°: ${e.answer.label}`,
+    );
+    expect(e.answer.label).toBe("Below the horizon at DSS-43");
+    expect(e.answer.value).toBeUndefined();
+    expect(e.answer.sky?.text).toMatch(
+      /horizon mask: Orion is \d+\.\d\d° up, the published receive limit there/,
+    );
   }, 120_000);
 });

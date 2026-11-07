@@ -55,6 +55,10 @@ import {
 } from "../examples/frames-explorer/sightLines.ts";
 import type { TerrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
 import { moonCut, rayPlacement } from "../examples/frames-explorer/skyRay.ts";
+import {
+  belowMask,
+  maskAt,
+} from "../examples/frames-explorer/scenarios/horizonMask.ts";
 import { MOON_RADIUS } from "../examples/frames-explorer/scenarios/occultation.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 
@@ -531,5 +535,17 @@ describe("the verdict joins the terrain's to the sky's (fix 1): the weakest lead
     expect(withTerrain(lost, t("clear")).aside).toBe(
       "Signal lost: Orion is behind the Moon · 394,304 km",
     );
+  });
+});
+
+describe("the DSN's horizon masks, as published (Task 6b)", () => {
+  it("reads 361 receive limits a dish, every degree, and interpolates linearly between them", () => {
+    const m = [6, 7.2, ...Array.from({ length: 359 }, () => 6)];
+    expect(maskAt(m, 0)).toBe(6);
+    expect(maskAt(m, 0.5)).toBeCloseTo(6.6, 12);
+    expect(maskAt(m, 1)).toBe(7.2);
+    expect(maskAt(m, 361)).toBe(7.2);
+    expect(belowMask(m, 1, 7.2)).toBe(true);
+    expect(belowMask(m, 1, 7.21)).toBe(false);
   });
 });

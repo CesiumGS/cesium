@@ -329,6 +329,10 @@ export function run(context: ExampleContext): ExampleRun {
       stage.scene() !== undefined
         ? host.state().evaluation?.sightLines
         : undefined,
+    maskCheck: () =>
+      stage.scene() !== undefined
+        ? host.state().evaluation?.maskCheck
+        : undefined,
     globeShown: () => stage.globeShown(),
     globeProblem: () => stage.globeProblem(),
     changed: () => invalidate(),
@@ -519,6 +523,10 @@ export function run(context: ExampleContext): ExampleRun {
     scene: () => stage.scene(),
     knobs: () => stage.knobs(),
     orionTrack: () => orion.track(),
+    masks: () =>
+      stage.scene() !== undefined
+        ? host.state().evaluation?.horizonMasks
+        : undefined,
     labels,
     refreshLabels: () => triads.refresh(),
     camera: () => {

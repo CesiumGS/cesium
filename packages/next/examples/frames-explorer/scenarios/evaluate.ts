@@ -142,6 +142,26 @@ export interface ScenarioEvaluation {
     startUtc: number;
     endUtc: number;
   }[];
+  /**
+   * Each site's published horizon mask (the DSN's receive masks, degrees
+   * at azimuths 0 to 360), by its frame's name: from orbit the page draws a
+   * dish's line only while Orion is above that dish's mask.
+   */
+  horizonMasks?: Readonly<Record<string, readonly number[]>>;
+  /**
+   * Rays from a site along its published mask (`from` and each `to` ITRF,
+   * m), traced over the drawn terrain on the page (sightLines.ts): our
+   * terrain's horizon checked against the published one.
+   */
+  maskCheck?: {
+    label: string;
+    from: readonly number[];
+    samples: readonly {
+      azimuth: number;
+      elevation: number;
+      to: readonly number[];
+    }[];
+  };
   /** Moments a button takes the clock to ("Behind the Moon"), UTC ms. */
   presets?: readonly { id: string; label: string; utcMs: number }[];
   /**

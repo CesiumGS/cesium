@@ -23,6 +23,7 @@ import { Instant } from "../../src/time/Instant.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
 import type { OrionTrack } from "./orionTrack.ts";
 import { overlayMesh, polyline } from "./overlays.ts";
+import { belowMask } from "./scenarios/horizonMask.ts";
 import { MOON_RADIUS } from "./scenarios/occultation.ts";
 import {
   azimuthElevation,
@@ -166,6 +167,8 @@ export function createSkyRay(deps: {
   scene(): SceneSpec | undefined;
   knobs(): KnobState;
   orionTrack(): OrionTrack | undefined;
+  /** Each site's published horizon mask, by its name: from orbit a line shows only above it. */
+  masks?(): Readonly<Record<string, readonly number[]>> | undefined;
   labels: LabelBoard;
   refreshLabels(): void;
   /**
@@ -338,11 +341,14 @@ export function createSkyRay(deps: {
       if (isChosen) {
         chosenText = `${ray.label} · ${elevation.toFixed(1)}° ${elevation >= 0 ? "up" : "down"}, az ${azimuth.toFixed(1)}° ${compassPoint(azimuth)}`;
       }
-      if (all && elevation < 0) {
-        // From orbit, a dish whose horizon hides Orion draws no line.
+      const mask = deps.masks?.()?.[s.name];
+      const below = mask ? belowMask(mask, azimuth, elevation) : elevation < 0;
+      if (all && below) {
+        // From orbit, a dish whose horizon (its published mask) hides
+        // Orion draws no line.
         words.push({
           id: `sky-ray:${s.name}:below`,
-          text: `${s.name.replace(" ENU", "")} · below the horizon`,
+          text: `${s.name.replace(" ENU", "")} · below ${mask ? "its horizon mask" : "the horizon"}`,
           at: Float64Array.from(origin),
           family: "earth",
           priority: 1,
