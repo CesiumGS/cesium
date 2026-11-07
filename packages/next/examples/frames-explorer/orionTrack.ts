@@ -73,13 +73,20 @@ export async function loadOrionTrack(
   }
   const bytes = await response.arrayBuffer();
   const listed = manifest?.files.find((f) => f.file === ORION_OEM);
-  if (
-    listed !== undefined &&
-    hex(await crypto.subtle.digest("SHA-256", bytes)) !== listed.sha256
-  ) {
-    throw new Error(
-      `${ORION_OEM} does not match its SHA-256 in manifest.json; re-run \`npm run setup\``,
-    );
+  if (listed !== undefined) {
+    // An http page anywhere but localhost has no crypto.subtle: say so,
+    // rather than use a file nothing has checked.
+    const subtle = globalThis.crypto?.subtle;
+    if (subtle === undefined) {
+      throw new Error(
+        `${ORION_OEM} can't be checked against its SHA-256 in manifest.json: this browser gives no crypto.subtle on an http page that isn't localhost; open the page over https or on localhost`,
+      );
+    }
+    if (hex(await subtle.digest("SHA-256", bytes)) !== listed.sha256) {
+      throw new Error(
+        `${ORION_OEM} does not match its SHA-256 in manifest.json (the file is corrupt or changed); re-run \`npm run setup\``,
+      );
+    }
   }
   return orionFromOem(new TextDecoder().decode(bytes), frames);
 }

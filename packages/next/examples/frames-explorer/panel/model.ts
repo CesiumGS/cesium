@@ -94,6 +94,11 @@ export interface OverlayView {
   /** Why it can't be drawn (missing, error). */
   problem?: string;
   /**
+   * A line about a part of a drawn overlay: Orion's dot while its OEM loads
+   * on the page, or why it can't show (R9; `attention` in the warning color).
+   */
+  note?: { text: string; attention: boolean };
+  /**
    * Lines drawn and keyed apart, each its own legend entry (the rigid and
    * the exact line, stop 4); without them the overlay is one entry.
    */

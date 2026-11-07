@@ -464,6 +464,15 @@ export function OverlayRow({
       {overlay.on && !problem && (
         <OverlayOptions overlay={overlay} model={model} actions={actions} />
       )}
+      {overlay.on && !problem && overlay.note && (
+        <Typography
+          variant="caption-lg"
+          render={<p />}
+          className={`fx-overlay-drawing${overlay.note.attention ? " fx-unbounded" : ""}`}
+        >
+          {overlay.note.text}
+        </Typography>
+      )}
       {overlay.on && !problem && overlay.drawing && (
         <Typography
           variant="caption-lg"

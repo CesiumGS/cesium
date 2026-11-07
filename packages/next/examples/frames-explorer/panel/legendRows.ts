@@ -35,6 +35,8 @@ export interface LegendRow {
   tone: "family" | "white";
   /** In the warning color (not bounded, or resting on an assumption). */
   attention: boolean;
+  /** A line under it about a part of the overlay (Orion's dot loading, or why it can't show). */
+  note?: { text: string; attention: boolean };
 }
 
 export function legendRows(drawn: readonly OverlayView[]): LegendRow[] {
@@ -65,6 +67,7 @@ export function legendRows(drawn: readonly OverlayView[]): LegendRow[] {
         family: look.family,
         tone: "family",
         attention,
+        ...(o.note && { note: o.note }),
       },
     ];
   });

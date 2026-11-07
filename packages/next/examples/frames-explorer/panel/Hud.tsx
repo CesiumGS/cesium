@@ -123,6 +123,14 @@ export function GlobeLegend({ model }: { model: PanelModel }) {
               >
                 {row.accuracy}
               </span>
+              {row.note && (
+                <span
+                  className={`fx-legend-sub${row.note.attention ? " fx-unbounded" : ""}`}
+                  role={row.note.attention ? "alert" : "status"}
+                >
+                  {row.note.text}
+                </span>
+              )}
             </span>
           </li>
         ))}

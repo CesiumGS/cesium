@@ -302,6 +302,7 @@ export function run(context: ExampleContext): ExampleRun {
     enter: (spec, knobs) => stage.enter(spec.id, knobs),
     update: (_spec, knobs) => stage.update(knobs),
     leave: () => stage.leave(),
+    reframe: () => stage.reframe(),
     setClock: (ms) => {
       viewer.clock.time = ms;
       viewer.clock.mode = "paused";

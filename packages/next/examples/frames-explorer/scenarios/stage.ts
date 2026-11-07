@@ -35,6 +35,11 @@ export interface Stage {
   flyToScene(): void;
   /** Orion's path was drawn: a new frame (a knob) is framed once. */
   orionDrawn(): void;
+  /**
+   * Back to the checked setup: the scene's view again, now, or once Orion's
+   * path in its checked frame is drawn if that frame changed.
+   */
+  reframe(): void;
   /** Every frame: the headlight follows the camera through a flight. */
   tick(): void;
   dispose(): void;
@@ -224,6 +229,12 @@ export function createStage(deps: {
     leave,
     exposure,
     flyToScene,
+    reframe: () => {
+      clearTimeout(siteFlight);
+      if (scene && !reframeOrion) {
+        flyToScene();
+      }
+    },
     orionDrawn: () => {
       if (reframeOrion) {
         // A new frame reads as a change: the camera frames the new path

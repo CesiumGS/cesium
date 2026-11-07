@@ -430,9 +430,16 @@ binds over the bullets above where they differ:
   every frame, from the same OEM the worker draws the path from
   (`orionTrack.ts`): Orion at the instant the globe shows, on the path in
   every drawing frame, never waiting for the worker (Task 4c). The worker
-  keeps the path's mesh, the accuracy statement and the proof. Its text
+  keeps the path's mesh, the accuracy statement and the proof. While that
+  OEM loads, or if it can't (a SHA-256 mismatch against the manifest, no
+  `crypto.subtle` on an http page that isn't localhost), Orion's legend row
+  and its overlay row say so, and the console warns (R9). Its text
   moves clear of the HUD's panels; every globe label sits under them, the
   time controls and their popover.
+- **Back to the checked setup** also flies to the scene's view: a scene's
+  framing is of the time it was flown at (one-path's frames the Moon where
+  it was then), so after a jump back from a far time it could frame
+  nothing (Task 4c).
 - **Labels ride with the canvas.** The engine renders a frame before the
   frame loop runs, so the loop places the labels first, against that frame
   (its camera and the instant the world was placed at, `Globe.shownAt`),

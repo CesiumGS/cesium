@@ -41,6 +41,13 @@ export interface ScenarioHostDeps {
   update(spec: ScenarioSpec, knobs: KnobState): void;
   /** Undoes `enter`: the scene's own drawings, lights and clock rate. */
   leave(spec: ScenarioSpec): void;
+  /**
+   * "Back to the checked setup": the scene's own view again. Its framing is
+   * of the time it was flown at (one-path's frames the Moon where it was
+   * then), so after the clock jumps back the camera may frame nothing
+   * (Task 4c re-review, item 3).
+   */
+  reframe?(spec: ScenarioSpec): void;
   /** Sets the clock (UTC ms), paused. */
   setClock(epochUtcMs: number): void;
   /** The clock's time, UTC ms. */
@@ -353,6 +360,7 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
       deps.setClock(epochUtcMs);
       deps.update(spec, knobs);
     });
+    deps.reframe?.(spec);
     void request();
   }
 

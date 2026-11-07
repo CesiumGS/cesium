@@ -80,7 +80,7 @@ export interface OrionLayer {
   /** The legend's line (R8), from the statement at the clock's instant. */
   accuracy(): Pick<
     OverlayView,
-    "accuracy" | "detail" | "drawing" | "caution" | "unbounded"
+    "accuracy" | "detail" | "drawing" | "caution" | "unbounded" | "note"
   >;
   dispose(): void;
 }
@@ -235,32 +235,70 @@ export function createOrionLayer(deps: {
    * change after a failure. The dot is placed from it every frame.
    */
   let track: OrionTrack | undefined;
+  /** The OEM's load on this thread: under way, or why it failed (R9: said, never silent). */
+  let trackLoad: { state: "loading" } | { state: "error"; message: string } = {
+    state: "loading",
+  };
   let trackLoading = false;
-  function loadTrack(): void {
+  /**
+   * Loads the OEM once the worker has it. After a failure it is tried again
+   * only when the path is drawn again (the overlay turned on, its frame
+   * changed), not on every change of the loading model.
+   */
+  function loadTrack(retry = false): void {
     const frames = framesNow();
     if (
       track ||
       trackLoading ||
+      (trackLoad.state === "error" && !retry) ||
       !frames ||
       loading.get("orion").state !== "ready"
     ) {
       return;
     }
     trackLoading = true;
+    trackLoad = { state: "loading" };
+    invalidate();
     deps
       .loadTrack(frames)
       .then((t) => {
         if (!disposed()) {
           track = t;
           deps.refreshCallouts();
+          invalidate();
         }
       })
-      .catch(() => {
-        // The dot stays off; the worker's path and statement still show.
+      .catch((error: unknown) => {
+        if (disposed() || isAbort(error)) {
+          return;
+        }
+        // The path and the statement still show; the dot can't, and the
+        // legend and the overlay's row say why, as the console does.
+        const message = scrub(messageOf(error));
+        trackLoad = { state: "error", message };
+        console.warn(`Orion's dot can't show: ${message}`);
+        deps.refreshCallouts();
+        invalidate();
       })
       .finally(() => {
         trackLoading = false;
       });
+  }
+
+  /** The legend's line about the dot while it isn't placed: loading, or why not. */
+  function dotNote(): OverlayView["note"] {
+    if (track || loading.get("orion").state !== "ready") {
+      return undefined;
+    }
+    return trackLoad.state === "error"
+      ? {
+          text: `Orion's dot can't show: ${trackLoad.message}`,
+          attention: true,
+        }
+      : {
+          text: "Orion's dot: loading its OEM on this page…",
+          attention: false,
+        };
   }
 
   function markerPoint(): Float64Array | undefined {
@@ -339,7 +377,7 @@ export function createOrionLayer(deps: {
     }
     orionBuild.drop();
     orionBuild.request({ frame: orionFrame, at: instant.tdb() });
-    loadTrack();
+    loadTrack(true);
     invalidate();
   }
 
@@ -356,12 +394,14 @@ export function createOrionLayer(deps: {
       ...(orionBuilt?.sampling && { sampling: orionBuilt.sampling }),
       ...(orionInfoError && { error: orionInfoError.message }),
     });
+    const note = s.on ? dotNote() : undefined;
     return {
       accuracy: l.accuracy,
       detail: l.detail,
       ...(l.drawing !== undefined && { drawing: l.drawing }),
       ...(l.caution && { caution: true }),
       ...(l.unbounded && { unbounded: true }),
+      ...(note && { note }),
     };
   }
 

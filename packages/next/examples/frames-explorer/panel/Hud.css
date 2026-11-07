@@ -436,6 +436,20 @@
 .fx-legend-acc.fx-unbounded {
   color: var(--stratakit-color-text-attention-base);
 }
+/* A line about a part of the overlay (Orion's dot), always shown in full. */
+.fx-legend-sub {
+  flex-basis: 100%;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  white-space: normal;
+}
+.fx-legend-sub.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-legend:not(.fx-legend-open) .fx-legend-text:has(.fx-legend-sub) {
+  flex-wrap: wrap;
+}
 .fx-legend-note {
   color: var(--stratakit-color-text-neutral-secondary);
   font-size: var(--stratakit-font-size-caption-lg);

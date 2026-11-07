@@ -42,7 +42,10 @@ import {
 } from "../../examples/frames-explorer/tests.ts";
 import { compose, pathPoint } from "../../examples/frames-explorer/orion.ts";
 import { adaptivePath } from "../../examples/frames-explorer/overlays.ts";
-import { orionPlace } from "../../examples/frames-explorer/orionTrack.ts";
+import {
+  loadOrionTrack,
+  orionPlace,
+} from "../../examples/frames-explorer/orionTrack.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
@@ -369,6 +372,33 @@ describe("Orion's dot, placed on the page's own thread, on the worker's drawn pa
     floor: 100,
     maxSamples: 8000,
   };
+  it("loads, on the page, the same Orion as the worker's (loadOrionTrack, checked against the manifest's SHA-256)", async () => {
+    const real = globalThis.fetch;
+    globalThis.fetch = (async (url: string) => {
+      expect(url).toBe(`/frames-data/${encodeURIComponent(ORION_OEM)}`);
+      return new Response(readFileSync(join(dir, ORION_OEM)));
+    }) as typeof fetch;
+    try {
+      const manifest = JSON.parse(
+        readFileSync(join(dir, "manifest.json"), "utf8"),
+      ) as StoreManifest;
+      const page = await loadOrionTrack(
+        frames,
+        manifest,
+        new AbortController().signal,
+      );
+      expect(page.spans).toEqual(orion.spans);
+      for (const hours of [-48, 0, 0.5, 30]) {
+        const t = Instant.fromTdb(drawnAt + hours * 3600);
+        expect(Array.from(page.state(t)), `${hours} h`).toEqual(
+          Array.from(orion.state(t)),
+        );
+      }
+    } finally {
+      globalThis.fetch = real;
+    }
+  });
+
   for (const frame of ["GCRF", "ITRF", "MOON_ME"] as const) {
     it(`agrees with the path drawn in ${frame}, at its samples and between them`, () => {
       const f =

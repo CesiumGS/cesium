@@ -81,6 +81,7 @@ function harness(
     },
     update: (s, knobs) => log.push(`update ${s.id} ${JSON.stringify(knobs)}`),
     leave: (s) => log.push(`leave ${s.id}`),
+    reframe: (s) => log.push(`reframe ${s.id}`),
     setClock: (ms) => {
       clock = ms;
       log.push(`clock ${ms}`);
@@ -365,6 +366,36 @@ describe("Back to the checked setup", () => {
       { frame: "GCRF" },
       { frame: "MOON_ME" },
     ]);
+  });
+});
+
+describe("Back to the checked setup reframes the scene (Task 4c re-review, item 3)", () => {
+  it("flies to the scene's view again, after the clock and the knobs are back: its framing is of the time it was flown at", () => {
+    const h = harness();
+    // Entered at a time far off the checked one (a link, or a long play):
+    // the scene was framed with the Moon where it was then.
+    void h.host.show(
+      "one-path",
+      { frame: "MOON_ME" },
+      checkedMs("one-path") + 13 * 86_400_000,
+    );
+    h.log.length = 0;
+    h.host.backToChecked();
+    expect(h.log).toEqual([
+      `clock ${checkedMs("one-path")}`,
+      `update one-path {"frame":"MOON_ME"}`,
+      "reframe one-path",
+    ]);
+  });
+
+  it("doesn't reframe when the clock or a knob moves, only on Back", () => {
+    const h = harness();
+    void h.host.show("one-path", {}, checkedMs("one-path"));
+    h.host.setKnob("frame", "GCRF");
+    h.setClockByUser(checkedMs("one-path") + 3_600_000);
+    h.host.clockChanged();
+    h.flush();
+    expect(h.log.filter((l) => l.startsWith("reframe"))).toEqual([]);
   });
 });
 
