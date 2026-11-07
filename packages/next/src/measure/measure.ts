@@ -206,6 +206,17 @@ function checkInputs(
         );
       }
     }
+    // A literal design point skips designPoint's checks: a NaN tolerance
+    // would make a NaN statement, neither a number nor undefined.
+    const tolerance = isDesign(point) ? point.obtained?.tolerance : undefined;
+    if (
+      tolerance !== undefined &&
+      !(Number.isFinite(tolerance) && tolerance >= 0)
+    ) {
+      throw new Error(
+        `${who}: point ${name}'s obtained.tolerance must be a finite number of metres, not negative, got ${tolerance}`,
+      );
+    }
   }
   if (options.frequency !== undefined && !Number.isFinite(options.frequency)) {
     throw new Error(

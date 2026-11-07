@@ -467,8 +467,9 @@ export class EngineeringFrame {
   /**
    * Resolves the PROJ operation once (R2), with the grids loaded now. Throws
    * for a body with no known geographic CRS, and as `resolveOperation` does
-   * when no operation has its grids. Better candidates it skips for missing
-   * grids are in `operation.betterCandidates`.
+   * when no operation has its grids. The candidates it skips for missing
+   * grids that state a smaller accuracy than the one taken are in
+   * `operation.betterCandidates`.
    *
    * With `geoidFallback`, a CRS that fails for missing grids resolves the
    * fallback CRS instead (see `EngineeringFrameDefinition.geoidFallback`;
@@ -496,7 +497,8 @@ export class EngineeringFrame {
    * whose missing grids the catalog has (a pinned pipeline: the grids it
    * names that the catalog has), then calls `create`. A grid the catalog
    * lacks is never fetched: `create` then takes the next candidate and
-   * records the better one in `operation.betterCandidates`. When a
+   * records the skipped one in `operation.betterCandidates` if PROJ states a
+   * smaller accuracy for it. When a
    * `geoidFallback` will apply, it also fetches what the fallback CRS's
    * best operation needs (the model's grid, `us_nga_egm96_15.tif` or
    * `us_nga_egm08_25.tif`). Rejects as `create` throws, before fetching

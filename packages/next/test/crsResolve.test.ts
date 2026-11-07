@@ -1,6 +1,6 @@
 // resolveOperation's error reporting, over a stub PROJ (no data needed).
 import { describe, expect, it } from "vitest";
-import { resolveOperation } from "../src/engineering/crs.ts";
+import { betterThan, resolveOperation } from "../src/engineering/crs.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 
 const ref = { format: "wkid", authority: "EPSG", wkid: 2227 } as const;
@@ -44,5 +44,28 @@ describe("resolveOperation errors", () => {
     expect(() => resolveOperation(proj, ref, "EPSG:4979")).toThrow(
       /no usable operation from EPSG:2227 to EPSG:4979; candidate A could not be expressed as a PROJ string/,
     );
+  });
+});
+
+describe("betterThan: which skipped candidates are better (Task 8 fix 1)", () => {
+  const skipped = [
+    { name: "A", accuracy: 1.14, missingGrids: ["a.tif"] },
+    { name: "B", accuracy: 2.015, missingGrids: ["b.tif"] },
+    { name: "C", accuracy: 3, missingGrids: ["c.tif"] },
+    { name: "D", missingGrids: ["d.tif"] },
+  ];
+
+  it("keeps only a strictly smaller stated accuracy: not an equal, larger or unstated one", () => {
+    expect(betterThan(2.015, skipped).map((c) => c.name)).toEqual(["A"]);
+    expect(betterThan(1, skipped)).toEqual([]);
+  });
+
+  it("keeps every one, in PROJ's order, when the chosen operation states none", () => {
+    expect(betterThan(undefined, skipped).map((c) => c.name)).toEqual([
+      "A",
+      "B",
+      "C",
+      "D",
+    ]);
   });
 });

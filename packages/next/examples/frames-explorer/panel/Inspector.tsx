@@ -8,9 +8,11 @@ import { svgChevronRight } from "@stratakit/icons/chevron-right";
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { svgHierarchyTree } from "@stratakit/icons/hierarchy-tree";
 import { svgLink } from "@stratakit/icons/link";
+import { svgStatusWarning } from "@stratakit/icons/status-warning";
 import { Icon } from "@stratakit/mui";
 import { type ReactNode, useId, useRef } from "react";
 import type { StressResult } from "../tests.ts";
+import { aboutSeparation } from "../warnings.ts";
 import { BudgetBar } from "./BudgetBar.tsx";
 import { quantity } from "./format.ts";
 import type { Comparison, GroupInfo, ResultExtras } from "./model.ts";
@@ -325,6 +327,15 @@ export function Inspector({
                 accuracy={result.accuracy}
                 label="Accuracy of this result"
               />
+              {/* What the attention color is about, in words (Task 8 fix 1). */}
+              {aboutSeparation(result.accuracy).warnings.map((w, i) => (
+                <Typography key={i} variant="body-sm" render={<p />}>
+                  <span className="fx-unbounded">
+                    <Icon href={svgStatusWarning} aria-hidden />
+                  </span>
+                  <span className="fx-visually-hidden">Warning: </span> {w}
+                </Typography>
+              ))}
             </>
           ) : (
             <Typography variant="body-sm" render={<p />}>

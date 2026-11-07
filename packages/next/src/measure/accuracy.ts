@@ -63,6 +63,12 @@ export interface AccuracyStatement {
    * when set. Optional: a statement built elsewhere may leave it out.
    */
   warningCodes?: WarningCode[];
+  /**
+   * More about a warning, by its code, for a reader that wants it: for
+   * `coarser-operation`, PROJ's names for the operations it lists (one
+   * line per frame). The warnings themselves stay short.
+   */
+  warningDetails?: Partial<Record<WarningCode, string>>;
 }
 
 /** A trajectory's TDB-versus-TT ambiguity (its `coordinateScale` is "unknown"), as a fraction of the geocentric distance (R7). */
@@ -142,24 +148,51 @@ function earthOrientationTerm(
 const metres = (v: number): string =>
   `${v.toLocaleString("en-US", { maximumSignificantDigits: 4 })} m`;
 
-/** `"name" (2.15 m; needs a.tif, b.tif)`, for each candidate. */
-const candidatesText = (candidates: readonly BetterCandidate[]): string =>
-  candidates
-    .map(
-      (c) =>
-        `"${c.name}" (${c.accuracy !== undefined ? metres(c.accuracy) : "accuracy not stated"}; needs ${c.missingGrids.join(", ")})`,
-    )
-    .join(", ");
+/** "±1.14 m each", "±2.15 m and ±5 m", "no stated accuracy": the candidates' figures. */
+function statedText(candidates: readonly BetterCandidate[]): string {
+  const stated = [
+    ...new Set(
+      candidates.flatMap((c) =>
+        c.accuracy !== undefined ? [`±${metres(c.accuracy)}`] : [],
+      ),
+    ),
+  ];
+  const unstated = candidates.some((c) => c.accuracy === undefined);
+  if (stated.length === 0) {
+    return "no stated accuracy";
+  }
+  const list =
+    stated.length === 1
+      ? `${stated[0]}${candidates.length > 1 && !unstated ? " each" : ""}`
+      : `${stated.slice(0, -1).join(", ")} and ${stated.at(-1)}`;
+  return `a stated ${list}${unstated ? " or none" : ""}`;
+}
+
+/**
+ * The better candidates as facts, briefly: how many, PROJ's stated figures
+ * and the grids they need, each grid once. "PROJ lists 2 operations with a
+ * stated ±1.14 m each that need a.tif, b.tif, not loaded".
+ */
+function candidatesFact(candidates: readonly BetterCandidate[]): string {
+  const n = candidates.length;
+  const grids = [...new Set(candidates.flatMap((c) => c.missingGrids))];
+  return `PROJ lists ${n === 1 ? "an operation" : `${n} operations`} with ${statedText(candidates)} that need${n === 1 ? "s" : ""} ${grids.join(", ")}, not loaded`;
+}
 
 /**
  * The projection term for a design end (R9): PROJ's stated accuracy for the
  * frame's recorded operation. A ballpark operation, or one PROJ gives no
  * accuracy for, is not known (`meters` undefined), never small. The note
  * (amended R9) names the optional grids the operation runs without, the
- * better candidates PROJ skipped for missing grids, and a geoid fallback,
- * whose datum swap this figure leaves out (the `geoidFallback` term).
+ * better candidates PROJ lists (their figures and grids, briefly), and a
+ * geoid fallback, whose datum swap this figure leaves out (the
+ * `geoidFallback` term). End b in end a's frame says those once: "as end a".
  */
-function projectionTerm(end: string, frame: EngineeringFrame): AccuracyTerm {
+function projectionTerm(
+  end: string,
+  frame: EngineeringFrame,
+  asEndA: boolean,
+): AccuracyTerm {
   const { operation, fallback } = frame;
   const grids =
     operation.grids.length > 0 ? operation.grids.join(", ") : "no grids";
@@ -179,14 +212,15 @@ function projectionTerm(end: string, frame: EngineeringFrame): AccuracyTerm {
     );
   }
   if (operation.betterCandidates.length > 0) {
-    parts.push(
-      `PROJ ranks these higher, skipped for missing grids: ${candidatesText(operation.betterCandidates)}`,
-    );
+    parts.push(candidatesFact(operation.betterCandidates));
   }
   return {
     source: "projection",
     meters: known ? operation.accuracy : undefined,
-    note: parts.join("; "),
+    note:
+      asEndA && parts.length > 1
+        ? `${parts[0]}; the rest as end a`
+        : parts.join("; "),
   };
 }
 
@@ -227,28 +261,38 @@ function pickTerm(end: string, obtained: DesignPointObtained): AccuracyTerm {
   };
 }
 
-/** The warnings a design end's frame carries: a coarser operation, a geoid fallback. */
+/**
+ * The warnings a design end's frame carries, as facts: better candidates PROJ
+ * lists (`coarser-operation`, with PROJ's names for them as its detail) and a
+ * geoid fallback.
+ */
 function frameWarnings(
   frame: EngineeringFrame,
-): { code: WarningCode; text: string }[] {
-  const out: { code: WarningCode; text: string }[] = [];
+): { code: WarningCode; text: string; detail?: string }[] {
+  const out: { code: WarningCode; text: string; detail?: string }[] = [];
   const { operation, fallback } = frame;
   const name = `Engineering frame "${frame.definition.name}"`;
   const better = operation.betterCandidates;
   if (better.length > 0) {
     const used =
       !operation.ballpark && operation.accuracy !== undefined
-        ? metres(operation.accuracy)
-        : "accuracy not known";
+        ? `states ±${metres(operation.accuracy)}`
+        : "states no accuracy";
     out.push({
       code: "coarser-operation",
-      text: `${name} uses a coarser PROJ operation (${used}): PROJ ranks ${better.length === 1 ? "another" : `${better.length} others`} above it, skipped because ${better.length === 1 ? "its" : "their"} grids aren't loaded: ${candidatesText(better)}. Load those grids for the better one`,
+      text: `${name}: ${candidatesFact(better)}; this frame's operation ${used}.`,
+      detail: `${name}: PROJ's names for them: ${better
+        .map(
+          (c) =>
+            `"${c.name}" (${c.accuracy !== undefined ? `±${metres(c.accuracy)}` : "no stated accuracy"})`,
+        )
+        .join("; ")}.`,
     });
   }
   if (fallback !== undefined) {
     out.push({
       code: "geoid-fallback",
-      text: `${name} reads its design heights as ${fallback.model} heights in place of EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")}): ${fallback.sigma !== undefined ? `the gap between them is the ${metres(fallback.sigma)} the app gave (fallbackSigma)` : "the gap between them is not known, so the accuracy is not bounded (no fallbackSigma)"}`,
+      text: `${name} reads its design heights as ${fallback.model} heights in place of EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")}): ${fallback.sigma !== undefined ? `the gap between them is the ${metres(fallback.sigma)} the app gave (fallbackSigma).` : "the gap between them is not known, so the accuracy is not bounded (no fallbackSigma)."}`,
     });
   }
   return out;
@@ -275,6 +319,7 @@ export function accuracyOf(
   const terms: AccuracyTerm[] = [];
   const warnings: string[] = [];
   const warningCodes: WarningCode[] = [];
+  const warningDetails: Partial<Record<WarningCode, string>> = {};
 
   if (commonAncestor(a.frame, b.frame) === frames.icrf) {
     // 0.01 m is DE440's Earth-Moon fit, so it is claimed only when both ends
@@ -311,15 +356,21 @@ export function accuracyOf(
     }
     const engineering = options.design?.[end as "a" | "b"];
     if (engineering) {
-      terms.push(projectionTerm(end, engineering));
+      // One frame's notes and warnings once, though both ends are in it.
+      const asEndA = end === "b" && engineering === options.design?.a;
+      terms.push(projectionTerm(end, engineering, asEndA));
       if (engineering.fallback !== undefined) {
         terms.push(fallbackTerm(end, engineering));
       }
-      // One frame's warnings once, though both ends are in it.
-      if (end === "a" || engineering !== options.design?.a) {
+      if (!asEndA) {
         for (const w of frameWarnings(engineering)) {
           warnings.push(w.text);
           warningCodes.push(w.code);
+          if (w.detail !== undefined) {
+            const before = warningDetails[w.code];
+            warningDetails[w.code] =
+              before === undefined ? w.detail : `${before} ${w.detail}`;
+          }
         }
       }
     }
@@ -381,5 +432,6 @@ export function accuracyOf(
     terms,
     warnings,
     warningCodes,
+    ...(Object.keys(warningDetails).length > 0 && { warningDetails }),
   };
 }

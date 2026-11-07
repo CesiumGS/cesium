@@ -382,6 +382,24 @@ describe("how a design point was obtained (plan 4b Task 8)", () => {
     expect(() =>
       designPoint(f, [0, 0, 0], { how: "pick", tolerance: 0.1, kind: "arc" }),
     ).toThrow(/kind/);
+    expect(() =>
+      designPoint(f, [0, 0, 0], {
+        how: "click" as "pick",
+        tolerance: 0.1,
+      }),
+    ).toThrow(/how/);
+  });
+
+  it("measure rejects a literal design point whose tolerance isn't finite", async () => {
+    const f = await frame();
+    const bad = {
+      engineeringFrame: f,
+      design: Float64Array.of(2000, 1000, 0),
+      obtained: { how: "pick", tolerance: NaN },
+    } as const;
+    expect(() =>
+      measure(bad, designPoint(f, [3000, 1000, 0]), instant, frames),
+    ).toThrow(/point a.*tolerance/);
   });
 });
 
@@ -408,17 +426,18 @@ describe("the projection term's note (amended R9)", () => {
     expect(terms).toHaveLength(2);
     for (const t of terms) {
       expect(t.meters).toBe(7);
-      expect(t.note).toContain(
-        "Inverse of California CS27 zone I + NAD27 to NAD83 (1) + NAD83 to WGS 84 (43)",
-      );
-      expect(t.note).toContain(
-        "Inverse of California CS27 zone I + NAD27 to WGS 84 (79)",
-      );
       expect(t.note).toMatch(
-        /2\.15 m; needs us_noaa_cnhpgn\.tif, us_noaa_conus\.tif/,
+        /^End [ab]: engineering frame "CS27": PROJ operation \(no grids\)/,
       );
-      expect(t.note).toMatch(/5 m; needs us_noaa_conus\.tif/);
     }
+    // Compact (fix 1): the accuracies and the grids, each grid once, no
+    // operation names, and only on the first end of the shared frame.
+    expect(terms[0]!.note).toContain(
+      "PROJ lists 2 operations with a stated ±2.15 m and ±5 m that need us_noaa_cnhpgn.tif, us_noaa_conus.tif, not loaded",
+    );
+    expect(terms[0]!.note).not.toContain("NAD27 to WGS 84 (79)");
+    expect(terms[1]!.note).not.toContain("PROJ lists");
+    expect(terms[1]!.note).toMatch(/as end a/);
   });
 
   it("names a pinned pipeline's optional grid that isn't loaded", async () => {
@@ -456,11 +475,45 @@ describe("the projection term's note (amended R9)", () => {
     );
     const terms = m.accuracy.terms.filter((t) => t.source === "projection");
     expect(terms).toHaveLength(2);
-    for (const t of terms) {
-      expect(t.note).toMatch(/optional grid.*not_a_loaded_grid\.tif/);
-    }
+    expect(terms[0]!.note).toMatch(/optional grid.*not_a_loaded_grid\.tif/);
+    expect(terms[1]!.note).toMatch(/as end a/);
     // GEOID18, loaded and required, is not named as missing.
     expect(terms[0]!.note).not.toMatch(/optional grid[^;]*us_noaa_g2018u0/);
+  });
+
+  it("doesn't name a pinned pipeline's optional grid that is loaded", async () => {
+    const P = await loadProj({ base });
+    const known = await frame();
+    const steps = parsePipeline(known.operation.pipeline).steps;
+    // GEOID18 written optional: loaded, so the operation runs with it.
+    const pinned = {
+      steps: steps.map((s) =>
+        s.operation === "vgridshift"
+          ? { ...s, params: { ...s.params, grids: "@us_noaa_g2018u0.tif" } }
+          : s,
+      ),
+    };
+    const f = EngineeringFrame.create(
+      {
+        name: "pinned, optional loaded",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+        pipeline: pinned,
+      },
+      P,
+    );
+    expect(f.operation.optionalGrids).toEqual(["us_noaa_g2018u0.tif"]);
+    expect(f.operation.missingOptionalGrids).toEqual([]);
+    const m = measure(
+      designPoint(f, [6_561_666, 1_640_416, 0]),
+      designPoint(f, [6_561_866, 1_640_416, 0]),
+      instant,
+      frames,
+      { signal: false },
+    );
+    for (const t of m.accuracy.terms.filter((x) => x.source === "projection")) {
+      expect(t.note).not.toMatch(/optional grid/);
+    }
   });
 });
 
@@ -521,8 +574,10 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
     );
     for (const t of projection) {
       expect(t.meters).toBe(f.operation.accuracy);
-      expect(t.note).toMatch(/EGM96 fallback/);
     }
+    // Said once per measurement: end b shares end a's frame.
+    expect(projection[0]!.note).toMatch(/EGM96 fallback/);
+    expect(projection[1]!.note).toMatch(/the rest as end a/);
     // One warning for the frame, not one per end.
     const codes = m.accuracy.warningCodes ?? [];
     expect(codes.filter((c) => c === "geoid-fallback")).toHaveLength(1);
@@ -572,12 +627,21 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
     expect(codes.filter((c) => c === "coarser-operation")).toHaveLength(1);
     expect(codes).toHaveLength(m.accuracy.warnings.length);
     const warning = m.accuracy.warnings[codes.indexOf("coarser-operation")]!;
-    expect(warning).toMatch(/CS27/);
-    expect(warning).toMatch(/us_noaa_cnhpgn\.tif/);
-    expect(warning).toMatch(/us_noaa_conus\.tif/);
-    expect(warning).toMatch(/2\.15 m/);
+    expect(warning).toBe(
+      'Engineering frame "CS27": PROJ lists 2 operations with a stated ±2.15 m and ±5 m that need us_noaa_cnhpgn.tif, us_noaa_conus.tif, not loaded; this frame\'s operation states ±7 m.',
+    );
+    // A fact, not advice (fix 1).
+    expect(warning).not.toMatch(/load those/i);
     // No e-notation in a warning the page may show.
     expect(warning).not.toMatch(/\de[-+]?\d/);
+    // PROJ's names for them are in the warning's detail.
+    const detail = m.accuracy.warningDetails?.["coarser-operation"];
+    expect(detail).toContain(
+      '"Inverse of California CS27 zone I + NAD27 to NAD83 (1) + NAD83 to WGS 84 (43)" (±2.15 m)',
+    );
+    expect(detail).toContain(
+      '"Inverse of California CS27 zone I + NAD27 to WGS 84 (79)" (±5 m)',
+    );
 
     // A frame without better candidates doesn't warn.
     const london = EngineeringFrame.create(
@@ -601,6 +665,42 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
     );
   });
 
+  it("warns once per frame: two frames with better candidates give two warnings", async () => {
+    const P = await loadProj({ base });
+    const cs27 = (name: string) =>
+      EngineeringFrame.create(
+        {
+          name,
+          body: EARTH,
+          crs: { format: "wkid", authority: "EPSG", wkid: 26741 },
+        },
+        P,
+      );
+    const one = cs27("CS27 one");
+    const two = cs27("CS27 two");
+    const m = measure(
+      designPoint(one, [1_900_000, 600_000, 0]),
+      designPoint(two, [1_901_000, 600_000, 0]),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const codes = m.accuracy.warningCodes ?? [];
+    const coarser = m.accuracy.warnings.filter(
+      (_, i) => codes[i] === "coarser-operation",
+    );
+    expect(coarser).toHaveLength(2);
+    expect(coarser[0]).toMatch(/"CS27 one"/);
+    expect(coarser[1]).toMatch(/"CS27 two"/);
+    // Different frames: each end's note is in full.
+    const projection = m.accuracy.terms.filter(
+      (t) => t.source === "projection",
+    );
+    expect(projection[1]!.note).toMatch(/PROJ lists 2 operations/);
+    const detail = m.accuracy.warningDetails?.["coarser-operation"] ?? "";
+    expect(detail).toMatch(/"CS27 one".*"CS27 two"/);
+  });
+
   it("warns coarser-operation for the plan-4a California frame (NADCON5 candidates, Task 6)", async () => {
     const f = await frame();
     expect(f.operation.betterCandidates.length).toBeGreaterThan(0);
@@ -613,9 +713,16 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
     );
     const codes = m.accuracy.warningCodes ?? [];
     const warning = m.accuracy.warnings[codes.indexOf("coarser-operation")]!;
-    expect(warning).toMatch(/CA3/);
-    expect(warning).toMatch(/us_noaa_nadcon5_nad83_harn_nad83_fbn_conus\.tif/);
-    expect(warning).toMatch(/1\.14 m/);
+    // Under fix 1's rule both NADCON5 candidates still count: PROJ states
+    // ±1.14 m for each, smaller than GEOID18's ±2.015 m. Their grids, once.
+    expect(warning).toBe(
+      'Engineering frame "CA3": PROJ lists 2 operations with a stated ±1.14 m each that need us_noaa_g1999u05.tif, us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif, us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif, us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif, us_noaa_geoid03_conus.tif, not loaded; this frame\'s operation states ±2.015 m.',
+    );
+    const projection = m.accuracy.terms.filter(
+      (t) => t.source === "projection",
+    );
+    expect(projection[0]!.note.length).toBeLessThan(400);
+    expect(projection[1]!.note.length).toBeLessThan(120);
     // The statement is still bounded: the operation used states its accuracy.
     expect(m.accuracy.meters).toBeDefined();
   });
@@ -689,5 +796,8 @@ describe("the Moon (plan 4a's carried-forward item)", () => {
     );
     expect(Math.abs(m.design!.distance - expected)).toBeLessThan(1e-9);
     expect(m.design!.siteScale).toBe(1);
+    // Two quantities: the stereographic grid is not true length (its scale
+    // at the pole is 1, rising away from it), so the body-fixed distance differs.
+    expect(Math.abs(m.distance - m.design!.distance)).toBeGreaterThan(1e-6);
   });
 });

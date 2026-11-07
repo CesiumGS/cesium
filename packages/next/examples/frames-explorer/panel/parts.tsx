@@ -13,7 +13,7 @@ import { type ReactNode, useState } from "react";
 import type { WalkStatement } from "./model.ts";
 import type { DataItem } from "../protocol.ts";
 import type { StressResult } from "../tests.ts";
-import { cautionOf } from "../warnings.ts";
+import { aboutSeparation, cautionOf } from "../warnings.ts";
 import { length } from "./format.ts";
 import { GLOSSARY, type GlossaryKey } from "./glossary.ts";
 
@@ -216,11 +216,21 @@ export function AccuracyText({
     );
   }
   const caution = cautionOf(accuracy);
+  // Why it's in the attention color: its first warning about the
+  // separation, else the assumption it rests on (Task 8 fix 1).
+  const why = caution
+    ? (aboutSeparation(accuracy).warnings[0] ??
+      accuracy.terms.find((t) => t.source === "coordinateScale")?.note)
+    : undefined;
   return (
-    <span className={`fx-accuracy${caution ? " fx-unbounded" : ""}`}>
+    <span
+      className={`fx-accuracy${caution ? " fx-unbounded" : ""}`}
+      title={why}
+    >
       ±{length(accuracy.meters)}
       {placement && <span className="fx-muted"> placement</span>}
       {!compact && <span className="fx-muted"> (1σ)</span>}
+      {why !== undefined && <span className="fx-visually-hidden">: {why}</span>}
     </span>
   );
 }

@@ -11,8 +11,10 @@
 // (PROJ_GRID_AVAILABILITY_IGNORED): by PROJ's own ranking of the operations
 // (exportable, not approximate, not ballpark, grids its database knows, area
 // of use and accuracy), not by which grids PROJ found when it first looked. So a
-// grid loaded late counts as soon as it is loaded, and the better operations
-// a frame skips for missing grids come before the one it takes.
+// grid loaded late counts as soon as it is loaded, and the operations a frame
+// skips for missing grids come before the one it takes. Of those, the better
+// ones (`betterCandidates`) are those with a smaller stated accuracy: being
+// earlier in PROJ's order is not enough (`betterThan`).
 //
 // A grid is available when `loadGrids` loaded it (and PROJ then found it
 // where it was put; proj.ts): PROJ's own answer for a candidate's grid isn't
@@ -120,12 +122,29 @@ export interface RecordedOperation {
   /**
    * The candidates before this one, in PROJ's order (grid availability
    * ignored), that were skipped only because grids they need aren't loaded
-   * (each has a PROJ string). A ballpark is never listed; a pinned pipeline
-   * has none.
+   * (each has a PROJ string) and that are better: PROJ states a strictly
+   * smaller accuracy for them, or this operation states none (`betterThan`).
+   * A ballpark is never listed; a pinned pipeline has none.
    */
   readonly betterCandidates: readonly BetterCandidate[];
   forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
   inverse(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
+}
+
+/**
+ * Which of the candidates skipped for missing grids are better than the
+ * operation taken, whose stated accuracy is `chosen`: those PROJ states a
+ * strictly smaller accuracy for, or all of them when `chosen` is undefined
+ * (no figure to compare). An equal, larger or unstated figure is not better,
+ * though PROJ lists it first. Order is kept.
+ */
+export function betterThan<C extends { readonly accuracy?: number }>(
+  chosen: number | undefined,
+  skipped: readonly C[],
+): C[] {
+  return chosen === undefined
+    ? [...skipped]
+    : skipped.filter((c) => c.accuracy !== undefined && c.accuracy < chosen);
 }
 
 /** A candidate operation skipped for missing grids (`betterCandidates`). */
@@ -485,7 +504,8 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  *    normalized-for-visualization form. A ballpark operation (PROJ names it
  *    "Ballpark ...") is taken only with `allowBallpark`, and then `accuracy`
  *    is undefined. The non-ballpark candidates before it that were skipped
- *    for missing grids are its `betterCandidates`.
+ *    for missing grids, and that state a smaller accuracy than it (any, if
+ *    it states none), are its `betterCandidates`.
  *  - If none qualifies it throws, naming the grids the better candidates need.
  */
 export function resolveOperation(
@@ -562,7 +582,8 @@ export function resolveOperation(
       );
     }
     const missing = new Set<string>();
-    // Skipped for missing grids, in order: the chosen one's better candidates.
+    // Skipped for missing grids, in order: the chosen one's better
+    // candidates are those of them `betterThan` keeps.
     const better: BetterCandidate[] = [];
     let skippedBallpark = false;
     // Candidates PROJ cannot express as a PROJ string, named in the final error.
@@ -617,14 +638,15 @@ export function resolveOperation(
         notCreated.push(proj.proj_get_name(candidate) ?? `candidate ${i}`);
         continue;
       }
-      const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
+      const stated = proj.proj_coordoperation_get_accuracy(candidate);
+      const accuracy = ballpark || stated < 0 ? undefined : stated;
       return {
         chosen: {
           string,
-          accuracy: ballpark || accuracy < 0 ? undefined : accuracy,
+          accuracy,
           grids: grids.needed,
           ballpark,
-          better,
+          better: betterThan(accuracy, better),
         },
       } as const;
     }

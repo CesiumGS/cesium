@@ -20,7 +20,7 @@ const TERM_FAMILY: Record<WalkTerm["source"], Family | "noedge"> = {
   relativity: "noedge",
   projection: "engineering",
   geoidFallback: "engineering",
-  pick: "engineering",
+  pick: "noedge",
   trajectory: "trajectory",
   coordinateScale: "trajectory",
   lightTime: "celestial",
