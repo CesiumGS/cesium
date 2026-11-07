@@ -13,6 +13,7 @@ import type {
 import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
 import type { ProofRow } from "../scenarios/proof.ts";
 import type { PublishedView } from "./answerText.ts";
+import type { SceneLegendRow } from "./legendRows.ts";
 import type { RouteStep } from "./routeSteps.ts";
 import type {
   KnobSpec,
@@ -207,6 +208,10 @@ export interface ScenarioPanelView {
   id: ScenarioId;
   title: string;
   question: string;
+  /** What applies at the checked setup, in words ("published references"). */
+  checkedBy: string;
+  /** The frame it draws in when there's no choice of it (the "Drawing in" tag). */
+  drawIn?: string;
   /** The strip, in its order: the scenarios the page shows. */
   strip: readonly { id: ScenarioId; title: string; question: string }[];
   knobs: readonly KnobSpec[];
@@ -290,6 +295,8 @@ export interface PanelModel {
   convergenceFactor: number;
   /** The triads' scale, as the legend states it. */
   triadScale: string;
+  /** The current scenario's own lines and marks, for the legend (the corridor's). */
+  sceneLegend?: readonly SceneLegendRow[];
   groups: readonly GroupInfo[];
   results: readonly StressResult[];
   extras: Readonly<Record<string, ResultExtras>>;

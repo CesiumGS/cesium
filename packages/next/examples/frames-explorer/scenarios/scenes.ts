@@ -19,7 +19,6 @@ import {
   BIM_SITE_GRID,
   CORRIDOR_SITE_GRID,
   bimEngineering,
-  bimSite,
   corridorEngineering,
 } from "./sites.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
@@ -133,6 +132,8 @@ export interface SceneSpec {
    * shows the same choice beside the answer.
    */
   treeControl?: { knob: string; verb: string };
+  /** The frame it draws in, when the scene has no choice of it: the diagram tags it. */
+  drawIn?: string;
   /** A short line under the diagram's key. */
   diagramNote?: string;
   /** The route's last step, by the drawn-in frame: what you see. */
@@ -240,6 +241,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       overlays: ["designGrid", "siteGrid", "rigidVsExact"],
     },
     dim: { wide: -0.6, narrow: -0.6 },
+    drawIn: "ITRF",
     drawnView: {
       ITRF: "the model on the Earth: where exact placement puts it, on the ellipsoid",
     },
@@ -258,6 +260,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       overlays: ["siteGrid"],
     },
     dim: { wide: -0.6, narrow: -0.6 },
+    drawIn: "ITRF",
     drawnView: {
       ITRF: "the point on the ground, and the road it's measured along",
     },
@@ -268,9 +271,6 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
 
 /** The frame names the BIM site and the corridor add (their camera views). */
 export const SITE_GRIDS = [BIM_SITE_GRID, CORRIDOR_SITE_GRID] as const;
-
-/** The BIM site's place at `knobs`, for its frames' camera. */
-export const bimPlace = (knobs: KnobState) => bimSite(knobs).crs.place;
 
 /** The scenarios the page shows: those with a scene (and an evaluator), in the strip's order. */
 export const READY: readonly ScenarioId[] = SCENARIOS.filter(

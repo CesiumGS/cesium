@@ -16,6 +16,9 @@ import { READY, SCENES } from "../examples/frames-explorer/scenarios/scenes.ts";
 import {
   BIM_CRS,
   BIM_LINE,
+  BIM_PLACES,
+  areaText,
+  covers,
   CLOTHOID_ROAD,
   WGS84_A,
   WGS84_E2,
@@ -44,7 +47,7 @@ describe("the rigid-against-exact gap, by hand", () => {
     );
   });
 
-  it("is the drop d²/2R alone on a ground-scaled grid, and the drop and the scale's part at right angles otherwise", () => {
+  it("is the drop d²/2R and the chord d³/3R² alone on a ground-scaled grid, and the drop and the parts along at right angles otherwise", () => {
     const flat = rigidGapByHand({
       d: 20_000,
       radius: 6_400_000,
@@ -52,21 +55,29 @@ describe("the rigid-against-exact gap, by hand", () => {
       gridScale: 1.00005,
     });
     expect(flat.drop).toBeCloseTo(31.25, 12);
-    expect(flat.along).toBeCloseTo(0, 12);
-    expect(flat.gap).toBeCloseTo(31.25, 12);
+    // 8e12 / (3 × 4.096e13) m.
+    expect(flat.along).toBeCloseTo(0.065104166666, 9);
+    expect(flat.gap).toBeCloseTo(Math.hypot(31.25, flat.along), 12);
     const scaled = rigidGapByHand({
       d: 20_000,
       radius: 6_400_000,
       siteScale: 1,
       gridScale: 0.9999,
     });
-    expect(scaled.along).toBeCloseTo(20_000 * (1 / 0.9999 - 1), 9);
+    expect(scaled.along).toBeCloseTo(
+      20_000 * (1 / 0.9999 - 1) + scaled.chord,
+      9,
+    );
     expect(scaled.gap).toBeCloseTo(Math.hypot(31.25, scaled.along), 12);
   });
 
   it("gives the BIM site's 31.4 m at its checked setup: California zone 3's scale at the site (0.99992918, from PROJ's factors), θ = 12.5°, s = 1.0000375, 37.7462° N", () => {
-    const { rotation, scale } = bimSite(spec("bim-site").checked.knobs);
-    expect([rotation, scale]).toEqual([12.5, 1.0000375]);
+    const { place, rotation, scale } = bimSite(spec("bim-site").checked.knobs);
+    expect([place.id, rotation, scale]).toEqual([
+      "san-francisco",
+      12.5,
+      1.0000375,
+    ]);
     const radius = normalRadius(
       WGS84_A,
       WGS84_E2,
@@ -89,34 +100,89 @@ describe("the rigid-against-exact gap, by hand", () => {
       gridScale: 0.99992918,
     });
     expect(g.drop).toBeCloseTo(31.32, 2);
-    expect(g.along).toBeCloseTo(2.17, 2);
+    // The scale's part, 2.17 m, and the chord's, d³/3R² = 0.065 m: 2.23 m,
+    // the inset's "2.23 m along" (fix 1 reconciled the 0.06 m).
+    expect(g.chord).toBeCloseTo(20_000 ** 3 / (3 * radius ** 2), 12);
+    expect(g.chord).toBeCloseTo(0.065, 3);
+    expect(g.along).toBeCloseTo(2.23, 2);
     expect(formatAnswer(g.gap, "m")).toBe("31.4 m");
   });
 });
 
 describe("the BIM site's setups", () => {
-  it("puts the site grid at the CRS's origin, rotated and scaled by the knobs", () => {
-    const s = bimSite({ crs: "utm-10n", rotation: -30, scale: 0.99996 });
+  it("puts the site grid at the site's origin in the CRS, rotated and scaled by the knobs", () => {
+    const s = bimSite({
+      site: "san-francisco",
+      crs: "utm-10n",
+      rotation: -30,
+      scale: 0.99996,
+    });
     expect(s.crs).toBe(BIM_CRS["utm-10n"]);
-    expect(s.site.origin).toEqual([549_095.54, 4_177_802.068, 0]);
-    expect(s.site.rotation).toBeCloseTo((-30 * Math.PI) / 180, 15);
-    expect(s.site.scale).toBe(0.99996);
+    expect(s.site!.origin).toEqual([549_095.54, 4_177_802.068, 0]);
+    expect(s.site!.rotation).toBeCloseTo((-30 * Math.PI) / 180, 15);
+    expect(s.site!.scale).toBe(0.99996);
+    // The same CRS at Portland: the same knobs, another origin.
+    const p = bimSite({
+      site: "portland",
+      crs: "utm-10n",
+      rotation: -30,
+      scale: 0.99996,
+    });
+    expect(p.place).toBe(BIM_PLACES.portland);
+    expect(p.site!.origin).toEqual([519_531.699, 5_038_526.897, 0]);
+  });
+
+  it("keeps the site and the CRS apart: a CRS whose area of use doesn't cover the site places nothing, and says so (fix 1)", () => {
+    expect(covers(BIM_CRS["ca-zone-3"], BIM_PLACES.portland)).toBe(false);
+    expect(covers(BIM_CRS["low-distortion"], BIM_PLACES["san-francisco"])).toBe(
+      false,
+    );
+    for (const place of Object.values(BIM_PLACES)) {
+      expect(covers(BIM_CRS["utm-10n"], place), place.id).toBe(true);
+    }
+    const knobs = {
+      site: "portland",
+      crs: "ca-zone-3",
+      rotation: 12.5,
+      scale: 1,
+    };
+    const s = bimSite(knobs);
+    expect(s.site).toBeUndefined();
+    expect(s.place.id).toBe("portland");
+    expect(s.crs.id).toBe("ca-zone-3");
+    const e = bimEngineering(knobs);
+    expect(e.outside).toBe(
+      "California zone 3 (EPSG:6420) doesn't cover Portland, Oregon",
+    );
+    // The camera still goes to the site, not to the CRS's own area.
+    expect(e.look.slice(0, 2)).toEqual([-122.75, 45.5]);
+    expect(areaText(BIM_CRS["ca-zone-3"])).toBe(
+      "123.02°W–117.83°W, 36.73°N–38.71°N",
+    );
+    // Covered: nothing outside.
+    expect(
+      bimEngineering({ ...knobs, crs: "utm-10n" }).outside,
+    ).toBeUndefined();
   });
 
   it("draws the 400 km line along the site grid's x axis in design units, the inset's mark at 20 km, and the design grid around the origin", () => {
-    for (const id of ["ca-zone-3", "utm-10n", "low-distortion"] as const) {
+    for (const [id, site] of [
+      ["ca-zone-3", "san-francisco"],
+      ["utm-10n", "san-francisco"],
+      ["utm-10n", "portland"],
+      ["low-distortion", "portland"],
+    ] as const) {
       const crs = BIM_CRS[id];
-      const e = bimEngineering({ crs: id, rotation: 12.5, scale: 1.0000375 });
+      const knobs = { site, crs: id, rotation: 12.5, scale: 1.0000375 };
+      const e = bimEngineering(knobs);
       const u = crs.unitsPerMeter;
       expect(e.rigid.from).toEqual([0, 0]);
       expect(e.rigid.to[0] / u).toBeCloseTo(400_000, 6);
       expect(e.rigid.to[1]).toBe(0);
       expect(e.rigid.mark / u).toBeCloseTo(20_000, 9);
-      expect(e.rigid.frame.site).toEqual(
-        bimSite({ crs: id, rotation: 12.5, scale: 1.0000375 }).site,
-      );
+      expect(e.rigid.frame.site).toEqual(bimSite(knobs).site);
       // The grid covers the origin, 100 km each way at least, on 10 km lines.
-      const [E, N] = crs.origin;
+      const [E, N] = crs.origins[site]!;
       expect(e.gridExtent.min[0]).toBeLessThanOrEqual(E - 100_000 * u);
       expect(e.gridExtent.max[1]).toBeGreaterThanOrEqual(N + 100_000 * u);
       expect((e.gridExtent.min[0] / u / 10_000) % 1).toBeCloseTo(0, 6);
@@ -188,6 +254,17 @@ describe("the strip", () => {
     expect(SCENES.corridor!.engineering!.overlays).toEqual(["siteGrid"]);
     expect(spec("bim-site").globe).toBe("ellipsoid");
     expect(spec("corridor").proof).toEqual(["measurement.clothoid"]);
-    expect(spec("bim-site").proof).toContain("rigid-placement-budget.site-gap");
+    expect(spec("bim-site").proof).toEqual(
+      expect.arrayContaining([
+        "rigid-placement-budget.site-gap.drop",
+        "rigid-placement-budget.site-gap.along",
+      ]),
+    );
+    expect(spec("bim-site").knobs.map((k) => k.id)).toEqual([
+      "site",
+      "crs",
+      "rotation",
+      "scale",
+    ]);
   });
 });

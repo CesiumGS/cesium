@@ -90,8 +90,14 @@
 .fx-proof-body[hidden] {
   display: none;
 }
-.fx-proof-title {
+.fx-proof-title,
+.fx-proof-note {
   color: var(--stratakit-color-text-neutral-secondary);
+}
+/* How far a check carries to the scenario (ScenarioSpec.proofNotes). */
+.fx-proof-note {
+  margin: 0 0 var(--stratakit-space-150);
+  font-style: italic;
 }
 .fx-proof-details {
   margin: 0;

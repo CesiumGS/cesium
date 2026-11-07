@@ -660,6 +660,12 @@ export function createOverlayControl(deps: {
       const before = parts(setup);
       const after = parts(to);
       setup = to;
+      if (before.rigidVsExact !== after.rigidVsExact) {
+        // The old line's ends and gap mustn't frame the camera or the inset
+        // while the new one draws.
+        rigidBuilt = undefined;
+        refreshInset();
+      }
       for (const id of ["designGrid", "siteGrid", "rigidVsExact"] as const) {
         if (before[id] !== after[id] && overlays.get(id)!.on) {
           drawOverlay(id);

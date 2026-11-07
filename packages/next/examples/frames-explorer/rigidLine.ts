@@ -111,9 +111,9 @@ export function rigidCopy(
   ];
   return {
     /** The overlay row's line (S-I7). */
-    accuracy: `parts as distance squared: ${mark} at ${M}, ${end} at ${L} (true scale)`,
+    accuracy: `${mark} apart at ${M}, ${end} at ${L} (true scale)`,
     /** Behind "About this figure". */
-    detail: `A ${L} design line from ${where.origin}, ${where.direction}. Placed rigidly at its start (dashed), it is straight, on the tangent plane there; placed exactly (solid), it follows the ellipsoid. They part as distance squared, d²/2R: ${mark} at ${M} (the inset) and ${end} at ${L}, by geometry, exact. Drawn at true scale; the ticks every 50 km run from the exact line up to the rigid one.`,
+    detail: `A ${L} design line from ${where.origin}, ${where.direction}. Placed rigidly at its start (dashed), it is straight, on the tangent plane there; placed exactly (solid), it follows the ellipsoid. They part by the drop, d²/2R, the ground curving away under the plane, and by a part along the line, where the grid's scale and the site's differ (rigid placement ignores both): ${mark} at ${M} (the inset) and ${end} at ${L}, by geometry, exact. Drawn at true scale; the ticks every 50 km run from the exact line up to the rigid one.`,
     parts,
     /** On the globe. */
     labels: {

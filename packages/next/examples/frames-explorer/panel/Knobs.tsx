@@ -140,6 +140,7 @@ function MovedWithTime({ s }: { s: ScenarioPanelView }) {
 /** The scenario fields the knobs read: the only ones they render again for (Task 4d). */
 export const KNOBS_READS = [
   "atChecked",
+  "checkedBy",
   "changed",
   "knobs",
   "values",
@@ -172,8 +173,8 @@ function KnobsView({
           <>
             <Icon href={svgStatusSuccess} aria-hidden />
             <span>
-              <span className="fx-strong">At the checked setup.</span> The
-              published references apply here.
+              <span className="fx-strong">At the checked setup.</span> The{" "}
+              {s.checkedBy} apply here.
             </span>
           </>
         ) : (

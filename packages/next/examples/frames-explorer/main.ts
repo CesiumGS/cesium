@@ -34,7 +34,7 @@ import {
 import { createFrameData } from "./frameData.ts";
 import { createFrameLoop } from "./frameLoop.ts";
 import { GapInset } from "./gapInset.ts";
-import { Globe, SECONDARY, familyRgba, hexRgba } from "./globe.ts";
+import { Globe, familyRgba, hexRgba } from "./globe.ts";
 import { createGlobeSelection } from "./globeSelection.ts";
 import { LoadingModel } from "./loading.ts";
 import { createOrionLayer } from "./orionLayer.ts";
@@ -329,8 +329,8 @@ export function run(context: ExampleContext): ExampleRun {
         Instant.fromUtc(ms, f.data.leapSeconds).tdb(),
       );
     },
-    // A scenario's own lines: engineering by default; ticks secondary, a
-    // leader white, as the rigid line's are (rigidOverlay.ts).
+    // A scenario's own lines: engineering by default, a leader white, as
+    // the rigid line's are (rigidOverlay.ts).
     drawOverlay: (id, g) =>
       globe.setOverlay(
         id,
@@ -340,7 +340,6 @@ export function run(context: ExampleContext): ExampleRun {
             l.name === "leader"
               ? hexRgba("#ffffff")
               : familyRgba("engineering"),
-          ...(l.name === "ticks" && { strength: SECONDARY }),
         })),
       ),
     removeOverlay: (id) => globe.removeOverlay(id),
@@ -452,6 +451,8 @@ export function run(context: ExampleContext): ExampleRun {
         scrub,
       });
     },
+    sceneLegend: () =>
+      stage.scene() !== undefined ? host.state().evaluation?.legend : undefined,
     environment: () => pageReport.lines(),
     notice: () => selection.notice(),
   });

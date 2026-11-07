@@ -104,6 +104,15 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
  * round trip and an independent route.
  */
 const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
+  // The BIM site's gap in its two parts, not the group's √(2Rε) (Task 6a fix 1).
+  "rigid-placement-budget.site-gap.drop": {
+    kind: "formula",
+    text: "d²/2R by hand, R the ellipsoid's radius of curvature in the site axis's true azimuth: within 1 mm.",
+  },
+  "rigid-placement-budget.site-gap.along": {
+    kind: "formula",
+    text: "d(s/k̄ − 1) + d³/3R² by hand, k̄ the grid's mean scale along the line: within 1 mm.",
+  },
   "measurement.clothoid": {
     kind: "roundTrip",
     text: "Each point's station and offset, given back by the alignment from the point it placed.",

@@ -163,6 +163,10 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     id: spec.id,
     title: spec.title,
     question: spec.question,
+    checkedBy: spec.checkedBy ?? "published references",
+    ...(SCENES[spec.id]?.drawIn !== undefined && {
+      drawIn: SCENES[spec.id]!.drawIn!,
+    }),
     strip: READY.map((id) => {
       const s = SCENARIOS.find((x) => x.id === id)!;
       return { id, title: s.title, question: s.question };

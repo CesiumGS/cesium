@@ -10,6 +10,7 @@ import { Alignment } from "../../src/engineering/alignment.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { vec3 } from "../../src/math/vec3.ts";
 import type { Viewer } from "../../widgets/index.ts";
+import { snapToStep } from "./panel/knobText.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import { CLOTHOID_ROAD } from "./scenarios/sites.ts";
 import type { KnobSpec } from "./scenarios/spec.ts";
@@ -39,9 +40,7 @@ export function knobsAt(
   }
   const snap = (id: string, v: number) => {
     const k = knobs.find((x) => x.id === id);
-    const step = k?.step ?? 1;
-    const digits = Math.max(0, -Math.floor(Math.log10(step)) + 1);
-    const r = Number((Math.round(v / step) * step).toFixed(digits));
+    const r = snapToStep(v, k?.step ?? 1);
     return Math.min(k?.max ?? Infinity, Math.max(k?.min ?? -Infinity, r));
   };
   return {

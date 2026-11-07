@@ -402,6 +402,18 @@ export class Globe {
         this.viewer.world.setViewMask(part.draw, mask);
       }
     }
+    // The other overlays too (Task 6a fix 1: the BIM site's grids ran
+    // through the inset's labels); the rigid line is the inset's subject.
+    for (const [id, o] of this.overlays) {
+      for (const { draw } of o.draws) {
+        this.viewer.world.setViewMask(draw, this.overlayMask(id));
+      }
+    }
+  }
+
+  /** The views an overlay draws in: all but the inset's, unless it is the inset's subject. */
+  private overlayMask(id: string): number {
+    return id === "rigidVsExact" ? 0xffffffff : this.triadMask;
   }
 
   /** A triad's draws on `transform`: one, or one per axis for a geocentric triad. */
@@ -625,6 +637,12 @@ export class Globe {
     } catch (error) {
       remove();
       throw error;
+    }
+    const mask = this.overlayMask(id);
+    if (mask !== 0xffffffff) {
+      for (const { draw } of draws) {
+        world.setViewMask(draw, mask);
+      }
     }
     this.overlays.set(id, {
       remove,

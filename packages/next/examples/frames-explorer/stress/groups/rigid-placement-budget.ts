@@ -13,6 +13,7 @@ import { epsg, fingerprintOf, proj, stressCase } from "../shared.ts";
 import { gapParts } from "../../inset.ts";
 import { rigidSeparation } from "../../overlays.ts";
 import {
+  MEASUREMENT_SITE,
   WGS84_A,
   WGS84_E2,
   normalRadius,
@@ -124,11 +125,13 @@ const rigidBudgetCase = stressCase(
 /**
  * The gap between rigid and exact placement `meters` along a site grid's x
  * axis from its origin (design 0, 0, 0): the library's (`rigidSeparation`),
- * its parts as the inset splits them (`gapParts`), and the hand formula's
- * (`rigidGapByHand`) with the radius of curvature in the axis's direction
- * (its grid bearing, 90° less the rotation: the convergence, about a
- * degree, changes the radius by under 1e-5) at the origin's latitude, and
- * the grid's scale there. One computation: the catalog's check below and
+ * its parts as the inset splits them (`gapParts`: the drop, and the part
+ * along the line, positive where the rigid point falls short), and the hand
+ * formula's (`rigidGapByHand`). The hand takes the radius of curvature in
+ * the axis's true azimuth at the origin (its grid bearing, 90° less the
+ * rotation, plus the convergence there) and the grid's mean scale along the
+ * line (Simpson's rule over five points), from the library as grid to ground
+ * takes its combined factor. One computation: the catalog's checks below and
  * the BIM site's answer (scenarios/bimSite.ts) both call it.
  */
 export function siteGap(
@@ -137,7 +140,8 @@ export function siteGap(
   meters: number,
 ) {
   const rigid = RigidPlacement.at(frame, [0, 0, 0]);
-  const design = [meters / frame.units.metersPerUnit, 0, 0];
+  const length = meters / frame.units.metersPerUnit;
+  const design = [length, 0, 0];
   const exact = Float64Array.from(frame.toBodyFixed(design));
   const placed = Float64Array.from(rigid.toBodyFixed(design));
   const start = rigid.toBodyFixed([0, 0, 0]);
@@ -149,11 +153,12 @@ export function siteGap(
     height: 0,
   })!;
   const latitude = origin.latitude / DEGREE;
-  const azimuth = siteAxisAzimuth(site.rotation / DEGREE);
+  const at = (t: number) => gridFactors(frame, [length * t, 0, 0]);
+  const convergence = at(0).convergence / DEGREE;
+  const azimuth = siteAxisAzimuth(site.rotation / DEGREE) + convergence;
   const radius = normalRadius(WGS84_A, WGS84_E2, latitude, azimuth);
-  // The grid's scale at the origin, from the library (as grid to ground
-  // takes its combined factor): at height 0 it is the projection's.
-  const gridScale = gridFactors(frame, [0, 0, 0]).combinedFactor;
+  const k = [0, 0.25, 0.5, 0.75, 1].map((t) => at(t).combinedFactor);
+  const gridScale = (k[0]! + 4 * k[1]! + 2 * k[2]! + 4 * k[3]! + k[4]!) / 12;
   const hand = rigidGapByHand({
     d: meters,
     radius,
@@ -162,10 +167,14 @@ export function siteGap(
   });
   return {
     gap: rigidSeparation(rigid, frame, design),
-    parts,
+    /** The drop, and how far short along the line the rigid point falls (m). */
+    drop: parts.drop,
+    short: -parts.along,
+    across: parts.across,
     hand,
     radius,
     gridScale,
+    convergence,
     latitude,
     exact,
     placed,
@@ -173,20 +182,65 @@ export function siteGap(
   };
 }
 
-/** Within 1% of the hand formula: it takes the grid's scale at the origin, not its mean along the line. */
-const SITE_GAP = 0.01;
+/**
+ * Each part within 1 mm of its hand formula: across the three CRSs, every
+ * rotation and the scale knob's range, the drop is within 0.4 mm and the
+ * part along within 0.05 mm (the higher-order terms the formulas leave
+ * out), so a 1 mm along part, a tenth of the scale knob's step at 20 km,
+ * shows.
+ */
+export const SITE_GAP_PART = 1e-3;
 
-/** The California measurement site (the BIM site's checked setup): EPSG:6420, θ = 12.5°, s = 1.0000375. */
-const BIM_CHECKED: SiteTransform = {
-  origin: [6_000_000, 2_100_000, 0],
-  rotation: (12.5 * Math.PI) / 180,
-  scale: 1.0000375,
-};
+/** The site-gap checks' results for `frame` (the catalog's at the measurement site; the BIM site's live at its knobs). */
+export function siteGapResults(
+  g: ReturnType<typeof siteGap>,
+  where: string,
+  base: { id: string; group: string },
+): StressResult[] {
+  const accuracyNote =
+    "exact arithmetic: both placements through the same PROJ operation, whose datum accuracy moves them together";
+  return [
+    {
+      id: `${base.id}.drop`,
+      group: base.group,
+      title: `${where}: placed rigidly at its origin, the point 20 km along the site grid's x axis is above the exact placement by d²/2R, within 1 mm (R in the axis's true azimuth)`,
+      pass: true,
+      value: Math.abs(g.drop - g.hand.drop),
+      tolerance: SITE_GAP_PART,
+      unit: "m",
+      detail: `drop ${fmt(g.drop, 7)} m; d²/2R ${fmt(g.hand.drop, 7)} m with R ${fmt(g.radius, 8)} m at ${fmt(g.latitude, 6)}°, azimuth ${fmt(siteAxisAzimuth(0) + g.convergence, 6)}° less the rotation (convergence ${fmt(g.convergence, 4)}°); the whole gap ${fmt(g.gap, 6)} m`,
+      effect: {
+        value: g.drop,
+        unit: "m",
+        label:
+          "how far above the ground rigid placement puts a point 20 km along the site grid",
+      },
+      accuracyNote,
+    },
+    {
+      id: `${base.id}.along`,
+      group: base.group,
+      title: `${where}: the rigid point 20 km along the site grid's x axis falls short of the exact one by d(s/k̄ − 1) + d³/3R², within 1 mm (k̄ the grid's mean scale along the line)`,
+      pass: true,
+      value: Math.abs(g.short - g.hand.along),
+      tolerance: SITE_GAP_PART,
+      unit: "m",
+      detail: `short by ${fmt(g.short, 6)} m; by hand ${fmt(g.hand.along, 6)} m: d(s/k̄ − 1) ${fmt(g.hand.along - g.hand.chord, 6)} m with k̄ ${fmt(g.gridScale, 10)}, and the chord d³/3R² ${fmt(g.hand.chord, 4)} m`,
+      effect: {
+        value: g.short,
+        unit: "m",
+        label:
+          "how far short along the line rigid placement puts a point 20 km along the site grid",
+      },
+      accuracyNote,
+    },
+  ];
+}
 
 const siteGapCase = stressCase(
   "rigid-placement-budget.site-gap",
   "rigid-placement-budget",
-  "The California site grid (EPSG:6420, θ = 12.5°, s = 1.0000375): placed rigidly at its origin, the point 20 km along its x axis is off the exact placement by the hand formula's √((d²/2R)² + (d(s/k − 1))²), within 1%",
+  "The California measurement site grid (EPSG:6420, θ = 12.5°, s = 1.0000375): placed rigidly at its origin, the point 20 km along its x axis is off the exact placement by the drop d²/2R and, along the line, d(s/k̄ − 1) + d³/3R², each within 1 mm",
   ["proj"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(
@@ -194,28 +248,22 @@ const siteGapCase = stressCase(
         name: "California zone 3 site (2D)",
         body: EARTH,
         crs: epsg(6420),
-        site: BIM_CHECKED,
+        site: MEASUREMENT_SITE,
       },
       proj(ctx),
     );
-    const g = siteGap(frame, BIM_CHECKED, 20_000);
+    const g = siteGap(frame, MEASUREMENT_SITE, 20_000);
+    const [drop, along] = siteGapResults(
+      g,
+      "The California measurement site grid (EPSG:6420, θ = 12.5°, s = 1.0000375)",
+      base,
+    );
     return [
       {
-        ...base,
-        pass: true,
-        value: Math.abs(g.gap / g.hand.gap - 1),
-        tolerance: SITE_GAP,
-        detail: `gap ${fmt(g.gap, 6)} m (${fmt(g.parts.drop, 5)} m down, ${fmt(g.parts.along, 4)} m along); by hand ${fmt(g.hand.gap, 6)} m (d²/2R ${fmt(g.hand.drop, 5)} m with R ${fmt(g.radius, 7)} m at ${fmt(g.latitude, 6)}°; d(s/k − 1) ${fmt(g.hand.along, 4)} m with k ${fmt(g.gridScale, 10)})`,
-        effect: {
-          value: g.gap,
-          unit: "m",
-          label:
-            "how far rigid placement puts a point 20 km along the site grid from where it belongs",
-        },
-        accuracyNote:
-          "exact arithmetic: both placements through the same PROJ operation, whose datum accuracy moves them together",
+        ...drop!,
         fingerprint: fingerprintOf(ctx, frame, g.fingerprintDesigns),
       },
+      along!,
     ];
   },
 );

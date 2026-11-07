@@ -158,24 +158,42 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       "Where exactly does this model sit, and how far off would a rigid placement be?",
     knobs: [
       {
+        id: "site",
+        label: "Site",
+        kind: "choice",
+        options: [
+          {
+            value: "san-francisco",
+            label: "San Francisco: the catalog's California measurement site",
+            short: "San Francisco",
+          },
+          {
+            value: "portland",
+            label: "Portland, Oregon: the OCRS Portland zone's origin",
+            short: "Portland",
+          },
+        ],
+      },
+      {
         id: "crs",
         label: "Design CRS",
         kind: "choice",
         options: [
           {
             value: "ca-zone-3",
-            label: "California zone 3 (EPSG:6420), state plane, US survey feet",
+            label:
+              "California zone 3 (EPSG:6420), state plane, US survey feet; it covers San Francisco only",
             short: "CA zone 3",
           },
           {
             value: "utm-10n",
-            label: "UTM zone 10N (EPSG:32610), metres",
+            label: "UTM zone 10N (EPSG:32610), metres; it covers both sites",
             short: "UTM 10N",
           },
           {
             value: "low-distortion",
             label:
-              "Oregon's Portland zone (EPSG:6854), a low-distortion projection, metres: the site moves to Portland",
+              "Oregon's Portland zone (EPSG:6854), a low-distortion projection, metres; it covers Portland only",
             short: "Portland LDP",
           },
         ],
@@ -203,14 +221,22 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // measurement.grid-to-ground and measurement.design-vs-itrf, the site
     // grid's round trip at that rotation and scale, and the CRS's own round
     // trip; and the answer itself, the gap 20 km out against its hand
-    // formula (rigid-placement-budget.site-gap, Task 6a). (NGS GU2195's
+    // formula, the drop and the part along the line each within 1 mm
+    // (rigid-placement-budget.site-gap.drop and .along, Task 6a fix 1). (NGS GU2195's
     // convergence is checked about 115 km away, so it isn't the site's true
     // north and isn't proof here.)
     checked: {
       epochUtc: MEASURED_AT,
-      knobs: { crs: "ca-zone-3", rotation: 12.5, scale: 1.0000375 },
+      knobs: {
+        site: "san-francisco",
+        crs: "ca-zone-3",
+        rotation: 12.5,
+        scale: 1.0000375,
+      },
     },
-    needs: ["proj", "geoid"],
+    // The scenario's own frames are 2D (ellipsoidal heights): GEOID18 is
+    // only its compound-CRS proof checks' need, which the catalog meets.
+    needs: ["proj"],
     // Task 6a's ruling: the ellipsoid. The exact line lies at height 0, so
     // its gap from the rigid line reads against the ground it curves with;
     // terrain would lift the line by up to 3 km along its 400 km, swamping
@@ -218,12 +244,25 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // height.
     globe: "ellipsoid",
     proof: [
-      "rigid-placement-budget.site-gap",
+      "rigid-placement-budget.site-gap.drop",
+      "rigid-placement-budget.site-gap.along",
       "measurement.grid-to-ground",
       "measurement.design-vs-itrf",
       "site-grids.round-trip.rotation-12.5.scale-1.0000375",
       "projections.epsg-6420-6360",
     ],
+    checkedBy: "hand formulas and round trips",
+    proofNotes: Object.fromEntries(
+      [
+        "measurement.grid-to-ground",
+        "measurement.design-vs-itrf",
+        "site-grids.round-trip.rotation-12.5.scale-1.0000375",
+        "projections.epsg-6420-6360",
+      ].map((id) => [
+        id,
+        "Checked in the compound CRS, California zone 3 with NAVD88 heights through GEOID18; the scenario uses the 2D CRS with ellipsoidal heights, so it carries over in E and N only.",
+      ]),
+    ),
   },
   {
     id: "corridor",
@@ -256,6 +295,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     needs: ["proj"],
     globe: "ellipsoid",
     proof: ["measurement.clothoid"],
+    checkedBy: "hand formulas and round trips",
   },
   {
     id: "drone",

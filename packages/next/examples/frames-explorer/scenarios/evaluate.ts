@@ -10,6 +10,7 @@
 // evaluator's word alone.
 import type { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
 import type { FrameCache } from "../frameCache.ts";
+import type { SceneLegendRow } from "../panel/legendRows.ts";
 import type { OverlayGeometry } from "../protocol.ts";
 import type { StressContext, StressResult } from "../tests.ts";
 import type { AddedFrameSpec } from "../tree.ts";
@@ -121,6 +122,8 @@ export interface ScenarioEvaluation {
    * them exactly.
    */
   drag?: { at: readonly number[]; toDesign: readonly number[] };
+  /** Its own lines and marks in the globe's legend (the corridor's road, point and offset). */
+  legend?: readonly SceneLegendRow[];
   sightLines?: readonly SightLine[];
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).

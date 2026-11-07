@@ -109,9 +109,8 @@ describe("the ten scenarios", () => {
   it("states what data and globe each needs", () => {
     expect(spec("dish-tracks").needs).toContain("orion");
     expect(spec("one-path").needs).toContain("orion");
-    expect(spec("bim-site").needs).toEqual(
-      expect.arrayContaining(["proj", "geoid"]),
-    );
+    // GEOID18 is its compound-CRS proof checks' need, not its own (fix 1).
+    expect(spec("bim-site").needs).toEqual(["proj"]);
     expect(spec("ship").needs).toEqual(
       expect.arrayContaining(["ships", "terrain"]),
     );
@@ -126,6 +125,7 @@ describe("the ten scenarios", () => {
     expect(dish.proof).toContain("space.dss43-orion.light-time");
     const bim = spec("bim-site");
     expect(bim.checked.knobs).toEqual({
+      site: "san-francisco",
       crs: "ca-zone-3",
       rotation: 12.5,
       scale: 1.0000375,
@@ -172,7 +172,7 @@ describe("checkedState", () => {
     expect(
       checkedState(
         s,
-        { crs: "utm-10n", rotation: 12.5, scale: 1 },
+        { site: "san-francisco", crs: "utm-10n", rotation: 12.5, scale: 1 },
         epochOf(s) - 60_000,
       ),
     ).toEqual({ atChecked: false, changed: ["crs", "scale", "time"] });
@@ -200,7 +200,16 @@ describe("clampKnobs (Review Focus 4)", () => {
     const s = spec("bim-site");
     expect(
       clampKnobs(s, { crs: "utm-10n", rotation: "-30.5", scale: 0.99996 }),
-    ).toEqual({ crs: "utm-10n", rotation: -30.5, scale: 0.99996 });
+    ).toEqual({
+      // A link without the site knob takes the checked site.
+      site: "san-francisco",
+      crs: "utm-10n",
+      rotation: -30.5,
+      scale: 0.99996,
+    });
+    // An unknown site falls back to the checked one; a valid one is kept.
+    expect(clampKnobs(s, { site: "Atlantis" }).site).toBe("san-francisco");
+    expect(clampKnobs(s, { site: "portland" }).site).toBe("portland");
   });
 
   it("falls back to the checked value for anything else, and drops knobs the scenario hasn't", () => {

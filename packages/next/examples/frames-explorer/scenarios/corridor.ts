@@ -15,7 +15,12 @@
 // (the station and offset back from the design point, within 1e-9 ft), and
 // the trip through the ground the answer takes.
 import { Alignment } from "../../../src/engineering/alignment.ts";
-import { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
+import {
+  EngineeringFrame,
+  designPoint,
+} from "../../../src/engineering/EngineeringFrame.ts";
+import { framePoint } from "../../../src/frames/local.ts";
+import { measure } from "../../../src/measure/measure.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { EARTH } from "../../../src/scene/Body.ts";
 import { Instant } from "../../../src/time/Instant.ts";
@@ -32,7 +37,6 @@ import {
   DESIGN_ROUND_TRIP,
   proj,
 } from "../stress/shared.ts";
-import type { AddedFrameSpec } from "../tree.ts";
 import {
   registerScenario,
   type ScenarioAnswer,
@@ -41,9 +45,10 @@ import {
 import {
   BIM_CRS,
   CLOTHOID_ROAD,
-  CORRIDOR_SITE,
+  MEASUREMENT_SITE,
   CORRIDOR_SITE_GRID,
   FTUS_PER_M,
+  crsEdge,
   offsetText,
   stationText,
 } from "./sites.ts";
@@ -74,7 +79,7 @@ function framesOf(ctx: StressContext, cache: FrameCache<EngineeringFrame>) {
           name: `${CA.name} site`,
           body: EARTH,
           crs: CA.crs,
-          site: CORRIDOR_SITE,
+          site: MEASUREMENT_SITE,
         },
         proj(ctx),
       ),
@@ -104,10 +109,11 @@ function roadOverlays(
   for (let i = 0; i <= steps; i++) {
     centre.set(at((i * road.length) / steps, 0), 3 * i);
   }
-  // A tick across the road every 100 ft, longer every 500 ft.
+  // A tick across the road every 100 ft, longer every 500 ft: long enough
+  // to read from the scene's 1,600 m (fix 1).
   const ticks: number[] = [];
   for (let s = 0; s <= road.endStation; s += 100) {
-    const half = s % 500 === 0 ? 12 : 6;
+    const half = s % 500 === 0 ? 25 : 12;
     ticks.push(...at(s, -half), ...at(s, half));
   }
   const foot = at(station, 0);
@@ -223,21 +229,21 @@ export const evaluateCorridor: ScenarioEvaluator = async (
   })!;
   const lat = (geo.latitude * 180) / Math.PI;
   const lon = (geo.longitude * 180) / Math.PI;
-  // The answer's accuracy: the alignment's inverse (measurement.clothoid's
-  // 1e-9 ft), or the trip through the ground if it adds more.
+  // The answer's accuracy, in two parts (fix 1). Relative to the road as
+  // placed through this operation: the alignment's inverse
+  // (measurement.clothoid's 1e-9 ft), or the trip through PROJ if it adds
+  // more. For a point measured in ITRF (or picked on the imagery): the
+  // route's own accuracy, through `measure` as one-path's is, which takes
+  // in the CRS's operation to WGS 84 (±2 m).
   const feet = Math.max(ALIGNMENT_RECOVERY, viaGround);
-  const op = plain.operation;
-  const edge: AddedFrameSpec["edge"] = {
-    kind: "proj-operation",
-    detail: `PROJ operation: ${op.pipeline}; grids: ${op.grids.join(", ") || "none"}`,
-    accuracy:
-      !op.ballpark && op.accuracy !== undefined && op.accuracy > 0
-        ? {
-            meters: op.accuracy,
-            note: "PROJ's stated accuracy for the recorded operation (the datum to WGS 84)",
-          }
-        : { note: "not known: PROJ states no accuracy for the operation" },
-  };
+  const route = measure(
+    designPoint(site, design),
+    framePoint(ctx.frames.itrf, itrf),
+    instant,
+    ctx.frames,
+    { signal: false },
+  ).accuracy;
+  const edge = crsEdge(plain);
   const live: StressResult[] = [
     {
       id: "measurement.clothoid.live",
@@ -301,7 +307,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
         parentId: CA.name,
         edge: {
           kind: "constant",
-          detail: `map conversion: origin ${CORRIDOR_SITE.origin[0].toLocaleString("en-US")} ftUS E, ${CORRIDOR_SITE.origin[1].toLocaleString("en-US")} ftUS N; rotation 12.5°; scale ${CORRIDOR_SITE.scale}`,
+          detail: `map conversion: origin ${MEASUREMENT_SITE.origin[0].toLocaleString("en-US")} ftUS E, ${MEASUREMENT_SITE.origin[1].toLocaleString("en-US")} ftUS N; rotation 12.5°; scale ${MEASUREMENT_SITE.scale}`,
           accuracy: {
             byDefinition: true,
             note: "exact by definition: the site formula, a rotation and a scale",
@@ -325,10 +331,16 @@ export const evaluateCorridor: ScenarioEvaluator = async (
       headline: `The point is at station ${stationText(found.station)}, ${offsetText(found.offset)} of the centreline, ${elementAt(found.station)}. Its place on the ground goes back through PROJ into ${CA.name} and the site grid, then a perpendicular dropped onto the road finds the nearest point on it: how far along the road that is, and how far out.`,
       value: found.station,
       unit: "ft",
-      accuracy: {
-        meters: feet / FTUS_PER_M,
-        note: `within ${fmt(feet, 2)} ft: the alignment gives a station and offset back to 1e-9 ft (measurement.clothoid's tolerance)${viaGround > ALIGNMENT_RECOVERY ? `; the trip through the ground adds ${fmt(viaGround, 2)} ft` : ", and the trip through the ground adds less"}`,
-      },
+      accuracy:
+        route.meters !== undefined
+          ? {
+              meters: route.meters,
+              note: `for a point measured in ITRF or picked on the imagery: ${CA.name}'s operation to WGS 84, ${(route.meters * FTUS_PER_M).toFixed(1)} ft. Relative to the road as placed through that operation, within ${fmt(feet, 2)} ft: the alignment gives a station and offset back to 1e-9 ft (measurement.clothoid's tolerance)${viaGround > ALIGNMENT_RECOVERY ? `, and the trip through PROJ adds ${fmt(viaGround, 2)} ft` : ""}`,
+            }
+          : {
+              note: `not bounded for a point measured in ITRF: ${route.terms.find((t) => t.meters === undefined)?.note ?? "a term has no size"}. Relative to the road as placed, within ${fmt(feet, 2)} ft`,
+              unbounded: true,
+            },
       path: { from: CORRIDOR_SITE_GRID, to: "ITRF" },
       method,
     },
@@ -347,6 +359,32 @@ export const evaluateCorridor: ScenarioEvaluator = async (
       },
     ],
     drag: { at: Array.from(itrf), toDesign: inverse },
+    legend: [
+      {
+        key: "road",
+        label: "The clothoid road's centreline, with a tick every 100 ft",
+        short: "Road",
+        accuracy: "stations 0+00 to 20+00; longer ticks every 500 ft",
+        line: "solid",
+        tone: "family",
+      },
+      {
+        key: "point",
+        label: "The point: drag it, or set it with the knobs",
+        short: "Point",
+        accuracy: `${stationText(found.station)}, ${offsetText(found.offset)}`,
+        line: "ring",
+        tone: "family",
+      },
+      {
+        key: "offset",
+        label: "Its offset, square to the road",
+        short: "Offset",
+        accuracy: offsetText(found.offset),
+        line: "solid",
+        tone: "white",
+      },
+    ],
     live,
     checkedAnswerValue: checkedStation,
   };

@@ -6,6 +6,20 @@ import type { OverlayId, OverlayView } from "./model.ts";
 
 type Line = "solid" | "dashed" | "dotted";
 
+/**
+ * A scenario's own line or mark in the legend (the corridor's road, its
+ * point and the point's offset: Task 6a fix 1), in the engineering family
+ * or white. `ring` keys a point you can drag.
+ */
+export interface SceneLegendRow {
+  key: string;
+  label: string;
+  short: string;
+  accuracy: string;
+  line: Line | "ring";
+  tone: "family" | "white";
+}
+
 /** Each overlay's family (color) and line style on the globe and in the legend (M8). */
 const OVERLAY_LOOK: Partial<Record<OverlayId, { family: Family; line: Line }>> =
   {
@@ -20,16 +34,17 @@ const OVERLAY_LOOK: Partial<Record<OverlayId, { family: Family; line: Line }>> =
 
 /** One entry in the legend. */
 export interface LegendRow {
-  /** Unique: the overlay's id, or "id:part". */
+  /** Unique: the overlay's id, or "id:part", or "scene:" and the scenario's key. */
   key: string;
-  overlay: OverlayId;
+  /** The overlay it keys; none for a scenario's own line. */
+  overlay?: OverlayId;
   /** The compact name. */
   name: string;
   /** The unfolded name. */
   label: string;
   accuracy: string;
-  /** The key drawn beside it: a line style, or the triads' three axes. */
-  line: Line | "axes";
+  /** The key drawn beside it: a line style, a draggable point's ring, or the triads' three axes. */
+  line: Line | "ring" | "axes";
   family: Family;
   /** The family's color, or white (the rigid line). */
   tone: "family" | "white";
@@ -39,7 +54,26 @@ export interface LegendRow {
   note?: { text: string; attention: boolean };
 }
 
-export function legendRows(drawn: readonly OverlayView[]): LegendRow[] {
+export function legendRows(
+  drawn: readonly OverlayView[],
+  scene: readonly SceneLegendRow[] = [],
+): LegendRow[] {
+  return [
+    ...overlayRows(drawn),
+    ...scene.map((r): LegendRow => ({
+      key: `scene:${r.key}`,
+      name: r.short,
+      label: r.label,
+      accuracy: r.accuracy,
+      line: r.line,
+      family: "engineering",
+      tone: r.tone,
+      attention: false,
+    })),
+  ];
+}
+
+function overlayRows(drawn: readonly OverlayView[]): LegendRow[] {
   return drawn.flatMap((o): LegendRow[] => {
     const look = OVERLAY_LOOK[o.id] ?? { family: "earth", line: "solid" };
     const attention = o.unbounded === true || o.caution === true;

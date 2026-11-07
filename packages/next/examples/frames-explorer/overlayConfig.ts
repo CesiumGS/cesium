@@ -121,6 +121,11 @@ export const DISTORTION: Record<
  * gives its own (the BIM site's CRS and site grid, the corridor's site).
  */
 export interface EngineeringSetup {
+  /**
+   * Why nothing is drawn: the CRS's area of use doesn't cover the site (the
+   * BIM site's knobs, fix 1). The stage turns the scene's overlays off.
+   */
+  outside?: string;
   /** The design CRS's frame name ("California zone 3"). */
   name: string;
   crs: CrsRef;

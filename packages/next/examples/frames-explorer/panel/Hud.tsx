@@ -74,7 +74,7 @@ export function useHudLayout(host: HTMLElement): number {
  * unfolded, the full lines and the triads' note.
  */
 /** The model fields the legend reads (Task 4d). */
-export const LEGEND_READS = ["overlays", "triadScale"] as const;
+export const LEGEND_READS = ["overlays", "triadScale", "sceneLegend"] as const;
 
 export const GlobeLegend = memo(
   GlobeLegendView,
@@ -84,7 +84,8 @@ export const GlobeLegend = memo(
 function GlobeLegendView({ model }: { model: PanelModel }) {
   const [open, setOpen] = useState(false);
   const drawn = model.overlays.filter((o) => o.on && o.state === "drawn");
-  if (drawn.length === 0) {
+  const scene = model.sceneLegend ?? [];
+  if (drawn.length === 0 && scene.length === 0) {
     return null;
   }
   return (
@@ -106,7 +107,7 @@ function GlobeLegendView({ model }: { model: PanelModel }) {
         </IconButton>
       </div>
       <ul className="fx-legend-list">
-        {legendRows(drawn).map((row) => (
+        {legendRows(drawn, scene).map((row) => (
           <li
             key={row.key}
             tabIndex={open ? undefined : 0}

@@ -62,7 +62,7 @@ describe("what the copy says, at true scale", () => {
 
   it("states both figures, with no exaggeration", () => {
     expect(copy.accuracy).toBe(
-      "parts as distance squared: 31.4 m at 20 km, 12.5 km at 400 km (true scale)",
+      "31.4 m apart at 20 km, 12.5 km at 400 km (true scale)",
     );
     expect(copy.detail).toMatch(/dashed/);
     expect(copy.detail).toMatch(/straight/);

@@ -393,6 +393,7 @@ function ScenariosView({
   );
   const control = scenario.treeControl;
   const current = control ? String(scenario.values[control.knob]) : undefined;
+  const drawIn = scenario.drawIn;
   const targets: DiagramTargets | undefined = useMemo(
     () =>
       control && current !== undefined
@@ -402,8 +403,16 @@ function ScenariosView({
             label: (id: string) => `${control.verb} ${id}`,
             onPick: (id: string) => actions.setKnob(control.knob, id),
           }
-        : undefined,
-    [control, current, actions],
+        : drawIn !== undefined
+          ? // A fixed frame to draw in (Task 6a fix 1): tagged, not a choice.
+            {
+              ids: new Set<string>(),
+              current: drawIn,
+              label: () => "",
+              onPick: () => {},
+            }
+          : undefined,
+    [control, current, drawIn, actions],
   );
   const extras: Record<string, ResultExtras> = useMemo(
     () => ({ ...model.extras, ...scenario.liveExtras }),
@@ -452,7 +461,7 @@ function ScenariosView({
                 onClick={scenario.atChecked ? toKnobs : actions.backToChecked}
                 title={
                   scenario.atChecked
-                    ? "The published references apply here"
+                    ? `The ${scenario.checkedBy} apply here`
                     : "Back to the checked setup"
                 }
               >

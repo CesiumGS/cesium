@@ -160,9 +160,19 @@ export function createStage(deps: {
       return;
     }
     defaults ??= overlays.engineering();
-    overlays.setEngineering(eng.setup(sceneKnobs, defaults));
+    const setup = eng.setup(sceneKnobs, defaults);
+    const moved =
+      overlays.engineering().look.join() !== setup.look.join() &&
+      overlays.engineering() !== defaults;
+    overlays.setEngineering(setup);
+    // A CRS whose area of use doesn't cover the site draws nothing (the
+    // answer says why): its overlays go off until it does.
     for (const o of eng.overlays) {
-      overlays.set(o, true);
+      overlays.set(o, setup.outside === undefined);
+    }
+    if (moved) {
+      // Another site (the BIM site's knob): the camera goes there.
+      flyToScene();
     }
   }
 

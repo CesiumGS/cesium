@@ -12,7 +12,11 @@ import {
   type AlignmentDefinition,
 } from "../../../src/engineering/alignment.ts";
 import type { CrsRef } from "../../../src/engineering/crs.ts";
-import type { SiteTransform } from "../../../src/engineering/EngineeringFrame.ts";
+import type {
+  EngineeringFrame,
+  SiteTransform,
+} from "../../../src/engineering/EngineeringFrame.ts";
+import type { AddedFrameSpec } from "../tree.ts";
 import type { EngineeringSetup } from "../overlayConfig.ts";
 import type { KnobState } from "./spec.ts";
 
@@ -22,8 +26,38 @@ const deg = Math.PI / 180;
 export const FTUS_PER_M = 3937 / 1200;
 
 export type BimCrsId = "ca-zone-3" | "utm-10n" | "low-distortion";
+export type BimSiteId = "san-francisco" | "portland";
 
-/** A design CRS the BIM site can be delivered in, and where its site is. */
+/** A place the BIM model can be: its origin on the ground (WGS 84, height 0). */
+export interface BimPlace {
+  id: BimSiteId;
+  longitude: number;
+  latitude: number;
+  where: string;
+}
+
+/**
+ * The two sites (the owner, fix 1: the site and the CRS are separate
+ * knobs). San Francisco is the catalog's California site (SITE_ORIGIN,
+ * stress/shared.ts, California zone 3's 6,000,000 and 2,100,000 ftUS);
+ * Portland is the OCRS Portland zone's own origin.
+ */
+export const BIM_PLACES: Readonly<Record<BimSiteId, BimPlace>> = {
+  "san-francisco": {
+    id: "san-francisco",
+    longitude: -122.442726,
+    latitude: 37.746199,
+    where: "San Francisco",
+  },
+  portland: {
+    id: "portland",
+    longitude: -122.75,
+    latitude: 45.5,
+    where: "Portland, Oregon",
+  },
+};
+
+/** A design CRS the BIM site can be delivered in. */
 export interface BimCrs {
   id: BimCrsId;
   /** The engineering frame's name ("California zone 3"). */
@@ -34,18 +68,24 @@ export interface BimCrs {
   /** Design units per metre. */
   unitsPerMeter: number;
   unit: "ftUS" | "m";
-  /** The site origin in the CRS (design E, N), as the model's map conversion gives it. */
-  origin: readonly [number, number];
-  /** The origin on WGS 84, degrees, for the camera (to a few metres). */
-  place: { longitude: number; latitude: number; where: string };
+  /**
+   * Its area of use, degrees (EPSG's, as PROJ gives it: the data test
+   * checks), and the area's name.
+   */
+  area: {
+    west: number;
+    south: number;
+    east: number;
+    north: number;
+    name: string;
+  };
+  /**
+   * Each site's origin in the CRS (design E, N), the same ground point to
+   * the millimetre (test/data/framesExplorerScenarios checks through PROJ);
+   * none for a site outside its area of use.
+   */
+  origins: Readonly<Partial<Record<BimSiteId, readonly [number, number]>>>;
 }
-
-/** The California site (the catalog's SITE_ORIGIN, stress/shared.ts), near San Francisco. */
-const SAN_FRANCISCO = {
-  longitude: -122.442726,
-  latitude: 37.746199,
-  where: "San Francisco",
-};
 
 export const BIM_CRS: Readonly<Record<BimCrsId, BimCrs>> = {
   "ca-zone-3": {
@@ -55,8 +95,14 @@ export const BIM_CRS: Readonly<Record<BimCrsId, BimCrs>> = {
     crs: { format: "wkid", authority: "EPSG", wkid: 6420 },
     unitsPerMeter: FTUS_PER_M,
     unit: "ftUS",
-    origin: [6_000_000, 2_100_000],
-    place: SAN_FRANCISCO,
+    area: {
+      west: -123.02,
+      south: 36.73,
+      east: -117.83,
+      north: 38.71,
+      name: "California, the San Francisco Bay Area to the Sierra Nevada",
+    },
+    origins: { "san-francisco": [6_000_000, 2_100_000] },
   },
   "utm-10n": {
     id: "utm-10n",
@@ -65,10 +111,17 @@ export const BIM_CRS: Readonly<Record<BimCrsId, BimCrs>> = {
     crs: { format: "wkid", authority: "EPSG", wkid: 32610 },
     unitsPerMeter: 1,
     unit: "m",
-    // The same ground point as California zone 3's origin, to the
-    // millimetre (test/data/framesExplorerScenarios checks it through PROJ).
-    origin: [549_095.54, 4_177_802.068],
-    place: SAN_FRANCISCO,
+    area: {
+      west: -126,
+      south: 0,
+      east: -120,
+      north: 84,
+      name: "between 126°W and 120°W, northern hemisphere",
+    },
+    origins: {
+      "san-francisco": [549_095.54, 4_177_802.068],
+      portland: [519_531.699, 5_038_526.897],
+    },
   },
   "low-distortion": {
     id: "low-distortion",
@@ -77,12 +130,57 @@ export const BIM_CRS: Readonly<Record<BimCrsId, BimCrs>> = {
     crs: { format: "wkid", authority: "EPSG", wkid: 6854 },
     unitsPerMeter: 1,
     unit: "m",
-    // The zone's own origin (its false easting and northing), in Portland:
-    // a low-distortion zone covers about 60 km, so the site moves there.
-    origin: [100_000, 50_000],
-    place: { longitude: -122.75, latitude: 45.5, where: "Portland, Oregon" },
+    area: {
+      west: -123.53,
+      south: 45.23,
+      east: -122.11,
+      north: 46.01,
+      name: "Oregon, the Portland area",
+    },
+    // The zone's own origin, its false easting and northing.
+    origins: { portland: [100_000, 50_000] },
   },
 };
+
+/** Whether `place` is inside `crs`'s area of use. */
+export const covers = (crs: BimCrs, place: BimPlace): boolean =>
+  place.longitude >= crs.area.west &&
+  place.longitude <= crs.area.east &&
+  place.latitude >= crs.area.south &&
+  place.latitude <= crs.area.north;
+
+/** "123.02°W–117.83°W, 36.73°N–38.71°N". */
+export function areaText(crs: BimCrs): string {
+  const lon = (v: number) => `${Math.abs(v)}°${v < 0 ? "W" : "E"}`;
+  const lat = (v: number) => `${Math.abs(v)}°${v < 0 ? "S" : "N"}`;
+  const a = crs.area;
+  return `${lon(a.west)}–${lon(a.east)}, ${lat(a.south)}–${lat(a.north)}`;
+}
+
+/**
+ * A design CRS's edge in the tree: its recorded PROJ operation, with the
+ * accuracy PROJ states (R8): ±2 m for NAD83(2011) to WGS 84, exact for a CRS
+ * on WGS 84 (the projection alone). One for the BIM site and the corridor.
+ */
+export function crsEdge(frame: EngineeringFrame): AddedFrameSpec["edge"] {
+  const op = frame.operation;
+  const known = !op.ballpark && op.accuracy !== undefined && op.accuracy > 0;
+  return {
+    kind: "proj-operation",
+    detail: `PROJ operation: ${op.pipeline}; grids: ${op.grids.join(", ") || "none"}`,
+    accuracy: known
+      ? {
+          meters: op.accuracy!,
+          note: "PROJ's stated accuracy for the recorded operation (the datum to WGS 84)",
+        }
+      : op.accuracy === 0
+        ? {
+            byDefinition: true,
+            note: "exact: the CRS is on WGS 84, so the operation is the projection alone",
+          }
+        : { note: "not known: PROJ states no accuracy for the operation" },
+  };
+}
 
 /** The site grid's frame name in the tree. */
 export const BIM_SITE_GRID = "BIM site grid";
@@ -90,23 +188,36 @@ export const BIM_SITE_GRID = "BIM site grid";
 /** The rigid and exact line along the site grid's x axis: its length and the inset's mark, metres. */
 export const BIM_LINE = { length: 400_000, mark: 20_000 } as const;
 
-/** The BIM site at `knobs`: its CRS and its site grid (the map conversion). */
+/**
+ * The BIM site at `knobs`: where it is, its CRS, and its site grid (the
+ * map conversion) when the CRS covers the site. A CRS whose area of use
+ * doesn't take in the site has no origin there: the scenario says so and
+ * draws nothing (fix 1), it neither moves the site nor picks another CRS.
+ */
 export function bimSite(knobs: KnobState): {
+  place: BimPlace;
   crs: BimCrs;
-  site: SiteTransform;
+  /** The site grid, when the CRS covers the site. */
+  site?: SiteTransform;
   rotation: number;
   scale: number;
 } {
+  const place =
+    BIM_PLACES[String(knobs.site) as BimSiteId] ?? BIM_PLACES["san-francisco"];
   const crs = BIM_CRS[String(knobs.crs) as BimCrsId] ?? BIM_CRS["ca-zone-3"];
   const rotation = Number(knobs.rotation);
   const scale = Number(knobs.scale);
+  const origin = covers(crs, place) ? crs.origins[place.id] : undefined;
   return {
+    place,
     crs,
-    site: {
-      origin: [crs.origin[0], crs.origin[1], 0],
-      rotation: rotation * deg,
-      scale,
-    },
+    ...(origin && {
+      site: {
+        origin: [origin[0], origin[1], 0] as [number, number, number],
+        rotation: rotation * deg,
+        scale,
+      },
+    }),
     rotation,
     scale,
   };
@@ -144,20 +255,33 @@ export function normalRadius(
 
 /**
  * The gap between rigid and exact placement `d` metres along a site grid's
- * axis, by hand (R11): the drop, the ellipsoid curving away under the
- * tangent plane, d²/2R in the axis's direction; and the part along it, the
- * site scale against the grid's scale that rigid placement ignores,
- * d (s/k − 1); at right angles, so the gap is their root sum square.
+ * axis, by hand (R11), in its two parts at right angles (fix 1: each is
+ * checked on its own):
+ *
+ *  - the drop, the ellipsoid curving away under the tangent plane: d²/2R,
+ *    R the radius of curvature in the axis's true azimuth;
+ *  - the part along the line, how far short the rigid point falls:
+ *    d (s/k̄ − 1), the site scale s against the grid's mean scale k̄ along
+ *    the line, which rigid placement ignores; and d³/3R², the tangent
+ *    plane's chord against the arc (the exact point, d along the ground,
+ *    is d − d³/6R² from the origin across the plane, and the rigid line
+ *    meets its level d³/6R² further on).
+ *
+ * The gap is their root sum square (the part across the line, the grid
+ * line's own curve, is millimetres).
  */
 export function rigidGapByHand(input: {
   d: number;
   radius: number;
   siteScale: number;
+  /** The grid's mean scale along the line. */
   gridScale: number;
-}): { drop: number; along: number; gap: number } {
-  const drop = (input.d * input.d) / (2 * input.radius);
-  const along = input.d * (input.siteScale / input.gridScale - 1);
-  return { drop, along, gap: Math.hypot(drop, along) };
+}): { drop: number; along: number; chord: number; gap: number } {
+  const { d, radius } = input;
+  const drop = (d * d) / (2 * radius);
+  const chord = d ** 3 / (3 * radius * radius);
+  const along = d * (input.siteScale / input.gridScale - 1) + chord;
+  return { drop, along, chord, gap: Math.hypot(drop, along) };
 }
 
 /**
@@ -180,8 +304,12 @@ export const CLOTHOID_ROAD: AlignmentDefinition = {
   ],
 };
 
-/** The measurement site the corridor sits on: California zone 3, θ = 12.5°, s = 1.0000375 (the catalog's). */
-export const CORRIDOR_SITE: SiteTransform = {
+/**
+ * The catalog's measurement site: California zone 3, θ = 12.5°, s =
+ * 1.0000375. The corridor sits on it; it is the BIM site's checked setup
+ * (rigid-placement-budget.site-gap checks it).
+ */
+export const MEASUREMENT_SITE: SiteTransform = {
   origin: [6_000_000, 2_100_000, 0],
   rotation: 12.5 * deg,
   scale: 1.0000375,
@@ -254,14 +382,20 @@ const siteWords = (rotation: number, scale: number) =>
  * the site grid's x axis from its origin, the inset's mark at 20 km.
  */
 export function bimEngineering(knobs: KnobState): EngineeringSetup {
-  const { crs, site, rotation, scale } = bimSite(knobs);
+  const { place, crs, site: placed, rotation, scale } = bimSite(knobs);
   const u = crs.unitsPerMeter;
   const half = 10_000 * u;
+  // Outside the CRS's area of use: nothing is drawn (the stage turns the
+  // overlays off); the setup still says where the site is, for the camera.
+  const site = placed ?? { origin: [0, 0, 0], rotation: 0, scale: 1 };
   return {
+    ...(!placed && {
+      outside: `${crs.name} (${crs.code}) doesn't cover ${place.where}`,
+    }),
     name: crs.name,
     crs: crs.crs,
     unitsPerMeter: u,
-    gridExtent: gridAround(crs.origin, u, 100_000),
+    gridExtent: gridAround([site.origin[0], site.origin[1]], u, 100_000),
     site: {
       transform: site,
       extent: { min: [-half, -half], max: [half, half] },
@@ -282,13 +416,13 @@ export function bimEngineering(knobs: KnobState): EngineeringSetup {
       origin: "the BIM site's origin",
       direction: "along the site grid's x axis",
       start: {
-        longitude: crs.place.longitude,
-        latitude: crs.place.latitude,
+        longitude: place.longitude,
+        latitude: place.latitude,
         azimuth: siteAxisAzimuth(rotation),
       },
     },
     gridLabel: `${crs.name} design grid, with true north`,
-    look: [crs.place.longitude, crs.place.latitude, 180_000],
+    look: [place.longitude, place.latitude, 180_000],
   };
 }
 
@@ -298,16 +432,12 @@ const ROAD_MIDDLE = new Alignment(CLOTHOID_ROAD).pointAt(1000, 0);
 /** The road's middle on WGS 84, degrees: for the camera only (to a few tens of metres). */
 export function corridorPlace(): { longitude: number; latitude: number } {
   const ca = BIM_CRS["ca-zone-3"];
-  const m = CORRIDOR_SITE.scale / ca.unitsPerMeter;
+  const sf = BIM_PLACES["san-francisco"];
+  const m = MEASUREMENT_SITE.scale / ca.unitsPerMeter;
   const [e, n] = [ROAD_MIDDLE[0]! * m, ROAD_MIDDLE[1]! * m];
-  const c = Math.cos(CORRIDOR_SITE.rotation);
-  const s = Math.sin(CORRIDOR_SITE.rotation);
-  return offsetPlace(
-    ca.place.longitude,
-    ca.place.latitude,
-    c * e - s * n,
-    s * e + c * n,
-  );
+  const c = Math.cos(MEASUREMENT_SITE.rotation);
+  const s = Math.sin(MEASUREMENT_SITE.rotation);
+  return offsetPlace(sf.longitude, sf.latitude, c * e - s * n, s * e + c * n);
 }
 
 /**
@@ -324,11 +454,11 @@ export function corridorEngineering(
     name: BIM_CRS["ca-zone-3"].name,
     crs: BIM_CRS["ca-zone-3"].crs,
     site: {
-      transform: CORRIDOR_SITE,
+      transform: MEASUREMENT_SITE,
       extent: { min: [500, 500], max: [3500, 2500] },
       step: 250,
       segment: 25,
-      label: `Measurement site grid (${siteWords(12.5, CORRIDOR_SITE.scale)}), 250 ft lines`,
+      label: `Measurement site grid (${siteWords(12.5, MEASUREMENT_SITE.scale)}), 250 ft lines`,
     },
     look: [place.longitude, place.latitude, 1600],
   };

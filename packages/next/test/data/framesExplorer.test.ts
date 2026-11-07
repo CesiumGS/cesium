@@ -335,6 +335,8 @@ describe("the frames explorer's stress tests, headless", () => {
     const BY_CHECK: Record<string, RegExp> = {
       "measurement.clothoid": /station and offset/,
       "measurement.design-vs-itrf": /design point fixed in ITRF/,
+      "rigid-placement-budget.site-gap.drop": /d²\/2R/,
+      "rigid-placement-budget.site-gap.along": /d\(s\/k̄ − 1\) \+ d³\/3R²/,
       "trajectory.moon-me.distance": /distance from the Moon's centre/,
       "trajectory.moon-me.round-trip": /MOON_ME/,
       frame: /engineering frame/,

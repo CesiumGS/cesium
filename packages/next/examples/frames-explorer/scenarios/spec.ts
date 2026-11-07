@@ -52,6 +52,14 @@ export interface ScenarioSpec {
   globe: "ellipsoid" | "terrain";
   /** The stress catalog's result ids that back it at the checked setup. */
   proof: readonly string[];
+  /**
+   * What applies at the checked setup, in words: "published references"
+   * (the default), or "hand formulas and round trips" for a scenario whose
+   * proof cites no published value (fix 1: the BIM site, the corridor).
+   */
+  checkedBy?: string;
+  /** A word on a proof row, by its id: how far the check carries to the scenario. */
+  proofNotes?: Readonly<Record<string, string>>;
 }
 
 /**

@@ -25,12 +25,16 @@ import {
   type SiteTransform,
 } from "../../../src/engineering/EngineeringFrame.ts";
 import { framePoint } from "../../../src/frames/local.ts";
-import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
+import { gridFactors } from "../../../src/engineering/factors.ts";
+import { Ellipsoid, fromDegrees } from "../../../src/math/ellipsoid.ts";
 import { measure } from "../../../src/measure/measure.ts";
 import { EARTH } from "../../../src/scene/Body.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";
-import { siteGap } from "../stress/groups/rigid-placement-budget.ts";
+import {
+  siteGap,
+  siteGapResults,
+} from "../stress/groups/rigid-placement-budget.ts";
 import {
   fmt,
   plainAccuracy,
@@ -44,13 +48,20 @@ import {
   proj,
   worstRoundTrip,
 } from "../stress/shared.ts";
-import type { AddedFrameSpec } from "../tree.ts";
 import {
   registerScenario,
   type ScenarioAnswer,
   type ScenarioEvaluator,
 } from "./evaluate.ts";
-import { BIM_LINE, BIM_SITE_GRID, bimSite, type BimCrs } from "./sites.ts";
+import {
+  BIM_LINE,
+  BIM_SITE_GRID,
+  areaText,
+  bimSite,
+  crsEdge,
+  type BimCrs,
+  type BimPlace,
+} from "./sites.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 
@@ -89,27 +100,6 @@ const designText = (v: number, crs: BimCrs) =>
 
 const degrees = (v: number, pos: string, neg: string) =>
   `${Math.abs(v).toFixed(5)}° ${v >= 0 ? pos : neg}`;
-
-/** The design CRS's edge: its recorded PROJ operation, with the accuracy PROJ states (R8). */
-function crsEdge(frame: EngineeringFrame): AddedFrameSpec["edge"] {
-  const op = frame.operation;
-  const known = !op.ballpark && op.accuracy !== undefined && op.accuracy > 0;
-  return {
-    kind: "proj-operation",
-    detail: `PROJ operation: ${op.pipeline}; grids: ${op.grids.join(", ") || "none"}`,
-    accuracy: known
-      ? {
-          meters: op.accuracy!,
-          note: "PROJ's stated accuracy for the recorded operation (the datum to WGS 84)",
-        }
-      : op.accuracy === 0
-        ? {
-            byDefinition: true,
-            note: "exact: the CRS is on WGS 84, so the operation is the projection alone",
-          }
-        : { note: "not known: PROJ states no accuracy for the operation" },
-  };
-}
 
 /** The live re-runs of the proof's checks, in the knobs' CRS and site grid. */
 function liveChecks(
@@ -173,27 +163,20 @@ function liveChecks(
   );
   // The CRS's own round trip: the site origin, a 50 km line north, and a
   // point 100 km east.
-  const origin = Float64Array.of(crs.origin[0], crs.origin[1], 0);
+  const origin = Float64Array.of(site.origin[0], site.origin[1], 0);
   const crsDesigns: Float64Array[] = [origin];
   for (let i = 1; i <= 10; i++) {
     crsDesigns.push(Float64Array.of(origin[0]!, origin[1]! + i * 5000 * u, 0));
   }
   crsDesigns.push(Float64Array.of(origin[0]! + 100_000 * u, origin[1]!, 0));
   return [
-    {
-      id: "rigid-placement-budget.site-gap.live",
+    ...siteGapResults(gap, `The site grid at ${where}`, {
+      id: "rigid-placement-budget.site-gap",
       group: "rigid-placement-budget",
-      title: `The site grid at ${where}: placed rigidly at its origin, the point 20 km along its x axis is off the exact placement by the hand formula's √((d²/2R)² + (d(s/k − 1))²), within 1%`,
-      pass: true,
-      value: Math.abs(gap.gap / gap.hand.gap - 1),
-      tolerance: 0.01,
-      detail: `gap ${fmt(gap.gap, 6)} m; by hand ${fmt(gap.hand.gap, 6)} m (d²/2R ${fmt(gap.hand.drop, 5)} m, R ${fmt(gap.radius, 7)} m; d(s/k − 1) ${fmt(gap.hand.along, 4)} m, k ${fmt(gap.gridScale, 10)})`,
-      accuracyNote:
-        "exact arithmetic: both placements through the same PROJ operation",
-      instant: instant.tdb(),
-    },
+    }).map((r) => ({ ...r, id: `${r.id}.live`, instant: instant.tdb() })),
     {
-      id: "site-grids.round-trip.rotation-12.5.scale-1.0000375.live",
+      // The case's live stand-in, at whatever rotation and scale (fix 1).
+      id: "site-grids.round-trip.live",
       group: "site-grids",
       title: `The site grid at ${where}: lands at the site formula's grid point (within 1e-9 m) and round-trips within 1e-4 m`,
       pass: formulaMeters < 1e-9,
@@ -260,13 +243,54 @@ function method(crs: BimCrs): NonNullable<ScenarioAnswer["method"]> {
     },
     {
       title: "The gap",
-      text: `The two placements of one point ${BIM_LINE.mark / 1000} km along the site grid's x axis. Most of it is the drop, d²/2R: the Earth curving away under the flat model. The rest is along the line: the site scale against the projection's, which rigid placement ignores. The catalog checks the gap against that hand formula within 1%.`,
+      text: `The two placements of one point ${BIM_LINE.mark / 1000} km along the site grid's x axis. Most of it is the drop, d²/2R: the Earth curving away under the flat model. The rest is along the line: the site scale against the projection's mean scale k̄ along it, d(s/k̄ − 1), which rigid placement ignores, and the flat plane's chord against the curved ground, d³/3R². The catalog checks each part against its formula within 1 mm.`,
     },
   ];
 }
 
 /** The checked setup's gap, once per worker (it is the same every time). */
 let checkedGap: number | undefined;
+
+/**
+ * The CRS doesn't cover the site (fix 1): nothing is placed or drawn, and
+ * the answer says so, with how far the projection's scale is off there (the
+ * distortion it would bring if used anyway).
+ */
+function outside(
+  ctx: StressContext,
+  cache: FrameCache<EngineeringFrame>,
+  crs: BimCrs,
+  place: BimPlace,
+  checked: number,
+): Awaited<ReturnType<ScenarioEvaluator>> {
+  const plain = frameOf(ctx, cache, crs);
+  const ground = Ellipsoid.WGS84.cartographicToCartesian(
+    fromDegrees(place.longitude, place.latitude, 0),
+    new Float64Array(3),
+  );
+  const k = gridFactors(plain, plain.fromBodyFixed(ground)).combinedFactor;
+  const ppm = (k - 1) * 1e6;
+  const words = `${crs.name} (${crs.code}) doesn't cover ${place.where}: its area of use is ${crs.area.name}, ${areaText(crs)}`;
+  return {
+    scenario: "bim-site",
+    added: [
+      { id: crs.name, label: crs.name, parentId: "ITRF", edge: crsEdge(plain) },
+    ],
+    answer: {
+      label: "",
+      aside: `Outside ${crs.code}'s area of use: its scale at ${place.where} is ${fmt(k, 8)}, ${Math.round(ppm).toLocaleString("en-US")} ppm (${(Math.abs(ppm) / 1000).toFixed(1)} m in every km)`,
+      headline: `${words}. The model isn't placed in it, and nothing is drawn: used this far outside its area, the projection's scale would be off by ${Math.round(ppm).toLocaleString("en-US")} ppm. Choose UTM zone 10N, which covers both sites, or the site's own zone.`,
+      accuracy: {
+        note: "not computed: the CRS's area of use doesn't cover the site",
+        unbounded: true,
+      },
+      path: { from: crs.name, to: "ITRF" },
+    },
+    overlays: [],
+    live: [],
+    checkedAnswerValue: checked,
+  };
+}
 
 export const evaluateBimSite: ScenarioEvaluator = async (
   ctx: StressContext,
@@ -275,25 +299,24 @@ export const evaluateBimSite: ScenarioEvaluator = async (
   cache: FrameCache<EngineeringFrame>,
 ) => {
   const instant = Instant.fromTdb(epochTdb);
-  const { crs, site, rotation, scale } = bimSite(knobs);
-  const frame = frameOf(ctx, cache, crs, site);
-  const plain = frameOf(ctx, cache, crs);
-  const gap = siteGap(frame, site, BIM_LINE.mark);
-  const far = siteGap(frame, site, BIM_LINE.length);
   if (checkedGap === undefined) {
     const c = bimSite(SPEC.checked.knobs);
     checkedGap = siteGap(
       frameOf(ctx, cache, c.crs, c.site),
-      c.site,
+      c.site!,
       BIM_LINE.mark,
     ).gap;
   }
-  const origin = Ellipsoid.WGS84.cartesianToCartographic(
-    frame.toBodyFixed([0, 0, 0]),
-    { longitude: 0, latitude: 0, height: 0 },
-  )!;
-  const lat = (origin.latitude * 180) / Math.PI;
-  const lon = (origin.longitude * 180) / Math.PI;
+  const { place, crs, site, rotation, scale } = bimSite(knobs);
+  if (site === undefined) {
+    return outside(ctx, cache, crs, place, checkedGap);
+  }
+  const frame = frameOf(ctx, cache, crs, site);
+  const plain = frameOf(ctx, cache, crs);
+  const gap = siteGap(frame, site, BIM_LINE.mark);
+  const far = siteGap(frame, site, BIM_LINE.length);
+  const lat = place.latitude;
+  const lon = place.longitude;
   const edge = crsEdge(plain);
   const datum =
     edge.accuracy.meters !== undefined
@@ -301,8 +324,7 @@ export const evaluateBimSite: ScenarioEvaluator = async (
       : edge.accuracy.byDefinition
         ? "exact (the CRS is on WGS 84)"
         : "not known (PROJ states no accuracy)";
-  const drop = gap.parts.drop;
-  const along = gap.parts.along;
+  const origin = site.origin;
   return {
     scenario: "bim-site",
     added: [
@@ -313,7 +335,7 @@ export const evaluateBimSite: ScenarioEvaluator = async (
         parentId: crs.name,
         edge: {
           kind: "constant",
-          detail: `IFC map conversion: origin ${designText(crs.origin[0], crs)} E, ${designText(crs.origin[1], crs)} N; rotation ${fmt(rotation, 4)}° (counterclockwise from grid east); scale ${scale}`,
+          detail: `IFC map conversion: origin ${designText(origin[0], crs)} E, ${designText(origin[1], crs)} N; rotation ${fmt(rotation, 4)}° (counterclockwise from grid east); scale ${scale}`,
           accuracy: {
             byDefinition: true,
             note: "exact by definition: the site formula, a rotation and a scale",
@@ -325,7 +347,7 @@ export const evaluateBimSite: ScenarioEvaluator = async (
       label: "The model's site origin",
       frame: crs.name,
       source: "IFC map conversion",
-      describes: `its easting and northing, ${designText(crs.origin[0], crs)} and ${designText(crs.origin[1], crs)}`,
+      describes: `its easting and northing, ${designText(origin[0], crs)} and ${designText(origin[1], crs)}`,
       accuracy: {
         byDefinition: true,
         note: "exact: the model's own numbers, as its map conversion gives them",
@@ -333,8 +355,8 @@ export const evaluateBimSite: ScenarioEvaluator = async (
     },
     answer: {
       label: "rigid against exact, 20 km along the site grid",
-      aside: `Site origin at ${degrees(lat, "N", "S")}, ${degrees(lon, "E", "W")} (${crs.place.where}), to ${datum}`,
-      headline: `Placed exactly, every point of the model goes through its map conversion and ${crs.name}'s PROJ operation to the Earth. Placed rigidly, the model is laid flat at its origin, and ${BIM_LINE.mark / 1000} km out along its x axis it is ${metres(gap.gap)} off: ${metres(drop)} above the ground as the Earth curves away, and ${metres(Math.abs(along))} ${along >= 0 ? "too far" : "short"} along the line, the site scale (${scale}) against ${crs.name}'s (${fmt(gap.gridScale, 8)} there). At ${BIM_LINE.length / 1000} km the two lines are ${metres(far.gap / 1000, 1).replace(" m", " km")} apart.`,
+      aside: `Site origin at ${degrees(lat, "N", "S")}, ${degrees(lon, "E", "W")} (${place.where}), to ${datum}`,
+      headline: `Placed exactly, every point of the model goes through its map conversion and ${crs.name}'s PROJ operation to the Earth. Placed rigidly, the model is laid flat at its origin, and ${BIM_LINE.mark / 1000} km out along its x axis it is ${metres(gap.gap)} off: ${metres(gap.drop)} above the ground as the Earth curves away, and ${metres(Math.abs(gap.short))} ${gap.short >= 0 ? "short" : "too far"} along the line, the site scale (${scale}) against ${crs.name}'s (${fmt(gap.gridScale, 8)} on average along it) and the flat plane's chord against the curved ground (${metres(gap.hand.chord, 3)}). At ${BIM_LINE.length / 1000} km the two lines are ${metres(far.gap / 1000, 1).replace(" m", " km")} apart.`,
       value: gap.gap,
       unit: "m",
       accuracy: {

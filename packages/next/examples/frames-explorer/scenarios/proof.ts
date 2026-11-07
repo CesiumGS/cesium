@@ -24,7 +24,12 @@ import type { ScenarioEvaluation } from "./evaluate.ts";
 import type { ScenarioSpec } from "./spec.ts";
 
 export type ProofRow =
-  | { kind: "checked"; result: StressResult }
+  | {
+      kind: "checked";
+      result: StressResult;
+      /** How far the check carries to the scenario (`ScenarioSpec.proofNotes`). */
+      note?: string;
+    }
   /** At the checked setup: a proof id the catalog hasn't given yet. No pass. */
   | { kind: "pending"; id: string; title: string }
   | { kind: "live"; result: StressResult }
@@ -77,7 +82,12 @@ export function proofRows(
         rows.push({ kind: "pending", id, title: id });
       } else if (result.displayOnly !== true) {
         // A display-only result is shown, not judged: never proof.
-        rows.push({ kind: "checked", result });
+        const note = spec.proofNotes?.[id];
+        rows.push({
+          kind: "checked",
+          result,
+          ...(note !== undefined && { note }),
+        });
       }
     }
     return rows;

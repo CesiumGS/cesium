@@ -456,7 +456,7 @@
         -2445974.7521893606, -3769997.0153075336, 4510874.571753688
       ]
     },
-    "rigid-placement-budget.site-gap": {
+    "rigid-placement-budget.site-gap.drop": {
       "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000.0001016 +y_0=500000.0001016 +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
       "grids": [],
       "coordinates": [

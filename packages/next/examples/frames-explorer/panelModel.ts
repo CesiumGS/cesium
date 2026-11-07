@@ -22,6 +22,7 @@ import type {
   ScenarioPanelView,
   UserCrsView,
 } from "./panel/model.ts";
+import type { SceneLegendRow } from "./panel/legendRows.ts";
 import type { OverlaySettings } from "./overlayControl.ts";
 import type { DataItem } from "./protocol.ts";
 import references from "./references.json";
@@ -117,6 +118,8 @@ export function createPanelModel(deps: {
   catalog: { results(): readonly StressResult[]; runView(): RunView };
   user: { results(): readonly StressResult[]; view(): UserCrsView };
   scenario(): ScenarioPanelView;
+  /** The current scenario's own legend rows, while its scene shows. */
+  sceneLegend?(): readonly SceneLegendRow[] | undefined;
   environment(): EnvironmentLine[];
   /** A message for the panel's snackbar (a deep link that didn't resolve). */
   notice(): { id: number; text: string } | undefined;
@@ -147,6 +150,10 @@ export function createPanelModel(deps: {
       convergenceFactor: CONVERGENCE_FACTOR,
       triadScale:
         "triads drawn at 6% of the camera's distance, 2 m to 2,000 km; ITRF and GCRF at 1.5 Earth radii",
+      ...(() => {
+        const rows = deps.sceneLegend?.();
+        return rows ? { sceneLegend: rows } : {};
+      })(),
       groups: GROUP_INFO,
       results: all,
       extras,

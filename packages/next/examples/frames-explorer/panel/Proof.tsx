@@ -215,6 +215,15 @@ export const ProofItem = memo(
           </span>
         </button>
         <div id={region} className="fx-proof-body" hidden={!expanded}>
+          {expanded && row.kind === "checked" && row.note !== undefined && (
+            <Typography
+              variant="body-sm"
+              render={<p />}
+              className="fx-proof-note"
+            >
+              {row.note}
+            </Typography>
+          )}
           {expanded &&
             (t.result ? (
               <ResultDetails
