@@ -6915,7 +6915,7 @@ with those. What is new, and worth proposing:
   alignment geometry (lines, arcs, clothoid spirals, grades, parabolic vertical
   curves, stationing) as tileset data, with segment kinds named after IFC
   4.3's `IfcAlignment`, so exact snapping and station-offset readouts work on
-  streamed content.
+  streamed content. Ours is `BENTLEY_alignments`, beside the frame.
 - **A declared coordinate operation (3D Tiles 2.0):** which operation the
   producer used to reproject, as WKT2 `COORDINATEOPERATION` or `BOUNDCRS`
   (standard) rather than a PROJ pipeline string, so a consumer can reproduce
@@ -7001,7 +7001,7 @@ so the options are:
   curvature correction per vertex, so the subdivision can be coarse;
 - refinement driven by screen-space error, folded into tile selection;
 - requiring producers to subdivide, and stating the rule in
-  `EXT_engineering_frame`.
+  `BENTLEY_engineering_frame`.
 
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`
@@ -7051,6 +7051,29 @@ with a brainstorm first:
 - **Controllers are policies over the rig.** The globe controls are a rig on
   ITRF with Earth's ellipsoid and grab-the-surface input. Orbit is a pivot
   plus an up axis. Free-fly can join them.
+- **A CAD-style controller for design space (owner, 2026-11-07),** with
+  orbit about the point under the cursor, pan, zoom to the cursor, and
+  animated standard views (top, front, side, isometric). The camera API
+  offers `fitBounds(bounds)`; what to fit (a selection, a model's extents)
+  is the application's. Orthographic or perspective is the camera's
+  projection, not the controller's. Section and clip planes are the
+  renderer's and the application's.
+- **Gestures are bindings, not subclasses (owner, 2026-11-07).** One gesture
+  set works the same on the globe and in design space by default, and a host
+  can change it without writing a controller:
+  - **actions:** the controller's named operations (orbit, pan, zoom, look,
+    tilt, roll, fly forward, frame selection, the standard views), each done
+    once by the controller;
+  - **bindings:** a plain, serializable map from input to action, such as
+    `{ "drag:left": "orbit", "drag:middle": "pan", "wheel": "zoom" }`,
+    covering mouse, touch and keys; a host passes a whole map or merges
+    overrides into a preset;
+  - **presets,** after Blender's "Blender" and "Industry Compatible"
+    keymaps: 2.0's default, and CAD-style sets;
+  - **custom actions:** a host registers a function over the rig and binds
+    it like any other;
+  - **full replacement** stays possible, because a controller is an
+    interface.
 - **Flights between rigs need a defined hand-off,** for example the Earth to
   a lunar site: interpolate in a common frame, then re-attach.
 - **The sky follows what the rig is attached to (owner, 2026-11-06).** Today
