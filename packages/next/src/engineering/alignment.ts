@@ -110,6 +110,21 @@ export interface StationOffset {
   readonly elevation?: number;
 }
 
+/** One horizontal element as an `Alignment` places it (`horizontalElements`). */
+export interface AlignmentElement {
+  /** As evaluated: a spiral of constant curvature is an arc or a line. */
+  readonly kind: "line" | "arc" | "spiral";
+  /** The station of its start. */
+  readonly station: number;
+  readonly length: number;
+  /**
+   * Signed curvature, 1/radius (positive left, 0 on a tangent), at its start
+   * and at its end.
+   */
+  readonly startCurvature: number;
+  readonly endCurvature: number;
+}
+
 /** An element placed on the alignment (positions relative to its start). */
 interface Placed {
   /** As evaluated: a spiral of constant curvature is placed as an arc or a line. */
@@ -273,6 +288,20 @@ export class Alignment {
       out[2] = this.elevationAt(station);
     }
     return out;
+  }
+
+  /**
+   * The horizontal elements in order of station, as placed: each one's
+   * `station` after the first is a join.
+   */
+  get horizontalElements(): readonly AlignmentElement[] {
+    return this.elements.map((element) => ({
+      kind: element.kind,
+      station: element.station,
+      length: element.length,
+      startCurvature: element.k0,
+      endCurvature: element.k0 + element.c * element.length,
+    }));
   }
 
   /** The azimuth of the direction of travel at a station (continuous; see the file comment). */

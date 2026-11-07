@@ -8,7 +8,10 @@
 //  - the Slang toolchain, pinned (scripts/slangTools.mjs): the native slangc
 //    for build-time Slang (the spike's ports, scripts/slangShader.mjs) and
 //    the WebAssembly build for runtime Slang (CustomShader.fromSlang, Dyno's
-//    Slang playground).
+//    Slang playground);
+//  - the design globe's generated tilesets and exact answers
+//    (scripts/designTiles.mjs) into the frames store, after its data and
+//    grids.
 // Nothing here is committed: both live outside version control.
 // Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { execFileSync } from "node:child_process";
@@ -18,6 +21,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
 import { ensureFrameData, parseGrids, parseSpan } from "./frameData.mjs";
+import { moduleRunner } from "./designTiles/moduleRunner.mjs";
 import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
 
 // `--frames-span y0-y1` or `--frames-span=y0-y1`, checked before any work.
@@ -92,4 +96,20 @@ console.log(`slang-wasm: ${await ensureSlangWasm()}`);
 
 // The frames data: ephemeris excerpts, leap seconds, Earth orientation, PROJ
 // and its grids.
-await ensureFrameData({ span: framesSpan, grids: gridSets });
+const { directory } = await ensureFrameData({
+  span: framesSpan,
+  grids: gridSets,
+});
+
+// The design globe's tiles and answers, from the frames data and grids above.
+// Through Vite's module runner: the generator runs the library's TypeScript,
+// some of which Node's type stripping can't load (parameter properties, and a
+// CommonJS dependency's named exports).
+const runner = await moduleRunner(join(here, ".."));
+try {
+  const generator = await runner.import(join(here, "designTiles.mjs"));
+  const { proj, grids, frames } = await generator.designTilesInputs(directory);
+  await generator.ensureDesignTiles(directory, proj, grids, frames);
+} finally {
+  await runner.close();
+}
