@@ -3,7 +3,8 @@
 // and the glue, the WebAssembly and proj.db are checked against their pins
 // before any of them is used. The stubs pass their own bytes' hashes as
 // `pins`, and import the glue from a data: URL of the verified bytes (Node's
-// loader refuses the browser's blob: URLs).
+// loader refuses the browser's blob: URLs). Grids load through a small stub
+// PROJ-data catalog naming `g.tif` and `late.tif`, passed by its hashes.
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,12 +14,16 @@ import { loadProj } from "../src/engineering/proj.ts";
 import { PROJ_FILE_SHA256 } from "../src/engineering/projPins.ts";
 import { sha256Hex } from "../src/io/sha256.ts";
 
-// A module whose emnapiInit returns a marker object.
+// A module whose emnapiInit returns a marker object (which finds every grid
+// where it was written).
 const GLUE = `globalThis.__glueLoads = (globalThis.__glueLoads ?? 0) + 1;
 export default async (moduleArg) => ({
   arg: (globalThis.__glueArg = moduleArg),
   FS: { writeFile() {} },
-  emnapiInit: () => ({ marker: "api" }),
+  emnapiInit: () => ({
+    marker: "api",
+    proj_grid_info: (name) => ({ filename: name }),
+  }),
 });
 `;
 
@@ -55,6 +60,41 @@ const corrupt = (bytes: Uint8Array, index = 0) => {
 
 const nameOf = (url: string) => url.slice(url.lastIndexOf("/") + 1);
 
+const encode = (text: string) => new TextEncoder().encode(text);
+
+/**
+ * A stub PROJ-data catalog listing `grids` (their sizes and hashes), its
+ * licenses, and the hashes to pass as `catalogPins`.
+ */
+async function stubCatalog(grids: Record<string, Uint8Array>) {
+  const features = await Promise.all(
+    Object.entries(grids).map(async ([name, bytes]) => ({
+      type: "Feature",
+      properties: {
+        name,
+        url: `https://cdn.proj.org/${name}`,
+        sha256sum: await sha256Hex(bytes),
+        file_size: bytes.length,
+        source: "Stub Agency",
+      },
+      geometry: null,
+    })),
+  );
+  const files = {
+    "files.geojson": encode(
+      JSON.stringify({ type: "FeatureCollection", features }),
+    ),
+    "copyright_and_licenses.csv": encode("filename,license\n"),
+  };
+  return {
+    files,
+    catalogPins: {
+      catalogSha256: await sha256Hex(files["files.geojson"]),
+      licensesSha256: await sha256Hex(files["copyright_and_licenses.csv"]),
+    },
+  };
+}
+
 describe("loadProj (browser path)", () => {
   let dir: string;
   let base: string;
@@ -90,27 +130,46 @@ describe("loadProj (browser path)", () => {
     (globalThis as { __glueLoads?: number }).__glueLoads ?? 0;
 
   it("builds URLs and the cache key from a base with no trailing slash", async () => {
+    const { files, catalogPins } = await stubCatalog({
+      "g.tif": stubBytes("g.tif"),
+    });
+    Object.assign(served, files);
     const without = base.slice(0, -1);
     const a = await loadProj({
       base: without,
       grids: ["g.tif"],
       pins,
       importGlue,
+      catalogPins,
     });
     // The glue and the WebAssembly too: loadProj fetches them so it can check
     // their bytes, and hands the WebAssembly to the glue so its bytes can be
-    // reported (R9).
+    // reported (R9). The catalog comes with them, and the grid after both.
     expect(urls).toEqual([
       `${base}proj_capi.mjs`,
       `${base}proj_capi.wasm`,
       `${base}proj.db`,
+      `${base}files.geojson`,
+      `${base}copyright_and_licenses.csv`,
       `${base}g.tif`,
     ]);
-    // The same store under the other spelling shares the first load.
-    expect(await loadProj({ base, grids: ["g.tif"], pins, importGlue })).toBe(
-      a,
-    );
+    // The same store under the other spelling shares the first load, and its
+    // catalog and grid.
+    expect(
+      await loadProj({ base, grids: ["g.tif"], pins, importGlue, catalogPins }),
+    ).toBe(a);
     expect(glueLoads()).toBe(1);
+    expect(urls).toHaveLength(6);
+  });
+
+  it("loads no catalog when no grids are named", async () => {
+    await loadProj({ base, pins, importGlue });
+    await loadProj({ base, grids: [], pins, importGlue });
+    expect(urls.map(nameOf)).toEqual([
+      "proj_capi.mjs",
+      "proj_capi.wasm",
+      "proj.db",
+    ]);
   });
 
   it("reports each file's bytes against its Content-Length (R9)", async () => {
@@ -120,10 +179,18 @@ describe("loadProj (browser path)", () => {
       "g.tif": 3000,
       "late.tif": 2500,
     };
-    const content = (name: string) =>
+    const grids = Object.fromEntries(
+      ["g.tif", "late.tif"].map((name) => [
+        name,
+        new Uint8Array(sizes[name]!).fill(name.length),
+      ]),
+    );
+    const { files, catalogPins } = await stubCatalog(grids);
+    const content = (name: string): Uint8Array =>
       name === "proj_capi.mjs"
         ? STUB[name]!
-        : new Uint8Array(sizes[name]!).fill(name.length);
+        : ((files as Record<string, Uint8Array>)[name] ??
+          new Uint8Array(sizes[name]!).fill(name.length));
     vi.stubGlobal("fetch", async (url: string) => {
       const bytes = content(nameOf(url));
       let offset = 0;
@@ -153,6 +220,7 @@ describe("loadProj (browser path)", () => {
       onProgress: (...c) => calls.push(c),
       pins: sized,
       importGlue,
+      catalogPins,
     });
     // A later call's grids report through that call's callback.
     const later: typeof calls = [];
@@ -162,9 +230,11 @@ describe("loadProj (browser path)", () => {
       onProgress: (...c) => later.push(c),
       pins: sized,
       importGlue,
+      catalogPins,
     });
     const items = (list: typeof calls) => [...new Set(list.map((c) => c[0]))];
-    // The glue is small and isn't reported, as before it was fetched here.
+    // The glue is small and isn't reported, as before it was fetched here;
+    // nor is the catalog.
     expect(items(calls).sort()).toEqual(["g.tif", "proj.db", "proj_capi.wasm"]);
     expect(items(later)).toEqual(["late.tif"]);
     for (const [name, size] of Object.entries(sizes)) {
@@ -214,7 +284,7 @@ describe("loadProj (browser path)", () => {
       // A refused load isn't memoized: with the right bytes, a retry loads.
       delete served[name];
       const api = await loadProj({ base, pins, importGlue });
-      expect(api).toEqual({ marker: "api" });
+      expect(api).toMatchObject({ marker: "api" });
       expect(glueLoads()).toBe(1);
     },
   );
@@ -250,7 +320,7 @@ describe("loadProj (browser path)", () => {
     const revoked = vi
       .spyOn(URL, "revokeObjectURL")
       .mockImplementation(() => {});
-    expect(await loadProj({ base, pins })).toEqual({ marker: "api" });
+    expect(await loadProj({ base, pins })).toMatchObject({ marker: "api" });
     expect(created).toHaveBeenCalledTimes(1);
     expect(blobs[0]!.type).toBe("text/javascript");
     expect(new Uint8Array(await blobs[0]!.arrayBuffer())).toEqual(

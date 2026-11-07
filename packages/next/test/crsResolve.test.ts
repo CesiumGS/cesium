@@ -8,6 +8,9 @@ const ref = { format: "wkid", authority: "EPSG", wkid: 2227 } as const;
 const stub = (operations: () => unknown): ProjApi =>
   ({
     proj_create: () => ({}),
+    // Quiet while listing (crs.ts lowers the log level, then restores it).
+    proj_log_level: () => 0,
+    PJ_LOG_NONE: 0,
     proj_get_name: () => "candidate A",
     proj_as_proj_string: () => null,
     proj_normalize_for_visualization: (o: unknown) => o,

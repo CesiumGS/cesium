@@ -27,6 +27,7 @@ export type PjProjStringType = number & {
   readonly [handle]: "PJ_PROJ_STRING_TYPE";
 };
 export type PjWktType = number & { readonly [handle]: "PJ_WKT_TYPE" };
+export type PjLogLevel = number & { readonly [handle]: "PJ_LOG_LEVEL" };
 
 /** A PJ_COORD: read it through its accessors (it is not a plain object). */
 export interface PjCoord {
@@ -93,6 +94,21 @@ export interface PjGridUsed {
   readonly available: boolean;
 }
 
+/**
+ * proj_grid_info's result (the C API's PJ_GRID_INFO), as far as it is read.
+ * PROJ looks the grid up when asked, unlike a candidate's `available`, which
+ * it caches per context the first time it looks (so a grid loaded later
+ * still reads as unavailable there).
+ */
+export interface PjGridInfo {
+  /** The grid's name; "" when PROJ finds no such grid. */
+  readonly gridname: string;
+  /** The path PROJ opened; "" when it finds none. */
+  readonly filename: string;
+  /** Such as "gtiff"; "missing" when PROJ finds none. */
+  readonly format: string;
+}
+
 /** proj_info's result (the C API's PJ_INFO), as far as it is read. */
 export interface PjInfo {
   /** Such as "Rel. 9.7.1, December 1st, 2025". */
@@ -104,6 +120,15 @@ export interface PjInfo {
 export interface ProjApi {
   /** The PROJ library's release (read by the fixture guard, test/data/proj.test.ts). */
   proj_info(): PjInfo;
+  /**
+   * Sets PROJ's log level and returns the one it replaces (PJ_LOG_TELL only
+   * reads it). Both of proj.js v0.9.2's builds have it (checked in the native
+   * binding and in proj_capi.wasm's exports), so the browser can quiet PROJ
+   * too.
+   */
+  proj_log_level(level: PjLogLevel): PjLogLevel;
+  /** Where PROJ finds a grid file now (see PjGridInfo). */
+  proj_grid_info(name: string): PjGridInfo;
   proj_create(definition: string): PJ;
   proj_create_crs_to_crs(source: string, target: string): PJ;
   proj_normalize_for_visualization(object: PJ): PJ;
@@ -179,4 +204,6 @@ export interface ProjApi {
   readonly PJ_TYPE_COMPOUND_CRS: PjType;
   readonly PJ_TYPE_BOUND_CRS: PjType;
   readonly PJ_WKT2_2019: PjWktType;
+  /** No log output (PROJ otherwise prints each grid it can't find to stderr). */
+  readonly PJ_LOG_NONE: PjLogLevel;
 }

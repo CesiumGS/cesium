@@ -1,0 +1,123 @@
+// One explicit grid set in Node (plan 4b Task 3): PROJ starts with no grids,
+// and a grid counts only once loadGrids has checked it against the PROJ-data
+// catalog and staged it where PROJ looks. `npm run test:data` runs it.
+//
+// Each data test file gets a PROJ of its own: Vitest 5.1's default pool is
+// `forks` with `isolate: true` (checked 2026-11-07: the resolved config of
+// this package's vite.config.ts says so, and three files run together each
+// logged a different process.pid and none saw another's globals or
+// process.env), so grids this file loads never reach another file's PROJ,
+// and its one-base-per-process rule is per file.
+import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { framesDataDirectory } from "../../scripts/frameData.mjs";
+import { listOperations, resolveOperation } from "../../src/engineering/crs.ts";
+import {
+  gridSource,
+  loadedGrids,
+  loadGrids,
+  loadProj,
+} from "../../src/engineering/proj.ts";
+
+const base = `${join(framesDataDirectory(), "proj")}/`;
+const grids = `${join(framesDataDirectory(), "grids")}/`;
+const OSGM15 = "uk_os_OSGM15_GB.tif";
+const OSTN15 = "uk_os_OSTN15_NTv2_OSGBtoETRS.tif";
+const GEOID18 = "us_noaa_g2018u0.tif";
+
+const BNG_ODN = {
+  format: "wkid",
+  authority: "EPSG",
+  wkid: 27700,
+  vcsWkid: 5701,
+} as const;
+const WGS84_3D = { format: "wkid", authority: "EPSG", wkid: 4979 } as const;
+
+const missing = (P: Awaited<ReturnType<typeof loadProj>>) =>
+  new Set(listOperations(P, BNG_ODN, WGS84_3D).flatMap((c) => c.missingGrids));
+
+describe("the staging directory (Node)", () => {
+  // First in the file: the sweep runs at the process's first load.
+  it("is the process's own, holds checked copies, and the first load sweeps those of ended processes", async () => {
+    // A process that has ended, and one that runs (this one's parent).
+    const ended = spawnSync(process.execPath, ["-e", ""]).pid!;
+    const stale = mkdtempSync(join(tmpdir(), "cesium-proj-"));
+    writeFileSync(join(stale, "owner"), String(ended));
+    const running = mkdtempSync(join(tmpdir(), "cesium-proj-"));
+    writeFileSync(join(running, "owner"), String(process.ppid));
+    try {
+      const P = await loadProj({ base, grids: [] });
+      expect(existsSync(stale)).toBe(false);
+      expect(existsSync(running)).toBe(true);
+      // PROJ_DATA is a fresh directory owned by this process, holding copies
+      // of proj.db and the binding, and no grid until one is loaded.
+      const staging = process.env.PROJ_DATA!;
+      expect(staging).toMatch(/[\\/]cesium-proj-[^\\/]+$/);
+      expect(readFileSync(join(staging, "owner"), "utf8")).toBe(
+        String(process.pid),
+      );
+      expect(readdirSync(staging).sort()).toEqual([
+        "owner",
+        "proj.db",
+        "proj_capi.node",
+      ]);
+      expect(P.proj_grid_info(GEOID18).filename).toBe("");
+    } finally {
+      rmSync(stale, { recursive: true, force: true });
+      rmSync(running, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("one explicit grid set (Node)", () => {
+  it("starts with no grids, and counts OSGM15 and OSTN15 once loadGrids loads them", async () => {
+    const P = await loadProj({ base, grids: [] });
+    expect(loadedGrids(P).size).toBe(0);
+    expect(missing(P)).toContain(OSGM15);
+    expect(() => resolveOperation(P, BNG_ODN, "EPSG:4979")).toThrow(
+      new RegExp(OSGM15.replace(/\./g, "\\.")),
+    );
+
+    await loadGrids(P, await gridSource({ base: grids }), [OSGM15, OSTN15]);
+    expect([...loadedGrids(P)].sort()).toEqual([OSGM15, OSTN15].sort());
+    expect(missing(P)).not.toContain(OSGM15);
+    expect(missing(P)).not.toContain(OSTN15);
+    // Staged, as copies PROJ finds there.
+    expect(P.proj_grid_info(OSGM15).filename).toBe(
+      join(process.env.PROJ_DATA!, OSGM15),
+    );
+    // PROJ had cached both as unavailable when it first looked; the recorded
+    // operation reads them now.
+    const op = resolveOperation(P, BNG_ODN, "EPSG:4979");
+    expect(op.grids).toEqual(expect.arrayContaining([OSGM15, OSTN15]));
+    expect(op.ballpark).toBe(false);
+    // ODN height 0 becomes an ellipsoidal height: OSGM15 puts the geoid about
+    // 46 m above the ellipsoid near Greenwich (E 538000, N 177000).
+    const out = op.forward([538000, 177000, 0]);
+    expect(out[2]).toBeGreaterThan(40);
+    expect(out[2]).toBeLessThan(55);
+  });
+
+  it("keeps a grid that sits in base but wasn't named out of PROJ's reach", async () => {
+    // GEOID18 is in the store's proj/, beside proj.db, but this PROJ was
+    // loaded with grids: [], so it reads from its own staging directory.
+    const P = await loadProj({ base, grids: [] });
+    expect(loadedGrids(P).has(GEOID18)).toBe(false);
+    const navd88 = listOperations(
+      P,
+      { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+      WGS84_3D,
+    ).flatMap((c) => c.missingGrids);
+    expect(navd88).toContain(GEOID18);
+  });
+});

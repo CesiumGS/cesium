@@ -1,10 +1,12 @@
 // CRS references and recorded PROJ operations (plan 4a task 2), against the
 // frames data store and pyproj's fixture (test/fixtures/frames/proj.json,
-// scripts/frameFixtures.py). `npm run test:data` runs it.
-import { copyFileSync, mkdtempSync, rmSync, symlinkSync } from "node:fs";
+// scripts/frameFixtures.py). `npm run test:data` runs it. PROJ here loads
+// with the legacy default grids (GEOID18); the cases without any grid are in
+// crsNoGrids.test.ts, a process of their own.
+import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   crsDefinition,
@@ -58,14 +60,6 @@ function geographicError(a: ArrayLike<number>, b: ArrayLike<number>): number {
   const north = Math.abs(a[1]! - b[1]!) * degreesToMeters;
   return Math.hypot(east, north);
 }
-
-// A copy of the module and proj.db without the geoid: a second base with its
-// own PROJ_DATA. The native module loads twice from two different files.
-const withoutGrids = mkdtempSync(join(tmpdir(), "proj-no-grids-"));
-for (const name of ["proj_capi.node", "proj.db"]) {
-  copyFileSync(join(base, name), join(withoutGrids, name));
-}
-afterAll(() => rmSync(withoutGrids, { recursive: true, force: true }));
 
 describe("CRS references", () => {
   it("builds the definition PROJ accepts (R3)", () => {
@@ -155,79 +149,26 @@ describe("the geoid (Review Focus 1)", () => {
     expect(op.accuracy).toBeCloseTo(2.015, 6);
   });
 
-  describe("when it is not installed", () => {
-    let P: ProjApi;
-    const loadWithout = async () =>
-      (P = await loadProj({ base: withoutGrids }));
-
-    it("throws, naming the grid, never choosing PROJ's coarser operation", async () => {
-      await loadWithout();
-      expect(() =>
-        resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979"),
-      ).toThrow(/us_noaa_g2018u0\.tif/);
-    });
-
-    it("also refuses to fall back to a ballpark operation by default", async () => {
-      await loadWithout();
-      expect(() =>
-        resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979", {
-          allowBallpark: false,
-        }),
-      ).toThrow(/us_noaa_g2018u0/);
-    });
-
-    it("takes the ballpark operation only when asked, with no accuracy", async () => {
-      await loadWithout();
-      const op = resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979", {
-        allowBallpark: true,
-      });
-      expect(op.ballpark).toBe(true);
-      expect(op.accuracy).toBeUndefined();
-      expect(op.grids).toEqual([]);
-      // Heights are not corrected: the ballpark leaves NAVD88 as it is.
-      const out = op.forward([6889750, 1640416.667, 328.083333333]);
-      expect(out[2]).toBeCloseTo(100, 4);
-    });
-
-    it("still resolves a pair that needs no grid", async () => {
-      await loadWithout();
-      const op = resolveOperation(P, ref("EPSG:32611"), "EPSG:4979");
-      expect(op.ballpark).toBe(false);
-    });
-
-    it("throws when a pinned pipeline's grid is missing, not an identity", async () => {
-      await loadWithout();
-      const pipeline = `+proj=pipeline +step +proj=vgridshift +grids=${GEOID} +multiplier=1`;
-      expect(() =>
-        resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979", { pipeline }),
-      ).toThrow(/us_noaa_g2018u0/);
-    });
-  });
-
-  it("keeps each base's search path when two load back to back", async () => {
-    // Regression for loadNode: the binding read PROJ_DATA at first use, so a
-    // base loaded after another and used later searched the last one's
-    // directory. Two fresh bases are loaded before either is used: one with
-    // the geoid (a symlink to the store's), one without, loaded second.
-    const withGrid = mkdtempSync(join(tmpdir(), "proj-grid-"));
-    const without = mkdtempSync(join(tmpdir(), "proj-nogrid-"));
+  it("throws for a second base, naming the first, and still works", async () => {
+    // PROJ_DATA names one directory per process, so a base loaded after
+    // another would search the first one's (the old regression, when the
+    // binding read PROJ_DATA at first use). Now the second throws. Its files
+    // are good copies, so this is the base rule speaking, not a refusal.
+    const P = await loadProj({ base });
+    const other = mkdtempSync(join(tmpdir(), "proj-second-base-"));
     try {
-      for (const dir of [withGrid, without]) {
-        for (const name of ["proj_capi.node", "proj.db"]) {
-          copyFileSync(join(base, name), join(dir, name));
-        }
+      for (const name of ["proj_capi.node", "proj.db"]) {
+        copyFileSync(join(base, name), join(other, name));
       }
-      symlinkSync(join(base, GEOID), join(withGrid, GEOID));
-      const first = await loadProj({ base: withGrid });
-      const second = await loadProj({ base: without });
-      const op = resolveOperation(first, ref("EPSG:6420+6360"), "EPSG:4979");
+      await expect(loadProj({ base: other, grids: [] })).rejects.toThrow(
+        `PROJ: this process loaded PROJ from ${base.slice(0, -1)}; it can't also load ${other}`,
+      );
+      // The first base is unaffected, and still reads its geoid.
+      expect(await loadProj({ base })).toBe(P);
+      const op = resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979");
       expect(op.grids).toContain(GEOID);
-      expect(() =>
-        resolveOperation(second, ref("EPSG:6420+6360"), "EPSG:4979"),
-      ).toThrow(/us_noaa_g2018u0/);
     } finally {
-      rmSync(withGrid, { recursive: true, force: true });
-      rmSync(without, { recursive: true, force: true });
+      rmSync(other, { recursive: true, force: true });
     }
   });
 
@@ -302,6 +243,9 @@ describe("operations that cannot be done", () => {
   it("throws when PROJ lists no operations (stub)", () => {
     const stub = {
       proj_create: () => ({}),
+      // Quiet while listing (crs.ts lowers the log level, then restores it).
+      proj_log_level: () => 0,
+      PJ_LOG_NONE: 0,
       proj_get_name: () => "x",
       proj_as_proj_string: () => "x",
       PJ_PROJ_5: 1,
@@ -428,6 +372,9 @@ describe("Operation candidates (listOperations)", () => {
   ) =>
     ({
       proj_create: () => ({}),
+      // Quiet while listing (crs.ts lowers the log level, then restores it).
+      proj_log_level: () => 0,
+      PJ_LOG_NONE: 0,
       proj_get_name: () => "Candidate",
       proj_as_proj_string: () => "+proj=noop",
       proj_normalize_for_visualization: (o: unknown) => o,
@@ -612,6 +559,9 @@ describe("an area of interest (ruling F8)", () => {
     const stub = (overrides: Partial<Record<keyof ProjApi, unknown>>) =>
       ({
         proj_create: () => ({}),
+        // Quiet while listing (crs.ts lowers the log level, then restores it).
+        proj_log_level: () => 0,
+        PJ_LOG_NONE: 0,
         proj_get_name: () => "CRS",
         proj_as_proj_string: () => "+proj=noop",
         PJ_PROJ_5: 1,

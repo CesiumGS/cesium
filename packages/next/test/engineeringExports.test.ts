@@ -10,6 +10,7 @@ import type {
   CrsRef,
   CrsUnits,
   GridFactors,
+  GridSource,
   LoadProjOptions,
   OperationCandidate,
   ProjApi,
@@ -22,6 +23,7 @@ export type IndexTypes = [
   CrsRef,
   CrsUnits,
   GridFactors,
+  GridSource,
   LoadProjOptions,
   OperationCandidate,
   ProjApi,
@@ -37,6 +39,9 @@ describe("package index: engineering frames", () => {
     const source = read("../src/index.ts");
     for (const name of [
       "loadProj",
+      "gridSource",
+      "loadGrids",
+      "loadedGrids",
       "gridFactors",
       "resolveOperation",
       "listOperations",

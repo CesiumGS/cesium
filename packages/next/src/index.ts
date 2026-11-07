@@ -176,7 +176,13 @@ export {
 } from "./engineering/alignment.ts";
 export { fresnel } from "./engineering/fresnel.ts";
 export {
+  gridSource,
+  loadedGrids,
+  loadGrids,
   loadProj,
+  type GridSource,
+  type GridSourceOptions,
+  type LoadGridsOptions,
   type LoadProjOptions,
   type ProjApi,
 } from "./engineering/proj.ts";

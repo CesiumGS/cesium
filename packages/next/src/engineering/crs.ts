@@ -6,7 +6,14 @@
 // may pick one whose grid is absent, then return the input unchanged; this
 // module walks the operation list itself and takes only an operation whose
 // grids are all available.
+//
+// A grid is available when `loadGrids` loaded it (and PROJ then found it
+// where it was put; proj.ts): PROJ's own answer for a candidate's grid isn't
+// enough. PROJ caches that answer per context the first time it looks, so a
+// grid loaded afterwards still reads as unavailable, and the candidate as not
+// instantiable; and PROJ may find a grid of its own outside the loaded set.
 import type { PJ, PjObjList, ProjApi } from "./projApi.ts";
+import { loadedGrids } from "./proj.ts";
 
 /**
  * A reference to a coordinate reference system, with the shapes of the 3D Tiles
@@ -303,6 +310,66 @@ function refinedInverse(
 }
 
 /**
+ * Runs `list` with PROJ's log level at PJ_LOG_NONE, and puts the previous
+ * level back after: listing candidates makes PROJ print every grid it can't
+ * find.
+ */
+function quietly<T>(proj: ProjApi, list: () => T): T {
+  const previous = proj.proj_log_level(proj.PJ_LOG_NONE);
+  try {
+    return list();
+  } finally {
+    proj.proj_log_level(previous);
+  }
+}
+
+/** A candidate's grids, judged against what `loadGrids` loaded. */
+interface CandidateGrids {
+  /** Every grid file it reads. */
+  readonly needed: string[];
+  /** The grids in `needed` that `loadGrids` hasn't loaded. */
+  readonly missing: string[];
+  /**
+   * Whether PROJ can instantiate it: PROJ's answer, or yes when PROJ said no
+   * only for want of grids loaded since it looked (its answer is cached).
+   * `resolveOperation` then creates its PROJ string, which throws if PROJ
+   * still can't.
+   */
+  readonly instantiable: boolean;
+}
+
+function candidateGrids(
+  proj: ProjApi,
+  candidate: PJ,
+  loaded: ReadonlySet<string>,
+): CandidateGrids {
+  const needed: string[] = [];
+  const missing: string[] = [];
+  // PROJ called a grid unavailable that has been loaded since.
+  let loadedSince = false;
+  for (
+    let g = 0;
+    g < proj.proj_coordoperation_get_grid_used_count(candidate);
+    g++
+  ) {
+    const grid = proj.proj_coordoperation_get_grid_used(candidate, g);
+    needed.push(grid.short_name);
+    if (!loaded.has(grid.short_name)) {
+      missing.push(grid.short_name);
+    } else if (!grid.available) {
+      loadedSince = true;
+    }
+  }
+  return {
+    needed,
+    missing,
+    instantiable:
+      proj.proj_coordoperation_is_instantiable(candidate) ||
+      (loadedSince && missing.length === 0),
+  };
+}
+
+/**
  * PROJ's candidate operations from one CRS definition to another: the list
  * `resolveOperation` walks and `listOperations` reports, from the same
  * factory context. For a pair PROJ cannot relate (a Moon CRS and the
@@ -355,8 +422,8 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  *  - Otherwise PROJ's candidate list for the pair (within
  *    `options.areaOfInterest`, when given) is walked in PROJ's order
  *    (by accuracy and area of use) and the first instantiable operation whose
- *    grids all report available is taken, in its normalized-for-visualization
- *    form. A ballpark operation (PROJ names it "Ballpark ...") is taken only
+ *    grids `loadGrids` has all loaded is taken, in its
+ *    normalized-for-visualization form. A ballpark operation (PROJ names it "Ballpark ...") is taken only
  *    with `allowBallpark`, and then `accuracy` is undefined.
  *  - If none qualifies it throws, naming the grids the better candidates need.
  */
@@ -388,67 +455,67 @@ export function resolveOperation(
   }
 
   const where = `from ${crsDefinition(source)} to ${target}`;
-  const { candidates, listError } = candidateList(
-    proj,
-    crsDefinition(source),
-    target,
-    areaOfInterest,
-  );
-  if (!candidates || candidates.length() === 0) {
-    throw new Error(
-      `PROJ offers no usable operation ${where}`,
-      listError === undefined ? undefined : { cause: listError },
-    );
-  }
-
-  const missing = new Set<string>();
-  let skippedBallpark = false;
-  // Candidates PROJ cannot express as a PROJ string, named in the final error.
-  const noString: string[] = [];
-  const count = candidates.length();
-  for (let i = 0; i < count; i++) {
-    const candidate = candidates.get(i);
-    const grids: string[] = [];
-    let available = true;
-    for (
-      let g = 0;
-      g < proj.proj_coordoperation_get_grid_used_count(candidate);
-      g++
-    ) {
-      const grid = proj.proj_coordoperation_get_grid_used(candidate, g);
-      grids.push(grid.short_name);
-      if (!grid.available) {
-        available = false;
-        missing.add(grid.short_name);
-      }
-    }
-    if (!available || !proj.proj_coordoperation_is_instantiable(candidate)) {
-      continue;
-    }
-    const ballpark = isBallpark(proj, candidate);
-    if (ballpark && !allowBallpark) {
-      skippedBallpark = true;
-      continue;
-    }
-    const string = proj.proj_as_proj_string(
-      proj.proj_normalize_for_visualization(candidate),
-      proj.PJ_PROJ_5,
-    );
-    if (string === null) {
-      noString.push(proj.proj_get_name(candidate) ?? `candidate ${i}`);
-      continue;
-    }
-    const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
-    return record(
+  const loaded = loadedGrids(proj);
+  // The walk, quietly; the chosen candidate is recorded after it, so an
+  // error creating it is logged.
+  const walk = quietly(proj, () => {
+    const { candidates, listError } = candidateList(
       proj,
-      string,
-      ballpark || accuracy < 0 ? undefined : accuracy,
-      grids,
-      ballpark,
-      epoch,
+      crsDefinition(source),
+      target,
+      areaOfInterest,
     );
-  }
+    if (!candidates || candidates.length() === 0) {
+      throw new Error(
+        `PROJ offers no usable operation ${where}`,
+        listError === undefined ? undefined : { cause: listError },
+      );
+    }
+    const missing = new Set<string>();
+    let skippedBallpark = false;
+    // Candidates PROJ cannot express as a PROJ string, named in the final error.
+    const noString: string[] = [];
+    const count = candidates.length();
+    for (let i = 0; i < count; i++) {
+      const candidate = candidates.get(i);
+      const grids = candidateGrids(proj, candidate, loaded);
+      for (const grid of grids.missing) {
+        missing.add(grid);
+      }
+      if (grids.missing.length > 0 || !grids.instantiable) {
+        continue;
+      }
+      const ballpark = isBallpark(proj, candidate);
+      if (ballpark && !allowBallpark) {
+        skippedBallpark = true;
+        continue;
+      }
+      const string = proj.proj_as_proj_string(
+        proj.proj_normalize_for_visualization(candidate),
+        proj.PJ_PROJ_5,
+      );
+      if (string === null) {
+        noString.push(proj.proj_get_name(candidate) ?? `candidate ${i}`);
+        continue;
+      }
+      const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
+      return {
+        chosen: {
+          string,
+          accuracy: ballpark || accuracy < 0 ? undefined : accuracy,
+          grids: grids.needed,
+          ballpark,
+        },
+      } as const;
+    }
+    return { missing, skippedBallpark, noString } as const;
+  });
 
+  if (walk.chosen) {
+    const { string, accuracy, grids, ballpark } = walk.chosen;
+    return record(proj, string, accuracy, grids, ballpark, epoch);
+  }
+  const { missing, skippedBallpark, noString } = walk;
   if (missing.size > 0) {
     const hint = skippedBallpark
       ? "; pass allowBallpark: true to accept a ballpark transformation"
@@ -488,9 +555,12 @@ export interface OperationCandidate {
   };
   /** Every grid file it reads. */
   readonly gridsNeeded: readonly string[];
-  /** The grids in `gridsNeeded` that are not installed. */
+  /** The grids in `gridsNeeded` that `loadGrids` hasn't loaded. */
   readonly missingGrids: readonly string[];
-  /** Whether PROJ can instantiate it (PROJ's own check, grids aside). */
+  /**
+   * Whether PROJ can instantiate it: PROJ's own check, made when it first
+   * looked, or yes when that said no only for want of grids loaded since.
+   */
   readonly instantiable: boolean;
   /** A ballpark transformation: datum differences ignored, accuracy unknown. */
   readonly ballpark: boolean;
@@ -516,62 +586,53 @@ export function listOperations(
   target: CrsRef,
   options: ListOperationsOptions = {},
 ): readonly OperationCandidate[] {
-  const { candidates, listError } = candidateList(
-    proj,
-    crsDefinition(source),
-    crsDefinition(target),
-    options.areaOfInterest,
-  );
-  if (listError !== undefined) {
-    // The binding's answer for a pair PROJ cannot relate; anything else is a
-    // failure, not an empty list.
-    if (listError instanceof Error && listError.message === EMPTY_LIST) {
+  const loaded = loadedGrids(proj);
+  return quietly(proj, () => {
+    const { candidates, listError } = candidateList(
+      proj,
+      crsDefinition(source),
+      crsDefinition(target),
+      options.areaOfInterest,
+    );
+    if (listError !== undefined) {
+      // The binding's answer for a pair PROJ cannot relate; anything else is
+      // a failure, not an empty list.
+      if (listError instanceof Error && listError.message === EMPTY_LIST) {
+        return [];
+      }
+      throw new Error(
+        `PROJ could not list the operations from ${crsDefinition(source)} to ${crsDefinition(target)}`,
+        { cause: listError },
+      );
+    }
+    if (!candidates) {
       return [];
     }
-    throw new Error(
-      `PROJ could not list the operations from ${crsDefinition(source)} to ${crsDefinition(target)}`,
-      { cause: listError },
-    );
-  }
-  if (!candidates) {
-    return [];
-  }
-  const out: OperationCandidate[] = [];
-  const count = candidates.length();
-  for (let i = 0; i < count; i++) {
-    const candidate = candidates.get(i);
-    const gridsNeeded: string[] = [];
-    const missingGrids: string[] = [];
-    for (
-      let g = 0;
-      g < proj.proj_coordoperation_get_grid_used_count(candidate);
-      g++
-    ) {
-      const grid = proj.proj_coordoperation_get_grid_used(candidate, g);
-      gridsNeeded.push(grid.short_name);
-      if (!grid.available) {
-        missingGrids.push(grid.short_name);
-      }
+    const out: OperationCandidate[] = [];
+    const count = candidates.length();
+    for (let i = 0; i < count; i++) {
+      const candidate = candidates.get(i);
+      const grids = candidateGrids(proj, candidate, loaded);
+      const ballpark = isBallpark(proj, candidate);
+      const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
+      const area = areaOfUse(proj, candidate);
+      out.push({
+        name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
+        pipeline:
+          proj.proj_as_proj_string(
+            proj.proj_normalize_for_visualization(candidate),
+            proj.PJ_PROJ_5,
+          ) ?? "",
+        ...(!ballpark && accuracy >= 0 && { accuracy }),
+        ...(area && { areaOfUse: area }),
+        gridsNeeded: grids.needed,
+        missingGrids: grids.missing,
+        instantiable: grids.instantiable,
+        ballpark,
+      });
     }
-    const ballpark = isBallpark(proj, candidate);
-    const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
-    const area = areaOfUse(proj, candidate);
-    out.push({
-      name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
-      pipeline:
-        proj.proj_as_proj_string(
-          proj.proj_normalize_for_visualization(candidate),
-          proj.PJ_PROJ_5,
-        ) ?? "",
-      ...(!ballpark && accuracy >= 0 && { accuracy }),
-      ...(area && { areaOfUse: area }),
-      gridsNeeded,
-      missingGrids,
-      instantiable: proj.proj_coordoperation_is_instantiable(candidate),
-      ballpark,
-    });
-  }
-  return out;
+    return out;
+  });
 }
 
 /** proj.js's message when proj_create_operations finds no operation (a null list). */
