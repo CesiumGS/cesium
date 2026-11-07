@@ -29,7 +29,13 @@ import {
   ANCHOR_STATION,
   CORRIDOR_ALIGNMENT,
   corridorFrame,
+  sectionSurface,
 } from "../../examples/design-globe/corridor.ts";
+import {
+  corridorTree,
+  largestChordError,
+  type CorridorNode,
+} from "../../scripts/designTiles/corridorMesh.mjs";
 import { PORTFOLIO, SITE_BUILDING } from "../../examples/design-globe/sites.ts";
 import { DESIGN_TILES_INSTANT } from "../../scripts/designTiles.mjs";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
@@ -39,10 +45,16 @@ import {
   designPoint,
 } from "../../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../src/engineering/factors.ts";
+import { checkDeclaredGrids } from "../../src/engineering/georeference.ts";
 import {
   checkRigidTransform,
+  declaredDefinition,
   readGeoreference,
 } from "../../src/engineering/georeferenceTileset.ts";
+import {
+  formatPipeline,
+  parsePipeline,
+} from "../../src/engineering/pipeline.ts";
 import {
   placeReprojected,
   placeRigid,
@@ -148,13 +160,25 @@ describe("the design globe's generated tiles", () => {
     answers = JSON.parse(read("answers.json").toString("utf8"));
     P = await loadProj({ base: `${join(store, "proj")}/`, grids: [] });
     source = await gridSource({ base: `${join(store, "grids")}/` });
-    frame = await EngineeringFrame.load(corridorFrame(), {
+    // Every frame here is the one the tileset's own declaration describes,
+    // loaded as georeferenceTileset loads it: a reader of the declaration
+    // gets these tiles' frame.
+    frame = await declaredFrame(rigidJson, "corridor-rigid");
+    rigid = placeRigid(frame, anchor);
+    reprojected = placeReprojected(
+      await declaredFrame(reprojectedJson, "corridor-reprojected"),
+    );
+  });
+
+  /** The frame a tileset's declaration describes, its grids checked first. */
+  async function declaredFrame(json: Json, name: string) {
+    const declared = readGeoreference(json)!;
+    checkDeclaredGrids(declared, source.catalog);
+    return EngineeringFrame.load(declaredDefinition(declared, name), {
       proj: P,
       grids: source,
     });
-    rigid = placeRigid(frame, anchor);
-    reprojected = placeReprojected(frame);
-  });
+  }
 
   it("writes a manifest of version 1 with the inputs' hashes", () => {
     const manifest = JSON.parse(read("manifest.json").toString("utf8"));
@@ -195,20 +219,40 @@ describe("the design globe's generated tiles", () => {
     expect(b).toHaveLength(a.length);
     // The tileset's own error isn't scaled: metres in both.
     expect(rigidJson.geometricError).toBe(reprojectedJson.geometricError);
+    // The generator's tree again, for each parent's stations.
+    const nodes = new Map<string, CorridorNode>();
+    const index = (node: CorridorNode) => {
+      nodes.set(`tiles/${node.id}.glb`, node);
+      node.children.forEach(index);
+    };
+    index(
+      corridorTree(alignment, { leafLength: 2_000, chordTolerance: 0.003 }),
+    );
+    let checkedParents = 0;
     const leaf = a.find((x) => !x.json.children)!;
     expect(leaf.json.geometricError).toBe(0.003);
     for (let i = 0; i < a.length; i++) {
       const [x, y] = [a[i]!.tile.geometricError, b[i]!.tile.geometricError];
       expect(Math.abs(x - y) / y).toBeLessThan(1e-12);
       if (a[i]!.json.children) {
-        // Parents state at least twice their children's error.
+        // Parents state at least twice their children's error, and at
+        // least their own stations' largest chord error.
         for (const child of a[i]!.json.children) {
           expect(a[i]!.json.geometricError).toBeGreaterThanOrEqual(
             2 * child.geometricError,
           );
         }
+        const uri: string | undefined = a[i]!.json.content?.uri;
+        if (uri !== undefined) {
+          const node = nodes.get(uri)!;
+          expect(a[i]!.json.geometricError, uri).toBeGreaterThanOrEqual(
+            largestChordError(alignment, node.stations),
+          );
+          checkedParents++;
+        }
       }
     }
+    expect(checkedParents).toBe(85);
   });
 
   it("round-trips every 50th vertex of every leaf within 1e-4 m, in either placement", () => {
@@ -257,8 +301,14 @@ describe("the design globe's generated tiles", () => {
     expect(worstReprojected).toBeLessThan(1e-4);
   });
 
-  it("makes each rigid root its placement's matrix, and declares the placements", async () => {
+  it("places all nine tilesets by their own declarations", async () => {
     const declared = readGeoreference(rigidJson)!;
+    // The corridor's declared operation is its GEOID18 pin, exactly.
+    expect(declared.pipeline).toBe(
+      formatPipeline(parsePipeline(corridorFrame().pipeline as string)),
+    );
+    expect(frame.operation.grids).toEqual(["us_noaa_g2018u0.tif"]);
+    expect(readGeoreference(reprojectedJson)!.pipeline).toBe(declared.pipeline);
     expect(declared.placement).toEqual({
       mode: "rigid",
       anchor: Array.from(anchor),
@@ -276,10 +326,16 @@ describe("the design globe's generated tiles", () => {
       const json = tileset(dir);
       const georeference = readGeoreference(json)!;
       expect(georeference.placement.mode, site.id).toBe("rigid");
-      const siteFrame = await EngineeringFrame.load(site.frame, {
-        proj: P,
-        grids: source,
-      });
+      expect(georeference.geoidFallback, site.id).toBe(
+        site.frame.geoidFallback,
+      );
+      expect(georeference.pipeline !== undefined, site.id).toBe(
+        site.frame.pipeline !== undefined,
+      );
+      const siteFrame = await declaredFrame(json, dir);
+      expect([...siteFrame.operation.grids].sort(), site.id).toEqual(
+        [...site.grids].sort(),
+      );
       const placement = placeRigid(
         siteFrame,
         (georeference.placement as { readonly anchor: readonly number[] })
@@ -359,6 +415,7 @@ describe("the design globe's generated tiles", () => {
       const design = alignment.pointAt(point.station, point.offset);
       expect(point.design[0]).toBe(design[0]);
       expect(point.design[1]).toBe(design[1]);
+      expect(point.design[2]).toBe(design[2]! + sectionSurface(point.offset));
       expect(Array.from(frame.toBodyFixed(point.design))).toEqual(
         point.bodyFixed,
       );

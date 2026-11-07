@@ -6,11 +6,15 @@ import type { Mat4 } from "../math/mat4.ts";
 import { EARTH, MOON } from "../scene/Body.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import { strictWkt2 } from "./crs.ts";
-import { EngineeringFrame } from "./EngineeringFrame.ts";
+import {
+  EngineeringFrame,
+  type EngineeringFrameDefinition,
+} from "./EngineeringFrame.ts";
 import {
   ENGINEERING_FRAME_EXTENSION,
   GEOREFERENCE_PATH,
   GeoreferenceError,
+  checkDeclaredGrids,
   parseGeoreference,
   type TilesetGeoreference,
 } from "./georeference.ts";
@@ -28,13 +32,44 @@ import type { ProjApi } from "./projApi.ts";
  * Throws a `GeoreferenceError` naming the JSON path for an unknown mode,
  * format or body, a missing `crs` or `placement`, a non-finite number, a
  * `wkt2` that isn't WKT2 in form (`wkt2Problem`: a PROJ string, AUTH:CODE or
- * PROJJSON) or is over 65,536 characters, or more than 64 alignments (or
- * 4,096 elements in one). Fields it doesn't know are ignored.
+ * PROJJSON) or is over 65,536 characters, more than 64 alignments (or
+ * 4,096 elements in one), or a `pipeline` that isn't a plain PROJ pipeline
+ * (over 4,096 characters or 32 steps, `+init`, a grid that isn't a plain
+ * file name), an unknown `geoidFallback` or a bad `fallbackSigma`. Fields it doesn't know are ignored.
  */
 export function readGeoreference(
   tilesetJson: unknown,
 ): TilesetGeoreference | undefined {
   return parseGeoreference(tilesetJson, { EARTH, MOON });
+}
+
+/**
+ * The engineering frame a declaration describes: its name (else
+ * `fallbackName`, such as the tileset's URL), body, CRS, site, alignments,
+ * area of interest, and its pinned pipeline or geoid fallback. Check its
+ * grids first (`checkDeclaredGrids`).
+ */
+export function declaredDefinition(
+  declared: TilesetGeoreference,
+  fallbackName: string,
+): EngineeringFrameDefinition {
+  return {
+    name: declared.name ?? fallbackName,
+    body: declared.body,
+    crs: declared.crs,
+    ...(declared.site && { site: declared.site }),
+    ...(declared.alignments && { alignments: declared.alignments }),
+    ...(declared.areaOfInterest && {
+      areaOfInterest: declared.areaOfInterest,
+    }),
+    ...(declared.pipeline !== undefined && { pipeline: declared.pipeline }),
+    ...(declared.geoidFallback !== undefined && {
+      geoidFallback: declared.geoidFallback,
+    }),
+    ...(declared.fallbackSigma !== undefined && {
+      fallbackSigma: declared.fallbackSigma,
+    }),
+  };
 }
 
 /** Metres: the drawn anchor's tolerance in `checkRigidTransform`. */
@@ -105,12 +140,15 @@ const isIdentity = (m: ArrayLike<number>) => {
 /**
  * Places a tileset by its `EXT_engineering_frame` declaration: loads the
  * frame (`EngineeringFrame.load`, named by the declaration, else the
- * tileset's URL), builds the declared placement, checks a rigid one against
+ * tileset's URL, with its declared pipeline or geoid fallback), builds the declared placement, checks a rigid one against
  * `tileset.root.transform` (`checkRigidTransform`), and sets
  * `tileset.placement`. PROJ is used here, never by `Tileset3D.load`.
  *
  * Every refusal is an error and a `warnings` entry:
  *  - a tileset that declares nothing (no placement is guessed);
+ *  - a declared pipeline naming a grid that isn't a current entry of
+ *    `options.grids`' catalog, or any pipeline without `options.grids`
+ *    (`checkDeclaredGrids`);
  *  - a declared WKT2 that PROJ's strict WKT parser refuses (`strictWkt2`);
  *  - one whose `modelMatrix` isn't the identity, before the frame loads or
  *    after (`root.transform` includes it, and a change would leave the
@@ -142,6 +180,12 @@ export async function georeferenceTileset(
   if (!isIdentity(tileset.modelMatrix)) {
     return refuse(moved());
   }
+  // A declared pipeline's grids against the catalog, before PROJ sees it.
+  try {
+    checkDeclaredGrids(declared, options.grids?.catalog);
+  } catch (error) {
+    return refuse(error as Error);
+  }
   if (declared.crs.format === "wkt2") {
     // Untrusted WKT2: PROJ's strict parser first (the reader checked its
     // form, wkt2Problem).
@@ -159,16 +203,7 @@ export async function georeferenceTileset(
   let frame: EngineeringFrame;
   try {
     frame = await EngineeringFrame.load(
-      {
-        name: declared.name ?? tileset.url,
-        body: declared.body,
-        crs: declared.crs,
-        ...(declared.site ? { site: declared.site } : {}),
-        ...(declared.alignments ? { alignments: declared.alignments } : {}),
-        ...(declared.areaOfInterest
-          ? { areaOfInterest: declared.areaOfInterest }
-          : {}),
-      },
+      declaredDefinition(declared, tileset.url),
       options.grids
         ? { proj: options.proj, grids: options.grids }
         : { proj: options.proj },

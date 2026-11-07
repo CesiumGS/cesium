@@ -21,18 +21,21 @@
 // frame's image of exactly that design point (the centre plus the float32),
 // so both tilesets draw one set of design points.
 //
-// The output is built in `design-globe.partial/` (which the dev server's
+// The output is built in `design-globe.<run>.partial/` (which the dev server's
 // /frames-data mount never serves) and renamed into place when complete.
 import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 import {
   ANCHOR_STATION,
@@ -48,6 +51,7 @@ import {
   designPoint,
 } from "../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../src/engineering/factors.ts";
+import { formatPipeline, parsePipeline } from "../src/engineering/pipeline.ts";
 import { placeRigid } from "../src/engineering/placement.ts";
 import { gridSource, loadProj } from "../src/engineering/proj.ts";
 import { createFrames } from "../src/frames/frames.ts";
@@ -98,22 +102,41 @@ const INPUTS = [
   "src/engineering/EngineeringFrame.ts",
   "src/engineering/placement.ts",
   "src/engineering/factors.ts",
+  "src/engineering/pipeline.ts",
   "src/engineering/projPins.ts",
   "src/measure/measure.ts",
 ];
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
-/** What the manifest must say for the output to be current. */
-function wantedManifest() {
+/**
+ * What the manifest must say for the output to be current: the version, the
+ * instant, the inputs' hashes, and the store's grids (name and SHA-256, from
+ * its manifest), since the unpinned frames resolve against whatever grids
+ * the store holds.
+ */
+function wantedManifest(store) {
+  const files = JSON.parse(
+    readFileSync(join(store, "manifest.json"), "utf8"),
+  ).files;
   return {
     version: VERSION,
     instant: DESIGN_TILES_INSTANT,
     sha256: Object.fromEntries(
       INPUTS.map((file) => [file, sha256(readFileSync(join(root, file)))]),
     ),
+    grids: Object.fromEntries(
+      files
+        .filter((f) => f.role === "grid" || f.role === "gridCatalog")
+        .map((f) => [f.file, f.sha256])
+        .sort(([a], [b]) => (a < b ? -1 : 1)),
+    ),
   };
 }
+
+/** The manifest's inputs, without what generation records (`frames`). */
+const inputsOf = ({ version, instant, sha256, grids }) =>
+  JSON.stringify({ version, instant, sha256, grids });
 
 /**
  * PROJ (with no grids loaded yet), a GridSource over the store's grids, and
@@ -217,8 +240,9 @@ function fitBox(axes, points, boxes) {
   const halfAxes = [];
   for (let k = 0; k < 3; k++) {
     const middle = (lo[k] + hi[k]) / 2;
-    // A flat box (a level slab) keeps a little thickness.
-    const half = Math.max((hi[k] - lo[k]) / 2, 1e-3);
+    // A flat box (a level slab) keeps a little thickness, and every box a
+    // part per million more, so float noise never leaves a child outside.
+    const half = Math.max((hi[k] - lo[k]) / 2, 1e-3) * (1 + 1e-6);
     for (let j = 0; j < 3; j++) {
       centre[j] += axes[k][j] * middle;
     }
@@ -312,9 +336,10 @@ function tileContents(mesh, frame, reprojected) {
     fhi[i % 3] = Math.max(fhi[i % 3], fixed[i]);
   }
   const fixedCentre = [0, 1, 2].map((k) => Math.round((flo[k] + fhi[k]) / 2));
-  // The frame's Jacobian at the tile's design centre, for the normals: the
-  // projection is conformal, so it turns a design direction as it turns the
-  // surface's normal.
+  // The frame's Jacobian at the tile's design centre, for the normals. The
+  // 3D map isn't exactly conformal (horizontal scale about mpu/k, vertical
+  // metersPerHeightUnit), so the inverse transpose would be exact; the
+  // difference is about 1e-4 rad, below shading's notice.
   const at = frame.toBodyFixed(centre);
   const columns = DESIGN_AXES.map((axis) =>
     sub(
@@ -409,6 +434,22 @@ function declaration(definition, placement) {
     }),
     ...(definition.areaOfInterest && {
       areaOfInterest: { ...definition.areaOfInterest },
+    }),
+    // The operation the tiles were built with, so a reader resolves the same
+    // frame: the pinned pipeline (as the one string factory writes it), or
+    // the geoid fallback.
+    ...(definition.pipeline !== undefined && {
+      pipeline: formatPipeline(
+        typeof definition.pipeline === "string"
+          ? parsePipeline(definition.pipeline)
+          : definition.pipeline,
+      ),
+    }),
+    ...(definition.geoidFallback !== undefined && {
+      geoidFallback: definition.geoidFallback,
+    }),
+    ...(definition.fallbackSigma !== undefined && {
+      fallbackSigma: definition.fallbackSigma,
     }),
     placement,
   };
@@ -620,6 +661,8 @@ function corridorAnswers(frame, alignment, placement, frames) {
     }
   }
 
+  // The built-in leap seconds: 37 s on 2026-01-01, as in every later table
+  // (leap seconds are never withdrawn), whichever table `frames` holds.
   const instant = Instant.fromUtc(
     Date.parse(DESIGN_TILES_INSTANT),
     LeapSeconds.builtIn(),
@@ -717,7 +760,7 @@ export async function ensureDesignTiles(
   logger = console.log,
 ) {
   const out = join(store, "design-globe");
-  const wanted = wantedManifest();
+  const wanted = wantedManifest(store);
   const outputs = [
     "answers.json",
     "corridor-rigid/tileset.json",
@@ -730,7 +773,7 @@ export async function ensureDesignTiles(
       readFileSync(join(out, "manifest.json"), "utf8"),
     );
     if (
-      JSON.stringify(current) === JSON.stringify(wanted) &&
+      inputsOf(current) === inputsOf(wanted) &&
       outputs.every((file) => existsSync(join(out, file)))
     ) {
       logger(`design globe: current (${relative(store, out)}/manifest.json)`);
@@ -741,14 +784,37 @@ export async function ensureDesignTiles(
   }
   const started = performance.now();
   logger(`design globe: generating into ${out}`);
-  const partial = `${out}.partial`;
-  rmSync(partial, { recursive: true, force: true });
+  // A build directory of this run's own (two setups at once don't share
+  // one), ending ".partial" so the dev server never serves it; another
+  // run's, left for an hour, is swept.
+  const tag = `${process.pid}-${Date.now()}`;
+  const partial = `${out}.${tag}.partial`;
+  for (const name of readdirSync(store)) {
+    const path = join(store, name);
+    if (
+      name.startsWith("design-globe.") &&
+      name.endsWith(".partial") &&
+      Date.now() - statSync(path).mtimeMs > 3_600_000
+    ) {
+      rmSync(path, { recursive: true, force: true });
+    }
+  }
   mkdirSync(partial, { recursive: true });
+  // Each frame's resolved operation, for the manifest.
+  const resolved = {};
+  const record = (id, f) => {
+    resolved[id] = {
+      grids: [...f.operation.grids],
+      operation: f.operation.matchedCandidate ?? null,
+      ...(f.fallback && { fallback: f.fallback.model }),
+    };
+  };
 
   const frame = await EngineeringFrame.load(corridorFrame(), { proj, grids });
   const alignment = frame.alignments.find(
     (a) => a.name === CORRIDOR_ALIGNMENT.name,
   );
+  record("corridor", frame);
   const placement = placeRigid(frame, alignment.pointAt(ANCHOR_STATION));
   const tree = corridorTree(alignment, {
     leafLength: LEAF_LENGTH,
@@ -756,7 +822,9 @@ export async function ensureDesignTiles(
   });
   // A leaf states the sampling's tolerance; a parent twice its children's
   // largest, or its own stations' largest chord error where that is more
-  // (decimating 2× makes a curve's chords err about 4× as much).
+  // (decimating 2× makes a curve's chords err about 4× as much). The ticks a
+  // parent drops (it keeps every 2^level-th) aren't counted: they are small
+  // marks 0.03 ft above the surface.
   const withErrors = (node) => {
     const children = node.children.map(withErrors);
     return {
@@ -787,7 +855,16 @@ export async function ensureDesignTiles(
   });
 
   for (const site of [SITE_BUILDING, ...PORTFOLIO]) {
-    const siteFrame = await EngineeringFrame.load(site.frame, { proj, grids });
+    let siteFrame;
+    try {
+      siteFrame = await EngineeringFrame.load(site.frame, { proj, grids });
+    } catch (error) {
+      throw new Error(
+        `design globe: ${site.name}'s frame doesn't load from the store's grids (it reads ${site.grids.join(", ")}; setup's default grid sets, portfolio and tests, have them): ${error.message}`,
+        { cause: error },
+      );
+    }
+    record(site.id, siteFrame);
     const mesh = buildingMesh(site);
     // Exact boxes: a leaf errs only by float32 rounding, half an ulp of its
     // largest coordinate from its centre.
@@ -819,9 +896,14 @@ export async function ensureDesignTiles(
     join(partial, "answers.json"),
     corridorAnswers(frame, alignment, placement, frames),
   );
-  writeJson(join(partial, "manifest.json"), wanted);
-  rmSync(out, { recursive: true, force: true });
+  writeJson(join(partial, "manifest.json"), { ...wanted, frames: resolved });
+  // Move the old output aside, the new one in, then remove the old.
+  const old = `${out}.${tag}-old.partial`;
+  if (existsSync(out)) {
+    renameSync(out, old);
+  }
   renameSync(partial, out);
+  rmSync(old, { recursive: true, force: true });
   const seconds = (performance.now() - started) / 1000;
   logger(
     `design globe: ${corridor.vertices.toLocaleString("en-US")} corridor vertices per placement, written in ${seconds.toFixed(1)} s`,

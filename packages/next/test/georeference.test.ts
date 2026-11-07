@@ -3,10 +3,14 @@
 // GeoreferenceError naming its JSON path; the anchor case needs PROJ and is
 // test/data/georeferenceTileset.test.ts's.
 import { describe, expect, it } from "vitest";
+import { CORRIDOR_PIPELINE } from "../examples/design-globe/corridor.ts";
 import {
   ENGINEERING_FRAME_EXTENSION,
   GeoreferenceError,
+  checkDeclaredGrids,
 } from "../src/engineering/georeference.ts";
+import { GridCatalog } from "../src/engineering/gridCatalog.ts";
+import { formatPipeline, parsePipeline } from "../src/engineering/pipeline.ts";
 import { readGeoreference } from "../src/engineering/georeferenceTileset.ts";
 import { EARTH, MOON } from "../src/scene/Body.ts";
 
@@ -454,6 +458,124 @@ describe("readGeoreference", () => {
     it("a declaration that isn't an object", () => {
       expect(failure("rigid").path).toBe(ROOT);
       expect(failure(null).path).toBe(ROOT);
+    });
+  });
+});
+
+describe("the declared operation: pipeline, geoidFallback, fallbackSigma", () => {
+  const GEOID18 = "us_noaa_g2018u0.tif";
+  /** A catalog of GEOID18, and a grid PROJ-data has removed. */
+  const catalog = GridCatalog.parse(
+    JSON.stringify({
+      type: "FeatureCollection",
+      features: [GEOID18, "xx_removed.tif"].map((name) => ({
+        type: "Feature",
+        properties: {
+          name,
+          url: `https://cdn.proj.org/${name}`,
+          sha256sum: "a".repeat(64),
+          file_size: 1,
+          source: "NOAA",
+          ...(name === "xx_removed.tif" && { version_removed: "1.20" }),
+        },
+      })),
+    }),
+  );
+  const withPipeline = (pipeline: unknown) => ({ ...rigid(), pipeline });
+  /** CORRIDOR_PIPELINE with its geoid grid renamed. */
+  const naming = (grid: string) => CORRIDOR_PIPELINE.replace(GEOID18, grid);
+
+  it("reads a pinned pipeline, written as formatPipeline writes it", () => {
+    const g = readGeoreference(tileset(withPipeline(CORRIDOR_PIPELINE)))!;
+    expect(g.pipeline).toBe(formatPipeline(parsePipeline(CORRIDOR_PIPELINE)));
+    expect(() => checkDeclaredGrids(g, catalog)).not.toThrow();
+  });
+
+  it("reads a geoid fallback and its sigma", () => {
+    const g = readGeoreference(
+      tileset({ ...rigid(), geoidFallback: "EGM96", fallbackSigma: 0.5 }),
+    )!;
+    expect(g.geoidFallback).toBe("EGM96");
+    expect(g.fallbackSigma).toBe(0.5);
+    expect(g.pipeline).toBeUndefined();
+    expect(() => checkDeclaredGrids(g, undefined)).not.toThrow();
+  });
+
+  describe("refuses, naming the field", () => {
+    it("a path in a grid name", () => {
+      for (const grid of [
+        "/etc/hosts",
+        "../proj.db",
+        "sub/us_noaa_g2018u0.tif",
+      ]) {
+        const error = failure(withPipeline(naming(grid)));
+        expect(error.path, grid).toBe(`${ROOT}.pipeline`);
+        expect(error.message).toMatch(/plain file name/);
+      }
+    });
+
+    it("a grid the catalog lacks, or has removed", () => {
+      for (const grid of ["us_noaa_g2012bu0.tif", "xx_removed.tif"]) {
+        const g = readGeoreference(tileset(withPipeline(naming(grid))))!;
+        let error: unknown;
+        try {
+          checkDeclaredGrids(g, catalog);
+        } catch (e) {
+          error = e;
+        }
+        expect(error, grid).toBeInstanceOf(GeoreferenceError);
+        expect((error as GeoreferenceError).path).toBe(`${ROOT}.pipeline`);
+      }
+    });
+
+    it("a pipeline whose grids no catalog can check", () => {
+      const g = readGeoreference(tileset(withPipeline(CORRIDOR_PIPELINE)))!;
+      expect(() => checkDeclaredGrids(g, undefined)).toThrow(GeoreferenceError);
+    });
+
+    it("an oversized pipeline, or one of too many steps", () => {
+      const long = `${CORRIDOR_PIPELINE} +step +proj=noop${" ".repeat(4_096)}`;
+      expect(failure(withPipeline(long)).path).toBe(`${ROOT}.pipeline`);
+      const steps = `+proj=pipeline${" +step +proj=noop".repeat(33)}`;
+      expect(steps.length).toBeLessThan(4_096);
+      expect(failure(withPipeline(steps)).message).toMatch(/33 steps/);
+    });
+
+    it("a pipeline that isn't one, or isn't a string", () => {
+      for (const bad of [
+        "+init=epsg:4326",
+        "proj=pipeline",
+        "+proj=pipeline +step +proj=noop +init=epsg:4326",
+        "+proj=pipeline +step +proj=noop +x=a'b",
+        42,
+        "",
+      ]) {
+        expect(failure(withPipeline(bad)).path, String(bad)).toBe(
+          `${ROOT}.pipeline`,
+        );
+      }
+    });
+
+    it("an unknown fallback, a bad sigma, or a fallback with a pipeline", () => {
+      expect(failure({ ...rigid(), geoidFallback: "EGM84" }).path).toBe(
+        `${ROOT}.geoidFallback`,
+      );
+      for (const sigma of [-1, Number.NaN, "1"]) {
+        expect(
+          failure({ ...rigid(), geoidFallback: "EGM96", fallbackSigma: sigma })
+            .path,
+        ).toBe(`${ROOT}.fallbackSigma`);
+      }
+      expect(failure({ ...rigid(), fallbackSigma: 1 }).path).toBe(
+        `${ROOT}.fallbackSigma`,
+      );
+      expect(
+        failure({
+          ...rigid(),
+          pipeline: CORRIDOR_PIPELINE,
+          geoidFallback: "EGM96",
+        }).path,
+      ).toBe(`${ROOT}.geoidFallback`);
     });
   });
 });

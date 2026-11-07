@@ -8,6 +8,8 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import { ENGINEERING_FRAME_EXTENSION } from "../src/engineering/georeference.ts";
 import { georeferenceTileset } from "../src/engineering/georeferenceTileset.ts";
+import { GridCatalog } from "../src/engineering/gridCatalog.ts";
+import type { GridSource } from "../src/engineering/proj.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
@@ -232,6 +234,92 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
         expect(tileset.placement).toBe(placement);
         expect(spy.mock.calls[0]![0]).toMatchObject({ name: URL_ });
         expect([...tileset.warnings]).toEqual([]);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    const PIPELINE =
+      "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1";
+    const catalog = GridCatalog.parse(
+      JSON.stringify({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {
+              name: "us_noaa_g2018u0.tif",
+              url: "https://cdn.proj.org/us_noaa_g2018u0.tif",
+              sha256sum: "a".repeat(64),
+              file_size: 1,
+            },
+          },
+        ],
+      }),
+    );
+    const grids = { base: "/proj-grids/", catalog } as GridSource;
+
+    it("passes a declared pipeline, or a geoid fallback, to the frame's load", async () => {
+      const spy = vi.spyOn(EngineeringFrame, "load").mockResolvedValue(frame);
+      try {
+        const pinned = await load(
+          tilesetJson({
+            [ENGINEERING_FRAME_EXTENSION]: {
+              ...reprojected,
+              pipeline: PIPELINE,
+            },
+          }),
+        );
+        await georeferenceTileset(pinned, { proj: {} as ProjApi, grids });
+        expect(spy.mock.calls[0]![0]).toMatchObject({ pipeline: PIPELINE });
+        const fallback = await load(
+          tilesetJson({
+            [ENGINEERING_FRAME_EXTENSION]: {
+              ...reprojected,
+              geoidFallback: "EGM96",
+              fallbackSigma: 0.5,
+            },
+          }),
+        );
+        await georeferenceTileset(fallback, { proj: {} as ProjApi });
+        expect(spy.mock.calls[1]![0]).toMatchObject({
+          geoidFallback: "EGM96",
+          fallbackSigma: 0.5,
+        });
+        expect(spy.mock.calls[1]![0]).not.toHaveProperty("pipeline");
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it("refuses, and warns, a declared pipeline whose grids no catalog checks, before loading", async () => {
+      const spy = vi.spyOn(EngineeringFrame, "load").mockResolvedValue(frame);
+      try {
+        for (const options of [
+          { proj: {} as ProjApi },
+          {
+            proj: {} as ProjApi,
+            grids: {
+              base: "/proj-grids/",
+              catalog: GridCatalog.parse('{"features": []}'),
+            } as GridSource,
+          },
+        ]) {
+          const tileset = await load(
+            tilesetJson({
+              [ENGINEERING_FRAME_EXTENSION]: {
+                ...reprojected,
+                pipeline: PIPELINE,
+              },
+            }),
+          );
+          await expect(georeferenceTileset(tileset, options)).rejects.toThrow(
+            /pipeline/,
+          );
+          expect([...tileset.warnings].join("\n")).toContain("pipeline");
+          expect(tileset.placement).toBeUndefined();
+        }
+        expect(spy).not.toHaveBeenCalled();
       } finally {
         spy.mockRestore();
       }

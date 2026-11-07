@@ -68,6 +68,9 @@ export async function moduleRunner(root) {
     },
     "serve",
   );
+  // Vite's Environment API (as in Vite 8.0.16, the version pinned here; the
+  // same steps as its own `runnerImport`, kept open). It is marked
+  // experimental, so a Vite upgrade may need this file updated.
   const environment = createRunnableDevEnvironment("designTiles", config, {
     runnerOptions: { hmr: { logger: false } },
     hot: false,

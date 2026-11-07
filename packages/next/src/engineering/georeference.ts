@@ -44,7 +44,9 @@
 //       "alignments": [ AlignmentDefinition, ... ],   (at most 64; a spiral's
 //                                                     null radius is a tangent end)
 //       "areaOfInterest": { "west": -122.5, "south": 37.5, "east": -121.5, "north": 38.2 },
-//       "placement": { "mode": "rigid", "anchor": [e, n, u] }   (or { "mode": "reprojected" })
+//       "placement": { "mode": "rigid", "anchor": [e, n, u] }   (or { "mode": "reprojected" }),
+//       "pipeline": "+proj=pipeline +step …",          (optional: the pinned operation)
+//       "geoidFallback": "EGM96", "fallbackSigma": 0.5 (optional; not with pipeline)
 //     }
 //   }
 //
@@ -70,7 +72,9 @@ import type {
   VerticalProfile,
 } from "./alignment.ts";
 import type { AreaOfInterest, CrsRef } from "./crs.ts";
-import type { SiteTransform } from "./EngineeringFrame.ts";
+import type { GeoidModel, SiteTransform } from "./EngineeringFrame.ts";
+import type { GridCatalog } from "./gridCatalog.ts";
+import { formatPipeline, parsePipeline, pipelineGrids } from "./pipeline.ts";
 import { wkt2Problem } from "./wkt2.ts";
 
 /** The proposed tileset-level extension (held item 4: its name is the owner's). */
@@ -87,6 +91,15 @@ const MAX_ELEMENTS = 4096;
 const MAX_NAME = 256;
 /** A registry name, as PROJ's authorities are: "EPSG", "IAU_2015", "ESRI". */
 const AUTHORITY = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;
+/** The longest declared pipeline read, in characters. */
+const MAX_PIPELINE = 4_096;
+/** The most steps a declared pipeline may have. */
+const MAX_STEPS = 32;
+/** A grid's file name as PROJ-data's catalog writes them: no path, no scheme. */
+const PLAIN_FILE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
+/** Parameters a declared pipeline may not use: `init` reads PROJ's init files. */
+const REFUSED_KEYS = ["init"];
+const GEOID_MODELS: readonly GeoidModel[] = ["EGM96", "EGM2008"];
 /** A decimal year, as the draft writes `epoch`. */
 const DECIMAL_YEAR = /^\d{1,4}(\.\d+)?$/;
 /** The declaration's JSON path from the tileset's root. */
@@ -115,6 +128,15 @@ export interface TilesetGeoreference {
   readonly alignments?: readonly AlignmentDefinition[];
   readonly areaOfInterest?: AreaOfInterest;
   readonly placement: DeclaredPlacement;
+  /**
+   * The pinned operation, as `formatPipeline` writes it; its grids are plain
+   * file names (`checkDeclaredGrids` holds them to a catalog).
+   */
+  readonly pipeline?: string;
+  /** The geoid model design heights fall back to (never with `pipeline`). */
+  readonly geoidFallback?: GeoidModel;
+  /** The fallback's stated accuracy, metres; only with `geoidFallback`. */
+  readonly fallbackSigma?: number;
 }
 
 /**
@@ -450,6 +472,100 @@ function readAlignment(value: unknown, path: string): AlignmentDefinition {
   return definition;
 }
 
+/**
+ * A declared pipeline, checked before PROJ sees it: a string of at most
+ * MAX_PIPELINE characters and MAX_STEPS steps that `parsePipeline` reads and
+ * `formatPipeline` writes back (its keys and values in their allowlists),
+ * with no `init`, and whose grids are plain file names (a path or a URL
+ * never reaches PROJ's file lookup). Returned as `formatPipeline` writes it.
+ */
+function readPipeline(value: unknown, path: string): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new GeoreferenceError(
+      path,
+      `must be a non-empty string (got ${shown(value)})`,
+    );
+  }
+  if (value.length > MAX_PIPELINE) {
+    throw new GeoreferenceError(
+      path,
+      `is ${value.length} characters; at most ${MAX_PIPELINE} are read`,
+    );
+  }
+  let text: string;
+  let grids: readonly { name: string }[];
+  try {
+    const pipeline = parsePipeline(value);
+    if (pipeline.steps.length > MAX_STEPS) {
+      throw new GeoreferenceError(
+        path,
+        `has ${pipeline.steps.length} steps; at most ${MAX_STEPS} are read`,
+      );
+    }
+    for (const params of [
+      pipeline.globals,
+      ...pipeline.steps.map((step) => step.params),
+    ]) {
+      const refused = REFUSED_KEYS.find((key) => params && key in params);
+      if (refused !== undefined) {
+        throw new GeoreferenceError(path, `may not use +${refused}`);
+      }
+    }
+    text = formatPipeline(pipeline);
+    grids = pipelineGrids(pipeline);
+  } catch (error) {
+    if (error instanceof GeoreferenceError) {
+      throw error;
+    }
+    throw new GeoreferenceError(
+      path,
+      `isn't a PROJ pipeline this reader accepts (${(error as Error).message.slice(0, 120)})`,
+    );
+  }
+  for (const grid of grids) {
+    if (!PLAIN_FILE.test(grid.name)) {
+      throw new GeoreferenceError(
+        path,
+        `names a grid ${shown(grid.name)} that isn't a plain file name`,
+      );
+    }
+  }
+  return text;
+}
+
+/**
+ * Throws a `GeoreferenceError` naming `pipeline` unless every grid a
+ * declared pipeline names is a current entry of `catalog` (not removed).
+ * Without a catalog, a declared pipeline's grids can't be checked, so it is
+ * refused. A declaration without a pipeline passes.
+ */
+export function checkDeclaredGrids(
+  georeference: TilesetGeoreference,
+  catalog: GridCatalog | undefined,
+): void {
+  if (georeference.pipeline === undefined) {
+    return;
+  }
+  const path = `${ROOT}.pipeline`;
+  if (catalog === undefined) {
+    throw new GeoreferenceError(
+      path,
+      "names grids that can't be checked without a grid catalog (place it with a GridSource)",
+    );
+  }
+  for (const { name: grid } of pipelineGrids(
+    parsePipeline(georeference.pipeline),
+  )) {
+    const entry = catalog.get(grid);
+    if (entry === undefined || entry.removed) {
+      throw new GeoreferenceError(
+        path,
+        `names the grid ${shown(grid)}, which isn't a current entry of the grid catalog`,
+      );
+    }
+  }
+}
+
 function readPlacement(value: unknown, path: string): DeclaredPlacement {
   const placement = object(value, path);
   const mode = oneOf(
@@ -516,6 +632,35 @@ export function parseGeoreference(
     crs: readCrs(declaration.crs, `${ROOT}.crs`),
     placement: readPlacement(declaration.placement, `${ROOT}.placement`),
   };
+  if (declaration.pipeline !== undefined) {
+    result.pipeline = readPipeline(declaration.pipeline, `${ROOT}.pipeline`);
+  }
+  if (declaration.geoidFallback !== undefined) {
+    const path = `${ROOT}.geoidFallback`;
+    result.geoidFallback = oneOf(
+      declaration.geoidFallback,
+      GEOID_MODELS,
+      path,
+      "geoid model",
+    );
+    if (result.pipeline !== undefined) {
+      throw new GeoreferenceError(
+        path,
+        "doesn't apply with a pinned pipeline (declare the fallback CRS's pipeline instead)",
+      );
+    }
+  }
+  if (declaration.fallbackSigma !== undefined) {
+    const path = `${ROOT}.fallbackSigma`;
+    const sigma = finite(declaration.fallbackSigma, path);
+    if (sigma < 0) {
+      throw new GeoreferenceError(path, `must not be negative (got ${sigma})`);
+    }
+    if (result.geoidFallback === undefined) {
+      throw new GeoreferenceError(path, "applies only with geoidFallback");
+    }
+    result.fallbackSigma = sigma;
+  }
   if (declaration.name !== undefined) {
     result.name = name(declaration.name, `${ROOT}.name`);
   }
