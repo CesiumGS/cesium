@@ -6951,6 +6951,12 @@ groundwork for animation in general.
 - **Path and timing are separate.** The path is the route (straight in the
   blend frame, an arc over the surface as 1.x's `flyTo` does with its maximum
   height, or a spline); the easing maps time onto it.
+- **Interruption is configurable per transition (owner, 2026-11-07),**
+  with a default for user input: `stop` (the camera stays where it is, on
+  the rig it was nearer to), `handover` (the transition's velocity carries
+  into the user's drag, spring-style), or `finish` (input waits until the
+  transition completes). Programmatic interruptions, such as a new
+  transition starting, use the same policies.
 - **Configurable at three levels:** per call, per pair of rig kinds (a
   Cinemachine-style table of defaults, such as "globe → ride-along: 3 s
   ease-in-out"), and app-wide.
