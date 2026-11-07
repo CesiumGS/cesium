@@ -369,6 +369,7 @@ Every scenario task from here on follows the patterns Task 4 settled:
   - numbered route steps below the tree give each step's physical meaning and its accuracy.
 - **The question and the headline.** The big value answers the question directly. `ScenarioAnswer.label` is required: a value, a unit and a few words. The callout and the panel agree.
 - **Published values sit next to the answer.** At the checked setup that's the reference and its citation, the difference and the tolerance. Off it, the reference applies at the checked setup, with the delta and no verdict. Collapsed proof rows show "ours vs published".
+- **Anything that follows the clock is placed on the main thread, every frame,** at the instant actually shown: markers, pointing lines, triads, footprints and their labels. Use the page's frame tree and tracks for this (owner, 2026-11-06, after Orion's dot and the Moon line jumped). The worker only supplies the answer text, statements and proof. These may trail the clock, shown as "Following the clock". Every scenario adds a test that its per-frame geometry agrees with the worker's evaluation at sample instants, within the stated accuracy.
 - **Screenshots are never committed.** design-screenshots/ is git-ignored, so put shots under the SDD workspace.
 - **Mockups come first** for any visual that isn't covered by an existing pattern: show the owner before building.
 - **One or two scenarios per task,** to keep reviews and context small.
