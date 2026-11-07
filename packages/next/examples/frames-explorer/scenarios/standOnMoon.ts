@@ -64,7 +64,7 @@ export const LUNAR_SAMPLES = Math.round((SYNODIC_MONTH * DAY) / STEP);
 export const LUNAR_CLOCK_METHOD: NonNullable<ScenarioAnswer["method"]> = [
   {
     title: "Two clocks",
-    text: "One at rest on the Moon's surface at the lunar site; the other at sea level on the Earth (height 0 on the ellipsoid), at the California datasheet point (NGS GU2195).",
+    text: "One at rest on the Moon's surface at the lunar site; the other on the Earth at height 0 on the ellipsoid (within a few tens of metres of the geoid, the reference's sea level), at the California datasheet point (NGS GU2195).",
   },
   {
     title: "Where each clock is, and how fast it moves",
@@ -84,7 +84,7 @@ export const LUNAR_CLOCK_METHOD: NonNullable<ScenarioAnswer["method"]> = [
   },
   {
     title: `What the ${EFFECT * 100}% covers`,
-    text: `The point-mass approximation. Ashby & Patla's full model (a clock on the selenoid against one on the geoid) gives ${publishedRate().printed}; with the bodies taken as point masses, this method is held to within ${EFFECT * 100}% of it, the catalog check's tolerance.`,
+    text: `The point-mass approximation. Ashby & Patla's full model (a clock on the selenoid against one on the geoid) gives ${publishedRate().printed}; with the bodies taken as point masses, this method is held to within ${EFFECT * 100}% of it at the checked setup (south pole, 1 Jan 2026), the catalog check's tolerance.`,
   },
 ];
 
