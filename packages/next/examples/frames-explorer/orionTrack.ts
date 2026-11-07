@@ -11,6 +11,7 @@ import type { Frames } from "../../src/frames/frames.ts";
 import type { Instant } from "../../src/time/Instant.ts";
 import { Trajectory } from "../../src/trajectory/Trajectory.ts";
 import { parseOem } from "../../src/trajectory/oem.ts";
+import { MissingDataError } from "./errors.ts";
 
 /** The Artemis II OEM's file name in the frames store. */
 export const ORION_OEM = "EM2_FODNAVBET_revF_PUBLIC.oem";
@@ -83,7 +84,7 @@ export async function loadOrionTrack(
       );
     }
     if (hex(await subtle.digest("SHA-256", bytes)) !== listed.sha256) {
-      throw new Error(
+      throw new MissingDataError(
         `${ORION_OEM} does not match its SHA-256 in manifest.json (the file is corrupt or changed); re-run \`npm run setup\``,
       );
     }

@@ -12,7 +12,7 @@
 //
 // The messages and the page's side (`createClient`) are in protocol.ts, which
 // the main thread imports without this module's catalog and PROJ.
-import { isMissing } from "./errors.ts";
+import { MissingDataError, isMissing } from "./errors.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
@@ -97,13 +97,7 @@ import {
   type TrajectoryInfo,
 } from "./protocol.ts";
 
-/**
- * Data the store doesn't have: the item's state is `missing`, and the message
- * carries the setup hint. Any other error from a loader is `error`.
- */
-export class MissingDataError extends Error {
-  override name = "MissingDataError";
-}
+export { MissingDataError };
 
 const errorName = (error: unknown): string =>
   error instanceof Error ? error.name : "Error";
@@ -1047,13 +1041,13 @@ async function fetchChecked(
     throw new Error(`could not fetch ${url}: ${messageOf(cause)}`, { cause });
   }
   if (!response.ok) {
-    throw new Error(
+    throw new MissingDataError(
       `${entry.file} is listed in manifest.json but ${url} returned ${response.status}; re-run \`npm run setup\``,
     );
   }
   const bytes = await readWithProgress(response, onProgress);
   if (hex(await crypto.subtle.digest("SHA-256", bytes)) !== entry.sha256) {
-    throw new Error(
+    throw new MissingDataError(
       `${entry.file} does not match its SHA-256 in manifest.json (the file is corrupt or changed); re-run \`npm run setup\``,
     );
   }

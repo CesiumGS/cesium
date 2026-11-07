@@ -7,6 +7,15 @@ export const messageOf = (e: unknown): string =>
   e instanceof Error ? e.message : String(e);
 
 /**
+ * Data the store doesn't have, or doesn't have intact: the item's state is
+ * `missing`, and the message carries the setup hint. Any other error from a
+ * loader is `error`.
+ */
+export class MissingDataError extends Error {
+  override name = "MissingDataError";
+}
+
+/**
  * Data the frames store doesn't have (R5): the worker's `MissingDataError`,
  * which the protocol rebuilds on the page with its name.
  */
