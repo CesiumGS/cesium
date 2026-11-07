@@ -465,6 +465,78 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     checkNotes: BODY_CHECK_NOTES,
   },
   {
+    id: "robot-arm",
+    title: "A robot arm at a spaceport",
+    question:
+      "How far is the arm's tool from the survey station, and how sure are we?",
+    knobs: [
+      {
+        id: "yaw",
+        label: "Base yaw",
+        kind: "range",
+        min: -180,
+        max: 180,
+        step: 1,
+        unit: "°",
+      },
+      {
+        id: "shoulder",
+        label: "Shoulder",
+        kind: "range",
+        min: 0,
+        max: 85,
+        step: 1,
+        unit: "°",
+      },
+      {
+        id: "elbow",
+        label: "Elbow",
+        kind: "range",
+        min: -160,
+        max: 0,
+        step: 1,
+        unit: "°",
+      },
+      {
+        id: "wrist",
+        label: "Wrist",
+        kind: "range",
+        min: -90,
+        max: 90,
+        step: 1,
+        unit: "°",
+      },
+    ],
+    // The arm at its checked pose (stress/groups/joint-chain.ts
+    // CHECKED_POSE), at the drone's epoch. Its checks: CCV6's NAD83(2011)
+    // to ITRF2020 against NGS's own (measured data), and the chain's hand
+    // formulas and round trip at that pose (Task 7b).
+    checked: {
+      epochUtc: MEASURED_AT,
+      knobs: { yaw: 20, shoulder: 35, elbow: -50, wrist: 0 },
+    },
+    needs: ["proj"],
+    globe: "ellipsoid",
+    checks: [
+      "reference-values.ngs-di3564.itrf2020",
+      "frame-tree.joint-chain.forward-kinematics",
+      "frame-tree.joint-chain.accuracy",
+      "frame-tree.joint-chain.round-trip",
+    ],
+    checkKinds: {
+      "reference-values.ngs-di3564.itrf2020": "measured",
+      "frame-tree.joint-chain.forward-kinematics": "hand",
+      "frame-tree.joint-chain.accuracy": "hand",
+      "frame-tree.joint-chain.round-trip": "roundTrip",
+    },
+    checkNotes: {
+      "reference-values.ngs-di3564.itrf2020":
+        "Checked at the station itself, about 17 km from the pad: the path the answer takes for its end of the line (NAD83(2011) through PROJ to ITRF2020), against NGS's own ITRF2020 position.",
+      "frame-tree.joint-chain.accuracy":
+        "Checked at the checked pose and fully extended: the rule the library composes, worked by hand.",
+    },
+  },
+  {
     id: "everything",
     title: "Everything at once",
     question:

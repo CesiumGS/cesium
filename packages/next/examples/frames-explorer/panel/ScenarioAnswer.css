@@ -108,3 +108,50 @@
 .fx-stale {
   opacity: 0.5;
 }
+
+/* The accuracy term by term (the robot arm's, Task 7b): a two-column list,
+   the figure right-aligned in tabular numbers; each term's note is its tip. */
+.fx-answer-breakdown {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--stratakit-space-50) var(--stratakit-space-300);
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-answer-term {
+  display: contents;
+}
+.fx-answer-term > dt,
+.fx-answer-term > dd {
+  margin: 0;
+}
+.fx-answer-term > dd {
+  text-align: end;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+
+/* The app's own code, as text (Task 7b): the source's lines, scrolled
+   sideways in the narrow panel rather than wrapped. */
+.fx-answer-code > p {
+  margin: var(--stratakit-space-100) 0 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+}
+.fx-answer-code > pre {
+  margin: var(--stratakit-space-100) 0 0;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  overflow-x: auto;
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+  line-height: var(--stratakit-line-height-mono-sm);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-mono-muted);
+}
+.fx-answer-code-file {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-caption-md);
+}

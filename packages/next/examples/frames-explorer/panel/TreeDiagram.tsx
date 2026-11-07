@@ -273,7 +273,7 @@ export function shapeKey(tree: TreeNode, fullLabels: boolean): string {
       n.id,
       n.label,
       n.edge.kind,
-      n.added ? "+" : "",
+      n.app ? "app" : n.added ? "+" : "",
       fullLabels ? edgeAccuracyText(n.edge.kind, n.edge.accuracy).text : "",
       String(n.children.length),
     );
@@ -913,7 +913,7 @@ export const TreeDiagram = memo(function TreeDiagram({
               key={p.id}
               id={p.id}
               label={n.label}
-              className={`fx-node fx-family-${family}${n.added ? " fx-added" : ""}${onPath ? " fx-on-path" : ""}${target ? " fx-target" : ""}${drawing ? " fx-drawing" : ""}`}
+              className={`fx-node fx-family-${family}${n.added ? " fx-added" : ""}${n.app ? " fx-app" : ""}${onPath ? " fx-on-path" : ""}${target ? " fx-target" : ""}${drawing ? " fx-drawing" : ""}`}
               style={{
                 transform,
                 inlineSize: p.w,
@@ -926,7 +926,7 @@ export const TreeDiagram = memo(function TreeDiagram({
                 target
                   ? `${targets!.label(n.id)}${drawing ? ", drawing in it now" : ""}`
                   : undefined,
-                `${n.label}, ${FAMILY_INFO[family].label}${n.added ? ", added by this scenario" : ""}`,
+                `${n.label}, ${FAMILY_INFO[family].label}${n.app ? ", defined by your app" : n.added ? ", added by this scenario" : ""}`,
                 end,
                 w ? `Edge from ${w.full}` : "the root",
               ]

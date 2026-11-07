@@ -22,8 +22,8 @@ const spec = (id: string): ScenarioSpec => {
 
 const epochOf = (s: ScenarioSpec): number => Date.parse(s.checked.epochUtc);
 
-describe("the ten scenarios", () => {
-  it("are the spec's ten, each once, opening on a striking one and ending on the capstone", () => {
+describe("the scenarios", () => {
+  it("are the spec's ten and the robot arm (Task 7b), each once, opening on a striking one and ending on the capstone", () => {
     const ids = SCENARIOS.map((s) => s.id);
     expect([...ids].sort()).toEqual([
       "bim-site",
@@ -34,6 +34,7 @@ describe("the ten scenarios", () => {
       "everything",
       "moon-from-here",
       "one-path",
+      "robot-arm",
       "ship",
       "stand-on-moon",
     ]);

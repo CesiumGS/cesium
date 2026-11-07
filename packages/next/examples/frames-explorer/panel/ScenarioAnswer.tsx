@@ -14,6 +14,7 @@ import {
   publishedText,
   type PublishedView,
 } from "./answerText.ts";
+import { length } from "./format.ts";
 import { webLink } from "./Inspector.tsx";
 
 /**
@@ -56,6 +57,7 @@ export const ANSWER_READS = [
   "published",
   "note",
   "terrain",
+  "appCode",
 ] as const;
 
 export const ScenarioAnswer = memo(
@@ -123,6 +125,25 @@ function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
       <p className={`fx-answer-acc${accuracyWarns(a) ? " fx-unbounded" : ""}`}>
         <span className="fx-answer-acc-label">Accuracy</span> {accuracyLine(a)}
       </p>
+      {a.breakdown && a.breakdown.length > 0 && (
+        <dl
+          className={`fx-answer-breakdown${loading ? " fx-stale" : ""}`}
+          aria-label="The accuracy term by term (1σ)"
+        >
+          {a.breakdown.map((t) => (
+            <div key={t.label} className="fx-answer-term" title={t.note}>
+              <dt>{t.label}</dt>
+              <dd className="fx-num">
+                {t.meters === undefined
+                  ? "not stated"
+                  : t.meters === 0
+                    ? "exact"
+                    : breakdownFigure(t.meters)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
       {loading && (
         <p className="fx-answer-wait" role="status">
           <CircularProgress size={12} aria-hidden />
@@ -146,7 +167,22 @@ function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
           </ol>
         </details>
       )}
+      {scenario.appCode && (
+        <details className="fx-answer-method fx-answer-code">
+          <summary>How these frames are defined</summary>
+          <p>{scenario.appCode.summary}</p>
+          <pre aria-label={`From ${scenario.appCode.file}`}>
+            <code>{scenario.appCode.code}</code>
+          </pre>
+          <p className="fx-answer-code-file">{scenario.appCode.file}</p>
+        </details>
+      )}
       {scenario.note && <p className="fx-answer-note">{scenario.note}</p>}
     </div>
   );
+}
+
+/** A term's size: millimetres to a tenth, or the length's own unit past a metre. */
+function breakdownFigure(meters: number): string {
+  return meters < 1 ? `${(meters * 1000).toFixed(1)} mm` : length(meters, 3);
 }

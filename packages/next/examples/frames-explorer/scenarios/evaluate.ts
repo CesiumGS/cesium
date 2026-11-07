@@ -57,6 +57,11 @@ export interface ScenarioAnswer {
   value?: number;
   unit?: string;
   /**
+   * The figure's decimals, where its unit's default would hide what its
+   * accuracy supports (the robot arm's 17 km to the millimetre, Task 7b).
+   */
+  digits?: number;
+  /**
    * Always stated (R8): metres where it is bounded, and in words either way.
    * `unbounded` when it has no size (not bounded, not stated or not known):
    * the panel says so in its warning colour, from this flag, never from the
@@ -65,6 +70,12 @@ export interface ScenarioAnswer {
   accuracy: { meters?: number; note: string; unbounded?: boolean };
   /** The tree path the answer runs along: node ids for `branchPath`. */
   path?: { from: string; to: string };
+  /**
+   * The answer's accuracy term by term, largest first (the robot arm's,
+   * Task 7b): each one's words, its size (1σ, m; absent when not stated)
+   * and where it comes from.
+   */
+  breakdown?: readonly { label: string; meters?: number; note: string }[];
   /**
    * How the answer is worked out, in plain words: a few short steps, each a
    * title and its sentence or two (Task 4c item 1).
@@ -149,8 +160,8 @@ export interface Moment {
   knobs?: KnobState;
   /** What the moment is, in the button's tooltip (after the time a time moment takes the clock to). */
   title?: string;
-  /** The button's icon: the Moon for one behind it, else the timeline. */
-  icon?: "moon" | "timeline";
+  /** The button's icon: the Moon for one behind it, the arm's reach or its fold, else the timeline. */
+  icon?: "moon" | "timeline" | "extend" | "stow";
 }
 
 export interface ScenarioEvaluation {
@@ -243,6 +254,19 @@ export interface ScenarioEvaluation {
    * ship's buoy.
    */
   track?: { heights: readonly number[]; buoySea?: number };
+  /**
+   * The robot arm (Task 7b): its tool's place (ITRF, m) at the knobs, for
+   * the page's agreement test; the station it is measured to (ITRF, m, at
+   * the evaluation's epoch); and the station's and the PROJ operation's own
+   * accuracy (1σ, m), which the page adds to the tool's (it composes the
+   * tool's itself, every frame, from its own frames).
+   */
+  arm?: {
+    tool: readonly number[];
+    mark: readonly number[];
+    markMeters: number;
+    projMeters?: number;
+  };
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).
    * None may carry an id of the scenario's `checks` (the host refuses it),

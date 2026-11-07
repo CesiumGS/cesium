@@ -241,6 +241,89 @@
         "AJ3674!UTM  12      -   0.99994945  x   0.99970626  =   0.99965573"
       ]
     },
+    "ngs-DI3564": {
+      "source": {
+        "document": "NGS CORS coordinate file, ITRF2020 (MYCS3): CAPE CANAVERAL 6 (CCV6), FLORIDA, ccv6_20.coord.txt (\"Retrieved from NGS DataBase on 06/09/25\"), with the station's NGS Data Sheet (datasheet95, version 8.12.5.20)",
+        "publisher": "National Geodetic Survey, NOAA (NOAA CORS Network)",
+        "pid": "DI3564",
+        "url": "https://noaa-cors-pds.s3.amazonaws.com/coord/coord_20/ccv6_20.coord.txt",
+        "datasheetUrl": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=DI3564",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  7, 2026 04:07:18 EST",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The NOAA CORS station nearest LC-39A that NGS publishes in both NAD83(2011) and ITRF: about 17 km south-south-east of the pad (NGS's radial search for CORS within 30 miles of N283630 W0803615: Cape Canaveral 1 to 6 at 10.8 to 10.9 miles, Titusville at 13.3). None is within a few kilometres. The datasheet gives NAD83(2011) only; the coordinate file gives both, the NAD83(2011) position transformed by NGS from ITRF2020 in April 2025. geodesy.noaa.gov/corsdata/ answered HTTP 410 (retired 2026-11-01), so the coordinate file is read from NGS's NOAA Open Data Dissemination bucket, the location NGS's data page gives. Measured data: the antenna reference point's position from GNSS.",
+      "designation": "CAPE CANAVERAL 6 CORS ARP",
+      "corsId": "CCV6",
+      "nad83": {
+        "epoch": "2010.0",
+        "latitude": "28 27 35.82726(N)",
+        "longitude": "080 32 43.70268(W)",
+        "ellipsoidHeight": "-22.687",
+        "x": "921786.467",
+        "y": "-5535362.780",
+        "z": "3021404.718",
+        "velocity": {
+          "vx": "0.0009",
+          "vy": "0.0028",
+          "vz": "-0.0014"
+        },
+        "networkSd": {
+          "units": "cm",
+          "north": "0.04",
+          "east": "0.02",
+          "height": "0.05"
+        }
+      },
+      "itrf2020": {
+        "epoch": "2020.0",
+        "x": "921785.628",
+        "y": "-5535361.195",
+        "z": "3021404.559",
+        "latitude": "28 27 35.84907 N",
+        "longitude": "080 32 43.72356 W",
+        "ellipsoidHeight": "-24.258",
+        "velocity": {
+          "vx": "-0.0123",
+          "vy": "0.0019",
+          "vz": "0.0017"
+        }
+      },
+      "lines": [
+        "DI3564* NAD 83(2011) POSITION- 28 27 35.82726(N) 080 32 43.70268(W)   ADJUSTED",
+        "DI3564* NAD 83(2011) ELLIP HT-   -22.687 (meters)        (04/??/25)   ADJUSTED",
+        "DI3564* NAD 83(2011) EPOCH   -  2010.00",
+        "DI3564  NAD 83(2011) X  -    921,786.467 (meters)                     COMP",
+        "DI3564  NAD 83(2011) Y  - -5,535,362.780 (meters)                     COMP",
+        "DI3564  NAD 83(2011) Z  -  3,021,404.718 (meters)                     COMP",
+        "DI3564  NETWORK    0.09   0.10           0.04   0.02   0.05     -0.16016100",
+        "| ITRF2020 POSITION (EPOCH 2020.0)                                            |",
+        "|     X =    921785.628 m     latitude    =  28 27 35.84907 N                 |",
+        "|     Y =  -5535361.195 m     longitude   = 080 32 43.72356 W                 |",
+        "|     Z =   3021404.559 m     ellipsoid height =  -24.258   m                 |",
+        "|     VX =  -0.0123 m/yr      northward =   0.0034 m/yr                       |",
+        "|     VY =   0.0019 m/yr      eastward  =  -0.0118 m/yr                       |",
+        "|     VZ =   0.0017 m/yr      upward    =  -0.0026 m/yr                       |",
+        "| NAD_83 (2011) POSITION (EPOCH 2010.0)                                       |",
+        "|     X =    921786.467 m     latitude    =  28 27 35.82726 N                 |",
+        "|     Y =  -5535362.780 m     longitude   = 080 32 43.70268 W                 |",
+        "|     Z =   3021404.718 m     ellipsoid height =  -22.687   m                 |",
+        "|     VX =   0.0009 m/yr      northward =   0.0000 m/yr                       |",
+        "|     VY =   0.0028 m/yr      eastward  =   0.0013 m/yr                       |",
+        "|     VZ =  -0.0014 m/yr      upward    =  -0.0030 m/yr                       |"
+      ]
+    },
+    "lc-39a-pad": {
+      "kind": "input",
+      "source": {
+        "document": "Kennedy Space Center Launch Complex 39A (Wikipedia), the infobox's coordinates",
+        "publisher": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Kennedy_Space_Center_Launch_Complex_39A",
+        "retrieved": "2026-11-07"
+      },
+      "description": "Where the robot arm's synthetic pad frame is defined (scenarios/arm.ts PAD): an input, not an expected value (ruling F6). Its east-north-up frame is defined at this point on the WGS 84 ellipsoid (h = 0, as the globe is drawn), so the place is exact by definition; no survey of the pad itself is claimed. AIAA's vehicle guide (28.6082° N, 80.6041° W) and The Space Devs' launch-location API (28.60822681, -80.60428186) agree with it to tens of metres. No published pad elevation was found, so none is used.",
+      "latitude": "28 36 30.2 N",
+      "longitude": "80 36 15.6 W"
+    },
     "iogp-lambert-conic-conformal-2sp": {
       "source": {
         "document": "IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2: Coordinate Conversions and Transformations including Formulas",

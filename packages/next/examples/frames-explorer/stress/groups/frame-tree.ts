@@ -2,6 +2,7 @@
 import { type Frame, frameTransform } from "../../../../src/frames/Frame.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import { bodyFrameCase } from "./body-frames.ts";
+import { jointChainCase } from "./joint-chain.ts";
 import {
   ROTATION,
   apply,
@@ -146,4 +147,5 @@ const frameTreeCase = stressCase(
 export const frameTreeCases: readonly StressCase[] = [
   frameTreeCase,
   bodyFrameCase,
+  jointChainCase,
 ];

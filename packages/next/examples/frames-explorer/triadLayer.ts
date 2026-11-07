@@ -112,6 +112,9 @@ export function createTriadLayer(deps: {
         // Stand-on-moon's subject at 15% of the camera's distance (S-I8).
         ...(id === LUNAR_SITE &&
           scene?.id === "stand-on-moon" && { scale: 0.15 }),
+        // A scene's own frames at its scale (the robot arm's joints, Task 7b).
+        ...(!geocentric &&
+          scene?.triadScale !== undefined && { scale: scene.triadScale }),
       });
     }
     return out;

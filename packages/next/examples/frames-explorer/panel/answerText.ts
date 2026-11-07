@@ -27,8 +27,12 @@ const grouped = (value: number, digits: number): string =>
   });
 
 /** "56.02 µs/day", "178.31°", "1.24 km/s". */
-export function formatAnswer(value: number, unit: string): string {
-  const text = grouped(value, DIGITS[unit] ?? 3).replace("-", "−");
+export function formatAnswer(
+  value: number,
+  unit: string,
+  digits?: number,
+): string {
+  const text = grouped(value, digits ?? DIGITS[unit] ?? 3).replace("-", "−");
   return unit === "°" ? `${text}°` : `${text} ${unit}`;
 }
 
@@ -77,7 +81,7 @@ export function answerTitle(answer: ScenarioAnswer): string | undefined {
     // No figure: the words alone, when they answer it ("Not placed: …").
     return answer.label !== "" ? answer.label : undefined;
   }
-  const figure = formatAnswer(answer.value, answer.unit);
+  const figure = formatAnswer(answer.value, answer.unit, answer.digits);
   return answer.label ? `${figure} ${answer.label}` : figure;
 }
 

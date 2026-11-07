@@ -348,6 +348,10 @@ describe("the frames explorer's stress tests, headless", () => {
       "frame-tree.body-frame.roll": /y about (its )?x/,
       "frame-tree.body-frame.footprint": /ray–plane intersection/,
       "frame-tree.body-frame.sight-over-hill": /crest/,
+      // The robot arm's chain (Task 7b).
+      "frame-tree.joint-chain.forward-kinematics":
+        /closed-form planar solution/,
+      "frame-tree.joint-chain.accuracy": /encoder's angle times/i,
       frame: /engineering frame/,
       "source-crs": /axis unit/,
       "recorded-operation": /TOWGS84|registry prints/,

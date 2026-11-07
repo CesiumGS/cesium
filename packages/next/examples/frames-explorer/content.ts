@@ -117,6 +117,20 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "frame-tree.body-frame.round-trip.live": "Your frames to ITRF and back",
   "frame-tree.body-frame.sight-over-hill.live":
     "Your mast over the test hill, by hand",
+  // The robot arm (Task 7b).
+  "reference-values.ngs-di3564.itrf2020":
+    "CCV6's NAD83(2011) through PROJ against NGS's ITRF2020",
+  "frame-tree.joint-chain.forward-kinematics":
+    "The arm's tool at three poses against the closed form",
+  "frame-tree.joint-chain.accuracy":
+    "The tool's composed accuracy against the lever-arm rule",
+  "frame-tree.joint-chain.round-trip": "The arm's joints to ITRF and back",
+  "frame-tree.joint-chain.forward-kinematics.live":
+    "Your pose's tool against the closed form",
+  "frame-tree.joint-chain.accuracy.live":
+    "Your pose's accuracy against the lever-arm rule",
+  "frame-tree.joint-chain.round-trip.live":
+    "Your pose's joints to ITRF and back",
 };
 
 /**
@@ -145,6 +159,15 @@ const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
   "frame-tree.body-frame.sight-over-hill": {
     kind: "formula",
     text: "The segment's height over the ridge's crest by hand: blocked below it, clear above it and its tile's error.",
+  },
+  // The robot arm's chain against its hand closed form and lever-arm rule (Task 7b).
+  "frame-tree.joint-chain.forward-kinematics": {
+    kind: "formula",
+    text: "The closed-form planar solution by hand: the boom, forearm and tool at their summed elevations, turned by the yaw: within 1e-9 m.",
+  },
+  "frame-tree.joint-chain.accuracy": {
+    kind: "formula",
+    text: "Each encoder's angle times the tool's distance from that joint, the links and the base's survey, root-sum-square, worked by hand: within 1 nm.",
   },
   // The BIM site's gap in its two parts, not the group's √(2Rε) (Task 6a fix 1).
   "rigid-placement-budget.site-gap.drop": {

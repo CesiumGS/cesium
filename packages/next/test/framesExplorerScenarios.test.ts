@@ -284,6 +284,7 @@ describe("the strip", () => {
       "corridor",
       "drone",
       "ship",
+      "robot-arm",
     ]);
     expect(SCENES["bim-site"]!.engineering!.overlays).toEqual([
       "designGrid",

@@ -230,6 +230,8 @@ export interface ScenarioPanelView {
   problem?: { message: string; missing: boolean };
   /** The latest answer (the last setup's while it is stale). */
   answer?: ScenarioAnswer;
+  /** The app code under the answer, "How these frames are defined" (the robot arm's joints, Task 7b). */
+  appCode?: { summary: string; file: string; code: string };
   /** The headline's published counterpart, and how ours compares (answerText.ts). */
   published?: PublishedView;
   /**

@@ -379,6 +379,11 @@
         -1995284.6217023332, -4938737.460620518, 3497146.0608041673
       ]
     },
+    "reference-values.ngs-di3564.itrf2020": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +z_in=m +xy_out=rad +z_out=m +step +proj=cart +ellps=GRS80 +step +inv +proj=helmert +x=1.0039 +y=-1.90961 +z=-0.54117 +rx=0.02678138 +ry=-0.00042027 +rz=0.01093206 +s=-5.109e-05 +dx=0.00079 +dy=-0.0007 +dz=-0.00124 +drx=6.667e-05 +dry=-0.00075744 +drz=-5.133e-05 +ds=-7.201e-05 +t_epoch=2010 +convention=coordinate_frame",
+      "grids": [],
+      "coordinates": [921785.627765284, -5535361.195206291, 3021404.559475948]
+    },
     "reference-values.iogp-lambert-conic-conformal-2sp-forward": {
       "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=27.8333333333333 +lon_0=-99 +lat_1=28.3833333333333 +lat_2=30.2833333333333 +x_0=609601.219202438 +y_0=0 +ellps=clrk66 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
       "grids": [],

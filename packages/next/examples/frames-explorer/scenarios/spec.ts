@@ -20,6 +20,7 @@ export type ScenarioId =
   | "one-path"
   | "stand-on-moon"
   | "ship"
+  | "robot-arm"
   | "everything";
 
 export type KnobValue = number | string;

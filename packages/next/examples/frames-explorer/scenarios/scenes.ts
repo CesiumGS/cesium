@@ -25,6 +25,15 @@ import {
   bimEngineering,
   corridorEngineering,
 } from "./sites.ts";
+import {
+  ARM,
+  ARM_FRAMES,
+  MARK,
+  PAD,
+  anglesOf,
+  armFrames,
+  type ArmFrames,
+} from "./arm.ts";
 import type { ScenarioEvaluation } from "./evaluate.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
@@ -182,6 +191,8 @@ export interface SceneSpec {
   focus: readonly string[];
   /** The triads drawn whatever is selected, at these knobs. */
   triads(knobs: KnobState): string[];
+  /** Its own frames' triads' length, as a fraction of the camera's distance (the default 0.06): the arm's joints sit metres apart. */
+  triadScale?: number;
   /** Each geocentric axis named and kept clear of the declutter (stop 1's S-I1). */
   pinnedAxes?: boolean;
   /** Lit from the camera, not the clock's sun (stop 2's S-I6). */
@@ -257,6 +268,24 @@ export interface SceneSpec {
     knobs: KnobState,
     evaluation: ScenarioEvaluation | undefined,
   ): readonly Frame[];
+}
+
+/**
+ * The arm's frames on the page, one set per frame tree: the knobs set their
+ * angles (the frames are uncached, so they move at the same instant), and
+ * the same frames stay in the tree.
+ */
+const ARMS = new WeakMap<Frame, ArmFrames>();
+
+/** The page's arm under `itrf`, its angles set from `knobs`. */
+export function pageArm(itrf: Frame, knobs: KnobState): ArmFrames {
+  let arm = ARMS.get(itrf);
+  if (!arm) {
+    arm = armFrames(itrf, anglesOf(knobs));
+    ARMS.set(itrf, arm);
+  }
+  Object.assign(arm.angles, anglesOf(knobs));
+  return arm;
 }
 
 /** The ship's track's start, TDB s (vehicles.ts `SHIP.startUtc`). */
@@ -499,6 +528,36 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote: `The ship's place comes from its track; the mast rides its body as it pitches and rolls. ${BUOY.short}'s sight line is traced over the terrain on the globe.`,
     note: "The track and the sea state are synthetic (along 33 CFR 167's lanes). The sight line is traced over the terrain as drawn: the sea's curve and the headlands; refraction is left out.",
+  },
+  "robot-arm": {
+    id: "robot-arm",
+    // From the north-north-west, looking south-south-east along the arm's
+    // line to the station (CCV6 lies 17 km away at a bearing of about
+    // 161°), so the line runs into the distance and the arm, reaching
+    // east-north-east, is seen side on.
+    camera: "site",
+    flight: 3,
+    focus: ["ITRF", PAD.name],
+    // The slewing ring shares the shoulder's origin (the column's top): one
+    // triad there, the shoulder's.
+    triads: () => ARM_FRAMES.filter((n) => n !== ARM.yaw),
+    triadScale: 0.025,
+    look: () => ({
+      // Centred 35 m to the arm's right as seen, so the arm sits left of
+      // the answer's callout.
+      ...offsetPlace(PAD.longitude, PAD.latitude, 13, -12),
+      range: 140,
+      heading: 150,
+      pitch: -22,
+    }),
+    bodies: (frames, k) => pageArm(frames.itrf, k).all,
+    light: "camera",
+    drawIn: ARM.tool,
+    drawnView: {
+      [ARM.tool]: `${MARK.name} seen from the tool: the straight line's length is the answer`,
+    },
+    diagramNote: `The arm's frames are defined by your app with the public Frame API, each with its spec sheet's accuracy. ${MARK.name}'s position comes in NAD83(2011) and goes through PROJ to ITRF, then down the arm.`,
+    note: "The arm, its spec sheet and its survey are synthetic. It stands on the WGS 84 ellipsoid at LC-39A's published position (h = 0, as the globe is drawn); the station is at its own height, 24 m below the ellipsoid.",
   },
 };
 

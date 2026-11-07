@@ -10,6 +10,7 @@ import type {
   ResultExtras,
   ScenarioPanelView,
 } from "./panel/model.ts";
+import { APP_CODE } from "./panel/appCode.ts";
 import { routeSteps } from "./panel/routeSteps.ts";
 import { withTerrain, withTerrainAnswer } from "./panel/answerText.ts";
 import type { ScenarioHostState } from "./scenarioHost.ts";
@@ -249,6 +250,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       e?.answer.value,
     ),
     ...(path && { path }),
+    ...(APP_CODE[spec.id] && { appCode: APP_CODE[spec.id]! }),
     checks,
     liveExtras,
     ...(input.sceneNote !== undefined && { note: input.sceneNote }),

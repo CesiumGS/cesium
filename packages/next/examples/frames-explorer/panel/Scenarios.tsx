@@ -128,7 +128,11 @@ function Detail({
       </div>
       <Typography variant="caption-lg" color="textSecondary" render={<p />}>
         {FAMILY_INFO[family].label}
-        {node.added ? ", added by this scenario" : ", built in"}
+        {node.app
+          ? ", defined by your app (the public Frame API)"
+          : node.added
+            ? ", added by this scenario"
+            : ", built in"}
         {node.edge.kind === "root" ? "; the tree's root" : ""}
       </Typography>
       {edge}
@@ -351,6 +355,23 @@ function ScenariosView({
     checks: useId(),
   };
   const tree = model.tree;
+  // Frames the app defines itself (the robot arm's joints, Task 7b) take
+  // their own key row; "added by this scenario" stays for the others.
+  const addedKinds = useMemo(() => {
+    let app = false;
+    let plain = false;
+    const walk = (n: TreeNode) => {
+      app ||= n.app === true;
+      plain ||= n.added === true && n.app !== true;
+      n.children.forEach(walk);
+    };
+    if (tree) {
+      walk(tree);
+    }
+    return { app, plain };
+  }, [tree]);
+  const hasApp = addedKinds.app;
+  const hasPlainAdded = addedKinds.plain;
   const [expandedView, setExpandedView] = useState(false);
   const expandButton = useRef<HTMLButtonElement>(null);
   const top = useRef<HTMLDivElement>(null);
@@ -497,10 +518,18 @@ function ScenariosView({
                   <span className="fx-key-glyph fx-key-built" aria-hidden />
                   frame (no data in it)
                 </li>
-                <li>
-                  <span className="fx-key-glyph fx-key-added" aria-hidden />
-                  added by this scenario
-                </li>
+                {(!hasApp || hasPlainAdded) && (
+                  <li>
+                    <span className="fx-key-glyph fx-key-added" aria-hidden />
+                    added by this scenario
+                  </li>
+                )}
+                {hasApp && (
+                  <li>
+                    <span className="fx-key-glyph fx-key-app" aria-hidden />
+                    defined by your app
+                  </li>
+                )}
                 {scenario.data && (
                   <li>
                     <span className="fx-key-card" aria-hidden />

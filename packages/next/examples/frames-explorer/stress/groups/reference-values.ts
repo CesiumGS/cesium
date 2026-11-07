@@ -23,6 +23,7 @@ import {
   sexagesimal,
 } from "../references.ts";
 import { type ResultBase, type StressCase, fmt } from "../runner.ts";
+import { corsStationCase } from "./cors-station.ts";
 import {
   epsg,
   fingerprintOf,
@@ -506,6 +507,7 @@ const clothoidReferenceCase = stressCase(
 
 export const referenceValuesCases: readonly StressCase[] = [
   ...NGS_MARKS.map(ngsCase),
+  corsStationCase,
   ...WORKED_EXAMPLES.map((e) => workedExampleCase(e, "forward")),
   ...WORKED_EXAMPLES.map((e) => workedExampleCase(e, "reverse")),
   clothoidReferenceCase,

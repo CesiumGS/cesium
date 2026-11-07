@@ -13,9 +13,17 @@
 //    the buoy's light, green where the last trace found it clear, red past
 //    where it met the terrain, amber where it can't tell; the buoy's name.
 //
+//  - The robot arm (Task 7b): its links joint to joint from the page's own
+//    joint frames (the knobs move them), a ring at the tool, and the
+//    straight line from the tool to the station, labelled with its length
+//    and accuracy: the tool's composed here by the library (pointAccuracy)
+//    from the page's frames, the station's and PROJ's from the worker.
+//
 // The verdicts are the trace's, which trails the clock (on demand,
 // sightLines.ts); the lines' places are this frame's.
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
+import { framePoint } from "../../src/frames/local.ts";
+import { pointAccuracy } from "../../src/frames/pointAccuracy.ts";
 import type { Frames } from "../../src/frames/frames.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
@@ -26,6 +34,7 @@ import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import type { SceneSpec } from "./scenarios/scenes.ts";
 import { LINE_PX, segmentPlacement } from "./skyRay.ts";
 import type { LabelBoard } from "./triadLayer.ts";
+import { ARM, MARK } from "./scenarios/arm.ts";
 import {
   BUOY,
   CAMERA_MOUNT,
@@ -118,7 +127,7 @@ export function createBodyLines(deps: {
   const fixed = new Map<string, string>();
   let labelKey = "";
   /** Where the moving labels sit this frame: their `at` reads it (the text is set only when it changes). */
-  const anchor: { sight?: number[]; camera?: number[] } = {};
+  const anchor: { sight?: number[]; camera?: number[]; leader?: number[] } = {};
 
   function clear(): void {
     for (const id of [...shown.keys(), ...fixed.keys()]) {
@@ -248,6 +257,62 @@ export function createBodyLines(deps: {
     return Float64Array.from(out);
   }
 
+  /** The arm's links, its tool's ring and its line to the station, this frame. */
+  function placeArm(
+    a: NonNullable<ScenarioEvaluation["arm"]>,
+    byName: ReadonlyMap<string, Frame>,
+    itrf: Frame,
+    instant: NonNullable<ReturnType<typeof globe.shownAt>>,
+    segments: Segment[],
+    labels: LabelSpec[],
+  ): void {
+    const chain = [ARM.base, ARM.yaw, ARM.elbow, ARM.wrist, ARM.tool].map((n) =>
+      byName.get(n),
+    );
+    if (chain.some((f) => f === undefined)) {
+      return;
+    }
+    const at = chain.map((f) => at3(frameTransform(f!, itrf, instant)));
+    ["column", "boom", "forearm", "tool"].forEach((name, i) => {
+      segments.push({ name, from: at[i]!, to: at[i + 1]!, color: "white" });
+    });
+    const tool = at[4]!;
+    fixedLine(
+      "ring",
+      tool.map((x) => x.toFixed(3)).join(),
+      () => ring(tool, 0.8),
+      "white",
+    );
+    const mark = Array.from(a.mark);
+    segments.push({
+      name: "leader",
+      from: tool,
+      to: mark,
+      color: "track",
+      dashed: true,
+    });
+    const length = Math.hypot(...tool.map((x, i) => x - mark[i]!));
+    const composed = pointAccuracy(
+      framePoint(chain[4]!, [0, 0, 0], instant),
+      itrf,
+    );
+    const total =
+      composed.meters === undefined || a.projMeters === undefined
+        ? undefined
+        : Math.hypot(composed.meters, a.markMeters, a.projMeters);
+    // The label 70 m along the line from the tool, clear of the arm and
+    // still in the view.
+    anchor.leader = tool.map((x, i) => x + (70 / length) * (mark[i]! - x));
+    labels.push({
+      id: "bodies:leader",
+      text: `${length.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} m ${total === undefined ? "(not bounded)" : `±${(total * 1000).toFixed(1)} mm`} to ${MARK.name}`,
+      at: () => anchor.leader,
+      family: "earth",
+      priority: 4,
+      pinned: true,
+    });
+  }
+
   function place(): void {
     const scene = deps.scene();
     const frames = deps.frames();
@@ -257,7 +322,7 @@ export function createBodyLines(deps: {
       !scene?.bodies ||
       !frames ||
       !instant ||
-      !e?.track ||
+      !(e?.track || e?.arm) ||
       e.scenario !== scene.id
     ) {
       if (shown.size > 0 || fixed.size > 0 || deps.labels.has("bodies")) {
@@ -269,8 +334,10 @@ export function createBodyLines(deps: {
     const traces = deps.traces();
     const segments: Segment[] = [];
     const labels: LabelSpec[] = [];
-    const heights = e.track.heights;
-    if (scene.id === "drone") {
+    const heights = e.track?.heights ?? [];
+    if (scene.id === "robot-arm" && e.arm) {
+      placeArm(e.arm, byName, frames.itrf, instant, segments, labels);
+    } else if (scene.id === "drone") {
       const mount = byName.get(CAMERA_MOUNT);
       const fp = e.answer.footprint;
       const line = e.sightLines?.find((l) => l.id === fp?.line);
@@ -337,7 +404,7 @@ export function createBodyLines(deps: {
         () => trackPoints(shipTrack(heights).vertices, heights),
         "track",
       );
-      if (body && mast && sight && e.track.buoySea !== undefined) {
+      if (body && mast && sight && e.track?.buoySea !== undefined) {
         const waterline = at3(frameTransform(body, frames.itrf, instant));
         const sensor = at3(frameTransform(mast, frames.itrf, instant));
         segments.push({

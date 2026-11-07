@@ -15,7 +15,9 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
+import { svgMinimize } from "@stratakit/icons/minimize";
 import { svgMoon } from "@stratakit/icons/moon";
+import { svgPathExtend } from "@stratakit/icons/path-extend";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { svgTimeline } from "@stratakit/icons/timeline";
 import { svgUndo } from "@stratakit/icons/undo";
@@ -163,7 +165,12 @@ export const KNOBS_READS = [
 export const Knobs = memo(KnobsView, equalOn("scenario", KNOBS_READS));
 
 /** A moment's icon, as its evaluator declares it (Task 6c fix 1). */
-const MOMENT_ICON = { moon: svgMoon, timeline: svgTimeline } as const;
+const MOMENT_ICON = {
+  moon: svgMoon,
+  timeline: svgTimeline,
+  extend: svgPathExtend,
+  stow: svgMinimize,
+} as const;
 
 function KnobsView({
   scenario,
