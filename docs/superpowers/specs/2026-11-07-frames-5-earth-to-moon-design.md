@@ -178,10 +178,12 @@ morph onto the core, so it should not race 4b's Tasks 18 to 22.
 - **Size.** Heavy dependencies load only when needed, as Slang and PROJ
   already do.
 - **Licenses** as the frames spec §9 says, plus the new sources in section 14.
-- **No ion tokens in the repo.** Examples take a token from `.env.local`, the
-  Viewer's UI or ion's default evaluation token. (How the built gallery gets a
-  token in production is still the owner's call, carried from the scenarios
-  plan.)
+- **No ion tokens in the repo or in builds.** Examples get their token
+  through Dyno's one token setting (`ionToken()`): a token pasted in Dyno's
+  shell, then `.env.local` in development only, then ion's default
+  evaluation token. Production builds never embed `.env.local`'s token
+  (merged 2026-11-07, `d2cca2f34a`), so the built gallery asks the viewer to
+  paste one where ion content is needed.
 - **Examples are documentation.** They use only the public API. Where an
   example has to reach past it, that is a finding for the API review (5i).
 - **UI quality.** The owner wants polished UI and UX: no cramped quick mockups,
@@ -1314,12 +1316,11 @@ the default plan 5 follows if the owner says nothing.
    joins the upstream proposals), and a no means either dropping the field or
    building a stopgap subdivider that the later engine replaces. _Default:_
    as section 13.4.
-5. **How does the built gallery get an ion token in production?** Carried
-   from the scenarios plan (`npm run build` inlines `VITE_ION_TOKEN`). The
-   Artemis example can't draw without Cesium World Terrain and Cesium Moon.
-   _Why it matters:_ it decides whether 5g ships in the built gallery or
-   runs locally only, and whether 5g needs a token entry task. _Default:_
-   local only, with the Viewer's token UI.
+5. _Answered (2026-11-07):_ the built gallery gets an ion token from Dyno's
+   one token setting, pasted by the viewer; builds never embed
+   `.env.local`'s (`d2cca2f34a`). 5g ships in the built gallery and needs no
+   token task of its own: it reads `ionToken()` and shows Dyno's "Paste an
+   ion token" prompt where Cesium World Terrain or Cesium Moon is needed.
 
 ## 18. Assumptions and open items
 
