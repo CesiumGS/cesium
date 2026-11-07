@@ -7452,6 +7452,7 @@ the questions below:
 8. **Precision.** CPU queries are float64. GPU queries use hi/lo,
    camera-relative origins. Hits are refined on the CPU when an exact answer
    matters, the way 1.x refines picks.
+9. **Validation data.** Published horizon masks, such as the DSN's for DSS-14, DSS-43 and DSS-63 (810-005, as used by the frames example's dish scenario), are measured horizons. Comparing ray-query terrain horizons against them, across terrain sources and levels of detail, is a standing validation test for this work (owner, 2026-11-06).
 
 ## 14. Follow-ups
 
