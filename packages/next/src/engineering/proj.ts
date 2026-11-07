@@ -5,15 +5,21 @@
 //  - Browser: the WebAssembly C-API build (`proj_capi.mjs` beside
 //    `proj_capi.wasm`, served from `base`), initialized the way proj.js's own
 //    wasm/emnapi.mjs does, with `proj.db` and the grids written into the
-//    module's file system.
+//    module's file system. The glue, the WebAssembly and `proj.db` are
+//    fetched and checked against their pins (projPins.ts) before any is used,
+//    and the glue runs from a Blob URL of the checked bytes, so what runs is
+//    what was hashed.
 //  - Node: the native binding (`proj_capi.node`) from the store directory,
-//    which PROJ_DATA names so it finds `proj.db` and the grids there.
+//    which PROJ_DATA names so it finds `proj.db` and the grids there; both
+//    are checked first (projNode.ts).
 //
 // Licenses: PROJ and proj.js are MIT; proj.db carries the EPSG Dataset (IOGP,
 // https://epsg.org/terms-of-use.html).
 import { readWithProgress, type LoadProgress } from "../io/readWithProgress.ts";
+import { sha256Hex } from "../io/sha256.ts";
 import type { ProjApi } from "./projApi.ts";
-import { isNode, loadNodeProj } from "./projNode.ts";
+import { isNode, loadNodeProj, type ProjPins } from "./projNode.ts";
+import { PROJ_FILE_SHA256 } from "./projPins.ts";
 
 export type { ProjApi } from "./projApi.ts";
 
@@ -32,6 +38,22 @@ export interface LoadProjOptions {
    * load reports only the grids it adds. Node reads files and never calls it.
    */
   readonly onProgress?: LoadProgress;
+  /**
+   * Internal, for tests: the SHA-256 each PROJ file must have (default
+   * `PROJ_FILE_SHA256`), so stubs can pass their own bytes' hashes.
+   */
+  readonly pins?: ProjPins;
+  /**
+   * Internal, for tests: imports the glue from its checked bytes (default:
+   * from a Blob URL of them). Node's loader refuses blob: URLs, so the
+   * Node-run unit tests inject a data: URL importer.
+   */
+  readonly importGlue?: (bytes: Uint8Array) => Promise<unknown>;
+}
+
+/** The glue module's shape. */
+interface Glue {
+  default(moduleArg?: ModuleArg): Promise<WasmModule>;
 }
 
 interface WasmModule {
@@ -52,6 +74,13 @@ interface WasmModule {
  */
 interface ModuleArg {
   wasmBinary?: ArrayBuffer;
+  /**
+   * Where the glue would find its files. Imported from a Blob URL, it can't
+   * resolve them against its own URL (`new URL("proj_capi.wasm", "blob:…")`
+   * throws), so this names them in `base`. Nothing is fetched there: the
+   * glue uses `wasmBinary`.
+   */
+  locateFile?: (path: string) => string;
 }
 
 interface Loaded {
@@ -80,8 +109,52 @@ async function fetchBuffer(
   );
 }
 
-async function loadNode(base: string): Promise<Loaded> {
-  return { api: Promise.resolve(await loadNodeProj(base)), grids: new Set() };
+/** Throws unless `bytes` hash to `expected`, naming the file and both hashes. */
+async function verify(
+  name: string,
+  bytes: ArrayBuffer | Uint8Array,
+  expected: string,
+): Promise<void> {
+  const actual = await sha256Hex(bytes);
+  if (actual !== expected) {
+    throw new Error(
+      `PROJ: ${name} SHA-256 mismatch (expected ${expected}, got ${actual})`,
+    );
+  }
+}
+
+/** Fetches one of PROJ's pinned files and checks it against its pin. */
+async function fetchPinned(
+  base: string,
+  name: keyof ProjPins,
+  pins: ProjPins,
+  onProgress: LoadProgress | undefined,
+): Promise<ArrayBuffer> {
+  const bytes = await fetchBuffer(base, name, onProgress);
+  await verify(name, bytes, pins[name]);
+  return bytes;
+}
+
+/**
+ * Imports the glue from a Blob URL of its checked bytes (call 4: what runs is
+ * what was hashed, and the server isn't asked for it twice).
+ */
+async function importFromBlob(bytes: Uint8Array): Promise<unknown> {
+  const url = URL.createObjectURL(
+    new Blob([bytes as BlobPart], { type: "text/javascript" }),
+  );
+  try {
+    return await import(/* @vite-ignore */ url);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function loadNode(base: string, pins: ProjPins): Promise<Loaded> {
+  return {
+    api: Promise.resolve(await loadNodeProj(base, pins)),
+    grids: new Set(),
+  };
 }
 
 /** Fetches the named files of `base` that `have` lacks, in parallel. */
@@ -124,37 +197,55 @@ async function loadBrowser(
   base: string,
   grids: readonly string[],
   onProgress: LoadProgress | undefined,
+  pins: ProjPins,
+  importGlue: (bytes: Uint8Array) => Promise<unknown>,
 ): Promise<Loaded> {
-  const have = new Set<string>();
-  // The glue, its WebAssembly (fetched here, so its bytes can be reported),
-  // proj.db and the grids, all at once.
-  const [glue, wasmBinary, files] = await Promise.all([
-    import(/* @vite-ignore */ `${base}proj_capi.mjs`) as Promise<{
-      default(moduleArg?: ModuleArg): Promise<WasmModule>;
-    }>,
-    fetchBuffer(base, "proj_capi.wasm", onProgress),
-    fetchFiles(base, ["proj.db", ...grids], have, onProgress),
+  // proj.db counts as had from the start, so a grid list naming it can't
+  // fetch an unchecked copy over the checked one.
+  const have = new Set<string>(["proj.db"]);
+  // The glue (small, so its bytes aren't reported), its WebAssembly (fetched
+  // here, so its bytes can be reported), proj.db and the grids, all at once.
+  // The pinned three are checked as they arrive; nothing runs until all are.
+  const [glueBytes, wasmBinary, db, files] = await Promise.all([
+    fetchPinned(base, "proj_capi.mjs", pins, undefined),
+    fetchPinned(base, "proj_capi.wasm", pins, onProgress),
+    fetchPinned(base, "proj.db", pins, onProgress),
+    fetchFiles(base, grids, have, onProgress),
   ]);
-  const module = await glue.default({ wasmBinary });
+  const glue = (await importGlue(new Uint8Array(glueBytes))) as Glue;
+  const module = await glue.default({
+    wasmBinary,
+    locateFile: (path) => `${base}${path}`,
+  });
   // Only the browser path needs it, so importing the package index does not
   // pull the runtime into every bundle.
   const emnapi = await import("@emnapi/runtime");
   const api = module.emnapiInit({ context: emnapi.getDefaultContext() });
-  writeFiles(module, files, have);
+  writeFiles(module, [["proj.db", new Uint8Array(db)], ...files], have);
   return { api: Promise.resolve(api), module, grids: have };
 }
 
 /**
  * PROJ's C API, loaded once per `base` (later calls share the first one's
- * result, and load any further `grids` it names in the browser).
+ * result, and load any further `grids` it names in the browser). Rejects,
+ * naming the file and both hashes, when `proj_capi.mjs`, `proj_capi.wasm`
+ * or `proj.db` (or, in Node, `proj_capi.node`) isn't the pinned file; a
+ * refused load isn't remembered.
  */
 export async function loadProj(options: LoadProjOptions): Promise<ProjApi> {
-  const { grids = [], onProgress } = options;
+  const {
+    grids = [],
+    onProgress,
+    pins = PROJ_FILE_SHA256,
+    importGlue = importFromBlob,
+  } = options;
   // Every URL and the cache key are built from one form that ends in a slash.
   const base = /[\\/]$/.test(options.base) ? options.base : `${options.base}/`;
   let entry = loaded.get(base);
   if (!entry) {
-    entry = isNode() ? loadNode(base) : loadBrowser(base, grids, onProgress);
+    entry = isNode()
+      ? loadNode(base, pins)
+      : loadBrowser(base, grids, onProgress, pins, importGlue);
     loaded.set(base, entry);
     // A failed load is not remembered, so a retry after setup can work.
     entry.catch(() => {

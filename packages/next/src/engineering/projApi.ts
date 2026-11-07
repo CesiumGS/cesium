@@ -93,7 +93,17 @@ export interface PjGridUsed {
   readonly available: boolean;
 }
 
+/** proj_info's result (the C API's PJ_INFO), as far as it is read. */
+export interface PjInfo {
+  /** Such as "Rel. 9.7.1, December 1st, 2025". */
+  readonly release: string;
+  /** Such as "9.7.1". */
+  readonly version: string;
+}
+
 export interface ProjApi {
+  /** The PROJ library's release (read by the fixture guard, test/data/proj.test.ts). */
+  proj_info(): PjInfo;
   proj_create(definition: string): PJ;
   proj_create_crs_to_crs(source: string, target: string): PJ;
   proj_normalize_for_visualization(object: PJ): PJ;

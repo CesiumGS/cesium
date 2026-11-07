@@ -560,6 +560,22 @@ def signal(store, frame_kernel, earth_pck):
     write("signal", {"rows": rows})
 
 
+def engine_proj_version(store):
+    """The engine's PROJ version ("9.7.1"): proj_info() of the store's native binding
+    (proj/proj_capi.node, which `npm run setup` verified), run in Node. The binding's
+    path goes in as an argument, never into the script's text."""
+    import subprocess
+
+    directory = str(Path(store).resolve() / "proj") + "/"
+    script = (
+        "process.env.PROJ_DATA = process.argv[1];"
+        "const api = require(process.argv[1] + 'proj_capi.node');"
+        "process.stdout.write(api.proj_info().version);"
+    )
+    result = subprocess.run(["node", "-e", script, directory], check=True, capture_output=True, text=True)
+    return result.stdout
+
+
 def proj(store):
     """PROJ transformations, from pyproj (the reference for plan 4a's CRS operations):
     forward (design coordinates to geographic 3D, lon/lat in degrees, height in metres)
@@ -572,7 +588,9 @@ def proj(store):
     Moon pair is IAU 2015 south polar (metres) to Moon (2015) sphere geographic, which
     is the only Moon geographic CRS in the store's proj.db (it has no 3D one); heights
     pass through. Records pyproj's PROJ version and, per pair, the operation it chose
-    (its PROJ string and accuracy) so a different choice in the engine's PROJ shows."""
+    (its PROJ string and accuracy) so a different choice in the engine's PROJ shows,
+    and the engine's PROJ version (from the store's native binding), which the data
+    test checks against the loaded PROJ so a new engine regenerates the fixture."""
     import pyproj
     from pyproj import Transformer
     from pyproj.datadir import append_data_dir
@@ -598,7 +616,12 @@ def proj(store):
         ("WGS 84 / UTM zone 11N", "EPSG:32611", "EPSG:4979", (500000.0, 0.0), 1.0),
         ("Moon (2015) - Sphere / Ocentric / South Polar", "IAU_2015:30135", "IAU_2015:30100", (0.0, 0.0), 1.0),
     ]
-    out = {"pyprojVersion": pyproj.__version__, "projVersion": pyproj.proj_version_str, "cases": []}
+    out = {
+        "pyprojVersion": pyproj.__version__,
+        "projVersion": pyproj.proj_version_str,
+        "engineProjVersion": engine_proj_version(store),
+        "cases": [],
+    }
     for name, source, target, origin, unit in cases:
         group = pyproj.transformer.TransformerGroup(source, target, always_xy=True)
         assert group.transformers, f"no available operation for {source}"
