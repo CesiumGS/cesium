@@ -6904,7 +6904,7 @@ _Upstream proposals, for the owner to take to the right people (owner,
 tileset declaration overlaps existing work for its CRS (`ESRI_crs` in 3D
 Tiles 1.1; `EXT_geospatial_crs_source`, an open draft in the 3D Tiles 2.0
 work, CesiumGS/glTF#131) and its body (`3DTILES_ellipsoid`; the 2.0 root
-CRS). The declaration is renamed `CESIUM_engineering_frame` and composes
+CRS). The declaration is renamed `BENTLEY_engineering_frame` and composes
 with those. What is new, and worth proposing:
 
 - **A placement mode on the source CRS (3D Tiles 2.0, #131):** one field,
