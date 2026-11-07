@@ -418,7 +418,7 @@ const heightOf = (p: ArrayLike<number>): number | undefined =>
 
 /**
  * The ship's answer with the page's trace of the mast's sight line to the
- * buoy (Task 7): the verdict joins the label and leads the aside. It says
+ * lighthouse (Task 7): the verdict joins the label and leads the aside. It says
  * what decided it: where the line meets the drawn terrain, or the lowest
  * clearance beyond each end's own ground (the ray's margin) with the
  * terrain's error there, over the drawn sea or the drawn land. The sea is
@@ -439,7 +439,7 @@ function withSight(
   });
   if (!v || v.traced !== sight.key || v.state === "waiting") {
     return join(
-      "buoy: tracing",
+      "lighthouse: tracing",
       `${sight.target}: ${v?.state === "waiting" && v.traced === sight.key ? v.text : "the sight line isn't traced yet"}`,
     );
   }
@@ -450,14 +450,14 @@ function withSight(
       ? "the drawn sea"
       : "the drawn land";
   };
-  /** "2.1 km short of the buoy". */
+  /** "2.1 km short of Alcatraz Light". */
   const short = (p: ArrayLike<number>) =>
     v.to ? ` ${length(dist3(p, v.to))} short of ${sight.target}` : "";
   const m = v.margin;
   switch (v.state) {
     case "clear":
       return join(
-        "buoy in sight",
+        "lighthouse in sight",
         `${sight.target} in sight: ${m ? `the line passes ${length(m.clearance)} over ${ground(m.at, m.clearance)}${short(m.at)} at its lowest, beyond the terrain's ±${length(m.error)}` : "the line clears the drawn terrain"}`,
       );
     case "blocked": {
@@ -465,20 +465,20 @@ function withSight(
         ? ` ${ground(v.hitAt, 0)}${v.from ? ` ${length(dist3(v.hitAt, v.from))} out` : ""}`
         : " the drawn terrain";
       return join(
-        "buoy hidden",
+        "lighthouse hidden",
         `${sight.target} hidden: the line meets${where}`,
       );
     }
     case "may-block":
       return join(
-        "buoy: can't tell",
+        "lighthouse: can't tell",
         m
           ? `${sight.target}: the line passes ${length(m.clearance)} over ${ground(m.at, m.clearance)}${short(m.at)}, inside the terrain's ±${length(m.error)} (a per-level heuristic): can't tell`
           : `${sight.target}: the line passes within the terrain's error; can't tell`,
       );
     case "unknown":
       return join(
-        "buoy: can't tell",
+        "lighthouse: can't tell",
         `${sight.target}: ${v.unknownFraction !== undefined && v.unknownFraction < 1 ? `the terrain is unknown over ${share(v.unknownFraction)} of the line near the ground` : "no drawn terrain to trace it over"}; can't tell`,
       );
   }

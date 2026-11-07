@@ -1,12 +1,14 @@
-// When the drawn headlands stop meeting the ship's mast's line to the buoy
-// (Task 7), on the page's thread: the sight line traced over the drawn
+// When the drawn headlands stop meeting the ship's mast's line to the
+// lighthouse (Task 7; Alcatraz Island Light since the owner's follow-up,
+// 2026-11-07), on the page's thread: the sight line traced over the drawn
 // terrain each minute along the ship's whole track (the same frames as the
 // worker's, vehicles.ts, and the same trace as the answer's,
 // sightLines.ts). The spans where the drawn terrain doesn't block it go on
 // the timeline as windows (Task 6c's clickable marks), each saying whether
 // it is in sight or only within the terrain's error; the first that follows
 // a minute the land blocked it is the moment, "Headland stops blocking (as
-// drawn)", or "Buoy comes into view" only when that span traced clear.
+// drawn)", or "Lighthouse comes into view" only when that span traced
+// clear.
 //
 // A minute over terrain not drawn, or drawn only coarsely, is in no window,
 // and nothing is "in sight" within the terrain's error (Review Focus 2).
@@ -24,10 +26,10 @@ import type { Moment, ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import { shipStartTdb } from "./scenarios/scenes.ts";
 import type { KnobState, ScenarioId } from "./scenarios/spec.ts";
 import {
-  BUOY,
-  BUOY_GROUND,
+  LIGHTHOUSE,
+  LIGHTHOUSE_GROUND,
   SHIP,
-  buoyLight,
+  lighthouseLight,
   shipFrames,
   shipSpan,
 } from "./scenarios/vehicles.ts";
@@ -102,10 +104,10 @@ export function sightWindows(
     const run = samples.slice(i, j + 1);
     const startUtc = startMs + i * step * 1000;
     windows.push({
-      id: `buoy-${windows.length}`,
+      id: `lighthouse-${windows.length}`,
       label: run.every((x) => x === "clear")
-        ? `${BUOY.short} in sight from the mast (traced each minute over the drawn terrain)`
-        : `The drawn headlands don't meet the mast's line to ${BUOY.short}; near the water it stays within the terrain's error, so the buoy can't be told in sight (traced each minute)`,
+        ? `${LIGHTHOUSE.short} in sight from the mast: the line clears the drawn terrain beyond its error (traced each minute)`
+        : `The drawn headlands don't meet the mast's line to ${LIGHTHOUSE.short}; it passes within the terrain's error, so the lighthouse can't be told in sight (traced each minute)`,
       startUtc,
       // A run's last sample stands for the minute after it, to the track's end.
       endUtc: startMs + Math.min(j + 1, samples.length - 1) * step * 1000,
@@ -116,13 +118,13 @@ export function sightWindows(
       // whole run traced clear.
       const clear = run.every((x) => x === "clear");
       moment = {
-        id: "buoy-in-view",
+        id: "lighthouse-in-view",
         label: clear
-          ? "Buoy comes into view"
+          ? "Lighthouse comes into view"
           : "Headland stops blocking (as drawn)",
         title: clear
-          ? `the first minute the mast's line to ${BUOY.short} clears the drawn terrain beyond its error`
-          : `the first minute the drawn headlands no longer meet the mast's line to ${BUOY.short}; near the water the line stays within the drawn terrain's error, so the buoy can't be told in sight`,
+          ? `the first minute the mast's line to ${LIGHTHOUSE.short} clears the drawn terrain beyond its error, all the way to the span's end`
+          : `the first minute the drawn headlands no longer meet the mast's line to ${LIGHTHOUSE.short}; the line passes within the drawn terrain's error, so the lighthouse can't be told in sight`,
         icon: "timeline",
         utcMs: startUtc,
       };
@@ -132,7 +134,7 @@ export function sightWindows(
 }
 
 /** How the last scan went: the samples it could settle, of all, and its cost. */
-export interface BuoyCoverage {
+export interface LighthouseCoverage {
   settled: number;
   samples: number;
   /** The main thread's time tracing, ms. */
@@ -141,18 +143,18 @@ export interface BuoyCoverage {
   elapsedMs: number;
 }
 
-export interface BuoyWindow {
+export interface LighthouseWindow {
   windows(): readonly SightWindow[];
   /** The moment, once a scan finds one. */
   presets(): readonly Moment[] | undefined;
-  coverage(): BuoyCoverage | undefined;
+  coverage(): LighthouseCoverage | undefined;
   evaluationChanged(): void;
   /** The globe the viewer shows changed (stage.ts): follow its heights. */
   globeChanged(): void;
   dispose(): void;
 }
 
-export function createBuoyWindow(deps: {
+export function createLighthouseWindow(deps: {
   viewer: Pick<Viewer, "globe" | "engine" | "view">;
   frames(): Frames | undefined;
   scenario(): ScenarioId | undefined;
@@ -161,11 +163,11 @@ export function createBuoyWindow(deps: {
   globeShown(): "ellipsoid" | "terrain" | undefined;
   /** The windows or the moment changed. */
   changed(): void;
-}): BuoyWindow {
+}): LighthouseWindow {
   const { viewer } = deps;
   let windows: SightWindow[] = [];
   let presets: Moment[] | undefined;
-  let coverage: BuoyCoverage | undefined;
+  let coverage: LighthouseCoverage | undefined;
   /** What the published windows were traced for ("" for none). */
   let published = "";
   /** The scan running, if one is: what it is for. */
@@ -190,14 +192,14 @@ export function createBuoyWindow(deps: {
     if (
       e?.scenario !== "ship" ||
       !e.track ||
-      e.track.buoySea === undefined ||
+      e.track.lightSea === undefined ||
       deps.globeShown() !== "terrain"
     ) {
       return "";
     }
     return JSON.stringify([
       e.track.heights,
-      e.track.buoySea,
+      e.track.lightSea,
       deps.knobs().mast,
     ]);
   }
@@ -244,7 +246,7 @@ export function createBuoyWindow(deps: {
     const began = performance.now();
     let busy = 0;
     const heights = e.track.heights;
-    const light = buoyLight(e.track.buoySea!);
+    const light = lighthouseLight(e.track.lightSea!);
     const startTdb = shipStartTdb(frames);
     const [, mast] = shipFrames(
       frames.itrf,
@@ -271,7 +273,7 @@ export function createBuoyWindow(deps: {
         out.push(
           sampleOf(
             terrainLineOfSight(placed.from, placed.to, target, {
-              groundRadius: BUOY_GROUND,
+              groundRadius: LIGHTHOUSE_GROUND,
             }),
           ),
         );

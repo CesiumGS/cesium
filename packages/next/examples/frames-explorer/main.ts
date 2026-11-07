@@ -57,7 +57,7 @@ import { createScenarioHost } from "./scenarioHost.ts";
 import { scenarioView } from "./scenarioModel.ts";
 import { createStage } from "./scenarios/stage.ts";
 import { createBodyLines } from "./bodyLines.ts";
-import { createBuoyWindow } from "./buoyWindow.ts";
+import { createLighthouseWindow } from "./lighthouseWindow.ts";
 import { createSightLines } from "./sightLines.ts";
 import { createSkyRay } from "./skyRay.ts";
 import { ViewStore, formatParams, parseParams } from "./selection.ts";
@@ -293,7 +293,7 @@ export function run(context: ExampleContext): ExampleRun {
     refreshCallouts: () => callouts.refresh(),
     globeChanged: () => {
       sightLines.globeChanged();
-      buoyWindow.globeChanged();
+      lighthouseWindow.globeChanged();
     },
     evaluation: () => host.state().evaluation,
   });
@@ -361,9 +361,9 @@ export function run(context: ExampleContext): ExampleRun {
     changed: () => invalidate(),
   });
   scope.defer(() => sightLines.dispose());
-  // When the ship's mast sees the buoy along its whole track (Task 7):
+  // When the ship's mast sees the lighthouse along its whole track (Task 7):
   // traced on demand, its spans on the timeline and its moment in the knobs.
-  const buoyWindow = createBuoyWindow({
+  const lighthouseWindow = createLighthouseWindow({
     viewer,
     frames,
     scenario: () =>
@@ -376,8 +376,8 @@ export function run(context: ExampleContext): ExampleRun {
       invalidate();
     },
   });
-  scope.defer(() => buoyWindow.dispose());
-  /** The scenario's windows on the timeline: the evaluation's (the dish's behind the Moon) and the page's (the ship's buoy). */
+  scope.defer(() => lighthouseWindow.dispose());
+  /** The scenario's windows on the timeline: the evaluation's (the dish's behind the Moon) and the page's (the ship's lighthouse). */
   function refreshMarks(): void {
     const state = host.state();
     viewer.timeControls?.setMarks(
@@ -385,7 +385,7 @@ export function run(context: ExampleContext): ExampleRun {
         ...((stage.scene() !== undefined
           ? state.evaluation?.windows
           : undefined) ?? []),
-        ...buoyWindow.windows(),
+        ...lighthouseWindow.windows(),
       ].map((w) => ({
         start: w.startUtc,
         end: w.endUtc,
@@ -437,7 +437,7 @@ export function run(context: ExampleContext): ExampleRun {
         callouts.refresh();
         sightLines.evaluationChanged();
         stage.evaluationChanged();
-        buoyWindow.evaluationChanged();
+        lighthouseWindow.evaluationChanged();
         refreshMarks();
       }
       if (state.generation !== paramsGeneration) {
@@ -537,8 +537,8 @@ export function run(context: ExampleContext): ExampleRun {
           }),
         ...(stage.scene() !== undefined &&
           sightLines.view() !== undefined && { terrain: sightLines.view()! }),
-        ...(buoyWindow.presets() !== undefined && {
-          pagePresets: buoyWindow.presets()!,
+        ...(lighthouseWindow.presets() !== undefined && {
+          pagePresets: lighthouseWindow.presets()!,
         }),
         scrub,
       });

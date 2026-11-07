@@ -351,24 +351,36 @@ ship's mast and sight line are placed every frame from the page's own
 frames (`bodyLines.ts`), and a data test holds them to the worker's at
 sample instants. What the terrain says is the page's: the drone's spot is
 where its camera's ray meets the drawn terrain, read off a local placement
-the worker makes from PROJ (`footprint`); the ship's sight line to Harding
-Rock's buoy is traced on demand, and each minute of its track is traced in
-slices of about 8 ms for the timeline's windows and the moment
-(`buoyWindow.ts`; the 95 traces take 20 to 30 ms of the main thread at the
-default view, measured; a running scan finishes, and heights that change
-meanwhile queue one more; a scan for another mast or datum never
-publishes). The moment says what the drawn terrain shows: "Headland stops
-blocking (as drawn)", its tooltip saying the line stays within the
-terrain's error near the water, or "Buoy comes into view" only when the
+the worker makes from PROJ (`footprint`); the ship's sight line to
+Alcatraz Island Light (the owner's follow-up, 2026-11-07: Harding Rock's
+buoy, 3 m up, was always inside the terrain's error) is traced on demand,
+and each minute of its track is traced in slices of about 8 ms for the
+timeline's windows and the moment (`lighthouseWindow.ts`; a running scan
+finishes, and heights that change meanwhile queue one more; a scan for
+another mast or datum never publishes). The light is NOAA's U.S. Coast
+Pilot 7 (2026, 58th edition, chapter 7): 37°49′34″ N, 122°25′20″ W, 214 ft
+above mean high water (the Coast Pilot's datum for heights, chapter 1),
+carried to NAVD88 by station 9414290's published tidal datums (MHW 1.612 m
+above NAVD88, 1983–2001 epoch; ±0.05 m estimated, as NOAA states none); the
+USCG Light List couldn't be fetched (HTTP 403). It stands 66.8 m above
+NAVD88 on an island about 500 m long, the line's own ground at that end
+(`LIGHTHOUSE_GROUND`). The moment says what the drawn terrain shows:
+"Headland stops blocking (as drawn)", its tooltip saying the line stays
+within the terrain's error, or "Lighthouse comes into view" only when the
 span traced clear. A moment may set knobs instead of the time (the drone's
-"Over the building"). Near the water the line passes within the drawn
-terrain's error (its per-level heuristic, ±19 m to ±38 m at the levels
-drawn), so the buoy reads "can't tell", never "in sight", unless the tiles
-are fine enough; the verdict states the deciding clearance
-(`terrainLineOfSight`'s `margin`: away from each end's own ground), its
-error, where it is and whether the drawn ground under it is the sea
-(GEOID18's, whatever the datum knob says) or the land. Without terrain it
-says "can't tell", never "tracing" for ever.
+"Over the building"). At the checked setup and the default view the line
+passes about 16 m over the drawn land at the Golden Gate's south shore,
+inside the ±38 m of the level-11 tiles drawn there, so it reads "can't
+tell"; zoomed toward the Gate (level-13 tiles, ±9.4 m) the last minutes of
+the track read "in sight", the line 24 m over the drawn land beyond its
+error (browser check, 2026-11-07; the Coast Pilot leads ships in on 070°
+toward this light). Near the ship, over the sea, a 25 m mast clears a
+level-12 sea's ±19 m by about 6 m (a data test). The verdict states the
+deciding clearance (`terrainLineOfSight`'s `margin`: away from each end's
+own ground), its error, where it is and whether the drawn ground under it
+is the sea (GEOID18's, whatever the datum knob says) or the land: never
+"in sight" without that bound, and "can't tell" inside the error band.
+Without terrain it says "can't tell", never "tracing" for ever.
 
 **The panel, top to bottom, one scroll** (`panel/Scenarios.tsx`): the
 strip; the question as the tab's heading (`headline-sm`); the knobs; the
@@ -1225,11 +1237,11 @@ board, an overlay's `OverlayState`).
 | `skyRay.ts`               | The line of sight up to the Moon or Orion, placed every frame at the shown instant (Task 6b)                                                                         |
 | `scenarios/pointing.ts`   | Azimuth and elevation, and the pointing by hand: light time and aberration (pure; Task 6b)                                                                           |
 | `scenarios/bodyFrame.ts`  | A moving body's frame from its track: heading from the velocity, pitch and roll (`trackFrame`; pure, Task 7)                                                         |
-| `scenarios/vehicles.ts`   | The drone's and the ship's synthetic tracks, frames, sea state and buoy (pure; the page and the worker, Task 7)                                                      |
+| `scenarios/vehicles.ts`   | The drone's and the ship's synthetic tracks, frames, sea state and lighthouse (pure; the page and the worker, Task 7)                                                |
 | `scenarios/placement.ts`  | The design grid read off the worker's local placement on the page (the drone's spot, Task 7)                                                                         |
 | `scenarios/testHill.ts`   | A drawn test hill (one tile) the line of sight is checked against by hand (the catalog and the tests, Task 7)                                                        |
-| `bodyLines.ts`            | The drone's camera ray and spot, the ship's mast and sight line to the buoy, placed every frame (Task 7)                                                             |
-| `buoyWindow.ts`           | The ship's sight line traced each minute along its track, on demand: the timeline's windows and the moment (Task 7)                                                  |
+| `bodyLines.ts`            | The drone's camera ray and spot, the ship's mast and sight line to the lighthouse, placed every frame (Task 7)                                                       |
+| `lighthouseWindow.ts`     | The ship's sight line traced each minute along its track, on demand: the timeline's windows and the moment (Task 7)                                                  |
 | `scenarios/jointChain.ts` | A kinematic chain of joint frames, defined by the app through the public `Frame` API, uncached, each with its stated accuracy (Task 7b)                              |
 | `scenarios/arm.ts`        | The robot arm at LC-39A: its pad, synthetic geometry and spec sheet, its frames, the closed form and lever-arm rule by hand (pure; the page and the worker, Task 7b) |
 | `scenarios/robotArm.ts`   | The arm's evaluator: the tool-to-CCV6 distance, its composed accuracy, the station through PROJ (Task 7b)                                                            |

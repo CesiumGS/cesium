@@ -2521,18 +2521,36 @@
       },
       "track": "The explorer's track: the northbound lane's centreline (122-39.80W) from 37-33.00N to 37-39.20N; across the precautionary area to the eastbound lane's start (37-45.85N 122-37.85W, midway between its two lines); along the lane's centreline through 37-46.893N 122-34.30W to 37-47.95N 122-30.90W; at 12 knots."
     },
-    "uscg-light-list-harding-rock": {
+    "noaa-coast-pilot-7-alcatraz-light": {
       "kind": "input",
       "source": {
-        "document": "USCG Light List, Volume VI, Pacific Coast and Pacific Islands, District 11: Harding Rock Lighted Buoy HR, red and green bands, Fl (2+1)R 6s",
-        "publisher": "U.S. Coast Guard Navigation Center; the position as transcribed by the San Francisco YRA marks compilation (github.com/nkiesel/YRA-Marks, mark YRA-17), which gives the USCG Light List, District 11, as its source",
-        "locator": "YRA-Marks, mark YRA-17 (Harding Rock Lighted Buoy HR)",
-        "url": "https://github.com/nkiesel/YRA-Marks",
+        "document": "United States Coast Pilot 7, Pacific Coast — California, 2026 (58th) Edition",
+        "publisher": "NOAA, Office of Coast Survey",
+        "locator": "Chapter 7 (San Francisco Bay), page 283, paragraph (195): \"Alcatraz Light (37°49'34\"N., 122°25'20\"W.), 214 feet above the water\" (a gray octagonal pyramidal tower on the island's southeast part); Chapter 1, paragraph (40), Heights: \"in feet (meters) above the tidal datum used for that purpose on the charts, usually mean high water\"",
+        "edition": "2026 (58th) Edition, chapters dated 01 NOV 2026",
+        "url": "https://nauticalcharts.noaa.gov/publications/coast-pilot/files/cp7/CPB7_C07_WEB.pdf",
+        "sha256": "33a58f91f02e641ab4ad0f477b683e818aa54e8ff703575e1170a88d7e2d24a3",
         "retrieved": "2026-11-07"
       },
-      "description": "The buoy the ship's mast looks for (scenarios/vehicles.ts BUOY): an input, not an expected value. The Light List's own PDF (navcen.uscg.gov) answered HTTP 403 to the fetch, so the position is the compilation's, unchecked against it; its light's height above the water is assumed, 3 m (the Light List gives none for a buoy). Not for navigation.",
-      "latitude": "37.838240",
-      "longitude": "-122.445990"
+      "description": "The lighthouse the ship's mast looks for (scenarios/vehicles.ts LIGHTHOUSE): an input, not an expected value (ruling F6). The USCG Light List (Volume VI) is the primary source for a light's position and height, but navcen.uscg.gov answered HTTP 403 (and timed out) to the fetch, so the Coast Pilot's published entry is used; its chapter 1 is CPB7_C01_WEB.pdf (SHA-256 541a4003c12d684aa71e39a90b4d0befea9a036ffa50eb24d9635163518f4bec). The position is on NAD 83 to the nearest second (about ±15 m); the height is to the nearest foot, above mean high water. Not for navigation.",
+      "latitude": "37°49'34\"N",
+      "longitude": "122°25'20\"W",
+      "heightAboveMhw": "214 ft"
+    },
+    "noaa-coops-9414290-datums": {
+      "kind": "input",
+      "source": {
+        "document": "NOAA CO-OPS tidal datums, station 9414290, San Francisco, CA",
+        "publisher": "NOAA, Center for Operational Oceanographic Products and Services (CO-OPS), metadata API",
+        "locator": "datums.json, units metric: epoch 1983-2001 (National Tidal Datum Epoch), accepted Apr 17 2003; MHW 3.416 m and NAVD88 1.804 m above the station datum (STND)",
+        "edition": "epoch 1983-2001, accepted 2003-04-17",
+        "url": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/datums.json?units=metric",
+        "retrieved": "2026-11-07"
+      },
+      "description": "Carries the lighthouse's height from mean high water to NAVD88 (scenarios/vehicles.ts LIGHTHOUSE.mhwAboveNavd88: MHW − NAVD88 = 1.612 m): an input, not an expected value. NOAA states no accuracy for the offset; the example estimates ±0.05 m (Alcatraz is 4 km from the gauge, and mean high water drifts by centimetres across the central bay), labelled as an estimate.",
+      "MHW": "3.416",
+      "NAVD88": "1.804",
+      "units": "m above STND"
     }
   }
 }

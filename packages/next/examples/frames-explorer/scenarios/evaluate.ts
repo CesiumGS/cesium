@@ -151,7 +151,7 @@ export interface ScenarioAnswer {
   };
   /**
    * The answer carries a line of sight to a target over the terrain (the
-   * ship's mast to the buoy, Task 7): the page's trace of sight line
+   * ship's mast to the lighthouse, Task 7): the page's trace of sight line
    * `line` joins its verdict to the label and the aside. `sea` is the
    * drawn sea's ellipsoidal height at the target through GEOID18 (whatever
    * the datum knob says), m, to tell the drawn sea from the land where the
@@ -179,8 +179,8 @@ export interface SightLine {
   subject?: string;
   /**
    * How far from each end (m) the path counts as over that end's own
-   * ground (`terrainLineOfSight`'s `groundRadius`): the ship's buoy floats
-   * on the sea it stands over.
+   * ground (`terrainLineOfSight`'s `groundRadius`): the ship's lighthouse
+   * stands on its island.
    */
   groundRadius?: number;
   /**
@@ -322,10 +322,10 @@ export interface ScenarioEvaluation {
   /**
    * A moving body's track, for the page to build the same frames from
    * (vehicles.ts): each vertex's ellipsoidal height, m, the datum knob
-   * already applied (GEOID18 is the worker's), and the sea's at the
-   * ship's buoy.
+   * already applied (GEOID18 is the worker's), and NAVD88's zero at the
+   * ship's lighthouse, as the datum knob reads it.
    */
-  track?: { heights: readonly number[]; buoySea?: number };
+  track?: { heights: readonly number[]; lightSea?: number };
   /**
    * The robot arm (Task 7b): its tool's place (ITRF, m) at the knobs, for
    * the page's agreement test; the station it is measured to (ITRF, m, at

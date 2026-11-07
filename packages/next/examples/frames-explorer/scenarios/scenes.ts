@@ -39,9 +39,9 @@ import type { ScenarioEvaluation } from "./evaluate.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 import {
-  BUOY,
   CAMERA_MOUNT,
   DRONE_BODY,
+  LIGHTHOUSE,
   MAST_SENSOR,
   SHIP,
   SHIP_BODY,
@@ -648,7 +648,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
   ship: {
     id: "ship",
     // Over the main ship channel, looking in toward the Golden Gate: the
-    // ship's last legs, the headlands and the buoy beyond them, close
+    // ship's last legs, the headlands and the lighthouse beyond them, close
     // enough that the terrain the sight line crosses is drawn at levels
     // 11 to 13.
     camera: "site",
@@ -677,7 +677,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       "California zone 3":
         "the ship's easting and northing on the port's grid, in US survey feet",
     },
-    diagramNote: `The ship's place comes from its track; the mast rides its body as it pitches and rolls. ${BUOY.short}'s sight line is traced over the terrain on the globe.`,
+    diagramNote: `The ship's place comes from its track; the mast rides its body as it pitches and rolls. ${LIGHTHOUSE.short}'s sight line is traced over the terrain on the globe.`,
     calloutNote:
       "Synthetic track and sea state; the sight line is the terrain as drawn, no refraction.",
     note: "The track and the sea state are synthetic (along 33 CFR 167's lanes). The sight line is traced over the terrain as drawn: the sea's curve and the headlands; refraction is left out.",

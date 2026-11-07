@@ -262,7 +262,7 @@ export interface ScenarioViewInput {
   sceneCalloutNote?: string;
   /** Its lines of sight over the terrain (sightLines.ts). */
   terrain?: ScenarioPanelView["terrain"];
-  /** Moments the page found itself, after the evaluation's (the ship's buoy coming into view, Task 7). */
+  /** Moments the page found itself, after the evaluation's (the ship's lighthouse coming into view, Task 7). */
   pagePresets?: readonly Moment[];
   scrub(text: string): string;
 }

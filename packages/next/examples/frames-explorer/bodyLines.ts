@@ -10,8 +10,9 @@
 //    nothing, or before it is traced.
 //  - The ship: its track; the mast, a leader from the waterline up to the
 //    sensor as the ship pitches and rolls; the sight line from the sensor to
-//    the buoy's light, green where the last trace found it clear, red past
-//    where it met the terrain, amber where it can't tell; the buoy's name.
+//    the lighthouse's light, green where the last trace found it clear, red
+//    past where it met the terrain, amber where it can't tell; the light's
+//    name.
 //
 //  - The robot arm (Task 7b): its links joint to joint from the page's own
 //    joint frames (the knobs move them), a ring at the tool, and the
@@ -40,12 +41,12 @@ import type { LabelBoard } from "./triadLayer.ts";
 import { ARM, MARK, PAD_OUTSIDE_SHORT } from "./scenarios/arm.ts";
 import { CAPSTONE, type SceneSpec } from "./scenarios/scenes.ts";
 import {
-  BUOY,
   CAMERA_MOUNT,
+  LIGHTHOUSE,
   MAST_SENSOR,
   SHIP_BODY,
-  buoyLight,
   droneTrack,
+  lighthouseLight,
   onEarth,
   shipTrack,
 } from "./scenarios/vehicles.ts";
@@ -583,7 +584,7 @@ export function createBodyLines(deps: {
         () => trackPoints(shipTrack(heights).vertices, heights),
         "track",
       );
-      if (body && mast && sight && e.track?.buoySea !== undefined) {
+      if (body && mast && sight && e.track?.lightSea !== undefined) {
         const waterline = at3(frameTransform(body, frames.itrf, instant));
         const sensor = at3(frameTransform(mast, frames.itrf, instant));
         segments.push({
@@ -592,7 +593,7 @@ export function createBodyLines(deps: {
           to: sensor,
           color: "white",
         });
-        const light = Array.from(buoyLight(e.track.buoySea));
+        const light = Array.from(lighthouseLight(e.track.lightSea));
         const mine = currentTrace(traces, sight.line, sight.key, stale);
         const hit = mine?.state === "blocked" ? mine.hitAt : undefined;
         if (hit && mine?.from) {
@@ -639,8 +640,8 @@ export function createBodyLines(deps: {
                 : "tracing";
         labels.push(
           {
-            id: "bodies:buoy",
-            text: BUOY.name,
+            id: "bodies:lighthouse",
+            text: LIGHTHOUSE.name,
             at: Float64Array.from(light),
             family: "earth",
             priority: 3,
@@ -648,7 +649,7 @@ export function createBodyLines(deps: {
           },
           {
             id: "bodies:sight",
-            text: `To ${BUOY.short} · ${words}`,
+            text: `To ${LIGHTHOUSE.short} · ${words}`,
             at: () => anchor.sight,
             family: "earth",
             priority: 4,
@@ -667,7 +668,7 @@ export function createBodyLines(deps: {
     for (const s of segments) {
       draw(s);
     }
-    // A fixed label's place is part of its key: the buoy's light moves 32 m
+    // A fixed label's place is part of its key: the lighthouse's light moves 32 m
     // with the datum, the spot with the knobs (review finding 10).
     const key = labels
       .map(

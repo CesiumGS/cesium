@@ -3,20 +3,20 @@
 // 33 CFR 167.400–167.406, labelled synthetic: no AIS extract small enough to
 // pin exists, vehicles.ts), pitching and rolling in a modelled sea, with a
 // sensor up its mast. The questions: where is the ship on the port's design
-// grid (California zone 3), and can the mast see Harding Rock's buoy past
-// the headlands of the Golden Gate? The time is the viewer's timeline.
+// grid (California zone 3), and can the mast see Alcatraz Island's light
+// past the headlands of the Golden Gate? The time is the viewer's timeline.
 //
 // The tree adds the ship's body under ITRF (from its track: its place,
 // heading along the lane, and the sea state's pitch and roll), the mast
 // sensor under the body, and California zone 3 under ITRF. The ship's
 // reference point is data, pinned beside its body; its route runs to ITRF
-// and through PROJ to the grid. The mast's sight line to the buoy is traced
+// and through PROJ to the grid. The mast's sight line to the light is traced
 // on the page over the drawn terrain (Task 5, sightLines.ts): the sea's
 // curve and the headlands are both in it.
 //
 // The height datum (the knob): the sea is at NAVD88 0 m, which GEOID18 puts
 // about 32 m below the ellipsoid here; taken at the ellipsoid's 0 instead,
-// the ship and the buoy float 32 m too high, and the mast sees further than
+// the ship and the light float 32 m too high, and the mast sees further than
 // it can. Charts use mean lower low water: plan 4b's work.
 import type { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
 import { frameTransform } from "../../../src/frames/Frame.ts";
@@ -39,15 +39,16 @@ import {
 import { BIM_CRS, FTUS_PER_M, crsEdge } from "./sites.ts";
 import type { KnobState } from "./spec.ts";
 import {
-  BUOY,
-  BUOY_GROUND,
+  LIGHTHOUSE,
+  LIGHTHOUSE_GROUND,
+  LIGHT_HEIGHT,
   MAST_SENSOR,
   SEA_STATE,
   SHIP,
   SHIP_BODY,
   alongTrack,
-  buoyLight,
   headingText,
+  lighthouseLight,
   seaState,
   shipAt,
   shipFrames,
@@ -57,17 +58,17 @@ import {
 
 const CA = BIM_CRS["ca-zone-3"];
 
-/** The sea's ellipsoidal height at each vertex and at the buoy: NAVD88 0 through GEOID18, or the ellipsoid's 0. */
+/** The sea's ellipsoidal height at each vertex and NAVD88's zero at the lighthouse: through GEOID18, or the ellipsoid's 0. */
 export function seaHeights(
   navd88: EngineeringFrame,
   knobs: KnobState,
-): { heights: number[]; buoySea: number; geoid: number } {
+): { heights: number[]; lightSea: number; geoid: number } {
   const on = knobs.datum === "navd88";
   const heights = SHIP.vertices.map(([lon, lat]) =>
     on ? geoidHeight(navd88, lon, lat) : 0,
   );
-  const geoid = geoidHeight(navd88, BUOY.longitude, BUOY.latitude);
-  return { heights, buoySea: on ? geoid : 0, geoid };
+  const geoid = geoidHeight(navd88, LIGHTHOUSE.longitude, LIGHTHOUSE.latitude);
+  return { heights, lightSea: on ? geoid : 0, geoid };
 }
 
 /** "6,012,345.6 ftUS". */
@@ -100,8 +101,8 @@ function method(): NonNullable<ScenarioAnswer["method"]> {
       text: "Its reference point (the body's origin, at the waterline) goes through California zone 3's PROJ operation to its easting and northing in US survey feet.",
     },
     {
-      title: "The buoy",
-      text: `The page traces the mast's straight line to ${BUOY.name}'s light (its position as the San Francisco YRA marks list transcribes it from the USCG Light List, not checked against the Light List itself; the light assumed ${BUOY.lightHeight} m above the water) against the terrain as drawn: the sea curving away and the headlands either side of the Golden Gate are both in it. Air bends the line a little over the sea (refraction), which is left out.`,
+      title: "The lighthouse",
+      text: `The page traces the mast's straight line to ${LIGHTHOUSE.name} against the terrain as drawn: the sea curving away and the headlands either side of the Golden Gate are both in it. The light's place and height are NOAA's U.S. Coast Pilot 7 (2026, 58th edition, chapter 7): 37°49′34″ N, 122°25′20″ W, 214 ft (${fmt(LIGHTHOUSE.aboveMhw, 4)} m) above the water, which the Coast Pilot means as above mean high water. NOAA's published tidal datums at San Francisco (station 9414290, the 1983–2001 epoch) put mean high water ${fmt(LIGHTHOUSE.mhwAboveNavd88, 4)} m above NAVD88 (±${fmt(LIGHTHOUSE.offsetAccuracy, 1)} m, estimated: NOAA states no accuracy for it, and the island is 4 km from the gauge), so the light is ${fmt(LIGHT_HEIGHT, 4)} m above NAVD88. The Light List itself (USCG, Volume VI) couldn't be fetched. Air bends the line a little over the sea (refraction), which is left out.`,
     },
   ];
 }
@@ -117,7 +118,7 @@ export const evaluateShip: ScenarioEvaluator = async (
   const leap = f.data.leapSeconds;
   const plain = caZone3Frame(ctx, cache, "plain");
   const navd88 = caZone3Frame(ctx, cache, "navd88");
-  const { heights, buoySea, geoid } = seaHeights(navd88, knobs);
+  const { heights, lightSea, geoid } = seaHeights(navd88, knobs);
   const mastHeight = Number(knobs.mast);
   const startMs = Date.parse(SHIP.startUtc);
   const startTdb = Instant.fromUtc(startMs, leap).tdb();
@@ -128,7 +129,7 @@ export const evaluateShip: ScenarioEvaluator = async (
   const here = [b[12]!, b[13]!, b[14]!];
   const sensor = [s[12]!, s[13]!, s[14]!];
   const design = plain.fromBodyFixed(Float64Array.from(here));
-  const light = buoyLight(buoySea);
+  const light = lighthouseLight(lightSea);
   const range = Math.hypot(...[0, 1, 2].map((i) => light[i]! - sensor[i]!));
   const span = shipSpan(heights);
   const elapsed = epochTdb - startTdb;
@@ -146,7 +147,7 @@ export const evaluateShip: ScenarioEvaluator = async (
   // the mast's and the light's horizons, √(2Rh) each.
   const R = 6_371_000;
   const horizons =
-    Math.sqrt(2 * R * mastHeight) + Math.sqrt(2 * R * BUOY.lightHeight);
+    Math.sqrt(2 * R * mastHeight) + Math.sqrt(2 * R * LIGHT_HEIGHT);
   const edge = crsEdge(plain);
   const key = JSON.stringify([mastHeight, knobs.datum]);
   const attitude = seaState(epochTdb);
@@ -264,8 +265,8 @@ export const evaluateShip: ScenarioEvaluator = async (
     },
     answer: {
       label: `E ${ft(design[0]!)}, N ${ft(design[1]!)} ftUS`,
-      aside: `The ship ${where}, heading ${headingText(here, state.velocity)} · ${fmt(range / 1000, 3)} km from ${BUOY.short}`,
-      headline: `On California zone 3 the ship's reference point is at ${ft(design[0]!)} ftUS east and ${ft(design[1]!)} ftUS north. Whether the mast sees ${BUOY.name} is the drawn terrain's answer: the sea curving away between them and the headlands of the Golden Gate. Over a smooth sea alone (no refraction), a ${fmt(mastHeight, 3)} m mast and the buoy's ${BUOY.lightHeight} m light see each other out to ${fmt(horizons / 1000, 3)} km, and the buoy is ${fmt(range / 1000, 3)} km away. ${ellipsoidSea ? `Here the sea is taken at the ellipsoid's 0 m: GEOID18 puts it ${fmt(-geoid, 4)} m lower, so the ship and the buoy float that much too high, and the mast sees over what it can't.` : `The sea is at NAVD88 0 m, ${fmt(-geoid, 4)} m below the ellipsoid through GEOID18.`} Tides, and mean lower low water (the charts' datum), are left out: that is plan 4b's work.`,
+      aside: `The ship ${where}, heading ${headingText(here, state.velocity)} · ${fmt(range / 1000, 3)} km from ${LIGHTHOUSE.short}`,
+      headline: `On California zone 3 the ship's reference point is at ${ft(design[0]!)} ftUS east and ${ft(design[1]!)} ftUS north. Whether the mast sees ${LIGHTHOUSE.name} is the drawn terrain's answer: the sea curving away between them and the headlands of the Golden Gate. Over a smooth sea alone (no refraction), a ${fmt(mastHeight, 3)} m mast and the light, ${fmt(LIGHT_HEIGHT, 3)} m above NAVD88, see each other out to ${fmt(horizons / 1000, 3)} km, and the light is ${fmt(range / 1000, 3)} km away. ${ellipsoidSea ? `Here the sea is taken at the ellipsoid's 0 m: GEOID18 puts it ${fmt(-geoid, 4)} m lower, so the ship and the light float that much too high, and the mast sees over what it can't.` : `The sea is at NAVD88 0 m, ${fmt(-geoid, 4)} m below the ellipsoid through GEOID18.`} Tides, and mean lower low water (the charts' datum), are left out: that is plan 4b's work.`,
       accuracy: {
         ...(edge.accuracy.meters !== undefined && {
           meters: edge.accuracy.meters,
@@ -274,26 +275,26 @@ export const evaluateShip: ScenarioEvaluator = async (
       },
       path: { from: SHIP_BODY, to: CA.name },
       method: method(),
-      sight: { line: "buoy", key, target: BUOY.short, sea: geoid },
+      sight: { line: "lighthouse", key, target: LIGHTHOUSE.short, sea: geoid },
     },
     overlays: [],
     sightLines: [
       {
-        id: "buoy",
+        id: "lighthouse",
         key,
         from: sensor,
         to: Array.from(light),
-        label: BUOY.name,
-        subject: `The mast's line of sight to ${BUOY.name}`,
-        groundRadius: BUOY_GROUND,
+        label: LIGHTHOUSE.name,
+        subject: `The mast's line of sight to ${LIGHTHOUSE.name}`,
+        groundRadius: LIGHTHOUSE_GROUND,
       },
     ],
-    track: { heights, buoySea },
+    track: { heights, lightSea },
     legend: [
       {
         key: "ray",
-        label: `The mast's line of sight to ${BUOY.name}: green where clear, red where the terrain blocks it, amber where it can't tell`,
-        short: "To the buoy",
+        label: `The mast's line of sight to ${LIGHTHOUSE.name}: green where clear, red where the terrain blocks it, amber where it can't tell`,
+        short: "To the lighthouse",
         accuracy: `${fmt(range / 1000, 3)} km`,
         line: "solid",
         tone: "white",

@@ -1,9 +1,10 @@
 // The drone over the BIM site and the ship entering San Francisco Bay
 // (Task 7): their synthetic tracks, their body frames (bodyFrame.ts), the
 // drone's camera mount and the ship's mast sensor, the ship's modelled sea
-// state, and the buoy the mast looks for. Plain data and pure functions:
-// the worker's evaluators (drone.ts, ship.ts) and the page (the triads, the
-// lines placed every frame, the buoy's window) read the same ones, so the
+// state, and the lighthouse the mast looks for. Plain data and pure
+// functions: the worker's evaluators (drone.ts, ship.ts) and the page (the
+// triads, the lines placed every frame, the lighthouse's window) read the
+// same ones, so the
 // page's geometry is the worker's (Task 4c's rule).
 //
 // Heights come in as ellipsoidal heights, one per vertex: the worker turns
@@ -264,31 +265,55 @@ export function shipFrames(
   return [body, sensor];
 }
 
+/** One international foot, m. */
+const FOOT = 0.3048;
+
 /**
- * The buoy the mast looks for: Harding Rock Lighted Buoy HR, inside the
- * Golden Gate, past the headlands from the approach. Its position is the
- * USCG Light List's (Volume VI, District 11), as the San Francisco YRA
- * marks compilation transcribes it (references.json
- * uscg-light-list-harding-rock); its light's height above the water is
- * assumed (a lighted buoy's is a few metres; the Light List gives none).
+ * The light the mast looks for: Alcatraz Island Light, 2.5 miles inside
+ * the Golden Gate, past the headlands from the approach (a leading mark
+ * for entering the bay). Its position and its light's height are NOAA's
+ * Coast Pilot 7's (2026, 58th edition, chapter 7, paragraph 195: 37°49′34″
+ * N, 122°25′20″ W, 214 ft above the water; references.json
+ * noaa-coast-pilot-7-alcatraz-light), on NAD 83 taken as WGS 84 (about
+ * 1.5 m apart here). The Coast Pilot gives heights above the charts'
+ * datum for heights, usually mean high water (chapter 1, paragraph 40);
+ * NOAA's published tidal datums at San Francisco (station 9414290,
+ * 1983–2001 epoch: noaa-coops-9414290-datums) put mean high water
+ * 1.612 m above NAVD88, which carries the light to NAVD88.
  */
-export const BUOY = {
-  name: "Harding Rock Lighted Buoy HR",
-  short: "Buoy HR",
-  longitude: -122.44599,
-  latitude: 37.83824,
-  lightHeight: 3,
+export const LIGHTHOUSE = {
+  name: "Alcatraz Island Light",
+  short: "Alcatraz Light",
+  longitude: -(122 + 25 / 60 + 20 / 3600),
+  latitude: 37 + 49 / 60 + 34 / 3600,
+  /** The light's height above mean high water, m: the Coast Pilot's 214 ft. */
+  aboveMhw: 214 * FOOT,
+  /**
+   * Mean high water above NAVD88 at station 9414290, m: its published
+   * datums, MHW 3.416 m and NAVD88 1.804 m above the station datum.
+   */
+  mhwAboveNavd88: 3.416 - 1.804,
+  /**
+   * That offset's accuracy, m (estimated, illustrative): NOAA publishes
+   * none for it. The station is 4 km from the island, and the bay's
+   * central tidal datums differ by centimetres over that.
+   */
+  offsetAccuracy: 0.05,
 } as const;
 
-/** The buoy's light, Earth-fixed, with the sea at ellipsoidal height `sea` there. */
-export const buoyLight = (sea: number): Float64Array =>
-  onEarth(BUOY.longitude, BUOY.latitude, sea + BUOY.lightHeight);
+/** The light's height above NAVD88, m: above mean high water, then mean high water above NAVD88. */
+export const LIGHT_HEIGHT = LIGHTHOUSE.aboveMhw + LIGHTHOUSE.mhwAboveNavd88;
+
+/** The lighthouse's light, Earth-fixed, with NAVD88's zero (the sea, as the datum knob reads it) at ellipsoidal height `sea` there. */
+export const lighthouseLight = (sea: number): Float64Array =>
+  onEarth(LIGHTHOUSE.longitude, LIGHTHOUSE.latitude, sea + LIGHT_HEIGHT);
 
 /**
  * How far from each end of the mast's sight line (m) the path counts as
- * over that end's own ground: the sea the buoy floats on (the drawn
- * triangle under it caps it, `terrainLineOfSight`'s `groundRadius`).
- * Without it, a light 3 m above the water would always sit inside the
- * drawn sea's error and never read as in sight.
+ * over that end's own ground (`terrainLineOfSight`'s `groundRadius`, capped
+ * by the drawn triangle under it): the island the light stands on
+ * (Alcatraz is about 500 m long) and, at the mast, the sea round the ship.
+ * Without it, the island's own summit, 20 m under the light, would sit
+ * inside the drawn terrain's error.
  */
-export const BUOY_GROUND = 1500;
+export const LIGHTHOUSE_GROUND = 500;

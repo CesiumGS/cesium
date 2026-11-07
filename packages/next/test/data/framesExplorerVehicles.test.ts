@@ -47,18 +47,26 @@ import type {
 import { SCENARIOS } from "../../examples/frames-explorer/scenarios/specs.ts";
 import {
   CAMERA_MOUNT,
+  LIGHTHOUSE,
+  LIGHTHOUSE_GROUND,
+  LIGHT_HEIGHT,
   MAST_SENSOR,
   SHIP,
   SHIP_BODY,
-  buoyLight,
+  lighthouseLight,
   seaState,
   shipSpan,
 } from "../../examples/frames-explorer/scenarios/vehicles.ts";
+import { testHill } from "../../examples/frames-explorer/scenarios/testHill.ts";
+import { terrainSightText } from "../../examples/frames-explorer/sightLines.ts";
+import { terrainLineOfSight } from "../../src/measure/terrainLineOfSight.ts";
+import { LEVEL_ZERO_ERROR } from "../../src/globe/TerrainSource.ts";
+import references from "../../examples/frames-explorer/references.json";
 import { enuAxes } from "../../examples/frames-explorer/scenarios/bodyFrame.ts";
 import {
   sightWindows,
   type SightSample,
-} from "../../examples/frames-explorer/buoyWindow.ts";
+} from "../../examples/frames-explorer/lighthouseWindow.ts";
 import {
   buildScenarioTree,
   buildTree,
@@ -396,7 +404,7 @@ describe("the drone: what the camera looks at, on the design grid", () => {
   }, 120_000);
 });
 
-describe("the ship: its place on the port's grid, and its sight line to the buoy", () => {
+describe("the ship: its place on the port's grid, and its sight line to the lighthouse", () => {
   it("puts its reference point on California zone 3 through PROJ, its mast up its pitching body, and the sea at NAVD88 0 through GEOID18", async () => {
     const s = spec("ship");
     const t = checkedTdb("ship");
@@ -434,7 +442,7 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
     expect(ell.answer.headline).toMatch(/float that much too high/);
   }, 120_000);
 
-  it("the page's own frames, built from the evaluation's track, put the mast where the worker's sight line starts and the buoy's light where it ends, and pitch and roll the ship as the sea state says, at instants along the track (per-frame geometry, Task 4c's rule)", async () => {
+  it("the page's own frames, built from the evaluation's track, put the mast where the worker's sight line starts and the lighthouse's light where it ends, and pitch and roll the ship as the sea state says, at instants along the track (per-frame geometry, Task 4c's rule)", async () => {
     const s = spec("ship");
     const start = shipStartTdb(frames);
     const span = shipSpan(SHIP.vertices.map(() => -32)).seconds;
@@ -453,8 +461,8 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
         worst = Math.max(
           worst,
           dist([m[12]!, m[13]!, m[14]!], line.from),
-          // The buoy's light, as the page draws it, is the line's end.
-          dist(buoyLight(e.track!.buoySea!), line.to),
+          // The lighthouse's light, as the page draws it, is the line's end.
+          dist(lighthouseLight(e.track!.lightSea!), line.to),
         );
         // The body's pitch and roll, read off its axes, are the sea state's.
         const b = frameTransform(body, frames.itrf, instant);
@@ -486,7 +494,7 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
       }
     }
     print(
-      `ship: the page's mast and buoy against the worker's line, worst ${worst.toExponential(2)} m; pitch and roll against the sea state, worst ${worstAngle.toExponential(2)} rad`,
+      `ship: the page's mast and lighthouse against the worker's line, worst ${worst.toExponential(2)} m; pitch and roll against the sea state, worst ${worstAngle.toExponential(2)} rad`,
     );
     expect(worst).toBeLessThan(1e-6);
     expect(worstAngle).toBeLessThan(1e-12);
@@ -543,7 +551,11 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
     expect(a.moment?.title).toMatch(/can't be told in sight/);
     // Only a span that traced clear throughout says it comes into view.
     const c = sightWindows(at("bbccb"), start, 60);
-    expect(c.moment?.label).toBe("Buoy comes into view");
+    expect(c.moment?.label).toBe("Lighthouse comes into view");
+    expect(c.moment?.id).toBe("lighthouse-in-view");
+    expect(c.windows[0]!.label).toMatch(
+      /clears the drawn terrain beyond its error/,
+    );
     // After terrain not drawn: no moment (nothing says the land hid it).
     const b = sightWindows(at("uuccc"), start, 60);
     expect(b.windows).toHaveLength(1);
@@ -552,7 +564,7 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
   });
 });
 
-describe("the ship's verdict on the buoy, from the page's trace (Task 7 fix round 1)", () => {
+describe("the ship's verdict on the lighthouse, from the page's trace (Task 7 fix round 1)", () => {
   it("states the deciding clearance with its bound and where it is, over the drawn sea or land against GEOID18's sea whatever the datum; never in sight within the error; can't tell without terrain", async () => {
     const s = spec("ship");
     const e = await client.scenario(
@@ -564,7 +576,7 @@ describe("the ship's verdict on the buoy, from the page's trace (Task 7 fix roun
     const line = e.sightLines![0]!;
     // GEOID18's sea, not the knob's ellipsoid 0 (review finding 9).
     expect(sight.sea).toBeLessThan(-31);
-    expect(e.track!.buoySea).toBe(0);
+    expect(e.track!.lightSea).toBe(0);
     const at = (t: number, up: number) => {
       const p = line.from.map((x, i) => x + t * (line.to[i]! - x));
       const g = Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {
@@ -581,7 +593,7 @@ describe("the ship's verdict on the buoy, from the page's trace (Task 7 fix roun
       );
     };
     const base = {
-      id: "buoy",
+      id: "lighthouse",
       text: "",
       traced: sight.key,
       from: line.from,
@@ -595,9 +607,9 @@ describe("the ship's verdict on the buoy, from the page's trace (Task 7 fix roun
         margin: { clearance: 8, error: 18.8, at: at(0.85, 8) },
       },
     ]);
-    expect(sea.label).toMatch(/· buoy: can't tell$/);
+    expect(sea.label).toMatch(/· lighthouse: can't tell$/);
     expect(sea.aside).toMatch(
-      /^Buoy HR: the line passes 8\.0 m over the drawn sea [\d.]+ km short of Buoy HR, inside the terrain's ±19 m \(a per-level heuristic\): can't tell/,
+      /^Alcatraz Light: the line passes 8\.0 m over the drawn sea [\d.]+ km short of Alcatraz Light, inside the terrain's ±19 m \(a per-level heuristic\): can't tell/,
     );
     const land = withTerrainAnswer(e.answer, [
       {
@@ -613,12 +625,109 @@ describe("the ship's verdict on the buoy, from the page's trace (Task 7 fix roun
     const none = withTerrainAnswer(e.answer, [
       { ...base, state: "unknown", unknownFraction: 1 },
     ]);
-    expect(none.label).toMatch(/· buoy: can't tell$/);
+    expect(none.label).toMatch(/· lighthouse: can't tell$/);
     expect(none.aside).toMatch(/no drawn terrain to trace it over/);
     // A trace for another mast is still tracing.
     const stale = withTerrainAnswer(e.answer, [
       { ...base, traced: "other", state: "clear" },
     ]);
-    expect(stale.label).toMatch(/· buoy: tracing$/);
+    expect(stale.label).toMatch(/· lighthouse: tracing$/);
+  }, 120_000);
+});
+
+describe("the ship's lighthouse (the owner's follow-up, 2026-11-07)", () => {
+  it("is Alcatraz Island Light at the Coast Pilot's position and height, carried from mean high water to NAVD88 by station 9414290's published datums", () => {
+    const entries = references.entries as unknown as Record<
+      string,
+      Record<string, string>
+    >;
+    const light = entries["noaa-coast-pilot-7-alcatraz-light"]!;
+    const dms = (t: string) => {
+      const [d, m, sec] = t.match(/[\d.]+/g)!.map(Number);
+      return (/[SW]/.test(t) ? -1 : 1) * (d! + m! / 60 + sec! / 3600);
+    };
+    expect(LIGHTHOUSE.latitude).toBeCloseTo(dms(light.latitude!), 12);
+    expect(LIGHTHOUSE.longitude).toBeCloseTo(dms(light.longitude!), 12);
+    expect(LIGHTHOUSE.aboveMhw).toBeCloseTo(
+      parseFloat(light.heightAboveMhw!) * 0.3048,
+      12,
+    );
+    const tide = entries["noaa-coops-9414290-datums"]!;
+    expect(LIGHTHOUSE.mhwAboveNavd88).toBeCloseTo(
+      Number(tide.MHW) - Number(tide.NAVD88),
+      12,
+    );
+    expect(LIGHT_HEIGHT).toBeCloseTo(65.2272 + 1.612, 9);
+  });
+
+  it("at the checked setup, over a drawn sea at level 12 (±19 m), reads in sight with its clearance and error; at level 11 (±38 m) the same line can't be told", async () => {
+    // The page's verdict needs the drawn terrain, which only the browser
+    // has (Cesium World Terrain): here a level sea stands in for the water
+    // between the ship and the island, at GEOID18's NAVD88 zero, so the
+    // test holds what the sea alone allows. The headlands are the page's to
+    // judge (the report's browser check).
+    const s = spec("ship");
+    const e = await client.scenario(
+      "ship",
+      s.checked.knobs,
+      checkedTdb("ship"),
+    );
+    const sight = e.answer.sight!;
+    const line = e.sightLines![0]!;
+    expect(line.id).toBe("lighthouse");
+    expect(line.groundRadius).toBe(LIGHTHOUSE_GROUND);
+    const mid = Ellipsoid.WGS84.cartesianToCartographic(
+      Float64Array.from(line.from.map((x, i) => (x + line.to[i]!) / 2)),
+      { longitude: 0, latitude: 0, height: 0 },
+    )!;
+    const sea = (level: number) =>
+      testHill({
+        longitude: (mid.longitude * 180) / Math.PI,
+        latitude: (mid.latitude * 180) / Math.PI,
+        height: 0,
+        sea: sight.sea,
+        span: 40_000,
+        level,
+      });
+    const traced = (level: number) => {
+      const r = terrainLineOfSight(line.from, line.to, sea(level).target, {
+        groundRadius: line.groundRadius!,
+      });
+      const v = terrainSightText(
+        line.id,
+        line.label,
+        r,
+        undefined,
+        line.subject,
+      );
+      return {
+        r,
+        answer: withTerrainAnswer(e.answer, [
+          { ...v, traced: sight.key, from: line.from, to: line.to },
+        ]),
+      };
+    };
+    const fine = traced(12);
+    expect(fine.r.clear).toBe(true);
+    const m = fine.r.margin!;
+    expect(m.error).toBeCloseTo(LEVEL_ZERO_ERROR / 2 ** 12, 9);
+    // The deciding clearance is near the ship, just beyond its own sea:
+    // about the mast's 25 m (this level sea sits at the island's GEOID18,
+    // a few tenths off the ship's), some 6 m more than the error.
+    expect(m.clearance).toBeGreaterThan(24);
+    expect(m.clearance).toBeLessThan(28);
+    expect(m.meters).toBeGreaterThan(5);
+    expect(fine.answer.label).toMatch(/· lighthouse in sight$/);
+    expect(fine.answer.aside).toMatch(
+      /^Alcatraz Light in sight: the line passes 2\d(\.\d)? m over the drawn sea [\d.]+ km short of Alcatraz Light at its lowest, beyond the terrain's ±19 m/,
+    );
+    print(
+      `ship: at the checked setup over a level-12 sea, clearance ${m.clearance.toFixed(2)} m against ±${m.error.toFixed(2)} m, ${(dist(m.at, line.from) / 1000).toFixed(2)} km from the mast`,
+    );
+    // One level coarser, the same clearance sits inside the error: never
+    // in sight.
+    const coarse = traced(11);
+    expect(coarse.r.clear).toBeUndefined();
+    expect(coarse.answer.label).toMatch(/· lighthouse: can't tell$/);
   }, 120_000);
 });

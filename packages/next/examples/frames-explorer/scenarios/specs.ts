@@ -432,7 +432,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     id: "ship",
     title: "A ship enters San Francisco Bay",
     question:
-      "Where is the ship on the port's design grid, and can the mast see the buoy past the headland?",
+      "Where is the ship on the port's design grid, and can the mast see Alcatraz's lighthouse past the headland?",
     knobs: [
       {
         id: "mast",
