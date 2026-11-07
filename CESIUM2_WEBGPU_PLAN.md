@@ -7028,6 +7028,26 @@ with a brainstorm first:
   free-fly has only a range limit. Underground visualization is a first-class
   case, so no constraint lives anywhere a controller can't turn it off
   (seeing underground, such as translucent terrain, is the renderer's).
+- **The rig splits position from orientation (owner, 2026-11-07),** after
+  Cinemachine's Body and Aim, so any follow behaviour is expressible and the
+  user chooses it:
+  - **position:** an anchor (a frame's origin, such as Orion's), an offset,
+    and the frame the offset is expressed in;
+  - **orientation:** a frame whose axes the camera's up and forward follow,
+    or an aim (look at a target, with an up vector taken from a frame);
+  - **damping,** optional, per part.
+
+  Every orientation choice is a frame in the tree, built with SPICE's
+  **two-vector dynamic frames** (a primary axis along one vector, a secondary
+  toward another, re-evaluated over time): a cockpit view is the target's body
+  frame; an orbital view is primary up from the central body, secondary along
+  the velocity (local vertical, local horizontal); a stars-fixed view is a
+  constant frame captured in GCRF when the rig attaches; a level-horizon
+  follow is primary the target's forward axis, secondary up from the central
+  body. Named presets (`"cockpit"`, `"orbital"`, `"inertial"`) sit on top of
+  the generic form. Two-vector frames are a frame-tree feature in their own
+  right (antenna pointing, sun-relative frames), not just a camera one.
+
 - **Controllers are policies over the rig.** The globe controls are a rig on
   ITRF with Earth's ellipsoid and grab-the-surface input. Orbit is a pivot
   plus an up axis. Free-fly can join them.
