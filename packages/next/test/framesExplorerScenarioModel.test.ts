@@ -97,13 +97,18 @@ describe("publishedView", () => {
         result({ id: PUB.checkId, pass: true, value: 0.45, unit: "m" }),
       ],
     ]);
-    const v = publishedView(PUB, light, true, "current", [], 1.315257);
+    const pub = { ...PUB, value: 1.3152565, unit: "s" };
+    const v = publishedView(pub, light, true, "current", [], 1.315257);
+    // The difference at this row's own instant, in time: not the check's
+    // worst row (its 0.45 m).
     expect(v.published).toMatchObject({
       state: "checked",
       ours: 1.315257,
-      difference: { value: 0.45, unit: "m" },
+      unit: "s",
       pass: true,
     });
+    expect(v.published?.difference?.unit).toBe("s");
+    expect(v.published?.difference?.value).toBeCloseTo(5e-7, 12);
     // An effect, where there is one, is ours.
     expect(
       publishedView(PUB, checked, true, "current", [], 1).published,

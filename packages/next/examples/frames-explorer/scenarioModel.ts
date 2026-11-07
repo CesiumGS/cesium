@@ -89,14 +89,30 @@ export function publishedView(
       ...base,
       state: "checked" as const,
       ...(r.effect
-        ? { ours: r.effect.value }
-        : answerValue !== undefined && { ours: answerValue }),
-      ...(r.value !== undefined && {
-        difference: {
-          value: r.value,
-          ...(r.unit !== undefined && { unit: r.unit }),
-        },
-      }),
+        ? {
+            ours: r.effect.value,
+            ...(r.value !== undefined && {
+              difference: {
+                value: r.value,
+                ...(r.unit !== undefined && { unit: r.unit }),
+              },
+            }),
+          }
+        : answerValue !== undefined
+          ? // No effect of its own (the dish's light time, checked at every
+            // row of its fixture): ours against this row's published value,
+            // at the checked setup's own instant, in the answer's unit
+            // (Task 6c fix 1 follow-up), not the check's worst row.
+            {
+              ours: answerValue,
+              difference: { value: answerValue - pub.value, unit: pub.unit },
+            }
+          : r.value !== undefined && {
+              difference: {
+                value: r.value,
+                ...(r.unit !== undefined && { unit: r.unit }),
+              },
+            }),
       pass: r.pass,
     },
   };

@@ -24,6 +24,7 @@ import {
   publishedText,
 } from "../../examples/frames-explorer/panel/answerText.ts";
 import { snapToStep } from "../../examples/frames-explorer/panel/knobText.ts";
+import { publishedView } from "../../examples/frames-explorer/scenarioModel.ts";
 import { knobsAt } from "../../examples/frames-explorer/pointDrag.ts";
 import {
   BIM_CRS,
@@ -681,21 +682,26 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
       0.5,
     );
     const r = catalog.get(pub.checkId)!;
-    const t = publishedText({
-      printed: pub.printed,
-      document: pub.document,
-      tolerance: pub.tolerance,
-      unit: pub.unit,
-      state: "checked",
-      ours: e.answer.value!,
-      difference: { value: r.value!, unit: r.unit! },
-      pass: r.pass,
+    // The panel's view: the difference at this row, in time.
+    const view = publishedView(
+      pub,
+      catalog,
+      true,
+      "current",
+      [],
+      e.answer.value,
+    ).published!;
+    expect(view.difference).toEqual({
+      value: e.answer.value! - pub.value,
+      unit: "s",
     });
+    expect(Math.abs(view.difference!.value)).toBeLessThan(0.5 / 299_792_458);
+    const t = publishedText({ ...view, pass: r.pass });
     expect(t.published).toMatch(
       /^Published: 1\.3152565\d\d s one way at DSS-43/,
     );
     expect(t.comparison).toMatch(
-      /^ours 1\.31525\d s · difference \d+ mm · c·∆lt within 0\.5 m at each of its rows · passes$/,
+      /^ours 1\.31525\d s · difference −?[\d.]+ ns · c·∆lt within 0\.5 m at each of its rows · passes$/,
     );
     // Off it (another station): the published value applies at the checked setup.
     const off = await client.scenario(
