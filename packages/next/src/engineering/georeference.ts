@@ -47,7 +47,8 @@
 //                            is read; Esri's WKT1 `wkt` isn't (a declared CRS
 //                            is a code or WKT2). A wkid of 32767 or less is an
 //                            EPSG code, a larger one an ESRI code (Esri's
-//                            numbering), and the pair must be in one registry.
+//                            numbering), each code on its own: EPSG:32610
+//                            with ESRI:115700 is CrsRef's `vcsAuthority`.
 //                            Its per-tile transforms aren't read.
 //   3DTILES_ellipsoid        3D Tiles 1.1, status Complete (CesiumGS/3d-tiles,
 //                            extensions/3DTILES_ellipsoid): on the tileset
@@ -61,15 +62,20 @@
 // this declaration's own `crs`, which is now optional (the fallback). Every
 // one present is read and screened (a WKT2 through wkt2Problem and the
 // PARAMETERFILE check here, then PROJ's strict parser in
-// georeferenceTileset), and they must agree: the same format, registry
-// (case aside), codes and epoch, or the same WKT2 text, else a
-// GeoreferenceError naming both paths. ESRI_crs has no epoch, so it agrees on
-// codes alone, and our `crs`'s epoch, if any, is kept. The body comes from
-// 3DTILES_ellipsoid, else `body`; both, disagreeing, are refused. The area of
-// interest is `areaOfInterest` when given (an override), else derived from
-// the root tile's bounding volume: a region's degrees, or a box's or
+// georeferenceTileset), and they must agree. One that is the same
+// declaration (registries, codes, or WKT2 text) agrees here; two epochs that
+// differ disagree here; anything else (a code beside a WKT2, other codes) is
+// kept in `otherCrs`, and georeferenceTileset asks PROJ whether it is the
+// same CRS (`checkCrsAgreement`: proj_is_equivalent_to, after the strict
+// parse), so EPSG:32611 and its WKT2 agree. A disagreement is a
+// GeoreferenceError naming both paths. ESRI_crs has no epoch, so our
+// `crs`'s epoch, if any, is kept. The body comes from 3DTILES_ellipsoid,
+// else `body`; both, disagreeing, are refused. The area of interest is
+// `areaOfInterest` when given (an override), else derived from the root
+// tile's bounding volume (`derivedArea`): a region's degrees, or a box's or
 // sphere's 27 points (centre, faces, edges, corners) through the root
-// transform onto the body, when they span less than 180 degrees of
+// transform onto the body, when they are near its surface (a volume in local
+// metres isn't: no area, and a warning) and span less than 180 degrees of
 // longitude; otherwise there is none, as before.
 //
 // What the draft lacks, and this design needs (spec section 7.2), is a
@@ -113,10 +119,30 @@
 //   }
 //
 // The segment types are IFC 4.3's IfcAlignmentHorizontalSegmentTypeEnum and
-// IfcAlignmentVerticalSegmentTypeEnum values; a radius is signed as IFC's
-// (positive curves left, counter-clockwise), and null is a tangent end.
-// `startAzimuth` is ours (radians clockwise from grid north; IFC's
-// StartDirection is anticlockwise from the x-axis), as are the stations.
+// IfcAlignmentVerticalSegmentTypeEnum values. The fields are ours (the
+// AlignmentDefinition's), not IFC's attribute names, so the extension reads
+// as one shape and round-trips exactly; they map to IFC 4.3 as:
+//
+//   ours                       IFC 4.3
+//   start [E, N]               IfcAlignmentHorizontalSegment.StartPoint (the first)
+//   startAzimuth               StartDirection = π/2 − startAzimuth (IFC: radians
+//                              anticlockwise from the x-axis; ours: clockwise from
+//                              grid north)
+//   length (horizontal)        SegmentLength
+//   radius (CIRCULARARC)       StartRadiusOfCurvature = EndRadiusOfCurvature
+//   startRadius, endRadius     StartRadiusOfCurvature, EndRadiusOfCurvature
+//   startStation               the alignment's IfcReferent stationing (no segment
+//                              attribute)
+//   vertical.startStation      IfcAlignmentVerticalSegment.StartDistAlong (the first)
+//   vertical.startElevation    StartHeight (the first)
+//   length (vertical)          HorizontalLength
+//   gradient                   StartGradient = EndGradient
+//   startGradient, endGradient StartGradient, EndGradient
+//
+// A radius is signed as IFC's (positive curves left, counter-clockwise). A
+// spiral's tangent end is written null (JSON has no Infinity) and read from
+// null or 0 (IFC's "no curvature"); an arc's 0 is refused.
+// `startAzimuth` is ours, as are the stations.
 // The old in-frame `alignments` (AlignmentDefinition's shape, kinds "line",
 // "arc", "spiral", "grade", "parabola") is read for now with a warning.
 //
@@ -404,8 +430,14 @@ const ELLIPSOID_PATH = "extensions.3DTILES_ellipsoid";
 const VOLUME_PATH = "root.boundingVolume";
 /** Metres: how near 3DTILES_ellipsoid's radii must be a body's, per axis. */
 const RADII_TOLERANCE = 0.01;
-/** The largest EPSG code (Esri's numbering: larger wkids are ESRI's). */
+/**
+ * The largest EPSG code: Esri numbers its own CRSs above it (37xxx, 5xxxx,
+ * 102xxx, 115xxx), and 32767 is its "user-defined" sentinel. A wrong guess
+ * (an Esri code below it that isn't EPSG's) fails at PROJ's lookup, loudly.
+ */
 const LAST_EPSG = 32_767;
+/** Metres: how near the body's surface a derived area's volume must come. */
+const SURFACE_TOLERANCE = 10_000;
 
 /** A tileset's placement as declared: the mode, and a rigid one's anchor. */
 export type DeclaredPlacement =
@@ -435,6 +467,15 @@ export interface GeoreferenceSources {
   readonly alignments?: string;
 }
 
+/** A declared CRS, and where it was read. */
+export interface DeclaredCrs {
+  readonly crs: CrsRef;
+  /** The CRS object's JSON path. */
+  readonly path: string;
+  /** The WKT2 string's path, when it is WKT2. */
+  readonly wkt2Path?: string;
+}
+
 /** A `BENTLEY_engineering_frame` declaration, read by `readGeoreference`. */
 export interface TilesetGeoreference {
   readonly name?: string;
@@ -442,6 +483,13 @@ export interface TilesetGeoreference {
   readonly body: Body;
   /** EXT_geospatial_crs_source's, else ESRI_crs's, else `crs`'s. */
   readonly crs: CrsRef;
+  /**
+   * The other declared CRSs that aren't the same declaration as `crs` (a
+   * code beside a WKT2, or other codes): `georeferenceTileset` holds each to
+   * PROJ's equivalence with `crs` (`checkCrsAgreement`) before anything
+   * else, and refuses one that isn't. Absent when there are none.
+   */
+  readonly otherCrs?: readonly DeclaredCrs[];
   readonly site?: SiteTransform;
   readonly alignments?: readonly AlignmentDefinition[];
   readonly areaOfInterest?: AreaOfInterest;
@@ -456,7 +504,10 @@ export interface TilesetGeoreference {
   /** The fallback's stated accuracy, metres; only with `geoidFallback`. */
   readonly fallbackSigma?: number;
   readonly sources: GeoreferenceSources;
-  /** What loads but is out of date: the old name, in-frame alignments. */
+  /**
+   * What loads but is out of date or ignored: the old name, in-frame
+   * alignments, a root volume no area of interest is derived from.
+   */
   readonly warnings: readonly string[];
 }
 
@@ -746,8 +797,9 @@ function readCrsAt(value: unknown, path: string): ReadCrs {
 /**
  * ESRI_crs's root object: `wkid` (and `vcsWkid`), or `wkt2`, never both (the
  * extension makes them mutually exclusive). Esri's WKT1 `wkt` isn't read. A
- * wkid up to 32767 is EPSG's, a larger one ESRI's, and a vcsWkid must be in
- * the same registry (a CrsRef names one).
+ * wkid up to 32767 is EPSG's, a larger one ESRI's (LAST_EPSG), each code on
+ * its own: a vcsWkid in the other registry is its `vcsAuthority`, as in
+ * EPSG:32610 with ESRI:115700.
  */
 function readEsriCrs(value: unknown, path: string): ReadCrs {
   const esri = object(value, path);
@@ -780,59 +832,65 @@ function readEsriCrs(value: unknown, path: string): ReadCrs {
     authority: string;
     wkid: number;
     vcsWkid?: number;
+    vcsAuthority?: string;
   } = { format: "wkid", authority, wkid };
   if (esri.vcsWkid !== undefined) {
     const vcsWkid = code(esri.vcsWkid, `${path}.vcsWkid`);
-    if ((vcsWkid <= LAST_EPSG ? "EPSG" : "ESRI") !== authority) {
-      throw new GeoreferenceError(
-        `${path}.vcsWkid`,
-        `is ${vcsWkid <= LAST_EPSG ? "an EPSG" : "an ESRI"} code while wkid ${wkid} is ${authority === "EPSG" ? "an EPSG" : "an ESRI"} code; a pair from two registries isn't read`,
-      );
-    }
     crs.vcsWkid = vcsWkid;
+    const vcsAuthority = vcsWkid <= LAST_EPSG ? "EPSG" : "ESRI";
+    if (vcsAuthority !== authority) {
+      crs.vcsAuthority = vcsAuthority;
+    }
   }
   return { crs, path, hasEpoch: false };
 }
 
 /** A CRS for a message, without echoing untrusted text. */
-function shownCrsRef(crs: CrsRef): string {
+export function shownDeclaredCrs(crs: CrsRef): string {
   if (crs.format === "wkt2") {
     return `a WKT2 of ${crs.wkt2.length} characters`;
   }
-  const codes = `${crs.authority}:${crs.wkid}${crs.vcsWkid === undefined ? "" : `+${crs.vcsWkid}`}`;
+  const vertical =
+    crs.vcsWkid === undefined
+      ? ""
+      : crs.vcsAuthority === undefined
+        ? `+${crs.vcsWkid}`
+        : `+${crs.vcsAuthority}:${crs.vcsWkid}`;
+  const codes = `${crs.authority}:${crs.wkid}${vertical}`;
   return crs.epoch === undefined ? codes : `${codes} at epoch ${crs.epoch}`;
 }
 
 /**
- * Whether two declared CRSs are the same: the same registry (case aside),
- * codes and, when both can state one, epoch; or the same WKT2 text. A code
- * and a WKT2 never agree (telling would take PROJ).
+ * Whether two declared CRSs are the same declaration: the same registries
+ * (case aside) and codes, or the same WKT2 text. Anything else is for PROJ
+ * to judge (`checkCrsAgreement`): a code and its WKT2 can be one CRS.
  */
-function sameCrs(a: ReadCrs, b: ReadCrs): boolean {
-  const x = a.crs;
-  const y = b.crs;
+function sameDeclaration(x: CrsRef, y: CrsRef): boolean {
   if (x.format === "wkt2" || y.format === "wkt2") {
     return x.format === "wkt2" && y.format === "wkt2" && x.wkt2 === y.wkt2;
   }
+  const up = (s: string) => s.toUpperCase();
   return (
-    x.authority.toUpperCase() === y.authority.toUpperCase() &&
+    up(x.authority) === up(y.authority) &&
     x.wkid === y.wkid &&
     x.vcsWkid === y.vcsWkid &&
-    (!a.hasEpoch || !b.hasEpoch || x.epoch === y.epoch)
+    up(x.vcsAuthority ?? x.authority) === up(y.vcsAuthority ?? y.authority)
   );
 }
 
 /**
  * The source CRS: EXT_geospatial_crs_source's, else ESRI_crs's, else the
- * declaration's `crs`. Every one present is read (and so screened), and
- * each must agree with the one used, else a GeoreferenceError naming both
- * paths. When ESRI_crs is used, our `crs`'s epoch (it has none) is kept.
+ * declaration's `crs`. Every one present is read (and so screened). One
+ * that is the same declaration as the one used is dropped; two epochs that
+ * differ are refused here (PROJ's equivalence doesn't see an epoch), naming
+ * both paths; any other is kept in `others` for PROJ (`checkCrsAgreement`).
+ * When ESRI_crs is used, our `crs`'s epoch (it has none) is kept.
  */
 function readSourceCrs(
   extensions: Json,
   declaration: Json,
   root: string,
-): ReadCrs {
+): { readonly used: ReadCrs; readonly others: readonly ReadCrs[] } {
   const found: ReadCrs[] = [];
   if (extensions[CRS_SOURCE_EXTENSION] !== undefined) {
     found.push(readCrsAt(extensions[CRS_SOURCE_EXTENSION], SOURCE_PATH));
@@ -850,12 +908,24 @@ function readSourceCrs(
       `is required when the tileset has neither ${CRS_SOURCE_EXTENSION} nor ${ESRI_CRS_EXTENSION}`,
     );
   }
+  const others: ReadCrs[] = [];
   for (const other of found.slice(1)) {
-    if (!sameCrs(used, other)) {
+    const x = used.crs;
+    const y = other.crs;
+    if (
+      used.hasEpoch &&
+      other.hasEpoch &&
+      x.format === "wkid" &&
+      y.format === "wkid" &&
+      x.epoch !== y.epoch
+    ) {
       throw new GeoreferenceError(
         other.path,
-        `disagrees with ${used.path}: ${shownCrsRef(other.crs)} against ${shownCrsRef(used.crs)}; declare one CRS`,
+        `disagrees with ${used.path}: ${shownDeclaredCrs(y)} against ${shownDeclaredCrs(x)}; declare one CRS`,
       );
+    }
+    if (!sameDeclaration(x, y)) {
+      others.push(other);
     }
   }
   const epoch = found.find(
@@ -866,9 +936,12 @@ function readSourceCrs(
     used.crs.format === "wkid" &&
     epoch?.crs.format === "wkid"
   ) {
-    return { ...used, crs: { ...used.crs, epoch: epoch.crs.epoch! } };
+    return {
+      used: { ...used, crs: { ...used.crs, epoch: epoch.crs.epoch! } },
+      others,
+    };
   }
-  return used;
+  return { used, others };
 }
 
 function readSite(value: unknown, path: string): SiteTransform {
@@ -955,25 +1028,33 @@ const wrapped = (degrees: number) =>
   degrees > 180 ? degrees - 360 : degrees < -180 ? degrees + 360 : degrees;
 
 /**
- * The area of interest the root tile's bounding volume covers on `body`, or
- * undefined when it can't be told (no or a malformed volume or transform, a
- * point at the body's centre, or 180 degrees or more of longitude): a
- * region's own degrees; a box's or sphere's 27 points (centre, face and
- * edge middles, corners) through the root's transform. It only scopes
- * PROJ's choice of operation, as `areaOfInterest` does.
+ * The area of interest the root tile's bounding volume covers on `body`: a
+ * region's own degrees (a region is body-fixed by definition, and states its
+ * own span, so a wide one is kept); or a box's or sphere's 27 points
+ * (centre, face and edge middles, corners) through the root's transform,
+ * when they span less than 180 degrees of longitude (27 points can't tell
+ * a wider span, and a box over a pole is clipped to its sampled latitudes).
+ * Undefined, with nothing to say, for no or a malformed volume or transform,
+ * or a wide box. Undefined with a `problem` when the volume isn't plausibly
+ * body-fixed: it doesn't come within 10 km of the body's surface (its
+ * centre's height is more than 10 km plus its reach, the farthest sampled
+ * point from the centre), as a box in local metres without a transform
+ * doesn't (it sits near the body's centre). It only scopes PROJ's choice of
+ * operation, as `areaOfInterest` does.
  */
 function derivedArea(
   tilesetJson: Json,
   body: Body,
-): AreaOfInterest | undefined {
+): { readonly area?: AreaOfInterest; readonly problem?: string } {
+  const none = {};
   const tile = tilesetJson.root;
   if (!isObject(tile) || !isObject(tile.boundingVolume)) {
-    return undefined;
+    return none;
   }
   const volume = tile.boundingVolume;
   if (volume.region !== undefined) {
     if (!isNumbers(volume.region, 6)) {
-      return undefined;
+      return none;
     }
     const [west, south, east, north] = volume.region.map((x) => x * DEGREES);
     const ok =
@@ -983,8 +1064,8 @@ function derivedArea(
       south! <= north! &&
       north! <= 90;
     return ok
-      ? { west: west!, south: south!, east: east!, north: north! }
-      : undefined;
+      ? { area: { west: west!, south: south!, east: east!, north: north! } }
+      : none;
   }
   let centre: number[];
   let axes: number[][];
@@ -1001,20 +1082,21 @@ function derivedArea(
       [0, 0, r],
     ];
   } else {
-    return undefined;
+    return none;
   }
   const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
   let m = IDENTITY;
   if (tile.transform !== undefined) {
     if (!isNumbers(tile.transform, 16)) {
-      return undefined;
+      return none;
     }
     m = tile.transform;
   }
-  const lons: number[] = [];
-  const lats: number[] = [];
-  const at: Cartographic = { longitude: 0, latitude: 0, height: 0 };
-  const point = new Float64Array(3);
+  const offSurface = (how: string) => ({
+    problem: `${VOLUME_PATH} isn't near the ${body.name}'s surface (${how}), so no area of interest is derived from it (declare ${GEOREFERENCE_PATH}.areaOfInterest)`,
+  });
+  // The 27 points, the centre first.
+  const points: Float64Array[] = [];
   for (const i of [0, -1, 1]) {
     for (const j of [0, -1, 1]) {
       for (const k of [0, -1, 1]) {
@@ -1022,22 +1104,49 @@ function derivedArea(
           (c) =>
             centre[c]! + i * axes[0]![c]! + j * axes[1]![c]! + k * axes[2]![c]!,
         );
+        const point = new Float64Array(3);
         for (let r = 0; r < 3; r++) {
           point[r] =
             m[r]! * p[0]! + m[4 + r]! * p[1]! + m[8 + r]! * p[2]! + m[12 + r]!;
         }
-        const c = body.ellipsoid.cartesianToCartographic(point, at);
-        if (
-          c === undefined ||
-          !Number.isFinite(c.longitude) ||
-          !Number.isFinite(c.latitude)
-        ) {
-          return undefined;
-        }
-        lons.push(c.longitude * DEGREES);
-        lats.push(c.latitude * DEGREES);
+        points.push(point);
       }
     }
+  }
+  const middlePoint = points[0]!;
+  const reach = Math.max(
+    ...points.map((q) =>
+      Math.hypot(
+        q[0]! - middlePoint[0]!,
+        q[1]! - middlePoint[1]!,
+        q[2]! - middlePoint[2]!,
+      ),
+    ),
+  );
+  const at: Cartographic = { longitude: 0, latitude: 0, height: 0 };
+  const lons: number[] = [];
+  const lats: number[] = [];
+  for (const point of points) {
+    const c = body.ellipsoid.cartesianToCartographic(point, at);
+    if (
+      c === undefined ||
+      !Number.isFinite(c.longitude) ||
+      !Number.isFinite(c.latitude) ||
+      !Number.isFinite(c.height)
+    ) {
+      return offSurface("a sampled point is at its centre");
+    }
+    if (point === middlePoint) {
+      // Body-fixed: the volume comes within SURFACE_TOLERANCE of the surface.
+      const allowed = SURFACE_TOLERANCE + reach;
+      if (!(Math.abs(c.height) <= allowed)) {
+        return offSurface(
+          `its centre is ${(c.height / 1000).toFixed(1)} km from it, and it reaches ${(reach / 1000).toFixed(1)} km`,
+        );
+      }
+    }
+    lons.push(c.longitude * DEGREES);
+    lats.push(c.latitude * DEGREES);
   }
   // Longitudes about the centre's (the first point), so an area across the
   // antimeridian stays one span (and west > east says so).
@@ -1046,14 +1155,25 @@ function derivedArea(
   const low = Math.min(...offsets);
   const high = Math.max(...offsets);
   if (!(high - low < 180)) {
-    return undefined;
+    return none;
   }
   return {
-    west: wrapped(middle + low),
-    south: Math.max(-90, Math.min(...lats)),
-    east: wrapped(middle + high),
-    north: Math.min(90, Math.max(...lats)),
+    area: {
+      west: wrapped(middle + low),
+      south: Math.max(-90, Math.min(...lats)),
+      east: wrapped(middle + high),
+      north: Math.min(90, Math.max(...lats)),
+    },
   };
+}
+
+/**
+ * A BENTLEY_alignments spiral's radius: null (JSON has no Infinity) or 0
+ * (IFC 4.3's StartRadiusOfCurvature and EndRadiusOfCurvature write 0 for
+ * no curvature) is a tangent end, Infinity.
+ */
+function ifcRadius(value: unknown, path: string): number {
+  return value === 0 ? Infinity : radius(value, path);
 }
 
 /** A spiral's radius: JSON has no Infinity, so null is a tangent end. */
@@ -1191,8 +1311,8 @@ function readHorizontalSegment(
   return {
     kind: "spiral",
     length,
-    startRadius: radius(segment.startRadius, `${path}.startRadius`),
-    endRadius: radius(segment.endRadius, `${path}.endRadius`),
+    startRadius: ifcRadius(segment.startRadius, `${path}.startRadius`),
+    endRadius: ifcRadius(segment.endRadius, `${path}.endRadius`),
   };
 }
 
@@ -1401,20 +1521,32 @@ function readPipeline(value: unknown, path: string): string {
 /**
  * Throws a `GeoreferenceError` naming the field unless every grid a
  * declared pipeline names, and every file a declared WKT2's PARAMETERFILEs
- * name, is a current entry of `catalog` (not removed). Without a catalog,
- * such names can't be checked, so they are refused. A declaration that
- * names no grid passes.
+ * name (the CRS used's, and `otherCrs`', which PROJ parses to compare), is a
+ * current entry of `catalog` (not removed). Without a catalog, such names
+ * can't be checked, so they are refused. A declaration that names no grid
+ * passes.
  */
 export function checkDeclaredGrids(
   georeference: TilesetGeoreference,
   catalog: GridCatalog | undefined,
 ): void {
   const root = georeference.sources.declaration;
-  if (georeference.crs.format === "wkt2") {
-    const path =
-      georeference.sources.wkt2 ??
-      `${root}.crs.extensions.${WKT2_EXTENSION}.wkt2`;
-    const files = wkt2Files(georeference.crs.wkt2, path);
+  const declared: DeclaredCrs[] = [
+    {
+      crs: georeference.crs,
+      path: georeference.sources.crs,
+      wkt2Path:
+        georeference.sources.wkt2 ??
+        `${root}.crs.extensions.${WKT2_EXTENSION}.wkt2`,
+    },
+    ...(georeference.otherCrs ?? []),
+  ];
+  for (const { crs, wkt2Path } of declared) {
+    if (crs.format !== "wkt2") {
+      continue;
+    }
+    const path = wkt2Path!;
+    const files = wkt2Files(crs.wkt2, path);
     if (files.length > 0 && catalog === undefined) {
       throw new GeoreferenceError(
         path,
@@ -1542,7 +1674,7 @@ export function parseGeoreference(
     body = theirs;
     bodyPath = ELLIPSOID_PATH;
   }
-  const crs = readSourceCrs(extensions, declaration, root);
+  const { used: crs, others } = readSourceCrs(extensions, declaration, root);
   if (declaration.placement === undefined) {
     throw new GeoreferenceError(`${root}.placement`, "is required");
   }
@@ -1563,6 +1695,13 @@ export function parseGeoreference(
     sources,
     warnings,
   };
+  if (others.length > 0) {
+    result.otherCrs = others.map((o) => ({
+      crs: o.crs,
+      path: o.path,
+      ...(o.wkt2Path !== undefined && { wkt2Path: o.wkt2Path }),
+    }));
+  }
   if (declaration.pipeline !== undefined) {
     result.pipeline = readPipeline(declaration.pipeline, `${root}.pipeline`);
   }
@@ -1631,10 +1770,12 @@ export function parseGeoreference(
     );
     sources.areaOfInterest = `${root}.areaOfInterest`;
   } else {
-    const area = derivedArea(tilesetJson, body);
+    const { area, problem } = derivedArea(tilesetJson, body);
     if (area !== undefined) {
       result.areaOfInterest = area;
       sources.areaOfInterest = VOLUME_PATH;
+    } else if (problem !== undefined) {
+      warnings.push(problem);
     }
   }
   return result;

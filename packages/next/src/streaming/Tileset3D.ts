@@ -87,6 +87,8 @@ const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
  */
 const ENGINEERING_FRAME = "BENTLEY_engineering_frame";
 const OLD_ENGINEERING_FRAME = "EXT_engineering_frame";
+/** CRS extensions read only beside a frame declaration. */
+const CRS_ONLY = ["ESRI_crs", "EXT_geospatial_crs_source"];
 
 /** A tileset.json's declaration as read: parsed, or why not. */
 type Declaration =
@@ -103,12 +105,19 @@ async function readDeclaration(
   json: TileJson,
 ): Promise<Declaration | undefined> {
   const extensions: unknown = json?.extensions;
-  if (
-    typeof extensions !== "object" ||
-    extensions === null ||
-    !(ENGINEERING_FRAME in extensions || OLD_ENGINEERING_FRAME in extensions)
-  ) {
+  if (typeof extensions !== "object" || extensions === null) {
     return undefined;
+  }
+  if (!(
+    ENGINEERING_FRAME in extensions || OLD_ENGINEERING_FRAME in extensions
+  )) {
+    // A CRS alone has no placement mode: nothing is guessed, but say so.
+    const crs = CRS_ONLY.find((name) => name in extensions);
+    return crs === undefined
+      ? undefined
+      : {
+          warning: `tileset.json has ${crs} but no ${ENGINEERING_FRAME} placement; not placed`,
+        };
   }
   try {
     const { parseGeoreference } =

@@ -5,7 +5,7 @@
 import type { Mat4 } from "../math/mat4.ts";
 import { EARTH, MOON } from "../scene/Body.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
-import { strictWkt2 } from "./crs.ts";
+import { crsObject, strictWkt2, type CrsRef } from "./crs.ts";
 import {
   EngineeringFrame,
   type EngineeringFrameDefinition,
@@ -16,6 +16,7 @@ import {
   GeoreferenceError,
   checkDeclaredGrids,
   parseGeoreference,
+  shownDeclaredCrs,
   type TilesetGeoreference,
 } from "./georeference.ts";
 import {
@@ -25,7 +26,7 @@ import {
 } from "./placement.ts";
 import type { GridCatalog } from "./gridCatalog.ts";
 import type { GridSource } from "./proj.ts";
-import type { ProjApi } from "./projApi.ts";
+import type { PJ, ProjApi } from "./projApi.ts";
 
 /**
  * The `BENTLEY_engineering_frame` declaration of a parsed tileset.json
@@ -80,6 +81,49 @@ export function declaredDefinition(
       fallbackSigma: declared.fallbackSigma,
     }),
   };
+}
+
+/**
+ * Throws a `GeoreferenceError` naming the other CRS's path, and the used
+ * one's, unless each of `declared.otherCrs` is the same CRS to PROJ as
+ * `declared.crs` (`proj_is_equivalent_to`, PJ_COMP_EQUIVALENT: metadata
+ * aside), so a code and its WKT2 agree. Each WKT2 is parsed with PROJ's
+ * strict WKT parser first (`strictWkt2`), a code by its definition; one
+ * PROJ can't create is refused at its path.
+ */
+export function checkCrsAgreement(
+  proj: ProjApi,
+  declared: TilesetGeoreference,
+): void {
+  const others = declared.otherCrs ?? [];
+  if (others.length === 0) {
+    return;
+  }
+  const parse = (crs: CrsRef, path: string): PJ => {
+    try {
+      return crs.format === "wkt2"
+        ? strictWkt2(proj, crs, "the declared CRS")
+        : crsObject(proj, crs, "the declared CRS");
+    } catch (error) {
+      throw new GeoreferenceError(
+        path,
+        (error as Error).message.slice(0, MAX_SHOWN),
+      );
+    }
+  };
+  const used = parse(
+    declared.crs,
+    declared.sources.wkt2 ?? declared.sources.crs,
+  );
+  for (const other of others) {
+    const object = parse(other.crs, other.wkt2Path ?? other.path);
+    if (!proj.proj_is_equivalent_to(used, object, proj.PJ_COMP_EQUIVALENT)) {
+      throw new GeoreferenceError(
+        other.path,
+        `disagrees with ${declared.sources.crs}: ${shownDeclaredCrs(other.crs)} isn't the same CRS to PROJ as ${shownDeclaredCrs(declared.crs)}; declare one CRS`,
+      );
+    }
+  }
 }
 
 /** Metres: the drawn anchor's tolerance in `checkRigidTransform`. */
@@ -164,6 +208,8 @@ const isIdentity = (m: ArrayLike<number>) => {
  *    (`checkDeclaredGrids`);
  *  - a declared WKT2 (ours, ESRI_crs's or EXT_geospatial_crs_source's)
  *    that PROJ's strict WKT parser refuses (`strictWkt2`);
+ *  - two declared CRSs that aren't the same CRS to PROJ
+ *    (`checkCrsAgreement`);
  *  - one whose `modelMatrix` isn't the identity, before the frame loads or
  *    after (`root.transform` includes it, and a change would leave the
  *    placement no longer what is drawn);
@@ -221,6 +267,11 @@ export async function georeferenceTileset(
         ),
       );
     }
+  }
+  try {
+    checkCrsAgreement(options.proj, declared);
+  } catch (error) {
+    return refuse(error as Error);
   }
   let frame: EngineeringFrame;
   try {

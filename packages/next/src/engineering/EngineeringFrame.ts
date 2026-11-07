@@ -261,7 +261,8 @@ function fallbackCrs(
   if (
     crs.format !== "wkid" ||
     crs.vcsWkid === undefined ||
-    crs.authority.toUpperCase() !== "EPSG"
+    crs.authority.toUpperCase() !== "EPSG" ||
+    (crs.vcsAuthority ?? "EPSG").toUpperCase() !== "EPSG"
   ) {
     return { reason: "the CRS isn't an EPSG code with a vcsWkid" };
   }

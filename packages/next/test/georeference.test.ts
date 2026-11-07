@@ -824,17 +824,26 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
       expect(g.warnings).toEqual([]);
     });
 
-    it("reads ESRI_crs's wkids above 32767 as ESRI's, and refuses a mixed pair", () => {
+    it("reads ESRI_crs's wkids above 32767 as ESRI's, each code on its own", () => {
       expect(
         readGeoreference(
           composed(withoutCrs(), { ESRI_crs: { wkid: 102100 } }),
         )!.crs,
       ).toEqual({ format: "wkid", authority: "ESRI", wkid: 102100 });
+      // EPSG horizontal, ESRI vertical, as Esri writes them.
       expect(
-        refusal(
-          composed(withoutCrs(), { ESRI_crs: { wkid: 6420, vcsWkid: 105703 } }),
-        ).path,
-      ).toBe("extensions.ESRI_crs.vcsWkid");
+        readGeoreference(
+          composed(withoutCrs(), {
+            ESRI_crs: { wkid: 32610, vcsWkid: 115700 },
+          }),
+        )!.crs,
+      ).toEqual({
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 32610,
+        vcsWkid: 115700,
+        vcsAuthority: "ESRI",
+      });
       expect(
         refusal(composed(withoutCrs(), { ESRI_crs: { vcsWkid: 6360 } })).path,
       ).toBe("extensions.ESRI_crs.wkid");
@@ -974,33 +983,59 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
       });
     });
 
-    it("refuses a disagreement, naming both paths", () => {
-      const ours = refusal(
+    it("keeps a CRS that isn't the same declaration for PROJ to judge", () => {
+      // Same declaration: nothing for PROJ.
+      expect(
+        readGeoreference(
+          composed(rigid(), { ESRI_crs: { wkid: 6420, vcsWkid: 6360 } }),
+        )!.otherCrs,
+      ).toBeUndefined();
+      // Other codes, and a code beside a WKT2: kept with their paths
+      // (georeferenceTileset's checkCrsAgreement asks PROJ).
+      const codes = readGeoreference(
         composed(rigid(), { ESRI_crs: { wkid: 2227, vcsWkid: 6360 } }),
-      );
-      expect(ours.path).toBe(`${ROOT}.crs`);
-      expect(ours.message).toContain(`${ROOT}.crs`);
-      expect(ours.message).toContain("extensions.ESRI_crs");
-      expect(ours.message).toMatch(/EPSG:6420\+6360 against EPSG:2227\+6360/);
-      const draft = refusal(
+      )!;
+      expect(codes.sources.crs).toBe("extensions.ESRI_crs");
+      expect(codes.otherCrs).toEqual([
+        {
+          crs: {
+            format: "wkid",
+            authority: "EPSG",
+            wkid: 6420,
+            vcsWkid: 6360,
+          },
+          path: `${ROOT}.crs`,
+        },
+      ]);
+      const draft = readGeoreference(
         composed(rigid(), {
           EXT_geospatial_crs_source: {
             format: "wkt2",
             extensions: { EXT_geospatial_crs_wkt2: { wkt2: UTM_WKT2 } },
           },
         }),
+      )!;
+      expect(draft.sources.wkt2).toBe(
+        "extensions.EXT_geospatial_crs_source.extensions.EXT_geospatial_crs_wkt2.wkt2",
       );
-      expect(draft.path).toBe(`${ROOT}.crs`);
-      expect(draft.message).toContain("extensions.EXT_geospatial_crs_source");
-      const theirs = refusal(
+      expect(draft.otherCrs!.map((o) => o.path)).toEqual([`${ROOT}.crs`]);
+      // A kept WKT2 is screened, and its PARAMETERFILEs held to the catalog.
+      const theirs = readGeoreference(
         composed(withoutCrs(), {
           EXT_geospatial_crs_source: WKID,
-          ESRI_crs: { wkid: 6420 },
+          ESRI_crs: { wkt2: UTM_WKT2 },
         }),
-      );
-      expect(theirs.path).toBe("extensions.ESRI_crs");
-      expect(theirs.message).toContain("extensions.EXT_geospatial_crs_source");
-      // Two epochs that differ disagree too.
+      )!;
+      expect(theirs.otherCrs).toEqual([
+        {
+          crs: { format: "wkt2", wkt2: UTM_WKT2 },
+          path: "extensions.ESRI_crs",
+          wkt2Path: "extensions.ESRI_crs.wkt2",
+        },
+      ]);
+    });
+
+    it("refuses two epochs that differ, naming both paths", () => {
       const epoch = (e: string) => ({
         format: "wkid",
         extensions: {
@@ -1015,6 +1050,16 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
           ),
         ).path,
       ).toBe(`${ROOT}.crs`);
+      const both = refusal(
+        composed(
+          { ...rigid(), crs: epoch("2019.81") },
+          { EXT_geospatial_crs_source: epoch("2010.0") },
+        ),
+      );
+      expect(both.message).toContain("extensions.EXT_geospatial_crs_source");
+      expect(both.message).toMatch(
+        /at epoch 2019\.81 against .* at epoch 2010/,
+      );
     });
 
     it("refuses a declaration with no CRS anywhere", () => {
@@ -1216,6 +1261,106 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
       expect(global.sources.areaOfInterest).toBeUndefined();
     });
 
+    it("derives none from a box in local metres without a transform, and warns once", () => {
+      const g = readGeoreference(
+        composed(
+          withoutArea(),
+          {},
+          {
+            geometricError: 0,
+            boundingVolume: {
+              box: [100, 50, 0, 10, 0, 0, 0, 10, 0, 0, 0, 10],
+            },
+          },
+        ),
+      )!;
+      expect(g.areaOfInterest).toBeUndefined();
+      expect(g.sources.areaOfInterest).toBeUndefined();
+      const about = g.warnings.filter((w) => w.includes("root.boundingVolume"));
+      expect(about).toHaveLength(1);
+      expect(about[0]).toMatch(/isn't near the Earth's surface/);
+    });
+
+    it("derives one from a large ECEF sphere at the surface, and on the Moon", () => {
+      // A 50 km sphere about a city: its samples are 50 km up, but it is
+      // at the surface.
+      const city = readGeoreference(
+        composed(
+          withoutArea(),
+          {},
+          {
+            geometricError: 0,
+            boundingVolume: { sphere: [...at(-0.127, 51.503), 50_000] },
+          },
+        ),
+      )!;
+      expect(city.areaOfInterest!.west).toBeLessThan(-0.127);
+      expect(city.areaOfInterest!.east).toBeGreaterThan(-0.127);
+      expect(
+        city.warnings.filter((w) => w.includes("root.boundingVolume")),
+      ).toEqual([]);
+      // A 2 km box at (23.47°, 0.67°) on the Moon (Apollo 11's site).
+      const d = Math.PI / 180;
+      const site = Array.from(
+        MOON.ellipsoid.cartographicToCartesian(
+          { longitude: 23.47 * d, latitude: 0.67 * d, height: 0 },
+          new Float64Array(3),
+        ),
+      );
+      const moon = readGeoreference(
+        composed(
+          {
+            crs: {
+              format: "wkt2",
+              extensions: {
+                EXT_geospatial_crs_wkt2: {
+                  wkt2: 'PROJCRS["Moon local",BASEGEOGCRS["Moon (2015)"]]',
+                },
+              },
+            },
+            placement: { mode: "reprojected" },
+          },
+          {
+            "3DTILES_ellipsoid": {
+              body: "Moon",
+              radii: [1737400, 1737400, 1737400],
+            },
+          },
+          {
+            geometricError: 0,
+            transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, ...site, 1],
+            boundingVolume: {
+              box: [0, 0, 0, 1000, 0, 0, 0, 1000, 0, 0, 0, 1000],
+            },
+          },
+        ),
+      )!;
+      expect(moon.body).toBe(MOON);
+      const a = moon.areaOfInterest!;
+      expect(a.west).toBeLessThan(23.47);
+      expect(a.east).toBeGreaterThan(23.47);
+      expect(a.south).toBeLessThan(0.67);
+      expect(a.north).toBeGreaterThan(0.67);
+      // 1 km on a 1,737.4 km sphere is about 0.033°.
+      expect(a.east - a.west).toBeLessThan(0.15);
+      // The same box read on the Earth's ellipsoid is far below its surface.
+      expect(
+        readGeoreference(
+          composed(
+            withoutArea(),
+            {},
+            {
+              geometricError: 0,
+              transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, ...site, 1],
+              boundingVolume: {
+                box: [0, 0, 0, 1000, 0, 0, 0, 1000, 0, 0, 0, 1000],
+              },
+            },
+          ),
+        )!.areaOfInterest,
+      ).toBeUndefined();
+    });
+
     it("keeps ours as an override", () => {
       const g = readGeoreference(
         composed(
@@ -1355,6 +1500,47 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
       );
       expect(g.sources.alignments).toBe("extensions.BENTLEY_alignments");
       expect(g.warnings).toEqual([]);
+    });
+
+    it("reads an IFC tangent end written 0 as null is, and still refuses an arc's 0", () => {
+      const withoutAlignments = rigid();
+      delete withoutAlignments.alignments;
+      const extension = {
+        alignments: [
+          {
+            name: "IFC",
+            start: [0, 0],
+            startAzimuth: 0,
+            startStation: 0,
+            horizontal: [
+              { type: "LINE", length: 10 },
+              { type: "CLOTHOID", length: 20, startRadius: 0, endRadius: 300 },
+              { type: "CIRCULARARC", length: 30, radius: 300 },
+              { type: "CLOTHOID", length: 20, startRadius: 300, endRadius: 0 },
+            ],
+          },
+        ],
+      };
+      const g = readGeoreference(
+        composed(withoutAlignments, { [ALIGNMENTS_EXTENSION]: extension }),
+      )!;
+      expect(g.alignments![0]!.horizontal[1]).toEqual({
+        kind: "spiral",
+        length: 20,
+        startRadius: Infinity,
+        endRadius: 300,
+      });
+      expect(g.alignments![0]!.horizontal[3]).toMatchObject({
+        endRadius: Infinity,
+      });
+      (extension.alignments[0]!.horizontal[2] as { radius: number }).radius = 0;
+      expect(
+        refusal(
+          composed(withoutAlignments, { [ALIGNMENTS_EXTENSION]: extension }),
+        ).path,
+      ).toBe(
+        "extensions.BENTLEY_alignments.alignments[0].horizontal[2].radius",
+      );
     });
 
     it("reads the old in-frame alignments with a warning, and refuses both", () => {

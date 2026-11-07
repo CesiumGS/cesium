@@ -5,6 +5,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
+import { crsDefinition, crsObject } from "../../src/engineering/crs.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import { ENGINEERING_FRAME_EXTENSION } from "../../src/engineering/georeference.ts";
 import {
@@ -295,5 +296,108 @@ describe("a CRS from ESRI_crs or EXT_geospatial_crs_source alone", () => {
     await expect(georeferenceTileset(esri, { proj })).rejects.toThrow(
       /extensions\.ESRI_crs\.wkt2: .*strict WKT2/,
     );
+  });
+});
+
+describe("two declared CRSs, judged by PROJ", () => {
+  const reprojectedWith = (others: Record<string, unknown>) =>
+    standIn(
+      m4.mat4(),
+      {
+        crs: {
+          format: "wkid",
+          extensions: {
+            EXT_geospatial_crs_wkid: { authority: "EPSG", wkid: 32611 },
+          },
+        },
+        placement: { mode: "reprojected" },
+      },
+      others,
+    );
+  const sourceWkt2 = (wkt2: string) => ({
+    EXT_geospatial_crs_source: {
+      format: "wkt2",
+      extensions: { EXT_geospatial_crs_wkt2: { wkt2 } },
+    },
+  });
+
+  it("agree when a code and its WKT2 are the same CRS, and place", async () => {
+    const proj = await loadProj({ base });
+    const wkt2 = proj.proj_as_wkt(
+      proj.proj_create("EPSG:32611"),
+      proj.PJ_WKT2_2019,
+    );
+    const tileset = reprojectedWith(sourceWkt2(wkt2));
+    expect(tileset.georeference!.otherCrs).toHaveLength(1);
+    const placement = await georeferenceTileset(tileset, { proj });
+    expect(placement.mode).toBe("reprojected");
+    expect(tileset.warnings.size).toBe(0);
+  });
+
+  it("are refused when PROJ says they differ, naming both paths, with a warning", async () => {
+    const proj = await loadProj({ base });
+    const wkt2 = proj.proj_as_wkt(
+      proj.proj_create("EPSG:32610"),
+      proj.PJ_WKT2_2019,
+    );
+    const tileset = reprojectedWith(sourceWkt2(wkt2));
+    const refused = georeferenceTileset(tileset, { proj });
+    await expect(refused).rejects.toThrow(
+      /extensions\.BENTLEY_engineering_frame\.crs: disagrees with extensions\.EXT_geospatial_crs_source: EPSG:32611 isn't the same CRS to PROJ/,
+    );
+    expect(tileset.placement).toBeUndefined();
+    expect([...tileset.warnings].join("\n")).toContain("disagrees with");
+    // A kept WKT2 goes through the strict parser too.
+    const bad = reprojectedWith(
+      sourceWkt2(wkt2.replace("CS[", 'NOTANODE["x"],CS[')),
+    );
+    await expect(georeferenceTileset(bad, { proj })).rejects.toThrow(
+      /strict WKT2/,
+    );
+  });
+});
+
+describe("a vertical CRS in another registry (vcsAuthority)", () => {
+  it("resolves Esri's EPSG:32610 with ESRI:115700, read from ESRI_crs", async () => {
+    const proj = await loadProj({ base });
+    const declared = standIn(
+      m4.mat4(),
+      { placement: { mode: "reprojected" } },
+      { ESRI_crs: { wkid: 32610, vcsWkid: 115700 } },
+    ).georeference!;
+    expect(crsDefinition(declared.crs)).toBe("EPSG:32610+ESRI:115700");
+    expect(() =>
+      crsObject(proj, declared.crs, "the declared CRS"),
+    ).not.toThrow();
+    // Backwards compatible: one registry writes as before.
+    expect(
+      crsDefinition({
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 6420,
+        vcsWkid: 6360,
+        vcsAuthority: "epsg",
+      }),
+    ).toBe("EPSG:6420+6360");
+  });
+
+  it("fails at PROJ's lookup, naming the definition, when the vertical code's registry is wrong", async () => {
+    const proj = await loadProj({ base });
+    await expect(
+      (async () =>
+        EngineeringFrame.create(
+          {
+            name: "wrong registry",
+            body: EARTH,
+            crs: {
+              format: "wkid",
+              authority: "EPSG",
+              wkid: 32610,
+              vcsWkid: 115700,
+            },
+          },
+          proj,
+        ))(),
+    ).rejects.toThrow(/PROJ could not create .*"EPSG:32610\+115700"/);
   });
 });

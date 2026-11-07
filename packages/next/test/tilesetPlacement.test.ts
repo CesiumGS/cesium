@@ -163,6 +163,28 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
     ]);
   });
 
+  it("warns about a CRS extension without a frame declaration, and places nothing", async () => {
+    const tileset = await load(
+      tilesetJson({ ESRI_crs: { wkid: 6420, vcsWkid: 6360 } }),
+    );
+    expect(tileset.georeference).toBeUndefined();
+    expect([...tileset.warnings]).toEqual([
+      "tileset.json has ESRI_crs but no BENTLEY_engineering_frame placement; not placed",
+    ]);
+  });
+
+  it("derives no area from a root box in local metres, with one warning", async () => {
+    const json = tilesetJson({ [ENGINEERING_FRAME_EXTENSION]: reprojected });
+    delete (json.root as { transform?: number[] }).transform;
+    const tileset = await load(json);
+    expect(tileset.georeference!.areaOfInterest).toBeUndefined();
+    const warnings = [...tileset.warnings];
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatch(
+      /root\.boundingVolume isn't near the Earth's surface/,
+    );
+  });
+
   it("has no extensions and no declaration when the tileset has none", async () => {
     const tileset = await load(tilesetJson());
     expect(tileset.extensions).toEqual({});

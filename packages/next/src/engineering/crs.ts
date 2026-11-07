@@ -54,16 +54,23 @@ export type CrsRef =
       /** The registry, such as "EPSG" or "IAU_2015". */
       readonly authority: string;
       readonly wkid: number;
-      /** The vertical CRS's code in the same registry (a compound CRS). */
+      /** The vertical CRS's code (a compound CRS), in `vcsAuthority`. */
       readonly vcsWkid?: number;
+      /**
+       * The vertical CRS's registry when it isn't `authority` (an EPSG
+       * horizontal CRS with an ESRI vertical code, as Esri writes them);
+       * `authority` when absent.
+       */
+      readonly vcsAuthority?: string;
       /** Coordinate epoch, decimal year, for a dynamic datum. */
       readonly epoch?: number;
     }
   | { readonly format: "wkt2"; readonly wkt2: string };
 
 /**
- * The string PROJ accepts for a reference: "EPSG:2227", "EPSG:6420+6360", or
- * WKT2. The epoch is not part of it (proj_create rejects "CRS@epoch"); an
+ * The string PROJ accepts for a reference: "EPSG:2227", "EPSG:6420+6360",
+ * "EPSG:32610+ESRI:115700" (a vertical code in another registry), or WKT2.
+ * The epoch is not part of it (proj_create rejects "CRS@epoch"); an
  * operation applies it as the coordinate time (see resolveOperation).
  */
 export function crsDefinition(ref: CrsRef): string {
@@ -71,7 +78,15 @@ export function crsDefinition(ref: CrsRef): string {
     return ref.wkt2;
   }
   const code = `${ref.authority}:${ref.wkid}`;
-  return ref.vcsWkid === undefined ? code : `${code}+${ref.vcsWkid}`;
+  if (ref.vcsWkid === undefined) {
+    return code;
+  }
+  const other =
+    ref.vcsAuthority !== undefined &&
+    ref.vcsAuthority.toUpperCase() !== ref.authority.toUpperCase();
+  return other
+    ? `${code}+${ref.vcsAuthority}:${ref.vcsWkid}`
+    : `${code}+${ref.vcsWkid}`;
 }
 
 /**
@@ -1222,7 +1237,11 @@ export function compoundParts(
     vertical: part(
       1,
       codes
-        ? { format: "wkid", authority: ref.authority, wkid: ref.vcsWkid! }
+        ? {
+            format: "wkid",
+            authority: ref.vcsAuthority ?? ref.authority,
+            wkid: ref.vcsWkid!,
+          }
         : undefined,
     ),
   };
