@@ -204,9 +204,15 @@ export {
   type DesignPick,
   type PickView,
 } from "./engineering/pick.ts";
+// Snapping, split as 1.x splits Scene#snap (client) and SnapService
+// (server); plan 5 replaces the CPU client side with a GPU snap pass.
 export {
   ClientSnapService,
   GEOMETRY_NOT_RETAINED,
+  SNAP_SERVER_FAILED,
+  refiningSnap,
+  type ServiceSnapRequest,
+  type SnapCamera,
   type SnapRequest,
   type SnapResult,
   type SnapService,

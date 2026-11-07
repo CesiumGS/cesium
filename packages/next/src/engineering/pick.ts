@@ -65,8 +65,8 @@ export interface DesignPick {
 }
 
 /**
- * @internal The camera a pick's position and feature were read with, for
- * projecting into that same frame (`projectToPixel`).
+ * The camera a pick's position and feature were read with, for projecting
+ * into that same frame (`projectToPixel`); public as `SnapCamera`.
  */
 export interface PickCamera extends CameraPose {
   readonly position: Float64Array;

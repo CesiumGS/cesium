@@ -1,7 +1,14 @@
 // Plan 4b task 16: ClientSnapService over retained tile geometry, View.toPixel,
 // and Tileset3D's retainGeometry (with World.drawMatrix).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { ClientSnapService } from "../src/engineering/snap.ts";
+import {
+  ClientSnapService,
+  SNAP_SERVER_FAILED,
+  refiningSnap,
+  type ServiceSnapRequest,
+  type SnapResult,
+  type SnapService,
+} from "../src/engineering/snap.ts";
 import type { PickView } from "../src/engineering/pick.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
 import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
@@ -131,12 +138,16 @@ describe("ClientSnapService", () => {
       aperture: 6,
     });
     expect(r?.kind).toBe("point");
-    expect(Array.from(r!.point)).toEqual([R, 40, 0]);
-    expect(Array.from(r!.raw)).toEqual(Array.from(under(x + 3, y)));
+    expect(Array.from(r!.snapPoint)).toEqual([R, 40, 0]);
+    expect(Array.from(r!.hitPoint)).toEqual(Array.from(under(x + 3, y)));
     expect(r!.distance).toBeCloseTo(3, 9);
     expect(r!.exact).toBe(false);
     expect(r!.tileset).toBe(ts);
     expect(r!.curve).toBeUndefined();
+    expect(r!.source).toBe("client");
+    expect(r!.provisional).toBe(false);
+    expect(r!.feature).toEqual({ featureId: 7, name: undefined });
+    expect(r!.camera!.position[0]).toBe(R + 1000);
     // The face normal, toward the camera.
     expect(Array.from(r!.normal!)).toEqual([1, 0, 0]);
   });
@@ -150,9 +161,9 @@ describe("ClientSnapService", () => {
       aperture: 6,
     });
     expect(r?.kind).toBe("segment");
-    expect(r!.point[0]).toBe(R);
-    expect(r!.point[1]).toBeCloseTo(20, 9);
-    expect(r!.point[2]).toBeCloseTo(0, 9);
+    expect(r!.snapPoint[0]).toBe(R);
+    expect(r!.snapPoint[1]).toBeCloseTo(20, 9);
+    expect(r!.snapPoint[2]).toBeCloseTo(0, 9);
     expect(r!.distance).toBeCloseTo(3, 9);
     expect(r!.curve!.map((p) => Array.from(p))).toEqual([
       [R, 0, 0],
@@ -170,8 +181,8 @@ describe("ClientSnapService", () => {
     });
     expect(r?.kind).toBe("surface");
     const raw = Array.from(under(x + 20, y + 20));
-    expect(Array.from(r!.point)).toEqual(raw);
-    expect(Array.from(r!.raw)).toEqual(raw);
+    expect(Array.from(r!.snapPoint)).toEqual(raw);
+    expect(Array.from(r!.hitPoint)).toEqual(raw);
     expect(r!.distance).toBe(0);
     expect(r!.exact).toBe(false);
   });
@@ -185,7 +196,7 @@ describe("ClientSnapService", () => {
       aperture: 6,
     });
     expect(r?.kind).toBe("point");
-    expect(Array.from(r!.point)).toEqual([R, 0, 40]);
+    expect(Array.from(r!.snapPoint)).toEqual([R, 0, 40]);
     expect(r!.tolerance).toBe(GEOMETRIC_ERROR);
   });
 
@@ -216,7 +227,7 @@ describe("ClientSnapService", () => {
     for (let i = 0; i < 3; i++) {
       const r = await service.snap({ view: view(), x, y, aperture: 6 });
       expect(r?.kind).toBe("surface");
-      expect(Array.from(r!.point)).toEqual(Array.from(under(x, y)));
+      expect(Array.from(r!.snapPoint)).toEqual(Array.from(under(x, y)));
       expect(r!.design?.obtained?.kind).toBe("surface");
     }
     expect([...ts.warnings]).toEqual(["snap: geometry not retained"]);
@@ -300,7 +311,210 @@ describe("ClientSnapService: no design answer (Review Focus 4)", () => {
       aperture: 6,
     });
     expect(r?.kind).toBe("point");
-    expect(Array.from(r!.point)).toEqual([R, 40, 0]);
+    expect(Array.from(r!.snapPoint)).toEqual([R, 40, 0]);
+  });
+});
+
+describe("refiningSnap: the client's snap, then the server's", () => {
+  // 3 px right of vertex B (R, 40, 0).
+  const [bx, by] = toScreen(40, 0);
+  const request = () => ({ view: view(), x: bx + 3, y: by, aperture: 6 });
+  /** The server's answer: B moved 1 cm, as the design data has it. */
+  const designB = Float64Array.from([R, 40.01, 0]);
+  function answer(over: Partial<SnapResult> = {}): SnapResult {
+    return {
+      snapPoint: designB,
+      hitPoint: designB,
+      distance: 99,
+      kind: "point",
+      tolerance: 0,
+      exact: true,
+      source: "server",
+      provisional: false,
+      ...over,
+    };
+  }
+  function server(
+    snap: (
+      r: ServiceSnapRequest,
+      s?: AbortSignal,
+    ) => Promise<SnapResult | undefined>,
+  ) {
+    const fn = vi.fn(snap);
+    return { service: { snap: fn } as SnapService, fn };
+  }
+
+  it("calls onUpdate with the client snap, then the server's", async () => {
+    const ts = tileset({ placement: placement() });
+    const client = new ClientSnapService([ts]);
+    const { service, fn } = server(async () => answer());
+    const updates: SnapResult[] = [];
+    const r = await refiningSnap(request(), client, service, (u) =>
+      updates.push(u),
+    );
+    expect(updates.map((u) => [u.source, u.provisional])).toEqual([
+      ["client", true],
+      ["server", false],
+    ]);
+    const first = updates[0]!;
+    expect(first.kind).toBe("point");
+    expect(Array.from(first.snapPoint)).toEqual([R, 40, 0]);
+    expect(first.exact).toBe(false);
+    expect(r).toBe(updates[1]);
+    expect(Array.from(r!.snapPoint)).toEqual(Array.from(designB));
+    expect(r!.exact).toBe(true);
+    expect(r!.tileset).toBe(ts);
+    // Its distance is from the cursor, on the client's camera.
+    expect(r!.distance).toBeCloseTo(3 - 0.005, 6);
+    // The request, as 1.x's SnapService.snap takes it.
+    const [req, signal] = fn.mock.calls[0]!;
+    expect(signal).toBeUndefined();
+    expect(req.tileset).toBe(ts);
+    expect(req.feature).toEqual({ featureId: 7, name: undefined });
+    expect(req.testPoint).toBe(first.hitPoint);
+    expect(req.closePoint).toBe(first.snapPoint);
+    expect(req.camera).toBe(first.camera);
+    expect(req.camera.width).toBe(1000);
+    expect([req.canvasWidth, req.canvasHeight, req.aperture]).toEqual([
+      1000, 500, 6,
+    ]);
+  });
+
+  it("keeps the client snap when the server finds none", async () => {
+    const client = new ClientSnapService([tileset()]);
+    const { service } = server(async () => undefined);
+    const updates: SnapResult[] = [];
+    const r = await refiningSnap(request(), client, service, (u) =>
+      updates.push(u),
+    );
+    expect(updates.map((u) => [u.source, u.provisional])).toEqual([
+      ["client", true],
+      ["client", false],
+    ]);
+    expect(r).toBe(updates[1]);
+    expect(r!.exact).toBe(false);
+    expect(Array.from(r!.snapPoint)).toEqual([R, 40, 0]);
+  });
+
+  it("keeps the client snap and warns once when the server fails", async () => {
+    const ts = tileset();
+    const client = new ClientSnapService([ts]);
+    const { service } = server(async () => {
+      throw new Error("503");
+    });
+    for (let i = 0; i < 2; i++) {
+      const updates: SnapResult[] = [];
+      const r = await refiningSnap(request(), client, service, (u) =>
+        updates.push(u),
+      );
+      expect(updates.map((u) => u.provisional)).toEqual([true, false]);
+      expect(r?.source).toBe("client");
+      expect(r?.provisional).toBe(false);
+    }
+    expect([...ts.warnings]).toEqual([SNAP_SERVER_FAILED]);
+  });
+
+  it("treats a malformed server answer as a failure", async () => {
+    const ts = tileset();
+    const { service } = server(async () =>
+      answer({ snapPoint: Float64Array.from([NaN, 0, 0]) }),
+    );
+    const r = await refiningSnap(
+      request(),
+      new ClientSnapService([ts]),
+      service,
+      () => {},
+    );
+    expect(r?.source).toBe("client");
+    expect([...ts.warnings]).toEqual([SNAP_SERVER_FAILED]);
+  });
+
+  it("ignores a superseded snap's late server answer", async () => {
+    const client = new ClientSnapService([tileset()]);
+    const late: Array<(r: SnapResult) => void> = [];
+    const signals: AbortSignal[] = [];
+    // A server that ignores the signal and answers whenever it likes.
+    const { service } = server(
+      (_req, signal) =>
+        new Promise((resolve) => {
+          signals.push(signal!);
+          late.push(resolve);
+        }),
+    );
+    const first: SnapResult[] = [];
+    const second: SnapResult[] = [];
+    const a = new AbortController();
+    const one = refiningSnap(
+      request(),
+      client,
+      service,
+      (u) => first.push(u),
+      a.signal,
+    );
+    await vi.waitFor(() => expect(late).toHaveLength(1));
+    // A newer snap supersedes it: the caller aborts the older one.
+    a.abort();
+    const b = new AbortController();
+    const two = refiningSnap(
+      request(),
+      client,
+      service,
+      (u) => second.push(u),
+      b.signal,
+    );
+    await vi.waitFor(() => expect(late).toHaveLength(2));
+    expect(signals[0]!.aborted).toBe(true);
+    expect(signals[1]!.aborted).toBe(false);
+    late[1]!(answer());
+    late[0]!(answer({ kind: "segment" }));
+    const [r1, r2] = await Promise.all([one, two]);
+    expect(first.map((u) => [u.source, u.provisional])).toEqual([
+      ["client", true],
+    ]);
+    expect(r1?.source).toBe("client");
+    expect(r1?.provisional).toBe(false);
+    expect(second.map((u) => u.source)).toEqual(["client", "server"]);
+    expect(r2?.kind).toBe("point");
+  });
+
+  it("gives the client snap, not provisional, without a server", async () => {
+    const updates: SnapResult[] = [];
+    const r = await refiningSnap(
+      request(),
+      new ClientSnapService([tileset()]),
+      undefined,
+      (u) => updates.push(u),
+    );
+    expect(updates).toHaveLength(1);
+    expect(r).toBe(updates[0]);
+    expect(r?.source).toBe("client");
+    expect(r?.provisional).toBe(false);
+  });
+
+  it("asks no server for a snap off the listed tilesets", async () => {
+    const { service, fn } = server(async () => answer());
+    const updates: SnapResult[] = [];
+    const r = await refiningSnap(
+      request(),
+      new ClientSnapService([tileset({ owns: false })]),
+      service,
+      (u) => updates.push(u),
+    );
+    expect(fn).not.toHaveBeenCalled();
+    expect(r?.kind).toBe("surface");
+    expect(updates.map((u) => u.provisional)).toEqual([false]);
+  });
+
+  it("resolves undefined over the sky, with no update", async () => {
+    const onUpdate = vi.fn();
+    const r = await refiningSnap(
+      { view: view({ sky: true }), x: 1, y: 1, aperture: 6 },
+      new ClientSnapService([tileset()]),
+      server(async () => answer()).service,
+      onUpdate,
+    );
+    expect(r).toBeUndefined();
+    expect(onUpdate).not.toHaveBeenCalled();
   });
 });
 
@@ -350,7 +564,7 @@ describe("ClientSnapService: what the camera can't see", () => {
       aperture: 6,
     });
     expect(r?.kind).toBe("point");
-    expect(Array.from(r!.point)).toEqual([R, 40, 40]);
+    expect(Array.from(r!.snapPoint)).toEqual([R, 40, 40]);
     expect(r!.distance).toBeCloseTo(Math.hypot(2, 2), 6);
     expect(r!.design!.obtained!.kind).toBe("point");
   });
@@ -371,7 +585,7 @@ describe("ClientSnapService: what the camera can't see", () => {
       tileset({ placement: placement(), geometry }),
     ]).snap({ view: view(), x: 521, y: 218, aperture: 6 });
     expect(r?.kind).toBe("surface");
-    expect(Array.from(r!.point)).toEqual(Array.from(under(521, 218)));
+    expect(Array.from(r!.snapPoint)).toEqual(Array.from(under(521, 218)));
     expect(r!.design!.obtained!.kind).toBe("surface");
   });
 
@@ -406,11 +620,11 @@ describe("ClientSnapService: what the camera can't see", () => {
     ]).snap({ view: view({ aim }), x, y, aperture: 6 });
     expect(r?.kind).toBe("segment");
     expect(r!.distance).toBeLessThanOrEqual(3 + 1e-9);
-    expect(r!.point[0]).toBeCloseTo(R, 6);
-    expect(r!.point[1]).toBeCloseTo(5, 6);
+    expect(r!.snapPoint[0]).toBeCloseTo(R, 6);
+    expect(r!.snapPoint[1]).toBeCloseTo(5, 6);
     // The 3D point is where the screen's nearest point shows.
     const at = new Float64Array(2);
-    projectToPixel(pose, camera.fovy(2), 1000, 500, r!.point, at);
+    projectToPixel(pose, camera.fovy(2), 1000, 500, r!.snapPoint, at);
     expect(Math.hypot(at[0]! - x, at[1]! - y)).toBeCloseTo(r!.distance, 6);
     // The camera sees the road from above: the normal is up.
     expect(r!.normal![0]).toBeCloseTo(1, 9);
@@ -440,7 +654,7 @@ describe("ClientSnapService: what the camera can't see", () => {
     });
     // A (500, 250) of the square, not the triangle in front of the lens.
     expect(r?.kind).toBe("point");
-    expect(Array.from(r!.point)).toEqual([R, 0, 0]);
+    expect(Array.from(r!.snapPoint)).toEqual([R, 0, 0]);
   });
 });
 

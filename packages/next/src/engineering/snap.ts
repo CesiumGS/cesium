@@ -1,3 +1,13 @@
+/**
+ * Snapping, split as CesiumJS 1.x splits it: a client side that snaps at once
+ * to what is drawn (1.x `Scene#snap`; here `ClientSnapService`, on the CPU
+ * over retained tile geometry, which plan 5 replaces with a GPU snap pass),
+ * and a server side that snaps to the source design data (1.x
+ * `SnapService`, as `IonSnapService` implements it). `refiningSnap` shows the
+ * client's answer and then updates it with the server's.
+ */
+import { projectToPixel } from "../scene/Camera.ts";
+import type { PickResult } from "../scene/View.ts";
 import type { TileGeometry } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
@@ -6,6 +16,13 @@ import {
   type SnapKind,
 } from "./EngineeringFrame.ts";
 import { pickInFrame, type PickCamera, type PickView } from "./pick.ts";
+
+/**
+ * The camera a snap's pick was read with, and its view's size in CSS
+ * pixels: what a server needs to snap as the screen shows it (1.x passes the
+ * `Camera` and the canvas size).
+ */
+export type SnapCamera = PickCamera;
 
 /** Where to snap: CSS pixels from the view's top-left, as `pickDesign`. */
 export interface SnapRequest {
@@ -16,62 +33,109 @@ export interface SnapRequest {
   readonly aperture: number;
 }
 
-/** What a snap landed on. */
+/** What a snap landed on (1.x `SnapService.Result`, and more). */
 export interface SnapResult {
-  /** The snapped position: body-fixed metres, as displayed. */
-  readonly point: Float64Array;
-  /** The pick under the cursor it started from (body-fixed, displayed). */
-  readonly raw: Float64Array;
-  /** CSS pixels from the cursor to `point` on the screen (0 on a surface). */
+  /** The snapped point, the one to use: body-fixed metres, as displayed. */
+  readonly snapPoint: Float64Array;
+  /**
+   * Where the cursor hit the geometry (body-fixed, displayed). On the
+   * client, the surface under the cursor: on the object and off its edges,
+   * so it seeds a server snap well (1.x's hybrid snapping seeds from
+   * `Scene#snap`'s `surfacePosition` for that reason).
+   */
+  readonly hitPoint: Float64Array;
+  /** CSS pixels from the cursor to `snapPoint` on the screen (0 on a surface). */
   readonly distance: number;
   readonly kind: SnapKind;
   /**
-   * The unit normal of a face at `point`: one facing the camera where there
-   * is one, else another turned toward it. None on a `surface`.
+   * The unit normal of a face at `snapPoint`: one facing the camera where
+   * there is one, else another turned toward it.
    */
   readonly normal?: Float64Array;
-  /** The geometry snapped to: an edge's two ends for a `segment`. */
+  /** The geometry snapped to: an edge's two ends for a client `segment`. */
   readonly curve?: readonly Float64Array[];
   /**
-   * Design coordinates of `point` (`obtained: { how: "snap", tolerance,
-   * kind }`), only where `pickDesign` gives the raw pick design coordinates.
+   * Design coordinates of `snapPoint` (`obtained: { how: "snap", tolerance,
+   * kind }`). A client snap gives them only where `pickDesign` gives the
+   * pick design coordinates.
    */
   readonly design?: DesignPoint;
-  /** Metres: how far `point` may be from the geometry it stands for. */
+  /** Metres: how far `snapPoint` may be from the geometry it stands for. */
   readonly tolerance: number;
-  /** Whether `point` lies on the analytic geometry (tolerance 0). */
+  /** Whether `snapPoint` lies on the analytic geometry (tolerance 0). */
   readonly exact: boolean;
   /** The listed tileset whose content was hit. */
   readonly tileset?: Tileset3D;
+  /** "client": snapped to what is drawn; "server": to the design data. */
+  readonly source: "client" | "server";
+  /** A client snap a server was asked to refine, still unanswered. */
+  readonly provisional: boolean;
+  /** The element hit (1.x's `elementId` comes from it). */
+  readonly feature?: PickResult;
+  /**
+   * The camera the client snap used, to build a server request from: absent
+   * when the camera kept moving during the pick.
+   */
+  readonly camera?: SnapCamera;
+}
+
+/** A server snap's request, as 1.x's `SnapService.snap` takes it. */
+export interface ServiceSnapRequest {
+  readonly tileset: Tileset3D;
+  /** The element to snap to. */
+  readonly feature?: PickResult;
+  /** The point to snap from: body-fixed, displayed. */
+  readonly testPoint: Float64Array;
+  /** A point near the target geometry that seeds the search (1.x default: `testPoint`). */
+  readonly closePoint?: Float64Array;
+  readonly camera: SnapCamera;
+  /** The view's size in CSS pixels. */
+  readonly canvasWidth: number;
+  readonly canvasHeight: number;
+  /** The snap tolerance in CSS pixels. */
+  readonly aperture: number;
 }
 
 /**
- * Snaps a cursor to geometry (after 1.x's `SnapService`). Resolves undefined
- * over the sky.
+ * The server side (1.x `SnapService`): snaps against the source design
+ * data, not the drawn mesh. Resolves undefined when no snap is possible.
+ * The composer sets `source`, `provisional` and `distance` of what it
+ * returns.
  */
 export interface SnapService {
-  snap(request: SnapRequest): Promise<SnapResult | undefined>;
+  snap(
+    request: ServiceSnapRequest,
+    signal?: AbortSignal,
+  ): Promise<SnapResult | undefined>;
 }
 
 /** Added once to a tileset's `warnings` when snapping finds no geometry. */
 export const GEOMETRY_NOT_RETAINED = "snap: geometry not retained";
 
+/** Added once to a tileset's `warnings` when its snap server fails. */
+export const SNAP_SERVER_FAILED =
+  "snap: the snap server failed; client snaps stand";
+
 /**
- * Snapping to the triangles tiles keep with `retainGeometry`, on the
- * client. From `pickDesign`'s hit, the hit draw's vertices are projected
- * with the camera of the pick's frame: the nearest within the aperture is a
- * `point`; failing that, the nearest point of an edge within it is a
- * `segment`; failing that, the raw hit is a `surface`. A snapped point is a
- * vertex or on an edge of the tile's mesh, which stands for the true
- * geometry within the tile's geometric error: that is the tolerance (a
- * geometric error of 0 is taken at its word), and no snap is exact.
+ * The client side (1.x `Scene#snap`), on the CPU over the triangles tiles
+ * keep with `retainGeometry` until plan 5's GPU snap pass replaces it. From
+ * `pickDesign`'s hit, the hit draw's vertices are projected with the camera
+ * of the pick's frame: the nearest within the aperture is a `point`; failing
+ * that, the nearest point of an edge within it is a `segment`; failing that,
+ * the hit is a `surface`. A snapped point is a vertex or on an edge of the
+ * tile's mesh, which stands for the true geometry within the tile's
+ * geometric error: that is the tolerance (a geometric error of 0 is taken at
+ * its word), and no client snap is exact.
  *
  * A vertex or edge point the hit draw's own triangles hide from the camera
  * (the line of sight crosses one of them before reaching it) is passed over
  * for the next nearest. Occlusion by other draws isn't tested: such a point
  * is still a vertex of the drawn mesh, within the aperture.
+ *
+ * Its results have `source: "client"`, are not provisional, and carry the
+ * camera and feature a server request is built from (`refiningSnap`).
  */
-export class ClientSnapService implements SnapService {
+export class ClientSnapService {
   /**
    * Per-vertex work buffers, kept across snaps: about 57 bytes per vertex
    * of the largest draw snapped to.
@@ -82,21 +146,26 @@ export class ClientSnapService implements SnapService {
 
   async snap(request: SnapRequest): Promise<SnapResult | undefined> {
     const { view, x, y, aperture } = request;
-    if (!(Number.isFinite(aperture) && aperture >= 0)) {
-      throw new Error(
-        `ClientSnapService: the aperture must be a finite number of CSS pixels, not negative, got ${aperture}`,
-      );
-    }
+    checkAperture(aperture);
     const framed = await pickInFrame(view, x, y, this.tilesets);
     if (framed === undefined) {
       return undefined;
     }
     const { pick, camera, draw, tile } = framed;
     const tileset = pick.tileset;
-    const raw = pick.position;
+    const hitPoint = pick.position;
+    const common = {
+      hitPoint,
+      exact: false,
+      source: "client",
+      provisional: false,
+      ...(tileset !== undefined && { tileset }),
+      ...(pick.feature !== undefined && { feature: pick.feature }),
+      ...(camera !== undefined && { camera }),
+    } as const;
     const surface = (tolerance: number): SnapResult => ({
-      point: Float64Array.from(raw),
-      raw,
+      ...common,
+      snapPoint: Float64Array.from(hitPoint),
       distance: 0,
       kind: "surface",
       ...(pick.design !== undefined && {
@@ -107,8 +176,6 @@ export class ClientSnapService implements SnapService {
         }),
       }),
       tolerance,
-      exact: false,
-      ...(tileset !== undefined && { tileset }),
     });
     if (
       camera === undefined ||
@@ -118,15 +185,12 @@ export class ClientSnapService implements SnapService {
     ) {
       return surface(pick.tolerance);
     }
-    // The raw hit is on the mesh within a pixel's footprint, and the mesh on
-    // the geometry within the geometric error.
+    // The hit is on the mesh within a pixel's footprint, and the mesh on the
+    // geometry within the geometric error.
     const surfaceTolerance = pick.tolerance + tile.geometricError;
     if (tile.geometry === undefined) {
-      if (
-        !tileset.retainGeometry &&
-        !tileset.warnings.has(GEOMETRY_NOT_RETAINED)
-      ) {
-        tileset.warnings.add(GEOMETRY_NOT_RETAINED);
+      if (!tileset.retainGeometry) {
+        warnOnce(tileset, GEOMETRY_NOT_RETAINED);
       }
       return surface(surfaceTolerance);
     }
@@ -144,8 +208,8 @@ export class ClientSnapService implements SnapService {
     const tolerance = tile.geometricError;
     const placement = tileset.placement;
     return {
-      point: found.point,
-      raw,
+      ...common,
+      snapPoint: found.point,
       distance: found.distance,
       kind: found.kind,
       ...(found.normal !== undefined && { normal: found.normal }),
@@ -159,10 +223,136 @@ export class ClientSnapService implements SnapService {
           ),
         }),
       tolerance,
-      exact: false,
-      tileset,
     };
   }
+}
+
+function checkAperture(aperture: number): void {
+  if (!(Number.isFinite(aperture) && aperture >= 0)) {
+    throw new Error(
+      `snap: the aperture must be a finite number of CSS pixels, not negative, got ${aperture}`,
+    );
+  }
+}
+
+function warnOnce(tileset: Tileset3D, warning: string): void {
+  if (!tileset.warnings.has(warning)) {
+    tileset.warnings.add(warning);
+  }
+}
+
+/**
+ * Snaps on the client and refines on the server, as 1.x's hybrid snapping
+ * does: `onUpdate` gets the client snap at once (provisional while a server
+ * was asked), then the server's (`source: "server"`) when it answers, and
+ * the promise resolves with the last of them.
+ *
+ * The server is asked when there is one and the client snap hit a listed
+ * tileset in one camera frame: with the client's `hitPoint` as `testPoint`,
+ * its `snapPoint` as `closePoint`, its feature and its camera. When the
+ * server finds no snap, fails (a warning on the tileset, once) or gives a
+ * malformed answer, the client snap stands: `onUpdate` gets it again, no
+ * longer provisional, and the promise resolves with it.
+ *
+ * Abort `signal` when a newer snap supersedes this one: the server request
+ * is aborted with it, and `onUpdate` is not called again, even if the server
+ * answers anyway. The promise then resolves with the client snap, not
+ * provisional.
+ */
+export async function refiningSnap(
+  request: SnapRequest,
+  client: ClientSnapService,
+  server: SnapService | undefined,
+  onUpdate: (result: SnapResult) => void,
+  signal?: AbortSignal,
+): Promise<SnapResult | undefined> {
+  const found = await client.snap(request);
+  if (found === undefined) {
+    return undefined;
+  }
+  const { tileset, camera } = found;
+  const asks =
+    server !== undefined && tileset !== undefined && camera !== undefined;
+  const settled: SnapResult = { ...found, provisional: false };
+  if (signal?.aborted) {
+    return settled;
+  }
+  if (!asks) {
+    onUpdate(settled);
+    return settled;
+  }
+  onUpdate({ ...found, provisional: true });
+  let answer: SnapResult | undefined;
+  let failed = false;
+  try {
+    answer = await server.snap(
+      {
+        tileset,
+        ...(found.feature !== undefined && { feature: found.feature }),
+        testPoint: found.hitPoint,
+        closePoint: found.snapPoint,
+        camera,
+        canvasWidth: camera.width,
+        canvasHeight: camera.height,
+        aperture: request.aperture,
+      },
+      signal,
+    );
+  } catch {
+    failed = true;
+  }
+  if (signal?.aborted) {
+    return settled;
+  }
+  if (!failed && answer !== undefined && !wellFormed(answer)) {
+    failed = true;
+  }
+  if (failed) {
+    warnOnce(tileset, SNAP_SERVER_FAILED);
+  }
+  if (failed || answer === undefined) {
+    onUpdate(settled);
+    return settled;
+  }
+  const at = new Float64Array(2);
+  const depth = projectToPixel(
+    camera,
+    camera.fovy,
+    camera.width,
+    camera.height,
+    answer.snapPoint,
+    at,
+  );
+  const refined: SnapResult = {
+    ...answer,
+    hitPoint: answer.hitPoint ?? found.hitPoint,
+    distance:
+      depth > 0 ? Math.hypot(at[0]! - request.x, at[1]! - request.y) : NaN,
+    tileset: answer.tileset ?? tileset,
+    source: "server",
+    provisional: false,
+    ...(found.feature !== undefined && { feature: found.feature }),
+    camera,
+  };
+  onUpdate(refined);
+  return refined;
+}
+
+/** A server answer with finite points and a finite, non-negative tolerance. */
+function wellFormed(r: SnapResult): boolean {
+  const finite3 = (p: unknown) =>
+    p instanceof Float64Array &&
+    p.length >= 3 &&
+    Number.isFinite(p[0]) &&
+    Number.isFinite(p[1]) &&
+    Number.isFinite(p[2]);
+  return (
+    finite3(r.snapPoint) &&
+    (r.hitPoint === undefined || finite3(r.hitPoint)) &&
+    typeof r.tolerance === "number" &&
+    Number.isFinite(r.tolerance) &&
+    r.tolerance >= 0
+  );
 }
 
 interface Found {
