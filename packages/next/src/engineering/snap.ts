@@ -35,8 +35,21 @@ export interface SnapRequest {
 
 /** What a snap landed on (1.x `SnapService.Result`, and more). */
 export interface SnapResult {
-  /** The snapped point, the one to use: body-fixed metres, as displayed. */
+  /**
+   * The snapped point, the one to use: body-fixed metres, as displayed. With
+   * `design`, the exact design answer, where the placement draws it.
+   */
   readonly snapPoint: Float64Array;
+  /**
+   * Where the snap is shown and judged on the screen, when that isn't
+   * `snapPoint` (body-fixed metres, as displayed): the visible point on the
+   * drawn surface directly over, or nearest, an exact design point that
+   * lies under it, such as an alignment's profile grade line under a median
+   * barrier. `snapPoint` and `design` stay the exact design answer, and the
+   * readout uses them; a marker is drawn here. At most `SHOWN_POINT_REACH`
+   * from `snapPoint`. Absent, `snapPoint` is shown.
+   */
+  readonly shownPoint?: Float64Array;
   /**
    * Where the cursor hit the geometry (body-fixed, displayed). From a
    * server, 1.x's meaning: the nearest edge point within the aperture, else
@@ -114,6 +127,14 @@ export interface SnapService {
     signal?: AbortSignal,
   ): Promise<SnapResult | null | undefined>;
 }
+
+/**
+ * Metres: how far a result's `shownPoint` may be from its `snapPoint`. A
+ * shown point stands for the surface over a design point (a barrier, a
+ * kerb, a deck's wearing course), so it is near; 2 m covers such a surface
+ * and refuses a shown point somewhere else on the screen.
+ */
+export const SHOWN_POINT_REACH = 2;
 
 /** Added once to a tileset's `warnings` when snapping finds no geometry. */
 export const GEOMETRY_NOT_RETAINED = "snap: geometry not retained";
@@ -305,13 +326,17 @@ function warnOnce(tileset: Tileset3D, warning: string): void {
  * reason for refusing an answer, adds a warning to the tileset once.
  *
  * A server answer is refused when it is malformed (points, tolerance,
- * `kind`, `normal`, `curve`); when it is `exact` with a tolerance other than
- * 0; when its `design` isn't where its tileset's placement draws
- * `snapPoint` (within the tolerance and 1 mm); when `snapPoint` is behind the
+ * `kind`, `normal`, `curve`, `shownPoint`); when it is `exact` with a
+ * tolerance other than 0; when its `design` isn't where its tileset's
+ * placement draws `snapPoint` (within the tolerance and 1 mm); when its
+ * `shownPoint` is more than `SHOWN_POINT_REACH` from `snapPoint`; when the
+ * point it is shown at (`shownPoint`, else `snapPoint`) is behind the
  * client's camera, nearer than its near plane or more than the aperture
- * and 1 px from the cursor; or when the client's hit draw hides it from that
- * camera by more than the tile's geometric error (an exact design point a
- * little inside the drawn mesh still passes).
+ * and 1 px from the cursor; or when the client's hit draw hides that point
+ * from the camera by more than the tile's geometric error (an exact design
+ * point a little inside the drawn mesh still passes; one well inside it,
+ * such as a profile grade line under a barrier, passes when its
+ * `shownPoint` is on the surface over it).
  *
  * Abort `signal` when a newer snap supersedes this one: the server request
  * is aborted with it, and `onUpdate` is not called again, even if the server
@@ -383,7 +408,11 @@ export async function refiningSnap(
         refined = {
           ...rest,
           hitPoint: answer.hitPoint ?? found.hitPoint,
-          distance: cursorDistance(camera, answer.snapPoint, request),
+          distance: cursorDistance(
+            camera,
+            answer.shownPoint ?? answer.snapPoint,
+            request,
+          ),
           tileset: answer.tileset ?? tileset,
           source: "server",
           provisional: false,
@@ -451,6 +480,19 @@ function refusal(
   if (r.hitPoint !== undefined && !finite3(r.hitPoint)) {
     return "hitPoint is not 3 finite numbers";
   }
+  if (r.shownPoint !== undefined) {
+    if (!(r.shownPoint instanceof Float64Array) || !finite3(r.shownPoint)) {
+      return "shownPoint is not 3 finite numbers";
+    }
+    const apart = Math.hypot(
+      r.shownPoint[0]! - r.snapPoint[0]!,
+      r.shownPoint[1]! - r.snapPoint[1]!,
+      r.shownPoint[2]! - r.snapPoint[2]!,
+    );
+    if (!(apart <= SHOWN_POINT_REACH)) {
+      return `shownPoint more than ${SHOWN_POINT_REACH} m from snapPoint`;
+    }
+  }
   if (!(
     typeof r.tolerance === "number" &&
     Number.isFinite(r.tolerance) &&
@@ -491,15 +533,20 @@ function refusal(
       return "design coordinates not where the placement draws snapPoint";
     }
   }
-  const distance = cursorDistance(camera, r.snapPoint, request);
+  // What the screen shows: the shown point, else the snapped one.
+  const [shown, name] =
+    r.shownPoint !== undefined
+      ? [r.shownPoint, "shownPoint"]
+      : [r.snapPoint, "snapPoint"];
+  const distance = cursorDistance(camera, shown, request);
   if (Number.isNaN(distance)) {
-    return "snapPoint behind the camera or nearer than its near plane";
+    return `${name} behind the camera or nearer than its near plane`;
   }
   if (distance > request.aperture + 1) {
-    return "snapPoint outside the aperture";
+    return `${name} outside the aperture`;
   }
-  if (client.hides(found, r.snapPoint)) {
-    return "snapPoint hidden from the camera by the drawn mesh";
+  if (client.hides(found, shown)) {
+    return `${name} hidden from the camera by the drawn mesh`;
   }
   return undefined;
 }

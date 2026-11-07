@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import {
   measurementModel,
+  meters,
   unitSymbol,
 } from "../examples/design-globe/measureModel.ts";
 import {
@@ -153,6 +154,15 @@ describe("measurementModel", () => {
     expect(view.a.offset).toBeUndefined();
     expect(view.a.elevation).toBeUndefined();
     expect(view.a.tolerance).toBe("±200 mm");
+  });
+
+  it("writes lengths in the unit that reads best, km to nm", () => {
+    expect(meters(1_500)).toBe("1.5 km");
+    expect(meters(2.85)).toBe("2.9 m");
+    expect(meters(0.9996)).toBe("1.0 m");
+    expect(meters(0.0123)).toBe("12 mm");
+    expect(meters(1e-4)).toBe("100 µm");
+    expect(meters(-3e-9)).toBe("−3.0 nm");
   });
 
   it("abbreviates the design units", () => {

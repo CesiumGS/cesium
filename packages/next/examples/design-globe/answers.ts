@@ -77,7 +77,10 @@ export interface AnswerMarker extends AnswerStationOffset {
   readonly design: readonly [number, number, number];
   readonly bodyFixed: readonly [number, number, number];
   readonly rigidDisplayed: readonly [number, number, number];
-  /** |rigidDisplayed − bodyFixed|, metres: the headline "about 31.6 m". */
+  /**
+   * |rigidDisplayed − bodyFixed|, metres: the headline, about 30.6 m at
+   * station 170,000 (31.6 m is station 171,255, nearest 20 km from the anchor).
+   */
   readonly separation: number;
 }
 
@@ -404,7 +407,13 @@ export async function loadAnswers(
   url: string,
   signal: AbortSignal,
 ): Promise<Answers> {
-  const response = await fetch(url, { signal });
+  let response: Response;
+  try {
+    response = await fetch(url, { signal });
+  } catch (error) {
+    signal.throwIfAborted();
+    throw new Error(`${url}: request failed`, { cause: error });
+  }
   if (!response.ok) {
     throw new Error(
       `${url}: HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ""}`,

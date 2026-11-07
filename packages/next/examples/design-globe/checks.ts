@@ -4,7 +4,7 @@
 // datasheet. The check panel (Task 20) draws these rows.
 import type { PlacementMode } from "../../src/engineering/placement.ts";
 import type { Answers } from "./answers.ts";
-import { stationText, unitSymbol } from "./measureModel.ts";
+import { offsetText, stationText, unitSymbol } from "./measureModel.ts";
 
 /**
  * How a shown value was obtained, which sets its tolerance: an exact snap
@@ -25,7 +25,8 @@ export interface CheckRow {
   /** In `unit`: |shown − expected| within it passes. */
   readonly tolerance: number;
   readonly status: "pass" | "fail" | "not-shown";
-  readonly basis: CheckBasis;
+  /** How the shown value was obtained; "published" for a published reference's rows. */
+  readonly basis: CheckBasis | "published";
   /**
    * What `expected` is: the generator's exact answer, or a published
    * reference (NGS's datasheet).
@@ -85,23 +86,29 @@ export const VERTEX_TOLERANCE_M = 1e-4;
  * feet, ftUS: they are published to 0.01 sFT (half of it, 0.005), and are
  * converted from the metric ones, which are rounded to the millimetre first
  * (half a millimetre, 0.00164 ftUS). HS5109's northing shows it: 632,517.990
- * m is 2,075,186.1058 sFT, published as .11, where the unrounded northing
- * (PROJ's, 632,517.98969 m) is 2,075,186.1049.
+ * m is 2,075,186.1055 sFT, published as .11, where the unrounded northing
+ * (PROJ's, 632,517.98982 m) is 2,075,186.1049.
  */
 export const MARK_SPC_TOLERANCE = 0.005 + (0.0005 * 3937) / 1200;
 
-/** A tolerance in metres for a basis (a pick's must be stated). */
+/**
+ * A tolerance in metres for a basis (a pick's must be stated), for a value
+ * from `ends` points: a vertex distance may be off by each end's 1e-4 m. An
+ * exact snap's 1e-6 design units bound float64 noise, not an end's error,
+ * so it isn't doubled; a pick's stated tolerance already covers both ends.
+ */
 function metres(
   basis: CheckBasis,
   stated: number | undefined,
   mpu: number,
   id: string,
+  ends: 1 | 2 = 1,
 ): number {
   switch (basis) {
     case "exact":
       return EXACT_TOLERANCE * mpu;
     case "vertex":
-      return VERTEX_TOLERANCE_M;
+      return ends * VERTEX_TOLERANCE_M;
     case "pick":
       if (!(stated !== undefined && Number.isFinite(stated) && stated >= 0)) {
         throw new Error(
@@ -118,10 +125,11 @@ function design(
   stated: number | undefined,
   mpu: number,
   id: string,
+  ends: 1 | 2 = 1,
 ): number {
   return basis === "exact"
     ? EXACT_TOLERANCE
-    : metres(basis, stated, mpu, id) / mpu;
+    : metres(basis, stated, mpu, id, ends) / mpu;
 }
 
 function compare(
@@ -140,12 +148,9 @@ function compare(
   };
 }
 
-/** "Sta. 450+00.000, 35 ftUS right". */
+/** "Sta. 450+00.000, 35.000 ftUS right", as the measure panel writes it. */
 function where(station: number, offset: number, symbol: string): string {
-  const side =
-    offset === 0
-      ? "on the centreline"
-      : `${Math.abs(offset)} ${symbol} ${offset > 0 ? "right" : "left"}`;
+  const side = offset === 0 ? "on the centreline" : offsetText(offset, symbol);
   return `Sta. ${stationText(station)}, ${side}`;
 }
 
@@ -157,8 +162,10 @@ function where(station: number, offset: number, symbol: string): string {
  * northing against the datasheet ("published reference"). A value the
  * page doesn't show is "not-shown"; points it doesn't show have no rows.
  *
- * Tolerances by basis: exact, 1e-6 design units; vertex, 1e-4 m; pick, the
- * stated tolerance (metres). Throws for a shown point or pair that isn't an
+ * Tolerances by basis: exact, 1e-6 design units; vertex, 1e-4 m (2e-4 m
+ * for a pair's distances, one per end); pick, the stated tolerance
+ * (metres). The mark's rows have basis "published" and the datasheet's
+ * stated precision (`MARK_SPC_TOLERANCE`). Throws for a shown point or pair that isn't an
  * answer, and for a pick with no stated tolerance.
  */
 export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
@@ -213,8 +220,8 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
     const value = shown.pairs.get(pair.id);
     const basis = value?.basis ?? "exact";
     const id = `pair.${pair.id}`;
-    const inDesign = design(basis, value?.tolerance, mpu, id);
-    const inMetres = metres(basis, value?.tolerance, mpu, id);
+    const inDesign = design(basis, value?.tolerance, mpu, id, 2);
+    const inMetres = metres(basis, value?.tolerance, mpu, id, 2);
     const common = { basis, kind } as const;
     rows.push(
       compare(
@@ -272,7 +279,10 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
   );
 
   const mark = answers.mark;
-  const published = { basis: "exact", kind: "published reference" } as const;
+  const published = {
+    basis: "published",
+    kind: "published reference",
+  } as const;
   rows.push(
     compare(
       {

@@ -7,7 +7,10 @@
 //
 // Design lengths are given to 0.001 design units and true lengths to the
 // millimetre, the generator's answers' own precision for a checked
-// distance; ratios and tolerances to 2 significant figures.
+// distance; the combined factor in ppm to 3 significant figures (the
+// panel's details, as the explorer's inspector) and tolerances and accuracy
+// to 2. Heights are written in the horizontal unit's symbol: `Measurement`
+// carries no height unit, and the corridor's (NAVD88 ftUS) is the same.
 import type { SnapResult } from "../../src/engineering/snap.ts";
 import type { Measurement } from "../../src/measure/measure.ts";
 
@@ -96,19 +99,37 @@ function significant(x: number, digits: number): string {
   return (x < 0 ? MINUS : "") + f.format(Math.abs(x));
 }
 
-/** A length in metres, 2 significant figures, in m or mm (km from 1,000 m). */
+const LENGTH_UNITS: readonly (readonly [number, string])[] = [
+  [1e3, "km"],
+  [1, "m"],
+  [1e-3, "mm"],
+  [1e-6, "µm"],
+  [1e-9, "nm"],
+];
+
+/**
+ * A length in metres to 2 significant figures in the unit that reads best,
+ * as the explorer's: km, m, mm, µm, nm (below a nanometre, nm still).
+ */
 export function meters(x: number): string {
   const a = Math.abs(x);
   if (a === 0) {
     return "0 m";
   }
-  if (Number(a.toPrecision(2)) >= 1000) {
-    return `${significant(x / 1000, 2)} km`;
+  for (const [i, [scale, unit]] of LENGTH_UNITS.entries()) {
+    const up = LENGTH_UNITS[i - 1];
+    // 0.9996 m to 2 figures is 1.0 m, not 1,000 mm.
+    if (
+      up !== undefined &&
+      Number((a / scale).toPrecision(2)) >= up[0] / scale
+    ) {
+      return `${significant(x / up[0], 2)} ${up[1]}`;
+    }
+    if (a >= scale || i === LENGTH_UNITS.length - 1) {
+      return `${significant(x / scale, 2)} ${unit}`;
+    }
   }
-  if (Number(a.toPrecision(2)) >= 1) {
-    return `${significant(x, 2)} m`;
-  }
-  return `${significant(x * 1000, 2)} mm`;
+  return `${significant(x, 2)} m`;
 }
 
 /** A design length: "10,000.000 ftUS". */
@@ -123,8 +144,8 @@ export function stationText(station: number): string {
   return `${sign}${hundreds}+${rest.toFixed(3).padStart(6, "0")}`;
 }
 
-/** An offset with its side: "35.000 ftUS right". */
-function offsetText(offset: number, symbol: string): string {
+/** An offset with its side: "35.000 ftUS right", or "0.000 ftUS". */
+export function offsetText(offset: number, symbol: string): string {
   const text = designLength(Math.abs(offset), symbol);
   if (fixed(offset, 3) === fixed(0, 3)) {
     return text;
@@ -216,7 +237,7 @@ export function measurementModel(
     combinedFactorPpm:
       design === undefined
         ? DASH
-        : `${fixed((design.combinedFactor.mean - 1) * 1e6, 1)} ppm`,
+        : `${significant((design.combinedFactor.mean - 1) * 1e6, 3)} ppm`,
     convergence,
     a: end(a, alignment?.a, symbol),
     b: end(b, alignment?.b, symbol),

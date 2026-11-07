@@ -172,8 +172,17 @@ describe("loadAnswers", () => {
     expect(a.mark.pid).toBe("HS5109");
   });
 
-  it("throws naming the URL for an HTTP error, a non-JSON body and a bad field", async () => {
+  it("throws naming the URL for a failed request, an HTTP error, a non-JSON body and a bad field", async () => {
     const signal = new AbortController().signal;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }),
+    );
+    await expect(loadAnswers("/a.json", signal)).rejects.toThrow(
+      "/a.json: request failed",
+    );
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response("no", { status: 404 })),
@@ -206,7 +215,8 @@ describe("checkRows", () => {
     const pair = a.pairs[0]!;
     for (const [basis, toleranceDesign, stated] of [
       ["exact", EXACT_TOLERANCE, undefined],
-      ["vertex", VERTEX_TOLERANCE_M / MPU, undefined],
+      // A distance's vertex tolerance is one per end.
+      ["vertex", (2 * VERTEX_TOLERANCE_M) / MPU, undefined],
       ["pick", 0.05 / MPU, 0.05],
     ] as const) {
       for (const [factor, status] of [
@@ -297,6 +307,7 @@ describe("checkRows", () => {
     const rows = checkRows(a, shown);
     const e = row(rows, "mark.easting");
     expect(e.kind).toBe("published reference");
+    expect(e.basis).toBe("published");
     expect(e.tolerance).toBe(MARK_SPC_TOLERANCE);
     expect(e.unit).toBe("ftUS");
     expect(e.status).toBe("pass");

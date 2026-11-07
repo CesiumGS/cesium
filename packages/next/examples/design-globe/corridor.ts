@@ -290,7 +290,7 @@ const dmsRadians = (
 ) => (sign * (degrees + minutes / 60 + seconds / 3600) * Math.PI) / 180;
 
 /**
- * A real NGS survey mark near the corridor's far end (owner, 2026-11-07),
+ * A real NGS survey mark toward the corridor's far end (owner, 2026-11-07),
  * from its datasheet as NGS published it: GOLD CREEK (HS5109), a 1946
  * triangulation station disk in a concrete monument on a low hill south of
  * Dublin, recovered in good condition on 2023-07-28. Its NAD83(2011)
@@ -299,7 +299,7 @@ const dmsRadians = (
  * only mark with a NAD83(2011) position within 1,500 ftUS of the
  * centreline from station 137,000 to the end (NGS Data Explorer's radial
  * searches, 2026-11-07; the others there are NAD 83(1986) bench marks with
- * scaled positions). It lies about 501 ftUS left of the centreline at about
+ * scaled or hand-held positions). It lies about 501 ftUS left of the centreline at about
  * station 154,395, some 19,650 ftUS before the end.
  *
  * The values are the datasheet's, verbatim in `published`; `geodetic` is

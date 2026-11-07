@@ -6,6 +6,7 @@ import {
   SNAP_SERVER_FAILED,
   SNAP_SERVER_REFUSED,
   SNAP_UPDATE_FAILED,
+  SHOWN_POINT_REACH,
   refiningSnap,
   type ServiceSnapRequest,
   type SnapResult,
@@ -528,6 +529,55 @@ describe("refiningSnap: the client's snap, then the server's", () => {
     expect([...ts.warnings]).toEqual([]);
   });
 
+  it("judges an exact point under the drawn mesh by its shown point on it", async () => {
+    // 1.5 m behind the square's face, which hides it from the camera; shown
+    // on the face over it. The design stays the hidden, exact point.
+    const pl = placement();
+    const snapPoint = Float64Array.from([R - 1.5, 32.32, 6.06]);
+    const shownPoint = Float64Array.from([R, 32.32, 6.06]);
+    const exactAt = (over: Partial<SnapResult>) =>
+      answer({
+        snapPoint,
+        design: designPoint(frame, pl.designOf(snapPoint), {
+          how: "snap",
+          tolerance: 0,
+          kind: "point",
+        }),
+        ...over,
+      });
+    const req = { view: view(), x: 517, y: 248, aperture: 6 };
+    const ts = tileset({ placement: pl });
+    const r = await refiningSnap(
+      req,
+      new ClientSnapService([ts]),
+      server(async () => exactAt({ shownPoint })).service,
+      () => {},
+    );
+    expect([...ts.warnings]).toEqual([]);
+    expect(r?.source).toBe("server");
+    expect(Array.from(r!.snapPoint)).toEqual(Array.from(snapPoint));
+    expect(Array.from(r!.shownPoint!)).toEqual(Array.from(shownPoint));
+    expect(Array.from(r!.design!.design)).toEqual(
+      Array.from(pl.designOf(snapPoint)),
+    );
+    // The cursor's distance is to what is shown.
+    const [sx, sy] = toScreen(32.32, 6.06);
+    expect(r!.distance).toBeCloseTo(Math.hypot(sx - 517, sy - 248), 9);
+
+    // Without the shown point, the same answer is hidden and refused.
+    const hidden = tileset({ placement: pl });
+    const refused = await refiningSnap(
+      req,
+      new ClientSnapService([hidden]),
+      server(async () => exactAt({})).service,
+      () => {},
+    );
+    expect(refused?.source).toBe("client");
+    expect([...hidden.warnings]).toEqual([
+      `${SNAP_SERVER_REFUSED}: snapPoint hidden from the camera by the drawn mesh`,
+    ]);
+  });
+
   describe("refuses a server answer that doesn't check out", () => {
     const pl = placement();
     const behind = Float64Array.from([R - 10, 32.32, 6.06]);
@@ -594,6 +644,34 @@ describe("refiningSnap: the client's snap, then the server's", () => {
         "a point the drawn mesh hides",
         { snapPoint: behind },
         "snapPoint hidden from the camera by the drawn mesh",
+      ],
+      [
+        "a non-finite shown point",
+        { shownPoint: Float64Array.from([R, NaN, 0]) },
+        "shownPoint is not 3 finite numbers",
+      ],
+      [
+        "a shown point more than SHOWN_POINT_REACH from snapPoint",
+        { shownPoint: Float64Array.from([R, 40.01, SHOWN_POINT_REACH + 0.01]) },
+        `shownPoint more than ${SHOWN_POINT_REACH} m from snapPoint`,
+      ],
+      [
+        "a shown point the drawn mesh hides",
+        {
+          snapPoint: Float64Array.from([R - 1.5, 32.32, 6.06]),
+          shownPoint: Float64Array.from([R - 1, 32.32, 6.06]),
+        },
+        "shownPoint hidden from the camera by the drawn mesh",
+      ],
+      [
+        "a shown point outside the aperture, its snapPoint inside",
+        {
+          // 6.5 px from the cursor (inside 6 px and 1 px of slack), shown
+          // 1.9 m further on, at 7.45 px.
+          snapPoint: Float64Array.from([R, 47, 4]),
+          shownPoint: Float64Array.from([R, 48.9, 4]),
+        },
+        "shownPoint outside the aperture",
       ],
     ];
     for (const [name, over, reason] of cases) {
