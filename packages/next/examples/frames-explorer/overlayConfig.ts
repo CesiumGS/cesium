@@ -12,7 +12,8 @@ import type {
   OverlayPart,
   OverlayView,
 } from "./panel/model.ts";
-import type { DataItem } from "./protocol.ts";
+import type { DataItem, FrameParams } from "./protocol.ts";
+import { RIGID_FRAME, RIGID_LINE } from "./rigidLine.ts";
 
 const deg = Math.PI / 180;
 
@@ -111,6 +112,78 @@ export const DISTORTION: Record<
     height: 13,
     look: [-122.75, 45.5, 90_000],
   },
+};
+
+/**
+ * The engineering overlays' setup: the design grid with true north, the
+ * site grid and the rigid and exact line, in one design CRS. The default is
+ * the California grid and site (Verification's results draw it); a scenario
+ * gives its own (the BIM site's CRS and site grid, the corridor's site).
+ */
+export interface EngineeringSetup {
+  /** The design CRS's frame name ("California zone 3"). */
+  name: string;
+  crs: CrsRef;
+  /** Design units per metre: the grid's 10 km lines and its segments are given in metres. */
+  unitsPerMeter: number;
+  /** The design grid's extent, design units. */
+  gridExtent: Extent;
+  /** The site grid: its transform, its extent and lines (design units of the site grid). */
+  site: {
+    transform: SiteTransform;
+    extent: Extent;
+    step: number;
+    segment: number;
+    /** The legend's name for it. */
+    label: string;
+  };
+  /** The rigid and exact line, in `frame`: from, to and the inset's mark, design units. */
+  rigid: {
+    frame: FrameParams;
+    from: readonly [number, number];
+    to: readonly [number, number];
+    mark: number;
+    /** Where it starts and which way it runs, in words ("the California site origin", "east along grid east"). */
+    origin: string;
+    direction: string;
+    /**
+     * Where it starts on WGS 84 (degrees) and its azimuth (degrees from
+     * north), for the camera until the line is drawn: about right.
+     */
+    start: { longitude: number; latitude: number; azimuth: number };
+  };
+  /** The legend's name for the design grid. */
+  gridLabel: string;
+  /** Where the camera frames the design grid: longitude, latitude (degrees) and range (m). */
+  look: [lon: number, lat: number, range: number];
+}
+
+const SITE_HALF = 10_000 * FT;
+
+/** The overlays' setup outside a scenario: stop 3's grid and stop 4's line, as they were. */
+export const DEFAULT_ENGINEERING: EngineeringSetup = {
+  name: "California zone 3",
+  crs: CALIFORNIA,
+  unitsPerMeter: FT,
+  gridExtent: GRID_EXTENT,
+  site: {
+    transform: SITE,
+    extent: { min: [-SITE_HALF, -SITE_HALF], max: [SITE_HALF, SITE_HALF] },
+    step: 2000 * FT,
+    segment: 100 * FT,
+    label: "Site grid (θ = 12.5°, s = 1.0000375)",
+  },
+  rigid: {
+    frame: RIGID_FRAME,
+    from: RIGID_LINE.from,
+    to: RIGID_LINE.to,
+    mark: RIGID_LINE.markDesign,
+    origin: "the California site origin",
+    direction: "east along grid east",
+    start: { longitude: -122.443, latitude: 37.746, azimuth: 88.6 },
+  },
+  gridLabel: "California design grid, with true north",
+  look: [-120.5, 37.85, 180_000],
 };
 
 /** One overlay's state on the page. */

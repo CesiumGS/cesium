@@ -88,11 +88,37 @@ export interface ScenarioEvaluation {
     frame: string;
     /** Where it comes from ("OEM"). */
     source: string;
+    /**
+     * What its numbers are, for the route's first step: "position and
+     * velocity" by default (Orion's), "the site origin's easting and
+     * northing" (the BIM site's).
+     */
+    describes?: string;
     /** Its own accuracy, as a tree edge states one (R8). */
     accuracy: AddedFrameSpec["edge"]["accuracy"];
   };
   answer: ScenarioAnswer;
   overlays: readonly { id: string; geometry: OverlayGeometry }[];
+  /**
+   * Labels the page puts on the globe at Earth-fixed points (ITRF, metres):
+   * the corridor's stations. `marker` draws Orion-now's dot with its halo.
+   */
+  labels?: readonly {
+    id: string;
+    text: string;
+    at: readonly number[];
+    marker?: boolean;
+  }[];
+  /**
+   * A point the user drags on the globe to set two knobs (the corridor's
+   * station and offset): where it is (ITRF, metres), and a local placement
+   * that takes a point on the ground to the knobs' design plane, ITRF to
+   * design units (a column-major 4×4, rigid at the point's road: good to a
+   * few centimetres there, finer than the knobs' steps). The page reads the
+   * knobs off the design point (`knobsAt`, scenes.ts); the worker answers at
+   * them exactly.
+   */
+  drag?: { at: readonly number[]; toDesign: readonly number[] };
   sightLines?: readonly SightLine[];
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).

@@ -45,6 +45,7 @@ export const pointOf = (
 export function rigidLayers(
   g: OverlayGeometry,
   engineeringColor: Rgba,
+  where?: Parameters<typeof rigidCopy>[1],
 ): {
   built: RigidBuilt | undefined;
   layers: {
@@ -73,11 +74,14 @@ export function rigidLayers(
   // leans).
   const parts =
     mark && along ? gapParts(mark.exact, mark.rigid, along) : undefined;
-  const copy = rigidCopy({
-    sagEnd: sag,
-    gapAtMark: mark?.separation ?? NaN,
-    ...(parts && { markDrop: parts.drop, markAlong: parts.along }),
-  });
+  const copy = rigidCopy(
+    {
+      sagEnd: sag,
+      gapAtMark: mark?.separation ?? NaN,
+      ...(parts && { markDrop: parts.drop, markAlong: parts.along }),
+    },
+    where,
+  );
   const built =
     start && a
       ? {

@@ -456,6 +456,14 @@
         -2445974.7521893606, -3769997.0153075336, 4510874.571753688
       ]
     },
+    "rigid-placement-budget.site-gap": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000.0001016 +y_0=500000.0001016 +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -2708955.809214787, -4261603.692492956, 3883207.064898772,
+        -2690987.141056153, -4269562.710256489, 3886930.9460130977
+      ]
+    },
     "coordinate-epoch.nad83-itrf2014.epoch-2010": {
       "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +z_in=m +xy_out=rad +z_out=m +step +proj=cart +ellps=GRS80 +step +inv +proj=helmert +x=1.0053 +y=-1.90921 +z=-0.54157 +rx=0.02678138 +ry=-0.00042027 +rz=0.01093206 +s=0.00036891 +dx=0.00079 +dy=-0.0006 +dz=-0.00144 +drx=6.667e-05 +dry=-0.00075744 +drz=-5.133e-05 +ds=-7.201e-05 +t_epoch=2010 +convention=coordinate_frame +step +inv +proj=cart +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
       "grids": [],

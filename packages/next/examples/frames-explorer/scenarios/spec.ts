@@ -32,7 +32,8 @@ export interface KnobSpec {
   max?: number;
   step?: number;
   unit?: string;
-  options?: readonly { value: string; label: string }[];
+  /** A choice's options: its value (in the URL), its label, and the button's short text (the value without one). */
+  options?: readonly { value: string; label: string; short?: string }[];
 }
 
 /** Each knob's value, by knob id. */

@@ -162,9 +162,22 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
         label: "Design CRS",
         kind: "choice",
         options: [
-          { value: "ca-zone-3", label: "California zone 3 (EPSG:6420)" },
-          { value: "utm-10n", label: "UTM zone 10N (EPSG:32610)" },
-          { value: "low-distortion", label: "A low-distortion zone" },
+          {
+            value: "ca-zone-3",
+            label: "California zone 3 (EPSG:6420), state plane, US survey feet",
+            short: "CA zone 3",
+          },
+          {
+            value: "utm-10n",
+            label: "UTM zone 10N (EPSG:32610), metres",
+            short: "UTM 10N",
+          },
+          {
+            value: "low-distortion",
+            label:
+              "Oregon's Portland zone (EPSG:6854), a low-distortion projection, metres: the site moves to Portland",
+            short: "Portland LDP",
+          },
         ],
       },
       {
@@ -189,16 +202,23 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // 12.5° and scaled 1.0000375, at its measurement epoch:
     // measurement.grid-to-ground and measurement.design-vs-itrf, the site
     // grid's round trip at that rotation and scale, and the CRS's own round
-    // trip. (NGS GU2195's convergence is checked about 115 km away, so it
-    // isn't the site's true north and isn't proof here.)
+    // trip; and the answer itself, the gap 20 km out against its hand
+    // formula (rigid-placement-budget.site-gap, Task 6a). (NGS GU2195's
+    // convergence is checked about 115 km away, so it isn't the site's true
+    // north and isn't proof here.)
     checked: {
       epochUtc: MEASURED_AT,
       knobs: { crs: "ca-zone-3", rotation: 12.5, scale: 1.0000375 },
     },
     needs: ["proj", "geoid"],
-    // Terrain or the ellipsoid here is Task 6's ruling.
+    // Task 6a's ruling: the ellipsoid. The exact line lies at height 0, so
+    // its gap from the rigid line reads against the ground it curves with;
+    // terrain would lift the line by up to 3 km along its 400 km, swamping
+    // a 31 m gap, and a lift for display would be a second, misleading
+    // height.
     globe: "ellipsoid",
     proof: [
+      "rigid-placement-budget.site-gap",
       "measurement.grid-to-ground",
       "measurement.design-vs-itrf",
       "site-grids.round-trip.rotation-12.5.scale-1.0000375",
@@ -231,11 +251,11 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     ],
     // The catalog's clothoid road (stations 0 to 2,000) at one of
     // measurement.clothoid's points: station 650, in the entry spiral, 15
-    // right. Its proof comes with Task 6.
+    // right. It recovers every one of its points within 1e-9 design units.
     checked: { epochUtc: MEASURED_AT, knobs: { station: 650, offset: 15 } },
     needs: ["proj"],
     globe: "ellipsoid",
-    proof: [],
+    proof: ["measurement.clothoid"],
   },
   {
     id: "drone",

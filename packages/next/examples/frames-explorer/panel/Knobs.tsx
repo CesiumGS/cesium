@@ -15,7 +15,7 @@ import { svgUndo } from "@stratakit/icons/undo";
 import { Icon } from "@stratakit/mui";
 import { memo, useId } from "react";
 import type { KnobSpec, KnobValue } from "../scenarios/spec.ts";
-import { knobText, movedText } from "./knobText.ts";
+import { knobText, movedText, snapToStep } from "./knobText.ts";
 import { useLiveTime } from "./liveTime.ts";
 import { equalOn } from "./memo.ts";
 import type { ScenarioPanelView } from "./model.ts";
@@ -40,8 +40,7 @@ function RangeKnob({
   const to = (v: number) => (log ? Math.log10(v) : v);
   const from = (t: number) => {
     const v = log ? 10 ** t : t;
-    const step = knob.step ?? 1;
-    return Math.round(v / step) * step;
+    return snapToStep(v, knob.step ?? 1);
   };
   return (
     <div className="fx-knob">
@@ -100,7 +99,7 @@ function ChoiceKnob({
             title={o.label}
             render={<Button variant="outlined" />}
           >
-            {o.value}
+            {o.short ?? o.value}
             {o.value === checked && (
               <span className="fx-visually-hidden"> (checked setup)</span>
             )}
@@ -114,7 +113,9 @@ function ChoiceKnob({
         className="fx-knob-help"
       >
         {options.find((o) => o.value === value)?.label}
-        {value === checked ? "" : `; checked in ${checked}`}
+        {value === checked
+          ? ""
+          : `; checked in ${options.find((o) => o.value === checked)?.short ?? checked}`}
       </Typography>
     </div>
   );

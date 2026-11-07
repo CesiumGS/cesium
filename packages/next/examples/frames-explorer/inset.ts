@@ -68,15 +68,16 @@ export function insetBox(
     );
     const height = Math.round((width * INSET.height) / INSET.width);
     const x = view.width - INSET.gutter - width;
-    return {
-      frame: {
-        x,
-        y: INSET.narrowTop,
-        width,
-        height: height + INSET.caption,
-      },
-      view: { x, y: INSET.narrowTop + INSET.caption, width, height },
-    };
+    const at = (y: number) => ({
+      frame: { x, y, width, height: height + INSET.caption },
+      view: { x, y: y + INSET.caption, width, height },
+    });
+    const top = at(INSET.narrowTop);
+    // A scenario's callout over the view's top right: the inset steps
+    // down under it (Task 6a: the BIM site's answer and its gap).
+    return avoid !== undefined && meets(top.frame, avoid)
+      ? at(Math.round(avoid.y + avoid.height + INSET.gutter))
+      : top;
   }
   const wide = (width: number) => {
     const height = Math.round((width * INSET.height) / INSET.width);

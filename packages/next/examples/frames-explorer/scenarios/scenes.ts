@@ -12,7 +12,16 @@ import type { Frame } from "../../../src/frames/Frame.ts";
 import { eastNorthUpFrame } from "../../../src/frames/local.ts";
 import { Ellipsoid, fromDegrees } from "../../../src/math/ellipsoid.ts";
 import { MOON } from "../../../src/scene/Body.ts";
+import type { EngineeringSetup } from "../overlayConfig.ts";
 import type { RigKind } from "../orbit.ts";
+import type { OverlayId } from "../panel/model.ts";
+import {
+  BIM_SITE_GRID,
+  CORRIDOR_SITE_GRID,
+  bimEngineering,
+  bimSite,
+  corridorEngineering,
+} from "./sites.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 
@@ -71,14 +80,19 @@ export function earthSiteFrame(
 /** Orion's draw-in frame (one-path's knob). */
 export type DrawnFrame = "GCRF" | "ITRF" | "MOON_ME";
 
-/** A named framing; cameraViews.ts places each at the clock's instant. */
-export type SceneCamera = "northPole" | "earthMoon" | "lunarSite";
+/**
+ * A named framing; cameraViews.ts places each at the clock's instant.
+ * `rigidLine` is stop 4's side view of the rigid and exact line, as drawn;
+ * `engineering` the setup's own look (the corridor's road).
+ */
+export type SceneCamera =
+  "northPole" | "earthMoon" | "lunarSite" | "rigidLine" | "engineering";
 
 export interface SceneSpec {
   id: ScenarioId;
   camera: SceneCamera;
-  /** The orbit the flight lands in (orbit.ts): each scenario names its rig. */
-  rig: RigKind;
+  /** The orbit the flight lands in (orbit.ts); none for a view on the ground (the globe controls). */
+  rig?: RigKind;
   /** The flight's length, s (the tour's: 3.0 to the plane, 3.5 to the site). */
   flight?: number;
   /**
@@ -101,6 +115,14 @@ export interface SceneSpec {
   orion?(knobs: KnobState): DrawnFrame;
   /** The lunar site at this latitude. */
   lunarSite?(knobs: KnobState): number;
+  /**
+   * The engineering overlays it draws (overlayControl.ts), in its own
+   * setup at these knobs: the BIM site's CRS and site grid, the corridor's.
+   */
+  engineering?: {
+    setup(knobs: KnobState, defaults: EngineeringSetup): EngineeringSetup;
+    overlays: readonly OverlayId[];
+  };
   /** Sites on the Earth the scene adds (their frames under ITRF). */
   earthSites?: readonly { name: string; longitude: number; latitude: number }[];
   /** A limit the scenario says plainly, under its answer and on the globe. */
@@ -204,7 +226,51 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     lunarSite: (k) => Number(k.latitude),
     note: "The Moon's imagery is the sky's distant backdrop until plan 5 draws the Moon as a tileset in MOON_ME, so it lines up with the site only from straight above, as here.",
   },
+  "bim-site": {
+    id: "bim-site",
+    // Stop 4's view (owner's rework): from the side of the 400 km line, so
+    // the straight rigid line visibly leaves the curving ground; the inset
+    // shows the gap at 20 km.
+    camera: "rigidLine",
+    flight: 3,
+    focus: ["ITRF"],
+    triads: () => [],
+    engineering: {
+      setup: (k) => bimEngineering(k),
+      overlays: ["designGrid", "siteGrid", "rigidVsExact"],
+    },
+    dim: { wide: -0.6, narrow: -0.6 },
+    drawnView: {
+      ITRF: "the model on the Earth: where exact placement puts it, on the ellipsoid",
+    },
+    diagramNote:
+      "The model's numbers are in its site grid; the map conversion and PROJ take them to the Earth.",
+    note: "Drawn on the WGS 84 ellipsoid, not terrain: the exact line lies at height 0, so its gap from the rigid line reads against the ground it curves with.",
+  },
+  corridor: {
+    id: "corridor",
+    camera: "engineering",
+    flight: 3,
+    focus: ["ITRF"],
+    triads: () => [],
+    engineering: {
+      setup: (_k, defaults) => corridorEngineering(defaults),
+      overlays: ["siteGrid"],
+    },
+    dim: { wide: -0.6, narrow: -0.6 },
+    drawnView: {
+      ITRF: "the point on the ground, and the road it's measured along",
+    },
+    diagramNote:
+      "Station and offset are measured along the road, in the site grid; drag the point on the globe, or set it with the knobs.",
+  },
 };
+
+/** The frame names the BIM site and the corridor add (their camera views). */
+export const SITE_GRIDS = [BIM_SITE_GRID, CORRIDOR_SITE_GRID] as const;
+
+/** The BIM site's place at `knobs`, for its frames' camera. */
+export const bimPlace = (knobs: KnobState) => bimSite(knobs).crs.place;
 
 /** The scenarios the page shows: those with a scene (and an evaluator), in the strip's order. */
 export const READY: readonly ScenarioId[] = SCENARIOS.filter(

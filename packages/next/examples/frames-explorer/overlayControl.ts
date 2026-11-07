@@ -10,18 +10,15 @@ import type { GapInset } from "./gapInset.ts";
 import { SECONDARY, familyRgba, type Globe, type LabelSpec } from "./globe.ts";
 import { distortionAccuracy, operationText } from "./legend.ts";
 import {
-  CALIFORNIA,
   CONVERGENCE_FACTOR,
+  DEFAULT_ENGINEERING,
   DISTORTION,
-  FT,
-  GRID_EXTENT,
-  GRID_STEP,
   OVERLAYS,
   OVERLAY_LABEL,
   OVERLAY_NEEDS,
-  SITE,
   defaultAccuracy,
   defaultDetail,
+  type EngineeringSetup,
   type OverlayState,
 } from "./overlayConfig.ts";
 import { overlayMesh, roundTripMarkers, triad } from "./overlays.ts";
@@ -42,7 +39,7 @@ import type {
   OverlayView,
 } from "./panel/model.ts";
 import type { FrameParams, OverlayGeometry } from "./protocol.ts";
-import { RIGID_FRAME, RIGID_LINE } from "./rigidLine.ts";
+import { RIGID_LINE } from "./rigidLine.ts";
 import { pointOf, rigidLayers, type RigidBuilt } from "./rigidOverlay.ts";
 import type { StressResult } from "./tests.ts";
 import type { LabelBoard } from "./triadLayer.ts";
@@ -73,6 +70,12 @@ export interface OverlayControl {
   setTrueScale(on: boolean): void;
   /** The rigid and exact lines as drawn, for stop 4's camera. */
   rigidBuilt(): RigidBuilt | undefined;
+  /**
+   * The engineering overlays' setup (a scenario's CRS and site grid), or the
+   * default California one: the ones on are drawn again in it.
+   */
+  setEngineering(setup: EngineeringSetup | undefined): void;
+  engineering(): EngineeringSetup;
   /** The clock time the bias triad was drawn at. */
   biasAt(): number;
   /** The 2 km lines show only while the camera is within 60 km of them. */
@@ -136,6 +139,7 @@ export function createOverlayControl(deps: {
   let biasFactor = 1e6;
   let trueScale = false;
   let rigidBuilt: RigidBuilt | undefined;
+  let setup: EngineeringSetup = DEFAULT_ENGINEERING;
 
   const frameParams = (
     crs: CrsRef,
@@ -235,16 +239,19 @@ export function createOverlayControl(deps: {
         return;
       case "designGrid":
         void request(id, async () => {
-          const frame = frameParams(CALIFORNIA, "California zone 3");
+          const u = setup.unitsPerMeter;
+          const extent = setup.gridExtent;
+          const step = 10_000 * u;
+          const frame = frameParams(setup.crs, setup.name);
           // The 2 km lines, shown only under 60 km range (DESIGN.md "The
           // tour", stop 3), built after the major ones and drawn apart.
           const minorToken = s.token;
           void client
             .overlay("designGrid", {
               frame,
-              extent: GRID_EXTENT,
-              step: GRID_STEP / 5,
-              segment: 2000 * FT,
+              extent,
+              step: step / 5,
+              segment: 2000 * u,
               skipEvery: 5,
             })
             .then((minor) => {
@@ -264,15 +271,15 @@ export function createOverlayControl(deps: {
           const [grid, north] = await Promise.all([
             client.overlay("designGrid", {
               frame,
-              extent: GRID_EXTENT,
-              step: GRID_STEP,
-              segment: 1000 * FT,
+              extent,
+              step,
+              segment: 1000 * u,
             }),
             client.overlay("trueNorthLines", {
               frame,
-              extent: GRID_EXTENT,
-              step: GRID_STEP,
-              segment: 2000 * FT,
+              extent,
+              step,
+              segment: 2000 * u,
               ...(!trueScale && { exaggeration: CONVERGENCE_FACTOR }),
             }),
           ]);
@@ -310,12 +317,12 @@ export function createOverlayControl(deps: {
         return;
       case "siteGrid":
         void request(id, async () => {
-          const half = 10_000 * FT;
+          const site = setup.site;
           const g = await client.overlay("designGrid", {
-            frame: frameParams(CALIFORNIA, "California zone 3 site", SITE),
-            extent: { min: [-half, -half], max: [half, half] },
-            step: 2000 * FT,
-            segment: 100 * FT,
+            frame: frameParams(setup.crs, `${setup.name} site`, site.transform),
+            extent: site.extent,
+            step: site.step,
+            segment: site.segment,
           });
           const op = operationText(g.operation);
           return {
@@ -337,16 +344,17 @@ export function createOverlayControl(deps: {
         void request(id, async () => {
           // Stop 4 (owner's rework): the 400 km line at true scale
           // (rigidOverlay.ts), and the 20 km mark for the inset.
+          const r = setup.rigid;
           const g = await client.overlay("rigidVsExact", {
-            frame: RIGID_FRAME,
-            from: RIGID_LINE.from,
-            to: RIGID_LINE.to,
+            frame: r.frame,
+            from: r.from,
+            to: r.to,
             samples: RIGID_LINE.samples,
             dashes: RIGID_LINE.dashes,
             ticks: RIGID_LINE.ticks,
-            marks: [RIGID_LINE.markDesign],
+            marks: [r.mark],
           });
-          const { built, ...drawn } = rigidLayers(g, engineeringColor);
+          const { built, ...drawn } = rigidLayers(g, engineeringColor, r);
           rigidBuilt = built;
           return drawn;
         });
@@ -557,7 +565,14 @@ export function createOverlayControl(deps: {
   function overlayViews(): OverlayView[] {
     return OVERLAYS.map((id) => {
       const s = overlays.get(id)!;
-      const [label, short] = OVERLAY_LABEL[id];
+      const [fixed, short] = OVERLAY_LABEL[id];
+      // The grids are named for the setup they're drawn in (a scenario's).
+      const label =
+        id === "designGrid"
+          ? setup.gridLabel
+          : id === "siteGrid"
+            ? setup.site.label
+            : fixed;
       const need = OVERLAY_NEEDS[id];
       const base: OverlayView = {
         id,
@@ -627,6 +642,32 @@ export function createOverlayControl(deps: {
       drawOverlay("designGrid");
     },
     rigidBuilt: () => rigidBuilt,
+    setEngineering: (next) => {
+      const to = next ?? DEFAULT_ENGINEERING;
+      // What each overlay is drawn from: only those whose part changed
+      // are drawn again (the rotation knob moves the site grid and the
+      // line, not the design grid).
+      const parts = (x: EngineeringSetup) => ({
+        designGrid: JSON.stringify([
+          x.crs,
+          x.name,
+          x.unitsPerMeter,
+          x.gridExtent,
+        ]),
+        siteGrid: JSON.stringify([x.crs, x.name, x.site]),
+        rigidVsExact: JSON.stringify(x.rigid),
+      });
+      const before = parts(setup);
+      const after = parts(to);
+      setup = to;
+      for (const id of ["designGrid", "siteGrid", "rigidVsExact"] as const) {
+        if (before[id] !== after[id] && overlays.get(id)!.on) {
+          drawOverlay(id);
+        }
+      }
+      invalidate();
+    },
+    engineering: () => setup,
     biasAt: () => biasAt,
     updateMinorGrid,
     views: overlayViews,

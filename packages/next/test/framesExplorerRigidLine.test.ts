@@ -198,6 +198,21 @@ describe("the inset's placement", () => {
     expect(tiny.view.width).toBeLessThanOrEqual(INSET.narrowShare * 300);
   });
 
+  it("steps down under a scenario's answer callout on a narrow view (Task 6a)", () => {
+    const callout = { x: 160, y: 40, width: 228, height: 60 };
+    const b = insetBox({ width: 400, height: 600 }, 120, callout);
+    expect(b.frame.y).toBe(callout.y + callout.height + INSET.gutter);
+    expect(b.view.y).toBe(b.frame.y + INSET.caption);
+    // Clear of it: it stays at the top.
+    const clear = insetBox({ width: 400, height: 600 }, 120, {
+      x: 0,
+      y: 500,
+      width: 100,
+      height: 40,
+    });
+    expect(clear.frame.y).toBe(INSET.narrowTop);
+  });
+
   // The tour caption (top right, 340 px wide) on a view 560 to about 700 px
   // wide: the inset narrows to stay clear of it, and keeps its place when
   // the two don't meet.

@@ -176,7 +176,11 @@ export class GapInset {
     // The tour caption, top right on a wide view: between about 560 and
     // 620 px it can reach over the inset's corner.
     // Each stop mounts its own caption element: watch only the one shown.
-    const tour = this.hud.querySelector(".fx-tour") ?? undefined;
+    // A scenario's answer callout takes the tour caption's place (Task 6a).
+    const tour =
+      this.hud.querySelector(".fx-tour") ??
+      this.hud.querySelector(".fx-callout") ??
+      undefined;
     if (tour !== this.observedCaption) {
       if (this.observedCaption) {
         this.resize.unobserve(this.observedCaption);

@@ -3,13 +3,26 @@
 import {
   EngineeringFrame,
   RigidPlacement,
+  type SiteTransform,
 } from "../../../../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../../../src/engineering/factors.ts";
 import { EARTH } from "../../../../src/scene/Body.ts";
 import { ellipsoidOf, onEarth, radii } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
-import { epsg, proj, stressCase } from "../shared.ts";
+import { epsg, fingerprintOf, proj, stressCase } from "../shared.ts";
+import { gapParts } from "../../inset.ts";
 import { rigidSeparation } from "../../overlays.ts";
+import {
+  WGS84_A,
+  WGS84_E2,
+  normalRadius,
+  rigidGapByHand,
+  siteAxisAzimuth,
+} from "../../scenarios/sites.ts";
+import { Ellipsoid } from "../../../../src/math/ellipsoid.ts";
+
+const DEGREE = Math.PI / 180;
+const WGS84 = Ellipsoid.WGS84;
 
 const RIGID_SITES: readonly {
   readonly latitude: number;
@@ -108,6 +121,106 @@ const rigidBudgetCase = stressCase(
   },
 );
 
+/**
+ * The gap between rigid and exact placement `meters` along a site grid's x
+ * axis from its origin (design 0, 0, 0): the library's (`rigidSeparation`),
+ * its parts as the inset splits them (`gapParts`), and the hand formula's
+ * (`rigidGapByHand`) with the radius of curvature in the axis's direction
+ * (its grid bearing, 90° less the rotation: the convergence, about a
+ * degree, changes the radius by under 1e-5) at the origin's latitude, and
+ * the grid's scale there. One computation: the catalog's check below and
+ * the BIM site's answer (scenarios/bimSite.ts) both call it.
+ */
+export function siteGap(
+  frame: EngineeringFrame,
+  site: SiteTransform,
+  meters: number,
+) {
+  const rigid = RigidPlacement.at(frame, [0, 0, 0]);
+  const design = [meters / frame.units.metersPerUnit, 0, 0];
+  const exact = Float64Array.from(frame.toBodyFixed(design));
+  const placed = Float64Array.from(rigid.toBodyFixed(design));
+  const start = rigid.toBodyFixed([0, 0, 0]);
+  const along = [0, 1, 2].map((i) => placed[i]! - start[i]!);
+  const parts = gapParts(exact, placed, along);
+  const origin = WGS84.cartesianToCartographic(frame.toBodyFixed([0, 0, 0]), {
+    longitude: 0,
+    latitude: 0,
+    height: 0,
+  })!;
+  const latitude = origin.latitude / DEGREE;
+  const azimuth = siteAxisAzimuth(site.rotation / DEGREE);
+  const radius = normalRadius(WGS84_A, WGS84_E2, latitude, azimuth);
+  // The grid's scale at the origin, from the library (as grid to ground
+  // takes its combined factor): at height 0 it is the projection's.
+  const gridScale = gridFactors(frame, [0, 0, 0]).combinedFactor;
+  const hand = rigidGapByHand({
+    d: meters,
+    radius,
+    siteScale: site.scale,
+    gridScale,
+  });
+  return {
+    gap: rigidSeparation(rigid, frame, design),
+    parts,
+    hand,
+    radius,
+    gridScale,
+    latitude,
+    exact,
+    placed,
+    fingerprintDesigns: [[0, 0, 0], design],
+  };
+}
+
+/** Within 1% of the hand formula: it takes the grid's scale at the origin, not its mean along the line. */
+const SITE_GAP = 0.01;
+
+/** The California measurement site (the BIM site's checked setup): EPSG:6420, θ = 12.5°, s = 1.0000375. */
+const BIM_CHECKED: SiteTransform = {
+  origin: [6_000_000, 2_100_000, 0],
+  rotation: (12.5 * Math.PI) / 180,
+  scale: 1.0000375,
+};
+
+const siteGapCase = stressCase(
+  "rigid-placement-budget.site-gap",
+  "rigid-placement-budget",
+  "The California site grid (EPSG:6420, θ = 12.5°, s = 1.0000375): placed rigidly at its origin, the point 20 km along its x axis is off the exact placement by the hand formula's √((d²/2R)² + (d(s/k − 1))²), within 1%",
+  ["proj"],
+  async (ctx, base) => {
+    const frame = EngineeringFrame.create(
+      {
+        name: "California zone 3 site (2D)",
+        body: EARTH,
+        crs: epsg(6420),
+        site: BIM_CHECKED,
+      },
+      proj(ctx),
+    );
+    const g = siteGap(frame, BIM_CHECKED, 20_000);
+    return [
+      {
+        ...base,
+        pass: true,
+        value: Math.abs(g.gap / g.hand.gap - 1),
+        tolerance: SITE_GAP,
+        detail: `gap ${fmt(g.gap, 6)} m (${fmt(g.parts.drop, 5)} m down, ${fmt(g.parts.along, 4)} m along); by hand ${fmt(g.hand.gap, 6)} m (d²/2R ${fmt(g.hand.drop, 5)} m with R ${fmt(g.radius, 7)} m at ${fmt(g.latitude, 6)}°; d(s/k − 1) ${fmt(g.hand.along, 4)} m with k ${fmt(g.gridScale, 10)})`,
+        effect: {
+          value: g.gap,
+          unit: "m",
+          label:
+            "how far rigid placement puts a point 20 km along the site grid from where it belongs",
+        },
+        accuracyNote:
+          "exact arithmetic: both placements through the same PROJ operation, whose datum accuracy moves them together",
+        fingerprint: fingerprintOf(ctx, frame, g.fingerprintDesigns),
+      },
+    ];
+  },
+);
+
 export const rigidPlacementBudgetCases: readonly StressCase[] = [
   rigidBudgetCase,
+  siteGapCase,
 ];

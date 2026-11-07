@@ -1125,33 +1125,35 @@ reverse). Each part exports a `create…(deps)` that returns its API and a
 given; shared state is passed as an explicit object (`PageCore`, the label
 board, an overlay's `OverlayState`).
 
-| File                 | What it does                                                                                                                |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `main.ts`            | `run`: the HUD host, the globe, the worker client, the scenario host, the clock's opening; builds and wires the parts below |
-| `page.ts`            | `PageCore` (what every part is given), the panel model's source (`invalidate`), shared constants and helpers                |
-| `frameData.ts`       | The frame data and the frames store's manifest, loaded on the main thread                                                   |
-| `treeState.ts`       | The frame tree at the clock's instant, its composed accuracy, the engineering node                                          |
-| `triadLayer.ts`      | The triads and the label board every part's labels go through                                                               |
-| `walkPath.ts`        | The selected frame's dotted walk on the globe                                                                               |
-| `overlayConfig.ts`   | The overlays' names, needs, the California grid and site, default lines (pure)                                              |
-| `overlayControl.ts`  | The overlays' state, worker requests, the 2 km lines, the inset, the legend's view                                          |
-| `rigidOverlay.ts`    | Stop 4's lines: layers and labels from the worker's geometry                                                                |
-| `orionLayer.ts`      | Orion's path, placed with its frame as the clock runs, and its statements                                                   |
-| `orionTrack.ts`      | Orion's OEM on the page's thread: the dot's place every frame (the worker's catalog shares `orionFromOem`)                  |
-| `cameraViews.ts`     | Where each scenario, frame and stop frames the globe, and the orbit it lands in                                             |
-| `cameraRig.ts`       | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                      |
-| `scenarios/stage.ts` | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                             |
-| `callouts.ts`        | The lunar clock's callout, Orion's marker and path label                                                                    |
-| `labelPanels.ts`     | The panels over the view the globe's labels keep clear of (pure placement, Task 4c)                                         |
-| `catalogRuns.ts`     | The stress catalog's runs and results                                                                                       |
-| `userCrs.ts`         | "Try your own": the ion asset and the bound-CRS checks                                                                      |
-| `pageReport.ts`      | The report's environment and the Report tab's lines                                                                         |
-| `panelModel.ts`      | The panel's model, built from every part                                                                                    |
-| `scenarioModel.ts`   | The scenario's part of the model (pure: freshness, published value, proof, route)                                           |
-| `globeSelection.ts`  | The selection on the globe (R14), Frame content (F), the links' known ids                                                   |
-| `deepLinks.ts`       | Back, forward and edited links (R15)                                                                                        |
-| `frameLoop.ts`       | The per-frame work                                                                                                          |
-| `panelActions.ts`    | What the panel asks of the page                                                                                             |
+| File                 | What it does                                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `main.ts`            | `run`: the HUD host, the globe, the worker client, the scenario host, the clock's opening; builds and wires the parts below  |
+| `page.ts`            | `PageCore` (what every part is given), the panel model's source (`invalidate`), shared constants and helpers                 |
+| `frameData.ts`       | The frame data and the frames store's manifest, loaded on the main thread                                                    |
+| `treeState.ts`       | The frame tree at the clock's instant, its composed accuracy, the engineering node                                           |
+| `triadLayer.ts`      | The triads and the label board every part's labels go through                                                                |
+| `walkPath.ts`        | The selected frame's dotted walk on the globe                                                                                |
+| `overlayConfig.ts`   | The overlays' names, needs, the California grid and site, default lines (pure)                                               |
+| `overlayControl.ts`  | The overlays' state, worker requests, the 2 km lines, the inset, the legend's view                                           |
+| `rigidOverlay.ts`    | Stop 4's lines: layers and labels from the worker's geometry                                                                 |
+| `orionLayer.ts`      | Orion's path, placed with its frame as the clock runs, and its statements                                                    |
+| `orionTrack.ts`      | Orion's OEM on the page's thread: the dot's place every frame (the worker's catalog shares `orionFromOem`)                   |
+| `cameraViews.ts`     | Where each scenario, frame and stop frames the globe, and the orbit it lands in                                              |
+| `cameraRig.ts`       | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                       |
+| `scenarios/stage.ts` | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                              |
+| `scenarios/sites.ts` | The BIM site's CRSs, site grid and line, and the corridor's road and site (pure; shared by the page and the worker, Task 6a) |
+| `pointDrag.ts`       | The corridor's point, dragged on the globe: its hit target and the knobs it sets (Task 6a)                                   |
+| `callouts.ts`        | The lunar clock's callout, Orion's marker and path label                                                                     |
+| `labelPanels.ts`     | The panels over the view the globe's labels keep clear of (pure placement, Task 4c)                                          |
+| `catalogRuns.ts`     | The stress catalog's runs and results                                                                                        |
+| `userCrs.ts`         | "Try your own": the ion asset and the bound-CRS checks                                                                       |
+| `pageReport.ts`      | The report's environment and the Report tab's lines                                                                          |
+| `panelModel.ts`      | The panel's model, built from every part                                                                                     |
+| `scenarioModel.ts`   | The scenario's part of the model (pure: freshness, published value, proof, route)                                            |
+| `globeSelection.ts`  | The selection on the globe (R14), Frame content (F), the links' known ids                                                    |
+| `deepLinks.ts`       | Back, forward and edited links (R15)                                                                                         |
+| `frameLoop.ts`       | The per-frame work                                                                                                           |
+| `panelActions.ts`    | What the panel asks of the page                                                                                              |
 
 The stylesheet is `panel/panel.css`, an index that imports one file per
 part in cascade order: `tokens.css` (the family palette and axis colors),

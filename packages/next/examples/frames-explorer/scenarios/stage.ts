@@ -6,7 +6,11 @@
 import type { Frame } from "../../../src/frames/Frame.ts";
 import type { CameraView } from "../cameraViews.ts";
 import { NARROW_VIEW } from "../content.ts";
-import { OVERLAYS, type OverlayState } from "../overlayConfig.ts";
+import {
+  OVERLAYS,
+  type EngineeringSetup,
+  type OverlayState,
+} from "../overlayConfig.ts";
 import type { PageCore } from "../page.ts";
 import type { OrionFrame, OverlayId } from "../panel/model.ts";
 import type { StressResult } from "../tests.ts";
@@ -51,6 +55,8 @@ export function createStage(deps: {
     state(id: OverlayId): OverlayState;
     set(id: OverlayId, on: boolean): void;
     drawOn(id: OverlayId): void;
+    setEngineering(setup: EngineeringSetup | undefined): void;
+    engineering(): EngineeringSetup;
   };
   orion: { frame(): OrionFrame; setFrame(frame: OrionFrame): void };
   sceneView(sc: SceneSpec): CameraView | undefined;
@@ -74,6 +80,10 @@ export function createStage(deps: {
   let reframeOrion = false;
   /** A flight to the site's new latitude, after the knob's burst. */
   let siteFlight = 0;
+  /** The engineering overlays drawn again in the knobs' setup, after their burst. */
+  let engineeringRedraw = 0;
+  /** The setup outside the scene, restored when it's left. */
+  let defaults: EngineeringSetup | undefined;
 
   const exposure = (): number =>
     sceneExposure(scene, viewer.container.clientWidth, NARROW_VIEW);
@@ -143,6 +153,19 @@ export function createStage(deps: {
     deps.refreshCallouts();
   }
 
+  /** The scene's engineering overlays, on and in its setup at the knobs (the BIM site, the corridor). */
+  function applyEngineering(): void {
+    const eng = scene?.engineering;
+    if (!eng) {
+      return;
+    }
+    defaults ??= overlays.engineering();
+    overlays.setEngineering(eng.setup(sceneKnobs, defaults));
+    for (const o of eng.overlays) {
+      overlays.set(o, true);
+    }
+  }
+
   function enter(id: ScenarioId, knobs: KnobState): void {
     scene = SCENES[id];
     sceneKnobs = knobs;
@@ -159,6 +182,7 @@ export function createStage(deps: {
       lightFromCamera();
     }
     applySceneKnobs();
+    applyEngineering();
     globe.dimGround(exposure());
     flyToScene();
     // Its proof at the checked setup: the catalog's checks, run if they
@@ -173,6 +197,15 @@ export function createStage(deps: {
     }
     sceneKnobs = knobs;
     applySceneKnobs();
+    if (scene?.engineering) {
+      // PROJ draws them again once the slider rests, not at every step.
+      clearTimeout(engineeringRedraw);
+      engineeringRedraw = window.setTimeout(() => {
+        if (!disposed()) {
+          applyEngineering();
+        }
+      }, 200);
+    }
     if (moved) {
       // The camera follows the site once the slider rests.
       clearTimeout(siteFlight);
@@ -187,6 +220,14 @@ export function createStage(deps: {
   function leave(): void {
     if (scene?.orion) {
       overlays.set("orion", false);
+    }
+    clearTimeout(engineeringRedraw);
+    if (scene?.engineering) {
+      for (const o of scene.engineering.overlays) {
+        overlays.set(o, false);
+      }
+      overlays.setEngineering(defaults);
+      defaults = undefined;
     }
     if (headlight) {
       headlight = false;
@@ -257,6 +298,7 @@ export function createStage(deps: {
       }
       offClock();
       clearTimeout(siteFlight);
+      clearTimeout(engineeringRedraw);
     },
   };
 }

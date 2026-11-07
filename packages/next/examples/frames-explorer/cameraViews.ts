@@ -7,7 +7,7 @@ import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
 import { fromDegrees } from "../../src/math/ellipsoid.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { Framing } from "./globe.ts";
-import { RIGID_FRAMING } from "./overlayConfig.ts";
+import { RIGID_FRAMING, type EngineeringSetup } from "./overlayConfig.ts";
 import {
   AXES_RIG,
   SITE_RIG,
@@ -32,7 +32,8 @@ import {
   type PageCore,
 } from "./page.ts";
 import type { RigidBuilt } from "./rigidOverlay.ts";
-import { LUNAR_SITE, type SceneSpec } from "./scenarios/scenes.ts";
+import { LUNAR_SITE, SITE_GRIDS, type SceneSpec } from "./scenarios/scenes.ts";
+import { offsetPlace } from "./scenarios/sites.ts";
 
 /** A surface view at `lon`, `lat` (degrees), `range` (m), `heading` (degrees) and `pitch` (radians). */
 export const framingAt = (
@@ -106,6 +107,8 @@ export function createCameraViews(deps: {
   orionNodeId(): string | undefined;
   /** Stop 4's lines as drawn. */
   rigidBuilt(): RigidBuilt | undefined;
+  /** The engineering overlays' setup (a scenario's, or the default). */
+  engineering(): EngineeringSetup;
 }): CameraViews {
   const { viewer, frames: framesNow, instantNow } = deps.core;
 
@@ -129,13 +132,16 @@ export function createCameraViews(deps: {
         // stay clear of the disc as GCRF's turn against ITRF's, and their
         // z axes point at the camera.
         return framingAt(0, 90, 5.5 * EARTH_RADIUS, 0, -Math.PI / 2 + 1e-3);
-      case "designGrid":
-        return framingAt(-120.5, 37.85, 180_000, 0, -35 * deg);
+      case "designGrid": {
+        const [lon, lat, range] = deps.engineering().look;
+        return framingAt(lon, lat, range, 0, -35 * deg);
+      }
       case "rigidVsExact": {
-        // Stop 4 (owner's rework): from the side, south of the 400 km line
-        // looking north, a little down, the whole line across the left of
-        // the view (the legend and the inset take the bottom right), so the
-        // straight tangent visibly leaves the curving ground.
+        // Stop 4 (owner's rework): from the side, to the right of the 400
+        // km line looking across it (south of an eastward line, looking
+        // north), a little down, the whole line across the left of the view
+        // (the legend and the inset take the bottom right), so the straight
+        // tangent visibly leaves the curving ground.
         const built = deps.rigidBuilt();
         const geo = (p: ArrayLike<number>) =>
           WGS84.cartesianToCartographic(Float64Array.from(p), {
@@ -145,9 +151,25 @@ export function createCameraViews(deps: {
           });
         const a = built && geo(built.start);
         const b = built && geo(built.end);
-        const lon0 = a ? a.longitude / deg : -122.443;
-        const lon1 = b ? b.longitude / deg : -117.904;
-        const lat = a && b ? (a.latitude + b.latitude) / 2 / deg : 37.745;
+        // Until it is drawn: from the setup's start and azimuth.
+        const start = deps.engineering().rigid.start;
+        const end =
+          a && b
+            ? undefined
+            : offsetPlace(
+                start.longitude,
+                start.latitude,
+                400_000 * Math.sin(start.azimuth * deg),
+                400_000 * Math.cos(start.azimuth * deg),
+              );
+        const lon0 = a ? a.longitude / deg : start.longitude;
+        const lat0 = a ? a.latitude / deg : start.latitude;
+        const lon1 = b ? b.longitude / deg : end!.longitude;
+        const lat1 = b ? b.latitude / deg : end!.latitude;
+        // Looking square to the line: its azimuth less 90°.
+        const mid = ((lat0 + lat1) / 2) * deg;
+        const azimuth =
+          Math.atan2((lon1 - lon0) * Math.cos(mid), lat1 - lat0) / deg;
         // The range fits the line across the view's width: on a portrait
         // (narrow) view the camera's field of view is the height's, so it
         // steps back by the aspect.
@@ -155,9 +177,9 @@ export function createCameraViews(deps: {
         const aspect = w > 0 && h > 0 ? w / h : 1;
         return framingAt(
           lon0 + (lon1 - lon0) * RIGID_FRAMING.along,
-          lat - RIGID_FRAMING.south,
+          lat0 + (lat1 - lat0) * RIGID_FRAMING.along - RIGID_FRAMING.south,
           RIGID_FRAMING.range / Math.min(1, aspect),
-          0,
+          azimuth - 90,
           RIGID_FRAMING.pitch * deg,
         );
       }
@@ -350,6 +372,14 @@ export function createCameraViews(deps: {
       const f = framing("designGrid");
       return f && { framing: f };
     }
+    if ((SITE_GRIDS as readonly string[]).includes(id)) {
+      // A site grid: its setup's look, closer (the corridor's road, the
+      // BIM site's origin).
+      const [lon, lat, range] = deps.engineering().look;
+      return {
+        framing: framingAt(lon, lat, Math.min(range, 20_000), 0, -50 * deg),
+      };
+    }
     return { framing: OPENING };
   }
 
@@ -363,6 +393,12 @@ export function createCameraViews(deps: {
       case "northPole": {
         const f = framing("northPole");
         return f && geocentricView(f);
+      }
+      case "rigidLine":
+        return surface(framing("rigidVsExact"));
+      case "engineering": {
+        const [lon, lat, range] = deps.engineering().look;
+        return surface(framingAt(lon, lat, range, 0, -55 * deg));
       }
     }
   }

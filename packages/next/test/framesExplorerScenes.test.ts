@@ -21,8 +21,14 @@ import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
 const scene = (id: keyof typeof SCENES) => SCENES[id]!;
 
 describe("the strip's scenarios", () => {
-  it("are the three ported from the tour, in the strip's order, opening on one-path", () => {
-    expect(READY).toEqual(["one-path", "earth-turns", "stand-on-moon"]);
+  it("are the three ported from the tour and the two on the ground (Task 6a), in the strip's order, opening on one-path", () => {
+    expect(READY).toEqual([
+      "one-path",
+      "earth-turns",
+      "stand-on-moon",
+      "bim-site",
+      "corridor",
+    ]);
     expect(READY[0]).toBe(SCENARIOS[0]!.id);
   });
 });

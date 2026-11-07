@@ -34,6 +34,8 @@ export function createCallouts(deps: {
   refreshTriads(): void;
   /** The frame data's leap seconds, once it's in (for the marker's UTC). */
   leapSeconds(): LeapSeconds | undefined;
+  /** The corridor's point while it is dragged (pointDrag.ts). */
+  dragPoint?(): Float64Array | undefined;
 }): Callouts {
   const { globe, view } = deps.core;
   const { orion } = deps;
@@ -116,6 +118,23 @@ export function createCallouts(deps: {
           at: () => orion.pathPoint(middle.origin),
           family: "trajectory",
           priority: 2,
+        });
+      }
+    }
+    // The scenario's own labels (the corridor's stations and its point),
+    // while its scene shows: the point follows a drag before its answer.
+    if (e && scene?.id === e.scenario) {
+      for (const l of e.labels ?? []) {
+        out.push({
+          id: `scenario:${l.id}`,
+          text: l.text,
+          at:
+            l.marker === true
+              ? () => deps.dragPoint?.() ?? l.at
+              : Float64Array.from(l.at),
+          family: "engineering",
+          priority: l.marker === true ? 5 : 1,
+          ...(l.marker === true && { marker: true, pinned: true }),
         });
       }
     }

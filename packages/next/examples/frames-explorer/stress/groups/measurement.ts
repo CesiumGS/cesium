@@ -4,14 +4,12 @@ import {
   type SiteTransform,
   designPoint,
 } from "../../../../src/engineering/EngineeringFrame.ts";
-import {
-  Alignment,
-  type AlignmentDefinition,
-} from "../../../../src/engineering/alignment.ts";
+import { Alignment } from "../../../../src/engineering/alignment.ts";
 import { framePoint } from "../../../../src/frames/local.ts";
 import { measure } from "../../../../src/measure/measure.ts";
 import { EARTH } from "../../../../src/scene/Body.ts";
 import { CALIFORNIA, type StressCase, plainAccuracy } from "../runner.ts";
+import { CLOTHOID_ROAD } from "../../scenarios/sites.ts";
 import {
   ALIGNMENT_RECOVERY,
   GRID_TO_GROUND,
@@ -117,21 +115,14 @@ const gridToGroundCase = stressCase(
   },
 );
 
-// A tangent, a clothoid in, a left arc of radius 800, a clothoid out and a
-// tangent, eastbound from (1000, 1000), stations 0 to 2000.
-const CLOTHOID_ROAD: AlignmentDefinition = {
-  name: "Clothoid road",
-  start: [1000, 1000],
-  startAzimuth: Math.PI / 2,
-  startStation: 0,
-  horizontal: [
-    { kind: "line", length: 500 },
-    { kind: "spiral", length: 300, startRadius: Infinity, endRadius: 800 },
-    { kind: "arc", length: 400, radius: 800 },
-    { kind: "spiral", length: 300, startRadius: 800, endRadius: Infinity },
-    { kind: "line", length: 500 },
-  ],
-};
+// The clothoid road (a tangent, a clothoid in, a left arc of radius 800, a
+// clothoid out and a tangent, eastbound from (1000, 1000), stations 0 to
+// 2000): scenarios/sites.ts's, which the corridor scenario draws.
+/** The stations and offsets measurement.clothoid recovers: every element, both sides. */
+export const CLOTHOID_STATIONS = [
+  100, 520, 650, 790, 1000, 1210, 1350, 1480, 1900,
+] as const;
+export const CLOTHOID_OFFSETS = [-25, 0, 15] as const;
 
 const clothoidCase = stressCase(
   "measurement.clothoid",
@@ -142,8 +133,8 @@ const clothoidCase = stressCase(
     const road = new Alignment(CLOTHOID_ROAD);
     let worst = 0;
     let count = 0;
-    for (const station of [100, 520, 650, 790, 1000, 1210, 1350, 1480, 1900]) {
-      for (const offset of [-25, 0, 15]) {
+    for (const station of CLOTHOID_STATIONS) {
+      for (const offset of CLOTHOID_OFFSETS) {
         const point = road.pointAt(station, offset);
         const found = road.stationOffset(point);
         worst = Math.max(

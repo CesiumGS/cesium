@@ -34,7 +34,7 @@ import {
 import { createFrameData } from "./frameData.ts";
 import { createFrameLoop } from "./frameLoop.ts";
 import { GapInset } from "./gapInset.ts";
-import { Globe, familyRgba } from "./globe.ts";
+import { Globe, SECONDARY, familyRgba, hexRgba } from "./globe.ts";
 import { createGlobeSelection } from "./globeSelection.ts";
 import { LoadingModel } from "./loading.ts";
 import { createOrionLayer } from "./orionLayer.ts";
@@ -47,6 +47,7 @@ import {
   type PageCore,
 } from "./page.ts";
 import { createPageReport } from "./pageReport.ts";
+import { createPointDrag } from "./pointDrag.ts";
 import { Panel } from "./panel/Panel.tsx";
 import { createPanelActions } from "./panelActions.ts";
 import { clockView, createPanelModel } from "./panelModel.ts";
@@ -246,6 +247,7 @@ export function run(context: ExampleContext): ExampleRun {
     orionBuilt: () => orion.built(),
     orionNodeId: () => orion.info()?.info.node.id,
     rigidBuilt: () => overlays.rigidBuilt(),
+    engineering: () => overlays.engineering(),
   });
   scope.defer(() => cameraViews.dispose());
   // The pivot marker while the orbit is dragged (HUD); a drag or wheel of
@@ -281,8 +283,24 @@ export function run(context: ExampleContext): ExampleRun {
     lunarSiteOrigin: () => cameraViews.lunarSiteOrigin(),
     refreshTriads: () => triads.refresh(),
     leapSeconds: () => frames()?.data.leapSeconds,
+    dragPoint: () => pointDrag.point(),
   });
   scope.defer(() => callouts.dispose());
+  // The corridor's point, dragged on the globe: it sets the station and
+  // offset knobs (the host re-evaluates once the burst ends).
+  const pointDrag = createPointDrag({
+    viewer,
+    hud,
+    evaluation: () =>
+      stage.scene() !== undefined ? host.state().evaluation : undefined,
+    knobs: () => host.state().spec.knobs,
+    setKnobs: (k) => {
+      host.setKnob("station", k.station);
+      host.setKnob("offset", k.offset);
+    },
+    refreshCallouts: () => callouts.refresh(),
+  });
+  scope.defer(() => pointDrag.dispose());
 
   /** The current scenario's evaluation, if the host has one. */
   const evaluationNow = () => host.state().evaluation;
@@ -311,13 +329,20 @@ export function run(context: ExampleContext): ExampleRun {
         Instant.fromUtc(ms, f.data.leapSeconds).tdb(),
       );
     },
+    // A scenario's own lines: engineering by default; ticks secondary, a
+    // leader white, as the rigid line's are (rigidOverlay.ts).
     drawOverlay: (id, g) =>
-      globe.setOverlay(id, [
-        {
-          chunks: g.layers.flatMap((l) => l.chunks),
-          color: familyRgba("engineering"),
-        },
-      ]),
+      globe.setOverlay(
+        id,
+        g.layers.map((l) => ({
+          chunks: l.chunks,
+          color:
+            l.name === "leader"
+              ? hexRgba("#ffffff")
+              : familyRgba("engineering"),
+          ...(l.name === "ticks" && { strength: SECONDARY }),
+        })),
+      ),
     removeOverlay: (id) => globe.removeOverlay(id),
     enter: (spec, knobs) => stage.enter(spec.id, knobs),
     update: (_spec, knobs) => stage.update(knobs),
@@ -463,7 +488,10 @@ export function run(context: ExampleContext): ExampleRun {
       drawBias: () => overlays.draw("bias"),
     },
     followOrbit: () => cameraRig.follow(),
-    sceneTick: () => stage.tick(),
+    sceneTick: () => {
+      stage.tick();
+      pointDrag.tick();
+    },
     walk: walkPath,
   });
   scope.defer(() => frameLoop.dispose());

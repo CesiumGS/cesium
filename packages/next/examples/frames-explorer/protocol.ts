@@ -240,7 +240,8 @@ export interface OverlayLayer {
 
 /** An overlay as built in the worker. Its typed arrays' buffers are transferred. */
 export interface OverlayGeometry {
-  kind: OverlayKind;
+  /** The worker's builder, or `scenario`: a scenario's own geometry (its evaluation's overlays). */
+  kind: OverlayKind | "scenario";
   /**
    * designGrid: `grid`; trueNorthLines: `trueNorth`; rigidVsExact: `exact`,
    * `rigid` (dashed, as geometry) and `ticks`; distortion: `tissot` and `contours`; trajectoryPath: `path`.

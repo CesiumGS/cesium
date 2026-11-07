@@ -226,7 +226,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       const start = e.data
         ? {
             title: `${e.data.label}, as delivered`,
-            does: `position and velocity, expressed in ${e.data.frame} (${e.data.source})`,
+            does: `${e.data.describes ?? "position and velocity"}, expressed in ${e.data.frame} (${e.data.source})`,
             accuracy: e.data.accuracy,
           }
         : (sc?.routeEnds?.start ?? { title: p.from, does: "" });

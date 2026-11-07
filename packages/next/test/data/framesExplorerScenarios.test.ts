@@ -18,7 +18,20 @@ import {
   createClient,
   type ClientWorker,
 } from "../../examples/frames-explorer/protocol.ts";
-import { publishedText } from "../../examples/frames-explorer/panel/answerText.ts";
+import {
+  formatAnswer,
+  publishedText,
+} from "../../examples/frames-explorer/panel/answerText.ts";
+import { snapToStep } from "../../examples/frames-explorer/panel/knobText.ts";
+import { knobsAt } from "../../examples/frames-explorer/pointDrag.ts";
+import {
+  BIM_CRS,
+  FTUS_PER_M,
+  offsetText,
+} from "../../examples/frames-explorer/scenarios/sites.ts";
+import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
+import { Ellipsoid } from "../../src/math/ellipsoid.ts";
+import { EARTH } from "../../src/scene/Body.ts";
 import { routeSteps } from "../../examples/frames-explorer/panel/routeSteps.ts";
 import references from "../../examples/frames-explorer/references.json";
 import { proofRows } from "../../examples/frames-explorer/scenarios/proof.ts";
@@ -134,11 +147,18 @@ const OFF: Record<string, { knobs: KnobState; hours: number }> = {
   "one-path": { knobs: { frame: "GCRF" }, hours: 1 },
   "earth-turns": { knobs: { rate: 60 }, hours: 6 },
   "stand-on-moon": { knobs: { latitude: -45 }, hours: 24 },
+  "bim-site": {
+    knobs: { crs: "utm-10n", rotation: 30, scale: 1 },
+    hours: 1,
+  },
+  corridor: { knobs: { station: 1210, offset: -25 }, hours: 1 },
 };
 const PORTED: readonly ScenarioId[] = [
   "one-path",
   "earth-turns",
   "stand-on-moon",
+  "bim-site",
+  "corridor",
 ];
 
 const catalog = new Map<string, StressResult>();
@@ -544,14 +564,168 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
     expect(t.comparison).not.toMatch(/passes|fails/);
   }, 60_000);
 
-  it("only stand-on-moon's headline has a published counterpart among the ported three", async () => {
-    for (const id of ["one-path", "earth-turns"] as const) {
+  it("only stand-on-moon's headline has a published counterpart among the ported three (and the two on the ground)", async () => {
+    for (const id of [
+      "one-path",
+      "earth-turns",
+      "bim-site",
+      "corridor",
+    ] as const) {
       const e = await client.scenario(
         id,
         spec(id).checked.knobs,
         checkedTdb(id),
       );
       expect(e.answer.published, id).toBeUndefined();
+    }
+  }, 60_000);
+});
+
+describe("bim-site: a BIM model's site grid on the globe (Task 6a)", () => {
+  const s = spec("bim-site");
+  const at = checkedTdb("bim-site");
+
+  it("adds its design CRS under ITRF and the site grid under it, pins the model's origin to the CRS, and answers the 31.4 m gap", async () => {
+    const e = await client.scenario(s.id, s.checked.knobs, at);
+    expect(e.added.map((a) => [a.id, a.parentId])).toEqual([
+      ["California zone 3", "ITRF"],
+      ["BIM site grid", "California zone 3"],
+    ]);
+    expect(e.added[0]!.edge.kind).toBe("proj-operation");
+    expect(e.added[1]!.edge.accuracy.byDefinition).toBe(true);
+    expect(e.data).toMatchObject({
+      label: "The model's site origin",
+      frame: "California zone 3",
+      source: "IFC map conversion",
+    });
+    expect(e.data!.describes).toContain("6,000,000 ftUS");
+    expect(e.answer.unit).toBe("m");
+    expect(formatAnswer(e.answer.value!, "m")).toBe("31.4 m");
+    expect(e.answer.path).toEqual({ from: "California zone 3", to: "ITRF" });
+    // The catalog's check is of the same computation, at the same setup.
+    const r = catalog.get("rigid-placement-budget.site-gap")!;
+    expect(r.pass).toBe(true);
+    expect(e.answer.value).toBeCloseTo(r.effect!.value, 9);
+    print(`bim-site: ${r.detail}`);
+  }, 60_000);
+
+  it("keeps the site where it is in UTM 10N (the same ground point as California zone 3's origin, to a millimetre), and moves it to Portland in the low-distortion zone", async () => {
+    const P = await context().loadProj();
+    const make = (crs: (typeof BIM_CRS)[keyof typeof BIM_CRS]) =>
+      EngineeringFrame.create(
+        { name: crs.name, body: EARTH, crs: crs.crs },
+        P,
+      ).toBodyFixed([crs.origin[0], crs.origin[1], 0]);
+    const ca = make(BIM_CRS["ca-zone-3"]);
+    const utm = make(BIM_CRS["utm-10n"]);
+    expect(
+      Math.hypot(ca[0]! - utm[0]!, ca[1]! - utm[1]!, ca[2]! - utm[2]!),
+    ).toBeLessThan(1e-3);
+    const g = Ellipsoid.WGS84.cartesianToCartographic(
+      make(BIM_CRS["low-distortion"]),
+      { longitude: 0, latitude: 0, height: 0 },
+    )!;
+    expect((g.longitude * 180) / Math.PI).toBeCloseTo(-122.75, 6);
+    expect((g.latitude * 180) / Math.PI).toBeCloseTo(45.5, 6);
+  }, 60_000);
+
+  it("parts by the CRS's scale along the line: UTM 10N's 0.99963 adds metres, the low-distortion zone almost nothing (unrotated, unscaled sites)", async () => {
+    const gap = async (crs: string) =>
+      (await client.scenario(s.id, { crs, rotation: 0, scale: 1 }, at)).answer
+        .value!;
+    const [ca, utm, ldp] = await Promise.all([
+      gap("ca-zone-3"),
+      gap("utm-10n"),
+      gap("low-distortion"),
+    ]);
+    // The drop d²/2R is about 31.3 m everywhere; what differs is the part
+    // along the line, d (1/k − 1).
+    expect(utm).toBeGreaterThan(ca);
+    expect(ca).toBeGreaterThan(ldp);
+    expect(utm - ldp).toBeGreaterThan(0.5);
+    print(
+      `bim-site gaps at 20 km: CA zone 3 ${ca.toFixed(3)} m, UTM 10N ${utm.toFixed(3)} m, Portland LDP ${ldp.toFixed(3)} m`,
+    );
+  }, 60_000);
+
+  it("a ground-scaled site grid (s = k) leaves only the drop", async () => {
+    // California zone 3's scale at the site, from the catalog's detail.
+    const k = Number(
+      /k (0\.\d+)/.exec(
+        catalog.get("rigid-placement-budget.site-gap")!.detail!,
+      )![1],
+    );
+    const e = await client.scenario(
+      s.id,
+      { crs: "ca-zone-3", rotation: 12.5, scale: snapToStep(k, 0.0000005) },
+      at,
+    );
+    const live = e.live.find(
+      (r) => r.id === "rigid-placement-budget.site-gap.live",
+    )!;
+    expect(live.pass).toBe(true);
+    // Within the knob's step of the drop alone (5e-7 × 20 km = 1 cm).
+    expect(e.answer.value!).toBeCloseTo(20_000 ** 2 / (2 * 6_384_892), 1);
+  }, 60_000);
+});
+
+describe("corridor: station and offset on the clothoid road (Task 6a)", () => {
+  const s = spec("corridor");
+  const at = checkedTdb("corridor");
+
+  it("round-trips the catalog's points through the ground: the answer's station and offset are the knobs' within the catalog's 1e-9 ft", async () => {
+    const catalogResult = catalog.get("measurement.clothoid")!;
+    expect(catalogResult.pass).toBe(true);
+    let worst = 0;
+    for (const station of [100, 650, 1000, 1350, 1900]) {
+      for (const offset of [-25, 15]) {
+        const e = await client.scenario(s.id, { station, offset }, at);
+        // Within the answer's own stated accuracy: the alignment's 1e-9 ft,
+        // or what the trip through PROJ adds (a few 1e-9 ft).
+        const stated = e.answer.accuracy.meters! * FTUS_PER_M;
+        expect(stated).toBeLessThan(1e-7);
+        expect(Math.abs(e.answer.value! - station)).toBeLessThanOrEqual(stated);
+        expect(e.answer.label).toContain(offsetText(offset));
+        const live = e.live.find((r) => r.id === "measurement.clothoid.live")!;
+        expect(live.pass, live.detail).toBe(true);
+        expect(live.value!).toBeLessThanOrEqual(catalogResult.tolerance!);
+        worst = Math.max(worst, Math.abs(e.answer.value! - station));
+      }
+    }
+    print(
+      `corridor: worst station back through the ground ${worst.toExponential(2)} ft; the catalog's worst ${catalogResult.value!.toExponential(2)} design units`,
+    );
+  }, 120_000);
+
+  it("adds California zone 3 and the measurement site grid, pins the road to the site grid, and draws the road, its offset and its point", async () => {
+    const e = await client.scenario(s.id, s.checked.knobs, at);
+    expect(e.added.map((a) => [a.id, a.parentId])).toEqual([
+      ["California zone 3", "ITRF"],
+      ["Measurement site grid", "California zone 3"],
+    ]);
+    expect(e.data).toMatchObject({
+      frame: "Measurement site grid",
+      source: "alignment",
+    });
+    expect(e.overlays.map((o) => o.id)).toEqual(["road", "offset"]);
+    expect(e.labels?.find((l) => l.marker)?.text).toBe(
+      "6+50.00, 15.00 ft right",
+    );
+    expect(e.answer.accuracy.meters!).toBeLessThan(1e-6);
+  }, 60_000);
+
+  it("reads the dragged point's knobs back off its own place: the local placement is good to the knobs' steps along the whole road", async () => {
+    for (const [station, offset] of [
+      [650, 15],
+      [3, -50],
+      [1997, 50],
+      [1210, -25],
+    ] as const) {
+      const e = await client.scenario(s.id, { station, offset }, at);
+      expect(knobsAt(e.drag!.at, e.drag!.toDesign, s.knobs)).toEqual({
+        station,
+        offset,
+      });
     }
   }, 60_000);
 });
