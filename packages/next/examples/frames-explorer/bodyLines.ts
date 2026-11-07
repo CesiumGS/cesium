@@ -34,7 +34,7 @@ import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import type { SceneSpec } from "./scenarios/scenes.ts";
 import { LINE_PX, segmentPlacement } from "./skyRay.ts";
 import type { LabelBoard } from "./triadLayer.ts";
-import { ARM, MARK } from "./scenarios/arm.ts";
+import { ARM, MARK, PAD_OUTSIDE_SHORT } from "./scenarios/arm.ts";
 import {
   BUOY,
   CAMERA_MOUNT,
@@ -305,7 +305,7 @@ export function createBodyLines(deps: {
     anchor.leader = tool.map((x, i) => x + (70 / length) * (mark[i]! - x));
     labels.push({
       id: "bodies:leader",
-      text: `${length.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} m ${total === undefined ? "(not bounded)" : `±${(total * 1000).toFixed(1)} mm`} to ${MARK.name}`,
+      text: `${length.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} m ${total === undefined ? "(not bounded)" : `±${(total * 1000).toFixed(1)} mm`} to ${MARK.name} (${PAD_OUTSIDE_SHORT})`,
       at: () => anchor.leader,
       family: "earth",
       priority: 4,

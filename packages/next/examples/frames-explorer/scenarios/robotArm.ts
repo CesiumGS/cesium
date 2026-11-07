@@ -39,6 +39,8 @@ import {
   GEOMETRY,
   COORDINATE_EPOCH,
   MARK,
+  PAD_OUTSIDE,
+  PAD_OUTSIDE_SHORT,
   largestFirst,
   PAD,
   SPEC_SHEET,
@@ -213,7 +215,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
       edge: appEdge(
         PAD.name,
         "constant",
-        `east-north-up at NGS mark ${PAD.mark} on LC-39A's pad (${PAD.latitude.toFixed(5)}° N, ${(-PAD.longitude).toFixed(5)}° W, h ${PAD.height.toFixed(3)} m, its datasheet's; through PROJ to ITRF2020 at ${COORDINATE_EPOCH.toFixed(1)}): the library's eastNorthUpFrame`,
+        `east-north-up at NGS mark ${PAD.mark} on LC-39A's pad (${PAD.latitude.toFixed(5)}° N, ${(-PAD.longitude).toFixed(5)}° W, h ${PAD.height.toFixed(3)} m, its datasheet's, its NAD83(1990) position taken as NAD83(2011), an identity PROJ states at 0.1 m (ESRI:108355); carried by CCV6's NAD83(2011) velocity and through PROJ to ITRF2020 at ${COORDINATE_EPOCH.toFixed(1)}): the library's eastNorthUpFrame`,
       ),
     },
     {
@@ -352,7 +354,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
   const accuracyNote =
     total === undefined
       ? `not bounded: ${composed.unboundedBy !== undefined ? `${composed.unboundedBy} states no accuracy` : "PROJ states no accuracy for the operation"}`
-      : `the terms below, root-sum-square; ${lead}`;
+      : `the terms below, root-sum-square; ${lead}. ${PAD_OUTSIDE}`;
   const toolInBase = frameTransform(arm.tool, arm.base, instant);
   const out = Math.hypot(toolInBase[12]!, toolInBase[13]!);
   return {
@@ -388,7 +390,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
         },
         {
           title: "What each frame states",
-          text: `The spec sheet (synthetic, 1σ): each encoder ±${SPEC_SHEET.encoderDegrees}°, each link's length ±${SPEC_SHEET.linkMeters * 1000} mm, the base's survey in the pad frame ±${SPEC_SHEET.surveyMeters * 1000} mm. The pad's frame is exact by definition: it is defined at NGS mark ${PAD.mark}, a disk in LC-39A's pad, at its datasheet's position and height. So the ± covers the arm and the station from that point; it is not a survey of LC-39A or of where a real arm would stand. Moving the point moves the answer about 1 m per metre along the line to the station, 0.33 m per metre east and 3.4 mm per metre of height; ${PAD.mark}'s position is from a 1991 adjustment in NAD83(1990), taken here as NAD83(2011), and the mark's stability is rated questionable, so centimetres to decimetres lie outside the ±.`,
+          text: `The spec sheet (synthetic, 1σ): each encoder ±${SPEC_SHEET.encoderDegrees}°, each link's length ±${SPEC_SHEET.linkMeters * 1000} mm, the base's survey in the pad frame ±${SPEC_SHEET.surveyMeters * 1000} mm. The pad's frame is exact by definition: it is defined at NGS mark ${PAD.mark}, a disk in LC-39A's pad, at its datasheet's position and height. So the ± covers the arm and the station from that point; it is not a survey of LC-39A or of where a real arm would stand. Moving the point moves the answer about 1 m per metre along the line to the station, 0.33 m per metre east and 3.4 mm per metre of height; ${PAD.mark}'s position is from a 1991 adjustment and the mark's stability is rated questionable.`,
         },
         {
           title: "How the library composes it",
@@ -396,7 +398,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
         },
         {
           title: `${MARK.name}`,
-          text: `NGS's NAD83(2011) position for the station (epoch ${station.nad83.epoch}), carried to ${epochText} by its NAD83(2011) velocity, through PROJ's NAD83(2011) to ITRF2020 operation at that epoch, the pad's path too: both ends ride one plate, so the distance doesn't follow the clock. ITRF here is taken as ITRF2020. The catalog checks the same path against NGS's own ITRF2020 position for the station.`,
+          text: `NGS's NAD83(2011) position for the station (epoch ${station.nad83.epoch}), carried to ${epochText} by its NAD83(2011) velocity, through PROJ's NAD83(2011) to ITRF2020 operation at that epoch. The pad takes the same path, carried by the station's velocity (borrowed: a passive mark has none of its own), so the distance doesn't depend on the epoch chosen or follow the clock. ITRF here is taken as ITRF2020. The catalog checks the same path against NGS's own ITRF2020 position for the station.`,
         },
       ],
     },
@@ -447,7 +449,10 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
         key: "leader",
         label: `The straight line from the tool to ${MARK.name}`,
         short: `To ${MARK.name}`,
-        accuracy: total === undefined ? "not bounded" : `±${mm(total)} (1σ)`,
+        accuracy:
+          total === undefined
+            ? "not bounded"
+            : `±${mm(total)} (1σ); ${PAD_OUTSIDE_SHORT}`,
         line: "dashed",
         tone: "white",
       },

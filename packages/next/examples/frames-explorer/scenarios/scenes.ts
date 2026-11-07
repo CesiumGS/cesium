@@ -30,6 +30,7 @@ import {
   ARM_FRAMES,
   MARK,
   PAD,
+  PAD_OUTSIDE,
   anglesOf,
   armFrames,
   type ArmFrames,
@@ -557,7 +558,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       [ARM.tool]: `${MARK.name} seen from the tool: the straight line's length is the answer`,
     },
     diagramNote: `The arm's frames are defined by your app with the public Frame API, each with its spec sheet's accuracy. ${MARK.name}'s position comes in NAD83(2011) and goes through PROJ to ITRF, then down the arm.`,
-    note: "The arm, its spec sheet and its survey are synthetic. Its pad frame is defined at NGS mark AK1155 on LC-39A's pad, at the datasheet's height (NAVD88 14.137 m, 16 m below the ellipsoid in ITRF2020): the ± is from that point, not a survey of LC-39A. About 1 m per metre along the line, 3.4 mm per metre of height, if the point moves.",
+    note: `The arm, its spec sheet and its survey are synthetic. Its pad frame is defined at NGS mark AK1155 on LC-39A's pad, at the datasheet's height (NAVD88 14.137 m, 16 m below the ellipsoid in ITRF2020): the ± is from that point, not a survey of LC-39A. About 1 m per metre along the line, 3.4 mm per metre of height, if the point moves. ${PAD_OUTSIDE}`,
   },
 };
 

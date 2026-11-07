@@ -8,7 +8,7 @@
 // relativistic term sits on no edge, and only `accuracyOf` includes it). It
 // states the accuracy of the separation between the two points, so a
 // rotation on the path adds nothing to it: the walk says so.
-import { framePoint } from "../../src/frames/local.ts";
+import { convertPoint, framePoint } from "../../src/frames/local.ts";
 import {
   pointAccuracy,
   type PointAccuracyTerm,
@@ -192,27 +192,21 @@ function statedView(
   };
 }
 
-/** One frame's view against one reference. */
-export function composedView(
-  tree: TreeNode,
+/**
+ * The accuracy of the separation of a point from the reference's origin by
+ * the library's `accuracyOf` (through `measure`), each term tied to the
+ * route's `edges` it comes from. `target === reference` composes nothing.
+ */
+function separationView(
+  byId: ReadonlyMap<string, TreeNode>,
   frames: Frames,
   instant: Instant,
-  reference: Reference,
-  target: string,
-  placed: ReadonlyMap<string, PlacedNode> = new Map(),
-): ComposedView | undefined {
-  const { byId, chain } = index(tree);
-  const node = byId.get(target);
-  const ref = byId.get(reference)?.frame;
-  if (node === undefined || ref === undefined) {
-    return undefined;
-  }
-  // A route through the app's own frames: their stated accuracies, as the
-  // library composes them (one source with the scenario's answer).
-  const route = pathEdges(chain, reference, target);
-  if (node.frame !== undefined && route.some((e) => byId.get(e)?.app)) {
-    return statedView(node, ref, instant, byId, route);
-  }
+  ref: NonNullable<TreeNode["frame"]>,
+  self: boolean,
+  point: ReturnType<typeof framePoint>,
+  edges: readonly string[],
+  projection?: AccuracyTerm,
+): ComposedView {
   const b = framePoint(ref, [0, 0, 0], instant);
   const accuracyOf = (a: ReturnType<typeof framePoint>): AccuracyStatement => {
     try {
@@ -220,7 +214,7 @@ export function composedView(
     } catch (error) {
       // A frame against itself has nothing to compose; anything else that
       // fails is not bounded, with why, never exact (R8, F35).
-      if (target === reference) {
+      if (self) {
         return { meters: 0, terms: [], warnings: [] };
       }
       const message = error instanceof Error ? error.message : String(error);
@@ -231,29 +225,21 @@ export function composedView(
       };
     }
   };
-  let statement: AccuracyStatement;
-  const extra = placed.get(target);
-  // Only warnings about the separation stay: measure's signal, footprint
-  // and alignment notes say nothing of where the origin is (S-I4).
-  if (node.frame !== undefined) {
-    statement = accuracyOf(framePoint(node.frame, [0, 0, 0], instant));
-  } else if (extra !== undefined) {
-    const s = accuracyOf(framePoint(frames.itrf, extra.itrf, instant));
-    const terms = [...s.terms, extra.projection];
+  let statement = accuracyOf(point);
+  if (projection !== undefined) {
     statement = {
       meters:
-        s.meters === undefined || extra.projection.meters === undefined
+        statement.meters === undefined || projection.meters === undefined
           ? undefined
-          : Math.hypot(s.meters, extra.projection.meters),
-      terms,
-      warnings: s.warnings,
-      ...(s.warningCodes && { warningCodes: s.warningCodes }),
+          : Math.hypot(statement.meters, projection.meters),
+      terms: [...statement.terms, projection],
+      warnings: statement.warnings,
+      ...(statement.warningCodes && { warningCodes: statement.warningCodes }),
     };
-  } else {
-    return undefined;
   }
+  // Only warnings about the separation stay: measure's signal, footprint
+  // and alignment notes say nothing of where the origin is (S-I4).
   statement = aboutSeparation(statement);
-  const edges = pathEdges(chain, reference, target);
   const kindOf = (id: string) => byId.get(id)?.edge.kind;
   const termEdges = statement.terms.map((t): string[] => {
     switch (t.source) {
@@ -283,6 +269,145 @@ export function composedView(
       ? `Not bounded: ${unknown.note}.`
       : "The accuracy of the separation of the two origins: what a distance between them can claim.");
   return { statement, termEdges, zeroAtOrigin, note };
+}
+
+/**
+ * A route through the app's own frames, in two parts (Task 7b fix 2): from
+ * the node up to its nearest built-in ancestor, each frame's stated
+ * accuracy as the library composes it (`pointAccuracy`); from there to the
+ * reference, `accuracyOf` for the node's origin expressed in that ancestor,
+ * so each built-in edge reads as it does for every other node (its lever,
+ * its "not stated"). The two combine root-sum-square, each term on its edge.
+ */
+function mixedView(
+  byId: ReadonlyMap<string, TreeNode>,
+  chain: (id: string) => string[],
+  frames: Frames,
+  instant: Instant,
+  reference: Reference,
+  node: TreeNode,
+  ref: NonNullable<TreeNode["frame"]>,
+): ComposedView {
+  const ids = chain(node.id);
+  const anchorId = ids.find((id) => id !== node.id && !byId.get(id)?.app);
+  const anchor = anchorId !== undefined ? byId.get(anchorId)?.frame : undefined;
+  if (anchorId === undefined || anchor === undefined) {
+    return statedView(
+      node,
+      ref,
+      instant,
+      byId,
+      pathEdges(chain, reference, node.id),
+    );
+  }
+  const appPart = statedView(
+    node,
+    anchor,
+    instant,
+    byId,
+    pathEdges(chain, anchorId, node.id),
+  );
+  if (anchorId === reference) {
+    return appPart;
+  }
+  let builtIn: ComposedView;
+  try {
+    const p = convertPoint(
+      framePoint(node.frame!, [0, 0, 0], instant),
+      anchor,
+    ).position;
+    builtIn = separationView(
+      byId,
+      frames,
+      instant,
+      ref,
+      false,
+      framePoint(anchor, p, instant),
+      pathEdges(chain, reference, anchorId),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    builtIn = {
+      statement: {
+        meters: undefined,
+        terms: [],
+        warnings: [`the statement could not be composed: ${message}`],
+      },
+      termEdges: [],
+      zeroAtOrigin: [],
+      note: `Not bounded: the statement could not be composed: ${message}.`,
+    };
+  }
+  const a = appPart.statement;
+  const b = builtIn.statement;
+  const meters =
+    a.meters === undefined || b.meters === undefined
+      ? undefined
+      : Math.hypot(a.meters, b.meters);
+  const note =
+    b.meters === undefined
+      ? builtIn.note
+      : a.meters === undefined
+        ? appPart.note
+        : `Root-sum-square of two parts: from ${node.label} up to ${anchorId}, each frame's own stated accuracy (pointAccuracy); from ${anchorId} to ${reference}, the library's statement for that point (accuracyOf).`;
+  return {
+    statement: {
+      meters,
+      terms: [...b.terms, ...a.terms],
+      warnings: b.warnings,
+      ...(b.warningCodes && { warningCodes: b.warningCodes }),
+    },
+    termEdges: [...builtIn.termEdges, ...appPart.termEdges],
+    zeroAtOrigin: [...builtIn.zeroAtOrigin, ...appPart.zeroAtOrigin],
+    note,
+  };
+}
+
+/** One frame's view against one reference. */
+export function composedView(
+  tree: TreeNode,
+  frames: Frames,
+  instant: Instant,
+  reference: Reference,
+  target: string,
+  placed: ReadonlyMap<string, PlacedNode> = new Map(),
+): ComposedView | undefined {
+  const { byId, chain } = index(tree);
+  const node = byId.get(target);
+  const ref = byId.get(reference)?.frame;
+  if (node === undefined || ref === undefined) {
+    return undefined;
+  }
+  const route = pathEdges(chain, reference, target);
+  if (node.frame !== undefined && route.some((e) => byId.get(e)?.app)) {
+    return mixedView(byId, chain, frames, instant, reference, node, ref);
+  }
+  const self = target === reference;
+  if (node.frame !== undefined) {
+    return separationView(
+      byId,
+      frames,
+      instant,
+      ref,
+      self,
+      framePoint(node.frame, [0, 0, 0], instant),
+      route,
+    );
+  }
+  const extra = placed.get(target);
+  if (extra !== undefined) {
+    return separationView(
+      byId,
+      frames,
+      instant,
+      ref,
+      self,
+      framePoint(frames.itrf, extra.itrf, instant),
+      route,
+      extra.projection,
+    );
+  }
+  return undefined;
 }
 
 /** Every frame's view against every reference, at `instant`. */

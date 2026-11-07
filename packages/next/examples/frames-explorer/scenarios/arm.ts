@@ -23,13 +23,15 @@ const DEG = Math.PI / 180;
 /**
  * Where the pad frame is defined: NGS mark AK1155, "THIRTY NINE A", a disk
  * set in LC-39A's concrete pad beside the flame deflector (references.json
- * `lc-39a-pad`, the NGS datasheet). Its NAD83(1990) position (taken as
- * NAD83(2011) at 2010.0) and ellipsoidal height (NAVD88 14.137 m + GEOID18
- * −28.252 m, both on the datasheet) go through PROJ's NAD83(2011) to
- * ITRF2020 at the coordinate epoch, the same path the station takes; the
- * result is pinned here (the page has no PROJ) and the data test holds it
- * to PROJ within 1 mm. A definition: the ± is the arm's and the station's
- * from this point, not a survey of LC-39A.
+ * `lc-39a-pad`, the NGS datasheet). Its NAD83(1990) position is taken as
+ * NAD83(2011) at 2010.0 (an identity PROJ states at 0.1 m, ESRI:108355),
+ * with its ellipsoidal height (NAVD88 14.137 m + GEOID18 −28.252 m, both on
+ * the datasheet). It is carried to the coordinate epoch by CCV6's NAD83(2011)
+ * velocity, borrowed from the station 17 km away (a passive mark has none of
+ * its own), and goes through PROJ's NAD83(2011) to ITRF2020 there: the
+ * station's own path. The result is pinned here (the page has no PROJ) and
+ * the data test holds it to that path within 1 mm. A definition: the ± is
+ * the arm's and the station's from this point, not a survey of LC-39A.
  */
 export const PAD = {
   name: "LC-39A pad ENU",
@@ -40,8 +42,8 @@ export const PAD = {
   longitude: -(80 + 36 / 60 + 14.609 / 3600),
   /** Its ellipsoidal height from the datasheet: NAVD88 + GEOID18, m. */
   height: 14.137 - 28.252,
-  /** In ITRF2020 at `COORDINATE_EPOCH`, through PROJ, m. */
-  itrf: [914850.9978, -5528601.0481, 3035776.5248] as const,
+  /** In ITRF2020 at `COORDINATE_EPOCH`, carried by CCV6's NAD83(2011) velocity and through PROJ, m. */
+  itrf: [914851.0122, -5528601.0033, 3035776.5024] as const,
 } as const;
 
 /**
@@ -192,7 +194,7 @@ export function armFrames(itrf: Frame, angles: Readonly<ArmAngles>): ArmFrames {
   const pad = eastNorthUpFrame(PAD.name, itrf, Ellipsoid.WGS84, padPosition(), {
     accuracy: {
       byDefinition: true,
-      note: "exact by definition: the pad's frame is defined at NGS mark AK1155 on LC-39A's pad (its datasheet position and height, through PROJ to ITRF2020); not a survey of the pad",
+      note: "exact by definition: the pad's frame is defined at NGS mark AK1155 on LC-39A's pad (its datasheet's NAD83(1990) position taken as NAD83(2011), an identity PROJ states at 0.1 m (ESRI:108355), and its height; carried by CCV6's NAD83(2011) velocity and through PROJ to ITRF2020); not a survey of the pad. The pad point's own uncertainty, about 0.1 m, is outside the ±: AK1155's NAD83(1990) position is taken as NAD83(2011), an identity PROJ states at 0.1 m (ESRI:108355).",
     },
   });
   const [x, y, z] = GEOMETRY.base;
@@ -290,6 +292,16 @@ export function toolAccuracyByHand(angles: Readonly<ArmAngles>): {
     },
   };
 }
+
+/**
+ * What lies outside the answer's ±, said once wherever the ± is stated, in
+ * these words (Task 7b fix 2).
+ */
+export const PAD_OUTSIDE =
+  "The pad point's own uncertainty, about 0.1 m, is outside the ±: AK1155's NAD83(1990) position is taken as NAD83(2011), an identity PROJ states at 0.1 m (ESRI:108355).";
+
+/** The same, where a line has room for a few words (the globe's label, the legend). */
+export const PAD_OUTSIDE_SHORT = "pad point ±0.1 m outside";
 
 /** The station the tool is measured to (references.json `ngs-DI3564`). */
 export const MARK = {

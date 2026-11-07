@@ -63,7 +63,8 @@ import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import { createFrames } from "../../src/frames/frames.ts";
-import { framePoint } from "../../src/frames/local.ts";
+import { convertPoint, framePoint } from "../../src/frames/local.ts";
+import { measure } from "../../src/measure/measure.ts";
 import { pointAccuracy } from "../../src/frames/pointAccuracy.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import { EarthOrientationParameters } from "../../src/time/eop.ts";
@@ -316,7 +317,7 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
 });
 
 describe("the robot arm's pad and its walk (Task 7b fix 1)", () => {
-  it("pins the pad at AK1155's datasheet position and height through PROJ to ITRF2020, within 1 mm", async () => {
+  it("pins the pad at AK1155's datasheet position and height, carried by CCV6's velocity and through PROJ to ITRF2020 (the station's path), within 1 mm", async () => {
     const pad = (
       references.entries as unknown as Record<
         string,
@@ -350,7 +351,21 @@ describe("the robot arm's pad and its walk (Task 7b fix 1)", () => {
       },
       "EPSG:9988",
     );
-    const itrf = op.forward([dms(pad.longitude), dms(pad.latitude), h]);
+    // The station's path: carried from 2010.0 by CCV6's NAD83(2011)
+    // velocity (borrowed), then PROJ at the coordinate epoch.
+    const v = (
+      references.entries as unknown as Record<
+        string,
+        { nad83: { velocity: { vx: string; vy: string; vz: string } } }
+      >
+    )["ngs-DI3564"]!.nad83.velocity;
+    const years = COORDINATE_EPOCH - 2010;
+    const at = op.forward([dms(pad.longitude), dms(pad.latitude), h]);
+    const itrf = [
+      at[0]! + Number(v.vx) * years,
+      at[1]! + Number(v.vy) * years,
+      at[2]! + Number(v.vz) * years,
+    ];
     expect(dist(itrf, PAD.itrf)).toBeLessThan(0.001);
   }, 120_000);
 
@@ -390,10 +405,46 @@ describe("the robot arm's pad and its walk (Task 7b fix 1)", () => {
     const pad = v.zeroAtOrigin.find((z) => z.edge === PAD.name)!;
     expect(pad.why).toMatch(/exact by definition/);
     expect(v.zeroAtOrigin.map((z) => z.edge)).toEqual([PAD.name]);
-    // Against GCRF the ITRF edge's angular term joins, at the tool's lever.
+    // Against GCRF the built-in part is accuracyOf's for the tool's place
+    // in ITRF (its ITRF lever is ρ, as every other node's), root-sum-square
+    // with the arm's stated part.
     const g = composedView(tree, frames, instant, "GCRF", ARM.tool)!;
-    expect(g.termEdges.flat()).toContain("ITRF");
-    expect(g.statement.meters!).toBeGreaterThan(tool.meters!);
+    const at = convertPoint(
+      framePoint(arm.tool, [0, 0, 0], instant),
+      frames.itrf,
+    );
+    const builtIn = measure(
+      at,
+      framePoint(frames.gcrf, [0, 0, 0], instant),
+      instant,
+      frames,
+    ).accuracy;
+    const eo = g.statement.terms.findIndex(
+      (t) => t.source === "earthOrientation",
+    );
+    expect(g.termEdges[eo]).toEqual(["ITRF"]);
+    expect(g.statement.terms[eo]!.meters).toBe(
+      builtIn.terms.find((t) => t.source === "earthOrientation")!.meters,
+    );
+    expect(g.statement.meters).toBeCloseTo(
+      Math.hypot(tool.meters!, builtIn.meters!),
+      15,
+    );
+    // Against ICRF: not bounded exactly when ITRF's own walk is, with its
+    // reason; never a bounded overclaim.
+    for (const r of ["GCRF", "ICRF"] as const) {
+      const toolView = composedView(tree, frames, instant, r, ARM.tool)!;
+      const itrfView = composedView(tree, frames, instant, r, "ITRF")!;
+      expect(toolView.statement.meters === undefined, r).toBe(
+        itrfView.statement.meters === undefined,
+      );
+      if (itrfView.statement.meters === undefined) {
+        expect(toolView.note).toBe(itrfView.note);
+      }
+    }
+    expect(
+      composedView(tree, frames, instant, "ICRF", ARM.tool)!.statement.meters,
+    ).toBeUndefined();
   }, 120_000);
 });
 
