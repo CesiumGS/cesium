@@ -131,7 +131,7 @@ describe("the portfolio (call 19)", () => {
       "6677+6695",
       "28992+5709",
       "32737+5773",
-      "2223+8228",
+      "6405+8228",
       "9488+9471",
     ]);
   });
@@ -226,7 +226,7 @@ describe("the pinned GEOID18 pipelines", () => {
   const cases = [
     ["the corridor", corridorFrame(), CORRIDOR_PIPELINE, 2.015],
     ["the site-grid building", SITE_BUILDING.frame, CORRIDOR_PIPELINE, 2.015],
-    ["Phoenix", phoenix.frame, PHOENIX_PIPELINE, 2.115],
+    ["Phoenix", phoenix.frame, PHOENIX_PIPELINE, 2.015],
   ] as const;
   for (const [what, frame, pinned, accuracy] of cases) {
     it(`${what}: pins PROJ's own GEOID18 operation within its area, which PROJ ranks behind a superseded geoid`, async () => {
@@ -242,8 +242,33 @@ describe("the pinned GEOID18 pipelines", () => {
       expect(candidates[0]!.gridsNeeded.some((g) => /g1999u0/.test(g))).toBe(
         true,
       );
+      // The pin matches that candidate, so the frame keeps PROJ's stated
+      // accuracy for it, and names it.
+      const loaded = await EngineeringFrame.load(frame, {
+        proj: P,
+        grids: (await setup()).source,
+      });
+      expect(loaded.operation.accuracy).toBe(accuracy);
+      expect(loaded.operation.matchedCandidate).toBe(geoid18!.name);
     });
   }
+
+  it("a hand-edited pin that matches no candidate states no accuracy", async () => {
+    const { P, source } = await setup();
+    // Equivalent in effect (a no-op step), but not one of PROJ's strings.
+    const edited = CORRIDOR_PIPELINE.replace(
+      " +step +proj=unitconvert +xy_in=rad",
+      " +step +proj=noop +step +proj=unitconvert +xy_in=rad",
+    );
+    expect(edited).not.toBe(CORRIDOR_PIPELINE);
+    const frame = await EngineeringFrame.load(
+      { ...corridorFrame(), pipeline: edited },
+      { proj: P, grids: source },
+    );
+    expect(frame.operation.pipeline).toBe(edited);
+    expect(frame.operation.accuracy).toBeUndefined();
+    expect(frame.operation.matchedCandidate).toBeUndefined();
+  });
 });
 
 describe("setup's portfolio grid set", () => {

@@ -62,7 +62,7 @@ One line each: what was chosen, then what undoing it costs.
 13. **A rigid tileset uses the standard root `transform`, equal to `RigidPlacement.matrix`.** The reader checks the declared anchor against that transform and refuses a mismatch. A reprojected tileset is plain Earth-fixed tiles. Both are readable by any 3D Tiles 1.1 viewer. *Undo:* the generator and one check.
 14. **PROJ loads on `georeferenceTileset()`,** not on `Tileset3D.load`, which only parses the declaration. *Undo:* one call site.
 15. **Ready for the morph.** The generator writes the rigid and reprojected tilesets with identical tile trees and vertex order, and a test pins it, so plan 5 can pair the vertices. No dual-position attribute is written. *Undo:* the generator.
-16. **The corridor is in EPSG:6420+6360** (NAD83(2011) / California zone 3 in US survey feet, with NAVD88 heights in US survey feet, through GEOID18). It runs 164,042 ftUS from (6,080,000, 2,110,000) at azimuth 100°, with three spiralled curves and a bridge at stations 600+00 to 612+00 (Task 12). Its frame pins GEOID18's operation (`CORRIDOR_PIPELINE`, 2026-11-07, owner's call): PROJ ranks NADCON5 with GEOID99 or GEOID03 (stated ±1.14 m) ahead of GEOID18 (±2.015 m), and those geoids are superseded for NAVD88. A pinned operation states no accuracy. *Undo:* edit the data file and regenerate; drop the pin.
+16. **The corridor is in EPSG:6420+6360** (NAD83(2011) / California zone 3 in US survey feet, with NAVD88 heights in US survey feet, through GEOID18). It runs 164,042 ftUS from (6,080,000, 2,110,000) at azimuth 100°, with three spiralled curves and a bridge at stations 600+00 to 612+00 (Task 12). Its frame pins GEOID18's operation (`CORRIDOR_PIPELINE`, 2026-11-07, owner's call): PROJ ranks NADCON5 with GEOID99 or GEOID03 (stated ±1.14 m) ahead of GEOID18 (±2.015 m), and those geoids are superseded for NAVD88. A pin that matches one of PROJ's candidates keeps that candidate's stated accuracy (`matchedCandidate`); one that matches none states none. *Undo:* edit the data file and regenerate; drop the pin.
 17. **Tessellation.** The leaf chord error is at most 0.003 ftUS (about 0.9 mm), on 2,000 ft leaf tiles, with parents decimated 2× per level. A tile's `geometricError` is the snap tolerance it states. *Undo:* generator parameters.
 18. **Client snapping needs `retainGeometry: true` on the tileset** (CPU copies of the loaded tiles). It snaps to the hit draw's vertices first, then its edges, then the surface. *Undo:* one option; a GPU route could replace it later.
 19. **The portfolio** (Task 12):
@@ -71,7 +71,7 @@ One line each: what was chosen, then what undoing it costs.
     - Tokyo: 6677+6695, JPGEO2024 (PROJ ranks it ahead of GSIGEO2011; Task 9, 2026-11-07), whose axes are northing first;
     - Amsterdam: 28992+5709, RDNAPTRANS;
     - Nairobi: 32737+5773, EGM96;
-    - Phoenix: 2223+8228, international feet with NAVD88 in feet, pinned to GEOID18 with NADCON5 to NAD83(2011) (`PHOENIX_PIPELINE`; PROJ's first choice reads GEOID99);
+    - Phoenix: 6405+8228, NAD83(2011) / Arizona Central in international feet with NAVD88 in feet, pinned to GEOID18 (`PHOENIX_PIPELINE`; PROJ's first choice reads GEOID99). It was 2223+8228 (the original NAD83) until 2026-11-07;
     - Jakarta: 9488+9471 (SRGI2013 / UTM zone 48S with INAGeoid2020 v1 heights), whose grid `INAGEOID2020v1.gtx` isn't in PROJ-data, so it uses the EGM96 fallback. It replaced São Paulo: `proj.db` 9.7.1 has no Brazilian vertical CRS;
     - the corridor's site-grid building, which is the local grid.
 

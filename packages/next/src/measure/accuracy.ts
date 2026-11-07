@@ -197,8 +197,12 @@ function projectionTerm(
   const grids =
     operation.grids.length > 0 ? operation.grids.join(", ") : "no grids";
   const known = !operation.ballpark && operation.accuracy !== undefined;
+  const matched =
+    known && operation.matchedCandidate !== undefined
+      ? `; pinned: the accuracy PROJ states for the candidate it matches, "${operation.matchedCandidate}"`
+      : "";
   const parts = [
-    `End ${end}: engineering frame "${frame.definition.name}": PROJ operation (${grids})${operation.ballpark ? ", a ballpark operation" : ""}${known ? "" : "; its accuracy is not known"}`,
+    `End ${end}: engineering frame "${frame.definition.name}": PROJ operation (${grids})${operation.ballpark ? ", a ballpark operation" : ""}${known ? "" : "; its accuracy is not known"}${matched}`,
   ];
   if (fallback !== undefined) {
     parts.push(

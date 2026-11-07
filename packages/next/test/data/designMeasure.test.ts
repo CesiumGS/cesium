@@ -191,10 +191,9 @@ describe("measure in design terms", () => {
     expect(terms[1]!.note).toContain("End b");
   });
 
-  it("leaves meters undefined when the operation's accuracy is unknown (a pinned pipeline)", async () => {
+  it("keeps PROJ's stated accuracy for a pinned pipeline that matches its candidate, and says so", async () => {
     const P = await loadProj({ base });
     const known = await frame();
-    expect(known.operation.accuracy).toBeDefined();
     const f = EngineeringFrame.create(
       {
         name: "pinned",
@@ -204,7 +203,40 @@ describe("measure in design terms", () => {
       },
       P,
     );
+    expect(f.operation.accuracy).toBe(known.operation.accuracy);
+    expect(f.operation.matchedCandidate).toMatch(
+      /NAD83\(2011\) to NAVD88 height \(3\)/,
+    );
+    const m = measure(
+      designPoint(f, [6_561_666, 1_640_416, 0]),
+      designPoint(f, [6_561_866, 1_640_416, 0]),
+      instant,
+      frames,
+    );
+    const terms = m.accuracy.terms.filter((t) => t.source === "projection");
+    expect(terms[0]!.meters).toBe(2.015);
+    expect(terms[0]!.note).toMatch(
+      /pinned: the accuracy PROJ states for the candidate it matches/,
+    );
+    expect(m.accuracy.meters).toBeDefined();
+  });
+
+  it("leaves meters undefined when the operation's accuracy is unknown (a pinned pipeline that matches no candidate)", async () => {
+    const P = await loadProj({ base });
+    const known = await frame();
+    expect(known.operation.accuracy).toBeDefined();
+    const f = EngineeringFrame.create(
+      {
+        name: "pinned",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+        // A no-op step: the same effect, but not PROJ's string.
+        pipeline: `${known.operation.pipeline} +step +proj=noop`,
+      },
+      P,
+    );
     expect(f.operation.accuracy).toBeUndefined();
+    expect(f.operation.matchedCandidate).toBeUndefined();
     expect(f.operation.ballpark).toBe(false);
     const m = measure(
       designPoint(f, [6_561_666, 1_640_416, 0]),

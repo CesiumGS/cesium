@@ -14,10 +14,8 @@ export const GRID_SETS = {
   // Nairobi, and Jakarta's fallback: EGM96. NAVD88 heights read GEOID18,
   // NGS's current model, through a pinned pipeline wherever PROJ ranks a
   // superseded geoid ahead of it: the corridor and its site-grid building
-  // (EPSG:6420+6360) read GEOID18 alone (PROJ's best, 1.14 m, is NADCON5
-  // with GEOID99); Phoenix (EPSG:2223+8228) reads GEOID18 and NADCON5 from
-  // NAD83 (1986) to NAD83(2011) (PROJ's best within its area, 1.1 m, is
-  // Arizona's HPGN with GEOID99's tile 6).
+  // (EPSG:6420+6360) and Phoenix (EPSG:6405+8228) read GEOID18 alone
+  // (PROJ's best for each, 1.14 m, is NADCON5 with GEOID99).
   portfolio: [
     "uk_os_OSTN15_NTv2_OSGBtoETRS.tif",
     "uk_os_OSGM15_GB.tif",
@@ -27,10 +25,6 @@ export const GRID_SETS = {
     "nl_nsgi_nlgeo2018.tif",
     "us_nga_egm96_15.tif",
     "us_noaa_g2018u0.tif",
-    "us_noaa_nadcon5_nad83_1986_nad83_harn_conus.tif",
-    "us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif",
-    "us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif",
-    "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
   ],
   // The grids the data tests use. EPSG:26741 (California CS27 zone I) to
   // WGS 84: PROJ's best candidate (2.15 m, NAD27 to NAD83 (1) + NAD83 to

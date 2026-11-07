@@ -64,17 +64,16 @@ const EGM96_GRID = "us_nga_egm96_15.tif";
 const GEOID18_GRID = "us_noaa_g2018u0.tif";
 
 /**
- * NAD83 / Arizona Central (ft) + NAVD88 height (ft), EPSG:2223+8228, to WGS 84
- * (EPSG:4979) through GEOID18: PROJ's "Inverse of SPCS83 Arizona Central zone
- * (international foot) + NAD83 to NAD83(2011) (NADCON5, CONUS) + Conversion
- * from NAVD88 height (ft) to NAVD88 height + Inverse of NAD83(2011) to NAVD88
- * height (3) + NAD83(2011) to WGS 84 (1)", stated ±2.115 m, as proj.db 9.7.1
- * writes it within the Phoenix site's area (recorded 2026-11-07). GEOID18 is
- * defined on NAD83(2011), so NADCON5 first carries the position there from
- * NAD83 (1986) through HARN, FBN and NSRS2007.
+ * NAD83(2011) / Arizona Central (ft) + NAVD88 height (ft), EPSG:6405+8228, to
+ * WGS 84 (EPSG:4979) through GEOID18: PROJ's "Inverse of SPCS83 Arizona
+ * Central zone (international foot) + Conversion from NAVD88 height (ft) to
+ * NAVD88 height + Inverse of NAD83(2011) to NAVD88 height (3) + NAD83(2011)
+ * to WGS 84 (1)", stated ±2.015 m, as proj.db 9.7.1 writes it within the
+ * Phoenix site's area (recorded 2026-11-07). GEOID18 is defined on
+ * NAD83(2011), the CRS's own datum, so no horizontal grid is needed.
  */
 export const PHOENIX_PIPELINE =
-  "+proj=pipeline +step +proj=unitconvert +xy_in=ft +xy_out=m +step +inv +proj=tmerc +lat_0=31 +lon_0=-111.916666666667 +k=0.9999 +x_0=213360 +y_0=0 +ellps=GRS80 +step +proj=gridshift +grids=us_noaa_nadcon5_nad83_1986_nad83_harn_conus.tif +step +proj=gridshift +no_z_transform +grids=us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif +step +proj=gridshift +no_z_transform +grids=us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif +step +proj=gridshift +no_z_transform +grids=us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif +step +proj=unitconvert +z_in=ft +z_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg";
+  "+proj=pipeline +step +proj=unitconvert +xy_in=ft +xy_out=m +step +inv +proj=tmerc +lat_0=31 +lon_0=-111.916666666667 +k=0.9999 +x_0=213360 +y_0=0 +ellps=GRS80 +step +proj=unitconvert +z_in=ft +z_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg";
 
 /**
  * The site-grid building: 200 × 120 ftUS, three stories of 13 ft, on a site
@@ -201,13 +200,17 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
   {
     id: "phoenix",
     name: "Phoenix site",
-    place: "Tempe, Phoenix metro, Arizona, on the zone's central meridian",
+    place:
+      "Tempe, Phoenix metro, Arizona, on the zone's central meridian; in international feet, where the corridor is in US survey feet",
     frame: {
       name: "Phoenix site",
       body: EARTH,
-      // NAD83 / Arizona Central (ft) + NAVD88 height (ft), both in
-      // international feet.
-      crs: wkid(2223, 8228),
+      // NAD83(2011) / Arizona Central (ft) + NAVD88 height (ft), both in
+      // international feet (0.3048 m), a contrast with California's US
+      // survey feet. NAD83(2011), not the original NAD83 of EPSG:2223: what
+      // a contemporary Arizona project uses. The same projection, so the
+      // same origin.
+      crs: wkid(6405, 8228),
       pipeline: PHOENIX_PIPELINE,
       areaOfInterest: around(-111.917, 33.419),
     },
@@ -216,17 +219,10 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     origin: [700_000, 880_000, 1_160],
     model: { width: 180, depth: 140, stories: 4, storyHeight: 13 },
     // Pinned to GEOID18 (`PHOENIX_PIPELINE`), as the California frames
-    // are: PROJ's best candidate within the area, 1.1 m, is Arizona's HPGN
-    // grid with GEOID99's tile 6, a superseded NAVD88 geoid, ranked ahead of
-    // NADCON5 with GEOID03 (1.14 m) and the GEOID18 operation (2.115 m) by
-    // stated accuracy. GEOID18 and NADCON5 from NAD83 (1986) to NAD83(2011).
-    grids: [
-      GEOID18_GRID,
-      "us_noaa_nadcon5_nad83_1986_nad83_harn_conus.tif",
-      "us_noaa_nadcon5_nad83_harn_nad83_fbn_conus.tif",
-      "us_noaa_nadcon5_nad83_fbn_nad83_2007_conus.tif",
-      "us_noaa_nadcon5_nad83_2007_nad83_2011_conus.tif",
-    ],
+    // are: PROJ's best candidate within the area, 1.14 m, is NADCON5 back
+    // to NAD83(HARN) with GEOID99's tile 6, a superseded NAVD88 geoid,
+    // ranked ahead of the GEOID18 operation (2.015 m) by stated accuracy.
+    grids: [GEOID18_GRID],
   },
   {
     id: "jakarta",

@@ -124,8 +124,19 @@ export interface CrsUnits {
 export interface RecordedOperation {
   /** The PROJ pipeline string, identical for both directions. */
   readonly pipeline: string;
-  /** PROJ's stated accuracy in metres; undefined when PROJ reports none. */
+  /**
+   * PROJ's stated accuracy in metres; undefined when PROJ reports none. For
+   * a pinned pipeline, the figure PROJ states for the listed candidate it
+   * matches (`matchedCandidate`); undefined when it matches none.
+   */
   readonly accuracy: number | undefined;
+  /**
+   * A pinned pipeline only: PROJ's name for the candidate, among those it
+   * lists for the pair (within the area of interest), that the pin is
+   * equivalent to (`formatPipeline(parsePipeline(...))` of both are equal).
+   * `accuracy` is that candidate's stated one. Absent when nothing matches.
+   */
+  readonly matchedCandidate?: string;
   /** Grid files the operation reads (all required ones loaded when it was resolved; a pinned pipeline may also list optional ones that are not). */
   readonly grids: readonly string[];
   /**
@@ -398,6 +409,7 @@ function record(
   ballpark: boolean,
   betterCandidates: readonly BetterCandidate[],
   epoch: number,
+  matchedCandidate?: string,
 ): RecordedOperation {
   const operation = fixed(proj, pipeline);
   const forward = transformer(proj, operation, proj.PJ_FWD, epoch);
@@ -410,6 +422,7 @@ function record(
     missingOptionalGrids: optionalGrids.filter((name) => !loaded.has(name)),
     ballpark,
     betterCandidates,
+    ...(matchedCandidate !== undefined && { matchedCandidate }),
     forward,
     inverse: refinedInverse(
       forward,
@@ -601,6 +614,63 @@ function candidateList(
   }
 }
 
+/**
+ * The accurate (non-ballpark) candidate PROJ lists from `source` to
+ * `target` whose PROJ string, normalized for visualization and then
+ * `formatPipeline(parsePipeline(...))`, equals `normalized`: its name and
+ * stated accuracy (undefined when it states none). Undefined when none
+ * matches, or PROJ lists none (a pair it can't relate, or a CRS it can't
+ * create: the pin itself still stands).
+ */
+function matchingCandidate(
+  proj: ProjApi,
+  source: CrsRef,
+  target: string,
+  normalized: string,
+  areaOfInterest: AreaOfInterest | undefined,
+): { readonly name: string; readonly accuracy?: number } | undefined {
+  const same = (string: string) => {
+    try {
+      return formatPipeline(parsePipeline(string)) === normalized;
+    } catch {
+      return false;
+    }
+  };
+  try {
+    return quietly(proj, () => {
+      const { candidates } = candidateList(
+        proj,
+        source,
+        target,
+        areaOfInterest,
+      );
+      const count = candidates?.length() ?? 0;
+      for (let i = 0; i < count; i++) {
+        const candidate = candidates!.get(i);
+        if (isBallpark(proj, candidate)) {
+          continue;
+        }
+        const string = proj.proj_as_proj_string(
+          proj.proj_normalize_for_visualization(candidate),
+          proj.PJ_PROJ_5,
+        );
+        if (string !== null && same(string)) {
+          const stated = proj.proj_coordoperation_get_accuracy(candidate);
+          return {
+            name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
+            ...(stated >= 0 && { accuracy: stated }),
+          };
+        }
+      }
+      return undefined;
+    });
+  } catch {
+    // A CRS PROJ can't create, an invalid area, or a PROJ without the
+    // listing calls: no candidate to match.
+    return undefined;
+  }
+}
+
 /** PROJ names a ballpark transformation (datum differences ignored) "Ballpark ...". */
 function isBallpark(proj: ProjApi, candidate: PJ): boolean {
   return /ballpark/i.test(proj.proj_get_name(candidate) ?? "");
@@ -610,8 +680,12 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  * Resolves the operation from `source` to `target` (a PROJ code such as
  * "EPSG:4979", or WKT2) once, as plan 4a R2 requires.
  *
- *  - With `options.pipeline` the string is used as is; its accuracy is unknown
- *    (undefined) and it is not marked ballpark. It throws if a grid it names is
+ *  - With `options.pipeline` the string is used as is, and it is not marked
+ *    ballpark. If it is equivalent to one of the accurate (non-ballpark)
+ *    candidates PROJ lists for the pair (within `options.areaOfInterest`),
+ *    compared as `formatPipeline(parsePipeline(...))`, it records that
+ *    candidate's name (`matchedCandidate`) and stated accuracy; otherwise
+ *    its accuracy is unknown (undefined). It throws if a grid it names is
  *    missing.
  *  - Otherwise PROJ's candidate list for the pair (within
  *    `options.areaOfInterest`, when given) is walked in PROJ's order with
@@ -646,9 +720,9 @@ export function resolveOperation(
     // canonicalized: recorded pinned strings must stay byte-identical.
     const text =
       typeof pipeline === "string" ? pipeline : formatPipeline(pipeline);
-    const named = pipelineGrids(
-      typeof pipeline === "string" ? parsePipeline(pipeline) : pipeline,
-    );
+    const structured =
+      typeof pipeline === "string" ? parsePipeline(pipeline) : pipeline;
+    const named = pipelineGrids(structured);
     const grids = [...new Set(named.map((grid) => grid.name))];
     const optionalGrids = grids.filter((name) =>
       named.every((grid) => grid.name !== name || grid.optional),
@@ -662,16 +736,24 @@ export function resolveOperation(
         `The pinned PROJ pipeline needs ${listed(lacking)}, which ${lacking.length === 1 ? "is" : "are"} not loaded`,
       );
     }
+    const match = matchingCandidate(
+      proj,
+      source,
+      target,
+      formatPipeline(structured),
+      areaOfInterest,
+    );
     try {
       return record(
         proj,
         text,
-        undefined,
+        match?.accuracy,
         grids,
         optionalGrids,
         false,
         [],
         epoch,
+        match?.name,
       );
     } catch (error) {
       const needs = grids.length > 0 ? `; it needs ${listed(grids)}` : "";
