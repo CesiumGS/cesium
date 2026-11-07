@@ -23,14 +23,15 @@
 // https://epsg.org/terms-of-use.html); each grid carries its own, from the
 // catalog's copyright_and_licenses.csv (GridCatalog.credit).
 import { readWithProgress, type LoadProgress } from "../io/readWithProgress.ts";
-import { sha256Hex } from "../io/sha256.ts";
 import { GridCatalog, type GridEntry } from "./gridCatalog.ts";
 import type { ProjApi } from "./projApi.ts";
+import { checkGrid, verify } from "./projCheck.ts";
 import {
   isNode,
   loadNodeProj,
   manifestGridNames,
   readNodeFile,
+  RESERVED_NAMES,
   stageNodeGrid,
   type ProjPins,
 } from "./projNode.ts";
@@ -166,20 +167,6 @@ async function fetchBuffer(
     response,
     onProgress && ((received, total) => onProgress(name, received, total)),
   );
-}
-
-/** Throws unless `bytes` hash to `expected`, naming the file and both hashes. */
-async function verify(
-  name: string,
-  bytes: ArrayBuffer | Uint8Array,
-  expected: string,
-): Promise<void> {
-  const actual = await sha256Hex(bytes);
-  if (actual !== expected) {
-    throw new Error(
-      `PROJ: ${name} SHA-256 mismatch (expected ${expected}, got ${actual})`,
-    );
-  }
 }
 
 /** Fetches one of PROJ's pinned files and checks it against its pin. */
@@ -346,7 +333,7 @@ async function readVerified(
  * and `copyright_and_licenses.csv`, read from `base` and checked against
  * `PROJ_DATA_CATALOG` (or the given hashes) before they are parsed. Rejects,
  * naming the file and both hashes, on a mismatch. Memoized per base (and
- * hashes); a refused read isn't remembered.
+ * hashes); a refused read isn't remembered. Every refusal is a rejection.
  */
 export function gridSource(options: GridSourceOptions): Promise<GridSource> {
   const base = withSlash(options.base);
@@ -355,8 +342,10 @@ export function gridSource(options: GridSourceOptions): Promise<GridSource> {
     options.version !== PROJ_DATA_CATALOG.version &&
     options.catalogSha256 === undefined
   ) {
-    throw new TypeError(
-      `gridSource: a version (${options.version}) goes with the catalogSha256 of that version's catalog`,
+    return Promise.reject(
+      new TypeError(
+        `gridSource: a version (${options.version}) goes with the catalogSha256 of that version's catalog`,
+      ),
     );
   }
   const catalogSha256 =
@@ -430,19 +419,6 @@ const newGridState = (
 });
 
 /**
- * Throws unless `bytes` are `entry`'s: its length, then its SHA-256. Both
- * errors name the file and both hashes (Review Focus 2).
- */
-async function checkGrid(entry: GridEntry, bytes: Uint8Array): Promise<void> {
-  if (bytes.byteLength !== entry.bytes) {
-    throw new Error(
-      `PROJ: ${entry.name} is ${bytes.byteLength} bytes, not the catalog's ${entry.bytes} (SHA-256 expected ${entry.sha256}, got ${await sha256Hex(bytes)})`,
-    );
-  }
-  await verify(entry.name, bytes, entry.sha256);
-}
-
-/**
  * Reports a grid's progress, and stops the read once it has more bytes than
  * the catalog's size: nothing larger is held.
  */
@@ -463,6 +439,13 @@ function gridEntry(source: GridSource, name: string): GridEntry {
   if (!/^[A-Za-z0-9_][\w.-]*$/.test(name)) {
     throw new Error(
       `PROJ: ${JSON.stringify(name)} is not a plain grid file name`,
+    );
+  }
+  // PROJ's own files, the staging directory's and the catalog's: a catalog
+  // (an overridden one, say) listing one of these can't put a grid over it.
+  if (RESERVED_NAMES.has(name) || name.endsWith(".partial")) {
+    throw new Error(
+      `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`,
     );
   }
   const entry = source.catalog.get(name);

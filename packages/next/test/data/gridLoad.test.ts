@@ -10,6 +10,7 @@
 // and its one-base-per-process rule is per file.
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   mkdtempSync,
   readdirSync,
@@ -28,6 +29,7 @@ import {
   loadGrids,
   loadProj,
 } from "../../src/engineering/proj.ts";
+import { sha256Hex } from "../../src/io/sha256.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 const grids = `${join(framesDataDirectory(), "grids")}/`;
@@ -119,5 +121,45 @@ describe("one explicit grid set (Node)", () => {
       WGS84_3D,
     ).flatMap((c) => c.missingGrids);
     expect(navd88).toContain(GEOID18);
+  });
+
+  it("refuses a grid whose bytes don't match the catalog, leaving nothing staged or loaded (Review Focus 2)", async () => {
+    const P = await loadProj({ base, grids: [] });
+    const CONUS = "us_noaa_conus.tif";
+    // A grid source of the real catalog, with a corrupted copy of a grid.
+    const dir = mkdtempSync(join(tmpdir(), "frames-bad-grids-"));
+    try {
+      for (const name of ["files.geojson", "copyright_and_licenses.csv"]) {
+        copyFileSync(join(grids, name), join(dir, name));
+      }
+      const good = readFileSync(join(grids, CONUS));
+      const bad = Uint8Array.from(good);
+      bad[bad.length >> 1]! ^= 0xff;
+      writeFileSync(join(dir, CONUS), bad);
+      const source = await gridSource({ base: dir });
+      const expected = source.catalog.get(CONUS)!.sha256;
+      await expect(loadGrids(P, source, [CONUS])).rejects.toThrow(
+        `PROJ: ${CONUS} SHA-256 mismatch (expected ${expected}, got ${await sha256Hex(bad)})`,
+      );
+      const staged = readdirSync(process.env.PROJ_DATA!);
+      expect(staged).not.toContain(CONUS);
+      expect(staged.filter((name) => name.endsWith(".partial"))).toEqual([]);
+      expect(loadedGrids(P).has(CONUS)).toBe(false);
+      expect(P.proj_grid_info(CONUS).filename).toBe("");
+      // Truncated, too.
+      writeFileSync(join(dir, CONUS), good.subarray(0, 1000));
+      await expect(loadGrids(P, source, [CONUS])).rejects.toThrow(
+        new RegExp(
+          `^PROJ: ${CONUS.replace(/\./g, "\\.")} is 1000 bytes, not the catalog's`,
+        ),
+      );
+      expect(readdirSync(process.env.PROJ_DATA!)).not.toContain(CONUS);
+      // The right bytes load on a retry.
+      writeFileSync(join(dir, CONUS), good);
+      await loadGrids(P, source, [CONUS]);
+      expect(loadedGrids(P).has(CONUS)).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

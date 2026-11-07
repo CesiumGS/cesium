@@ -20,13 +20,16 @@
 // grids). The directory is removed when the process exits normally. A killed
 // process (Vitest ends its forks that way) leaves it, so each directory holds
 // its process's pid (`owner`), and the next first load removes those whose
-// process has ended.
+// process has ended. The sweep reads only a real directory and a small
+// regular `owner`, both this user's, never through a symlink nor waiting on
+// a FIFO; anything else is left alone. The exit handler never throws (on
+// Windows the mapped binding can't be deleted), so the sweep is its fallback.
 //
 // Its own module, typed by the little of Node it uses, so the library's
 // declaration build (tsconfig.lib.json, browser types only) checks it without
 // Node's types.
-import { sha256Hex } from "../io/sha256.ts";
 import type { ProjApi } from "./projApi.ts";
+import { verify } from "./projCheck.ts";
 
 /**
  * The SHA-256 each of PROJ's own files must have (`PROJ_FILE_SHA256`, from
@@ -41,6 +44,8 @@ interface NodeProcess {
   readonly versions?: { readonly node?: string };
   readonly env: Record<string, string | undefined>;
   readonly pid: number;
+  /** POSIX only. */
+  getuid?(): number;
   on(event: "exit", listener: () => void): void;
   /** Signal 0 only: whether a process exists (it throws ESRCH if not). */
   kill(pid: number, signal: 0): boolean;
@@ -70,10 +75,35 @@ interface NodeFs {
     options: { recursive?: boolean; force: boolean },
   ): Promise<void>;
   access(path: string): Promise<void>;
+  lstat(path: string): Promise<NodeStats>;
+  open(path: string, flags: number): Promise<NodeFileHandle>;
   readonly constants: {
     readonly COPYFILE_EXCL: number;
     readonly COPYFILE_FICLONE: number;
+    readonly O_RDONLY: number;
+    /** POSIX only. */
+    readonly O_NOFOLLOW?: number;
+    /** POSIX only. */
+    readonly O_NONBLOCK?: number;
   };
+}
+
+interface NodeStats {
+  isDirectory(): boolean;
+  isFile(): boolean;
+  readonly uid: number;
+  readonly size: number;
+}
+
+interface NodeFileHandle {
+  stat(): Promise<NodeStats>;
+  read(
+    buffer: Uint8Array,
+    offset: number,
+    length: number,
+    position: number,
+  ): Promise<{ bytesRead: number }>;
+  close(): Promise<void>;
 }
 
 /** `node:fs`'s `rmSync`, for the exit handler. */
@@ -176,20 +206,6 @@ export async function manifestGridNames(base: string): Promise<string[]> {
   return names;
 }
 
-/** Throws unless `bytes` hash to `expected`, naming the file and both hashes. */
-async function verify(
-  name: string,
-  bytes: Uint8Array,
-  expected: string,
-): Promise<void> {
-  const actual = await sha256Hex(bytes);
-  if (actual !== expected) {
-    throw new Error(
-      `PROJ: ${name} SHA-256 mismatch (expected ${expected}, got ${actual})`,
-    );
-  }
-}
-
 /**
  * Copies `source` into `staging` as `<name>.partial`, passes the copy's bytes
  * to `check`, and renames it to `name` only if `check` resolves. On any
@@ -230,6 +246,22 @@ async function stage(
 /** Staging directories are `<tmpdir>/cesium-proj-XXXXXX`, each with an `owner`. */
 const STAGING_PREFIX = "cesium-proj-";
 const OWNER = "owner";
+/** A pid in decimal; an `owner` any larger isn't one of ours. */
+const MAX_OWNER_BYTES = 64;
+
+/**
+ * The names of PROJ's own files, the staging directory's and the catalog's:
+ * no grid may take one (`loadGrids` refuses them, and any `*.partial`).
+ */
+export const RESERVED_NAMES: ReadonlySet<string> = new Set([
+  "proj.db",
+  "proj_capi.node",
+  "proj_capi.mjs",
+  "proj_capi.wasm",
+  OWNER,
+  "files.geojson",
+  "copyright_and_licenses.csv",
+]);
 
 /** Whether process `pid` exists (one we may not signal exists too). */
 function alive(pid: number): boolean {
@@ -242,11 +274,50 @@ function alive(pid: number): boolean {
 }
 
 /**
- * Removes the staging directories in `tmp` whose owner process has ended.
- * Best effort: a directory with no readable `owner`, or one whose process
- * may still run, is left alone.
+ * The pid in `directory`'s `owner`, read only if the directory is a real one
+ * and `owner` a small regular file, both this user's (where Node knows the
+ * user): never through a symlink, never blocking on a FIFO or a device. Any
+ * other entry gives undefined.
  */
-async function sweepStaging(tmp: string): Promise<void> {
+async function ownerOf(directory: string): Promise<number | undefined> {
+  const fs = await nodeImport<NodeFs>("node:fs/promises");
+  const { join } = await nodeImport<NodePath>("node:path");
+  const uid = nodeProcess()!.getuid?.();
+  const ours = (stats: NodeStats) => uid === undefined || stats.uid === uid;
+  const listed = await fs.lstat(directory);
+  if (!listed.isDirectory() || !ours(listed)) {
+    return undefined;
+  }
+  const path = join(directory, OWNER);
+  const file = await fs.lstat(path);
+  if (!file.isFile() || !ours(file) || file.size > MAX_OWNER_BYTES) {
+    return undefined;
+  }
+  // Swapped for a symlink since: O_NOFOLLOW refuses it. For a FIFO:
+  // O_NONBLOCK opens without waiting, and the handle's own stat refuses it.
+  const { O_RDONLY, O_NOFOLLOW = 0, O_NONBLOCK = 0 } = fs.constants;
+  const handle = await fs.open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
+  try {
+    const opened = await handle.stat();
+    if (!opened.isFile() || !ours(opened)) {
+      return undefined;
+    }
+    const buffer = new Uint8Array(MAX_OWNER_BYTES);
+    const { bytesRead } = await handle.read(buffer, 0, MAX_OWNER_BYTES, 0);
+    const text = new TextDecoder().decode(buffer.subarray(0, bytesRead));
+    return /^\d+$/.test(text) ? Number(text) : undefined;
+  } finally {
+    await handle.close();
+  }
+}
+
+/**
+ * Removes the staging directories in `tmp` whose owner process has ended.
+ * Best effort, and silent: anything that isn't plainly one of ours (see
+ * ownerOf), or whose process may still run, is left alone. Exported for its
+ * tests.
+ */
+export async function sweepStaging(tmp: string): Promise<void> {
   const fs = await nodeImport<NodeFs>("node:fs/promises");
   const { join } = await nodeImport<NodePath>("node:path");
   let entries: string[];
@@ -261,17 +332,35 @@ async function sweepStaging(tmp: string): Promise<void> {
       .map(async (name) => {
         const directory = join(tmp, name);
         try {
-          const owner = await fs.readFile(join(directory, OWNER), "utf8");
-          const pid = /^\d+$/.test(owner) ? Number(owner) : 0;
-          if (pid > 0 && pid !== nodeProcess()!.pid && !alive(pid)) {
+          const pid = await ownerOf(directory);
+          if (
+            pid !== undefined &&
+            pid > 0 &&
+            pid !== nodeProcess()!.pid &&
+            !alive(pid)
+          ) {
             await fs.rm(directory, { recursive: true, force: true });
           }
         } catch {
-          // Not readable, or removed meanwhile by another process's sweep.
+          // Not ours to judge, or removed meanwhile by another sweep.
         }
       }),
   );
 }
+
+/**
+ * The exit handler that removes `staging`. It never throws, so it can't turn
+ * the exit code into 1: Windows refuses to delete the still-mapped binding,
+ * and a later sweep removes what is left. Exported for its tests.
+ */
+export const exitCleanup =
+  (staging: string, rmSync: NodeFsSync["rmSync"]) => (): void => {
+    try {
+      rmSync(staging, { recursive: true, force: true });
+    } catch {
+      // Left for the next process's sweep.
+    }
+  };
 
 let swept: Promise<void> | undefined;
 
@@ -345,23 +434,35 @@ export async function loadNodeProj(
       `PROJ: this process loaded PROJ from ${claimed.directory}; it can't also load ${directory} (PROJ_DATA names one directory per process)`,
     );
   }
+  const env = nodeProcess()!.env;
+  const previousData = env.PROJ_DATA;
   let api: ProjApi;
   try {
     // Read when the binding initializes, so it comes before the require.
-    nodeProcess()!.env.PROJ_DATA = staging;
+    env.PROJ_DATA = staging;
     const require = createRequire(import.meta.url);
-    api = require(join(staging, "proj_capi.node")) as ProjApi;
+    try {
+      api = require(join(staging, "proj_capi.node")) as ProjApi;
+    } catch (error) {
+      throw new Error(
+        `PROJ: the native binding couldn't load from ${staging} (if the temporary directory is mounted noexec, set TMPDIR to one that isn't)`,
+        { cause: error },
+      );
+    }
     // The binding reads PROJ_DATA when its context is first used, not when
     // it loads, so use it now.
     api.proj_create("EPSG:4326");
   } catch (error) {
+    if (previousData === undefined) {
+      delete env.PROJ_DATA;
+    } else {
+      env.PROJ_DATA = previousData;
+    }
     await discard();
     throw error;
   }
   claimed = { directory, proj: { api, staging } };
-  nodeProcess()!.on("exit", () =>
-    rmSync(staging, { recursive: true, force: true }),
-  );
+  nodeProcess()!.on("exit", exitCleanup(staging, rmSync));
   return claimed.proj;
 }
 

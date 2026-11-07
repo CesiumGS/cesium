@@ -257,7 +257,7 @@ describe("gridSource and loadGrids (browser path)", () => {
     });
 
     it("refuses a version without the catalog hash it belongs to", async () => {
-      expect(() => gridSource({ base, version: "9.9" })).toThrow(
+      await expect(gridSource({ base, version: "9.9" })).rejects.toThrow(
         /version.*catalogSha256/,
       );
     });
@@ -292,7 +292,7 @@ describe("gridSource and loadGrids (browser path)", () => {
 
     it.each([
       ["../proj.db", /not a plain grid file name/],
-      ["proj.db", /proj\.db is not in the PROJ-data .* catalog/],
+      ["proj.db", /proj\.db is the name of one of PROJ's own files/],
       ["nope.tif", /nope\.tif is not in the PROJ-data .* catalog/],
       ["old.tif", /old\.tif is marked removed/],
       ["https://example.com/g.tif", /not a plain grid file name/],
@@ -379,6 +379,55 @@ describe("gridSource and loadGrids (browser path)", () => {
       expect(calls.at(-1)).toEqual(["late.tif", 50, undefined]);
     });
 
+    it("refuses PROJ's own names, even from an overridden catalog that lists them", async () => {
+      const reserved = [
+        "proj.db",
+        "proj_capi.node",
+        "proj_capi.wasm",
+        "proj_capi.mjs",
+        "owner",
+        "files.geojson",
+        "copyright_and_licenses.csv",
+        "g.tif.partial",
+      ];
+      const bytes = filled(10, 9);
+      const listing = encode(
+        JSON.stringify({
+          type: "FeatureCollection",
+          features: reserved.map((name) => ({
+            type: "Feature",
+            properties: {
+              name,
+              url: `https://cdn.proj.org/${name}`,
+              sha256sum: "0".repeat(64),
+              file_size: bytes.length,
+              source: "Stub Agency",
+            },
+            geometry: null,
+          })),
+        }),
+      );
+      const other = `${base}other/`;
+      served["files.geojson"] = listing;
+      const P = await load();
+      const grids = await gridSource({
+        base: other,
+        catalogSha256: await sha256Hex(listing),
+        licensesSha256: catalogPins.licensesSha256,
+        version: "9.9",
+      });
+      expect(grids.catalog.get("proj.db")).toBeDefined();
+      urls.length = 0;
+      for (const name of reserved) {
+        await expect(loadGrids(P, grids, [name]), name).rejects.toThrow(
+          `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`,
+        );
+      }
+      expect(urls).toEqual([]);
+      expect(writes.filter(([path]) => path !== "/proj.db")).toEqual([]);
+      expect(writes.filter(([path]) => path === "/proj.db")).toHaveLength(1);
+    });
+
     it("refuses a grid PROJ finds anywhere but where it was written", async () => {
       const P = await load();
       const grids = await source();
@@ -458,6 +507,41 @@ describe("gridSource and loadGrids (browser path)", () => {
       const op = resolveOperation(P, ref, "EPSG:4979");
       expect(op.grids).toEqual(["g.tif"]);
       expect(op.accuracy).toBe(0.5);
+    });
+
+    it("tries the next candidate when one counted against PROJ's cached no still can't be created", async () => {
+      // Candidate 0 reads g.tif, which PROJ cached as unavailable; PROJ can't
+      // create its string even now. Candidate 1 needs no grid.
+      const api = stubApi() as unknown as Record<string, unknown>;
+      vi.stubGlobal("__api", {
+        ...api,
+        proj_create_operations: () => ({
+          length: () => 2,
+          get: (i: number) => ({ i }),
+        }),
+        proj_coordoperation_get_grid_used_count: (c: { i: number }) =>
+          c.i === 0 ? 1 : 0,
+        proj_coordoperation_is_instantiable: (c: { i: number }) => c.i === 1,
+        proj_as_proj_string: (o: { i?: number; def?: string }) =>
+          o.i !== undefined
+            ? `+proj=cand${o.i}`
+            : o.def === "+proj=cand0"
+              ? null
+              : (o.def ?? "+proj=noop"),
+        proj_create: (def: string) => ({ def }),
+        proj_get_name: (o: { i?: number; def?: string }) =>
+          o.def === "+proj=cand0" ? null : `Candidate ${o.i ?? o.def}`,
+      });
+      const P = await load();
+      await loadGrids(P, await source(), ["g.tif"]);
+      const ref = { format: "wkid", authority: "EPSG", wkid: 2227 } as const;
+      const [first, second] = listOperations(P, ref, ref);
+      expect(first!.missingGrids).toEqual([]);
+      expect(first!.instantiable).toBe(false);
+      expect(second!.instantiable).toBe(true);
+      expect(resolveOperation(P, ref, "EPSG:4979").pipeline).toBe(
+        "+proj=cand1",
+      );
     });
   });
 });

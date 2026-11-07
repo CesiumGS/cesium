@@ -332,10 +332,22 @@ interface CandidateGrids {
   /**
    * Whether PROJ can instantiate it: PROJ's answer, or yes when PROJ said no
    * only for want of grids loaded since it looked (its answer is cached).
-   * `resolveOperation` then creates its PROJ string, which throws if PROJ
-   * still can't.
    */
   readonly instantiable: boolean;
+  /**
+   * `instantiable` overrides PROJ's no: the candidate counts only once its
+   * PROJ string is created (`creatable`).
+   */
+  readonly rejudged: boolean;
+}
+
+/** Whether PROJ creates an operation from `string` now. */
+function creatable(proj: ProjApi, string: string): boolean {
+  try {
+    return exists(proj, proj.proj_create(string));
+  } catch {
+    return false;
+  }
 }
 
 function candidateGrids(
@@ -360,13 +372,9 @@ function candidateGrids(
       loadedSince = true;
     }
   }
-  return {
-    needed,
-    missing,
-    instantiable:
-      proj.proj_coordoperation_is_instantiable(candidate) ||
-      (loadedSince && missing.length === 0),
-  };
+  const projSays = proj.proj_coordoperation_is_instantiable(candidate);
+  const rejudged = !projSays && loadedSince && missing.length === 0;
+  return { needed, missing, instantiable: projSays || rejudged, rejudged };
 }
 
 /**
@@ -420,11 +428,13 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  *    (undefined) and it is not marked ballpark. It throws if a grid it names is
  *    missing.
  *  - Otherwise PROJ's candidate list for the pair (within
- *    `options.areaOfInterest`, when given) is walked in PROJ's order
- *    (by accuracy and area of use) and the first instantiable operation whose
- *    grids `loadGrids` has all loaded is taken, in its
- *    normalized-for-visualization form. A ballpark operation (PROJ names it "Ballpark ...") is taken only
- *    with `allowBallpark`, and then `accuracy` is undefined.
+ *    `options.areaOfInterest`, when given) is walked in PROJ's order (by
+ *    accuracy and area of use; PROJ's sort may still count a grid loaded
+ *    after it first looked as missing) and the first instantiable operation
+ *    whose grids `loadGrids` has all loaded is taken, in its
+ *    normalized-for-visualization form. A ballpark operation (PROJ names it
+ *    "Ballpark ...") is taken only with `allowBallpark`, and then `accuracy`
+ *    is undefined.
  *  - If none qualifies it throws, naming the grids the better candidates need.
  */
 export function resolveOperation(
@@ -475,6 +485,9 @@ export function resolveOperation(
     let skippedBallpark = false;
     // Candidates PROJ cannot express as a PROJ string, named in the final error.
     const noString: string[] = [];
+    // Candidates counted instantiable against PROJ's cached no that PROJ
+    // still can't create.
+    const notCreated: string[] = [];
     const count = candidates.length();
     for (let i = 0; i < count; i++) {
       const candidate = candidates.get(i);
@@ -498,6 +511,10 @@ export function resolveOperation(
         noString.push(proj.proj_get_name(candidate) ?? `candidate ${i}`);
         continue;
       }
+      if (grids.rejudged && !creatable(proj, string)) {
+        notCreated.push(proj.proj_get_name(candidate) ?? `candidate ${i}`);
+        continue;
+      }
       const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
       return {
         chosen: {
@@ -508,14 +525,14 @@ export function resolveOperation(
         },
       } as const;
     }
-    return { missing, skippedBallpark, noString } as const;
+    return { missing, skippedBallpark, noString, notCreated } as const;
   });
 
   if (walk.chosen) {
     const { string, accuracy, grids, ballpark } = walk.chosen;
     return record(proj, string, accuracy, grids, ballpark, epoch);
   }
-  const { missing, skippedBallpark, noString } = walk;
+  const { missing, skippedBallpark, noString, notCreated } = walk;
   if (missing.size > 0) {
     const hint = skippedBallpark
       ? "; pass allowBallpark: true to accept a ballpark transformation"
@@ -525,9 +542,12 @@ export function resolveOperation(
     );
   }
   const lacking =
-    noString.length > 0
+    (noString.length > 0
       ? `; ${named(noString)} could not be expressed as a PROJ string`
-      : "";
+      : "") +
+    (notCreated.length > 0
+      ? `; PROJ could not create ${named(notCreated)}`
+      : "");
   throw new Error(
     skippedBallpark
       ? `PROJ offers only a ballpark operation ${where}; pass allowBallpark: true to accept it${lacking}`
@@ -616,18 +636,21 @@ export function listOperations(
       const ballpark = isBallpark(proj, candidate);
       const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
       const area = areaOfUse(proj, candidate);
+      const pipeline =
+        proj.proj_as_proj_string(
+          proj.proj_normalize_for_visualization(candidate),
+          proj.PJ_PROJ_5,
+        ) ?? "";
       out.push({
         name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
-        pipeline:
-          proj.proj_as_proj_string(
-            proj.proj_normalize_for_visualization(candidate),
-            proj.PJ_PROJ_5,
-          ) ?? "",
+        pipeline,
         ...(!ballpark && accuracy >= 0 && { accuracy }),
         ...(area && { areaOfUse: area }),
         gridsNeeded: grids.needed,
         missingGrids: grids.missing,
-        instantiable: grids.instantiable,
+        instantiable: grids.rejudged
+          ? pipeline !== "" && creatable(proj, pipeline)
+          : grids.instantiable,
         ballpark,
       });
     }
