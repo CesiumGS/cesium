@@ -116,6 +116,7 @@ const isIdentity = (m: ArrayLike<number>) => {
  *    after (`root.transform` includes it, and a change would leave the
  *    placement no longer what is drawn);
  *  - a frame that doesn't load (`EngineeringFrame.load`'s error, shortened);
+ *  - a tileset destroyed while its frame loaded (an error only: no warning);
  *  - a rigid anchor the root transform disagrees with.
  */
 export async function georeferenceTileset(
@@ -186,7 +187,13 @@ export async function georeferenceTileset(
     );
   }
   // The load can take seconds (grids download): the application may have
-  // moved the tileset meanwhile.
+  // destroyed the tileset meanwhile (then nothing is placed or warned: it is
+  // gone), or moved it.
+  if (tileset.isDestroyed()) {
+    throw new Error(
+      `georeferenceTileset: ${tileset.url} was destroyed while its frame loaded`,
+    );
+  }
   if (!isIdentity(tileset.modelMatrix)) {
     return refuse(moved());
   }

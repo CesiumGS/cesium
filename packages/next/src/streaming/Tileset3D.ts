@@ -1646,6 +1646,11 @@ export class Tileset3D implements TileTree {
     }
   }
 
+  /** True once `destroy` has run (1.x `isDestroyed`). */
+  isDestroyed(): boolean {
+    return this.destroyed;
+  }
+
   /** Unloads all content. The tileset can't be used afterwards. */
   destroy(): void {
     for (const controller of this.loading.values()) {

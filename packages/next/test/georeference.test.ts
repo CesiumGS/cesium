@@ -291,7 +291,6 @@ describe("readGeoreference", () => {
         'PROJCRS["x",BASEGEOGCRS["y"] +nadgrids=@null]',
         'BOUNDCRS["x",REMARK["+nadgrids=conus"]]',
         'GEOGCRS["x" +towgs84=0,0,0]',
-        "  ",
       ]) {
         const e = failure(declaration(wkt2));
         expect(e.path).toBe(path);
@@ -302,7 +301,7 @@ describe("readGeoreference", () => {
       // whitespace; a "+" inside a quoted name, or before a digit, is no
       // PROJ parameter.
       for (const wkt2 of [
-        ' geogcrs ["WGS 84 + extras",ELLIPSOID["x",6378137,298.257223563]]',
+        'geogcrs ["WGS 84 + extras",ELLIPSOID["x",6378137,298.257223563]]',
         'GEOGRAPHICCRS("a ""quoted"" +b name",X[1E+3])',
         'COMPOUNDCRS["h + v",PROJCRS["h"],VERTCRS["v"]]',
       ]) {
@@ -310,6 +309,21 @@ describe("readGeoreference", () => {
           format: "wkt2",
           wkt2,
         });
+      }
+      // Stored trimmed: a BOM, NBSP or whitespace around it is gone, so the
+      // string checked is the string PROJ parses.
+      const wkt2 = 'GEOGCRS["x",ELLIPSOID["x",6378137,298.257223563]]';
+      for (const around of ["\uFEFF", "\u00A0", " \n\t"]) {
+        expect(
+          readGeoreference(tileset(declaration(`${around}${wkt2}${around}`)))!
+            .crs,
+        ).toEqual({ format: "wkt2", wkt2 });
+      }
+      // Nothing but white space is no WKT2 at all.
+      for (const blank of ["  ", "\uFEFF \u00A0"]) {
+        const e = failure(declaration(blank));
+        expect(e.path).toBe(path);
+        expect(e.message).toContain("non-empty string");
       }
     });
 

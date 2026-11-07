@@ -261,6 +261,27 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       }
     });
 
+    it("places nothing, and doesn't warn, when the tileset is destroyed while the frame loads", async () => {
+      const tileset = await load(declared());
+      const spy = vi
+        .spyOn(EngineeringFrame, "load")
+        .mockImplementation(async () => {
+          tileset.destroy();
+          return frame;
+        });
+      try {
+        expect(tileset.isDestroyed()).toBe(false);
+        await expect(
+          georeferenceTileset(tileset, { proj: {} as ProjApi }),
+        ).rejects.toThrow(/was destroyed while its frame loaded/);
+        expect(tileset.isDestroyed()).toBe(true);
+        expect(tileset.placement).toBeUndefined();
+        expect([...tileset.warnings]).toEqual([]);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
     it("refuses, and warns, when the frame doesn't load", async () => {
       const tileset = await load(declared());
       const spy = vi

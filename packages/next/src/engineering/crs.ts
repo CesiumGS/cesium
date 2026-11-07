@@ -268,6 +268,8 @@ export function crsObject(
  * take a PROJ string, AUTH:CODE or PROJJSON: for WKT from untrusted data,
  * checked before anything else uses it (`georeferenceTileset`). It must also
  * hold no PROJ-string token. Throws, naming `what` and PROJ's parse error.
+ * The PJ needs no proj_destroy: proj.js frees it when its wrapper is
+ * garbage-collected (see `creates` in proj.ts).
  */
 export function strictWkt2(
   proj: ProjApi,

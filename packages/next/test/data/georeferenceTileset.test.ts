@@ -66,6 +66,7 @@ function standIn(rootTransform: m4.Mat4, declaration: unknown): Tileset3D {
     modelMatrix: m4.mat4(),
     root: { transform: rootTransform },
     placement: undefined,
+    isDestroyed: () => false,
   } as unknown as Tileset3D;
 }
 
@@ -201,6 +202,20 @@ describe("a wkt2 CRS reference", () => {
     );
     expect(bad.placement).toBeUndefined();
     expect([...bad.warnings].join("\n")).toContain("strict WKT2");
+    // Text after a valid WKT2, with no "+" for the form check to see: PROJ's
+    // strict parser refuses it.
+    const trailing = declared(`${good} proj=utm zone=11 nadgrids=x.tif`);
+    await expect(georeferenceTileset(trailing, { proj })).rejects.toThrow(
+      /strict WKT2/,
+    );
+    expect(trailing.placement).toBeUndefined();
+    // A BOM-led WKT2 is stored trimmed by the reader, and places.
+    const bom = declared(`\uFEFF${good}`);
+    expect(bom.georeference!.crs).toEqual({
+      format: "wkt2",
+      wkt2: good.trim(),
+    });
+    expect((await georeferenceTileset(bom, { proj })).mode).toBe("reprojected");
     // PROJ's own WKT2 places.
     const placed = await georeferenceTileset(declared(good), { proj });
     expect(placed.mode).toBe("reprojected");

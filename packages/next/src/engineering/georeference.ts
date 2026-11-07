@@ -289,22 +289,32 @@ function readCrs(value: unknown, path: string): CrsRef {
   }
   const at = `${path}.extensions.${WKT2_EXTENSION}`;
   const companion = object(extensions[WKT2_EXTENSION], at);
-  const wkt2 = companion.wkt2;
-  if (typeof wkt2 !== "string" || wkt2.length === 0) {
+  const raw = companion.wkt2;
+  if (typeof raw !== "string") {
     throw new GeoreferenceError(
       `${at}.wkt2`,
-      `must be a non-empty string (got ${shown(wkt2)})`,
+      `must be a non-empty string (got ${shown(raw)})`,
     );
   }
-  if (wkt2.length > MAX_WKT2) {
+  if (raw.length > MAX_WKT2) {
     throw new GeoreferenceError(
       `${at}.wkt2`,
-      `is ${wkt2.length.toLocaleString("en-US")} characters; at most ${MAX_WKT2.toLocaleString("en-US")} are read`,
+      `is ${raw.length.toLocaleString("en-US")} characters; at most ${MAX_WKT2.toLocaleString("en-US")} are read`,
+    );
+  }
+  // Stored trimmed (a BOM, whitespace and NBSP are ECMAScript white space),
+  // so the string checked here is the string PROJ parses.
+  const wkt2 = raw.trim();
+  if (wkt2.length === 0) {
+    throw new GeoreferenceError(
+      `${at}.wkt2`,
+      `must be a non-empty string (got ${shown(raw)})`,
     );
   }
   // The draft's "MUST be a Well-Known Text (version 2) string": anything
   // else (a PROJ string, AUTH:CODE, PROJJSON) proj_create would also accept.
-  // EngineeringFrame then parses it with PROJ's strict WKT parser.
+  // georeferenceTileset then parses it with PROJ's strict WKT parser
+  // (strictWkt2).
   const problem = wkt2Problem(wkt2);
   if (problem !== undefined) {
     throw new GeoreferenceError(`${at}.wkt2`, problem);
