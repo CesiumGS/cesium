@@ -10,14 +10,14 @@
 //    the WebAssembly build for runtime Slang (CustomShader.fromSlang, Dyno's
 //    Slang playground).
 // Nothing here is committed: both live outside version control.
-// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050]
+// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
-import { ensureFrameData, parseSpan } from "./frameData.mjs";
+import { ensureFrameData, parseGrids, parseSpan } from "./frameData.mjs";
 import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
 
 // `--frames-span y0-y1` or `--frames-span=y0-y1`, checked before any work.
@@ -30,6 +30,18 @@ const framesSpan = parseSpan(
     : process.argv[spanArg]?.includes("=")
       ? process.argv[spanArg].split("=")[1]
       : (process.argv[spanArg + 1] ?? ""),
+);
+
+// `--grids a,b` (sets of scripts/gridSets.mjs; `all` is every PROJ-data grid).
+const gridsArg = process.argv.findIndex(
+  (a) => a === "--grids" || a.startsWith("--grids="),
+);
+const gridSets = parseGrids(
+  gridsArg < 0
+    ? "portfolio,tests"
+    : process.argv[gridsArg]?.includes("=")
+      ? process.argv[gridsArg].split("=")[1]
+      : (process.argv[gridsArg + 1] ?? ""),
 );
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -78,5 +90,6 @@ for (const version of releases) {
 console.log(`slangc: ${await ensureSlangc()}`);
 console.log(`slang-wasm: ${await ensureSlangWasm()}`);
 
-// The frames data: ephemeris excerpts, leap seconds, Earth orientation.
-await ensureFrameData({ span: framesSpan });
+// The frames data: ephemeris excerpts, leap seconds, Earth orientation, PROJ
+// and its grids.
+await ensureFrameData({ span: framesSpan, grids: gridSets });

@@ -47,8 +47,11 @@ const text = (file: string): string => readFileSync(join(dir, file), "utf8");
 
 describe("frames data store", () => {
   it("lists the four sources, both packs and the four trajectory files", () => {
-    // PROJ's files (role `proj`) are checked in proj.test.ts.
-    const roles = manifest.files.map((f) => f.role).filter((r) => r !== "proj");
+    // PROJ's files (role `proj`) are checked in proj.test.ts, the catalog and
+    // grids (roles `gridCatalog`, `grid`) in gridStore.test.ts.
+    const roles = manifest.files
+      .map((f) => f.role)
+      .filter((r) => !["proj", "gridCatalog", "grid"].includes(r));
     expect(roles.sort()).toEqual([
       "eop",
       "leapSeconds",

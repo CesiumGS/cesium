@@ -9,7 +9,9 @@
 // It also stores PROJ (proj.js v0.9.2's release builds, PROJ 9.7.1) under
 // `proj/`: the WebAssembly glue and module, the host's native binding,
 // `proj.db` and the GEOID18 grid, each tarball and the grid checked against a
-// pinned SHA-256 (manifest role `proj`).
+// pinned SHA-256 (manifest role `proj`), and PROJ-data's grids under `grids/`
+// (`ensureGrids`: the pinned 1.25.0 catalog, then each grid checked against it;
+// roles `gridCatalog` and `grid`).
 //
 // Nothing here is committed. Licenses: the NAIF kernels are checked against
 // the SHA-256 pinned below; each pack's manifest names its source file, that
@@ -17,6 +19,7 @@
 // distributed). The EOP data is IERS's, via CelesTrak.
 import { createHash } from "node:crypto";
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -28,15 +31,23 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { gunzipSync } from "node:zlib";
+import { GridCatalog } from "../src/engineering/gridCatalog.ts";
+import {
+  PROJ_DATA_CATALOG,
+  PROJ_FILE_SHA256,
+} from "../src/engineering/projPins.ts";
 import { readDaf } from "../src/ephemeris/spk.ts";
 import { writePack } from "../src/ephemeris/pack.ts";
 import { EarthOrientationParameters } from "../src/time/eop.ts";
 import { Instant } from "../src/time/Instant.ts";
 import { LeapSeconds } from "../src/time/leapSeconds.ts";
+import { GRID_SETS } from "./gridSets.mjs";
+import { verifiedDownload } from "./verifiedDownload.mjs";
 
 const NAIF = "https://naif.jpl.nasa.gov/pub/naif/generic_kernels";
 const ARTEMIS = "https://naif.jpl.nasa.gov/pub/naif/ARTEMIS/kernels/spk";
 const DAY_MS = 86_400_000;
+const DEFAULT_GRIDS = ["portfolio", "tests"];
 const REFRESH_MS = 7 * DAY_MS;
 
 /** The SHA-256 of each NAIF kernel, recorded on first download, 2026-11-05. */
@@ -77,8 +88,7 @@ export const PROJ_SHA256 = {
     "6585d6909b248b0036a582a0ed715e8fc88b864398d7e742dcc1c85d14f3a373",
   "win32-x64.tar.gz":
     "90f6e199aa306bfb7f4e6960efd886e340b343c3199ec348c053e93c3b17b90b",
-  "us_noaa_g2018u0.tif":
-    "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2",
+  "us_noaa_g2018u0.tif": PROJ_FILE_SHA256["us_noaa_g2018u0.tif"],
 };
 
 const PROJ_CREDIT =
@@ -223,6 +233,16 @@ export function extractTar(gz, wanted) {
   return found;
 }
 
+/** A PROJ file with a pinned hash (PROJ_FILE_SHA256) must match it. */
+function checkProjFile(name, bytes) {
+  const pinned = PROJ_FILE_SHA256[name];
+  if (pinned !== undefined && sha256(bytes) !== pinned) {
+    throw new Error(
+      `proj/${name}: SHA-256 mismatch with the pin (expected ${pinned}, got ${sha256(bytes)}); delete it and re-run setup`,
+    );
+  }
+}
+
 /** A pinned download of the PROJ set, checked against PROJ_SHA256. */
 async function downloadPinned(url, name, log) {
   log(`  ${name}: downloading ${url}`);
@@ -260,6 +280,7 @@ async function ensureProj(dir, previous, log) {
     });
   const entries = [];
   const record = (name, bytes, tarball, sourceSha256) => {
+    checkProjFile(name, bytes);
     entries.push({
       file: `proj/${name}`,
       role: "proj",
@@ -338,6 +359,147 @@ async function ensureProj(dir, previous, log) {
     sourceUrl: gridUrl,
     credit: "NOAA/NGS GEOID18 (public domain), via cdn.proj.org",
   });
+  return entries;
+}
+
+/** Every set name, or a grid name, resolved to the catalog's non-removed names. */
+function gridNames(catalog, sets) {
+  const names = new Set();
+  for (const set of sets) {
+    const members = Object.hasOwn(GRID_SETS, set) ? GRID_SETS[set] : undefined;
+    if (members === undefined) {
+      throw new Error(
+        `--grids: unknown set "${set}" (known: ${Object.keys(GRID_SETS).join(", ")})`,
+      );
+    }
+    const list =
+      members === "*"
+        ? [...catalog.entries.values()]
+            .filter((e) => !e.removed)
+            .map((e) => e.name)
+        : members;
+    for (const name of list) {
+      const entry = catalog.get(name);
+      if (!entry || entry.removed) {
+        throw new Error(
+          `--grids ${set}: ${name} is ${entry ? "removed from" : "not in"} the PROJ-data ${PROJ_DATA_CATALOG.version} catalog; fix scripts/gridSets.mjs`,
+        );
+      }
+      names.add(name);
+    }
+  }
+  return [...names];
+}
+
+const hasHash = (path, hash) =>
+  existsSync(path) && sha256(readFileSync(path)) === hash;
+
+/**
+ * PROJ-data's catalog and the named grid sets into `<store>/grids/`.
+ *
+ * The catalog (`files.geojson`) and the license table
+ * (`copyright_and_licenses.csv`) are fetched from the pinned 1.25.0 tag and
+ * checked against PROJ_DATA_CATALOG; each grid comes from cdn.proj.org and is
+ * checked against the catalog's size and hash (`verifiedDownload`). A stored
+ * file is kept if it still matches; GEOID18 is copied from `proj/`. The two
+ * catalog files are also copied into `proj/`, so a PROJ base holds a catalog.
+ * Grids stored earlier but not in `sets` stay in the manifest while they still
+ * match the catalog. Returns the manifest entries (roles `gridCatalog`,
+ * `grid`).
+ */
+export async function ensureGrids(dir, sets, log = console.log) {
+  const grids = join(dir, "grids");
+  mkdirSync(grids, { recursive: true });
+  const entries = [];
+
+  const catalogFiles = [
+    {
+      file: "files.geojson",
+      url: PROJ_DATA_CATALOG.catalogUrl,
+      sha256: PROJ_DATA_CATALOG.catalogSha256,
+      bytes: PROJ_DATA_CATALOG.catalogBytes,
+    },
+    {
+      file: "copyright_and_licenses.csv",
+      url: PROJ_DATA_CATALOG.licensesUrl,
+      sha256: PROJ_DATA_CATALOG.licensesSha256,
+      bytes: PROJ_DATA_CATALOG.licensesBytes,
+    },
+  ];
+  for (const { file, url, sha256: hash, bytes } of catalogFiles) {
+    const path = join(grids, file);
+    if (hasHash(path, hash)) {
+      log(`  grids/${file}: present, verified`);
+    } else {
+      log(`  grids/${file}: downloading ${url}`);
+      await verifiedDownload(url, path, { sha256: hash, bytes });
+    }
+    // A PROJ base (proj/) holds the catalog too.
+    const copy = join(dir, "proj", file);
+    if (!hasHash(copy, hash)) {
+      mkdirSync(join(dir, "proj"), { recursive: true });
+      copyFileSync(path, copy);
+    }
+    entries.push({
+      file: `grids/${file}`,
+      role: "gridCatalog",
+      sha256: hash,
+      sourceUrl: url,
+      credit: `OSGeo PROJ-data ${PROJ_DATA_CATALOG.version}`,
+    });
+  }
+
+  const catalog = GridCatalog.parse(
+    readFileSync(join(grids, "files.geojson"), "utf8"),
+    readFileSync(join(grids, "copyright_and_licenses.csv"), "utf8"),
+  );
+  const names = gridNames(catalog, sets);
+  if (sets.includes("all")) {
+    const total = names.reduce((sum, name) => sum + catalog.get(name).bytes, 0);
+    log(
+      `  grids: all ${names.length} grids, ${(total / 1e6).toFixed(0)} MB in total`,
+    );
+  }
+  const wanted = new Set(names);
+  for (const name of names) {
+    const grid = catalog.get(name);
+    const path = join(grids, name);
+    const url = `${PROJ_CDN}/${name}`;
+    const proj = join(dir, "proj", name);
+    if (hasHash(path, grid.sha256)) {
+      log(`  grids/${name}: present, verified`);
+    } else if (hasHash(proj, grid.sha256)) {
+      copyFileSync(proj, path);
+      log(`  grids/${name}: copied from proj/`);
+    } else {
+      log(`  grids/${name}: downloading ${url}`);
+      await verifiedDownload(url, path, {
+        sha256: grid.sha256,
+        bytes: grid.bytes,
+      });
+    }
+    entries.push({
+      file: `grids/${name}`,
+      role: "grid",
+      sha256: grid.sha256,
+      sourceUrl: url,
+      credit: catalog.credit(name),
+    });
+  }
+  // Grids stored by an earlier run with other sets stay listed while intact.
+  for (const old of readPreviousFiles(dir)) {
+    const name = old.file?.startsWith("grids/") ? old.file.slice(6) : "";
+    const grid = old.role === "grid" ? catalog.get(name) : undefined;
+    if (grid && !wanted.has(name) && hasHash(join(grids, name), grid.sha256)) {
+      entries.push({
+        file: old.file,
+        role: "grid",
+        sha256: grid.sha256,
+        sourceUrl: `${PROJ_CDN}/${name}`,
+        credit: catalog.credit(name),
+      });
+    }
+  }
   return entries;
 }
 
@@ -447,9 +609,13 @@ export function readPreviousFiles(dir) {
 
 /**
  * Download, verify and excerpt everything into the store, and write
- * `manifest.json`. `span` is `[y0, y1]`, both years included.
+ * `manifest.json`. `span` is `[y0, y1]`, both years included; `grids` names
+ * the PROJ-data grid sets to store (`ensureGrids`, default `portfolio,tests`).
  */
-export async function ensureFrameData({ span }, log = console.log) {
+export async function ensureFrameData(
+  { span, grids = DEFAULT_GRIDS },
+  log = console.log,
+) {
   const [y0, y1] = span;
   const dir = framesDataDirectory();
   mkdirSync(dir, { recursive: true });
@@ -476,6 +642,7 @@ export async function ensureFrameData({ span }, log = console.log) {
   }
   const previousFiles = readPreviousFiles(dir);
   const projEntries = await ensureProj(dir, previousFiles, log);
+  const gridEntries = await ensureGrids(dir, grids, log);
   const leapBytes = await ensureFresh(dir, SOURCES.leapSeconds, log, (text) =>
     LeapSeconds.fromIers(text),
   );
@@ -559,6 +726,7 @@ export async function ensureFrameData({ span }, log = console.log) {
     },
     ...trajectories,
     ...projEntries,
+    ...gridEntries,
   ];
   writeFileSync(
     join(dir, "manifest.json"),
@@ -566,6 +734,19 @@ export async function ensureFrameData({ span }, log = console.log) {
   );
   log(`  manifest.json: ${files.length} files`);
   return { directory: dir, files };
+}
+
+/** "portfolio,tests" → ["portfolio", "tests"]; an unknown set is refused. */
+export function parseGrids(text) {
+  const sets = text.split(",").map((s) => s.trim());
+  for (const set of sets) {
+    if (!Object.hasOwn(GRID_SETS, set)) {
+      throw new Error(
+        `--grids: unknown set "${set}" (known: ${Object.keys(GRID_SETS).join(", ")})`,
+      );
+    }
+  }
+  return sets;
 }
 
 /** "2000-2050" → [2000, 2050]. */
