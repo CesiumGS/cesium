@@ -8,7 +8,7 @@ import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import { EARTH } from "../src/scene/Body.ts";
-import { Camera } from "../src/scene/Camera.ts";
+import { Camera, projectToPixel } from "../src/scene/Camera.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { CanvasTarget, OffscreenTarget, View } from "../src/scene/View.ts";
 import type { DrawHandle, World } from "../src/scene/World.ts";
@@ -57,6 +57,7 @@ function tileset(
     placement?: TilesetPlacement;
     retain?: boolean;
     owns?: boolean;
+    geometry?: TileGeometry;
   } = {},
 ): Tileset3D {
   const retain = o.retain ?? true;
@@ -67,7 +68,7 @@ function tileset(
       sphere: { center: Float64Array.from([R, 20, 20]), radius: 200 },
     },
     contentVolume: undefined,
-    ...(retain && { geometry: [geometry()] }),
+    ...(retain && { geometry: [o.geometry ?? geometry()] }),
   };
   return {
     placement: o.placement,
@@ -89,13 +90,20 @@ function under(x: number, y: number): Float64Array {
 }
 
 function view(
-  o: { sky?: boolean; feature?: boolean; onPick?: (c: Camera) => void } = {},
+  o: {
+    sky?: boolean;
+    feature?: boolean;
+    onPick?: (c: Camera) => void;
+    /** Places the camera (default: 1000 m above (R, 0, 0), looking down). */
+    aim?: (c: Camera) => void;
+  } = {},
 ): PickView {
   const camera = new Camera();
   camera.position.set([R + 1000, 0, 0]);
   camera.direction.set([-1, 0, 0]);
   camera.orient(Float64Array.from([0, 0, 1]));
   camera.fov = Math.PI / 2;
+  o.aim?.(camera);
   return {
     pick: async () => {
       o.onPick?.(camera);
@@ -302,6 +310,140 @@ function expectPixel(p: Float64Array | undefined, x: number, y: number) {
   expect(p![1]).toBeCloseTo(y, 9);
 }
 
+/** A draw of `triangles` (local metres, nine per triangle) at (R, 0, 0). */
+function soup(triangles: number[]): TileGeometry {
+  const matrix = m4.mat4();
+  matrix[12] = R;
+  return {
+    draw: DRAW,
+    positions: new Float32Array(triangles),
+    indices: Uint32Array.from(
+      triangles.slice(0, triangles.length / 3),
+      (_, i) => i,
+    ),
+    matrix,
+  };
+}
+
+describe("ClientSnapService: what the camera can't see", () => {
+  // The front square of geometry() (A, B, C, D at x = R, 2 m per px) and,
+  // 100 m behind it (2.2 m per px), a triangle whose first vertex shows at
+  // (517, 232): inside the square, hidden by it.
+  const front = [0, 0, 0, 0, 40, 0, 0, 40, 40, 0, 0, 0, 0, 40, 40, 0, 0, 40];
+  const hiddenAt = [517, 232] as const;
+  const back = (dy: number, dz: number) => {
+    const y = (hiddenAt[0] - 500) * 2.2,
+      z = (250 - hiddenAt[1]) * 2.2;
+    return [-100, y, z, -100, y + dy, z, -100, y + dy, z + dz];
+  };
+
+  it("passes over a hidden vertex for the visible one behind it on the screen", async () => {
+    const ts = tileset({
+      placement: placement(),
+      geometry: soup([...front, ...back(40, 40)]),
+    });
+    // 1 px from the hidden vertex, 2.8 px from D at (520, 230).
+    const r = await new ClientSnapService([ts]).snap({
+      view: view(),
+      x: hiddenAt[0] + 1,
+      y: hiddenAt[1],
+      aperture: 6,
+    });
+    expect(r?.kind).toBe("point");
+    expect(Array.from(r!.point)).toEqual([R, 40, 40]);
+    expect(r!.distance).toBeCloseTo(Math.hypot(2, 2), 6);
+    expect(r!.design!.obtained!.kind).toBe("point");
+  });
+
+  it("gives the surface when everything near the cursor is hidden", async () => {
+    // An 80 m square in front, (500..540, 210..250) on the screen, and
+    // behind it a small triangle at (520, 218), (524, 218) and (520, 214),
+    // all hidden. The square's corners and edges (its diagonal x + y = 750
+    // too) are more than 6 px from the cursor.
+    const big = front.map((c) => c * 2);
+    const y = 20 * 2.2,
+      z = 32 * 2.2;
+    const geometry = soup([
+      ...big,
+      ...[-100, y, z, -100, y + 8.8, z, -100, y, z + 8.8],
+    ]);
+    const r = await new ClientSnapService([
+      tileset({ placement: placement(), geometry }),
+    ]).snap({ view: view(), x: 521, y: 218, aperture: 6 });
+    expect(r?.kind).toBe("surface");
+    expect(Array.from(r!.point)).toEqual(Array.from(under(521, 218)));
+    expect(r!.design!.obtained!.kind).toBe("surface");
+  });
+
+  it("still snaps to a road's edge 3 px away, seen 2 m above it", async () => {
+    // A road 10 m wide from 10 m to 210 m ahead, in the plane x = R, and the
+    // camera 2 m above it looking at a point 50 m ahead.
+    const road = [
+      0, -5, 10, 0, 5, 10, 0, 5, 210, 0, -5, 10, 0, 5, 210, 0, -5, 210,
+    ];
+    const aim = (c: Camera) => {
+      c.position.set([R + 2, 0, 0]);
+      c.fov = Math.PI / 2;
+      c.direction.set([-2 / Math.hypot(2, 50), 0, 50 / Math.hypot(2, 50)]);
+      c.orient(Float64Array.from([1, 0, 0]));
+    };
+    const camera = new Camera();
+    aim(camera);
+    const shown = new Float64Array(2);
+    const pose = {
+      position: camera.position,
+      direction: camera.direction,
+      up: camera.up,
+      right: camera.right,
+    };
+    projectToPixel(pose, camera.fovy(2), 1000, 500, [R, 5, 50], shown);
+    // 3 px toward the road's middle (the edge y = 5 shows to one side).
+    const side = Math.sign(shown[0]! - 500);
+    const x = shown[0]! - 3 * side,
+      y = shown[1]!;
+    const r = await new ClientSnapService([
+      tileset({ geometry: soup(road) }),
+    ]).snap({ view: view({ aim }), x, y, aperture: 6 });
+    expect(r?.kind).toBe("segment");
+    expect(r!.distance).toBeLessThanOrEqual(3 + 1e-9);
+    expect(r!.point[0]).toBeCloseTo(R, 6);
+    expect(r!.point[1]).toBeCloseTo(5, 6);
+    // The 3D point is where the screen's nearest point shows.
+    const at = new Float64Array(2);
+    projectToPixel(pose, camera.fovy(2), 1000, 500, r!.point, at);
+    expect(Math.hypot(at[0]! - x, at[1]! - y)).toBeCloseTo(r!.distance, 6);
+    // The camera sees the road from above: the normal is up.
+    expect(r!.normal![0]).toBeCloseTo(1, 9);
+  });
+
+  it("ignores vertices nearer than the camera's near plane", async () => {
+    // A triangle 5 cm in front of the camera, its vertex under the cursor.
+    const ts = tileset({
+      geometry: soup([
+        999.95,
+        0,
+        0,
+        999.95,
+        0.01,
+        0,
+        999.95,
+        0,
+        0.01,
+        ...front,
+      ]),
+    });
+    const r = await new ClientSnapService([ts]).snap({
+      view: view(),
+      x: 500,
+      y: 250,
+      aperture: 6,
+    });
+    // A (500, 250) of the square, not the triangle in front of the lens.
+    expect(r?.kind).toBe("point");
+    expect(Array.from(r!.point)).toEqual([R, 0, 0]);
+  });
+});
+
 describe("View.toPixel", () => {
   function realView(target: OffscreenTarget | CanvasTarget): View {
     const v = new View({ target, world: {} as World });
@@ -331,8 +473,11 @@ describe("View.toPixel", () => {
     expectPixel(v.toPixel([R, 40, -20]), 520, 260);
   });
 
-  it("is undefined behind the camera", () => {
+  it("is undefined behind the camera and nearer than the near plane", () => {
     const v = realView(new OffscreenTarget(1000, 500));
+    expect(v.camera.near).toBe(0.1);
+    expect(v.toPixel([R + 1000 - 0.05, 0, 0])).toBeUndefined();
+    expect(v.toPixel([R + 1000 - 0.2, 0, 0])).toBeDefined();
     expect(v.toPixel([R + 2000, 0, 0])).toBeUndefined();
     expect(v.toPixel([R + 1000, 5, 0])).toBeUndefined();
   });
@@ -388,9 +533,12 @@ function selectionView(): SelectionView {
 
 describe("Tileset3D.retainGeometry", () => {
   let engine: Engine;
+  /** What the tile's content decodes to. */
+  let content = square;
+  afterEach(() => (content = square));
   beforeAll(async () => {
     engine = await fakeEngine();
-    vi.spyOn(engine, "loadGltf").mockImplementation(async () => square());
+    vi.spyOn(engine, "loadGltf").mockImplementation(async () => content());
   });
   afterEach(() => vi.unstubAllGlobals());
 
@@ -416,6 +564,28 @@ describe("Tileset3D.retainGeometry", () => {
     return { tileset, tile, world };
   }
 
+  it("keeps a mesh drawn by two nodes once", async () => {
+    content = () => {
+      const asset = square();
+      const moved = m4.mat4();
+      moved[12] = 3;
+      asset.draws.push({ mesh: 0, material: -1, matrix: moved });
+      return asset;
+    };
+    const off = await loaded(false);
+    const { tileset, tile } = await loaded(true);
+    const [a, b] = tile.geometry!;
+    expect(tile.geometry).toHaveLength(2);
+    expect(b!.positions).toBe(a!.positions);
+    expect(b!.indices).toBe(a!.indices);
+    expect(b!.matrix).not.toEqual(a!.matrix);
+    expect(tile.bytes).toBe(
+      off.tile.bytes + a!.positions.byteLength + a!.indices.byteLength,
+    );
+    off.tileset.destroy();
+    tileset.destroy();
+  });
+
   it("keeps nothing by default", async () => {
     const { tileset, tile } = await loaded();
     expect(tileset.retainGeometry).toBe(false);
@@ -438,10 +608,14 @@ describe("Tileset3D.retainGeometry", () => {
     );
     // 3D Tiles y-up content, at the root transform's (R, 0, 0).
     expect(g!.matrix[12]).toBe(R);
-    const bytes = tile.bytes;
-    expect(bytes).toBeGreaterThanOrEqual(
-      g!.positions.byteLength + g!.indices.byteLength,
+    // The retained bytes count in the tile and the cache, not in uploads.
+    const off = await loaded(false);
+    expect(tile.bytes).toBe(
+      off.tile.bytes + g!.positions.byteLength + g!.indices.byteLength,
     );
+    expect(tileset.stats.bytes).toBe(tile.bytes);
+    expect(tileset.stats.bytesTotal).toBe(off.tileset.stats.bytesTotal);
+    off.tileset.destroy();
 
     // A changed modelMatrix moves the retained matrix with the draw.
     const moved = m4.mat4();

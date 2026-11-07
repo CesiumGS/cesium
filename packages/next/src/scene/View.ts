@@ -487,8 +487,9 @@ export class View {
   /**
    * Where an Earth-fixed position shows in this view with its current camera:
    * CSS pixels from the view's top-left (as `pickDesign` takes them), or
-   * undefined when the position is behind the camera. Off-screen positions
-   * in front of it give pixels outside the view.
+   * undefined when the position is behind the camera or nearer than its
+   * near plane (not drawn). Off-screen positions in front of it give pixels
+   * outside the view.
    */
   toPixel(position: ArrayLike<number>): Float64Array | undefined {
     const rect = this.pixelRect();
@@ -503,7 +504,7 @@ export class View {
       position,
       out,
     );
-    return depth > 0 ? out : undefined;
+    return depth >= this.camera.near && depth > 0 ? out : undefined;
   }
 
   /** True when a point in target pixels falls inside this view. */

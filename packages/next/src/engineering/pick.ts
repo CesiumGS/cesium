@@ -28,6 +28,8 @@ export interface PickView {
     readonly direction: ArrayLike<number>;
     readonly up: ArrayLike<number>;
     readonly right: ArrayLike<number>;
+    /** Metres; nothing nearer is drawn (0 when absent). */
+    readonly near?: number;
     /** Bumped on every camera change. */
     readonly version: number;
     fovy(aspect: number): number;
@@ -72,6 +74,8 @@ export interface PickCamera extends CameraPose {
   readonly up: Float64Array;
   readonly right: Float64Array;
   readonly fovy: number;
+  /** Metres: nothing nearer is drawn. */
+  readonly near: number;
   /** The view's size in CSS pixels. */
   readonly width: number;
   readonly height: number;
@@ -135,6 +139,11 @@ const copy3 = (v: ArrayLike<number>) =>
   Float64Array.from([v[0]!, v[1]!, v[2]!]);
 const same3 = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+const sameRect = (
+  r: { readonly width: number; readonly height: number },
+  width: number,
+  height: number,
+) => r.width === width && r.height === height;
 
 /**
  * @internal `pickDesign`, also giving the camera the answer was read with,
@@ -158,9 +167,11 @@ export async function pickInFrame(
     const direction = copy3(cam.direction);
     const up = copy3(cam.up);
     const right = copy3(cam.right);
+    const near = cam.near ?? 0;
     const rect = view.pixelRect();
+    const width = rect.width;
     const height = rect.height;
-    const fovy = cam.fovy(rect.width / height);
+    const fovy = cam.fovy(width / height);
     const [position, feature] = await Promise.all([
       view.pickPosition(px, py),
       view.pick(px, py),
@@ -178,7 +189,10 @@ export async function pickInFrame(
       cam.version !== version ||
       !same3(cam.position, eye) ||
       !same3(cam.direction, direction) ||
-      !same3(cam.up, up);
+      !same3(cam.up, up) ||
+      (cam.near ?? 0) !== near ||
+      cam.fovy(width / height) !== fovy ||
+      !sameRect(view.pixelRect(), width, height);
     if (moved) {
       if (attempt === 0) {
         continue;
@@ -191,7 +205,8 @@ export async function pickInFrame(
       up,
       right,
       fovy,
-      width: rect.width / ratio,
+      near,
+      width: width / ratio,
       height: height / ratio,
     };
 

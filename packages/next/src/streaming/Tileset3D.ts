@@ -1446,8 +1446,13 @@ export class Tileset3D implements TileTree {
         tile.bytes = model.bytes;
         if (this.retainGeometry) {
           tile.geometry = this.retain(asset, placement);
+          // A mesh drawn by several nodes is kept, and counted, once.
+          const arrays = new Set<Float32Array | Uint32Array>();
           for (const g of tile.geometry) {
-            tile.bytes += g.positions.byteLength + g.indices.byteLength;
+            arrays.add(g.positions).add(g.indices);
+          }
+          for (const a of arrays) {
+            tile.bytes += a.byteLength;
           }
         }
         budget.bytes -= model.bytes;
@@ -1587,13 +1592,18 @@ export class Tileset3D implements TileTree {
   /**
    * A placed asset's triangles for `Tile.geometry`: per draw (placing
    * keeps the asset's draw order), skipping lines and instanced draws.
-   * Views into a larger buffer are copied so they don't keep it alive.
+   * Views into a larger buffer are copied so they don't keep it alive; draws
+   * of one mesh share its arrays.
    */
   private retain(asset: GltfAsset, placement: ModelPlacement): TileGeometry[] {
     const kept: TileGeometry[] = [];
     if (asset.instances !== undefined) {
       return kept;
     }
+    const meshes = new Map<
+      number,
+      { positions: Float32Array; indices: Uint32Array }
+    >();
     asset.draws.forEach((d, i) => {
       const mesh = asset.meshes[d.mesh];
       const draw = placement.draws[i];
@@ -1608,12 +1618,12 @@ export class Tileset3D implements TileTree {
       }
       const own = <T extends Float32Array | Uint32Array>(a: T): T =>
         a.byteLength === a.buffer.byteLength ? a : (a.slice() as T);
-      kept.push({
-        draw: draw!,
-        positions: own(mesh.positions),
-        indices: own(mesh.indices),
-        matrix,
-      });
+      let arrays = meshes.get(d.mesh);
+      if (arrays === undefined) {
+        arrays = { positions: own(mesh.positions), indices: own(mesh.indices) };
+        meshes.set(d.mesh, arrays);
+      }
+      kept.push({ draw: draw!, ...arrays, matrix });
     });
     return kept;
   }
