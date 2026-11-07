@@ -19,6 +19,7 @@
 
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
 - Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
+- Fixed `PostProcessStageLibrary` stages sharing a name, so the same stage can be added more than once to a `PostProcessStageCollection`. [#13855](https://github.com/CesiumGS/cesium/pull/13855)
 
 ## 1.147 - 2026-11-02
 
