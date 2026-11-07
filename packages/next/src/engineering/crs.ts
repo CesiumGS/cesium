@@ -29,6 +29,7 @@ import {
   type Pipeline,
 } from "./pipeline.ts";
 import { loadedGrids } from "./proj.ts";
+import { projTokenProblem } from "./wkt2.ts";
 
 /**
  * A reference to a coordinate reference system, with the shapes of the 3D Tiles
@@ -58,6 +59,16 @@ export function crsDefinition(ref: CrsRef): string {
   }
   const code = `${ref.authority}:${ref.wkid}`;
   return ref.vcsWkid === undefined ? code : `${code}+${ref.vcsWkid}`;
+}
+
+/**
+ * `crsDefinition`, shortened to 80 characters for a message: a WKT2 can be
+ * 65,536 characters of untrusted text (a tileset's).
+ */
+export function shownCrs(ref: CrsRef): string {
+  // One line: WKT is often pretty-printed.
+  const definition = crsDefinition(ref).replace(/\s+/g, " ");
+  return definition.length > 80 ? `${definition.slice(0, 77)}...` : definition;
 }
 
 /**
@@ -222,6 +233,65 @@ function exists(proj: ProjApi, object: PJ): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * The PJ of a CRS reference, through `proj_create`. A `wkt2` reference must
+ * first hold no PROJ-string token (`projTokenProblem`), so a PROJ string in a
+ * `wkt2` field is refused rather than read as one; WKT1 still parses (the
+ * frames explorer's "Try your own" takes it, and hand-written WKT with
+ * grammar slips that PROJ's lax path tolerates). Untrusted WKT2 (a tileset's)
+ * also goes through `strictWkt2` first. Throws, naming `what`, for one PROJ
+ * can't create.
+ */
+export function crsObject(
+  proj: ProjApi,
+  ref: CrsRef | string,
+  what: string,
+): PJ {
+  if (typeof ref === "string") {
+    return create(proj, ref, what);
+  }
+  if (ref.format === "wkid") {
+    return create(proj, crsDefinition(ref), what);
+  }
+  const problem = projTokenProblem(ref.wkt2);
+  if (problem !== undefined) {
+    throw new Error(`PROJ: ${what} "${shownCrs(ref)}" ${problem}`);
+  }
+  return create(proj, ref.wkt2, what);
+}
+
+/**
+ * A WKT2 reference parsed by PROJ's strict WKT parser
+ * (`proj_create_from_wkt`, STRICT=YES), never `proj_create`, which would also
+ * take a PROJ string, AUTH:CODE or PROJJSON: for WKT from untrusted data,
+ * checked before anything else uses it (`georeferenceTileset`). It must also
+ * hold no PROJ-string token. Throws, naming `what` and PROJ's parse error.
+ */
+export function strictWkt2(
+  proj: ProjApi,
+  ref: { readonly format: "wkt2"; readonly wkt2: string },
+  what: string,
+): PJ {
+  const problem = projTokenProblem(ref.wkt2);
+  if (problem !== undefined) {
+    throw new Error(`PROJ: ${what} "${shownCrs(ref)}" ${problem}`);
+  }
+  let object: PJ;
+  try {
+    [object] = proj.proj_create_from_wkt(ref.wkt2, { STRICT: true });
+  } catch (error) {
+    const message = (error as Error).message ?? String(error);
+    throw new Error(
+      `PROJ could not parse ${what} "${shownCrs(ref)}" as strict WKT2: ${message.replace(/\s+/g, " ").slice(0, 200)}`,
+      { cause: error },
+    );
+  }
+  if (!exists(proj, object)) {
+    throw new Error(`PROJ could not create ${what} "${shownCrs(ref)}"`);
+  }
+  return object;
 }
 
 function create(proj: ProjApi, definition: string, what: string): PJ {
@@ -453,14 +523,14 @@ function candidateGrids(
  */
 function candidateList(
   proj: ProjApi,
-  source: string,
-  target: string,
+  source: CrsRef | string,
+  target: CrsRef | string,
   areaOfInterest?: AreaOfInterest,
 ): { candidates: PjObjList | null; listError?: unknown } {
   const area =
     areaOfInterest === undefined ? undefined : checkedArea(areaOfInterest);
-  const from = create(proj, source, "the source CRS");
-  const to = create(proj, target, "the target CRS");
+  const from = crsObject(proj, source, "the source CRS");
+  const to = crsObject(proj, target, "the target CRS");
   try {
     const context = proj.proj_create_operation_factory_context("");
     proj.proj_operation_factory_context_set_grid_availability_use(
@@ -564,14 +634,15 @@ export function resolveOperation(
     }
   }
 
-  const where = `from ${crsDefinition(source)} to ${target}`;
+  const shownTarget = target.length > 80 ? `${target.slice(0, 77)}...` : target;
+  const where = `from ${shownCrs(source)} to ${shownTarget}`;
   const loaded = loadedGrids(proj);
   // The walk, quietly; the chosen candidate is recorded after it, so an
   // error creating it is logged.
   const walk = quietly(proj, () => {
     const { candidates, listError } = candidateList(
       proj,
-      crsDefinition(source),
+      source,
       target,
       areaOfInterest,
     );
@@ -756,8 +827,8 @@ export function listOperations(
   return quietly(proj, () => {
     const { candidates, listError } = candidateList(
       proj,
-      crsDefinition(source),
-      crsDefinition(target),
+      source,
+      target,
       options.areaOfInterest,
     );
     if (listError !== undefined) {
@@ -767,7 +838,7 @@ export function listOperations(
         return [];
       }
       throw new Error(
-        `PROJ could not list the operations from ${crsDefinition(source)} to ${crsDefinition(target)}`,
+        `PROJ could not list the operations from ${shownCrs(source)} to ${shownCrs(target)}`,
         { cause: listError },
       );
     }
@@ -850,7 +921,7 @@ export function unbound(proj: ProjApi, crs: PJ): PJ {
 
 /** The horizontal (and, when there is one, vertical) units of a CRS, from PROJ. */
 export function crsUnits(proj: ProjApi, ref: CrsRef): CrsUnits {
-  const crs = unbound(proj, create(proj, crsDefinition(ref), "the CRS"));
+  const crs = unbound(proj, crsObject(proj, ref, "the CRS"));
   const axis = (part: PJ, index: number) =>
     proj.proj_cs_get_axis_info(
       proj.proj_crs_get_coordinate_system(part),
@@ -904,7 +975,7 @@ export function compoundParts(
   proj: ProjApi,
   ref: CrsRef,
 ): { readonly horizontal: CrsPart; readonly vertical: CrsPart } | undefined {
-  const crs = unbound(proj, create(proj, crsDefinition(ref), "the CRS"));
+  const crs = unbound(proj, crsObject(proj, ref, "the CRS"));
   if (proj.proj_get_type(crs) !== proj.PJ_TYPE_COMPOUND_CRS) {
     return undefined;
   }
@@ -982,7 +1053,7 @@ export function verticalGridDatums(
   /** The vertical CRS's identifier's authority, searched under; null when it has none. */
   readonly authority: string | null;
 } {
-  const crs = unbound(proj, create(proj, crsDefinition(vertical), "the CRS"));
+  const crs = unbound(proj, crsObject(proj, vertical, "the CRS"));
   return quietly(proj, () => {
     const identified = proj.proj_get_id_auth_name(crs, 0);
     const authority = identified ?? "EPSG";

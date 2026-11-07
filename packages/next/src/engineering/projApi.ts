@@ -136,6 +136,17 @@ export interface ProjApi {
   /** Where PROJ finds a grid file now (see PjGridInfo). */
   proj_grid_info(name: string): PjGridInfo;
   proj_create(definition: string): PJ;
+  /**
+   * PROJ's WKT parser (proj_create_from_wkt): the object and the parser's
+   * warnings. With STRICT it refuses WKT that isn't well formed; it throws
+   * a parse error ("Parsing error : ...", or "missing [" for text that
+   * isn't WKT at all). Both of proj.js v0.9.2's builds have it (checked in
+   * the native binding and in the WebAssembly build, 2026-11-07).
+   */
+  proj_create_from_wkt(
+    wkt: string,
+    options?: Record<string, string | boolean | number>,
+  ): [PJ, readonly string[]];
   proj_create_crs_to_crs(source: string, target: string): PJ;
   proj_normalize_for_visualization(object: PJ): PJ;
 

@@ -173,13 +173,19 @@ export {
 } from "./engineering/placement.ts";
 export {
   ENGINEERING_FRAME_EXTENSION,
+  GEOREFERENCE_PATH,
   GeoreferenceError,
+  parseGeoreference,
+  type DeclaredPlacement,
+  type GeoreferenceBodies,
+  type TilesetGeoreference,
+} from "./engineering/georeference.ts";
+export {
   checkRigidTransform,
   georeferenceTileset,
   readGeoreference,
-  type DeclaredPlacement,
-  type TilesetGeoreference,
-} from "./engineering/georeference.ts";
+} from "./engineering/georeferenceTileset.ts";
+export { WKT2_CRS_KEYWORDS, wkt2Problem } from "./engineering/wkt2.ts";
 export {
   Alignment,
   type AlignmentDefinition,
@@ -204,7 +210,10 @@ export {
 } from "./engineering/proj.ts";
 export {
   crsDefinition,
+  crsObject,
   crsUnits,
+  shownCrs,
+  strictWkt2,
   listOperations,
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,

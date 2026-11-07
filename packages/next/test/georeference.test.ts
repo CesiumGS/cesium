@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest";
 import {
   ENGINEERING_FRAME_EXTENSION,
   GeoreferenceError,
-  readGeoreference,
 } from "../src/engineering/georeference.ts";
+import { readGeoreference } from "../src/engineering/georeferenceTileset.ts";
 import { EARTH, MOON } from "../src/scene/Body.ts";
 
 const ROOT = "extensions.EXT_engineering_frame";
@@ -268,6 +268,101 @@ describe("readGeoreference", () => {
       expect(e.message).toContain("65,536");
       // The untrusted text isn't echoed back.
       expect(e.message.length).toBeLessThan(300);
+    });
+
+    it("a wkt2 that isn't WKT2 (a parser differential)", () => {
+      const declaration = (wkt2: string) => ({
+        crs: {
+          format: "wkt2",
+          extensions: { EXT_geospatial_crs_wkt2: { wkt2 } },
+        },
+        placement: { mode: "reprojected" },
+      });
+      const path = `${ROOT}.crs.extensions.EXT_geospatial_crs_wkt2.wkt2`;
+      for (const wkt2 of [
+        // A PROJ string, a code, PROJJSON, a URN: proj_create takes them all.
+        "+proj=longlat +datum=WGS84 +type=crs",
+        "EPSG:4326",
+        '{"type":"GeographicCRS","name":"WGS 84"}',
+        "urn:ogc:def:crs:EPSG::4326",
+        // WKT1.
+        'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563]]]',
+        // WKT2-lookalikes carrying PROJ-string parameters.
+        'PROJCRS["x",BASEGEOGCRS["y"] +nadgrids=@null]',
+        'BOUNDCRS["x",REMARK["+nadgrids=conus"]]',
+        'GEOGCRS["x" +towgs84=0,0,0]',
+        "  ",
+      ]) {
+        const e = failure(declaration(wkt2));
+        expect(e.path).toBe(path);
+        expect(e.message).toContain(path);
+        expect(e.message).toMatch(/must be WKT2?:/);
+      }
+      // WKT2's keywords are case-insensitive, may be long-form, take "(" and
+      // whitespace; a "+" inside a quoted name, or before a digit, is no
+      // PROJ parameter.
+      for (const wkt2 of [
+        ' geogcrs ["WGS 84 + extras",ELLIPSOID["x",6378137,298.257223563]]',
+        'GEOGRAPHICCRS("a ""quoted"" +b name",X[1E+3])',
+        'COMPOUNDCRS["h + v",PROJCRS["h"],VERTCRS["v"]]',
+      ]) {
+        expect(readGeoreference(tileset(declaration(wkt2)))!.crs).toEqual({
+          format: "wkt2",
+          wkt2,
+        });
+      }
+    });
+
+    it("an epoch that isn't the draft's decimal-year string", () => {
+      for (const epoch of [2019.81, "-2019", "2019.81x"]) {
+        const declaration = rigid();
+        (
+          declaration.crs as {
+            extensions: { EXT_geospatial_crs_wkid: Record<string, unknown> };
+          }
+        ).extensions.EXT_geospatial_crs_wkid.epoch = epoch;
+        expect(failure(declaration).path).toBe(
+          `${ROOT}.crs.extensions.EXT_geospatial_crs_wkid.epoch`,
+        );
+      }
+    });
+
+    it("alignment elements: a zero length or radius, and too many", () => {
+      const withElement = (element: Record<string, unknown>) => {
+        const declaration = rigid();
+        const alignment = (
+          declaration.alignments as Record<string, unknown>[]
+        )[0]!;
+        (alignment.horizontal as unknown[])[0] = element;
+        return declaration;
+      };
+      expect(failure(withElement({ kind: "line", length: 0 })).path).toBe(
+        `${ROOT}.alignments[0].horizontal[0].length`,
+      );
+      expect(
+        failure(withElement({ kind: "arc", length: 10, radius: 0 })).path,
+      ).toBe(`${ROOT}.alignments[0].horizontal[0].radius`);
+      expect(
+        failure(
+          withElement({
+            kind: "spiral",
+            length: 10,
+            startRadius: null,
+            endRadius: 0,
+          }),
+        ).path,
+      ).toBe(`${ROOT}.alignments[0].horizontal[0].endRadius`);
+      const declaration = rigid();
+      const alignment = (
+        declaration.alignments as Record<string, unknown>[]
+      )[0]!;
+      alignment.horizontal = Array.from({ length: 4097 }, () => ({
+        kind: "line",
+        length: 1,
+      }));
+      expect(failure(declaration).path).toBe(
+        `${ROOT}.alignments[0].horizontal`,
+      );
     });
 
     it("more than 64 alignments", () => {

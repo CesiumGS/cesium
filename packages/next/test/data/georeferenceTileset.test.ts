@@ -5,12 +5,12 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
+import { ENGINEERING_FRAME_EXTENSION } from "../../src/engineering/georeference.ts";
 import {
   checkRigidTransform,
   georeferenceTileset,
   readGeoreference,
-  ENGINEERING_FRAME_EXTENSION,
-} from "../../src/engineering/georeference.ts";
+} from "../../src/engineering/georeferenceTileset.ts";
 import { placeRigid } from "../../src/engineering/placement.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
 import * as m4 from "../../src/math/mat4.ts";
@@ -159,5 +159,51 @@ describe("georeferenceTileset", () => {
     expect(placement.frame.definition.name).toBe(
       "https://tiles.test/corridor/tileset.json",
     );
+  });
+});
+
+describe("a wkt2 CRS reference", () => {
+  it("is refused when it holds a PROJ string, which proj_create would take", async () => {
+    await expect(
+      (async () =>
+        EngineeringFrame.create(
+          {
+            name: "w",
+            body: EARTH,
+            crs: {
+              format: "wkt2",
+              wkt2: "+proj=utm +zone=11 +datum=WGS84 +units=m +type=crs",
+            },
+          },
+          await loadProj({ base }),
+        ))(),
+    ).rejects.toThrow(/must be WKT: it holds a PROJ-string token/);
+  });
+
+  it("from a tileset goes through PROJ's strict WKT parser", async () => {
+    const proj = await loadProj({ base });
+    const good = proj.proj_as_wkt(
+      proj.proj_create("EPSG:32611"),
+      proj.PJ_WKT2_2019,
+    );
+    const declared = (wkt2: string) =>
+      standIn(m4.mat4(), {
+        crs: {
+          format: "wkt2",
+          extensions: { EXT_geospatial_crs_wkt2: { wkt2 } },
+        },
+        placement: { mode: "reprojected" },
+      });
+    // WKT2 in form, but a node PROJ's grammar doesn't have.
+    const bad = declared(good.replace("CS[", 'NOTANODE["x"],CS['));
+    await expect(georeferenceTileset(bad, { proj })).rejects.toThrow(
+      /extensions\.EXT_engineering_frame\.crs\.extensions\.EXT_geospatial_crs_wkt2\.wkt2: .*strict WKT2/,
+    );
+    expect(bad.placement).toBeUndefined();
+    expect([...bad.warnings].join("\n")).toContain("strict WKT2");
+    // PROJ's own WKT2 places.
+    const placed = await georeferenceTileset(declared(good), { proj });
+    expect(placed.mode).toBe("reprojected");
+    expect(placed.frame.units.projected).toBe(true);
   });
 });

@@ -49,14 +49,20 @@
 //   }
 //
 // A rigid tileset's root `transform` is the rigid placement's matrix (call
-// 13); `checkRigidTransform` holds the two together. The glTF-level
+// 13); `checkRigidTransform` (georeferenceTileset.ts) holds the two together. The glTF-level
 // EXT_geospatial_crs and EXT_georeference aren't read: they carry no
 // placement mode. The reader is this one module so it can follow the draft as
 // it changes. Unknown fields are ignored; a malformed one throws a
 // GeoreferenceError naming its JSON path, and nothing is guessed.
-import { EARTH, MOON, type Body } from "../scene/Body.ts";
-import type { Mat4 } from "../math/mat4.ts";
-import type { Tileset3D } from "../streaming/Tileset3D.ts";
+//
+// This module is the parser alone, and imports nothing with side effects:
+// `Tileset3D.load` imports it on demand, only for a tileset.json that has the
+// extension, and a module with side-effecting imports (scene/Body.ts) would
+// be kept in every bundle that re-exports it. So the bodies are passed in
+// (`parseGeoreference`), and `readGeoreference`, which passes EARTH and MOON,
+// is in georeferenceTileset.ts with `georeferenceTileset` and
+// `checkRigidTransform`, which need the engineering modules.
+import type { Body } from "../scene/Body.ts";
 import type {
   AlignmentDefinition,
   HorizontalElement,
@@ -64,14 +70,8 @@ import type {
   VerticalProfile,
 } from "./alignment.ts";
 import type { AreaOfInterest, CrsRef } from "./crs.ts";
-import { EngineeringFrame, type SiteTransform } from "./EngineeringFrame.ts";
-import {
-  placeReprojected,
-  placeRigid,
-  type TilesetPlacement,
-} from "./placement.ts";
-import type { GridSource } from "./proj.ts";
-import type { ProjApi } from "./projApi.ts";
+import type { SiteTransform } from "./EngineeringFrame.ts";
+import { wkt2Problem } from "./wkt2.ts";
 
 /** The proposed tileset-level extension (held item 4: its name is the owner's). */
 export const ENGINEERING_FRAME_EXTENSION = "EXT_engineering_frame";
@@ -81,17 +81,20 @@ const WKT2_EXTENSION = "EXT_geospatial_crs_wkt2";
 /** The longest WKT2 read, in characters. */
 const MAX_WKT2 = 65_536;
 const MAX_ALIGNMENTS = 64;
+/** The most horizontal elements, or profile segments, read per alignment. */
+const MAX_ELEMENTS = 4096;
 /** The longest name read (frame, alignment), in characters. */
 const MAX_NAME = 256;
 /** A registry name, as PROJ's authorities are: "EPSG", "IAU_2015", "ESRI". */
 const AUTHORITY = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;
 /** A decimal year, as the draft writes `epoch`. */
 const DECIMAL_YEAR = /^\d{1,4}(\.\d+)?$/;
-const ROOT = `extensions.${ENGINEERING_FRAME_EXTENSION}`;
-/** Metres: the drawn anchor's tolerance in `checkRigidTransform`. */
-const ANCHOR_TOLERANCE = 1e-3;
-/** Relative: a column's tolerance in `checkRigidTransform`. */
-const COLUMN_TOLERANCE = 1e-9;
+/** The declaration's JSON path from the tileset's root. */
+// A plain literal: a template at the top level would count as a side effect
+// to the bundler, keeping this module in bundles that never parse a
+// declaration.
+export const GEOREFERENCE_PATH = "extensions.EXT_engineering_frame";
+const ROOT = GEOREFERENCE_PATH;
 
 /** A tileset's placement as declared: the mode, and a rigid one's anchor. */
 export type DeclaredPlacement =
@@ -272,11 +275,9 @@ function readCrs(value: unknown, path: string): CrsRef {
     }
     if (wkid.epoch !== undefined) {
       const epoch = wkid.epoch;
-      // The draft writes a decimal-year string; a number is taken too.
+      // The draft writes a decimal-year string, as is read here.
       if (typeof epoch === "string" && DECIMAL_YEAR.test(epoch)) {
         ref.epoch = Number(epoch);
-      } else if (typeof epoch === "number") {
-        ref.epoch = finite(epoch, `${at}.epoch`);
       } else {
         throw new GeoreferenceError(
           `${at}.epoch`,
@@ -300,6 +301,13 @@ function readCrs(value: unknown, path: string): CrsRef {
       `${at}.wkt2`,
       `is ${wkt2.length.toLocaleString("en-US")} characters; at most ${MAX_WKT2.toLocaleString("en-US")} are read`,
     );
+  }
+  // The draft's "MUST be a Well-Known Text (version 2) string": anything
+  // else (a PROJ string, AUTH:CODE, PROJJSON) proj_create would also accept.
+  // EngineeringFrame then parses it with PROJ's strict WKT parser.
+  const problem = wkt2Problem(wkt2);
+  if (problem !== undefined) {
+    throw new GeoreferenceError(`${at}.wkt2`, problem);
   }
   return { format, wkt2 };
 }
@@ -336,7 +344,27 @@ function readArea(value: unknown, path: string): AreaOfInterest {
 
 /** A spiral's radius: JSON has no Infinity, so null is a tangent end. */
 function radius(value: unknown, path: string): number {
-  return value === null ? Infinity : finite(value, path);
+  return value === null ? Infinity : nonZero(value, path);
+}
+
+function nonZero(value: unknown, path: string): number {
+  const n = finite(value, path);
+  if (n === 0) {
+    throw new GeoreferenceError(path, "must not be 0");
+  }
+  return n;
+}
+
+/** At most MAX_ELEMENTS items. */
+function elements(value: unknown, path: string): unknown[] {
+  const items = array(value, path);
+  if (items.length > MAX_ELEMENTS) {
+    throw new GeoreferenceError(
+      path,
+      `holds ${items.length} items; at most ${MAX_ELEMENTS} are read`,
+    );
+  }
+  return items;
 }
 
 function readElement(value: unknown, path: string): HorizontalElement {
@@ -347,12 +375,12 @@ function readElement(value: unknown, path: string): HorizontalElement {
     `${path}.kind`,
     "kind",
   );
-  const length = finite(element.length, `${path}.length`);
+  const length = positive(element.length, `${path}.length`);
   if (kind === "line") {
     return { kind, length };
   }
   if (kind === "arc") {
-    return { kind, length, radius: finite(element.radius, `${path}.radius`) };
+    return { kind, length, radius: nonZero(element.radius, `${path}.radius`) };
   }
   return {
     kind,
@@ -370,7 +398,7 @@ function readSegment(value: unknown, path: string): ProfileSegment {
     `${path}.kind`,
     "kind",
   );
-  const length = finite(segment.length, `${path}.length`);
+  const length = positive(segment.length, `${path}.length`);
   return kind === "grade"
     ? { kind, length, grade: finite(segment.grade, `${path}.grade`) }
     : {
@@ -386,7 +414,7 @@ function readProfile(value: unknown, path: string): VerticalProfile {
   return {
     startStation: finite(profile.startStation, `${path}.startStation`),
     startElevation: finite(profile.startElevation, `${path}.startElevation`),
-    segments: array(profile.segments, `${path}.segments`).map((s, i) =>
+    segments: elements(profile.segments, `${path}.segments`).map((s, i) =>
       readSegment(s, `${path}.segments[${i}]`),
     ),
   };
@@ -402,8 +430,8 @@ function readAlignment(value: unknown, path: string): AlignmentDefinition {
     start: [e!, n!],
     startAzimuth: finite(alignment.startAzimuth, `${path}.startAzimuth`),
     startStation: finite(alignment.startStation, `${path}.startStation`),
-    horizontal: array(alignment.horizontal, `${path}.horizontal`).map((h, i) =>
-      readElement(h, `${path}.horizontal[${i}]`),
+    horizontal: elements(alignment.horizontal, `${path}.horizontal`).map(
+      (h, i) => readElement(h, `${path}.horizontal[${i}]`),
     ),
   };
   if (alignment.vertical !== undefined) {
@@ -427,16 +455,27 @@ function readPlacement(value: unknown, path: string): DeclaredPlacement {
   return { mode, anchor: [e!, n!, u!] };
 }
 
+/** The bodies a declaration may name, as `parseGeoreference` maps them. */
+export interface GeoreferenceBodies {
+  readonly EARTH: Body;
+  readonly MOON: Body;
+}
+
 /**
- * The `EXT_engineering_frame` declaration of a parsed tileset.json, or
+ * `readGeoreference` (georeferenceTileset.ts), with the bodies passed in:
+ * the `EXT_engineering_frame` declaration of a parsed tileset.json, or
  * undefined when it has none. Throws a `GeoreferenceError` naming the JSON
  * path for an unknown mode or format, a missing `crs` or `placement`, a
- * non-finite number, a WKT2 over 65,536 characters, or more than 64
- * alignments. Fields it doesn't know are ignored.
+ * non-finite number, a `wkt2` that isn't WKT2 in form (`wkt2Problem`: a PROJ
+ * string, AUTH:CODE or PROJJSON) or is over 65,536 characters, or more than
+ * 64 alignments (or 4,096 elements in one). Fields it doesn't know are
+ * ignored.
  */
-export function readGeoreference(
+export function parseGeoreference(
   tilesetJson: unknown,
+  bodies: GeoreferenceBodies,
 ): TilesetGeoreference | undefined {
+  const { EARTH, MOON } = bodies;
   if (!isObject(tilesetJson) || !isObject(tilesetJson.extensions)) {
     return undefined;
   }
@@ -491,128 +530,4 @@ export function readGeoreference(
     );
   }
   return result;
-}
-
-/**
- * Throws a `GeoreferenceError` naming `placement.anchor` unless a rigid
- * tileset's root transform is its placement's matrix: the root transform
- * must draw the anchor within 1 mm of `placement.displayed(anchor)`, and each
- * of its columns must be within 1e-9 (relative to that column's length) of
- * `rigid.matrix`'s.
- */
-export function checkRigidTransform(
-  placement: TilesetPlacement,
-  rootTransform: Mat4,
-): void {
-  const rigid = placement.rigid;
-  if (placement.mode !== "rigid" || rigid === undefined) {
-    throw new Error("checkRigidTransform: the placement isn't rigid");
-  }
-  const path = `${ROOT}.placement.anchor`;
-  const a = rigid.anchor;
-  const m = rootTransform;
-  const shownAt = placement.displayed(a);
-  let gap = 0;
-  for (let i = 0; i < 3; i++) {
-    const drawn =
-      m[i]! * a[0]! + m[4 + i]! * a[1]! + m[8 + i]! * a[2]! + m[12 + i]!;
-    gap = Math.hypot(gap, drawn - shownAt[i]!);
-  }
-  if (!(gap <= ANCHOR_TOLERANCE)) {
-    throw new GeoreferenceError(
-      path,
-      `the root transform draws the anchor ${gap.toPrecision(3)} m from where its rigid placement does (at most ${ANCHOR_TOLERANCE} m)`,
-    );
-  }
-  for (let c = 0; c < 4; c++) {
-    let difference = 0;
-    let length = 0;
-    for (let r = 0; r < 4; r++) {
-      const expected = rigid.matrix[4 * c + r]!;
-      difference = Math.hypot(difference, m[4 * c + r]! - expected);
-      length = Math.hypot(length, expected);
-    }
-    const relative = difference / length;
-    if (!(relative <= COLUMN_TOLERANCE)) {
-      throw new GeoreferenceError(
-        path,
-        `the root transform's column ${c} differs from the rigid placement's at the anchor by ${relative.toPrecision(3)} relative (at most ${COLUMN_TOLERANCE})`,
-      );
-    }
-  }
-}
-
-const isIdentity = (m: ArrayLike<number>) => {
-  for (let i = 0; i < 16; i++) {
-    if (m[i] !== (i % 5 === 0 ? 1 : 0)) {
-      return false;
-    }
-  }
-  return true;
-};
-
-/**
- * Places a tileset by its `EXT_engineering_frame` declaration: loads the
- * frame (`EngineeringFrame.load`, named by the declaration, else the
- * tileset's URL), builds the declared placement, checks a rigid one against
- * `tileset.root.transform` (`checkRigidTransform`), and sets
- * `tileset.placement`. PROJ is used here, never by `Tileset3D.load`.
- *
- * Refuses, with an error and a `warnings` entry, a tileset that declares
- * nothing (no placement is guessed), one whose `modelMatrix` isn't the
- * identity (`root.transform` includes it, and a later change would leave the
- * placement no longer what is drawn), and a rigid anchor the root transform
- * disagrees with.
- */
-export async function georeferenceTileset(
-  tileset: Tileset3D,
-  options: { readonly proj: ProjApi; readonly grids?: GridSource },
-): Promise<TilesetPlacement> {
-  const refuse = (error: Error): never => {
-    tileset.warnings.add(error.message);
-    throw error;
-  };
-  const declared = tileset.georeference;
-  if (declared === undefined) {
-    return refuse(
-      new Error(
-        `georeferenceTileset: ${tileset.url} has no readable ${ENGINEERING_FRAME_EXTENSION} declaration; no placement is guessed`,
-      ),
-    );
-  }
-  if (!isIdentity(tileset.modelMatrix)) {
-    return refuse(
-      new Error(
-        `georeferenceTileset: ${tileset.url} has a modelMatrix other than the identity, so its declared placement wouldn't be what is drawn; place it without one`,
-      ),
-    );
-  }
-  const frame = await EngineeringFrame.load(
-    {
-      name: declared.name ?? tileset.url,
-      body: declared.body,
-      crs: declared.crs,
-      ...(declared.site ? { site: declared.site } : {}),
-      ...(declared.alignments ? { alignments: declared.alignments } : {}),
-      ...(declared.areaOfInterest
-        ? { areaOfInterest: declared.areaOfInterest }
-        : {}),
-    },
-    options.grids
-      ? { proj: options.proj, grids: options.grids }
-      : { proj: options.proj },
-  );
-  const placement =
-    declared.placement.mode === "rigid"
-      ? placeRigid(frame, declared.placement.anchor)
-      : placeReprojected(frame);
-  if (placement.mode === "rigid") {
-    try {
-      checkRigidTransform(placement, tileset.root.transform);
-    } catch (error) {
-      return refuse(error as Error);
-    }
-  }
-  tileset.placement = placement;
-  return placement;
 }

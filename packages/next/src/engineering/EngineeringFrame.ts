@@ -20,6 +20,7 @@ import {
   MOON_GEOGRAPHIC_CRS,
   crsUnits,
   crsDefinition,
+  shownCrs,
   listOperations,
   compoundParts,
   resolveOperation,
@@ -282,7 +283,7 @@ function fallbackCrs(
     )
   ) {
     return {
-      reason: `the horizontal CRS ${crsDefinition(horizontal.ref)} doesn't resolve alone`,
+      reason: `the horizontal CRS ${shownCrs(horizontal.ref)} doesn't resolve alone`,
     };
   }
   return {
@@ -341,8 +342,7 @@ function noVerticalGrid(
   ) {
     return undefined;
   }
-  const shown = crsDefinition(definition.crs);
-  const from = shown.length > 80 ? `${shown.slice(0, 77)}...` : shown;
+  const from = shownCrs(definition.crs);
   const ballpark =
     "PROJ offers only a ballpark operation, with undefined accuracy (pass allowBallpark: true to accept it)";
   const { name } = parts.vertical;
@@ -615,7 +615,7 @@ export class EngineeringFrame {
     const units = crsUnits(proj, definition.crs);
     if (!units.projected) {
       throw new Error(
-        `EngineeringFrame: an engineering frame needs a projected CRS; ${crsDefinition(definition.crs).slice(0, 80)} is geographic or not projected`,
+        `EngineeringFrame: an engineering frame needs a projected CRS; ${shownCrs(definition.crs)} is geographic or not projected`,
       );
     }
     return { target, units };
@@ -676,7 +676,7 @@ export class EngineeringFrame {
         operation = resolveOperation(proj, replacement, target, options);
       } catch (fallbackError) {
         throw new Error(
-          `EngineeringFrame "${definition.name}": the ${model} fallback for ${crsDefinition(definition.crs)} (${(error as Error).message}) can't be resolved either: ${(fallbackError as Error).message}`,
+          `EngineeringFrame "${definition.name}": the ${model} fallback for ${shownCrs(definition.crs)} (${(error as Error).message}) can't be resolved either: ${(fallbackError as Error).message}`,
           { cause: fallbackError },
         );
       }

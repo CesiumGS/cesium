@@ -5,10 +5,9 @@
 // engine's workers never answer, and the glTF parser's Basis transcoder
 // doesn't load in Node).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import {
-  ENGINEERING_FRAME_EXTENSION,
-  georeferenceTileset,
-} from "../src/engineering/georeference.ts";
+import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
+import { ENGINEERING_FRAME_EXTENSION } from "../src/engineering/georeference.ts";
+import { georeferenceTileset } from "../src/engineering/georeferenceTileset.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
@@ -214,6 +213,71 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       georeferenceTileset(tileset, { proj: {} as ProjApi }),
     ).rejects.toThrow(/EXT_engineering_frame/);
     expect(tileset.placement).toBeUndefined();
+  });
+
+  describe("georeferenceTileset around the frame's load (EngineeringFrame.load stubbed)", () => {
+    const declared = () =>
+      tilesetJson({ [ENGINEERING_FRAME_EXTENSION]: reprojected });
+    const frame = { definition: { name: "stub" } } as EngineeringFrame;
+
+    it("places a reprojected declaration when nothing changes", async () => {
+      const tileset = await load(declared());
+      const spy = vi.spyOn(EngineeringFrame, "load").mockResolvedValue(frame);
+      try {
+        const placement = await georeferenceTileset(tileset, {
+          proj: {} as ProjApi,
+        });
+        expect(placement.mode).toBe("reprojected");
+        expect(placement.frame).toBe(frame);
+        expect(tileset.placement).toBe(placement);
+        expect(spy.mock.calls[0]![0]).toMatchObject({ name: URL_ });
+        expect([...tileset.warnings]).toEqual([]);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it("refuses, and warns, when modelMatrix changes while the frame loads", async () => {
+      const tileset = await load(declared());
+      const spy = vi
+        .spyOn(EngineeringFrame, "load")
+        .mockImplementation(async () => {
+          // The application moves the tileset while grids download.
+          tileset.modelMatrix = m4.setTranslation(
+            m4.mat4(),
+            new Float64Array([0, 0, 5]),
+          );
+          return frame;
+        });
+      try {
+        await expect(
+          georeferenceTileset(tileset, { proj: {} as ProjApi }),
+        ).rejects.toThrow(/modelMatrix/);
+        expect(spy).toHaveBeenCalledOnce();
+        expect(tileset.placement).toBeUndefined();
+        expect([...tileset.warnings].join("\n")).toContain("modelMatrix");
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it("refuses, and warns, when the frame doesn't load", async () => {
+      const tileset = await load(declared());
+      const spy = vi
+        .spyOn(EngineeringFrame, "load")
+        .mockRejectedValue(new Error(`PROJ said no ${"x".repeat(500)}`));
+      try {
+        await expect(
+          georeferenceTileset(tileset, { proj: {} as ProjApi }),
+        ).rejects.toThrow(/doesn't load: PROJ said no/);
+        const warning = [...tileset.warnings].join("\n");
+        expect(warning).toContain("doesn't load");
+        expect(warning.length).toBeLessThan(400);
+        expect(tileset.placement).toBeUndefined();
+      } finally {
+        spy.mockRestore();
+      }
+    });
   });
 
   it("tileOfDraw finds a loaded tile's draw, and nothing once it unloads", async () => {

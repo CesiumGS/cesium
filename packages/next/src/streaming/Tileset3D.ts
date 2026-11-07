@@ -7,6 +7,7 @@
  * exceeds its byte budget; a tile touched by any view stays.
  */
 import type { Engine } from "../scene/Engine.ts";
+import { EARTH, MOON } from "../scene/Body.ts";
 import type {
   CastRay,
   ClipBox,
@@ -50,11 +51,8 @@ import {
   type DebugColor,
 } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
-import {
-  GeoreferenceError,
-  readGeoreference,
-  type TilesetGeoreference,
-} from "../engineering/georeference.ts";
+// Types only: the parser loads on demand (`readDeclaration`).
+import type { TilesetGeoreference } from "../engineering/georeference.ts";
 import type { TilesetPlacement } from "../engineering/placement.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
@@ -82,6 +80,48 @@ const LOADING_IMAGERY = 1e15;
 const CANCEL_AFTER_FRAMES = 30;
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
+/**
+ * georeference.ts's ENGINEERING_FRAME_EXTENSION, written out so the parser
+ * is imported only for a tileset.json that has it.
+ */
+const ENGINEERING_FRAME = "EXT_engineering_frame";
+
+/** A tileset.json's declaration as read: parsed, or why not. */
+type Declaration =
+  { readonly georeference: TilesetGeoreference } | { readonly warning: string };
+
+/**
+ * Reads a tileset.json's EXT_engineering_frame, importing the parser only
+ * when the extension is there (other tilesets pay nothing). A malformed
+ * declaration, or anything else that goes wrong reading it, is a warning:
+ * it never fails the load.
+ */
+async function readDeclaration(
+  json: TileJson,
+): Promise<Declaration | undefined> {
+  const extensions: unknown = json?.extensions;
+  if (
+    typeof extensions !== "object" ||
+    extensions === null ||
+    !(ENGINEERING_FRAME in extensions)
+  ) {
+    return undefined;
+  }
+  try {
+    const { parseGeoreference } =
+      await import("../engineering/georeference.ts");
+    const georeference = parseGeoreference(json, { EARTH, MOON });
+    return georeference === undefined ? undefined : { georeference };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // The parser's own errors name the extension and the field.
+    return {
+      warning: message.startsWith(`${ENGINEERING_FRAME}:`)
+        ? message
+        : `${ENGINEERING_FRAME}: unreadable (${message.slice(0, 200)})`,
+    };
+  }
+}
 
 /**
  * A hierarchical content source other than a 3D Tiles tileset.json (plan
@@ -250,7 +290,10 @@ const WHITE = [1, 1, 1, 1] as const;
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
   readonly events = new Emitter<TilesetEvents>();
-  /** tileset.json's top-level `extensions` (none for terrain). */
+  /**
+   * tileset.json's top-level `extensions` (none for terrain), frozen at the
+   * top level only: the objects inside are the parsed JSON itself.
+   */
   readonly extensions: Readonly<Record<string, unknown>>;
   /**
    * Its `EXT_engineering_frame` declaration, parsed at load. Undefined when
@@ -701,6 +744,7 @@ export class Tileset3D implements TileTree {
     readonly geometricError: number,
     source?: TileSource,
     tilesetJson?: TileJson,
+    declaration?: Declaration,
   ) {
     if (options.customShader && options.style) {
       throw new Error("Tileset3D: give a customShader or a style, not both.");
@@ -729,16 +773,12 @@ export class Tileset3D implements TileTree {
       !Array.isArray(extensions)
         ? Object.freeze({ ...extensions })
         : NO_EXTENSIONS;
-    try {
-      const georeference = readGeoreference(tilesetJson);
-      if (georeference !== undefined) {
-        this.georeference = georeference;
+    if (declaration !== undefined) {
+      if ("georeference" in declaration) {
+        this.georeference = declaration.georeference;
+      } else {
+        this.warnings.add(declaration.warning);
       }
-    } catch (error) {
-      if (!(error instanceof GeoreferenceError)) {
-        throw error;
-      }
-      this.warnings.add(error.message);
     }
     if (options.placement !== undefined) {
       this.placement = options.placement;
@@ -774,6 +814,7 @@ export class Tileset3D implements TileTree {
       { warnings },
       options.modelMatrix,
     );
+    const declaration = await readDeclaration(json);
     const tileset = new Tileset3D(
       engine,
       world,
@@ -783,6 +824,7 @@ export class Tileset3D implements TileTree {
       geometricError,
       undefined,
       json,
+      declaration,
     );
     warnings.forEach((w) => tileset.warnings.add(w));
     tileset.stats.tiles = countTiles(root);

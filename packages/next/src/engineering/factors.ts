@@ -12,7 +12,7 @@
 // position: that is on the target's datum (WGS84 for EPSG:4979) after the
 // datum operation, a metre or two away, which would change k by about 1e-10
 // (and the results would not match pyproj's Proj.get_factors at 1e-12).
-import { crsDefinition, unbound } from "./crs.ts";
+import { crsDefinition, crsObject, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
 import type { PJ, ProjApi } from "./projApi.ts";
 
@@ -126,7 +126,15 @@ function projectionOf(frame: EngineeringFrame): Projection {
   const P: ProjApi = frame.proj;
   // A bound CRS's projection is its source CRS's; a compound CRS's horizontal
   // part is its first component (itself possibly bound).
-  const crs = unbound(P, P.proj_create(crsDefinition(frame.definition.crs)));
+  // A WKT2 refused if it holds a PROJ-string token (crsObject); a code as
+  // before.
+  const ref = frame.definition.crs;
+  const crs = unbound(
+    P,
+    ref.format === "wkt2"
+      ? crsObject(P, ref, "the CRS")
+      : P.proj_create(crsDefinition(ref)),
+  );
   const horizontal =
     P.proj_get_type(crs) === P.PJ_TYPE_COMPOUND_CRS
       ? unbound(P, P.proj_crs_get_sub_crs(crs, 0))
