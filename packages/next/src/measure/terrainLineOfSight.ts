@@ -114,6 +114,9 @@ export function terrainLineOfSight(
       `exact against the drawn terrain triangles (${levels}); the drawn surface may lie up to ±${round(known.geometricError)} m from the source's heights (level ${known.minLevel}'s geometric error, the coarsest crossed)`,
     );
     notes.push(
+      "that per-level error (level zero's, halving each level, as 1.x) is a heuristic, not a bound: quantized-mesh carries no per-tile error (a real bound is plan §13.16's)",
+    );
+    notes.push(
       source
         ? `plus the source's own ±${source.meters} m (${source.statistic})`
         : "the source's own accuracy is not stated",

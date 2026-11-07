@@ -150,10 +150,15 @@ let sampleT = new Float64Array(0);
 let sampleD = new Float64Array(0);
 let sampleC = new Float64Array(0);
 let sampleE = new Float64Array(0);
+/** Which triangle each sample lies over: mesh id × 2^26 + triangle. */
+let sampleK = new Float64Array(0);
+let meshIds = 0;
 const MAX_CELLS = 2_000_000;
 
 /** A tile's triangles ready for rays: Earth-fixed, with a (u, v) grid. */
 interface RayMesh {
+  /** Distinguishes meshes in clearance samples. */
+  id: number;
   rectangle: Rectangle;
   ellipsoid: Ellipsoid;
   heights: TerrainHeights;
@@ -280,18 +285,20 @@ export function castTerrainRay(
   let bestHi = 0;
   let cells = 0;
   let samples = 0;
-  const addSample = (t: number, c: number, error: number) => {
+  const addSample = (t: number, c: number, error: number, key: number) => {
     if (samples === sampleT.length) {
       const grow = Math.max(1024, samples * 2);
       sampleT = grown(sampleT, grow);
       sampleD = grown(sampleD, grow);
       sampleC = grown(sampleC, grow);
       sampleE = grown(sampleE, grow);
+      sampleK = grown(sampleK, grow);
     }
     sampleT[samples] = t;
     sampleD[samples] = c - error;
     sampleC[samples] = c;
     sampleE[samples] = error;
+    sampleK[samples] = key;
     samples++;
   };
 
@@ -453,7 +460,7 @@ export function castTerrainRay(
         if (height === Infinity) {
           continue;
         }
-        addSample(t, height, error);
+        addSample(t, height, error, mesh.id * 2 ** 26 + k);
         if (height < best) {
           best = height;
           bestT = t;
@@ -662,32 +669,52 @@ export function castTerrainRay(
 }
 
 /**
- * The lowest clearance less its error over the samples, leaving out each
- * end's run while the segment is still within the error of its own ground
- * (only at the segment's true ends).
+ * The lowest clearance less its error over the samples, leaving out the
+ * ground each true end stands on: the drawn triangle under the observer
+ * (or target), and nothing beyond it. Within that triangle the segment
+ * cannot be told from the observer's own ground; past it, the terrain's
+ * error counts in full, however low the segment runs.
  */
 function margin(
   count: number,
   fromGround: boolean,
   toGround: boolean,
 ): NonNullable<TerrainRayResult["margin"]> {
-  // The runs at the ends are the samples before the first with room, and
-  // after the last; with none, nothing is left out.
-  let first = Infinity;
-  let last = -Infinity;
+  const ends = 1e-12;
+  const startKeys = new Set<number>();
+  const endKeys = new Set<number>();
   for (let i = 0; i < count; i++) {
-    if (sampleD[i]! > 0) {
-      first = Math.min(first, sampleT[i]!);
-      last = Math.max(last, sampleT[i]!);
+    if (fromGround && sampleT[i]! <= ends) {
+      startKeys.add(sampleK[i]!);
+    }
+    if (toGround && sampleT[i]! >= 1 - ends) {
+      endKeys.add(sampleK[i]!);
     }
   }
-  const lo = fromGround && first < Infinity ? first : -Infinity;
-  const hi = toGround && last > -Infinity ? last : Infinity;
+  // The end triangles' stretches along the segment.
+  let lo = -Infinity;
+  let hi = Infinity;
+  for (let i = 0; i < count; i++) {
+    if (startKeys.has(sampleK[i]!)) {
+      lo = Math.max(lo, sampleT[i]!);
+    }
+    if (endKeys.has(sampleK[i]!)) {
+      hi = Math.min(hi, sampleT[i]!);
+    }
+  }
   let at = -1;
   for (let i = 0; i < count; i++) {
     const t = sampleT[i]!;
-    if (t >= lo && t <= hi && (at < 0 || sampleD[i]! < sampleD[at]!)) {
+    if (t > lo && t < hi && (at < 0 || sampleD[i]! < sampleD[at]!)) {
       at = i;
+    }
+  }
+  if (at < 0) {
+    // The ends' own triangles are all there is: nothing to leave out.
+    for (let i = 0; i < count; i++) {
+      if (at < 0 || sampleD[i]! < sampleD[at]!) {
+        at = i;
+      }
     }
   }
   return {
@@ -1278,6 +1305,7 @@ function buildMesh(tile: TerrainRayTile, ellipsoid: Ellipsoid): RayMesh {
     latZ0[i] = coneApex(a, e2, latSin[i]!);
   }
   return {
+    id: ++meshIds,
     rectangle: r,
     ellipsoid,
     heights: t,

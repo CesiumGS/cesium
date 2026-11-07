@@ -735,9 +735,10 @@ describe("globe selections mark stand-ins", () => {
         contains(t.globe!.rectangle, 0.3, 0.2),
       )!;
       await load(source, level0);
-      // Loading expands a tile with the availability known then; as if its
-      // children's were still loading:
-      level0.globe!.expanded = false;
+      // Its metadata (its children's availability) hasn't come: loading
+      // leaves it unexpanded rather than childless.
+      expect(level0.globe!.expanded).toBe(false);
+      expect(level0.children).toHaveLength(0);
       const selection =
         policy === "budgeted"
           ? new GlobeBudgetedSelection(source, {})

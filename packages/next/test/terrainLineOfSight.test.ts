@@ -159,17 +159,44 @@ describe("terrainLineOfSight", () => {
 
   it("is clear from an observer on the ground: its own ground is not the error band", () => {
     // Flat drawn terrain, level 14 (±4.7 m): a dish standing on a vertex
-    // looks at a mast top 2 km away.
+    // looks up at a point 300 m high, 4 km away. Past the dish's own
+    // triangle (about 200 m) the segment is well clear of the error.
     const rects = strip(-0.001, 0.001, 2, -0.0005, 0.0005);
     const tiles = rects.map((rectangle) => gridTile(rectangle, 33, () => 0));
     const target = stripTarget(
       rects.map((rectangle, i) => ({ rectangle, tile: tiles[i]! })),
     );
     const dish = vertex(tiles[0]!, 16 * 33 + 20);
-    const r = terrainLineOfSight(dish, at(0.0003, 0.0001, 100), target);
+    const r = terrainLineOfSight(dish, at(0.0003, 0.0001, 300), target);
     expect(Math.abs(r.minClearance!)).toBeLessThan(1e-6);
     expect(r.clear).toBe(true);
     expect(r.accuracy.note).not.toMatch(/may block/);
+  });
+
+  it("is not clear along a low stretch over coarse tiles, past the observer's own ground", () => {
+    // Four level-9 flat tiles (±151 m). From the ground to 300 m, 20 km
+    // off, the segment stays under 151 m for about 10 km.
+    const size = Math.PI / 2 ** 9;
+    const rects = strip(-size, size, 2, -size / 2, size / 2).flatMap((r) => [
+      { ...r, north: 0 },
+      { ...r, south: 0 },
+    ]);
+    const target = stripTarget(
+      rects.map((rectangle) => ({
+        rectangle,
+        tile: gridTile(rectangle, 65, () => 0, 9),
+      })),
+    );
+    const r = terrainLineOfSight(
+      at(-0.3 * size, 0.1 * size, 0),
+      at(-0.3 * size + 20000 / A, 0.1 * size, 300),
+      target,
+    );
+    expect(r.blockedAt).toBeUndefined();
+    expect(r.unknownFraction).toBe(0);
+    expect(r.clear).toBeUndefined();
+    expect(r.accuracy.note).toMatch(/so the true terrain may block/);
+    expect(r.accuracy.note).toMatch(/heuristic, not a bound/);
   });
 
   it("never rounds a share to 0% or 100% when it isn't", () => {

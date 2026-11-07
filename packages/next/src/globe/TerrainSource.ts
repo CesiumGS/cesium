@@ -486,7 +486,12 @@ export class TerrainSource {
       info.maximumHeight,
     );
     if (!g.expanded) {
-      this.createChildren(tile, g);
+      // Only once its children's availability is known: created sooner, a
+      // tile whose metadata tile hasn't loaded would have none and pass
+      // for the finest there is. Unexpanded, it is a stand-in until then.
+      if (this.availabilityKnown(tile, g.level + 1)) {
+        this.createChildren(tile, g);
+      }
       return;
     }
     // Children created before this tile loaded took a coarser ancestor's

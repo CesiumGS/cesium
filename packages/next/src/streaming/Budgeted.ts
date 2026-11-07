@@ -525,7 +525,6 @@ export class BudgetedSelection extends StepwiseSelection {
     return fov / sweep >= this.motionBenefit * load;
   }
 
-  /** Loaded content that can draw now (terrain also waits for imagery). */
   /**
    * Whether finer content may exist below a tile whose children aren't
    * known yet (terrain waiting on availability); none for 3D Tiles.
@@ -534,6 +533,7 @@ export class BudgetedSelection extends StepwiseSelection {
     return false;
   }
 
+  /** Loaded content that can draw now (terrain also waits for imagery). */
   protected drawable(tile: Tile, _result: SelectionResult): boolean {
     return tile.contentAvailable;
   }
