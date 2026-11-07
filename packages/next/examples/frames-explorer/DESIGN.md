@@ -384,8 +384,11 @@ the answer; the knobs; the proof. Nothing opens in a sheet.
   references apply here." or "Off the checked setup: “Site latitude” and the
   time differ from it.", with **Back to the checked setup**; then each knob
   (a range's checked value marked on its track; a rate over three decades on
-  a log track; a choice as a segmented control naming its full label below);
-  then the time, with Play or Pause.
+  a log track; a choice as a segmented control naming its full label below).
+  No time row (the owner, 2026-11-06: redundant with the viewer's timeline,
+  the only time control): the time is still part of the checked setup, so
+  the marker names it when it moved ("time 2026-04-07 04:00 UTC (checked:
+  2026-04-06 23:00 UTC)"), Back restores it, and the link carries it as `t`.
 - **Proof** (the owner, 2026-11-06: no sheet): each row one full-width
   button, 44 px or taller, with a chevron and `aria-expanded`, that unfolds in
   place into its difference against its tolerance, what it is compared

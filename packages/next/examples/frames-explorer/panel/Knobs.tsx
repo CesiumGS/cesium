@@ -10,14 +10,12 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { svgPause } from "@stratakit/icons/pause";
-import { svgPlay } from "@stratakit/icons/play";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { svgUndo } from "@stratakit/icons/undo";
 import { Icon } from "@stratakit/mui";
 import { memo, useId } from "react";
 import type { KnobSpec, KnobValue } from "../scenarios/spec.ts";
-import { knobText, movedText, utcText } from "./knobText.ts";
+import { knobText, movedText } from "./knobText.ts";
 import { useLiveTime } from "./liveTime.ts";
 import { equalOn } from "./memo.ts";
 import type { ScenarioPanelView } from "./model.ts";
@@ -128,16 +126,6 @@ function MovedWithTime({ s }: { s: ScenarioPanelView }) {
   return <>{movedText({ ...s, epochUtc: epochUtc ?? s.checkedEpochUtc })}</>;
 }
 
-/** The scenario's time, now: the one line of the knobs that moves every frame while the clock plays. */
-function TimeValue({ checkedEpochUtc }: { checkedEpochUtc: string }) {
-  const { epochUtc } = useLiveTime();
-  return (
-    <span className="fx-knob-value fx-num">
-      {utcText(epochUtc ?? checkedEpochUtc)}
-    </span>
-  );
-}
-
 export const Knobs = memo(
   KnobsView,
   equalOn("scenario", [
@@ -147,8 +135,6 @@ export const Knobs = memo(
     "values",
     "checked",
     "checkedEpochUtc",
-    "playing",
-    "rate",
     "eop",
   ]),
 );
@@ -157,12 +143,10 @@ function KnobsView({
   scenario,
   onKnob,
   onBack,
-  onPlay,
 }: {
   scenario: ScenarioPanelView;
   onKnob: (id: string, value: KnobValue) => void;
   onBack: () => void;
-  onPlay: (on: boolean) => void;
 }) {
   const s = scenario;
   const timeMoved = s.changed.includes("time");
@@ -225,42 +209,21 @@ function KnobsView({
           />
         ),
       )}
-      <div className="fx-knob fx-knob-time">
-        <div className="fx-knob-head">
-          <span className="fx-knob-label">Time</span>
-          <TimeValue checkedEpochUtc={s.checkedEpochUtc} />
-        </div>
-        <div className="fx-time-row">
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Icon href={s.playing ? svgPause : svgPlay} />}
-            onClick={() => onPlay(!s.playing)}
-          >
-            {s.playing
-              ? "Pause"
-              : `Play${s.rate !== 1 ? ` at ${s.rate.toLocaleString("en-US")}×` : ""}`}
-          </Button>
-          <Typography variant="caption-lg" color="textSecondary" render={<p />}>
-            {timeMoved
-              ? `Checked at ${utcText(s.checkedEpochUtc)}. `
-              : "The checked setup's time. "}
-            Also set with the time controls over the globe.
-          </Typography>
-        </div>
-        {eop && eop.kind !== "measured" && (
-          <Typography
-            variant="caption-lg"
-            render={<p />}
-            className="fx-unbounded"
-          >
-            Earth orientation{" "}
-            {eop.kind === "predicted"
-              ? `predicted, ${eop.ageDays.toFixed(1)} days past the last measured row (IERS Bulletin A)`
-              : `outside the table (${eop.span})`}
-          </Typography>
-        )}
-      </div>
+      {/* The time is set on the timeline under the globe (the owner,
+          2026-11-06); the marker above names it when it moved, and Back
+          restores it. Its Earth-orientation caution stays here (R8). */}
+      {eop && eop.kind !== "measured" && (
+        <Typography
+          variant="caption-lg"
+          render={<p />}
+          className="fx-unbounded"
+        >
+          Earth orientation{" "}
+          {eop.kind === "predicted"
+            ? `predicted, ${eop.ageDays.toFixed(1)} days past the last measured row (IERS Bulletin A)`
+            : `outside the table (${eop.span})`}
+        </Typography>
+      )}
     </div>
   );
 }

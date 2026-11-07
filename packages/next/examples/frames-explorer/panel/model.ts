@@ -342,8 +342,6 @@ export interface PanelActions {
   setKnob(id: string, value: KnobValue): void;
   /** Back to the checked setup: its knobs and epoch. */
   backToChecked(): void;
-  /** Plays or pauses the clock. */
-  setPlaying(on: boolean): void;
   /** The next selection of result `id` shows it without moving the camera or the overlays. */
   selectQuietly(id: string): void;
 }

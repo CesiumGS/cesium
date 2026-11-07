@@ -568,7 +568,6 @@ function ScenariosView({
                 scenario={scenario}
                 onKnob={actions.setKnob}
                 onBack={actions.backToChecked}
-                onPlay={actions.setPlaying}
               />
             </section>
 

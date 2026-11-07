@@ -59,11 +59,3 @@
 .fx-knob-choice {
   flex-wrap: wrap;
 }
-.fx-time-row {
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-300);
-}
-.fx-time-row > .MuiButton-root {
-  flex: none;
-}

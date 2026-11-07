@@ -20,7 +20,7 @@ const FINGERPRINTED = Object.keys(
 );
 
 export function createPanelActions(deps: {
-  core: Pick<PageCore, "viewer" | "client" | "view" | "invalidate">;
+  core: Pick<PageCore, "viewer" | "client" | "view">;
   link: ExampleContext["link"];
   catalog: { run(ids?: readonly string[]): Promise<string | undefined> };
   /** Loads the frame data again (frameData.ts). */
@@ -41,7 +41,7 @@ export function createPanelActions(deps: {
   report: Pick<PageReport, "report">;
   host: Pick<ScenarioHost, "show" | "setKnob" | "backToChecked" | "params">;
 }): { actions: PanelActions; dispose(): void } {
-  const { viewer, client, view, invalidate } = deps.core;
+  const { viewer, client, view } = deps.core;
   const { overlays, host } = deps;
   const actions: PanelActions = {
     runAll: () => void deps.catalog.run(),
@@ -115,10 +115,6 @@ export function createPanelActions(deps: {
     setKnob: (id, value) => host.setKnob(id, value),
     backToChecked: () => host.backToChecked(),
     selectQuietly: (id) => deps.selection.selectQuietly(id),
-    setPlaying: (on) => {
-      viewer.clock.mode = on ? "playing" : "paused";
-      invalidate();
-    },
   };
   return { actions, dispose: () => {} };
 }
