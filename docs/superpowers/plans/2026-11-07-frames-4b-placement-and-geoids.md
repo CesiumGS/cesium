@@ -932,13 +932,13 @@ No UI is in this task.
 
     Write the generator and this type from one shape: Task 14 writes what this type reads.
   - **`loadAnswers(url: string, signal: AbortSignal): Promise<Answers>`.** It validates the shape and the finite numbers, and throws naming the path.
-  - **`class ExactSnapService implements SnapService`**, with `constructor(tileset: Tileset3D /* a corridor tileset */, alignment: Alignment)`.
-    - It snaps in design space, after `pickDesign`, within the aperture converted to design units by the footprint. In order:
+  - **`class ExactSnapService implements SnapService`**, with `constructor(tileset: Tileset3D /* a corridor tileset */, alignment: Alignment)`. It is the server side of Task 16's split (owner, 2026-11-07, mirroring 1.x's `SnapService`): it takes a `ServiceSnapRequest` built from the client snap (`testPoint` = the client's `hitPoint`, `closePoint` = its `snapPoint`, the same camera snapshot) and refines it against the design data. The page runs it through `refiningSnap(request, client, exact, onUpdate)`, so the client's mesh snap shows at once and the exact answer replaces it.
+    - It snaps in design space, from `placement.designOf(testPoint)`, within the aperture converted to design units by the footprint. In order:
       1. a station tick's point (`point`);
       2. the nearest of the centerline and the lines at the cross-section's edge offsets (`segment` on a tangent, `arc` on an arc or a spiral), with `curve` as 21 points over ±100 ft;
-      3. otherwise the raw pick, with `exact` false.
-    - An exact snap has tolerance 0 and `exact` true, and its design point lies on the analytic geometry.
-    - Beyond the alignment's ends there is no station, and the raw pick is returned (Review Focus 4).
+      3. otherwise undefined, so the client's snap stands.
+    - An exact snap has tolerance 0, `exact` true and `source: "server"`, and its design point lies on the analytic geometry.
+    - Beyond the alignment's ends there is no station, and it returns undefined, so the client's snap stands (Review Focus 4).
   - **`interface CheckRow { id; label; unit; shown?: number; expected: number; tolerance: number; status: "pass" | "fail" | "not-shown"; basis: "exact" | "vertex" | "pick" }`.**
   - **`interface ShownValues`**: what the page shows, by answer id: `{ points: Map<number, { design?: Float64Array; station?: number; offset?: number; basis: CheckRow["basis"]; tolerance?: number }>; pairs: Map<string, { designDistance?: number; horizontalDistance?: number; trueDistance?: number; basis: CheckRow["basis"]; tolerance?: number }> }`.
   - **`checkRows(answers: Answers, shown: ShownValues): CheckRow[]`.** The tolerance by basis:
