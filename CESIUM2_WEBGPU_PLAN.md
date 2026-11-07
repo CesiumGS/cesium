@@ -7232,9 +7232,17 @@ are left out.
   frames that state no accuracy (Sacramento's site, the lunar site, the DSN dishes,
   the drone, the ship) use the old composer. Whether they should read
   "unbounded" instead is the owner's call.
-- **Plan 5: the API review decides whether `LEVEL_ZERO_ERROR` stays
-  exported.** It was exported for the test hill. `Trajectory.velocitySigma`
-  is also new.
+- **Plan 5: the API review of this plan's library additions.**
+  - Whether `LEVEL_ZERO_ERROR` stays exported (it was exported for the test
+    hill).
+  - `castTerrainRay` and five terrain tile types became public alongside
+    `terrainLineOfSight`.
+  - Some production modules export test-only helpers.
+  - `Trajectory.velocitySigma` is new.
+- **Example: the coarse-terrain guard applies only to the capstone.** The
+  "not judged from this far out" rule, for an end whose terrain error is
+  above `COARSE_TERRAIN_METERS`, belongs in the shared line-of-sight text, so
+  every scenario's trace gets it.
 - **Plan 4b: the chart datum (MLLW).** The ship's heights are NAVD88, and the
   answer says that charts use MLLW.
 - **Library: widgets expose their occluders** (`occluders()` or
@@ -7260,6 +7268,10 @@ are left out.
   the operation's name, and put the pipeline behind a disclosure.
 - **Example: the notation test** covers answers and check rows, but not route
   steps or globe labels.
+- **Example: knob and answer precision differ** for the same quantity, and
+  "Run all again" shows before a full run has happened.
+- **Example: whether the tree's key should keep the "added" versus "your app"
+  distinction** (owner's call).
 - **Example: "Show source" shows only `main.ts`** (later gallery work).
 - **Data: spot-check the DSN masks** against a fresh download of the
   spreadsheet.

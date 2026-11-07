@@ -1258,6 +1258,75 @@ part in cascade order: `tokens.css` (the family palette and axis colors),
 it. A new scenario's styles go in its component's file, or a new file
 imported where its rules belong in the cascade.
 
+## Tree, data and route (owner-approved, 2026-11-06)
+
+The owner approved this from a mockup: "ooo yeah i like that, the animation
+really helps too". It replaced the "from", "to" and "drawing in" badges. The
+frame tree holds only frames. Data is pinned beside the tree, the frame you
+draw in is a tag, and what lights up is the data's route through the tree.
+
+1. **Frames are the only nodes.** They are neutral pills; family colours stay
+   as a subtle accent. The tree's shape never changes when the view changes.
+2. **Data is pinned beside the tree, not in it.** It is a dashed card on a
+   dashed tether, hanging off the frame its numbers are expressed in, for
+   example "Orion's data / in EME2000 (OEM)". Orion isn't a frame node
+   unless a scenario adds an Orion-centred frame; if one does, both are
+   shown and the difference is explicit. A scenario without data (the
+   Earth turns) lights the route between the answer's two frames instead.
+   An added site, such as Sacramento's, is a frame the scenario adds, not
+   data.
+3. **The frame you draw in carries a "Drawing in" tag.** It moves when the
+   choice changes, and clicking a selectable frame changes it.
+4. **The route lights up.** The edges of `branchPath(dataFrame, drawFrame)`
+   light, and a dot travels from the data's frame up to the common ancestor
+   and down to the drawn-in frame, looping about every 2.2 s. With reduced
+   motion the dot sits at the destination.
+5. **The route is spelled out under the tree** as numbered steps:
+   - the start ("Orion's data, as delivered: position and velocity, in
+     EME2000");
+   - one step per edge, saying what it does in plain words (a fixed
+     rotation; the Earth's rotation; the Moon's position), with its accuracy
+     on the right;
+   - the end ("Drawn in ITRF: the path loops because the Earth turns under
+     it").
+
+   These steps replace the long edge labels in the docked tree; full labels
+   stay in the Expand dialog and the tips.
+
+6. **A compact legend:** a frame (no data in it); data, pinned to its frame;
+   the frame you draw in; the data's route.
+
+A test holds the lit edges and the steps to `branchPath` for every
+draw-in choice.
+
+## Lunar orientation accuracy: the sources (research, 2026-11-06)
+
+No published angular uncertainty exists for DE440's libration angles
+themselves. The Moon's edges say so instead of inventing one.
+
+- **MOON_ICRF → MOON_ME** (DE440's integrated libration):
+  - Park et al. 2021 (AJ 161:105, §2.4) gives no formal orientation
+    uncertainty.
+  - The lunar laser ranging fit's residuals, about 1.3 cm rms recently
+    (§5.1), are a range residual, not an orientation accuracy. They are
+    never shown as the edge's ±.
+  - Unmodelled tidal libration is "a few milliseconds of arc" (the DE421
+    and DE430 memos). 1 mas is about 8 mm at the surface.
+  - DE440's realisation of ME differs from the DE421-aligned ME by up to
+    3.07 × 10⁻⁷ rad (about 0.53 m) over 2000–2040 (NAIF
+    `moon_de440_250416.tf`).
+  - The edge reads "not stated", with those figures as context.
+- **MOON_PA ↔ MOON_ME** is a constant rotation per ephemeris (Park eq. 19),
+  so it is exact by definition for DE440. The ME frame is a convention: its
+  longitude is limited by the gravity field to about 1″ (about 8 m) (DE421
+  IOM, p. 10).
+- **Sources:**
+  - NAIF `moon_de440_250416.tf` (it supersedes `moon_de440_220930.tf`,
+    which differs only in alias IDs);
+  - NAIF `de440_and_de441.pdf`;
+  - JPL's `de421_moon_coord_iom.pdf`;
+  - NAIF `de430_moon_coord.pdf`.
+
 ## Glossary
 
 Every term below has a popover wherever it appears (`panel/glossary.ts`,
