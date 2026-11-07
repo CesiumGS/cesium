@@ -94,6 +94,11 @@ export interface TerrainRayOptions {
   endTolerance?: number;
   /** The source's own error, m, added to each tile's in `margin`. */
   sourceAccuracy?: number;
+  /**
+   * How far from each end (horizontal m) the segment counts as over the
+   * observer's own ground in `margin` (default 30, a source's posting).
+   */
+  groundRadius?: number;
 }
 
 export interface TerrainRayResult {
@@ -117,10 +122,10 @@ export interface TerrainRayResult {
   minClearance?: { meters: number; t: number; level: number };
   /**
    * The lowest clearance less the error of the tile under it (its
-   * geometric error plus `sourceAccuracy`), m, leaving out the stretch at
-   * each end where the segment is still within that error of its own
-   * observer's ground. Positive: clear of the true terrain too. When the
-   * segment never rises out of the error, nothing is left out.
+   * geometric error plus `sourceAccuracy`), m, leaving out each true end's
+   * own ground: the drawn triangle it stands over, but no more than
+   * `groundRadius` from it. Positive: clear of the true terrain too. When
+   * the ends' own ground is all there is, nothing is left out.
    */
   margin?: { meters: number; clearance: number; error: number; t: number };
   /** Lengths, m, over which the terrain is unknown, by reason. */
@@ -660,7 +665,31 @@ export function castTerrainRay(
     };
   }
   if (samples > 0) {
-    result.margin = margin(samples, bandLo === 0, bandHi === 1);
+    // Where each end's own ground ends: `groundRadius` of horizontal
+    // distance (along the tangent plane at that end).
+    const radius = options.groundRadius ?? 30;
+    const reach = (p: ArrayLike<number>): number => {
+      const c = ellipsoid.cartesianToCartographic(p as Float64Array, {
+        longitude: 0,
+        latitude: 0,
+        height: 0,
+      });
+      if (!c) {
+        return 0;
+      }
+      const cosLat = Math.cos(c.latitude);
+      const nx = cosLat * Math.cos(c.longitude);
+      const ny = cosLat * Math.sin(c.longitude);
+      const nz = Math.sin(c.latitude);
+      const up = ray.dx * nx + ray.dy * ny + ray.dz * nz;
+      const horizontal = Math.sqrt(Math.max(0, length * length - up * up));
+      return horizontal > 0 ? radius / horizontal : Infinity;
+    };
+    result.margin = margin(
+      samples,
+      bandLo === 0 ? reach(from) : -Infinity,
+      bandHi === 1 ? 1 - reach(to) : Infinity,
+    );
   }
   if (known) {
     result.known = known;
@@ -671,27 +700,28 @@ export function castTerrainRay(
 /**
  * The lowest clearance less its error over the samples, leaving out the
  * ground each true end stands on: the drawn triangle under the observer
- * (or target), and nothing beyond it. Within that triangle the segment
- * cannot be told from the observer's own ground; past it, the terrain's
- * error counts in full, however low the segment runs.
+ * (or target), but no further than `startCap` / `endCap` (the fractions at
+ * `groundRadius` from each end; ∓Infinity where the end isn't on the
+ * ground). Past that the terrain's error counts in full, however low the
+ * segment runs: a triangle kilometres wide is not the observer's ground.
  */
 function margin(
   count: number,
-  fromGround: boolean,
-  toGround: boolean,
+  startCap: number,
+  endCap: number,
 ): NonNullable<TerrainRayResult["margin"]> {
   const ends = 1e-12;
   const startKeys = new Set<number>();
   const endKeys = new Set<number>();
   for (let i = 0; i < count; i++) {
-    if (fromGround && sampleT[i]! <= ends) {
+    if (startCap > -Infinity && sampleT[i]! <= ends) {
       startKeys.add(sampleK[i]!);
     }
-    if (toGround && sampleT[i]! >= 1 - ends) {
+    if (endCap < Infinity && sampleT[i]! >= 1 - ends) {
       endKeys.add(sampleK[i]!);
     }
   }
-  // The end triangles' stretches along the segment.
+  // The end triangles' stretches along the segment, capped.
   let lo = -Infinity;
   let hi = Infinity;
   for (let i = 0; i < count; i++) {
@@ -702,27 +732,67 @@ function margin(
       hi = Math.min(hi, sampleT[i]!);
     }
   }
-  let at = -1;
+  const capLo = startKeys.size > 0 && startCap < lo;
+  const capHi = endKeys.size > 0 && endCap > hi;
+  lo = Math.min(lo, startCap);
+  hi = Math.max(hi, endCap);
+  let best: NonNullable<TerrainRayResult["margin"]> | undefined;
+  const offer = (t: number, d: number, c: number, e: number) => {
+    if (!best || d < best.meters) {
+      best = { meters: d, clearance: c, error: e, t };
+    }
+  };
   for (let i = 0; i < count; i++) {
     const t = sampleT[i]!;
-    if (t > lo && t < hi && (at < 0 || sampleD[i]! < sampleD[at]!)) {
-      at = i;
+    if (t > lo && t < hi) {
+      offer(t, sampleD[i]!, sampleC[i]!, sampleE[i]!);
     }
   }
-  if (at < 0) {
-    // The ends' own triangles are all there is: nothing to leave out.
-    for (let i = 0; i < count; i++) {
-      if (at < 0 || sampleD[i]! < sampleD[at]!) {
-        at = i;
+  // At a cap inside an end's triangle there is no sample: the clearance is
+  // linear in t across one triangle, so it is interpolated from the
+  // triangle's own samples either side.
+  const at = (keys: Set<number>, t: number) => {
+    for (const key of keys) {
+      let a = -1;
+      let b = -1;
+      for (let i = 0; i < count; i++) {
+        if (sampleK[i] !== key) {
+          continue;
+        }
+        const ti = sampleT[i]!;
+        if (ti <= t && (a < 0 || ti > sampleT[a]!)) {
+          a = i;
+        }
+        if (ti >= t && (b < 0 || ti < sampleT[b]!)) {
+          b = i;
+        }
       }
+      if (a < 0 || b < 0) {
+        continue;
+      }
+      const span = sampleT[b]! - sampleT[a]!;
+      const f = span > 0 ? (t - sampleT[a]!) / span : 0;
+      offer(
+        t,
+        sampleD[a]! + (sampleD[b]! - sampleD[a]!) * f,
+        sampleC[a]! + (sampleC[b]! - sampleC[a]!) * f,
+        sampleE[a]!,
+      );
+    }
+  };
+  if (capLo) {
+    at(startKeys, startCap);
+  }
+  if (capHi) {
+    at(endKeys, endCap);
+  }
+  if (!best) {
+    // The ends' own ground is all there is: nothing to leave out.
+    for (let i = 0; i < count; i++) {
+      offer(sampleT[i]!, sampleD[i]!, sampleC[i]!, sampleE[i]!);
     }
   }
-  return {
-    meters: sampleD[at]!,
-    clearance: sampleC[at]!,
-    error: sampleE[at]!,
-    t: sampleT[at]!,
-  };
+  return best!;
 }
 
 /** `inner` inside `outer`, to rounding. */

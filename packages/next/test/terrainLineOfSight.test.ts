@@ -158,11 +158,13 @@ describe("terrainLineOfSight", () => {
   });
 
   it("is clear from an observer on the ground: its own ground is not the error band", () => {
-    // Flat drawn terrain, level 14 (±4.7 m): a dish standing on a vertex
-    // looks up at a point 300 m high, 4 km away. Past the dish's own
-    // triangle (about 200 m) the segment is well clear of the error.
+    // Flat drawn terrain at level 17 (±0.59 m): a dish standing on a
+    // vertex looks up at a point 300 m high, 4 km away. Past its own ground
+    // (30 m) the segment is 2 m up, clear of the error.
     const rects = strip(-0.001, 0.001, 2, -0.0005, 0.0005);
-    const tiles = rects.map((rectangle) => gridTile(rectangle, 33, () => 0));
+    const tiles = rects.map((rectangle) =>
+      gridTile(rectangle, 33, () => 0, 17),
+    );
     const target = stripTarget(
       rects.map((rectangle, i) => ({ rectangle, tile: tiles[i]! })),
     );
@@ -197,6 +199,29 @@ describe("terrainLineOfSight", () => {
     expect(r.clear).toBeUndefined();
     expect(r.accuracy.note).toMatch(/so the true terrain may block/);
     expect(r.accuracy.note).toMatch(/heuristic, not a bound/);
+  });
+
+  it("is not clear across a triangle kilometres wide under the observer", () => {
+    // A level-9 tile (±151 m) of 9×9 vertices: triangles about 5 km across.
+    // From a vertex on the ground to 2 km up, 20 km off, the segment stays
+    // under 151 m for about 1.5 km inside the observer's own triangle, then
+    // clears it by far. That triangle is not the observer's ground: only
+    // 30 m is.
+    const size = Math.PI / 2 ** 9;
+    const rectangle = { west: 0, east: size, south: 0, north: size };
+    const tile = gridTile(rectangle, 9, () => 0, 9);
+    const target = stripTarget([{ rectangle, tile }]);
+    const dish = vertex(tile, 4 * 9 + 2);
+    const far = at(0.25 * size + 20000 / A, 0.5 * size, 2000);
+    const r = terrainLineOfSight(dish, far, target);
+    expect(r.blockedAt).toBeUndefined();
+    expect(r.unknownFraction).toBe(0);
+    expect(r.clear).toBeUndefined();
+    expect(r.accuracy.note).toMatch(/so the true terrain may block/);
+    // Counting the whole 5 km triangle as its ground would read clear.
+    expect(
+      terrainLineOfSight(dish, far, target, { groundRadius: 6000 }).clear,
+    ).toBe(true);
   });
 
   it("never rounds a share to 0% or 100% when it isn't", () => {

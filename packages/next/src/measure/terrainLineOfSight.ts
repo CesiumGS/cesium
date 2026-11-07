@@ -8,14 +8,21 @@ export interface TerrainLineOfSightOptions {
    * covers the drawn mesh's error alone and the note says so.
    */
   sourceAccuracy?: { meters: number; statistic: string };
+  /**
+   * How far from each end (horizontal m) the path counts as over its
+   * observer's own ground, where the terrain's error doesn't count against
+   * it (default 30, about a source's posting). Never beyond the drawn
+   * triangle the observer stands over.
+   */
+  groundRadius?: number;
 }
 
 export interface TerrainLineOfSight {
   /**
    * `true` when the whole path is over known terrain and clears it by more
    * than the terrain's error (each tile's geometric error plus the
-   * source's), leaving out the stretch at each end still within that error
-   * of its observer's own ground; `false` when it meets the drawn terrain
+   * source's), leaving out each end's own ground (the drawn triangle it
+   * stands over, at most `groundRadius`); `false` when it meets the drawn terrain
    * (even if other spans are unknown); `undefined` otherwise: unknown spans
    * could hide an obstruction, or the true terrain could block within its
    * error. Terrain that isn't drawn, or is drawn only as a coarse stand-in
@@ -60,12 +67,12 @@ export function terrainLineOfSight(
   options: TerrainLineOfSightOptions = {},
 ): TerrainLineOfSight {
   const source = options.sourceAccuracy;
-  const ray = castTerrainRay(
-    from,
-    to,
-    target,
-    source ? { sourceAccuracy: source.meters } : {},
-  );
+  const ray = castTerrainRay(from, to, target, {
+    ...(source ? { sourceAccuracy: source.meters } : {}),
+    ...(options.groundRadius !== undefined
+      ? { groundRadius: options.groundRadius }
+      : {}),
+  });
   if (!ray) {
     return {
       clear: undefined,
