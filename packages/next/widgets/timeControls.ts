@@ -484,6 +484,7 @@ export function attachTimeControls(
   let cachedStrip: ImageData | undefined;
   let sunMarks: SunTimes | undefined;
   let marks: readonly TimeMark[] = [];
+  const baseTitle = strip.title;
 
   function render(): void {
     const t = clock.time;
@@ -594,17 +595,8 @@ export function attachTimeControls(
     const xOf = (ms: number) => ((ms - start) / DAY) * width;
     // The app's marked spans, over the sky (not cached: they change).
     g.fillStyle = "rgba(255, 112, 84, 0.6)";
-    for (const m of marks) {
-      const x0 = Math.max(0, xOf(m.start));
-      const x1 = Math.min(width, xOf(m.end));
-      if (x1 > x0) {
-        g.fillRect(
-          Math.floor(x0),
-          0,
-          Math.max(ratio, Math.ceil(x1 - x0)),
-          height,
-        );
-      }
+    for (const [x, w] of markSpans(marks, start, width, ratio)) {
+      g.fillRect(x, 0, w, height);
     }
     const wall = Date.now();
     if (wall >= start && wall < start + DAY) {
@@ -643,7 +635,9 @@ export function attachTimeControls(
     },
     setMarks(next) {
       marks = next;
-      strip.title = next.map((m) => m.title).join("\n");
+      // The marks' titles join whatever title the strip had; never replace it.
+      const titles = next.map((m) => m.title).join("\n");
+      strip.title = [baseTitle, titles].filter((t) => t !== "").join("\n");
       render();
     },
     dispose() {
@@ -654,6 +648,29 @@ export function attachTimeControls(
       root.remove();
     },
   };
+}
+
+/**
+ * The marked spans over the day starting at `start` (UTC ms) on a strip
+ * `width` px wide: each [x, width] in px, clipped to the day, at least
+ * `minWidth` wide; spans outside the day are left out.
+ */
+export function markSpans(
+  marks: readonly TimeMark[],
+  start: number,
+  width: number,
+  minWidth = 1,
+): [number, number][] {
+  const xOf = (ms: number) => ((ms - start) / DAY) * width;
+  const out: [number, number][] = [];
+  for (const m of marks) {
+    const x0 = Math.max(0, xOf(m.start));
+    const x1 = Math.min(width, xOf(m.end));
+    if (x1 > x0) {
+      out.push([Math.floor(x0), Math.max(minWidth, Math.ceil(x1 - x0))]);
+    }
+  }
+  return out;
 }
 
 /** The sky's color by the sun's elevation (degrees), for the day strip. */

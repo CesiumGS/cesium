@@ -99,7 +99,7 @@ function moonFrom(ctx: StressContext, instant: Instant) {
 }
 
 /** The checked setup's range, km, once per worker. */
-let checkedRange: number | undefined;
+const checkedRanges = new WeakMap<object, number>();
 
 export const evaluateMoonFromHere: ScenarioEvaluator = async (
   ctx: StressContext,
@@ -112,11 +112,15 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
   const apparent = leg.receiverDirection;
   const { azimuth, elevation } = azimuthElevation(apparent);
   const range = leg.range;
-  checkedRange ??=
-    moonFrom(
-      ctx,
-      Instant.fromUtc(Date.parse(SPEC.checked.epochUtc), f.data.leapSeconds),
-    ).leg.range / 1000;
+  let checkedRange = checkedRanges.get(f);
+  if (checkedRange === undefined) {
+    checkedRange =
+      moonFrom(
+        ctx,
+        Instant.fromUtc(Date.parse(SPEC.checked.epochUtc), f.data.leapSeconds),
+      ).leg.range / 1000;
+    checkedRanges.set(f, checkedRange);
+  }
   // The same pointing by hand from the tree's vectors (R11).
   const hand = pointingByHand(f, site, f.moonIcrf, instant);
   const byHand = angleBetween(hand.apparent, apparent);
@@ -181,7 +185,7 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
     },
     {
       title: "Against Horizons",
-      text: "At the checked setup JPL Horizons' observer table gives the same direction in ICRF and the same light-time range. Its azimuth and elevation differ by about half an arcsecond: its horizon turns with the pole of date, ours with the Earth (polar motion), so the catalog shows that row without a verdict.",
+      text: "At the checked setup JPL Horizons' observer table gives the same direction in ICRF (within 1.2 mas) and the same light-time range (within 0.12 m). Its azimuth and elevation differ from ours by 0.385″, and about 0.3″ of that is unexplained: polar motion accounts for only part of it, and our Earth orientation agrees with SPICE's to a few hundredths of an arcsecond (plan 3's DSS-43 checks). So the catalog shows that row without a verdict.",
     },
   ];
   const evaluation: ScenarioEvaluation = {
@@ -203,7 +207,21 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
     ],
     answer: {
       label: `away, ${pointingText(azimuth, elevation)}`,
-      aside: `${up ? (blockedBy ? `In the sky, but behind ${blockedBy}` : "Above the horizon") : "Below the horizon: the Earth is in the way"} · the light left ${fmt(leg.lightTime, 4)} s ago · ${km(m.distance)} between centres now`,
+      sky:
+        up && !blockedBy
+          ? {
+              state: "clear",
+              where: "at Sacramento",
+              text: "Above the horizon: clear of the Earth",
+            }
+          : {
+              state: "lost",
+              where: "at Sacramento",
+              text: up
+                ? `In the sky, but behind ${blockedBy}`
+                : "Below the horizon: the Earth is in the way",
+            },
+      aside: `the light left ${fmt(leg.lightTime, 4)} s ago · ${km(m.distance)} between centres now`,
       headline: `From Sacramento the Moon is ${pointingText(azimuth, elevation)}, ${km(range)} away as the light travels: what you see left the Moon ${fmt(leg.lightTime, 4)} s ago, when it was there. At this instant its centre is ${km(m.distance)} from the site. Its centre comes down the tree from MOON_ICRF through ICRF and GCRF to ITRF and the site's east-north-up frame, where east, north and up give the azimuth and elevation.`,
       value: range / 1000,
       unit: "km",

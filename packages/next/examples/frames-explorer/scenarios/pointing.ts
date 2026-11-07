@@ -81,6 +81,20 @@ export function angleBetween(
 }
 
 /**
+ * Stellar aberration, relativistically: the unit direction `u` seen by an
+ * observer moving at β = V/c, p = (γ⁻¹u + (1 + u·β/(1 + γ⁻¹))β) / (1 + u·β).
+ * The one helper both pointings use (fix 1).
+ */
+export function aberrate(
+  u: readonly number[],
+  beta: readonly number[],
+): number[] {
+  const ub = u[0]! * beta[0]! + u[1]! * beta[1]! + u[2]! * beta[2]!;
+  const g = Math.sqrt(1 - (beta[0]! ** 2 + beta[1]! ** 2 + beta[2]! ** 2));
+  return u.map((x, i) => (g * x + (1 + ub / (1 + g)) * beta[i]!) / (1 + ub));
+}
+
+/**
  * By hand, from the tree's vectors (R11): where `target`'s origin is seen
  * from `site`'s origin at `instant`, in `site`'s axes. The light time
  * c·τ = |x_target(t − τ) − x_site(t)| (barycentric, Newtonian) solved by
@@ -114,9 +128,7 @@ export function pointingByHand(
   const range = len(v);
   const u = v.map((x) => x / range);
   const beta = sub(at(site, t + 0.5), at(site, t - 0.5)).map((x) => x / C);
-  const ub = u[0]! * beta[0]! + u[1]! * beta[1]! + u[2]! * beta[2]!;
-  const g = Math.sqrt(1 - (beta[0]! ** 2 + beta[1]! ** 2 + beta[2]! ** 2));
-  const p = u.map((x, i) => (g * x + (1 + ub / (1 + g)) * beta[i]!) / (1 + ub));
+  const p = aberrate(u, beta);
   // Into the site's axes: the ICRF-to-site rotation (column-major 4×4).
   const m = frameTransform(icrf, site, instant);
   const toSite = (w: readonly number[]) => {
@@ -199,9 +211,7 @@ export function rayFrom(
     axis[0]! * r[1]! - axis[1]! * r[0]!,
   ].map((x) => x * EARTH_ROTATION_RATE);
   const beta = ve.map((x, i) => (x + spin[i]!) / C);
-  const ub = u[0]! * beta[0]! + u[1]! * beta[1]! + u[2]! * beta[2]!;
-  const g = Math.sqrt(1 - (beta[0]! ** 2 + beta[1]! ** 2 + beta[2]! ** 2));
-  const p = u.map((x, i) => (g * x + (1 + ub / (1 + g)) * beta[i]!) / (1 + ub));
+  const p = aberrate(u, beta);
   // ICRF to the site's axes: the rotation part's transpose (row-major).
   const rot = rotationPart(m);
   const out = [0, 1, 2].map(

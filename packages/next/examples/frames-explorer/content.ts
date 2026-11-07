@@ -137,7 +137,7 @@ const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
   },
   "space.moon-from-sacramento.horizon": {
     kind: "published",
-    text: "Shown, not judged: JPL Horizons' airless apparent azimuth and elevation, whose horizon turns with the pole of date.",
+    text: "Shown, not judged: JPL Horizons' airless apparent azimuth and elevation, about 0.3″ from ours for a reason not yet found.",
   },
   "trajectory.moon-me.distance": {
     kind: "independent",

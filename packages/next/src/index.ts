@@ -324,12 +324,7 @@ export {
   type TerrainRayTarget,
   type TerrainRayTile,
 } from "./globe/terrainRay.ts";
-export {
-  solveLightTime,
-  type LightTimeSolution,
-  type ShapiroBody,
-} from "./measure/lightTime.ts";
-export { lineOfSight } from "./measure/lineOfSight.ts";
+export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";
 export { createFrames, type Frames } from "./frames/frames.ts";

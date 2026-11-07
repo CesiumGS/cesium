@@ -115,6 +115,8 @@ export function createCameraViews(deps: {
   rigidBuilt(): RigidBuilt | undefined;
   /** The engineering overlays' setup (a scenario's, or the default). */
   engineering(): EngineeringSetup;
+  /** The azimuth the scene's line of sight leaves its site at now, degrees (skyRay.ts). */
+  skyAzimuth?(): number | undefined;
 }): CameraViews {
   const { viewer, frames: framesNow, instantNow } = deps.core;
 

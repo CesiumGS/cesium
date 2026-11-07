@@ -7,7 +7,8 @@
 //
 // The first trace over freshly loaded tiles costs about 30 ms, so it runs
 // on demand: when the evaluation changes, and 300 ms after the terrain's
-// heights last changed as tiles load (trailing), never every frame. A path
+// heights last changed as tiles load (trailing), never every frame. The
+// stage says when the globe itself changes (no polling). A path
 // over terrain that isn't drawn, or drawn only coarsely while finer tiles
 // load, is unknown, never clear; inside the terrain's error it "may block"
 // (Review Focus 2). Without the terrain globe nothing is traced and the line
@@ -34,7 +35,9 @@ export const HEIGHTS_SETTLE = 300;
 /** While tiles keep loading, it traces at most this long after the first change it waited for, ms. */
 export const HEIGHTS_MAX_WAIT = 1500;
 
-const pct = (x: number) => `${Math.round(x * 100)}%`;
+/** "30%", or "under 1%" for a sliver (never "0%" for a share that isn't nothing). */
+export const pct = (x: number) =>
+  x > 0 && x < 0.005 ? "under 1%" : `${Math.round(x * 100)}%`;
 
 /**
  * The answer's words for one line of sight to `label` (pure): the terrain's
@@ -55,10 +58,15 @@ export function terrainSightText(
     };
   }
   const accuracy = r.accuracy.note;
+  const sizes = {
+    ...(r.accuracy.meters !== undefined && { meters: r.accuracy.meters }),
+    unknownFraction: r.unknownFraction,
+  };
   if (r.clear === false) {
     return {
       id,
       state: "blocked",
+      ...sizes,
       text: `The local horizon toward ${label}: the terrain blocks it.`,
       accuracy,
     };
@@ -67,6 +75,7 @@ export function terrainSightText(
     return {
       id,
       state: "clear",
+      ...sizes,
       text: `The local horizon toward ${label}: the terrain is clear${r.minClearance !== undefined ? `, by ${length(r.minClearance)} at the closest beyond the observer's own ground` : ""}.`,
       accuracy,
     };
@@ -75,6 +84,7 @@ export function terrainSightText(
     return {
       id,
       state: "unknown",
+      ...sizes,
       text: `The local horizon toward ${label}: unknown over ${pct(r.unknownFraction)} of the path near the ground (terrain not drawn there yet, or only coarsely); not counted as clear.`,
       accuracy,
     };
@@ -82,6 +92,7 @@ export function terrainSightText(
   return {
     id,
     state: "may-block",
+    ...sizes,
     text: `The local horizon toward ${label}: the terrain may block it: the path passes within the terrain's error${r.minClearance !== undefined ? ` (${length(r.minClearance)} above the drawn surface)` : ""}.`,
     accuracy,
   };
@@ -129,6 +140,8 @@ export interface SightLines {
   view(): readonly TerrainSightView[] | undefined;
   /** The evaluation changed: trace its lines again. */
   evaluationChanged(): void;
+  /** The globe the viewer shows changed (stage.ts, after `setGlobe`): follow its heights. */
+  globeChanged(): void;
   dispose(): void;
 }
 
@@ -208,9 +221,8 @@ export function createSightLines(deps: {
     );
   }
 
-  // The globe changes when a scenario switches it (stage.ts): follow the
-  // one shown, trailing its height changes. A slow check, not per frame.
-  const watch = window.setInterval(() => {
+  /** Follows the globe shown (a scenario switches it, stage.ts), trailing its height changes. */
+  function globeChanged(): void {
     const globe = viewer.globe;
     if (globe !== subscribed) {
       offHeights?.();
@@ -220,20 +232,16 @@ export function createSightLines(deps: {
           schedule();
         }
       });
-      if (deps.lines()?.length) {
-        schedule();
-      }
-    } else if (
-      deps.lines()?.length &&
-      views?.some((v) => v.state === "waiting") &&
-      deps.globeShown() === "terrain"
-    ) {
+    }
+    if (deps.lines()?.length) {
       schedule();
     }
-  }, 1000);
+  }
+  globeChanged();
 
   return {
     view: () => views,
+    globeChanged,
     evaluationChanged: () => {
       if (deps.lines() !== traced) {
         schedule();
@@ -241,7 +249,6 @@ export function createSightLines(deps: {
     },
     dispose: () => {
       clearTimeout(settle);
-      clearInterval(watch);
       offHeights?.();
     },
   };

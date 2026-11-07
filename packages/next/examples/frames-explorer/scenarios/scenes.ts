@@ -291,7 +291,10 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     focus: ["ITRF", "GCRF", "MOON_ICRF"],
     triads: () => [SACRAMENTO.name],
     earthSites: () => [SACRAMENTO],
-    look: () => ({ ...SACRAMENTO, range: 30_000, heading: 0, pitch: -25 }),
+    look: () => ({ ...SACRAMENTO, range: 25_000, heading: 0, pitch: -12 }),
+    // Lit from the camera: at the checked time it is night in Sacramento,
+    // and the ground and the ray would be lost in the dark (fix 1).
+    light: "camera",
     skyRay: { target: "moon", label: "To the Moon", site: () => SACRAMENTO },
     drawIn: SACRAMENTO.name,
     routeEnds: {
@@ -316,7 +319,8 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     focus: ["EME2000", "GCRF", "ITRF"],
     triads: (k) => [stationOf(k).name],
     earthSites: (k) => [stationOf(k)],
-    look: (k) => ({ ...stationOf(k), range: 40_000, heading: 0, pitch: -25 }),
+    look: (k) => ({ ...stationOf(k), range: 25_000, heading: 0, pitch: -12 }),
+    light: "camera",
     cameraFor: (k) => (k.view === "orbit" ? "earthMoon" : "site"),
     // From orbit, Orion's path in GCRF beside the Earth and the Moon.
     orion: (k) => (k.view === "orbit" ? "GCRF" : undefined),

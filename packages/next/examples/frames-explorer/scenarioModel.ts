@@ -11,6 +11,7 @@ import type {
   ScenarioPanelView,
 } from "./panel/model.ts";
 import { routeSteps } from "./panel/routeSteps.ts";
+import { withTerrain } from "./panel/answerText.ts";
 import type { ScenarioHostState } from "./scenarioHost.ts";
 import type { ScenarioAnswer } from "./scenarios/evaluate.ts";
 import { proofRows, type ProofRow } from "./scenarios/proof.ts";
@@ -189,7 +190,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     ...(st.problem !== undefined && {
       problem: { ...st.problem, message: input.scrub(st.problem.message) },
     }),
-    ...(e && { answer: e.answer }),
+    ...(e && { answer: withTerrain(e.answer, input.terrain) }),
     ...publishedView(
       e?.answer.published,
       catalog,

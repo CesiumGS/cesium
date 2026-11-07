@@ -40,10 +40,11 @@ import {
 } from "./evaluate.ts";
 import { SIGHT_LENGTH, POINTING_BY_HAND } from "./moonFromHere.ts";
 import {
-  type OcclusionWindow,
-  commonWindows,
-  limbAngle,
-  moonWindows,
+  type DishWindows,
+  type MoonWindow,
+  type Window,
+  MOON_RADIUS,
+  scanWindows,
 } from "./occultation.ts";
 import {
   angleBetween,
@@ -58,9 +59,6 @@ import { SCENARIOS } from "./specs.ts";
 const SPEC = SCENARIOS.find((s) => s.id === "dish-tracks")!;
 
 const ARCSECOND = Math.PI / 648_000;
-
-/** The Moon's radius, m (IAU, as the catalog's line-of-sight check cites it: naif-moon-radius). */
-const MOON_RADIUS = 1_737_400;
 
 /** Within this of the horizon (degrees) the hand check leaves the Earth's verdict to the library. */
 const HORIZON_GREY = 1;
@@ -124,23 +122,28 @@ function noOrion(ctx: StressContext): string {
   return `No Orion data at this time: its OEM covers ${day(o.spans[0]![0])} to ${day(o.spans.at(-1)![1])}, with short gaps between segments. Move the clock into that span to see the answer.`;
 }
 
-/** The checked setup's light time, s, once per worker. */
-let checkedLight: number | undefined;
+/** The checked setup's light time, s, once per frame tree. */
+const checkedLights = new WeakMap<Frames, number>();
 
-/** Each station's windows behind the Moon, and every station's at once: once per Orion. */
-const occultations = new WeakMap<
+/** Each dish's windows and the network's, once per Orion. */
+const windowsByOrion = new WeakMap<
   object,
   {
-    byStation: Record<StationId, OcclusionWindow[]>;
-    common: { start: number; end: number }[];
+    byStation: Record<StationId, DishWindows>;
+    network: Window[];
     places: Record<StationId, number[]>;
   }
 >();
 
-/** The windows behind the Moon, from the stations' SPK places at the checked setup (plate motion is millimetres). */
-async function behindTheMoon(ctx: StressContext) {
+/**
+ * Each dish's windows (behind the Moon; unavailable, the Moon or its
+ * horizon in the way) and the network's (every dish unavailable at once),
+ * from the stations' SPK places at the checked setup (plate motion over the
+ * mission is millimetres).
+ */
+async function dishAndNetworkWindows(ctx: StressContext) {
   const o = orion(ctx);
-  let w = occultations.get(o);
+  let w = windowsByOrion.get(o);
   if (w === undefined) {
     const t = Instant.fromUtc(
       Date.parse(SPEC.checked.epochUtc),
@@ -148,19 +151,22 @@ async function behindTheMoon(ctx: StressContext) {
     );
     const ids = Object.keys(DSN_STATIONS) as StationId[];
     const places = {} as Record<StationId, number[]>;
-    const byStation = {} as Record<StationId, OcclusionWindow[]>;
+    const byStation = {} as Record<StationId, DishWindows>;
     for (const id of ids) {
       places[id] = Array.from(
         (await stationTrajectory(ctx, id)).state(t).subarray(0, 3),
       );
-      byStation[id] = moonWindows(ctx.frames, o, places[id]);
     }
-    w = {
-      byStation,
-      common: commonWindows(ids.map((id) => byStation[id])),
-      places,
-    };
-    occultations.set(o, w);
+    const scan = scanWindows(
+      ctx.frames,
+      o,
+      ids.map((id) => places[id]),
+    );
+    ids.forEach((id, i) => {
+      byStation[id] = scan.dishes[i]!;
+    });
+    w = { byStation, network: scan.network, places };
+    windowsByOrion.set(o, w);
   }
   return w;
 }
@@ -169,8 +175,16 @@ async function behindTheMoon(ctx: StressContext) {
 const clockText = (ctx: StressContext, tdb: number) =>
   `${new Date(Instant.fromTdb(tdb).toUtc(ctx.frames.data.leapSeconds)).toISOString().slice(11, 19)} UTC`;
 
-/** The hand check of the edges: Orion on the Moon's limb there, within this many metres at the Moon. */
-export const LIMB_EDGE = 10;
+/** Just inside and just outside each Moon edge, s, where the library's line of sight is asked. */
+export const EDGE_PROBE = 0.05;
+
+/**
+ * The same at a horizon edge, s. The library's Earth verdict changes about
+ * a light time (0.9 to 1.3 s) after the hand's, which tests the path in
+ * ITRF at reception (measured over the mission's horizon edges, fix 1):
+ * the two place the Earth at different instants. Flagged for the library.
+ */
+export const HORIZON_PROBE = 2;
 
 /** Orion seen from `site` at `instant`: Newtonian light time, as plan 3's SPICE fixture. */
 function look(
@@ -243,6 +257,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     },
   };
   const path = { from: o.reference.name, to: station.name };
+  let checkedLight = checkedLights.get(f);
   if (checkedLight === undefined) {
     const t = Instant.fromUtc(
       Date.parse(SPEC.checked.epochUtc),
@@ -251,6 +266,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     const checkedId = SPEC.checked.knobs.station as StationId;
     const s = await stationFrame(ctx, checkedId, t);
     checkedLight = look(ctx, s.frame, t).signal!.downlink.lightTime;
+    checkedLights.set(f, checkedLight);
   }
   let m: ReturnType<typeof measure>;
   try {
@@ -306,31 +322,66 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       : handEarth === false
         ? by !== "Earth" && sight.clear === !handMoon
         : sight.clear === !handMoon || by === "Earth";
-  const verdict = sight.clear
-    ? "clear of the Earth and the Moon"
-    : `hidden by ${by === "Earth" ? "the Earth (below the horizon)" : "the Moon"}`;
-  // Behind the Moon: the windows, the one we're in, and its edges' check.
-  const behind = await behindTheMoon(ctx);
-  const mine = behind.byStation[id];
-  const within = mine.find(
-    (w) => w.start - 1 <= epochTdb && epochTdb <= w.end + 1,
-  );
-  const lost = by === "Moon";
-  const edgeText = (w: OcclusionWindow) =>
+  // Behind the Moon, below the horizon: the dish's windows and the
+  // network's, the ones we're in, and the edges asked of the library.
+  const all = await dishAndNetworkWindows(ctx);
+  const mine = all.byStation[id];
+  const inside = <W extends Window>(list: readonly W[]) =>
+    list.find((w) => w.start - 1 <= epochTdb && epochTdb <= w.end + 1);
+  const moonNow = inside(mine.moon);
+  const networkNow = inside(all.network);
+  const behindMoon = by === "Moon";
+  const belowHorizon = by === "Earth";
+  const edgeText = (w: MoonWindow) =>
     `loss ${clockText(ctx, w.start)}, acquisition ${clockText(ctx, w.end)}; a kilometre of the real limb's relief (the Moon is taken as a 1,737.4 km sphere) moves them ${fmt(w.secondsPerKm.start, 2)} s and ${fmt(w.secondsPerKm.end, 2)} s`;
-  const moonDistance = (tdb: number) => {
-    const m = frameTransform(f.moonIcrf, f.itrf, Instant.fromTdb(tdb)).subarray(
-      12,
-      15,
-    );
-    const p = behind.places[id];
-    return Math.hypot(m[0]! - p[0]!, m[1]! - p[1]!, m[2]! - p[2]!);
+  const networkText = (w: Window) =>
+    `no dish can hear Orion from ${clockText(ctx, w.start)} to ${clockText(ctx, w.end)} (${fmt((w.end - w.start) / 60, 3)} min)`;
+  // The library's line of sight (`measure`, the Earth and the Moon) just
+  // inside and just outside each edge of this dish's unavailable windows.
+  const stationPoint = framePoint(f.itrf, all.places[id]);
+  const libraryClear = (t: number): boolean | undefined => {
+    try {
+      return measure(
+        stationPoint,
+        framePoint(o.frame, [0, 0, 0]),
+        Instant.fromTdb(t),
+        f,
+        { shapiro: [] },
+      ).lineOfSight?.clear;
+    } catch {
+      return undefined;
+    }
   };
-  const edgeMisses = mine.flatMap((w) =>
-    [w.start, w.end].map(
-      (t) => Math.abs(limbAngle(f, o, behind.places[id], t)) * moonDistance(t),
-    ),
+  const near = mine.unavailable.filter(
+    (w) =>
+      Math.abs(w.start - epochTdb) < 86_400 ||
+      Math.abs(w.end - epochTdb) < 86_400,
   );
+  // An end at the edge of Orion's data isn't a change of verdict: not asked.
+  const probe = (t: number) =>
+    mine.moon.some(
+      (m) => Math.abs(m.start - t) < 0.01 || Math.abs(m.end - t) < 0.01,
+    )
+      ? EDGE_PROBE
+      : HORIZON_PROBE;
+  const probes = near.flatMap((w) => [
+    ...(w.open?.start
+      ? []
+      : ([
+          [w.start - probe(w.start), true],
+          [w.start + probe(w.start), false],
+        ] as const)),
+    ...(w.open?.end
+      ? []
+      : ([
+          [w.end - probe(w.end), false],
+          [w.end + probe(w.end), true],
+        ] as const)),
+  ]);
+  const disagreements = probes.filter(([t, clear]) => {
+    const c = libraryClear(t);
+    return c !== undefined && c !== clear;
+  });
   const toItrf = frameTransform(site, f.itrf, instant);
   const along = (length: number) =>
     [0, 1, 2].map(
@@ -343,19 +394,16 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     );
   const live: StressResult[] = [
     {
-      id: "dish-tracks.behind-the-moon.live",
+      id: "dish-tracks.windows.live",
       group: "space",
-      title: `${id} loses Orion behind the Moon and finds it again where hand geometry puts it on the Moon's limb (the angle from the limb to Orion, times the Moon's distance, within ${LIMB_EDGE} m)`,
-      pass: mine.length > 0,
-      value: Math.max(0, ...edgeMisses),
-      tolerance: LIMB_EDGE,
-      unit: "m",
-      detail:
-        mine.length === 0
-          ? "no window in Orion's data"
-          : mine.map(edgeText).join("; "),
+      title: `${id}'s windows without Orion (the Moon or the Earth in the way) within a day of the scenario's time, found by hand geometry and bisected to 1 ms: the library's line of sight agrees ${EDGE_PROBE} s inside and outside each Moon edge, and ${HORIZON_PROBE} s each side of a horizon edge (its Earth verdict comes about a light time later)`,
+      pass: near.length > 0 && disagreements.length === 0,
+      value: disagreements.length,
+      tolerance: 0,
+      unit: "edges",
+      detail: `${near.length} windows (${probes.length} edges asked${disagreements.length > 0 ? `; the library disagrees at ${disagreements.map(([t]) => clockText(ctx, t)).join(", ")}` : ""}): ${near.map((w) => `${w.open?.start ? "data from " : ""}${clockText(ctx, w.start)} to ${clockText(ctx, w.end)}${w.open?.end ? " (end of a data segment)" : ""}`).join("; ")}${mine.moon.length > 0 ? `; behind the Moon: ${mine.moon.map(edgeText).join("; ")}` : ""}${all.network.length > 0 ? `; the network: ${all.network.map(networkText).join("; ")}` : ""}`,
       accuracyNote:
-        "computed, not published: the library's line of sight against the Moon, its edges bisected to 1 ms, checked by hand limb geometry",
+        "computed, not published: hand geometry (the Moon a 1,737.4 km sphere, the Earth WGS 84) checked against the library's line of sight at each edge",
       instant: instant.tdb(),
     },
     {
@@ -409,13 +457,39 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     added,
     data,
     answer: {
-      label: `one way; point ${pointingText(azimuth, elevation)}`,
-      aside: lost
-        ? `Signal lost: Orion is behind the Moon${within ? ` · ${edgeText(within)}` : ""}`
-        : `${sight.clear ? "In view" : "Not in view"}: ${verdict} · ${fmt(hand.range / 1000, 7)} km · range rate ${fmt(leg.rangeRate / 1000, 4)} km/s`,
-      headline: `${lost ? "Signal lost: Orion is behind the Moon. " : ""}${id} at ${station.complex} points ${pointingText(azimuth, elevation)} to receive Orion; the signal takes ${leg.lightTime.toFixed(6)} s on the way down, and the path is ${verdict}. Orion's data comes from EME2000 through EARTH_ICRF up to ICRF, then down through GCRF and the turning Earth (ITRF) into ${station.name}, the dish's own east, north and up.`,
-      value: leg.lightTime,
-      unit: "s",
+      // The state leads (fix 1): the pointing only while it's in view.
+      label: behindMoon
+        ? "Signal lost: Orion is behind the Moon"
+        : belowHorizon
+          ? `Below the horizon at ${id}`
+          : `one way; point ${pointingText(azimuth, elevation)}`,
+      sky: behindMoon
+        ? {
+            state: "lost",
+            where: `at ${id}`,
+            text: `Signal lost: Orion is behind the Moon${moonNow ? ` · ${edgeText(moonNow)}` : ""}`,
+          }
+        : belowHorizon
+          ? {
+              state: "lost",
+              where: `at ${id}`,
+              text: `Below ${id}'s horizon: the Earth is in the way (${(-elevation).toFixed(2)}° down)`,
+            }
+          : {
+              state: "clear",
+              where: `at ${id}`,
+              text: "In view: clear of the Earth and the Moon",
+            },
+      aside: [
+        ...(networkNow ? [networkText(networkNow)] : []),
+        `${fmt(hand.range / 1000, 7)} km`,
+        `range rate ${fmt(leg.rangeRate / 1000, 4)} km/s`,
+      ].join(" · "),
+      headline: `${behindMoon ? `Signal lost: Orion is behind the Moon, so ${id} can't hear it. ` : belowHorizon ? `Orion is below ${id}'s horizon, so it can't hear it. ` : `${id} at ${station.complex} points ${pointingText(azimuth, elevation)} to receive Orion. `}The signal takes ${leg.lightTime.toFixed(6)} s on the way down. Orion's data comes from EME2000 through EARTH_ICRF up to ICRF, then down through GCRF and the turning Earth (ITRF) into ${station.name}, the dish's own east, north and up.`,
+      ...(!(behindMoon || belowHorizon) && {
+        value: leg.lightTime,
+        unit: "s",
+      }),
       accuracy:
         statement.meters !== undefined
           ? {
@@ -441,18 +515,33 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
         tone: "white",
       },
     ],
-    windows: behind.common.map((w, i) => ({
-      id: `behind-moon-${i}`,
-      label: "Orion behind the Moon from every dish",
-      startUtc: Instant.fromTdb(w.start).toUtc(f.data.leapSeconds),
-      endUtc: Instant.fromTdb(w.end).toUtc(f.data.leapSeconds),
-    })),
-    presets: behind.common.slice(0, 1).map((w) => ({
-      id: "behind-moon",
-      label: "Behind the Moon",
-      // A minute before the last dish loses Orion.
-      utcMs: Instant.fromTdb(w.start - 60).toUtc(f.data.leapSeconds),
-    })),
+    windows: [
+      ...all.network.map((w, i) => ({
+        id: `network-${i}`,
+        label: "No dish can hear Orion",
+        startUtc: Instant.fromTdb(w.start).toUtc(f.data.leapSeconds),
+        endUtc: Instant.fromTdb(w.end).toUtc(f.data.leapSeconds),
+      })),
+      ...mine.moon.map((w, i) => ({
+        id: `${id}-moon-${i}`,
+        label: `Orion behind the Moon from ${id}`,
+        startUtc: Instant.fromTdb(w.start).toUtc(f.data.leapSeconds),
+        endUtc: Instant.fromTdb(w.end).toUtc(f.data.leapSeconds),
+      })),
+    ],
+    presets: all.network
+      .filter((w) =>
+        Object.values(all.byStation).some((d) =>
+          d.moon.some((m) => m.start < w.end && m.end > w.start),
+        ),
+      )
+      .slice(0, 1)
+      .map((w) => ({
+        id: "behind-moon",
+        label: "Behind the Moon",
+        // A minute before the network loses Orion.
+        utcMs: Instant.fromTdb(w.start - 60).toUtc(f.data.leapSeconds),
+      })),
     sightLines: [
       {
         id: "orion",

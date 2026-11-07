@@ -279,6 +279,10 @@ export interface TerrainSightView {
   state: "clear" | "blocked" | "may-block" | "unknown" | "waiting";
   text: string;
   accuracy?: string;
+  /** The terrain's error at the levels crossed, m, when known. */
+  meters?: number;
+  /** Share of the path over unknown terrain, 0 to 1. */
+  unknownFraction?: number;
 }
 
 /** One line of the report's environment (R15). */

@@ -3,6 +3,7 @@
 // bounded" with its reason when it has no size), and how far a setting moves
 // it from the checked setup's. Pure, unit-tested.
 import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
+import type { TerrainSightView } from "./model.ts";
 import { length, quantity } from "./format.ts";
 
 /** Digits after the point that suit a unit's figures. */
@@ -133,4 +134,58 @@ export function publishedText(p: PublishedView): {
     case "loading":
       return { published, comparison: "Checking ours against it…" };
   }
+}
+
+/** "30%", or "under 1%" for a sliver. */
+const share = (x: number) =>
+  x > 0 && x < 0.005 ? "under 1%" : `${Math.round(x * 100)}%`;
+
+/**
+ * The answer with the terrain's verdict joined to the sky's (Task 6b fix 1):
+ * the weakest of the Earth, the Moon and the terrain leads the aside. Clear
+ * of the Earth and the Moon but blocked by the terrain, the headline says so
+ * and drops its figure; inside the terrain's error it says the terrain may
+ * block, with that error; over unknown terrain, how much is unknown. Never a
+ * pass the terrain hasn't given.
+ */
+export function withTerrain(
+  answer: ScenarioAnswer,
+  terrain: readonly TerrainSightView[] | undefined,
+): ScenarioAnswer {
+  const sky = answer.sky;
+  if (!sky) {
+    return answer;
+  }
+  const t = terrain?.[0];
+  let lead = sky.text;
+  let blocked = false;
+  if (sky.state === "clear" && t) {
+    const err = t.meters !== undefined ? ` (±${length(t.meters)})` : "";
+    switch (t.state) {
+      case "clear":
+        lead = `${sky.text}, and of the terrain${err}`;
+        break;
+      case "may-block":
+        lead = `${sky.text}; the terrain may block it${err}`;
+        break;
+      case "unknown":
+        lead = `${sky.text}; the terrain is unknown over ${share(t.unknownFraction ?? 1)} of the path near the ground`;
+        break;
+      case "waiting":
+        lead = `${sky.text}; the terrain isn't traced yet`;
+        break;
+      case "blocked":
+        blocked = true;
+        lead = `Blocked by the terrain ${sky.where}: the Earth and the Moon are clear`;
+        break;
+    }
+  }
+  const aside = [lead, answer.aside].filter((x) => x).join(" · ");
+  if (!blocked) {
+    return { ...answer, aside };
+  }
+  const rest = { ...answer };
+  delete rest.value;
+  delete rest.unit;
+  return { ...rest, label: `Blocked by the terrain ${sky.where}`, aside };
 }

@@ -7,7 +7,12 @@
 // test/data/framesExplorerScenarios.test.ts's).
 import { describe, expect, it } from "vitest";
 import { Alignment } from "../src/engineering/alignment.ts";
-import { formatAnswer } from "../examples/frames-explorer/panel/answerText.ts";
+import {
+  answerTitle,
+  formatAnswer,
+  withTerrain,
+} from "../examples/frames-explorer/panel/answerText.ts";
+import type { TerrainSightView } from "../examples/frames-explorer/panel/model.ts";
 import {
   knobText,
   snapToStep,
@@ -471,5 +476,60 @@ describe("the dish's lines from orbit (Task 6b, the owner's ask)", () => {
     expect(dish.skyRay!.all!({ view: "dish" })).toBeUndefined();
     const view = spec("dish-tracks").knobs.find((k) => k.id === "view")!;
     expect(view.view).toBe(true);
+  });
+});
+
+describe("the verdict joins the terrain's to the sky's (fix 1): the weakest leads", () => {
+  const answer = {
+    label: "one way; point 28.39° up at azimuth 104.21° (ESE)",
+    value: 1.315257,
+    unit: "s",
+    headline: "",
+    aside: "394,304 km",
+    accuracy: { note: "" },
+    sky: {
+      state: "clear" as const,
+      where: "at DSS-43",
+      text: "In view: clear of the Earth and the Moon",
+    },
+  };
+  const t = (state: TerrainSightView["state"], extra = {}) => [
+    { id: "orion", state, text: "", meters: 75, ...extra },
+  ];
+
+  it("never reads as a pass the terrain hasn't given", () => {
+    expect(withTerrain(answer, t("may-block")).aside).toBe(
+      "In view: clear of the Earth and the Moon; the terrain may block it (±75 m) · 394,304 km",
+    );
+    expect(
+      withTerrain(answer, t("unknown", { unknownFraction: 0.3 })).aside,
+    ).toMatch(/the terrain is unknown over 30% of the path/);
+    expect(withTerrain(answer, t("waiting")).aside).toMatch(/isn't traced yet/);
+    expect(withTerrain(answer, t("clear")).aside).toMatch(
+      /^In view: clear of the Earth and the Moon, and of the terrain/,
+    );
+  });
+
+  it("leads with the terrain when it blocks, without the pointing figure", () => {
+    const b = withTerrain(answer, t("blocked"));
+    expect(b.label).toBe("Blocked by the terrain at DSS-43");
+    expect(b.value).toBeUndefined();
+    expect(answerTitle(b)).toBe("Blocked by the terrain at DSS-43");
+  });
+
+  it("leaves a lost signal as the sky says, whatever the terrain", () => {
+    const lost = {
+      ...answer,
+      label: "Signal lost: Orion is behind the Moon",
+      value: undefined,
+      sky: {
+        state: "lost" as const,
+        where: "at DSS-43",
+        text: "Signal lost: Orion is behind the Moon",
+      },
+    };
+    expect(withTerrain(lost, t("clear")).aside).toBe(
+      "Signal lost: Orion is behind the Moon · 394,304 km",
+    );
   });
 });

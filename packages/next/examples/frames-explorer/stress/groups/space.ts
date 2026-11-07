@@ -438,7 +438,7 @@ const unitAzEl = (az: number, el: number): number[] => [
 const moonFromSacramentoCase = stressCase(
   "space.moon-from-sacramento",
   "space",
-  "The Moon from a Sacramento site against JPL Horizons' observer table: the astrometric direction (ICRF, light time) within 0.01″, the light-time range within 1 m, and the airless apparent azimuth and elevation (display only: Horizons turns its horizon with the pole of date)",
+  "The Moon from a Sacramento site against JPL Horizons' observer table: the astrometric direction (ICRF, light time) within 0.01″, the light-time range within 1 m, and the airless apparent azimuth and elevation (display only: about 0.3″ apart, unexplained)",
   ["frames"],
   async (ctx, base) => {
     const h = cited<HorizonsMoon>("jpl-horizons-moon-sacramento");
@@ -493,7 +493,7 @@ const moonFromSacramentoCase = stressCase(
     const delta = printed(h.deltaAu).value * auKm * 1000;
     // The apparent direction in the site's axes, against Horizons' airless
     // azimuth and elevation; and again with polar motion left out of our
-    // horizon, as Horizons' (its horizon turns with the pole of date).
+    // horizon, which leaves about 0.3″ unexplained (fix 1).
     const apparent = leg.receiverDirection;
     const theirs = unitAzEl(
       printed(h.azimuth).value,
@@ -549,10 +549,10 @@ const moonFromSacramentoCase = stressCase(
         id: `${base.id}.horizon`,
         source,
         title:
-          "The Moon's airless apparent azimuth and elevation from a Sacramento site against JPL Horizons' (display only: Horizons' horizon turns with the pole of date)",
+          "The Moon's airless apparent azimuth and elevation from a Sacramento site against JPL Horizons' (display only: about 0.3″ apart, unexplained)",
         pass: true,
         displayOnly: true,
-        detail: `Horizons azimuth ${h.azimuth}°, elevation ${h.elevation}°; ours ${az(apparent)}°, ${el(apparent)}°, ${fmt(angle3(apparent, theirs) / ARCSECOND, 3)}″ apart. With polar motion (x ${fmt(eop.xp / ARCSECOND, 4)}″, y ${fmt(eop.yp / ARCSECOND, 4)}″, the EOP table's) taken out of our horizon, ${fmt(angle3(turned, theirs) / ARCSECOND, 3)}″ apart; the rest is a turn about the polar axis that this check doesn't account for. Our light time and aberration match plan 3's SPICE fixture (space.dss43-orion)`,
+        detail: `Horizons azimuth ${h.azimuth}°, elevation ${h.elevation}°; ours ${az(apparent)}°, ${el(apparent)}°, ${fmt(angle3(apparent, theirs) / ARCSECOND, 3)}″ apart. With polar motion (x ${fmt(eop.xp / ARCSECOND, 4)}″, y ${fmt(eop.yp / ARCSECOND, 4)}″, the EOP table's) taken out of our horizon, still ${fmt(angle3(turned, theirs) / ARCSECOND, 3)}″ apart: polar motion accounts for only part of it, and the rest is unexplained. Our Earth orientation agrees with SPICE's to a few hundredths of an arcsecond (plan 3's DSS-43 checks), and our light time and aberration match its fixture (space.dss43-orion); our astrometric direction matches Horizons' to about a milliarcsecond (.direction)`,
         effect: {
           value: angle3(apparent, theirs) / ARCSECOND,
           unit: "″",

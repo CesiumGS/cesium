@@ -26,6 +26,13 @@ export interface ScenarioAnswer {
   label: string;
   /** A second line always shown under the headline ("0.42 km/s in GCRF · 27.2 km/s in ITRF"). */
   aside?: string;
+  /**
+   * The line of sight's verdict against the Earth and the Moon, apart from
+   * `aside` so the page can join the terrain's to it: the weakest of the
+   * three leads (Task 6b fix 1, answerText.ts `withTerrain`). `where` names
+   * the observer ("at DSS-43").
+   */
+  sky?: { state: "clear" | "lost"; text: string; where: string };
   /** The paragraph that explains it. */
   headline: string;
   /**

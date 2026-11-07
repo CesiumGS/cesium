@@ -72,6 +72,8 @@ export function createStage(deps: {
   rebuildTree(): void;
   refreshTriads(): void;
   refreshCallouts(): void;
+  /** The viewer's globe changed (a switch finished or failed): the terrain's lines follow it. */
+  globeChanged?(): void;
 }): Stage {
   const { viewer, globe, frames: framesNow, disposed } = deps.core;
   const { overlays, orion } = deps;
@@ -112,6 +114,7 @@ export function createStage(deps: {
         if (askedGlobe === kind) {
           shownGlobe = kind;
         }
+        deps.globeChanged?.();
       },
       (error: unknown) => {
         // No ion token, or the terrain endpoint failed: the line of sight
@@ -122,6 +125,7 @@ export function createStage(deps: {
           askedGlobe = kind === "terrain" ? "ellipsoid" : "terrain";
           shownGlobe = askedGlobe;
         }
+        deps.globeChanged?.();
       },
     );
   }

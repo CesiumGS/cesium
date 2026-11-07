@@ -64,6 +64,7 @@ import signalFixture from "../fixtures/frames/signal.json";
 import {
   DSN_STATIONS,
   SACRAMENTO,
+  SCENES,
   earthSiteFrame,
 } from "../../examples/frames-explorer/scenarios/scenes.ts";
 import {
@@ -73,7 +74,11 @@ import {
   pointingText,
   rayDirection,
 } from "../../examples/frames-explorer/scenarios/pointing.ts";
-import { targetPlace } from "../../examples/frames-explorer/skyRay.ts";
+import {
+  createSkyRay,
+  targetPlace,
+} from "../../examples/frames-explorer/skyRay.ts";
+import type { LabelBoard } from "../../examples/frames-explorer/triadLayer.ts";
 import {
   MOON_DIRECTION,
   MOON_RANGE,
@@ -972,8 +977,15 @@ describe("a dish tracks Orion (Task 6b)", () => {
       { station: "DSS-43" },
       at("2026-04-06T23:04:00Z"),
     );
-    expect(behind.answer.aside).toMatch(
+    // The state leads (fix 1): no pointing figure while the signal is lost.
+    expect(behind.answer.label).toBe("Signal lost: Orion is behind the Moon");
+    expect(behind.answer.value).toBeUndefined();
+    expect(behind.answer.sky?.state).toBe("lost");
+    expect(behind.answer.sky?.text).toMatch(
       /^Signal lost: Orion is behind the Moon · loss \d\d:\d\d:\d\d UTC, acquisition/,
+    );
+    expect(behind.answer.aside).toMatch(
+      /^no dish can hear Orion from 22:42:5\d UTC to 23:23:1\d UTC/,
     );
     const los = behind.live.find((r) => r.id === "space.line-of-sight.live")!;
     expect(los.pass, los.detail).toBe(true);
@@ -982,9 +994,18 @@ describe("a dish tracks Orion (Task 6b)", () => {
       { station: "DSS-43" },
       at("2026-04-06T20:00:00Z"),
     );
-    expect(before.answer.aside).toMatch(
-      /^In view: clear of the Earth and the Moon/,
+    expect(before.answer.sky).toMatchObject({
+      state: "clear",
+      text: "In view: clear of the Earth and the Moon",
+    });
+    // Below the horizon: the state, not a pointing below it.
+    const down = await client.scenario(
+      "dish-tracks",
+      { station: "DSS-14" },
+      at("2026-04-06T23:04:00Z"),
     );
+    expect(down.answer.label).toBe("Below the horizon at DSS-14");
+    expect(down.answer.value).toBeUndefined();
     // The page traces the last part over the terrain: one sight line from the dish.
     expect(before.sightLines?.map((l) => l.id)).toEqual(["orion"]);
   }, 60_000);
@@ -1011,7 +1032,7 @@ describe("a dish tracks Orion (Task 6b)", () => {
 });
 
 describe("Orion behind the Moon (Task 6b, the owner's ask)", () => {
-  it("finds the window when the Moon hides Orion from every dish, its edges on the limb by hand, and offers a jump to just before it", async () => {
+  it("finds when no dish can hear Orion, the Moon or each dish's horizon in the way, its edges agreed by the library, and offers a jump to just before the loss behind the Moon", async () => {
     // The view knob is a way of looking, not a setting.
     expect(
       checkedState(
@@ -1026,27 +1047,33 @@ describe("Orion behind the Moon (Task 6b, the owner's ask)", () => {
       checkedTdb("dish-tracks"),
     );
     const iso = (ms: number) => new Date(ms).toISOString();
-    print(
-      `behind the Moon, every dish: ${(e.windows ?? []).map((w) => `${iso(w.startUtc)} to ${iso(w.endUtc)}`).join("; ")}`,
+    const network = (e.windows ?? []).filter(
+      (w) => w.label === "No dish can hear Orion",
     );
-    const edges = e.live.find(
-      (r) => r.id === "dish-tracks.behind-the-moon.live",
-    )!;
     print(
-      `DSS-43 edges: ${edges.detail}; worst ${edges.value} m off the limb by hand`,
+      `no dish can hear Orion: ${network.map((w) => `${iso(w.startUtc)} to ${iso(w.endUtc)}`).join("; ")}`,
     );
+    const edges = e.live.find((r) => r.id === "dish-tracks.windows.live")!;
+    print(`DSS-43 windows: ${edges.detail}`);
+    // The library's line of sight agrees just inside and outside each edge.
     expect(edges.pass, edges.detail).toBe(true);
-    expect(e.windows).toHaveLength(1);
-    expect(e.presets?.[0]?.utcMs).toBe(e.windows![0]!.startUtc - 60_000);
+    // The network's loss behind the Moon: DSS-14 and DSS-63 have Orion
+    // below their horizons then, so it is DSS-43's own (fix 1, item 1).
+    const flyby = network.find(
+      (w) =>
+        w.startUtc < Date.parse("2026-04-06T23:00:00Z") &&
+        w.endUtc > Date.parse("2026-04-06T23:00:00Z"),
+    )!;
+    expect(e.presets?.[0]?.utcMs).toBe(flyby.startUtc - 60_000);
     // Pinned (computed, not published: no NASA loss-of-signal time is cited
     // here), within 1 s; a kilometre of the real limb's relief moves an edge
     // by about 0.8 s, which the Moon as a sphere leaves out.
     const near = (ms: number, iso: string) =>
       expect(Math.abs(ms - Date.parse(iso)), iso).toBeLessThan(1000);
-    near(e.windows![0]!.startUtc, "2026-04-06T22:42:53.503Z");
-    near(e.windows![0]!.endUtc, "2026-04-06T23:20:05.140Z");
+    near(flyby.startUtc, "2026-04-06T22:42:53.503Z");
+    near(flyby.endUtc, "2026-04-06T23:23:12.000Z");
     expect(edges.detail).toMatch(
-      /loss 22:42:5[34] UTC, acquisition 23:23:1[12] UTC/,
+      /behind the Moon: loss 22:42:5[34] UTC, acquisition 23:23:1[12] UTC/,
     );
   }, 120_000);
 });
@@ -1095,7 +1122,7 @@ describe("where's the Moon from here (Task 6b)", () => {
     expect(direction.source?.document).toMatch(/Horizons/);
   }, 60_000);
 
-  it("shows Horizons' apparent azimuth and elevation without a verdict: about half an arcsecond apart, mostly Horizons' horizon turning with the pole of date", async () => {
+  it("shows Horizons' apparent azimuth and elevation without a verdict: 0.385″ apart, still about 0.3″ with polar motion taken out, unexplained", async () => {
     const h = (
       await runStress(context(), {
         ids: ["space.moon-from-sacramento.horizon"],
@@ -1104,6 +1131,9 @@ describe("where's the Moon from here (Task 6b)", () => {
     expect(h!.displayOnly).toBe(true);
     print(`moon-from-here horizon: ${h!.detail}`);
     expect(h!.effect!.value).toBeLessThan(1);
+    expect(h!.detail).toMatch(
+      /still 0\.2\d\d″ apart: polar motion accounts for only part of it, and the rest is unexplained/,
+    );
     // Never proof: the scenario's rows leave it out.
     expect(moon.proof).not.toContain("space.moon-from-sacramento.horizon");
   }, 60_000);
@@ -1189,4 +1219,85 @@ describe("the line of sight drawn every frame on the page (Task 6b fix: it follo
       expect(worst).toBeLessThan(c.tolerance);
     }, 60_000);
   }
+});
+
+describe("createSkyRay as the page runs it (fix 1): with the page's Orion track, against the worker", () => {
+  /** A globe that records what the sky ray draws. */
+  function fakeGlobe(shown: () => Instant) {
+    const overlays = new Map<
+      string,
+      { placement: Float64Array; dashed: boolean }
+    >();
+    return {
+      overlays,
+      globe: {
+        shownAt: () => shown(),
+        setOverlay: (
+          id: string,
+          layers: readonly { dashed?: boolean }[],
+          options: { placement?: ArrayLike<number> } = {},
+        ) => {
+          overlays.set(id, {
+            placement: Float64Array.from(options.placement!),
+            dashed: layers[0]!.dashed === true,
+          });
+        },
+        placeOverlay: (id: string, m: ArrayLike<number>) => {
+          overlays.get(id)!.placement = Float64Array.from(m);
+        },
+        removeOverlay: (id: string) => void overlays.delete(id),
+        hasOverlay: (id: string) => overlays.has(id),
+      },
+    };
+  }
+
+  it("draws DSS-43's line where the worker's sight line points, dashed exactly while the worker says the Moon hides Orion", async () => {
+    let at = Instant.fromTdb(checkedTdb("dish-tracks"));
+    const g = fakeGlobe(() => at);
+    const labels: LabelBoard = new Map();
+    const knobs = { station: "DSS-43", view: "orbit" };
+    const sky = createSkyRay({
+      globe: g.globe as never,
+      frames: () => frames,
+      scene: () => SCENES["dish-tracks"],
+      knobs: () => knobs,
+      // The page's own track: orionFromOem on this thread, as orionLayer loads it.
+      orionTrack: () => orion,
+      labels,
+      refreshLabels: () => {},
+    });
+    for (const iso of [
+      "2026-04-06T12:55:53Z",
+      "2026-04-06T20:00:00Z",
+      "2026-04-06T22:50:00Z",
+      "2026-04-06T23:10:00Z",
+    ]) {
+      const tdb = tdbOf(Date.parse(iso));
+      at = Instant.fromTdb(tdb);
+      sky.place();
+      const e = await client.scenario("dish-tracks", knobs, tdb);
+      const line = e.sightLines![0]!;
+      const w = [0, 1, 2].map((i) => line.to[i]! - line.from[i]!);
+      const lw = Math.hypot(w[0]!, w[1]!, w[2]!);
+      const drawn = g.overlays.get("scenario:sky-ray:DSS-43 ENU:0")!;
+      const z = [
+        drawn.placement[8]!,
+        drawn.placement[9]!,
+        drawn.placement[10]!,
+      ];
+      expect(
+        angleBetween(
+          z,
+          w.map((x) => x / lw),
+        ),
+        iso,
+      ).toBeLessThan(1e-8);
+      const lost = e.answer.label.startsWith("Signal lost");
+      expect(drawn.dashed, `${iso}: dashed while the Moon hides Orion`).toBe(
+        lost,
+      );
+    }
+    sky.dispose();
+    expect(g.overlays.size).toBe(0);
+  }, 120_000);
 });

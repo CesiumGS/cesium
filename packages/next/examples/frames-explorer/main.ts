@@ -250,6 +250,7 @@ export function run(context: ExampleContext): ExampleRun {
     orionNodeId: () => orion.info()?.info.node.id,
     rigidBuilt: () => overlays.rigidBuilt(),
     engineering: () => overlays.engineering(),
+    skyAzimuth: () => skyRay.azimuth(),
   });
   scope.defer(() => cameraViews.dispose());
   // The pivot marker while the orbit is dragged (HUD); a drag or wheel of
@@ -271,6 +272,7 @@ export function run(context: ExampleContext): ExampleRun {
     rebuildTree: () => treeState.rebuild(),
     refreshTriads: () => triads.refresh(),
     refreshCallouts: () => callouts.refresh(),
+    globeChanged: () => sightLines.globeChanged(),
   });
   scope.defer(() => stage.dispose());
   const callouts = createCallouts({
@@ -519,6 +521,23 @@ export function run(context: ExampleContext): ExampleRun {
     orionTrack: () => orion.track(),
     labels,
     refreshLabels: () => triads.refresh(),
+    camera: () => {
+      const c = viewer.view.camera;
+      const h = viewer.container.clientHeight;
+      if (h <= 0) {
+        return undefined;
+      }
+      const k = (2 * Math.tan(c.fov / 2)) / h;
+      return {
+        position: c.position,
+        pixelAt: (p) =>
+          Math.hypot(
+            p[0]! - c.position[0]!,
+            p[1]! - c.position[1]!,
+            p[2]! - c.position[2]!,
+          ) * k,
+      };
+    },
   });
   scope.defer(() => skyRay.dispose());
   const frameLoop = createFrameLoop({

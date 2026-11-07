@@ -66,6 +66,26 @@ export function targetPlace(
     frameTransform(frame, frames.icrf, Instant.fromTdb(tdb)).subarray(12, 15);
 }
 
+/**
+ * A column-major placement taking the local unit segment (0, 0, 0)–(0, 0, 1)
+ * to `p0`–`p1` (its x and y columns square to it: they place nothing).
+ */
+export function segmentPlacement(
+  p0: ArrayLike<number>,
+  p1: ArrayLike<number>,
+): Float64Array {
+  const d = [0, 1, 2].map((i) => p1[i]! - p0[i]!);
+  const l = Math.hypot(d[0]!, d[1]!, d[2]!);
+  return rayPlacement(
+    p0,
+    d.map((x) => x / l),
+    l,
+  );
+}
+
+/** How many screen pixels wide a line is drawn: three 1 px strands side by side (fix 1). */
+export const LINE_PX = 3;
+
 /** A column-major placement taking local z to `d` (ITRF unit) times `length` at `origin`. */
 export function rayPlacement(
   origin: ArrayLike<number>,
@@ -132,6 +152,8 @@ export interface SkyRay {
   place(): void;
   /** The chosen site's line now (ITRF unit direction), for checks. */
   now(): { origin: number[]; direction: number[] } | undefined;
+  /** The chosen site's azimuth to the target now, degrees: the ground camera faces it. */
+  azimuth(): number | undefined;
   dispose(): void;
 }
 
@@ -146,6 +168,17 @@ export function createSkyRay(deps: {
   orionTrack(): OrionTrack | undefined;
   labels: LabelBoard;
   refreshLabels(): void;
+  /**
+   * The camera now: where it is, and how many metres a pixel spans at a
+   * point. Lines are widened to `LINE_PX` on screen with it; without it
+   * they are 1 px.
+   */
+  camera?():
+    | {
+        position: ArrayLike<number>;
+        pixelAt(p: ArrayLike<number>): number;
+      }
+    | undefined;
 }): SkyRay {
   const { globe } = deps;
   /** Each site's frame and its fixed placement in ITRF, by its key. */
@@ -197,31 +230,68 @@ export function createSkyRay(deps: {
     return site;
   }
 
-  function draw(line: Drawn): void {
-    const id = `${OVERLAY}:${line.name}`;
-    const how = `${line.blocked}:${line.strength}`;
-    const placement = rayPlacement(line.origin, line.direction, line.length);
-    if (shown.get(id) !== how) {
-      const unit = new Float64Array(3 * 201);
-      for (let i = 0; i <= 200; i++) {
-        unit[3 * i + 2] = i / 200;
-      }
-      globe.setOverlay(
-        id,
-        [
-          {
-            chunks: overlayMesh(polyline(unit, [255, 255, 255, 255])),
-            color: hexRgba("#ffffff"),
-            strength: line.strength * (line.blocked ? BLOCKED : 1),
-            dashed: line.blocked,
-          },
-        ],
-        { placement },
-      );
-      shown.set(id, how);
-    } else {
-      globe.placeOverlay(id, placement);
+  /** Each line's strands: a 1 px line and one a pixel to each side of it, square to the view. */
+  function strands(line: Drawn): Float64Array[] {
+    const p0 = line.origin;
+    const p1 = line.origin.map((x, i) => x + line.length * line.direction[i]!);
+    const cam = deps.camera?.();
+    if (!cam) {
+      return [segmentPlacement(p0, p1)];
     }
+    const side = (p: number[]) => {
+      const v = p.map((x, i) => x - cam.position[i]!);
+      const d = line.direction;
+      const c = [
+        d[1]! * v[2]! - d[2]! * v[1]!,
+        d[2]! * v[0]! - d[0]! * v[2]!,
+        d[0]! * v[1]! - d[1]! * v[0]!,
+      ];
+      const l = Math.hypot(c[0]!, c[1]!, c[2]!) || 1;
+      const px = cam.pixelAt(p);
+      return c.map((x) => (x / l) * px);
+    };
+    const s0 = side(p0);
+    const s1 = side(p1);
+    const half = (LINE_PX - 1) / 2;
+    const out: Float64Array[] = [];
+    for (let k = -half; k <= half; k++) {
+      out.push(
+        segmentPlacement(
+          p0.map((x, i) => x + k * s0[i]!),
+          p1.map((x, i) => x + k * s1[i]!),
+        ),
+      );
+    }
+    return out;
+  }
+
+  function draw(line: Drawn): void {
+    const placements = strands(line);
+    const how = `${line.blocked}:${line.strength}`;
+    placements.forEach((placement, k) => {
+      const id = `${OVERLAY}:${line.name}:${k}`;
+      if (shown.get(id) !== how) {
+        const unit = new Float64Array(3 * 201);
+        for (let i = 0; i <= 200; i++) {
+          unit[3 * i + 2] = i / 200;
+        }
+        globe.setOverlay(
+          id,
+          [
+            {
+              chunks: overlayMesh(polyline(unit, [255, 255, 255, 255])),
+              color: hexRgba("#ffffff"),
+              strength: line.strength * (line.blocked ? BLOCKED : 1),
+              dashed: line.blocked,
+            },
+          ],
+          { placement },
+        );
+        shown.set(id, how);
+      } else {
+        globe.placeOverlay(id, placement);
+      }
+    });
   }
 
   function place(): void {
@@ -294,7 +364,8 @@ export function createSkyRay(deps: {
         words.push({
           id: `sky-ray:${name}`,
           text: `${name.replace(" ENU", "")}${blocked ? " · lost behind the Moon" : ""}`,
-          at: () => alongLine(name, 0.12),
+          // At its end near the Earth (fix 1).
+          at: () => alongLine(name, 0),
           family: "earth",
           priority: 1,
         });
@@ -302,9 +373,9 @@ export function createSkyRay(deps: {
     }
     current = lines;
     // Lines no longer drawn (a dish whose horizon now hides Orion) go.
-    const keep = new Set(lines.map((l) => `${OVERLAY}:${l.name}`));
+    const keep = new Set(lines.map((l) => `${OVERLAY}:${l.name}:`));
     for (const id of ids()) {
-      if (!keep.has(id)) {
+      if (![...keep].some((k) => id.startsWith(k))) {
         globe.removeOverlay(id);
         shown.delete(id);
       }
@@ -344,8 +415,31 @@ export function createSkyRay(deps: {
     }
   }
 
+  function azimuth(): number | undefined {
+    const scene = deps.scene();
+    const ray = scene?.skyRay;
+    const frames = deps.frames();
+    const instant = globe.shownAt();
+    if (!ray || !frames || !instant) {
+      return undefined;
+    }
+    const target = targetPlace(frames, ray.target, deps.orionTrack());
+    if (!target) {
+      return undefined;
+    }
+    try {
+      const site = siteOf(frames, ray.site(deps.knobs()), instant);
+      return azimuthElevation(
+        rayFrom(frames, site.frame, site.latitude, target, instant).enu,
+      ).azimuth;
+    } catch {
+      return undefined;
+    }
+  }
+
   return {
     place,
+    azimuth,
     now: () => {
       const name = deps.scene()?.skyRay?.site(deps.knobs()).name;
       const l = current.find((x) => x.name === name);

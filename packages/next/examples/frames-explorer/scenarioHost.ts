@@ -361,7 +361,14 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
       return;
     }
     cancelTimer();
-    knobs = spec.checked.knobs;
+    // A view knob (the dish's "From orbit") is a way of looking, not part
+    // of the checked setup: it stays as the user chose it.
+    const views = Object.fromEntries(
+      spec.knobs
+        .filter((k) => k.view === true)
+        .map((k) => [k.id, knobs[k.id]!]),
+    );
+    knobs = { ...spec.checked.knobs, ...views };
     epochUtcMs = Date.parse(spec.checked.epochUtc);
     quietly(() => {
       deps.setClock(epochUtcMs);
