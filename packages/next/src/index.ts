@@ -324,6 +324,7 @@ export {
   type TerrainRayTarget,
   type TerrainRayTile,
 } from "./globe/terrainRay.ts";
+export { LEVEL_ZERO_ERROR } from "./globe/TerrainSource.ts";
 export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";

@@ -310,12 +310,23 @@ function withFootprint(
   return unbounded("Tracing the camera's ray on the terrain", v.text);
 }
 
+/** A point's height above the ellipsoid, m. */
+const heightOf = (p: ArrayLike<number>): number | undefined =>
+  Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {
+    longitude: 0,
+    latitude: 0,
+    height: 0,
+  })?.height;
+
 /**
  * The ship's answer with the page's trace of the mast's sight line to the
- * buoy (Task 7): the verdict joins the label and leads the aside. Where it
- * meets the terrain, a point within 3 m of the sea's height is the sea's
- * horizon; higher, the land. Never in sight over terrain not drawn, or
- * within its error.
+ * buoy (Task 7): the verdict joins the label and leads the aside. It says
+ * what decided it: where the line meets the drawn terrain, or the lowest
+ * clearance beyond each end's own ground (the ray's margin) with the
+ * terrain's error there, over the drawn sea or the drawn land. The sea is
+ * GEOID18's whatever the datum knob says (review finding 9): ground within
+ * 3 m of it is the sea. Never in sight over terrain not drawn, or within
+ * its error.
  */
 function withSight(
   answer: ScenarioAnswer,
@@ -328,49 +339,49 @@ function withSight(
     label: `${answer.label} · ${verdict}`,
     aside: [lead, answer.aside].filter((x) => x).join(" · "),
   });
-  const err = v?.meters !== undefined ? ` (±${length(v.meters)})` : "";
   if (!v || v.traced !== sight.key || v.state === "waiting") {
     return join(
       "buoy: tracing",
       `${sight.target}: ${v?.state === "waiting" && v.traced === sight.key ? v.text : "the sight line isn't traced yet"}`,
     );
   }
+  /** "the drawn sea" or "the drawn land" under a point `above` m over the drawn surface. */
+  const ground = (p: ArrayLike<number>, above: number) => {
+    const h = heightOf(p);
+    return h !== undefined && Math.abs(h - above - sight.sea) < 3
+      ? "the drawn sea"
+      : "the drawn land";
+  };
+  /** "2.1 km short of the buoy". */
+  const short = (p: ArrayLike<number>) =>
+    v.to ? ` ${length(dist3(p, v.to))} short of ${sight.target}` : "";
+  const m = v.margin;
   switch (v.state) {
     case "clear":
       return join(
         "buoy in sight",
-        `${sight.target} in sight: the line clears the sea and the land as drawn${err}`,
+        `${sight.target} in sight: ${m ? `the line passes ${length(m.clearance)} over ${ground(m.at, m.clearance)}${short(m.at)} at its lowest, beyond the terrain's ±${length(m.error)}` : "the line clears the drawn terrain"}`,
       );
     case "blocked": {
-      let what = "the terrain";
-      let far = "";
-      if (v.hitAt) {
-        const h = Ellipsoid.WGS84.cartesianToCartographic(
-          Float64Array.from(v.hitAt),
-          { longitude: 0, latitude: 0, height: 0 },
-        )?.height;
-        what =
-          h !== undefined && h - sight.sea < 3
-            ? "the sea's horizon"
-            : "the land";
-        if (v.from) {
-          far = ` ${length(dist3(v.hitAt, v.from))} out`;
-        }
-      }
+      const where = v.hitAt
+        ? ` ${ground(v.hitAt, 0)}${v.from ? ` ${length(dist3(v.hitAt, v.from))} out` : ""}`
+        : " the drawn terrain";
       return join(
         "buoy hidden",
-        `${sight.target} hidden: the line meets ${what}${far}`,
+        `${sight.target} hidden: the line meets${where}`,
       );
     }
     case "may-block":
       return join(
         "buoy: can't tell",
-        `${sight.target}: the line passes within the terrain's error${err}; not counted as in sight`,
+        m
+          ? `${sight.target}: the line passes ${length(m.clearance)} over ${ground(m.at, m.clearance)}${short(m.at)}, inside the terrain's ±${length(m.error)} (a per-level heuristic): can't tell`
+          : `${sight.target}: the line passes within the terrain's error; can't tell`,
       );
     case "unknown":
       return join(
         "buoy: can't tell",
-        `${sight.target}: the terrain is unknown over ${share(v.unknownFraction ?? 1)} of the line near the ground; not counted as in sight`,
+        `${sight.target}: ${v.unknownFraction !== undefined && v.unknownFraction < 1 ? `the terrain is unknown over ${share(v.unknownFraction)} of the line near the ground` : "no drawn terrain to trace it over"}; can't tell`,
       );
   }
   return answer;

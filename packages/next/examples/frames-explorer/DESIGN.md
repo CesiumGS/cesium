@@ -353,12 +353,22 @@ sample instants. What the terrain says is the page's: the drone's spot is
 where its camera's ray meets the drawn terrain, read off a local placement
 the worker makes from PROJ (`footprint`); the ship's sight line to Harding
 Rock's buoy is traced on demand, and each minute of its track is traced in
-slices for the timeline's windows and the "Buoy clears the headland"
-moment (`buoyWindow.ts`). A moment may set knobs instead of the time (the
-drone's "Over the building"). Near the water the line passes within the
-drawn terrain's error (its per-level heuristic, ±19 m to ±38 m at the
-levels drawn), so the buoy reads "can't tell", never "in sight", unless the
-tiles are fine enough.
+slices of about 8 ms for the timeline's windows and the moment
+(`buoyWindow.ts`; the 95 traces take 20 to 30 ms of the main thread at the
+default view, measured; a running scan finishes, and heights that change
+meanwhile queue one more; a scan for another mast or datum never
+publishes). The moment says what the drawn terrain shows: "Headland stops
+blocking (as drawn)", its tooltip saying the line stays within the
+terrain's error near the water, or "Buoy comes into view" only when the
+span traced clear. A moment may set knobs instead of the time (the drone's
+"Over the building"). Near the water the line passes within the drawn
+terrain's error (its per-level heuristic, ±19 m to ±38 m at the levels
+drawn), so the buoy reads "can't tell", never "in sight", unless the tiles
+are fine enough; the verdict states the deciding clearance
+(`terrainLineOfSight`'s `margin`: away from each end's own ground), its
+error, where it is and whether the drawn ground under it is the sea
+(GEOID18's, whatever the datum knob says) or the land. Without terrain it
+says "can't tell", never "tracing" for ever.
 
 **The panel, top to bottom, one scroll** (`panel/Scenarios.tsx`): the
 strip; the question as the tab's heading (`headline-sm`); the knobs; the

@@ -63,6 +63,13 @@ export function terrainSightText(
   const sizes = {
     ...(r.accuracy.meters !== undefined && { meters: r.accuracy.meters }),
     unknownFraction: r.unknownFraction,
+    ...(r.margin && {
+      margin: {
+        clearance: r.margin.clearance,
+        error: r.margin.error,
+        at: Array.from(r.margin.at),
+      },
+    }),
   };
   if (r.clear === false) {
     return {
@@ -79,8 +86,9 @@ export function terrainSightText(
       id,
       state: "clear",
       ...sizes,
-      ...(r.minClearance !== undefined && { clearance: r.minClearance }),
-      text: `${subject}: the terrain is clear${r.minClearance !== undefined ? `, by ${length(r.minClearance)} at the closest beyond the observer's own ground` : ""}.`,
+      // The deciding clearance, away from each end's own ground: not the
+      // ends' own heights (review finding 8).
+      text: `${subject}: the terrain is clear${r.margin ? `, by ${length(r.margin.clearance)} at the closest beyond each end's own ground` : ""}.`,
       accuracy,
     };
   }
@@ -97,8 +105,7 @@ export function terrainSightText(
     id,
     state: "may-block",
     ...sizes,
-    ...(r.minClearance !== undefined && { clearance: r.minClearance }),
-    text: `${subject}: the terrain may block it: the path passes within the terrain's error${r.minClearance !== undefined ? ` (${length(r.minClearance)} above the drawn surface)` : ""}.`,
+    text: `${subject}: the terrain may block it: the path passes within the terrain's error${r.margin ? ` (${length(r.margin.clearance)} above the drawn surface, inside its ±${length(r.margin.error)}, beyond each end's own ground)` : ""}.`,
     accuracy,
   };
 }
@@ -240,8 +247,14 @@ export function createSightLines(deps: {
           : undefined);
     views = lines.map((l) => {
       if (!target || !globe) {
+        const v = terrainSightText(l.id, l.label, undefined, why, l.subject);
         return {
-          ...terrainSightText(l.id, l.label, undefined, why, l.subject),
+          ...v,
+          // No terrain here, or it failed: can't tell, never "tracing" for
+          // ever (review finding 7); loading while the terrain globe comes.
+          ...(shown === "ellipsoid" || deps.globeProblem() !== undefined
+            ? { state: "unknown" as const, unknownFraction: 1 }
+            : {}),
           ...(l.key !== undefined && { traced: l.key }),
         };
       }
@@ -259,6 +272,7 @@ export function createSightLines(deps: {
         // What it was traced for: an answer takes only its own (Task 6c's rule).
         ...(l.key !== undefined && { traced: l.key }),
         from: placed.from,
+        to: placed.to,
       };
       return placed.lifted > 0
         ? {

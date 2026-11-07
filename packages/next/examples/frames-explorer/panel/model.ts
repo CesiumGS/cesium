@@ -289,10 +289,15 @@ export interface TerrainSightView {
   mask?: { azimuths: number; below: number; above: number; unsure: number };
   /** Where a blocked line first meets the drawn terrain (Earth-fixed m): the drone's footprint (Task 7). */
   hitAt?: readonly number[];
-  /** Where the line was traced from, as placed on the drawn ground (Earth-fixed m). */
+  /** Where the line was traced from, as placed on the drawn ground, and to (Earth-fixed m). */
   from?: readonly number[];
-  /** The line's lowest height above the drawn terrain, m, ends included (clear or may block). */
-  clearance?: number;
+  to?: readonly number[];
+  /**
+   * The deciding clearance, away from each end's own ground
+   * (`terrainLineOfSight`'s `margin`): the lowest clearance there, m, the
+   * terrain's error under it, and where it is (Earth-fixed).
+   */
+  margin?: { clearance: number; error: number; at: readonly number[] };
 }
 
 /** One line of the report's environment (R15). */

@@ -10,16 +10,11 @@ import type {
   TerrainRayTarget,
   TerrainRayTile,
 } from "../../../src/globe/terrainRay.ts";
+import { LEVEL_ZERO_ERROR } from "../../../src/globe/TerrainSource.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 
 type Rectangle = TerrainRayTile["rectangle"];
 type TerrainHeights = TerrainRayTile["heights"];
-
-/**
- * Quantized-mesh's level-zero geometric error, m, halving each level: the
- * heuristic the drawn globe states (TerrainSource's `LEVEL_ZERO_ERROR`).
- */
-const LEVEL_ZERO_ERROR = (6378137 * 2 * Math.PI * 0.25) / (65 * 2);
 
 const Q = 32767;
 const deg = Math.PI / 180;

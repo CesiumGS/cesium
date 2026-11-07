@@ -48,8 +48,9 @@ const mix = (a: V3, ka: number, b: V3, kb: number): V3 => [
  * East, north and up at `position` (Earth-fixed m) on `ellipsoid`: up is
  * the geodetic normal at the point's foot on the ellipsoid (its geodetic
  * latitude and longitude), not the normal of the scaled ellipsoid through
- * the point, which tilts from it by about e²·h·sin 2φ / R (0.3 µrad at
- * 250 m): the hand check caught it.
+ * the point, which tilts from it by about e²·h·sin 2φ / (2N), N the prime
+ * vertical's radius (0.13 µrad at 250 m here, 0.5 µrad at 1 km): the hand
+ * check caught it.
  */
 export function enuAxes(
   position: ArrayLike<number>,

@@ -103,9 +103,10 @@ export interface ScenarioAnswer {
   /**
    * The answer carries a line of sight to a target over the terrain (the
    * ship's mast to the buoy, Task 7): the page's trace of sight line
-   * `line` joins its verdict to the label and the aside. `sea` is the sea's
-   * ellipsoidal height at the target, m, to tell the sea's horizon from
-   * the land where the line meets the terrain.
+   * `line` joins its verdict to the label and the aside. `sea` is the
+   * drawn sea's ellipsoidal height at the target through GEOID18 (whatever
+   * the datum knob says), m, to tell the drawn sea from the land where the
+   * line meets the terrain or passes lowest over it.
    */
   sight?: { line: string; key: string; target: string; sea: number };
 }
@@ -146,7 +147,7 @@ export interface Moment {
   utcMs?: number;
   /** The knobs it sets, instead of the time. */
   knobs?: KnobState;
-  /** The button's tooltip, for one that sets knobs. */
+  /** What the moment is, in the button's tooltip (after the time a time moment takes the clock to). */
   title?: string;
   /** The button's icon: the Moon for one behind it, else the timeline. */
   icon?: "moon" | "timeline";

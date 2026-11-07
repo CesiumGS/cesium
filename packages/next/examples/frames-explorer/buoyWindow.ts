@@ -1,16 +1,20 @@
-// When the headlands stop hiding the buoy from the ship's mast (Task 7), on
-// the page's thread: the sight line traced over the drawn terrain each
-// minute along the ship's whole track (the same frames as the worker's,
-// vehicles.ts, and the same trace as the answer's, sightLines.ts). The
-// spans where the drawn terrain doesn't block it go on the timeline as
-// windows (Task 6c's clickable marks), each saying whether it is in sight
-// or only within the terrain's error; the first that follows a minute the
-// land blocked it is the "Buoy clears the headland" moment.
+// When the drawn headlands stop meeting the ship's mast's line to the buoy
+// (Task 7), on the page's thread: the sight line traced over the drawn
+// terrain each minute along the ship's whole track (the same frames as the
+// worker's, vehicles.ts, and the same trace as the answer's,
+// sightLines.ts). The spans where the drawn terrain doesn't block it go on
+// the timeline as windows (Task 6c's clickable marks), each saying whether
+// it is in sight or only within the terrain's error; the first that follows
+// a minute the land blocked it is the moment, "Headland stops blocking (as
+// drawn)", or "Buoy comes into view" only when that span traced clear.
 //
 // A minute over terrain not drawn, or drawn only coarsely, is in no window,
-// and nothing is "in sight" within the terrain's error (Review Focus 2). It runs on demand, in slices so no frame waits long:
-// when the mast's height or the datum changes, and 1.5 s after the
-// terrain's heights last changed as tiles load. Never per frame.
+// and nothing is "in sight" within the terrain's error (Review Focus 2).
+// It runs on demand, in slices of about 8 ms so no frame waits long: when
+// the mast's height or the datum changes (what was found for the old one
+// goes at once), and 1.5 s after the terrain's heights last changed as
+// tiles load. A running scan finishes; heights that change meanwhile queue
+// one more. Never per frame.
 import { frameTransform } from "../../src/frames/Frame.ts";
 import type { Frames } from "../../src/frames/frames.ts";
 import { terrainLineOfSight } from "../../src/measure/terrainLineOfSight.ts";
@@ -32,8 +36,8 @@ import { placeObserver } from "./sightLines.ts";
 /** The trace's step along the track, s. */
 export const WINDOW_STEP = 60;
 
-/** Lines traced per slice of the main thread. */
-const SLICE = 4;
+/** The main thread's time per slice of the scan, ms. */
+const SLICE_MS = 8;
 
 /** It traces again this long after the terrain's heights last changed, ms. */
 const SETTLE = 1500;
@@ -73,9 +77,10 @@ export const sampleOf = (r: {
 /**
  * The spans where the drawn terrain doesn't block the line (samples each
  * `step` s from `startMs`: clear, or within the terrain's error), each
- * labelled by what the terrain says there; and the moment the buoy clears
- * the headland: the first such span that follows a minute where the drawn
- * terrain blocked it (pure). A span after terrain not drawn is no moment:
+ * labelled by what the terrain says there; and the moment the drawn
+ * headland stops blocking it: the first such span that follows a minute
+ * where the drawn terrain blocked it, named "comes into view" only when the
+ * whole span traced clear (pure). A span after terrain not drawn is no moment:
  * nothing says the land hid it before.
  */
 export function sightWindows(
@@ -100,15 +105,24 @@ export function sightWindows(
       id: `buoy-${windows.length}`,
       label: run.every((x) => x === "clear")
         ? `${BUOY.short} in sight from the mast (traced each minute over the drawn terrain)`
-        : `${BUOY.short} past the headlands: the drawn terrain doesn't block the mast's line, though near the water it passes within the terrain's error (traced each minute)`,
+        : `The drawn headlands don't meet the mast's line to ${BUOY.short}; near the water it stays within the terrain's error, so the buoy can't be told in sight (traced each minute)`,
       startUtc,
       // A run's last sample stands for the minute after it, to the track's end.
       endUtc: startMs + Math.min(j + 1, samples.length - 1) * step * 1000,
     });
     if (moment === undefined && samples[i - 1] === "blocked") {
+      // What the drawn terrain shows, no more (review finding 2): the
+      // minute the drawn land stops meeting the line. In sight only if the
+      // whole run traced clear.
+      const clear = run.every((x) => x === "clear");
       moment = {
         id: "buoy-in-view",
-        label: "Buoy clears the headland",
+        label: clear
+          ? "Buoy comes into view"
+          : "Headland stops blocking (as drawn)",
+        title: clear
+          ? `the first minute the mast's line to ${BUOY.short} clears the drawn terrain beyond its error`
+          : `the first minute the drawn headlands no longer meet the mast's line to ${BUOY.short}; near the water the line stays within the drawn terrain's error, so the buoy can't be told in sight`,
         icon: "timeline",
         utcMs: startUtc,
       };
@@ -117,12 +131,21 @@ export function sightWindows(
   return { windows, ...(moment && { moment }) };
 }
 
+/** How the last scan went: the samples it could settle, of all, and its cost. */
+export interface BuoyCoverage {
+  settled: number;
+  samples: number;
+  /** The main thread's time tracing, ms. */
+  busyMs: number;
+  /** From its start to its end, slices and waits between them, ms. */
+  elapsedMs: number;
+}
+
 export interface BuoyWindow {
   windows(): readonly SightWindow[];
   /** The moment, once a scan finds one. */
   presets(): readonly Moment[] | undefined;
-  /** How the last scan went: the samples it could settle, of all. */
-  coverage(): { settled: number; samples: number } | undefined;
+  coverage(): BuoyCoverage | undefined;
   evaluationChanged(): void;
   /** The globe the viewer shows changed (stage.ts): follow its heights. */
   globeChanged(): void;
@@ -142,8 +165,13 @@ export function createBuoyWindow(deps: {
   const { viewer } = deps;
   let windows: SightWindow[] = [];
   let presets: Moment[] | undefined;
-  let coverage: { settled: number; samples: number } | undefined;
-  let scanned = "";
+  let coverage: BuoyCoverage | undefined;
+  /** What the published windows were traced for ("" for none). */
+  let published = "";
+  /** The scan running, if one is: what it is for. */
+  let running: { key: string; generation: number } | undefined;
+  /** The terrain's heights changed while a scan ran: one more scan after it. */
+  let again = false;
   let generation = 0;
   let timer = 0;
   /** The running scan's next slice. */
@@ -174,16 +202,25 @@ export function createBuoyWindow(deps: {
     ]);
   }
 
-  function reset(): void {
-    generation++;
-    clearTimeout(timer);
-    clearTimeout(slice);
+  /** Drops what was published (another mast or datum's, or none now). */
+  function unpublish(): void {
+    published = "";
     if (windows.length > 0 || presets !== undefined || coverage) {
       windows = [];
       presets = undefined;
       coverage = undefined;
       deps.changed();
     }
+  }
+
+  /** Stops the running scan and any waiting one. */
+  function cancel(): void {
+    generation++;
+    running = undefined;
+    again = false;
+    waitingSince = undefined;
+    clearTimeout(timer);
+    clearTimeout(slice);
   }
 
   function scan(): void {
@@ -194,13 +231,18 @@ export function createBuoyWindow(deps: {
     const target = globe?.terrainRayTarget(viewer.engine.viewBit(viewer.view));
     const e = deps.evaluation();
     if (key === "" || !frames || !globe || !target || !e?.track) {
-      reset();
-      scanned = key;
+      // Nothing to trace over yet: a later height change or knob asks again.
+      if (key === "") {
+        unpublish();
+      }
       return;
     }
     const mine = ++generation;
+    running = { key, generation: mine };
+    again = false;
     clearTimeout(slice);
-    scanned = key;
+    const began = performance.now();
+    let busy = 0;
     const heights = e.track.heights;
     const light = buoyLight(e.track.buoySea!);
     const startTdb = shipStartTdb(frames);
@@ -211,38 +253,54 @@ export function createBuoyWindow(deps: {
       Number(deps.knobs().mast),
     );
     const samples = Math.floor(shipSpan(heights).seconds / WINDOW_STEP) + 1;
-    const clear: SightSample[] = [];
+    const out: SightSample[] = [];
     const step = (): void => {
       if (mine !== generation) {
         return;
       }
-      for (let k = 0; k < SLICE && clear.length < samples; k++) {
-        const t = startTdb + clear.length * WINDOW_STEP;
+      // About 8 ms of the main thread per slice (review finding 1), at
+      // least one trace.
+      const t0 = performance.now();
+      do {
+        const t = startTdb + out.length * WINDOW_STEP;
         const m = frameTransform(mast, frames.itrf, Instant.fromTdb(t));
         const placed = placeObserver(
           { from: [m[12]!, m[13]!, m[14]!], to: Array.from(light) },
           (lon, lat) => globe.surfaceHeight(lon, lat),
         );
-        clear.push(
+        out.push(
           sampleOf(
             terrainLineOfSight(placed.from, placed.to, target, {
               groundRadius: BUOY_GROUND,
             }),
           ),
         );
-      }
-      if (clear.length < samples) {
+      } while (out.length < samples && performance.now() - t0 < SLICE_MS);
+      busy += performance.now() - t0;
+      if (out.length < samples) {
         slice = window.setTimeout(step, 0);
         return;
       }
-      const found = sightWindows(clear, Date.parse(SHIP.startUtc), WINDOW_STEP);
-      windows = found.windows;
-      presets = found.moment ? [found.moment] : undefined;
-      coverage = {
-        settled: clear.filter((c) => c !== "unknown").length,
-        samples,
-      };
-      deps.changed();
+      running = undefined;
+      // A scan for a mast or datum that has since changed never publishes
+      // (review finding 11): the change scheduled its own.
+      if (key === keyNow()) {
+        const found = sightWindows(out, Date.parse(SHIP.startUtc), WINDOW_STEP);
+        windows = found.windows;
+        presets = found.moment ? [found.moment] : undefined;
+        coverage = {
+          settled: out.filter((c) => c !== "unknown").length,
+          samples,
+          busyMs: busy,
+          elapsedMs: performance.now() - began,
+        };
+        published = key;
+        deps.changed();
+      }
+      if (again) {
+        again = false;
+        schedule(SETTLE);
+      }
     };
     step();
   }
@@ -257,19 +315,41 @@ export function createBuoyWindow(deps: {
     );
   }
 
+  /** The terrain's heights changed: trace again once they settle, after a running scan ends. */
+  function heightsChanged(): void {
+    if (keyNow() === "") {
+      return;
+    }
+    if (running) {
+      again = true;
+    } else {
+      schedule(SETTLE);
+    }
+  }
+
   function globeChanged(): void {
     const globe = viewer.globe;
     if (globe !== subscribed) {
       offHeights?.();
       subscribed = globe;
-      offHeights = globe?.onHeightsChanged(() => {
-        if (keyNow() !== "") {
-          schedule(SETTLE);
-        }
-      });
+      offHeights = globe?.onHeightsChanged(heightsChanged);
     }
-    if (keyNow() !== scanned) {
-      schedule(SETTLE);
+    evaluationChanged();
+    heightsChanged();
+  }
+
+  function evaluationChanged(): void {
+    const key = keyNow();
+    const wanted = running?.key ?? published;
+    if (key === wanted) {
+      return;
+    }
+    // Another mast or datum, or none: what was found for the old one goes
+    // now, and its scan stops (review finding 11).
+    cancel();
+    unpublish();
+    if (key !== "") {
+      schedule(400);
     }
   }
   globeChanged();
@@ -278,22 +358,10 @@ export function createBuoyWindow(deps: {
     windows: () => windows,
     presets: () => presets,
     coverage: () => coverage,
-    evaluationChanged: () => {
-      const key = keyNow();
-      if (key === "") {
-        if (scanned !== "") {
-          scanned = "";
-          reset();
-        }
-      } else if (key !== scanned) {
-        schedule(400);
-      }
-    },
+    evaluationChanged,
     globeChanged,
     dispose: () => {
-      generation++;
-      clearTimeout(timer);
-      clearTimeout(slice);
+      cancel();
       offHeights?.();
     },
   };

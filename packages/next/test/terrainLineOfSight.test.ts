@@ -157,6 +157,33 @@ describe("terrainLineOfSight", () => {
     expect(loose.clear).toBeUndefined();
   });
 
+  it("states the deciding margin: the lowest clearance away from the ends, its error and where it is", () => {
+    const { target } = hillTarget({}, 9);
+    const from = at(-HALF, 0, 360);
+    const to = at(HALF, 0, 360);
+    const r = terrainLineOfSight(from, to, target);
+    const m = r.margin!;
+    expect(m).toBeDefined();
+    // Inside level 9's error: no room to spare, as `clear` says.
+    expect(m.meters).toBeLessThanOrEqual(0);
+    expect(m.meters).toBeCloseTo(m.clearance - m.error, 9);
+    expect(m.error).toBeCloseTo(r.accuracy.meters!, 9);
+    // Over the hill's top (the middle of the path), its point on the segment.
+    expect(m.t).toBeGreaterThan(0.4);
+    expect(m.t).toBeLessThan(0.6);
+    for (let i = 0; i < 3; i++) {
+      expect(m.at[i]).toBeCloseTo(from[i]! + m.t * (to[i]! - from[i]!), 6);
+    }
+    // With room: positive, and clear.
+    const high = terrainLineOfSight(
+      at(-HALF, 0, 900),
+      at(HALF, 0, 900),
+      target,
+    );
+    expect(high.margin!.meters).toBeGreaterThan(0);
+    expect(high.clear).toBe(true);
+  });
+
   it("is clear from an observer on the ground: its own ground is not the error band", () => {
     // Flat drawn terrain at level 17 (±0.59 m): a dish standing on a
     // vertex looks up at a point 300 m high, 4 km away. Past its own ground

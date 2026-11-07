@@ -49,8 +49,12 @@ import {
   CAMERA_MOUNT,
   MAST_SENSOR,
   SHIP,
+  SHIP_BODY,
+  buoyLight,
+  seaState,
   shipSpan,
 } from "../../examples/frames-explorer/scenarios/vehicles.ts";
+import { enuAxes } from "../../examples/frames-explorer/scenarios/bodyFrame.ts";
 import {
   sightWindows,
   type SightSample,
@@ -67,6 +71,7 @@ import {
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
+import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
@@ -406,26 +411,62 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
     expect(ell.answer.headline).toMatch(/float that much too high/);
   }, 120_000);
 
-  it("the page's own frames, built from the evaluation's track, put the mast where the worker's sight line starts, at instants along the track (per-frame geometry, Task 4c's rule)", async () => {
+  it("the page's own frames, built from the evaluation's track, put the mast where the worker's sight line starts and the buoy's light where it ends, and pitch and roll the ship as the sea state says, at instants along the track (per-frame geometry, Task 4c's rule)", async () => {
     const s = spec("ship");
     const start = shipStartTdb(frames);
     const span = shipSpan(SHIP.vertices.map(() => -32)).seconds;
     let worst = 0;
-    for (const f of [0.05, 0.3, 0.55, 0.8, 0.99]) {
-      const t = start + f * span + 0.37;
-      const e = await client.scenario("ship", s.checked.knobs, t);
-      const local = SCENES.ship!.bodies!(frames, s.checked.knobs, e);
-      const mast = local.find((x) => x.name === MAST_SENSOR)!;
-      const m = frameTransform(mast, frames.itrf, Instant.fromTdb(t));
-      worst = Math.max(
-        worst,
-        dist([m[12]!, m[13]!, m[14]!], e.sightLines![0]!.from),
-      );
+    let worstAngle = 0;
+    for (const knobs of [s.checked.knobs, { mast: 40, datum: "ellipsoid" }]) {
+      for (const f of [0.05, 0.3, 0.55, 0.8, 0.99]) {
+        const t = start + f * span + 0.37;
+        const e = await client.scenario("ship", knobs, t);
+        const local = SCENES.ship!.bodies!(frames, knobs, e);
+        const mast = local.find((x) => x.name === MAST_SENSOR)!;
+        const body = local.find((x) => x.name === SHIP_BODY)!;
+        const instant = Instant.fromTdb(t);
+        const m = frameTransform(mast, frames.itrf, instant);
+        const line = e.sightLines![0]!;
+        worst = Math.max(
+          worst,
+          dist([m[12]!, m[13]!, m[14]!], line.from),
+          // The buoy's light, as the page draws it, is the line's end.
+          dist(buoyLight(e.track!.buoySea!), line.to),
+        );
+        // The body's pitch and roll, read off its axes, are the sea state's.
+        const b = frameTransform(body, frames.itrf, instant);
+        const x = [b[0]!, b[1]!, b[2]!];
+        const y = [b[4]!, b[5]!, b[6]!];
+        const up = enuAxes([b[12]!, b[13]!, b[14]!]).up;
+        const dot = (a: number[], c: number[]) =>
+          a[0]! * c[0]! + a[1]! * c[1]! + a[2]! * c[2]!;
+        const cross = (a: number[], c: number[]) => [
+          a[1]! * c[2]! - a[2]! * c[1]!,
+          a[2]! * c[0]! - a[0]! * c[2]!,
+          a[0]! * c[1]! - a[1]! * c[0]!,
+        ];
+        const pitch = Math.asin(dot(x, up));
+        const h = x.map((v, i) => v - dot(x, up) * up[i]!);
+        const hl = Math.hypot(h[0]!, h[1]!, h[2]!);
+        const y0 = cross(
+          up,
+          h.map((v) => v / hl),
+        );
+        const z1 = cross(x, y0);
+        const roll = Math.atan2(dot(y, z1), dot(y, y0));
+        const want = seaState(t);
+        worstAngle = Math.max(
+          worstAngle,
+          Math.abs(pitch - want.pitch),
+          Math.abs(roll - want.roll),
+        );
+      }
     }
     print(
-      `ship: the page's mast against the worker's, worst ${worst.toExponential(2)} m`,
+      `ship: the page's mast and buoy against the worker's line, worst ${worst.toExponential(2)} m; pitch and roll against the sea state, worst ${worstAngle.toExponential(2)} rad`,
     );
     expect(worst).toBeLessThan(1e-6);
+    expect(worstAngle).toBeLessThan(1e-12);
   }, 120_000);
 
   it("the page's drone frames put the camera where the worker's ray starts, along it", async () => {
@@ -456,7 +497,7 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
     expect(worst).toBeLessThan(1e-6);
   }, 120_000);
 
-  it("marks the spans where the drawn terrain doesn't block the line, and the moment the buoy clears the headland only after the land blocked it", () => {
+  it("marks the spans where the drawn terrain doesn't block the line, and the moment the drawn headland stops blocking it only after the land blocked it", () => {
     const at = (s: string): SightSample[] =>
       [...s].map((c) =>
         c === "c"
@@ -474,11 +515,87 @@ describe("the ship: its place on the port's grid, and its sight line to the buoy
     ).toEqual([[5 * 60_000, 9 * 60_000]]);
     expect(a.windows[0]!.label).toMatch(/within the terrain's error/);
     expect(a.moment?.utcMs).toBe(start + 5 * 60_000);
-    expect(a.moment?.label).toBe("Buoy clears the headland");
+    // What the drawn terrain shows, hedged: within its error, not in sight.
+    expect(a.moment?.label).toBe("Headland stops blocking (as drawn)");
+    expect(a.moment?.title).toMatch(/can't be told in sight/);
+    // Only a span that traced clear throughout says it comes into view.
+    const c = sightWindows(at("bbccb"), start, 60);
+    expect(c.moment?.label).toBe("Buoy comes into view");
     // After terrain not drawn: no moment (nothing says the land hid it).
     const b = sightWindows(at("uuccc"), start, 60);
     expect(b.windows).toHaveLength(1);
     expect(b.windows[0]!.label).toMatch(/in sight from the mast/);
     expect(b.moment).toBeUndefined();
   });
+});
+
+describe("the ship's verdict on the buoy, from the page's trace (Task 7 fix round 1)", () => {
+  it("states the deciding clearance with its bound and where it is, over the drawn sea or land against GEOID18's sea whatever the datum; never in sight within the error; can't tell without terrain", async () => {
+    const s = spec("ship");
+    const e = await client.scenario(
+      "ship",
+      { ...s.checked.knobs, datum: "ellipsoid" },
+      checkedTdb("ship"),
+    );
+    const sight = e.answer.sight!;
+    const line = e.sightLines![0]!;
+    // GEOID18's sea, not the knob's ellipsoid 0 (review finding 9).
+    expect(sight.sea).toBeLessThan(-31);
+    expect(e.track!.buoySea).toBe(0);
+    const at = (t: number, up: number) => {
+      const p = line.from.map((x, i) => x + t * (line.to[i]! - x));
+      const g = Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {
+        longitude: 0,
+        latitude: 0,
+        height: 0,
+      })!;
+      // A point `up` m over a drawn surface at GEOID18's sea.
+      return Array.from(
+        Ellipsoid.WGS84.cartographicToCartesian(
+          { ...g, height: sight.sea + up },
+          new Float64Array(3),
+        ),
+      );
+    };
+    const base = {
+      id: "buoy",
+      text: "",
+      traced: sight.key,
+      from: line.from,
+      to: line.to,
+    };
+    const sea = withTerrainAnswer(e.answer, [
+      {
+        ...base,
+        state: "may-block",
+        meters: 19,
+        margin: { clearance: 8, error: 18.8, at: at(0.85, 8) },
+      },
+    ]);
+    expect(sea.label).toMatch(/· buoy: can't tell$/);
+    expect(sea.aside).toMatch(
+      /^Buoy HR: the line passes 8\.0 m over the drawn sea [\d.]+ km short of Buoy HR, inside the terrain's ±19 m \(a per-level heuristic\): can't tell/,
+    );
+    const land = withTerrainAnswer(e.answer, [
+      {
+        ...base,
+        state: "may-block",
+        meters: 19,
+        // 20 m of drawn ground under it: land, though under the knob's
+        // ellipsoid 0 it would sit below the "sea".
+        margin: { clearance: 6, error: 18.8, at: at(0.5, 26) },
+      },
+    ]);
+    expect(land.aside).toMatch(/over the drawn land/);
+    const none = withTerrainAnswer(e.answer, [
+      { ...base, state: "unknown", unknownFraction: 1 },
+    ]);
+    expect(none.label).toMatch(/· buoy: can't tell$/);
+    expect(none.aside).toMatch(/no drawn terrain to trace it over/);
+    // A trace for another mast is still tracing.
+    const stale = withTerrainAnswer(e.answer, [
+      { ...base, traced: "other", state: "clear" },
+    ]);
+    expect(stale.label).toMatch(/· buoy: tracing$/);
+  }, 120_000);
 });

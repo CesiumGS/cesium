@@ -194,11 +194,14 @@ export function createBodyLines(deps: {
     });
   }
 
-  /** A static line (the track, the ring), drawn again only when `key` changes. */
+  /**
+   * A static line (the track, the ring), its points built and drawn again
+   * only when `key` changes (review finding 10: not every frame).
+   */
   function fixedLine(
     name: string,
     key: string,
-    points: Float64Array,
+    points: () => Float64Array,
     color: keyof typeof COLOR,
   ): void {
     const id = `${OVERLAY}:fixed:${name}`;
@@ -207,7 +210,7 @@ export function createBodyLines(deps: {
     }
     globe.setOverlay(id, [
       {
-        chunks: overlayMesh(polyline(points, [255, 255, 255, 255])),
+        chunks: overlayMesh(polyline(points(), [255, 255, 255, 255])),
         color: hexRgba(COLOR[color]),
       },
     ]);
@@ -274,7 +277,7 @@ export function createBodyLines(deps: {
       fixedLine(
         "track",
         JSON.stringify(heights),
-        trackPoints(droneTrack(heights).vertices, heights),
+        () => trackPoints(droneTrack(heights).vertices, heights),
         "track",
       );
       if (mount && fp && line) {
@@ -291,7 +294,7 @@ export function createBodyLines(deps: {
             to: Array.from(hit),
             color: "white",
           });
-          fixedLine("ring", hit.join(), ring(hit, 12), "white");
+          fixedLine("ring", hit.join(), () => ring(hit, 12), "white");
           labels.push({
             id: "bodies:footprint",
             text: footprintLabel(fp, hit),
@@ -331,7 +334,7 @@ export function createBodyLines(deps: {
       fixedLine(
         "track",
         JSON.stringify(heights),
-        trackPoints(shipTrack(heights).vertices, heights),
+        () => trackPoints(shipTrack(heights).vertices, heights),
         "track",
       );
       if (body && mast && sight && e.track.buoySea !== undefined) {
@@ -419,7 +422,14 @@ export function createBodyLines(deps: {
     for (const s of segments) {
       draw(s);
     }
-    const key = labels.map((l) => `${l.id}:${l.text}`).join("|");
+    // A fixed label's place is part of its key: the buoy's light moves 32 m
+    // with the datum, the spot with the knobs (review finding 10).
+    const key = labels
+      .map(
+        (l) =>
+          `${l.id}:${l.text}:${typeof l.at === "function" ? "" : Array.from(l.at, (x) => x.toFixed(2)).join()}`,
+      )
+      .join("|");
     if (key !== labelKey) {
       labelKey = key;
       deps.labels.set("bodies", labels);

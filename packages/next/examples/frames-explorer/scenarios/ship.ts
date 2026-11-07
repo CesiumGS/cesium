@@ -119,7 +119,7 @@ function method(): NonNullable<ScenarioAnswer["method"]> {
     },
     {
       title: "The buoy",
-      text: `The page traces the mast's straight line to ${BUOY.name}'s light (the USCG Light List's position, the light assumed ${BUOY.lightHeight} m above the water) against the terrain as drawn: the sea curving away and the headlands either side of the Golden Gate are both in it. Air bends the line a little over the sea (refraction), which is left out.`,
+      text: `The page traces the mast's straight line to ${BUOY.name}'s light (its position as the San Francisco YRA marks list transcribes it from the USCG Light List, not checked against the Light List itself; the light assumed ${BUOY.lightHeight} m above the water) against the terrain as drawn: the sea curving away and the headlands either side of the Golden Gate are both in it. Air bends the line a little over the sea (refraction), which is left out.`,
     },
   ];
 }
@@ -283,7 +283,7 @@ export const evaluateShip: ScenarioEvaluator = async (
     answer: {
       label: `E ${ft(design[0]!)}, N ${ft(design[1]!)} ftUS`,
       aside: `The ship ${where}, heading ${headingText(here, state.velocity)} · ${fmt(range / 1000, 3)} km from ${BUOY.short}`,
-      headline: `On California zone 3 the ship's reference point is at ${ft(design[0]!)} ftUS east and ${ft(design[1]!)} ftUS north. Whether the mast sees ${BUOY.name} is the drawn terrain's answer: the sea curving away between them and the headlands of the Golden Gate. Over a smooth sea alone (no refraction), a ${fmt(mastHeight, 3)} m mast and the buoy's ${BUOY.lightHeight} m light see each other out to ${fmt(horizons / 1000, 3)} km, and the buoy is ${fmt(range / 1000, 3)} km away. ${ellipsoidSea ? `Here the sea is taken at the ellipsoid's 0 m: GEOID18 puts it ${fmt(-geoid, 4)} m lower, so the ship and the buoy float that much too high, and the mast sees over what it can't.` : `The sea is at NAVD88 0 m, ${fmt(-geoid, 4)} m below the ellipsoid through GEOID18; tides, and mean lower low water (the charts' datum), are left out: that is plan 4b's work.`}`,
+      headline: `On California zone 3 the ship's reference point is at ${ft(design[0]!)} ftUS east and ${ft(design[1]!)} ftUS north. Whether the mast sees ${BUOY.name} is the drawn terrain's answer: the sea curving away between them and the headlands of the Golden Gate. Over a smooth sea alone (no refraction), a ${fmt(mastHeight, 3)} m mast and the buoy's ${BUOY.lightHeight} m light see each other out to ${fmt(horizons / 1000, 3)} km, and the buoy is ${fmt(range / 1000, 3)} km away. ${ellipsoidSea ? `Here the sea is taken at the ellipsoid's 0 m: GEOID18 puts it ${fmt(-geoid, 4)} m lower, so the ship and the buoy float that much too high, and the mast sees over what it can't.` : `The sea is at NAVD88 0 m, ${fmt(-geoid, 4)} m below the ellipsoid through GEOID18.`} Tides, and mean lower low water (the charts' datum), are left out: that is plan 4b's work.`,
       accuracy: {
         ...(edge.accuracy.meters !== undefined && {
           meters: edge.accuracy.meters,
@@ -292,7 +292,7 @@ export const evaluateShip: ScenarioEvaluator = async (
       },
       path: { from: SHIP_BODY, to: CA.name },
       method: method(),
-      sight: { line: "buoy", key, target: BUOY.short, sea: buoySea },
+      sight: { line: "buoy", key, target: BUOY.short, sea: geoid },
     },
     overlays: [],
     sightLines: [

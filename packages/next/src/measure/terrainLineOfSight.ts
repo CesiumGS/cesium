@@ -37,6 +37,22 @@ export interface TerrainLineOfSight {
   minClearance?: number;
   /** Earth-fixed position where the segment first meets the terrain. */
   blockedAt?: Float64Array;
+  /**
+   * The deciding clearance, away from each end's own ground (the drawn
+   * triangle it stands over, at most `groundRadius`): the lowest clearance
+   * there less the terrain's error under it. `meters` > 0 is room to spare
+   * (clear); ≤ 0 is inside the error (may block). `clearance` and `error`
+   * are its parts, m; `at` is where it is (Earth-fixed), `t` the fraction
+   * of the way from `from` to `to`. Undefined when no known span lies
+   * outside the ends' own ground.
+   */
+  margin?: {
+    meters: number;
+    clearance: number;
+    error: number;
+    t: number;
+    at: Float64Array;
+  };
   /** Share of the path's length over unknown terrain, 0 to 1. */
   unknownFraction: number;
   accuracy: { meters?: number; note: string };
@@ -175,6 +191,14 @@ export function terrainLineOfSight(
   }
   if (ray.hit) {
     result.blockedAt = ray.hit.point;
+  }
+  if (ray.margin) {
+    const { meters: m, clearance, error, t } = ray.margin;
+    const at = new Float64Array(3);
+    for (let i = 0; i < 3; i++) {
+      at[i] = from[i]! + t * (to[i]! - from[i]!);
+    }
+    result.margin = { meters: m, clearance, error, t, at };
   }
   return result;
 }

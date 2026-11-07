@@ -274,7 +274,7 @@ function KnobsView({
                 onClick={() => onMoment(p)}
                 title={
                   p.utcMs !== undefined
-                    ? `Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused`
+                    ? `Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused${p.title ? `: ${p.title}` : ""}`
                     : (p.title ?? `Sets the knobs to ${p.label}`)
                 }
               >

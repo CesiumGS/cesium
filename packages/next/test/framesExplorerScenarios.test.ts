@@ -388,10 +388,24 @@ describe("the terrain line of sight's words (Task 6b, Review Focus 2)", () => {
     const v = terrainSightText(
       "o",
       "Orion",
-      result({ clear: true, minClearance: 1234 }),
+      result({
+        clear: true,
+        // Ends included: the observer's own 2 m, never quoted (Task 7 fix 1).
+        minClearance: 2,
+        margin: {
+          meters: 1218,
+          clearance: 1234,
+          error: 16,
+          t: 0.5,
+          at: new Float64Array(3),
+        },
+      }),
     );
     expect(v.state).toBe("clear");
-    expect(v.text).toMatch(/clear, by 1\.2 km/);
+    expect(v.text).toMatch(
+      /clear, by 1\.2 km at the closest beyond each end's own ground/,
+    );
+    expect(v.margin?.clearance).toBe(1234);
     expect(v.accuracy).toBe("exact against the drawn terrain");
   });
 
