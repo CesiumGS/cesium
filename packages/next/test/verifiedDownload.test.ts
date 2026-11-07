@@ -8,8 +8,29 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { verifiedDownload } from "../scripts/verifiedDownload.mjs";
+
+// Lets a test change what writeSync does: "short" writes one byte at a time,
+// "lie" reports a full write but stores nothing.
+const writes = vi.hoisted(() => ({
+  mode: "normal" as "normal" | "short" | "lie",
+}));
+vi.mock("node:fs", async (importOriginal) => {
+  const fs = await importOriginal<typeof import("node:fs")>();
+  return {
+    ...fs,
+    writeSync: ((fd: number, buf: Uint8Array, at: number, length: number) => {
+      if (writes.mode === "short") {
+        return fs.writeSync(fd, buf, at, Math.min(1, length));
+      }
+      if (writes.mode === "lie") {
+        return length;
+      }
+      return fs.writeSync(fd, buf, at, length);
+    }) as typeof fs.writeSync,
+  };
+});
 
 const URL_ = "https://cdn.proj.org/x.tif";
 const GOOD = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
@@ -23,7 +44,10 @@ beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "verified-download-"));
   path = join(dir, "x.tif");
 });
-afterEach(() => rmSync(dir, { recursive: true, force: true }));
+afterEach(() => {
+  writes.mode = "normal";
+  rmSync(dir, { recursive: true, force: true });
+});
 
 /** A body delivered in two chunks. */
 const respond = (bytes: Uint8Array, init?: ResponseInit): Response => {
@@ -134,5 +158,40 @@ describe("verifiedDownload", () => {
       }),
     ).rejects.toThrow();
     expect(new Uint8Array(readFileSync(path))).toEqual(GOOD);
+  });
+
+  it("finishes a short write instead of storing a truncated file", async () => {
+    writes.mode = "short";
+    await verifiedDownload(URL_, path, expected, { fetch: stub(GOOD) });
+    expect(new Uint8Array(readFileSync(path))).toEqual(GOOD);
+    expect(readdirSync(dir)).toEqual(["x.tif"]);
+  });
+
+  it("refuses a file whose stored size is not the verified size", async () => {
+    writes.mode = "lie";
+    await expect(
+      verifiedDownload(URL_, path, expected, { fetch: stub(GOOD) }),
+    ).rejects.toThrow(/x\.tif.*0 bytes stored, expected 8/);
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it("lets two concurrent calls for one path both succeed, with no partial left", async () => {
+    await Promise.all([
+      verifiedDownload(URL_, path, expected, { fetch: stub(GOOD) }),
+      verifiedDownload(URL_, path, expected, { fetch: stub(GOOD) }),
+    ]);
+    expect(new Uint8Array(readFileSync(path))).toEqual(GOOD);
+    expect(readdirSync(dir)).toEqual(["x.tif"]);
+  });
+
+  it("does not let a failing call delete a succeeding call's file", async () => {
+    const bad = stub(new Uint8Array(8));
+    const results = await Promise.allSettled([
+      verifiedDownload(URL_, path, expected, { fetch: bad }),
+      verifiedDownload(URL_, path, expected, { fetch: stub(GOOD) }),
+    ]);
+    expect(results.map((r) => r.status)).toEqual(["rejected", "fulfilled"]);
+    expect(new Uint8Array(readFileSync(path))).toEqual(GOOD);
+    expect(readdirSync(dir)).toEqual(["x.tif"]);
   });
 });

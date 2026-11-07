@@ -331,8 +331,8 @@ async function ensureProj(dir, previous, log) {
     );
     for (const [entry, name] of Object.entries(files)) {
       const bytes = extracted.get(entry);
-      store(join(proj, name), bytes);
       record(name, bytes, url, PROJ_SHA256[tarball]);
+      store(join(proj, name), bytes);
     }
   }
 
@@ -362,16 +362,21 @@ async function ensureProj(dir, previous, log) {
   return entries;
 }
 
+/** The members of a named grid set (`"*"`: all); an unknown name throws. */
+function gridSet(set) {
+  if (!Object.hasOwn(GRID_SETS, set)) {
+    throw new Error(
+      `--grids: unknown set "${set}" (known: ${Object.keys(GRID_SETS).join(", ")})`,
+    );
+  }
+  return GRID_SETS[set];
+}
+
 /** Every set name, or a grid name, resolved to the catalog's non-removed names. */
 function gridNames(catalog, sets) {
   const names = new Set();
   for (const set of sets) {
-    const members = Object.hasOwn(GRID_SETS, set) ? GRID_SETS[set] : undefined;
-    if (members === undefined) {
-      throw new Error(
-        `--grids: unknown set "${set}" (known: ${Object.keys(GRID_SETS).join(", ")})`,
-      );
-    }
+    const members = gridSet(set);
     const list =
       members === "*"
         ? [...catalog.entries.values()]
@@ -739,13 +744,7 @@ export async function ensureFrameData(
 /** "portfolio,tests" → ["portfolio", "tests"]; an unknown set is refused. */
 export function parseGrids(text) {
   const sets = text.split(",").map((s) => s.trim());
-  for (const set of sets) {
-    if (!Object.hasOwn(GRID_SETS, set)) {
-      throw new Error(
-        `--grids: unknown set "${set}" (known: ${Object.keys(GRID_SETS).join(", ")})`,
-      );
-    }
-  }
+  sets.forEach(gridSet);
   return sets;
 }
 

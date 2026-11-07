@@ -176,7 +176,10 @@ export class GridCatalog {
         country: optionalString(p.source_country),
         license: licenses?.get(name),
         description: optionalString(p.description),
-        removed: p.version_removed !== undefined && p.version_removed !== "",
+        removed:
+          p.version_removed !== undefined &&
+          p.version_removed !== null &&
+          p.version_removed !== "",
       });
     });
     return new GridCatalog(entries, version);
