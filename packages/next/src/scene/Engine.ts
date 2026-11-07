@@ -171,6 +171,14 @@ interface PersistentImage {
 const VIEW_KEY_LENGTH = 27;
 
 /**
+ * How near its meter reading an adapted exposure is settled: the eye's
+ * cones and rods (log10 cd/m², about 1%) and automatic exposure (EV). A
+ * reading this close moves nothing (see `adaptExposure`).
+ */
+const EYE_SETTLED = 0.005;
+const AUTO_SETTLED = 0.02;
+
+/**
  * Prefetching looks this far ahead: content the camera would reveal in
  * this time at its current velocity loads before it comes into view (about
  * a load's latency).
@@ -2630,6 +2638,13 @@ export class Engine {
    * exponentially at `speed` per second; the first reading is taken as is.
    * The eye's cones adapt to the photopic reading, its rods to the
    * scotopic one (scene/eye.ts `adapt`). Renders again until it settles.
+   *
+   * A settled exposure stays as it is for a reading within `EYE_SETTLED`
+   * or `AUTO_SETTLED` of it. The meter divides the pre-exposure out of an
+   * fp16 image, so its reading moves with the exposure (by about 0.01%):
+   * following it moved the exposure, which is in the view's on-demand
+   * fingerprint, so each metered frame asked for another and an idle scene
+   * rendered indefinitely (OSM Buildings at the eye's exposure).
    */
   private adaptExposure(
     view: View,
@@ -2659,21 +2674,21 @@ export class Engine {
       }
       const cones = Math.log10(Math.max(average, 1e-7));
       const rods = Math.log10(Math.max(scotopic, 1e-7));
+      const settled = () =>
+        Math.abs(cones - state.cones) <= EYE_SETTLED &&
+        Math.abs(rods - state.rods) <= EYE_SETTLED;
       if (!state.metered || !Number.isFinite(state.cones + state.rods)) {
         state.cones = cones;
         state.rods = rods;
         state.metered = true;
-      } else {
+      } else if (!settled()) {
         const dt = Math.min((now - state.time) / 1000, 1);
         const speed = e.speed ?? EYE_ADAPTATION_SPEED;
         state.cones = adapt(state.cones, cones, dt, "cones", speed);
         state.rods = adapt(state.rods, rods, dt, "rods", speed);
       }
       state.time = now;
-      if (
-        Math.abs(cones - state.cones) > 0.005 ||
-        Math.abs(rods - state.rods) > 0.005
-      ) {
+      if (!settled()) {
         this.requestRender();
       }
       return;
@@ -2691,13 +2706,13 @@ export class Engine {
     if (!state.metered) {
       state.ev100 = target;
       state.metered = true;
-    } else {
+    } else if (Math.abs(target - state.ev100) > AUTO_SETTLED) {
       const dt = Math.min((now - state.time) / 1000, 1);
       state.ev100 +=
         (target - state.ev100) * (1 - Math.exp(-dt * (e.speed ?? 2)));
     }
     state.time = now;
-    if (Math.abs(target - state.ev100) > 0.02) {
+    if (Math.abs(target - state.ev100) > AUTO_SETTLED) {
       this.requestRender();
     }
   }
