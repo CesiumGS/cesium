@@ -10,7 +10,8 @@
 // the exposure, a moved exposure changed the view's on-demand fingerprint,
 // and the frame it rendered was metered again: OSM Buildings in Dyno's Viewer
 // (the eye's exposure) rendered every second or third tick indefinitely,
-// its readings alternating between two values 0.01% apart.
+// its readings alternating between two values 0.01% apart. A reading within
+// a settled band of the exposure now moves nothing (Engine `adaptExposure`).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
@@ -30,8 +31,50 @@ const URL_ = `${BASE}tileset.json`;
 /** Scene luminances (cd/m²), photopic and scotopic: OSM Buildings by day. */
 const DAY = { photopic: 17_188, scotopic: 39_296 };
 const DUSK = { photopic: 20, scotopic: 60 };
-/** What the meter sees (the tests change it). */
-let scene = DAY;
+/** Engine.ts `EYE_SETTLED` (log10 cd/m²) and `AUTO_SETTLED` (EV). */
+const EYE_BAND = 0.005;
+const AUTO_BAND = 0.02;
+const AUTO: Exposure = { auto: true };
+
+const f32 = new Float32Array(1);
+const u32 = new Uint32Array(f32.buffer);
+
+/**
+ * `x` rounded to IEEE half precision (round to nearest, ties to even), as
+ * the GPU stores a float32 into an rgba16float target: through float32
+ * first. Subnormal halves are kept; past 65504 (after rounding) is
+ * infinite. `Math.f16round` does this from a double, but only from Node 24.
+ */
+export function f16round(x: number): number {
+  f32[0] = x;
+  const bits = u32[0]!;
+  const sign = bits >>> 31 ? -1 : 1;
+  const biased = (bits >>> 23) & 0xff;
+  const mantissa = bits & 0x7fffff;
+  if (biased === 0xff) {
+    return mantissa ? Number.NaN : sign * Infinity;
+  }
+  if (biased === 0) {
+    return sign * 0; // float32 subnormals are far below half's smallest
+  }
+  const exponent = biased - 127;
+  // The significand with its leading 1, and how many of its 24 bits drop:
+  // 13 for a normal half, more below 2^-14 (a subnormal half's units are
+  // 2^-24 apart).
+  const significand = mantissa | 0x800000;
+  const drop = exponent >= -14 ? 13 : 13 + (-14 - exponent);
+  if (drop > 24) {
+    return sign * 0; // under half of 2^-24
+  }
+  const unit = 2 ** drop;
+  let kept = Math.floor(significand / unit);
+  const rest = significand - kept * unit;
+  if (rest > unit / 2 || (rest === unit / 2 && kept % 2 === 1)) {
+    kept++;
+  }
+  const value = kept * 2 ** (exponent - 23 + drop);
+  return sign * (value > 65504 ? Infinity : value);
+}
 
 /** One triangle, one draw, the default material (as test/models.test.ts). */
 function triangle(): GltfAsset {
@@ -70,44 +113,92 @@ interface EngineInternals {
   meters: Array<{ view: View; readback: GPUBuffer; scratch: GPUBuffer[] }>;
 }
 
-/**
- * Answers each meter readback as the GPU's meter would for a scene of
- * `scene`'s luminance rendered at the view's exposure then: the pre-exposed
- * light rounded to fp16, the exposure divided back out, log2 averaged in
- * float32 (meter.slang).
- */
-function meterAsTheGpu(engine: Engine): void {
-  const meters = (engine as unknown as EngineInternals).meters;
-  meters.push = (...items) => {
-    for (const meter of items) {
-      const scale = meter.view.exposureScale;
-      const seen = (l: number) => Math.log2(Math.f16round(l * scale) / scale);
-      const values = Float32Array.of(
-        seen(scene.photopic),
-        1,
-        seen(scene.scotopic),
-        1,
-      );
-      meter.readback = {
-        mapAsync: () => Promise.resolve(),
-        getMappedRange: () => values.buffer.slice(0),
-        destroy: () => {},
-      } as unknown as GPUBuffer;
-    }
-    return Array.prototype.push.apply(meters, items);
-  };
-}
+describe("f16round (the test meter's fp16)", () => {
+  it.each([
+    [1, 1],
+    [-2, -2],
+    [0.1, 0.0999755859375],
+    [17_188, 17_184], // halves are 16 apart in [16384, 32768)
+    [1 + 2 ** -11, 1], // a tie: to the even neighbour
+    [1 + 3 * 2 ** -11, 1 + 2 ** -9], // a tie: to the even neighbour
+    [65_504, 65_504], // the largest half
+    [65_519, 65_504], // under the tie with 2^16
+    [65_520, Infinity], // the tie rounds to even, 2^16: overflow
+    [2 ** -14, 2 ** -14], // the smallest normal half
+    [2 ** -24, 2 ** -24], // the smallest subnormal half
+    [3 * 2 ** -26, 2 ** -24], // three quarters of a unit
+    [2 ** -25, 0], // half a unit: a tie, to even (zero)
+    [1e-30, 0],
+    [Infinity, Infinity],
+  ])("%d rounds to %d", (x, half) => {
+    expect(f16round(x)).toBe(half);
+  });
+
+  it("NaN stays NaN", () => {
+    expect(f16round(Number.NaN)).toBeNaN();
+  });
+
+  const native = (Math as { f16round?: (x: number) => number }).f16round;
+  it.runIf(native !== undefined)(
+    "agrees with Math.f16round on float32 values (Node 24)",
+    () => {
+      for (let i = 0; i < 20_000; i++) {
+        // Float32 inputs, so rounding through float32 first changes nothing.
+        const x = Math.fround(
+          (Math.random() - 0.5) * 2 ** Math.floor(Math.random() * 60 - 30),
+        );
+        expect(f16round(x)).toBe(native!(x));
+      }
+    },
+  );
+});
 
 describe("on-demand rendering goes idle", () => {
   let engine: Engine;
   let now = 0;
+  /** What the meter sees (the tests change it). */
+  let scene = DAY;
+  /** The meter rounds the pre-exposed image to fp16 (false: a control). */
+  let rounds = true;
+
+  /**
+   * Answers each meter readback as the GPU's meter would for a scene of
+   * `scene`'s luminance rendered at the view's exposure then: the
+   * pre-exposed light rounded to fp16, the exposure divided back out, log2
+   * averaged in float32. The readback's layout is meter.slang's result
+   * (`sum`, `count`, `rodSum`, `rodCount`: log2 sums and their counts) as
+   * Engine.ts reads it after submit.
+   */
+  function meterAsTheGpu(): void {
+    const meters = (engine as unknown as EngineInternals).meters;
+    meters.push = (...items) => {
+      const seen = (l: number, scale: number) =>
+        Math.log2(rounds ? f16round(l * scale) / scale : l);
+      for (const meter of items) {
+        const scale = meter.view.exposureScale;
+        const values = Float32Array.of(
+          seen(scene.photopic, scale),
+          1,
+          seen(scene.scotopic, scale),
+          1,
+        );
+        meter.readback = {
+          mapAsync: () => Promise.resolve(),
+          getMappedRange: () => values.buffer.slice(0),
+          destroy: () => {},
+        } as unknown as GPUBuffer;
+      }
+      return Array.prototype.push.apply(meters, items);
+    };
+  }
 
   beforeEach(async () => {
     now = 1000;
     scene = DAY;
+    rounds = true;
     vi.spyOn(performance, "now").mockImplementation(() => now);
     engine = await fakeEngine();
-    meterAsTheGpu(engine);
+    meterAsTheGpu();
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -136,18 +227,52 @@ describe("on-demand rendering goes idle", () => {
     return view;
   }
 
+  /** A view adapted to `scene` and idle (no frame in 600 ticks). */
+  async function settled(exposure: Exposure): Promise<View> {
+    const view = addView(exposure);
+    // Adapting (from the default daylight state) renders.
+    expect(await ticks(120)).toBeGreaterThan(0);
+    await ticks(1200);
+    expect(await ticks(600)).toBe(0);
+    return view;
+  }
+
+  /** How far the scene is from the view's adapted state, in its band's units. */
+  function offBand(view: View): number {
+    const s = view.autoExposure!;
+    if ("eye" in view.exposure) {
+      return (
+        Math.max(
+          Math.abs(Math.log10(scene.photopic) - s.cones),
+          Math.abs(Math.log10(scene.scotopic) - s.rods),
+        ) / EYE_BAND
+      );
+    }
+    return (
+      Math.abs(Math.log2((scene.photopic * 100) / 12.5) - s.ev100) / AUTO_BAND
+    );
+  }
+
+  /** The scene moved by `bands` of the view's band from its adapted state. */
+  function sceneOff(view: View, bands: number): typeof scene {
+    const s = view.autoExposure!;
+    if ("eye" in view.exposure) {
+      const d = bands * EYE_BAND;
+      return { photopic: 10 ** (s.cones + d), scotopic: 10 ** (s.rods + d) };
+    }
+    const photopic = (12.5 / 100) * 2 ** (s.ev100 + bands * AUTO_BAND);
+    return { photopic, scotopic: photopic * 2.5 };
+  }
+
   it.each([
     ["the eye by day", EYE, DAY],
     ["the eye at dusk (darkening)", EYE, DUSK],
-    ["automatic exposure", { auto: true } as Exposure, DAY],
+    ["automatic exposure", AUTO, DAY],
   ])(
     "%s settles on a reading that moves with the exposure",
     async (_name, exposure, luminance) => {
       scene = luminance;
-      const view = addView(exposure);
-      // Adapting (from the default daylight state) renders.
-      expect(await ticks(120)).toBeGreaterThan(0);
-      await ticks(1200);
+      const view = await settled(exposure);
       const scale = view.exposureScale;
       // Settled: the meter's exposure-dependent rounding moves nothing.
       expect(await ticks(600)).toBe(0);
@@ -159,6 +284,81 @@ describe("on-demand rendering goes idle", () => {
       expect(await ticks(600)).toBeGreaterThan(1);
       expect(view.exposureScale).not.toBe(scale);
       await ticks(600);
+      expect(await ticks(600)).toBe(0);
+    },
+    60_000,
+  );
+
+  it.each([
+    ["the eye", EYE],
+    ["automatic exposure", AUTO],
+  ])(
+    "%s settles with a meter that doesn't round (the control)",
+    async (_name, exposure) => {
+      rounds = false;
+      const view = await settled(exposure);
+      const scale = view.exposureScale;
+      expect(await ticks(600)).toBe(0);
+      expect(view.exposureScale).toBe(scale);
+    },
+  );
+
+  it.each([
+    ["the eye", 1, EYE],
+    ["the eye", -1, EYE],
+    ["automatic exposure", 1, AUTO],
+    ["automatic exposure", -1, AUTO],
+  ])(
+    "%s holds for a change just inside its band, adapts just outside (direction %d)",
+    async (_name, sign, exposure) => {
+      const view = await settled(exposure);
+      const scale = view.exposureScale;
+      // Just inside: the frame that meters it is the only one.
+      scene = sceneOff(view, sign * 0.8);
+      engine.requestRender();
+      expect(await ticks(600)).toBe(1);
+      expect(view.exposureScale).toBe(scale);
+      // Just outside: it adapts, until within the band again.
+      scene = sceneOff(view, sign * 1.2);
+      engine.requestRender();
+      expect(await ticks(600)).toBeGreaterThan(1);
+      expect(view.exposureScale).not.toBe(scale);
+      await ticks(1200);
+      expect(offBand(view)).toBeLessThanOrEqual(1.02);
+      expect(await ticks(600)).toBe(0);
+    },
+    60_000,
+  );
+
+  it.each([
+    ["the eye", EYE],
+    ["automatic exposure", AUTO],
+  ])(
+    "%s catches up with a slow ramp of changes each inside the band (sunset)",
+    async (_name, exposure) => {
+      const view = await settled(exposure);
+      const scale = view.exposureScale;
+      // 200 steps, each 0.6 of the band darker than the last, each redrawn
+      // (as the sun moving redraws): 120 bands in all.
+      const factor =
+        "eye" in exposure ? 10 ** (-0.6 * EYE_BAND) : 2 ** (-0.6 * AUTO_BAND);
+      let frames = 0;
+      for (let i = 0; i < 200; i++) {
+        scene = {
+          photopic: scene.photopic * factor,
+          scotopic: scene.scotopic * factor,
+        };
+        engine.requestRender();
+        frames += await ticks(6);
+      }
+      // More frames than the redraws asked for: it adapted along the way
+      // (lagging as an eye does, not held by the band).
+      expect(frames).toBeGreaterThan(200);
+      expect(view.exposureScale).not.toBe(scale);
+      // Once the light stops changing it catches up to within the band, and
+      // the frames stop.
+      await ticks(1200);
+      expect(offBand(view)).toBeLessThanOrEqual(1.02);
       expect(await ticks(600)).toBe(0);
     },
     60_000,
@@ -182,7 +382,8 @@ describe("on-demand rendering goes idle", () => {
           })
         : new Response("not found", { status: 404 }),
     );
-    const view = addView(EYE);
+    // A fixed exposure: what renders here is the tileset's doing alone.
+    const view = addView({ ev100: 15 });
     const tileset = await engine.addTileset(view.world, URL_);
     await ticks(600);
     // Requested and waiting for its content: nothing on screen changes.
