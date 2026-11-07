@@ -74,7 +74,9 @@ export function writeGlb(mesh) {
     const parts = features.map((f) => encoder.encode(String(f[key])));
     const offsets = new Uint32Array(parts.length + 1);
     parts.forEach((p, i) => (offsets[i + 1] = offsets[i] + p.length));
-    const values = new Uint8Array(offsets[parts.length]);
+    // A zero-length bufferView is invalid glTF: an all-empty column keeps one
+    // padding byte (every offset is 0, so no string reads it).
+    const values = new Uint8Array(Math.max(1, offsets[parts.length]));
     parts.forEach((p, i) => values.set(p, offsets[i]));
     return { values, offsets };
   };
@@ -84,8 +86,11 @@ export function writeGlb(mesh) {
   // Binary chunk: each view starts 4-byte aligned.
   const blobs = [];
   let length = 0;
-  const view = (bytes, target) => {
+  const view = (bytes, target, byteStride) => {
     const entry = { byteOffset: length, byteLength: bytes.byteLength };
+    if (byteStride !== undefined) {
+      entry.byteStride = byteStride;
+    }
     if (target !== undefined) {
       entry.target = target;
     }
@@ -95,10 +100,15 @@ export function writeGlb(mesh) {
   };
   const raw = (array) =>
     new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
+  // glTF wants each vertex attribute element 4-byte aligned: every u16 ID
+  // sits in its own 4-byte slot (byteStride 4).
+  const slots = new Uint8Array(vertices * 4);
+  const slotView = new DataView(slots.buffer);
+  featureIds.forEach((id, i) => slotView.setUint16(i * 4, id, true));
   const bufferViews = [
     view(raw(positions), ARRAY_BUFFER),
     view(raw(normals), ARRAY_BUFFER),
-    view(raw(featureIds), ARRAY_BUFFER),
+    view(slots, ARRAY_BUFFER, 4),
     view(raw(indices), ELEMENT_ARRAY_BUFFER),
     view(names.values),
     view(raw(names.offsets)),

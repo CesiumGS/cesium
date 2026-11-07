@@ -56,6 +56,55 @@ describe("writeGlb", () => {
     ]);
   });
 
+  it("is valid glTF: bounds, strides, targets, padding", () => {
+    const m = mesh();
+    const bytes = writeGlb(m);
+    const { json, bin } = splitGlb(bytes);
+    expect(json.accessors[0].min).toEqual([0, 0, -5]);
+    expect(json.accessors[0].max).toEqual([10, 3, 0]);
+    const views = json.bufferViews;
+    expect(views[0].target).toBe(34962);
+    expect(views[2]).toMatchObject({ target: 34962, byteStride: 4 });
+    expect(views[3].target).toBe(34963);
+    for (const v of views) {
+      expect(v.byteLength).toBeGreaterThan(0);
+      expect(v.byteOffset % 4).toBe(0);
+    }
+    // JSON padding is spaces, BIN padding zeros.
+    const data = new DataView(bytes.buffer, bytes.byteOffset);
+    const jsonLength = data.getUint32(12, true);
+    const text = new TextDecoder().decode(bytes.subarray(20, 20 + jsonLength));
+    expect(text.slice(text.trimEnd().length)).toMatch(/^ *$/);
+    const used = json.buffers[0].byteLength as number;
+    expect(bin!.byteLength).toBeGreaterThanOrEqual(used);
+    expect(Array.from(bin!.subarray(used)).every((b) => b === 0)).toBe(true);
+    // Padding between views is zero too (the 2-byte tail of the names).
+    for (const v of views) {
+      const end = v.byteOffset + v.byteLength;
+      const next = (end + 3) & ~3;
+      expect(Array.from(bin!.subarray(end, next)).every((b) => b === 0)).toBe(
+        true,
+      );
+    }
+  });
+
+  it("keeps no zero-length view when every name and kind is empty", async () => {
+    const m = {
+      ...mesh(),
+      features: [
+        { name: "", kind: "" },
+        { name: "", kind: "" },
+      ],
+    };
+    const { json } = splitGlb(writeGlb(m));
+    for (const v of json.bufferViews) {
+      expect(v.byteLength).toBeGreaterThan(0);
+    }
+    const { asset } = await parseGltf(dataUrl(writeGlb(m)), textures);
+    expect(asset.featureTables[0]!.columns.name).toEqual(["", ""]);
+    expect(asset.featureTables[0]!.columns.kind).toEqual(["", ""]);
+  });
+
   it("round-trips through the engine's glTF loader", async () => {
     const m = mesh();
     const { asset, transfer } = await parseGltf(dataUrl(writeGlb(m)), textures);
