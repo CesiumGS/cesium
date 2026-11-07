@@ -21,6 +21,7 @@ import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
+import { framesDataExcludes, projGridsPlugin } from "./scripts/projGrids.mjs";
 import { slangWasmDirectory } from "./scripts/slangTools.mjs";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
@@ -42,14 +43,21 @@ const contentTypes: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".wasm": "application/wasm",
   ".svg": "image/svg+xml",
+  ".glb": "model/gltf-binary",
+  ".tif": "image/tiff",
 };
 
 /**
  * Serves a local directory at `prefix` without copying it into the package:
  * the 1.x build for the parity harness, and optionally the Slang WASM build
- * (set SLANG_WASM_DIR) for the Slang spike.
+ * (set SLANG_WASM_DIR) for the Slang spike. A path inside `root` that
+ * `exclude` refuses (given relative to `root`, platform-separated) is a 404.
  */
-function serveDirectory(prefix: string, root: string): Plugin {
+function serveDirectory(
+  prefix: string,
+  root: string,
+  { exclude }: { exclude?: (relative: string) => boolean } = {},
+): Plugin {
   // Absolute, without a trailing separator, so `base + sep` is the prefix of
   // everything inside it and of nothing beside it (`/a/frames-old`).
   const base = resolvePath(root);
@@ -60,6 +68,15 @@ function serveDirectory(prefix: string, root: string): Plugin {
         const path = normalize(
           join(base, decodeURIComponent((req.url ?? "/").split("?")[0]!)),
         );
+        if (
+          exclude &&
+          path.startsWith(base + sep) &&
+          exclude(path.slice(base.length + 1))
+        ) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
         if (
           !(path === base || path.startsWith(base + sep)) ||
           !existsSync(path) ||
@@ -341,6 +358,15 @@ const framesData = existsSync(join(framesDataDirectory(), "manifest.json"))
   ? framesDataDirectory()
   : undefined;
 
+// PROJ-data's catalog and grids in the store, served (and fetched from
+// cdn.proj.org on first request, verified) only at /proj-grids/
+// (scripts/projGrids.mjs); /frames-data/ doesn't serve them.
+const projGrids = existsSync(
+  join(framesDataDirectory(), "grids", "files.geojson"),
+)
+  ? join(framesDataDirectory(), "grids")
+  : undefined;
+
 const framesDataTests = !["", "0"].includes(process.env.FRAMES_DATA ?? "");
 
 export default defineConfig({
@@ -387,7 +413,14 @@ export default defineConfig({
       "/cesium-ref",
       fileURLToPath(new URL("../../.bench", import.meta.url)),
     ),
-    ...(framesData ? [serveDirectory("/frames-data", framesData)] : []),
+    ...(framesData
+      ? [
+          serveDirectory("/frames-data", framesData, {
+            exclude: framesDataExcludes,
+          }),
+        ]
+      : []),
+    ...(projGrids ? [projGridsPlugin("/proj-grids", projGrids)] : []),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   // Worker bundles take their own plugins (the Basis glue is decoded there).
