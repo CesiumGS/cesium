@@ -33,6 +33,11 @@ import {
   type ScenarioEvaluator,
 } from "../examples/frames-explorer/scenarios/evaluate.ts";
 import { evaluateEarthTurns } from "../examples/frames-explorer/scenarios/earthTurns.ts";
+import { evaluateStandOnMoon } from "../examples/frames-explorer/scenarios/standOnMoon.ts";
+import {
+  FRAME_CACHE_LIMIT,
+  FrameCache,
+} from "../examples/frames-explorer/frameCache.ts";
 import type { ScenarioId } from "../examples/frames-explorer/scenarios/spec.ts";
 import type { AddedFrameSpec } from "../examples/frames-explorer/tree.ts";
 import {
@@ -639,10 +644,14 @@ describe("scenario", () => {
       1234.5,
     );
     expect(evaluator).toHaveBeenCalledOnce();
-    expect(evaluator.mock.calls[0]!.slice(1)).toEqual([
+    expect(evaluator.mock.calls[0]!.slice(1, 3)).toEqual([
       { rate: 86_400 },
       1234.5,
     ]);
+    // And the worker's bounded frame cache (frameCache.ts).
+    expect((evaluator.mock.calls[0] as unknown[])[3]).toBeInstanceOf(
+      FrameCache,
+    );
 
     const reply = sent.find((s) => s.message.type === "scenario")!;
     const chunks = got.overlays[0]!.geometry.layers[0]!.chunks;
@@ -1187,5 +1196,106 @@ describe("the main thread's module", () => {
       expect(statement, statement).toMatch(/^import type\b/);
     }
     expect(source).not.toMatch(/\bimport\(/);
+  });
+});
+
+describe("the worker's frame cache (Task 6a follow-up: it never evicted)", () => {
+  /** The overlay a dragged rotation knob asks for: a new site at every value. */
+  const atRotation = (rotation: number) => ({
+    frame: {
+      name: "site",
+      body: "earth" as const,
+      crs: { format: "wkid" as const, authority: "EPSG", wkid: 32611 },
+      site: { origin: [0, 0, 0] as const, rotation, scale: 1 },
+    },
+    extent: {
+      min: [0, 0] as [number, number],
+      max: [20_000, 20_000] as [number, number],
+    },
+    step: 10_000,
+    segment: 10_000,
+  });
+  const proj = async () => ({}) as ProjApi;
+  const quiet = (id: ScenarioId): ScenarioEvaluation => ({
+    scenario: id,
+    added: [],
+    answer: { label: "", headline: "", accuracy: { note: "a stub" } },
+    overlays: [],
+    live: [],
+  });
+
+  it("keeps the most recently used, least recent out first, and refuses a limit below 1", () => {
+    const cache = new FrameCache<number>(2);
+    const made: string[] = [];
+    const get = (k: string) =>
+      cache.get(k, () => {
+        made.push(k);
+        return made.length;
+      });
+    get("a");
+    get("b");
+    get("a"); // a is now the most recent
+    get("c"); // b goes
+    get("a");
+    get("b");
+    expect(made).toEqual(["a", "b", "c", "b"]);
+    expect(cache.size).toBe(2);
+    expect(() => new FrameCache(0)).toThrow(RangeError);
+  });
+
+  it("stays at its bound through 1,000 slider moves, reusing the recent ones", async () => {
+    const cache = new FrameCache<EngineeringFrame>();
+    const createFrame = vi.fn(() => stubFrame as unknown as EngineeringFrame);
+    const { client } = connect(async () => context({ loadProj: proj }), {
+      createFrame,
+      frameCache: cache,
+    });
+    let largest = 0;
+    for (let i = 0; i < 1000; i++) {
+      await client.overlay("designGrid", atRotation(i * 0.5));
+      largest = Math.max(largest, cache.size);
+    }
+    expect(createFrame).toHaveBeenCalledTimes(1000);
+    expect(largest).toBe(FRAME_CACHE_LIMIT);
+    expect(cache.size).toBe(FRAME_CACHE_LIMIT);
+    // A knob moved back to a recent value reuses its frame.
+    await client.overlay("designGrid", atRotation(998 * 0.5));
+    expect(createFrame).toHaveBeenCalledTimes(1000);
+  }, 60_000);
+
+  it("empties the old scenario's entries when the worker turns to another, its evaluator's and its overlays' alike", async () => {
+    const cache = new FrameCache<EngineeringFrame>();
+    const stub = () => stubFrame as unknown as EngineeringFrame;
+    const { client } = connect(async () => context({ loadProj: proj }), {
+      createFrame: stub,
+      frameCache: cache,
+    });
+    // Made before any scenario (the catalog's overlays): kept.
+    await client.overlay("designGrid", atRotation(-1));
+    try {
+      stubScenario("earth-turns", async (_ctx, _knobs, _t, frames) => {
+        for (const k of ["crs", "site", "site-2"]) {
+          frames.get(`earth-turns:${k}`, stub);
+        }
+        return quiet("earth-turns");
+      });
+      stubScenario("stand-on-moon", async (_ctx, _knobs, _t, frames) => {
+        frames.get("stand-on-moon:site", stub);
+        return quiet("stand-on-moon");
+      });
+      await client.scenario("earth-turns", { rate: 3600 }, 0);
+      await client.overlay("designGrid", atRotation(1));
+      await client.overlay("designGrid", atRotation(2));
+      expect(cache.madeIn("earth-turns")).toBe(5);
+      expect(cache.madeIn(undefined)).toBe(1);
+      await client.scenario("stand-on-moon", { latitude: -90 }, 0);
+      expect(cache.madeIn("earth-turns")).toBe(0);
+      expect(cache.madeIn("stand-on-moon")).toBe(1);
+      expect(cache.madeIn(undefined)).toBe(1);
+      expect(cache.size).toBe(2);
+    } finally {
+      stubScenario("earth-turns", evaluateEarthTurns);
+      stubScenario("stand-on-moon", evaluateStandOnMoon);
+    }
   });
 });

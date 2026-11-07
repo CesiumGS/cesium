@@ -29,6 +29,7 @@ import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { measure } from "../../../src/measure/measure.ts";
 import { EARTH } from "../../../src/scene/Body.ts";
 import { Instant } from "../../../src/time/Instant.ts";
+import type { FrameCache } from "../frameCache.ts";
 import { siteGap } from "../stress/groups/rigid-placement-budget.ts";
 import {
   fmt,
@@ -55,20 +56,19 @@ import { SCENARIOS } from "./specs.ts";
 
 const SPEC = SCENARIOS.find((s) => s.id === "bim-site")!;
 
-/** The frames made, by their definition: PROJ resolves an operation once per CRS and site. */
-const frames = new Map<string, EngineeringFrame>();
-/** At most this many kept (a dragged rotation knob makes a new one per value). */
-const KEEP = 12;
-
+/**
+ * The CRS's frame, or its site grid's, through the worker's bounded cache
+ * (frameCache.ts): PROJ resolves an operation once per CRS and site, and a
+ * dragged rotation knob makes a new one per value.
+ */
 function frameOf(
   ctx: StressContext,
+  cache: FrameCache<EngineeringFrame>,
   crs: BimCrs,
   site?: SiteTransform,
 ): EngineeringFrame {
-  const key = JSON.stringify([crs.id, site ?? null]);
-  let frame = frames.get(key);
-  if (frame === undefined) {
-    frame = EngineeringFrame.create(
+  return cache.get(`bim-site:${JSON.stringify([crs.id, site ?? null])}`, () =>
+    EngineeringFrame.create(
       {
         name: site ? `${crs.name} site` : crs.name,
         body: EARTH,
@@ -76,13 +76,8 @@ function frameOf(
         ...(site && { site }),
       },
       proj(ctx),
-    );
-    if (frames.size >= KEEP) {
-      frames.delete(frames.keys().next().value!);
-    }
-    frames.set(key, frame);
-  }
-  return frame;
+    ),
+  );
 }
 
 const metres = (m: number, digits = 2) =>
@@ -119,13 +114,13 @@ function crsEdge(frame: EngineeringFrame): AddedFrameSpec["edge"] {
 /** The live re-runs of the proof's checks, in the knobs' CRS and site grid. */
 function liveChecks(
   ctx: StressContext,
+  frame: EngineeringFrame,
+  plain: EngineeringFrame,
   crs: BimCrs,
   site: SiteTransform,
   gap: ReturnType<typeof siteGap>,
   instant: Instant,
 ): StressResult[] {
-  const frame = frameOf(ctx, crs, site);
-  const plain = frameOf(ctx, crs);
   const u = crs.unitsPerMeter;
   const rotation = (site.rotation * 180) / Math.PI;
   const where = `${crs.code}, θ = ${fmt(rotation, 4)}°, s = ${site.scale}`;
@@ -277,17 +272,18 @@ export const evaluateBimSite: ScenarioEvaluator = async (
   ctx: StressContext,
   knobs: KnobState,
   epochTdb: number,
+  cache: FrameCache<EngineeringFrame>,
 ) => {
   const instant = Instant.fromTdb(epochTdb);
   const { crs, site, rotation, scale } = bimSite(knobs);
-  const frame = frameOf(ctx, crs, site);
-  const plain = frameOf(ctx, crs);
+  const frame = frameOf(ctx, cache, crs, site);
+  const plain = frameOf(ctx, cache, crs);
   const gap = siteGap(frame, site, BIM_LINE.mark);
   const far = siteGap(frame, site, BIM_LINE.length);
   if (checkedGap === undefined) {
     const c = bimSite(SPEC.checked.knobs);
     checkedGap = siteGap(
-      frameOf(ctx, c.crs, c.site),
+      frameOf(ctx, cache, c.crs, c.site),
       c.site,
       BIM_LINE.mark,
     ).gap;
@@ -348,7 +344,7 @@ export const evaluateBimSite: ScenarioEvaluator = async (
       method: method(crs),
     },
     overlays: [],
-    live: liveChecks(ctx, crs, site, gap, instant),
+    live: liveChecks(ctx, frame, plain, crs, site, gap, instant),
     checkedAnswerValue: checkedGap,
   };
 };

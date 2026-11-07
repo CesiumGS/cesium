@@ -64,6 +64,7 @@ import {
   withDefaults,
   type Need,
 } from "./stress/runner.ts";
+import { FrameCache } from "./frameCache.ts";
 import { buildTree, type TreeNode } from "./tree.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import {
@@ -141,6 +142,8 @@ export interface HostOptions {
     params: FrameParams,
     proj: ProjApi,
   ) => EngineeringFrame;
+  /** The engineering frames kept for reuse (default: a `FrameCache` of `FRAME_CACHE_LIMIT`). */
+  readonly frameCache?: FrameCache<EngineeringFrame>;
 }
 
 export function defaultCreateFrame(
@@ -593,7 +596,8 @@ export function createHost(
     }
   }
 
-  const frameCache = new Map<string, EngineeringFrame>();
+  /** Bounded, and emptied of a scenario's frames when the next one is asked for (frameCache.ts). */
+  const frameCache = options.frameCache ?? new FrameCache<EngineeringFrame>();
 
   async function frameFor(
     loaded: Loaded,
@@ -603,13 +607,9 @@ export function createHost(
     if (hasVertical(params.crs)) {
       await loadItem(loaded.raw, "geoid");
     }
-    const key = JSON.stringify(params);
-    let frame = frameCache.get(key);
-    if (frame === undefined) {
-      frame = createFrame(params, proj);
-      frameCache.set(key, frame);
-    }
-    return frame;
+    return frameCache.get(`overlay:${JSON.stringify(params)}`, () =>
+      createFrame(params, proj),
+    );
   }
 
   const operationOf = (
@@ -846,6 +846,10 @@ export function createHost(
           `not a scenario (${SCENARIOS.map((s) => s.id).join(", ")})`,
         );
       }
+      // The previous scenario's frames go (frameCache.ts). The page sends a
+      // new scenario's overlay requests just before its evaluation, so their
+      // frames may go with them: they are made again on their next use.
+      frameCache.scenarioChanged(spec.id);
       const evaluator = scenarioEvaluator(spec.id);
       if (evaluator === undefined) {
         throw new RangeError("no evaluator is registered in the worker");
@@ -869,7 +873,12 @@ export function createHost(
           ? request.knobs
           : {},
       );
-      const evaluated = await evaluator(met.ctx, knobs, request.epochTdb);
+      const evaluated = await evaluator(
+        met.ctx,
+        knobs,
+        request.epochTdb,
+        frameCache,
+      );
       if (evaluated.scenario !== spec.id) {
         throw new Error(
           `its evaluator answered for "${String(evaluated.scenario)}"`,

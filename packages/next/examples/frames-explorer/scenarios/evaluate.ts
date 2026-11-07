@@ -8,6 +8,8 @@
 // scenario's needs, clamps its knobs, calls the evaluator, and judges `live`
 // as the runner would (`judgeResult`), so a live row is never the
 // evaluator's word alone.
+import type { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
+import type { FrameCache } from "../frameCache.ts";
 import type { OverlayGeometry } from "../protocol.ts";
 import type { StressContext, StressResult } from "../tests.ts";
 import type { AddedFrameSpec } from "../tree.ts";
@@ -140,12 +142,15 @@ export interface ScenarioEvaluation {
 /**
  * Evaluates a scenario at `knobs` (already clamped to its spec) and
  * `epochTdb` (TDB seconds past J2000). `ctx` has the frame tree and the data
- * the scenario's spec needs.
+ * the scenario's spec needs; `frames` is the worker's bounded cache of
+ * engineering frames (frameCache.ts), which the host empties of the
+ * previous scenario's when the scenario changes.
  */
 export type ScenarioEvaluator = (
   ctx: StressContext,
   knobs: KnobState,
   epochTdb: number,
+  frames: FrameCache<EngineeringFrame>,
 ) => Promise<ScenarioEvaluation>;
 
 const evaluators = new Map<ScenarioId, ScenarioEvaluator>();

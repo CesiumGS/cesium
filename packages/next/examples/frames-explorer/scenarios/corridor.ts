@@ -19,6 +19,7 @@ import { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import { EARTH } from "../../../src/scene/Body.ts";
 import { Instant } from "../../../src/time/Instant.ts";
+import type { FrameCache } from "../frameCache.ts";
 import { overlayMesh, polyline, segments } from "../overlays.ts";
 import type { OverlayGeometry } from "../protocol.ts";
 import {
@@ -64,24 +65,27 @@ const ELEMENTS: readonly { to: number; name: string }[] = [
 const elementAt = (station: number) =>
   ELEMENTS.find((e) => station < e.to)!.name;
 
-let frames: { site: EngineeringFrame; plain: EngineeringFrame } | undefined;
-function framesOf(ctx: StressContext) {
-  frames ??= {
-    site: EngineeringFrame.create(
-      {
-        name: `${CA.name} site`,
-        body: EARTH,
-        crs: CA.crs,
-        site: CORRIDOR_SITE,
-      },
-      proj(ctx),
+/** The site grid's and the CRS's frames, through the worker's bounded cache (frameCache.ts). */
+function framesOf(ctx: StressContext, cache: FrameCache<EngineeringFrame>) {
+  return {
+    site: cache.get("corridor:site", () =>
+      EngineeringFrame.create(
+        {
+          name: `${CA.name} site`,
+          body: EARTH,
+          crs: CA.crs,
+          site: CORRIDOR_SITE,
+        },
+        proj(ctx),
+      ),
     ),
-    plain: EngineeringFrame.create(
-      { name: CA.name, body: EARTH, crs: CA.crs },
-      proj(ctx),
+    plain: cache.get("corridor:plain", () =>
+      EngineeringFrame.create(
+        { name: CA.name, body: EARTH, crs: CA.crs },
+        proj(ctx),
+      ),
     ),
   };
-  return frames;
 }
 
 /** The colours the page tints by layer (main.ts): the road engineering, the offset white. */
@@ -191,11 +195,12 @@ export const evaluateCorridor: ScenarioEvaluator = async (
   ctx: StressContext,
   knobs: KnobState,
   epochTdb: number,
+  cache: FrameCache<EngineeringFrame>,
 ) => {
   const instant = Instant.fromTdb(epochTdb);
   const station = Number(knobs.station);
   const offset = Number(knobs.offset);
-  const { site, plain } = framesOf(ctx);
+  const { site, plain } = framesOf(ctx, cache);
   inverse ??= localInverse(site);
   const design = [...road.pointAt(station, offset), 0];
   // The point on the ground, and back from it: the trip the answer takes.
