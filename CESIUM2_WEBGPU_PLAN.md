@@ -6959,37 +6959,36 @@ dominant term, and propagates "not stated" by name. Plan 5 designs the rest:
   the composed accuracy with its breakdown, so "±1.8 mm, mostly the shoulder
   encoder" is something any app gets, not something the example computes.
 
-**When the frame tree is rebuilt, and an async API around it (owner,
-2026-11-06).** The frames example hitched about once a second while its clock
-played. The page rebuilt the whole tree and re-rendered its diagram each
-real second, for about 60 ms of main-thread work, only to refresh the
-Earth-orientation accuracy on one edge. "We need to be smarter in general
-about when frame trees are rebuilt, and they probably need an async API
-around them so they can be spread across multiple frames like other stuff in
-the engine." Plan 5 designs this with the catalog and the tree in use:
+**When the frame tree is rebuilt, and what needs to be async (owner,
+2026-11-06; revised after measuring).** The frames example hitched about once
+a second while its clock played. The first suspect was the once-a-second
+tree rebuild, which prompted the owner's question about an async API "so they
+can be spread across multiple frames like other stuff in the engine".
+Measuring showed the rebuild takes 0.4 ms. The real cost was every consumer
+(the whole React panel, about 117k elements a second) redrawing every frame,
+whether or not anything had changed (Task 4d of the frames-explorer scenarios
+plan). The owner, on seeing that: "if rebuilding the frame tree is that fast
+we probably don't need the async API". So:
 
-- **Change tracking, not rebuilds.** Each frame carries a revision, which goes
-  up when its placement's inputs change: a joint angle, a newly loaded
-  kernel, a new EOP table, a revised edge accuracy. Queries and consumers
-  (diagrams, overlays, statements) key their caches on the revisions along
-  their route, and redo only what moved. This is the "change signal" gap the
-  frames example's robot-arm task records: state-dependent frames stay
-  cacheable and the renderer knows when to redraw.
-- **Two kinds of query.** Cheap queries stay synchronous and per frame: one
-  transform at an instant, or one point. They must stay microseconds, so the
-  example's Orion dot and labels can be placed every frame. Heavy queries are
-  async and budgeted across frames, the way tile streaming and the request
-  scheduler work: sampling a long trajectory into a mesh, an accuracy
-  statement with all its terms, proof checks, and PROJ batches. They take an
-  `AbortSignal`, report progress, and run in a worker or in time slices on the
-  main thread under a per-frame budget.
-- **Time-dependent accuracy updates on its own cadence.** An edge whose
-  accuracy drifts with time, such as predicted EOP, publishes a new value
-  only when it changes by a visible amount. Its consumers update just that
-  value, never the whole tree.
-- **Where it lands:** the engine's frame-budget machinery, shared with tiles,
-  the imagery composite and terrain, so the frame tree's work competes fairly
-  within one per-frame budget.
+- **The tree and single queries stay synchronous.** Building or rebuilding a
+  tree, and one transform or one point at an instant, cost microseconds to
+  well under a millisecond. Making them async would add API cost for nothing.
+- **Change tracking is the lesson.** Each frame carries a revision, which goes
+  up when its placement's inputs change: a joint angle, a newly loaded kernel,
+  a new EOP table, a revised edge accuracy. Consumers (diagrams, overlays,
+  labels, statements) key their work on the revisions along their route and
+  skip it when nothing moved. This is also the "change signal" gap that the
+  example's robot-arm task records.
+- **Time-dependent values publish on change.** An edge whose accuracy drifts
+  with time, such as predicted EOP, publishes a new value only when it
+  changes by a visible amount. Only its own consumers update.
+- **Bulk work only, if anything, gets an async shape.** Sampling a long
+  trajectory into a mesh, accuracy statements over many samples, proof checks
+  and PROJ batches are genuinely heavy, and today they run in the example's
+  worker. Plan 5 decides only whether the library offers them as cancellable
+  (`AbortSignal`), progress-reporting operations that run in a worker or
+  under the engine's per-frame budget. That is a question about bulk
+  operations, not about the frame tree.
 
 **A public API review (owner, 2026-11-06).** Plan 5 is also the time to
 look at the public API as a whole. Decide what belongs on which side of it,
