@@ -284,6 +284,22 @@ The owner confirmed that "Open in Verification" leaves the camera where it is, s
 - [ ] Tests first for items 1, 2 and 4, then the fixes. Check items 2 and 3 in the browser, and take screenshots.
 - [ ] Commit with "examples: frames explorer: how the lunar clock rate is worked out, Orion's dot while playing, labels under the HUD".
 
+### Task 4d: No hitch while the clock plays (owner, 2026-11-06)
+
+The diagnosis was made in a browser on 5190 (ledger, 2026-11-06). In one-path, with the clock playing at 1 h/s and the camera rotating slowly, about 55 of 543 frames dropped, in bursts of 3–6 almost exactly once a real second. The main thread was busy for about 60 ms each time, in tasks under 50 ms. With the clock paused, the same rotation gave 3 slow frames of 360, and earth-turns gave 0 of 571. The prime suspect is frameLoop.ts:59, `deps.rebuildTree()`, which runs once a real second while the clock has moved more than a minute: the whole tree and its diagram are rebuilt to refresh the Earth-orientation sigma on the ITRF edge. Scenario re-evaluations every ~730 ms (replaceState plus the worker reply) also contribute.
+
+- [ ] **Step 1: Measure first.** Wrap `rebuildTree`, the scenario-reply handling and the tree diagram's render with `performance.measure` in a dev-only probe, and attribute the ~60 ms. Write the breakdown into the report before changing anything.
+- [ ] **Step 2: Write a failing test.** While the clock plays, with the scenario and tree shape unchanged, the tree diagram's React subtree doesn't re-render, and no tree rebuild happens. Only the changed edge accuracy's text updates. Use a render counter or a rebuild spy.
+- [ ] **Step 3: Fix it at the source.**
+  - Split "the tree's shape" (built when the scenario or its added frames change) from "edge values that drift with time" (the EOP sigma).
+  - Update the values in place: memoized diagram props, keyed so an unchanged edge doesn't re-render, with the accuracy text updating only when its printed value changes.
+  - Make the scenario reply path cheap when nothing visible changed: skip the overlay re-upload when the mesh is unchanged, and skip proof rows when their text is unchanged.
+  - Keep the route animation running across value updates.
+- [ ] **Step 4: Measure again** in the browser, with the same protocol (1 h/s, slow rotation, 10 s). The target is no once-a-second bursts, and slow frames at the paused baseline (about 1%). Report before and after numbers.
+- [ ] **Step 5: Run** the gates (`npm test`, `npm run test:data` with 225 results and unchanged fingerprints, tsc, lint), then commit with "examples: frames explorer: the tree's values update in place while the clock plays (no once-a-second rebuild)".
+
+The library-level design (revisions, cheap synchronous queries and budgeted async ones) is plan 5 (CESIUM2_WEBGPU_PLAN.md §13.14). This task fixes the example only.
+
 ### Task 5: Terrain line of sight (library)
 
 **Files:**
