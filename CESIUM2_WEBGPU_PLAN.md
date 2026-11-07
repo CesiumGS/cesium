@@ -6899,6 +6899,32 @@ curve). Plan 4b ships the split with a CPU stand-in for the client side
 in for the server. Plan 5 replaces the stand-in with a GPU snap pass, which
 handles occlusion and cost by construction.
 
+_Plan 5 design input: modules with interfaces (owner, 2026-11-07)._ "We
+should generally be thinking about how to make 2.0 more modular so pieces of
+it can be reused and composed in interesting ways and we can easily plug
+different module implementations in for places where that makes sense."
+Plan 5's API review designs the seams:
+
+- **Frame management as its own module,** behind interfaces to the core
+  drawing code, so an application can include it, leave it out, or replace
+  it, for example with a frame manager that isn't built on PROJ. Coordinate
+  conversion becomes a service the module supplies (PROJ is one
+  implementation). Placement takes a third mode beside rigid and
+  reprojected: content that arrives already reprojected by its producer or
+  host. Picking reports frame-tagged positions through an interface the
+  module fills in.
+- **Measurement and tools as their own module,** open source in this
+  repository. 1.x keeps its measurement toolkit separate from the engine,
+  and 2.0 does too: the core provides picks, design coordinates, accuracy
+  terms and the frame tree; the module provides the tools and their UI. A
+  host application can use it or bring its own.
+- **Snapping** keeps the client/server split (plan 4b, Task 16): the client
+  side is the core's, and the server side is a service any host can supply.
+- **Later, after prototyping: the drawing layer's portability.** Whether
+  drawing can be modularized enough to support WebGPU's compatibility mode,
+  or a WebGL 2 backend. Not now: the owner wants no design compromises in
+  the WebGPU approach while the prototype is built.
+
 _Plan 5 design input: tessellating warped models (owner, 2026-11-07)._ A
 reprojected model's edges are straight chords between reprojected vertices,
 so a large flat face (a runway slab, a panel row) sags below the curved
