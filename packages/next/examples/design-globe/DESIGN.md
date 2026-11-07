@@ -52,6 +52,32 @@ the second audience: every number is there and honest, but quieter.
   A quieter third pair, two stations 10,000 ft apart, shows the design
   distance identical in both placements.
 
+- **The panel's headline and details** (owner, 2026-11-07). Up front: the
+  placement and the morph; each opening measurement's headline number; the
+  design distance and the true (ground) distance side by side, labelled.
+  Behind "Details": the ellipsoid distance, the combined scale factor in ppm,
+  each end's station, offset, elevation and design coordinates in the CRS's
+  own units, the snap kind and its tolerance, the accuracy statement, and the
+  checks against the generator's exact answers and the NGS datasheet.
+- **Visuals in the viewer carry the story** ("the more we can augment that
+  with visuals in the viewer the better"). First version:
+  1. **Error whiskers:** a leader every 1,000 ft along the corridor from each
+     rigid position to its reprojected partner, coloured by length: zero at
+     the anchor, about 31 m at the far end, shrinking to nothing as the morph
+     completes.
+  2. **The anchor ring:** "the placements agree here".
+  3. **The measurement lines,** with a label pill giving the design distance,
+     and the other placement's line ghosted beside each one.
+  4. **A ground-versus-grid ruler** along the 10,000 ft pair: tick marks in
+     design feet against true ground feet (the scale factor's gap, about
+     0.4 ft over 10,000 ft, visible when zoomed in).
+  5. **The survey mark** as a survey-disk marker with its PID; the datasheet
+     values on hover or focus.
+
+  Later, as toggles, off by default: a grid-north-against-true-north compass
+  at the cursor (convergence, about 1° across the corridor), and an error
+  ribbon tinting the ground under the corridor by rigid error.
+
 - **The portfolio is a list to fly through**, each site with its CRS, units
   and height system.
 

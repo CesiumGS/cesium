@@ -983,6 +983,7 @@ No UI is in this task.
     - Reduced motion switches at once.
   - true scale by default (owner, 2026-11-07): an "Exaggerate the error" toggle, off by default, labelled with its factor while on. The opening shot is at true scale near the far end (about 20 km from the anchor, about 31 m of sag), with a "Fly along" control down the corridor to the anchor;
   - show the sag (`displayError`) under the cursor in rigid mode;
+  - draw the error whiskers (a leader every 1,000 ft from each rigid position to its reprojected partner, coloured by length, shrinking with the morph) and the anchor ring (examples/design-globe/DESIGN.md, "Visuals in the viewer");
   - add the portfolio list, with a fly-to and each site's grid credits.
 - [ ] **Step 3: Run** the tests, tsc, eslint and prettier.
 - [ ] **Step 4: Browser check** on your own port. Both modes draw. A pick on each (Task 15 on the GPU) gives design coordinates within the stated pick tolerance of the vertex under the cursor. A portfolio site in London loads its OS grids from `/proj-grids/`, with byte progress.
@@ -1005,7 +1006,8 @@ No UI is in this task.
   - the measure tool, through `measure(a.design, b.design, …)`;
   - the readouts from `measurementModel`;
   - station, offset and elevation;
-  - markers and the line on the globe, in the mockup's styles and drawn as the explorer draws its overlays;
+  - markers and the line on the globe, drawn as the explorer draws its overlays: each measurement line with a design-distance label pill and the other placement's line ghosted; the ground-versus-grid ruler along the 10,000 ft pair; the survey mark as a survey-disk marker with its datasheet on hover or focus;
+  - the panel's headline and details split (DESIGN.md): the design and true distances side by side up front, the rest behind "Details";
   - keyboard operation.
 - [ ] **Step 3: Run** the tests, tsc, eslint and prettier.
 - [ ] **Step 4: Browser check** on your own port:
@@ -1026,7 +1028,8 @@ No UI is in this task.
 - [ ] **Step 1: Implement:**
   - the check panel from `checkRows`, comparing every value shown with the generator's answer;
   - the ion slots, drawn empty with what the application must supply (CRS, units, site transform, placement mode);
-  - "Copy link".
+  - "Copy link";
+  - two toggles, off by default: the convergence compass at the cursor, and the error ribbon (DESIGN.md, "Visuals in the viewer").
 - [ ] **Step 2: Run** two UX reviews on the most capable model: first against the mockup, then against the real page, in headless Chrome with Metal. Fix every Critical and Important finding.
 - [ ] **Step 3: Browser checks** on your own port:
   - both modes and every site;
