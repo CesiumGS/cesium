@@ -12,7 +12,7 @@
 // position: that is on the target's datum (WGS84 for EPSG:4979) after the
 // datum operation, a metre or two away, which would change k by about 1e-10
 // (and the results would not match pyproj's Proj.get_factors at 1e-12).
-import { crsDefinition, crsObject, unbound } from "./crs.ts";
+import { crsObject, exists, normalizeExisting, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
 import type { PJ, ProjApi } from "./projApi.ts";
 
@@ -129,23 +129,26 @@ function projectionOf(frame: EngineeringFrame): Projection {
   // A WKT2 refused if it holds a PROJ-string token (crsObject); a code as
   // before.
   const ref = frame.definition.crs;
-  const crs = unbound(
-    P,
-    ref.format === "wkt2"
-      ? crsObject(P, ref, "the CRS")
-      : P.proj_create(crsDefinition(ref)),
-  );
+  const crs = unbound(P, crsObject(P, ref, "the CRS"));
   const horizontal =
     P.proj_get_type(crs) === P.PJ_TYPE_COMPOUND_CRS
       ? unbound(P, P.proj_crs_get_sub_crs(crs, 0))
       : crs;
+  if (!exists(P, horizontal)) {
+    throw new Error("PROJ could not create the CRS's horizontal part");
+  }
   // The CRS's conversion, normalized for visualization: (lon, lat) in degrees
   // to (E, N) in the CRS's units, inverted to find a grid point's longitude
   // and latitude on the CRS's own datum. proj_factors takes the projected CRS
   // itself (PROJ applies its conversion), with radians.
-  const conversion = P.proj_normalize_for_visualization(
+  const conversion = normalizeExisting(
+    P,
     P.proj_crs_get_coordoperation(horizontal),
+    "the CRS's conversion",
   );
+  if (!exists(P, conversion)) {
+    throw new Error("PROJ could not normalize the CRS's conversion");
+  }
   const ellipsoid = P.proj_ellipsoid_get_parameters(
     P.proj_get_ellipsoid(P.proj_crs_get_geodetic_crs(horizontal)),
   );

@@ -1,6 +1,10 @@
 // resolveOperation's error reporting, over a stub PROJ (no data needed).
 import { describe, expect, it } from "vitest";
-import { betterThan, resolveOperation } from "../src/engineering/crs.ts";
+import {
+  betterThan,
+  listOperations,
+  resolveOperation,
+} from "../src/engineering/crs.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 
 const ref = { format: "wkid", authority: "EPSG", wkid: 2227 } as const;
@@ -171,5 +175,35 @@ describe("betterThan: a better candidate keeps the chosen operation's geoid", ()
         skipped,
       ).map((c) => c.name),
     ).toEqual(["same"]);
+  });
+});
+
+describe("no native PROJ call on an object PROJ could not create", () => {
+  // PROJ's proj_normalize_for_visualization dereferences a null pointer for
+  // the empty object the binding returns: a SIGSEGV. The stub throws if it
+  // is ever reached, so the guard is what the tests see.
+  const EMPTY = {};
+  const empty = (operations: () => unknown): ProjApi => {
+    const proj = stub(operations) as unknown as Record<string, unknown>;
+    // The CRSs (proj_create's objects) exist; the candidate is empty.
+    proj.proj_get_name = (o: unknown) => (o === EMPTY ? null : "a CRS");
+    proj.proj_as_proj_string = () => null;
+    proj.proj_normalize_for_visualization = () => {
+      throw new Error("native normalize reached");
+    };
+    return proj as unknown as ProjApi;
+  };
+  const list = () => ({ length: () => 1, get: () => EMPTY });
+
+  it("resolveOperation throws a clear error for an empty candidate", () => {
+    expect(() => resolveOperation(empty(list), ref, "EPSG:4979")).toThrow(
+      /PROJ could not create candidate 0/,
+    );
+  });
+
+  it("listOperations throws a clear error for an empty candidate", () => {
+    expect(() =>
+      listOperations(empty(list), ref, { ...ref, wkid: 4979 }),
+    ).toThrow(/PROJ could not create candidate 0/);
   });
 });

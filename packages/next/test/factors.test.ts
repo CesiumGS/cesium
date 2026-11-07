@@ -11,6 +11,7 @@ function stubFrame(factors: Record<string, number>): EngineeringFrame {
     PJ_PROJ_5: 1,
     PJ_TYPE_COMPOUND_CRS: 1,
     proj_create: () => object,
+    proj_get_name: () => "stub CRS",
     proj_get_type: () => 0,
     proj_crs_get_coordoperation: () => object,
     proj_normalize_for_visualization: () => object,

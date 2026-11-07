@@ -289,7 +289,7 @@ function checkedArea(area: AreaOfInterest): AreaOfInterest {
 // proj_create does not throw for a definition it cannot build (a missing grid,
 // an unknown code): it logs, and returns an empty object that proj_trans then
 // passes coordinates through. An object that exists has a name or a PROJ string.
-function exists(proj: ProjApi, object: PJ): boolean {
+export function exists(proj: ProjApi, object: PJ): boolean {
   try {
     return (
       (proj.proj_get_name(object) ?? null) !== null ||
@@ -298,6 +298,30 @@ function exists(proj: ProjApi, object: PJ): boolean {
   } catch {
     return false;
   }
+}
+
+/** Candidate `i` of PROJ's list, thrown for when PROJ could not create it. */
+function candidateAt(proj: ProjApi, candidates: PjObjList, i: number): PJ {
+  const candidate = candidates.get(i);
+  if (!exists(proj, candidate)) {
+    throw new Error(`PROJ could not create candidate ${i}`);
+  }
+  return candidate;
+}
+
+/**
+ * `proj_normalize_for_visualization` of an object PROJ created. The binding
+ * hands the C function an empty object as it finds it, and PROJ then
+ * dereferences a null pointer: a SIGSEGV that kills the process, uncatchable
+ * in JS. So an object that does not exist (`exists`) throws here, naming
+ * `what`, and never reaches PROJ. The result may still be empty (PROJ could
+ * not normalize it); `proj_as_proj_string` answers null for that.
+ */
+export function normalizeExisting(proj: ProjApi, object: PJ, what: string): PJ {
+  if (!exists(proj, object)) {
+    throw new Error(`PROJ could not create ${what} to normalize it`);
+  }
+  return proj.proj_normalize_for_visualization(object);
 }
 
 /**
@@ -655,12 +679,12 @@ function matchingCandidate(
       );
       const count = candidates?.length() ?? 0;
       for (let i = 0; i < count; i++) {
-        const candidate = candidates!.get(i);
+        const candidate = candidateAt(proj, candidates!, i);
         if (isBallpark(proj, candidate)) {
           continue;
         }
         const string = proj.proj_as_proj_string(
-          proj.proj_normalize_for_visualization(candidate),
+          normalizeExisting(proj, candidate, `candidate ${i}`),
           proj.PJ_PROJ_5,
         );
         if (string !== null && same(string)) {
@@ -803,7 +827,7 @@ export function resolveOperation(
     const notCreated: string[] = [];
     const count = candidates.length();
     for (let i = 0; i < count; i++) {
-      const candidate = candidates.get(i);
+      const candidate = candidateAt(proj, candidates, i);
       const grids = candidateGrids(proj, candidate, loaded);
       for (const grid of grids.missing) {
         missing.add(grid);
@@ -818,7 +842,7 @@ export function resolveOperation(
         const string = ballpark
           ? null
           : proj.proj_as_proj_string(
-              proj.proj_normalize_for_visualization(candidate),
+              normalizeExisting(proj, candidate, `candidate ${i}`),
               proj.PJ_PROJ_5,
             );
         const verticalShifts =
@@ -842,7 +866,7 @@ export function resolveOperation(
         continue;
       }
       const string = proj.proj_as_proj_string(
-        proj.proj_normalize_for_visualization(candidate),
+        normalizeExisting(proj, candidate, `candidate ${i}`),
         proj.PJ_PROJ_5,
       );
       if (string === null) {
@@ -1002,16 +1026,16 @@ export function listOperations(
     const out: OperationCandidate[] = [];
     const count = candidates.length();
     for (let i = 0; i < count; i++) {
-      const candidate = candidates.get(i);
+      const candidate = candidateAt(proj, candidates, i);
+      const pipeline =
+        proj.proj_as_proj_string(
+          normalizeExisting(proj, candidate, `candidate ${i}`),
+          proj.PJ_PROJ_5,
+        ) ?? "";
       const grids = candidateGrids(proj, candidate, loaded);
       const ballpark = isBallpark(proj, candidate);
       const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
       const area = areaOfUse(proj, candidate);
-      const pipeline =
-        proj.proj_as_proj_string(
-          proj.proj_normalize_for_visualization(candidate),
-          proj.PJ_PROJ_5,
-        ) ?? "";
       out.push({
         name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
         pipeline,
