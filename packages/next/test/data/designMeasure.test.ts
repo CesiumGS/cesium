@@ -13,19 +13,24 @@ import {
   designPoint,
   type SiteTransform,
 } from "../../src/engineering/EngineeringFrame.ts";
-import { loadProj } from "../../src/engineering/proj.ts";
+import {
+  formatPipeline,
+  parsePipeline,
+} from "../../src/engineering/pipeline.ts";
+import { gridSource, loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../src/frames/frames.ts";
 import { framePoint } from "../../src/frames/local.ts";
 import { measure, measureSpan } from "../../src/measure/measure.ts";
-import { EARTH } from "../../src/scene/Body.ts";
+import { EARTH, MOON } from "../../src/scene/Body.ts";
 import { EarthOrientationParameters } from "../../src/time/eop.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const base = `${join(dir, "proj")}/`;
+const gridStore = `${join(dir, "grids")}/`;
 const bytes = (file: string): ArrayBuffer => {
   const b = readFileSync(join(dir, file));
   return b.buffer.slice(
@@ -337,5 +342,352 @@ describe("measure in design terms", () => {
         frames,
       ),
     ).toThrow(/non-finite/);
+  });
+});
+
+describe("how a design point was obtained (plan 4b Task 8)", () => {
+  it("adds a pick term of the pick's tolerance, and a snap term named for its kind", async () => {
+    const f = await frame();
+    const picked = designPoint(f, [2000, 1000, 0], {
+      how: "pick",
+      tolerance: 0.02,
+    });
+    expect(picked.obtained).toEqual({ how: "pick", tolerance: 0.02 });
+    const typed = designPoint(f, [3000, 1000, 0]);
+    expect(typed.obtained).toBeUndefined();
+    const m = measure(picked, typed, instant, frames, { signal: false });
+    const picks = m.accuracy.terms.filter((t) => t.source === "pick");
+    expect(picks).toHaveLength(1);
+    expect(picks[0]!.meters).toBe(0.02);
+    expect(picks[0]!.note).toMatch(/^End a: .*picked/);
+
+    const snapped = designPoint(f, [3000, 1000, 0], {
+      how: "snap",
+      tolerance: 0,
+      kind: "segment",
+    });
+    const s = measure(picked, snapped, instant, frames, { signal: false });
+    const terms = s.accuracy.terms.filter((t) => t.source === "pick");
+    expect(terms.map((t) => t.meters)).toEqual([0.02, 0]);
+    expect(terms[1]!.note).toMatch(/^End b: .*snapped to a segment/);
+  });
+
+  it("rejects a tolerance that is negative or not finite, and a kind on a pick", async () => {
+    const f = await frame();
+    for (const tolerance of [-0.01, NaN, Infinity]) {
+      expect(() =>
+        designPoint(f, [0, 0, 0], { how: "pick", tolerance }),
+      ).toThrow(/tolerance/);
+    }
+    expect(() =>
+      designPoint(f, [0, 0, 0], { how: "pick", tolerance: 0.1, kind: "arc" }),
+    ).toThrow(/kind/);
+  });
+});
+
+describe("the projection term's note (amended R9)", () => {
+  const CS27 = { format: "wkid", authority: "EPSG", wkid: 26741 } as const;
+
+  it("names the better candidates PROJ skipped for missing grids, with their accuracies and grids", async () => {
+    const f = EngineeringFrame.create(
+      { name: "CS27", body: EARTH, crs: CS27 },
+      await loadProj({ base }),
+    );
+    expect(f.operation.accuracy).toBe(7);
+    expect(f.operation.betterCandidates.map((c) => c.accuracy)).toEqual([
+      2.15, 5,
+    ]);
+    const m = measure(
+      designPoint(f, [1_900_000, 600_000, 0]),
+      designPoint(f, [1_901_000, 600_000, 0]),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const terms = m.accuracy.terms.filter((t) => t.source === "projection");
+    expect(terms).toHaveLength(2);
+    for (const t of terms) {
+      expect(t.meters).toBe(7);
+      expect(t.note).toContain(
+        "Inverse of California CS27 zone I + NAD27 to NAD83 (1) + NAD83 to WGS 84 (43)",
+      );
+      expect(t.note).toContain(
+        "Inverse of California CS27 zone I + NAD27 to WGS 84 (79)",
+      );
+      expect(t.note).toMatch(
+        /2\.15 m; needs us_noaa_cnhpgn\.tif, us_noaa_conus\.tif/,
+      );
+      expect(t.note).toMatch(/5 m; needs us_noaa_conus\.tif/);
+    }
+  });
+
+  it("names a pinned pipeline's optional grid that isn't loaded", async () => {
+    const P = await loadProj({ base });
+    const known = await frame();
+    const steps = parsePipeline(known.operation.pipeline).steps;
+    const geoid = steps.findIndex((s) => s.operation === "vgridshift");
+    const pinned = {
+      steps: [
+        ...steps.slice(0, geoid + 1),
+        {
+          operation: "vgridshift",
+          params: { grids: "@not_a_loaded_grid.tif,@null", multiplier: "1" },
+        },
+        ...steps.slice(geoid + 1),
+      ],
+    };
+    const f = EngineeringFrame.create(
+      {
+        name: "pinned, optional",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+        pipeline: pinned,
+      },
+      P,
+    );
+    expect(f.operation.pipeline).toBe(formatPipeline(pinned));
+    expect(f.operation.optionalGrids).toEqual(["not_a_loaded_grid.tif"]);
+    const m = measure(
+      designPoint(f, [6_561_666, 1_640_416, 0]),
+      designPoint(f, [6_561_866, 1_640_416, 0]),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const terms = m.accuracy.terms.filter((t) => t.source === "projection");
+    expect(terms).toHaveLength(2);
+    for (const t of terms) {
+      expect(t.note).toMatch(/optional grid.*not_a_loaded_grid\.tif/);
+    }
+    // GEOID18, loaded and required, is not named as missing.
+    expect(terms[0]!.note).not.toMatch(/optional grid[^;]*us_noaa_g2018u0/);
+  });
+});
+
+describe("the Earth: geoid fallbacks and coarser operations", () => {
+  // Jakarta: EPSG:9488+9471, whose grid (INAGEOID2020v1.gtx) PROJ-data lacks
+  // (Task 7).
+  const JAKARTA = {
+    format: "wkid",
+    authority: "EPSG",
+    wkid: 9488,
+    vcsWkid: 9471,
+  } as const;
+  const jakarta = async (fallbackSigma?: number) =>
+    EngineeringFrame.load(
+      {
+        name: "Jakarta",
+        body: EARTH,
+        crs: JAKARTA,
+        geoidFallback: "EGM96",
+        ...(fallbackSigma !== undefined && { fallbackSigma }),
+      },
+      {
+        proj: await loadProj({ base }),
+        grids: await gridSource({ base: gridStore }),
+      },
+    );
+  const ends = [
+    [704_000, 9_313_000, 5],
+    [705_000, 9_313_500, 8],
+  ];
+
+  it("adds a geoidFallback term per end, not known without fallbackSigma, so the statement is not bounded", async () => {
+    const f = await jakarta();
+    expect(f.fallback?.model).toBe("EGM96");
+    // PROJ states an accuracy for the fallback CRS's own operation.
+    expect(f.operation.accuracy).toBeDefined();
+    const m = measure(
+      designPoint(f, ends[0]!),
+      designPoint(f, ends[1]!),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const fallbacks = m.accuracy.terms.filter(
+      (t) => t.source === "geoidFallback",
+    );
+    expect(fallbacks).toHaveLength(2);
+    for (const t of fallbacks) {
+      expect(t.meters).toBeUndefined();
+      expect(t.note).toMatch(/EGM96/);
+      expect(t.note).toMatch(/EPSG:9471/);
+      expect(t.note).toMatch(/INAGEOID2020v1\.gtx/);
+    }
+    expect(m.accuracy.meters).toBeUndefined();
+    // The projection term says its figure is the fallback's operation alone.
+    const projection = m.accuracy.terms.filter(
+      (t) => t.source === "projection",
+    );
+    for (const t of projection) {
+      expect(t.meters).toBe(f.operation.accuracy);
+      expect(t.note).toMatch(/EGM96 fallback/);
+    }
+    // One warning for the frame, not one per end.
+    const codes = m.accuracy.warningCodes ?? [];
+    expect(codes.filter((c) => c === "geoid-fallback")).toHaveLength(1);
+    const warning = m.accuracy.warnings[codes.indexOf("geoid-fallback")]!;
+    expect(warning).toMatch(/Jakarta/);
+    expect(warning).toMatch(/EGM96/);
+    expect(warning).toMatch(/not bounded/);
+  });
+
+  it("states fallbackSigma as the geoidFallback term, so the statement is bounded", async () => {
+    const f = await jakarta(0.5);
+    const m = measure(
+      designPoint(f, ends[0]!),
+      designPoint(f, ends[1]!),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const fallbacks = m.accuracy.terms.filter(
+      (t) => t.source === "geoidFallback",
+    );
+    expect(fallbacks.map((t) => t.meters)).toEqual([0.5, 0.5]);
+    expect(m.accuracy.meters).toBeDefined();
+    expect(m.accuracy.meters!).toBeGreaterThan(0.5);
+    const codes = m.accuracy.warningCodes ?? [];
+    const warning = m.accuracy.warnings[codes.indexOf("geoid-fallback")]!;
+    expect(warning).toMatch(/0\.5 m/);
+  });
+
+  it("warns coarser-operation for a frame with better candidates, naming their grids, once per frame", async () => {
+    const f = EngineeringFrame.create(
+      {
+        name: "CS27",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 26741 },
+      },
+      await loadProj({ base }),
+    );
+    const m = measure(
+      designPoint(f, [1_900_000, 600_000, 0]),
+      designPoint(f, [1_901_000, 600_000, 0]),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const codes = m.accuracy.warningCodes ?? [];
+    expect(codes.filter((c) => c === "coarser-operation")).toHaveLength(1);
+    expect(codes).toHaveLength(m.accuracy.warnings.length);
+    const warning = m.accuracy.warnings[codes.indexOf("coarser-operation")]!;
+    expect(warning).toMatch(/CS27/);
+    expect(warning).toMatch(/us_noaa_cnhpgn\.tif/);
+    expect(warning).toMatch(/us_noaa_conus\.tif/);
+    expect(warning).toMatch(/2\.15 m/);
+    // No e-notation in a warning the page may show.
+    expect(warning).not.toMatch(/\de[-+]?\d/);
+
+    // A frame without better candidates doesn't warn.
+    const london = EngineeringFrame.create(
+      {
+        name: "UTM 10N",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 32610 },
+      },
+      await loadProj({ base }),
+    );
+    expect(london.operation.betterCandidates).toEqual([]);
+    const plain = measure(
+      designPoint(london, [500_000, 4_000_000, 0]),
+      designPoint(london, [500_100, 4_000_000, 0]),
+      instant,
+      frames,
+      { signal: false },
+    );
+    expect(plain.accuracy.warningCodes ?? []).not.toContain(
+      "coarser-operation",
+    );
+  });
+
+  it("warns coarser-operation for the plan-4a California frame (NADCON5 candidates, Task 6)", async () => {
+    const f = await frame();
+    expect(f.operation.betterCandidates.length).toBeGreaterThan(0);
+    const m = measure(
+      designPoint(f, [2000, 1000, 0]),
+      designPoint(f, [3000, 1000, 0]),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const codes = m.accuracy.warningCodes ?? [];
+    const warning = m.accuracy.warnings[codes.indexOf("coarser-operation")]!;
+    expect(warning).toMatch(/CA3/);
+    expect(warning).toMatch(/us_noaa_nadcon5_nad83_harn_nad83_fbn_conus\.tif/);
+    expect(warning).toMatch(/1\.14 m/);
+    // The statement is still bounded: the operation used states its accuracy.
+    expect(m.accuracy.meters).toBeDefined();
+  });
+});
+
+describe("the Moon (plan 4a's carried-forward item)", () => {
+  const south = { format: "wkid", authority: "IAU_2015", wkid: 30135 } as const;
+  const moonFrames = async () => {
+    const P = await loadProj({ base });
+    return {
+      polar: EngineeringFrame.create(
+        { name: "Moon south", body: MOON, crs: south },
+        P,
+      ),
+      site: EngineeringFrame.create(
+        {
+          name: "Moon south site",
+          body: MOON,
+          crs: south,
+          site: { origin: [0, 0, 0], rotation: Math.PI / 6, scale: 1 },
+        },
+        P,
+      ),
+    };
+  };
+
+  it("measures between design points in two Moon frames: no design result, the body-fixed distance, a projection term per end", async () => {
+    const { polar, site } = await moonFrames();
+    const da = [12_000, -8_000, 50];
+    const db = [3_000, 4_000, -20];
+    const a = designPoint(polar, da);
+    const b = designPoint(site, db);
+    const m = measure(a, b, instant, frames);
+    expect(m.design).toBeUndefined();
+    const pa = polar.toBodyFixed(da);
+    const pb = site.toBodyFixed(db);
+    const direct = Math.hypot(
+      pa[0]! - pb[0]!,
+      pa[1]! - pb[1]!,
+      pa[2]! - pb[2]!,
+    );
+    expect(Math.abs(m.distance - direct)).toBeLessThan(1e-9);
+    const projection = m.accuracy.terms.filter(
+      (t) => t.source === "projection",
+    );
+    expect(projection).toHaveLength(2);
+    expect(projection[0]!.note).toMatch(/^End a: .*Moon south"/);
+    expect(projection[1]!.note).toMatch(/^End b: .*Moon south site"/);
+    expect(m.overBody?.body).toBe(MOON);
+
+    const quiet = measure(a, b, instant, frames, { signal: false });
+    expect(quiet.signal).toBeUndefined();
+    expect(quiet.lineOfSight).toBeUndefined();
+  });
+
+  it("gives the design distance in one Moon frame", async () => {
+    const { site } = await moonFrames();
+    const da = [12_000, -8_000, 50];
+    const db = [3_000, 4_000, -20];
+    const m = measure(
+      designPoint(site, da),
+      designPoint(site, db),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const expected = Math.hypot(
+      db[0]! - da[0]!,
+      db[1]! - da[1]!,
+      db[2]! - da[2]!,
+    );
+    expect(Math.abs(m.design!.distance - expected)).toBeLessThan(1e-9);
+    expect(m.design!.siteScale).toBe(1);
   });
 });

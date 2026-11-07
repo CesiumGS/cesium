@@ -356,6 +356,8 @@ const ADDS: Record<WalkTerm["source"], string> = {
   earthOrientation: "Earth orientation",
   relativity: "relativity",
   projection: "the PROJ operation",
+  geoidFallback: "the geoid fallback",
+  pick: "the pick tolerance",
   trajectory: "the trajectory",
   coordinateScale: "the time scale",
   lightTime: "light time",

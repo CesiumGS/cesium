@@ -110,6 +110,11 @@ export interface RecordedOperation {
    * without them, so one missing from a pinned pipeline is not an error.
    */
   readonly optionalGrids: readonly string[];
+  /**
+   * The grids in `optionalGrids` that weren't loaded when the operation was
+   * resolved: PROJ skips their steps, so the operation runs without them.
+   */
+  readonly missingOptionalGrids: readonly string[];
   /** A ballpark transformation: datum differences ignored (accuracy unknown). */
   readonly ballpark: boolean;
   /**
@@ -260,11 +265,13 @@ function record(
 ): RecordedOperation {
   const operation = fixed(proj, pipeline);
   const forward = transformer(proj, operation, proj.PJ_FWD, epoch);
+  const loaded = loadedGrids(proj);
   return {
     pipeline,
     accuracy,
     grids,
     optionalGrids,
+    missingOptionalGrids: optionalGrids.filter((name) => !loaded.has(name)),
     ballpark,
     betterCandidates,
     forward,

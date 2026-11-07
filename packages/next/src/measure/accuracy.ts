@@ -3,7 +3,12 @@ import { DE440_EARTH_MOON_METERS, type Frames } from "../frames/frames.ts";
 import { convertPoint, type FramePoint } from "../frames/local.ts";
 import type { Instant } from "../time/Instant.ts";
 import { Trajectory } from "../trajectory/Trajectory.ts";
-import type { EngineeringFrame } from "../engineering/EngineeringFrame.ts";
+import type {
+  DesignPointObtained,
+  EngineeringFrame,
+  SnapKind,
+} from "../engineering/EngineeringFrame.ts";
+import type { BetterCandidate } from "../engineering/crs.ts";
 import { earthOrientationSigma } from "../frames/orientationSigma.ts";
 import { EARTH_ROTATION_RATE } from "./constants.ts";
 
@@ -21,7 +26,9 @@ export interface AccuracyTerm {
     | "coordinateScale"
     | "relativity"
     | "lightTime"
-    | "projection";
+    | "projection"
+    | "pick"
+    | "geoidFallback";
   /** 1σ in meters, or `undefined` when its size is not known. */
   meters: number | undefined;
   note: string;
@@ -32,13 +39,18 @@ export interface AccuracyTerm {
  * `own-instant-no-signal` and `coincident` concern only the signal (light
  * time, line of sight), `no-footprint` only `overBody`, `alignment-unused`
  * only the design result; `leap-seconds-expired` may affect the instant.
+ * `coarser-operation` (an engineering frame's operation is not PROJ's best,
+ * whose grids aren't loaded) and `geoid-fallback` (a frame reads its heights
+ * in a global geoid model's place) concern a design end's position.
  */
 export type WarningCode =
   | "own-instant-no-signal"
   | "coincident"
   | "no-footprint"
   | "alignment-unused"
-  | "leap-seconds-expired";
+  | "leap-seconds-expired"
+  | "coarser-operation"
+  | "geoid-fallback";
 
 /** What a measurement claims to know, term by term. */
 export interface AccuracyStatement {
@@ -126,21 +138,120 @@ function earthOrientationTerm(
   };
 }
 
+/** Metres for a note, never in e-notation: "2.15 m", "0.0000001 m". */
+const metres = (v: number): string =>
+  `${v.toLocaleString("en-US", { maximumSignificantDigits: 4 })} m`;
+
+/** `"name" (2.15 m; needs a.tif, b.tif)`, for each candidate. */
+const candidatesText = (candidates: readonly BetterCandidate[]): string =>
+  candidates
+    .map(
+      (c) =>
+        `"${c.name}" (${c.accuracy !== undefined ? metres(c.accuracy) : "accuracy not stated"}; needs ${c.missingGrids.join(", ")})`,
+    )
+    .join(", ");
+
 /**
  * The projection term for a design end (R9): PROJ's stated accuracy for the
  * frame's recorded operation. A ballpark operation, or one PROJ gives no
- * accuracy for, is not known (`meters` undefined), never small.
+ * accuracy for, is not known (`meters` undefined), never small. The note
+ * (amended R9) names the optional grids the operation runs without, the
+ * better candidates PROJ skipped for missing grids, and a geoid fallback,
+ * whose datum swap this figure leaves out (the `geoidFallback` term).
  */
 function projectionTerm(end: string, frame: EngineeringFrame): AccuracyTerm {
-  const { operation } = frame;
+  const { operation, fallback } = frame;
   const grids =
     operation.grids.length > 0 ? operation.grids.join(", ") : "no grids";
   const known = !operation.ballpark && operation.accuracy !== undefined;
+  const parts = [
+    `End ${end}: engineering frame "${frame.definition.name}": PROJ operation (${grids})${operation.ballpark ? ", a ballpark operation" : ""}${known ? "" : "; its accuracy is not known"}`,
+  ];
+  if (fallback !== undefined) {
+    parts.push(
+      `this is the ${fallback.model} fallback CRS's operation: its figure leaves out the gap between ${fallback.model} and EPSG:${fallback.replacedVertical} (the geoidFallback term)`,
+    );
+  }
+  const missing = operation.missingOptionalGrids;
+  if (missing.length > 0) {
+    parts.push(
+      `it runs without the optional grid${missing.length === 1 ? "" : "s"} ${missing.join(", ")}, which ${missing.length === 1 ? "isn't" : "aren't"} loaded`,
+    );
+  }
+  if (operation.betterCandidates.length > 0) {
+    parts.push(
+      `PROJ ranks these higher, skipped for missing grids: ${candidatesText(operation.betterCandidates)}`,
+    );
+  }
   return {
     source: "projection",
     meters: known ? operation.accuracy : undefined,
-    note: `End ${end}: engineering frame "${frame.definition.name}": PROJ operation (${grids})${operation.ballpark ? ", a ballpark operation" : ""}${known ? "" : "; its accuracy is not known"}`,
+    note: parts.join("; "),
   };
+}
+
+/**
+ * The geoid-fallback term for a design end of a frame that took one: the
+ * gap between the model and the replaced datum, as `fallbackSigma` states
+ * it, else not known (Review Focus 5): never PROJ's figure for the model.
+ */
+function fallbackTerm(end: string, frame: EngineeringFrame): AccuracyTerm {
+  const fallback = frame.fallback!;
+  const why = `End ${end}: engineering frame "${frame.definition.name}": ${fallback.model} heights stand in for EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")})`;
+  return {
+    source: "geoidFallback",
+    meters: fallback.sigma,
+    note:
+      fallback.sigma !== undefined
+        ? `${why}: the fallbackSigma the app gave`
+        : `${why}: the gap between them is not known (no fallbackSigma)`,
+  };
+}
+
+const SNAPPED_TO: Readonly<Record<SnapKind, string>> = {
+  point: "a point",
+  segment: "a segment",
+  arc: "an arc",
+  surface: "a surface",
+};
+
+/** The pick term for a design end that was picked or snapped. */
+function pickTerm(end: string, obtained: DesignPointObtained): AccuracyTerm {
+  return {
+    source: "pick",
+    meters: obtained.tolerance,
+    note:
+      obtained.how === "pick"
+        ? `End ${end}: the design point was picked: the pick's tolerance`
+        : `End ${end}: the design point was snapped to ${obtained.kind !== undefined ? SNAPPED_TO[obtained.kind] : "geometry"}: the snap's tolerance`,
+  };
+}
+
+/** The warnings a design end's frame carries: a coarser operation, a geoid fallback. */
+function frameWarnings(
+  frame: EngineeringFrame,
+): { code: WarningCode; text: string }[] {
+  const out: { code: WarningCode; text: string }[] = [];
+  const { operation, fallback } = frame;
+  const name = `Engineering frame "${frame.definition.name}"`;
+  const better = operation.betterCandidates;
+  if (better.length > 0) {
+    const used =
+      !operation.ballpark && operation.accuracy !== undefined
+        ? metres(operation.accuracy)
+        : "accuracy not known";
+    out.push({
+      code: "coarser-operation",
+      text: `${name} uses a coarser PROJ operation (${used}): PROJ ranks ${better.length === 1 ? "another" : `${better.length} others`} above it, skipped because ${better.length === 1 ? "its" : "their"} grids aren't loaded: ${candidatesText(better)}. Load those grids for the better one`,
+    });
+  }
+  if (fallback !== undefined) {
+    out.push({
+      code: "geoid-fallback",
+      text: `${name} reads its design heights as ${fallback.model} heights in place of EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")}): ${fallback.sigma !== undefined ? `the gap between them is the ${metres(fallback.sigma)} the app gave (fallbackSigma)` : "the gap between them is not known, so the accuracy is not bounded (no fallbackSigma)"}`,
+    });
+  }
+  return out;
 }
 
 /**
@@ -157,6 +268,8 @@ export function accuracyOf(
     signal: boolean;
     /** The engineering frame of an end given as a design point (R9). */
     design?: { a?: EngineeringFrame; b?: EngineeringFrame };
+    /** How an end given as a design point was picked or snapped (its `pick` term). */
+    obtained?: { a?: DesignPointObtained; b?: DesignPointObtained };
   },
 ): AccuracyStatement {
   const terms: AccuracyTerm[] = [];
@@ -199,6 +312,20 @@ export function accuracyOf(
     const engineering = options.design?.[end as "a" | "b"];
     if (engineering) {
       terms.push(projectionTerm(end, engineering));
+      if (engineering.fallback !== undefined) {
+        terms.push(fallbackTerm(end, engineering));
+      }
+      // One frame's warnings once, though both ends are in it.
+      if (end === "a" || engineering !== options.design?.a) {
+        for (const w of frameWarnings(engineering)) {
+          warnings.push(w.text);
+          warningCodes.push(w.code);
+        }
+      }
+    }
+    const obtained = options.obtained?.[end as "a" | "b"];
+    if (obtained) {
+      terms.push(pickTerm(end, obtained));
     }
     const trajectory = trajectoryOf(point.frame);
     if (trajectory) {

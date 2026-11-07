@@ -353,6 +353,10 @@ export function measure(
       ...(isDesign(pointA) && { a: pointA.engineeringFrame }),
       ...(isDesign(pointB) && { b: pointB.engineeringFrame }),
     },
+    obtained: {
+      ...(isDesign(pointA) && pointA.obtained && { a: pointA.obtained }),
+      ...(isDesign(pointB) && pointB.obtained && { b: pointB.obtained }),
+    },
   });
   accuracy.warnings.push(...warnings);
   accuracy.warningCodes = [...(accuracy.warningCodes ?? []), ...warningCodes];

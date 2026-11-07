@@ -800,19 +800,67 @@ export class EngineeringFrame {
   }
 }
 
+/** What a snap landed on: a vertex, an edge, a curve or a face. */
+export type SnapKind = "point" | "segment" | "arc" | "surface";
+
+/**
+ * How a design point was obtained, when not typed in: picked on the screen
+ * or snapped to geometry, within `tolerance` metres (its `pick` accuracy
+ * term). `kind` is what a snap landed on.
+ */
+export interface DesignPointObtained {
+  readonly how: "pick" | "snap";
+  /** Metres; finite and not negative (an exact snap's is 0). */
+  readonly tolerance: number;
+  readonly kind?: SnapKind;
+}
+
 /** A position in design coordinates, with the frame that gives them meaning. */
 export interface DesignPoint {
   readonly engineeringFrame: EngineeringFrame;
   readonly design: Float64Array;
+  /** How the point was obtained; absent for a point given as numbers. */
+  readonly obtained?: DesignPointObtained;
 }
 
+/**
+ * A design point in `frame`. `obtained` says how it was picked or snapped;
+ * throws for a tolerance that is negative or not finite, or a `kind` on a
+ * pick.
+ */
 export function designPoint(
   frame: EngineeringFrame,
   design: ArrayLike<number>,
+  obtained?: DesignPointObtained,
 ): DesignPoint {
+  if (obtained !== undefined) {
+    const { how, tolerance, kind } = obtained;
+    if (how !== "pick" && how !== "snap") {
+      throw new Error(
+        `designPoint: obtained.how must be "pick" or "snap", got ${String(how)}`,
+      );
+    }
+    if (!(Number.isFinite(tolerance) && tolerance >= 0)) {
+      throw new Error(
+        `designPoint: obtained.tolerance must be a finite number of metres, not negative, got ${tolerance}`,
+      );
+    }
+    if (kind !== undefined && how !== "snap") {
+      throw new Error(
+        `designPoint: obtained.kind ("${kind}") is what a snap landed on; a pick has none`,
+      );
+    }
+  }
   return {
     engineeringFrame: frame,
     design: new Float64Array([design[0]!, design[1]!, design[2] ?? 0]),
+    ...(obtained !== undefined && {
+      obtained: {
+        how: obtained.how,
+        tolerance: obtained.tolerance,
+        ...(obtained.kind !== undefined && { kind: obtained.kind }),
+      },
+    }),
   };
 }
 
