@@ -69,7 +69,8 @@ export function formatDelta(value: number, unit: string): string {
  */
 export function answerTitle(answer: ScenarioAnswer): string | undefined {
   if (answer.value === undefined || answer.unit === undefined) {
-    return undefined;
+    // No figure: the words alone, when they answer it ("Not placed: …").
+    return answer.label !== "" ? answer.label : undefined;
   }
   const figure = formatAnswer(answer.value, answer.unit);
   return answer.label ? `${figure} ${answer.label}` : figure;

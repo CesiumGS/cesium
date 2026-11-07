@@ -221,6 +221,15 @@ describe("the headline (fix 1: questions and answers line up)", () => {
     expect(
       answerTitle({ label: "", headline: "x", accuracy: { note: "" } }),
     ).toBeUndefined();
+    // No figure, but words that answer it (the BIM site outside its CRS's
+    // area of use): the words alone.
+    expect(
+      answerTitle({
+        label: "Not placed: California zone 3 doesn't cover Portland, Oregon",
+        headline: "x",
+        accuracy: { note: "", unbounded: true },
+      }),
+    ).toBe("Not placed: California zone 3 doesn't cover Portland, Oregon");
   });
 });
 

@@ -445,9 +445,13 @@ export function run(context: ExampleContext): ExampleRun {
         playing: viewer.clock.mode === "playing",
         rate: viewer.clock.rate,
         ...(instant && f && { eop: clockView(f, instant).eop }),
-        ...(stage.scene()?.note !== undefined && {
-          sceneNote: stage.scene()!.note!,
-        }),
+        // Not while the scene draws nothing (the BIM site's CRS outside its
+        // area of use): its note is about what is drawn.
+        ...(stage.scene()?.note !== undefined &&
+          (stage.scene()?.engineering === undefined ||
+            overlays.engineering().outside === undefined) && {
+            sceneNote: stage.scene()!.note!,
+          }),
         scrub,
       });
     },

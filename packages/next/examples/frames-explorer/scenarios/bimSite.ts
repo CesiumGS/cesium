@@ -277,7 +277,8 @@ function outside(
       { id: crs.name, label: crs.name, parentId: "ITRF", edge: crsEdge(plain) },
     ],
     answer: {
-      label: "",
+      // No figure, but the callout still answers (re-review minor 1).
+      label: `Not placed: ${crs.name} doesn't cover ${place.where}`,
       aside: `Outside ${crs.code}'s area of use: its scale at ${place.where} is ${fmt(k, 8)}, ${Math.round(ppm).toLocaleString("en-US")} ppm (${(Math.abs(ppm) / 1000).toFixed(1)} m in every km)`,
       headline: `${words}. The model isn't placed in it, and nothing is drawn: used this far outside its area, the projection's scale would be off by ${Math.round(ppm).toLocaleString("en-US")} ppm. Choose UTM zone 10N, which covers both sites, or the site's own zone.`,
       accuracy: {

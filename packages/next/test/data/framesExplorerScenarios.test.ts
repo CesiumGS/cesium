@@ -19,6 +19,7 @@ import {
   type ClientWorker,
 } from "../../examples/frames-explorer/protocol.ts";
 import {
+  answerTitle,
   formatAnswer,
   publishedText,
 } from "../../examples/frames-explorer/panel/answerText.ts";
@@ -754,6 +755,11 @@ describe("bim-site: a BIM model's site grid on the globe (Task 6a)", () => {
     ] as const) {
       const e = await client.scenario(s.id, knobs({ site, crs }), at);
       expect(e.answer.value, `${crs} at ${site}`).toBeUndefined();
+      // The callout still answers, in words (re-review minor 1).
+      expect(e.answer.label).toBe(
+        `Not placed: ${BIM_CRS[crs].name} doesn't cover ${BIM_PLACES[site].where}`,
+      );
+      expect(answerTitle(e.answer)).toBe(e.answer.label);
       expect(e.answer.headline).toMatch(/doesn't cover/);
       expect(e.answer.accuracy.unbounded).toBe(true);
       expect(e.answer.aside).toContain(`${near.toLocaleString("en-US")} ppm`);
