@@ -28,7 +28,7 @@ the second audience: every number is there and honest, but quieter.
   exploration. One sentence of narration per step, with Next, Back and
   "Explore on your own" always visible; leaving keeps the current view,
   placement and measurements. The steps:
-  1. The corridor at the far end, rigid: the road drawn about 31.6 m from
+  1. The corridor at the far end, rigid: the road drawn about 30 m from
      where it is (the self-check measurement and the whiskers).
   2. The morph to reprojected: the gap closes to 0.000 m as the geometry
      moves into the globe's frame.
@@ -57,13 +57,13 @@ the second audience: every number is there and honest, but quieter.
   1. **The design against itself:** a ground marker at station 170,000's
      true position (placed through the design CRS by PROJ, and labelled as
      the design's own point, not a survey), measured to the drawn station.
-     Rigid: about 31.6 m apart. Reprojected: 0.000 m. The morph shrinks it
-     live.
+     Rigid: about 30 m apart (the page reads the figure from `answers.json`).
+     Reprojected: 0.000 m. The morph shrinks it live.
   2. **The design against a real survey mark:** an NGS mark near the far end,
      placed from NGS's published NAD83(2011) position, independent of the
      design's pipeline, measured to the nearest point on the drawn
      centreline. Reprojected matches the distance from NGS's published zone 3
-     coordinates; rigid is off by up to about 31 m. The surveyor's question:
+     coordinates; rigid is off by about 19 m there (HS5109 "GOLD CREEK"). The surveyor's question:
      does the design line up with the control it was surveyed from?
 
   A quieter third pair, two stations 10,000 ft apart, shows the design
