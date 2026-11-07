@@ -24,6 +24,23 @@ the second audience: every number is there and honest, but quieter.
   partner. Reduced motion switches at once.
 - **The other placement stays as a ghost**, a secondary visual for the before
   and after.
+- **A short tour you can leave at any point** (owner, 2026-11-07), then free
+  exploration. One sentence of narration per step, with Next, Back and
+  "Explore on your own" always visible; leaving keeps the current view,
+  placement and measurements. The steps:
+  1. The corridor at the far end, rigid: the road drawn about 31.6 m from
+     where it is (the self-check measurement and the whiskers).
+  2. The morph to reprojected: the gap closes to 0.000 m as the geometry
+     moves into the globe's frame.
+  3. The survey mark: the design against NGS's own control.
+  4. The 10,000 ft pair: the design distance is the same in both
+     placements; only reprojected also draws it in the right place.
+  5. Down the ladder: the single building (rigid is fine), the airport
+     (metres), the pole line (tens of metres).
+  6. Hand-off: the panel, the flight list and the measure tool, yours.
+
+  The tour respects reduced motion: steps cut instead of flying.
+
 - **True scale by default.** The error is never exaggerated unless the viewer
   asks: an "Exaggerate the error" toggle, off by default and labelled with
   its factor while on, because exaggeration "confuses the accuracy story"

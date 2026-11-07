@@ -1079,6 +1079,7 @@ The owner: the portfolio "should show every country done right, and talk about t
   - the ion slots, drawn empty with what the application must supply (CRS, units, site transform, placement mode);
   - "Copy link";
   - two toggles, off by default: the convergence compass at the cursor, and the error ribbon (DESIGN.md, "Visuals in the viewer").
+  - the short tour (owner, 2026-11-07; DESIGN.md "A short tour"): six steps with one sentence of narration each, Next, Back and "Explore on your own" always visible; leaving keeps the view, placement and measurements; reduced motion cuts instead of flying; a deep link can open at a step.
 - [ ] **Step 2: Run** two UX reviews on the most capable model: first against the mockup, then against the real page, in headless Chrome with Metal. Fix every Critical and Important finding.
 - [ ] **Step 3: Browser checks** on your own port:
   - both modes and every site;
