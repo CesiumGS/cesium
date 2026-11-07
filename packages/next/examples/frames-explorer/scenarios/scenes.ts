@@ -663,11 +663,14 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     // Low behind the ship, looking up the sight line through the Golden
     // Gate to Alcatraz (the coordinator's ruling, 2026-11-07): the ship
     // above the time bar, the bridge mid-frame, the island left of the
-    // answer's callout; close enough that the Gate's south shore, where the
-    // line passes lowest, is drawn at level 13 (±9.4 m) and the rest of the
-    // line at 12 or finer, so the checked setup's trace is bounded. A view
-    // across the line framed it better but drew the Gate at level 12 (±19
-    // m, a 1 m margin).
+    // answer's callout; close enough that, on a desktop canvas (checked at
+    // a 1440 × 1000 page, DPR 1) once the tiles load, the Gate's south
+    // shore, where the line passes lowest, is drawn at level 13 (±9.4 m)
+    // and the rest at 12 or finer, so the checked setup's trace reads a
+    // bounded "in sight". A smaller canvas, or tiles still loading, can
+    // draw it coarser: then it reads "can't tell", honestly. A view across
+    // the line framed it better but drew the Gate at level 12 (±19 m, a 1 m
+    // margin).
     camera: "site",
     flight: 3,
     focus: ["ITRF"],

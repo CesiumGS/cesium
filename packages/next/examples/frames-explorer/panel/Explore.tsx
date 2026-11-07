@@ -35,6 +35,7 @@ import {
   type WalkTerm,
 } from "./model.ts";
 import { AccuracyText, ITEM_LABEL, Term, unknownTerms } from "./parts.tsx";
+import { addsNothingText } from "./walkWords.ts";
 
 /** A tab's section: an h2 in StrataKit's subtitle style, and its content. */
 export function Section({
@@ -156,7 +157,6 @@ export function Walk({
   view?.termEdges.forEach((edges, i) =>
     edges.forEach((e) => termsOn.set(e, [...(termsOn.get(e) ?? []), i])),
   );
-  const zero = new Map(view?.zeroAtOrigin.map((z) => [z.edge, z.why]) ?? []);
   let step = 0;
   const edgeRow = (
     child: TreeNode,
@@ -228,15 +228,7 @@ export function Walk({
                       </span>
                     );
                   })
-                : zero.has(child.id)
-                  ? `Adds nothing at the origin: ${zero.get(child.id)}.`
-                  : terms.length > 0 && child.edge.kind === "rotation"
-                    ? // A term that is 0 m here (Earth orientation at the
-                      // geocentre): the same words as the other rotations.
-                      "Adds nothing at the origin: its rotation turns about this point, so the lever arm is 0 m."
-                    : child.edge.accuracy.byDefinition
-                      ? "Adds nothing: exact by definition."
-                      : "Adds nothing at the origin."}
+                : view && addsNothingText(child, view)}
             </p>
           )}
         </div>

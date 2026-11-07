@@ -7,8 +7,9 @@ import {
   composedAccuracy,
   composedView,
 } from "../examples/frames-explorer/composed.ts";
-import { buildTree } from "../examples/frames-explorer/tree.ts";
+import { buildTree, type TreeNode } from "../examples/frames-explorer/tree.ts";
 import { cautionOf } from "../examples/frames-explorer/warnings.ts";
+import { addsNothingText } from "../examples/frames-explorer/panel/walkWords.ts";
 import { Frame } from "../src/frames/Frame.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import { framePoint } from "../src/frames/local.ts";
@@ -194,5 +195,53 @@ describe("a placed engineering-frame node (worker-held, S-I4)", () => {
     expect(v.statement.warnings).toEqual([]);
     expect(v.statement.warningCodes).toEqual([]);
     expect(cautionOf(v.statement)).toBe(false);
+  });
+});
+
+describe("the walk's words for an edge that adds nothing (the follow-up review, I1)", () => {
+  const all = (n: TreeNode): TreeNode[] => [n, ...n.children.flatMap(all)];
+  const node = (id: string) => all(tree).find((n) => n.id === id)!;
+  it("says ITRF's 0 m Earth orientation turns about the reference's origin, never that a point 384,000 km off has a lever of 0 m", () => {
+    for (const id of ["MOON_PA", "MOON_ICRF"]) {
+      const v = composedView(tree, frames, instant, "ITRF", id)!;
+      const itrf = node("ITRF");
+      // ITRF's term is there, and 0 m: its end is the reference's origin.
+      const on = v.termEdges.flatMap((edges, i) =>
+        edges.includes("ITRF") ? [i] : [],
+      );
+      expect(on.length, id).toBeGreaterThan(0);
+      expect(
+        on.every((i) => v.statement.terms[i]!.meters === 0),
+        id,
+      ).toBe(true);
+      const words = addsNothingText(itrf, v);
+      expect(words, id).toBe(
+        "Adds nothing here: its rotation turns about the reference's origin, so the separation from that origin doesn't change.",
+      );
+      expect(words).not.toMatch(/lever arm is 0 m/);
+    }
+  });
+
+  it("says the lever arm is 0 m only where the point is at the rotation's origin (MOON_ME for MOON_PA, at the Moon's centre)", () => {
+    const v = composedView(tree, frames, instant, "ITRF", "MOON_PA")!;
+    expect(addsNothingText(node("MOON_ME"), v)).toBe(
+      "Adds nothing at the origin: its rotation turns about this point: the lever arm is 0 m.",
+    );
+  });
+
+  it("reads unbounded, never 0 m, where the rotation's lever can't be worked out", () => {
+    // A tree whose MOON_ME node has lost its frame: no lever to work out.
+    const copy = (n: TreeNode): TreeNode => ({
+      ...n,
+      ...(n.id === "MOON_ME" && { frame: undefined }),
+      children: n.children.map(copy),
+    });
+    const broken = copy(tree);
+    // MOON_PA's walk crosses MOON_ME; without its frame there is no lever.
+    const v = composedView(broken, frames, instant, "ITRF", "MOON_PA")!;
+    const z = v.zeroAtOrigin.find((x) => x.edge === "MOON_ME");
+    expect(z).toBeUndefined();
+    expect(v.statement.meters).toBeUndefined();
+    expect(v.note).toMatch(/could not be composed at this point/);
   });
 });

@@ -447,9 +447,11 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     ],
     // 91 minutes along its synthetic track (Task 7), in the main ship
     // channel's eastbound lane where the mast's line to Alcatraz Island
-    // Light clears the Golden Gate's south shore (the coordinator's ruling,
-    // 2026-11-07: at 18:20 it grazed it, 16 m over the drawn land), a 25 m
-    // mast, the sea at NAVD88 0 m through
+    // Light clears the Golden Gate's south shore by 24 m (the coordinator's
+    // ruling, 2026-11-07: at 18:20 it grazed it, 16 m over the drawn land):
+    // a bounded "in sight" where the Gate is drawn at level 13, as on a
+    // desktop canvas once the tiles load; "can't tell" where coarser tiles
+    // stand in. A 25 m mast, the sea at NAVD88 0 m through
     // GEOID18. Its checks: the body frame's heading and roll and the test
     // hill's sight line by hand, round trips, California zone 3's round trip,
     // and GEOID18's NAVD88 height against NGS's at GU2195. No AIS: the

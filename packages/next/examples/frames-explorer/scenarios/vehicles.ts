@@ -298,7 +298,8 @@ const FOOT = 0.3048;
  * N, 122°25′20″ W, 214 ft above the water; references.json
  * noaa-coast-pilot-7-alcatraz-light), on NAD 83 taken as WGS 84 (about
  * 1.5 m apart here). The Coast Pilot gives heights above the charts'
- * datum for heights, usually mean high water (chapter 1, paragraph 40);
+ * datum for heights, usually mean high water (chapter 1, paragraph 40;
+ * were it mean higher high water, 0.186 m higher, station 9414290's DHQ);
  * NOAA's published tidal datums at San Francisco (station 9414290,
  * 1983–2001 epoch: noaa-coops-9414290-datums) put mean high water
  * 1.612 m above NAVD88, which carries the light to NAVD88.

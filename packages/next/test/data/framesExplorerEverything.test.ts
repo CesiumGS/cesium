@@ -398,6 +398,25 @@ describe("the capstone: every pair of its five objects (Task 8)", () => {
           ),
           9,
         );
+        // The lunar site's row is the walk's MOON_ME term at the site (the
+        // site itself exact), one figure for one thing (the follow-up
+        // review, minor 4).
+        if (a === "lunar-site" || b === "lunar-site") {
+          const v = composedView(
+            tree,
+            frames,
+            instant,
+            "ITRF",
+            CAPSTONE["lunar-site"].node,
+          )!;
+          const i = v.termEdges.findIndex(
+            (x) => x.length === 1 && x[0] === "MOON_ME",
+          );
+          const row = e.answer.breakdown!.find((t) =>
+            /^MOON_ME's orientation at the lunar site/.test(t.label),
+          )!;
+          expect(row.meters).toBeCloseTo(v.statement.terms[i]!.meters!, 12);
+        }
         // Each end the app defines under ITRF, at its walk's figure.
         for (const w of e.answer.accuracy.walks ?? []) {
           expect(w.meters).toBeCloseTo(

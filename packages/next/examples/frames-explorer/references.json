@@ -2580,7 +2580,7 @@
         "url": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/datums.json?units=metric",
         "retrieved": "2026-11-07"
       },
-      "description": "Carries the lighthouse's height from mean high water to NAVD88 (scenarios/vehicles.ts LIGHTHOUSE.mhwAboveNavd88: MHW − NAVD88 = 1.612 m): an input, not an expected value. NOAA states no accuracy for the offset; the example estimates ±0.05 m (Alcatraz is 4 km from the gauge, and mean high water drifts by centimetres across the central bay), labelled as an estimate.",
+      "description": "Carries the lighthouse's height from mean high water to NAVD88 (scenarios/vehicles.ts LIGHTHOUSE.mhwAboveNavd88: MHW − NAVD88 = 1.612 m): an input, not an expected value. NOAA states no accuracy for the offset; the example estimates ±0.05 m (Alcatraz is 4 km from the gauge, and mean high water drifts by centimetres across the central bay), labelled as an estimate. The Coast Pilot says heights are \"usually\" above mean high water; were this light's above mean higher high water, it would sit 0.186 m higher (the station's DHQ), beyond that estimate.",
       "MHW": "3.416",
       "NAVD88": "1.804",
       "units": "m above STND"

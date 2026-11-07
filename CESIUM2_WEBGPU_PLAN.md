@@ -6856,9 +6856,12 @@ asset 2: no access token`, on every example.
   `accuracyOf`: walks over built-in frames only, and each walk's part past
   its nearest built-in frame. Moving those needs a stated rotation axis in
   `FrameAccuracy` (UT1's lever is the distance from the spin axis) and
-  frames that carry the terms on no edge. Until then `accuracyOf` gives a
-  point on the Moon no lever for MOON_ME's unstated orientation: the lunar
-  site walks to ITRF at ±3 cm though MOON_ME states no accuracy.)
+  frames that carry the terms on no edge. `accuracyOf` still gives a point
+  on the Moon no lever for MOON_ME's orientation, and the library's MOON_ME
+  still states none. The explorer covers it on its own side: it estimates
+  MOON_ME at 3 × 10⁻⁷ rad, labelled "estimated, illustrative", and its walk
+  adds that times a point's distance from the Moon's centre, so the lunar
+  site walks to ITRF at ±0.52 m, not the ±3 cm `accuracyOf` alone gives.)
 
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`
@@ -7221,10 +7224,12 @@ are left out.
 - **Plan 5 / §13.16: a near-field bounded terrain trace.** Trace 20–50 km
   round each end with tiles at a level chosen for the error, whatever the
   camera is doing. Today a sight line takes the error of the tiles the
-  camera happened to load. That is why the ship's lighthouse reads "can't
-  tell" at the default view (the buoy it replaced always did),
-  why the drone often reads "can't tell yet", and why an Earth end in the
-  capstone says "not judged from this far out".
+  camera happened to load. That is why the ship's lighthouse reads "in
+  sight" at the checked setup only where the Gate is drawn at level 13 (a
+  desktop canvas, once the tiles load; the scene's camera was moved close
+  for it) and "can't tell" where coarser tiles stand in (the buoy it
+  replaced always did), why the drone often reads "can't tell yet", and why
+  an Earth end in the capstone says "not judged from this far out".
 - **Plan 5 / §13.16: a per-tile terrain error over open water,** or a
   quantized-mesh water mask. The level-wide error overstates the error over
   flat sea many times over.
@@ -7242,9 +7247,12 @@ are left out.
   that frame on, is still `accuracyOf` (through `measure`). Moving it needs
   a stated rotation axis on each frame, a home for terms that sit on no edge
   (light time, relativity), and a trajectory's covariance as its frame's
-  accuracy (Orion's), and it will move catalog numbers. It would also give
-  MOON_ME's unstated orientation its lever at a point on the Moon, which
-  `accuracyOf` leaves out today.
+  accuracy (Orion's), and it will move catalog numbers. MOON_ME's
+  orientation now has its lever at a point on the Moon in the explorer's
+  walk, from an estimate that lives in the explorer (3 × 10⁻⁷ rad,
+  `scenarios/stated.ts`), not in the library: the library's MOON_ME still
+  states none, and `accuracyOf` still has no lever term for it. That, and a
+  published figure to replace the estimate, remain.
 - **Plan 5: the API review of this plan's library additions.**
   - Whether `LEVEL_ZERO_ERROR` stays exported (it was exported for the test
     hill).

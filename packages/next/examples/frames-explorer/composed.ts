@@ -6,8 +6,11 @@
 //
 // `accuracyOf` is the authority (deferred note from Task 2: the Moon's
 // relativistic term sits on no edge, and only `accuracyOf` includes it). It
-// states the accuracy of the separation between the two points, so a
-// rotation on the path adds nothing to it: the walk says so.
+// states the accuracy of the separation between the two points. A rotation
+// on the path that it has no term for adds nothing only where it turns
+// about the point itself; off that frame's origin the walk adds the
+// rotation's stated error times the point's distance from it (the owner's
+// follow-up, 2026-11-07: MOON_ME at the lunar site), and says so.
 import { convertPoint, framePoint } from "../../src/frames/local.ts";
 import {
   pointAccuracy,
@@ -31,10 +34,11 @@ import {
 } from "./panel/model.ts";
 import { length } from "./panel/format.ts";
 
-/** Within this of a frame's origin (m), its rotation moves a point by nothing worth stating. */
-const LEVER_AT_ORIGIN = 1e-3;
 import type { TreeNode } from "./tree.ts";
 import { aboutSeparation } from "./warnings.ts";
+
+/** Within this of a frame's origin (m), its rotation moves a point by nothing worth stating. */
+const LEVER_AT_ORIGIN = 1e-3;
 
 /** A node the main thread can't hand to `accuracyOf` itself: an engineering frame known only from the worker. */
 export interface PlacedNode {
@@ -269,8 +273,13 @@ function separationView(
   // frame's origin (the owner's follow-up, 2026-11-07: the lunar site,
   // 1,737 km from MOON_ME's): its stated rotation error times that lever
   // joins the walk, on its edge; a rotation that states none, with a lever,
-  // leaves the walk unbounded, named. Only at its own origin does it add
-  // nothing.
+  // leaves the walk unbounded, named, and so does a lever that can't be
+  // worked out. Only at its own origin does it add nothing. The lever is the
+  // point's distance from that origin: exact for a rotation on the point's
+  // side of the route; for one on the reference's side it overstates (the
+  // separation moves by at most the error times the smaller of the two
+  // ends' distances), never understates. Today only MOON_ME, on the point's
+  // side, meets the rule: ITRF always carries accuracyOf's own term.
   const leverAt = (id: string): number | undefined => {
     const f = byId.get(id)?.frame;
     if (f === undefined) {
@@ -284,14 +293,24 @@ function separationView(
     }
   };
   const turned: { edge: string; term: StatedTerm }[] = [];
-  let unboundedBy: { edge: string; lever: number } | undefined;
+  let unboundedBy: { edge: string; lever?: number } | undefined;
   const zeroAtOrigin: { edge: string; why: string }[] = [];
   for (const e of edges.filter((x) => !used.has(x))) {
     const node = byId.get(e)!;
     const a = node.edge.accuracy;
     const lever =
       node.edge.kind === "rotation" && !a.byDefinition ? leverAt(e) : 0;
-    if (lever === undefined || lever <= LEVER_AT_ORIGIN) {
+    if (lever === undefined) {
+      unboundedBy ??= { edge: e };
+      turned.push({
+        edge: e,
+        term: {
+          source: "stated",
+          meters: undefined,
+          note: `its rotation's lever at this point could not be worked out; ${a.note}`,
+        },
+      });
+    } else if (lever <= LEVER_AT_ORIGIN) {
       zeroAtOrigin.push({ edge: e, why: whyNothing(node) });
     } else if (a.radians !== undefined) {
       turned.push({
@@ -323,7 +342,9 @@ function separationView(
     (unknown !== undefined
       ? `Not bounded: ${unknown.note}.`
       : unboundedBy !== undefined
-        ? `Not bounded: ${unboundedBy.edge} states no accuracy for its rotation, which moves this point (${length(unboundedBy.lever)} from its origin).`
+        ? unboundedBy.lever === undefined
+          ? `Not bounded: ${unboundedBy.edge}'s rotation could not be composed at this point (its lever could not be worked out).`
+          : `Not bounded: ${unboundedBy.edge} states no accuracy for its rotation, which moves this point (${length(unboundedBy.lever)} from its origin).`
         : turned.length > 0
           ? `The accuracy of the separation of the two origins, with ${turned.map((x) => x.edge).join(" and ")}'s stated rotation error at this point's distance from its origin.`
           : "The accuracy of the separation of the two origins: what a distance between them can claim.");

@@ -33,7 +33,7 @@ export const DSN_STATION_METERS = 0.1;
 export const DSN_STATION_ACCURACY: EdgeAccuracy = {
   meters: DSN_STATION_METERS,
   radians: DSN_STATION_METERS / EARTH_RADIUS,
-  note: "published: DSN 810-005, module 301 (Rev. P), Table 7: 24 to 35 mm (1σ) per component at the VLBI epoch, grown to as much as 0.1 m (1σ) since, its note says; the axes tilt with the place, 0.1 m over the Earth's radius",
+  note: "published: DSN 810-005, module 301 (Rev. P), Table 7: 24 to 35 mm (1σ) per component at the VLBI epoch, grown to as much as 0.1 m (1σ) since, its note says; taken as the position's 1σ (the note doesn't say per component, which would be about 0.17 m); the axes tilt with the place, 0.1 m over the Earth's radius",
   short: "published: DSN 810-005 301, Table 7 (0.1 m, 1σ)",
 };
 
@@ -109,15 +109,15 @@ export const MOON_ME_RADIANS = 3e-7;
  * MOON_ME's orientation (DE440's integrated libration), which the library
  * leaves "not stated": DE440 publishes no orientation uncertainty (Park et
  * al. 2021, AJ 161:105, §2.4). Estimated, illustrative, from the two
- * figures that bound its size: DE440's mean-Earth frame differs from
- * DE421's by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF
- * moon_de440_250416.tf), and unmodelled tidal libration is a few
+ * figures that bound its size: DE440's librations in DE421's mean-Earth
+ * convention differ from DE421's own by up to 3.07 × 10⁻⁷ rad over
+ * 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ), and unmodelled tidal libration is a few
  * milliarcseconds (the DE421 and DE430 memos; 1 mas is about 8 mm at the
  * surface). 3 × 10⁻⁷ rad is about 0.5 m at the surface. The explorer's
  * tree and walk state it; the library's MOON_ME still states none.
  */
 export const MOON_ME_ACCURACY: EdgeAccuracy = {
   radians: MOON_ME_RADIANS,
-  note: "estimated, illustrative: DE440 publishes no orientation uncertainty for its libration (Park et al. 2021, AJ 161:105, §2.4); its mean-Earth frame differs from DE421's by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf) and unmodelled tidal libration is a few mas (about 8 mm per mas at the surface), so 3 × 10⁻⁷ rad, about 0.5 m at the surface",
+  note: "estimated, illustrative: DE440 publishes no orientation uncertainty for its libration (Park et al. 2021, AJ 161:105, §2.4); its librations in DE421's mean-Earth convention differ from DE421's own by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ, so conservative) and unmodelled tidal libration is a few mas (about 8 mm per mas at the surface), so 3 × 10⁻⁷ rad, about 0.5 m at the surface",
   short: "estimated, illustrative: 3 × 10⁻⁷ rad (about 0.5 m at the surface)",
 };

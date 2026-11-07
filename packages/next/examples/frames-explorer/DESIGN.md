@@ -122,8 +122,12 @@ An expert who finds one thing stated two ways stops trusting the rest. So:
   stated accuracy unless a source truly states none. A rotation the
   `accuracyOf` statement has no term for still moves a point off its
   frame's origin: the walk adds its stated rotation error times that lever
-  on its edge, or reads unbounded, naming it, where it states none (it
-  says "adds nothing" only at the frame's own origin). Orion's frame is the library's trajectory: its OEM
+  on its edge, or reads unbounded, naming it, where it states none or its
+  lever can't be worked out. It says "the lever arm is 0 m" only where the
+  point is at that frame's origin; where `accuracyOf`'s own rotation term
+  is 0 m (the Earth's orientation against ITRF, for a point on the Moon),
+  it says the rotation turns about the reference's origin, so the
+  separation from it doesn't change (`panel/walkWords.ts`). Orion's frame is the library's trajectory: its OEM
   covariance is on its edge and `accuracyOf` composes it.
 
 ## On the globe (C1)
@@ -408,14 +412,20 @@ within the terrain's error, or "Lighthouse comes into view" only when the
 span traced clear. A moment may set knobs instead of the time (the drone's
 "Over the building"). The checked setup is 18:31 UTC, in the last minutes
 of the track (the coordinator's ruling, 2026-11-07), and the scene's camera
-sits low behind the ship looking up the line through the Gate, so the
-Gate's south shore, where the line passes lowest, is drawn at level 13
-(±9.4 m) and the rest at 12 or finer: the default view reads "lighthouse in
-sight", the line 24 m over the drawn land 5.1 km short of the light, beyond
-the terrain's ±9.4 m (browser check). At 18:20, or from further out (the
-old 17 km view, level-11 tiles at ±38 m), the same line read "can't tell",
-16 m over the drawn land; a view across the line framed it better but drew
-the Gate at level 12 (±19 m, a 1 m margin). The Coast Pilot leads ships in
+sits low behind the ship looking up the line through the Gate. On a
+desktop page (checked at 1440 × 1000, DPR 1: a canvas about 730 × 780 px),
+once the tiles have loaded, the Gate's south shore, where the line passes
+lowest, is drawn at level 13 (±9.4 m) and the rest at 12 or finer, and the
+default view reads "lighthouse in sight": the line 24 m over the drawn
+land 5.1 km short of the light, beyond the terrain's ±9.4 m (browser
+check; a data test holds that verdict given that land at level 13, and
+"can't tell" at level 11). That depends on the canvas and on tile loading:
+on a smaller canvas, at another DPR, or before the finer tiles arrive, the
+Gate can be drawn coarser, and the same line reads "can't tell" (at level
+11, ±38 m) or "in sight" by a thinner margin. At 18:20, or from the old
+17 km view, it read "can't tell", 16 m over the drawn land; a view across
+the line framed it better but drew the Gate at level 12 (±19 m, a 1 m
+margin). The Coast Pilot leads ships in
 on 070° toward this light. Near the ship, over the sea, a 25 m mast clears a
 level-12 sea's ±19 m by about 6 m (a data test). The verdict states the
 deciding clearance (`terrainLineOfSight`'s `margin`: away from each end's

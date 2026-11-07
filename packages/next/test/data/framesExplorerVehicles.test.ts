@@ -57,7 +57,10 @@ import {
   seaState,
   shipSpan,
 } from "../../examples/frames-explorer/scenarios/vehicles.ts";
-import { testHill } from "../../examples/frames-explorer/scenarios/testHill.ts";
+import {
+  heightOverMeridian,
+  testHill,
+} from "../../examples/frames-explorer/scenarios/testHill.ts";
 import { terrainSightText } from "../../examples/frames-explorer/sightLines.ts";
 import { terrainLineOfSight } from "../../src/measure/terrainLineOfSight.ts";
 import { LEVEL_ZERO_ERROR } from "../../src/globe/TerrainSource.ts";
@@ -752,6 +755,73 @@ describe("the ship's lighthouse (the owner's follow-up, 2026-11-07)", () => {
     );
     // One level coarser, the same clearance sits inside the error: never
     // in sight.
+    const coarse = traced(11);
+    expect(coarse.r.clear).toBeUndefined();
+    expect(coarse.answer.label).toMatch(/· lighthouse: can't tell$/);
+  }, 120_000);
+});
+
+describe("the ship's bounded verdict at the checked setup, given level-13 tiles at the Golden Gate (the follow-up review, I3)", () => {
+  it("in sight with the browser's deciding clearance, 24 m over the drawn land 5.1 km short of the light, beyond level 13's ±9.4 m; can't tell at level 11's ±38 m", async () => {
+    // The browser (a 1440 × 1000 desktop page, DPR 1, the default view)
+    // drew the Gate's south shore 24 m under the line, 5.1 km short of the
+    // light, at level 13. A ridge standing there, 24 m under the line, is
+    // that land as drawn; the rest is the level sea at GEOID18's zero.
+    const s = spec("ship");
+    const e = await client.scenario(
+      "ship",
+      s.checked.knobs,
+      checkedTdb("ship"),
+    );
+    const sight = e.answer.sight!;
+    const line = e.sightLines![0]!;
+    const length = dist(line.from, line.to);
+    const f = 1 - 5100 / length;
+    const p = line.from.map((x, i) => x + f * (line.to[i]! - x));
+    const g = Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {
+      longitude: 0,
+      latitude: 0,
+      height: 0,
+    })!;
+    const deg = 180 / Math.PI;
+    const ridge = (height: number, level: number) =>
+      testHill({
+        longitude: g.longitude * deg,
+        latitude: g.latitude * deg,
+        height,
+        sea: sight.sea,
+        span: 40_000,
+        level,
+      });
+    const crest = ridge(1, 13).crest.longitude;
+    const over = heightOverMeridian(line.from, line.to, crest)! - sight.sea;
+    const traced = (level: number) => {
+      const hill = ridge(over - 24, level);
+      const r = terrainLineOfSight(line.from, line.to, hill.target, {
+        groundRadius: line.groundRadius!,
+      });
+      const v = terrainSightText(
+        line.id,
+        line.label,
+        r,
+        undefined,
+        line.subject,
+      );
+      return {
+        r,
+        answer: withTerrainAnswer(e.answer, [
+          { ...v, traced: sight.key, from: line.from, to: line.to },
+        ]),
+      };
+    };
+    const fine = traced(13);
+    expect(fine.r.clear).toBe(true);
+    expect(fine.r.margin!.clearance).toBeCloseTo(24, 0);
+    expect(fine.r.margin!.error).toBeCloseTo(LEVEL_ZERO_ERROR / 2 ** 13, 9);
+    expect(fine.answer.label).toMatch(/· lighthouse in sight$/);
+    expect(fine.answer.aside).toMatch(
+      /^Alcatraz Light in sight: the line passes 24 m over the drawn land 5\.1 km short of Alcatraz Light at its lowest, beyond the terrain's ±9\.4 m/,
+    );
     const coarse = traced(11);
     expect(coarse.r.clear).toBeUndefined();
     expect(coarse.answer.label).toMatch(/· lighthouse: can't tell$/);
