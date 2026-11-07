@@ -50,7 +50,7 @@ One line each: what was chosen, then what undoing it costs.
 1. **The §8.1 example is a new gallery example, `examples/design-globe/`, not an extension of the frames explorer.** The explorer is a proof page for frames and projections. §8.1 is a product-like page for design users, with tilesets, a measure tool with snapping and a check panel, none of which the explorer has. The explorer is also being edited by other agents tonight. The explorer gains only two catalog groups (Task 21). *Undo:* moving the example's modules into an explorer scenario, about a day; the library is unaffected.
 2. **The catalog pin is PROJ-data 1.25.0's `files.geojson`,** from the immutable tag URL. It is 331,044 bytes, SHA-256 `46f26c830faa164af9ef9ef51a7325a9d3800eb12ad4b1661c1d3143af7becc3`, byte-identical to cdn.proj.org's copy on 2026-11-06. Its `copyright_and_licenses.csv` (39,115 bytes, `1222fbfae2ad0033876e744d29ee40287ae6fd1f48a943fdde3c2a556b1d2379`) is pinned with it for credits. *Undo:* two constants.
 3. **PROJ's own files are pinned in `src/engineering/projPins.ts`,** shared by setup and the loader. The browser hashes the glue, the WebAssembly and `proj.db` before using them. Node re-hashes `proj.db` against the pin, and the native `.node` against setup's manifest entry, because its extracted hash differs per platform. *Undo:* one module.
-4. **The glue is imported from a Blob URL of its verified bytes,** so what runs is what was hashed. If the glue needs its own URL, the task records that and imports the verified URL instead. *Undo:* one line.
+4. **The glue is imported from a Blob URL of its verified bytes,** so what runs is what was hashed. The importer is injectable, so the unit tests, which run in Node where `blob:` imports fail, inject their own. If the glue needs its own URL, the task records that and imports the verified URL instead. *Undo:* one line.
 5. **Both platforms see only the grids loaded explicitly.** In Node, PROJ_DATA points at a per-process staging directory holding `proj.db` and links to the verified grids, and a Node process supports one PROJ base. Node keeps a legacy default (every verified grid already in the base) until Task 21 moves the explorer's tests to explicit lists. *Undo:* loader-only.
 6. **Grids live in a new store directory, `grids/`, not PROJ's `proj/`.** So nothing setup prefetches can change the explorer's Node results before Task 21. *Undo:* a path.
 7. **The default grid base URL is `/proj-grids/`,** a dev-server endpoint that fetches on a miss and validates every name against the catalog. A `GridSource` takes any base with cdn.proj.org's layout, and the catalog hash can be overridden for a newer catalog. *Undo:* a configuration default.
@@ -72,7 +72,7 @@ One line each: what was chosen, then what undoing it costs.
     - Amsterdam: 28992+5709, RDNAPTRANS;
     - Nairobi: 32737+5773, EGM96;
     - Phoenix: 2223+8228, international feet with NAVD88 in feet;
-    - São Paulo: SIRGAS 2000 / UTM 23S with Imbituba heights, whose geoid grid isn't on the CDN, so it uses the EGM96 fallback;
+    - Jakarta: 9488+9471 (SRGI2013 / UTM zone 48S with INAGeoid2020 v1 heights), whose grid `INAGEOID2020v1.gtx` isn't in PROJ-data, so it uses the EGM96 fallback. It replaced São Paulo: `proj.db` 9.7.1 has no Brazilian vertical CRS;
     - the corridor's site-grid building, which is the local grid.
 
     No public ion asset is included: ion exposes no CRS for an asset (the explorer's R18 research), so each needs its frame supplied, and they go in the empty ion slots. *Undo:* a data list.
@@ -109,10 +109,10 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - `npx tsc --noEmit -p .`;
   - `npx eslint` and `npx prettier --check` on the changed files.
 
-  Run `npm run test:data` in full only when a task changes `src/frames`, `src/engineering`, the explorer's `stress/`, its references or `fingerprints.json`. The full gates (`npm test`, `npm run test:data`, eslint on the tree, Snyk) run once, in Task 22.
+  Run `npm run test:data` in full only when a task changes `src/frames`, `src/engineering`, the explorer's `stress/`, its references or `fingerprints.json`. The full gates (`npm test`, `npm run test:data`, eslint on the tree, Snyk) run once, in Task 22. The exception: Tasks 11 and 16, which change the core `Tileset3D`, `Tile`, `View` and `World`, also run `npm test` once.
 - **Security:**
   - **No ion token** in the repo, workers, URLs, logs, storage or the DOM.
-  - **Endpoint hardening:** a grid endpoint serves or fetches only a name that is exactly a key of the pinned catalog. There is no path traversal, no fetching of arbitrary URLs, no redirects followed, a size cap from the catalog, and generic error bodies (details go only to the server log).
+  - **Endpoint hardening:** a grid endpoint serves or fetches only a name that is exactly a key of the pinned catalog. There is no path traversal, no fetching of arbitrary URLs, no redirects followed, a size cap from the catalog, and generic error bodies (details go only to the server log). The `/frames-data` mount excludes `grids/` and `*.partial`, so `/proj-grids/` is the only route to a grid (Task 4).
   - Untrusted strings (tileset JSON, catalog fields, WKT) are rendered as text and validated before use.
 - **Structured PROJ inputs.** Build CRS references and pipelines from structured data (`CrsRef`, `Pipeline`), never by concatenating strings. Strings are made in one place each: `crsDefinition` and `formatPipeline`.
 - **Data comes only through setup and lives outside the repo.** The store (`~/.cesium-bench/frames`, or `FRAMES_DATA_DIR`) gains:
@@ -139,6 +139,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   | `proj/proj_capi.mjs` | `26cc8f8a83edc2c859f48829bb8dd0e9303e891cab801251974c92763df9031a` |
   | `proj/proj_capi.wasm` | `6efdbdaf7f1ee6bc49b92ea784e45d04e53a1f3f6299179f9397a3cac7539914` |
   | `proj/proj.db` | `b192cb2fd7eb0fab76aa9495743288f4f2da4534f586ab5ccb9d869c644e8272` |
+  | `proj/us_noaa_g2018u0.tif` (16,742,155 bytes; equal to `frameData.mjs`'s `PROJ_SHA256`) | `fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2` |
   | `https://raw.githubusercontent.com/OSGeo/PROJ-data/1.25.0/files.geojson` (331,044 bytes; 458 entries) | `46f26c830faa164af9ef9ef51a7325a9d3800eb12ad4b1661c1d3143af7becc3` |
   | `https://raw.githubusercontent.com/OSGeo/PROJ-data/1.25.0/copyright_and_licenses.csv` (39,115 bytes) | `1222fbfae2ad0033876e744d29ee40287ae6fd1f48a943fdde3c2a556b1d2379` |
 
@@ -157,7 +158,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 
 1. **Hostile grid names at the dev endpoint.** `../proj.db`, `%2e%2e%2fmanifest.json`, `proj.db`, `x.tif.partial`, `https://example.com/a.tif`, a name not in the catalog, and a catalog entry marked removed each get a 404. Nothing is fetched upstream and nothing is written. Test: Task 4.
 2. **Bytes that don't match the catalog** (a truncated download, a corrupted cache, a mirror serving another catalog's version). They are refused by the dev server, by `loadGrids` in the browser and Node, and by setup. Nothing is stored or loaded, and the error names the file and both hashes. Tests: Tasks 1, 2, 3 and 4.
-3. **A tileset declaration that is malformed or wrong.** An unknown mode, a missing `crs`, NaN in a site transform, a WKT over 64 KiB, or a rigid anchor that disagrees with the root transform gives no design coordinates, and an error or warning names the field. The engine never guesses a placement. Tests: Task 11.
+3. **A tileset declaration that is malformed or wrong.** An unknown mode, a missing `crs`, NaN in a site transform, a WKT2 over 65,536 characters, or a rigid anchor that disagrees with the root transform gives no design coordinates, and an error or warning names the field. The engine never guesses a placement. Tests: Task 11.
 4. **Picks and snaps that have no design answer:** the sky, a tileset without a placement, a draw not in the given tilesets, or a point beyond the alignment's ends. These return true values only, with no design coordinates and no station: nothing is extrapolated. Tests: Tasks 15, 16 and 17.
 5. **Depth-positive vertical CRSs and geoid fallbacks.** A LAT depth of +10 lies 10 m *below* depth 0, a rigid placement's up axis points down for a depth CRS, and a fallback's accuracy is undefined unless `fallbackSigma` is given, never small. Tests: Tasks 7 and 8.
 
@@ -189,7 +190,9 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - `packages/next/src/engineering/gridCatalog.ts`
   - `packages/next/src/io/sha256.ts`
   - `packages/next/scripts/gridSets.mjs`
+  - `packages/next/scripts/verifiedDownload.mjs`
   - `packages/next/test/gridCatalog.test.ts`
+  - `packages/next/test/verifiedDownload.test.ts`
   - `packages/next/test/data/gridStore.test.ts`
 - Modify:
   - `packages/next/scripts/frameData.mjs`
@@ -204,13 +207,13 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - **Produces** (`sha256.ts`): `sha256Hex(bytes: ArrayBuffer | Uint8Array): Promise<string>`, with `crypto.subtle` in both Node and the browser.
 - **Produces** (`gridCatalog.ts`):
   - `interface GridEntry`:
-    - `name`, `sha256`, `bytes`;
+    - `name`, `url`, `sha256`, `bytes`;
     - `type?: string` (the catalog's `type`, such as `VERTICAL_OFFSET_GEOGRAPHIC_TO_VERTICAL`);
     - `sourceCrs?`, `targetCrs?`, `area?: AreaOfInterest` (from `full_bbox`);
     - `agency: string` (`source`), `country?`, `license?` (from the CSV), `description?`;
     - `removed: boolean` (`version_removed` set).
   - `class GridCatalog`:
-    - `static parse(geojson: string, licensesCsv?: string): GridCatalog`;
+    - `static parse(geojson: string, licensesCsv?: string, version: string = PROJ_DATA_CATALOG.version): GridCatalog` (the catalog carries no version of its own);
     - `get(name: string): GridEntry | undefined`;
     - `readonly entries: ReadonlyMap<string, GridEntry>`;
     - `readonly version: string`;
@@ -219,8 +222,14 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - `portfolio` holds the grids of call 19: `uk_os_OSTN15_NTv2_OSGBtoETRS.tif`, `uk_os_OSGM15_GB.tif`, `au_ga_AUSGeoid2020_20180201.tif`, `jp_gsi_gsigeo2011.tif`, `nl_nsgi_rdtrans2018.tif`, `nl_nsgi_nlgeo2018.tif`, `us_nga_egm96_15.tif` and `us_noaa_g2018u0.tif`.
   - `tests` holds `us_noaa_conus.tif`, the NADCON5 NAD27→NAD83 CONUS grids, and the LAT grid that Task 7 settles on.
   - Tasks 6, 7, 9 and 12 correct these names to what `listOperations` reports, and say so in their commits.
+- **Produces** (`verifiedDownload.mjs`): `verifiedDownload(url: string, path: string, expected: { sha256: string; bytes: number }, options?: { fetch?: typeof fetch; timeoutMs?: number }): Promise<void>`. It is the one verified fetcher; setup and Task 4's cache both use it:
+  - it fetches with `redirect: "error"` and `AbortSignal.timeout` (default 120,000 ms);
+  - it aborts past `expected.bytes`;
+  - it writes to `<path>.partial`, checks the length and the hash, then renames;
+  - on a mismatch it deletes the partial file and throws, naming the file and both hashes.
 - **Produces** (`frameData.mjs`): `ensureGrids(dir: string, sets: readonly string[], log): Promise<ManifestEntry[]>`.
   - It writes to `<store>/grids/`, with manifest roles `gridCatalog` and `grid`.
+  - `ensureFrameData({ span, grids })` calls it with the `--grids` sets and adds its entries to the manifest's `files`, since `ensureFrameData` rewrites `manifest.json`. `ManifestEntry` is declared in `frameData.d.mts`.
   - It links (or copies) `files.geojson` and `copyright_and_licenses.csv` into `proj/` as well, so a PROJ base holds a catalog (Task 3 needs it).
   - It also verifies each extracted PROJ file against `PROJ_FILE_SHA256`.
 - `setup.mjs` takes `--grids a,b`, defaulting to `portfolio,tests`. `all` prints the total size first.
@@ -231,14 +240,20 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - an entry with `version_removed` has `removed: true`;
   - a feature with no `sha256sum` throws, naming it;
   - `sha256Hex` of "abc" is `ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad`.
+
+  And `test/verifiedDownload.test.ts` (a temporary directory and a stub `fetch`):
+  - good bytes are stored, with no `.partial` left;
+  - a wrong hash, a short body and a body past the byte count each leave no file and throw, naming both hashes or the size (Review Focus 2);
+  - a redirect is not followed.
 - [ ] **Step 2: Write the failing data test** (`test/data/gridStore.test.ts`):
   - the store's `grids/files.geojson` hashes to the pin and has 458 entries;
+  - `manifest.json` lists the catalog (role `gridCatalog`) and each stored grid (role `grid`);
   - `us_nga_egm96_15.tif`'s entry is 2,710,815 bytes;
   - every grid of the `portfolio` and `tests` sets is present, with the catalog's size and hash.
-- [ ] **Step 3: Run** `npx vitest run test/gridCatalog.test.ts` and `FRAMES_DATA=1 npx vitest run test/data/gridStore.test.ts`, and confirm both fail.
+- [ ] **Step 3: Run** `npx vitest run test/gridCatalog.test.ts test/verifiedDownload.test.ts` and `FRAMES_DATA=1 npx vitest run test/data/gridStore.test.ts`, and confirm both fail.
 - [ ] **Step 4: Implement.** Setup's rules:
-  - It fetches the catalog and the CSV from the pinned tag URLs, checks length and hash, and only then stores them (through `.partial` and a rename).
-  - It fetches each grid from `https://cdn.proj.org/<name>` and verifies it the same way.
+  - It fetches the catalog and the CSV from the pinned tag URLs with `verifiedDownload`.
+  - It fetches each grid from `https://cdn.proj.org/<name>` with `verifiedDownload`, against the catalog's size and hash.
   - `us_noaa_g2018u0.tif` is linked, or copied, from `proj/`.
   - A mismatch deletes the partial file and throws, naming the file and both hashes (Review Focus 2).
 - [ ] **Step 5: Run** `npm run setup -- --skip-build`, then both tests, and confirm they pass.
@@ -251,10 +266,11 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - Modify:
   - `packages/next/src/engineering/proj.ts`
   - `packages/next/src/engineering/projNode.ts`
+  - `packages/next/src/engineering/projApi.ts` (`proj_info`, which the native binding has)
   - `packages/next/scripts/frameFixtures.py`
   - `packages/next/test/fixtures/frames/proj.json` (adds `engineProjVersion`, values unchanged)
 - Test:
-  - `packages/next/test/projLoad.test.ts` (extend)
+  - `packages/next/test/projLoad.test.ts` (extend; its existing cases are updated to pass their stubs' hashes)
   - `packages/next/test/data/proj.test.ts` (extend)
 
 **Interfaces:**
@@ -262,8 +278,9 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - Consumes: Task 1's `PROJ_FILE_SHA256` and `sha256Hex`.
 - **Produces:**
   - `loadProj` refuses, with `Error("PROJ: <file> SHA-256 mismatch (expected …, got …)")`, any of `proj_capi.mjs`, `proj_capi.wasm` or `proj.db` that doesn't match the pin. A refused load isn't memoized.
-  - The browser imports the glue from a Blob URL of its verified bytes (call 4).
-  - Node verifies `proj.db` against the pin, and `proj_capi.node` against the `proj/proj_capi.node` entry of `<store>/manifest.json`. A missing manifest throws "run `npm run setup`".
+  - `LoadProjOptions` gains two internal options for tests: `pins` (defaulting to `PROJ_FILE_SHA256`), so the stubs can pass their own bytes' hashes, and `importGlue?: (bytes: Uint8Array) => Promise<unknown>` (defaulting to an import from a Blob URL of the verified bytes, call 4), so the Node-run unit tests can inject a `data:` or file importer.
+  - Node verifies `proj.db` against the pin, and `proj_capi.node` against the `proj/proj_capi.node` entry of the store's `manifest.json`. The store is found the way `framesDataDirectory()` finds it (`FRAMES_DATA_DIR`, else `~/.cesium-bench/frames`), not relative to `base`. A missing manifest throws "run `npm run setup`".
+  - `ProjApi.proj_info(): { release: string; version: string }`, read for the fixture guard.
 
 - [ ] **Step 1: Write the failing tests:**
   - **Unit** (`test/projLoad.test.ts`, the existing browser-path stubs): a stubbed `fetch` serving `proj.db` with one byte changed makes `loadProj` reject `/proj\.db SHA-256 mismatch/`, and a retry with the right bytes resolves. Do the same for the WebAssembly.
@@ -287,13 +304,15 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - Test:
   - `packages/next/test/gridSource.test.ts`
   - `packages/next/test/data/gridLoad.test.ts`
+  - `packages/next/test/projLoad.test.ts` (its stubs gain a small catalog naming `g.tif` and `late.tif`)
+  - `packages/next/test/data/crs.test.ts`, whose no-grid cases move to `packages/next/test/data/crsNoGrids.test.ts` with `grids: []`. Its two-base regression ("keeps each base's search path…") becomes "a second base throws".
 
 **Interfaces:**
 
 - Consumes: Tasks 1 and 2.
 - **Produces** (`proj.ts`):
   - `interface GridSource { readonly base: string; readonly catalog: GridCatalog }`.
-  - `gridSource(options: { base: string; catalogSha256?: string; licensesSha256?: string; onProgress?: LoadProgress }): Promise<GridSource>`.
+  - `gridSource(options: { base: string; catalogSha256?: string; licensesSha256?: string; version?: string; onProgress?: LoadProgress }): Promise<GridSource>`. `version` (default `PROJ_DATA_CATALOG.version`) goes with an overridden catalog hash, for credits.
     - It reads `${base}files.geojson` and `${base}copyright_and_licenses.csv` (a fetch in the browser, a file read in Node) and verifies them against `PROJ_DATA_CATALOG` or the overrides.
     - It is memoized per base.
   - `loadGrids(proj: ProjApi, source: GridSource, names: readonly string[], options?: { onProgress?: LoadProgress }): Promise<void>`. Each name:
@@ -324,7 +343,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   First confirm that Vitest runs each data test file in its own process (the default `forks` pool with `isolate`), so grids one file links never reach another file's PROJ. Record what you find in the test's header comment.
 - [ ] **Step 3: Run** both tests and confirm they fail.
 - [ ] **Step 4: Implement.** If the WebAssembly build lacks `proj_log_level`, record that in `projApi.ts`; the browser then keeps PROJ's noise.
-- [ ] **Step 5: Run** the tests, then `npm run test:data`, and confirm the explorer's catalog is unchanged (225 results, fingerprints equal).
+- [ ] **Step 5: Run** the tests, then `npm run test:data`. Confirm the explorer's catalog is unchanged against its result count and fingerprints recorded at this task's start (other agents add cases, so don't use a fixed number).
 - [ ] **Step 6: Commit** with "engineering: one explicit grid set on both platforms, loaded from a verified GridSource".
 
 ### Task 4: The dev server's grid endpoint
@@ -346,14 +365,13 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
     - The name must match `^[A-Za-z0-9][A-Za-z0-9_.-]*$`, contain no "..", and be exactly a key of the catalog that isn't removed and whose `url` is `https://cdn.proj.org/<name>`.
     - `files.geojson` and `copyright_and_licenses.csv` are the two other names allowed.
   - **`createGridCache({ dir, catalog, fetch, log }): { ensure(name: string): Promise<string> }`.**
-    - It returns the verified file's path, fetching on a miss from the fixed origin `https://cdn.proj.org/`.
-    - It fetches with `redirect: "error"` and `AbortSignal.timeout(120_000)`, and aborts past the entry's byte count.
-    - It writes to `.partial`, checks length and hash, then renames.
+    - It returns the verified file's path, fetching on a miss from the fixed origin `https://cdn.proj.org/` through Task 1's `verifiedDownload`.
     - Concurrent `ensure` calls for one name share one fetch.
   - **`projGridsPlugin(prefix: string, dir: string): Plugin`** for GET and HEAD only.
     - It sends `Content-Length` and a content type: `image/tiff`, `application/geo+json` or `text/csv`.
     - An unknown name is a 404. An upstream or hash failure is a 502 with the body "grid unavailable", and the details go to the server log.
-    - `vite.config.ts` mounts it at `/proj-grids` when `<store>/grids/files.geojson` exists.
+    - `vite.config.ts` mounts it at `/proj-grids` when `<store>/grids/files.geojson` exists. Before mounting, it hashes `files.geojson` and the CSV against `PROJ_DATA_CATALOG`; on a mismatch it logs and doesn't mount (Review Focus 2).
+  - **`serveDirectory`** gains an `exclude` option, and the `/frames-data` mount excludes `grids/` and `*.partial`.
 
 - [ ] **Step 1: Write the failing test** (`test/projGrids.test.ts`, with a temporary directory, a small catalog and a stub `fetch`):
   - Review Focus 1's names each make `gridRequest` return undefined, with no fetch and no file written.
@@ -367,7 +385,8 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - [ ] **Step 4: Run** the test and confirm it passes.
 - [ ] **Step 5: Check it on your own dev server:**
   - `curl -sI http://127.0.0.1:<52xx>/proj-grids/us_nga_egm96_15.tif` gives 200 with `Content-Length: 2710815`;
-  - `/proj-grids/..%2fmanifest.json` and `/proj-grids/nope.tif` give 404.
+  - `/proj-grids/..%2fmanifest.json` and `/proj-grids/nope.tif` give 404;
+  - `/frames-data/grids/files.geojson` gives 404.
 - [ ] **Step 6: Commit** with "dev server: /proj-grids/, catalog-validated grids fetched on first request and verified".
 
 ### Task 5: Structured pipelines
@@ -379,7 +398,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - `packages/next/src/engineering/crs.ts` (replace `gridsOf`; `ResolveOptions.pipeline?: string | Pipeline`)
   - `packages/next/src/engineering/EngineeringFrame.ts` (`pipeline?: string | Pipeline`)
   - `packages/next/src/index.ts`
-- Test: `packages/next/test/pipeline.test.ts`
+- Test: `packages/next/test/pipeline.test.ts` (parsing, formatting and grids) and `packages/next/test/data/pipeline.test.ts` (the cases that need PROJ)
 
 **Interfaces:**
 
@@ -392,20 +411,22 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
     - A string without `+proj=pipeline` is one step.
     - It throws on an empty step, a token not starting with "+", or a step with no `proj`.
   - **`formatPipeline(pipeline: Pipeline): string`**, the only place a pipeline string is made.
-    - It validates keys (`^[a-z_][a-z0-9_]*$`) and values (no whitespace, no "+"), and throws, naming the token.
+    - It validates keys (`^[A-Za-z_][A-Za-z0-9_]*$`, since PROJ has uppercase keys such as `R`) and values (no whitespace, no "+"), and throws, naming the token.
     - One step with no globals is written without the pipeline wrapper.
   - **`pipelineGrids(pipeline: Pipeline): readonly { name: string; optional: boolean; key: "grids" | "nadgrids" | "geoidgrids" }[]`**. It splits on ",", strips a leading "@" (setting `optional`), and drops PROJ's special name `null`.
-  - **`RecordedOperation` gains `optionalGrids: readonly string[]`.** A missing optional grid in a pinned pipeline is not an error; the projection term's note names it.
+  - **`RecordedOperation` gains `optionalGrids: readonly string[]`.** A missing optional grid in a pinned pipeline is not an error; Task 8's projection note names it.
 
-- [ ] **Step 1: Write the failing test** (`test/pipeline.test.ts`):
-  - Each pipeline string recorded in `test/fixtures/frames/proj.json` round-trips: `formatPipeline(parsePipeline(s))` equals `s` with whitespace normalized.
+- [ ] **Step 1: Write the failing tests.** In `test/pipeline.test.ts`:
   - `+proj=pipeline +step +proj=hgridshift +grids=@a.tif,b.tif +step +proj=vgridshift +geoidgrids=us_noaa_g2018u0.tif +multiplier=1` gives three grids, with `a.tif` optional.
   - `+nadgrids=@null,conus` gives just `conus`.
   - Malformed input throws, and `formatPipeline` with a value holding a space throws.
+
+  In `test/data/pipeline.test.ts`:
+  - **Round trips.** For each case in `test/fixtures/frames/proj.json`, the pipeline PROJ itself records (`resolveOperation(...).pipeline`) round-trips: `formatPipeline(parsePipeline(s))` equals `s` with whitespace normalized. The fixture's own strings are pyproj's, with no "+", so they aren't used. The Moon case covers an uppercase key (`+R=1737400`).
   - **Pinned pipelines:** `resolveOperation` with a `Pipeline` object equals the same pinned as a string, and a pinned pipeline naming `+geoidgrids=` for a grid that isn't loaded throws, naming that grid (the 4a carried-forward item).
-- [ ] **Step 2: Run** the test and confirm it fails.
+- [ ] **Step 2: Run** both tests and confirm they fail.
 - [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** the test, then `npm run test:data`, and confirm they pass.
+- [ ] **Step 4: Run** both tests, then `npm run test:data`, and confirm they pass.
 - [ ] **Step 5: Commit** with "engineering: structured PROJ pipelines, with grids, nadgrids, geoidgrids and optional grids".
 
 ### Task 6: Lazy grids for frames, and the better candidates
@@ -416,6 +437,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - `packages/next/src/engineering/crs.ts`
   - `packages/next/src/engineering/EngineeringFrame.ts`
   - `packages/next/src/index.ts`
+  - `packages/next/scripts/gridSets.mjs`
 - Test: `packages/next/test/data/frameLoad.test.ts`
 
 **Interfaces:**
@@ -447,6 +469,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - Modify:
   - `packages/next/src/engineering/EngineeringFrame.ts`
   - `packages/next/src/engineering/crs.ts` (`CrsUnits.verticalDirection`)
+  - `packages/next/scripts/gridSets.mjs`
 - Test:
   - `packages/next/test/data/geoidFallback.test.ts`
   - `packages/next/test/engineeringFrame.test.ts` (the rigid sign, with a stub)
@@ -464,17 +487,18 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
     Then the frame resolves `{ ...crs, vcsWkid: 5773 }` (EGM96) or `3855` (EGM2008). `load` first loads `us_nga_egm96_15.tif` or `us_nga_egm08_25.tif` from the catalog.
   - **`CrsUnits.verticalDirection?: "up" | "down"`**, from the height axis's direction.
   - **`RigidPlacement`**: for `"down"` the up column of `matrix`, and `toBodyFixed` and `fromBodyFixed`, use −`metersPerHeightUnit`.
+  - **A vertical CRS with no grid.** When only a ballpark operation relates a compound CRS's vertical part to the ellipsoid (MLLW depth, EPSG:5866, has no transformation in `proj.db`), `create` and `load` throw `"<vertical CRS name>: no PROJ-data grid relates it to the ellipsoid"`, not the generic ballpark message.
 
 - [ ] **Step 1: Write the failing tests:**
   - **Unit** (`test/engineeringFrame.test.ts`): with a stub `ProjApi` whose height axis is "down", `RigidPlacement` maps design (0, 0, 10) to 10 units *below* the anchor's surface normal (Review Focus 5).
   - **Data** (`test/data/geoidFallback.test.ts`):
-    - **São Paulo** (SIRGAS 2000 / UTM 23S with its Imbituba height CRS; find the code in `proj.db` and record it). Without `geoidFallback`, `load` throws, naming the missing grid. With `"EGM96"`, `frame.fallback.model` is "EGM96", and `toGeodetic` at height 0 equals that of the same horizontal CRS with `vcsWkid: 5773`, within 1e-9 m. `projection` accuracy is a separate concern, in Task 8.
-    - **A LAT depth CRS** with its PROJ-data grid. Use the first of these that `proj.db` 9.7.1 resolves: Amersfoort / RD New + LAT NL depth (`nl_nsgi_nllat2018.tif`), then the DKLAT 2023 depth (`dk_sdfi_dklat_2023.tif`); record which.
+    - **Jakarta** (EPSG:9488+9471, SRGI2013 / UTM zone 48S with INAGeoid2020 v1 heights, through transformation 9305 and `INAGEOID2020v1.gtx`, which PROJ-data lacks; confirm with `listOperations`). Without `geoidFallback`, `load` throws, naming the missing grid. With `"EGM96"`, `frame.fallback.model` is "EGM96", and `toGeodetic` at height 0 equals that of the same horizontal CRS with `vcsWkid: 5773`, within 1e-9 m. `projection` accuracy is a separate concern, in Task 8.
+    - **A LAT depth CRS** with its PROJ-data grid. Use the first of these that `proj.db` 9.7.1 resolves: Amersfoort / RD New + LAT NL depth (EPSG:9287, `nl_nsgi_nllat2018.tif`), then DKLAT(2023) depth (EPSG:10550, `dk_sdfi_dklat_2023.tif`); record which.
       - `units.verticalDirection` is "down".
       - The geodetic height at depth 10 is 10 m below that at depth 0, within 1e-6 m.
       - Both points round-trip within 1e-4 m.
       - The rigid round trip is exact to 1e-9 m.
-    - **MLLW.** A frame on NAD83(2011) with the EPSG vertical CRS "MLLW depth" throws, naming the vertical CRS and saying it has no PROJ-data grid (call 11).
+    - **MLLW.** A frame on NAD83(2011) with MLLW depth (EPSG:5866) throws `/MLLW depth: no PROJ-data grid relates it to the ellipsoid/` (call 11).
 - [ ] **Step 2: Run** the tests and confirm they fail.
 - [ ] **Step 3: Implement.** Correct the grid sets for the grids used.
 - [ ] **Step 4: Run** the tests, then `npm run test:data`, and confirm they pass.
@@ -497,9 +521,11 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - **`DesignPoint.obtained?: { readonly how: "pick" | "snap"; readonly tolerance: number; readonly kind?: SnapKind }`** (tolerance in m), and **`designPoint(frame, design, obtained?)`**. `SnapKind` is declared here as `"point" | "segment" | "arc" | "surface"` and re-exported by Task 16.
   - **`AccuracyTerm.source`** gains `"pick"` (meters = `obtained.tolerance`) and `"geoidFallback"` (meters = `fallback.sigma`, or undefined).
   - **`WarningCode`** gains `"coarser-operation"` (when `betterCandidates` isn't empty, naming them and their grids) and `"geoid-fallback"`.
+  - **`projectionTerm`'s note** (amended R9) names the operation's missing optional grids (Task 5) and its skipped better candidates, with their accuracies and grids.
 
 - [ ] **Step 1: Write the failing data tests:**
   - **A pick term.** A design point with `obtained: { how: "pick", tolerance: 0.02 }` adds a `pick` term of 0.02 m.
+  - **The projection note.** For the EPSG:26741 frame without NADCON (Task 6), the note names the 5 m and 2.15 m candidates and their grids. For a pinned pipeline with a missing optional grid, it names that grid.
   - **The Earth.** The EGM96 fallback frame's ends add `geoidFallback` terms with `meters` undefined, so the statement's `meters` is undefined. With `fallbackSigma: 0.5` it is 0.5 m (Review Focus 5). A frame with better candidates warns `coarser-operation`, naming their grids.
   - **The Moon** (the 4a carried-forward item). Use two Moon frames: the 4a south-polar CRS, and the same CRS with a site transform (rotation 30°, scale 1).
     - Design points in the two frames give no `design` result.
@@ -519,12 +545,18 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - Create:
   - `packages/next/test/fixtures/frames/geoids.json`
   - `packages/next/test/data/geoids.test.ts`
-- Modify: `packages/next/test/data/factors.test.ts` (the Mercator (Spherical) case)
+- Modify:
+  - `packages/next/test/data/factors.test.ts` (the Mercator (Spherical) case)
+  - `packages/next/scripts/gridSets.mjs`
 
 **Interfaces:**
 
 - Consumes: Tasks 6 and 7.
-- **Produces:** `geoids.json`: `{ cases: { id, crs: CrsRef, grids: string[], source: { url, retrieved, publisher }, precision: number /* m */, points: { input: number[], expected: number[] }[] }[] }`. Task 21 reuses it.
+- **Produces:** `geoids.json`: `{ cases: GeoidCase[] }`, with `GeoidCase` a union of:
+  - `{ id, crs: CrsRef, kind: "geographic" | "projected", grids: string[], source: { url, retrieved, publisher }, precision: number /* m */, points: { input: number[], expected: number[] }[] }`;
+  - `{ id, grids: string[], missingReference: string }`.
+
+  Task 21 reuses it.
 
 - [ ] **Step 1: Collect the references.** For each grid, take the publisher's own test values, never PROJ or pyproj (the explorer's R10):
   - EGM96 and EGM2008: NGA's interpolation test inputs and outputs;
@@ -534,7 +566,11 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - NLGEO2018 and RDNAPTRANS: NSGI.
 
   Use either the publisher's examples or its online calculator, with the date it was used. Record each source's URL, the retrieval date and its stated precision. A grid with no published reference found within the task is listed in the fixture as `{ id, missingReference: "<why>" }`, and nothing is compared for it.
-- [ ] **Step 2: Write the failing data test** (`test/data/geoids.test.ts`). Each case is a frame made with `EngineeringFrame.load` and a `GridSource` over the store. Forward and inverse match each point within the case's `precision`.
+- [ ] **Step 2: Write the failing data test** (`test/data/geoids.test.ts`), with a `GridSource` over the store. Forward and inverse match each point within the case's `precision`.
+  - **Geographic cases** (NGA, GA and GSI publish latitude and longitude → N): `loadGrids`, then `resolveOperation` on a geographic compound CRS (for example EPSG:4326+5773 → EPSG:4979). `EngineeringFrame` refuses a non-projected CRS, so these don't use it.
+  - **Projected cases** (OSTN15 and OSGM15, RD and NAP): `EngineeringFrame.load`.
+  - **EGM2008:** run setup with `--grids portfolio,tests,egm2008` first. The case skips, with the reason "us_nga_egm08_25.tif not in the store; run npm run setup -- --grids egm2008", when the grid is absent.
+  - `missingReference` cases compare nothing.
 - [ ] **Step 3: Write the failing factors case.** Plan 4a's Mercator (Spherical) item asks for a WKT2 CRS using EPSG method 1026 on a sphere:
   - `gridFactors` gives k = 1/cos φ within 1e-12, and convergence 0, at φ = 0°, 30° and 60°;
   - the same method on an ellipsoid whose radii differ throws, as `checkSphere` does.
@@ -603,24 +639,29 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - **`readGeoreference(tilesetJson: unknown): TilesetGeoreference | undefined`.** It gives undefined when the extension is absent.
     - It maps `crs: { format: "wkid", extensions: { EXT_geospatial_crs_wkid: { authority, wkid, vcsWkid?, epoch? } } }`, and the `wkt2` companion, to `CrsRef`.
     - It throws a `GeoreferenceError` naming the JSON path for: an unknown mode or format; a missing `crs`; non-finite numbers; a WKT2 over 65,536 characters; more than 64 alignments.
+  - **`checkRigidTransform`'s and the reader's messages name the field:** a mismatched anchor names `placement.anchor`.
   - **`checkRigidTransform(placement: TilesetPlacement, rootTransform: Mat4): void`.** It throws when `rootTransform × anchor` differs from `placement.displayed(anchor)` by more than 1e-3 m, or a column differs from `rigid.matrix`'s by more than 1e-9 relative.
   - **`georeferenceTileset(tileset: Tileset3D, options: { proj: ProjApi; grids?: GridSource }): Promise<TilesetPlacement>`.** It loads the frame (`EngineeringFrame.load`), builds the placement, checks a rigid placement against `tileset.root.transform`, and sets `tileset.placement`.
+    - The frame's `name` is the declared `name`, else the tileset's URL.
+    - It refuses, with an error and a `warnings` entry, unless the tileset's `modelMatrix` is the identity: `root.transform` includes it, and a later change would leave `displayed` no longer what is drawn.
 - **Produces** (`Tileset3D`):
   - `readonly extensions: Readonly<Record<string, unknown>>` (from `tileset.json`).
   - `readonly georeference?: TilesetGeoreference`, parsed at load. A malformed declaration adds a `warnings` entry naming the path and leaves this undefined; it never fails the load.
-  - `placement?: TilesetPlacement` (settable), and `TilesetOptions.placement`, for the application to supply one for an undeclared tileset.
+  - `placement?: TilesetPlacement` (settable), and `TilesetOptions.placement`, for the application to supply one for an undeclared tileset. Document it beside `Tile.placement`, which is a tile's content (`ModelPlacement`): the two are unrelated.
   - `tileOfDraw(draw: DrawHandle): Tile | undefined`, kept in step with tile placement and unloading (index and generation).
 
+- [ ] **Step 0: Check the draft** (spec §7.2: "The builder first checks the draft's current names and shape"). Read the current 3D Tiles 2.0 draft's `EXT_geospatial_crs` (and its `_wkid` and `_wkt2` companions) and `EXT_georeference`. Record their names, shapes and the date read in `georeference.ts`'s header. If the shape has changed from call 12's, follow it and say so in the commit.
 - [ ] **Step 1: Write the failing tests:**
-  - **Parsing** (`test/georeference.test.ts`): valid rigid and reprojected declarations, in both CRS formats, parse to the expected shape. Each Review Focus 3 case throws, naming its path. Unknown extra fields are ignored.
-  - **`Tileset3D`** (`test/tilesetPlacement.test.ts`, with the existing fake engine from `test/fakeGpu.ts` as other `Tileset3D` tests use it):
+  - **Parsing** (`test/georeference.test.ts`): valid rigid and reprojected declarations, in both CRS formats, parse to the expected shape. Review Focus 3's parse cases (an unknown mode or format, a missing `crs`, NaN in a site transform, a WKT2 over 65,536 characters) each throw, naming their path. Unknown extra fields are ignored.
+  - **`Tileset3D`** (`test/tilesetPlacement.test.ts`). No test constructs a `Tileset3D` today, so this one establishes the harness: `fakeEngine` from `test/fakeGpu.ts`, with a stubbed `fetch` for `tileset.json` and its content.
     - `extensions` and `georeference` are read;
     - a malformed declaration warns and the load succeeds;
+    - `georeferenceTileset` on a tileset with a non-identity `modelMatrix` refuses and warns;
     - `tileOfDraw` finds a loaded tile's draw and returns undefined after the tile unloads.
-  - **Data** (`test/data/georeferenceTileset.test.ts`): `checkRigidTransform` passes for `placeRigid(frame, a).rigid.matrix`, and throws for that matrix translated by 1 cm, and rotated by 1e-6 rad.
+  - **Data** (`test/data/georeferenceTileset.test.ts`): `checkRigidTransform` passes for `placeRigid(frame, a).rigid.matrix`, and throws for that matrix translated by 1 cm and rotated by 1e-6 rad, with a message naming `placement.anchor` (Review Focus 3's anchor case).
 - [ ] **Step 2: Run** the tests and confirm they fail.
 - [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** the tests, then `npm run test:data`, and confirm they pass.
+- [ ] **Step 4: Run** the tests, `npm test` once (Global Constraints' exception), then `npm run test:data`, and confirm they pass.
 - [ ] **Step 5: Commit** with "tiles: EXT_engineering_frame placement declarations, and georeferenceTileset".
 
 ### Task 12: The corridor and the portfolio, as data
@@ -630,6 +671,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
 - Create:
   - `packages/next/examples/design-globe/corridor.ts`
   - `packages/next/examples/design-globe/sites.ts`
+- Modify: `packages/next/scripts/gridSets.mjs`
 - Test: `packages/next/test/designGlobeCorridor.test.ts` and `packages/next/test/data/designGlobeSites.test.ts`
 
 Use erasable TypeScript only (no parameter properties or enums), so the Node generator can import these files.
@@ -685,14 +727,14 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
     - `model: { width: number; depth: number; stories: number; storyHeight: number }`;
     - `grids: readonly string[]`.
   - **`SITE_BUILDING`**: 200 × 120, 3 stories of 13, on a site grid of `CORRIDOR_CRS` with origin (start + (2,000, 1,500), 0), rotation 12.5° and scale 1.0000375.
-  - **`PORTFOLIO`**, call 19's seven sites:
+  - **`PORTFOLIO`**, call 19's seven sites (origins in design coordinates):
     - London (530,000, 180,000);
     - Sydney (334,000, 6,252,000);
     - Tokyo (−7,000 E, −35,500 N, in normalized order);
     - Amsterdam (121,000, 487,000);
     - Nairobi (257,000, 9,857,000);
     - Phoenix (EPSG:2223 at the zone's centre, + 8228);
-    - São Paulo (the Imbituba compound of Task 7, with `geoidFallback: "EGM96"`).
+    - Jakarta (702,000, 9,314,000) on EPSG:9488+9471, Task 7's compound, with `geoidFallback: "EGM96"`.
   - **`ION_SLOTS: readonly { label: string; ionAssetId?: number; frame?: EngineeringFrameDefinition; placement?: PlacementMode }[]`**, with two empty entries labelled "Metrostation (share key)" and "Your long iModel" (held item 2).
 
 - [ ] **Step 1: Write the failing tests:**
@@ -752,7 +794,7 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
 - Consumes: Tasks 6, 10, 11's `ENGINEERING_FRAME_EXTENSION`, 12 and 13.
 - **Produces:**
   - **`sampleStations(alignment: Alignment, from: number, to: number, chordTolerance: number): Float64Array`.** Stations are spaced so the chord error is at most 0.003 ft on curves, and at most 30 ft apart on tangents. Joins and the bridge's ends are always included.
-  - **`ensureDesignTiles(store: string, proj: ProjApi, grids: GridSource, log): Promise<void>`.** It writes `<store>/design-globe/`:
+  - **`ensureDesignTiles(store: string, proj: ProjApi, grids: GridSource, frames: Frames, log): Promise<void>`.** Setup loads the `Frames` from the store's frame data; `measure` runs at one fixed instant, `DESIGN_TILES_INSTANT` (2026-01-01T00:00:00 UTC), recorded in `answers.json`. It writes `<store>/design-globe/`:
     - `corridor-rigid/` and `corridor-reprojected/`;
     - `site-building/`;
     - `portfolio-<id>/` for each site (rigid);
@@ -761,22 +803,23 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
 
     It regenerates only when the manifest differs.
   - **Tiles:**
-    - Leaves cover 2,000 ft of station, and their parents are decimated 2× per level. `geometricError` is 0.003 ft in metres at the leaves and doubles per level.
+    - Leaves cover 2,000 ft of station, and their parents are decimated 2× per level.
+    - **`geometricError`.** The engine scales a tile's `geometricError` by its transform's largest scale (`Tile.ts`), which on the rigid root is 0.3048006 (feet to metres). So the rigid tileset writes it in design units (0.003 ft at the leaves) and the reprojected one in metres (0.003 × 0.3048006…), both doubling per level. The scaled `Tile.geometricError` is then equal in the two.
     - **Rigid:** the root `transform` is `placeRigid(frame, pointAt(ANCHOR_STATION)).rigid.matrix`, which takes absolute design units to Earth-fixed metres. Each tile's `transform` translates from its parent's centre to its own, in design units; the root's centre is the design origin. Vertices are design units relative to their tile's centre.
     - **Reprojected:** each vertex goes through `frame.toBodyFixed`, relative to the tile's Earth-fixed centre.
     - Content is glTF Y-up, so a tile-space (E, N, U) is written as (E, U, −N), and the same for Earth-fixed offsets.
     - Both carry `EXT_engineering_frame`. Their tile ids, trees and vertex order are identical (call 15).
   - **`answers.json`:**
-    - **`points`:** for each of 41 stations (at every 4,000 ft, at each join and on the bridge) at offsets 0, ±17 and ±40: the design coordinates, `frame.toBodyFixed`, the rigid `displayed`, `displayError`, the geodetic position, the combined factor, the convergence, the station and offset;
+    - **`points`:** at every 4,000 ft of station, at each join, at the bridge's ends, and at the stations nearest 10 km and 20 km from the anchor; at offsets 0, ±17 and ±40: the design coordinates, `frame.toBodyFixed`, the rigid `displayed`, `displayError`, the geodetic position, the combined factor, the convergence, the station and offset;
     - **`pairs`:** for four pairs (10,000 ft on the first tangent, across the 5,000 ft curve, across the bridge, end to end): `measure`'s `design.distance`, `horizontalDistance` and `distance`, and the stations and offsets.
 
 - [ ] **Step 1: Write the failing tests:**
   - **Sampling** (`test/designTilesSampling.test.ts`): on an arc of radius 3,000 the maximum chord error is ≤ 0.003; tangents are at most 30 apart; every join is included.
   - **The output** (`test/data/designTiles.test.ts`, reading the store):
-    - the two corridor tilesets have identical trees, tile ids and per-tile vertex counts;
+    - the two corridor tilesets have identical trees, tile ids and per-tile vertex counts, and equal scaled `Tile.geometricError` (built with `treeFromJson`);
     - for every 50th vertex of every leaf, rigid `designOf(displayed)` and reprojected `designOf(vertex)` equal the vertex's design coordinates within 1e-4 m. This is the spec §10 round trip, with the pick replaced by the exact displayed position;
     - `checkRigidTransform` passes on the rigid root;
-    - `answers.json`'s rigid `displayError` at 10 km and 20 km from the anchor is in the spec's range;
+    - `answers.json`'s rigid `displayError` at the points nearest 10 km and 20 km from the anchor is in the spec's range (the farthest point, at the end, is about 20.8 km away);
     - recomputing three answers with the library reproduces them exactly.
 - [ ] **Step 2: Run** the tests and confirm they fail.
 - [ ] **Step 3: Implement.** Generation must take under a minute; log the time.
@@ -802,11 +845,14 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
     - `tileset?: Tileset3D`, `feature?: PickResult`;
     - `design?: DesignPoint`;
     - `tolerance: number` (m).
-  - **`pickDesign(view: PickView, x: number, y: number, tilesets: readonly Tileset3D[]): Promise<DesignPick | undefined>`.** `PickView` is the structural subset of `View` it uses (`pick`, `pickPosition`, `camera`, `height`, and the world's `feature`), so tests can pass fakes.
-    - The tolerance is one pixel's footprint: the distance from the camera × 2·tan(fovy/2) / the view's height in CSS px.
+  - **`pickDesign(view: PickView, x: number, y: number, tilesets: readonly Tileset3D[]): Promise<DesignPick | undefined>`.** `x` and `y` are CSS pixels.
+    - `PickView` is the structural subset of `View` it uses, so tests can pass fakes: `pick`, `pickPosition`, `camera`, `pixelRect()`, the render target's `pixelRatio`, and the world's `feature`.
+    - `View.pick` and `pickPosition` take target (device) pixels, so `pickDesign` multiplies by `pixelRatio` before calling them. View has no `height`.
+    - The tolerance is one CSS pixel's footprint: the distance from the camera × 2·tan(fovy/2) / `pixelRect()`'s height in CSS px.
     - `design` is `placement.designOf(position)`, with `obtained: { how: "pick", tolerance }`, only when the hit draw belongs to a listed tileset with a placement.
 
 - [ ] **Step 1: Write the failing test** (fakes only):
+  - with `pixelRatio` 2, a pick at CSS (10, 20) calls `view.pick(20, 40)`;
   - a hit on a rigid tileset's draw gives `design` equal to `placement.designOf(position)` and the footprint tolerance;
   - a hit on a reprojected tileset does the same;
   - Review Focus 4: the sky gives undefined; a tileset without a placement gives no `design`; a draw of an unlisted tileset gives neither `tileset` nor `design`.
@@ -832,7 +878,7 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
 
 - Consumes: Task 15.
 - **Produces:**
-  - **`SnapRequest { view; x; y; aperture: number /* CSS px */ }`.**
+  - **`SnapRequest { view: PickView; x: number; y: number; aperture: number }`**, all in CSS px, as `pickDesign` takes them.
   - **`SnapResult`:**
     - `point` and `raw` (`Float64Array`, displayed, body-fixed);
     - `distance` (CSS px) and `kind: SnapKind`;
@@ -852,11 +898,11 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
   - 20 px from everything gives `surface` with the raw point;
   - the tolerance equals the tile's geometric error;
   - `design` comes through the placement;
-  - a tileset loaded without `retainGeometry` gives `surface` and a warning "snap: geometry not retained";
+  - a tileset loaded without `retainGeometry` gives `surface`, and adds "snap: geometry not retained" to `tileset.warnings` once, however many snaps;
   - Review Focus 4's cases give no `design`.
 - [ ] **Step 2: Run** the test and confirm it fails.
 - [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** the test and `npm test`, and confirm they pass.
+- [ ] **Step 4: Run** the test and `npm test` once (Global Constraints' exception), and confirm they pass.
 - [ ] **Step 5: Commit** with "engineering: SnapService, and client-side snapping to retained tile geometry".
 
 ### Task 17: The example's core: exact snapping, checks and the measurement model
@@ -879,6 +925,12 @@ No UI is in this task.
 
 - Consumes: Tasks 12, 14, 15 and 16.
 - **Produces:**
+  - **`interface Answers`**, Task 14's `answers.json`:
+    - `version: number`, `instant: string`, `anchorStation: number`;
+    - `points: { station; offset; design: [number, number, number]; bodyFixed: [number, number, number]; rigidDisplayed: [number, number, number]; displayError; geodetic: { longitude; latitude; height }; combinedFactor; convergence }[]`;
+    - `pairs: { id; from: number; to: number /* indices into points */; designDistance; horizontalDistance; trueDistance; ends: { a: { station; offset }; b: { station; offset } } }[]`.
+
+    Write the generator and this type from one shape: Task 14 writes what this type reads.
   - **`loadAnswers(url: string, signal: AbortSignal): Promise<Answers>`.** It validates the shape and the finite numbers, and throws naming the path.
   - **`class ExactSnapService implements SnapService`**, with `constructor(tileset: Tileset3D /* a corridor tileset */, alignment: Alignment)`.
     - It snaps in design space, after `pickDesign`, within the aperture converted to design units by the footprint. In order:
@@ -888,10 +940,12 @@ No UI is in this task.
     - An exact snap has tolerance 0 and `exact` true, and its design point lies on the analytic geometry.
     - Beyond the alignment's ends there is no station, and the raw pick is returned (Review Focus 4).
   - **`interface CheckRow { id; label; unit; shown?: number; expected: number; tolerance: number; status: "pass" | "fail" | "not-shown"; basis: "exact" | "vertex" | "pick" }`.**
+  - **`interface ShownValues`**: what the page shows, by answer id: `{ points: Map<number, { design?: Float64Array; station?: number; offset?: number; basis: CheckRow["basis"]; tolerance?: number }>; pairs: Map<string, { designDistance?: number; horizontalDistance?: number; trueDistance?: number; basis: CheckRow["basis"]; tolerance?: number }> }`.
   - **`checkRows(answers: Answers, shown: ShownValues): CheckRow[]`.** The tolerance by basis:
     - exact: 1e-6 design units;
     - vertex: 1e-4 m in design units;
     - pick: the stated pick tolerance.
+  - **`interface MeasureView`**: display strings, `{ designDistance; horizontalDistance; delta: [string, string, string]; unitName; trueDistance; combinedFactorPpm; convergence; a: EndView; b: EndView; accuracy; exact: boolean }`, with `EndView = { station?: string; offset?: string; elevation?: string; snapKind?: string; tolerance: string }`.
   - **`measurementModel(a: SnapResult, b: SnapResult, measurement: Measurement): MeasureView`.** It gives display strings for the design distance and deltas (with the unit name), the true distance, the combined factor (as ppm), the convergence, the stations, offsets and elevations, and the accuracy, following the explorer DESIGN.md's "Copy and numbers" rules.
 
 - [ ] **Step 1: Write the failing tests:**
@@ -900,7 +954,7 @@ No UI is in this task.
     - near a tick at 45,000 it gives `point` at exactly (45,000, ±35);
     - before the start, it gives the raw pick with no station.
   - **Checks:** a shown value inside its tolerance passes; one 2× outside fails; an absent one is `not-shown`.
-  - **The measurement model:** for `answers.pairs[0]` it shows "10,000.000 ftUS" design and the true distance in metres to the millimetre.
+  - **The measurement model:** for `answers.pairs[0]` (10,000 ft along the first tangent, on its +2% grade) it shows a horizontal design distance of "10,000.000 ftUS" and a 3D design distance of about "10,002.000 ftUS", each labelled, and the true distance in metres to the millimetre.
 - [ ] **Step 2: Run** the tests and confirm they fail.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** the tests and confirm they pass.
@@ -932,6 +986,7 @@ No UI is in this task.
 **Files:**
 
 - Create: `packages/next/examples/design-globe/measureTool.ts` and `panel/Measure.tsx`
+- Modify: `packages/next/examples/design-globe/main.ts` and `page.ts` (wiring the tool in)
 - Test: `packages/next/test/designGlobeMeasureTool.test.ts`
 
 - [ ] **Step 1: Write the failing tests:**
@@ -956,7 +1011,9 @@ No UI is in this task.
 **Files:**
 
 - Create: `packages/next/examples/design-globe/panel/Checks.tsx`
-- Modify: `packages/next/examples/design-globe/sites.ts` (only if the owner supplies the ion slots' values)
+- Modify:
+  - `packages/next/examples/design-globe/main.ts` and `page.ts` (the panel and "Copy link")
+  - `packages/next/examples/design-globe/sites.ts` (only if the owner supplies the ion slots' values)
 
 - [ ] **Step 1: Implement:**
   - the check panel from `checkRows`, comparing every value shown with the generator's answer;
@@ -987,14 +1044,14 @@ No UI is in this task.
 - Modify:
   - `packages/next/examples/frames-explorer/stress/stressGroups.ts`
   - `packages/next/examples/frames-explorer/fingerprints.json` (new cases only)
-  - `packages/next/test/data/framesExplorer.test.ts` and `framesExplorerScenarios.test.ts` (`grids: [GEOID18]`)
+  - every `test/data` file that calls `loadProj` without `grids` (find them with `grep -l "loadProj(" test/data`; at the plan's writing: `crs`, `proj`, `boundCrs`, `designMeasure`, `engineeringFrame`, `factors`, `framesExplorer`, `framesExplorerScenarios`, `framesExplorerOverlays`, `framesExplorerProtocol`, `framesExplorerVehicles`, and 4b's new data tests), each passing explicit `grids`
   - `packages/next/src/engineering/projNode.ts` (remove the legacy default)
 
 - [ ] **Step 1: Write the groups:**
-  - **global-geoids:** one result per `geoids.json` case, against its published reference;
+  - **global-geoids:** one result per `geoids.json` case, against its published reference. A `missingReference` case is reported as "no published reference", never as a pass;
   - **tileset-placement:** for the BIM site, the rigid inverse is exact, the reprojected round trip holds, and the sag at 20 km matches the hand formula.
 - [ ] **Step 2:** Pass explicit `grids` in the explorer's data tests, remove the Node legacy default (call 5), and confirm Node now sees exactly the grids listed.
-- [ ] **Step 3: Run** `npm run test:data`. The existing 225 results and their fingerprints are unchanged, and the new results pass. Check the catalog's "Run all" in the browser on your own port.
+- [ ] **Step 3: Run** `npm run test:data`. The existing results, against the count and fingerprints recorded at this task's start, are unchanged, and the new results pass. Check the catalog's "Run all" in the browser on your own port.
 - [ ] **Step 4: Commit** with "examples: frames explorer: global geoid and tileset placement groups; explicit grids on both platforms".
 
 ### Task 22: Docs, the plan note, the final gates and Snyk
@@ -1023,7 +1080,7 @@ No UI is in this task.
   - `npx tsc --noEmit -p .`, `npx eslint .`, `npx prettier --check .`;
   - `npm test` and `npm run test:data`;
   - `npm run build` and `npm run build:lib`;
-  - `snyk_code_scan` on `src/engineering`, `src/streaming`, `src/measure`, `scripts/projGrids.mjs`, `scripts/designTiles*`, `scripts/frameData.mjs` and `examples/design-globe`.
+  - `snyk_code_scan` on `src/engineering`, `src/streaming`, `src/measure`, `src/io`, `src/scene`, `scripts/projGrids.mjs`, `scripts/verifiedDownload.mjs`, `scripts/gridSets.mjs`, `scripts/designTiles*`, `scripts/frameData.mjs`, `scripts/setup.mjs` and `examples/design-globe`.
 
   Fix new findings and rescan until clean. Record the pre-existing findings.
 - [ ] **Step 4: Commit** with "Plan: frames 4b results".
