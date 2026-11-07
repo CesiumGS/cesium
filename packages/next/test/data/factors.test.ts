@@ -459,8 +459,8 @@ describe("grid factors against the CRS's own ellipsoid", () => {
 // own. On a sphere PROJ's scales are the method's: k = h = 1 / cos phi, and
 // the meridians are the grid's verticals. On an ellipsoid PROJ projects it on
 // the conformal sphere at the latitude of origin (+proj=merc +R_C, here the
-// semi-minor axis), not the radius factors.ts lists for the method (the
-// semi-major axis), so checkSphere refuses it rather than mislead.
+// semi-minor axis), which gridFactors doesn't support: it refuses, saying
+// so (Task 9 fix 1; mapping 1026 to R_C is a possible later change).
 const MERCATOR_SPHERICAL_ON_A_SPHERE = `PROJCRS["Mercator (Spherical) on a sphere",
   BASEGEOGCRS["Sphere",
     DATUM["Sphere of radius 6371000 m",
@@ -524,7 +524,7 @@ describe("Mercator (Spherical), EPSG method 1026", () => {
     }
   });
 
-  it("on an ellipsoid whose radii differ, gridFactors throws as checkSphere does", async () => {
+  it("on an ellipsoid whose radii differ, gridFactors refuses it and says why", async () => {
     const P = await loadProj({ base });
     const frame = EngineeringFrame.create(
       {
@@ -536,7 +536,7 @@ describe("Mercator (Spherical), EPSG method 1026", () => {
     );
     for (const latitude of [0, 30, 60]) {
       expect(() => gridFactors(frame, designAt(6378137, latitude))).toThrow(
-        /Mercator \(Spherical\) \(EPSG 1026\): PROJ's coordinates have a sphere radius of 6356752\.\d+ m, not the method's 6378137 m/,
+        "gridFactors: EPSG method 1026 (Mercator (Spherical)) on an ellipsoid: PROJ projects it on the conformal sphere R_C(φ0); gridFactors supports this method only on a sphere",
       );
     }
   });

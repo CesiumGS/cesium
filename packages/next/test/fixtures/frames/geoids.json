@@ -20,7 +20,7 @@
         "publisher": "Ordnance Survey"
       },
       "precision": 0.01,
-      "note": "OS's ETRS89-to-OSGB36 test (OSTN15_OSGM15_TestInput_ETRStoOSGB.txt and its TestOutput, values to 0.001 m), every point on ODN (OSGBDatumFlag 1; the other datum flags are island datums OSGM15_GB.tif doesn't hold). Precision: OS's OSTN15 NTv2 user guide (in https://www.ordnancesurvey.co.uk/documents/resources/OSTN15-NTv2.zip) says NTv2 implementations of its test values 'should be with[in] a cm or so', and OSGM15's GTX format guide gives 1 cm rms for mainland GB.",
+      "note": "OS's ETRS89-to-OSGB36 test (OSTN15_OSGM15_TestInput_ETRStoOSGB.txt and its TestOutput, values to 0.001 m), every point on ODN (OSGBDatumFlag 1; the other datum flags are island datums OSGM15_GB.tif doesn't hold). Precision: 0.01 m is the models' stated accuracy, not a tolerance for reproducing these values: OS's OSTN15 NTv2 user guide (in https://www.ordnancesurvey.co.uk/documents/resources/OSTN15-NTv2.zip) says NTv2 implementations should agree with its test values 'with[in] a cm or so' (it also says the NTv2 grid agrees with native OSTN15 at the 0.001 m level), and OSGM15's GTX format guide gives 1 cm rms for mainland GB. Observed worst on 2026-11-07: 7.4 mm horizontal (TP03's northing, from PROJ-data's NTv2 grid as PROJ applies it) and 2.0 mm vertical.",
       "points": [
         {
           "id": "TP02",
@@ -407,7 +407,7 @@
         "publisher": "NSGI"
       },
       "precision": 0.001,
-      "note": "NSGI's RDNAPTRANS2018 self-validation file (Z001_ETRS89andRDNAP.txt, ETRS89 = ETRF2000), the 15 of its 100 points that lie on Dutch land. Precision: NSGI's own validation tolerance in the same repository (validation/validate.py): 0.001 m in RD and NAP, 1e-8 degrees in latitude and longitude.",
+      "note": "NSGI's RDNAPTRANS2018 self-validation file (Z001_ETRS89andRDNAP.txt, ETRS89 = ETRF2000), the 15 of its 100 points that lie on Dutch land. nsgi.nl doesn't publish this file at a stable URL: its validation page (https://www.nsgi.nl/coordinatenstelsels-en-transformaties/tools/validatieservice) says the self-validation file comes in the RDNAPTRANS download, behind a request form; this copy is in NSGI's own GitHub organisation, which nsgi.nl's Transformatie-API page links. Precision: NSGI's own validation tolerance in the same repository (validation/validate.py): 0.001 m in RD and NAP, 1e-8 degrees in latitude and longitude.",
       "points": [
         {
           "id": "30010009",
@@ -629,7 +629,7 @@
         "publisher": "Geoscience Australia"
       },
       "precision": 0.001,
-      "note": "GA's AUSGeoid2020 calculator (ellipsoidal height 0, 'Ellipsoid to AUSGeoid2020 Separation'), shown to 0.001 m, at nodes of the 1-minute grid. Between nodes the calculator interpolates cubically and PROJ bilinearly: 1.0 to 2.1 mm apart at six city points on 2026-11-07 (see the Task 9 report).",
+      "note": "GA's AUSGeoid2020 calculator (ellipsoidal height 0, 'Ellipsoid to AUSGeoid2020 Separation'), shown to 0.001 m, at nodes of the 1-minute grid. Between nodes the calculator appears to interpolate cubically (inferred, not stated by GA: a cubic fit of PROJ-data's node values reproduces its values to 0.35 mm, and GA's GeodePy interpolates with scipy's cubic griddata), while PROJ interpolates bilinearly: 1.0 to 2.1 mm apart at six city points on 2026-11-07 (see the Task 9 report).",
       "points": [
         {
           "input": [
@@ -967,18 +967,74 @@
       ]
     },
     {
+      "id": "egm2008",
+      "crs": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 4326,
+        "vcsWkid": 3855
+      },
+      "target": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 4979
+      },
+      "kind": "geographic",
+      "grids": [
+        "us_nga_egm08_25.tif"
+      ],
+      "source": {
+        "url": "https://web.archive.org/web/20090523142241/http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/OUTPUT3.DAT",
+        "retrieved": "2026-11-07",
+        "publisher": "US National Geospatial-Intelligence Agency (NGA), through the Internet Archive"
+      },
+      "precision": 0.01,
+      "note": "NGA's test output for its 2.5 x 2.5-minute interpolation program (OUTPUT3.DAT, archived 2009-05-23) from its INPUT.DAT (https://web.archive.org/web/20090523095007/http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/INPUT.DAT), both listed on NGA's EGM2008 WGS 84 page (https://web.archive.org/web/20090522114550/http://earth-info.nga.mil:80/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html), read on 2026-11-07 because earth-info.nga.mil itself timed out. Values to 0.001 m. Precision: that page says interp_2p5min.f matches harmonic synthesis 'to within 1 cm'. Longitudes 241 and 242.983333 are written as -119 and -117.016667. The two south-pole points (-90, 359.983333 and -90, 0; -30.150) are left out: PROJ 9.7.1 gives no value at exactly -90 degrees on this grid ('outside the operation's domain'). Observed on 2026-11-07: 9.9 mm at the one point between nodes (36, -117.016667), PROJ's bilinear against NGA's interpolation.",
+      "points": [
+        {
+          "input": [
+            37.0,
+            -119.0
+          ],
+          "expected": [
+            -26.151
+          ]
+        },
+        {
+          "input": [
+            37.0,
+            -119.0
+          ],
+          "expected": [
+            -26.151
+          ]
+        },
+        {
+          "input": [
+            36.0,
+            -117.016667
+          ],
+          "expected": [
+            -29.171
+          ]
+        },
+        {
+          "input": [
+            90.0,
+            0.0
+          ],
+          "expected": [
+            14.899
+          ]
+        }
+      ]
+    },
+    {
       "id": "egm96",
       "grids": [
         "us_nga_egm96_15.tif"
       ],
-      "missingReference": "earth-info.nga.mil timed out on 2026-11-07 (no connection). NGA's 2006 interpolation test (egm96/input.dat and outintpt.dat, read through the Internet Archive) uses intpt's spline interpolation, which PROJ's bilinear vgridshift on the 15-minute grid doesn't reproduce: up to 0.056 m on its six points. No NGA bilinear or grid-node values could be reached."
-    },
-    {
-      "id": "egm2008",
-      "grids": [
-        "us_nga_egm08_25.tif"
-      ],
-      "missingReference": "earth-info.nga.mil timed out on 2026-11-07 (no connection), and the Internet Archive's copies of NGA's EGM2008 2.5-minute interpolation test couldn't be read (the archive was intermittently offline)."
+      "missingReference": "No reference that bilinear interpolation reproduces within a stated precision. earth-info.nga.mil timed out (no TCP connection) on 2026-11-07, so NGA's own EGM96 test files were read through the Internet Archive: input.dat (https://web.archive.org/web/20061030154234/http://earth-info.nga.mil:80/GandG/wgs84/gravitymod/egm96/input.dat), outintpt.dat (https://web.archive.org/web/20061029211313/http://earth-info.nga.mil:80/GandG/wgs84/gravitymod/egm96/outintpt.dat) and intpt.f (https://web.archive.org/web/20070112050942/http://earth-info.nga.mil:80/GandG/wgs84/gravitymod/egm96/intpt.f), which sets IWINDO=4, a 4 x 4 spline. Compared on 2026-11-07, PROJ's bilinear vgridshift on the 15-minute grid differs from outintpt.dat by 0.003 to 0.056 m on its six points, and NGA's EGM96 pages (readme.txt and egm96.html, 2006) state no precision for interpolating the grid, so nothing is asserted."
     }
   ]
 }

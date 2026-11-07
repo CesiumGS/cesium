@@ -352,15 +352,16 @@ function noVerticalGrid(
       (c) => !c.ballpark,
     );
     if (anywhere !== undefined) {
+      const degrees = (value: number) => `${value.toFixed(4)}°`;
       const box = (b: AreaOfInterest) =>
-        `west ${b.west}, south ${b.south}, east ${b.east}, north ${b.north}`;
+        `W ${degrees(b.west)}, S ${degrees(b.south)}, E ${degrees(b.east)}, N ${degrees(b.north)}`;
       const accuracy =
         anywhere.accuracy === undefined ? "" : ` (${anywhere.accuracy} m)`;
       const applies =
         anywhere.areaOfUse === undefined
           ? ""
           : `, applies to ${box(anywhere.areaOfUse)}`;
-      return `${name}: no accurate operation from ${from} covers the area of interest (${box(area)}); PROJ's best without it, ${anywhere.name}${accuracy}${applies}. ${ballpark}`;
+      return `${name}: no accurate operation from ${from} covers the area of interest (${box(area)}); PROJ's best without the area, ${anywhere.name}${accuracy}${applies}. ${ballpark}`;
     }
   }
   const here = parts.horizontal.geodeticName ?? parts.horizontal.name;

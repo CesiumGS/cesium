@@ -70,28 +70,36 @@ interface Projection {
  *    PROJ's eqc forces a sphere of radius a (EPSG:32662 and ESRI:54002's
  *    +proj=eqc +datum=WGS84 still have the sphere's 1/cos phi as their
  *    parallel scale).
- *  - Mercator (Spherical) (1026): listed with the semi-major axis, but PROJ
- *    9.7.1 writes it as +proj=merc +R_C, the conformal sphere at the
- *    latitude of origin (the semi-minor axis at 0°), so checkSphere throws
- *    for it on an ellipsoid (factors.test.ts, plan 4b Task 9). proj.db has
- *    no such CRS today. Its deprecated twin, Mercator (1SP) (Spherical)
- *    (9841), PROJ 9.7.1 can't build at all.
  * PROJ's own scales for all of these are the sphere's, so h and k come from
  * the derivatives. checkSphere confirms each radius against PROJ's own
  * coordinates, so a radius PROJ does not use throws rather than misleads.
+ *
+ * Mercator (Spherical) (1026) is not among them: PROJ 9.7.1 writes it as
+ * +proj=merc +R_C, on the conformal sphere at the latitude of origin, R_C =
+ * a sqrt(1 - e2) / (1 - e2 sin^2 phi0), and gridFactors refuses it on an
+ * ellipsoid (CONFORMAL_SPHERE_METHODS). Supporting it would be one more
+ * radius here, R_C(phi0), with tests (a possible later change; plan 4b Task
+ * 9). On a sphere PROJ's own scales are right. proj.db has no such CRS
+ * today, and PROJ 9.7.1 can't build its deprecated twin, Mercator (1SP)
+ * (Spherical) (9841), at all.
  */
 const SPHERICAL_METHODS: Readonly<
   Record<string, (a: number, e2: number) => number>
 > = {
   "1024": (a) => a,
-  "1026": (a) => a,
-  "9841": (a) => a,
   "1029": (a) => a,
   "9823": (a) => a,
   "1027": authalicRadius,
   "9821": authalicRadius,
   "9834": authalicRadius,
 };
+
+/**
+ * EPSG's spherical-formula methods that PROJ projects on the conformal sphere
+ * at the latitude of origin when the datum is an ellipsoid, which gridFactors
+ * doesn't support there (see SPHERICAL_METHODS).
+ */
+const CONFORMAL_SPHERE_METHODS: ReadonlySet<string> = new Set(["1026"]);
 
 function authalicRadius(a: number, e2: number): number {
   const e = Math.sqrt(e2);
@@ -141,6 +149,15 @@ function projectionOf(frame: EngineeringFrame): Projection {
   const method = P.proj_coordoperation_get_method_info(
     P.proj_crs_get_coordoperation(horizontal),
   );
+  if (
+    method.method_auth_name === "EPSG" &&
+    e2 > 0 &&
+    CONFORMAL_SPHERE_METHODS.has(method.method_code)
+  ) {
+    throw new Error(
+      `gridFactors: EPSG method ${method.method_code} (${method.method_name}) on an ellipsoid: PROJ projects it on the conformal sphere R_C(φ0); gridFactors supports this method only on a sphere`,
+    );
+  }
   const radiusOf =
     method.method_auth_name === "EPSG" && e2 > 0
       ? SPHERICAL_METHODS[method.method_code]
