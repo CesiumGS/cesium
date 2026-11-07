@@ -6863,6 +6863,42 @@ asset 2: no access token`, on every example.
   adds that times a point's distance from the Moon's centre, so the lunar
   site walks to ITRF at ±0.52 m, not the ±3 cm `accuracyOf` alone gives.)
 
+_Plan 5 design input: routing a design CRS into the frame tree (owner,
+2026-11-07)._ Today an engineering frame relates its CRS to WGS 84
+(EPSG:4979), and PROJ ranks the candidate operations by a stated accuracy that
+the step to the WGS 84 ensemble dominates (1–2 m). For California zone 3 +
+NAVD88 that made PROJ prefer GEOID99 plus NADCON5 (±1.14 m) over GEOID18
+(±2.015 m), though GEOID18 is NGS's current model and the one an engineer's
+data uses. Plan 4b pinned GEOID18 and ruled that a "better" candidate must
+keep the same geoid. Plan 5 designs the routing properly:
+
+- **Route to the frame tree's own root, not to WGS 84.** Relate a design CRS
+  to ITRF2020 at the frame's epoch, through the published transformation for
+  its datum (for NAD83(2011), NGS's 14-parameter Helmert to ITRF2020; check
+  `proj.db` carries it). Stated accuracies then describe the real chain at
+  centimetre level, and comparing candidates means something.
+- **Reasonable defaults, decided by the engine.** Per height system, prefer the
+  current geoid model (GEOID18 for NAVD88, and so on). Per horizontal datum,
+  prefer the published, time-dependent route to ITRF. Rank by stated accuracy
+  only among candidates that agree on those. The defaults should be data (a
+  small table the engine ships, with sources), not code paths.
+- **Explicitly configurable through the API.** An application can name the
+  geoid model, the datum route or a whole pinned pipeline per frame, and can
+  read back which route was taken and why (`RecordedOperation`, and the
+  skipped candidates with their reasons).
+
+_Plan 5 design input: snapping on the GPU, and the client/server split
+(owner, 2026-11-07)._ Mirror 1.x: `Scene#snap` is a client-side GPU snapping
+pass (an offscreen pick render into an RGBA32F target whose pixels carry the
+pick ID, an edge flag and eye-space depth; `Snapping.js`, `SnapFramebuffer.js`),
+and `SnapService` / `IonSnapService` is the separable server side, which
+refines a snap against the source design data from the client's element, test
+point, camera and canvas size (`snapPoint`, `hitPoint`, heat, geometry type,
+curve). Plan 4b ships the split with a CPU stand-in for the client side
+(retained tile geometry) and the design globe's exact alignment snap standing
+in for the server. Plan 5 replaces the stand-in with a GPU snap pass, which
+handles occlusion and cost by construction.
+
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`
 works in Earth-fixed coordinates, constrains the camera to the ellipsoid, and
