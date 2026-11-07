@@ -21,10 +21,12 @@ import {
   crsUnits,
   crsDefinition,
   listOperations,
+  compoundParts,
   resolveOperation,
   type AreaOfInterest,
   type CrsRef,
   type CrsUnits,
+  type OperationCandidate,
   type RecordedOperation,
 } from "./crs.ts";
 import type { GridCatalog } from "./gridCatalog.ts";
@@ -70,6 +72,41 @@ export interface EngineeringFrameDefinition {
    * operations whose area of use contains it (see `ResolveOptions`).
    */
   readonly areaOfInterest?: AreaOfInterest;
+  /**
+   * A global geoid to read design heights against when the CRS's own
+   * vertical datum can't be used (the plan's call 9). It applies only when
+   * `crs` is a `wkid` reference with a `vcsWkid` (EPSG), PROJ's candidates
+   * for it fail for want of grids, and the horizontal CRS alone resolves with
+   * none missing. The frame then resolves `{ ...crs, vcsWkid: 5773 }`
+   * (EGM96) or `3855` (EGM2008) and records it in `fallback`; `load` fetches
+   * the model's grid. Design heights keep the CRS's vertical unit and
+   * direction. Not with `pipeline`.
+   */
+  readonly geoidFallback?: GeoidModel;
+  /**
+   * The fallback's standard uncertainty in metres, as the app knows it (the
+   * gap between the replaced datum and the model). Without it the fallback's
+   * accuracy is undefined, never small. Positive; only with `geoidFallback`.
+   */
+  readonly fallbackSigma?: number;
+}
+
+/** A global geoid model a frame can fall back to (`geoidFallback`). */
+export type GeoidModel = "EGM96" | "EGM2008";
+
+/** The EPSG vertical CRS of each model's heights. */
+const GEOID_MODEL_CRS: Readonly<Record<GeoidModel, number>> = {
+  EGM96: 5773,
+  EGM2008: 3855,
+};
+
+/** A geoid fallback a frame took (`EngineeringFrameDefinition.geoidFallback`). */
+export interface EngineeringFrameFallback {
+  readonly model: GeoidModel;
+  /** The EPSG code of the vertical CRS the model replaced (`crs.vcsWkid`). */
+  readonly replacedVertical: number;
+  /** `fallbackSigma`, metres; absent when the app gave none (accuracy undefined). */
+  readonly sigma?: number;
 }
 
 /** Options for `EngineeringFrame.load`. */
@@ -168,6 +205,114 @@ function gridsToLoad(
   return [];
 }
 
+/**
+ * Whether `resolveOperation`'s walk (crs.ts) can take a candidate now: not a
+ * ballpark (unless `allowBallpark`), with a PROJ string, every grid loaded,
+ * and instantiable. Keep with that walk and `gridsToLoad`.
+ */
+function usable(
+  candidate: OperationCandidate,
+  allowBallpark: boolean,
+): boolean {
+  return (
+    (allowBallpark || !candidate.ballpark) &&
+    candidate.pipeline !== "" &&
+    candidate.missingGrids.length === 0 &&
+    candidate.instantiable
+  );
+}
+
+/**
+ * The CRS a definition's `geoidFallback` makes it resolve instead, or
+ * undefined when the fallback doesn't apply (call 9): `crs` is an EPSG `wkid`
+ * reference with a `vcsWkid`; none of PROJ's candidates for it is usable now
+ * and a non-ballpark one lacks grids (its resolution fails for missing
+ * grids); and the horizontal CRS alone has a usable non-ballpark candidate
+ * (it resolves with none missing).
+ */
+function fallbackCrs(
+  definition: EngineeringFrameDefinition,
+  proj: ProjApi,
+  target: CrsRef,
+): CrsRef | undefined {
+  const { crs, geoidFallback, areaOfInterest } = definition;
+  if (
+    geoidFallback === undefined ||
+    crs.format !== "wkid" ||
+    crs.vcsWkid === undefined ||
+    crs.authority.toUpperCase() !== "EPSG"
+  ) {
+    return undefined;
+  }
+  const options = areaOfInterest === undefined ? {} : { areaOfInterest };
+  const allowBallpark = definition.allowBallpark ?? false;
+  const candidates = listOperations(proj, crs, target, options);
+  const failsForGrids =
+    !candidates.some((c) => usable(c, allowBallpark)) &&
+    candidates.some(
+      (c) => !c.ballpark && c.pipeline !== "" && c.missingGrids.length > 0,
+    );
+  if (!failsForGrids) {
+    return undefined;
+  }
+  const horizontal: CrsRef = {
+    format: "wkid",
+    authority: crs.authority,
+    wkid: crs.wkid,
+    ...(crs.epoch !== undefined && { epoch: crs.epoch }),
+  };
+  const resolves = listOperations(proj, horizontal, target, options).some((c) =>
+    usable(c, false),
+  );
+  return resolves
+    ? { ...crs, vcsWkid: GEOID_MODEL_CRS[geoidFallback] }
+    : undefined;
+}
+
+/**
+ * Call 11's message, for a compound CRS whose vertical part only a ballpark
+ * relates to the ellipsoid (NOAA's MLLW depth, EPSG:5866, has no
+ * transformation in proj.db): every candidate for the CRS is a ballpark, and
+ * so is every one for its vertical CRS alone, while its horizontal CRS alone
+ * has one that isn't. Undefined otherwise (the generic message stands).
+ */
+function noVerticalGrid(
+  proj: ProjApi,
+  definition: EngineeringFrameDefinition,
+  target: CrsRef,
+): string | undefined {
+  const parts = compoundParts(proj, definition.crs);
+  if (parts === undefined) {
+    return undefined;
+  }
+  const options =
+    definition.areaOfInterest === undefined
+      ? {}
+      : { areaOfInterest: definition.areaOfInterest };
+  const onlyBallparks = (ref: CrsRef) =>
+    listOperations(proj, ref, target, options).every((c) => c.ballpark);
+  const compound = listOperations(proj, definition.crs, target, options);
+  if (
+    compound.length === 0 ||
+    !compound.every((c) => c.ballpark) ||
+    !onlyBallparks(parts.vertical.ref) ||
+    onlyBallparks(parts.horizontal.ref)
+  ) {
+    return undefined;
+  }
+  const shown = crsDefinition(definition.crs);
+  return `${parts.vertical.name}: no PROJ-data grid relates it to the ellipsoid (from ${shown.length > 80 ? `${shown.slice(0, 77)}...` : shown}); PROJ offers only a ballpark operation, with undefined accuracy (pass allowBallpark: true to accept it)`;
+}
+
+/** `f()`, or undefined if it throws. */
+function unlessThrows<T>(f: () => T): T | undefined {
+  try {
+    return f();
+  } catch {
+    return undefined;
+  }
+}
+
 const RADIANS_PER_DEGREE = Math.PI / 180;
 
 /**
@@ -202,9 +347,19 @@ export class EngineeringFrame {
    * empty.
    */
   readonly gridCredits: readonly string[];
+  /**
+   * The geoid fallback the frame took (`definition.geoidFallback`), when it
+   * took one: `operation` is then the fallback CRS's, and design heights are
+   * that model's heights, in `units`' vertical unit and direction.
+   */
+  readonly fallback?: EngineeringFrameFallback;
   // Metres per design height unit the operation leaves unconverted; 1 where
   // PROJ already returns metres.
   private readonly heightScale: number;
+  // The operation's input height per design height unit: 1, except for a
+  // fallback whose CRS's vertical unit or direction differs from the
+  // model's (metres, up).
+  private readonly operationHeight: number;
 
   private constructor(
     definition: EngineeringFrameDefinition,
@@ -213,8 +368,14 @@ export class EngineeringFrame {
     heightScale: number,
     proj: ProjApi,
     gridCredits: readonly string[],
+    fallback: EngineeringFrameFallback | undefined,
+    operationHeight: number,
   ) {
     this.proj = proj;
+    if (fallback !== undefined) {
+      this.fallback = fallback;
+    }
+    this.operationHeight = operationHeight;
     this.gridCredits = gridCredits;
     this.definition = definition;
     this.alignments = (definition.alignments ?? []).map(
@@ -242,6 +403,13 @@ export class EngineeringFrame {
    * for a body with no known geographic CRS, and as `resolveOperation` does
    * when no operation has its grids. Better candidates it skips for missing
    * grids are in `operation.betterCandidates`.
+   *
+   * With `geoidFallback`, a CRS that fails for missing grids resolves the
+   * fallback CRS instead (see `EngineeringFrameDefinition.geoidFallback`;
+   * the model's grid must be loaded). A compound CRS whose vertical part
+   * only a ballpark relates to the ellipsoid (MLLW depth) throws
+   * "<vertical CRS name>: no PROJ-data grid relates it to the ellipsoid"
+   * (call 11) unless `allowBallpark` is set.
    */
   static create(
     definition: EngineeringFrameDefinition,
@@ -262,9 +430,11 @@ export class EngineeringFrame {
    * whose missing grids the catalog has (a pinned pipeline: the grids it
    * names that the catalog has), then calls `create`. A grid the catalog
    * lacks is never fetched: `create` then takes the next candidate and
-   * records the better one in `operation.betterCandidates`. Rejects as
-   * `create` throws, before fetching anything for a definition `create`
-   * refuses, and as `loadGrids` rejects.
+   * records the better one in `operation.betterCandidates`. When a
+   * `geoidFallback` will apply, it also fetches what the fallback CRS's
+   * best operation needs (the model's grid, `us_nga_egm96_15.tif` or
+   * `us_nga_egm08_25.tif`). Rejects as `create` throws, before fetching
+   * anything for a definition `create` refuses, and as `loadGrids` rejects.
    */
   static async load(
     definition: EngineeringFrameDefinition,
@@ -282,6 +452,22 @@ export class EngineeringFrame {
       if (names.length > 0) {
         await loadGrids(proj, grids, names);
       }
+      // A fallback that will apply: fetch what its CRS's best operation
+      // needs (the model's grid).
+      const fallback = unlessThrows(() =>
+        fallbackCrs(definition, proj, checked.target),
+      );
+      if (fallback !== undefined) {
+        const more = gridsToLoad(
+          { ...definition, crs: fallback },
+          proj,
+          checked.target,
+          grids.catalog,
+        );
+        if (more.length > 0) {
+          await loadGrids(proj, grids, more);
+        }
+      }
     }
     return EngineeringFrame.resolve(definition, proj, checked, grids?.catalog);
   }
@@ -292,7 +478,32 @@ export class EngineeringFrame {
     proj: ProjApi,
   ): { readonly target: CrsRef; readonly units: CrsUnits } {
     const target = geographicTarget(definition.body);
-    const { site } = definition;
+    const { site, geoidFallback, fallbackSigma } = definition;
+    if (
+      geoidFallback !== undefined &&
+      !Object.hasOwn(GEOID_MODEL_CRS, geoidFallback)
+    ) {
+      throw new RangeError(
+        `EngineeringFrame: geoidFallback must be "EGM96" or "EGM2008", got ${JSON.stringify(geoidFallback)}`,
+      );
+    }
+    if (fallbackSigma !== undefined) {
+      if (!(fallbackSigma > 0 && Number.isFinite(fallbackSigma))) {
+        throw new RangeError(
+          `EngineeringFrame: fallbackSigma must be a positive number of metres, got ${fallbackSigma}`,
+        );
+      }
+      if (geoidFallback === undefined) {
+        throw new RangeError(
+          "EngineeringFrame: fallbackSigma is given without a geoidFallback",
+        );
+      }
+    }
+    if (geoidFallback !== undefined && definition.pipeline !== undefined) {
+      throw new Error(
+        "EngineeringFrame: geoidFallback doesn't apply to a pinned pipeline; pin the fallback CRS's pipeline instead",
+      );
+    }
     if (site !== undefined) {
       if (!(site.scale > 0 && Number.isFinite(site.scale))) {
         throw new RangeError(
@@ -326,7 +537,7 @@ export class EngineeringFrame {
     catalog: GridCatalog | undefined,
   ): EngineeringFrame {
     const target = crsDefinition(targetRef);
-    const operation = resolveOperation(proj, definition.crs, target, {
+    const options = {
       ...(definition.pipeline !== undefined && {
         pipeline: definition.pipeline,
       }),
@@ -336,7 +547,54 @@ export class EngineeringFrame {
       ...(definition.areaOfInterest !== undefined && {
         areaOfInterest: definition.areaOfInterest,
       }),
-    });
+    };
+    let operation: RecordedOperation;
+    let fallback: EngineeringFrameFallback | undefined;
+    let operationHeight = 1;
+    try {
+      operation = resolveOperation(proj, definition.crs, target, options);
+    } catch (error) {
+      // The diagnoses list PROJ's candidates again; should that fail, the
+      // resolution's own error stands.
+      const replacement = unlessThrows(() =>
+        fallbackCrs(definition, proj, targetRef),
+      );
+      if (replacement === undefined) {
+        // Only PROJ's own search, refused for its ballpark: a pinned
+        // pipeline's error, or one with allowBallpark, stands as it is.
+        const message =
+          definition.pipeline === undefined && definition.allowBallpark !== true
+            ? unlessThrows(() => noVerticalGrid(proj, definition, targetRef))
+            : undefined;
+        if (message !== undefined) {
+          throw new Error(message, { cause: error });
+        }
+        throw error;
+      }
+      const model = definition.geoidFallback!;
+      try {
+        operation = resolveOperation(proj, replacement, target, options);
+      } catch (fallbackError) {
+        throw new Error(
+          `EngineeringFrame "${definition.name}": the ${model} fallback for ${crsDefinition(definition.crs)} (${(error as Error).message}) can't be resolved either: ${(fallbackError as Error).message}`,
+          { cause: fallbackError },
+        );
+      }
+      fallback = {
+        model,
+        replacedVertical: (definition.crs as { vcsWkid: number }).vcsWkid,
+        ...(definition.fallbackSigma !== undefined && {
+          sigma: definition.fallbackSigma,
+        }),
+      };
+      // Design heights keep the CRS's vertical unit and direction; the
+      // operation takes the model's.
+      const model3d = crsUnits(proj, replacement);
+      const signed = (u: CrsUnits) =>
+        (u.metersPerVerticalUnit ?? 1) *
+        (u.verticalDirection === "down" ? -1 : 1);
+      operationHeight = signed(units) / signed(model3d);
+    }
     // PROJ converts a vertical axis's unit on the way to EPSG:4979. Where it
     // does not (the Moon's target passes heights through; a CRS with no
     // vertical axis has nothing to convert), the design height is in the
@@ -361,6 +619,8 @@ export class EngineeringFrame {
       heightScale,
       proj,
       gridCredits,
+      fallback,
+      operationHeight,
     );
   }
 
@@ -417,7 +677,11 @@ export class EngineeringFrame {
 
   /** Geodetic position of a design point: radians and metres (R4). */
   toGeodetic(design: ArrayLike<number>): Cartographic {
-    const geographic = this.operation.forward(this.projected(design));
+    const projected = this.projected(design);
+    if (this.operationHeight !== 1) {
+      projected[2] = projected[2]! * this.operationHeight;
+    }
+    const geographic = this.operation.forward(projected);
     return cartographic(
       geographic[0]! * RADIANS_PER_DEGREE,
       geographic[1]! * RADIANS_PER_DEGREE,
@@ -453,6 +717,9 @@ export class EngineeringFrame {
       geodetic.latitude / RADIANS_PER_DEGREE,
       geodetic.height / this.heightScale,
     ]);
+    if (this.operationHeight !== 1) {
+      projected[2] = projected[2]! / this.operationHeight;
+    }
     return this.fromProjected(projected, out);
   }
 }
@@ -489,7 +756,10 @@ export function designPoint(
  *    from a convergence formula. East is north x up.
  *  - Scale is `units.metersPerUnit` horizontally and the frame's
  *    `metersPerHeightUnit` along up (the vertical unit, else the horizontal
- *    one), not the point scale factor, and not the site scale either.
+ *    one), not the point scale factor, and not the site scale either. For a
+ *    depth CRS (`units.verticalDirection` "down") it is -`metersPerHeightUnit`:
+ *    the matrix's third column points down, and design depth +10 lies 10
+ *    units below the anchor along the surface normal.
  */
 export class RigidPlacement {
   readonly frame: EngineeringFrame;
@@ -501,13 +771,17 @@ export class RigidPlacement {
   private readonly north: Float64Array;
   private readonly up: Float64Array;
   private readonly scale: number;
+  // Metres along up per design height unit: negative for a depth CRS.
   private readonly heightUnit: number;
 
   private constructor(frame: EngineeringFrame, anchorDesign: Float64Array) {
     this.frame = frame;
     this.anchor = anchorDesign;
     this.scale = frame.units.metersPerUnit;
-    this.heightUnit = frame.metersPerHeightUnit;
+    this.heightUnit =
+      frame.units.verticalDirection === "down"
+        ? -frame.metersPerHeightUnit
+        : frame.metersPerHeightUnit;
     const origin = frame.toBodyFixed(anchorDesign);
     const up = v3.vec3();
     if (frame.body.ellipsoid.geodeticSurfaceNormal(origin, up) === undefined) {

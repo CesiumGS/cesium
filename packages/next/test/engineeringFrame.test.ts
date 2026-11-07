@@ -13,7 +13,11 @@ import type { ProjApi } from "../src/engineering/projApi.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 
-const stub = (metersPerUnit = 1, vertical?: number): ProjApi =>
+const stub = (
+  metersPerUnit = 1,
+  vertical?: number,
+  verticalDirection = "up",
+): ProjApi =>
   ({
     proj_create: () => ({}),
     proj_get_name: () => "stub",
@@ -28,6 +32,8 @@ const stub = (metersPerUnit = 1, vertical?: number): ProjApi =>
     proj_cs_get_axis_info: (_: unknown, index: number) => ({
       unit_name: "stub unit",
       unit_conv_factor: index === 2 ? vertical : metersPerUnit,
+      direction:
+        index === 2 ? verticalDirection : index === 0 ? "east" : "north",
     }),
     proj_coord: (x: number, y: number, z: number, t: number) => ({
       v: [x, y, z, t],
@@ -229,5 +235,112 @@ describe("RigidPlacement over the stub", () => {
     ).toBeCloseTo(1, 9);
     const back = placement.fromBodyFixed(above);
     expect(back[2]).toBeCloseTo(anchor[2]! + 1, 6);
+  });
+});
+
+describe("depth axes over the stub", () => {
+  it("reads the height axis's direction into units.verticalDirection", () => {
+    expect(
+      EngineeringFrame.create(definition(), stub(1, 1)).units.verticalDirection,
+    ).toBe("up");
+    expect(
+      EngineeringFrame.create(definition(), stub(1, 1, "down")).units
+        .verticalDirection,
+    ).toBe("down");
+    expect(
+      EngineeringFrame.create(definition(), stub()).units.verticalDirection,
+    ).toBeUndefined();
+  });
+
+  it("a rigid placement puts design depth 10 ten units below the anchor's surface normal", () => {
+    // Metre horizontal, 0.3048 m (foot) depth.
+    const frame = EngineeringFrame.create(
+      definition(),
+      stub(1, 0.3048, "down"),
+    );
+    expect(frame.metersPerHeightUnit).toBe(0.3048);
+    const anchor = [0, 0, 0];
+    const placement = RigidPlacement.at(frame, anchor);
+    const o = placement.toBodyFixed(anchor);
+    const deep = placement.toBodyFixed([0, 0, 10]);
+    const up = EARTH.ellipsoid.geodeticSurfaceNormal(o, new Float64Array(3))!;
+    const d = [deep[0]! - o[0]!, deep[1]! - o[1]!, deep[2]! - o[2]!];
+    expect(Math.hypot(d[0]!, d[1]!, d[2]!)).toBeCloseTo(3.048, 9);
+    expect(d[0]! * up[0]! + d[1]! * up[1]! + d[2]! * up[2]!).toBeCloseTo(
+      -3.048,
+      9,
+    );
+    // The matrix's up column points down too, and agrees with toBodyFixed.
+    const m = placement.matrix;
+    for (let r = 0; r < 3; r++) {
+      expect(m[8 + r]!).toBeCloseTo(-0.3048 * up[r]!, 12);
+      expect(m[8 + r]! * 10 + m[12 + r]!).toBeCloseTo(deep[r]!, 6);
+    }
+    // And back, exactly: within 1e-9 m (the body-fixed coordinates' ulp is
+    // about 1e-9 m, so compare metres, not feet).
+    const metres = [1, 1, 0.3048];
+    for (const design of [
+      [0, 0, 10],
+      [0.01, -0.02, -4],
+    ]) {
+      const back = placement.fromBodyFixed(placement.toBodyFixed(design));
+      for (let i = 0; i < 3; i++) {
+        expect(Math.abs(back[i]! - design[i]!) * metres[i]!).toBeLessThan(1e-9);
+      }
+    }
+  });
+});
+
+describe("geoid fallback definitions", () => {
+  const wkid = {
+    format: "wkid",
+    authority: "EPSG",
+    wkid: 9488,
+    vcsWkid: 9471,
+  } as const;
+
+  it("rejects an unknown model, naming the field", () => {
+    expect(() =>
+      EngineeringFrame.create(
+        definition({
+          pipeline: undefined,
+          crs: wkid,
+          geoidFallback: "EGM84" as unknown as "EGM96",
+        }),
+        stub(),
+      ),
+    ).toThrow(/geoidFallback/);
+  });
+
+  it("rejects a fallbackSigma that isn't positive and finite, or has no fallback", () => {
+    for (const fallbackSigma of [0, -1, Number.NaN, Infinity]) {
+      expect(() =>
+        EngineeringFrame.create(
+          definition({ crs: wkid, geoidFallback: "EGM96", fallbackSigma }),
+          stub(),
+        ),
+      ).toThrow(/fallbackSigma/);
+    }
+    expect(() =>
+      EngineeringFrame.create(
+        definition({ crs: wkid, fallbackSigma: 1 }),
+        stub(),
+      ),
+    ).toThrow(/fallbackSigma/);
+  });
+
+  it("rejects a fallback with a pinned pipeline", () => {
+    expect(() =>
+      EngineeringFrame.create(
+        definition({ crs: wkid, geoidFallback: "EGM96" }),
+        stub(),
+      ),
+    ).toThrow(/geoidFallback.*pipeline/);
+  });
+
+  it("a frame that resolves has no fallback", () => {
+    expect(EngineeringFrame.create(definition(), stub()).fallback).toBe(
+      undefined,
+    );
   });
 });

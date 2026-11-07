@@ -79,6 +79,12 @@ export interface CrsUnits {
   /** The height axis's unit, for a compound or 3D CRS. */
   readonly verticalUnitName?: string;
   readonly metersPerVerticalUnit?: number;
+  /**
+   * The height axis's direction, for a compound or 3D CRS whose third axis
+   * PROJ gives as "up" or "down": "down" for a depth CRS (such as a LAT or
+   * MLLW depth, where +10 lies 10 units below 0).
+   */
+  readonly verticalDirection?: "up" | "down";
 }
 
 /**
@@ -834,6 +840,8 @@ export function crsUnits(proj: ProjApi, ref: CrsRef): CrsUnits {
   ) {
     vertical = axis(crs, 2);
   }
+  // PROJ gives axis directions in lower case ("up", "down", "east", ...).
+  const direction = vertical?.direction?.toLowerCase();
   return {
     projected: proj.proj_get_type(horizontalCrs) === proj.PJ_TYPE_PROJECTED_CRS,
     horizontalUnitName: horizontal.unit_name,
@@ -842,5 +850,63 @@ export function crsUnits(proj: ProjApi, ref: CrsRef): CrsUnits {
       verticalUnitName: vertical.unit_name,
       metersPerVerticalUnit: vertical.unit_conv_factor,
     }),
+    ...((direction === "up" || direction === "down") && {
+      verticalDirection: direction,
+    }),
+  };
+}
+
+/** One part of a compound CRS: its name, and a reference to it alone. */
+export interface CrsPart {
+  readonly name: string;
+  readonly ref: CrsRef;
+}
+
+/**
+ * A compound CRS's horizontal and vertical parts, each with its name and a
+ * reference to it alone: for a `wkid` reference with a `vcsWkid`, the two
+ * codes (the horizontal keeping the epoch); otherwise each sub-CRS's WKT2,
+ * a bound sub-CRS keeping its transformation. Undefined for a CRS that isn't
+ * compound.
+ */
+export function compoundParts(
+  proj: ProjApi,
+  ref: CrsRef,
+): { readonly horizontal: CrsPart; readonly vertical: CrsPart } | undefined {
+  const crs = unbound(proj, create(proj, crsDefinition(ref), "the CRS"));
+  if (proj.proj_get_type(crs) !== proj.PJ_TYPE_COMPOUND_CRS) {
+    return undefined;
+  }
+  const part = (index: number, codeRef: CrsRef | undefined): CrsPart => {
+    const sub = proj.proj_crs_get_sub_crs(crs, index);
+    return {
+      name:
+        proj.proj_get_name(unbound(proj, sub)) ??
+        (index === 0 ? "The horizontal CRS" : "The vertical CRS"),
+      ref: codeRef ?? {
+        format: "wkt2",
+        wkt2: proj.proj_as_wkt(sub, proj.PJ_WKT2_2019),
+      },
+    };
+  };
+  const codes = ref.format === "wkid" && ref.vcsWkid !== undefined;
+  return {
+    horizontal: part(
+      0,
+      codes
+        ? {
+            format: "wkid",
+            authority: ref.authority,
+            wkid: ref.wkid,
+            ...(ref.epoch !== undefined && { epoch: ref.epoch }),
+          }
+        : undefined,
+    ),
+    vertical: part(
+      1,
+      codes
+        ? { format: "wkid", authority: ref.authority, wkid: ref.vcsWkid! }
+        : undefined,
+    ),
   };
 }
