@@ -931,6 +931,7 @@ No UI is in this task.
     - `pairs: { id; from: number; to: number /* indices into points */; designDistance; horizontalDistance; trueDistance; ends: { a: { station; offset }; b: { station; offset } } }[]`.
 
     Write the generator and this type from one shape: Task 14 writes what this type reads.
+  - **The survey mark** (owner, 2026-11-07). `Answers` gains `mark: { pid; name; datasheetUrl; retrieved; geodetic: { longitude; latitude; ellipsoidHeight } /* NAD83(2011), as NGS publishes */; publishedSpc: { easting; northing } /* zone 3, US ft, from the datasheet */; nearest: { station; offset }; designDistance; trueDistance }`. Pick a real NGS mark within a few hundred feet of the corridor near its far end, with a NAD83(2011) position and zone 3 coordinates on its datasheet. The generator (Task 14's script, extended here) computes its nearest centreline point and the distances. A check row compares PROJ's zone 3 coordinates for the mark with the datasheet's (kind "published reference").
   - **`loadAnswers(url: string, signal: AbortSignal): Promise<Answers>`.** It validates the shape and the finite numbers, and throws naming the path.
   - **`class ExactSnapService implements SnapService`**, with `constructor(tileset: Tileset3D /* a corridor tileset */, alignment: Alignment)`. It is the server side of Task 16's split (owner, 2026-11-07, mirroring 1.x's `SnapService`): it takes a `ServiceSnapRequest` built from the client snap (`testPoint` = the client's `hitPoint`, `closePoint` = its `snapPoint`, the same camera snapshot) and refines it against the design data. The page runs it through `refiningSnap(request, client, exact, onUpdate)`, so the client's mesh snap shows at once and the exact answer replaces it.
     - It snaps in design space, from `placement.designOf(testPoint)`, within the aperture converted to design units by the footprint. In order:
@@ -999,6 +1000,7 @@ No UI is in this task.
   - the two-click state machine (first point, second point, reset with Escape);
   - the snap mode selects `ExactSnapService`, `ClientSnapService` or a plain `pickDesign`;
   - the deep link carries both design points.
+  - the page opens with two measurements already made (owner, 2026-11-07): the design against itself (a marker at station 170,000's true position, to the drawn station: about 31.6 m rigid, 0.000 m reprojected, shrinking during the morph) and the design against the survey mark (`answers.mark`, to the nearest drawn centreline point). A quieter third pair, two stations 10,000 ft apart, shows the design distance identical in both placements.
 - [ ] **Step 2: Implement:**
   - the measure tool, through `measure(a.design, b.design, …)`;
   - the readouts from `measurementModel`;

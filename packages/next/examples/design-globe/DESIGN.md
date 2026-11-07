@@ -34,6 +34,24 @@ the second audience: every number is there and honest, but quieter.
 - **Measurement proves the second half of the claim.** The same two points
   give the same design distance in both placements; the drawn positions and
   the true distance differ, and reprojected gets both right.
+- **The page opens with two measurements already made** (owner, 2026-11-07:
+  "really highlights the importance of using the different frames for
+  measurement"; "show both so as to demonstrate both use cases"):
+  1. **The design against itself:** a ground marker at station 170,000's
+     true position (placed through the design CRS by PROJ, and labelled as
+     the design's own point, not a survey), measured to the drawn station.
+     Rigid: about 31.6 m apart. Reprojected: 0.000 m. The morph shrinks it
+     live.
+  2. **The design against a real survey mark:** an NGS mark near the far end,
+     placed from NGS's published NAD83(2011) position, independent of the
+     design's pipeline, measured to the nearest point on the drawn
+     centreline. Reprojected matches the distance from NGS's published zone 3
+     coordinates; rigid is off by up to about 31 m. The surveyor's question:
+     does the design line up with the control it was surveyed from?
+
+  A quieter third pair, two stations 10,000 ft apart, shows the design
+  distance identical in both placements.
+
 - **The portfolio is a list to fly through**, each site with its CRS, units
   and height system.
 
