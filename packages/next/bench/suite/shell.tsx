@@ -46,6 +46,7 @@ import wordmarkLight from "./assets/Cesium_Logo_Color_Overlay.png";
 import { useTheme } from "./theme.tsx";
 import { useRuns } from "./views/common.tsx";
 import { FirstRun } from "./views/FirstRun.tsx";
+import { worksWithoutRuns } from "./withoutRuns.ts";
 
 /**
  * Dyno's shell (DESIGN.md): StrataKit's navigation rail in three groups
@@ -84,9 +85,6 @@ const GROUPS: Destination[][] = [
   ],
 ];
 const DESTINATIONS = GROUPS.flat();
-
-/** Paths that work without runs; the others show the guided first run. */
-const WITHOUT_RUNS = /^\/(explorer|viewer|images|examples|start|lab)(\/|$)/;
 
 /** The rail item a path belongs to (a run's report belongs to Runs). */
 const destinationOf = (path: string) =>
@@ -377,11 +375,7 @@ export function Shell() {
         className={`content viz ${scheme}`}
         aria-label={active?.label ?? "Dyno"}
       >
-        {summaries.length || WITHOUT_RUNS.test(path) ? (
-          <Outlet />
-        ) : (
-          <FirstRun />
-        )}
+        {summaries.length || worksWithoutRuns(path) ? <Outlet /> : <FirstRun />}
       </main>
 
       <CommandPalette
