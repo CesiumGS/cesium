@@ -6961,6 +6961,41 @@ groundwork for animation in general.
   Cinemachine-style table of defaults, such as "globe → ride-along: 3 s
   ease-in-out"), and app-wide.
 
+_Plan 5 design input: one flat render space, and frames above it (owner,
+2026-11-07)._ This replaces the question of a default frame tree. "The
+default frame tree that's needed for a scene is application dependent and we
+don't need to load up a bunch of frame tree stuff for an app that's never
+going to go into space."
+
+- **The rendering core knows one flat space and nothing about frames:** a
+  Cartesian render space in metres with no meaning attached, a transform per
+  draw, and a camera pose in it. Precision stays camera-relative, so one core
+  serves a site, the Earth and the Moon. The core's only frame-adjacent
+  feature is a per-draw vertex warp hook, for content that is reprojected,
+  flattened or morphing. Without the frames module, a draw's transform is a
+  matrix the application sets.
+- **The frames module is optional and sits above the core.** At each tick's
+  time it resolves every frame in use into the render space and hands the
+  core transforms and warps. The render space is one chosen frame, the
+  **render root**: ITRF for the globe view, the engineering frame for design
+  view (so design coordinates are straight axes, and the globe's tiles reach
+  it flattened through the frame's projection), MOON_ME on the Moon. Design
+  view is not a special mode, and the design-space morph blends two render
+  roots.
+- **Frames are built on demand, so an app pays for what it uses.** Providers
+  load when a frame that needs them is first asked for: an ellipsoid-only
+  Earth (the globe default); Earth orientation (IAU models, plus IERS data
+  for precision) when GCRF is asked for; an ephemeris for the Moon or the
+  Sun; PROJ for an engineering frame; a trajectory with its data. Whoever
+  asks chooses the precision.
+- **The Viewer picks defaults** (for a globe app: ITRF as the render root,
+  the ellipsoid Earth, nothing else); applications on the lower-level APIs
+  choose for themselves, or leave the module out.
+- **The warp hook is also where tessellation meets projection:** the frames
+  module knows each draw's warp (its geometric projection into the render
+  root), so subdividing warped geometry (see "tessellating warped models")
+  can be driven from the same information.
+
 _Plan 5 design input: modules with interfaces (owner, 2026-11-07)._ "We
 should generally be thinking about how to make 2.0 more modular so pieces of
 it can be reused and composed in interesting ways and we can easily plug
