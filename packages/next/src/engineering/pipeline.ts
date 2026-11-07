@@ -45,10 +45,16 @@ function checkKey(key: string): void {
   }
 }
 
-function checkValue(key: string, value: string): void {
-  if (value === "" || /[\s+]/.test(value)) {
+// What PROJ writes in a value (checked against every string proj.db 9.7.1
+// produces). An allowlist, not a blocklist: PROJ's tokenizer honours double
+// quotes, so a quote could hide a "+step" and make PROJ run another pipeline
+// than the one validated here.
+const VALUE = /^[A-Za-z0-9_.,@/:=-]+$/;
+
+function checkValue(key: string, value: unknown): asserts value is string {
+  if (typeof value !== "string" || !VALUE.test(value)) {
     throw new Error(
-      `PROJ pipeline: the value ${shown(value)} of +${key} is empty or holds whitespace or "+"`,
+      `PROJ pipeline: the value ${shown(String(value))} of +${key} is empty or holds a character outside A-Z a-z 0-9 _ . , @ / : = -`,
     );
   }
 }
@@ -107,6 +113,8 @@ function parseStep(text: string, index: number): PipelineStep {
   for (const entry of list) {
     if (entry.key === "inv" && entry.value === true) {
       inverse = true;
+    } else if (entry.key === "inv" || entry.key === "step") {
+      throw new Error(`PROJ pipeline: ${what} has +${entry.key} with a value`);
     } else if (entry.key === "proj") {
       if (typeof entry.value !== "string" || operation !== undefined) {
         throw new Error(`PROJ pipeline: ${what} has a bad +proj`);
@@ -119,6 +127,7 @@ function parseStep(text: string, index: number): PipelineStep {
   if (operation === undefined) {
     throw new Error(`PROJ pipeline: ${what} has no +proj`);
   }
+  checkKey(operation);
   if (operation === "pipeline") {
     throw new Error(`PROJ pipeline: ${what} nests a pipeline`);
   }
@@ -175,7 +184,7 @@ function writeParams(
     if (value === true) {
       out.push(`+${key}`);
     } else {
-      checkValue(key, value);
+      checkValue(key, value as unknown);
       out.push(`+${key}=${value}`);
     }
   }
@@ -194,8 +203,10 @@ function writeStep(step: PipelineStep): string {
 /**
  * The PROJ string for a pipeline: the only place one is made. It validates
  * every key (letters, digits and "_", not starting with a digit) and value
- * (not empty, no whitespace, no "+") and throws, naming the token. One step
- * with no globals is written without the `+proj=pipeline` wrapper.
+ * (only A-Z a-z 0-9 _ . , @ / : = -, so no quote, space or "+") and throws,
+ * naming the token. One step with no globals is written without the
+ * `+proj=pipeline` wrapper, so a one-step pipeline PROJ wrote with the wrapper
+ * is equivalent, not identical, after a round trip.
  */
 export function formatPipeline(pipeline: Pipeline): string {
   const { globals, steps } = pipeline;

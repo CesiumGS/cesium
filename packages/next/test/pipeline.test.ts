@@ -103,3 +103,37 @@ describe("formatPipeline", () => {
     expect(() => formatPipeline({ steps: [] })).toThrow(/no steps/);
   });
 });
+
+describe("values come from an allowlist", () => {
+  it("refuses a quote that would hide a step from PROJ, in both directions", () => {
+    expect(() =>
+      formatPipeline({
+        steps: [
+          { operation: "unitconvert", params: { title: '"x' } },
+          { operation: "affine", params: { xoff: "1000", title: 'y"' } },
+        ],
+      }),
+    ).toThrow(/"\\"x"/);
+    expect(() =>
+      parsePipeline(
+        '+proj=pipeline +step +proj=unitconvert +title="x +step +proj=affine +xoff=1000 +title=y"',
+      ),
+    ).toThrow(/"x/);
+    expect(() => parsePipeline("+proj=utm +zone=1;2")).toThrow(/1;2/);
+  });
+
+  it("refuses values that are not strings or true", () => {
+    expect(() =>
+      formatPipeline({
+        steps: [
+          { operation: "utm", params: { zone: 11 as unknown as string } },
+        ],
+      }),
+    ).toThrow(/11/);
+    expect(() =>
+      formatPipeline({
+        steps: [{ operation: "utm", params: { f: false as unknown as true } }],
+      }),
+    ).toThrow(/false/);
+  });
+});

@@ -9,7 +9,6 @@ import { resolveOperation, type CrsRef } from "../../src/engineering/crs.ts";
 import {
   formatPipeline,
   parsePipeline,
-  pipelineGrids,
 } from "../../src/engineering/pipeline.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
 import fixture from "../fixtures/frames/proj.json";
@@ -53,11 +52,7 @@ describe("the pipelines PROJ records", () => {
       "EPSG:4979",
     );
     expect(op.grids).toContain(GEOID);
-    expect(op.optionalGrids).toEqual(
-      pipelineGrids(parsePipeline(op.pipeline))
-        .filter((g) => g.optional)
-        .map((g) => g.name),
-    );
+    expect(op.optionalGrids).toEqual([]);
   });
 });
 
@@ -105,7 +100,27 @@ describe("a pinned pipeline", () => {
           ],
         },
       }),
-    ).toThrow(/not_a_loaded_grid\.tif/);
+    ).toThrow(/needs not_a_loaded_grid\.tif, which is not loaded/);
+  });
+
+  it("refuses a quote that would hide a step from PROJ", async () => {
+    const P = await loadProj({ base });
+    expect(() =>
+      resolveOperation(P, source, "EPSG:4979", {
+        pipeline:
+          '+proj=pipeline +step +inv +proj=utm +zone=11 +step +proj=unitconvert +title="x +step +proj=affine +xoff=1000 +title=y"',
+      }),
+    ).toThrow(/"x/);
+  });
+
+  it("counts a grid named optional and required as required", async () => {
+    const P = await loadProj({ base });
+    expect(() =>
+      resolveOperation(P, source, "EPSG:4979", {
+        pipeline:
+          "+proj=pipeline +step +proj=hgridshift +grids=@g_missing.tif +step +proj=vgridshift +grids=g_missing.tif +multiplier=1",
+      }),
+    ).toThrow(/needs g_missing\.tif, which is not loaded/);
   });
 
   it("does not require a missing optional grid", async () => {

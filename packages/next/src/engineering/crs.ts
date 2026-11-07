@@ -90,7 +90,7 @@ export interface RecordedOperation {
   readonly pipeline: string;
   /** PROJ's stated accuracy in metres; undefined when PROJ reports none. */
   readonly accuracy: number | undefined;
-  /** Grid files the operation reads (all available when it was resolved). */
+  /** Grid files the operation reads (all required ones loaded when it was resolved; a pinned pipeline may also list optional ones that are not). */
   readonly grids: readonly string[];
   /**
    * The grids in `grids` that are written optional (`@name`): PROJ goes on
@@ -457,7 +457,9 @@ export function resolveOperation(
       ? source.epoch
       : Infinity;
   if (pipeline !== undefined) {
-    // A string is used exactly as given (it is also read, to find its grids).
+    // A string is validated by parsePipeline (same key and value rules as
+    // formatPipeline) and then passed to PROJ exactly as given, not
+    // canonicalized: recorded pinned strings must stay byte-identical.
     const text =
       typeof pipeline === "string" ? pipeline : formatPipeline(pipeline);
     const named = pipelineGrids(
@@ -553,9 +555,17 @@ export function resolveOperation(
 
   if (walk.chosen) {
     const { string, accuracy, grids, ballpark } = walk.chosen;
-    const optionalGrids = pipelineGrids(parsePipeline(string))
-      .filter((grid) => grid.optional)
-      .map((grid) => grid.name);
+    let optionalGrids: string[];
+    try {
+      optionalGrids = pipelineGrids(parsePipeline(string))
+        .filter((grid) => grid.optional)
+        .map((grid) => grid.name);
+    } catch (error) {
+      throw new Error(
+        `PROJ's operation ${where} could not be read (${(error as Error).message})`,
+        { cause: error },
+      );
+    }
     return record(
       proj,
       string,
