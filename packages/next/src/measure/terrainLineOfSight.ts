@@ -1,224 +1,144 @@
-import { Ellipsoid, type Cartographic } from "../math/ellipsoid.ts";
-
-/** Default ground spacing between samples, m. */
-const DEFAULT_STEP = 30;
-/** The most samples one call takes; a longer path coarsens its step. */
-const MAX_SAMPLES = 20_000;
+import { castTerrainRay, type TerrainRayTarget } from "../globe/terrainRay.ts";
 
 export interface TerrainLineOfSightOptions {
-  /** Metres between samples. Default 30, the finest tile's ground spacing. */
-  step?: number;
-  /** Default WGS84. */
-  ellipsoid?: Ellipsoid;
-  /** 1σ error of the terrain heights, m, e.g. the loaded tile's geometric error. */
-  terrainAccuracy?: number;
+  /**
+   * The terrain source's own vertical accuracy, m (e.g. from its
+   * documentation), added to the drawn tiles' geometric error. Unstated, the
+   * accuracy covers the drawn mesh's error alone and the note says so.
+   */
+  sourceAccuracy?: number;
 }
 
 export interface TerrainLineOfSight {
   /**
-   * `true` when every sample is known and above the terrain, `false` when a
-   * known sample is below it, `undefined` when unknown spans could hide an
-   * obstruction. Terrain that isn't loaded is never clear.
+   * `true` when the whole path is over known terrain and above it, `false`
+   * when it meets the drawn terrain (even if other spans are unknown),
+   * `undefined` when unknown spans could hide an obstruction. Terrain that
+   * isn't drawn, or is drawn only as a coarse stand-in while finer tiles
+   * load, is never clear.
    */
   clear: boolean | undefined;
-  /** The ray's lowest height above the terrain among known samples, m. */
+  /**
+   * The segment's lowest height above the drawn terrain over its known
+   * spans, m, ends included (an observer standing on the ground gives 0).
+   */
   minClearance?: number;
-  /** Earth-fixed position of the first sample below the terrain. */
+  /** Earth-fixed position where the segment first meets the terrain. */
   blockedAt?: Float64Array;
-  /** Share of the path's length whose terrain height was unknown, 0 to 1. */
+  /** Share of the path's length over unknown terrain, 0 to 1. */
   unknownFraction: number;
   accuracy: { meters?: number; note: string };
-  /** Metres between samples actually used (0 for a zero-length path). */
-  step: number;
-  /**
-   * The largest change in terrain height between adjacent samples, m: the
-   * error `minClearance` can carry from sampling at `step`.
-   */
-  stepError: number;
 }
-
-const point = new Float64Array(3);
-const geodetic: Cartographic = { longitude: 0, latitude: 0, height: 0 };
 
 /**
  * Whether the straight segment `from`–`to` (Earth-fixed metres) clears the
- * terrain `sampleHeight` describes (ellipsoid height at longitude and latitude
- * in radians; `undefined` where unknown). The segment is a chord in Earth-fixed
- * space, so the earth's curvature enters through the ellipsoid: each sample's
- * height above the ellipsoid is compared with the terrain's.
+ * terrain as drawn (`target`: `Tileset3D.terrainRayTarget`, the globe's,
+ * for the view the answer is shown in). It is an exact ray query against the
+ * drawn triangles (`castTerrainRay`, plan §13.10): no sampling step, so a
+ * ridge one cell wide is caught wherever it sits, and the earth's curvature
+ * comes with the Earth-fixed triangles. Endpoints are observers standing on
+ * or above the terrain: a hit within 1 mm of either end is their own ground.
  *
- * Samples fall every `step` metres (coarser only when that would take more
- * than 20,000, and then `clear` is never `true`), and the lowest one is
- * refined with finer samples either side. Features narrower than the step can
- * be missed. Endpoints are observers standing on or in the terrain, so they
- * are not tested for blocking, though unknown terrain under them counts as
- * unknown.
+ * Place observers on `surfaceHeight` (the drawn surface), not
+ * `sampleHeight`, and again as finer tiles load: an observer left below a
+ * refined surface is blocked by the ground above it.
  *
- * For a page, pass the globe's `surfaceHeight`, not `sampleHeight`. It is the
- * height of the surface as drawn (the triangle the viewer sees) and what
- * clamped content stands on, so an observer placed on it is not buried. The
- * caller's `terrainAccuracy` must cover the drawn surface's offset from the
- * true terrain on coarse tiles, since `surfaceHeight` can lie hundreds of
- * metres below `sampleHeight`.
- *
- * This is CPU sampling along one ray. A GPU viewshed belongs to plan 5's
- * renderer items.
+ * The accuracy is the terrain's at the levels the path crossed: the largest
+ * geometric error among them (the coarsest level's), plus the source's own
+ * when given. The answer is exact for the drawn surface; the true terrain
+ * may lie that far from it.
  */
 export function terrainLineOfSight(
   from: ArrayLike<number>,
   to: ArrayLike<number>,
-  sampleHeight: (longitude: number, latitude: number) => number | undefined,
+  target: TerrainRayTarget,
   options: TerrainLineOfSightOptions = {},
 ): TerrainLineOfSight {
-  const ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
-  const meters = options.terrainAccuracy;
-  const accuracyOf = (note: string): TerrainLineOfSight["accuracy"] =>
-    meters === undefined ? { note } : { meters, note };
-  const length = Math.hypot(
-    to[0]! - from[0]!,
-    to[1]! - from[1]!,
-    to[2]! - from[2]!,
-  );
-  const requested = options.step ?? DEFAULT_STEP;
-  if (!Number.isFinite(length) || !Number.isFinite(requested)) {
+  const ray = castTerrainRay(from, to, target);
+  if (!ray) {
     return {
       clear: undefined,
       unknownFraction: 1,
-      accuracy: accuracyOf("endpoints or step are not finite; nothing sampled"),
-      step: 0,
-      stepError: 0,
+      accuracy: { note: "endpoints are not finite; nothing traced" },
     };
   }
-  const baseStep = Math.max(requested, 1e-3);
-  const n =
-    length === 0 ? 0 : Math.min(MAX_SAMPLES, Math.ceil(length / baseStep));
-  const coarsened = length > 0 && length / n > baseStep * (1 + 1e-9);
-  const step = n === 0 ? 0 : length / n;
-
-  /** Terrain height under the ray at fraction `t`, and the ray's height there. */
-  const sampleAt = (
-    t: number,
-  ): { ground: number | undefined; height: number } => {
-    for (let i = 0; i < 3; i++) {
-      point[i] = from[i]! + (to[i]! - from[i]!) * t;
-    }
-    if (ellipsoid.cartesianToCartographic(point, geodetic) === undefined) {
-      return { ground: undefined, height: NaN };
-    }
-    const ground = sampleHeight(geodetic.longitude, geodetic.latitude);
-    return {
-      ground:
-        ground === undefined || !Number.isFinite(ground) ? undefined : ground,
-      height: geodetic.height,
-    };
-  };
-
-  let unknownCount = 0;
-  let blockedT: number | undefined;
-  let min: number | undefined;
-  let minIndex = -1;
-  let stepError = 0;
-  let previousGround: number | undefined;
-  for (let i = 0; i <= n; i++) {
-    const t = n === 0 ? 0 : i / n;
-    const { ground, height } = sampleAt(t);
-    if (ground === undefined) {
-      unknownCount++;
-      previousGround = undefined;
-      continue;
-    }
-    if (previousGround !== undefined) {
-      stepError = Math.max(stepError, Math.abs(ground - previousGround));
-    }
-    previousGround = ground;
-    if (i === 0 || i === n) {
-      continue;
-    }
-    const c = height - ground;
-    if (min === undefined || c < min) {
-      min = c;
-      minIndex = i;
-    }
-    if (c < 0 && blockedT === undefined) {
-      blockedT = t;
-    }
-  }
-
-  // Refine around the lowest sample with finer samples either side.
-  if (minIndex >= 0 && blockedT === undefined) {
-    let lo = (minIndex - 1) / n;
-    let hi = (minIndex + 1) / n;
-    for (let round = 0; round < 4 && (hi - lo) * length > 0.5; round++) {
-      const parts = 8;
-      let best = (lo + hi) / 2;
-      let bestC = Infinity;
-      for (let k = 1; k < parts; k++) {
-        const tk = lo + ((hi - lo) * k) / parts;
-        const { ground, height } = sampleAt(tk);
-        if (ground !== undefined && height - ground < bestC) {
-          bestC = height - ground;
-          best = tk;
-        }
-      }
-      if (bestC < min!) {
-        min = bestC;
-      }
-      if (bestC < 0) {
-        blockedT = best;
-        break;
-      }
-      const w = (hi - lo) / parts;
-      lo = Math.max(lo, best - w);
-      hi = Math.min(hi, best + w);
-    }
-  }
-
-  // Each sample stands for the half-intervals either side of it, so a single
-  // unknown sample still counts; a zero-length path is all-or-nothing.
+  const { length, known, unknown } = ray;
+  const unknownLength = unknown.notDrawn + unknown.notRefined;
   const unknownFraction =
-    n === 0 ? (unknownCount > 0 ? 1 : 0) : Math.min(1, unknownCount / (n + 1));
-  let blockedAt: Float64Array | undefined;
-  if (blockedT !== undefined) {
-    blockedAt = new Float64Array(3);
-    for (let i = 0; i < 3; i++) {
-      blockedAt[i] = from[i]! + (to[i]! - from[i]!) * blockedT;
-    }
-  }
-  const clear =
-    blockedT !== undefined
-      ? false
-      : unknownCount > 0 || coarsened
-        ? undefined
-        : true;
+    length === 0 ? (known ? 0 : 1) : Math.min(1, unknownLength / length);
+  // Extension point (plan §13.10): buildings and BIM (3D Tiles) keep no CPU
+  // triangles, so they are ray cast on the GPU (`World.castRays`, batched and
+  // asynchronous). A caller that casts this segment there too would merge
+  // its nearest hit with `ray.hit` here, nearest first. Until then this is
+  // terrain only.
+  const blocked = ray.hit !== undefined;
+  const clear = blocked
+    ? false
+    : unknownLength > 0 || !known
+      ? undefined
+      : true;
 
-  const notes = [
-    meters === undefined
-      ? "terrain accuracy not stated"
-      : `terrain heights ±${meters} m (1σ)`,
-    `sampled every ${step.toFixed(1)} m; minClearance can differ by up to ${stepError.toFixed(1)} m from sampling (the largest terrain change within one step); features narrower than the step can be missed`,
-  ];
-  if (coarsened) {
+  const source = options.sourceAccuracy;
+  const meters = known
+    ? known.geometricError + (source !== undefined ? source : 0)
+    : undefined;
+  const notes: string[] = [];
+  if (known) {
+    const levels =
+      known.minLevel === known.maxLevel
+        ? `level ${known.minLevel}`
+        : `levels ${known.minLevel}–${known.maxLevel}`;
     notes.push(
-      `path too long to sample at ${baseStep} m (limit ${MAX_SAMPLES} samples), so clearance is unknown`,
+      `exact against the drawn terrain triangles (${levels}); the drawn surface may lie up to ±${round(known.geometricError)} m from the source's heights (level ${known.minLevel}'s geometric error, the coarsest crossed)`,
+    );
+    notes.push(
+      source !== undefined
+        ? `plus the source's own ±${source} m`
+        : "the source's own accuracy is not stated",
+    );
+  } else {
+    notes.push("no drawn terrain under the path");
+  }
+  if (unknownLength > 0) {
+    const pct = (x: number) => ((x / length) * 100).toFixed(0);
+    const why: string[] = [];
+    if (unknown.notDrawn > 0) {
+      why.push(
+        `${pct(unknown.notDrawn)}% not drawn (not loaded, or out of view)`,
+      );
+    }
+    if (unknown.notRefined > 0) {
+      why.push(
+        `${pct(unknown.notRefined)}% not refined (a coarser tile stands in while finer ones load)`,
+      );
+    }
+    notes.push(
+      `terrain unknown over ${(unknownFraction * 100).toFixed(0)}% of the path: ${why.join(", ")}${clear === undefined ? ", so clearance is unknown" : ""}`,
     );
   }
-  if (unknownCount > 0) {
+  const min = ray.minClearance?.meters;
+  if (min !== undefined && meters !== undefined && Math.abs(min) < meters) {
     notes.push(
-      `terrain unknown over ${(unknownFraction * 100).toFixed(0)}% of the path${clear === undefined ? ", so clearance is unknown" : ""}`,
+      clear === false
+        ? `the block (${round(-min)} m deep) is within the terrain's error, so the true terrain may not block`
+        : `the lowest clearance, ${round(min)} m, is within the terrain's error, so the true terrain may block`,
     );
   }
+  const note = notes.join("; ");
   const result: TerrainLineOfSight = {
     clear,
     unknownFraction,
-    accuracy: accuracyOf(notes.join("; ")),
-    step,
-    stepError,
+    accuracy: meters === undefined ? { note } : { meters, note },
   };
   if (min !== undefined) {
     result.minClearance = min;
   }
-  if (blockedAt) {
-    result.blockedAt = blockedAt;
+  if (ray.hit) {
+    result.blockedAt = ray.hit.point;
   }
   return result;
+}
+
+function round(x: number): string {
+  return x >= 10 ? x.toFixed(0) : x.toFixed(1);
 }

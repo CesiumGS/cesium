@@ -316,6 +316,14 @@ export {
   type TerrainLineOfSight,
   type TerrainLineOfSightOptions,
 } from "./measure/terrainLineOfSight.ts";
+export {
+  castTerrainRay,
+  type TerrainRayOptions,
+  type TerrainRayPatch,
+  type TerrainRayResult,
+  type TerrainRayTarget,
+  type TerrainRayTile,
+} from "./globe/terrainRay.ts";
 export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";

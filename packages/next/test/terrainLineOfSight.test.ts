@@ -1,179 +1,168 @@
 import { describe, expect, it } from "vitest";
-import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { terrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
+import { LEVEL_ZERO_ERROR } from "../src/globe/TerrainSource.ts";
+import {
+  A,
+  WGS84,
+  at,
+  distanceToTile,
+  gridTile,
+  strip,
+  stripTarget,
+  trueMinimumClearance,
+} from "./terrainRayFixtures.ts";
 
-const WGS84 = Ellipsoid.WGS84;
-const A = WGS84.radii[0]!;
+const HALF = 20000 / A; // 20 km either side of the hill
+const W = 3000 / A;
+const SIGMA = 3000 / A;
 const PEAK = 300;
-const SIGMA = 3000 / A; // radians of arc
-
-/** A Gaussian hill at the origin of longitude and latitude. */
 const hill = (lon: number, lat: number): number =>
   PEAK * Math.exp(-(lon * lon + lat * lat) / (2 * SIGMA * SIGMA));
 
-function at(lonRad: number, latRad: number, height: number): Float64Array {
-  return WGS84.cartographicToCartesian(
-    { longitude: lonRad, latitude: latRad, height },
-    new Float64Array(3),
-  );
+/** Eight tiles along the equator; `skip` marks some unknown. */
+function hillTarget(
+  unknown: Record<number, "not drawn" | "not refined"> = {},
+  level = 14,
+) {
+  const rects = strip(-HALF * 1.01, HALF * 1.01, 8, -W, W);
+  const tiles = rects.map((r) => gridTile(r, 33, hill, level));
+  return {
+    rects,
+    tiles,
+    target: stripTarget(
+      rects.map((rectangle, i) =>
+        unknown[i]
+          ? { rectangle, unknown: unknown[i] }
+          : { rectangle, tile: tiles[i]! },
+      ),
+    ),
+  };
 }
 
-const HALF = 20000 / A; // 20 km either side of the hill
+const ERROR_14 = LEVEL_ZERO_ERROR / 2 ** 14;
 
 describe("terrainLineOfSight", () => {
-  it("clears a sharp hill sampled off-peak within the step's error", () => {
-    const H = 500;
-    const sigma = 400 / A;
-    const sharp = (lon: number, lat: number): number =>
-      PEAK * Math.exp(-(lon * lon + lat * lat) / (2 * sigma * sigma));
-    // Shift the ends 11 m so the peak falls between samples.
-    const shift = 11 / A;
-    const result = terrainLineOfSight(
-      at(-HALF + shift, 0, H),
-      at(HALF + shift, 0, H),
-      sharp,
-      { step: 30 },
-    );
-    // Hand geometry: the chord's lowest point over the peak is near the
-    // midpoint, (a+H)·cosθ from the center, less the summit.
-    const expected = (A + H) * Math.cos(HALF) - A - PEAK;
-    expect(result.clear).toBe(true);
-    expect(result.unknownFraction).toBe(0);
-    expect(result.blockedAt).toBeUndefined();
-    expect(result.stepError).toBeGreaterThan(1);
-    expect(Math.abs(result.minClearance! - expected)).toBeLessThan(
-      result.stepError,
-    );
-    expect(result.accuracy.note).toContain("narrower than the step");
+  it("clears the hill and states the true lowest clearance", () => {
+    const { target, tiles } = hillTarget();
+    const from = at(-HALF, 0.2 * W, 520);
+    const to = at(HALF, -0.1 * W, 500);
+    const r = terrainLineOfSight(from, to, target);
+    expect(r.clear).toBe(true);
+    expect(r.unknownFraction).toBe(0);
+    expect(r.blockedAt).toBeUndefined();
+    const truth = trueMinimumClearance(from, to, tiles, 33);
+    expect(Math.abs(r.minClearance! - truth.meters)).toBeLessThan(1e-6);
+    expect(r.accuracy.meters).toBeCloseTo(ERROR_14, 9);
+    expect(r.accuracy.note).toMatch(/level 14/);
+    expect(r.accuracy.note).not.toMatch(/step|sampled/);
   });
 
-  it("is blocked by a ray through the hill's face", () => {
-    const result = terrainLineOfSight(
-      at(-HALF, 0, 100),
-      at(HALF, 0, 100),
-      hill,
-      { step: 30 },
-    );
-    expect(result.clear).toBe(false);
-    expect(result.minClearance).toBeLessThan(0);
-    const c = WGS84.cartesianToCartographic(result.blockedAt!, {
+  it("is blocked by a ray through the hill's face, at a point on a triangle", () => {
+    const { target, tiles } = hillTarget();
+    const r = terrainLineOfSight(at(-HALF, 0, 100), at(HALF, 0, 100), target);
+    expect(r.clear).toBe(false);
+    expect(r.minClearance).toBeLessThan(0);
+    const c = WGS84.cartesianToCartographic(r.blockedAt!, {
       longitude: 0,
       latitude: 0,
       height: 0,
     })!;
-    // On the near (west) face: left of the summit, inside 3σ.
     expect(c.longitude).toBeLessThan(0);
     expect(c.longitude).toBeGreaterThan(-3 * SIGMA);
+    expect(
+      Math.min(...tiles.map((t) => distanceToTile(r.blockedAt!, t))),
+    ).toBeLessThan(1e-6);
   });
 
-  it("never calls a path clear over unloaded terrain (30% unknown)", () => {
-    const unloaded = (lon: number, lat: number): number | undefined =>
-      lon > -0.15 * (2 * HALF) + 0 * lat && lon < 0.15 * (2 * HALF)
-        ? undefined
-        : 0;
-    const result = terrainLineOfSight(
-      at(-HALF, 0, 2000),
-      at(HALF, 0, 2000),
-      unloaded,
-      { step: 30 },
-    );
-    expect(result.clear).toBeUndefined();
-    expect(result.unknownFraction).toBeGreaterThan(0.28);
-    expect(result.unknownFraction).toBeLessThan(0.32);
-    expect(result.accuracy.note).toMatch(/unknown/i);
+  it("never calls a path clear over unloaded or not-refined terrain, by length", () => {
+    const { target, rects } = hillTarget({ 1: "not drawn", 6: "not refined" });
+    const from = at(-HALF, 0, 2000);
+    const to = at(HALF, 0, 2000);
+    const r = terrainLineOfSight(from, to, target);
+    // Along the equator the chord's longitude goes with the angle at the
+    // center: tan λ = y / x on a line, so the span between two meridians is
+    // exact.
+    const t = (lon: number) => {
+      const dx = to[0]! - from[0]!;
+      const dy = to[1]! - from[1]!;
+      return (
+        (from[0]! * Math.sin(lon) - from[1]! * Math.cos(lon)) /
+        (dy * Math.cos(lon) - dx * Math.sin(lon))
+      );
+    };
+    const expected =
+      t(rects[1]!.east) -
+      t(rects[1]!.west) +
+      (t(rects[6]!.east) - t(rects[6]!.west));
+    expect(r.clear).toBeUndefined();
+    expect(r.unknownFraction).toBeCloseTo(expected, 9);
+    expect(r.accuracy.note).toMatch(/unknown over 25% of the path/);
+    expect(r.accuracy.note).toMatch(/not loaded/);
+    expect(r.accuracy.note).toMatch(/not refined/);
   });
 
   it("still reports a block when part of the path is unknown", () => {
-    const result = terrainLineOfSight(
-      at(-HALF, 0, 100),
-      at(HALF, 0, 100),
-      (lon, lat) => (lon > 0.5 * HALF ? undefined : hill(lon, lat)),
-    );
-    expect(result.clear).toBe(false);
-    expect(result.unknownFraction).toBeGreaterThan(0);
-  });
-
-  it("states the terrain accuracy it was given", () => {
-    const result = terrainLineOfSight(
-      at(-HALF, 0, 500),
-      at(HALF, 0, 500),
-      hill,
-      { terrainAccuracy: 12.5 },
-    );
-    expect(result.accuracy.meters).toBe(12.5);
-    expect(result.accuracy.note).toContain("12.5");
-  });
-
-  it("never reports clear over a narrow tall ridge, wherever it sits", () => {
-    for (let offset = 0; offset < 60; offset += 3) {
-      const centre = (offset - 30) / A;
-      const ridge = (lon: number): number =>
-        Math.abs(lon - centre) < 50 / A ? 800 : 0;
-      const r = terrainLineOfSight(at(-HALF, 0, 500), at(HALF, 0, 500), ridge, {
-        step: 30,
-      });
-      expect(r.clear).toBe(false);
-    }
-  });
-
-  it("never reports clear over a 100 m unloaded hole, wherever it sits", () => {
-    for (let offset = 0; offset < 60; offset += 3) {
-      const centre = (offset - 30) / A;
-      const holed = (lon: number): number | undefined =>
-        Math.abs(lon - centre) < 50 / A ? undefined : 0;
-      const r = terrainLineOfSight(
-        at(-HALF, 0, 2000),
-        at(HALF, 0, 2000),
-        holed,
-        { step: 30 },
-      );
-      expect(r.clear).toBeUndefined();
-      expect(r.unknownFraction).toBeGreaterThan(0);
-    }
-  });
-
-  it("treats a single unknown sample as unknown", () => {
-    let calls = 0;
-    const r = terrainLineOfSight(
-      at(-HALF, 0, 2000),
-      at(HALF, 0, 2000),
-      () => (++calls === 200 ? undefined : 0),
-      { step: 30 },
-    );
-    expect(r.clear).toBeUndefined();
+    const { target } = hillTarget({ 6: "not drawn" });
+    const r = terrainLineOfSight(at(-HALF, 0, 100), at(HALF, 0, 100), target);
+    expect(r.clear).toBe(false);
     expect(r.unknownFraction).toBeGreaterThan(0);
   });
 
-  it("is unknown, not clear, when the path is too long to sample at step", () => {
+  it("widens the accuracy on coarse tiles, adding the source's own", () => {
+    const { target } = hillTarget({}, 9);
     const r = terrainLineOfSight(
       at(-HALF, 0, 2000),
       at(HALF, 0, 2000),
-      () => 0,
-      { step: 0.1 },
+      target,
+      {
+        sourceAccuracy: 12.5,
+      },
     );
-    expect(r.clear).toBeUndefined();
-    expect(r.step).toBeGreaterThan(0.1);
-    expect(r.accuracy.note).toContain("too long to sample at 0.1 m");
+    const error9 = LEVEL_ZERO_ERROR / 2 ** 9;
+    expect(r.accuracy.meters).toBeCloseTo(error9 + 12.5, 9);
+    expect(r.accuracy.note).toMatch(/level 9/);
+    expect(r.accuracy.note).toContain("12.5");
+    const unstated = terrainLineOfSight(
+      at(-HALF, 0, 2000),
+      at(HALF, 0, 2000),
+      target,
+    );
+    expect(unstated.accuracy.note).toMatch(
+      /source's own accuracy is not stated/,
+    );
+  });
+
+  it("says when the margin is within the terrain's error", () => {
+    const { target } = hillTarget({}, 9);
+    // 300 m peak; the ray clears it by tens of metres, inside level 9's 150 m.
+    const r = terrainLineOfSight(at(-HALF, 0, 360), at(HALF, 0, 360), target);
+    expect(r.clear).toBe(true);
+    expect(r.minClearance!).toBeLessThan(r.accuracy.meters!);
+    expect(r.accuracy.note).toMatch(/within the terrain's error/);
   });
 
   it("returns unknown for non-finite input without hanging", () => {
-    const r = terrainLineOfSight([NaN, 0, 0], at(HALF, 0, 0), () => 0);
+    const { target } = hillTarget();
+    const r = terrainLineOfSight([NaN, 0, 0], at(HALF, 0, 0), target);
     expect(r.clear).toBeUndefined();
     expect(r.unknownFraction).toBe(1);
-    const inf = terrainLineOfSight(at(0, 0, 0), at(HALF, 0, 0), () => 0, {
-      step: Infinity,
-    });
-    expect(inf.clear).toBeUndefined();
-    expect(inf.unknownFraction).toBe(1);
-    const far = terrainLineOfSight(at(0, 0, 0), [Infinity, 0, 0], () => 0);
+    const far = terrainLineOfSight(at(0, 0, 0), [Infinity, 0, 0], target);
     expect(far.clear).toBeUndefined();
+    expect(far.unknownFraction).toBe(1);
   });
 
   it("counts unknown terrain under a zero-length path", () => {
+    const { target } = hillTarget({ 3: "not drawn", 4: "not drawn" });
     const p = at(0, 0, 10);
-    const unknown = terrainLineOfSight(p, p, () => undefined);
+    const unknown = terrainLineOfSight(p, p, target);
     expect(unknown.clear).toBeUndefined();
     expect(unknown.unknownFraction).toBe(1);
-    expect(terrainLineOfSight(p, p, () => 0).clear).toBe(true);
+    const known = terrainLineOfSight(
+      at(-HALF, 0, 500),
+      at(-HALF, 0, 500),
+      target,
+    );
+    expect(known.clear).toBe(true);
+    expect(known.unknownFraction).toBe(0);
   });
 });

@@ -28,6 +28,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
 import {
   containingTriangle,
+  flatTerrainHeights,
   interpolateHeight,
   type Rectangle,
   type TerrainHeights,
@@ -36,6 +37,14 @@ import {
 } from "./quantizedMesh.ts";
 import { GlobeStepwiseSelection } from "./GlobeStepwise.ts";
 import { GlobeBudgetedSelection } from "./GlobeBudgeted.ts";
+import type {
+  TerrainRayPatch,
+  TerrainRayTarget,
+  TerrainRayTile,
+} from "./terrainRay.ts";
+
+/** The ellipsoid's drawn tiles' vertices and triangles (shared, read-only). */
+let flatHeights: TerrainHeights | undefined;
 
 /** Decodes one tile in a worker: fetch, quantized-mesh decode, skirts. */
 export type TerrainLoader = (
@@ -305,6 +314,106 @@ export class TerrainSource {
       );
     }
     return finest;
+  }
+
+  /**
+   * The terrain as drawn in the views of `viewMask` (default all), for exact
+   * ray queries (`castTerrainRay`, `terrainLineOfSight`). It reads the tiles'
+   * state at each call and writes nothing.
+   *
+   * At a point, the deepest tile on its quadtree path that some view of the
+   * mask selected and whose content is loaded is what the screen draws
+   * there. It is unknown ("not refined") where that tile only stands in for
+   * finer terrain still loading: drawn whole while its region refines
+   * (`Tile.standInMask`), or as a mixed-LOD placeholder in a hole whose
+   * tile has data. A quadrant without data is drawn by the tile above, the
+   * finest there is, so it is known. Where no such tile exists it is
+   * unknown ("not drawn"). The answer holds over the deepest tile on the
+   * path, which has no children.
+   */
+  rayTarget(viewMask = 0xffffffff): TerrainRayTarget {
+    const mask = viewMask >>> 0;
+    return {
+      ellipsoid: Ellipsoid.WGS84,
+      patchAt: (longitude, latitude) =>
+        this.rayPatch(longitude, latitude, mask),
+    };
+  }
+
+  private readonly rayTiles = new WeakMap<Tile, TerrainRayTile>();
+
+  private rayPatch(
+    longitude: number,
+    latitude: number,
+    mask: number,
+  ): TerrainRayPatch {
+    let tile = this.root.children.find((t) =>
+      rectangleContains(t.globe!.rectangle, longitude, latitude),
+    );
+    if (!tile) {
+      return {
+        rectangle: {
+          west: -Math.PI,
+          south: -Math.PI / 2,
+          east: Math.PI,
+          north: Math.PI / 2,
+        },
+        unknown: "not drawn",
+      };
+    }
+    const path: Tile[] = [];
+    let drawn = -1;
+    while (tile) {
+      path.push(tile);
+      if (
+        (tile.viewMask & mask) !== 0 &&
+        tile.state === "ready" &&
+        (tile.globe!.heights !== undefined || this.flat)
+      ) {
+        drawn = path.length - 1;
+      }
+      tile = tile.children.find((t) =>
+        rectangleContains(t.globe!.rectangle, longitude, latitude),
+      );
+    }
+    const rectangle = path[path.length - 1]!.globe!.rectangle;
+    if (drawn < 0) {
+      return { rectangle, unknown: "not drawn" };
+    }
+    const shown = path[drawn]!;
+    const below = path.slice(drawn + 1);
+    const standIn =
+      (shown.standInMask & shown.viewMask & mask) !== 0 &&
+      below.length > 0 &&
+      !below[0]!.fillFromParent;
+    const holes = shown.holes;
+    const inHole =
+      (shown.placeholderMask & mask) !== 0 &&
+      holes !== undefined &&
+      below.some((t) => holes.has(t) && !t.fillFromParent);
+    if (standIn || inHole) {
+      return { rectangle, unknown: "not refined" };
+    }
+    return { rectangle, tile: this.rayTile(shown) };
+  }
+
+  /** A drawn tile as a ray reads it, kept while its heights are. */
+  private rayTile(tile: Tile): TerrainRayTile {
+    const g = tile.globe!;
+    const cached = this.rayTiles.get(tile);
+    if (cached && (g.heights ? cached.heights === g.heights : this.flat)) {
+      return cached;
+    }
+    const ray: TerrainRayTile = {
+      rectangle: g.rectangle,
+      // The ellipsoid keeps no heights: its tiles are all the same grid. A
+      // wrapper of its own per tile keys the ray's per-tile cache.
+      heights: g.heights ?? { ...(flatHeights ??= flatTerrainHeights()) },
+      level: g.level,
+      geometricError: tile.geometricError,
+    };
+    this.rayTiles.set(tile, ray);
+    return ray;
   }
 
   /** Content left the cache: its height data goes too. */

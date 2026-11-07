@@ -419,34 +419,19 @@ interface TerrainTileData {
 }
 
 /**
- * A flat tile on the ellipsoid (1.x `EllipsoidTerrainProvider`): an
- * `n`×`n` grid at height 0, with skirts, built without any data.
+ * The vertices (quantized) and triangles of a flat `n`×`n` ellipsoid tile:
+ * what `flatTerrainTile` draws, for ray queries against the ellipsoid.
  */
-export function flatTerrainTile(
-  rect: Rectangle,
-  skirtHeight: number,
-  n = 16,
-): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
+export function flatTerrainHeights(n = 16): TerrainHeights {
   const count = n * n;
   const u = new Uint16Array(count);
   const v = new Uint16Array(count);
   const h = new Uint16Array(count);
-  const positions = new Float64Array(count * 3);
-  const p = new Float64Array(3);
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
       const k = j * n + i;
       u[k] = Math.round((i / (n - 1)) * 32767);
       v[k] = Math.round((j / (n - 1)) * 32767);
-      Ellipsoid.WGS84.cartographicToCartesian(
-        {
-          longitude: rect.west + (i / (n - 1)) * (rect.east - rect.west),
-          latitude: rect.south + (j / (n - 1)) * (rect.north - rect.south),
-          height: 0,
-        },
-        p,
-      );
-      positions.set(p, k * 3);
     }
   }
   const triangles = new Uint32Array((n - 1) * (n - 1) * 6);
@@ -456,6 +441,35 @@ export function flatTerrainTile(
       const a = j * n + i;
       triangles.set([a, a + 1, a + n, a + 1, a + n + 1, a + n], t);
       t += 6;
+    }
+  }
+  return { u, v, h, triangles, minimumHeight: 0, maximumHeight: 0 };
+}
+
+/**
+ * A flat tile on the ellipsoid (1.x `EllipsoidTerrainProvider`): an
+ * `n`×`n` grid at height 0, with skirts, built without any data.
+ */
+export function flatTerrainTile(
+  rect: Rectangle,
+  skirtHeight: number,
+  n = 16,
+): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
+  const count = n * n;
+  const { u, v, h, triangles } = flatTerrainHeights(n);
+  const positions = new Float64Array(count * 3);
+  const p = new Float64Array(3);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      Ellipsoid.WGS84.cartographicToCartesian(
+        {
+          longitude: rect.west + (i / (n - 1)) * (rect.east - rect.west),
+          latitude: rect.south + (j / (n - 1)) * (rect.north - rect.south),
+          height: 0,
+        },
+        p,
+      );
+      positions.set(p, (j * n + i) * 3);
     }
   }
   const column = (i: number) =>

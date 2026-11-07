@@ -102,6 +102,8 @@ interface Pass {
   medium: Queued[];
   low: Queued[];
   touched: Tile[];
+  /** Kicked tiles: drawn whole while their descendants load. */
+  standIns: Tile[];
 }
 
 export class GlobeStepwiseSelection implements TileSelection {
@@ -154,6 +156,7 @@ export class GlobeStepwiseSelection implements TileSelection {
       medium: [],
       low: [],
       touched: [],
+      standIns: [],
     };
 
     // Level-zero tiles nearest first (longitude/latitude distance).
@@ -273,6 +276,7 @@ export class GlobeStepwiseSelection implements TileSelection {
           }
           P.render.length = first;
           P.render.push(tile);
+          P.standIns.push(tile);
           setResult(P, tile, RENDERED);
           const wasRendered = last === RENDERED;
           if (
@@ -580,6 +584,11 @@ export class GlobeStepwiseSelection implements TileSelection {
       }
     }
     result.selected.push(...selected);
+    // Kicked tiles still drawn (a kick above drops those below it).
+    const standIns = P.standIns.filter((t) => selected.has(t));
+    if (standIns.length > 0) {
+      result.standIns = standIns;
+    }
     for (const [parent, list] of holes) {
       // Too many pieces to clip to: draw the whole tile.
       if (list.length <= CLIP_BOXES) {

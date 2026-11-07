@@ -114,6 +114,13 @@ export interface SelectionResult {
    * inside those volumes.
    */
   placeholders?: Map<Tile, readonly Tile[]>;
+  /**
+   * Selected tiles drawn whole in place of finer content still loading:
+   * the view wants them refined (not refined). Terrain ray queries read
+   * them (`Tile.standInMask`); `Budgeted` and the globe's `Stepwise` report
+   * them, 3D Tiles' `Stepwise` (1.x parity) does not.
+   */
+  standIns?: Tile[];
   /** Loaded tiles not drawn for want of imagery (terrain): it loads for them. */
   waiting?: Tile[];
 }

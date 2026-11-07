@@ -24,6 +24,7 @@ import type { FeatureStyle } from "../scene/FeatureStyle.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
+import type { TerrainRayTarget } from "../globe/terrainRay.ts";
 import {
   StepwiseSelection,
   REQUEST_PURPOSES,
@@ -102,6 +103,8 @@ export interface TileSource {
   exactHeight?(longitude: number, latitude: number): number | undefined;
   /** Height of the drawn surface there (terrain sources). */
   surfaceHeight?(longitude: number, latitude: number): number | undefined;
+  /** The drawn surface for exact ray queries (terrain sources). */
+  rayTarget?(viewMask?: number): TerrainRayTarget;
   /** Called with each rectangle whose heights changed (terrain sources). */
   readonly heightListeners?: Set<(rectangle: Rectangle) => void>;
   /** A tile's content left the cache. */
@@ -641,6 +644,8 @@ export class Tileset3D implements TileTree {
   settledAt?: number;
   private masked = new Set<Tile>();
   private placeholders = new Set<Tile>();
+  /** Tiles drawn whole while finer content loads, in some view. */
+  private standIns = new Set<Tile>();
   private inFlight = 0;
   /** In flight for anything but prefetch (`prefetchAfterVisible`). */
   private visibleInFlight = 0;
@@ -781,6 +786,16 @@ export class Tileset3D implements TileTree {
   }
 
   /**
+   * The terrain as drawn in the views of `viewMask` (default all; a view's
+   * bit is `Engine.viewBit`), read-only, for exact ray queries
+   * (`terrainLineOfSight`). Undefined for 3D Tiles: they keep no CPU
+   * triangles and are ray cast on the GPU (§13.10, `World.castRays`).
+   */
+  terrainRayTarget(viewMask?: number): TerrainRayTarget | undefined {
+    return this.source?.rayTarget?.(viewMask);
+  }
+
+  /**
    * Calls `listener` with each rectangle (radians) whose surface heights
    * changed as terrain tiles load and unload; returns a remover. Never
    * called for 3D Tiles.
@@ -900,6 +915,10 @@ export class Tileset3D implements TileTree {
       tile.placeholderMask = 0;
       tile.holes = undefined;
     }
+    const nowStandIns = new Set<Tile>();
+    for (const tile of this.standIns) {
+      tile.standInMask = 0;
+    }
     this.selection.imageryReady =
       this.imagery || this.imageryPending ? this.imageryReady : undefined;
     this.selection.expectedLoadSeconds = this.loadEstimateMs / 1000;
@@ -922,6 +941,10 @@ export class Tileset3D implements TileTree {
           tile.holes.add(hole);
         }
         nowPlaceholders.add(tile);
+      }
+      for (const tile of result.standIns ?? []) {
+        tile.standInMask = (tile.standInMask | bit) >>> 0;
+        nowStandIns.add(tile);
       }
       for (const tile of result.touched) {
         tile.touchedFrame = frame;
@@ -985,6 +1008,7 @@ export class Tileset3D implements TileTree {
       }
     }
     this.placeholders = nowPlaceholders;
+    this.standIns = nowStandIns;
     this.updateDebug();
     this.stats.placeholders = nowPlaceholders.size;
 
@@ -1433,6 +1457,8 @@ export class Tileset3D implements TileTree {
     tile.debugColor = undefined;
     tile.appliedPlaceholderMask = 0;
     tile.placeholderMask = 0;
+    tile.standInMask = 0;
+    this.standIns.delete(tile);
     tile.holes = tile.appliedHoles = undefined;
     if (tile.clip) {
       this.world.freeClip(tile.clip);

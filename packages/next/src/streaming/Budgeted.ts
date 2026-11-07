@@ -190,6 +190,11 @@ export class BudgetedSelection extends StepwiseSelection {
     }
     const cover = this.display(root, view, pass, rootError, NONE, 0, result);
     result.selected.push(...cover.tiles);
+    if (result.standIns) {
+      // Only those still drawn: an ancestor may have held instead.
+      const selected = new Set(result.selected);
+      result.standIns = result.standIns.filter((t) => selected.has(t));
+    }
     return result;
   }
 
@@ -402,6 +407,8 @@ export class BudgetedSelection extends StepwiseSelection {
       ) {
         return { tiles: parts, complete: false, holes };
       }
+      // Drawn whole while its region refines: a stand-in.
+      (result.standIns ??= []).push(tile);
       return { tiles: own, complete: true, holes: NO_HOLES };
     }
     return {

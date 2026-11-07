@@ -117,6 +117,11 @@ export class Tile {
   placeholderMask = 0;
   /** The volumes it fills as a placeholder, over all views this frame. */
   holes?: Set<Tile>;
+  /**
+   * Views drawing this tile whole in place of finer content still loading
+   * (not refined: coarser than the view wants there) this frame.
+   */
+  standInMask = 0;
   /** Placeholder mask and holes currently written to the draw records. */
   appliedPlaceholderMask = 0;
   appliedHoles?: Set<Tile>;
