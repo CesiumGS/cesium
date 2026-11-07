@@ -460,8 +460,10 @@ function operationReading(entry: GridEntry): string | undefined {
  * Whether PROJ creates an operation from `definition` now, quietly (PROJ
  * logs each file it can't open). proj_create doesn't throw for one it can't
  * build: it returns an object with neither a name nor a PROJ string. The
- * object isn't kept (ProjApi has no proj_destroy; crs.ts's probes are the
- * same).
+ * object isn't kept: proj.js frees a PJ when its wrapper is garbage-collected
+ * (SWIG's destructor in the native build, emnapi's FinalizationRegistry in
+ * the browser), so the probe needs no proj_destroy. Measured on the native
+ * build, 2026-11-07: 300,000 probes with GC between rounds left RSS flat.
  */
 function creates(proj: ProjApi, definition: string): boolean {
   const previous = proj.proj_log_level(proj.PJ_LOG_NONE);
