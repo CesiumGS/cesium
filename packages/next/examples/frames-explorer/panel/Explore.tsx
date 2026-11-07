@@ -19,7 +19,6 @@ import {
 } from "@mui/material";
 import { type ReactNode, useId } from "react";
 import type { TreeNode } from "../tree.ts";
-import type { AccuracyTerm } from "../../../src/measure/accuracy.ts";
 import { BudgetBar } from "./BudgetBar.tsx";
 import { EDGE_LABEL, familyMap } from "./families.ts";
 import { edgeAccuracyText } from "./FrameTree.tsx";
@@ -34,6 +33,7 @@ import {
   type PanelModel,
   REFERENCES,
   type Reference,
+  type WalkTerm,
 } from "./model.ts";
 import { AccuracyText, ITEM_LABEL, Term, unknownTerms } from "./parts.tsx";
 
@@ -366,7 +366,8 @@ const sentence = (text: string): string =>
   text.charAt(0).toUpperCase() + text.slice(1);
 
 /** A term as the walk's "Adds …" line names it, in plain words. */
-const ADDS: Record<AccuracyTerm["source"], string> = {
+const ADDS: Record<WalkTerm["source"], string> = {
+  stated: "its stated accuracy",
   ephemeris: "the ephemeris",
   earthOrientation: "Earth orientation",
   relativity: "relativity",

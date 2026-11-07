@@ -5,31 +5,51 @@
 // from here.
 //
 // The tree: ITRF → LC-39A pad ENU (the library's `eastNorthUpFrame` at the
-// pad, "up" the ellipsoid's normal at the point itself; at h = 0 the same as
-// at its foot, so the explorer's two ENU conventions agree here) → Arm base
+// pad, "up" the ellipsoid's normal at the point itself; 16 m below the
+// ellipsoid that differs from the normal at its foot by about 7 nrad, so the
+// explorer's two ENU conventions agree here to well under a micrometre at the
+// arm's reach) → Arm base
 // (a fixed placement, its survey stated) → Base yaw → Shoulder → Elbow →
 // Wrist → Tool.
 import { Frame } from "../../../src/frames/Frame.ts";
 import type { FrameAccuracy } from "../../../src/frames/frameAccuracy.ts";
 import { eastNorthUpFrame } from "../../../src/frames/local.ts";
-import { Ellipsoid, fromDegrees } from "../../../src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 import type { KnobState } from "./spec.ts";
 import { jointChain, type Joint } from "./jointChain.ts";
 
 const DEG = Math.PI / 180;
 
 /**
- * LC-39A, where the pad frame is defined (references.json `lc-39a-pad`:
- * 28°36′30.2″ N, 80°36′15.6″ W), on the WGS 84 ellipsoid at h = 0 (as the
- * globe is drawn; no pad elevation is published to use).
+ * Where the pad frame is defined: NGS mark AK1155, "THIRTY NINE A", a disk
+ * set in LC-39A's concrete pad beside the flame deflector (references.json
+ * `lc-39a-pad`, the NGS datasheet). Its NAD83(1990) position (taken as
+ * NAD83(2011) at 2010.0) and ellipsoidal height (NAVD88 14.137 m + GEOID18
+ * −28.252 m, both on the datasheet) go through PROJ's NAD83(2011) to
+ * ITRF2020 at the coordinate epoch, the same path the station takes; the
+ * result is pinned here (the page has no PROJ) and the data test holds it
+ * to PROJ within 1 mm. A definition: the ± is the arm's and the station's
+ * from this point, not a survey of LC-39A.
  */
 export const PAD = {
   name: "LC-39A pad ENU",
   short: "LC-39A",
-  latitude: 28 + 36 / 60 + 30.2 / 3600,
-  longitude: -(80 + 36 / 60 + 15.6 / 3600),
-  height: 0,
+  mark: "AK1155",
+  /** The datasheet's NAD83(1990) position, degrees (for the camera and the words). */
+  latitude: 28 + 36 / 60 + 27.06119 / 3600,
+  longitude: -(80 + 36 / 60 + 14.609 / 3600),
+  /** Its ellipsoidal height from the datasheet: NAVD88 + GEOID18, m. */
+  height: 14.137 - 28.252,
+  /** In ITRF2020 at `COORDINATE_EPOCH`, through PROJ, m. */
+  itrf: [914850.9978, -5528601.0481, 3035776.5248] as const,
 } as const;
+
+/**
+ * The coordinate epoch both ends are placed at (decimal year): the pad and
+ * the station sit on one plate, so their distance doesn't follow the clock;
+ * in ITRF2020 both drift about 1.3 cm a year together.
+ */
+export const COORDINATE_EPOCH = 2026.0;
 
 /** The frames' names, the tree's node ids. */
 export const ARM = {
@@ -150,12 +170,8 @@ export function armJoints(angles: Readonly<ArmAngles>): Joint[] {
   ];
 }
 
-/** The pad's place on the Earth, ITRF metres. */
-export const padPosition = (): Float64Array =>
-  Ellipsoid.WGS84.cartographicToCartesian(
-    fromDegrees(PAD.longitude, PAD.latitude, PAD.height),
-    new Float64Array(3),
-  );
+/** The pad's place on the Earth, ITRF metres (pinned; see `PAD`). */
+export const padPosition = (): Float64Array => Float64Array.from(PAD.itrf);
 
 /** The arm's frames under `itrf`: the pad, the base, then the joints to the tool (last). */
 export interface ArmFrames {
@@ -176,7 +192,7 @@ export function armFrames(itrf: Frame, angles: Readonly<ArmAngles>): ArmFrames {
   const pad = eastNorthUpFrame(PAD.name, itrf, Ellipsoid.WGS84, padPosition(), {
     accuracy: {
       byDefinition: true,
-      note: "exact by definition: the pad's frame is defined at LC-39A's published position (Wikipedia), on the WGS 84 ellipsoid",
+      note: "exact by definition: the pad's frame is defined at NGS mark AK1155 on LC-39A's pad (its datasheet position and height, through PROJ to ITRF2020); not a survey of the pad",
     },
   });
   const [x, y, z] = GEOMETRY.base;
@@ -283,3 +299,20 @@ export const MARK = {
   long: "CCV6, Cape Canaveral 6 CORS ARP",
   pid: "DI3564",
 } as const;
+
+/**
+ * The answer's breakdown order: terms with no size (not stated) first, as
+ * the ones that bound nothing, then the largest first; ties keep their order.
+ * Never NaN, whatever the sizes (Task 7b fix 1).
+ */
+export function largestFirst(
+  a: { meters?: number | undefined },
+  b: { meters?: number | undefined },
+): number {
+  const ua = a.meters === undefined || Number.isNaN(a.meters);
+  const ub = b.meters === undefined || Number.isNaN(b.meters);
+  if (ua || ub) {
+    return ua === ub ? 0 : ua ? -1 : 1;
+  }
+  return b.meters! - a.meters!;
+}

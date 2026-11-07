@@ -2,7 +2,10 @@
 // from the worker, the frame tree and the run. Only
 // types from the rest of the example: the main thread never bundles the
 // stress catalog, PROJ or the overlay builders (protocol.ts's rule).
-import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
+import type {
+  AccuracyStatement,
+  AccuracyTerm,
+} from "../../../src/measure/accuracy.ts";
 import type { DataItem, RunSummary } from "../protocol.ts";
 import type {
   Citation,
@@ -166,12 +169,34 @@ export type Reference = "ITRF" | "GCRF" | "ICRF";
 export const REFERENCES: readonly Reference[] = ["ITRF", "GCRF", "ICRF"];
 
 /**
- * A frame's composed accuracy (R8) as the walk shows it: `accuracyOf`'s
- * statement for a point at the frame's origin against `reference` at the
- * clock's instant, with each term tied to the edges it comes from (C2).
+ * A term of a frame's own stated accuracy (`FrameAccuracy`), composed by
+ * `pointAccuracy` along the walk (Task 7b fix 1): the app's frames, the
+ * robot arm's joints. Its edge is in the view's `termEdges`.
+ */
+export interface StatedTerm {
+  source: "stated";
+  /** 1σ, m; undefined when the frame states none. */
+  meters: number | undefined;
+  note: string;
+}
+
+/** A walk's term: one of `accuracyOf`'s, or a frame's stated accuracy. */
+export type WalkTerm = AccuracyTerm | StatedTerm;
+
+/** A walk's statement: `accuracyOf`'s, or one composed from stated accuracies. */
+export type WalkStatement = Omit<AccuracyStatement, "terms"> & {
+  terms: WalkTerm[];
+};
+
+/**
+ * A frame's composed accuracy (R8) as the walk shows it, for a point at the
+ * frame's origin against `reference` at the clock's instant, with each term
+ * tied to the edges it comes from (C2): `accuracyOf`'s statement, or, where
+ * the route crosses frames the app defines (and every frame on it states
+ * its accuracy), `pointAccuracy`'s composition of those statements.
  */
 export interface ComposedView {
-  statement: AccuracyStatement;
+  statement: WalkStatement;
   /** For each of `statement.terms`, the edges (child node ids) it comes from; empty for a term on no edge. */
   termEdges: readonly (readonly string[])[];
   /** Path edges that contribute nothing at the origin, and why (a rotation about the origin). */

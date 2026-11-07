@@ -10,7 +10,7 @@ import { svgStatusWarning } from "@stratakit/icons/status-warning";
 import { Icon } from "@stratakit/mui";
 import { unstable_Popover as Popover } from "@stratakit/structures";
 import { type ReactNode, useState } from "react";
-import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
+import type { WalkStatement } from "./model.ts";
 import type { DataItem } from "../protocol.ts";
 import type { StressResult } from "../tests.ts";
 import { cautionOf } from "../warnings.ts";
@@ -168,7 +168,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 /** The unknown terms of a statement, by their notes. */
-export function unknownTerms(a: AccuracyStatement): string[] {
+export function unknownTerms(a: WalkStatement): string[] {
   const terms = a.terms
     .filter((t) => t.meters === undefined)
     .map((t) => t.note);
@@ -190,7 +190,7 @@ export function AccuracyText({
   compact = false,
   placement = false,
 }: {
-  accuracy: AccuracyStatement | undefined;
+  accuracy: WalkStatement | undefined;
   note?: string | undefined;
   compact?: boolean;
   /** The figure is an absolute placement beside a relative check. */

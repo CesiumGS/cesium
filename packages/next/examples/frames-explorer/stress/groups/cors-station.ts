@@ -1,6 +1,8 @@
 // A CORS station in NAD83(2011) and ITRF2020 (Task 7b): CCV6, Cape Canaveral
 // 6 (PID DI3564), NGS's published coordinates in both frames (MYCS3,
-// references.json `ngs-DI3564`), measured data. PROJ's NAD83(2011) to
+// references.json `ngs-DI3564`). NGS computed the NAD83(2011) position from
+// the ITRF2020 one, so the check is PROJ against NGS's own computation (a
+// published reference), not a measurement. PROJ's NAD83(2011) to
 // ITRF2020 operation takes the station's NAD83(2011) position (epoch
 // 2010.0) to ITRF2020 at 2010.0; the station's own ITRF2020 velocity then
 // carries it to 2020.0, where NGS prints it. The robot arm's mark
@@ -37,6 +39,12 @@ export interface CorsStation {
       readonly east: string;
       readonly height: string;
     };
+    /** The datasheet's FGDC network accuracy at 95% (its NETWORK line). */
+    readonly network95: {
+      readonly units: string;
+      readonly horizontal: string;
+      readonly ellipsoidHeight: string;
+    };
   };
   readonly itrf2020: {
     readonly epoch: string;
@@ -57,9 +65,6 @@ export const STATION_ID = "ngs-DI3564";
 const NAD83_2011_3D = 6319;
 const ITRF2020_XYZ = "EPSG:9988";
 
-/** The datasheet's FGDC network accuracy, 95%, ellipsoid height (the larger of its two), m. */
-const NETWORK_95_M = 0.001;
-
 const velocityOf = (v: CorsStation["nad83"]["velocity"]): Printed[] => [
   printed(v.vx),
   printed(v.vy),
@@ -73,6 +78,8 @@ export function stationValues(s: CorsStation) {
   const h = printed(s.nad83.ellipsoidHeight);
   const sd = s.nad83.networkSd;
   const cm = sd.units === "cm" ? 0.01 : 1;
+  const n95 = s.nad83.network95;
+  const cm95 = n95.units === "cm" ? 0.01 : 1;
   return {
     lat,
     lon,
@@ -85,6 +92,12 @@ export function stationValues(s: CorsStation) {
       number,
       number,
     ],
+    /** The datasheet's 95% network accuracy, the larger of its horizontal and ellipsoid-height figures, m. */
+    network95:
+      Math.max(
+        printed(n95.horizontal).value,
+        printed(n95.ellipsoidHeight).value,
+      ) * cm95,
   };
 }
 
@@ -122,7 +135,7 @@ export const corsStationCase: StressCase = (() => {
   return stressCase(
     id,
     "reference-values",
-    `CORS station ${s.corsId} (${s.designation}, PID DI3564): its NAD83(2011) position through PROJ to ITRF2020 at 2010.0, carried to 2020.0 by its ITRF2020 velocity, against NGS's ITRF2020 position`,
+    `CORS station ${s.corsId} (${s.designation}, PID DI3564): its NAD83(2011) position through PROJ to ITRF2020 at 2010.0, carried to 2020.0 by its ITRF2020 velocity, PROJ against NGS's own computation of its ITRF2020 position`,
     ["proj"],
     async (ctx, base) => {
       const P = proj(ctx);
@@ -160,10 +173,10 @@ export const corsStationCase: StressCase = (() => {
         {
           ...base,
           id: `${base.id}.itrf2020`,
-          title: `${s.corsId}: NAD83(2011) ${s.nad83.latitude}, ${s.nad83.longitude}, h ${s.nad83.ellipsoidHeight} m (epoch ${s.nad83.epoch}) through PROJ to ITRF2020, carried to ${s.itrf2020.epoch} by its ITRF2020 velocity, against NGS's ITRF2020 X ${s.itrf2020.x}, Y ${s.itrf2020.y}, Z ${s.itrf2020.z} m, within the printed digits and the datasheet's 95% network accuracy (1 mm)`,
+          title: `${s.corsId}: NAD83(2011) ${s.nad83.latitude}, ${s.nad83.longitude}, h ${s.nad83.ellipsoidHeight} m (epoch ${s.nad83.epoch}) through PROJ to ITRF2020, carried to ${s.itrf2020.epoch} by its ITRF2020 velocity: PROJ against NGS's own computation, ITRF2020 X ${s.itrf2020.x}, Y ${s.itrf2020.y}, Z ${s.itrf2020.z} m, within the printed digits and the datasheet's 95% network accuracy (${(v.network95 * 1000).toFixed(1)} mm)`,
           pass: !operation.ballpark,
           value: worst,
-          tolerance: rounding + NETWORK_95_M,
+          tolerance: rounding + v.network95,
           unit: "m",
           detail: `ours X ${ours[0]!.toFixed(4)}, Y ${ours[1]!.toFixed(4)}, Z ${ours[2]!.toFixed(4)} m; the printed digits allow ${fmt(rounding * 1000, 3)} mm; PROJ's operation accuracy ${operation.accuracy ?? "not stated"} m; ${operation.pipeline}`,
           fingerprint: operationFingerprint(ctx, operation, [ours]),

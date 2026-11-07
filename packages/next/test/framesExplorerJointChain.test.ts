@@ -11,6 +11,7 @@ import { Instant } from "../src/time/Instant.ts";
 import {
   ARM,
   armFrames,
+  largestFirst,
   toolAccuracyByHand,
   toolByHand,
   type ArmAngles,
@@ -132,9 +133,12 @@ describe("the robot arm", () => {
       const hand = toolAccuracyByHand(angles);
       expect(ours.meters).toBeDefined();
       expect(Math.abs(ours.meters! - hand.meters)).toBeLessThan(1e-9);
-      const lever = (name: string) =>
-        ours.terms.find((t) => t.frame === name && t.kind === "angular")!
-          .lever!;
+      const lever = (name: string) => {
+        const t = ours.terms.find(
+          (x) => x.frame === name && x.kind === "angular",
+        );
+        return t?.kind === "angular" ? t.lever : NaN;
+      };
       expect(lever(ARM.shoulder)).toBeCloseTo(hand.levers.shoulder, 9);
       expect(lever(ARM.elbow)).toBeCloseTo(hand.levers.elbow, 9);
       expect(lever(ARM.wrist)).toBeCloseTo(hand.levers.wrist, 9);
@@ -176,7 +180,7 @@ describe("the app code under the answer", () => {
     expect(code).toMatch(/cache: false/);
     expect(code).toMatch(/accuracy: joint\.accuracy/);
     expect(lines.length).toBeGreaterThanOrEqual(5);
-    expect(lines.length).toBeLessThanOrEqual(14);
+    expect(lines.length).toBeLessThanOrEqual(10);
     expect(lines.every((l) => !l.startsWith(" ") || l.startsWith("  "))).toBe(
       true,
     );
@@ -186,5 +190,26 @@ describe("the app code under the answer", () => {
     expect(() => sourceRegion("// nothing", "joint-frame")).toThrow(
       /no region/,
     );
+  });
+});
+
+describe("the answer's breakdown order", () => {
+  it("puts unstated terms first, then the largest, and never compares NaN", () => {
+    const terms = [
+      { label: "a", meters: 0.001 },
+      { label: "u1" },
+      { label: "b", meters: 0.003 },
+      { label: "u2", meters: undefined },
+      { label: "c", meters: 0 },
+    ];
+    expect([...terms].sort(largestFirst).map((t) => t.label)).toEqual([
+      "u1",
+      "u2",
+      "b",
+      "a",
+      "c",
+    ]);
+    expect(largestFirst({}, {})).toBe(0);
+    expect(Number.isNaN(largestFirst({}, { meters: 1 }))).toBe(false);
   });
 });

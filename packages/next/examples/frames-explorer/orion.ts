@@ -2,10 +2,9 @@
 // statement (R8), the redraw cadence that keeps one request in flight and
 // drops stale ones, and the view down on the orbit plane (tour stop 5).
 // Pure, so each is unit-tested (test/framesExplorerOrion.test.ts).
-import type { AccuracyTerm } from "../../src/measure/accuracy.ts";
 import type { Sampling } from "./overlays.ts";
 import { length, seconds } from "./panel/format.ts";
-import type { ComposedView, OrionFrame } from "./panel/model.ts";
+import type { ComposedView, OrionFrame, WalkTerm } from "./panel/model.ts";
 import type { TrajectoryInfo } from "./protocol.ts";
 import type { TreeNode } from "./tree.ts";
 
@@ -28,7 +27,7 @@ const TERM_SHORT: Record<string, string> = {
 };
 
 /** A term's note without the statement's "End a:" bookkeeping. */
-const plainNote = (t: AccuracyTerm): string =>
+const plainNote = (t: WalkTerm): string =>
   t.note.replace(/^End [ab]: /, "").replace(/^Trajectory "[^"]*": /, "");
 
 /** "2026-04-06T23:00:00.000Z" as "2026-04-06 23:00 UTC". */
@@ -95,7 +94,7 @@ export function orionLegend(
       unbounded: true,
     };
   }
-  const largest = statement.terms.reduce<AccuracyTerm | undefined>(
+  const largest = statement.terms.reduce<WalkTerm | undefined>(
     (a, t) =>
       t.meters !== undefined && (a === undefined || t.meters > a.meters!)
         ? t

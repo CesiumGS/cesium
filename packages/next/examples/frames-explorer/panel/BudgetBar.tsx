@@ -4,11 +4,8 @@
 // its color is the frame family the term comes from. An unknown term is an
 // amber "not bounded" segment, and the total says so instead of a number.
 import { Typography } from "@mui/material";
-import type {
-  AccuracyStatement,
-  AccuracyTerm,
-} from "../../../src/measure/accuracy.ts";
 import type { Family } from "./families.ts";
+import type { WalkStatement, WalkTerm } from "./model.ts";
 import { length } from "./format.ts";
 import { AccuracyText } from "./parts.tsx";
 
@@ -16,7 +13,8 @@ import { AccuracyText } from "./parts.tsx";
  * The family a term's error comes from (its segment's color); a term on no
  * edge (the Moon's relativity) takes the neutral "no edge" tone (I9).
  */
-const TERM_FAMILY: Record<AccuracyTerm["source"], Family | "noedge"> = {
+const TERM_FAMILY: Record<WalkTerm["source"], Family | "noedge"> = {
+  stated: "earth",
   ephemeris: "celestial",
   earthOrientation: "earth",
   relativity: "noedge",
@@ -26,7 +24,8 @@ const TERM_FAMILY: Record<AccuracyTerm["source"], Family | "noedge"> = {
   lightTime: "celestial",
 };
 
-export const TERM_LABEL: Record<AccuracyTerm["source"], string> = {
+export const TERM_LABEL: Record<WalkTerm["source"], string> = {
+  stated: "Stated by the frame",
   ephemeris: "Ephemeris",
   earthOrientation: "Earth orientation",
   relativity: "Relativity",
@@ -48,14 +47,14 @@ export function BudgetBar({
   label,
   from,
 }: {
-  accuracy: AccuracyStatement;
+  accuracy: WalkStatement;
   /** What the statement is of, as the bar's accessible name. */
   label: string;
   /** For each term, the edges it comes from, as the walk names them (C2). */
   from?: readonly string[];
 }) {
   const known = accuracy.terms.filter(
-    (t): t is AccuracyTerm & { meters: number } => t.meters !== undefined,
+    (t): t is WalkTerm & { meters: number } => t.meters !== undefined,
   );
   const variance = known.reduce((s, t) => s + t.meters * t.meters, 0);
   const unknown = accuracy.terms.filter((t) => t.meters === undefined);

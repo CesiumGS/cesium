@@ -62,15 +62,15 @@ export function jointChain(parent: Frame, joints: readonly Joint[]): Frame[] {
   const out: Frame[] = [];
   let up = parent;
   for (const joint of joints) {
+    // Child to parent: the link offset, then the turn by the angle now.
+    // The angle is state beyond the instant: no cache. The app states the
+    // joint's accuracy (1σ); the library composes it.
     // #region joint-frame
     const frame = new Frame(
       joint.name,
       up,
-      // Child to parent: the link offset, then the turn by the angle now.
       (_instant, out) =>
         jointMatrix(joint.axis, joint.angle(), joint.offset, out),
-      // The angle is state beyond the instant: no cache. The app states
-      // the joint's accuracy (1σ); the library composes it.
       joint.accuracy
         ? { cache: false, accuracy: joint.accuracy }
         : { cache: false },

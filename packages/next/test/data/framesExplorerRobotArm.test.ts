@@ -30,11 +30,13 @@ import {
 } from "../../examples/frames-explorer/scenarios/checks.ts";
 import {
   ARM,
+  COORDINATE_EPOCH,
   MARK,
   PAD,
 } from "../../examples/frames-explorer/scenarios/arm.ts";
+import { composedView } from "../../examples/frames-explorer/composed.ts";
+import { resolveOperation } from "../../src/engineering/crs.ts";
 import { orientation } from "../../examples/frames-explorer/scenarios/earthTurns.ts";
-import { decimalYear } from "../../examples/frames-explorer/scenarios/robotArm.ts";
 import {
   SCENES,
   pageArm,
@@ -156,7 +158,7 @@ beforeAll(async () => {
 }, 120_000);
 
 describe("the robot arm (Task 7b) through the worker's host", () => {
-  it("at its checked setup: the app's frames, the station's route through PROJ and down the arm, and every check the catalog's, passing; only the measured row may say validated", async () => {
+  it("at its checked setup: the app's frames, the station's route through PROJ and down the arm, and every check the catalog's, passing; none says validated", async () => {
     const s = spec(ID);
     const e = await client.scenario(ID, s.checked.knobs, checkedTdb(ID));
     expect(e.scenario).toBe(ID);
@@ -196,7 +198,7 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
     const rows = checkRows(s, true, catalog, e);
     expect(rows.map((r) => r.status)).toEqual(s.checks.map(() => "checked"));
     expect(rows.map((r) => r.kind)).toEqual([
-      "measured",
+      "published",
       "hand",
       "hand",
       "roundTrip",
@@ -208,9 +210,9 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
         const extras = extrasOf(r.result);
         const t = checkRowText(r, { [r.result.id]: extras }, "current");
         const text = checkRowStrings(r, t, extras).join(" ");
-        if (r.kind !== "measured") {
-          expect(/\bvalidated\b/i.test(text), text).toBe(false);
-        }
+        // None is measured data: CCV6's check is PROJ against NGS's own
+        // computation, so no row says "validated".
+        expect(/\bvalidated\b/i.test(text), text).toBe(false);
       }
     }
   }, 120_000);
@@ -241,7 +243,7 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
     expect(e.answer.breakdown!.length).toBeGreaterThan(5);
   }, 120_000);
 
-  it("puts the station where NGS's ITRF2020 position and velocity put it at the checked epoch, within the check's millimetres", async () => {
+  it("puts the station where NGS's ITRF2020 position and velocity put it at the coordinate epoch, within the check's millimetres", async () => {
     const s = spec(ID);
     const e = await client.scenario(ID, s.checked.knobs, checkedTdb(ID));
     const m = (
@@ -257,7 +259,7 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
         }
       >
     )["ngs-DI3564"]!.itrf2020;
-    const years = decimalYear(Date.parse(s.checked.epochUtc)) - 2020;
+    const years = COORDINATE_EPOCH - 2020;
     const ngs = [
       Number(m.x) + Number(m.velocity.vx) * years,
       Number(m.y) + Number(m.velocity.vy) * years,
@@ -313,6 +315,88 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
   }, 120_000);
 });
 
+describe("the robot arm's pad and its walk (Task 7b fix 1)", () => {
+  it("pins the pad at AK1155's datasheet position and height through PROJ to ITRF2020, within 1 mm", async () => {
+    const pad = (
+      references.entries as unknown as Record<
+        string,
+        {
+          latitude: string;
+          longitude: string;
+          orthometricHeight: string;
+          geoidHeight: string;
+        }
+      >
+    )["lc-39a-pad"]!;
+    const dms = (t: string) => {
+      const [d, m, sec] = t
+        .replace(/\(.\)/, "")
+        .trim()
+        .split(/\s+/)
+        .map(Number);
+      return (/[SW]/.test(t) ? -1 : 1) * (d! + m! / 60 + sec! / 3600);
+    };
+    const h = Number(pad.orthometricHeight) + Number(pad.geoidHeight);
+    expect(PAD.height).toBeCloseTo(h, 9);
+    expect(PAD.latitude).toBeCloseTo(dms(pad.latitude), 12);
+    expect(PAD.longitude).toBeCloseTo(dms(pad.longitude), 12);
+    const op = resolveOperation(
+      await loadProj({ base }),
+      {
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 6319,
+        epoch: COORDINATE_EPOCH,
+      },
+      "EPSG:9988",
+    );
+    const itrf = op.forward([dms(pad.longitude), dms(pad.latitude), h]);
+    expect(dist(itrf, PAD.itrf)).toBeLessThan(0.001);
+  }, 120_000);
+
+  it("walks the Tool with the library's composition: the same total as the answer's tool term, each term on its own edge, no false reasons", async () => {
+    const s = spec(ID);
+    const instant = Instant.fromTdb(checkedTdb(ID));
+    const e = await client.scenario(ID, s.checked.knobs, checkedTdb(ID));
+    const tree = buildScenarioTree(buildTree(frames, {}, instant), e.added);
+    const arm = pageArm(frames.itrf, s.checked.knobs);
+    const attach = (n: typeof tree) => {
+      const f = arm.all.find((x) => x.name === n.id);
+      if (f) {
+        n.frame = f;
+      }
+      n.children.forEach(attach);
+    };
+    attach(tree);
+    const v = composedView(tree, frames, instant, "ITRF", ARM.tool)!;
+    const tool = pointAccuracy(
+      framePoint(arm.tool, [0, 0, 0], instant),
+      frames.itrf,
+    );
+    expect(v.statement.meters).toBeCloseTo(tool.meters!, 15);
+    // Each term on its own edge: the encoders, the links, the survey.
+    const edges = new Set(v.termEdges.flat());
+    for (const id of [
+      ARM.base,
+      ARM.yaw,
+      ARM.shoulder,
+      ARM.elbow,
+      ARM.wrist,
+      ARM.tool,
+    ]) {
+      expect(edges.has(id), id).toBe(true);
+    }
+    // The pad adds nothing, and says why: exact by definition.
+    const pad = v.zeroAtOrigin.find((z) => z.edge === PAD.name)!;
+    expect(pad.why).toMatch(/exact by definition/);
+    expect(v.zeroAtOrigin.map((z) => z.edge)).toEqual([PAD.name]);
+    // Against GCRF the ITRF edge's angular term joins, at the tool's lever.
+    const g = composedView(tree, frames, instant, "GCRF", ARM.tool)!;
+    expect(g.termEdges.flat()).toContain("ITRF");
+    expect(g.statement.meters!).toBeGreaterThan(tool.meters!);
+  }, 120_000);
+});
+
 describe("earth-turns' angular case through the library's composer", () => {
   it("is the ITRF edge's angular sigma times the equatorial radius", () => {
     const instant = Instant.fromTdb(checkedTdb("earth-turns"));
@@ -326,6 +410,7 @@ describe("earth-turns' angular case through the library's composer", () => {
     );
     expect(p.terms).toHaveLength(1);
     expect(p.terms[0]).toMatchObject({ frame: "ITRF", kind: "angular" });
-    expect(p.terms[0]!.lever).toBe(6_378_137);
+    const t = p.terms[0]!;
+    expect(t.kind === "angular" && t.lever).toBe(6_378_137);
   });
 });

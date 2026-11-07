@@ -248,10 +248,10 @@
         "pid": "DI3564",
         "url": "https://noaa-cors-pds.s3.amazonaws.com/coord/coord_20/ccv6_20.coord.txt",
         "datasheetUrl": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=DI3564",
-        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  7, 2026 04:07:18 EST",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  7, 2026 05:00:46 EST",
         "retrieved": "2026-11-07"
       },
-      "description": "The NOAA CORS station nearest LC-39A that NGS publishes in both NAD83(2011) and ITRF: about 17 km south-south-east of the pad (NGS's radial search for CORS within 30 miles of N283630 W0803615: Cape Canaveral 1 to 6 at 10.8 to 10.9 miles, Titusville at 13.3). None is within a few kilometres. The datasheet gives NAD83(2011) only; the coordinate file gives both, the NAD83(2011) position transformed by NGS from ITRF2020 in April 2025. geodesy.noaa.gov/corsdata/ answered HTTP 410 (retired 2026-11-01), so the coordinate file is read from NGS's NOAA Open Data Dissemination bucket, the location NGS's data page gives. Measured data: the antenna reference point's position from GNSS.",
+      "description": "The NOAA CORS station nearest LC-39A that NGS publishes in both NAD83(2011) and ITRF: about 17 km south-south-east of the pad (NGS's radial search for CORS within 30 miles of N283630 W0803615: Cape Canaveral 1 to 6 at 10.8 to 10.9 miles, Titusville at 13.3). None is within a few kilometres. The datasheet gives NAD83(2011) only; the coordinate file gives both, the NAD83(2011) position transformed by NGS from ITRF2020 in April 2025. geodesy.noaa.gov/corsdata/ answered HTTP 410 (retired 2026-11-01), so the coordinate file is read from NGS's NOAA Open Data Dissemination bucket, the location NGS's data page gives. The two positions are not independent: NGS transformed the NAD83(2011) one from the ITRF2020 one, so a check between them tests PROJ's transformation against NGS's own computation (a published reference), not a measurement. The datasheet prints the ellipsoid height's adjustment date as \"(04/??/25)\": the \"??\" is NGS's own (no day), copied as printed.",
       "designation": "CAPE CANAVERAL 6 CORS ARP",
       "corsId": "CCV6",
       "nad83": {
@@ -272,6 +272,11 @@
           "north": "0.04",
           "east": "0.02",
           "height": "0.05"
+        },
+        "network95": {
+          "units": "cm",
+          "horizontal": "0.09",
+          "ellipsoidHeight": "0.10"
         }
       },
       "itrf2020": {
@@ -315,14 +320,37 @@
     "lc-39a-pad": {
       "kind": "input",
       "source": {
-        "document": "Kennedy Space Center Launch Complex 39A (Wikipedia), the infobox's coordinates",
-        "publisher": "Wikipedia",
-        "url": "https://en.wikipedia.org/wiki/Kennedy_Space_Center_Launch_Complex_39A",
+        "document": "NGS Data Sheet (datasheet95, version 8.12.5.20): THIRTY NINE A",
+        "publisher": "National Geodetic Survey, NOAA",
+        "pid": "AK1155",
+        "url": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=AK1155",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  7, 2026 05:03:28 EST",
         "retrieved": "2026-11-07"
       },
-      "description": "Where the robot arm's synthetic pad frame is defined (scenarios/arm.ts PAD): an input, not an expected value (ruling F6). Its east-north-up frame is defined at this point on the WGS 84 ellipsoid (h = 0, as the globe is drawn), so the place is exact by definition; no survey of the pad itself is claimed. AIAA's vehicle guide (28.6082° N, 80.6041° W) and The Space Devs' launch-location API (28.60822681, -80.60428186) agree with it to tens of metres. No published pad elevation was found, so none is used.",
-      "latitude": "28 36 30.2 N",
-      "longitude": "80 36 15.6 W"
+      "description": "Where the robot arm's pad frame is defined (scenarios/arm.ts PAD): an input, not an expected value (ruling F6). AK1155 is a disk set in LC-39A's concrete pad, 24 feet south-south-west of the flame deflector's south-east corner (the datasheet's description). Its NAD83(1990) position is taken as NAD83(2011) at 2010.0 and its ellipsoidal height is the datasheet's NAVD88 height plus its GEOID18 height; arm.ts pins the result of PROJ's NAD83(2011) to ITRF2020 operation at 2026.0, which the data test holds to PROJ. NASA's fact sheet gives the Pad A hardstand as 48 feet above sea level, which agrees with the mark's 46.38 feet to within the step from the apron to the hardstand; it is cited as a cross-check, not used. The pad frame is a definition: the answer's ± is the arm's and the station's from this point, not a survey of LC-39A.",
+      "designation": "THIRTY NINE A",
+      "latitude": "28 36 27.06119(N)",
+      "longitude": "080 36 14.60900(W)",
+      "orthometricHeight": "14.137",
+      "geoidHeight": "-28.252",
+      "lines": [
+        "AK1155* NAD 83(1990) POSITION- 28 36 27.06119(N) 080 36 14.60900(W)   ADJUSTED",
+        "AK1155* NAVD 88 ORTHO HEIGHT -    14.137 (meters)       46.38  (feet) ADJUSTED",
+        "AK1155  GEOID HEIGHT    -        -28.252 (meters)                     GEOID18",
+        "AK1155_SETTING: 31 = SET IN A PAVEMENT SUCH AS STREET, SIDEWALK, CURB, ETC.",
+        "AK1155_STABILITY: D = MARK OF QUESTIONABLE OR UNKNOWN STABILITY",
+        "AK1155'MILES EAST-NORTHEAST OF THE VERTICAL ASSEMBLY BUILDING, 24 FEET",
+        "AK1155'SOUTH-SOUTHWEST OF THE SOUTHEAST CORNER OF THE FLAME DEFLECTOR AND",
+        "AK1155'6 FEET WEST OF THE EAST TRACK OF THE CRAWLER WAY.  THE MARK IS",
+        "AK1155'SET IN A DRILL HOLE IN A LARGE CONCRETE PAD AND STAMPED THIRTY"
+      ],
+      "crossCheck": {
+        "document": "NASA Facts, Launch Complex 39-A and 39-B, FS-2004-03-005-KSC (146677main_LC39-2004a.pdf)",
+        "publisher": "NASA John F. Kennedy Space Center",
+        "url": "https://www3.nasa.gov/centers/kennedy/pdf/146677main_LC39-2004a.pdf",
+        "retrieved": "2026-11-07",
+        "quote": "Pad A and Pad B hardstands are 48 feet and 55 feet above sea level, respectively."
+      }
     },
     "iogp-lambert-conic-conformal-2sp": {
       "source": {

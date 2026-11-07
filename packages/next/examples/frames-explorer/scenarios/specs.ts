@@ -509,14 +509,16 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     ],
     // The arm at its checked pose (stress/groups/joint-chain.ts
     // CHECKED_POSE), at the drone's epoch. Its checks: CCV6's NAD83(2011)
-    // to ITRF2020 against NGS's own (measured data), and the chain's hand
+    // to ITRF2020, PROJ against NGS's own computation, and the chain's hand
     // formulas and round trip at that pose (Task 7b).
     checked: {
       epochUtc: MEASURED_AT,
       knobs: { yaw: 20, shoulder: 35, elbow: -50, wrist: 0 },
     },
     needs: ["proj"],
-    globe: "ellipsoid",
+    // The terrain globe: the pad frame sits at AK1155's datasheet height, so
+    // the arm stands on the drawn deck (Task 7b fix 1).
+    globe: "terrain",
     checks: [
       "reference-values.ngs-di3564.itrf2020",
       "frame-tree.joint-chain.forward-kinematics",
@@ -524,14 +526,17 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       "frame-tree.joint-chain.round-trip",
     ],
     checkKinds: {
-      "reference-values.ngs-di3564.itrf2020": "measured",
+      // NGS computed CCV6's NAD83(2011) position from its ITRF2020 one, so
+      // this checks PROJ against NGS's own computation: a published
+      // reference, never "validated" (Task 7b fix 1).
+      "reference-values.ngs-di3564.itrf2020": "published",
       "frame-tree.joint-chain.forward-kinematics": "hand",
       "frame-tree.joint-chain.accuracy": "hand",
       "frame-tree.joint-chain.round-trip": "roundTrip",
     },
     checkNotes: {
       "reference-values.ngs-di3564.itrf2020":
-        "Checked at the station itself, about 17 km from the pad: the path the answer takes for its end of the line (NAD83(2011) through PROJ to ITRF2020), against NGS's own ITRF2020 position.",
+        "Checked at the station itself, about 17 km from the pad: the path the answer takes for both ends of the line (NAD83(2011) through PROJ to ITRF2020), PROJ against NGS's own computation of the station's ITRF2020 position from the same data.",
       "frame-tree.joint-chain.accuracy":
         "Checked at the checked pose and fully extended: the rule the library composes, worked by hand.",
     },

@@ -37,7 +37,9 @@ import type { AddedFrameSpec, EdgeAccuracy } from "../tree.ts";
 import {
   ARM,
   GEOMETRY,
+  COORDINATE_EPOCH,
   MARK,
+  largestFirst,
   PAD,
   SPEC_SHEET,
   anglesOf,
@@ -49,13 +51,6 @@ import type { KnobState } from "./spec.ts";
 const station = (references.entries as unknown as Record<string, CorsStation>)[
   STATION_ID
 ]!;
-
-/** A UTC instant as a decimal year (the PROJ operation's coordinate epoch). */
-export function decimalYear(utcMs: number): number {
-  const y = new Date(utcMs).getUTCFullYear();
-  const start = Date.UTC(y, 0, 1);
-  return y + (utcMs - start) / (Date.UTC(y + 1, 0, 1) - start);
-}
 
 /**
  * The station's own accuracy (1σ, m): the datasheet's network standard
@@ -90,9 +85,12 @@ const JOINT_WORDS: Record<string, string> = {
   [ARM.wrist]: "wrist",
 };
 
+/** A term that is a rotation error times its lever arm. */
+type AngularTerm = Extract<PointAccuracyTerm, { kind: "angular" }>;
+
 /** An angular term's words in the answer's breakdown. */
-const encoderLabel = (t: PointAccuracyTerm): string =>
-  `${(JOINT_WORDS[t.frame] ?? t.frame).replace(/^./, (c) => c.toUpperCase())} encoder ±${SPEC_SHEET.encoderDegrees}° × ${t.lever!.toFixed(1)} m`;
+const encoderLabel = (t: AngularTerm): string =>
+  `${(JOINT_WORDS[t.frame] ?? t.frame).replace(/^./, (c) => c.toUpperCase())} encoder ±${SPEC_SHEET.encoderDegrees}° × ${t.lever.toFixed(1)} m`;
 
 const edgeOf = (a: {
   meters?: number;
@@ -112,8 +110,8 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
   const arm = armFrames(itrf, angles);
   const t = frameTransform(arm.tool, itrf, instant);
   const tool = [t[12]!, t[13]!, t[14]!];
-  const utc = instant.toUtc(ctx.frames.data.leapSeconds);
-  const year = decimalYear(utc);
+  // Both ends at one coordinate epoch: they ride one plate (arm.ts).
+  const year = COORDINATE_EPOCH;
   const v = stationValues(station);
   const years = year - v.epoch;
   const { itrf: mark, operation } = stationInItrf(proj(ctx), station, year);
@@ -132,7 +130,9 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
     composed.meters === undefined || projMeters === undefined
       ? undefined
       : Math.hypot(composed.meters, markSigma.meters, projMeters);
-  const angular = composed.terms.filter((x) => x.kind === "angular");
+  const angular = composed.terms.filter(
+    (x): x is AngularTerm => x.kind === "angular",
+  );
   const links = composed.terms.filter(
     (x) => x.kind === "meters" && x.frame !== ARM.base,
   );
@@ -169,7 +169,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
           ? "PROJ's stated accuracy for the operation"
           : "not stated: PROJ gives no accuracy for the operation",
     },
-  ].sort((a, b) => (b.meters ?? Infinity) - (a.meters ?? Infinity));
+  ].sort(largestFirst);
   // The leading term, or the encoders that share it (the shoulder and the
   // base yaw turn about one point, the column's top).
   const top = dominantTerm({
@@ -213,7 +213,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
       edge: appEdge(
         PAD.name,
         "constant",
-        `east-north-up at LC-39A, ${PAD.latitude.toFixed(5)}° N, ${(-PAD.longitude).toFixed(5)}° W on WGS 84 (h = 0): the library's eastNorthUpFrame`,
+        `east-north-up at NGS mark ${PAD.mark} on LC-39A's pad (${PAD.latitude.toFixed(5)}° N, ${(-PAD.longitude).toFixed(5)}° W, h ${PAD.height.toFixed(3)} m, its datasheet's; through PROJ to ITRF2020 at ${COORDINATE_EPOCH.toFixed(1)}): the library's eastNorthUpFrame`,
       ),
     },
     {
@@ -348,7 +348,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
     },
   ];
 
-  const dateText = new Date(utc).toISOString().slice(0, 10);
+  const epochText = `the coordinate epoch ${COORDINATE_EPOCH.toFixed(1)}`;
   const accuracyNote =
     total === undefined
       ? `not bounded: ${composed.unboundedBy !== undefined ? `${composed.unboundedBy} states no accuracy` : "PROJ states no accuracy for the operation"}`
@@ -362,7 +362,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
       label: `${MARK.name}'s position`,
       frame: MARK.frame,
       source: `NGS datasheet ${MARK.pid}`,
-      describes: `the station's NAD83(2011) position (epoch ${station.nad83.epoch}), carried to ${dateText} by its published velocity`,
+      describes: `the station's NAD83(2011) position (epoch ${station.nad83.epoch}), carried to ${epochText} by its published velocity`,
       accuracy: {
         meters: markSigma.meters,
         note: `the datasheet's network standard deviations and its velocity's rounding over ${years.toFixed(1)} years (1σ)`,
@@ -388,7 +388,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
         },
         {
           title: "What each frame states",
-          text: `The spec sheet (synthetic, 1σ): each encoder ±${SPEC_SHEET.encoderDegrees}°, each link's length ±${SPEC_SHEET.linkMeters * 1000} mm, the base's survey in the pad frame ±${SPEC_SHEET.surveyMeters * 1000} mm. The pad's frame is exact by definition: it is defined at the pad's published position.`,
+          text: `The spec sheet (synthetic, 1σ): each encoder ±${SPEC_SHEET.encoderDegrees}°, each link's length ±${SPEC_SHEET.linkMeters * 1000} mm, the base's survey in the pad frame ±${SPEC_SHEET.surveyMeters * 1000} mm. The pad's frame is exact by definition: it is defined at NGS mark ${PAD.mark}, a disk in LC-39A's pad, at its datasheet's position and height. So the ± covers the arm and the station from that point; it is not a survey of LC-39A or of where a real arm would stand. Moving the point moves the answer about 1 m per metre along the line to the station, 0.33 m per metre east and 3.4 mm per metre of height; ${PAD.mark}'s position is from a 1991 adjustment in NAD83(1990), taken here as NAD83(2011), and the mark's stability is rated questionable, so centimetres to decimetres lie outside the ±.`,
         },
         {
           title: "How the library composes it",
@@ -396,7 +396,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
         },
         {
           title: `${MARK.name}`,
-          text: `NGS's NAD83(2011) position for the station (epoch ${station.nad83.epoch}), carried to ${dateText} by its NAD83(2011) velocity, through PROJ's NAD83(2011) to ITRF2020 operation at that epoch. ITRF here is taken as ITRF2020. The catalog checks the same path against NGS's own ITRF2020 position for the station.`,
+          text: `NGS's NAD83(2011) position for the station (epoch ${station.nad83.epoch}), carried to ${epochText} by its NAD83(2011) velocity, through PROJ's NAD83(2011) to ITRF2020 operation at that epoch, the pad's path too: both ends ride one plate, so the distance doesn't follow the clock. ITRF here is taken as ITRF2020. The catalog checks the same path against NGS's own ITRF2020 position for the station.`,
         },
       ],
     },

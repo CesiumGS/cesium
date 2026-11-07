@@ -119,7 +119,7 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
     "Your mast over the test hill, by hand",
   // The robot arm (Task 7b).
   "reference-values.ngs-di3564.itrf2020":
-    "CCV6's NAD83(2011) through PROJ against NGS's ITRF2020",
+    "CCV6 through PROJ against NGS's own ITRF2020 computation",
   "frame-tree.joint-chain.forward-kinematics":
     "The arm's tool at three poses against the closed form",
   "frame-tree.joint-chain.accuracy":

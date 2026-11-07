@@ -79,6 +79,12 @@
   /* Room for focus rings inside the scroller. */
   padding: 2px;
   margin: -2px;
+  /*
+   * And a gutter for the scrollbar: an overlay scrollbar (macOS) draws over
+   * the content's last 10 px, which cut right-aligned figures and line ends
+   * (Task 7b fix 1, the answer's breakdown).
+   */
+  padding-inline-end: var(--stratakit-space-300);
 }
 .fx-more-below {
   flex: none;
