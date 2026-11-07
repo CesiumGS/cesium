@@ -225,8 +225,8 @@ describe("measure in design terms", () => {
       wkid: 32611,
       vcsWkid: 6360,
     } as const;
-    // PROJ offers only a ballpark operation for this pair (no vertical datum
-    // operation is known for UTM 11N heights in ftUS here).
+    // PROJ offers only a ballpark operation for this pair: NAVD88's grids
+    // (GEOID18 and earlier) are defined on NAD83 datums, not on WGS 84.
     expect(() =>
       EngineeringFrame.create({ name: "x", body: EARTH, crs }, P),
     ).toThrow(/only a ballpark/);

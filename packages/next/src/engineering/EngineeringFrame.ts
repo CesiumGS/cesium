@@ -23,6 +23,7 @@ import {
   listOperations,
   compoundParts,
   resolveOperation,
+  verticalGridDatums,
   type AreaOfInterest,
   type CrsRef,
   type CrsUnits,
@@ -107,6 +108,8 @@ export interface EngineeringFrameFallback {
   readonly replacedVertical: number;
   /** `fallbackSigma`, metres; absent when the app gave none (accuracy undefined). */
   readonly sigma?: number;
+  /** The grids PROJ's best candidate for the CRS lacked: why it fell back. */
+  readonly missingGrids: readonly string[];
 }
 
 /** Options for `EngineeringFrame.load`. */
@@ -183,11 +186,12 @@ function gridsToLoad(
       (name) => !loaded.has(name) && fetchable(catalog, name),
     );
   }
-  const candidates = listOperations(proj, definition.crs, target, {
-    ...(definition.areaOfInterest !== undefined && {
-      areaOfInterest: definition.areaOfInterest,
-    }),
-  });
+  const candidates = listOperations(
+    proj,
+    definition.crs,
+    target,
+    listOptions(definition),
+  );
   for (const candidate of candidates) {
     if (candidate.ballpark || candidate.pipeline === "") {
       continue;
@@ -222,59 +226,91 @@ function usable(
   );
 }
 
+/** `listOperations`' options for a definition: its area of interest. */
+function listOptions(definition: EngineeringFrameDefinition): {
+  areaOfInterest?: AreaOfInterest;
+} {
+  return definition.areaOfInterest === undefined
+    ? {}
+    : { areaOfInterest: definition.areaOfInterest };
+}
+
 /**
- * The CRS a definition's `geoidFallback` makes it resolve instead, or
- * undefined when the fallback doesn't apply (call 9): `crs` is an EPSG `wkid`
- * reference with a `vcsWkid`; none of PROJ's candidates for it is usable now
- * and a non-ballpark one lacks grids (its resolution fails for missing
- * grids); and the horizontal CRS alone has a usable non-ballpark candidate
- * (it resolves with none missing).
+ * Whether a definition's `geoidFallback` applies (call 9), and so the CRS it
+ * makes the frame resolve instead, with the grids the CRS's best candidate
+ * lacks: `crs` is an EPSG `wkid` reference with a `vcsWkid`; none of PROJ's
+ * candidates for it is usable now and a non-ballpark one lacks grids (its
+ * resolution fails for missing grids); and the horizontal CRS alone has a
+ * usable non-ballpark candidate (it resolves with none missing). Otherwise
+ * why it doesn't apply; undefined without a `geoidFallback`.
  */
 function fallbackCrs(
   definition: EngineeringFrameDefinition,
   proj: ProjApi,
   target: CrsRef,
-): CrsRef | undefined {
-  const { crs, geoidFallback, areaOfInterest } = definition;
+):
+  | { readonly crs: CrsRef; readonly missingGrids: readonly string[] }
+  | { readonly reason: string }
+  | undefined {
+  const { crs, geoidFallback } = definition;
+  if (geoidFallback === undefined) {
+    return undefined;
+  }
   if (
-    geoidFallback === undefined ||
     crs.format !== "wkid" ||
     crs.vcsWkid === undefined ||
     crs.authority.toUpperCase() !== "EPSG"
   ) {
-    return undefined;
+    return { reason: "the CRS isn't an EPSG code with a vcsWkid" };
   }
-  const options = areaOfInterest === undefined ? {} : { areaOfInterest };
+  const options = listOptions(definition);
   const allowBallpark = definition.allowBallpark ?? false;
   const candidates = listOperations(proj, crs, target, options);
-  const failsForGrids =
-    !candidates.some((c) => usable(c, allowBallpark)) &&
-    candidates.some(
-      (c) => !c.ballpark && c.pipeline !== "" && c.missingGrids.length > 0,
-    );
-  if (!failsForGrids) {
-    return undefined;
-  }
-  const horizontal: CrsRef = {
-    format: "wkid",
-    authority: crs.authority,
-    wkid: crs.wkid,
-    ...(crs.epoch !== undefined && { epoch: crs.epoch }),
-  };
-  const resolves = listOperations(proj, horizontal, target, options).some((c) =>
-    usable(c, false),
+  const lacking = candidates.find(
+    (c) => !c.ballpark && c.pipeline !== "" && c.missingGrids.length > 0,
   );
-  return resolves
-    ? { ...crs, vcsWkid: GEOID_MODEL_CRS[geoidFallback] }
-    : undefined;
+  if (
+    candidates.some((c) => usable(c, allowBallpark)) ||
+    lacking === undefined
+  ) {
+    return { reason: "the CRS doesn't fail for missing grids" };
+  }
+  const horizontal = compoundParts(proj, crs)!.horizontal;
+  if (
+    !listOperations(proj, horizontal.ref, target, options).some((c) =>
+      usable(c, false),
+    )
+  ) {
+    return {
+      reason: `the horizontal CRS ${crsDefinition(horizontal.ref)} doesn't resolve alone`,
+    };
+  }
+  return {
+    crs: { ...crs, vcsWkid: GEOID_MODEL_CRS[geoidFallback] },
+    missingGrids: lacking.missingGrids,
+  };
+}
+
+/** At most `max` names, then "and N more". */
+function someOf(names: readonly string[], max = 3): string {
+  return names.length <= max
+    ? names.join(", ")
+    : `${names.slice(0, max).join(", ")} and ${names.length - max} more`;
 }
 
 /**
- * Call 11's message, for a compound CRS whose vertical part only a ballpark
- * relates to the ellipsoid (NOAA's MLLW depth, EPSG:5866, has no
- * transformation in proj.db): every candidate for the CRS is a ballpark, and
- * so is every one for its vertical CRS alone, while its horizontal CRS alone
- * has one that isn't. Undefined otherwise (the generic message stands).
+ * Call 11's message, for a compound CRS that only ballparks relate to the
+ * ellipsoid although its horizontal CRS alone has an operation that isn't
+ * one: the vertical part is to blame. `proj.db` then tells two cases apart
+ * (`verticalGridDatums`):
+ *
+ *  - grids for the vertical datum exist, defined on another geographic CRS
+ *    (NAVD88 with WGS 84 / UTM: GEOID18 is on NAD83(2011)): the message names
+ *    that CRS and the fix;
+ *  - none exist (NOAA's MLLW depth, EPSG:5866, has no transformation): "<the
+ *    vertical CRS>: no PROJ-data grid relates it to the ellipsoid".
+ *
+ * Undefined otherwise (the generic message stands).
  */
 function noVerticalGrid(
   proj: ProjApi,
@@ -285,23 +321,42 @@ function noVerticalGrid(
   if (parts === undefined) {
     return undefined;
   }
-  const options =
-    definition.areaOfInterest === undefined
-      ? {}
-      : { areaOfInterest: definition.areaOfInterest };
-  const onlyBallparks = (ref: CrsRef) =>
-    listOperations(proj, ref, target, options).every((c) => c.ballpark);
+  const options = listOptions(definition);
   const compound = listOperations(proj, definition.crs, target, options);
   if (
     compound.length === 0 ||
     !compound.every((c) => c.ballpark) ||
-    !onlyBallparks(parts.vertical.ref) ||
-    onlyBallparks(parts.horizontal.ref)
+    listOperations(proj, parts.horizontal.ref, target, options).every(
+      (c) => c.ballpark,
+    )
   ) {
     return undefined;
   }
   const shown = crsDefinition(definition.crs);
-  return `${parts.vertical.name}: no PROJ-data grid relates it to the ellipsoid (from ${shown.length > 80 ? `${shown.slice(0, 77)}...` : shown}); PROJ offers only a ballpark operation, with undefined accuracy (pass allowBallpark: true to accept it)`;
+  const from = shown.length > 80 ? `${shown.slice(0, 77)}...` : shown;
+  const ballpark =
+    "PROJ offers only a ballpark operation, with undefined accuracy (pass allowBallpark: true to accept it)";
+  const { name } = parts.vertical;
+  const here = parts.horizontal.geodeticName ?? parts.horizontal.name;
+  const { datums, geoidModels } = verticalGridDatums(proj, parts.vertical.ref);
+  if (datums.some((datum) => datum.name === here)) {
+    // Grids on this very datum, and still only ballparks: not this case.
+    return undefined;
+  }
+  if (datums.length > 0) {
+    const best = datums[0]!;
+    const vertical = parts.vertical.ref;
+    const compoundCode =
+      best.geographic2d !== undefined && vertical.format === "wkid"
+        ? `, or the compound ${best.geographic2d}+${vertical.wkid}`
+        : "";
+    const accuracy = best.accuracy === undefined ? "" : `, ${best.accuracy} m`;
+    return `${name}: its grids are defined on ${someOf(datums.map((d) => d.name))}, not on ${here} (from ${from}); use a horizontal CRS on ${best.name}${compoundCode} (best: ${best.transformation}${accuracy}). ${ballpark}`;
+  }
+  if (geoidModels.length > 0) {
+    return `${name}: PROJ's geoid models for it (${someOf(geoidModels)}) aren't defined on ${here} (from ${from}); use a horizontal CRS on the models' datum. ${ballpark}`;
+  }
+  return `${name}: no PROJ-data grid relates it to the ellipsoid (from ${from}); ${ballpark}`;
 }
 
 /** `f()`, or undefined if it throws. */
@@ -457,9 +512,9 @@ export class EngineeringFrame {
       const fallback = unlessThrows(() =>
         fallbackCrs(definition, proj, checked.target),
       );
-      if (fallback !== undefined) {
+      if (fallback !== undefined && "crs" in fallback) {
         const more = gridsToLoad(
-          { ...definition, crs: fallback },
+          { ...definition, crs: fallback.crs },
           proj,
           checked.target,
           grids.catalog,
@@ -556,21 +611,28 @@ export class EngineeringFrame {
     } catch (error) {
       // The diagnoses list PROJ's candidates again; should that fail, the
       // resolution's own error stands.
-      const replacement = unlessThrows(() =>
+      const decided = unlessThrows(() =>
         fallbackCrs(definition, proj, targetRef),
       );
-      if (replacement === undefined) {
+      if (decided === undefined || !("crs" in decided)) {
         // Only PROJ's own search, refused for its ballpark: a pinned
         // pipeline's error, or one with allowBallpark, stands as it is.
         const message =
           definition.pipeline === undefined && definition.allowBallpark !== true
             ? unlessThrows(() => noVerticalGrid(proj, definition, targetRef))
             : undefined;
-        if (message !== undefined) {
-          throw new Error(message, { cause: error });
+        const why =
+          decided === undefined
+            ? ""
+            : ` (geoidFallback "${definition.geoidFallback}" doesn't apply: ${decided.reason})`;
+        if (message === undefined && why === "") {
+          throw error;
         }
-        throw error;
+        throw new Error(`${message ?? (error as Error).message}${why}`, {
+          cause: error,
+        });
       }
+      const replacement = decided.crs;
       const model = definition.geoidFallback!;
       try {
         operation = resolveOperation(proj, replacement, target, options);
@@ -583,6 +645,7 @@ export class EngineeringFrame {
       fallback = {
         model,
         replacedVertical: (definition.crs as { vcsWkid: number }).vcsWkid,
+        missingGrids: decided.missingGrids,
         ...(definition.fallbackSigma !== undefined && {
           sigma: definition.fallbackSigma,
         }),

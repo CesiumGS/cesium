@@ -110,7 +110,11 @@ describe("geoid fallback: Jakarta, EPSG:9488+9471", () => {
       jakarta({ geoidFallback: "EGM96" }),
       { proj: P, grids: source },
     );
-    expect(frame.fallback).toEqual({ model: "EGM96", replacedVertical: 9471 });
+    expect(frame.fallback).toEqual({
+      model: "EGM96",
+      replacedVertical: 9471,
+      missingGrids: [JAKARTA_GRID],
+    });
     expect(frame.fallback!.sigma).toBeUndefined();
     expect(loadedGrids(P).has(EGM96_GRID)).toBe(true);
     expect(frame.operation.grids).toEqual([EGM96_GRID]);
@@ -148,6 +152,7 @@ describe("geoid fallback: Jakarta, EPSG:9488+9471", () => {
     expect(frame.fallback).toEqual({
       model: "EGM96",
       replacedVertical: 9471,
+      missingGrids: [JAKARTA_GRID],
       sigma: 0.5,
     });
   });
@@ -178,6 +183,7 @@ describe("geoid fallback: Jakarta, EPSG:9488+9471", () => {
       expect(frame.fallback).toEqual({
         model: "EGM2008",
         replacedVertical: 9471,
+        missingGrids: [JAKARTA_GRID],
       });
       expect(frame.operation.grids).toEqual([EGM2008_GRID]);
       const direct = EngineeringFrame.create(
@@ -194,6 +200,90 @@ describe("geoid fallback: Jakarta, EPSG:9488+9471", () => {
       expect(Math.abs(a.height - b.height)).toBeLessThan(1e-9);
     },
   );
+});
+
+// A fallback keeps the CRS's vertical unit and direction: the operation takes
+// the model's heights (metres, up). Before the DKLAT and GEOID18 grids are
+// loaded (this file's PROJ never loads GEOID18), with EGM96 loaded above.
+describe("geoid fallback: design depths and feet", () => {
+  const DEPTH: CrsRef = {
+    format: "wkid",
+    authority: "EPSG",
+    wkid: 25832,
+    vcsWkid: 10550,
+  };
+  const KATTEGAT_EN = [653_000, 6_263_000];
+
+  it("a depth CRS's fallback reads depth +10 as 10 m below the model's 0", async () => {
+    const { P } = await setup();
+    expect(loadedGrids(P).has("dk_sdfi_dklat_2023.tif")).toBe(false);
+    const frame = EngineeringFrame.create(
+      { name: "Kattegat", body: EARTH, crs: DEPTH, geoidFallback: "EGM96" },
+      P,
+    );
+    expect(frame.fallback).toEqual({
+      model: "EGM96",
+      replacedVertical: 10550,
+      missingGrids: ["dk_sdfi_dklat_2023.tif"],
+    });
+    expect(frame.units.verticalDirection).toBe("down");
+    const direct = EngineeringFrame.create(
+      {
+        name: "Kattegat EGM96",
+        body: EARTH,
+        crs: { ...DEPTH, vcsWkid: 5773 },
+      },
+      P,
+    );
+    const at = (u: number) => [KATTEGAT_EN[0]!, KATTEGAT_EN[1]!, u];
+    const h0 = frame.toGeodetic(at(0)).height;
+    const h10 = frame.toGeodetic(at(10)).height;
+    expect(Math.abs(h10 - (h0 - 10))).toBeLessThan(1e-6);
+    // Depth 10 is EGM96 height -10.
+    expect(Math.abs(h10 - direct.toGeodetic(at(-10)).height)).toBeLessThan(
+      1e-9,
+    );
+    for (const u of [0, 10]) {
+      const back = frame.fromBodyFixed(frame.toBodyFixed(at(u)));
+      for (let i = 0; i < 3; i++) {
+        expect(Math.abs(back[i]! - at(u)[i]!)).toBeLessThan(1e-4);
+      }
+    }
+  });
+
+  it("a ftUS CRS's fallback converts design feet to the model's metres", async () => {
+    const { P } = await setup();
+    // SPCS83 California zone 3 (ftUS) + NAVD88 height (ftUS), without
+    // GEOID18.
+    const crs: CrsRef = {
+      format: "wkid",
+      authority: "EPSG",
+      wkid: 6420,
+      vcsWkid: 6360,
+    };
+    const frame = EngineeringFrame.create(
+      { name: "CA3", body: EARTH, crs, geoidFallback: "EGM96" },
+      P,
+    );
+    // PROJ's best candidate (1.14 m, NADCON5 with GEOID99) is the one lacking.
+    expect(frame.fallback?.missingGrids).toContain("us_noaa_g1999u05.tif");
+    expect(frame.metersPerHeightUnit).toBeCloseTo(1200 / 3937, 15);
+    const direct = EngineeringFrame.create(
+      { name: "CA3 EGM96", body: EARTH, crs: { ...crs, vcsWkid: 5773 } },
+      P,
+    );
+    const en = [6_000_000, 2_100_000];
+    const h100 = frame.toGeodetic([en[0]!, en[1]!, 100]).height;
+    const h0 = frame.toGeodetic([en[0]!, en[1]!, 0]).height;
+    expect(Math.abs(h100 - h0 - 100 * (1200 / 3937))).toBeLessThan(1e-6);
+    expect(
+      Math.abs(
+        h100 - direct.toGeodetic([en[0]!, en[1]!, 100 * (1200 / 3937)]).height,
+      ),
+    ).toBeLessThan(1e-9);
+    const back = frame.fromBodyFixed(frame.toBodyFixed([en[0]!, en[1]!, 100]));
+    expect(Math.abs(back[2]! - 100)).toBeLessThan(1e-4);
+  });
 });
 
 // A lowest-astronomical-tide depth CRS with its PROJ-data grid. proj.db
@@ -222,6 +312,24 @@ describe("depth axes: DKLAT(2023) depth, EPSG:25832+10550", () => {
     );
     expect(candidates.length).toBeGreaterThan(0);
     expect(candidates.every((c) => c.ballpark)).toBe(true);
+    // Its grid is on ETRS89, and the error says so.
+    expect(() =>
+      EngineeringFrame.create(
+        {
+          name: "RD + LAT",
+          body: EARTH,
+          crs: {
+            format: "wkid",
+            authority: "EPSG",
+            wkid: 28992,
+            vcsWkid: 9287,
+          },
+        },
+        P,
+      ),
+    ).toThrow(
+      /^LAT NL depth: its grids are defined on ETRS89, not on Amersfoort .*use a horizontal CRS on ETRS89, or the compound EPSG:4258\+9287/,
+    );
   });
 
   it("depth +10 is 10 m below depth 0, and both round trip", async () => {
@@ -310,9 +418,35 @@ describe("tidal datums with no grid: MLLW depth, EPSG:6347+5866", () => {
 
   it("a geoid fallback doesn't apply: the datum has no grid, not a missing one", async () => {
     const { P } = await setup();
-    expect(() =>
-      EngineeringFrame.create(mllw({ geoidFallback: "EGM96" }), P),
-    ).toThrow(MLLW_MESSAGE);
+    const make = () =>
+      EngineeringFrame.create(mllw({ geoidFallback: "EGM96" }), P);
+    expect(make).toThrow(MLLW_MESSAGE);
+    // And it says why the fallback wasn't taken.
+    expect(make).toThrow(
+      /geoidFallback "EGM96" doesn't apply: the CRS doesn't fail for missing grids/,
+    );
+  });
+
+  it("a height system whose grids are on another datum is told apart: WGS 84 / UTM + NAVD88", async () => {
+    const { P } = await setup();
+    // GEOID18 (in PROJ-data) relates NAVD88 to NAD83(2011), not to WGS 84.
+    const navd88 = (vcsWkid: number) => () =>
+      EngineeringFrame.create(
+        {
+          name: "UTM 11N + NAVD88",
+          body: EARTH,
+          crs: { format: "wkid", authority: "EPSG", wkid: 32611, vcsWkid },
+        },
+        P,
+      );
+    expect(navd88(5703)).toThrow(
+      /^NAVD88 height: its grids are defined on NAD83\(2011\)[^;]*, not on WGS 84 .*use a horizontal CRS on NAD83\(2011\), or the compound EPSG:6318\+5703 \(best: NAD83\(2011\) to NAVD88 height \(3\), 0\.015 m\)/,
+    );
+    // In ftUS, through NAVD88 height's conversion.
+    expect(navd88(6360)).toThrow(
+      /^NAVD88 height \(ftUS\): its grids are defined on NAD83\(2011\).*the compound EPSG:6318\+6360/,
+    );
+    expect(navd88(6360)).not.toThrow(/no PROJ-data grid/);
   });
 
   it("allowBallpark still accepts the ballpark, with no accuracy", async () => {

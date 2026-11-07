@@ -860,6 +860,8 @@ export function crsUnits(proj: ProjApi, ref: CrsRef): CrsUnits {
 export interface CrsPart {
   readonly name: string;
   readonly ref: CrsRef;
+  /** The horizontal part's geodetic CRS's name, such as "WGS 84". */
+  readonly geodeticName?: string;
 }
 
 /**
@@ -879,10 +881,15 @@ export function compoundParts(
   }
   const part = (index: number, codeRef: CrsRef | undefined): CrsPart => {
     const sub = proj.proj_crs_get_sub_crs(crs, index);
+    const geodeticName =
+      index === 0
+        ? proj.proj_get_name(proj.proj_crs_get_geodetic_crs(unbound(proj, sub)))
+        : null;
     return {
       name:
         proj.proj_get_name(unbound(proj, sub)) ??
         (index === 0 ? "The horizontal CRS" : "The vertical CRS"),
+      ...(geodeticName !== null && { geodeticName }),
       ref: codeRef ?? {
         format: "wkt2",
         wkt2: proj.proj_as_wkt(sub, proj.PJ_WKT2_2019),
@@ -909,4 +916,173 @@ export function compoundParts(
         : undefined,
     ),
   };
+}
+
+/** A geographic CRS that a vertical datum's grids are defined on. */
+export interface VerticalGridDatum {
+  /** The geographic CRS's name, such as "NAD83(2011)". */
+  readonly name: string;
+  /** Its geographic 2D CRS, "EPSG:6318", when the database has one by that name. */
+  readonly geographic2d?: string;
+  /** Its most accurate grid transformation's name, and that accuracy (m). */
+  readonly transformation: string;
+  readonly accuracy?: number;
+}
+
+/**
+ * What `proj.db` has relating a vertical CRS's datum to an ellipsoid by a
+ * grid: the geographic CRSs its grid transformations start from (most
+ * accurate first), and the geoid models the database names for it. Both
+ * empty for a datum such as MLLW, which has no transformation at all.
+ *
+ * The transformations are found by name (the vertical CRS's own, and those
+ * of the vertical CRSs a conversion relates it to on the same datum, such as
+ * NAVD88 height for NAVD88 height (ftUS)), then kept only if they read a
+ * grid and run between a geographic CRS and a vertical CRS on the same
+ * datum.
+ */
+export function verticalGridDatums(
+  proj: ProjApi,
+  vertical: CrsRef,
+): {
+  readonly datums: readonly VerticalGridDatum[];
+  readonly geoidModels: readonly string[];
+} {
+  const crs = unbound(proj, create(proj, crsDefinition(vertical), "the CRS"));
+  return quietly(proj, () => {
+    const authority = proj.proj_get_id_auth_name(crs, 0) ?? "EPSG";
+    const code = proj.proj_get_id_code(crs, 0);
+    const datum = proj.proj_crs_get_datum_forced(crs);
+    const onDatum = (other: PJ) =>
+      proj.proj_get_type(other) === proj.PJ_TYPE_VERTICAL_CRS &&
+      proj.proj_is_equivalent_to(
+        proj.proj_crs_get_datum_forced(other),
+        datum,
+        proj.PJ_COMP_EQUIVALENT,
+      );
+    const search = (name: string): PJ[] => {
+      let list: PjObjList | null = null;
+      try {
+        list = proj.proj_create_from_name(
+          authority,
+          name,
+          [proj.PJ_TYPE_TRANSFORMATION],
+          true,
+          0,
+        );
+      } catch {
+        // proj.js throws for a search that matches nothing.
+      }
+      const out: PJ[] = [];
+      for (let i = 0; i < (list?.length() ?? 0); i++) {
+        out.push(list!.get(i));
+      }
+      return out;
+    };
+    const geographic = (object: PJ) => {
+      const type = proj.proj_get_type(object);
+      return (
+        type === proj.PJ_TYPE_GEOGRAPHIC_3D_CRS ||
+        type === proj.PJ_TYPE_GEOGRAPHIC_2D_CRS
+      );
+    };
+    const ownName = proj.proj_get_name(crs);
+    const names = new Set<string>(ownName === null ? [] : [ownName]);
+    for (const operation of ownName === null ? [] : search(ownName)) {
+      for (const end of [
+        proj.proj_get_source_crs(operation),
+        proj.proj_get_target_crs(operation),
+      ]) {
+        const name = proj.proj_get_name(end);
+        if (name !== null && onDatum(end)) {
+          names.add(name);
+        }
+      }
+    }
+    const best = new Map<string, VerticalGridDatum>();
+    const seen = new Set<string>();
+    for (const name of names) {
+      for (const operation of search(name)) {
+        const id = proj.proj_get_id_code(operation, 0) ?? "";
+        if (
+          seen.has(id) ||
+          proj.proj_coordoperation_get_grid_used_count(operation) === 0
+        ) {
+          continue;
+        }
+        seen.add(id);
+        const source = proj.proj_get_source_crs(operation);
+        const target = proj.proj_get_target_crs(operation);
+        const [from, to] = geographic(source)
+          ? [source, target]
+          : [target, source];
+        if (!geographic(from) || !onDatum(to)) {
+          continue;
+        }
+        const fromName = proj.proj_get_name(from) ?? "a geographic CRS";
+        const raw = proj.proj_coordoperation_get_accuracy(operation);
+        const accuracy = raw >= 0 ? raw : undefined;
+        const previous = best.get(fromName);
+        if (
+          previous !== undefined &&
+          (accuracy === undefined ||
+            (previous.accuracy !== undefined && previous.accuracy <= accuracy))
+        ) {
+          continue;
+        }
+        best.set(fromName, {
+          name: fromName,
+          transformation: proj.proj_get_name(operation) ?? `operation ${id}`,
+          ...(accuracy !== undefined && { accuracy }),
+        });
+      }
+    }
+    const datums = [...best.values()]
+      .sort(
+        (a, b) =>
+          (a.accuracy ?? Infinity) - (b.accuracy ?? Infinity) ||
+          a.name.localeCompare(b.name),
+      )
+      .map((entry) => {
+        const found = search2d(proj, authority, entry.name);
+        return found === undefined ? entry : { ...entry, geographic2d: found };
+      });
+    let geoidModels: readonly string[] = [];
+    if (code !== null) {
+      try {
+        geoidModels = [
+          ...proj.proj_get_geoid_models_from_database(authority, code),
+        ];
+      } catch {
+        // None.
+      }
+    }
+    return { datums, geoidModels };
+  });
+}
+
+/** The geographic 2D CRS named exactly `name`, as "AUTH:code". */
+function search2d(
+  proj: ProjApi,
+  authority: string,
+  name: string,
+): string | undefined {
+  try {
+    const list = proj.proj_create_from_name(
+      authority,
+      name,
+      [proj.PJ_TYPE_GEOGRAPHIC_2D_CRS],
+      false,
+      1,
+    );
+    if (list === null || list.length() === 0) {
+      return undefined;
+    }
+    const crs = list.get(0);
+    const auth = proj.proj_get_id_auth_name(crs, 0);
+    const code = proj.proj_get_id_code(crs, 0);
+    return auth !== null && code !== null ? `${auth}:${code}` : undefined;
+  } catch {
+    return undefined;
+  }
 }

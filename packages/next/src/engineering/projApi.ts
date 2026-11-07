@@ -28,6 +28,9 @@ export type PjProjStringType = number & {
 };
 export type PjWktType = number & { readonly [handle]: "PJ_WKT_TYPE" };
 export type PjLogLevel = number & { readonly [handle]: "PJ_LOG_LEVEL" };
+export type PjComparisonCriterion = number & {
+  readonly [handle]: "PJ_COMPARISON_CRITERION";
+};
 export type PjGridAvailabilityUse = number & {
   readonly [handle]: "PROJ_GRID_AVAILABILITY_USE";
 };
@@ -203,6 +206,41 @@ export interface ProjApi {
   proj_get_type(object: PJ): PjType;
   /** Null for an object PROJ could not create (proj_create does not throw). */
   proj_get_name(object: PJ): string | null;
+  /** An object's identifier (its authority, its code); null when it has none. */
+  proj_get_id_auth_name(object: PJ, index: number): string | null;
+  proj_get_id_code(object: PJ, index: number): string | null;
+
+  // Database queries, for diagnosing a vertical CRS that only a ballpark
+  // relates to the ellipsoid (plan 4b Task 7). Both of proj.js v0.9.2's
+  // builds have them (checked in the native binding and in the WebAssembly
+  // build's exports, 2026-11-07).
+  /**
+   * The database's objects of `types` whose name matches `name` (with
+   * `approximate`, PROJ's loose match: the normalized name contains it);
+   * `limit` 0 for all. An empty list (or null) when none matches.
+   */
+  proj_create_from_name(
+    authority: string,
+    name: string,
+    types: readonly PjType[],
+    approximate: boolean,
+    limit: number,
+  ): PjObjList | null;
+  /** The names of the geoid models the database has for a vertical CRS. */
+  proj_get_geoid_models_from_database(
+    authority: string,
+    code: string,
+  ): readonly string[];
+  /** An operation's target CRS (`proj_get_source_crs` is its source). */
+  proj_get_target_crs(operation: PJ): PJ;
+  /** A CRS's datum, or its datum ensemble as a datum. */
+  proj_crs_get_datum_forced(crs: PJ): PJ;
+  proj_is_equivalent_to(
+    a: PJ,
+    b: PJ,
+    criterion: PjComparisonCriterion,
+  ): boolean;
+
   proj_as_wkt(
     object: PJ,
     type: PjWktType,
@@ -215,6 +253,12 @@ export interface ProjApi {
   readonly PJ_TYPE_PROJECTED_CRS: PjType;
   readonly PJ_TYPE_COMPOUND_CRS: PjType;
   readonly PJ_TYPE_BOUND_CRS: PjType;
+  readonly PJ_TYPE_GEOGRAPHIC_2D_CRS: PjType;
+  readonly PJ_TYPE_GEOGRAPHIC_3D_CRS: PjType;
+  readonly PJ_TYPE_VERTICAL_CRS: PjType;
+  readonly PJ_TYPE_TRANSFORMATION: PjType;
+  /** Equivalent, ignoring names and identifiers. */
+  readonly PJ_COMP_EQUIVALENT: PjComparisonCriterion;
   readonly PJ_WKT2_2019: PjWktType;
   /** No log output (PROJ otherwise prints each grid it can't find to stderr). */
   readonly PJ_LOG_NONE: PjLogLevel;
