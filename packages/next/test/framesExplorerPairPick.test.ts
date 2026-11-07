@@ -2,7 +2,15 @@
 // From, the next To, and so on; Shift sets To, Enter From; To never becomes
 // From's own frame; a pick of the other end's object swaps them; and the
 // alternation starts again at From when something else changed the pair.
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+import { Root } from "@stratakit/mui";
 import { describe, expect, it } from "vitest";
+import { TreeDiagram } from "../examples/frames-explorer/panel/TreeDiagram.tsx";
+import { buildTree } from "../examples/frames-explorer/tree.ts";
+import { createFrames } from "../src/frames/frames.ts";
+import { Instant } from "../src/time/Instant.ts";
+import { syntheticFrameData } from "./syntheticFrames.ts";
 import {
   nextAfter,
   nextText,
@@ -75,5 +83,52 @@ describe("nextAfter", () => {
   it("says which end comes next", () => {
     expect(nextText("from")).toMatch(/sets From/);
     expect(nextText("to")).toMatch(/sets To$/);
+  });
+});
+
+describe("one picking state for the docked tree and the Expand dialog's (Task 9)", () => {
+  const frames = createFrames(syntheticFrameData());
+  const tree = buildTree(frames, {}, Instant.fromTdb(0));
+  const ids = ["ITRF", "GCRF"];
+  const targets = (next: "from" | "to", announce: boolean) => ({
+    ids: new Set(ids),
+    current: "ITRF",
+    label: (id: string) => id,
+    onPick: () => {},
+    pair: {
+      from: "ITRF",
+      to: "GCRF",
+      next,
+      press: () => {},
+      announce,
+    },
+  });
+  const render = (next: "from" | "to", announce: boolean) =>
+    renderToString(
+      createElement(
+        Root,
+        { colorScheme: "dark" },
+        createElement(TreeDiagram, {
+          tree,
+          onSelect: () => {},
+          label: "tree",
+          targets: targets(next, announce),
+        }),
+      ),
+    );
+
+  it("shows the parent's next end, not a state of its own", () => {
+    expect(render("to", true)).toContain(nextText("to"));
+    expect(render("from", true)).toContain(nextText("from"));
+  });
+
+  it("makes only the announcing diagram's line a live region", () => {
+    expect(render("to", true)).toMatch(
+      /class="fx-pair-next" aria-live="polite"/,
+    );
+    const quiet = render("to", false);
+    expect(quiet).toContain(nextText("to"));
+    expect(quiet).not.toMatch(/aria-live="polite"[^>]*>Next click/);
+    expect(quiet).not.toMatch(/fx-pair-next" aria-live/);
   });
 });

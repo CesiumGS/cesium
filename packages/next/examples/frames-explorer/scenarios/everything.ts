@@ -91,6 +91,10 @@ const HORIZON_GREY = 0.1;
 const EARTH_MEAN_RADIUS = 6_371_000;
 const LIMB_GREY = 0.01;
 
+/** "0.12° of the Mast sensor's horizon and 0.01° of the Moon's limb": each grey item with its own band. */
+export const greyText = (grey: readonly { what: string; band: number }[]) =>
+  grey.map((g) => `${fmt(g.band, 2)}° of ${g.what}`).join(" and ");
+
 /** Each frame's origin in `to` at `instant`, m. */
 const originIn = (frame: Frame, to: Frame, instant: Instant): number[] => {
   const m = frameTransform(frame, to, instant);
@@ -582,12 +586,15 @@ export const evaluateEverything: ScenarioEvaluator = async (
             new Float64Array(3),
           )!,
         );
-  const hand: { blocked?: "Earth" | "Moon"; grey: string[]; words: string[] } =
-    { grey: [], words: [] };
+  // Each grey item with its own band (degrees), so the detail prints the
+  // band that decided it, not the widest (Task 9).
+  const hand: {
+    blocked?: "Earth" | "Moon";
+    grey: { what: string; band: number }[];
+    words: string[];
+  } = { grey: [], words: [] };
   /** The other end's elevation from the lunar site, degrees, when it is an end. */
   let siteElevation: number | undefined;
-  /** Each Earth end's grey band, degrees. */
-  const greys: number[] = [];
   /** The tool's height above its pad, m. */
   const toolUp = frameTransform(x.arm.tool, x.arm.pad, instant)[14]!;
   for (const [obj, here, there] of [
@@ -609,12 +616,11 @@ export const evaluateEverything: ScenarioEvaluator = async (
         0,
       );
       const grey = HORIZON_GREY + Math.sqrt((2 * h) / EARTH_MEAN_RADIUS) * DEG;
-      greys.push(grey);
       hand.words.push(
         `${CAPSTONE[obj].name} sees the other ${fmt(el, 4)}° up (its horizon's dip ${fmt(grey - HORIZON_GREY, 2)}°)`,
       );
       if (Math.abs(el) <= grey) {
-        hand.grey.push(`${CAPSTONE[obj].name}'s horizon`);
+        hand.grey.push({ what: `${CAPSTONE[obj].name}'s horizon`, band: grey });
       } else if (el < 0) {
         hand.blocked ??= "Earth";
       }
@@ -629,7 +635,10 @@ export const evaluateEverything: ScenarioEvaluator = async (
       siteElevation = el;
       hand.words.push(`the lunar site sees the other ${fmt(el, 4)}° up`);
       if (Math.abs(el) <= HORIZON_GREY) {
-        hand.grey.push("the lunar site's horizon");
+        hand.grey.push({
+          what: "the lunar site's horizon",
+          band: HORIZON_GREY,
+        });
       } else if (el < 0) {
         hand.blocked ??= "Moon";
       }
@@ -658,7 +667,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       `the ${body}'s centre ${fmt(angle, 6)}° from the line, its limb ${fmt(limb, 6)}°`,
     );
     if (Math.abs(angle - limb) <= LIMB_GREY) {
-      hand.grey.push(`the ${body}'s limb`);
+      hand.grey.push({ what: `the ${body}'s limb`, band: LIMB_GREY });
     } else if (angle < limb && norm(toB) > norm(toBody)) {
       hand.blocked ??= body;
     }
@@ -748,7 +757,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       group: "space",
       title: `${A.title} and ${B.name}: the library's line of sight (the Earth and the Moon) agrees with hand geometry (each end's horizon, and the bodies' limbs)`,
       pass: losPass,
-      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: ${hand.blocked ? `blocked by the ${hand.blocked}` : "clear"} (${hand.words.join("; ")})${hand.grey.length > 0 ? `; within ${fmt(Math.max(HORIZON_GREY, ...greys), 2)}° of ${hand.grey.join(" and ")}: the library's verdict stands` : ""}`,
+      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: ${hand.blocked ? `blocked by the ${hand.blocked}` : "clear"} (${hand.words.join("; ")})${hand.grey.length > 0 ? `; within ${greyText(hand.grey)}: the library's verdict stands` : ""}`,
       accuracyNote: "exact arithmetic: hand geometry",
       instant: epochTdb,
     },

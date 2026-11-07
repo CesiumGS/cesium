@@ -35,6 +35,7 @@ import {
   type DiagramSelection,
   type DiagramTargets,
   TreeDiagram,
+  usePairPicker,
 } from "./TreeDiagram.tsx";
 
 function SectionHead({
@@ -422,32 +423,43 @@ function ScenariosView({
   const fromValue = pair ? String(scenario.values[pair.from]) : undefined;
   const toValue = pair ? String(scenario.values[pair.to]) : undefined;
   const meet = scenario.path?.ancestor;
+  const pairNode = (v: string | undefined) =>
+    v === undefined
+      ? undefined
+      : (pair?.options.find((o) => o.value === v)?.node ?? v);
+  const fromNode = pairNode(fromValue);
+  const toNode = pairNode(toValue);
+  // One picking state for the docked tree and the Expand dialog's (Task 9).
+  const pickEnd = useStableCallback((id: string, end: "from" | "to") => {
+    const o = pair?.options.find((x) => x.node === id);
+    if (pair && o) {
+      actions.setKnob(end === "from" ? pair.from : pair.to, o.value);
+    }
+  });
+  const picker = usePairPicker(
+    fromNode !== undefined && toNode !== undefined
+      ? { from: fromNode, to: toNode }
+      : undefined,
+    pickEnd,
+  );
   const targets: DiagramTargets | undefined = useMemo(
     () =>
-      pair && fromValue !== undefined && toValue !== undefined
+      pair && fromNode !== undefined && toNode !== undefined
         ? (() => {
-            const node = (v: string) =>
-              pair.options.find((o) => o.value === v)?.node ?? v;
             const byNode = new Map(pair.options.map((o) => [o.node, o]));
             return {
               ids: new Set(byNode.keys()),
-              current: node(fromValue),
+              current: fromNode,
               label: (id: string) =>
                 `${byNode.get(id)?.label ?? id}: click (or Enter) for From, Shift-click (or Shift+Enter) for To`,
               onPick: () => {},
               pair: {
-                from: node(fromValue),
-                to: node(toValue),
+                from: fromNode,
+                to: toNode,
                 ...(meet !== undefined && { meet }),
-                pick: (id: string, end: "from" | "to") => {
-                  const o = byNode.get(id);
-                  if (o) {
-                    actions.setKnob(
-                      end === "from" ? pair.from : pair.to,
-                      o.value,
-                    );
-                  }
-                },
+                next: picker.next,
+                press: picker.press,
+                announce: true,
               },
             };
           })()
@@ -467,7 +479,27 @@ function ScenariosView({
                 onPick: () => {},
               }
             : undefined,
-    [control, current, drawIn, actions, pair, fromValue, toValue, meet],
+    [
+      control,
+      current,
+      drawIn,
+      actions,
+      pair,
+      fromNode,
+      toNode,
+      meet,
+      picker.next,
+      picker.press,
+    ],
+  );
+  // The docked tree's "Next click…" line is the live region unless the
+  // Expand dialog is open: then the dialog's is (one region, Task 9).
+  const dockedTargets: DiagramTargets | undefined = useMemo(
+    () =>
+      targets?.pair && expandedView
+        ? { ...targets, pair: { ...targets.pair, announce: false } }
+        : targets,
+    [targets, expandedView],
   );
   const extras: Record<string, ResultExtras> = useMemo(
     () => ({ ...model.extras, ...scenario.liveExtras }),
@@ -605,7 +637,7 @@ function ScenariosView({
                   onSelect={select}
                   label={`The frame tree of ${scenario.title}`}
                   resetKey={scenario.id}
-                  targets={targets}
+                  targets={dockedTargets}
                   data={scenario.data}
                 />
               ) : (

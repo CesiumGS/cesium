@@ -345,6 +345,11 @@ export interface TerrainSightView {
    * 1): unknown, never clear, with words saying so.
    */
   coarse?: string;
+  /**
+   * The end it was traced from, when the trace read clear with no stated
+   * error (Task 9): no bound to judge, so unknown, never clear.
+   */
+  unbounded?: string;
 }
 
 /** One line of the report's environment (R15). */

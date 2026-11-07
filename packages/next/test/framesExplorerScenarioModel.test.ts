@@ -15,7 +15,9 @@ import {
   scenarioFreshness,
   scenarioView,
 } from "../examples/frames-explorer/scenarioModel.ts";
+import { withTerrain } from "../examples/frames-explorer/panel/answerText.ts";
 import { checkRows } from "../examples/frames-explorer/scenarios/checks.ts";
+import { greyText } from "../examples/frames-explorer/scenarios/everything.ts";
 import type { ScenarioAnswer } from "../examples/frames-explorer/scenarios/evaluate.ts";
 import { READY } from "../examples/frames-explorer/scenarios/scenes.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
@@ -265,12 +267,15 @@ describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
     subject: "The ship's mast's local horizon toward Orion",
     end: "the ship's mast",
   };
-  const trace = (meters: number, state: "clear" | "may-block" = "clear") => ({
+  const trace = (
+    meters: number | undefined,
+    state: "clear" | "may-block" | "blocked" | "unknown" = "clear",
+  ) => ({
     id: "pair",
     state,
     text: "traced",
     traced: "k",
-    meters,
+    ...(meters !== undefined && { meters }),
   });
 
   it("never judges an end's horizon over tiles coarser than the threshold, and never says clear there", () => {
@@ -292,6 +297,55 @@ describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
         sightLines: [line],
       })[0]!.state,
     ).toBe("waiting");
+  });
+
+  it("downgrades only clear and may block over coarse tiles, never a definite block (Task 9)", () => {
+    const far = (state: "clear" | "may-block" | "blocked" | "unknown") =>
+      ownTraces([trace(77_000, state)], { sightLines: [line] })[0]!;
+    expect(far("may-block")).toMatchObject({
+      state: "unknown",
+      coarse: "the ship's mast",
+    });
+    // A block over coarse tiles is still a block, with its own words.
+    expect(far("blocked")).toEqual(trace(77_000, "blocked"));
+    // An unknown keeps its own words (its share of the path).
+    expect(far("unknown")).toEqual(trace(77_000, "unknown"));
+  });
+
+  it("never reads clear without a bound: a clear with no stated error is unknown (Task 9)", () => {
+    const [v] = ownTraces([trace(undefined)], { sightLines: [line] });
+    expect(v).toMatchObject({
+      state: "unknown",
+      unbounded: "the ship's mast",
+      text: "The ship's mast's local horizon toward Orion: the terrain's error at the ship's mast isn't stated, so it isn't counted as clear.",
+    });
+    const answer: ScenarioAnswer = {
+      label: "Distance",
+      headline: "1 km",
+      accuracy: { note: "" },
+      sky: {
+        state: "clear",
+        text: "In view",
+        key: "k",
+        line: "pair",
+        where: "",
+      },
+    } as ScenarioAnswer;
+    const aside = withTerrain(answer, [v!]).aside!;
+    expect(aside).toMatch(/isn't counted as clear/);
+    expect(aside).not.toMatch(/and of the terrain/);
+  });
+
+  it("prints the band that decided each grey verdict, not the widest (Task 9)", () => {
+    expect(
+      greyText([
+        { what: "the Mast sensor's horizon", band: 0.1234 },
+        { what: "the Moon's limb", band: 0.01 },
+      ]),
+    ).toBe("0.12° of the Mast sensor's horizon and 0.01° of the Moon's limb");
+    expect(greyText([{ what: "the Moon's limb", band: 0.01 }])).toBe(
+      "0.01° of the Moon's limb",
+    );
   });
 
   it("compares ours in the published unit where the headline is another quantity, and moves it off the checked setup", () => {

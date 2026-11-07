@@ -96,8 +96,56 @@ export interface DiagramTargets {
     from: string;
     to: string;
     meet?: string;
-    pick: (id: string, end: "from" | "to") => void;
+    /**
+     * Which end a plain click sets next, and a press on a pill: one state
+     * for every diagram of the pair (the docked one and the Expand
+     * dialog's, Task 9), from `usePairPicker`.
+     */
+    next: PairEnd;
+    press: (id: string, how: PairPress) => void;
+    /**
+     * Whether this diagram's "Next click…" line is the polite live region:
+     * one at a time (the dialog's while it is open), so a pick is read out
+     * once.
+     */
+    announce: boolean;
   };
+}
+
+/**
+ * The pair's picking state (Task 8 fix 1 M2; shared by both diagrams, Task
+ * 9): the end a plain click sets next, kept while the pair is the one the
+ * last pick expected; the knobs, Swap or a moment changing it start again
+ * at From. `pick` sets a knob.
+ */
+export function usePairPicker(
+  now: PairNodes | undefined,
+  pick: (id: string, end: PairEnd) => void,
+): { next: PairEnd; press: (id: string, how: PairPress) => void } {
+  const [next, setNext] = useState<PairEnd>("from");
+  const expected = useRef<PairNodes | undefined>(undefined);
+  const from = now?.from;
+  const to = now?.to;
+  useEffect(() => {
+    if (from !== undefined && to !== undefined) {
+      setNext((n) => nextAfter(n, expected.current, { from, to }));
+    }
+  }, [from, to]);
+  const press = useCallback(
+    (id: string, how: PairPress) => {
+      if (from === undefined || to === undefined) {
+        return;
+      }
+      const r = pairPick({ from, to }, next, id, how);
+      expected.current = r.expect;
+      setNext(r.next);
+      if (r.end) {
+        pick(id, r.end);
+      }
+    },
+    [from, to, next, pick],
+  );
+  return { next, press };
 }
 
 /** The meeting frame's tag (the capstone's pair). */
@@ -571,29 +619,8 @@ export const TreeDiagram = memo(function TreeDiagram({
     () => new Map<string, string>(JSON.parse(tagKey) as [string, string][]),
     [tagKey],
   );
-  // Which end a plain click sets next (shown and announced under the
-  // diagram), kept while the pair is the one the tree's own last pick
-  // expected; the knobs, Swap or a moment changing it start again at From.
-  const [nextEnd, setNextEnd] = useState<PairEnd>("from");
-  const expected = useRef<PairNodes | undefined>(undefined);
-  const pairFrom = pair?.from;
-  const pairTo = pair?.to;
-  useEffect(() => {
-    if (pairFrom !== undefined && pairTo !== undefined) {
-      setNextEnd((n) =>
-        nextAfter(n, expected.current, { from: pairFrom, to: pairTo }),
-      );
-    }
-  }, [pairFrom, pairTo]);
-  /** A press on a pair's pill: the knob it sets, and the next end. */
-  const press = (id: string, how: PairPress) => {
-    const r = pairPick(pair!, nextEnd, id, how);
-    expected.current = r.expect;
-    setNextEnd(r.next);
-    if (r.end) {
-      pair!.pick(id, r.end);
-    }
-  };
+  /** A press on a pair's pill: the knob it sets, and the next end (the parent's one state). */
+  const press = (id: string, how: PairPress) => pair!.press(id, how);
   const layout = useMemo(
     () => diagramLayout(shaped, keep, expanded, width, ends, fullLabels, data),
     [shaped, keep, expanded, width, ends, fullLabels, data],
@@ -832,8 +859,11 @@ export const TreeDiagram = memo(function TreeDiagram({
     <>
       {pair && (
         // Which end the next click sets, read out as it changes (M2).
-        <p className="fx-pair-next" aria-live="polite">
-          {nextText(nextEnd)}
+        <p
+          className="fx-pair-next"
+          {...(pair.announce && { "aria-live": "polite" as const })}
+        >
+          {nextText(pair.next)}
         </p>
       )}
       <div

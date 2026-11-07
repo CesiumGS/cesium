@@ -1667,6 +1667,23 @@ These bind over the bullets above where they differ.
   breakdown, after the stated terms, and left out of the ±, as the walk
   leaves it out.
 
+### 9: the UX review and browser checks (2026-11-07)
+
+- **An end's horizon over coarse tiles** (`ownTraces`): only "clear" and
+  "may block" turn into "isn't judged from this far out"; a definite
+  block stays a block, and an unknown keeps its own share of the path. A
+  trace that reads clear with no stated error has no bound, so it is
+  unknown ("isn't counted as clear"), never clear. (The library gives
+  that only for a path wholly above the terrain's height band, which a
+  trace from the ground never is.)
+- **The hand line of sight's detail** names each grey item with its own
+  band ("within 0.12° of the Mast sensor's horizon and 0.01° of the Moon's
+  limb"), not the widest band for all.
+- **One picking state for both diagrams** (`usePairPicker`, held by the
+  panel): the docked tree and the Expand dialog's share the next end, and
+  only one "Next click…" line is the live region (the dialog's while it is
+  open).
+
 ### Carried forward (engine work)
 
 - **X-ray dashes for the geocentric triads inside the globe.** (Meanwhile

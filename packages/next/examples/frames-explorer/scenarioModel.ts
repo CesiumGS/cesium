@@ -148,7 +148,10 @@ export const COARSE_TERRAIN_METERS = 100;
  * one made for another pair (its `traced` isn't its line's key) reads as
  * tracing, never as this pair's verdict; a line the evaluation no longer
  * has goes. A line traced from a named end over tiles coarser than
- * `COARSE_TERRAIN_METERS` is unknown, never clear (fix 1).
+ * `COARSE_TERRAIN_METERS` that reads clear or may block is unknown, never
+ * clear (fix 1); a definite block stays a block, and an unknown keeps its
+ * own words (Task 9). A clear with no stated error (`meters` undefined) has
+ * no bound to judge, so it is unknown too (Task 9).
  */
 export function ownTraces(
   terrain: readonly TerrainSightView[],
@@ -161,10 +164,27 @@ export function ownTraces(
       continue;
     }
     const subject = line.subject ?? `The local horizon toward ${line.label}`;
+    const own = line.key === undefined || v.traced === line.key;
     if (
       line.end !== undefined &&
-      (line.key === undefined || v.traced === line.key) &&
-      v.state !== "waiting" &&
+      own &&
+      v.state === "clear" &&
+      v.meters === undefined
+    ) {
+      out.push({
+        id: v.id,
+        state: "unknown",
+        unbounded: line.end,
+        ...(v.traced !== undefined && { traced: v.traced }),
+        text: `${subject}: the terrain's error at ${line.end} isn't stated, so it isn't counted as clear.`,
+        ...(v.accuracy !== undefined && { accuracy: v.accuracy }),
+      });
+      continue;
+    }
+    if (
+      line.end !== undefined &&
+      own &&
+      (v.state === "clear" || v.state === "may-block") &&
       v.meters !== undefined &&
       v.meters > COARSE_TERRAIN_METERS
     ) {
@@ -178,7 +198,7 @@ export function ownTraces(
       continue;
     }
     out.push(
-      line.key === undefined || v.traced === line.key
+      own
         ? v
         : {
             id: v.id,
