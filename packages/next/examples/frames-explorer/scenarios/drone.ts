@@ -410,6 +410,7 @@ export const evaluateDrone: ScenarioEvaluator = async (
         to,
         label: "the camera's centre ray",
         subject: "The camera's centre ray, traced on the terrain",
+        firstHit: true,
       },
     ],
     track: { heights },

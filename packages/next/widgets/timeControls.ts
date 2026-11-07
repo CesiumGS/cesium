@@ -43,6 +43,14 @@ export interface TimeControlsOptions {
    */
   onNight?: () => void;
   nightActionLabel?: string;
+  /**
+   * The zone the controls open on (default "nominal", the place's by
+   * longitude); ⚙ still offers the others. An app whose time isn't about a
+   * place on the Earth opens on "utc".
+   */
+  zone?: TimeZoneChoice;
+  /** The group's accessible name (default "Date and time of the sun"). */
+  label?: string;
 }
 
 export interface TimeControlsHandle {
@@ -58,6 +66,10 @@ export interface TimeControlsHandle {
    * jumps the clock to its start, paused. An empty list clears them.
    */
   setMarks(marks: readonly TimeMark[]): void;
+  /** Shows the time in `zone`, as if picked in ⚙. */
+  setZone(zone: TimeZoneChoice): void;
+  /** Renames the group for assistive technology. */
+  setLabel(label: string): void;
   dispose(): void;
 }
 
@@ -69,7 +81,9 @@ export interface TimeMark {
   title: string;
 }
 
-type Zone = "nominal" | "solar" | "utc" | "local";
+/** The zones ⚙ offers. */
+export type TimeZoneChoice = "nominal" | "solar" | "utc" | "local";
+type Zone = TimeZoneChoice;
 
 const DAY = 86_400_000;
 const MINUTE = 60_000;
@@ -121,13 +135,13 @@ export function attachTimeControls(
   injectStyle();
   const root = el("div", "cesium-time");
   root.setAttribute("role", "group");
-  root.setAttribute("aria-label", "Date and time of the sun");
+  root.setAttribute("aria-label", options.label ?? "Date and time of the sun");
   // Pointer input inside the controls stays out of the camera.
   for (const type of ["pointerdown", "pointerup", "wheel", "dblclick"]) {
     root.addEventListener(type, (e) => e.stopPropagation());
   }
   // By longitude until a time-zone map gives the place's legal zone.
-  let zone: Zone = "nominal";
+  let zone: Zone = options.zone ?? "nominal";
 
   // --- the bar ---
   const bar = el("div", "ct-bar");
@@ -227,6 +241,7 @@ export function attachTimeControls(
     option("utc", "UTC"),
     option("local", `This computer (${computerZone})`),
   );
+  zoneSelect.value = zone;
 
   // The sun: always shown, its action reserved (no shift when it sets).
   const sunRow = el("div", "ct-sun");
@@ -674,6 +689,15 @@ export function attachTimeControls(
     setMarks(next) {
       marks = next;
       render();
+    },
+    setZone(next) {
+      zone = next;
+      zoneSelect.value = next;
+      lastDrawn = "";
+      render();
+    },
+    setLabel(label) {
+      root.setAttribute("aria-label", label);
     },
     dispose() {
       unsubscribe();

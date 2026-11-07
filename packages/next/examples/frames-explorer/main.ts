@@ -75,6 +75,16 @@ export function run(context: ExampleContext): ExampleRun {
       ? text.split(token).join("[redacted]")
       : text;
 
+  // The clock in UTC, as every checked setup, deep link and citation is: a
+  // zone by the camera's longitude means nothing over the Moon (Task 9,
+  // I1). ⚙ still offers the others. The group is named for what it drives.
+  viewer.timeControls?.setZone("utc");
+  viewer.timeControls?.setLabel("Scenario time");
+  scope.defer(() => {
+    viewer.timeControls?.setZone("nominal");
+    viewer.timeControls?.setLabel("Date and time of the sun");
+  });
+
   // The HUD host over the canvas: the legend, tour captions and labels (R17).
   const hud = document.createElement("div");
   hud.className = "fx-hud-host";

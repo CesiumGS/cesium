@@ -522,10 +522,20 @@ export class Viewer {
 
   // ------------------------------------------------------------- globe
 
-  /** The time controls' marks, when the viewer has them: spans an app marks on the day strip. */
-  get timeControls(): Pick<TimeControlsHandle, "setMarks"> | undefined {
+  /**
+   * The time controls, when the viewer has them: spans an app marks on the
+   * day strip, the zone they show and their accessible name.
+   */
+  get timeControls():
+    Pick<TimeControlsHandle, "setMarks" | "setZone" | "setLabel"> | undefined {
     const t = this.time_;
-    return t && { setMarks: (marks) => t.setMarks(marks) };
+    return (
+      t && {
+        setMarks: (marks) => t.setMarks(marks),
+        setZone: (zone) => t.setZone(zone),
+        setLabel: (label) => t.setLabel(label),
+      }
+    );
   }
 
   /** The globe's tileset (terrain or the ellipsoid), once built. */

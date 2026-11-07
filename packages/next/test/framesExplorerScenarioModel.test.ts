@@ -16,7 +16,10 @@ import {
   scenarioView,
   withPending,
 } from "../examples/frames-explorer/scenarioModel.ts";
-import { withTerrain } from "../examples/frames-explorer/panel/answerText.ts";
+import {
+  withTerrain,
+  withTerrainAnswer,
+} from "../examples/frames-explorer/panel/answerText.ts";
 import { checkRows } from "../examples/frames-explorer/scenarios/checks.ts";
 import { greyText } from "../examples/frames-explorer/scenarios/everything.ts";
 import type { ScenarioAnswer } from "../examples/frames-explorer/scenarios/evaluate.ts";
@@ -399,6 +402,37 @@ describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
     const done = [trace(10)];
     expect(withPending(done, e)).toEqual(done);
     expect(withPending(undefined, { sightLines: [] })).toBeUndefined();
+  });
+
+  it("gives the drone no spot when the terrain before the hit is undrawn or within its error (Task 9 C1)", () => {
+    const answer = {
+      label: "",
+      headline: "",
+      accuracy: { note: "" },
+      footprint: { line: "camera", key: "k", tilt: 45 },
+    } as unknown as ScenarioAnswer;
+    const hit = {
+      id: "camera",
+      state: "blocked" as const,
+      text: "the terrain blocks it.",
+      traced: "k",
+      meters: 2.4,
+      hitAt: [1, 2, 3],
+      from: [0, 0, 0],
+    };
+    // Early segment unknown, later segment hits: no spot.
+    for (const beforeHit of [
+      { clear: undefined, unknownFraction: 0.79, meters: 38 },
+      { clear: undefined, unknownFraction: 0, meters: 38 },
+      { clear: false, unknownFraction: 0 },
+    ]) {
+      const a = withTerrainAnswer(answer, [{ ...hit, beforeHit }]);
+      expect(a.label).toMatch(/^Can't tell yet/);
+      expect(a.accuracy).toMatchObject({ unbounded: true });
+      expect(a.accuracy.meters).toBeUndefined();
+    }
+    // Not traced before the hit at all: no spot either.
+    expect(withTerrainAnswer(answer, [hit]).label).toMatch(/^Can't tell yet/);
   });
 
   it("prints the band that decided each grey verdict, not the widest (Task 9)", () => {

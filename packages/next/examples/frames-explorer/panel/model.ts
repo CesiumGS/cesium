@@ -350,6 +350,17 @@ export interface TerrainSightView {
    * error (Task 9): no bound to judge, so unknown, never clear.
    */
   unbounded?: string;
+  /**
+   * For a first-hit ray (`SightLine.firstHit`), the trace from its start
+   * up to just short of the hit: whether the terrain there is all drawn
+   * and clear by more than its error, its share unknown and its error, m
+   * (the coarsest level crossed). Undefined when it hit nothing.
+   */
+  beforeHit?: {
+    clear: boolean | undefined;
+    unknownFraction: number;
+    meters?: number;
+  };
 }
 
 /** One line of the report's environment (R15). */

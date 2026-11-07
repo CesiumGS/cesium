@@ -138,6 +138,24 @@ export function moonCut(
   return hit > 0 && hit < length ? hit : undefined;
 }
 
+/**
+ * Where the Moon blocks a sky ray to `target`, m along it; undefined when
+ * it doesn't. A ray to the Moon ends on the Moon, which never blocks
+ * itself (Task 9, C2): only Orion's line can be lost behind it.
+ */
+export function moonBlocks(
+  target: "moon" | "orion",
+  origin: ArrayLike<number>,
+  d: ArrayLike<number>,
+  length: number,
+  moon: ArrayLike<number>,
+  radius = MOON_RADIUS,
+): number | undefined {
+  return target === "moon"
+    ? undefined
+    : moonCut(origin, d, length, moon, radius);
+}
+
 /** One line as it is drawn this frame. */
 interface Drawn {
   name: string;
@@ -355,7 +373,7 @@ export function createSkyRay(deps: {
         });
         continue;
       }
-      const cut = moonCut(origin, direction, range, moon);
+      const cut = moonBlocks(ray.target, origin, direction, range, moon);
       const blocked = cut !== undefined;
       lines.push({
         name: s.name,

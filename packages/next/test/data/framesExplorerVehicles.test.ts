@@ -325,7 +325,10 @@ describe("the drone: what the camera looks at, on the design grid", () => {
       hitAt: hit,
       from: e.sightLines![0]!.from,
       traced: fp.key,
+      // The ray up to the spot: drawn, and clear by more than its error.
+      beforeHit: { clear: true, unknownFraction: 0, meters: 1.2 },
     };
+    expect(e.sightLines![0]!.firstHit).toBe(true);
     const a = withTerrainAnswer(e.answer, [view]);
     expect(a.label).toMatch(
       /^Looking at E 6,0\d\d,\d{3}\.\d, N 2,1\d\d,\d{3}\.\d ftUS$/,
@@ -342,6 +345,26 @@ describe("the drone: what the camera looks at, on the design grid", () => {
       { ...view, state: "unknown", unknownFraction: 0.4 },
     ]);
     expect(unknown.label).toMatch(/^Can't tell/);
+    // Task 9 C1: a hit behind terrain that isn't drawn, or that the ray
+    // passes within its error, is no spot: an earlier hit may hide there.
+    for (const beforeHit of [
+      { clear: undefined, unknownFraction: 0.79, meters: 38 },
+      { clear: undefined, unknownFraction: 0, meters: 38 },
+      undefined,
+    ]) {
+      const b = withTerrainAnswer(e.answer, [
+        { ...view, ...(beforeHit ? { beforeHit } : { beforeHit: undefined }) },
+      ]);
+      expect(b.label).toMatch(/^Can't tell yet/);
+      expect(b.accuracy.unbounded).toBe(true);
+      expect(b.accuracy.meters).toBeUndefined();
+      expect(b.label).not.toMatch(/Looking at/);
+    }
+    // The spot's error is the coarsest crossed, up to and at the hit.
+    const coarse = withTerrainAnswer(e.answer, [
+      { ...view, beforeHit: { clear: true, unknownFraction: 0, meters: 9 } },
+    ]);
+    expect(coarse.accuracy.meters!).toBeCloseTo(Math.hypot(9, 2), 3);
   }, 120_000);
 
   it("reads the reported 250 m as NAVD88 through GEOID18 (the drone 32 m lower than as ellipsoidal), and the headline says how far that moves the spot", async () => {

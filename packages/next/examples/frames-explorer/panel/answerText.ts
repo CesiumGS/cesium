@@ -291,9 +291,25 @@ function withFootprint(
       if (!v.hitAt) {
         break;
       }
+      // A spot only where the ray up to it crosses drawn terrain that it
+      // clears by more than its error (Task 9 C1): an undrawn or coarse
+      // span before the hit may hide an earlier one. The same rule as a
+      // line of sight's: never a figure inside an unbounded band.
+      const before = v.beforeHit;
+      if (before?.clear !== true || v.meters === undefined) {
+        return unbounded(
+          "Can't tell yet: the terrain before the spot isn't drawn finely enough",
+          before === undefined || v.meters === undefined
+            ? "the ray's path to the spot isn't traced with a stated error"
+            : before.unknownFraction > 0
+              ? `the terrain is unknown over ${share(before.unknownFraction)} of the ray before the spot (not drawn yet, or only coarsely), so an earlier hit can't be ruled out`
+              : `the ray passes within the terrain's error${before.meters !== undefined ? ` (±${length(before.meters)})` : ""} before the spot, so an earlier hit can't be ruled out`,
+        );
+      }
       const p = footprintAt(fp, v.hitAt);
       const range = v.from ? dist3(v.hitAt, v.from) : undefined;
-      const err = v.meters ?? 0;
+      // The coarsest terrain the ray crossed, up to and at the spot.
+      const err = Math.max(v.meters, before.meters ?? 0);
       const tan = Math.tan((Math.max(fp.tilt, 1) * Math.PI) / 180);
       const along = err / tan;
       const datum = fp.datum.meters ?? 0;

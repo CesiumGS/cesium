@@ -188,6 +188,32 @@ export function placeObserver(
   };
 }
 
+/** How far short of a first hit the ray up to it is traced, m: off the hit's own triangle. */
+export const BEFORE_HIT = 1;
+
+/**
+ * The ray from `from` up to `BEFORE_HIT` short of its first hit `hit`,
+ * traced over the same drawn terrain: clear only when all of it is drawn
+ * and clears the terrain by more than its error (Task 9 C1). Its error is
+ * the coarsest level's it crossed.
+ */
+export function beforeHit(
+  from: ArrayLike<number>,
+  hit: ArrayLike<number>,
+  target: Parameters<typeof terrainLineOfSight>[2],
+): NonNullable<TerrainSightView["beforeHit"]> {
+  const d = [0, 1, 2].map((i) => hit[i]! - from[i]!);
+  const len = Math.hypot(d[0]!, d[1]!, d[2]!);
+  const k = len > BEFORE_HIT ? (len - BEFORE_HIT) / len : 0;
+  const short = [0, 1, 2].map((i) => from[i]! + k * d[i]!);
+  const r = terrainLineOfSight(from, short, target);
+  return {
+    clear: r.clear,
+    unknownFraction: r.unknownFraction,
+    ...(r.accuracy.meters !== undefined && { meters: r.accuracy.meters }),
+  };
+}
+
 export interface SightLines {
   /** The current scenario's lines over the terrain, once it has any. */
   view(): readonly TerrainSightView[] | undefined;
@@ -273,6 +299,12 @@ export function createSightLines(deps: {
         ...(l.key !== undefined && { traced: l.key }),
         from: placed.from,
         to: placed.to,
+        // A camera's ray: is the terrain before its first hit drawn, and
+        // clear by more than its error? (Task 9 C1.)
+        ...(l.firstHit === true &&
+          r.blockedAt && {
+            beforeHit: beforeHit(placed.from, r.blockedAt, target),
+          }),
       };
       return placed.lifted > 0
         ? {

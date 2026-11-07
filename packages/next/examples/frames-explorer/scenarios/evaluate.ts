@@ -173,6 +173,13 @@ export interface SightLine {
    * the terrain at it isn't judged from this far out.
    */
   end?: string;
+  /**
+   * The line is a camera's ray whose first hit is the answer (the drone's
+   * footprint, Task 9 C1): the page also traces the ray up to the hit, so
+   * a spot is given only when the terrain before it is drawn and clears it
+   * by more than its error.
+   */
+  firstHit?: boolean;
 }
 
 /**
