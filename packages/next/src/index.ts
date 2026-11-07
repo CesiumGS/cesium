@@ -198,6 +198,11 @@ export {
 } from "./engineering/alignment.ts";
 export { fresnel } from "./engineering/fresnel.ts";
 export {
+  pickDesign,
+  type DesignPick,
+  type PickView,
+} from "./engineering/pick.ts";
+export {
   gridSource,
   loadedGrids,
   loadGrids,
