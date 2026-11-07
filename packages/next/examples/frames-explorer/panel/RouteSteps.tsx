@@ -4,6 +4,7 @@
 // accuracy, to what you see in the drawn-in frame. A route in two legs
 // (stand-on-moon's two clocks, each taken up to ICRF: Task 4c item 1) shows
 // each leg under its heading, both lit, the numbering running on.
+import { memo } from "react";
 import type { RouteStep } from "./routeSteps.ts";
 
 function Step({ s, n }: { s: RouteStep; n: number }) {
@@ -29,7 +30,7 @@ function Step({ s, n }: { s: RouteStep; n: number }) {
 
 const key = (s: RouteStep, i: number) => `${s.kind}:${s.edge ?? i}`;
 
-export function RouteSteps({
+export const RouteSteps = memo(function RouteSteps({
   steps,
   legs,
 }: {
@@ -69,4 +70,4 @@ export function RouteSteps({
       ))}
     </ol>
   );
-}
+});

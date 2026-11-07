@@ -17,6 +17,8 @@ import { Icon } from "@stratakit/mui";
 import { unstable_Popover as Popover } from "@stratakit/structures";
 import type { DataItem } from "../protocol.ts";
 import { duration, megabytes } from "./format.ts";
+import { memo } from "react";
+import { equalOn } from "./memo.ts";
 import type { ItemStatus, PanelActions, PanelModel } from "./model.ts";
 import { ITEM_DETAIL, ITEM_LABEL, StatusBadge } from "./parts.tsx";
 import { reportCounts } from "../report.ts";
@@ -112,7 +114,12 @@ function announcement(model: PanelModel, passed: number, failed: number) {
   return "";
 }
 
-export function StatusStrip({
+export const StatusStrip = memo(
+  StatusStripView,
+  equalOn("model", ["items", "run", "results", "waiting"]),
+);
+
+function StatusStripView({
   model,
   actions,
   onShowFailure,

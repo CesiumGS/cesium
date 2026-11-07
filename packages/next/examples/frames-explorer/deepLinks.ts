@@ -16,6 +16,44 @@ import {
   type ViewStore,
 } from "./selection.ts";
 
+/**
+ * Writes the link for each asked-for setup (Task 4d). While the clock
+ * plays, the scenario host re-evaluates every 0.7 s to follow it, and each
+ * write is a navigation that renders the gallery again; so a request that
+ * only followed the playing clock (the same scenario and knobs as the link
+ * has) leaves the link's time behind, and the link takes it when the clock
+ * stops. A knob or a scenario is written at once, playing or not.
+ */
+export function createLinkWriter(deps: {
+  /** The scenario and its knobs, as a key (not the time). */
+  setup(): string;
+  playing(): boolean;
+  /** Writes the link as it is now (`context.setParams`). */
+  write(): void;
+}): { asked(): void; clockChanged(): void } {
+  let linked: string | undefined;
+  let behind = false;
+  const write = () => {
+    linked = deps.setup();
+    behind = false;
+    deps.write();
+  };
+  return {
+    asked: () => {
+      if (deps.playing() && deps.setup() === linked) {
+        behind = true;
+      } else {
+        write();
+      }
+    },
+    clockChanged: () => {
+      if (behind && !deps.playing()) {
+        write();
+      }
+    },
+  };
+}
+
 /** The scenario a link names, or the strip's first when it isn't on the page yet. */
 export const readyScenario = (id: ScenarioId | undefined): ScenarioId =>
   id !== undefined && READY.includes(id) ? id : READY[0]!;

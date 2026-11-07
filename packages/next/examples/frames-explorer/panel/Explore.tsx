@@ -24,6 +24,7 @@ import { BudgetBar } from "./BudgetBar.tsx";
 import { EDGE_LABEL, familyMap } from "./families.ts";
 import { edgeAccuracyText } from "./FrameTree.tsx";
 import { length, sig } from "./format.ts";
+import { useLiveTime } from "./liveTime.ts";
 import {
   type ComposedView,
   type DistortionCrs,
@@ -63,6 +64,11 @@ export function Section({
 /** "2026-04-06 23:00:00 UTC" from ISO 8601. */
 export const utc = (iso: string) =>
   iso.replace("T", " ").replace(/(\.\d+)?Z$/, " UTC");
+
+/** The clock's instant, now (it moves every frame while the clock plays). */
+function ClockUtc() {
+  return <>{utc(useLiveTime().utc)}</>;
+}
 
 /** `id`'s node and its ancestors, root first. */
 export function pathFromRoot(tree: TreeNode, id: string): TreeNode[] {
@@ -324,7 +330,7 @@ export function Walk({
             ) : (
               <Term k="icrf" />
             )}{" "}
-            at the clock&rsquo;s instant, {utc(model.clock.utc)}.
+            at the clock&rsquo;s instant, <ClockUtc />.
           </Typography>
           <BudgetBar
             accuracy={view.statement}

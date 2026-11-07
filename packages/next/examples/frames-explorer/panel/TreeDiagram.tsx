@@ -23,8 +23,17 @@
 // (one-path: "Draw Orion's path in" this frame).
 //
 // The layout is chosen in one place, `diagramLayout` below.
+//
+// Task 4d: the diagram is laid out from the tree's shape (`shapeKey`: its
+// frames, labels and edge kinds), and the values that drift while the clock
+// plays (an edge's accuracy) are read from the latest tree. So a value
+// update keeps the layout, and the route's dot runs on; and each edge and
+// pill is its own memoized part with plain props, so only one whose
+// printed text changed renders again.
 import {
   type KeyboardEvent,
+  memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -37,6 +46,7 @@ import { designRoot } from "./designRoot.ts";
 import { unfoldedFor } from "./diagramFocus.ts";
 import { EDGE_LABEL, FAMILY_INFO, familyMap, type Family } from "./families.ts";
 import { edgeAccuracyText } from "./FrameTree.tsx";
+import { useStableCallback } from "./memo.ts";
 import { focusTree, layoutTree } from "./treeLayout.ts";
 
 /** A pill's height (a 32 px hit target), a depth row's and the gap between pills, px. */
@@ -250,11 +260,212 @@ function elbow(p: { x: number; y: number }, c: { x: number; y: number }) {
   return `M ${p.x} ${top} V ${mid} H ${c.x} V ${bottom}`;
 }
 
+/**
+ * The tree's shape as the diagram lays it out: each frame's id, label,
+ * edge kind and whether the scenario added it, in order. With `fullLabels`
+ * (the Expand dialog, whose slots are as wide as each edge's label) the
+ * edges' accuracy text too. Equal keys draw the same layout.
+ */
+export function shapeKey(tree: TreeNode, fullLabels: boolean): string {
+  const parts: string[] = [];
+  const walk = (n: TreeNode) => {
+    parts.push(
+      n.id,
+      n.label,
+      n.edge.kind,
+      n.added ? "+" : "",
+      fullLabels ? edgeAccuracyText(n.edge.kind, n.edge.accuracy).text : "",
+      String(n.children.length),
+    );
+    n.children.forEach(walk);
+  };
+  walk(tree);
+  return JSON.stringify(parts);
+}
+
+/** `tree` while its shape is the last one's: the last tree, so what's laid out from it holds. */
+function useShape(tree: TreeNode, fullLabels: boolean): TreeNode {
+  const last = useRef<{ tree: TreeNode; key: string }>(undefined);
+  const key = shapeKey(tree, fullLabels);
+  if (last.current?.key !== key) {
+    last.current = { tree, key };
+  }
+  return last.current.tree;
+}
+
+/** Every node of `tree`, by id. */
+function nodesById(tree: TreeNode): Map<string, TreeNode> {
+  const out = new Map<string, TreeNode>();
+  const walk = (n: TreeNode) => {
+    out.set(n.id, n);
+    n.children.forEach(walk);
+  };
+  walk(tree);
+  return out;
+}
+
+/** What the diagram's parts call back, one object for the diagram's life. */
+interface DiagramHandlers {
+  edge(id: string, on: boolean): void;
+  node(id: string): void;
+  key(id: string, e: KeyboardEvent<HTMLElement>): void;
+  focus(id: string): void;
+  tip(id: string, el: Element): void;
+  hideTip(): void;
+  remember(id: string, el: HTMLElement | null): void;
+}
+
+/** An edge: its connector, and a hit target with its full words (a chip's and the data's tether have none). */
+const DiagramEdge = memo(function DiagramEdge({
+  id,
+  d,
+  from,
+  family,
+  lit,
+  chip,
+  data,
+  on,
+  words,
+  h,
+}: {
+  id: string;
+  d: string;
+  from: string;
+  family: Family;
+  lit: number | undefined;
+  chip: boolean;
+  data: boolean;
+  on: boolean;
+  /** The edge's full line, for its name and tip. */
+  words: string | undefined;
+  h: DiagramHandlers;
+}) {
+  return (
+    <g>
+      <path
+        aria-hidden
+        className={`fx-diagram-edge fx-family-${family}${lit !== undefined ? " fx-lit" : ""}${chip ? " fx-chip-edge" : ""}${data ? " fx-data-tether" : ""}${on ? " fx-selected" : ""}`}
+        style={
+          {
+            d: `path("${d}")`,
+            "--fx-from-d": `path("${from}")`,
+            "--i": lit ?? 0,
+          } as React.CSSProperties
+        }
+      />
+      {words !== undefined && (
+        <path
+          className="fx-diagram-hit"
+          role="button"
+          tabIndex={0}
+          aria-label={`Edge ${words}`}
+          aria-pressed={on}
+          style={{ d: `path("${d}")` } as React.CSSProperties}
+          onClick={() => h.edge(id, on)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              h.edge(id, on);
+            }
+          }}
+          onPointerEnter={(e) => h.tip(id, e.currentTarget)}
+          onPointerLeave={h.hideTip}
+          onFocus={(e) => h.tip(id, e.currentTarget)}
+          onBlur={h.hideTip}
+        />
+      )}
+    </g>
+  );
+});
+
+interface NodeProps {
+  id: string;
+  label: string;
+  className: string;
+  /** The pill's place, and where it grows from: plain values, compared one by one. */
+  style: { transform: string; inlineSize: number; from: string; i: number };
+  tabbable: boolean;
+  pressed: boolean;
+  ariaLabel: string;
+  tag: string | undefined;
+  h: DiagramHandlers;
+}
+
+/** A frame's pill. */
+const DiagramNode = memo(function DiagramNode({
+  id,
+  label,
+  className,
+  style,
+  tabbable,
+  pressed,
+  ariaLabel,
+  tag,
+  h,
+}: NodeProps) {
+  const ref = useCallback(
+    (el: HTMLElement | null) => h.remember(id, el),
+    [h, id],
+  );
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={className}
+      style={
+        {
+          transform: style.transform,
+          inlineSize: style.inlineSize,
+          "--fx-from": style.from,
+          "--i": style.i,
+        } as React.CSSProperties
+      }
+      tabIndex={tabbable ? 0 : -1}
+      aria-pressed={pressed}
+      aria-label={ariaLabel}
+      onFocus={(e) => {
+        h.focus(id);
+        h.tip(id, e.currentTarget);
+      }}
+      onBlur={h.hideTip}
+      onPointerEnter={(e) => h.tip(id, e.currentTarget)}
+      onPointerLeave={h.hideTip}
+      onKeyDown={(e) => h.key(id, e)}
+      onClick={() => h.node(id)}
+    >
+      <span className="fx-node-glyph" aria-hidden />
+      <span className="fx-node-label">{label}</span>
+      {tag && (
+        <span className="fx-node-tag" aria-hidden>
+          {tag}
+        </span>
+      )}
+    </button>
+  );
+}, sameNodeProps);
+
+function sameNodeProps(a: NodeProps, b: NodeProps): boolean {
+  return (
+    a.id === b.id &&
+    a.label === b.label &&
+    a.className === b.className &&
+    a.style.transform === b.style.transform &&
+    a.style.inlineSize === b.style.inlineSize &&
+    a.style.from === b.style.from &&
+    a.style.i === b.style.i &&
+    a.tabbable === b.tabbable &&
+    a.pressed === b.pressed &&
+    a.ariaLabel === b.ariaLabel &&
+    a.tag === b.tag &&
+    a.h === b.h
+  );
+}
+
 const reducedMotion = () =>
   typeof matchMedia === "function" &&
   matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function TreeDiagram({
+export const TreeDiagram = memo(function TreeDiagram({
   tree,
   path,
   keep,
@@ -305,7 +516,10 @@ export function TreeDiagram({
     return () => observer.disconnect();
   }, []);
 
-  const families = useMemo(() => familyMap(tree), [tree]);
+  // Laid out from the shape; values read from the latest tree (`nodes`).
+  const shaped = useShape(tree, fullLabels);
+  const nodes = useMemo(() => nodesById(tree), [tree]);
+  const families = useMemo(() => familyMap(shaped), [shaped]);
   // The one tag: the frame you draw in (the owner's design).
   const ends = useMemo(() => {
     const out = new Map<string, string>();
@@ -315,8 +529,8 @@ export function TreeDiagram({
     return out;
   }, [targets]);
   const layout = useMemo(
-    () => diagramLayout(tree, keep, expanded, width, ends, fullLabels, data),
-    [tree, keep, expanded, width, ends, fullLabels, data],
+    () => diagramLayout(shaped, keep, expanded, width, ends, fullLabels, data),
+    [shaped, keep, expanded, width, ends, fullLabels, data],
   );
   const byId = useMemo(
     () => new Map(layout.placed.map((p) => [p.id, p])),
@@ -460,14 +674,59 @@ export function TreeDiagram({
       pills.current.delete(id);
     }
   };
+  // What the memoized edges and pills call: stable, reading this render's state.
+  const onEdge = useStableCallback((id: string, on: boolean) =>
+    onSelect(on ? undefined : { kind: "edge", id }),
+  );
+  const onNode = useStableCallback((id: string) => {
+    const target = targets?.ids.has(id) === true;
+    const isSelected = selected?.kind === "node" && selected.id === id;
+    if (target) {
+      // The tree as the control: draw in this frame, and show it.
+      targets!.onPick(id);
+      onSelect({ kind: "node", id });
+    } else {
+      onSelect(isSelected ? undefined : { kind: "node", id });
+    }
+  });
+  const onNodeKey = useStableCallback(
+    (id: string, e: KeyboardEvent<HTMLElement>) => {
+      const p = byId.get(id);
+      if (p) {
+        onKey(p)(e);
+      }
+    },
+  );
+  const onTip = useStableCallback((id: string, el: Element) =>
+    setTip({ id, el }),
+  );
+  const handlers: DiagramHandlers = useMemo(
+    () => ({
+      edge: onEdge,
+      node: onNode,
+      key: onNodeKey,
+      focus: (id) => setFocus(id),
+      tip: onTip,
+      hideTip: () => setTip(undefined),
+      remember: (id, el) => {
+        if (el) {
+          pills.current.set(id, el);
+        } else {
+          pills.current.delete(id);
+        }
+      },
+    }),
+    [onEdge, onNode, onNodeKey, onTip],
+  );
+  /** A placed node's frame as it is now (its edge's accuracy drifts). */
+  const nodeOf = (p: Placed | undefined): TreeNode | undefined =>
+    p?.node && (nodes.get(p.id) ?? p.node);
   const words = (p: Placed) => {
     const parent = p.parent !== undefined ? byId.get(p.parent) : undefined;
-    return p.node && parent?.node
-      ? edgeWords(p.node, parent.node.label)
-      : undefined;
+    const n = nodeOf(p);
+    const up = nodeOf(parent);
+    return n && up ? edgeWords(n, up.label) : undefined;
   };
-  const tipFor = (id: string) => (e: { currentTarget: Element }) =>
-    setTip({ id, el: e.currentTarget });
   const hideTip = () => setTip(undefined);
 
   // The tip: fixed to the viewport, so the box's scroll never clips it.
@@ -513,51 +772,24 @@ export function TreeDiagram({
             if (!p) {
               return null;
             }
-            const d = elbow(p, c);
-            const from = `M ${p.x} ${p.y + PILL / 2} V ${p.y + PILL / 2} H ${p.x} V ${p.y + PILL / 2}`;
-            const i = lit.get(c.id);
             const family: Family = c.node
               ? (families.get(c.id) ?? "earth")
               : "earth";
-            const on = selected?.kind === "edge" && selected.id === c.id;
-            const w = words(c);
+            const w = c.node ? words(c) : undefined;
             return (
-              <g key={c.id}>
-                <path
-                  aria-hidden
-                  className={`fx-diagram-edge fx-family-${family}${i !== undefined ? " fx-lit" : ""}${c.chip ? " fx-chip-edge" : ""}${c.data ? " fx-data-tether" : ""}${on ? " fx-selected" : ""}`}
-                  style={
-                    {
-                      d: `path("${d}")`,
-                      "--fx-from-d": `path("${from}")`,
-                      "--i": i ?? 0,
-                    } as React.CSSProperties
-                  }
-                />
-                {c.node && w && (
-                  <path
-                    className="fx-diagram-hit"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Edge ${w.full}`}
-                    aria-pressed={on}
-                    style={{ d: `path("${d}")` } as React.CSSProperties}
-                    onClick={() =>
-                      onSelect(on ? undefined : { kind: "edge", id: c.id })
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        onSelect(on ? undefined : { kind: "edge", id: c.id });
-                      }
-                    }}
-                    onPointerEnter={tipFor(c.id)}
-                    onPointerLeave={hideTip}
-                    onFocus={tipFor(c.id)}
-                    onBlur={hideTip}
-                  />
-                )}
-              </g>
+              <DiagramEdge
+                key={c.id}
+                id={c.id}
+                d={elbow(p, c)}
+                from={`M ${p.x} ${p.y + PILL / 2} V ${p.y + PILL / 2} H ${p.x} V ${p.y + PILL / 2}`}
+                family={family}
+                lit={lit.get(c.id)}
+                chip={c.chip !== undefined}
+                data={c.data === true}
+                on={selected?.kind === "edge" && selected.id === c.id}
+                words={w?.full}
+                h={handlers}
+              />
             );
           })}
           {route && (
@@ -615,12 +847,14 @@ export function TreeDiagram({
         {layout.placed.map((p) => {
           const parent =
             p.parent !== undefined ? byId.get(p.parent) : undefined;
+          const transform = `translate(${p.x - p.w / 2}px, ${p.y - PILL / 2}px)`;
+          const from = parent
+            ? `translate(${parent.x - p.w / 2}px, ${parent.y - PILL / 2}px) scale(0.6)`
+            : transform;
           const style = {
-            transform: `translate(${p.x - p.w / 2}px, ${p.y - PILL / 2}px)`,
+            transform,
             inlineSize: p.w,
-            "--fx-from": parent
-              ? `translate(${parent.x - p.w / 2}px, ${parent.y - PILL / 2}px) scale(0.6)`
-              : `translate(${p.x - p.w / 2}px, ${p.y - PILL / 2}px)`,
+            "--fx-from": from,
           } as React.CSSProperties;
           if (p.data && data) {
             return (
@@ -662,7 +896,7 @@ export function TreeDiagram({
               </button>
             );
           }
-          const n = p.node!;
+          const n = nodeOf(p)!;
           const family = families.get(n.id) ?? "earth";
           const w = words(p);
           const isSelected = selected?.kind === "node" && selected.id === n.id;
@@ -671,20 +905,20 @@ export function TreeDiagram({
           const drawing = targets?.current === n.id;
           const end = onPath ? "on the route" : undefined;
           return (
-            <button
+            <DiagramNode
               key={p.id}
-              ref={remember(p.id)}
-              type="button"
+              id={p.id}
+              label={n.label}
               className={`fx-node fx-family-${family}${n.added ? " fx-added" : ""}${onPath ? " fx-on-path" : ""}${target ? " fx-target" : ""}${drawing ? " fx-drawing" : ""}`}
-              style={
-                {
-                  ...style,
-                  "--i": lit.get(n.id) ?? 0,
-                } as React.CSSProperties
-              }
-              tabIndex={roving === p.id ? 0 : -1}
-              aria-pressed={target ? drawing : isSelected}
-              aria-label={[
+              style={{
+                transform,
+                inlineSize: p.w,
+                from,
+                i: lit.get(n.id) ?? 0,
+              }}
+              tabbable={roving === p.id}
+              pressed={target ? drawing : isSelected}
+              ariaLabel={[
                 target
                   ? `${targets!.label(n.id)}${drawing ? ", drawing in it now" : ""}`
                   : undefined,
@@ -694,32 +928,9 @@ export function TreeDiagram({
               ]
                 .filter((t) => t !== undefined)
                 .join(". ")}
-              onFocus={(e) => {
-                setFocus(p.id);
-                tipFor(p.id)(e);
-              }}
-              onBlur={hideTip}
-              onPointerEnter={tipFor(p.id)}
-              onPointerLeave={hideTip}
-              onKeyDown={onKey(p)}
-              onClick={() => {
-                if (target) {
-                  // The tree as the control: draw in this frame, and show it.
-                  targets!.onPick(n.id);
-                  onSelect({ kind: "node", id: n.id });
-                } else {
-                  onSelect(isSelected ? undefined : { kind: "node", id: n.id });
-                }
-              }}
-            >
-              <span className="fx-node-glyph" aria-hidden />
-              <span className="fx-node-label">{n.label}</span>
-              {p.tag && (
-                <span className="fx-node-tag" aria-hidden>
-                  {p.tag}
-                </span>
-              )}
-            </button>
+              tag={p.tag}
+              h={handlers}
+            />
           );
         })}
       </div>
@@ -742,4 +953,4 @@ export function TreeDiagram({
         )}
     </div>
   );
-}
+});

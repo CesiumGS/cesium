@@ -2,13 +2,31 @@
 // built-in frames and what the scenario's evaluation added, the main
 // thread's own frames attached so the walk can state them, Orion's node
 // from the worker, and every node's composed accuracy (R8).
+//
+// Its shape and its values are kept apart (Task 4d). The shape (which
+// frames, under which parents) is built when the frame data, the scene's
+// own frames or the frames the evaluation added change (`rebuild`). The
+// values that drift with time, the Earth-orientation sigma on the ITRF edge
+// and the composed accuracy, are updated in place while the clock plays
+// (`refresh`), as are an evaluation's new accuracies for the same frames:
+// only a node whose value changed is new, with its path to the root, and
+// every other node keeps its identity, so the diagram's unchanged pills
+// and edges don't render again.
 import type { Frame } from "../../src/frames/Frame.ts";
 import { composedAccuracy, type PlacedNode } from "./composed.ts";
 import type { PageCore } from "./page.ts";
 import type { ComposedAccuracy, Reference } from "./panel/model.ts";
 import type { OverlayGeometry, TrajectoryInfo } from "./protocol.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
-import { buildScenarioTree, buildTree, type TreeNode } from "./tree.ts";
+import { sameData, share } from "./share.ts";
+import {
+  buildScenarioTree,
+  buildTree,
+  driftingAccuracies,
+  type AddedFrameSpec,
+  type EdgeAccuracy,
+  type TreeNode,
+} from "./tree.ts";
 
 export function findNode(root: TreeNode, id: string): TreeNode | undefined {
   if (root.id === id) {
@@ -36,6 +54,35 @@ export function nodeIds(tree: TreeNode | undefined): Set<string> {
   return out;
 }
 
+/**
+ * `tree` with `id`'s edge stating `accuracy`: the same tree when it already
+ * does; otherwise new objects for that node and its ancestors only.
+ */
+export function withAccuracy(
+  tree: TreeNode,
+  id: string,
+  accuracy: EdgeAccuracy,
+): TreeNode {
+  if (tree.id === id) {
+    return sameData(tree.edge.accuracy, accuracy)
+      ? tree
+      : { ...tree, edge: { ...tree.edge, accuracy } };
+  }
+  let changed = false;
+  const children = tree.children.map((c) => {
+    const next = withAccuracy(c, id, accuracy);
+    changed ||= next !== c;
+    return next;
+  });
+  return changed ? { ...tree, children } : tree;
+}
+
+/** What an evaluation's added frames are, without the accuracies that change between replies. */
+const addedShape = (added: readonly AddedFrameSpec[]): string =>
+  JSON.stringify(
+    added.map((a) => [a.id, a.label, a.parentId, a.edge.kind, a.edge.detail]),
+  );
+
 /** The engineering frame the worker placed (known from its operation). */
 export interface EngineeringNode {
   node: TreeNode;
@@ -50,8 +97,19 @@ export interface TreeState {
   fail(note: string): void;
   composed(): ComposedAccuracy;
   engineering(): EngineeringNode | undefined;
-  /** The tree and the walk's statements at the clock's instant. */
+  /** Builds the tree's shape again (the frame data, the scene's frames or the evaluation's changed), with its values at the clock's instant. */
   rebuild(): void;
+  /**
+   * The values that drift with time, at the clock's instant (the ITRF
+   * edge's Earth-orientation sigma, the composed accuracy), updated in
+   * place; the shape is built again only if it changed. The panel is told
+   * only when something did.
+   */
+  refresh(): void;
+  /** The evaluation is a new one: its frames' values in place, or a rebuild if its frames differ. */
+  evaluationChanged(): void;
+  /** Orion's statements came or went: its composed accuracy, merged in. */
+  orionChanged(): void;
   ids(): Set<string>;
   /** The design grid's operation names the engineering frame, once. */
   noteEngineering(g: OverlayGeometry, center: ArrayLike<number>): void;
@@ -74,7 +132,48 @@ export function createTreeState(deps: {
   let treeNote: string | undefined =
     "The frame tree draws once frame data is in.";
   let composed: ComposedAccuracy = { ITRF: {}, GCRF: {}, ICRF: {} };
+  /** The tree's own composed accuracy, before Orion's statements are merged in. */
+  let own: ComposedAccuracy | undefined;
   let engineering: EngineeringNode | undefined;
+  /** What the shape was built from: the frame data, the scene's frames, the added frames. */
+  let built:
+    { frames: unknown; local: readonly Frame[]; added: string } | undefined;
+
+  const shapeChanged = (): boolean => {
+    const local = deps.local();
+    return (
+      built === undefined ||
+      built.frames !== framesNow() ||
+      built.local.length !== local.length ||
+      built.local.some((f, i) => f !== local[i]) ||
+      built.added !== addedShape(deps.evaluation()?.added ?? [])
+    );
+  };
+
+  /** Orion's composed accuracy merged into the tree's own, while its node is in the tree. */
+  function merged(t: TreeNode, mine: ComposedAccuracy): ComposedAccuracy {
+    const info = deps.orion();
+    const orion =
+      info !== undefined && findNode(t, info.node.id) ? info : undefined;
+    return orion
+      ? (Object.fromEntries(
+          (Object.keys(mine) as Reference[]).map((r) => [
+            r,
+            { ...mine[r], [orion.node.id]: orion.composed[r] },
+          ]),
+        ) as ComposedAccuracy)
+      : mine;
+  }
+
+  /** Takes `t` and `mine` as the current values; true if anything the panel shows changed. */
+  function apply(t: TreeNode, mine: ComposedAccuracy): boolean {
+    const next = share(composed, merged(t, mine));
+    const changed = t !== tree || next !== composed;
+    tree = t;
+    own = mine;
+    composed = next;
+    return changed;
+  }
 
   function rebuild(): void {
     const frames = framesNow();
@@ -96,23 +195,51 @@ export function createTreeState(deps: {
       n.children.forEach(attach);
     };
     attach(t);
-    // Orion's statements from the worker's reply, while they're current.
-    const info = deps.orion();
-    const orion =
-      info !== undefined && findNode(t, info.node.id) ? info : undefined;
-    tree = t;
+    built = {
+      frames,
+      local: [...local],
+      added: addedShape(e?.added ?? []),
+    };
+    // Nodes equal to the last tree's keep their identity (share).
+    const next = share(tree, t);
     treeNote = undefined;
-    const own = composedAccuracy(t, frames, instant);
-    composed = orion
-      ? (Object.fromEntries(
-          (Object.keys(own) as Reference[]).map((r) => [
-            r,
-            { ...own[r], [orion.node.id]: orion.composed[r] },
-          ]),
-        ) as ComposedAccuracy)
-      : own;
+    apply(next, share(own, composedAccuracy(next, frames, instant)));
     deps.updateKnown();
     invalidate();
+  }
+
+  function refresh(): void {
+    const frames = framesNow();
+    const instant = instantNow();
+    if (!frames || !instant) {
+      return;
+    }
+    if (!tree || shapeChanged()) {
+      rebuild();
+      return;
+    }
+    // The same frames: only the values that drift, and the evaluation's.
+    let t = tree;
+    for (const [id, a] of Object.entries(driftingAccuracies(frames, instant))) {
+      t = withAccuracy(t, id, a);
+    }
+    for (const a of deps.evaluation()?.added ?? []) {
+      t = withAccuracy(t, a.id, a.edge.accuracy);
+    }
+    const mine = share(own, composedAccuracy(t, frames, instant));
+    if (apply(t, mine)) {
+      invalidate();
+    }
+  }
+
+  function orionChanged(): void {
+    if (!tree || !own) {
+      refresh();
+      return;
+    }
+    if (apply(tree, own)) {
+      invalidate();
+    }
   }
 
   function noteEngineering(
@@ -161,6 +288,9 @@ export function createTreeState(deps: {
     composed: () => composed,
     engineering: () => engineering,
     rebuild,
+    refresh,
+    evaluationChanged: refresh,
+    orionChanged,
     ids: () => nodeIds(tree),
     noteEngineering,
     dispose: () => {},

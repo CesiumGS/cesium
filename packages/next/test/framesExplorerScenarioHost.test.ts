@@ -250,8 +250,44 @@ describe("overlay ownership", () => {
     h.pending[1]!.resolve(evaluation("stand-on-moon", ["b"]));
     await h.settle();
     expect(h.log).toContain("remove scenario:stand-on-moon:a");
-    expect(h.log).toContain("draw scenario:stand-on-moon:b");
+    // b's geometry is the same: it stays drawn, not uploaded again (Task 4d).
+    expect(h.log).not.toContain("draw scenario:stand-on-moon:b");
+    expect(h.log).not.toContain("remove scenario:stand-on-moon:b");
     expect(h.log).not.toContain("leave stand-on-moon");
+  });
+
+  it("uploads an overlay again only when its geometry changed (Task 4d)", async () => {
+    const h = harness();
+    const moved = (e: ScenarioEvaluation): ScenarioEvaluation => ({
+      ...e,
+      overlays: e.overlays.map((o) => ({
+        ...o,
+        geometry: { ...o.geometry, sagAtEnd: 2 },
+      })),
+    });
+    void h.host.show("stand-on-moon");
+    h.pending[0]!.resolve(evaluation("stand-on-moon", ["b"]));
+    await h.settle();
+    expect(h.log).toContain("draw scenario:stand-on-moon:b");
+    h.log.length = 0;
+    h.host.setKnob("latitude", -45);
+    h.flush();
+    h.pending[1]!.resolve(moved(evaluation("stand-on-moon", ["b"])));
+    await h.settle();
+    expect(h.log).toContain("draw scenario:stand-on-moon:b");
+    // Switched away and back: drawn again, its old drawing having gone.
+    h.log.length = 0;
+    void h.host.show("one-path");
+    h.pending.at(-1)!.resolve(evaluation("one-path"));
+    await h.settle();
+    void h.host.show("stand-on-moon");
+    h.pending.at(-1)!.resolve(moved(evaluation("stand-on-moon", ["b"])));
+    await h.settle();
+    const removed = h.log.indexOf("remove scenario:stand-on-moon:b");
+    expect(removed).toBeGreaterThanOrEqual(0);
+    expect(h.log.indexOf("draw scenario:stand-on-moon:b")).toBeGreaterThan(
+      removed,
+    );
   });
 
   it("removes its overlays and leaves the scenario on dispose; a reply after it draws nothing", async () => {

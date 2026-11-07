@@ -14,7 +14,7 @@ import { svgInfo } from "@stratakit/icons/info";
 import { svgStatusError } from "@stratakit/icons/status-error";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { Icon } from "@stratakit/mui";
-import { useId, useState } from "react";
+import { memo, useCallback, useId, useState } from "react";
 import type { ProofRow } from "../scenarios/proof.ts";
 import type { StressResult } from "../tests.ts";
 import { quantity } from "./format.ts";
@@ -149,7 +149,132 @@ function ResultDetails({
   );
 }
 
-export function Proof({
+/** A row's head: what a collapsed row shows. */
+const sameHead = (a: ProofRowText, b: ProofRowText): boolean =>
+  a.key === b.key &&
+  a.tone === b.tone &&
+  a.title === b.title &&
+  a.verdict === b.verdict &&
+  a.status === b.status &&
+  a.summary === b.summary;
+
+interface ProofItemProps {
+  row: ProofRow;
+  t: ProofRowText;
+  expanded: boolean;
+  region: string;
+  onToggle: (key: string) => void;
+  extras: ResultExtras | undefined;
+  freshness: "current" | "updating" | "following";
+  atChecked: boolean;
+  onOpenResult: (id: string) => void;
+  onBack: () => void;
+}
+
+/**
+ * One row. A re-evaluation while the clock plays makes new rows every time;
+ * a row renders again only when its text changed, or, expanded, when what
+ * its details show did (Task 4d).
+ */
+const ProofItem = memo(
+  function ProofItem({
+    row,
+    t,
+    expanded,
+    region,
+    onToggle,
+    extras,
+    freshness,
+    atChecked,
+    onOpenResult,
+    onBack,
+  }: ProofItemProps) {
+    return (
+      <li className={`fx-proof-row fx-tone-${t.tone}`}>
+        <button
+          type="button"
+          className="fx-proof-head"
+          aria-expanded={expanded}
+          aria-controls={region}
+          onClick={() => onToggle(t.key)}
+        >
+          <Icon
+            href={svgChevronRight}
+            className={`fx-proof-chevron${expanded ? " fx-open" : ""}`}
+          />
+          <StatusIcon tone={t.tone} />
+          <span className="fx-proof-text">
+            <span className="fx-proof-name">{t.title}</span>
+            <span className="fx-proof-status">
+              <span className="fx-proof-status-word">
+                {t.verdict ? `${t.verdict} · ` : ""}
+                {t.status}
+              </span>
+              <span className="fx-proof-summary fx-num">{t.summary}</span>
+            </span>
+          </span>
+        </button>
+        <div id={region} className="fx-proof-body" hidden={!expanded}>
+          {expanded &&
+            (t.result ? (
+              <ResultDetails
+                result={t.result}
+                extras={extras}
+                live={row.kind === "live"}
+                onOpen={
+                  row.kind === "checked" && freshness === "current"
+                    ? () => onOpenResult(t.result!.id)
+                    : undefined
+                }
+              />
+            ) : t.tone === "stale" ? (
+              <Typography variant="body-sm" render={<p />}>
+                Re-running at your setting: its verdict shows here when
+                it&rsquo;s in, and nothing is claimed until then.
+              </Typography>
+            ) : row.kind === "reference-only" ? (
+              <>
+                <Typography variant="body-sm" render={<p />}>
+                  Its published reference applies at the checked setup, not at
+                  yours, so it isn&rsquo;t judged here.{" "}
+                  {t.summary.charAt(0).toUpperCase()}
+                  {t.summary.slice(1)}.
+                </Typography>
+                <Link
+                  component="button"
+                  type="button"
+                  className="fx-proof-open"
+                  onClick={onBack}
+                >
+                  Back to the checked setup
+                </Link>
+              </>
+            ) : (
+              <Typography variant="body-sm" render={<p />}>
+                {atChecked
+                  ? "The catalog's check runs in the worker; its verdict shows here when it's in."
+                  : "Re-running at your setting; nothing is claimed until it's in."}
+              </Typography>
+            ))}
+        </div>
+      </li>
+    );
+  },
+  (a, b) =>
+    a.expanded === b.expanded &&
+    a.region === b.region &&
+    a.onToggle === b.onToggle &&
+    sameHead(a.t, b.t) &&
+    (!b.expanded ||
+      (a.row === b.row &&
+        a.extras === b.extras &&
+        a.freshness === b.freshness &&
+        a.atChecked === b.atChecked &&
+        a.onOpenResult === b.onOpenResult &&
+        a.onBack === b.onBack)),
+);
+
+export const Proof = memo(function Proof({
   rows,
   extras,
   atChecked,
@@ -169,16 +294,19 @@ export function Proof({
 }) {
   const uid = useId();
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
-  const toggle = (key: string) =>
-    setOpen((o) => {
-      const next = new Set(o);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
+  const toggle = useCallback(
+    (key: string) =>
+      setOpen((o) => {
+        const next = new Set(o);
+        if (next.has(key)) {
+          next.delete(key);
+        } else {
+          next.add(key);
+        }
+        return next;
+      }),
+    [],
+  );
   if (rows.length === 0) {
     return (
       <Typography variant="body-sm" color="textSecondary" render={<p />}>
@@ -192,79 +320,22 @@ export function Proof({
     <ul className="fx-proof">
       {rows.map((row) => {
         const t = proofRowText(row, extras, freshness, published);
-        const expanded = open.has(t.key);
-        const region = `${uid}-${t.key}`;
         return (
-          <li key={t.key} className={`fx-proof-row fx-tone-${t.tone}`}>
-            <button
-              type="button"
-              className="fx-proof-head"
-              aria-expanded={expanded}
-              aria-controls={region}
-              onClick={() => toggle(t.key)}
-            >
-              <Icon
-                href={svgChevronRight}
-                className={`fx-proof-chevron${expanded ? " fx-open" : ""}`}
-              />
-              <StatusIcon tone={t.tone} />
-              <span className="fx-proof-text">
-                <span className="fx-proof-name">{t.title}</span>
-                <span className="fx-proof-status">
-                  <span className="fx-proof-status-word">
-                    {t.verdict ? `${t.verdict} · ` : ""}
-                    {t.status}
-                  </span>
-                  <span className="fx-proof-summary fx-num">{t.summary}</span>
-                </span>
-              </span>
-            </button>
-            <div id={region} className="fx-proof-body" hidden={!expanded}>
-              {expanded &&
-                (t.result ? (
-                  <ResultDetails
-                    result={t.result}
-                    extras={extras[t.result.id]}
-                    live={row.kind === "live"}
-                    onOpen={
-                      row.kind === "checked" && freshness === "current"
-                        ? () => onOpenResult(t.result!.id)
-                        : undefined
-                    }
-                  />
-                ) : t.tone === "stale" ? (
-                  <Typography variant="body-sm" render={<p />}>
-                    Re-running at your setting: its verdict shows here when
-                    it&rsquo;s in, and nothing is claimed until then.
-                  </Typography>
-                ) : row.kind === "reference-only" ? (
-                  <>
-                    <Typography variant="body-sm" render={<p />}>
-                      Its published reference applies at the checked setup, not
-                      at yours, so it isn&rsquo;t judged here.{" "}
-                      {t.summary.charAt(0).toUpperCase()}
-                      {t.summary.slice(1)}.
-                    </Typography>
-                    <Link
-                      component="button"
-                      type="button"
-                      className="fx-proof-open"
-                      onClick={onBack}
-                    >
-                      Back to the checked setup
-                    </Link>
-                  </>
-                ) : (
-                  <Typography variant="body-sm" render={<p />}>
-                    {atChecked
-                      ? "The catalog's check runs in the worker; its verdict shows here when it's in."
-                      : "Re-running at your setting; nothing is claimed until it's in."}
-                  </Typography>
-                ))}
-            </div>
-          </li>
+          <ProofItem
+            key={t.key}
+            row={row}
+            t={t}
+            expanded={open.has(t.key)}
+            region={`${uid}-${t.key}`}
+            onToggle={toggle}
+            extras={t.result ? extras[t.result.id] : undefined}
+            freshness={freshness}
+            atChecked={atChecked}
+            onOpenResult={onOpenResult}
+            onBack={onBack}
+          />
         );
       })}
     </ul>
   );
-}
+});

@@ -170,7 +170,6 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     knobs: spec.knobs,
     values: st.knobs,
     checked: spec.checked.knobs,
-    epochUtc: new Date(st.epochUtcMs).toISOString(),
     checkedEpochUtc: new Date(Date.parse(spec.checked.epochUtc)).toISOString(),
     atChecked: st.atChecked,
     changed: st.changed,

@@ -29,23 +29,25 @@ import { GROUP_INFO, groupInfo } from "./stress/groupInfo.ts";
 import type { StressResult } from "./tests.ts";
 import type { TreeNode } from "./tree.ts";
 
-/** The clock's UTC and the Earth orientation's state at its instant. */
+/**
+ * The Earth orientation's state at the clock's instant (its time is the
+ * time source's, page.ts). A predicted sample's age is kept to the tenth
+ * of a day it is printed at, so the model doesn't change every frame while
+ * the clock plays (Task 4d).
+ */
 export function clockView(
-  time: number,
   frames: Frames | undefined,
   instant: Instant | undefined,
 ): ClockView {
-  const utc = new Date(time).toISOString().replace(/\.\d+Z$/, "Z");
   if (!frames || !instant) {
-    return { utc, eop: { kind: "measured" } };
+    return { eop: { kind: "measured" } };
   }
   const sigma = earthOrientationSigma(frames, instant);
   return {
-    utc,
     eop: sigma.degraded
       ? { kind: "outside", span: sigma.span }
       : sigma.predicted
-        ? { kind: "predicted", ageDays: sigma.ageDays }
+        ? { kind: "predicted", ageDays: Math.round(sigma.ageDays * 10) / 10 }
         : { kind: "measured" },
   };
 }
@@ -103,7 +105,7 @@ export interface PanelModelBuilder {
 }
 
 export function createPanelModel(deps: {
-  core: Pick<PageCore, "viewer" | "loading" | "frames" | "instantNow">;
+  core: Pick<PageCore, "loading" | "frames" | "instantNow">;
   token: string | undefined;
   tree: {
     tree(): TreeNode | undefined;
@@ -119,7 +121,7 @@ export function createPanelModel(deps: {
   /** A message for the panel's snackbar (a deep link that didn't resolve). */
   notice(): { id: number; text: string } | undefined;
 }): PanelModelBuilder {
-  const { viewer, loading, frames, instantNow } = deps.core;
+  const { loading, frames, instantNow } = deps.core;
 
   function build(): PanelModel {
     const tree = deps.tree.tree();
@@ -138,7 +140,7 @@ export function createPanelModel(deps: {
       ...(tree ? { tree } : {}),
       ...(treeNote !== undefined && { treeNote }),
       composed: deps.tree.composed(),
-      clock: clockView(viewer.clock.time, frames(), instantNow()),
+      clock: clockView(frames(), instantNow()),
       overlays: deps.overlays.views(),
       orionFrame: deps.orionFrame(),
       ...deps.overlays.settings(),

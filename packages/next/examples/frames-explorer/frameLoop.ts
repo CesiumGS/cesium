@@ -17,7 +17,8 @@ export function createFrameLoop(deps: {
   core: Pick<PageCore, "viewer" | "frames" | "instantNow" | "disposed"> & {
     globe: Pick<PageCore["globe"], "update" | "placeLabels">;
   };
-  rebuildTree(): void;
+  /** The tree's values that drift with time, at the clock's instant (treeState.ts `refresh`). */
+  refreshTree(): void;
   orion: { place(): void; askIfMoved(now: number, real: number): void };
   callouts: { changed(): boolean; refresh(): void };
   overlays: {
@@ -57,10 +58,11 @@ export function createFrameLoop(deps: {
         const now = viewer.clock.time;
         const real = performance.now();
         if (Math.abs(now - lastTree) > 60_000 && real - lastTreeReal > 1000) {
-          // The tree's Earth-orientation sigma and the walk's statements (R8).
+          // The tree's Earth-orientation sigma and the walk's statements
+          // (R8), in place: the tree's shape stays (Task 4d).
           lastTree = now;
           lastTreeReal = real;
-          deps.rebuildTree();
+          deps.refreshTree();
         }
         // Orion's path moves with its drawing frame every frame; its
         // statement (the tree and the legend) is asked for again after a

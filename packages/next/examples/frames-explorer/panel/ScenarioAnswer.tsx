@@ -42,9 +42,24 @@ function Published({ p }: { p: PublishedView }) {
     </div>
   );
 }
+import { memo } from "react";
+import { equalOn } from "./memo.ts";
 import type { ScenarioPanelView } from "./model.ts";
 
-export function ScenarioAnswer({ scenario }: { scenario: ScenarioPanelView }) {
+export const ScenarioAnswer = memo(
+  ScenarioAnswerView,
+  equalOn("scenario", [
+    "answer",
+    "freshness",
+    "problem",
+    "status",
+    "queued",
+    "published",
+    "note",
+  ]),
+);
+
+function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
   const a = scenario.answer;
   // The last setup's answer, dimmed, while the new one is worked out; while
   // the clock plays it follows in place, not dimmed.

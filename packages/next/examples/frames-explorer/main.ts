@@ -25,7 +25,12 @@ import { createCallouts } from "./callouts.ts";
 import { createCameraRig } from "./cameraRig.ts";
 import { OPENING, createCameraViews } from "./cameraViews.ts";
 import { createCatalogRuns } from "./catalogRuns.ts";
-import { createDeepLinks, initialTab, readyScenario } from "./deepLinks.ts";
+import {
+  createDeepLinks,
+  createLinkWriter,
+  initialTab,
+  readyScenario,
+} from "./deepLinks.ts";
 import { createFrameData } from "./frameData.ts";
 import { createFrameLoop } from "./frameLoop.ts";
 import { GapInset } from "./gapInset.ts";
@@ -35,7 +40,12 @@ import { LoadingModel } from "./loading.ts";
 import { createOrionLayer } from "./orionLayer.ts";
 import { loadOrionTrack } from "./orionTrack.ts";
 import { createOverlayControl } from "./overlayControl.ts";
-import { FLYBY, createModelSource, type PageCore } from "./page.ts";
+import {
+  FLYBY,
+  createModelSource,
+  createTimeSource,
+  type PageCore,
+} from "./page.ts";
 import { createPageReport } from "./pageReport.ts";
 import { Panel } from "./panel/Panel.tsx";
 import { createPanelActions } from "./panelActions.ts";
@@ -222,7 +232,7 @@ export function run(context: ExampleContext): ExampleRun {
     core,
     state: overlays.state("orion"),
     refreshCallouts: () => callouts.refresh(),
-    rebuildTree: () => treeState.rebuild(),
+    refreshTree: () => treeState.orionChanged(),
     drawn: () => stage.orionDrawn(),
     // The dot's OEM, on this thread (orionTrack.ts).
     loadTrack: (f) => loadOrionTrack(f, frameData.manifest(), signal),
@@ -279,6 +289,16 @@ export function run(context: ExampleContext): ExampleRun {
 
   let paramsGeneration = -1;
   let shownEvaluation: unknown;
+  // The link: each asked-for setup, its time held while the clock plays.
+  const link = createLinkWriter({
+    setup: () => {
+      const p = host.params();
+      return JSON.stringify([p.scenario, p.knobs]);
+    },
+    playing: () => viewer.clock.mode === "playing",
+    write: () =>
+      context.setParams(formatParams({ ...view.get(), ...host.params() })),
+  });
   const host = createScenarioHost({
     evaluate: (id, knobs, ms) => {
       const f = frames();
@@ -310,15 +330,16 @@ export function run(context: ExampleContext): ExampleRun {
     clock: () => viewer.clock.time,
     changed: (state) => {
       if (state.evaluation !== shownEvaluation) {
-        // New frames attach in the tree; the callouts take the answer.
+        // New frames attach in the tree (its values update in place when
+        // the frames are the same); the callouts take the answer.
         shownEvaluation = state.evaluation;
-        treeState.rebuild();
+        treeState.evaluationChanged();
         callouts.refresh();
       }
       if (state.generation !== paramsGeneration) {
         // The link follows each asked-for setup, not every clock frame.
         paramsGeneration = state.generation;
-        context.setParams(formatParams({ ...view.get(), ...host.params() }));
+        link.asked();
       }
       invalidate();
     },
@@ -331,6 +352,7 @@ export function run(context: ExampleContext): ExampleRun {
   });
   scope.defer(() => host.dispose());
   scope.defer(viewer.clock.events.on("change", () => host.clockChanged()));
+  scope.defer(viewer.clock.events.on("change", () => link.clockChanged()));
 
   // ------------------------------------------------------ the runs (R13)
   /** Every run, catalog or "Try your own", one at a time (final review, Important 1). */
@@ -398,8 +420,7 @@ export function run(context: ExampleContext): ExampleRun {
         tree: treeState.tree(),
         playing: viewer.clock.mode === "playing",
         rate: viewer.clock.rate,
-        ...(instant &&
-          f && { eop: clockView(viewer.clock.time, f, instant).eop }),
+        ...(instant && f && { eop: clockView(f, instant).eop }),
         ...(stage.scene()?.note !== undefined && {
           sceneNote: stage.scene()!.note!,
         }),
@@ -432,7 +453,7 @@ export function run(context: ExampleContext): ExampleRun {
   // ------------------------------------------------------------- startup
   const frameLoop = createFrameLoop({
     core,
-    rebuildTree: () => treeState.rebuild(),
+    refreshTree: () => treeState.refresh(),
     orion,
     callouts,
     overlays: {
@@ -452,6 +473,15 @@ export function run(context: ExampleContext): ExampleRun {
   viewer.clock.time = FLYBY;
   viewer.clock.mode = "paused";
   scope.defer(viewer.clock.events.on("change", () => invalidate()));
+  // The times the panel prints, after the scenario host has taken the
+  // clock's (its listener is registered above).
+  const timeSource = createTimeSource({
+    clock: () => viewer.clock.time,
+    epoch: () => host.params().time,
+    disposed: () => disposed,
+  });
+  scope.defer(() => timeSource.dispose());
+  scope.defer(viewer.clock.events.on("change", () => timeSource.changed()));
   viewer.controller.maximumHeight = 2e9;
   viewer.view.camera.near = 0.1;
   viewer.controller.focus(
@@ -486,6 +516,7 @@ export function run(context: ExampleContext): ExampleRun {
       view,
       actions,
       hud,
+      time: timeSource.source,
       ...(tab && { initialTab: tab }),
     }),
   };

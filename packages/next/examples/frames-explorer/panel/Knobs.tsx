@@ -15,9 +15,11 @@ import { svgPlay } from "@stratakit/icons/play";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { svgUndo } from "@stratakit/icons/undo";
 import { Icon } from "@stratakit/mui";
-import { useId } from "react";
+import { memo, useId } from "react";
 import type { KnobSpec, KnobValue } from "../scenarios/spec.ts";
 import { knobText, movedText, utcText } from "./knobText.ts";
+import { useLiveTime } from "./liveTime.ts";
+import { equalOn } from "./memo.ts";
 import type { ScenarioPanelView } from "./model.ts";
 
 /** A range spanning three decades or more moves on a log scale (the clock's rate). */
@@ -120,7 +122,38 @@ function ChoiceKnob({
   );
 }
 
-export function Knobs({
+/** What moved off the checked setup, the time as it is now (it moves while the clock plays). */
+function MovedWithTime({ s }: { s: ScenarioPanelView }) {
+  const { epochUtc } = useLiveTime();
+  return <>{movedText({ ...s, epochUtc: epochUtc ?? s.checkedEpochUtc })}</>;
+}
+
+/** The scenario's time, now: the one line of the knobs that moves every frame while the clock plays. */
+function TimeValue({ checkedEpochUtc }: { checkedEpochUtc: string }) {
+  const { epochUtc } = useLiveTime();
+  return (
+    <span className="fx-knob-value fx-num">
+      {utcText(epochUtc ?? checkedEpochUtc)}
+    </span>
+  );
+}
+
+export const Knobs = memo(
+  KnobsView,
+  equalOn("scenario", [
+    "atChecked",
+    "changed",
+    "knobs",
+    "values",
+    "checked",
+    "checkedEpochUtc",
+    "playing",
+    "rate",
+    "eop",
+  ]),
+);
+
+function KnobsView({
   scenario,
   onKnob,
   onBack,
@@ -153,7 +186,12 @@ export function Knobs({
             <span className="fx-marker-dot" aria-hidden />
             <span>
               <span className="fx-strong">Off the checked setup:</span>{" "}
-              {movedText(s)}. The proof re-runs here.
+              {timeMoved ? (
+                <MovedWithTime s={s} />
+              ) : (
+                movedText({ ...s, epochUtc: s.checkedEpochUtc })
+              )}
+              . The proof re-runs here.
             </span>
           </>
         )}
@@ -190,7 +228,7 @@ export function Knobs({
       <div className="fx-knob fx-knob-time">
         <div className="fx-knob-head">
           <span className="fx-knob-label">Time</span>
-          <span className="fx-knob-value fx-num">{utcText(s.epochUtc)}</span>
+          <TimeValue checkedEpochUtc={s.checkedEpochUtc} />
         </div>
         <div className="fx-time-row">
           <Button

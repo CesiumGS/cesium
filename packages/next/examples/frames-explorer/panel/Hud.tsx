@@ -17,6 +17,7 @@ import { svgChevronUp } from "@stratakit/icons/chevron-up";
 import { svgReCenter } from "@stratakit/icons/re-center";
 import { Icon } from "@stratakit/mui";
 import {
+  memo,
   useEffect,
   useLayoutEffect,
   useReducer,
@@ -26,6 +27,7 @@ import {
 import { isFrameKey } from "../orbit.ts";
 import { captionFold, foldReducer } from "./fold.ts";
 import { legendRows } from "./legendRows.ts";
+import { equalOn } from "./memo.ts";
 import { accuracyLine, accuracyWarns, answerTitle } from "./answerText.ts";
 import type { PanelModel, ScenarioPanelView } from "./model.ts";
 
@@ -71,7 +73,12 @@ export function useHudLayout(host: HTMLElement): number {
  * swatch, name and accuracy, ellipsized, the full line on hover and focus);
  * unfolded, the full lines and the triads' note.
  */
-export function GlobeLegend({ model }: { model: PanelModel }) {
+export const GlobeLegend = memo(
+  GlobeLegendView,
+  equalOn("model", ["overlays", "triadScale"]),
+);
+
+function GlobeLegendView({ model }: { model: PanelModel }) {
   const [open, setOpen] = useState(false);
   const drawn = model.overlays.filter((o) => o.on && o.state === "drawn");
   if (drawn.length === 0) {
@@ -155,7 +162,7 @@ export function GlobeLegend({ model }: { model: PanelModel }) {
  * says the scenario's limit (the backdrop Moon). On a narrow view it folds
  * to one row, the answer's figure, with a chevron to unfold it (F42).
  */
-export function ScenarioCallout({
+export const ScenarioCallout = memo(function ScenarioCallout({
   scenario,
   narrow,
   onKnob,
@@ -278,7 +285,7 @@ export function ScenarioCallout({
       )}
     </section>
   );
-}
+});
 
 /**
  * Frame content (owner: stuck out in space): re-flies the selected frame or

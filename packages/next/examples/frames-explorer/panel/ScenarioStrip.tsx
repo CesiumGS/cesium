@@ -12,11 +12,17 @@ import {
   MenuItem,
   Select,
 } from "@mui/material";
-import { useId } from "react";
+import { memo, useId } from "react";
+import { equalOn } from "./memo.ts";
 import type { ScenarioId } from "../scenarios/spec.ts";
 import type { ScenarioPanelView } from "./model.ts";
 
-export function ScenarioStrip({
+export const ScenarioStrip = memo(
+  ScenarioStripView,
+  equalOn("scenario", ["id", "title", "strip"]),
+);
+
+function ScenarioStripView({
   scenario,
   onSelect,
 }: {
@@ -38,7 +44,9 @@ export function ScenarioStrip({
             onSelect(next);
           }
         }}
-        MenuProps={{ slotProps: { paper: { className: "fx-scenario-menu" } } }}
+        MenuProps={{
+          slotProps: { paper: { className: "fx-scenario-menu" } },
+        }}
       >
         {scenario.strip.map((s) => (
           <MenuItem key={s.id} value={s.id}>

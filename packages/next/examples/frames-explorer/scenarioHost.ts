@@ -13,6 +13,7 @@
 // one. On a switch, every overlay the old scenario drew is removed, and the
 // old scenario's scene left, before the new one enters or draws.
 import type { OverlayGeometry } from "./protocol.ts";
+import { sameData } from "./share.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import {
   checkedState,
@@ -141,8 +142,8 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
   let problem: ScenarioHostState["problem"];
   let generation = 0;
   let disposed = false;
-  /** The overlays drawn for the current scenario, by globe id. */
-  let owned = new Set<string>();
+  /** The overlays drawn for the current scenario, by globe id, with the geometry drawn. */
+  let owned = new Map<string, OverlayGeometry>();
   /** The request in the worker, and the latest one waiting behind it. */
   let inFlight = false;
   let waiting: { send: () => void; drop: () => void } | undefined;
@@ -209,10 +210,10 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
   };
 
   function removeOwned(): void {
-    for (const id of owned) {
+    for (const id of owned.keys()) {
       deps.removeOverlay(id);
     }
-    owned = new Set();
+    owned = new Map();
   }
 
   function apply(
@@ -223,14 +224,20 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
     if (disposed || gen !== generation || e.scenario !== spec.id) {
       return;
     }
-    const next = new Set(e.overlays.map((o) => overlayId(spec.id, o.id)));
-    for (const id of owned) {
+    const next = new Map(
+      e.overlays.map((o) => [overlayId(spec.id, o.id), o.geometry]),
+    );
+    for (const id of owned.keys()) {
       if (!next.has(id)) {
         deps.removeOverlay(id);
       }
     }
-    for (const o of e.overlays) {
-      deps.drawOverlay(overlayId(spec.id, o.id), o.geometry);
+    for (const [id, geometry] of next) {
+      // The same geometry stays drawn: no upload while the clock plays
+      // and the mesh didn't change (Task 4d).
+      if (!sameData(owned.get(id), geometry)) {
+        deps.drawOverlay(id, geometry);
+      }
     }
     owned = next;
     evaluation = e;

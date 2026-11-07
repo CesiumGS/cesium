@@ -8,7 +8,7 @@ import { Button, Typography } from "@mui/material";
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { svgWindowExpand } from "@stratakit/icons/window-expand";
 import { Icon } from "@stratakit/mui";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { TreeNode } from "../tree.ts";
 import { ReferenceSelect, Walk, pathFromRoot } from "./Explore.tsx";
@@ -25,6 +25,7 @@ import type {
 } from "./model.ts";
 import { designRoot } from "./designRoot.ts";
 import { keepSet } from "./diagramFocus.ts";
+import { equalOn, sameSet, useStable, useStableCallback } from "./memo.ts";
 import { RouteSteps } from "./RouteSteps.tsx";
 import { Proof } from "./Proof.tsx";
 import { ScenarioAnswer } from "./ScenarioAnswer.tsx";
@@ -305,7 +306,17 @@ function useMoreBelow(
   return { more, knobsBelow, scroller };
 }
 
-export function Scenarios({
+/**
+ * The tab, memoized (Task 4d): it reads the model's tree, its note, the
+ * results' extras and the composed accuracy, and renders again only when
+ * one of those, or the scenario, changed.
+ */
+export const Scenarios = memo(
+  ScenariosView,
+  equalOn("model", ["tree", "treeNote", "extras", "composed"]),
+);
+
+function ScenariosView({
   model,
   scenario,
   actions,
@@ -345,24 +356,35 @@ export function Scenarios({
       expandButton.current?.focus({ preventScroll: true }),
     );
   };
-  const diagramSelection: DiagramSelection | undefined =
-    selection.kind === "node" || selection.kind === "edge"
-      ? selection
-      : selection.kind === "frame"
-        ? { kind: "node", id: selection.id }
-        : undefined;
-  const select = (s: DiagramSelection | undefined) =>
-    setSelection(s ?? { kind: "none" });
-  const selectedId = diagramSelection?.id;
-  const keep = useMemo(
+  const diagramSelection: DiagramSelection | undefined = useMemo(
     () =>
-      tree &&
-      keepSet(
-        tree,
-        scenario,
-        selectedId === undefined ? undefined : { kind: "node", id: selectedId },
-      ),
-    [tree, scenario, selectedId],
+      selection.kind === "node" || selection.kind === "edge"
+        ? selection
+        : selection.kind === "frame"
+          ? { kind: "node", id: selection.id }
+          : undefined,
+    [selection],
+  );
+  const select = useStableCallback((s: DiagramSelection | undefined) =>
+    setSelection(s ?? { kind: "none" }),
+  );
+  const selectedId = diagramSelection?.id;
+  // The frames the docked diagram draws: the same set while they're the
+  // same, so its layout (and the route's dot) holds as values update.
+  const keep = useStable(
+    useMemo(
+      () =>
+        tree &&
+        keepSet(
+          tree,
+          scenario,
+          selectedId === undefined
+            ? undefined
+            : { kind: "node", id: selectedId },
+        ),
+      [tree, scenario, selectedId],
+    ),
+    sameSet,
   );
   const control = scenario.treeControl;
   const current = control ? String(scenario.values[control.knob]) : undefined;
@@ -378,10 +400,20 @@ export function Scenarios({
         : undefined,
     [control, current, actions],
   );
-  const extras: Record<string, ResultExtras> = {
-    ...model.extras,
-    ...scenario.liveExtras,
-  };
+  const extras: Record<string, ResultExtras> = useMemo(
+    () => ({ ...model.extras, ...scenario.liveExtras }),
+    [model.extras, scenario.liveExtras],
+  );
+  const pub = scenario.answer?.published;
+  const published = useMemo(
+    () =>
+      pub && {
+        proofId: pub.proofId,
+        printed: pub.printed,
+        unit: pub.unit,
+      },
+    [pub],
+  );
   const toKnobs = () =>
     knobsSection.current?.scrollIntoView({
       block: "start",
@@ -547,13 +579,7 @@ export function Scenarios({
                 extras={extras}
                 atChecked={scenario.atChecked}
                 freshness={scenario.freshness}
-                published={
-                  scenario.answer?.published && {
-                    proofId: scenario.answer.published.proofId,
-                    printed: scenario.answer.published.printed,
-                    unit: scenario.answer.published.unit,
-                  }
-                }
+                published={published}
                 onOpenResult={onOpenResult}
                 onBack={actions.backToChecked}
               />

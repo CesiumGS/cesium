@@ -102,8 +102,8 @@ export function createOrionLayer(deps: {
   state: OverlayState;
   /** The callouts follow the path and the statement. */
   refreshCallouts(): void;
-  /** The tree takes Orion's node and statements. */
-  rebuildTree(): void;
+  /** The tree takes Orion's statements: its composed accuracy follows (treeState.ts `orionChanged`). */
+  refreshTree(): void;
   /** A path was drawn (the scene may frame it). */
   drawn(): void;
   /** Loads Orion's OEM on this thread, once the worker has it (orionTrack.ts `loadOrionTrack`). */
@@ -324,7 +324,7 @@ export function createOrionLayer(deps: {
       }
       orionInfo = { info, utc: arg.utc };
       orionInfoError = undefined;
-      deps.rebuildTree();
+      deps.refreshTree();
       deps.refreshCallouts();
     },
     (error, arg) => {
@@ -334,7 +334,7 @@ export function createOrionLayer(deps: {
         return;
       }
       orionInfoError = { message: scrub(messageOf(error)), utc: arg.utc };
-      deps.rebuildTree();
+      deps.refreshTree();
       deps.refreshCallouts();
     },
   );

@@ -24,12 +24,16 @@ import {
   ScenarioCallout,
   useHudLayout,
 } from "./Hud.tsx";
+import { TimeContext } from "./liveTime.ts";
+import { useStableCallback } from "./memo.ts";
 import type {
   LensChoice,
   PanelActions,
   PanelModel,
+  Reference,
   Selection,
   Tab,
+  TimeSource,
 } from "./model.ts";
 import type { ViewStore } from "../selection.ts";
 import { Report } from "./Report.tsx";
@@ -51,6 +55,8 @@ export interface PanelProps {
   actions: PanelActions;
   /** Over the canvas: the legend and the scenario's answer go here. */
   hud: HTMLElement;
+  /** The clock's and the scenario's times, which move every frame while it plays (Task 4d). */
+  time: TimeSource;
   initialTab?: Tab;
 }
 
@@ -65,7 +71,21 @@ const PARTS: readonly [Part, string][] = [
   ["report", "Report"],
 ];
 
-export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
+export function Panel({ time, ...rest }: PanelProps) {
+  return (
+    <TimeContext.Provider value={time}>
+      <PanelBody {...rest} />
+    </TimeContext.Provider>
+  );
+}
+
+function PanelBody({
+  source,
+  view,
+  actions,
+  hud,
+  initialTab,
+}: Omit<PanelProps, "time">) {
   const model = useSyncExternalStore(source.subscribe, source.get);
   const shared = useSyncExternalStore(view.subscribe, () => view.get());
   const uid = useId();
@@ -79,7 +99,9 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
     initialTab === "report" ? "report" : "checks",
   );
   const selection = shared.selection;
-  const setSelection = (s: Selection) => view.select(s);
+  // Stable callbacks: the memoized parts below don't render for a new one.
+  const setSelection = useStableCallback((s: Selection) => view.select(s));
+  const setReference = useStableCallback((r: Reference) => view.setAgainst(r));
   const lens = shared.lens;
   const setLens = (l: LensChoice) => view.setLens(l);
   const [frameFilter, setFrameFilter] = useState<string | undefined>(
@@ -116,23 +138,23 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
     setSelection({ kind: "result", id: r.id });
     setEntry("scenarios");
   };
-  const showFailure = (id: string) => {
+  const showFailure = useStableCallback((id: string) => {
     setLens("all");
     setFrameFilter(undefined);
     setPart("checks");
     setEntry("verification");
     selectResult(id);
-  };
+  });
   // From a scenario's proof row: the result selected without flying the
   // camera, so the scenario's view stays; F frames it on request (fix 2).
-  const openInVerification = (id: string) => {
+  const openInVerification = useStableCallback((id: string) => {
     actions.selectQuietly(id);
     setLens("all");
     setFrameFilter(undefined);
     setPart("checks");
     setEntry("verification");
     selectResult(id);
-  };
+  });
   const copyLink = (s: Selection, message: string) => {
     void navigator.clipboard
       ?.writeText(actions.linkTo(s))
@@ -170,7 +192,7 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
               selection={selection}
               setSelection={setSelection}
               reference={shared.against}
-              setReference={(r) => view.setAgainst(r)}
+              setReference={setReference}
               hud={hud}
               onOpenResult={openInVerification}
             />

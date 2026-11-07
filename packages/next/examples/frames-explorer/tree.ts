@@ -136,6 +136,19 @@ function earthOrientationAccuracy(
   );
 }
 
+/**
+ * The built-in edges whose accuracy drifts with the instant, by frame name:
+ * the GCRF to ITRF Earth-orientation sigma (Task 4d: while the clock plays,
+ * the page updates these in place rather than building the tree again).
+ * Each is the accuracy `buildTree` states for that edge at `instant`.
+ */
+export function driftingAccuracies(
+  frames: Frames,
+  instant: Instant,
+): Record<string, EdgeAccuracy> {
+  return { [frames.itrf.name]: earthOrientationAccuracy(frames, instant) };
+}
+
 /** The built-in edges, keyed by frame name. Built lazily: some accuracies depend on the instant. */
 const BUILT_IN: Record<
   string,

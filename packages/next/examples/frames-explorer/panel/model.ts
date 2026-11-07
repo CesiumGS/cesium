@@ -122,10 +122,25 @@ export interface OverlayPart {
 export type OrionFrame = "GCRF" | "ITRF" | "MOON_ME";
 export type DistortionCrs = "6420" | "32610" | "3857" | "ldp";
 
-/** The clock's readout (R4: triads and Orion follow it). */
-export interface ClockView {
-  /** ISO 8601 UTC, to the second. */
+/**
+ * The times the panel prints that move every frame while the clock plays
+ * (Task 4d): their own source, so the rest of the panel doesn't render
+ * with them (page.ts `createTimeSource`).
+ */
+export interface LiveTime {
+  /** The clock's instant, ISO 8601 UTC to the second. */
   utc: string;
+  /** The scenario's time, ISO 8601 UTC, while a scenario shows. */
+  epochUtc?: string;
+}
+
+export interface TimeSource {
+  subscribe(listener: () => void): () => void;
+  get(): LiveTime;
+}
+
+/** The clock's readout (R4: triads and Orion follow it); its time is `LiveTime`'s. */
+export interface ClockView {
   /** The same instant as the viewer's time controls show it (the place's local time). */
   local?: string;
   /** Earth orientation at the instant: measured, predicted with its age, or outside the table. */
@@ -198,9 +213,8 @@ export interface ScenarioPanelView {
   values: KnobState;
   /** The checked setup's knobs and epoch (ISO 8601 UTC). */
   checked: KnobState;
+  /** The scenario's time is `LiveTime.epochUtc` (it moves every frame while the clock plays). */
   checkedEpochUtc: string;
-  /** The scenario's time, ISO 8601 UTC. */
-  epochUtc: string;
   atChecked: boolean;
   /** What moved off the checked setup: knob ids, then "time". */
   changed: readonly string[];

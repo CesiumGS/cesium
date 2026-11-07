@@ -206,7 +206,7 @@ function page() {
     core,
     state,
     refreshCallouts: () => callouts.refresh(),
-    rebuildTree: () => {},
+    refreshTree: () => {},
     drawn: () => {},
     loadTrack: () => Promise.resolve(track),
   });
@@ -225,7 +225,7 @@ function page() {
   });
   const loop = createFrameLoop({
     core,
-    rebuildTree: () => {},
+    refreshTree: () => {},
     orion,
     callouts,
     overlays: {

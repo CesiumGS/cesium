@@ -94,7 +94,7 @@ function layer(load: () => Promise<OrionTrack>) {
     core,
     state,
     refreshCallouts: () => {},
-    rebuildTree: () => {},
+    refreshTree: () => {},
     drawn: () => {},
     loadTrack,
   });
