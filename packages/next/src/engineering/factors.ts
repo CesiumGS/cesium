@@ -65,13 +65,17 @@ interface Projection {
  *    twin) and Lambert Cylindrical Equal Area (Spherical) (9834): the
  *    authalic sphere's radius, R_A = a sqrt((1 - (1 - e2)/(2e) ln((1 - e)/
  *    (1 + e))) / 2) (sections 3.3.2.1, 3.2.6.1 and the implementation notes);
- *  - Equidistant Cylindrical (Spherical) (1029; 9823) and Mercator
- *    (Spherical) (1026; 9841): the datum's semi-major axis. IOGP suggests the
- *    conformal sphere at the origin, but PROJ's eqc and spherical merc force
- *    a sphere of radius a (EPSG:32662 and ESRI:54002's +proj=eqc
- *    +datum=WGS84 still have the sphere's 1/cos phi as their parallel scale).
- *    proj.db has no Mercator (Spherical) CRS on an ellipsoid today; the same
- *    check guards it.
+ *  - Equidistant Cylindrical (Spherical) (1029; 9823): the datum's
+ *    semi-major axis. IOGP suggests the conformal sphere at the origin, but
+ *    PROJ's eqc forces a sphere of radius a (EPSG:32662 and ESRI:54002's
+ *    +proj=eqc +datum=WGS84 still have the sphere's 1/cos phi as their
+ *    parallel scale).
+ *  - Mercator (Spherical) (1026): listed with the semi-major axis, but PROJ
+ *    9.7.1 writes it as +proj=merc +R_C, the conformal sphere at the
+ *    latitude of origin (the semi-minor axis at 0°), so checkSphere throws
+ *    for it on an ellipsoid (factors.test.ts, plan 4b Task 9). proj.db has
+ *    no such CRS today. Its deprecated twin, Mercator (1SP) (Spherical)
+ *    (9841), PROJ 9.7.1 can't build at all.
  * PROJ's own scales for all of these are the sphere's, so h and k come from
  * the derivatives. checkSphere confirms each radius against PROJ's own
  * coordinates, so a radius PROJ does not use throws rather than misleads.

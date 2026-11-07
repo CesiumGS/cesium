@@ -453,6 +453,37 @@ describe("tidal datums with no grid: MLLW depth, EPSG:6347+5866", () => {
     expect(navd88(6360)).not.toThrow(/no PROJ-data grid/);
   });
 
+  it("an area of interest beyond the vertical grid's area is told apart from grids on another datum: BNG + ODN", async () => {
+    const { P } = await setup();
+    // PROJ relates British National Grid + ODN to WGS 84 through OSTN15 and
+    // OSGM15 (1.038 m), whose area of use starts at 49.93° N. A box that
+    // reaches 49.86° N leaves only ballparks: the area is why (plan 4b Task
+    // 9 found this; the message said ODN's grids weren't on OSGB36).
+    const bngOdn: CrsRef = {
+      format: "wkid",
+      authority: "EPSG",
+      wkid: 27700,
+      vcsWkid: 5701,
+    };
+    const make = (south: number) => () =>
+      EngineeringFrame.create(
+        {
+          name: "Cornwall",
+          body: EARTH,
+          crs: bngOdn,
+          areaOfInterest: { west: -5.4, south, east: -5.0, north: 50.2 },
+        },
+        P,
+      );
+    expect(make(49.86)).toThrow(
+      /^ODN height: no accurate operation from EPSG:27700\+5701 covers the area of interest \(west -5\.4, south 49\.86, east -5, north 50\.2\); PROJ's best without it, Inverse of British National Grid \+ OSGB36 to ETRS89 \(2\) \+ Inverse of ETRS89 to ODN height \(2\) \+ ETRS89 to WGS 84 \(1\) \(1\.038 m\), applies to west -7\.06, south 49\.93, east 1\.8, north 58\.71\. PROJ offers only a ballpark operation/,
+    );
+    expect(make(49.86)).not.toThrow(/its grids are defined on/);
+    // Inside the area, the frame resolves once its grids are loaded; without
+    // them the error is PROJ's own, naming the grids.
+    expect(make(49.95)).toThrow(/missing: .*uk_os_/);
+  });
+
   it("a non-EPSG vertical CRS, which the name search can't vouch for, keeps the generic message", async () => {
     const { P } = await setup();
     // ESRI:105703 is NAVD88_height_(ftUS) (EPSG's datum 5103): GEOID18

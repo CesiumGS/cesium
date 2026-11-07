@@ -1,0 +1,984 @@
+{
+  "$comment": "Geoid and height-system cases against their publishers' own test values (plan 4b Task 9; never PROJ's or pyproj's). precision is metres. Geographic cases: input [latitude, longitude] in degrees on target, expected [N], the geoid height in metres (h = H + N); the case's crs is the compound CRS, target its geographic 3D CRS. Projected cases: input [latitude, longitude, h] in degrees and metres on ETRS89 (equal to WGS 84 through PROJ's null step), expected [E, N, H] in the CRS's units. A case with missingReference compares nothing.",
+  "cases": [
+    {
+      "id": "uk-ostn15-osgm15",
+      "crs": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 27700,
+        "vcsWkid": 5701
+      },
+      "kind": "projected",
+      "grids": [
+        "uk_os_OSTN15_NTv2_OSGBtoETRS.tif",
+        "uk_os_OSGM15_GB.tif"
+      ],
+      "source": {
+        "url": "https://www.ordnancesurvey.co.uk/documents/resources/OSTN15-OSGM15-DevelopersPack.zip",
+        "retrieved": "2026-11-07",
+        "publisher": "Ordnance Survey"
+      },
+      "precision": 0.01,
+      "note": "OS's ETRS89-to-OSGB36 test (OSTN15_OSGM15_TestInput_ETRStoOSGB.txt and its TestOutput, values to 0.001 m), every point on ODN (OSGBDatumFlag 1; the other datum flags are island datums OSGM15_GB.tif doesn't hold). Precision: OS's OSTN15 NTv2 user guide (in https://www.ordnancesurvey.co.uk/documents/resources/OSTN15-NTv2.zip) says NTv2 implementations of its test values 'should be with[in] a cm or so', and OSGM15's GTX format guide gives 1 cm rms for mainland GB.",
+      "points": [
+        {
+          "id": "TP02",
+          "input": [
+            49.9600613782,
+            -5.20304609998,
+            124.269
+          ],
+          "expected": [
+            170370.718,
+            11572.405,
+            71.264
+          ]
+        },
+        {
+          "id": "TP03",
+          "input": [
+            50.4388582561,
+            -4.10864563561,
+            215.251
+          ],
+          "expected": [
+            250359.811,
+            62016.569,
+            163.097
+          ]
+        },
+        {
+          "id": "TP04",
+          "input": [
+            50.57563665,
+            -1.2978227724,
+            94.688
+          ],
+          "expected": [
+            449816.371,
+            75335.861,
+            48.589
+          ]
+        },
+        {
+          "id": "TP05",
+          "input": [
+            50.9312793791,
+            -1.450514337,
+            100.405
+          ],
+          "expected": [
+            438710.92,
+            114792.25,
+            54.056
+          ]
+        },
+        {
+          "id": "TP06",
+          "input": [
+            51.4007822014,
+            -3.5512834924,
+            112.371
+          ],
+          "expected": [
+            292184.87,
+            168003.465,
+            60.646
+          ]
+        },
+        {
+          "id": "TP07",
+          "input": [
+            51.3744702555,
+            1.44454730409,
+            99.439
+          ],
+          "expected": [
+            639821.835,
+            169565.858,
+            55.149
+          ]
+        },
+        {
+          "id": "TP08",
+          "input": [
+            51.4275474302,
+            -2.54407618349,
+            104.018
+          ],
+          "expected": [
+            362269.991,
+            169978.69,
+            54.485
+          ]
+        },
+        {
+          "id": "TP09",
+          "input": [
+            51.4893656495,
+            -0.1199255718,
+            66.057
+          ],
+          "expected": [
+            530624.974,
+            178388.464,
+            20.544
+          ]
+        },
+        {
+          "id": "TP10",
+          "input": [
+            51.858908964,
+            -4.3085247696,
+            81.351
+          ],
+          "expected": [
+            241124.584,
+            220332.641,
+            27.613
+          ]
+        },
+        {
+          "id": "TP11",
+          "input": [
+            51.8943663735,
+            0.89724327012,
+            75.274
+          ],
+          "expected": [
+            599445.59,
+            225722.826,
+            30.207
+          ]
+        },
+        {
+          "id": "TP12",
+          "input": [
+            52.2552938163,
+            -2.15458614387,
+            101.526
+          ],
+          "expected": [
+            389544.19,
+            261912.153,
+            51.998
+          ]
+        },
+        {
+          "id": "TP13",
+          "input": [
+            52.2516095123,
+            -0.9124895697,
+            131.594
+          ],
+          "expected": [
+            474335.969,
+            262047.755,
+            83.982
+          ]
+        },
+        {
+          "id": "TP14",
+          "input": [
+            52.7513668717,
+            0.40153547065,
+            66.431
+          ],
+          "expected": [
+            562180.547,
+            319784.995,
+            20.912
+          ]
+        },
+        {
+          "id": "TP15",
+          "input": [
+            52.9621910941,
+            -1.19747655922,
+            93.825
+          ],
+          "expected": [
+            454002.834,
+            340834.943,
+            45.275
+          ]
+        },
+        {
+          "id": "TP16",
+          "input": [
+            53.3448028019,
+            -2.6404932081,
+            88.411
+          ],
+          "expected": [
+            357455.843,
+            383290.436,
+            36.779
+          ]
+        },
+        {
+          "id": "TP17",
+          "input": [
+            53.4162851604,
+            -4.28918069756,
+            100.776
+          ],
+          "expected": [
+            247958.971,
+            393492.909,
+            46.335
+          ]
+        },
+        {
+          "id": "TP18",
+          "input": [
+            53.4163092542,
+            -4.28917792869,
+            100.854
+          ],
+          "expected": [
+            247959.241,
+            393495.583,
+            46.413
+          ]
+        },
+        {
+          "id": "TP19",
+          "input": [
+            53.7791102576,
+            -3.04045490691,
+            64.94
+          ],
+          "expected": [
+            331534.564,
+            431920.794,
+            12.658
+          ]
+        },
+        {
+          "id": "TP20",
+          "input": [
+            53.8002151963,
+            -1.66379168242,
+            215.609
+          ],
+          "expected": [
+            422242.186,
+            433818.701,
+            165.912
+          ]
+        },
+        {
+          "id": "TP22",
+          "input": [
+            54.1168514429,
+            -0.07773133187,
+            86.778
+          ],
+          "expected": [
+            525745.67,
+            470703.214,
+            41.232
+          ]
+        },
+        {
+          "id": "TP24",
+          "input": [
+            54.8954234042,
+            -2.93827741149,
+            93.542
+          ],
+          "expected": [
+            339921.145,
+            556034.761,
+            41.107
+          ]
+        },
+        {
+          "id": "TP25",
+          "input": [
+            54.9791227366,
+            -1.61657685184,
+            125.878
+          ],
+          "expected": [
+            424639.355,
+            565012.703,
+            76.574
+          ]
+        },
+        {
+          "id": "TP26",
+          "input": [
+            55.8539995295,
+            -4.29649016251,
+            71.617
+          ],
+          "expected": [
+            256340.925,
+            664697.269,
+            17.459
+          ]
+        },
+        {
+          "id": "TP27",
+          "input": [
+            55.9247826551,
+            -3.29479219337,
+            119.032
+          ],
+          "expected": [
+            319188.434,
+            670947.534,
+            66.388
+          ]
+        },
+        {
+          "id": "TP28",
+          "input": [
+            57.0060669605,
+            -5.8283669185,
+            68.494
+          ],
+          "expected": [
+            167634.202,
+            797067.144,
+            13.192
+          ]
+        },
+        {
+          "id": "TP29",
+          "input": [
+            57.1390251896,
+            -2.04856030746,
+            108.611
+          ],
+          "expected": [
+            397160.491,
+            805349.736,
+            58.933
+          ]
+        },
+        {
+          "id": "TP30",
+          "input": [
+            57.4862500072,
+            -4.21926398555,
+            66.178
+          ],
+          "expected": [
+            267056.768,
+            846176.972,
+            13.26
+          ]
+        },
+        {
+          "id": "TP34",
+          "input": [
+            58.5812046128,
+            -3.72631022121,
+            98.634
+          ],
+          "expected": [
+            299721.891,
+            967202.992,
+            46.021
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nl-rdnaptrans2018",
+      "crs": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 28992,
+        "vcsWkid": 5709
+      },
+      "kind": "projected",
+      "grids": [
+        "nl_nsgi_rdtrans2018.tif",
+        "nl_nsgi_nlgeo2018.tif"
+      ],
+      "source": {
+        "url": "https://github.com/GeodetischeInfrastructuur/transformations/blob/4b766710cd596e015c58a19046324eb71d2426e9/validation/data/Z001_ETRS89andRDNAP.txt",
+        "retrieved": "2026-11-07",
+        "publisher": "NSGI"
+      },
+      "precision": 0.001,
+      "note": "NSGI's RDNAPTRANS2018 self-validation file (Z001_ETRS89andRDNAP.txt, ETRS89 = ETRF2000), the 15 of its 100 points that lie on Dutch land. Precision: NSGI's own validation tolerance in the same repository (validation/validate.py): 0.001 m in RD and NAP, 1e-8 degrees in latitude and longitude.",
+      "points": [
+        {
+          "id": "30010009",
+          "input": [
+            53.184783369,
+            5.816489592,
+            203.4425
+          ],
+          "expected": [
+            183697.1899,
+            577653.4349,
+            162.1973
+          ]
+        },
+        {
+          "id": "30010014",
+          "input": [
+            51.825323002,
+            5.049883673,
+            3.4374
+          ],
+          "expected": [
+            131745.5792,
+            426355.6419,
+            -40.1293
+          ]
+        },
+        {
+          "id": "30010019",
+          "input": [
+            52.716916247,
+            4.971955798,
+            232.1489
+          ],
+          "expected": [
+            126941.2885,
+            525583.8295,
+            189.735
+          ]
+        },
+        {
+          "id": "30010024",
+          "input": [
+            52.984909704,
+            6.775366112,
+            148.2846
+          ],
+          "expected": [
+            248222.1165,
+            556221.9315,
+            106.9584
+          ]
+        },
+        {
+          "id": "30010048",
+          "input": [
+            52.765775289,
+            6.025230199,
+            263.7736
+          ],
+          "expected": [
+            198063.5327,
+            531130.2133,
+            221.5415
+          ]
+        },
+        {
+          "id": "30010052",
+          "input": [
+            51.674559075,
+            5.159209097,
+            9.7099
+          ],
+          "expected": [
+            139229.7879,
+            409553.3776,
+            -33.9167
+          ]
+        },
+        {
+          "id": "30010053",
+          "input": [
+            53.255638209,
+            6.832591255,
+            11.9531
+          ],
+          "expected": [
+            251460.5426,
+            586421.5535,
+            -28.6965
+          ]
+        },
+        {
+          "id": "30010055",
+          "input": [
+            52.140280214,
+            6.283826609,
+            60.4856
+          ],
+          "expected": [
+            216379.0437,
+            461722.4577,
+            16.9608
+          ]
+        },
+        {
+          "id": "30010057",
+          "input": [
+            51.352621077,
+            5.457690819,
+            267.1858
+          ],
+          "expected": [
+            159910.5404,
+            373714.9536,
+            223.0196
+          ]
+        },
+        {
+          "id": "30010061",
+          "input": [
+            52.290257108,
+            5.021235164,
+            293.3105
+          ],
+          "expected": [
+            130031.2115,
+            478092.6998,
+            250.2237
+          ]
+        },
+        {
+          "id": "30010065",
+          "input": [
+            52.752855543,
+            5.912022268,
+            24.2958
+          ],
+          "expected": [
+            190433.1059,
+            529631.1529,
+            -17.9726
+          ]
+        },
+        {
+          "id": "30010072",
+          "input": [
+            51.487917973,
+            4.240498387,
+            55.8216
+          ],
+          "expected": [
+            75358.0123,
+            389390.7968,
+            11.5288
+          ]
+        },
+        {
+          "id": "30010077",
+          "input": [
+            52.433711033,
+            4.592141948,
+            270.4875
+          ],
+          "expected": [
+            100931.2449,
+            494287.8082,
+            227.5343
+          ]
+        },
+        {
+          "id": "30010089",
+          "input": [
+            51.73200332,
+            4.986422683,
+            125.4229
+          ],
+          "expected": [
+            127313.4508,
+            415995.7533,
+            81.7772
+          ]
+        },
+        {
+          "id": "30010097",
+          "input": [
+            52.508480538,
+            4.921456934,
+            -10.7592
+          ],
+          "expected": [
+            123379.7747,
+            502412.1096,
+            -53.4976
+          ]
+        }
+      ]
+    },
+    {
+      "id": "au-ausgeoid2020",
+      "crs": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 7844,
+        "vcsWkid": 5711
+      },
+      "target": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 7843
+      },
+      "kind": "geographic",
+      "grids": [
+        "au_ga_AUSGeoid2020_20180201.tif"
+      ],
+      "source": {
+        "url": "https://geodesyapps.ga.gov.au/ausgeoid2020",
+        "retrieved": "2026-11-07",
+        "publisher": "Geoscience Australia"
+      },
+      "precision": 0.001,
+      "note": "GA's AUSGeoid2020 calculator (ellipsoidal height 0, 'Ellipsoid to AUSGeoid2020 Separation'), shown to 0.001 m, at nodes of the 1-minute grid. Between nodes the calculator interpolates cubically and PROJ bilinearly: 1.0 to 2.1 mm apart at six city points on 2026-11-07 (see the Task 9 report).",
+      "points": [
+        {
+          "input": [
+            -35.3,
+            149.1
+          ],
+          "expected": [
+            19.262
+          ]
+        },
+        {
+          "input": [
+            -33.9,
+            151.2
+          ],
+          "expected": [
+            22.523
+          ]
+        },
+        {
+          "input": [
+            -32.0,
+            115.9
+          ],
+          "expected": [
+            -32.179
+          ]
+        },
+        {
+          "input": [
+            -12.5,
+            130.8
+          ],
+          "expected": [
+            51.531
+          ]
+        },
+        {
+          "input": [
+            -42.9,
+            147.3
+          ],
+          "expected": [
+            -3.764
+          ]
+        },
+        {
+          "input": [
+            -23.7,
+            133.9
+          ],
+          "expected": [
+            15.428
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jp-jpgeo2024",
+      "crs": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 6668,
+        "vcsWkid": 6695
+      },
+      "target": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 6667
+      },
+      "kind": "geographic",
+      "grids": [
+        "jp_gsi_jpgeo2024.tif"
+      ],
+      "source": {
+        "url": "https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh/cgi/geoidcalc.pl",
+        "retrieved": "2026-11-07",
+        "publisher": "Geospatial Information Authority of Japan (GSI)"
+      },
+      "precision": 0.0001,
+      "note": "GSI's geoid-height API for JPGEO2024 (ジオイド2024日本とその周辺), documented at https://vldb.gsi.go.jp/sokuchi/surveycalc/api_help.html, given to 0.0001 m; every point has HeightReferenceConversion 0.0000.",
+      "points": [
+        {
+          "input": [
+            35.68123,
+            139.76712
+          ],
+          "expected": [
+            36.7614
+          ]
+        },
+        {
+          "input": [
+            34.7025,
+            135.4959
+          ],
+          "expected": [
+            37.5923
+          ]
+        },
+        {
+          "input": [
+            43.06417,
+            141.34694
+          ],
+          "expected": [
+            32.2293
+          ]
+        },
+        {
+          "input": [
+            33.59028,
+            130.42056
+          ],
+          "expected": [
+            32.6055
+          ]
+        },
+        {
+          "input": [
+            38.26889,
+            140.87194
+          ],
+          "expected": [
+            41.9545
+          ]
+        },
+        {
+          "input": [
+            36.10377,
+            140.08786
+          ],
+          "expected": [
+            40.2826
+          ]
+        },
+        {
+          "input": [
+            35.17056,
+            136.88167
+          ],
+          "expected": [
+            38.0704
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jp-gsigeo2011",
+      "crs": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 6668,
+        "vcsWkid": 6695
+      },
+      "target": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 6667
+      },
+      "kind": "geographic",
+      "grids": [
+        "jp_gsi_gsigeo2011.tif"
+      ],
+      "source": {
+        "url": "https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh2011/cgi/geoidcalc.pl",
+        "retrieved": "2026-11-07",
+        "publisher": "Geospatial Information Authority of Japan (GSI)"
+      },
+      "precision": 0.0001,
+      "note": "GSI's transitional API for GSIGEO2011 Ver2.2 (日本のジオイド2011), documented at https://vldb.gsi.go.jp/sokuchi/surveycalc/api_help.html, given to 0.0001 m. Ver2.2 adds Iwo Jima to Ver2.1 (PROJ-data's grid), so mainland values are the same. proj.db ranks JPGEO2024 first for JGD2011 (vertical) height, so the test pins PROJ's own GSIGEO2011 operation.",
+      "points": [
+        {
+          "input": [
+            35.68123,
+            139.76712
+          ],
+          "expected": [
+            36.6625
+          ]
+        },
+        {
+          "input": [
+            34.7025,
+            135.4959
+          ],
+          "expected": [
+            37.448
+          ]
+        },
+        {
+          "input": [
+            43.06417,
+            141.34694
+          ],
+          "expected": [
+            31.9865
+          ]
+        },
+        {
+          "input": [
+            33.59028,
+            130.42056
+          ],
+          "expected": [
+            32.5277
+          ]
+        },
+        {
+          "input": [
+            38.26889,
+            140.87194
+          ],
+          "expected": [
+            41.7979
+          ]
+        },
+        {
+          "input": [
+            36.10377,
+            140.08786
+          ],
+          "expected": [
+            40.1858
+          ]
+        },
+        {
+          "input": [
+            35.17056,
+            136.88167
+          ],
+          "expected": [
+            37.9154
+          ]
+        }
+      ]
+    },
+    {
+      "id": "us-geoid18",
+      "crs": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 6318,
+        "vcsWkid": 5703
+      },
+      "target": {
+        "format": "wkid",
+        "authority": "EPSG",
+        "wkid": 6319
+      },
+      "kind": "geographic",
+      "grids": [
+        "us_noaa_g2018u0.tif"
+      ],
+      "source": {
+        "url": "https://geodesy.noaa.gov/api/geoid/ght",
+        "retrieved": "2026-11-07",
+        "publisher": "NOAA National Geodetic Survey"
+      },
+      "precision": 0.001,
+      "note": "NGS's Geoid Height Service (model=14, GEOID18; documented at https://geodesy.noaa.gov/web_services/geoid.shtml), given to 0.001 m, at nodes of the 1-minute grid. Between nodes NGS doesn't interpolate bilinearly as PROJ does: up to 1.3 mm apart at eight city points on 2026-11-07 (see the Task 9 report).",
+      "points": [
+        {
+          "input": [
+            38.0,
+            -122.0
+          ],
+          "expected": [
+            -32.051
+          ]
+        },
+        {
+          "input": [
+            39.75,
+            -105.0
+          ],
+          "expected": [
+            -17.083
+          ]
+        },
+        {
+          "input": [
+            40.7,
+            -74.0
+          ],
+          "expected": [
+            -31.857
+          ]
+        },
+        {
+          "input": [
+            29.75,
+            -95.35
+          ],
+          "expected": [
+            -27.317
+          ]
+        },
+        {
+          "input": [
+            47.6,
+            -122.3
+          ],
+          "expected": [
+            -23.678
+          ]
+        },
+        {
+          "input": [
+            41.9,
+            -87.6
+          ],
+          "expected": [
+            -33.628
+          ]
+        },
+        {
+          "input": [
+            33.45,
+            -112.05
+          ],
+          "expected": [
+            -29.874
+          ]
+        },
+        {
+          "input": [
+            35.25,
+            -80.85
+          ],
+          "expected": [
+            -30.454
+          ]
+        }
+      ]
+    },
+    {
+      "id": "egm96",
+      "grids": [
+        "us_nga_egm96_15.tif"
+      ],
+      "missingReference": "earth-info.nga.mil timed out on 2026-11-07 (no connection). NGA's 2006 interpolation test (egm96/input.dat and outintpt.dat, read through the Internet Archive) uses intpt's spline interpolation, which PROJ's bilinear vgridshift on the 15-minute grid doesn't reproduce: up to 0.056 m on its six points. No NGA bilinear or grid-node values could be reached."
+    },
+    {
+      "id": "egm2008",
+      "grids": [
+        "us_nga_egm08_25.tif"
+      ],
+      "missingReference": "earth-info.nga.mil timed out on 2026-11-07 (no connection), and the Internet Archive's copies of NGA's EGM2008 2.5-minute interpolation test couldn't be read (the archive was intermittently offline)."
+    }
+  ]
+}

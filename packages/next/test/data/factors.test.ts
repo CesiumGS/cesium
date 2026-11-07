@@ -453,3 +453,91 @@ describe("grid factors against the CRS's own ellipsoid", () => {
     expect(() => gridFactors(frame, [0, 0, 0])).toThrow(/pole/);
   });
 });
+
+// Mercator (Spherical), EPSG method 1026 (plan 4a's carried item, plan 4b
+// Task 9): proj.db has no CRS that uses it, so these are WKT2 CRSs of their
+// own. On a sphere PROJ's scales are the method's: k = h = 1 / cos phi, and
+// the meridians are the grid's verticals. On an ellipsoid PROJ projects it on
+// the conformal sphere at the latitude of origin (+proj=merc +R_C, here the
+// semi-minor axis), not the radius factors.ts lists for the method (the
+// semi-major axis), so checkSphere refuses it rather than mislead.
+const MERCATOR_SPHERICAL_ON_A_SPHERE = `PROJCRS["Mercator (Spherical) on a sphere",
+  BASEGEOGCRS["Sphere",
+    DATUM["Sphere of radius 6371000 m",
+      ELLIPSOID["Sphere",6371000,0,LENGTHUNIT["metre",1]]],
+    PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]]],
+  CONVERSION["Mercator (Spherical)",
+    METHOD["Mercator (Spherical)",ID["EPSG",1026]],
+    PARAMETER["Latitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8801]],
+    PARAMETER["Longitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8802]],
+    PARAMETER["False easting",0,LENGTHUNIT["metre",1],ID["EPSG",8806]],
+    PARAMETER["False northing",0,LENGTHUNIT["metre",1],ID["EPSG",8807]]],
+  CS[Cartesian,2],
+    AXIS["easting (X)",east,ORDER[1],LENGTHUNIT["metre",1]],
+    AXIS["northing (Y)",north,ORDER[2],LENGTHUNIT["metre",1]]]`;
+const MERCATOR_SPHERICAL_ON_WGS84 = `PROJCRS["Mercator (Spherical) on WGS 84",
+  BASEGEOGCRS["WGS 84",
+    DATUM["World Geodetic System 1984",
+      ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],
+    PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]]],
+  CONVERSION["Mercator (Spherical)",
+    METHOD["Mercator (Spherical)",ID["EPSG",1026]],
+    PARAMETER["Latitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8801]],
+    PARAMETER["Longitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8802]],
+    PARAMETER["False easting",0,LENGTHUNIT["metre",1],ID["EPSG",8806]],
+    PARAMETER["False northing",0,LENGTHUNIT["metre",1],ID["EPSG",8807]]],
+  CS[Cartesian,2],
+    AXIS["easting (X)",east,ORDER[1],LENGTHUNIT["metre",1]],
+    AXIS["northing (Y)",north,ORDER[2],LENGTHUNIT["metre",1]]]`;
+
+describe("Mercator (Spherical), EPSG method 1026", () => {
+  // E = R lambda, N = R asinh(tan phi), at lambda = 0.1 rad.
+  const designAt = (radius: number, latitude: number) => [
+    radius * 0.1,
+    radius * Math.asinh(Math.tan((latitude * Math.PI) / 180)),
+    0,
+  ];
+
+  it("on a sphere: k = 1 / cos phi within 1e-12 and convergence 0, at 0°, 30° and 60°", async () => {
+    const P = await loadProj({ base });
+    const frame = EngineeringFrame.create(
+      {
+        name: "Mercator (Spherical) on a sphere",
+        body: EARTH,
+        crs: { format: "wkt2", wkt2: MERCATOR_SPHERICAL_ON_A_SPHERE },
+        // A sphere's datum has only a ballpark to WGS 84.
+        allowBallpark: true,
+      },
+      P,
+    );
+    for (const latitude of [0, 30, 60]) {
+      const result = gridFactors(frame, designAt(6371000, latitude));
+      const secant = 1 / Math.cos((latitude * Math.PI) / 180);
+      // PROJ's numerical longitude derivative: measured 6.1e-13 at 60°.
+      expect(
+        Math.abs(result.pointScale - secant),
+        `k at ${latitude}`,
+      ).toBeLessThan(1e-12);
+      expect(Math.abs(result.convergence), `convergence at ${latitude}`).toBe(
+        0,
+      );
+    }
+  });
+
+  it("on an ellipsoid whose radii differ, gridFactors throws as checkSphere does", async () => {
+    const P = await loadProj({ base });
+    const frame = EngineeringFrame.create(
+      {
+        name: "Mercator (Spherical) on WGS 84",
+        body: EARTH,
+        crs: { format: "wkt2", wkt2: MERCATOR_SPHERICAL_ON_WGS84 },
+      },
+      P,
+    );
+    for (const latitude of [0, 30, 60]) {
+      expect(() => gridFactors(frame, designAt(6378137, latitude))).toThrow(
+        /Mercator \(Spherical\) \(EPSG 1026\): PROJ's coordinates have a sphere radius of 6356752\.\d+ m, not the method's 6378137 m/,
+      );
+    }
+  });
+});

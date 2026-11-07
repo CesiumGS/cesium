@@ -311,6 +311,11 @@ function someOf(names: readonly string[], max = 3): string {
  *    vertical CRS>: no PROJ-data grid relates it to the ellipsoid", saying
  *    what proj.db was searched for.
  *
+ * Before either: with an `areaOfInterest`, when PROJ has an accurate
+ * operation for the compound CRS without it, the area is to blame (British
+ * National Grid + ODN with a box reaching south of OSGM15's 49.93° N), and
+ * the message says so, with that operation's area of use (plan 4b Task 9).
+ *
  * The search is by name, which is conclusive only for an EPSG vertical CRS;
  * for any other (ESRI:105703, NAVD88_height_(ftUS), finds nothing although
  * GEOID18 relates NAVD88 to NAD83(2011)) the generic message stands. So it
@@ -341,6 +346,23 @@ function noVerticalGrid(
   const ballpark =
     "PROJ offers only a ballpark operation, with undefined accuracy (pass allowBallpark: true to accept it)";
   const { name } = parts.vertical;
+  const area = definition.areaOfInterest;
+  if (area !== undefined) {
+    const anywhere = listOperations(proj, definition.crs, target).find(
+      (c) => !c.ballpark,
+    );
+    if (anywhere !== undefined) {
+      const box = (b: AreaOfInterest) =>
+        `west ${b.west}, south ${b.south}, east ${b.east}, north ${b.north}`;
+      const accuracy =
+        anywhere.accuracy === undefined ? "" : ` (${anywhere.accuracy} m)`;
+      const applies =
+        anywhere.areaOfUse === undefined
+          ? ""
+          : `, applies to ${box(anywhere.areaOfUse)}`;
+      return `${name}: no accurate operation from ${from} covers the area of interest (${box(area)}); PROJ's best without it, ${anywhere.name}${accuracy}${applies}. ${ballpark}`;
+    }
+  }
   const here = parts.horizontal.geodeticName ?? parts.horizontal.name;
   const { datums, geoidModels, authority } = verticalGridDatums(
     proj,
