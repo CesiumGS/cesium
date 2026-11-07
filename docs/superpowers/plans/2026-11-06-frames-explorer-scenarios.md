@@ -328,6 +328,35 @@ The library-level design (revisions, cheap synchronous queries and budgeted asyn
 - [ ] **Step 4: Run** the tests and `npm test`, and confirm they pass.
 - [ ] **Step 5: Commit** with "measure: terrain line of sight over a height sampler".
 
+### Task 5b: Line of sight as a ray query against the drawn terrain (owner, 2026-11-06)
+
+The owner, on Task 5's stepped version: "isn't this a ray tracing query?" Yes. Task 5 marches along the ray at a fixed step against a height sampler, so it carries a step error and can miss features narrower than the step. CESIUM2_WEBGPU_PLAN.md §13.10 already describes the exact version: each loaded terrain tile keeps its drawn triangles on the CPU, so a ray can be traced through them exactly. "Rebuild it now."
+
+**Files:**
+
+- Create: `src/measure/terrainRay.ts`, or a better-placed module beside the globe. It holds the exact ray traversal over loaded terrain tiles.
+- Modify:
+  - `src/measure/terrainLineOfSight.ts`, which keeps its contract: `clear`, `minClearance`, `blockedAt`, `unknownFraction` and `accuracy`;
+  - whatever globe or terrain module has to expose loaded tiles' drawn triangles for querying, read-only.
+- Test: `test/terrainRay.test.ts` and `test/terrainLineOfSight.test.ts`.
+
+**Requirements:**
+
+- **Exact against the drawn surface.** Traverse the ray tile by tile, using the loaded tile that's actually drawn at each place (the same LOD the screen shows). Within a tile, step cell by cell through its grid (DDA) and intersect the ray with that cell's triangles in float64. There's no sampling step and no "narrower than step" caveat. Curvature comes for free, because the triangles are Earth-fixed.
+- **Unknown stays unknown.** Spans where no tile is loaded, or the loaded tile is only an ancestor placeholder (the brief may call this state "not refined"), make `clear: undefined` and add to `unknownFraction` by length. A blocking hit found anywhere still makes `clear: false`.
+- **Accuracy.** The note states the terrain's own accuracy at the levels the ray crossed. Coarse tiles widen it, using the level's geometric error. It never claims more than the data supports.
+- **Fallback.** Keep the sampler-based path only if a caller still needs it, such as tests or heights with no tiles, and label it plainly as approximate. The page uses the ray path.
+- **Buildings and BIM.** 3D Tiles are out of scope. They need the GPU ray API in §13.10. Leave one clear extension point, and a comment pointing at §13.10.
+- **Performance.** A 40 km ray over loaded tiles should take well under a frame. Report a measured time, from Node or a microbenchmark.
+
+- [ ] **Step 1: Write failing tests** with synthetic tiles: a small grid mesh shaped as a hill, a narrow ridge one cell wide, a gap with no tile, and a coarse ancestor-only span. Check:
+  - the ridge is always caught, whatever its position;
+  - the hit point lies on the triangle, within 1e-6 m;
+  - the gap and the ancestor span give `undefined`, with the right length fraction;
+  - a clear ray reports a `minClearance` equal to the true minimum over the triangles.
+- [ ] **Step 2: Implement the traversal and the read-only tile access. Then switch `terrainLineOfSight` to it.**
+- [ ] **Step 3: Run the focused tests and tsc. If src/globe changes, also run its own existing tests. Then commit.**
+
 ### Conventions for Tasks 6a–8 (from Task 4 and the owner, 2026-11-06)
 
 Every scenario task from here on follows the patterns Task 4 settled:
