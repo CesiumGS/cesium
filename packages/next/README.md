@@ -412,9 +412,13 @@ Nothing loads PROJ until a frame is created. The only npm dependency is
 sit beside it: setup fetches GEOID18, and `loadProj` takes the names of any
 others in the browser.
 
-**Frames explorer example.** `examples/frames-explorer/` (in the gallery) shows
-the frame tree live, draws the frames and projections on the globe, and runs
-77 reference-checked stress cases (`npm run test:data` runs the same catalog).
+**Frames explorer example.** `examples/frames-explorer/` (in the gallery) opens
+on eleven scenarios, each a real problem solved by the frame tree it builds:
+Orion's speed in three frames, the Earth turning, the Moon from Sacramento, a
+clock on the Moon, a dish tracking Orion, a BIM site, a survey corridor, a
+drone, a ship, a robot arm on the pad, and all of them at once. Each one
+answers on the globe, states its accuracy and shows how it is checked. The reference-checked stress catalog is on the
+Verification tab (`npm run test:data` runs the same catalog).
 
 **Credits.** The EPSG Dataset in `proj.db` is credited to IOGP, under its
 terms of use (https://epsg.org/terms-of-use.html). PROJ and proj.js are MIT.

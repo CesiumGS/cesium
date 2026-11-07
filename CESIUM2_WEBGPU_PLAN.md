@@ -6782,9 +6782,9 @@ because none of them changes a result.
   stop 6 (13.10's ray queries).
 - **Dyno: a resizable side column that stacks below about 900 px.** The panel
   takes 579 px of 1440, and 380 px of 900.
-- **Dyno: a Viewer time-control option to show UTC.** The control's zone
-  follows the camera (UTC−9 to UTC+5 across the tour), and "UTC+5" at the Moon
-  means nothing. It matters most at stops 5 and 6.
+- ~~**Dyno: a Viewer time-control option to show UTC.**~~ Done in the
+  scenarios plan (Task 9): `attachTimeControls` takes `zone` and `label`
+  options, and the explorer opens in UTC.
 - **Dyno: the root error alert is misleading.** Any error reads "Dyno could
   not read the results".
 - **Dyno: with no ion token, the default imagery throws** an uncaught `ion
@@ -6812,11 +6812,8 @@ asset 2: no access token`, on every example.
   9841). The derivative path handles it, and `checkSphere` throws if a radius
   differs, but `proj.db` has no such CRS, so nothing tests it. Add one when
   4b's CRS coverage includes it.
-- **Plan 4b: `frameCache` is unbounded** in the worker. It caches the
-  `EngineeringFrame`s the overlays build, keyed by their frame parameters
-  (CRS and site), for the life of the worker. Each holds its PROJ CRS and
-  operation, so 4b's comparisons across many CRSs grow it without bound.
-  Bound it.
+- ~~**Plan 4b: `frameCache` is unbounded** in the worker.~~ Closed by
+  `e9f362f3a5`, which bounds it.
 - **Plan 4b: verify PROJ's served bytes in the browser.** `loadProj`'s
   browser path doesn't check the SHA-256 of `proj.db` or the WebAssembly it
   fetches. The example's report labels them "manifest SHA-256 (not verified
@@ -7130,6 +7127,151 @@ height system is standardized yet.
     time and heights). A lunar geoid will most likely ship as a grid. It plugs
     in like NAVD88 does on Earth: through an engineering frame's pinned PROJ
     pipeline with a vertical grid step, which plan 4a supports.
+
+**Frames explorer scenarios: results (2026-11-07).** The explorer now opens on
+eleven scenarios instead of a tour and a test report
+(docs/superpowers/specs/2026-11-06-frames-explorer-scenarios-design.md, plan
+docs/superpowers/plans/2026-11-06-frames-explorer-scenarios.md). Each one
+builds its own frame tree, answers one question on the globe, says how sure it
+is, and shows how that is checked. The stress catalog is still there, behind
+the Verification tab.
+
+- **The scenarios and their trees.**
+  - **One path, three frames:** how fast is Orion going? GCRF, ITRF and
+    MOON_ME, with Orion's OEM.
+  - **The Earth turns:** where is Greenwich pointing, against the stars?
+    ITRF under GCRF, with measured Earth orientation.
+  - **Where's the Moon from here?** Its direction and distance from
+    Sacramento, through the site's ENU frame, checked against JPL Horizons.
+  - **Stand on the Moon:** how fast does a clock run at a lunar site?
+    MOON_ME, MOON_PA and the site's ENU frame.
+  - **A dish tracks Orion:** light time and pointing from DSS-43, with the
+    DSN horizon masks.
+  - **A BIM site on the globe:** a site grid under a design CRS (rotation and
+    scale), at San Francisco or Portland.
+  - **Survey a corridor:** station and offset on a design alignment.
+  - **A drone over the site:** what the camera is looking at on the design
+    grid. The drone and camera mount are app-defined frames from a track.
+  - **A ship enters San Francisco Bay:** its position on California zone 3,
+    and whether the mast sensor's sight line to Harding Rock's buoy clears
+    the headland.
+  - **A robot arm on the pad:** a joint chain on LC-39A, tied to NGS mark
+    AK1155 and checked against survey mark CCV6.
+  - **Everything at once:** any two objects from the other scenarios, with
+    the route between them through the meeting frame. The checked pair is
+    DSS-43 ← Orion.
+- **The proof model.** Each check has a kind: published reference, measured
+  data, hand formula, round trip or live re-run. Only measured rows may say
+  "validated". Each scenario has a checked setup. Off it, the reference rows
+  say they apply at the checked setup, and the round trips and live rows
+  re-run at your setting. The answer's accuracy comes from the frames' stated
+  accuracy (`Frame.accuracy`, `pointAccuracy` and `dominantTerm`, new in
+  this plan), up to the nearest built-in frame, then from the example's
+  accuracy composer beyond it, combined root-sum-square. A failed evaluation
+  shows its error with Retry, and no figure from an earlier setting.
+- **Terrain line of sight.** `terrainLineOfSight` now returns the deciding
+  margin (clearance, error, position). The explorer never says "clear"
+  inside the terrain's error band, or without a bound. Over undrawn or coarse
+  terrain it says "can't tell yet". The drone gives a spot only when the ray
+  before the hit is drawn and clear.
+- **Data sources.**
+  - **The ship's track is synthetic,** along the 33 CFR 167.400 inbound lane.
+    No AIS extract is used.
+  - **Harding Rock's buoy** is from a YRA compilation that cites the USCG
+    Light List; the Light List itself returned 403.
+  - **The robot arm's pad** is at NGS mark AK1155, carried through PROJ to
+    ITRF2020 at epoch 2026.0 with CCV6's velocity. **CCV6** (PID DI3564)
+    comes from NGS's NAD83(2011)↔ITRF2020 values on the NODD S3 bucket.
+  - **The DSN masks** are the published receive masks (DSN 810-005, module
+    301).
+  - **Orion's OEM** is NASA's Artemis II ephemeris, as in plan 3.
+- **Screenshots.** Task 9 took about 150 of them: every scenario in both
+  themes at 1440 and 380 px, the checks on and off the checked setup, the
+  Expand dialog, and the failure state. They're in the plan's workspace and
+  not committed (owner, 2026-11-06).
+- **Gates.**
+  - `npm test`: 1,365 pass.
+  - `npm run test:data`: 295 pass. `fingerprints.json` only gains two
+    entries (`reference-values.ngs-di3564.itrf2020` and
+    `rigid-placement-budget.site-gap.drop`).
+  - tsc and eslint are clean, and `npm run build` builds.
+  - `snyk_code_scan` finds 0 issues in the example and `widgets`. In `src`
+    it finds only the accepted CWE-23 in `proj.ts`, which predates this plan.
+  - The browser checks pass: Review Focus 1–5, keyboard-only use, reduced
+    motion, the console, and the token search.
+
+_Carried forward from the frames explorer scenarios plan._ These are deferred
+items that are real work. The wording and test-strength nits the reviews raised
+are left out.
+
+- **Renderer / engine: GPU labels and wide polylines for the example's HUD.**
+  The labels are DOM elements positioned each frame, and the overlay lines are
+  1-pixel lists. Port them to the vector renderer's GPU labels (with a
+  decluttering compute pass) and to wide polylines when those land. Keep the
+  precision lesson from the jitter fix (labels and markers far from the Earth)
+  as a vector-renderer test. The globe's labels can still collide.
+- **Plan 5: a GPU viewshed.** The drone's viewshed overlay isn't built,
+  because the CPU trace can't meet its 50 ms budget.
+- **Plan 5: the Moon as a tileset.** In Earth views, the Moon is a backdrop
+  body, and the scenarios say so.
+- **Plan 5 / §13.16: a near-field bounded terrain trace.** Trace 20–50 km
+  round each end with tiles at a level chosen for the error, whatever the
+  camera is doing. Today a sight line takes the error of the tiles the
+  camera happened to load. That is why the ship's buoy reads "can't tell",
+  why the drone often reads "can't tell yet", and why an Earth end in the
+  capstone says "not judged from this far out".
+- **Plan 5 / §13.16: a per-tile terrain error over open water,** or a
+  quantized-mesh water mask. The level-wide error overstates the error over
+  flat sea many times over.
+- **Plan 5: one ENU convention.** Body frames take "up" at their foot;
+  `eastNorthUpFrame` takes it at the point (about 0.13 µrad apart at 250 m).
+  Pick one and document it.
+- **Plan 5: move the example's `accuracyOf` onto `pointAccuracy`.** This needs
+  a stated rotation axis on each frame, and a home for terms that sit on no
+  edge (light time, relativity), and it will move catalog numbers. Until then,
+  frames that state no accuracy (Sacramento's site, the lunar site, the DSN dishes,
+  the drone, the ship) use the old composer. Whether they should read
+  "unbounded" instead is the owner's call.
+- **Plan 5: the API review decides whether `LEVEL_ZERO_ERROR` stays
+  exported.** It was exported for the test hill. `Trajectory.velocitySigma`
+  is also new.
+- **Plan 4b: the chart datum (MLLW).** The ship's heights are NAVD88, and the
+  answer says that charts use MLLW.
+- **Library: widgets expose their occluders** (`occluders()` or
+  `data-occludes`) instead of the example matching Dyno class names in
+  `labelPanels.ts`. The credits and the time bar also overlap (a z-index fix
+  in `widgets/credits.ts` and `timeControls.ts`).
+- **Example: split the older files over 800 lines** (`overlays.ts`, `host.ts`,
+  `globe.ts`, `stress/runner.ts`) when they are next changed.
+- **Example: tag overlay frame requests by scenario,** so the first frames
+  after a switch aren't evicted and rebuilt.
+- **Example: the worker returns path sample times,** so Orion's dot sits at
+  the clock's time.
+- **Example: panel boxes from a ResizeObserver** instead of a
+  `querySelectorAll` each frame.
+- **Example: the terrain scan's `cancel()` resets `waitingSince`,** and its
+  first slice on cold tiles takes about 30 ms.
+- **Example: the tree diagram's keyboard and fit.**
+  - Every edge is its own Tab stop (19 in the capstone); a roving tabindex
+    would make it one.
+  - The route row's "can't both fit" test looks only at width.
+  - The "Checks ↓" pill can cover the tree.
+- **Example: the route steps show PROJ's pipeline as a wall of text.** Show
+  the operation's name, and put the pipeline behind a disclosure.
+- **Example: the notation test** covers answers and check rows, but not route
+  steps or globe labels.
+- **Example: "Show source" shows only `main.ts`** (later gallery work).
+- **Data: spot-check the DSN masks** against a fresh download of the
+  spreadsheet.
+- **Data: check the buoy's position against the USCG Light List.** It came
+  from a third-party compilation. Fixing it is one constant.
+- **Dyno: the shell overflows at a 380 px viewport.** See the resizable side
+  column item above.
+- **Dyno (security): `npm run build` inlines `VITE_ION_TOKEN`** into 10
+  bundles, so a deployed build would ship the token. How the gallery gets a
+  token in production is the owner's call.
+- **Bisect gap:** `de5a508f52` doesn't type-check on its own; the next commit
+  fixes it.
 
 ### 13.15 GPU resource limits and capacities (r50, design)
 
