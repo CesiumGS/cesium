@@ -980,6 +980,7 @@ No UI is in this task.
     - During the morph, a pick gives no design coordinates (the drawn geometry is between placements), and the HUD says so.
     - The other placement stays as a ghost (thin, translucent), a secondary visual for the before and after.
     - Reduced motion switches at once.
+  - true scale by default (owner, 2026-11-07): an "Exaggerate the error" toggle, off by default, labelled with its factor while on. The opening shot is at true scale near the far end (about 20 km from the anchor, about 31 m of sag), with a "Fly along" control down the corridor to the anchor;
   - show the sag (`displayError`) under the cursor in rigid mode;
   - add the portfolio list, with a fly-to and each site's grid credits.
 - [ ] **Step 3: Run** the tests, tsc, eslint and prettier.

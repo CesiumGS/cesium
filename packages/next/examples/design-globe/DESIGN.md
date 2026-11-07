@@ -24,6 +24,13 @@ the second audience: every number is there and honest, but quieter.
   partner. Reduced motion switches at once.
 - **The other placement stays as a ghost**, a secondary visual for the before
   and after.
+- **True scale by default.** The error is never exaggerated unless the viewer
+  asks: an "Exaggerate the error" toggle, off by default and labelled with
+  its factor while on, because exaggeration "confuses the accuracy story"
+  (owner). The opening shot is at true scale, low and oblique near the far
+  end of the corridor (about 20 km from the anchor), where the rigid
+  placement is about 31 m off and the gap reads; a "Fly along" control runs
+  the camera down the corridor to the anchor, where the two placements meet.
 - **Measurement proves the second half of the claim.** The same two points
   give the same design distance in both placements; the drawn positions and
   the true distance differ, and reprojected gets both right.
