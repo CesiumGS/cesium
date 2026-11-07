@@ -15,7 +15,7 @@
 // the CRS's design grid with true north, the site grid and the line
 // (scenes.ts, overlayControl.ts): the evaluation draws nothing itself.
 //
-// Off the checked setup it re-runs live what its proof checks at the
+// Off the checked setup it re-runs live what its checks check at the
 // catalog's site: the gap against the hand formula, the site grid's formula
 // and round trip, grid to ground, design against ITRF, and the CRS's round
 // trip, each in the knobs' CRS and site grid.
@@ -101,7 +101,7 @@ const designText = (v: number, crs: BimCrs) =>
 const degrees = (v: number, pos: string, neg: string) =>
   `${Math.abs(v).toFixed(5)}° ${v >= 0 ? pos : neg}`;
 
-/** The live re-runs of the proof's checks, in the knobs' CRS and site grid. */
+/** The live re-runs of its checks, in the knobs' CRS and site grid. */
 function liveChecks(
   ctx: StressContext,
   frame: EngineeringFrame,

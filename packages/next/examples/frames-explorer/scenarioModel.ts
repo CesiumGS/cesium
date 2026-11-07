@@ -1,6 +1,6 @@
 // The scenario's part of the panel's model (the Scenarios tab): its
 // knobs and checked setup, whether its answer is current, following the
-// clock or updating, its proof rows, the published value it's checked
+// clock or updating, its check rows, the published value it's checked
 // against, the answer's path and route through the tree. Pure: the host's
 // state and the page's results in, the view out (unit-tested in
 // test/framesExplorerScenarioModel.test.ts).
@@ -14,7 +14,7 @@ import { routeSteps } from "./panel/routeSteps.ts";
 import { withTerrain } from "./panel/answerText.ts";
 import type { ScenarioHostState } from "./scenarioHost.ts";
 import type { ScenarioAnswer } from "./scenarios/evaluate.ts";
-import { proofRows, type ProofRow } from "./scenarios/proof.ts";
+import { checkKind, checkRows, type CheckRow } from "./scenarios/checks.ts";
 import { READY, SCENES } from "./scenarios/scenes.ts";
 import { checkedState } from "./scenarios/spec.ts";
 import { SCENARIOS } from "./scenarios/specs.ts";
@@ -47,7 +47,7 @@ export function publishedView(
   catalog: ReadonlyMap<string, StressResult>,
   atChecked: boolean,
   freshness: Freshness,
-  proof: readonly ProofRow[],
+  checks: readonly CheckRow[],
 ): Pick<ScenarioPanelView, "published"> {
   if (!pub) {
     return {};
@@ -59,17 +59,17 @@ export function publishedView(
     tolerance: pub.tolerance,
     unit: pub.unit,
   };
-  const r = catalog.get(pub.proofId);
+  const r = catalog.get(pub.checkId);
   if (!atChecked) {
-    const ref = proof.find(
-      (row) => row.kind === "reference-only" && row.id === pub.proofId,
+    const ref = checks.find(
+      (row) => row.status === "reference-only" && row.id === pub.checkId,
     );
     return {
       published: {
         ...base,
         state: "off" as const,
         ...(freshness === "current" &&
-          ref?.kind === "reference-only" &&
+          ref?.status === "reference-only" &&
           ref.delta && { delta: ref.delta }),
       },
     };
@@ -95,7 +95,7 @@ export function publishedView(
 
 export interface ScenarioViewInput {
   st: ScenarioHostState;
-  /** The catalog's results (the proof's checks). */
+  /** The catalog's results (the scenario's checks). */
   results: readonly StressResult[];
   tree: TreeNode | undefined;
   playing: boolean;
@@ -115,7 +115,7 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
   const catalog = new Map(input.results.map((r) => [r.id, r]));
   const e = st.evaluation;
   const freshness = scenarioFreshness(st, playing);
-  let proof: ProofRow[];
+  let checks: CheckRow[];
   if (e && st.evaluatedAt) {
     // The rows of the setup it was made at; `freshness` says whether
     // that is the current one (the panel withholds stale verdicts).
@@ -124,9 +124,9 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       st.evaluatedAt.knobs,
       st.evaluatedAt.epochUtcMs,
     ).atChecked;
-    proof = proofRows(spec, at, catalog, e);
+    checks = checkRows(spec, at, catalog, e);
   } else if (st.atChecked) {
-    proof = proofRows(spec, true, catalog, {
+    checks = checkRows(spec, true, catalog, {
       scenario: spec.id,
       added: [],
       answer: { label: "", headline: "", accuracy: { note: "" } },
@@ -135,8 +135,9 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     });
   } else {
     // Re-running: nothing is claimed until the live checks are in (R9).
-    proof = spec.proof.map((id) => ({
-      kind: "pending" as const,
+    checks = spec.checks.map((id) => ({
+      status: "pending" as const,
+      kind: checkKind(spec, id),
       id,
       title: catalog.get(id)?.title ?? id,
     }));
@@ -196,10 +197,10 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
       catalog,
       st.atChecked,
       freshness,
-      proof,
+      checks,
     ),
     ...(path && { path }),
-    proof,
+    checks,
     liveExtras,
     ...(input.sceneNote !== undefined && { note: input.sceneNote }),
     ...(input.terrain !== undefined && { terrain: input.terrain }),

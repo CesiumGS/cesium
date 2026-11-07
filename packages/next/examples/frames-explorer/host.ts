@@ -888,14 +888,14 @@ export function createHost(
           `its evaluator answered for "${String(evaluated.scenario)}"`,
         );
       }
-      // A live check under a proof id would stand in for the catalog's
+      // A live check under a catalog check id would stand in for the catalog's
       // check against its published reference, at a setting where that
       // reference doesn't apply (Review Focus 1).
-      const proof = new Set(spec.proof);
-      const clash = evaluated.live.find((r) => proof.has(r.id));
+      const checks = new Set(spec.checks);
+      const clash = evaluated.live.find((r) => checks.has(r.id));
       if (clash !== undefined) {
         throw new Error(
-          `its live check "${clash.id}" has the id of one of its proof checks`,
+          `its live check "${clash.id}" has the id of one of its catalog checks`,
         );
       }
       // Judged here, as the runner judges the catalog's: a live row is never

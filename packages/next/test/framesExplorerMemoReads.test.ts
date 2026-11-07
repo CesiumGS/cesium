@@ -1,7 +1,7 @@
 // The panel parts with hand-written comparators (Task 4d review): each
 // renders again only when a field on its compared list changes, so a field
 // it reads that isn't on the list would leave it stale. Knobs, the answer
-// and a proof row are rendered here (react-dom/server, in Node) with their
+// and a check row are rendered here (react-dom/server, in Node) with their
 // `scenario` (or row text) behind a Proxy that records every field read;
 // the reads must be a subset of the list. The diagram's pill comparator
 // and its shape key are checked directly.
@@ -14,8 +14,8 @@ import {
   Knobs,
 } from "../examples/frames-explorer/panel/Knobs.tsx";
 import type { ScenarioPanelView } from "../examples/frames-explorer/panel/model.ts";
-import { ProofItem } from "../examples/frames-explorer/panel/Proof.tsx";
-import { proofRowText } from "../examples/frames-explorer/panel/proofText.ts";
+import { CheckItem } from "../examples/frames-explorer/panel/Checks.tsx";
+import { checkRowText } from "../examples/frames-explorer/panel/checkText.ts";
 import {
   ANSWER_READS,
   ScenarioAnswer,
@@ -95,6 +95,8 @@ const evaluation: ScenarioEvaluation = {
   },
   overlays: [],
   live: [result],
+  // A moment, so the knobs' "Jump to" renders its button (Task 6c).
+  presets: [{ id: "behind-moon", label: "Behind the Moon", utcMs: 0 }],
 } as unknown as ScenarioEvaluation;
 
 function view(over: Partial<ScenarioHostState> = {}): ScenarioPanelView {
@@ -171,7 +173,13 @@ const outside = (reads: Set<string>, list: readonly string[]) =>
 describe("what each memoized part reads is on its compared list (Task 4d)", () => {
   it("Knobs", () => {
     const reads = readsOf(views(), (s) =>
-      createElement(Knobs, { scenario: s, onKnob: noop, onBack: noop }),
+      createElement(Knobs, {
+        scenario: s,
+        headingId: "h",
+        onKnob: noop,
+        onBack: noop,
+        onMoment: noop,
+      }),
     );
     expect(reads.size).toBeGreaterThan(3);
     expect(outside(reads, KNOBS_READS)).toEqual([]);
@@ -185,14 +193,14 @@ describe("what each memoized part reads is on its compared list (Task 4d)", () =
     expect(outside(reads, ANSWER_READS)).toEqual([]);
   });
 
-  it("a collapsed proof row reads only its head's text", () => {
+  it("a collapsed check row reads only its head's text", () => {
     const s = view();
-    for (const row of s.proof) {
-      const t = proofRowText(row, s.liveExtras, s.freshness, undefined);
+    for (const row of s.checks) {
+      const t = checkRowText(row, s.liveExtras, s.freshness, undefined);
       const rec = recording(t);
       const rowRec = recording(row);
       render(
-        createElement(ProofItem, {
+        createElement(CheckItem, {
           row: rowRec.proxy,
           t: rec.proxy,
           expanded: false,
@@ -208,9 +216,9 @@ describe("what each memoized part reads is on its compared list (Task 4d)", () =
       expect(
         outside(rec.reads, [
           "key",
+          "kind",
           "tone",
           "title",
-          "verdict",
           "status",
           "summary",
         ]),

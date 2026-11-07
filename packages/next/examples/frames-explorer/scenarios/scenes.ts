@@ -158,7 +158,7 @@ export interface SceneSpec {
   /** The flight's length, s (the tour's: 3.0 to the plane, 3.5 to the site). */
   flight?: number;
   /**
-   * The base frames its answer and proof name: the docked diagram keeps
+   * The base frames its answer and checks name: the docked diagram keeps
    * them (and their ancestors) in view from the start, before the
    * evaluation's path is in.
    */

@@ -45,8 +45,8 @@ const EQUATOR = 6_378_137;
 /** The sidereal day, s: one turn of the Earth against the stars. */
 export const SIDEREAL_DAY = (2 * Math.PI) / EARTH_ROTATION_RATE;
 
-/** The proof check this scenario stands in for off the checked setup. */
-const PROOF = "frame-tree.compositions.itrf-gcrf";
+/** The catalog check this scenario stands in for off the checked setup. */
+const CHECK = "frame-tree.compositions.itrf-gcrf";
 
 /** Where ITRF's x (Greenwich) faces in GCRF's equator, degrees east of GCRF's x, in [0, 360). */
 export function greenwichAngle(ctx: StressContext, instant: Instant): number {
@@ -79,14 +79,14 @@ function compositions(ctx: StressContext, instant: Instant): StressResult {
     instant,
     ctx.frames.itrf,
     ctx.frames.gcrf,
-    PROOF,
+    CHECK,
     "ITRF ↔ GCRF at the scenario's time, checked by every route through the tree (including frames this scenario doesn't draw: the six others, the Moon's among them): round trips and compositions agree within 1 mm per 1e9 m and 1e-12 in rotation",
   );
 }
 
 /**
  * The catalog's frame-tree.compositions check for the pair `a`, `b` at one
- * instant, as `<proof>.live`: seeded points through a → b → a and back,
+ * instant, as `<check>.live`: seeded points through a → b → a and back,
  * and through each of the six other frames of the tree, within 1 mm per
  * 1e9 m and 1e-12 in rotation. Earth-turns' ITRF–GCRF, and the Moon from
  * here's ITRF–MOON_ICRF (Task 6b).
@@ -96,7 +96,7 @@ export function compositionsAt(
   instant: Instant,
   a: Frame,
   b: Frame,
-  proof: string,
+  check: string,
   title: string,
 ): StressResult {
   const f = ctx.frames;
@@ -159,7 +159,7 @@ export function compositionsAt(
     }
   }
   return {
-    id: `${proof}.live`,
+    id: `${check}.live`,
     group: "frame-tree",
     title,
     pass: worstRotation <= ROTATION,
@@ -211,7 +211,7 @@ export const evaluateEarthTurns: ScenarioEvaluator = async (
     ),
   );
   // The checked angle stated within half a turn of this one, so the delta
-  // (proof.ts) never jumps by 360°.
+  // (checks.ts) never jumps by 360°.
   const turn = ((((angle - checked + 180) % 360) + 360) % 360) - 180;
   const rate = Number(knobs.rate);
   const onScreen = SIDEREAL_DAY / rate;

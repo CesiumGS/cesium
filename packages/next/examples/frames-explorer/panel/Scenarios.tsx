@@ -1,7 +1,8 @@
-// The scenarios' tab (spec "How the page works"), the page's first view: the
-// strip, the scenario's question, its frame tree (the panel's hero, with an
-// "Expand" view over the globe), its answer, its knobs and its proof, top
-// to bottom in one scroll. Selecting a frame or an edge in the tree opens its
+// The scenarios' tab (spec "How the page works"), the page's first view, top
+// to bottom in one scroll, in Task 6c's order: the picker, the scenario's
+// question, its knobs (under the question, owner: "the knobs are hard to
+// find"), its frame tree (the panel's hero, with an "Expand" view over the
+// globe), its answer, the route's steps and its checks. Selecting a frame or an edge in the tree opens its
 // detail in place under the diagram (the walk, the edge's kind and accuracy),
 // never in a sheet (the owner, 2026-11-06).
 import { Button, Typography } from "@mui/material";
@@ -27,7 +28,7 @@ import { designRoot } from "./designRoot.ts";
 import { keepSet } from "./diagramFocus.ts";
 import { equalOn, sameSet, useStable, useStableCallback } from "./memo.ts";
 import { RouteSteps } from "./RouteSteps.tsx";
-import { Proof } from "./Proof.tsx";
+import { Checks } from "./Checks.tsx";
 import { ScenarioAnswer } from "./ScenarioAnswer.tsx";
 import { ScenarioStrip } from "./ScenarioStrip.tsx";
 import {
@@ -267,27 +268,27 @@ function ExpandedTree({
   );
 }
 
-/** "Knobs and proof ↓": shows while there's more below in the tab's scroller (owner, fix 1). */
-function useMoreBelow(
+/**
+ * "Checks ↓" (Task 6c; "Knobs and proof ↓" before the knobs moved up): shows
+ * while the Checks section's head is below the tab's scroller, at the end of
+ * a tall tab (owner, fix 1).
+ */
+function useChecksBelow(
   anchor: React.RefObject<HTMLElement | null>,
-  knobs: React.RefObject<HTMLElement | null>,
-): { more: boolean; knobsBelow: boolean; scroller: HTMLElement | null } {
-  const [more, setMore] = useState(false);
-  const [knobsBelow, setKnobsBelow] = useState(true);
-  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  checks: React.RefObject<HTMLElement | null>,
+): boolean {
+  const [below, setBelow] = useState(false);
   useEffect(() => {
     const el =
       anchor.current?.closest<HTMLElement>(".fx-scenarios-scroll") ?? null;
-    setScroller(el);
     if (!el) {
       return;
     }
     const measure = () => {
-      setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 24);
-      const k = knobs.current;
-      setKnobsBelow(
-        k !== null &&
-          k.getBoundingClientRect().top >
+      const c = checks.current;
+      setBelow(
+        c !== null &&
+          c.getBoundingClientRect().top >
             el.getBoundingClientRect().bottom - 40,
       );
     };
@@ -302,8 +303,8 @@ function useMoreBelow(
       el.removeEventListener("scroll", measure);
       observer.disconnect();
     };
-  }, [anchor, knobs]);
-  return { more, knobsBelow, scroller };
+  }, [anchor, checks]);
+  return below;
 }
 
 /**
@@ -346,14 +347,15 @@ function ScenariosView({
     tree: useId(),
     answer: useId(),
     knobs: useId(),
-    proof: useId(),
+    route: useId(),
+    checks: useId(),
   };
   const tree = model.tree;
   const [expandedView, setExpandedView] = useState(false);
   const expandButton = useRef<HTMLButtonElement>(null);
   const top = useRef<HTMLDivElement>(null);
-  const knobsSection = useRef<HTMLElement>(null);
-  const { more, knobsBelow, scroller } = useMoreBelow(top, knobsSection);
+  const checksSection = useRef<HTMLElement>(null);
+  const checksBelow = useChecksBelow(top, checksSection);
   const closeExpanded = () => {
     setExpandedView(false);
     // Focus back to what opened it (I18's rule for the HUD).
@@ -422,14 +424,14 @@ function ScenariosView({
   const published = useMemo(
     () =>
       pub && {
-        proofId: pub.proofId,
+        checkId: pub.checkId,
         printed: pub.printed,
         unit: pub.unit,
       },
     [pub],
   );
-  const toKnobs = () =>
-    knobsSection.current?.scrollIntoView({
+  const toChecks = () =>
+    checksSection.current?.scrollIntoView({
       block: "start",
       behavior:
         typeof matchMedia === "function" &&
@@ -455,22 +457,20 @@ function ScenariosView({
               >
                 {scenario.question}
               </Typography>
-              <button
-                type="button"
-                className={`fx-checked-chip${scenario.atChecked ? "" : " fx-off-checked-chip"}`}
-                onClick={scenario.atChecked ? toKnobs : actions.backToChecked}
-                title={
-                  scenario.atChecked
-                    ? `The ${scenario.checkedBy} apply here`
-                    : "Back to the checked setup"
-                }
-              >
-                {scenario.atChecked ? "Checked setup" : "Off checked · Back"}
-              </button>
             </div>
           </div>
 
           <div className="fx-scenario-body">
+            <section className="fx-section" aria-labelledby={ids.knobs}>
+              <Knobs
+                scenario={scenario}
+                headingId={ids.knobs}
+                onKnob={actions.setKnob}
+                onBack={actions.backToChecked}
+                onMoment={actions.goToTime}
+              />
+            </section>
+
             <section
               className="fx-section fx-tree-section"
               aria-labelledby={ids.tree}
@@ -551,9 +551,6 @@ function ScenariosView({
                   {model.treeNote}
                 </Typography>
               )}
-              {scenario.route && (
-                <RouteSteps steps={scenario.route} legs={scenario.routeLegs} />
-              )}
               {tree && diagramSelection && (
                 <Detail
                   model={model}
@@ -569,26 +566,24 @@ function ScenariosView({
 
             <section className="fx-section" aria-labelledby={ids.answer}>
               <SectionHead id={ids.answer} title="The answer" />
-              <ScenarioAnswer scenario={scenario} onPreset={actions.goToTime} />
+              <ScenarioAnswer scenario={scenario} />
             </section>
+
+            {scenario.route && (
+              <section className="fx-section" aria-labelledby={ids.route}>
+                <SectionHead id={ids.route} title="Route steps" />
+                <RouteSteps steps={scenario.route} legs={scenario.routeLegs} />
+              </section>
+            )}
 
             <section
               className="fx-section"
-              aria-labelledby={ids.knobs}
-              ref={knobsSection}
+              aria-labelledby={ids.checks}
+              ref={checksSection}
             >
-              <SectionHead id={ids.knobs} title="Knobs" />
-              <Knobs
-                scenario={scenario}
-                onKnob={actions.setKnob}
-                onBack={actions.backToChecked}
-              />
-            </section>
-
-            <section className="fx-section" aria-labelledby={ids.proof}>
-              <SectionHead id={ids.proof} title="Proof" />
-              <Proof
-                rows={scenario.proof}
+              <SectionHead id={ids.checks} title="Checks" />
+              <Checks
+                rows={scenario.checks}
                 extras={extras}
                 atChecked={scenario.atChecked}
                 freshness={scenario.freshness}
@@ -601,26 +596,15 @@ function ScenariosView({
         </div>
       </div>
       {/* Its own strip under the scroller, never over the content (fix 2). */}
-      {more && (
+      {checksBelow && (
         <div className="fx-more-below">
           <Button
             size="small"
             variant="outlined"
             className="fx-more-button"
-            onClick={() =>
-              knobsBelow
-                ? toKnobs()
-                : scroller?.scrollTo({
-                    top: scroller.scrollHeight,
-                    behavior:
-                      typeof matchMedia === "function" &&
-                      matchMedia("(prefers-reduced-motion: reduce)").matches
-                        ? "auto"
-                        : "smooth",
-                  })
-            }
+            onClick={toChecks}
           >
-            {knobsBelow ? "Knobs and proof ↓" : "Proof ↓"}
+            Checks ↓
           </Button>
         </div>
       )}

@@ -341,8 +341,10 @@ site. Each scene names its camera and the rig it lands in:
 | stand-on-moon | straight down the site's vertical (stop 6's), 3.5 s; `lunarSite`           | the site's triad at 15% of the camera's distance, and the lunar clock's gain as a callout | paused at 2026-01-01             |
 
 **The panel, top to bottom, one scroll** (`panel/Scenarios.tsx`): the
-strip; the question as the tab's heading (`headline-sm`); the frame tree;
-the answer; the knobs; the proof. Nothing opens in a sheet.
+strip; the question as the tab's heading (`headline-sm`); the knobs; the
+frame tree; the answer; the route steps; the checks (Task 6c's order: the
+owner, "the knobs are hard to find … maybe right under the question").
+Nothing opens in a sheet.
 
 - **The strip**: one bordered entry per scenario (title, and its question
   in a quieter, clamped line); the one showing has the selected row's 2 px
@@ -380,11 +382,19 @@ the answer; the knobs; the proof. Nothing opens in a sheet.
   The same answer is the **globe's callout**, top right at 48 px (level
   with Frame content, clear of Dyno's inspector strip, the credits and the
   legend); under 560 px it folds to its figure with a chevron (F42).
-- **Knobs**: the marker first, "At the checked setup. The published
-  references apply here." or "Off the checked setup: “Site latitude” and the
-  time differ from it.", with **Back to the checked setup**; then each knob
-  (a range's checked value marked on its track; a rate over three decades on
-  a log track; a choice as a segmented control naming its full label below).
+- **Knobs** (Task 6c, the approved mockup): a head with "Knobs" and the
+  checked-setup chip ("At the checked setup", its title naming what applies
+  there, or "Off the checked setup" in the attention colour), and off it a
+  line under the head naming what moved ("Site latitude −45.0° (checked:
+  −90.0°). The checks re-run here."); then one row per knob, its label in a
+  column of one width and its control beside it, wrapping under the label
+  at narrow widths (a range's checked value marked on its track, its value
+  at the track's end; a rate over three decades on a log track; a choice as
+  a segmented control naming its full label below); then **Jump to**: the
+  scenario's moments as outlined buttons with an icon ("Behind the Moon",
+  the dish's), and **Back to the checked setup** as a quieter text button,
+  disabled at the checked setup. A moment is a button, never a chip: the
+  chip is a status.
   No time row (the owner, 2026-11-06: redundant with the viewer's timeline,
   the only time control): the time is still part of the checked setup, so
   the marker names it when it moved ("time 2026-04-07 04:00 UTC (checked:
@@ -393,21 +403,37 @@ the answer; the knobs; the proof. Nothing opens in a sheet.
   only followed the clock doesn't write the link (each write renders the
   gallery again), and the link takes the time when the clock stops (Task
   4d, `createLinkWriter`). Copy link is always the current time.
-- **Proof** (the owner, 2026-11-06: no sheet): each row one full-width
-  button, 44 px or taller, with a chevron and `aria-expanded`, that unfolds in
-  place into its difference against its tolerance, what it is compared
-  against, its reference and source, and its accuracy. Its status is in
-  words beside its colour: Checked against a reference (or Checked by the
-  catalog, for a round trip that cites nothing), Live re-run, Reference
-  applies at the checked setup (with how far your setting moves the answer),
-  or Loading. A catalog row offers one labelled "Open in Verification".
+- **Checks** ("Proof" until Task 6c: the owner, it overclaimed; most are
+  verification, a few validation; the owner, 2026-11-06: no sheet): a
+  legend of the five kinds once at the top, then each row one full-width
+  button, 44 px or taller, with a chevron and `aria-expanded`, in three
+  columns: its **kind**'s tag, its title over one line of detail, and its
+  **status** as an icon and a word. The kinds (`CheckKind`,
+  `scenarios/checks.ts`): **Published** reference (a cited independent
+  computation: Ashby & Patla, JPL Horizons, IERS, a SPICE fixture),
+  **Measured** data (NGS survey marks, the DSN's horizon masks, tracking
+  data; the only rows that may say "validated"), **Hand** formula (R11),
+  **Round trip** (two routes or a there-and-back that agree) and **Live**
+  re-run (off the checked setup). A kind is derived from the result (the
+  reference it cites, measured or not, else what it is compared with,
+  content.ts) and named in the spec (`checkKinds`) where it can't be. The
+  statuses: Checked, Failed, Not judged here (its line: "Reference applies
+  at the checked setup; your setting moves the answer by …"), Loading,
+  Updating, Following. Kind and status stay apart: the kind tints
+  (`tokens.css` `--fx-kind-*`, purple, teal, pink, blue, warm grey, each
+  6.3:1 or more in both schemes) are none of the pass, fail or warning
+  hues, and neither is colour alone. The row unfolds in place into its
+  difference against its tolerance, what it is compared against, its
+  reference and source, and its accuracy. A catalog row offers one
+  labelled "Open in Verification".
 
 **Fix round 1 (the owner's reports, 2026-11-06)** changed these, and
 binds over the bullets above where they differ:
 
 - **The picker** is StrataKit's select, "Scenario", full width and sticky
-  with the question as the lead line and a "Checked setup" / "Off checked ·
-  Back" chip; its list gives each title with its question under it.
+  with the question as the lead line (Task 6c moved its "Checked setup"
+  chip to the knobs' head); its list gives each title with its question
+  under it.
 - **The tree holds only frames.** Data (Orion's) is a dashed card pinned
   below the frame its numbers are in ("Orion's data, in EME2000 (OEM)"). The
   frame you draw in takes StrataKit's accent with a "Drawing in" tag, and
@@ -428,8 +454,8 @@ binds over the bullets above where they differ:
   sit under it, with ours, the difference and the verdict at the checked
   setup, or the delta and no verdict off it.
 - **Stale is said**: while the shown evaluation is another setup's, the
-  answer dims and the proof reads "Updating" with no verdict; while the
-  clock plays they read "Following the clock" in one steady state.
+  answer dims and the checks read "Updating" with no verdict; while the
+  clock plays they read "Following" in one steady state.
 - **Orion's marker** is a dot with a halo on the path at the clock's time,
   "Orion, HH:MM UTC" beside it, an arrow at the view's edge when it is off
   screen; the globe's callout names the drawn-in frame and carries the same
@@ -437,7 +463,7 @@ binds over the bullets above where they differ:
   every frame, from the same OEM the worker draws the path from
   (`orionTrack.ts`): Orion at the instant the globe shows, on the path in
   every drawing frame, never waiting for the worker (Task 4c). The worker
-  keeps the path's mesh, the accuracy statement and the proof. While that
+  keeps the path's mesh, the accuracy statement and the checks. While that
   OEM loads, or if it can't (a SHA-256 mismatch against the manifest, no
   `crypto.subtle` on an http page that isn't localhost), Orion's legend row
   and its overlay row say so, and the console warns (R9). Its text
@@ -453,8 +479,11 @@ binds over the bullets above where they differ:
   and a label set mid-frame waits for the next placement (Task 4c: placed
   later, labels far from the Earth wobbled by a frame's motion as frame
   times varied).
-- **More below**: a fade and a "Knobs and proof ↓" pill at the scroller's
-  foot until the end is reached.
+- **Checks below**: a "Checks ↓" pill at the scroller's foot while the
+  Checks head is below it (Task 6c; "Knobs and proof ↓" before the knobs
+  moved up). The timeline's marked windows (the dish's behind the Moon) are
+  clickable too: a click in one, without a drag, jumps the clock to its
+  start (`TimeControlsHandle.setMarks`, `markAt`).
 
 **Verification** is the second tab: the catalog's Checks, its Overlays and
 the Report, one segmented control apart. Its inspector's sheet keeps one
@@ -1141,6 +1170,7 @@ board, an overlay's `OverlayState`).
 | `cameraViews.ts`        | Where each scenario, frame and stop frames the globe, and the orbit it lands in                                              |
 | `cameraRig.ts`          | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                       |
 | `scenarios/stage.ts`    | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                              |
+| `scenarios/checks.ts`   | A scenario's check rows on and off its checked setup, and each check's kind (pure; Task 6c)                                  |
 | `scenarios/sites.ts`    | The BIM site's CRSs, site grid and line, and the corridor's road and site (pure; shared by the page and the worker, Task 6a) |
 | `pointDrag.ts`          | The corridor's point, dragged on the globe: its hit target and the knobs it sets (Task 6a)                                   |
 | `sightLines.ts`         | A scenario's lines of sight over the drawn terrain: traced on demand, trailing height changes (Task 6b)                      |
@@ -1152,7 +1182,7 @@ board, an overlay's `OverlayState`).
 | `userCrs.ts`            | "Try your own": the ion asset and the bound-CRS checks                                                                       |
 | `pageReport.ts`         | The report's environment and the Report tab's lines                                                                          |
 | `panelModel.ts`         | The panel's model, built from every part                                                                                     |
-| `scenarioModel.ts`      | The scenario's part of the model (pure: freshness, published value, proof, route)                                            |
+| `scenarioModel.ts`      | The scenario's part of the model (pure: freshness, published value, checks, route)                                           |
 | `globeSelection.ts`     | The selection on the globe (R14), Frame content (F), the links' known ids                                                    |
 | `deepLinks.ts`          | Back, forward and edited links (R15)                                                                                         |
 | `frameLoop.ts`          | The per-frame work                                                                                                           |
@@ -1163,7 +1193,7 @@ part in cascade order: `tokens.css` (the family palette and axis colors),
 `PanelFrame.css`, `shared.css`, then each component's (`StatusStrip.css`,
 `Explore.css`, `Verify.css`, `Inspector.css`, `TryYourOwn.css`,
 `Report.css`, `Hud.css`, `Scenarios.css`, `RouteSteps.css`,
-`TreeDiagram.css`, `ScenarioAnswer.css`, `Knobs.css`, `Proof.css`,
+`TreeDiagram.css`, `ScenarioAnswer.css`, `Knobs.css`, `Checks.css`,
 `VerificationHead.css`), then `motion.css`, `narrow.css` and
 `GlobeLabels.css`. Keep the order: rules of equal specificity resolve by
 it. A new scenario's styles go in its component's file, or a new file

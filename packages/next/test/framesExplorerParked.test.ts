@@ -114,7 +114,7 @@ describe("Open in Verification on the result already selected (quiet flag)", () 
     };
     choose({ kind: "result", id: result.id });
     expect(show).toHaveBeenCalledTimes(1);
-    // From the proof row, while it is already the selection: nothing moves.
+    // From the check row, while it is already the selection: nothing moves.
     selection.selectQuietly(result.id);
     choose({ kind: "result", id: result.id });
     expect(show).toHaveBeenCalledTimes(1);

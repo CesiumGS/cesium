@@ -1,0 +1,183 @@
+/* The scenario's checks (Checks.tsx). Imported in order by panel.css. */
+/*
+ * The kinds' tags (tokens.css --fx-kind-*): a small tinted label, its text
+ * at AA on its tint in both schemes. Never a status colour.
+ */
+.fx-kind {
+  display: inline-block;
+  justify-self: start;
+  padding: 1px var(--stratakit-space-150);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--fx-kind-bg);
+  color: var(--fx-kind-fg);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.fx-kind-published {
+  --fx-kind-bg: var(--fx-kind-published-bg);
+  --fx-kind-fg: var(--fx-kind-published-fg);
+}
+.fx-kind-measured {
+  --fx-kind-bg: var(--fx-kind-measured-bg);
+  --fx-kind-fg: var(--fx-kind-measured-fg);
+}
+.fx-kind-hand {
+  --fx-kind-bg: var(--fx-kind-hand-bg);
+  --fx-kind-fg: var(--fx-kind-hand-fg);
+}
+.fx-kind-roundTrip {
+  --fx-kind-bg: var(--fx-kind-round-trip-bg);
+  --fx-kind-fg: var(--fx-kind-round-trip-fg);
+}
+.fx-kind-live {
+  --fx-kind-bg: var(--fx-kind-live-bg);
+  --fx-kind-fg: var(--fx-kind-live-fg);
+}
+/* The legend: the five kinds once, at the top of the section. */
+.fx-check-legend {
+  list-style: none;
+  margin: 0 0 var(--stratakit-space-200);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100);
+}
+/* The checks: one disclosure per row, the whole row its button. */
+.fx-checks {
+  --fx-kind-column: 5.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fx-check-row {
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-check-row:first-child {
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-check-head {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  /*
+   * Kind | title and detail | status | chevron (the approved mockup). The
+   * kind's column is one width, so the titles line up row to row.
+   */
+  grid-template-columns: var(--fx-kind-column) minmax(0, 1fr) auto 16px;
+  align-items: start;
+  gap: var(--stratakit-space-200);
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: var(--stratakit-space-200) var(--stratakit-space-100);
+  cursor: pointer;
+  border-radius: var(--stratakit-radius-sm);
+}
+.fx-check-head:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.fx-check-head:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: -2px;
+}
+.fx-check-chevron,
+.fx-check-icon {
+  flex: none;
+  margin-block-start: 2px;
+}
+.fx-check-chevron {
+  color: var(--stratakit-color-icon-neutral-secondary);
+  transition: transform 160ms var(--fx-ease);
+}
+.fx-check-chevron.fx-open {
+  transform: rotate(90deg);
+}
+.fx-tone-pass .fx-check-icon {
+  color: var(--stratakit-color-icon-positive-base);
+}
+.fx-tone-fail .fx-check-icon {
+  color: var(--stratakit-color-icon-critical-base);
+}
+.fx-tone-reference .fx-check-icon,
+.fx-tone-loading .fx-check-icon {
+  color: var(--stratakit-color-icon-info-base);
+}
+.fx-check-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+.fx-check-name {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-check-summary {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* The status: its icon and its word, on the right. */
+.fx-check-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-tone-pass .fx-check-status-word {
+  color: var(--stratakit-color-text-positive-base);
+}
+.fx-tone-fail .fx-check-status-word {
+  color: var(--stratakit-color-text-critical-base);
+}
+.fx-tone-reference .fx-check-status-word,
+.fx-tone-loading .fx-check-status-word {
+  color: var(--stratakit-color-text-info-base);
+}
+.fx-check-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: 0 var(--stratakit-space-100) var(--stratakit-space-300)
+    calc(
+      var(--fx-kind-column) + var(--stratakit-space-200) +
+        var(--stratakit-space-100)
+    );
+}
+.fx-check-body[hidden] {
+  display: none;
+}
+.fx-check-title,
+.fx-check-note {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* How far a check carries to the scenario (ScenarioSpec.checkNotes). */
+.fx-check-note {
+  margin: 0 0 var(--stratakit-space-150);
+  font-style: italic;
+}
+.fx-check-details {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.fx-check-detail dt {
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-check-detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.fx-check-open {
+  align-self: flex-start;
+  min-block-size: 32px;
+  font-weight: 600;
+}

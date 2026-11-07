@@ -18,6 +18,23 @@
   --fx-axis-y: light-dark(#1b7e2a, #5ad664);
   --fx-axis-z: light-dark(#0559d2, #5d97f7);
   --fx-ease: cubic-bezier(0.2, 0, 0, 1);
+  /*
+   * The checks' kinds (Checks.css, Task 6c): a tint and its text, light and
+   * dark. StrataKit has no categorical palette (its hues are its statuses),
+   * so these are the approved mockup's, none of them a pass, fail or warning
+   * hue: purple published, teal measured, pink hand formula, blue round
+   * trip, warm grey live. Each text is 6.3:1 or more on its tint (AA).
+   */
+  --fx-kind-published-bg: light-dark(#eeedfe, #3c3489);
+  --fx-kind-published-fg: light-dark(#3c3489, #cecbf6);
+  --fx-kind-measured-bg: light-dark(#e1f5ee, #085041);
+  --fx-kind-measured-fg: light-dark(#085041, #9fe1cb);
+  --fx-kind-hand-bg: light-dark(#fbeaf0, #72243e);
+  --fx-kind-hand-fg: light-dark(#72243e, #f4c0d1);
+  --fx-kind-round-trip-bg: light-dark(#e6f1fb, #0c447c);
+  --fx-kind-round-trip-fg: light-dark(#0c447c, #b5d4f4);
+  --fx-kind-live-bg: light-dark(#f1efe8, #444441);
+  --fx-kind-live-fg: light-dark(#444441, #d3d1c7);
 }
 .fx-family-celestial {
   --fx-family: var(--fx-celestial);

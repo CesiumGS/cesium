@@ -167,7 +167,7 @@ function publishedRate(): NonNullable<
     ...(entry.source.doi !== undefined && {
       url: `https://doi.org/${entry.source.doi}`,
     }),
-    proofId: "lunar-time.moon-vs-earth.synodic",
+    checkId: "lunar-time.moon-vs-earth.synodic",
     tolerance: "within 2%",
   };
 }

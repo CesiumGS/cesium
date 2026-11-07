@@ -3,16 +3,16 @@
 
 /*
  * The scenarios' tab (DESIGN.md "Scenarios"): the strip, the question, the
- * frame tree as the panel's one bold thing, then the answer, the knobs and
- * the proof, each a heading and its content, no cards.
+ * knobs, the frame tree as the panel's one bold thing, then the answer, the
+ * route and the checks, each a heading and its content, no cards (Task 6c's
+ * order).
  */
 .fx-scenarios {
   gap: var(--stratakit-space-500);
 }
 /*
  * The picker and the question, sticky at the top of the tab's scroller: the
- * picker is StrataKit's select, the question the scenario's lead line,
- * beside a chip for the checked setup.
+ * picker is StrataKit's select, the question the scenario's lead line.
  */
 .fx-scenario-top {
   position: sticky;
@@ -53,27 +53,6 @@
   justify-content: space-between;
   gap: var(--stratakit-space-200);
 }
-.fx-checked-chip {
-  all: unset;
-  box-sizing: border-box;
-  flex: none;
-  min-block-size: 24px;
-  padding: 2px var(--stratakit-space-200);
-  border-radius: var(--stratakit-radius-round);
-  border: 1px solid var(--stratakit-color-border-positive-muted);
-  color: var(--stratakit-color-text-positive-base);
-  font-size: var(--stratakit-font-size-caption-lg);
-  font-weight: 600;
-  cursor: pointer;
-}
-.fx-off-checked-chip {
-  border-color: var(--stratakit-color-border-attention-base);
-  color: var(--stratakit-color-text-attention-base);
-}
-.fx-checked-chip:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 1px;
-}
 /* A section scrolled to sits below the sticky picker and question. */
 .fx-scenario-body > .fx-section {
   scroll-margin-block-start: 112px;
@@ -85,8 +64,7 @@
 }
 /*
  * The scenarios' own scroller, and under it (not over it) a strip with the
- * "Knobs and proof" button while there's more below (fix 2: the pill
- * covered content).
+ * "Checks" button while they're below (fix 2: the pill covered content).
  */
 .fx-scenarios-frame {
   flex: 1;

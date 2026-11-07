@@ -1,6 +1,6 @@
-// What a scenario's proof rows and answer say (examples/frames-explorer/
-// panel/proofText.ts, answerText.ts): each row's status in words, and
-// nothing reads as verified that isn't (Review Focus 1).
+// What a scenario's check rows and answer say (examples/frames-explorer/
+// panel/checkText.ts, answerText.ts): each row's status in words, its kind
+// apart from it, and nothing reads as verified that isn't (Review Focus 1).
 import { describe, expect, it } from "vitest";
 import {
   accuracyLine,
@@ -11,7 +11,11 @@ import {
   formatDelta,
 } from "../examples/frames-explorer/panel/answerText.ts";
 import { movedText } from "../examples/frames-explorer/panel/knobText.ts";
-import { proofRowText } from "../examples/frames-explorer/panel/proofText.ts";
+import {
+  KIND_TEXT,
+  checkRowText,
+} from "../examples/frames-explorer/panel/checkText.ts";
+import { CHECK_KINDS } from "../examples/frames-explorer/scenarios/checks.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
 import type { StressResult } from "../examples/frames-explorer/tests.ts";
 
@@ -25,11 +29,12 @@ const result = (over: Partial<StressResult> = {}): StressResult => ({
   ...over,
 });
 
-describe("a proof row's words", () => {
-  it("says a catalog result with a source is checked against a reference, with its verdict", () => {
-    const t = proofRowText(
+describe("a check row's words", () => {
+  it("says a judged catalog result is checked, with its kind apart from its status", () => {
+    const t = checkRowText(
       {
-        kind: "checked",
+        status: "checked",
+        kind: "published",
         result: result({
           source: {
             document: "Ashby & Patla",
@@ -39,49 +44,79 @@ describe("a proof row's words", () => {
       },
       { "lunar-time.moon-vs-earth.synodic": { label: "Lunar clock gain" } },
     );
-    expect(t.status).toBe("Checked against a reference");
-    expect(t.verdict).toBe("Pass");
+    expect(t.status).toBe("Checked");
+    expect(t.kind).toBe("published");
+    expect(t.tone).toBe("pass");
     expect(t.title).toBe("Lunar clock gain");
     expect(t.summary).toMatch(/within/);
   });
 
-  it("says a catalog round trip that cites nothing is checked by the catalog, not against a reference", () => {
-    const t = proofRowText({ kind: "checked", result: result() }, {});
-    expect(t.status).toBe("Checked by the catalog");
-  });
-
-  it("names a live re-run and a failure plainly", () => {
-    const t = proofRowText(
-      { kind: "live", result: result({ pass: false, value: 1 }) },
+  it("keeps a round trip's kind its own: the tag, not the status, says it", () => {
+    const t = checkRowText(
+      { status: "checked", kind: "roundTrip", result: result() },
       {},
     );
-    expect(t.status).toBe("Live re-run");
-    expect(t.verdict).toBe("Fail");
+    expect(t.status).toBe("Checked");
+    expect(t.kind).toBe("roundTrip");
+  });
+
+  it("names a live re-run's failure plainly", () => {
+    const t = checkRowText(
+      {
+        status: "live",
+        kind: "live",
+        result: result({ pass: false, value: 1 }),
+      },
+      {},
+    );
+    expect(t.status).toBe("Failed");
+    expect(t.kind).toBe("live");
     expect(t.tone).toBe("fail");
     expect(t.summary).toMatch(/beyond/);
   });
 
-  it("gives a reference-only row no verdict, and says how far the setting moves the answer", () => {
-    const t = proofRowText(
+  it("gives a reference-only row no verdict, and says the reference applies at the checked setup and how far the setting moves the answer", () => {
+    const t = checkRowText(
       {
-        kind: "reference-only",
+        status: "reference-only",
+        kind: "published",
         id: "x.y",
         title: "X",
         delta: { value: 0.0123, unit: "µs/day" },
       },
       {},
     );
-    expect(t.status).toBe("Reference applies at the checked setup");
-    expect(t.verdict).toBeUndefined();
+    expect(t.status).toBe("Not judged here");
+    expect(t.tone).toBe("reference");
     expect(t.result).toBeUndefined();
-    expect(t.summary).toBe("your setting moves the answer by +0.01 µs/day");
+    expect(t.summary).toBe(
+      "Reference applies at the checked setup; your setting moves the answer by +0.01 µs/day",
+    );
   });
 
   it("shows a pending row as loading, never a pass (R9)", () => {
-    const t = proofRowText({ kind: "pending", id: "x.y", title: "X" }, {});
+    const t = checkRowText(
+      { status: "pending", kind: "hand", id: "x.y", title: "X" },
+      {},
+    );
     expect(t.status).toBe("Loading");
-    expect(t.verdict).toBeUndefined();
+    expect(t.kind).toBe("hand");
     expect(t.tone).toBe("loading");
+  });
+
+  it("names every kind with a short tag and a legend name, and only measured data says validated", () => {
+    expect(Object.keys(KIND_TEXT).sort()).toEqual([...CHECK_KINDS].sort());
+    expect(CHECK_KINDS.map((k) => KIND_TEXT[k].name)).toEqual([
+      "Published reference",
+      "Measured data",
+      "Hand formula",
+      "Round trip",
+      "Live re-run",
+    ]);
+    for (const k of CHECK_KINDS) {
+      const text = Object.values(KIND_TEXT[k]).join(" ");
+      expect(/\bvalidated\b/i.test(text), k).toBe(k === "measured");
+    }
   });
 });
 
@@ -128,40 +163,50 @@ describe("an answer's text", () => {
 
 describe("a stale evaluation's rows (fix 1, item 1)", () => {
   const checked = {
-    kind: "checked" as const,
+    status: "checked" as const,
+    kind: "published" as const,
     result: result({ source: { document: "x" } as StressResult["source"] }),
   };
   const reference = {
-    kind: "reference-only" as const,
+    status: "reference-only" as const,
+    kind: "published" as const,
     id: "x.y",
     title: "X",
     delta: { value: 1, unit: "°" },
   };
 
   it("withholds every verdict, its colour and the delta while updating", () => {
-    for (const row of [checked, { kind: "live" as const, result: result() }]) {
-      const t = proofRowText(row, {}, "updating");
+    for (const row of [
+      checked,
+      { status: "live" as const, kind: "live" as const, result: result() },
+    ]) {
+      const t = checkRowText(row, {}, "updating");
       expect(t.status).toBe("Updating");
-      expect(t.verdict).toBeUndefined();
+      expect(t.kind).toBe(row.kind);
       expect(t.tone).toBe("stale");
       expect(t.result).toBeUndefined();
     }
-    const r = proofRowText(reference, {}, "updating");
+    const r = checkRowText(reference, {}, "updating");
     expect(r.summary).not.toMatch(/moves the answer/);
+    expect(r.summary).toBe("Reference applies at the checked setup");
     expect(r.status).toBe("Updating");
   });
 
   it("follows the clock in one steady state, its value updated in place, no verdict", () => {
-    const t = proofRowText({ kind: "live", result: result() }, {}, "following");
-    expect(t.status).toBe("Following the clock");
-    expect(t.verdict).toBeUndefined();
+    const t = checkRowText(
+      { status: "live", kind: "live", result: result() },
+      {},
+      "following",
+    );
+    expect(t.status).toBe("Following");
+    expect(t.tone).toBe("stale");
     // The value only: "within" would read as a verdict (fix 2).
     expect(t.summary).not.toMatch(/within|beyond/);
   });
 
   it("keeps a pending row loading whatever the freshness", () => {
-    const t = proofRowText(
-      { kind: "pending", id: "a", title: "A" },
+    const t = checkRowText(
+      { status: "pending", kind: "roundTrip", id: "a", title: "A" },
       {},
       "updating",
     );

@@ -290,8 +290,8 @@ describe("the strip", () => {
     ]);
     expect(SCENES.corridor!.engineering!.overlays).toEqual(["siteGrid"]);
     expect(spec("bim-site").globe).toBe("ellipsoid");
-    expect(spec("corridor").proof).toEqual(["measurement.clothoid"]);
-    expect(spec("bim-site").proof).toEqual(
+    expect(spec("corridor").checks).toEqual(["measurement.clothoid"]);
+    expect(spec("bim-site").checks).toEqual(
       expect.arrayContaining([
         "rigid-placement-budget.site-gap.drop",
         "rigid-placement-budget.site-gap.along",
@@ -366,7 +366,7 @@ describe("looking up from the Earth (Task 6b)", () => {
     expect(moon.drawIn).toBe(SACRAMENTO.name);
     expect(moon.routeEnds?.start.title).toMatch(/MOON_ICRF/);
     expect(spec("moon-from-here").globe).toBe("terrain");
-    expect(spec("moon-from-here").proof).toEqual([
+    expect(spec("moon-from-here").checks).toEqual([
       "space.moon-from-sacramento.range",
       "space.moon-from-sacramento.direction",
       "frame-tree.compositions.itrf-moon-icrf",

@@ -84,18 +84,18 @@ describe("the ten scenarios", () => {
     }
   });
 
-  it("backs its proof with catalog results that exist (ruling S1: non-empty lists only)", () => {
+  it("backs its checks with catalog results that exist (ruling S1: non-empty lists only)", () => {
     // Result ids are the case's id or start with it (`<case>.<part>`). The
     // data test (test/data/framesExplorer.test.ts) checks each against a
     // full run's results.
     const cases = STRESS_CASES.map((c) => c.id);
     let checked = 0;
     for (const s of SCENARIOS) {
-      if (s.proof.length === 0) {
+      if (s.checks.length === 0) {
         continue;
       }
-      expect(new Set(s.proof).size, s.id).toBe(s.proof.length);
-      for (const id of s.proof) {
+      expect(new Set(s.checks).size, s.id).toBe(s.checks.length);
+      for (const id of s.checks) {
         expect(
           cases.some((c) => id === c || id.startsWith(`${c}.`)),
           `${s.id}: ${id}`,
@@ -109,7 +109,7 @@ describe("the ten scenarios", () => {
   it("states what data and globe each needs", () => {
     expect(spec("dish-tracks").needs).toContain("orion");
     expect(spec("one-path").needs).toContain("orion");
-    // GEOID18 is its compound-CRS proof checks' need, not its own (fix 1).
+    // GEOID18 is its compound-CRS checks' need, not its own (fix 1).
     expect(spec("bim-site").needs).toEqual(["proj"]);
     expect(spec("ship").needs).toEqual(
       expect.arrayContaining(["ships", "terrain"]),
@@ -122,7 +122,7 @@ describe("the ten scenarios", () => {
   it("checks DSS-43 at a signal-fixture time, and the BIM site on California zone 3 at the measurement site", () => {
     const dish = spec("dish-tracks");
     expect(dish.checked.knobs.station).toBe("DSS-43");
-    expect(dish.proof).toContain("space.dss43-orion.light-time");
+    expect(dish.checks).toContain("space.dss43-orion.light-time");
     const bim = spec("bim-site");
     expect(bim.checked.knobs).toEqual({
       site: "san-francisco",
@@ -130,7 +130,7 @@ describe("the ten scenarios", () => {
       rotation: 12.5,
       scale: 1.0000375,
     });
-    expect(bim.proof).toContain("measurement.grid-to-ground");
+    expect(bim.checks).toContain("measurement.grid-to-ground");
   });
 });
 

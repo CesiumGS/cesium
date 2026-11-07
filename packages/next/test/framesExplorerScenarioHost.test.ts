@@ -561,7 +561,7 @@ describe("scrubbing the clock (fix 1: the owner's one-path report)", () => {
     expect(h.last().staleBy).toEqual(["time"]);
     // The mid-drag reply comes back. It is the latest asked for, so it
     // shows, but as the time it was made at: stale, never current (before
-    // this round it read as the current answer and proof: the bug).
+    // this round it read as the current answer and checks: the bug).
     h.pending[1]!.resolve(evaluation("one-path", ["mid"], 5));
     await h.settle();
     expect(h.last().evaluation?.answer.value).toBe(5);

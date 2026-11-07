@@ -11,7 +11,7 @@ import type {
   TraceStep,
 } from "../stress/groupInfo.ts";
 import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
-import type { ProofRow } from "../scenarios/proof.ts";
+import type { CheckRow } from "../scenarios/checks.ts";
 import type { PublishedView } from "./answerText.ts";
 import type { SceneLegendRow } from "./legendRows.ts";
 import type { RouteStep } from "./routeSteps.ts";
@@ -202,7 +202,7 @@ export interface UserCrsView {
 /**
  * The scenario on the page (spec "How the page works"): the strip, its
  * question and answer, its knobs against the checked setup, its tree's lit
- * path and its proof (scenarios/proof.ts).
+ * path and its checks (scenarios/checks.ts).
  */
 export interface ScenarioPanelView {
   id: ScenarioId;
@@ -242,7 +242,7 @@ export interface ScenarioPanelView {
   /** The answer's path through the tree: up from its start to the common ancestor, then down. */
   path?: { up: readonly string[]; ancestor: string; down: readonly string[] };
   /** The rows of the shown evaluation's setup; read with `freshness`. */
-  proof: readonly ProofRow[];
+  checks: readonly CheckRow[];
   /** The inline details' extras for the live rows (the catalog's are in `extras`). */
   liveExtras: Readonly<Record<string, ResultExtras>>;
   /** A limit the scenario says plainly (the backdrop Moon). */
@@ -265,7 +265,7 @@ export interface ScenarioPanelView {
   route?: readonly RouteStep[];
   /** The route's two legs' headings, when it meets at the ancestor (stand-on-moon's clocks). */
   routeLegs?: { start: string; end: string };
-  /** The base frames its answer and proof name, kept in the docked diagram's view. */
+  /** The base frames its answer and checks name, kept in the docked diagram's view. */
   focus: readonly string[];
   playing: boolean;
   rate: number;

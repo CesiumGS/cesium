@@ -247,9 +247,9 @@ export function createStage(deps: {
     applyEngineering();
     globe.dimGround(exposure());
     flyToScene();
-    // Its proof at the checked setup: the catalog's checks, run if they
+    // Its checks at the checked setup: the catalog's, run if they
     // aren't in hand (queued after the scenario's own evaluation).
-    queueMicrotask(() => ensureProof(id));
+    queueMicrotask(() => ensureChecks(id));
   }
 
   function update(knobs: KnobState): void {
@@ -321,10 +321,10 @@ export function createStage(deps: {
     deps.refreshCallouts();
   }
 
-  /** The catalog's proof checks for scenario `id`, run if the page doesn't have them. */
-  function ensureProof(id: ScenarioId): void {
+  /** The catalog's checks for scenario `id`, run if the page doesn't have them. */
+  function ensureChecks(id: ScenarioId): void {
     const spec = SCENARIOS.find((s) => s.id === id);
-    const missing = (spec?.proof ?? []).filter(
+    const missing = (spec?.checks ?? []).filter(
       (p) => !deps.catalog.results().some((r) => r.id === p),
     );
     if (!disposed() && missing.length > 0) {

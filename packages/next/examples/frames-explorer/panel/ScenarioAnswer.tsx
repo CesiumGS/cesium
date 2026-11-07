@@ -56,7 +56,6 @@ export const ANSWER_READS = [
   "published",
   "note",
   "terrain",
-  "presets",
 ] as const;
 
 export const ScenarioAnswer = memo(
@@ -64,14 +63,7 @@ export const ScenarioAnswer = memo(
   equalOn("scenario", ANSWER_READS),
 );
 
-function ScenarioAnswerView({
-  scenario,
-  onPreset,
-}: {
-  scenario: ScenarioPanelView;
-  /** Takes the clock to one of the scenario's moments. */
-  onPreset?: (utcMs: number) => void;
-}) {
+function ScenarioAnswerView({ scenario }: { scenario: ScenarioPanelView }) {
   const a = scenario.answer;
   // The last setup's answer, dimmed, while the new one is worked out; while
   // the clock plays it follows in place, not dimmed.
@@ -110,21 +102,6 @@ function ScenarioAnswerView({
           <p className="fx-answer-figure fx-num">{answerTitle(a)}</p>
         )}
         {a.aside && <p className="fx-answer-aside fx-num">{a.aside}</p>}
-        {onPreset && scenario.presets && (
-          <p className="fx-answer-presets">
-            {scenario.presets.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className="fx-checked-chip"
-                onClick={() => onPreset(p.utcMs)}
-                title={`Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </p>
-        )}
         {scenario.terrain?.map((t) => (
           <p
             key={t.id}

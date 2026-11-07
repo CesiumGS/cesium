@@ -38,7 +38,7 @@ export interface ScenarioAnswer {
   /**
    * The headline's published counterpart, where it has one (the owner,
    * fix 1): the value as printed and its citation, read from
-   * references.json; the catalog check `proofId` compares the two at the
+   * references.json; the catalog check `checkId` compares the two at the
    * checked setup, within `tolerance`.
    */
   published?: {
@@ -50,7 +50,7 @@ export interface ScenarioAnswer {
     document: string;
     /** A web link to it, if references.json gives one (a DOI's, first). */
     url?: string;
-    proofId: string;
+    checkId: string;
     /** The catalog's tolerance, in words: "within 2%". */
     tolerance: string;
   };
@@ -166,17 +166,17 @@ export interface ScenarioEvaluation {
   presets?: readonly { id: string; label: string; utcMs: number }[];
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).
-   * None may carry an id of the scenario's `proof` (the host refuses it),
+   * None may carry an id of the scenario's `checks` (the host refuses it),
    * and the host strips any `source`: the published references apply at the
    * checked setup, not here.
    * Off the checked setup they stand in for the catalog's own checks that
    * compare with no published value (round trips, hand formulas): those ran
-   * at the checked setup only, so the proof doesn't show them there.
+   * at the checked setup only, so the checks don't show them there.
    */
   live: readonly StressResult[];
   /**
    * The answer's value at the checked setup, in `answer.unit`: off it, the
-   * proof states how far the setting moves the answer from it.
+   * checks state how far the setting moves the answer from it.
    */
   checkedAnswerValue?: number;
 }

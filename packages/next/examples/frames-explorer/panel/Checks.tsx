@@ -1,12 +1,15 @@
-// The scenario's proof (spec goal 8), a compact list (scenarios/proof.ts's
-// rows). The owner, 2026-11-06: no sheet. Each row is one full-width button
-// with a clear chevron, at least 40 px tall, that expands in place into its
-// details (`aria-expanded`): the computed value and the tolerance, what it
-// is compared against and the reference's source, its accuracy. Each states
-// its status in words beside its colour: Checked against a reference (or by
-// the catalog, for a round trip that cites nothing), Live re-run,
-// Reference applies at the checked setup, or Loading. A result with more to
-// it than fits opens in Verification by one labelled link.
+// The scenario's checks (spec goal 8; "Proof" until Task 6c, which
+// overclaimed), a compact list (scenarios/checks.ts's rows) under a legend
+// of the five kinds. The owner, 2026-11-06: no sheet. Each row is one
+// full-width button, at least 40 px tall, in three columns: its kind's
+// colour-coded tag (what it compares with), its title over one line of
+// detail, and its status as an icon and a word (Checked, Failed, Not judged
+// here, Loading, Updating, Following), then a chevron. Kind and status stay
+// apart: the kind colours are none of the status colours, and neither is
+// colour alone. It expands in place into its details (`aria-expanded`): the
+// computed value and the tolerance, what it is compared against and the
+// reference's source, its accuracy. A result with more to it than fits
+// opens in Verification by one labelled link.
 import { CircularProgress, Link, Typography } from "@mui/material";
 import { svgChevronRight } from "@stratakit/icons/chevron-right";
 import { svgClock } from "@stratakit/icons/clock";
@@ -15,26 +18,63 @@ import { svgStatusError } from "@stratakit/icons/status-error";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { Icon } from "@stratakit/mui";
 import { memo, useCallback, useId, useState } from "react";
-import type { ProofRow } from "../scenarios/proof.ts";
+import {
+  CHECK_KINDS,
+  type CheckKind,
+  type CheckRow,
+} from "../scenarios/checks.ts";
 import type { StressResult } from "../tests.ts";
+import { formatDelta } from "./answerText.ts";
 import { quantity } from "./format.ts";
 import { webLink } from "./Inspector.tsx";
 import type { ResultExtras } from "./model.ts";
 import { AccuracyText } from "./parts.tsx";
-import { proofRowText, type ProofRowText } from "./proofText.ts";
+import { KIND_TEXT, checkRowText, type CheckRowText } from "./checkText.ts";
 
-function StatusIcon({ tone }: { tone: ProofRowText["tone"] }) {
+/** A kind's tag: its short name (the legend's full one) on its colour. */
+export function KindTag({
+  kind,
+  full = false,
+}: {
+  kind: CheckKind;
+  full?: boolean;
+}) {
+  const k = KIND_TEXT[kind];
+  return (
+    <span
+      className={`fx-kind fx-kind-${kind}`}
+      title={`${k.name}: ${k.meaning}`}
+    >
+      {full ? k.name : k.tag}
+    </span>
+  );
+}
+
+/** The five kinds, once, at the top of the section. */
+function KindLegend() {
+  return (
+    <ul className="fx-check-legend" aria-label="Kinds of check">
+      {CHECK_KINDS.map((kind) => (
+        <li key={kind}>
+          <KindTag kind={kind} full />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function StatusIcon({ tone }: { tone: CheckRowText["tone"] }) {
   switch (tone) {
     case "pass":
-      return <Icon href={svgStatusSuccess} className="fx-proof-icon" />;
+      return <Icon href={svgStatusSuccess} className="fx-check-icon" />;
     case "fail":
-      return <Icon href={svgStatusError} className="fx-proof-icon" />;
+      return <Icon href={svgStatusError} className="fx-check-icon" />;
     case "reference":
-      return <Icon href={svgInfo} className="fx-proof-icon" />;
+      return <Icon href={svgInfo} className="fx-check-icon" />;
     case "loading":
-      return <CircularProgress size={14} className="fx-proof-icon" />;
+      return <CircularProgress size={14} className="fx-check-icon" />;
     case "stale":
-      return <Icon href={svgClock} className="fx-proof-icon" />;
+      return <Icon href={svgClock} className="fx-check-icon" />;
   }
 }
 
@@ -46,7 +86,7 @@ function Detail({
   children: React.ReactNode;
 }) {
   return (
-    <div className="fx-proof-detail">
+    <div className="fx-check-detail">
       <dt>{label}</dt>
       <dd>{children}</dd>
     </div>
@@ -67,10 +107,10 @@ function ResultDetails({
   const link = webLink(extras?.source?.url);
   return (
     <>
-      <Typography variant="body-sm" render={<p />} className="fx-proof-title">
+      <Typography variant="body-sm" render={<p />} className="fx-check-title">
         {result.title}
       </Typography>
-      <dl className="fx-proof-details">
+      <dl className="fx-check-details">
         {result.value !== undefined && (
           <Detail
             label={result.tolerance !== undefined ? "Difference" : "Value"}
@@ -139,7 +179,7 @@ function ResultDetails({
         <Link
           component="button"
           type="button"
-          className="fx-proof-open"
+          className="fx-check-open"
           onClick={onOpen}
         >
           Open in Verification
@@ -150,17 +190,17 @@ function ResultDetails({
 }
 
 /** A row's head: what a collapsed row shows. */
-const sameHead = (a: ProofRowText, b: ProofRowText): boolean =>
+const sameHead = (a: CheckRowText, b: CheckRowText): boolean =>
   a.key === b.key &&
+  a.kind === b.kind &&
   a.tone === b.tone &&
   a.title === b.title &&
-  a.verdict === b.verdict &&
   a.status === b.status &&
   a.summary === b.summary;
 
-interface ProofItemProps {
-  row: ProofRow;
-  t: ProofRowText;
+interface CheckItemProps {
+  row: CheckRow;
+  t: CheckRowText;
   expanded: boolean;
   region: string;
   onToggle: (key: string) => void;
@@ -176,8 +216,8 @@ interface ProofItemProps {
  * a row renders again only when its text changed, or, expanded, when what
  * its details show did (Task 4d).
  */
-export const ProofItem = memo(
-  function ProofItem({
+export const CheckItem = memo(
+  function CheckItem({
     row,
     t,
     expanded,
@@ -188,38 +228,36 @@ export const ProofItem = memo(
     atChecked,
     onOpenResult,
     onBack,
-  }: ProofItemProps) {
+  }: CheckItemProps) {
     return (
-      <li className={`fx-proof-row fx-tone-${t.tone}`}>
+      <li className={`fx-check-row fx-tone-${t.tone}`}>
         <button
           type="button"
-          className="fx-proof-head"
+          className="fx-check-head"
           aria-expanded={expanded}
           aria-controls={region}
           onClick={() => onToggle(t.key)}
         >
+          <KindTag kind={t.kind} />
+          <span className="fx-check-text">
+            <span className="fx-check-name">{t.title}</span>
+            <span className="fx-check-summary fx-num">{t.summary}</span>
+          </span>
+          <span className="fx-check-status">
+            <StatusIcon tone={t.tone} />
+            <span className="fx-check-status-word">{t.status}</span>
+          </span>
           <Icon
             href={svgChevronRight}
-            className={`fx-proof-chevron${expanded ? " fx-open" : ""}`}
+            className={`fx-check-chevron${expanded ? " fx-open" : ""}`}
           />
-          <StatusIcon tone={t.tone} />
-          <span className="fx-proof-text">
-            <span className="fx-proof-name">{t.title}</span>
-            <span className="fx-proof-status">
-              <span className="fx-proof-status-word">
-                {t.verdict ? `${t.verdict} · ` : ""}
-                {t.status}
-              </span>
-              <span className="fx-proof-summary fx-num">{t.summary}</span>
-            </span>
-          </span>
         </button>
-        <div id={region} className="fx-proof-body" hidden={!expanded}>
-          {expanded && row.kind === "checked" && row.note !== undefined && (
+        <div id={region} className="fx-check-body" hidden={!expanded}>
+          {expanded && row.status === "checked" && row.note !== undefined && (
             <Typography
               variant="body-sm"
               render={<p />}
-              className="fx-proof-note"
+              className="fx-check-note"
             >
               {row.note}
             </Typography>
@@ -229,9 +267,9 @@ export const ProofItem = memo(
               <ResultDetails
                 result={t.result}
                 extras={extras}
-                live={row.kind === "live"}
+                live={row.status === "live"}
                 onOpen={
-                  row.kind === "checked" && freshness === "current"
+                  row.status === "checked" && freshness === "current"
                     ? () => onOpenResult(t.result!.id)
                     : undefined
                 }
@@ -241,18 +279,18 @@ export const ProofItem = memo(
                 Re-running at your setting: its verdict shows here when
                 it&rsquo;s in, and nothing is claimed until then.
               </Typography>
-            ) : row.kind === "reference-only" ? (
+            ) : row.status === "reference-only" ? (
               <>
                 <Typography variant="body-sm" render={<p />}>
-                  Its published reference applies at the checked setup, not at
-                  yours, so it isn&rsquo;t judged here.{" "}
-                  {t.summary.charAt(0).toUpperCase()}
-                  {t.summary.slice(1)}.
+                  Its reference applies at the checked setup, not at yours, so
+                  it isn&rsquo;t judged here.
+                  {row.delta &&
+                    ` Your setting moves the answer by ${formatDelta(row.delta.value, row.delta.unit)}.`}
                 </Typography>
                 <Link
                   component="button"
                   type="button"
-                  className="fx-proof-open"
+                  className="fx-check-open"
                   onClick={onBack}
                 >
                   Back to the checked setup
@@ -283,7 +321,7 @@ export const ProofItem = memo(
         a.onBack === b.onBack)),
 );
 
-export const Proof = memo(function Proof({
+export const Checks = memo(function Checks({
   rows,
   extras,
   atChecked,
@@ -292,10 +330,10 @@ export const Proof = memo(function Proof({
   onOpenResult,
   onBack,
 }: {
-  rows: readonly ProofRow[];
+  rows: readonly CheckRow[];
   freshness: "current" | "updating" | "following";
   /** The headline's published counterpart: its row says ours against it. */
-  published?: { proofId: string; printed: string; unit: string } | undefined;
+  published?: { checkId: string; printed: string; unit: string } | undefined;
   extras: Readonly<Record<string, ResultExtras>>;
   atChecked: boolean;
   onOpenResult: (id: string) => void;
@@ -326,25 +364,28 @@ export const Proof = memo(function Proof({
     );
   }
   return (
-    <ul className="fx-proof">
-      {rows.map((row) => {
-        const t = proofRowText(row, extras, freshness, published);
-        return (
-          <ProofItem
-            key={t.key}
-            row={row}
-            t={t}
-            expanded={open.has(t.key)}
-            region={`${uid}-${t.key}`}
-            onToggle={toggle}
-            extras={t.result ? extras[t.result.id] : undefined}
-            freshness={freshness}
-            atChecked={atChecked}
-            onOpenResult={onOpenResult}
-            onBack={onBack}
-          />
-        );
-      })}
-    </ul>
+    <>
+      <KindLegend />
+      <ul className="fx-checks">
+        {rows.map((row) => {
+          const t = checkRowText(row, extras, freshness, published);
+          return (
+            <CheckItem
+              key={t.key}
+              row={row}
+              t={t}
+              expanded={open.has(t.key)}
+              region={`${uid}-${t.key}`}
+              onToggle={toggle}
+              extras={t.result ? extras[t.result.id] : undefined}
+              freshness={freshness}
+              atChecked={atChecked}
+              onOpenResult={onOpenResult}
+              onBack={onBack}
+            />
+          );
+        })}
+      </ul>
+    </>
   );
 });

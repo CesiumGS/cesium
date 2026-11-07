@@ -1,12 +1,14 @@
 // A scenario's description: its question, its knobs (three or four at most,
 // on the frames it adds: knobs, not an editor) and its checked setup, the
 // knob values and epoch where its published references apply (R10). At the
-// checked setup its proof is the catalog's judged results; off it, the
-// proof says the reference applies at the checked setup and re-runs live.
+// checked setup its checks are the catalog's judged results; off it, they
+// say the reference applies at the checked setup, and re-run live.
 //
 // Knob values from a deep link are untrusted: `clampKnobs` keeps valid ones,
 // clamps a range's, and falls back to the checked value for anything else,
 // never throwing (Review Focus 4).
+
+import type { CheckKind } from "./checks.ts";
 
 export type ScenarioId =
   | "earth-turns"
@@ -56,15 +58,21 @@ export interface ScenarioSpec {
   needs: readonly ("proj" | "geoid" | "orion" | "terrain" | "ships")[];
   globe: "ellipsoid" | "terrain";
   /** The stress catalog's result ids that back it at the checked setup. */
-  proof: readonly string[];
+  checks: readonly string[];
   /**
    * What applies at the checked setup, in words: "published references"
    * (the default), or "hand formulas and round trips" for a scenario whose
-   * proof cites no published value (fix 1: the BIM site, the corridor).
+   * checks cite no published value (fix 1: the BIM site, the corridor).
    */
   checkedBy?: string;
-  /** A word on a proof row, by its id: how far the check carries to the scenario. */
-  proofNotes?: Readonly<Record<string, string>>;
+  /** A word on a check row, by its id: how far the check carries to the scenario. */
+  checkNotes?: Readonly<Record<string, string>>;
+  /**
+   * A check's kind, by its id, where it can't be derived from its result
+   * (scenarios/checks.ts `checkKind`): a hand formula that cites the kernel
+   * its inputs come from, say.
+   */
+  checkKinds?: Readonly<Record<string, CheckKind>>;
 }
 
 /**

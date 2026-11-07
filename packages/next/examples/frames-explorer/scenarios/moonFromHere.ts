@@ -10,7 +10,7 @@
 // GCRF down to the site. The page traces the line of sight over the drawn
 // terrain for the local horizon (sightLines.ts).
 //
-// At the checked setup, the proof is the catalog's comparison with Horizons
+// At the checked setup, its checks are the catalog's comparison with Horizons
 // (space.moon-from-sacramento: the astrometric direction and the range) and
 // the tree's ITRF–MOON_ICRF compositions. Off it, the compositions re-run
 // live at the scenario's time, and the pointing is worked out by hand from
@@ -45,7 +45,7 @@ import { SCENARIOS } from "./specs.ts";
 
 const SPEC = SCENARIOS.find((s) => s.id === "moon-from-here")!;
 
-/** The proof check the compositions stand in for off the checked setup. */
+/** The catalog check the compositions stand in for off the checked setup. */
 const COMPOSITIONS = "frame-tree.compositions.itrf-moon-icrf";
 
 /** The hand pointing against `measure`'s apparent direction, radians. */
@@ -76,7 +76,7 @@ function horizons(): NonNullable<ScenarioAnswer["published"]> {
     printed: `${entry.deltaAu} au (${km.toLocaleString("en-US", { maximumFractionDigits: 3 })} km), the light-time range at 2026-06-21 06:00 UTC`,
     document: entry.source.document,
     ...(entry.source.url !== undefined && { url: entry.source.url }),
-    proofId: "space.moon-from-sacramento.range",
+    checkId: "space.moon-from-sacramento.range",
     tolerance: `within ${MOON_RANGE} m`,
   };
 }

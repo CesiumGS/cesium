@@ -14,8 +14,8 @@
 // EARTH_ICRF, by the frame bias), then down through GCRF and the turning
 // Earth to the dish.
 //
-// At the checked setup (DSS-43 at signal.json's "spread" row) the proof is
-// the catalog's check against plan 3's SPICE fixture (light time and
+// At the checked setup (DSS-43 at signal.json's "spread" row) its checks
+// are the catalog's against plan 3's SPICE fixture (light time and
 // Doppler). Off it, the pointing is worked out by hand from the tree's own
 // vectors (R11), and the line of sight by hand limb geometry.
 import { framePoint, eastNorthUpFrame } from "../../../src/frames/local.ts";

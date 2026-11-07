@@ -26,7 +26,7 @@ const PUB: NonNullable<ScenarioAnswer["published"]> = {
   unit: "µs/day",
   printed: "56.02 µs/day",
   document: "A paper",
-  proofId: "space.lunar-time",
+  checkId: "space.lunar-time",
   tolerance: "within 2%",
 };
 
@@ -56,9 +56,9 @@ describe("scenarioFreshness", () => {
 describe("publishedView", () => {
   const checked = new Map([
     [
-      PUB.proofId,
+      PUB.checkId,
       result({
-        id: PUB.proofId,
+        id: PUB.checkId,
         pass: true,
         value: 0.01,
         unit: "µs/day",
@@ -93,8 +93,8 @@ describe("publishedView", () => {
   it("is off, never checked, away from the checked setup", () => {
     const v = publishedView(PUB, checked, false, "current", [
       {
-        kind: "reference-only",
-        id: PUB.proofId,
+        status: "reference-only",
+        id: PUB.checkId,
         delta: "your setting moves the answer by 1%",
       } as never,
     ]);
@@ -130,7 +130,7 @@ describe("scenarioView", () => {
     expect(v.strip.map((s) => s.id)).toEqual([...READY]);
     expect(v.freshness).toBe("current");
     expect(v.problem?.message).toBe("token [redacted] refused");
-    expect(v.proof).toHaveLength(spec.proof.length);
+    expect(v.checks).toHaveLength(spec.checks.length);
     expect(v).not.toHaveProperty("published");
     expect(v).not.toHaveProperty("route");
   });

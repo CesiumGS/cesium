@@ -5,7 +5,7 @@
 // own frame tree and Orion's track (orionTrack.ts), as Orion's dot is
 // (Task 4c): never from a worker reply, which comes on the evaluation's
 // cadence and made them step. The worker's evaluation keeps the answer,
-// its accuracy and its proof, which may trail the clock ("following").
+// its accuracy and its checks, which may trail the clock ("following").
 //
 // Each line is drawn once, a unit segment up a local z axis in 200 pieces
 // (so a blocked line can be dashed), under a placement moved every frame

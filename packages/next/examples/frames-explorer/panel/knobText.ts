@@ -1,5 +1,5 @@
 // A knob's value and what moved off the checked setup, in words (pure,
-// test/framesExplorerProofText.test.ts).
+// test/framesExplorerCheckText.test.ts).
 import type { KnobSpec, KnobValue } from "../scenarios/spec.ts";
 
 /** The digits after the point a step needs: 0 for 1, 1 for 0.5, 7 for 0.0000005. */

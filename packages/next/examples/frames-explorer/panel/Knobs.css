@@ -1,28 +1,39 @@
-/* The knobs, the checked-setup marker and the time (Knobs.tsx). Imported in order by panel.css. */
-/* The knobs, the checked-setup marker and the time. */
+/* The knobs, the checked-setup chip and the moments (Knobs.tsx). Imported in order by panel.css. */
+/*
+ * Under the question (Task 6c): a head with the chip, a labelled row per
+ * knob, then "Jump to". Each row's label sits in a column of one width, so
+ * the controls line up; at narrow widths a control wraps under its label.
+ */
 .fx-knobs {
+  --fx-knob-label: 7.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--stratakit-space-400);
+  gap: var(--stratakit-space-300);
 }
-.fx-checked-marker {
-  display: flex;
-  flex-wrap: wrap;
+.fx-knobs-head {
   align-items: center;
-  gap: var(--stratakit-space-150) var(--stratakit-space-200);
-  padding: var(--stratakit-space-200) var(--stratakit-space-300);
-  border-radius: var(--stratakit-radius-md);
-  background: var(--stratakit-color-bg-page-depth);
 }
-.fx-checked-marker > :nth-child(2) {
-  flex: 1 1 12em;
+/* The checked-setup chip: a status, not a button. */
+.fx-checked-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  min-block-size: 24px;
+  padding: 2px var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-round);
+  border: 1px solid var(--stratakit-color-border-positive-muted);
+  color: var(--stratakit-color-text-positive-base);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 600;
+  white-space: nowrap;
 }
-.fx-checked-marker .MuiSvgIcon-root,
-.fx-checked-marker > svg {
+.fx-checked-chip > svg {
   color: var(--stratakit-color-icon-positive-base);
 }
-.fx-off-checked {
-  box-shadow: inset 2px 0 0 var(--stratakit-color-border-attention-base);
+.fx-off-checked-chip {
+  border-color: var(--stratakit-color-border-attention-base);
+  color: var(--stratakit-color-text-attention-base);
 }
 .fx-marker-dot {
   flex: none;
@@ -31,26 +42,47 @@
   border-radius: var(--stratakit-radius-round);
   background: var(--stratakit-color-text-attention-base);
 }
+/* What moved off the checked setup, under the head. */
+.fx-moved {
+  margin-block-start: calc(-1 * var(--stratakit-space-150));
+  padding-inline-start: var(--stratakit-space-200);
+  box-shadow: inset 2px 0 0 var(--stratakit-color-border-attention-base);
+}
 .fx-knob {
   display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-100);
-}
-.fx-knob-head {
-  display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
-  gap: var(--stratakit-space-200);
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
 }
 .fx-knob-label {
-  font-weight: 600;
+  flex: 0 0 var(--fx-knob-label);
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-knob-control {
+  flex: 1 1 13rem;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-100);
+}
+/* A range: its slider, then its value. */
+.fx-knob-range {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.fx-knob-range .MuiSlider-root {
+  flex: 1;
+  margin-inline: var(--stratakit-space-200);
 }
 .fx-knob-value {
-  font-size: var(--stratakit-font-size-body-md);
-}
-.fx-knob .MuiSlider-root {
-  margin-inline: var(--stratakit-space-200);
-  inline-size: calc(100% - 2 * var(--stratakit-space-200));
+  flex: none;
+  min-inline-size: 4.5em;
+  text-align: end;
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
 }
 .fx-knob .MuiSlider-markLabel {
   font-size: var(--stratakit-font-size-caption-md);
@@ -58,4 +90,20 @@
 }
 .fx-knob-choice {
   flex-wrap: wrap;
+}
+.fx-knob-help {
+  margin: 0;
+}
+/* "Jump to": the moments as buttons, then Back, quieter. */
+.fx-jump {
+  align-items: center;
+}
+.fx-jump-buttons {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+}
+.fx-back-button:not(:disabled) {
+  color: var(--stratakit-color-text-neutral-secondary);
 }

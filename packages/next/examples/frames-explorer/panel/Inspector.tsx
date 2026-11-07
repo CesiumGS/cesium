@@ -1,5 +1,5 @@
 // The inspector (R14 level 4, R16's computation trace): one result, glance to
-// proof. Measured against expected, what it's compared against, the trace
+// evidence. Measured against expected, what it's compared against, the trace
 // from input to output, the accuracy, the source, the fingerprint, and
 // actions; Previous and Next step through its card (I4).
 import { Button, IconButton, Link, Typography } from "@mui/material";

@@ -92,7 +92,7 @@ export interface PublishedView {
   ours?: number;
   difference?: { value: number; unit?: string };
   pass?: boolean;
-  /** Off it: how far the setting moves the answer (the proof's delta). */
+  /** Off it: how far the setting moves the answer (the checks' delta). */
   delta?: { value: number; unit: string };
 }
 

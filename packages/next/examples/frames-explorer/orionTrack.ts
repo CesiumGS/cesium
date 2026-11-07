@@ -1,7 +1,7 @@
 // Orion's trajectory, where its position is used (Task 4c, the owner's
 // "why is there a worker between where the position is produced and where
 // it's consumed?"). The worker builds the heavy things from the OEM (the
-// path's mesh, the accuracy statement and its terms, the proof); the page
+// path's mesh, the accuracy statement and its terms, the checks); the page
 // loads the same OEM once and places Orion's dot itself, every frame, at the
 // instant the globe shows: an interpolation and a few transforms, a few
 // microseconds, with no round trip to wait for. The worker's catalog uses

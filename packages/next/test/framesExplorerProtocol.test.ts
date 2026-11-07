@@ -703,8 +703,8 @@ describe("scenario", () => {
     expect("source" in got.live[0]!).toBe(false);
   });
 
-  it("refuses a live check under one of the scenario's proof ids, naming it", async () => {
-    // earth-turns's proof: its catalog check against the published reference.
+  it("refuses a live check under one of the scenario's catalog check ids, naming it", async () => {
+    // earth-turns's checks: its catalog check against the published reference.
     stubScenario("earth-turns", async () =>
       evaluation([
         {
@@ -717,7 +717,7 @@ describe("scenario", () => {
     await expect(
       client.scenario("earth-turns", { rate: 3600 }, 0),
     ).rejects.toThrow(
-      /earth-turns.*"frame-tree\.compositions\.itrf-gcrf".*proof/,
+      /earth-turns.*"frame-tree\.compositions\.itrf-gcrf".*catalog checks/,
     );
   });
 

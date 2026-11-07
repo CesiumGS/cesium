@@ -1,8 +1,8 @@
 // The frames explorer's scenarios (examples/frames-explorer/scenarios/) on
 // the frames data store, through the worker's host as the page asks for
 // them: each answers with its accuracy, agrees with the catalog at its
-// checked setup, and off it re-runs live what its proof can't claim there
-// (P3: `live` covers the non-reference proof ids, and never takes a proof
+// checked setup, and off it re-runs live what its checks can't claim there
+// (P3: `live` covers the non-reference check ids, and never takes a check
 // id, which the host would refuse).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -38,7 +38,11 @@ import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { EARTH } from "../../src/scene/Body.ts";
 import { routeSteps } from "../../examples/frames-explorer/panel/routeSteps.ts";
 import references from "../../examples/frames-explorer/references.json";
-import { proofRows } from "../../examples/frames-explorer/scenarios/proof.ts";
+import {
+  checkKind,
+  checkRows,
+} from "../../examples/frames-explorer/scenarios/checks.ts";
+import { extrasOf } from "../../examples/frames-explorer/panelModel.ts";
 import {
   checkedState,
   type KnobState,
@@ -203,7 +207,7 @@ const PORTED: readonly ScenarioId[] = [
 
 const catalog = new Map<string, StressResult>();
 beforeAll(async () => {
-  const ids = PORTED.flatMap((id) => spec(id).proof);
+  const ids = PORTED.flatMap((id) => spec(id).checks);
   for (const r of await runStress(context(), { ids })) {
     catalog.set(r.id, r);
   }
@@ -234,17 +238,35 @@ describe("the ported scenarios through the worker's host", () => {
         }
         const path = branchPath(tree, e.answer.path!.from, e.answer.path!.to);
         expect(path.up.length + path.down.length).toBeGreaterThan(0);
-        // At the checked setup, every proof row is the catalog's, passing.
-        const rows = proofRows(spec(id), true, catalog, e);
-        expect(rows.map((r) => r.kind)).toEqual(
-          spec(id).proof.map(() => "checked"),
+        // At the checked setup, every check row is the catalog's, passing.
+        const rows = checkRows(spec(id), true, catalog, e);
+        expect(rows.map((r) => r.status)).toEqual(
+          spec(id).checks.map(() => "checked"),
         );
         for (const r of rows) {
-          expect(r.kind === "checked" && r.result.pass, id).toBe(true);
+          expect(r.status === "checked" && r.result.pass, id).toBe(true);
+          // Task 6c: its kind with its result is the kind it showed while
+          // loading, so a row never changes kind as its result comes in;
+          // and only measured data says "validated".
+          if (r.status === "checked") {
+            expect(r.kind, r.result.id).toBe(checkKind(spec(id), r.result.id));
+            const x = extrasOf(r.result);
+            const text = [
+              r.result.title,
+              r.result.detail,
+              r.result.accuracyNote,
+              r.note,
+              x.label,
+              x.compared?.text,
+            ].join(" ");
+            if (r.kind !== "measured") {
+              expect(/\bvalidated\b/i.test(text), r.result.id).toBe(false);
+            }
+          }
         }
       }, 60_000);
 
-      it("off its checked setup: live covers every proof id the catalog checks without a reference, takes none, and passes", async () => {
+      it("off its checked setup: live covers every check id the catalog checks without a reference, takes none, and passes", async () => {
         const off = OFF[id]!;
         const e = await client.scenario(
           id,
@@ -252,13 +274,13 @@ describe("the ported scenarios through the worker's host", () => {
           checkedTdb(id) + off.hours * 3600,
         );
         const live = new Set(e.live.map((r) => r.id));
-        const proof = new Set(spec(id).proof);
+        const checks = new Set(spec(id).checks);
         for (const r of e.live) {
-          expect(proof.has(r.id), r.id).toBe(false);
+          expect(checks.has(r.id), r.id).toBe(false);
           expect(r.pass, `${r.id}: ${r.detail}`).toBe(true);
           expect(r.source, r.id).toBeUndefined();
         }
-        for (const p of spec(id).proof) {
+        for (const p of spec(id).checks) {
           const result = catalog.get(p);
           expect(result, p).toBeDefined();
           if (result!.source === undefined) {
@@ -275,9 +297,9 @@ describe("the ported scenarios through the worker's host", () => {
           }
         }
         // Off it, nothing reads as verified: reference rows carry no pass.
-        const rows = proofRows(spec(id), false, catalog, e);
-        expect(rows.some((r) => r.kind === "checked")).toBe(false);
-        expect(rows.filter((r) => r.kind === "live")).toHaveLength(
+        const rows = checkRows(spec(id), false, catalog, e);
+        expect(rows.some((r) => r.status === "checked")).toBe(false);
+        expect(rows.filter((r) => r.status === "live")).toHaveLength(
           e.live.length,
         );
         expect(e.answer.value).not.toBe(e.checkedAnswerValue);
@@ -572,7 +594,7 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
     expect(pub.printed).toBe(entry.rate.replace("μs", "µs"));
     expect(pub.document).toBe(entry.source.document);
     expect(pub.url).toMatch(/^https:\/\/doi\.org\//);
-    const r = catalog.get(pub.proofId)!;
+    const r = catalog.get(pub.checkId)!;
     const t = publishedText({
       printed: pub.printed,
       document: pub.document,
@@ -592,19 +614,20 @@ describe("the published counterpart under stand-on-moon's headline (the owner, f
   it("off it: the reference's value and the delta, and no verdict", async () => {
     const s = spec("stand-on-moon");
     const e = await client.scenario(s.id, { latitude: -45 }, checkedTdb(s.id));
-    const rows = proofRows(s, false, catalog, e);
+    const rows = checkRows(s, false, catalog, e);
     const ref = rows.find(
       (row) =>
-        row.kind === "reference-only" && row.id === e.answer.published!.proofId,
+        row.status === "reference-only" &&
+        row.id === e.answer.published!.checkId,
     );
-    expect(ref?.kind === "reference-only" && ref.delta).toBeTruthy();
+    expect(ref?.status === "reference-only" && ref.delta).toBeTruthy();
     const t = publishedText({
       printed: e.answer.published!.printed,
       document: e.answer.published!.document,
       tolerance: e.answer.published!.tolerance,
       unit: e.answer.published!.unit,
       state: "off",
-      delta: ref?.kind === "reference-only" ? ref.delta! : undefined,
+      delta: ref?.status === "reference-only" ? ref.delta! : undefined,
     });
     expect(t.published).toContain("56.02 µs/day");
     expect(t.comparison).toMatch(/your setting moves the answer by [+−]/);
@@ -1121,7 +1144,7 @@ describe("where's the Moon from here (Task 6b)", () => {
       `moon-from-here: ${e.answer.value} km, Horizons ${delta} km; ${e.answer.label}`,
     );
     expect(Math.abs(e.answer.value! - delta) * 1000).toBeLessThan(MOON_RANGE);
-    expect(e.answer.published?.proofId).toBe(
+    expect(e.answer.published?.checkId).toBe(
       "space.moon-from-sacramento.range",
     );
     expect(e.answer.label).toContain(
@@ -1145,8 +1168,8 @@ describe("where's the Moon from here (Task 6b)", () => {
     expect(h!.detail).toMatch(
       /still 0\.2\d\d″ apart: polar motion accounts for only part of it, and the rest is unexplained/,
     );
-    // Never proof: the scenario's rows leave it out.
-    expect(moon.proof).not.toContain("space.moon-from-sacramento.horizon");
+    // Never a check: the scenario's rows leave it out.
+    expect(moon.checks).not.toContain("space.moon-from-sacramento.horizon");
   }, 60_000);
 
   it("works the pointing by hand from the tree's vectors (R11) at any time, and the site's frame is Sacramento's", async () => {

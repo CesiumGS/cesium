@@ -1,8 +1,12 @@
 // The scenario's knobs (spec goal 6: knobs, not an editor): three or four at
-// most, on the frames it added, and its time. A marker says whether the
-// setting is the checked setup, where the published references apply, or
-// what moved off it; "Back to the checked setup" returns there (goal 8).
-// Each range knob's checked value is marked on its track.
+// most, on the frames it added, and its time. Task 6c moved them up, under
+// the question (owner: "the knobs are hard to find"), in the approved
+// mockup's shape: a head with "Knobs" and the checked-setup chip, which says
+// whether the setting is the checked setup, where the references apply;
+// one labelled row per knob; then "Jump to": the scenario's moments ("Behind
+// the Moon") as buttons, and "Back to the checked setup" (goal 8). Off the
+// checked setup a line under the head says what moved. Each range knob's
+// checked value is marked on its track.
 import {
   Button,
   Slider,
@@ -10,7 +14,9 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
+import { svgMoon } from "@stratakit/icons/moon";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
+import { svgTimeline } from "@stratakit/icons/timeline";
 import { svgUndo } from "@stratakit/icons/undo";
 import { Icon } from "@stratakit/mui";
 import { memo, useId } from "react";
@@ -44,24 +50,24 @@ function RangeKnob({
   };
   return (
     <div className="fx-knob">
-      <div className="fx-knob-head">
-        <span id={id} className="fx-knob-label">
-          {knob.label}
-        </span>
+      <span id={id} className="fx-knob-label">
+        {knob.label}
+      </span>
+      <div className="fx-knob-control fx-knob-range">
+        <Slider
+          size="small"
+          min={to(knob.min ?? 0)}
+          max={to(knob.max ?? 1)}
+          step={log ? 0.01 : (knob.step ?? 1)}
+          value={to(value)}
+          // The checked value's tick; the chip above says it in words.
+          marks={[{ value: to(checked) }]}
+          aria-labelledby={id}
+          getAriaValueText={(t) => knobText(knob, from(t))}
+          onChange={(_, t) => onChange(from(t as number))}
+        />
         <span className="fx-knob-value fx-num">{knobText(knob, value)}</span>
       </div>
-      <Slider
-        size="small"
-        min={to(knob.min ?? 0)}
-        max={to(knob.max ?? 1)}
-        step={log ? 0.01 : (knob.step ?? 1)}
-        value={to(value)}
-        // The checked value's tick; the marker above says it in words.
-        marks={[{ value: to(checked) }]}
-        aria-labelledby={id}
-        getAriaValueText={(t) => knobText(knob, from(t))}
-        onChange={(_, t) => onChange(from(t as number))}
-      />
     </div>
   );
 }
@@ -84,39 +90,41 @@ function ChoiceKnob({
       <span id={id} className="fx-knob-label">
         {knob.label}
       </span>
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        value={value}
-        aria-labelledby={id}
-        className="fx-knob-choice"
-        onChange={(_, v: string | null) => v !== null && onChange(v)}
-      >
-        {options.map((o) => (
-          <ToggleButton
-            key={o.value}
-            value={o.value}
-            title={o.label}
-            render={<Button variant="outlined" />}
-          >
-            {o.short ?? o.value}
-            {o.value === checked && (
-              <span className="fx-visually-hidden"> (checked setup)</span>
-            )}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
-      <Typography
-        variant="caption-lg"
-        color="textSecondary"
-        render={<p />}
-        className="fx-knob-help"
-      >
-        {options.find((o) => o.value === value)?.label}
-        {value === checked
-          ? ""
-          : `; checked in ${options.find((o) => o.value === checked)?.short ?? checked}`}
-      </Typography>
+      <div className="fx-knob-control">
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={value}
+          aria-labelledby={id}
+          className="fx-knob-choice"
+          onChange={(_, v: string | null) => v !== null && onChange(v)}
+        >
+          {options.map((o) => (
+            <ToggleButton
+              key={o.value}
+              value={o.value}
+              title={o.label}
+              render={<Button variant="outlined" />}
+            >
+              {o.short ?? o.value}
+              {o.value === checked && (
+                <span className="fx-visually-hidden"> (checked setup)</span>
+              )}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <Typography
+          variant="caption-lg"
+          color="textSecondary"
+          render={<p />}
+          className="fx-knob-help"
+        >
+          {options.find((o) => o.value === value)?.label}
+          {value === checked
+            ? ""
+            : `; checked in ${options.find((o) => o.value === checked)?.short ?? checked}`}
+        </Typography>
+      </div>
     </div>
   );
 }
@@ -147,61 +155,72 @@ export const KNOBS_READS = [
   "checked",
   "checkedEpochUtc",
   "eop",
+  "presets",
 ] as const;
 
 export const Knobs = memo(KnobsView, equalOn("scenario", KNOBS_READS));
 
+/** A moment's icon: the Moon for one behind it, else the timeline. */
+const momentIcon = (id: string) =>
+  id.includes("moon") ? svgMoon : svgTimeline;
+
 function KnobsView({
   scenario,
+  headingId,
   onKnob,
   onBack,
+  onMoment,
 }: {
   scenario: ScenarioPanelView;
+  /** The section's heading id (its `aria-labelledby`). */
+  headingId: string;
   onKnob: (id: string, value: KnobValue) => void;
   onBack: () => void;
+  /** Takes the clock to one of the scenario's moments, paused. */
+  onMoment: (utcMs: number) => void;
 }) {
   const s = scenario;
   const timeMoved = s.changed.includes("time");
   const eop = s.eop;
+  const jumpId = useId();
   return (
     <div className="fx-knobs">
-      <div
-        className={`fx-checked-marker${s.atChecked ? "" : " fx-off-checked"}`}
-        role="status"
-      >
-        {s.atChecked ? (
-          <>
-            <Icon href={svgStatusSuccess} aria-hidden />
-            <span>
-              <span className="fx-strong">At the checked setup.</span> The{" "}
-              {s.checkedBy} apply here.
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="fx-marker-dot" aria-hidden />
-            <span>
-              <span className="fx-strong">Off the checked setup:</span>{" "}
-              {timeMoved ? (
-                <MovedWithTime s={s} />
-              ) : (
-                movedText(movedFrom(s, s.checkedEpochUtc))
-              )}
-              . The proof re-runs here.
-            </span>
-          </>
-        )}
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<Icon href={svgUndo} />}
-          disabled={s.atChecked}
-          onClick={onBack}
-          className="fx-back-button"
+      <div className="fx-section-head fx-knobs-head">
+        <Typography variant="subtitle-md" render={<h2 id={headingId} />}>
+          Knobs
+        </Typography>
+        <span
+          className={`fx-checked-chip${s.atChecked ? "" : " fx-off-checked-chip"}`}
+          role="status"
+          title={
+            s.atChecked
+              ? `The ${s.checkedBy} apply here`
+              : `The ${s.checkedBy} apply at the checked setup`
+          }
         >
-          Back to the checked setup
-        </Button>
+          {s.atChecked ? (
+            <Icon href={svgStatusSuccess} aria-hidden />
+          ) : (
+            <span className="fx-marker-dot" aria-hidden />
+          )}
+          {s.atChecked ? "At the checked setup" : "Off the checked setup"}
+        </span>
       </div>
+      {!s.atChecked && (
+        <Typography
+          variant="caption-lg"
+          color="textSecondary"
+          render={<p />}
+          className="fx-moved"
+        >
+          {timeMoved ? (
+            <MovedWithTime s={s} />
+          ) : (
+            movedText(movedFrom(s, s.checkedEpochUtc))
+          )}
+          . The checks re-run here.
+        </Typography>
+      )}
       {s.knobs.map((k) =>
         k.kind === "range" ? (
           <RangeKnob
@@ -222,8 +241,38 @@ function KnobsView({
         ),
       )}
       {/* The time is set on the timeline under the globe (the owner,
-          2026-11-06); the marker above names it when it moved, and Back
-          restores it. Its Earth-orientation caution stays here (R8). */}
+          2026-11-06); the line above names it when it moved, and Back
+          restores it. The scenario's moments jump it (Task 6c). */}
+      <div className="fx-knob fx-jump" role="group" aria-labelledby={jumpId}>
+        <span id={jumpId} className="fx-knob-label">
+          Jump to
+        </span>
+        <div className="fx-knob-control fx-jump-buttons">
+          {s.presets?.map((p) => (
+            <Button
+              key={p.id}
+              size="small"
+              variant="outlined"
+              startIcon={<Icon href={momentIcon(p.id)} />}
+              onClick={() => onMoment(p.utcMs)}
+              title={`Takes the clock to ${new Date(p.utcMs).toISOString().slice(11, 19)} UTC, paused`}
+            >
+              {p.label}
+            </Button>
+          ))}
+          <Button
+            size="small"
+            variant="text"
+            startIcon={<Icon href={svgUndo} />}
+            disabled={s.atChecked}
+            onClick={onBack}
+            className="fx-back-button"
+          >
+            Back to the checked setup
+          </Button>
+        </div>
+      </div>
+      {/* Its Earth-orientation caution stays here (R8). */}
       {eop && eop.kind !== "measured" && (
         <Typography
           variant="caption-lg"

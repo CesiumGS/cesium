@@ -2,7 +2,7 @@
 // one view store (selection.ts) is the selection the tree, the globe and
 // Verification share. A frame highlights its path and starts the walk; a
 // result turns its overlay on, highlights its group's frames and flies to
-// its site, or, asked for from a scenario's proof, is shown quietly; a
+// its site, or, asked for from a scenario's checks, is shown quietly; a
 // deep-linked result not in hand runs its group first (R15). Frame content
 // (F) and "Show on globe" frame the same targets.
 import { DISTORTION } from "./overlayConfig.ts";
@@ -81,7 +81,7 @@ export function createGlobeSelection(deps: {
   /** The deep-linked result being loaded (`loadLinkedResult`). */
   let linking: string | undefined;
   let notice: { id: number; text: string } | undefined;
-  /** A result to select without flying (Open in Verification from a proof row). */
+  /** A result to select without flying (Open in Verification from a check row). */
   let quietResult: string | undefined;
   let lastSelection = view.get().selection;
   let lastAgainst = view.get().against;
@@ -175,7 +175,7 @@ export function createGlobeSelection(deps: {
       }
       return;
     }
-    // Asked for from a scenario's proof: shown in Verification, the
+    // Asked for from a scenario's checks: shown in Verification, the
     // scenario's camera and overlays left as they are (fix 2).
     if (quietResult === s.id) {
       quietResult = undefined;

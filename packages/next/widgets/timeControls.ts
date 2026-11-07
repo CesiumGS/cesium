@@ -54,7 +54,8 @@ export interface TimeControlsHandle {
   /**
    * Marks spans of time on the day strip (UTC ms), drawn as bands over the
    * sky's colors, with their titles in the strip's tooltip: an app's events
-   * (a spacecraft behind the Moon). An empty list clears them.
+   * (a spacecraft behind the Moon). A click in a band, without a drag,
+   * jumps the clock to its start, paused. An empty list clears them.
    */
   setMarks(marks: readonly TimeMark[]): void;
   dispose(): void;
@@ -433,18 +434,34 @@ export function attachTimeControls(
   const timeAt = (clientX: number) =>
     dayStart(clock.time) + fractionAt(clientX) * (DAY - MINUTE);
   let dragging = false;
+  // Where a press began, for a click (no drag) in a marked span.
+  let pressX: number | undefined;
+  /** The marked span under `clientX` on the shown day, if any. */
+  const markUnder = (clientX: number) => {
+    const rect = strip.getBoundingClientRect();
+    return markAt(marks, dayStart(clock.time), rect.width, clientX - rect.left);
+  };
   strip.addEventListener("pointerdown", (e) => {
     dragging = true;
+    pressX = e.clientX;
     strip.setPointerCapture(e.pointerId);
     clock.mode = "paused";
     clock.time = timeAt(e.clientX);
   });
   strip.addEventListener("pointermove", (e) => {
     if (dragging) {
+      if (pressX !== undefined && Math.abs(e.clientX - pressX) > 3) {
+        pressX = undefined;
+      }
       clock.time = timeAt(e.clientX);
     }
+    // Over a marked span (not dragging): a click jumps to its start.
+    const mark = dragging ? undefined : markUnder(e.clientX);
+    strip.style.cursor = mark ? "pointer" : "";
     const f = fractionAt(e.clientX);
-    preview.textContent = formatClock.format(inZone(timeAt(e.clientX)));
+    preview.textContent = mark
+      ? `Jump to ${formatClock.format(inZone(mark.start))}`
+      : formatClock.format(inZone(timeAt(e.clientX)));
     preview.style.left = `${f * 100}%`;
     preview.hidden = false;
   });
@@ -453,8 +470,15 @@ export function attachTimeControls(
       preview.hidden = true;
     }
   });
-  strip.addEventListener("pointerup", () => {
+  strip.addEventListener("pointerup", (e) => {
     dragging = false;
+    // A click in a marked span jumps to its start.
+    const mark = pressX !== undefined ? markUnder(e.clientX) : undefined;
+    pressX = undefined;
+    if (mark) {
+      clock.mode = "paused";
+      clock.time = mark.start;
+    }
   });
   strip.addEventListener("keydown", (e) => {
     const step = e.shiftKey ? 60 * MINUTE : 15 * MINUTE;
@@ -678,6 +702,38 @@ export function markSpans(
     }
   }
   return out;
+}
+
+/**
+ * The marked span at `x` px on a strip `width` px wide showing the day from
+ * `start` (UTC ms), with `slop` px either side so a thin band can be hit;
+ * the latest-starting when bands overlap.
+ */
+export function markAt(
+  marks: readonly TimeMark[],
+  start: number,
+  width: number,
+  x: number,
+  slop = 3,
+): TimeMark | undefined {
+  if (width <= 0) {
+    return undefined;
+  }
+  const at = (ms: number) => ((ms - start) / DAY) * width;
+  let found: TimeMark | undefined;
+  for (const m of marks) {
+    const x0 = Math.max(0, at(m.start));
+    const x1 = Math.min(width, at(m.end));
+    if (
+      x1 > x0 &&
+      x >= x0 - slop &&
+      x <= x1 + slop &&
+      (found === undefined || m.start > found.start)
+    ) {
+      found = m;
+    }
+  }
+  return found;
 }
 
 /** The sky's color by the sun's elevation (degrees), for the day strip. */

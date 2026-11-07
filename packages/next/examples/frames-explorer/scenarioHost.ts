@@ -79,7 +79,7 @@ export interface ScenarioHostState {
   evaluatedAt?: { knobs: KnobState; epochUtcMs: number };
   /**
    * The evaluation is of another setup than the current one (a knob moved,
-   * or the clock): its answer and proof are the last setup's, not this
+   * or the clock): its answer and checks are the last setup's, not this
    * one's (Review Focus 1, R9). Its verdicts mustn't read as current.
    */
   stale: boolean;

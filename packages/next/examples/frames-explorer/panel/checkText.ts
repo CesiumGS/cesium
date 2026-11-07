@@ -1,8 +1,9 @@
-// What each proof row says (the owner, 2026-11-06: proof rows expand in
-// place, and each states its status in words as well as colour). Pure, so
-// the words are unit-tested (test/framesExplorerProofText.test.ts): nothing
-// reads as verified that isn't (Review Focus 1).
-import type { ProofRow } from "../scenarios/proof.ts";
+// What each check row says (the owner, 2026-11-06: check rows expand in
+// place, and each states its status in words as well as colour; Task 6c:
+// and names its kind, apart from its status). Pure, so the words are
+// unit-tested (test/framesExplorerCheckText.test.ts): nothing reads as
+// verified that isn't (Review Focus 1).
+import type { CheckKind, CheckRow } from "../scenarios/checks.ts";
 import type { StressResult } from "../tests.ts";
 import { formatAnswer, formatDelta } from "./answerText.ts";
 import { quantity } from "./format.ts";
@@ -12,28 +13,65 @@ import type { ResultExtras } from "./model.ts";
 const rowName = (r: StressResult, extras?: ResultExtras) =>
   extras?.label ?? r.title;
 
-export type ProofTone = "pass" | "fail" | "reference" | "loading" | "stale";
+export type CheckTone = "pass" | "fail" | "reference" | "loading" | "stale";
 
-export interface ProofRowText {
+/** Each kind's tag (short, on a row) and its name (the legend's). */
+export const KIND_TEXT: Readonly<
+  Record<CheckKind, { tag: string; name: string; meaning: string }>
+> = {
+  published: {
+    tag: "Published",
+    name: "Published reference",
+    meaning: "compared with a cited independent computation",
+  },
+  measured: {
+    tag: "Measured",
+    name: "Measured data",
+    meaning: "compared with measurements: validated",
+  },
+  hand: {
+    tag: "Hand",
+    name: "Hand formula",
+    meaning: "an independent closed-form check",
+  },
+  roundTrip: {
+    tag: "Round trip",
+    name: "Round trip",
+    meaning: "two routes, or a there-and-back, that agree",
+  },
+  live: {
+    tag: "Live",
+    name: "Live re-run",
+    meaning: "re-run at your setting, off the checked setup",
+  },
+};
+
+export interface CheckRowText {
   key: string;
+  /** What it compares with (its tag); never its status. */
+  kind: CheckKind;
   title: string;
-  /** The status in words: never colour alone. */
+  /**
+   * The status in a word or two, beside its icon: never colour alone, and
+   * never the kind (the tag says what it compares with). "Checked" and
+   * "Failed" only for a judged row whose setup is the current one.
+   */
   status:
-    | "Checked against a reference"
-    | "Checked by the catalog"
-    | "Live re-run"
-    | "Reference applies at the checked setup"
+    | "Checked"
+    | "Failed"
+    | "Not judged here"
     | "Loading"
     | "Updating"
-    | "Following the clock";
-  /** Pass or fail, for a judged row only. */
-  verdict?: "Pass" | "Fail";
-  tone: ProofTone;
-  /** One short line beside the status: the value against its tolerance, or the delta. */
+    | "Following";
+  tone: CheckTone;
+  /** One short line under the title: the value against its tolerance, or the delta. */
   summary: string;
   /** The judged result, for the inline details. */
   result?: StressResult;
 }
+
+/** Off the checked setup, a reference-backed row's line starts with this. */
+export const REFERENCE_APPLIES = "Reference applies at the checked setup";
 
 /** "3.2 nm, within 1 mm", or the case's own words. */
 export function valueLine(r: StressResult): string {
@@ -53,22 +91,23 @@ export function valueLine(r: StressResult): string {
  * a verdict's colour or a delta (Review Focus 1, R9). While the clock plays
  * the rows follow it in one steady state, their values updated in place.
  */
-export function proofRowText(
-  row: ProofRow,
+export function checkRowText(
+  row: CheckRow,
   extras: Readonly<Record<string, ResultExtras>>,
   freshness: "current" | "updating" | "following" = "current",
-  published?: { proofId: string; printed: string; unit: string },
-): ProofRowText {
+  published?: { checkId: string; printed: string; unit: string },
+): CheckRowText {
   const own = rowText(row, extras, published);
-  if (freshness === "current" || row.kind === "pending") {
+  if (freshness === "current" || row.status === "pending") {
     return own;
   }
   const following = freshness === "following";
   const result = own.result;
   return {
     key: own.key,
+    kind: own.kind,
     title: own.title,
-    status: following ? "Following the clock" : "Updating",
+    status: following ? "Following" : "Updating",
     tone: "stale",
     summary:
       following && result
@@ -79,8 +118,8 @@ export function proofRowText(
           : result.value !== undefined
             ? quantity(result.value, result.unit)
             : "following the clock"
-        : row.kind === "reference-only"
-          ? "its reference applies at the checked setup"
+        : row.status === "reference-only"
+          ? REFERENCE_APPLIES
           : "re-running at your setting",
     ...(following && result && { result }),
   };
@@ -101,9 +140,9 @@ const AGREES: Readonly<Record<string, string>> = {
 function summaryOf(
   r: StressResult,
   extras: ResultExtras | undefined,
-  published: { proofId: string; printed: string; unit: string } | undefined,
+  published: { checkId: string; printed: string; unit: string } | undefined,
 ): string {
-  if (published && r.id === published.proofId && r.effect) {
+  if (published && r.id === published.checkId && r.effect) {
     return `${formatAnswer(r.effect.value, published.unit)} vs ${published.printed} (published) · ${valueLine(r)}`;
   }
   const agrees =
@@ -112,23 +151,18 @@ function summaryOf(
 }
 
 function rowText(
-  row: ProofRow,
+  row: CheckRow,
   extras: Readonly<Record<string, ResultExtras>>,
-  published?: { proofId: string; printed: string; unit: string },
-): ProofRowText {
-  switch (row.kind) {
+  published?: { checkId: string; printed: string; unit: string },
+): CheckRowText {
+  switch (row.status) {
     case "checked": {
       const r = row.result;
       return {
         key: `checked:${r.id}`,
+        kind: row.kind,
         title: rowName(r, extras[r.id]),
-        // A check that cites no published value is the catalog's own (a
-        // round trip): it says so, not "against a reference".
-        status:
-          r.source !== undefined
-            ? "Checked against a reference"
-            : "Checked by the catalog",
-        verdict: r.pass ? "Pass" : "Fail",
+        status: r.pass ? "Checked" : "Failed",
         tone: r.pass ? "pass" : "fail",
         summary: summaryOf(r, extras[r.id], published),
         result: r,
@@ -138,9 +172,9 @@ function rowText(
       const r = row.result;
       return {
         key: `live:${r.id}`,
+        kind: row.kind,
         title: rowName(r, extras[r.id]),
-        status: "Live re-run",
-        verdict: r.pass ? "Pass" : "Fail",
+        status: r.pass ? "Checked" : "Failed",
         tone: r.pass ? "pass" : "fail",
         summary: summaryOf(r, extras[r.id], undefined),
         result: r,
@@ -149,16 +183,18 @@ function rowText(
     case "reference-only":
       return {
         key: `reference:${row.id}`,
+        kind: row.kind,
         title: extras[row.id]?.label ?? row.title,
-        status: "Reference applies at the checked setup",
+        status: "Not judged here",
         tone: "reference",
         summary: row.delta
-          ? `your setting moves the answer by ${formatDelta(row.delta.value, row.delta.unit)}`
-          : "not judged at your setting",
+          ? `${REFERENCE_APPLIES}; your setting moves the answer by ${formatDelta(row.delta.value, row.delta.unit)}`
+          : `${REFERENCE_APPLIES}; not judged at your setting`,
       };
     case "pending":
       return {
         key: `pending:${row.id}`,
+        kind: row.kind,
         title: extras[row.id]?.label ?? row.title,
         status: "Loading",
         tone: "loading",

@@ -2,10 +2,12 @@
 // graphics engineer (one trajectory that looks utterly different in three
 // frames), work down from space to the ground, and end on the capstone.
 //
-// Each checked setup is where the scenario's `proof` (stress-catalog result
-// ids) really applies: the catalog case's own epoch, site and parameters.
-// The comment beside each says which. Scenarios whose checks arrive with
-// their own tasks carry `proof: []` until then (ruling S1).
+// Each checked setup is where the scenario's `checks` (stress-catalog result
+// ids) really apply: the catalog case's own epoch, site and parameters. The
+// comment beside each says which. Scenarios whose checks arrive with their
+// own tasks carry `checks: []` until then (ruling S1). Each check's kind
+// (scenarios/checks.ts) is derived from its result; `checkKinds` names it
+// where it can't be.
 import type { KnobSpec, ScenarioSpec } from "./spec.ts";
 
 /** The catalog's measurement epoch (stress/shared.ts MEASURED_AT). */
@@ -63,7 +65,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     checked: { epochUtc: FLYBY, knobs: { frame: "MOON_ME" } },
     needs: ["orion"],
     globe: "ellipsoid",
-    proof: ["trajectory.moon-me.distance", "trajectory.moon-me.round-trip"],
+    checks: ["trajectory.moon-me.distance", "trajectory.moon-me.round-trip"],
   },
   {
     id: "earth-turns",
@@ -86,7 +88,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     checked: { epochUtc: "2026-03-20T12:00:00Z", knobs: { rate: 3600 } },
     needs: [],
     globe: "ellipsoid",
-    proof: ["frame-tree.compositions.itrf-gcrf"],
+    checks: ["frame-tree.compositions.itrf-gcrf"],
   },
   {
     id: "moon-from-here",
@@ -105,7 +107,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     needs: ["terrain"],
     // Task 6b: the terrain globe, for the local horizon's line of sight.
     globe: "terrain",
-    proof: [
+    checks: [
       "space.moon-from-sacramento.range",
       "space.moon-from-sacramento.direction",
       "frame-tree.compositions.itrf-moon-icrf",
@@ -128,13 +130,16 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     ],
     // lunar-time.moon-vs-earth.synodic: a clock at the lunar south pole,
     // averaged over a synodic month from 2026-01-01T00:00 UTC, against Ashby
-    // & Patla (its sidereal twin is display-only, so it isn't proof). The
+    // & Patla (its sidereal twin is display-only, so it isn't a check). The
     // MOON_ME-to-MOON_PA offset (space.effects.moon-me-pa) is also at the
     // south pole; it is a constant rotation, so it holds at any epoch.
     checked: { epochUtc: "2026-01-01T00:00:00Z", knobs: { latitude: -90 } },
     needs: [],
     globe: "ellipsoid",
-    proof: ["lunar-time.moon-vs-earth.synodic", "space.effects.moon-me-pa"],
+    checks: ["lunar-time.moon-vs-earth.synodic", "space.effects.moon-me-pa"],
+    // R·sqrt(θx² + θy²) by hand: it cites the DE440 frame kernel for its
+    // angles, its inputs, not for a value it is compared with.
+    checkKinds: { "space.effects.moon-me-pa": "hand" },
   },
   {
     id: "dish-tracks",
@@ -182,7 +187,14 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // it with the scenario); terrain is the page's, for the local horizon.
     needs: ["orion", "terrain"],
     globe: "terrain",
-    proof: ["space.dss43-orion.light-time", "space.dss43-orion.doppler"],
+    checks: ["space.dss43-orion.light-time", "space.dss43-orion.doppler"],
+    // Both cite DSN 810-005 for the station, their input. The light time is
+    // against plan 3's SPICE fixture (signal.json), a cited independent
+    // computation; the Doppler ratio against 1 − n·(vO − vS)/c by hand.
+    checkKinds: {
+      "space.dss43-orion.light-time": "published",
+      "space.dss43-orion.doppler": "hand",
+    },
   },
   {
     id: "bim-site",
@@ -257,7 +269,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // formula, the drop and the part along the line each within 1 mm
     // (rigid-placement-budget.site-gap.drop and .along, Task 6a fix 1). (NGS GU2195's
     // convergence is checked about 115 km away, so it isn't the site's true
-    // north and isn't proof here.)
+    // north and isn't one of its checks.)
     checked: {
       epochUtc: MEASURED_AT,
       knobs: {
@@ -268,7 +280,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       },
     },
     // The scenario's own frames are 2D (ellipsoidal heights): GEOID18 is
-    // only its compound-CRS proof checks' need, which the catalog meets.
+    // only its compound-CRS checks' need, which the catalog meets.
     needs: ["proj"],
     // Task 6a's ruling: the ellipsoid. The exact line lies at height 0, so
     // its gap from the rigid line reads against the ground it curves with;
@@ -276,7 +288,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // a 31 m gap, and a lift for display would be a second, misleading
     // height.
     globe: "ellipsoid",
-    proof: [
+    checks: [
       "rigid-placement-budget.site-gap.drop",
       "rigid-placement-budget.site-gap.along",
       "measurement.grid-to-ground",
@@ -285,7 +297,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       "projections.epsg-6420-6360",
     ],
     checkedBy: "hand formulas and round trips",
-    proofNotes: Object.fromEntries(
+    checkNotes: Object.fromEntries(
       [
         "measurement.grid-to-ground",
         "measurement.design-vs-itrf",
@@ -327,7 +339,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     checked: { epochUtc: MEASURED_AT, knobs: { station: 650, offset: 15 } },
     needs: ["proj"],
     globe: "ellipsoid",
-    proof: ["measurement.clothoid"],
+    checks: ["measurement.clothoid"],
     checkedBy: "hand formulas and round trips",
   },
   {
@@ -355,14 +367,14 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       },
       HEIGHT_DATUM,
     ],
-    // Over the BIM site, at its epoch. Its proof comes with Task 8.
+    // Over the BIM site, at its epoch. Its checks come with Task 8.
     checked: {
       epochUtc: MEASURED_AT,
       knobs: { tilt: 45, along: 50, datum: "navd88" },
     },
     needs: ["proj", "geoid", "terrain"],
     globe: "terrain",
-    proof: [],
+    checks: [],
   },
   {
     id: "ship",
@@ -382,11 +394,11 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       HEIGHT_DATUM,
     ],
     // A placeholder epoch: Task 7 pins it to the track's (AIS or
-    // synthetic), and adds its proof.
+    // synthetic), and adds its checks.
     checked: { epochUtc: MEASURED_AT, knobs: { mast: 25, datum: "navd88" } },
     needs: ["proj", "geoid", "terrain", "ships"],
     globe: "terrain",
-    proof: [],
+    checks: [],
   },
   {
     id: "everything",
@@ -409,13 +421,13 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     ],
     // The ship and the lunar site meet only at ICRF: the longest path
     // through the tree. At the dish's signal row, while Orion is in
-    // transit. Its proof comes with Task 8.
+    // transit. Its checks come with Task 8.
     checked: {
       epochUtc: SIGNAL_ROW,
       knobs: { from: "ship", to: "lunar-site" },
     },
     needs: ["orion", "terrain", "ships"],
     globe: "terrain",
-    proof: [],
+    checks: [],
   },
 ];

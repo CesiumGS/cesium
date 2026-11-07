@@ -1,6 +1,6 @@
 import "./panel.css";
 // The frames explorer's panel (R14): the status strip always on top, then
-// the scenarios (the first view: strip, tree, answer, knobs, proof) and, as
+// the scenarios (the first view: strip, question, knobs, tree, answer, route, checks) and, as
 // a secondary entry, Verification (the catalog's checks, its overlays and
 // the report); the globe's legend and the scenario's answer go to the HUD
 // host over the canvas. Rendered by Dyno under StrataKit's Root
@@ -145,7 +145,7 @@ function PanelBody({
     setEntry("verification");
     selectResult(id);
   });
-  // From a scenario's proof row: the result selected without flying the
+  // From a scenario's check row: the result selected without flying the
   // camera, so the scenario's view stays; F frames it on request (fix 2).
   const openInVerification = useStableCallback((id: string) => {
     actions.selectQuietly(id);
@@ -216,7 +216,7 @@ function PanelBody({
         >
           <div className="fx-verification-head">
             <Typography variant="body-sm" color="textSecondary" render={<p />}>
-              The stress catalog behind every scenario&rsquo;s proof: 225
+              The stress catalog behind every scenario&rsquo;s checks: 225
               results against their published references.
             </Typography>
             <ToggleButtonGroup
