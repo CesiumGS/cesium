@@ -158,6 +158,19 @@ describe("an answer's text", () => {
     expect(formatDelta(2.31, "°")).toBe("+2.31°");
     expect(formatDelta(-0.04, "km/s")).toBe("−0.04 km/s");
     expect(formatDelta(0, "km/s")).toBe("no change");
+    // A figure that rounds to zero has no sign.
+    expect(formatAnswer(-6e-9, "ft")).toBe("0.00 ft");
+    expect(formatAnswer(-0.004, "ft")).toBe("0.00 ft");
+    expect(formatAnswer(-0.006, "ft")).toBe("−0.01 ft");
+    // Too small for the unit's digits: significant figures, never "−0.00".
+    for (const v of [-1.2e-5, 3.4e-3, -2e-12]) {
+      const t = formatDelta(v, "µs/day");
+      expect(t, t).not.toMatch(/^[−+]0\.00 /);
+      expect(t, t).toMatch(/[1-9]/);
+      expect(t.startsWith(v < 0 ? "−" : "+")).toBe(true);
+    }
+    expect(formatDelta(-1.2e-5, "µs/day")).toBe("−1.2 × 10⁻⁵ µs/day");
+    expect(formatDelta(3.4e-3, "µs/day")).toBe("+0.0034 µs/day");
   });
 });
 

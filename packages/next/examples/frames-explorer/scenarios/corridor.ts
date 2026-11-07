@@ -59,6 +59,48 @@ const SPEC = SCENARIOS.find((s) => s.id === "corridor")!;
 const CA = BIM_CRS["ca-zone-3"];
 const road = new Alignment(CLOTHOID_ROAD);
 
+/**
+ * The station and offset of `p` (design feet), as `alignment.stationOffset`
+ * gives them; where a trip through the ground puts a point at the road's
+ * very start or end a hair beyond it (station 0: the foot nanometres before
+ * the start, Task 9), read on that end tangent's extension instead (the
+ * station held to the road's ends, as the library holds its own). Only
+ * within `within` (design units) of `design`, the point it set out from:
+ * anything further is outside, as the library says.
+ */
+export function stationOffsetNearEnds(
+  alignment: Alignment,
+  p: ArrayLike<number>,
+  design: ArrayLike<number>,
+  within: number,
+): { station: number; offset: number } {
+  try {
+    return alignment.stationOffset(p);
+  } catch (error) {
+    if (Math.hypot(p[0]! - design[0]!, p[1]! - design[1]!) > within) {
+      throw error;
+    }
+    const { startStation: a, endStation: b } = alignment;
+    const direct = alignment.stationOffset(design).station;
+    const end = Math.abs(direct - a) <= Math.abs(direct - b) ? a : b;
+    const inward = end === a ? 1 : -1;
+    const [x0, y0] = alignment.pointAt(end, 0);
+    const [x1, y1] = alignment.pointAt(end + inward, 0);
+    // The direction of travel there, east and north.
+    const len = Math.hypot(x1! - x0!, y1! - y0!);
+    const tx = (inward * (x1! - x0!)) / len;
+    const ty = (inward * (y1! - y0!)) / len;
+    const dx = p[0]! - x0!;
+    const dy = p[1]! - y0!;
+    // The station held to the road's, as the library holds its own; the
+    // offset positive to the right of travel, as the library's.
+    return {
+      station: Math.min(b, Math.max(a, end + dx * tx + dy * ty)),
+      offset: dx * ty - dy * tx,
+    };
+  }
+}
+
 /** The road's elements by station, for the answer's words. */
 const ELEMENTS: readonly { to: number; name: string }[] = [
   { to: 500, name: "on the first tangent" },
@@ -212,7 +254,13 @@ export const evaluateCorridor: ScenarioEvaluator = async (
   // The point on the ground, and back from it: the trip the answer takes.
   const itrf = Float64Array.from(site.toBodyFixed(design));
   const back = site.fromBodyFixed(itrf);
-  const found = road.stationOffset(back);
+  // Within the round trip's own tolerance of where it set out (1e-4 m).
+  const found = stationOffsetNearEnds(
+    road,
+    back,
+    design,
+    DESIGN_ROUND_TRIP * FTUS_PER_M,
+  );
   const direct = road.stationOffset(design);
   const viaGround = Math.max(
     Math.abs(found.station - station),

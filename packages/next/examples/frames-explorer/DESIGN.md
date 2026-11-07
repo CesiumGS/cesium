@@ -1683,6 +1683,21 @@ These bind over the bullets above where they differ.
   panel): the docked tree and the Expand dialog's share the next end, and
   only one "Next click…" line is the live region (the dialog's while it is
   open).
+- **Before the first trace** an answer with a sight line says "the terrain
+  isn't traced yet" (`withPending`), never a bare "In view" while the page
+  hasn't traced it.
+- **The corridor at its own ends.** At station 0 the trip through the
+  ground left the point nanometres before the road's start, and the
+  alignment (rightly) said "outside": the scenario didn't answer at its own
+  knob's minimum. Within the round trip's tolerance (1e-4 m) the station
+  is read on the end tangent's extension and held to the road's ends, as
+  the library holds its own (`stationOffsetNearEnds`).
+- **A failed evaluation off the checked setup** shows the reference rows
+  ("reference applies at the checked setup"), never a check "running" for
+  ever.
+- **Numbers that round to zero** read "0.00", never "−0.00"; a delta too
+  small for the unit's digits is given in significant figures ("+5.0 ×
+  10⁻⁴ µs/day"), never "−0.00 µs/day".
 
 ### Carried forward (engine work)
 

@@ -32,7 +32,10 @@ export function formatAnswer(
   unit: string,
   digits?: number,
 ): string {
-  const text = grouped(value, digits ?? DIGITS[unit] ?? 3).replace("-", "−");
+  const d = digits ?? DIGITS[unit] ?? 3;
+  // A value that rounds to zero reads "0.00", never "−0.00" (Task 9).
+  const shown = Math.abs(value) < 0.5 * 10 ** -d ? 0 : value;
+  const text = grouped(shown, d).replace("-", "−");
   return unit === "°" ? `${text}°` : `${text} ${unit}`;
 }
 
@@ -62,13 +65,20 @@ export function accuracyLine(answer: ScenarioAnswer): string {
     : sentence;
 }
 
-/** "+2.31°", "−0.04 km/s", "no change". */
+/**
+ * "+2.31°", "−0.04 km/s", "no change"; a move too small for the unit's
+ * digits in significant figures ("−1.2 × 10⁻⁵ µs/day"), never "−0.00"
+ * (Task 9).
+ */
 export function formatDelta(value: number, unit: string): string {
   if (value === 0) {
     return "no change";
   }
   const sign = value > 0 ? "+" : "−";
-  return `${sign}${formatAnswer(Math.abs(value), unit)}`;
+  const a = Math.abs(value);
+  return a < 0.5 * 10 ** -(DIGITS[unit] ?? 3)
+    ? `${sign}${quantity(a, unit)}`
+    : `${sign}${formatAnswer(a, unit)}`;
 }
 
 /**

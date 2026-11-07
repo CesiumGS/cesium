@@ -210,6 +210,33 @@ export function ownTraces(
   return out;
 }
 
+/**
+ * The terrain views with one "waiting" view for each of the evaluation's
+ * sight lines the page hasn't traced yet (Task 9): between an answer
+ * arriving and its first trace, the answer says "the terrain isn't traced
+ * yet", never a bare "In view" (Review Focus 2).
+ */
+export function withPending(
+  terrain: readonly TerrainSightView[] | undefined,
+  e: Pick<ScenarioEvaluation, "sightLines">,
+): TerrainSightView[] | undefined {
+  const missing = (e.sightLines ?? []).filter(
+    (l) => !terrain?.some((v) => v.id === l.id),
+  );
+  if (missing.length === 0) {
+    return terrain === undefined ? undefined : [...terrain];
+  }
+  return [
+    ...(terrain ?? []),
+    ...missing.map((l): TerrainSightView => ({
+      id: l.id,
+      state: "waiting",
+      ...(l.key !== undefined && { traced: l.key }),
+      text: `${l.subject ?? `The local horizon toward ${l.label}`}: waiting for the terrain.`,
+    })),
+  ];
+}
+
 export interface ScenarioViewInput {
   st: ScenarioHostState;
   /** The catalog's results (the scenario's checks). */
@@ -234,10 +261,11 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
   const catalog = new Map(input.results.map((r) => [r.id, r]));
   const e = st.evaluation;
   const freshness = scenarioFreshness(st, playing);
-  const terrain =
+  const own =
     input.terrain !== undefined && e?.pair
       ? ownTraces(input.terrain, e)
       : input.terrain;
+  const terrain = e ? withPending(own, e) : own;
   let checks: CheckRow[];
   if (e && st.evaluatedAt) {
     // The rows of the setup it was made at; `freshness` says whether
@@ -250,6 +278,17 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
     checks = checkRows(spec, at, catalog, e);
   } else if (st.atChecked) {
     checks = checkRows(spec, true, catalog, {
+      scenario: spec.id,
+      added: [],
+      answer: { label: "", headline: "", accuracy: { note: "" } },
+      overlays: [],
+      live: [],
+    });
+  } else if (st.problem !== undefined) {
+    // The evaluation failed off the checked setup: nothing runs, so no row
+    // says it is running (Task 9); the references still apply at the
+    // checked setup.
+    checks = checkRows(spec, false, catalog, {
       scenario: spec.id,
       added: [],
       answer: { label: "", headline: "", accuracy: { note: "" } },

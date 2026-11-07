@@ -14,6 +14,7 @@ import {
   publishedView,
   scenarioFreshness,
   scenarioView,
+  withPending,
 } from "../examples/frames-explorer/scenarioModel.ts";
 import { withTerrain } from "../examples/frames-explorer/panel/answerText.ts";
 import { checkRows } from "../examples/frames-explorer/scenarios/checks.ts";
@@ -135,6 +136,43 @@ describe("publishedView", () => {
 });
 
 describe("scenarioView", () => {
+  it("never shows a check as running when the evaluation failed off the checked setup (Task 9)", () => {
+    const spec = SCENARIOS.find((s) => s.id === "corridor")!;
+    const st: ScenarioHostState = {
+      spec,
+      knobs: { ...spec.checked.knobs, station: 0 },
+      epochUtcMs: Date.parse(spec.checked.epochUtc),
+      atChecked: false,
+      changed: ["station"],
+      status: "error",
+      stale: false,
+      staleBy: [],
+      problem: { message: "outside the alignment", missing: false },
+      generation: 1,
+    };
+    const v = scenarioView({
+      st,
+      results: [],
+      tree: undefined,
+      playing: false,
+      rate: 1,
+      scrub: (t) => t,
+    });
+    expect(v.checks.some((c) => c.status === "pending")).toBe(false);
+    // Without its result the catalog's check is taken as reference-backed.
+    expect(v.checks.every((c) => c.status === "reference-only")).toBe(true);
+    // Loading, it is pending (R9).
+    const loading = scenarioView({
+      st: { ...st, status: "loading", problem: undefined },
+      results: [],
+      tree: undefined,
+      playing: false,
+      rate: 1,
+      scrub: (t) => t,
+    });
+    expect(loading.checks.every((c) => c.status === "pending")).toBe(true);
+  });
+
   it("lists the ready scenarios and scrubs the problem's message", () => {
     const spec = SCENARIOS.find((s) => s.id === READY[0])!;
     const st: ScenarioHostState = {
@@ -334,6 +372,33 @@ describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
     const aside = withTerrain(answer, [v!]).aside!;
     expect(aside).toMatch(/isn't counted as clear/);
     expect(aside).not.toMatch(/and of the terrain/);
+  });
+
+  it("says the terrain isn't traced yet before the first trace, never a bare In view (Task 9)", () => {
+    const answer = {
+      label: "one way",
+      headline: "",
+      accuracy: { note: "" },
+      sky: {
+        state: "clear",
+        text: "In view: clear of the Earth and the Moon",
+        where: "at DSS-43",
+      },
+    } as ScenarioAnswer;
+    const e = { sightLines: [{ ...line, key: undefined, end: undefined }] };
+    for (const before of [undefined, []]) {
+      const views = withPending(before, e)!;
+      expect(views).toEqual([
+        expect.objectContaining({ id: "pair", state: "waiting" }),
+      ]);
+      expect(withTerrain(answer, views).aside).toBe(
+        "In view: clear of the Earth and the Moon; the terrain isn't traced yet",
+      );
+    }
+    // A traced line is left as it is; no lines, nothing added.
+    const done = [trace(10)];
+    expect(withPending(done, e)).toEqual(done);
+    expect(withPending(undefined, { sightLines: [] })).toBeUndefined();
   });
 
   it("prints the band that decided each grey verdict, not the widest (Task 9)", () => {
