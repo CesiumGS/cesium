@@ -275,8 +275,10 @@ export class Engine {
    * else the engine's only world. The terrain target is the globe under
    * that anchor (a ray under an anchor with none answers "unknown",
    * `"unsupported"`), traced exactly on the CPU; the draws target is
-   * `World.castRays` on the GPU. Standing queries look again after each
-   * tick (`onAfterTick`).
+   * `World.castRays` on the GPU, unknown over streamed tiles not drawn.
+   * Hidden tilesets (`show: false`) are not part of what rays meet: their
+   * draws aren't cast against, nor their tiles counted unknown. Standing
+   * queries look again after each tick (`onAfterTick`).
    */
   readonly queries: SpatialQueries = createSpatialQueries(
     {

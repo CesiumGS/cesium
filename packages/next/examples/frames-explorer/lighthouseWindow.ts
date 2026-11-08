@@ -269,7 +269,12 @@ export function createLighthouseWindow(deps: {
       view: viewer.view,
       groundRadius: LIGHTHOUSE_GROUND,
     };
-    /** The last slice's cost per minute traced, ms (none yet: one minute first). */
+    /**
+     * The main thread's time per minute traced in the last slice, ms (none
+     * yet: one minute first). Time the answers spent in flight while the
+     * thread was free (a GPU engine's readback) doesn't count, so latency
+     * never shrinks the batch.
+     */
     let perSample: number | undefined;
     const step = async (): Promise<void> => {
       if (mine !== generation) {
@@ -297,12 +302,22 @@ export function createLighthouseWindow(deps: {
           terrainLineOfSight(placed.from, placed.to, queries, options),
         );
       }
+      const placing = performance.now() - t0;
+      // Whether the thread was free while the batch was in flight: a
+      // timer that runs first says it was.
+      let free = false;
+      const probe = window.setTimeout(() => (free = true), 0);
       const answers = await Promise.all(asked);
+      clearTimeout(probe);
+      const resumed = performance.now();
       if (mine !== generation) {
         return; // cancelled, or a newer scan began: this one publishes nothing
       }
       out.push(...answers.map(sampleOf));
-      perSample = (performance.now() - t0) / count;
+      const main = free
+        ? placing + (performance.now() - resumed)
+        : performance.now() - t0;
+      perSample = main / count;
       busy += performance.now() - t0;
       if (out.length < samples) {
         slice = window.setTimeout(run, 0);

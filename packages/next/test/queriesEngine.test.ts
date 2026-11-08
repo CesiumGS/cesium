@@ -226,6 +226,50 @@ describe("Engine.queries on a running engine", () => {
     standing.dispose();
   });
 
+  it("delivers the improved answer of a standing query whose content finished loading while an answer was in flight, with no tick after", async () => {
+    let arrive: ((asset: GltfAsset) => void) | undefined;
+    vi.spyOn(engine, "loadGltf").mockImplementation(
+      () => new Promise<GltfAsset>((resolve) => (arrive = resolve)),
+    );
+    const { view, earth, cast } = scene();
+    engine.start();
+    const tileset = await engine.addTileset(view.world, URL_);
+    await frames(30);
+    expect(arrive).toBeDefined();
+    // The first cast answers late, as a GPU engine does: after the tile
+    // has loaded and the engine has gone to sleep.
+    let release: (() => void) | undefined;
+    cast.mockImplementationOnce(
+      (rays) =>
+        new Promise((resolve) => {
+          release = () => resolve(rays.map(() => undefined));
+        }),
+    );
+    const answers: QueryAnswer[] = [];
+    const standing = engine.queries.standing(
+      () => ask(view, earth, [THROUGH]),
+      (a) => answers.push(a),
+    );
+    await frames(2);
+    expect(release).toBeDefined();
+    arrive!(triangle());
+    await frames(60);
+    expect(tileset.stats.loaded).toBe(1);
+    expect(queue.size).toBe(0); // asleep: no tick will come
+    expect(answers).toHaveLength(0);
+    release!();
+    for (let i = 0; i < 5; i++) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    expect(queue.size).toBe(0);
+    expect(answers.map((a) => [a.final, a.rays[0]!.verdict])).toEqual([
+      [false, "unknown"],
+      [true, "clear"],
+    ]);
+    expect(answers[1]!.revision).toBeGreaterThan(answers[0]!.revision);
+    standing.dispose();
+  });
+
   it("rejects a query whose world is removed before the answer, and answers the rest of the batch", async () => {
     const a = engine.createWorld();
     const b = engine.createWorld();

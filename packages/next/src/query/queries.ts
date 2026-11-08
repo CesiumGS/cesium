@@ -135,7 +135,10 @@ export interface QueryAnswer {
    * when it does.
    */
   readonly revision: number;
-  /** False when a better answer may follow (more content loading). */
+  /**
+   * False when a better answer may follow: content it may meet was loading
+   * when it was asked. A standing query asks again when that ends.
+   */
   readonly final: boolean;
 }
 
@@ -160,7 +163,9 @@ export interface SpatialQueries {
    * Answers `query()` now (later, as every answer), then again each tick
    * with `everyTick`, else on a tick where its revision went up, or where
    * the content that was loading for an answer not `final` has finished.
-   * Answers come in order, one at a time; none after `dispose`.
+   * What changes while an answer is in flight is looked at when it lands,
+   * so an improved answer comes even if no tick follows. Answers come in
+   * order, one at a time; none after `dispose`.
    */
   standing(
     query: () => RayQuery,
@@ -262,13 +267,18 @@ export function createSpatialQueries(
     // alone.
     const batch: Pending[] = [];
     const revisions: number[] = [];
+    /** Loading at dispatch: an answer made then may be bettered later. */
+    const loadings: boolean[] = [];
     for (const p of queued) {
       if (p.settled) {
         continue;
       }
       try {
         host.check?.(p.query);
-        revisions.push(host.revision(p.query));
+        const revision = host.revision(p.query);
+        const loading = host.loading(p.query);
+        revisions.push(revision);
+        loadings.push(loading);
         batch.push(p);
       } catch (error) {
         fail(p, error);
@@ -315,13 +325,7 @@ export function createSpatialQueries(
         fail(p, failed.error);
         return;
       }
-      let final: boolean;
-      try {
-        final = !host.loading(query);
-      } catch (error) {
-        fail(p, error);
-        return;
-      }
+      const final = !loadings[i]!;
       const answer: QueryAnswer = {
         rays: query.rays.map((_, r) =>
           query.targets.length === 0
@@ -419,6 +423,12 @@ export function createSpatialQueries(
           } catch (error) {
             report(error);
           }
+          // What changed while it was in flight asks again now: the ticks
+          // that saw it skipped it, and an engine settled since sends no
+          // more (a GPU engine answers a tick or more late).
+          if (!disposed) {
+            again();
+          }
         },
         (error) => {
           busy = false;
@@ -428,14 +438,12 @@ export function createSpatialQueries(
         },
       );
     };
-    const off = host.onTick(() => {
-      if (disposed || busy) {
-        return; // the answer in flight comes first; the next tick looks again
-      }
+    /** Asks again if its revision rose, or loading ended after an answer not final. */
+    const again = (everyTick = false): void => {
       try {
         const q = query();
         if (
-          options.everyTick ||
+          everyTick ||
           host.revision(q) > asked ||
           (!lastFinal && !host.loading(q))
         ) {
@@ -444,6 +452,12 @@ export function createSpatialQueries(
       } catch (error) {
         report(error);
       }
+    };
+    const off = host.onTick(() => {
+      if (disposed || busy) {
+        return; // the answer in flight looks again when it lands
+      }
+      again(options.everyTick);
     });
     try {
       ask(query());
