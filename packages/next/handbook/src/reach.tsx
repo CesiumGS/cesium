@@ -539,43 +539,146 @@ const VENDORS = [
   { vendor: "Qualcomm", share: "4.46%" },
 ];
 
-const PRODUCTS: { product: string; states: ReactNode; source: SourceId }[] = [
+const PRODUCTS: { product: string; states: ReactNode; source: SourceId[] }[] = [
   {
-    product: "ArcGIS Maps SDK for JavaScript 5.1",
+    product: "LuciadRIA",
     states:
-      "Only WebGL 2, 64-bit browsers: Chrome and Edge 146 or later, Firefox 151 or 140 ESR, Safari 18 or later. The page doesn't mention WebGPU.",
-    source: "arcgis",
-  },
-  {
-    product: "Mapbox GL JS v3",
-    states:
-      "WebGL 2 is mandatory, and WebGL 1 support was discontinued. The guide doesn't mention WebGPU.",
-    source: "mapbox",
+      'Release 2026.0, of February 2026: "This transition replaces WebGL as the underlying graphics API", and applications must be served through HTTPS. Its setup page for 2026.1.01 calls WebGPU well supported on Windows and Mac, with Linux still in development. Neither page says whether a WebGL path remains.',
+    source: ["luciadGuide", "luciadSetup"],
   },
   {
     product: "APS Viewer v8 preview",
     states:
-      "Renders with WebGPU, and WebGL only as a fallback for hardware without it. Developers can force WebGL. The post calls it already deprecated.",
-    source: "aps",
+      "Renders with WebGPU, and WebGL only as a fallback for hardware without it. Developers can force WebGL, and the post calls it already deprecated. The post gives 1 February 2027 for v8 becoming the default, and 31 July 2027 for the end of v7's support.",
+    source: ["aps"],
   },
   {
     product: "Figma",
     states:
       "Renders with WebGPU, and can fall back to WebGL, including mid-session. It blocklists devices by their fallback rates.",
-    source: "figma",
+    source: ["figma"],
+  },
+  {
+    product: "deck.gl v9",
+    states:
+      'WebGPU support is "still a work in progress and is not production ready". Its table marks 32 layers as working on WebGPU, and 7 CARTO layers as not.',
+    source: ["deckgl"],
+  },
+  {
+    product: "MapLibre GL JS",
+    states:
+      "The roadmap lists a WebGPU backend beside the WebGL 2 renderer, with no dates. A proof-of-concept pull request opened in April 2026 is closed.",
+    source: ["maplibre", "maplibrePr"],
+  },
+  {
+    product: "Mapbox GL JS v3",
+    states:
+      'WebGL 2 is mandatory, and WebGL 1 support was discontinued. The guide doesn\'t mention WebGPU. An issue titled "WebGPU support?" has been open since April 2020.',
+    source: ["mapbox", "mapboxIssue"],
+  },
+  {
+    product: "ArcGIS Maps SDK for JavaScript 5.1",
+    states:
+      "Only WebGL 2, 64-bit browsers: Chrome and Edge 146 or later, Firefox 151 or 140 ESR, Safari 18 or later. The page doesn't mention WebGPU.",
+    source: ["arcgis"],
+  },
+  {
+    product: "three.js",
+    states:
+      "Ships a WebGPURenderer. Its migration guide lists changes to it in the steps from r181 to r187.",
+    source: ["threeMigration"],
+  },
+  {
+    product: "Babylon.js",
+    states:
+      "WebGL and WebGPU are maintained side by side. An existing WebGPU scene can't swap to WebGL for WebXR, so an application chooses up front.",
+    source: ["babylon"],
   },
   {
     product: "Unity 6.2",
     states: "WebGPU is marked experimental. WebGL 2 is the default.",
-    source: "unity",
+    source: ["unity"],
   },
   {
     product: "CesiumJS 1.140",
     states:
       "Billboards and labels require WebGL 2, or WebGL 1 with two named capabilities.",
-    source: "cesium1140",
+    source: ["cesium1140"],
   },
 ];
+
+const ISOLATION: { fact: ReactNode; evidence: Evidence; source: SourceId }[] = [
+  {
+    fact: "Canvas Remoting supports 2D canvas contexts only. WebGL and WebGPU contexts and 3D graphics applications are listed as not supported.",
+    evidence: "Primary",
+    source: "cloudflareCanvas",
+  },
+  {
+    fact: "Sites that use WebGL may not function under Browser Isolation, and it isn't supported in virtual machines.",
+    evidence: "Primary",
+    source: "cloudflareLimits",
+  },
+  {
+    fact: "Turbo Mode sends rendering to the local machine as a WebGL instruction set. The post doesn't mention WebGPU or 3D canvases.",
+    evidence: "Primary",
+    source: "zscaler",
+  },
+  {
+    fact: 'A 2021 post: "WebGL, in particular, is often disabled in virtualized environments". It doesn\'t mention WebGPU.',
+    evidence: "Primary",
+    source: "menlo",
+  },
+];
+
+const DEPLOYMENT: { fact: ReactNode; evidence: Evidence; source: SourceId }[] =
+  [
+    {
+      fact: (
+        <>
+          Without <C>'wasm-unsafe-eval'</C> in <C>script-src</C>, WebAssembly is
+          blocked. <C>'unsafe-eval'</C> also permits it, and overrides the
+          first.
+        </>
+      ),
+      evidence: "Primary",
+      source: "cspScript",
+    },
+    {
+      fact: (
+        <>
+          Workers are governed by <C>worker-src</C>, then <C>child-src</C>,{" "}
+          <C>script-src</C> and <C>default-src</C>.
+        </>
+      ),
+      evidence: "Primary",
+      source: "cspWorker",
+    },
+    {
+      fact: "Cesium ion Self-Hosted deploys on Kubernetes, and can run in disconnected, air-gapped environments.",
+      evidence: "Primary",
+      source: "ionSelfHosted",
+    },
+    {
+      fact: "ArcGIS Enterprise on Kubernetes needs the organization's own container registry when disconnected, and its default basemaps and Living Atlas aren't supported there.",
+      evidence: "Primary",
+      source: "esriDisconnected",
+    },
+    {
+      fact: "Mapbox Atlas runs behind a firewall, including on air-gapped networks.",
+      evidence: "Primary",
+      source: "atlas",
+    },
+    {
+      fact: "The Section 508 standards require content and applications to conform to WCAG 2.0 Level A and AA.",
+      evidence: "Primary",
+      source: "section508",
+    },
+    {
+      fact: "ArcGIS's JavaScript SDK supports keyboard navigation in 2D and 3D, gives the view an ARIA role of application, and takes a label and description. The page describes no alternative to the scene's content.",
+      evidence: "Primary",
+      source: "esriAccessibility",
+    },
+  ];
 
 const FactTable = ({
   label,
@@ -717,18 +820,110 @@ export function ReachFacts() {
         </ul>
       </Section>
 
-      <Section title="Comparable products">
-        <p>What each product's own page says it requires or does, as read.</p>
+      <Section title="Browser isolation">
+        <p>
+          Remote browser isolation runs the page somewhere else and sends the
+          result on, so it can stand between an application and the GPU,
+          whatever the browser's version. None of the pages we opened documents
+          WebGPU working through one, and we found no figure for how much
+          traffic is isolated. Nothing here has been tested.
+        </p>
+        <FactTable label="Browser isolation" rows={ISOLATION} />
+      </Section>
+
+      <Section title="Deployment requirements">
+        <h3>Content security policy</h3>
+        <p>
+          The engine runs WebAssembly (Draco, meshopt, Basis) in its workers,
+          and the page bundle has no WebAssembly and no <C>eval</C>. It was
+          tested with a page served <C>script-src 'self'</C>, apart from an
+          example's own inline script, and a same-origin worker served{" "}
+          <C>script-src 'self' 'wasm-unsafe-eval'</C>. A worker from another
+          origin starts through a <C>blob:</C> URL, so that page's policy must
+          allow it. This is from the overall plan, section 13.12.
+        </p>
+        <h3>Air-gapped use</h3>
+        <p>
+          The engine's reference data downloads today into a store outside the
+          repository, so a disconnected deployment has to supply it. A separate
+          optional data package is proposed and not built. The overall plan,
+          section 13.24, records what its author read of each data source's
+          terms. That reading needs legal confirmation before anything ships.
+        </p>
+        <h3>Accessibility</h3>
+        <p>
+          We found no rule specific to 3D canvases, and didn't check whether
+          agencies now ask for a later WCAG version. How the engine and its
+          widgets meet this hasn't been reviewed.
+        </p>
+        <h3>What the sources say</h3>
+        <FactTable label="Deployment requirements" rows={DEPLOYMENT} />
+      </Section>
+
+      <Section title="Other engines and comparable products">
+        <p>
+          What each one's own pages say it requires or does, as read. No
+          statement on a page doesn't mean no work is under way.
+        </p>
         <DataTable
-          label="Comparable products"
+          label="Other engines and comparable products"
           columns={[
             { head: "Product", cell: (r) => r.product },
-            { head: "What its page says", cell: (r) => r.states },
+            { head: "What its pages say", cell: (r) => r.states },
             { head: "Evidence", cell: () => "Primary" },
-            { head: "Source", cell: (r) => <Cite id={r.source} /> },
+            {
+              head: "Source",
+              cell: (r) =>
+                r.source.map((id, i) => (
+                  <span key={id}>
+                    {i > 0 ? ", " : ""}
+                    <Cite id={id} />
+                  </span>
+                )),
+            },
           ]}
           rows={PRODUCTS}
         />
+      </Section>
+
+      <Section title="Short notes">
+        <ul>
+          <li>
+            <strong>iPad.</strong> Every browser there uses WebKit, so WebGPU
+            needs iPadOS 26. On 7 June 2026, 68% of devices transacting on the
+            App Store used it, and 79% of iPhones used iOS 26 (
+            <Cite id="appleShare" />
+            ). Trimble Connect's mobile floor is iOS 18, with iOS 26 recommended
+            (
+            <Cite id="trimble" />
+            ).
+          </li>
+          <li>
+            <strong>WebXR.</strong> With Safari 26.2 on visionOS, WebXR supports
+            WebGPU (<Cite id="webkit262" />
+            ). Chrome's status for that integration reads "No active
+            development" (<Cite id="chromeXr" />
+            ). The engine has no WebXR path.
+          </li>
+          <li>
+            <strong>Slang.</strong> Slang has been under multi-company
+            governance at Khronos since November 2024, licensed under Apache 2.0
+            (
+            <Cite id="slangKhronos" />
+            ), and its newest release is v2026.21 (
+            <Cite id="slangReleases" />
+            ). The engine compiles its shaders at build time.
+          </li>
+          <li>
+            <strong>Community.</strong> npm's weekly downloads rose between the
+            first weeks of November 2025 and 2026: three from 2.9 to 34.6
+            million, and <C>@webgpu/types</C> from 2.2 to 14.4 million. So did
+            lodash, which has no WebGPU work, from 74.6 to 204.7 million (
+            <Cite id="npm" />
+            ). So these counts don't show demand for WebGPU. We found no survey
+            of developers on it.
+          </li>
+        </ul>
       </Section>
 
       <Section title="What we need to measure">
@@ -762,6 +957,14 @@ export function ReachFacts() {
           <li>
             <strong>Managed images.</strong> A hardened browser image, with the
             acceleration and 3D policies on and off.
+          </li>
+          <li>
+            <strong>Browser isolation.</strong> Ask vendors, then test: an
+            adapter, a device and WebGL 2 through each isolation mode.
+          </li>
+          <li>
+            <strong>Reach over time.</strong> A dated series of our own. Web3D
+            Survey's page publishes no history or dates.
           </li>
           <li>
             <strong>Reach where it counts.</strong> Adapter success, vendor and

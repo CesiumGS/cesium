@@ -310,9 +310,9 @@ export function Compatibility() {
             workaround (
             <Cite id="intel" />
             ). This engine renders with indirect draws by default, and{" "}
-            <C>SubmissionMode</C>'s <C>"direct"</C> may avoid it. We haven't
-            reproduced it, or tried that. The overall plan, section 13.23, holds
-            the work.
+            <C>SubmissionMode</C>'s <C>"direct"</C> may avoid it, though point
+            sets still draw from the cull there. We haven't reproduced it, or
+            tried that. The overall plan, section 13.23, holds the work.
           </p>
         </Note>
       </Section>
@@ -357,6 +357,32 @@ export function Compatibility() {
           "figma",
           "unity",
           "cesium1140",
+          "cloudflareCanvas",
+          "cloudflareLimits",
+          "zscaler",
+          "menlo",
+          "cspScript",
+          "cspWorker",
+          "ionSelfHosted",
+          "esriDisconnected",
+          "atlas",
+          "section508",
+          "esriAccessibility",
+          "luciadGuide",
+          "luciadSetup",
+          "deckgl",
+          "maplibre",
+          "maplibrePr",
+          "mapboxIssue",
+          "threeMigration",
+          "babylon",
+          "appleShare",
+          "trimble",
+          "webkit262",
+          "chromeXr",
+          "slangKhronos",
+          "slangReleases",
+          "npm",
         ]}
       />
     </Page>
