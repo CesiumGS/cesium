@@ -58,7 +58,8 @@ export type TerrainLoader = (
     url: string;
     headers?: Record<string, string>;
     rect: Rectangle;
-    skirtHeight: number;
+    /** Meters; an upsampled tile's per edge: west, south, east, north. */
+    skirtHeight: number | readonly number[];
     /**
      * A tile below the last level with data: clipped from the nearest tile
      * with data, over `rect`, from its `heights`, or, once they have left
@@ -430,16 +431,19 @@ export class TerrainSource {
     }
     const shown = path[drawn]!;
     const below = path.slice(drawn + 1);
-    // A stand-in hides finer data unless the quadrant here has none; with
-    // no children yet, their availability is still loading.
+    // A stand-in hides finer data unless the quadrant here has none (or is
+    // upsampled from the shown tile: it holds no finer data); with no
+    // children yet, their availability is still loading.
+    const noFiner = (t: Tile) =>
+      t.fillFromParent || t.globe!.upsampledFrom !== undefined;
     const standIn =
       (shown.standInMask & shown.viewMask & mask) !== 0 &&
-      (below.length > 0 ? !below[0]!.fillFromParent : !shown.globe!.expanded);
+      (below.length > 0 ? !noFiner(below[0]!) : !shown.globe!.expanded);
     const holes = shown.holes;
     const inHole =
       (shown.placeholderMask & mask) !== 0 &&
       holes !== undefined &&
-      below.some((t) => holes.has(t) && !t.fillFromParent);
+      below.some((t) => holes.has(t) && !noFiner(t));
     if (standIn || inHole) {
       return { rectangle, unknown: "not refined" };
     }
@@ -505,14 +509,20 @@ export class TerrainSource {
   async loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset> {
     const a = tile.globe!;
     const data = a.upsampledFrom;
-    // An upsampled tile hides the same cracks its data tile does.
-    const skirtLevel = (data?.globe ?? a).level;
+    const skirt = (level: number) => (this.levelZeroError / 2 ** level) * 5;
+    // An upsampled tile's edges on its data tile's boundary hide that
+    // tile's cracks, so they hang its skirt. Its inner edges come from one
+    // clip of one mesh, so they hang only what their own level's error
+    // asks (1.x halves them for each level).
+    const skirtHeight = data
+      ? skirtDepths(a, data.globe!, skirt(data.globe!.level), skirt(a.level))
+      : skirt(a.level);
     const { asset, info } = await this.load(
       {
         url: tile.contentUrl!,
         ...(this.headers ? { headers: this.headers } : {}),
         rect: rectangle(a),
-        skirtHeight: (this.levelZeroError / 2 ** skirtLevel) * 5,
+        skirtHeight,
         ...(data
           ? {
               upsample: {
@@ -537,7 +547,10 @@ export class TerrainSource {
     }
     if (info.heights) {
       g.heights = info.heights;
-      // An upsampled tile's surface is its data tile's: nothing moved.
+      // An upsampled tile's surface is its data tile's, to within that
+      // tile's stated error: no listener fires. (`surfaceHeight` rises by up
+      // to 0.16 m on a two-triangle level 13 tile, as the clip's points lie
+      // on the ellipsoid's arc and the data tile's triangles are chords.)
       if (!g.upsampledFrom) {
         this.heightsChanged(g.rectangle);
       }
@@ -618,21 +631,23 @@ export class TerrainSource {
   }
 
   /**
-   * Gives a loaded leaf below the last level with data four children whose
+   * Gives a loaded tile below the last level with data children whose
    * content is its mesh clipped to each (1.x upsamples them), so they draw
-   * with imagery of their own level (globe `Budgeted`). False where there
+   * with imagery of their own level (globe `Budgeted`). A leaf gets four.
+   * A tile with some data below it (a patchy edge of the data's range) has
+   * its quadrants without data upsampled the same way, in place of the
+   * stand-ins that took the nearest ancestor's imagery. False where there
    * is nothing to upsample: the ellipsoid (it has every level), a tile not
-   * loaded yet or with data below, or one that has children.
+   * loaded yet, or one whose children are all drawn from data or already
+   * upsampled.
    */
   upsampleContent(tile: Tile): boolean {
     const g = tile.globe!;
-    if (
-      this.flat ||
-      !g.expanded ||
-      tile.children.length > 0 ||
-      !g.heights ||
-      !g.own?.quadrants
-    ) {
+    if (this.flat || !g.expanded || !g.heights || !g.own?.quadrants) {
+      return false;
+    }
+    const leaf = tile.children.length === 0;
+    if (!leaf && !tile.children.some((c) => c.fillFromParent)) {
       return false;
     }
     const data = g.upsampledFrom ?? tile;
@@ -644,11 +659,26 @@ export class TerrainSource {
       [1, 1],
     ].forEach(([dx, dy], i) => {
       const a = { level: g.level + 1, x: g.x * 2 + dx!, y: g.y * 2 + dy! };
+      const at = leaf
+        ? -1
+        : tile.children.findIndex(
+            (c) => c.fillFromParent && c.globe!.x === a.x && c.globe!.y === a.y,
+          );
+      if (!leaf && at < 0) {
+        return;
+      }
       const [minimumHeight, maximumHeight] = quadrants[i]!;
       this.addChild(tile, a, minimumHeight, maximumHeight, true, data);
+      if (!leaf) {
+        // The new tile takes the stand-in's place.
+        const child = tile.children.pop()!;
+        tile.children[at] = child;
+      }
     });
     tile.childrenPartition = true;
-    this.tree.tilesAdded?.(tile.children.length);
+    if (leaf) {
+      this.tree.tilesAdded?.(tile.children.length);
+    }
     return true;
   }
 
@@ -771,6 +801,28 @@ export class TerrainSource {
     }
     return url.toString();
   }
+}
+
+/**
+ * An upsampled tile's skirt depth on each edge (west, south, east, north):
+ * `outer` where the edge lies on its data tile's boundary, `inner` where it
+ * lies inside it.
+ */
+export function skirtDepths(
+  a: Address,
+  data: Address,
+  outer: number,
+  inner: number,
+): number[] {
+  const span = 2 ** (a.level - data.level);
+  const x0 = data.x * span;
+  const y0 = data.y * span;
+  return [
+    a.x === x0 ? outer : inner,
+    a.y === y0 ? outer : inner,
+    a.x === x0 + span - 1 ? outer : inner,
+    a.y === y0 + span - 1 ? outer : inner,
+  ];
 }
 
 function regionVolume(

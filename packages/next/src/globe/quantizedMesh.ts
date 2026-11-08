@@ -297,7 +297,7 @@ function quadrantHeights(
 export function decodeQuantizedMesh(
   buffer: ArrayBuffer,
   rect: Rectangle,
-  skirtHeight: number,
+  skirtHeight: number | readonly number[],
 ): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
   const view = new DataView(buffer);
   let pos = 0;
@@ -404,7 +404,8 @@ export function decodeQuantizedMesh(
 /** A terrain tile's decoded contents, before its mesh is built. */
 interface TerrainTileData {
   rect: Rectangle;
-  skirtHeight: number;
+  /** Meters; or per edge: west, south, east, north. */
+  skirtHeight: number | readonly number[];
   /** Earth-fixed center: positions are relative to it. */
   center: [number, number, number];
   minimumHeight: number;
@@ -460,7 +461,7 @@ export function flatTerrainHeights(n = 16): TerrainHeights {
  */
 export function flatTerrainTile(
   rect: Rectangle,
-  skirtHeight: number,
+  skirtHeight: number | readonly number[],
   n = 16,
 ): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
   const count = n * n;
@@ -577,13 +578,14 @@ function clipPolygon(
  * (`parent`, over `parentRect`), clipped to `rect` and quantized again over
  * it, with skirts. Its surface is the parent's, so its imagery can refine
  * while the terrain stays as the data has it. Normals are interpolated from
- * the parent's (geodetic up without them).
+ * the parent's (geodetic up without them). `skirtHeight` is one depth, or
+ * one per edge (west, south, east, north).
  */
 export function upsampleTerrainTile(
   parent: TerrainHeights,
   parentRect: Rectangle,
   rect: Rectangle,
-  skirtHeight: number,
+  skirtHeight: number | readonly number[],
 ): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
   const width = parentRect.east - parentRect.west;
   const height = parentRect.north - parentRect.south;
@@ -841,7 +843,11 @@ function buildTerrainTile(d: TerrainTileData): {
     const sorted = Array.from(edge).sort((a, b) => key[a]! - key[b]!);
     const first = next;
     for (const i of sorted) {
-      place(i, next++, skirtHeight);
+      place(
+        i,
+        next++,
+        typeof skirtHeight === "number" ? skirtHeight : skirtHeight[e]!,
+      );
     }
     // Outward-facing, so the visible side is the front face and keeps its
     // (copied, surface) normal: with edges sorted along increasing u or v,

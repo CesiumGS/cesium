@@ -29,7 +29,7 @@ self.onmessage = async (
     headers?: Record<string, string>;
     textureSupport: TextureFormatSupport;
     rect: Rectangle;
-    skirtHeight: number;
+    skirtHeight: number | readonly number[];
     /** A terrain tile below the last level with data (`TerrainLoader`). */
     upsample?: { rect: Rectangle; heights?: TerrainHeights; url?: string };
     /** "stars": the star map's six faces. */

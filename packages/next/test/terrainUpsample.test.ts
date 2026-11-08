@@ -9,10 +9,13 @@ import {
   interpolateHeight,
   upsampleTerrainTile,
   type Rectangle,
+  type TerrainHeights,
+  type TileRange,
 } from "../src/globe/quantizedMesh.ts";
 import {
   LEVEL_ZERO_ERROR,
   TerrainSource,
+  skirtDepths,
   rectangle as tileRectangle,
   type TerrainLoader,
 } from "../src/globe/TerrainSource.ts";
@@ -113,6 +116,130 @@ describe("upsampleTerrainTile", () => {
     }
     expect(info.sphere.radius).toBeGreaterThan(0);
   });
+
+  it("hangs each edge's own skirt depth", () => {
+    const depths = [10, 20, 30, 40];
+    const { asset, info } = upsampleTerrainTile(
+      parent,
+      PARENT,
+      quadrant(PARENT, 0),
+      depths,
+    );
+    const mesh = asset.meshes[0]!;
+    const vertices = info.heights!.u.length;
+    const radius = (i: number, positions: ArrayLike<number>) =>
+      Math.hypot(
+        positions[i * 3]!,
+        positions[i * 3 + 1]!,
+        positions[i * 3 + 2]!,
+      );
+    // A skirt vertex hangs straight below the surface vertex at its (u, v):
+    // the drop is the difference of their distances from the tile's center
+    // along the local vertical, which, over 5 m, a few meters from
+    // the center, is within a few percent of the depth.
+    const surface = new Map<string, number>();
+    for (let i = 0; i < vertices; i++) {
+      surface.set(`${mesh.uvs![i * 2]}:${mesh.uvs![i * 2 + 1]}`, i);
+    }
+    const drops: number[][] = [[], [], [], []];
+    for (let i = vertices; i < mesh.positions.length / 3; i++) {
+      const key = `${mesh.uvs![i * 2]}:${mesh.uvs![i * 2 + 1]}`;
+      const top = surface.get(key)!;
+      const dx = mesh.positions[i * 3]! - mesh.positions[top * 3]!;
+      const dy = mesh.positions[i * 3 + 1]! - mesh.positions[top * 3 + 1]!;
+      const dz = mesh.positions[i * 3 + 2]! - mesh.positions[top * 3 + 2]!;
+      const u = mesh.uvs![i * 2]!;
+      const v = mesh.uvs![i * 2 + 1]!;
+      // A corner belongs to two edges: not read.
+      if ((u === 0 || u === 1) && (v === 0 || v === 1)) {
+        continue;
+      }
+      const edge = u === 0 ? 0 : v === 0 ? 1 : u === 1 ? 2 : 3;
+      drops[edge]!.push(Math.hypot(dx, dy, dz));
+    }
+    void radius;
+    drops.forEach((list, e) => {
+      expect(list.length).toBeGreaterThan(0);
+      for (const drop of list) {
+        expect(drop).toBeCloseTo(depths[e]!, 3);
+      }
+    });
+  });
+
+  it("neighbors made from one parent share their edge's vertices and heights", () => {
+    // An irregular mesh: jittered interior vertices on a 7 x 7 grid.
+    let seed = 7;
+    const random = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+    const n = 7;
+    const base = gridTile(
+      PARENT,
+      n,
+      (lon, lat) => 40 + 30 * Math.sin(lon * 4e5) * Math.cos(lat * 3e5),
+    ).heights;
+    const u = Uint16Array.from(base.u);
+    const v = Uint16Array.from(base.v);
+    const cell = 32767 / (n - 1);
+    for (let j = 1; j < n - 1; j++) {
+      for (let i = 1; i < n - 1; i++) {
+        u[j * n + i] = Math.round(
+          u[j * n + i]! + (random() - 0.5) * 0.4 * cell,
+        );
+        v[j * n + i] = Math.round(
+          v[j * n + i]! + (random() - 0.5) * 0.4 * cell,
+        );
+      }
+    }
+    const irregular: TerrainHeights = { ...base, u, v };
+    const clip = (q: number) =>
+      upsampleTerrainTile(irregular, PARENT, quadrant(PARENT, q), 10).info
+        .heights!;
+    /** The (position along the edge, height) pairs on one edge. */
+    const edge = (
+      t: TerrainHeights,
+      side: "east" | "west" | "north" | "south",
+    ) => {
+      const range = t.maximumHeight - t.minimumHeight;
+      const on = side === "east" || side === "west" ? t.u : t.v;
+      const along = side === "east" || side === "west" ? t.v : t.u;
+      const target = side === "east" || side === "north" ? 32767 : 0;
+      const points: [number, number][] = [];
+      for (let i = 0; i < on.length; i++) {
+        if (on[i] === target) {
+          points.push([along[i]!, t.minimumHeight + (t.h[i]! / 32767) * range]);
+        }
+      }
+      return points.sort((p, q) => p[0] - q[0]);
+    };
+    // The same places along the edge, at the same heights to within each
+    // tile's own height quantum.
+    const same = (a: [number, number][], b: [number, number][]): void => {
+      expect(a.map((p) => p[0])).toEqual(b.map((p) => p[0]));
+      a.forEach((p, i) => expect(p[1]).toBeCloseTo(b[i]![1], 1));
+    };
+    // South-west | south-east, and south-west over north-west, and the
+    // other pair of each.
+    same(edge(clip(0), "east"), edge(clip(1), "west"));
+    same(edge(clip(2), "east"), edge(clip(3), "west"));
+    same(edge(clip(0), "north"), edge(clip(2), "south"));
+    same(edge(clip(1), "north"), edge(clip(3), "south"));
+    expect(edge(clip(0), "east").length).toBeGreaterThan(2);
+  });
+});
+
+describe("skirtDepths", () => {
+  const data = { level: 2, x: 1, y: 1 };
+  it("keeps the data tile's depth where an edge lies on its boundary", () => {
+    // A child at its south-west corner: west and south are the data tile's.
+    expect(skirtDepths({ level: 3, x: 2, y: 2 }, data, 9, 1)).toEqual([
+      9, 9, 1, 1,
+    ]);
+    // Two levels down, at its east edge, one row up from the south.
+    expect(skirtDepths({ level: 4, x: 7, y: 5 }, data, 9, 1)).toEqual([
+      1, 1, 9, 1,
+    ]);
+    // The data tile itself.
+    expect(skirtDepths(data, data, 9, 1)).toEqual([9, 9, 9, 9]);
+  });
 });
 
 // ------------------------------------------------------------------ source
@@ -131,9 +258,13 @@ const EMPTY_ASSET = {
 async function terrain(
   levels: number,
   requests: Parameters<TerrainLoader>[0][] = [],
+  /** Replaces the whole-earth ranges at one level (a patchy edge). */
+  patch?: { level: number; range: TileRange },
 ): Promise<TerrainSource> {
   const available = Array.from({ length: levels }, (_, l) => [
-    { startX: 0, startY: 0, endX: 2 ** (l + 1) - 1, endY: 2 ** l - 1 },
+    patch?.level === l
+      ? patch.range
+      : { startX: 0, startY: 0, endX: 2 ** (l + 1) - 1, endY: 2 ** l - 1 },
   ]);
   vi.stubGlobal(
     "fetch",
@@ -313,9 +444,10 @@ describe("terrain past its data", () => {
     expect(requests[0]!.rect).toEqual(tileRectangle(grandchild.globe!));
     expect(requests[0]!.upsample!.rect).toEqual(data.globe!.rectangle);
     expect(requests[0]!.upsample!.heights).toBe(data.globe!.heights);
-    // Skirts as deep as its data tile's: the cracks they hide are that
-    // tile's.
-    expect(requests[0]!.skirtHeight).toBe((LEVEL_ZERO_ERROR / 4) * 5);
+    // Inside its data tile on every edge: only what its own level asks.
+    expect(requests[0]!.skirtHeight).toEqual(
+      Array(4).fill((LEVEL_ZERO_ERROR / 16) * 5),
+    );
 
     source.unloadTile(data);
     requests.length = 0;
@@ -338,6 +470,66 @@ describe("terrain past its data", () => {
     expect(patch.tile!.heights).toBe(child.globe!.heights);
     expect(patch.tile!.level).toBe(2);
     expect(patch.tile!.geometricError).toBe(data.geometricError);
+  });
+
+  it("an upsampled tile's heights move nothing: no listener fires, its data tile's surface is read", async () => {
+    const source = await terrain(3);
+    const data = tileAt(source, 2);
+    await load(source, data);
+    let fired = 0;
+    source.heightListeners.add(() => fired++);
+    source.upsampleContent(data);
+    const child = data.children.find((t) =>
+      contains(t.globe!.rectangle, 0.3, 0.2),
+    )!;
+    await load(source, child);
+    expect(child.globe!.heights).toBeDefined();
+    expect(fired).toBe(0);
+    expect(source.sampleHeight(0.3, 0.2)).toBeCloseTo(50, 6);
+    source.unloadTile(child);
+    expect(child.globe!.heights).toBeUndefined();
+    expect(fired).toBe(0);
+    // Its data tile's heights do move the surface.
+    source.unloadTile(data);
+    expect(fired).toBe(1);
+  });
+
+  it("rays: a quadrant upsampled from the drawn tile holds no finer data", async () => {
+    const source = await terrain(3);
+    const data = tileAt(source, 2);
+    await load(source, data);
+    data.viewMask = 1;
+    // As Budgeted reports it while the region refines.
+    data.standInMask = 1;
+    expect(source.upsampleContent(data)).toBe(true);
+    const patch = source.rayTarget().patchAt(0.3, 0.2);
+    expect(patch.unknown).toBeUndefined();
+    expect(patch.tile!.level).toBe(2);
+  });
+
+  it("budgeted: a quadrant without data, beside quadrants with, upsamples too", async () => {
+    // Level 4 everywhere; at level 5 only the quadrant east or west of the
+    // one over the camera. The other three quadrants of that level-4 tile
+    // have no data.
+    const level = 5;
+    const x = Math.floor((0.3 + Math.PI) / (Math.PI / 2 ** level));
+    const y = Math.floor((0.2 + Math.PI / 2) / (Math.PI / 2 ** level));
+    const source = await terrain(level + 1, [], {
+      level,
+      range: { startX: x ^ 1, startY: y, endX: x ^ 1, endY: y },
+    });
+    const selection = new GlobeBudgetedSelection(source, {});
+    selection.imageryRefines = () => true;
+    const selected = await settle(source, selection);
+    const under = selected.filter((t) =>
+      contains(t.globe!.rectangle, 0.3, 0.2),
+    );
+    expect(under).toHaveLength(1);
+    // Not the level 4 tile standing in for it: a tile of its own level,
+    // clipped from that tile, many levels finer.
+    expect(under[0]!.globe!.upsampledFrom).toBeDefined();
+    expect(under[0]!.fillFromParent).toBe(false);
+    expect(under[0]!.globe!.level).toBeGreaterThan(8);
   });
 
   it("the ellipsoid has every level: nothing is upsampled", () => {

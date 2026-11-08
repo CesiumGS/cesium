@@ -83,6 +83,11 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     return false;
   }
 
+  /** Quadrants without data upsample from their parent while imagery refines. */
+  protected override upsamplesFrom(parent: Tile): boolean {
+    return this.imageryRefines?.(parent) === true;
+  }
+
   /** Not expanded yet: its children's availability is still loading. */
   protected override refinementPending(tile: Tile): boolean {
     return tile.globe !== undefined && !tile.globe.expanded;
@@ -109,8 +114,8 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     }
     super.updateVisibility(tile, state, view, pass);
     if (
+      tile.globe &&
       state.visible &&
-      tile.children.length === 0 &&
       state.sse > this.memoryAdjustedScreenSpaceError &&
       this.imageryRefines?.(tile) === true
     ) {

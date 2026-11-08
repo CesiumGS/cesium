@@ -50,8 +50,10 @@ export interface GlobeImageryOptions {
   /**
    * Slices this layer adds to the world's array (default 256, at most the
    * device limit). A 256-texel slice with its mips is 349 KB, so 256 cost
-   * 89 MB. A view drew at most 61 tiles in measured flights, each needing
-   * a slice and sometimes an ancestor's while its own composites. Larger
+   * 89 MB. A view drew at most 61 tiles in measured flights over data
+   * (228 to 267 close to the ground, where terrain past its data is
+   * upsampled), each needing a slice and sometimes an ancestor's while its
+   * own composites. Larger
    * views get more: past 90% of its slices, the layer grows by this many
    * at a time (`SlicePool.demand`), and shrinks back once its need stays
    * low.

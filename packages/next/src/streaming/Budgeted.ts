@@ -218,8 +218,20 @@ export class BudgetedSelection extends StepwiseSelection {
     const state = tile.viewState(view.id);
 
     // A quadrant without data (terrain): the nearest loaded ancestor fills
-    // it, clipped to it.
+    // it, clipped to it. While the imagery has finer levels, its parent's
+    // mesh clipped to it draws it instead (`TerrainSource.upsampleContent`),
+    // so that parent is wanted too: skipped, a patchy edge of the data's
+    // range stayed as coarse as the level that did load.
     if (tile.fillFromParent) {
+      const parent = tile.parent;
+      if (
+        parent &&
+        parent.state === "unloaded" &&
+        this.upsamplesFrom(parent) &&
+        this.worthLoading(parent, view)
+      ) {
+        this.request(parent, FRONTIER + group, state.distance * 1e-3, result);
+      }
       return { tiles: [], complete: false, holes: [tile] };
     }
     // An external tileset must load before its subtree is known.
@@ -424,6 +436,14 @@ export class BudgetedSelection extends StepwiseSelection {
       complete: false,
       holes: parts.length === 0 ? [tile] : holes,
     };
+  }
+
+  /**
+   * Whether a quadrant without data is drawn from `parent`'s content, so
+   * that `parent` is wanted (terrain's `Budgeted` overrides it).
+   */
+  protected upsamplesFrom(_parent: Tile): boolean {
+    return false;
   }
 
   private mixes(tile: Tile): boolean {

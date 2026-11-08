@@ -11,6 +11,7 @@ import {
   UNITLESS_SKY,
   UNITLESS_SUN_ILLUMINANCE,
 } from "../src/index.ts";
+import { imageryLevel } from "../src/globe/GlobeImagery.ts";
 import { flip } from "./flip.ts";
 import type { Harness } from "../lab/harness.ts";
 import { compareImages } from "./metrics.ts";
@@ -29,7 +30,10 @@ const TEMPLATE = `
   The same cameras rendered by each engine after loading settles. Terrain
   selection is identical (globe Stepwise), fog and atmosphere are off in
   both, so the difference is imagery: level choice, compositing, filtering
-  and color. 2.0 may look better; FLIP records how far and where.
+  and color. 2.0 may look better; FLIP records how far and where. The
+  Amsterdam rows run 2.0's budgeted selection instead, where the terrain
+  data ends at level 13 and 1.x upsamples it: they also compare the imagery
+  level at the view's center (within 1 of 1.x's).
   <code>?only=</code> runs one camera.
 </p>
 <div class="status">Run to render each camera in both engines.</div>
@@ -54,13 +58,30 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
  * both, so the difference is imagery: level choice, compositing,
  * filtering and color. 2.0 is allowed to look better; this records by how
  * much and where (docs/imagery-1x-spec.md §7).
+ *
+ * The Amsterdam cameras run globe `Budgeted` (`policy: "budgeted"`): Cesium
+ * World Terrain has no data below level 13 over the polders, 1.x upsamples
+ * the terrain there so the imagery keeps refining, and 2.0's imagery
+ * stopped at Bing's level 13 (about 12 m a texel) at every range (engine
+ * bug 1). Their rows compare the imagery level of the tile at the view's
+ * center with 1.x's, which must be within 1.
  */
 
 const WIDTH = 640;
 const HEIGHT = 360;
 const deg = Math.PI / 180;
 
-const CAMERAS = [
+interface Camera {
+  label: string;
+  at: number[];
+  heading: number;
+  pitch: number;
+  range: number;
+  /** Default "stepwise", as 1.x selects terrain. */
+  policy?: "budgeted";
+}
+
+const CAMERAS: Camera[] = [
   {
     label: "Rainier oblique",
     at: [-121.76, 46.85, 2000],
@@ -97,7 +118,27 @@ const CAMERAS = [
     pitch: -30,
     range: 9000,
   },
+  // Terrain data ends at level 13 here. Budgeted selection, and the
+  // imagery level at the center is compared.
+  ...[3000, 1000, 300].map((range) => ({
+    label: `Amsterdam ${range} m (budgeted)`,
+    at: [4.9, 52.37, 0],
+    heading: 0,
+    pitch: -45,
+    range,
+    policy: "budgeted" as const,
+  })),
 ];
+
+/** The imagery level of the center's tile may differ from 1.x's by this. */
+const LEVEL_TOLERANCE = 1;
+/**
+ * FLIP limits for the budgeted rows. Their first run gave a mean of 0.033
+ * to 0.037 and a 95th percentile of 0.083 to 0.085; the stepwise rows
+ * reach 0.047 and 0.11, so the limits sit at those.
+ */
+const BUDGETED_FLIP_MEAN = 0.05;
+const BUDGETED_FLIP_P95 = 0.11;
 
 interface Row {
   view: string;
@@ -106,6 +147,9 @@ interface Row {
   flipP95?: number;
   meanDeltaE?: number;
   noticeable?: number;
+  /** The imagery level at the view's center: 2.0's, and 1.x's. */
+  level?: number;
+  level1x?: number;
 }
 
 async function settle(step: () => boolean, maxMs = 120000): Promise<void> {
@@ -225,14 +269,14 @@ async function runImagery(): Promise<Row[]> {
       });
       const tileset: Tileset3D = ellipsoid
         ? engine.addEllipsoid(world, {
-            policy: "stepwise",
+            policy: cam.policy ?? "stepwise",
             imagery,
             // 1.x's globe is unlit by default: compared as is.
             imageryOptions: { lit: false },
           })
         : await engine.addTerrain(world, terrain.url, {
             headers: terrain.headers,
-            policy: "stepwise",
+            policy: cam.policy ?? "stepwise",
             imagery,
             imageryOptions: { lit: false },
           });
@@ -274,15 +318,62 @@ async function runImagery(): Promise<Row[]> {
       });
       viewer.render();
       const legacy = capture(viewer.scene.canvas);
+      // Each engine's imagery level at the view's center.
+      const longitude = cam.at[0]! * deg;
+      const latitude = cam.at[1]! * deg;
+      const centerTile = (tileset.lastSelected.get(id) ?? []).find((t) => {
+        const r = t.globe!.rectangle;
+        return (
+          longitude >= r.west &&
+          longitude <= r.east &&
+          latitude >= r.south &&
+          latitude <= r.north
+        );
+      });
+      const level =
+        centerTile && tileset.imagery
+          ? imageryLevel(tileset.imagery.provider, centerTile)
+          : undefined;
+      let level1x: number | undefined;
+      for (const tile of viewer.scene.globe._surface._tilesToRender as Json[]) {
+        const r = tile.rectangle;
+        if (
+          longitude >= r.west &&
+          longitude <= r.east &&
+          latitude >= r.south &&
+          latitude <= r.north
+        ) {
+          for (const ti of tile.data?.imagery ?? []) {
+            const ready = ti.readyImagery?.level;
+            if (ready !== undefined) {
+              level1x = Math.max(level1x ?? 0, ready);
+            }
+          }
+        }
+      }
       engine.removeView(view);
       engine.removeTileset(tileset);
       engine.removeWorld(world);
 
       const f = flip(legacy.data, next.data, WIDTH, HEIGHT);
       const m = compareImages(legacy.data, next.data, WIDTH, HEIGHT);
+      let failure: string | undefined;
+      if (cam.policy) {
+        if (
+          level === undefined ||
+          level1x === undefined ||
+          Math.abs(level - level1x) > LEVEL_TOLERANCE
+        ) {
+          failure = `imagery level ${level} at the center, 1.x ${level1x}`;
+        } else if (f.mean > BUDGETED_FLIP_MEAN || f.p95 > BUDGETED_FLIP_P95) {
+          failure = `FLIP ${f.mean.toFixed(3)} mean, ${f.p95.toFixed(3)} p95`;
+        }
+      }
       rows.push({
         view: cam.label,
-        status: "ok",
+        status: failure ? `FAIL: ${failure}` : "ok",
+        ...(level !== undefined ? { level } : {}),
+        ...(level1x !== undefined ? { level1x } : {}),
         flipMean: f.mean,
         flipP95: f.p95,
         meanDeltaE: m.meanDeltaE,
@@ -325,10 +416,10 @@ function renderTable(rows: Row[]): void {
     v === undefined ? "" : `${(v * 100).toFixed(1)}%`;
   const n = (v?: number) => (v === undefined ? "" : v.toFixed(3));
   $("results").innerHTML =
-    `<tr><th>view</th><th>status</th><th>FLIP mean</th><th>FLIP p95</th><th>mean ΔE</th><th>ΔE > 2.3</th></tr>${rows
+    `<tr><th>view</th><th>status</th><th>level 2.0 / 1.x</th><th>FLIP mean</th><th>FLIP p95</th><th>mean ΔE</th><th>ΔE > 2.3</th></tr>${rows
       .map(
         (r) =>
-          `<tr><td>${r.view}</td><td>${r.status}</td><td>${n(r.flipMean)}</td><td>${n(r.flipP95)}</td>` +
+          `<tr><td>${r.view}</td><td>${r.status}</td><td>${r.level ?? ""}${r.level1x === undefined ? "" : ` / ${r.level1x}`}</td><td>${n(r.flipMean)}</td><td>${n(r.flipP95)}</td>` +
           `<td>${n(r.meanDeltaE)}</td><td>${pct(r.noticeable)}</td></tr>`,
       )
       .join("")}`;
