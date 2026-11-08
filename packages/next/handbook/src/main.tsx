@@ -1,3 +1,4 @@
+import "./font.ts";
 import "./handbook.css";
 import { IconButton } from "@mui/material";
 import { Icon, Root } from "@stratakit/mui";
@@ -191,6 +192,25 @@ function App() {
         </nav>
         <main className="main">
           <View />
+          <footer className="stamp">
+            <p>
+              Built {day(data.meta.generatedAt)} from commit {data.meta.commit}
+              {data.meta.dirty ? " plus uncommitted changes" : ""}. This page is
+              one self-contained file: it needs no server or network, except to
+              follow links to its sources.
+            </p>
+            <p>
+              Set in Inter, copyright The Inter Project Authors, under the{" "}
+              <a
+                href="https://openfontlicense.org"
+                target="_blank"
+                rel="noreferrer"
+              >
+                SIL Open Font License 1.1
+              </a>
+              .
+            </p>
+          </footer>
         </main>
       </div>
     </Root>

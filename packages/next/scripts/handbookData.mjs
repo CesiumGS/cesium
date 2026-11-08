@@ -13,12 +13,18 @@
 //             directory
 //   runtime   files the engine fetches at run time, measured in the setup
 //             store when this machine has it
-//   bench     bench/results (`node bench/run.mjs`) and handbook/baselines
+//   bench     bench/results (`node bench/run.mjs`, or BENCH_RESULTS_DIR) and
+//             handbook/baselines
+//
+// It also copies the page's font into handbook/generated/, from the setup
+// store, fetching it there first against a pinned hash, so the built page
+// loads nothing from the network.
 //
 // `--no-bundles` keeps the bundle section of the last run, for quick
 // iteration on the site (each build takes a few seconds).
 import { execFileSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -34,6 +40,7 @@ import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
 import { gzipSync } from "node:zlib";
 import ts from "typescript";
+import { verifiedDownload } from "./verifiedDownload.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -355,7 +362,7 @@ const verdicts = (rows) => {
  * local paths.
  */
 export function readBenchResults(root = packageRoot) {
-  const dir = join(root, "bench/results");
+  const dir = process.env.BENCH_RESULTS_DIR ?? join(root, "bench/results");
   const runs = [];
   for (const name of existsSync(dir) ? readdirSync(dir).sort() : []) {
     if (!name.endsWith(".json")) {
@@ -483,6 +490,90 @@ function readCounts(root) {
   };
 }
 
+/**
+ * Inter 4.1, the typeface StrataKit expects, which its Root otherwise loads
+ * from this URL when the page opens. SIL Open Font License 1.1.
+ */
+const INTER = {
+  url: "https://rsms.me/inter/font-files/InterVariable.woff2?v=4.1",
+  expected: {
+    bytes: 352240,
+    sha256: "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+  },
+};
+
+/** Puts the font beside the generated data, fetching it once if need be. */
+async function provideFont(outDir) {
+  const stored = join(
+    homedir(),
+    ".cesium-bench",
+    "fonts",
+    "InterVariable-4.1.woff2",
+  );
+  if (!existsSync(stored)) {
+    mkdirSync(dirname(stored), { recursive: true });
+    await verifiedDownload(INTER.url, stored, INTER.expected);
+  }
+  copyFileSync(stored, join(outDir, "InterVariable.woff2"));
+}
+
+/** `KEY=value` lines of an env file, as [key, value], quotes removed. */
+const envEntries = (path) =>
+  existsSync(path)
+    ? readFileSync(path, "utf8")
+        .split("\n")
+        .map((line) => /^\s*(?:export\s+)?([\w.-]+)\s*=\s*(.*)$/.exec(line))
+        .filter(Boolean)
+        .map((m) => [m[1], m[2].trim().replace(/^(["'])(.*)\1$/, "$2")])
+    : [];
+
+/**
+ * The package's env files: this checkout's and, from a worktree, the main
+ * checkout's, which is where `.env.local` lives.
+ */
+function envFiles(root) {
+  const common = git(
+    root,
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-common-dir",
+  );
+  const roots = new Set([root, join(dirname(common), "packages/next")]);
+  return [...roots].flatMap((dir) =>
+    existsSync(dir)
+      ? readdirSync(dir)
+          .filter((name) => /^\.env(\..+)?$/.test(name))
+          .map((name) => join(dir, name))
+      : [],
+  );
+}
+
+/**
+ * What must never be in a page that gets passed around: a value from an env
+ * file, anything shaped like an ion token (a JWT), a path on this machine.
+ * Each reason names where the value came from and never the value.
+ */
+export function findSecrets(
+  html,
+  { files = envFiles(packageRoot), home = homedir() } = {},
+) {
+  const found = [];
+  for (const file of files) {
+    for (const [key, value] of envEntries(file)) {
+      if (value.length >= 8 && html.includes(value)) {
+        found.push(`the value of ${key} from ${file.replace(/^.*\//, "")}`);
+      }
+    }
+  }
+  if (/eyJ[\w-]{10,}\.eyJ[\w-]{10,}\./.test(html)) {
+    found.push("a string shaped like an access token (a JWT)");
+  }
+  if (html.includes(home)) {
+    found.push("this machine's home directory");
+  }
+  return found;
+}
+
 function git(root, ...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
@@ -493,8 +584,18 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
   const previous = existsSync(outFile)
     ? JSON.parse(readFileSync(outFile, "utf8"))
     : undefined;
+  // What the page describes, or is: uncommitted changes make the stamp say so.
   const dirty =
-    git(root, "status", "--porcelain", "--", "src", "widgets").length > 0;
+    git(
+      root,
+      "status",
+      "--porcelain",
+      "--",
+      "src",
+      "widgets",
+      "api",
+      "handbook",
+    ).length > 0;
   const data = {
     meta: {
       generatedAt: new Date().toISOString(),
@@ -515,6 +616,7 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
     throw new Error("--no-bundles needs an earlier full run to keep from");
   }
   mkdirSync(outDir, { recursive: true });
+  await provideFont(outDir);
   writeFileSync(outFile, `${JSON.stringify(data, null, 1)}\n`);
   return data;
 }

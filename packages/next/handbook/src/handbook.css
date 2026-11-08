@@ -208,6 +208,19 @@ pre.snippet:focus-visible,
   margin-block: 0;
 }
 
+.stamp {
+  max-inline-size: 1000px;
+  margin: var(--stratakit-space-1000) auto 0;
+  padding-block-start: var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.stamp p {
+  margin: 0 0 var(--stratakit-space-100);
+  max-inline-size: 72ch;
+}
+
 /* -------------------------------------------------------------- the tables */
 
 .table-wrap {

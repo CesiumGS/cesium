@@ -21,6 +21,31 @@ can be attached or hosted with nothing beside it. It has no router: the hash is
 the tab (`#/frames`), so a link goes straight to a tab. Dyno's own data store
 and shell aren't reused, as they bring far more than a document needs.
 
+## Handing it out
+
+`npm run handbook` writes one file to hand out:
+`handbook/dist/cesium-2.0-handbook-<date>-<commit>.html`, or `-dirty` when the
+engine or the handbook has uncommitted changes. Build from a clean commit for
+anything that leaves the team. It opens from disk with no server, and the page
+itself uses no WebGPU.
+
+Everything is inside the file: scripts, styles, diagrams, data and the font. Only
+links to sources use the network, when someone follows them. Its figures are
+fixed when it's built, and each page's footer and a
+`<meta name="cesium-handbook-build">` tag give the build date and commit.
+
+The font is the one thing fetched at build time: Inter 4.1, pinned by SHA-256 in
+`scripts/handbookData.mjs` and kept in the setup store, never in the repository.
+Adding it first stops StrataKit's `Root` from requesting it from its usual host.
+
+The build fails, naming the source and never the value, if the page holds a value
+from an env file (this checkout's or the main checkout's), anything shaped like
+an access token, or this machine's home directory. No env file is loaded into the
+build at all (`envDir: false`).
+
+`BENCH_RESULTS_DIR` points the build at another `bench/results`, as a worktree has
+only the committed runs.
+
 ## Layout
 
 Thirteen tabs don't fit a horizontal strip, so they're a grouped side list on a
@@ -44,7 +69,7 @@ keep their names (`FrameGraph`).
 
 ## Keeping it up to date
 
-`npm run handbook` regenerates the figures and builds `handbook/dist/index.html`.
+`npm run handbook` regenerates the figures and builds the file to hand out.
 `npm run handbook:dev -- --port <yours>` serves the same page with hot reload.
 
 | What                                    | Where it comes from                                      | When it changes                                                      |
@@ -78,7 +103,7 @@ By hand, when the work changes it:
 
 - The side list rather than top tabs, as above.
 - `packages/next/handbook/` as the location.
-- One built file rather than a folder of assets.
+- One built file rather than a zip or a folder of assets, as it stays small.
 - Generated data isn't committed, so a checkout builds its own figures. A shared
   copy of the page shows the commit it was built from.
 - The API tab lists every export as `api/surface.txt` has it.

@@ -38,6 +38,10 @@ export function readBenchResults(root?: string): {
   adapters: { adapter: string; runs: number; [key: string]: unknown }[];
   baselines: { name: string; date: string | null; note: string | null }[];
 };
+export function findSecrets(
+  html: string,
+  options?: { files?: string[]; home?: string },
+): string[];
 export function generate(options?: {
   root?: string;
   bundles?: boolean;

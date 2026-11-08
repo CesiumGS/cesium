@@ -1,8 +1,12 @@
 // The handbook reads its figures from sources that stay current
 // (handbook/DESIGN.md). These fail when one of them changes shape, so the
 // reader is updated rather than the page quietly going wrong.
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { expect, it } from "vitest";
 import {
+  findSecrets,
   parseCheckBundle,
   readBenchResults,
   readLayers,
@@ -76,5 +80,31 @@ it("summarizes bench results per adapter, with no run errors in them", () => {
     expect(adapter.runs).toBeGreaterThan(0);
     // Run errors can quote local paths, so they never reach the page.
     expect(adapter).not.toHaveProperty("errors");
+  }
+});
+
+it("finds what must not be in a page that gets passed around", () => {
+  const dir = mkdtempSync(join(tmpdir(), "handbook-secrets-"));
+  try {
+    const file = join(dir, ".env.local");
+    writeFileSync(
+      file,
+      '# a comment\nVITE_SOME_KEY="not-a-real-value-123"\nSHORT=abc\n',
+    );
+    const options = { files: [file], home: "/home/someone" };
+    expect(findSecrets("<p>a clean page, abc</p>", options)).toEqual([]);
+    const found = findSecrets("x not-a-real-value-123 y", options);
+    expect(found).toEqual(["the value of VITE_SOME_KEY from .env.local"]);
+    // A reason never repeats the value.
+    expect(found.join()).not.toContain("not-a-real-value-123");
+    const jwtShape = ["eyJhbGciOiJIUzI1", "eyJzdWIiOiIxMjM0", "c2lnbmF0dXJl"];
+    expect(findSecrets(jwtShape.join("."), options)).toEqual([
+      "a string shaped like an access token (a JWT)",
+    ]);
+    expect(findSecrets("file:///home/someone/x", options)).toEqual([
+      "this machine's home directory",
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
