@@ -2920,6 +2920,15 @@ export class World {
     return this.anchorSlots[this.transformAnchor[handle.index]!];
   }
 
+  /** The anchor a draw hangs under, or undefined under none (or once removed). */
+  drawAnchor(handle: DrawHandle): AnchorHandle | undefined {
+    if (!this.hasDraw(handle)) {
+      return undefined;
+    }
+    const t = this.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
+    return this.anchorSlots[this.transformAnchor[t]!];
+  }
+
   /**
    * Sets an anchor's place in the table root (column-major float64, rigid):
    * where the core's own frame resolver (`tableResolver`) finds it. Views

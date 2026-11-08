@@ -25,6 +25,7 @@ entry	name	kind	tier
 .	CompiledStyle	interface	-
 .	ContentSummary	interface	-
 .	ContentTotals	interface	-
+.	CorePick	interface	-
 .	CustomShader	class	-
 .	CustomShaderOptions	interface	-
 .	DAYLIGHT_EXPOSURE	const	-
@@ -98,6 +99,8 @@ entry	name	kind	tier
 .	OrbitController	class	-
 .	OrbitFrame	interface	-
 .	OutputEncoding	type	-
+.	PickCamera	interface	-
+.	PickInterpreter	interface	-
 .	PickResult	interface	-
 .	PlacementMode	type	-
 .	PlacementOptions	type	-
@@ -254,7 +257,9 @@ frames	FrameOptions	interface	-
 frames	FramePoint	interface	-
 frames	FrameStandInWarning	interface	-
 frames	FrameUser	type	-
+frames	FramedPoint	interface	-
 frames	Frames	interface	-
+frames	FramesPickInterpreterOptions	interface	-
 frames	FramesResolver	interface	-
 frames	FramesResolverOptions	interface	-
 frames	OemSegment	interface	-
@@ -271,6 +276,7 @@ frames	celestialToTerrestrial	function	-
 frames	convertPoint	function	-
 frames	createFrameCatalog	function	-
 frames	createFrames	function	-
+frames	createFramesPickInterpreter	function	-
 frames	createFramesResolver	function	-
 frames	createSkyState	function	-
 frames	dominantTerm	function	-
@@ -352,7 +358,7 @@ proj	MOON_GEOGRAPHIC_CRS	const	-
 proj	OperationCandidate	interface	-
 proj	PJ	interface	-
 proj	ParamValue	type	-
-proj	PickCamera	interface	-
+proj	PickCamera	type	-
 proj	PickView	interface	-
 proj	Pipeline	interface	-
 proj	PipelineGrid	interface	-

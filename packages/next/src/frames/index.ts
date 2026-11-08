@@ -62,6 +62,11 @@ export {
   type FrameStandInWarning,
 } from "./resolver.ts";
 export {
+  createFramesPickInterpreter,
+  type FramedPoint,
+  type FramesPickInterpreterOptions,
+} from "./pickInterpreter.ts";
+export {
   attachSky,
   type AttachSkyOptions,
   type SkyInputs,

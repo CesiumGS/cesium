@@ -5,6 +5,7 @@ import type { FeatureValue } from "../io/gltfTypes.ts";
 import { MAX_ANCHORS, type ViewLighting } from "../render/layout.ts";
 import { EARTH, bodyKey, type Body } from "./Body.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
+import type { CorePick } from "./pick.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
 export interface Viewport {
@@ -322,8 +323,11 @@ function rotate(
   out[2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]! * w;
 }
 
-/** `out` = Rᵀ (v - t for a point), for a column-major rigid `m`; a copy without one. */
-function inverseRotate(
+/**
+ * @internal `out` = Rᵀ (v - t for a point), for a column-major rigid `m`; a
+ * copy without one.
+ */
+export function inverseRotate(
   m: ArrayLike<number> | undefined,
   v: ArrayLike<number>,
   out: Float64Array,
@@ -689,6 +693,7 @@ export class View {
     y: number;
     resolve?: (r: PickResult | undefined) => void;
     resolvePosition?: (p: Float64Array | undefined) => void;
+    resolvePoint?: (p: CorePick | undefined) => void;
   }> = [];
   /** @internal Waiting for the view's next render (`readHdr`). */
   pendingHdrReads: Array<(image: HdrImage) => void> = [];
@@ -881,6 +886,21 @@ export class View {
     camera.version++;
   }
 
+  /**
+   * @internal This view's placements now, for a pick to keep (render space
+   * ← anchor, copied): the table root's (key `undefined`) and each anchor
+   * of its world's, `undefined` at the identity.
+   */
+  pickPlacements(): Map<AnchorHandle | undefined, Float64Array | undefined> {
+    const out = new Map<AnchorHandle | undefined, Float64Array | undefined>();
+    const copy = (m: Float64Array | undefined) => m && Float64Array.from(m);
+    out.set(undefined, copy(this.placementOf(undefined, "pickPlacements")));
+    for (const anchor of this.world.anchors) {
+      out.set(anchor, copy(this.placementOf(anchor, "pickPlacements")));
+    }
+    return out;
+  }
+
   /** An anchor's placement, or undefined at the identity. */
   private placementOf(
     anchor: AnchorHandle | FrameKey | undefined,
@@ -1059,12 +1079,30 @@ export class View {
 
   /**
    * Earth-fixed position of what is drawn under a pixel of this view
-   * (float64, from the depth buffer), or undefined over the sky. Resolves a
-   * few frames later, with the camera of the frame it was read in.
+   * (float64, from the depth buffer): the body anchor's coordinates
+   * (`bodyAnchor`), whatever the render root. Undefined over the sky.
+   * Resolves a few frames later, with the camera of the frame it was read
+   * in.
    */
   pickPosition(x: number, y: number): Promise<Float64Array | undefined> {
     return new Promise((resolvePosition) => {
       this.pendingPicks.push({ x, y, resolvePosition });
+      this.wake?.();
+    });
+  }
+
+  /**
+   * What is drawn under a pixel of this view (pixels relative to its
+   * top-left, as `pick`): the position in render space (the rig's position
+   * reference frame) and in the hit draw's anchor, the draw and the
+   * feature, with the camera, the render root and the scene time. All of it
+   * is from the tick whose image was read, however many ticks later it
+   * resolves. Undefined over the sky. A pick interpreter turns it into a
+   * point tagged with its reference frame (`createFramesPickInterpreter`).
+   */
+  pickPoint(x: number, y: number): Promise<CorePick | undefined> {
+    return new Promise((resolvePoint) => {
+      this.pendingPicks.push({ x, y, resolvePoint });
       this.wake?.();
     });
   }

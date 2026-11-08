@@ -92,6 +92,7 @@ export {
   type RenderTarget,
   type Viewport,
 } from "./scene/View.ts";
+export type { CorePick, PickCamera, PickInterpreter } from "./scene/pick.ts";
 export {
   ViewLink,
   type ViewLinkMode,

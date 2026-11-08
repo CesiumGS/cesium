@@ -10,7 +10,6 @@ import {
   type TextureHandle,
 } from "../render/FrameGraph.ts";
 import {
-  UNDERLAY_DEPTH,
   VIEW_BIT_WORD,
   VIEW_SIZE,
   VIEW_STRIDE,
@@ -100,6 +99,7 @@ import {
   type ModelResourceOptions,
 } from "./gltfModel.ts";
 import type { CustomShader } from "./CustomShader.ts";
+import { corePick, depthDistance, pickResult, type PickTick } from "./pick.ts";
 
 /** Tone mappings by their index in present.slang's `PresentParams`. */
 const TONE_MAPPINGS: readonly ToneMapping[] = ["pbrNeutral", "agx", "aces"];
@@ -2479,6 +2479,8 @@ export class Engine {
         // One pick per frame keeps the shared params/result buffers simple.
         frame.pick =
           this.picks.length === 0 ? view.pendingPicks.shift() : undefined;
+        // The scene time of this image, for its picks (also idle ones).
+        frame.seconds = this.cameras.clock(view.world)?.seconds ?? 0;
         frame.graph.execute(encoder);
         frame.rendered = true;
       }
@@ -3345,22 +3347,72 @@ export class Engine {
     // The camera of this tick (in the body anchor, as drawn), to turn the
     // depth into a position.
     const camera = this.bodyCamera(view);
+    const tanY = Math.tan(camera.fovy(width / height) / 2);
+    const tanX = tanY * (width / height);
+    const ndcX = ((this.pickParamsData[0]! + 0.5) / width) * 2 - 1;
+    const ndcY = 1 - ((this.pickParamsData[1]! + 0.5) / height) * 2;
     this.picks.push({
       view,
       readback,
       request,
+      tick:
+        request.resolvePoint &&
+        this.pickTick(view, frame, tanX, tanY, ndcX, ndcY),
       camera: {
         position: Float64Array.from(camera.position),
         direction: Float64Array.from(camera.direction),
         up: Float64Array.from(camera.up),
         right: Float64Array.from(camera.right),
         near: camera.near,
-        tanY: Math.tan(camera.fovy(width / height) / 2),
-        tanX: Math.tan(camera.fovy(width / height) / 2) * (width / height),
-        ndcX: ((this.pickParamsData[0]! + 0.5) / width) * 2 - 1,
-        ndcY: 1 - ((this.pickParamsData[1]! + 0.5) / height) * 2,
+        tanY,
+        tanX,
+        ndcX,
+        ndcY,
       },
     });
+  }
+
+  /**
+   * What a pick keeps of the tick it reads (`View.pickPoint`, plan 5a's
+   * Review Focus 3): the view's camera in render space, its placements, its
+   * render root and the scene time, as of the image the pick pass reads. A
+   * view picked while idle hasn't moved since that image (its on-demand
+   * fingerprint holds its camera and placements), and `frame.seconds` is
+   * that image's.
+   */
+  private pickTick(
+    view: View,
+    frame: ViewFrame,
+    tanX: number,
+    tanY: number,
+    ndcX: number,
+    ndcY: number,
+  ): PickTick {
+    const c = view.camera;
+    const ratio =
+      view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
+    return {
+      view,
+      world: view.world,
+      root: this.cameras.root(view),
+      seconds: frame.seconds,
+      bodyAnchor: view.bodyAnchor,
+      placements: view.pickPlacements(),
+      camera: {
+        position: Float64Array.from(c.position),
+        direction: Float64Array.from(c.direction),
+        up: Float64Array.from(c.up),
+        right: Float64Array.from(c.right),
+      },
+      near: c.near,
+      fovy: c.fovy(frame.width / frame.height),
+      width: frame.width / ratio,
+      height: frame.height / ratio,
+      tanX,
+      tanY,
+      ndcX,
+      ndcY,
+    };
   }
 
   /** The view's frame graph for its current size, built on first use and on resize. */
@@ -3518,6 +3570,7 @@ export class Engine {
       bundle: undefined,
       bundles: [],
       pick: undefined,
+      seconds: 0,
       ids: idsTexture,
       depth: depthTexture,
       idsView,
@@ -4472,23 +4525,25 @@ export class Engine {
   }
 
   private resolvePicks(picks: PendingPick[]): void {
-    for (const { view, readback, request, camera: c } of picks) {
+    for (const { view, readback, request, camera: c, tick } of picks) {
       whenMapped(readback, () => {
         const words = new Uint32Array(readback.getMappedRange());
         const featureId = words[0]!;
         const depth = new Float32Array(words.buffer, 4, 1)[0]!;
         readback.unmap();
         this.pickReadback.push(readback);
+        if (request.resolvePoint) {
+          request.resolvePoint(corePick(tick!, featureId, depth));
+          return;
+        }
         if (request.resolvePosition) {
           // Reverse-Z, infinite far: distance along the view axis is
-          // near / depth.
-          if (!(depth > 0)) {
+          // near / depth (`depthDistance`).
+          const z = depthDistance(c.near, depth);
+          if (z === undefined) {
             request.resolvePosition(undefined);
             return;
           }
-          // Underlay draws (the bare ellipsoid) scale their depth down.
-          const z =
-            c.near / (depth <= UNDERLAY_DEPTH ? depth / UNDERLAY_DEPTH : depth);
           const p = new Float64Array(3);
           for (let i = 0; i < 3; i++) {
             p[i] =
@@ -4501,19 +4556,7 @@ export class Engine {
           request.resolvePosition(p);
           return;
         }
-        const resolve = request.resolve!;
-        const feature = view.world.feature(featureId);
-        resolve(
-          feature
-            ? {
-                featureId,
-                name: feature.name,
-                ...(feature.properties
-                  ? { properties: feature.properties }
-                  : {}),
-              }
-            : undefined,
-        );
+        request.resolve!(pickResult(featureId, view.world.feature(featureId)));
       });
     }
   }
@@ -4541,6 +4584,8 @@ interface PendingPick {
   view: View;
   readback: GPUBuffer;
   request: View["pendingPicks"][number];
+  /** What a `View.pickPoint` keeps of its tick. */
+  tick: PickTick | undefined;
   camera: {
     position: Float64Array;
     direction: Float64Array;
@@ -4586,6 +4631,8 @@ interface ViewFrame {
   /** One-element list handed to executeBundles. */
   readonly bundles: GPURenderBundle[];
   pick: View["pendingPicks"][number] | undefined;
+  /** The scene clock's seconds when it last rendered (its picks'). */
+  seconds: number;
   /** The view's own feature IDs and depth (picks read the last frame's). */
   readonly ids: GPUTexture;
   readonly depth: GPUTexture;

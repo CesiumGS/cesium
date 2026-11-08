@@ -21,7 +21,8 @@ import { engineeringPlacement } from "./placement.ts";
 /**
  * The camera a snap's pick was read with, and its view's size in CSS
  * pixels: what a server needs to snap as the screen shows it (1.x passes the
- * `Camera` and the canvas size).
+ * `Camera` and the canvas size). In the hit's coordinates (body-fixed for
+ * content on a body), from the tick the pick read.
  */
 export type SnapCamera = PickCamera;
 
@@ -89,8 +90,10 @@ export interface SnapResult {
   /** The element hit (1.x's `elementId` comes from it). */
   readonly feature?: PickResult;
   /**
-   * The camera the client snap used, to build a server request from: absent
-   * when the camera kept moving during the pick.
+   * The camera the client snap used (from the pick's tick, in the
+   * coordinates of `snapPoint`), to build a server request from: absent
+   * only when a view without `pickPoint` kept its camera moving during the
+   * pick.
    */
   readonly camera?: SnapCamera;
 }

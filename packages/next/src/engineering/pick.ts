@@ -9,18 +9,32 @@ import {
   volumeObb,
   type TileVolume,
 } from "../streaming/volumes.ts";
-import type { CameraPose } from "../scene/Camera.ts";
+import type { CorePick, PickInterpreter } from "../scene/pick.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
 import { engineeringPlacement } from "./placement.ts";
 
 /**
+ * The camera a pick's position and feature were read with, for projecting
+ * into that same tick (`projectToPixel`): the core's (`CorePick.camera`),
+ * named in this entry too; public as `SnapCamera`.
+ */
+export type PickCamera = CorePick["camera"];
+
+/**
  * The part of a `View` that `pickDesign` uses, so tests can pass fakes.
- * `pick` and `pickPosition` take target (device) pixels relative to the
- * view's top-left; `camera.fovy` is the vertical field of view for an aspect
- * ratio (the scene's `Camera` stores the larger dimension's), and
- * `direction`, `up` and `right` its unit axes (Earth-fixed).
+ * `pick`, `pickPosition` and `pickPoint` take target (device) pixels
+ * relative to the view's top-left; `camera.fovy` is the vertical field of
+ * view for an aspect ratio (the scene's `Camera` stores the larger
+ * dimension's), and `direction`, `up` and `right` its unit axes
+ * (Earth-fixed).
  */
 export interface PickView {
+  /**
+   * A `View`'s pick from one tick (`View.pickPoint`): with it, `pickDesign`
+   * reads the position, the feature and the camera together. Without it,
+   * it reads `pickPosition` and `pick` and checks the camera stayed put.
+   */
+  pickPoint?(x: number, y: number): Promise<CorePick | undefined>;
   pick(x: number, y: number): Promise<PickResult | undefined>;
   pickPosition(x: number, y: number): Promise<Float64Array | undefined>;
   readonly body: Body;
@@ -57,7 +71,7 @@ export interface DesignPick {
   readonly feature?: PickResult;
   /**
    * Present only for a hit on a listed tileset that has a placement, when
-   * the position, the feature and the camera all come from one frame and
+   * the position, the feature and the camera all come from one tick and
    * the hit tile's bounds contain the position.
    */
   readonly design?: DesignPoint;
@@ -65,27 +79,14 @@ export interface DesignPick {
   readonly tolerance: number;
 }
 
-/**
- * The camera a pick's position and feature were read with, for projecting
- * into that same frame (`projectToPixel`); public as `SnapCamera`.
- */
-export interface PickCamera extends CameraPose {
-  readonly position: Float64Array;
-  readonly direction: Float64Array;
-  readonly up: Float64Array;
-  readonly right: Float64Array;
-  readonly fovy: number;
-  /** Metres: nothing nearer is drawn. */
-  readonly near: number;
-  /** The view's size in CSS pixels. */
-  readonly width: number;
-  readonly height: number;
-}
-
 /** @internal `pickDesign`'s answer, with what snapping builds on. */
 export interface FramedPick {
   readonly pick: DesignPick;
-  /** Absent when the camera kept moving (the pick then has no feature). */
+  /**
+   * The camera the pick was read with, in the coordinates of `pick.position`.
+   * Absent when a view without `pickPoint` kept its camera moving (the pick
+   * then has no feature).
+   */
   readonly camera?: PickCamera;
   /** The hit draw and its tile, on a listed tileset. */
   readonly draw?: DrawHandle;
@@ -127,11 +128,14 @@ function nearVolume(
  * Picks the surface under a position of `view`: `x` and `y` are CSS pixels
  * relative to the view's top-left. Resolves undefined over the sky. Design
  * coordinates come from the hit tileset's placement, only when that tileset
- * is in `tilesets`. The position and the feature are read on different frames:
- * if the camera moved in between the pick is tried once more, and if it still
- * moved only the position returns, with no tileset, feature or design. When
- * the placement can't invert the hit (`designOf` throws), the pick resolves
- * without design coordinates and the tileset warns (`DESIGN_NOT_INVERTED`).
+ * is in `tilesets`. On a `View`, the position (the hit draw's anchor's
+ * coordinates: Earth-fixed for content on the Earth), the feature and the
+ * camera are one tick's (`View.pickPoint`). A view without `pickPoint` gives
+ * them on different frames: if the camera moved in between the pick is
+ * tried once more, and if it still moved only the position returns, with
+ * no tileset, feature or design. When the placement can't invert the hit
+ * (`designOf` throws), the pick resolves without design coordinates and the
+ * tileset warns (`DESIGN_NOT_INVERTED`).
  */
 export async function pickDesign(
   view: PickView,
@@ -153,6 +157,96 @@ const sameRect = (
 ) => r.width === width && r.height === height;
 
 /**
+ * @internal The engineering module's `PickInterpreter`: a core pick as
+ * `pickDesign`'s answer, design coordinates from `tilesets`' placements.
+ * The position is the pick's `anchorPosition`, and the camera its own (in
+ * the same coordinates), so the eye and the hit come from one tick in one
+ * anchor whatever the render root.
+ */
+export function designPickInterpreter(
+  view: PickView,
+  tilesets: readonly Tileset3D[],
+): PickInterpreter<FramedPick> {
+  return {
+    interpret: (core) =>
+      framed(
+        core.anchor?.body ?? view.body,
+        core.anchorPosition,
+        core.feature,
+        core.draw,
+        core.camera,
+        tilesets,
+      ),
+  };
+}
+
+/**
+ * `pickDesign`'s answer for a hit at `position` on `draw`, read with
+ * `camera` (in `position`'s coordinates).
+ */
+function framed(
+  body: Body,
+  position: Float64Array,
+  feature: PickResult | undefined,
+  draw: DrawHandle | undefined,
+  camera: PickCamera,
+  tilesets: readonly Tileset3D[],
+): FramedPick {
+  const distance = Math.hypot(
+    camera.position[0]! - position[0]!,
+    camera.position[1]! - position[1]!,
+    camera.position[2]! - position[2]!,
+  );
+  const tolerance = (distance * 2 * Math.tan(camera.fovy / 2)) / camera.height;
+  let tileset: Tileset3D | undefined;
+  let volume: TileVolume | undefined;
+  let hitDraw: DrawHandle | undefined;
+  let hitTile: Tile | undefined;
+  if (feature !== undefined && draw !== undefined) {
+    for (const t of tilesets) {
+      const tile = t.isDestroyed() ? undefined : t.tileOfDraw(draw);
+      if (tile !== undefined) {
+        tileset = t;
+        volume = tile.contentVolume ?? tile.volume;
+        hitDraw = draw;
+        hitTile = tile;
+        break;
+      }
+    }
+  }
+  const placement = engineeringPlacement(tileset?.placement);
+  const inside =
+    volume !== undefined && nearVolume(volume, position, tolerance + 1);
+  let design: DesignPoint | undefined;
+  if (placement !== undefined && inside) {
+    try {
+      design = designPoint(placement.frame, placement.designOf(position), {
+        how: "pick",
+        tolerance,
+      });
+    } catch {
+      // The placement can't invert this hit (EngineeringFrame.fromBodyFixed
+      // throws outside the operation's domain, or at the body's centre):
+      // the true values stand, without design coordinates.
+      tileset!.warnings.add(DESIGN_NOT_INVERTED);
+    }
+  }
+  const pick: DesignPick = {
+    body,
+    position,
+    ...(tileset !== undefined && { tileset }),
+    ...(feature !== undefined && { feature }),
+    ...(design !== undefined && { design }),
+    tolerance,
+  };
+  return {
+    pick,
+    camera,
+    ...(hitDraw !== undefined && { draw: hitDraw, tile: hitTile }),
+  };
+}
+
+/**
  * @internal `pickDesign`, also giving the camera the answer was read with,
  * and the hit draw and tile.
  */
@@ -165,6 +259,10 @@ export async function pickInFrame(
   const ratio = targetPixelRatio(view.target);
   const px = x * ratio;
   const py = y * ratio;
+  if (view.pickPoint) {
+    const core = await view.pickPoint(px, py);
+    return core && designPickInterpreter(view, tilesets).interpret(core);
+  }
   const cam = view.camera;
 
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -186,12 +284,16 @@ export async function pickInFrame(
     if (position === undefined) {
       return undefined;
     }
-    const distance = Math.hypot(
-      eye[0]! - position[0]!,
-      eye[1]! - position[1]!,
-      eye[2]! - position[2]!,
-    );
-    const tolerance = (distance * 2 * Math.tan(fovy / 2)) / (height / ratio);
+    const camera: PickCamera = {
+      position: eye,
+      direction,
+      up,
+      right,
+      fovy,
+      near,
+      width: width / ratio,
+      height: height / ratio,
+    };
     const moved =
       cam.version !== version ||
       !same3(cam.position, eye) ||
@@ -204,68 +306,22 @@ export async function pickInFrame(
       if (attempt === 0) {
         continue;
       }
-      return { pick: { body: view.body, position, tolerance } };
+      // Only the position: the feature may be another tick's.
+      const { pick } = framed(
+        view.body,
+        position,
+        undefined,
+        undefined,
+        camera,
+        tilesets,
+      );
+      return { pick };
     }
-    const camera: PickCamera = {
-      position: eye,
-      direction,
-      up,
-      right,
-      fovy,
-      near,
-      width: width / ratio,
-      height: height / ratio,
-    };
-
-    let tileset: Tileset3D | undefined;
-    let volume: TileVolume | undefined;
-    let hitDraw: DrawHandle | undefined;
-    let hitTile: Tile | undefined;
-    if (feature !== undefined) {
-      const draw = view.world.feature(feature.featureId)?.draw;
-      if (draw !== undefined) {
-        for (const t of tilesets) {
-          const tile = t.isDestroyed() ? undefined : t.tileOfDraw(draw);
-          if (tile !== undefined) {
-            tileset = t;
-            volume = tile.contentVolume ?? tile.volume;
-            hitDraw = draw;
-            hitTile = tile;
-            break;
-          }
-        }
-      }
-    }
-    const placement = engineeringPlacement(tileset?.placement);
-    const inside =
-      volume !== undefined && nearVolume(volume, position, tolerance + 1);
-    let design: DesignPoint | undefined;
-    if (placement !== undefined && inside) {
-      try {
-        design = designPoint(placement.frame, placement.designOf(position), {
-          how: "pick",
-          tolerance,
-        });
-      } catch {
-        // The placement can't invert this hit (EngineeringFrame.fromBodyFixed
-        // throws outside the operation's domain, or at the body's centre):
-        // the true values stand, without design coordinates.
-        tileset!.warnings.add(DESIGN_NOT_INVERTED);
-      }
-    }
-    const pick: DesignPick = {
-      body: view.body,
-      position,
-      ...(tileset !== undefined && { tileset }),
-      ...(feature !== undefined && { feature }),
-      ...(design !== undefined && { design }),
-      tolerance,
-    };
-    return {
-      pick,
-      camera,
-      ...(hitDraw !== undefined && { draw: hitDraw, tile: hitTile }),
-    };
+    const draw =
+      feature === undefined
+        ? undefined
+        : view.world.feature(feature.featureId)?.draw;
+    return framed(view.body, position, feature, draw, camera, tilesets);
   }
   throw new Error("unreachable");
 }

@@ -4,8 +4,10 @@ import { EARTH } from "../src/scene/Body.ts";
 import {
   DESIGN_NOT_INVERTED,
   pickDesign,
+  pickInFrame,
   type PickView,
 } from "../src/engineering/pick.ts";
+import type { CorePick } from "../src/scene/pick.ts";
 import type { DrawHandle } from "../src/scene/World.ts";
 import type { View } from "../src/scene/View.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
@@ -247,6 +249,112 @@ describe("pickDesign, one frame", () => {
       (5000 * 2 * Math.tan(Math.atan(0.5))) / 500,
       9,
     );
+  });
+});
+
+describe("pickDesign on View.pickPoint", () => {
+  /**
+   * `view()`'s fake with a `pickPoint` that answers `HIT` from one tick:
+   * the camera it was read with is `camera` (in the hit anchor's
+   * coordinates), whatever the view's own camera says now.
+   */
+  function pointView(
+    o: {
+      hit?: Float64Array | undefined;
+      feature?: boolean;
+      ratio?: number;
+      camera?: [number, number, number];
+      rect?: { width: number; height: number };
+    } = {},
+  ) {
+    const fake = view(o);
+    const ratio = o.ratio ?? 1;
+    const rect = o.rect ?? { width: 1000, height: 500 };
+    const eye = Float64Array.from(o.camera ?? [6378137 + 1000, 0, 100]);
+    const at = new Camera();
+    at.position.set(eye);
+    at.fov = Math.PI / 2;
+    const pickPoint = vi.fn(async (): Promise<CorePick | undefined> => {
+      const hit = "hit" in o ? o.hit : new Float64Array(HIT);
+      if (hit === undefined) {
+        return undefined;
+      }
+      return {
+        view: fake.v as unknown as View,
+        // Render space is elsewhere (a rig on another reference frame).
+        position: Float64Array.from([1, 2, 3]),
+        root: { name: "render root" },
+        anchor: undefined,
+        anchorPosition: hit,
+        draw: o.feature === false ? undefined : DRAW,
+        feature:
+          o.feature === false ? undefined : { featureId: 7, name: undefined },
+        seconds: 0,
+        camera: {
+          position: eye,
+          direction: Float64Array.from(at.direction),
+          up: Float64Array.from(at.up),
+          right: Float64Array.from(at.right),
+          fovy: at.fovy(rect.width / rect.height),
+          near: at.near,
+          width: rect.width / ratio,
+          height: rect.height / ratio,
+        },
+      };
+    });
+    const v: PickView = { ...fake.v, pickPoint };
+    return { ...fake, v, pickPoint };
+  }
+
+  it("gives what the two-read path gives, with the camera it read", async () => {
+    const pl = placement("rigid");
+    const ts = tileset({ placement: pl });
+    const before = await pickInFrame(view().v, 5, 5, [ts]);
+    const { v, pick, pickPosition, pickPoint } = pointView();
+    const after = await pickInFrame(v, 5, 5, [ts]);
+    expect(pickPoint).toHaveBeenCalledTimes(1);
+    expect(pick).not.toHaveBeenCalled();
+    expect(pickPosition).not.toHaveBeenCalled();
+    expect(after!.pick).toEqual(before!.pick);
+    expect(after!.draw).toEqual(before!.draw);
+    expect(after!.tile).toEqual(before!.tile);
+    expect(after!.camera).toEqual(before!.camera);
+  });
+
+  it("converts CSS pixels to target pixels by the pixel ratio", async () => {
+    const { v, pickPoint } = pointView({
+      ratio: 2,
+      rect: { width: 2000, height: 1000 },
+    });
+    const r = await pickDesign(v, 10, 20, []);
+    expect(pickPoint).toHaveBeenCalledWith(20, 40);
+    expect(r!.tolerance).toBeCloseTo(2, 9);
+  });
+
+  it("takes the eye from the pick's camera, never the view's camera now", async () => {
+    // The view's camera has moved on (or is in render space): 5000 m.
+    const { v, camera } = pointView();
+    camera.position[0] = 6378137 + 5000;
+    camera.version++;
+    const r = await pickDesign(v, 1, 1, [
+      tileset({ placement: placement("rigid") }),
+    ]);
+    // 1000 m from the hit, as read: no retry, the design kept.
+    expect(r!.tolerance).toBeCloseTo(2, 9);
+    expect(r!.design).toBeDefined();
+    expect(r!.feature?.featureId).toBe(7);
+  });
+
+  it("returns undefined over the sky, and no tileset without a draw", async () => {
+    expect(
+      await pickDesign(pointView({ hit: undefined }).v, 1, 1, []),
+    ).toBeUndefined();
+    const r = await pickDesign(pointView({ feature: false }).v, 1, 1, [
+      tileset({ placement: placement("rigid") }),
+    ]);
+    expect(r?.tileset).toBeUndefined();
+    expect(r?.design).toBeUndefined();
+    expect(Array.from(r!.position)).toEqual(Array.from(HIT));
   });
 });
 
