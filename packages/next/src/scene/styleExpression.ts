@@ -3,7 +3,8 @@
  * compiled to WGSL over a feature's metadata (plan §3.4, feature styling).
  * Node-safe. Semantics follow 1.x's `Expression`: `rgb` takes bytes,
  * `hsl` a hue in [0, 1], `color` a CSS name or hex string and an alpha;
- * colors are RGBA in [0, 1] as written (sRGB).
+ * colors are RGBA in [0, 1] as written (sRGB); each caller converts them
+ * to the linear values it draws with (FeatureStyle, VectorStyle).
  *
  * Every value is typed at compile time: number (f32), boolean, vec2–vec4
  * and color (vec4). Strings aren't on the GPU: they exist as `color()`'s

@@ -14,7 +14,7 @@ import {
 } from "../src/scene/FeatureStyle.ts";
 import { stringIds } from "../src/scene/stringIds.ts";
 
-type Row = Record<string, string | number | undefined>;
+type Row = Record<string, string | number | null | undefined>;
 
 /** A batch table of a few streets and buildings (a property can be missing). */
 const ROWS: Row[] = [
@@ -28,6 +28,8 @@ const ROWS: Row[] = [
   { name: "Pine Rd", kind: "tower", height: 14, alias: "Pine Rd" },
   // A number where the others have strings (1.x: never equal to one).
   { name: 3, kind: "road", height: 5 },
+  // A null value (a property's noData): not equal to any string, as missing.
+  { name: null, kind: null, height: 40 },
 ];
 
 /** The compiled expression of a stage, as a function of its metadata. */
@@ -213,11 +215,52 @@ describe("3D Tiles styles with strings, against 1.x", () => {
     });
   });
 
+  it("matches strings to results as 1.x's chain of conditions does", () => {
+    // 1.x has no match(): the vector language's, against the same in
+    // conditions.
+    agree(
+      {
+        show: "match(${name}, 'Main St', true, 'Oak Ave', true, false)",
+        color:
+          "match(${kind}, 'park', color('lime'), 'school', color('yellow'), 'tower', color('red'), color('white'))",
+      },
+      ROWS,
+      {
+        show: "${name} === 'Main St' || ${name} === 'Oak Ave'",
+        color:
+          "${kind} === 'park' ? color('lime') : ${kind} === 'school' ? color('yellow') : ${kind} === 'tower' ? color('red') : color('white')",
+      },
+    );
+  });
+
+  it("reads a null value as 1.x does: equal to no string", () => {
+    const nullRow = ROWS.length - 1;
+    expect(ROWS[nullRow]!.kind).toBeNull();
+    const [equal, unequal] = [
+      styled({ show: "${kind} === 'park'" }),
+      styled({ show: "${kind} !== 'park'" }),
+    ];
+    expect(equal[nullRow]!.show).toEqual([false, false]);
+    expect(unequal[nullRow]!.show).toEqual([true, true]);
+    agree({ show: "${name} !== ''" });
+  });
+
+  it("differs from 1.x in one case: a null property equals a missing one", () => {
+    // The row with a null name and no alias: 1.x's null === undefined is
+    // false; both read 0 on the GPU.
+    const row = ROWS.length - 1;
+    const [old, next] = styled({ show: "${name} === ${alias}" })[row]!.show!;
+    expect([old, next]).toEqual([false, true]);
+  });
+
   it("reads properties by the bracket form and compares two string properties", () => {
     agree({ show: "${feature['building:name']} === 'Hall'" });
     agree({ show: "${feature.kind} === 'road'" });
-    agree({ show: "${name} === ${alias}" });
-    agree({ show: "${name} !== ${alias}" });
+    // Not the null row: null and missing both read 0, so a null property
+    // equals a missing one, which 1.x says it doesn't (see below).
+    const withoutNull = ROWS.slice(0, -1);
+    agree({ show: "${name} === ${alias}" }, withoutNull);
+    agree({ show: "${name} !== ${alias}" }, withoutNull);
   });
 
   it("takes strings of tiles that load after the style", () => {

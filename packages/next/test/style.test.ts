@@ -181,6 +181,41 @@ describe("the properties a style reads", () => {
   });
 });
 
+describe("a style's colors", () => {
+  it("apply as 1.x's shaders do in each blend mode", () => {
+    const apply = (colorBlendMode?: "highlight" | "replace" | "mix") =>
+      new FeatureStyle({
+        color: "color('#ff8800')",
+        ...(colorBlendMode ? { colorBlendMode } : {}),
+        colorBlendAmount: 0.25,
+      }).shader.code;
+    // Highlight: from sRGB as written to the material's linear values.
+    expect(apply()).toContain(
+      "(*material).baseColor = (*material).baseColor * pow(c.rgb, vec3f(2.2));",
+    );
+    // Replace and mix: as 1.x, as they are, and white leaves the material's.
+    expect(apply("replace")).toContain(
+      "(*material).baseColor = select((*material).baseColor, c.rgb, styled);",
+    );
+    expect(apply("mix")).toContain(
+      "select((*material).baseColor, mix((*material).baseColor, c.rgb, 0.25f), styled);",
+    );
+    expect(apply()).toContain("let styled = !all(c.rgb > vec3f(0.999));");
+    // The alpha is not converted.
+    expect(apply()).toContain("(*material).alpha *= c.a;");
+  });
+});
+
+describe("a style's string columns", () => {
+  it("are asked for by the properties it reads", () => {
+    expect(stringIds.isWatched("readByTheStyle")).toBe(false);
+    const style = new FeatureStyle({ show: "${readByTheStyle} === 'x'" });
+    expect(style.properties).toEqual(["readByTheStyle"]);
+    expect(stringIds.isWatched("readByTheStyle")).toBe(true);
+    expect(stringIds.isWatched("nobodyReadsThis")).toBe(false);
+  });
+});
+
 describe("FeatureStyle", () => {
   it("compiles show, conditions and defines into one shader", () => {
     const style = new FeatureStyle({

@@ -1,4 +1,5 @@
 import { CustomShader, MAX_NAMED, packNamed } from "./CustomShader.ts";
+import { CapacityError } from "./CapacityError.ts";
 import { stringIds } from "./stringIds.ts";
 import {
   STYLE_HELPERS,
@@ -36,6 +37,16 @@ export interface FeatureStyleOptions {
   label?: string;
 }
 
+/**
+ * Gives a style's string literals back when its shader is collected: an
+ * id can't be reused while a shader that compares with it may draw.
+ */
+const literalsHeld = new FinalizationRegistry<string[]>((literals) => {
+  for (const value of literals) {
+    stringIds.unliteral(value);
+  }
+});
+
 const STYLE_TYPES: Record<NamedType, StyleType> = {
   f32: "number",
   vec2f: "vec2",
@@ -54,6 +65,12 @@ const STYLE_TYPES: Record<NamedType, StyleType> = {
  * the fragment stage. (Hiding reads properties per vertex: those in
  * property textures read 0 there.)
  *
+ * A style's colors are sRGB as written (`color('#ff8800')` shows as 1.x
+ * shows it); "highlight" converts them (gamma 2.2) to the material's
+ * linear values. 1.x's "replace" and "mix" don't convert, and neither do
+ * they here: the color is used as linear, so it shows lighter than
+ * written, and a white color leaves the material's as it is.
+ *
  * Use `shader` as a model's `shader` or a tileset's `customShader`, or
  * pass the style as `Tileset3DOptions.style`. Properties read 0 where a
  * mesh hasn't them.
@@ -64,7 +81,13 @@ const STYLE_TYPES: Record<NamedType, StyleType> = {
  * tile and style, and a literal compiles to its id. A string property
  * must be a string column in the tiles that have it: a numeric column
  * compared with a string never matches (as in 1.x), but a string column
- * used as a number reads an id. Regular expressions, string
+ * used as a number reads an id. Only the string columns a style reads are
+ * uploaded, so make the style before its content is uploaded: a tile
+ * uploaded earlier lacks them, and the engine reports it (`Engine.errors`),
+ * as it does for a column left out because it mixes strings with numbers
+ * or doesn't fit the mesh's directory (such a property reads 0, which
+ * makes `!==` true). A null value and a missing one are both 0, so two
+ * properties, one null and one missing, compare equal (1.x: not). Regular expressions, string
  * concatenation, `isDefined()` and `undefined` checks are refused with an
  * error: a missing property reads 0 on the GPU, which can't tell it from
  * a 0 value.
@@ -86,6 +109,7 @@ export class FeatureStyle {
     const types = options.types ?? {};
     const defines = options.defines ?? {};
     const reading = new Set<string>();
+    const literals: string[] = []; // held until the shader goes (`literalsHeld`)
     // Properties the fragment stage reads: the ones its stages share.
     const inFragment = new Set<string>();
     // `${name}` in a stage: a define's expression, else the property.
@@ -120,7 +144,21 @@ export class FeatureStyle {
           type: STYLE_TYPES[type],
           // A number property may be a string column (its ids).
           ...(type === "f32"
-            ? { string: (value: string) => stringIds.literal(value) }
+            ? {
+                string: (value: string) => {
+                  try {
+                    const id = stringIds.literal(value);
+                    literals.push(value);
+                    return id;
+                  } catch (error) {
+                    throw error instanceof CapacityError
+                      ? new Error(
+                          `Style: can't compare "${name}" with '${value}': the table of strings, ${stringIds.capacity} at most, is full.`,
+                        )
+                      : error;
+                  }
+                },
+              }
             : {}),
         };
       };
@@ -180,13 +218,23 @@ export class FeatureStyle {
     ].filter((h) => h !== undefined);
     const mode = options.colorBlendMode ?? "highlight";
     const amount = options.colorBlendAmount ?? 0.5;
+    // As 1.x's shaders do (ModelColorStage, CPUStylingStageFS and
+    // MaterialStageFS): "highlight" multiplies the material's linear color
+    // by the style's, converted from sRGB as written (the same 2.2 power
+    // as the vector styles' colors); "replace" and "mix" use the style's
+    // color as it is, as linear, and leave the material's where the style's
+    // is white (1.x reads white as "unstyled").
     const apply =
       mode === "replace"
-        ? "c.rgb"
+        ? "select((*material).baseColor, c.rgb, styled)"
         : mode === "mix"
-          ? `mix((*material).baseColor, c.rgb, ${f32(amount)})`
-          : "(*material).baseColor * c.rgb";
+          ? `select((*material).baseColor, mix((*material).baseColor, c.rgb, ${f32(amount)}), styled)`
+          : "(*material).baseColor * pow(c.rgb, vec3f(2.2))";
     this.properties = [...fields.keys()];
+    // Tiles upload the string columns a style reads, no others.
+    for (const property of this.properties) {
+      stringIds.watch(property);
+    }
     const shared = [...inFragment].map((property) => types[property] ?? "f32");
     if (!packNamed(shared)) {
       const floats = shared.reduce(
@@ -234,11 +282,13 @@ export class FeatureStyle {
         color !== undefined
           ? `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   let c = ${color};
+  let styled = !all(c.rgb > vec3f(0.999));
   (*material).baseColor = ${apply};
   (*material).alpha *= c.a;
 }`
           : "",
       ].join("\n"),
     });
+    literalsHeld.register(this.shader, literals);
   }
 }

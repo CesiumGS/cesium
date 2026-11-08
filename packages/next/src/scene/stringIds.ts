@@ -17,8 +17,15 @@
  * - A tile's column holds a reference on each of its distinct strings
  *   while it is uploaded (`retain`, `release`), so a streaming session
  *   frees the strings of tiles it unloads, and their ids are reused. A
- *   style's literals are never freed.
+ *   style holds its literals (`literal`, `unliteral`, counted: two styles
+ *   may share one) for as long as its shader lives.
+ * - A string column is uploaded only if a style reads its property
+ *   (`watch`, called by `FeatureStyle`): an unstyled scene pays nothing
+ *   for its strings. A style made after its content was uploaded finds
+ *   the column missing (World warns, naming it).
  */
+
+import { CapacityError } from "./CapacityError.ts";
 
 /** The first id: numbers below it are never string ids. */
 export const STRING_ID_BASE = 0x800000;
@@ -27,13 +34,26 @@ export const STRING_ID_BASE = 0x800000;
 export const MAX_STRING_IDS = 0x800000;
 
 export class StringIds {
+  /** How many distinct strings it holds at most (tests lower it). */
+  capacity = MAX_STRING_IDS;
+  private readonly watched = new Set<string>();
   private readonly ids = new Map<string, number>();
   /** The string of id `STRING_ID_BASE + i`, or undefined where free. */
   private readonly strings: Array<string | undefined> = [];
   private readonly references: number[] = [];
   /** Style literals: kept for the table's life. */
-  private readonly pinned = new Set<number>();
+  private readonly pinned = new Map<number, number>();
   private readonly free: number[] = [];
+
+  /** A style reads this property: its string columns are uploaded. */
+  watch(property: string): void {
+    this.watched.add(property);
+  }
+
+  /** Whether a style reads `property` (see `watch`). */
+  isWatched(property: string): boolean {
+    return this.watched.has(property);
+  }
 
   /** Distinct strings held now. */
   get size(): number {
@@ -51,19 +71,35 @@ export class StringIds {
   }
 
   /**
-   * A style literal's id, kept for good (a style may be used at any time
-   * and has nothing to release). Throws if the table is full.
+   * A style literal's id, held until `unliteral` gives it back (a style
+   * may be used at any time; `FeatureStyle` gives its literals back when
+   * its shader is collected). Throws `CapacityError` if the table is full.
    */
   literal(value: string): number {
     const id = this.take(value);
-    this.pinned.add(id);
+    this.pinned.set(id, (this.pinned.get(id) ?? 0) + 1);
     return id;
+  }
+
+  /** Gives back what `literal` took; the last of a string's frees it unless a column holds it. */
+  unliteral(value: string): void {
+    const id = this.ids.get(value);
+    const count = id === undefined ? 0 : (this.pinned.get(id) ?? 0);
+    if (id === undefined || count === 0) {
+      return;
+    }
+    if (count > 1) {
+      this.pinned.set(id, count - 1);
+      return;
+    }
+    this.pinned.delete(id);
+    this.freeIfUnused(value, id);
   }
 
   /**
    * Holds a reference on `value` for a table's column (one per distinct
    * string per column) and returns its id; `release` gives it back.
-   * Throws if the table is full.
+   * Throws `CapacityError` if the table is full.
    */
   retain(value: string): number {
     const id = this.take(value);
@@ -77,8 +113,13 @@ export class StringIds {
     if (id === undefined) {
       return;
     }
+    this.references[id - STRING_ID_BASE]!--;
+    this.freeIfUnused(value, id);
+  }
+
+  private freeIfUnused(value: string, id: number): void {
     const at = id - STRING_ID_BASE;
-    if (--this.references[at]! <= 0 && !this.pinned.has(id)) {
+    if (this.references[at]! <= 0 && !this.pinned.has(id)) {
       this.ids.delete(value);
       this.strings[at] = undefined;
       this.references[at] = 0;
@@ -91,13 +132,11 @@ export class StringIds {
     if (known !== undefined) {
       return known;
     }
+    if (this.ids.size >= this.capacity) {
+      throw new CapacityError("string ids");
+    }
     let id = this.free.pop();
     if (id === undefined) {
-      if (this.strings.length >= MAX_STRING_IDS) {
-        throw new Error(
-          `String properties: more than ${MAX_STRING_IDS} distinct strings are held at once; styles can't compare them on the GPU.`,
-        );
-      }
       id = STRING_ID_BASE + this.strings.length;
       this.strings.push(undefined);
       this.references.push(0);

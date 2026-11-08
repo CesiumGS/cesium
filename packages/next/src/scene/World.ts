@@ -690,6 +690,8 @@ export class World {
       meshes: number;
       /** The strings its string columns hold references on (`stringIds`). */
       strings: string[];
+      /** Columns left out, by name, with why (`warnUnavailable`). */
+      skipped: Map<string, string>;
     }
   >();
   /** An id per feature table object, for `tableColumns`' slab keys. */
@@ -1261,7 +1263,7 @@ export class World {
           (named0 +
             (mesh.propertyTextures?.length ?? 0) +
             (mesh.featureTable
-              ? tableColumnData(mesh.featureTable).length
+              ? plannedColumns(mesh.featureTable).columns.length
               : 0)) *
             3) +
       (mesh.featureTable ? this.tableBytes(mesh.featureTable) : 0);
@@ -1567,7 +1569,7 @@ export class World {
 
   /** A mesh's reference to its table's columns in `slab` released. */
   private releaseTable(table: FeatureTable, slab: Slab): number {
-    const key = this.tableKey(table, slab);
+    const key = this.tableKey(table, slab.id);
     const uploaded = this.tableColumns.get(key);
     if (!uploaded || --uploaded.meshes > 0) {
       return 0;
@@ -1585,18 +1587,18 @@ export class World {
   }
 
   /** `tableColumns`' key: the table object's id and the slab. */
-  private tableKey(table: FeatureTable, slab: Slab): string {
+  private tableKey(table: FeatureTable, slabId: number): string {
     let id = this.tableIds.get(table);
     if (id === undefined) {
       id = this.nextTableId++;
       this.tableIds.set(table, id);
     }
-    return `${id}|${slab.id}`;
+    return `${id}|${slabId}`;
   }
 
   /** The bytes a feature table's uploaded columns take (`uploadTable`). */
   private tableBytes(table: FeatureTable): number {
-    return tableColumnData(table).reduce(
+    return plannedColumns(table).columns.reduce(
       (n, c) => n + columnBytes(table, c),
       0,
     );
@@ -1606,8 +1608,10 @@ export class World {
    * A feature table's columns in the arena, uploaded once per table
    * object: numbers, booleans (0 or 1) and numeric arrays of up to 4
    * (shorter rows padded with zero), as float32 rows by local feature ID;
-   * missing values (null) read 0. A string column is uploaded as the ids
-   * of its strings (`stringIds`), held until the table is released.
+   * missing values (null) read 0. A string column a style reads is
+   * uploaded as the ids of its strings (`stringIds`), held until the table
+   * is released; a column left out is recorded with its reason
+   * (`warnUnavailable`).
    */
   private uploadTable(
     table: FeatureTable,
@@ -1617,12 +1621,13 @@ export class World {
   } {
     // Once per table object and slab: a table used from two slabs is
     // copied into each (rare: a table belongs to one tile's content).
-    const key = this.tableKey(table, slab);
+    const key = this.tableKey(table, slab.id);
     let uploaded = this.tableColumns.get(key);
     if (!uploaded) {
       const entries: number[][] = [];
       const ranges: Array<[number, number]> = [];
       const strings: string[] = [];
+      const plan = plannedColumns(table);
       const undo = () => {
         for (const [o, size] of ranges) {
           slab.vertex.release(o, size);
@@ -1631,22 +1636,28 @@ export class World {
           stringIds.release(value);
         }
       };
-      for (const column of tableColumnData(table)) {
+      for (const column of plan.columns) {
         let data = column.data;
+        let held: string[] = [];
         if (!data) {
-          try {
-            const ids = stringColumnData(column, table.count);
-            data = ids.data;
-            strings.push(...ids.held);
-          } catch (error) {
-            undo();
-            throw error;
+          const ids = stringColumnData(table, column);
+          if ("skip" in ids) {
+            plan.skipped.set(column.name, ids.skip);
+            continue;
           }
+          data = ids.data;
+          held = ids.held;
         }
         const offset = this.slabs.allocateVertex(slab, data.byteLength);
         if (offset === undefined) {
+          for (const value of held) {
+            stringIds.release(value);
+          }
           undo();
           throw new CapacityError("vertex arena");
+        }
+        for (const value of held) {
+          strings.push(value); // not push(...held): a long column overflows the stack
         }
         ranges.push([offset, data.byteLength]);
         this.queueUpload(slab.vertexBuffer, offset, data);
@@ -1656,11 +1667,45 @@ export class World {
           TABLE_PROPERTY | column.components,
         ]);
       }
-      uploaded = { entries, ranges, meshes: 0, strings };
+      uploaded = {
+        entries,
+        ranges,
+        meshes: 0,
+        strings,
+        skipped: plan.skipped,
+      };
       this.tableColumns.set(key, uploaded);
     }
     uploaded.meshes++;
     return uploaded;
+  }
+
+  /**
+   * Says (`Engine.errors`, once per message) that a custom shader reads a
+   * property of a mesh's feature table that wasn't uploaded, naming it and
+   * why: it reads 0 there, which a comparison can't tell from a value.
+   */
+  private warnUnavailable(mesh: MeshHandle, shader: CustomShader): void {
+    const ranges = this.meshRanges.get(mesh.id);
+    if (!ranges?.table) {
+      return;
+    }
+    const skipped = this.tableColumns.get(
+      this.tableKey(ranges.table, ranges.slab),
+    )?.skipped;
+    if (!skipped || skipped.size === 0) {
+      return;
+    }
+    for (const field of Object.keys(shader.named.metadata)) {
+      const property = shader.named.properties[field] ?? field;
+      const reason = skipped.get(property);
+      if (reason !== undefined) {
+        this.ctx.errors.report(
+          "resource",
+          `${shader.label}: the property "${property}" of a feature table isn't uploaded (${reason}), so it reads 0 there`,
+        );
+      }
+    }
   }
 
   /** Bytes in use in the vertex and index arenas. */
@@ -2141,6 +2186,9 @@ export class World {
     });
     batch.items += instanceCount > 0 ? instanceCount : 1;
     this.drawBatches[index] = batch;
+    if (shader) {
+      this.warnUnavailable(mesh, shader);
+    }
 
     // Bounds live in the transform's local frame, so moving or rotating
     // the transform never stales them; an explicit radius is in meters.
@@ -2415,6 +2463,9 @@ export class World {
     const old = this.drawBatches[index]!;
     if (old.shader === shader) {
       return;
+    }
+    if (shader) {
+      this.warnUnavailable(old.mesh, shader);
     }
     const o = index * RECORD_WORDS;
     const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
@@ -5321,61 +5372,77 @@ function boundingSphere(positions: Float32Array): {
 
 /**
  * A feature table's column as the arena holds it: numbers as they are, or
- * a string column's strings, uploaded as their ids (`stringIds`).
+ * a string column, uploaded as the ids of its strings (`stringIds`) when a
+ * style reads it.
  */
 interface TableColumn {
   name: string;
   components: number;
   /** A numeric column's float32 rows. */
   data?: Float32Array;
-  /** A string column's rows (null where missing), until it is uploaded. */
-  strings?: Array<string | null>;
+  /** A string column (its rows are the table's). */
+  text?: true;
 }
 
-const tableColumnCache = new WeakMap<FeatureTable, TableColumn[]>();
+/** What a table's columns come to: those to upload, and why others aren't. */
+interface TablePlan {
+  columns: TableColumn[];
+  /** Column name to the reason it isn't uploaded (a style reading it reads 0). */
+  skipped: Map<string, string>;
+}
 
-/** Directory entries kept free of string columns (`tableColumnData`). */
+const tableColumnCache = new WeakMap<FeatureTable, TablePlan>();
+
+/** Directory entries kept free of string columns (`plannedColumns`). */
 const DIRECTORY_RESERVE = 32;
+
+const NOT_WATCHED =
+  "a string column is uploaded only for a style made before its content: make the FeatureStyle first";
 
 /**
  * A feature table's columns as uploaded (`World.uploadTable`): numbers,
  * booleans (0 or 1) and numeric arrays of up to 4 (shorter rows padded
- * with zero), as float32 rows by local feature ID, and string columns
- * (strings only, or null) as the ids of their strings (`stringColumnData`),
- * as many as the mesh's directory has room for; missing values (null) read
- * 0. Computed once per table.
+ * with zero), as float32 rows by local feature ID; missing values (null)
+ * read 0. A column whose first value is a string is a string column
+ * (`plannedColumns` decides whether it is uploaded). Computed once per
+ * table; a column is told from its first value, so an unstyled scene's
+ * string columns cost a look at one row each.
  */
-function tableColumnData(table: FeatureTable): TableColumn[] {
-  let columns = tableColumnCache.get(table);
-  if (columns) {
-    return columns;
+function tableColumnData(table: FeatureTable): TablePlan {
+  let plan = tableColumnCache.get(table);
+  if (plan) {
+    return plan;
   }
-  columns = [];
+  plan = { columns: [], skipped: new Map() };
   for (const [name, values] of Object.entries(table.columns)) {
+    if (typeof values.find((v) => v !== null) === "string") {
+      plan.columns.push({ name, components: 1, text: true });
+      continue;
+    }
     let components = 0;
     let numeric = true;
-    let text = false;
     for (const v of values) {
       if (typeof v === "number" || typeof v === "boolean") {
         components = Math.max(components, 1);
       } else if (Array.isArray(v) && v.every((x) => typeof x === "number")) {
         components = Math.max(components, v.length);
-      } else if (typeof v === "string") {
-        text = true;
       } else if (v !== null) {
         numeric = false;
         break;
       }
     }
-    if (text && components === 0 && numeric) {
-      columns.push({
+    if (!numeric) {
+      plan.skipped.set(
         name,
-        components: 1,
-        strings: values.map((v) => (typeof v === "string" ? v : null)),
-      });
+        "its values aren't all numbers, booleans, numeric arrays or strings",
+      );
       continue;
     }
-    if (!numeric || text || components === 0 || components > 4) {
+    if (components === 0) {
+      continue;
+    }
+    if (components > 4) {
+      plan.skipped.set(name, "its arrays are longer than 4");
       continue;
     }
     const data = new Float32Array(Math.max(1, table.count) * components);
@@ -5386,21 +5453,43 @@ function tableColumnData(table: FeatureTable): TableColumn[] {
         data[row * components] = Number(v);
       }
     });
-    columns.push({ name, components, data });
+    plan.columns.push({ name, components, data });
   }
-  // A mesh's directory holds MAX_DIRECTORY_ENTRIES entries in all: string
-  // columns (which were never uploaded before) take only the room the
-  // numeric ones leave, less what attributes and properties in textures
-  // may use, so a table that fit before still does.
+  tableColumnCache.set(table, plan);
+  return plan;
+}
+
+/**
+ * The columns of `table` to upload now: the numeric ones, and the string
+ * columns a style reads (`stringIds.watch`) that fit a mesh's directory,
+ * which holds MAX_DIRECTORY_ENTRIES in all: they take only the room the
+ * numeric ones leave, less what attributes and properties in textures may
+ * use, so a table that fit before still does.
+ */
+function plannedColumns(table: FeatureTable): TablePlan {
+  const base = tableColumnData(table);
+  const skipped = new Map(base.skipped);
   let room = Math.max(
     0,
     MAX_DIRECTORY_ENTRIES -
       DIRECTORY_RESERVE -
-      columns.filter((c) => c.data).length,
+      base.columns.filter((c) => c.data).length,
   );
-  columns = columns.filter((c) => c.data || room-- > 0);
-  tableColumnCache.set(table, columns);
-  return columns;
+  const columns = base.columns.filter((c) => {
+    if (!c.text) {
+      return true;
+    }
+    if (!stringIds.isWatched(c.name)) {
+      skipped.set(c.name, NOT_WATCHED);
+      return false;
+    }
+    if (room-- <= 0) {
+      skipped.set(c.name, "past the room a mesh's directory has for columns");
+      return false;
+    }
+    return true;
+  });
+  return { columns, skipped };
 }
 
 /** The bytes a column takes in the arena. */
@@ -5413,29 +5502,42 @@ function columnBytes(table: FeatureTable, column: TableColumn): number {
 /**
  * A string column as float32 ids, one per row (0 where missing), holding
  * a reference on each distinct string (`stringIds.retain`); the distinct
- * strings come back for the release.
+ * strings come back for the release. Or why it can't be: it mixes strings
+ * with other values, or the string table is full (nothing is held then).
  */
 function stringColumnData(
+  table: FeatureTable,
   column: TableColumn,
-  count: number,
-): { data: Float32Array; held: string[] } {
-  const data = new Float32Array(Math.max(1, count));
+): { data: Float32Array; held: string[] } | { skip: string } {
+  const values = table.columns[column.name]!;
+  const data = new Float32Array(Math.max(1, table.count));
   const held = new Map<string, number>();
-  try {
-    column.strings!.forEach((value, row) => {
-      if (value !== null && row < data.length) {
-        let id = held.get(value);
-        if (id === undefined) {
-          id = stringIds.retain(value);
-          held.set(value, id);
-        }
-        data[row] = id;
-      }
-    });
-  } catch (error) {
-    // The table is full: give back what this column took.
+  const giveBack = () => {
     for (const value of held.keys()) {
       stringIds.release(value);
+    }
+  };
+  try {
+    for (let row = 0; row < values.length && row < data.length; row++) {
+      const value = values[row];
+      if (value === null || value === undefined) {
+        continue;
+      }
+      if (typeof value !== "string") {
+        giveBack();
+        return { skip: "it mixes strings with other values" };
+      }
+      let id = held.get(value);
+      if (id === undefined) {
+        id = stringIds.retain(value);
+        held.set(value, id);
+      }
+      data[row] = id;
+    }
+  } catch (error) {
+    giveBack();
+    if (error instanceof CapacityError) {
+      return { skip: "the table of strings is full" };
     }
     throw error;
   }
