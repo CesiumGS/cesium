@@ -79,6 +79,18 @@ struct _MatrixStorage_float4x4_ColMajorstd140_0
     @align(16) data_0 : array<vec4<f32>, i32(4)>,
 };
 
+struct AnchorEye_std140_0
+{
+    @align(16) eyeHi_0 : vec4<f32>,
+    @align(16) eyeLo_0 : vec4<f32>,
+    @align(16) axes_0 : array<vec4<f32>, i32(3)>,
+};
+
+struct _Array_std140_AnchorEye32_0
+{
+    @align(16) data_1 : array<AnchorEye_std140_0, i32(32)>,
+};
+
 struct View_std140_0
 {
     @align(16) viewProj_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
@@ -103,6 +115,7 @@ struct View_std140_0
     @align(16) bodyRadii_0 : vec4<f32>,
     @align(16) moonLight_0 : vec4<f32>,
     @align(16) time_0 : vec4<f32>,
+    @align(16) anchors_0 : _Array_std140_AnchorEye32_0,
 };
 
 @binding(0) @group(0) var<uniform> view_0 : View_std140_0;
@@ -114,7 +127,7 @@ struct View_std140_0
 
 struct _Array_std140_matrixx3Cfloatx2C4x2C4x3E4_0
 {
-    @align(16) data_1 : array<_MatrixStorage_float4x4_ColMajorstd140_0, i32(4)>,
+    @align(16) data_2 : array<_MatrixStorage_float4x4_ColMajorstd140_0, i32(4)>,
 };
 
 struct Shadows_std140_0
@@ -185,7 +198,7 @@ struct AirGroup_std140_0
 
 struct _Array_std140_AirGroup2_0
 {
-    @align(16) data_2 : array<AirGroup_std140_0, i32(2)>,
+    @align(16) data_3 : array<AirGroup_std140_0, i32(2)>,
 };
 
 struct Air_std140_0
@@ -201,7 +214,7 @@ struct Air_std140_0
 
 struct _MatrixStorage_float4x4_ColMajorstd430_0
 {
-    @align(16) data_3 : array<vec4<f32>, i32(4)>,
+    @align(16) data_4 : array<vec4<f32>, i32(4)>,
 };
 
 struct DrawItem_std430_0
@@ -896,7 +909,7 @@ fn directReflectance_0( n_3 : vec3<f32>,  v_0 : vec3<f32>,  l_0 : vec3<f32>,  f0
 
 fn cascadeLight_0( c_2 : u32,  relPosition_5 : vec3<f32>,  n_4 : vec3<f32>) -> f32
 {
-    var p_2 : vec4<f32> = (((vec4<f32>(relPosition_5 + n_4 * vec3<f32>((shadows_0.texels_0[c_2] * 2.0f)), 1.0f)) * (mat4x4<f32>(shadows_0.matrices_0.data_1[c_2].data_0[i32(0)][i32(0)], shadows_0.matrices_0.data_1[c_2].data_0[i32(1)][i32(0)], shadows_0.matrices_0.data_1[c_2].data_0[i32(2)][i32(0)], shadows_0.matrices_0.data_1[c_2].data_0[i32(3)][i32(0)], shadows_0.matrices_0.data_1[c_2].data_0[i32(0)][i32(1)], shadows_0.matrices_0.data_1[c_2].data_0[i32(1)][i32(1)], shadows_0.matrices_0.data_1[c_2].data_0[i32(2)][i32(1)], shadows_0.matrices_0.data_1[c_2].data_0[i32(3)][i32(1)], shadows_0.matrices_0.data_1[c_2].data_0[i32(0)][i32(2)], shadows_0.matrices_0.data_1[c_2].data_0[i32(1)][i32(2)], shadows_0.matrices_0.data_1[c_2].data_0[i32(2)][i32(2)], shadows_0.matrices_0.data_1[c_2].data_0[i32(3)][i32(2)], shadows_0.matrices_0.data_1[c_2].data_0[i32(0)][i32(3)], shadows_0.matrices_0.data_1[c_2].data_0[i32(1)][i32(3)], shadows_0.matrices_0.data_1[c_2].data_0[i32(2)][i32(3)], shadows_0.matrices_0.data_1[c_2].data_0[i32(3)][i32(3)]))));
+    var p_2 : vec4<f32> = (((vec4<f32>(relPosition_5 + n_4 * vec3<f32>((shadows_0.texels_0[c_2] * 2.0f)), 1.0f)) * (mat4x4<f32>(shadows_0.matrices_0.data_2[c_2].data_0[i32(0)][i32(0)], shadows_0.matrices_0.data_2[c_2].data_0[i32(1)][i32(0)], shadows_0.matrices_0.data_2[c_2].data_0[i32(2)][i32(0)], shadows_0.matrices_0.data_2[c_2].data_0[i32(3)][i32(0)], shadows_0.matrices_0.data_2[c_2].data_0[i32(0)][i32(1)], shadows_0.matrices_0.data_2[c_2].data_0[i32(1)][i32(1)], shadows_0.matrices_0.data_2[c_2].data_0[i32(2)][i32(1)], shadows_0.matrices_0.data_2[c_2].data_0[i32(3)][i32(1)], shadows_0.matrices_0.data_2[c_2].data_0[i32(0)][i32(2)], shadows_0.matrices_0.data_2[c_2].data_0[i32(1)][i32(2)], shadows_0.matrices_0.data_2[c_2].data_0[i32(2)][i32(2)], shadows_0.matrices_0.data_2[c_2].data_0[i32(3)][i32(2)], shadows_0.matrices_0.data_2[c_2].data_0[i32(0)][i32(3)], shadows_0.matrices_0.data_2[c_2].data_0[i32(1)][i32(3)], shadows_0.matrices_0.data_2[c_2].data_0[i32(2)][i32(3)], shadows_0.matrices_0.data_2[c_2].data_0[i32(3)][i32(3)]))));
     var uv_7 : vec2<f32> = vec2<f32>(p_2.x * 0.5f + 0.5f, 0.5f - p_2.y * 0.5f);
     var _S64 : bool;
     if((any(((uv_7 < vec2<f32>(0.0f))))))
@@ -2470,8 +2483,8 @@ fn sunAbove_0( r_2 : f32,  mu_2 : f32,  bottom_1 : f32,  soft_0 : f32) -> f32
 
 fn aerialMarch_0( relPosition_18 : vec3<f32>) -> AerialPerspective_0
 {
-    var a_2 : AirGroup_std140_0 = air_0.groups_0.data_2[i32(0)];
-    var b_8 : AirGroup_std140_0 = air_0.groups_0.data_2[i32(1)];
+    var a_2 : AirGroup_std140_0 = air_0.groups_0.data_3[i32(0)];
+    var b_8 : AirGroup_std140_0 = air_0.groups_0.data_3[i32(1)];
     var clearAir_0 : AerialPerspective_0;
     clearAir_0.inscatter_0 = vec3<f32>(0.0f);
     clearAir_0.transmittance_0 = vec3<f32>(1.0f);
@@ -2482,7 +2495,7 @@ fn aerialMarch_0( relPosition_18 : vec3<f32>) -> AerialPerspective_0
     var origin_0 : vec3<f32> = cameraPosition_0() / _S231;
     var r_3 : f32 = length(origin_0);
     var mu_3 : f32 = dot(origin_0, direction_1) / r_3;
-    var outer_0 : f32 = max(radii_1.x, max(radii_1.y, radii_1.z)) + air_0.groups_0.data_2[i32(0)].topRadius_0 - air_0.groups_0.data_2[i32(0)].bottomRadius_0;
+    var outer_0 : f32 = max(radii_1.x, max(radii_1.y, radii_1.z)) + air_0.groups_0.data_3[i32(0)].topRadius_0 - air_0.groups_0.data_3[i32(0)].bottomRadius_0;
     var start_0 : f32;
     if((r_3 > outer_0))
     {
@@ -2643,7 +2656,7 @@ fn vertexOut_0( vertexIndex_1 : u32,  item_0 : u32,  withAir_0 : bool) -> Surfac
 {
     var p_6 : DrawItem_std430_0 = items_0[item_0];
     var _S276 : u32 = p_6.record_0;
-    var _S277 : mat4x4<f32> = mat4x4<f32>(p_6.relModel_0.data_3[i32(0)][i32(0)], p_6.relModel_0.data_3[i32(1)][i32(0)], p_6.relModel_0.data_3[i32(2)][i32(0)], p_6.relModel_0.data_3[i32(3)][i32(0)], p_6.relModel_0.data_3[i32(0)][i32(1)], p_6.relModel_0.data_3[i32(1)][i32(1)], p_6.relModel_0.data_3[i32(2)][i32(1)], p_6.relModel_0.data_3[i32(3)][i32(1)], p_6.relModel_0.data_3[i32(0)][i32(2)], p_6.relModel_0.data_3[i32(1)][i32(2)], p_6.relModel_0.data_3[i32(2)][i32(2)], p_6.relModel_0.data_3[i32(3)][i32(2)], p_6.relModel_0.data_3[i32(0)][i32(3)], p_6.relModel_0.data_3[i32(1)][i32(3)], p_6.relModel_0.data_3[i32(2)][i32(3)], p_6.relModel_0.data_3[i32(3)][i32(3)]);
+    var _S277 : mat4x4<f32> = mat4x4<f32>(p_6.relModel_0.data_4[i32(0)][i32(0)], p_6.relModel_0.data_4[i32(1)][i32(0)], p_6.relModel_0.data_4[i32(2)][i32(0)], p_6.relModel_0.data_4[i32(3)][i32(0)], p_6.relModel_0.data_4[i32(0)][i32(1)], p_6.relModel_0.data_4[i32(1)][i32(1)], p_6.relModel_0.data_4[i32(2)][i32(1)], p_6.relModel_0.data_4[i32(3)][i32(1)], p_6.relModel_0.data_4[i32(0)][i32(2)], p_6.relModel_0.data_4[i32(1)][i32(2)], p_6.relModel_0.data_4[i32(2)][i32(2)], p_6.relModel_0.data_4[i32(3)][i32(2)], p_6.relModel_0.data_4[i32(0)][i32(3)], p_6.relModel_0.data_4[i32(1)][i32(3)], p_6.relModel_0.data_4[i32(2)][i32(3)], p_6.relModel_0.data_4[i32(3)][i32(3)]);
     var out_4 : SurfaceVertex;
     out_4.uv = vec2<f32>(0.0f);
     var _S278 : u32 = records_0[_S276].flags_0;

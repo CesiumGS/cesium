@@ -4,16 +4,18 @@
 // (Möller–Trumbore, both faces) and keeps the nearest hit per ray with an
 // atomic min on the distance's bits (non-negative floats order as u32s).
 // Brute force over candidate draws: a BVH replaces the job list later
-// (plan §13.10).
+// (plan §13.10). A cast's rays are in one anchor's coordinates
+// (CastOptions.anchor), and only draws under that anchor are candidates,
+// so a ray and a transform's origin share coordinates.
 
 import common;
 
 struct Ray {
-  float3 originHi;         // Earth-fixed origin, split hi/lo
+  float3 originHi;         // origin in the cast's anchor, split hi/lo
   float maxDistance;
   float3 originLo;
   uint pad0;
-  float3 direction;        // unit, Earth-fixed axes
+  float3 direction;        // unit, the anchor's axes
   uint pad1;
 };
 

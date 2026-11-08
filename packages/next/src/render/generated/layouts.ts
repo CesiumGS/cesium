@@ -4,7 +4,7 @@
 
 /** `View` as `view` holds it: byte offsets. */
 export const ViewLayout = {
-  size: 416,
+  size: 2976,
   align: 16,
   viewProj: 0,
   viewRotation: 64,
@@ -28,6 +28,7 @@ export const ViewLayout = {
   bodyRadii: 368,
   moonLight: 384,
   time: 400,
+  anchors: 416,
 } as const;
 
 /** `DrawRecord` as `records` holds it: byte offsets. */
@@ -138,4 +139,13 @@ export const LightLayout = {
   color: 16,
   direction: 32,
   cone: 48,
+} as const;
+
+/** `AnchorEye` as `anchorEyes` holds it: byte offsets. */
+export const AnchorEyeLayout = {
+  size: 80,
+  align: 16,
+  eyeHi: 0,
+  eyeLo: 16,
+  axes: 32,
 } as const;

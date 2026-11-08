@@ -5,6 +5,18 @@ struct _MatrixStorage_float4x4_ColMajorstd140_0
     @align(16) data_0 : array<vec4<f32>, i32(4)>,
 };
 
+struct AnchorEye_std140_0
+{
+    @align(16) eyeHi_0 : vec4<f32>,
+    @align(16) eyeLo_0 : vec4<f32>,
+    @align(16) axes_0 : array<vec4<f32>, i32(3)>,
+};
+
+struct _Array_std140_AnchorEye32_0
+{
+    @align(16) data_1 : array<AnchorEye_std140_0, i32(32)>,
+};
+
 struct View_std140_0
 {
     @align(16) viewProj_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
@@ -29,6 +41,7 @@ struct View_std140_0
     @align(16) bodyRadii_0 : vec4<f32>,
     @align(16) moonLight_0 : vec4<f32>,
     @align(16) time_0 : vec4<f32>,
+    @align(16) anchors_0 : _Array_std140_AnchorEye32_0,
 };
 
 @binding(0) @group(0) var<uniform> view_0 : View_std140_0;

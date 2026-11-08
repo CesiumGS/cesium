@@ -16,6 +16,7 @@ describe("shared struct layouts", () => {
         .sort(),
     ).toEqual(
       [
+        "AnchorEye",
         "DrawItem",
         "DrawRecord",
         "Instance",

@@ -67,6 +67,18 @@ struct _MatrixStorage_float4x4_ColMajorstd140_0
     @align(16) data_1 : array<vec4<f32>, i32(4)>,
 };
 
+struct AnchorEye_std140_0
+{
+    @align(16) eyeHi_0 : vec4<f32>,
+    @align(16) eyeLo_0 : vec4<f32>,
+    @align(16) axes_0 : array<vec4<f32>, i32(3)>,
+};
+
+struct _Array_std140_AnchorEye32_0
+{
+    @align(16) data_2 : array<AnchorEye_std140_0, i32(32)>,
+};
+
 struct View_std140_0
 {
     @align(16) viewProj_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
@@ -91,12 +103,13 @@ struct View_std140_0
     @align(16) bodyRadii_0 : vec4<f32>,
     @align(16) moonLight_0 : vec4<f32>,
     @align(16) time_0 : vec4<f32>,
+    @align(16) anchors_0 : _Array_std140_AnchorEye32_0,
 };
 
 @binding(0) @group(0) var<uniform> view_0 : View_std140_0;
 struct _MatrixStorage_float4x4_ColMajorstd430_0
 {
-    @align(16) data_2 : array<vec4<f32>, i32(4)>,
+    @align(16) data_3 : array<vec4<f32>, i32(4)>,
 };
 
 struct DrawItem_std430_0
@@ -137,6 +150,19 @@ struct Instance_std430_0
 
 @binding(2) @group(1) var<storage, read> instanceTable_0 : array<Instance_std430_0>;
 
+struct AnchorEye_0
+{
+     eyeHi_0 : vec4<f32>,
+     eyeLo_0 : vec4<f32>,
+     axes_0 : array<vec4<f32>, i32(3)>,
+};
+
+fn anchorEye_0( t_0 : ptr<function, Transform_std430_0>) -> AnchorEye_0
+{
+    var _S1 : AnchorEye_0 = AnchorEye_0( view_0.anchors_0.data_2[min((((((*t_0).flags_1) >> (u32(8)))) & (u32(255))), u32(31))].eyeHi_0, view_0.anchors_0.data_2[min((((((*t_0).flags_1) >> (u32(8)))) & (u32(255))), u32(31))].eyeLo_0, view_0.anchors_0.data_2[min((((((*t_0).flags_1) >> (u32(8)))) & (u32(255))), u32(31))].axes_0 );
+    return _S1;
+}
+
 struct SplitPosition_0
 {
      hi_0 : vec3<f32>,
@@ -145,10 +171,10 @@ struct SplitPosition_0
 
 fn SplitPosition_x24init_0( hi_1 : vec3<f32>,  lo_1 : vec3<f32>) -> SplitPosition_0
 {
-    var _S1 : SplitPosition_0;
-    _S1.hi_0 = hi_1;
-    _S1.lo_0 = lo_1;
-    return _S1;
+    var _S2 : SplitPosition_0;
+    _S2.hi_0 = hi_1;
+    _S2.lo_0 = lo_1;
+    return _S2;
 }
 
 fn SplitPosition_difference_0( this_0 : SplitPosition_0,  b_0 : SplitPosition_0) -> vec3<f32>
@@ -156,11 +182,13 @@ fn SplitPosition_difference_0( this_0 : SplitPosition_0,  b_0 : SplitPosition_0)
     return vec3<f32>(vec3<i32>(this_0.hi_0) - vec3<i32>(b_0.hi_0)) + (this_0.lo_0 - b_0.lo_0);
 }
 
-fn relativeMatrix_0( t_0 : ptr<function, Transform_std430_0>) -> mat4x4<f32>
+fn relativeMatrix_0( t_1 : ptr<function, Transform_std430_0>) -> mat4x4<f32>
 {
-    var rel_0 : vec3<f32> = SplitPosition_difference_0(SplitPosition_x24init_0((*t_0).originHi_0, (*t_0).originLo_0), SplitPosition_x24init_0(view_0.cameraHi_0, view_0.cameraLo_0));
-    var _S2 : mat3x3<f32> = mat3x3<f32>((*t_0).linear_0.data_0[i32(0)][i32(0)], (*t_0).linear_0.data_0[i32(1)][i32(0)], (*t_0).linear_0.data_0[i32(2)][i32(0)], (*t_0).linear_0.data_0[i32(0)][i32(1)], (*t_0).linear_0.data_0[i32(1)][i32(1)], (*t_0).linear_0.data_0[i32(2)][i32(1)], (*t_0).linear_0.data_0[i32(0)][i32(2)], (*t_0).linear_0.data_0[i32(1)][i32(2)], (*t_0).linear_0.data_0[i32(2)][i32(2)]);
-    return mat4x4<f32>(vec4<f32>(_S2[i32(0)], rel_0.x), vec4<f32>(_S2[i32(1)], rel_0.y), vec4<f32>(_S2[i32(2)], rel_0.z), vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f));
+    var _S3 : AnchorEye_0 = anchorEye_0(&((*t_1)));
+    var axes_1 : mat3x3<f32> = mat3x3<f32>(_S3.axes_0[i32(0)].xyz, _S3.axes_0[i32(1)].xyz, _S3.axes_0[i32(2)].xyz);
+    var linear_1 : mat3x3<f32> = (((mat3x3<f32>((*t_1).linear_0.data_0[i32(0)][i32(0)], (*t_1).linear_0.data_0[i32(1)][i32(0)], (*t_1).linear_0.data_0[i32(2)][i32(0)], (*t_1).linear_0.data_0[i32(0)][i32(1)], (*t_1).linear_0.data_0[i32(1)][i32(1)], (*t_1).linear_0.data_0[i32(2)][i32(1)], (*t_1).linear_0.data_0[i32(0)][i32(2)], (*t_1).linear_0.data_0[i32(1)][i32(2)], (*t_1).linear_0.data_0[i32(2)][i32(2)])) * (axes_1)));
+    var rel_0 : vec3<f32> = (((SplitPosition_difference_0(SplitPosition_x24init_0((*t_1).originHi_0, (*t_1).originLo_0), SplitPosition_x24init_0(_S3.eyeHi_0.xyz, _S3.eyeLo_0.xyz))) * (axes_1)));
+    return mat4x4<f32>(vec4<f32>(linear_1[i32(0)], rel_0.x), vec4<f32>(linear_1[i32(1)], rel_0.y), vec4<f32>(linear_1[i32(2)], rel_0.z), vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
 struct DrawItem_0
@@ -185,7 +213,7 @@ fn drawItem_0( m_0 : mat4x4<f32>,  record_2 : u32,  feature_2 : u32,  instance_1
 
 fn inFrustum_0( m_1 : mat4x4<f32>,  center_1 : vec3<f32>,  radius_1 : f32) -> bool
 {
-    var _S3 : vec3<f32> = (((vec4<f32>(center_1, 1.0f)) * (m_1))).xyz;
+    var _S4 : vec3<f32> = (((vec4<f32>(center_1, 1.0f)) * (m_1))).xyz;
     var p_0 : u32 = u32(0);
     loop
     {
@@ -196,7 +224,7 @@ fn inFrustum_0( m_1 : mat4x4<f32>,  center_1 : vec3<f32>,  radius_1 : f32) -> bo
         {
             break;
         }
-        if(((dot(view_0.planes_0[p_0].xyz, _S3) + view_0.planes_0[p_0].w) < (- radius_1)))
+        if(((dot(view_0.planes_0[p_0].xyz, _S4) + view_0.planes_0[p_0].w) < (- radius_1)))
         {
             return false;
         }
@@ -212,51 +240,60 @@ fn append_0( batch_1 : u32,  item_1 : u32)
     return;
 }
 
-fn drawable_0( _S4 : u32,  _S5 : ptr<function, Transform_std430_0>) -> bool
+fn drawable_0( _S5 : u32,  _S6 : ptr<function, Transform_std430_0>) -> bool
 {
-    var _S6 : u32 = records_0[_S4].flags_0;
-    var _S7 : bool;
-    if((((records_0[_S4].flags_0) & (u32(1)))) == u32(0))
+    var _S7 : u32 = records_0[_S5].flags_0;
+    var _S8 : bool;
+    if((((records_0[_S5].flags_0) & (u32(1)))) == u32(0))
     {
-        _S7 = ((((*_S5).flags_1) & (u32(1)))) == u32(0);
+        _S8 = ((((*_S6).flags_1) & (u32(1)))) == u32(0);
     }
     else
     {
-        _S7 = false;
+        _S8 = false;
     }
-    if(_S7)
+    if(_S8)
     {
-        _S7 = (records_0[_S4].indexCount_0) != u32(0);
+        _S8 = (records_0[_S5].indexCount_0) != u32(0);
     }
     else
     {
-        _S7 = false;
+        _S8 = false;
     }
-    if(_S7)
+    if(_S8)
     {
-        _S7 = (((records_0[_S4].viewMask_0) & ((view_0.viewBit_0)))) != u32(0);
+        _S8 = (((records_0[_S5].viewMask_0) & ((view_0.viewBit_0)))) != u32(0);
     }
     else
     {
-        _S7 = false;
+        _S8 = false;
     }
-    if(_S7)
+    if(_S8)
     {
         if(((view_0.time_0.y) > 0.5f))
         {
-            _S7 = ((_S6 & (u32(32)))) != u32(0);
+            _S8 = ((_S7 & (u32(32)))) != u32(0);
         }
         else
         {
-            _S7 = false;
+            _S8 = false;
         }
-        _S7 = !_S7;
+        _S8 = !_S8;
     }
     else
     {
-        _S7 = false;
+        _S8 = false;
     }
-    return _S7;
+    if(_S8)
+    {
+        var _S9 : AnchorEye_0 = anchorEye_0(&((*_S6)));
+        _S8 = ((_S9.eyeHi_0.w) < 0.5f);
+    }
+    else
+    {
+        _S8 = false;
+    }
+    return _S8;
 }
 
 @compute
@@ -272,44 +309,44 @@ fn cullRecords(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     {
         return;
     }
-    var _S8 : Transform_std430_0 = transforms_0[records_0[i_0].transform_0];
-    var _S9 : mat4x4<f32> = relativeMatrix_0(&(_S8));
-    var _S10 : DrawItem_0 = drawItem_0(_S9, i_0, u32(0), u32(0), u32(4294967295));
-    var _S11 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S10.relModel_0[i32(0)][i32(0)], _S10.relModel_0[i32(1)][i32(0)], _S10.relModel_0[i32(2)][i32(0)], _S10.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S10.relModel_0[i32(0)][i32(1)], _S10.relModel_0[i32(1)][i32(1)], _S10.relModel_0[i32(2)][i32(1)], _S10.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S10.relModel_0[i32(0)][i32(2)], _S10.relModel_0[i32(1)][i32(2)], _S10.relModel_0[i32(2)][i32(2)], _S10.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S10.relModel_0[i32(0)][i32(3)], _S10.relModel_0[i32(1)][i32(3)], _S10.relModel_0[i32(2)][i32(3)], _S10.relModel_0[i32(3)][i32(3)]) );
-    items_0[i_0].relModel_0.data_2 = _S11;
-    items_0[i_0].record_0 = _S10.record_0;
-    items_0[i_0].feature_0 = _S10.feature_0;
-    items_0[i_0].instance_0 = _S10.instance_0;
-    items_0[i_0].tint_0 = _S10.tint_0;
-    var _S12 : bool = drawable_0(i_0, &(_S8));
-    var _S13 : bool;
-    if(_S12)
+    var _S10 : Transform_std430_0 = transforms_0[records_0[i_0].transform_0];
+    var _S11 : mat4x4<f32> = relativeMatrix_0(&(_S10));
+    var _S12 : DrawItem_0 = drawItem_0(_S11, i_0, u32(0), u32(0), u32(4294967295));
+    var _S13 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S12.relModel_0[i32(0)][i32(0)], _S12.relModel_0[i32(1)][i32(0)], _S12.relModel_0[i32(2)][i32(0)], _S12.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S12.relModel_0[i32(0)][i32(1)], _S12.relModel_0[i32(1)][i32(1)], _S12.relModel_0[i32(2)][i32(1)], _S12.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S12.relModel_0[i32(0)][i32(2)], _S12.relModel_0[i32(1)][i32(2)], _S12.relModel_0[i32(2)][i32(2)], _S12.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S12.relModel_0[i32(0)][i32(3)], _S12.relModel_0[i32(1)][i32(3)], _S12.relModel_0[i32(2)][i32(3)], _S12.relModel_0[i32(3)][i32(3)]) );
+    items_0[i_0].relModel_0.data_3 = _S13;
+    items_0[i_0].record_0 = _S12.record_0;
+    items_0[i_0].feature_0 = _S12.feature_0;
+    items_0[i_0].instance_0 = _S12.instance_0;
+    items_0[i_0].tint_0 = _S12.tint_0;
+    var _S14 : bool = drawable_0(i_0, &(_S10));
+    var _S15 : bool;
+    if(_S14)
     {
-        _S13 = inFrustum_0(_S9, records_0[i_0].center_0, records_0[i_0].radius_0 * _S8.scale_0);
+        _S15 = inFrustum_0(_S11, records_0[i_0].center_0, records_0[i_0].radius_0 * _S10.scale_0);
     }
     else
     {
-        _S13 = false;
+        _S15 = false;
     }
-    if(_S13)
+    if(_S15)
     {
         append_0(records_0[i_0].batch_0, i_0);
     }
     return;
 }
 
-var<private> _S14 : vec3<u32>;
+var<private> _S16 : vec3<u32>;
 
 fn WorkgroupCount_0() -> vec3<u32>
 {
-    return _S14;
+    return _S16;
 }
 
 @compute
 @workgroup_size(64, 1, 1)
 fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_workgroups) _builtinWorkgroupCount_0 : vec3<u32>)
 {
-    _S14 = _builtinWorkgroupCount_0;
+    _S16 = _builtinWorkgroupCount_0;
     var j_0 : u32 = gid_1.x + gid_1.y * WorkgroupCount_0().x * u32(64);
     if((j_0 >= (params_0.instanceCount_0)))
     {
@@ -320,15 +357,15 @@ fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_
     {
         return;
     }
-    var _S15 : u32 = inst_0.record_1;
-    var _S16 : Transform_std430_0 = transforms_0[records_0[_S15].transform_0];
+    var _S17 : u32 = inst_0.record_1;
+    var _S18 : Transform_std430_0 = transforms_0[records_0[_S17].transform_0];
     var local_0 : mat4x4<f32> = mat4x4<f32>(inst_0.row0_0, inst_0.row1_0, inst_0.row2_0, vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f));
-    var _S17 : mat4x4<f32> = relativeMatrix_0(&(_S16));
-    var m_2 : mat4x4<f32> = (((local_0) * (_S17)));
+    var _S19 : mat4x4<f32> = relativeMatrix_0(&(_S18));
+    var m_2 : mat4x4<f32> = (((local_0) * (_S19)));
     var shown_0 : bool;
     if((inst_0.feature_1) != u32(4294967295))
     {
-        shown_0 = (records_0[_S15].featureId_0) != u32(0);
+        shown_0 = (records_0[_S17].featureId_0) != u32(0);
     }
     else
     {
@@ -337,24 +374,24 @@ fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_
     var feature_3 : u32;
     if(shown_0)
     {
-        feature_3 = records_0[_S15].featureId_0 + inst_0.feature_1;
+        feature_3 = records_0[_S17].featureId_0 + inst_0.feature_1;
     }
     else
     {
         feature_3 = u32(0);
     }
     var item_2 : u32 = params_0.firstInstanceItem_0 + j_0;
-    var _S18 : DrawItem_0 = drawItem_0(m_2, inst_0.record_1, feature_3, j_0 - records_0[_S15].instanceFirst_0, inst_0.tint_1);
-    var _S19 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S18.relModel_0[i32(0)][i32(0)], _S18.relModel_0[i32(1)][i32(0)], _S18.relModel_0[i32(2)][i32(0)], _S18.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S18.relModel_0[i32(0)][i32(1)], _S18.relModel_0[i32(1)][i32(1)], _S18.relModel_0[i32(2)][i32(1)], _S18.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S18.relModel_0[i32(0)][i32(2)], _S18.relModel_0[i32(1)][i32(2)], _S18.relModel_0[i32(2)][i32(2)], _S18.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S18.relModel_0[i32(0)][i32(3)], _S18.relModel_0[i32(1)][i32(3)], _S18.relModel_0[i32(2)][i32(3)], _S18.relModel_0[i32(3)][i32(3)]) );
-    items_0[item_2].relModel_0.data_2 = _S19;
-    items_0[item_2].record_0 = _S18.record_0;
-    items_0[item_2].feature_0 = _S18.feature_0;
-    items_0[item_2].instance_0 = _S18.instance_0;
-    items_0[item_2].tint_0 = _S18.tint_0;
-    var scale_1 : f32 = _S16.scale_0 * max(length(vec3<f32>(local_0[i32(0)][i32(0)], local_0[i32(1)][i32(0)], local_0[i32(2)][i32(0)])), max(length(vec3<f32>(local_0[i32(0)][i32(1)], local_0[i32(1)][i32(1)], local_0[i32(2)][i32(1)])), length(vec3<f32>(local_0[i32(0)][i32(2)], local_0[i32(1)][i32(2)], local_0[i32(2)][i32(2)]))));
+    var _S20 : DrawItem_0 = drawItem_0(m_2, inst_0.record_1, feature_3, j_0 - records_0[_S17].instanceFirst_0, inst_0.tint_1);
+    var _S21 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S20.relModel_0[i32(0)][i32(0)], _S20.relModel_0[i32(1)][i32(0)], _S20.relModel_0[i32(2)][i32(0)], _S20.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S20.relModel_0[i32(0)][i32(1)], _S20.relModel_0[i32(1)][i32(1)], _S20.relModel_0[i32(2)][i32(1)], _S20.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S20.relModel_0[i32(0)][i32(2)], _S20.relModel_0[i32(1)][i32(2)], _S20.relModel_0[i32(2)][i32(2)], _S20.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S20.relModel_0[i32(0)][i32(3)], _S20.relModel_0[i32(1)][i32(3)], _S20.relModel_0[i32(2)][i32(3)], _S20.relModel_0[i32(3)][i32(3)]) );
+    items_0[item_2].relModel_0.data_3 = _S21;
+    items_0[item_2].record_0 = _S20.record_0;
+    items_0[item_2].feature_0 = _S20.feature_0;
+    items_0[item_2].instance_0 = _S20.instance_0;
+    items_0[item_2].tint_0 = _S20.tint_0;
+    var scale_1 : f32 = _S18.scale_0 * max(length(vec3<f32>(local_0[i32(0)][i32(0)], local_0[i32(1)][i32(0)], local_0[i32(2)][i32(0)])), max(length(vec3<f32>(local_0[i32(0)][i32(1)], local_0[i32(1)][i32(1)], local_0[i32(2)][i32(1)])), length(vec3<f32>(local_0[i32(0)][i32(2)], local_0[i32(1)][i32(2)], local_0[i32(2)][i32(2)]))));
     if((((inst_0.flags_2) & (u32(6)))) != u32(0))
     {
-        var within_0 : bool = ((length((((vec4<f32>(records_0[_S15].center_0, 1.0f)) * (m_2))).xyz)) <= (unpack2x16float((((inst_0.flags_2) >> (u32(16))))).x));
+        var within_0 : bool = ((length((((vec4<f32>(records_0[_S17].center_0, 1.0f)) * (m_2))).xyz)) <= (unpack2x16float((((inst_0.flags_2) >> (u32(16))))).x));
         if((((inst_0.flags_2) & (u32(2)))) != u32(0))
         {
             shown_0 = within_0;
@@ -377,8 +414,8 @@ fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_
     }
     if(shown_0)
     {
-        var _S20 : bool = drawable_0(inst_0.record_1, &(_S16));
-        shown_0 = _S20;
+        var _S22 : bool = drawable_0(inst_0.record_1, &(_S18));
+        shown_0 = _S22;
     }
     else
     {
@@ -386,7 +423,7 @@ fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_
     }
     if(shown_0)
     {
-        shown_0 = inFrustum_0(m_2, records_0[_S15].center_0, records_0[_S15].radius_0 * scale_1);
+        shown_0 = inFrustum_0(m_2, records_0[_S17].center_0, records_0[_S17].radius_0 * scale_1);
     }
     else
     {
@@ -394,7 +431,7 @@ fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>, @builtin(num_
     }
     if(shown_0)
     {
-        append_0(records_0[_S15].batch_0, item_2);
+        append_0(records_0[_S17].batch_0, item_2);
     }
     return;
 }

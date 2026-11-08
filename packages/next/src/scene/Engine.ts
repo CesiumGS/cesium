@@ -14,6 +14,7 @@ import {
   VIEW_BIT_WORD,
   VIEW_SIZE,
   VIEW_STRIDE,
+  VIEW_TIME_WORD,
   writeViewBlock,
   type ViewBlock,
 } from "../render/layout.ts";
@@ -73,7 +74,13 @@ import {
   LIGHT_HEADER_FLOATS,
   packViewLights,
 } from "./lights.ts";
-import { World, type WorldOptions } from "./World.ts";
+import { World, type AnchorHandle, type WorldOptions } from "./World.ts";
+import {
+  ANCHOR_EYE_REACH,
+  computeAnchorEyes,
+  createAnchorEyes,
+  writeAnchorEyes,
+} from "./anchorEyes.ts";
 import { HeightClamping } from "./HeightClamping.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
 import {
@@ -174,7 +181,7 @@ interface PersistentImage {
 }
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
-const VIEW_KEY_LENGTH = 27;
+const VIEW_KEY_LENGTH = 30;
 /** Radians a degree (`Tileset3D.terrainClipped` takes degrees). */
 const DEGREES = Math.PI / 180;
 
@@ -387,6 +394,23 @@ export class Engine {
   private readonly viewIds = new Map<View, number>();
   private readonly viewMotion = new Map<View, ViewMotion>();
   private readonly aheadCamera = new Camera();
+  /**
+   * Each view's camera in its body anchor (`bodyCamera`), and what it was
+   * computed from.
+   */
+  private readonly bodyCameras = new WeakMap<
+    View,
+    {
+      camera: Camera;
+      version: number;
+      revision: number;
+      anchor: AnchorHandle | undefined;
+    }
+  >();
+  /** The view being written's anchor table, float64 (`writeView`). */
+  private readonly anchorEyes = createAnchorEyes();
+  /** Per view, the anchors its eye was last too far from (reported once). */
+  private readonly farAnchors = new WeakMap<View, Set<AnchorHandle>>();
   private readonly freeViewIds: number[] = [];
   private readonly maxViews: number;
   private readonly viewFrames = new Map<View, ViewFrame>();
@@ -707,7 +731,7 @@ export class Engine {
       this.probes.set(view, entry);
     }
     const ellipsoid = view.body.ellipsoid;
-    const position = view.camera.position;
+    const position = this.bodyCamera(view).position;
     const frame = environmentFrame(position, ellipsoid);
     const sun = this.sunDirection;
     const east = v3.dot(frame[0], sun);
@@ -777,7 +801,7 @@ export class Engine {
     const entry = this.probes.get(view);
     if (entry?.pending) {
       entry.pending = false;
-      const position = view.camera.position;
+      const position = this.bodyCamera(view).position;
       const ellipsoid = view.body.ellipsoid;
       this.sky.encodeEnvironment(
         encoder,
@@ -1171,6 +1195,79 @@ export class Engine {
     return this.pool.stats;
   }
 
+  /**
+   * The view's camera in its body anchor (`View.anchorCamera(view.
+   * bodyAnchor)`; the table's root while the world has none): what the
+   * engine shades, culls, clamps and clips the body with, since the
+   * shading axes are the body anchor's (plan 5a's call 18). Recomputed
+   * when the camera (`Camera.version`), the placements
+   * (`View.anchorRevision`) or the body anchor change. With the body
+   * anchor at the identity it equals `view.camera`, bit for bit.
+   */
+  private bodyCamera(view: View): Camera {
+    const anchor = view.bodyAnchor;
+    const version = view.camera.version;
+    const revision = view.anchorRevision;
+    let entry = this.bodyCameras.get(view);
+    if (!entry) {
+      entry = {
+        camera: new Camera(),
+        version: Number.NaN,
+        revision: Number.NaN,
+        anchor: undefined,
+      };
+      this.bodyCameras.set(view, entry);
+    }
+    if (
+      entry.version !== version ||
+      entry.revision !== revision ||
+      entry.anchor !== anchor
+    ) {
+      view.anchorCamera(anchor, entry.camera);
+      entry.version = version;
+      entry.revision = revision;
+      entry.anchor = anchor;
+    }
+    return entry.camera;
+  }
+
+  /**
+   * Reports, once each time it happens, an anchor whose draws a view hides
+   * because its eye is beyond `ANCHOR_EYE_REACH` of it.
+   */
+  private reportFarAnchors(view: View): void {
+    const eyes = this.anchorEyes;
+    let far = this.farAnchors.get(view);
+    for (let slot = 1; slot < eyes.hidden.length; slot++) {
+      const anchor = eyes.anchors[slot];
+      if (!anchor) {
+        continue;
+      }
+      if (eyes.hidden[slot] === 1) {
+        if (!far?.has(anchor)) {
+          if (!far) {
+            far = new Set();
+            this.farAnchors.set(view, far);
+          }
+          far.add(anchor);
+          this.ctx.errors.report(
+            "frame",
+            `The eye of view ${this.viewIds.get(view) ?? "?"} is more than ${ANCHOR_EYE_REACH.toLocaleString("en-US")} m (2^31 m) from the anchor ${anchor.name}: its draws are hidden in that view.`,
+          );
+        }
+      } else {
+        far?.delete(anchor);
+      }
+    }
+    if (far) {
+      for (const anchor of far) {
+        if (eyes.anchors[anchor.slot] !== anchor) {
+          far.delete(anchor);
+        }
+      }
+    }
+  }
+
   /** Builds the selection inputs for every enabled view of `world`. */
   private selectionViews(world: World): SelectionView[] {
     const out: SelectionView[] = [];
@@ -1180,7 +1277,7 @@ export class Engine {
       }
       const rect = view.pixelRect();
       const aspect = rect.width / rect.height;
-      const camera = view.camera;
+      const camera = this.bodyCamera(view);
       const p = camera.position;
       const d = camera.direction;
       // World-space planes in float64: camera-relative planes shifted by the
@@ -1248,7 +1345,7 @@ export class Engine {
           velocity: motion.velocity.position,
           angular: v3.cross(
             v3.vec3(),
-            view.camera.direction,
+            this.bodyCamera(view).direction,
             motion.velocity.direction,
           ),
         }
@@ -1256,7 +1353,7 @@ export class Engine {
   }
 
   private cameraAhead(view: View, seconds: number): Camera | undefined {
-    const camera = view.camera;
+    const camera = this.bodyCamera(view);
     const now = performance.now();
     let motion = this.viewMotion.get(view);
     if (!motion) {
@@ -1812,6 +1909,12 @@ export class Engine {
           this.reportLoopError("a tick listener", error);
         }
       }
+      // Each view's placements, checked against its world (a removed
+      // anchor, another world: `View.anchorRevision`), so the wake that
+      // finding raises is this tick's own, like the listeners'.
+      for (const view of this.views) {
+        void view.anchorRevision;
+      }
       // What the listeners changed renders in this tick: their wakes are
       // not needed. A listener they added runs from the next frame.
       this.wokenInTick = this.listenerAdded;
@@ -2061,6 +2164,9 @@ export class Engine {
     s[n++] = view.lighting.diffuseIbl;
     s[n++] = view.lighting.specularIbl;
     s[n++] = view.world.id;
+    // The placements, and the body anchor (the body camera's).
+    s[n++] = view.anchorRevision;
+    s[n++] = view.bodyAnchor?.slot ?? -1;
     let changed = false;
     for (let i = 0; i < n; i++) {
       if (s[i] !== key[i]) {
@@ -2396,7 +2502,7 @@ export class Engine {
       this.cityLights.set(provider, city);
     }
     const c = view.body.ellipsoid.cartesianToCartographic(
-      view.camera.position,
+      this.bodyCamera(view).position,
       scratchCartographic,
     );
     if (!c) {
@@ -2439,7 +2545,7 @@ export class Engine {
    */
   private writeLights(view: View, index: number, aspect: number): void {
     const frame = this.viewFrames.get(view)!;
-    const camera = view.camera;
+    const camera = this.bodyCamera(view);
     const tanY = Math.tan(camera.fovy(aspect) / 2);
     const count = packViewLights(
       this.lightData,
@@ -2455,6 +2561,7 @@ export class Engine {
         tanY,
       },
       view.exposureScale,
+      this.anchorEyes,
     );
     frame.lightCount = count;
     this.ctx.device.queue.writeBuffer(
@@ -2472,7 +2579,9 @@ export class Engine {
     rect: Readonly<PixelRect>,
   ): void {
     const aspect = rect.width / rect.height;
-    const camera = view.camera;
+    const camera = this.bodyCamera(view);
+    computeAnchorEyes(camera, view, this.anchorEyes);
+    this.reportFarAnchors(view);
     camera.viewRotation(scratchView);
     camera.projection(scratchProj, aspect);
     m4.multiply(scratchViewProj, scratchProj, scratchView);
@@ -2536,6 +2645,13 @@ export class Engine {
       }
     }
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
+    writeAnchorEyes(
+      this.viewData,
+      (index * VIEW_STRIDE) / 4,
+      camera,
+      view,
+      this.anchorEyes,
+    );
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
     this.writeShadows(view, index, aspect);
@@ -2552,7 +2668,7 @@ export class Engine {
     // Only what this view draws: a blended draw in no view (viewMask) or
     // hidden switches none of the passes on.
     const range = view.world.translucentRange(
-      view.camera.position,
+      this.bodyCamera(view).position,
       this.viewBit(view),
     );
     frame.translucent = range !== undefined;
@@ -2597,7 +2713,7 @@ export class Engine {
     // The moments' depths: the blended surfaces' own range (the moments
     // can't tell apart layers whose warped depths nearly agree: a range
     // reaching kilometers past a model's centimeters speckled it).
-    const near = Math.max(range.near, view.camera.near, 1e-3);
+    const near = Math.max(range.near, this.bodyCamera(view).near, 1e-3);
     const far = Math.max(range.far, near * 1.01);
     const d = this.translucentData;
     d.setUint32(0, frame.width, true);
@@ -2712,7 +2828,8 @@ export class Engine {
    */
   private writeCaptures(view: View): void {
     const block = this.viewBlock;
-    const camera = view.camera.position;
+    const bodyCamera = this.bodyCamera(view);
+    const camera = bodyCamera.position;
     for (const c of this.captures) {
       if (c.world !== view.world || c.stamp === this.frameNumber) {
         continue;
@@ -2758,18 +2875,19 @@ export class Engine {
       block.planes = p;
       block.aerial = undefined;
       writeViewBlock(c.data, 0, block);
+      writeAnchorEyes(c.data, 0, bodyCamera, view, this.anchorEyes);
       block.viewProj = viewProj;
       block.planes = planes;
       block.aerial = aerial;
       new Uint32Array(c.data.buffer)[VIEW_BIT_WORD] = this.viewBit(view);
-      c.data[101] = 1; // View.time.y: ground only
+      c.data[VIEW_TIME_WORD + 1] = 1; // View.time.y: ground only
       this.ctx.device.queue.writeBuffer(c.block, 0, c.data);
     }
   }
 
   private writeShadows(view: View, index: number, aspect: number): void {
     const frame = this.viewFrames.get(view)!;
-    const camera = view.camera;
+    const camera = this.bodyCamera(view);
     const up = v3.normalize(scratchShadowUp, camera.position);
     // The sun's, or at night the Moon's when it's up.
     const sunUp = v3.dot(up, this.sunDirection) > -0.05;
@@ -2806,6 +2924,7 @@ export class Engine {
         block.viewProj = cascades.matrices.subarray(k * 16, k * 16 + 16);
         block.planes = cascades.planes[k]!;
         writeViewBlock(this.cascadeData, o, block);
+        writeAnchorEyes(this.cascadeData, o, camera, view, this.anchorEyes);
         this.cascadeDataU32[o + VIEW_BIT_WORD] = this.viewBit(view);
       }
       block.viewProj = viewProj;
@@ -3058,8 +3177,9 @@ export class Engine {
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
       });
     enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
-    // The camera of this frame, to turn the depth into a position.
-    const camera = view.camera;
+    // The camera of this frame (in the body anchor, as drawn), to turn the
+    // depth into a position.
+    const camera = this.bodyCamera(view);
     this.picks.push({
       view,
       readback,
@@ -3821,7 +3941,7 @@ export class Engine {
           usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
         const data = new ArrayBuffer(16);
-        new Float32Array(data, 0, 1)[0] = view.camera.near;
+        new Float32Array(data, 0, 1)[0] = this.bodyCamera(view).near;
         new Uint32Array(data, 4, 2).set([width, height]);
         device.queue.writeBuffer(params, 0, data);
         const result = device.createBuffer({
@@ -4162,7 +4282,7 @@ export class Engine {
     // Camera-relative in float64, then float32: overlays share the
     // precision scheme of the draw records.
     const data = resources.staging;
-    const eye = view.camera.position;
+    const eye = this.bodyCamera(view).position;
     const ex = eye[0]!,
       ey = eye[1]!,
       ez = eye[2]!;

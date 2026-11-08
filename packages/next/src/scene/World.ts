@@ -358,15 +358,21 @@ export interface DrawHandle {
 
 /** A ray for `World.castRays`. */
 export interface CastRay {
-  /** Float64 Earth-fixed origin. */
+  /** Float64 origin, in the cast's anchor's coordinates (`CastOptions.anchor`). */
   origin: ArrayLike<number>;
-  /** Unit direction, Earth-fixed axes. */
+  /** Unit direction, in the anchor's axes. */
   direction: ArrayLike<number>;
   /** Hits beyond it are ignored (meters). */
   maxDistance: number;
 }
 
 export interface CastOptions {
+  /**
+   * The anchor whose coordinates the rays are in (Earth-fixed for the
+   * Earth's anchor, `bodyAnchor`); only draws under it are tested. Default:
+   * none, the transform table's root and the draws under no anchor.
+   */
+  anchor?: AnchorHandle;
   /** Only draws marked `collision` (tilesets with `enableCollision`). */
   collisionOnly?: boolean;
   /** Only draws some of these views draw (default: any). */
@@ -3066,6 +3072,7 @@ export class World {
       index,
       world.subarray(index * 16, index * 16 + 16),
       hidden,
+      this.transformAnchor[index],
     );
     this.transforms.mark(index);
     this.uploadsPending = true;
@@ -3127,11 +3134,12 @@ export class World {
   }
 
   /**
-   * @internal Each shown light with its transform's Earth-fixed matrix
-   * (lights.ts `packViewLights`); lights whose transform was removed go.
+   * @internal Each shown light with its transform's matrix relative to its
+   * anchor and the anchor's slot (0: none; lights.ts `packViewLights`);
+   * lights whose transform was removed go.
    */
   forEachLight(
-    visit: (light: LightOptions, matrix: Float64Array) => void,
+    visit: (light: LightOptions, matrix: Float64Array, anchor: number) => void,
   ): void {
     if (this.lightCount === 0) {
       return;
@@ -3151,6 +3159,7 @@ export class World {
         visit(
           light,
           this.transformWorld.subarray(t.index * 16, t.index * 16 + 16),
+          this.transformAnchor[t.index]!,
         );
       }
     }
@@ -3574,10 +3583,12 @@ export class World {
   }
 
   /**
-   * Casts rays (float64 Earth-fixed origins, unit directions) against the
-   * triangles of the draws they may hit and resolves each ray's nearest
-   * hit distance in meters, or undefined. Brute force on the GPU over the
-   * draws whose bounds a ray crosses (`raycast.slang`); one readback.
+   * Casts rays (float64 origins, unit directions, in the coordinates of
+   * `options.anchor`, by default the table's root) against the triangles of
+   * the draws under that anchor they may hit, and resolves each ray's
+   * nearest hit distance in meters, or undefined. Brute force on the GPU
+   * over the draws whose bounds a ray crosses (`raycast.slang`); one
+   * readback.
    */
   async castRays(
     rays: readonly CastRay[],
@@ -3698,6 +3709,11 @@ export class World {
     const u = this.recordsU32;
     const f = this.recordsF32;
     const mask = options.viewMask ?? ALL_VIEWS;
+    let anchorSlot = 0;
+    if (options.anchor) {
+      this.checkAnchor(options.anchor, "castRays");
+      anchorSlot = options.anchor.slot;
+    }
     const only = options.draws
       ? new Set(
           options.draws.filter((d) => this.hasDraw(d)).map((d) => d.index),
@@ -3752,7 +3768,10 @@ export class World {
         continue;
       }
       const t = u[o + TRANSFORM_WORD]!;
-      if (this.transformHiddenWorld[t] === 1) {
+      if (
+        this.transformHiddenWorld[t] === 1 ||
+        this.transformAnchor[t] !== anchorSlot
+      ) {
         continue;
       }
       const w = t * 16;

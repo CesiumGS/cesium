@@ -317,10 +317,84 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "anchors",
+                            "type": {
+                                "kind": "array",
+                                "elementCount": 32,
+                                "elementType": {
+                                    "kind": "struct",
+                                    "name": "AnchorEye",
+                                    "fields": [
+                                        {
+                                            "name": "eyeHi",
+                                            "type": {
+                                                "kind": "vector",
+                                                "elementCount": 4,
+                                                "elementType": {
+                                                    "kind": "scalar",
+                                                    "scalarType": "float32"
+                                                },
+                                                "sizes": [
+                                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                                ]
+                                            },
+                                            "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                                        },
+                                        {
+                                            "name": "eyeLo",
+                                            "type": {
+                                                "kind": "vector",
+                                                "elementCount": 4,
+                                                "elementType": {
+                                                    "kind": "scalar",
+                                                    "scalarType": "float32"
+                                                },
+                                                "sizes": [
+                                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                                ]
+                                            },
+                                            "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                                        },
+                                        {
+                                            "name": "axes",
+                                            "type": {
+                                                "kind": "array",
+                                                "elementCount": 3,
+                                                "elementType": {
+                                                    "kind": "vector",
+                                                    "elementCount": 4,
+                                                    "elementType": {
+                                                        "kind": "scalar",
+                                                        "scalarType": "float32"
+                                                    },
+                                                    "sizes": [
+                                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                                    ]
+                                                },
+                                                "uniformStride": 16,
+                                                "sizes": [
+                                                    {"kind": "uniform", "value": 48, "alignment": 16}
+                                                ]
+                                            },
+                                            "binding": {"kind": "uniform", "offset": 32, "size": 48, "elementStride": 16}
+                                        }
+                                    ],
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 80, "alignment": 16}
+                                    ]
+                                },
+                                "uniformStride": 80,
+                                "sizes": [
+                                    {"kind": "uniform", "value": 2560, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 416, "size": 2560, "elementStride": 80}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 416, "alignment": 16}
+                        {"kind": "uniform", "value": 2976, "alignment": 16}
                     ]
                 },
                 "containerVarLayout": {
@@ -638,13 +712,87 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "anchors",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 32,
+                                    "elementType": {
+                                        "kind": "struct",
+                                        "name": "AnchorEye",
+                                        "fields": [
+                                            {
+                                                "name": "eyeHi",
+                                                "type": {
+                                                    "kind": "vector",
+                                                    "elementCount": 4,
+                                                    "elementType": {
+                                                        "kind": "scalar",
+                                                        "scalarType": "float32"
+                                                    },
+                                                    "sizes": [
+                                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                                    ]
+                                                },
+                                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                                            },
+                                            {
+                                                "name": "eyeLo",
+                                                "type": {
+                                                    "kind": "vector",
+                                                    "elementCount": 4,
+                                                    "elementType": {
+                                                        "kind": "scalar",
+                                                        "scalarType": "float32"
+                                                    },
+                                                    "sizes": [
+                                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                                    ]
+                                                },
+                                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                                            },
+                                            {
+                                                "name": "axes",
+                                                "type": {
+                                                    "kind": "array",
+                                                    "elementCount": 3,
+                                                    "elementType": {
+                                                        "kind": "vector",
+                                                        "elementCount": 4,
+                                                        "elementType": {
+                                                            "kind": "scalar",
+                                                            "scalarType": "float32"
+                                                        },
+                                                        "sizes": [
+                                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                                        ]
+                                                    },
+                                                    "uniformStride": 16,
+                                                    "sizes": [
+                                                        {"kind": "uniform", "value": 48, "alignment": 16}
+                                                    ]
+                                                },
+                                                "binding": {"kind": "uniform", "offset": 32, "size": 48, "elementStride": 16}
+                                            }
+                                        ],
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 80, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 80,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 2560, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 416, "size": 2560, "elementStride": 80}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 416, "alignment": 16}
+                            {"kind": "uniform", "value": 2976, "alignment": 16}
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 416, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 2976, "elementStride": 0}
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -1035,10 +1183,84 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "anchors",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 32,
+                                    "elementType": {
+                                        "kind": "struct",
+                                        "name": "AnchorEye",
+                                        "fields": [
+                                            {
+                                                "name": "eyeHi",
+                                                "type": {
+                                                    "kind": "vector",
+                                                    "elementCount": 4,
+                                                    "elementType": {
+                                                        "kind": "scalar",
+                                                        "scalarType": "float32"
+                                                    },
+                                                    "sizes": [
+                                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                                    ]
+                                                },
+                                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                                            },
+                                            {
+                                                "name": "eyeLo",
+                                                "type": {
+                                                    "kind": "vector",
+                                                    "elementCount": 4,
+                                                    "elementType": {
+                                                        "kind": "scalar",
+                                                        "scalarType": "float32"
+                                                    },
+                                                    "sizes": [
+                                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                                    ]
+                                                },
+                                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                                            },
+                                            {
+                                                "name": "axes",
+                                                "type": {
+                                                    "kind": "array",
+                                                    "elementCount": 3,
+                                                    "elementType": {
+                                                        "kind": "vector",
+                                                        "elementCount": 4,
+                                                        "elementType": {
+                                                            "kind": "scalar",
+                                                            "scalarType": "float32"
+                                                        },
+                                                        "sizes": [
+                                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                                        ]
+                                                    },
+                                                    "uniformStride": 16,
+                                                    "sizes": [
+                                                        {"kind": "uniform", "value": 48, "alignment": 16}
+                                                    ]
+                                                },
+                                                "binding": {"kind": "uniform", "offset": 32, "size": 48, "elementStride": 16}
+                                            }
+                                        ],
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 80, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 80,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 2560, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 416, "size": 2560, "elementStride": 80}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 416, "alignment": 16}
+                            {"kind": "uniform", "value": 2976, "alignment": 16}
                         ]
                     },
                     "containerVarLayout": {
@@ -1356,13 +1578,87 @@
                                         ]
                                     },
                                     "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "anchors",
+                                    "type": {
+                                        "kind": "array",
+                                        "elementCount": 32,
+                                        "elementType": {
+                                            "kind": "struct",
+                                            "name": "AnchorEye",
+                                            "fields": [
+                                                {
+                                                    "name": "eyeHi",
+                                                    "type": {
+                                                        "kind": "vector",
+                                                        "elementCount": 4,
+                                                        "elementType": {
+                                                            "kind": "scalar",
+                                                            "scalarType": "float32"
+                                                        },
+                                                        "sizes": [
+                                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                                        ]
+                                                    },
+                                                    "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                                                },
+                                                {
+                                                    "name": "eyeLo",
+                                                    "type": {
+                                                        "kind": "vector",
+                                                        "elementCount": 4,
+                                                        "elementType": {
+                                                            "kind": "scalar",
+                                                            "scalarType": "float32"
+                                                        },
+                                                        "sizes": [
+                                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                                        ]
+                                                    },
+                                                    "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                                                },
+                                                {
+                                                    "name": "axes",
+                                                    "type": {
+                                                        "kind": "array",
+                                                        "elementCount": 3,
+                                                        "elementType": {
+                                                            "kind": "vector",
+                                                            "elementCount": 4,
+                                                            "elementType": {
+                                                                "kind": "scalar",
+                                                                "scalarType": "float32"
+                                                            },
+                                                            "sizes": [
+                                                                {"kind": "uniform", "value": 16, "alignment": 16}
+                                                            ]
+                                                        },
+                                                        "uniformStride": 16,
+                                                        "sizes": [
+                                                            {"kind": "uniform", "value": 48, "alignment": 16}
+                                                        ]
+                                                    },
+                                                    "binding": {"kind": "uniform", "offset": 32, "size": 48, "elementStride": 16}
+                                                }
+                                            ],
+                                            "sizes": [
+                                                {"kind": "uniform", "value": 80, "alignment": 16}
+                                            ]
+                                        },
+                                        "uniformStride": 80,
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 2560, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 416, "size": 2560, "elementStride": 80}
                                 }
                             ],
                             "sizes": [
-                                {"kind": "uniform", "value": 416, "alignment": 16}
+                                {"kind": "uniform", "value": 2976, "alignment": 16}
                             ]
                         },
-                        "binding": {"kind": "uniform", "offset": 0, "size": 416, "elementStride": 0}
+                        "binding": {"kind": "uniform", "offset": 0, "size": 2976, "elementStride": 0}
                     },
                     "sizes": [
                         {"kind": "descriptorTableSlot", "value": 1}

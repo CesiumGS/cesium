@@ -3,6 +3,7 @@ import type { Vec3 } from "../math/vec3.ts";
 import { SOLAR_ILLUMINANCE, type Body } from "../scene/Body.ts";
 import { splitHigh, splitVec3 } from "../math/transforms.ts";
 import {
+  AnchorEyeLayout,
   DrawItemLayout,
   DrawRecordLayout,
   InstanceLayout,
@@ -31,12 +32,20 @@ const R = words(DrawRecordLayout);
 const T = words(TransformLayout);
 const I = words(InstanceLayout);
 const M = words(MaterialLayout);
+const A = words(AnchorEyeLayout);
 
 /** `struct View`, padded to a 256-aligned stride per view. */
 export const VIEW_SIZE = ViewLayout.size;
 /** Word offset of `View.viewBit` (u32): this view's bit in record view masks. */
 export const VIEW_BIT_WORD = V.viewBit;
-export const VIEW_STRIDE = 512;
+/** Word offset of `View.time`; its y is 1 in a height capture's view. */
+export const VIEW_TIME_WORD = V.time;
+/** Bytes between views' blocks in a staging buffer: `VIEW_SIZE` rounded up to 256. */
+export const VIEW_STRIDE = Math.ceil(VIEW_SIZE / 256) * 256;
+/** Word offset of `View.anchors`: `MAX_ANCHORS` `AnchorEye`s. */
+export const VIEW_ANCHORS_WORD = V.anchors;
+/** Words of one `AnchorEye`. */
+export const ANCHOR_EYE_WORDS = A.size;
 
 export interface ViewBlock {
   viewProj: Mat4;
@@ -180,6 +189,40 @@ export function writeViewBlock(
   out[o + V.time + 1] = 0;
   out[o + V.time + 2] = 0;
   out[o + V.time + 3] = 0;
+  // Every anchor at the identity: each slot's eye is the camera, its axes
+  // the shading axes (scene/anchorEyes.ts writes a view's own after).
+  for (let slot = 0; slot < MAX_ANCHORS; slot++) {
+    writeAnchorEye(out, o, slot, block.cameraPosition, undefined, false);
+  }
+}
+
+/**
+ * Writes anchor slot `slot` of the view block at `offsetFloats`: the eye in
+ * the anchor's coordinates (float64, split as `splitVec3`), the rotation
+ * from the anchor's axes to the shading axes by row (9 values, row-major,
+ * from `axesOffset`; undefined: the identity), and whether its draws are
+ * hidden in the view.
+ */
+export function writeAnchorEye(
+  out: Float32Array,
+  offsetFloats: number,
+  slot: number,
+  eye: Vec3,
+  axes: ArrayLike<number> | undefined,
+  hidden: boolean,
+  axesOffset = 0,
+): void {
+  const o = offsetFloats + V.anchors + slot * A.size;
+  splitVec3(eye, out, o + A.eyeHi, out, o + A.eyeLo);
+  out[o + A.eyeHi + 3] = hidden ? 1 : 0;
+  out[o + A.eyeLo + 3] = 0;
+  for (let row = 0; row < 3; row++) {
+    const r = o + A.axes + row * 4;
+    for (let k = 0; k < 3; k++) {
+      out[r + k] = axes ? axes[axesOffset + row * 3 + k]! : row === k ? 1 : 0;
+    }
+    out[r + 3] = 0;
+  }
 }
 
 /** `struct DrawRecord` — 144 bytes (132 used, padded to WGSL's 16-byte alignment). */
@@ -519,10 +562,14 @@ export function writeDrawRecord(
   f32[o + R.billboardDepthTest] = r.billboardDepthTest ?? 0;
 }
 
+/** Bits of `Transform.flags` that hold its anchor slot (8 to 15). */
+export const TRANSFORM_ANCHOR_SHIFT = 8;
+
 /**
- * Writes a transform entry from its float64 world matrix (column-major):
- * the translation split hi/lo, the 3×3 in float32 and its largest axis
- * scale, which scales bounding radii.
+ * Writes a transform entry from its float64 matrix relative to its anchor
+ * (column-major): the translation split hi/lo, the 3×3 in float32 and its
+ * largest axis scale, which scales bounding radii, and its flags: hidden,
+ * and its anchor's slot (0: none) in bits 8 to 15.
  */
 export function writeTransform(
   f32: Float32Array,
@@ -530,6 +577,7 @@ export function writeTransform(
   index: number,
   m: ArrayLike<number>,
   hidden: boolean,
+  anchorSlot = 0,
 ): void {
   const o = index * TRANSFORM_WORDS;
   for (let i = 0; i < 3; i++) {
@@ -543,7 +591,8 @@ export function writeTransform(
     Math.hypot(m[4]!, m[5]!, m[6]!),
     Math.hypot(m[8]!, m[9]!, m[10]!),
   );
-  u32[o + T.flags] = hidden ? 1 : 0;
+  u32[o + T.flags] =
+    ((hidden ? 1 : 0) | ((anchorSlot & 0xff) << TRANSFORM_ANCHOR_SHIFT)) >>> 0;
   // The 3×3 by column, each padded to 16 bytes.
   for (let c = 0; c < 3; c++) {
     f32[o + T.linear + c * 4] = m[c * 4]!;

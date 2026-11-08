@@ -1,10 +1,22 @@
 // Generated from src/shaders/layouts.slang by slangc 2026.21
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
-@binding(8) @group(0) var<storage, read_write> out_0 : array<u32>;
+@binding(9) @group(0) var<storage, read_write> out_0 : array<u32>;
 
 struct _MatrixStorage_float4x4_ColMajorstd140_0
 {
     @align(16) data_0 : array<vec4<f32>, i32(4)>,
+};
+
+struct AnchorEye_std140_0
+{
+    @align(16) eyeHi_0 : vec4<f32>,
+    @align(16) eyeLo_0 : vec4<f32>,
+    @align(16) axes_0 : array<vec4<f32>, i32(3)>,
+};
+
+struct _Array_std140_AnchorEye32_0
+{
+    @align(16) data_1 : array<AnchorEye_std140_0, i32(32)>,
 };
 
 struct View_std140_0
@@ -31,6 +43,7 @@ struct View_std140_0
     @align(16) bodyRadii_0 : vec4<f32>,
     @align(16) moonLight_0 : vec4<f32>,
     @align(16) time_0 : vec4<f32>,
+    @align(16) anchors_0 : _Array_std140_AnchorEye32_0,
 };
 
 @binding(0) @group(0) var<uniform> view_0 : View_std140_0;
@@ -73,7 +86,7 @@ struct DrawRecord_std430_0
 
 struct _MatrixStorage_float3x3_ColMajorstd430_0
 {
-    @align(16) data_1 : array<vec3<f32>, i32(3)>,
+    @align(16) data_2 : array<vec3<f32>, i32(3)>,
 };
 
 struct Transform_std430_0
@@ -102,7 +115,7 @@ struct Instance_std430_0
 
 struct _MatrixStorage_float4x4_ColMajorstd430_0
 {
-    @align(16) data_2 : array<vec4<f32>, i32(4)>,
+    @align(16) data_3 : array<vec4<f32>, i32(4)>,
 };
 
 struct DrawItem_std430_0
@@ -154,11 +167,20 @@ struct Light_std430_0
 
 @binding(7) @group(0) var<storage, read> lights_0 : array<Light_std430_0>;
 
+struct AnchorEye_std430_0
+{
+    @align(16) eyeHi_0 : vec4<f32>,
+    @align(16) eyeLo_0 : vec4<f32>,
+    @align(16) axes_0 : array<vec4<f32>, i32(3)>,
+};
+
+@binding(8) @group(0) var<storage, read> anchorEyes_0 : array<AnchorEye_std430_0>;
+
 @compute
 @workgroup_size(1, 1, 1)
 fn layouts()
 {
-    out_0[i32(0)] = view_0.viewBit_0 + records_0[i32(0)].batch_0 + transforms_0[i32(0)].flags_1 + instances_0[i32(0)].record_0 + items_0[i32(0)].record_1 + materials_0[i32(0)].flags_3 + u32(lightHeaders_0[i32(0)].grid_0.w + lights_0[i32(0)].position_0.w);
+    out_0[i32(0)] = view_0.viewBit_0 + records_0[i32(0)].batch_0 + transforms_0[i32(0)].flags_1 + instances_0[i32(0)].record_0 + items_0[i32(0)].record_1 + materials_0[i32(0)].flags_3 + u32(lightHeaders_0[i32(0)].grid_0.w + lights_0[i32(0)].position_0.w + anchorEyes_0[i32(0)].eyeHi_0.w);
     return;
 }
 

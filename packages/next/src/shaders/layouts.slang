@@ -13,7 +13,8 @@ import common;
 [[vk::binding(5, 0)]] StructuredBuffer<Material> materials;
 [[vk::binding(6, 0)]] StructuredBuffer<LightHeader> lightHeaders;
 [[vk::binding(7, 0)]] StructuredBuffer<Light> lights;
-[[vk::binding(8, 0)]] RWStructuredBuffer<uint> out;
+[[vk::binding(8, 0)]] StructuredBuffer<AnchorEye> anchorEyes;
+[[vk::binding(9, 0)]] RWStructuredBuffer<uint> out;
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
@@ -21,5 +22,5 @@ void layouts() {
   // Every table read, so none is left out of the reflection.
   out[0] = view.viewBit + records[0].batch + transforms[0].flags +
            instances[0].record + items[0].record + materials[0].flags +
-           uint(lightHeaders[0].grid.w + lights[0].position.w);
+           uint(lightHeaders[0].grid.w + lights[0].position.w + anchorEyes[0].eyeHi.w);
 }

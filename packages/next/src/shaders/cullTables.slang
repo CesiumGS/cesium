@@ -37,30 +37,45 @@ public struct CullParams {
 public static const uint NONE = 0xffffffffu;
 public static const uint WHITE = 0xffffffffu;
 
+// The view's eye for a transform's anchor (Transform.flags bits 8 to 15;
+// a slot past the table reads its last entry).
+public AnchorEye anchorEye(Transform t) {
+  return view.anchors[min((t.flags >> 8u) & 0xffu, MAX_ANCHORS - 1u)];
+}
+
 // The transform as a camera-relative matrix. This is the only place large
-// world coordinates meet the camera: the position's difference from the
-// camera's is exact (SplitPosition), so the result keeps float32 precision
-// relative to the (small) camera distance. Rows: `linear` holds the
-// rotation-scale by row as Slang indexes it (layout.ts writes columns,
-// and the column-major storage reads them back as this matrix).
+// coordinates meet the camera: the position's difference from the eye in
+// the transform's anchor is exact (SplitPosition), so the result keeps
+// float32 precision relative to the (small) camera distance; then the
+// anchor's axes turn it into the view's shading axes (the identity for the
+// view's body anchor, and for every anchor placed at the identity, which
+// leaves each float as it was). Rows: `linear` holds the rotation-scale by
+// row as Slang indexes it (layout.ts writes columns, and the column-major
+// storage reads them back as this matrix).
 public float4x4 relativeMatrix(Transform t) {
+  AnchorEye eye = anchorEye(t);
   float3 rel = SplitPosition(t.originHi, t.originLo)
-                   .difference(SplitPosition(view.cameraHi, view.cameraLo));
+                   .difference(SplitPosition(eye.eyeHi.xyz, eye.eyeLo.xyz));
+  float3x3 axes = float3x3(eye.axes[0].xyz, eye.axes[1].xyz, eye.axes[2].xyz);
+  float3x3 linear = mul(axes, t.linear);
+  rel = mul(axes, rel);
   return float4x4(
-      float4(t.linear[0], rel.x),
-      float4(t.linear[1], rel.y),
-      float4(t.linear[2], rel.z),
+      float4(linear[0], rel.x),
+      float4(linear[1], rel.y),
+      float4(linear[2], rel.z),
       float4(0, 0, 0, 1));
 }
 
 // Hidden, empty, or not selected for this view (multi-view tile selection
 // shares one draw table and picks LOD per view through the mask). A height
 // capture's view (View.time.y 1) culls what isn't ground
-// (RecordFlags.notGround).
+// (RecordFlags.notGround). Under an anchor the eye is too far from
+// (AnchorEye.eyeHi.w 1), nothing draws.
 public bool drawable(DrawRecord r, Transform t) {
   return (r.flags & 1u) == 0u && (t.flags & 1u) == 0u && r.indexCount != 0u &&
          (r.viewMask & view.viewBit) != 0u &&
-         !(view.time.y > 0.5 && (r.flags & 32u) != 0u);
+         !(view.time.y > 0.5 && (r.flags & 32u) != 0u) &&
+         anchorEye(t).eyeHi.w < 0.5;
 }
 
 public bool inFrustum(float4x4 m, float3 center, float radius) {

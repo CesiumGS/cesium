@@ -5,6 +5,21 @@
 // slangBuild.mjs, `layouts.slang` → src/render/generated/layouts.ts).
 module common;
 
+// Anchor slots per view (render/layout.ts MAX_ANCHORS): slot 0 is the
+// transform table's root (no anchor).
+public static const uint MAX_ANCHORS = 32u;
+
+// The view's eye in one anchor's coordinates, and the rotation from that
+// anchor's axes to the view's shading axes (its body anchor's), both
+// computed in float64 on the CPU (scene/anchorEyes.ts). `eyeHi.w` is 1
+// when the eye is too far from the anchor (more than 2^31 m) for the
+// split positions' integer difference: its draws are hidden in the view.
+public struct AnchorEye {
+  public float4 eyeHi;           // xyz: the eye, split as SplitPosition's
+  public float4 eyeLo;
+  public float4 axes[3];         // the rotation by row (xyz)
+};
+
 public struct View {
   public float4x4 viewProj;      // rotation-only view × reverse-Z projection
   public float4x4 viewRotation;
@@ -42,6 +57,10 @@ public struct View {
   // Seconds since the engine started (x), for custom shaders' animation;
   // y: 1 in a height capture's view (cull `drawable`).
   public float4 time;
+  // Per anchor slot (Transform.flags bits 8 to 15): the eye in the
+  // anchor's coordinates and its axes into the shading axes (cullTables
+  // `relativeMatrix`). The body anchor's eye is `cameraHi`/`cameraLo`'s.
+  public AnchorEye anchors[MAX_ANCHORS];
 };
 
 public struct DrawRecord {
@@ -78,13 +97,14 @@ public struct DrawRecord {
   public float billboardDepthTest; // billboards: drawn in front within this distance, m
 };
 
-// A placement composed in float64 on the CPU (World transform table).
+// A placement composed in float64 on the CPU (World transform table),
+// relative to its anchor (the table's root under none).
 public struct Transform {
   public float3 originHi;
   public float scale;            // largest axis scale of `linear` (bounding radii)
   public float3 originLo;
-  public uint flags;             // 1 hidden (itself or an ancestor)
-  public float3x3 linear;        // rotation-scale, Earth-fixed axes
+  public uint flags;             // 1 hidden (itself or an ancestor); bits 8-15 its anchor slot
+  public float3x3 linear;        // rotation-scale, in its anchor's axes
 };
 
 // One instance of an instanced record.

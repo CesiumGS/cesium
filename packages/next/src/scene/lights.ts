@@ -8,6 +8,7 @@
  */
 
 import type { TransformHandle } from "./World.ts";
+import { ANCHOR_EYE_VALUES, type AnchorEyes } from "./anchorEyes.ts";
 
 export interface LightOptions {
   type: "point" | "spot";
@@ -97,17 +98,26 @@ let scratchCount = 0;
 
 /**
  * Packs the lights a view sees into `out` at `offset` (the header, then
- * each light camera-relative): `lights` calls back with each light and its
- * Earth-fixed matrix. Returns how many.
+ * each light camera-relative, in the shading axes): `lights` calls back
+ * with each light, its matrix relative to its anchor and the anchor's slot
+ * (0: none). With `eyes` (`computeAnchorEyes`), a light is made relative to
+ * its anchor's eye and turned into the shading axes, in float64 before the
+ * float32 pack, and a hidden anchor's lights are left out; without, every
+ * light is relative to `camera.position`. Returns how many.
  */
 export function packViewLights(
   out: Float32Array,
   offset: number,
   lights: (
-    visit: (light: LightOptions, matrix: ArrayLike<number>) => void,
+    visit: (
+      light: LightOptions,
+      matrix: ArrayLike<number>,
+      anchor?: number,
+    ) => void,
   ) => void,
   camera: LightCamera,
   exposure: number,
+  eyes?: AnchorEyes,
 ): number {
   const p = camera.position;
   const f = camera.direction;
@@ -118,16 +128,45 @@ export function packViewLights(
   const sideY = Math.sqrt(1 + tanY * tanY);
   candidates.length = 0;
   scratchCount = 0;
-  lights((light, m) => {
+  lights((light, m, anchor = 0) => {
     const color = light.color ?? [1, 1, 1];
     const brightest = Math.max(color[0], color[1], color[2]) * light.intensity;
-    if (!(brightest > 0)) {
+    if (!(brightest > 0) || eyes?.hidden[anchor] === 1) {
       return;
     }
     const reach = lightReach(brightest, exposure, light.range);
-    const cx = m[12]! - p[0]!;
-    const cy = m[13]! - p[1]!;
-    const cz = m[14]! - p[2]!;
+    let cx: number, cy: number, cz: number;
+    // Where a spot points (its transform's −z), in the shading axes.
+    let dx = -m[8]!,
+      dy = -m[9]!,
+      dz = -m[10]!;
+    if (eyes) {
+      const v = eyes.values;
+      const o = anchor * ANCHOR_EYE_VALUES;
+      const x = m[12]! - v[o]!;
+      const y = m[13]! - v[o + 1]!;
+      const z = m[14]! - v[o + 2]!;
+      if (eyes.identity[anchor] === 1) {
+        cx = x;
+        cy = y;
+        cz = z;
+      } else {
+        const a = o + 3;
+        cx = v[a]! * x + v[a + 1]! * y + v[a + 2]! * z;
+        cy = v[a + 3]! * x + v[a + 4]! * y + v[a + 5]! * z;
+        cz = v[a + 6]! * x + v[a + 7]! * y + v[a + 8]! * z;
+        const ex = dx,
+          ey = dy,
+          ez = dz;
+        dx = v[a]! * ex + v[a + 1]! * ey + v[a + 2]! * ez;
+        dy = v[a + 3]! * ex + v[a + 4]! * ey + v[a + 5]! * ez;
+        dz = v[a + 6]! * ex + v[a + 7]! * ey + v[a + 8]! * ez;
+      }
+    } else {
+      cx = m[12]! - p[0]!;
+      cy = m[13]! - p[1]!;
+      cz = m[14]! - p[2]!;
+    }
     const z = cx * f[0]! + cy * f[1]! + cz * f[2]!;
     const x = cx * r[0]! + cy * r[1]! + cz * r[2]!;
     const y = cx * u[0]! + cy * u[1]! + cz * u[2]!;
@@ -151,12 +190,23 @@ export function packViewLights(
       if (distance >= candidates[farthest]!.distance) {
         return;
       }
-      writeLight(candidates[farthest]!.at, light, m, cx, cy, cz, reach, color);
+      writeLight(
+        candidates[farthest]!.at,
+        light,
+        cx,
+        cy,
+        cz,
+        dx,
+        dy,
+        dz,
+        reach,
+        color,
+      );
       candidates[farthest]!.distance = distance;
       return;
     }
     const at = scratchCount++ * LIGHT_FLOATS;
-    writeLight(at, light, m, cx, cy, cz, reach, color);
+    writeLight(at, light, cx, cy, cz, dx, dy, dz, reach, color);
     candidates.push({ distance: Math.hypot(cx, cy, cz), at });
   });
   // The grid's depth: from the near plane to the farthest light's reach.
@@ -190,10 +240,12 @@ export function packViewLights(
 function writeLight(
   at: number,
   light: LightOptions,
-  m: ArrayLike<number>,
   cx: number,
   cy: number,
   cz: number,
+  dx: number,
+  dy: number,
+  dz: number,
   reach: number,
   color: readonly [number, number, number],
 ): void {
@@ -207,10 +259,10 @@ function writeLight(
   s[at + 6] = color[2] * light.intensity;
   s[at + 7] = light.type === "spot" ? 1 : 0;
   // Where a spot points: its transform's −z, unit.
-  const length = Math.hypot(m[8]!, m[9]!, m[10]!) || 1;
-  s[at + 8] = -m[8]! / length;
-  s[at + 9] = -m[9]! / length;
-  s[at + 10] = -m[10]! / length;
+  const length = Math.hypot(dx, dy, dz) || 1;
+  s[at + 8] = dx / length;
+  s[at + 9] = dy / length;
+  s[at + 10] = dz / length;
   // glTF's cone falloff: (cos θ · scale + offset)², clamped.
   const inner = Math.cos(light.innerConeAngle ?? 0);
   const outer = Math.cos(light.outerConeAngle ?? Math.PI / 4);
