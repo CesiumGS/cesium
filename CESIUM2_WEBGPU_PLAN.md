@@ -8330,6 +8330,10 @@ So streaming's logic is already free of the GPU API. The tangle is in `Engine.ts
 
 **Differences from 1.x to document.** Blending happens in linear, so `colorBlendMode: "mix"` and translucent colours differ from 1.x even with matching inputs. This is deliberate (owner, 2026-11-08): 1.x's blending is known to give incorrect results, so 1.x isn't the oracle for blended colours, and parity cases should expect the linear result. `vec4` colours are linear in 2.0, and plain numbers in 1.x.
 
+### 13.19 For a later brainstorm: semantic metadata and picking (owner, 2026-11-08)
+
+Not designed. A question to take up in its own session, then add to this plan: how semantic metadata interacts with the engine as world models mature, and what that means for picking in Gaussian splats and point clouds. Those representations have no surfaces or per-feature triangles, so "what did I pick?" may come from a learned or labelled field, not from a feature id on a mesh. Related: the query interface (§13.16), point clouds and vector tiles with the vector renderer, and 3D Tiles metadata, which isn't planned yet.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
