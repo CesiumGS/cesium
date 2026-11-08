@@ -166,11 +166,11 @@ describe("the portfolio (call 19)", () => {
 });
 
 describe("the site-grid building", () => {
-  it("is on a site grid of the corridor's CRS, 2,000 E and 1,500 N of the alignment's start", () => {
+  it("is on a site grid of the corridor's CRS, 1,000 S of the alignment's start, on a plinth", () => {
     const site = SITE_BUILDING.frame.site!;
     const [e0, n0] = CORRIDOR_ALIGNMENT.start;
     expect(SITE_BUILDING.frame.crs).toBe(CORRIDOR_CRS);
-    expect(site.origin).toEqual([e0 + 2_000, n0 + 1_500, 0]);
+    expect(site.origin).toEqual([e0, n0 - 1_000, 0]);
     expect(site.rotation).toBeCloseTo((12.5 * Math.PI) / 180, 15);
     expect(site.scale).toBe(1.0000375);
     expect(SITE_BUILDING.model).toEqual({
@@ -179,6 +179,7 @@ describe("the site-grid building", () => {
       depth: 120,
       stories: 3,
       storyHeight: 13,
+      plinth: 282,
     });
   });
 
