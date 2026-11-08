@@ -333,9 +333,9 @@ const axes = (scenes: number, scenarios: number) => [
     axis: "Content and link",
     varies:
       "Datasets pinned by hash, or streamed live, and a fast or throttled link",
-    kept: "A run refuses a mirrored dataset whose hash changed. Streamed content can change underneath, so its network conditions are recorded.",
+    kept: "A run refuses a mirrored dataset whose hash changed. Streamed content can change underneath, so a run counts its requests and bytes.",
     sampled:
-      "The catalog runs on the live network. Only the matrix runner throttles the link.",
+      "Most of the catalog runs over the live network, and only one suite throttles. See the network, below.",
     thin: true,
   },
   {
@@ -509,6 +509,59 @@ const ENV_OS = [
   "System memory speed and channels, and the machine's model.",
   "Which display a window is on, its true refresh mode, and any HDR state.",
   "Live clocks, temperature and throttling on Apple, AMD and Intel GPUs. Apple needs administrator rights for these.",
+];
+
+const NETWORK = [
+  {
+    what: "Live servers, for most catalog scenes",
+    state: "Built",
+    badge: "api-renamed",
+    means:
+      "Most of the catalog's datasets stream from ion each run, from a cold cache, over whatever link the machine has. A CDN's bad moment lands in the result: Philadelphia's first content ranged 1.3 to 2.7 s for 1.x alone. A run counts requests and bytes, but the ion CDN hides per-request timing from pages (the plan's follow-up 4).",
+  },
+  {
+    what: "Local files, for what can be redistributed",
+    state: "Built",
+    badge: "api-renamed",
+    means:
+      "Generated and sample content comes from a local store, checked by hash, with no network dependency. Today that's the fleet and the milk truck.",
+  },
+  {
+    what: "A throttled link, in one suite",
+    state: "Built",
+    badge: "api-renamed",
+    means: (
+      <>
+        <C>bench/run.mjs lod</C> and <C>lod-matrix.mjs</C> delay responses at
+        Playwright's request router, as a shared 20 Mbit/s link with 80 ms
+        latency and no HTTP cache. That router also sees workers, which
+        Chromium's network emulation can't attach to. The tiles still come from
+        the live server, so this adds a limit and doesn't remove the server's
+        variation.
+      </>
+    ),
+  },
+  {
+    what: "A simulated network: tiles from a local server, with shaped links",
+    state: "Planned",
+    badge: "goal-open",
+    means:
+      "Content from the local store, through a server that shapes latency, bandwidth and HTTP/2 per connection, for main threads and workers in both engines, so a result doesn't depend on a live server. Only where licences allow mirroring: Google's tiles stay live.",
+  },
+  {
+    what: "Network profiles from real users",
+    state: "Planned",
+    badge: "goal-open",
+    means:
+      "Profiles from field data, when there is some. Until then they're synthetic: fast, and 20 Mbit/s with 80 ms.",
+  },
+  {
+    what: "Recorded tiles, replayed",
+    state: "An idea",
+    badge: "goal-open",
+    means:
+      "A recording could bring stream-only content into the simulated network too. The plan doesn't describe it, and those licences don't allow mirroring as they stand, so this would need clearing first.",
+  },
 ];
 
 const COMMANDS = `# The app, on http://127.0.0.1:5190
@@ -801,6 +854,19 @@ export function Dyno() {
             power.
           </p>
         </Note>
+        <p>
+          The link is the axis most exposed to the outside world, so{" "}
+          <a
+            href="#dyno-network"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("dyno-network")?.scrollIntoView();
+            }}
+          >
+            the network
+          </a>{" "}
+          has its own section under methods.
+        </p>
         <h3>How each view slices it</h3>
         <div
           className="table-wrap"
@@ -1005,6 +1071,40 @@ export function Dyno() {
             </p>
           </div>
         </div>
+        <h3 id="dyno-network">The network</h3>
+        <p>
+          Today, most results depend on a live server. The plan doesn't mean to
+          leave it there.
+        </p>
+        <div
+          className="table-wrap"
+          tabIndex={0}
+          role="group"
+          aria-label="How runs get their tiles"
+        >
+          <table className="seams">
+            <thead>
+              <tr>
+                <th scope="col">How tiles arrive</th>
+                <th scope="col">State</th>
+                <th scope="col">What it means</th>
+              </tr>
+            </thead>
+            <tbody>
+              {NETWORK.map((row) => (
+                <tr key={row.what}>
+                  <th scope="row">{row.what}</th>
+                  <td>
+                    <span className={`api-badge ${row.badge}`}>
+                      {row.state}
+                    </span>
+                  </td>
+                  <td>{row.means}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <p>
           <strong>The RTX baseline.</strong> It's planned on the RTX 3000 Ada
           laptop used so far. That's a development laptop, not a dedicated
@@ -1021,7 +1121,8 @@ export function Dyno() {
             </li>
             <li>
               How a machine it hasn't run on behaves, or what real users'
-              networks do. It has a throttled link, not field data.
+              networks do. It has a throttled link and live servers, not field
+              data.
             </li>
             <li>
               Which of two different images is right. FLIP measures a
@@ -1039,7 +1140,7 @@ export function Dyno() {
           </ul>
         </Note>
         <Written
-          from="the overall plan, sections 16.3, 16.9 and 16.10, and the code"
+          from="the overall plan, sections 14, 16.2, 16.3, 16.9 and 16.10, and bench/run.mjs and telemetry.mjs"
           on="2026-11-08"
         />
       </Section>
@@ -1124,9 +1225,9 @@ export function Dyno() {
             checks saved from the Explorer.
           </li>
           <li>
-            <strong>Shaped links.</strong> Still planned: content served from
-            the local store through a server that shapes each connection, mainly
-            to lower variance, where licences allow mirroring.
+            <strong>A simulated network.</strong> Tiles from a local server with
+            shaped links, so results don't lean on a live server. The network
+            section above has what's built and what isn't.
           </li>
         </ul>
         <Written
