@@ -8,6 +8,7 @@
 // an EOP table that ends in January 2000).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadFrameData } from "../src/ephemeris/loadFrameData.ts";
+import { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { createSkyState, skyState, type SkyState } from "../src/frames/sky.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -206,7 +207,7 @@ async function viewer(options: ViewerOptions = {}): Promise<Viewer> {
     imagery: false,
     credits: false,
     timeControls: false,
-    warnings: false,
+    warningNotice: false,
     stars: false,
     moon: false,
     cityLights: false,
@@ -362,5 +363,158 @@ describe("the Viewer on the frames module", () => {
     ).toBe(0);
     v.sunFromClock = true;
     expect(skyDifference(engine, analyticAt(v.clock.time))).toBe(0);
+  });
+});
+
+describe("setFrameData keeps what the application set", () => {
+  const resolverOf = (v: Viewer) =>
+    engine.cameras.resolver(v.world) as ReturnType<typeof createFramesResolver>;
+
+  it("an application's rig stays; the viewer's own moves to the new ITRF", async () => {
+    const { Viewer } = await import("../widgets/Viewer.ts");
+    void Viewer;
+    const v = await viewer();
+    v.split = true;
+    const [main, second] = v.views as [typeof v.view, typeof v.view];
+    const earth = v.world.bodyAnchor(EARTH);
+    const appRig = {
+      position: { frame: earth },
+      orientation: { kind: "free" as const },
+    };
+    engine.cameras.setRig(second, appRig);
+    v.setFrameData(syntheticFrameData());
+    expect(engine.cameras.rig(second)).toBe(appRig);
+    expect(engine.cameras.rig(main).position.frame).toBe(v.frames.get("ITRF"));
+    expect(engine.cameras.root(main)).toBe(v.frames.get("ITRF"));
+    v.split = false;
+  });
+
+  it("anchor bindings to built-in reference frames move to the new catalog", async () => {
+    const v = await viewer();
+    const site = v.world.addAnchor("site");
+    resolverOf(v).bindAnchor(site, v.frames.get("MOON_ME"));
+    v.setFrameData(syntheticFrameData());
+    expect(resolverOf(v).catalog).toBe(v.frames);
+    expect(resolverOf(v).binding(site)).toBe(v.frames.get("MOON_ME"));
+  });
+
+  it("refuses, naming them, anchors bound to reference frames added to the catalog, and changes nothing", async () => {
+    const v = await viewer();
+    const old = v.frames;
+    const pad = Frame.constant(
+      "PAD",
+      old.get("ITRF"),
+      [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1000, 0, 0, 1],
+    );
+    old.add(pad);
+    const site = v.world.addAnchor("launch site");
+    resolverOf(v).bindAnchor(site, pad);
+    const before = resolverOf(v);
+    expect(() => v.setFrameData(syntheticFrameData())).toThrow(
+      /launch site \(bound to PAD\)/,
+    );
+    expect(v.frames).toBe(old);
+    expect(resolverOf(v)).toBe(before);
+    expect(resolverOf(v).binding(site)).toBe(pad);
+  });
+
+  it("an application's frame resolver stays", async () => {
+    const v = await viewer();
+    const own = createFramesResolver(v.frames);
+    engine.cameras.setResolver(v.world, own);
+    v.setFrameData(syntheticFrameData());
+    expect(engine.cameras.resolver(v.world)).toBe(own);
+  });
+
+  it("emits warningsCleared when the list is emptied", async () => {
+    const v = await viewer({
+      frameData: {
+        ...syntheticFrameData(),
+        warnings: [{ kind: "eopEnded", message: "old" }],
+      },
+    });
+    expect(v.warnings).toHaveLength(1);
+    const cleared = vi.fn();
+    v.events.on("warningsCleared", cleared);
+    v.setFrameData(syntheticFrameData());
+    expect(cleared).toHaveBeenCalledTimes(1);
+    expect(v.warnings).toEqual([]);
+  });
+});
+
+describe("the Viewer's warnings and loads, guarded", () => {
+  it("a warning listener that throws doesn't reject frameData", async () => {
+    failing = true;
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const v = await viewer({ frameData: BASE });
+    v.events.on("warning", () => {
+      throw new Error("listener");
+    });
+    await expect(v.frameData).resolves.toBeUndefined();
+    expect(v.warnings.map((w) => w.kind)).toEqual(["frameDataFailed"]);
+    expect(error).toHaveBeenCalled();
+  });
+
+  it("Engine.create failing aborts the frames data's loads", async () => {
+    const signals: Array<AbortSignal | undefined> = [];
+    const urls: string[] = [];
+    const served = fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: string | URL, init?: RequestInit) => {
+        urls.push(String(input));
+        signals.push(init?.signal ?? undefined);
+        return served(input, init);
+      }),
+    );
+    const { Viewer } = await import("../widgets/Viewer.ts");
+    const { Engine } = await import("../src/scene/Engine.ts");
+    vi.spyOn(Engine, "create").mockRejectedValue(new Error("no device"));
+    await expect(
+      Viewer.create(element() as unknown as HTMLElement, {
+        frameData: BASE,
+      }),
+    ).rejects.toThrow(/no device/);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    // The store's requests that went out were aborted (the providers'
+    // modules may load before or after the abort).
+    expect(urls.every((url) => url.startsWith(BASE))).toBe(true);
+    expect(signals.every((signal) => signal?.aborted)).toBe(true);
+  });
+});
+
+describe("a globe-only Viewer's tick with the clock playing", () => {
+  it("makes no Instant and walks no route", async () => {
+    let now = 1000;
+    const queue = new Map<number, FrameRequestCallback>();
+    let handle = 1;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      queue.set(handle, cb);
+      return handle++;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (h: number) => queue.delete(h));
+    const v = await viewer({ clock: new Clock({ time: INSIDE_MS }) });
+    const resolver = engine.cameras.resolver(v.world);
+    const resolve = vi.spyOn(resolver, "resolve");
+    const instants = vi.spyOn(Instant, "fromUtc");
+    const toParent = vi.spyOn(Frame.prototype, "toParent");
+    v.clock.mode = "playing";
+    const start = v.clock.time;
+    for (let i = 0; i < 30; i++) {
+      now += 1000 / 60;
+      const due = [...queue.values()];
+      queue.clear();
+      for (const cb of due) {
+        cb(now);
+      }
+      await new Promise((r) => setImmediate(r));
+    }
+    // The ticks ran: the clock moved and the anchors were placed each time.
+    expect(v.clock.time).toBeGreaterThan(start);
+    expect(resolve.mock.calls.length).toBeGreaterThanOrEqual(30);
+    expect(instants).not.toHaveBeenCalled();
+    expect(toParent).not.toHaveBeenCalled();
+    v.clock.mode = "paused";
   });
 });

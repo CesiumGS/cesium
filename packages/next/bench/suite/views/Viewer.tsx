@@ -269,7 +269,9 @@ export function Viewer() {
           host.frame(at);
         }
         host.setLighting(lightingRef.current);
-        setWarnings(result.warnings.length);
+        // The host's count now: a warning may have landed since the load's
+        // list was taken.
+        setWarnings(host.warningCount?.() ?? result.warnings.length);
         setState({ phase: "ready" });
       })
       .catch((error) => {
@@ -286,11 +288,9 @@ export function Viewer() {
     // `source` is keyed by its JSON; `at` only frames a new load.
   }, [host, sourceKey, token, attempt]);
 
-  // A warning after the load (the frames data's) counts too.
-  useEffect(
-    () => host?.onWarning?.(() => setWarnings((count) => count + 1)),
-    [host],
-  );
+  // A warning after the load (the frames data's) counts too, as the host
+  // counts it (each distinct warning once).
+  useEffect(() => host?.onWarning?.((count) => setWarnings(count)), [host]);
   useEffect(() => host?.setView(view), [host, view]);
   useEffect(() => host?.setLighting(lighting), [host, lighting]);
   // The inspector over the viewport, and picking on a click (not a drag).

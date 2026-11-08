@@ -13,11 +13,6 @@ export {
   type ZoomTarget,
 } from "./Viewer.ts";
 export {
-  attachWarnings,
-  type NoticeWarning,
-  type WarningsHandle,
-} from "./warnings.ts";
-export {
   followZoom,
   orbitState,
   planOrbit,

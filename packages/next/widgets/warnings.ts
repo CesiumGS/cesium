@@ -90,8 +90,12 @@ export function attachWarnings(element: HTMLElement): WarningsHandle {
     };
     const escape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !panel.hidden) {
+        // Focus goes back to the toggle only from inside the notice.
+        const inside = root.contains(document.activeElement);
         setOpen(false);
-        toggle.focus();
+        if (inside) {
+          toggle.focus();
+        }
       }
     };
     document.addEventListener("pointerdown", outside);
@@ -125,8 +129,8 @@ export function attachWarnings(element: HTMLElement): WarningsHandle {
       parts ??= build();
       const last = warnings[warnings.length - 1]!;
       const latest = last.summary ?? last.message;
-      parts.summary.textContent = latest;
-      parts.toggle.title = last.message;
+      parts.summary.replaceChildren(...withCode(latest));
+      parts.toggle.title = last.message.replaceAll("`", "");
       parts.count.textContent =
         warnings.length > 1 ? `${warnings.length} warnings` : "";
       parts.count.hidden = warnings.length < 2;
@@ -136,18 +140,18 @@ export function attachWarnings(element: HTMLElement): WarningsHandle {
           if (summary) {
             const title = document.createElement("div");
             title.className = "cw-item-title";
-            title.textContent = summary;
+            title.append(...withCode(summary));
             li.append(title);
           }
           const detail = document.createElement("div");
           detail.className = "cw-item-detail";
-          detail.textContent = message;
+          detail.append(...withCode(message));
           li.append(detail);
           return li;
         }),
       );
       if (warnings.length > shown) {
-        parts.live.textContent = `Warning: ${latest}`;
+        parts.live.textContent = `Warning: ${latest.replaceAll("`", "")}`;
       }
       shown = warnings.length;
       parts.root.hidden = dismissed >= shown;
@@ -160,6 +164,27 @@ export function attachWarnings(element: HTMLElement): WarningsHandle {
 }
 
 let notices = 0;
+
+/**
+ * `text` as nodes, with each `backticked` span (a command, a file) as a
+ * `code` element instead of raw backticks; an unpaired backtick is dropped.
+ */
+function withCode(text: string): Node[] {
+  const parts = text.split("`");
+  // With an odd number of backticks, the last one opens nothing.
+  const last = parts.length % 2 === 0 ? parts.length - 1 : parts.length;
+  return parts.flatMap((part, i): Node[] => {
+    if (part === "") {
+      return [];
+    }
+    if (i % 2 === 0 || i === last) {
+      return [document.createTextNode(part)];
+    }
+    const code = document.createElement("code");
+    code.textContent = part;
+    return [code];
+  });
+}
 
 // StrataKit's attention icon shape (a triangle with a bar and a dot), 16 px.
 const ATTENTION_ICON =
@@ -240,6 +265,10 @@ const CSS = `
 .cesium-warnings .cw-list li + li { padding-top: 10px; border-top: 1px solid var(--cw-border); }
 .cesium-warnings .cw-item-title { color: var(--cw-text); font-weight: 600; }
 .cesium-warnings .cw-item-detail { color: var(--cw-text-muted); }
+.cesium-warnings code {
+  font: 500 11px/16px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  padding: 0 3px; border-radius: 3px; background: var(--cw-hover); color: var(--cw-text);
+}
 .cesium-warnings .cw-live {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }

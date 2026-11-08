@@ -144,7 +144,11 @@ export function attachSky(
     revision = r;
     leap = catalog.leapSeconds;
     const ms = now * 1000;
-    if (SKY_FRAMES.every((name) => catalog.precisionOf(name) === "analytic")) {
+    let analytic = true;
+    for (let i = 0; i < SKY_FRAMES.length; i++) {
+      analytic &&= catalog.precisionOf(SKY_FRAMES[i]!) === "analytic";
+    }
+    if (analytic) {
       analyticSky(ms, state);
     } else {
       try {

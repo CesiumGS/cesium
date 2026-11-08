@@ -48,6 +48,7 @@ import {
   type ModelResource,
   type ModelResourceOptions,
   type PickResult,
+  type AnchorHandle,
   type Rig,
   type Tileset3D,
   type TilesetOptions,
@@ -63,9 +64,14 @@ import type {
 import { attachSky, type SkyInputs } from "../src/frames/attachSky.ts";
 import {
   createFrameCatalog,
+  type CatalogFrameName,
   type FrameCatalog,
 } from "../src/frames/catalog.ts";
-import { createFramesResolver } from "../src/frames/resolver.ts";
+import type { Frame } from "../src/frames/Frame.ts";
+import {
+  createFramesResolver,
+  type FramesResolver,
+} from "../src/frames/resolver.ts";
 import { Clock } from "../src/time/index.ts";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
@@ -156,10 +162,10 @@ export interface ViewerOptions {
   frameData?: string | FrameData;
   /**
    * Show the warnings (`Viewer.warnings`) in a small notice over the view
-   * (default true). An app that lists them in its own UI turns it off and
-   * listens to `events`' `warning`.
+   * (default true). Off, they are still listed and emitted: an app that
+   * shows them in its own UI turns the notice off and listens to `events`.
    */
-  warnings?: boolean;
+  warningNotice?: boolean;
   /**
    * How light becomes an image (`Exposure`): default `EYE`, as a person
    * there would see it; a camera's exposure for what a camera records.
@@ -322,8 +328,18 @@ export class Viewer {
   };
   private readonly warningList: ViewerWarning[] = [];
   private warnings_?: WarningsHandle;
-  /** `warning`: each `ViewerWarning`, as it is added to `warnings`. */
-  readonly events = new Emitter<{ warning: ViewerWarning }>();
+  /**
+   * `warning`: each `ViewerWarning`, as it is added to `warnings`;
+   * `warningsCleared`: the list was emptied (`setFrameData`).
+   */
+  readonly events = new Emitter<{
+    warning: ViewerWarning;
+    warningsCleared: Viewer;
+  }>();
+  /** The world's frame resolver the viewer set (an app may set its own). */
+  private ownResolver?: FramesResolver;
+  /** The rig the viewer sets on its views for the catalog in use. */
+  private ownRig?: Rig;
   /**
    * Always a promise: it resolves to the frames data of
    * `ViewerOptions.frameData` once the catalog has it, or to `undefined`,
@@ -437,7 +453,7 @@ export class Viewer {
       ).catch(() => undefined);
     }
     this.clock.events.on("change", () => this.engine.requestRender());
-    if (options.warnings !== false) {
+    if (options.warningNotice !== false) {
       this.warnings_ = attachWarnings(container);
     }
     // The frames module: the catalog, the world's resolver over it and the
@@ -601,10 +617,16 @@ export class Viewer {
         : undefined;
     const shared =
       options.engine instanceof Engine ? options.engine : undefined;
-    const engine =
-      shared ?? (await Engine.create(options.engine as EngineOptions));
-    await given;
-    return new Viewer(container, engine, options, early, !shared);
+    try {
+      const engine =
+        shared ?? (await Engine.create(options.engine as EngineOptions));
+      await given;
+      return new Viewer(container, engine, options, early, !shared);
+    } catch (error) {
+      // No viewer: the frames data it started loading isn't wanted.
+      early.frames?.abort.abort();
+      throw error;
+    }
   }
 
   /**
@@ -1015,7 +1037,8 @@ export class Viewer {
    * rig's and the world's frame resolver's. Asking it for a reference frame
    * at "precise" loads that frame's data (from `ViewerOptions.frameData`, or
    * "/frames-data/" without it); `tree()` gives the whole tree at
-   * "precise". `setFrameData` replaces it.
+   * "precise". `setFrameData` replaces it: reference frames added to it
+   * (`add`) don't carry over to the new one.
    */
   get frames(): FrameCatalog {
     return this.frames_;
@@ -1024,7 +1047,7 @@ export class Viewer {
   /**
    * The warnings so far, oldest first: frames data that didn't load or is
    * out of date (`ViewerWarning`). `events` emits `warning` for each; the
-   * notice over the view lists them (`ViewerOptions.warnings`).
+   * notice over the view lists them (`ViewerOptions.warningNotice`).
    */
   get warnings(): readonly ViewerWarning[] {
     return this.warningList;
@@ -1036,20 +1059,66 @@ export class Viewer {
    * view's rig and the world's resolver, so the Moon and the Sun are placed
    * with DE440 once its providers' modules are in (from the next frame when
    * they were loaded before). `undefined` returns to the analytic models.
-   * The warnings start again from the new data's. A load started by a
-   * `ViewerOptions.frameData` URL that has not finished no longer drives the
-   * sky; `frameData` (the promise) still reports the creation option.
+   *
+   * What the application set carries over: a view whose rig the
+   * application set keeps it (only the viewer's own ITRF rig moves to the
+   * new ITRF), and each anchor's binding to a built-in reference frame
+   * moves to the new catalog's frame of that name. A frame resolver the
+   * application set stays. Reference frames added to the old catalog
+   * (`frames.add`) don't carry over: with an anchor bound to one, this
+   * throws, naming them, and changes nothing.
+   *
+   * The warnings start again from the new data's (`events` emits
+   * `warningsCleared`). A load started by a `ViewerOptions.frameData` URL
+   * that has not finished no longer drives the sky; `frameData` (the
+   * promise) still reports the creation option.
    */
   setFrameData(data: FrameData | undefined): void {
     if (this.destroyed) {
       return;
     }
+    const bindings = this.carriedBindings();
     this.warningList.length = 0;
-    this.warnings_?.set(this.warningList);
+    this.showWarnings();
+    this.emit("warningsCleared", this);
     this.useFrames(
       Viewer.catalog(data, this.framesAbort).catalog,
       data !== undefined,
+      bindings,
     );
+  }
+
+  /**
+   * The anchor bindings of the viewer's own resolver, by reference frame
+   * name, for a new catalog; throws, naming them, for anchors bound to a
+   * reference frame that isn't one of the catalog's built-in ones.
+   */
+  private carriedBindings(): Array<[AnchorHandle, CatalogFrameName]> {
+    const resolver = this.ownResolver;
+    if (!resolver || this.engine.cameras.resolver(this.world) !== resolver) {
+      return [];
+    }
+    const old = this.frames_;
+    const carried: Array<[AnchorHandle, CatalogFrameName]> = [];
+    const stranded: string[] = [];
+    for (const anchor of this.world.anchors) {
+      const frame: Frame | undefined = resolver.binding(anchor);
+      if (!frame) {
+        continue;
+      }
+      const name = frame.name as CatalogFrameName;
+      if (old.names.includes(name) && old.get(name) === frame) {
+        carried.push([anchor, name]);
+      } else {
+        stranded.push(`${anchor.name} (bound to ${frame.name})`);
+      }
+    }
+    if (stranded.length > 0) {
+      throw new Error(
+        `setFrameData: anchors bound to reference frames added to viewer.frames can't move to a new catalog: ${stranded.join(", ")}`,
+      );
+    }
+    return carried;
   }
 
   /**
@@ -1057,20 +1126,46 @@ export class Viewer {
    * view's rig on its ITRF, the sky from it ("precise" with frames data, else
    * "analytic") and its warnings.
    */
-  private useFrames(catalog: FrameCatalog, precise: boolean): void {
+  private useFrames(
+    catalog: FrameCatalog,
+    precise: boolean,
+    bindings: ReadonlyArray<[AnchorHandle, CatalogFrameName]> = [],
+  ): void {
     this.offFrames?.();
-    const views = this.views;
-    if (this.frames_) {
+    const cameras = this.engine.cameras;
+    // An application's frame resolver stays, and so do the rigs it places.
+    const appResolver =
+      this.ownResolver !== undefined &&
+      cameras.resolver(this.world) !== this.ownResolver;
+    // The views to put on the new ITRF: all at first, then those still on
+    // the viewer's own rig (an application's rig stays).
+    const own = appResolver
+      ? []
+      : this.views.filter(
+          (view) => !this.ownRig || cameras.rig(view) === this.ownRig,
+        );
+    if (this.ownRig) {
       // Back to the table's root first, through the old resolver: the new
       // one can't place the old catalog's ITRF.
-      for (const view of views) {
-        this.engine.cameras.setRig(view, defaultRig(this.world));
+      for (const view of own) {
+        cameras.setRig(view, defaultRig(this.world));
       }
     }
     this.frames_ = catalog;
-    this.engine.cameras.setResolver(this.world, createFramesResolver(catalog));
-    for (const view of views) {
-      this.engine.cameras.setRig(view, this.rig());
+    this.ownRig = {
+      position: { frame: catalog.get("ITRF") },
+      orientation: { kind: "free" },
+    };
+    if (!appResolver) {
+      const resolver = createFramesResolver(catalog);
+      for (const [anchor, name] of bindings) {
+        resolver.bindAnchor(anchor, catalog.get(name));
+      }
+      this.ownResolver = resolver;
+      cameras.setResolver(this.world, resolver);
+    }
+    for (const view of own) {
+      cameras.setRig(view, this.ownRig);
     }
     // With frameData, one `frameDataFailed` says the load failed.
     const listed = (warning: FrameDataWarning) =>
@@ -1099,10 +1194,29 @@ export class Viewer {
 
   /** The rig of the viewer's views (spec section 7.2's default): on ITRF, free. */
   private rig(): Rig {
-    return {
-      position: { frame: this.frames_.get("ITRF") },
-      orientation: { kind: "free" },
-    };
+    return this.ownRig!;
+  }
+
+  /** Emits `name`; a listener that throws is reported, not passed on. */
+  private emit<K extends "warning" | "warningsCleared">(
+    name: K,
+    payload: K extends "warning" ? ViewerWarning : Viewer,
+  ): void {
+    try {
+      this.events.emit(name, payload as never);
+    } catch (error) {
+      console.error(`Viewer: a "${name}" listener threw`, error);
+    }
+  }
+
+  /** The notice's list, from `warnings`. */
+  private showWarnings(): void {
+    this.warnings_?.set(
+      this.warningList.map((w) => ({
+        message: w.message,
+        summary: WARNING_SUMMARY[w.kind],
+      })),
+    );
   }
 
   /** Adds a warning: listed, shown, emitted and (with `log`) logged. */
@@ -1115,13 +1229,8 @@ export class Viewer {
     if (log) {
       console.warn(entry.message);
     }
-    this.warnings_?.set(
-      this.warningList.map((w) => ({
-        message: w.message,
-        summary: WARNING_SUMMARY[w.kind],
-      })),
-    );
-    this.events.emit("warning", entry);
+    this.showWarnings();
+    this.emit("warning", entry);
   }
 
   /** The sun's direction at the clock's time. */

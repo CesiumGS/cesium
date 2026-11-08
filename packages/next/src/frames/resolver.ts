@@ -196,6 +196,12 @@ class Resolver implements FramesResolver {
     const b = this.reference(base, this.localB);
     const bLocal = this.hasLocal;
     this.scaled = false;
+    if (a === b && !aLocal && !bLocal) {
+      // Both ends in one reference frame (an Earth anchor under an ITRF
+      // rig, or two unbound ends): the identity, with no instant and no
+      // route walked, so a globe-only tick allocates nothing.
+      return m4.identity(out);
+    }
     if (a && b) {
       this.askPrecise(a, b);
       this.route(a, b, this.instant(seconds), out);
@@ -516,15 +522,17 @@ function isNode(key: FrameKey): boolean {
   return "transform" in key && "world" in key;
 }
 
+/** How many ancestors `f` has. */
+function depth(f: Frame): number {
+  let d = 0;
+  for (let p = f.parent; p; p = p.parent) {
+    d++;
+  }
+  return d;
+}
+
 /** The lowest common ancestor of two reference frames; throws across trees. */
 function commonAncestor(from: Frame, to: Frame): Frame {
-  const depth = (f: Frame) => {
-    let d = 0;
-    for (let p = f.parent; p; p = p.parent) {
-      d++;
-    }
-    return d;
-  };
   let a = from;
   let b = to;
   let da = depth(a);

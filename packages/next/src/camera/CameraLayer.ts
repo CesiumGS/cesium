@@ -24,6 +24,10 @@ export interface CameraLayerHost {
   readonly errors: EngineErrors;
 }
 
+/** What a failed placement keeps, said of the reference frame (no string built per tick). */
+const PLACEMENT = (key: FrameKey) =>
+  `a view keeps its last good placement of ${key.name}`;
+
 /** Report keys for what isn't a reference frame failing to resolve. */
 const POSE = "pose";
 const RIG = "rig";
@@ -509,7 +513,7 @@ export class CameraLayer {
         root,
         seconds,
         this.m[0]!,
-        `a view keeps its last good placement of ${key.name}`,
+        PLACEMENT,
       );
       if (m === undefined) {
         continue;
@@ -648,12 +652,17 @@ export class CameraLayer {
     root: FrameKey,
     seconds: number,
     out: Float64Array,
-    what: string,
+    what: string | ((frame: FrameKey) => string),
   ): Float64Array | undefined {
     try {
       return this.checked(resolver, frame, root, seconds, out);
     } catch (error) {
-      this.report(state, frame, what, error);
+      this.report(
+        state,
+        frame,
+        typeof what === "string" ? what : what(frame),
+        error,
+      );
       return undefined;
     }
   }

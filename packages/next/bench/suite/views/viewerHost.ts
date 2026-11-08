@@ -212,11 +212,14 @@ export interface ViewerHost {
   /** The feature under a point, CSS pixels from the element's top-left. */
   pick(x: number, y: number): Promise<PickInfo | undefined>;
   /**
-   * Calls `listener` when a warning arrives outside a load (the frames
-   * data's, which lands when it lands); it is in every later load's
-   * `warnings` too. Returns a remover.
+   * Calls `listener` with the number of warnings now (`warningCount`) when
+   * one arrives or goes outside a load (the frames data's, which land when
+   * they land); they are in every later load's `warnings` too. Returns a
+   * remover.
    */
-  onWarning?(listener: () => void): () => void;
+  onWarning?(listener: (count: number) => void): () => void;
+  /** How many distinct warnings there are now (the load's and later ones). */
+  warningCount?(): number;
   destroy(): void;
 }
 
@@ -269,7 +272,7 @@ export class NextViewerHost implements ViewerHost {
    * `warnings`, these stay.
    */
   private readonly frameDataWarnings: string[] = [];
-  private readonly warningListeners = new Set<() => void>();
+  private readonly warningListeners = new Set<(count: number) => void>();
 
   static async create(
     element: HTMLElement,
@@ -283,7 +286,7 @@ export class NextViewerHost implements ViewerHost {
       // DE440 for the sky; the Viewer's default is the analytic one.
       frameData: "/frames-data/",
       // Listed with the other load warnings (Problems in the inspector).
-      warnings: false,
+      warningNotice: false,
       // A public asset: with CesiumJS's evaluation token where the
       // account's doesn't reach it, as other public assets load here.
       cityLights: IonTmsImagery.fromIon(3812).catch(() =>
@@ -295,19 +298,30 @@ export class NextViewerHost implements ViewerHost {
     // Content loads next: no frames of the whole Earth (the Viewer's start)
     // before the camera jumps to it; the view shows once it's framed.
     host.resume = viewer.suspendPresentation();
+    const notify = () => {
+      for (const listener of host.warningListeners) {
+        listener(host.warnings.size);
+      }
+    };
     const frameDataWarning = (warning: ViewerWarning) => {
+      // Commands read as text here: no backticks.
       const text =
         warning.kind === "frameDataFailed"
-          ? "frames data: not loaded, the sky is analytic (run `npm run setup`)"
-          : warning.message;
+          ? 'frames data: not loaded, the sky is analytic (run "npm run setup")'
+          : warning.message.replaceAll("`", '"');
       host.frameDataWarnings.push(text);
       host.warnings.add(text);
-      for (const listener of host.warningListeners) {
-        listener();
-      }
+      notify();
     };
     viewer.warnings.forEach(frameDataWarning);
     viewer.events.on("warning", frameDataWarning);
+    // New frames data (`setFrameData`): its warnings start again.
+    viewer.events.on("warningsCleared", () => {
+      for (const text of host.frameDataWarnings.splice(0)) {
+        host.warnings.delete(text);
+      }
+      notify();
+    });
     viewer.ready.catch((error) =>
       host.warnings.add(`globe: ${message(error)}`),
     );
@@ -581,9 +595,13 @@ export class NextViewerHost implements ViewerHost {
       : undefined;
   }
 
-  onWarning(listener: () => void): () => void {
+  onWarning(listener: (count: number) => void): () => void {
     this.warningListeners.add(listener);
     return () => this.warningListeners.delete(listener);
+  }
+
+  warningCount(): number {
+    return this.warnings.size;
   }
 
   destroy(): void {

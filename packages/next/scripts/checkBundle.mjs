@@ -1,11 +1,12 @@
 // Checks that a globe-only Viewer pays for no precise reference frames (plan
 // 5a, Task 13; the plan's call 32 and ruling 6): it builds a page entry that
 // only calls `Viewer.create` with the defaults, with Vite, into a temporary
-// directory, prints its main chunk's size, and exits 1 when that chunk holds
-// the IAU 2006/2000A X and Y series (xy06Table's first coefficients), the
-// CIO locator s series (s06Table's first coefficients) or the DAF reader
-// (its file-record id). The precise providers load by dynamic `import()`, so
-// they belong in chunks of their own, never the main one.
+// directory, prints its main chunk's size, and exits 1 when that chunk, or a
+// chunk it imports statically, holds the IAU 2006/2000A X and Y series
+// (xy06Table's first coefficients), the CIO locator s series (s06Table's
+// first coefficients) or the DAF reader (its file-record id). The precise
+// providers load by dynamic `import()`, so they belong in chunks of their
+// own, reached only through it.
 //
 //   node scripts/checkBundle.mjs [--keep]
 //
@@ -96,22 +97,46 @@ try {
   if (!main) {
     throw new Error("checkBundle: the build has no main chunk");
   }
-  const bytes = Buffer.byteLength(main.code);
-  const gzip = gzipSync(main.code).length;
-  const lazy = outputs.filter((o) => o.type === "chunk" && !o.isEntry);
-  console.log(
-    `main chunk ${main.fileName}: ${(bytes / 1024).toFixed(1)} KB (${(gzip / 1024).toFixed(1)} KB gzipped)`,
+  // What loads with the page: the main chunk and the chunks it imports
+  // statically (all of them, transitively). The rest loads on demand.
+  const chunks = new Map(
+    outputs.filter((o) => o.type === "chunk").map((c) => [c.fileName, c]),
   );
-  for (const chunk of lazy) {
-    console.log(
-      `  lazy chunk ${chunk.fileName}: ${(Buffer.byteLength(chunk.code) / 1024).toFixed(1)} KB`,
-    );
+  const eager = [];
+  for (const queue = [main.fileName]; queue.length > 0;) {
+    const chunk = chunks.get(queue.pop());
+    if (chunk && !eager.includes(chunk)) {
+      eager.push(chunk);
+      queue.push(...chunk.imports);
+    }
   }
-  const numbers = numbersIn(main.code);
+  const lazy = [];
+  for (
+    const queue = [...eager.flatMap((c) => c.dynamicImports)];
+    queue.length > 0;
+  ) {
+    const chunk = chunks.get(queue.pop());
+    if (chunk && !eager.includes(chunk) && !lazy.includes(chunk)) {
+      lazy.push(chunk);
+      queue.push(...chunk.imports, ...chunk.dynamicImports);
+    }
+  }
+  const kb = (code) => (Buffer.byteLength(code) / 1024).toFixed(1);
+  const code = eager.map((c) => c.code).join("\n");
+  console.log(
+    `main chunk ${main.fileName}: ${kb(main.code)} KB (${(gzipSync(main.code).length / 1024).toFixed(1)} KB gzipped)`,
+  );
+  for (const chunk of eager.slice(1)) {
+    console.log(`  imported with it: ${chunk.fileName}: ${kb(chunk.code)} KB`);
+  }
+  for (const chunk of lazy) {
+    console.log(`  lazy chunk ${chunk.fileName}: ${kb(chunk.code)} KB`);
+  }
+  const numbers = numbersIn(code);
   const found = SERIES.filter(({ first }) => hasRun(numbers, first)).map(
     ({ what }) => what,
   );
-  if (main.code.includes(DAF_ID)) {
+  if (code.includes(DAF_ID)) {
     found.push(`the DAF reader ("${DAF_ID}", src/ephemeris/daf.ts)`);
   }
   if (keep) {
@@ -119,12 +144,12 @@ try {
   }
   if (found.length > 0) {
     console.error(
-      `checkBundle: a globe-only Viewer's main chunk holds ${found.join(", ")}; the precise providers must load by dynamic import()`,
+      `checkBundle: what a globe-only Viewer loads with the page holds ${found.join(", ")}; the precise providers must load by dynamic import()`,
     );
     process.exitCode = 1;
   } else {
     console.log(
-      "checkBundle: no X, Y or s series and no DAF reader in the main chunk",
+      "checkBundle: no X, Y or s series and no DAF reader in the main chunk or its static imports",
     );
   }
 } finally {

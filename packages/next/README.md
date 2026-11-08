@@ -258,7 +258,7 @@ Moon from DE440 and the IAU 2006/2000A Earth rotation inside the data's span.
 resolves. Stale data (an EOP table that ends before now, an expired
 leap-second table) is a warning too: `viewer.warnings` lists them,
 `viewer.events` emits `warning`, and a small notice over the view shows them
-(`warnings: false` turns it off). Without the option, Earth-only rendering is
+(`warningNotice: false` turns it off). Without the option, Earth-only rendering is
 unchanged. The bench Explorer opts in.
 
 **Engineering frames** (`src/engineering`). An `EngineeringFrame` is a design
