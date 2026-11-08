@@ -256,7 +256,8 @@ const CSS = `
   --cc-focus: var(--cesium-ui-focus, #8cc4ff);
   --cc-font: var(--cesium-ui-font, "InterVariable", "Inter", system-ui, sans-serif);
   --cc-shadow: var(--cesium-ui-shadow, 0 1px 0 oklch(0% 0 0 / 0.08), 0 4px 12px -2px oklch(0% 0 0 / 0.4));
-  position: absolute; inset: auto 8px 8px 8px; pointer-events: none; z-index: 1;
+  /* The viewer's overlays: the app's own at 1, credits and time controls at 2, the inspector topmost (5). */
+  position: absolute; inset: auto 8px 8px 8px; pointer-events: none; z-index: 2;
   font: 400 11px/16px var(--cc-font); color: var(--cc-text-muted);
 }
 .cesium-credits[hidden] { display: none; }

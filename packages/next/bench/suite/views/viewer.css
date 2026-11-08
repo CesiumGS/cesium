@@ -43,6 +43,8 @@
 .viewer-engine {
   position: absolute;
   inset: 0;
+  /* The viewer's overlays keep their order among themselves, under Dyno's. */
+  isolation: isolate;
 }
 .viewer-progress {
   position: absolute;

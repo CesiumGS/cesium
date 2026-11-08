@@ -199,6 +199,14 @@
   position: absolute;
   inset: 0;
 }
+/*
+ * The viewer's overlays (its credits, time controls and inspector, and the
+ * example's HUD) keep their order among themselves, all under Dyno's own
+ * over the stage: the loading note and the example's panel.
+ */
+.examples-view {
+  isolation: isolate;
+}
 /* Centered: the inspector is top left, the example's panel top right. */
 .examples-loading {
   position: absolute;

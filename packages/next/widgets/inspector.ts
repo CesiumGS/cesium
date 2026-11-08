@@ -1050,7 +1050,8 @@ const CSS = `
   color: var(--ci-text);
   font: 12px/1.45 system-ui, sans-serif;
   backdrop-filter: blur(4px);
-  z-index: 1;
+  /* Topmost of the viewer's overlays (credits and time controls at 2, an app's own below them). */
+  z-index: 5;
 }
 .cesium-inspector.expanded { width: 320px; }
 .cesium-inspector.right { left: auto; right: 8px; }
