@@ -191,13 +191,19 @@
   position: relative;
   height: max(420px, calc(100vh - 220px));
   border-radius: var(--stratakit-radius-md);
-  overflow: hidden;
+  overflow: clip;
   background: #000;
 }
+/*
+ * `clip`, not `hidden`: an overlay placed past the view's edge (a label on
+ * a point off screen) must not make the view a scroll container, which a
+ * focused control could then scroll sideways with no way back.
+ */
 .examples-view-area,
 .examples-view {
   position: absolute;
   inset: 0;
+  overflow: clip;
 }
 /*
  * The viewer's overlays (its credits, time controls and inspector, and the
@@ -364,10 +370,11 @@
 .examples-stage.side .examples-view-area {
   position: relative;
   inset: auto;
+  min-width: 0;
   min-height: 0;
   background: #000;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: clip;
 }
 .examples-stage.side .examples-panel {
   position: relative;
@@ -386,6 +393,25 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+}
+
+/*
+ * A narrow window (a phone): the side layout stacks, the view first at
+ * most of the screen's height, the panel under it at full width, the page
+ * scrolling rather than the panel.
+ */
+@media (max-width: 900px) {
+  .examples-stage.side {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(320px, 66vh) auto;
+    height: auto;
+  }
+  .examples-stage.side .examples-panel {
+    height: auto;
+  }
+  .examples-stage.side .examples-panel-body {
+    overflow: visible;
+  }
 }
 
 /* The Slang playground's panel (examples/slang-playground). */

@@ -53,6 +53,16 @@ body {
   padding: var(--stratakit-space-600) var(--stratakit-space-800)
     var(--stratakit-space-1000);
 }
+/* A phone: the page's gutters narrow, so its content keeps the width. */
+@media (max-width: 600px) {
+  .content {
+    padding: var(--stratakit-space-400) var(--stratakit-space-300)
+      var(--stratakit-space-800);
+  }
+  .page-header {
+    flex-wrap: wrap;
+  }
+}
 .shell-pending {
   display: flex;
   align-items: center;

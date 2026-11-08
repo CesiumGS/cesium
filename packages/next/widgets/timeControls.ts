@@ -465,7 +465,11 @@ export function attachTimeControls(
     settings.setAttribute("aria-expanded", String(open));
     if (open) {
       render();
-      (popover.querySelector("button, select") as HTMLElement | null)?.focus();
+      // Without scrolling: an app's container may hide its overflow, and a
+      // scroll there would carry the whole view sideways.
+      (popover.querySelector("button, select") as HTMLElement | null)?.focus({
+        preventScroll: true,
+      });
     }
   }
   root.addEventListener("keydown", (e) => {
