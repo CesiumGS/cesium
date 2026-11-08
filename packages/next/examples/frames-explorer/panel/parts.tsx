@@ -23,6 +23,8 @@ export const ITEM_LABEL: Record<DataItem, string> = {
   proj: "PROJ",
   geoid: "GEOID18",
   orion: "Orion OEM",
+  grids: "Geoid grids",
+  egm2008: "EGM2008",
 };
 
 /** What each item is, for its pill's detail. */
@@ -31,6 +33,10 @@ export const ITEM_DETAIL: Record<DataItem, string> = {
   proj: "PROJ's WebAssembly and proj.db",
   geoid: "NOAA's GEOID18 grid, for NAVD88 heights",
   orion: "Artemis II's trajectory (CCSDS OEM)",
+  grids:
+    "Country geoid grids from the PROJ-data catalog (about 19 MB), for Global geoids",
+  egm2008:
+    "NGA's EGM2008 2.5′ grid (80.6 MB), loaded only from its row's Run button",
 };
 
 export type Status =
@@ -108,6 +114,9 @@ export function resultStatus(
   }
   if (r.missing !== undefined && r.missing.length > 0) {
     return { status: "missing" };
+  }
+  if (r.optIn !== undefined) {
+    return { status: "shown", word: "Not run" };
   }
   if (r.displayOnly) {
     return { status: "shown" };

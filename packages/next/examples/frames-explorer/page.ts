@@ -45,6 +45,8 @@ export const ITEM_NAME: Record<DataItem, string> = {
   proj: "PROJ",
   geoid: "GEOID18",
   orion: "Orion's OEM",
+  grids: "the country geoid grids",
+  egm2008: "EGM2008",
 };
 
 /** An item the frames store doesn't have (R5). */

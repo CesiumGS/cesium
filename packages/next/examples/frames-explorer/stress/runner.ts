@@ -1,7 +1,7 @@
 // The stress-test runner: result and case types, judging (R7, R12) and
 // running with needs loaded once (R6, R13).
 import { type CrsRef, resolveOperation } from "../../../src/engineering/crs.ts";
-import type { GridSource, ProjApi } from "../../../src/engineering/proj.ts";
+import type { ProjApi } from "../../../src/engineering/proj.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
 import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
 import { Trajectory } from "../../../src/trajectory/Trajectory.ts";
@@ -23,11 +23,19 @@ export {
 } from "./groupInfo.ts";
 
 /**
- * Data a case may need: the frame tree (frame data), PROJ, GEOID18 or the
+ * Data a case may need: the frame tree (frame data), PROJ, GEOID18, the
  * Artemis II trajectory (which is placed in the frame tree, so it brings the
- * frame data with it).
+ * frame data with it), the country geoid grids from the PROJ-data catalog
+ * (`CatalogGridSet` "geoids", Task 21) or EGM2008 (opt-in, `StressCase.optIn`).
  */
-export type Need = "frames" | "proj" | "geoid" | "orion";
+export type Need = "frames" | "proj" | "geoid" | "orion" | "grids" | "egm2008";
+
+/**
+ * The PROJ-data catalog's grids a run loads beyond GEOID18 (Task 21):
+ * "geoids", the global geoids' country grids (about 19 MB), and "egm2008",
+ * NGA's global grid (80.6 MB), which loads only when the user opts in.
+ */
+export type CatalogGridSet = "geoids" | "egm2008";
 
 /**
  * A case read data it needs only optionally (`optionalNeeds`), and the data
@@ -102,6 +110,12 @@ export interface StressResult {
   fingerprintCheck?: { match: boolean; difference?: string };
   /** For a skipped case: the data that couldn't be had. */
   missing?: readonly Need[];
+  /**
+   * A case that runs only when the user opts in (EGM2008, 80.6 MB): its row
+   * says "not run: opt-in", is shown, not judged (`displayOnly`), and offers
+   * a button that loads the need and runs the case.
+   */
+  optIn?: { need: "egm2008"; bytes: number };
   /** The instant the result is for, TDB seconds past J2000. */
   instant?: number;
   /**
@@ -150,12 +164,20 @@ export interface DataContext {
    */
   loadGeoid?(): Promise<void>;
   /**
-   * The PROJ-data catalog's grids (a `GridSource`: the browser's
-   * `/proj-grids/`, Node's store `grids/`), for cases that load grids beyond
-   * GEOID18 into `loadProj`'s PROJ (the global geoids, Task 21). Absent, or
-   * rejecting, such a case reports its grids as missing.
+   * Loads a set of the PROJ-data catalog's grids into `loadProj`'s PROJ,
+   * each verified against the catalog (the browser's `/proj-grids/`, Node's
+   * store `grids/`; the global geoids, Task 21), reporting its bytes. It
+   * rejects with `MissingDataError` for grids the store doesn't have (the
+   * case is skipped), and with any other error for grids that fail their
+   * check (the case fails). Absent, the cases that need it are skipped.
    */
-  loadGridSource?(): Promise<GridSource>;
+  loadCatalogGrids?(set: CatalogGridSet): Promise<void>;
+  /**
+   * Whether the user opted in to an opt-in need (EGM2008's 80.6 MB: the
+   * row's button). Absent, nothing is opted in, so "Run all" never fetches
+   * it; Node's catalog test opts in.
+   */
+  optedIn?(need: "egm2008"): boolean;
   /** The frames store's manifest, for the fingerprints' grid SHA-256 values. */
   readonly manifest?: StoreManifest;
   /** Fetches the manifest, called once when a case with a need runs. */
@@ -184,6 +206,11 @@ export interface StressCase {
    */
   readonly optionalNeeds?: readonly Need[];
   /**
+   * A need the case loads only when the user opted in (`optedIn`), and its
+   * size; otherwise it gives one "not run: opt-in" row, shown, not judged.
+   */
+  readonly optIn?: { readonly need: "egm2008"; readonly bytes: number };
+  /**
    * The references.json entries the case cited while it was made
    * (`stressCase` claims them); the runner adds the ones it cites while it
    * runs, and the first becomes its results' `source`.
@@ -200,7 +227,7 @@ export interface StressGroup extends GroupInfo {
   readonly collects?: (result: StressResult) => boolean;
 }
 
-import { messageOf } from "../errors.ts";
+import { isMissing, messageOf } from "../errors.ts";
 export { messageOf };
 
 /** A number with `digits` significant figures, without trailing zeros. */
@@ -603,6 +630,10 @@ export class Needs {
   private proj?: Promise<Loaded<ProjApi>>;
   private geoid?: Promise<Loaded<true>>;
   private orion?: Promise<Loaded<Trajectory>>;
+  private readonly catalog = new Map<
+    CatalogGridSet,
+    Promise<{ ok: true } | { error: string; missing: boolean }>
+  >();
   private readonly ctx: DataContext;
 
   constructor(ctx: DataContext) {
@@ -665,13 +696,47 @@ export class Needs {
   }
 
   /**
+   * A set of catalog grids, loaded once per run: whether the store lacks
+   * them (`MissingDataError`, or no loader) or they failed their check.
+   */
+  loadCatalogGrids(
+    set: CatalogGridSet,
+  ): Promise<{ ok: true } | { error: string; missing: boolean }> {
+    const { ctx } = this;
+    let loading = this.catalog.get(set);
+    if (loading === undefined) {
+      loading =
+        ctx.loadCatalogGrids === undefined
+          ? Promise.resolve({
+              error: "this run has no PROJ-data catalog",
+              missing: true,
+            })
+          : ctx.loadCatalogGrids(set).then(
+              () => ({ ok: true as const }),
+              (error: unknown) => ({
+                error: messageOf(error),
+                missing: isMissing(error),
+              }),
+            );
+      this.catalog.set(set, loading);
+    }
+    return loading;
+  }
+
+  /**
    * The context for a case, or what is missing and why. `optional` needs are
    * loaded where they can be; the case reads them or gets `NeedMissingError`.
+   * Catalog grids that fail their check (not missing: present and wrong)
+   * fail the case instead (`failed`).
    */
   async meet(
     needs: readonly Need[],
     optional: readonly Need[] = [],
-  ): Promise<{ ctx: StressContext } | { missing: Need[]; reasons: string[] }> {
+  ): Promise<
+    | { ctx: StressContext }
+    | { missing: Need[]; reasons: string[] }
+    | { failed: string }
+  > {
     const missing: Need[] = [];
     const reasons: string[] = [];
     let proj: ProjApi | undefined;
@@ -720,6 +785,28 @@ export class Needs {
         }
       }
     }
+    // The catalog's grids, into the PROJ just loaded: the country geoids,
+    // and EGM2008 (only once opted in: runCases checks).
+    for (const [need, set, what] of [
+      ["grids", "geoids", "the country geoid grids"],
+      ["egm2008", "egm2008", "EGM2008 (us_nga_egm08_25.tif)"],
+    ] as const) {
+      if (!needs.includes(need) || proj === undefined) {
+        continue;
+      }
+      const loaded = await this.loadCatalogGrids(set);
+      if ("error" in loaded) {
+        if (!loaded.missing) {
+          return {
+            failed: `${what} failed to load: ${loaded.error}`,
+          };
+        }
+        missing.push(need);
+        reasons.push(
+          `Needs ${what} from the PROJ-data catalog, which ${loaded.error === "this run has no PROJ-data catalog" ? "this run doesn't have" : `aren't in the store (${loaded.error})`}. Run \`npm run setup -- --grids portfolio,tests\` and restart the dev server.`,
+        );
+      }
+    }
     if (needs.includes("orion")) {
       if (frames === undefined) {
         // Not fetched: it couldn't be placed without the frame data.
@@ -751,9 +838,10 @@ export class Needs {
       loadOrion: () => ctx.loadOrion(),
       ...(ctx.loadGeoid && { loadGeoid: () => ctx.loadGeoid!() }),
       ...(ctx.loadStations && { loadStations: () => ctx.loadStations!() }),
-      ...(ctx.loadGridSource && {
-        loadGridSource: () => ctx.loadGridSource!(),
+      ...(ctx.loadCatalogGrids && {
+        loadCatalogGrids: (set: CatalogGridSet) => ctx.loadCatalogGrids!(set),
       }),
+      ...(ctx.optedIn && { optedIn: (need: "egm2008") => ctx.optedIn!(need) }),
       ...(manifest !== undefined &&
         "value" in manifest &&
         manifest.value !== undefined && { manifest: manifest.value }),
@@ -835,13 +923,47 @@ export async function runCases(
     if (wanted !== undefined && !asked(wanted, c)) {
       continue;
     }
-    const met = await needs.meet(c.needs, c.optionalNeeds);
+    if (c.optIn !== undefined && ctx.optedIn?.(c.optIn.need) !== true) {
+      // Opt-in data (EGM2008's 80.6 MB) isn't fetched by a run: one row
+      // says so, shown, not judged, with the button that runs it.
+      const produced: StressResult = {
+        id: c.id,
+        group: c.group,
+        title: c.title,
+        pass: true,
+        displayOnly: true,
+        optIn: { need: c.optIn.need, bytes: c.optIn.bytes },
+        detail: `Not run: opt-in, ${fmt(c.optIn.bytes / 1e6)} MB. Its grid loads only when you ask: use the row's Run button.`,
+        accuracyNote: "none: not run",
+      };
+      const judged = withDefaults(
+        judgeResult(produced, fingerprints),
+        c.cites ?? [],
+      );
+      results.push(judged);
+      onResult?.(judged);
+      continue;
+    }
+    const met = await needs.meet(
+      c.optIn === undefined ? c.needs : [...c.needs, c.optIn.need],
+      c.optionalNeeds,
+    );
     if (signal?.aborted) {
       break;
     }
     let produced: StressResult[];
     let cites: readonly string[] = c.cites ?? [];
-    if ("missing" in met) {
+    if ("failed" in met) {
+      produced = [
+        {
+          id: c.id,
+          group: c.group,
+          title: c.title,
+          pass: false,
+          error: met.failed,
+        },
+      ];
+    } else if ("missing" in met) {
       produced = [
         {
           id: c.id,

@@ -105,6 +105,7 @@ import {
   loadOrionTrack,
   orionPlace,
 } from "../../examples/frames-explorer/orionTrack.ts";
+import { catalogGridsFrom } from "../../examples/frames-explorer/stress/groups/global-geoids.ts";
 import { gridSource, loadProj } from "../../src/engineering/proj.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
@@ -139,8 +140,12 @@ const orion = orionFromOem(readFileSync(join(dir, ORION_OEM), "utf8"), frames);
 const context = (): StressContext => ({
   frames,
   loadProj: () => loadProj({ base: `${join(dir, "proj")}/`, grids: GRIDS }),
-  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them.
-  loadGridSource: () => gridSource({ base: `${join(dir, "grids")}/` }),
+  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them
+  // (EGM2008's opt-in is not taken here).
+  loadCatalogGrids: catalogGridsFrom(
+    () => loadProj({ base: `${join(dir, "proj")}/`, grids: GRIDS }),
+    () => gridSource({ base: `${join(dir, "grids")}/` }),
+  ),
   loadOrion: () => Promise.resolve(orion),
   loadStations: () => Promise.resolve(bytes(STATIONS_SPK)),
   manifest: JSON.parse(

@@ -26,13 +26,21 @@ import type { StressResult } from "./tests.ts";
 import type { TreeNode } from "./tree.ts";
 
 /** The data the worker loads, each shown in the Status section (R9). */
-export type DataItem = "frames" | "proj" | "geoid" | "orion";
+export type DataItem =
+  "frames" | "proj" | "geoid" | "orion" | "grids" | "egm2008";
 
+/**
+ * Every item, in the status strip's order. "grids" and "egm2008" are the
+ * global geoids' catalog grids (Task 21): the country geoids, which "Run
+ * all" fetches, and EGM2008 (80.6 MB), which only its row's button does.
+ */
 export const DATA_ITEMS: readonly DataItem[] = [
   "frames",
   "proj",
   "geoid",
   "orion",
+  "grids",
+  "egm2008",
 ];
 
 /**

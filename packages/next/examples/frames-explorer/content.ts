@@ -2,6 +2,7 @@
 // what each is compared against. Plain data, imported by the main thread.
 // (The guided tour that was here gave way to the scenarios, scenarios/.)
 import type { Comparison } from "./stress/groupInfo.ts";
+import geoids from "../../test/fixtures/frames/geoids.json";
 
 /** Short row labels (60 characters or fewer), by result id; rows fall back to the title. */
 export const RESULT_LABELS: Readonly<Record<string, string>> = {
@@ -139,6 +140,16 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
  * round trip and an independent route.
  */
 const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
+  // The tileset placements' own inverses (Task 21); the sag is the group's
+  // hand formula.
+  "tileset-placement.site-building.rigid-inverse": {
+    kind: "roundTrip",
+    text: "The design point itself, after the rigid placement's forward and inverse: one transform and its inverse, within a few ULPs of an Earth-radius coordinate.",
+  },
+  "tileset-placement.site-building.reprojected-round-trip": {
+    kind: "roundTrip",
+    text: "The design point itself, after the reprojected placement's forward and inverse through the recorded GEOID18 operation, within 10⁻⁴ m.",
+  },
   // The drone's and the ship's frames from their tracks (Task 7).
   "frame-tree.body-frame.heading": {
     kind: "formula",
@@ -255,9 +266,37 @@ const EPSG_RECORD_COMPARED: Readonly<Record<string, Comparison>> = {
   "round-trip": BOUND_CRS_COMPARED["round-trip"]!,
 };
 
+/**
+ * The global geoids' cases with no published reference (geoids.json's
+ * `missingReference`, Task 21): compared with nothing, shown, not judged.
+ */
+const NO_REFERENCE: Readonly<Record<string, Comparison>> = Object.fromEntries(
+  (
+    geoids as unknown as {
+      cases: readonly {
+        id: string;
+        grids: readonly string[];
+        missingReference?: string;
+      }[];
+    }
+  ).cases.flatMap((c) =>
+    c.missingReference === undefined
+      ? []
+      : [
+          [
+            `global-geoids.${c.id}`,
+            {
+              kind: "none",
+              text: `Nothing is compared for ${c.grids.join(" and ")}. ${c.missingReference}`,
+            },
+          ],
+        ],
+  ),
+);
+
 /** The inspector's "Compared against" for result `id`: its own, else its group's. */
 export function comparedFor(id: string, group: Comparison): Comparison {
-  const own = RESULT_COMPARED[id];
+  const own = RESULT_COMPARED[id] ?? NO_REFERENCE[id];
   if (own) {
     return own;
   }

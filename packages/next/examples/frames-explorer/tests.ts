@@ -59,6 +59,7 @@ export {
   isNeedMissing,
   NeedMissingError,
   withDefaults,
+  type CatalogGridSet,
   type Citation,
   type Comparison,
   type DataContext,
@@ -98,8 +99,11 @@ export {
 
 /**
  * Every case, in the order the Verify tab lists them, group by group. The
- * global geoids come last: the catalog grids they load stay in the run's
- * PROJ, so every case before them sees only GEOID18, as before Task 21.
+ * catalog grids the global geoids load stay in the run's PROJ, so a second
+ * run sees them whatever the order; the results don't depend on it, because
+ * no other case's operation depends on those grids (bound-crss's registry
+ * check pins the gridless one), and a data test runs the catalog reversed
+ * and compares. The global geoids come last only as a second guard.
  */
 export const STRESS_CASES: readonly StressCase[] = [
   ...projectionsCases,
@@ -126,7 +130,7 @@ export const STRESS_CASES: readonly StressCase[] = [
   ...timeScalesCases,
   ...lunarTimeCases,
   ...tilesetPlacementCases,
-  // Last: its grids stay loaded in the run's PROJ (Task 21).
+  // Last, as a second guard: its grids stay loaded in the run's PROJ.
   ...globalGeoidsCases,
 ];
 

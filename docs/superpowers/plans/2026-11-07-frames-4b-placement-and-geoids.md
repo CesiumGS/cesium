@@ -112,7 +112,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   Run `npm run test:data` in full only when a task changes `src/frames`, `src/engineering`, the explorer's `stress/`, its references or `fingerprints.json`. The full gates (`npm test`, `npm run test:data`, eslint on the tree, Snyk) run once, in Task 22. The exception: Tasks 11 and 16, which change the core `Tileset3D`, `Tile`, `View` and `World`, also run `npm test` once.
 - **Security:**
   - **No ion token** in the repo, workers, URLs, logs, storage or the DOM.
-  - **Endpoint hardening:** a grid endpoint serves or fetches only a name that is exactly a key of the pinned catalog. There is no path traversal, no fetching of arbitrary URLs, no redirects followed, a size cap from the catalog, and generic error bodies (details go only to the server log). The `/frames-data` mount excludes `grids/` and `*.partial`, so `/proj-grids/` is the only route to catalog grids; the pinned PROJ base under `/frames-data/proj/` is served as setup verified it (Task 4; ruling at Task 21).
+  - **Endpoint hardening:** a grid endpoint serves or fetches only a name that is exactly a key of the pinned catalog. There is no path traversal, no fetching of arbitrary URLs, no redirects followed, a size cap from the catalog, and generic error bodies (details go only to the server log). The `/frames-data` mount excludes `grids/` and `*.partial`, so `/proj-grids/` is the only route to catalog grids other than the pinned GEOID18, which the PROJ base under `/frames-data/proj/` serves as setup verified it (Task 4; ruling at Task 21).
   - Untrusted strings (tileset JSON, catalog fields, WKT) are rendered as text and validated before use.
 - **Structured PROJ inputs.** Build CRS references and pipelines from structured data (`CrsRef`, `Pipeline`), never by concatenating strings. Strings are made in one place each: `crsDefinition` and `formatPipeline`.
 - **Data comes only through setup and lives outside the repo.** The store (`~/.cesium-bench/frames`, or `FRAMES_DATA_DIR`) gains:
@@ -149,7 +149,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   | What | Within |
   | --- | --- |
   | Design → displayed → design, either placement, anywhere on the 50 km corridor (spec §7.3, §10) | 1e-4 m |
-  | A rigid placement's inverse of its own forward | 1e-9 m |
+  | A rigid placement's inverse of its own forward | 4 ULPs of an Earth-radius coordinate, 4 × 2⁻³⁰ m (about 3.7e-9 m): one ULP at 6.4e6 m is 9.3e-10 m, so 1e-9 m was about one ULP (Task 21 fix 1) |
   | Rigid sag, 10 km and 20 km from the anchor along grid east | 7.8 ± 1.5 m and 31 ± 3 m |
   | Geoid and height-system cases against published references | each reference's stated precision, written in the fixture |
   | An exact snap's design point against the analytic geometry | 1e-6 design units |

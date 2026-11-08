@@ -17,9 +17,11 @@ import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import {
   gridSource,
+  loadGrids,
   loadProj,
   type ProjApi,
 } from "../../src/engineering/proj.ts";
+import { CATALOG_GRID_SETS } from "./stress/groups/global-geoids.ts";
 import {
   FRAME_DATA_ROLES,
   loadFrameData,
@@ -67,6 +69,7 @@ import {
   judgeResult,
   messageOf,
   withDefaults,
+  type CatalogGridSet,
   type Need,
 } from "./stress/runner.ts";
 import { FrameCache } from "./frameCache.ts";
@@ -390,7 +393,7 @@ export function createHost(
   ): Promise<Trajectory>;
   function loadItem(
     raw: DataContext,
-    item: "geoid",
+    item: "geoid" | "grids" | "egm2008",
     id?: number,
   ): Promise<void>;
   /**
@@ -399,7 +402,7 @@ export function createHost(
    */
   async function loadItem(
     raw: DataContext,
-    item: "frames" | "proj" | "orion" | "geoid",
+    item: DataItem,
     id?: number,
   ): Promise<unknown> {
     switch (item) {
@@ -430,8 +433,29 @@ export function createHost(
         }
         return undefined;
       }
+      case "grids":
+      case "egm2008": {
+        // The catalog's grids go into PROJ, so PROJ loads first.
+        await loadItem(raw, "proj");
+        await track(
+          item,
+          () =>
+            raw.loadCatalogGrids?.(item === "grids" ? "geoids" : "egm2008") ??
+            Promise.reject(
+              new MissingDataError("this context has no PROJ-data catalog"),
+            ),
+          id,
+        );
+        return undefined;
+      }
     }
   }
+
+  /**
+   * The opt-in items the user asked for (a `load` request: EGM2008's row
+   * button), so a run may fetch them.
+   */
+  const optedIn = new Set<DataItem>();
 
   /**
    * The data context, made once (a failed make is tried again next time).
@@ -459,9 +483,12 @@ export function createHost(
           ...(raw.loadStations !== undefined && {
             loadStations: () => raw.loadStations!(),
           }),
-          ...(raw.loadGridSource !== undefined && {
-            loadGridSource: () => raw.loadGridSource!(),
+          ...(raw.loadCatalogGrids !== undefined && {
+            loadCatalogGrids: (set: CatalogGridSet) =>
+              loadItem(raw, set === "geoids" ? "grids" : "egm2008"),
           }),
+          optedIn: (need: "egm2008") =>
+            optedIn.has(need) || raw.optedIn?.(need) === true,
         },
       }));
       made = attempt;
@@ -512,13 +539,17 @@ export function createHost(
           await loadItem(raw, "orion", id);
           break;
         case "geoid":
+        case "grids":
+        case "egm2008":
+          // Asking for an opt-in item is opting in (EGM2008's row button).
+          optedIn.add(item);
           try {
             await loadItem(raw, "proj");
           } catch (error) {
             failed(error, "needs PROJ, which did not load: ");
             return;
           }
-          await loadItem(raw, "geoid", id);
+          await loadItem(raw, item, id);
           break;
       }
     } catch (error) {
@@ -866,6 +897,9 @@ export function createHost(
         "frames",
         ...(spec.needs.filter((n) => WORKER_NEEDS.has(n)) as Need[]),
       ]);
+      if ("failed" in met) {
+        throw new Error(met.failed);
+      }
       if ("missing" in met) {
         throw new MissingDataError(met.reasons.join(" "));
       }
@@ -963,6 +997,9 @@ export function createHost(
           // The frame data where it loads (only the accuracy row reads it,
           // F44); boundCrsChecks loads PROJ itself, and says if it can't.
           const met = await new Needs(ctx).meet([], ["frames"]);
+          if ("failed" in met) {
+            throw new Error(met.failed);
+          }
           if ("missing" in met) {
             throw new MissingDataError(met.reasons.join(" "));
           }
@@ -1113,6 +1150,8 @@ export function browserContext(base = "/frames-data/"): MakeContext {
         proj: ["proj_capi.wasm", "proj.db"],
         geoid: [GEOID],
         orion: [ORION_OEM],
+        grids: CATALOG_GRID_SETS.geoids,
+        egm2008: CATALOG_GRID_SETS.egm2008,
       })[item];
     const received = new Map<
       DataItem,
@@ -1173,9 +1212,22 @@ export function browserContext(base = "/frames-data/"): MakeContext {
         await need("GEOID18", [`proj/${GEOID}`]);
         await loadProj({ base: projBase, grids: [GEOID], onProgress: onProj });
       },
-      // The PROJ-data catalog's grids, served (and verified) by the dev
-      // server's /proj-grids/ (the global geoids, Task 21).
-      loadGridSource: () => gridSource({ base: GRID_BASE }),
+      // The PROJ-data catalog's grids, served by the dev server's
+      // /proj-grids/ and verified against the catalog (the global geoids,
+      // Task 21), with their bytes reported as the item's.
+      loadCatalogGrids: async (set: CatalogGridSet) => {
+        const item = set === "geoids" ? "grids" : "egm2008";
+        const names = CATALOG_GRID_SETS[set];
+        await need(
+          set === "geoids" ? "The country geoid grids" : "EGM2008",
+          names.map((n) => `grids/${n}`),
+        );
+        const proj = await loadProj({ base: projBase, onProgress: onProj });
+        await loadGrids(proj, await gridSource({ base: GRID_BASE }), names, {
+          onProgress: (file, received, total) =>
+            progress(item, file, received, total),
+        });
+      },
       // 26 kB, checked against the manifest like the rest; fetched once.
       loadStations: once(async () => {
         const listed = await need("The DSN stations", [STATIONS_SPK]);

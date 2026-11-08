@@ -256,6 +256,13 @@ export function Verify({
             onSelect={(id) => onSelect(id === result?.id ? undefined : id)}
             waitingFor={model.waiting[g.id]}
             onRun={() => actions.runGroup(g.id)}
+            onOptIn={(r) => {
+              // Asking for the item opts in; the run then fetches and checks it.
+              if (r.optIn) {
+                actions.retryItem(r.optIn.need);
+                actions.runGroup(r.id);
+              }
+            }}
             busy={model.runBusy}
             {...(g.focus && {
               onShow: () => actions.showOnGlobe({ result: g.id }),

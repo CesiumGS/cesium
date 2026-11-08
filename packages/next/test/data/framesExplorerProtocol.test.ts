@@ -50,6 +50,7 @@ import {
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
+import { catalogGridsFrom } from "../../examples/frames-explorer/stress/groups/global-geoids.ts";
 import { gridSource, loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
@@ -87,8 +88,14 @@ const context = (): StressContext => ({
   frames,
   // GEOID18 loads with PROJ (GRIDS), so it needs no loadGeoid.
   loadProj: () => loadProj({ base, grids: GRIDS }),
-  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them.
-  loadGridSource: () => gridSource({ base: `${join(dir, "grids")}/` }),
+  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them
+  // (EGM2008's opt-in is not taken here).
+  loadCatalogGrids: catalogGridsFrom(
+    () => loadProj({ base, grids: GRIDS }),
+    () => gridSource({ base: `${join(dir, "grids")}/` }),
+  ),
+  // EGM2008's opt-in, taken: the direct and streamed runs both check it.
+  optedIn: () => true,
   loadOrion: () => Promise.resolve(orion),
   manifest: JSON.parse(
     readFileSync(join(dir, "manifest.json"), "utf8"),

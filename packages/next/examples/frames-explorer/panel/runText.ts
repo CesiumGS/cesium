@@ -2,7 +2,7 @@
 // why a run stopped or skipped checks. Plain functions, tested on their own.
 import type { DataItem } from "../protocol.ts";
 import type { StressResult } from "../tests.ts";
-import { duration } from "./format.ts";
+import { duration, megabytes } from "./format.ts";
 import type { RunView } from "./model.ts";
 
 const list = (words: readonly string[]): string =>
@@ -61,6 +61,9 @@ export function runLine(
 export function valueNote(result: StressResult): string {
   if (result.missing !== undefined && result.missing.length > 0) {
     return "skipped: missing data";
+  }
+  if (result.optIn !== undefined) {
+    return `not run: opt-in, ${megabytes(result.optIn.bytes)}`;
   }
   if (result.expectedError !== undefined) {
     return result.pass ? "threw as expected" : "didn't throw as expected";

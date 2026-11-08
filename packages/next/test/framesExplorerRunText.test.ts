@@ -12,6 +12,8 @@ const LABEL = {
   proj: "PROJ",
   geoid: "GEOID18",
   orion: "Orion OEM",
+  grids: "Geoid grids",
+  egm2008: "EGM2008",
 } as const;
 const summary = {
   passed: 212,

@@ -24,8 +24,15 @@ import { SITE_GAP_PART, siteGap } from "./rigid-placement-budget.ts";
 const GROUP = "tileset-placement";
 const ID = `${GROUP}.site-building`;
 
-/** A rigid placement's inverse of its own forward (the plan's accuracy table). */
-const RIGID_INVERSE = 1e-9;
+/**
+ * A rigid placement's inverse of its own forward (the plan's accuracy
+ * table): 4 ULPs of an Earth-radius coordinate. The round trip goes through
+ * body-fixed metres, whose coordinates here are 4.2e6 to 8.4e6 m (2²² to
+ * 2²³), where one ULP is 2⁻³⁰ m, about 9.3e-10 m; the transform and its
+ * inverse each round a few of them, so 1e-9 m (about one ULP) is no bound
+ * float64 can promise.
+ */
+const RIGID_INVERSE = 4 * 2 ** -30;
 
 /** How far out the sag is checked, metres along the site grid's x axis. */
 const SAG_AT = 20_000;
@@ -81,7 +88,7 @@ const NAME = `The design globe's site-grid building (${SITE_BUILDING.frame.name}
 const placementCase = stressCase(
   ID,
   GROUP,
-  `${NAME}, placed as a tileset both ways: the rigid placement inverts its own forward within 10⁻⁹ m, the reprojected one round-trips within 10⁻⁴ m, and the rigid sag 20 km out is the hand formula's`,
+  `${NAME}, placed as a tileset both ways: the rigid placement inverts its own forward within 4 ULPs of an Earth-radius coordinate (3.7 × 10⁻⁹ m), the reprojected one round-trips within 10⁻⁴ m, and the rigid sag 20 km out is the hand formula's`,
   ["proj", "geoid"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(SITE_BUILDING.frame, proj(ctx));
@@ -94,7 +101,7 @@ const placementCase = stressCase(
     results.push({
       ...base,
       id: `${ID}.rigid-inverse`,
-      title: `${NAME}: placed rigidly at its origin, designOf(displayed(d)) gives d back within 10⁻⁹ m, at its corners and out to 25 km`,
+      title: `${NAME}: placed rigidly at its origin, the design point comes back after the forward and inverse (designOf(displayed(d))) within 4 ULPs of an Earth-radius coordinate (3.7 × 10⁻⁹ m), at its corners and out to 25 km`,
       pass: rigid.mode === "rigid" && rigid.rigid !== undefined,
       value: worstInverse(rigid, points),
       tolerance: RIGID_INVERSE,
@@ -111,7 +118,7 @@ const placementCase = stressCase(
     results.push({
       ...base,
       id: `${ID}.reprojected-round-trip`,
-      title: `${NAME}: reprojected, every point through the frame, designOf(displayed(d)) gives d back within 10⁻⁴ m out to 25 km, with no display error`,
+      title: `${NAME}: reprojected, every point through the frame, the design point comes back after the forward and inverse (designOf(displayed(d))) within 10⁻⁴ m out to 25 km, with no display error`,
       pass: reprojected.mode === "reprojected" && drawnOff === 0,
       value: worstInverse(reprojected, points),
       tolerance: DESIGN_ROUND_TRIP,

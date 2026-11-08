@@ -50,7 +50,9 @@ export type Comparison =
   | { kind: "formula"; text: string }
   | { kind: "roundTrip"; text: string }
   | { kind: "error"; text: string }
-  | { kind: "independent"; text: string };
+  | { kind: "independent"; text: string }
+  /** Nothing: there is no published reference, so the row is shown, not judged. */
+  | { kind: "none"; text: string };
 
 /** A question card's group, as plain data. */
 export interface GroupInfo {
@@ -73,7 +75,9 @@ export interface GroupInfo {
    * its cases' needs; a test checks it), so the page can say what a card
    * waits for (R9).
    */
-  readonly needs: readonly ("frames" | "proj" | "geoid" | "orion")[];
+  readonly needs: readonly (
+    "frames" | "proj" | "geoid" | "orion" | "grids" | "egm2008"
+  )[];
   /**
    * F27: the accuracy that applies to a result of this group that states no
    * position accuracy, unless the case gives its own.
@@ -444,7 +448,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "global-geoids",
-    needs: ["proj"],
+    needs: ["proj", "geoid", "grids"],
     name: "Global geoids",
     question: "Do heights match each country's published geoid values?",
     lenses: ["civil", "gis", "offshore"],

@@ -190,6 +190,12 @@
 .fx-nobar {
   white-space: nowrap;
 }
+/* An opt-in row's Run (EGM2008's 80.6 MB), under its "not run" note. */
+.fx-opt-in {
+  display: flex;
+  margin-block-start: 4px;
+  white-space: nowrap;
+}
 
 /* Value against tolerance: a bar, a tick, and the numbers. */
 .fx-tol {

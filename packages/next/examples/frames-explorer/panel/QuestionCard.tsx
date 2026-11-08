@@ -18,7 +18,7 @@ import { Icon } from "@stratakit/mui";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import type { DataItem } from "../protocol.ts";
 import type { StressResult } from "../tests.ts";
-import { quantity } from "./format.ts";
+import { megabytes, quantity } from "./format.ts";
 import type { GroupInfo, ResultExtras } from "./model.ts";
 import {
   AccuracyText,
@@ -160,12 +160,16 @@ function ResultRows({
   selected,
   onSelect,
   waitingFor,
+  onOptIn,
+  busy,
 }: {
   results: readonly StressResult[];
   extras: Readonly<Record<string, ResultExtras>>;
   selected: string | undefined;
   onSelect: (id: string) => void;
   waitingFor: DataItem | undefined;
+  onOptIn?: ((r: StressResult) => void) | undefined;
+  busy?: string | undefined;
 }) {
   const effects = results.some((r) => r.effect !== undefined);
   // The selected row stays in view as the inspector opens under the list.
@@ -233,6 +237,19 @@ function ResultRows({
               </TableCell>
               <TableCell role="cell" className="fx-value">
                 <ToleranceBar result={r} />
+                {r.optIn && onOptIn && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    className="fx-opt-in"
+                    disabled={busy !== undefined}
+                    aria-label={`Run this check: loads ${megabytes(r.optIn.bytes)}`}
+                    {...(busy !== undefined && { title: busy })}
+                    onClick={() => onOptIn(r)}
+                  >
+                    Run ({megabytes(r.optIn.bytes)})
+                  </Button>
+                )}
               </TableCell>
               {effects && (
                 <TableCell
@@ -282,6 +299,7 @@ export function QuestionCard({
   onSelect,
   waitingFor,
   onRun,
+  onOptIn,
   busy,
   onShow,
   children,
@@ -295,6 +313,8 @@ export function QuestionCard({
   onSelect: (id: string) => void;
   waitingFor: DataItem | undefined;
   onRun: () => void;
+  /** An opt-in row's Run (EGM2008's 80.6 MB): loads its data, then runs it. */
+  onOptIn?: (r: StressResult) => void;
   /** Why "Run this group" waits: a run is going on (one at a time). */
   busy?: string | undefined;
   onShow?: () => void;
@@ -391,6 +411,8 @@ export function QuestionCard({
             selected={selected}
             onSelect={onSelect}
             waitingFor={waitingFor}
+            onOptIn={onOptIn}
+            busy={busy}
           />
         ) : (
           <Typography variant="body-sm" color="textSecondary" render={<p />}>

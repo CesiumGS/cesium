@@ -42,7 +42,7 @@ import {
   type Pipeline,
 } from "./pipeline.ts";
 import { loadedGrids } from "./proj.ts";
-import { wkt2Problem } from "./wkt2.ts";
+import { startsAsWkt2, wkt2Problem } from "./wkt2.ts";
 
 /**
  * A reference to a coordinate reference system, with the shapes of the 3D Tiles
@@ -343,8 +343,9 @@ export function normalizeExisting(proj: ProjApi, object: PJ, what: string): PJ {
  * The PJ of a CRS reference. A code goes through `proj_create` (its
  * definition, `crsDefinition`); a `wkt2` reference through `strictWkt2`,
  * PROJ's strict WKT parser, never `proj_create`, which would also take a
- * PROJ string, AUTH:CODE, PROJJSON or WKT1 in a `wkt2` field. A string is a
- * definition this library or PROJ made (`proj_create`). Throws, naming
+ * PROJ string, AUTH:CODE, PROJJSON or WKT1 in a `wkt2` field. A string
+ * that starts as WKT2 does goes through `strictWkt2` too; any other string
+ * (a code, or a definition PROJ wrote) through `proj_create`. Throws, naming
  * `what`, for one PROJ can't create.
  */
 export function crsObject(
@@ -353,7 +354,11 @@ export function crsObject(
   what: string,
 ): PJ {
   if (typeof ref === "string") {
-    return create(proj, ref, what);
+    // A string that is WKT2 is read as WKT2 is: strictly. Others are codes
+    // and PROJ's own definitions.
+    return startsAsWkt2(ref)
+      ? strictWkt2(proj, { format: "wkt2", wkt2: ref }, what)
+      : create(proj, ref, what);
   }
   if (ref.format === "wkid") {
     return create(proj, crsDefinition(ref), what);

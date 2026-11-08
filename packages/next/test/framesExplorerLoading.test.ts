@@ -116,6 +116,8 @@ describe("the model", () => {
       ["proj", "idle"],
       ["geoid", "idle"],
       ["orion", "idle"],
+      ["grids", "idle"],
+      ["egm2008", "idle"],
     ]);
   });
 
@@ -166,6 +168,8 @@ describe("the model", () => {
     model.reset();
     expect(model.items.map((s) => s.state)).toEqual([
       "ready",
+      "idle",
+      "idle",
       "idle",
       "idle",
       "idle",

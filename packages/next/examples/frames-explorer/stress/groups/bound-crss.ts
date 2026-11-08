@@ -14,6 +14,7 @@ import {
   strictWkt2,
 } from "../../../../src/engineering/crs.ts";
 import { gridFactors } from "../../../../src/engineering/factors.ts";
+import { projTokenProblem } from "../../../../src/engineering/wkt2.ts";
 import type { ProjApi } from "../../../../src/engineering/proj.ts";
 import { measure } from "../../../../src/measure/measure.ts";
 import { EARTH } from "../../../../src/scene/Body.ts";
@@ -222,7 +223,8 @@ function locate(
 /**
  * PROJ's best registry operation from `crs` to WGS 84 within `box`. With an
  * EPSG record to check it by (`gridless`: the catalog's cases), the best
- * that reads no grid: the record is a Helmert, and a grid another case
+ * that reads no grid, which the results' "PROJ's best registry operation"
+ * then means (the same operation on a PROJ with no catalog grids loaded): the record is a Helmert, and a grid another case
  * loaded into the run's PROJ (the global geoids' OSTN15, Task 21) would
  * outrank it on a later run. Before any such load the two are the same
  * operation: PROJ's list is in the same order, and the grid operations ahead
@@ -622,6 +624,47 @@ function slug(label: string): string {
   return out.replace(/^-+|-+$/g, "").slice(0, 40) || "crs";
 }
 
+/** The keywords a WKT1 CRS starts with (OGC 01-009, as GDAL writes it), and a bracket. */
+const WKT1_START =
+  /^(?:GEOGCS|PROJCS|GEOCCS|VERT_CS|COMPD_CS|LOCAL_CS)\s*[[(]/i;
+
+/**
+ * "Try your own"'s WKT1, written as WKT2 (2019) by PROJ's WKT parser, so
+ * only the converted text reaches the library, whose `wkt2` references are
+ * strict WKT2 (Task 21 fix 1). Undefined when `text` doesn't start as WKT1
+ * does, so a PROJ string, AUTH:CODE or PROJJSON is never read here. Throws
+ * for WKT1 holding a PROJ-string token (`EXTENSION["PROJ4", "+proj=…"]`),
+ * or that PROJ can't read.
+ */
+export function wkt1AsWkt2(P: ProjApi, text: string): string | undefined {
+  if (!WKT1_START.test(text.trim())) {
+    return undefined;
+  }
+  const problem = projTokenProblem(text);
+  if (problem !== undefined) {
+    throw new Error(`the WKT1 ${problem}`);
+  }
+  let object;
+  try {
+    [object] = P.proj_create_from_wkt(text, { STRICT: false });
+  } catch (error) {
+    throw new Error(
+      `PROJ could not read the WKT1: ${messageOf(error).replace(/\s+/g, " ").slice(0, 200)}`,
+      { cause: error },
+    );
+  }
+  // An object PROJ couldn't build writes no WKT; the library's strict
+  // parse refuses whatever else isn't WKT2.
+  const converted: string | null | undefined = P.proj_as_wkt(
+    object,
+    P.PJ_WKT2_2019,
+  );
+  if (typeof converted !== "string" || converted === "") {
+    throw new Error("PROJ could not read the WKT1");
+  }
+  return converted;
+}
+
 /**
  * The Bound CRSs group's checks on any WKT2 (R18's "Try your own"): units and
  * factors from the source CRS, the recorded operation, a hand-coded Helmert
@@ -630,7 +673,9 @@ function slug(label: string): string {
  * registry operation, and the accuracy. Every result is marked
  * `userInput: true` and carries no fingerprint: excluded from the pass
  * counts, the data test and the fingerprints. It never throws: a WKT that
- * makes no frame gives one failed result with the error.
+ * makes no frame gives one failed result with the error. WKT1 (as GDAL
+ * writes it) is converted to WKT2 first (`wkt1AsWkt2`), and its results'
+ * titles say "(WKT1, converted)".
  */
 export async function boundCrsChecks(
   ctx: StressContext,
@@ -639,11 +684,15 @@ export async function boundCrsChecks(
 ): Promise<StressResult[]> {
   const idBase = `${GROUP}.user.${slug(label)}`;
   try {
+    // WKT1 is the user's own input: converted, and labelled so.
+    const converted = wkt1AsWkt2(ctx.proj ?? (await ctx.loadProj()), wkt2);
+    const shown =
+      converted === undefined ? label : `${label} (WKT1, converted)`;
     // Its own run for the citations it reads (the WGS 84 ellipsoid's
     // record): outside a catalog run they'd otherwise pile up in
     // references.ts's list for case-making, once per "Try your own" run.
     const { value: results } = await collectCitations(() =>
-      boundChecks(ctx, wkt2, label, {
+      boundChecks(ctx, converted ?? wkt2, shown, {
         idBase,
         userInput: true,
       }),

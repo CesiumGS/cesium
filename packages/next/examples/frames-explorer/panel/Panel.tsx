@@ -71,6 +71,18 @@ const PARTS: readonly [Part, string][] = [
   ["report", "Report"],
 ];
 
+/**
+ * The Verification tab's opening line, with the count of catalog results
+ * the page holds (the user's own input aside), never a number written in.
+ */
+export function catalogLine(results: readonly StressResult[]): string {
+  const n = results.filter((r) => !r.userInput).length;
+  const lead = "The stress catalog behind every scenario\u2019s checks";
+  return n === 0
+    ? `${lead}: not run yet.`
+    : `${lead}: ${n} result${n === 1 ? "" : "s"} run.`;
+}
+
 export function Panel({ time, ...rest }: PanelProps) {
   return (
     <TimeContext.Provider value={time}>
@@ -216,8 +228,7 @@ function PanelBody({
         >
           <div className="fx-verification-head">
             <Typography variant="body-sm" color="textSecondary" render={<p />}>
-              The stress catalog behind every scenario&rsquo;s checks: 225
-              results against their published references.
+              {catalogLine(model.results)}
             </Typography>
             <ToggleButtonGroup
               exclusive

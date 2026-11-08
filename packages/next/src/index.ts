@@ -192,7 +192,11 @@ export {
   georeferenceTileset,
   readGeoreference,
 } from "./engineering/georeferenceTileset.ts";
-export { WKT2_CRS_KEYWORDS, wkt2Problem } from "./engineering/wkt2.ts";
+export {
+  WKT2_CRS_KEYWORDS,
+  projTokenProblem,
+  wkt2Problem,
+} from "./engineering/wkt2.ts";
 export {
   Alignment,
   type AlignmentDefinition,

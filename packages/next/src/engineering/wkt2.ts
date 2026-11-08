@@ -38,6 +38,9 @@ const START =
 // PROJ-string parameters that read files or whole definitions, anywhere.
 const PROJ_TOKENS = /\+(?:proj|init|nadgrids|geoidgrids)\b/i;
 
+/** Whether `text`, trimmed, starts as a WKT2 CRS does: a WKT2 CRS keyword and a bracket. */
+export const startsAsWkt2 = (text: string): boolean => START.test(text.trim());
+
 /**
  * Why `text` isn't a WKT2 CRS, or undefined when it may be one. It checks
  * the form only (PROJ's strict WKT parser checks the rest):
@@ -46,7 +49,7 @@ const PROJ_TOKENS = /\+(?:proj|init|nadgrids|geoidgrids)\b/i;
  *    and no "+" followed by a letter outside a quoted string.
  */
 export function wkt2Problem(text: string): string | undefined {
-  if (!START.test(text.trim())) {
+  if (!startsAsWkt2(text)) {
     return "must be WKT2: it must start with a WKT2 CRS keyword (PROJCRS, GEOGCRS, COMPOUNDCRS, BOUNDCRS, ...) and a bracket";
   }
   return projTokenProblem(text);

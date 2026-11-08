@@ -71,7 +71,9 @@ function ItemDetails({ items }: { items: readonly ItemStatus[] }) {
             </th>
             <td>
               {s.state === "idle"
-                ? "not loaded (loads when first needed)"
+                ? s.item === "egm2008"
+                  ? "not loaded (opt-in: its row's Run button)"
+                  : "not loaded (loads when first needed)"
                 : s.state === "fetching"
                   ? "fetching"
                   : s.state}

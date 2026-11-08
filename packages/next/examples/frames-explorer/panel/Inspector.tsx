@@ -61,6 +61,7 @@ const COMPARED_LABEL: Record<Comparison["kind"], string> = {
   roundTrip: "Round trip",
   error: "Expected error",
   independent: "Independent computation",
+  none: "No published reference",
 };
 
 export function Inspector({
