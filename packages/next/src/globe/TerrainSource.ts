@@ -11,6 +11,11 @@
  *   (from `layer.json` and the metadata extension's descendant ranges).
  *   All four are created when any is available; the others fill from
  *   their parent (1.x upsamples them). Until then a tile is a leaf.
+ * - Below the last level with data, the globe's `Budgeted` selection
+ *   upsamples a loaded leaf (`upsampleContent`): four children whose
+ *   content is the mesh of the nearest tile with data, clipped to them in
+ *   a worker, so their imagery refines. `Stepwise` keeps 1.x parity's
+ *   placeholders (`upsample`).
  * - Bounds: a tile's own height range once loaded, else its nearest loaded
  *   ancestor's.
  * - Geometric error per level as 1.x: level 0 is
@@ -54,6 +59,16 @@ export type TerrainLoader = (
     headers?: Record<string, string>;
     rect: Rectangle;
     skirtHeight: number;
+    /**
+     * A tile below the last level with data: clipped from the nearest tile
+     * with data, over `rect`, from its `heights`, or, once they have left
+     * the cache, from its content at `url`.
+     */
+    upsample?: {
+      rect: Rectangle;
+      heights?: TerrainHeights;
+      url?: string;
+    };
   },
   signal: AbortSignal,
 ) => Promise<{ asset: GltfAsset; info: TerrainTileInfo }>;
@@ -90,9 +105,15 @@ export interface GlobeTile extends Address {
   heights?: TerrainHeights;
   /**
    * A quadrant without data that 1.x would have upsampled by now: it was
-   * queued for loading (culled quadrants never are).
+   * queued for loading (culled quadrants never are). Globe `Stepwise`.
    */
   upsampled?: boolean;
+  /**
+   * Below the last level with data (globe `Budgeted`): its content is the
+   * mesh of this tile, the nearest with data above, clipped to it
+   * (`upsampleContent`).
+   */
+  upsampledFrom?: Tile;
   /** Children created (or known to be none). */
   expanded: boolean;
   /** Globe `Stepwise` selection result per view id, and its pass. */
@@ -432,13 +453,16 @@ export class TerrainSource {
     if (cached && (g.heights ? cached.heights === g.heights : this.flat)) {
       return cached;
     }
+    // An upsampled tile's surface is its data tile's, as accurate as that
+    // tile's level: its own finer error would over-claim.
+    const data = g.upsampledFrom ?? tile;
     const ray: TerrainRayTile = {
       rectangle: g.rectangle,
       // The ellipsoid keeps no heights: its tiles are all the same grid. A
       // wrapper of its own per tile keys the ray's per-tile cache.
       heights: g.heights ?? { ...(flatHeights ??= flatTerrainHeights()) },
-      level: g.level,
-      geometricError: tile.geometricError,
+      level: data.globe!.level,
+      geometricError: data.geometricError,
     };
     this.rayTiles.set(tile, ray);
     return ray;
@@ -448,7 +472,9 @@ export class TerrainSource {
   unloadTile(tile: Tile): void {
     if (tile.globe?.heights) {
       tile.globe.heights = undefined;
-      this.heightsChanged(tile.globe.rectangle);
+      if (!tile.globe.upsampledFrom) {
+        this.heightsChanged(tile.globe.rectangle);
+      }
     }
   }
 
@@ -478,12 +504,25 @@ export class TerrainSource {
   /** Content for one terrain tile; grows the tree under it. */
   async loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset> {
     const a = tile.globe!;
+    const data = a.upsampledFrom;
+    // An upsampled tile hides the same cracks its data tile does.
+    const skirtLevel = (data?.globe ?? a).level;
     const { asset, info } = await this.load(
       {
         url: tile.contentUrl!,
         ...(this.headers ? { headers: this.headers } : {}),
         rect: rectangle(a),
-        skirtHeight: (this.levelZeroError / 2 ** a.level) * 5,
+        skirtHeight: (this.levelZeroError / 2 ** skirtLevel) * 5,
+        ...(data
+          ? {
+              upsample: {
+                rect: data.globe!.rectangle,
+                ...(data.globe!.heights
+                  ? { heights: data.globe!.heights }
+                  : { url: data.contentUrl! }),
+              },
+            }
+          : {}),
       },
       signal,
     );
@@ -498,7 +537,10 @@ export class TerrainSource {
     }
     if (info.heights) {
       g.heights = info.heights;
-      this.heightsChanged(g.rectangle);
+      // An upsampled tile's surface is its data tile's: nothing moved.
+      if (!g.upsampledFrom) {
+        this.heightsChanged(g.rectangle);
+      }
     }
     g.own = {
       minimumHeight: info.minimumHeight,
@@ -575,6 +617,41 @@ export class TerrainSource {
     return tile.children.length > 0;
   }
 
+  /**
+   * Gives a loaded leaf below the last level with data four children whose
+   * content is its mesh clipped to each (1.x upsamples them), so they draw
+   * with imagery of their own level (globe `Budgeted`). False where there
+   * is nothing to upsample: the ellipsoid (it has every level), a tile not
+   * loaded yet or with data below, or one that has children.
+   */
+  upsampleContent(tile: Tile): boolean {
+    const g = tile.globe!;
+    if (
+      this.flat ||
+      !g.expanded ||
+      tile.children.length > 0 ||
+      !g.heights ||
+      !g.own?.quadrants
+    ) {
+      return false;
+    }
+    const data = g.upsampledFrom ?? tile;
+    const quadrants = g.own.quadrants;
+    [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ].forEach(([dx, dy], i) => {
+      const a = { level: g.level + 1, x: g.x * 2 + dx!, y: g.y * 2 + dy! };
+      const [minimumHeight, maximumHeight] = quadrants[i]!;
+      this.addChild(tile, a, minimumHeight, maximumHeight, true, data);
+    });
+    tile.childrenPartition = true;
+    this.tree.tilesAdded?.(tile.children.length);
+    return true;
+  }
+
   private createChildren(tile: Tile, g: GlobeTile, data = true): void {
     g.expanded = true;
     // South-west, south-east, north-west, north-east.
@@ -630,6 +707,7 @@ export class TerrainSource {
     minimumHeight: number,
     maximumHeight: number,
     available: boolean,
+    upsampledFrom?: Tile,
   ): void {
     const r = rectangle(a);
     const json: TileJson = {
@@ -645,7 +723,15 @@ export class TerrainSource {
       },
       geometricError: this.levelZeroError / 2 ** a.level,
       refine: "REPLACE",
-      ...(available ? { content: { uri: this.tileUrl(a) } } : {}),
+      ...(available
+        ? {
+            content: {
+              uri: upsampledFrom
+                ? `upsample:${a.level}/${a.x}/${a.y}`
+                : this.tileUrl(a),
+            },
+          }
+        : {}),
     };
     const tile = new Tile(
       parent,
@@ -659,9 +745,11 @@ export class TerrainSource {
       ...a,
       rectangle: r,
       metadata: false,
-      // Nothing below a quadrant without data.
-      expanded: !available,
+      // Nothing below a quadrant without data, nor data below one
+      // upsampled.
+      expanded: !available || upsampledFrom !== undefined,
       selection: [],
+      ...(upsampledFrom ? { upsampledFrom } : {}),
     };
     tile.fillFromParent = !available;
     parent.children.push(tile);

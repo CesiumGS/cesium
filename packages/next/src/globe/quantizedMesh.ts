@@ -75,6 +75,11 @@ export interface TerrainHeights {
   triangles: Uint32Array;
   minimumHeight: number;
   maximumHeight: number;
+  /**
+   * Oct-encoded vertex normals (two bytes a vertex), when the tile has
+   * them: tiles upsampled from this one interpolate them.
+   */
+  normals?: Uint8Array;
 }
 
 /**
@@ -361,7 +366,8 @@ export function decodeQuantizedMesh(
     const length = view.getUint32(pos + 1, true);
     pos += 5;
     if (id === EXT_OCT_NORMALS) {
-      octNormals = new Uint8Array(buffer, pos, vertexCount * 2);
+      // A copy: kept with the heights for upsampling, so transferred.
+      octNormals = new Uint8Array(buffer.slice(pos, pos + vertexCount * 2));
     } else if (id === EXT_METADATA) {
       const jsonLength = view.getUint32(pos, true);
       const text = new TextDecoder().decode(
@@ -413,6 +419,8 @@ interface TerrainTileData {
   /** Edge vertex indices: west, south, east, north. */
   edges: Uint32Array[];
   octNormals?: Uint8Array | undefined;
+  /** Unit normals per vertex (x, y, z), where there are no oct normals. */
+  vertexNormals?: Float32Array | undefined;
   available?: TileRange[][] | undefined;
   /** Keep the vertices and triangles for height queries (data tiles). */
   keepHeights?: boolean;
@@ -515,6 +523,245 @@ export function flatTerrainTile(
   });
 }
 
+/** A clipped polygon's corner: tile u, v (0..32767), height, normal. */
+interface Corner {
+  u: number;
+  v: number;
+  height: number;
+  nx: number;
+  ny: number;
+  nz: number;
+}
+
+/** The point a fraction `s` of the way from `a` to `b`. */
+function crossing(a: Corner, b: Corner, s: number): Corner {
+  return {
+    u: a.u + s * (b.u - a.u),
+    v: a.v + s * (b.v - a.v),
+    height: a.height + s * (b.height - a.height),
+    nx: a.nx + s * (b.nx - a.nx),
+    ny: a.ny + s * (b.ny - a.ny),
+    nz: a.nz + s * (b.nz - a.nz),
+  };
+}
+
+/**
+ * One Sutherland–Hodgman step: the part of `polygon` where
+ * `sign · (corner[axis] − bound) ≥ 0`.
+ */
+function clipPolygon(
+  polygon: Corner[],
+  axis: "u" | "v",
+  bound: number,
+  sign: number,
+): Corner[] {
+  const out: Corner[] = [];
+  for (let i = 0; i < polygon.length; i++) {
+    const a = polygon[i]!;
+    const b = polygon[(i + 1) % polygon.length]!;
+    const da = sign * (a[axis] - bound);
+    const db = sign * (b[axis] - bound);
+    if (da >= 0) {
+      out.push(a);
+    }
+    if (da >= 0 !== db >= 0) {
+      out.push(crossing(a, b, da / (da - db)));
+    }
+  }
+  return out;
+}
+
+/**
+ * A tile below the last level with data (1.x
+ * `upsampleQuantizedTerrainMesh`): the mesh of the nearest tile with data
+ * (`parent`, over `parentRect`), clipped to `rect` and quantized again over
+ * it, with skirts. Its surface is the parent's, so its imagery can refine
+ * while the terrain stays as the data has it. Normals are interpolated from
+ * the parent's (geodetic up without them).
+ */
+export function upsampleTerrainTile(
+  parent: TerrainHeights,
+  parentRect: Rectangle,
+  rect: Rectangle,
+  skirtHeight: number,
+): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
+  const width = parentRect.east - parentRect.west;
+  const height = parentRect.north - parentRect.south;
+  // The tile's extent in the parent's quantized coordinates.
+  const u0 = ((rect.west - parentRect.west) / width) * 32767;
+  const u1 = ((rect.east - parentRect.west) / width) * 32767;
+  const v0 = ((rect.south - parentRect.south) / height) * 32767;
+  const v1 = ((rect.north - parentRect.south) / height) * 32767;
+  const range = parent.maximumHeight - parent.minimumHeight;
+  const normal = new Float32Array(3);
+  const corner = (i: number): Corner => {
+    if (parent.normals) {
+      octDecode(parent.normals[i * 2]!, parent.normals[i * 2 + 1]!, normal, 0);
+    }
+    return {
+      u: parent.u[i]!,
+      v: parent.v[i]!,
+      height: parent.minimumHeight + (parent.h[i]! / 32767) * range,
+      nx: normal[0]!,
+      ny: normal[1]!,
+      nz: normal[2]!,
+    };
+  };
+
+  // Vertices keyed by their quantized place in the tile: corners shared by
+  // neighboring triangles (and crossings of a shared edge) merge.
+  const index = new Map<number, number>();
+  const us: number[] = [];
+  const vs: number[] = [];
+  const heights: number[] = [];
+  const normals: number[] = [];
+  const triangles: number[] = [];
+  const add = (c: Corner): number => {
+    const u = Math.min(
+      Math.max(Math.round(((c.u - u0) / (u1 - u0)) * 32767), 0),
+      32767,
+    );
+    const v = Math.min(
+      Math.max(Math.round(((c.v - v0) / (v1 - v0)) * 32767), 0),
+      32767,
+    );
+    const key = u * 32768 + v;
+    let i = index.get(key);
+    if (i === undefined) {
+      i = us.length;
+      index.set(key, i);
+      us.push(u);
+      vs.push(v);
+      heights.push(c.height);
+      const length = Math.hypot(c.nx, c.ny, c.nz) || 1;
+      normals.push(c.nx / length, c.ny / length, c.nz / length);
+    }
+    return i;
+  };
+  const t = parent.triangles;
+  for (let k = 0; k + 2 < t.length; k += 3) {
+    const a = t[k]!;
+    const b = t[k + 1]!;
+    const c = t[k + 2]!;
+    const pu = [parent.u[a]!, parent.u[b]!, parent.u[c]!];
+    const pv = [parent.v[a]!, parent.v[b]!, parent.v[c]!];
+    if (
+      Math.max(...pu) <= u0 ||
+      Math.min(...pu) >= u1 ||
+      Math.max(...pv) <= v0 ||
+      Math.min(...pv) >= v1
+    ) {
+      continue;
+    }
+    let polygon = [corner(a), corner(b), corner(c)];
+    polygon = clipPolygon(polygon, "u", u0, 1);
+    polygon = clipPolygon(polygon, "u", u1, -1);
+    polygon = clipPolygon(polygon, "v", v0, 1);
+    polygon = clipPolygon(polygon, "v", v1, -1);
+    if (polygon.length < 3) {
+      continue;
+    }
+    const first = add(polygon[0]!);
+    for (let i = 1; i + 1 < polygon.length; i++) {
+      const j = add(polygon[i]!);
+      const l = add(polygon[i + 1]!);
+      if (first !== j && j !== l && l !== first) {
+        triangles.push(first, j, l);
+      }
+    }
+  }
+
+  const count = us.length;
+  let minimumHeight = Infinity;
+  let maximumHeight = -Infinity;
+  for (const h of heights) {
+    minimumHeight = Math.min(minimumHeight, h);
+    maximumHeight = Math.max(maximumHeight, h);
+  }
+  if (count === 0) {
+    minimumHeight = maximumHeight = parent.minimumHeight;
+  }
+  const childRange = maximumHeight - minimumHeight;
+  // u, v and h in one buffer, as decoded tiles keep them (transferred once).
+  const uvh = new Uint16Array(count * 3);
+  const u = uvh.subarray(0, count);
+  const v = uvh.subarray(count, 2 * count);
+  const h = uvh.subarray(2 * count, 3 * count);
+  const west: number[] = [];
+  const south: number[] = [];
+  const east: number[] = [];
+  const north: number[] = [];
+  for (let i = 0; i < count; i++) {
+    u[i] = us[i]!;
+    v[i] = vs[i]!;
+    h[i] =
+      childRange > 0
+        ? Math.round(((heights[i]! - minimumHeight) / childRange) * 32767)
+        : 0;
+    if (u[i] === 0) {
+      west.push(i);
+    }
+    if (v[i] === 0) {
+      south.push(i);
+    }
+    if (u[i] === 32767) {
+      east.push(i);
+    }
+    if (v[i] === 32767) {
+      north.push(i);
+    }
+  }
+
+  // Center, bounding sphere and horizon point from the vertices.
+  const ellipsoid = Ellipsoid.WGS84;
+  const center = ellipsoid.cartographicToCartesian(
+    {
+      longitude: (rect.west + rect.east) / 2,
+      latitude: (rect.south + rect.north) / 2,
+      height: (minimumHeight + maximumHeight) / 2,
+    },
+    new Float64Array(3),
+  );
+  const positions = new Float64Array(count * 3);
+  const p = new Float64Array(3);
+  let radius = 0;
+  for (let i = 0; i < count; i++) {
+    ellipsoid.cartographicToCartesian(
+      {
+        longitude: rect.west + (u[i]! / 32767) * (rect.east - rect.west),
+        latitude: rect.south + (v[i]! / 32767) * (rect.north - rect.south),
+        height: heights[i]!,
+      },
+      p,
+    );
+    positions.set(p, i * 3);
+    radius = Math.max(
+      radius,
+      Math.hypot(p[0]! - center[0]!, p[1]! - center[1]!, p[2]! - center[2]!),
+    );
+  }
+  const occludee = horizonCullingPoint(center, positions, minimumHeight);
+  const c: [number, number, number] = [center[0]!, center[1]!, center[2]!];
+  return buildTerrainTile({
+    rect,
+    skirtHeight,
+    center: c,
+    minimumHeight,
+    maximumHeight,
+    sphere: { center: c, radius },
+    horizonOcclusionPoint: occludee
+      ? [occludee[0]!, occludee[1]!, occludee[2]!]
+      : undefined,
+    u,
+    v,
+    h,
+    triangles: Uint32Array.from(triangles),
+    edges: [west, south, east, north].map((e) => Uint32Array.from(e)),
+    vertexNormals: parent.normals ? Float32Array.from(normals) : undefined,
+    keepHeights: true,
+  });
+}
+
 /** Vertices, skirts, normals and bounds of a decoded terrain tile. */
 function buildTerrainTile(d: TerrainTileData): {
   asset: GltfAsset;
@@ -535,6 +782,7 @@ function buildTerrainTile(d: TerrainTileData): {
     triangles,
     edges,
     octNormals,
+    vertexNormals,
     available,
   } = d;
   const vertexCount = u.length;
@@ -568,6 +816,10 @@ function buildTerrainTile(d: TerrainTileData): {
     uvs[dst * 2 + 1] = vv;
     if (octNormals) {
       octDecode(octNormals[i * 2]!, octNormals[i * 2 + 1]!, normals, dst * 3);
+    } else if (vertexNormals) {
+      normals[dst * 3] = vertexNormals[i * 3]!;
+      normals[dst * 3 + 1] = vertexNormals[i * 3 + 1]!;
+      normals[dst * 3 + 2] = vertexNormals[i * 3 + 2]!;
     } else {
       // Geodetic up as a fallback normal.
       ellipsoid.geodeticSurfaceNormalCartographic(carto, scratch);
@@ -659,7 +911,15 @@ function buildTerrainTile(d: TerrainTileData): {
       // u, v and h share one buffer (transferred once).
       ...(d.keepHeights
         ? {
-            heights: { u, v, h, triangles, minimumHeight, maximumHeight },
+            heights: {
+              u,
+              v,
+              h,
+              triangles,
+              minimumHeight,
+              maximumHeight,
+              ...(octNormals ? { normals: octNormals } : {}),
+            },
           }
         : {}),
     },
@@ -669,6 +929,7 @@ function buildTerrainTile(d: TerrainTileData): {
       uvs.buffer,
       indices.buffer,
       ...(d.keepHeights ? [u.buffer, triangles.buffer] : []),
+      ...(d.keepHeights && octNormals ? [octNormals.buffer] : []),
     ],
   };
 }

@@ -43,10 +43,13 @@ export interface TerrainRayTile {
   readonly rectangle: Rectangle;
   /** Its drawn triangles (no skirts), quantized as decoded. */
   readonly heights: TerrainHeights;
-  /** Quadtree level. */
+  /**
+   * Quadtree level: of the tile with data it is clipped from, for a tile
+   * upsampled below the last level with data.
+   */
   readonly level: number;
   /**
-   * Its level's geometric error, m: how far its drawn surface may lie from
+   * That level's geometric error, m: how far its drawn surface may lie from
    * the source's heights.
    */
   readonly geometricError: number;

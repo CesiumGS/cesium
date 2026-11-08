@@ -88,6 +88,26 @@ interface Source {
   composited?: boolean;
 }
 
+/** 1.x ImageryLayer: the level whose texel spacing matches the error. */
+export function imageryLevel(p: ImageryProvider, tile: Tile): number {
+  const r = tile.globe!.rectangle;
+  const latitudeClosestToEquator =
+    r.south > 0 ? r.south : r.north < 0 ? r.north : 0;
+  const latitudeFactor =
+    p.tilingScheme === "webMercator" ? Math.cos(latitudeClosestToEquator) : 1;
+  const levelZeroTiles = p.tilingScheme === "webMercator" ? 1 : 2;
+  const levelZeroSpacing =
+    (WGS84_RADIUS * 2 * Math.PI * latitudeFactor) /
+    (p.tileSize * levelZeroTiles);
+  return Math.min(
+    Math.max(
+      Math.round(Math.log2(levelZeroSpacing / tile.geometricError)),
+      p.minimumLevel,
+    ),
+    p.maximumLevel,
+  );
+}
+
 /** Frames no wanted tile needs a loading source before it is cancelled. */
 const CANCEL_AFTER_FRAMES = 30;
 
@@ -489,26 +509,17 @@ export class GlobeImagery implements SliceUser {
 
   // ------------------------------------------------------------- levels
 
-  /** 1.x ImageryLayer: the level whose texel spacing matches the error. */
+  /**
+   * Whether the provider has a finer level than the one `tile` draws with:
+   * terrain past its data is upsampled only then (`TileSelection`).
+   */
+  refines(tile: Tile): boolean {
+    return imageryLevel(this.provider, tile) < this.provider.maximumLevel;
+  }
+
   private job(tile: Tile): Job {
-    const g = tile.globe!;
-    const r = g.rectangle;
-    const p = this.provider;
-    const latitudeClosestToEquator =
-      r.south > 0 ? r.south : r.north < 0 ? r.north : 0;
-    const latitudeFactor =
-      p.tilingScheme === "webMercator" ? Math.cos(latitudeClosestToEquator) : 1;
-    const levelZeroTiles = p.tilingScheme === "webMercator" ? 1 : 2;
-    const levelZeroSpacing =
-      (WGS84_RADIUS * 2 * Math.PI * latitudeFactor) /
-      (p.tileSize * levelZeroTiles);
-    const level = Math.min(
-      Math.max(
-        Math.round(Math.log2(levelZeroSpacing / tile.geometricError)),
-        p.minimumLevel,
-      ),
-      p.maximumLevel,
-    );
+    const r = tile.globe!.rectangle;
+    const level = imageryLevel(this.provider, tile);
     const tiles: [number, number][] = [];
     const n = 2 ** level;
     const x0 = Math.floor(((r.west + Math.PI) / (2 * Math.PI)) * n);

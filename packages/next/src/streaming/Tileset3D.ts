@@ -895,6 +895,8 @@ export class Tileset3D implements TileTree {
   imageryPending = false;
   private readonly imageryReady = (tile: Tile) =>
     !this.imageryPending && (this.imagery?.hasImagery(tile) ?? true);
+  private readonly imageryRefines = (tile: Tile) =>
+    this.imagery?.refines(tile) ?? false;
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
@@ -1285,6 +1287,7 @@ export class Tileset3D implements TileTree {
     }
     this.policy.imageryReady =
       this.imagery || this.imageryPending ? this.imageryReady : undefined;
+    this.policy.imageryRefines = this.imagery ? this.imageryRefines : undefined;
     this.policy.expectedLoadSeconds = this.loadEstimateMs / 1000;
     const waiting = new Set<Tile>();
     for (const view of views) {

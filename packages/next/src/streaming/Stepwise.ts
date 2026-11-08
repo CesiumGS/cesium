@@ -87,6 +87,13 @@ export interface TileSelection {
    */
   imageryReady?: (tile: Tile) => boolean;
   /**
+   * Terrain draped with imagery: whether the imagery has a finer level than
+   * the one a tile draws with. Below the last level with terrain data, the
+   * globe's `Budgeted` selection upsamples a tile only then (`Tileset3D`
+   * sets it).
+   */
+  imageryRefines?: (tile: Tile) => boolean;
+  /**
    * Prefetch requests wait until no visible request of the tileset is
    * queued or in flight (they took a throttled link's bandwidth from what
    * the view shows). 1.x's preloads go out with the rest (`Stepwise`).

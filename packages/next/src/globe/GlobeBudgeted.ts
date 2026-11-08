@@ -17,6 +17,14 @@
  * (r38); its tiles are generated, so expanding ahead saves no round trips.
  * Limiting terrain the same way slowed OSM Philadelphia's settle by 0.5 s.
  *
+ * Below the last level with data, a loaded tile the view wants finer is
+ * upsampled (`TerrainSource.upsampleContent`) while the imagery has finer
+ * levels: its children draw its mesh clipped to them, with their own
+ * imagery. Without them, terrain stopped where the data does, and the
+ * imagery with it: Cesium World Terrain ends at level 13 over Amsterdam's
+ * polders, so Bing drew at about 12 m a texel at every range (1.x
+ * upsamples there too; globe `Stepwise` keeps 1.x's parity placeholders).
+ *
  * No free detail from the cache (`opportunisticRatio` 0, as for 3D Tiles):
  * finer terrain brings finer imagery, and an imagery provider's levels can
  * be different captures (Bing's level 12 on Rainier's south flank is hazy
@@ -46,6 +54,7 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
   /** When this pass's expansion budget runs out (performance.now). */
   private expandUntil = 0;
   imageryReady?: (tile: Tile) => boolean;
+  imageryRefines?: (tile: Tile) => boolean;
 
   constructor(
     private readonly source: TerrainSource,
@@ -81,7 +90,9 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
 
   /**
    * Expands the tile (its children, where availability is known) first;
-   * the ellipsoid within the pass's budget.
+   * the ellipsoid within the pass's budget. Then, below the last level with
+   * data, upsamples it if the view wants it finer and the imagery has finer
+   * levels.
    */
   protected override updateVisibility(
     tile: Tile,
@@ -97,6 +108,14 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
       this.source.expand(tile);
     }
     super.updateVisibility(tile, state, view, pass);
+    if (
+      state.visible &&
+      tile.children.length === 0 &&
+      state.sse > this.memoryAdjustedScreenSpaceError &&
+      this.imageryRefines?.(tile) === true
+    ) {
+      this.source.upsampleContent(tile);
+    }
   }
 
   override select(

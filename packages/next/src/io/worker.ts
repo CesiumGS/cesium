@@ -3,7 +3,9 @@ import { parseGltf } from "./gltfParse.ts";
 import {
   decodeQuantizedMesh,
   flatTerrainTile,
+  upsampleTerrainTile,
   type Rectangle,
+  type TerrainHeights,
 } from "../globe/quantizedMesh.ts";
 
 /** Quantized-mesh with the extensions we decode, as 1.x requests it. */
@@ -28,6 +30,8 @@ self.onmessage = async (
     textureSupport: TextureFormatSupport;
     rect: Rectangle;
     skirtHeight: number;
+    /** A terrain tile below the last level with data (`TerrainLoader`). */
+    upsample?: { rect: Rectangle; heights?: TerrainHeights; url?: string };
     /** "stars": the star map's six faces. */
     urls?: string[];
   }>,
@@ -46,6 +50,46 @@ self.onmessage = async (
         event.data.rect,
         event.data.skirtHeight,
       );
+      self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
+      return;
+    }
+    const upsample = event.data.upsample;
+    if (type === "terrain" && upsample) {
+      // Clipped from the nearest tile with data: from its heights, or from
+      // its content again once they left the cache.
+      const start = performance.now();
+      let heights = upsample.heights;
+      let bytes = 0;
+      if (!heights) {
+        const response = await fetch(upsample.url!, {
+          headers: { ...event.data.headers, Accept: TERRAIN_ACCEPT },
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`terrain tile: ${response.status}`);
+        }
+        const buffer = await response.arrayBuffer();
+        bytes = buffer.byteLength;
+        heights = decodeQuantizedMesh(buffer, upsample.rect, 0).info.heights!;
+      }
+      const decodeStart = performance.now();
+      const { asset, info, transfer } = upsampleTerrainTile(
+        heights,
+        upsample.rect,
+        event.data.rect,
+        event.data.skirtHeight,
+      );
+      if (bytes > 0) {
+        // Fetched again: its bytes count (none without a fetch, as the
+        // ellipsoid's).
+        asset.timing = {
+          format: "quantized-mesh",
+          networkMs: decodeStart - start,
+          bytes,
+          decodeMs: performance.now() - decodeStart,
+          images: {},
+        };
+      }
       self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
       return;
     }
