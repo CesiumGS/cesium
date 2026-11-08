@@ -17,6 +17,7 @@ import {
   loadedGrids,
   loadProj,
 } from "../../src/engineering/proj.ts";
+import { HOSTILE_GRID_NAMES } from "../hostileGridNames.ts";
 
 const store = framesDataDirectory();
 const GEOID18 = "us_noaa_g2018u0.tif";
@@ -83,6 +84,24 @@ describe("an operation reads only grids we verified and staged", () => {
       ).toThrow(name);
     }
   });
+
+  it("refuses a pinned pipeline reading any of the one rule's names, even as an optional grid", async () => {
+    const { P } = await setup();
+    const before = [...loadedGrids(P)];
+    const resolving = (grids: string) => () =>
+      resolveOperation(P, CORRIDOR, "EPSG:4979", { pipeline: pinned(grids) });
+    for (const name of HOSTILE_GRID_NAMES) {
+      // Required: it isn't loaded (no such name can be).
+      expect(resolving(name), name).toThrow();
+      // Optional, which PROJ would skip: the name itself is refused (by
+      // parsePipeline first, for a ":", a path or a space).
+      expect(resolving(`@${name},${GEOID18}`), name).toThrow(
+        /by a path or an unusual name|^PROJ pipeline: /,
+      );
+    }
+    expect([...loadedGrids(P)]).toEqual(before);
+    // 56 resolutions: ~1.5 s alone, more on a loaded machine.
+  }, 30_000);
 
   it("still resolves the corridor's pin and PROJ's own choice on the staged grid", async () => {
     const { P } = await setup();

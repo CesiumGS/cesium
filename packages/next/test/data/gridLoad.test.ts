@@ -30,6 +30,10 @@ import {
   loadProj,
 } from "../../src/engineering/proj.ts";
 import { sha256Hex } from "../../src/io/sha256.ts";
+import {
+  HOSTILE_GRID_NAMES,
+  RESERVED_GRID_NAMES,
+} from "../hostileGridNames.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 const grids = `${join(framesDataDirectory(), "grids")}/`;
@@ -137,59 +141,58 @@ describe("one explicit grid set (Node)", () => {
     expect(navd88).toContain(GEOID18);
   });
 
-  it("refuses PROJ's own names in any case, and a trailing dot, before reading anything (Node)", async () => {
+  it("refuses the one rule's names (PROJ's own in any case, a trailing dot), before reading anything (Node)", async () => {
     const P = await loadProj({ base, grids: [] });
-    const names = [
-      "PROJ.DB",
-      "Proj_Capi.node",
-      "Owner",
-      "proj.ini",
-      "ITRF2014",
-      "g.tif.PARTIAL",
-      "proj.db.",
-    ];
-    // An overridden catalog listing them, each with a file of that name
-    // beside it (which must never be read).
+    const before = readdirSync(process.env.PROJ_DATA!).sort();
+    // An overridden catalog listing one of them can't be a grid source.
     const dir = mkdtempSync(join(tmpdir(), "frames-reserved-grids-"));
     try {
-      const catalog = JSON.stringify({
-        type: "FeatureCollection",
-        features: names.map((name) => ({
-          type: "Feature",
-          properties: {
-            name,
-            url: `https://cdn.proj.org/${name}`,
-            sha256sum: "0".repeat(64),
-            file_size: 1,
-            source: "Stub Agency",
-          },
-          geometry: null,
-        })),
-      });
-      const licenses = "filename,license\n";
-      writeFileSync(join(dir, "files.geojson"), catalog);
-      writeFileSync(join(dir, "copyright_and_licenses.csv"), licenses);
       const encode = (text: string) => new TextEncoder().encode(text);
-      const source = await gridSource({
-        base: dir,
-        catalogSha256: await sha256Hex(encode(catalog)),
-        licensesSha256: await sha256Hex(encode(licenses)),
-        version: "0.0-test",
-      });
-      const before = readdirSync(process.env.PROJ_DATA!).sort();
-      for (const name of names) {
-        await expect(loadGrids(P, source, [name]), name).rejects.toThrow(
-          name.endsWith(".")
-            ? /is not a plain grid file name/
-            : `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`,
-        );
+      const licenses = "filename,license\n";
+      writeFileSync(join(dir, "copyright_and_licenses.csv"), licenses);
+      for (const name of HOSTILE_GRID_NAMES) {
+        const catalog = JSON.stringify({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                name,
+                url: `https://cdn.proj.org/${name}`,
+                sha256sum: "0".repeat(64),
+                file_size: 1,
+                source: "Stub Agency",
+              },
+              geometry: null,
+            },
+          ],
+        });
+        writeFileSync(join(dir, "files.geojson"), catalog);
+        await expect(
+          gridSource({
+            base: dir,
+            catalogSha256: await sha256Hex(encode(catalog)),
+            licensesSha256: await sha256Hex(encode(licenses)),
+            version: "0.0-test",
+          }),
+          name,
+        ).rejects.toThrow(/^grid catalog: feature 0 is named /);
       }
-      expect(readdirSync(process.env.PROJ_DATA!).sort()).toEqual(before);
-      const loaded = loadedGrids(P);
-      expect(names.filter((name) => loaded.has(name))).toEqual([]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+    // And the real catalog's source refuses each by name.
+    const source = await gridSource({ base: grids });
+    for (const name of HOSTILE_GRID_NAMES) {
+      await expect(loadGrids(P, source, [name]), name).rejects.toThrow(
+        RESERVED_GRID_NAMES.includes(name)
+          ? `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`
+          : `PROJ: ${JSON.stringify(name)} is not a plain grid file name`,
+      );
+    }
+    expect(readdirSync(process.env.PROJ_DATA!).sort()).toEqual(before);
+    const loaded = loadedGrids(P);
+    expect(HOSTILE_GRID_NAMES.filter((name) => loaded.has(name))).toEqual([]);
   });
 
   it("refuses a grid whose bytes don't match the catalog, leaving nothing staged or loaded (Review Focus 2)", async () => {

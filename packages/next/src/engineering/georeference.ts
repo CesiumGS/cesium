@@ -11,7 +11,11 @@
 //                            { authority: string, wkid: integer }  (required),
 //                            vcsWkid?: integer (the vertical CRS when wkid is
 //                            horizontal), epoch?: string (a decimal year,
-//                            "2019.81").
+//                            "2019.81"). Read here with one field more, our
+//                            proposal: vcsAuthority?: string, the registry
+//                            of vcsWkid when it isn't wkid's (EPSG:32610
+//                            with ESRI:115700), as CrsRef's `vcsAuthority`
+//                            and as ESRI_crs implies it; the draft has none.
 //   EXT_geospatial_crs_wkt2  extends that object; format "wkt2":
 //                            { wkt2: string }  (required).
 //   EXT_georeference         on a node: { longitude, latitude (degrees),
@@ -170,13 +174,13 @@ import type {
 } from "./alignment.ts";
 import type { AreaOfInterest, CrsRef } from "./crs.ts";
 import type { GeoidModel, SiteTransform } from "./EngineeringFrame.ts";
-import type { GridCatalog } from "./gridCatalog.ts";
+import { isPlainGridName, type GridCatalog } from "./gridCatalog.ts";
 import { formatPipeline, parsePipeline, pipelineGrids } from "./pipeline.ts";
 import { wkt2Problem } from "./wkt2.ts";
 
 /** The tileset-level extension (a vendor name, owner, 2026-11-07). */
 export const ENGINEERING_FRAME_EXTENSION = "BENTLEY_engineering_frame";
-/** Its old name, read for now with RENAMED_WARNING. */
+/** @internal Its old name, read for now with RENAMED_WARNING. */
 export const OLD_ENGINEERING_FRAME_EXTENSION = "EXT_engineering_frame";
 /** The tileset-level alignments, beside the frame (IFC 4.3's segment types). */
 export const ALIGNMENTS_EXTENSION = "BENTLEY_alignments";
@@ -186,7 +190,7 @@ export const ESRI_CRS_EXTENSION = "ESRI_crs";
 export const CRS_SOURCE_EXTENSION = "EXT_geospatial_crs_source";
 /** 3D Tiles 1.1's body and ellipsoid. */
 export const ELLIPSOID_EXTENSION = "3DTILES_ellipsoid";
-/** The warning a declaration under the old name loads with. */
+/** @internal The warning a declaration under the old name loads with. */
 export const RENAMED_WARNING =
   "EXT_engineering_frame is renamed BENTLEY_engineering_frame";
 
@@ -205,8 +209,6 @@ const AUTHORITY = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;
 const MAX_PIPELINE = 4_096;
 /** The most steps a declared pipeline may have. */
 const MAX_STEPS = 32;
-/** A grid's file name as PROJ-data's catalog writes them: no path, no scheme. */
-const PLAIN_FILE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
 /** Parameters a declared pipeline may not use: `init` reads PROJ's init files. */
 const REFUSED_KEYS = ["init"];
 /**
@@ -416,7 +418,7 @@ const PATH_LIKE = /[/\\:]|\.\./;
 const GEOID_MODELS: readonly GeoidModel[] = ["EGM96", "EGM2008"];
 /** A decimal year, as the draft writes `epoch`. */
 const DECIMAL_YEAR = /^\d{1,4}(\.\d+)?$/;
-/** The declaration's JSON path from the tileset's root. */
+/** @internal The declaration's JSON path from the tileset's root. */
 // A plain literal: a template at the top level would count as a side effect
 // to the bundler, keeping this module in bundles that never parse a
 // declaration.
@@ -671,7 +673,7 @@ function wkt2Files(wkt2: string, path: string): string[] {
     );
   }
   for (const file of files) {
-    if (!PLAIN_FILE.test(file)) {
+    if (!isPlainGridName(file)) {
       throw new GeoreferenceError(
         path,
         `holds a PARAMETERFILE naming ${shown(file)}, which isn't a plain file name (a grid of the catalog)`,
@@ -705,10 +707,31 @@ function readCrs(value: unknown, path: string): CrsRef {
       authority: string;
       wkid: number;
       vcsWkid?: number;
+      vcsAuthority?: string;
       epoch?: number;
     } = { format, authority, wkid: code(wkid.wkid, `${at}.wkid`) };
     if (wkid.vcsWkid !== undefined) {
       ref.vcsWkid = code(wkid.vcsWkid, `${at}.vcsWkid`);
+    }
+    // Our proposal beside the draft's fields: vcsWkid's registry, when it
+    // isn't wkid's. The same registry as wkid's is the default, so not kept.
+    if (wkid.vcsAuthority !== undefined) {
+      const vcsAuthority = wkid.vcsAuthority;
+      if (typeof vcsAuthority !== "string" || !AUTHORITY.test(vcsAuthority)) {
+        throw new GeoreferenceError(
+          `${at}.vcsAuthority`,
+          `must be a registry name such as "ESRI" (got ${shown(vcsAuthority)})`,
+        );
+      }
+      if (ref.vcsWkid === undefined) {
+        throw new GeoreferenceError(
+          `${at}.vcsAuthority`,
+          "is given without a vcsWkid",
+        );
+      }
+      if (vcsAuthority.toUpperCase() !== authority.toUpperCase()) {
+        ref.vcsAuthority = vcsAuthority;
+      }
     }
     if (wkid.epoch !== undefined) {
       const epoch = wkid.epoch;
@@ -1508,7 +1531,7 @@ function readPipeline(value: unknown, path: string): string {
     );
   }
   for (const grid of grids) {
-    if (!PLAIN_FILE.test(grid.name)) {
+    if (!isPlainGridName(grid.name)) {
       throw new GeoreferenceError(
         path,
         `names a grid ${shown(grid.name)} that isn't a plain file name`,
@@ -1601,14 +1624,18 @@ function readPlacement(value: unknown, path: string): DeclaredPlacement {
   return { mode, anchor: [e!, n!, u!] };
 }
 
-/** The bodies a declaration may name, as `parseGeoreference` maps them. */
+/**
+ * @internal The bodies a declaration may name, as `parseGeoreference` maps
+ * them (so `Tileset3D` can import the reader lazily, without `Body`).
+ */
 export interface GeoreferenceBodies {
   readonly EARTH: Body;
   readonly MOON: Body;
 }
 
 /**
- * `readGeoreference` (georeferenceTileset.ts), with the bodies passed in:
+ * @internal `readGeoreference` (georeferenceTileset.ts), the public reader,
+ * with the bodies passed in:
  * the `BENTLEY_engineering_frame` declaration of a parsed tileset.json (or
  * the old `EXT_engineering_frame`, with RENAMED_WARNING), composed with the
  * tileset's EXT_geospatial_crs_source, ESRI_crs, 3DTILES_ellipsoid,

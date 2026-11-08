@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { Camera } from "../src/scene/Camera.ts";
 import { EARTH } from "../src/scene/Body.ts";
-import { pickDesign, type PickView } from "../src/engineering/pick.ts";
+import {
+  DESIGN_NOT_INVERTED,
+  pickDesign,
+  type PickView,
+} from "../src/engineering/pick.ts";
 import type { DrawHandle } from "../src/scene/World.ts";
 import type { View } from "../src/scene/View.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
@@ -33,6 +37,7 @@ function tileset(opts: {
 }): Tileset3D {
   return {
     placement: opts.placement,
+    warnings: new Set<string>(),
     tileOfDraw: (d: { index: number }) =>
       (opts.owns ?? true) && d.index === DRAW.index
         ? ({
@@ -131,6 +136,26 @@ describe("pickDesign", () => {
     expect(
       await pickDesign(v, 1, 1, [tileset({ placement: placement("rigid") })]),
     ).toBeUndefined();
+  });
+
+  it("gives the true values without design when the placement can't invert the hit", async () => {
+    const pl = placement("reprojected");
+    pl.designOf = () => {
+      throw new RangeError(
+        "PROJ cannot transform (1, 2, 3): outside the operation's domain",
+      );
+    };
+    const ts = tileset({ placement: pl });
+    const r = await pickDesign(view().v, 5, 5, [ts]);
+    expect(r?.tileset).toBe(ts);
+    expect(r?.feature?.featureId).toBe(7);
+    expect(Array.from(r!.position)).toEqual(Array.from(HIT));
+    expect(r!.tolerance).toBeGreaterThan(0);
+    expect(r?.design).toBeUndefined();
+    expect([...ts.warnings]).toEqual([DESIGN_NOT_INVERTED]);
+    // Once, however often it happens.
+    await pickDesign(view().v, 5, 5, [ts]);
+    expect(ts.warnings.size).toBe(1);
   });
 
   it("gives no design for a tileset without a placement", async () => {

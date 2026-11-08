@@ -26,9 +26,14 @@ export function framesDataExclusion(root: string): (path: string) => boolean;
 /** The `code` of `ensure`'s rejection when a fetch was needed but not allowed. */
 export const FETCH_NOT_ALLOWED: string;
 
-/** What a request's `Sec-Fetch-Site` lets it have. */
+/**
+ * What a request lets it have, by `Sec-Fetch-Site`; without it, by `Origin`
+ * and `Referer` (another origin: none; this `Host`: fetch), and with neither
+ * fetch only from a loopback `remoteAddress` (curl, Node), else stored.
+ */
 export function gridAccess(
-  site: string | string[] | undefined,
+  headers: Record<string, string | string[] | undefined>,
+  remoteAddress: string | undefined,
 ): "fetch" | "stored" | "none";
 
 /** A grid cache: `ensure` gives the path of a verified copy. */

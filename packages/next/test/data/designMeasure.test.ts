@@ -560,7 +560,10 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
     wkid: 9488,
     vcsWkid: 9471,
   } as const;
-  const jakarta = async (fallbackSigma?: number) =>
+  const jakarta = async (
+    fallbackSigma?: number,
+    fallbackSigmaSource?: "app" | "declaration",
+  ) =>
     EngineeringFrame.load(
       {
         name: "Jakarta",
@@ -568,6 +571,7 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
         crs: JAKARTA,
         geoidFallback: "EGM96",
         ...(fallbackSigma !== undefined && { fallbackSigma }),
+        ...(fallbackSigmaSource !== undefined && { fallbackSigmaSource }),
       },
       {
         proj: await loadProj({ base, grids: GRIDS }),
@@ -639,6 +643,33 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
     const codes = m.accuracy.warningCodes ?? [];
     const warning = m.accuracy.warnings[codes.indexOf("geoid-fallback")]!;
     expect(warning).toMatch(/0\.5 m/);
+    expect(warning).toMatch(/the app gave/);
+    expect(fallbacks[0]!.note).toMatch(/the fallbackSigma the app gave/);
+  });
+
+  it("says a tileset's declared fallbackSigma is the declaration's, not the app's", async () => {
+    const f = await jakarta(0.5, "declaration");
+    const m = measure(
+      designPoint(f, ends[0]!),
+      designPoint(f, ends[1]!),
+      instant,
+      frames,
+      { signal: false },
+    );
+    const fallbacks = m.accuracy.terms.filter(
+      (t) => t.source === "geoidFallback",
+    );
+    expect(fallbacks.map((t) => t.meters)).toEqual([0.5, 0.5]);
+    for (const t of fallbacks) {
+      expect(t.note).toMatch(
+        /the fallbackSigma the tileset's declaration states/,
+      );
+      expect(t.note).not.toMatch(/app/);
+    }
+    const codes = m.accuracy.warningCodes ?? [];
+    const warning = m.accuracy.warnings[codes.indexOf("geoid-fallback")]!;
+    expect(warning).toMatch(/0\.5 m the tileset's declaration states/);
+    expect(warning).not.toMatch(/app gave/);
   });
 
   it("warns coarser-operation for a frame with better candidates, naming their grids, once per frame", async () => {

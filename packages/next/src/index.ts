@@ -163,7 +163,10 @@ export {
   type DesignPoint,
   type DesignPointObtained,
   type EngineeringFrameDefinition,
+  type EngineeringFrameFallback,
   type EngineeringFrameLoadOptions,
+  type FallbackSigmaSource,
+  type GeoidModel,
   type SiteTransform,
   type SnapKind,
 } from "./engineering/EngineeringFrame.ts";
@@ -176,14 +179,10 @@ export {
 export {
   ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
-  GEOREFERENCE_PATH,
   GeoreferenceError,
-  OLD_ENGINEERING_FRAME_EXTENSION,
-  RENAMED_WARNING,
   alignmentsExtension,
-  parseGeoreference,
+  type DeclaredCrs,
   type DeclaredPlacement,
-  type GeoreferenceBodies,
   type GeoreferenceSources,
   type TilesetGeoreference,
 } from "./engineering/georeference.ts";
@@ -192,14 +191,14 @@ export {
   georeferenceTileset,
   readGeoreference,
 } from "./engineering/georeferenceTileset.ts";
-export {
-  WKT2_CRS_KEYWORDS,
-  projTokenProblem,
-  wkt2Problem,
-} from "./engineering/wkt2.ts";
+export { WKT2_CRS_KEYWORDS, wkt2Problem } from "./engineering/wkt2.ts";
+// @internal, both: for the frames explorer, whose catalog uses only the index.
+export { projTokenProblem } from "./engineering/wkt2.ts";
+export { strictWkt2 } from "./engineering/crs.ts";
 export {
   Alignment,
   type AlignmentDefinition,
+  type AlignmentElement,
   type HorizontalElement,
   type ProfileGrade,
   type ProfileParabola,
@@ -209,8 +208,10 @@ export {
 } from "./engineering/alignment.ts";
 export { fresnel } from "./engineering/fresnel.ts";
 export {
+  DESIGN_NOT_INVERTED,
   pickDesign,
   type DesignPick,
+  type PickCamera,
   type PickView,
 } from "./engineering/pick.ts";
 // Snapping, split as 1.x splits Scene#snap (client) and SnapService
@@ -239,12 +240,31 @@ export {
   type LoadProjOptions,
   type ProjApi,
 } from "./engineering/proj.ts";
+// The types ProjApi's methods name (proj.js's C API, handles and records).
+export type {
+  PJ,
+  PjAxisInfo,
+  PjComparisonCriterion,
+  PjCoord,
+  PjDirection,
+  PjEllipsoidParameters,
+  PjFactors,
+  PjGridAvailabilityUse,
+  PjGridInfo,
+  PjGridUsed,
+  PjInfo,
+  PjLogLevel,
+  PjMethodInfo,
+  PjObjList,
+  PjOperationFactoryContext,
+  PjProjStringType,
+  PjType,
+  PjWktType,
+} from "./engineering/projApi.ts";
+export { GridCatalog, type GridEntry } from "./engineering/gridCatalog.ts";
 export {
   crsDefinition,
-  crsObject,
   crsUnits,
-  shownCrs,
-  strictWkt2,
   listOperations,
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,

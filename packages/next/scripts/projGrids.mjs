@@ -15,8 +15,10 @@ import {
 } from "node:fs";
 import { extname, join, relative as relativePath, sep } from "node:path";
 import { pipeline } from "node:stream";
-import { GridCatalog } from "../src/engineering/gridCatalog.ts";
-import { RESERVED_NAMES } from "../src/engineering/projNode.ts";
+import {
+  GridCatalog,
+  isPlainGridName,
+} from "../src/engineering/gridCatalog.ts";
 import { PROJ_DATA_CATALOG } from "../src/engineering/projPins.ts";
 import { verifiedDownload } from "./verifiedDownload.mjs";
 
@@ -33,25 +35,17 @@ const CATALOG_TYPES = {
 };
 
 /**
- * The catalog entry for `name` when it may be served: a plain file name (the
- * brief's pattern, and Task 3's in proj.ts: it ends in a letter or digit),
- * no "..", none of PROJ's own file names or a `.partial` in any case, a
- * `.tif` or `.json`, and exactly a key of the catalog that isn't removed and
- * whose URL is cdn.proj.org's for that name.
+ * The catalog entry for `name` when it may be served: a grid's name by the
+ * library's one rule (`isPlainGridName`: a bare file name ending in a letter
+ * or digit, no "..", none of PROJ's own file names or a `.partial` in any
+ * case), a `.tif` or `.json`, and exactly a key of the catalog that isn't
+ * removed and whose URL is cdn.proj.org's for that name.
  *
  * @param {string} name
  * @param {GridCatalog} catalog
  */
 function servableGrid(name, catalog) {
-  if (
-    !/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(name) ||
-    !/^(?:[A-Za-z0-9]|[A-Za-z0-9_][\w.-]*[A-Za-z0-9])$/.test(name) ||
-    name.includes("..")
-  ) {
-    return undefined;
-  }
-  const lower = name.toLowerCase();
-  if (RESERVED_NAMES.has(lower) || lower.endsWith(".partial")) {
+  if (!isPlainGridName(name)) {
     return undefined;
   }
   if (!Object.hasOwn(GRID_TYPES, extname(name))) {
@@ -315,20 +309,71 @@ export function createGridCache({
   };
 }
 
+/** A loopback address, as Node gives a socket's (IPv4, IPv6, or mapped). */
+const isLoopback = (address) =>
+  typeof address === "string" &&
+  (address === "::1" || /^(?:::ffff:)?127\.\d+\.\d+\.\d+$/.test(address));
+
 /**
- * What a request's `Sec-Fetch-Site` lets it have: `fetch` (stored or fetched
- * on a miss) when the header is absent (curl, Node) or `same-origin` or
- * `none` (typed in the address bar); `stored` (no upstream fetch) when
- * `same-site`; else nothing.
+ * Whether an `Origin` or `Referer` value names the request's own origin
+ * (its `Host`): `"same"`, `"other"` (another origin, `null`, a repeated
+ * header or one that doesn't parse), or undefined when it is absent.
  *
- * @param {string | string[] | undefined} site
+ * @param {string | string[] | undefined} value
+ * @param {string | undefined} host
+ */
+function originOf(value, host) {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string" || host === undefined) {
+    return "other";
+  }
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") &&
+      url.host === host.toLowerCase()
+      ? "same"
+      : "other";
+  } catch {
+    return "other";
+  }
+}
+
+/**
+ * What a request may have: `fetch` (stored, or fetched on a miss), `stored`
+ * (no upstream fetch) or `none`. By `Sec-Fetch-Site` when the request sends
+ * it: `same-origin` or `none` (typed in the address bar) fetch, `same-site`
+ * is stored, anything else none. Without it (curl, Node, and browsers too
+ * old to send it: Safari before 16.4, Firefox before 90), by `Origin` and
+ * `Referer`: either naming another origin is none, either naming this one
+ * (the `Host`) fetches. With neither, only a client on this machine (a
+ * loopback `remoteAddress`: curl, Node and the tests) may fetch on a miss;
+ * any other is stored. What is left open is a page on this machine that an
+ * old browser loads with no referrer, bounded by the fetch cap.
+ *
+ * @param {Record<string, string | string[] | undefined>} headers
+ * @param {string | undefined} remoteAddress
  * @returns {"fetch" | "stored" | "none"}
  */
-export function gridAccess(site) {
-  if (site === undefined || site === "same-origin" || site === "none") {
+export function gridAccess(headers, remoteAddress) {
+  const site = headers["sec-fetch-site"];
+  if (site !== undefined) {
+    if (site === "same-origin" || site === "none") {
+      return "fetch";
+    }
+    return site === "same-site" ? "stored" : "none";
+  }
+  const host = typeof headers.host === "string" ? headers.host : undefined;
+  const origin = originOf(headers.origin, host);
+  const referer = originOf(headers.referer, host);
+  if (origin === "other" || referer === "other") {
+    return "none";
+  }
+  if (origin === "same" || referer === "same") {
     return "fetch";
   }
-  return site === "same-site" ? "stored" : "none";
+  return isLoopback(remoteAddress) ? "fetch" : "stored";
 }
 
 /** A plain-text response that says nothing about why. */
@@ -377,7 +422,7 @@ export function createGridHandler({
       res.end(req.method === "HEAD" ? undefined : Buffer.from(bytes));
       return;
     }
-    const access = gridAccess(req.headers["sec-fetch-site"]);
+    const access = gridAccess(req.headers, req.socket?.remoteAddress);
     if (access === "none") {
       plain(res, 403, "forbidden");
       return;

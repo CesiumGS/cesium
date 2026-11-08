@@ -601,6 +601,18 @@ describe("refiningSnap: the client's snap, then the server's", () => {
         "design coordinates not where the placement draws snapPoint",
       ],
       [
+        // Where the placement draws snapPoint, but in another frame.
+        "a design in another engineering frame",
+        {
+          design: designPoint(
+            { name: "other" } as unknown as EngineeringFrame,
+            pl.designOf(designB),
+            { how: "snap", tolerance: 0, kind: "point" },
+          ),
+        },
+        "design coordinates in another engineering frame than the placement's",
+      ],
+      [
         "an unknown kind",
         { kind: "vertex" as SnapResult["kind"] },
         "kind is not a SnapKind",

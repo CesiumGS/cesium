@@ -329,6 +329,20 @@ describe("geoid fallback definitions", () => {
     ).toThrow(/fallbackSigma/);
   });
 
+  it("rejects a fallbackSigmaSource that is neither the app nor a declaration", () => {
+    expect(() =>
+      EngineeringFrame.create(
+        definition({
+          crs: wkid,
+          geoidFallback: "EGM96",
+          fallbackSigma: 1,
+          fallbackSigmaSource: "vendor" as never,
+        }),
+        stub(),
+      ),
+    ).toThrow(/fallbackSigmaSource/);
+  });
+
   it("rejects a fallback with a pinned pipeline", () => {
     expect(() =>
       EngineeringFrame.create(

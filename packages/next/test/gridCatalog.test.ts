@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { GridCatalog } from "../src/engineering/gridCatalog.ts";
+import {
+  GridCatalog,
+  gridNameProblem,
+  isPlainGridName,
+} from "../src/engineering/gridCatalog.ts";
 import { PROJ_DATA_CATALOG } from "../src/engineering/projPins.ts";
 import { sha256Hex } from "../src/io/sha256.ts";
+import {
+  PLAIN_GRID_NAMES,
+  RESERVED_GRID_NAMES,
+  UNPLAIN_GRID_NAMES,
+} from "./hostileGridNames.ts";
 
 const HEX_A = "a".repeat(64);
 const HEX_B = "b".repeat(64);
@@ -129,6 +138,53 @@ describe("GridCatalog.parse", () => {
     });
     expect(() => GridCatalog.parse(size)).toThrow(/s\.tif/);
   });
+});
+
+describe("the grid-name rule", () => {
+  it.each(UNPLAIN_GRID_NAMES)("finds %j unplain", (name) => {
+    expect(gridNameProblem(name)).toBe("unplain");
+    expect(isPlainGridName(name)).toBe(false);
+  });
+
+  it.each(RESERVED_GRID_NAMES)("finds %j reserved", (name) => {
+    expect(gridNameProblem(name)).toBe("reserved");
+    expect(isPlainGridName(name)).toBe(false);
+  });
+
+  it.each(PLAIN_GRID_NAMES)("accepts %j", (name) => {
+    expect(gridNameProblem(name)).toBeUndefined();
+    expect(isPlainGridName(name)).toBe(true);
+  });
+
+  it.each([...UNPLAIN_GRID_NAMES, ...RESERVED_GRID_NAMES])(
+    "refuses a catalog listing %j, naming it",
+    (name) => {
+      const listing = JSON.stringify({
+        features: [
+          feature({
+            url: "https://cdn.proj.org/g.tif",
+            name: "g.tif",
+            file_size: 1,
+            sha256sum: HEX_A,
+          }),
+          feature({
+            url: `https://cdn.proj.org/${name}`,
+            name,
+            file_size: 1,
+            sha256sum: HEX_A,
+          }),
+        ],
+      });
+      const shown = JSON.stringify(
+        name.length > 80 ? `${name.slice(0, 77)}...` : name,
+      );
+      expect(() => GridCatalog.parse(listing)).toThrow(
+        RESERVED_GRID_NAMES.includes(name)
+          ? `grid catalog: feature 1 is named ${shown}, the name of one of PROJ's own files, not a grid's`
+          : `grid catalog: feature 1 is named ${shown}, which isn't a plain grid file name`,
+      );
+    },
+  );
 });
 
 describe("sha256Hex", () => {

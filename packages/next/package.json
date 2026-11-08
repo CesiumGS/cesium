@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/checkDeclarations.mjs --only engineering,measure",
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

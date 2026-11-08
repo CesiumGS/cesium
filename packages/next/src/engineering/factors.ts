@@ -12,9 +12,9 @@
 // position: that is on the target's datum (WGS84 for EPSG:4979) after the
 // datum operation, a metre or two away, which would change k by about 1e-10
 // (and the results would not match pyproj's Proj.get_factors at 1e-12).
-import { crsObject, exists, normalizeExisting, unbound } from "./crs.ts";
+import { crsObject, normalizeExisting, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
-import type { PJ, ProjApi } from "./projApi.ts";
+import { exists, type PJ, type ProjApi } from "./projApi.ts";
 
 export interface GridFactors {
   /**

@@ -19,6 +19,7 @@ import {
   checkDeclaredGrids,
 } from "../src/engineering/georeference.ts";
 import { GridCatalog } from "../src/engineering/gridCatalog.ts";
+import { HOSTILE_GRID_NAMES } from "./hostileGridNames.ts";
 import { formatPipeline, parsePipeline } from "../src/engineering/pipeline.ts";
 import { readGeoreference } from "../src/engineering/georeferenceTileset.ts";
 import { EARTH, MOON } from "../src/scene/Body.ts";
@@ -561,6 +562,11 @@ describe("the declared operation: pipeline, geoidFallback, fallbackSigma", () =>
       }
     });
 
+    // The one rule's names (hostileGridNames.ts), as every path refuses them.
+    it.each(HOSTILE_GRID_NAMES)("a grid named %j", (grid) => {
+      expect(failure(withPipeline(naming(grid))).path).toBe(`${ROOT}.pipeline`);
+    });
+
     it("a grid name that isn't a plain file name, without a path", () => {
       const error = failure(withPipeline(naming("@@x.tif")));
       expect(error.path).toBe(`${ROOT}.pipeline`);
@@ -699,6 +705,13 @@ describe("untrusted WKT2 that names files, numeric bounds and empty grid lists",
       expect(error.path, file).toBe(WKT2_PATH);
       expect(error.message, file).toMatch(/PARAMETERFILE/);
     }
+  });
+
+  // The one rule's names (hostileGridNames.ts), as every path refuses them.
+  it.each(HOSTILE_GRID_NAMES)("refuses a PARAMETERFILE naming %j", (file) => {
+    const error = failure(withWkt2(boundCrs(file)));
+    expect(error.path).toBe(WKT2_PATH);
+    expect(error.message).toMatch(/PARAMETERFILE/);
   });
 
   it("holds a PARAMETERFILE's plain name to the catalog", () => {
@@ -850,6 +863,61 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
       expect(
         refusal(composed(withoutCrs(), { ESRI_crs: { wkid: 1.5 } })).path,
       ).toBe("extensions.ESRI_crs.wkid");
+    });
+
+    it("reads our crs's vcsAuthority (a proposal), so EPSG:32610 + ESRI:115700 agrees with ESRI_crs", () => {
+      const declared = (companion: Record<string, unknown>) => ({
+        ...withoutCrs(),
+        crs: {
+          format: "wkid",
+          extensions: { EXT_geospatial_crs_wkid: companion },
+        },
+      });
+      const esriVertical = {
+        authority: "EPSG",
+        wkid: 32610,
+        vcsWkid: 115700,
+        vcsAuthority: "ESRI",
+      };
+      const expected = {
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 32610,
+        vcsWkid: 115700,
+        vcsAuthority: "ESRI",
+      };
+      expect(readGeoreference(tileset(declared(esriVertical)))!.crs).toEqual(
+        expected,
+      );
+      // Beside ESRI_crs's same pair: one CRS, not a disagreement.
+      const both = readGeoreference(
+        composed(declared(esriVertical), {
+          ESRI_crs: { wkid: 32610, vcsWkid: 115700 },
+        }),
+      )!;
+      expect(both.crs).toEqual(expected);
+      expect(both.otherCrs ?? []).toEqual([]);
+      // wkid's own registry is the default, so not kept.
+      expect(
+        readGeoreference(
+          tileset(declared({ ...esriVertical, vcsAuthority: "epsg" })),
+        )!.crs,
+      ).toEqual({
+        format: "wkid",
+        authority: "EPSG",
+        wkid: 32610,
+        vcsWkid: 115700,
+      });
+      const at = `${ROOT}.crs.extensions.EXT_geospatial_crs_wkid.vcsAuthority`;
+      for (const bad of ["", "ESRI/x", 7, "E".repeat(33)]) {
+        expect(
+          refusal(tileset(declared({ ...esriVertical, vcsAuthority: bad })))
+            .path,
+          String(bad),
+        ).toBe(at);
+      }
+      const noVertical = { ...esriVertical, vcsWkid: undefined };
+      expect(refusal(tileset(declared(noVertical))).path).toBe(at);
     });
 
     it("reads ESRI_crs's wkt2 through the same screening, and refuses its WKT1 and both forms", () => {

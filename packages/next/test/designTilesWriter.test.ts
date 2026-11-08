@@ -10,6 +10,7 @@ vi.mock("../src/io/decoders.ts", () => ({
   },
 }));
 
+import { frameExtensions } from "../scripts/designTiles.mjs";
 import { writeGlb } from "../scripts/designTiles/gltf.mjs";
 import { tilesetJson } from "../scripts/designTiles/tileset.mjs";
 import { featureName } from "../src/io/features.ts";
@@ -20,6 +21,8 @@ import {
   ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
 } from "../src/engineering/georeference.ts";
+import { readGeoreference } from "../src/engineering/georeferenceTileset.ts";
+import { EARTH } from "../src/scene/Body.ts";
 
 // A quad of two triangles, one per feature (glTF Y-up).
 const mesh = () => ({
@@ -328,5 +331,39 @@ describe("tilesetJson", () => {
     expect(() => tilesetJson({ ...tree, geometricError: -1 }, {})).toThrow(
       /geometricError/,
     );
+  });
+});
+
+describe("frameExtensions", () => {
+  it("writes a crs whose vertical code is in another registry, and reads it back", () => {
+    const crs = {
+      format: "wkid",
+      authority: "EPSG",
+      wkid: 32610,
+      vcsWkid: 115700,
+      vcsAuthority: "ESRI",
+    } as const;
+    const extensions = frameExtensions(
+      { name: "Bay", body: EARTH, crs },
+      { mode: "reprojected" },
+    );
+    const declared = extensions[ENGINEERING_FRAME_EXTENSION] as {
+      crs: { extensions: { EXT_geospatial_crs_wkid: unknown } };
+    };
+    expect(declared.crs.extensions.EXT_geospatial_crs_wkid).toEqual({
+      authority: "EPSG",
+      wkid: 32610,
+      vcsWkid: 115700,
+      vcsAuthority: "ESRI",
+    });
+    const read = readGeoreference({
+      asset: { version: "1.1" },
+      root: {
+        boundingVolume: { sphere: [-2_700_000, -4_300_000, 3_850_000, 100] },
+        geometricError: 1,
+      },
+      extensions,
+    });
+    expect(read?.crs).toEqual(crs);
   });
 });

@@ -6,6 +6,7 @@ import { Trajectory } from "../trajectory/Trajectory.ts";
 import type {
   DesignPointObtained,
   EngineeringFrame,
+  EngineeringFrameFallback,
   SnapKind,
 } from "../engineering/EngineeringFrame.ts";
 import type { BetterCandidate } from "../engineering/crs.ts";
@@ -228,6 +229,13 @@ function projectionTerm(
   };
 }
 
+/** Whose claim a fallback's sigma is: the app's, or a tileset's declaration. */
+function sigmaStatedBy(fallback: EngineeringFrameFallback): string {
+  return fallback.sigmaSource === "declaration"
+    ? "the tileset's declaration states"
+    : "the app gave";
+}
+
 /**
  * The geoid-fallback term for a design end of a frame that took one: the
  * gap between the model and the replaced datum, as `fallbackSigma` states
@@ -241,7 +249,7 @@ function fallbackTerm(end: string, frame: EngineeringFrame): AccuracyTerm {
     meters: fallback.sigma,
     note:
       fallback.sigma !== undefined
-        ? `${why}: the fallbackSigma the app gave`
+        ? `${why}: the fallbackSigma ${sigmaStatedBy(fallback)}`
         : `${why}: the gap between them is not known (no fallbackSigma)`,
   };
 }
@@ -296,7 +304,7 @@ function frameWarnings(
   if (fallback !== undefined) {
     out.push({
       code: "geoid-fallback",
-      text: `${name} reads its design heights as ${fallback.model} heights in place of EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")}): ${fallback.sigma !== undefined ? `the gap between them is the ${metres(fallback.sigma)} the app gave (fallbackSigma).` : "the gap between them is not known, so the accuracy is not bounded (no fallbackSigma)."}`,
+      text: `${name} reads its design heights as ${fallback.model} heights in place of EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")}): ${fallback.sigma !== undefined ? `the gap between them is the ${metres(fallback.sigma)} ${sigmaStatedBy(fallback)} (fallbackSigma).` : "the gap between them is not known, so the accuracy is not bounded (no fallbackSigma)."}`,
     });
   }
   return out;

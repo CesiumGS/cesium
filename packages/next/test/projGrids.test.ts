@@ -20,6 +20,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GridCatalog } from "../src/engineering/gridCatalog.ts";
+import { HOSTILE_GRID_NAMES } from "./hostileGridNames.ts";
 import {
   createGridCache,
   createGridHandler,
@@ -57,7 +58,9 @@ const feature = (
   geometry: null,
 });
 
-// A hostile catalog, too: it lists names that are never servable.
+// A hostile catalog, too: it lists names that are never servable. (One
+// listing PROJ's own names or a `*.partial` can't be parsed: GridCatalog.parse
+// refuses it, by the grid-name rule the endpoint shares.)
 const CATALOG_JSON = JSON.stringify({
   type: "FeatureCollection",
   features: [
@@ -69,11 +72,7 @@ const CATALOG_JSON = JSON.stringify({
     feature("elsewhere.tif", GOOD, {
       url: "https://example.com/elsewhere.tif",
     }),
-    feature("proj.db", GOOD),
-    feature("PROJ.DB", GOOD),
-    feature("x.tif.partial", GOOD),
     feature("README.txt", GOOD),
-    feature("trailing.", GOOD),
   ],
 });
 const LICENSES_CSV = "filename,license\ngood.tif,CC-BY-4.0\n";
@@ -106,6 +105,11 @@ const HOSTILE = [
   "",
   "/manifest.json",
   "/.good.tif",
+  // The one rule's names (hostileGridNames.ts), but the catalog's own two
+  // files, which the endpoint serves as such.
+  ...HOSTILE_GRID_NAMES.filter(
+    (name) => name !== "files.geojson" && name !== "copyright_and_licenses.csv",
+  ).map((name) => `/${encodeURIComponent(name)}`),
 ];
 
 describe("gridRequest", () => {
@@ -317,6 +321,25 @@ describe("the grid endpoint", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("without Sec-Fetch-Site, refuses another origin's request and fetches for this one's", async () => {
+    const { calls, fetcher } = stubFetch(() => new Response(GOOD));
+    const base = await serve(fetcher);
+    const others: Record<string, string>[] = [
+      { Origin: "https://evil.example" },
+      { Referer: "https://evil.example/page" },
+    ];
+    for (const headers of others) {
+      const response = await fetch(`${base}/good.tif`, { headers });
+      expect(response.status, JSON.stringify(headers)).toBe(403);
+    }
+    expect(calls).toHaveLength(0);
+    const response = await fetch(`${base}/good.tif`, {
+      headers: { Referer: `${base}/examples/frames-explorer/` },
+    });
+    expect(response.status).toBe(200);
+    expect(calls).toHaveLength(1);
+  });
+
   it.each(["same-origin", "none"])(
     "fetches on a miss for a %s request",
     async (site) => {
@@ -471,8 +494,8 @@ describe("the grid endpoint", () => {
 });
 
 describe("gridAccess", () => {
+  const HOST = "localhost:5190";
   it.each([
-    [undefined, "fetch"],
     ["same-origin", "fetch"],
     ["none", "fetch"],
     ["same-site", "stored"],
@@ -480,8 +503,69 @@ describe("gridAccess", () => {
     ["", "none"],
     ["bogus", "none"],
     [["same-origin", "cross-site"], "none"],
-  ] as const)("%j gives %j", (site, access) => {
-    expect(gridAccess(site as string | string[] | undefined)).toBe(access);
+  ] as const)("Sec-Fetch-Site %j gives %j", (site, access) => {
+    const headers = {
+      host: HOST,
+      "sec-fetch-site": site as string | string[],
+    };
+    // Origin and Referer don't override it, nor does a loopback client.
+    expect(gridAccess(headers, "127.0.0.1")).toBe(access);
+    expect(
+      gridAccess(
+        { ...headers, origin: "http://localhost:5190" },
+        "203.0.113.9",
+      ),
+    ).toBe(access);
+  });
+
+  // Without Sec-Fetch-Site: curl, Node, and Safari before 16.4 or Firefox
+  // before 90.
+  it.each([
+    // Neither Origin nor Referer: only a client on this machine fetches.
+    [{}, "127.0.0.1", "fetch"],
+    [{}, "127.4.5.6", "fetch"],
+    [{}, "::1", "fetch"],
+    [{}, "::ffff:127.0.0.1", "fetch"],
+    [{}, "203.0.113.9", "stored"],
+    [{}, "::ffff:192.168.1.2", "stored"],
+    [{}, undefined, "stored"],
+    // This origin, by Origin or Referer, fetches from anywhere.
+    [{ origin: "http://localhost:5190" }, "203.0.113.9", "fetch"],
+    [
+      { referer: "http://localhost:5190/examples/frames-explorer/" },
+      "203.0.113.9",
+      "fetch",
+    ],
+    [{ referer: "https://LOCALHOST:5190/x" }, "127.0.0.1", "fetch"],
+    // Another origin, by either, is refused, even from this machine.
+    [{ origin: "https://evil.example" }, "127.0.0.1", "none"],
+    [{ referer: "https://evil.example/page" }, "127.0.0.1", "none"],
+    [{ origin: "http://localhost:5191" }, "127.0.0.1", "none"],
+    [{ origin: "null" }, "127.0.0.1", "none"],
+    [{ origin: "not a url" }, "127.0.0.1", "none"],
+    [{ referer: "file:///Users/x/page.html" }, "127.0.0.1", "none"],
+    [
+      { origin: ["http://localhost:5190", "http://localhost:5190"] },
+      "127.0.0.1",
+      "none",
+    ],
+    [
+      { origin: "http://localhost:5190", referer: "https://evil.example/" },
+      "127.0.0.1",
+      "none",
+    ],
+  ] as const)("%j from %j gives %j", (extra, address, access) => {
+    const headers = { host: HOST, ...extra } as Record<
+      string,
+      string | string[] | undefined
+    >;
+    expect(gridAccess(headers, address)).toBe(access);
+  });
+
+  it("refuses an Origin or Referer when the request has no Host to compare", () => {
+    expect(gridAccess({ origin: "http://localhost:5190" }, "127.0.0.1")).toBe(
+      "none",
+    );
   });
 });
 
@@ -655,14 +739,11 @@ describe("createGridCache", () => {
   });
 
   it.each([
-    "../proj.db",
-    "proj.db",
-    "x.tif.partial",
-    "https://example.com/a.tif",
     "nope.tif",
     "gone.tif",
     "elsewhere.tif",
-    "files.geojson",
+    "README.txt",
+    ...HOSTILE_GRID_NAMES,
   ])("refuses %j without fetching or writing", async (name) => {
     const { calls, fetcher } = stubFetch(() => new Response(GOOD));
     const cache = createGridCache({ dir, catalog, fetch: fetcher, log });

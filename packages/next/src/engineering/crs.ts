@@ -33,7 +33,7 @@
 // enough. PROJ caches that answer per context the first time it looks, so a
 // grid loaded afterwards still reads as unavailable, and the candidate as not
 // instantiable; and PROJ may find a grid of its own outside the loaded set.
-import type { PJ, PjObjList, ProjApi } from "./projApi.ts";
+import { exists, type PJ, type PjObjList, type ProjApi } from "./projApi.ts";
 import {
   formatPipeline,
   parsePipeline,
@@ -41,6 +41,7 @@ import {
   pipelineVerticalShifts,
   type Pipeline,
 } from "./pipeline.ts";
+import { isPlainGridName } from "./gridCatalog.ts";
 import { loadedGrids } from "./proj.ts";
 import { startsAsWkt2, wkt2Problem } from "./wkt2.ts";
 
@@ -90,7 +91,7 @@ export function crsDefinition(ref: CrsRef): string {
 }
 
 /**
- * `crsDefinition`, shortened to 80 characters for a message: a WKT2 can be
+ * @internal `crsDefinition`, shortened to 80 characters for a message: a WKT2 can be
  * 65,536 characters of untrusted text (a tileset's).
  */
 export function shownCrs(ref: CrsRef): string {
@@ -301,20 +302,6 @@ function checkedArea(area: AreaOfInterest): AreaOfInterest {
   return area;
 }
 
-// proj_create does not throw for a definition it cannot build (a missing grid,
-// an unknown code): it logs, and returns an empty object that proj_trans then
-// passes coordinates through. An object that exists has a name or a PROJ string.
-export function exists(proj: ProjApi, object: PJ): boolean {
-  try {
-    return (
-      (proj.proj_get_name(object) ?? null) !== null ||
-      (proj.proj_as_proj_string(object, proj.PJ_PROJ_5) ?? null) !== null
-    );
-  } catch {
-    return false;
-  }
-}
-
 /** Candidate `i` of PROJ's list, thrown for when PROJ could not create it. */
 function candidateAt(proj: ProjApi, candidates: PjObjList, i: number): PJ {
   const candidate = candidates.get(i);
@@ -340,6 +327,7 @@ export function normalizeExisting(proj: ProjApi, object: PJ, what: string): PJ {
 }
 
 /**
+ * @internal Not in the package index: the frame's construction uses it.
  * The PJ of a CRS reference. A code goes through `proj_create` (its
  * definition, `crsDefinition`); a `wkt2` reference through `strictWkt2`,
  * PROJ's strict WKT parser, never `proj_create`, which would also take a
@@ -367,6 +355,8 @@ export function crsObject(
 }
 
 /**
+ * @internal The frame's construction uses it; the package index exports it
+ * only for the frames explorer, whose catalog uses only the index.
  * A WKT2 reference parsed by PROJ's strict WKT parser
  * (`proj_create_from_wkt`, STRICT=YES), never `proj_create`, which would also
  * take a PROJ string, AUTH:CODE or PROJJSON: every `wkt2` reference
@@ -450,16 +440,13 @@ function transformer(
   };
 }
 
-/** A grid's file name as PROJ-data's catalog writes them: no path, no scheme. */
-const PLAIN_GRID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
-
 /**
  * The invariant every recorded operation keeps, whatever made it (a pinned
  * or declared pipeline, PROJ's chosen candidate, a fallback; from EPSG
  * codes, WKT, PROJJSON or a URN): each grid its PROJ string reads is a
  * plain file name that `loadGrids` verified and staged. A required grid
  * must be loaded; an optional one (`@name`, which PROJ skips when it can't
- * find it) must at least be a plain name, so its lookup stays in PROJ's own
+ * find it) must at least be a plain name (`isPlainGridName`, the one rule), so its lookup stays in PROJ's own
  * search path. Throws, naming the grid, before PROJ creates the operation.
  */
 function checkUsedGrids(proj: ProjApi, pipeline: string): void {
@@ -468,7 +455,7 @@ function checkUsedGrids(proj: ProjApi, pipeline: string): void {
     const shown = JSON.stringify(
       grid.name.length > 80 ? `${grid.name.slice(0, 77)}...` : grid.name,
     );
-    if (!PLAIN_GRID.test(grid.name)) {
+    if (!isPlainGridName(grid.name)) {
       throw new Error(
         `The PROJ operation reads the grid ${shown} by a path or an unusual name; only grids loaded through loadGrids, by their plain names, are used`,
       );

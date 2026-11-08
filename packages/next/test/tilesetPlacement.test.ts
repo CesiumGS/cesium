@@ -336,6 +336,8 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
         expect(spy.mock.calls[1]![0]).toMatchObject({
           geoidFallback: "EGM96",
           fallbackSigma: 0.5,
+          // The tileset states it, not the app.
+          fallbackSigmaSource: "declaration",
         });
         expect(spy.mock.calls[1]![0]).not.toHaveProperty("pipeline");
       } finally {

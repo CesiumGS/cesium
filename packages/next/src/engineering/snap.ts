@@ -523,6 +523,9 @@ function refusal(
     if (placement === undefined) {
       return "design coordinates on a tileset without a placement";
     }
+    if (r.design.engineeringFrame !== placement.frame) {
+      return "design coordinates in another engineering frame than the placement's";
+    }
     const shown = placement.displayed(r.design.design);
     const off = Math.hypot(
       shown[0]! - r.snapPoint[0]!,

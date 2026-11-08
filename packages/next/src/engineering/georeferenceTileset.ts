@@ -79,6 +79,8 @@ export function declaredDefinition(
     }),
     ...(declared.fallbackSigma !== undefined && {
       fallbackSigma: declared.fallbackSigma,
+      // The tileset's claim, not the app's: the accuracy says so.
+      fallbackSigmaSource: "declaration" as const,
     }),
   };
 }

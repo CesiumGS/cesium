@@ -5,6 +5,24 @@
 
 declare const handle: unique symbol;
 
+/**
+ * Whether PROJ built `object`. proj_create does not throw for a definition
+ * it cannot build (a missing grid, an unknown code): it logs, and returns an
+ * empty object that proj_trans then passes coordinates through. An object
+ * that exists has a name or a PROJ string. Here, not in crs.ts, so proj.ts
+ * (which crs.ts imports) uses it too.
+ */
+export function exists(proj: ProjApi, object: PJ): boolean {
+  try {
+    return (
+      (proj.proj_get_name(object) ?? null) !== null ||
+      (proj.proj_as_proj_string(object, proj.PJ_PROJ_5) ?? null) !== null
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** A PROJ object (a CRS, a coordinate operation, a coordinate system). */
 export interface PJ {
   readonly [handle]: "PJ";

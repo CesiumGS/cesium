@@ -19,6 +19,7 @@ import {
 } from "../src/engineering/proj.ts";
 import { PROJ_DATA_CATALOG } from "../src/engineering/projPins.ts";
 import { sha256Hex } from "../src/io/sha256.ts";
+import { HOSTILE_GRID_NAMES, RESERVED_GRID_NAMES } from "./hostileGridNames.ts";
 
 const encode = (text: string) => new TextEncoder().encode(text);
 
@@ -368,19 +369,16 @@ describe("gridSource and loadGrids (browser path)", () => {
     });
 
     it.each([
-      ["../proj.db", /not a plain grid file name/],
-      ["proj.db", /proj\.db is the name of one of PROJ's own files/],
       ["nope.tif", /nope\.tif is not in the PROJ-data .* catalog/],
       ["old.tif", /old\.tif is marked removed/],
-      ["https://example.com/g.tif", /not a plain grid file name/],
-      [".hidden.tif", /not a plain grid file name/],
-      // Windows drops a trailing dot: this would be proj.db.
-      ["proj.db.", /not a plain grid file name/],
-      ["g.tif.", /not a plain grid file name/],
-      ["PROJ.DB", /PROJ\.DB is the name of one of PROJ's own files/],
-      ["Proj.Ini", /Proj\.Ini is the name of one of PROJ's own files/],
-      ["g.tif.PARTIAL", /is the name of one of PROJ's own files/],
-    ])("rejects %s before anything is fetched", async (name, message) => {
+      // The one rule's names (hostileGridNames.ts), as every path refuses them.
+      ...HOSTILE_GRID_NAMES.map((name): [string, string] => [
+        name,
+        RESERVED_GRID_NAMES.includes(name)
+          ? `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`
+          : `PROJ: ${JSON.stringify(name)} is not a plain grid file name`,
+      ]),
+    ])("rejects %j before anything is fetched", async (name, message) => {
       const P = await load();
       const grids = await source();
       urls.length = 0;
@@ -462,64 +460,49 @@ describe("gridSource and loadGrids (browser path)", () => {
       expect(calls.at(-1)).toEqual(["late.tif", 50, undefined]);
     });
 
-    it("refuses PROJ's own names, even from an overridden catalog that lists them", async () => {
-      const reserved = [
-        "proj.db",
-        "proj_capi.node",
-        "proj_capi.wasm",
-        "proj_capi.mjs",
-        "owner",
-        "files.geojson",
-        "copyright_and_licenses.csv",
-        "g.tif.partial",
-        "proj.ini",
-        "ITRF2014",
-        "epsg",
-        "tmp",
-        "dev",
-        // In any case: macOS's and Windows's file systems ignore it.
-        "PROJ.DB",
-        "Owner",
-        "Proj_Capi.node",
-        "g.tif.Partial",
-        "PROJ.INI",
-      ];
+    it("refuses an overridden catalog that lists PROJ's own names, loading nothing", async () => {
       const bytes = filled(10, 9);
-      const listing = encode(
-        JSON.stringify({
-          type: "FeatureCollection",
-          features: reserved.map((name) => ({
-            type: "Feature",
-            properties: {
-              name,
-              url: `https://cdn.proj.org/${name}`,
-              sha256sum: "0".repeat(64),
-              file_size: bytes.length,
-              source: "Stub Agency",
-            },
-            geometry: null,
-          })),
-        }),
-      );
-      const other = `${base}other/`;
-      served["files.geojson"] = listing;
-      const P = await load();
-      const grids = await gridSource({
-        base: other,
-        catalogSha256: await sha256Hex(listing),
-        licensesSha256: catalogPins.licensesSha256,
-        version: "9.9",
-      });
-      expect(grids.catalog.get("proj.db")).toBeDefined();
-      urls.length = 0;
-      for (const name of reserved) {
-        await expect(loadGrids(P, grids, [name]), name).rejects.toThrow(
-          `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`,
+      for (const name of RESERVED_GRID_NAMES) {
+        const listing = encode(
+          JSON.stringify({
+            type: "FeatureCollection",
+            features: ["g.tif", name].map((listed) => ({
+              type: "Feature",
+              properties: {
+                name: listed,
+                url: `https://cdn.proj.org/${listed}`,
+                sha256sum: "0".repeat(64),
+                file_size: bytes.length,
+                source: "Stub Agency",
+              },
+              geometry: null,
+            })),
+          }),
         );
+        const other = `${base}other-${encodeURIComponent(name)}/`;
+        served["files.geojson"] = listing;
+        urls.length = 0;
+        await expect(
+          gridSource({
+            base: other,
+            catalogSha256: await sha256Hex(listing),
+            licensesSha256: catalogPins.licensesSha256,
+            version: "9.9",
+          }),
+          name,
+        ).rejects.toThrow(
+          `grid catalog: feature 1 is named ${JSON.stringify(name)}, the name of one of PROJ's own files, not a grid's`,
+        );
+        // Only the catalog and its license table are read.
+        expect(
+          urls.filter(
+            (u) =>
+              !u.endsWith("/files.geojson") &&
+              !u.endsWith("/copyright_and_licenses.csv"),
+          ),
+        ).toEqual([]);
       }
-      expect(urls).toEqual([]);
-      expect(writes.filter(([path]) => path !== "/proj.db")).toEqual([]);
-      expect(writes.filter(([path]) => path === "/proj.db")).toHaveLength(1);
+      expect(writes).toEqual([]);
     });
 
     it("refuses a grid PROJ finds anywhere but where it was written", async () => {

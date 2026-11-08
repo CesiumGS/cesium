@@ -91,7 +91,16 @@ export interface EngineeringFrameDefinition {
    * accuracy is undefined, never small. Positive; only with `geoidFallback`.
    */
   readonly fallbackSigma?: number;
+  /**
+   * Who states `fallbackSigma`: `"app"` (the default) or `"declaration"`, a
+   * tileset's `BENTLEY_engineering_frame` (`declaredDefinition` sets it), so
+   * the accuracy says whose claim the figure is.
+   */
+  readonly fallbackSigmaSource?: FallbackSigmaSource;
 }
+
+/** Who states a frame's `fallbackSigma`. */
+export type FallbackSigmaSource = "app" | "declaration";
 
 /** A global geoid model a frame can fall back to (`geoidFallback`). */
 export type GeoidModel = "EGM96" | "EGM2008";
@@ -107,8 +116,10 @@ export interface EngineeringFrameFallback {
   readonly model: GeoidModel;
   /** The EPSG code of the vertical CRS the model replaced (`crs.vcsWkid`). */
   readonly replacedVertical: number;
-  /** `fallbackSigma`, metres; absent when the app gave none (accuracy undefined). */
+  /** `fallbackSigma`, metres; absent when none was given (accuracy undefined). */
   readonly sigma?: number;
+  /** Who states `sigma` (`fallbackSigmaSource`); present with it. */
+  readonly sigmaSource?: FallbackSigmaSource;
   /** The grids PROJ's best candidate for the CRS lacked: why it fell back. */
   readonly missingGrids: readonly string[];
 }
@@ -579,7 +590,8 @@ export class EngineeringFrame {
     proj: ProjApi,
   ): { readonly target: CrsRef; readonly units: CrsUnits } {
     const target = geographicTarget(definition.body);
-    const { site, geoidFallback, fallbackSigma } = definition;
+    const { site, geoidFallback, fallbackSigma, fallbackSigmaSource } =
+      definition;
     if (
       geoidFallback !== undefined &&
       !Object.hasOwn(GEOID_MODEL_CRS, geoidFallback)
@@ -599,6 +611,15 @@ export class EngineeringFrame {
           "EngineeringFrame: fallbackSigma is given without a geoidFallback",
         );
       }
+    }
+    if (
+      fallbackSigmaSource !== undefined &&
+      fallbackSigmaSource !== "app" &&
+      fallbackSigmaSource !== "declaration"
+    ) {
+      throw new RangeError(
+        `EngineeringFrame: fallbackSigmaSource must be "app" or "declaration", got ${JSON.stringify(fallbackSigmaSource)}`,
+      );
     }
     if (geoidFallback !== undefined && definition.pipeline !== undefined) {
       throw new Error(
@@ -696,6 +717,7 @@ export class EngineeringFrame {
         missingGrids: decided.missingGrids,
         ...(definition.fallbackSigma !== undefined && {
           sigma: definition.fallbackSigma,
+          sigmaSource: definition.fallbackSigmaSource ?? "app",
         }),
       };
       // Design heights keep the CRS's vertical unit and direction; the

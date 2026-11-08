@@ -23,14 +23,13 @@
 // https://epsg.org/terms-of-use.html); each grid carries its own, from the
 // catalog's copyright_and_licenses.csv (GridCatalog.credit).
 import { readWithProgress, type LoadProgress } from "../io/readWithProgress.ts";
-import { GridCatalog, type GridEntry } from "./gridCatalog.ts";
-import type { ProjApi } from "./projApi.ts";
+import { GridCatalog, gridNameProblem, type GridEntry } from "./gridCatalog.ts";
+import { exists, type ProjApi } from "./projApi.ts";
 import { checkGrid, verify } from "./projCheck.ts";
 import {
   isNode,
   loadNodeProj,
   readNodeFile,
-  RESERVED_NAMES,
   stageNodeGrid,
   type ProjPins,
 } from "./projNode.ts";
@@ -461,11 +460,7 @@ function operationReading(entry: GridEntry): string | undefined {
 function creates(proj: ProjApi, definition: string): boolean {
   const previous = proj.proj_log_level(proj.PJ_LOG_NONE);
   try {
-    const object = proj.proj_create(definition);
-    return (
-      (proj.proj_get_name(object) ?? null) !== null ||
-      (proj.proj_as_proj_string(object, proj.PJ_PROJ_5) ?? null) !== null
-    );
+    return exists(proj, proj.proj_create(definition));
   } catch {
     return false;
   } finally {
@@ -475,18 +470,18 @@ function creates(proj: ProjApi, definition: string): boolean {
 
 /** The catalog entry for `name`; throws unless it is a plain, current catalog key. */
 function gridEntry(source: GridSource, name: string): GridEntry {
-  // A bare file name: it becomes a path where PROJ looks. It ends in a letter
-  // or digit, as Windows drops a trailing dot ("proj.db." is "proj.db").
-  if (!/^(?:[A-Za-z0-9]|[A-Za-z0-9_][\w.-]*[A-Za-z0-9])$/.test(name)) {
+  // A bare file name (gridNameProblem, the one rule): it becomes a path where
+  // PROJ looks. RESERVED_NAMES (PROJ's own files and the rest) and *.partial
+  // are refused in any case, as macOS's and Windows's file systems ignore it:
+  // an overridden catalog can't list one (GridCatalog.parse refuses it), and
+  // a name not in the catalog is refused here first.
+  const problem = gridNameProblem(name);
+  if (problem === "unplain") {
     throw new Error(
       `PROJ: ${JSON.stringify(name)} is not a plain grid file name`,
     );
   }
-  // PROJ's own files and the rest of RESERVED_NAMES, in any case (macOS's and
-  // Windows's file systems ignore it): a catalog (an overridden one, say)
-  // listing one of these can't put a grid over it.
-  const lower = name.toLowerCase();
-  if (RESERVED_NAMES.has(lower) || lower.endsWith(".partial")) {
+  if (problem === "reserved") {
     throw new Error(
       `PROJ: ${name} is the name of one of PROJ's own files, not a grid's`,
     );

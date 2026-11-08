@@ -4,6 +4,87 @@
 import type { AreaOfInterest } from "./crs.ts";
 import { PROJ_DATA_CATALOG } from "./projPins.ts";
 
+/**
+ * The names no grid may take, in lower case (`gridNameProblem` compares
+ * `name.toLowerCase()`, since macOS's and Windows's file systems ignore case,
+ * and refuses any `*.partial` too):
+ *  - PROJ's own files, and what it reads from its data directory: `proj.ini`
+ *    (network and cache settings), `defaults`, and the `+init=` files
+ *    (resource_files.html: epsg, ITRF2014, nad27 and the rest);
+ *  - the Node staging directory's `owner` (projNode.ts), and the catalog's
+ *    two files;
+ *  - the WebAssembly module's root directories (`/tmp`, `/home`, `/dev`,
+ *    `/proc`), as MEMFS puts a browser grid at `/<name>`.
+ * None is a key of the pinned PROJ-data 1.25.0 catalog (checked).
+ */
+export const RESERVED_NAMES: ReadonlySet<string> = new Set([
+  "proj.db",
+  "proj_capi.node",
+  "proj_capi.mjs",
+  "proj_capi.wasm",
+  "proj.ini",
+  "defaults",
+  "epsg",
+  "esri",
+  "esri.extra",
+  "ignf",
+  "other.extra",
+  "world",
+  "nad.lst",
+  "nad27",
+  "nad83",
+  "gl27",
+  "ch",
+  "itrf2000",
+  "itrf2008",
+  "itrf2014",
+  "projjson.schema.json",
+  "deformation_model.schema.json",
+  "triangulation.schema.json",
+  "owner",
+  "files.geojson",
+  "copyright_and_licenses.csv",
+  "tmp",
+  "home",
+  "dev",
+  "proc",
+]);
+
+/**
+ * A bare file name of at most 128 characters: letters, digits, `_`, `.` and
+ * `-`, starting and ending with a letter or digit (no hidden file, and no
+ * trailing dot, which Windows drops: "proj.db." is "proj.db").
+ */
+const PLAIN_GRID_NAME = /^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,126}[A-Za-z0-9])?$/;
+
+/**
+ * Why `name` can't be a grid's file name, or undefined when it can:
+ * `"unplain"` unless it is a bare file name of PROJ-data's alphabet
+ * (`PLAIN_GRID_NAME`, and no `..`), `"reserved"` when it is one of
+ * `RESERVED_NAMES` or a `*.partial`, in any case. The one rule for a grid's
+ * name: the catalog (`GridCatalog.parse`), `loadGrids`, every recorded
+ * operation's grids, a tileset's declared pipeline and WKT2, and the dev
+ * server's grid endpoint all apply it. A grid's name becomes a path where
+ * PROJ looks (MEMFS `/<name>`, or beside `proj.db`) and a PROJ string value.
+ */
+export function gridNameProblem(
+  name: string,
+): "unplain" | "reserved" | undefined {
+  if (!PLAIN_GRID_NAME.test(name) || name.includes("..")) {
+    return "unplain";
+  }
+  const lower = name.toLowerCase();
+  if (RESERVED_NAMES.has(lower) || lower.endsWith(".partial")) {
+    return "reserved";
+  }
+  return undefined;
+}
+
+/** Whether `name` may be a grid's file name (`gridNameProblem` finds none). */
+export function isPlainGridName(name: string): boolean {
+  return gridNameProblem(name) === undefined;
+}
+
 /** One file of the catalog. */
 export interface GridEntry {
   readonly name: string;
@@ -125,7 +206,8 @@ export class GridCatalog {
   /**
    * Parses `files.geojson` (and, for licenses, `copyright_and_licenses.csv`).
    * A feature without a name, URL, 64-hex `sha256sum` or whole-number
-   * `file_size` throws, naming it. The catalog carries no version of its own,
+   * `file_size` throws, naming it, as does one whose name isn't a grid's
+   * (`gridNameProblem`: a path, an unusual name, or one of PROJ's own). The catalog carries no version of its own,
    * so `version` is the tag it was fetched from.
    */
   static parse(
@@ -146,6 +228,17 @@ export class GridCatalog {
       const name = optionalString(p.name);
       if (name === undefined) {
         throw new Error(`grid catalog: feature ${index} has no name`);
+      }
+      const problem = gridNameProblem(name);
+      if (problem !== undefined) {
+        const shown = JSON.stringify(
+          name.length > 80 ? `${name.slice(0, 77)}...` : name,
+        );
+        throw new Error(
+          problem === "reserved"
+            ? `grid catalog: feature ${index} is named ${shown}, the name of one of PROJ's own files, not a grid's`
+            : `grid catalog: feature ${index} is named ${shown}, which isn't a plain grid file name`,
+        );
       }
       const url = optionalString(p.url);
       const sha256 = p.sha256sum;

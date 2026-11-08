@@ -1,4 +1,7 @@
-import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
+import type {
+  EngineeringFrame,
+  EngineeringFrameDefinition,
+} from "../src/engineering/EngineeringFrame.ts";
 import type { GridSource } from "../src/engineering/proj.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import type { Frames } from "../src/frames/frames.ts";
@@ -33,3 +36,13 @@ export function ensureDesignTiles(
   frames: Frames,
   log?: (line: string) => void,
 ): Promise<void>;
+/**
+ * The tileset-level extensions of a frame and a placement: the
+ * `BENTLEY_engineering_frame` declaration, and `BENTLEY_alignments` when the
+ * frame has alignments.
+ */
+export function frameExtensions(
+  definition: EngineeringFrameDefinition,
+  placement:
+    { mode: "rigid"; anchor: readonly number[] } | { mode: "reprojected" },
+): Record<string, unknown>;

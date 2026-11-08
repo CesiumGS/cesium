@@ -56,7 +56,8 @@ export function wkt2Problem(text: string): string | undefined {
 }
 
 /**
- * `wkt2Problem`'s second check alone: a PROJ-string token, or a "+" and a
+ * @internal The package index exports it only for the frames explorer,
+ * whose catalog uses only the index. `wkt2Problem`'s second check alone: a PROJ-string token, or a "+" and a
  * letter outside a quoted string (WKT1's EXTENSION["PROJ4", "+proj=..."]
  * among them). `strictWkt2`, which every `wkt2` reference goes through
  * (`crsObject`), applies both checks, then PROJ's strict WKT parser.

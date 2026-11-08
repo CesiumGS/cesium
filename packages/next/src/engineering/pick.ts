@@ -104,6 +104,10 @@ function targetPixelRatio(target: PickView["target"]): number {
   return ratio;
 }
 
+/** The hit tileset's warning when its placement can't invert a pick. */
+export const DESIGN_NOT_INVERTED =
+  "a pick on this tileset has no design coordinates: its placement can't invert the hit (outside the operation's domain, or at the body's centre)";
+
 /** Whether `p` is within `margin` metres of the tile volume. */
 function nearVolume(
   volume: TileVolume,
@@ -124,7 +128,9 @@ function nearVolume(
  * coordinates come from the hit tileset's placement, only when that tileset
  * is in `tilesets`. The position and the feature are read on different frames:
  * if the camera moved in between the pick is tried once more, and if it still
- * moved only the position returns, with no tileset, feature or design.
+ * moved only the position returns, with no tileset, feature or design. When
+ * the placement can't invert the hit (`designOf` throws), the pick resolves
+ * without design coordinates and the tileset warns (`DESIGN_NOT_INVERTED`).
  */
 export async function pickDesign(
   view: PickView,
@@ -232,18 +238,26 @@ export async function pickInFrame(
     const placement = tileset?.placement;
     const inside =
       volume !== undefined && nearVolume(volume, position, tolerance + 1);
+    let design: DesignPoint | undefined;
+    if (placement !== undefined && inside) {
+      try {
+        design = designPoint(placement.frame, placement.designOf(position), {
+          how: "pick",
+          tolerance,
+        });
+      } catch {
+        // The placement can't invert this hit (EngineeringFrame.fromBodyFixed
+        // throws outside the operation's domain, or at the body's centre):
+        // the true values stand, without design coordinates.
+        tileset!.warnings.add(DESIGN_NOT_INVERTED);
+      }
+    }
     const pick: DesignPick = {
       body: view.body,
       position,
       ...(tileset !== undefined && { tileset }),
       ...(feature !== undefined && { feature }),
-      ...(placement !== undefined &&
-        inside && {
-          design: designPoint(placement.frame, placement.designOf(position), {
-            how: "pick",
-            tolerance,
-          }),
-        }),
+      ...(design !== undefined && { design }),
       tolerance,
     };
     return {

@@ -224,50 +224,9 @@ const OWNER = "owner";
 /** A pid in decimal; an `owner` any larger isn't one of ours. */
 const MAX_OWNER_BYTES = 64;
 
-/**
- * The names no grid may take, in lower case (`loadGrids` compares
- * `name.toLowerCase()`, since macOS's and Windows's file systems ignore case,
- * and refuses any `*.partial` too):
- *  - PROJ's own files, and what it reads from its data directory: `proj.ini`
- *    (network and cache settings), `defaults`, and the `+init=` files
- *    (resource_files.html: epsg, ITRF2014, nad27 and the rest);
- *  - the staging directory's `owner`, and the catalog's two files;
- *  - the WebAssembly module's root directories (`/tmp`, `/home`, `/dev`,
- *    `/proc`).
- * None is a key of the pinned PROJ-data 1.25.0 catalog (checked).
- */
-export const RESERVED_NAMES: ReadonlySet<string> = new Set([
-  "proj.db",
-  "proj_capi.node",
-  "proj_capi.mjs",
-  "proj_capi.wasm",
-  "proj.ini",
-  "defaults",
-  "epsg",
-  "esri",
-  "esri.extra",
-  "ignf",
-  "other.extra",
-  "world",
-  "nad.lst",
-  "nad27",
-  "nad83",
-  "gl27",
-  "ch",
-  "itrf2000",
-  "itrf2008",
-  "itrf2014",
-  "projjson.schema.json",
-  "deformation_model.schema.json",
-  "triangulation.schema.json",
-  OWNER,
-  "files.geojson",
-  "copyright_and_licenses.csv",
-  "tmp",
-  "home",
-  "dev",
-  "proc",
-]);
+// The names no grid may take (PROJ's own files, the staging directory's
+// `owner`, the catalog's files) are gridCatalog.ts's RESERVED_NAMES, which
+// lists OWNER's "owner" too.
 
 /** Whether process `pid` exists (one we may not signal exists too). */
 function alive(pid: number): boolean {

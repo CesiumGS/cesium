@@ -428,7 +428,7 @@ function tileContents(mesh, frame, reprojected) {
  * `BENTLEY_engineering_frame` declaration, and the frame's alignments as
  * `BENTLEY_alignments` (IFC 4.3's segment types) when it has any.
  */
-function frameExtensions(definition, placement) {
+export function frameExtensions(definition, placement) {
   return {
     [ENGINEERING_FRAME_EXTENSION]: declaration(definition, placement),
     ...(definition.alignments?.length && {
@@ -449,6 +449,11 @@ function declaration(definition, placement) {
               authority: crs.authority,
               wkid: crs.wkid,
               ...(crs.vcsWkid !== undefined && { vcsWkid: crs.vcsWkid }),
+              // Our proposal beside the draft's fields (georeference.ts):
+              // vcsWkid's registry, when it isn't wkid's.
+              ...(crs.vcsAuthority !== undefined && {
+                vcsAuthority: crs.vcsAuthority,
+              }),
               ...(crs.epoch !== undefined && { epoch: String(crs.epoch) }),
             },
           },

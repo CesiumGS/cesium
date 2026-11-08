@@ -154,7 +154,18 @@ describe("geoid fallback: Jakarta, EPSG:9488+9471", () => {
       replacedVertical: 9471,
       missingGrids: [JAKARTA_GRID],
       sigma: 0.5,
+      sigmaSource: "app",
     });
+    // A tileset's declaration states it (declaredDefinition).
+    const declared = EngineeringFrame.create(
+      jakarta({
+        geoidFallback: "EGM96",
+        fallbackSigma: 0.5,
+        fallbackSigmaSource: "declaration",
+      }),
+      P,
+    );
+    expect(declared.fallback?.sigmaSource).toBe("declaration");
   });
 
   it("a CRS that resolves takes no fallback", async () => {
