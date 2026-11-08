@@ -724,7 +724,7 @@ export function Dyno() {
                 recorded, so they're compared with care.
               </li>
               <li>
-                What 1.x can't do at all, such as this fleet of instances. That
+                What only 2.0 draws, such as this fleet of instances. That
                 engine shows as not run, and with one engine there's no verdict.
               </li>
               <li>

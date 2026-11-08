@@ -134,6 +134,10 @@ close it is to the truth or the best reference: within 27 km of DE440, a stated
 is. The catalog's `Precision` type and `"precise"` level keep their code names,
 but they set accuracy, so prose calls them levels.
 
+Stay neutral about other engines and 1.x. Say "other engines", "comparable
+products" or name them, never "competitors". State what each publicly does, without
+judging it or framing a race: no "ahead", "behind", "beat" or "win" in a comparison.
+
 ## Diagrams
 
 A diagram earns its place by showing a mechanism better than prose. Everything in

@@ -88,10 +88,10 @@ function CpuBars({ a }: { a: AdapterResults }) {
 }
 
 const TARGETS = [
-  { metric: "Main-thread CPU per tick", target: "3× lower or better than 1.x" },
+  { metric: "Main-thread CPU per tick", target: "A third of 1.x's, or less" },
   { metric: "Steady-state allocations", target: "None" },
-  { metric: "Time to full detail", target: "2× faster or better than 1.x" },
-  { metric: "GPU time", target: "Equal to 1.x or lower" },
+  { metric: "Time to full detail", target: "Half of 1.x's, or less" },
+  { metric: "GPU time", target: "1.x's, or less" },
   { metric: "Memory with N views", target: "Well under N times one view" },
 ];
 

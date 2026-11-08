@@ -150,20 +150,20 @@ const goals = (): readonly Goal[] => [
     id: "visual",
     title: "Visual quality",
     sentence:
-      "Physically based, in linear colour, with better translucency and atmosphere, and free to beat 1.x.",
+      "Physically based, in linear colour, with exact translucency available and a sky built from the atmosphere. It may differ from 1.x on purpose.",
     state: "partly",
     oneX: (
       <>
         1.x is the reference the image tests compare against, after years of
         tuning, and it already has order-independent translucency and an
-        atmosphere. Its HDR is off by default. Nothing here measures it as
-        looking worse, and 2.0's linear blending differs from it on purpose.
+        atmosphere. Its HDR is off by default. Nothing here measures either as
+        looking better, and 2.0's linear blending differs from it on purpose.
       </>
     ),
     today: [
       [
         "measured",
-        "Matching, not beating: on the first parity scenes, mean ΔE 0.05 to 0.91 against 1.x, with only anti-aliased edges differing.",
+        "On the first parity scenes the image matches 1.x: mean ΔE 0.05 to 0.91, with only anti-aliased edges differing.",
       ],
       [
         "built",
@@ -171,7 +171,7 @@ const goals = (): readonly Goal[] => [
       ],
       [
         "target",
-        '"Better" is a judgement so far. No study has compared how the two look.',
+        "Which looks better is a judgement so far. No study has compared how the two look.",
       ],
     ],
     tab: "shading",

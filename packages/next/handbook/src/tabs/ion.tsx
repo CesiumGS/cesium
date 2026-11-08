@@ -36,8 +36,8 @@ export function Ion() {
       lede={
         <>
           ion is the default source of terrain, imagery and tilesets, but it's
-          optional: nothing in the engine needs it to draw. Unlike 1.x, no token
-          is built in, so the application brings one.
+          optional: nothing in the engine needs it to draw. 1.x builds in a
+          default token. 2.0 builds in none, so the application brings one.
         </>
       }
     >
