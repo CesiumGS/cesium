@@ -3,6 +3,13 @@ import type { World } from "../scene/World.ts";
 
 /** A layer using the pool (GlobeImagery). */
 export interface SliceUser {
+  /** Its slices, most recently used first. */
+  heldSlices(): number[];
+  /**
+   * The pool shrank: each slice it keeps is renumbered (`moved`, old to
+   * new), and those not in `moved` are no longer its.
+   */
+  relocate(moved: ReadonlyMap<number, number>): void;
   /** Slices its tiles need this frame (`SlicePool.usage`). */
   readonly needed: number;
 }
@@ -17,9 +24,11 @@ export interface SliceUser {
  * Capacity is data: the pool starts at what its first layer asks for and
  * grows (a copy into a larger array, then a rebind) as layers join, up to
  * the device's `maxTextureArrayLayers` and the 12 bits a record has for a
- * slice. Each layer recycles its own least recently used slices once it
- * holds its share, so a late layer (night lights resolve after the
- * imagery) still gets slices.
+ * slice. It shrinks back to what the remaining layers asked for when one
+ * leaves: they keep their most recently used slices, renumbered into the
+ * smaller array (`SliceUser.relocate`). Each layer recycles its own least
+ * recently used slices once it holds its share, so a late layer (night
+ * lights resolve after the imagery) still gets slices.
  *
  * The slices are a cache, so "used" reaches capacity soon after a flight
  * starts, by design. What a frame needs (`needed`: the slices its tiles
@@ -90,7 +99,7 @@ export class SlicePool {
   texture: GPUTexture;
   /** Layers in the array. */
   capacity = 0;
-  private readonly free: number[] = [];
+  private free: number[] = [];
   /** Its layers, and the slices each asked for. */
   private readonly users = new Map<SliceUser, number>();
   private destroyed = false;
@@ -139,9 +148,16 @@ export class SlicePool {
     }
   }
 
-  /** A user leaves with its slices (given back first); the last destroys. */
+  /**
+   * A user leaves, its slices given back first. The pool shrinks to what
+   * the others asked for; the last user destroys it.
+   */
   release(user: SliceUser): void {
-    if (!this.users.delete(user) || this.users.size > 0) {
+    if (!this.users.delete(user)) {
+      return;
+    }
+    if (this.users.size > 0) {
+      this.shrink();
       return;
     }
     this.destroyed = true;
@@ -184,6 +200,83 @@ export class SlicePool {
       this.texture.createView({ dimension: "2d-array" }),
     );
     old.destroy();
+  }
+
+  /**
+   * Down to what the users asked for (within the ceiling). Each keeps its
+   * most recently used slices, up to its request: slices below the new
+   * capacity stay where they are, and the others move into free slices
+   * below it. One copy, then a rebind, as for growing.
+   */
+  private shrink(): void {
+    const wanted = this.wanted;
+    const target = Math.min(wanted, this.ceiling);
+    if (target >= this.capacity) {
+      return;
+    }
+    // Under the ceiling, each user's request scaled down to fit.
+    const scale = target / wanted;
+    const kept = [...this.users].map(
+      ([user, asked]) =>
+        [user, user.heldSlices().slice(0, Math.floor(asked * scale))] as const,
+    );
+    const staying = new Set<number>();
+    for (const [, slices] of kept) {
+      for (const slice of slices) {
+        if (slice < target) {
+          staying.add(slice);
+        }
+      }
+    }
+    const free: number[] = [];
+    for (let i = target - 1; i >= 0; i--) {
+      if (!staying.has(i)) {
+        free.push(i);
+      }
+    }
+    // Requests sum to at most `target`, so a free slice is always left.
+    const moves: Array<[from: number, to: number]> = [];
+    const renumbered = kept.map(([user, slices]) => {
+      const moved = new Map<number, number>();
+      for (const slice of slices) {
+        const to = slice < target ? slice : free.pop()!;
+        moved.set(slice, to);
+        if (to !== slice) {
+          moves.push([slice, to]);
+        }
+      }
+      return [user, moved] as const;
+    });
+    const old = this.texture;
+    this.texture = this.create(target);
+    const encoder = this.device.createCommandEncoder({
+      label: "globe.slices.shrink",
+    });
+    for (let level = 0; level < this.mipLevelCount; level++) {
+      const extent = Math.max(1, this.size >> level);
+      encoder.copyTextureToTexture(
+        { texture: old, mipLevel: level },
+        { texture: this.texture, mipLevel: level },
+        [extent, extent, target],
+      );
+      for (const [from, to] of moves) {
+        encoder.copyTextureToTexture(
+          { texture: old, mipLevel: level, origin: [0, 0, from] },
+          { texture: this.texture, mipLevel: level, origin: [0, 0, to] },
+          [extent, extent, 1],
+        );
+      }
+    }
+    this.device.queue.submit([encoder.finish()]);
+    this.free = free;
+    this.capacity = target;
+    this.world.setImageryArray(
+      this.texture.createView({ dimension: "2d-array" }),
+    );
+    old.destroy();
+    for (const [user, moved] of renumbered) {
+      user.relocate(moved);
+    }
   }
 
   private create(layers: number): GPUTexture {

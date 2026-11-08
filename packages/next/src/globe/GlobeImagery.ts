@@ -41,7 +41,12 @@ const PASSES_PER_FRAME = 256;
 const MAX_SOURCES = 512;
 
 export interface GlobeImageryOptions {
-  /** Slices in the array (default 512, at most the device limit). */
+  /**
+   * Slices this layer adds to the world's array (default 256, at most the
+   * device limit). A 256-texel slice with its mips is 349 KB, so 256 cost
+   * 89 MB. A view drew at most 61 tiles in measured flights, each needing
+   * a slice and sometimes an ancestor's while its own composites.
+   */
   slices?: number;
   /** Slice width and height in texels (default 256). */
   size?: number;
@@ -93,7 +98,7 @@ interface Job {
 }
 
 /** Slices a layer adds to the world's array by default. */
-export const DEFAULT_IMAGERY_SLICES = 512;
+export const DEFAULT_IMAGERY_SLICES = 256;
 
 export class GlobeImagery implements SliceUser {
   /** The world's slices, shared with its other imagery layers. */
@@ -111,7 +116,10 @@ export class GlobeImagery implements SliceUser {
   private readonly slices = new Map<Tile, { slice: number; used: number }>();
   private readonly jobs = new Map<Tile, Job>();
   private readonly sources = new Map<string, Source>();
-  private readonly applied = new WeakMap<ModelPlacement, number>();
+  /** The imagery each placement's draws point at (replaced on relocation). */
+  private applied = new WeakMap<ModelPlacement, number>();
+  /** Relocated: the drawn tiles' draws are pointed again on the next update. */
+  private relocated = false;
   /**
    * Slices this frame's tiles need (`update`): the distinct slices they
    * draw with (their own, or an ancestor's while theirs composites), and
@@ -262,9 +270,17 @@ export class GlobeImagery implements SliceUser {
     return undefined;
   }
 
-  /** Loading or compositing: the terrain tileset stays active. */
+  /**
+   * Loading, compositing, or relocated (`relocate`): the terrain tileset
+   * stays active, so it updates even when settled.
+   */
   get busy(): boolean {
-    return this.loading > 0 || this.jobs.size > 0 || !this.pipelines;
+    return (
+      this.loading > 0 ||
+      this.jobs.size > 0 ||
+      !this.pipelines ||
+      this.relocated
+    );
   }
 
   /**
@@ -317,6 +333,7 @@ export class GlobeImagery implements SliceUser {
     for (const [tile] of order) {
       this.apply(tile);
     }
+    this.relocated = false;
     this.cancelStale(frame);
     this.trimSources(frame);
   }
@@ -396,6 +413,32 @@ export class GlobeImagery implements SliceUser {
     this.needed = 0;
     this.pool.release(this);
     this.params.destroy();
+  }
+
+  /** Its slices, most recently used first (`SliceUser`). */
+  heldSlices(): number[] {
+    return [...this.slices.values()]
+      .sort((a, b) => b.used - a.used)
+      .map((s) => s.slice);
+  }
+
+  /**
+   * The pool shrank (`SliceUser`): slices renumbered or dropped. The next
+   * update points every drawn tile's draws again, as their slices (or
+   * their ancestors') may have moved; until then the layer is `busy`, so
+   * a settled tileset still runs that update before the next draw.
+   */
+  relocate(moved: ReadonlyMap<number, number>): void {
+    for (const [tile, s] of this.slices) {
+      const to = moved.get(s.slice);
+      if (to === undefined) {
+        this.slices.delete(tile);
+      } else {
+        s.slice = to;
+      }
+    }
+    this.applied = new WeakMap();
+    this.relocated = true;
   }
 
   // ------------------------------------------------------------- levels

@@ -5,7 +5,7 @@ import { fakeDevice, installGpuGlobals } from "./fakeGpu.ts";
 
 /** A layer holding no slices. */
 function user(): SliceUser {
-  return { needed: 0 };
+  return { heldSlices: () => [], relocate: () => {}, needed: 0 };
 }
 
 describe("SlicePool", () => {
@@ -38,10 +38,13 @@ describe("SlicePool", () => {
     const first = user();
     const pool = SlicePool.acquire(device, world, 256, 4, first);
     SlicePool.acquire(device, world, 256, 4, user());
-    pool.texture.destroy = () => void log.push("destroy");
+    const array = pool.texture;
+    log.length = 0;
     pool.release(first);
+    // Shrunk to the other's 4: the smaller array bound, never none.
     expect(log).not.toContain("unbind");
-    expect(log).not.toContain("destroy");
+    expect(pool.texture).not.toBe(array);
+    expect(pool.capacity).toBe(4);
   });
 });
 
