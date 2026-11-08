@@ -59,6 +59,87 @@ function fake(
   });
 }
 
+/** What a fake texture was created with, for checking copies. */
+interface FakeTexture {
+  width: number;
+  height: number;
+  depthOrArrayLayers: number;
+  format: GPUTextureFormat;
+  mipLevelCount: number;
+  usage: number;
+}
+const fakeTextures = new WeakMap<object, FakeTexture>();
+
+/** Usage bits as WebGPU defines them (the globals may not be installed). */
+const COPY_SRC = 0x1;
+const COPY_DST = 0x2;
+
+/**
+ * Checks a `copyTextureToTexture` as WebGPU validation would, for textures
+ * the fake device made (others pass): each side's mip level exists, the
+ * copy's box (origin and size, layers included) lies within that mip, the
+ * formats match, the source has COPY_SRC and the destination COPY_DST, and
+ * the two are different textures. Throws on the first failure.
+ */
+export function checkTextureCopy(
+  source: GPUTexelCopyTextureInfo,
+  destination: GPUTexelCopyTextureInfo,
+  size: GPUExtent3D,
+): void {
+  const src = fakeTextures.get(source.texture);
+  const dst = fakeTextures.get(destination.texture);
+  if (!src || !dst) {
+    return;
+  }
+  const [w, h, d] = Array.isArray(size)
+    ? [size[0] ?? 1, size[1] ?? 1, size[2] ?? 1]
+    : [
+        (size as GPUExtent3DDict).width,
+        (size as GPUExtent3DDict).height ?? 1,
+        (size as GPUExtent3DDict).depthOrArrayLayers ?? 1,
+      ];
+  const fail = (why: string) => {
+    throw new Error(`copyTextureToTexture: ${why}`);
+  };
+  if (source.texture === destination.texture) {
+    fail("source and destination are the same texture");
+  }
+  if (src.format !== dst.format) {
+    fail(`formats differ (${src.format}, ${dst.format})`);
+  }
+  if (!(src.usage & COPY_SRC)) {
+    fail("the source lacks COPY_SRC");
+  }
+  if (!(dst.usage & COPY_DST)) {
+    fail("the destination lacks COPY_DST");
+  }
+  for (const [name, side, t] of [
+    ["source", source, src],
+    ["destination", destination, dst],
+  ] as const) {
+    const mip = side.mipLevel ?? 0;
+    if (mip >= t.mipLevelCount) {
+      fail(`${name} mip ${mip} of ${t.mipLevelCount}`);
+    }
+    const o = side.origin;
+    const [x, y, z] = Array.isArray(o)
+      ? [o[0] ?? 0, o[1] ?? 0, o[2] ?? 0]
+      : [
+          (o as GPUOrigin3DDict | undefined)?.x ?? 0,
+          (o as GPUOrigin3DDict | undefined)?.y ?? 0,
+          (o as GPUOrigin3DDict | undefined)?.z ?? 0,
+        ];
+    const mw = Math.max(1, t.width >> mip);
+    const mh = Math.max(1, t.height >> mip);
+    if (x + w > mw || y + h > mh) {
+      fail(`${name} box ${x + w}x${y + h} past mip ${mip}'s ${mw}x${mh}`);
+    }
+    if (z + d > t.depthOrArrayLayers) {
+      fail(`${name} layers ${z} to ${z + d} past ${t.depthOrArrayLayers}`);
+    }
+  }
+}
+
 /** A device with `limits` (any limit not given is large). */
 export function fakeDevice(limits: Record<string, number>): GPUDevice {
   const all = new Proxy(limits, {
@@ -90,15 +171,26 @@ export function fakeDevice(limits: Record<string, number>): GPUDevice {
           (size as GPUExtent3DDict).height ?? 1,
           (size as GPUExtent3DDict).depthOrArrayLayers ?? 1,
         ];
-    return fake(`texture ${d.label ?? ""}`, {
+    const described: FakeTexture = {
       width,
       height,
       depthOrArrayLayers: depth,
       format: d.format,
       mipLevelCount: d.mipLevelCount ?? 1,
+      usage: d.usage,
+    };
+    const texture = fake(`texture ${d.label ?? ""}`, {
+      ...described,
       destroy: () => {},
     });
+    fakeTextures.set(texture, described);
+    return texture;
   };
+  // Texture copies are checked as WebGPU would (`checkTextureCopy`).
+  device.createCommandEncoder = (d?: GPUCommandEncoderDescriptor) =>
+    fake(`encoder ${d?.label ?? ""}`, {
+      copyTextureToTexture: checkTextureCopy,
+    });
   return fake("device", device) as GPUDevice;
 }
 

@@ -1245,10 +1245,6 @@ export class Tileset3D implements TileTree {
       return;
     }
     if (this.frozen) {
-      // The frozen selection still draws: after the slice pool shrank, its
-      // tiles' imagery is pointed again (and the layers settle).
-      this.imagery?.refresh();
-      this.lights?.refresh();
       this.updateDebug();
       return;
     }

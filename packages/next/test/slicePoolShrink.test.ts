@@ -10,11 +10,13 @@ import type { World } from "../src/scene/World.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 import {
+  compositingLayer,
   fakeWorld,
   holder,
   layer,
   recordingDevice,
   tile,
+  type Copy,
 } from "./sliceFakes.ts";
 
 describe("imagery slices: the default per layer", () => {
@@ -32,11 +34,40 @@ describe("imagery slices: the default per layer", () => {
     expect(SlicePool.usage(world)).toBeUndefined();
   });
 
-  it("covers the measured views with margin", () => {
-    // Measured flights drew at most 61 tiles in a view; each needs its own
-    // slice, and while it composites, at worst an ancestor's too.
-    const worstDrawn = 61;
-    expect(2 * worstDrawn).toBeLessThan(DEFAULT_IMAGERY_SLICES / 2);
+  it("covers the measured views without growing", () => {
+    // Measured flights drew at most 61 tiles in a view. Here each draws
+    // with an ancestor's slice while its own composites (16 of them), and
+    // every one gets its own slice at the default size, with room left.
+    const world = fakeWorld();
+    const imagery = compositingLayer(world, recordingDevice([]));
+    const internals = imagery as unknown as {
+      slices: Map<Tile, { slice: number; used: number }>;
+      jobs: Map<Tile, unknown>;
+    };
+    const parents = Array.from({ length: 16 }, (_, i) => tile(4, i, 0));
+    for (const p of parents) {
+      internals.slices.set(p, {
+        slice: imagery["pool"].take()!,
+        used: 0,
+      });
+    }
+    const drawn = Array.from({ length: 61 }, (_, i) => {
+      const p = parents[i % 16]!;
+      return tile(5, 2 * p.globe!.x + (i >> 4), 0, p);
+    });
+    const wanted = new Map(drawn.map((t, i) => [t, i]));
+    let peak = 0;
+    for (let frame = 0; frame < 10; frame++) {
+      imagery.update(wanted);
+      peak = Math.max(peak, imagery.needed);
+    }
+    expect(peak).toBe(61 + 16);
+    expect(internals.jobs.size).toBe(0);
+    expect(drawn.every((t) => internals.slices.has(t))).toBe(true);
+    expect(SlicePool.usage(world)!.capacity).toBe(DEFAULT_IMAGERY_SLICES);
+    // At most 30% of the default: growth (at 90%) is far off.
+    expect(peak / DEFAULT_IMAGERY_SLICES).toBeLessThan(0.31);
+    imagery.destroy();
   });
 });
 
@@ -44,7 +75,7 @@ describe("imagery slices: the pool shrinks when a layer leaves", () => {
   beforeAll(() => installGpuGlobals());
 
   it("to what the others asked for, their slices renumbered below it", () => {
-    const copies: Array<{ from: number; to: number }> = [];
+    const copies: Copy[] = [];
     const log: string[] = [];
     const device = recordingDevice(copies);
     const world = fakeWorld(log);
@@ -70,13 +101,21 @@ describe("imagery slices: the pool shrinks when a layer leaves", () => {
     // The smaller array is bound before the old one is destroyed.
     expect(log).toEqual(["bind", "destroy old"]);
     // Every kept slice is in the new array, each where its copy went.
+    // Each copy was checked as WebGPU would (recordingDevice): within both
+    // arrays' layers and each mip's extent, formats and usages matching.
     expect(staying.held.every((s) => s < 4)).toBe(true);
     expect(new Set(staying.held).size).toBe(3);
-    const moved = copies.filter((c) => c.from !== c.to);
-    expect(moved.length).toBe(3 * pool.mipLevelCount);
-    for (const [from, to] of staying.relocated!) {
-      expect(moved).toContainEqual({ from, to });
+    for (let mip = 0; mip < pool.mipLevelCount; mip++) {
+      const width = Math.max(1, 256 >> mip);
+      const atMip = copies.filter((c) => c.mip === mip);
+      // The slices below the new size, whole, then each moved slice.
+      expect(atMip[0]).toEqual({ from: 0, to: 0, layers: 4, mip, width });
+      const moves = atMip.slice(1).map(({ from, to }) => [from, to]);
+      expect(moves).toEqual([...staying.relocated!]);
+      expect(atMip.slice(1).every((c) => c.layers === 1)).toBe(true);
+      expect(atMip.every((c) => c.width === width)).toBe(true);
     }
+    expect(copies.length).toBe(4 * pool.mipLevelCount);
     // One slice is left free, and the layer can take it.
     expect(pool.take()).toBeDefined();
     expect(pool.take()).toBeUndefined();
@@ -160,13 +199,8 @@ describe("imagery slices: the pool shrinks when a layer leaves", () => {
     expect(slices.length).toBe(3);
     expect(slices.every((s) => s < 256)).toBe(true);
     expect(new Set(slices).size).toBe(3);
-    // Its drawn tiles' draws still name the old slices: busy (its tileset
-    // stays active) until the next update points them again.
-    (imagery as unknown as { pipelines: object }).pipelines = {};
-    expect(imagery.busy).toBe(true);
-    imagery.update(new Map(tiles.map((t) => [t, 0])));
-    expect(imagery.busy).toBe(false);
-    // Pointed again, at its renumbered slice.
+    // Pointed again at once, at its renumbered slice, with no update: a
+    // frozen tileset's draws are right too.
     const after = internals.slices.get(drawn)!.slice;
     expect(after).toBeLessThan(256);
     expect(pointed).toEqual([packImagery(before), packImagery(after)]);

@@ -228,20 +228,6 @@ describe("Tileset3D eviction: the same tiles as the old sort", () => {
     tileset.destroy();
   });
 
-  it("a frozen tileset still re-points its imagery after the pool shrank", async () => {
-    const tileset = await load({});
-    await run(tileset, 3);
-    const refresh = vi.fn();
-    const imagery = { refresh, destroy: () => {}, busy: false };
-    tileset.imagery = imagery as unknown as Tileset3D["imagery"];
-    tileset.lights = imagery as unknown as Tileset3D["lights"];
-    tileset.freezeSelection = true;
-    tileset.update([view(0, 3)]);
-    expect(refresh).toHaveBeenCalledTimes(2);
-    tileset.imagery = tileset.lights = undefined;
-    tileset.destroy();
-  });
-
   it("counts a fixed overhead per tile against the budget", async () => {
     const tileset = await load({});
     const t = tileset as unknown as Internals;

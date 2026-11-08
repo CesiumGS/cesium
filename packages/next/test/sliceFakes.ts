@@ -1,7 +1,10 @@
 // Fakes for the imagery slice tests (test/sliceNeed.test.ts and
 // test/slicePoolShrink.test.ts): a world, a recording device, a layer that
 // holds slices, and GlobeImagery over a provider that never loads.
-import { GlobeImagery } from "../src/globe/GlobeImagery.ts";
+import {
+  GlobeImagery,
+  type GlobeImageryOptions,
+} from "../src/globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../src/globe/ImageryProvider.ts";
 import { SlicePool, type SliceUser } from "../src/globe/SlicePool.ts";
 import type { WorkerPool } from "../src/io/WorkerPool.ts";
@@ -9,7 +12,7 @@ import type { RenderContext } from "../src/scene/RenderContext.ts";
 import type { World } from "../src/scene/World.ts";
 import type { RequestScheduler } from "../src/streaming/RequestScheduler.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
-import { fakeDevice } from "./fakeGpu.ts";
+import { checkTextureCopy, fakeDevice } from "./fakeGpu.ts";
 
 /** A world that records binds; nothing else is needed of it here. */
 export function fakeWorld(log: string[] = []): World {
@@ -22,23 +25,43 @@ export function fakeWorld(log: string[] = []): World {
   } as unknown as World;
 }
 
-/** A device whose encoders record their texture copies. */
-export function recordingDevice(copies: Array<{ from: number; to: number }>) {
+/** A texture copy, as `recordingDevice` records it. */
+export interface Copy {
+  from: number;
+  to: number;
+  layers: number;
+  mip: number;
+  width: number;
+}
+
+/**
+ * A device whose encoders check their texture copies as WebGPU would
+ * (`checkTextureCopy`) and record them.
+ */
+export function recordingDevice(copies: Copy[]): GPUDevice {
   const device = fakeDevice({});
-  (device as { createCommandEncoder: unknown }).createCommandEncoder = () => ({
-    copyTextureToTexture: (
-      source: { origin?: number[] },
-      destination: { origin?: number[] },
+  const encoder = device.createCommandEncoder.bind(device);
+  (device as { createCommandEncoder: unknown }).createCommandEncoder = (
+    d?: GPUCommandEncoderDescriptor,
+  ) => {
+    // The fake encoder answers everything; only its copies are recorded.
+    const inner = encoder(d);
+    inner.copyTextureToTexture = (
+      source: GPUTexelCopyTextureInfo,
+      destination: GPUTexelCopyTextureInfo,
       size: number[],
     ) => {
+      checkTextureCopy(source, destination, size);
       copies.push({
-        from: source.origin?.[2] ?? 0,
-        to: destination.origin?.[2] ?? 0,
-        ...(size[2] !== 1 ? { layers: size[2] } : {}),
+        from: (source.origin as number[] | undefined)?.[2] ?? 0,
+        to: (destination.origin as number[] | undefined)?.[2] ?? 0,
+        layers: size[2] ?? 1,
+        mip: source.mipLevel ?? 0,
+        width: size[0]!,
       });
-    },
-    finish: () => ({}),
-  });
+    };
+    return inner;
+  };
   return device;
 }
 
@@ -130,4 +153,38 @@ export function tile(level: number, x: number, y: number, parent?: Tile): Tile {
       },
     },
   } as unknown as Tile;
+}
+
+/**
+ * A layer whose one source tile (level 0) is ready, so every job
+ * composites, at the per-frame pass budget (23 tiles a frame).
+ */
+export function compositingLayer(
+  world: World,
+  device: GPUDevice,
+  options: GlobeImageryOptions = {},
+): GlobeImagery {
+  const imagery = new GlobeImagery(
+    { device } as unknown as RenderContext,
+    world,
+    { ...provider, maximumLevel: 0 },
+    requests,
+    {} as WorkerPool,
+    options,
+  );
+  const internals = imagery as unknown as {
+    sources: Map<string, unknown>;
+    pipelines?: object;
+  };
+  internals.pipelines = { fill: {}, composite: {}, downsample: {} };
+  internals.sources.set("0/0/0", {
+    state: "ready",
+    used: 0,
+    texture: device.createTexture({
+      size: [256, 256],
+      format: "rgba8unorm",
+      usage: 0,
+    }),
+  });
+  return imagery;
 }

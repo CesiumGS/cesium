@@ -50,6 +50,13 @@ export interface SliceUser {
  * has, they grow by whole steps (its first request) up to the ceiling, and
  * they shrink back a step at a time, never below the first request, once
  * the need has stayed below half the smaller size for 600 updates.
+ * - Growing on need allocates the larger array inside an out-of-memory
+ *   error scope and switches to it once the scope reports no error: at
+ *   most one growth is in flight, so at most one whole-array copy a frame.
+ *   On an error the pool stays at its size, stops growing, and says so
+ *   once (`usage().warning`).
+ * - At the ceiling, layers short of slices take whole steps from layers
+ *   holding more than their part of it, parts in proportion to need.
  *
  * The slices are a cache, so "used" reaches capacity soon after a flight
  * starts, by design. What a frame needs (`needed`: the slices its tiles
@@ -79,8 +86,13 @@ export class SlicePool {
       pool = new SlicePool(device, world, size);
       SlicePool.pools.set(world, pool);
     }
+    if (!Number.isInteger(slices) || slices <= 0) {
+      throw new RangeError(
+        `SlicePool: slices must be a positive integer, not ${slices}`,
+      );
+    }
     pool.reserve(pool.wanted + slices);
-    pool.users.set(user, { base: slices, asked: slices, low: 0 });
+    pool.users.set(user, { base: slices, asked: slices, low: 0, need: 0 });
     return pool;
   }
 
@@ -92,6 +104,7 @@ export class SlicePool {
    * - `used`: slices holding imagery (cached). It reaches capacity by
    *   design.
    * - `capacity`: the array's layers; `ceiling`: the most it may grow to.
+   * - `warning`: why it stopped growing below the ceiling (out of memory).
    */
   static usage(world: World):
     | {
@@ -99,6 +112,7 @@ export class SlicePool {
         used: number;
         capacity: number;
         ceiling: number;
+        warning?: string;
       }
     | undefined {
     const pool = SlicePool.pools.get(world);
@@ -114,6 +128,7 @@ export class SlicePool {
       used: pool.capacity - pool.free.length,
       capacity: pool.capacity,
       ceiling: pool.ceiling,
+      ...(pool.warning ? { warning: pool.warning } : {}),
     };
   }
 
@@ -123,13 +138,22 @@ export class SlicePool {
   private free: number[] = [];
   /**
    * Its layers: the slices each first asked for (`base`, also the growth
-   * step), has now (`asked`), and updates in a row with a low need.
+   * step), has now (`asked`), updates in a row with a low need, and the
+   * last need it reported.
    */
   private readonly users = new Map<
     SliceUser,
-    { base: number; asked: number; low: number }
+    { base: number; asked: number; low: number; need: number }
   >();
   private destroyed = false;
+  /** The most it may grow to: the ceiling, or less after out of memory. */
+  private limit: number;
+  /** A larger array is being allocated (`grow`). */
+  private growing = false;
+  /** Bumped by every resize, so a growth that resolves late is dropped. */
+  private version = 0;
+  /** Why growth stopped below the ceiling, once it has. */
+  private warning?: string;
   readonly mipLevelCount: number;
 
   private constructor(
@@ -139,6 +163,7 @@ export class SlicePool {
   ) {
     this.mipLevelCount = Math.log2(size) + 1;
     this.texture = this.create(1);
+    this.limit = this.ceiling;
   }
 
   /** The most slices any pool can have on this device. */
@@ -160,16 +185,25 @@ export class SlicePool {
 
   /**
    * A user's share, its slices of the capacity: past it, the user recycles
-   * its own slices first.
+   * its own slices first. Below what it asked for only at the ceiling, or
+   * while a larger array is allocated.
    */
   share(user: SliceUser): number {
     const asked = this.users.get(user)?.asked ?? 0;
-    return Math.floor((asked * this.capacity) / Math.max(1, this.wanted));
+    return Math.min(
+      asked,
+      Math.floor((asked * this.capacity) / Math.max(1, this.wanted)),
+    );
   }
 
   /** The slices a user has now (grown or not), or 0 for a stranger. */
   asked(user: SliceUser): number {
     return this.users.get(user)?.asked ?? 0;
+  }
+
+  /** A larger array is being allocated: shares may lag what was asked. */
+  get resizing(): boolean {
+    return this.growing;
   }
 
   /**
@@ -182,31 +216,122 @@ export class SlicePool {
     if (!d) {
       return;
     }
+    d.need = needed;
     if (needed > SLICE_GROW_AT * d.asked) {
       d.low = 0;
-      // Whole steps, the last one cut at the ceiling.
-      const room = this.ceiling - (this.wanted - d.asked);
-      let asked = d.asked;
-      while (needed > SLICE_GROW_AT * asked && asked < room) {
-        asked = Math.min(asked + d.base, room);
-      }
-      if (asked > d.asked) {
-        d.asked = asked;
-        this.reserve(this.wanted);
-      }
+      this.raise(user, d, needed);
+      this.grow();
       return;
     }
-    const smaller = d.asked - d.base;
-    if (smaller < d.base || needed >= SLICE_SHRINK_AT * smaller) {
+    // Whole steps down, so a growth cut at the ceiling returns to the base.
+    const smaller = Math.max(d.base, Math.ceil(d.asked / d.base - 1) * d.base);
+    if (d.asked <= d.base || needed >= SLICE_SHRINK_AT * smaller) {
       d.low = 0;
+      this.grow();
       return;
     }
     if (++d.low < SLICE_SHRINK_AFTER) {
+      this.grow();
       return;
     }
     d.low = 0;
     d.asked = smaller;
     this.shrink();
+  }
+
+  /**
+   * More slices for a user whose need passed 90% of them: whole steps up to
+   * what the need wants, within the room under the limit. Where the limit
+   * binds, steps taken from users holding more than their part.
+   */
+  private raise(
+    user: SliceUser,
+    d: { base: number; asked: number; low: number; need: number },
+    needed: number,
+  ): void {
+    let want = d.asked;
+    while (needed > SLICE_GROW_AT * want) {
+      want += d.base;
+    }
+    const room = this.limit - (this.wanted - d.asked);
+    if (room > d.asked) {
+      d.asked = Math.min(want, room);
+    }
+    if (d.asked >= want) {
+      return;
+    }
+    // Each user's part of the limit, in proportion to need, at least its
+    // first request.
+    let total = 0;
+    for (const u of this.users.values()) {
+      total += u.need;
+    }
+    const part = (u: { base: number; need: number }) =>
+      Math.max(u.base, Math.floor((this.limit * u.need) / Math.max(1, total)));
+    const mine = Math.min(want, part(d));
+    while (d.asked + d.base <= mine) {
+      let donor: typeof d | undefined;
+      for (const [other, o] of this.users) {
+        if (other !== user && o.asked - d.base >= Math.max(o.base, part(o))) {
+          donor = o;
+          break;
+        }
+      }
+      if (!donor) {
+        break;
+      }
+      // The donor gives back what's over its share on its next update.
+      donor.asked -= d.base;
+      donor.low = 0;
+      d.asked += d.base;
+    }
+  }
+
+  /**
+   * Toward what the users asked for (within the limit): a larger array is
+   * allocated inside an out-of-memory error scope, and switched to once the
+   * scope reports no error. One at a time.
+   */
+  private grow(): void {
+    if (this.growing || this.destroyed) {
+      return;
+    }
+    const target = Math.min(this.wanted, this.limit);
+    if (target <= this.capacity) {
+      return;
+    }
+    this.growing = true;
+    const version = this.version;
+    this.device.pushErrorScope("out-of-memory");
+    const texture = this.create(target);
+    const settle = (error: unknown) => {
+      this.growing = false;
+      if (error) {
+        texture.destroy();
+        this.outOfMemory(target);
+        return;
+      }
+      if (this.destroyed || version !== this.version) {
+        // Resized meanwhile (a layer joined or left): asked again later.
+        texture.destroy();
+        return;
+      }
+      this.switchTo(texture, target);
+    };
+    void this.device.popErrorScope().then(settle, settle);
+  }
+
+  /**
+   * A larger array failed to allocate: stay at this size, scale the users'
+   * slices to fit it, and warn once.
+   */
+  private outOfMemory(target: number): void {
+    const wanted = this.wanted;
+    this.limit = this.capacity;
+    for (const d of this.users.values()) {
+      d.asked = Math.floor((d.asked * this.capacity) / wanted);
+    }
+    this.warning ??= `imagery slices: out of GPU memory growing to ${target} layers; staying at ${this.capacity}`;
   }
 
   /** A free slice, or undefined when none is left. */
@@ -240,15 +365,21 @@ export class SlicePool {
     this.texture.destroy();
   }
 
-  /** Room for `layers` slices (within the ceiling), copying what's there. */
+  /** Room for `layers` slices (within the limit), copying what's there. */
   private reserve(layers: number): void {
-    const target = Math.min(layers, this.ceiling);
+    const target = Math.min(layers, this.limit);
     if (target <= this.capacity) {
       return;
     }
+    this.switchTo(this.create(target), target);
+  }
+
+  /** Switches to a larger array of `target` layers, copying what's there. */
+  private switchTo(texture: GPUTexture, target: number): void {
+    this.version++;
     const old = this.texture;
     const oldCapacity = this.capacity;
-    this.texture = this.create(target);
+    this.texture = texture;
     if (oldCapacity > 0) {
       const encoder = this.device.createCommandEncoder({
         label: "globe.slices.grow",
@@ -283,10 +414,11 @@ export class SlicePool {
    */
   private shrink(): void {
     const wanted = this.wanted;
-    const target = Math.min(wanted, this.ceiling);
+    const target = Math.min(wanted, this.limit);
     if (target >= this.capacity) {
       return;
     }
+    this.version++;
     // Under the ceiling, each user's request scaled down to fit.
     const scale = target / wanted;
     const kept = [...this.users].map(

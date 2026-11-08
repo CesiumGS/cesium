@@ -121,9 +121,7 @@ export class GlobeImagery implements SliceUser {
   private readonly sources = new Map<string, Source>();
   /** The imagery each placement's draws point at (replaced on relocation). */
   private applied = new WeakMap<ModelPlacement, number>();
-  /** Relocated: the drawn tiles' draws are pointed again on the next update. */
-  private relocated = false;
-  /** The tiles the last update pointed (`refresh`). */
+  /** The tiles the last update pointed, re-pointed on relocation. */
   private drawn: Tile[] = [];
   /**
    * Slices this frame's tiles need (`update`): the distinct slices they
@@ -161,10 +159,13 @@ export class GlobeImagery implements SliceUser {
     const device = ctx.device;
     // Every layer of a world composites into one array (SlicePool), so
     // they share its size: the first layer's.
-    this.requested = Math.min(
-      options.slices ?? DEFAULT_IMAGERY_SLICES,
-      MAX_IMAGERY_SLICES,
-    );
+    const slices = options.slices ?? DEFAULT_IMAGERY_SLICES;
+    if (!Number.isInteger(slices) || slices <= 0) {
+      throw new RangeError(
+        `GlobeImagery: slices must be a positive integer, not ${slices}`,
+      );
+    }
+    this.requested = Math.min(slices, MAX_IMAGERY_SLICES);
     this.pool = SlicePool.acquire(
       device,
       world,
@@ -275,17 +276,9 @@ export class GlobeImagery implements SliceUser {
     return undefined;
   }
 
-  /**
-   * Loading, compositing, or relocated (`relocate`): the terrain tileset
-   * stays active, so it updates even when settled.
-   */
+  /** Loading or compositing: the terrain tileset stays active. */
   get busy(): boolean {
-    return (
-      this.loading > 0 ||
-      this.jobs.size > 0 ||
-      !this.pipelines ||
-      this.relocated
-    );
+    return this.loading > 0 || this.jobs.size > 0 || !this.pipelines;
   }
 
   /**
@@ -326,6 +319,7 @@ export class GlobeImagery implements SliceUser {
     // Grown before compositing, so this frame's tiles find free slices.
     this.pool.demand(this, this.needed);
     this.drawn = order.map(([tile]) => tile);
+    this.trim(order);
     // Fetch sources, nearest tiles first, within the origin's window.
     for (const [tile] of order) {
       const job = this.jobs.get(tile);
@@ -341,7 +335,6 @@ export class GlobeImagery implements SliceUser {
     for (const [tile] of order) {
       this.apply(tile);
     }
-    this.relocated = false;
     this.cancelStale(frame);
     this.trimSources(frame);
   }
@@ -432,10 +425,11 @@ export class GlobeImagery implements SliceUser {
   }
 
   /**
-   * The pool shrank (`SliceUser`): slices renumbered or dropped. The next
-   * update points every drawn tile's draws again, as their slices (or
-   * their ancestors') may have moved; until then the layer is `busy`, so
-   * a settled tileset still runs that update before the next draw.
+   * The pool shrank (`SliceUser`): slices renumbered or dropped. The last
+   * update's tiles are pointed again at once, as their slices (or their
+   * ancestors') may have moved: another layer's update may shrink the pool
+   * after this one's, in the same frame, and a frozen tileset doesn't
+   * update at all. Pointing only writes the CPU records, uploaded at render.
    */
   relocate(moved: ReadonlyMap<number, number>): void {
     for (const [tile, s] of this.slices) {
@@ -447,22 +441,36 @@ export class GlobeImagery implements SliceUser {
       }
     }
     this.applied = new WeakMap();
-    this.relocated = true;
-  }
-
-  /**
-   * After a relocation, points the last update's tiles at their slices
-   * again without a full update: what a frozen tileset (`freezeSelection`)
-   * calls, since it skips its updates but still draws those tiles.
-   */
-  refresh(): void {
-    if (!this.relocated) {
-      return;
-    }
     for (const tile of this.drawn) {
       this.apply(tile);
     }
-    this.relocated = false;
+  }
+
+  /**
+   * Gives back the slices over this layer's share, which falls below what
+   * it holds only at the ceiling, when another layer took a step of its
+   * slices (`SlicePool.demand`): least recently used first, then this
+   * frame's farthest tiles. Not while a larger array is allocated.
+   */
+  private trim(order: [Tile, number][]): void {
+    const over = this.slices.size - this.pool.share(this);
+    if (over <= 0 || this.pool.resizing) {
+      return;
+    }
+    const rank = new Map(order.map(([tile], i) => [tile, i]));
+    const victims = [...this.slices]
+      .sort(
+        (a, b) =>
+          a[1].used - b[1].used ||
+          (rank.get(b[0]) ?? 0) - (rank.get(a[0]) ?? 0),
+      )
+      .slice(0, over);
+    // A drawn tile left without its slice draws its ancestor's, and asks
+    // again next update.
+    for (const [tile, s] of victims) {
+      this.slices.delete(tile);
+      this.pool.give([s.slice]);
+    }
   }
 
   // ------------------------------------------------------------- levels
@@ -787,9 +795,11 @@ export class GlobeImagery implements SliceUser {
   }
 
   /**
-   * A free slice from the pool, or this layer's least recently used one not
-   * wanted this frame: that first once the layer holds its share of the
-   * pool, so layers sharing it can't starve one another.
+   * A free slice from the pool while the layer holds less than its share,
+   * else its least recently used one not wanted this frame. Never past its
+   * share, so layers sharing the pool can't starve one another: a layer
+   * needing more grows its share (`SlicePool.demand`), or at the ceiling
+   * takes a step from a layer holding more than its part.
    */
   private allocate(frame: number): number | undefined {
     if (this.slices.size < this.pool.share(this)) {
@@ -798,7 +808,7 @@ export class GlobeImagery implements SliceUser {
         return free;
       }
     }
-    return this.recycle(frame) ?? this.pool.take();
+    return this.recycle(frame);
   }
 
   /** This layer's least recently used slice not wanted this frame. */

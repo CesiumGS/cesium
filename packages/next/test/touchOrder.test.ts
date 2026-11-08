@@ -218,43 +218,66 @@ describe("TouchOrder: per-frame cost", () => {
   });
 
   it("is far cheaper than sorting every resident tile", () => {
-    // Wall clock, loosely: the old sort at 30,000 tiles took 5.5 ms a frame.
+    // Work counted, not timed (the old sort took 5.5 ms a frame at 30,000
+    // tiles): the old policy visits every loaded tile and sorts the
+    // candidates; the order follows links and sorts one selection.
     const resident = 30_000;
+    const selection = 200;
     const nodes = Array.from({ length: resident }, (_, i) => new Node(i));
     const loaded = new Set<Node>();
     const order = new TouchOrder<Node>();
-    nodes.forEach((n, i) => {
-      order.touch(n, 1 + Math.floor(i / 200));
+    // Loaded in one order, last touched in a scattered one, as in a flight
+    // that revisits places.
+    let seed = 1;
+    const touchedAt = nodes.map(() => {
+      seed = (seed * 48271) % 2147483647;
+      return 1 + (seed % 150);
+    });
+    for (const n of nodes) {
       loaded.add(n);
+    }
+    const byFrame = [...nodes].sort(
+      (a, b) => touchedAt[a.id]! - touchedAt[b.id]!,
+    );
+    let sealedAt = 0;
+    for (const n of byFrame) {
+      const f = touchedAt[n.id]!;
+      if (f !== sealedAt) {
+        order.seal(sealedAt);
+        sealedAt = f;
+      }
+      order.touch(n, f);
       order.add(n);
-    });
-    let frame = 1 + resident / 200;
+    }
+    let frame = 151;
     order.seal(frame);
-    const frames = 20;
-    const time = (run: () => void) => {
-      const start = performance.now();
-      for (let f = 0; f < frames; f++) {
-        run();
+    // The old policy, one frame.
+    let compared = 0;
+    void [...loaded]
+      .filter((t) => t.touchedFrame < frame + 1)
+      .sort((a, b) => {
+        compared++;
+        return a.touchedFrame - b.touchedFrame;
+      });
+    const oldWork = resident + compared;
+    // The order, one frame: touches, the seal, eight evictions.
+    frame++;
+    const before = order.steps;
+    for (let k = 0; k < selection; k++) {
+      order.touch(nodes[(frame * 37 + k) % resident]!, frame);
+    }
+    order.seal(frame);
+    let count = 8;
+    for (const node of order.coldest(frame)) {
+      if (count-- <= 0) {
+        break;
       }
-      return (performance.now() - start) / frames;
-    };
-    const old = time(() => {
-      oldCandidates(loaded, frame + 1).slice(0, 8);
-    });
-    const incremental = time(() => {
-      frame++;
-      for (let k = 0; k < 200; k++) {
-        order.touch(nodes[(frame * 37 + k) % resident]!, frame);
-      }
-      order.seal(frame);
-      let count = 8;
-      for (const node of order.coldest(frame)) {
-        if (count-- <= 0) {
-          break;
-        }
-        void node;
-      }
-    });
-    expect(incremental).toBeLessThan(old / 10);
+      order.remove(node);
+    }
+    // The seal's sort of one selection, at most n log2 n comparisons.
+    const newWork =
+      selection + (order.steps - before) + selection * Math.log2(selection);
+    expect(oldWork).toBeGreaterThan(300_000);
+    expect(newWork).toBeLessThan(oldWork / 100);
   });
 });

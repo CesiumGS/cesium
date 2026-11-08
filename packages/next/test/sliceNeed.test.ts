@@ -77,5 +77,15 @@ describe("imagery slices: what a frame needs", () => {
       ceiling: 2048,
     });
     expect(thrashing.used / thrashing.capacity!).toBeGreaterThan(0.9);
+    // Out of memory, the row says growth stopped, and why.
+    const stopped = imagerySlicesRow({
+      needed: 480,
+      used: 512,
+      capacity: 512,
+      ceiling: 2048,
+      warning: "imagery slices: out of GPU memory",
+    });
+    expect(stopped.text).toContain("stopped growing");
+    expect(stopped.detail).toContain("out of GPU memory");
   });
 });

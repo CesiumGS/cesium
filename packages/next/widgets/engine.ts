@@ -345,11 +345,6 @@ export function engineSnapshot(
 }
 
 /**
- * Resolve, root tileset, to first content, to settled (or still streaming),
- * over the tilesets shown: a hidden one (the globe under photorealistic
- * tiles) draws nothing, so it never settles and the load never ended.
- */
-/**
  * The imagery slices' meter: this frame's need against capacity. The
  * slices are a cache, so how many hold imagery reaches capacity within
  * seconds by design; that count is in the text and the tooltip, and the
@@ -361,17 +356,23 @@ export function imagerySlicesRow(slices: {
   used: number;
   capacity: number;
   ceiling: number;
+  warning?: string;
 }): MemoryRow {
   return {
     label: "Imagery slices",
     unit: "count",
     used: slices.needed,
     capacity: slices.capacity,
-    text: `${slices.needed} needed of ${slices.capacity} · ${slices.used} cached`,
-    detail: `Needed: the slices this frame's tiles draw with or wait for. Cached: slices holding imagery, a cache that fills by design and recycles its least recently used. Globe imagery and night lights share one array; it grows to ${slices.ceiling} layers.`,
+    text: `${slices.needed} needed of ${slices.capacity} · ${slices.used} cached${slices.warning ? " · stopped growing" : ""}`,
+    detail: `Needed: the slices this frame's tiles draw with or wait for. Cached: slices holding imagery, a cache that fills by design and recycles its least recently used. Globe imagery and night lights share one array; it grows with the need, up to ${slices.ceiling} layers.${slices.warning ? ` ${slices.warning}.` : ""}`,
   };
 }
 
+/**
+ * Resolve, root tileset, to first content, to settled (or still streaming),
+ * over the tilesets shown: a hidden one (the globe under photorealistic
+ * tiles) draws nothing, so it never settles and the load never ended.
+ */
 function loadPhases(
   all: readonly Tileset3D[],
   options: EngineSnapshotOptions,
