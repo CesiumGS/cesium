@@ -1403,6 +1403,12 @@ export class World {
     },
   ): PointMesh {
     const fields = Object.entries(streams?.layout ?? {});
+    if (fields.length > MAX_DIRECTORY_ENTRIES) {
+      // surface.slang `readInstance` reads this many at most.
+      throw new RangeError(
+        `addPointMesh: ${fields.length} fields; a point set holds at most ${MAX_DIRECTORY_ENTRIES}.`,
+      );
+    }
     for (const [name, { offset, components }] of fields) {
       if (
         components < 1 ||
@@ -1860,6 +1866,13 @@ export class World {
       );
     }
     const streams = options.instances?.streams;
+    const fieldCount = Object.keys(streams?.layout ?? {}).length;
+    if (fieldCount > MAX_DIRECTORY_ENTRIES) {
+      // surface.slang `readInstance` reads this many at most.
+      throw new RangeError(
+        `addDraw: ${fieldCount} instance fields; a draw holds at most ${MAX_DIRECTORY_ENTRIES}.`,
+      );
+    }
     for (const [name, { offset, components }] of Object.entries(
       streams?.layout ?? {},
     )) {

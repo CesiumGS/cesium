@@ -140,8 +140,9 @@ DrawRecord drawRecord(uint index) {
 static const float CITY_LIGHTS_LUMINANCE = 0.3;
 static const float CITY_LIGHTS_FLOOR = 0.004;
 static const uint CLIP_BOXES = 8u;
-// Entries a mesh's named-attribute directory holds at most (layout.ts
-// MAX_DIRECTORY_ENTRIES): `readNamed`'s loop bound.
+// Entries a mesh's named-attribute directory, or a draw's instance
+// directory, holds at most (layout.ts MAX_DIRECTORY_ENTRIES): the bound of
+// `readNamed`'s, `readFragmentProperty`'s and `readInstance`'s loops.
 static const uint MAX_DIRECTORY_ENTRIES = 256u;
 
 [[vk::binding(0, 2)]] Texture2D<float4> baseColorTexture;
@@ -532,7 +533,9 @@ export __extern_cpp float4 readNamed(uint directory, uint hash, uint vertexIndex
 // A named field of an instance's streams (`InstanceOptions.streams.layout`)
 // as raw bits, through the draw's directory (DrawRecord.instanceDirectory:
 // count, then per field its name's hash, word offset and components);
-// zero where absent.
+// zero where absent. At most MAX_DIRECTORY_ENTRIES fields (`World.addDraw`
+// and `addPointMesh` refuse more), each at most 4 components: its loops'
+// constant bounds.
 export __extern_cpp uint4 readInstance(uint draw, uint instance, uint hash) {
   DrawRecord r = drawRecord(draw);
   uint4 bits = uint4(0u);
@@ -540,12 +543,18 @@ export __extern_cpp uint4 readInstance(uint draw, uint instance, uint hash) {
     return bits;
   }
   uint count = asuint(vertices[r.instanceDirectory]);
-  for (uint i = 0u; i < count; i++) {
+  for (uint i = 0u; i < MAX_DIRECTORY_ENTRIES; i++) {
+    if (i >= count) {
+      break;
+    }
     uint entry = r.instanceDirectory + 1u + i * 3u;
     if (asuint(vertices[entry]) == hash) {
       uint b = r.instanceStreams + instance * r.instanceStride + asuint(vertices[entry + 1u]);
-      uint components = min(asuint(vertices[entry + 2u]), 4u);
-      for (uint c = 0u; c < components; c++) {
+      uint components = asuint(vertices[entry + 2u]);
+      for (uint c = 0u; c < 4u; c++) {
+        if (c >= components) {
+          break;
+        }
         bits[c] = asuint(vertices[b + c]);
       }
       break;
@@ -580,12 +589,17 @@ uint4 propertyTexel(uint slot, float2 uv) {
 // scale): its bytes from the texel's channels, little-endian per
 // component, as the component type, normalized, then offset and scaled;
 // `fallback` where the mesh's directory has it otherwise or not at all.
+// Its loops are bounded by constants, as `readNamed`'s: the directory's
+// MAX_DIRECTORY_ENTRIES, and 4 channels, components and bytes.
 export __extern_cpp float4 readFragmentProperty(uint directory, uint hash, float2 uv, uint feature, float4 fallback) {
   if (directory == NO_STREAM) {
     return fallback;
   }
   uint count = asuint(vertices[directory]);
-  for (uint i = 0u; i < count; i++) {
+  for (uint i = 0u; i < MAX_DIRECTORY_ENTRIES; i++) {
+    if (i >= count) {
+      break;
+    }
     uint entry = directory + 1u + i * 3u;
     if (asuint(vertices[entry]) != hash) {
       continue;
@@ -600,7 +614,10 @@ export __extern_cpp float4 readFragmentProperty(uint directory, uint hash, float
       if (feature != 0xffffffffu) {
         uint size = info & 0xffu;
         uint row = asuint(vertices[entry + 1u]) + feature * size;
-        for (uint c = 0u; c < size; c++) {
+        for (uint c = 0u; c < 4u; c++) {
+          if (c >= size) {
+            break;
+          }
           value[c] = vertices[row + c];
         }
       }
@@ -614,15 +631,24 @@ export __extern_cpp float4 readFragmentProperty(uint directory, uint hash, float
     uint components = min(asuint(vertices[b + 4u]), 4u);
     bool normalized = asuint(vertices[b + 5u]) != 0u;
     uint bytes[4] = { 0u, 0u, 0u, 0u };
-    for (uint k = 0u; k < channelCount; k++) {
+    for (uint k = 0u; k < 4u; k++) {
+      if (k >= channelCount) {
+        break;
+      }
       bytes[k] = texel[(channels >> (k * 8u)) & 3u];
     }
     // Bytes per component: 8-, 16- or 32-bit types (COMPONENT_TYPE_CODES).
     uint size = kind <= 1u ? 1u : (kind == 2u || kind == 3u ? 2u : 4u);
     float4 value = float4(0.0);
-    for (uint c = 0u; c < components; c++) {
+    for (uint c = 0u; c < 4u; c++) {
+      if (c >= components) {
+        break;
+      }
       uint raw = 0u;
-      for (uint k = 0u; k < size; k++) {
+      for (uint k = 0u; k < 4u; k++) {
+        if (k >= size) {
+          break;
+        }
         uint at = c * size + k;
         if (at < 4u) {
           raw |= bytes[at] << (k * 8u);

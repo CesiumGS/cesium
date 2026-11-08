@@ -460,9 +460,10 @@ export interface MeshStreams {
  */
 /**
  * Entries a mesh's named-attribute directory holds at most (its
- * attributes, metadata properties and feature table columns): the
- * constant bounding surface.slang `readNamed`'s loop (the same there).
- * `World.addMesh` refuses a mesh with more.
+ * attributes, metadata properties and feature table columns), and fields
+ * an instance directory holds at most: the constant bounding surface.slang
+ * `readNamed`'s, `readFragmentProperty`'s and `readInstance`'s loops (the
+ * same there). `World.addMesh`, `addDraw` and `addPointMesh` refuse more.
  */
 export const MAX_DIRECTORY_ENTRIES = 256;
 /** Property textures a texture set binds, from this binding (group 2). */

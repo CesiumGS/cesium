@@ -2142,10 +2142,14 @@ fn readInstance( draw_0 : u32,  instance_1 : u32,  hash_1 : u32) -> vec4<u32>
     var i_3 : u32 = u32(0);
     loop
     {
-        if((i_3 < _S215))
+        if((i_3 < u32(256)))
         {
         }
         else
+        {
+            break;
+        }
+        if((i_3 >= _S215))
         {
             break;
         }
@@ -2153,14 +2157,18 @@ fn readInstance( draw_0 : u32,  instance_1 : u32,  hash_1 : u32) -> vec4<u32>
         if((bitcast<u32>((vertices_0[entry_1]))) == hash_1)
         {
             var _S216 : u32 = records_0[draw_0].instanceStreams_0 + instance_1 * records_0[draw_0].instanceStride_0 + (bitcast<u32>((vertices_0[entry_1 + u32(1)])));
-            var _S217 : u32 = min((bitcast<u32>((vertices_0[entry_1 + u32(2)]))), u32(4));
+            var _S217 : u32 = (bitcast<u32>((vertices_0[entry_1 + u32(2)])));
             var c_6 : u32 = u32(0);
             loop
             {
-                if((c_6 < _S217))
+                if((c_6 < u32(4)))
                 {
                 }
                 else
+                {
+                    break;
+                }
+                if((c_6 >= _S217))
                 {
                     break;
                 }
@@ -2206,10 +2214,14 @@ fn readFragmentProperty( directory_1 : u32,  hash_2 : u32,  uv_18 : vec2<f32>,  
     var i_4 : u32 = u32(0);
     loop
     {
-        if((i_4 < _S220))
+        if((i_4 < u32(256)))
         {
         }
         else
+        {
+            break;
+        }
+        if((i_4 >= _S220))
         {
             break;
         }
@@ -2235,10 +2247,14 @@ fn readFragmentProperty( directory_1 : u32,  hash_2 : u32,  uv_18 : vec2<f32>,  
                 c_7 = u32(0);
                 loop
                 {
-                    if((c_7 < size_5))
+                    if((c_7 < u32(4)))
                     {
                     }
                     else
+                    {
+                        break;
+                    }
+                    if((c_7 >= size_5))
                     {
                         break;
                     }
@@ -2263,10 +2279,14 @@ fn readFragmentProperty( directory_1 : u32,  hash_2 : u32,  uv_18 : vec2<f32>,  
         var k_0 : u32 = u32(0);
         loop
         {
-            if((k_0 < _S223))
+            if((k_0 < u32(4)))
             {
             }
             else
+            {
+                break;
+            }
+            if((k_0 >= _S223))
             {
                 break;
             }
@@ -2301,10 +2321,14 @@ fn readFragmentProperty( directory_1 : u32,  hash_2 : u32,  uv_18 : vec2<f32>,  
         c_7 = u32(0);
         loop
         {
-            if((c_7 < _S225))
+            if((c_7 < u32(4)))
             {
             }
             else
+            {
+                break;
+            }
+            if((c_7 >= _S225))
             {
                 break;
             }
@@ -2312,10 +2336,14 @@ fn readFragmentProperty( directory_1 : u32,  hash_2 : u32,  uv_18 : vec2<f32>,  
             var raw_0 : u32 = u32(0);
             loop
             {
-                if((k_0 < i_4))
+                if((k_0 < u32(4)))
                 {
                 }
                 else
+                {
+                    break;
+                }
+                if((k_0 >= i_4))
                 {
                     break;
                 }

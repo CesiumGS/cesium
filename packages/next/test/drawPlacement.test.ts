@@ -407,6 +407,43 @@ describe("World placements", () => {
     world.removeMesh(mesh);
   });
 
+  it("refuses instance directories past readInstance's bound", () => {
+    const layout: Record<string, { offset: number; components: number }> = {};
+    for (let i = 0; i <= MAX_DIRECTORY_ENTRIES; i++) {
+      layout[`f${i}`] = { offset: 0, components: 1 };
+    }
+    expect(() => world.addPointMesh(4, { stride: 1, layout })).toThrow(
+      new RegExp(`${MAX_DIRECTORY_ENTRIES + 1} fields.*at most`),
+    );
+    expect(() =>
+      world.addDraw({
+        mesh: world.addMesh(quad),
+        origin: Float64Array.of(0, 0, 0),
+        instances: {
+          matrices: Float64Array.of(
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+          ),
+          streams: { data: new Float32Array(1), stride: 1, layout },
+        },
+      }),
+    ).toThrow(new RegExp(`${MAX_DIRECTORY_ENTRIES + 1} instance fields`));
+  });
+
   it("refuses a dual position without its attribute, and billboards", () => {
     const draw = addQuad();
     expect(() =>
