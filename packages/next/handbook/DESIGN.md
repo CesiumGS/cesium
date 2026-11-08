@@ -46,6 +46,34 @@ build at all (`envDir: false`).
 `BENCH_RESULTS_DIR` points the build at another `bench/results`, as a worktree has
 only the committed runs.
 
+## The live view
+
+Overview's "See it run" draws a small scene with the real engine, from inside the
+one file, with no network and no token. `viewer/` holds its scene. `vite.config.ts`
+builds that as one module and puts it in the page as inert text
+(`<script type="text/plain" id="live-engine">`), so nothing parses it until a reader
+presses Start, when `src/live.tsx` imports it from a blob.
+
+It reaches past the public API in three places, all in `viewer/`:
+
+- `viewer/workerPool.ts` replaces `src/io/WorkerPool.ts`, because Chromium won't
+  start module workers from a page opened from disk, even from a blob. It decodes
+  on the main thread and answers only terrain and image requests.
+- It imports `flatTerrainTile` from `src/globe/quantizedMesh.ts`, for those requests.
+- `viewer/slang.ts` replaces `src/scene/slang.ts`, as the scene compiles no Slang.
+
+`viewer/natural-earth-world.jpg` is Natural Earth II (public domain,
+naturalearthdata.com), stitched from the engine's level 2 tiles at 2048 by 1024.
+It's one tile because the engine addresses a geographic provider's level as a square
+grid, with Mercator rows in `GlobeImagery.job()`, which doesn't suit a geographic
+pyramid. If that changes, check the map still sits in the right place: the towers
+stand in Switzerland.
+
+Check by hand when the engine changes: from `file://`, with stock browser flags, it
+starts on a click, the map and shadows look right, dragging orbits, and it submits
+no GPU work before the click, while idle, out of view or on another tab. A lost
+device shows the message and doesn't retry.
+
 ## Layout
 
 Nineteen tabs don't fit a horizontal strip, so they're a grouped side list on a
@@ -123,6 +151,7 @@ Details closed on screen print open.
 | Tessellation: the seam and the engine it leaves room for; the chart's dashed row | By hand, in `src/tabs/tessellation.tsx` and `src/pipeline.ts`, from the plan 5 spec                                                                                            | 2026-11-08                   |
 | 1.x to 2.0 API: the mapping and its tasks                                        | By hand, in `src/apiMap.ts` and `src/snippets.ts`. Counts and shares generated                                                                                                 | 2026-11-08                   |
 | Overview: the design targets and what they cost                                  | By hand, in `src/goals.tsx`, `src/costs.tsx` and `src/tabs/overview.tsx`, from the plans and 1.x source. Figures generated where the data exists; others cite the plan         | 2026-11-08                   |
+| Overview: the live view's still, `shots/live-globe.webp`                         | Captured by hand from the live view itself, in Edge. Holds only the globe                                                                                                      | 2026-11-08                   |
 | Dyno: how the pieces fit; each view by its job                                   | By hand, in `src/tabs/dyno.tsx`, from `bench/suite` and the overall plan, section 16                                                                                           | 2026-11-08                   |
 | Dyno: screenshots in `shots/`                                                    | Captured by hand from a short run of the one redistributable scene, in both themes where cheap. Check each by eye for tokens and account details. Licensed renders never go in | 2026-11-08                   |
 | Tile selection: a tile's states; levels per policy; mixed LOD; cache levels      | By hand, in `src/flows.tsx` and `src/tabs/selection.tsx`                                                                                                                       | 2026-11-08                   |

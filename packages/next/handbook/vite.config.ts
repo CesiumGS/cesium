@@ -8,7 +8,7 @@ import { execFile } from "node:child_process";
 import { readFileSync, renameSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig, type Plugin } from "vite";
+import { build, defineConfig, type Plugin } from "vite";
 import { findSecrets, findUnembeddedImages } from "../scripts/handbookData.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -22,6 +22,13 @@ const meta = () =>
   ).meta;
 
 /**
+ * Vite fills this placeholder after this config's plugins run. A single file
+ * has nothing to preload, so it stays empty.
+ */
+const noPreload = (code: string) =>
+  code.replaceAll("__VITE_PRELOAD__", "void 0");
+
+/**
  * Moves the built script and styles into the page, stamps it, refuses it if it
  * holds a secret or needs an image beside it, and names the file for handing out.
  */
@@ -30,7 +37,7 @@ function inlineIntoPage(): Plugin {
     name: "handbook-inline-into-page",
     enforce: "post",
     apply: "build",
-    generateBundle(_options, bundle) {
+    async generateBundle(_options, bundle) {
       const page = bundle["index.html"];
       if (!page || page.type !== "asset" || typeof page.source !== "string") {
         throw new Error("handbook: the build has no index.html");
@@ -42,7 +49,10 @@ function inlineIntoPage(): Plugin {
             `<script[^>]*src="[^"]*${name.replace(/^.*\//, "")}"[^>]*></script>`,
           );
           // A replacer function: `$` in the code stays literal.
-          const code = output.code.replaceAll("</script", "<\\/script");
+          const code = noPreload(output.code).replaceAll(
+            "</script",
+            "<\\/script",
+          );
           html = html.replace(tag, "");
           html = html.replace(
             "</body>",
@@ -58,6 +68,15 @@ function inlineIntoPage(): Plugin {
           delete bundle[name];
         }
       }
+      // Inert text until a reader starts the live view: nothing parses it.
+      const engine = (await buildLiveEngine())
+        .replaceAll("</script", "<\\/script")
+        .replaceAll("<!--", "<\\!--");
+      html = html.replace(
+        "</body>",
+        () =>
+          `<script type="text/plain" id="live-engine">${engine}</script></body>`,
+      );
       const { commit, generatedAt, dirty } = meta();
       html = html.replace(
         "</head>",
@@ -86,6 +105,60 @@ function inlineIntoPage(): Plugin {
       console.log(`handbook: dist/${name}, ${mb.toFixed(2)} MB`);
     },
   };
+}
+
+/**
+ * Swaps two engine modules for the live view's: its workers, which a page
+ * opened from disk can't start, and its Slang compiler, which it doesn't use.
+ */
+function liveViewModules(): Plugin {
+  return {
+    name: "handbook-live-view-modules",
+    enforce: "pre",
+    resolveId(source, importer) {
+      if (!importer?.includes("/src/")) {
+        return null;
+      }
+      if (/\/WorkerPool\.ts$/.test(source)) {
+        return join(here, "viewer/workerPool.ts");
+      }
+      if (/\/slang\.ts$/.test(source)) {
+        return join(here, "viewer/slang.ts");
+      }
+      return null;
+    },
+  };
+}
+
+/** The live view's engine, as one module's text, built apart from the page. */
+async function buildLiveEngine(): Promise<string> {
+  const result = await build({
+    configFile: false,
+    root: here,
+    envDir: false,
+    publicDir: false,
+    logLevel: "warn",
+    plugins: [liveViewModules()],
+    build: {
+      write: false,
+      target: "es2023",
+      assetsInlineLimit: 100_000_000,
+      modulePreload: false,
+      rollupOptions: {
+        input: join(here, "viewer/main.ts"),
+        preserveEntrySignatures: "strict",
+        output: { format: "es", codeSplitting: false },
+      },
+    },
+  });
+  const outputs = Array.isArray(result) ? result : [result];
+  const chunk = outputs
+    .flatMap((o) => ("output" in o ? o.output : []))
+    .find((o) => o.type === "chunk");
+  if (!chunk || chunk.type !== "chunk") {
+    throw new Error("handbook: the live engine didn't build");
+  }
+  return noPreload(chunk.code);
 }
 
 /**
@@ -122,7 +195,7 @@ export default defineConfig({
   // No env file reaches this build: the page is for handing out.
   envDir: false,
   publicDir: false,
-  plugins: [inlineIntoPage(), regenerateData()],
+  plugins: [liveViewModules(), inlineIntoPage(), regenerateData()],
   server: { host: "127.0.0.1", strictPort: true },
   build: {
     outDir: "dist",

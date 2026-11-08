@@ -1,7 +1,16 @@
 import { count, data, day, size, libraryEntry } from "../data.ts";
 import { Costs } from "../costs.tsx";
 import { GoalList } from "../goals.tsx";
-import { C, DataTable, Generated, Page, Section, Written } from "../parts.tsx";
+import { LiveGlobeFigure } from "../live.tsx";
+import {
+  C,
+  CodeBlock,
+  DataTable,
+  Generated,
+  Page,
+  Section,
+  Written,
+} from "../parts.tsx";
 
 const MILESTONES = [
   {
@@ -41,6 +50,10 @@ const MILESTONES = [
   },
 ];
 
+const QUICK_START = `npm install
+npm run setup --workspace @cesium/next   # once per machine
+npm run dev --workspace @cesium/next     # then open http://127.0.0.1:5190`;
+
 export function Overview() {
   const core = libraryEntry("core");
   return (
@@ -58,6 +71,44 @@ export function Overview() {
         </>
       }
     >
+      <Section title="Quick start: run Dyno">
+        <p>
+          Dyno is the app for measuring and exploring the engine. You need Node
+          24 or later and a browser with WebGPU. From the repository root:
+        </p>
+        <CodeBlock language="shell" code={QUICK_START} />
+        <p>
+          To load your own Cesium ion content, paste your token into{" "}
+          <strong>ion token</strong> at the foot of Dyno's side rail. Without
+          one, the evaluation token reaches public assets only. More on the{" "}
+          <a href="#/dyno">Dyno</a> tab.
+        </p>
+      </Section>
+
+      <Section title="See it run">
+        <p>
+          This is the engine, live, from inside this one file. It starts only
+          when you ask, draws only when something changes, and stops when it's
+          out of view. Drag to orbit.
+        </p>
+        <LiveGlobeFigure />
+        <p className="provenance">
+          It's a small, simple scene: an ellipsoid with no terrain, one image of
+          Natural Earth II (public domain, naturalearthdata.com), and a block of
+          boxes. There's no streaming, no 3D Tiles, no ion and no stars. The
+          time of day is a simple model, not an ephemeris. It decodes on the
+          main thread, because a page opened from disk can't start the engine's
+          workers. For the full experience, with real content and both engines,
+          run <a href="#/dyno">Dyno</a>.
+        </p>
+        <p className="provenance">
+          Run from a file on disk in Chrome 156 and Edge 157 on a Mac. It can't
+          start yet in WebKit 27.2: its shader compiler rejects one of the
+          engine's kernels. Firefox 157 offered no GPU adapter on that machine.
+          Where it can't run, you see the picture and a note saying why.
+        </p>
+      </Section>
+
       <Section title="What it's aiming for">
         <p>
           Fourteen targets. Each has a state today, and opens to show where 1.x

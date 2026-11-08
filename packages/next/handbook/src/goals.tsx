@@ -185,7 +185,7 @@ const goals = (): readonly Goal[] => [
     state: "built",
     oneX: (
       <>
-        1.x's math agrees with 2.0's to 1e-12 in the parity tests, and 2.0 uses
+        1.x's math agrees with 2.0's to 10⁻¹² in the parity tests, and 2.0 uses
         it as an oracle. It doesn't attach a stated error to a position. Its
         analytic Moon is up to 0.31° and 2,051 km from DE440, sampled over 2000
         to 2050. Some height queries also miss what's drawn: on OSM Buildings,{" "}
@@ -226,7 +226,7 @@ const goals = (): readonly Goal[] => [
     today: [
       [
         "measured",
-        "Precision on the GPU: about 4e-8 of the distance, so 31 µm at 1 km.",
+        "Precision on the GPU: about 4 × 10⁻⁸ of the distance, so 31 µm at 1 km.",
       ],
       [
         "built",
