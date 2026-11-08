@@ -840,26 +840,10 @@
       },
       "description": "The 70 m stations' own position accuracy, stated on their east-north-up frames (scenarios/stated.ts DSN_STATION_ACCURACY): an input, not an expected value (ruling F6). Table 7 gives each antenna's location uncertainty (m, 1σ) at the time of its VLBI measurements; its note says these have since grown to as much as 0.1 m (1σ), from events such as the 2019 Ridgecrest earthquake and plate velocities integrated over the years. The explorer states 0.1 m.",
       "units": "m, 1-sigma",
-      "columns": [
-        "spin radius",
-        "longitude",
-        "z"
-      ],
-      "DSS 14": [
-        "0.024",
-        "0.035",
-        "0.030"
-      ],
-      "DSS 43": [
-        "0.026",
-        "0.035",
-        "0.032"
-      ],
-      "DSS 63": [
-        "0.027",
-        "0.035",
-        "0.031"
-      ],
+      "columns": ["spin radius", "longitude", "z"],
+      "DSS 14": ["0.024", "0.035", "0.030"],
+      "DSS 43": ["0.026", "0.035", "0.032"],
+      "DSS 63": ["0.027", "0.035", "0.031"],
       "note": "as much as 0.1 meter, 1-sigma, since the VLBI measurements"
     },
     "dsn-horizon-masks": {
