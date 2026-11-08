@@ -8,7 +8,9 @@ import {
   CORRIDOR_ALIGNMENT,
   CORRIDOR_CRS,
   CROSS_SECTION,
+  STRUCTURES,
   TICKS,
+  VIADUCTS,
   corridorFrame,
   sectionSurface,
 } from "../examples/design-globe/corridor.ts";
@@ -114,16 +116,31 @@ describe("the corridor's alignment", () => {
 describe("the corridor's vertical profile", () => {
   const profile = CORRIDOR_ALIGNMENT.vertical!;
 
-  it("runs from station 10,000 at 120 ftUS to the alignment's end", () => {
+  it("runs from station 10,000, tied in to the ground at 316.71 ftUS, to the alignment's end", () => {
     expect(profile.startStation).toBe(10_000);
-    expect(profile.startElevation).toBe(120);
+    expect(profile.startElevation).toBe(316.71);
     const length = profile.segments.reduce((sum, s) => sum + s.length, 0);
     expect(profile.startStation + length).toBe(alignment.endStation);
-    expect(alignment.elevationAt(10_000)).toBeCloseTo(120, 9);
+    expect(alignment.elevationAt(10_000)).toBeCloseTo(316.71, 9);
   });
 
-  it("is 910 ftUS at station 92,500", () => {
-    expect(alignment.elevationAt(92_500)).toBeCloseTo(910, 9);
+  it("keeps its grades within 6% and its vertical curves at AASHTO's least K for 65 mph", () => {
+    for (const s of profile.segments) {
+      const grades =
+        s.kind === "grade" ? [s.grade] : [s.startGrade, s.endGrade];
+      for (const g of grades) {
+        expect(Math.abs(g)).toBeLessThanOrEqual(0.06);
+      }
+      if (s.kind === "parabola") {
+        // K: the curve's length per percent of grade change; crest 193, sag 157.
+        const a = (s.endGrade - s.startGrade) * 100;
+        const least = a < 0 ? 193 : 157;
+        expect(s.length / Math.abs(a), `curve at ${s.length}`).toBeGreaterThan(
+          least - 0.5,
+        );
+        expect(s.length).toBeGreaterThanOrEqual(200);
+      }
+    }
   });
 
   it("has continuous grades: each parabola joins its neighbours' grades", () => {
@@ -136,27 +153,44 @@ describe("the corridor's vertical profile", () => {
   });
 });
 
-describe("the bridge", () => {
-  it("lies on the long tangent (stations 37,000 to 67,000)", () => {
+describe("the structures", () => {
+  it("run in order of station, apart, within the alignment", () => {
+    let at = alignment.startStation;
+    for (const s of STRUCTURES) {
+      expect(
+        s.fromStation,
+        `${s.kind} at ${s.fromStation}`,
+      ).toBeGreaterThanOrEqual(at);
+      expect(s.toStation).toBeGreaterThan(s.fromStation);
+      at = s.toStation;
+    }
+    expect(at).toBeLessThanOrEqual(alignment.endStation);
+    expect(STRUCTURES.filter((s) => s.kind === "viaduct")).toHaveLength(19);
+    expect(STRUCTURES.filter((s) => s.kind === "tunnel")).toHaveLength(19);
+  });
+
+  it("give each viaduct 4×4 piers at ±20 in equal spans of about 120 between its ends", () => {
+    for (const v of VIADUCTS) {
+      expect(v.deckThickness).toBe(1.5);
+      expect([v.piers.width, v.piers.depth]).toEqual([4, 4]);
+      expect(v.piers.offsets).toEqual([-20, 20]);
+      const ends = [v.fromStation, ...v.piers.stations, v.toStation];
+      const span = (v.toStation - v.fromStation) / (ends.length - 1);
+      expect(Math.abs(span - 120)).toBeLessThan(60);
+      ends.slice(1).forEach((station, i) => {
+        expect(station - ends[i]!).toBeCloseTo(span, 9);
+      });
+      expect(v.piers.belowProfile % 5).toBe(0);
+    }
+  });
+
+  it("measure across the viaduct on the long tangent (stations 37,000 to 67,000)", () => {
     const tangent = ranges.find(
       (r) => r.from <= BRIDGE.fromStation && BRIDGE.toStation <= r.to,
     );
     expect(tangent?.element.kind).toBe("line");
     expect([tangent?.from, tangent?.to]).toEqual([37_000, 67_000]);
-    expect([BRIDGE.fromStation, BRIDGE.toStation]).toEqual([60_000, 61_200]);
-  });
-
-  it("has 4×4 piers at ±20 every 120 between its ends, down to the profile −25", () => {
-    expect(BRIDGE.deckThickness).toBe(1.5);
-    expect(BRIDGE.piers.width).toBe(4);
-    expect(BRIDGE.piers.depth).toBe(4);
-    expect(BRIDGE.piers.offsets).toEqual([-20, 20]);
-    expect(BRIDGE.piers.belowProfile).toBe(25);
-    expect(BRIDGE.piers.stations).toHaveLength(9);
-    BRIDGE.piers.stations.forEach((station, i) => {
-      expect(station).toBe(BRIDGE.fromStation + 120 * (i + 1));
-    });
-    expect(BRIDGE.piers.stations.at(-1)).toBeLessThan(BRIDGE.toStation);
+    expect([BRIDGE.fromStation, BRIDGE.toStation]).toEqual([43_700, 47_800]);
   });
 });
 

@@ -1,9 +1,10 @@
 // The design globe's corridor, as data (plan 4b Task 12; the plan's call 16):
 // a 164,042 ftUS (50 km) highway in NAD83(2011) / California zone 3 (ftUS)
 // with NAVD88 heights in ftUS, EPSG:6420+6360. Its alignment has three
-// spiralled curves and a profile of grades and parabolas, and it carries a
-// bridge on its long tangent. The generator (scripts/designTiles.mjs) builds
-// the tilesets and the exact answers from these values.
+// spiralled curves and a profile of grades and parabolas fitted to the real
+// ground, with viaducts and tunnels where the ground is too far from it. The
+// generator (scripts/designTiles.mjs) builds the tilesets and the exact
+// answers from these values.
 //
 // Every length, station, offset and elevation is in US survey feet. The
 // sign conventions are alignment.ts's: azimuths in radians clockwise from
@@ -28,9 +29,48 @@ export const CORRIDOR_CRS: CrsRef = {
 /**
  * The mainline: 164,042 ftUS from (6,080,000, 2,110,000) at azimuth 100°,
  * stations 10,000 to 174,042. Curves of +5,000 (left), −3,000 (right) and
- * +8,000 (left), each entered and left by a clothoid spiral, and a profile
- * that climbs at +2%, runs at −0.5% over the long tangent (and the bridge),
- * climbs at +3% and levels off at 910 ftUS from station 92,500.
+ * +8,000 (left), each entered and left by a clothoid spiral.
+ *
+ * Its profile is a design vertical alignment fitted to the real ground:
+ * USGS 3DEP ground heights (NAVD88 metres, from 3DEP's elevation service,
+ * no token) at 330 points every 500 ftUS along the horizontal alignment,
+ * sampled 2026-11-07 by scripts/corridorGround.mjs, which also made the fit
+ * (the samples are not in the repo). The fit, as a highway designer would
+ * set it for a 65 mph freeway: grades within 6%, to 0.01%; PVIs on whole
+ * stations, each with a symmetric parabolic vertical curve of at least
+ * AASHTO's least K for stopping sight distance (crest 193, sag 157, ft per
+ * percent of grade change; 2018 Green Book), in whole 100 ft; the ends tied
+ * in to the ground; Huber's loss against the ground (40 ftUS), so that it
+ * follows the ground where a road can and leaves to a structure what it
+ * can't. Its PVIs (station, elevation in ftUS, the grades either side, the
+ * curve and its K):
+ *
+ *        100+00    316.71  (start)
+ *        190+00    791.01  +5.27% to +0.82%, crest 900 ft, K 202
+ *        220+00    815.61  +0.82% to −2.41%, crest 700 ft, K 217
+ *        340+00    526.41  −2.41% to +4.79%, sag 1,200 ft, K 167
+ *        520+00  1,388.61  +4.79% to −5.98%, crest 2,100 ft, K 195
+ *        700+00    312.21  −5.98% to +0.60%, sag 1,100 ft, K 167
+ *        790+00    366.21  +0.60% to +5.98%, sag 900 ft, K 167
+ *        910+00  1,083.81  +5.98% to −5.85%, crest 2,300 ft, K 194
+ *        940+00    908.31  −5.85% to +4.01%, sag 1,600 ft, K 162
+ *       1000+00  1,148.91  +4.01% to −5.98%, crest 2,000 ft, K 200
+ *       1090+00    610.71  −5.98% to −0.20%, sag 1,000 ft, K 173
+ *       1210+00    586.71  −0.20% to +4.52%, sag 800 ft, K 169
+ *       1270+00    857.91  +4.52% to −6.00%, crest 2,100 ft, K 200
+ *       1300+00    677.91  −6.00% to +3.10%, sag 1,500 ft, K 165
+ *       1390+00    956.91  +3.10% to −4.78%, crest 1,600 ft, K 203
+ *       1480+00    526.71  −4.78% to +4.96%, sag 1,600 ft, K 164
+ *       1510+00    675.51  +4.96% to −4.15%, crest 1,800 ft, K 198
+ *       1600+00    302.01  −4.15% to +0.46%, sag 800 ft, K 174
+ *       1740+42    366.60  (end)
+ *
+ * The ground is steep hills crossed against their grain, so no profile
+ * within 6% can follow it: against the samples the fit's largest fill is
+ * 330.8 ftUS (100.8 m, at station 64,500) and its largest cut 605.2 ftUS
+ * (184.5 m, at station 51,000), and both are structures (`STRUCTURES`). Outside them,
+ * on earthwork, the fill reaches 49.4 ftUS (15.1 m) and the cut 79.8 ftUS
+ * (24.3 m). Its RMS against the ground is 161.8 ftUS.
  */
 export const CORRIDOR_ALIGNMENT: AlignmentDefinition = {
   name: "Mainline",
@@ -54,15 +94,128 @@ export const CORRIDOR_ALIGNMENT: AlignmentDefinition = {
   ],
   vertical: {
     startStation: 10_000,
-    startElevation: 120,
+    startElevation: 316.71,
     segments: [
-      { kind: "grade", length: 15_000, grade: 0.02 },
-      { kind: "parabola", length: 2_000, startGrade: 0.02, endGrade: -0.005 },
-      { kind: "grade", length: 40_000, grade: -0.005 },
-      { kind: "parabola", length: 3_000, startGrade: -0.005, endGrade: 0.03 },
-      { kind: "grade", length: 20_000, grade: 0.03 },
-      { kind: "parabola", length: 2_500, startGrade: 0.03, endGrade: 0 },
-      { kind: "grade", length: 81_542, grade: 0 },
+      { kind: "grade", length: 8550, grade: 0.0527 },
+      {
+        kind: "parabola",
+        length: 900,
+        startGrade: 0.0527,
+        endGrade: 0.0082,
+      },
+      { kind: "grade", length: 2200, grade: 0.0082 },
+      {
+        kind: "parabola",
+        length: 700,
+        startGrade: 0.0082,
+        endGrade: -0.0241,
+      },
+      { kind: "grade", length: 11_050, grade: -0.0241 },
+      {
+        kind: "parabola",
+        length: 1200,
+        startGrade: -0.0241,
+        endGrade: 0.0479,
+      },
+      { kind: "grade", length: 16_350, grade: 0.0479 },
+      {
+        kind: "parabola",
+        length: 2100,
+        startGrade: 0.0479,
+        endGrade: -0.0598,
+      },
+      { kind: "grade", length: 16_400, grade: -0.0598 },
+      {
+        kind: "parabola",
+        length: 1100,
+        startGrade: -0.0598,
+        endGrade: 0.006,
+      },
+      { kind: "grade", length: 8000, grade: 0.006 },
+      {
+        kind: "parabola",
+        length: 900,
+        startGrade: 0.006,
+        endGrade: 0.0598,
+      },
+      { kind: "grade", length: 10_400, grade: 0.0598 },
+      {
+        kind: "parabola",
+        length: 2300,
+        startGrade: 0.0598,
+        endGrade: -0.0585,
+      },
+      { kind: "grade", length: 1050, grade: -0.0585 },
+      {
+        kind: "parabola",
+        length: 1600,
+        startGrade: -0.0585,
+        endGrade: 0.0401,
+      },
+      { kind: "grade", length: 4200, grade: 0.0401 },
+      {
+        kind: "parabola",
+        length: 2000,
+        startGrade: 0.0401,
+        endGrade: -0.0598,
+      },
+      { kind: "grade", length: 7500, grade: -0.0598 },
+      {
+        kind: "parabola",
+        length: 1000,
+        startGrade: -0.0598,
+        endGrade: -0.002,
+      },
+      { kind: "grade", length: 11_100, grade: -0.002 },
+      {
+        kind: "parabola",
+        length: 800,
+        startGrade: -0.002,
+        endGrade: 0.0452,
+      },
+      { kind: "grade", length: 4550, grade: 0.0452 },
+      {
+        kind: "parabola",
+        length: 2100,
+        startGrade: 0.0452,
+        endGrade: -0.06,
+      },
+      { kind: "grade", length: 1200, grade: -0.06 },
+      {
+        kind: "parabola",
+        length: 1500,
+        startGrade: -0.06,
+        endGrade: 0.031,
+      },
+      { kind: "grade", length: 7450, grade: 0.031 },
+      {
+        kind: "parabola",
+        length: 1600,
+        startGrade: 0.031,
+        endGrade: -0.0478,
+      },
+      { kind: "grade", length: 7400, grade: -0.0478 },
+      {
+        kind: "parabola",
+        length: 1600,
+        startGrade: -0.0478,
+        endGrade: 0.0496,
+      },
+      { kind: "grade", length: 1300, grade: 0.0496 },
+      {
+        kind: "parabola",
+        length: 1800,
+        startGrade: 0.0496,
+        endGrade: -0.0415,
+      },
+      { kind: "grade", length: 7700, grade: -0.0415 },
+      {
+        kind: "parabola",
+        length: 800,
+        startGrade: -0.0415,
+        endGrade: 0.0046,
+      },
+      { kind: "grade", length: 13_642, grade: 0.0046 },
     ],
   },
 };
@@ -191,34 +344,119 @@ export interface Bridge {
     readonly depth: number;
     /** Each pier line's offset. */
     readonly offsets: readonly number[];
-    /** Every 120 ft between the bridge's ends (which are abutments). */
+    /** About every 120 ft between the bridge's ends (which are abutments). */
     readonly stations: readonly number[];
     /** Each pier goes down to the profile's elevation minus this. */
     readonly belowProfile: number;
   };
 }
 
+/** A tunnel: the road under the ground from one portal to the other. */
+export interface Tunnel {
+  readonly fromStation: number;
+  readonly toStation: number;
+}
+
+/** A structure along the mainline, in order of station. */
+export type Structure =
+  | ({ readonly kind: "viaduct" } & Bridge)
+  | ({ readonly kind: "tunnel" } & Tunnel);
+
 const PIER_SPACING = 120;
 
 /**
- * The bridge: stations 60,000 to 61,200 on the long tangent, a 1.5 ft deck,
- * and 4×4 ft piers at offsets ±20 every 120 ft, down to the profile −25.
+ * A viaduct from `from` to `to`: a 1.5 ft deck and 4×4 ft piers at offsets
+ * ±20, in equal spans of about 120 ft, each down to the profile less
+ * `belowProfile` (its deepest fill against the ground and 15 ftUS more, in
+ * whole 5 ftUS: below the ground the terrain hides the rest).
  */
-export const BRIDGE: Bridge = {
-  fromStation: 60_000,
-  toStation: 61_200,
-  deckThickness: 1.5,
-  piers: {
-    width: 4,
-    depth: 4,
-    offsets: [-20, 20],
-    stations: Array.from(
-      { length: (61_200 - 60_000) / PIER_SPACING - 1 },
-      (_, i) => 60_000 + PIER_SPACING * (i + 1),
-    ),
-    belowProfile: 25,
-  },
+const viaduct = (from: number, to: number, belowProfile: number): Structure => {
+  const spans = Math.max(1, Math.round((to - from) / PIER_SPACING));
+  return {
+    kind: "viaduct",
+    fromStation: from,
+    toStation: to,
+    deckThickness: 1.5,
+    piers: {
+      width: 4,
+      depth: 4,
+      offsets: [-20, 20],
+      stations: Array.from(
+        { length: spans - 1 },
+        (_, i) => from + ((to - from) * (i + 1)) / spans,
+      ),
+      belowProfile,
+    },
+  };
 };
+
+const tunnel = (from: number, to: number): Structure => ({
+  kind: "tunnel",
+  fromStation: from,
+  toStation: to,
+});
+
+/**
+ * The mainline's structures (scripts/corridorGround.mjs, with the profile):
+ * a viaduct where the profile is more than 50 ftUS over the sampled ground
+ * and a tunnel where it is more than 80 ftUS under it. Each sample stands
+ * for half the way to its neighbours, and a viaduct reaches on to where the
+ * ground meets the road; structures of a kind within 1,500 ft are joined
+ * over ground on their own side of the road; their ends are in whole
+ * 100 ft. 19 viaducts (52,600 ft) and 19 tunnels (44,400 ft): 59% of the
+ * 164,042 ft.
+ */
+export const STRUCTURES: readonly Structure[] = [
+  tunnel(11_700, 14_800),
+  viaduct(15_100, 17_900, 225),
+  viaduct(18_600, 19_300, 85),
+  tunnel(19_700, 20_800),
+  viaduct(21_700, 23_800, 280),
+  tunnel(26_200, 26_800),
+  viaduct(27_700, 29_300, 245),
+  tunnel(29_700, 31_300),
+  viaduct(31_700, 34_300, 170),
+  tunnel(36_200, 36_800),
+  tunnel(39_200, 40_300),
+  tunnel(41_700, 43_300),
+  viaduct(43_700, 47_800, 235),
+  tunnel(48_200, 52_800),
+  viaduct(53_700, 54_400, 120),
+  tunnel(54_700, 59_800),
+  viaduct(60_200, 69_300, 350),
+  tunnel(75_700, 78_300),
+  viaduct(79_200, 86_800, 295),
+  tunnel(87_700, 94_300),
+  viaduct(94_700, 96_300, 150),
+  tunnel(97_200, 101_300),
+  viaduct(102_200, 107_300, 215),
+  viaduct(108_700, 109_300, 105),
+  tunnel(109_700, 110_300),
+  tunnel(111_700, 114_300),
+  viaduct(114_700, 115_300, 100),
+  tunnel(115_700, 117_800),
+  viaduct(119_200, 122_300, 210),
+  tunnel(124_700, 125_300),
+  viaduct(128_700, 130_300, 260),
+  viaduct(131_700, 134_900, 245),
+  tunnel(135_700, 138_300),
+  viaduct(139_500, 143_800, 105),
+  tunnel(144_200, 145_800),
+  viaduct(147_700, 148_300, 70),
+  tunnel(149_200, 150_800),
+  viaduct(152_200, 152_800, 100),
+];
+
+/** The viaducts, in order of station. */
+export const VIADUCTS: readonly Bridge[] = STRUCTURES.filter(
+  (s): s is { kind: "viaduct" } & Bridge => s.kind === "viaduct",
+);
+
+/**
+ * The bridge the answers measure across: the viaduct on the long tangent,
+ * stations 43,700 to 47,800.
+ */
+export const BRIDGE: Bridge = VIADUCTS.find((v) => v.fromStation === 43_700)!;
 
 /**
  * Station ticks: a mark every 100 ft of station, on each outer shoulder at

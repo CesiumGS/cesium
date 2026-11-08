@@ -16,6 +16,7 @@ import {
   SITE_BUILDING,
   modelAnchor,
   modelFootprint,
+  modelRoute,
   type PortfolioSite,
 } from "./sites.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
@@ -370,6 +371,15 @@ export interface SiteEntry {
   };
   /** The model's footprint corners at its ground, design units. */
   readonly corners?: readonly (readonly [number, number, number])[];
+  /**
+   * A model along a line (sites.ts `modelRoute`): its route at its ground
+   * and its foundations' reach either side, design units. Its terrain is
+   * clipped around the route, not over the footprint.
+   */
+  readonly route?: {
+    readonly points: readonly (readonly [number, number, number])[];
+    readonly halfWidth: number;
+  };
   /** Where rigid is exact: the model's middle, design units. */
   readonly anchor?: readonly [number, number, number];
   readonly frame: EngineeringFrameDefinition;
@@ -413,6 +423,7 @@ const codesOf = (crs: CrsRef): string =>
  */
 function siteEntry(site: PortfolioSite, store: string): SiteEntry {
   const corners = modelFootprint(site);
+  const route = modelRoute(site);
   /** Across the footprint, design units: its diagonal. */
   const across = Math.hypot(
     corners[2]![0] - corners[0]![0],
@@ -442,6 +453,7 @@ function siteEntry(site: PortfolioSite, store: string): SiteEntry {
       }),
     },
     corners,
+    ...(route !== undefined && { route }),
     anchor: modelAnchor(site),
     frame: site.frame,
     ...(site.frame.geoidFallback !== undefined && {

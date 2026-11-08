@@ -1,10 +1,11 @@
 // The generator's station sampling and corridor mesh (plan 4b Task 14):
 // chords within tolerance on curves, tangents at most 30 ft apart, every join
-// and the bridge's ends kept, and triangles wound to face their normals.
+// and the structures' ends kept, and triangles wound to face their normals.
 import { describe, expect, it } from "vitest";
 import {
   BRIDGE,
   CORRIDOR_ALIGNMENT,
+  STRUCTURES,
 } from "../examples/design-globe/corridor.ts";
 import {
   corridorMesh,
@@ -85,7 +86,7 @@ describe("sampleStations", () => {
     expect(Array.from(stations)).toEqual(expect.arrayContaining([600, 3_100]));
   });
 
-  it("includes the corridor's joins and the bridge's ends within a range", () => {
+  it("includes the corridor's joins and the structures' ends within a range", () => {
     const corridor = new Alignment(CORRIDOR_ALIGNMENT);
     const all = Array.from(
       sampleStations(
@@ -101,8 +102,7 @@ describe("sampleStations", () => {
       expect.arrayContaining([
         ...joins,
         corridor.endStation,
-        BRIDGE.fromStation,
-        BRIDGE.toStation,
+        ...STRUCTURES.flatMap((st) => [st.fromStation, st.toStation]),
       ]),
     );
     // A range that starts and ends between joins keeps only its own.
@@ -143,7 +143,8 @@ function facing(mesh: {
 
 describe("corridorMesh", () => {
   const alignment = new Alignment(CORRIDOR_ALIGNMENT);
-  const stations = sampleStations(alignment, 59_900, 61_300, 0.003);
+  // The viaduct on the long tangent, 43,700 to 47,800, and a little either side.
+  const stations = sampleStations(alignment, 43_600, 47_900, 0.003);
   const mesh = corridorMesh(alignment, stations, { tickInterval: 100 });
 
   it("names the section's strips, the barriers, the deck, the piers and the ticks", () => {
@@ -153,11 +154,11 @@ describe("corridorMesh", () => {
         "left lanes",
         "right outer shoulder",
         "median barrier",
-        "bridge deck",
-        "pier 601+20 left",
-        "pier 610+80 right",
-        "tick 600+00 left",
-        "tick 612+00 right",
+        "viaduct 437+00 to 478+00",
+        "pier 438+20.59 left",
+        "pier 476+79.41 right",
+        "tick 437+00 left",
+        "tick 478+00 right",
       ]),
     );
     expect(mesh.featureIds.length * 3).toBe(mesh.design.length);
@@ -168,21 +169,24 @@ describe("corridorMesh", () => {
     expect(facing(mesh)).toBe(mesh.indices.length / 3);
   });
 
-  it("puts the deck 1.5 ft under the surface and the piers 25 ft under the profile", () => {
-    // The profile falls across the bridge, so the last pier reaches lowest.
+  it("puts the deck 1.5 ft under the surface and each pier its viaduct's depth under the profile", () => {
     const deepest = Math.min(
-      ...BRIDGE.piers.stations.map((s) => alignment.elevationAt(s)),
+      ...BRIDGE.piers.stations.map(
+        (s) => alignment.elevationAt(s) - BRIDGE.piers.belowProfile,
+      ),
     );
     let lowest = Infinity;
     for (let i = 2; i < mesh.design.length; i += 3) {
       lowest = Math.min(lowest, mesh.design[i]!);
     }
-    expect(lowest).toBeCloseTo(deepest - BRIDGE.piers.belowProfile, 6);
+    expect(lowest).toBeCloseTo(deepest, 6);
     // The deck's underside at the median, 1.5 ft under the surface there.
-    const under = alignment.elevationAt(60_600) - BRIDGE.deckThickness;
+    // A sampled station near the viaduct's middle.
+    const at = Array.from(stations).find((s) => s >= 45_000)!;
+    const under = alignment.elevationAt(at) - BRIDGE.deckThickness;
     let found = false;
     for (let i = 0; i < mesh.design.length; i += 3) {
-      const p = alignment.pointAt(60_600, 0);
+      const p = alignment.pointAt(at, 0);
       if (
         Math.hypot(mesh.design[i]! - p[0]!, mesh.design[i + 1]! - p[1]!) <
           1.0001 &&

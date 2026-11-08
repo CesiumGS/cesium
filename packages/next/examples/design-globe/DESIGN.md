@@ -80,14 +80,14 @@ the second audience: every number is there and honest, but quieter.
   with visuals in the viewer the better"). First version:
   1. **Error whiskers:** a leader every 1,000 ft along the corridor from each
      rigid position to its reprojected partner, coloured by length: zero at
-     the anchor, about 31 m at the far end, shrinking to nothing as the morph
+     the anchor, about 34 m at the far end, shrinking to nothing as the morph
      completes.
   2. **The anchor ring:** "the placements agree here".
   3. **The measurement lines,** with a label pill giving the design distance,
      and the other placement's line ghosted beside each one.
   4. **A ground-versus-grid ruler** along the 10,000 ft pair: tick marks in
      design feet against true ground feet. The gap the scale factor makes
-     is read from the page's own measurement of the pair (0.764 ftUS at
+     is read from the page's own measurement of the pair (0.927 ftUS at
      10,000 ft with today's answers), never written here; it shows when
      zoomed in on the far end, where the two last ticks stand side by side
      with a bracket ("Close in on the ruler").
@@ -103,7 +103,7 @@ the second audience: every number is there and honest, but quieter.
   corners, nearly all of it the 0.99991 scale factor rigid ignores) through a
   block, a port, an airport, a solar farm and a campus, to a 30 km utility
   pole line (18 m, nearly all of it curvature), and the 50 km corridor
-  (about 31 m). Each rung's error at its edge comes in its parts: curvature
+  (about 34 m at its far end). Each rung's error at its edge comes in its parts: curvature
   (d²/2R), the scale factor rigid ignores, and the geoid's slope. Each site is "every
   country, done right" (its CRS, units, height system and national geoid,
   credited) and tells the story in one line: its extent, its rigid error at
@@ -171,9 +171,9 @@ number stays in the sidebar, next to that number.
 │ └──────────────────────────────┘ │ Globe     │ │ │ Oakland hills to Livermore    │   (the selected
 │  Click a first point on a model  │ lat lon h │ │ │ [Rigid at the anchor|Reproj.] │    site's)
 │                                  │ error     │ │ │ One transform at the anchor…  │
-│            ◌·  snap preview      └───────────┘ │ │ 30.586 m  station 1700+00 … ▸ │   the evidence
-│                                                │ │ 19.278 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
-│                                                │ │ 10,000.000 ftUS = 3,048.848 m ▸│
+│            ◌·  snap preview      └───────────┘ │ │ 30.551 m  station 1700+00 … ▸ │   the evidence
+│                                                │ │ 19.253 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
+│                                                │ │ 10,000.000 ftUS = 3,051.835 m ▸│
 │        ┌ tour card ─────────────┐              │ │ sag chart        Fly along    │
 │        └────────────────────────┘   └────────┘ │ │ Take the short tour           │
 │ credits      [ time controls ]                 │ │ CRS, heights, units ▸ details │ 3 the site's facts
@@ -281,11 +281,20 @@ number in a headline row is not repeated in its Details), no e-notation.
   where they are: on the ellipsoid, a NAVD88 design floated by the geoid's
   height (about 32 m in California, 46 m in London). Terrain is clipped
   under each site's footprint and the corridor's strip (F11), so the
-  ground never pokes through a flat design surface. (The corridor's
-  profile is synthetic and doesn't follow the ground: where it floats over
-  the Livermore valley, its clipped strip shows as a slot in the ground
-  below it. A profile that follows the terrain is the generator's to
-  make.)
+  ground never pokes through a flat design surface. London's pole line
+  clips a buffer around its route, the wayleave and rigid's sideways
+  error, not the 30 km rectangle that holds it.
+- **The corridor's profile follows the real ground** (round 2): a design
+  vertical alignment fitted to USGS 3DEP ground heights along the
+  alignment, grades within 6% and AASHTO's least K for 65 mph
+  (corridor.ts has the PVIs, the K values and the fit's cut and fill). The
+  hills are crossed against their grain, so no road within 6% can follow
+  them: 19 viaducts and 19 tunnels carry 59% of it, and its earthwork stays
+  within 49 ftUS of fill and 80 ftUS of cut. The clipped strip narrows to
+  a sliver over each structure, so the ground stays under a viaduct (its
+  piers stand on it) and over a tunnel (the road is hidden in the hill).
+  The anchor, at the alignment's middle, is in a 6,600 ft tunnel, so the
+  anchor ring and the end of Fly along are inside the hill.
 
 ### The ghost (F4)
 

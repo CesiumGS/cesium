@@ -1,11 +1,12 @@
 // The corridor's geometry for the design-globe generator (plan 4b Task 14):
 // station sampling, the swept cross-section (shoulders, lanes, barriers), the
-// bridge (deck and piers), the station ticks, and the tile tree of station
+// viaducts (decks and piers), the station ticks, and the tile tree of station
 // ranges. Everything is in design coordinates (US survey feet, E, N, U),
 // float64; the writer turns it into tile-relative float32.
 import {
-  BRIDGE,
   CROSS_SECTION,
+  STRUCTURES,
+  VIADUCTS,
   TICKS,
   sectionSurface,
 } from "../../examples/design-globe/corridor.ts";
@@ -18,6 +19,9 @@ export const SECTION_REACH = Math.max(
   ...CROSS_SECTION.barriers.map((b) => Math.abs(b.offset) + b.baseWidth / 2),
   ...CROSS_SECTION.strips.map((s) => Math.max(-s.from, s.to)),
 );
+
+/** Every structure's ends (the viaducts' and the tunnels' portals). */
+const STRUCTURE_ENDS = STRUCTURES.flatMap((s) => [s.fromStation, s.toStation]);
 
 /** The offsets a chord error is measured at: the centreline and both edges. */
 const MEASURED_OFFSETS = [-SECTION_REACH, 0, SECTION_REACH];
@@ -90,8 +94,8 @@ function withinTolerance(alignment, a, b, pieces, tolerance) {
 /**
  * Stations from `from` to `to` (both included) spaced so the chord error is
  * at most `chordTolerance` on curves, and at most TANGENT_SPACING apart on
- * tangents. The alignment's joins and the bridge's ends within the range are
- * always included. On a curve the spacing starts from the element's largest
+ * tangents. The alignment's joins and the structures' ends within the range
+ * are always included. On a curve the spacing starts from the element's largest
  * curvature at the section's outer edge (its radius plus SECTION_REACH, where
  * a chord errs most), and each piece is then checked at its middle
  * (`chordError`, which also counts the profile's vertical curves) and split
@@ -120,8 +124,7 @@ export function sampleStations(alignment, from, to, chordTolerance) {
   const breaks = new Set([from, to]);
   for (const station of [
     ...elements.map((e) => e.station),
-    BRIDGE.fromStation,
-    BRIDGE.toStation,
+    ...STRUCTURE_ENDS,
   ]) {
     if (station > from && station < to) {
       breaks.add(station);
@@ -167,13 +170,12 @@ export function sampleStations(alignment, from, to, chordTolerance) {
 
 /**
  * Every other station, keeping the first, the last, the alignment's joins
- * and the bridge's ends: a parent tile's stations, decimated 2×.
+ * and the structures' ends: a parent tile's stations, decimated 2×.
  */
 export function decimate(alignment, stations) {
   const kept = new Set([
     ...alignment.horizontalElements.map((e) => e.station),
-    BRIDGE.fromStation,
-    BRIDGE.toStation,
+    ...STRUCTURE_ENDS,
   ]);
   const last = stations.length - 1;
   return Float64Array.from(
@@ -376,141 +378,153 @@ export function corridorMesh(alignment, stations, options = {}) {
     );
   }
 
-  // The bridge's deck: its underside 1.5 ft under the surface, its sides at
-  // the section's edges, and its ends where the range reaches them.
-  const thickness = BRIDGE.deckThickness;
-  const deck = Array.from(stations).filter(
-    (s) => s >= BRIDGE.fromStation && s <= BRIDGE.toStation,
-  );
-  if (deck.length >= 2) {
-    const id = builder.feature("bridge deck", "deck");
-    const reach = SECTION_REACH;
-    const under = [...BREAKS]
-      .reverse()
-      .map((o) => [o, sectionSurface(o) - thickness]);
-    sweep(builder, alignment, deck, under, id);
-    const edge = sectionSurface(reach);
-    sweep(
-      builder,
-      alignment,
-      deck,
-      [
-        [reach, edge],
-        [reach, edge - thickness],
-      ],
-      id,
+  // Each viaduct's deck and piers.
+  for (const bridge of VIADUCTS) {
+    // Its deck: its underside 1.5 ft under the surface, its sides at
+    // the section's edges, and its ends where the range reaches them.
+    const thickness = bridge.deckThickness;
+    const deck = Array.from(stations).filter(
+      (s) => s >= bridge.fromStation && s <= bridge.toStation,
     );
-    const leftEdge = sectionSurface(-reach);
-    sweep(
-      builder,
-      alignment,
-      deck,
-      [
-        [-reach, leftEdge - thickness],
-        [-reach, leftEdge],
-      ],
-      id,
-    );
-    for (const [end, sign] of [
-      [BRIDGE.fromStation, -1],
-      [BRIDGE.toStation, 1],
-    ]) {
-      if (deck[0] !== end && deck[deck.length - 1] !== end) {
+    if (deck.length >= 2) {
+      const id = builder.feature(
+        `viaduct ${stationLabel(bridge.fromStation)} to ${stationLabel(bridge.toStation)}`,
+        "deck",
+      );
+      const reach = SECTION_REACH;
+      const under = [...BREAKS]
+        .reverse()
+        .map((o) => [o, sectionSurface(o) - thickness]);
+      sweep(builder, alignment, deck, under, id);
+      const edge = sectionSurface(reach);
+      sweep(
+        builder,
+        alignment,
+        deck,
+        [
+          [reach, edge],
+          [reach, edge - thickness],
+        ],
+        id,
+      );
+      const leftEdge = sectionSurface(-reach);
+      sweep(
+        builder,
+        alignment,
+        deck,
+        [
+          [-reach, leftEdge - thickness],
+          [-reach, leftEdge],
+        ],
+        id,
+      );
+      for (const [end, sign] of [
+        [bridge.fromStation, -1],
+        [bridge.toStation, 1],
+      ]) {
+        if (deck[0] !== end && deck[deck.length - 1] !== end) {
+          continue;
+        }
+        const azimuth = alignment.azimuthAt(end);
+        const outward = [sign * Math.sin(azimuth), sign * Math.cos(azimuth), 0];
+        for (let k = 1; k < BREAKS.length; k++) {
+          const [o0, o1] = [BREAKS[k - 1], BREAKS[k]];
+          const [s0, s1] = [sectionSurface(o0), sectionSurface(o1)];
+          builder.quad(
+            [
+              sectionPoint(alignment, end, o0, s0),
+              sectionPoint(alignment, end, o1, s1),
+              sectionPoint(alignment, end, o1, s1 - thickness),
+              sectionPoint(alignment, end, o0, s0 - thickness),
+            ],
+            outward,
+            id,
+          );
+        }
+      }
+    }
+
+    // Its piers: boxes from the deck's underside down to the profile less
+    // its `belowProfile`.
+    const { width, depth, offsets, belowProfile } = bridge.piers;
+    for (const station of bridge.piers.stations) {
+      if (!owns(alignment, from, to, station)) {
         continue;
       }
-      const azimuth = alignment.azimuthAt(end);
-      const outward = [sign * Math.sin(azimuth), sign * Math.cos(azimuth), 0];
-      for (let k = 1; k < BREAKS.length; k++) {
-        const [o0, o1] = [BREAKS[k - 1], BREAKS[k]];
-        const [s0, s1] = [sectionSurface(o0), sectionSurface(o1)];
-        builder.quad(
+      const azimuth = alignment.azimuthAt(station);
+      const forward = [Math.sin(azimuth), Math.cos(azimuth), 0];
+      const right = [Math.cos(azimuth), -Math.sin(azimuth), 0];
+      const bottom = alignment.elevationAt(station) - belowProfile;
+      for (const offset of offsets) {
+        const id = builder.feature(
+          `pier ${stationLabel(station)} ${offset < 0 ? "left" : "right"}`,
+          "pier",
+        );
+        const corner = (along, across, low) => {
+          const s = station + (along * depth) / 2;
+          const o = offset + (across * width) / 2;
+          const p = sectionPoint(
+            alignment,
+            s,
+            o,
+            sectionSurface(o) - thickness,
+          );
+          return low ? [p[0], p[1], bottom] : p;
+        };
+        const face = (corners, outward) =>
+          builder.quad(
+            corners.map(([a, c, low]) => corner(a, c, low)),
+            outward,
+            id,
+          );
+        const back = forward.map((v) => -v);
+        const left = right.map((v) => -v);
+        face(
           [
-            sectionPoint(alignment, end, o0, s0),
-            sectionPoint(alignment, end, o1, s1),
-            sectionPoint(alignment, end, o1, s1 - thickness),
-            sectionPoint(alignment, end, o0, s0 - thickness),
+            [-1, -1, false],
+            [-1, 1, false],
+            [-1, 1, true],
+            [-1, -1, true],
           ],
-          outward,
-          id,
+          back,
+        );
+        face(
+          [
+            [1, -1, false],
+            [1, 1, false],
+            [1, 1, true],
+            [1, -1, true],
+          ],
+          forward,
+        );
+        face(
+          [
+            [-1, -1, false],
+            [1, -1, false],
+            [1, -1, true],
+            [-1, -1, true],
+          ],
+          left,
+        );
+        face(
+          [
+            [-1, 1, false],
+            [1, 1, false],
+            [1, 1, true],
+            [-1, 1, true],
+          ],
+          right,
+        );
+        face(
+          [
+            [-1, -1, true],
+            [1, -1, true],
+            [1, 1, true],
+            [-1, 1, true],
+          ],
+          [0, 0, -1],
         );
       }
-    }
-  }
-
-  // The piers: boxes from the deck's underside down to the profile − 25.
-  const { width, depth, offsets, belowProfile } = BRIDGE.piers;
-  for (const station of BRIDGE.piers.stations) {
-    if (!owns(alignment, from, to, station)) {
-      continue;
-    }
-    const azimuth = alignment.azimuthAt(station);
-    const forward = [Math.sin(azimuth), Math.cos(azimuth), 0];
-    const right = [Math.cos(azimuth), -Math.sin(azimuth), 0];
-    const bottom = alignment.elevationAt(station) - belowProfile;
-    for (const offset of offsets) {
-      const id = builder.feature(
-        `pier ${stationLabel(station)} ${offset < 0 ? "left" : "right"}`,
-        "pier",
-      );
-      const corner = (along, across, low) => {
-        const s = station + (along * depth) / 2;
-        const o = offset + (across * width) / 2;
-        const p = sectionPoint(alignment, s, o, sectionSurface(o) - thickness);
-        return low ? [p[0], p[1], bottom] : p;
-      };
-      const face = (corners, outward) =>
-        builder.quad(
-          corners.map(([a, c, low]) => corner(a, c, low)),
-          outward,
-          id,
-        );
-      const back = forward.map((v) => -v);
-      const left = right.map((v) => -v);
-      face(
-        [
-          [-1, -1, false],
-          [-1, 1, false],
-          [-1, 1, true],
-          [-1, -1, true],
-        ],
-        back,
-      );
-      face(
-        [
-          [1, -1, false],
-          [1, 1, false],
-          [1, 1, true],
-          [1, -1, true],
-        ],
-        forward,
-      );
-      face(
-        [
-          [-1, -1, false],
-          [1, -1, false],
-          [1, -1, true],
-          [-1, -1, true],
-        ],
-        left,
-      );
-      face(
-        [
-          [-1, 1, false],
-          [1, 1, false],
-          [1, 1, true],
-          [-1, 1, true],
-        ],
-        right,
-      );
-      face(
-        [
-          [-1, -1, true],
-          [1, -1, true],
-          [1, 1, true],
-          [-1, 1, true],
-        ],
-        [0, 0, -1],
-      );
     }
   }
 

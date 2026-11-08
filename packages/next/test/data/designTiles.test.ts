@@ -41,6 +41,7 @@ vi.mock("../../src/io/decoders.ts", () => ({
 
 import {
   ANCHOR_STATION,
+  BRIDGE,
   CORRIDOR_ALIGNMENT,
   SURVEY_MARK,
   corridorFrame,
@@ -751,7 +752,7 @@ describe("the design globe's generated tiles", () => {
     for (const point of [
       answers.points.find((p: Json) => p.nearKm === 10),
       answers.points.find(
-        (p: Json) => p.station === 61_200 && p.offset === -17,
+        (p: Json) => p.station === BRIDGE.toStation && p.offset === -17,
       ),
     ]) {
       const design = alignment.pointAt(point.station, point.offset);
@@ -794,8 +795,9 @@ describe("the design globe's generated tiles", () => {
     expect(m.design!.horizontalDistance).toBe(pair.horizontalDistance);
     expect(m.distance).toBe(pair.trueDistance);
 
-    // The measurement model on pairs[0], 10,000 ft on the first tangent's
-    // +2% grade: the horizontal and 3D design distances, and the true one.
+    // The measurement model on pairs[0], 10,000 ft on the first tangent, up
+    // the profile's +5.27% grade: the horizontal and 3D design distances, and
+    // the true one.
     const first = answers.pairs[0];
     const [a, b] = [first.from, first.to].map(
       (i: number) => answers.points[i].design,
@@ -824,7 +826,15 @@ describe("the design globe's generated tiles", () => {
       }),
     );
     expect(view.horizontalDistance).toBe("10,000.000 ftUS");
-    expect(view.designDistance).toBe("10,002.000 ftUS");
+    // The straight line between the ends: 10,000 ft across, and the climb
+    // between their elevations.
+    const climb = alignment.elevationAt(20_000) - alignment.elevationAt(10_000);
+    expect(view.designDistance).toBe(
+      `${Math.hypot(10_000, climb).toLocaleString("en-US", {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+      })} ftUS`,
+    );
     expect(view.trueDistance).toBe(
       `${first.trueDistance.toLocaleString("en-US", {
         minimumFractionDigits: 3,

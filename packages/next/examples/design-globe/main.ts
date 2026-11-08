@@ -26,7 +26,7 @@ import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";
 import { checksView } from "./checksView.ts";
-import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
+import { ANCHOR_STATION, CORRIDOR_ALIGNMENT, STRUCTURES } from "./corridor.ts";
 import { createCursor, drawnPlacement } from "./cursor.ts";
 import { createMeasureTool } from "./measureTool.ts";
 import { pointsLink } from "./measureState.ts";
@@ -74,6 +74,8 @@ import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
 import {
   clearTerrainClips,
   footprintRegion,
+  horizontalApart,
+  routeRegion,
   stripRegion,
   syncTerrainClip,
 } from "./terrainClips.ts";
@@ -416,20 +418,44 @@ export function run(context: ExampleContext): ExampleRun {
     const displayed = (d: ArrayLike<number>) => placement.displayed(d);
     const mpu = placement.frame.units.metersPerUnit;
     const corners = site.entry.corners;
+    const route = site.entry.route;
     const rigidError = (d: ArrayLike<number>) =>
       site.rigidPlacement?.displayError(d) ?? 0;
+    // Rigid's error across the ground (its drop is up or down, so a clip
+    // needn't reach past it).
+    const rigidAcross = (d: ArrayLike<number>) =>
+      site.rigidPlacement === undefined
+        ? 0
+        : horizontalApart(site.rigidPlacement.displayed(d), displayed(d));
     const polygon =
       site === corridor
         ? // The paved section and its barriers (±41 ftUS), and room for
-          // the rigid copy's sideways shift (the scale factor's 2.3 m).
-          stripRegion(alignment, displayed, CORRIDOR_CLIP_HALF_WIDTH, 500)
-        : corners !== undefined
-          ? footprintRegion(
-              corners,
+          // the rigid copy's sideways shift (the scale factor's 2.3 m), on
+          // its earthwork: the ground stays under its viaducts and over its
+          // tunnels.
+          stripRegion(
+            alignment,
+            displayed,
+            CORRIDOR_CLIP_HALF_WIDTH,
+            500,
+            STRUCTURES,
+          )
+        : route !== undefined
+          ? // Around the line (London's poles and their stays), not the
+            // rectangle that holds it: a vertex every 500 design units.
+            routeRegion(
+              route.points,
               displayed,
-              (Math.max(...corners.map(rigidError)) + CLIP_MARGIN) / mpu,
+              (d) => route.halfWidth + (rigidAcross(d) + CLIP_MARGIN) / mpu,
+              500,
             )
-          : undefined;
+          : corners !== undefined
+            ? footprintRegion(
+                corners,
+                displayed,
+                (Math.max(...corners.map(rigidError)) + CLIP_MARGIN) / mpu,
+              )
+            : undefined;
     const why = syncTerrainClip(globe, site.entry.id, polygon);
     if (why !== undefined) {
       console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
@@ -441,6 +467,19 @@ export function run(context: ExampleContext): ExampleRun {
       clearTerrainClips(globe);
     }
   });
+  // A site placed before the terrain was built (the corridor, on a cold
+  // load) found no globe to clip: clip every placed site once it is there.
+  void viewer.ready.then(
+    () => {
+      if (signal.aborted) {
+        return;
+      }
+      for (const site of placedApi.keys()) {
+        clipTerrain(site);
+      }
+    },
+    () => {}, // the viewer's own status says why
+  );
 
   /** PROJ, as each placed site was placed with (for its facts again). */
   const placedApi = new Map<SiteRuntime, ProjApi>();

@@ -23,7 +23,7 @@ export function largestChordError(
 ): number;
 /**
  * Stations from `from` to `to`, within `chordTolerance` on curves and at most
- * TANGENT_SPACING apart on tangents, with every join and the bridge's ends.
+ * TANGENT_SPACING apart on tangents, with every join and the structures' ends.
  */
 export function sampleStations(
   alignment: Alignment,
@@ -31,7 +31,7 @@ export function sampleStations(
   to: number,
   chordTolerance: number,
 ): Float64Array;
-/** Every other station, keeping the ends, the joins and the bridge's ends. */
+/** Every other station, keeping the ends, the joins and the structures' ends. */
 export function decimate(
   alignment: Alignment,
   stations: ArrayLike<number>,

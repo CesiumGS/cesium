@@ -277,6 +277,31 @@ export function modelFootprint(
   ]);
 }
 
+/**
+ * A model laid along a line rather than over an area: its route at its
+ * ground's height (design units, absolute) and how far its foundations reach
+ * either side and past its ends. London's pole line: the wayleave strip, 6 m
+ * either side, which holds every pole and the stays at its angle and end
+ * poles, anchored 6 m out (scripts/designTiles/poleLineMesh.mjs). Undefined
+ * for a model that covers its footprint.
+ */
+export function modelRoute(site: PortfolioSite):
+  | {
+      readonly points: readonly [number, number, number][];
+      readonly halfWidth: number;
+    }
+  | undefined {
+  const m = site.model;
+  if (m.kind !== "poleLine") {
+    return undefined;
+  }
+  const [e, n, u] = site.origin;
+  return {
+    points: m.route.map(([de, dn]) => [e + de, n + dn, u]),
+    halfWidth: m.wayleave / 2,
+  };
+}
+
 /** The port's breakwater and back strip, across, metres (scripts/designTiles/portMesh.mjs). */
 export const PORT_BREAKWATER = 30;
 export const PORT_BACK_STRIP = 150;
