@@ -92,6 +92,8 @@ export const API_ROWS: readonly ApiRow[] = [
       "widgets:TilesetSource",
       "widgets:ZoomTarget",
       "widgets:ModelLoad",
+      // `Viewer.events` is one.
+      "Emitter",
     ],
     status: "changed",
     note: "`new Viewer(el)` becomes `await Viewer.create(el)`, because the device is asynchronous, and the options differ.",
