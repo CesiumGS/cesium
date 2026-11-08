@@ -886,6 +886,7 @@ export class World {
     this.drawArguments = new DrawArguments(
       device,
       this.drawConstants,
+      (record) => this.drawBatches[record] !== undefined,
       this.drawRows,
       items,
     );
@@ -3993,7 +3994,7 @@ export class World {
     }
     const queue = this.ctx.device.queue;
     queue.writeBuffer(this.batchBuffer, 0, table);
-    queue.writeBuffer(this.drawArguments.directList, 0, direct);
+    this.drawArguments.writeDirect(direct);
     for (const [record, draw] of this.pointDraws) {
       this.writePointParams(draw, record);
     }
@@ -4648,7 +4649,6 @@ const POINT_MARGIN = 64;
 const NO_HIT = 0x7f7fffff;
 /** Smallest staging buffer for queued uploads. */
 const UPLOAD_CHUNK_BYTES = 1 << 20;
-/** CPU rows a per-slot table starts with. */
 const IDENTITY = Float64Array.of(
   1,
   0,

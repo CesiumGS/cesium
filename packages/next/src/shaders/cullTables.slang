@@ -29,8 +29,9 @@ public struct CullParams {
 [[vk::binding(4, 1)]] public RWStructuredBuffer<uint> itemList;
 [[vk::binding(6, 1)]] public StructuredBuffer<Batch> batches;
 // Five words a batch (drawIndexedIndirect): index count, instance count
-// (the visible items, counted by `append`), first index, base vertex,
-// first instance.
+// (the visible items, counted by `countInstance`), first index, base
+// vertex, first instance. Read and written only through the accessors
+// below (the draw-arguments seam, render/drawArguments.ts).
 [[vk::binding(7, 1)]] public RWStructuredBuffer<Atomic<uint>> args;
 [[vk::binding(8, 1)]] public ConstantBuffer<CullParams> params;
 
@@ -41,6 +42,60 @@ public struct CullParams {
 [ForceInline]
 public DrawRecord drawRecord(uint index) {
   return records[index];
+}
+
+// The draw-arguments seam's shader side (plan 5a's call 37; on the CPU,
+// render/drawArguments.ts, whose `slotOf` is `argumentSlot` in bytes).
+// Multi-draw indirect or GPU-driven submission replaces these functions,
+// not the kernels that call them. Inlined, so the kernels compile as they
+// did before the seam.
+
+// Words of the arguments a batch.
+public static const uint ARGUMENT_WORDS = 5u;
+
+// The first word of batch `batch`'s arguments. (Its result and
+// `countInstance`'s are named locals so that the generated WGSL keeps the
+// names it had before the seam: byte for byte the same kernels.)
+[ForceInline]
+public uint argumentSlot(uint batch) {
+  uint a = batch * ARGUMENT_WORDS;
+  return a;
+}
+
+// Counts one visible item into the instance count of the arguments at
+// `a`; returns the count before it (the item's place in its batch's slice
+// of `itemList`).
+[ForceInline]
+public uint countInstance(uint a) {
+  uint slot = args[a + 1u].add(1u);
+  return slot;
+}
+
+// The instance count the cull counted, in the arguments at `a`.
+[ForceInline]
+public uint countedInstances(uint a) {
+  return args[a + 1u].load();
+}
+
+// An indexed batch's arguments at `a`, beside the instance count the
+// cull counted. The item index comes from `itemList` bound as an
+// instance-step vertex buffer at the batch's offset, so the base vertex
+// and first instance stay 0 and the `indirect-first-instance` feature is
+// not needed.
+[ForceInline]
+public void storeIndexedArguments(uint a, uint indexCount, uint firstIndex) {
+  args[a].store(indexCount);
+  args[a + 2u].store(firstIndex);
+  args[a + 3u].store(0u);
+  args[a + 4u].store(0u);
+}
+
+// Word `word` (0 to ARGUMENT_WORDS - 1) of the arguments at `a`. A point
+// set's are read as a non-indexed draw's: vertex count, instance count,
+// first vertex, first instance.
+[ForceInline]
+public void storeArgument(uint a, uint word, uint value) {
+  args[a + word].store(value);
 }
 
 public static const uint NONE = 0xffffffffu;

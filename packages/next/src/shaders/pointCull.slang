@@ -255,12 +255,14 @@ void splatPoints(uint3 gid : SV_DispatchThreadID) {
 [shader("compute")]
 [numthreads(1, 1, 1)]
 void writePointArgs() {
-  uint a = pointCull.batch * 5u;
+  uint a = argumentSlot(pointCull.batch);
   // `writeDrawArgs` counted the record's item: 1 where it passed this
   // view's cull (and its view mask), else 0.
-  bool shown = args[a + 1u].load() > 0u;
-  args[a].store(shown ? pointCounts[pointCull.counter].load() * 6u : 0u);
-  args[a + 1u].store(shown ? 1u : 0u);
-  args[a + 2u].store(0u);
-  args[a + 3u].store(0u);
+  bool shown = countedInstances(a) > 0u;
+  // A non-indexed draw's: vertex count, instance count, first vertex,
+  // first instance.
+  storeArgument(a, 0u, shown ? pointCounts[pointCull.counter].load() * 6u : 0u);
+  storeArgument(a, 1u, shown ? 1u : 0u);
+  storeArgument(a, 2u, 0u);
+  storeArgument(a, 3u, 0u);
 }

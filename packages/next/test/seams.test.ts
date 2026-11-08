@@ -77,8 +77,9 @@ const ARRAY =
 /**
  * Lines of a TypeScript module that write draw records other than through
  * the seam: an element of a record array assigned (also through a local
- * alias of one), a record array filled or set, `writeDrawRecord` called, or
- * the records' mirrored table made.
+ * alias of one), a record array filled or set or cast (its read-only type
+ * is what keeps other writes out), `writeDrawRecord` called, or the
+ * records' mirrored table made.
  */
 export function recordWritesOutsideSeam(text: string): number[] {
   const source = stripComments(text);
@@ -125,7 +126,10 @@ export function recordWritesOutsideSeam(text: string): number[] {
         if (ASSIGN.test(rest) || before === "++" || before === "--") {
           out.add(lineAt(source, m.index));
         }
-      } else if (/^\s*\.\s*(?:set|fill|copyWithin)\s*\(/.test(after)) {
+      } else if (
+        /^\s*\.\s*(?:set|fill|copyWithin)\s*\(/.test(after) ||
+        /^\s*as\b/.test(after)
+      ) {
         out.add(lineAt(source, m.index));
       }
     }
@@ -152,31 +156,105 @@ function blockEnd(source: string, offset: number): number {
   return source.length;
 }
 
+/** The seams' GPU buffers, as the world names them. */
+const SEAM_BUFFERS =
+  /\b(?:recordBuffer|drawConstants\.buffer|drawArguments\.(?:buffer|itemList))\b/;
+
+/**
+ * Lines of a TypeScript module that write a seam's GPU buffer from the CPU
+ * (`writeBuffer`, `clearBuffer`, `copyBufferToBuffer` naming it).
+ */
+export function seamBufferWrites(text: string): number[] {
+  const source = stripComments(text);
+  const out = new Set<number>();
+  for (const m of source.matchAll(
+    /\.\s*(?:writeBuffer|clearBuffer|copyBufferToBuffer)\s*\(/g,
+  )) {
+    const open = m.index + m[0].length - 1;
+    let depth = 0;
+    let end = open;
+    for (; end < source.length; end++) {
+      depth += source[end] === "(" ? 1 : source[end] === ")" ? -1 : 0;
+      if (depth === 0) {
+        break;
+      }
+    }
+    if (SEAM_BUFFERS.test(source.slice(open, end + 1))) {
+      out.add(lineAt(source, m.index));
+    }
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
+/**
+ * The offset ranges of the bodies of the functions named in `names` in a
+ * Slang module (definitions only: a forward declaration has no body).
+ */
+function bodies(source: string, names: readonly string[]): [number, number][] {
+  const out: [number, number][] = [];
+  const definition = new RegExp(
+    String.raw`\b(?:${names.join("|")})\s*\([^()]*\)\s*\{`,
+    "g",
+  );
+  for (const m of source.matchAll(definition)) {
+    const open = m.index + m[0].length - 1;
+    out.push([open, blockEnd(source, open + 1)]);
+  }
+  return out;
+}
+
+/** Lines of Slang source that index `buffer[` outside the `accessors`. */
+function indexedOutside(
+  text: string,
+  buffer: string,
+  accessors: readonly string[],
+): number[] {
+  const source = stripComments(text);
+  const seams = bodies(source, accessors);
+  const out = new Set<number>();
+  for (const m of source.matchAll(
+    new RegExp(String.raw`\b${buffer}\s*\[`, "g"),
+  )) {
+    if (!seams.some(([from, to]) => m.index > from && m.index < to)) {
+      out.add(lineAt(source, m.index));
+    }
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
 /** Lines of a Slang module that index `records[` outside `drawRecord`. */
 export function recordReadsOutsideAccessor(text: string): number[] {
-  const lines = stripComments(text).split("\n");
-  const out: number[] = [];
-  let inSeam = false;
-  let depth = 0;
-  lines.forEach((line, i) => {
-    if (/\bDrawRecord\s+drawRecord\s*\(/.test(line)) {
-      inSeam = true;
-      depth = 0;
-    }
-    if (inSeam) {
-      for (const c of line) {
-        depth += c === "{" ? 1 : c === "}" ? -1 : 0;
-      }
-      if (depth <= 0 && line.includes("}")) {
-        inSeam = false;
-      }
-      return;
-    }
-    if (/\brecords\s*\[/.test(line)) {
-      out.push(i + 1);
-    }
-  });
-  return out;
+  return indexedOutside(text, "records", ["drawRecord"]);
+}
+
+/** cullTables.slang's draw-argument accessors (the arguments' seam). */
+const ARGUMENT_ACCESSORS = [
+  "argumentSlot",
+  "countInstance",
+  "countedInstances",
+  "storeIndexedArguments",
+  "storeArgument",
+] as const;
+
+/** Lines of a Slang module that index `args[` outside its accessors. */
+export function argumentsOutsideAccessors(text: string): number[] {
+  return indexedOutside(text, "args", ARGUMENT_ACCESSORS);
+}
+
+/** Lines of a Slang module that define any of `names` (with a body). */
+export function definitions(text: string, names: readonly string[]): number[] {
+  const source = stripComments(text);
+  return bodies(source, names).map(([open]) => lineAt(source, open));
+}
+
+/** A Slang module's buffers of draw records: line and name. */
+export function recordTables(text: string): { line: number; name: string }[] {
+  const source = stripComments(text);
+  return [
+    ...source.matchAll(
+      /\b(?:RW)?StructuredBuffer\s*<\s*DrawRecord\s*>\s+(\w+)/g,
+    ),
+  ].map((m) => ({ line: lineAt(source, m.index), name: m[1]! }));
 }
 
 /** Lines of a TypeScript module that issue indexed or indirect draws. */
@@ -251,14 +329,34 @@ function other() {
   u[o] = 1;
   const flags = this.recordsU32[o + FLAGS_WORD]!;
   this.flags[o] = flags;
+  const w = this.recordsU32 as Uint32Array;
+  (this.drawConstants.f32 as unknown as Float32Array)[o] = 2;
 }`;
     expect(recordWritesOutsideSeam(module)).toEqual([
-      3, 5, 7, 9, 11, 13, 14, 15,
+      3, 5, 7, 9, 11, 13, 14, 15, 23, 24,
     ]);
+  });
+
+  it("CPU writes of the seams' GPU buffers", () => {
+    const module = `queue.writeBuffer(this.recordBuffer, 0, data);
+queue.writeBuffer(this.batchBuffer, 0, table);
+encoder.clearBuffer(
+  this.drawArguments.buffer,
+  0,
+  20,
+);
+encoder.copyBufferToBuffer(old, 0, this.drawConstants.buffer, 0, n);
+queue.writeBuffer(this.drawArguments.itemList, 0, f(a, b));
+pass.setBindGroup(0, group(this.recordBuffer));`;
+    expect(seamBufferWrites(module)).toEqual([1, 3, 8, 9]);
   });
 
   it("record reads in Slang", () => {
     const module = `[[vk::binding(0, 1)]] StructuredBuffer<DrawRecord> records;
+DrawRecord drawRecord(uint index);
+uint early(uint i) {
+  return records[i].flags;
+}
 [ForceInline]
 public DrawRecord drawRecord(uint index) {
   return records[index];
@@ -268,7 +366,45 @@ void main() {
   uint f = records[i].flags;
   // records[i]
 }`;
-    expect(recordReadsOutsideAccessor(module)).toEqual([8]);
+    // A forward declaration is not the seam.
+    expect(recordReadsOutsideAccessor(module)).toEqual([4, 12]);
+    expect(definitions(module, ["drawRecord"])).toEqual([7]);
+  });
+
+  it("record tables in Slang under another name, or read-write", () => {
+    const module = `[[vk::binding(0, 1)]] StructuredBuffer<DrawRecord> records;
+[[vk::binding(1, 1)]] StructuredBuffer< DrawRecord > draws;
+[[vk::binding(2, 1)]] RWStructuredBuffer<DrawRecord> scratch;
+uint f(uint i) {
+  return draws[i].flags; // no records[: only the name gives it away
+}`;
+    expect(recordReadsOutsideAccessor(module)).toEqual([]);
+    expect(recordTables(module)).toEqual([
+      { line: 1, name: "records" },
+      { line: 2, name: "draws" },
+      { line: 3, name: "scratch" },
+    ]);
+  });
+
+  it("draw arguments in Slang", () => {
+    const module = `[[vk::binding(7, 1)]] public RWStructuredBuffer<Atomic<uint>> args;
+public uint argumentSlot(uint batch) {
+  uint a = batch * ARGUMENT_WORDS;
+  return a;
+}
+public void storeArgument(uint a, uint word, uint value) {
+  args[a + word].store(value);
+}
+void append(uint batch, uint item) {
+  uint slot = args[batch * 5u + 1u].add(1u);
+}
+void writePointArgs() {
+  uint a = argumentSlot(pointCull.batch);
+  storeArgument(a, 0u, 6u);
+  args[a + 1u].store(1u);
+}`;
+    expect(argumentsOutsideAccessors(module)).toEqual([10, 15]);
+    expect(definitions(module, ARGUMENT_ACCESSORS)).toEqual([2, 6]);
   });
 
   it("content draws and buffer binds", () => {
@@ -314,22 +450,59 @@ describe("the per-draw constants seam", () => {
   });
 
   it("reads draw records in Slang only through drawRecord", () => {
+    // The modules that bind the records, each with its accessor: a
+    // per-draw constants backend replaces these four functions.
+    const readers = [
+      "cullTables.slang",
+      "surface.slang",
+      "raycast.slang",
+      "layouts.slang",
+    ].map((name) => join(src, "shaders", name));
     const violations: string[] = [];
     for (const path of files(src, /\.slang$/)) {
-      for (const line of recordReadsOutsideAccessor(
-        readFileSync(path, "utf8"),
-      )) {
+      const text = readFileSync(path, "utf8");
+      const where = relative(root, path);
+      for (const line of recordReadsOutsideAccessor(text)) {
+        violations.push(`${where}:${line} reads records[`);
+      }
+      const reader = readers.includes(path);
+      for (const line of definitions(text, ["drawRecord"])) {
+        if (!reader) {
+          violations.push(`${where}:${line} defines drawRecord`);
+        }
+      }
+      for (const { line, name } of recordTables(text)) {
+        if (!reader || name !== "records") {
+          violations.push(`${where}:${line} binds draw records as ${name}`);
+        }
+      }
+    }
+    expect(violations).toEqual([]);
+    for (const path of readers) {
+      const text = readFileSync(path, "utf8");
+      expect(
+        /\bDrawRecord\s+drawRecord\s*\(\s*uint\s+\w+\s*\)/.test(text),
+      ).toBe(true);
+      expect(definitions(text, ["drawRecord"]).length).toBe(1);
+      expect(recordTables(text).map((t) => t.name)).toEqual(["records"]);
+    }
+  });
+
+  it("writes the records' GPU table only through the seam", () => {
+    const seams = [
+      join(src, "render", "drawConstants.ts"),
+      join(src, "render", "drawArguments.ts"),
+    ];
+    const violations: string[] = [];
+    for (const path of files(src, /\.ts$/)) {
+      if (seams.includes(path)) {
+        continue;
+      }
+      for (const line of seamBufferWrites(readFileSync(path, "utf8"))) {
         violations.push(`${relative(root, path)}:${line}`);
       }
     }
     expect(violations).toEqual([]);
-    for (const name of ["cullTables.slang", "surface.slang"]) {
-      expect(
-        /\bDrawRecord\s+drawRecord\s*\(\s*uint\s+\w+\s*\)/.test(
-          readFileSync(join(src, "shaders", name), "utf8"),
-        ),
-      ).toBe(true);
-    }
   });
 });
 
@@ -350,12 +523,32 @@ describe("the draw-arguments and geometry-submission seams", () => {
     expect(contentDraws(readFileSync(seam, "utf8")).length).toBeGreaterThan(0);
   });
 
+  it("reaches draw arguments in Slang only through cullTables' accessors", () => {
+    const tables = join(src, "shaders", "cullTables.slang");
+    const violations: string[] = [];
+    for (const path of files(src, /\.slang$/)) {
+      const text = readFileSync(path, "utf8");
+      for (const line of argumentsOutsideAccessors(text)) {
+        violations.push(`${relative(root, path)}:${line} indexes args[`);
+      }
+      if (path !== tables) {
+        for (const line of definitions(text, ARGUMENT_ACCESSORS)) {
+          violations.push(
+            `${relative(root, path)}:${line} defines an accessor`,
+          );
+        }
+      }
+    }
+    expect(violations).toEqual([]);
+    expect(
+      definitions(readFileSync(tables, "utf8"), ARGUMENT_ACCESSORS).length,
+    ).toBe(ARGUMENT_ACCESSORS.length);
+  });
+
   it("binds vertex and index buffers only on the submission path", () => {
-    const allowed = new Set([
-      "World.recordBundle",
-      "World.bindSlab",
-      "Engine.drawOverlays",
-    ]);
+    // Slabs (index buffers) and the overlays; the batches' item lists are
+    // bound by DrawArguments.drawBatch.
+    const allowed = new Set(["World.bindSlab", "Engine.drawOverlays"]);
     const violations: string[] = [];
     for (const path of files(src, /\.ts$/)) {
       if (path === seam) {
@@ -428,6 +621,15 @@ describe("DrawArguments.slotOf", () => {
     offsets = [];
     world.prepareFrame();
     expect([...offsets].sort((a, b) => a - b)).toEqual([0, 20, 40]);
+    // A slot that holds no draw has no arguments: removed, never used, or
+    // past the table.
+    world.removeDraw(shared);
+    expect(() => args.slotOf(shared.index)).toThrow(RangeError);
+    expect(args.slotOf(draws[0]!.index)).toBe(slots[0]);
+    expect(() => args.slotOf(shared.index + 1)).toThrow(RangeError);
+    expect(() => args.slotOf(1 << 20)).toThrow(RangeError);
+    expect(() => args.slotOf(-1)).toThrow(RangeError);
+    expect(() => args.slotOf(0.5)).toThrow(RangeError);
     world.destroy();
   });
 });

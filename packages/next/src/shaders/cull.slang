@@ -13,7 +13,7 @@ import common;
 import cullTables;
 
 void append(uint batch, uint item) {
-  uint slot = args[batch * 5u + 1u].add(1u);
+  uint slot = countInstance(argumentSlot(batch));
   itemList[batches[batch].itemBase + slot] = item;
 }
 
@@ -96,13 +96,6 @@ void writeDrawArgs(uint3 gid : SV_DispatchThreadID) {
     return;
   }
   Batch batch = batches[b];
-  uint a = b * 5u;
-  args[a].store(batch.indexCount);
-  // args[a + 1]: the instance count `append` counted.
-  args[a + 2u].store(batch.firstIndex);
-  args[a + 3u].store(0u);
-  // The item index comes from `itemList` bound as an instance-step vertex
-  // buffer at the batch's offset, so firstInstance stays 0 and the
-  // `indirect-first-instance` feature is not needed.
-  args[a + 4u].store(0u);
+  uint a = argumentSlot(b);
+  storeIndexedArguments(a, batch.indexCount, batch.firstIndex);
 }

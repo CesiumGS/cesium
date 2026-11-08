@@ -18,7 +18,11 @@ export interface ArgumentBatch {
  * The draw-arguments seam (plan 5a's call 37): a world's indirect draw
  * arguments, the item lists its batches draw from, and the one place its
  * content draws are issued (`drawBatch`). A record's pointer to its
- * arguments is its batch (`slotOf`): no record word is added for it.
+ * arguments is its batch (`slotOf`): no record word is added for it. On
+ * the GPU the cull kernels reach the arguments only through cullTables.slang's
+ * accessors (`argumentSlot`, `countInstance`, `storeIndexedArguments`,
+ * `storeArgument`). This class is the only CPU writer of its buffers; the
+ * world binds them (`buffer`, `itemList`) in the cull's groups.
  *
  * Today each batch is one draw, its items bound as a vertex buffer at the
  * batch's slice of the list. Multi-draw indirect (the first instance in
@@ -27,39 +31,56 @@ export interface ArgumentBatch {
  * "design for it; don't build it").
  */
 export class DrawArguments {
+  private arguments: GPUBuffer;
+  private items: GPUBuffer;
+  private direct: GPUBuffer;
+
+  /**
+   * `live`: whether a record slot holds a draw (a removed draw's record
+   * keeps its last batch word, which may name another batch by then).
+   */
+  constructor(
+    private readonly device: GPUDevice,
+    private readonly constants: DrawConstants,
+    private readonly live: (record: number) => boolean,
+    batchRows: number,
+    items: number,
+  ) {
+    this.arguments = this.createArguments(batchRows);
+    [this.items, this.direct] = this.createLists(items);
+  }
+
   /**
    * Five 32-bit words a batch (`drawIndexedIndirect`): index count,
    * instance count (counted by the cull, cleared per view), first index,
    * base vertex, first instance. A point set's first four read as a
-   * non-indexed draw's.
+   * non-indexed draw's. Replaced by `growBatches`.
    */
-  buffer: GPUBuffer;
-  /** Visible draw items, compacted per batch by the cull kernels. */
-  itemList: GPUBuffer;
-  /** All draw items per batch, for "direct" submission. */
-  directList: GPUBuffer;
-
-  constructor(
-    private readonly device: GPUDevice,
-    private readonly constants: DrawConstants,
-    batchRows: number,
-    items: number,
-  ) {
-    this.buffer = this.createArguments(batchRows);
-    [this.itemList, this.directList] = this.createLists(items);
+  get buffer(): GPUBuffer {
+    return this.arguments;
   }
 
   /**
-   * The byte offset in `buffer` of record `record`'s batch's arguments: the
-   * record's pointer to its indirect arguments (its batch word).
+   * Visible draw items, compacted per batch by the cull kernels. Replaced
+   * by `growItems`.
+   */
+  get itemList(): GPUBuffer {
+    return this.items;
+  }
+
+  /**
+   * The byte offset in `buffer` of draw record `record`'s batch's
+   * arguments: the record's pointer to its indirect arguments (its batch
+   * word). A RangeError for a slot that holds no draw.
    */
   slotOf(record: number): number {
     if (
       !Number.isInteger(record) ||
       record < 0 ||
-      record >= this.constants.rows
+      record >= this.constants.rows ||
+      !this.live(record)
     ) {
-      throw new RangeError(`slotOf: no record ${record}`);
+      throw new RangeError(`slotOf: no draw in record ${record}`);
     }
     return (
       this.constants.u32[record * RECORD_WORDS + BATCH_WORD]! * INDIRECT_SIZE
@@ -68,15 +89,23 @@ export class DrawArguments {
 
   /** Arguments for `rows` batches (the old ones are rewritten per view). */
   growBatches(rows: number): void {
-    this.buffer.destroy();
-    this.buffer = this.createArguments(rows);
+    this.arguments.destroy();
+    this.arguments = this.createArguments(rows);
   }
 
   /** Item lists for `items` items (rewritten by the cull and the batches). */
   growItems(items: number): void {
-    this.itemList.destroy();
-    this.directList.destroy();
-    [this.itemList, this.directList] = this.createLists(items);
+    this.items.destroy();
+    this.direct.destroy();
+    [this.items, this.direct] = this.createLists(items);
+  }
+
+  /**
+   * The "direct" list: every batch's items at its slice (`itemBase`), as
+   * the batches were last laid out.
+   */
+  writeDirect(list: Uint32Array): void {
+    this.device.queue.writeBuffer(this.direct, 0, list);
   }
 
   /**
@@ -85,7 +114,7 @@ export class DrawArguments {
    */
   clear(encoder: GPUCommandEncoder, batches: number): void {
     encoder.clearBuffer(
-      this.buffer,
+      this.arguments,
       0,
       Math.max(INDIRECT_SIZE, batches * INDIRECT_SIZE),
     );
@@ -104,25 +133,25 @@ export class DrawArguments {
   ): void {
     pass.setVertexBuffer(
       0,
-      direct ? this.directList : this.itemList,
+      direct ? this.direct : this.items,
       batch.itemBase * 4,
     );
     const { mesh } = batch;
     if (batch.points) {
       if (!direct) {
-        pass.drawIndirect(this.buffer, batch.index * INDIRECT_SIZE);
+        pass.drawIndirect(this.arguments, batch.index * INDIRECT_SIZE);
       }
     } else if (direct) {
       pass.drawIndexed(mesh.indexCount, batch.items, mesh.firstIndex, 0, 0);
     } else {
-      pass.drawIndexedIndirect(this.buffer, batch.index * INDIRECT_SIZE);
+      pass.drawIndexedIndirect(this.arguments, batch.index * INDIRECT_SIZE);
     }
   }
 
   destroy(): void {
-    this.buffer.destroy();
-    this.itemList.destroy();
-    this.directList.destroy();
+    this.arguments.destroy();
+    this.items.destroy();
+    this.direct.destroy();
   }
 
   private createArguments(rows: number): GPUBuffer {
