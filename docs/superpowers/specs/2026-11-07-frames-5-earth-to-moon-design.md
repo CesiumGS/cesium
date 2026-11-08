@@ -11,6 +11,10 @@ made many design decisions about plan 5. They are recorded in
 "_Upstream proposals_", "_Terms_" and "_Design input after plan 5_", and in
 the "Carried forward" lists. This document turns them into a buildable design.
 
+**Status: approved by the owner, 2026-11-07,** for implementation of all of
+plan 5 ("you can implement past 5a, see how far you can get with all of plan
+5's implementation"). The owner reviews the spec and the work as it lands.
+
 **How to read it.** Everything stated plainly was decided by the owner, in the
 frames spec, in §13.14, or in the review of this document's first draft. The
 owner's words are quoted where they settle a point. Calls marked **(author's
@@ -138,6 +142,15 @@ What plan 5 builds on, as of 2026-11-07:
 15. **A public API review:** a map of the surface and proposed moves.
 
 ### Non-goals
+
+- **A loading screen for the Viewer** (the owner's idea for later,
+  2026-11-07). By default, the Viewer would show a cover with the Cesium logo
+  that fades out to reveal the scene once the initial tile loading is
+  complete, so the first view doesn't show tiles popping in. Configurable and
+  disableable. It needs an engine signal that the first view is ready (its
+  tiles refined to the screen-space error, or a timeout), which the bench's
+  settled checks already approximate. Not in plan 5; recorded for the Viewer
+  work after it.
 
 - **A GPU tessellation engine.** The owner wants one engine, later, for both
   reprojected models and B-reps (trimmed NURBS from CAD): patches and the
@@ -1501,7 +1514,8 @@ selection; or requiring producers to subdivide, with the rule stated in
 (section 8). A flat face of edge d sags below the curved Earth by about
 d²/8R at its middle: 2 cm for 1 km, 2 m for 10 km.
 
-**Plan 5's treatment (author's call; section 17, question 4):**
+**Plan 5's treatment (the owner approved it, 2026-11-07; section 17,
+question 4):**
 
 - **State the rule.** `BENTLEY_engineering_frame` gains a declared chord
   tolerance: the largest sag the producer allowed, in metres. 4b's generator
@@ -1917,8 +1931,10 @@ the default plan 5 follows if the owner says nothing.
    14.2). The self-directing replay (section 14.3) and a viewer-first audience
    are the author's calls, to be tried. The question was: **what is the
    Artemis example's story?**
-4. **Reprojected models the engine didn't generate: is "state the rule and
-   measure the sag" enough for plan 5?** Section 13.4 adds a declared chord
+4. _Answered (2026-11-07): yes, declare and measure;_ no engine subdivision
+   until the tessellation engine. The question was: **reprojected models the
+   engine didn't generate: is "state the rule and measure the sag" enough for
+   plan 5?** Section 13.4 adds a declared chord
    tolerance to `BENTLEY_engineering_frame`, measures the sag of tiles that
    declare none, and does no engine subdivision until the tessellation
    engine. _Why it matters:_ the field commits the extension's shape (and
