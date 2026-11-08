@@ -2,7 +2,7 @@
 // readout top right (the rigid error under the cursor, or why there are no
 // design coordinates), the legend bottom right, and the anchor ring's label.
 import { useSyncExternalStore } from "react";
-import { WHISKER_RAMP } from "../overlays.ts";
+import { WHISKER_RAMP } from "../colors.ts";
 import type { CursorView, LegendView, LiveSource } from "./model.ts";
 
 export function CursorCard({ cursor }: { cursor: CursorView }) {
@@ -49,7 +49,7 @@ export function Legend({ legend }: { legend: LegendView }) {
             }}
           />
           <span className="dg-num">
-            Rigid error every 1,000 ftUS: {legend.whiskers.min} to{" "}
+            Rigid error, rigid end to true end: {legend.whiskers.min} to{" "}
             {legend.whiskers.max}
           </span>
         </div>

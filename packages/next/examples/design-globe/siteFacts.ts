@@ -24,6 +24,11 @@ export interface SiteFactsInput {
     readonly alignment: Alignment;
     readonly errors: readonly number[];
   };
+  /**
+   * The generator's answer for a ladder site (answers.json `sites`): its
+   * extent and the rigid error at its farthest point, exact.
+   */
+  readonly answer?: { readonly extent: number; readonly displayError: number };
 }
 
 /** The site's frame and story; no story where its rigid error can't be found. */
@@ -52,7 +57,10 @@ export function siteFacts(input: SiteFactsInput): {
   let edge: number | undefined;
   let extent = entry.extent;
   const rigid = input.rigid;
-  if (input.along !== undefined) {
+  if (input.answer !== undefined) {
+    edge = input.answer.displayError;
+    extent = input.answer.extent;
+  } else if (input.along !== undefined) {
     edge = Math.max(...input.along.errors);
     // Along the alignment, not across: a highway's extent is its length.
     extent = input.along.alignment.length * frame.units.metersPerUnit;

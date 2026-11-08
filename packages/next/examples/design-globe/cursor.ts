@@ -1,45 +1,95 @@
 // The cursor (plan 4b Task 18): design picks under the pointer (Task 15's
 // `pickDesign`), one at a time, the latest position winning, and the HUD's
 // readout from them: the rigid error there, the design coordinates in the
-// CRS's own units and height system, the pick's tolerance. `pickAt` is the
-// seam the measure tool (Task 19) takes.
-import { pickDesign } from "../../src/engineering/pick.ts";
+// CRS's own units and height system, the pick's tolerance.
+//
+// `pickAt` is the seam the measure tool (Task 19) takes, and it holds the
+// rule (page.ts `designRefusal`): no design coordinates while the drawn
+// geometry is between placements, while rigid is drawn exaggerated, or on a
+// tileset whose placement isn't the one drawn there. A pick's answer is
+// applied only if nothing changed while it ran (a generation counter: the
+// camera, the cursor's position, the morph and the exaggeration).
+import { pickDesign, type DesignPick } from "../../src/engineering/pick.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import { fixed, unitSymbol } from "./measureModel.ts";
-import { cursorReadout, errorText, type Placement } from "./page.ts";
+import {
+  cursorReadout,
+  designRefusal,
+  errorText,
+  type Placement,
+} from "./page.ts";
 import type { CursorView } from "./panel/model.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
+
+/** The page's state a pick is judged by. */
+export interface PickState {
+  readonly mode: Placement;
+  /** The morph's `t`: which placement a paired site draws its own tiles in. */
+  readonly t: number;
+  readonly morphing: boolean;
+  readonly exaggeration: number;
+}
 
 export interface CursorDeps {
   readonly viewer: Viewer;
   readonly signal: AbortSignal;
   sites(): Iterable<SiteRuntime>;
-  /** The page's placement and whether the drawn geometry is between placements or exaggerated. */
-  state(): {
-    readonly mode: Placement;
-    readonly morphing: boolean;
-    readonly exaggeration: number;
-  };
+  state(): PickState;
   /** The readout changed. */
   changed(): void;
   disposed(): boolean;
 }
 
+/** A pick as the page gives it: design coordinates only where honest. */
+export interface PagePick {
+  /** The pick; `design` is left out when `refused`. */
+  readonly hit: DesignPick | undefined;
+  readonly site: SiteRuntime | undefined;
+  /** Why there are no design coordinates, when a design pick was refused. */
+  readonly refused?: string;
+  /** The placement drawn where it hit (a one-tileset site's is rigid). */
+  readonly drawn?: Placement;
+}
+
 export interface Cursor {
-  /** A design pick at CSS pixel (x, y) of the view, and the site it hit. */
-  pickAt(
-    x: number,
-    y: number,
-  ): Promise<{
-    hit: Awaited<ReturnType<typeof pickDesign>>;
-    site: SiteRuntime | undefined;
-  }>;
+  /** A design pick at CSS pixel (x, y) of the view, with the page's rule applied. */
+  pickAt(x: number, y: number): Promise<PagePick>;
   /** The readout, again from the state (a morph or the exaggeration began or ended). */
   update(): void;
   /** The camera moved: what was under the cursor no longer is. */
   cameraMoved(): void;
   view(): CursorView;
+}
+
+/** The placement a site draws its own tiles in now. */
+export function drawnPlacement(site: SiteRuntime, t: number): Placement {
+  return site.pair === undefined || t < 0.5 ? "rigid" : "reprojected";
+}
+
+/** `pick` with the page's rule applied (`designRefusal`). */
+export function judgePick(
+  hit: DesignPick | undefined,
+  site: SiteRuntime | undefined,
+  state: PickState,
+): PagePick {
+  if (hit === undefined || site === undefined) {
+    return { hit, site };
+  }
+  const drawn = drawnPlacement(site, state.t);
+  const drawnTileset = drawn === "rigid" ? site.rigid : site.reprojected;
+  const refused = designRefusal({
+    mode: drawn,
+    morphing: site.pair !== undefined && state.morphing,
+    exaggeration: site.pair !== undefined ? state.exaggeration : 1,
+    hitIsDrawn: hit.tileset === drawnTileset,
+  });
+  if (refused === undefined || hit.design === undefined) {
+    return { hit, site, drawn };
+  }
+  const rest: DesignPick = { ...hit };
+  delete (rest as { design?: unknown }).design;
+  return { hit: rest, site, refused, drawn };
 }
 
 export function createCursor(deps: CursorDeps): Cursor {
@@ -53,20 +103,22 @@ export function createCursor(deps: CursorDeps): Cursor {
   /** The readout says why there are no design coordinates (moving, exaggerated). */
   let blocked = false;
   let pending: [number, number] | undefined;
+  /** Bumped by anything that makes a pick in flight stale. */
+  let generation = 0;
 
   const pickable = () =>
     [...deps.sites()].flatMap((s) =>
       [s.rigid, s.reprojected].filter((t): t is Tileset3D => t !== undefined),
     );
 
-  async function pickAt(x: number, y: number) {
+  async function pickAt(x: number, y: number): Promise<PagePick> {
     const hit = await pickDesign(viewer.view, x, y, pickable());
     const site = [...deps.sites()].find(
       (s) =>
         hit?.tileset !== undefined &&
         (s.rigid === hit.tileset || s.reprojected === hit.tileset),
     );
-    return { hit, site };
+    return judgePick(hit, site, st());
   }
 
   function set(next: CursorView): void {
@@ -74,17 +126,27 @@ export function createCursor(deps: CursorDeps): Cursor {
     deps.changed();
   }
 
+  /** The readout with no pick: what pointing would show. */
+  const idle = (mode: Placement): CursorView => ({
+    text: cursorReadout({ mode, morphing: false, exaggeration: 1 }).text,
+    muted: false,
+  });
+
   function update(at?: [number, number]): void {
     if (at !== undefined) {
       pending = at;
+      generation++;
     }
     const s = st();
     const base = cursorReadout({
       mode: s.mode,
       morphing: s.morphing,
-      exaggeration: s.mode === "rigid" ? s.exaggeration : 1,
+      exaggeration: s.exaggeration,
     });
     if (!base.design) {
+      if (!blocked) {
+        generation++;
+      }
       blocked = true;
       set({ text: base.text, muted: true });
       return;
@@ -92,7 +154,8 @@ export function createCursor(deps: CursorDeps): Cursor {
     if (blocked) {
       // Settled again: the readout waits for the next pick.
       blocked = false;
-      set({ text: base.text, muted: false });
+      generation++;
+      set(idle(s.mode));
     }
     if (picking || pending === undefined) {
       return;
@@ -100,25 +163,38 @@ export function createCursor(deps: CursorDeps): Cursor {
     const [x, y] = pending;
     pending = undefined;
     picking = true;
+    const issued = generation;
+    const camera = viewer.view.camera.version;
     void pickAt(x, y)
-      .then(({ hit, site }) => {
-        // A pick from before a morph or the exaggeration began says nothing now.
-        if (deps.disposed() || blocked) {
+      .then(({ hit, site, refused, drawn }) => {
+        // Anything that changed while it ran (the camera, the pointer, the
+        // morph) makes it stale: it says nothing now.
+        if (
+          deps.disposed() ||
+          issued !== generation ||
+          camera !== viewer.view.camera.version
+        ) {
           return;
         }
-        const mode = st().mode;
+        const mode = drawn ?? st().mode;
+        if (refused !== undefined) {
+          cursor = { text: refused, muted: true };
+          return;
+        }
         const design = hit?.design;
-        const rigid = site?.rigidPlacement;
         if (design === undefined || site === undefined) {
-          cursor = {
-            text:
-              hit === undefined
-                ? cursorReadout({ mode, morphing: false, exaggeration: 1 }).text
-                : site === undefined
-                  ? "No design model here."
-                  : "This site's frame is still loading: no design coordinates yet.",
-            muted: hit === undefined || site === undefined,
-          };
+          cursor =
+            hit === undefined
+              ? { ...idle(mode), muted: true }
+              : {
+                  text:
+                    site === undefined
+                      ? /ghost|deck/.test(hit.feature?.name ?? "")
+                        ? "That's the other placement's ghost: point at the solid model for design coordinates."
+                        : "No design model here."
+                      : "This site's frame is still loading: no design coordinates yet.",
+                  muted: true,
+                };
           return;
         }
         const d = design.design;
@@ -140,7 +216,7 @@ export function createCursor(deps: CursorDeps): Cursor {
             // No station off the alignment's ends: none is shown.
           }
         }
-        const error = rigid?.displayError(d) ?? 0;
+        const error = site.rigidPlacement?.displayError(d) ?? 0;
         const symbol = unitSymbol(frame.units.horizontalUnitName);
         const read = cursorReadout({
           mode,
@@ -188,15 +264,9 @@ export function createCursor(deps: CursorDeps): Cursor {
     pickAt,
     update: () => update(),
     cameraMoved() {
-      if (cursor.coordinates !== undefined) {
-        set({
-          text: cursorReadout({
-            mode: st().mode,
-            morphing: false,
-            exaggeration: 1,
-          }).text,
-          muted: false,
-        });
+      generation++;
+      if (cursor.coordinates !== undefined || (!blocked && cursor.muted)) {
+        set(idle(st().mode));
       }
     },
     view: () => cursor,

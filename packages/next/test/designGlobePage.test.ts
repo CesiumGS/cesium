@@ -9,6 +9,7 @@ import {
   MORPH_MS,
   SITES,
   cursorReadout,
+  designRefusal,
   errorText,
   formatParams,
   loadingSummary,
@@ -16,12 +17,22 @@ import {
   morphValue,
   nextLoading,
   parseParams,
+  probeVerdict,
   retargetMorph,
   rigidVerdict,
   type LoadEvent,
   type LoadItem,
   type PageParams,
 } from "../examples/design-globe/page.ts";
+import {
+  buildPanelModel,
+  type PageSnapshot,
+} from "../examples/design-globe/panelModel.ts";
+import { creaseEdges } from "../examples/design-globe/placementPair.ts";
+import { judgePick } from "../examples/design-globe/cursor.ts";
+import type { SiteRuntime } from "../examples/design-globe/siteLoader.ts";
+import type { DesignPick } from "../src/engineering/pick.ts";
+import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 
 describe("design globe params", () => {
   it("defaults to the corridor, rigid, with exact snapping", () => {
@@ -209,6 +220,19 @@ describe("design globe loading states", () => {
     expect(again[0]!.detail).toBeUndefined();
   });
 
+  it("drops an item on clear (its site reloaded)", () => {
+    const done = run(events);
+    const cleared = nextLoading(done, { type: "clear", id: "catalog" });
+    expect(cleared.map((i) => i.id)).toEqual([
+      "proj",
+      `grid:${GRID}`,
+      "tiles:corridor",
+    ]);
+    expect(nextLoading(cleared, { type: "clear", id: "catalog" })).toBe(
+      cleared,
+    );
+  });
+
   it("sums up: loading, then ready; an error or missing data wins", () => {
     expect(loadingSummary([]).state).toBe("ready");
     expect(loadingSummary(run(events.slice(0, 9))).state).toBe("loading");
@@ -322,5 +346,221 @@ describe("design globe portfolio and words", () => {
     expect(settled.design).toBe(true);
     expect(settled.text).toContain("30.6 m");
     expect(settled.text).toContain("1700+00");
+  });
+});
+
+describe("design globe seams (fix round 1)", () => {
+  it("refuses design coordinates while the drawn geometry isn't a placement's", () => {
+    const settled = {
+      mode: "rigid" as const,
+      morphing: false,
+      exaggeration: 1,
+      hitIsDrawn: true,
+    };
+    expect(designRefusal(settled)).toBeUndefined();
+    expect(designRefusal({ ...settled, morphing: true })).toMatch(
+      /between placements/,
+    );
+    expect(designRefusal({ ...settled, exaggeration: EXAGGERATION })).toMatch(
+      new RegExp(`×${EXAGGERATION}`),
+    );
+    // Exaggeration moves only the rigid geometry: reprojected stays true.
+    expect(
+      designRefusal({
+        ...settled,
+        mode: "reprojected",
+        exaggeration: EXAGGERATION,
+      }),
+    ).toBeUndefined();
+    expect(designRefusal({ ...settled, hitIsDrawn: false })).toMatch(
+      /not drawn/,
+    );
+  });
+
+  it("tells a missing tileset from a failing server", () => {
+    expect(probeVerdict(200, "application/json")).toBe("ok");
+    expect(probeVerdict(404, "text/html")).toBe("missing");
+    // A dev server answers a missing file with its own page.
+    expect(probeVerdict(200, "text/html")).toBe("missing");
+    expect(probeVerdict(502, "text/html")).toBe("error");
+    expect(probeVerdict(500, "application/json")).toBe("error");
+    expect(probeVerdict(undefined, undefined)).toBe("error");
+  });
+});
+
+describe("design globe panel model", () => {
+  const snapshot = (over: Partial<PageSnapshot> = {}): PageSnapshot => ({
+    params: { mode: "reprojected", site: "london", snap: "exact" },
+    loading: [],
+    t: 1,
+    morphing: false,
+    ghost: true,
+    exaggerate: true,
+    sites: new Map(
+      SITES.map((entry) => [
+        entry.id,
+        {
+          entry,
+          paired: entry.id === "corridor",
+          started: true,
+          drawn: true,
+        },
+      ]),
+    ),
+    stations: { start: 10_000, end: 174_042 },
+    cursor: { text: "", muted: false },
+    flyingAlong: false,
+    evidence: true,
+    ...over,
+  });
+
+  it("shows a rigid-only site as rigid, its switch and toggles off, with why", () => {
+    const m = buildPanelModel(snapshot());
+    expect(m.mode).toBe("rigid");
+    expect(m.switchable).toBe(false);
+    expect(m.ghost).toBe(false);
+    expect(m.exaggerate).toBe(false);
+    expect(m.switchNote).toMatch(/reprojected tiles are on the way/);
+    expect(m.legend.solid).toBe("rigid");
+    expect(m.legend.ghostText).toBeUndefined();
+    expect(m.legend.exaggeration).toBe(1);
+  });
+
+  it("shows the corridor's own state", () => {
+    const m = buildPanelModel(
+      snapshot({
+        params: { mode: "reprojected", site: "corridor", snap: "exact" },
+      }),
+    );
+    expect(m.mode).toBe("reprojected");
+    expect(m.switchable).toBe(true);
+    expect(m.ghost).toBe(true);
+    expect(m.exaggerate).toBe(true);
+    expect(m.legend.solid).toBe("reprojected");
+  });
+});
+
+describe("design globe creases", () => {
+  it("finds a box's 12 edges and nothing on a flat strip", () => {
+    // A unit box, flat-shaded: 6 faces × 2 triangles, own vertices each.
+    const corners = [
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+      [1, 0, 1],
+      [1, 1, 1],
+      [0, 1, 1],
+    ];
+    const faces = [
+      [0, 3, 2, 1],
+      [4, 5, 6, 7],
+      [0, 1, 5, 4],
+      [1, 2, 6, 5],
+      [2, 3, 7, 6],
+      [3, 0, 4, 7],
+    ];
+    const positions: number[] = [];
+    const indices: number[] = [];
+    for (const f of faces) {
+      const base = positions.length / 3;
+      for (const c of f) {
+        positions.push(...corners[c]!);
+      }
+      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+    const box = creaseEdges(
+      Float32Array.from(positions),
+      Uint32Array.from(indices),
+    );
+    expect(box.length / 2).toBe(12);
+    // A strip of three coplanar quads: its shared edges don't fold.
+    const strip = creaseEdges(
+      Float32Array.from([
+        0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0, 0, 1, 0, 1, 1, 0, 2, 1, 0, 3, 1, 0,
+      ]),
+      Uint32Array.from([0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6]),
+    );
+    expect(strip.length).toBe(0);
+  });
+});
+
+describe("design globe pick seam (judgePick)", () => {
+  const rigidSet = { name: "rigid" } as unknown as Tileset3D;
+  const reproSet = { name: "reprojected" } as unknown as Tileset3D;
+  const site = {
+    entry: SITES.at(-1)!,
+    rigid: rigidSet,
+    reprojected: reproSet,
+    pair: {},
+  } as unknown as SiteRuntime;
+  const oneTileset = {
+    entry: SITES[0]!,
+    rigid: rigidSet,
+  } as unknown as SiteRuntime;
+  const pick = (tileset: Tileset3D) =>
+    ({
+      position: new Float64Array(3),
+      tileset,
+      tolerance: 0.2,
+      design: { design: new Float64Array([1, 2, 3]) },
+    }) as unknown as DesignPick;
+  const settled = {
+    mode: "rigid" as const,
+    t: 0,
+    morphing: false,
+    exaggeration: 1,
+  };
+
+  it("gives design coordinates on the drawn placement, settled at true scale", () => {
+    const r = judgePick(pick(rigidSet), site, settled);
+    expect(r.refused).toBeUndefined();
+    expect(r.hit?.design).toBeDefined();
+    expect(r.drawn).toBe("rigid");
+    const p = judgePick(pick(reproSet), site, {
+      ...settled,
+      mode: "reprojected",
+      t: 1,
+    });
+    expect(p.hit?.design).toBeDefined();
+  });
+
+  it("refuses mid-morph, while rigid is exaggerated, and off the drawn placement", () => {
+    const moving = judgePick(pick(rigidSet), site, {
+      ...settled,
+      t: 0.3,
+      morphing: true,
+    });
+    expect(moving.hit?.design).toBeUndefined();
+    expect(moving.refused).toMatch(/between placements/);
+    const exaggerated = judgePick(pick(rigidSet), site, {
+      ...settled,
+      exaggeration: EXAGGERATION,
+    });
+    expect(exaggerated.hit?.design).toBeUndefined();
+    // The reprojected tileset hit while rigid is drawn (a stale tile).
+    const other = judgePick(pick(reproSet), site, settled);
+    expect(other.hit?.design).toBeUndefined();
+    expect(other.refused).toMatch(/not drawn/);
+    // Reprojected and exaggerated: the drawn geometry is true.
+    const trueScale = judgePick(pick(reproSet), site, {
+      mode: "reprojected",
+      t: 1,
+      morphing: false,
+      exaggeration: EXAGGERATION,
+    });
+    expect(trueScale.hit?.design).toBeDefined();
+  });
+
+  it("treats a one-tileset site as rigid, whatever the page's mode", () => {
+    const r = judgePick(pick(rigidSet), oneTileset, {
+      mode: "reprojected",
+      t: 1,
+      morphing: true,
+      exaggeration: EXAGGERATION,
+    });
+    expect(r.drawn).toBe("rigid");
+    expect(r.hit?.design).toBeDefined();
   });
 });

@@ -98,16 +98,15 @@ export function Status({
   }
   if (summary.state === "missing") {
     const [first] = summary.items;
-    const [say, command] = (first?.detail ?? "").split(": npm ");
     return (
       <Alert severity="warning" className="dg-status">
-        <div>{say}:</div>
-        {command !== undefined && (
-          <code className="dg-code-block">npm {command}</code>
+        <div>{first?.detail}</div>
+        {first?.command !== undefined && (
+          <code className="dg-code-block">{first.command}</code>
         )}
         <div className="dg-muted">
-          It writes about 40 MB to the store outside the repository; nothing
-          comes from Cesium ion.
+          It writes the design globe's tilesets and answers to the store outside
+          the repository; nothing comes from Cesium ion.
         </div>
       </Alert>
     );

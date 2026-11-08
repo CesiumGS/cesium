@@ -137,7 +137,7 @@ function PlacementSection({
           <span className="dg-muted dg-actions-note">
             {model.flyAlong === "unavailable"
               ? "Once the corridor's frame is in."
-              : "From 20 km out, where rigid is farthest off, down the corridor."}
+              : (model.alongNote ?? "Down the corridor to the anchor.")}
           </span>
         </div>
       )}
@@ -156,7 +156,7 @@ export function Panel({ source, live, actions, hud, children }: PanelProps) {
       {createPortal(
         <>
           <CursorCard cursor={model.cursor} />
-          <Legend legend={model.legend} />
+          {model.drawn && <Legend legend={model.legend} />}
           <AnchorLabel live={live} />
         </>,
         hud,

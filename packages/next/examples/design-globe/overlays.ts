@@ -16,11 +16,11 @@ import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { CustomShader } from "../../src/scene/CustomShader.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { visibleRise } from "./exactSnap.ts";
+import { rampAt } from "./colors.ts";
 import {
   PARTNER_SEMANTIC,
   morphShader,
   type PairState,
-  type Rgba,
 } from "./placementPair.ts";
 
 /** One sample along the centreline. */
@@ -68,36 +68,6 @@ export function sagSamples(
   return out;
 }
 
-/** The whiskers' colour ramp, short to long (sRGB hex; dark HUD tones). */
-export const WHISKER_RAMP = ["#fff1b8", "#ffc46b", "#ff8a3d", "#f2552c"];
-
-const srgbToLinear = (c: number) =>
-  c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-
-/** Linear RGBA of an sRGB hex colour. */
-export function hexLinear(hex: string, alpha = 1): Rgba {
-  const v = Number.parseInt(hex.slice(1), 16);
-  return [
-    srgbToLinear(((v >> 16) & 255) / 255),
-    srgbToLinear(((v >> 8) & 255) / 255),
-    srgbToLinear((v & 255) / 255),
-    alpha,
-  ];
-}
-
-/** The ramp's colour at `u` (0 to 1), linear RGBA. */
-function rampAt(u: number): Rgba {
-  const stops = WHISKER_RAMP.map((h) => hexLinear(h));
-  const x = Math.min(1, Math.max(0, u)) * (stops.length - 1);
-  const i = Math.min(stops.length - 2, Math.floor(x));
-  const f = x - i;
-  const a = stops[i]!;
-  const b = stops[i + 1]!;
-  return [0, 1, 2, 3].map(
-    (k) => a[k]! + (b[k]! - a[k]!) * f,
-  ) as unknown as Rgba;
-}
-
 /** Drawn things a module owns, removed together. */
 class Drawn {
   private readonly draws: DrawHandle[] = [];
@@ -133,7 +103,7 @@ export class Whiskers extends Drawn {
     maxDisplacement: number,
   ) {
     super(world);
-    this.shader = morphShader("design globe whiskers", maxDisplacement, false);
+    this.shader = morphShader("design globe whiskers", maxDisplacement, "line");
     const origin = samples[0]!.truth;
     const max = Math.max(...samples.map((s) => s.error)) || 1;
     const n = samples.length;

@@ -20,11 +20,16 @@ import { loadAnswers, type Answers } from "./answers.ts";
 import {
   EXAGGERATION,
   GRID_MODELS,
+  probeVerdict,
   type LoadEvent,
   type SiteEntry,
 } from "./page.ts";
 import type { SiteView } from "./panel/model.ts";
-import { PlacementPair, type PairLook } from "./placementPair.ts";
+import {
+  PlacementPair,
+  type PairLook,
+  type PairOptions,
+} from "./placementPair.ts";
 
 /** Where the store's design-globe directory is served. */
 export const STORE = "/frames-data/design-globe/";
@@ -43,6 +48,8 @@ export interface SiteRuntime {
   pair?: PlacementPair;
   /** The loads under way (cleared on failure, so Retry runs them again). */
   tiles?: Promise<void>;
+  /** Its tiles' content failed: Retry reloads its tilesets. */
+  tilesFailed?: boolean;
   frame?: Promise<void>;
   view?: Pick<SiteView, "frame" | "story">;
 }
@@ -67,6 +74,8 @@ export interface LoaderDeps {
   disposed(): boolean;
   /** A site's pair was made (the morph applies its state to it). */
   paired(site: SiteRuntime): void;
+  /** A site's whiskers from its pairs, if it gets them that way. */
+  pairOptions(site: SiteRuntime): Pick<PairOptions, "whiskers">;
   /** A site's placements are in. */
   placed(site: SiteRuntime, api: ProjApi): void;
   /** Logged without the token (`scrub`). */
@@ -78,29 +87,37 @@ export interface SiteLoader {
   loadTiles(site: SiteRuntime): Promise<void>;
   /** The site's grids, each its own item with bytes, then its placements. */
   loadFrame(site: SiteRuntime): Promise<void>;
-  /** The generator's answers (`answers.json`), checked. */
+  /** The generator's answers (`answers.json`), checked; reported as an item. */
   loadAnswers(): Promise<Answers>;
+  /** Reloads what failed for these sites (their tiles, frames) and the answers. */
+  retry(sites: Iterable<SiteRuntime>): Promise<void>;
 }
 
 export function createSiteLoader(deps: LoaderDeps): SiteLoader {
   const { viewer, scope, signal, report } = deps;
   let proj: Promise<ProjApi> | undefined;
   let catalog: Promise<GridSource> | undefined;
+  let answers: Promise<Answers> | undefined;
 
   /**
-   * Whether the store has a tileset at `path`: a dev server answers a
-   * missing file with its own page, so the answer must be JSON.
+   * What the store says about a tileset at `path` (page.ts `probeVerdict`):
+   * a dev server answers a missing file with its own page, so the answer
+   * must be JSON; a 5xx is the server failing, not the file missing.
    */
-  async function isTileset(path: string): Promise<boolean> {
+  async function probe(
+    path: string,
+  ): Promise<{ verdict: "ok" | "missing" | "error"; status?: number }> {
     const r = await fetch(`${STORE}${path}tileset.json`, {
       method: "HEAD",
       signal,
     }).catch(() => undefined);
-    return (
-      r !== undefined &&
-      r.ok &&
-      /json/.test(r.headers.get("Content-Type") ?? "")
-    );
+    return {
+      verdict: probeVerdict(
+        r?.status,
+        r?.headers.get("Content-Type") ?? undefined,
+      ),
+      ...(r && { status: r.status }),
+    };
   }
 
   function loadTiles(site: SiteRuntime): Promise<void> {
@@ -118,12 +135,19 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
           : undefined;
         if (pair === undefined && tilesets.pair !== undefined) {
           // The scale ladder's pair, when setup has written it (Task 17b).
-          if (await isTileset(tilesets.pair.reprojected)) {
+          if ((await probe(tilesets.pair.reprojected)).verdict === "ok") {
             pair = tilesets.pair;
           }
         }
-        if (!(await isTileset(pair?.rigid ?? tilesets.rigid))) {
-          throw new MissingError(`${STORE}${pair?.rigid ?? tilesets.rigid}`);
+        const first = pair?.rigid ?? tilesets.rigid;
+        const found = await probe(first);
+        if (found.verdict === "missing") {
+          throw new MissingError(`${STORE}${first}`);
+        }
+        if (found.verdict === "error") {
+          throw new Error(
+            `${STORE}${first}tileset.json: ${found.status !== undefined ? `HTTP ${found.status}` : "no answer"}`,
+          );
         }
         const [rigid, reprojected] = await Promise.all([
           add(pair?.rigid ?? tilesets.rigid),
@@ -149,7 +173,10 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
             rigid,
             reprojected,
             deps.look,
-            (40 * EXAGGERATION) / 0.3,
+            {
+              maxDisplacement: (40 * EXAGGERATION) / 0.3,
+              ...deps.pairOptions(site),
+            },
           );
           scope.defer(() => site.pair?.dispose());
           deps.paired(site);
@@ -165,7 +192,8 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
             ? {
                 type: "missing",
                 id,
-                detail: `${site.entry.name}'s tilesets aren't in the frames store. Generate them once, in packages/next: ${SETUP}`,
+                detail: `${site.entry.name}'s tilesets aren't in the frames store. Generate them once, in packages/next:`,
+                command: SETUP,
               }
             : {
                 type: "error",
@@ -179,15 +207,36 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
     return site.tiles;
   }
 
-  /** The tiles' item: fetching with bytes until the first view is in. */
+  /**
+   * The tiles' item: fetching with bytes until the first view is in, an
+   * error (with Retry) as soon as any content fails; after that, a failure
+   * later on (while flying) is its own error item.
+   */
   function watchTiles(site: SiteRuntime, id: string): void {
+    let ready = false;
     const step = () => {
-      if (deps.disposed()) {
+      if (deps.disposed() || site.tiles === undefined) {
         return;
       }
       const sets = [site.rigid, site.reprojected].filter(
         (t): t is Tileset3D => t !== undefined,
       );
+      const failed = sets.flatMap((t) =>
+        [...t.warnings].filter((w) => w.startsWith("content failed")),
+      );
+      if (failed.length > 0) {
+        site.tilesFailed = true;
+        report({
+          type: "error",
+          id: ready ? `${id}:later` : id,
+          detail: `${site.entry.name}: ${failed.length === 1 ? "a tile" : `${failed.length} tiles`} didn't load (${failed[0]!.replace(/^content failed: /, "")}).`,
+        });
+        return;
+      }
+      if (ready) {
+        setTimeout(step, 1000);
+        return;
+      }
       const received = sets.reduce((n, t) => n + t.stats.bytesReceived, 0);
       const settled = sets.every(
         (t) => t.firstContentAt !== undefined && t.idle,
@@ -200,6 +249,8 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
           id,
           detail: `${tiles} tiles in view${sets.length > 1 ? ", both placements" : ""}`,
         });
+        ready = true;
+        setTimeout(step, 1000);
         return;
       }
       report({ type: "progress", id, file: "tiles", received });
@@ -236,7 +287,9 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
             ? {
                 type: "missing",
                 id: "proj",
-                detail: `PROJ isn't in the frames store. Run once, in packages/next: ${SETUP}`,
+                detail:
+                  "PROJ isn't in the frames store. Run once, in packages/next:",
+                command: SETUP,
               }
             : {
                 type: "error",
@@ -367,9 +420,81 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
     return site.frame;
   }
 
-  return {
-    loadTiles,
-    loadFrame,
-    loadAnswers: () => loadAnswers(`${STORE}answers.json`, signal),
-  };
+  function loadTheAnswers(): Promise<Answers> {
+    answers ??= (async () => {
+      report({
+        type: "start",
+        id: "answers",
+        label: "The generator's answers",
+      });
+      try {
+        const a = await loadAnswers(`${STORE}answers.json`, signal);
+        report({
+          type: "ready",
+          id: "answers",
+          detail: "answers.json, checked",
+        });
+        return a;
+      } catch (error) {
+        answers = undefined;
+        if (!isAbort(error) && !deps.disposed()) {
+          report(
+            isMissing(error)
+              ? {
+                  type: "missing",
+                  id: "answers",
+                  detail:
+                    "The design globe's answers aren't in the frames store. Run once, in packages/next:",
+                  command: SETUP,
+                }
+              : { type: "error", id: "answers", detail: messageOf(error) },
+          );
+        }
+        throw error;
+      }
+    })();
+    return answers;
+  }
+
+  /** Takes a site's tilesets out, so its tiles load again from the start. */
+  function unload(site: SiteRuntime): void {
+    for (const id of [
+      `tiles:${site.entry.id}`,
+      `tiles:${site.entry.id}:later`,
+    ]) {
+      report({ type: "clear", id });
+    }
+    site.pair?.dispose();
+    for (const t of [site.rigid, site.reprojected]) {
+      if (t !== undefined) {
+        viewer.remove(t);
+      }
+    }
+    delete site.pair;
+    delete site.rigid;
+    delete site.reprojected;
+    delete site.rigidPlacement;
+    delete site.reprojectedPlacement;
+    delete site.tiles;
+    delete site.frame;
+    delete site.view;
+    site.tilesFailed = false;
+  }
+
+  async function retry(sites: Iterable<SiteRuntime>): Promise<void> {
+    const runs: Promise<unknown>[] = [loadTheAnswers().catch(() => {})];
+    for (const site of sites) {
+      if (site.tilesFailed) {
+        unload(site);
+      }
+      runs.push(
+        loadTiles(site)
+          .then(() => loadFrame(site))
+          .catch(() => {}),
+      );
+    }
+    await Promise.all(runs);
+  }
+
+  return { loadTiles, loadFrame, loadAnswers: loadTheAnswers, retry };
 }

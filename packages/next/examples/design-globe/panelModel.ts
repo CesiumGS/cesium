@@ -26,6 +26,8 @@ export interface SiteSnapshot {
   readonly paired: boolean;
   /** Its loads are under way or done. */
   readonly started: boolean;
+  /** Some of its tiles are drawn (its tilesets are in). */
+  readonly drawn: boolean;
   readonly view?: Pick<SiteView, "frame" | "story">;
 }
 
@@ -43,6 +45,12 @@ export interface PageSnapshot {
   /** The alignment's stations, for the sag chart. */
   readonly stations: { readonly start: number; readonly end: number };
   readonly cursor: CursorView;
+  /** Each ladder site's extent from the generator's answers, metres. */
+  readonly extents?: ReadonlyMap<string, number>;
+  /** Each ladder site's rigid error at its edge (answers), metres: its whiskers' range. */
+  readonly edgeErrors?: ReadonlyMap<string, number>;
+  /** Where "Fly along" starts (the answers' point about 20 km out), station. */
+  readonly alongFrom?: number;
   /** The camera flies along the corridor now. */
   readonly flyingAlong: boolean;
   /** The whiskers and the ring are drawn. */
@@ -64,7 +72,12 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
   const paired = selected.paired;
   const twoTilesets =
     paired || selected.entry.tilesets.reprojected !== undefined;
-  const solid: Placement = s.t >= 0.5 ? "reprojected" : "rigid";
+  // A site with one tileset is drawn rigid, whatever the page's mode.
+  const solid: Placement = !twoTilesets
+    ? "rigid"
+    : s.t >= 0.5
+      ? "reprojected"
+      : "rigid";
   const samples = s.samples;
   const worst =
     samples !== undefined
@@ -89,7 +102,16 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
           };
         })()
       : undefined;
-  const sites: SiteView[] = SITES.map((entry) => {
+  // Smallest first by the generator's exact extents once they're in (the
+  // ladder), by the footprints' before; the corridor last.
+  const size = (e: SiteEntry) => s.extents?.get(e.id) ?? e.extent;
+  const ordered = [
+    ...SITES.filter((e) => e.id !== "corridor").sort(
+      (a, b) => size(a) - size(b),
+    ),
+    corridor.entry,
+  ];
+  const sites: SiteView[] = ordered.map((entry) => {
     const site = s.sites.get(entry.id)!;
     return {
       id: entry.id,
@@ -98,7 +120,13 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
       summary: siteSummary(entry),
       selected: entry.id === s.params.site,
       busy: site.started && site.view === undefined,
-      paired: entry.tilesets.reprojected !== undefined || site.paired,
+      // "Rigid only" once its tiles say so: a ladder site's pair is probed
+      // when it loads.
+      paired:
+        site.paired ||
+        (!site.drawn &&
+          (entry.tilesets.reprojected !== undefined ||
+            entry.tilesets.pair !== undefined)),
       ...(entry.fallback && { fallback: `${entry.fallback} fallback` }),
       ...(site.view?.frame && { frame: site.view.frame }),
       ...(site.view?.story && { story: site.view.story }),
@@ -112,18 +140,32 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
       : `Reprojected through ${selected.entry.codes}`;
   return {
     loading: s.loading,
-    mode: s.params.mode,
+    mode: twoTilesets ? s.params.mode : "rigid",
     morphing: s.morphing,
-    ghost: s.ghost,
-    exaggerate: s.exaggerate,
+    // Off while there is no other placement to show or exaggerate.
+    ghost: paired && s.ghost,
+    exaggerate: paired && s.exaggerate,
     exaggeration: EXAGGERATION,
     switchable: paired,
     ...(!paired && {
       switchNote: twoTilesets
         ? "The switch works once both placements' tiles are in."
-        : "This site has one tileset, rigid, until its reprojected twin is generated (the scale ladder). Its rigid error is in its story below.",
+        : "Drawn rigid: this site's reprojected tiles are on the way (the scale ladder). Its rigid error is in its story below.",
     }),
     ...(sag && { sag }),
+    ...(samples !== undefined &&
+      s.alongFrom !== undefined && {
+        alongNote: (() => {
+          const at = samples.reduce((a, b) =>
+            Math.abs(b.station - s.alongFrom!) <
+            Math.abs(a.station - s.alongFrom!)
+              ? b
+              : a,
+          );
+          return `From 20 km out, where rigid is ${errorText(at.error)} off, down the corridor to the anchor.`;
+        })(),
+      }),
+    drawn: selected.drawn,
     flyAlong: !isCorridor
       ? "hidden"
       : s.flyingAlong
@@ -143,10 +185,19 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
               ? "Reprojected, where it truly is (ghost)"
               : "Rigid, where one transform puts it (ghost)",
         }),
-      ...(isCorridor &&
-        s.evidence &&
-        worst !== undefined &&
-        s.t < 1 && { whiskers: { min: "0 m", max: errorText(worst) } }),
+      ...(s.t < 1 &&
+        (isCorridor
+          ? s.evidence &&
+            worst !== undefined && {
+              whiskers: { min: "0 m", max: errorText(worst) },
+            }
+          : paired &&
+            s.edgeErrors?.get(selected.entry.id) !== undefined && {
+              whiskers: {
+                min: "0 m",
+                max: errorText(s.edgeErrors.get(selected.entry.id)!),
+              },
+            })),
       anchor: isCorridor && s.evidence,
       exaggeration: paired ? (s.exaggerate ? EXAGGERATION : 1) : 1,
     },

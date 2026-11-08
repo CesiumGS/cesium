@@ -16,16 +16,17 @@
 //   - panelModel.ts: the panel's model from a snapshot of the state here.
 import { createElement } from "react";
 import { Alignment } from "../../src/engineering/alignment.ts";
+import type { ProjApi } from "../../src/engineering/proj.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";
 import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
-import { createCursor } from "./cursor.ts";
+import { createCursor, drawnPlacement } from "./cursor.ts";
 import { MorphDriver, type MorphTarget } from "./morphDriver.ts";
+import { hexLinear } from "./colors.ts";
 import {
   AnchorRing,
   Whiskers,
-  hexLinear,
   sagSamples,
   type SagSample,
 } from "./overlays.ts";
@@ -46,14 +47,7 @@ import { buildPanelModel, type SiteSnapshot } from "./panelModel.ts";
 import type { PairLook } from "./placementPair.ts";
 import { CameraMoves, createShots, reducedMotion } from "./shots.ts";
 import { siteFacts } from "./siteFacts.ts";
-import {
-  SETUP,
-  createSiteLoader,
-  isAbort,
-  isMissing,
-  messageOf,
-  type SiteRuntime,
-} from "./siteLoader.ts";
+import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
 
 const deg = Math.PI / 180;
 
@@ -127,6 +121,26 @@ export function run(context: ExampleContext): ExampleRun {
   viewer.container.append(hud);
   scope.defer(() => hud.remove());
   viewer.view.camera.near = 0.1;
+  // The clock in local solar time, the one the page sets each site's light
+  // by (shots.ts `daylight`); on leaving, the zone, label and clock go back.
+  const prior = {
+    zone: viewer.timeControls?.zone(),
+    label: viewer.timeControls?.label(),
+    time: viewer.clock.time,
+    mode: viewer.clock.mode,
+  };
+  viewer.timeControls?.setZone("solar");
+  viewer.timeControls?.setLabel("Sun at the site (local solar time)");
+  scope.defer(() => {
+    if (prior.zone !== undefined) {
+      viewer.timeControls?.setZone(prior.zone);
+    }
+    if (prior.label) {
+      viewer.timeControls?.setLabel(prior.label);
+    }
+    viewer.clock.time = prior.time;
+    viewer.clock.mode = prior.mode;
+  });
   const alignment = new Alignment(CORRIDOR_ALIGNMENT);
 
   // ------------------------------------------------------------ state
@@ -189,11 +203,17 @@ export function run(context: ExampleContext): ExampleRun {
     viewer,
     signal,
     sites: () => sites.values(),
-    state: () => ({
-      mode: params.mode,
-      morphing: morph.morphing,
-      exaggeration: morph.exaggeration,
-    }),
+    // As the selected site is drawn: a one-tileset site is rigid, unmoving.
+    state: () => {
+      const selected = sites.get(params.site) ?? corridor;
+      const paired = selected.pair !== undefined;
+      return {
+        mode: drawnPlacement(selected, morph.t()),
+        t: morph.t(),
+        morphing: paired && morph.morphing,
+        exaggeration: paired ? morph.exaggeration : 1,
+      };
+    },
     changed: refresh,
     disposed: () => disposed,
   });
@@ -227,7 +247,22 @@ export function run(context: ExampleContext): ExampleRun {
     report,
     disposed: () => disposed,
     paired: () => morph.apply(),
+    // Every paired site but the corridor (whose whiskers stand on its
+    // alignment) gets whiskers from its own vertices: about twelve across
+    // it, coloured against its largest rigid error.
+    pairOptions: (site) =>
+      site === corridor
+        ? {}
+        : {
+            whiskers: {
+              spacing: Math.max(2, site.entry.extent / 12),
+              scale:
+                answers?.sites[site.entry.id]?.displayError ??
+                Math.max(1e-3, (site.entry.extent / 2) ** 2 / (2 * 6_371_000)),
+            },
+          },
     placed: (site, api) => {
+      placedApi.set(site, api);
       if (
         site === corridor &&
         site.rigidPlacement &&
@@ -241,18 +276,7 @@ export function run(context: ExampleContext): ExampleRun {
         );
         buildCorridorEvidence(site);
       }
-      site.view = siteFacts({
-        entry: site.entry,
-        ...(site.rigidPlacement && { rigid: site.rigidPlacement }),
-        ...(site.reprojectedPlacement && {
-          reprojected: site.reprojectedPlacement,
-        }),
-        api,
-        ...(site === corridor &&
-          samples !== undefined && {
-            along: { alignment, errors: samples.map((s) => s.error) },
-          }),
-      });
+      computeFacts(site);
       // The grids' credits, with the data credits (bottom left).
       const credits = (site.rigidPlacement ?? site.reprojectedPlacement)!.frame
         .gridCredits;
@@ -270,6 +294,31 @@ export function run(context: ExampleContext): ExampleRun {
     },
     warn: (message) => console.warn(scrub(message)),
   });
+
+  /** PROJ, as each placed site was placed with (for its facts again). */
+  const placedApi = new Map<SiteRuntime, ProjApi>();
+  /** A site's facts, again when the answers arrive (a ladder site's story is theirs). */
+  function computeFacts(site: SiteRuntime): void {
+    const api = placedApi.get(site);
+    if (api === undefined) {
+      return;
+    }
+    site.view = siteFacts({
+      entry: site.entry,
+      ...(site.rigidPlacement && { rigid: site.rigidPlacement }),
+      ...(site.reprojectedPlacement && {
+        reprojected: site.reprojectedPlacement,
+      }),
+      api,
+      ...(site === corridor &&
+        samples !== undefined && {
+          along: { alignment, errors: samples.map((s) => s.error) },
+        }),
+      ...(answers?.sites[site.entry.id] !== undefined && {
+        answer: answers.sites[site.entry.id]!,
+      }),
+    });
+  }
 
   /** The whiskers and the anchor ring. */
   function buildCorridorEvidence(site: SiteRuntime): void {
@@ -348,14 +397,26 @@ export function run(context: ExampleContext): ExampleRun {
             entry: s.entry,
             paired: s.pair !== undefined,
             started: s.tiles !== undefined || s.frame !== undefined,
+            drawn: s.rigid !== undefined,
             ...(s.view && { view: s.view }),
           },
         ]),
       ),
       ...(samples && { samples }),
       ...(answers && { anchorStation: answers.anchorStation }),
+      ...(answers?.points.find((q) => q.nearKm === 20) !== undefined && {
+        alongFrom: answers.points.find((q) => q.nearKm === 20)!.station,
+      }),
       stations: { start: alignment.startStation, end: alignment.endStation },
       cursor: cursor.view(),
+      ...(answers && {
+        extents: new Map(
+          Object.entries(answers.sites).map(([id, a]) => [id, a.extent]),
+        ),
+        edgeErrors: new Map(
+          Object.entries(answers.sites).map(([id, a]) => [id, a.displayError]),
+        ),
+      }),
       flyingAlong: camera.flying && shots.alongStation() !== undefined,
       evidence: whiskers !== undefined && ring !== undefined,
     });
@@ -383,6 +444,18 @@ export function run(context: ExampleContext): ExampleRun {
       morph.exaggerate = on;
       morph.apply();
       cursor.update();
+      // On the corridor's opening view, keep the deck in frame: the shot
+      // pulls back with the drawn gap, and returns when it's off.
+      if (
+        params.site === "corridor" &&
+        answers !== undefined &&
+        !camera.flying
+      ) {
+        const f = shots.openingShot(answers, morph.exaggeration);
+        if (f !== undefined) {
+          camera.flyTo(f);
+        }
+      }
       refresh();
     },
     flyAlong: () => shots.flyAlong(),
@@ -400,7 +473,7 @@ export function run(context: ExampleContext): ExampleRun {
         .then(() => {
           const t = site.rigid;
           if (t !== undefined && params.site === id && !disposed) {
-            shots.flyToTileset(t, id === "corridor");
+            shots.flyToTileset(t, id === "corridor", answers?.sites[id]);
           }
           refresh();
           return loader.loadFrame(site);
@@ -408,16 +481,20 @@ export function run(context: ExampleContext): ExampleRun {
         .catch(() => {})
         .finally(refresh);
     },
+    // Everything that failed, answers included: the corridor, the selected
+    // site, and any site whose tiles failed.
     retry() {
-      for (const site of sites.values()) {
-        if (site === corridor || site.entry.id === params.site) {
-          void loader
-            .loadTiles(site)
-            .then(() => loader.loadFrame(site))
-            .catch(() => {})
-            .finally(refresh);
-        }
-      }
+      void loader
+        .retry(
+          [...sites.values()].filter(
+            (s) =>
+              s === corridor ||
+              s.entry.id === params.site ||
+              s.tilesFailed === true,
+          ),
+        )
+        .finally(refresh);
+      void fetchAnswers();
     },
   };
 
@@ -440,45 +517,39 @@ export function run(context: ExampleContext): ExampleRun {
   model.store = store;
   scope.defer(() => store.dispose());
 
-  // ------------------------------------------------------------ startup
-  // The corridor first: its tiles draw and morph before PROJ is in.
-  void loader.loadTiles(corridor).catch(() => {});
-  void loader
-    .loadAnswers()
-    .then((a) => {
-      if (disposed) {
+  /** The answers (again on Retry); the opening shot once they're in. */
+  let opened = false;
+  async function fetchAnswers(): Promise<void> {
+    try {
+      const a = await loader.loadAnswers();
+      if (disposed || answers === a) {
         return;
       }
       answers = a;
-      // The opening shot (DESIGN.md "The story"): true scale, near the far end.
-      if (params.site === "corridor") {
+      // Ladder sites placed before the answers: their story is the answers'.
+      for (const site of sites.values()) {
+        computeFacts(site);
+      }
+      // The opening shot (DESIGN.md "The story"): true scale, near the far
+      // end; once, and not over a view the user has chosen since.
+      if (params.site === "corridor" && !opened) {
+        opened = true;
         const f = shots.openingShot(a);
         if (f) {
-          shots.daylight(f.center);
           camera.cut(f);
+          shots.daylight(f.center);
         }
       }
       refresh();
-    })
-    .catch((error: unknown) => {
-      if (isAbort(error) || disposed) {
-        return;
-      }
-      report({
-        type: "start",
-        id: "answers",
-        label: "The generator's answers",
-      });
-      report(
-        isMissing(error)
-          ? {
-              type: "missing",
-              id: "answers",
-              detail: `The design globe's answers aren't in the frames store. Run once, in packages/next: ${SETUP}`,
-            }
-          : { type: "error", id: "answers", detail: messageOf(error) },
-      );
-    });
+    } catch {
+      // Reported as the answers' item (siteLoader.ts), with Retry.
+    }
+  }
+
+  // ------------------------------------------------------------ startup
+  // The corridor first: its tiles draw and morph before PROJ is in.
+  void loader.loadTiles(corridor).catch(() => {});
+  void fetchAnswers();
   void loader.loadFrame(corridor);
   if (params.site !== "corridor") {
     actions.selectSite(params.site);

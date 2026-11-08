@@ -6,24 +6,33 @@
 import type { Alignment } from "../../src/engineering/alignment.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Viewer } from "../../widgets/index.ts";
-import type { Answers } from "./answers.ts";
+import type { AnswerSite, Answers } from "./answers.ts";
 import type { SagSample } from "./overlays.ts";
 import { morphEase } from "./page.ts";
 
 const deg = Math.PI / 180;
 
 /**
- * The opening shot's camera, about the point midway between where rigid
- * draws the centreline and where it is: across the road from its left, at
- * about the rigid deck's height, so the rigid road stands in the air against
- * the sky with the true one on the ground below it. Heading relative to the
- * alignment's azimuth there.
+ * The opening shot (review I1): looking back along the road toward the
+ * anchor, 28° off its axis, from between the two levels: the true road on
+ * the ground below, receding with its lanes and barriers, and the rigid copy
+ * of it floating overhead, a whisker standing between the two in the
+ * foreground. Centred `lift` of the way from where the centreline truly is
+ * up to where rigid draws it. (A camera at the rigid deck's own height sees
+ * it edge-on; one above both reads as two parallel roads.) Heading relative
+ * to the alignment's azimuth there.
  */
 export const OPENING_VIEW = {
-  heading: -95 * deg,
-  pitch: -3.5 * deg,
-  range: 180,
+  heading: 208 * deg,
+  pitch: -6 * deg,
+  range: 120,
+  lift: 0.4,
 };
+/** A model whose rigid error reaches this many metres is framed where it is largest. */
+const VISIBLE_GAP = 3;
+
+/** "Fly along" looks across the road, relative to the alignment's azimuth. */
+const ALONG_HEADING = -75 * deg;
 /** "Fly along": about 24 km in 24 s, slow enough for the tiles to keep up. */
 export const ALONG_MS = 24_000;
 
@@ -185,8 +194,8 @@ export interface ShotsDeps {
 
 /** The page's camera shots. */
 export interface Shots {
-  /** The opening shot, from the answers' point about 20 km out. */
-  openingShot(a: Answers): Framing | undefined;
+  /** The opening shot, from the answers' point about 20 km out, at exaggeration `k`. */
+  openingShot(a: Answers, k?: number): Framing | undefined;
   /** "Fly along": to the far end, then down the corridor to the anchor. */
   flyAlong(): void;
   /** The flight along ended (arrived, or the user took the camera). */
@@ -196,25 +205,50 @@ export interface Shots {
   /** The clock at 10:30 local solar time at a body-fixed point. */
   daylight(at: ArrayLike<number>): void;
   /** Flies to a tileset (the corridor to its opening shot). */
-  flyToTileset(tileset: Tileset3D, corridorShot: boolean): void;
+  /** Flies to a tileset: the corridor to its opening shot, a large ladder site to its farthest point. */
+  flyToTileset(
+    tileset: Tileset3D,
+    corridorShot: boolean,
+    answer?: AnswerSite,
+  ): void;
 }
 
 export function createShots(deps: ShotsDeps): Shots {
   const { viewer, camera, alignment } = deps;
   let alongStation: number | undefined;
 
-  function openingShot(a: Answers): Framing | undefined {
+  /**
+   * The opening shot at exaggeration `k`: the same view, centred and
+   * pulled back with the drawn gap so the rigid deck stays in frame.
+   */
+  function openingShot(a: Answers, k = 1): Framing | undefined {
     const p =
       a.points.find((q) => q.nearKm === 20) ??
       a.points.reduce((x, y) => (y.displayError > x.displayError ? y : x));
     if (p === undefined) {
       return undefined;
     }
-    const center = p.bodyFixed.map((v, k) => (v + p.rigidDisplayed[k]!) / 2);
+    const v = OPENING_VIEW;
+    if (k === 1) {
+      return {
+        center: p.bodyFixed.map(
+          (t, i) => t + (p.rigidDisplayed[i]! - t) * v.lift,
+        ),
+        heading: alignment.azimuthAt(p.station) + v.heading,
+        pitch: v.pitch,
+        range: v.range,
+      };
+    }
+    // Exaggerated: centred halfway up the drawn gap, pulled back to about
+    // twice it, so the deck and the road below both stay in frame.
+    const gap = p.displayError * k;
     return {
-      center,
-      ...OPENING_VIEW,
-      heading: alignment.azimuthAt(p.station) + OPENING_VIEW.heading,
+      center: p.bodyFixed.map(
+        (t, i) => t + (p.rigidDisplayed[i]! - t) * k * 0.5,
+      ),
+      heading: alignment.azimuthAt(p.station) + v.heading,
+      pitch: -8 * deg,
+      range: 2.2 * gap,
     };
   }
 
@@ -255,9 +289,11 @@ export function createShots(deps: ShotsDeps): Shots {
       ? undefined
       : {
           center,
-          heading: alignment.azimuthAt(station) + OPENING_VIEW.heading,
-          pitch: OPENING_VIEW.pitch + (-30 * deg - OPENING_VIEW.pitch) * k,
-          range: OPENING_VIEW.range + (420 - OPENING_VIEW.range) * k,
+          // Across the road from its right, so the deck and the road below
+          // slide past side by side; rising as the gap closes.
+          heading: alignment.azimuthAt(station) + ALONG_HEADING,
+          pitch: -8 * deg + (-30 * deg + 8 * deg) * k,
+          range: 220 + (420 - 220) * k,
         };
   }
 
@@ -310,23 +346,47 @@ export function createShots(deps: ShotsDeps): Shots {
     viewer.clock.mode = "paused";
   }
 
-  function flyToTileset(tileset: Tileset3D, corridorShot: boolean): void {
+  /** Flies to `to` in its own daylight, set again on arrival for the clock's place. */
+  function flyLit(to: Framing): void {
+    daylight(to.center);
+    camera.flyTo(to, () => daylight(to.center));
+  }
+
+  function flyToTileset(
+    tileset: Tileset3D,
+    corridorShot: boolean,
+    answer?: AnswerSite,
+  ): void {
     const answers = deps.answers();
     if (corridorShot && answers !== undefined) {
       const f = openingShot(answers);
       if (f) {
-        daylight(f.center);
-        camera.flyTo(f);
+        flyLit(f);
         return;
       }
     }
+    const far = answer?.points[1];
+    if (far !== undefined && far.displayError >= VISIBLE_GAP) {
+      // A model whose rigid error you can see: where it is largest, close
+      // enough to read the model and the gap (the pole line is thin at
+      // full extent).
+      const gap = far.displayError;
+      flyLit({
+        center: far.bodyFixed.map(
+          (t, i) => t + (far.rigidDisplayed[i]! - t) * 0.4,
+        ),
+        heading: -40 * deg,
+        pitch: -14 * deg,
+        range: Math.max(90, 3.5 * gap + 60),
+      });
+      return;
+    }
     const sphere = tileset.root.volume.sphere;
-    daylight(sphere.center);
-    camera.flyTo({
+    flyLit({
       center: sphere.center,
       heading: -35 * deg,
       pitch: -28 * deg,
-      range: Math.max(150, sphere.radius * 4.5),
+      range: Math.max(150, sphere.radius * 2.4),
     });
   }
 

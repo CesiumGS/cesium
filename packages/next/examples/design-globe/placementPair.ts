@@ -31,14 +31,20 @@
 // draws, never a frame late. (Its return value is the solid placement's
 // tint.)
 import { CustomShader } from "../../src/scene/CustomShader.ts";
-import type { MeshHandle, World, DrawHandle } from "../../src/scene/World.ts";
+import { MaterialFlags } from "../../src/render/layout.ts";
+import type {
+  DrawHandle,
+  DrawOptions,
+  MeshHandle,
+  World,
+} from "../../src/scene/World.ts";
 import type { ModelPlacement } from "../../src/scene/gltfModel.ts";
 import type { Tile, TileGeometry } from "../../src/streaming/Tile.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
+import { rampAt, type Rgba } from "./colors.ts";
 import type { Placement } from "./page.ts";
 
-/** Linear RGBA. */
-export type Rgba = readonly [number, number, number, number];
+export type { Rgba } from "./colors.ts";
 
 /** How the two placements look. */
 export interface PairLook {
@@ -50,6 +56,21 @@ export interface PairLook {
   readonly reprojectedLine: Rgba;
   /** The content's own material, for the pair's surfaces. */
   readonly baseColor: Rgba;
+}
+
+export interface PairOptions {
+  /**
+   * The farthest a vertex moves, in the rigid tiles' model units, at the
+   * largest exaggeration (it pads culling bounds).
+   */
+  readonly maxDisplacement: number;
+  /**
+   * Whiskers from the pairs' own vertices: one at least every `spacing`
+   * metres, coloured by length over `scale` metres (the site's largest
+   * rigid error). None for a site whose whiskers are drawn otherwise (the
+   * corridor's, along its alignment).
+   */
+  readonly whiskers?: { readonly spacing: number; readonly scale: number };
 }
 
 /** What the pair draws. */
@@ -86,25 +107,64 @@ fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
 }
 `;
 
+/** The ghost deck's hatch: its period in framebuffer pixels, and the share of it drawn. */
+const GHOST_PERIOD = 6;
+const GHOST_COVER = 0.34;
+
+/**
+ * The ghost deck: the other placement's surface, hatched (screen-door
+ * transparency: diagonal stripes cut out of an opaque surface, so it draws
+ * in the opaque pass; a blended surface makes the engine run its whole
+ * translucency pipeline, about 50 ms a frame on a MacBook Air). The hatch
+ * thins out where the two placements are within a couple of metres of each
+ * other (near the anchor, where they coincide and a second surface would
+ * only fight the first for depth).
+ */
+const GHOST_WGSL = /* wgsl */ `
+fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  let reprojected = vsInput.attributes.reprojected;
+  let rigid = reprojected + (vsInput.positionMC - reprojected) * uniforms.exaggeration;
+  (*vsOutput).positionMC = mix(rigid, reprojected, uniforms.t);
+}
+fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
+  let apart = smoothstep(0.25, 2.5, fsInput.attributes.error * uniforms.exaggeration);
+  let stripe = fract((fsInput.screen.x + fsInput.screen.y) / ${GHOST_PERIOD.toFixed(1)});
+  (*material).alpha = select(0.0, 1.0, stripe < ${GHOST_COVER} * apart);
+}
+`;
+
 /** The attribute carrying each vertex's reprojected partner. */
 export const PARTNER_SEMANTIC = "_DG_REPROJECTED";
+/** The attribute carrying each vertex's rigid error, metres. */
+export const ERROR_SEMANTIC = "_DG_ERROR";
+
+/** What a morph shader draws: the solid surface, a ghost deck, or lines. */
+export type MorphShaderKind = "surface" | "ghost" | "line";
 
 /** A shader that blends a mesh's rigid positions toward their partners. */
 export function morphShader(
   label: string,
   displacement: number,
-  surface: boolean,
+  kind: MorphShaderKind,
 ): CustomShader {
   return new CustomShader({
     label,
-    wgsl: surface ? SURFACE_WGSL : LINE_WGSL,
+    wgsl:
+      kind === "surface"
+        ? SURFACE_WGSL
+        : kind === "ghost"
+          ? GHOST_WGSL
+          : LINE_WGSL,
     attributes: {
       reprojected: { semantic: PARTNER_SEMANTIC, type: "vec3f" },
+      ...(kind === "ghost" && {
+        error: { semantic: ERROR_SEMANTIC, type: "f32" as const },
+      }),
     },
     uniforms: {
       t: { type: "f32", value: 0 },
       exaggeration: { type: "f32", value: 1 },
-      ...(surface && {
+      ...(kind === "surface" && {
         rigidTint: { type: "vec4f", value: [1, 1, 1, 1] },
         reprojectedTint: { type: "vec4f", value: [1, 1, 1, 1] },
       }),
@@ -117,10 +177,26 @@ export function morphShader(
 interface Part {
   readonly surfaceMesh: MeshHandle;
   readonly surface: DrawHandle;
+  /** The other placement's deck, translucent, at either end. */
+  readonly rigidDeck: DrawHandle;
+  readonly reprojectedDeck: DrawHandle;
   readonly lineMesh?: MeshHandle;
   readonly rigidGhost?: DrawHandle;
   readonly reprojectedGhost?: DrawHandle;
+  readonly whiskerMesh?: MeshHandle;
+  readonly whiskers?: DrawHandle;
 }
+
+/** The view masks a pair's draws were last given, per kind. */
+interface Masks {
+  readonly surface: number;
+  /** The rigid ghost: its deck and its lines. */
+  readonly rigid: number;
+  readonly reprojected: number;
+  readonly whiskers: number;
+}
+
+const NO_MASKS: Masks = { surface: 0, rigid: 0, reprojected: 0, whiskers: 0 };
 
 interface Pair {
   readonly rigidTile: Tile;
@@ -129,7 +205,7 @@ interface Pair {
   readonly reprojectedGeometry: readonly TileGeometry[];
   readonly parts: readonly Part[];
   /** The view mask the pair's draws were last given, per kind. */
-  masks: { surface: number; rigid: number; reprojected: number };
+  masks: Masks;
 }
 
 /** `m⁻¹` of a column-major affine matrix (float64). */
@@ -182,21 +258,82 @@ function between(a: ArrayLike<number>, b: ArrayLike<number>): Float64Array {
   return out;
 }
 
-/** The reprojected tile's positions in the rigid tile's model space. */
+/**
+ * The reprojected tile's positions in the rigid tile's model space, each
+ * vertex's rigid error (metres, the distance between the two placements'
+ * Earth-fixed positions), and the rigid positions Earth-fixed.
+ */
 function partnerPositions(
   rigid: TileGeometry,
   reprojected: TileGeometry,
-): Float32Array {
+): { partner: Float32Array; error: Float32Array; world: Float64Array } {
   const m = between(reprojected.matrix, rigid.matrix);
   const q = reprojected.positions;
-  const out = new Float32Array(q.length);
+  const p = rigid.positions;
+  const r = rigid.matrix;
+  const s = reprojected.matrix;
+  const partner = new Float32Array(q.length);
+  const error = new Float32Array(q.length / 3);
+  const world = new Float64Array(q.length);
   for (let v = 0; v < q.length; v += 3) {
     const x = q[v]!;
     const y = q[v + 1]!;
     const z = q[v + 2]!;
-    out[v] = m[0]! * x + m[4]! * y + m[8]! * z + m[12]!;
-    out[v + 1] = m[1]! * x + m[5]! * y + m[9]! * z + m[13]!;
-    out[v + 2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]!;
+    partner[v] = m[0]! * x + m[4]! * y + m[8]! * z + m[12]!;
+    partner[v + 1] = m[1]! * x + m[5]! * y + m[9]! * z + m[13]!;
+    partner[v + 2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]!;
+    const a = p[v]!;
+    const b = p[v + 1]!;
+    const c = p[v + 2]!;
+    let d2 = 0;
+    for (let k = 0; k < 3; k++) {
+      const w = r[k]! * a + r[4 + k]! * b + r[8 + k]! * c + r[12 + k]!;
+      world[v + k] = w;
+      const t = s[k]! * x + s[4 + k]! * y + s[8 + k]! * z + s[12 + k]!;
+      d2 += (w - t) ** 2;
+    }
+    error[v / 3] = Math.sqrt(d2);
+  }
+  return { partner, error, world };
+}
+
+/**
+ * Vertices at least `spacing` metres apart (greedy, on a grid of that
+ * size): where a model's whiskers stand.
+ */
+export function spacedVertices(world: Float64Array, spacing: number): number[] {
+  const taken = new Map<string, number[]>();
+  const out: number[] = [];
+  const cell = (x: number) => Math.floor(x / spacing);
+  for (let v = 0; v < world.length / 3; v++) {
+    const x = world[3 * v]!;
+    const y = world[3 * v + 1]!;
+    const z = world[3 * v + 2]!;
+    const [cx, cy, cz] = [cell(x), cell(y), cell(z)];
+    let near = false;
+    for (let dx = -1; dx <= 1 && !near; dx++) {
+      for (let dy = -1; dy <= 1 && !near; dy++) {
+        for (let dz = -1; dz <= 1 && !near; dz++) {
+          for (const u of taken.get(`${cx + dx},${cy + dy},${cz + dz}`) ?? []) {
+            if (
+              Math.hypot(
+                world[3 * u]! - x,
+                world[3 * u + 1]! - y,
+                world[3 * u + 2]! - z,
+              ) < spacing
+            ) {
+              near = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (!near) {
+      out.push(v);
+      const key = `${cx},${cy},${cz}`;
+      taken.set(key, [...(taken.get(key) ?? []), v]);
+    }
   }
   return out;
 }
@@ -344,6 +481,10 @@ export class PlacementPair {
   private readonly rigidLineShader: CustomShader;
   private readonly reprojectedLineShader: CustomShader;
   private readonly material: number;
+  private readonly deckMaterial: number;
+  private readonly rigidDeckShader: CustomShader;
+  private readonly reprojectedDeckShader: CustomShader;
+  private readonly whiskerShader: CustomShader;
   private state: PairState = {
     t: 0,
     morphing: false,
@@ -364,30 +505,40 @@ export class PlacementPair {
     readonly rigid: Tileset3D,
     readonly reprojected: Tileset3D,
     private readonly look: PairLook,
-    maxDisplacement: number,
+    private readonly options: PairOptions,
   ) {
-    this.surfaceShader = morphShader(
-      "design globe morph",
-      maxDisplacement,
-      true,
-    );
-    this.rigidLineShader = morphShader(
-      "design globe rigid ghost",
-      maxDisplacement,
-      false,
-    );
+    const pad = options.maxDisplacement;
+    this.surfaceShader = morphShader("design globe morph", pad, "surface");
+    this.rigidLineShader = morphShader("design globe rigid ghost", pad, "line");
     this.reprojectedLineShader = morphShader(
       "design globe reprojected ghost",
-      maxDisplacement,
-      false,
+      pad,
+      "line",
     );
+    this.rigidDeckShader = morphShader("design globe rigid deck", pad, "ghost");
+    this.reprojectedDeckShader = morphShader(
+      "design globe reprojected deck",
+      pad,
+      "ghost",
+    );
+    this.whiskerShader = morphShader("design globe whiskers", pad, "line");
     this.reprojectedLineShader.setUniform("t", 1);
+    this.reprojectedDeckShader.setUniform("t", 1);
     this.surfaceShader.setUniform("rigidTint", look.rigidTint);
     this.surfaceShader.setUniform("reprojectedTint", look.reprojectedTint);
     this.material = world.addMaterial({
       baseColor: look.baseColor,
       metallic: 0,
       roughness: 1,
+    });
+    // The ghost deck: white, cut out (the hatch), tinted per draw by its
+    // placement.
+    this.deckMaterial = world.addMaterial({
+      baseColor: [1, 1, 1, 1],
+      metallic: 0,
+      roughness: 1,
+      alphaCutoff: 0.5,
+      flags: MaterialFlags.alphaMask,
     });
     rigid.debugTileColor = (tile) => this.onTile("rigid", tile);
     reprojected.debugTileColor = (tile) => this.onTile("reprojected", tile);
@@ -410,16 +561,24 @@ export class PlacementPair {
     this.state = next;
     if (before.t !== next.t) {
       this.surfaceShader.setUniform("t", next.t);
+      this.whiskerShader.setUniform("t", next.t);
     }
     if (before.exaggeration !== next.exaggeration) {
-      this.surfaceShader.setUniform("exaggeration", next.exaggeration);
-      this.rigidLineShader.setUniform("exaggeration", next.exaggeration);
+      for (const shader of [
+        this.surfaceShader,
+        this.rigidLineShader,
+        this.rigidDeckShader,
+        this.whiskerShader,
+      ]) {
+        shader.setUniform("exaggeration", next.exaggeration);
+      }
     }
     const structural =
       before.morphing !== next.morphing ||
       before.ghost !== next.ghost ||
       (before.exaggeration === 1) !== (next.exaggeration === 1) ||
-      before.t >= 0.5 !== next.t >= 0.5;
+      before.t >= 0.5 !== next.t >= 0.5 ||
+      (before.t === 1) !== (next.t === 1);
     if (structural) {
       this.reapply();
     }
@@ -429,7 +588,7 @@ export class PlacementPair {
   /** Re-runs every drawn tile's visibility (both tilesets' callbacks). */
   private reapply(): void {
     for (const pair of this.pairs.values()) {
-      this.setMasks(pair, 0, 0, 0);
+      this.setMasks(pair, NO_MASKS);
     }
     const rigid = this.rigid.debugTileColor;
     const reprojected = this.reprojected.debugTileColor;
@@ -471,48 +630,50 @@ export class PlacementPair {
     }
     const pair = this.pairFor(role, tile);
     const drawn = tile.viewMask;
-    const { ghost, morphing } = this.state;
+    const { ghost, morphing, t } = this.state;
     const standIn = pair !== undefined && this.standIn;
-    if (showTile(this.world, tile, !standIn)) {
+    // Mid-morph, a tile whose partner hasn't loaded would draw at its end,
+    // not between: a brief hole is more honest than a wrong position.
+    const show = !standIn && !(morphing && pair === undefined);
+    if (showTile(this.world, tile, show)) {
       this.changed = true;
     }
     if (pair !== undefined) {
-      this.setMasks(
-        pair,
-        standIn ? drawn : 0,
-        ghost && (morphing || solid === "reprojected") ? drawn : 0,
-        ghost && (morphing || solid === "rigid") ? drawn : 0,
-      );
+      this.setMasks(pair, {
+        surface: standIn ? drawn : 0,
+        rigid: ghost && (morphing || solid === "reprojected") ? drawn : 0,
+        reprojected: ghost && (morphing || solid === "rigid") ? drawn : 0,
+        // Whiskers shrink to nothing at t = 1: drawn until then.
+        whiskers: t < 1 ? drawn : 0,
+      });
     }
     return solid === "rigid" ? this.look.rigidTint : this.look.reprojectedTint;
   }
 
-  private setMasks(
-    pair: Pair,
-    surface: number,
-    rigid: number,
-    reprojected: number,
-  ): void {
+  private setMasks(pair: Pair, next: Masks): void {
     const m = pair.masks;
     if (
-      m.surface === surface &&
-      m.rigid === rigid &&
-      m.reprojected === reprojected
+      m.surface === next.surface &&
+      m.rigid === next.rigid &&
+      m.reprojected === next.reprojected &&
+      m.whiskers === next.whiskers
     ) {
       return;
     }
+    const set = (draw: DrawHandle | undefined, was: number, now: number) => {
+      if (draw !== undefined && was !== now) {
+        this.world.setViewMask(draw, now);
+      }
+    };
     for (const part of pair.parts) {
-      if (m.surface !== surface) {
-        this.world.setViewMask(part.surface, surface);
-      }
-      if (part.rigidGhost && m.rigid !== rigid) {
-        this.world.setViewMask(part.rigidGhost, rigid);
-      }
-      if (part.reprojectedGhost && m.reprojected !== reprojected) {
-        this.world.setViewMask(part.reprojectedGhost, reprojected);
-      }
+      set(part.surface, m.surface, next.surface);
+      set(part.rigidDeck, m.rigid, next.rigid);
+      set(part.rigidGhost, m.rigid, next.rigid);
+      set(part.reprojectedDeck, m.reprojected, next.reprojected);
+      set(part.reprojectedGhost, m.reprojected, next.reprojected);
+      set(part.whiskers, m.whiskers, next.whiskers);
     }
-    pair.masks = { surface, rigid, reprojected };
+    pair.masks = next;
     this.changed = true;
   }
 
@@ -556,7 +717,7 @@ export class PlacementPair {
       rigidGeometry: rg,
       reprojectedGeometry: pg,
       parts,
-      masks: { surface: 0, rigid: 0, reprojected: 0 },
+      masks: NO_MASKS,
     };
     this.pairs.set(path, pair);
     return pair;
@@ -564,7 +725,11 @@ export class PlacementPair {
 
   private buildPart(rigid: TileGeometry, reprojected: TileGeometry): Part {
     const { world } = this;
-    const partner = partnerPositions(rigid, reprojected);
+    const {
+      partner,
+      error,
+      world: rigidWorld,
+    } = partnerPositions(rigid, reprojected);
     const m = rigid.matrix;
     const origin = Float64Array.from([m[12]!, m[13]!, m[14]!]);
     const model = Float64Array.from(m);
@@ -573,77 +738,148 @@ export class PlacementPair {
       positions: rigid.positions,
       normals: vertexNormals(rigid.positions, rigid.indices),
       indices: rigid.indices,
-      attributes: { [PARTNER_SEMANTIC]: { data: partner, components: 3 } },
+      attributes: {
+        [PARTNER_SEMANTIC]: { data: partner, components: 3 },
+        [ERROR_SEMANTIC]: { data: error, components: 1 },
+      },
     });
-    const surface = world.addDraw({
-      mesh: surfaceMesh,
-      origin,
-      model,
-      material: this.material,
-      doubleSided: true,
-      shader: this.surfaceShader,
-      viewMask: 0,
-      name: "design globe morph",
-    });
-    const creases = creaseEdges(rigid.positions, rigid.indices);
-    if (creases.length === 0) {
-      return { surfaceMesh, surface };
-    }
-    // The creases' own vertices, in order, so the mesh is just its lines.
-    const positions = new Float32Array(creases.length * 3);
-    const partners = new Float32Array(creases.length * 3);
-    for (let k = 0; k < creases.length; k++) {
-      const v = creases[k]! * 3;
-      positions.set(rigid.positions.subarray(v, v + 3), k * 3);
-      partners.set(partner.subarray(v, v + 3), k * 3);
-    }
-    const lineMesh = world.addMesh({
-      positions,
-      indices: Uint32Array.from({ length: creases.length }, (_, i) => i),
-      topology: "line-list",
-      attributes: { [PARTNER_SEMANTIC]: { data: partners, components: 3 } },
-    });
-    const ghost = (shader: CustomShader, color: Rgba, name: string) =>
+    const draw = (
+      mesh: MeshHandle,
+      shader: CustomShader,
+      name: string,
+      extra: Partial<DrawOptions>,
+    ) =>
       world.addDraw({
-        mesh: lineMesh,
+        mesh,
         origin,
         model,
-        unlit: true,
-        color,
         shader,
         viewMask: 0,
         name,
+        ...extra,
       });
-    return {
+    const surface = draw(
       surfaceMesh,
-      surface,
-      lineMesh,
-      rigidGhost: ghost(
+      this.surfaceShader,
+      "design globe morph",
+      {
+        material: this.material,
+        doubleSided: true,
+      },
+    );
+    // The other placement's deck: the same mesh, hatched, unlit, in its
+    // placement's colour (the "before" beside the solid "after").
+    const deck = (shader: CustomShader, color: Rgba, name: string) =>
+      draw(surfaceMesh, shader, name, {
+        material: this.deckMaterial,
+        doubleSided: true,
+        unlit: true,
+        color,
+      });
+    const rigidDeck = deck(
+      this.rigidDeckShader,
+      this.look.rigidLine,
+      "design globe rigid deck",
+    );
+    const reprojectedDeck = deck(
+      this.reprojectedDeckShader,
+      this.look.reprojectedLine,
+      "design globe reprojected deck",
+    );
+    const part: {
+      -readonly [K in keyof Part]: Part[K];
+    } = { surfaceMesh, surface, rigidDeck, reprojectedDeck };
+    const lines = (positions: Float32Array, partners: Float32Array) =>
+      world.addMesh({
+        positions,
+        indices: Uint32Array.from(
+          { length: positions.length / 3 },
+          (_, i) => i,
+        ),
+        topology: "line-list",
+        attributes: { [PARTNER_SEMANTIC]: { data: partners, components: 3 } },
+      });
+    const creases = creaseEdges(rigid.positions, rigid.indices);
+    if (creases.length > 0) {
+      // The creases' own vertices, in order, so the mesh is just its lines.
+      const positions = new Float32Array(creases.length * 3);
+      const partners = new Float32Array(creases.length * 3);
+      for (let k = 0; k < creases.length; k++) {
+        const v = creases[k]! * 3;
+        positions.set(rigid.positions.subarray(v, v + 3), k * 3);
+        partners.set(partner.subarray(v, v + 3), k * 3);
+      }
+      part.lineMesh = lines(positions, partners);
+      part.rigidGhost = draw(
+        part.lineMesh,
         this.rigidLineShader,
-        this.look.rigidLine,
         "design globe rigid ghost",
-      ),
-      reprojectedGhost: ghost(
+        { unlit: true, color: this.look.rigidLine },
+      );
+      part.reprojectedGhost = draw(
+        part.lineMesh,
         this.reprojectedLineShader,
-        this.look.reprojectedLine,
         "design globe reprojected ghost",
-      ),
-    };
+        { unlit: true, color: this.look.reprojectedLine },
+      );
+    }
+    const spec = this.options.whiskers;
+    if (spec !== undefined) {
+      const chosen = spacedVertices(rigidWorld, spec.spacing);
+      if (chosen.length > 0) {
+        // Each whisker: from the vertex's rigid position (blended by the
+        // morph) to its true one, which both ends carry as their partner.
+        const positions = new Float32Array(chosen.length * 6);
+        const partners = new Float32Array(chosen.length * 6);
+        const colors = new Float32Array(chosen.length * 8);
+        chosen.forEach((v, i) => {
+          positions.set(rigid.positions.subarray(3 * v, 3 * v + 3), i * 6);
+          positions.set(partner.subarray(3 * v, 3 * v + 3), i * 6 + 3);
+          partners.set(partner.subarray(3 * v, 3 * v + 3), i * 6);
+          partners.set(partner.subarray(3 * v, 3 * v + 3), i * 6 + 3);
+          const c = rampAt(error[v]! / spec.scale);
+          colors.set(c, i * 8);
+          colors.set(c, i * 8 + 4);
+        });
+        part.whiskerMesh = world.addMesh({
+          positions,
+          colors,
+          indices: Uint32Array.from({ length: chosen.length * 2 }, (_, i) => i),
+          topology: "line-list",
+          attributes: {
+            [PARTNER_SEMANTIC]: { data: partners, components: 3 },
+          },
+        });
+        part.whiskers = draw(
+          part.whiskerMesh,
+          this.whiskerShader,
+          "design globe whiskers",
+          { unlit: true },
+        );
+      }
+    }
+    return part;
   }
 
   private release(path: string, pair: Pair): void {
     const { world } = this;
     for (const part of pair.parts) {
-      world.removeDraw(part.surface);
-      if (part.rigidGhost) {
-        world.removeDraw(part.rigidGhost);
+      for (const d of [
+        part.surface,
+        part.rigidDeck,
+        part.reprojectedDeck,
+        part.rigidGhost,
+        part.reprojectedGhost,
+        part.whiskers,
+      ]) {
+        if (d !== undefined) {
+          world.removeDraw(d);
+        }
       }
-      if (part.reprojectedGhost) {
-        world.removeDraw(part.reprojectedGhost);
-      }
-      world.removeMesh(part.surfaceMesh);
-      if (part.lineMesh) {
-        world.removeMesh(part.lineMesh);
+      for (const mesh of [part.surfaceMesh, part.lineMesh, part.whiskerMesh]) {
+        if (mesh !== undefined) {
+          world.removeMesh(mesh);
+        }
       }
     }
     this.pairs.delete(path);
@@ -679,6 +915,7 @@ export class PlacementPair {
     }
     if (!this.world.destroyed) {
       this.world.removeMaterial(this.material);
+      this.world.removeMaterial(this.deckMaterial);
     }
   }
 }

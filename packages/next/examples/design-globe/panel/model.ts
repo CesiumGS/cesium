@@ -98,8 +98,10 @@ export interface PanelModel {
   readonly switchable: boolean;
   /** Why the switch is off, when it is. */
   readonly switchNote?: string;
-  /** The placement section's sentence. */
-  readonly placementText?: string;
+  /** Under "Fly along": where it starts, and the rigid error there. */
+  readonly alongNote?: string;
+  /** The selected site's tiles are in: the legend describes what's drawn. */
+  readonly drawn: boolean;
   readonly sag?: SagView;
   /** "Fly along" runs (or can run). */
   readonly flyAlong: "running" | "ready" | "unavailable" | "hidden";

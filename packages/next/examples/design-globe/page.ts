@@ -11,7 +11,13 @@
 //    panel and the HUD use for an error, a verdict and the cursor.
 import { CORRIDOR_ALIGNMENT, CORRIDOR_CRS, corridorFrame } from "./corridor.ts";
 import { fixed, stationText } from "./measureModel.ts";
-import { PORTFOLIO, SITE_BUILDING, type PortfolioSite } from "./sites.ts";
+import {
+  LADDER,
+  SITE_BUILDING,
+  modelAnchor,
+  modelFootprint,
+  type PortfolioSite,
+} from "./sites.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import type { EngineeringFrameDefinition } from "../../src/engineering/EngineeringFrame.ts";
 
@@ -97,6 +103,8 @@ export interface LoadItem {
   readonly bytes?: number;
   /** What failed, what is missing, or a ready item's one-line note. */
   readonly detail?: string;
+  /** The one command that fixes it, shown as code. */
+  readonly command?: string;
   /** Bytes per file, for an item fetched as several (PROJ: glue, wasm, db). */
   readonly files?: Readonly<
     Record<string, { received: number; total?: number }>
@@ -105,6 +113,8 @@ export interface LoadItem {
 
 export type LoadEvent =
   | { readonly type: "start"; readonly id: string; readonly label: string }
+  /** The item is gone (its site was reloaded): it leaves the list. */
+  | { readonly type: "clear"; readonly id: string }
   | {
       readonly type: "progress";
       readonly id: string;
@@ -118,6 +128,8 @@ export type LoadEvent =
       readonly type: "missing" | "error";
       readonly id: string;
       readonly detail: string;
+      /** The one command that fixes it (missing data: setup). */
+      readonly command?: string;
     };
 
 const FINAL: ReadonlySet<ItemState> = new Set(["ready", "missing", "error"]);
@@ -150,6 +162,8 @@ export function nextLoading(
   const put = (next: LoadItem): readonly LoadItem[] =>
     at >= 0 ? items.with(at, next) : [...items, next];
   switch (event.type) {
+    case "clear":
+      return at >= 0 ? items.filter((_, i) => i !== at) : items;
     case "start":
       if (
         item !== undefined &&
@@ -207,6 +221,7 @@ export function nextLoading(
         label: item?.label ?? event.id,
         state: event.type,
         detail: event.detail,
+        ...(event.command !== undefined && { command: event.command }),
       });
   }
 }
@@ -320,8 +335,10 @@ export interface SiteEntry {
     /** Tried first, and the pair used when present (Task 17b's names). */
     readonly pair?: { readonly rigid: string; readonly reprojected: string };
   };
-  /** Design points spanning the model (its box's corners), for the rigid error at its edge. */
+  /** The model's footprint corners at its ground, design units. */
   readonly corners?: readonly (readonly [number, number, number])[];
+  /** Where rigid is exact: the model's middle, design units. */
+  readonly anchor?: readonly [number, number, number];
   readonly frame: EngineeringFrameDefinition;
   /** A fallback that applies (Jakarta's EGM96). */
   readonly fallback?: string;
@@ -358,52 +375,16 @@ const codesOf = (crs: CrsRef): string =>
     : crs.format.toUpperCase();
 
 /**
- * A box model's corners, design units: its footprint, at its ground and its
- * top. Read field by field, so a site whose model isn't a box (Task 17b's
- * ladder: blocks, a port, an airport…) gets none until the page reads its
- * own footprint; the panel then states no rigid error rather than a wrong one.
+ * A model's footprint corners at its ground (sites.ts `modelFootprint`),
+ * design units, and the anchor rigid is exact at (`modelAnchor`).
  */
-function boxCorners(
-  site: PortfolioSite,
-): [number, number, number][] | undefined {
-  const m = site.model as unknown as Readonly<Record<string, unknown>>;
-  const num = (key: string) =>
-    typeof m[key] === "number" && Number.isFinite(m[key]) ? m[key] : undefined;
-  const width = num("width");
-  const depth = num("depth");
-  const stories = num("stories");
-  const storyHeight = num("storyHeight");
-  if (
-    width === undefined ||
-    depth === undefined ||
-    stories === undefined ||
-    storyHeight === undefined
-  ) {
-    return undefined;
-  }
-  const [x, y, z] = site.origin;
-  const top = z + stories * storyHeight;
-  const corners: [number, number, number][] = [];
-  for (const dx of [0, width]) {
-    for (const dy of [0, depth]) {
-      for (const h of [z, top]) {
-        corners.push([x + dx, y + dy, h]);
-      }
-    }
-  }
-  return corners;
-}
-
-function buildingEntry(site: PortfolioSite, store: string): SiteEntry {
-  const corners = boxCorners(site);
-  /** Across the footprint, design units: the first two corners' diagonal. */
-  const across =
-    corners === undefined
-      ? 0
-      : Math.hypot(
-          corners[6]![0] - corners[0]![0],
-          corners[6]![1] - corners[0]![1],
-        );
+function siteEntry(site: PortfolioSite, store: string): SiteEntry {
+  const corners = modelFootprint(site);
+  /** Across the footprint, design units: its diagonal. */
+  const across = Math.hypot(
+    corners[2]![0] - corners[0]![0],
+    corners[2]![1] - corners[0]![1],
+  );
   const unit =
     site.frame.crs.format === "wkid"
       ? (ORDER_UNITS[site.frame.crs.wkid] ?? 1)
@@ -426,7 +407,8 @@ function buildingEntry(site: PortfolioSite, store: string): SiteEntry {
         },
       }),
     },
-    ...(corners !== undefined && { corners }),
+    corners,
+    anchor: modelAnchor(site),
     frame: site.frame,
     ...(site.frame.geoidFallback !== undefined && {
       fallback: site.frame.geoidFallback,
@@ -462,8 +444,8 @@ export const CORRIDOR_SITE: SiteEntry = {
  * and gives each site both placements.
  */
 export const SITES: readonly SiteEntry[] = [
-  buildingEntry(SITE_BUILDING, "site-building"),
-  ...PORTFOLIO.map((s) => buildingEntry(s, `portfolio-${s.id}`)),
+  siteEntry(SITE_BUILDING, "site-building"),
+  ...LADDER.map((s) => siteEntry(s, `portfolio-${s.id}`)),
 ]
   .sort((a, b) => a.extent - b.extent)
   .concat([CORRIDOR_SITE]);
@@ -538,7 +520,7 @@ export function cursorReadout(state: {
       text: "Moving between placements: no design coordinates until it settles.",
     };
   }
-  if (state.exaggeration !== 1) {
+  if (state.exaggeration !== 1 && state.mode === "rigid") {
     return {
       design: false,
       text: `Errors drawn ×${state.exaggeration}: no design coordinates while exaggerated.`,
@@ -563,4 +545,52 @@ export function cursorReadout(state: {
         ? `Rigid draws this ${errorText(hit.error)} from where it is${where}.`
         : `Drawn where it is${where}; rigid would be ${errorText(hit.error)} off.`,
   };
+}
+
+/**
+ * Why a pick on the drawn geometry gives no design coordinates, or
+ * undefined when it does: the geometry is between placements (a morph), the
+ * rigid placement is drawn exaggerated, or the hit isn't on the tileset
+ * whose placement is drawn (a tile drawn at the other end of a morph).
+ * The measure tool's seam (cursor.ts `pickAt`) applies it to every pick.
+ */
+export function designRefusal(state: {
+  readonly mode: Placement;
+  readonly morphing: boolean;
+  readonly exaggeration: number;
+  /** The hit tileset's placement is the one drawn there now. */
+  readonly hitIsDrawn: boolean;
+}): string | undefined {
+  if (state.morphing) {
+    return "Moving between placements: no design coordinates until it settles.";
+  }
+  if (state.mode === "rigid" && state.exaggeration !== 1) {
+    return `Errors drawn ×${state.exaggeration}: no design coordinates while exaggerated.`;
+  }
+  if (!state.hitIsDrawn) {
+    return "That placement is not drawn here now: no design coordinates.";
+  }
+  return undefined;
+}
+
+/**
+ * What a probe of a store file says: `ok` (JSON), `missing` (404, or a dev
+ * server's page for a file it hasn't: run setup) or `error` (the server
+ * failed, or there was no answer: Retry).
+ */
+export function probeVerdict(
+  status: number | undefined,
+  contentType: string | undefined,
+): "ok" | "missing" | "error" {
+  if (
+    status === undefined ||
+    status >= 500 ||
+    (status >= 400 && status !== 404)
+  ) {
+    return "error";
+  }
+  if (status === 404) {
+    return "missing";
+  }
+  return /json/.test(contentType ?? "") ? "ok" : "missing";
 }
