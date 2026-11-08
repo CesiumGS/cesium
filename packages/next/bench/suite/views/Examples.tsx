@@ -304,14 +304,14 @@ export function ExamplePage() {
             aria-controls="example-controls"
             onClick={toggleCollapsed}
           >
-            Controls
+            {info.panelTitle ?? "Controls"}
             <span className="examples-panel-chevron" aria-hidden="true" />
           </button>
           <div
             ref={panel}
             id="example-controls"
             className="examples-panel-body"
-            aria-label="Controls"
+            aria-label={info.panelTitle ?? "Controls"}
             hidden={collapsed}
           />
         </div>

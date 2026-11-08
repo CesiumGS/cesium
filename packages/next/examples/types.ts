@@ -95,6 +95,8 @@ export interface ExampleInfo {
    * editor or other tools that want the room).
    */
   layout?: "overlay" | "side";
+  /** Its panel's heading, where "Controls" undersells it (a story, facts). */
+  panelTitle?: string;
   load: () => Promise<ExampleModule>;
   /** Its module's source, as shown beside it. */
   source: () => Promise<string>;

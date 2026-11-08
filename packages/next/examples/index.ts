@@ -63,6 +63,7 @@ export const EXAMPLES: ExampleInfo[] = [
     labels: ["Engineering", "Projections", "3D Tiles"],
     globe: "terrain",
     layout: "side",
+    panelTitle: "The story and its figures",
     load: () => import("./design-globe/main.ts"),
     source: () => import("./design-globe/main.ts?raw").then((m) => m.default),
   },
