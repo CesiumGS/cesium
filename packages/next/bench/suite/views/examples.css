@@ -396,20 +396,22 @@
 }
 
 /*
- * A narrow window (a phone): the side layout stacks, the view first at
- * most of the screen's height, the panel under it at full width, the page
- * scrolling rather than the panel.
+ * A narrow window (a phone), for an example that opts in (`stackNarrow`):
+ * the side layout stacks, the view first at most of the screen's height,
+ * the panel under it at full width, the page scrolling rather than the
+ * panel. Opt-in, because a panel built on its own scrollers (the frames
+ * explorer's) needs the side layout's bounded height.
  */
 @media (max-width: 900px) {
-  .examples-stage.side {
+  .examples-stage.side.stack-narrow {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(320px, 66vh) auto;
     height: auto;
   }
-  .examples-stage.side .examples-panel {
+  .examples-stage.side.stack-narrow .examples-panel {
     height: auto;
   }
-  .examples-stage.side .examples-panel-body {
+  .examples-stage.side.stack-narrow .examples-panel-body {
     overflow: visible;
   }
 }

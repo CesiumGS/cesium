@@ -64,6 +64,7 @@ export const EXAMPLES: ExampleInfo[] = [
     globe: "terrain",
     layout: "side",
     panelTitle: "The story and its figures",
+    stackNarrow: true,
     load: () => import("./design-globe/main.ts"),
     source: () => import("./design-globe/main.ts?raw").then((m) => m.default),
   },

@@ -97,6 +97,14 @@ export interface ExampleInfo {
   layout?: "overlay" | "side";
   /** Its panel's heading, where "Controls" undersells it (a story, facts). */
   panelTitle?: string;
+  /**
+   * A side layout that stacks in a narrow window (900 px or less): the view
+   * first, the panel under it at its full height, the page scrolling. Only
+   * for a panel that reads top to bottom; one built on its own scrollers
+   * (the frames explorer's tabs, sheet and sticky picker) keeps the side
+   * layout, which gives them a bounded height.
+   */
+  stackNarrow?: boolean;
   load: () => Promise<ExampleModule>;
   /** Its module's source, as shown beside it. */
   source: () => Promise<string>;

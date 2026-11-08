@@ -282,7 +282,9 @@ export function ExamplePage() {
           {error}
         </Alert>
       )}
-      <div className={`examples-stage${info.layout === "side" ? " side" : ""}`}>
+      <div
+        className={`examples-stage${info.layout === "side" ? " side" : ""}${info.layout === "side" && info.stackNarrow === true ? " stack-narrow" : ""}`}
+      >
         {/* The view and what goes over it: the loading overlay centers on
             the canvas, not the stage (which the side layout's panel shares). */}
         <div className="examples-view-area">
