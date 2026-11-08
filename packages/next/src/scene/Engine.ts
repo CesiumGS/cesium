@@ -1597,7 +1597,7 @@ export class Engine {
     if (index >= 0) {
       this.worlds.splice(index, 1);
     }
-    this.cameras.setClock(world, undefined);
+    this.cameras.forget(world);
     world.destroy();
     this.wake();
   }

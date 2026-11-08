@@ -469,5 +469,112 @@ describe("the frames resolver under the camera layer", () => {
       maxDiff(view.anchorPlacement(earth, new Float64Array(16)), inside),
     ).toBe(0);
     expect(resolver.warnings).toHaveLength(1);
+    // Out again: a new episode, one more warning.
+    clock.time = INSIDE_MS + 5 * 86_400_000;
+    engine.cameras.update();
+    expect(resolver.warnings).toHaveLength(2);
+    expect(cameraErrors().slice(errorsBefore)).toEqual([]);
+  });
+
+  it("outside the data, a second resolve at the same instant doesn't ask the precise edge again", async () => {
+    setup();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const catalog = createFrameCatalog({ data: dataWithEopEnd() });
+    const resolver = createFramesResolver(catalog, { precision: "precise" });
+    const itrf = catalog.get("ITRF");
+    const gcrf = catalog.get("GCRF");
+    resolver.routeRevision(itrf, gcrf);
+    await catalog.ready("ITRF", "precise");
+    const seconds = (INSIDE_MS + 86_400_000) / 1000;
+    const toParent = vi.spyOn(itrf, "toParent");
+    const out = new Float64Array(16);
+    resolver.resolve(itrf, gcrf, seconds, out);
+    const first = Float64Array.from(out);
+    resolver.resolve(itrf, gcrf, seconds, out);
+    resolver.resolve(gcrf, itrf, seconds, out);
+    expect(toParent).toHaveBeenCalledTimes(1);
+    resolver.resolve(itrf, gcrf, seconds, out);
+    expect(maxDiff(out, first)).toBe(0);
+    // Another instant asks again.
+    resolver.resolve(itrf, gcrf, seconds + 1, out);
+    expect(toParent).toHaveBeenCalledTimes(2);
+  });
+
+  it("rebinding an anchor with the clock paused re-places it on the next tick", () => {
+    setup();
+    const catalog = createFrameCatalog({ data: syntheticFrameData() });
+    const gcrf = catalog.get("GCRF");
+    const at = (x: number) => (_instant: Instant, out: Float64Array) => {
+      out.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, 0, 0, 1]);
+    };
+    // Two application reference frames under GCRF; the first has been
+    // invalidated once, so a sum of revisions over the route would not
+    // change when the binding moves from it to the second.
+    const first = new Frame("FIRST", gcrf, at(1000));
+    const second = new Frame("SECOND", gcrf, at(2000));
+    first.invalidate();
+    catalog.add(first);
+    catalog.add(second);
+    const site = world.addAnchor("site");
+    const resolver = createFramesResolver(catalog);
+    resolver.bindAnchor(site, first);
+    const clock = new Clock({ time: INSIDE_MS, mode: "paused" });
+    engine.cameras.setResolver(world, resolver);
+    engine.cameras.setClock(world, clock);
+    engine.cameras.setRig(view, {
+      position: { frame: gcrf },
+      orientation: { kind: "free" },
+    });
+    expect(view.anchorPlacement(site, new Float64Array(16))[12]).toBe(1000);
+    // The route's own revision changes, not only the table root's.
+    const before = resolver.routeRevision(site, gcrf);
+    resolver.bindAnchor(site, second);
+    expect(resolver.routeRevision(site, gcrf)).not.toBe(before);
+    engine.cameras.update();
+    expect(view.anchorPlacement(site, new Float64Array(16))[12]).toBe(2000);
+  });
+
+  it("a host's edge that is slightly off rigid reaches the camera layer's refusal", () => {
+    setup();
+    const errorsBefore = cameraErrors().length;
+    const catalog = createFrameCatalog({ data: syntheticFrameData() });
+    const gcrf = catalog.get("GCRF");
+    // Scaled by 1 + 1e-8: past the camera layer's 1e-9, well inside 1e-6.
+    const k = 1 + 1e-8;
+    const scaled = new Frame("SCALED", gcrf, (_instant, out) => {
+      out.set([k, 0, 0, 0, 0, k, 0, 0, 0, 0, k, 0, 0, 0, 0, 1]);
+    });
+    catalog.add(scaled);
+    const site = world.addAnchor("site");
+    const resolver = createFramesResolver(catalog);
+    resolver.bindAnchor(site, scaled);
+    const m = resolver.resolve(
+      site,
+      gcrf,
+      INSIDE_MS / 1000,
+      new Float64Array(16),
+    );
+    expect(m[0]).toBe(k);
+    engine.cameras.setResolver(world, resolver);
+    engine.cameras.setClock(world, new Clock({ time: INSIDE_MS }));
+    engine.cameras.setRig(view, {
+      position: { frame: gcrf },
+      orientation: { kind: "free" },
+    });
+    const reported = cameraErrors().slice(errorsBefore);
+    expect(reported).toHaveLength(1);
+    expect(reported[0]!.message).toMatch(/not rigid|orthonormal/);
+  });
+
+  it("removing a world stops watching its resolver", () => {
+    setup();
+    const catalog = createFrameCatalog({ data: syntheticFrameData() });
+    const resolver = createFramesResolver(catalog);
+    const unwatch = vi.fn();
+    vi.spyOn(resolver, "watch").mockReturnValue(unwatch);
+    engine.cameras.setResolver(world, resolver);
+    engine.removeWorld(world);
+    expect(unwatch).toHaveBeenCalledTimes(1);
+    // afterEach removes it again: harmless.
   });
 });

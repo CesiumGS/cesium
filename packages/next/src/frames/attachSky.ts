@@ -9,10 +9,63 @@ import type { LeapSeconds } from "../time/leapSeconds.ts";
 import { FrameUnavailableError } from "../camera/frameResolver.ts";
 import type { FrameCatalog, Precision } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
-import { createSkyState, skyState, turnSky, type SkyState } from "./sky.ts";
+import {
+  analyticSky,
+  createSkyState,
+  turnSky,
+  type SkyState,
+} from "./skyAnalytic.ts";
 
 /** The reference frames the sky reads. */
 const SKY_FRAMES = ["GCRF", "ITRF", "HCRS", "MOON_ICRF", "MOON_ME"] as const;
+
+const m = new Float64Array(16);
+const earth = new Float64Array(3);
+const sun = new Float64Array(3);
+const moon = new Float64Array(3);
+const meanEarth = new Float64Array(9);
+
+/** A reference frame's origin in ICRF: each edge read here is a translation from ICRF. */
+function origin(frame: Frame, instant: Instant, out: Float64Array): void {
+  frame.toParent(instant, m);
+  out[0] = m[12]!;
+  out[1] = m[13]!;
+  out[2] = m[14]!;
+}
+
+/**
+ * @internal The sky at `instant` through the catalog's edges, at whatever
+ * its reference frames run at now, into `out`: ITRF's rotation from GCRF
+ * (row-major R, from its child-to-parent Rᵀ), the Sun and the Moon as their
+ * origins' differences from GCRF's in ICRF axes, and MOON_ME's rotation
+ * from MOON_ICRF. Throws where an edge does (outside the data).
+ */
+export function skyThroughFrames(
+  catalog: FrameCatalog,
+  instant: Instant,
+  out: SkyState,
+): SkyState {
+  catalog.get("ITRF").toParent(instant, m);
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      out.icrfToFixed[i * 3 + j] = m[i * 4 + j]!;
+    }
+  }
+  origin(catalog.get("GCRF"), instant, earth);
+  origin(catalog.get("HCRS"), instant, sun);
+  origin(catalog.get("MOON_ICRF"), instant, moon);
+  for (let i = 0; i < 3; i++) {
+    sun[i] = sun[i]! - earth[i]!;
+    moon[i] = moon[i]! - earth[i]!;
+  }
+  catalog.get("MOON_ME").toParent(instant, m);
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      meanEarth[i * 3 + j] = m[i * 4 + j]!;
+    }
+  }
+  return turnSky(sun, moon, meanEarth, out);
+}
 
 /** Options of `attachSky`. */
 export interface AttachSkyOptions {
@@ -33,7 +86,9 @@ export interface AttachSkyOptions {
  *
  * - At `"analytic"` (the default) nothing loads, and while every one of
  *   the five runs on its stand-in the sky is `skyState(ms, undefined)`'s,
- *   to the bit: the stand-ins are those models.
+ *   to the bit: the stand-ins are those models (through the edges it is
+ *   within 1e-12). Its static imports reach no IAU 2006/2000A series: the
+ *   precise ITRF comes from the provider the catalog loads by `import()`.
  * - At `"precise"`, the sky is the stand-ins' while the data loads and the
  *   ephemeris's once it arrives (`skyState(ms, data)`'s within 1e-11). At an
  *   instant outside the data (the ephemeris's span, or past the EOP
@@ -54,11 +109,6 @@ export function attachSky(
     frames[name] = catalog.get(name, { precision, user: "sky" });
   }
   const state = createSkyState();
-  const m = new Float64Array(16);
-  const earth = new Float64Array(3);
-  const sun = new Float64Array(3);
-  const moon = new Float64Array(3);
-  const meanEarth = new Float64Array(9);
   let seconds = Number.NaN;
   let revision = Number.NaN;
   let leap: LeapSeconds | undefined;
@@ -73,41 +123,6 @@ export function attachSky(
     return sum;
   };
 
-  /** The sky through the catalog's edges; throws outside the data. */
-  const fromFrames = (instant: Instant, out: SkyState): SkyState => {
-    // ITRF from GCRF: the child-to-parent matrix is Rᵀ, so R's row-major
-    // elements are its column-major ones.
-    frames.ITRF.toParent(instant, m);
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        out.icrfToFixed[i * 3 + j] = m[i * 4 + j]!;
-      }
-    }
-    origin(frames.GCRF, instant, earth);
-    origin(frames.HCRS, instant, sun);
-    origin(frames.MOON_ICRF, instant, moon);
-    for (let i = 0; i < 3; i++) {
-      sun[i] = sun[i]! - earth[i]!;
-      moon[i] = moon[i]! - earth[i]!;
-    }
-    // MOON_ME from MOON_ICRF: likewise, the row-major ICRF to ME rotation.
-    frames.MOON_ME.toParent(instant, m);
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        meanEarth[i * 3 + j] = m[i * 4 + j]!;
-      }
-    }
-    return turnSky(sun, moon, meanEarth, out);
-  };
-
-  /** A reference frame's origin in ICRF: each edge is a translation from its parent, ICRF's. */
-  const origin = (frame: Frame, instant: Instant, out: Float64Array) => {
-    frame.toParent(instant, m);
-    out[0] = m[12]!;
-    out[1] = m[13]!;
-    out[2] = m[14]!;
-  };
-
   const update = () => {
     const now = clock.seconds;
     const r = revisions();
@@ -119,10 +134,10 @@ export function attachSky(
     leap = catalog.leapSeconds;
     const ms = now * 1000;
     if (SKY_FRAMES.every((name) => catalog.precisionOf(name) === "analytic")) {
-      skyState(ms, undefined, state);
+      analyticSky(ms, state);
     } else {
       try {
-        fromFrames(Instant.fromUtc(ms, leap), state);
+        skyThroughFrames(catalog, Instant.fromUtc(ms, leap), state);
       } catch (error) {
         // Outside the data: draw the analytic sky, as skyState does. The
         // tick goes on whatever failed; anything else is said once.
@@ -132,7 +147,7 @@ export function attachSky(
             `attachSky: the sky falls back to the analytic models: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
-        skyState(ms, undefined, state);
+        analyticSky(ms, state);
       }
     }
     engine.icrfToFixed.set(state.icrfToFixed);

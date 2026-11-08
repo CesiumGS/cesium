@@ -52,9 +52,10 @@ export function segmentBlocked(
   const n1 = bx * bx + by * by + bz * bz;
   const limit = Math.min(1, n0, n1);
   if (t === 1) {
-    // The closest point is the end itself: a + (b − a) · 1 can differ from b
-    // by a rounding, which would put a lower end just under its own limit.
-    return n1 < limit;
+    // The closest point is the end b itself, and |b|² is never under the
+    // limit, which is at most n1. (Found as a + (b − a) · 1, it can differ
+    // from b by a rounding and fall just under it.)
+    return false;
   }
   const cx = ax + ex * t;
   const cy = ay + ey * t;

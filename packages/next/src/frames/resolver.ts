@@ -79,15 +79,29 @@ export interface FramesResolver extends FrameResolver {
   readonly events: Emitter<{ warning: FrameStandInWarning }>;
 }
 
-/** Rigid within this after a route through GCRF's scaling edge is made rigid. */
+/**
+ * How far from rigid a route through GCRF's precise edge may be and still
+ * be made rigid: eq. 11.19 scales by about 2.5e-8 and shears by about 5e-9.
+ */
 const NEARLY_RIGID = 1e-6;
+
+/** What a route's revision was last computed from (`routeRevision`). */
+interface RouteRecord {
+  a: Frame | undefined;
+  b: Frame | undefined;
+  /** `routeRevision(a, b)` of the bound reference frames. */
+  frames: number;
+  /** The nodes' worlds' `transformRevision`, summed. */
+  nodes: number;
+  revision: number;
+}
 
 class Resolver implements FramesResolver {
   readonly events = new Emitter<{ warning: FrameStandInWarning }>();
   private readonly warningList: FrameStandInWarning[] = [];
   private readonly bindings = new WeakMap<AnchorHandle, Frame>();
-  /** Goes up on `bindAnchor`: every route may have changed. */
-  private bindRevision = 0;
+  /** Each route's record, by its two keys. */
+  private readonly routes = new WeakMap<FrameKey, Map<FrameKey, RouteRecord>>();
   private readonly watchers = new Set<() => void>();
   /** Frames asked for at "precise" (or found not to be the catalog's). */
   private readonly asked = new WeakSet<Frame>();
@@ -95,7 +109,15 @@ class Resolver implements FramesResolver {
   private readonly rigFrames = new WeakSet<Frame>();
   /** The catalog's own stand-in reference frames, by frame. */
   private readonly standInNames = new WeakMap<Frame, StandInName | null>();
+  /** Stand-in episodes warned about and not yet over. */
   private readonly warned = new Set<string>();
+  /** A reference frame found outside its data, at that instant and revision. */
+  private readonly outside = new WeakMap<
+    Frame,
+    { tt: number; revision: number; name: StandInName }
+  >();
+  /** The route being composed crossed GCRF's precise (scaling) edge. */
+  private scaled = false;
   private standIns: Readonly<Record<StandInName, FrameEdge>> | undefined;
   // The last instant, by seconds and leap-second table.
   private lastSeconds = Number.NaN;
@@ -142,7 +164,6 @@ class Resolver implements FramesResolver {
       return;
     }
     this.bindings.set(anchor, frame);
-    this.bindRevision++;
     for (const listener of this.watchers) {
       listener();
     }
@@ -174,6 +195,7 @@ class Resolver implements FramesResolver {
     const aLocal = this.hasLocal;
     const b = this.reference(base, this.localB);
     const bLocal = this.hasLocal;
+    this.scaled = false;
     if (a && b) {
       this.askPrecise(a, b);
       this.route(a, b, this.instant(seconds), out);
@@ -188,23 +210,56 @@ class Resolver implements FramesResolver {
       m4.invertAffine(this.localB, this.localB);
       m4.multiply(out, this.localB, out);
     }
-    return this.rigid(out);
+    return this.scaled ? this.rigid(out) : out;
   }
 
+  /**
+   * A counter per route that goes up whenever anything the route is made
+   * of changes: which reference frames its ends are bound to, any revision
+   * along it, or a node's matrix. Not a sum, so a change of binding can't
+   * cancel a change of revisions.
+   */
   routeRevision(frame: FrameKey, base: FrameKey): number {
-    let sum = this.bindRevision;
+    if (frame === base) {
+      return 0;
+    }
     const a = this.reference(frame, undefined);
     const b = this.reference(base, undefined);
-    if (frame !== base && a && b) {
+    let frames = 0;
+    if (a && b) {
       this.askPrecise(a, b);
-      sum += routeRevision(a, b);
+      frames = routeRevision(a, b);
     }
-    for (const key of [frame, base]) {
-      if (isNode(key)) {
-        sum += (key as TransformFrameKey).world.transformRevision;
-      }
+    let nodes = 0;
+    if (isNode(frame)) {
+      nodes += (frame as TransformFrameKey).world.transformRevision;
     }
-    return sum;
+    if (isNode(base)) {
+      nodes += (base as TransformFrameKey).world.transformRevision;
+    }
+    let byBase = this.routes.get(frame);
+    if (!byBase) {
+      byBase = new Map();
+      this.routes.set(frame, byBase);
+    }
+    const record = byBase.get(base);
+    if (!record) {
+      byBase.set(base, { a, b, frames, nodes, revision: 0 });
+      return 0;
+    }
+    if (
+      record.a !== a ||
+      record.b !== b ||
+      record.frames !== frames ||
+      record.nodes !== nodes
+    ) {
+      record.a = a;
+      record.b = b;
+      record.frames = frames;
+      record.nodes = nodes;
+      record.revision++;
+    }
+    return record.revision;
   }
 
   motion(
@@ -358,9 +413,15 @@ class Resolver implements FramesResolver {
 
   /**
    * `f`'s edge at `instant`; for a catalog reference frame outside its
-   * data, its analytic stand-in, warned about once.
+   * data, its analytic stand-in, warned about once per episode. Found
+   * outside at an instant, it isn't asked again at that instant.
    */
   private edge(f: Frame, instant: Instant, out: Float64Array): void {
+    const memo = this.outside.get(f);
+    if (memo && memo.tt === instant.tt && memo.revision === f.revision) {
+      this.standInEdge(memo.name, instant, out);
+      return;
+    }
     try {
       f.toParent(instant, out);
     } catch (error) {
@@ -371,10 +432,28 @@ class Resolver implements FramesResolver {
       if (name === undefined) {
         throw error;
       }
-      this.standIns ??= analyticEdges(() => this.catalog.leapSeconds);
-      this.standIns[name](instant, out);
+      this.standInEdge(name, instant, out);
+      this.outside.set(f, { tt: instant.tt, revision: f.revision, name });
       this.warnStandIn(name, instant, error as FrameUnavailableError);
+      return;
     }
+    const name = this.standInName(f);
+    if (name !== undefined) {
+      // Inside its data: any stand-in episode of it is over.
+      this.warned.delete(name);
+      if (name === "GCRF" && this.catalog.precisionOf("GCRF") === "precise") {
+        this.scaled = true;
+      }
+    }
+  }
+
+  private standInEdge(
+    name: StandInName,
+    instant: Instant,
+    out: Float64Array,
+  ): void {
+    this.standIns ??= analyticEdges(() => this.catalog.leapSeconds);
+    this.standIns[name](instant, out);
   }
 
   private warnStandIn(
@@ -395,18 +474,25 @@ class Resolver implements FramesResolver {
       message: `frames: ${name} is drawn on its analytic stand-in from ${at} on, outside its data (${cause.message}); measurements there still throw. The stand-in's accuracy: ${accuracy.note}`,
     };
     this.warningList.push(warning);
-    if (this.events.has("warning")) {
-      this.events.emit("warning", warning);
-    } else {
-      console.warn(warning.message);
+    try {
+      if (this.events.has("warning")) {
+        this.events.emit("warning", warning);
+      } else {
+        console.warn(warning.message);
+      }
+    } catch (error) {
+      // A listener that throws must not stop the tick.
+      console.warn(
+        `frames resolver: a warning listener threw: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
-   * A placement must be rigid. GCRF's precise edge scales by about 1.5e-8
-   * (IERS eq. 11.19), so a route through it is made rigid by its polar
-   * rotation, keeping its translation. Anything further from rigid is left
-   * for the camera layer to refuse.
+   * A placement must be rigid. GCRF's precise edge scales (IERS eq. 11.19),
+   * so a route through it is made rigid by its polar rotation, keeping its
+   * translation. Only such routes: any other edge's error, and anything
+   * further from rigid, is left for the camera layer to refuse.
    */
   private rigid(out: Float64Array): Float64Array {
     if (
@@ -474,18 +560,26 @@ function commonAncestor(from: Frame, to: Frame): Frame {
  *   call 29): a route with an unbound end is the identity between the
  *   ends' reference frames.
  * - Times: scene seconds, through the catalog's leap seconds (`instant`).
- * - Revisions: `routeRevision` of the bound reference frames, plus bindings
- *   and, through a node, its world's `transformRevision`. `watch` hears the
+ * - Revisions: a counter per route, raised when its ends' bindings, the
+ *   bound reference frames' `routeRevision` or (through a node) its world's
+ *   `transformRevision` change. `watch` hears the
  *   catalog's changes (data arriving), so the camera layer wakes for them.
  *   An application's own reference frame whose data arrives says so with
  *   `invalidate()`, and wakes the engine itself.
  * - Rendering falls back where measuring throws: a catalog reference frame
  *   running at "precise" at an instant outside its data is drawn on its
- *   analytic stand-in, warned about once (`warnings`, the `warning` event,
- *   else `console.warn`), stating the stand-in's accuracy;
- *   `frameTransform` there still throws `FrameUnavailableError`. A
- *   reference frame with no stand-in throws, and the camera layer keeps
+ *   analytic stand-in, warned about once per episode (`warnings`, the
+ *   `warning` event, else `console.warn`), stating the stand-in's
+ *   accuracy; `frameTransform` there still throws `FrameUnavailableError`.
+ *   A reference frame with no stand-in throws, and the camera layer keeps
  *   the view's last good placement.
+ * - Placements are rigid. A route through GCRF's precise edge, which
+ *   scales by about 2.5 × 10⁻⁸ and shears by about 5 × 10⁻⁹ (IERS eq.
+ *   11.19), is made rigid by its polar rotation, keeping its translation:
+ *   the scale and shear are dropped, so content moves by about 2 × 10⁻⁸ of
+ *   its distance from its anchor's origin (about 13 cm at the Earth's
+ *   surface under a Moon-rooted rig). No other route is changed: an edge
+ *   that isn't rigid reaches the camera layer, which refuses it.
  * - The reference frames named directly (a rig's) are marked as used by
  *   `"rig"`; anchors' bindings as used by the application.
  */

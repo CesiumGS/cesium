@@ -3,6 +3,8 @@
 // anchor axes. At "analytic" it is today's analytic sky to the bit and
 // fetches nothing; at "precise" it is skyState's ephemeris sky inside the
 // data and the analytic one outside it.
+import { readFileSync } from "node:fs";
+import { dirname, join, normalize, relative } from "node:path";
 import {
   afterEach,
   beforeAll,
@@ -12,7 +14,7 @@ import {
   it,
   vi,
 } from "vitest";
-import { attachSky } from "../src/frames/attachSky.ts";
+import { attachSky, skyThroughFrames } from "../src/frames/attachSky.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createSkyState, skyState, type SkyState } from "../src/frames/sky.ts";
 import type { Engine } from "../src/scene/Engine.ts";
@@ -69,7 +71,6 @@ describe("attachSky", () => {
       clock.time = Date.UTC(2000, 0, 1) + k * 18_262_310_017; // about 0.58 years apart, to 2058
       skyState(clock.time, undefined, expected);
       expect(skyDifference(engine, expected)).toBe(0);
-      expect(skyDifference(engine, expected)).toBeLessThan(1e-12);
     }
     // Let any dynamic import settle: nothing loads.
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -141,4 +142,72 @@ describe("attachSky", () => {
     ).toBe(0);
     detach();
   });
+});
+
+describe("the sky through the catalog's edges", () => {
+  it("at the stand-ins matches skyState(ms, undefined) within 1e-12", () => {
+    const catalog = createFrameCatalog();
+    const sky = createSkyState();
+    const expected = createSkyState();
+    let worst = 0;
+    for (let k = 0; k < 100; k++) {
+      const ms = Date.UTC(2000, 0, 1) + k * 18_262_310_017;
+      skyThroughFrames(catalog, Instant.fromUtc(ms, catalog.leapSeconds), sky);
+      skyState(ms, undefined, expected);
+      const moon = Math.hypot(...expected.moonPosition);
+      worst = Math.max(
+        worst,
+        maxDiff(sky.icrfToFixed, expected.icrfToFixed),
+        maxDiff(sky.sunDirection, expected.sunDirection),
+        maxDiff(sky.moonPosition, expected.moonPosition) / moon,
+        maxDiff(sky.moonAxes, expected.moonAxes),
+      );
+    }
+    expect(worst).toBeLessThan(1e-12);
+  });
+});
+
+describe("attachSky's and the resolver's imports", () => {
+  const root = normalize(join(import.meta.dirname, ".."));
+  /** Every file reached by static (non-type) imports from `start`. */
+  const staticClosure = (start: string): string[] => {
+    const seen = new Set([start]);
+    const queue = [start];
+    for (let file = queue.pop(); file; file = queue.pop()) {
+      const text = readFileSync(join(root, file), "utf8");
+      const pattern =
+        /^(?:import|export)\s+(?!type\b)[^;]*?from\s+"(\.[^"]+)"/gms;
+      for (const [, specifier] of text.matchAll(pattern)) {
+        const to = relative(
+          root,
+          join(root, dirname(file), specifier!),
+        ).replaceAll("\\", "/");
+        if (!seen.has(to)) {
+          seen.add(to);
+          queue.push(to);
+        }
+      }
+    }
+    return [...seen].sort();
+  };
+
+  for (const start of ["src/frames/attachSky.ts", "src/frames/resolver.ts"]) {
+    it(`${start} reaches no ERFA series, EOP parser, ephemeris or provider statically`, () => {
+      const reached = staticClosure(start);
+      // The analytic sky is reached; the series are not.
+      expect(reached).toContain("src/time/celestial.ts");
+      const heavy = reached.filter(
+        (f) =>
+          f.includes("/providers/") ||
+          f === "src/frames/edges.ts" ||
+          f === "src/frames/sky.ts" ||
+          f === "src/time/earthOrientation.ts" ||
+          // The X, Y and s series and their tables, and the CIO rotation.
+          /^src\/time\/erfa\/(xy06|s06|rotation)/.test(f) ||
+          f === "src/time/eop.ts" ||
+          f.startsWith("src/ephemeris/"),
+      );
+      expect(heavy).toEqual([]);
+    });
+  }
 });

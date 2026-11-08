@@ -126,6 +126,18 @@ export class CameraLayer {
     this.host.wake();
   }
 
+  /**
+   * @internal The engine removed `world`: stops watching its resolver and
+   * its clock, and forgets both.
+   */
+  forget(world: World): void {
+    this.unwatchResolvers.get(world)?.();
+    this.unwatchResolvers.delete(world);
+    this.resolvers.delete(world);
+    this.clocks.get(world)?.unwatch();
+    this.clocks.delete(world);
+  }
+
   /** The scene clock of `world`'s views, if any. */
   clock(world: World): SceneClock | undefined {
     return this.clocks.get(world)?.clock;
