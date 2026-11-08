@@ -7,9 +7,9 @@
 //
 //   node scripts/checkDeclarations.mjs [--only engineering,measure] [index.d.ts]
 //
-// `--only` reports only dangling types declared under those directories of
-// the types (`build:lib` checks `engineering` and `measure`, which plan 4b
-// audited; the rest of the API, ~100 types in scene, streaming, io and gpu,
+// `--only` reports only dangling types declared under, or named by an export
+// declared under, those directories of the types (`build:lib` checks
+// `engineering` and `measure`, which plan 4b audited; the rest of the API, ~100 types in scene, streaming, io and gpu,
 // waits for plan 5's API review). Exits 1, listing each dangling type, where it is
 // declared and an exported declaration that names it, when there are any.
 import { dirname, relative, resolve, sep } from "node:path";
@@ -117,8 +117,8 @@ function check(symbol, owner) {
       typesDir,
       symbol.declarations.find(ours).getSourceFile().fileName,
     );
-    if (reported(file)) {
-      dangling.set(symbol.name, { owner, file });
+    if (reported(file) || reported(owner.file)) {
+      dangling.set(symbol.name, { owner: owner.name, file });
     }
   }
   // A dangling type's own references are reachable too.
@@ -141,7 +141,11 @@ function walk(symbol, owner) {
 
 for (const symbol of exported) {
   if (!(symbol.flags & ts.SymbolFlags.ValueModule)) {
-    walk(symbol, symbol.name);
+    const declaration = (symbol.declarations ?? []).find(ours);
+    const file = declaration
+      ? relative(typesDir, declaration.getSourceFile().fileName)
+      : "";
+    walk(symbol, { name: symbol.name, file });
   }
 }
 

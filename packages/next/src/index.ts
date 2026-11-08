@@ -90,7 +90,7 @@ export {
   type ViewLinkMode,
   type ViewLinkOptions,
 } from "./scene/ViewLink.ts";
-export { Camera } from "./scene/Camera.ts";
+export { Camera, type CameraPose } from "./scene/Camera.ts";
 export { OrbitController } from "./scene/OrbitController.ts";
 export {
   InspectController,
