@@ -1,4 +1,5 @@
 import type { Vec3 } from "../math/vec3.ts";
+import { icrfToFixed } from "./celestial.ts";
 
 const DAY_MS = 86_400_000;
 const deg = Math.PI / 180;
@@ -54,6 +55,35 @@ export function sunDirection(ms: number, out: Vec3): Vec3 {
   out[0] = c * x + s * y;
   out[1] = -s * x + c * y;
   out[2] = z;
+  return out;
+}
+
+/** The astronomical unit, m (IAU 2012 Resolution B2). */
+const AU = 149_597_870_700;
+
+const fixedScratch = new Float64Array(9);
+
+/**
+ * The sun's center from the Earth's center at a time, metres, in the
+ * celestial frame's axes (ICRF): `sunDirection`'s direction turned back by
+ * `icrfToFixed(ms)ᵀ`, times the distance from the same low-precision
+ * formula (R = 1.00014 - 0.01671 cos g - 0.00014 cos 2g au, g the mean
+ * anomaly; Astronomical Almanac, section C). So `icrfToFixed(ms)` turns it
+ * back onto `sunDirection` exactly, up to rounding.
+ */
+export function sunPosition(ms: number, out: Vec3): Vec3 {
+  const n = julianDate(ms) - 2_451_545.0;
+  const g = (357.528 + 0.9856003 * n) * deg;
+  const r = (1.00014 - 0.01671 * Math.cos(g) - 0.00014 * Math.cos(2 * g)) * AU;
+  const d = sunDirection(ms, scratch);
+  const m = icrfToFixed(ms, fixedScratch);
+  const x = d[0]!;
+  const y = d[1]!;
+  const z = d[2]!;
+  // icrf = Mᵀ · fixed for the row-major M.
+  for (let i = 0; i < 3; i++) {
+    out[i] = r * (m[i]! * x + m[3 + i]! * y + m[6 + i]! * z);
+  }
   return out;
 }
 

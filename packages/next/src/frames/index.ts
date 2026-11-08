@@ -33,6 +33,15 @@ export {
 } from "./orientationSigma.ts";
 export { rotationPart, toParentMatrix } from "./matrix.ts";
 export { createFrames, type Frames } from "./frames.ts";
+export {
+  createFrameCatalog,
+  type CatalogFrameName,
+  type FrameCatalog,
+  type FrameCatalogOptions,
+  type FrameInUse,
+  type FrameUser,
+  type Precision,
+} from "./catalog.ts";
 export { createSkyState, skyState, type SkyState } from "./sky.ts";
 export {
   framePoint,

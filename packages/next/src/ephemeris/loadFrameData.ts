@@ -3,15 +3,19 @@ import { EarthOrientationParameters } from "../time/eop.ts";
 import { LeapSeconds } from "../time/leapSeconds.ts";
 import { Ephemeris } from "./Ephemeris.ts";
 
-/** A staleness notice from `loadFrameData`, by kind, with a message for people. */
+/** A notice about frame data, by kind, with a message for people. */
 export interface FrameDataWarning {
   /**
    * `leapSecondsExpired`: the leap-second table is past its expiry, so a newly
    * announced leap second would be missed. `eopEnded`: the EOP table ends
-   * before now, so later samples are degraded.
+   * before now, so later samples are degraded. `loadFailed`: a frame catalog's
+   * load failed, so the reference frames in `frames` stay on their stand-ins
+   * (or unavailable); the message names them and the cause.
    */
-  kind: "leapSecondsExpired" | "eopEnded";
+  kind: "leapSecondsExpired" | "eopEnded" | "loadFailed";
   message: string;
+  /** For `loadFailed`: the reference frames that asked for the data. */
+  frames?: readonly string[];
 }
 
 /** Everything the frames layer needs, loaded from the store `npm run setup` fills. */
@@ -204,6 +208,45 @@ export async function loadFrameRoles(
 }
 
 /**
+ * The leap-second table from the store's `Leap_Second.dat` bytes when it
+ * expires after the built-in table (`LeapSeconds.builtIn()`, NAIF
+ * naif0012.tls); otherwise, or with no bytes, the built-in table.
+ */
+export function leapSecondsFrom(bytes: ArrayBuffer | undefined): LeapSeconds {
+  const builtIn = LeapSeconds.builtIn();
+  const stored = bytes
+    ? LeapSeconds.fromIers(new TextDecoder().decode(bytes))
+    : undefined;
+  return stored && stored.expires > builtIn.expires ? stored : builtIn;
+}
+
+/**
+ * The staleness notices at `now`: the leap-second table is past its expiry,
+ * or the EOP table ends before now so its samples are degraded. Empty when
+ * both are current.
+ */
+export function stalenessWarnings(
+  leapSeconds: LeapSeconds,
+  eop: EarthOrientationParameters,
+  now: number,
+): FrameDataWarning[] {
+  const warnings: FrameDataWarning[] = [];
+  if (leapSeconds.isExpired(now)) {
+    warnings.push({
+      kind: "leapSecondsExpired",
+      message: `frames data: the leap-second table expired on ${new Date(leapSeconds.expires).toISOString().slice(0, 10)}; UTC conversions after a newly announced leap second would be off by a second. Re-run \`npm run setup\` to refresh it.`,
+    });
+  }
+  if (eop.last < now) {
+    warnings.push({
+      kind: "eopEnded",
+      message: `frames data: the Earth orientation table ends on ${new Date(eop.last).toISOString().slice(0, 10)}, before now; later instants use degraded samples. Re-run \`npm run setup\` to refresh it.`,
+    });
+  }
+  return warnings;
+}
+
+/**
  * Load the Earth orientation parameters, ephemeris and leap-second table that
  * `npm run setup` wrote: every role, through `loadFrameRoles`. Rejects with a
  * message saying to run setup when the store is missing or incomplete. The
@@ -231,32 +274,12 @@ export async function loadFrameData(
     FRAME_DATA_ROLES,
     typeof options === "function" ? { onProgress: options } : options,
   );
-  const decode = (bytes: ArrayBuffer | undefined): string =>
-    new TextDecoder().decode(bytes);
-
-  const builtIn = LeapSeconds.builtIn();
-  const stored = leap ? LeapSeconds.fromIers(decode(leap)) : undefined;
-  const leapSeconds =
-    stored && stored.expires > builtIn.expires ? stored : builtIn;
+  const leapSeconds = leapSecondsFrom(leap);
   const earthOrientation = EarthOrientationParameters.fromCelestrakCsv(
-    decode(eop),
+    new TextDecoder().decode(eop),
   );
   const ephemeris = Ephemeris.fromPacks(planets!, moon!);
-
-  const now = Date.now();
-  const warnings: FrameDataWarning[] = [];
-  if (leapSeconds.isExpired(now)) {
-    warnings.push({
-      kind: "leapSecondsExpired",
-      message: `frames data: the leap-second table expired on ${new Date(leapSeconds.expires).toISOString().slice(0, 10)}; UTC conversions after a newly announced leap second would be off by a second. Re-run \`npm run setup\` to refresh it.`,
-    });
-  }
-  if (earthOrientation.last < now) {
-    warnings.push({
-      kind: "eopEnded",
-      message: `frames data: the Earth orientation table ends on ${new Date(earthOrientation.last).toISOString().slice(0, 10)}, before now; later instants use degraded samples. Re-run \`npm run setup\` to refresh it.`,
-    });
-  }
+  const warnings = stalenessWarnings(leapSeconds, earthOrientation, Date.now());
   for (const warning of warnings) {
     console.warn(warning.message);
   }

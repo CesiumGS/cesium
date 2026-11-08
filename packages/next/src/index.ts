@@ -242,3 +242,7 @@ export {
 } from "./globe/terrainRay.ts";
 export { LEVEL_ZERO_ERROR } from "./globe/TerrainSource.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
+export {
+  FrameUnavailableError,
+  type FrameKey,
+} from "./camera/frameResolver.ts";

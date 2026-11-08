@@ -12,6 +12,7 @@ export {
   julianDate,
   sunDirection,
   sunElevation,
+  sunPosition,
   sunTimes,
   type SunTimes,
 } from "./sun.ts";
