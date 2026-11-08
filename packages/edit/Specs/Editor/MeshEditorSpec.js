@@ -13,7 +13,13 @@ import {
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
-import { EditMode, Mesh, MeshEditor, MeshEditorStyle } from "../../index.js";
+import {
+  EditMode,
+  Mesh,
+  MeshEditor,
+  MeshEditorGroup,
+  MeshEditorStyle,
+} from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -267,6 +273,82 @@ describe(
         );
         expect(listener).not.toHaveBeenCalled();
       });
+
+      it("adds the mesh to the root group by default", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        const mesh = editor.addMesh(createSource(square));
+
+        expect(mesh.parent).toBe(editor.root);
+        expect(mesh.name).toBeUndefined();
+        expect(editor.root.children).toEqual([mesh]);
+      });
+
+      it("adds the mesh to the given group with the given name", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+
+        const mesh = editor.addMesh(createSource(square), {
+          name: "Body",
+          parent: group,
+        });
+
+        expect(mesh.name).toBe("Body");
+        expect(mesh.parent).toBe(group);
+        expect(group.children).toEqual([mesh]);
+        expect(editor.root.children).toEqual([group]);
+      });
+
+      it("throws if options.parent isn't a group in this editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const otherGroup = otherEditor.addGroup();
+        const mesh = editor.addMesh(createSource(square));
+
+        expect(() =>
+          editor.addMesh(createSource(square), { parent: otherGroup }),
+        ).toThrowDeveloperError();
+        expect(() =>
+          editor.addMesh(createSource(square), { parent: mesh }),
+        ).toThrowDeveloperError();
+        expect(editor.meshes).toEqual([mesh]);
+      });
+
+      it("throws if options.name isn't a string", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(() =>
+          editor.addMesh(createSource(square), { name: 1 }),
+        ).toThrowDeveloperError();
+      });
+
+      it("raises meshGroupChanged with the parent after meshAdded", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+        const calls = [];
+        editor.meshAdded.addEventListener(() => calls.push("meshAdded"));
+        editor.meshGroupChanged.addEventListener((changedGroup) => {
+          calls.push("meshGroupChanged");
+          expect(changedGroup).toBe(group);
+          expect(changedGroup.children.length).toBe(1);
+        });
+
+        editor.addMesh(createSource(square), { parent: group });
+
+        expect(calls).toEqual(["meshAdded", "meshGroupChanged"]);
+      });
+
+      it("does not change the hierarchy if the geometry can't be edited", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const listener = jasmine.createSpy("meshGroupChanged");
+        editor.meshGroupChanged.addEventListener(listener);
+
+        expect(() => editor.addMesh(createSource(lines))).toThrowError(
+          RuntimeError,
+        );
+        expect(editor.root.children).toEqual([]);
+        expect(listener).not.toHaveBeenCalled();
+      });
     });
 
     describe("meshes", function () {
@@ -410,6 +492,232 @@ describe(
         editor.removeMesh(mesh);
 
         expect(listener).not.toHaveBeenCalled();
+      });
+
+      it("removes the mesh from its parent", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+        const first = editor.addMesh(createSource(square), { parent: group });
+        const second = editor.addMesh(createSource(square), { parent: group });
+
+        editor.removeMesh(first);
+
+        expect(group.children).toEqual([second]);
+      });
+
+      it("raises meshGroupChanged with the parent after meshRemoved", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+        const mesh = editor.addMesh(createSource(square), { parent: group });
+        const calls = [];
+        editor.meshRemoved.addEventListener(() => calls.push("meshRemoved"));
+        editor.meshGroupChanged.addEventListener((changedGroup) => {
+          calls.push("meshGroupChanged");
+          expect(changedGroup).toBe(group);
+          expect(changedGroup.children).toEqual([]);
+        });
+
+        editor.removeMesh(mesh);
+
+        expect(calls).toEqual(["meshRemoved", "meshGroupChanged"]);
+      });
+
+      it("does not raise meshGroupChanged for a mesh that isn't in the editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const mesh = otherEditor.addMesh(createSource(square));
+        const listener = jasmine.createSpy("meshGroupChanged");
+        editor.meshGroupChanged.addEventListener(listener);
+
+        editor.removeMesh(mesh);
+
+        expect(listener).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("root", function () {
+      it("is an empty group with no name or parent", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(editor.root).toBeInstanceOf(MeshEditorGroup);
+        expect(editor.root.name).toBeUndefined();
+        expect(editor.root.parent).toBeUndefined();
+        expect(editor.root.children).toEqual([]);
+      });
+
+      it("can't be removed", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(() => editor.removeGroup(editor.root)).toThrowDeveloperError();
+        expect(editor.root.isDestroyed()).toBe(false);
+      });
+    });
+
+    describe("addGroup", function () {
+      it("adds a group to the root group by default", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        const group = editor.addGroup();
+
+        expect(group).toBeInstanceOf(MeshEditorGroup);
+        expect(group.name).toBeUndefined();
+        expect(group.parent).toBe(editor.root);
+        expect(group.children).toEqual([]);
+        expect(editor.root.children).toEqual([group]);
+      });
+
+      it("adds a group to the given group with the given name", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const parent = editor.addGroup({ name: "Milk truck" });
+
+        const group = editor.addGroup({ name: "Wheels", parent });
+
+        expect(parent.name).toBe("Milk truck");
+        expect(group.name).toBe("Wheels");
+        expect(group.parent).toBe(parent);
+        expect(parent.children).toEqual([group]);
+      });
+
+      it("lists meshes and groups in the order they were added", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const first = editor.addMesh(createSource(square));
+        const second = editor.addGroup();
+        const third = editor.addMesh(createSource(square));
+
+        expect(editor.root.children).toEqual([first, second, third]);
+      });
+
+      it("children returns a copy", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+
+        editor.root.children.length = 0;
+
+        expect(editor.root.children).toEqual([group]);
+      });
+
+      it("doesn't list groups in meshes", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+
+        expect(editor.meshes).toEqual([]);
+        expect(group.children).toEqual([]);
+      });
+
+      it("throws if options.parent isn't a group in this editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const otherGroup = otherEditor.addGroup();
+        const mesh = editor.addMesh(createSource(square));
+
+        expect(() =>
+          editor.addGroup({ parent: otherGroup }),
+        ).toThrowDeveloperError();
+        expect(() => editor.addGroup({ parent: mesh })).toThrowDeveloperError();
+        expect(editor.root.children).toEqual([mesh]);
+      });
+
+      it("throws if options.parent was removed", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+        editor.removeGroup(group);
+
+        expect(() =>
+          editor.addGroup({ parent: group }),
+        ).toThrowDeveloperError();
+      });
+
+      it("raises meshGroupChanged with the parent", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const parent = editor.addGroup();
+        const listener = jasmine
+          .createSpy("meshGroupChanged")
+          .and.callFake((changedGroup) => {
+            expect(changedGroup.children.length).toBe(1);
+          });
+        editor.meshGroupChanged.addEventListener(listener);
+
+        editor.addGroup({ parent });
+
+        expect(listener).toHaveBeenCalledOnceWith(parent);
+      });
+    });
+
+    describe("removeGroup", function () {
+      it("returns true, removes the group from its parent and destroys it", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const parent = editor.addGroup();
+        const group = editor.addGroup({ parent });
+
+        expect(editor.removeGroup(group)).toBe(true);
+        expect(parent.children).toEqual([]);
+        expect(group.isDestroyed()).toBe(true);
+      });
+
+      it("removes and destroys everything in the group", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+        const innerGroup = editor.addGroup({ parent: group });
+        const sources = [createSource(square), createSource(square)];
+        const mesh = editor.addMesh(sources[0], { parent: group });
+        const innerMesh = editor.addMesh(sources[1], { parent: innerGroup });
+        const otherMesh = editor.addMesh(createSource(square));
+
+        editor.removeGroup(group);
+
+        expect(editor.meshes).toEqual([otherMesh]);
+        expect(editor.root.children).toEqual([otherMesh]);
+        expect(mesh.isDestroyed()).toBe(true);
+        expect(innerMesh.isDestroyed()).toBe(true);
+        expect(innerGroup.isDestroyed()).toBe(true);
+        for (const source of sources) {
+          expect(source.show).toBe(true);
+          expect(editor.getMesh(source)).toBeUndefined();
+        }
+      });
+
+      it("raises meshRemoved for each mesh, then meshGroupChanged once with the parent", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const parent = editor.addGroup();
+        const group = editor.addGroup({ parent });
+        const innerGroup = editor.addGroup({ parent: group });
+        const mesh = editor.addMesh(createSource(square), { parent: group });
+        const innerMesh = editor.addMesh(createSource(square), {
+          parent: innerGroup,
+        });
+        const calls = [];
+        editor.meshRemoved.addEventListener((removedMesh) => {
+          expect(removedMesh.isDestroyed()).toBe(false);
+          calls.push(removedMesh);
+        });
+        editor.meshGroupChanged.addEventListener((changedGroup) => {
+          expect(changedGroup.children).toEqual([]);
+          calls.push(changedGroup);
+        });
+
+        editor.removeGroup(group);
+
+        expect(calls).toEqual([innerMesh, mesh, parent]);
+      });
+
+      it("returns false for a group that isn't in the editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const otherGroup = otherEditor.addGroup();
+        const listener = jasmine.createSpy("meshGroupChanged");
+        editor.meshGroupChanged.addEventListener(listener);
+
+        expect(editor.removeGroup(otherGroup)).toBe(false);
+        expect(otherGroup.isDestroyed()).toBe(false);
+        expect(listener).not.toHaveBeenCalled();
+      });
+
+      it("returns false for a group that was already removed", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const group = editor.addGroup();
+        editor.removeGroup(group);
+
+        expect(editor.removeGroup(group)).toBe(false);
       });
     });
 
@@ -798,6 +1106,30 @@ describe(
         editor.addMesh(createSource(square));
         const listener = jasmine.createSpy("meshRemoved");
         editor.meshRemoved.addEventListener(listener);
+
+        scene.primitives.remove(editor);
+
+        expect(listener).not.toHaveBeenCalled();
+      });
+
+      it("destroys every group, including the root", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const root = editor.root;
+        const group = editor.addGroup();
+        const innerGroup = editor.addGroup({ parent: group });
+
+        scene.primitives.remove(editor);
+
+        expect(root.isDestroyed()).toBe(true);
+        expect(group.isDestroyed()).toBe(true);
+        expect(innerGroup.isDestroyed()).toBe(true);
+      });
+
+      it("does not raise meshGroupChanged", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.addMesh(createSource(square), { parent: editor.addGroup() });
+        const listener = jasmine.createSpy("meshGroupChanged");
+        editor.meshGroupChanged.addEventListener(listener);
 
         scene.primitives.remove(editor);
 
