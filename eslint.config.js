@@ -32,6 +32,10 @@ export default [
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
       "**/*/SpecList.js",
+      // @cesium/next's build output (git-ignored), written by `npm run build`
+      // and `npm run build:lib`.
+      "packages/next/dist/",
+      "packages/next/dist-lib/",
     ],
   },
   {
