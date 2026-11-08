@@ -620,6 +620,13 @@ export class PlacementPair {
   };
   private readonly paths = new WeakMap<Tile, string>();
   private disposed = false;
+  /**
+   * The warm-up: a triangle of no area drawn with each morph shader from the
+   * first pair on, so their pipelines compile before the first morph needs
+   * them (a custom shader draws with the engine's stand-in until then: the
+   * first morph's surface came out black, feedback F4).
+   */
+  private warm?: { mesh: MeshHandle; draws: DrawHandle[] };
   /** Something on the globe changed since the last `takeChanged`. */
   private changed = false;
 
@@ -810,6 +817,7 @@ export class PlacementPair {
       this.markChanged();
     }
     if (pair !== undefined) {
+      this.warmUp(tile, drawn);
       this.setMasks(pair, {
         surface: standIn ? drawn : 0,
         rigid: ghost && (morphing || solid === "reprojected") ? drawn : 0,
@@ -819,6 +827,47 @@ export class PlacementPair {
       });
     }
     return solid === "rigid" ? this.look.rigidTint : this.look.reprojectedTint;
+  }
+
+  private warmUp(tile: Tile, viewMask: number): void {
+    const g = tile.geometry?.[0];
+    if (this.warm !== undefined || g === undefined || viewMask === 0) {
+      return;
+    }
+    const m = g.matrix;
+    const at = g.positions.subarray(0, 3);
+    const positions = new Float32Array([...at, ...at, ...at]);
+    const mesh = this.world.addMesh({
+      positions,
+      normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+      indices: Uint32Array.from([0, 1, 2]),
+      attributes: {
+        [PARTNER_SEMANTIC]: { data: positions, components: 3 },
+        [STANDOFF_SEMANTIC]: { data: new Float32Array(3), components: 1 },
+      },
+    });
+    const model = Float64Array.from(m);
+    model[12] = model[13] = model[14] = 0;
+    const origin = Float64Array.from([m[12]!, m[13]!, m[14]!]);
+    const draws = (
+      [
+        [this.surfaceShader, this.material],
+        [this.rigidDeckShader, this.deckMaterial],
+        [this.reprojectedDeckShader, this.deckMaterial],
+      ] as const
+    ).map(([shader, material]) =>
+      this.world.addDraw({
+        mesh,
+        origin,
+        model,
+        shader,
+        material,
+        viewMask,
+        doubleSided: true,
+        name: "design globe warm-up",
+      }),
+    );
+    this.warm = { mesh, draws };
   }
 
   private setMasks(pair: Pair, next: Masks): void {
@@ -1090,6 +1139,12 @@ export class PlacementPair {
     this.reprojected.debugTileColor = undefined;
     for (const [path, pair] of [...this.pairs]) {
       this.release(path, pair);
+    }
+    if (this.warm !== undefined && !this.world.destroyed) {
+      for (const d of this.warm.draws) {
+        this.world.removeDraw(d);
+      }
+      this.world.removeMesh(this.warm.mesh);
     }
     if (!this.world.destroyed) {
       this.world.removeMaterial(this.material);
