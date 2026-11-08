@@ -5,6 +5,7 @@ import OverlayRenderer from "./OverlayRenderer.js";
 
 /** @import { FrameState, GeometrySource } from "@cesium/engine"; */
 /** @import { OverlayViews } from "@cesium/mesh-editor"; */
+/** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
 
 /**
@@ -23,12 +24,20 @@ import OverlayRenderer from "./OverlayRenderer.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class Mesh {
+  /** @type {string|undefined} */
+  #name;
+
+  /** @type {MeshEditorGroup} */
+  #parent;
+
   /**
    * Hides the source, if it has a <code>show</code> property, and creates the
    * mesh's overlay renderer.
    *
    * @param {object} options
    * @param {GeometrySource} options.source The geometry being edited.
+   * @param {string} [options.name] The mesh's name.
+   * @param {MeshEditorGroup} options.parent The group holding the mesh.
    * @param {bigint} options.key The mesh's key in its editor's wasm.
    * @param {*} options.module The loaded wasm module.
    * @param {MeshEditorStyle} options.style The editor's style, shared by its meshes.
@@ -41,6 +50,9 @@ class Mesh {
      * @readonly
      */
     this.source = options.source;
+
+    this.#name = options.name;
+    this.#parent = options.parent;
 
     /**
      * Whether to draw the mesh's vertices, edges and faces.
@@ -75,6 +87,27 @@ class Mesh {
     if ("show" in source) {
       source.show = false;
     }
+  }
+
+  /**
+   * The mesh's name, or <code>undefined</code> if it wasn't given one.
+   *
+   * @type {string|undefined}
+   * @readonly
+   */
+  get name() {
+    return this.#name;
+  }
+
+  /**
+   * The group holding the mesh: the one it was added to, or the editor's
+   * {@link MeshEditor#root} group.
+   *
+   * @type {MeshEditorGroup}
+   * @readonly
+   */
+  get parent() {
+    return this.#parent;
   }
 
   /**

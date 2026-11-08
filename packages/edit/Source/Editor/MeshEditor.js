@@ -5,6 +5,7 @@ import {
   DeveloperError,
   Event,
   RuntimeError,
+  defined,
   destroyObject,
 } from "@cesium/core";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@cesium/mesh-editor";
 import EditMode from "./EditMode.js";
 import Mesh from "./Mesh.js";
+import MeshEditorGroup from "./MeshEditorGroup.js";
 import MeshEditorModule from "./MeshEditorModule.js";
 import MeshEditorStyle from "./MeshEditorStyle.js";
 
@@ -54,6 +56,10 @@ const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
  * In {@link EditMode.NONE}, they're drawn as outlined faces. Inactive meshes
  * are drawn as faces. {@link MeshEditor#style} sets how meshes are drawn.
  *
+ * Meshes are organized in a hierarchy of {@link MeshEditorGroup}s, starting
+ * at the editor's {@link MeshEditor#root} group. The hierarchy only organizes
+ * meshes; it doesn't affect how they're placed or drawn.
+ *
  * The editor is a primitive in the scene's primitive collection. Remove it
  * with <code>scene.primitives.remove(editor)</code>, which destroys it.
  *
@@ -64,7 +70,8 @@ const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
  *
  * @example
  * const editor = await Cesium.MeshEditor.addToScene(viewer.scene);
- * const mesh = editor.addMesh(model.nodes[0].primitives[0]);
+ * const group = editor.addGroup({ name: "Milk truck" });
+ * const mesh = editor.addMesh(model.nodes[0].primitives[0], { parent: group });
  * editor.setMeshActive(mesh);
  * editor.mode = Cesium.EditMode.VERTEX;
  */
@@ -90,6 +97,16 @@ class MeshEditor {
 
   /** @type {Map<GeometrySource, Mesh>} */
   #meshesBySource = new Map();
+
+  /** @type {MeshEditorGroup} */
+  #root = new MeshEditorGroup();
+
+  /**
+   * Every group in the editor, including the root.
+   *
+   * @type {Set<MeshEditorGroup>}
+   */
+  #groups = new Set([this.#root]);
 
   /** @type {MeshEditorStyle} */
   #style = new MeshEditorStyle();
@@ -132,6 +149,15 @@ class MeshEditor {
      * @type {Event<function(Mesh): void>}
      */
     this.meshRemoved = new Event();
+
+    /**
+     * Raised when meshes or groups are added to or removed from a group.
+     * Removing a group raises the event once, for the group's parent, and not
+     * for the groups inside it. Not raised when the editor is destroyed.
+     *
+     * @type {Event<function(MeshEditorGroup): void>}
+     */
+    this.meshGroupChanged = new Event();
   }
 
   /**
@@ -171,6 +197,17 @@ class MeshEditor {
    */
   get meshes() {
     return Array.from(this.#meshes);
+  }
+
+  /**
+   * The group at the top of the editor's hierarchy. Meshes and groups added
+   * without a parent are added to it. It can't be removed.
+   *
+   * @type {MeshEditorGroup}
+   * @readonly
+   */
+  get root() {
+    return this.#root;
   }
 
   /**
@@ -218,23 +255,33 @@ class MeshEditor {
    * The new mesh starts inactive.
    *
    * @param {GeometrySource} source The geometry to edit.
+   * @param {object} [options] Object with the following properties:
+   * @param {string} [options.name] The mesh's name.
+   * @param {MeshEditorGroup} [options.parent] The group to add the mesh to. Defaults to {@link MeshEditor#root}.
    * @returns {Mesh} The mesh that edits the source.
    *
    * @exception {DeveloperError} The source was already added.
+   * @exception {DeveloperError} options.parent isn't a group in this editor.
    * @exception {RuntimeError} The source's geometry can't be edited.
    */
-  addMesh(source) {
+  addMesh(source, options) {
+    const name = options?.name;
+    const parent = options?.parent ?? this.#root;
+
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("source", source);
     if (this.#meshesBySource.has(source)) {
       throw new DeveloperError("The source was already added.");
     }
+    this.#checkOptions(options);
     //>>includeEnd('debug');
 
     const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
 
     const mesh = new Mesh({
       source,
+      name,
+      parent,
       key,
       module: this.#module,
       style: this.#style,
@@ -242,8 +289,10 @@ class MeshEditor {
     this.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
     this.#meshes.add(mesh);
     this.#meshesBySource.set(source, mesh);
+    parent._addChild(mesh);
 
     this.meshAdded.raiseEvent(mesh);
+    this.meshGroupChanged.raiseEvent(parent);
 
     return mesh;
   }
@@ -256,17 +305,118 @@ class MeshEditor {
    * @returns {boolean} <code>true</code> if the mesh was removed, <code>false</code> if it wasn't in the editor.
    */
   removeMesh(mesh) {
-    if (!this.#meshes.delete(mesh)) {
+    if (!this.#meshes.has(mesh)) {
       return false;
     }
+
+    const parent = mesh.parent;
+    this.#removeMesh(mesh);
+    this.meshGroupChanged.raiseEvent(parent);
+
+    return true;
+  }
+
+  /**
+   * Removes a mesh in the editor from it and its parent, raises
+   * meshRemoved, and destroys it.
+   *
+   * @param {Mesh} mesh The mesh to remove.
+   * @ignore
+   */
+  #removeMesh(mesh) {
+    this.#meshes.delete(mesh);
     this.#meshesBySource.delete(mesh.source);
+    mesh.parent._removeChild(mesh);
 
     this.#wasmEditor.removeMesh(mesh._key)?.free();
     // Before destroying the mesh, so listeners can still read it.
     this.meshRemoved.raiseEvent(mesh);
     mesh._destroy();
+  }
+
+  /**
+   * Adds a group to the editor's hierarchy, to hold meshes and other groups.
+   *
+   * @param {object} [options] Object with the following properties:
+   * @param {string} [options.name] The group's name.
+   * @param {MeshEditorGroup} [options.parent] The group to add the group to. Defaults to {@link MeshEditor#root}.
+   * @returns {MeshEditorGroup} The new group.
+   *
+   * @exception {DeveloperError} options.parent isn't a group in this editor.
+   */
+  addGroup(options) {
+    const name = options?.name;
+    const parent = options?.parent ?? this.#root;
+    this.#checkOptions(options);
+
+    const group = new MeshEditorGroup({ name, parent });
+    this.#groups.add(group);
+    parent._addChild(group);
+
+    this.meshGroupChanged.raiseEvent(parent);
+
+    return group;
+  }
+
+  /**
+   * Removes a group and everything in it from the editor, and destroys them.
+   * Each mesh in it is removed as by {@link MeshEditor#removeMesh}, raising
+   * {@link MeshEditor#meshRemoved}.
+   *
+   * @param {MeshEditorGroup} group The group to remove.
+   * @returns {boolean} <code>true</code> if the group was removed, <code>false</code> if it wasn't in the editor.
+   *
+   * @exception {DeveloperError} The root group can't be removed.
+   */
+  removeGroup(group) {
+    //>>includeStart('debug', pragmas.debug);
+    if (group === this.#root) {
+      throw new DeveloperError("The root group can't be removed.");
+    }
+    //>>includeEnd('debug');
+
+    if (!this.#groups.has(group)) {
+      return false;
+    }
+    const parent = group.parent;
+    if (!defined(parent)) {
+      return false;
+    }
+
+    /** @type {MeshEditorGroup[]} */
+    const removedGroups = [];
+    this.#removeGroup(group, removedGroups);
+    this.meshGroupChanged.raiseEvent(parent);
+
+    for (const removedGroup of removedGroups) {
+      removedGroup._destroy();
+    }
 
     return true;
+  }
+
+  /**
+   * Removes a group and everything in it from the editor and from their
+   * parents, raising meshRemoved for each mesh. Destroys the meshes, but not
+   * the groups.
+   *
+   * @param {MeshEditorGroup} group The group to remove.
+   * @param {MeshEditorGroup[]} removedGroups Receives the removed groups, to destroy.
+   * @ignore
+   */
+  #removeGroup(group, removedGroups) {
+    this.#groups.delete(group);
+    removedGroups.push(group);
+
+    for (const child of group.children) {
+      if (child instanceof MeshEditorGroup) {
+        this.#removeGroup(child, removedGroups);
+      } else {
+        this.#removeMesh(child);
+      }
+    }
+
+    group.parent?._removeChild(group);
   }
 
   /**
@@ -360,6 +510,30 @@ class MeshEditor {
     //>>includeStart('debug', pragmas.debug);
     if (!this.#meshes.has(mesh)) {
       throw new DeveloperError("The mesh isn't in this editor.");
+    }
+    //>>includeEnd('debug');
+  }
+
+  /**
+   * Checks the options for adding a mesh or group.
+   *
+   * @param {object} [options] The options.
+   * @param {string} [options.name] The name.
+   * @param {MeshEditorGroup} [options.parent] The parent.
+   * @exception {DeveloperError} options.parent isn't a group in this editor.
+   * @ignore
+   */
+  #checkOptions(options) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(options)) {
+      return;
+    }
+    Check.typeOf.object("options", options);
+    if (defined(options.name)) {
+      Check.typeOf.string("options.name", options.name);
+    }
+    if (defined(options.parent) && !this.#groups.has(options.parent)) {
+      throw new DeveloperError("options.parent isn't a group in this editor.");
     }
     //>>includeEnd('debug');
   }
@@ -470,15 +644,18 @@ class MeshEditor {
 
   /**
    * Destroys every mesh, which shows its source if it has a <code>show</code>
-   * property, and frees the editor's resources. The editor can't be used
-   * afterwards. Removing the editor from the scene's primitives, or
-   * destroying the scene, calls this.
+   * property, and every group, and frees the editor's resources. The editor
+   * can't be used afterwards. Removing the editor from the scene's
+   * primitives, or destroying the scene, calls this.
    *
    * @returns {void}
    */
   destroy() {
     for (const mesh of this.#meshes) {
       mesh._destroy();
+    }
+    for (const group of this.#groups) {
+      group._destroy();
     }
 
     this.#updateResult.free();
