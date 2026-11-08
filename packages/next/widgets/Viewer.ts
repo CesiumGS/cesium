@@ -14,6 +14,12 @@
  *
  * The sun follows the viewer's clock (`viewer.clock`), set with the time
  * controls over the view; `setSun` places it by hand instead.
+ *
+ * The reference frames are the frames module's (`viewer.frames`, a catalog;
+ * plan 5a's call 32): the view's rig is on ITRF, the world's frame resolver
+ * is over the catalog, and the sky comes from it through `attachSky`. The
+ * catalog's precise reference frames load by dynamic `import()` only when
+ * asked, so a Viewer without `frameData` downloads and fetches none of them.
  */
 import {
   BingImagery,
@@ -27,6 +33,7 @@ import {
   Engine,
   GlobeController,
   InspectController,
+  defaultRig,
   eastNorthUpToFixedFrame,
   fromDegrees,
   loadIonMoonMap,
@@ -41,14 +48,24 @@ import {
   type ModelResource,
   type ModelResourceOptions,
   type PickResult,
+  type Rig,
   type Tileset3D,
   type TilesetOptions,
   type View,
   type ViewLink,
   type World,
 } from "../src/index.ts";
-import { loadFrameData, type FrameData } from "../src/frames/index.ts";
-import { FrameSky } from "../src/frames/frameSky.ts";
+import { Emitter } from "../src/core/Emitter.ts";
+import type {
+  FrameData,
+  FrameDataWarning,
+} from "../src/ephemeris/loadFrameData.ts";
+import { attachSky, type SkyInputs } from "../src/frames/attachSky.ts";
+import {
+  createFrameCatalog,
+  type FrameCatalog,
+} from "../src/frames/catalog.ts";
+import { createFramesResolver } from "../src/frames/resolver.ts";
 import { Clock } from "../src/time/index.ts";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
@@ -69,6 +86,7 @@ import {
   type TimeControlsHandle,
   type TimeControlsOptions,
 } from "./timeControls.ts";
+import { attachWarnings, type WarningsHandle } from "./warnings.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -125,14 +143,23 @@ export interface ViewerOptions {
    */
   moon?: boolean;
   /**
-   * DE440 for the sky: a base URL for `loadFrameData` (the store `npm run
-   * setup` fills, served at "/frames-data/") or data already loaded. The
-   * stars, the Moon and the sun then come from the ephemeris and the IAU
+   * The precise sky: a frames store's URL (the store `npm run setup` fills,
+   * served at "/frames-data/") or data already loaded, for the catalog
+   * (`viewer.frames`). The sky's reference frames are then asked for at
+   * "precise": the stars, the Moon and the sun come from DE440 and the IAU
    * 2006/2000A Earth rotation inside the data's span, and from the analytic
-   * models outside it. Default: none, the analytic sky (the data is loaded
-   * only when a scene needs it).
+   * models outside it and while a URL's data loads. Data already loaded is
+   * in use when `Viewer.create` resolves. Default: none, the analytic sky,
+   * and nothing of the precise reference frames is downloaded or fetched
+   * (the catalog loads them when a scene asks).
    */
   frameData?: string | FrameData;
+  /**
+   * Show the warnings (`Viewer.warnings`) in a small notice over the view
+   * (default true). An app that lists them in its own UI turns it off and
+   * listens to `events`' `warning`.
+   */
+  warnings?: boolean;
   /**
    * How light becomes an image (`Exposure`): default `EYE`, as a person
    * there would see it; a camera's exposure for what a camera records.
@@ -155,6 +182,32 @@ export interface ViewerOptions {
    */
   maxInstances?: number;
 }
+
+/**
+ * Something the Viewer gets wrong without saying so otherwise:
+ *
+ * - `"frameDataFailed"`: `frameData` didn't load, so the sky stays on the
+ *   analytic models (one warning, whatever failed);
+ * - the frames data's own notices (`FrameDataWarning`): `"eopEnded"`, the
+ *   Earth orientation table ends before now; `"leapSecondsExpired"`, the
+ *   leap-second table is past its expiry; `"loadFailed"`, a load the
+ *   application asked of `viewer.frames` failed.
+ */
+export interface ViewerWarning {
+  readonly kind: FrameDataWarning["kind"] | "frameDataFailed";
+  readonly message: string;
+}
+
+/** Each warning kind in a few words, for the notice's collapsed line. */
+const WARNING_SUMMARY: Readonly<Record<ViewerWarning["kind"], string>> = {
+  frameDataFailed: "Frames data didn't load; the sky is approximate",
+  loadFailed: "Frames data didn't load",
+  eopEnded: "The Earth orientation data is out of date",
+  leapSecondsExpired: "The leap-second table has expired",
+};
+
+/** The sky's reference frames (`attachSky`), asked for at "precise" with `frameData`. */
+const SKY_FRAMES = ["GCRF", "ITRF", "HCRS", "MOON_ICRF", "MOON_ME"] as const;
 
 /** The Moon map's attributions' owner (`addAttributions`). */
 const MOON_CREDIT = {};
@@ -211,6 +264,8 @@ const deg = Math.PI / 180;
 interface EarlyEndpoints {
   imagery?: Promise<BingImagery>;
   terrain?: ReturnType<typeof resolveIonAsset>;
+  /** The catalog over `frameData`, its loads started. */
+  frames?: { catalog: FrameCatalog; abort: AbortController };
 }
 
 export class Viewer {
@@ -247,17 +302,33 @@ export class Viewer {
   /** The scene's time: the sun follows it unless placed by `setSun`. */
   readonly clock: Clock;
   private sunFromClock_ = true;
+  /** The catalog in use (`frames`), replaced by `setFrameData`. */
+  private frames_!: FrameCatalog;
+  /** Aborts the catalogs' loads on `destroy`. */
+  private readonly framesAbort: AbortController;
+  /** Stops the sky and the warnings of the catalog in use. */
+  private offFrames?: () => void;
   /**
-   * The sky from the loaded frames data (`ViewerOptions.frameData`, once it
-   * arrives, or `setFrameData`).
+   * What `attachSky` writes, copied to the engine as it asks to render: the
+   * stars' turn always, the sun while it follows the clock, the Moon when
+   * it is drawn (`ViewerOptions.moon`).
    */
-  private readonly frameSky = new FrameSky();
-  /** Counts `setFrameData` calls, so a load still in flight does not undo one. */
-  private frameDataSets = 0;
+  private readonly sky: SkyInputs = {
+    icrfToFixed: new Float64Array(9),
+    sunDirection: new Float64Array(3),
+    moonPosition: new Float64Array(3),
+    moonAxes: new Float64Array(6),
+    requestRender: () => this.applySky(),
+  };
+  private readonly warningList: ViewerWarning[] = [];
+  private warnings_?: WarningsHandle;
+  /** `warning`: each `ViewerWarning`, as it is added to `warnings`. */
+  readonly events = new Emitter<{ warning: ViewerWarning }>();
   /**
-   * Always a promise: it resolves to the data, or to `undefined`, silently
-   * when no `ViewerOptions.frameData` was given and after one `console.warn`
-   * when loading failed. In both cases the sky stays analytic.
+   * Always a promise: it resolves to the frames data of
+   * `ViewerOptions.frameData` once the catalog has it, or to `undefined`,
+   * at once when the option was not given and with one `frameDataFailed`
+   * warning when loading failed. In both cases the sky stays analytic.
    */
   readonly frameData: Promise<FrameData | undefined>;
   /** The Moon is drawn (`ViewerOptions.moon`). */
@@ -365,37 +436,35 @@ export class Viewer {
           : Promise.resolve(lights)
       ).catch(() => undefined);
     }
-    this.clock.events.on("change", () => {
-      this.applyClockSky();
-      this.engine.requestRender();
-    });
-    const frameData = options.frameData;
-    if (frameData === undefined) {
-      this.frameData = Promise.resolve(undefined);
-    } else if (typeof frameData !== "string") {
-      // Already loaded: apply it now, so the first frame draws the real sky.
-      this.frameSky.setData(frameData);
-      this.frameData = Promise.resolve(frameData);
-    } else {
-      const sets = this.frameDataSets;
-      this.frameData = loadFrameData(frameData).then(
-        (data) => {
-          if (!this.destroyed && sets === this.frameDataSets) {
-            this.frameSky.setData(data);
-            this.applyClockSky();
-            this.engine.requestRender();
-          }
-          return data;
-        },
-        (error: unknown) => {
-          console.warn(
-            `Viewer: frames data did not load, the sky stays analytic (${error instanceof Error ? error.message : String(error)})`,
-          );
-          return undefined;
-        },
-      );
+    this.clock.events.on("change", () => this.engine.requestRender());
+    if (options.warnings !== false) {
+      this.warnings_ = attachWarnings(container);
     }
-    this.applyClockSky();
+    // The frames module: the catalog, the world's resolver over it and the
+    // clock its rigs read, each view's rig on ITRF, and the sky.
+    engine.cameras.setClock(this.world, this.clock);
+    const frames = early.frames ?? Viewer.catalog(options.frameData);
+    this.framesAbort = frames.abort;
+    this.useFrames(frames.catalog, options.frameData !== undefined);
+    const catalog = frames.catalog;
+    this.frameData =
+      options.frameData === undefined
+        ? Promise.resolve(undefined)
+        : catalog.tree().then(
+            (tree) => tree.data,
+            (error: unknown) => {
+              if (!this.destroyed && catalog === this.frames_) {
+                this.warn(
+                  {
+                    kind: "frameDataFailed",
+                    message: `Viewer: the frames data did not load, so the sky stays on the analytic models (${error instanceof Error ? error.message : String(error)})`,
+                  },
+                  true,
+                );
+              }
+              return undefined;
+            },
+          );
     if (this.moon) {
       const signal = this.moonMapLoad.signal;
       void fetch(MOON_MAP, { signal })
@@ -521,15 +590,42 @@ export class Viewer {
     // Settled here so a failure surfaces where it is used, not unhandled.
     early.imagery?.catch(() => {});
     early.terrain?.catch(() => {});
+    // The precise sky's data starts loading while the device is created;
+    // data already in hand is in use by the time the viewer is returned.
+    if (options.frameData !== undefined) {
+      early.frames = Viewer.catalog(options.frameData);
+    }
+    const given =
+      typeof options.frameData === "object"
+        ? early.frames!.catalog.tree().catch(() => {})
+        : undefined;
     const shared =
       options.engine instanceof Engine ? options.engine : undefined;
-    return new Viewer(
-      container,
-      shared ?? (await Engine.create(options.engine as EngineOptions)),
-      options,
-      early,
-      !shared,
-    );
+    const engine =
+      shared ?? (await Engine.create(options.engine as EngineOptions));
+    await given;
+    return new Viewer(container, engine, options, early, !shared);
+  }
+
+  /**
+   * A catalog over `data` (default: the store's URL, loaded only when
+   * asked), its loads stopped by `abort`; with data, the sky's reference
+   * frames are asked for at "precise" at once, so their loads start.
+   */
+  private static catalog(
+    data: string | FrameData | undefined,
+    abort = new AbortController(),
+  ): { catalog: FrameCatalog; abort: AbortController } {
+    const catalog = createFrameCatalog({
+      ...(data !== undefined ? { data } : {}),
+      signal: abort.signal,
+    });
+    if (data !== undefined) {
+      for (const name of SKY_FRAMES) {
+        catalog.get(name, { precision: "precise" });
+      }
+    }
+    return { catalog, abort };
   }
 
   // ------------------------------------------------------------- globe
@@ -894,42 +990,143 @@ export class Viewer {
   }
 
   /**
-   * The sky at the clock's time: one `skyState` (DE440 inside the loaded
-   * frames data's span, else the analytic models) serves the stars' turn, the
-   * Moon's place and, while the sun follows the clock, the sun.
+   * The sky `attachSky` computed at the clock's time, on the engine: the
+   * stars' turn, the Moon's place while it is drawn and, while the sun
+   * follows the clock, the sun.
    */
-  private applyClockSky(): void {
-    const sky = this.frameSky.at(this.clock.time);
+  private applySky(): void {
+    if (this.destroyed) {
+      return;
+    }
+    const sky = this.sky;
     this.engine.icrfToFixed.set(sky.icrfToFixed);
     if (this.sunFromClock_) {
       this.engine.sunDirection.set(sky.sunDirection);
     }
     if (this.moon) {
-      (this.engine.moonPosition ??= new Float64Array(3)).set(sky.moonPosition);
-      (this.engine.moonAxes ??= new Float64Array(6)).set(sky.moonAxes);
+      (this.engine.moonPosition ??= new Float64Array(3)).set(sky.moonPosition!);
+      (this.engine.moonAxes ??= new Float64Array(6)).set(sky.moonAxes!);
     }
+    this.engine.requestRender();
+  }
+
+  /**
+   * The reference frames' catalog (spec section 7.7): the sky's, the view's
+   * rig's and the world's frame resolver's. Asking it for a reference frame
+   * at "precise" loads that frame's data (from `ViewerOptions.frameData`, or
+   * "/frames-data/" without it); `tree()` gives the whole tree at
+   * "precise". `setFrameData` replaces it.
+   */
+  get frames(): FrameCatalog {
+    return this.frames_;
+  }
+
+  /**
+   * The warnings so far, oldest first: frames data that didn't load or is
+   * out of date (`ViewerWarning`). `events` emits `warning` for each; the
+   * notice over the view lists them (`ViewerOptions.warnings`).
+   */
+  get warnings(): readonly ViewerWarning[] {
+    return this.warningList;
   }
 
   /**
    * Give the sky frames data after creation, as `ViewerOptions.frameData`
-   * does at creation: the Moon and the Sun are placed with DE440 from the
-   * next frame. `undefined` returns to the analytic models. A load started by
-   * a `ViewerOptions.frameData` URL that has not finished is dropped in favor
-   * of this call; `frameData` (the promise) still reports the creation option.
+   * does at creation: a new catalog over `data` (`frames`) for the sky, the
+   * view's rig and the world's resolver, so the Moon and the Sun are placed
+   * with DE440 once its providers' modules are in (from the next frame when
+   * they were loaded before). `undefined` returns to the analytic models.
+   * The warnings start again from the new data's. A load started by a
+   * `ViewerOptions.frameData` URL that has not finished no longer drives the
+   * sky; `frameData` (the promise) still reports the creation option.
    */
   setFrameData(data: FrameData | undefined): void {
-    this.frameDataSets++;
-    this.frameSky.setData(data);
-    if (!this.destroyed) {
-      this.applyClockSky();
-      this.engine.requestRender();
+    if (this.destroyed) {
+      return;
     }
+    this.warningList.length = 0;
+    this.warnings_?.set(this.warningList);
+    this.useFrames(
+      Viewer.catalog(data, this.framesAbort).catalog,
+      data !== undefined,
+    );
+  }
+
+  /**
+   * Puts the viewer on `catalog`: the world's frame resolver over it, each
+   * view's rig on its ITRF, the sky from it ("precise" with frames data, else
+   * "analytic") and its warnings.
+   */
+  private useFrames(catalog: FrameCatalog, precise: boolean): void {
+    this.offFrames?.();
+    const views = this.views;
+    if (this.frames_) {
+      // Back to the table's root first, through the old resolver: the new
+      // one can't place the old catalog's ITRF.
+      for (const view of views) {
+        this.engine.cameras.setRig(view, defaultRig(this.world));
+      }
+    }
+    this.frames_ = catalog;
+    this.engine.cameras.setResolver(this.world, createFramesResolver(catalog));
+    for (const view of views) {
+      this.engine.cameras.setRig(view, this.rig());
+    }
+    // With frameData, one `frameDataFailed` says the load failed.
+    const listed = (warning: FrameDataWarning) =>
+      !(precise && warning.kind === "loadFailed");
+    // Notices from before: a FrameData object's came with it (its loader
+    // logged them), and a load that ended while the device was created
+    // logged its own (nothing listened yet).
+    for (const warning of catalog.warnings.filter(listed)) {
+      this.warn(warning, false);
+    }
+    const offWarning = catalog.events.on("warning", (warning) => {
+      if (listed(warning)) {
+        this.warn(warning, true);
+      }
+    });
+    const detachSky = attachSky(this.sky, {
+      catalog,
+      clock: this.clock,
+      precision: precise ? "precise" : "analytic",
+    });
+    this.offFrames = () => {
+      offWarning();
+      detachSky();
+    };
+  }
+
+  /** The rig of the viewer's views (spec section 7.2's default): on ITRF, free. */
+  private rig(): Rig {
+    return {
+      position: { frame: this.frames_.get("ITRF") },
+      orientation: { kind: "free" },
+    };
+  }
+
+  /** Adds a warning: listed, shown, emitted and (with `log`) logged. */
+  private warn(warning: FrameDataWarning | ViewerWarning, log: boolean): void {
+    const entry: ViewerWarning = {
+      kind: warning.kind,
+      message: warning.message,
+    };
+    this.warningList.push(entry);
+    if (log) {
+      console.warn(entry.message);
+    }
+    this.warnings_?.set(
+      this.warningList.map((w) => ({
+        message: w.message,
+        summary: WARNING_SUMMARY[w.kind],
+      })),
+    );
+    this.events.emit("warning", entry);
   }
 
   /** The sun's direction at the clock's time. */
   private applyClockSun(): void {
-    this.applyClockSky();
-    this.engine.requestRender();
+    this.applySky();
   }
 
   /** What the time is about: what is framed, else below the camera. */
@@ -1011,6 +1208,7 @@ export class Viewer {
         this.canvas,
         this.engine,
       ));
+      this.engine.cameras.setRig(second, this.rig());
       second.camera.near = this.view.camera.near;
       controller.focus(
         this.controller.target,
@@ -1044,6 +1242,7 @@ export class Viewer {
         world: this.world,
         viewport: this.overviewViewport(),
       });
+      this.engine.cameras.setRig(this.overview_, this.rig());
       this.overviewLink = this.engine.link(this.view, this.overview_, {
         modes: ["follow", "footprint"],
         followScale: 4,
@@ -1285,6 +1484,9 @@ export class Viewer {
   destroy(): void {
     this.destroyed = true;
     this.moonMapLoad.abort();
+    this.offFrames?.();
+    this.framesAbort.abort();
+    this.warnings_?.dispose();
     this.orbit_?.dispose();
     this.offTick();
     this.credits_?.dispose();

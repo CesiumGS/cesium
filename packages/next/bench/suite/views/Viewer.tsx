@@ -286,6 +286,11 @@ export function Viewer() {
     // `source` is keyed by its JSON; `at` only frames a new load.
   }, [host, sourceKey, token, attempt]);
 
+  // A warning after the load (the frames data's) counts too.
+  useEffect(
+    () => host?.onWarning?.(() => setWarnings((count) => count + 1)),
+    [host],
+  );
   useEffect(() => host?.setView(view), [host, view]);
   useEffect(() => host?.setLighting(lighting), [host, lighting]);
   // The inspector over the viewport, and picking on a click (not a drag).

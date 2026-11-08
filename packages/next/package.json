@@ -28,6 +28,7 @@
     "shaders": "node scripts/slangBuild.mjs",
     "shaders:check": "node scripts/slangBuild.mjs --check",
     "surface": "node scripts/surfaceMap.mjs --write",
+    "check:bundle": "node scripts/checkBundle.mjs",
     "setup": "node scripts/setup.mjs"
   },
   "dependencies": {

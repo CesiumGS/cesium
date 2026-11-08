@@ -9,8 +9,14 @@ export {
   type GlobeKind,
   type TilesetSource,
   type ViewerOptions,
+  type ViewerWarning,
   type ZoomTarget,
 } from "./Viewer.ts";
+export {
+  attachWarnings,
+  type NoticeWarning,
+  type WarningsHandle,
+} from "./warnings.ts";
 export {
   followZoom,
   orbitState,

@@ -245,13 +245,20 @@ sigmas, 50.35 and 51.07 m: between epochs `positionSigma` takes the larger of
 the epoch before and the epoch after). So pass `covarianceUnits: "m"` to
 `Trajectory.fromOem` for it. The default stays `"km"`, as the standard says.
 
-The Viewer loads none of this by default. `new Viewer({ frameData:
+The Viewer loads none of this by default: its reference frames are a catalog
+(`viewer.frames`) whose precise providers load by dynamic `import()` only when
+asked, so a globe-only Viewer's main chunk carries none of them (`npm run
+check:bundle` checks it). `Viewer.create(container, { frameData:
 "/frames-data/" })` (or a `FrameData` already loaded) draws the sun, stars and
-Moon from DE440 and the IAU 2006/2000A Earth rotation inside the data's span;
+Moon from DE440 and the IAU 2006/2000A Earth rotation inside the data's span.
 `viewer.frameData` is always a promise: it resolves to the data, or to
-`undefined`, silently when the option was not given and after one
-`console.warn` when loading failed (the sky then stays analytic). A
-`FrameData` object that is already loaded applies at construction. Without the option, Earth-only rendering is
+`undefined`, at once when the option was not given and with one
+`frameDataFailed` warning when loading failed (the sky then stays analytic). A
+`FrameData` object that is already loaded is in use when `Viewer.create`
+resolves. Stale data (an EOP table that ends before now, an expired
+leap-second table) is a warning too: `viewer.warnings` lists them,
+`viewer.events` emits `warning`, and a small notice over the view shows them
+(`warnings: false` turns it off). Without the option, Earth-only rendering is
 unchanged. The bench Explorer opts in.
 
 **Engineering frames** (`src/engineering`). An `EngineeringFrame` is a design

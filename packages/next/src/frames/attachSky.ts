@@ -67,6 +67,16 @@ export function skyThroughFrames(
   return turnSky(sun, moon, meanEarth, out);
 }
 
+/**
+ * What `attachSky` writes: an engine's four sky inputs, and its request to
+ * render, called after every write. An `Engine` is one; a Viewer passes its
+ * own, to keep a sun placed by hand and to leave the Moon out.
+ */
+export type SkyInputs = Pick<
+  Engine,
+  "icrfToFixed" | "sunDirection" | "moonPosition" | "moonAxes" | "requestRender"
+>;
+
 /** Options of `attachSky`. */
 export interface AttachSkyOptions {
   catalog: FrameCatalog;
@@ -96,10 +106,11 @@ export interface AttachSkyOptions {
  *   for drawing, as `skyState` does; measurements there still throw.
  *
  * It recomputes when the clock changes or the catalog does (data arriving)
- * and asks the engine to render. Returns the detacher.
+ * and asks the engine to render, after writing all four. Returns the
+ * detacher.
  */
 export function attachSky(
-  engine: Engine,
+  engine: SkyInputs,
   options: AttachSkyOptions,
 ): () => void {
   const { catalog, clock } = options;

@@ -61,4 +61,8 @@ export {
   type FramesResolverOptions,
   type FrameStandInWarning,
 } from "./resolver.ts";
-export { attachSky, type AttachSkyOptions } from "./attachSky.ts";
+export {
+  attachSky,
+  type AttachSkyOptions,
+  type SkyInputs,
+} from "./attachSky.ts";

@@ -261,6 +261,7 @@ frames	OemSegment	interface	-
 frames	PointAccuracy	interface	-
 frames	PointAccuracyTerm	type	-
 frames	Precision	type	-
+frames	SkyInputs	type	-
 frames	SkyState	interface	-
 frames	StateSegment	interface	-
 frames	Trajectory	class	-
@@ -450,6 +451,7 @@ widgets	InspectorOptions	interface	-
 widgets	InspectorSnapshot	interface	-
 widgets	MemoryRow	interface	-
 widgets	ModelLoad	interface	-
+widgets	NoticeWarning	interface	-
 widgets	OrbitContext	interface	-
 widgets	OrbitOptions	interface	-
 widgets	OrbitPlan	interface	-
@@ -462,10 +464,13 @@ widgets	TimeMark	interface	-
 widgets	TimeZoneChoice	type	-
 widgets	Viewer	class	-
 widgets	ViewerOptions	interface	-
+widgets	ViewerWarning	interface	-
+widgets	WarningsHandle	interface	-
 widgets	ZoomTarget	type	-
 widgets	attachCredits	function	-
 widgets	attachInspector	function	-
 widgets	attachTimeControls	function	-
+widgets	attachWarnings	function	-
 widgets	engineSnapshot	function	-
 widgets	followZoom	function	-
 widgets	inspectEngine	function	-

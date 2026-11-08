@@ -83,6 +83,8 @@ const ALLOWED: Record<Exclude<Layer, "widgets">, readonly Layer[]> = {
 interface Edge {
   readonly to: string;
   readonly typeOnly: boolean;
+  /** A dynamic `import("…")`: loaded when called, so not bundled with the importer. */
+  readonly dynamic?: true;
 }
 
 function listTs(dir: string): string[] {
@@ -119,7 +121,7 @@ function edgesOf(file: string): Edge[] {
 function edgesOfText(file: string, text: string): Edge[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
   const edges: Edge[] = [];
-  const add = (specifier: string, typeOnly: boolean) => {
+  const add = (specifier: string, typeOnly: boolean, dynamic = false) => {
     if (!specifier.startsWith(".")) {
       return; // packages are outside the rule
     }
@@ -128,7 +130,7 @@ function edgesOfText(file: string, text: string): Edge[] {
       "\\",
       "/",
     );
-    edges.push({ to, typeOnly });
+    edges.push(dynamic ? { to, typeOnly, dynamic } : { to, typeOnly });
   };
   const visit = (node: ts.Node) => {
     if (
@@ -148,7 +150,7 @@ function edgesOfText(file: string, text: string): Edge[] {
       node.arguments[0] &&
       ts.isStringLiteralLike(node.arguments[0])
     ) {
-      add(node.arguments[0].text, false);
+      add(node.arguments[0].text, false, true);
     } else if (
       ts.isImportTypeNode(node) &&
       ts.isLiteralTypeNode(node.argument) &&
@@ -190,12 +192,20 @@ function violations(layer: Layer): string[] {
   return out;
 }
 
-/** Every file a file reaches through its imports, itself included. */
-function closure(start: string): string[] {
+/**
+ * Every file a file reaches through its imports, itself included. With
+ * `bundled`, only what a bundler puts beside it: value imports, not type
+ * imports (erased) or dynamic ones (where loading stops, in a chunk of
+ * their own).
+ */
+function closure(start: string, { bundled = false } = {}): string[] {
   const seen = new Set([start]);
   const queue = [start];
   for (let file = queue.pop(); file !== undefined; file = queue.pop()) {
-    for (const { to } of edgesOf(file)) {
+    for (const { to, typeOnly, dynamic } of edgesOf(file)) {
+      if (bundled && (typeOnly || dynamic)) {
+        continue;
+      }
       if (to.endsWith(".ts") && !seen.has(to)) {
         seen.add(to);
         queue.push(to);
@@ -295,6 +305,25 @@ it("the time controls reach time without frames", () =>
   expect(
     closure("widgets/timeControls.ts").filter((f) => layerOf(f) === "frames"),
   ).toEqual([]));
+it("the Viewer bundles no X, Y or s series, Earth orientation, EOP parser or ephemeris (plan 5a's call 32)", () => {
+  const bundled = closure("widgets/Viewer.ts", { bundled: true });
+  // The analytic catalog and the sky are bundled; the precise providers load
+  // by dynamic import().
+  expect(bundled).toContain("src/frames/catalog.ts");
+  expect(bundled).toContain("src/frames/attachSky.ts");
+  expect(
+    bundled.filter(
+      (f) =>
+        f === "src/time/erfa/xy06Table.ts" ||
+        f === "src/time/erfa/s06Table.ts" ||
+        f === "src/time/earthOrientation.ts" ||
+        f === "src/time/eop.ts" ||
+        f.startsWith("src/ephemeris/"),
+    ),
+  ).toEqual([]);
+  // Reached, but only by import(): the providers.
+  expect(closure("widgets/Viewer.ts")).toContain("src/time/eop.ts");
+});
 it(
   "each entry publishes only names declared in its own layer",
   () =>
@@ -348,8 +377,8 @@ it("finds imports of every kind and classifies them", () => {
     ].join("\n"),
   );
   expect(edges).toEqual([
-    // Dynamic import: a value.
-    { to: "src/scene/World.ts", typeOnly: false },
+    // Dynamic import: a value, loaded when called.
+    { to: "src/scene/World.ts", typeOnly: false, dynamic: true },
     // An import type node: type-only.
     { to: "src/scene/Camera.ts", typeOnly: true },
     // An inline `{ type X }` still loads the module (verbatimModuleSyntax).
