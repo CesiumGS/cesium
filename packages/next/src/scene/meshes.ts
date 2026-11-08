@@ -25,7 +25,7 @@ export interface MeshData {
    * A globe tile's first skirt vertex: the vertices from here on hang below
    * its edges to hide cracks between levels, and each skirt triangle lists
    * one of them first. Skirts are hidden where a region draws the terrain
-   * below full opacity (`Globe.terrain.addRegion`). Default: no skirts.
+   * below opacity 0.999 (`Globe.terrain.addRegion`). Default: no skirts.
    */
   skirtStart?: number;
   /**

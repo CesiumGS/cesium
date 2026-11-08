@@ -58,8 +58,9 @@ export interface TerrainRegionOptions {
   /**
    * Picks go through the ground inside to what shows through, where it
    * isn't drawn fully opaque. Default false: picks stop at it, as at
-   * opaque terrain. A region with `ground` false is always a hole for
-   * picks.
+   * opaque terrain. A region with `ground` false is a hole for picks
+   * wherever its terrain is not drawn opaque; at opacity 1, or drawn
+   * opaque from 0.999, a pick hits the drawn terrain.
    */
   pickThrough?: boolean;
 }
@@ -74,11 +75,12 @@ export interface TerrainRegion {
   /**
    * 0 to 1, both included; set it at any time. A value outside that range
    * throws a RangeError. Setting it costs one small write, with no
-   * recompile and no new material, so a fade can set it every tick. The
-   * only exception: a whole-globe region ("everywhere") takes one of the
-   * world's region slots while its opacity is below 1, so raising it to 1
-   * frees the slot, and lowering it again can throw a `TerrainRegionError`
-   * when none is free.
+   * recompile, so a fade can set it every tick. Crossing 0 or 1 does more,
+   * once: it tests the tiles under the region again, and can make a
+   * blended twin of their material. A whole-globe region ("everywhere")
+   * also takes one of the world's region slots while its opacity is below
+   * 1, so raising it to 1 frees the slot, and lowering it again can throw
+   * a `TerrainRegionError` when none is free.
    */
   opacity: number;
   /**
@@ -120,8 +122,8 @@ export class GlobeTerrain {
    * opacity is a blended surface like any other, ordered with the rest by
    * the view's `translucencyMethod` and tested against the opaque depth per
    * sample, so content under it shows at its true depth and still hides
-   * what lies behind it. Its tile skirts are hidden where it is below full
-   * opacity. Where regions overlap, the least opacity wins. From 0.999
+   * what lies behind it. Its tile skirts are hidden where its opacity is below
+   * 0.999. Where regions overlap, the least opacity wins. From 0.999
    * down the terrain draws blended: it casts no shadow, takes no ambient
    * occlusion and writes no depth, which a fade shows as a step in
    * lighting at that opacity.
@@ -180,11 +182,13 @@ export class GlobeTerrain {
       clips.checkBudget(compiled);
     }
     // The whole globe holds a slot only while it changes how terrain draws.
+    const ground = options.ground ?? opacity > 0;
     const slot =
       compiled || opacity < 1
         ? globe.world.addTerrainClipRegion(
             compiled ? packClipShape(compiled) : new Float32Array(0),
             opacity,
+            ground,
           )
         : -1;
     const handle = new RegionHandle(
@@ -196,7 +200,7 @@ export class GlobeTerrain {
       shape: compiled,
       slot,
       opacity,
-      ground: options.ground ?? opacity > 0,
+      ground,
       pickThrough: options.pickThrough === true,
     };
     handle.entry = entry;
@@ -234,6 +238,7 @@ export class GlobeTerrain {
         entry.slot = globe.world.addTerrainClipRegion(
           new Float32Array(0),
           opacity,
+          entry.ground,
         );
       } else if (opacity === 1) {
         globe.world.removeTerrainClipRegion(entry.slot);
@@ -265,6 +270,9 @@ export class GlobeTerrain {
       return;
     }
     entry.ground = ground;
+    if (entry.slot >= 0) {
+      this.globe.world.setTerrainClipGround(entry.slot, ground);
+    }
     this.globe.clips.version++;
     this.globe.regionsChanged([], this.globe.clips.boundsOf(entry));
   }

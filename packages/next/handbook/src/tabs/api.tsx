@@ -115,10 +115,12 @@ export function Api() {
         </p>
       </Section>
 
-      <Section title="Translucent terrain">
+      <Section title="Terrain regions">
         <p>
-          Terrain is translucent in a region or everywhere, through four methods
-          on a globe's <C>Tileset3D</C>. The Rendering tab shows how it draws.
+          A globe's terrain is drawn at an opacity in a region or everywhere,
+          through <C>globe.terrain</C>. Only what <C>Engine.addTerrain</C> and{" "}
+          <C>addEllipsoid</C> return has it: on another tileset it is a compile
+          error. The Rendering tab shows how it draws.
         </p>
         <CodeBlock language="ts" code={snippetText("terrain.next.ts")} />
         <ul>
@@ -133,23 +135,22 @@ export function Api() {
             0, and an opacity change never alters it.
           </li>
           <li>
-            <C>setTerrainOpacity(opacity, {"{ pickThrough }"})</C> applies to
-            the whole globe, above 0 and up to 1. Where it meets a region, the
-            least opacity wins, and a clip wins over both.
+            <C>"everywhere"</C> takes the whole globe, and holds one of the 32
+            region slots while its opacity is below 1. Where regions overlap,
+            the least opacity wins.
           </li>
           <li>
-            <C>pickThrough</C> decides whether picks stop at the translucent
-            ground or go on to what shows through it. Omitted, it's false for a
-            new region, and <C>setTerrainTranslucency</C> and{" "}
-            <C>setTerrainOpacity</C> keep the current value.
+            <C>pickThrough</C> decides whether picks stop at the ground or go on
+            to what shows through it. It defaults to false, and it can be set on
+            the region at any time.
           </li>
         </ul>
         <p>
-          Only a globe has terrain to make translucent, so these throw on any
-          other tileset. Heights, terrain rays and clamping treat translucent
-          terrain as ground.
+          <C>opacity</C>, <C>ground</C> and <C>pickThrough</C> are properties of
+          the region, and <C>remove()</C> ends it. Height captures follow{" "}
+          <C>ground</C> too, whatever the opacity.
         </p>
-        <Written from={<C>src/streaming/Tileset3D.ts</C>} on="2026-11-08" />
+        <Written from={<C>src/globe/Globe.ts</C>} on="2026-11-08" />
       </Section>
 
       <Section title="The principles behind it">

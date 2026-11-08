@@ -738,6 +738,7 @@ export class World {
         blocks: number;
         rows: Float32Array;
         opacity: number;
+        ground: boolean;
         everywhere: boolean;
       }
     | undefined
@@ -3509,11 +3510,16 @@ export class World {
    * inside; between 0 and 1 the terrain inside is drawn at that opacity
    * (`Globe.terrain.addRegion`); 1 changes nothing. No rows: the slot
    * holds everywhere a record's mask names it (`addRegion("everywhere")`),
-   * and takes no blocks. Throws a `TerrainRegionError` when all
+   * and takes no blocks. `ground` (default: unless `opacity` is 0) is what
+   * height captures draw. Throws a `TerrainRegionError` when all
    * `MAX_TERRAIN_CLIPS` slots are taken, or the region doesn't fit the
    * blocks set aside for regions (`WorldOptions.maxClipBlocks`).
    */
-  addTerrainClipRegion(rows: Float32Array, opacity = 0): number {
+  addTerrainClipRegion(
+    rows: Float32Array,
+    opacity = 0,
+    ground = opacity > 0,
+  ): number {
     checkTerrainOpacity(opacity);
     let slot = 0;
     while (slot < MAX_TERRAIN_CLIPS && this.terrainClipRuns[slot]) {
@@ -3531,6 +3537,7 @@ export class World {
         blocks: 0,
         rows,
         opacity,
+        ground,
         everywhere,
       };
       this.writeTerrainClip(slot);
@@ -3559,7 +3566,14 @@ export class World {
         `no run of ${blocks} clip blocks is free for the region (placeholders hold the rest of the world's ${this.maxClipBlocks}, WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
       );
     }
-    this.terrainClipRuns[slot] = { block, blocks, rows, opacity, everywhere };
+    this.terrainClipRuns[slot] = {
+      block,
+      blocks,
+      rows,
+      opacity,
+      ground,
+      everywhere,
+    };
     this.terrainClipBlocks += blocks;
     this.writeTerrainClip(slot);
     this.version++;
@@ -3608,6 +3622,24 @@ export class World {
     this.changedViews = ALL_VIEWS;
   }
 
+  /**
+   * @internal Changes whether a terrain region's terrain is ground
+   * (`addTerrainClipRegion`): height captures leave out what isn't. One
+   * directory row; the captures are redone, and the views redrawn.
+   */
+  setTerrainClipGround(slot: number, ground: boolean): void {
+    const run = this.terrainClipRuns[slot];
+    if (!run || run.ground === ground) {
+      return;
+    }
+    run.ground = ground;
+    this.writeDirectoryRow(slot);
+    this.version++;
+    // Height captures (and rays) read the world's content revision.
+    this.contentRevision_++;
+    this.changedViews = ALL_VIEWS;
+  }
+
   /** A region's rows into its run's blocks, and its directory row. */
   private writeTerrainClip(slot: number): void {
     const run = this.terrainClipRuns[slot]!;
@@ -3626,7 +3658,8 @@ export class World {
 
   /**
    * A slot's directory row (surface.slang `terrainOpacity`): its region's
-   * first row, its opacity's bits, and 1 when it holds everywhere.
+   * first row, its opacity's bits, 1 when it holds everywhere, and 1 when
+   * its terrain is ground.
    */
   private writeDirectoryRow(slot: number): void {
     const run = this.terrainClipRuns[slot]!;
@@ -3634,6 +3667,7 @@ export class World {
     entry[0] = run.block * CLIP_BLOCK_ROWS;
     new Float32Array(entry.buffer, 4, 1)[0] = run.opacity;
     entry[2] = run.everywhere ? 1 : 0;
+    entry[3] = run.ground ? 1 : 0;
     this.ctx.device.queue.writeBuffer(this.clipBuffer, slot * 16, entry);
   }
 

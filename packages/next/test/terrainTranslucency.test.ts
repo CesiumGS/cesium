@@ -23,6 +23,7 @@ import type { DrawHandle } from "../src/scene/World.ts";
 import type { Globe } from "../src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import {
+  shaderClippedOut,
   shaderOpacity,
   shaderTerrainAlpha,
   type ShaderRegion,
@@ -139,7 +140,17 @@ describe("the world's region slots with an opacity", () => {
         everywhere: new Uint32Array(data.buffer)[2],
       };
     };
-    return { world, row, restore: () => (device.queue = queue) };
+    /** The ground word of a slot's last directory row. */
+    const groundWord = (slot: number) =>
+      new Uint32Array(
+        writes
+          .filter(
+            ([buffer, offset]) =>
+              buffer === clipBuffer() && offset === slot * 16,
+          )
+          .at(-1)![2].buffer,
+      )[3];
+    return { world, row, groundWord, restore: () => (device.queue = queue) };
   };
   const rows = (n: number) => new Float32Array(n * CLIP_BLOCK_ROWS * 4);
 
@@ -199,6 +210,28 @@ describe("the world's region slots with an opacity", () => {
       world.changedViews = 0;
       world.setTerrainClipOpacity(all, 0.6);
       expect(world.changedViews).toBe(ALL_VIEWS);
+    } finally {
+      restore();
+    }
+  });
+
+  it("write ground in the directory row's w, by default unless the opacity is 0, and wake what depends on a change", async () => {
+    const { world, groundWord: word, restore } = await spy();
+    try {
+      const cut = world.addTerrainClipRegion(rows(1));
+      const glass = world.addTerrainClipRegion(rows(1), 0.5);
+      const ghost = world.addTerrainClipRegion(rows(1), 0, true);
+      expect([word(cut), word(glass), word(ghost)]).toEqual([0, 1, 1]);
+      const before = world.contentRevision;
+      world.changedViews = 0;
+      world.setTerrainClipGround(glass, false);
+      expect(word(glass)).toBe(0);
+      expect(world.contentRevision).toBeGreaterThan(before);
+      expect(world.changedViews).toBe(ALL_VIEWS);
+      // No change, no wake.
+      world.changedViews = 0;
+      world.setTerrainClipGround(glass, false);
+      expect(world.changedViews).toBe(0);
     } finally {
       restore();
     }
@@ -911,6 +944,60 @@ describe("the shader's opacity rules (surface.slang terrainOpacity and terrainAl
     expect(o([A, B, clip], 0b111, inClip, true)).toBe(0);
   });
 
+  it("honours `ground` in height captures, whatever the opacity: all four combinations", () => {
+    const at = (opacity: number, ground: boolean): ShaderRegion => ({
+      ...A,
+      opacity,
+      ground,
+    });
+    const cases: Array<[number, boolean]> = [
+      [0, false], // a cut: not drawn, not ground
+      [0, true], // invisible ground: not drawn, ground
+      [0.5, false], // glass that isn't ground
+      [0.5, true], // glass that is
+    ];
+    for (const [opacity, ground] of cases) {
+      const r = [at(opacity, ground)];
+      const label = `opacity ${opacity}, ground ${ground}`;
+      // Drawn passes: by opacity. Left out only at 0.
+      expect(shaderClippedOut(r, 1, camera, inA), label).toBe(opacity === 0);
+      expect(shaderOpacity(r, 1, camera, inA, false), label).toBeCloseTo(
+        opacity,
+        6,
+      );
+      // Height captures: by ground. Left out only where it isn't ground.
+      expect(shaderClippedOut(r, 1, camera, inA, false), label).toBe(!ground);
+      expect(
+        shaderTerrainAlpha(r, 1, camera, inA, { terrainSeen: false }),
+        label,
+      ).toBe(ground ? 1 : 0);
+      // Outside the region nothing is left out.
+      expect(shaderClippedOut(r, 1, camera, nowhere, false), label).toBe(false);
+    }
+    // Overlapping: any hole wins in a capture, over ground that is not.
+    expect(
+      shaderClippedOut(
+        [at(0.5, true), at(0.5, false)],
+        0b11,
+        camera,
+        inA,
+        false,
+      ),
+    ).toBe(true);
+    // The whole globe, ground or not.
+    const all = (ground: boolean): ShaderRegion => ({
+      opacity: 0.5,
+      ground,
+      everywhere: true,
+    });
+    expect(shaderClippedOut([all(false)], 1, camera, nowhere, false)).toBe(
+      true,
+    );
+    expect(shaderClippedOut([all(true)], 1, camera, nowhere, false)).toBe(
+      false,
+    );
+  });
+
   it("hides skirts wherever the terrain is less than opaque, and not where it draws opaque", () => {
     const alpha = (
       regions: ShaderRegion[],
@@ -970,7 +1057,14 @@ describe("the shader's translucency", () => {
   it("takes the least opacity, skips regions that can't lower it, and stops at a clip", () => {
     const f = body(slang, "float terrainOpacity(");
     expect(f).toMatch(
-      /if \(alpha >= opacity \|\| \(clipsOnly && alpha > 0\.0\)\)/,
+      /if \(alpha >= opacity \|\| \(which == REGIONS_CUTS && alpha > 0\.0\)\)/,
+    );
+    // Height captures read `ground` from the directory row's w.
+    expect(f).toMatch(
+      /which == REGIONS_HOLES\) \{\s+if \(entry\.w != 0u\) \{\s+continue; \/\/ ground/,
+    );
+    expect(body(slang, "bool clippedOut(")).toMatch(
+      /terrainSeen \? REGIONS_CUTS : REGIONS_HOLES/,
     );
     expect(f).toMatch(
       /opacity = alpha;\s+if \(opacity <= 0\.0\) \{\s+return 0\.0;/,
@@ -985,9 +1079,9 @@ describe("the shader's translucency", () => {
     expect(f).toMatch(
       /if \(opacity < OPAQUE_ALPHA && \(in\.ids\.z & SKIRT_BIT\) != 0u\) \{\s+return 0\.0;/,
     );
-    // Clips only (no translucency) where the pass doesn't see it.
+    // Holes only (what isn't ground) where the pass doesn't see opacity.
     expect(f).toMatch(
-      /terrainOpacity\(r\.terrainClip, in\.relPosition, !terrainSeen\)/,
+      /terrainOpacity\(\s*r\.terrainClip,\s*in\.relPosition,\s*terrainSeen \? REGIONS_SEEN : REGIONS_HOLES,?\s*\)/,
     );
   });
 

@@ -902,7 +902,9 @@ bool segmentsCross(float2 a, float2 b, float2 q, float2 s) {
 // directory, a row a slot: the region's first row (x, a uint; 0 for a free
 // slot), its opacity (y, a float's bits: 0 the terrain not drawn inside,
 // between 0 and 1 drawn at that opacity, 1 no effect), and whether it is
-// everywhere (z, a uint: 1 for "everywhere", a slot with no shape). A region's rows
+// everywhere (z, a uint: 1 for "everywhere", a slot with no shape), and
+// whether the terrain inside is ground (w, a uint: 1 ground, 0 a hole for
+// height captures). A region's rows
 // (`packClipShape`): its anchor's position hi (xyz) with its gnomonic
 // radius (w); lo with its grid's columns and rows (w, a uint: columns in
 // the low 16 bits); its east, north and up axes; its box in its plane
@@ -931,11 +933,18 @@ static const uint MAX_CLIP_CELL_EDGES = 32u;
 static const uint MAX_CLIP_FRAGMENT_EDGES = 128u;
 static const uint CLIP_HEADER_ROWS = 6u;
 
+// What `terrainOpacity` finds: the drawn opacity of every region (0), the
+// cuts only, regions of opacity 0 (1: what isn't drawn at all,
+// `clippedOut`), or the holes only, regions that aren't ground, counted as
+// opacity 0 (2: height captures, `heightFs`).
+static const uint REGIONS_SEEN = 0u;
+static const uint REGIONS_CUTS = 1u;
+static const uint REGIONS_HOLES = 2u;
+
 // The terrain's opacity at `p`: the least opacity of the regions of `mask`
-// that hold it (0 inside a clip), 1 where none does. A region that can't
-// lower the opacity found so far isn't tested; with `clipsOnly`, only
-// clips are (`clippedOut`: what isn't drawn at all).
-float terrainOpacity(uint mask, float3 p, bool clipsOnly) {
+// that hold it (0 inside a cut), 1 where none does. A region that can't
+// lower the opacity found so far isn't tested.
+float terrainOpacity(uint mask, float3 p, uint which) {
   SplitPosition camera = SplitPosition(view.cameraHi, view.cameraLo);
   uint budget = MAX_CLIP_FRAGMENT_EDGES;
   float opacity = 1.0;
@@ -947,7 +956,13 @@ float terrainOpacity(uint mask, float3 p, bool clipsOnly) {
     mask &= mask - 1u;
     uint4 entry = asuint(clipBoxes[slot]);
     float alpha = asfloat(entry.y);
-    if (alpha >= opacity || (clipsOnly && alpha > 0.0)) {
+    if (which == REGIONS_HOLES) {
+      if (entry.w != 0u) {
+        continue; // ground
+      }
+      alpha = 0.0;
+    }
+    if (alpha >= opacity || (which == REGIONS_CUTS && alpha > 0.0)) {
       continue;
     }
     if (entry.z != 0u) {
@@ -1000,6 +1015,11 @@ float terrainOpacity(uint mask, float3 p, bool clipsOnly) {
   return opacity;
 }
 
+// Whether a pass sees the terrain's opacity: height captures don't. They
+// draw every region's terrain opaque, and leave out only what isn't ground
+// (`heightFs`, `TerrainRegion.ground`).
+static bool terrainSeen = true;
+
 // What the record doesn't draw at `p` in this view: a mixed-LOD
 // placeholder outside its boxes, clipped terrain inside its regions.
 bool placeholderOut(DrawRecord r, float3 p) {
@@ -1009,7 +1029,8 @@ bool clippedOut(DrawRecord r, float3 p) {
   if (placeholderOut(r, p)) {
     return true;
   }
-  return r.terrainClip != 0u && terrainOpacity(r.terrainClip, p, true) <= 0.0;
+  return r.terrainClip != 0u &&
+         terrainOpacity(r.terrainClip, p, terrainSeen ? REGIONS_CUTS : REGIONS_HOLES) <= 0.0;
 }
 
 // Blended surfaces at least this opaque draw in the opaque pass (depth,
@@ -1017,10 +1038,6 @@ bool clippedOut(DrawRecord r, float3 p) {
 // Near-opaque layers a few centimeters apart are what order-independent
 // transparency's moments tell apart worst.
 static const float OPAQUE_ALPHA = 0.999;
-
-// Whether a pass sees terrain translucency: height captures don't (the
-// ground there is ground for clamping, `heightFs`).
-static bool terrainSeen = true;
 
 // A draw's opacity from its globe's translucency at the fragment
 // (`terrainOpacity`): 1 for other draws; 0 on a skirt wherever the terrain
@@ -1030,7 +1047,8 @@ float terrainAlpha(DrawRecord r, SurfaceVaryings in) {
   if (r.terrainClip == 0u) {
     return 1.0;
   }
-  float opacity = terrainOpacity(r.terrainClip, in.relPosition, !terrainSeen);
+  float opacity = terrainOpacity(r.terrainClip, in.relPosition,
+                                 terrainSeen ? REGIONS_SEEN : REGIONS_HOLES);
   if (opacity < OPAQUE_ALPHA && (in.ids.z & SKIRT_BIT) != 0u) {
     return 0.0;
   }
@@ -1133,7 +1151,8 @@ void shadowFs(SurfaceVaryings in) {
 }
 
 // A height capture's masked caster (Engine `addHeightCapture`): as
-// `shadowFs`, but translucent terrain is ground (clips still aren't).
+// `shadowFs`, but what is ground is drawn whatever its opacity, and what
+// isn't is left out whatever its opacity.
 [shader("fragment")]
 void heightFs(SurfaceVaryings in) {
   terrainSeen = false;

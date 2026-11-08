@@ -877,7 +877,7 @@ export class Tileset3D implements TileTree {
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
-  /** A non-3D-Tiles source, when streaming one (fromSource). */
+  /** A non-3D-Tiles source, when streaming one (`Globe.create`). */
   protected source?: TileSource;
   /** Last frame in which an update changed anything. */
   private lastChange = 0;
