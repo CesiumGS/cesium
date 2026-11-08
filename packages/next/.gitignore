@@ -7,3 +7,6 @@ dist-lib/
 
 # Design-review screenshots: local only (large, retaken often; never committed)
 examples/*/design-screenshots/
+
+# Python bytecode (importing scripts/frameFixtures.py writes it)
+__pycache__/
