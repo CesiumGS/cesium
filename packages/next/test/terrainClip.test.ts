@@ -20,7 +20,6 @@ import {
 import { castTerrainRay } from "../src/globe/terrainRay.ts";
 import { TerrainSource } from "../src/globe/TerrainSource.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
-import { splitVec3 } from "../src/math/transforms.ts";
 import {
   CLIP_BLOCK_BITS,
   CLIP_BLOCK_ROWS,
@@ -33,6 +32,7 @@ import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { A, at, gridTile, stripTarget } from "./terrainRayFixtures.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import { shaderInside } from "./terrainClipShader.ts";
 
 const R = Math.PI / 180;
 const WGS84 = Ellipsoid.WGS84;
@@ -387,93 +387,6 @@ describe("terrain clip regions", () => {
     expect(insideClipShape(shape, 0, 0)).toBe(true);
   });
 });
-
-/**
- * surface.slang `terrainOpacity` for one region, in float32 as the GPU
- * runs it: `rows` as packed, the camera split hi/lo, the fragment's
- * camera-relative position in float32.
- */
-function shaderInside(
-  rows: Float32Array,
-  camera: Float64Array,
-  point: Float64Array,
-  budget: { left: number; cut?: boolean } = { left: 128 },
-): boolean {
-  const f = Math.fround;
-  const u = new Uint32Array(rows.buffer);
-  const hi = new Float32Array(3);
-  const lo = new Float32Array(3);
-  splitVec3(camera, hi, 0, lo, 0);
-  const rel = [0, 1, 2].map((i) => f(point[i]! - camera[i]!));
-  // SplitPosition.difference: (int(hi) − int(camera hi)) + (lo − camera lo).
-  const anchorRel = [0, 1, 2].map((i) =>
-    f(f(rows[i]! - hi[i]!) + f(rows[4 + i]! - lo[i]!)),
-  );
-  const d = rel.map((v, i) => f(v - anchorRel[i]!));
-  const dot = (o: number) =>
-    f(
-      f(f(rows[o]! * d[0]!) + f(rows[o + 1]! * d[1]!)) +
-        f(rows[o + 2]! * d[2]!),
-    );
-  const lx = dot(8);
-  const ly = dot(12);
-  const lz = dot(16);
-  const denominator = f(rows[3]! + lz);
-  if (denominator <= 0) {
-    return false;
-  }
-  const k = f(rows[3]! / denominator);
-  const qx = f(lx * k);
-  const qy = f(ly * k);
-  const [x0, y0, x1, y1] = [rows[20]!, rows[21]!, rows[22]!, rows[23]!];
-  if (qx < x0 || qy < y0 || qx > x1 || qy > y1) {
-    return false;
-  }
-  const columns = Math.min(Math.max(u[7]! & 0xffff, 1), 128);
-  const gridRows = Math.min(Math.max(u[7]! >>> 16, 1), 128);
-  const grid = 6;
-  const edges = grid + columns * gridRows;
-  const cw = f(f(x1 - x0) / columns);
-  const ch = f(f(y1 - y0) / gridRows);
-  const ax = Math.min(Math.floor(Math.max(f(f(qx - x0) / cw), 0)), columns - 1);
-  const ay = Math.min(
-    Math.floor(Math.max(f(f(qy - y0) / ch), 0)),
-    gridRows - 1,
-  );
-  const c = (grid + ay * columns + ax) * 4;
-  const start = u[c]!;
-  const count = Math.min(u[c + 1]! & 0x7fffffff, 32, budget.left);
-  budget.cut ||= count < (u[c + 1]! & 0x7fffffff);
-  budget.left -= count;
-  let inside = u[c + 1]! >>> 31 === 1;
-  const sx = rows[c + 2]!;
-  const sy = rows[c + 3]!;
-  // surface.slang `segmentsCross`, in float32.
-  const side = (ex: number, ey: number, px: number, py: number) =>
-    f(f(ex * py) - f(ey * px)) > 0;
-  for (let j = 0; j < count; j++) {
-    const o = (edges + start + j) * 4;
-    const [pax, pay, pbx, pby] = [
-      rows[o]!,
-      rows[o + 1]!,
-      rows[o + 2]!,
-      rows[o + 3]!,
-    ];
-    const ex = f(pbx - pax);
-    const ey = f(pby - pay);
-    const tx = f(sx - qx);
-    const ty = f(sy - qy);
-    if (
-      side(ex, ey, f(qx - pax), f(qy - pay)) !==
-        side(ex, ey, f(sx - pax), f(sy - pay)) &&
-      side(tx, ty, f(pax - qx), f(pay - qy)) !==
-        side(tx, ty, f(pbx - qx), f(pby - qy))
-    ) {
-      inside = !inside;
-    }
-  }
-  return inside;
-}
 
 /** Distance from a plane point to a region's nearest edge, m. */
 function edgeDistance(xy: Float64Array, x: number, y: number): number {

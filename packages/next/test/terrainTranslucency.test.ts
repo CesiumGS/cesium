@@ -4,11 +4,20 @@
 // terrain as ground, the shader's opacity and skirt rules, and the CPU
 // ray that lets picks stop at it. CPU only (fakeGpu).
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { flatTerrainTile } from "../src/globe/quantizedMesh.ts";
-import { TerrainClipError } from "../src/globe/terrainClip.ts";
 import {
+  TerrainClipError,
+  compileTerrainClip,
+  packClipShape,
+} from "../src/globe/terrainClip.ts";
+import { castTerrainRay } from "../src/globe/terrainRay.ts";
+import { Ellipsoid } from "../src/math/ellipsoid.ts";
+import {
+  ALL_VIEWS,
+  BATCH_WORD,
   CLIP_BLOCK_ROWS,
+  MATERIAL_INDEX_WORD,
   MaterialFlags,
   RECORD_WORDS,
   TERRAIN_CLIP_WORD,
@@ -17,6 +26,11 @@ import { createBox } from "../src/scene/meshes.ts";
 import type { DrawHandle } from "../src/scene/World.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import {
+  shaderOpacity,
+  shaderTerrainAlpha,
+  type ShaderRegion,
+} from "./terrainClipShader.ts";
 import { at, gridTile, stripTarget } from "./terrainRayFixtures.ts";
 
 const R = Math.PI / 180;
@@ -170,6 +184,30 @@ describe("the world's region slots with an opacity", () => {
     }
   });
 
+  it("wake the views when an opacity changes, the first time and each time after", async () => {
+    const { world, restore } = await spy();
+    try {
+      const glass = world.addTerrainClipRegion(rows(1), 0.4);
+      world.changedViews = 0;
+      world.setTerrainClipOpacity(glass, 0.6);
+      expect(world.changedViews).toBe(ALL_VIEWS);
+      // Nothing else marks a record: only the views the world names are
+      // redrawn, so a second change would otherwise be lost.
+      world.changedViews = 0;
+      world.setTerrainClipOpacity(glass, 0.5);
+      expect(world.changedViews).toBe(ALL_VIEWS);
+      world.changedViews = 0;
+      world.setTerrainClipOpacity(glass, 0.5); // no change, no wake
+      expect(world.changedViews).toBe(0);
+      const all = world.addTerrainClipRegion(new Float32Array(0), 0.4);
+      world.changedViews = 0;
+      world.setTerrainClipOpacity(all, 0.6);
+      expect(world.changedViews).toBe(ALL_VIEWS);
+    } finally {
+      restore();
+    }
+  });
+
   it("refuse an opacity out of range, a clip everywhere, and a change of kind", async () => {
     const { world, restore } = await spy();
     try {
@@ -219,6 +257,147 @@ describe("a draw's material, changed in place", () => {
     expect(world.drawMaterial(draw)).toBe(opaque);
     expect(world.translucentRange([0, 0, 10])).toBeUndefined();
     expect(() => world.setDrawMaterial(draw, 9999)).toThrow(RangeError);
+  });
+});
+
+describe("setDrawMaterial's batches", () => {
+  interface Batch {
+    index: number;
+    key: string;
+    items: number;
+    shown: number;
+    material: number;
+  }
+  const internals = (world: unknown) =>
+    world as unknown as {
+      drawBatches: Array<Batch | undefined>;
+      batches: Map<string, Batch>;
+      freeBatches: Batch[];
+      pointDraws: Map<number, { batch: Batch; params: GPUBuffer }>;
+    };
+
+  it("moves a draw's counts to the new batch: items, and shown unless hidden", async () => {
+    const engine = await fakeEngine();
+    const world = engine.createWorld();
+    const opaque = world.addMaterial({ baseColor: [0.6, 0.6, 0.6, 1] });
+    const blended = world.materialWithFlags(opaque, MaterialFlags.alphaBlend);
+    const mesh = world.addMesh(createBox());
+    const a = world.addDraw({ mesh, material: opaque });
+    const b = world.addDraw({ mesh, material: opaque });
+    const hidden = world.addDraw({ mesh, material: opaque });
+    world.setViewMask(hidden, 0);
+    const w = internals(world);
+    const first = w.drawBatches[a.index]!;
+    expect(w.drawBatches[hidden.index]).toBe(first);
+    expect([first.items, first.shown]).toEqual([3, 2]);
+
+    world.setDrawMaterial(a, blended);
+    const twin = w.drawBatches[a.index]!;
+    expect(twin).not.toBe(first);
+    expect(twin.material).toBe(blended);
+    expect([first.items, first.shown]).toEqual([2, 1]);
+    expect([twin.items, twin.shown]).toEqual([1, 1]);
+
+    // A hidden draw is an item but not shown, in either batch.
+    world.setDrawMaterial(hidden, blended);
+    expect(w.drawBatches[hidden.index]).toBe(twin);
+    expect([first.items, first.shown]).toEqual([1, 1]);
+    expect([twin.items, twin.shown]).toEqual([2, 1]);
+
+    // The last draw out frees the old batch for reuse.
+    world.setDrawMaterial(b, blended);
+    expect([twin.items, twin.shown]).toEqual([3, 2]);
+    expect(first.items).toBe(0);
+    expect(first.key).toBe("");
+    expect(w.batches.has(twin.key)).toBe(true);
+    expect([...w.batches.values()]).not.toContain(first);
+    expect(w.freeBatches).toContain(first);
+    // Its record follows: the batch's index and the material's.
+    const u = (world as unknown as { recordsU32: Uint32Array }).recordsU32;
+    expect(u[a.index * RECORD_WORDS + BATCH_WORD]).toBe(twin.index);
+    expect(world.drawMaterial(b)).toBe(blended);
+    // And back.
+    world.setDrawMaterial(a, opaque);
+    expect(w.drawBatches[a.index]!.material).toBe(opaque);
+    expect([twin.items, twin.shown]).toEqual([2, 1]);
+  });
+
+  it("moves a draw's view mask change with it: a draw shown later counts in its current batch", async () => {
+    const engine = await fakeEngine();
+    const world = engine.createWorld();
+    const opaque = world.addMaterial({ baseColor: [0.6, 0.6, 0.6, 1] });
+    const blended = world.materialWithFlags(opaque, MaterialFlags.alphaBlend);
+    const mesh = world.addMesh(createBox());
+    const draw = world.addDraw({ mesh, material: opaque });
+    world.setDrawMaterial(draw, blended);
+    const w = internals(world);
+    const twin = w.drawBatches[draw.index]!;
+    world.setViewMask(draw, 0);
+    expect(twin.shown).toBe(0);
+    world.setViewMask(draw, ALL_VIEWS);
+    expect(twin.shown).toBe(1);
+    world.removeDraw(draw);
+    expect([twin.items, twin.shown]).toEqual([0, 0]);
+  });
+
+  it("points a point set's cull at the new batch", async () => {
+    const engine = await fakeEngine();
+    const world = engine.createWorld();
+    const opaque = world.addMaterial({ baseColor: [1, 1, 1, 1] });
+    const blended = world.materialWithFlags(opaque, MaterialFlags.alphaBlend);
+    const mesh = world.addPointMesh(4, { stride: 1 });
+    const draw = world.addDraw({
+      mesh,
+      material: opaque,
+      billboard: { size: 8 },
+    });
+    const w = internals(world);
+    const params = w.pointDraws.get(draw.index)!.params;
+    const writes: Uint32Array[] = [];
+    const device = engine.gpu.device as unknown as { queue: GPUQueue };
+    const queue = device.queue;
+    device.queue = new Proxy(queue, {
+      get: (t, key) =>
+        key === "writeBuffer"
+          ? (buffer: GPUBuffer, _offset: number, data: ArrayBufferView) => {
+              if (buffer === params) {
+                writes.push(new Uint32Array(data.buffer.slice(0)));
+              }
+            }
+          : (t as unknown as Record<PropertyKey, unknown>)[key],
+    });
+    try {
+      world.setDrawMaterial(draw, blended);
+    } finally {
+      device.queue = queue;
+    }
+    const batch = w.drawBatches[draw.index]!;
+    expect(w.pointDraws.get(draw.index)!.batch).toBe(batch);
+    // pointCull.slang's params: word 3 the record, word 5 the batch.
+    expect(writes.at(-1)![3]).toBe(draw.index);
+    expect(writes.at(-1)![5]).toBe(batch.index);
+  });
+
+  it("changes the material word in the record and nothing else of it", async () => {
+    const engine = await fakeEngine();
+    const world = engine.createWorld();
+    const opaque = world.addMaterial({ baseColor: [0.6, 0.6, 0.6, 1] });
+    const blended = world.materialWithFlags(opaque, MaterialFlags.alphaBlend);
+    const mesh = world.addMesh(createBox());
+    const draw = world.addDraw({ mesh, material: opaque });
+    const u = (world as unknown as { recordsU32: Uint32Array }).recordsU32;
+    const o = draw.index * RECORD_WORDS;
+    const before = Array.from(u.subarray(o, o + RECORD_WORDS));
+    world.setDrawMaterial(draw, blended);
+    const after = Array.from(u.subarray(o, o + RECORD_WORDS));
+    const changed = after
+      .map((v, i) => (v !== before[i] ? i : -1))
+      .filter((i) => i >= 0);
+    // The batch (slot in the draw arguments) and the material.
+    expect(changed.sort()).toEqual([BATCH_WORD, MATERIAL_INDEX_WORD].sort());
+    expect(after[MATERIAL_INDEX_WORD]).toBe(blended);
+    expect(() => world.removeDraw(draw)).not.toThrow();
+    expect(() => world.setDrawMaterial(draw, opaque)).toThrow(/removed/);
   });
 });
 
@@ -417,6 +596,309 @@ describe("picks on translucent terrain (the CPU ray)", () => {
   });
 });
 
+describe("picks from under the ground", () => {
+  // Flat ground 100 m up over nine degrees; the camera 30 m under it, in the
+  // region.
+  const rect = {
+    west: 3 * R,
+    south: 44 * R,
+    east: 12 * R,
+    north: 49 * R,
+  };
+  const lon = 7.43;
+  const lat = 46.93;
+  /** Meters east and up from the camera, as a point. */
+  const offset = (east: number, up: number) =>
+    at(lon * R + east / (6_378_137 * Math.cos(lat * R)), lat * R, 70 + up);
+  /** The tile, and the rest of the globe not drawn. */
+  const target = (tile: ReturnType<typeof gridTile>) =>
+    stripTarget([
+      { rectangle: rect, tile },
+      {
+        rectangle: {
+          west: -Math.PI,
+          south: -Math.PI / 2,
+          east: Math.PI,
+          north: Math.PI / 2,
+        },
+      },
+    ]);
+  const setUp = async () => {
+    const t = await globeWithTiles();
+    const source = (t.globe as unknown as { source: Record<string, unknown> })
+      .source;
+    const tile = gridTile(rect, 161, () => 100);
+    source.rayTarget = () => target(tile);
+    source.tileOf = (rayTile: unknown) =>
+      rayTile === tile ? t.underTile : undefined;
+    return { ...t, tile };
+  };
+  const cast = (
+    globe: Tileset3D,
+    east: number,
+    up: number,
+  ): { distance: number } | undefined => {
+    const origin = offset(0, 0);
+    const to = offset(east, up);
+    const length = Math.hypot(...[0, 1, 2].map((k) => to[k]! - origin[k]!));
+    return globe.translucentTerrainHit(
+      origin,
+      [0, 1, 2].map((k) => (to[k]! - origin[k]!) / length),
+    );
+  };
+
+  /** The ray due east along the tangent plane, level. */
+  const level = (globe: Tileset3D) => {
+    const east = [-Math.sin(lon * R), Math.cos(lon * R), 0];
+    return globe.translucentTerrainHit(offset(0, 0), east);
+  };
+
+  it("castTerrainRay's surface is a crossing, where its hit counts a sample below the surface", async () => {
+    const { tile } = await setUp();
+    // Level for 200 m: no surface on the ray, though `hit` may find one.
+    const flat = castTerrainRay(offset(0, 0), offset(200, 0), target(tile))!;
+    expect(flat.surface).toBeUndefined();
+    const up = castTerrainRay(offset(0, 0), offset(0, 60), target(tile))!;
+    // (the grid's chords sag below the 100 m by up to half a meter)
+    expect(Math.abs(up.surface!.t * 60 - 30)).toBeLessThan(1.5);
+    // The measured fault: the lower hit is the first sample under the
+    // surface, well short of the 30 m to the ground.
+    expect(up.hit).toBeDefined();
+    expect(up.hit!.t).toBeLessThanOrEqual(up.surface!.t);
+  });
+
+  it("stop where the ray crosses the ground above, not near the camera", async () => {
+    const { globe, under, done } = await setUp();
+    globe.addTerrainTranslucency(
+      { rectangle: { west: 3, south: 44, east: 12, north: 49 } },
+      { opacity: 0.4 },
+    );
+    // Straight up: the ground is 30 m over the camera.
+    const straight = cast(globe, 0, 60)!;
+    expect(Math.abs(straight.distance - 30)).toBeLessThan(1.5);
+    // Up at about 47 degrees: 30 m up needs 28 m along, 41 m of ray.
+    const slanted = cast(globe, 28, 30)!;
+    expect(Math.abs(slanted.distance - Math.hypot(28, 30))).toBeLessThan(2);
+    expect(slanted.distance).toBeGreaterThan(40);
+    // Level, east: the ground curves up to the ray's height 20 km away
+    // (the horizon's drop), nowhere nearer.
+    expect(level(globe)!.distance).toBeGreaterThan(15_000);
+    expect(level(globe)!.distance).toBeLessThan(25_000);
+    // Down: away from the ground.
+    expect(cast(globe, 0, -60)).toBeUndefined();
+    void under;
+    done();
+  });
+
+  it("do the same under the whole globe's translucency, and a ray looking down stops short of the far side", async () => {
+    const { globe, done } = await setUp();
+    globe.setTerrainOpacity(0.5);
+    expect(Math.abs(cast(globe, 0, 60)!.distance - 30)).toBeLessThan(1.5);
+    expect(cast(globe, 28, 30)!.distance).toBeGreaterThan(40);
+    expect(level(globe)!.distance).toBeGreaterThan(15_000);
+    expect(level(globe)!.distance).toBeLessThan(25_000);
+    // Looking straight down the stub target would throw at the far side's
+    // missing patch: the ray ends under the lowest terrain, on this side.
+    expect(() => cast(globe, 0, -60)).not.toThrow();
+    expect(cast(globe, 0, -60)).toBeUndefined();
+    done();
+  });
+});
+
+describe("a translucent region's opacity, changed in place", () => {
+  it("changes the opacity and pickThrough without a recompile or a material swap", async () => {
+    const { world, globe, under, done } = await globeWithTiles();
+    const glass = globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    const twin = world.drawMaterial(under);
+    const add = vi.spyOn(world, "addTerrainClipRegion");
+    const swap = vi.spyOn(world, "setDrawMaterial");
+    const set = vi.spyOn(world, "setTerrainClipOpacity");
+    world.changedViews = 0;
+    globe.setTerrainTranslucency(glass, { opacity: 0.6 });
+    expect(glass.opacity).toBe(0.6);
+    expect(glass.pickThrough).toBe(false);
+    expect(set).toHaveBeenCalledTimes(1);
+    expect(set.mock.calls[0]![1]).toBe(0.6);
+    expect(add).not.toHaveBeenCalled();
+    expect(swap).not.toHaveBeenCalled();
+    expect(world.drawMaterial(under)).toBe(twin);
+    // An on-demand loop redraws: the second change, as much as the first.
+    expect(world.changedViews).toBe(ALL_VIEWS);
+    world.changedViews = 0;
+    globe.setTerrainTranslucency(glass, { opacity: 0.8, pickThrough: true });
+    expect(glass.opacity).toBe(0.8);
+    expect(glass.pickThrough).toBe(true);
+    expect(world.changedViews).toBe(ALL_VIEWS);
+    // Only what is given changes.
+    globe.setTerrainTranslucency(glass, { pickThrough: false });
+    expect(glass.opacity).toBe(0.8);
+    expect(glass.pickThrough).toBe(false);
+    expect(globe.terrainTranslucencies).toEqual([glass]);
+    // Removing it still works through the same handle.
+    globe.removeTerrainTranslucency(glass);
+    expect(globe.terrainTranslucencies).toEqual([]);
+    done();
+  });
+
+  it("refuses an opacity outside (0, 1) and ignores a removed region", async () => {
+    const { globe, done } = await globeWithTiles();
+    const glass = globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    for (const opacity of [0, 1, -1, Number.NaN]) {
+      expect(() => globe.setTerrainTranslucency(glass, { opacity })).toThrow(
+        RangeError,
+      );
+    }
+    expect(glass.opacity).toBe(0.35);
+    globe.removeTerrainTranslucency(glass);
+    expect(() =>
+      globe.setTerrainTranslucency(glass, { opacity: 0.5 }),
+    ).not.toThrow();
+    expect(glass.opacity).toBe(0.35);
+    done();
+  });
+
+  it("changes where picks stop, with pickThrough", async () => {
+    const t = await globeWithTiles();
+    const source = (t.globe as unknown as { source: Record<string, unknown> })
+      .source;
+    const rect = {
+      west: 7.3 * R,
+      south: 46.8 * R,
+      east: 7.6 * R,
+      north: 47.1 * R,
+    };
+    const tile = gridTile(rect, 17, () => 100);
+    source.rayTarget = () => stripTarget([{ rectangle: rect, tile }]);
+    source.tileOf = () => t.underTile;
+    const glass = t.globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    const origin = at(7.43 * R, 46.93 * R, 2100);
+    const ground = at(7.43 * R, 46.93 * R, 0);
+    const direction = [0, 1, 2].map((k) => (ground[k]! - origin[k]!) / 2100);
+    expect(t.globe.translucentTerrainHit(origin, direction)).toBeDefined();
+    t.globe.setTerrainTranslucency(glass, { pickThrough: true });
+    expect(t.globe.translucentTerrainHit(origin, direction)).toBeUndefined();
+    t.done();
+  });
+
+  it("keeps the whole globe's pickThrough when setTerrainOpacity omits it, and refuses a destroyed globe", async () => {
+    const { engine, globe } = await globeWithTiles();
+    globe.setTerrainOpacity(0.5, { pickThrough: true });
+    globe.setTerrainOpacity(0.6);
+    const state = (
+      globe as unknown as { globalTranslucency: { pickThrough: boolean } }
+    ).globalTranslucency;
+    expect(state.pickThrough).toBe(true);
+    globe.setTerrainOpacity(0.6, { pickThrough: false });
+    expect(state.pickThrough).toBe(false);
+    (globe as unknown as { loaded: Set<unknown> }).loaded.clear();
+    engine.removeTileset(globe);
+    expect(() => globe.setTerrainOpacity(0.5)).toThrow(/destroyed/);
+  });
+
+  it("wakes the views for the whole globe's opacity, the second change as much as the first", async () => {
+    const { world, globe, done } = await globeWithTiles();
+    globe.setTerrainOpacity(0.4);
+    world.changedViews = 0;
+    globe.setTerrainOpacity(0.6);
+    expect(world.changedViews).toBe(ALL_VIEWS);
+    done();
+  });
+});
+
+describe("the shader's opacity rules (surface.slang terrainOpacity and terrainAlpha, in float32)", () => {
+  const wgs84 = Ellipsoid.WGS84;
+  const camera = at(7.43 * R, 46.93 * R, 2100);
+  const point = (lon: number, lat: number) => at(lon * R, lat * R, 100);
+  const region = (
+    rectangle: { west: number; south: number; east: number; north: number },
+    opacity: number,
+  ): ShaderRegion => ({
+    opacity,
+    rows: packClipShape(compileTerrainClip({ rectangle }, wgs84)),
+  });
+  const A = region({ west: 7.42, south: 46.92, east: 7.44, north: 46.94 }, 0.5);
+  const B = region({ west: 7.43, south: 46.93, east: 7.45, north: 46.95 }, 0.3);
+  const clip = region(
+    { west: 7.435, south: 46.925, east: 7.437, north: 46.927 },
+    0,
+  );
+  const globeWide: ShaderRegion = { opacity: 0.8, everywhere: true };
+  const inA = point(7.425, 46.93);
+  const inBoth = point(7.435, 46.935);
+  const inClip = point(7.436, 46.926);
+  const nowhere = point(7.5, 46.99);
+  const o = (
+    regions: ShaderRegion[],
+    mask: number,
+    p: Float64Array,
+    clipsOnly = false,
+  ) => shaderOpacity(regions, mask, camera, p, clipsOnly);
+
+  it("is 1 with no mask or where no region of the mask holds the point", () => {
+    expect(o([A, B], 0, inA)).toBe(1);
+    expect(o([A, B], 0b11, nowhere)).toBe(1);
+    // A region outside the mask is not tested.
+    expect(o([A, B], 0b10, inA)).toBe(1);
+  });
+
+  it("takes the least opacity where regions overlap, in either slot order", () => {
+    expect(o([A], 1, inA)).toBeCloseTo(0.5, 6);
+    expect(o([A, B], 0b11, inBoth)).toBeCloseTo(0.3, 6);
+    expect(o([B, A], 0b11, inBoth)).toBeCloseTo(0.3, 6);
+    // The whole globe's 0.8 doesn't raise a region's 0.5, and fills the rest.
+    expect(o([A, globeWide], 0b11, inA)).toBeCloseTo(0.5, 6);
+    expect(o([globeWide, A], 0b11, inA)).toBeCloseTo(0.5, 6);
+    expect(o([A, globeWide], 0b11, nowhere)).toBeCloseTo(0.8, 6);
+    expect(o([A, globeWide], 0b01, nowhere)).toBe(1);
+  });
+
+  it("lets a clip win over every opacity, wherever its slot is", () => {
+    expect(o([A, B, clip], 0b111, inClip)).toBe(0);
+    expect(o([clip, A, B, globeWide], 0b1111, inClip)).toBe(0);
+    expect(o([globeWide, B, A, clip], 0b1111, inClip)).toBe(0);
+    // Outside the clip the translucent regions still apply.
+    expect(o([A, B, clip], 0b111, inA)).toBeCloseTo(0.5, 6);
+  });
+
+  it("sees clips only when asked (height captures, the shadows' cut-out test)", () => {
+    expect(o([A, B, clip], 0b111, inBoth, true)).toBe(1);
+    expect(o([A, globeWide, clip], 0b111, inA, true)).toBe(1);
+    expect(o([A, B, clip], 0b111, inClip, true)).toBe(0);
+  });
+
+  it("hides skirts wherever the terrain is less than opaque, and not where it draws opaque", () => {
+    const alpha = (
+      regions: ShaderRegion[],
+      mask: number,
+      p: Float64Array,
+      skirt: boolean,
+      terrainSeen = true,
+    ) => shaderTerrainAlpha(regions, mask, camera, p, { skirt, terrainSeen });
+    expect(alpha([A], 1, inA, false)).toBeCloseTo(0.5, 6);
+    expect(alpha([A], 1, inA, true)).toBe(0);
+    // Outside the region its skirts draw as ever.
+    expect(alpha([A], 1, nowhere, true)).toBe(1);
+    // A tile with no mask draws as it always did.
+    expect(alpha([A], 0, inA, true)).toBe(1);
+    // Near 1 the surface is opaque (OPAQUE_ALPHA, 0.999): its skirts stay.
+    const nearly: ShaderRegion = { opacity: 0.9995, everywhere: true };
+    expect(alpha([nearly], 1, inA, true)).toBeCloseTo(0.9995, 6);
+    const lower: ShaderRegion = { opacity: 0.998, everywhere: true };
+    expect(alpha([lower], 1, inA, true)).toBe(0);
+    // A height capture sees clips only: the ground stays ground, with its
+    // skirts, and a clip is a hole.
+    expect(alpha([A], 1, inA, true, false)).toBe(1);
+    expect(alpha([A, clip], 0b11, inClip, false, false)).toBe(0);
+  });
+
+  it("shares the edge budget across regions, as the shader does", () => {
+    // Regions of the mask are tested lowest slot first, each taking its
+    // cell's edges from the 128 a fragment may test; none left, none tested.
+    // A rectangle's cell holds at most 4 edges, far under the budget.
+    expect(o([A, B, clip], 0b111, inBoth)).toBeCloseTo(0.3, 6);
+  });
+});
+
 describe("the shader's translucency", () => {
   const slang = readFileSync(
     new URL("../src/shaders/surface.slang", import.meta.url),
@@ -456,7 +938,7 @@ describe("the shader's translucency", () => {
   it("hides skirts wherever the terrain is less than opaque", () => {
     const f = body(slang, "float terrainAlpha(");
     expect(f).toMatch(
-      /if \(opacity < 1\.0 && \(in\.ids\.z & SKIRT_BIT\) != 0u\) \{\s+return 0\.0;/,
+      /if \(opacity < OPAQUE_ALPHA && \(in\.ids\.z & SKIRT_BIT\) != 0u\) \{\s+return 0\.0;/,
     );
     // Clips only (no translucency) where the pass doesn't see it.
     expect(f).toMatch(

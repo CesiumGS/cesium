@@ -3,6 +3,8 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   ClientSnapService,
+  OUT_OF_SIGHT_WARNING,
+  SNAP_SERVER_ALWAYS_OUT_OF_SIGHT,
   SNAP_SERVER_FAILED,
   SNAP_SERVER_REFUSED,
   SNAP_UPDATE_FAILED,
@@ -581,6 +583,57 @@ describe("refiningSnap: the client's snap, then the server's", () => {
       "snapPoint hidden from the camera by the drawn mesh",
     );
     expect([...hidden.warnings]).toEqual([]);
+  });
+
+  it("warns once when every answer from one server is out of sight, 10 in a row", async () => {
+    const pl = placement();
+    const snapPoint = Float64Array.from([R - 1.5, 32.32, 6.06]);
+    const answerOf = (over: Partial<SnapResult>) =>
+      answer({
+        snapPoint,
+        design: designPoint(frame, pl.designOf(snapPoint), {
+          how: "snap",
+          tolerance: 0,
+          kind: "point",
+        }),
+        ...over,
+      });
+    const hiddenAnswer = () => answerOf({});
+    const shownAnswer = () =>
+      answerOf({ shownPoint: Float64Array.from([R, 32.32, 6.06]) });
+    const ts = tileset({ placement: pl });
+    const run = server(async () => hiddenAnswer());
+    const once = () =>
+      refiningSnap(
+        { view: view(), x: 517, y: 248, aperture: 6 },
+        new ClientSnapService([ts]),
+        run.service,
+        () => {},
+      );
+    for (let i = 0; i < OUT_OF_SIGHT_WARNING - 1; i++) {
+      await once();
+    }
+    expect([...ts.warnings]).toEqual([]);
+    await once();
+    expect([...ts.warnings]).toEqual([SNAP_SERVER_ALWAYS_OUT_OF_SIGHT]);
+    await once();
+    expect(ts.warnings.size).toBe(1);
+    // An answer that is in sight ends the run: another server of its own,
+    // nine hidden, one shown, nine hidden, and no warning.
+    const other = tileset({ placement: pl });
+    let n = 0;
+    const mixed = server(async () =>
+      n++ === 9 ? shownAnswer() : hiddenAnswer(),
+    );
+    for (let i = 0; i < 19; i++) {
+      await refiningSnap(
+        { view: view(), x: 517, y: 248, aperture: 6 },
+        new ClientSnapService([other]),
+        mixed.service,
+        () => {},
+      );
+    }
+    expect([...other.warnings]).toEqual([]);
   });
 
   describe("refuses a server answer that doesn't check out", () => {

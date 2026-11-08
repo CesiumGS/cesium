@@ -188,7 +188,7 @@ number stays in the sidebar, next to that number.
 │                                  │ error     │ │ │ One transform at the anchor…  │
 │            ◌·  snap preview      └───────────┘ │ │ 34.541 m  station 1700+00 … ▸ │   the evidence
 │                                                │ │ 22.883 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
-│                                                │ │ 10,000.000 ftUS = 3,050.722 m ▸│
+│                                                │ │ 10,000.000 ftUS = 3,048.270 m ▸│
 │        ┌ tour card ─────────────┐              │ │ sag chart        Fly along    │
 │        └────────────────────────┘   └────────┘ │ │ Take the short tour           │
 │ credits      [ time controls ]                 │ │ CRS, heights, units ▸ details │ 3 the site's facts
@@ -373,7 +373,7 @@ engine's `accuracyOf`).
   narrows to a sliver, so the ground stays under a viaduct (its piers
   stand on it) and over a tunnel (the road is hidden in the hill). It
   leaves no room for the rigid copy: rigid moves 2.3 m sideways at the
-  far end but rises 34 m, so the ground doesn't come through it.
+  far end but rises 38.1 m, so the ground doesn't come through it.
 - **The anchor and the measured sections stand above the ground** (owner,
   2026-11-08: "pick some different spots that are above ground"). The
   alignment's middle, station 92,021, is in a tunnel, and the nearest

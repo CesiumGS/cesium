@@ -28,6 +28,7 @@ import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import {
   castTerrainRay,
+  TERRAIN_BAND,
   type TerrainRayTarget,
   type TerrainRayTile,
 } from "../globe/terrainRay.ts";
@@ -652,15 +653,50 @@ export class Tileset3D implements TileTree {
     clips.checkBudget(shape);
     const slot = this.world.addTerrainClipRegion(packClipShape(shape), opacity);
     const pickThrough = options.pickThrough === true;
-    const translucency: TerrainTranslucency = Object.freeze({
+    // Its `opacity` and `pickThrough` follow `setTerrainTranslucency`.
+    const translucency: Mutable<TerrainTranslucency> = {
       region: frozenRegion(region),
       opacity,
       pickThrough,
-    });
+    };
     const entry = { clip: translucency, shape, slot, opacity, pickThrough };
     clips.add(entry);
     this.terrainClipsChanged([]);
     return translucency;
+  }
+
+  /**
+   * Changes a translucent region's opacity (above 0, below 1) and, when
+   * given, its `pickThrough`, in place: no recompile, no material swap, so
+   * a fade can call it every tick. The handle's `opacity` follows. A
+   * region can't become opaque this way: remove it
+   * (`removeTerrainTranslucency`). Throws a RangeError for an opacity
+   * outside (0, 1); does nothing for a region already removed.
+   */
+  setTerrainTranslucency(
+    translucency: TerrainTranslucency,
+    options: { opacity?: number; pickThrough?: boolean },
+  ): void {
+    const entry = this.source?.clips?.entries.find(
+      (e) => e.clip === translucency,
+    );
+    if (!entry || this.destroyed) {
+      return;
+    }
+    const opacity = options.opacity ?? entry.opacity!;
+    if (!(Number.isFinite(opacity) && opacity > 0 && opacity < 1)) {
+      throw new RangeError(
+        `Tileset3D.setTerrainTranslucency: opacity must be above 0 and below 1, got ${opacity}`,
+      );
+    }
+    const pickThrough = options.pickThrough ?? entry.pickThrough === true;
+    this.world.setTerrainClipOpacity(entry.slot, opacity);
+    entry.opacity = opacity;
+    entry.pickThrough = pickThrough;
+    const handle = translucency as Mutable<TerrainTranslucency>;
+    handle.opacity = opacity;
+    handle.pickThrough = pickThrough;
+    this.changed();
   }
 
   /** Draws the terrain inside `translucency` opaque again. */
@@ -691,7 +727,8 @@ export class Tileset3D implements TileTree {
   /**
    * Makes the whole globe's terrain translucent at `opacity` (above 0; 1,
    * the default, is opaque again), as `addTerrainTranslucency` does inside
-   * a region, with the same drawing, queries and picks (`pickThrough`).
+   * a region, with the same drawing, queries and picks (`pickThrough`; kept
+   * while omitted).
    * Regions still apply: the least opacity wins. Takes one of the 32 region
    * slots while below 1.
    */
@@ -709,8 +746,14 @@ export class Tileset3D implements TileTree {
         `Tileset3D.setTerrainOpacity: opacity must be above 0 and at most 1, got ${opacity}`,
       );
     }
-    const pickThrough = options.pickThrough === true;
+    if (this.destroyed) {
+      throw new Error(
+        "Tileset3D.setTerrainOpacity: the globe was destroyed; set it on the globe that replaced it.",
+      );
+    }
     const current = this.globalTranslucency;
+    // A slider that gives only the opacity keeps the pick setting.
+    const pickThrough = options.pickThrough ?? current?.pickThrough === true;
     if (opacity === 1) {
       if (current) {
         this.world.removeTerrainClipRegion(current.slot);
@@ -791,16 +834,20 @@ export class Tileset3D implements TileTree {
       far = Math.max(far, -b + root);
     };
     const ellipsoid = clips.ellipsoid;
-    const a = ellipsoid.radii[0]!;
     if (globalPicks) {
-      // Out to the farthest terrain a camera here could see: its horizon
-      // and the highest terrain's beyond it.
-      const h = Math.max(0, Math.hypot(origin[0]!, origin[1]!, origin[2]!) - a);
-      const reach =
-        Math.sqrt(h * (2 * a + h)) +
-        Math.sqrt(TERRAIN_BAND * (2 * a + TERRAIN_BAND));
+      // The ray's part inside the highest terrain's shell, and no further
+      // than where it dives under the lowest terrain (a ray looking down
+      // would otherwise cross the whole globe); `castTerrainRay` clips it to
+      // the height band from there.
+      take([0, 0, 0], Math.max(...ellipsoid.radii) + TERRAIN_BAND);
       near = 0;
-      far = Math.max(far, reach + TERRAIN_BAND);
+      const inner = Math.min(...ellipsoid.radii) - TERRAIN_BAND;
+      const b = origin[0]! * d[0]! + origin[1]! * d[1]! + origin[2]! * d[2]!;
+      const c =
+        origin[0]! ** 2 + origin[1]! ** 2 + origin[2]! ** 2 - inner ** 2;
+      if (b < 0 && c > 0 && b * b - c >= 0) {
+        far = Math.min(far, -b - Math.sqrt(b * b - c));
+      }
     } else {
       for (const e of regions) {
         const [x0, y0, x1, y1] = e.shape.box;
@@ -830,7 +877,9 @@ export class Tileset3D implements TileTree {
     const from = [0, 1, 2].map((k) => origin[k]! + d[k]! * near);
     const to = [0, 1, 2].map((k) => origin[k]! + d[k]! * far);
     const ray = castTerrainRay(from, to, target);
-    const hit = ray?.hit;
+    // Surface crossings only: `hit` also counts the first sample below the
+    // surface, which for a camera under the ground is next to the camera.
+    const hit = ray?.surface;
     if (!hit || !(hit.t > 0)) {
       return undefined;
     }
@@ -2325,11 +2374,7 @@ export interface TerrainTranslucency {
   readonly pickThrough: boolean;
 }
 
-/**
- * How far above the ellipsoid terrain may stand, m, with room: a pick
- * ray's reach over translucent terrain.
- */
-const TERRAIN_BAND = 9100;
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
 /** A frozen copy of a clip region, as its handle keeps it. */
 function frozenRegion(region: TerrainClipRegion): TerrainClipRegion {

@@ -1013,29 +1013,30 @@ bool clippedOut(DrawRecord r, float3 p) {
   return r.terrainClip != 0u && terrainOpacity(r.terrainClip, p, true) <= 0.0;
 }
 
+// Blended surfaces at least this opaque draw in the opaque pass (depth,
+// shadows, picks, ambient occlusion); the rest in the translucent passes.
+// Near-opaque layers a few centimeters apart are what order-independent
+// transparency's moments tell apart worst.
+static const float OPAQUE_ALPHA = 0.999;
+
 // Whether a pass sees terrain translucency: height captures don't (the
 // ground there is ground for clamping, `heightFs`).
 static bool terrainSeen = true;
 
 // A draw's opacity from its globe's translucency at the fragment
 // (`terrainOpacity`): 1 for other draws; 0 on a skirt wherever the terrain
-// is less than opaque (skirts only hide cracks in opaque ground).
+// is less than opaque (skirts only hide cracks in opaque ground, and the
+// surface draws opaque from OPAQUE_ALPHA).
 float terrainAlpha(DrawRecord r, SurfaceVaryings in) {
   if (r.terrainClip == 0u) {
     return 1.0;
   }
   float opacity = terrainOpacity(r.terrainClip, in.relPosition, !terrainSeen);
-  if (opacity < 1.0 && (in.ids.z & SKIRT_BIT) != 0u) {
+  if (opacity < OPAQUE_ALPHA && (in.ids.z & SKIRT_BIT) != 0u) {
     return 0.0;
   }
   return opacity;
 }
-
-// Blended surfaces at least this opaque draw in the opaque pass (depth,
-// shadows, picks, ambient occlusion); the rest in the translucent passes.
-// Near-opaque layers a few centimeters apart are what order-independent
-// transparency's moments tell apart worst.
-static const float OPAQUE_ALPHA = 0.999;
 
 // The opaque pass draws its depth first, cutouts by alpha to coverage
 // (`depthCoverageFs`): its shading, at equal depth, then fills just the

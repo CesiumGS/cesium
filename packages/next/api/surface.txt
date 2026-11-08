@@ -427,6 +427,7 @@ proj	ProjResolvedCoordinates	interface	-
 proj	RecordedOperation	interface	-
 proj	ResolveOptions	interface	-
 proj	RigidPlacement	class	-
+proj	SNAP_SERVER_ALWAYS_OUT_OF_SIGHT	const	-
 proj	SNAP_SERVER_FAILED	const	-
 proj	SNAP_SERVER_REFUSED	const	-
 proj	SNAP_UPDATE_FAILED	const	-

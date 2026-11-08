@@ -61,6 +61,7 @@ import {
   MAX_TERRAIN_CLIPS,
   MAX_TERRAIN_CLIP_BLOCKS,
   packClip,
+  MATERIAL_FLAGS_WORD,
   MATERIAL_WORDS,
   NO_TEXTURE,
   MaterialFlags,
@@ -2486,6 +2487,8 @@ export class World {
       instanced: old.instanced,
       draw: index,
     });
+    // Any count a batch keeps per draw (items, shown, and one a later
+    // change adds) must move with the record here, as in `setDrawShader`.
     old.items -= items;
     if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
       old.shown--;
@@ -2531,7 +2534,8 @@ export class World {
         (material + 1) * MATERIAL_WORDS,
       ),
     );
-    scratch.u32[12] = (scratch.u32[12]! | flags) >>> 0;
+    scratch.u32[MATERIAL_FLAGS_WORD] =
+      (scratch.u32[MATERIAL_FLAGS_WORD]! | flags) >>> 0;
     return this.internMaterial(scratch.u32);
   }
 
@@ -3521,6 +3525,9 @@ export class World {
     run.opacity = opacity;
     this.writeDirectoryRow(slot);
     this.version++;
+    // Masks and materials stay as they are, so nothing else marks the
+    // views: an on-demand loop would keep the old opacity on screen.
+    this.changedViews = ALL_VIEWS;
   }
 
   /** A region's rows into its run's blocks, and its directory row. */

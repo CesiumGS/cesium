@@ -2,7 +2,7 @@
 // the measure panel shows (the frames explorer's DESIGN.md, "Copy and
 // numbers": units always, thousands separators, "±" on accuracy). The
 // measurement here is answers.pairs[0], "10,000 ftUS on the last tangent"
-// (stations 10,000 to 20,000 on its +2% grade), with the values the
+// (stations 162,000 to 172,000 on its +0.33% grade), with the values the
 // generator recorded for it on 2026-11-07; test/data/designTiles.test.ts
 // runs the same model on the library's own measurement of that pair.
 import { describe, expect, it } from "vitest";

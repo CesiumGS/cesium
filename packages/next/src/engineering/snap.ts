@@ -159,12 +159,29 @@ export const SNAP_SERVER_FAILED =
 /**
  * Begins the warning added once per reason when a server's answer doesn't
  * check out (`refiningSnap`): "snap: a server snap was refused: <reason>".
- * A point merely out of sight isn't one (`SnapResult.serverOutOfSight`).
+ * A point merely out of sight isn't one (`SnapResult.serverOutOfSight`),
+ * unless the server's answers all are (`SNAP_SERVER_ALWAYS_OUT_OF_SIGHT`).
  */
 export const SNAP_SERVER_REFUSED = "snap: a server snap was refused";
 
 /** Added once to a tileset's `warnings` when `refiningSnap`'s `onUpdate` throws. */
 export const SNAP_UPDATE_FAILED = "snap: onUpdate threw; it must not";
+
+/**
+ * Added once to a tileset's `warnings` when a server's answers are out of
+ * sight `OUT_OF_SIGHT_WARNING` times in a row. One such answer is the
+ * camera's view (a barrier's far face, a road under a deck); every answer
+ * being so is a server wrong only along the view ray, such as a height
+ * datum off by a few meters, and worth a developer's notice.
+ */
+export const SNAP_SERVER_ALWAYS_OUT_OF_SIGHT =
+  "snap: every answer from the snap server was hidden from the camera by the drawn mesh, 10 in a row; check its heights";
+
+/** How many answers in a row out of sight make the warning above. */
+export const OUT_OF_SIGHT_WARNING = 10;
+
+/** Each server's answers out of sight in a row. */
+const outOfSightRuns = new WeakMap<object, number>();
 
 /** Ends a refusal that is the camera's view, not the server's fault. */
 const OUT_OF_SIGHT = "hidden from the camera by the drawn mesh";
@@ -359,7 +376,8 @@ function warnOnce(tileset: Tileset3D, warning: string): void {
  * That last refusal is no fault of the server's: a server knows the design,
  * not what is drawn in front of it from here (a barrier's far face seen
  * from the road, a road under a deck). So it adds no warning: the client
- * snap stands and says why (`SnapResult.serverOutOfSight`).
+ * snap stands and says why (`SnapResult.serverOutOfSight`). Only a server
+ * whose answers are out of sight 10 times in a row gets a warning.
  *
  * Abort `signal` when a newer snap supersedes this one: the server request
  * is aborted with it, and `onUpdate` is not called again, even if the server
@@ -421,10 +439,16 @@ export async function refiningSnap(
     if (signal?.aborted) {
       return settled;
     }
+    const run = (outOfSightRuns.get(server) ?? 0) + 1;
+    outOfSightRuns.delete(server); // any other answer ends the run
     if (answer !== undefined && answer !== null) {
       const reason = refusal(answer, found, client, request, tileset, camera);
       if (reason?.endsWith(OUT_OF_SIGHT)) {
         outOfSight = reason;
+        outOfSightRuns.set(server, run);
+        if (run >= OUT_OF_SIGHT_WARNING) {
+          warning = SNAP_SERVER_ALWAYS_OUT_OF_SIGHT;
+        }
       } else if (reason !== undefined) {
         warning = `${SNAP_SERVER_REFUSED}: ${reason}`;
       } else {

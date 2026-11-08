@@ -379,6 +379,8 @@ export const INDIRECT_SIZE = 20;
 /** `struct Material` — 64 bytes. */
 export const MATERIAL_SIZE = MaterialLayout.size;
 export const MATERIAL_WORDS = M.size;
+/** Word offset of a material's flags (`MaterialFlags`). */
+export const MATERIAL_FLAGS_WORD = M.flags;
 /** Stream offset meaning "attribute absent". */
 export const NO_STREAM = 0xffffffff;
 

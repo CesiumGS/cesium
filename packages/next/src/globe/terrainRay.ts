@@ -127,6 +127,13 @@ export interface TerrainRayResult {
    * surface.
    */
   hit?: { t: number; point: Float64Array; level: number };
+  /**
+   * The nearest point where the segment crosses a drawn triangle, and
+   * nothing else: never the first sample found below the surface. A ray
+   * that starts under the ground has below-surface samples at once, so
+   * `hit` would stop near it; picks want this one.
+   */
+  surface?: { t: number; point: Float64Array; level: number };
   /** The lowest clearance over the known spans, m, and where. */
   minClearance?: { meters: number; t: number; level: number };
   /**
@@ -166,6 +173,8 @@ const EDGE = 1e-12;
 const MAX_PATCHES = 100_000;
 const DEFAULT_MAXIMUM_HEIGHT = 9000;
 const BAND_PAD = 100;
+/** How far above the ellipsoid a ray looks for terrain by default, m. */
+export const TERRAIN_BAND = DEFAULT_MAXIMUM_HEIGHT + BAND_PAD;
 /** A footprint this far outside its patch (m) has lost the patch. */
 const OUTSIDE = 1e-6;
 
@@ -698,6 +707,17 @@ export function castTerrainRay(
         ray.oz + ray.dz * blockedT,
       ),
       level: hitT <= belowT ? hitLevel : belowLevel,
+    };
+  }
+  if (hitT < Infinity) {
+    result.surface = {
+      t: hitT,
+      point: Float64Array.of(
+        ray.ox + ray.dx * hitT,
+        ray.oy + ray.dy * hitT,
+        ray.oz + ray.dz * hitT,
+      ),
+      level: hitLevel,
     };
   }
   if (samples > 0) {

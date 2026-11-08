@@ -458,7 +458,7 @@ export function run(context: ExampleContext): ExampleRun {
       // ground stays under its viaducts and over its tunnels. No room for
       // the rigid copy (it would leave a gap beside the true slopes): it
       // moves sideways by the scale factor's share, but rises off the
-      // ground faster, by the curvature's d²/2R (2.3 m sideways and 34 m
+      // ground faster, by the curvature's d²/2R (2.3 m sideways and 38.1 m
       // up at the far end), so the ground doesn't come through it.
       // In a few regions (terrainClips.ts `CORRIDOR_CLIP_PLANS`), each
       // keyed by its piece; the first plan the globe takes whole.

@@ -630,7 +630,7 @@ fn terrainAlpha_0( _S33 : u32,  _S34 : SurfaceVaryings_0) -> f32
     }
     var opacity_2 : f32 = terrainOpacity_0(_S35, _S34.relPosition_0, !terrainSeen_0);
     var _S36 : bool;
-    if((opacity_2 < 1.0f))
+    if((opacity_2 < 0.99900001287460327f))
     {
         _S36 = (((_S34.ids_0.z) & (u32(2147483648)))) != u32(0);
     }

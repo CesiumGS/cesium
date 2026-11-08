@@ -1089,9 +1089,9 @@ export interface ClipEntry {
   /** Its bit in draw records' `terrainClip` (`World.addTerrainClipRegion`). */
   readonly slot: number;
   /** 0: a clip. Default 0. */
-  readonly opacity?: number;
+  opacity?: number;
   /** A translucent region picks don't stop at (`pickThrough`). */
-  readonly pickThrough?: boolean;
+  pickThrough?: boolean;
 }
 
 /**

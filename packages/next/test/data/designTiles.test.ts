@@ -815,8 +815,8 @@ describe("the design globe's generated tiles", () => {
     expect(m.design!.horizontalDistance).toBe(pair.horizontalDistance);
     expect(m.distance).toBe(pair.trueDistance);
 
-    // The measurement model on pairs[0], 10,000 ftUS on the last tangent, over
-    // the profile's crest at station 19,000: the horizontal and 3D design distances, and
+    // The measurement model on pairs[0], 10,000 ftUS on the last tangent, from
+    // station 162,000 to 172,000, on fill: the horizontal and 3D design distances, and
     // the true one.
     const first = answers.pairs[0];
     const [a, b] = [first.from, first.to].map(
