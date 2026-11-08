@@ -619,6 +619,9 @@ async function createPipelines(
       },
       { binding: 6, visibility: FRAGMENT, sampler: { type: "filtering" } },
       // Night lights are slices of the same array (globe/SlicePool.ts).
+      // Placements (placement.slang, scene/placementTable.ts): parameters
+      // and per-draw blocks, read before the custom vertex stage.
+      storage(7, true, VERTEX),
     ],
   });
   const textureSetEntries: GPUBindGroupLayoutEntry[] = [

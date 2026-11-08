@@ -21,6 +21,10 @@ import { RAY_MODULES, rayBypasses, rayProgram } from "./raySeam.ts";
  *   batch's argument slot (`DrawArguments.slotOf`) is its pointer to them;
  * - geometry submission: vertex and index buffers are bound only on the
  *   submission path;
+ * - per-draw placements (plan 5a's call 42): the placements buffer is
+ *   written only by `src/scene/placementTable.ts` and read in Slang only
+ *   through placement.slang's `placementRow`, so a per-draw data backend
+ *   (or the later tessellation engine) replaces those two;
  * - rays (a hardware ray-query engine, spec section 7.10): the examples and
  *   `measure` reach rays only through the query interface
  *   (`src/query/queries.ts`, `Engine.queries`), never `castTerrainRay`, a
@@ -166,11 +170,18 @@ function blockEnd(source: string, offset: number): number {
 const SEAM_BUFFERS =
   /\b(?:recordBuffer|drawConstants\.buffer|drawArguments\.(?:buffer|itemList))\b/;
 
+/** The placements buffer, as the world and its table name it. */
+const PLACEMENT_BUFFERS =
+  /\b(?:placementTable\.buffer|placementBuffer|placements)\b/;
+
 /**
  * Lines of a TypeScript module that write a seam's GPU buffer from the CPU
  * (`writeBuffer`, `clearBuffer`, `copyBufferToBuffer` naming it).
  */
-export function seamBufferWrites(text: string): number[] {
+export function seamBufferWrites(
+  text: string,
+  buffers: RegExp = SEAM_BUFFERS,
+): number[] {
   const source = stripComments(text);
   const out = new Set<number>();
   for (const m of source.matchAll(
@@ -185,7 +196,7 @@ export function seamBufferWrites(text: string): number[] {
         break;
       }
     }
-    if (SEAM_BUFFERS.test(source.slice(open, end + 1))) {
+    if (buffers.test(source.slice(open, end + 1))) {
       out.add(lineAt(source, m.index));
     }
   }
@@ -231,6 +242,19 @@ function indexedOutside(
 /** Lines of a Slang module that index `records[` outside `drawRecord`. */
 export function recordReadsOutsideAccessor(text: string): number[] {
   return indexedOutside(text, "records", ["drawRecord"]);
+}
+
+/** Lines of a Slang module that index `placements[` outside `placementRow`. */
+export function placementReadsOutsideAccessor(text: string): number[] {
+  return indexedOutside(text, "placements", ["placementRow"]);
+}
+
+/** Lines of a Slang module that declare a buffer named `placements`. */
+export function placementTables(text: string): number[] {
+  const source = stripComments(text);
+  return [...source.matchAll(/StructuredBuffer\s*<[^>]*>\s+placements\b/g)].map(
+    (m) => lineAt(source, m.index),
+  );
 }
 
 /** cullTables.slang's draw-argument accessors (the arguments' seam). */
@@ -425,6 +449,29 @@ void writePointArgs() {
     expect(definitions(module, ARGUMENT_ACCESSORS)).toEqual([2, 6]);
   });
 
+  it("placements in Slang, and CPU writes of their buffer", () => {
+    const module = `[[vk::binding(7, 1)]] StructuredBuffer<float4> placements;
+[ForceInline]
+float4 placementRow(uint row) {
+  return placements[row];
+}
+float3 sneak(uint at) {
+  return placements[at + 1u].xyz;
+}`;
+    expect(placementReadsOutsideAccessor(module)).toEqual([7]);
+    expect(placementTables(module)).toEqual([1]);
+    expect(
+      placementTables("RWStructuredBuffer< float4 > placements;\n"),
+    ).toEqual([1]);
+    const writes = `queue.writeBuffer(this.placementTable.buffer, 0, data);
+queue.writeBuffer(this.recordBuffer, 0, data);
+encoder.copyBufferToBuffer(
+  old, 0, placements, 0, n,
+);
+pass.setBindGroup(1, group(this.placementTable.buffer));`;
+    expect(seamBufferWrites(writes, PLACEMENT_BUFFERS)).toEqual([1, 3]);
+  });
+
   it("content draws and buffer binds", () => {
     const module = `export class World {
   private recordBundle(): void {
@@ -581,6 +628,57 @@ describe("the per-draw constants seam", () => {
       }
     }
     expect(violations).toEqual([]);
+  });
+});
+
+describe("the placements buffer", () => {
+  const module = join(src, "shaders", "placement.slang");
+  const table = join(src, "scene", "placementTable.ts");
+
+  it("is read in Slang only through placement.slang's placementRow", () => {
+    const violations: string[] = [];
+    for (const path of files(src, /\.slang$/)) {
+      const text = readFileSync(path, "utf8");
+      const where = relative(root, path);
+      for (const line of placementReadsOutsideAccessor(text)) {
+        violations.push(`${where}:${line} reads placements[`);
+      }
+      if (path !== module) {
+        for (const line of placementTables(text)) {
+          violations.push(`${where}:${line} binds placements`);
+        }
+        for (const line of definitions(text, ["placementRow"])) {
+          violations.push(`${where}:${line} defines placementRow`);
+        }
+      }
+    }
+    expect(violations).toEqual([]);
+    const text = readFileSync(module, "utf8");
+    expect(placementTables(text).length).toBe(1);
+    expect(definitions(text, ["placementRow"]).length).toBe(1);
+  });
+
+  it("is written only by src/scene/placementTable.ts", () => {
+    const violations: string[] = [];
+    for (const path of files(src, /\.ts$/)) {
+      if (path === table) {
+        continue;
+      }
+      for (const line of seamBufferWrites(
+        readFileSync(path, "utf8"),
+        PLACEMENT_BUFFERS,
+      )) {
+        violations.push(`${relative(root, path)}:${line}`);
+      }
+    }
+    expect(violations).toEqual([]);
+    // Its own writes go through `this.gpu`; the buffer is made only there.
+    for (const path of files(src, /\.ts$/)) {
+      if (path !== table) {
+        expect(readFileSync(path, "utf8")).not.toMatch(/"world\.placements"/);
+      }
+    }
+    expect(readFileSync(table, "utf8")).toMatch(/"world\.placements"/);
   });
 });
 

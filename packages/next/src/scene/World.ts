@@ -15,6 +15,15 @@ import {
 import { DrawConstants } from "../render/drawConstants.ts";
 import { DrawArguments } from "../render/drawArguments.ts";
 import {
+  checkParameterValue,
+  checkPlacement,
+  maxDisplacement,
+  type FittedOperation,
+  type Placement,
+  type PlacementParameter,
+} from "./placement.ts";
+import { PlacementTable } from "./placementTable.ts";
+import {
   INSTANCE_WORDS,
   INSTANCE_COUNT_WORD,
   INSTANCE_STRIDE_WORD,
@@ -37,6 +46,8 @@ import {
   TRANSFORM_WORDS,
   TRANSFORM_WORD,
   RADIUS_WORD,
+  CENTER_WORD,
+  NO_PLACEMENT,
   FLAGS_WORD,
   VIEW_MASK_WORD,
   ALL_VIEWS,
@@ -577,6 +588,18 @@ export class World {
   /** Instance slots in use or freed below the highest (cull dispatch size). */
   private instanceHighWater = 0;
   private uploadsPending = false;
+  /**
+   * The placements buffer (plan 5a's call 42): parameters and each placed
+   * draw's block, bound in the draw group for the vertex stage.
+   */
+  private readonly placementTable: PlacementTable;
+  /** Each draw's per-vertex placement, by draw slot (`setPlacement`). */
+  private readonly drawPlacements: Array<DrawPlacement | undefined> = [];
+  /** This world's placement parameters: their float and their draws. */
+  private readonly parameters = new WeakMap<
+    PlacementParameter,
+    ParameterSlot
+  >();
   private readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> =
     [];
   private materialsF32: Float32Array;
@@ -644,6 +667,8 @@ export class World {
       index: [number, number];
       /** Its feature table's columns (`tableColumns`), shared. */
       table?: FeatureTable;
+      /** Its named attributes' components (a dual position's check). */
+      named?: Map<string, number>;
     }
   >();
   /**
@@ -941,6 +966,9 @@ export class World {
       addressModeV: "clamp-to-edge",
       maxAnisotropy: 16,
     });
+    this.placementTable = new PlacementTable(device, () =>
+      this.tablesReplaced(),
+    );
     this.createDrawBindGroup();
 
     this.addMaterial({}); // material 0: white, lit, untextured
@@ -1318,6 +1346,16 @@ export class World {
       vertex: vertexRanges,
       index: [indexOffset, mesh.indices.byteLength],
       ...(table ? { table: mesh.featureTable } : {}),
+      ...(mesh.attributes
+        ? {
+            named: new Map(
+              Object.entries(mesh.attributes).map(([name, a]) => [
+                name,
+                a.components,
+              ]),
+            ),
+          }
+        : {}),
     });
     return {
       id,
@@ -2327,6 +2365,11 @@ export class World {
     batch.items += items;
     this.drawBatches[index] = batch;
     // The bounds' padding for a vertex stage's displacement follows it.
+    const placed = this.drawPlacements[index];
+    if (placed) {
+      placed.base +=
+        (shader?.displacement ?? 0) - (old.shader?.displacement ?? 0);
+    }
     this.drawConstants.setBatch(
       index,
       batch.index,
@@ -2383,6 +2426,7 @@ export class World {
       );
     }
     this.drawConstants.clear(handle.index);
+    this.releasePlacement(handle.index);
     const pointDraw = this.pointDraws.get(handle.index);
     if (pointDraw) {
       this.flushUploads();
@@ -3710,6 +3754,199 @@ export class World {
     return out;
   }
 
+  /**
+   * A placement parameter (plan 5a's call 42): one float in this world's
+   * placements buffer, which every placement naming it reads, so a morph
+   * writes 4 bytes a tick however many draws it moves. Setting its `value`
+   * to a non-finite number throws a `RangeError` (as `value` here does)
+   * and keeps the old value; a dual position or blend that grows past its
+   * bounds (`maxDisplacement`) as it changes grows its draws' bounds too.
+   */
+  createPlacementParameter(value: number): PlacementParameter {
+    checkParameterValue("createPlacementParameter", value);
+    const word = this.placementTable.allocateParameter(value);
+    const slot: ParameterSlot = { word, draws: new Set() };
+    let current = value;
+    const changed = () => this.parameterChanged(slot, current);
+    const parameter: PlacementParameter = Object.seal({
+      get value() {
+        return current;
+      },
+      set value(next: number) {
+        checkParameterValue("PlacementParameter", next);
+        if (next === current) {
+          return;
+        }
+        current = next;
+        changed();
+      },
+    });
+    this.parameters.set(parameter, slot);
+    return parameter;
+  }
+
+  /**
+   * Sets the draw's placement (spec section 7.6): a dual position, a
+   * fitted operation or a blend, evaluated per vertex before its custom
+   * vertex stage (shaders/placement.slang); `undefined` or `{ kind:
+   * "affine" }` leaves the transform alone. The draw's bounding radius
+   * grows by the placement's largest displacement (`maxDisplacement`).
+   * The placement is copied into the placements buffer: set it again after
+   * changing its numbers (its parameters are read live). Vertex buffers
+   * are never written.
+   *
+   * Refuses (nothing changed) a non-finite number, naming its field (plan
+   * 5a's Review Focus 4); a parameter of another world; a dual position
+   * whose semantic isn't one of the draw's mesh's attributes of 3
+   * components; and a billboard or point draw, whose positions are
+   * offsets on screen.
+   */
+  setPlacement(handle: DrawHandle, placement: Placement | undefined): void {
+    if (!this.hasDraw(handle)) {
+      throw new Error("setPlacement: the draw was removed.");
+    }
+    const index = handle.index;
+    const next =
+      placement !== undefined && placement.kind !== "affine"
+        ? placement
+        : undefined;
+    const o = index * RECORD_WORDS;
+    if (next) {
+      checkPlacement("setPlacement", next);
+      const flags = this.recordsU32[o + FLAGS_WORD]!;
+      if (flags & (RecordFlags.billboard | RecordFlags.points)) {
+        throw new Error(
+          "setPlacement: a billboard or point draw's positions are offsets on screen; it has no per-vertex placement.",
+        );
+      }
+      for (const t of parametersOf(next)) {
+        if (!this.parameters.has(t)) {
+          throw new Error(
+            "setPlacement: the placement's t isn't a parameter of this world (World.createPlacementParameter).",
+          );
+        }
+      }
+      if (next.kind === "dual") {
+        const mesh = this.drawBatches[index]!.mesh;
+        const components = this.meshRanges
+          .get(mesh.id)
+          ?.named?.get(next.semantic);
+        if (components === undefined || components < 3) {
+          throw new RangeError(
+            `setPlacement: the draw's mesh has no ${next.semantic} attribute of 3 components for its dual position.`,
+          );
+        }
+      }
+    }
+    const old = this.drawPlacements[index];
+    const base = old ? old.base : this.recordsF32[o + RADIUS_WORD]!;
+    this.releasePlacement(index);
+    if (!next) {
+      if (old) {
+        this.drawConstants.setPlacement(index, NO_PLACEMENT);
+        this.drawConstants.setRadius(index, base);
+        this.contentRevision_++;
+        this.markDirty(index);
+      }
+      return;
+    }
+    const reach = this.placementReach(index, next, base);
+    const at = this.placementTable.add(
+      next,
+      (t) => this.parameters.get(t)!.word,
+    );
+    const pad = maxDisplacement(next, reach);
+    const slots = parametersOf(next).map((t) => this.parameters.get(t)!);
+    for (const slot of slots) {
+      slot.draws.add(index);
+    }
+    this.drawPlacements[index] = {
+      placement: next,
+      at,
+      base,
+      pad,
+      reach,
+      slots,
+    };
+    this.drawConstants.setPlacement(index, at);
+    this.drawConstants.setRadius(index, base + pad);
+    this.contentRevision_++;
+    this.markDirty(index);
+  }
+
+  /** The draw's per-vertex placement (`setPlacement`), if any. */
+  drawPlacement(handle: DrawHandle): Placement | undefined {
+    return this.hasDraw(handle)
+      ? this.drawPlacements[handle.index]?.placement
+      : undefined;
+  }
+
+  /** A parameter changed: its float, and its draws' bounds and views. */
+  private parameterChanged(slot: ParameterSlot, value: number): void {
+    this.placementTable.setParameter(slot.word, value);
+    if (slot.draws.size === 0) {
+      return;
+    }
+    let views = 0;
+    for (const index of slot.draws) {
+      const placed = this.drawPlacements[index]!;
+      const pad = maxDisplacement(placed.placement, placed.reach);
+      if (pad !== placed.pad) {
+        placed.pad = pad;
+        this.drawConstants.setRadius(index, placed.base + pad);
+        this.uploadsPending = true;
+      }
+      views |= this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+    }
+    this.version++;
+    this.changedViews |= views;
+  }
+
+  /** Frees a draw's placement block and its parameters' links to it. */
+  private releasePlacement(index: number): void {
+    const placed = this.drawPlacements[index];
+    if (!placed) {
+      return;
+    }
+    this.placementTable.remove(placed.at, placed.placement);
+    for (const slot of placed.slots) {
+      slot.draws.delete(index);
+    }
+    this.drawPlacements[index] = undefined;
+  }
+
+  /**
+   * How far a draw's vertices reach in a fitted operation's normalized
+   * coordinates (at least 1): its bounding sphere's farthest point from
+   * the operation's center over its scale.
+   */
+  private placementReach(
+    index: number,
+    placement: Placement,
+    radius: number,
+  ): number {
+    const o = index * RECORD_WORDS + CENTER_WORD;
+    const f32 = this.recordsF32;
+    const reach = (f: "identity" | FittedOperation) =>
+      f === "identity"
+        ? 1
+        : (Math.hypot(
+            f32[o]! - f.center[0]!,
+            f32[o + 1]! - f.center[1]!,
+            f32[o + 2]! - f.center[2]!,
+          ) +
+            radius) /
+          f.scale;
+    switch (placement.kind) {
+      case "fitted":
+        return Math.max(1, reach(placement));
+      case "blend":
+        return Math.max(1, reach(placement.from), reach(placement.to));
+      default:
+        return 1;
+    }
+  }
+
   /** Changes a draw's tint (linear RGBA, multiplied with its material). */
   setColor(handle: DrawHandle, color: ArrayLike<number>): void {
     if (!this.hasDraw(handle)) {
@@ -4567,6 +4804,8 @@ export class World {
         ...buffers.map((b, binding) => ({ binding, resource: { buffer: b } })),
         { binding: 5, resource: this.imageryView },
         { binding: 6, resource: this.imagerySampler },
+        // Placements (placement.slang): the vertex stage's.
+        { binding: 7, resource: { buffer: this.placementTable.buffer } },
       ],
     });
   }
@@ -4641,6 +4880,7 @@ export class World {
     this.pointCounts.destroy();
     this.drawConstants.destroy();
     this.drawArguments.destroy();
+    this.placementTable.destroy();
     this.transforms.destroy();
     this.instances.destroy();
     this.slabs.destroy();
@@ -4654,6 +4894,34 @@ export class World {
       buffer.destroy();
     }
   }
+}
+
+/** A draw's per-vertex placement (`World.setPlacement`). */
+interface DrawPlacement {
+  placement: Placement;
+  /** Its block's header row in the placements buffer. */
+  at: number;
+  /** The record's bounding radius without the placement (model units). */
+  base: number;
+  /** What the placement adds to it (`maxDisplacement`). */
+  pad: number;
+  /** How far its vertices reach in a fitted operation's coordinates. */
+  reach: number;
+  /** The parameters it reads. */
+  slots: ParameterSlot[];
+}
+
+/** A placement parameter's float and the draws whose placements read it. */
+interface ParameterSlot {
+  word: number;
+  draws: Set<number>;
+}
+
+/** The parameters a placement reads. */
+function parametersOf(placement: Placement): PlacementParameter[] {
+  return placement.kind === "dual" || placement.kind === "blend"
+    ? [placement.t]
+    : [];
 }
 
 /** A point draw (`World.addDraw` of a point mesh) and its per-view cull. */

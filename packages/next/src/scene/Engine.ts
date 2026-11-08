@@ -1699,6 +1699,7 @@ export class Engine {
     }
     this.views.push(view);
     this.viewIds.set(view, id);
+    view.renderRoot = () => this.cameras.root(view);
     this.watchView(view);
     this.wake();
     return view;
@@ -1716,6 +1717,7 @@ export class Engine {
     this.viewWatches.get(view)?.();
     this.viewWatches.delete(view);
     view.wake = undefined;
+    view.renderRoot = undefined;
     this.dropPersistent(view);
     const probe = this.probes.get(view);
     if (probe) {

@@ -95,6 +95,10 @@ public struct DrawRecord {
   public uint instanceDirectory; // named fields of the instance streams (DrawRecordData)
   public float billboardSize;    // billboards (flag 16): pixels per mesh unit
   public float billboardDepthTest; // billboards: drawn in front within this distance, m
+  // Its placement's block in the world's placements buffer (placement.slang,
+  // scene/placementTable.ts), applied before the custom vertex stage;
+  // 0xffffffff: none (the transform alone).
+  public uint placement;
 };
 
 // A placement composed in float64 on the CPU (World transform table),

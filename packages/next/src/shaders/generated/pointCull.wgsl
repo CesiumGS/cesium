@@ -52,6 +52,7 @@ struct DrawRecord_std430_0
     @align(4) instanceDirectory_0 : u32,
     @align(8) billboardSize_0 : f32,
     @align(4) billboardDepthTest_0 : f32,
+    @align(16) placement_0 : u32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;

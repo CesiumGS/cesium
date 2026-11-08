@@ -231,12 +231,14 @@ export function writeAnchorEye(
   }
 }
 
-/** `struct DrawRecord` — 144 bytes (132 used, padded to WGSL's 16-byte alignment). */
+/** `struct DrawRecord` — 160 bytes (148 used, padded to WGSL's 16-byte alignment). */
 export const RECORD_SIZE = DrawRecordLayout.size;
 export const RECORD_WORDS = R.size;
 /** Word offsets of `DrawRecord` fields written after creation. */
 /** A draw record's bounding radius (f32) and batch index (u32). */
 export const RADIUS_WORD = R.radius;
+/** Word offset of a draw record's bounding sphere's center (3 × f32). */
+export const CENTER_WORD = R.center;
 /** Word offset of `DrawRecord.color`: the draw's tint, linear RGBA (f32). */
 export const COLOR_WORD = R.color;
 export const BATCH_WORD = R.batch;
@@ -292,6 +294,13 @@ export function packClip(block: number, count: number): number {
   }
   return (block | (count << CLIP_BLOCK_BITS)) >>> 0;
 }
+/**
+ * Word offset of a record's placement: its block's row in the world's
+ * placements buffer (scene/placementTable.ts), `NO_PLACEMENT` for none.
+ */
+export const PLACEMENT_WORD = R.placement;
+/** A record's `placement` without one: the transform alone (placement.slang the same). */
+export const NO_PLACEMENT = 0xffffffff;
 /** Word offsets of a record's range in the instance table (count 0: none). */
 export const INSTANCE_FIRST_WORD = R.instanceFirst;
 export const INSTANCE_COUNT_WORD = R.instanceCount;
@@ -568,6 +577,7 @@ export function writeDrawRecord(
   u32[o + R.instanceDirectory] = r.instanceDirectory ?? NO_STREAM;
   f32[o + R.billboardSize] = r.billboardSize ?? 0;
   f32[o + R.billboardDepthTest] = r.billboardDepthTest ?? 0;
+  u32[o + R.placement] = NO_PLACEMENT; // World.setPlacement
 }
 
 /** Bits of `Transform.flags` that hold its anchor slot (8 to 15). */

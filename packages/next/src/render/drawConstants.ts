@@ -9,6 +9,7 @@ import {
   INSTANCE_COUNT_WORD,
   LIGHTS_SLICE_WORD,
   PLACEHOLDER_MASK_WORD,
+  PLACEMENT_WORD,
   RADIUS_WORD,
   RECORD_WORDS,
   RecordFlags,
@@ -23,6 +24,8 @@ import {
  * on the CPU and in their GPU table. Every write of a record goes through
  * this class, and the shaders read a record only through Slang
  * `drawRecord(index)` (cullTables.slang, surface.slang, raycast.slang).
+ * A record's placement word points into the world's placements buffer
+ * (scene/placementTable.ts), the per-draw data placements add.
  * Immediates or push constants, or another layout of the per-draw data,
  * would replace this class and that one function, not their callers
  * (CESIUM2_WEBGPU_PLAN.md §7.1, "design for it; don't build it").
@@ -125,6 +128,23 @@ export class DrawConstants {
     this.table.u32[o + BATCH_WORD] = batch;
     this.table.f32[o + RADIUS_WORD] = radius;
     this.table.mark(index);
+  }
+
+  /**
+   * The record's bounding radius alone (model units): its placement's
+   * largest displacement follows the placement (`World.setPlacement`).
+   */
+  setRadius(index: number, radius: number): void {
+    this.table.f32[index * RECORD_WORDS + RADIUS_WORD] = radius;
+    this.table.mark(index);
+  }
+
+  /**
+   * The record's placement: its block's row in the world's placements
+   * buffer (`NO_PLACEMENT`: none); true when it changed.
+   */
+  setPlacement(index: number, row: number): boolean {
+    return this.setWord(index, PLACEMENT_WORD, row);
   }
 
   /** A removed draw's record: hidden, with no instances. */

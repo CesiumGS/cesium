@@ -61,6 +61,7 @@ export {
   type FramesResolverOptions,
   type FrameStandInWarning,
 } from "./resolver.ts";
+export { placementOf, type DrawPlacementInfo } from "./placementQuery.ts";
 export {
   createFramesPickInterpreter,
   type FramedPoint,

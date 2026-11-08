@@ -27,6 +27,7 @@
 // `__extern_cpp` here (shaders/link SURFACE_BOUNDARY).
 
 import common;
+import placement;
 import surfaceBoundary;
 
 static const float PI = 3.14159265358979;
@@ -693,6 +694,9 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
     localFeature = instance;
     tableFeature = instance;
   }
+  // The draw's placement (placement.slang), before the custom vertex
+  // stage, in model space: the transform carries the large offset.
+  position = placePosition(r.placement, position, vertexIndex, r.attributes, tableFeature);
   // The custom shader's vertex stage (CustomShader.ts's defaults: unchanged).
   CesiumVertex v;
   v.positionMC = position;

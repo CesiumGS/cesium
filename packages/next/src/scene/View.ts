@@ -588,6 +588,12 @@ export class View {
    * `lighting` also when written in place), and for a pick.
    */
   wake?: () => void;
+  /**
+   * @internal The view's render root (the camera layer's,
+   * `CameraLayer.root`): set by `Engine.addView`, read by the frames
+   * module's placement query (`placementOf`), which is given the view.
+   */
+  renderRoot?: () => FrameKey;
   private readonly state = {} as {
     world: World;
     viewport: Viewport;

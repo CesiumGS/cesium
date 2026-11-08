@@ -94,6 +94,20 @@ export {
 } from "./scene/View.ts";
 export type { CorePick, PickCamera, PickInterpreter } from "./scene/pick.ts";
 export {
+  PLACEMENT_MONOMIALS,
+  PLACEMENT_TERMS,
+  maxDisplacement,
+  placePosition,
+  resamplable,
+  secondDerivativeBound,
+  type AffinePlacement,
+  type DualPosition,
+  type FittedOperation,
+  type Placement,
+  type PlacementBlend,
+  type PlacementParameter,
+} from "./scene/placement.ts";
+export {
   ViewLink,
   type ViewLinkMode,
   type ViewLinkOptions,

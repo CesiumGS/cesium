@@ -2027,10 +2027,21 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "placement",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 144, "alignment": 16}
+                        {"kind": "uniform", "value": 160, "alignment": 16}
                     ]
                 },
                 "sizes": [
@@ -2770,6 +2781,28 @@
                 "resultType": {
                     "kind": "scalar",
                     "scalarType": "float32"
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "placements",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -4806,10 +4839,21 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "placement",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 144, "alignment": 16}
+                            {"kind": "uniform", "value": 160, "alignment": 16}
                         ]
                     },
                     "sizes": [
@@ -5554,6 +5598,28 @@
                         {"kind": "descriptorTableSlot", "value": 1}
                     ]
                 }
+            },
+            {
+                "name": "placements",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        },
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
             }
         ]
     },
@@ -6224,6 +6290,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -6893,6 +6963,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -7600,6 +7674,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -8285,6 +8363,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -9042,6 +9124,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -9810,6 +9896,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -10523,6 +10613,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -11259,6 +11353,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -11972,6 +12070,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         },
@@ -12711,6 +12813,10 @@
                 {
                     "name": "opaqueDepth",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
                 }
             ]
         }

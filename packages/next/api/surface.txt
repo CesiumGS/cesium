@@ -2,6 +2,7 @@ entry	name	kind	tier
 .	AEROSOLS	const	-
 .	AccelerationStructures	interface	-
 .	AerosolType	type	-
+.	AffinePlacement	interface	-
 .	AnchorHandle	interface	-
 .	BASE_BINDING_LIMITS	const	-
 .	BASE_CAPACITY_LIMITS	const	-
@@ -36,6 +37,7 @@ entry	name	kind	tier
 .	DesignPlacement	interface	-
 .	DrawHandle	interface	-
 .	DrawOptions	interface	-
+.	DualPosition	interface	-
 .	EARTH	const	-
 .	EYE	const	-
 .	Ellipsoid	class	-
@@ -49,6 +51,7 @@ entry	name	kind	tier
 .	FeatureStyleOptions	interface	-
 .	FeatureTable	interface	-
 .	FeatureValue	type	-
+.	FittedOperation	interface	-
 .	FrameKey	interface	-
 .	FrameMotion	interface	-
 .	FrameResolver	interface	-
@@ -101,11 +104,16 @@ entry	name	kind	tier
 .	OrbitController	class	-
 .	OrbitFrame	interface	-
 .	OutputEncoding	type	-
+.	PLACEMENT_MONOMIALS	const	-
+.	PLACEMENT_TERMS	const	-
 .	PickCamera	interface	-
 .	PickInterpreter	interface	-
 .	PickResult	interface	-
+.	Placement	type	-
+.	PlacementBlend	interface	-
 .	PlacementMode	type	-
 .	PlacementOptions	type	-
+.	PlacementParameter	interface	-
 .	PointProperty	interface	-
 .	PointPropertyType	type	-
 .	PointSource	class	-
@@ -226,14 +234,18 @@ entry	name	kind	tier
 .	mat4.transformPoint	function	-
 .	mat4.transformVec4	function	-
 .	mat4.viewRotation	function	-
+.	maxDisplacement	function	-
 .	memorySlangCache	function	-
 .	modelUsage	function	-
 .	orbitBasis	function	-
 .	orbitPose	function	-
+.	placePosition	function	-
 .	readWithProgress	function	-
+.	resamplable	function	-
 .	resolveITwinIModel	function	-
 .	resolveIonAsset	function	-
 .	resolveUri	function	-
+.	secondDerivativeBound	function	-
 .	summarizeContent	function	-
 .	tableResolver	function	-
 .	terrainQueries	function	-
@@ -262,6 +274,7 @@ frames	CoordinateRequest	interface	-
 frames	CoordinateService	interface	-
 frames	CrsRef	type	-
 frames	CrsUnits	interface	-
+frames	DrawPlacementInfo	interface	-
 frames	EarthOrientationParameters	class	-
 frames	EarthOrientationSigma	type	-
 frames	EopSample	interface	-
@@ -313,6 +326,7 @@ frames	frameTransform	function	-
 frames	loadFrameData	function	-
 frames	loadFrameRoles	function	-
 frames	parseOem	function	-
+frames	placementOf	function	-
 frames	pointAccuracy	function	-
 frames	readSpk	function	-
 frames	rotationPart	function	-
