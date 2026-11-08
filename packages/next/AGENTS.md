@@ -5,7 +5,10 @@ Rules for anyone working in this package, people and coding agents alike. The RE
 ## Repository practice
 
 - Commit by path only: `git add -- <paths>`, then `git commit -- <paths>`. Never `git add -A`, `git stash`, `git reset` or `git checkout --` on files you didn't change. Several people or agents may share a checkout.
-- Before committing, check that `git diff --cached --name-only` lists only your files. The lint-staged pre-commit hook commits whatever is staged, and it has swept another person's unfinished file into a commit before.
+- The lint-staged pre-commit hook can sweep someone else's unfinished work into your commit. It has happened with files that were staged and with one that wasn't: its backup and restore steps run across the whole working tree. So when several people or agents are working at once:
+  - Work in your own `git worktree` whenever you can. Sharing a checkout is the cause; everything below only reduces the risk.
+  - In a shared checkout, check that `git diff --cached --name-only` is empty first, stage and commit in one command, and never leave files staged.
+  - Afterwards, check `git show --stat HEAD`. If another person's file went in, tell them rather than amending or reverting it: their working copy is still intact, and their next commit carries the rest.
 - If `.git/index.lock` exists, wait and retry rather than removing it.
 - Never commit screenshots, downloaded data, or secrets. Data lives in the setup store outside the repo (`npm run setup`; `FRAMES_DATA_DIR`).
 - Never write an ion token into code, logs, URLs, test output, screenshots or builds. Examples get theirs from Dyno's token setting, or from `.env.local` in development only.
