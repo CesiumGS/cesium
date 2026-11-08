@@ -1,4 +1,5 @@
-import { CustomShader } from "./CustomShader.ts";
+import { CustomShader, MAX_NAMED, packNamed } from "./CustomShader.ts";
+import { stringIds } from "./stringIds.ts";
 import {
   STYLE_HELPERS,
   compileStyleExpression,
@@ -55,10 +56,25 @@ const STYLE_TYPES: Record<NamedType, StyleType> = {
  *
  * Use `shader` as a model's `shader` or a tileset's `customShader`, or
  * pass the style as `Tileset3DOptions.style`. Properties read 0 where a
- * mesh hasn't them; strings aren't on the GPU, so expressions comparing
- * them are refused. A shader reads at most 4 properties. A color's alpha
- * scales the material's; blended translucency comes from the material
- * (not yet from the style).
+ * mesh hasn't them.
+ *
+ * String properties compare with `===`, `!==` and `match()`
+ * (`${name} === 'Main St'`): strings aren't on the GPU, so a tile's string
+ * columns are uploaded as ids (scene/stringIds.ts), the same for every
+ * tile and style, and a literal compiles to its id. A string property
+ * must be a string column in the tiles that have it: a numeric column
+ * compared with a string never matches (as in 1.x), but a string column
+ * used as a number reads an id. Regular expressions, string
+ * concatenation, `isDefined()` and `undefined` checks are refused with an
+ * error: a missing property reads 0 on the GPU, which can't tell it from
+ * a 0 value.
+ *
+ * The properties `color` reads (and the colors' own alpha, which hides a
+ * feature too) travel from the vertex to the fragment stage: at most 16
+ * float components in all (a draw passes four vec4f between its stages).
+ * Properties only `show` reads cost nothing there. A color's alpha scales
+ * the material's; blended translucency comes from the material (not yet
+ * from the style).
  */
 export class FeatureStyle {
   readonly shader: CustomShader;
@@ -70,6 +86,8 @@ export class FeatureStyle {
     const types = options.types ?? {};
     const defines = options.defines ?? {};
     const reading = new Set<string>();
+    // Properties the fragment stage reads: the ones its stages share.
+    const inFragment = new Set<string>();
     // `${name}` in a stage: a define's expression, else the property.
     const reader =
       (stage: "vsInput" | "fsInput") =>
@@ -93,8 +111,18 @@ export class FeatureStyle {
             : `p${fields.size}`;
           fields.set(name, field);
         }
+        if (stage === "fsInput") {
+          inFragment.add(name);
+        }
         const type = types[name] ?? "f32";
-        return { wgsl: `${stage}.metadata.${field}`, type: STYLE_TYPES[type] };
+        return {
+          wgsl: `${stage}.metadata.${field}`,
+          type: STYLE_TYPES[type],
+          // A number property may be a string column (its ids).
+          ...(type === "f32"
+            ? { string: (value: string) => stringIds.literal(value) }
+            : {}),
+        };
       };
     const compile = (
       value: StyleExpression | undefined,
@@ -159,10 +187,34 @@ export class FeatureStyle {
           ? `mix((*material).baseColor, c.rgb, ${f32(amount)})`
           : "(*material).baseColor * c.rgb";
     this.properties = [...fields.keys()];
+    const shared = [...inFragment].map((property) => types[property] ?? "f32");
+    if (!packNamed(shared)) {
+      const floats = shared.reduce(
+        (n, type) =>
+          n +
+          (type === "f32"
+            ? 1
+            : type === "vec2f"
+              ? 2
+              : type === "vec3f"
+                ? 3
+                : 4),
+        0,
+      );
+      throw new Error(
+        `Style: its color reads ${inFragment.size} properties, ${floats} float components, and a draw passes ${MAX_NAMED * 4} between its stages. Properties only show reads cost nothing there.`,
+      );
+    }
     const metadata = Object.fromEntries(
       [...fields].map(([property, field]) => [
         field,
-        { property, type: types[property] ?? ("f32" as const) },
+        {
+          property,
+          type: types[property] ?? ("f32" as const),
+          // Read only by `show` (the vertex stage): no room in the draw's
+          // varyings.
+          ...(inFragment.has(property) ? {} : { vertexOnly: true }),
+        },
       ]),
     );
     this.shader = new CustomShader({

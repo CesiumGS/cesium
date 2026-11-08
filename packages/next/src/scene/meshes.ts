@@ -48,8 +48,9 @@ export interface MeshData {
   propertyTextures?: PropertyTextureData[];
   /**
    * Properties of its features (by local feature ID): their numeric,
-   * boolean and short numeric array columns are uploaded for custom shaders
-   * (`metadata.<column>`), once per table object.
+   * boolean, short numeric array and string columns are uploaded for custom
+   * shaders (`metadata.<column>`), once per table object. A string column
+   * is uploaded as its strings' ids (`stringIds`), which a style compares.
    */
   featureTable?: FeatureTable;
 }

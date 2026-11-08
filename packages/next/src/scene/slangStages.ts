@@ -23,6 +23,8 @@ export interface NamedDeclarations {
   semantics: Record<string, string>;
   /** Each metadata field's property ID (its name where absent). */
   properties: Record<string, string>;
+  /** Metadata fields only the vertex stage reads (no varying of their own). */
+  vertexOnly?: readonly string[];
   /** Per-instance values (`CustomShaderOptions.instance`). */
   instance: Record<string, InstanceType>;
 }

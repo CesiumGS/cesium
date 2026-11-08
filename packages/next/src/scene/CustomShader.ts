@@ -76,16 +76,24 @@ export interface CustomShaderOptions {
    * (`vsInput.attributes.temperature`, `fsInput.attributes.temperature`):
    * the glTF semantic they come from (`_TEMPERATURE`, `TEXCOORD_1`) and
    * their type. Interpolated for the fragment stage; zero where a mesh
-   * hasn't the attribute. Together with `metadata`, at most 4.
+   * hasn't the attribute. Together with `metadata` read by the fragment
+   * stage, at most 16 float components (a draw passes four vec4f between its
+   * stages; a vec3f takes 3, and 16 scalars fit).
    */
   attributes?: Record<string, { semantic: string; type: NamedType }>;
   /**
    * `EXT_structural_metadata` properties the stages read
    * (`vsInput.metadata.temperatures`, `fsInput.metadata.temperatures`), by
    * property ID, with their type: property attributes, offset and scale
-   * applied. Zero where a mesh hasn't the property.
+   * applied. Zero where a mesh hasn't the property. The fragment stage's
+   * count toward the 16 float components `attributes` shares; a property
+   * only `vertexMain` reads can be declared `vertexOnly`, which takes no
+   * room (`fsInput.metadata.<name>` then reads 0).
    */
-  metadata?: Record<string, NamedType | { property: string; type: NamedType }>;
+  metadata?: Record<
+    string,
+    NamedType | { property: string; type: NamedType; vertexOnly?: boolean }
+  >;
   /**
    * Per-instance values the stages read (`vsInput.instance.heading`,
    * `fsInput.instance.symbol`), by name: the instanced draw's stream fields
@@ -152,7 +160,13 @@ const READ: Record<
   mat2x2f: { components: 4, read: "", unpack: "mat2x2f(#.xy, #.zw)" },
 };
 
-/** The slots `VsOut` passes named values in (opaque.wgsl `named0`…). */
+/**
+ * The slots `VsOut` passes named values in (surfaceVertex.wgsl `named0`…),
+ * each a vec4f. The slots are the last of a fragment stage's 16 inputs
+ * (the engine's other varyings fill 13 locations, and `front_facing`,
+ * `sample_mask` and `sample_index` count too), so there is no room for
+ * more: a draw passes `MAX_NAMED * 4` float components between its stages.
+ */
 export const MAX_NAMED = 4;
 
 /**
@@ -203,26 +217,33 @@ const SWIZZLE = "xyzw";
  * back per fragment; with the contract and its stage functions.
  */
 export function namedCode(named: NamedDeclarations): string {
+  const vertexOnly = new Set(named.vertexOnly ?? []);
   const fields = [
     ...Object.entries(named.attributes).map(([name, type]) => ({
       struct: "Attributes",
       name,
       type,
       key: named.semantics[name]!,
+      passed: true,
     })),
     ...Object.entries(named.metadata).map(([name, type]) => ({
       struct: "Metadata",
       name,
       type,
       key: metadataKey(named.properties[name] ?? name),
+      passed: !vertexOnly.has(name),
     })),
   ];
-  const places = packNamed(fields.map((f) => f.type));
-  if (!places) {
+  // Only the fields the fragment stage may read are passed to it.
+  const passed = fields.filter((f) => f.passed);
+  const passedPlaces = packNamed(passed.map((f) => f.type));
+  if (!passedPlaces) {
+    const floats = passed.reduce((n, f) => n + READ[f.type].components, 0);
     throw new Error(
-      `Custom shader: its attributes and metadata properties don't fit ${MAX_NAMED} vec4f.`,
+      `Custom shader: its attributes and metadata properties need ${floats} float components between the vertex and fragment stages, and a draw passes ${MAX_NAMED * 4} (${MAX_NAMED} vec4f; a vec3f takes 3, a mat2x2f 4). Properties only vertexMain reads can be declared vertexOnly.`,
     );
   }
+  const places = fields.map((f) => passedPlaces[passed.indexOf(f)]);
   // A value's slot read back, as its type's components.
   const slotRead = (i: number) => {
     const f = fields[i]!;
@@ -259,6 +280,10 @@ export function namedCode(named: NamedDeclarations): string {
       `fn ${back}(f: CesiumFragment) -> ${struct} {`,
       `  return ${struct}(${own
         .map((f) => {
+          if (!f.passed) {
+            // Read only by the vertex stage: zero here (WGSL's zero value).
+            return `${f.type}()`;
+          }
           const varying = slotRead(fields.indexOf(f));
           if (struct === "Attributes") {
             return READ[f.type].unpack.replaceAll("#", varying);
@@ -281,7 +306,7 @@ export function namedCode(named: NamedDeclarations): string {
     const components = ["0.0", "0.0", "0.0", "0.0"];
     let any = false;
     fields.forEach((f, i) => {
-      if (places[i]!.slot !== slot) {
+      if (places[i]?.slot !== slot) {
         return;
       }
       any = true;
@@ -364,12 +389,16 @@ function declarations(options: CustomShaderOptions): NamedDeclarations {
   // (`building:material`) is read under another name.
   const metadata: Record<string, NamedType> = {};
   const properties: Record<string, string> = {};
+  const vertexOnly: string[] = [];
   for (const [name, declared] of Object.entries(options.metadata ?? {})) {
     if (typeof declared === "string") {
       metadata[name] = declared;
     } else {
       metadata[name] = declared.type;
       properties[name] = declared.property;
+      if (declared.vertexOnly) {
+        vertexOnly.push(name);
+      }
     }
   }
   const names = [...Object.keys(attributes), ...Object.keys(metadata)];
@@ -395,7 +424,7 @@ function declarations(options: CustomShaderOptions): NamedDeclarations {
       throw new Error(`Custom shader: unknown instance type "${type}".`);
     }
   }
-  return { attributes, metadata, semantics, properties, instance };
+  return { attributes, metadata, semantics, properties, vertexOnly, instance };
 }
 
 let nextId = 1;

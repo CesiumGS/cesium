@@ -85,6 +85,7 @@ import { featureName, featureProperties } from "../io/features.ts";
 import type { RenderContext, SurfaceKey } from "./RenderContext.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import { PointCuller } from "./PointCuller.ts";
+import { stringIds } from "./stringIds.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
 import type { LightHandle, LightOptions } from "./lights.ts";
 import {
@@ -683,7 +684,13 @@ export class World {
    */
   private readonly tableColumns = new Map<
     string,
-    { entries: number[][]; ranges: Array<[number, number]>; meshes: number }
+    {
+      entries: number[][];
+      ranges: Array<[number, number]>;
+      meshes: number;
+      /** The strings its string columns hold references on (`stringIds`). */
+      strings: string[];
+    }
   >();
   /** An id per feature table object, for `tableColumns`' slab keys. */
   private readonly tableIds = new WeakMap<FeatureTable, number>();
@@ -1566,6 +1573,9 @@ export class World {
       return 0;
     }
     this.tableColumns.delete(key);
+    for (const value of uploaded.strings) {
+      stringIds.release(value);
+    }
     let bytes = 0;
     for (const [offset, size] of uploaded.ranges) {
       slab.vertex.release(offset, size);
@@ -1586,14 +1596,18 @@ export class World {
 
   /** The bytes a feature table's uploaded columns take (`uploadTable`). */
   private tableBytes(table: FeatureTable): number {
-    return tableColumnData(table).reduce((n, c) => n + c.data.byteLength, 0);
+    return tableColumnData(table).reduce(
+      (n, c) => n + columnBytes(table, c),
+      0,
+    );
   }
 
   /**
    * A feature table's columns in the arena, uploaded once per table
    * object: numbers, booleans (0 or 1) and numeric arrays of up to 4
    * (shorter rows padded with zero), as float32 rows by local feature ID;
-   * missing values (null) read 0. String columns aren't uploaded.
+   * missing values (null) read 0. A string column is uploaded as the ids
+   * of its strings (`stringIds`), held until the table is released.
    */
   private uploadTable(
     table: FeatureTable,
@@ -1608,23 +1622,41 @@ export class World {
     if (!uploaded) {
       const entries: number[][] = [];
       const ranges: Array<[number, number]> = [];
-      for (const { name, data, components } of tableColumnData(table)) {
+      const strings: string[] = [];
+      const undo = () => {
+        for (const [o, size] of ranges) {
+          slab.vertex.release(o, size);
+        }
+        for (const value of strings) {
+          stringIds.release(value);
+        }
+      };
+      for (const column of tableColumnData(table)) {
+        let data = column.data;
+        if (!data) {
+          try {
+            const ids = stringColumnData(column, table.count);
+            data = ids.data;
+            strings.push(...ids.held);
+          } catch (error) {
+            undo();
+            throw error;
+          }
+        }
         const offset = this.slabs.allocateVertex(slab, data.byteLength);
         if (offset === undefined) {
-          for (const [o, size] of ranges) {
-            slab.vertex.release(o, size);
-          }
+          undo();
           throw new CapacityError("vertex arena");
         }
         ranges.push([offset, data.byteLength]);
         this.queueUpload(slab.vertexBuffer, offset, data);
         entries.push([
-          attributeHash(metadataKey(name)),
+          attributeHash(metadataKey(column.name)),
           offset / 4,
-          TABLE_PROPERTY | components,
+          TABLE_PROPERTY | column.components,
         ]);
       }
-      uploaded = { entries, ranges, meshes: 0 };
+      uploaded = { entries, ranges, meshes: 0, strings };
       this.tableColumns.set(key, uploaded);
     }
     uploaded.meshes++;
@@ -5125,6 +5157,13 @@ export class World {
   destroy(): void {
     this.destroyed_ = true;
     this.stopTracking();
+    // Its tables' string ids go back to the shared table.
+    for (const uploaded of this.tableColumns.values()) {
+      for (const value of uploaded.strings) {
+        stringIds.release(value);
+      }
+    }
+    this.tableColumns.clear();
     for (const chunk of this.uploadChunks) {
       chunk.buffer.destroy();
     }
@@ -5280,20 +5319,31 @@ function boundingSphere(positions: Float32Array): {
   return { center, radius: Math.sqrt(r2) };
 }
 
-/** A feature table's numeric columns as the arena holds them. */
+/**
+ * A feature table's column as the arena holds it: numbers as they are, or
+ * a string column's strings, uploaded as their ids (`stringIds`).
+ */
 interface TableColumn {
   name: string;
-  data: Float32Array;
   components: number;
+  /** A numeric column's float32 rows. */
+  data?: Float32Array;
+  /** A string column's rows (null where missing), until it is uploaded. */
+  strings?: Array<string | null>;
 }
 
 const tableColumnCache = new WeakMap<FeatureTable, TableColumn[]>();
 
+/** Directory entries kept free of string columns (`tableColumnData`). */
+const DIRECTORY_RESERVE = 32;
+
 /**
  * A feature table's columns as uploaded (`World.uploadTable`): numbers,
  * booleans (0 or 1) and numeric arrays of up to 4 (shorter rows padded
- * with zero), as float32 rows by local feature ID; missing values (null)
- * read 0. String columns aren't uploaded. Computed once per table.
+ * with zero), as float32 rows by local feature ID, and string columns
+ * (strings only, or null) as the ids of their strings (`stringColumnData`),
+ * as many as the mesh's directory has room for; missing values (null) read
+ * 0. Computed once per table.
  */
 function tableColumnData(table: FeatureTable): TableColumn[] {
   let columns = tableColumnCache.get(table);
@@ -5304,17 +5354,28 @@ function tableColumnData(table: FeatureTable): TableColumn[] {
   for (const [name, values] of Object.entries(table.columns)) {
     let components = 0;
     let numeric = true;
+    let text = false;
     for (const v of values) {
       if (typeof v === "number" || typeof v === "boolean") {
         components = Math.max(components, 1);
       } else if (Array.isArray(v) && v.every((x) => typeof x === "number")) {
         components = Math.max(components, v.length);
+      } else if (typeof v === "string") {
+        text = true;
       } else if (v !== null) {
         numeric = false;
         break;
       }
     }
-    if (!numeric || components === 0 || components > 4) {
+    if (text && components === 0 && numeric) {
+      columns.push({
+        name,
+        components: 1,
+        strings: values.map((v) => (typeof v === "string" ? v : null)),
+      });
+      continue;
+    }
+    if (!numeric || text || components === 0 || components > 4) {
       continue;
     }
     const data = new Float32Array(Math.max(1, table.count) * components);
@@ -5325,10 +5386,60 @@ function tableColumnData(table: FeatureTable): TableColumn[] {
         data[row * components] = Number(v);
       }
     });
-    columns.push({ name, data, components });
+    columns.push({ name, components, data });
   }
+  // A mesh's directory holds MAX_DIRECTORY_ENTRIES entries in all: string
+  // columns (which were never uploaded before) take only the room the
+  // numeric ones leave, less what attributes and properties in textures
+  // may use, so a table that fit before still does.
+  let room = Math.max(
+    0,
+    MAX_DIRECTORY_ENTRIES -
+      DIRECTORY_RESERVE -
+      columns.filter((c) => c.data).length,
+  );
+  columns = columns.filter((c) => c.data || room-- > 0);
   tableColumnCache.set(table, columns);
   return columns;
+}
+
+/** The bytes a column takes in the arena. */
+function columnBytes(table: FeatureTable, column: TableColumn): number {
+  return column.data
+    ? column.data.byteLength
+    : Math.max(1, table.count) * Float32Array.BYTES_PER_ELEMENT;
+}
+
+/**
+ * A string column as float32 ids, one per row (0 where missing), holding
+ * a reference on each distinct string (`stringIds.retain`); the distinct
+ * strings come back for the release.
+ */
+function stringColumnData(
+  column: TableColumn,
+  count: number,
+): { data: Float32Array; held: string[] } {
+  const data = new Float32Array(Math.max(1, count));
+  const held = new Map<string, number>();
+  try {
+    column.strings!.forEach((value, row) => {
+      if (value !== null && row < data.length) {
+        let id = held.get(value);
+        if (id === undefined) {
+          id = stringIds.retain(value);
+          held.set(value, id);
+        }
+        data[row] = id;
+      }
+    });
+  } catch (error) {
+    // The table is full: give back what this column took.
+    for (const value of held.keys()) {
+      stringIds.release(value);
+    }
+    throw error;
+  }
+  return { data, held: [...held.keys()] };
 }
 
 function align4(bytes: number): number {

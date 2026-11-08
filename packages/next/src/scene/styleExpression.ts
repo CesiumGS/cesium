@@ -6,10 +6,14 @@
  * colors are RGBA in [0, 1] as written (sRGB).
  *
  * Every value is typed at compile time: number (f32), boolean, vec2–vec4
- * and color (vec4). Strings exist only as `color()`'s argument and
- * `${feature['name']}` keys; comparing string properties, regular
- * expressions and `undefined` checks need properties the GPU doesn't have
- * and are refused with an error naming them.
+ * and color (vec4). Strings aren't on the GPU: they exist as `color()`'s
+ * argument, `${feature['name']}` keys, and the literal in an equality
+ * test or `match()` key. A string property is a number there, the id of
+ * its string (`StyleValue.string`, scene/stringIds.ts), so `===`, `!==`
+ * and `match()` compare it with a literal's id; other uses of strings
+ * (concatenation, `.toString()`), regular expressions and `undefined`
+ * checks need what the GPU doesn't have and are refused with an error
+ * naming them.
  *
  * The vector styling language's additions (vector/VectorStyle.ts) parse
  * here too: lengths and angles with units (`14px`, `2km`, `90deg`, read as
@@ -27,6 +31,11 @@ export interface StyleValue {
   type: StyleType;
   /** An enum property's names, by index (its value is the index). */
   enum?: readonly string[];
+  /**
+   * A property that may hold strings: its value is a string's id, and this
+   * gives a literal's id (`stringIds.literal`), for comparing the two.
+   */
+  string?: (value: string) => number;
 }
 
 /** A parsed expression. */
@@ -251,6 +260,12 @@ export function parseStyleExpression(source: string): Node {
         fail(source, "expected a member name after .");
       }
       at++;
+      if (isOp("(")) {
+        fail(
+          source,
+          `methods (.${t.v}()) aren't supported: strings and regular expressions aren't on the GPU`,
+        );
+      }
       node = { kind: "member", object: node, name: t.v };
     }
     return node;
@@ -575,6 +590,21 @@ export function compileStyleExpression(
   read: PropertyReader,
   options: StyleCompileOptions = {},
 ): StyleValue {
+  /** `value` equals the name `literal`: an enum's index, or a string's id. */
+  const nameTest = (value: StyleValue, literal: string): string => {
+    if (value.enum) {
+      const index = value.enum.indexOf(literal);
+      return index < 0 ? "false" : `(${value.wgsl} == ${f32(index)})`;
+    }
+    if (value.string && value.type === "number") {
+      return `(${value.wgsl} == ${f32(value.string(literal))})`;
+    }
+    return fail(
+      source,
+      `string '${literal}' compared with a value that isn't an enum or a string property`,
+    );
+  };
+
   const compile = (node: Node): StyleValue => {
     switch (node.kind) {
       case "number":
@@ -586,7 +616,7 @@ export function compileStyleExpression(
           options.string?.(node.value) ??
           fail(
             source,
-            `string '${node.value}' outside color() (string properties aren't on the GPU)`,
+            `string '${node.value}' outside color(), a comparison with a property, or a match() key (strings aren't on the GPU)`,
           )
         );
       case "property":
@@ -616,7 +646,8 @@ export function compileStyleExpression(
             return compile(node.right);
           }
         }
-        // An enum compared with a name: with its index.
+        // An enum compared with a name: with its index; a string property
+        // with a literal: with its id.
         const named = (a: Node, b: Node) =>
           b.kind === "string" &&
           ["===", "!==", "==", "!="].includes(node.op) &&
@@ -625,14 +656,7 @@ export function compileStyleExpression(
           const [value, name] = named(node.left, node.right)
             ? [compile(node.left), node.right as { value: string }]
             : [compile(node.right), node.left as { value: string }];
-          if (!value.enum) {
-            fail(
-              source,
-              `string '${name.value}' compared with a value that isn't an enum (string properties aren't on the GPU)`,
-            );
-          }
-          const index = value.enum.indexOf(name.value);
-          const eq = index < 0 ? "false" : `(${value.wgsl} == ${f32(index)})`;
+          const eq = nameTest(value, name.value);
           return {
             wgsl: node.op.startsWith("!") ? `(!${eq})` : eq,
             type: "boolean",
@@ -673,7 +697,10 @@ export function compileStyleExpression(
 
   const binary = (op: string, a: StyleValue, b: StyleValue): StyleValue => {
     if (op === "=~" || op === "!~") {
-      fail(source, "regular expressions need strings, which aren't on the GPU");
+      fail(
+        source,
+        "regular expressions aren't supported: a pattern would need testing against every string a tile holds, and the result on the GPU",
+      );
     }
     if (op === "&&" || op === "||") {
       if (a.type !== "boolean" || b.type !== "boolean") {
@@ -747,11 +774,7 @@ export function compileStyleExpression(
           const key = args[k]!;
           let test: string;
           if (key.kind === "string") {
-            const index = value.enum?.indexOf(key.value) ?? -1;
-            if (!value.enum) {
-              fail(source, `match: '${key.value}' against a non-enum value`);
-            }
-            test = index < 0 ? "false" : `(${value.wgsl} == ${f32(index)})`;
+            test = nameTest(value, key.value);
           } else {
             const kv = compile(key);
             if (kv.type !== value.type) {
@@ -909,6 +932,14 @@ export function compileStyleExpression(
     }
     const f = COMPONENTWISE[name];
     if (!f) {
+      if (name === "regExp" || name === "isDefined") {
+        fail(
+          source,
+          name === "regExp"
+            ? "regExp() isn't supported: a pattern would need testing against every string a tile holds, and the result on the GPU"
+            : "isDefined() isn't supported: a missing property reads 0 on the GPU, so it can't tell missing from 0",
+        );
+      }
       fail(source, `unknown function ${name}()`);
     }
     if (args.length !== f.args) {
