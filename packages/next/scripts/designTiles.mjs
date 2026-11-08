@@ -1144,7 +1144,9 @@ export async function ensureDesignTiles(
       placement: placeRigid(siteFrame, buildingAnchor(SITE_BUILDING)),
       rigidDir: join(partial, "site-building"),
       name: SITE_BUILDING.name,
-      color: BUILDING_COLOR,
+      // The vertices carry the colours; the material is white, or glTF
+      // multiplies them (the stories would read BUILDING_COLOR squared).
+      color: WHITE,
       log: logger,
     });
   }

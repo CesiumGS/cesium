@@ -1388,6 +1388,30 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
     expect(corridor).toBeGreaterThan(previous);
   });
 
+  it("colours the site-grid building once: by vertex, on a white material (UX review M-a)", () => {
+    // glTF multiplies baseColorFactor by COLOR_0, so a coloured material
+    // over coloured vertices would square the building's colour.
+    const json = tileset("site-building");
+    const uris: string[] = [];
+    const visit = (tile: Json) => {
+      if (tile.content?.uri) {
+        uris.push(tile.content.uri);
+      }
+      (tile.children ?? []).forEach(visit);
+    };
+    visit(json.root);
+    expect(uris.length).toBeGreaterThan(0);
+    for (const uri of uris) {
+      const glb = splitGlb(new Uint8Array(read("site-building", uri))).json;
+      expect(glb.meshes[0].primitives[0].attributes.COLOR_0, uri).toBeDefined();
+      for (const material of glb.materials) {
+        expect(material.pbrMetallicRoughness.baseColorFactor, uri).toEqual([
+          1, 1, 1, 1,
+        ]);
+      }
+    }
+  });
+
   it("stands London's poles on the ground, and its Fly to looks at them (UX review M1)", () => {
     const site = PORTFOLIO.find((s) => s.id === "london")!;
     const m = site.model as { ground?: readonly number[]; poleHeight: number };
