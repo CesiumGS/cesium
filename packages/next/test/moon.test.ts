@@ -42,7 +42,8 @@ describe("moonPosition", () => {
     const y = Math.cos(epsilon) * yq + Math.sin(epsilon) * zq;
     const z = -Math.sin(epsilon) * yq + Math.cos(epsilon) * zq;
     const distance = Math.hypot(x, y, z);
-    // 1 mas in the rotations, the example's rounding.
+    // The example's figures to 0.0005 degrees (1.8 arcseconds), and the
+    // distance to 5 km.
     expect(Math.atan2(y, x) / deg).toBeCloseTo(133.162655, 3);
     expect(Math.asin(z / distance) / deg).toBeCloseTo(-3.229126, 3);
     expect(distance / 1000).toBeCloseTo(368_409.7, -1);

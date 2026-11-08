@@ -1077,8 +1077,8 @@ everything, placed from the sky inputs.
   loaded, as any parent tile does.
 - **No pop.** The impostor and the tileset hang under the same anchor (one
   ephemeris, one MOON_ME orientation). Today's sky inputs can come from the analytic
-  Moon series, which is up to 16″ (27 km) from DE440 over 2000 to 2050
-  (`ANALYTIC_ACCURACY.MOON_ICRF`; 0.31° and about 2,100 km when this was
+  Moon series. The sky's inputs are Earth-fixed and include the analytic turn, so they are up to 20.9″ (36.5 km) from DE440 sampled daily over 2000 to 2050
+  (the series alone: 16″ and 27 km, `ANALYTIC_ACCURACY.MOON_ICRF`; 0.31° and about 2,100 km when this was
   written, on Simon 1994's terms), so the impostor stops taking them: it is placed by
   its anchor like the tileset. Both use the same reflectance
   model (5e's Hapke, or Lommel-Seeliger for both) and the same exposure, so
