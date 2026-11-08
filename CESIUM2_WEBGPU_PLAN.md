@@ -8358,6 +8358,10 @@ Not designed. A question to take up in its own session, then add to this plan: e
 
 **Later: ion's public REST API.** Wrappers around ion's API calls, separate from what the renderer needs to fetch tiles. 1.147 added the experimental `IonAssetElementService`, wrapping ion's newly public calls for querying, filtering, aggregating and navigating element metadata (BIM and CAD), which 2.0 should cover here. Related to §13.19. Read it in `packages/engine/Source` when this work starts. Name the module for what it does, such as an ion client. The GIS protocols question in §13.20 builds on the same content source interface. Expect ion's REST API to change substantially: keep its wrappers thin and in this module, keep the renderer depending only on the content source interface, and test the asset endpoint's parsing against recorded responses, so a change shows up in one place.
 
+### 13.22 For later: custom post-processing (owner, 2026-11-08)
+
+Not designed. Custom post-processing stages should be exposed through a proper public interface, and FXAA and ambient occlusion should be built on that interface, to flesh it out and prove it. Maybe this needs a graph-based compositing structure, as other engines have. `src/render/FrameGraph.ts` already orders the passes internally, so the question is what to expose and how a stage declares what it reads and writes. It should use the shader linker's named boundaries, and it replaces 1.x's `PostProcessStage`. Also consider where a stage sits relative to exposure and tone mapping (scene-referred or display-referred), and depth and id access.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
