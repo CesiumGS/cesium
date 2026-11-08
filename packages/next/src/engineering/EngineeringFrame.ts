@@ -929,7 +929,10 @@ export function designPoint(
  * body curves away from the tangent plane: about 7.8 m at 10 km, spec 7.2).
  *
  *  - The origin is the anchor's exact body-fixed position, `frame.toBodyFixed`.
- *  - Up is the ellipsoid's surface normal there.
+ *  - Up is the ellipsoid's geodetic normal there: the normal at the
+ *    anchor's foot on the surface. (The ellipsoid's gradient at an anchor
+ *    off the surface leans by about h e² sin φ cos φ / a: 1.3 × 10⁻⁷ rad, or
+ *    0.6 mm of drop 20 km out, for an anchor 259 m up at 37.8°.)
  *  - Grid north is the direction from `toBodyFixed(anchor)` to
  *    `toBodyFixed(anchor + one design unit along +N)` (along the frame's own
  *    design axes, so a site transform's rotation is included), projected onto
@@ -965,7 +968,12 @@ export class RigidPlacement {
         : frame.metersPerHeightUnit;
     const origin = frame.toBodyFixed(anchorDesign);
     const up = v3.vec3();
-    if (frame.body.ellipsoid.geodeticSurfaceNormal(origin, up) === undefined) {
+    const ellipsoid = frame.body.ellipsoid;
+    const foot = ellipsoid.scaleToGeodeticSurface(origin, v3.vec3());
+    if (
+      foot === undefined ||
+      ellipsoid.geodeticSurfaceNormal(foot, up) === undefined
+    ) {
       throw new RangeError(
         "RigidPlacement: the anchor is at the body's centre",
       );
