@@ -6,10 +6,15 @@
 //    morph). The rigid one is design units under one root transform, the
 //    rigid placement's matrix at the alignment's middle; the reprojected one
 //    is every vertex through the frame, in Earth-fixed metres;
-//  - site-building/ and portfolio-<id>/: each site's building, rigid at its
-//    footprint's centre;
+//  - site-building/: the site-grid building, rigid at its footprint's
+//    centre;
+//  - portfolio-<id>-rigid/ and portfolio-<id>-reprojected/: the scale
+//    ladder (Task 17b), each portfolio site's model twice, one tile tree
+//    with the same tile ids and vertex order as the corridor's pair, rigid
+//    at the model's middle (scripts/designTiles/ladder.mjs);
 //  - answers.json: exact values at points and between pairs, from the
-//    library, at DESIGN_TILES_INSTANT, for the example's checks;
+//    library, at DESIGN_TILES_INSTANT, for the example's checks, and each
+//    ladder site's extent and rigid error at its edge;
 //  - manifest.json: version 1 and the SHA-256 of the inputs, so it
 //    regenerates only when they change.
 //
@@ -46,7 +51,11 @@ import {
   sectionSurface,
 } from "../examples/design-globe/corridor.ts";
 import { parseAnswers } from "../examples/design-globe/answers.ts";
-import { PORTFOLIO, SITE_BUILDING } from "../examples/design-globe/sites.ts";
+import {
+  PORTFOLIO,
+  SITE_BUILDING,
+  modelAnchor,
+} from "../examples/design-globe/sites.ts";
 import { Ephemeris } from "../src/ephemeris/Ephemeris.ts";
 import {
   EngineeringFrame,
@@ -72,6 +81,12 @@ import {
   largestChordError,
 } from "./designTiles/corridorMesh.mjs";
 import { writeGlb } from "./designTiles/gltf.mjs";
+import {
+  LEAF_ERROR_METRES,
+  ladderPlan,
+  ladderTree,
+  planExtent,
+} from "./designTiles/ladder.mjs";
 import { buildingAnchor, buildingMesh } from "./designTiles/siteMesh.mjs";
 import { tilesetJson } from "./designTiles/tileset.mjs";
 
@@ -94,6 +109,8 @@ const MARKER_STATION = 170_000;
 /** Linear RGBA. */
 const CORRIDOR_COLOR = [0.45, 0.45, 0.43, 1];
 const BUILDING_COLOR = [0.62, 0.5, 0.38, 1];
+/** The ladder's models colour every vertex (COLOR_0); the material is white. */
+const WHITE = [1, 1, 1, 1];
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -105,6 +122,14 @@ const INPUTS = [
   "scripts/designTiles.mjs",
   "scripts/designTiles/corridorMesh.mjs",
   "scripts/designTiles/siteMesh.mjs",
+  "scripts/designTiles/ladder.mjs",
+  "scripts/designTiles/meshBuilder.mjs",
+  "scripts/designTiles/blockMesh.mjs",
+  "scripts/designTiles/portMesh.mjs",
+  "scripts/designTiles/solarFarmMesh.mjs",
+  "scripts/designTiles/airportMesh.mjs",
+  "scripts/designTiles/campusMesh.mjs",
+  "scripts/designTiles/poleLineMesh.mjs",
   "scripts/designTiles/gltf.mjs",
   "scripts/designTiles/tileset.mjs",
   // The library the tiles and answers come from.
@@ -470,12 +495,13 @@ const writeJson = (path, value) => {
 
 /**
  * Writes a tileset or two from a tree of design meshes: `top` is the top
- * content tile, each node with `id`, `mesh()` (built on demand),
- * `geometricError` (design units) and `children`. Above it a contentless
- * root holds the rigid placement's matrix (rigid) or nothing (reprojected),
- * so tile centres stay small enough for float32. With `reprojectedDir`, the
- * reprojected tileset too. Returns the vertex count (one placement's) and
- * the GLB bytes written.
+ * content tile, each node with `id`, `mesh()` (built on demand; null for a
+ * tile with no content, placed between its children), `geometricError`
+ * (design units) and `children`. Above it a contentless root holds the
+ * rigid placement's matrix (rigid) or nothing (reprojected), so tile
+ * centres stay small enough for float32. With `reprojectedDir`, the
+ * reprojected tileset too. Returns the vertex count (one placement's), the
+ * GLB bytes written and the tile count.
  */
 function writeTilesets({
   top,
@@ -490,10 +516,47 @@ function writeTilesets({
   const mpu = frame.units.metersPerUnit;
   let vertices = 0;
   let bytes = 0;
+  let tiles = 0;
   // Post-order: a node's box contains its children's.
   const visit = (node) => {
     const children = node.children.map(visit);
     const mesh = node.mesh();
+    tiles++;
+    if (mesh === null) {
+      // No content: centred among its children, its boxes holding theirs.
+      const among = (mode) =>
+        [0, 1, 2].map((k) =>
+          Math.round(
+            children.reduce((sum, c) => sum + c[mode].centre[k], 0) /
+              children.length,
+          ),
+        );
+      const result = {
+        id: node.id,
+        geometricError: node.geometricError,
+        children,
+        rigid: {
+          centre: among("rigid"),
+          box: fitBox(
+            DESIGN_AXES,
+            [],
+            children.map((c) => c.rigid.box),
+          ),
+        },
+      };
+      if (reprojectedDir !== undefined) {
+        const centre = among("reprojected");
+        result.reprojected = {
+          centre,
+          box: fitBox(
+            enuAxes(frame, centre),
+            [],
+            children.map((c) => c.reprojected.box),
+          ),
+        };
+      }
+      return result;
+    }
     const contents = tileContents(mesh, frame, reprojectedDir !== undefined);
     vertices += mesh.design.length / 3;
     const uri = `tiles/${node.id}.glb`;
@@ -505,6 +568,7 @@ function writeTilesets({
         featureIds: mesh.featureIds,
         features: mesh.features,
         color,
+        ...(mesh.colors !== undefined && { colors: mesh.colors }),
       });
     const rigidGlb = glb(contents.rigid.positions, contents.rigid.normals);
     mkdirSync(join(rigidDir, "tiles"), { recursive: true });
@@ -585,9 +649,76 @@ function writeTilesets({
     writeJson(join(reprojectedDir, "tileset.json"), reprojectedJson);
   }
   log(
-    `  ${name}: ${vertices.toLocaleString("en-US")} vertices, ${(bytes / 1e6).toFixed(1)} MB of GLB`,
+    `  ${name}: ${tiles.toLocaleString("en-US")} tiles, ${vertices.toLocaleString("en-US")} vertices, ${(bytes / 1e6).toFixed(1)} MB of GLB`,
   );
-  return { vertices, bytes };
+  return { vertices, bytes, tiles };
+}
+
+/**
+ * The parts of a rigid placement's error at a design point, metres (the
+ * placement at `anchor` ignores all three): the curvature d²/2R (R the
+ * Gaussian radius √(MN) at the anchor), the scale d·|1 − 1/k| (k the
+ * combined factor at the anchor: grid distance = ground distance × k), and
+ * the geoid's rise from the anchor to the point (the change in ellipsoidal
+ * height less the change in design height). The error is about
+ * √((curvature − geoid)² + scale²).
+ */
+export function rigidErrorTerms(frame, anchor, point) {
+  const d =
+    Math.hypot(point[0] - anchor[0], point[1] - anchor[1]) *
+    frame.units.metersPerUnit;
+  const from = frame.toGeodetic(anchor);
+  const to = frame.toGeodetic(point);
+  const [a, , c] = frame.body.ellipsoid.radii;
+  const e2 = 1 - (c * c) / (a * a);
+  const w = Math.sqrt(1 - e2 * Math.sin(from.latitude) ** 2);
+  const radius = Math.sqrt(((a * (1 - e2)) / w ** 3) * (a / w));
+  const k = gridFactors(frame, anchor).combinedFactor;
+  return {
+    curvature: (d * d) / (2 * radius),
+    scale: d * Math.abs(1 - 1 / k),
+    geoid:
+      to.height -
+      from.height -
+      (point[2] - anchor[2]) * frame.metersPerHeightUnit,
+  };
+}
+
+/** A ladder site's answers: its extent, its rigid error at its edge and three points. */
+function siteAnswers(site, frame, placement, plan, tree, written) {
+  const mpu = frame.units.metersPerUnit;
+  const anchor = modelAnchor(site);
+  const { extent, farthest } = planExtent(plan, anchor);
+  const point = (label, design) => ({
+    label,
+    design: Array.from(design),
+    bodyFixed: Array.from(frame.toBodyFixed(design)),
+    rigidDisplayed: Array.from(placement.displayed(design)),
+    displayError: placement.displayError(design),
+    distanceFromAnchor:
+      Math.hypot(design[0] - anchor[0], design[1] - anchor[1]) * mpu,
+  });
+  const points = [
+    point("Anchor", anchor),
+    point("Farthest point", farthest),
+    point(plan.landmark.label, plan.landmark.design),
+  ];
+  return {
+    name: site.name,
+    kind: site.model.kind,
+    extent: extent * mpu,
+    anchor: [...anchor],
+    displayError: points[1].displayError,
+    distanceFromAnchor: points[1].distanceFromAnchor,
+    terms: rigidErrorTerms(frame, anchor, farthest),
+    points,
+    tiles: {
+      count: written.tiles,
+      levels: tree.levels,
+      vertices: written.vertices,
+      leafError: LEAF_ERROR_METRES,
+    },
+  };
 }
 
 /** Points and pairs computed with the library: the example checks against them. */
@@ -845,7 +976,10 @@ export async function ensureDesignTiles(
     "corridor-rigid/tileset.json",
     "corridor-reprojected/tileset.json",
     "site-building/tileset.json",
-    ...PORTFOLIO.map((site) => `portfolio-${site.id}/tileset.json`),
+    ...PORTFOLIO.flatMap((site) => [
+      `portfolio-${site.id}-rigid/tileset.json`,
+      `portfolio-${site.id}-reprojected/tileset.json`,
+    ]),
   ];
   try {
     const current = JSON.parse(
@@ -933,25 +1067,30 @@ export async function ensureDesignTiles(
     log: logger,
   });
 
-  for (const site of [SITE_BUILDING, ...PORTFOLIO]) {
-    let siteFrame;
+  const loadSite = async (site) => {
     try {
-      siteFrame = await EngineeringFrame.load(site.frame, { proj, grids });
+      const siteFrame = await EngineeringFrame.load(site.frame, {
+        proj,
+        grids,
+      });
+      record(site.id, siteFrame);
+      return siteFrame;
     } catch (error) {
       throw new Error(
         `design globe: ${site.name}'s frame doesn't load from the store's grids (it reads ${site.grids.join(", ")}; setup's default grid sets, portfolio and tests, have them): ${error.message}`,
         { cause: error },
       );
     }
-    record(site.id, siteFrame);
-    const mesh = buildingMesh(site);
+  };
+
+  // The site-grid building: one rigid tile.
+  {
+    const siteFrame = await loadSite(SITE_BUILDING);
+    const mesh = buildingMesh(SITE_BUILDING);
     // Exact boxes: a leaf errs only by float32 rounding, half an ulp of its
     // largest coordinate from its centre.
-    const reach = Math.max(
-      site.model.width,
-      site.model.depth,
-      site.model.stories * site.model.storyHeight,
-    );
+    const { width, depth, stories, storyHeight } = SITE_BUILDING.model;
+    const reach = Math.max(width, depth, stories * storyHeight);
     writeTilesets({
       top: {
         id: "0-0",
@@ -960,21 +1099,58 @@ export async function ensureDesignTiles(
         children: [],
       },
       frame: siteFrame,
-      placement: placeRigid(siteFrame, buildingAnchor(site)),
-      rigidDir: join(
-        partial,
-        site === SITE_BUILDING ? "site-building" : `portfolio-${site.id}`,
-      ),
-      name: site.name,
+      placement: placeRigid(siteFrame, buildingAnchor(SITE_BUILDING)),
+      rigidDir: join(partial, "site-building"),
+      name: SITE_BUILDING.name,
       color: BUILDING_COLOR,
       log: logger,
     });
   }
 
+  // The scale ladder: each portfolio site's model in both placements, one
+  // tree, rigid at the model's middle.
+  const sites = {};
+  for (const site of PORTFOLIO) {
+    const at = performance.now();
+    const siteFrame = await loadSite(site);
+    const mpu = siteFrame.units.metersPerUnit;
+    const plan = ladderPlan(site);
+    const tree = ladderTree(plan, {
+      leafError: LEAF_ERROR_METRES / mpu,
+      metersPerUnit: mpu,
+    });
+    const placement = placeRigid(siteFrame, modelAnchor(site));
+    const written = writeTilesets({
+      top: tree.top,
+      frame: siteFrame,
+      placement,
+      rigidDir: join(partial, `portfolio-${site.id}-rigid`),
+      reprojectedDir: join(partial, `portfolio-${site.id}-reprojected`),
+      name: `${site.name} (${site.model.kind}, rigid and reprojected)`,
+      color: WHITE,
+      log: logger,
+    });
+    sites[site.id] = siteAnswers(
+      site,
+      siteFrame,
+      placement,
+      plan,
+      tree,
+      written,
+    );
+    const answer = sites[site.id];
+    logger(
+      `    ${(answer.extent / 1000).toFixed(2)} km across, ${tree.levels} levels; rigid ${answer.displayError.toPrecision(3)} m off at ${(answer.distanceFromAnchor / 1000).toFixed(2)} km; ${((performance.now() - at) / 1000).toFixed(1)} s`,
+    );
+  }
+
   // Checked as the page reads it, so the file is the type's shape.
   writeJson(
     join(partial, "answers.json"),
-    parseAnswers(corridorAnswers(frame, alignment, placement, frames)),
+    parseAnswers({
+      ...corridorAnswers(frame, alignment, placement, frames),
+      sites,
+    }),
   );
   writeJson(join(partial, "manifest.json"), { ...wanted, frames: resolved });
   // Move the old output aside, the new one in, then remove the old.
@@ -986,6 +1162,6 @@ export async function ensureDesignTiles(
   rmSync(old, { recursive: true, force: true });
   const seconds = (performance.now() - started) / 1000;
   logger(
-    `design globe: ${corridor.vertices.toLocaleString("en-US")} corridor vertices per placement, written in ${seconds.toFixed(1)} s`,
+    `design globe: ${corridor.vertices.toLocaleString("en-US")} corridor vertices per placement and the ladder's seven sites, written in ${seconds.toFixed(1)} s`,
   );
 }

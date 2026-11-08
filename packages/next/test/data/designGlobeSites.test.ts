@@ -1,7 +1,8 @@
 // The design globe's portfolio (plan 4b Task 12, the plan's call 19): each
 // site's frame loads with the store's grids, its operation reads exactly the
 // grids the site lists, its origin lands where the site says and round-trips,
-// and setup's `portfolio` grid set is the grids they all read.
+// its model's footprint (Task 17b's ladder) is in its area of interest, and
+// setup's `portfolio` grid set is the grids they all read.
 //
 // PROJ starts with no grids, and grids come from the store's `grids/`
 // through a GridSource, as the browser gets them. A file of its own, so a
@@ -23,6 +24,7 @@ import {
   PHOENIX_PIPELINE,
   PORTFOLIO,
   SITE_BUILDING,
+  modelFootprint,
   type PortfolioSite,
 } from "../../examples/design-globe/sites.ts";
 import { Alignment } from "../../src/engineering/alignment.ts";
@@ -94,17 +96,14 @@ async function checkSite(site: PortfolioSite): Promise<EngineeringFrame> {
     true,
   );
   expect(roundTripMetres(frame, site.origin)).toBeLessThan(1e-4);
-  // The model's far corner, top floor, round-trips too.
-  const { width, depth, stories, storyHeight } = site.model;
-  const corner = [
-    site.origin[0] + width,
-    site.origin[1] + depth,
-    site.origin[2] + stories * storyHeight,
-  ];
-  expect(inside(frame.toGeodetic(corner), site.frame.areaOfInterest!)).toBe(
-    true,
-  );
-  expect(roundTripMetres(frame, corner)).toBeLessThan(1e-4);
+  // The model's footprint's corners are in its area, and round-trip too.
+  for (const corner of modelFootprint(site)) {
+    expect(
+      inside(frame.toGeodetic(corner), site.frame.areaOfInterest!),
+      `${site.id}: corner ${corner.join(", ")} in its area`,
+    ).toBe(true);
+    expect(roundTripMetres(frame, corner)).toBeLessThan(1e-4);
+  }
   return frame;
 }
 
@@ -175,6 +174,7 @@ describe("the site-grid building", () => {
     expect(site.rotation).toBeCloseTo((12.5 * Math.PI) / 180, 15);
     expect(site.scale).toBe(1.0000375);
     expect(SITE_BUILDING.model).toEqual({
+      kind: "building",
       width: 200,
       depth: 120,
       stories: 3,

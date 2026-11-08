@@ -1,7 +1,10 @@
 // A portfolio site's building for the design-globe generator (plan 4b Task
 // 14): a box per story, in the site's design coordinates (its CRS's units,
 // easting first), from the site's corner `origin`, `width` along design east
-// and `depth` along design north.
+// and `depth` along design north. The site-grid building is this mesh as
+// one rigid tile; the ladder's single building (Task 17b) is the same
+// stories as a part of one leaf (`buildingPlan`).
+import { srgb } from "./meshBuilder.mjs";
 
 /** Each story's walls step in this fraction of the footprint's shorter side, above the ground floor, so the stories read apart. */
 const SETBACK = 0.004;
@@ -20,6 +23,7 @@ export function buildingAnchor(site) {
 
 /**
  * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ *   a site whose model is a building
  * @returns {{ design: Float64Array, normals: Float32Array, indices: Uint32Array,
  *   featureIds: Uint16Array, features: { name: string, kind: string }[] }}
  */
@@ -111,5 +115,46 @@ export function buildingMesh(site) {
     indices: Uint32Array.from(indices),
     featureIds: Uint16Array.from(ids),
     features,
+  };
+}
+
+/** The ladder's building: brick walls, with a darker roof slab on the top story. */
+const WALL = srgb("#9c6b52");
+const ROOF = srgb("#4a4440");
+
+/**
+ * The building as a ladder plan: one part (the building, every story) in a
+ * single leaf, its faces coloured (walls, and the roof).
+ *
+ * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ */
+export function buildingPlan(site) {
+  const mesh = buildingMesh(site);
+  const anchor = buildingAnchor(site);
+  const { width, depth, stories, storyHeight } = site.model;
+  const top = site.origin[2] + stories * storyHeight;
+  const feature = { name: site.name, kind: "building" };
+  const draw = (b) => {
+    const at = (i) => [
+      mesh.design[3 * i],
+      mesh.design[3 * i + 1],
+      mesh.design[3 * i + 2],
+    ];
+    // Each face is a quad's two triangles (q0, q1, q2) and (q0, q2, q3).
+    for (let t = 0; t < mesh.indices.length; t += 6) {
+      const [q0, q1, q2, , , q3] = [...mesh.indices.subarray(t, t + 6)].map(at);
+      const roof = mesh.normals[3 * mesh.indices[t] + 2] > 0.5 && q0[2] === top;
+      b.quad(q0, q1, q2, q3, roof ? ROOF : WALL, feature);
+    }
+  };
+  return {
+    anchor,
+    leafSize: Infinity,
+    parts: [{ at: [anchor[0], anchor[1]], lods: [{ error: 0, draw }] }],
+    grounds: [],
+    landmark: {
+      label: "Roof corner",
+      design: [site.origin[0] + width, site.origin[1] + depth, top],
+    },
   };
 }

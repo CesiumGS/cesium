@@ -104,6 +104,28 @@ function answersJson(): Record<string, unknown> {
       horizontalDistance: 501.3,
       trueDistance: 186.0,
     },
+    sites: {
+      sydney: {
+        name: "Sydney: an airport",
+        kind: "airport",
+        extent: 3_970.2,
+        anchor: [331_800, 6_242_450, 6],
+        displayError: 0.371,
+        distanceFromAnchor: 1_985.1,
+        terms: { curvature: 0.309, scale: 0.13, geoid: -0.02 },
+        points: ["Anchor", "Farthest point", "Runway 16R threshold"].map(
+          (label, i) => ({
+            label,
+            design: [331_800 + 900 * i, 6_242_450 - 500 * i, 6],
+            bodyFixed: [-4_646_000.1 + i, 2_553_000.2, -3_542_000.3],
+            rigidDisplayed: [-4_646_000.1 + i, 2_553_000.2, -3_542_000.0],
+            displayError: [0, 0.371, 0.1][i],
+            distanceFromAnchor: [0, 1_985.1, 1_029.6][i],
+          }),
+        ),
+        tiles: { count: 61, levels: 4, vertices: 41_000, leafError: 0.001 },
+      },
+    },
   };
 }
 
@@ -123,6 +145,8 @@ describe("parseAnswers", () => {
     expect(a.pairs[0]!.from).toBe(0);
     expect(a.points[2]!.nearKm).toBe(20);
     expect(a.mark.publishedSpc.northing).toBe(2_075_186.11);
+    expect(a.sites.sydney!.points[2]!.label).toBe("Runway 16R threshold");
+    expect(a.sites.sydney!.tiles.levels).toBe(4);
   });
 
   const broken: [string, (j: Json) => void, string][] = [
@@ -148,6 +172,17 @@ describe("parseAnswers", () => {
       "marker.bodyFixed is not 3 numbers",
     ],
     ["another version", (j) => (j.version = 2), "version is 2"],
+    [
+      "a site without its three points",
+      (j) => j.sites.sydney.points.pop(),
+      "sites.sydney.points is not 3 points",
+    ],
+    [
+      "a site's term as a string",
+      (j) => (j.sites.sydney.terms.scale = "0.13"),
+      "sites.sydney.terms.scale is not a finite number",
+    ],
+    ["no sites", (j) => delete j.sites, "sites is not an object"],
   ];
   for (const [name, edit, message] of broken) {
     it(`throws naming the path for ${name}`, () => {

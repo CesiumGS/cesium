@@ -128,6 +128,47 @@ describe("writeGlb", () => {
     expect(table.columns.kind).toEqual(["bridge", "pier"]);
   });
 
+  it("writes per-vertex colours as COLOR_0, normalized bytes, that the loader reads back", async () => {
+    const colors = new Float32Array([
+      1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0.5, 0.25, 0, 1, 0, 0, 0,
+      1,
+    ]);
+    const bytes = writeGlb({ ...mesh(), colors });
+    const { json } = splitGlb(bytes);
+    const primitive = json.meshes[0].primitives[0];
+    const accessor = json.accessors[primitive.attributes.COLOR_0];
+    expect(accessor).toMatchObject({
+      componentType: 5121,
+      normalized: true,
+      type: "VEC4",
+      count: 6,
+    });
+    expect(json.bufferViews[accessor.bufferView]).toMatchObject({
+      target: 34962,
+      byteStride: 4,
+    });
+    const { asset } = await parseGltf(dataUrl(bytes), textures);
+    const out = asset.meshes[0]!.colors!;
+    expect(out).toHaveLength(24);
+    for (let i = 0; i < 24; i++) {
+      // Half a step, and float32's rounding of the step.
+      expect(Math.abs(out[i]! - colors[i]!)).toBeLessThanOrEqual(
+        0.5 / 255 + 1e-6,
+      );
+    }
+    // Without colours, no COLOR_0.
+    expect(
+      splitGlb(writeGlb(mesh())).json.meshes[0].primitives[0].attributes
+        .COLOR_0,
+    ).toBeUndefined();
+    expect(() => writeGlb({ ...mesh(), colors: new Float32Array(23) })).toThrow(
+      /four numbers a vertex/,
+    );
+    expect(() =>
+      writeGlb({ ...mesh(), colors: colors.map((c, i) => (i === 3 ? 2 : c)) }),
+    ).toThrow(/\[0, 1\]/);
+  });
+
   it("refuses inconsistent meshes", () => {
     expect(() =>
       writeGlb({ ...mesh(), featureIds: new Uint16Array(3) }),

@@ -2,9 +2,12 @@
 // Plain Node, no dependencies. One mesh, one primitive: POSITION, NORMAL, a
 // `_FEATURE_ID_0` attribute (EXT_mesh_features) and a property table of each
 // feature's `name` and `kind` (EXT_structural_metadata), so a pick reports
-// the feature's name through `World.feature`.
+// the feature's name through `World.feature`. With `colors`, each vertex's
+// linear RGBA as COLOR_0 (normalized unsigned bytes), which glTF multiplies
+// by the material's base colour.
 
 const FLOAT = 5126;
+const UNSIGNED_BYTE = 5121;
 const UNSIGNED_SHORT = 5123;
 const UNSIGNED_INT = 5125;
 const ARRAY_BUFFER = 34962;
@@ -19,12 +22,14 @@ const pad4 = (n) => (n + 3) & ~3;
  * @param {{
  *   positions: Float32Array, normals: Float32Array, indices: Uint32Array,
  *   featureIds: Uint16Array, features: readonly {name: string, kind: string}[],
- *   color: [number, number, number, number],
- * }} mesh Positions are glTF Y-up. `color` is linear RGBA.
+ *   color: [number, number, number, number], colors?: Float32Array,
+ * }} mesh Positions are glTF Y-up. `color` is linear RGBA, and `colors`
+ *   four linear components a vertex in [0, 1].
  * @returns {Uint8Array}
  */
 export function writeGlb(mesh) {
-  const { positions, normals, indices, featureIds, features, color } = mesh;
+  const { positions, normals, indices, featureIds, features, color, colors } =
+    mesh;
   if (positions.length === 0 || positions.length % 3 !== 0) {
     throw new Error("writeGlb: positions must be a non-empty multiple of 3");
   }
@@ -55,6 +60,16 @@ export function writeGlb(mesh) {
   }
   if (color.length !== 4 || !color.every(Number.isFinite)) {
     throw new Error("writeGlb: color is four finite numbers");
+  }
+  if (colors !== undefined) {
+    if (colors.length !== vertices * 4) {
+      throw new Error("writeGlb: colors are four numbers a vertex");
+    }
+    for (const c of colors) {
+      if (!(c >= 0 && c <= 1)) {
+        throw new Error("writeGlb: colors must be in [0, 1]");
+      }
+    }
   }
 
   const min = [Infinity, Infinity, Infinity];
@@ -114,7 +129,12 @@ export function writeGlb(mesh) {
     view(raw(names.offsets)),
     view(kinds.values),
     view(raw(kinds.offsets)),
-  ].map((v) => ({ buffer: 0, ...v }));
+  ];
+  if (colors !== undefined) {
+    const bytes = Uint8Array.from(colors, (c) => Math.round(c * 255));
+    bufferViews.push(view(bytes, ARRAY_BUFFER, 4));
+  }
+  bufferViews.forEach((v, i) => (bufferViews[i] = { buffer: 0, ...v }));
 
   const json = {
     asset: { version: "2.0", generator: "cesium-next design tiles" },
@@ -126,7 +146,12 @@ export function writeGlb(mesh) {
       {
         primitives: [
           {
-            attributes: { POSITION: 0, NORMAL: 1, _FEATURE_ID_0: 2 },
+            attributes: {
+              POSITION: 0,
+              NORMAL: 1,
+              _FEATURE_ID_0: 2,
+              ...(colors !== undefined && { COLOR_0: 4 }),
+            },
             indices: 3,
             material: 0,
             mode: 4,
@@ -178,6 +203,17 @@ export function writeGlb(mesh) {
         count: indices.length,
         type: "SCALAR",
       },
+      ...(colors !== undefined
+        ? [
+            {
+              bufferView: 8,
+              componentType: UNSIGNED_BYTE,
+              normalized: true,
+              count: vertices,
+              type: "VEC4",
+            },
+          ]
+        : []),
     ],
     bufferViews,
     buffers: [{ byteLength: length }],

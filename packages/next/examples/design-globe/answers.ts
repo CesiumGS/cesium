@@ -6,7 +6,8 @@
 // (checks.ts).
 //
 // Units: design values (`design`, stations, offsets, design distances) are
-// in the corridor CRS's own units, US survey feet (`frame.unitName`);
+// in the corridor CRS's own units, US survey feet (`frame.unitName`),
+// except a site's (`sites`), which are in that site's CRS's units;
 // body-fixed positions and true distances are Earth-fixed metres; angles
 // are radians; geodetic heights are metres above the ellipsoid.
 //
@@ -153,6 +154,61 @@ export interface AnswerFrame {
   readonly grids: readonly string[];
 }
 
+/** A design point of a portfolio site's model, where it is and where rigid draws it. */
+export interface AnswerSitePoint {
+  /** "Anchor", "Farthest point", or the model's landmark ("Pole 1's top"). */
+  readonly label: string;
+  /** In the site's CRS's units, easting first. */
+  readonly design: readonly [number, number, number];
+  /** Where the point truly is, through the site's frame (Earth-fixed metres). */
+  readonly bodyFixed: readonly [number, number, number];
+  /** Where the rigid placement at the anchor draws it (Earth-fixed metres). */
+  readonly rigidDisplayed: readonly [number, number, number];
+  /** |rigidDisplayed − bodyFixed|, metres. */
+  readonly displayError: number;
+  /** The horizontal design distance from the anchor, metres. */
+  readonly distanceFromAnchor: number;
+}
+
+/**
+ * A portfolio site's rung of the scale ladder (Task 17b): its model's size
+ * and its rigid placement's error at its edge, with the parts of that error.
+ */
+export interface AnswerSite {
+  readonly name: string;
+  /** The model's kind ("airport", "poleLine", …). */
+  readonly kind: string;
+  /** The largest horizontal distance between two of the model's points, metres. */
+  readonly extent: number;
+  /** The rigid placement's anchor: the model's middle, design units. */
+  readonly anchor: readonly [number, number, number];
+  /** The rigid error at the model's point farthest from the anchor (`points[1]`), metres. */
+  readonly displayError: number;
+  /** That point's horizontal distance from the anchor, d, metres. */
+  readonly distanceFromAnchor: number;
+  /**
+   * The rigid error's parts there, metres: the curvature (d²/2R, R the
+   * Gaussian radius at the anchor), the scale (d·|1 − 1/k|, k the combined
+   * factor at the anchor, which rigid ignores), and the geoid's rise from
+   * the anchor to the point (rigid keeps the anchor's). The error is about
+   * √((curvature − geoid)² + scale²).
+   */
+  readonly terms: {
+    readonly curvature: number;
+    readonly scale: number;
+    readonly geoid: number;
+  };
+  /** The anchor, the farthest point and the model's landmark, in that order. */
+  readonly points: readonly AnswerSitePoint[];
+  /** Both placements' one tile tree: its tiles, levels, vertices (one placement's) and leaf error (metres). */
+  readonly tiles: {
+    readonly count: number;
+    readonly levels: number;
+    readonly vertices: number;
+    readonly leafError: number;
+  };
+}
+
 /** `<store>/design-globe/answers.json`. */
 export interface Answers {
   readonly version: number;
@@ -168,6 +224,8 @@ export interface Answers {
   readonly pairs: readonly AnswerPair[];
   readonly marker: AnswerMarker;
   readonly mark: AnswerMark;
+  /** The scale ladder's seven sites by id (Task 17b). */
+  readonly sites: Readonly<Record<string, AnswerSite>>;
 }
 
 /** The version this file reads. */
@@ -382,6 +440,62 @@ export function parseAnswers(json: unknown, source = "answers.json"): Answers {
     trueDistance: r.number(m.trueDistance, "mark.trueDistance"),
   };
 
+  const siteEntries = Object.entries(r.object(root.sites, "sites"));
+  if (siteEntries.length === 0) {
+    r.fail("sites", "is empty");
+  }
+  const sites: Record<string, AnswerSite> = {};
+  for (const [id, value] of siteEntries) {
+    const path = `sites.${id}`;
+    const o = r.object(value, path);
+    const terms = r.object(o.terms, `${path}.terms`);
+    const tiles = r.object(o.tiles, `${path}.tiles`);
+    const sitePoints = r.array(o.points, `${path}.points`);
+    if (sitePoints.length !== 3) {
+      r.fail(
+        `${path}.points`,
+        "is not 3 points (the anchor, the farthest, the landmark)",
+      );
+    }
+    sites[id] = {
+      name: r.string(o.name, `${path}.name`),
+      kind: r.string(o.kind, `${path}.kind`),
+      extent: r.number(o.extent, `${path}.extent`),
+      anchor: r.vec3(o.anchor, `${path}.anchor`),
+      displayError: r.number(o.displayError, `${path}.displayError`),
+      distanceFromAnchor: r.number(
+        o.distanceFromAnchor,
+        `${path}.distanceFromAnchor`,
+      ),
+      terms: {
+        curvature: r.number(terms.curvature, `${path}.terms.curvature`),
+        scale: r.number(terms.scale, `${path}.terms.scale`),
+        geoid: r.number(terms.geoid, `${path}.terms.geoid`),
+      },
+      points: sitePoints.map((pv, i) => {
+        const pp = `${path}.points[${i}]`;
+        const p = r.object(pv, pp);
+        return {
+          label: r.string(p.label, `${pp}.label`),
+          design: r.vec3(p.design, `${pp}.design`),
+          bodyFixed: r.vec3(p.bodyFixed, `${pp}.bodyFixed`),
+          rigidDisplayed: r.vec3(p.rigidDisplayed, `${pp}.rigidDisplayed`),
+          displayError: r.number(p.displayError, `${pp}.displayError`),
+          distanceFromAnchor: r.number(
+            p.distanceFromAnchor,
+            `${pp}.distanceFromAnchor`,
+          ),
+        };
+      }),
+      tiles: {
+        count: r.number(tiles.count, `${path}.tiles.count`),
+        levels: r.number(tiles.levels, `${path}.tiles.levels`),
+        vertices: r.number(tiles.vertices, `${path}.tiles.vertices`),
+        leafError: r.number(tiles.leafError, `${path}.tiles.leafError`),
+      },
+    };
+  }
+
   return {
     version,
     instant: r.string(root.instant, "instant"),
@@ -395,6 +509,7 @@ export function parseAnswers(json: unknown, source = "answers.json"): Answers {
     pairs,
     marker,
     mark,
+    sites,
   };
 }
 

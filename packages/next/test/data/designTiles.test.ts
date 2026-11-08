@@ -12,7 +12,13 @@
 //  - answers.json is `Answers`' shape (Task 17): the station 170,000
 //    marker's rigid separation, the survey mark's zone 3 coordinates
 //    through PROJ against NGS's datasheet, and the measurement model on the
-//    library's own measurement of pairs[0].
+//    library's own measurement of pairs[0];
+//  - the scale ladder (Task 17b): each site's rigid and reprojected
+//    tilesets are partners (one tree, the same ids, indices, feature ids
+//    and colours, and every vertex the same design point), load by their
+//    own declarations, round-trip on their leaves, keep every reprojected
+//    leaf's edges within the sag rule, and have the extents and rigid
+//    errors of the ladder, which grow down it.
 // `npm run test:data` runs it.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -48,8 +54,17 @@ import {
   largestChordError,
   type CorridorNode,
 } from "../../scripts/designTiles/corridorMesh.mjs";
-import { PORTFOLIO, SITE_BUILDING } from "../../examples/design-globe/sites.ts";
-import { DESIGN_TILES_INSTANT } from "../../scripts/designTiles.mjs";
+import {
+  LADDER,
+  PORTFOLIO,
+  SITE_BUILDING,
+  modelAnchor,
+} from "../../examples/design-globe/sites.ts";
+import {
+  DESIGN_TILES_INSTANT,
+  rigidErrorTerms,
+} from "../../scripts/designTiles.mjs";
+import { MIN_RADIUS } from "../../scripts/designTiles/meshBuilder.mjs";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import { Alignment } from "../../src/engineering/alignment.ts";
 import {
@@ -103,15 +118,47 @@ const shape = (tile: Json): Shape => ({
 
 /** A GLB's POSITION accessor as a Float32Array. */
 function positions(bytes: Uint8Array): Float32Array {
+  return accessorOf(bytes, "POSITION") as Float32Array;
+}
+
+/**
+ * A GLB's attribute (by semantic) or its indices ("indices"), each element
+ * read through its view's stride, as the accessor's array type.
+ */
+function accessorOf(bytes: Uint8Array, semantic: string): ArrayLike<number> {
   const { json, bin } = splitGlb(bytes);
+  const primitive = json.meshes[0].primitives[0];
   const accessor =
-    json.accessors[json.meshes[0].primitives[0].attributes.POSITION];
+    json.accessors[
+      semantic === "indices"
+        ? primitive.indices
+        : primitive.attributes[semantic]
+    ];
   const view = json.bufferViews[accessor.bufferView];
-  const offset =
+  const Type = (
+    {
+      5121: Uint8Array,
+      5123: Uint16Array,
+      5125: Uint32Array,
+      5126: Float32Array,
+    } as const
+  )[accessor.componentType as 5121 | 5123 | 5125 | 5126];
+  const components = { SCALAR: 1, VEC3: 3, VEC4: 4 }[
+    accessor.type as "SCALAR" | "VEC3" | "VEC4"
+  ];
+  const size = Type.BYTES_PER_ELEMENT * components;
+  const stride = view.byteStride ?? size;
+  const start =
     bin!.byteOffset + (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
-  return new Float32Array(
-    bin!.buffer.slice(offset, offset + 12 * accessor.count),
-  );
+  const out = new Type(accessor.count * components);
+  const data = bin!.buffer.slice(
+    start,
+    start + stride * accessor.count,
+  ) as ArrayBuffer;
+  for (let i = 0; i < accessor.count; i++) {
+    out.set(new Type(data, i * stride, components), i * components);
+  }
+  return out;
 }
 
 /** Pairs of (json tile, engine tile), depth first. */
@@ -202,6 +249,11 @@ describe("the design globe's generated tiles", () => {
       "scripts/designTiles.mjs",
       "scripts/designTiles/corridorMesh.mjs",
       "scripts/designTiles/siteMesh.mjs",
+      "scripts/designTiles/ladder.mjs",
+      "scripts/designTiles/meshBuilder.mjs",
+      ...["block", "port", "solarFarm", "airport", "campus", "poleLine"].map(
+        (m) => `scripts/designTiles/${m}Mesh.mjs`,
+      ),
     ]) {
       expect(manifest.sha256[file]).toMatch(/^[0-9a-f]{64}$/);
     }
@@ -314,7 +366,7 @@ describe("the design globe's generated tiles", () => {
     expect(worstReprojected).toBeLessThan(1e-4);
   });
 
-  it("places all ten tilesets by their own declarations", async () => {
+  it("places every tileset by its own declaration", async () => {
     const declared = readGeoreference(rigidJson)!;
     // BENTLEY_engineering_frame, with the alignments as BENTLEY_alignments:
     // nothing to warn about, and the corridor's alignment exactly.
@@ -345,9 +397,26 @@ describe("the design globe's generated tiles", () => {
     expect(() =>
       checkRigidTransform(rigid, Float64Array.from(rigidJson.root.transform)),
     ).not.toThrow();
-    for (const site of [SITE_BUILDING, ...PORTFOLIO]) {
-      const dir =
-        site === SITE_BUILDING ? "site-building" : `portfolio-${site.id}`;
+    const rigidDirs = [
+      [SITE_BUILDING, "site-building"],
+      ...PORTFOLIO.map((s) => [s, `portfolio-${s.id}-rigid`] as const),
+    ] as const;
+    for (const site of PORTFOLIO) {
+      // The reprojected partner: declared reprojected, the same frame.
+      const dir = `portfolio-${site.id}-reprojected`;
+      const json = tileset(dir);
+      const georeference = readGeoreference(json)!;
+      expect(json.extensionsUsed, dir).toEqual(["BENTLEY_engineering_frame"]);
+      expect(georeference.warnings, dir).toEqual([]);
+      expect(georeference.placement, dir).toEqual({ mode: "reprojected" });
+      expect(json.root.transform, dir).toBeUndefined();
+      expect(georeference.geoidFallback, dir).toBe(site.frame.geoidFallback);
+      const siteFrame = await declaredFrame(json, dir);
+      expect([...siteFrame.operation.grids].sort(), dir).toEqual(
+        [...site.grids].sort(),
+      );
+    }
+    for (const [site, dir] of rigidDirs) {
       const json = tileset(dir);
       const georeference = readGeoreference(json)!;
       expect(json.extensionsUsed, site.id).toEqual([
@@ -588,5 +657,264 @@ describe("the design globe's generated tiles", () => {
     expect(mark.trueDistance).toBeGreaterThan(
       mark.horizontalDistance * frame.units.metersPerUnit * 0.99,
     );
+  });
+});
+
+/** The ladder (owner, 2026-11-07), smallest first: each model's extent, metres. */
+const LADDER_EXTENTS: Record<string, number> = {
+  amsterdam: 60,
+  tokyo: 1_000,
+  jakarta: 3_000,
+  phoenix: 4_000,
+  sydney: 4_000,
+  nairobi: 10_000,
+  london: 30_000,
+};
+
+describe("the scale ladder's tilesets (Task 17b)", () => {
+  let P: ProjApi;
+  let source: GridSource;
+  let answers: Json;
+  const loaded = new Map<
+    string,
+    {
+      rigidJson: Json;
+      reprojectedJson: Json;
+      rigid: TilesetPlacement;
+      reprojected: TilesetPlacement;
+      frame: EngineeringFrame;
+    }
+  >();
+  beforeAll(async () => {
+    if (!existsSync(join(out, "manifest.json"))) {
+      throw new Error(`${out}/manifest.json is missing: run \`npm run setup\``);
+    }
+    answers = JSON.parse(read("answers.json").toString("utf8"));
+    P = await loadProj({ base: `${join(store, "proj")}/`, grids: [] });
+    source = await gridSource({ base: `${join(store, "grids")}/` });
+    // Each placement from its own tileset's declaration.
+    const proj = P;
+    const grids = source;
+    const load = (json: Json, name: string) =>
+      EngineeringFrame.load(
+        declaredDefinition(readGeoreference(json)!, name, grids.catalog),
+        { proj, grids },
+      );
+    for (const site of PORTFOLIO) {
+      const rigidJson = tileset(`portfolio-${site.id}-rigid`);
+      const reprojectedJson = tileset(`portfolio-${site.id}-reprojected`);
+      const frame = await load(rigidJson, site.id);
+      const anchor = (
+        readGeoreference(rigidJson)!.placement as {
+          readonly anchor: readonly number[];
+        }
+      ).anchor;
+      loaded.set(site.id, {
+        rigidJson,
+        reprojectedJson,
+        frame,
+        rigid: placeRigid(frame, anchor),
+        reprojected: placeReprojected(await load(reprojectedJson, site.id)),
+      });
+    }
+  }, 60_000);
+
+  it("anchors each rigid tileset at its model's middle, and passes checkRigidTransform", () => {
+    for (const site of PORTFOLIO) {
+      const { rigidJson, rigid } = loaded.get(site.id)!;
+      expect(Array.from(rigid.rigid!.anchor), site.id).toEqual(
+        modelAnchor(site),
+      );
+      expect(rigidJson.root.transform, site.id).toEqual(
+        Array.from(rigid.rigid!.matrix),
+      );
+      expect(() =>
+        checkRigidTransform(rigid, Float64Array.from(rigidJson.root.transform)),
+      ).not.toThrow();
+    }
+  });
+
+  for (const site of LADDER) {
+    it(`${site.id}: both tilesets are partners, vertex for vertex, and the leaves round-trip within 1e-4 m`, () => {
+      const { rigidJson, reprojectedJson, rigid, reprojected, frame } =
+        loaded.get(site.id)!;
+      const rigidDir = `portfolio-${site.id}-rigid`;
+      const reprojectedDir = `portfolio-${site.id}-reprojected`;
+      expect(shape(reprojectedJson.root)).toEqual(shape(rigidJson.root));
+      expect(rigidJson.geometricError).toBe(reprojectedJson.geometricError);
+      const a = [...walk(rigidJson.root, tree(rigidJson))];
+      const b = [...walk(reprojectedJson.root, tree(reprojectedJson))];
+      expect(b).toHaveLength(a.length);
+      const mpu = frame.units.metersPerUnit;
+      const mph = frame.metersPerHeightUnit;
+      let leaves = 0;
+      let leafVertices = 0;
+      let checked = 0;
+      let worstPartner = 0;
+      let worstRigid = 0;
+      let worstReprojected = 0;
+      for (let t = 0; t < a.length; t++) {
+        const r = a[t]!;
+        const q = b[t]!;
+        expect(q.json.content?.uri).toBe(r.json.content?.uri);
+        // One error once the engine scales the rigid one by its transform.
+        expect(
+          Math.abs(r.tile.geometricError - q.tile.geometricError) /
+            Math.max(q.tile.geometricError, 1e-12),
+        ).toBeLessThan(1e-12);
+        if (!r.json.content) {
+          continue;
+        }
+        const uri = r.json.content.uri;
+        const [ra, qa] = [read(rigidDir, uri), read(reprojectedDir, uri)];
+        for (const semantic of ["indices", "_FEATURE_ID_0", "COLOR_0"]) {
+          expect(
+            Array.from(accessorOf(qa, semantic)),
+            `${uri} ${semantic}`,
+          ).toEqual(Array.from(accessorOf(ra, semantic)));
+        }
+        const pa = positions(ra);
+        const pb = positions(qa);
+        expect(pb.length, uri).toBe(pa.length);
+        const centre = [0, 1, 2].map((k) =>
+          r.chain.slice(1).reduce((sum, m) => sum + m[12 + k]!, 0),
+        );
+        const leaf = !r.json.children;
+        leaves += leaf ? 1 : 0;
+        leafVertices += leaf ? pa.length / 3 : 0;
+        // Every vertex of a leaf; every 7th of a parent.
+        const step = leaf ? 1 : 7;
+        for (let i = 0; i < pa.length / 3; i += step) {
+          const local = zUp(pa, i);
+          const design = local.map((v, k) => centre[k]! + v);
+          const gap = (got: ArrayLike<number>) =>
+            Math.hypot(
+              (got[0]! - design[0]!) * mpu,
+              (got[1]! - design[1]!) * mpu,
+              (got[2]! - design[2]!) * mph,
+            );
+          const partner = gap(
+            reprojected.designOf(apply(q.tile.transform, zUp(pb, i))),
+          );
+          if (leaf) {
+            worstReprojected = Math.max(worstReprojected, partner);
+            worstRigid = Math.max(
+              worstRigid,
+              gap(rigid.designOf(apply(r.tile.transform, local))),
+            );
+            checked++;
+          } else {
+            // A parent's float32 offsets span its whole box: a millimetre.
+            worstPartner = Math.max(worstPartner, partner);
+          }
+        }
+      }
+      expect(leaves).toBeGreaterThan(0);
+      expect(checked).toBe(leafVertices);
+      expect(checked).toBeGreaterThan(100);
+      expect(worstRigid).toBeLessThan(1e-4);
+      expect(worstReprojected).toBeLessThan(1e-4);
+      expect(worstPartner).toBeLessThan(5e-3);
+    });
+
+    it(`${site.id}: every reprojected leaf's longest edge sags (d²/8R) at most the leaf's error`, () => {
+      const { reprojectedJson } = loaded.get(site.id)!;
+      const dir = `portfolio-${site.id}-reprojected`;
+      let leaves = 0;
+      let worst = 0;
+      for (const { json } of walk(
+        reprojectedJson.root,
+        tree(reprojectedJson),
+      )) {
+        if (json.children || !json.content) {
+          continue;
+        }
+        leaves++;
+        const bytes = read(dir, json.content.uri);
+        const p = positions(bytes);
+        const index = accessorOf(bytes, "indices");
+        let longest = 0;
+        const edge = (i: number, j: number) =>
+          Math.hypot(
+            p[3 * i]! - p[3 * j]!,
+            p[3 * i + 1]! - p[3 * j + 1]!,
+            p[3 * i + 2]! - p[3 * j + 2]!,
+          );
+        for (let t = 0; t < index.length; t += 3) {
+          const [i, j, k] = [index[t]!, index[t + 1]!, index[t + 2]!];
+          longest = Math.max(longest, edge(i, j), edge(j, k), edge(k, i));
+        }
+        // Metres: the reprojected tiles are Earth-fixed metres.
+        const sag = (longest * longest) / (8 * MIN_RADIUS);
+        expect(sag, json.content.uri).toBeLessThanOrEqual(json.geometricError);
+        worst = Math.max(worst, sag / json.geometricError);
+      }
+      expect(leaves).toBeGreaterThan(0);
+      expect(worst).toBeGreaterThan(0);
+    });
+  }
+
+  it("answers.sites: the ladder's extents, three exact points each, and trees of 3 levels or more over 1 km", () => {
+    expect(Object.keys(answers.sites).sort()).toEqual(
+      PORTFOLIO.map((s) => s.id).sort(),
+    );
+    for (const site of LADDER) {
+      const a = answers.sites[site.id];
+      const { frame, rigid, rigidJson } = loaded.get(site.id)!;
+      const metres = LADDER_EXTENTS[site.id]!;
+      expect(a.kind).toBe(site.model.kind);
+      expect(Math.abs(a.extent - metres) / metres, site.id).toBeLessThan(0.1);
+      expect(a.anchor).toEqual(modelAnchor(site));
+      expect(a.points.map((p: Json) => p.label).slice(0, 2)).toEqual([
+        "Anchor",
+        "Farthest point",
+      ]);
+      for (const p of a.points) {
+        expect(Array.from(frame.toBodyFixed(p.design))).toEqual(p.bodyFixed);
+        expect(Array.from(rigid.displayed(p.design))).toEqual(p.rigidDisplayed);
+        expect(rigid.displayError(p.design)).toBe(p.displayError);
+      }
+      expect(a.points[0].displayError).toBeLessThan(1e-6);
+      expect(a.displayError).toBe(a.points[1].displayError);
+      expect(a.distanceFromAnchor).toBe(a.points[1].distanceFromAnchor);
+      // The farthest point is about half the extent from the middle.
+      expect(Math.abs((2 * a.distanceFromAnchor) / a.extent - 1)).toBeLessThan(
+        0.1,
+      );
+      // The tree as written: its depth, counting the content tiles' levels.
+      const depth = (tile: Json): number =>
+        1 + Math.max(0, ...(tile.children ?? []).map(depth));
+      expect(depth(rigidJson.root.children[0])).toBe(a.tiles.levels);
+      if (a.extent > 1_000) {
+        expect(a.tiles.levels, site.id).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
+  it("the rigid error at each model's edge is d²/2R with the scale and geoid terms rigid ignores, d²/2R alone where it dominates, and grows down the ladder", () => {
+    let dominated = 0;
+    let previous = 0;
+    for (const site of LADDER) {
+      const a = answers.sites[site.id];
+      const { frame } = loaded.get(site.id)!;
+      const terms = rigidErrorTerms(frame, a.anchor, a.points[1].design);
+      expect(terms).toEqual(a.terms);
+      const e = a.displayError;
+      const predicted = Math.hypot(terms.curvature - terms.geoid, terms.scale);
+      expect(Math.abs(e - predicted) / e, site.id).toBeLessThan(0.1);
+      if (terms.curvature >= 3 * Math.max(terms.scale, Math.abs(terms.geoid))) {
+        expect(Math.abs(e - terms.curvature) / e, site.id).toBeLessThan(0.1);
+        dominated++;
+      }
+      // Bigger models, bigger rigid errors.
+      expect(e, site.id).toBeGreaterThan(previous);
+      previous = e;
+    }
+    expect(dominated).toBeGreaterThanOrEqual(2);
+    // The corridor tops the ladder: its rigid error at its far end.
+    const corridor = Math.max(
+      ...answers.points.map((p: Json) => p.displayError),
+    );
+    expect(corridor).toBeGreaterThan(previous);
   });
 });

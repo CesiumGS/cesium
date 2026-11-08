@@ -1,3 +1,4 @@
+import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import type { GridSource } from "../src/engineering/proj.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import type { Frames } from "../src/frames/frames.ts";
@@ -12,9 +13,18 @@ export function designTilesInputs(
   store: string,
 ): Promise<{ proj: ProjApi; grids: GridSource; frames: Frames }>;
 /**
+ * The parts of a rigid placement's error at a design point, metres:
+ * curvature d²/2R, scale d·|1 − 1/k| and the geoid's rise from the anchor.
+ */
+export function rigidErrorTerms(
+  frame: EngineeringFrame,
+  anchor: ArrayLike<number>,
+  point: ArrayLike<number>,
+): { curvature: number; scale: number; geoid: number };
+/**
  * Writes `<store>/design-globe/` (the corridor rigid and reprojected, the
- * site building, the portfolio, answers.json and manifest.json) unless its
- * manifest is current.
+ * site building, the scale ladder's sites rigid and reprojected,
+ * answers.json and manifest.json) unless its manifest is current.
  */
 export function ensureDesignTiles(
   store: string,
