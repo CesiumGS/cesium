@@ -7,6 +7,7 @@
 // only when the bootstrap intervals separate; gaps (scenes an engine can't
 // draw yet) are shown, not hidden.
 import { ratio, summarize } from "./stats.mjs";
+import { currentGpuTimer, GPU_TIMER } from "./gpuTimer.mjs";
 import { engineLabel, isRelease } from "./engines.mjs";
 import {
   CHART_CSS,
@@ -498,6 +499,7 @@ const geomean = (values) =>
     : undefined;
 
 export function renderReport(results, options = {}) {
+  results = currentGpuTimer(results);
   const configs = [...new Set(results.runs.map((r) => r.config))];
   const baseline =
     results.baseline && configs.includes(results.baseline)
@@ -946,6 +948,8 @@ const CONDITION_METRICS = [
  * how many of its runs were valid (no per-frame series or timeline).
  */
 export function summarizeRun(results) {
+  // GPU numbers only of the current timer; the cell records it.
+  results = currentGpuTimer(results);
   const env = results.environment ?? {};
   const cells = {};
   for (const run of results.runs) {
@@ -1000,6 +1004,7 @@ export function summarizeRun(results) {
     title: c.title,
     config: c.config,
     warnings: c.verdicts.filter((v) => v !== "valid").length,
+    ...(c.values.gpuP50 ? { gpuTimer: GPU_TIMER } : {}),
     metrics: Object.fromEntries(
       Object.entries(c.values).map(([k, v]) => [
         k,

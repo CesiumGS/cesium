@@ -295,6 +295,13 @@ export interface RunMetrics {
   cpuP95?: number;
   /** GPU time per frame, ms (median), where the engine exposes it. */
   gpuP50?: number;
+  /**
+   * The GPU timer that measured `gpuP50` (src/gpu/GpuTimer.ts `version`;
+   * gpuTimer.mjs): absent, 1 (passes summed); 2, overlap counted once.
+   */
+  gpuTimer?: number;
+  /** `gpuP50` of an older timer, kept apart at reading (gpuTimer.mjs). */
+  gpuSummedP50?: number;
   /** Long animation frames (over 50 ms) and the worst blocking time, ms. */
   longFrames?: number;
   worstBlockingMs?: number;

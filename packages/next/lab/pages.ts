@@ -147,6 +147,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../bench/shaderCost.ts").then((m) => m.harness),
   },
   {
+    id: "translucency-cost",
+    group: "microbenchmarks",
+    title: "Translucency fixed cost",
+    description:
+      "GPU time at 1456 × 1360 with no blended draw, one in no view or hidden, and a small and a large one on screen; with a wall-time check on the GPU timer.",
+    page: "/bench/translucencyCost.html",
+    entry: "runTranslucencyCost",
+    load: () => import("../bench/translucencyCost.ts").then((m) => m.harness),
+  },
+  {
     id: "hitch",
     group: "microbenchmarks",
     title: "Hitches",

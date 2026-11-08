@@ -77,6 +77,7 @@ async function measure(
 ): Promise<Row[]> {
   const engine = await Engine.create();
   const rows: Row[] = [];
+  let watching = true;
   try {
     const world = engine.createWorld({
       maxDraws: 1024,
@@ -142,7 +143,6 @@ async function measure(
 
     const frames: number[] = [];
     let last = performance.now();
-    let watching = true;
     const tick = (t: number) => {
       frames.push(t - last);
       last = t;
@@ -248,9 +248,9 @@ async function measure(
     await read("60 m quad, visible (most of the view)");
     world.removeDraw(draw);
     await read("no blended draw again");
-    watching = false;
     status.textContent = "Done.";
   } finally {
+    watching = false;
     engine.stop();
     engine.destroy();
   }

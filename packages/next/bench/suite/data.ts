@@ -1,4 +1,5 @@
 import { METRICS, summarizeRun } from "./report.mjs";
+import { currentGpuTimerSummary } from "./gpuTimer.mjs";
 import publicCatalog from "./catalog/public.json";
 import methodNotes from "./annotations.json";
 import type { Budget, Dataset, EngineConfig, Scene } from "./schema.ts";
@@ -19,6 +20,8 @@ export interface Cell {
   title: string;
   config: string;
   warnings?: number;
+  /** The GPU timer its gpuP50 is from (gpuTimer.mjs); absent: none, or 1. */
+  gpuTimer?: number;
   metrics: Record<
     string,
     { median: number; low: number; high: number; values: number[] }
@@ -151,7 +154,8 @@ export function loadRuns(): Promise<Runs> {
             const s = index.summaries.includes(summaryName)
               ? await (await fetch(`/bench-results/${summaryName}`)).json()
               : summarizeRun(await full(name));
-            return { ...s, name } as Summary;
+            // A summary stored before timer versions has no GPU time.
+            return { ...currentGpuTimerSummary(s), name } as Summary;
           } catch {
             return undefined;
           }

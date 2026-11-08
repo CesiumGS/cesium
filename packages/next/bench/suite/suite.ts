@@ -16,6 +16,7 @@ import {
   UNITLESS_SUN_ILLUMINANCE,
 } from "../../src/index.ts";
 import { volumeFromJson } from "../../src/streaming/volumes.ts";
+import { GpuTimer } from "../../src/gpu/GpuTimer.ts";
 import {
   type CreditSource,
   engineSnapshot,
@@ -405,6 +406,8 @@ export interface Adapter {
   /** Renders one frame; returns main-thread ms inside the engine. */
   frame(): number;
   gpuMs(): number | undefined;
+  /** The version of the timer behind `gpuMs` (`RunMetrics.gpuTimer`). */
+  gpuTimer?(): number;
   /** Nothing loading for the current view. */
   settled(): boolean;
   /** Some content (tiles or models) is drawn. */
@@ -737,6 +740,10 @@ export class NextAdapter implements Adapter {
   gpuMs(): number | undefined {
     const ms = this.engine.stats.gpuMs;
     return Number.isFinite(ms) ? ms : undefined;
+  }
+
+  gpuTimer(): number {
+    return GpuTimer.version;
   }
 
   settled(): boolean {
@@ -1720,6 +1727,9 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       metrics.cpuP50 = quantile(cpu, 0.5);
       metrics.cpuP95 = quantile(cpu, 0.95);
       metrics.gpuP50 = quantile(gpu, 0.5);
+      if (gpu.length && adapter.gpuTimer) {
+        metrics.gpuTimer = adapter.gpuTimer();
+      }
 
       if (sun) {
         adapter.setSun(sunDirection(spec, pose(1)));

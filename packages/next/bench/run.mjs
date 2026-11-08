@@ -106,6 +106,10 @@ const suites = {
   tracks: ["/parity/tracks.html?bench", "runTracks"],
   tracksBench: ["/bench/tracksBench.html?bench", "runTracksBench"],
   shaderCost: ["/bench/shaderCost.html?bench", "runShaderCost"],
+  translucencyCost: [
+    "/bench/translucencyCost.html?bench",
+    "runTranslucencyCost",
+  ],
   // Clamping heights on OSM Buildings vs 1.x (needs VITE_ION_TOKEN).
   heights: ["/parity/heights.html?bench", "runHeights"],
   tileset: [

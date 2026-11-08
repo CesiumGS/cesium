@@ -3717,8 +3717,11 @@ export class World {
   /**
    * The nearest and farthest a blended surface may be from `eye` (the
    * bounding spheres of the draws the view of `viewBit` draws: shown and
-   * in its view mask, as the cull's `drawable`; the frustum aside), m;
-   * undefined without any, and the view then runs no translucent passes.
+   * in its view mask, as the cull's `drawable`), m; undefined without any,
+   * and the view then runs no translucent passes. Unlike the cull it
+   * doesn't test the frustum, empty draws (no indices) or a height
+   * capture's ground-only rule: those can only run the passes for
+   * nothing, never leave a drawn surface out.
    */
   translucentRange(
     eye: ArrayLike<number>,

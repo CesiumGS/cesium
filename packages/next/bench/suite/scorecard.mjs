@@ -29,6 +29,7 @@
 // but not judged. 2.0 against 2.0 (a change against main) judges them all.
 //
 // No scene measured by both engines (all errored, say) has no scorecard.
+import { currentGpuTimer } from "./gpuTimer.mjs";
 import { ratio, summarize } from "./stats.mjs";
 import { escape } from "./charts.mjs";
 import { engineLabel, engineOf, setupOf } from "./engines.mjs";
@@ -226,6 +227,7 @@ function selectionCheck(results, candidate) {
 
 /** The scorecard for baseline vs candidate under a declared plan. */
 export function scorecard(results, options = {}) {
+  results = currentGpuTimer(results);
   const configs = [...new Set(results.runs.map((r) => r.config))];
   const baseline = options.baseline ?? results.baseline ?? configs[0];
   const candidate =
@@ -371,6 +373,8 @@ ${card.plan.hypothesis ? `<div class="sub">Hypothesis: ${escape(card.plan.hypoth
  * scene, the median (or its ratio to the baseline's) against the limit.
  */
 export function checkBudgets(results, budgets = results.budgets ?? []) {
+  // A ratio to a baseline measured by another GPU timer isn't taken.
+  results = currentGpuTimer(results);
   const configs = [...new Set(results.runs.map((r) => r.config))];
   const baseline = results.baseline ?? configs[0];
   return budgets
@@ -467,6 +471,8 @@ export function compareTable(
   [newResults, newConfig],
   metrics,
 ) {
+  oldResults = currentGpuTimer(oldResults);
+  newResults = currentGpuTimer(newResults);
   const keys = metrics ?? [DEFAULT_PLAN.primary, ...DEFAULT_PLAN.guardrails];
   const lines = [];
   const pad = (s, n) => String(s).padEnd(n);

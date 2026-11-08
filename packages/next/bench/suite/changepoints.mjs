@@ -8,6 +8,7 @@
 // are keyed by what changed and where, so their triage state (status,
 // owner, note) survives new runs; that state lives beside the results.
 import { summarize } from "./stats.mjs";
+import { currentGpuTimerSummary } from "./gpuTimer.mjs";
 
 /** Deterministic pseudo-random numbers (alerts must be reproducible). */
 function random(seed) {
@@ -121,7 +122,9 @@ export function detectAlerts(
   { minChange = 0.03, minRuns = 6, ...options } = {},
 ) {
   const series = new Map();
-  for (const s of summaries) {
+  for (const stored of summaries) {
+    // GPU time only of the current timer: no step where the timer changed.
+    const s = currentGpuTimerSummary(stored);
     for (const cell of s.scenes) {
       const scene =
         cell.scenario && cell.scenario !== "cold-orbit"

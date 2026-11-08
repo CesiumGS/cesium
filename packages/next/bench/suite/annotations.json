@@ -32,6 +32,13 @@
       "kind": "method",
       "short": "baseline 1.147.0",
       "text": "CesiumJS 1.147.0 joins the default engines and becomes the baseline (1.146.0 still runs)."
+    },
+    {
+      "date": "2026-11-08T00:48:20Z",
+      "kind": "method",
+      "short": "GPU timer 2: overlap counted once",
+      "text": "2.0's GPU time per frame counts passes that overlap once (the union of their intervals; GpuTimer version 2, 62a56785d4). Before, each pass's interval was summed: on a GPU whose passes overlap (an Apple tiler) that read several passes too many (36 ms for 11 with translucency on). Results record gpuTimer; an older timer's gpuP50 is kept apart as gpuSummedP50 and never compared, so gpuP50 starts here. Not measured on nvidia-lovelace, where independent passes may also overlap.",
+      "metrics": ["gpuP50"]
     }
   ]
 }

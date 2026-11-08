@@ -4,9 +4,20 @@
  * frames are simply not measured. A no-op when `timestamp-query` is missing.
  *
  * Chrome quantizes timestamps to 100 µs unless developer features are
- * enabled, so treat values as benchmark data, not a product feature.
+ * enabled, so treat values as benchmark data, not a product feature. The
+ * frame time is the union of the passes' intervals, not their sum, so it
+ * isn't comparable with numbers from before `version` 2.
  */
 export class GpuTimer {
+  /**
+   * What `milliseconds` means, as benchmark results record it
+   * (`RunMetrics.gpuTimer`; bench/suite/gpuTimer.mjs): 1, every pass's
+   * interval summed (before 2026-11-07); 2, overlapping passes counted
+   * once (`passTimes`). The two aren't comparable on a GPU whose passes
+   * overlap (an Apple tiler: 1 read about three opaque passes too many
+   * with translucency on).
+   */
+  static readonly version = 2;
   private static readonly maxPasses = 32;
   /**
    * Smoothed GPU frame time in milliseconds, or NaN when unsupported: the
@@ -61,11 +72,8 @@ export class GpuTimer {
   /** Label to index into `labelMs`, interned once. */
   private readonly labelIndex = new Map<string, number>();
   private readonly labelMs = new Float64Array(GpuTimer.maxPasses);
-  private readonly labelSum = new Float64Array(GpuTimer.maxPasses);
-  /** A measured frame's passes' timestamps and own times (`passTimes`). */
-  private readonly begins = new Float64Array(GpuTimer.maxPasses);
-  private readonly ends = new Float64Array(GpuTimer.maxPasses);
-  private readonly own = new Float64Array(GpuTimer.maxPasses);
+  /** A measured frame's times (`frameTimes`), reused. */
+  private readonly scratch = frameScratch(GpuTimer.maxPasses);
   /** This frame's passes' label indices. */
   private readonly frameLabels = new Uint8Array(GpuTimer.maxPasses);
   /** Per-pass timestamp-write descriptors, created once. */
@@ -193,42 +201,22 @@ export class GpuTimer {
   private onMapped(buffer: GPUBuffer): void {
     const { count, labels } = this.handlers.get(buffer)!;
     const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
-    let first = timestamp(words, 0);
-    let last = timestamp(words, 1);
-    this.labelSum.fill(0);
     const order: number[] = [];
-    const passes = count / 2;
-    for (let i = 0; i < count; i += 2) {
-      if (!order.includes(labels[i / 2]!)) {
-        order.push(labels[i / 2]!);
+    for (let i = 0; i < count / 2; i++) {
+      if (!order.includes(labels[i]!)) {
+        order.push(labels[i]!);
       }
-      const begin = timestamp(words, i),
-        end = timestamp(words, i + 1);
-      this.begins[i / 2] = begin;
-      this.ends[i / 2] = end;
-      first = begin < first ? begin : first;
-      last = end > last ? end : last;
     }
+    const times = frameTimes(words, count / 2, labels, this.scratch);
     buffer.unmap();
-    // Passes overlap on a tiler (an Apple GPU starts a pass's vertex stage
-    // while the last one's fragments run): each pass counts only its time
-    // no earlier pass covered, so the total is the time any pass ran.
-    const total = passTimes(this.begins, this.ends, passes, this.own);
-    for (let i = 0; i < passes; i++) {
-      const k = labels[i]!;
-      this.labelSum[k] = this.labelSum[k]! + this.own[i]!;
-    }
     this.idle.push(buffer);
     this.order = mergeOrder(this.order, order);
-    this.milliseconds = smooth(this.milliseconds, total / 1e6);
+    this.milliseconds = smooth(this.milliseconds, times.total / 1e6);
     for (let i = 0; i < this.labelIndex.size; i++) {
-      this.labelMs[i] = smooth(this.labelMs[i]!, this.labelSum[i]! / 1e6);
+      this.labelMs[i] = smooth(this.labelMs[i]!, times.perLabel[i]! / 1e6);
     }
-    if (last > first) {
-      this.spanMilliseconds = smooth(
-        this.spanMilliseconds,
-        (last - first) / 1e6,
-      );
+    if (times.span > 0) {
+      this.spanMilliseconds = smooth(this.spanMilliseconds, times.span / 1e6);
     }
   }
 
@@ -253,7 +241,70 @@ function smooth(previous: number, sample: number): number {
   return Number.isNaN(previous) ? sample : previous * 0.9 + sample * 0.1;
 }
 
-/** The union so far of `passTimes`'s intervals: sorted, disjoint. */
+/** `frameTimes`'s output and working arrays, for up to `passes` passes. */
+export interface FrameTimes {
+  begins: Float64Array;
+  ends: Float64Array;
+  /** Each pass's own time (`passTimes`), ns. */
+  own: Float64Array;
+  /** Own time by label index, ns; labels sharing passes add up. */
+  perLabel: Float64Array;
+  /** The time any pass ran, ns: the sum of `own` and of `perLabel`. */
+  total: number;
+  /** First begin to last end, ns (0 when the end isn't after the begin). */
+  span: number;
+}
+
+export function frameScratch(passes: number): FrameTimes {
+  return {
+    begins: new Float64Array(passes),
+    ends: new Float64Array(passes),
+    own: new Float64Array(passes),
+    perLabel: new Float64Array(passes),
+    total: 0,
+    span: 0,
+  };
+}
+
+/**
+ * One measured frame from its resolved timestamps (`words`: 64-bit values
+ * as pairs of 32-bit words, each pass's begin then end) and each pass's
+ * label index: the time any pass ran, each label's share of it, and the
+ * span. Fills and returns `out` (`frameScratch`).
+ */
+export function frameTimes(
+  words: Uint32Array,
+  passes: number,
+  labels: ArrayLike<number>,
+  out: FrameTimes,
+): FrameTimes {
+  let first = Infinity;
+  let last = -Infinity;
+  for (let i = 0; i < passes; i++) {
+    const begin = timestamp(words, i * 2);
+    const end = timestamp(words, i * 2 + 1);
+    out.begins[i] = begin;
+    out.ends[i] = end;
+    first = begin < first ? begin : first;
+    last = end > last ? end : last;
+  }
+  // Passes overlap on a tiler (an Apple GPU starts a pass's vertex stage
+  // while the last one's fragments run): each pass counts only its time
+  // no earlier pass covered, so the total is the time any pass ran.
+  out.total = passTimes(out.begins, out.ends, passes, out.own);
+  out.perLabel.fill(0);
+  for (let i = 0; i < passes; i++) {
+    const k = labels[i]!;
+    out.perLabel[k] = out.perLabel[k]! + out.own[i]!;
+  }
+  out.span = last > first ? last - first : 0;
+  return out;
+}
+
+/**
+ * The union so far of `passTimes`'s intervals: sorted, disjoint. Shared by
+ * every timer; `passTimes` is synchronous, so no two calls interleave.
+ */
 let unionBegin = new Float64Array(64);
 let unionEnd = new Float64Array(64);
 
