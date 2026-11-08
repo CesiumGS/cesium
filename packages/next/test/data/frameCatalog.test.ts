@@ -16,6 +16,9 @@ import {
   loadFrameData,
   type FrameData,
 } from "../../src/ephemeris/loadFrameData.ts";
+import { icrfToFixed } from "../../src/time/celestial.ts";
+import { celestialToTerrestrial } from "../../src/time/earthOrientation.ts";
+import type { EopSample } from "../../src/time/eop.ts";
 import { Instant } from "../../src/time/Instant.ts";
 
 const BASE = "/frames-data/";
@@ -72,6 +75,28 @@ function angleBetween(a: ArrayLike<number>, b: ArrayLike<number>): number {
 }
 
 const DAY_MS = 86_400_000;
+
+/** The rotation angle between two row-major 3 × 3 rotations, radians. */
+function rowAngle(a: ArrayLike<number>, b: ArrayLike<number>): number {
+  let trace = 0;
+  for (let i = 0; i < 9; i++) {
+    trace += a[i]! * b[i]!;
+  }
+  return Math.acos(Math.min(1, Math.max(-1, (trace - 1) / 2)));
+}
+
+const NO_EOP: EopSample = {
+  ut1MinusUtc: 0,
+  ut1MinusTai: 0,
+  xp: 0,
+  yp: 0,
+  dX: 0,
+  dY: 0,
+  predicted: false,
+  degraded: false,
+};
+const fixed = new Float64Array(9);
+const model = new Float64Array(9);
 
 describe("the frame catalog over the store", () => {
   it("runs every reference frame at precise, the catalog's own frames", () => {
@@ -168,7 +193,25 @@ describe("the frame catalog over the store", () => {
           ),
         ),
       );
+      // The analytic model alone against IAU 2006/2000A: UT1 = UTC, no
+      // polar motion, no celestial pole offsets.
+      const dat = data.leapSeconds.taiMinusUtc(ms);
+      note(
+        "itrfModel",
+        rowAngle(
+          icrfToFixed(ms, fixed),
+          celestialToTerrestrial(
+            instant,
+            { ...NO_EOP, ut1MinusTai: -dat },
+            model,
+          ),
+        ),
+      );
       if (ms >= data.eop.first && ms <= data.eop.lastObserved) {
+        note(
+          "ut1MinusUtc",
+          Math.abs(data.eop.atInstant(instant, data.leapSeconds).ut1MinusUtc),
+        );
         note(
           "ITRF",
           angleBetween(
@@ -178,30 +221,61 @@ describe("the frame catalog over the store", () => {
         );
       }
     }
-    console.info("stand-ins, largest error (m or rad):", worst);
-    expect(worst.MOON_ME!).toBeLessThanOrEqual(
+    const arcsec = (rad: number) => `${((rad * 648000) / Math.PI).toFixed(2)}″`;
+    const km = (m: number) => `${(m / 1000).toFixed(0)} km`;
+    const within = (
+      name: string,
+      measured: number,
+      stated: number,
+      show: (v: number) => string,
+    ) =>
+      expect(
+        measured,
+        `${name}: measured ${show(measured)}, stated ${show(stated)}`,
+      ).toBeLessThanOrEqual(stated);
+    within(
+      "MOON_ME",
+      worst.MOON_ME!,
       ANALYTIC_ACCURACY.MOON_ME.radians,
+      arcsec,
     );
     // Rounded up from the measured figure, not padded past the next arcsecond.
-    expect(worst.MOON_ME!).toBeGreaterThan(
-      ANALYTIC_ACCURACY.MOON_ME.radians - Math.PI / 648000,
+    expect(
+      worst.MOON_ME!,
+      `MOON_ME: measured ${arcsec(worst.MOON_ME!)}`,
+    ).toBeGreaterThan(ANALYTIC_ACCURACY.MOON_ME.radians - Math.PI / 648000);
+    // ITRF's bound is derived from its parts; check each part and the whole.
+    within("ITRF", worst.ITRF!, ANALYTIC_ACCURACY.ITRF.radians, arcsec);
+    within(
+      "ITRF's model part",
+      worst.itrfModel!,
+      (10 * Math.PI) / 648000,
+      arcsec,
     );
-    expect(worst.ITRF!).toBeLessThanOrEqual(ANALYTIC_ACCURACY.ITRF.radians);
-    expect(worst.ITRF!).toBeGreaterThan(
-      ANALYTIC_ACCURACY.ITRF.radians - Math.PI / 648000,
-    );
-    expect(worst.HCRS!).toBeLessThanOrEqual(ANALYTIC_ACCURACY.HCRS.meters);
-    expect(worst.GCRF!).toBeLessThanOrEqual(ANALYTIC_ACCURACY.GCRF.meters);
-    expect(worst.EARTH_ICRF!).toBeLessThanOrEqual(
+    expect(
+      worst.ut1MinusUtc!,
+      "|UT1 - UTC| over the EOP table, s",
+    ).toBeLessThan(0.9);
+    within("HCRS", worst.HCRS!, ANALYTIC_ACCURACY.HCRS.meters, km);
+    within("GCRF", worst.GCRF!, ANALYTIC_ACCURACY.GCRF.meters, km);
+    within(
+      "EARTH_ICRF",
+      worst.EARTH_ICRF!,
       ANALYTIC_ACCURACY.EARTH_ICRF.meters,
+      km,
     );
-    expect(worst.MOON_ICRF!).toBeLessThanOrEqual(
+    within(
+      "MOON_ICRF",
+      worst.MOON_ICRF!,
       ANALYTIC_ACCURACY.MOON_ICRF.meters,
+      km,
     );
-    // The parts the notes state: Meeus's Sun (33,000 km) and Simon's Moon
-    // (2,100 km) from the Earth.
-    expect(worst.sunFromEarth!).toBeLessThanOrEqual(3.3e7);
-    expect(worst.moonFromEarth!).toBeLessThanOrEqual(2.1e6);
+    // The parts the notes state: the Sun's offset from the barycentre (about
+    // 1.5 million km), Meeus's Sun (33,000 km) and Simon's Moon (2,100 km)
+    // from the Earth.
+    within("the barycentre's offset", worst.HCRS!, 1.5e9, km);
+    within("Meeus's Sun", worst.sunFromEarth!, 3.3e7, km);
+    within("Simon's Moon", worst.moonFromEarth!, 2.1e6, km);
     expect(analytic.precisionOf("MOON_ME")).toBe("analytic");
   }, 60_000);
 });

@@ -6,7 +6,8 @@ import { Ephemeris } from "../../ephemeris/Ephemeris.ts";
 import {
   loadFrameRoles,
   type FrameDataLoadOptions,
-} from "../../ephemeris/loadFrameData.ts";
+} from "../../ephemeris/frameRoles.ts";
+import type { Instant } from "../../time/Instant.ts";
 import { bodyEdge, gcrfEdge, moonMeEdge, type PreciseEdge } from "../edges.ts";
 import { BUILT_IN_ACCURACY } from "../frameAccuracy.ts";
 
@@ -23,25 +24,34 @@ export interface EphemerisFrames {
 /** The provider over an ephemeris already in hand. */
 export function ephemerisFrom(ephemeris: Ephemeris): EphemerisFrames {
   const data = { ephemeris };
+  const covers = (instant: Instant) => ephemeris.contains(instant);
   return {
     ephemeris,
     edges: {
-      GCRF: { toParent: gcrfEdge(data), accuracy: BUILT_IN_ACCURACY.GCRF },
+      GCRF: {
+        toParent: gcrfEdge(data),
+        accuracy: BUILT_IN_ACCURACY.GCRF,
+        covers,
+      },
       EARTH_ICRF: {
         toParent: bodyEdge("EARTH_ICRF", data),
         accuracy: BUILT_IN_ACCURACY.EARTH_ICRF,
+        covers,
       },
       HCRS: {
         toParent: bodyEdge("HCRS", data),
         accuracy: BUILT_IN_ACCURACY.HCRS,
+        covers,
       },
       MOON_ICRF: {
         toParent: bodyEdge("MOON_ICRF", data),
         accuracy: BUILT_IN_ACCURACY.MOON_ICRF,
+        covers,
       },
       MOON_ME: {
         toParent: moonMeEdge(data),
         accuracy: BUILT_IN_ACCURACY.MOON_ME,
+        covers,
       },
     },
   };

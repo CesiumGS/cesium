@@ -483,8 +483,9 @@ class Catalog implements FrameCatalog {
 
   /**
    * A reference frame that runs on its stand-in until its precise edge is
-   * set, then on that. A precise edge that throws (the instant is outside
-   * its data) throws `FrameUnavailableError`, `"outsideData"`.
+   * set, then on that. At an instant its data doesn't cover (`covers`), it
+   * throws `FrameUnavailableError`, `"outsideData"`, with the edge's own
+   * message; any other error passes through unchanged.
    */
   private standInFrame(name: StandInName, parent: Frame): Frame {
     const standIn = this.standIns[name];
@@ -499,16 +500,25 @@ class Catalog implements FrameCatalog {
           standIn(instant, out);
           return;
         }
-        try {
-          precise.toParent(instant, out);
-        } catch (cause) {
+        if (!precise.covers(instant)) {
+          // The edge's own error says which data ends where.
+          let cause: unknown;
+          try {
+            precise.toParent(instant, out);
+          } catch (error) {
+            cause = error;
+          }
           throw new FrameUnavailableError(
             name,
             "outsideData",
-            messageOf(cause),
+            cause === undefined
+              ? `${name}: the instant is outside its data`
+              : messageOf(cause),
             { cause },
           );
         }
+        // Anything else it throws (a FrameUnavailableError too) goes as is.
+        precise.toParent(instant, out);
       },
       {
         accuracy: (instant) => {

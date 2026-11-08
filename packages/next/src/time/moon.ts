@@ -17,9 +17,11 @@ const TT_MINUS_UTC = 69_184;
  * The Moon's center at a time, meters from the Earth's center in the
  * celestial frame (ICRF): Simon et al. (1994) §4, mean elements with their
  * main periodic terms, as 1.x's `Simon1994PlanetaryPositions` computes it
- * (`computeMoonPositionInEarthInertialFrame`), within about 0.05° and 0.1%
- * of distance (tests: Meeus's example 47.a). Turn it to Earth-fixed axes
- * with `icrfToFixed`.
+ * (`computeMoonPositionInEarthInertialFrame`). Its periodic terms are
+ * truncated: against DE440 it is up to 0.31° (2,051 km) off, sampled daily
+ * over 2000 to 2050 (test/data/frameCatalog.test.ts); Meeus's example 47.a
+ * agrees within 0.05° and 0.1% of distance. Turn it to Earth-fixed axes with
+ * `icrfToFixed`.
  */
 export function moonPosition(
   ms: number,

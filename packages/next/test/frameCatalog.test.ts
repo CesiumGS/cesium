@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, normalize, relative } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FrameUnavailableError } from "../src/camera/frameResolver.ts";
-import { ANALYTIC_ACCURACY } from "../src/frames/analytic.ts";
+import { ANALYTIC_ACCURACY, analyticUtcMs } from "../src/frames/analytic.ts";
 import {
   createFrameCatalog,
   type FrameCatalog,
@@ -17,6 +17,7 @@ import type { FrameDataWarning } from "../src/ephemeris/loadFrameData.ts";
 import { EARTH, MOON } from "../src/scene/Body.ts";
 import { icrfToFixed } from "../src/time/celestial.ts";
 import { Instant } from "../src/time/Instant.ts";
+import { LeapSeconds } from "../src/time/leapSeconds.ts";
 import { sunDirection, sunPosition } from "../src/time/sun.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { pack } from "./syntheticPacks.ts";
@@ -37,6 +38,17 @@ function eopText(startMjd: number, days: number): string {
   return `${rows.join("\n")}\n`;
 }
 
+/** A leap-second excerpt from 1999 on, expiring after the built-in table. */
+const LEAP_TEXT = `#  File expires on 28 December 2030
+#    MJD        Date        TAI-UTC (s)
+ 51179.0    1  1 1999       32
+ 53736.0    1  1 2006       33
+ 54832.0    1  1 2009       34
+ 56109.0    1  7 2012       35
+ 57204.0    1  7 2015       36
+ 57754.0    1  1 2017       37
+`;
+
 const bytesOf = (data: string | Uint8Array): ArrayBuffer => {
   const u8 =
     typeof data === "string" ? new TextEncoder().encode(data) : data.slice();
@@ -54,6 +66,7 @@ const ROLES: Record<string, string> = {
   "planets.pack": "planets",
   "moon.pack": "moon",
   "EOP-All.csv": "eop",
+  "Leap_Second.dat": "leapSeconds",
 };
 const FILES: Record<string, ArrayBuffer> = {
   "planets.pack": bytesOf(
@@ -62,6 +75,8 @@ const FILES: Record<string, ArrayBuffer> = {
   "moon.pack": bytesOf(pack("PCK", ["moonPa"], "MOON_PA", "euler")),
   // 1999-12-22 to 2000-01-11, around the synthetic packs' span.
   "EOP-All.csv": bytesOf(eopText(51534, 21)),
+  // Expires after the built-in table, so the catalog adopts it.
+  "Leap_Second.dat": bytesOf(LEAP_TEXT),
 };
 
 let requested: string[] = [];
@@ -233,9 +248,9 @@ describe("the frame catalog", () => {
     const itrf = catalog.get("ITRF", { precision: "precise" });
     expect(catalog.precisionOf("ITRF")).toBe("analytic");
     expect(itrf.accuracy(at)).toBe(ANALYTIC_ACCURACY.ITRF);
-    // 15″ (0.0042°): icrfToFixed against IAU 2006/2000A and the EOP.
+    // 18″ (0.005°): icrfToFixed's bound against IAU 2006/2000A and the EOP.
     expect(itrf.accuracy(at).radians).toBeCloseTo(
-      (15 / 3600) * (Math.PI / 180),
+      (18 / 3600) * (Math.PI / 180),
       12,
     );
     const standIn = frameTransform(itrf, catalog.get("GCRF"), at);
@@ -416,9 +431,60 @@ describe("the frame catalog", () => {
   it("the Earth orientation provider fetches only the EOP and leap-second files", async () => {
     const catalog = createFrameCatalog({ data: BASE });
     await catalog.ready("ITRF", "precise");
-    // The synthetic store has no leap-second file: the built-in table stays.
-    expect(fetchCalls()).toEqual(["manifest.json", "EOP-All.csv"]);
+    expect(fetchCalls()).toEqual([
+      "manifest.json",
+      "EOP-All.csv",
+      "Leap_Second.dat",
+    ]);
     expect(catalog.precisionOf("ITRF")).toBe("precise");
+  });
+
+  it("adopts the store's newer leap-second table, redoing the stand-ins", async () => {
+    const catalog = createFrameCatalog({ data: BASE });
+    expect(catalog.leapSeconds).toBe(LeapSeconds.builtIn());
+    const gcrf = catalog.get("GCRF");
+    const moonMe = catalog.get("MOON_ME");
+    const before = [gcrf.revision, moonMe.revision];
+    await catalog.ready("ITRF", "precise");
+    expect(catalog.leapSeconds).not.toBe(LeapSeconds.builtIn());
+    expect(catalog.leapSeconds.expires).toBe(Date.UTC(2030, 11, 28));
+    // The stand-ins read UTC through the table, so they are redone.
+    expect(gcrf.revision).toBeGreaterThan(before[0]!);
+    expect(moonMe.revision).toBeGreaterThan(before[1]!);
+    // An instant from whole milliseconds reads back through the new table.
+    const ms = Date.UTC(2020, 5, 1);
+    const instant = Instant.fromUtc(ms, catalog.leapSeconds);
+    expect(analyticUtcMs(instant, catalog.leapSeconds)).toBe(ms);
+  });
+
+  it("an error other than outside-the-data passes through unchanged", async () => {
+    const loading = new FrameUnavailableError("EOP", "loading");
+    const data = syntheticFrameData();
+    const eop = Object.create(data.eop) as typeof data.eop;
+    eop.atInstant = () => {
+      throw loading;
+    };
+    const catalog = createFrameCatalog({ data: { ...data, eop } });
+    const itrf = catalog.get("ITRF", { precision: "precise" });
+    await catalog.ready("ITRF", "precise");
+    expect(() => itrf.toParent(at)).toThrow(loading);
+  });
+
+  it("ITRF at precise past the EOP table throws outsideData, saying so", async () => {
+    const catalog = createFrameCatalog({ data: BASE });
+    const itrf = catalog.get("ITRF", { precision: "precise" });
+    await catalog.ready("ITRF", "precise");
+    const later = Instant.fromTt(60 * 86_400);
+    const error = (() => {
+      try {
+        itrf.toParent(later);
+      } catch (e) {
+        return e;
+      }
+    })() as FrameUnavailableError;
+    expect(error).toBeInstanceOf(FrameUnavailableError);
+    expect(error.reason).toBe("outsideData");
+    expect(error.message).toContain("EOP table");
   });
 
   it("ready waits for the asked precision and can be cancelled", async () => {

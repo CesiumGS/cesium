@@ -3,17 +3,18 @@
 // reaches this module only by dynamic `import()`, so its IAU 2006/2000A
 // series and the EOP parser load only when someone asks for ITRF at
 // "precise".
+import type { FrameData } from "../../ephemeris/loadFrameData.ts";
 import {
   leapSecondsFrom,
   loadFrameRoles,
   stalenessWarnings,
-  type FrameData,
   type FrameDataLoadOptions,
   type FrameDataWarning,
-} from "../../ephemeris/loadFrameData.ts";
+} from "../../ephemeris/frameRoles.ts";
 import { EarthOrientationParameters } from "../../time/eop.ts";
 import type { LeapSeconds } from "../../time/leapSeconds.ts";
-import { itrfAccuracy, itrfEdge, type PreciseEdge } from "../edges.ts";
+import type { PreciseEdge } from "../edges.ts";
+import { itrfAccuracy, itrfEdge } from "../itrfEdge.ts";
 
 /** What the Earth orientation provider gives the catalog. */
 export interface EarthOrientation {
@@ -36,6 +37,8 @@ export function earthOrientationFrom(
       ITRF: {
         toParent: itrfEdge(data),
         accuracy: (instant) => itrfAccuracy(data, instant),
+        covers: (instant) =>
+          !data.eop.atInstant(instant, data.leapSeconds).degraded,
       },
     },
   };

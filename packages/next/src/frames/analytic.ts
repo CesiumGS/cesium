@@ -23,21 +23,22 @@ export type StandInName =
 const ARCSECOND = Math.PI / 648000;
 
 /**
- * The Sun's distance from the solar system's barycentre at most, m (about
- * 2.2 million km, a little over two solar radii; 1.38 million km over 2000
- * to 2050 in DE440). HCRS's stand-in puts the Sun at the barycentre.
+ * HCRS's stand-in puts the Sun at the barycentre. The Sun circles it at up
+ * to about 1.5 million km (some 2.2 solar radii; 1.38 million km at most over
+ * 2000 to 2050 in DE440). The stated 2.2 million km is a conservative bound
+ * above that.
  */
 const SUN_BARYCENTRE_METERS = 2.2e9;
 /**
  * The Sun from the Earth by Meeus's low-precision formula, against DE440:
- * 32,277 km at most over 2000 to 2050 (0.0123°), rounded up
+ * 32,277 km at most, sampled daily over 2000 to 2050 (0.0123°), rounded up
  * (test/data/frameCatalog.test.ts).
  */
 const MEEUS_SUN_METERS = 3.3e7;
 /**
  * The Moon from the Earth by Simon et al. (1994)'s main terms, against
- * DE440: 2,051 km at most over 2000 to 2050 (about 0.31°), rounded up
- * (test/data/frameCatalog.test.ts).
+ * DE440: 2,051 km at most, sampled daily over 2000 to 2050 (about 0.31°),
+ * rounded up (test/data/frameCatalog.test.ts).
  */
 const SIMON_MOON_METERS = 2.1e6;
 /**
@@ -48,41 +49,50 @@ const SIMON_MOON_METERS = 2.1e6;
 const MOON_AXES_RADIANS = 21 * ARCSECOND;
 
 /**
- * `icrfToFixed` against IAU 2006/2000A with the measured EOP: 14.49″ at most
- * over the EOP table's observed rows from 2000, rounded up
- * (test/data/frameCatalog.test.ts). Against the model alone (UT1 = UTC, no
- * polar motion) it is 9.96″ over 2000 to 2050; plan 1's 0.0023° (8.3″) was
- * one instant, 2026-01-01.
+ * `icrfToFixed` against IAU 2006/2000A with the EOP, as a bound from its
+ * parts (they add in quadrature: the first tilts the pole, the second spins
+ * about it):
+ *
+ * - the model, which leaves out nutation: 9.96″ at most against the series
+ *   with UT1 = UTC and no polar motion, sampled over 2000 to 2050, taken as
+ *   10″, plus 0.6″ of polar motion (about 0.5″ at most);
+ * - UT1 taken as UTC: |UT1 - UTC| < 0.9 s, which holds wherever the
+ *   leap-second table does (13.54″ of spin at 0.9 s), taken as 13.6″.
+ *
+ * hypot(10.6″, 13.6″) = 17.2″, rounded up to 18″. The largest sample over the
+ * EOP table's observed rows (2000 to 2026) is 14.49″ (plan 1's 0.0023°, or
+ * 8.3″, was one instant, 2026-01-01).
  */
-const ITRF_RADIANS = 15 * ARCSECOND;
+const ITRF_RADIANS = 18 * ARCSECOND;
 
 /** The Earth's stand-in: the barycentre's offset plus Meeus's Sun. */
 const EARTH_METERS = SUN_BARYCENTRE_METERS + MEEUS_SUN_METERS;
 const EARTH_NOTE =
-  "analytic stand-in: the Earth placed from Meeus's Sun (about 33,000 km), with the Sun at the barycentre (up to 2.2 million km off)";
+  "analytic stand-in: the Earth placed from Meeus's Sun (within 33,000 km of DE440, sampled daily over 2000 to 2050), with the Sun at the barycentre (which it circles at up to about 1.5 million km; 2.2 million km is stated as a conservative bound)";
 
 /**
- * Each stand-in's stated accuracy: the largest error measured against the
- * precise data, rounded up, stated as the 1σ figure (a conservative one).
+ * Each stand-in's stated accuracy, stated as its 1σ figure (a conservative
+ * one): the largest error measured against the precise data, rounded up, or
+ * for ITRF a bound from its parts.
  */
 export const ANALYTIC_ACCURACY = deepFreeze({
   HCRS: {
     meters: SUN_BARYCENTRE_METERS,
-    note: "analytic stand-in: the Sun placed at the barycentre, which it circles at up to about 2.2 million km",
+    note: "analytic stand-in: the Sun placed at the barycentre, which it circles at up to about 1.5 million km (1.38 million km over 2000 to 2050 in DE440); 2.2 million km is stated as a conservative bound",
   },
   GCRF: { meters: EARTH_METERS, note: EARTH_NOTE },
   EARTH_ICRF: { meters: EARTH_METERS, note: EARTH_NOTE },
   MOON_ICRF: {
     meters: EARTH_METERS + SIMON_MOON_METERS,
-    note: "analytic stand-in: the Moon from the Earth by Simon et al. (1994), about 0.31° (some 2,100 km at the Moon), on the Earth's stand-in (Meeus's Sun, the Sun at the barycentre)",
+    note: "analytic stand-in: the Moon from the Earth by Simon et al. (1994), within about 0.31° (2,100 km) of DE440, sampled daily over 2000 to 2050, on the Earth's stand-in (Meeus's Sun, the Sun at the barycentre)",
   },
   ITRF: {
     radians: ITRF_RADIANS,
-    note: "analytic stand-in: IAU 1976 precession and Greenwich mean sidereal time, with UT1 taken as UTC and no nutation or polar motion (icrfToFixed): within 15″ (0.0042°) of IAU 2006/2000A with the measured EOP. The model alone is within 10″ (0.0028°) over 2000 to 2050; the rest is UT1 - UTC, up to 0.9 s",
+    note: "analytic stand-in: IAU 1976 precession and Greenwich mean sidereal time, with UT1 taken as UTC and no nutation or polar motion (icrfToFixed): within 18″ (0.005°) of IAU 2006/2000A with the EOP, assuming |UT1 − UTC| < 0.9 s, within the leap-second table. A bound from its parts: the model within 10″ over 2000 to 2050 and polar motion 0.6″, tilting the pole; UT1 − UTC 13.6″ of spin",
   },
   MOON_ME: {
     radians: MOON_AXES_RADIANS,
-    note: "analytic stand-in: the IAU rotation model's lunar axes (Archinal et al. 2011), within 21″ of the lunar PCK's mean-Earth axes over 2000 to 2050",
+    note: "analytic stand-in: the IAU rotation model's lunar axes (Archinal et al. 2011), within 21″ of the lunar PCK's mean-Earth axes, sampled daily over 2000 to 2050",
   },
 } as const satisfies Record<StandInName, FrameAccuracy>);
 

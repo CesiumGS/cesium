@@ -1,13 +1,8 @@
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
 import { EARTH, MOON, type Body } from "../scene/Body.ts";
 import { EME2000_TO_PARENT, MOON_PA_TO_PARENT } from "./analytic.ts";
-import {
-  bodyEdge,
-  gcrfEdge,
-  itrfAccuracy,
-  itrfEdge,
-  moonMeEdge,
-} from "./edges.ts";
+import { bodyEdge, gcrfEdge, moonMeEdge } from "./edges.ts";
+import { itrfAccuracy, itrfEdge } from "./itrfEdge.ts";
 import { Frame } from "./Frame.ts";
 import { BUILT_IN_ACCURACY } from "./frameAccuracy.ts";
 

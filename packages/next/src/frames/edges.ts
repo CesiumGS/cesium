@@ -1,21 +1,15 @@
 // The built-in tree's precise edges, one per reference frame: `createFrames`
 // and the catalog's providers both build on these, so the two trees agree to
 // the bit (plan 5a's call 13). Each edge writes its reference frame's
-// child-to-parent matrix for an instant.
+// child-to-parent matrix for an instant. ITRF's edge, which pulls the IAU
+// 2006/2000A series, lives in `itrfEdge.ts`. It is not re-exported here: a
+// re-export would put the series in the ephemeris provider's chunk too.
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
-import {
-  C,
-  EARTH_ROTATION_RATE,
-  GM_MOON,
-  GM_SUN,
-  L_C,
-} from "../math/constants.ts";
+import { C, GM_MOON, GM_SUN, L_C } from "../math/constants.ts";
 import type { Mat4 } from "../math/mat4.ts";
-import { celestialToTerrestrial } from "../time/earthOrientation.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 import { toParentMatrix } from "./matrix.ts";
-import { earthOrientationSigma } from "./orientationSigma.ts";
 
 /** A reference frame's edge: writes its child-to-parent matrix at `instant`. */
 export type FrameEdge = (instant: Instant, out: Mat4) => void;
@@ -25,6 +19,11 @@ export interface PreciseEdge {
   readonly toParent: FrameEdge;
   readonly accuracy:
     Readonly<FrameAccuracy> | ((instant: Instant) => Readonly<FrameAccuracy>);
+  /**
+   * Whether the data covers `instant`. Outside it `toParent` throws, and
+   * the catalog throws `FrameUnavailableError` (`"outsideData"`) instead.
+   */
+  readonly covers: (instant: Instant) => boolean;
 }
 
 const IDENTITY = [1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -68,33 +67,6 @@ export function gcrfEdge(data: Pick<FrameData, "ephemeris">): FrameEdge {
 }
 
 /**
- * ITRF from GCRF by IAU 2006/2000A and the EOP. Throws past the EOP table's
- * predictions, where UT1 would otherwise drift silently.
- */
-export function itrfEdge(
-  data: Pick<FrameData, "eop" | "leapSeconds">,
-): FrameEdge {
-  const { eop, leapSeconds } = data;
-  const rotation = new Float64Array(9);
-  return (instant, out) => {
-    const sample = eop.atInstant(instant, leapSeconds);
-    if (sample.degraded) {
-      // UT1 - UTC drifts about a millisecond a day once the table's
-      // predictions end: hundreds of meters at the equator within a year.
-      const iso = (ms: number) => new Date(ms).toISOString();
-      throw new Error(
-        `ITRF: the EOP table covers ${iso(eop.first)} to ${iso(eop.last)} and its predictions end there; measurements past it need newer EOP data (npm run setup refreshes it)`,
-      );
-    }
-    toParentMatrix(
-      celestialToTerrestrial(instant, sample, rotation),
-      undefined,
-      out,
-    );
-  };
-}
-
-/**
  * A body's centre in ICRF axes, from the ephemeris: the Sun (HCRS), the
  * Earth (EARTH_ICRF, TDB-compatible) or the Moon (MOON_ICRF). A plain
  * translation from the barycentre.
@@ -123,36 +95,4 @@ export function moonMeEdge(data: Pick<FrameData, "ephemeris">): FrameEdge {
   return (instant, out) => {
     toParentMatrix(ephemeris.moonMeanEarth(instant, rotation), undefined, out);
   };
-}
-
-/**
- * The GCRF to ITRF rotation's accuracy at `instant`: the Earth-orientation
- * sigma. UT1 error turns the Earth by `σ_t · ω` radians and polar motion
- * tilts its axis by `σ_p`; the edge states their root sum square in radians
- * (a point's error is this times its distance from the geocentre). Not
- * known outside the EOP table.
- */
-export function itrfAccuracy(
-  data: Pick<FrameData, "eop" | "leapSeconds">,
-  instant: Instant,
-): FrameAccuracy {
-  const sigma = earthOrientationSigma({ data }, instant);
-  if (sigma.degraded) {
-    return {
-      note: `not known: the instant is outside the EOP table (${sigma.span})`,
-    };
-  }
-  const note = sigma.predicted
-    ? `predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last observed row (IERS Bulletin A)`
-    : "measured Earth orientation (UT1 35 µs, polar motion 0.1 mas)";
-  const radians = Math.hypot(
-    sigma.ut1Seconds * EARTH_ROTATION_RATE,
-    sigma.polarRadians,
-  );
-  return Number.isFinite(radians) && radians > 0
-    ? {
-        radians,
-        note: `${note}. An angular bound: the Earth's spin (UT1) and the tilt of its axis (polar motion) combined, in radians; a point's error in metres is this times its distance from the geocentre`,
-      }
-    : { note: "not known: Earth orientation is not finite" };
 }
