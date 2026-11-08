@@ -918,10 +918,6 @@ export function Selection() {
       <Section title="In progress, not in this build">
         <ul>
           <li>
-            <strong>Shadow casters:</strong> selecting off-screen tiles to cast
-            shadows into view. It's being reworked.
-          </li>
-          <li>
             <strong>Presentations of a tileset:</strong> one selection with
             several draws. It's planned, and not started.
           </li>

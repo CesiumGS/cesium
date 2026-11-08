@@ -555,7 +555,6 @@ export const DECISIONS: readonly DecisionNote[] = [
 ];
 
 export const COMING = [
-  "Shadow casters: off-screen tiles selected to cast into view, which will change what the shadows pass draws.",
   "Presentations of a tileset: one selection with several draws.",
   "A GPU tessellation engine, later: not built, with its seam (S4 and S2) kept open. The Tessellation tab holds its place.",
 ];

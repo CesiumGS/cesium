@@ -552,9 +552,10 @@ export function Shadows() {
       <Section title="What's limited today">
         <ul>
           <li>
-            <strong>Off-screen casters.</strong> Only tiles a view selected
-            cast. A hill just out of view casts nothing into it, even inside a
-            cascade's box. Work on this is under way; see the last section.
+            <strong>Off-screen casters share the cache.</strong> Tiles out of
+            view cast into it, but only with room: they take bytes no view uses
+            and no recent view may come back to, and they give way to what views
+            draw. With little room, they coarsen first.
           </li>
           <li>
             <strong>Reach.</strong> Past the far distance there are no shadows,
@@ -622,11 +623,12 @@ export function Shadows() {
       </Section>
 
       <Section title="Off-screen casters">
-        <Note title="In progress, not in this build">
+        <Note title="In this build">
           <p>
-            Work to let tiles out of view cast into it hasn't merged. This
-            section will describe it once it has. Until then, the limit above
-            stands.
+            A tileset selects tiles off screen that cast into view, and only the
+            cascades see them. They load after everything a view needs, and
+            never evict what a view uses. They can cost reloads when a view
+            returns after more than 60 s away.
           </p>
         </Note>
       </Section>
