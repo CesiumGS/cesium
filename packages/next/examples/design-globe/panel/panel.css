@@ -275,21 +275,37 @@
   font-size: var(--stratakit-font-size-caption-lg);
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.dg-hud-cursor {
+/*
+ * The right rail (DESIGN.md "The viewer"): the cursor card over the
+ * legend, top right, clear of the toolbar (top left) and of the tour's card
+ * and the time controls (bottom).
+ */
+.dg-hud-rail {
+  position: absolute;
   inset-block-start: 12px;
   inset-inline-end: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--stratakit-space-200);
+  max-inline-size: calc(100% - 24px);
+  pointer-events: none;
+}
+.dg-hud-rail > .dg-hud {
+  position: static;
+}
+/* The pointer under the card's corner: the rail steps left, under the toolbar. */
+.dg-hud-rail.aside {
+  inset-inline-end: auto;
+  inset-inline-start: 8px;
+  inset-block-start: 96px;
+  align-items: flex-start;
 }
 .dg-hud-cursor.muted > span:not(.dg-hud-title) {
   color: var(--stratakit-color-text-neutral-secondary);
 }
-/*
- * Bottom right, above the time controls (main.ts sets --dg-time-clear from
- * their real top): the top left is the toolbar's, under the inspector.
- */
 .dg-hud-legend {
-  inset-block-end: var(--dg-time-clear, 128px);
-  inset-inline-end: 12px;
-  max-inline-size: min(300px, calc(50% - 24px));
+  max-inline-size: min(300px, 100%);
   font-size: var(--stratakit-font-size-caption-lg);
   line-height: var(--stratakit-line-height-caption-lg);
 }

@@ -318,8 +318,12 @@ export function Panel({ source, live, actions, hud, measure }: PanelProps) {
       {createPortal(
         <>
           <MeasureOverlay model={model} actions={actions} measure={measure} />
-          <CursorCard cursor={model.cursor} />
-          {model.drawn && <Legend legend={model.legend} />}
+          {/* The right rail: the cursor card over the legend; it steps
+              left, under the toolbar, when the pointer is under it. */}
+          <div className={`dg-hud-rail${model.cursor.aside ? " aside" : ""}`}>
+            <CursorCard cursor={model.cursor} />
+            {model.drawn && <Legend legend={model.legend} />}
+          </div>
           <AnchorLabel live={live} />
           {model.cursor.compass !== undefined && (
             <CompassMark compass={model.cursor.compass} />

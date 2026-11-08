@@ -54,6 +54,9 @@
   color: var(--stratakit-color-text-attention-base);
   font-weight: 600;
 }
+.dg-toolbar-prompt {
+  max-inline-size: min(340px, 55cqi);
+}
 .dg-toolbar-prompt.idle {
   display: none;
 }
@@ -121,12 +124,6 @@
   max-inline-size: min(360px, calc(100% - 24px));
   font-size: var(--stratakit-font-size-caption-lg);
   line-height: var(--stratakit-line-height-caption-lg);
-}
-/* The pointer under the card's corner: the card steps left, under the toolbar. */
-.dg-hud-cursor.aside {
-  inset-inline-end: auto;
-  inset-inline-start: 8px;
-  inset-block-start: 96px;
 }
 .dg-cc-blocks {
   display: grid;

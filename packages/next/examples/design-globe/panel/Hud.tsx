@@ -60,7 +60,7 @@ export function CursorCard({ cursor }: { cursor: CursorView }) {
   const pick = cursor.design !== undefined;
   return (
     <div
-      className={`dg-hud dg-hud-cursor${cursor.muted ? " muted" : ""}${pick ? " has-pick" : ""}${cursor.aside ? " aside" : ""}`}
+      className={`dg-hud dg-hud-cursor${cursor.muted ? " muted" : ""}${pick ? " has-pick" : ""}`}
       role="group"
       aria-label="At the cursor"
     >

@@ -174,7 +174,7 @@ number stays in the sidebar, next to that number.
 │            ◌·  snap preview      └───────────┘ │ │ 30.586 m  station 1700+00 … ▸ │   the evidence
 │                                                │ │ 19.278 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
 │                                                │ │ 10,000.000 ftUS = 3,048.848 m ▸│
-│        ┌ tour card ─────────────┐   ┌ legend ┐ │ │ sag chart        Fly along    │
+│        ┌ tour card ─────────────┐              │ │ sag chart        Fly along    │
 │        └────────────────────────┘   └────────┘ │ │ Take the short tour           │
 │ credits      [ time controls ]                 │ │ CRS, heights, units ▸ details │ 3 the site's facts
 └────────────────────────────────────────────────┘ │ Your measurement (when one)   │ 4
@@ -201,7 +201,8 @@ number stays in the sidebar, next to that number.
      there;
    - on the corridor, the sag chart and Fly along;
    - Take the short tour (while the tour isn't running).
-3. **The site's facts**: CRS, heights (with the geoid model) and units,
+3. **The site's facts** ("Its frame"): CRS, heights (with the geoid
+   model) and units,
    always visible; "Frame details" folded: the operation's stated accuracy,
    the combined factor, rigid's error in its three parts, a site grid,
    the grids' credits, a fallback.
@@ -249,11 +250,14 @@ number in a headline row is not repeated in its Details), no e-notation.
   an arc on a curve, a cross on a surface), solid once the exact snap has
   answered, and a faint ring of the snap's reach around the cursor.
 - **The cursor card** (F12), top right, compact: the design coordinates
-  first (E, N, H with units, the CRS's codes and height system), then the
+  (E, N, H with units, the CRS's codes and height system) beside the
   globe's (latitude, longitude, ellipsoidal height, WGS 84), then the
   error as one line. Moving the cursor shows the design space being
   reprojected: the design numbers and the globe numbers change together.
-- **The legend**, bottom right above the time controls.
+  When the pointer is under the rail (the card and the legend), the rail
+  steps to the left under the toolbar.
+- **The legend**, under the cursor card in the top right rail: the bottom
+  is the tour's card and the time controls'.
 - **The tour's card**, bottom centre above the time controls.
 - **Layering** (F2): the inspector is topmost. The viewer's own overlays
   stack canvas, then the page's overlays, then the credits and the time
@@ -281,24 +285,27 @@ number in a headline row is not repeated in its Details), no e-notation.
 
 ### The ghost (F4)
 
-Root causes of what the owner saw, and the fixes:
+Root causes of what the owner saw, and the fixes (placementPair.ts):
 
 - **Coplanar partners.** The ghost deck is the other placement's surface,
-  drawn translucent and depth-tested against the opaque pass. Where the two
-  placements are within a few centimetres (near the anchor; along a
-  surface's own plane, where a horizontal offset keeps them coplanar), the
-  ghost's fragments pass the depth test on some pixels and fail on
-  others: z-fighting. The ghost is now pushed back in depth by a few
-  centimetres at its own distance (a polygon offset in the morph shader),
-  and fades out wherever its partner is under one pixel apart, so it
-  never competes with the solid surface for the same depth.
+  drawn translucent and depth-tested against the opaque pass. Where a
+  partner lies in its face's own plane (near the anchor; a horizontal
+  shift of a flat deck or of a wall), the two surfaces share depth and the
+  ghost passes the test on some pixels and fails on others: z-fighting.
+  It used to fade by the 3D distance between partners, which a coplanar
+  shift doesn't reduce. Each vertex now carries its partner's stand-off
+  along the face's normal, and the ghost fades out below 5 to 50 cm of it:
+  it is only drawn where it stands clear of the solid surface. (The
+  custom shader stages can't write depth or see the camera, so a depth
+  offset wasn't available; the stand-off is exact instead.)
 - **The ghost on the active shape.** During a morph both decks were drawn
-  as well as the moving surface; at t = 0 the rigid deck is exactly the
-  moving surface, and at t = 1 the reprojected deck is, so the
-  translucent tint lay on the active shape itself. Now, during a morph,
-  only the deck of the placement being left is drawn, and it fades with
-  the morph's progress; the destination's deck is never drawn under the
-  moving surface.
-- **The morph's artifacts.** The ghost's crease lines are opaque and drawn
-  with the deck's positions: at the anchor end they sat exactly on the
-  solid surface (more z-fighting). They take the same depth offset.
+  with the moving surface; at t = 0 the rigid deck is the moving surface
+  and at t = 1 the reprojected deck is, so the translucent colour lay on
+  the active shape itself. Each ghost is now drawn as far as the morph has
+  moved the surface off it: the rigid ghost by t, the reprojected one by
+  1 − t, so neither is ever drawn on the surface it coincides with, and
+  the settled states are unchanged.
+- **The morph's artifacts.** The ghost's creases are opaque lines on the
+  deck's positions: they z-fought the solid surface the same way, and both
+  sets were drawn mid-morph. They take the same stand-off and presence,
+  cut out by an alpha mask (lines draw opaque).
