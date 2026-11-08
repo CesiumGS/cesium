@@ -122,6 +122,15 @@ static const uint CLUSTERS_BYTES = LIGHT_HEADER_BYTES + MAX_VIEW_LIGHTS * LIGHT_
 [[vk::binding(5, 1)]] Texture2DArray<float4> imagery;
 [[vk::binding(6, 1)]] SamplerState imagerySampler;
 
+// A draw's record: the only read of `records` in the surface shaders (the
+// per-draw constants seam, plan 5a's call 37). A later per-draw constants
+// path (immediates, a resource table) replaces this function alone.
+// Inlined, so each field is loaded where it is used, as before.
+[ForceInline]
+DrawRecord drawRecord(uint index) {
+  return records[index];
+}
+
 // The night image's brightest white, cd/m² as seen from above (a city's
 // lamps averaged over the image's half-kilometer texels): VIIRS's
 // day-night band saturates near 100 nW/cm²/sr in city centers, about 0.3
@@ -510,7 +519,7 @@ export __extern_cpp float4 readNamed(uint directory, uint hash, uint vertexIndex
 // count, then per field its name's hash, word offset and components);
 // zero where absent.
 export __extern_cpp uint4 readInstance(uint draw, uint instance, uint hash) {
-  DrawRecord r = records[draw];
+  DrawRecord r = drawRecord(draw);
   uint4 bits = uint4(0u);
   if (r.instanceDirectory == NO_STREAM || r.instanceStreams == NO_STREAM) {
     return bits;
@@ -631,7 +640,7 @@ float3 column3(float4x4 m, int c) {
 SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   DrawItem p = items[item];
   uint draw = p.record;
-  DrawRecord r = records[draw];
+  DrawRecord r = drawRecord(draw);
   float4x4 m = p.relModel;
   SurfaceVertex out;
   out.uv = float2(0.0);
@@ -786,7 +795,7 @@ export __extern_cpp SurfaceVertex surfaceVertex(uint vertexIndex, uint item) {
   return vertexOut(vertexIndex, item, true);
 }
 export __extern_cpp SurfaceVertex surfacePointVertex(uint vertexIndex, uint item) {
-  DrawRecord r = records[items[item].record];
+  DrawRecord r = drawRecord(items[item].record);
   uint point = asuint(vertices[r.uvOffset + vertexIndex / 6u]);
   return vertexOut(point * 6u + vertexIndex % 6u, item, true);
 }
@@ -956,7 +965,7 @@ bool shadingClippedOut(DrawRecord r, float3 p) {
 
 // A fragment as the custom shader's fragment stage takes it.
 CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric) {
-  DrawRecord r = records[in.ids.x];
+  DrawRecord r = drawRecord(in.ids.x);
   cesiumAnchor = in.relPosition;
   CesiumFragment f;
   f.positionMC = in.positionMC;
@@ -1000,7 +1009,7 @@ MaterialOutput materialOutput(float3 baseColor, float alpha, float metallic, flo
 // (`fragmentMain`'s material alpha; the engine's leaves it). Called in
 // uniform control flow: a `fragmentMain` may sample textures.
 float materialAlpha(SurfaceVaryings in) {
-  DrawRecord r = records[in.ids.x];
+  DrawRecord r = drawRecord(in.ids.x);
   Material material = materials[r.materialIndex];
   float4 sampled = materialTexture(material, TEXTURE_BASE_COLOR, in.uv);
   float4 color = material.baseColor * r.color * in.color;
@@ -1018,7 +1027,7 @@ float materialAlpha(SurfaceVaryings in) {
 // The opaque pass's discards: alpha cutoff, blended surfaces' translucent
 // parts, mixed-LOD placeholders.
 void cutOut(SurfaceVaryings in) {
-  DrawRecord r = records[in.ids.x];
+  DrawRecord r = drawRecord(in.ids.x);
   Material material = materials[r.materialIndex];
   float alpha = materialAlpha(in);
   if ((material.flags & 12u) != 0u) {
@@ -1046,7 +1055,7 @@ void shadowFs(SurfaceVaryings in) {
 // shadowing everything near the camera until they had all loaded.
 [shader("fragment")]
 void shadowPlaceholderFs(SurfaceVaryings in) {
-  DrawRecord r = records[in.ids.x];
+  DrawRecord r = drawRecord(in.ids.x);
   if (clippedOut(r, in.relPosition)) {
     discard;
   }
@@ -1071,7 +1080,7 @@ float4 prepassFs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) : SV_Tar
 // placeholders' clip.
 [shader("fragment")]
 float4 depthCoverageFs(SurfaceVaryings in) : SV_Target0 {
-  DrawRecord r = records[in.ids.x];
+  DrawRecord r = drawRecord(in.ids.x);
   Material material = materials[r.materialIndex];
   float alpha = materialAlpha(in);
   float ramp = max(fwidth(alpha), 1e-4);
@@ -1287,7 +1296,7 @@ Surface surface(float3 color, float alpha, bool unlit) {
 static bool surfaceLight = true;
 
 Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
-  DrawRecord r = records[in.ids.x];
+  DrawRecord r = drawRecord(in.ids.x);
   Material material = materials[r.materialIndex];
   uint flags = material.flags;
 
@@ -1511,7 +1520,7 @@ struct FsOut {
 FsOut fs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
   Surface s = shadeSurface(in, frontFacing, false);
   if (!cutOutInDepth &&
-      (materials[records[in.ids.x].materialIndex].flags & 8u) != 0u && s.alpha < OPAQUE_ALPHA) {
+      (materials[drawRecord(in.ids.x).materialIndex].flags & 8u) != 0u && s.alpha < OPAQUE_ALPHA) {
     discard;
   }
   FsOut out;
@@ -1747,7 +1756,7 @@ float momentDepth(float3 relPosition) {
 // A blended surface's alpha (`shadeSurface`'s, without its light), with the
 // opaque pass's placeholder clip.
 float blendedAlpha(SurfaceVaryings in) {
-  DrawRecord r = records[in.ids.x];
+  DrawRecord r = drawRecord(in.ids.x);
   float alpha = materialAlpha(in);
   if (clippedOut(r, in.relPosition)) {
     discard;

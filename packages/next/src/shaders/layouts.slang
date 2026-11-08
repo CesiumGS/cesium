@@ -16,11 +16,18 @@ import common;
 [[vk::binding(8, 0)]] StructuredBuffer<AnchorEye> anchorEyes;
 [[vk::binding(9, 0)]] RWStructuredBuffer<uint> out;
 
+// Its read of `records`, as every module reads it (the per-draw constants
+// seam, plan 5a's call 37).
+[ForceInline]
+DrawRecord drawRecord(uint index) {
+  return records[index];
+}
+
 [shader("compute")]
 [numthreads(1, 1, 1)]
 void layouts() {
   // Every table read, so none is left out of the reflection.
-  out[0] = view.viewBit + records[0].batch + transforms[0].flags +
+  out[0] = view.viewBit + drawRecord(0).batch + transforms[0].flags +
            instances[0].record + items[0].record + materials[0].flags +
            uint(lightHeaders[0].grid.w + lights[0].position.w + anchorEyes[0].eyeHi.w);
 }

@@ -34,6 +34,15 @@ public struct CullParams {
 [[vk::binding(7, 1)]] public RWStructuredBuffer<Atomic<uint>> args;
 [[vk::binding(8, 1)]] public ConstantBuffer<CullParams> params;
 
+// A draw's record: the only read of `records` in the cull kernels (the
+// per-draw constants seam, plan 5a's call 37). A later per-draw constants
+// path (immediates, a resource table) replaces this function alone.
+// Inlined, so each field is loaded where it is used, as before.
+[ForceInline]
+public DrawRecord drawRecord(uint index) {
+  return records[index];
+}
+
 public static const uint NONE = 0xffffffffu;
 public static const uint WHITE = 0xffffffffu;
 

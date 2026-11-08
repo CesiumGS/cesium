@@ -37,6 +37,13 @@ struct Job {
 
 static const uint NONE = 0xffffffffu;
 
+// A draw's record: the only read of `records` here (the per-draw constants
+// seam, plan 5a's call 37; this kernel binds its own tables).
+[ForceInline]
+DrawRecord drawRecord(uint index) {
+  return records[index];
+}
+
 float3 position(uint offset, uint index) {
   uint b = offset + index * 3u;
   return float3(vertices[b], vertices[b + 1u], vertices[b + 2u]);
@@ -55,7 +62,7 @@ void main(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
   // The record's fields, read once here: Slang splits a large struct's
   // load into a read of each field where it is used, and the repeated
   // bounds-checked reads cost this kernel 30% (the gate, plan §3.4).
-  DrawRecord r = records[job.record];
+  DrawRecord r = drawRecord(job.record);
   uint indexCount = r.indexCount;
   uint firstIndex = r.firstIndex;
   uint positionOffset = r.positionOffset;

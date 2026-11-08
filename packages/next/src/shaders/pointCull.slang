@@ -82,7 +82,7 @@ float4 placePoint(uint i) {
   if (!(abs(x) < 1e37)) {
     return float4(0.0);
   }
-  DrawRecord r = records[pointCull.record];
+  DrawRecord r = drawRecord(pointCull.record);
   Transform t = transforms[r.transform];
   // Under an anchor the eye is too far from (cullTables `drawable`): the
   // quads draw nothing then, and neither may the splats.
@@ -226,7 +226,7 @@ void splatPoints(uint3 gid : SV_DispatchThreadID) {
   float half = size * 0.5;
   uint bits = asuint(s.z);
   float4 color = styleColor(i, distance);
-  uint feature = records[pointCull.record].featureId + i;
+  uint feature = drawRecord(pointCull.record).featureId + i;
   int w = int(view.viewport.x);
   int h = int(view.viewport.y);
   int x0 = int(floor(s.x - half - 0.5));

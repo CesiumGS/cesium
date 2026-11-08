@@ -237,6 +237,8 @@ export const RECORD_WORDS = R.size;
 /** Word offsets of `DrawRecord` fields written after creation. */
 /** A draw record's bounding radius (f32) and batch index (u32). */
 export const RADIUS_WORD = R.radius;
+/** Word offset of `DrawRecord.color`: the draw's tint, linear RGBA (f32). */
+export const COLOR_WORD = R.color;
 export const BATCH_WORD = R.batch;
 export const TRANSFORM_WORD = R.transform;
 export const FLAGS_WORD = R.flags;

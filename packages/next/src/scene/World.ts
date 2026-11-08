@@ -7,7 +7,14 @@ import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { CapacityError } from "./CapacityError.ts";
 import { Slabs, type Slab } from "./Slabs.ts";
 import {
-  INDIRECT_SIZE,
+  INITIAL_ROWS,
+  MirroredTable,
+  grownSize,
+  resized,
+} from "./MirroredTable.ts";
+import { DrawConstants } from "../render/drawConstants.ts";
+import { DrawArguments } from "../render/drawArguments.ts";
+import {
   INSTANCE_WORDS,
   INSTANCE_COUNT_WORD,
   INSTANCE_STRIDE_WORD,
@@ -30,28 +37,21 @@ import {
   TRANSFORM_WORDS,
   TRANSFORM_WORD,
   RADIUS_WORD,
-  BATCH_WORD,
   FLAGS_WORD,
   VIEW_MASK_WORD,
-  IMAGERY_SLICE_WORD,
-  LIGHTS_SLICE_WORD,
   ALL_VIEWS,
-  CLIP_BLOCK_WORD,
   CLIP_BOXES,
   CLIP_BOX_FLOATS,
   CLIP_BLOCK_ROWS,
   MAX_ANCHORS,
   MAX_TERRAIN_CLIPS,
   MAX_TERRAIN_CLIP_BLOCKS,
-  TERRAIN_CLIP_WORD,
   packClip,
   MATERIAL_WORDS,
   NO_TEXTURE,
-  PLACEHOLDER_MASK_WORD,
   MaterialFlags,
   RecordFlags,
   packTint,
-  writeDrawRecord,
   writeInstance,
   writeMaterial,
   writeTransform,
@@ -445,180 +445,6 @@ interface Batch {
 }
 
 /**
- * A CPU table mirrored to a GPU storage buffer. Changed entries upload once
- * per frame: a contiguous run with one write, entries spread across the
- * table as packed (index, data) pairs that a compute pass scatters
- * (`scatter.slang`), instead of the whole span between them. The CPU rows
- * grow as entries are used (`reserve`); the GPU buffer holds `gpuRows`,
- * the full capacity unless given fewer, and grows by `growGpu`.
- */
-class MirroredTable {
-  f32: Float32Array;
-  u32: Uint32Array;
-  buffer: GPUBuffer;
-  gpuRows: number;
-  private flags: Uint8Array;
-  private readonly dirty: number[] = [];
-  private readonly params: GPUBuffer;
-  private readonly paramsData = new Uint32Array(4);
-  private staging?: GPUBuffer;
-  private scratch = new Uint32Array(0);
-  private bindGroup?: GPUBindGroup;
-
-  constructor(
-    private readonly ctx: RenderContext,
-    private readonly label: string,
-    readonly words: number,
-    readonly capacity: number,
-    gpuRows = capacity,
-  ) {
-    const rows = Math.min(capacity, INITIAL_ROWS);
-    const data = new ArrayBuffer(rows * words * 4);
-    this.f32 = new Float32Array(data);
-    this.u32 = new Uint32Array(data);
-    this.flags = new Uint8Array(rows);
-    this.gpuRows = gpuRows;
-    this.buffer = this.createBuffer(gpuRows);
-    this.params = ctx.device.createBuffer({
-      label: `world.${label}.scatter`,
-      size: 16,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    this.paramsData[1] = words;
-  }
-
-  private createBuffer(rows: number): GPUBuffer {
-    return this.ctx.device.createBuffer({
-      label: `world.${this.label}`,
-      size: Math.max(1, rows) * this.words * 4,
-      // COPY_SRC: tests compare the GPU copy with the CPU table, and the
-      // table copies itself when it grows.
-      usage:
-        GPUBufferUsage.STORAGE |
-        GPUBufferUsage.COPY_DST |
-        GPUBufferUsage.COPY_SRC,
-    });
-  }
-
-  /** A larger GPU buffer holding the old one's rows (queued after its writes). */
-  growGpu(rows: number): void {
-    const old = this.buffer;
-    this.buffer = this.createBuffer(rows);
-    this.gpuRows = rows;
-    const { device } = this.ctx;
-    const encoder = device.createCommandEncoder({ label: "world.grow" });
-    encoder.copyBufferToBuffer(old, 0, this.buffer, 0, old.size);
-    device.queue.submit([encoder.finish()]);
-    old.destroy();
-    // The scatter's group binds the table.
-    this.bindGroup = undefined;
-  }
-
-  /** Rows on the CPU. */
-  get rows(): number {
-    return this.flags.length;
-  }
-
-  /**
-   * Room for rows below `count` on the CPU (doubling, up to the capacity);
-   * true when `f32` and `u32` were replaced.
-   */
-  reserve(count: number): boolean {
-    if (count <= this.rows) {
-      return false;
-    }
-    const rows = grownSize(this.rows, count, this.capacity);
-    const data = new ArrayBuffer(rows * this.words * 4);
-    new Uint32Array(data).set(this.u32);
-    this.f32 = new Float32Array(data);
-    this.u32 = new Uint32Array(data);
-    this.flags = resized(this.flags, rows);
-    return true;
-  }
-
-  mark(index: number): void {
-    if (this.flags[index] === 0) {
-      this.flags[index] = 1;
-      this.dirty.push(index);
-    }
-  }
-
-  /** Uploads the changes; a scatter is encoded into `pass`. */
-  upload(pass: GPUComputePassEncoder): void {
-    const n = this.dirty.length;
-    if (n === 0) {
-      return;
-    }
-    const queue = this.ctx.device.queue;
-    const bytes = this.words * 4;
-    let min = Number.POSITIVE_INFINITY;
-    let max = -1;
-    for (const i of this.dirty) {
-      min = Math.min(min, i);
-      max = Math.max(max, i);
-      this.flags[i] = 0;
-    }
-    const span = max - min + 1;
-    if (span <= 2 * n + 16) {
-      queue.writeBuffer(
-        this.buffer,
-        min * bytes,
-        this.f32.buffer,
-        min * bytes,
-        span * bytes,
-      );
-      this.dirty.length = 0;
-      return;
-    }
-    const total = n * (1 + this.words);
-    if (this.scratch.length < total) {
-      const size = 1 << Math.ceil(Math.log2(total));
-      this.scratch = new Uint32Array(size);
-      this.staging?.destroy();
-      this.staging = this.ctx.device.createBuffer({
-        label: "world.scatter.staging",
-        size: size * 4,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-      });
-      this.bindGroup = undefined;
-    }
-    if (!this.bindGroup) {
-      this.bindGroup = this.ctx.device.createBindGroup({
-        label: "world.scatter",
-        layout: this.ctx.pipelines.scatterLayout,
-        entries: [
-          { binding: 0, resource: { buffer: this.params } },
-          { binding: 1, resource: { buffer: this.staging! } },
-          { binding: 2, resource: { buffer: this.buffer } },
-        ],
-      });
-    }
-    const out = this.scratch;
-    for (let k = 0; k < n; k++) {
-      const i = this.dirty[k]!;
-      out[k] = i;
-      out.set(
-        this.u32.subarray(i * this.words, (i + 1) * this.words),
-        n + k * this.words,
-      );
-    }
-    this.dirty.length = 0;
-    queue.writeBuffer(this.staging!, 0, out.buffer, 0, total * 4);
-    this.paramsData[0] = n;
-    queue.writeBuffer(this.params, 0, this.paramsData);
-    pass.setPipeline(this.ctx.pipelines.scatter);
-    pass.setBindGroup(0, this.bindGroup!);
-    pass.dispatchWorkgroups(Math.ceil((n * this.words) / 64));
-  }
-
-  destroy(): void {
-    this.buffer.destroy();
-    this.params.destroy();
-    this.staging?.destroy();
-  }
-}
-
-/**
  * Scene content shared by any number of views: a geometry arena (separate
  * attribute streams pulled by vertex shaders), a material table, texture
  * sets, and a table of draw records mirrored to the GPU.
@@ -642,9 +468,18 @@ export class World {
   // Per-slot CPU tables (records, transforms, instances, materials) start
   // small and grow as slots are used; the GPU tables are full size (a
   // 65536-draw world's CPU tables held 37 MB on NYC, r39).
-  private readonly records: MirroredTable;
-  private recordsF32: Float32Array;
-  private recordsU32: Uint32Array;
+  /**
+   * @internal The draw records (the per-draw constants seam): every
+   * record write goes through it.
+   */
+  readonly drawConstants: DrawConstants;
+  /** The records' words, to read (written through `drawConstants`). */
+  private get recordsU32(): ArrayLike<number> {
+    return this.drawConstants.u32;
+  }
+  private get recordsF32(): ArrayLike<number> {
+    return this.drawConstants.f32;
+  }
   /** Generation per draw slot (`DrawHandle.generation`). */
   private drawGeneration: Uint32Array;
   /** Transform a draw owns (placed by origin and model), or -1. */
@@ -869,10 +704,11 @@ export class World {
   materialBuffer: GPUBuffer;
   /** Mixed-LOD clip boxes, `CLIP_BOXES` per block. */
   clipBuffer: GPUBuffer;
-  /** Visible draw items, compacted per batch by the cull kernels. */
-  itemListBuffer: GPUBuffer;
-  /** All draw items per batch, for "direct" submission. */
-  private directListBuffer: GPUBuffer;
+  /**
+   * @internal The draw arguments, the item lists and the batches' draws
+   * (the draw-arguments seam).
+   */
+  readonly drawArguments: DrawArguments;
   /**
    * Counts table growths: whatever binds a world table's buffer (the
    * instance table, records, transforms, materials) rebinds when it
@@ -897,7 +733,6 @@ export class World {
     group: GPUBindGroup;
   };
   private batchBuffer: GPUBuffer;
-  indirectBuffer: GPUBuffer;
   /**
    * GPU rows of the draw tables (records, batches, their counts and
    * arguments, the items' draw part); grows to `maxDraws`.
@@ -976,17 +811,9 @@ export class World {
       (slab) => this.slabReplaced(slab),
     );
 
-    this.records = new MirroredTable(
-      ctx,
-      "records",
-      RECORD_WORDS,
-      this.maxDraws,
-      this.drawRows,
-    );
-    this.recordsF32 = this.records.f32;
-    this.recordsU32 = this.records.u32;
-    this.drawGeneration = new Uint32Array(this.records.rows);
-    this.drawOwnedTransform = new Int32Array(this.records.rows).fill(-1);
+    this.drawConstants = new DrawConstants(ctx, this.maxDraws, this.drawRows);
+    this.drawGeneration = new Uint32Array(this.drawConstants.rows);
+    this.drawOwnedTransform = new Int32Array(this.drawConstants.rows).fill(-1);
     this.transforms = new MirroredTable(
       ctx,
       "transforms",
@@ -1022,7 +849,7 @@ export class World {
     const buffer = (label: string, size: number, usage: GPUBufferUsageFlags) =>
       device.createBuffer({ label: `world.${label}`, size, usage });
     const storage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
-    this.recordBuffer = this.records.buffer;
+    this.recordBuffer = this.drawConstants.buffer;
     this.transformBuffer = this.transforms.buffer;
     this.instanceBuffer = this.instances.buffer;
     // COPY_SRC lets precision tests read back the cull kernels' output.
@@ -1056,19 +883,13 @@ export class World {
       this.clipRows * this.clipScratch.byteLength,
       storage | GPUBufferUsage.COPY_SRC,
     );
-    this.itemListBuffer = buffer(
-      "itemList",
-      items * 4,
-      GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
-    );
-    this.directListBuffer = buffer(
-      "directList",
-      items * 4,
-      GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    );
-    [this.batchBuffer, this.indirectBuffer] = this.createBatchBuffers(
+    this.drawArguments = new DrawArguments(
+      device,
+      this.drawConstants,
       this.drawRows,
+      items,
     );
+    this.batchBuffer = this.createBatchBuffer(this.drawRows);
     this.cullParams = buffer(
       "cullParams",
       16,
@@ -1207,8 +1028,8 @@ export class World {
         this.itemBuffer.size +
         this.materialBuffer.size +
         this.clipBuffer.size +
-        this.itemListBuffer.size +
-        this.indirectBuffer.size,
+        this.drawArguments.itemList.size +
+        this.drawArguments.buffer.size,
     };
   }
 
@@ -1723,10 +1544,8 @@ export class World {
 
   /** CPU room for draw slots below `count`. */
   private reserveDraws(count: number): void {
-    if (this.records.reserve(count)) {
-      const rows = this.records.rows;
-      this.recordsF32 = this.records.f32;
-      this.recordsU32 = this.records.u32;
+    if (this.drawConstants.reserve(count)) {
+      const rows = this.drawConstants.rows;
       this.drawGeneration = resized(this.drawGeneration, rows);
       this.drawOwnedTransform = resized(this.drawOwnedTransform, rows, -1);
     }
@@ -2197,7 +2016,7 @@ export class World {
     this.featureRangeFirst.push(firstFeature);
     this.featureRangeDraw.push(index);
     this.drawFeatureFirst[index] = firstFeature;
-    writeDrawRecord(this.recordsF32, this.recordsU32, index, {
+    this.drawConstants.write(index, {
       transform,
       center: mesh.center,
       radius:
@@ -2481,12 +2300,14 @@ export class World {
     }
     batch.items += items;
     this.drawBatches[index] = batch;
-    this.recordsU32[o + BATCH_WORD] = batch.index;
     // The bounds' padding for a vertex stage's displacement follows it.
-    this.recordsF32[o + RADIUS_WORD] =
+    this.drawConstants.setBatch(
+      index,
+      batch.index,
       this.recordsF32[o + RADIUS_WORD]! -
-      (old.shader?.displacement ?? 0) +
-      (shader?.displacement ?? 0);
+        (old.shader?.displacement ?? 0) +
+        (shader?.displacement ?? 0),
+    );
     const point = this.pointDraws.get(index);
     if (point) {
       point.batch = batch;
@@ -2527,14 +2348,13 @@ export class World {
     // Slices of the item list follow batch sizes: rebuild them.
     this.bundle = undefined;
     this.translucentDraws = undefined;
-    this.recordsU32[o + FLAGS_WORD] = RecordFlags.hidden;
     if (instanceCount > 0) {
       this.releaseInstances(
         this.recordsU32[o + INSTANCE_FIRST_WORD]!,
         instanceCount,
       );
-      this.recordsU32[o + INSTANCE_COUNT_WORD] = 0;
     }
+    this.drawConstants.clear(handle.index);
     const pointDraw = this.pointDraws.get(handle.index);
     if (pointDraw) {
       this.flushUploads();
@@ -3248,9 +3068,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const o = handle.index * RECORD_WORDS;
-    if (this.recordsU32[o + LIGHTS_SLICE_WORD] !== packed >>> 0) {
-      this.recordsU32[o + LIGHTS_SLICE_WORD] = packed >>> 0;
+    if (this.drawConstants.setLights(handle.index, packed)) {
       this.markDirty(handle.index);
     }
   }
@@ -3265,18 +3083,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const o = handle.index * RECORD_WORDS;
-    const flags = this.recordsU32[o + FLAGS_WORD]!;
-    const next =
-      packed !== 0 && unlit
-        ? flags | RecordFlags.unlit
-        : flags & ~RecordFlags.unlit;
-    if (
-      this.recordsU32[o + IMAGERY_SLICE_WORD] !== packed >>> 0 ||
-      flags !== next
-    ) {
-      this.recordsU32[o + IMAGERY_SLICE_WORD] = packed >>> 0;
-      this.recordsU32[o + FLAGS_WORD] = next;
+    if (this.drawConstants.setImagery(handle.index, packed, unlit)) {
       this.markDirty(handle.index);
     }
   }
@@ -3285,11 +3092,10 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const index = handle.index * RECORD_WORDS + VIEW_MASK_WORD;
-    const old = this.recordsU32[index]!;
+    const old = this.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     if (old !== mask >>> 0) {
       this.changedViews |= old; // the views it left
-      this.recordsU32[index] = mask >>> 0;
+      this.drawConstants.setViewMask(handle.index, mask);
       this.markDirty(handle.index);
       if ((old === 0) !== (mask === 0)) {
         // Its batch joins or leaves the bundles: they're recorded again
@@ -3381,15 +3187,9 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const o = handle.index * RECORD_WORDS;
     const m = clip ? mask >>> 0 : 0;
     const packed = clip ? packClip(clip.block, clip.count) : 0;
-    if (
-      this.recordsU32[o + PLACEHOLDER_MASK_WORD] !== m ||
-      this.recordsU32[o + CLIP_BLOCK_WORD] !== packed
-    ) {
-      this.recordsU32[o + PLACEHOLDER_MASK_WORD] = m;
-      this.recordsU32[o + CLIP_BLOCK_WORD] = packed;
+    if (this.drawConstants.setPlaceholder(handle.index, m, packed)) {
       this.markDirty(handle.index);
     }
   }
@@ -3550,9 +3350,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const index = handle.index * RECORD_WORDS + TERRAIN_CLIP_WORD;
-    if (this.recordsU32[index] !== mask >>> 0) {
-      this.recordsU32[index] = mask >>> 0;
+    if (this.drawConstants.setTerrainClip(handle.index, mask)) {
       this.markDirty(handle.index);
     }
   }
@@ -3610,14 +3408,11 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const index = handle.index * RECORD_WORDS + FLAGS_WORD;
-    const flags = this.recordsU32[index]!;
+    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     const next = collision
       ? flags | RecordFlags.collision
       : flags & ~RecordFlags.collision;
-    if (next !== flags) {
-      this.recordsU32[index] = next;
-      this.records.mark(handle.index);
+    if (this.drawConstants.setFlags(handle.index, next)) {
       this.uploadsPending = true;
     }
   }
@@ -3889,10 +3684,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const o = handle.index * RECORD_WORDS;
-    for (let i = 0; i < 4; i++) {
-      this.recordsF32[o + 4 + i] = color[i] ?? 1;
-    }
+    this.drawConstants.setColor(handle.index, color);
     this.markDirty(handle.index);
   }
 
@@ -3900,11 +3692,11 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const flagsIndex = handle.index * RECORD_WORDS + FLAGS_WORD;
-    const flags = this.recordsU32[flagsIndex]!;
-    this.recordsU32[flagsIndex] = visible
-      ? flags & ~RecordFlags.hidden
-      : flags | RecordFlags.hidden;
+    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    this.drawConstants.setFlags(
+      handle.index,
+      visible ? flags & ~RecordFlags.hidden : flags | RecordFlags.hidden,
+    );
     this.markDirty(handle.index);
   }
 
@@ -4054,11 +3846,7 @@ export class World {
     const { pipelines, currentViewBindGroup } = this.ctx;
     // The batches' instance counts start at zero (cull.slang `append`
     // counts into them); the rest of the arguments `writeDrawArgs` writes.
-    encoder.clearBuffer(
-      this.indirectBuffer,
-      0,
-      Math.max(INDIRECT_SIZE, this.batchList.length * INDIRECT_SIZE),
-    );
+    this.drawArguments.clear(encoder, this.batchList.length);
     if (points && this.pointDraws.size) {
       encoder.clearBuffer(this.pointCounts);
       if ([...this.pointDraws.values()].some((d) => d.tiny > 0)) {
@@ -4121,7 +3909,7 @@ export class World {
       return;
     }
     this.uploadsPending = false;
-    this.records.upload(pass);
+    this.drawConstants.upload(pass);
     this.transforms.upload(pass);
     this.instances.upload(pass);
     // Kernels writing the tables each frame (tracks' instance rows), after
@@ -4205,7 +3993,7 @@ export class World {
     }
     const queue = this.ctx.device.queue;
     queue.writeBuffer(this.batchBuffer, 0, table);
-    queue.writeBuffer(this.directListBuffer, 0, direct);
+    queue.writeBuffer(this.drawArguments.directList, 0, direct);
     for (const [record, draw] of this.pointDraws) {
       this.writePointParams(draw, record);
     }
@@ -4307,7 +4095,6 @@ export class World {
           a.mesh.slab - b.mesh.slab,
       );
     const direct = this._submission === "direct";
-    const list = direct ? this.directListBuffer : this.itemListBuffer;
     let pipeline: GPURenderPipeline | undefined;
     let group: GPUBindGroup | undefined;
     let slab = -1;
@@ -4341,8 +4128,7 @@ export class World {
         group = wantedGroup;
         encoder.setBindGroup(2, group);
       }
-      encoder.setVertexBuffer(0, list, batch.itemBase * 4);
-      this.drawBatch(encoder, batch, direct);
+      this.drawArguments.drawBatch(encoder, batch, direct);
     }
     return encoder.finish();
   }
@@ -4528,7 +4314,6 @@ export class World {
     pass.setBindGroup(0, this.ctx.currentViewBindGroup);
     pass.setBindGroup(3, group);
     const direct = this._submission === "direct";
-    const list = direct ? this.directListBuffer : this.itemListBuffer;
     let current: GPURenderPipeline | undefined;
     let bound: GPUBindGroup | undefined;
     let slab = -1;
@@ -4555,35 +4340,7 @@ export class World {
         bound = wantedGroup;
         pass.setBindGroup(2, bound);
       }
-      pass.setVertexBuffer(0, list, batch.itemBase * 4);
-      this.drawBatch(pass, batch, direct);
-    }
-  }
-
-  /**
-   * A batch's draw: indexed, or for a point set six vertices per point
-   * without indices. The indirect arguments serve both: the indexed
-   * layout's first four words (count, instances, first, 0) read as a
-   * non-indexed draw's.
-   */
-  private drawBatch(
-    pass: GPURenderPassEncoder | GPURenderBundleEncoder,
-    batch: Batch,
-    direct: boolean,
-  ): void {
-    const { mesh } = batch;
-    if (batch.points) {
-      // Only as the view's cull listed them ("direct" has no list).
-      if (!direct) {
-        pass.drawIndirect(this.indirectBuffer, batch.index * INDIRECT_SIZE);
-      }
-    } else if (direct) {
-      pass.drawIndexed(mesh.indexCount, batch.items, mesh.firstIndex, 0, 0);
-    } else {
-      pass.drawIndexedIndirect(
-        this.indirectBuffer,
-        batch.index * INDIRECT_SIZE,
-      );
+      this.drawArguments.drawBatch(pass, batch, direct);
     }
   }
 
@@ -4599,9 +4356,9 @@ export class World {
           [1, this.transformBuffer],
           [2, this.instanceBuffer],
           [3, this.itemBuffer],
-          [4, this.itemListBuffer],
+          [4, this.drawArguments.itemList],
           [6, this.batchBuffer],
-          [7, this.indirectBuffer],
+          [7, this.drawArguments.buffer],
           [8, this.cullParams],
         ] as const
       ).map(([binding, b]) => ({ binding, resource: { buffer: b } })),
@@ -4612,7 +4369,7 @@ export class World {
       entries: [
         { binding: 0, resource: { buffer: this.recordBuffer } },
         { binding: 1, resource: { buffer: this.transformBuffer } },
-        { binding: 7, resource: { buffer: this.indirectBuffer } },
+        { binding: 7, resource: { buffer: this.drawArguments.buffer } },
       ],
     });
   }
@@ -4638,11 +4395,11 @@ export class World {
    */
   private growDraws(count: number): void {
     const rows = grownSize(this.drawRows, count, this.maxDraws);
-    this.records.growGpu(rows);
-    this.recordBuffer = this.records.buffer;
+    this.drawConstants.growGpu(rows);
+    this.recordBuffer = this.drawConstants.buffer;
     this.batchBuffer.destroy();
-    this.indirectBuffer.destroy();
-    [this.batchBuffer, this.indirectBuffer] = this.createBatchBuffers(rows);
+    this.batchBuffer = this.createBatchBuffer(rows);
+    this.drawArguments.growBatches(rows);
     this.drawRows = rows;
     this.recreateItemBuffers();
     this.tablesReplaced();
@@ -4718,27 +4475,13 @@ export class World {
     this.pointSetCount = count;
   }
 
-  /**
-   * The per-batch buffers for `rows` batches: batches, and their indirect
-   * arguments (whose instance counts the cull counts in, cleared per view).
-   */
-  private createBatchBuffers(rows: number): [GPUBuffer, GPUBuffer] {
-    const { device } = this.ctx;
-    return [
-      device.createBuffer({
-        label: "world.batches",
-        size: rows * 16,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-      }),
-      device.createBuffer({
-        label: "world.indirect",
-        size: rows * INDIRECT_SIZE,
-        usage:
-          GPUBufferUsage.STORAGE |
-          GPUBufferUsage.INDIRECT |
-          GPUBufferUsage.COPY_DST,
-      }),
-    ];
+  /** The batch table for `rows` batches (their arguments: `drawArguments`). */
+  private createBatchBuffer(rows: number): GPUBuffer {
+    return this.ctx.device.createBuffer({
+      label: "world.batches",
+      size: rows * 16,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
   }
 
   /** The items and their lists for the current draw and instance rows. */
@@ -4746,23 +4489,12 @@ export class World {
     const items = this.drawRows + this.instances.gpuRows;
     const { device } = this.ctx;
     this.itemBuffer.destroy();
-    this.itemListBuffer.destroy();
-    this.directListBuffer.destroy();
     this.itemBuffer = device.createBuffer({
       label: "world.items",
       size: items * DRAW_ITEM_SIZE,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    this.itemListBuffer = device.createBuffer({
-      label: "world.itemList",
-      size: items * 4,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
-    });
-    this.directListBuffer = device.createBuffer({
-      label: "world.directList",
-      size: items * 4,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
+    this.drawArguments.growItems(items);
   }
 
   /**
@@ -4850,7 +4582,7 @@ export class World {
   }
 
   private markDirty(index: number): void {
-    this.records.mark(index);
+    this.drawConstants.mark(index);
     this.uploadsPending = true;
     this.version++;
     this.changedViews |=
@@ -4876,7 +4608,8 @@ export class World {
     this.splats.color.destroy();
     this.splats.feature.destroy();
     this.pointCounts.destroy();
-    this.records.destroy();
+    this.drawConstants.destroy();
+    this.drawArguments.destroy();
     this.transforms.destroy();
     this.instances.destroy();
     this.slabs.destroy();
@@ -4884,10 +4617,7 @@ export class World {
       this.itemBuffer,
       this.materialBuffer,
       this.clipBuffer,
-      this.itemListBuffer,
-      this.directListBuffer,
       this.batchBuffer,
-      this.indirectBuffer,
       this.cullParams,
     ]) {
       buffer.destroy();
@@ -4919,24 +4649,6 @@ const NO_HIT = 0x7f7fffff;
 /** Smallest staging buffer for queued uploads. */
 const UPLOAD_CHUNK_BYTES = 1 << 20;
 /** CPU rows a per-slot table starts with. */
-const INITIAL_ROWS = 1024;
-
-/** Rows after growing from `rows` to hold `count`: doubling, capped. */
-function grownSize(rows: number, count: number, capacity: number): number {
-  return Math.min(capacity, Math.max(count, rows * 2));
-}
-
-/** A copy of `array` with `length` elements, the new ones `fill`. */
-function resized<
-  T extends Uint8Array | Uint32Array | Int32Array | Float64Array,
->(array: T, length: number, fill = 0): T {
-  const out = new (array.constructor as new (length: number) => T)(length);
-  out.set(array);
-  if (fill !== 0) {
-    out.fill(fill, array.length);
-  }
-  return out;
-}
 const IDENTITY = Float64Array.of(
   1,
   0,

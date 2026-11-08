@@ -180,7 +180,7 @@ struct AnchorEye_std430_0
 @workgroup_size(1, 1, 1)
 fn layouts()
 {
-    out_0[i32(0)] = view_0.viewBit_0 + records_0[i32(0)].batch_0 + transforms_0[i32(0)].flags_1 + instances_0[i32(0)].record_0 + items_0[i32(0)].record_1 + materials_0[i32(0)].flags_3 + u32(lightHeaders_0[i32(0)].grid_0.w + lights_0[i32(0)].position_0.w + anchorEyes_0[i32(0)].eyeHi_0.w);
+    out_0[i32(0)] = view_0.viewBit_0 + records_0[u32(0)].batch_0 + transforms_0[i32(0)].flags_1 + instances_0[i32(0)].record_0 + items_0[i32(0)].record_1 + materials_0[i32(0)].flags_3 + u32(lightHeaders_0[i32(0)].grid_0.w + lights_0[i32(0)].position_0.w + anchorEyes_0[i32(0)].eyeHi_0.w);
     return;
 }
 

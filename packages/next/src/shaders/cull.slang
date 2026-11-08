@@ -34,7 +34,7 @@ void cullRecords(uint3 gid : SV_DispatchThreadID) {
   if (i >= params.recordCount) {
     return;
   }
-  DrawRecord r = records[i];
+  DrawRecord r = drawRecord(i);
   if (r.instanceCount != 0u) {
     return; // its instances are the items (`cullInstances`)
   }
@@ -58,7 +58,7 @@ void cullInstances(uint3 gid : SV_DispatchThreadID) {
   if (inst.record == NONE) {
     return;
   }
-  DrawRecord r = records[inst.record];
+  DrawRecord r = drawRecord(inst.record);
   Transform t = transforms[r.transform];
   // The instance's rows are the rows of its affine matrix.
   float4x4 local = float4x4(inst.row0, inst.row1, inst.row2, float4(0, 0, 0, 1));
