@@ -211,8 +211,8 @@ export function Legend({ legend }: { legend: LegendView }) {
               }}
             />
             <span className="dg-num">
-              Error ribbon, the ground tinted by rigid's error:{" "}
-              {legend.ribbon.min} to {legend.ribbon.max}
+              Error ribbon, the road where it truly is, tinted by rigid's error
+              there: {legend.ribbon.min} to {legend.ribbon.max}
             </span>
           </div>
         )}

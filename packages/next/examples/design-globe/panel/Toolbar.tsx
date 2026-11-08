@@ -153,7 +153,7 @@ export function MeasureToolbar({
               onChange={(on) => actions.setCompass(on)}
             />
             <Toggle
-              label="Error ribbon: the ground under the corridor tinted by rigid's error"
+              label="Error ribbon: the road where it truly is, tinted by rigid's error there"
               icon={svgRoad}
               active={view.ribbon}
               reason={

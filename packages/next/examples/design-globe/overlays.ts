@@ -18,6 +18,7 @@ import { MaterialFlags } from "../../src/render/layout.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { visibleRise } from "./exactSnap.ts";
 import { rampAt } from "./colors.ts";
+import { sectionSurface } from "./corridor.ts";
 import {
   PARTNER_SEMANTIC,
   morphShader,
@@ -207,15 +208,20 @@ export class AnchorRing extends Drawn {
   }
 }
 
-/** The error ribbon's columns across the centreline, design units: soft outer edges (the road is ±41). */
-const RIBBON_COLUMNS = [-300, -200, 200, 300] as const;
+/**
+ * The error ribbon's columns across the centreline, design units: the paved
+ * section between its outer barriers (±39), at the strips' breaks so the
+ * tint follows the crossfall, its outer edges soft (UX review S9: a band
+ * on the road, not a flood over the ground either side).
+ */
+const RIBBON_COLUMNS = [-38, -34, -29, -5, -1, 1, 5, 29, 34, 38] as const;
 /** Each column's opacity: the outer edges fade to nothing. */
-const RIBBON_EDGE = [0, 1, 1, 0] as const;
-/** Below the profile, design units: under the bridge deck's underside (1.5), so nothing on the road meets it. */
-const RIBBON_DROP = 2.5;
+const RIBBON_EDGE = [0, 1, 1, 1, 1, 1, 1, 1, 1, 0] as const;
+/** Over the road's surface, design units: clear of it at any range, under a car. */
+const RIBBON_LIFT = 0.5;
 
-/** The ribbon's opacity: a light tint, so the imagery and the true road read through it. */
-const RIBBON_ALPHA = 0.22;
+/** The ribbon's opacity: enough to read on the grey road, the road's lines through it. */
+const RIBBON_ALPHA = 0.5;
 
 /** No tint where rigid's error is under about half a metre: the ribbon shows where the story is. */
 const ribbonFade = (error: number) => {
@@ -225,11 +231,11 @@ const ribbonFade = (error: number) => {
 
 /**
  * The error ribbon (DESIGN.md "Visuals in the viewer", a toggle, off by
- * default): the ground under the corridor, where it truly is, tinted by
- * rigid's error at each station on the whiskers' ramp (the largest at the
- * far end, none near the anchor). Unlit and translucent, a band either
- * side of the road a little under its surface with soft edges, so the road
- * draws over its middle (Task 20 fix 1: a tint, not a slab).
+ * default): the road where it truly is, tinted by rigid's error at each
+ * station on the whiskers' ramp (the largest at the far end, none near the
+ * anchor). Unlit and translucent, a band on the paved section just over its
+ * surface, with soft edges (UX review S9: on the road, not a flood over the
+ * ground either side; hidden in the tunnels, as the road is).
  */
 export class ErrorRibbon extends Drawn {
   private readonly draw: DrawHandle;
@@ -266,12 +272,12 @@ export class ErrorRibbon extends Drawn {
     const colors = new Float32Array(n * cols * 4);
     let origin: Float64Array | undefined;
     stations.forEach((s, i) => {
-      const z = alignment.elevationAt(s) - RIBBON_DROP;
+      const z = alignment.elevationAt(s) + RIBBON_LIFT;
       const c = rampAt(errors[i]! / this.max);
       const fade = ribbonFade(errors[i]!);
       RIBBON_COLUMNS.forEach((offset, j) => {
         const [e, nn] = alignment.pointAt(s, offset);
-        const p = reprojected.displayed([e!, nn!, z]);
+        const p = reprojected.displayed([e!, nn!, z + sectionSurface(offset)]);
         origin ??= Float64Array.from(p);
         const v = i * cols + j;
         for (let k = 0; k < 3; k++) {
