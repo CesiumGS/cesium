@@ -643,6 +643,19 @@ export function Explorer() {
           ))}
         </div>
 
+        {snapshot?.undrawn.map(
+          (undrawn, i) =>
+            undrawn &&
+            configs[i] && (
+              <Alert key={i} severity="warning" className="explorer-undrawn">
+                {paneName(configs[i], index.branch)} can&rsquo;t draw the
+                content of {undrawn.tiles.toLocaleString()}{" "}
+                {undrawn.tiles === 1 ? "tile" : "tiles"} so far, though the tile
+                counts include them: {undrawn.reasons.join("; ")}
+              </Alert>
+            ),
+        )}
+
         <div className="explorer-below">
           {(colors !== "plain" || volumes.bounding || volumes.content) && (
             <Legend colors={colors} volumes={volumes} configs={configs} />

@@ -24,6 +24,12 @@ import {
  * cameras), and the inspection settings (paused streaming, tile tints,
  * bounding volumes). The view renders the panes and controls, reads the
  * selection a few times a second, and attaches an inspector to each pane.
+ *
+ * It is for looking, not measuring, so 2.0 panes render on demand in their
+ * engines' own loops and sleep when nothing changes. This loop only asks for
+ * animation frames while it has work in each one (`needsFrames`): a camera
+ * path playing, a 1.x pane (which renders only when called), or a camera to
+ * copy between linked panes. Otherwise it looks a few times a second.
  */
 
 export type TileColors = "plain" | "depth" | "difference";
@@ -31,6 +37,8 @@ export type TileColors = "plain" | "depth" | "difference";
 export interface Snapshot {
   /** Tiles each pane draws now. */
   drawn: DrawnTile[][];
+  /** Each pane's tiles it can't draw, and why (undefined: none). */
+  undrawn: Array<{ tiles: number; reasons: string[] } | undefined>;
   /** Shared frame interval, ms. */
   interval: number;
   /** Camera of the leading pane: longitude, latitude (degrees), height (m). */
@@ -47,10 +55,14 @@ const linear = (hex: string) =>
   ];
 /** Selection difference: tiles both draw stay neutral gray. */
 const SHARED = [0.45, 0.45, 0.45] as const;
+/** How often an idle loop looks for what changed, and snapshots, ms. */
+const SNAPSHOT_MS = 250;
 
 interface Pane {
   config: EngineConfig;
   adapter: Adapter;
+  /** Renders in its engine's own loop (`Adapter.startOnDemand`). */
+  onDemand: boolean;
   cpu: number;
   gpu: number | undefined;
   /** Frames drawn (the inspector's frames per second). */
@@ -59,9 +71,25 @@ interface Pane {
 
 export class ExplorerSession {
   mode: "path" | "free" = "path";
-  playing = false;
   speed = 1;
-  link = true;
+  /** The camera path is playing. */
+  get playing(): boolean {
+    return this.playing_;
+  }
+  set playing(on: boolean) {
+    this.playing_ = on;
+    this.look();
+  }
+  private playing_ = false;
+  /** Free flight: the panes' cameras follow the one you touch. */
+  get link(): boolean {
+    return this.link_;
+  }
+  set link(on: boolean) {
+    this.link_ = on;
+    this.look();
+  }
+  private link_ = true;
   /** Place on the camera path, 0 to 1. */
   progress = 0;
   /** Called every frame while the path plays (for the slider). */
@@ -78,6 +106,7 @@ export class ExplorerSession {
   private generation = 0;
   private stopped = false;
   private frameRequest = 0;
+  private idleTimer: ReturnType<typeof setTimeout> | undefined;
   private last = performance.now();
   private interval = 16.7;
   private lastSnapshot = 0;
@@ -95,9 +124,49 @@ export class ExplorerSession {
     this.running = true;
     this.stopped = false;
     this.last = performance.now();
-    this.frameRequest = requestAnimationFrame(this.tick);
+    this.look();
   }
   private running = false;
+
+  /** The adapters of the panes now (tests, and only to read). */
+  get adapters(): Adapter[] {
+    return this.panes.map((p) => p.adapter);
+  }
+
+  /** While false, the loop looks a few times a second instead. */
+  private needsFrames(): boolean {
+    const panes = this.panes;
+    return (
+      (this.mode === "path" && this.playing_) ||
+      panes.some((p) => !p.onDemand) ||
+      (this.mode === "free" && this.link_ && panes.length > 1)
+    );
+  }
+
+  /** Runs the loop's next pass now, not at the next idle look. */
+  private look(): void {
+    if (this.running) {
+      this.cancelPass();
+      this.frameRequest = requestAnimationFrame(this.tick);
+    }
+  }
+
+  private cancelPass(): void {
+    cancelAnimationFrame(this.frameRequest);
+    clearTimeout(this.idleTimer);
+    this.idleTimer = undefined;
+  }
+
+  private schedule(): void {
+    if (this.needsFrames()) {
+      this.frameRequest = requestAnimationFrame(this.tick);
+    } else {
+      this.idleTimer = setTimeout(
+        () => this.tick(performance.now()),
+        SNAPSHOT_MS,
+      );
+    }
+  }
 
   /**
    * Builds the panes for `base` with these configurations, in these
@@ -135,7 +204,15 @@ export class ExplorerSession {
         }
         adapter.setSun(sunDirection(spec, this.pose(0)));
         adapter.setCamera(this.pose(this.progress));
-        panes.push({ config, adapter, cpu: 0, gpu: undefined, frames: 0 });
+        adapter.startOnDemand?.();
+        panes.push({
+          config,
+          adapter,
+          onDemand: adapter.startOnDemand !== undefined,
+          cpu: 0,
+          gpu: undefined,
+          frames: 0,
+        });
       }
     } catch (e) {
       for (const p of panes) {
@@ -150,6 +227,7 @@ export class ExplorerSession {
     this.setPaused(this.paused);
     this.setTileColors(this.colors);
     this.setVolumes(this.volumes.bounding, this.volumes.content);
+    this.look();
     return true;
   }
 
@@ -176,7 +254,7 @@ export class ExplorerSession {
             cpuMs: pane.cpu,
             ...(pane.gpu !== undefined ? { gpuMs: pane.gpu } : {}),
             intervalMs: this.interval,
-            rendering: "continuous",
+            rendering: pane.onDemand ? "on demand" : "continuous",
             framesRendered: pane.frames,
           },
           camera: [...camera.position, ...camera.direction],
@@ -205,11 +283,12 @@ export class ExplorerSession {
   setMode(mode: "path" | "free"): void {
     this.mode = mode;
     if (mode === "free") {
-      this.playing = false;
+      this.playing_ = false;
     }
     for (const p of this.panes) {
       p.adapter.setInteractive(mode === "free");
     }
+    this.look();
   }
 
   /** The pane under the pointer leads linked cameras. */
@@ -219,6 +298,7 @@ export class ExplorerSession {
 
   setProgress(progress: number): void {
     this.progress = progress;
+    this.look();
   }
 
   setPaused(on: boolean): void {
@@ -261,8 +341,12 @@ export class ExplorerSession {
     }
     const dt = now - this.last;
     this.last = now;
-    this.interval += (dt - this.interval) * 0.1;
-    if (this.mode === "path" && this.playing) {
+    // An idle look's gap isn't a frame interval.
+    if (this.idleTimer === undefined) {
+      this.interval += (dt - this.interval) * 0.1;
+    }
+    this.idleTimer = undefined;
+    if (this.mode === "path" && this.playing_) {
       let t = this.progress + (dt / 1000 / this.duration) * this.speed;
       if (t >= 1) {
         t = 0;
@@ -281,7 +365,7 @@ export class ExplorerSession {
           }
           pane.adapter.setCamera(p);
         }
-      } else if (this.link && panes[this.leader]) {
+      } else if (this.link_ && panes[this.leader]) {
         const p = panes[this.leader]!.adapter.getCamera();
         panes.forEach((pane, i) => {
           if (i !== this.leader) {
@@ -290,28 +374,42 @@ export class ExplorerSession {
         });
       }
       for (const pane of panes) {
-        const cpu = pane.adapter.frame();
-        pane.frames++;
-        pane.cpu += (cpu - pane.cpu) * 0.1;
+        const own = pane.onDemand ? pane.adapter.onDemandStats!() : undefined;
+        if (own) {
+          // Its engine's loop rendered, or didn't: already smoothed.
+          pane.frames = own.frames;
+          pane.cpu = own.cpuMs;
+        } else {
+          const cpu = pane.adapter.frame();
+          pane.frames++;
+          pane.cpu += (cpu - pane.cpu) * 0.1;
+        }
         const gpu = pane.adapter.gpuMs();
         if (gpu !== undefined) {
           pane.gpu =
             pane.gpu === undefined ? gpu : pane.gpu + (gpu - pane.gpu) * 0.1;
         }
       }
-      if (now - this.lastSnapshot > 250) {
+      if (now - this.lastSnapshot >= SNAPSHOT_MS) {
         this.lastSnapshot = now;
         this.snapshot();
       }
     }
-    this.frameRequest = requestAnimationFrame(this.tick);
+    this.schedule();
   };
 
   private snapshot(): void {
     const drawn = this.panes.map((p) => p.adapter.drawnTiles());
-    this.drawnKeys = drawn.map((list) => new Set(list.map((t) => t.key)));
-    if (this.colors === "difference") {
-      // Re-applied so still engines repaint as the other's selection moves.
+    const keys = drawn.map((list) => new Set(list.map((t) => t.key)));
+    const moved = keys.some(
+      (set, i) =>
+        set.size !== this.drawnKeys[i]?.size ||
+        [...set].some((key) => !this.drawnKeys[i]!.has(key)),
+    );
+    this.drawnKeys = keys;
+    if (this.colors === "difference" && moved) {
+      // Re-applied so still engines repaint as the other's selection moves;
+      // not otherwise, or they would never sleep.
       this.setTileColors(this.colors);
     }
     const leader = this.panes[this.leader] ?? this.panes[0]!;
@@ -323,6 +421,7 @@ export class ExplorerSession {
     });
     this.onSnapshot?.({
       drawn,
+      undrawn: this.panes.map((p) => p.adapter.undrawnTiles?.()),
       interval: this.interval,
       ...(c
         ? {
@@ -348,7 +447,7 @@ export class ExplorerSession {
     this.stopped = true;
     this.running = false;
     this.generation++;
-    cancelAnimationFrame(this.frameRequest);
+    this.cancelPass();
     this.destroyPanes();
   }
 }

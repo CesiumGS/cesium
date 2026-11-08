@@ -405,6 +405,15 @@ export interface Adapter {
   setup(container: HTMLElement, spec: RunSpec): Promise<void>;
   /** Renders one frame; returns main-thread ms inside the engine. */
   frame(): number;
+  /**
+   * Hands rendering to the engine's own on-demand loop, for looking rather
+   * than measuring (the explorer): it renders what changes and sleeps when
+   * nothing does, and `frame` isn't called. Engines without one (1.x) leave
+   * it out.
+   */
+  startOnDemand?(): void;
+  /** With `startOnDemand`: its main-thread ms per frame and frames so far. */
+  onDemandStats?(): { cpuMs: number; frames: number };
   gpuMs(): number | undefined;
   /** The version of the timer behind `gpuMs` (`RunMetrics.gpuTimer`). */
   gpuTimer?(): number;
@@ -426,6 +435,11 @@ export interface Adapter {
   setPolicy?(policy: "budgeted" | "stepwise"): void;
   /** The tiles drawn now, keyed so two engines' selections compare. */
   drawnTiles(): DrawnTile[];
+  /**
+   * Selected or not, tiles whose content this engine can't draw, and why.
+   * Undefined: none, or the engine doesn't say (1.x).
+   */
+  undrawnTiles?(): { tiles: number; reasons: string[] } | undefined;
   /**
    * Tints each drawn tile with the color this returns (linear RGB; none
    * leaves it untinted), checked every frame; undefined clears tints.
@@ -499,6 +513,20 @@ const BUDGETED_OPTIONS = [
   "opportunisticRatio",
   "skipLevels",
 ] as const;
+
+/** Exactly the same camera, value by value. */
+function samePose(a: Pose, b: Pose): boolean {
+  for (let i = 0; i < 3; i++) {
+    if (
+      a.position[i] !== b.position[i] ||
+      a.direction[i] !== b.direction[i] ||
+      a.up[i] !== b.up[i]
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
 
 export class NextAdapter implements Adapter {
   private engine!: Engine;
@@ -737,6 +765,21 @@ export class NextAdapter implements Adapter {
     return performance.now() - t;
   }
 
+  startOnDemand(): void {
+    // As `Viewer` does: the controller's ground check in the engine's tick,
+    // whose result the same tick renders. It wakes nothing by itself.
+    this.engine.onTick(() => {
+      this.controller?.update();
+      return false;
+    });
+    this.engine.start();
+  }
+
+  onDemandStats(): { cpuMs: number; frames: number } {
+    const { cpuMs, framesRendered } = this.engine.stats;
+    return { cpuMs, frames: framesRendered };
+  }
+
   gpuMs(): number | undefined {
     const ms = this.engine.stats.gpuMs;
     return Number.isFinite(ms) ? ms : undefined;
@@ -765,10 +808,20 @@ export class NextAdapter implements Adapter {
 
   setCamera(pose: Pose): void {
     const c = this.view.camera;
+    // The same pose again changes nothing (a linked or paused camera is
+    // written every tick), and `orient` would bump the camera's version,
+    // which wakes an on-demand engine.
+    const written = this.writtenPose;
+    if (written?.version === c.version && samePose(written.pose, pose)) {
+      return;
+    }
     c.position.set(pose.position);
     c.direction.set(pose.direction);
     c.orient(Float64Array.from(pose.up));
+    this.writtenPose = { pose, version: c.version };
   }
+  /** The last pose `setCamera` wrote, and the camera's version after it. */
+  private writtenPose: { pose: Pose; version: number } | undefined;
 
   getCamera(): Pose {
     const c = this.view.camera;
@@ -814,6 +867,18 @@ export class NextAdapter implements Adapter {
       }
     }
     return out;
+  }
+
+  undrawnTiles(): { tiles: number; reasons: string[] } | undefined {
+    const tiles = this.tilesets.reduce((n, t) => n + t.stats.undrawn, 0);
+    return tiles > 0
+      ? {
+          tiles,
+          reasons: [
+            ...new Set(this.tilesets.flatMap((t) => [...t.undrawnReasons])),
+          ],
+        }
+      : undefined;
   }
 
   setTileTint(tint: TileTint | undefined): void {
@@ -863,7 +928,15 @@ export class NextAdapter implements Adapter {
   }
 
   setSun(direction: Float64Array): void {
-    this.engine.sunDirection.set(direction);
+    const sun = this.engine.sunDirection;
+    if (
+      sun[0] !== direction[0] ||
+      sun[1] !== direction[1] ||
+      sun[2] !== direction[2]
+    ) {
+      sun.set(direction);
+      this.engine.wake(); // set in place: the loop can't see it
+    }
   }
 
   effectiveRender(): EffectiveRender {

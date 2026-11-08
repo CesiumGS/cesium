@@ -23,6 +23,10 @@
 .explorer-stage {
   margin-block-end: var(--stratakit-space-800);
 }
+
+.explorer-undrawn {
+  margin-block-start: var(--stratakit-space-200);
+}
 .explorer-transport {
   display: flex;
   flex-wrap: wrap;
