@@ -45,6 +45,27 @@ export class MeshBuilder {
     color: Rgba,
     feature: Feature,
   ): void;
+  /** A box standing on the ground: centre `at`, base at `z`, turned `angle`. */
+  box(
+    at: readonly [number, number],
+    z: number,
+    length: number,
+    width: number,
+    height: number,
+    angle: number,
+    color: Rgba,
+    feature: Feature,
+  ): void;
+  /** A vertical prism of a regular `sides`-gon: centre `at`, from z0 up `height`. */
+  cylinder(
+    at: readonly [number, number],
+    z0: number,
+    height: number,
+    radius: number,
+    sides: number,
+    color: Rgba,
+    feature: Feature,
+  ): void;
   build(): DesignTileMesh & { colors: Float32Array };
 }
 /** The longest triangle edge of a mesh, design units. */

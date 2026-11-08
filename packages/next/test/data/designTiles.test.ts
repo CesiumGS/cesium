@@ -17,8 +17,12 @@
 //    tilesets are partners (one tree, the same ids, indices, feature ids
 //    and colours, and every vertex the same design point), load by their
 //    own declarations, round-trip on their leaves, keep every reprojected
-//    leaf's edges within the sag rule, and have the extents and rigid
-//    errors of the ladder, which grow down it.
+//    tile's edges within the sag rule, and have the extents and rigid
+//    errors of the ladder, which grow down it;
+//  - the ladder's coarse tiles (F6): each is within its stated error of the
+//    leaves both ways (sampled), and keeps something standing in the region
+//    of every solid feature its leaves hold (paint, wires and the ground
+//    may go).
 // `npm run test:data` runs it.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -197,6 +201,246 @@ const zUp = (p: Float32Array, i: number) => [
   p[3 * i + 1]!,
 ];
 
+/** A GLB's feature names (its property table's `name` column), by feature id. */
+function featureNames(bytes: Uint8Array): string[] {
+  const { json, bin } = splitGlb(bytes);
+  const table = json.extensions.EXT_structural_metadata.propertyTables[0];
+  const view = (i: number) => {
+    const v = json.bufferViews[i];
+    return new Uint8Array(
+      bin!.buffer,
+      bin!.byteOffset + (v.byteOffset ?? 0),
+      v.byteLength,
+    );
+  };
+  const values = view(table.properties.name.values);
+  const raw = view(table.properties.name.stringOffsets);
+  const offsets = new Uint32Array(
+    raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength),
+  );
+  const decoder = new TextDecoder();
+  return Array.from({ length: table.count }, (_v, i) =>
+    decoder.decode(values.subarray(offsets[i]!, offsets[i + 1]!)),
+  );
+}
+
+/** Calls f on each triangle (9 numbers) of a flat array, with its index. */
+function eachTriangle(
+  tris: Float64Array,
+  f: (t: Float64Array, i: number) => void,
+) {
+  for (let i = 0; 9 * i < tris.length; i++) {
+    f(tris.subarray(9 * i, 9 * i + 9), i);
+  }
+}
+
+/** A triangle's width: twice its area over its longest edge. */
+function width(t: ArrayLike<number>): number {
+  const [ux, uy, uz] = [t[3]! - t[0]!, t[4]! - t[1]!, t[5]! - t[2]!];
+  const [vx, vy, vz] = [t[6]! - t[0]!, t[7]! - t[1]!, t[8]! - t[2]!];
+  const area = Math.hypot(
+    uy * vz - uz * vy,
+    uz * vx - ux * vz,
+    ux * vy - uy * vx,
+  );
+  const longest = Math.max(
+    Math.hypot(ux, uy, uz),
+    Math.hypot(vx, vy, vz),
+    Math.hypot(t[6]! - t[3]!, t[7]! - t[4]!, t[8]! - t[5]!),
+  );
+  return area / Math.max(longest, 1e-12);
+}
+
+/** Points of a triangle no farther apart than `spacing`, its corners among them. */
+function samples(
+  t: ArrayLike<number>,
+  spacing: number,
+  f: (x: number, y: number, z: number) => void,
+) {
+  const n = Math.max(
+    1,
+    Math.ceil(
+      Math.max(
+        Math.hypot(t[3]! - t[0]!, t[4]! - t[1]!, t[5]! - t[2]!),
+        Math.hypot(t[6]! - t[3]!, t[7]! - t[4]!, t[8]! - t[5]!),
+        Math.hypot(t[0]! - t[6]!, t[1]! - t[7]!, t[2]! - t[8]!),
+      ) / spacing,
+    ),
+  );
+  for (let i = 0; i <= n; i++) {
+    for (let j = 0; i + j <= n; j++) {
+      const [u, v] = [i / n, j / n];
+      const w = 1 - u - v;
+      f(
+        w * t[0]! + u * t[3]! + v * t[6]!,
+        w * t[1]! + u * t[4]! + v * t[7]!,
+        w * t[2]! + u * t[5]! + v * t[8]!,
+      );
+    }
+  }
+}
+
+/** The distance from a point to the segment from t[a..a+2] to t[b..b+2]. */
+function toSegment(
+  x: number,
+  y: number,
+  z: number,
+  t: Float64Array,
+  a: number,
+  b: number,
+) {
+  const dx = t[b]! - t[a]!;
+  const dy = t[b + 1]! - t[a + 1]!;
+  const dz = t[b + 2]! - t[a + 2]!;
+  const len2 = dx * dx + dy * dy + dz * dz;
+  const s =
+    len2 > 0
+      ? Math.max(
+          0,
+          Math.min(
+            1,
+            ((x - t[a]!) * dx + (y - t[a + 1]!) * dy + (z - t[a + 2]!) * dz) /
+              len2,
+          ),
+        )
+      : 0;
+  return Math.hypot(
+    x - t[a]! - s * dx,
+    y - t[a + 1]! - s * dy,
+    z - t[a + 2]! - s * dz,
+  );
+}
+
+/**
+ * The distance from a point to the triangle at t[o..o+8]: to its plane
+ * where the foot lies inside it (on the inner side of every edge), else
+ * to its nearest edge.
+ */
+function toTriangle(x: number, y: number, z: number, t: Float64Array, o = 0) {
+  const ux = t[o + 3]! - t[o]!;
+  const uy = t[o + 4]! - t[o + 1]!;
+  const uz = t[o + 5]! - t[o + 2]!;
+  const vx = t[o + 6]! - t[o]!;
+  const vy = t[o + 7]! - t[o + 1]!;
+  const vz = t[o + 8]! - t[o + 2]!;
+  const nx = uy * vz - uz * vy;
+  const ny = uz * vx - ux * vz;
+  const nz = ux * vy - uy * vx;
+  const nn = Math.hypot(nx, ny, nz);
+  if (nn > 0) {
+    const h =
+      ((x - t[o]!) * nx + (y - t[o + 1]!) * ny + (z - t[o + 2]!) * nz) / nn;
+    const fx = x - (h * nx) / nn;
+    const fy = y - (h * ny) / nn;
+    const fz = z - (h * nz) / nn;
+    let inside = true;
+    for (let e = 0; e < 3 && inside; e++) {
+      const a = o + 3 * e;
+      const b = o + 3 * ((e + 1) % 3);
+      const ex = t[b]! - t[a]!;
+      const ey = t[b + 1]! - t[a + 1]!;
+      const ez = t[b + 2]! - t[a + 2]!;
+      const px = fx - t[a]!;
+      const py = fy - t[a + 1]!;
+      const pz = fz - t[a + 2]!;
+      inside =
+        (ey * pz - ez * py) * nx +
+          (ez * px - ex * pz) * ny +
+          (ex * py - ey * px) * nz >=
+        0;
+    }
+    if (inside) {
+      return Math.abs(h);
+    }
+  }
+  return Math.min(
+    toSegment(x, y, z, t, o, o + 3),
+    toSegment(x, y, z, t, o + 3, o + 6),
+    toSegment(x, y, z, t, o + 6, o),
+  );
+}
+
+/** Tiles' triangles in a horizontal grid, for the distance to the nearest. */
+class Grid {
+  readonly tris: Float64Array;
+  readonly cells = new Map<number, number[]>();
+  readonly x0: number;
+  readonly y0: number;
+  constructor(
+    tiles: { tris: Float64Array }[],
+    readonly cell: number,
+    from?: Grid,
+  ) {
+    this.tris = from?.tris ?? concat(tiles.map((r) => r.tris));
+    // A local origin keeps the cell indices small, and exact as keys.
+    this.x0 = this.tris[0] ?? 0;
+    this.y0 = this.tris[1] ?? 0;
+    if (cell <= 0) {
+      return;
+    }
+    eachTriangle(this.tris, (t, i) => {
+      const [i0, i1] = this.span(t[0]!, t[3]!, t[6]!, this.x0);
+      const [j0, j1] = this.span(t[1]!, t[4]!, t[7]!, this.y0);
+      for (let a = i0; a <= i1; a++) {
+        for (let b = j0; b <= j1; b++) {
+          const key = this.key(a, b);
+          const list = this.cells.get(key);
+          if (list) {
+            list.push(i);
+          } else {
+            this.cells.set(key, [i]);
+          }
+        }
+      }
+    });
+  }
+
+  span(a: number, b: number, c: number, origin: number) {
+    return [
+      Math.floor((Math.min(a, b, c) - origin) / this.cell),
+      Math.floor((Math.max(a, b, c) - origin) / this.cell),
+    ] as const;
+  }
+
+  key(a: number, b: number) {
+    return (a + 2_097_152) * 4_194_304 + (b + 2_097_152);
+  }
+
+  /** The distance to the nearest triangle, or some distance at most `enough` once one is that near. */
+  distance(x: number, y: number, z: number, enough: number): number {
+    const a = Math.floor((x - this.x0) / this.cell);
+    const b = Math.floor((y - this.y0) / this.cell);
+    let best = Infinity;
+    for (let r = 0; r < 64; r++) {
+      if (r > 0 && (r - 1) * this.cell >= best) {
+        return best;
+      }
+      for (let i = -r; i <= r; i++) {
+        const edge = i === -r || i === r;
+        for (let j = -r; j <= r; j += edge || r === 0 ? 1 : 2 * r) {
+          for (const k of this.cells.get(this.key(a + i, b + j)) ?? []) {
+            best = Math.min(best, toTriangle(x, y, z, this.tris, 9 * k));
+            if (best <= enough) {
+              return best;
+            }
+          }
+        }
+      }
+    }
+    return best;
+  }
+}
+
+const concat = (arrays: Float64Array[]) => {
+  const out = new Float64Array(arrays.reduce((n, a) => n + a.length, 0));
+  let at = 0;
+  for (const a of arrays) {
+    out.set(a, at);
+    at += a.length;
+  }
+  return out;
+};
+
 describe("the design globe's generated tiles", () => {
   let rigidJson: Json;
   let reprojectedJson: Json;
@@ -364,7 +608,7 @@ describe("the design globe's generated tiles", () => {
     expect(checked).toBeGreaterThan(3_000);
     expect(worstRigid).toBeLessThan(1e-4);
     expect(worstReprojected).toBeLessThan(1e-4);
-  });
+  }, 120_000);
 
   it("places every tileset by its own declaration", async () => {
     const declared = readGeoreference(rigidJson)!;
@@ -446,7 +690,7 @@ describe("the design globe's generated tiles", () => {
         checkRigidTransform(placement, Float64Array.from(json.root.transform)),
       ).not.toThrow();
     }
-  });
+  }, 120_000);
 
   it("states the spec's rigid sag at the points nearest 10 and 20 km from the anchor", () => {
     expect(answers.instant).toBe(DESIGN_TILES_INSTANT);
@@ -827,9 +1071,9 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
       expect(worstRigid).toBeLessThan(1e-4);
       expect(worstReprojected).toBeLessThan(1e-4);
       expect(worstPartner).toBeLessThan(5e-3);
-    });
+    }, 120_000);
 
-    it(`${site.id}: every reprojected leaf's longest edge sags (d²/8R) at most the leaf's error`, () => {
+    it(`${site.id}: every reprojected tile's longest edge sags (d²/8R) at most the tile's error, at every level`, () => {
       const { reprojectedJson } = loaded.get(site.id)!;
       const dir = `portfolio-${site.id}-reprojected`;
       let leaves = 0;
@@ -838,10 +1082,10 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
         reprojectedJson.root,
         tree(reprojectedJson),
       )) {
-        if (json.children || !json.content) {
+        if (!json.content) {
           continue;
         }
-        leaves++;
+        leaves += json.children ? 0 : 1;
         const bytes = read(dir, json.content.uri);
         const p = positions(bytes);
         const index = accessorOf(bytes, "indices");
@@ -863,7 +1107,181 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
       }
       expect(leaves).toBeGreaterThan(0);
       expect(worst).toBeGreaterThan(0);
-    });
+    }, 120_000);
+
+    it(`${site.id}: each coarse tile is within its error of the leaves, both ways, and keeps something standing where each solid feature stood`, () => {
+      const { rigidJson, frame } = loaded.get(site.id)!;
+      const dir = `portfolio-${site.id}-rigid`;
+      const mpu = frame.units.metersPerUnit;
+      // Every content tile, rigid, in design coordinates.
+      type Read = {
+        id: string;
+        level: number;
+        error: number;
+        leaves: Read[];
+        tris: Float64Array;
+        names: string[];
+      };
+      const all: Read[] = [];
+      const visit = (json: Json, centre: number[]): Read[] => {
+        const here = json.transform
+          ? centre.map((v, k) => v + json.transform[12 + k])
+          : centre;
+        const below: Read[] = (json.children ?? []).flatMap((c: Json) =>
+          visit(c, here),
+        );
+        if (!json.content) {
+          return below;
+        }
+        const bytes = read(dir, json.content.uri);
+        const p = positions(bytes);
+        const index = accessorOf(bytes, "indices");
+        const ids = accessorOf(bytes, "_FEATURE_ID_0");
+        const names = featureNames(bytes);
+        const tris = new Float64Array(3 * index.length);
+        const triNames: string[] = [];
+        for (let t = 0; t < index.length; t += 3) {
+          for (let k = 0; k < 3; k++) {
+            const local = zUp(p, index[t + k]!);
+            for (let a = 0; a < 3; a++) {
+              tris[3 * (t + k) + a] = here[a]! + local[a]!;
+            }
+          }
+          triNames.push(names[ids[index[t]!]!]!);
+        }
+        const id = json.content.uri.replace(/^tiles\/|\.glb$/g, "");
+        const leaf = !json.children;
+        const tile: Read = {
+          id,
+          level: Number(id.split("-")[0]),
+          error: json.geometricError,
+          leaves: leaf ? [] : below.filter((r) => r.leaves.length === 0),
+          tris,
+          names: triNames,
+        };
+        all.push(tile);
+        return [...below, tile];
+      };
+      visit(rigidJson.root.children[0], [0, 0, 0]);
+      const leaves = all.filter((r) => r.level === 0);
+      const coarse = all.filter((r) => r.level > 0);
+      expect(leaves.length).toBeGreaterThan(0);
+      if (coarse.length === 0) {
+        return;
+      }
+
+      // Detail (paint, wires, the ground) may go; the rest is solid.
+      const extent = new Map<
+        string,
+        { lo: number; hi: number; wide: number }
+      >();
+      for (const leaf of leaves) {
+        eachTriangle(leaf.tris, (t, i) => {
+          const name = leaf.names[i]!;
+          const e = extent.get(name) ?? {
+            lo: Infinity,
+            hi: -Infinity,
+            wide: 0,
+          };
+          e.lo = Math.min(e.lo, t[2]!, t[5]!, t[8]!);
+          e.hi = Math.max(e.hi, t[2]!, t[5]!, t[8]!);
+          e.wide = Math.max(e.wide, width(t));
+          extent.set(name, e);
+        });
+      }
+      const detail = new Set(
+        [...extent]
+          .filter(([, e]) => (e.hi - e.lo) * mpu <= 0.5 || e.wide * mpu <= 0.1)
+          .map(([name]) => name),
+      );
+
+      const full = new Grid(leaves, 0);
+      let groups = 0;
+      let worst = 0;
+      for (const level of new Set(coarse.map((r) => r.level))) {
+        const tiles = coarse.filter((r) => r.level === level);
+        const cell = Math.max(...tiles.map((r) => r.error));
+        const shown = new Grid(tiles, cell);
+        const detailGrid = new Grid(leaves, cell, full);
+        for (const tile of tiles) {
+          const e = tile.error;
+          // What is drawn, near the full detail; the full detail, near
+          // what this level draws. Samples at the level's largest error
+          // apart: any sample's distance is a lower bound on the deviation,
+          // so each must be within the tile's own (which may be 2 mm, where
+          // the tile draws only full detail).
+          const far = (from: Float64Array, to: Grid) => {
+            let found = 0;
+            eachTriangle(from, (t) =>
+              samples(t, cell, (x, y, z) => {
+                const d = to.distance(x, y, z, e);
+                found = Math.max(found, d);
+              }),
+            );
+            return found;
+          };
+          const back = far(tile.tris, detailGrid);
+          const there = Math.max(...tile.leaves.map((l) => far(l.tris, shown)));
+          expect(back, `${tile.id} drawn to full detail`).toBeLessThanOrEqual(
+            e,
+          );
+          expect(there, `${tile.id} full detail to drawn`).toBeLessThanOrEqual(
+            e,
+          );
+          worst = Math.max(worst, Math.max(back, there) / e);
+
+          // Every leaf's solid feature keeps something standing in its region.
+          const standing: number[][] = [];
+          eachTriangle(tile.tris, (t, i) => {
+            if (!detail.has(tile.names[i]!)) {
+              standing.push(Array.from(t));
+            }
+          });
+          for (const leaf of tile.leaves) {
+            const regions = new Map<string, number[]>();
+            eachTriangle(leaf.tris, (t, i) => {
+              const name = leaf.names[i]!;
+              if (detail.has(name)) {
+                return;
+              }
+              const r = regions.get(name) ?? [
+                Infinity,
+                Infinity,
+                Infinity,
+                -Infinity,
+                -Infinity,
+                -Infinity,
+              ];
+              for (let k = 0; k < 9; k += 3) {
+                r[0] = Math.min(r[0]!, t[k]!);
+                r[1] = Math.min(r[1]!, t[k + 1]!);
+                r[2] = Math.min(r[2]!, t[k + 2]!);
+                r[3] = Math.max(r[3]!, t[k]!);
+                r[4] = Math.max(r[4]!, t[k + 1]!);
+                r[5] = Math.max(r[5]!, t[k + 2]!);
+              }
+              regions.set(name, r);
+            });
+            for (const [name, r] of regions) {
+              groups++;
+              const rise = r[2]! + 0.25 * (r[5]! - r[2]!);
+              const slack = e / 2;
+              const found = standing.some(
+                (t) =>
+                  [0, 3, 6].some((k) => t[k + 2]! >= rise) &&
+                  Math.min(t[0]!, t[3]!, t[6]!) <= r[3]! + slack &&
+                  Math.max(t[0]!, t[3]!, t[6]!) >= r[0]! - slack &&
+                  Math.min(t[1]!, t[4]!, t[7]!) <= r[4]! + slack &&
+                  Math.max(t[1]!, t[4]!, t[7]!) >= r[1]! - slack,
+              );
+              expect(found, `${tile.id}: ${name} (leaf ${leaf.id})`).toBe(true);
+            }
+          }
+        }
+      }
+      expect(groups).toBeGreaterThan(0);
+      expect(worst).toBeGreaterThan(0);
+    }, 120_000);
   }
 
   it("answers.sites: the ladder's extents, three exact points each, and trees of 3 levels or more over 1 km", () => {

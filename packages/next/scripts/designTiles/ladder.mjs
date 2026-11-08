@@ -15,15 +15,24 @@
 //  - The tree splits the footprint's box in two along every axis longer
 //    than `leafSize`, until none is, so every leaf is at one depth. A tile
 //    holds the parts whose `at` it holds; empty tiles are left out.
+//  - A leaf draws every part it holds at full detail. A tile above the
+//    leaves draws a simplified version of every part it holds
+//    (coarsen.mjs): the solids clustered on a grid of CELL_DIVISOR cells
+//    across the tile, small ones as boxes, dense ones merged into blocks;
+//    paint and wires as the parts' lods draw them, or dropped where they
+//    leave them out.
 //  - A leaf's geometric error is the leaf tolerance (1 mm). A parent's is
-//    the larger of twice its children's and the largest error of what it
-//    draws instead of full detail. Every face at level l is subdivided until
+//    the larger of twice its children's and its measured deviation from the
+//    full detail it replaces (Hausdorff, sampled, both ways), or a dropped
+//    detail's lod error where more. Every face at level l is subdivided until
 //    its edges' sag (d²/8R) is at most 2^l times the leaf tolerance, which
 //    the doubling keeps within the tile's error (each tile's mesh() checks).
 import { airportPlan } from "./airportMesh.mjs";
 import { blockPlan } from "./blockMesh.mjs";
 import { campusPlan } from "./campusMesh.mjs";
+import { coarsen, detailFeatures, trianglesOf, weld } from "./coarsen.mjs";
 import {
+  LAYER_METRES,
   MeshBuilder,
   edgeSag,
   longestEdge,
@@ -36,6 +45,8 @@ import { solarFarmPlan } from "./solarFarmMesh.mjs";
 
 /** A leaf's geometric error, metres: the sag rule's tolerance at the leaves. */
 export const LEAF_ERROR_METRES = 0.001;
+/** A coarse tile clusters its solids on cells of its larger side / this. */
+export const CELL_DIVISOR = 64;
 
 const PLANS = {
   building: buildingPlan,
@@ -186,6 +197,54 @@ export function ladderTree(plan, { leafError, metersPerUnit }) {
     buckets.push(bucket);
   }
 
+  // Each part's full detail and each lod's drawing, as triangles, once.
+  const full = new Map();
+  const fullOf = (p) => {
+    let t = full.get(p);
+    if (t === undefined) {
+      t = trianglesOf((b) => p.lods[0].draw?.(b));
+      full.set(p, t);
+    }
+    return t;
+  };
+  const hands = new Map();
+  const handOf = (p, lod) => {
+    if (lod.draw === p.lods[0].draw) {
+      return fullOf(p);
+    }
+    if (lod.draw === null) {
+      return null;
+    }
+    let t = hands.get(lod);
+    if (t === undefined) {
+      t = trianglesOf(lod.draw);
+      hands.set(lod, t);
+    }
+    return t;
+  };
+  // Paint and wires: drawn as the lods draw them, never clustered.
+  const details = detailFeatures(
+    parts.flatMap((p) => fullOf(p)),
+    mpu,
+  );
+
+  // The whole ground at a level, as triangles, for the coarse tiles' measure.
+  const groundTriangles = new Map();
+  const groundAt = (level) => {
+    let t = groundTriangles.get(level);
+    if (t === undefined) {
+      t = trianglesOf((b) => {
+        for (const g of grounds) {
+          if (lodAt(g, level).keep) {
+            b.flat(g.at, g.z, g.length, g.width, g.angle, g.color, g.feature);
+          }
+        }
+      });
+      groundTriangles.set(level, t);
+    }
+    return t;
+  };
+
   let tiles = 0;
   const node = (level, ix, iy) => {
     const children = [];
@@ -222,51 +281,77 @@ export function ladderTree(plan, { leafError, metersPerUnit }) {
     for (const c of children) {
       error = Math.max(error, 2 * c.geometricError);
     }
-    for (const p of held.parts) {
-      error = Math.max(error, lodAt(p, level).error);
-    }
     for (const c of held.cells) {
       error = Math.max(error, lodAt(c.ground, level).error);
     }
     error = Math.max(error, held.dropped);
     tiles++;
     const id = `${level}-${ix}-${iy}`;
+    const builder = new MeshBuilder(maxEdge(level));
+    const drawCells = (b) => {
+      for (const c of held.cells) {
+        const g = c.ground;
+        b.flat(c.at, g.z, c.length, c.width, g.angle, g.color, g.feature);
+      }
+    };
+    let stats;
+    let cell = 0;
+    if (level === 0) {
+      for (const p of held.parts) {
+        p.lods[0].draw?.(builder);
+      }
+    } else {
+      // A simplified version of everything held, its error measured.
+      const [gx, gy] = grid(level);
+      cell = Math.max(width / gx, height / gy) / CELL_DIVISOR;
+      const coarse = coarsen({
+        pieces: held.parts.map((p) => {
+          const lod = lodAt(p, level);
+          return { part: p, full: fullOf(p), lod, hand: handOf(p, lod) };
+        }),
+        ground: groundAt(level),
+        detail: (feature) => details.has(feature),
+        cell,
+        layer: LAYER_METRES / mpu,
+        // Half a cell at least: a bound found fast where it holds.
+        target: Math.max(error, cell / 2),
+      });
+      error = Math.max(error, coarse.error);
+      stats = coarse.stats;
+      for (const t of coarse.triangles) {
+        const p = t.p;
+        builder.triangle(
+          [p[0], p[1], p[2]],
+          [p[3], p[4], p[5]],
+          [p[6], p[7], p[8]],
+          t.color,
+          t.feature,
+        );
+      }
+    }
+    drawCells(builder);
     const geometricError = error;
+    let mesh = null;
+    if (!builder.empty) {
+      // A coarse tile's triangles come one by one: their shared corners welded.
+      mesh = level === 0 ? builder.build() : weld(builder.build());
+      // The sag rule, checked: the longest edge's sag within the error.
+      const sag = edgeSag(longestEdge(mesh) * mpu) / mpu;
+      if (!(sag <= geometricError * (1 + 1e-9))) {
+        throw new Error(
+          `ladderTree: tile ${id}: an edge sags ${(sag * mpu).toPrecision(3)} m, over its geometric error`,
+        );
+      }
+    }
     return {
       id,
       level,
       geometricError,
       children,
-      mesh() {
-        const builder = new MeshBuilder(maxEdge(level));
-        for (const p of held.parts) {
-          lodAt(p, level).draw?.(builder);
-        }
-        for (const c of held.cells) {
-          const g = c.ground;
-          builder.flat(
-            c.at,
-            g.z,
-            c.length,
-            c.width,
-            g.angle,
-            g.color,
-            g.feature,
-          );
-        }
-        if (builder.empty) {
-          return null;
-        }
-        const mesh = builder.build();
-        // The sag rule, checked: the longest edge's sag within the error.
-        const sag = edgeSag(longestEdge(mesh) * mpu) / mpu;
-        if (!(sag <= geometricError * (1 + 1e-9))) {
-          throw new Error(
-            `ladderTree: tile ${id}: an edge sags ${(sag * mpu).toPrecision(3)} m, over its geometric error`,
-          );
-        }
-        return mesh;
-      },
+      parts: held.parts,
+      cell,
+      stats,
+      mesh: () => mesh,
     };
   };
   const top = node(depth, 0, 0);

@@ -126,6 +126,7 @@ const INPUTS = [
   "scripts/designTiles/corridorMesh.mjs",
   "scripts/designTiles/siteMesh.mjs",
   "scripts/designTiles/ladder.mjs",
+  "scripts/designTiles/coarsen.mjs",
   "scripts/designTiles/meshBuilder.mjs",
   "scripts/designTiles/blockMesh.mjs",
   "scripts/designTiles/portMesh.mjs",

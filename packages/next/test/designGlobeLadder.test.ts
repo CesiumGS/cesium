@@ -23,7 +23,12 @@ import {
   type SolarFarmModel,
 } from "../examples/design-globe/sites.ts";
 import {
+  detailFeatures,
+  trianglesOf,
+} from "../scripts/designTiles/coarsen.mjs";
+import {
   LEAF_ERROR_METRES,
+  type LadderPart,
   ladderPlan,
   ladderTree,
   planExtent,
@@ -60,6 +65,8 @@ type Node = {
   level: number;
   geometricError: number;
   children: Node[];
+  parts: LadderPart[];
+  cell: number;
   mesh(): (DesignTileMesh & { colors: Float32Array }) | null;
 };
 
@@ -114,7 +121,11 @@ const built = (s: PortfolioSite) => {
   return b;
 };
 
-describe("the scale ladder", () => {
+// Building a model's tree (its coarse tiles simplified and measured) takes
+// seconds; under a full suite's load, more.
+const SLOW = { timeout: 120_000 };
+
+describe("the scale ladder", SLOW, () => {
   it("is the seven sites, smallest first, each with its model", () => {
     expect(LADDER.map((s) => [s.id, s.model.kind])).toEqual(
       TABLE.map(([id, kind]) => [id, kind]),
@@ -179,18 +190,129 @@ describe("the scale ladder", () => {
     });
   }
 
-  it("parents state at least what they draw instead of full detail", () => {
-    const { plan, top } = built(site("london"));
-    // The pole line drops its poles at level 4: those tiles state at
-    // least half a pole's height.
-    const level4 = [...nodes(top)].filter((n) => n.level === 4);
-    expect(level4.length).toBeGreaterThan(0);
-    const height = (site("london").model as PoleLineModel).poleHeight;
-    for (const n of level4) {
-      expect(n.geometricError).toBeGreaterThanOrEqual(height / 2);
-    }
-    expect(plan.parts.length).toBeGreaterThan(500);
-  });
+  for (const [id] of TABLE.filter(([, kind]) => kind !== "building")) {
+    it(`${id}: every coarse tile draws a simplified version of every solid object it holds, lighter than its full detail`, () => {
+      const s = site(id);
+      const { plan, top, mpu } = built(s);
+      const full = new Map(
+        plan.parts.map((p) => [p, trianglesOf((b) => p.lods[0]!.draw?.(b))]),
+      );
+      // Paint, wires and the ground may go; every other feature stays.
+      const details = detailFeatures([...full.values()].flat(), mpu);
+      const notSolid = new Set([
+        ...[...details].map((f) => f.name),
+        ...(plan.grounds as unknown as { feature: { name: string } }[]).map(
+          (g) => g.feature.name,
+        ),
+      ]);
+      const leafTriangles = [...nodes(top)]
+        .filter((n) => n.level === 0)
+        .reduce((sum, n) => sum + n.mesh()!.indices.length / 3, 0);
+      let pieces = 0;
+      for (const node of nodes(top)) {
+        if (node.level === 0) {
+          continue;
+        }
+        const mesh = node.mesh()!;
+        // The tile's solid triangles, in a grid of their bounds.
+        const cell = 8 * node.cell;
+        const grid = new Map<string, number[]>();
+        const boxes: { b: number[]; top: number }[] = [];
+        for (let t = 0; t < mesh.indices.length; t += 3) {
+          const i = [0, 1, 2].map((k) => mesh.indices[t + k]!);
+          if (notSolid.has(mesh.features[mesh.featureIds[i[0]!]!]!.name)) {
+            continue;
+          }
+          const xs = i.map((j) => mesh.design[3 * j]!);
+          const ys = i.map((j) => mesh.design[3 * j + 1]!);
+          const b = [
+            Math.min(...xs),
+            Math.min(...ys),
+            Math.max(...xs),
+            Math.max(...ys),
+          ];
+          const n = boxes.push({
+            b,
+            top: Math.max(...i.map((j) => mesh.design[3 * j + 2]!)),
+          });
+          for (
+            let x = Math.floor(b[0]! / cell);
+            x <= Math.floor(b[2]! / cell);
+            x++
+          ) {
+            for (
+              let y = Math.floor(b[1]! / cell);
+              y <= Math.floor(b[3]! / cell);
+              y++
+            ) {
+              const key = `${x},${y}`;
+              grid.set(key, [...(grid.get(key) ?? []), n - 1]);
+            }
+          }
+        }
+        // A clustered corner moves at most a cell's diagonal.
+        const reach = Math.sqrt(3) * node.cell;
+        for (const part of node.parts) {
+          const byFeature = new Map<object, number[][]>();
+          for (const t of full.get(part)!) {
+            if (!details.has(t.feature)) {
+              byFeature.set(t.feature, [
+                ...(byFeature.get(t.feature) ?? []),
+                t.p,
+              ]);
+            }
+          }
+          for (const [feature, list] of byFeature) {
+            pieces++;
+            const ps = list.flat();
+            const xs = ps.filter((_v, k) => k % 3 === 0);
+            const ys = ps.filter((_v, k) => k % 3 === 1);
+            const zs = ps.filter((_v, k) => k % 3 === 2);
+            const [x0, y0, x1, y1] = [
+              Math.min(...xs) - reach,
+              Math.min(...ys) - reach,
+              Math.max(...xs) + reach,
+              Math.max(...ys) + reach,
+            ];
+            const z0 = Math.min(...zs);
+            const rise = z0 + 0.25 * (Math.max(...zs) - z0);
+            let found = false;
+            for (
+              let x = Math.floor(x0 / cell);
+              !found && x <= Math.floor(x1 / cell);
+              x++
+            ) {
+              for (
+                let y = Math.floor(y0 / cell);
+                !found && y <= Math.floor(y1 / cell);
+                y++
+              ) {
+                found = (grid.get(`${x},${y}`) ?? []).some(
+                  (k) =>
+                    boxes[k]!.top >= rise &&
+                    boxes[k]!.b[0]! <= x1 &&
+                    x0 <= boxes[k]!.b[2]! &&
+                    boxes[k]!.b[1]! <= y1 &&
+                    y0 <= boxes[k]!.b[3]!,
+                );
+              }
+            }
+            expect(
+              found,
+              `${id} ${node.id}: ${(feature as { name: string }).name}`,
+            ).toBe(true);
+          }
+        }
+        // Lighter than the full detail it replaces.
+        expect(mesh.indices.length / 3, `${id} ${node.id}`).toBeLessThan(
+          leafTriangles,
+        );
+      }
+      expect(pieces).toBeGreaterThan(0);
+      // The top tile draws a fraction of the leaves' triangles.
+      expect(top.mesh()!.indices.length / 3).toBeLessThan(leafTriangles / 2);
+    });
+  }
 
   it("winds every face to its normal, at every level, and builds the same model every run", () => {
     for (const s of LADDER) {
@@ -362,7 +484,7 @@ function coplanarOverlaps(
   return found;
 }
 
-describe("no polygon z-fights another (fix round 1)", () => {
+describe("no polygon z-fights another (fix round 1)", SLOW, () => {
   it("uses one layer stack of 5 cm", () => {
     expect(LAYER_METRES).toBe(0.05);
   });
@@ -443,7 +565,7 @@ function featuresOf(s: PortfolioSite) {
 const leafMeshes = (s: PortfolioSite) =>
   [...nodes(built(s).top)].filter((n) => n.level === 0).map((n) => n.mesh()!);
 
-describe("each model reads as what it is", () => {
+describe("each model reads as what it is", SLOW, () => {
   it("the airport: two runways with markings and thresholds, taxiways, a terminal", () => {
     const kinds = featuresOf(site("sydney"));
     expect([...kinds.get("runway")!].sort()).toEqual([

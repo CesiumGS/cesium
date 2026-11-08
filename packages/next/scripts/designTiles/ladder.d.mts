@@ -1,8 +1,11 @@
 import type { PortfolioSite } from "../../examples/design-globe/sites.ts";
+import type { CoarsenStats } from "./coarsen.mjs";
 import type { DesignTileMesh } from "./corridorMesh.mjs";
 
 /** A leaf's geometric error, metres (1 mm). */
 export const LEAF_ERROR_METRES: number;
+/** A coarse tile clusters its solids on cells of its larger side / this. */
+export const CELL_DIVISOR: number;
 
 export interface LadderLod {
   /** A bound on the distance from full detail to what is drawn, design units. */
@@ -36,6 +39,12 @@ export interface LadderNode {
   level: number;
   geometricError: number;
   children: LadderNode[];
+  /** The parts the tile holds (by their `at`). */
+  parts: LadderPart[];
+  /** A coarse tile's clustering cell, design units (0 at the leaves). */
+  cell: number;
+  /** What a coarse tile's simplification did (undefined at the leaves). */
+  stats?: CoarsenStats;
   mesh(): (DesignTileMesh & { colors: Float32Array }) | null;
 }
 
