@@ -4,7 +4,13 @@ import { describe, expect, it } from "vitest";
 import { Alignment } from "../src/engineering/alignment.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { CORRIDOR_ALIGNMENT } from "../examples/design-globe/corridor.ts";
-import { PORTFOLIO, modelRoute } from "../examples/design-globe/sites.ts";
+import {
+  PORTFOLIO,
+  SITE_BUILDING,
+  modelOnGround,
+  modelRoute,
+} from "../examples/design-globe/sites.ts";
+import { SITES, siteById } from "../examples/design-globe/page.ts";
 import {
   EARTHWORK,
   SIDE_SLOPES,
@@ -22,6 +28,7 @@ import {
   geodeticOf,
   horizontalApart,
   routeRegion,
+  siteClipRegion,
   type DaylightStretch,
 } from "../examples/design-globe/terrainClips.ts";
 import {
@@ -324,13 +331,52 @@ describe("terrain clip regions", () => {
     });
   });
 
-  it("clips London's pole line around its wayleave, within the clip's vertex limit", () => {
+  it("leaves the ground unclipped under a model that stands on it (UX review M1, M5)", () => {
+    const rigid = { error: () => 0.5, across: () => 0.5 };
+    // London's poles and the site-grid building stand on the real ground.
+    expect(siteById("london").onGround).toBe(true);
+    expect(siteById("site-building").onGround).toBe(true);
+    for (const site of SITES) {
+      if (site.id === "corridor") {
+        continue; // clipped to its daylight lines (below)
+      }
+      const region = siteClipRegion(site, displayed, 1, rigid, 3);
+      expect(region === undefined, site.id).toBe(site.onGround === true);
+      expect(site.onGround === true, site.id).toBe(
+        modelOnGround(PORTFOLIO.find((p) => p.id === site.id) ?? SITE_BUILDING),
+      );
+    }
+    // Even with a route or corners, a model on the ground clears its clip.
+    expect(
+      siteClipRegion(
+        { ...siteById("london"), onGround: true },
+        displayed,
+        1,
+        rigid,
+        3,
+      ),
+    ).toBeUndefined();
+  });
+
+  it("would clip a pole line on one plane around its wayleave, within the clip's vertex limit", () => {
     const london = PORTFOLIO.find((s) => s.id === "london")!;
-    const route = modelRoute(london)!;
+    const model = london.model as Extract<
+      typeof london.model,
+      { kind: "poleLine" }
+    >;
+    const flat = { ...london, model: { ...model, ground: undefined } };
+    expect(modelOnGround(flat)).toBe(false);
+    const route = modelRoute(flat)!;
     // The wayleave strip, 12 m wide, holds the poles and their stays.
     expect(route.halfWidth).toBe(6);
     expect(route.points).toHaveLength(6);
-    const p = routeRegion(route.points, displayed, () => 12, 500);
+    const p = siteClipRegion(
+      { route },
+      displayed,
+      1,
+      { error: () => 0, across: () => 6 },
+      0,
+    )!;
     expect(p.length).toBeGreaterThan(100);
     expect(p.length).toBeLessThanOrEqual(1024);
     // Every model but the pole line covers its footprint.

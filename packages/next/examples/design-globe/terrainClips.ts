@@ -60,6 +60,59 @@ export function footprintRegion(
   });
 }
 
+/** What a site's own clip needs (page.ts `SiteEntry`'s fields). */
+export interface SiteClipShape {
+  /** The model's footprint corners at its ground, design units. */
+  readonly corners?: readonly (readonly [number, number, number])[];
+  /** A model along a line: its route and its foundations' reach either side. */
+  readonly route?: {
+    readonly points: readonly (readonly [number, number, number])[];
+    readonly halfWidth: number;
+  };
+  /** The model stands on the real ground. */
+  readonly onGround?: boolean;
+}
+
+/**
+ * The terrain clip for a site other than the corridor, or undefined for
+ * none: nothing under a model that stands on the real ground (London's
+ * poles, the site-grid building on its plinth: UX review M1, M5); around a
+ * line model's route (a vertex every 500 design units); else over its
+ * footprint. Each is padded by rigid's error there (`rigidAcross` across
+ * the ground and `rigidError` in all, metres) and `margin` metres, so the
+ * ground never pokes through a flat design surface in either placement.
+ */
+export function siteClipRegion(
+  site: SiteClipShape,
+  displayed: Displayed,
+  metersPerUnit: number,
+  rigid: {
+    readonly error: (design: ArrayLike<number>) => number;
+    readonly across: (design: ArrayLike<number>) => number;
+  },
+  margin: number,
+): ClipVertex[] | undefined {
+  if (site.onGround === true) {
+    return undefined;
+  }
+  const { route, corners } = site;
+  if (route !== undefined) {
+    return routeRegion(
+      route.points,
+      displayed,
+      (d) => route.halfWidth + (rigid.across(d) + margin) / metersPerUnit,
+      500,
+    );
+  }
+  return corners === undefined
+    ? undefined
+    : footprintRegion(
+        corners,
+        displayed,
+        (Math.max(...corners.map(rigid.error)) + margin) / metersPerUnit,
+      );
+}
+
 /**
  * A buffered line: the route's left side from its start to its end, then
  * its right side back, each point `pad(point)` design units out from the

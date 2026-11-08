@@ -152,7 +152,11 @@ export interface PoleLineModel {
   readonly span: number;
   readonly poleHeight: number;
   readonly armLength: number;
-  /** The conductors' sag at mid-span, and the wayleave strip's width. */
+  /**
+   * The conductors' sag at mid-span, and the wayleave strip's width: the
+   * strip either side of the route that holds the poles and their stays
+   * (the footprint's margin, and a clip's if the line stood on one plane).
+   */
   readonly sag: number;
   readonly wayleave: number;
   /**
@@ -306,11 +310,12 @@ export function modelOnGround(site: PortfolioSite): boolean {
 
 /**
  * A model laid along a line rather than over an area: its route at its
- * ground's height (design units, absolute) and how far its foundations reach
- * either side and past its ends. London's pole line: the wayleave strip, 6 m
- * either side, which holds every pole and the stays at its angle and end
- * poles, anchored 6 m out (scripts/designTiles/poleLineMesh.mjs). Undefined
- * for a model that covers its footprint.
+ * origin's height (design units, absolute) and how far its foundations
+ * reach either side and past its ends, the wayleave strip, 6 m either side
+ * for London's (its stays are anchored 6 m out: scripts/designTiles/
+ * poleLineMesh.mjs). A pole line on one plane would be clipped around it;
+ * London's stands on the real ground (`modelOnGround`), so its terrain
+ * isn't clipped at all. Undefined for a model that covers its footprint.
  */
 export function modelRoute(site: PortfolioSite):
   | {

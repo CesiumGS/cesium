@@ -77,9 +77,8 @@ import {
   clearTerrainClips,
   daylightPieces,
   daylightRegion,
-  footprintRegion,
   horizontalApart,
-  routeRegion,
+  siteClipRegion,
   syncTerrainClip,
   type DaylightStretch,
 } from "./terrainClips.ts";
@@ -426,7 +425,8 @@ export function run(context: ExampleContext): ExampleRun {
    * The terrain under the site's design (feedback F11): its footprint,
    * padded by rigid's error there, so the ground never pokes through a
    * flat design surface in either placement; or the corridor out to its
-   * side slopes' daylight lines, so the ground meets the slopes.
+   * side slopes' daylight lines, so the ground meets the slopes; none under
+   * a model on the real ground (terrainClips.ts `siteClipRegion`).
    */
   function clipTerrain(site: SiteRuntime): void {
     const globe = viewer.globe;
@@ -436,8 +436,6 @@ export function run(context: ExampleContext): ExampleRun {
     }
     const displayed = (d: ArrayLike<number>) => placement.displayed(d);
     const mpu = placement.frame.units.metersPerUnit;
-    const corners = site.entry.corners;
-    const route = site.entry.route;
     const rigidError = (d: ArrayLike<number>) =>
       site.rigidPlacement?.displayError(d) ?? 0;
     // Rigid's error across the ground (its drop is up or down, so a clip
@@ -490,28 +488,14 @@ export function run(context: ExampleContext): ExampleRun {
       console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
       return;
     }
-    if (site.entry.onGround === true) {
-      // Its poles stand on the ground (London's): nothing to clip.
-      syncTerrainClip(globe, site.entry.id, undefined);
-      return;
-    }
-    const polygon =
-      route !== undefined
-        ? // Around a line model's route, not the rectangle that holds
-          // it: a vertex every 500 design units.
-          routeRegion(
-            route.points,
-            displayed,
-            (d) => route.halfWidth + (rigidAcross(d) + CLIP_MARGIN) / mpu,
-            500,
-          )
-        : corners !== undefined
-          ? footprintRegion(
-              corners,
-              displayed,
-              (Math.max(...corners.map(rigidError)) + CLIP_MARGIN) / mpu,
-            )
-          : undefined;
+    // None under a model on the real ground: its clip, if any, cleared.
+    const polygon = siteClipRegion(
+      site.entry,
+      displayed,
+      mpu,
+      { error: rigidError, across: rigidAcross },
+      CLIP_MARGIN,
+    );
     const why = syncTerrainClip(globe, site.entry.id, polygon);
     if (why !== undefined) {
       console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
