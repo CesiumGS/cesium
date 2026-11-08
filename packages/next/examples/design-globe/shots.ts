@@ -7,6 +7,7 @@ import type { Alignment } from "../../src/engineering/alignment.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import type { AnswerSite, Answers } from "./answers.ts";
+import type { OpenerId } from "./measureOpeners.ts";
 import { enuAt, type SagSample } from "./overlays.ts";
 import { morphEase } from "./page.ts";
 
@@ -437,5 +438,48 @@ export function createShots(deps: ShotsDeps): Shots {
     alongStation: () => alongStation,
     daylight,
     flyToTileset,
+  };
+}
+
+/**
+ * "Close in on the ruler": along the pair's line, looking down at its far
+ * end from about 22 m. The bracket between ground's last foot tick and
+ * design's, about 0.23 m across, reads, seen through the other placement's
+ * translucent ghost deck (8 m above at the pair's far end; Task 20).
+ */
+export function rulerFraming(focus: {
+  readonly center: Float64Array;
+  readonly along: ArrayLike<number>;
+}): Framing {
+  const { east, north } = enuAt(focus.center);
+  const a = focus.along;
+  const heading = Math.atan2(
+    a[0]! * east[0]! + a[1]! * east[1]! + a[2]! * east[2]!,
+    a[0]! * north[0]! + a[1]! * north[1]! + a[2]! * north[2]!,
+  );
+  return { center: focus.center, heading, pitch: -70 * deg, range: 22 };
+}
+
+/** An opener's "Show" framing: its line's middle, across the road for the marker and the mark. */
+export function openerFraming(
+  id: OpenerId,
+  focus: { readonly center: Float64Array; readonly length: number },
+  answers: Answers | undefined,
+  alignment: Alignment,
+): Framing {
+  const station =
+    id === "marker"
+      ? answers?.marker.station
+      : id === "mark"
+        ? answers?.mark.nearest.station
+        : undefined;
+  return {
+    center: focus.center,
+    heading:
+      station !== undefined
+        ? alignment.azimuthAt(station) + OPENING_VIEW.heading
+        : -35 * deg,
+    pitch: id === "pair" ? -32 * deg : -10 * deg,
+    range: Math.max(140, focus.length * (id === "pair" ? 1.4 : 2.2)),
   };
 }

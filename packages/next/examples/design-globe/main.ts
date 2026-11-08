@@ -21,7 +21,6 @@
 //   - viewParams.ts: the compass and error ribbon toggles (Task 20).
 import { createElement } from "react";
 import { Alignment } from "../../src/engineering/alignment.ts";
-import { gridFactors } from "../../src/engineering/factors.ts";
 import type { ProjApi } from "../../src/engineering/proj.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
@@ -30,7 +29,6 @@ import { checksView } from "./checksView.ts";
 import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
 import { createCursor, drawnPlacement } from "./cursor.ts";
 import { createMeasureTool } from "./measureTool.ts";
-import { unitSymbol } from "./measureModel.ts";
 import { pointsLink } from "./measureState.ts";
 import type { MeasurePanel } from "./measureView.ts";
 import { createFrameDriver } from "./frameDriver.ts";
@@ -62,18 +60,15 @@ import { buildPanelModel, type SiteSnapshot } from "./panelModel.ts";
 import { reducedTransparency, type PairLook } from "./placementPair.ts";
 import {
   CameraMoves,
-  OPENING_VIEW,
   createShots,
+  openerFraming,
   reducedMotion,
+  rulerFraming,
 } from "./shots.ts";
 import { siteFacts } from "./siteFacts.ts";
+import { combinedFactorOf, tourFactsOf } from "./storyFacts.ts";
 import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
-import {
-  TOUR_LADDER,
-  tourCard,
-  type TourFacts,
-  type TourTarget,
-} from "./tour.ts";
+import { tourCard, type TourTarget } from "./tour.ts";
 import { createTour, type TourRuntime } from "./tourRuntime.ts";
 import { formatView, parseView, type ViewParams } from "./viewParams.ts";
 
@@ -413,7 +408,7 @@ export function run(context: ExampleContext): ExampleRun {
         reprojected: site.reprojectedPlacement,
       }),
       api,
-      ...combinedFactorOf(site),
+      ...combinedFactorOf(site, { answers, corridor, alignment }),
       ...(site === corridor &&
         samples !== undefined && {
           along: { alignment, errors: samples.map((s) => s.error) },
@@ -422,38 +417,6 @@ export function run(context: ExampleContext): ExampleRun {
         answer: answers.sites[site.entry.id]!,
       }),
     });
-  }
-
-  /**
-   * The combined factor at a site's rigid anchor: the answers' for a ladder
-   * site; else PROJ's, at the corridor's anchor station or the model's middle
-   * (none for a site grid, whose own scale `gridFactors` leaves out).
-   */
-  function combinedFactorOf(site: SiteRuntime): { combinedFactor?: number } {
-    const k = answers?.sites[site.entry.id]?.combinedFactor;
-    if (k !== undefined) {
-      return { combinedFactor: k };
-    }
-    const frame = (site.rigidPlacement ?? site.reprojectedPlacement)?.frame;
-    const station = answers?.anchorStation ?? ANCHOR_STATION;
-    const at = alignment.pointAt(station, 0);
-    const anchor =
-      site === corridor
-        ? [at[0]!, at[1]!, alignment.elevationAt(station)]
-        : site.entry.anchor;
-    // A site grid's own scale isn't in the grid's factor: none is stated.
-    if (
-      frame === undefined ||
-      anchor === undefined ||
-      site.entry.frame.site !== undefined
-    ) {
-      return {};
-    }
-    try {
-      return { combinedFactor: gridFactors(frame, anchor).combinedFactor };
-    } catch {
-      return {};
-    }
   }
 
   /** The error ribbon, drawn while its toggle is on (built once the corridor is placed). */
@@ -626,7 +589,9 @@ export function run(context: ExampleContext): ExampleRun {
           }),
       },
       checks: checksView(answers, tool.shownValues(), user),
-      ...(state !== undefined && { tour: tourCard(state, tourFacts()) }),
+      ...(state !== undefined && {
+        tour: tourCard(state, tourFactsOf(answers, corridor)),
+      }),
       view: {
         compass: view.compass,
         ribbon: view.ribbon,
@@ -634,55 +599,6 @@ export function run(context: ExampleContext): ExampleRun {
           corridor.rigidPlacement !== undefined &&
           corridor.reprojectedPlacement !== undefined,
       },
-    };
-  }
-
-  /** What the tour's sentences read: the answers and the corridor's placements. */
-  function tourFacts(): TourFacts {
-    const rigid = corridor.rigidPlacement;
-    const pair = answers?.pairs[0];
-    const ends =
-      pair && answers
-        ? [answers.points[pair.from], answers.points[pair.to]]
-        : undefined;
-    const drawn =
-      rigid && ends?.[0] && ends[1]
-        ? (() => {
-            const a = rigid.displayed(ends[0].design);
-            const b = rigid.displayed(ends[1].design);
-            return Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
-          })()
-        : undefined;
-    return {
-      codes: corridor.entry.codes,
-      ladder: new Map(
-        TOUR_LADDER.flatMap((s) => {
-          const a = answers?.sites[s.site];
-          return a
-            ? [[s.site, { error: a.displayError, extent: a.extent }]]
-            : [];
-        }),
-      ),
-      ...(answers && {
-        markerSeparation: answers.marker.separation,
-        mark: {
-          pid: answers.mark.pid,
-          name: answers.mark.name,
-          ...(rigid && {
-            rigidOffset: rigid.displayError(answers.mark.nearestDesign),
-          }),
-        },
-      }),
-      ...(pair &&
-        answers && {
-          pair: {
-            horizontal: pair.horizontalDistance,
-            symbol: unitSymbol(answers.frame.unitName),
-            ...(drawn !== undefined && {
-              rigidShort: pair.trueDistance - drawn,
-            }),
-          },
-        }),
     };
   }
 
@@ -866,30 +782,7 @@ export function run(context: ExampleContext): ExampleRun {
       if (focus === undefined) {
         return;
       }
-      // Along the line, looking down at its far end from about 22 m: the
-      // bracket between ground's last foot tick and design's, about 0.23 m
-      // across, reads, seen through the other placement's translucent ghost
-      // deck (8 m above at the pair's far end; Task 20).
-      const up = new Float64Array(3);
-      Ellipsoid.WGS84.geodeticSurfaceNormal(focus.center, up);
-      const east = [-up[1]!, up[0]!, 0];
-      const el = Math.hypot(east[0]!, east[1]!) || 1;
-      const north = [
-        (-up[2]! * east[1]!) / el,
-        (up[2]! * east[0]!) / el,
-        (up[0]! * east[1]! - up[1]! * east[0]!) / el,
-      ];
-      const a = focus.along;
-      const heading = Math.atan2(
-        (a[0]! * east[0]! + a[1]! * east[1]!) / el,
-        a[0]! * north[0]! + a[1]! * north[1]! + a[2]! * north[2]!,
-      );
-      const to = {
-        center: focus.center,
-        heading,
-        pitch: -70 * deg,
-        range: 22,
-      };
+      const to = rulerFraming(focus);
       shots.daylight(to.center);
       camera.flyTo(to, () => shots.daylight(to.center));
     },
@@ -898,22 +791,7 @@ export function run(context: ExampleContext): ExampleRun {
       if (focus === undefined) {
         return;
       }
-      const station =
-        id === "marker"
-          ? answers?.marker.station
-          : id === "mark"
-            ? answers?.mark.nearest.station
-            : undefined;
-      const heading =
-        station !== undefined
-          ? alignment.azimuthAt(station) + OPENING_VIEW.heading
-          : -35 * deg;
-      const to = {
-        center: focus.center,
-        heading,
-        pitch: id === "pair" ? -32 * deg : -10 * deg,
-        range: Math.max(140, focus.length * (id === "pair" ? 1.4 : 2.2)),
-      };
+      const to = openerFraming(id, focus, answers, alignment);
       shots.daylight(to.center);
       camera.flyTo(to, () => shots.daylight(to.center));
     },
