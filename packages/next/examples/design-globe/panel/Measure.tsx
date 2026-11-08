@@ -1,24 +1,16 @@
 import "./measure.css";
-// The measure section (DESIGN.md "The story", "Layout" 4) and its labels over
-// the globe. Up front, the measurements the page opens with: each one's
-// headline, the design and true distances side by side and labelled, and a
-// sentence on the line as the globe draws it, in that placement's colour;
-// behind "Details", the rest. Then the user's own measurement: the snap
-// mode, what to do next, and the same headline and details. Over the globe:
-// the design-distance pills, the ends, the station marker, NGS's survey disk
-// (its datasheet on hover or focus), the snap glyph and the keyboard's
-// crosshair.
-import {
-  Button,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from "@mui/material";
+// The measurements (DESIGN.md "The sidebar"): the openers as the story's
+// evidence rows, each a headline number with its caption, Show and a
+// Details disclosure holding the rest; the user's own measurement once
+// there is one, with how exact it is folded; and the labels over the globe
+// (`MeasureHud`): the design-distance pills, the ends, the station marker,
+// NGS's survey disk (its datasheet on hover or focus), the snap preview
+// and the keyboard's crosshair. The snap mode and Clear are the toolbar's
+// (Toolbar.tsx, feedback F8).
+import { Button, Typography } from "@mui/material";
 import { svgChevronDown } from "@stratakit/icons/chevron-down";
-import { svgMeasureDistance } from "@stratakit/icons/measure-distance";
 import { Icon } from "@stratakit/mui";
-import { type ReactNode, useId, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
+import { type ReactNode, useId, useState } from "react";
 import type { MeasureLive } from "../measureLabels.ts";
 import type { GlobeTone, OpenerFigures, OpenerId } from "../measureOpeners.ts";
 import type {
@@ -50,17 +42,13 @@ export interface MeasureActions {
   toCorridor(): void;
 }
 
-const SNAP_LABEL: Record<SnapMode, string> = {
-  exact: "Alignment (exact)",
-  geometry: "Geometry",
-  none: "None",
-};
-
 function Details({
   rows,
+  label = "Details",
   children,
 }: {
   rows: readonly DetailRow[];
+  label?: string;
   children?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -78,7 +66,7 @@ function Details({
         onClick={() => setOpen(!open)}
       >
         <Icon href={svgChevronDown} aria-hidden className="dg-m-caret" />
-        Details
+        {label}
       </button>
       {open && (
         <div id={id} className="dg-m-more">
@@ -169,6 +157,7 @@ function Failed({
   );
 }
 
+/** One opener as an evidence row: its headline, its caption, Show, and Details. */
 function Opener({
   opener,
   figures,
@@ -183,80 +172,94 @@ function Opener({
   const id = useId();
   // The line as drawn changes every frame of a morph: the live figures.
   const f = figures ?? opener;
-  const headline = opener.id !== "pair";
+  const pair = opener.id === "pair";
   return (
-    <article
-      className={`dg-m${opener.quiet ? " quiet" : ""}`}
-      aria-labelledby={id}
-    >
-      <div className="dg-m-head">
-        <h3 id={id} className="dg-m-title">
-          {opener.title}
-        </h3>
+    <li className="dg-ev" aria-labelledby={id}>
+      <div className="dg-ev-row">
+        {pair ? (
+          <span className="dg-ev-figure dg-num">{opener.design}</span>
+        ) : (
+          <>
+            {/* Every frame of a morph, so not announced: the region below says it once settled. */}
+            <span className={`dg-ev-figure dg-num ${f.tone}`}>
+              {f.hero ?? "Not to scale"}
+            </span>
+            <span className="dg-visually-hidden" aria-live="polite">
+              {opener.tone === "moving"
+                ? ""
+                : `${opener.title}: ${opener.hero ?? "not to scale"}.`}
+            </span>
+          </>
+        )}
         <Button
           size="small"
           variant="text"
+          className="dg-ev-show"
           aria-label={`Show ${opener.title} on the globe`}
           onClick={() => actions.show(opener.id)}
         >
           Show
         </Button>
       </div>
+      <h3 id={id} className="dg-ev-title">
+        {opener.title}
+      </h3>
+      <p className="dg-ev-caption">
+        {pair
+          ? `${opener.designLabel ?? "Design distance"}; true distance ${opener.trueDistance}, the same in both placements.`
+          : (f.heroCaption ??
+            "Rigid draws the station this far from where its own design puts it.")}
+      </p>
       {opener.error !== undefined && (
         <Failed error={opener.error} actions={actions} />
       )}
-      {headline && (
-        <>
-          {/* Every frame of a morph, so not announced: the region below says it once settled. */}
-          <p className={`dg-m-hero dg-num ${f.tone}`}>
-            <span className="dg-m-big">{f.hero ?? "Not to scale"}</span>
-            {f.heroCaption !== undefined && (
-              <span className="dg-m-hero-text">{f.heroCaption}</span>
-            )}
-          </p>
-          <span className="dg-visually-hidden" aria-live="polite">
-            {opener.tone === "moving"
-              ? ""
-              : `${opener.title}: ${opener.hero ?? "not to scale"}.`}
-          </span>
-        </>
-      )}
-      {opener.id === "marker" ? (
-        <p className="dg-m-said dg-num">{f.globe}</p>
-      ) : (
-        <>
-          {opener.id === "mark" && <Globe text={f.globe} tone={f.tone} />}
-          <Distances
-            design={opener.design}
-            designLabel={opener.designLabel}
-            slope={opener.slope}
-            trueDistance={opener.trueDistance}
-            small
-          />
-          {opener.id === "pair" && <Globe text={f.globe} tone={f.tone} />}
-        </>
-      )}
-      {opener.id === "pair" && (
-        <div className="dg-actions">
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => actions.closeInOnRuler()}
-          >
-            Close in on the ruler
-          </Button>
-          <span className="dg-muted dg-actions-note">
-            Its far end, where ground's feet and design's part; the ghost and
-            the ribbon step aside until you move the camera.
-          </span>
-        </div>
-      )}
       <Details rows={opener.details}>
+        {opener.id === "marker" ? (
+          <p className="dg-m-said dg-num">{f.globe}</p>
+        ) : (
+          <>
+            {opener.id === "mark" && (
+              <>
+                <Globe text={f.globe} tone={f.tone} />
+                <Distances
+                  design={opener.design}
+                  designLabel={opener.designLabel}
+                  slope={opener.slope}
+                  trueDistance={opener.trueDistance}
+                  small
+                />
+              </>
+            )}
+            {pair && (
+              <>
+                {opener.slope !== undefined && (
+                  <p className="dg-m-said dg-num">
+                    {opener.slope} along the slope.
+                  </p>
+                )}
+                <Globe text={f.globe} tone={f.tone} />
+                <div className="dg-actions">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => actions.closeInOnRuler()}
+                  >
+                    Close in on the ruler
+                  </Button>
+                  <span className="dg-muted dg-actions-note">
+                    Its far end, where ground's feet and design's part; the
+                    ghost and the ribbon step aside until you move the camera.
+                  </span>
+                </div>
+              </>
+            )}
+          </>
+        )}
         {opener.id === "mark" && datasheet !== undefined && (
           <Datasheet sheet={datasheet} />
         )}
       </Details>
-    </article>
+    </li>
   );
 }
 
@@ -280,7 +283,52 @@ function Datasheet({ sheet }: { sheet: DatasheetView }) {
   );
 }
 
-function Yours({
+/**
+ * The corridor's evidence (DESIGN.md "The sidebar" 2): its three opening
+ * measurements as rows; nothing on another site, whose story is its own.
+ */
+export function Evidence({
+  model,
+  live,
+  actions,
+}: {
+  model: MeasurePanel;
+  live: MeasureLive;
+  actions: MeasureActions;
+}) {
+  if (model.away !== undefined) {
+    return null;
+  }
+  return (
+    <>
+      {model.waiting !== undefined && (
+        <p className="dg-muted dg-m-wait" role="status">
+          {model.waiting}
+        </p>
+      )}
+      {model.openers.length > 0 && (
+        <ul className="dg-ev-list" aria-label="The opening measurements">
+          {model.openers.map((o) => (
+            <Opener
+              key={o.id}
+              opener={o}
+              figures={live.figures[o.id]}
+              datasheet={model.datasheet}
+              actions={actions}
+            />
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+/**
+ * The viewer's own measurement (DESIGN.md "The sidebar" 4), once there is
+ * one: the design and true distances, the line as drawn, and how exact it
+ * is, folded (the measurement error explanation the owner kept here).
+ */
+export function YourMeasurement({
   model,
   actions,
 }: {
@@ -289,50 +337,19 @@ function Yours({
 }) {
   const id = useId();
   const u = model.user;
+  if (u.result === undefined && u.error === undefined) {
+    return null;
+  }
   return (
-    <div
-      className="dg-m-user"
-      onKeyDown={(e) => {
-        if (e.key === "Escape" && u.phase !== "empty") {
-          actions.clear();
-        }
-      }}
-    >
-      <Typography
-        variant="subtitle-sm"
-        render={<h3 className="dg-m-subhead" />}
-      >
-        Your measurement
-      </Typography>
-      <div className="dg-m-snap">
-        <span id={`${id}-snap`} className="dg-muted">
-          Snap to
-        </span>
-        <ToggleButtonGroup
-          exclusive
-          size="small"
-          value={model.snap}
-          aria-labelledby={`${id}-snap`}
-          onChange={(_, v: SnapMode | null) => v && actions.setSnap(v)}
-        >
-          {(["exact", "geometry", "none"] as const).map((m) => (
-            <ToggleButton
-              key={m}
-              value={m}
-              render={<Button variant="outlined" />}
-            >
-              {SNAP_LABEL[m]}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+    <section className="dg-section dg-m-user" aria-labelledby={`${id}-h`}>
+      <div className="dg-section-head">
+        <Typography variant="subtitle-md" render={<h2 id={`${id}-h`} />}>
+          Your measurement
+        </Typography>
+        <Button size="small" variant="text" onClick={() => actions.clear()}>
+          Clear
+        </Button>
       </div>
-      <p
-        className={`dg-m-next${u.refused ? " refused" : " dg-muted"}`}
-        role="status"
-        aria-live="polite"
-      >
-        {u.busy ? "Snapping…" : u.instruction}
-      </p>
       {u.error !== undefined && <Failed error={u.error} actions={actions} />}
       {u.result !== undefined && (
         <>
@@ -341,7 +358,7 @@ function Yours({
             trueDistance={u.result.trueDistance}
           />
           <Globe text={u.result.globe} tone={u.result.tone} />
-          <Details rows={u.result.details}>
+          <Details rows={u.result.details} label="How exact this is">
             {u.result.ends.map((e) => (
               <div key={e.label} className="dg-m-end">
                 <span className="dg-m-end-label">{e.label}</span>
@@ -355,87 +372,6 @@ function Yours({
           </Details>
         </>
       )}
-      <div className="dg-actions">
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={() => actions.pointAtCentre()}
-          startIcon={<Icon href={svgMeasureDistance} aria-hidden />}
-        >
-          {u.phase === "first"
-            ? "Second point at the view's centre"
-            : "Point at the view's centre"}
-        </Button>
-        {u.phase !== "empty" && (
-          <Button size="small" variant="text" onClick={() => actions.clear()}>
-            Clear
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export function Measure({
-  source,
-  live,
-  actions,
-  hud,
-}: {
-  source: MeasureSource;
-  live: MeasureLiveSource;
-  actions: MeasureActions;
-  hud: HTMLElement;
-}) {
-  const model = useSyncExternalStore(source.subscribe, source.get);
-  const now = useSyncExternalStore(live.subscribe, live.get);
-  const id = useId();
-  return (
-    <section className="dg-section dg-measure" aria-labelledby={`${id}-h`}>
-      <Typography variant="subtitle-md" render={<h2 id={`${id}-h`} />}>
-        Measure
-      </Typography>
-      {model.waiting !== undefined && (
-        <p className="dg-muted dg-m-wait" role="status">
-          {model.waiting}
-        </p>
-      )}
-      {model.away !== undefined && (
-        <div className="dg-m-away">
-          <p className="dg-m-away-story">
-            <span className="dg-strong">{model.away.name}</span>
-            {model.away.story !== undefined
-              ? `: ${model.away.story}`
-              : ": its story comes with its frame."}
-          </p>
-          <p className="dg-muted dg-m-away-note">
-            The opening measurements, the self-check and the NGS mark, are the
-            corridor's.{" "}
-            <Button
-              size="small"
-              variant="text"
-              onClick={() => actions.toCorridor()}
-            >
-              Fly to the corridor
-            </Button>
-          </p>
-        </div>
-      )}
-      {model.openers.length > 0 && (
-        <div className="dg-m-list">
-          {model.openers.map((o) => (
-            <Opener
-              key={o.id}
-              opener={o}
-              figures={now.figures[o.id]}
-              datasheet={model.datasheet}
-              actions={actions}
-            />
-          ))}
-        </div>
-      )}
-      <Yours model={model} actions={actions} />
-      {createPortal(<MeasureHud live={now} datasheet={model.datasheet} />, hud)}
     </section>
   );
 }
@@ -443,7 +379,7 @@ export function Measure({
 /** The snap's glyph: a square on a point, a bar on a line, an arc on a curve, a cross on a surface. */
 function Glyph({ kind }: { kind: string }) {
   return (
-    <svg width="18" height="18" viewBox="-9 -9 18 18" aria-hidden>
+    <svg width="12" height="12" viewBox="-9 -9 18 18" aria-hidden>
       {kind === "point" && <rect x="-5" y="-5" width="10" height="10" />}
       {kind === "segment" && (
         <>
@@ -469,7 +405,7 @@ const KIND: Record<string, string> = {
   surface: "surface",
 };
 
-function MeasureHud({
+export function MeasureHud({
   live,
   datasheet,
 }: {
@@ -556,13 +492,16 @@ function MeasureHud({
         </div>
       )}
       {live.hover !== undefined && (
+        // The snap preview (feedback F5): where a click would land, a
+        // translucent dot with the snap kind's glyph; solid once exact.
         <div
-          className={`dg-m-glyph${live.hover.exact ? " exact" : ""}`}
+          className={`dg-snap${live.hover.exact ? " exact" : ""}${live.hover.provisional ? " provisional" : ""}`}
           style={at(live.hover.x, live.hover.y)}
           aria-hidden
         >
-          <Glyph kind={live.hover.kind} />
-          <span>
+          <i className="dg-snap-dot" />
+          <span className="dg-snap-tag">
+            <Glyph kind={live.hover.kind} />
             {live.hover.exact
               ? `exact ${KIND[live.hover.kind]}`
               : KIND[live.hover.kind]}

@@ -1,6 +1,6 @@
 /*
- * The measure section and its labels over the globe (DESIGN.md "The story",
- * "On the globe"). StrataKit tokens; the placements' colours from panel.css;
+ * The measurements' details and their labels over the globe (DESIGN.md
+ * "The sidebar", "The viewer"; the evidence rows are toolbar.css's). StrataKit tokens; the placements' colours from panel.css;
  * the measure line's yellow and the survey disk's bronze are the 3D view's
  * own colours (Dyno's guide exempts them), used over the dark HUD only.
  */
@@ -13,71 +13,6 @@
 
 .dg-m-wait {
   margin: 0;
-}
-
-/* The openers: rules between them, as the sites list; the quiet pair quieter. */
-.dg-m-list {
-  display: flex;
-  flex-direction: column;
-}
-.dg-m {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-200);
-  padding-block: var(--stratakit-space-300);
-  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.dg-m:last-child {
-  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.dg-m-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--stratakit-space-300);
-}
-.dg-m-title {
-  margin: 0;
-  font-size: var(--stratakit-font-size-body-md);
-  line-height: var(--stratakit-line-height-body-md);
-  font-weight: 600;
-}
-.dg-m.quiet .dg-m-title {
-  font-size: var(--stratakit-font-size-body-sm);
-  line-height: var(--stratakit-line-height-body-sm);
-  font-weight: 500;
-}
-.dg-m-head .MuiButton-root {
-  flex: none;
-}
-
-/* The self-check's headline: the drawn gap, large, in the drawn placement's colour. */
-.dg-m-hero {
-  margin: 0;
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--stratakit-space-100) var(--stratakit-space-300);
-}
-.dg-m-big {
-  font-size: var(--stratakit-font-size-headline-sm);
-  line-height: var(--stratakit-line-height-headline-sm);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.dg-m-hero.rigid .dg-m-big {
-  color: var(--dg-rigid);
-}
-.dg-m-hero.reprojected .dg-m-big {
-  color: var(--dg-reprojected);
-}
-.dg-m-hero.moving .dg-m-big,
-.dg-m-hero.muted .dg-m-big {
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.dg-m-hero-text {
-  flex: 1 1 14em;
-  color: var(--stratakit-color-text-neutral-secondary);
 }
 
 /* The design and true distances, side by side, the same weight: neither is the other's footnote. */
@@ -196,22 +131,6 @@
   gap: var(--stratakit-space-200);
   margin-block-start: var(--stratakit-space-200);
 }
-.dg-m-subhead {
-  margin: 0;
-}
-.dg-m-snap {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--stratakit-space-200) var(--stratakit-space-300);
-}
-.dg-m-next {
-  margin: 0;
-  min-block-size: 2.9em;
-}
-.dg-m-next.refused {
-  color: var(--stratakit-color-text-attention-base);
-}
 
 @media (prefers-reduced-motion: no-preference) {
   .dg-m-caret {
@@ -233,8 +152,7 @@
 .dg-m-dot,
 .dg-m-pill,
 .dg-m-pin,
-.dg-m-disk,
-.dg-m-glyph {
+.dg-m-disk {
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
@@ -412,35 +330,6 @@
   white-space: pre;
 }
 
-/* The snap under the pointer: its kind's glyph; yellow when exact. */
-.dg-m-glyph {
-  pointer-events: none;
-}
-.dg-m-glyph svg {
-  position: absolute;
-  transform: translate(-9px, -9px);
-  fill: none;
-  stroke: #fff;
-  stroke-width: 1.5;
-  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
-}
-.dg-m-glyph span {
-  position: absolute;
-  transform: translate(12px, -22px);
-  color: #fff;
-  font-size: var(--stratakit-font-size-caption-md);
-  font-weight: 600;
-  white-space: nowrap;
-  paint-order: stroke;
-  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
-}
-.dg-m-glyph.exact svg {
-  stroke: var(--dg-measure);
-}
-.dg-m-glyph.exact span {
-  color: var(--dg-measure-ink);
-}
-
 /* The keyboard's crosshair at the view's centre. */
 .dg-m-crosshair {
   position: absolute;
@@ -483,20 +372,4 @@
   display: block;
   font-size: var(--stratakit-font-size-caption-lg);
   font-weight: 400;
-}
-
-/* Another site selected: its story leads; the corridor's openers stay on it (Task 20 fix 1, C1). */
-.dg-m-away {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-150);
-}
-.dg-m-away-story {
-  margin: 0;
-  font-size: var(--stratakit-font-size-body-md);
-  line-height: var(--stratakit-line-height-body-md);
-}
-.dg-m-away-note {
-  margin: 0;
-  font-size: var(--stratakit-font-size-caption-lg);
 }

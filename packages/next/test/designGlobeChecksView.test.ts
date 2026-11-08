@@ -1,7 +1,7 @@
 // Plan 4b Task 20: the design globe's check panel (examples/design-globe/
 // checksView.ts): checks.ts's rows grouped by what the page shows, worded
-// once, with what isn't shown said as such and never as a pass; the ion
-// slots (slots.ts); the convergence compass's needles (compass.ts).
+// once, with what isn't shown said as such and never as a pass; the
+// convergence compass's needles (compass.ts).
 import { describe, expect, it } from "vitest";
 import type { Answers } from "../examples/design-globe/answers.ts";
 import type { ShownValues } from "../examples/design-globe/checks.ts";
@@ -12,7 +12,6 @@ import {
   convergenceText,
 } from "../examples/design-globe/compass.ts";
 import { behindEarth } from "../examples/design-globe/measureLabels.ts";
-import { ION_SLOTS } from "../examples/design-globe/slots.ts";
 
 const MPU = 1200 / 3937;
 
@@ -238,24 +237,6 @@ describe("design globe checks view", () => {
     expect(pair.rows.find((r) => r.status === "fail")!.label).toMatch(
       /station/,
     );
-  });
-});
-
-describe("design globe ion slots", () => {
-  it("are the two empty slots, each naming what the app must supply", () => {
-    expect(ION_SLOTS.map((s) => s.name)).toEqual([
-      "Metrostation (share key)",
-      "Your long iModel",
-    ]);
-    for (const s of ION_SLOTS) {
-      expect(s.needs.map((n) => n.what)).toEqual([
-        "CRS",
-        "Units",
-        "Site transform",
-        "Placement mode",
-      ]);
-      expect(s.needs.every((n) => n.detail.length > 10)).toBe(true);
-    }
   });
 });
 

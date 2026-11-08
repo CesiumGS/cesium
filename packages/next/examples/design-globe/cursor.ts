@@ -26,7 +26,12 @@ import {
   errorText,
   type Placement,
 } from "./page.ts";
-import type { CompassView, CursorView } from "./panel/model.ts";
+import { Ellipsoid } from "../../src/math/ellipsoid.ts";
+import type {
+  CompassView,
+  CoordinateBlock,
+  CursorView,
+} from "./panel/model.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
 
 /**
@@ -124,6 +129,46 @@ export function judgePick(
   delete (rest as { design?: unknown }).design;
   return { hit: rest, site, refused, drawn };
 }
+
+/**
+ * Where the globe draws a point (body-fixed metres): latitude and
+ * longitude to 0.000001° (about 0.1 m), and height above the WGS 84
+ * ellipsoid to the centimetre.
+ */
+export function globeBlock(p: ArrayLike<number>): CoordinateBlock | undefined {
+  const c = Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {
+    longitude: 0,
+    latitude: 0,
+    height: 0,
+  });
+  if (c === undefined) {
+    return undefined;
+  }
+  const lat = c.latitude / DEG;
+  const lon = c.longitude / DEG;
+  return {
+    title: "Globe, WGS 84",
+    note: "Height above the ellipsoid",
+    rows: [
+      {
+        label: "Lat",
+        value: `${fixed(Math.abs(lat), 6)}°`,
+        unit: lat < 0 ? "S" : "N",
+      },
+      {
+        label: "Lon",
+        value: `${fixed(Math.abs(lon), 6)}°`,
+        unit: lon < 0 ? "W" : "E",
+      },
+      { label: "h", value: fixed(c.height, 2), unit: "m" },
+    ],
+  };
+}
+
+const DEG = Math.PI / 180;
+
+/** The cursor card's corner, CSS pixels from the view's top right (its widest). */
+const CARD_REACH = { x: 400, y: 200 };
 
 /** How long the compass's directions are taken, in pixels' footprints at the hit. */
 const COMPASS_REACH_PX = 40;
@@ -329,9 +374,30 @@ export function createCursor(deps: CursorDeps): Cursor {
           deps.compass?.() === true
             ? compassAt(viewer, hit!, design.engineeringFrame, d)
             : undefined;
+        const globe = globeBlock(hit!.position);
+        const heightUnit = /\(([^)]+)\)\s*$/.exec(vertical ?? "")?.[1];
         cursor = {
           text: read.text,
           coordinates: `E ${fixed(d[0]!, 2)}  N ${fixed(d[1]!, 2)} ${symbol}  ·  H ${fixed(d[2]!, 2)} ${vertical ?? symbol}`,
+          design: {
+            title: `Design, ${site.entry.codes}`,
+            ...(vertical !== undefined && {
+              note: vertical.replace(/\s*\([^)]*\)\s*$/, ""),
+            }),
+            rows: [
+              { label: "E", value: fixed(d[0]!, 2), unit: symbol },
+              { label: "N", value: fixed(d[1]!, 2), unit: symbol },
+              {
+                label: "H",
+                value: fixed(d[2]!, 2),
+                unit: heightUnit ?? symbol,
+              },
+            ],
+          },
+          ...(globe !== undefined && { globe }),
+          // Under the card's corner: the card steps to the other side.
+          ...(x > viewer.canvas.clientWidth - CARD_REACH.x &&
+            y < CARD_REACH.y && { aside: true }),
           tolerance: `pick ±${errorText(hit!.tolerance)} (one pixel there)`,
           muted: false,
           ...(compass !== undefined && { compass }),

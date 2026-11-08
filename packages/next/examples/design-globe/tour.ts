@@ -235,7 +235,7 @@ function narration(state: TourState, f: TourFacts): string {
         f.ladder.get(TOUR_LADDER[state.stop]?.site ?? ""),
       );
     default:
-      return "The rest is yours: switch placements, fly to any site and measure with the tool in the panel; the page's own figures are checked against the generator's exact answers in Checks, where you can measure an answer pair to see it checked.";
+      return "The rest is yours: switch placements, fly to any site and measure with the toolbar over the view; the page's own figures are checked against the generator's exact answers in Checks, where you can measure an answer pair to see it checked.";
   }
 }
 

@@ -44,8 +44,10 @@ export interface SiteView {
   readonly id: string;
   readonly name: string;
   readonly place: string;
-  /** "EPSG:6420+6360 · NAVD88 via GEOID18": the row's second line. */
+  /** "EPSG:6420+6360 · NAVD88 via GEOID18": its codes and geoid models. */
   readonly summary: string;
+  /** The ladder row's second line: its extent and rigid's error at its edge, or its codes until those are known. */
+  readonly row: string;
   readonly selected: boolean;
   /** The site's tiles or frame are loading (fly-to waits). */
   readonly busy: boolean;
@@ -72,12 +74,34 @@ export interface SagView {
   readonly caption: string;
 }
 
-/** The cursor's readout in the HUD. */
+/** One coordinate in the cursor card: "E", "6,082,345.12", "ftUS". */
+export interface CoordinateRow {
+  readonly label: string;
+  readonly value: string;
+  readonly unit: string;
+}
+
+/** A block of the cursor card: what the coordinates are in, and the rows. */
+export interface CoordinateBlock {
+  /** "Design, EPSG:6420+6360", "Globe, WGS 84". */
+  readonly title: string;
+  /** "NAVD88 height (ftUS)", "Ellipsoidal height". */
+  readonly note?: string;
+  readonly rows: readonly CoordinateRow[];
+}
+
+/** The cursor's readout in the HUD (feedback F12): a compact card. */
 export interface CursorView {
   /** One sentence: the error here, or why there are no design coordinates. */
   readonly text: string;
   /** Design coordinates at the cursor, in the CRS's own units. */
   readonly coordinates?: string;
+  /** The design coordinates, as the card lays them out. */
+  readonly design?: CoordinateBlock;
+  /** Where the globe draws the point: latitude, longitude, ellipsoidal height. */
+  readonly globe?: CoordinateBlock;
+  /** The pointer is under the card's corner: the card steps to the left. */
+  readonly aside?: boolean;
   /** The pick's tolerance, "pick ±0.12 m (one pixel)". */
   readonly tolerance?: string;
   /** No design answer here (moving, exaggerated): drawn quieter. */

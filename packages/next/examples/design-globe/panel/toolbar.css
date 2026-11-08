@@ -1,0 +1,387 @@
+/*
+ * The design globe's overhaul (owner's feedback round F, DESIGN.md
+ * "Layout"): the toolbar over the view, the snap preview, the cursor card,
+ * the story area's evidence rows, the ladder's rows and the layering.
+ * StrataKit tokens; the placements' colours and the measure line's yellow
+ * from panel.css and measure.css.
+ */
+
+/* ------------------------------------------------- layering (F2) */
+
+/*
+ * The page's overlays are one layer over the canvas (feedback F2): under
+ * the viewer's credits and time controls (z-index 2) and its inspector (5),
+ * which is topmost; the tour's card and the legend sit clear of the time
+ * controls, above them.
+ */
+.dg-hud-host {
+  z-index: 1;
+}
+
+/* --------------------------------------------------------- toolbar */
+
+/* Top left, under Dyno's inspector line, as CAD tools sit over a view. */
+.dg-toolbar {
+  position: absolute;
+  inset-block-start: 44px;
+  inset-inline-start: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-150);
+  max-inline-size: calc(100% - 16px);
+  pointer-events: none;
+}
+.dg-toolbar > * {
+  pointer-events: auto;
+}
+.dg-toolbar-badge,
+.dg-toolbar-prompt {
+  margin: 0;
+  padding: 2px var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-bg-elevation-base) 90%,
+    transparent
+  );
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  box-shadow: var(--stratakit-shadow-surface-sm);
+}
+.dg-toolbar-badge {
+  color: var(--stratakit-color-text-attention-base);
+  font-weight: 600;
+}
+.dg-toolbar-prompt.idle {
+  display: none;
+}
+.dg-toolbar-prompt.refused {
+  color: var(--stratakit-color-text-attention-base);
+}
+
+/* ---------------------------------------------- snap preview (F5) */
+
+.dg-snap {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+/* Where a click lands: a translucent dot in the measure line's yellow. */
+.dg-snap-dot {
+  position: absolute;
+  inset: -7px;
+  inline-size: 14px;
+  block-size: 14px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--dg-measure) 35%, transparent);
+  border: 1.5px solid color-mix(in oklab, var(--dg-measure) 85%, #000);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
+}
+.dg-snap.provisional .dg-snap-dot {
+  border-style: dashed;
+}
+.dg-snap.exact .dg-snap-dot {
+  background: color-mix(in oklab, var(--dg-measure) 60%, transparent);
+  border-color: var(--dg-measure);
+}
+.dg-snap-tag {
+  position: absolute;
+  transform: translate(11px, -50%);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 var(--stratakit-space-100);
+  border-radius: var(--stratakit-radius-sm);
+  background: color-mix(in oklab, #000 55%, transparent);
+  color: #fff;
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: 16px;
+  white-space: nowrap;
+}
+.dg-snap-tag svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.dg-snap.exact .dg-snap-tag {
+  color: var(--dg-measure-ink);
+}
+
+/* ------------------------------------------------ cursor card (F12) */
+
+.dg-hud-cursor {
+  gap: var(--stratakit-space-150);
+  inline-size: auto;
+  min-inline-size: 0;
+  max-inline-size: min(360px, calc(100% - 24px));
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+/* The pointer under the card's corner: the card steps left, under the toolbar. */
+.dg-hud-cursor.aside {
+  inset-inline-end: auto;
+  inset-inline-start: 8px;
+  inset-block-start: 96px;
+}
+.dg-cc-blocks {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: var(--stratakit-space-400);
+}
+.dg-cc-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dg-cc-title {
+  color: var(--stratakit-color-text-neutral-secondary);
+  white-space: nowrap;
+}
+.dg-cc-rows {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: var(--stratakit-space-200);
+  margin: 0;
+}
+.dg-cc-rows > div {
+  display: contents;
+}
+.dg-cc-rows dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-cc-rows dd {
+  margin: 0;
+  text-align: end;
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dg-cc-unit {
+  display: inline-block;
+  min-inline-size: 2.6em;
+  margin-inline-start: var(--stratakit-space-100);
+  text-align: start;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-cc-note {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-cc-say {
+  padding-block-start: var(--stratakit-space-150);
+  border-block-start: 1px solid
+    color-mix(
+      in oklab,
+      var(--stratakit-color-text-neutral-secondary) 30%,
+      transparent
+    );
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.dg-cc-say.idle {
+  padding-block-start: 0;
+  border: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+@container dg-hud (max-width: 560px) {
+  .dg-cc-blocks {
+    grid-template-columns: max-content;
+    gap: var(--stratakit-space-150);
+  }
+}
+
+/* ----------------------------------------- the story area (F13) */
+
+.dg-bar > .dg-status {
+  flex: 1 1 16em;
+  min-inline-size: 0;
+}
+.dg-bar-note {
+  margin: calc(-1 * var(--stratakit-space-400)) 0 0;
+}
+.dg-story-area {
+  gap: var(--stratakit-space-300);
+}
+.dg-story-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dg-story-head h2 {
+  margin: 0;
+}
+.dg-story-place {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-placement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.dg-placement .dg-switch {
+  align-self: stretch;
+}
+.dg-placement .dg-switch .MuiToggleButton-root {
+  flex: 1;
+}
+
+/* The evidence: a headline number per row, its caption under it. */
+.dg-ev-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dg-ev {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-block: var(--stratakit-space-200);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-ev:last-child {
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-ev-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+}
+.dg-ev-figure {
+  margin: 0;
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.dg-ev-figure.rigid {
+  color: var(--dg-rigid);
+}
+.dg-ev-figure.reprojected {
+  color: var(--dg-reprojected);
+}
+.dg-ev-figure.moving,
+.dg-ev-figure.muted {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-ev-show {
+  flex: none;
+}
+.dg-ev-title {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+  font-weight: 600;
+}
+.dg-ev-caption {
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-ev .dg-m-details {
+  margin-block-start: var(--stratakit-space-50);
+}
+.dg-site-story {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.dg-site-story p {
+  margin: 0;
+}
+.dg-verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  font-weight: 500;
+}
+.dg-verdict.ok svg {
+  color: var(--stratakit-color-icon-positive-base);
+}
+.dg-away-note {
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+
+/* The site's facts. */
+.dg-site-facts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-150);
+}
+.dg-site-facts > .dg-facts,
+.dg-site-facts > .dg-m-more {
+  align-self: stretch;
+}
+.dg-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* The ladder: each row one button, the name over its extent and error. */
+.dg-sites li {
+  display: block;
+}
+.dg-site {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  inline-size: 100%;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200)
+    var(--stratakit-space-150) var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-inline-start: 2px solid transparent;
+  cursor: pointer;
+}
+.dg-sites li:last-child .dg-site {
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-site:hover {
+  background: var(--stratakit-color-bg-page-depth);
+}
+.dg-site:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: -2px;
+}
+.dg-site.selected {
+  border-inline-start-color: var(--stratakit-color-border-accent-strong);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.dg-site-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.dg-site-name {
+  font-weight: 500;
+}
+.dg-site.selected .dg-site-name {
+  font-weight: 600;
+}
+.dg-site-meta {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-site-go {
+  flex: none;
+  display: inline-flex;
+  color: var(--stratakit-color-icon-neutral-base);
+  opacity: 0;
+}
+.dg-site:hover .dg-site-go,
+.dg-site:focus-visible .dg-site-go,
+.dg-site.selected .dg-site-go {
+  opacity: 1;
+}

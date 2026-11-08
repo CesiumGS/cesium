@@ -349,6 +349,8 @@ export interface SiteEntry {
   readonly id: string;
   readonly name: string;
   readonly place: string;
+  /** Its civil time zone, by IANA name (the time controls show its clock). */
+  readonly timeZone: string;
   readonly crs: CrsRef;
   /** "EPSG:6420+6360". */
   readonly codes: string;
@@ -424,6 +426,7 @@ function siteEntry(site: PortfolioSite, store: string): SiteEntry {
     id: site.id,
     name: site.name,
     place: site.place,
+    timeZone: site.timeZone,
     crs: site.frame.crs,
     codes: codesOf(site.frame.crs),
     grids: site.grids,
@@ -457,6 +460,7 @@ export const CORRIDOR_SITE: SiteEntry = {
   id: "corridor",
   name: "Highway corridor",
   place: "Oakland hills toward the Livermore valley, California",
+  timeZone: "America/Los_Angeles",
   crs: CORRIDOR_CRS,
   codes: codesOf(CORRIDOR_CRS),
   grids: ["us_noaa_g2018u0.tif"],

@@ -1,7 +1,6 @@
 /*
- * Task 20's parts of the design globe's panel and HUD: the bar (the tour's
- * way in and Copy link), the viewer toggles' hints, the checks, the ion
- * slots, the tour's card and the convergence compass. StrataKit tokens,
+ * Task 20's parts of the design globe's panel and HUD: the bar (the status
+ * and Copy link), the checks, the tour's card and the convergence compass. StrataKit tokens,
  * with the frames explorer's two check-kind tints (its tokens.css: the
  * explorer's second exception to StrataKit, which has no categorical
  * palette; neither tint is a status hue, each 6.3:1 or more in both
@@ -22,27 +21,9 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--stratakit-space-200);
-  margin-block-start: calc(-1 * var(--stratakit-space-300));
 }
 .dg-bar-note {
   font-size: var(--stratakit-font-size-caption-lg);
-}
-
-/* --------------------------------------------------------- the toggles */
-
-.dg-toggle.two-line {
-  align-items: flex-start;
-}
-.dg-toggle.two-line .MuiSwitch-root {
-  margin-block-start: 2px;
-}
-.dg-toggle.two-line > span {
-  display: flex;
-  flex-direction: column;
-}
-.dg-toggle-hint {
-  font-size: var(--stratakit-font-size-caption-lg);
-  line-height: var(--stratakit-line-height-caption-lg);
 }
 
 /* ---------------------------------------------------------- the checks */
@@ -244,57 +225,6 @@
   .dg-check-row > .dg-check-status {
     grid-area: status;
   }
-}
-
-/* ------------------------------------------------------- the ion slots */
-
-.dg-slots-lead {
-  margin: 0;
-}
-.dg-slots {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-300);
-}
-/* Drawn empty: a dashed outline, the slot's shape with nothing in it. */
-.dg-slot {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-150);
-  padding: var(--stratakit-space-300);
-  border: 1px dashed var(--stratakit-color-border-neutral-base);
-  border-radius: var(--stratakit-radius-md);
-}
-.dg-slot-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--stratakit-space-200);
-}
-.dg-slot-source {
-  font-size: var(--stratakit-font-size-caption-lg);
-  line-height: var(--stratakit-line-height-caption-lg);
-}
-.dg-slot-needs {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: var(--stratakit-space-100) var(--stratakit-space-300);
-  margin: var(--stratakit-space-100) 0 0;
-  font-size: var(--stratakit-font-size-caption-lg);
-  line-height: var(--stratakit-line-height-caption-lg);
-}
-.dg-slot-needs > div {
-  display: contents;
-}
-.dg-slot-needs dt {
-  font-weight: 600;
-}
-.dg-slot-needs dd {
-  margin: 0;
-  color: var(--stratakit-color-text-neutral-secondary);
 }
 
 /* ------------------------------------------------------------ the tour */

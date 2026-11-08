@@ -1,10 +1,12 @@
-// Over the globe (DESIGN.md "On the globe"), always dark: the cursor's
-// readout top right (the rigid error under the cursor, or why there are no
-// design coordinates), the legend bottom right, and the anchor ring's label.
+// Over the globe (DESIGN.md "The viewer"), always dark: the cursor's card
+// top right (the design and globe coordinates under the cursor and the
+// rigid error there, or why there are none), the legend bottom right, and
+// the anchor ring's label.
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { WHISKER_RAMP } from "../colors.ts";
 import type {
   CompassView,
+  CoordinateBlock,
   CursorView,
   LegendView,
   LiveSource,
@@ -13,11 +15,38 @@ import type {
 /** How long the cursor's readout must rest before a screen reader hears it, ms. */
 const ANNOUNCE_AFTER_MS = 1000;
 
+/** One block of the card: its title, its note, and label | value | unit rows. */
+function Block({ block }: { block: CoordinateBlock }) {
+  return (
+    <div className="dg-cc-block">
+      <span className="dg-cc-title">{block.title}</span>
+      <dl className="dg-cc-rows dg-num">
+        {block.rows.map((r) => (
+          <div key={r.label}>
+            <dt>{r.label}</dt>
+            <dd>
+              {r.value}
+              <span className="dg-cc-unit">{r.unit}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {block.note !== undefined && (
+        <span className="dg-cc-note">{block.note}</span>
+      )}
+    </div>
+  );
+}
+
 /**
- * The cursor's readout. Not a live region: it changes with every pointer
- * move. A screen reader hears it once it has rested a second (or, for the
- * keyboard, after Enter places the crosshair's pick), politely, through a
- * separate hidden region (Task 20 fix 1, page I4).
+ * The cursor's readout (feedback F12), a compact card: the design
+ * coordinates (E, N, H in the CRS's units) beside the globe's (latitude,
+ * longitude, ellipsoidal height), so moving the cursor shows the design
+ * space reprojected; then the error, one line. Not a live region: it
+ * changes with every pointer move. A screen reader hears it once it has
+ * rested a second (or, for the keyboard, after Enter places the
+ * crosshair's pick), politely, through a separate hidden region (Task 20
+ * fix 1, page I4).
  */
 export function CursorCard({ cursor }: { cursor: CursorView }) {
   const said = [cursor.text, cursor.coordinates, cursor.compass?.text]
@@ -28,24 +57,29 @@ export function CursorCard({ cursor }: { cursor: CursorView }) {
     const timer = setTimeout(() => setAnnounced(said), ANNOUNCE_AFTER_MS);
     return () => clearTimeout(timer);
   }, [said]);
+  const pick = cursor.design !== undefined;
   return (
     <div
-      className={`dg-hud dg-hud-cursor${cursor.muted ? " muted" : ""}${cursor.coordinates !== undefined ? " has-pick" : ""}`}
+      className={`dg-hud dg-hud-cursor${cursor.muted ? " muted" : ""}${pick ? " has-pick" : ""}${cursor.aside ? " aside" : ""}`}
       role="group"
       aria-label="At the cursor"
     >
-      <span className="dg-hud-title" aria-hidden>
-        At the cursor
-      </span>
-      <span>{cursor.text}</span>
-      {cursor.coordinates !== undefined && (
-        <span className="dg-num dg-hud-coords">{cursor.coordinates}</span>
+      {pick && (
+        <div className="dg-cc-blocks" aria-hidden>
+          <Block block={cursor.design!} />
+          {cursor.globe !== undefined && <Block block={cursor.globe} />}
+        </div>
       )}
+      <span className={`dg-cc-say${pick ? "" : " idle"}`} aria-hidden>
+        {cursor.text}
+      </span>
       {cursor.tolerance !== undefined && (
-        <span className="dg-hud-muted dg-num">{cursor.tolerance}</span>
+        <span className="dg-cc-note dg-num" aria-hidden>
+          {cursor.tolerance}
+        </span>
       )}
       {cursor.compass !== undefined && (
-        <span className="dg-num dg-hud-compass-text">
+        <span className="dg-num dg-hud-compass-text" aria-hidden>
           {cursor.compass.text}
         </span>
       )}

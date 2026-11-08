@@ -74,6 +74,28 @@ export function siteSummary(entry: SiteEntry): string {
   return `${entry.codes}  ·  ${entry.models.join(" + ")}`;
 }
 
+/** A length in words: "73 m", "3.97 km". */
+const lengthText = (m: number): string =>
+  m >= 1000 ? `${fixed(m / 1000, m >= 10_000 ? 1 : 2)} km` : `${fixed(m, 0)} m`;
+
+/**
+ * A ladder row's second line: "73 m across; rigid 2.6 mm off at its edge"
+ * (its story's, else the answers'), or its codes until either is in.
+ */
+export function siteRow(
+  entry: SiteEntry,
+  story: SiteView["story"],
+  answer: { readonly extent?: number; readonly edgeError?: number },
+): string {
+  if (story !== undefined) {
+    return `${story.extent}; rigid ${story.edgeError} off at its edge`;
+  }
+  if (answer.extent !== undefined && answer.edgeError !== undefined) {
+    return `${lengthText(answer.extent)} across; rigid ${errorText(answer.edgeError)} off at its edge`;
+  }
+  return siteSummary(entry);
+}
+
 /** "station 920+21". */
 export const stationShort = (station: number): string =>
   `station ${Math.floor(station / 100)}+${String(Math.round(station % 100)).padStart(2, "0")}`;
@@ -130,6 +152,10 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
       name: entry.name,
       place: entry.place,
       summary: siteSummary(entry),
+      row: siteRow(entry, site.view?.story, {
+        extent: s.extents?.get(entry.id),
+        edgeError: s.edgeErrors?.get(entry.id),
+      }),
       selected: entry.id === s.params.site,
       busy: site.started && site.view === undefined,
       // "Rigid only" once its tiles say so: a ladder site's pair is probed

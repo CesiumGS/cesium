@@ -51,12 +51,14 @@ export interface MeasureLive {
     readonly left: boolean;
     readonly up: boolean;
   };
-  /** The snap under the pointer. */
+  /** The snap preview: where a click would land now (feedback F5). */
   readonly hover?: {
     readonly x: number;
     readonly y: number;
     readonly kind: SnapKind;
     readonly exact: boolean;
+    /** The client's snap, while the exact service is still asked. */
+    readonly provisional: boolean;
   };
   /** The view's centre is marked (keyboard measuring). */
   readonly crosshair: boolean;

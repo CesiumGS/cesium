@@ -86,6 +86,20 @@ import type { StoreFrame } from "./stores.ts";
 
 /** How far from the cursor a snap may land, CSS pixels. */
 export const APERTURE = 12;
+/** The snap preview starts a snap at most this often, ms (one in flight). */
+export const HOVER_INTERVAL_MS = 50;
+
+/**
+ * The pointer while snapping: a ring of the snap's reach (`APERTURE`) with
+ * a dot at its centre, as CAD tools draw their aperture (feedback F5).
+ */
+const SNAP_CURSOR = (() => {
+  const r = APERTURE;
+  const size = 2 * r + 4;
+  const c = size / 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="black" stroke-opacity="0.45" stroke-width="3"/><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="white" stroke-opacity="0.9" stroke-width="1.25"/><circle cx="${c}" cy="${c}" r="1.5" fill="white" stroke="black" stroke-width="0.75"/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${c} ${c}, crosshair`;
+})();
 /** A click: the pointer moved less than this between down and up, CSS pixels. */
 const CLICK_SLOP = 5;
 
@@ -147,6 +161,8 @@ export interface MeasureTool {
   shownValues(): ShownValues | undefined;
   /** The selected site changed: the corridor's openers are drawn on the corridor only. */
   siteChanged(): void;
+  /** The snap mode changed: the pointer and the preview follow it. */
+  snapChanged(): void;
   /** The viewer's own finished measurement's ends, design units (for the checks). */
   userEnds():
     | {
@@ -480,6 +496,9 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
   let hoverAbort: AbortController | undefined;
   let hoverBusy = false;
   let hoverNext: [number, number] | undefined;
+  /** When the last hover snap started, and the timer waiting out the interval. */
+  let hoverStarted = -Infinity;
+  let hoverTimer: ReturnType<typeof setTimeout> | undefined;
   let clickAbort: AbortController | undefined;
 
   const snapDeps = (): SnapDeps => ({
@@ -623,9 +642,21 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       return;
     }
     hoverNext = [x, y];
-    if (hoverBusy) {
+    if (hoverBusy || hoverTimer !== undefined) {
       return;
     }
+    // Throttled: one snap in flight, at most one start per interval.
+    const wait = hoverStarted + HOVER_INTERVAL_MS - performance.now();
+    if (wait > 0) {
+      hoverTimer = setTimeout(() => {
+        hoverTimer = undefined;
+        if (hoverNext !== undefined && !deps.disposed()) {
+          hoverAt(...hoverNext);
+        }
+      }, wait);
+      return;
+    }
+    hoverStarted = performance.now();
     const [hx, hy] = hoverNext;
     hoverNext = undefined;
     hoverAbort?.abort();
@@ -651,7 +682,13 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       setHover(
         px === undefined
           ? undefined
-          : { x: px[0]!, y: px[1]!, kind: result.kind, exact: result.exact },
+          : {
+              x: px[0]!,
+              y: px[1]!,
+              kind: result.kind,
+              exact: result.exact,
+              provisional: result.provisional,
+            },
       );
     };
     void snapWith(
@@ -673,6 +710,11 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
           hoverAt(...hoverNext);
         }
       });
+  }
+
+  /** The aperture cursor while snapping; the default otherwise. */
+  function syncCursor(): void {
+    canvas.style.cursor = deps.snapMode() === "none" ? "" : SNAP_CURSOR;
   }
 
   function setHover(next: MeasureLive["hover"]): void {
@@ -724,9 +766,16 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     },
     { signal },
   );
-  canvas.addEventListener("pointerleave", () => setHover(undefined), {
-    signal,
-  });
+  canvas.addEventListener(
+    "pointerleave",
+    () => {
+      hoverNext = undefined;
+      hoverAbort?.abort();
+      setHover(undefined);
+    },
+    { signal },
+  );
+  syncCursor();
   // Keyboard: the canvas takes focus; Enter places a point at the centre
   // (the crosshair marks it), Escape clears.
   const priorTabIndex = canvas.getAttribute("tabindex");
@@ -867,6 +916,8 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
   signal.addEventListener("abort", () => {
     hoverAbort?.abort();
     clickAbort?.abort();
+    clearTimeout(hoverTimer);
+    canvas.style.cursor = "";
   });
 
   return {
@@ -924,6 +975,11 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     siteChanged() {
       redraw();
       deps.changed();
+    },
+    snapChanged() {
+      syncCursor();
+      hoverAbort?.abort();
+      setHover(undefined);
     },
     shownValues() {
       const a = deps.answers();

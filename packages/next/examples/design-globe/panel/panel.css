@@ -128,17 +128,6 @@
   /* Two lines, so the toggles below don't jump as the sentence changes. */
   min-block-size: 2.9em;
 }
-.dg-toggles {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-100);
-}
-.dg-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-200);
-  cursor: pointer;
-}
 .dg-factor {
   font-weight: 600;
   color: var(--stratakit-color-text-attention-base);
@@ -205,61 +194,11 @@
   font-size: var(--stratakit-font-size-caption-lg);
 }
 
-/* The sites: rows with rules, the selected one with an accent bar. */
+/* The sites: toolbar.css (rows that are buttons). */
 .dg-sites {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-.dg-site {
-  padding: var(--stratakit-space-200) var(--stratakit-space-200)
-    var(--stratakit-space-200) var(--stratakit-space-300);
-  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
-  border-inline-start: 2px solid transparent;
-}
-.dg-site:last-child {
-  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.dg-site.selected {
-  border-inline-start-color: var(--stratakit-color-border-accent-strong);
-  background: var(--stratakit-color-bg-page-depth);
-}
-.dg-site-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--stratakit-space-300);
-}
-.dg-site-name {
-  display: flex;
-  flex-direction: column;
-  min-inline-size: 0;
-}
-.dg-site-head .MuiButton-root {
-  flex: none;
-  white-space: nowrap;
-}
-.dg-site-place {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  font-size: var(--stratakit-font-size-caption-lg);
-  line-height: var(--stratakit-line-height-caption-lg);
-}
-.dg-site-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--stratakit-space-100);
-  margin-block-start: var(--stratakit-space-50);
-  font-size: var(--stratakit-font-size-caption-lg);
-}
-.dg-site-detail {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-200);
-  margin-block-start: var(--stratakit-space-300);
 }
 .dg-site-wait {
   display: flex;
@@ -286,19 +225,6 @@
   margin: 0;
   color: var(--stratakit-color-text-attention-base);
 }
-.dg-story {
-  margin: 0;
-  padding-block-start: var(--stratakit-space-200);
-  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.dg-story .cesium-icon,
-.dg-story svg {
-  vertical-align: -2px;
-}
-.dg-story.ok svg {
-  color: var(--stratakit-color-icon-positive-base);
-}
-
 /* ------------------------------------------------------------- HUD */
 
 /* Always dark over the scene, as Dyno's inspector and the credits are. */
@@ -352,19 +278,20 @@
 .dg-hud-cursor {
   inset-block-start: 12px;
   inset-inline-end: 12px;
-  inline-size: min(320px, calc(50% - 24px));
 }
 .dg-hud-cursor.muted > span:not(.dg-hud-title) {
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.dg-hud-coords {
-  white-space: pre-wrap;
-}
-/* Top left, under Dyno's inspector line: clear of the time controls and the credits at the bottom. */
+/*
+ * Bottom right, above the time controls (main.ts sets --dg-time-clear from
+ * their real top): the top left is the toolbar's, under the inspector.
+ */
 .dg-hud-legend {
-  inset-block-start: 44px;
-  inset-inline-start: 12px;
+  inset-block-end: var(--dg-time-clear, 128px);
+  inset-inline-end: 12px;
   max-inline-size: min(300px, calc(50% - 24px));
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
 }
 .dg-key {
   display: flex;
@@ -431,7 +358,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .dg-site-detail {
+  .dg-m-more {
     animation: dg-open 160ms var(--dg-ease);
   }
 }

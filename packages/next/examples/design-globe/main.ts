@@ -54,7 +54,7 @@ import {
   type PageParams,
   type Placement,
 } from "./page.ts";
-import { Measure, type MeasureActions } from "./panel/Measure.tsx";
+import type { MeasureActions } from "./panel/Measure.tsx";
 import { Panel } from "./panel/Panel.tsx";
 import type { LiveValues, PanelActions, PanelModel } from "./panel/model.ts";
 import { buildPanelModel, type SiteSnapshot } from "./panelModel.ts";
@@ -112,16 +112,25 @@ export function run(context: ExampleContext): ExampleRun {
   viewer.container.append(hud);
   scope.defer(() => hud.remove());
   viewer.view.camera.near = 0.1;
-  // The clock in local solar time, the one the page sets each site's light
-  // by (shots.ts `daylight`); on leaving, the zone, label and clock go back.
+  // The clock in the selected site's civil time (its IANA zone, feedback
+  // F9); each Fly to sets it to the site's daylight (shots.ts `daylight`).
+  // On leaving, the zone, label and clock go back.
   const prior = {
     zone: viewer.timeControls?.zone(),
     label: viewer.timeControls?.label(),
     time: viewer.clock.time,
     mode: viewer.clock.mode,
   };
-  viewer.timeControls?.setZone("solar");
-  viewer.timeControls?.setLabel("Sun at the site (local solar time)");
+  /** The time controls show `entry`'s civil time. */
+  const siteClock = (entry: {
+    readonly timeZone: string;
+    readonly name: string;
+  }) => {
+    viewer.timeControls?.setZone({ iana: entry.timeZone });
+    viewer.timeControls?.setLabel(
+      `Time at ${entry.name} (${entry.timeZone}), and the sun there`,
+    );
+  };
   scope.defer(() => {
     if (prior.zone !== undefined) {
       viewer.timeControls?.setZone(prior.zone);
@@ -155,6 +164,7 @@ export function run(context: ExampleContext): ExampleRun {
     SITES.map((entry) => [entry.id, { entry }]),
   );
   const corridor = sites.get("corridor")!;
+  siteClock((sites.get(params.site) ?? corridor).entry);
   scope.defer(() => {
     whiskers?.dispose();
     ring?.dispose();
@@ -616,6 +626,13 @@ export function run(context: ExampleContext): ExampleRun {
     }
     params = { ...params, site: id };
     setLink(formatParams(params));
+    siteClock(site.entry);
+    // In the site's daylight at once (again on arrival, shots.ts `flyLit`),
+    // whatever time it was where the camera was.
+    const known = site.rigid?.root.volume.sphere.center;
+    if (fly && known !== undefined) {
+      shots.daylight(known);
+    }
     // The corridor's openers are drawn on the corridor only.
     tool.siteChanged();
     refresh();
@@ -798,6 +815,7 @@ export function run(context: ExampleContext): ExampleRun {
     setSnap(snap) {
       params = { ...params, snap };
       setLink(formatParams(params));
+      tool.snapChanged();
       refresh();
     },
     clear: () => tool.clear(),
@@ -855,7 +873,10 @@ export function run(context: ExampleContext): ExampleRun {
       tour?.fromLink(next);
       const p = parseParams(next);
       // The snap first: the mode and the site write the link with it.
-      params = { ...params, snap: p.snap };
+      if (p.snap !== params.snap) {
+        params = { ...params, snap: p.snap };
+        tool.snapChanged();
+      }
       if (p.mode !== params.mode) {
         setMode(p.mode);
       }
@@ -956,15 +977,16 @@ export function run(context: ExampleContext): ExampleRun {
       disposed = true;
       camera.stop();
     },
-    panel: createElement(
-      Panel,
-      { source: store, live, actions, hud },
-      createElement(Measure, {
+    panel: createElement(Panel, {
+      source: store,
+      live,
+      actions,
+      hud,
+      measure: {
         source: measureStore,
         live: tool.live,
         actions: measureActions,
-        hud,
-      }),
-    ),
+      },
+    }),
   };
 }

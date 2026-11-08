@@ -174,6 +174,8 @@ export interface PortfolioSite<M extends PortfolioModel = PortfolioModel> {
   readonly name: string;
   /** Where it is, in words. */
   readonly place: string;
+  /** Its civil time zone, by IANA name: the time controls show its clock. */
+  readonly timeZone: string;
   readonly frame: EngineeringFrameDefinition;
   /**
    * In design coordinates (the frame's units): a building's corner (it
@@ -332,6 +334,7 @@ export const SITE_BUILDING: PortfolioSite<BuildingModel> = {
   id: "site-building",
   name: "Site-grid building",
   place: "Beside the corridor's start, Oakland hills, California",
+  timeZone: "America/Los_Angeles",
   frame: {
     name: "Site-grid building",
     body: EARTH,
@@ -376,6 +379,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     name: "London: a pole line",
     place:
       "Across mid-Essex farmland, north of Chelmsford, England: 30 km of 11 kV overhead line",
+    timeZone: "Europe/London",
     frame: {
       name: "London: a pole line",
       body: EARTH,
@@ -408,6 +412,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     id: "sydney",
     name: "Sydney: an airport",
     place: "Mascot, Sydney, Australia, where Kingsford Smith airport is",
+    timeZone: "Australia/Sydney",
     frame: {
       name: "Sydney: an airport",
       body: EARTH,
@@ -448,6 +453,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     id: "tokyo",
     name: "Tokyo: a city block",
     place: "Marunouchi, by Tokyo Station, Japan",
+    timeZone: "Asia/Tokyo",
     frame: {
       name: "Tokyo: a city block",
       body: EARTH,
@@ -478,6 +484,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     id: "amsterdam",
     name: "Amsterdam: a canal building",
     place: "Grachtengordel, Amsterdam, Netherlands",
+    timeZone: "Europe/Amsterdam",
     frame: {
       name: "Amsterdam: a canal building",
       body: EARTH,
@@ -502,6 +509,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     name: "Nairobi: a campus",
     place:
       "On the Konza plain, Machakos County, Kenya, about 60 km south-east of Nairobi",
+    timeZone: "Africa/Nairobi",
     frame: {
       name: "Nairobi: a campus",
       body: EARTH,
@@ -527,6 +535,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     name: "Phoenix: a solar farm",
     place:
       "The Gila River valley south of Phoenix, Arizona, on the zone's central meridian; in international feet, where the corridor is in US survey feet",
+    timeZone: "America/Phoenix",
     frame: {
       name: "Phoenix: a solar farm",
       body: EARTH,
@@ -567,6 +576,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
     id: "jakarta",
     name: "Jakarta: a container port",
     place: "Tanjung Priok, North Jakarta, Indonesia",
+    timeZone: "Asia/Jakarta",
     frame: {
       name: "Jakarta: a container port",
       body: EARTH,
