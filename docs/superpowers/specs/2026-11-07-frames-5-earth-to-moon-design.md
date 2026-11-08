@@ -515,8 +515,8 @@ Design:
   transition starting or ending, a controller re-attaching (free flight's
   nearest body, section 11.3), or the application setting a new rig.
 - **The rig is evaluated at the tick's scene time,** from the clock interface.
-  The frames module's clock (the time library's) is what turns that scene time
-  into an `Instant` for its providers **(author's call)**.
+  The time library's clock is what turns that scene time into an `Instant`
+  for the frames module's providers **(author's call)**.
 - **A rig on a reference frame that moves keeps on-demand rendering awake
   while the clock runs,** because its anchors move. A paused clock lets it
   settle.
@@ -572,14 +572,22 @@ separate packages:
 - `@cesium/next`: the core (World, View, Camera, Engine, tilesets, globe,
   vector), the camera layer (rigs, controllers, bindings, transitions) and the
   animation core;
-- `@cesium/next/frames`: the tree, the catalog, providers, trajectories, the
-  frame resolver over the tree, and the time library;
+- `@cesium/next/time`: the time library: `Instant`, time scales and leap
+  seconds, the scene clock (which implements the core's clock interface), and
+  the time formatter (section 9.6). The owner, 2026-11-07: its own entry
+  point, so a globe-only app with a timeline needs time and dates without the
+  frame tree. It carries no Earth orientation series and no ephemeris data;
+- `@cesium/next/frames`: the tree, the catalog, providers, trajectories and the
+  frame resolver over the tree;
 - `@cesium/next/proj`: the PROJ coordinate service (lazy, as today);
 - `@cesium/next/measure`: measurement (5i settles its tool seam).
 
 **The dependency rule:** the core imports nothing from `frames`, `proj` or
-`measure`. `frames` imports core types only (`Body`, `Ellipsoid`, the math
-module, the resolver and clock interfaces). `measure` imports `frames`. An
+`measure`, and nothing from `time` (it sees time only through the clock
+interface). `time` imports nothing but the math module and the clock
+interface. `frames` imports `time` and core types only (`Body`, `Ellipsoid`,
+the math module, the resolver and clock interfaces). `measure` imports
+`frames`. The Viewer and the widgets may import `time` without `frames`. An
 import-graph test enforces it, and `src/frames/frames.ts`'s import of
 `src/measure/constants.ts` moves to a neutral module (carried forward from
 plan 3).
@@ -1677,9 +1685,10 @@ the default plan 5 follows if the owner says nothing.
    §13.16 brainstorm, then its build) before 5g's line-of-sight readouts.
    _Default:_ no; 5g says "can't tell" honestly.
 2. **One package with entry points, or separate packages?** Section 7.7
-   chose entry points of `@cesium/next` (`/frames`, `/proj`, `/measure`), with
-   the camera layer and the animation core in the core entry point and the
-   time library in `/frames`. _Why it matters:_ it sets 5a's first tasks (the
+   chose entry points of `@cesium/next` (`/time`, `/frames`, `/proj`,
+   `/measure`), with the camera layer and the animation core in the core
+   entry point and the time library in its own (the owner's choice,
+   2026-11-07). _Why it matters:_ it sets 5a's first tasks (the
    build, the import boundary, where the Viewer sits) and what 5i's surface map
    treats as a unit; moving to packages after 5a redoes that work. _Default:_
    entry points.
