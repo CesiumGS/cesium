@@ -983,21 +983,32 @@ export class View {
    * until the next call.
    */
   pixelRect(): Readonly<PixelRect> {
-    const x = Math.round(this.viewport.x * this.target.width);
-    const y = Math.round(this.viewport.y * this.target.height);
-    const width = Math.max(
-      1,
-      Math.round(this.viewport.width * this.target.width),
+    const { width: targetWidth, height: targetHeight } = this.target;
+    // At least a pixel, inside the target: a canvas squeezed to 0 width is 1
+    // across, where a viewport off its middle rounded to no size at all (a
+    // texture without size, and every frame rejected).
+    const x = Math.max(
+      Math.min(Math.round(this.viewport.x * targetWidth), targetWidth - 1),
+      0,
     );
-    const height = Math.max(
-      1,
-      Math.round(this.viewport.height * this.target.height),
+    const y = Math.max(
+      Math.min(Math.round(this.viewport.y * targetHeight), targetHeight - 1),
+      0,
     );
     const rect = this.rect;
     rect.x = x;
     rect.y = y;
-    rect.width = Math.min(width, this.target.width - x);
-    rect.height = Math.min(height, this.target.height - y);
+    rect.width = Math.max(
+      Math.min(Math.round(this.viewport.width * targetWidth), targetWidth - x),
+      1,
+    );
+    rect.height = Math.max(
+      Math.min(
+        Math.round(this.viewport.height * targetHeight),
+        targetHeight - y,
+      ),
+      1,
+    );
     return rect;
   }
 

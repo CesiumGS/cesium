@@ -2548,6 +2548,11 @@ export class Engine {
       const rect = image ? image.rect : view.pixelRect();
       const frame = this.viewFrame(view, rect);
       frame.slot = slots;
+      // Every frame takes the view's exposure as it is now: only the
+      // on-demand check computed it, so `renderFrame()` and the continuous
+      // loop drew with a stale scale (a fixed exposure set later never
+      // applied; automatic exposure never moved).
+      this.updateExposure(view);
       this.writeView(view, slots, rect);
       this.updateEnvironment(view);
       slots++;
@@ -3340,7 +3345,9 @@ export class Engine {
    * ISO 100) minus the compensation, within [min, max], approached
    * exponentially at `speed` per second; the first reading is taken as is.
    * The eye's cones adapt to the photopic reading, its rods to the
-   * scotopic one (scene/eye.ts `adapt`). Renders again until it settles.
+   * scotopic one (scene/eye.ts `adapt`). Renders again until it settles,
+   * and once more after the step that settles it: the view's scale follows
+   * the state only in a frame.
    *
    * A settled exposure stays as it is for a reading within `EYE_SETTLED`
    * or `AUTO_SETTLED` of it. The meter divides the pre-exposure out of an
@@ -3380,6 +3387,7 @@ export class Engine {
       const settled = () =>
         Math.abs(cones - state.cones) <= EYE_SETTLED &&
         Math.abs(rods - state.rods) <= EYE_SETTLED;
+      const moved = !state.metered || !settled();
       if (!state.metered || !Number.isFinite(state.cones + state.rods)) {
         state.cones = cones;
         state.rods = rods;
@@ -3391,7 +3399,11 @@ export class Engine {
         state.rods = adapt(state.rods, rods, dt, "rods", speed);
       }
       state.time = now;
-      if (!settled()) {
+      // A frame at the new exposure, also when this step settled it: the
+      // eye adapts to light at once, so noon after night landed in the
+      // band in one step, and the loop slept with the last frame drawn at
+      // night's exposure.
+      if (moved) {
         this.requestRender();
       }
       return;
@@ -3406,16 +3418,19 @@ export class Engine {
       ),
       e.max ?? 18,
     );
+    const moved =
+      !state.metered || Math.abs(target - state.ev100) > AUTO_SETTLED;
     if (!state.metered) {
       state.ev100 = target;
       state.metered = true;
-    } else if (Math.abs(target - state.ev100) > AUTO_SETTLED) {
+    } else if (moved) {
       const dt = Math.min((now - state.time) / 1000, 1);
       state.ev100 +=
         (target - state.ev100) * (1 - Math.exp(-dt * (e.speed ?? 2)));
     }
     state.time = now;
-    if (Math.abs(target - state.ev100) > AUTO_SETTLED) {
+    // A frame at the new exposure (as the eye's).
+    if (moved) {
       this.requestRender();
     }
   }
@@ -4358,7 +4373,10 @@ export class Engine {
       (enc, get) => {
         const auto = view.autoExposure;
         const adapts = "auto" in view.exposure || "eye" in view.exposure;
-        if (!adapts || !auto || auto.pending) {
+        // Not a column or a row: a canvas squeezed to 0 width draws 1 pixel
+        // across, which says nothing of the view (stars alone, from a view
+        // half full of a sunlit Earth, opened the eye: white on the way back).
+        if (!adapts || !auto || auto.pending || width < 2 || height < 2) {
           return;
         }
         auto.pending = true;
