@@ -168,7 +168,7 @@ export function globeBlock(p: ArrayLike<number>): CoordinateBlock | undefined {
 const DEG = Math.PI / 180;
 
 /** The right rail's corner (the cursor card over the legend), CSS pixels from the view's top right. */
-const CARD_REACH = { x: 400, y: 260 };
+const CARD_REACH = { x: 350, y: 260 };
 
 /** How long the compass's directions are taken, in pixels' footprints at the hit. */
 const COMPASS_REACH_PX = 40;
