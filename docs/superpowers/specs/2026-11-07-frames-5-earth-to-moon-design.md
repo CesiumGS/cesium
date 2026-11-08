@@ -1076,9 +1076,10 @@ everything, placed from the sky inputs.
 - **No hole.** The impostor keeps drawing until the tiles replacing it are
   loaded, as any parent tile does.
 - **No pop.** The impostor and the tileset hang under the same anchor (one
-  ephemeris, one MOON_ME orientation). Today's sky inputs can come from Meeus,
-  about 10″ or some 20 km at the Moon, so the impostor stops taking them: it
-  is placed by its anchor like the tileset. Both use the same reflectance
+  ephemeris, one MOON_ME orientation). Today's sky inputs can come from the analytic
+  Moon series, which is up to 0.31° (about 2,100 km) from DE440 over 2000 to
+  2050 (measured in 5a), so the impostor stops taking them: it is placed by
+  its anchor like the tileset. Both use the same reflectance
   model (5e's Hapke, or Lommel-Seeliger for both) and the same exposure, so
   the swap is an ordinary refinement.
 - **Depth-correct.** The impostor moves out of the sky pass into the opaque
