@@ -11,7 +11,12 @@ export {
   type FrameDataWarning,
 } from "../ephemeris/loadFrameData.ts";
 export { readSpk, type StateSegment } from "../ephemeris/spk.ts";
-export { Frame, frameTransform, type FrameOptions } from "./Frame.ts";
+export {
+  Frame,
+  frameTransform,
+  routeRevision,
+  type FrameOptions,
+} from "./Frame.ts";
 export type { FrameAccuracy } from "./frameAccuracy.ts";
 export {
   pointAccuracy,

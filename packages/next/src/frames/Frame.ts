@@ -44,6 +44,9 @@ export class Frame<N extends string = string> {
     FrameAccuracy | ((instant: Instant) => FrameAccuracy);
   private readonly entry = new Float64Array(16);
   private entryTt = NaN;
+  private entryRevision = 0;
+  private count = 0;
+  private published: Readonly<FrameAccuracy> | undefined;
 
   /**
    * A child of `parent`. `toParent` writes the child-to-parent matrix for
@@ -77,6 +80,46 @@ export class Frame<N extends string = string> {
     return typeof a === "function" ? checkedAccuracy(this.name, a(instant)) : a;
   }
 
+  /**
+   * Goes up by one whenever the edge to the parent changes in a way time
+   * alone does not explain (`invalidate()`, or a new published accuracy);
+   * starts at 0. A consumer redoes its work when the revision it saw
+   * differs. A getter, so a subclass whose edge depends on other inputs
+   * can compute it from them.
+   */
+  get revision(): number {
+    return this.count;
+  }
+
+  /**
+   * Says the edge changed: bumps `revision` and drops the cached matrix,
+   * so the next `toParent` recomputes even at the same instant.
+   */
+  invalidate(): void {
+    this.count++;
+    this.entryTt = NaN;
+  }
+
+  /**
+   * The accuracy consumers see at `instant`: the last published figure,
+   * replaced (and `revision` bumped) only when the current one differs from
+   * it by more than 1% of the published figure or 1 mm, whichever is
+   * larger. For `radians`, 1 mm is 1 mm at 6,378,137 m. A change of kind
+   * (metres, radians, by definition, not stated) always publishes. The
+   * first call publishes without a bump: nothing has seen an earlier figure.
+   */
+  publishedAccuracy(instant: Instant): Readonly<FrameAccuracy> {
+    const now = this.accuracy(instant);
+    const last = this.published;
+    if (last === undefined) {
+      this.published = now;
+    } else if (differs(last, now)) {
+      this.published = now;
+      this.count++;
+    }
+    return this.published!;
+  }
+
   /** A frame with no parent. Its `toParent` is the identity. */
   static root<N extends string>(name: N): Frame<N> {
     // The one construction without a parent; `toParent` never calls compute.
@@ -106,15 +149,41 @@ export class Frame<N extends string = string> {
       this.compute(instant, out);
       return out;
     }
-    if (this.entryTt !== instant.tt) {
+    if (this.entryTt !== instant.tt || this.entryRevision !== this.revision) {
       // Invalidate first: a compute that throws after writing part of the
       // matrix must not leave garbage keyed to the previous instant.
       this.entryTt = NaN;
       this.compute(instant, this.entry);
       this.entryTt = instant.tt;
+      this.entryRevision = this.revision;
     }
     return copy(out, this.entry);
   }
+}
+
+/** 1 mm as a rotation, at the Earth's equatorial radius (plan's call 9). */
+const ONE_MM_RADIANS = 0.001 / 6378137;
+
+/** Whether `now` is worth publishing over `last` (see `publishedAccuracy`). */
+function differs(
+  last: Readonly<FrameAccuracy>,
+  now: Readonly<FrameAccuracy>,
+): boolean {
+  if (
+    (last.meters === undefined) !== (now.meters === undefined) ||
+    (last.radians === undefined) !== (now.radians === undefined) ||
+    (last.byDefinition === true) !== (now.byDefinition === true)
+  ) {
+    return true;
+  }
+  const moved = (a: number | undefined, b: number | undefined, floor: number) =>
+    a !== undefined &&
+    b !== undefined &&
+    Math.abs(b - a) > Math.max(0.01 * a, floor);
+  return (
+    moved(last.meters, now.meters, 0.001) ||
+    moved(last.radians, now.radians, ONE_MM_RADIANS)
+  );
 }
 
 // Scratch for frameTransform, one set per reentrancy level: a guard for a
@@ -161,16 +230,8 @@ function toAncestor(
   }
 }
 
-/**
- * The matrix `M` with `p_to = M · p_from`, composed through the lowest
- * common ancestor of the two frames. Throws across trees.
- */
-export function frameTransform(
-  from: Frame,
-  to: Frame,
-  instant: Instant,
-  out: Mat4 = new Float64Array(16),
-): Mat4 {
+/** The lowest common ancestor of two frames; throws across trees. */
+function commonAncestor(from: Frame, to: Frame, caller: string): Frame {
   let a = from;
   let b = to;
   let da = depthOf(a);
@@ -186,12 +247,44 @@ export function frameTransform(
   while (a !== b) {
     if (!a.parent || !b.parent) {
       throw new Error(
-        `frameTransform: no common ancestor of "${from.name}" and "${to.name}"`,
+        `${caller}: no common ancestor of "${from.name}" and "${to.name}"`,
       );
     }
     a = a.parent;
     b = b.parent;
   }
+  return a;
+}
+
+/**
+ * The sum of `revision` over every reference frame on the route from `from`
+ * to `to` through their lowest common ancestor (the ancestor itself is not
+ * on the route). Unchanged while nothing on the route was invalidated.
+ * Throws across trees.
+ */
+export function routeRevision(from: Frame, to: Frame): number {
+  const top = commonAncestor(from, to, "routeRevision");
+  let sum = 0;
+  for (let f = from; f !== top; f = f.parent!) {
+    sum += f.revision;
+  }
+  for (let f = to; f !== top; f = f.parent!) {
+    sum += f.revision;
+  }
+  return sum;
+}
+
+/**
+ * The matrix `M` with `p_to = M · p_from`, composed through the lowest
+ * common ancestor of the two frames. Throws across trees.
+ */
+export function frameTransform(
+  from: Frame,
+  to: Frame,
+  instant: Instant,
+  out: Mat4 = new Float64Array(16),
+): Mat4 {
+  const a = commonAncestor(from, to, "frameTransform");
   const s = scratchFor(level++);
   try {
     toAncestor(from, a, instant, s.up, s.step);

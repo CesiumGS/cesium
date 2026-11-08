@@ -252,6 +252,7 @@ frames	parseOem	function	-
 frames	pointAccuracy	function	-
 frames	readSpk	function	-
 frames	rotationPart	function	-
+frames	routeRevision	function	-
 frames	skyState	function	-
 frames	toParentMatrix	function	-
 frames	worldTransformFrame	function	-
