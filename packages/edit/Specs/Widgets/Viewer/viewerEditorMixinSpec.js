@@ -110,6 +110,28 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     );
   });
 
+  it("adds default tools to the editor and the toolbar", function () {
+    viewerEditorMixin(viewer, { editor });
+
+    expect(SelectTool.addTo).toHaveBeenCalledOnceWith(editor);
+    expect(TranslateTool.addTo).toHaveBeenCalledOnceWith(editor);
+    expect(viewer.editorTools).toEqual({
+      select: selectTool,
+      translate: translateTool,
+    });
+    expect(Object.isFrozen(viewer.editorTools)).toBe(true);
+    expect(
+      viewer.editorToolbar.viewModel.toolEntries.map((entry) => entry.tool),
+    ).toEqual([undefined, selectTool, translateTool]);
+  });
+
+  it("exposes the default tools without a toolbar", function () {
+    viewerEditorMixin(viewer, { editor, toolbar: false });
+
+    expect(viewer.editorTools.select).toBe(selectTool);
+    expect(viewer.editorTools.translate).toBe(translateTool);
+  });
+
   it("requires a viewer and an editor in its scene", function () {
     expect(() =>
       viewerEditorMixin(undefined, { editor }),
@@ -126,6 +148,10 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     viewer.editor = {};
     expect(() => viewerEditorMixin(viewer, { editor })).toThrowDeveloperError();
     delete viewer.editor;
+
+    viewer.editorTools = {};
+    expect(() => viewerEditorMixin(viewer, { editor })).toThrowDeveloperError();
+    delete viewer.editorTools;
 
     viewer.editorToolbar = {};
     expect(() => viewerEditorMixin(viewer, { editor })).toThrowDeveloperError();
@@ -213,6 +239,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
     expect(viewer.editorToolbar.viewModel.modeEntries).toBe(modes);
     expect(viewer.editorToolbar.viewModel.toolEntries).toBe(tools);
+    expect(viewer.editorTools.select).toBe(selectTool);
 
     // Default shortcuts for omitted entries are skipped.
     press("1");

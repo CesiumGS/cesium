@@ -3,8 +3,6 @@
 import { Check, DeveloperError, EventHelper } from "@cesium/core";
 import { createCommand, knockout } from "@cesium/widgets";
 import EditMode from "../../Editor/EditMode.js";
-import SelectTool from "../../Editor/SelectTool.js";
-import TranslateTool from "../../Editor/TranslateTool.js";
 
 /** @import { Command } from "@cesium/widgets"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
@@ -36,7 +34,7 @@ import TranslateTool from "../../Editor/TranslateTool.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @typedef {object} EditorToolbarOptions
  * @property {EditorToolbarModeEntry[]} [modes] Entries replacing the default modes.
- * @property {EditorToolbarToolEntry[]} [tools] Entries replacing the default tools.
+ * @property {EditorToolbarToolEntry[]} [tools] Entries replacing the default tools. The toolbar doesn't add tools to the editor, so by default it only offers clearing the active tool.
  */
 
 /**
@@ -186,20 +184,12 @@ class EditorToolbarViewModel {
   }
 
   /**
-   * Registers the default tools and creates their entries.
+   * Creates the default tool entries.
    * @returns {EditorToolbarToolEntry[]} The tool entries.
    * @ignore
    */
   #createToolEntries() {
-    return [
-      { id: "none", label: "Tools", tool: undefined },
-      { id: "select", label: "Select", tool: SelectTool.addTo(this.#editor) },
-      {
-        id: "translate",
-        label: "Translate",
-        tool: TranslateTool.addTo(this.#editor),
-      },
-    ];
+    return [{ id: "none", label: "Tools", tool: undefined }];
   }
 
   /**

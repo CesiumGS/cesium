@@ -42,15 +42,22 @@ The APIs in this package are experimental and are expected to evolve as CesiumJS
 widgets' stylesheet and its own:
 
 ```js
-import { EditorToolbar, MeshEditor } from "@cesium/edit";
+import { EditorToolbar, MeshEditor, SelectTool } from "@cesium/edit";
 import "@cesium/widgets/Source/widgets.css";
 import "@cesium/edit/Source/Widgets/EditorToolbar/EditorToolbar.css";
 
 const editor = await MeshEditor.addToScene(viewer.scene);
-const toolbar = new EditorToolbar("editorToolbarContainer", editor);
+const toolbar = new EditorToolbar("editorToolbarContainer", editor, {
+  tools: [
+    { id: "none", label: "Tools", tool: undefined },
+    { id: "select", label: "Select", tool: SelectTool.addTo(editor) },
+  ],
+});
 ```
 
-Pass `modes` or `tools` to replace the default entries.
+Pass `modes` or `tools` to replace the default entries. The toolbar doesn't add
+tools to the editor, so pass the tools it should offer. `viewerEditorMixin`
+adds a select and a translate tool, exposed as `viewer.editorTools`.
 
 ## Community
 
