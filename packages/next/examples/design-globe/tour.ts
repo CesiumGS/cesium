@@ -7,7 +7,7 @@
 // figure the page doesn't have yet is left out of the sentence. Pure, so
 // test/designGlobeTour.test.ts runs it in Node.
 import { fixed } from "./measureModel.ts";
-import { errorText, rigidVerdict, type Placement } from "./page.ts";
+import { errorText, lengthText, rigidVerdict, type Placement } from "./page.ts";
 import { cause } from "./siteFacts.ts";
 
 /** Where a step points the camera: main.ts's shots. */
@@ -163,9 +163,8 @@ export interface LadderFacts {
 const small = (m: number): string =>
   Math.abs(m) < 0.01 ? `${fixed(m * 1000, 1)} mm` : errorText(m);
 
-/** "60 m", "4.0 km". */
-const extentText = (m: number): string =>
-  m >= 1000 ? `${fixed(m / 1000, 1)} km` : `${fixed(m, 0)} m`;
+/** "60 m", "4.00 km": page.ts's one formatter. */
+const extentText = lengthText;
 
 /** "station 1700+00". */
 const stationShort = (station: number): string =>

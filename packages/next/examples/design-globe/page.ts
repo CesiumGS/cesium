@@ -522,6 +522,19 @@ export function siteGridText(
   return `origin E ${fixed(site.origin[0], 3)}, N ${fixed(site.origin[1], 3)} ${symbol}; rotated ${fixed(degrees, 1)}° from grid east; scale ${site.scale}`;
 }
 
+/**
+ * A model's extent as every line says it, to three figures: "60 m", "972 m",
+ * "3.05 km", "4.00 km", "30.7 km" (UX review P1: one formatter, so a row
+ * doesn't change its digits when its site loads).
+ */
+export function lengthText(m: number): string {
+  if (m < 1000) {
+    return `${fixed(m, 0)} m`;
+  }
+  const km = m / 1000;
+  return `${fixed(km, km >= 100 ? 0 : km >= 10 ? 1 : 2)} km`;
+}
+
 /** A rigid error as the panel and HUD say it: "31.6 m", "84 mm", "0.3 mm". */
 export function errorText(meters: number): string {
   const a = Math.abs(meters);

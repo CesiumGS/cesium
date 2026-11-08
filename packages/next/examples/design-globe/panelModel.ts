@@ -10,6 +10,7 @@ import {
   errorText,
   siteGridText,
   type LoadItem,
+  lengthText,
   type PageParams,
   type Placement,
   type SiteEntry,
@@ -73,10 +74,6 @@ function unitOf(entry: SiteEntry): string {
 export function siteSummary(entry: SiteEntry): string {
   return `${entry.codes}  ·  ${entry.models.join(" + ")}`;
 }
-
-/** A length in words: "73 m", "3.97 km". */
-const lengthText = (m: number): string =>
-  m >= 1000 ? `${fixed(m / 1000, m >= 10_000 ? 1 : 2)} km` : `${fixed(m, 0)} m`;
 
 /**
  * A ladder row's second line: "73 m across; rigid 2.6 mm off at its edge"

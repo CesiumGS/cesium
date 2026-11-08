@@ -174,7 +174,8 @@ describe("design globe tour", () => {
     expect(at(0)).toContain("2.6 mm");
     expect(at(0)).toContain("mostly the scale factor rigid ignores");
     expect(at(0)).toContain("0.99991");
-    expect(at(1)).toMatch(/^An airport, 4\.0 km across/);
+    // One formatter for every extent, to three figures (UX review P1).
+    expect(at(1)).toMatch(/^An airport, 3\.97 km across/);
     expect(at(1)).toContain("390 mm");
     expect(at(1)).toContain("mostly the Earth's curvature");
     expect(at(1)).toMatch(/reproject it\.$/);

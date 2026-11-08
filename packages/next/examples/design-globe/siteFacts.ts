@@ -10,6 +10,7 @@ import type { ProjApi } from "../../src/engineering/proj.ts";
 import { fixed, unitSymbol } from "./measureModel.ts";
 import {
   errorText,
+  lengthText,
   rigidVerdict,
   siteGridText,
   type SiteEntry,
@@ -210,11 +211,7 @@ export function siteFacts(input: SiteFactsInput): {
   return {
     frame: view,
     story: {
-      extent: `${
-        extent >= 1000
-          ? `${fixed(extent / 1000, 1)} km`
-          : `${fixed(extent, 0)} m`
-      } ${input.along !== undefined ? "long" : "across"}`,
+      extent: `${lengthText(extent)} ${input.along !== undefined ? "long" : "across"}`,
       edgeError: errorText(edge),
       cause: cause(terms),
       acceptable: verdict.acceptable,
