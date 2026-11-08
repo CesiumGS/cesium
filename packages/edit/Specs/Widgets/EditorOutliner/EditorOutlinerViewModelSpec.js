@@ -1,32 +1,22 @@
 import { Event } from "@cesium/core";
 import { knockout } from "@cesium/widgets";
-import { EditorOutlinerViewModel } from "../../../index.js";
+import { EditorOutlinerViewModel, Mesh } from "../../../index.js";
 
 describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
   let editor;
-  let provider;
   let viewModel;
 
-  function item(label, children = [], mesh = undefined) {
-    return { label, children, mesh };
+  // Groups are plain objects, so specs can change their names and children,
+  // then raise meshGroupChanged.
+  function group(name, children = []) {
+    return { name, children };
   }
 
-  // Items are plain objects holding their label, children and mesh, so specs
-  // can change them and raise changed.
-  function createProvider(roots) {
-    return {
-      roots,
-      changed: new Event(),
-      getChildren(item) {
-        return item === undefined ? this.roots : item.children;
-      },
-      getLabel(item) {
-        return item.label;
-      },
-      getMesh(item) {
-        return item.mesh;
-      },
-    };
+  // The view model recognizes meshes by their type.
+  function mesh(name) {
+    return Object.create(Mesh.prototype, {
+      name: { value: name, writable: true },
+    });
   }
 
   // Like MeshEditor, setMeshActive and setMeshInactive don't raise
@@ -36,13 +26,16 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     const meshes = [];
     const activeMeshes = new Set();
     return {
+      root: group(undefined),
+      meshGroupChanged: new Event(),
       meshActiveChanged: new Event(),
       get meshes() {
         return [...meshes];
       },
-      addMesh(mesh) {
-        meshes.push(mesh);
-        return mesh;
+      addMesh(name) {
+        const added = mesh(name);
+        meshes.push(added);
+        return added;
       },
       hasMesh(mesh) {
         return meshes.includes(mesh);
@@ -79,11 +72,11 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     //   b
     //     c
     // d
-    c = item("c");
-    b = item("b", [c]);
-    a = item("a", [b]);
-    d = item("d");
-    provider = createProvider([a, d]);
+    c = group("c");
+    b = group("b", [c]);
+    a = group("a", [b]);
+    d = group("d");
+    editor.root.children = [a, d];
   });
 
   afterEach(function () {
@@ -92,25 +85,18 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
   });
 
   it("requires an editor", function () {
-    expect(
-      () => new EditorOutlinerViewModel(undefined, provider),
-    ).toThrowDeveloperError();
+    expect(() => new EditorOutlinerViewModel()).toThrowDeveloperError();
   });
 
-  it("requires a provider", function () {
-    expect(() => new EditorOutlinerViewModel(editor)).toThrowDeveloperError();
-  });
-
-  it("exposes the editor and provider", function () {
-    viewModel = new EditorOutlinerViewModel(editor, provider);
+  it("exposes the editor", function () {
+    viewModel = new EditorOutlinerViewModel(editor);
 
     expect(viewModel.editor).toBe(editor);
-    expect(viewModel.provider).toBe(provider);
   });
 
   describe("rows", function () {
-    it("start with the root items expanded and the others collapsed", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+    it("start with the root group's items expanded and the others collapsed", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
 
       expect(rowLabels()).toEqual(["a", "  b", "d"]);
       expect(findRow("a").expanded).toBe(true);
@@ -118,32 +104,47 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("describe their items", function () {
-      const mesh = {};
-      provider.roots = [item("leaf", [], mesh), a];
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      const leaf = mesh("leaf");
+      editor.root.children = [leaf, a];
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      const leaf = viewModel.rows[0];
-      expect(leaf.item).toBe(provider.roots[0]);
-      expect(leaf.label).toBe("leaf");
-      expect(leaf.depth).toBe(0);
-      expect(leaf.expandable).toBe(false);
-      expect(leaf.mesh).toBe(mesh);
-      expect(leaf.selectable).toBe(true);
-      expect(leaf.active).toBe(false);
+      const leafRow = viewModel.rows[0];
+      expect(leafRow.item).toBe(leaf);
+      expect(leafRow.label).toBe("leaf");
+      expect(leafRow.depth).toBe(0);
+      expect(leafRow.expandable).toBe(false);
+      expect(leafRow.mesh).toBe(leaf);
+      expect(leafRow.selectable).toBe(true);
+      expect(leafRow.active).toBe(false);
+      expect(findRow("a").item).toBe(a);
       expect(findRow("a").expandable).toBe(true);
       expect(findRow("a").mesh).toBeUndefined();
       expect(findRow("a").selectable).toBe(false);
     });
 
+    it("label unnamed meshes and groups with numbers that don't change", function () {
+      const unnamedMeshes = [mesh(), mesh()];
+      const unnamedGroup = group(undefined, [unnamedMeshes[1]]);
+      editor.root.children = [unnamedMeshes[0], unnamedGroup, group()];
+      viewModel = new EditorOutlinerViewModel(editor);
+
+      expect(rowLabels()).toEqual(["Mesh 1", "Group 1", "  Mesh 2", "Group 2"]);
+
+      editor.root.children = [unnamedGroup, mesh()];
+      editor.meshGroupChanged.raiseEvent(editor.root);
+
+      expect(rowLabels()).toEqual(["Group 1", "  Mesh 2", "Mesh 3"]);
+    });
+
     it("are empty for an empty tree", function () {
-      provider.roots = [];
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      editor.root.children = [];
+      viewModel = new EditorOutlinerViewModel(editor);
 
       expect(viewModel.rows.length).toBe(0);
     });
 
     it("are observable, as are their properties", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       const rowsChanged = jasmine.createSpy("rows");
       const expandedChanged = jasmine.createSpy("expanded");
       knockout.getObservable(viewModel, "rows").subscribe(rowsChanged);
@@ -160,7 +161,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
 
   describe("toggleExpanded", function () {
     it("shows a collapsed row's children", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
       viewModel.toggleExpanded(findRow("b"));
 
@@ -169,7 +170,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("hides an expanded row's descendants", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       viewModel.toggleExpanded(findRow("b"));
 
       viewModel.toggleExpanded(findRow("a"));
@@ -179,7 +180,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("keeps hidden rows expanded", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       viewModel.toggleExpanded(findRow("b"));
       viewModel.toggleExpanded(findRow("a"));
 
@@ -189,7 +190,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("does nothing for a row without children", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       const row = findRow("d");
       const expanded = row.expanded;
 
@@ -200,7 +201,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("reuses the rows that stay visible", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       const [rowA, rowB, rowD] = viewModel.rows;
 
       viewModel.toggleExpanded(rowB);
@@ -213,7 +214,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
 
   describe("expandAll and collapseAll", function () {
     it("expandAll shows every item", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
       viewModel.expandAll();
 
@@ -221,7 +222,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("collapseAll shows only the root items", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       viewModel.expandAll();
 
       viewModel.collapseAll();
@@ -230,7 +231,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("collapseAll collapses hidden items too", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       viewModel.expandAll();
       viewModel.collapseAll();
 
@@ -240,115 +241,118 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
   });
 
-  describe("when the provider changes", function () {
-    it("re-reads the root items for undefined", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      const e = item("e");
+  describe("when the hierarchy changes", function () {
+    function raiseGroupChanged(changedGroup) {
+      editor.meshGroupChanged.raiseEvent(changedGroup);
+    }
 
-      provider.roots = [d, e];
-      provider.changed.raiseEvent(undefined);
+    it("re-reads the root group's items when it changes", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
+      const e = group("e");
+
+      editor.root.children = [d, e];
+      raiseGroupChanged(editor.root);
 
       expect(rowLabels()).toEqual(["d", "e"]);
     });
 
-    it("re-reads every item for undefined", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+    it("re-reads every item when the root group changes", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      a.label = "A";
+      a.name = "A";
       b.children = [];
-      provider.changed.raiseEvent(undefined);
+      raiseGroupChanged(editor.root);
 
       expect(rowLabels()).toEqual(["A", "  b", "d"]);
       expect(findRow("b").expandable).toBe(false);
     });
 
-    it("re-reads an item's label, mesh and children", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      const mesh = {};
+    it("re-reads a group's name and children", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
+      const added = mesh("e");
 
-      a.label = "A";
-      a.mesh = mesh;
-      a.children = [b, item("e")];
-      provider.changed.raiseEvent(a);
+      a.name = "A";
+      a.children = [b, added];
+      raiseGroupChanged(a);
 
       expect(rowLabels()).toEqual(["A", "  b", "  e", "d"]);
-      expect(findRow("A").mesh).toBe(mesh);
+      expect(findRow("e").mesh).toBe(added);
     });
 
-    it("re-reads the items beneath an item", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+    it("re-reads the items beneath a group", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      b.label = "B";
-      provider.changed.raiseEvent(a);
+      b.name = "B";
+      raiseGroupChanged(a);
 
       expect(rowLabels()).toEqual(["a", "  B", "d"]);
     });
 
     it("doesn't re-read other items", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      spyOn(provider, "getLabel").and.callThrough();
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      provider.changed.raiseEvent(b);
+      a.name = "A";
+      d.name = "D";
+      b.name = "B";
+      raiseGroupChanged(b);
 
-      const labeled = provider.getLabel.calls.allArgs().map(([item]) => item);
-      expect(labeled).toContain(b);
-      expect(labeled).not.toContain(a);
-      expect(labeled).not.toContain(d);
+      expect(rowLabels()).toEqual(["a", "  B", "d"]);
     });
 
-    it("updates whether an item is expandable", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+    it("updates whether a group is expandable", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
       viewModel.toggleExpanded(findRow("b"));
 
-      c.children = [item("e")];
-      provider.changed.raiseEvent(c);
+      c.children = [group("e")];
+      raiseGroupChanged(c);
 
       expect(findRow("c").expandable).toBe(true);
       expect(rowLabels()).toEqual(["a", "  b", "    c", "d"]);
     });
 
-    it("ignores items it hasn't read yet", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      spyOn(provider, "getChildren").and.callThrough();
+    it("ignores groups it hasn't read yet", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
+      const children = jasmine.createSpy("children").and.returnValue([]);
+      Object.defineProperty(c, "children", { get: children });
 
-      provider.changed.raiseEvent(c);
+      raiseGroupChanged(c);
 
-      expect(provider.getChildren).not.toHaveBeenCalled();
+      expect(children).not.toHaveBeenCalled();
     });
 
-    it("forgets whether removed items were expanded", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+    it("forgets whether removed groups were expanded", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
       viewModel.toggleExpanded(findRow("b"));
 
       a.children = [];
-      provider.changed.raiseEvent(a);
+      raiseGroupChanged(a);
       a.children = [b];
-      provider.changed.raiseEvent(a);
+      raiseGroupChanged(a);
 
       expect(findRow("b").expanded).toBe(false);
       expect(rowLabels()).toEqual(["a", "  b", "d"]);
     });
 
-    it("keeps whether a moved item is expanded", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+    it("keeps whether a moved group is expanded", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
       viewModel.toggleExpanded(findRow("b"));
 
       // Moves b from a to d: the new parent changes first, then the old one.
-      // d is a root item, so it's expanded.
+      // d is in the root group, so it's expanded.
       d.children = [b];
-      provider.changed.raiseEvent(d);
+      raiseGroupChanged(d);
       a.children = [];
-      provider.changed.raiseEvent(a);
+      raiseGroupChanged(a);
 
       expect(findRow("b").expanded).toBe(true);
       expect(rowLabels()).toEqual(["a", "d", "  b", "    c"]);
     });
 
     it("reuses the rows of items still in the tree", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
       const rowA = findRow("a");
 
-      provider.changed.raiseEvent(undefined);
+      raiseGroupChanged(editor.root);
 
       expect(findRow("a")).toBe(rowA);
     });
@@ -356,26 +360,22 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
 
   describe("selection", function () {
     let m0, m1, m2, m3, outside;
-    let i0, group, i1, i2, i3;
+    let meshGroup;
 
-    // i0 (m0)
-    // group, with no mesh
-    //   i1 (m1)
-    //   i2 (m2)
-    // i3 (m3)
+    // m0
+    // group
+    //   m1
+    //   m2
+    // m3
     // The editor also has a mesh that isn't in the tree.
     beforeEach(function () {
-      m0 = editor.addMesh({ name: "m0" });
-      m1 = editor.addMesh({ name: "m1" });
-      m2 = editor.addMesh({ name: "m2" });
-      m3 = editor.addMesh({ name: "m3" });
-      outside = editor.addMesh({ name: "outside" });
-      i0 = item("i0", [], m0);
-      i1 = item("i1", [], m1);
-      i2 = item("i2", [], m2);
-      group = item("group", [i1, i2]);
-      i3 = item("i3", [], m3);
-      provider = createProvider([i0, group, i3]);
+      m0 = editor.addMesh("m0");
+      m1 = editor.addMesh("m1");
+      m2 = editor.addMesh("m2");
+      m3 = editor.addMesh("m3");
+      outside = editor.addMesh("outside");
+      meshGroup = group("group", [m1, m2]);
+      editor.root.children = [m0, meshGroup, m3];
     });
 
     function activeLabels() {
@@ -389,13 +389,13 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     it("rows start showing whether their meshes are active", function () {
       editor.setMeshActive(m1);
 
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      expect(activeLabels()).toEqual(["i1"]);
+      expect(activeLabels()).toEqual(["m1"]);
     });
 
     it("rows are selectable when they have a mesh", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
       expect(viewModel.rows.map((row) => row.selectable)).toEqual([
         true,
@@ -406,131 +406,113 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
       ]);
     });
 
-    it("rows follow changes to their mesh", function () {
-      editor.setMeshActive(m2);
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      const row = findRow("group");
-
-      group.mesh = m2;
-      provider.changed.raiseEvent(group);
-
-      expect(row.selectable).toBe(true);
-      expect(row.active).toBe(true);
-
-      group.mesh = undefined;
-      provider.changed.raiseEvent(group);
-
-      expect(row.selectable).toBe(false);
-      expect(row.active).toBe(false);
-    });
-
     it("makes only the row's mesh active", function () {
       editor.setMeshActive(m0);
       editor.setMeshActive(outside);
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      viewModel.select(findRow("i1"));
+      viewModel.select(findRow("m1"));
 
       expect(activeMeshes()).toEqual([m1]);
-      expect(activeLabels()).toEqual(["i1"]);
+      expect(activeLabels()).toEqual(["m1"]);
     });
 
     it("toggles the row's mesh and keeps the others with toggle", function () {
       editor.setMeshActive(m0);
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      viewModel.select(findRow("i1"), { toggle: true });
+      viewModel.select(findRow("m1"), { toggle: true });
 
       expect(activeMeshes()).toEqual([m0, m1]);
-      expect(activeLabels()).toEqual(["i0", "i1"]);
+      expect(activeLabels()).toEqual(["m0", "m1"]);
 
-      viewModel.select(findRow("i0"), { toggle: true });
+      viewModel.select(findRow("m0"), { toggle: true });
 
       expect(activeMeshes()).toEqual([m1]);
-      expect(activeLabels()).toEqual(["i1"]);
+      expect(activeLabels()).toEqual(["m1"]);
     });
 
     it("makes only the meshes from the last selected row active with range", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      viewModel.select(findRow("i1"));
+      viewModel = new EditorOutlinerViewModel(editor);
+      viewModel.select(findRow("m1"));
       editor.setMeshActive(outside);
 
-      viewModel.select(findRow("i3"), { range: true });
+      viewModel.select(findRow("m3"), { range: true });
 
       expect(activeMeshes()).toEqual([m1, m2, m3]);
-      expect(activeLabels()).toEqual(["i1", "i2", "i3"]);
+      expect(activeLabels()).toEqual(["m1", "m2", "m3"]);
     });
 
     it("selects ranges upward", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      viewModel.select(findRow("i2"));
+      viewModel = new EditorOutlinerViewModel(editor);
+      viewModel.select(findRow("m2"));
 
-      viewModel.select(findRow("i0"), { range: true });
+      viewModel.select(findRow("m0"), { range: true });
 
       expect(activeMeshes()).toEqual([m0, m1, m2]);
     });
 
     it("skips rows that can't be selected in a range", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      viewModel.select(findRow("i0"));
+      viewModel = new EditorOutlinerViewModel(editor);
+      viewModel.select(findRow("m0"));
 
-      viewModel.select(findRow("i3"), { range: true });
+      viewModel.select(findRow("m3"), { range: true });
 
       expect(activeMeshes()).toEqual([m0, m1, m2, m3]);
     });
 
     it("keeps where ranges start", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      viewModel.select(findRow("i1"));
-      viewModel.select(findRow("i3"), { range: true });
+      viewModel = new EditorOutlinerViewModel(editor);
+      viewModel.select(findRow("m1"));
+      viewModel.select(findRow("m3"), { range: true });
 
-      viewModel.select(findRow("i0"), { range: true });
+      viewModel.select(findRow("m0"), { range: true });
 
       expect(activeMeshes()).toEqual([m0, m1]);
     });
 
     it("starts ranges at rows selected with toggle", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      viewModel.select(findRow("i0"));
-      viewModel.select(findRow("i2"), { toggle: true });
+      viewModel = new EditorOutlinerViewModel(editor);
+      viewModel.select(findRow("m0"));
+      viewModel.select(findRow("m2"), { toggle: true });
 
-      viewModel.select(findRow("i3"), { range: true });
+      viewModel.select(findRow("m3"), { range: true });
 
       expect(activeMeshes()).toEqual([m2, m3]);
     });
 
     it("adds a range to the active meshes with toggle and range", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      viewModel.select(findRow("i1"));
+      viewModel = new EditorOutlinerViewModel(editor);
+      viewModel.select(findRow("m1"));
       editor.setMeshActive(outside);
 
-      viewModel.select(findRow("i2"), { toggle: true });
-      viewModel.select(findRow("i3"), { toggle: true, range: true });
+      viewModel.select(findRow("m2"), { toggle: true });
+      viewModel.select(findRow("m3"), { toggle: true, range: true });
 
       expect(activeMeshes()).toEqual([m1, m2, m3, outside]);
     });
 
     it("treats a range without a start as a plain selection", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
-      viewModel.select(findRow("i2"), { range: true });
+      viewModel.select(findRow("m2"), { range: true });
 
       expect(activeMeshes()).toEqual([m2]);
     });
 
     it("treats a range whose start is hidden as a plain selection", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      viewModel.select(findRow("i1"));
+      viewModel = new EditorOutlinerViewModel(editor);
+      viewModel.select(findRow("m1"));
       viewModel.toggleExpanded(findRow("group"));
 
-      viewModel.select(findRow("i3"), { range: true });
+      viewModel.select(findRow("m3"), { range: true });
 
       expect(activeMeshes()).toEqual([m3]);
     });
 
     it("does nothing for a row that can't be selected", function () {
       editor.setMeshActive(m0);
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
       viewModel.select(findRow("group"));
 
@@ -539,29 +521,20 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
 
     it("does nothing for a row whose mesh isn't in the editor", function () {
       editor.setMeshActive(m0);
-      provider.roots = [i0, item("stale", [], { name: "stale" })];
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      editor.root.children = [m0, mesh("stale")];
+      viewModel = new EditorOutlinerViewModel(editor);
 
       expect(() => viewModel.select(findRow("stale"))).not.toThrow();
       expect(activeMeshes()).toEqual([m0]);
     });
 
-    it("updates every row showing a mesh", function () {
-      group.mesh = m2;
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-
-      viewModel.select(findRow("i2"));
-
-      expect(activeLabels()).toEqual(["group", "i2"]);
-    });
-
     it("rows follow meshActiveChanged", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
       editor.setMeshActive(m2);
       editor.meshActiveChanged.raiseEvent(m2, true);
 
-      expect(activeLabels()).toEqual(["i2"]);
+      expect(activeLabels()).toEqual(["m2"]);
 
       editor.setMeshInactive(m2);
       editor.meshActiveChanged.raiseEvent(m2, false);
@@ -570,8 +543,8 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("updates hidden rows on meshActiveChanged", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
-      const row = findRow("i1");
+      viewModel = new EditorOutlinerViewModel(editor);
+      const row = findRow("m1");
       expect(row.active).toBe(false);
       viewModel.toggleExpanded(findRow("group"));
 
@@ -582,7 +555,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
     });
 
     it("ignores meshActiveChanged for meshes not in the tree", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
 
       expect(() =>
         editor.meshActiveChanged.raiseEvent(outside, true),
@@ -592,22 +565,22 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
 
     describe("activate", function () {
       it("selects and focuses a row that can be selected", function () {
-        viewModel = new EditorOutlinerViewModel(editor, provider);
-        viewModel.select(findRow("i0"));
+        viewModel = new EditorOutlinerViewModel(editor);
+        viewModel.select(findRow("m0"));
 
-        viewModel.activate(findRow("i1"), { toggle: true });
+        viewModel.activate(findRow("m1"), { toggle: true });
 
         expect(activeMeshes()).toEqual([m0, m1]);
-        expect(viewModel.focusedRow).toBe(findRow("i1"));
+        expect(viewModel.focusedRow).toBe(findRow("m1"));
       });
 
       it("expands or collapses and focuses a row that can't be selected", function () {
         editor.setMeshActive(m0);
-        viewModel = new EditorOutlinerViewModel(editor, provider);
+        viewModel = new EditorOutlinerViewModel(editor);
 
         viewModel.activate(findRow("group"));
 
-        expect(rowLabels()).toEqual(["i0", "group", "i3"]);
+        expect(rowLabels()).toEqual(["m0", "group", "m3"]);
         expect(viewModel.focusedRow).toBe(findRow("group"));
         expect(activeMeshes()).toEqual([m0]);
       });
@@ -624,7 +597,7 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
       //   b
       //     c
       // d
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+      viewModel = new EditorOutlinerViewModel(editor);
     });
 
     it("starts with no row focused", function () {
@@ -730,12 +703,12 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
   });
 
   describe("destroy", function () {
-    it("stops listening to the provider and editor", function () {
-      viewModel = new EditorOutlinerViewModel(editor, provider);
+    it("stops listening to the editor", function () {
+      viewModel = new EditorOutlinerViewModel(editor);
 
       viewModel.destroy();
 
-      expect(provider.changed.numberOfListeners).toBe(0);
+      expect(editor.meshGroupChanged.numberOfListeners).toBe(0);
       expect(editor.meshActiveChanged.numberOfListeners).toBe(0);
     });
   });
