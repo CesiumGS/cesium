@@ -12,7 +12,7 @@
 import { gridFactors } from "../../src/engineering/factors.ts";
 import { pickDesign, type DesignPick } from "../../src/engineering/pick.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import {
   compassNeedles,
   convergenceShort,

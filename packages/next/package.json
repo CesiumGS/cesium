@@ -5,6 +5,18 @@
   "description": "Proof of concept for a WebGPU-native CesiumJS 2.0 engine.",
   "license": "Apache-2.0",
   "type": "module",
+  "sideEffects": [
+    "*.css",
+    "./bench/**",
+    "./demo/**",
+    "./examples/**",
+    "./handbook/**",
+    "./lab/**",
+    "./parity/**",
+    "./spikes/**",
+    "./standalone/**",
+    "./test/**"
+  ],
   "engines": {
     "node": ">=24"
   },
@@ -13,12 +25,13 @@
     "./time": "./src/time/index.ts",
     "./frames": "./src/frames/index.ts",
     "./proj": "./src/proj/index.ts",
-    "./measure": "./src/measure/index.ts"
+    "./measure": "./src/measure/index.ts",
+    "./widgets": "./widgets/index.ts"
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/checkDeclarations.mjs --only engineering,measure dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts",
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && tsc -p tsconfig.lib.widgets.json && node scripts/checkDeclarations.mjs --only engineering,measure,widgets dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts dist-lib/types/widgets/index.d.ts",
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

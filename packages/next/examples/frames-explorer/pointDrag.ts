@@ -13,7 +13,7 @@ import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { vec3 } from "../../src/math/vec3.ts";
 import { createFramesPickInterpreter } from "../../src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../../src/frames/resolver.ts";
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import { snapToStep } from "./panel/knobText.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import { CLOTHOID_ROAD } from "./scenarios/sites.ts";

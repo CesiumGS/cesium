@@ -1,9 +1,13 @@
 // The dependency rule between the entry points (spec section 7.7), checked
-// over the import graph of `src/` and `widgets/`. Layers are assigned here,
+// over the import graph of `src/` and `widgets/`. The widgets sit on the
+// public API only: they import the entry points by the package's name
+// (`@cesium/next/time`), as an application would, so they could move to a
+// package of their own. Layers are assigned here,
 // not by folder (plan 5a's call 2): the ERFA series and the EOP parser stay
 // in `src/time/` but count as frames. Type-only imports count too (call 4),
 // because published declarations carry them; under `verbatimModuleSyntax`
 // only a declaration-level `import type` / `export type` is type-only.
+import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, normalize, relative, sep } from "node:path";
 import ts from "typescript";
@@ -13,6 +17,9 @@ const root = normalize(join(import.meta.dirname, ".."));
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
   exports: Record<string, string>;
 };
+
+/** The package's name: the entry points' specifiers, and how the widgets import them. */
+const SELF = "@cesium/next";
 
 type Layer =
   "utilities" | "time" | "frames" | "proj" | "measure" | "widgets" | "core";
@@ -83,6 +90,8 @@ const ALLOWED: Record<Exclude<Layer, "widgets">, readonly Layer[]> = {
 interface Edge {
   readonly to: string;
   readonly typeOnly: boolean;
+  /** Imported by the package's name: `to` is the entry point's file. */
+  readonly entry?: true;
   /** A dynamic `import("…")`: loaded when called, so not bundled with the importer. */
   readonly dynamic?: true;
 }
@@ -122,6 +131,21 @@ function edgesOfText(file: string, text: string): Edge[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
   const edges: Edge[] = [];
   const add = (specifier: string, typeOnly: boolean, dynamic = false) => {
+    if (specifier === SELF || specifier.startsWith(`${SELF}/`)) {
+      // The package's own entry point, by name: the file its `exports` names.
+      const key = specifier === SELF ? "." : `.${specifier.slice(SELF.length)}`;
+      const target = pkg.exports[key];
+      if (target === undefined) {
+        throw new Error(`${file}: ${specifier} is not an entry point`);
+      }
+      edges.push({
+        to: target.replace(/^\.\//, ""),
+        typeOnly,
+        ...(dynamic ? { dynamic: true as const } : {}),
+        entry: true,
+      });
+      return;
+    }
     if (!specifier.startsWith(".")) {
       return; // packages are outside the rule
     }
@@ -167,7 +191,9 @@ function edgesOfText(file: string, text: string): Edge[] {
 function allowed(from: Layer, edge: Edge): boolean {
   const to = layerOf(edge.to);
   if (from === "widgets") {
-    return true;
+    // Another widgets file, or an entry point by the package's name: never
+    // a module under `src/` (even an entry's file, by its path).
+    return to === "widgets" || edge.entry === true;
   }
   if (ALLOWED[from].includes(to)) {
     return true;
@@ -305,25 +331,43 @@ it("the time controls reach time without frames", () =>
   expect(
     closure("widgets/timeControls.ts").filter((f) => layerOf(f) === "frames"),
   ).toEqual([]));
-it("the Viewer bundles no X, Y or s series, Earth orientation, EOP parser or ephemeris (plan 5a's call 32)", () => {
-  const bundled = closure("widgets/Viewer.ts", { bundled: true });
-  // The analytic catalog and the sky are bundled; the precise providers load
-  // by dynamic import().
-  expect(bundled).toContain("src/frames/catalog.ts");
-  expect(bundled).toContain("src/frames/attachSky.ts");
+it("the widgets import only each other and the entry points, by the package's name", () =>
+  expect(violations("widgets")).toEqual([]));
+it("refuses an internal import from the widgets", () => {
+  const edges = edgesOfText(
+    "widgets/sample.ts",
+    [
+      'import { Emitter } from "../src/core/Emitter.ts";',
+      'import type { Frame } from "../src/frames/Frame.ts";',
+      'import { Engine } from "../src/index.ts";',
+      'import { Clock } from "@cesium/next/time";',
+      'import { Viewer } from "./Viewer.ts";',
+      'const frames = import("@cesium/next/frames");',
+    ].join("\n"),
+  );
   expect(
-    bundled.filter(
-      (f) =>
-        f === "src/time/erfa/xy06Table.ts" ||
-        f === "src/time/erfa/s06Table.ts" ||
-        f === "src/time/earthOrientation.ts" ||
-        f === "src/time/eop.ts" ||
-        f.startsWith("src/ephemeris/"),
-    ),
-  ).toEqual([]);
-  // Reached, but only by import(): the providers.
-  expect(closure("widgets/Viewer.ts")).toContain("src/time/eop.ts");
+    edges.filter((edge) => !allowed("widgets", edge)).map((edge) => edge.to),
+  ).toEqual(["src/core/Emitter.ts", "src/frames/Frame.ts", "src/index.ts"]);
+  expect(edges.filter((edge) => edge.entry).map((edge) => edge.to)).toEqual([
+    "src/time/index.ts",
+    "src/frames/index.ts",
+  ]);
+  expect(() =>
+    edgesOfText("widgets/sample.ts", 'import "@cesium/next/nowhere";'),
+  ).toThrow(/not an entry point/);
 });
+// The file graph can't say what a bundler keeps from an entry point that
+// imports every precise provider: tree shaking decides (the package's
+// `sideEffects`, and no top-level code that a bundler can't prove pure).
+// So this builds a page that only creates a Viewer, as an application does.
+it("a globe-only Viewer bundles no X, Y or s series, Earth orientation, EOP parser or ephemeris (plan 5a's call 32)", () => {
+  const report = execFileSync(
+    process.execPath,
+    [join(root, "scripts/checkBundle.mjs")],
+    { cwd: root, encoding: "utf8" },
+  );
+  expect(report).toContain("no X, Y or s series and no DAF reader");
+}, 120_000);
 it(
   "each entry publishes only names declared in its own layer",
   () =>
@@ -345,13 +389,14 @@ it("resolves each published name to the file that declares it", () => {
   ]);
   expect(where("src/index.ts", "Engine")).toEqual(["src/scene/Engine.ts"]);
 }, 30_000);
-it("package.json exports the five entry points", () =>
+it("package.json exports the entry points", () =>
   expect(Object.keys(pkg.exports)).toEqual([
     ".",
     "./time",
     "./frames",
     "./proj",
     "./measure",
+    "./widgets",
   ]));
 it("finds imports of every kind and classifies them", () => {
   // The checker is only as good as its parser: a sample of known edges.

@@ -2,7 +2,7 @@
 // is"): a small ring with a crosshair at `viewer.orbitPivot` while the orbit
 // is dragged, fading out after. HUD, as the globe's labels are: white with
 // a dark ring, never taking the pointer; placed by `pivotPlacement`.
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import { pivotPlacement } from "./orbit.ts";
 
 export class PivotMarker {

@@ -29,12 +29,19 @@ const onlyAt = args.indexOf("--only");
 const only =
   onlyAt >= 0 ? args.splice(onlyAt, 2)[1]?.split(",").filter(Boolean) : [];
 const typesDir = resolve(root, "dist-lib/types");
-/** Each entry point's declarations: `./src/x/index.ts` -> `types/x/index.d.ts`. */
-const entryPoints = Object.values(
-  JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")).exports,
-).map((path) =>
-  resolve(typesDir, relative("src", path).replace(/\.ts$/, ".d.ts")),
-);
+const entries = JSON.parse(
+  readFileSync(resolve(root, "package.json"), "utf8"),
+).exports;
+/**
+ * An entry point's declarations: `./src/x/index.ts` -> `types/x/index.d.ts`,
+ * and the widgets' `./widgets/index.ts` -> `types/widgets/index.d.ts`.
+ */
+const declarationsOf = (path) =>
+  resolve(
+    typesDir,
+    path.replace(/^\.\/(src\/)?/, "").replace(/\.ts$/, ".d.ts"),
+  );
+const entryPoints = Object.values(entries).map(declarationsOf);
 const walked =
   args.length > 0 ? args.map((path) => resolve(root, path)) : entryPoints;
 const reported = (file) =>
@@ -48,6 +55,13 @@ const program = ts.createProgram([...new Set([...entryPoints, ...walked])], {
   target: ts.ScriptTarget.ESNext,
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
+  // The widgets' declarations import the entry points by the package's name.
+  paths: Object.fromEntries(
+    Object.entries(entries).map(([key, path]) => [
+      key === "." ? "@cesium/next" : `@cesium/next${key.slice(1)}`,
+      [declarationsOf(path)],
+    ]),
+  ),
 });
 const checker = program.getTypeChecker();
 const indexOf = (entry) => {

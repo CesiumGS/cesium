@@ -15,7 +15,7 @@ import type {
   TransformHandle,
 } from "../../src/scene/World.ts";
 import type { Instant } from "../../src/time/Instant.ts";
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import { clearOfPanels, overlaps, panelBoxes } from "./labelPanels.ts";
 import type { OverlayChunk, Rgba } from "./overlays.ts";
 import { AXIS_COLORS, FAMILY_INFO, type Family } from "./panel/families.ts";

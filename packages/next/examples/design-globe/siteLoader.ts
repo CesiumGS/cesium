@@ -15,7 +15,7 @@ import {
   type ProjApi,
 } from "../../src/engineering/proj.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import { loadAnswers, type Answers } from "./answers.ts";
 import {
   EXAGGERATION,

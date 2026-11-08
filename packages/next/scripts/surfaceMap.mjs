@@ -6,7 +6,7 @@
 //
 // Without `--write` it prints the map. With it, it writes `api/surface.txt`.
 // The entries are the `package.json` `exports` (key `.` is entry `.`,
-// `./time` is entry `time`, and so on) plus the widgets. A tier comes from the
+// `./time` is entry `time`, `./widgets` is entry `widgets`, and so on). A tier comes from the
 // declaration's TSDoc tag: `@stable`, `@experimental` or `@internal`; `-` when
 // it has none. A namespace (`export * as vec3`) lists its members as
 // `vec3.add`, each with its own kind and tier.
@@ -19,7 +19,7 @@ const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const TIERS = ["stable", "experimental", "internal"];
 const HEADER = "entry\tname\tkind\ttier";
 
-/** The entry name to source file map: the package's `exports`, then the widgets. */
+/** The entry name to source file map: the package's `exports`. */
 const packageEntries = (root) => {
   const { exports = {} } = JSON.parse(
     readFileSync(resolve(root, "package.json"), "utf8"),
@@ -34,7 +34,6 @@ const packageEntries = (root) => {
       entries[key === "." ? "." : key.slice(2)] = file;
     }
   }
-  entries.widgets = "widgets/index.ts";
   return entries;
 };
 

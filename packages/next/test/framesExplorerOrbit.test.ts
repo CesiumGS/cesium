@@ -31,9 +31,14 @@ import {
   type OrbitFrame,
 } from "../src/scene/InspectController.ts";
 import type { View } from "../src/scene/View.ts";
-import { orbitState, planOrbit } from "../widgets/orbitFocus.ts";
+import { installGpuGlobals } from "./fakeGpu.ts";
 import { SCENES } from "../examples/frames-explorer/scenarios/scenes.ts";
 import { Camera } from "../src/scene/Camera.ts";
+
+// The widgets import the core by its entry point, which reads WebGPU's
+// globals as it loads: install them first, then import.
+installGpuGlobals();
+const { orbitState, planOrbit } = await import("../widgets/orbitFocus.ts");
 
 const sub = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   [0, 1, 2].map((i) => a[i]! - b[i]!);

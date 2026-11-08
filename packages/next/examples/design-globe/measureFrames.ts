@@ -11,7 +11,7 @@ import { createFrames, type Frames } from "../../src/frames/frames.ts";
 import { measure, type Measurement } from "../../src/measure/measure.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { LeapSeconds } from "../../src/time/leapSeconds.ts";
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import type { LoadEvent } from "./page.ts";
 
 /** A `measure` that ran: its result, or why it failed. */

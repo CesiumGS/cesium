@@ -2,7 +2,7 @@
 // with no build step of its own, from its server or another origin.
 //
 //   dist-lib/cesium-next.mjs   the core's ES module (shaders inlined)
-//   dist-lib/cesium-next-{time,frames,proj,measure}.mjs
+//   dist-lib/cesium-next-{time,frames,proj,measure,widgets}.mjs
 //                              the other entry points (`@cesium/next/time`, ...)
 //   dist-lib/assets/           the content worker, its chunks, and the
 //                              Draco and Basis wasm, each found relative to
@@ -54,7 +54,7 @@ export default defineConfig({
     // Wasm and images as files, not data: URLs in the bundle.
     assetsInlineLimit: 0,
     rollupOptions: {
-      // The five entry points; what they share goes into chunks under
+      // The six entry points; what they share goes into chunks under
       // assets/, so a page loads only what its imports reach.
       input: {
         "cesium-next": "src/index.ts",
@@ -62,6 +62,7 @@ export default defineConfig({
         "cesium-next-frames": "src/frames/index.ts",
         "cesium-next-proj": "src/proj/index.ts",
         "cesium-next-measure": "src/measure/index.ts",
+        "cesium-next-widgets": "widgets/index.ts",
       },
       // Keep the entries' exports (a library, not an app).
       preserveEntrySignatures: "strict",

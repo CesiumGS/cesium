@@ -3,6 +3,7 @@
 // (`@cesium/next/time`, `/frames`, `/proj`, `/measure`); the core imports
 // none of them (spec section 7.7, test/importBoundary.test.ts).
 export type { ClockChange, SceneClock } from "./core/sceneClock.ts";
+export { Emitter } from "./core/Emitter.ts";
 export {
   Engine,
   type EngineOptions,

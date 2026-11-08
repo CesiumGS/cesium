@@ -34,8 +34,12 @@
  * civil time, daylight saving included, labelled with the zone's
  * abbreviation ("BST"), as the browser's Intl knows it.
  */
-import type { Clock } from "../src/time/Clock.ts";
-import { sunElevation, sunTimes, type SunTimes } from "../src/time/sun.ts";
+import {
+  sunElevation,
+  sunTimes,
+  type Clock,
+  type SunTimes,
+} from "@cesium/next/time";
 
 export interface TimeControlsOptions {
   /** The place the time is about (geodetic radians), if any yet. */

@@ -1,0 +1,25 @@
+{
+  // The widgets' declarations (`dist-lib/types/widgets`), compiled against the
+  // core's emitted declarations (`tsconfig.lib.json` runs first): the widgets
+  // import the entry points by the package's name, so they see exactly what
+  // a consumer of the library sees, and nothing under `src/`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "widgets",
+    "outDir": "dist-lib/types/widgets",
+    "types": ["@webgpu/types", "vite/client"],
+    "lib": ["ES2023", "ESNext.Disposable", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@cesium/next": ["./dist-lib/types/index.d.ts"],
+      "@cesium/next/time": ["./dist-lib/types/time/index.d.ts"],
+      "@cesium/next/frames": ["./dist-lib/types/frames/index.d.ts"],
+      "@cesium/next/proj": ["./dist-lib/types/proj/index.d.ts"],
+      "@cesium/next/measure": ["./dist-lib/types/measure/index.d.ts"]
+    }
+  },
+  "include": ["widgets"]
+}

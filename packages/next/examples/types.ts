@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { GlobeKind, Viewer } from "../widgets/index.ts";
+import type { GlobeKind, Viewer } from "@cesium/next/widgets";
 
 /**
  * Examples (plan §13.12): what users and stakeholders see, one per

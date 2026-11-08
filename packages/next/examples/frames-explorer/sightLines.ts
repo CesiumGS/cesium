@@ -21,7 +21,7 @@ import {
   type TerrainLineOfSight,
 } from "../../src/measure/terrainLineOfSight.ts";
 import type { SpatialQueries } from "../../src/query/queries.ts";
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import { length, share } from "./panel/format.ts";
 import type { ScenarioEvaluation, SightLine } from "./scenarios/evaluate.ts";
 

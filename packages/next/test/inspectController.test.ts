@@ -12,7 +12,13 @@ import { Ellipsoid, cartographic } from "../src/math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
 import * as v3 from "../src/math/vec3.ts";
 import * as m4 from "../src/math/mat4.ts";
-import { followZoom, orbitState, planOrbit } from "../widgets/orbitFocus.ts";
+import { installGpuGlobals } from "./fakeGpu.ts";
+
+// The widgets import the core by its entry point, which reads WebGPU's
+// globals as it loads: install them first, then import.
+installGpuGlobals();
+const { followZoom, orbitState, planOrbit } =
+  await import("../widgets/orbitFocus.ts");
 
 const SIZE = 100;
 const maxPitch = Math.PI / 2 - 1e-3;

@@ -12,7 +12,7 @@ import {
   type Tileset3D,
   type View,
   type World,
-} from "../src/index.ts";
+} from "@cesium/next";
 import type {
   ContentMix,
   Inspectable,

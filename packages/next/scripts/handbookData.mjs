@@ -204,6 +204,8 @@ export function readCatalog(root = packageRoot) {
 
 /** The declarations the layer table is made of, by name, in the test. */
 const TEST_DECLARATIONS = [
+  "pkg",
+  "SELF",
   "TIME_FILES",
   "layerOf",
   "FRAMES_CORE_VALUES",

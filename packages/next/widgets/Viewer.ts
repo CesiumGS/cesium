@@ -30,6 +30,7 @@ import {
   EYE,
   Ellipsoid,
   DEFAULT_SKY,
+  Emitter,
   Engine,
   GlobeController,
   InspectController,
@@ -56,24 +57,20 @@ import {
   type View,
   type ViewLink,
   type World,
-} from "../src/index.ts";
-import { Emitter } from "../src/core/Emitter.ts";
-import type {
-  FrameData,
-  FrameDataWarning,
-} from "../src/ephemeris/loadFrameData.ts";
-import { attachSky, type SkyInputs } from "../src/frames/attachSky.ts";
+} from "@cesium/next";
 import {
+  attachSky,
   createFrameCatalog,
-  type CatalogFrameName,
-  type FrameCatalog,
-} from "../src/frames/catalog.ts";
-import type { Frame } from "../src/frames/Frame.ts";
-import {
   createFramesResolver,
+  type CatalogFrameName,
+  type Frame,
+  type FrameCatalog,
+  type FrameData,
+  type FrameDataWarning,
   type FramesResolver,
-} from "../src/frames/resolver.ts";
-import { Clock } from "../src/time/index.ts";
+  type SkyInputs,
+} from "@cesium/next/frames";
+import { Clock } from "@cesium/next/time";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
 import {

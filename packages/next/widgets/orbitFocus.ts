@@ -1,18 +1,19 @@
 /**
  * The Viewer's orbit controls (`setControls("orbit", options)`), apart from
- * the Viewer so they run in Node: what an orbit's options resolve to, and
- * how `zoomTo` re-focuses an orbit.
+ * the Viewer so they run in Node (with WebGPU's globals installed, which the
+ * core's entry point reads as it loads): what an orbit's options resolve to,
+ * and how `zoomTo` re-focuses an orbit.
  */
-import * as vec3 from "../src/math/vec3.ts";
-import { Ellipsoid } from "../src/math/ellipsoid.ts";
-import { EARTH } from "../src/scene/Body.ts";
 import {
+  EARTH,
+  Ellipsoid,
   enuBasis,
   orbitBasis,
   orbitPose,
+  vec3,
   type InspectController,
   type OrbitFrame,
-} from "../src/scene/InspectController.ts";
+} from "@cesium/next";
 
 /**
  * Where `setControls("orbit", options)` orbits. Fields left out keep the

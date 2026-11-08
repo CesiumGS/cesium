@@ -12,7 +12,7 @@
 import type { Frames } from "../../src/frames/frames.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { Instant } from "../../src/time/Instant.ts";
-import type { Viewer } from "../../widgets/index.ts";
+import type { Viewer } from "@cesium/next/widgets";
 import type { Globe } from "./globe.ts";
 import type { LoadingModel } from "./loading.ts";
 import { length } from "./panel/format.ts";

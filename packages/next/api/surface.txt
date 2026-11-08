@@ -41,6 +41,7 @@ entry	name	kind	tier
 .	EARTH	const	-
 .	EYE	const	-
 .	Ellipsoid	class	-
+.	Emitter	class	-
 .	Engine	class	-
 .	EngineError	interface	-
 .	EngineErrorKind	type	-
