@@ -219,6 +219,7 @@ entry	name	kind	tier
 .	vec3.sub	function	-
 .	vec3.vec3	function	-
 frames	EarthOrientationParameters	class	-
+frames	EarthOrientationSigma	type	-
 frames	EopSample	interface	-
 frames	Ephemeris	class	-
 frames	FRAME_DATA_ROLES	const	-
@@ -241,6 +242,7 @@ frames	convertPoint	function	-
 frames	createFrames	function	-
 frames	createSkyState	function	-
 frames	dominantTerm	function	-
+frames	earthOrientationSigma	function	-
 frames	eastNorthUpFrame	function	-
 frames	frameBias	function	-
 frames	framePoint	function	-
@@ -259,7 +261,6 @@ measure	AlignmentMeasurement	interface	-
 measure	C	const	-
 measure	DesignMeasurement	interface	-
 measure	EARTH_ROTATION_RATE	const	-
-measure	EarthOrientationSigma	type	-
 measure	GM_EARTH	const	-
 measure	GM_MOON	const	-
 measure	GM_SUN	const	-
@@ -273,7 +274,6 @@ measure	SurfaceDistance	interface	-
 measure	TerrainLineOfSight	interface	-
 measure	TerrainLineOfSightOptions	interface	-
 measure	WarningCode	type	-
-measure	earthOrientationSigma	function	-
 measure	measure	function	-
 measure	measureSpan	function	-
 measure	properTimeRate	function	-

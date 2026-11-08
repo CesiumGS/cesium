@@ -1,5 +1,5 @@
 import type { DesignPlacement } from "../streaming/designPlacement.ts";
-import { RigidPlacement, type EngineeringFrame } from "./EngineeringFrame.ts";
+import { EngineeringFrame, RigidPlacement } from "./EngineeringFrame.ts";
 
 /**
  * Where a tileset's design coordinates are drawn, and the exact way back
@@ -16,14 +16,18 @@ export interface TilesetPlacement extends DesignPlacement {
 }
 
 /**
- * A tileset's placement when it is an engineering frame's (one this module
- * built, or an application's `TilesetPlacement`), else undefined: a
- * `DesignPlacement` without a frame gives no design points.
+ * A tileset's placement as a `TilesetPlacement`: `placement` itself when its
+ * `frame` is an `EngineeringFrame` (one `placeRigid`, `placeReprojected` or
+ * `georeferenceTileset` built, or an application's), else undefined. Picks
+ * and snaps get design points only through such a placement; any other
+ * `DesignPlacement` draws and inverts, but names no engineering frame.
  */
 export function engineeringPlacement(
   placement: DesignPlacement | undefined,
 ): TilesetPlacement | undefined {
-  return placement !== undefined && "frame" in placement
+  const frame: unknown = (placement as Partial<TilesetPlacement> | undefined)
+    ?.frame;
+  return frame instanceof EngineeringFrame
     ? (placement as TilesetPlacement)
     : undefined;
 }

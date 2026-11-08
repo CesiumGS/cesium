@@ -12,7 +12,7 @@
 import { type Frame, frameTransform } from "../../../src/frames/Frame.ts";
 import { framePoint } from "../../../src/frames/local.ts";
 import { pointAccuracy } from "../../../src/frames/pointAccuracy.ts";
-import { earthOrientationSigma } from "../../../src/measure/accuracy.ts";
+import { earthOrientationSigma } from "../../../src/frames/orientationSigma.ts";
 import { EARTH_ROTATION_RATE } from "../../../src/measure/constants.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import { length, radians } from "../panel/format.ts";

@@ -108,6 +108,8 @@ const LOADING_IMAGERY = 1e15;
 const CANCEL_AFTER_FRAMES = 30;
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
+/** `Tileset3D.rootJson` of a tileset.json without a root (and of terrain). */
+const NO_ROOT_JSON: Tileset3D["rootJson"] = Object.freeze({});
 /**
  * A hierarchical content source other than a 3D Tiles tileset.json (plan
  * §3.7): its own root, content loader and placement; selection, requests,
@@ -945,7 +947,7 @@ export class Tileset3D implements TileTree {
               .boundingVolume,
             transform: (rootJson as Record<string, unknown>).transform,
           })
-        : NO_EXTENSIONS;
+        : NO_ROOT_JSON;
     if (options.placement !== undefined) {
       this.placement = options.placement;
     }

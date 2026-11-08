@@ -4,7 +4,7 @@
 // "Try your own"'s results with what each was compared with, the scenario
 // (scenarioModel.ts) and the report's environment.
 import type { Frames } from "../../src/frames/frames.ts";
-import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
+import { earthOrientationSigma } from "../../src/frames/orientationSigma.ts";
 import type { Instant } from "../../src/time/Instant.ts";
 import { RESULT_LABELS, comparedFor } from "./content.ts";
 import type { LoadingModel } from "./loading.ts";

@@ -522,7 +522,7 @@ function refusal(
   if (r.design !== undefined) {
     const placement = engineeringPlacement((r.tileset ?? tileset).placement);
     if (placement === undefined) {
-      return "design coordinates on a tileset without a placement";
+      return "design coordinates on a tileset without an engineering frame's placement";
     }
     if (r.design.engineeringFrame !== placement.frame) {
       return "design coordinates in another engineering frame than the placement's";

@@ -13,11 +13,6 @@ import type { BetterCandidate } from "../engineering/crs.ts";
 import { earthOrientationSigma } from "../frames/orientationSigma.ts";
 import { EARTH_ROTATION_RATE } from "./constants.ts";
 
-export {
-  earthOrientationSigma,
-  type EarthOrientationSigma,
-} from "../frames/orientationSigma.ts";
-
 /** One contribution to a measurement's uncertainty. */
 export interface AccuracyTerm {
   source:

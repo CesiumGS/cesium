@@ -2,7 +2,10 @@
 // height axis goes through RigidPlacement's down column.
 import { describe, expect, it } from "vitest";
 import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
-import { placeRigid } from "../src/engineering/placement.ts";
+import {
+  engineeringPlacement,
+  placeRigid,
+} from "../src/engineering/placement.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import { EARTH } from "../src/scene/Body.ts";
 
@@ -50,5 +53,28 @@ describe("placeRigid with a depth axis", () => {
       (deep[2]! - o[2]!) * up[2]!;
     expect(along).toBeCloseTo(-3.048, 9);
     expect(p.designOf(deep)[2]).toBeCloseTo(10, 6);
+  });
+});
+
+describe("engineeringPlacement", () => {
+  const draws = {
+    mode: "reprojected" as const,
+    frameName: "site",
+    displayed: (d: ArrayLike<number>) => Float64Array.from(d),
+    designOf: (p: ArrayLike<number>) => Float64Array.from(p),
+    displayError: () => 0,
+  };
+
+  it("is the placement itself when its frame is an EngineeringFrame", () => {
+    const frame = Object.create(EngineeringFrame.prototype) as EngineeringFrame;
+    const placement = { ...draws, frame };
+    expect(engineeringPlacement(placement)).toBe(placement);
+  });
+
+  it("is undefined for no placement, no frame, or a frame of another kind", () => {
+    expect(engineeringPlacement(undefined)).toBeUndefined();
+    expect(engineeringPlacement(draws)).toBeUndefined();
+    const lookalike = { ...draws, frame: { name: "site" } };
+    expect(engineeringPlacement(lookalike)).toBeUndefined();
   });
 });

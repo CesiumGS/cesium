@@ -16,7 +16,7 @@ import type { PickView } from "../src/engineering/pick.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
 import {
   designPoint,
-  type EngineeringFrame,
+  EngineeringFrame,
 } from "../src/engineering/EngineeringFrame.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
@@ -31,7 +31,10 @@ import { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;
-const frame = { name: "fake" } as unknown as EngineeringFrame;
+// An EngineeringFrame to `instanceof` (engineeringPlacement), with only what is read.
+const frame = Object.assign(Object.create(EngineeringFrame.prototype), {
+  name: "fake",
+}) as EngineeringFrame;
 const DRAW = { index: 3, generation: 1, name: undefined } as DrawHandle;
 const GEOMETRIC_ERROR = 0.25;
 
@@ -707,6 +710,32 @@ describe("refiningSnap: the client's snap, then the server's", () => {
         expect([...ts.warnings]).toEqual([`${SNAP_SERVER_REFUSED}: ${reason}`]);
       });
     }
+
+    it("design coordinates on a placement with no engineering frame", async () => {
+      // A DesignPlacement whose frame isn't an EngineeringFrame: it draws
+      // and inverts, but gives no design points (engineeringPlacement).
+      const plain = { ...pl, frame: { name: "fake" } };
+      const ts = tileset({ placement: plain as unknown as TilesetPlacement });
+      const r = await refiningSnap(
+        { view: view(), x: 517, y: 248, aperture: 6 },
+        new ClientSnapService([ts]),
+        server(async () =>
+          answer({
+            design: designPoint(frame, pl.designOf(designB), {
+              how: "snap",
+              tolerance: 0,
+              kind: "point",
+            }),
+          }),
+        ).service,
+        () => {},
+      );
+      expect(r?.source).toBe("client");
+      expect(r?.design).toBeUndefined();
+      expect([...ts.warnings]).toEqual([
+        `${SNAP_SERVER_REFUSED}: design coordinates on a tileset without an engineering frame's placement`,
+      ]);
+    });
   });
 
   it("ignores a superseded snap's late server answer", async () => {

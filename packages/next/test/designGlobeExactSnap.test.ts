@@ -25,7 +25,7 @@ import {
   visibleRise,
 } from "../examples/design-globe/exactSnap.ts";
 import { Alignment } from "../src/engineering/alignment.ts";
-import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
 import {
   ClientSnapService,
@@ -40,7 +40,10 @@ import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 const R = 6_378_137;
 const MPU = 1200 / 3937;
 const alignment = new Alignment(CORRIDOR_ALIGNMENT);
-const frame = { units: { metersPerUnit: MPU } } as unknown as EngineeringFrame;
+// An EngineeringFrame to `instanceof` (engineeringPlacement), with only what is read.
+const frame = Object.assign(Object.create(EngineeringFrame.prototype), {
+  units: { metersPerUnit: MPU },
+}) as EngineeringFrame;
 /** The design origin of the fake placement: near the picks. */
 const ORIGIN = alignment.pointAt(31_000);
 

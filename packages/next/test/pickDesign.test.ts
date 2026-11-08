@@ -10,9 +10,12 @@ import type { DrawHandle } from "../src/scene/World.ts";
 import type { View } from "../src/scene/View.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
-import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 
-const frame = { name: "fake" } as unknown as EngineeringFrame;
+// An EngineeringFrame to `instanceof` (engineeringPlacement), with only what is read.
+const frame = Object.assign(Object.create(EngineeringFrame.prototype), {
+  name: "fake",
+}) as EngineeringFrame;
 const DRAW = { index: 3, generation: 1 } as unknown as DrawHandle;
 const HIT = new Float64Array([6378137, 0, 100]);
 

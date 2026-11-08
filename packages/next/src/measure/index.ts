@@ -19,10 +19,8 @@ export {
 } from "./measure.ts";
 export { properTimeRate, type Leg } from "./doppler.ts";
 export {
-  earthOrientationSigma,
   type AccuracyStatement,
   type AccuracyTerm,
-  type EarthOrientationSigma,
   type WarningCode,
 } from "./accuracy.ts";
 export { surfaceDistance, type SurfaceDistance } from "./surface.ts";

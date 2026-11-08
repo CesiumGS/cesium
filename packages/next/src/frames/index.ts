@@ -19,6 +19,10 @@ export {
   type PointAccuracy,
   type PointAccuracyTerm,
 } from "./pointAccuracy.ts";
+export {
+  earthOrientationSigma,
+  type EarthOrientationSigma,
+} from "./orientationSigma.ts";
 export { rotationPart, toParentMatrix } from "./matrix.ts";
 export { createFrames, type Frames } from "./frames.ts";
 export { createSkyState, skyState, type SkyState } from "./sky.ts";

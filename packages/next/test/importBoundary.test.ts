@@ -5,7 +5,7 @@
 // because published declarations carry them; under `verbatimModuleSyntax`
 // only a declaration-level `import type` / `export type` is type-only.
 import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join, normalize, relative } from "node:path";
+import { dirname, join, normalize, relative, sep } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
 
@@ -83,8 +83,6 @@ const ALLOWED: Record<Exclude<Layer, "widgets">, readonly Layer[]> = {
 interface Edge {
   readonly to: string;
   readonly typeOnly: boolean;
-  /** A re-export (`export … from`), which an entry index publishes. */
-  readonly reexport: boolean;
 }
 
 function listTs(dir: string): string[] {
@@ -103,16 +101,25 @@ function listTs(dir: string): string[] {
 const files = [...listTs("src"), ...listTs("widgets")];
 const edgeCache = new Map<string, Edge[]>();
 
-/** Each relative import of a file: static, re-export, dynamic, type. */
+/** Each relative import of a file (from the package, as `src/a/b.ts`). */
 function edgesOf(file: string): Edge[] {
   const cached = edgeCache.get(file);
   if (cached) {
     return cached;
   }
-  const text = readFileSync(join(root, file), "utf8");
+  const edges = edgesOfText(file, readFileSync(join(root, file), "utf8"));
+  edgeCache.set(file, edges);
+  return edges;
+}
+
+/**
+ * Each relative import in `text`, read as the file `file`: static imports
+ * and re-exports, dynamic `import("…")`, and `import("…").T` type nodes.
+ */
+function edgesOfText(file: string, text: string): Edge[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
   const edges: Edge[] = [];
-  const add = (specifier: string, typeOnly: boolean, reexport: boolean) => {
+  const add = (specifier: string, typeOnly: boolean) => {
     if (!specifier.startsWith(".")) {
       return; // packages are outside the rule
     }
@@ -121,42 +128,37 @@ function edgesOf(file: string): Edge[] {
       "\\",
       "/",
     );
-    edges.push({ to, typeOnly, reexport });
+    edges.push({ to, typeOnly });
   };
   const visit = (node: ts.Node) => {
     if (
       ts.isImportDeclaration(node) &&
       ts.isStringLiteral(node.moduleSpecifier)
     ) {
-      add(
-        node.moduleSpecifier.text,
-        node.importClause?.isTypeOnly === true,
-        false,
-      );
+      add(node.moduleSpecifier.text, node.importClause?.isTypeOnly === true);
     } else if (
       ts.isExportDeclaration(node) &&
       node.moduleSpecifier &&
       ts.isStringLiteral(node.moduleSpecifier)
     ) {
-      add(node.moduleSpecifier.text, node.isTypeOnly, true);
+      add(node.moduleSpecifier.text, node.isTypeOnly);
     } else if (
       ts.isCallExpression(node) &&
       node.expression.kind === ts.SyntaxKind.ImportKeyword &&
       node.arguments[0] &&
       ts.isStringLiteralLike(node.arguments[0])
     ) {
-      add(node.arguments[0].text, false, false);
+      add(node.arguments[0].text, false);
     } else if (
       ts.isImportTypeNode(node) &&
       ts.isLiteralTypeNode(node.argument) &&
       ts.isStringLiteral(node.argument.literal)
     ) {
-      add(node.argument.literal.text, true, false);
+      add(node.argument.literal.text, true);
     }
     ts.forEachChild(node, visit);
   };
   visit(source);
-  edgeCache.set(file, edges);
   return edges;
 }
 
@@ -203,20 +205,77 @@ function closure(start: string): string[] {
   return [...seen].sort();
 }
 
-/** Each entry's re-export of a module outside its layer and the neutral ones. */
-function entryLeaks(): string[] {
-  const out: string[] = [];
-  for (const path of Object.values(pkg.exports)) {
-    const entry = path.replace(/^\.\//, "");
-    const layer = layerOf(entry);
-    for (const edge of edgesOf(entry)) {
-      const to = layerOf(edge.to);
-      if (edge.reexport && to !== layer && to !== "neutral") {
-        out.push(`${entry} → ${edge.to}`);
+interface Published {
+  readonly entry: string;
+  readonly name: string;
+  /** Where the name is declared, resolved by the checker. */
+  readonly file: string;
+}
+
+let published: Published[] | undefined;
+
+/**
+ * Each name each entry publishes, with the file that declares it. The
+ * checker follows every hop to the declaration: `export … from` chains, a
+ * module that imports a name and exports it again (`import { X }; export
+ * { X }`), and `export *`.
+ */
+function publishedNames(): Published[] {
+  if (published) {
+    return published;
+  }
+  const entries = Object.values(pkg.exports).map((path) =>
+    path.replace(/^\.\//, ""),
+  );
+  const program = ts.createProgram(
+    entries.map((entry) => join(root, entry)),
+    {
+      noEmit: true,
+      skipLibCheck: true,
+      types: [],
+      allowImportingTsExtensions: true,
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+    },
+  );
+  const checker = program.getTypeChecker();
+  const out: Published[] = [];
+  for (const entry of entries) {
+    const index = program.getSourceFile(join(root, entry));
+    const moduleSymbol = index && checker.getSymbolAtLocation(index);
+    if (!moduleSymbol) {
+      throw new Error(`${entry}: not in the program`);
+    }
+    for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
+      const target =
+        symbol.flags & ts.SymbolFlags.Alias
+          ? checker.getAliasedSymbol(symbol)
+          : symbol;
+      for (const declaration of target.declarations ?? []) {
+        const file = relative(root, declaration.getSourceFile().fileName)
+          .split(sep)
+          .join("/");
+        out.push({ entry, name: symbol.name, file });
       }
     }
   }
-  return out;
+  return (published = out);
+}
+
+/**
+ * Each name an entry publishes that is declared outside its layer and the
+ * neutral modules, as "<entry> → <declaring file> (<name>)".
+ */
+function entryLeaks(): string[] {
+  const out = new Set<string>();
+  for (const { entry, name, file } of publishedNames()) {
+    const to = layerOf(file);
+    if (!file.startsWith("..") && to !== layerOf(entry) && to !== "neutral") {
+      out.add(`${entry} → ${file} (${name})`);
+    }
+  }
+  return [...out];
 }
 
 it("the core imports nothing from time, frames, proj or measure", () => {
@@ -236,8 +295,27 @@ it("the time controls reach time without frames", () =>
   expect(
     closure("widgets/timeControls.ts").filter((f) => layerOf(f) === "frames"),
   ).toEqual([]));
-it("each entry re-exports only its own layer", () =>
-  expect(entryLeaks()).toEqual([]));
+it(
+  "each entry publishes only names declared in its own layer",
+  () =>
+    // Resolved through the checker, so a name re-exported by way of another
+    // module (an `export … from` chain, or `import { X }; export { X }`)
+    // counts where it is declared.
+    expect(entryLeaks()).toEqual([]),
+  30_000,
+);
+it("resolves each published name to the file that declares it", () => {
+  const where = (entry: string, name: string) =>
+    publishedNames()
+      .filter((p) => p.entry === entry && p.name === name)
+      .map((p) => p.file);
+  // Through measure/constants.ts's re-export, to the math module.
+  expect(where("src/measure/index.ts", "C")).toEqual(["src/math/constants.ts"]);
+  expect(where("src/frames/index.ts", "earthOrientationSigma")).toEqual([
+    "src/frames/orientationSigma.ts",
+  ]);
+  expect(where("src/index.ts", "Engine")).toEqual(["src/scene/Engine.ts"]);
+}, 30_000);
 it("package.json exports the five entry points", () =>
   expect(Object.keys(pkg.exports)).toEqual([
     ".",
@@ -255,11 +333,32 @@ it("finds imports of every kind and classifies them", () => {
   expect(edgesOf("src/time/Instant.ts")).toContainEqual({
     to: "src/time/leapSeconds.ts",
     typeOnly: true,
-    reexport: false,
   });
-  expect(edgesOf("src/index.ts")).toContainEqual({
-    to: "src/scene/Engine.ts",
-    typeOnly: false,
-    reexport: true,
-  });
+  const edges = edgesOfText(
+    "src/frames/sample.ts",
+    [
+      'const later = import("../scene/World.ts");',
+      'let pose: import("../scene/Camera.ts").CameraPose;',
+      'import { type Tile } from "../streaming/Tile.ts";',
+      'import type { View } from "../scene/View.ts";',
+      'export type { Body } from "../scene/Body.ts";',
+      'export { Frame } from "./Frame.ts";',
+      'import { Ellipsoid } from "@cesium/elsewhere";',
+      'import sky from "../shaders/generated/sky.wgsl?raw";',
+    ].join("\n"),
+  );
+  expect(edges).toEqual([
+    // Dynamic import: a value.
+    { to: "src/scene/World.ts", typeOnly: false },
+    // An import type node: type-only.
+    { to: "src/scene/Camera.ts", typeOnly: true },
+    // An inline `{ type X }` still loads the module (verbatimModuleSyntax).
+    { to: "src/streaming/Tile.ts", typeOnly: false },
+    { to: "src/scene/View.ts", typeOnly: true },
+    // `export type … from`: type-only.
+    { to: "src/scene/Body.ts", typeOnly: true },
+    { to: "src/frames/Frame.ts", typeOnly: false },
+    // Packages are skipped; a query suffix is dropped.
+    { to: "src/shaders/generated/sky.wgsl", typeOnly: false },
+  ]);
 });
