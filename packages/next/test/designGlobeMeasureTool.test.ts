@@ -247,7 +247,7 @@ function answers(): Answers {
     pairs: [
       {
         id: "first-tangent",
-        label: "10,000 ft on the first tangent",
+        label: "10,000 ftUS on the first tangent",
         from: 0,
         to: 1,
         designDistance: 10_001.999800040241,
@@ -479,7 +479,7 @@ describe("the measurements the page opens with", () => {
     expect(reprojected.design).toBe(rigid.design);
     expect(rigid.trueDistance).toBe("3,048.848 m");
     expect(reprojected.trueDistance).toBe(rigid.trueDistance);
-    expect(rigid.title).toBe("10,000 ft on the first tangent");
+    expect(rigid.title).toBe("10,000 ftUS on the first tangent");
   });
 
   it("writes no e-notation and names every unit", () => {

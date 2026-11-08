@@ -1,7 +1,7 @@
 // Plan 4b Task 17: the design globe's measurement model, the display strings
 // the measure panel shows (the frames explorer's DESIGN.md, "Copy and
 // numbers": units always, thousands separators, "±" on accuracy). The
-// measurement here is answers.pairs[0], "10,000 ft on the first tangent"
+// measurement here is answers.pairs[0], "10,000 ftUS on the first tangent"
 // (stations 10,000 to 20,000 on its +2% grade), with the values the
 // generator recorded for it on 2026-11-07; test/data/designTiles.test.ts
 // runs the same model on the library's own measurement of that pair.

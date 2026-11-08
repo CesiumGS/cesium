@@ -34,7 +34,7 @@ function answers(): Answers {
     pairs: [
       {
         id: "first-tangent",
-        label: "10,000 ft on the first tangent",
+        label: "10,000 ftUS on the first tangent",
         from: 0,
         to: 1,
         designDistance: 10_001.999800040241,
@@ -145,7 +145,7 @@ describe("design globe checks view", () => {
     const pair = v.groups[1]!;
     // Its three distances, then its two ends' five values each.
     expect(pair.rows).toHaveLength(13);
-    expect(pair.title).toBe("10,000 ft on the first tangent");
+    expect(pair.title).toBe("10,000 ftUS on the first tangent");
     // Its rows don't repeat the group's title.
     expect(pair.rows[0]!.label).toBe("Design distance (3D)");
     expect(pair.rows[3]!.label).toMatch(/^Sta\. 100\+00\.000/);

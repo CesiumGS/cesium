@@ -61,7 +61,7 @@ function answersJson(): Record<string, unknown> {
     pairs: [
       {
         id: "first-tangent",
-        label: "10,000 ft on the first tangent",
+        label: "10,000 ftUS on the first tangent",
         from: 0,
         to: 1,
         designDistance: 10_001.999800040241,

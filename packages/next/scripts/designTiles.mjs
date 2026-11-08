@@ -847,7 +847,7 @@ function corridorAnswers(frame, alignment, placement, frames) {
   const pairs = [
     {
       id: "first-tangent",
-      label: "10,000 ft on the first tangent",
+      label: "10,000 ftUS on the first tangent",
       a: [PAIR_STATIONS[0], 0],
       b: [PAIR_STATIONS[1], 0],
     },
