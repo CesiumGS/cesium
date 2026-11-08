@@ -83,6 +83,7 @@ import {
   writeAnchorEyes,
 } from "./anchorEyes.ts";
 import { HeightClamping } from "./HeightClamping.ts";
+import { contentAnchor, earthAnchor } from "./earthAnchor.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
 import {
   GlobeImagery,
@@ -1022,7 +1023,8 @@ export class Engine {
    * Fetches, decodes and uploads a glTF, GLB or b3dm into `world`: a
    * `ModelResource` to place (`model.place`) and release when done. Its
    * source data is released once uploaded unless `releaseSourceData` is
-   * false.
+   * false. Placements hang under the Earth's anchor unless they name
+   * another (`PlacementOptions.anchor`) or a parent.
    */
   async loadModel(
     world: World,
@@ -1048,7 +1050,9 @@ export class Engine {
    * Uploads a parsed glTF asset into `world` (meshes, materials, textures):
    * a `ModelResource` the caller owns, placed with `model.place` and freed
    * once released with no placements left. By default the asset's decoded
-   * images are closed once uploaded (`releaseSourceData`).
+   * images are closed once uploaded (`releaseSourceData`). Placements hang
+   * under the Earth's anchor unless they name another
+   * (`PlacementOptions.anchor`) or a parent.
    */
   uploadModel(
     world: World,
@@ -1065,7 +1069,9 @@ export class Engine {
 
   /**
    * Streams a 3D Tiles tileset into `world`: selection runs per view each
-   * frame, and content is drawn only in the views that selected it.
+   * tick, and content is drawn only in the views that selected it. Its
+   * content hangs under the Earth's anchor (`TilesetOptions.anchor` names
+   * another), and selection reads each view's camera there.
    */
   async addTileset(
     world: World,
@@ -1087,7 +1093,8 @@ export class Engine {
    * Streams quantized-mesh terrain (`url`: a `layer.json` or its directory,
    * e.g. Cesium World Terrain's ion endpoint) into `world`, through the same
    * selection, requests, cache and rendering as 3D Tiles. Selection defaults
-   * to 1.x's globe threshold, SSE 2.
+   * to 1.x's globe threshold, SSE 2. Under the Earth's anchor unless
+   * `options.anchor` names another.
    */
   async addTerrain(
     world: World,
@@ -1111,7 +1118,8 @@ export class Engine {
   /**
    * The ellipsoid as a globe without terrain data (1.x's default
    * `EllipsoidTerrainProvider`): flat tiles built in workers, selected,
-   * culled and draped with imagery like terrain.
+   * culled and draped with imagery like terrain. Under the Earth's anchor
+   * unless `options.anchor` names another.
    */
   addEllipsoid(world: World, options: GlobeOptions = {}): Tileset3D {
     const source = TerrainSource.ellipsoid(this.terrainLoader, {
@@ -1279,8 +1287,43 @@ export class Engine {
     }
   }
 
-  /** Builds the selection inputs for every enabled view of `world`. */
-  private selectionViews(world: World): SelectionView[] {
+  /**
+   * The selection inputs of the tilesets under `anchor` in `world`, made
+   * once per update (`updateTilesets`) and shared by those tilesets: per
+   * view, a cost per anchor with tilesets, not per tileset (plan 5a's call
+   * 21).
+   */
+  private selectionFor(world: World, anchor: AnchorHandle): SelectionView[] {
+    let byAnchor = this.selections.get(world);
+    if (!byAnchor) {
+      byAnchor = new Map();
+      this.selections.set(world, byAnchor);
+    }
+    let views = byAnchor.get(anchor);
+    if (!views) {
+      views = this.selectionViews(world, anchor);
+      byAnchor.set(anchor, views);
+    }
+    return views;
+  }
+  /** `selectionFor`'s inputs of the current update, by world and anchor. */
+  private readonly selections = new Map<
+    World,
+    Map<AnchorHandle, SelectionView[]>
+  >();
+  /** A view's camera in a tileset's anchor other than its body's. */
+  private readonly selectionCamera = new Camera();
+  /** The prefetch camera re-expressed in such an anchor. */
+  private readonly selectionAhead = new Camera();
+
+  /**
+   * Builds the selection inputs for every enabled view of `world`, with
+   * each view's camera in `anchor` (`View.anchorCamera`): positions,
+   * directions, planes and the camera's cartographic are in the anchor's
+   * coordinates (Earth-fixed for the Earth's). In the view's body anchor
+   * it is the body camera, as drawn.
+   */
+  private selectionViews(world: World, anchor: AnchorHandle): SelectionView[] {
     const out: SelectionView[] = [];
     for (const view of this.views) {
       if (!view.enabled || view.world !== world) {
@@ -1288,7 +1331,11 @@ export class Engine {
       }
       const rect = view.pixelRect();
       const aspect = rect.width / rect.height;
-      const camera = this.bodyCamera(view);
+      const body = view.bodyAnchor;
+      const inBody = anchor === body;
+      const camera = inBody
+        ? this.bodyCamera(view)
+        : view.anchorCamera(anchor, this.selectionCamera);
       const p = camera.position;
       const d = camera.direction;
       // World-space planes in float64: camera-relative planes shifted by the
@@ -1316,7 +1363,24 @@ export class Engine {
       // velocity, so only content it is about to reveal loads ahead. None
       // while it is still: a margin around a still view (r37) was half the
       // bytes of a jump into OSM Philadelphia, rarely drawn (L1′).
-      const ahead = this.cameraAhead(view, PREFETCH_AHEAD_SECONDS);
+      let ahead = this.cameraAhead(view, PREFETCH_AHEAD_SECONDS);
+      let motion = ahead && this.motionOf(view);
+      if (ahead && motion && !inBody) {
+        // Measured in the body anchor: re-expressed in this one.
+        const m = m4.multiply(
+          scratchSelection,
+          m4.invertAffine(
+            scratchSelectionInverse,
+            view.anchorPlacement(anchor),
+          ),
+          view.anchorPlacement(body, scratchSelectionBody),
+        );
+        ahead = transformCamera(m, ahead, this.selectionAhead);
+        motion = {
+          velocity: rotateVector(m, motion.velocity, v3.vec3()),
+          angular: rotateVector(m, motion.angular, v3.vec3()),
+        };
+      }
       const pixelRatio =
         view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
       out.push({
@@ -1329,10 +1393,10 @@ export class Engine {
           height: 0,
         }) ?? { longitude: 0, latitude: 0, height: 0 },
         planes,
-        ...(ahead
+        ...(ahead && motion
           ? {
               prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
-              motion: this.motionOf(view)!,
+              motion,
             }
           : {}),
         sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
@@ -1422,10 +1486,12 @@ export class Engine {
    * content at each longitude and latitude (radians), as 1.x
    * `Scene.sampleHeightMostDetailed`: the tiles under each point are loaded
    * down to the leaves whatever the views show, then ray cast on the GPU
-   * down the geodetic normal from 10 km (nearest hit). Tilesets: those
-   * given, else the shown collision tilesets of the world. Undefined where
-   * nothing is hit (a globe given here has none inside its terrain clips,
-   * `addTerrainClip`). Needs the frame loop running (`start`).
+   * down the geodetic normal from 10 km (nearest hit), in the Earth's
+   * anchor. Tilesets: those given, else the shown collision tilesets of
+   * the world; only those under the Earth's anchor (`Tileset3D.anchor`)
+   * give heights. Undefined where nothing is hit (a globe given here has
+   * none inside its terrain clips, `addTerrainClip`). Needs the frame loop
+   * running (`start`).
    */
   async sampleHeightMostDetailed(
     world: World,
@@ -1433,11 +1499,15 @@ export class Engine {
     options: { tilesets?: readonly Tileset3D[] } = {},
   ): Promise<Array<number | undefined>> {
     const START = 10000;
-    const tilesets =
+    // The rays are Earth-fixed: they meet the content under the Earth's
+    // anchor (`World.castRays` tests only the cast's anchor).
+    const earth = earthAnchor(world);
+    const tilesets = (
       options.tilesets ??
       this.tilesets.filter(
         (t) => t.world === world && t.show && t.enableCollision && !t.terrain,
-      );
+      )
+    ).filter((t) => t.anchor === earth);
     const rays = positions.map(({ longitude, latitude }) => {
       const up = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
         { longitude, latitude, height: 0 },
@@ -1457,7 +1527,10 @@ export class Engine {
       tilesets.map(async (tileset) => {
         const query = await tileset.queryRays(rays);
         try {
-          const hits = await world.castRays(rays, { draws: query.draws });
+          const hits = await world.castRays(rays, {
+            draws: query.draws,
+            anchor: earth,
+          });
           hits.forEach((d, i) => {
             // Terrain clipped there is a hole (`addTerrainClip`): the ray
             // runs down the normal, so the hit is at the point's own
@@ -1671,12 +1744,14 @@ export class Engine {
     this.uploadBudget.trees = 0;
     const n = this.tilesets.length;
     const start = n > 0 ? this.tilesetRotation++ % n : 0;
+    this.selections.clear();
     for (let k = 0; k < n; k++) {
       const tileset = this.tilesets[(start + k) % n]!;
       if (due(tileset)) {
-        tileset.update(this.selectionViews(tileset.world));
+        tileset.update(this.selectionFor(tileset.world, tileset.anchor));
       }
     }
+    this.selections.clear();
     this.budgetFilled = this.uploadBudget.bytes <= 0;
     // After the tilesets: their loads and unloads announce height changes.
     this.clamping.update();
@@ -1801,7 +1876,9 @@ export class Engine {
    * `bottom` (meters along up) in a `size`² depth texture, drawn each frame
    * by the first view of the world (with what it selected). Height at a
    * texel: bottom + depth × (top − bottom); depth 0: no ground. For
-   * clamping many things on the GPU (tracks).
+   * clamping many things on the GPU (tracks). `origin` is in `anchor`'s
+   * coordinates (default the Earth's: Earth-fixed), and its east, north
+   * and up are the WGS84 ellipsoid's there.
    */
   addHeightCapture(
     world: World,
@@ -1811,8 +1888,10 @@ export class Engine {
       top?: number;
       bottom?: number;
       size?: number;
+      anchor?: AnchorHandle;
     },
   ): HeightCapture {
+    const anchor = contentAnchor(world, options.anchor, "addHeightCapture");
     const device = this.ctx.device;
     const size = options.size ?? 2048;
     const texture = device.createTexture({
@@ -1829,6 +1908,7 @@ export class Engine {
     );
     const capture: HeightCapture = {
       world,
+      anchor,
       origin: v3.vec3(
         options.origin[0]!,
         options.origin[1]!,
@@ -2859,8 +2939,26 @@ export class Engine {
       }
       c.stamp = this.frameNumber;
       c.by = view;
-      const [e, n, u] = c.axes;
-      const rel = v3.sub(v3.vec3(), c.origin, camera);
+      let [e, n, u] = c.axes;
+      let origin = c.origin;
+      const body = view.bodyAnchor;
+      if (c.anchor !== body) {
+        // The block is in the body anchor's axes (the shading axes): the
+        // capture's square re-expressed there, in float64.
+        const m = m4.multiply(
+          scratchSelection,
+          m4.invertAffine(
+            scratchSelectionInverse,
+            view.anchorPlacement(body, scratchSelectionBody),
+          ),
+          view.anchorPlacement(c.anchor, scratchCaptureAnchor),
+        );
+        origin = m4.transformPoint(scratchCaptureOrigin, m, c.origin);
+        e = rotateVector(m, e, scratchCaptureAxes[0]);
+        n = rotateVector(m, n, scratchCaptureAxes[1]);
+        u = rotateVector(m, u, scratchCaptureAxes[2]);
+      }
+      const rel = v3.sub(v3.vec3(), origin, camera);
       const h = c.halfExtent;
       const depth = c.top - c.bottom;
       const ce = v3.dot(e, rel);
@@ -4610,6 +4708,33 @@ const scratchCartographic: Cartographic = {
   height: 0,
 };
 const scratchProj = m4.mat4();
+const scratchSelection = m4.mat4();
+const scratchSelectionInverse = m4.mat4();
+const scratchSelectionBody = new Float64Array(16);
+const scratchCaptureAnchor = new Float64Array(16);
+const scratchCaptureOrigin = v3.vec3();
+const scratchCaptureAxes = [v3.vec3(), v3.vec3(), v3.vec3()] as const;
+
+/** `m` (rigid, column-major) times a vector, without its translation. */
+function rotateVector(m: ArrayLike<number>, v: ArrayLike<number>, out: Vec3) {
+  const x = v[0]!,
+    y = v[1]!,
+    z = v[2]!;
+  out[0] = m[0]! * x + m[4]! * y + m[8]! * z;
+  out[1] = m[1]! * x + m[5]! * y + m[9]! * z;
+  out[2] = m[2]! * x + m[6]! * y + m[10]! * z;
+  return out;
+}
+
+/** A camera moved by `m` (rigid): written into `out`, which is returned. */
+function transformCamera(m: m4.Mat4, from: Camera, out: Camera): Camera {
+  out.copyFrom(from);
+  m4.transformPoint(out.position, m, from.position);
+  rotateVector(m, from.direction, out.direction);
+  rotateVector(m, from.up, out.up);
+  rotateVector(m, from.right, out.right);
+  return out;
+}
 const scratchShadowUp = v3.vec3();
 const scratchAo = new Float32Array(16);
 const scratchViewProj = m4.mat4();
@@ -4618,6 +4743,9 @@ const scratchPlanes = new Float32Array(20);
 /** A height capture (`Engine.addHeightCapture`). */
 export interface HeightCapture {
   readonly world: World;
+  /** The anchor its square is placed in (default the Earth's). */
+  readonly anchor: AnchorHandle;
+  /** Its middle, in `anchor`'s coordinates. */
   readonly origin: Vec3;
   /** East, north and up at `origin`. */
   readonly axes: readonly [Vec3, Vec3, Vec3];

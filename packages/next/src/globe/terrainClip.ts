@@ -38,6 +38,16 @@
  * clipped terrain is a hole for them all (`TerrainClips`). A tile tests
  * only the regions it touches (`TerrainClips.maskFor`, a bit per region in
  * its draw records); with no regions nothing is tested.
+ *
+ * Regions are geodetic on the Earth and evaluated in the globe's anchor
+ * (`Tileset3D.anchor`, the Earth's): their anchors and edges are
+ * Earth-fixed, and the shader compares them with fragments in the view's
+ * shading axes (its body anchor's, plan 5a's call 18). A view of the Earth
+ * has the Earth's anchor as its body anchor, so wherever its render space
+ * places the Earth (a rig on an inertial reference frame turns it), the
+ * shader's inputs are those of an Earth-fixed render space, and clips stay
+ * where they were drawn. A globe under another anchor than its views' body
+ * anchor isn't supported yet (per-body content comes later).
  */
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { splitVec3 } from "../math/transforms.ts";

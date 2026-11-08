@@ -5,6 +5,7 @@
  */
 import * as vec3 from "../src/math/vec3.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
+import { EARTH } from "../src/scene/Body.ts";
 import {
   enuBasis,
   orbitBasis,
@@ -142,7 +143,9 @@ export function planOrbit(
 /**
  * `zoomTo` while orbiting: an east-north-up orbit focuses on what is framed
  * from `zoomTo`'s heading and pitch; one in a frame keeps the frame, the
- * camera placed as `zoomTo` places it and the orbit read from there.
+ * camera placed as `zoomTo` places it and the orbit read from there. The
+ * pose is Earth-fixed, set through the view's Earth anchor
+ * (`View.setCameraFromAnchor`).
  */
 export function followZoom(
   controller: InspectController,
@@ -163,4 +166,6 @@ export function followZoom(
   } else {
     controller.focus(center, heading, pitch, range);
   }
+  const view = controller.view;
+  view.setCameraFromAnchor(view.world.bodyAnchor(EARTH), view.camera);
 }

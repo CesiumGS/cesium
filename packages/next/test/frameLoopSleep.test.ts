@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import * as v3 from "../src/math/vec3.ts";
+import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { CanvasTarget, OffscreenTarget, type View } from "../src/scene/View.ts";
 import { Clock } from "../src/time/Clock.ts";
@@ -691,6 +692,7 @@ describe("the frame loop sleeps when settled", () => {
     function collider(world: View["world"]) {
       const tileset = {
         world,
+        anchor: world.bodyAnchor(EARTH),
         url: "collider",
         show: true,
         enableCollision: true,

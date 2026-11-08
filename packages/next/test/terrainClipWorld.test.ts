@@ -4,6 +4,7 @@
 // regions come and go; and the queries that treat clipped terrain as a
 // hole (height clamping, sampleHeightMostDetailed). CPU only (fakeGpu).
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import { EARTH } from "../src/scene/Body.ts";
 import {
   TerrainClipError,
   type TerrainClipRegion,
@@ -380,6 +381,8 @@ function fakeTileset(
     options.clipped?.(lon, lat) ?? false;
   return {
     world,
+    // Under the Earth's anchor, as tilesets are by default (plan 5a).
+    anchor: world.bodyAnchor(EARTH),
     url: options.url,
     show: true,
     enableCollision: options.collision,
@@ -401,12 +404,14 @@ function fakeTileset(
   };
 }
 
-/** A world as height clamping uses it: casts and one transform. */
+/** A world as height clamping uses it: casts, its Earth anchor and one transform. */
 function fakeWorld(castRays: World["castRays"]) {
   const matrix = new Float64Array(16);
   matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1;
+  const earth = { index: 0, generation: 0, name: "Earth", slot: 1 };
   return {
     id: 1,
+    bodyAnchor: () => earth,
     castRays,
     transformAlive: () => true,
     localMatrix: () => Float64Array.from(matrix),

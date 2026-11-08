@@ -2,7 +2,7 @@ import * as m4 from "../math/mat4.ts";
 import { MaterialFlags } from "../render/layout.ts";
 import { cssColor } from "../scene/styleExpression.ts";
 import type { Engine } from "../scene/Engine.ts";
-import type { DrawHandle, World } from "../scene/World.ts";
+import type { AnchorHandle, DrawHandle, World } from "../scene/World.ts";
 import type { PointCuller } from "../scene/PointCuller.ts";
 import type { ModelResource } from "../scene/gltfModel.ts";
 import { ModelPool } from "./ModelPool.ts";
@@ -38,6 +38,12 @@ export interface VectorLayerOptions {
   splatBelow?: number;
   /** Culling radius of the points around their source's origin (m; default 2,000 km). */
   radius?: number;
+  /**
+   * The anchor its draws hang under: its sources' (`PointSource.anchor`,
+   * the Earth's by default), which every source must share; one given
+   * must be it.
+   */
+  anchor?: AnchorHandle;
 }
 
 /**
@@ -95,6 +101,20 @@ export class VectorLayer {
       ReturnType<typeof compileVectorStyle>
     >();
     const first = sourceOf(undefined);
+    // The points are placed in their source's anchor: the layer's draws
+    // hang there too.
+    const anchor = options.anchor ?? first.anchor;
+    const sources =
+      "mesh" in options.source
+        ? [options.source as PointSource]
+        : Object.values(options.source);
+    for (const s of sources) {
+      if (s.anchor !== anchor) {
+        throw new Error(
+          `VectorLayer: the source's points are under ${s.anchor.name}, not ${anchor.name}; a layer draws under its sources' anchor.`,
+        );
+      }
+    }
     const style = compileVectorStyle(options.style, first.layout);
     compiled.set(first, style);
     const layer = new VectorLayer(engine, world, style.parameters);
@@ -120,6 +140,7 @@ export class VectorLayer {
           rotation[12] = rotation[13] = rotation[14] = 0;
           const draw = world.addDraw({
             mesh: source.mesh,
+            parent: anchor,
             origin: source.origin,
             model: rotation,
             radius: options.radius ?? 2e6,

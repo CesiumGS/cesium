@@ -4,7 +4,8 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Engine, HeightCapture } from "../scene/Engine.ts";
-import type { PointMesh, World } from "../scene/World.ts";
+import type { AnchorHandle, PointMesh, World } from "../scene/World.ts";
+import { contentAnchor } from "../scene/earthAnchor.ts";
 
 /**
  * A property's type: a number (f32), an integer (u32), a vector, or one of
@@ -25,10 +26,17 @@ export interface PointSourceOptions {
   /** Points it holds (their GPU memory is made up front). */
   capacity: number;
   /**
-   * Earth-fixed origin of its frame (east, north, up): positions are meters
-   * in it, so float32 keeps centimeters within a few hundred kilometers.
+   * Origin of its frame (east, north, up), in `anchor`'s coordinates
+   * (Earth-fixed under the Earth's): positions are meters in it, so
+   * float32 keeps centimeters within a few hundred kilometers.
    */
   origin: Vec3;
+  /**
+   * The anchor its points hang under (`World.addAnchor`,
+   * `World.bodyAnchor`; default the Earth's). Its layers' draws, model
+   * pools and ground capture follow it.
+   */
+  anchor?: AnchorHandle;
   /** Per-point properties styles read (`${name}`), besides `heading`. */
   properties?: Record<string, PointPropertyType>;
   /**
@@ -85,7 +93,9 @@ export class PointSource {
   /** The point mesh layers draw. */
   readonly mesh: PointMesh;
   readonly origin: Vec3;
-  /** East, north, up at the origin, Earth-fixed (float64). */
+  /** The anchor its points hang under (`PointSourceOptions.anchor`). */
+  readonly anchor: AnchorHandle;
+  /** East, north, up at the origin, in its anchor's coordinates (float64). */
   readonly frame: m4.Mat4;
   /** Each property's place in a point's words, `heading` included. */
   readonly layout: Readonly<Record<string, PointProperty>>;
@@ -122,6 +132,7 @@ export class PointSource {
   ) {
     const { device } = engine.gpu;
     const capacity = (this.capacity = options.capacity);
+    this.anchor = contentAnchor(world, options.anchor, "PointSource");
     this.origin = options.origin;
     this.clock = options.clock ?? (() => engine.time);
     this.delay = options.delay ?? 0;
@@ -164,6 +175,7 @@ export class PointSource {
     if (clamp) {
       this.heights = engine.addHeightCapture(world, {
         origin: options.origin,
+        anchor: this.anchor,
         halfExtent: clamp.halfExtent,
         ...(clamp.size !== undefined ? { size: clamp.size } : {}),
         ...(clamp.top !== undefined ? { top: clamp.top } : {}),

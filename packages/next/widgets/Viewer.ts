@@ -17,7 +17,9 @@
  */
 import {
   BingImagery,
+  Camera,
   CanvasTarget,
+  EARTH,
   IonTmsImagery,
   EYE,
   Ellipsoid,
@@ -340,6 +342,7 @@ export class Viewer {
       -Math.PI / 2,
       2e7,
     );
+    this.fromEarth(this.view);
     // The camera stays above the globe's drawn surface.
     this.controller.surfaceHeight = (longitude, latitude) =>
       this.globe_?.show
@@ -713,6 +716,27 @@ export class Viewer {
   // ------------------------------------------------------------- camera
 
   /**
+   * The main view's camera in the Earth's anchor (`View.anchorCamera`):
+   * Earth-fixed, whatever the view's render space. Reused: current until
+   * the next call.
+   */
+  private earthCamera(): Camera {
+    return this.view.anchorCamera(this.world.bodyAnchor(EARTH), this.earthPose);
+  }
+  private readonly earthPose = new Camera();
+
+  /**
+   * Re-expresses the pose a controller or `lookAt` just wrote into `view`'s
+   * camera, which is Earth-fixed, in its render space through the Earth's
+   * anchor (`View.setCameraFromAnchor`): framing shows the same Earth
+   * however the view places it. A copy while the anchor is at the
+   * identity.
+   */
+  private fromEarth(view: View): void {
+    view.setCameraFromAnchor(this.world.bodyAnchor(EARTH), view.camera);
+  }
+
+  /**
    * Frames content, a bounding sphere or a place (heading 35°, pitch -30°).
    * A model frames where it stands (`bounds`); clamped and still settling
    * on the ground, it frames again once it has (`Clamp.whenSettled`),
@@ -776,7 +800,7 @@ export class Viewer {
       // the globe instead from straight above the ground under the camera,
       // north up, orbiting that ground point.
       const ground = ellipsoid.scaleToGeodeticSurface(
-        this.view.camera.position,
+        this.earthCamera().position,
         vec3.vec3(),
       );
       if (ground) {
@@ -808,6 +832,7 @@ export class Viewer {
     this.view.camera.near = Math.min(0.1, Math.max(0.001, radius * 0.002));
     vec3.copy(this.focusCenter, center);
     this.controller.focus(center, heading, pitch, range);
+    this.fromEarth(this.view);
     if (this.orbit_) {
       followZoom(this.orbit_, center, heading, pitch, range);
     }
@@ -819,6 +844,7 @@ export class Viewer {
         -0.25,
         range * 0.4,
       );
+      this.fromEarth(this.second);
     }
     if (this.sunFromClock_) {
       if (!this.clockPlaced) {
@@ -911,7 +937,7 @@ export class Viewer {
     const at =
       vec3.length(this.focusCenter) > 0
         ? this.focusCenter
-        : this.view.camera.position;
+        : this.earthCamera().position;
     const c = ellipsoid.cartesianToCartographic(at, {
       longitude: 0,
       latitude: 0,
@@ -992,6 +1018,7 @@ export class Viewer {
         -0.25,
         this.controller.range * 0.4,
       );
+      this.fromEarth(second);
     } else {
       this.secondController!.dispose();
       this.engine.removeView(this.second!);
@@ -1119,7 +1146,7 @@ export class Viewer {
       }
       const plan = planOrbit(orbit && orbitState(orbit), options ?? {}, {
         focusCenter: this.focusCenter,
-        cameraPosition: this.view.camera.position,
+        cameraPosition: this.earthCamera().position,
         globeHeading: this.controller.heading,
       });
       if (!orbit) {
@@ -1134,6 +1161,7 @@ export class Viewer {
         orbit.maxRange = plan.maxRange;
       }
       orbit.focus(plan.target, plan.heading, plan.pitch, plan.range);
+      this.fromEarth(this.view);
     } else if (mode === "globe" && this.orbit_) {
       this.orbit_.dispose();
       this.orbit_ = undefined;

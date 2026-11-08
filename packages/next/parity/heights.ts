@@ -1,4 +1,5 @@
 import {
+  EARTH,
   Ellipsoid,
   Engine,
   fromDegrees,
@@ -242,6 +243,8 @@ async function runHeights(): Promise<Row[]> {
         };
       });
       const hits = await world.castRays(rays, {
+        // The tileset's draws are under the Earth's anchor (plan 5a).
+        anchor: world.bodyAnchor(EARTH),
         collisionOnly: true,
         viewMask: engine.viewBit(view),
       });

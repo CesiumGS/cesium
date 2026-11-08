@@ -6,6 +6,7 @@ import {
 } from "../shaders/link/index.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
+import { Camera } from "../scene/Camera.ts";
 import type { Engine } from "../scene/Engine.ts";
 import type { World } from "../scene/World.ts";
 import type { ModelPlacement, ModelResource } from "../scene/gltfModel.ts";
@@ -49,6 +50,7 @@ export class ModelPool {
   private readonly removeHook: () => void;
   private readonly inverseFrame = m4.mat4();
   private readonly scratch = v3.vec3();
+  private readonly camera = new Camera();
 
   constructor(
     private readonly engine: Engine,
@@ -73,6 +75,7 @@ export class ModelPool {
     // Hidden until claimed: no models at the origin on the first frame.
     this.placement = model.place({
       modelMatrix: source.frame,
+      anchor: source.anchor,
       ground: false,
       instances: { matrices: identities },
     });
@@ -250,7 +253,7 @@ export class ModelPool {
     u32[4] = p.anchors;
     u32[5] = p.streams;
     u32[6] = p.stride;
-    // The views' cameras, in the source's frame.
+    // The views' cameras, in the source's frame (through its anchor).
     let cameras = 0;
     for (const view of this.engine.views) {
       if (view.world !== this.world || !view.enabled || cameras === 4) {
@@ -259,7 +262,7 @@ export class ModelPool {
       const c = m4.transformPoint(
         this.scratch,
         this.inverseFrame,
-        view.camera.position,
+        view.anchorCamera(source.anchor, this.camera).position,
       );
       f32[12 + cameras * 4] = c[0]!;
       f32[13 + cameras * 4] = c[1]!;

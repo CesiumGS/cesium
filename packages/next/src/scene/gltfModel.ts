@@ -24,7 +24,9 @@ import type {
   HeightReference,
 } from "./HeightClamping.ts";
 import type { LightHandle } from "./lights.ts";
+import { contentAnchor, earthAnchor } from "./earthAnchor.ts";
 import type {
+  AnchorHandle,
   DrawHandle,
   InstanceOptions,
   MaterialOptions,
@@ -70,7 +72,8 @@ export interface ModelResourceOptions {
 type PlacementWhere =
   | {
       /**
-       * Float64 transform (e.g. an east-north-up frame): Earth-fixed, or
+       * Float64 transform (e.g. an east-north-up frame): in its anchor's
+       * coordinates (Earth-fixed under the Earth's, the default), or
        * relative to `parent`.
        */
       modelMatrix: Mat4;
@@ -106,6 +109,13 @@ type PlacementAnchor =
     };
 
 interface PlacementCommon {
+  /**
+   * The anchor it hangs under (`World.addAnchor`, `World.bodyAnchor`):
+   * default the Earth's, so `modelMatrix` and `at` are Earth-fixed. With a
+   * `parent`, the parent's anchor; one given must be it. A `heightReference`
+   * clamps to the Earth's ground, so only under the Earth's anchor.
+   */
+  anchor?: AnchorHandle;
   /** Unlit shading for every draw (1.x `LightingModel.UNLIT`). */
   unlit?: boolean;
   /** Custom shader stages for every draw (`setShader` changes them). */
@@ -607,6 +617,25 @@ export function placeModel(
     throw new Error("place: a heightReference needs a model without parent");
   }
   const world = model.world;
+  if (options.anchor !== undefined) {
+    const anchor = contentAnchor(world, options.anchor, "place");
+    if (options.parent) {
+      const under = world.anchorOf(options.parent);
+      if (under !== anchor) {
+        throw new Error(
+          `place: the parent hangs under ${under?.name ?? "no anchor"}, not ${anchor.name}; leave out the anchor, or give the parent's.`,
+        );
+      }
+    } else if (
+      both.heightReference &&
+      both.heightReference !== "none" &&
+      anchor !== earthAnchor(world)
+    ) {
+      throw new Error(
+        `place: a heightReference clamps to the Earth's ground; ${anchor.name} is not the Earth's anchor.`,
+      );
+    }
+  }
   const placed: { draws: DrawHandle[]; lights: LightHandle[] } = {
     draws: [],
     lights: [],
@@ -669,7 +698,10 @@ function placeGltf(
     translation[14] = z;
     rootMatrix = m4.multiply(m4.mat4(), modelMatrix, translation);
   }
-  const root = world.addTransform(rootMatrix, options.parent);
+  const root = world.addTransform(
+    rootMatrix,
+    options.parent ?? contentAnchor(world, options.anchor, "place"),
+  );
   onRoot(root);
 
   // Below the root: RTC_CENTER × axis correction × node, as 1.x
@@ -925,7 +957,10 @@ export class ModelPlacement implements Disposable {
     return this.removed_;
   }
 
-  /** Where it stands now (moves and clamping included), Earth-fixed. */
+  /**
+   * Where it stands now (moves and clamping included), in its anchor's
+   * coordinates: Earth-fixed under the Earth's.
+   */
   bounds(): { center: Vec3; radius: number } {
     this.alive("bounds");
     const m = this.model.world.worldMatrix(this.transform);
@@ -936,7 +971,8 @@ export class ModelPlacement implements Disposable {
   }
 
   /**
-   * Moves it: Earth-fixed, or relative to its parent. A clamped placement
+   * Moves it: in its anchor's coordinates (Earth-fixed under the Earth's),
+   * or relative to its parent. A clamped placement
    * is anchored again where it now stands.
    */
   setTransform(matrix: Mat4): void {

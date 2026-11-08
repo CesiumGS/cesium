@@ -7,7 +7,9 @@
  * exceeds its byte budget; a tile touched by any view stays.
  */
 import type { Engine } from "../scene/Engine.ts";
+import { contentAnchor } from "../scene/earthAnchor.ts";
 import type {
+  AnchorHandle,
   CastRay,
   ClipBox,
   DrawHandle,
@@ -205,6 +207,13 @@ export interface TilesetOptions extends BudgetedOptions {
    * unloads. Off by default: other tilesets keep no copy.
    */
   retainGeometry?: boolean;
+  /**
+   * The anchor its content hangs under (`World.addAnchor`,
+   * `World.bodyAnchor`; default the Earth's, so tile transforms are
+   * Earth-fixed as tileset.json writes them). Selection reads each view's
+   * camera in this anchor (`View.anchorCamera`). Fixed at load.
+   */
+  anchor?: AnchorHandle;
 }
 
 export interface TilesetStats {
@@ -441,6 +450,11 @@ export class Tileset3D implements TileTree {
   private delta: Mat4 = m4.mat4();
   /** Parent transform of all content: moves it with one write. */
   private readonly transform: TransformHandle;
+  /**
+   * The anchor its content hangs under (`TilesetOptions.anchor`; default
+   * the Earth's): what its tiles' transforms and volumes are relative to.
+   */
+  readonly anchor: AnchorHandle;
 
   private moveVolumes(tile: Tile, change: Mat4): void {
     tile.volume = transformVolume(tile.volume, change);
@@ -490,6 +504,11 @@ export class Tileset3D implements TileTree {
    * a region touches test it, per fragment, and only against the few edges
    * of their place in the region's grid, so a long corridor strip costs
    * only where it runs. Wakes the frame loop.
+   *
+   * Regions are geodetic on the Earth, evaluated in the globe's anchor
+   * (`anchor`, the Earth's): a view's camera there (its body camera) is
+   * what the shader compares fragments with, so clips stay put wherever a
+   * view's render space places the Earth.
    */
   addTerrainClip(region: TerrainClipRegion): TerrainClip {
     const clips = this.source?.clips;
@@ -918,7 +937,8 @@ export class Tileset3D implements TileTree {
     this.collision = options.enableCollision ?? false;
     this.retainGeometry = options.retainGeometry ?? false;
     this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
-    this.transform = world.addTransform(m4.mat4());
+    this.anchor = contentAnchor(world, options.anchor, "Tileset3D");
+    this.transform = world.addTransform(m4.mat4(), this.anchor);
     this.policy = createSelection(options, source);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;

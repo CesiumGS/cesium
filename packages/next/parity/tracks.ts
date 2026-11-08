@@ -1,5 +1,6 @@
 import {
   Camera,
+  EARTH,
   Ellipsoid,
   Engine,
   OffscreenTarget,
@@ -10,6 +11,7 @@ import {
   fromDegrees,
   mat4,
   vec3,
+  type AnchorHandle,
   type MeshData,
   type VectorStyleDocument,
   type World,
@@ -142,13 +144,16 @@ function hills(half: number, step: number): MeshData {
 
 /**
  * Ground heights at (x, y) in `frame` (east-north-up at an origin) by the
- * world's exact ray casts straight down from `top` (undefined: no hit).
+ * world's exact ray casts straight down from `top` (undefined: no hit),
+ * against the draws under `anchor` (default none: the page's own meshes;
+ * a tileset's are under the Earth's anchor).
  */
 async function castDown(
   world: World,
   frame: mat4.Mat4,
   points: Array<[number, number]>,
   top: number,
+  anchor?: AnchorHandle,
 ): Promise<Array<number | undefined>> {
   const down = [-frame[8]!, -frame[9]!, -frame[10]!];
   const hits = await world.castRays(
@@ -163,6 +168,7 @@ async function castDown(
       direction: down,
       maxDistance: 5000,
     })),
+    anchor ? { anchor } : {},
   );
   return hits.map((d) => (d === undefined ? undefined : top - d));
 }
@@ -537,7 +543,13 @@ async function runTracks(): Promise<Row[]> {
         points.push([(i - 39.5) * 2.5, (j - 39.5) * 2.5]);
       }
     }
-    const reference = await castDown(world, enu, points, 300);
+    const reference = await castDown(
+      world,
+      enu,
+      points,
+      300,
+      world.bodyAnchor(EARTH),
+    );
     const tracks = new PointSource(engine, world, {
       capacity: points.length,
       origin: ground,

@@ -4,6 +4,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import type { TransformHandle, World } from "./World.ts";
+import { earthAnchor } from "./earthAnchor.ts";
 
 /**
  * How content's height relates to the ground (1.x `HeightReference`):
@@ -106,7 +107,8 @@ const CAST_INTERVAL = 10;
  *   anchored there is re-clamped, against the drawn surface (1.x
  *   `Globe.getHeight`).
  * - 3D Tiles with `enableCollision` are ray cast on the GPU
- *   (`World.castRays`) down the geodetic normal, against the tiles the
+ *   (`World.castRays`, in the Earth's anchor) down the geodetic normal,
+ *   against the tiles the
  *   views drew, nearest hit from above (1.x: CPU picking of the first
  *   tile hit along a geocentric ray). Casts are batched for all anchors and
  *   repeat only while those tilesets change.
@@ -118,8 +120,12 @@ const CAST_INTERVAL = 10;
  *   re-clamps the content under it.
  *
  * Content moves along the local vertical only, as 1.x models do: its root
- * transform (Earth-fixed, without a parent, e.g. `ModelPlacement.transform`)
- * is translated, so everything placed by it follows.
+ * transform (Earth-fixed, under the Earth's anchor without a parent, e.g.
+ * `ModelPlacement.transform`) is translated, so everything placed by it
+ * follows.
+ *
+ * The ground is the Earth's: only tilesets and globes under the Earth's
+ * anchor (`Tileset3D.anchor`) give it.
  */
 export class HeightClamping {
   private readonly entries = new Set<Entry>();
@@ -286,6 +292,7 @@ export class HeightClamping {
         (t) =>
           t.world === e.world &&
           t.show &&
+          onEarth(t) &&
           (t.terrain
             ? !/3DTiles/.test(reference)
             : t.enableCollision && usesTiles(reference)),
@@ -422,6 +429,8 @@ export class HeightClamping {
       // content on the clipped terrain it can't see.
       const globes = tilesets.filter((t) => t.terrain && t.world === world);
       const hits = await world.castRays(rays, {
+        // The rays are Earth-fixed: the content under the Earth's anchor.
+        anchor: earthAnchor(world),
         collisionOnly: true,
         viewMask: this.viewMask(world),
         exclude: (draw) => globes.some((t) => t.ownsDraw(draw)),
@@ -472,7 +481,7 @@ export class HeightClamping {
     if (!/3DTiles/.test(reference)) {
       // The globe: its drawn surface (1.x Globe.getHeight).
       for (const t of this.tilesets()) {
-        if (t.world === e.world && t.show) {
+        if (t.world === e.world && t.show && onEarth(t)) {
           const h = t.surfaceHeight(longitude, latitude);
           if (h !== undefined) {
             ground = Math.max(ground ?? -Infinity, h);
@@ -524,7 +533,12 @@ function settle(e: Entry): void {
  * clips and all.
  */
 function isCollider(t: Tileset3D): boolean {
-  return t.show && t.enableCollision && !t.terrain;
+  return t.show && t.enableCollision && !t.terrain && onEarth(t);
+}
+
+/** Under the Earth's anchor: its ground is the Earth's. */
+function onEarth(t: Tileset3D): boolean {
+  return t.anchor === earthAnchor(t.world);
 }
 
 function usesTiles(reference: HeightReference): boolean {

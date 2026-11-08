@@ -21,8 +21,16 @@ const zUp = { up: [0, 0, 1], headingRef: [1, 0, 0] };
 /** A view of SIZE × SIZE pixels and an element whose box matches it. */
 function setup(options?: InspectControllerOptions) {
   const camera = new Camera();
+  // The Earth's anchor at the identity: posing through it is a copy.
+  const earth = { index: 0, generation: 0, name: "Earth", slot: 1 };
   const view = {
     camera,
+    world: { bodyAnchor: () => earth },
+    setCameraFromAnchor: (_anchor: unknown, pose: Camera) => {
+      if (pose !== camera) {
+        camera.copyFrom(pose);
+      }
+    },
     target: { width: SIZE, height: SIZE },
     contains: () => true,
     pixelRect: () => ({ x: 0, y: 0, width: SIZE, height: SIZE }),

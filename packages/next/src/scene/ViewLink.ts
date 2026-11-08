@@ -1,6 +1,8 @@
 import * as v3 from "../math/vec3.ts";
 import { Ellipsoid, cartographic } from "../math/ellipsoid.ts";
 import type { Vec3 } from "../math/vec3.ts";
+import { Camera } from "./Camera.ts";
+import { earthAnchor } from "./earthAnchor.ts";
 import type { Overlay, View } from "./View.ts";
 
 export type ViewLinkMode =
@@ -19,9 +21,17 @@ export interface ViewLinkOptions {
 }
 
 /**
- * Relates two views. Links are evaluated once per frame before rendering, so
+ * Relates two views. Links are evaluated once per tick before rendering, so
  * linked views always render from consistent cameras. Input routing ("control")
  * is done by pointing a camera controller at the source view's camera.
+ *
+ * Cameras are related through the Earth's anchor (plan 5a's call 22): the
+ * target gets the source's pose in the source's Earth anchor
+ * (`View.anchorCamera`), set in its own (`View.setCameraFromAnchor`), so
+ * views whose Earth anchors are placed differently in their render spaces
+ * still show the same Earth. The footprint and the follow target are
+ * Earth-fixed: the footprint overlay is drawn in the target's body anchor,
+ * the Earth's for a view of the Earth.
  */
 export class ViewLink {
   private readonly overlay: Overlay;
@@ -29,6 +39,10 @@ export class ViewLink {
   private readonly mirror: boolean;
   private readonly followMode: boolean;
   private readonly footprint: boolean;
+  /** The source's camera in its Earth anchor, each evaluation. */
+  private readonly sourceCamera = new Camera();
+  /** The target's pose in its Earth anchor ("follow"). */
+  private readonly targetCamera = new Camera();
 
   constructor(
     readonly source: View,
@@ -49,8 +63,12 @@ export class ViewLink {
   }
 
   evaluate(): void {
+    this.source.anchorCamera(earthAnchor(this.source.world), this.sourceCamera);
     if (this.mirror) {
-      this.target.camera.copyFrom(this.source.camera);
+      const target = this.target;
+      // Field of view and near plane as they are; the pose in the Earth.
+      target.camera.copyFrom(this.sourceCamera);
+      target.setCameraFromAnchor(earthAnchor(target.world), this.sourceCamera);
     }
     if (this.followMode) {
       this.follow();
@@ -68,17 +86,14 @@ export class ViewLink {
   }
 
   private follow(): void {
-    const camera = this.source.camera;
+    const camera = this.sourceCamera;
     const focus = this.groundPoint(0, 0, scratchFocus);
     const distance = v3.distance(camera.position, focus);
     const range = Math.max(500, distance * (this.options.followScale ?? 3));
-    this.target.camera.lookAt(
-      focus,
-      0,
-      -Math.PI / 2 + 1e-4,
-      range,
-      this.ellipsoid,
-    );
+    const target = this.target;
+    const pose = this.targetCamera.copyFrom(target.camera);
+    pose.lookAt(focus, 0, -Math.PI / 2 + 1e-4, range, this.ellipsoid);
+    target.setCameraFromAnchor(earthAnchor(target.world), pose);
   }
 
   /** Walks the source viewport's border and connects consecutive ground hits. */
@@ -119,7 +134,7 @@ export class ViewLink {
    * frames (or drop out), making the footprint and the follow target flicker.
    */
   private groundPoint(ndcX: number, ndcY: number, out: Vec3): Vec3 {
-    const camera = this.source.camera;
+    const camera = this.sourceCamera;
     const direction = camera.rayDirection(
       ndcX,
       ndcY,
