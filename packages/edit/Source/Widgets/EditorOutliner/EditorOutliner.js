@@ -3,19 +3,11 @@
 import { Check, defined } from "@cesium/core";
 import { getElement } from "@cesium/engine";
 import { knockout } from "@cesium/widgets";
-import EditorMeshTreeProvider from "./EditorMeshTreeProvider.js";
 import EditorOutlinerViewModel from "./EditorOutlinerViewModel.js";
 
 /** @import { Command } from "@cesium/widgets"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
-/** @import MeshTreeProvider from "./MeshTreeProvider.js"; */
 /** @import { EditorOutlinerRow, EditorOutlinerSelectOptions } from "./EditorOutlinerViewModel.js"; */
-
-/**
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- * @typedef {object} EditorOutlinerOptions
- * @property {MeshTreeProvider} [provider] The tree to display. Defaults to an {@link EditorMeshTreeProvider} listing every mesh in the editor.
- */
 
 /**
  * Calls a command; its generated type isn't callable.
@@ -81,12 +73,12 @@ function isDisabled(row) {
 }
 
 /**
- * A collapsible tree of a {@link MeshEditor}'s meshes. Clicking a row makes its
- * mesh the only active mesh; Ctrl- or Cmd-clicking toggles it, and
- * Shift-clicking selects a range. Clicking a row without a mesh expands or
- * collapses it. Rows whose meshes are active are highlighted, and rows that
- * can't be selected or expanded are dimmed. Requires
- * <code>EditorOutliner.css</code>.
+ * A collapsible tree of a {@link MeshEditor}'s meshes and the groups holding
+ * them, starting with those in its {@link MeshEditor#root} group. Clicking a
+ * mesh's row makes it the only active mesh; Ctrl- or Cmd-clicking toggles
+ * it, and Shift-clicking selects a range. Clicking a group's row expands or
+ * collapses it. Rows whose meshes are active are highlighted, and empty
+ * groups are dimmed. Requires <code>EditorOutliner.css</code>.
  * <p>
  * The outliner is a single tab stop. The up and down arrow keys, Home and End
  * move between rows, the right arrow key expands a row or moves to its first
@@ -102,7 +94,6 @@ function isDisabled(row) {
  *
  * @param {Element|string} container The element or ID that hosts the outliner.
  * @param {MeshEditor} editor The editor whose meshes are listed.
- * @param {EditorOutlinerOptions} [options] The outliner's options.
  */
 class EditorOutliner {
   /** @type {Element} */
@@ -110,13 +101,6 @@ class EditorOutliner {
 
   /** @type {EditorOutlinerViewModel} */
   #viewModel;
-
-  /**
-   * The provider the outliner created, which it destroys with itself.
-   *
-   * @type {EditorMeshTreeProvider|undefined}
-   */
-  #ownProvider;
 
   /** @type {HTMLDivElement} */
   #wrapper;
@@ -134,22 +118,15 @@ class EditorOutliner {
   /**
    * @param {Element|string} container The element or ID that hosts the outliner.
    * @param {MeshEditor} editor The editor whose meshes are listed.
-   * @param {EditorOutlinerOptions} [options] The outliner's options.
    */
-  constructor(container, editor, options) {
+  constructor(container, editor) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("container", container);
     Check.typeOf.object("editor", editor);
     //>>includeEnd('debug');
 
     this.#container = getElement(container);
-
-    let provider = options?.provider;
-    if (!defined(provider)) {
-      this.#ownProvider = new EditorMeshTreeProvider(editor);
-      provider = this.#ownProvider;
-    }
-    this.#viewModel = new EditorOutlinerViewModel(editor, provider);
+    this.#viewModel = new EditorOutlinerViewModel(editor);
 
     this.#wrapper = this.#createElements();
     try {
@@ -361,15 +338,13 @@ class EditorOutliner {
   }
 
   /**
-   * Removes the outliner from the DOM and destroys its view model, and the
-   * provider it created, if it created one.
+   * Removes the outliner from the DOM and destroys its view model.
    */
   destroy() {
     this.#focusSubscription?.dispose();
     knockout.cleanNode(this.#wrapper);
     this.#wrapper.remove();
     this.#viewModel.destroy();
-    this.#ownProvider?.destroy();
   }
 }
 

@@ -8,7 +8,6 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
 
 /** @import { Viewer } from "@cesium/widgets"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
-/** @import { EditorOutlinerOptions } from "../EditorOutliner/EditorOutliner.js"; */
 /** @import { EditorToolbarOptions, EditorToolbarModeEntry, EditorToolbarToolEntry } from "../EditorToolbar/EditorToolbarViewModel.js"; */
 /** @import { Command } from "@cesium/widgets"; */
 
@@ -25,8 +24,7 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
  * @property {MeshEditor} editor An editor in the viewer's scene.
  * @property {boolean} [toolbar=true] Whether to add a toolbar.
  * @property {EditorToolbarOptions} [toolbarOptions] The toolbar's options. Without <code>tools</code>, the toolbar offers the {@link ViewerEditorTools}.
- * @property {boolean} [outliner=false] Whether to add an outliner.
- * @property {EditorOutlinerOptions} [outlinerOptions] The outliner's options.
+ * @property {boolean} [outliner=false] Whether to add an outliner, showing the editor's meshes and groups.
  * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them.
  */
 
@@ -125,8 +123,7 @@ function viewerEditorMixin(viewer, options) {
       viewer,
       options.outliner === true,
       "cesium-viewer-editorOutlinerContainer",
-      (container) =>
-        new EditorOutliner(container, editor, options.outlinerOptions),
+      (container) => new EditorOutliner(container, editor),
     );
     removeKeyBindings = installKeyBindings(
       viewer,
