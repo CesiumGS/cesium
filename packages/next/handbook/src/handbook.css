@@ -1388,9 +1388,19 @@ span.api-source {
 .section .goal-link {
   margin-block-start: var(--stratakit-space-200);
 }
-.costs {
-  display: grid;
-  gap: var(--stratakit-space-200);
+.cost-table td:first-child {
+  inline-size: 34%;
+}
+.cost-table td:nth-child(2) {
+  inline-size: 7.5em;
+  white-space: nowrap;
+}
+.cost-wide td:first-child {
+  inline-size: 26%;
+}
+.cost-wide td:nth-child(2) {
+  inline-size: 34%;
+  white-space: normal;
 }
 .open-question {
   margin-block: var(--stratakit-space-400);

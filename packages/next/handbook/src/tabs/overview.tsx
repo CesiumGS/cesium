@@ -1,7 +1,6 @@
-import { API_ROWS } from "../apiMap.ts";
 import { count, data, day, size, libraryEntry } from "../data.ts";
+import { Costs } from "../costs.tsx";
 import { GoalList } from "../goals.tsx";
-import { WEBGPU_USAGE } from "../sources.ts";
 import { C, DataTable, Generated, Page, Section, Written } from "../parts.tsx";
 
 const MILESTONES = [
@@ -44,10 +43,6 @@ const MILESTONES = [
 
 export function Overview() {
   const core = libraryEntry("core");
-  const breaking = API_ROWS.filter(
-    (r) =>
-      r.status === "absent" || r.status === "changed" || r.status === "renamed",
-  ).length;
   return (
     <Page
       title="A WebGPU engine for CesiumJS 2.0"
@@ -79,33 +74,7 @@ export function Overview() {
       </Section>
 
       <Section title="What it costs">
-        <ul className="costs">
-          <li>
-            <strong>A breaking API.</strong> {breaking} of the {API_ROWS.length}{" "}
-            areas in the <a href="#/compare">1.x to 2.0 API</a> comparison break
-            existing code. Apps change; they don't just recompile.
-          </li>
-          <li>
-            <strong>WebGPU only.</strong> There's no WebGL fallback and no
-            compatibility mode. {WEBGPU_USAGE} of global browser usage has
-            WebGPU, and the <a href="#/browsers">Browser compatibility</a> tab
-            says who that leaves out.
-          </li>
-          <li>
-            <strong>What 1.x has that isn't built.</strong> Entities and
-            DataSources; Primitive, Geometry and Appearance; 2D and Columbus
-            view; CZML, KML and GeoJSON; imagery on 3D Tiles; underground
-            viewing; camera flights; glTF animation; labels and polylines;
-            clipping planes on tilesets; post-processing stages; point clouds,
-            splats and vector tiles. Since the plan's first list of non-goals,
-            globe translucency has been built, and widgets partly.
-          </li>
-          <li>
-            <strong>Migration effort.</strong> Nobody has estimated or measured
-            it, and there's no migration tool. 1.x shader text has to be
-            rewritten, every pick has to be awaited, and math code changes.
-          </li>
-        </ul>
+        <Costs />
         <div className="open-question">
           <h3>An open question: the real cost of reaching production</h3>
           <p>
@@ -125,7 +94,7 @@ export function Overview() {
           <p>Whatever the tooling, going to production involves:</p>
           <ul>
             <li>the API review (plan 5i) and documentation</li>
-            <li>1.x parity gaps, and migration</li>
+            <li>1.x parity gaps, migration, and a migration guide</li>
             <li>the plan's open performance and compute milestones (M5, M6)</li>
             <li>browser reach, and testing on real hardware</li>
             <li>a security review, and licensing, including of data</li>
@@ -155,7 +124,7 @@ export function Overview() {
           </ul>
         </div>
         <Written
-          from="the overall plan's non-goals and milestones, checked against api/surface.txt and git"
+          from="the overall plan, sections 3 and 13.17 and its milestones, the plan 5 spec, the code and git"
           on="2026-11-08"
         />
       </Section>
