@@ -41,6 +41,7 @@ entry	name	kind	tier
 .	CustomShaderOptions	interface	-
 .	DAYLIGHT_EXPOSURE	const	-
 .	DAYLIGHT_SUN_ILLUMINANCE	const	-
+.	DEFAULT_IMAGERY_SLICES	const	-
 .	DEFAULT_SKY	const	-
 .	DESIGN_NOT_INVERTED	const	-
 .	DeclaredCrs	interface	-
@@ -215,6 +216,7 @@ entry	name	kind	tier
 .	SkyState	interface	-
 .	SlangCache	interface	-
 .	SlicePool	class	-
+.	SliceUser	interface	-
 .	SnapCamera	type	-
 .	SnapKind	type	-
 .	SnapRequest	interface	-
