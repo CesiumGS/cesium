@@ -796,12 +796,20 @@ export __extern_cpp SurfaceVertex surfaceDepthVertex(uint vertexIndex, uint item
 
 // --- the opaque passes' fragments ---------------------------------------------
 
+// Bits of a record's `clipBlock` holding the block (layout.ts
+// `CLIP_BLOCK_BITS`); the box count above.
+static const uint CLIP_BLOCK_BITS = 28u;
+
 // A mixed-LOD placeholder's boxes: `packed` is the record's `clipBlock`,
-// the block in bits 0-27 and how many boxes it holds in bits 28-31.
+// the block in bits 0-27 and how many boxes it holds in bits 28-31 (at
+// most CLIP_BOXES, the loop's constant bound, whatever the record holds).
 bool insideClipBoxes(uint packed, float3 p) {
-  uint block = packed & 0x0fffffffu;
-  uint count = packed >> 28u;
-  for (uint i = 0u; i < count; i++) {
+  uint block = packed & ((1u << CLIP_BLOCK_BITS) - 1u);
+  uint count = packed >> CLIP_BLOCK_BITS;
+  for (uint i = 0u; i < CLIP_BOXES; i++) {
+    if (i >= count) {
+      break;
+    }
     uint b = (block * CLIP_BOXES + i) * 5u;
     float3 d = p - SplitPosition(clipBoxes[b].xyz, clipBoxes[b + 1u].xyz)
                        .difference(SplitPosition(view.cameraHi, view.cameraLo));
@@ -831,11 +839,13 @@ bool segmentsCross(float2 a, float2 b, float2 q, float2 s) {
 
 // Terrain clipping (a globe's `addTerrainClip`, globe/terrainClip.ts): the
 // world's regions live in `clipBoxes`, block 0's first 32 rows a directory
-// (a region's first row and vertex count, as uints). A region's rows
+// (a region's first row, as a uint; 0 for a free slot). A region's rows
 // (`packClipShape`): its anchor's position hi (xyz) with its gnomonic
-// radius (w); lo with its grid's size; its east, north and up axes; its box
-// in its plane; its grid's cells (first edge row and count, the sample);
-// the cells' edges, one a row (both ends in the plane).
+// radius (w); lo with its grid's columns and rows (w, a uint: columns in
+// the low 16 bits); its east, north and up axes; its box in its plane
+// (CLIP_HEADER_ROWS in all); its grid's cells, row by row (first edge row
+// and count, the sample); the cells' edges, one a row (both ends in the
+// plane).
 //
 // A fragment projects from the point where the anchor's normal meets the
 // polar axis onto the anchor's tangent plane (gnomonic: exact at the
@@ -844,16 +854,23 @@ bool segmentsCross(float2 a, float2 b, float2 q, float2 s) {
 // the cell's sample point is known inside or out, and the segment from the
 // fragment to it crosses only the cell's edges, so the fragment is inside
 // when it crosses an odd number of them and the sample isn't, or the
-// reverse. A fragment tests at most MAX_CLIP_CELL_EDGES edges per region.
-// `mask` is the record's `terrainClip`: the regions its tile's rectangle
-// touches (the CPU filters per tile). Every loop has a constant bound,
-// whatever the buffer holds.
+// reverse. A fragment tests at most MAX_CLIP_CELL_EDGES edges per region,
+// and MAX_CLIP_FRAGMENT_EDGES in all, whatever the buffer holds: the CPU
+// refuses regions that would need more (`TerrainClips.checkBudget`), and
+// the budget here only keeps a bad buffer's cost bounded. `mask` is the
+// record's `terrainClip`: the regions its tile's rectangle touches (the
+// CPU filters per tile). Every loop has a constant bound. The constants
+// are terrainClip.ts's and layout.ts's (test/terrainClip.test.ts reads
+// them here).
 static const uint MAX_TERRAIN_CLIPS = 32u;
 static const uint MAX_CLIP_GRID = 128u;
-static const uint MAX_CLIP_CELL_EDGES = 128u;
+static const uint MAX_CLIP_CELL_EDGES = 32u;
+static const uint MAX_CLIP_FRAGMENT_EDGES = 128u;
+static const uint CLIP_HEADER_ROWS = 6u;
 
 bool insideTerrainClip(uint mask, float3 p) {
   SplitPosition camera = SplitPosition(view.cameraHi, view.cameraLo);
+  uint budget = MAX_CLIP_FRAGMENT_EDGES;
   for (uint n = 0u; n < MAX_TERRAIN_CLIPS; n++) {
     if (mask == 0u) {
       break;
@@ -876,15 +893,17 @@ bool insideTerrainClip(uint mask, float3 p) {
     if (q.x < box.x || q.y < box.y || q.x > box.z || q.y > box.w) {
       continue;
     }
-    uint size = clamp(uint(lo.w), 1u, MAX_CLIP_GRID);
-    uint grid = o + 6u;
-    uint edges = grid + size * size;
-    float2 cell = max((box.zw - box.xy) / float(size), float2(1e-6));
-    uint2 at = min(uint2(max((q - box.xy) / cell, float2(0.0))), uint2(size - 1u));
-    float4 c = clipBoxes[grid + at.y * size + at.x];
+    uint sizes = asuint(lo.w);
+    uint2 size = clamp(uint2(sizes & 0xffffu, sizes >> 16u), uint2(1u), uint2(MAX_CLIP_GRID));
+    uint grid = o + CLIP_HEADER_ROWS;
+    uint edges = grid + size.x * size.y;
+    float2 cell = max((box.zw - box.xy) / float2(size), float2(1e-6));
+    uint2 at = min(uint2(max((q - box.xy) / cell, float2(0.0))), size - 1u);
+    float4 c = clipBoxes[grid + at.y * size.x + at.x];
     uint start = asuint(c.x);
     uint word = asuint(c.y);
-    uint count = min(word & 0x7fffffffu, MAX_CLIP_CELL_EDGES);
+    uint count = min(word & 0x7fffffffu, min(MAX_CLIP_CELL_EDGES, budget));
+    budget -= count;
     bool inside = (word >> 31u) != 0u;
     for (uint j = 0u; j < MAX_CLIP_CELL_EDGES; j++) {
       if (j >= count) {

@@ -175,6 +175,8 @@ interface PersistentImage {
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 27;
+/** Radians a degree (`Tileset3D.terrainClipped` takes degrees). */
+const DEGREES = Math.PI / 180;
 
 /**
  * How near its meter reading an adapted exposure is settled: the eye's
@@ -1355,8 +1357,8 @@ export class Engine {
             if (
               d !== undefined &&
               !tileset.terrainClipped(
-                positions[i]!.longitude,
-                positions[i]!.latitude,
+                positions[i]!.longitude / DEGREES,
+                positions[i]!.latitude / DEGREES,
                 START - d,
               )
             ) {

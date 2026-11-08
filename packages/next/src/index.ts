@@ -131,7 +131,9 @@ export {
   type GlobeImageryOptions,
 } from "./globe/GlobeImagery.ts";
 export {
+  MAX_CLIP_FRAGMENT_EDGES,
   MAX_TERRAIN_CLIP_VERTICES,
+  TerrainClipError,
   type TerrainClip,
   type TerrainClipPosition,
   type TerrainClipRectangle,

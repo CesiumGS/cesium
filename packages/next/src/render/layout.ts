@@ -216,10 +216,29 @@ export const PLACEHOLDER_MASK_WORD = R.placeholderMask;
  * rectangle touches; inside those it draws nothing. 0: none.
  */
 export const TERRAIN_CLIP_WORD = R.terrainClip;
-/** Bits of `DrawRecord.clipBlock` holding the block; the box count above. */
+/**
+ * Bits of `DrawRecord.clipBlock` holding the block; the box count above
+ * (surface.slang `CLIP_BLOCK_BITS`).
+ */
 export const CLIP_BLOCK_BITS = 28;
-/** A placeholder's `DrawRecord.clipBlock`: its block and box count. */
+/**
+ * A placeholder's `DrawRecord.clipBlock`: its block (below 2^28) and box
+ * count (1 to `CLIP_BOXES`). Throws for any other, which the shader would
+ * misread.
+ */
 export function packClip(block: number, count: number): number {
+  if (
+    !Number.isInteger(block) ||
+    block < 0 ||
+    block >= 2 ** CLIP_BLOCK_BITS ||
+    !Number.isInteger(count) ||
+    count < 1 ||
+    count > CLIP_BOXES
+  ) {
+    throw new RangeError(
+      `packClip: block ${block} and count ${count} don't fit (block below 2^${CLIP_BLOCK_BITS}, 1 to ${CLIP_BOXES} boxes).`,
+    );
+  }
   return (block | (count << CLIP_BLOCK_BITS)) >>> 0;
 }
 /** Word offsets of a record's range in the instance table (count 0: none). */
@@ -234,9 +253,17 @@ export const CLIP_BOX_FLOATS = 20;
 export const CLIP_BLOCK_ROWS = (CLIP_BOXES * CLIP_BOX_FLOATS) / 4;
 /**
  * Terrain clip regions a world holds at once: a bit each in a record's
- * `terrainClip`, a row each of the directory in clip block 0.
+ * `terrainClip`, a row each of the directory in clip block 0
+ * (surface.slang `MAX_TERRAIN_CLIPS`).
  */
 export const MAX_TERRAIN_CLIPS = 32;
+/**
+ * Clip blocks one terrain clip region takes at most (its packed rows,
+ * `CLIP_BLOCK_ROWS` a block). All `MAX_TERRAIN_CLIPS` regions at this
+ * size take 3,840 blocks, which the world sets aside from its placeholders'
+ * (`WorldOptions.maxClipBlocks`).
+ */
+export const MAX_TERRAIN_CLIP_BLOCKS = 120;
 
 /**
  * `struct Transform` — 80 bytes: a placement composed in float64 on the CPU

@@ -81,6 +81,7 @@ import {
  * over its byte budget (§13.15).
  */
 const CAPACITY_PRESSURE = 0.9;
+const DEGREES_TO_RADIANS = Math.PI / 180;
 const PIPELINE_WINDOW = 256;
 /** Imagery priority offset of loading tiles: after drawn and waiting ones. */
 const LOADING_IMAGERY = 1e15;
@@ -486,11 +487,15 @@ export class Tileset3D implements TileTree {
    * inside `region` (a rectangle or a simple polygon, geodetic degrees on
    * the globe's body) the terrain isn't drawn, so content placed there
    * shows instead. Edges are exact per pixel. Returns the clip, for
-   * `removeTerrainClip`. Throws, saying why, for a region it can't clip:
-   * not a simple polygon, within 5° of a pole, spanning more than 10° from
-   * its middle, more than 1,024 vertices (`MAX_TERRAIN_CLIP_VERTICES`),
-   * edges crowded together (more than 128 in one cell of its grid), or past
-   * 32 regions in the world (`MAX_TERRAIN_CLIPS`).
+   * `removeTerrainClip`. Throws a `TerrainClipError`, saying why and what
+   * to change, for a region it can't clip: not a simple polygon; reaching
+   * within 5° of a pole, or going round one; spanning more than 10° from
+   * its middle; more than 1,024 vertices (`MAX_TERRAIN_CLIP_VERTICES`);
+   * edges crowded together (more than 32 in one cell of its grid); with
+   * the regions it overlaps, more than 128 edges for a fragment to test
+   * (`MAX_CLIP_FRAGMENT_EDGES`); past the clip blocks the world sets aside
+   * for regions (`WorldOptions.maxClipBlocks`); or past 32 regions in the
+   * world (`MAX_TERRAIN_CLIPS`). Also throws on a destroyed globe.
    *
    * Clipped terrain is a hole for every query, as it is on screen: picks
    * (`View.pick`) hit what shows through; `terrainRayTarget` rays
@@ -515,11 +520,14 @@ export class Tileset3D implements TileTree {
         "Tileset3D.addTerrainClip: only a globe (Engine.addTerrain, addEllipsoid) has terrain to clip.",
       );
     }
+    if (this.destroyed) {
+      throw new Error(
+        "Tileset3D.addTerrainClip: the globe was destroyed; add clips to the globe that replaced it.",
+      );
+    }
     const shape = compileTerrainClip(region, clips.ellipsoid);
-    const slot = this.world.addTerrainClipRegion(
-      packClipShape(shape),
-      shape.xy.length / 2,
-    );
+    clips.checkBudget(shape);
+    const slot = this.world.addTerrainClipRegion(packClipShape(shape));
     const clip: TerrainClip = Object.freeze({ region: frozenRegion(region) });
     const entry = { clip, shape, slot };
     clips.add(entry);
@@ -544,11 +552,26 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * Whether the globe's terrain is clipped at a longitude and latitude
-   * (radians; `addTerrainClip`), at `height` m (default 0).
+   * Whether the globe's terrain is clipped (`addTerrainClip`) at a
+   * longitude and latitude in degrees, as the regions' vertices are, and
+   * `height` m above the ellipsoid (default 0).
    */
   terrainClipped(longitude: number, latitude: number, height = 0): boolean {
-    return this.source?.clips?.clippedAt(longitude, latitude, height) ?? false;
+    return (
+      this.source?.clips?.clippedAt(
+        longitude * DEGREES_TO_RADIANS,
+        latitude * DEGREES_TO_RADIANS,
+        height,
+      ) ?? false
+    );
+  }
+
+  /**
+   * @internal Whether the draw in slot `index` is this tileset's content
+   * now (its loaded tiles').
+   */
+  ownsDraw(index: number): boolean {
+    return this.drawTiles.has(index);
   }
 
   /** Masks every loaded tile again, tells height listeners, wakes. */

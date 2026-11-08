@@ -83,6 +83,8 @@ interface Entry extends Clamp {
 }
 
 const ellipsoid = Ellipsoid.WGS84;
+/** Radians a degree (`Tileset3D.terrainClipped` takes degrees). */
+const DEGREES = Math.PI / 180;
 /** 3D Tiles rays start this far above the anchor (1.x: 9000 m, fixed). */
 const RAY_START = 10000;
 /** ...and reach this far below the ellipsoid. */
@@ -161,9 +163,7 @@ export class HeightClamping {
     if (this.casting) {
       return false; // its end wakes the loop
     }
-    const colliders = this.tilesets().filter(
-      (t) => t.show && t.enableCollision,
-    );
+    const colliders = this.tilesets().filter(isCollider);
     if (colliders.length === 0) {
       return false;
     }
@@ -292,7 +292,9 @@ export class HeightClamping {
       );
       // A globe clipped here (`addTerrainClip`) has no ground to give.
       const surfaces = allowed.filter(
-        (t) => !t.terrain || !t.terrainClipped(longitude, latitude),
+        (t) =>
+          !t.terrain ||
+          !t.terrainClipped(longitude / DEGREES, latitude / DEGREES),
       );
       if (surfaces.length === 0) {
         if (allowed.length > 0) {
@@ -380,7 +382,7 @@ export class HeightClamping {
     if (this.casting || this.frame - this.lastCast < CAST_INTERVAL) {
       return;
     }
-    const colliders = tilesets.filter((t) => t.show && t.enableCollision);
+    const colliders = tilesets.filter(isCollider);
     const signature = colliders.map((t) => t.changedAt).join("|");
     const changed = signature !== this.castSignature;
     const byWorld = new Map<World, Entry[]>();
@@ -415,9 +417,14 @@ export class HeightClamping {
         direction: v3.negate(v3.vec3(), e.up),
         maxDistance: starts[i]! + RAY_DEPTH,
       }));
+      // Not the globes' draws, even with collision: their ground comes
+      // from `surfaceHeight`, which knows their clips; a cast would stand
+      // content on the clipped terrain it can't see.
+      const globes = tilesets.filter((t) => t.terrain && t.world === world);
       const hits = await world.castRays(rays, {
         collisionOnly: true,
         viewMask: this.viewMask(world),
+        exclude: (draw) => globes.some((t) => t.ownsDraw(draw)),
       });
       entries.forEach((e, i) => {
         const hit = hits[i];
@@ -509,6 +516,15 @@ function settle(e: Entry): void {
   for (const resolve of e.waiters.splice(0)) {
     resolve();
   }
+}
+
+/**
+ * A tileset whose draws the casts stand content on: shown 3D Tiles with
+ * `enableCollision`. Not a globe: its ground is sampled (`surfaceHeight`),
+ * clips and all.
+ */
+function isCollider(t: Tileset3D): boolean {
+  return t.show && t.enableCollision && !t.terrain;
 }
 
 function usesTiles(reference: HeightReference): boolean {

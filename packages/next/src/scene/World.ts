@@ -41,6 +41,7 @@ import {
   CLIP_BOX_FLOATS,
   CLIP_BLOCK_ROWS,
   MAX_TERRAIN_CLIPS,
+  MAX_TERRAIN_CLIP_BLOCKS,
   TERRAIN_CLIP_WORD,
   packClip,
   MATERIAL_WORDS,
@@ -57,6 +58,7 @@ import {
   type MeshStreams,
 } from "../render/layout.ts";
 import { splitHigh, splitVec3 } from "../math/transforms.ts";
+import { TerrainClipError } from "../globe/terrainClip.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { MeshData } from "./meshes.ts";
@@ -92,7 +94,14 @@ export interface WorldOptions {
    * and never past the device's largest storage binding).
    */
   slabBytes?: number;
-  /** Mixed-LOD clip blocks (placeholder tiles drawn at once; default 16,384). */
+  /**
+   * Clip blocks, of 8 boxes each (default 16,384, at least 2). Block 0 is
+   * the terrain clip regions' directory. A quarter of the rest, at most
+   * 3,840 blocks (32 regions of `MAX_TERRAIN_CLIP_BLOCKS`), is set aside
+   * for terrain clip regions (`Tileset3D.addTerrainClip`); the others
+   * hold mixed-LOD placeholders, a block for each placeholder tile drawn
+   * at once (12,544 by default).
+   */
   maxClipBlocks?: number;
   /** Transform table entries (default: `maxDraws`). */
   maxTransforms?: number;
@@ -139,7 +148,10 @@ export interface WorldMemory {
   instances: Usage;
   /** Distinct materials (shared by content), against the ceiling. */
   materials: Usage;
+  /** Mixed-LOD placeholders' clip blocks. */
   clipBlocks: Usage;
+  /** Terrain clip regions' clip blocks, against those set aside for them. */
+  terrainClipBlocks: Usage;
   pointSets: Usage;
   batches: number;
   /** The GPU tables' buffers (records, transforms, instances, materials, lists, args), as grown. */
@@ -351,6 +363,11 @@ export interface CastOptions {
    * mask is not checked.
    */
   draws?: readonly DrawHandle[];
+  /**
+   * @internal Not the draws in the slots it is true for (height clamping
+   * leaves the globes' out).
+   */
+  exclude?: (draw: number) => boolean;
 }
 
 /** A placement in the world's transform table (`addTransform`). */
@@ -721,13 +738,28 @@ export class World {
   private readonly maxClipBlocks: number;
   /**
    * Block 0 is the terrain clip regions' directory (`addTerrainClipRegion`),
-   * reserved so the shaders find it without a binding of its own.
+   * reserved so the shaders find it without a binding of its own. Blocks
+   * past it are placeholders' (one each) or terrain regions' (runs); each
+   * kind keeps its own free list, so placeholders don't break up the runs
+   * regions free.
    */
   private clipBlockCount = 1;
+  /** Placeholders' free blocks. */
   private readonly freeClipBlocks: number[] = [];
-  /** Terrain clip regions by slot: their first block and block count. */
+  /** Blocks placeholders hold, and the most they may. */
+  private placeholderBlocks = 0;
+  private readonly placeholderCapacity: number;
+  /** Free runs terrain regions left: sorted by block, never touching. */
+  private readonly freeClipRuns: Array<{ block: number; blocks: number }> = [];
+  /** Blocks terrain regions hold, and the most they may. */
+  private terrainClipBlocks = 0;
+  private readonly terrainClipBudget: number;
+  /**
+   * Terrain clip regions by slot: their first block, block count and rows
+   * (kept to move them: only the directory points at them).
+   */
   private readonly terrainClipRuns: Array<
-    { block: number; blocks: number } | undefined
+    { block: number; blocks: number; rows: Float32Array } | undefined
   > = [];
   private readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
   private nextMeshId = 0;
@@ -929,12 +961,17 @@ export class World {
       storage,
     );
     this.maxClipBlocks = Math.max(
-      1,
+      2,
       Math.min(
         options.maxClipBlocks ?? 1 << 14,
         fits(this.clipScratch.byteLength),
       ),
     );
+    this.terrainClipBudget = Math.min(
+      MAX_TERRAIN_CLIPS * MAX_TERRAIN_CLIP_BLOCKS,
+      Math.floor((this.maxClipBlocks - 1) / 4),
+    );
+    this.placeholderCapacity = this.maxClipBlocks - 1 - this.terrainClipBudget;
     this.clipRows = Math.min(this.maxClipBlocks, 256);
     // COPY_SRC: copied into a larger buffer as it grows.
     this.clipBuffer = buffer(
@@ -1067,8 +1104,12 @@ export class World {
         capacity: this.maxMaterials,
       },
       clipBlocks: {
-        used: this.clipBlockCount - this.freeClipBlocks.length,
-        capacity: this.maxClipBlocks,
+        used: this.placeholderBlocks,
+        capacity: this.placeholderCapacity,
+      },
+      terrainClipBlocks: {
+        used: this.terrainClipBlocks,
+        capacity: this.terrainClipBudget,
       },
       pointSets: { used: this.pointDraws.size, capacity: this.maxPointSets },
       batches: this.batches.size,
@@ -1113,11 +1154,9 @@ export class World {
       ["material table", this.materialByKey.size, this.maxMaterials],
       ["vertex arena", this.slabs.vertexUsed, this.slabs.options.vertexBudget],
       ["index arena", this.slabs.indexUsed, this.slabs.options.indexBudget],
-      [
-        "clip blocks",
-        this.clipBlockCount - this.freeClipBlocks.length,
-        this.maxClipBlocks,
-      ],
+      // Placeholders' only: terrain regions' blocks are set aside, and
+      // evicting tiles wouldn't free them.
+      ["clip blocks", this.placeholderBlocks, this.placeholderCapacity],
       ["point sets", this.pointDraws.size, this.maxPointSets],
     ];
     let fraction = 0;
@@ -2936,15 +2975,22 @@ export class World {
    * returns undefined when there are too many or no block is free.
    */
   allocateClip(boxes: readonly ClipBox[]): ClipHandle | undefined {
-    if (boxes.length === 0 || boxes.length > CLIP_BOXES) {
+    if (
+      boxes.length === 0 ||
+      boxes.length > CLIP_BOXES ||
+      this.placeholderBlocks >= this.placeholderCapacity
+    ) {
       return undefined;
     }
     const block =
       this.freeClipBlocks.pop() ??
-      (this.clipBlockCount < this.maxClipBlocks ? this.clipBlockCount++ : -1);
+      (this.clipBlockCount < this.maxClipBlocks
+        ? this.clipBlockCount++
+        : this.blockFromRuns());
     if (block < 0) {
       return undefined;
     }
+    this.placeholderBlocks++;
     if (block >= this.clipRows) {
       this.growClips(block + 1);
     }
@@ -2965,6 +3011,32 @@ export class World {
 
   freeClip(clip: ClipHandle): void {
     this.freeClipBlocks.push(clip.block);
+    this.placeholderBlocks--;
+  }
+
+  /**
+   * A placeholder's block from the terrain regions' free runs, when no
+   * other is left: the end of the smallest, so larger runs stay whole.
+   * -1 when there is none.
+   */
+  private blockFromRuns(): number {
+    const runs = this.freeClipRuns;
+    let smallest = -1;
+    for (let i = 0; i < runs.length; i++) {
+      if (smallest < 0 || runs[i]!.blocks < runs[smallest]!.blocks) {
+        smallest = i;
+      }
+    }
+    if (smallest < 0) {
+      return -1;
+    }
+    const run = runs[smallest]!;
+    run.blocks--;
+    const block = run.block + run.blocks;
+    if (run.blocks === 0) {
+      runs.splice(smallest, 1);
+    }
+    return block;
   }
 
   /**
@@ -2991,32 +3063,47 @@ export class World {
 
   /**
    * @internal Uploads a terrain clip region (globe/terrainClip.ts
-   * `packClipShape`: vec4 rows, `vertices` of them after its header) into
-   * whole clip blocks and points its directory row (block 0) at it;
-   * returns its slot, the record mask's bit (`setTerrainClip`). Throws when
-   * all `MAX_TERRAIN_CLIPS` slots are taken or the clip blocks are full.
+   * `packClipShape`: vec4 rows) into a run of whole clip blocks and points
+   * its directory row (block 0) at it; returns its slot, the record mask's
+   * bit (`setTerrainClip`). Throws a `TerrainClipError` when all
+   * `MAX_TERRAIN_CLIPS` slots are taken, or the region doesn't fit the
+   * blocks set aside for regions (`WorldOptions.maxClipBlocks`).
    */
-  addTerrainClipRegion(rows: Float32Array, vertices: number): number {
+  addTerrainClipRegion(rows: Float32Array): number {
     let slot = 0;
     while (slot < MAX_TERRAIN_CLIPS && this.terrainClipRuns[slot]) {
       slot++;
     }
     if (slot === MAX_TERRAIN_CLIPS) {
-      throw new Error(
-        `At most ${MAX_TERRAIN_CLIPS} terrain clip regions per world are supported.`,
+      throw new TerrainClipError(
+        `at most ${MAX_TERRAIN_CLIPS} terrain clip regions per world are supported; remove one, or merge neighboring regions into one polygon.`,
       );
     }
-    const floats = CLIP_BLOCK_ROWS * 4;
-    const blocks = Math.ceil(rows.length / floats);
-    const block = this.allocateClipRun(blocks);
-    const data = new Float32Array(blocks * floats);
-    data.set(rows);
-    const { queue } = this.ctx.device;
-    queue.writeBuffer(this.clipBuffer, block * floats * 4, data);
-    // The directory row: the region's first row and its vertex count.
-    const entry = new Uint32Array([block * CLIP_BLOCK_ROWS, vertices, 0, 0]);
-    queue.writeBuffer(this.clipBuffer, slot * 16, entry);
-    this.terrainClipRuns[slot] = { block, blocks };
+    const blocks = Math.ceil(rows.length / (CLIP_BLOCK_ROWS * 4));
+    if (blocks > MAX_TERRAIN_CLIP_BLOCKS) {
+      throw new TerrainClipError(
+        `the region takes ${blocks} clip blocks, more than the ${MAX_TERRAIN_CLIP_BLOCKS} a region may; simplify the polygon, or split it.`,
+      );
+    }
+    if (this.terrainClipBlocks + blocks > this.terrainClipBudget) {
+      throw new TerrainClipError(
+        `the world's terrain clip regions would take ${this.terrainClipBlocks + blocks} clip blocks, more than the ${this.terrainClipBudget} set aside for them (WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
+      );
+    }
+    let block = this.allocateClipRun(blocks);
+    if (block < 0) {
+      // The free blocks are there but broken up: move the regions together.
+      this.packTerrainClips();
+      block = this.allocateClipRun(blocks);
+    }
+    if (block < 0) {
+      throw new TerrainClipError(
+        `no run of ${blocks} clip blocks is free for the region (placeholders hold the rest of the world's ${this.maxClipBlocks}, WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
+      );
+    }
+    this.terrainClipRuns[slot] = { block, blocks, rows };
+    this.terrainClipBlocks += blocks;
+    this.writeTerrainClip(slot);
     this.version++;
     return slot;
   }
@@ -3028,10 +3115,98 @@ export class World {
       return;
     }
     this.terrainClipRuns[slot] = undefined;
-    for (let b = 0; b < run.blocks; b++) {
-      this.freeClipBlocks.push(run.block + b);
-    }
+    this.terrainClipBlocks -= run.blocks;
+    this.freeRun(run.block, run.blocks);
+    // An empty directory row: a stale mask bit would read a region of no
+    // rows at row 0, never the freed blocks (removal also clears the
+    // tiles' masks at once).
+    this.ctx.device.queue.writeBuffer(
+      this.clipBuffer,
+      slot * 16,
+      new Uint32Array(4),
+    );
     this.version++;
+  }
+
+  /** A region's rows into its run's blocks, and its directory row. */
+  private writeTerrainClip(slot: number): void {
+    const run = this.terrainClipRuns[slot]!;
+    const floats = CLIP_BLOCK_ROWS * 4;
+    const data = new Float32Array(run.blocks * floats);
+    data.set(run.rows);
+    const { queue } = this.ctx.device;
+    queue.writeBuffer(this.clipBuffer, run.block * floats * 4, data);
+    const entry = new Uint32Array([run.block * CLIP_BLOCK_ROWS, 0, 0, 0]);
+    queue.writeBuffer(this.clipBuffer, slot * 16, entry);
+  }
+
+  /**
+   * Returns a run of blocks to the regions' free runs, merging neighbors,
+   * and (`trim`) lowers the blocks in use when it reaches the top.
+   */
+  private freeRun(block: number, blocks: number, trim = true): void {
+    const runs = this.freeClipRuns;
+    let i = 0;
+    while (i < runs.length && runs[i]!.block < block) {
+      i++;
+    }
+    runs.splice(i, 0, { block, blocks });
+    if (i + 1 < runs.length && block + blocks === runs[i + 1]!.block) {
+      runs[i]!.blocks += runs[i + 1]!.blocks;
+      runs.splice(i + 1, 1);
+    }
+    if (i > 0 && runs[i - 1]!.block + runs[i - 1]!.blocks === block) {
+      runs[i - 1]!.blocks += runs[i]!.blocks;
+      runs.splice(i, 1);
+    }
+    if (trim) {
+      this.trimClipRuns();
+    }
+  }
+
+  /** A free run at the top lowers the blocks in use. */
+  private trimClipRuns(): void {
+    const runs = this.freeClipRuns;
+    const last = runs[runs.length - 1];
+    if (last && last.block + last.blocks === this.clipBlockCount) {
+      this.clipBlockCount = last.block;
+      runs.pop();
+    }
+  }
+
+  /**
+   * Slides every terrain region down, lowest first, to the first free run
+   * of the regions' that holds it (at worst where it was), so their free
+   * runs come together above them. Only the directory points at a region,
+   * and the writes are queued before any later draw.
+   */
+  private packTerrainClips(): void {
+    const slots = this.terrainClipRuns
+      .map((run, slot) => (run ? slot : -1))
+      .filter((slot) => slot >= 0)
+      .sort(
+        (a, b) =>
+          this.terrainClipRuns[a]!.block - this.terrainClipRuns[b]!.block,
+      );
+    const runs = this.freeClipRuns;
+    for (const slot of slots) {
+      const run = this.terrainClipRuns[slot]!;
+      this.freeRun(run.block, run.blocks, false);
+      // Its own blocks are free again, so some run holds it.
+      const i = runs.findIndex((r) => r.blocks >= run.blocks);
+      const free = runs[i]!;
+      const moved = free.block !== run.block;
+      run.block = free.block;
+      free.block += run.blocks;
+      free.blocks -= run.blocks;
+      if (free.blocks === 0) {
+        runs.splice(i, 1);
+      }
+      if (moved) {
+        this.writeTerrainClip(slot);
+      }
+    }
+    this.trimClipRuns();
   }
 
   /**
@@ -3050,25 +3225,45 @@ export class World {
   }
 
   /**
-   * `count` consecutive clip blocks: free ones where a run of them is
-   * free, else new ones (the buffer grows). Throws when the blocks are full.
+   * `count` consecutive clip blocks for a terrain region: the smallest of
+   * the regions' free runs that holds them, else a run of placeholders'
+   * free blocks, else new ones (the buffer grows). -1 when none is free.
    */
   private allocateClipRun(count: number): number {
-    const free = this.freeClipBlocks;
-    if (count === 1 && free.length > 0) {
-      return free.pop()!;
+    const runs = this.freeClipRuns;
+    let fit = -1;
+    for (let i = 0; i < runs.length; i++) {
+      if (
+        runs[i]!.blocks >= count &&
+        (fit < 0 || runs[i]!.blocks < runs[fit]!.blocks)
+      ) {
+        fit = i;
+      }
     }
-    free.sort((a, b) => a - b);
-    for (let i = 0; i + count <= free.length; i++) {
-      if (free[i + count - 1]! - free[i]! === count - 1) {
-        const block = free[i]!;
-        free.splice(i, count);
-        return block;
+    if (fit >= 0) {
+      const run = runs[fit]!;
+      const block = run.block;
+      run.block += count;
+      run.blocks -= count;
+      if (run.blocks === 0) {
+        runs.splice(fit, 1);
+      }
+      return block;
+    }
+    const free = this.freeClipBlocks;
+    if (free.length >= count) {
+      free.sort((a, b) => a - b);
+      for (let i = 0; i + count <= free.length; i++) {
+        if (free[i + count - 1]! - free[i]! === count - 1) {
+          const block = free[i]!;
+          free.splice(i, count);
+          return block;
+        }
       }
     }
     const block = this.clipBlockCount;
     if (block + count > this.maxClipBlocks) {
-      throw new CapacityError("clip blocks");
+      return -1;
     }
     this.clipBlockCount += count;
     if (block + count > this.clipRows) {
@@ -3252,7 +3447,8 @@ export class World {
       if (
         !batch ||
         batch.mesh.topology !== "triangle-list" ||
-        (only && !only.has(i))
+        (only && !only.has(i)) ||
+        options.exclude?.(i) === true
       ) {
         continue;
       }
