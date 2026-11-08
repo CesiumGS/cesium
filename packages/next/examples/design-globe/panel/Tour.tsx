@@ -11,7 +11,7 @@ import {
 import { svgArrowLeft } from "@stratakit/icons/arrow-left";
 import { svgArrowRight } from "@stratakit/icons/arrow-right";
 import { Icon } from "@stratakit/mui";
-import { useId, useRef } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { TOUR_STEPS, type TourCardView } from "../tour.ts";
 import type { PanelActions } from "./model.ts";
 
@@ -24,13 +24,45 @@ export function TourCard({
 }) {
   const id = useId();
   const leave = useRef<HTMLButtonElement>(null);
+  const steps = useRef<HTMLOListElement>(null);
+  // The steps are one Tab stop, the arrow keys moving between them
+  // (a roving tabindex, UX review M-i): the stop is the step last focused,
+  // the current step until then.
+  const [stop, setStop] = useState<{ at: number; from: number }>();
+  const tabStop =
+    stop !== undefined && stop.from === card.index ? stop.at : card.index;
+  const moveTo = (i: number) => {
+    const to = (i + card.count) % card.count;
+    setStop({ at: to, from: card.index });
+    steps.current?.querySelectorAll("button")[to]?.focus();
+  };
+  const onStepsKey = (e: KeyboardEvent) => {
+    const to =
+      e.key === "ArrowRight" || e.key === "ArrowDown"
+        ? tabStop + 1
+        : e.key === "ArrowLeft" || e.key === "ArrowUp"
+          ? tabStop - 1
+          : e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? card.count - 1
+              : undefined;
+    if (to !== undefined) {
+      e.preventDefault();
+      moveTo(to);
+    }
+  };
   return (
     <section className="dg-hud dg-tour" aria-labelledby={`${id}-t`}>
       <div className="dg-tour-head">
-        {/* The steps, each one a way to it (UX review P6): for the pointer
-            and a screen reader's own navigation, out of the Tab order,
-            which Back and Next already serve. */}
-        <ol className="dg-tour-steps" aria-label="The tour's steps">
+        {/* The steps, each one a way to it (UX review P6): one Tab stop,
+            the arrow keys moving between them, Enter or Space going there. */}
+        <ol
+          ref={steps}
+          className="dg-tour-steps"
+          aria-label="The tour's steps"
+          onKeyDown={onStepsKey}
+        >
           {Array.from({ length: card.count }, (_, i) => (
             <li
               key={i}
@@ -40,7 +72,8 @@ export function TourCard({
             >
               <button
                 type="button"
-                tabIndex={-1}
+                tabIndex={i === tabStop ? 0 : -1}
+                onFocus={() => setStop({ at: i, from: card.index })}
                 aria-label={`Step ${i + 1}: ${TOUR_STEPS[i]?.title ?? ""}`}
                 aria-current={i === card.index ? "step" : undefined}
                 onClick={() => actions.tour({ type: "start", step: i })}
