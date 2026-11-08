@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { icrfToFixed } from "../src/time/celestial.ts";
-import { celestialToTerrestrial } from "../src/time/earthOrientation.ts";
+import {
+  celestialToTerrestrial,
+  interpolatedXys,
+} from "../src/time/earthOrientation.ts";
 import { EarthOrientationParameters, type EopSample } from "../src/time/eop.ts";
 import { era00 } from "../src/time/erfa/rotation.ts";
 import { s06 } from "../src/time/erfa/s06.ts";
@@ -226,5 +229,47 @@ describe("Earth orientation (IAU 2006/2000A)", () => {
     }
     const angle = Math.acos(Math.min(1, (trace - 1) / 2)) * (180 / Math.PI);
     expect(angle).toBeLessThan(0.01);
+  });
+});
+
+describe("X, Y and s on a 60 s grid of TT (plan 5a, ruling 2)", () => {
+  it("agree with the direct series within 1e-11 rad at 1,000 instants from 2000 to 2050", () => {
+    // A small deterministic generator (mulberry32), so a failure repeats.
+    let state = 0x5a12;
+    const random = () => {
+      state = (state + 0x6d2b79f5) | 0;
+      let t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const start = Instant.fromUtc(Date.UTC(2000, 0, 1), leap).tt;
+    const end = Instant.fromUtc(Date.UTC(2050, 0, 1), leap).tt;
+    const out = new Float64Array(3);
+    let worst = 0;
+    for (let i = 0; i < 1000; i++) {
+      const tt = start + random() * (end - start);
+      const instant = Instant.fromTt(tt);
+      const [tt1, tt2] = instant.jdTt();
+      const [x, y] = xy06(tt1, tt2);
+      const s = s06(tt1, tt2, x, y);
+      interpolatedXys(instant, out);
+      worst = Math.max(
+        worst,
+        Math.abs(out[0]! - x),
+        Math.abs(out[1]! - y),
+        Math.abs(out[2]! - s),
+      );
+    }
+    expect(worst).toBeLessThan(1e-11);
+  });
+
+  it("is the series itself on the grid", () => {
+    const instant = Instant.fromTt(60 * 1_000_000);
+    const [tt1, tt2] = instant.jdTt();
+    const [x, y] = xy06(tt1, tt2);
+    const xys = interpolatedXys(instant);
+    expect(Math.abs(xys[0]! - x)).toBeLessThan(1e-15);
+    expect(Math.abs(xys[1]! - y)).toBeLessThan(1e-15);
+    expect(Math.abs(xys[2]! - s06(tt1, tt2, x, y))).toBeLessThan(1e-17);
   });
 });

@@ -48,12 +48,17 @@ export function segmentBlocked(
     1,
     Math.max(0, -(ax * ex + ay * ey + az * ez) / (ex * ex + ey * ey + ez * ez)),
   );
-  const cx = ax + ex * t;
-  const cy = ay + ey * t;
-  const cz = az + ez * t;
   const n0 = ax * ax + ay * ay + az * az;
   const n1 = bx * bx + by * by + bz * bz;
   const limit = Math.min(1, n0, n1);
+  if (t === 1) {
+    // The closest point is the end itself: a + (b − a) · 1 can differ from b
+    // by a rounding, which would put a lower end just under its own limit.
+    return n1 < limit;
+  }
+  const cx = ax + ex * t;
+  const cy = ay + ey * t;
+  const cz = az + ez * t;
   return cx * cx + cy * cy + cz * cz < limit;
 }
 

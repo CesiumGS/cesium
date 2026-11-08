@@ -97,7 +97,7 @@ export function skyState(
   if (!ephemeris.contains(instant)) {
     return analytic(ms, out);
   }
-  const r = celestialToTerrestrial(
+  celestialToTerrestrial(
     instant,
     data.eop.atInstant(instant, data.leapSeconds),
     out.icrfToFixed,
@@ -107,7 +107,29 @@ export function skyState(
   for (let i = 0; i < 3; i++) {
     icrfVector[i] = sun[i]! - earth[i]!;
   }
-  turn(r, icrfVector, 0, out.sunDirection, 0);
+  return turnSky(
+    icrfVector,
+    ephemeris.moonFromEarth(instant, moonState),
+    ephemeris.moonMeanEarth(instant, meanEarth),
+    out,
+  );
+}
+
+/**
+ * @internal The sky from its parts in ICRF axes, turned to Earth-fixed axes
+ * by `out.icrfToFixed` (set first): the Sun from the Earth's centre (any
+ * length), the Moon from the Earth's centre (metres) and the row-major
+ * ICRF to mean-Earth rotation. Sets `source` to `"ephemeris"`. `skyState`
+ * and `attachSky` share it, so their arithmetic is the same.
+ */
+export function turnSky(
+  sunFromEarth: ArrayLike<number>,
+  moonFromEarth: ArrayLike<number>,
+  meanEarthRows: ArrayLike<number>,
+  out: SkyState,
+): SkyState {
+  const r = out.icrfToFixed;
+  turn(r, sunFromEarth, 0, out.sunDirection, 0);
   const d = Math.hypot(
     out.sunDirection[0]!,
     out.sunDirection[1]!,
@@ -116,12 +138,11 @@ export function skyState(
   for (let i = 0; i < 3; i++) {
     out.sunDirection[i] = out.sunDirection[i]! / d;
   }
-  turn(r, ephemeris.moonFromEarth(instant, moonState), 0, out.moonPosition, 0);
+  turn(r, moonFromEarth, 0, out.moonPosition, 0);
   // Rows 0 and 2 of the row-major ICRF -> ME rotation are the ME x axis and
   // pole in ICRF.
-  const me = ephemeris.moonMeanEarth(instant, meanEarth);
-  turn(r, me, 0, out.moonAxes, 0);
-  turn(r, me, 6, out.moonAxes, 3);
+  turn(r, meanEarthRows, 0, out.moonAxes, 0);
+  turn(r, meanEarthRows, 6, out.moonAxes, 3);
   out.source = "ephemeris";
   return out;
 }

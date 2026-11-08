@@ -86,6 +86,8 @@ interface ViewState {
 export class CameraLayer {
   private readonly states = new WeakMap<View, ViewState>();
   private readonly resolvers = new WeakMap<World, FrameResolver>();
+  /** The remover of each world's resolver's `watch`. */
+  private readonly unwatchResolvers = new WeakMap<World, () => void>();
   private readonly tables = new WeakMap<World, FrameResolver>();
   private readonly clocks = new WeakMap<
     World,
@@ -105,10 +107,17 @@ export class CameraLayer {
 
   /**
    * Sets the frame resolver of `world`'s views; they re-evaluate on the
-   * next tick, and failures are reported afresh.
+   * next tick, and failures are reported afresh. A resolver that can
+   * `watch` wakes the loop when its routes change.
    */
   setResolver(world: World, resolver: FrameResolver): void {
+    this.unwatchResolvers.get(world)?.();
+    this.unwatchResolvers.delete(world);
     this.resolvers.set(world, resolver);
+    const unwatch = resolver.watch?.(() => this.host.wake());
+    if (unwatch) {
+      this.unwatchResolvers.set(world, unwatch);
+    }
     for (const view of this.host.views) {
       if (view.world === world) {
         this.states.get(view)?.reported.clear();

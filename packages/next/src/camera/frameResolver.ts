@@ -89,4 +89,11 @@ export interface FrameResolver {
    * revision stay as they were.
    */
   routeRevision(frame: FrameKey, base: FrameKey): number;
+  /**
+   * Calls `listener` when a route's revision may have gone up without the
+   * clock moving (data arriving, a binding changed). The camera layer
+   * watches its resolvers so that on-demand rendering wakes for it.
+   * Returns a remover.
+   */
+  watch?(listener: () => void): () => void;
 }

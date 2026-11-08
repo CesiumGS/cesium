@@ -55,3 +55,10 @@ export {
   type TrajectoryAccuracy,
 } from "../trajectory/Trajectory.ts";
 export { parseOem, type OemSegment } from "../trajectory/oem.ts";
+export {
+  createFramesResolver,
+  type FramesResolver,
+  type FramesResolverOptions,
+  type FrameStandInWarning,
+} from "./resolver.ts";
+export { attachSky, type AttachSkyOptions } from "./attachSky.ts";

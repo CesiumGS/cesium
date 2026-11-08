@@ -234,6 +234,7 @@ entry	name	kind	tier
 .	vec3.set	function	-
 .	vec3.sub	function	-
 .	vec3.vec3	function	-
+frames	AttachSkyOptions	interface	-
 frames	CatalogFrameName	type	-
 frames	EarthOrientationParameters	class	-
 frames	EarthOrientationSigma	type	-
@@ -251,8 +252,11 @@ frames	FrameDataWarning	interface	-
 frames	FrameInUse	interface	-
 frames	FrameOptions	interface	-
 frames	FramePoint	interface	-
+frames	FrameStandInWarning	interface	-
 frames	FrameUser	type	-
 frames	Frames	interface	-
+frames	FramesResolver	interface	-
+frames	FramesResolverOptions	interface	-
 frames	OemSegment	interface	-
 frames	PointAccuracy	interface	-
 frames	PointAccuracyTerm	type	-
@@ -261,10 +265,12 @@ frames	SkyState	interface	-
 frames	StateSegment	interface	-
 frames	Trajectory	class	-
 frames	TrajectoryAccuracy	type	-
+frames	attachSky	function	-
 frames	celestialToTerrestrial	function	-
 frames	convertPoint	function	-
 frames	createFrameCatalog	function	-
 frames	createFrames	function	-
+frames	createFramesResolver	function	-
 frames	createSkyState	function	-
 frames	dominantTerm	function	-
 frames	earthOrientationSigma	function	-

@@ -45,6 +45,34 @@ describe("segmentBlocked", () => {
     expect(segmentBlocked(start, [-a[0]!, 0, 0], r, 1)).toBe(true);
   });
 
+  it("clears a station below the surface sighting straight up, whichever end it is", () => {
+    // The closest point at an end of the segment is that end exactly: a
+    // lower end found as a + (b − a) · 1 differs from b by a rounding, which
+    // used to block about one such line in a few.
+    const e = Ellipsoid.WGS84;
+    const r = [e.radii[0]!, e.radii[1]!, e.radii[2]!];
+    const at = (lon: number, lat: number, h: number) =>
+      e.cartographicToCartesian(
+        { longitude: lon, latitude: lat, height: h },
+        new Float64Array(3),
+      );
+    let blocked = 0;
+    for (let i = 0; i < 400; i++) {
+      const lon = ((i * 0.618034) % 1) * 2 * Math.PI - Math.PI;
+      const lat = ((i * 0.414214) % 1) * Math.PI - Math.PI / 2;
+      const h = -1 - ((i * 0.732051) % 1) * 3000;
+      const station = at(lon, lat, h);
+      const overhead = at(lon, lat, 2e7);
+      if (segmentBlocked(station, overhead, r, 1)) {
+        blocked++;
+      }
+      if (segmentBlocked(overhead, station, r, 1)) {
+        blocked++;
+      }
+    }
+    expect(blocked).toBe(0);
+  });
+
   it("uses the ellipsoid's own radii", () => {
     const a = Ellipsoid.WGS84.radii[0]!;
     const c = Ellipsoid.WGS84.radii[2]!;

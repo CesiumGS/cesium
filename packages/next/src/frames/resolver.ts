@@ -1,0 +1,497 @@
+// The frames module's frame resolver (spec section 7.2; plan 5a, Task 12):
+// the camera layer's questions answered over the catalog's tree. Anchors
+// are bound to reference frames (a body's anchor to its body-fixed one);
+// the table root and unbound anchors sit at the render root's origin (plan
+// 5a's call 29). Rendering falls back where measuring throws: a reference
+// frame asked for at "precise" at an instant outside its data draws on its
+// analytic stand-in, with one warning stating the stand-in's accuracy.
+import {
+  FrameUnavailableError,
+  type FrameKey,
+  type FrameMotion,
+  type FrameResolver,
+} from "../camera/frameResolver.ts";
+import { Emitter } from "../core/Emitter.ts";
+import * as m4 from "../math/mat4.ts";
+import { rigidMatrixError } from "../math/transforms.ts";
+import type { AnchorHandle, TransformFrameKey } from "../scene/World.ts";
+import { Instant } from "../time/Instant.ts";
+import type { LeapSeconds } from "../time/leapSeconds.ts";
+import {
+  ANALYTIC_ACCURACY,
+  analyticEdges,
+  type StandInName,
+} from "./analytic.ts";
+import type { CatalogFrameName, FrameCatalog, Precision } from "./catalog.ts";
+import type { FrameEdge } from "./edges.ts";
+import { Frame, routeRevision } from "./Frame.ts";
+import type { FrameAccuracy } from "./frameAccuracy.ts";
+import { rotationPart } from "./matrix.ts";
+
+/**
+ * A reference frame drawn on its analytic stand-in because the instant is
+ * outside its data (kind `"standIn"`): once per reference frame.
+ */
+export interface FrameStandInWarning {
+  readonly kind: "standIn";
+  /** The reference frame's name. */
+  readonly frame: string;
+  /** The stand-in's stated accuracy, which is what the drawing is good to. */
+  readonly accuracy: Readonly<FrameAccuracy>;
+  readonly message: string;
+}
+
+/** Options of `createFramesResolver`. */
+export interface FramesResolverOptions {
+  /**
+   * `"precise"` asks the catalog for `"precise"` on every catalog edge of
+   * each route the resolver uses (precision is per edge); `"analytic"`
+   * (the default) asks nothing, so the routes run at whatever the
+   * catalog's reference frames already run at.
+   */
+  precision?: Precision;
+}
+
+/** The camera layer's frame resolver over a catalog; see `createFramesResolver`. */
+export interface FramesResolver extends FrameResolver {
+  readonly catalog: FrameCatalog;
+  readonly precision: Precision;
+  /** The Instant at scene `seconds`, through the catalog's leap seconds, as `Clock.instant` does. */
+  instant(seconds: number): Instant;
+  /**
+   * Binds `anchor` to `frame`: content under the anchor is in `frame`'s
+   * coordinates. `frame` must be in the catalog's tree (it is marked as
+   * used by the application). An anchor made by `World.bodyAnchor(body)`
+   * binds itself to `catalog.bodyFixed(body)` on first use.
+   */
+  bindAnchor(anchor: AnchorHandle, frame: Frame): void;
+  /** The reference frame `anchor` is bound to, if any (binding a body's anchor). */
+  binding(anchor: AnchorHandle): Frame | undefined;
+  motion(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    out: FrameMotion,
+  ): FrameMotion;
+  watch(listener: () => void): () => void;
+  /** The stand-in warnings so far, in order. */
+  readonly warnings: readonly FrameStandInWarning[];
+  readonly events: Emitter<{ warning: FrameStandInWarning }>;
+}
+
+/** Rigid within this after a route through GCRF's scaling edge is made rigid. */
+const NEARLY_RIGID = 1e-6;
+
+class Resolver implements FramesResolver {
+  readonly events = new Emitter<{ warning: FrameStandInWarning }>();
+  private readonly warningList: FrameStandInWarning[] = [];
+  private readonly bindings = new WeakMap<AnchorHandle, Frame>();
+  /** Goes up on `bindAnchor`: every route may have changed. */
+  private bindRevision = 0;
+  private readonly watchers = new Set<() => void>();
+  /** Frames asked for at "precise" (or found not to be the catalog's). */
+  private readonly asked = new WeakSet<Frame>();
+  /** Frames marked as a rig's. */
+  private readonly rigFrames = new WeakSet<Frame>();
+  /** The catalog's own stand-in reference frames, by frame. */
+  private readonly standInNames = new WeakMap<Frame, StandInName | null>();
+  private readonly warned = new Set<string>();
+  private standIns: Readonly<Record<StandInName, FrameEdge>> | undefined;
+  // The last instant, by seconds and leap-second table.
+  private lastSeconds = Number.NaN;
+  private lastLeap: LeapSeconds | undefined;
+  private lastInstant: Instant | undefined;
+  /** Whether the last `reference` wrote an anchor-relative matrix. */
+  private hasLocal = false;
+  private readonly localA = new Float64Array(16);
+  private readonly localB = new Float64Array(16);
+  private readonly up = new Float64Array(16);
+  private readonly down = new Float64Array(16);
+  private readonly step = new Float64Array(16);
+  private readonly inverse = new Float64Array(16);
+  private readonly plus = new Float64Array(16);
+  private readonly minus = new Float64Array(16);
+  private readonly rotation = new Float64Array(9);
+
+  constructor(
+    readonly catalog: FrameCatalog,
+    readonly precision: Precision,
+  ) {}
+
+  get warnings(): readonly FrameStandInWarning[] {
+    return this.warningList;
+  }
+
+  instant(seconds: number): Instant {
+    const leap = this.catalog.leapSeconds;
+    if (seconds !== this.lastSeconds || leap !== this.lastLeap) {
+      this.lastInstant = Instant.fromUtc(seconds * 1000, leap);
+      this.lastSeconds = seconds;
+      this.lastLeap = leap;
+    }
+    return this.lastInstant!;
+  }
+
+  bindAnchor(anchor: AnchorHandle, frame: Frame): void {
+    if (!("slot" in anchor)) {
+      throw new Error(`bindAnchor: ${String(anchor)} is not an anchor.`);
+    }
+    // Throws, naming it, for a reference frame outside the catalog's tree.
+    this.catalog.use(frame, "application");
+    if (this.bindings.get(anchor) === frame) {
+      return;
+    }
+    this.bindings.set(anchor, frame);
+    this.bindRevision++;
+    for (const listener of this.watchers) {
+      listener();
+    }
+  }
+
+  binding(anchor: AnchorHandle): Frame | undefined {
+    return this.bound(anchor);
+  }
+
+  watch(listener: () => void): () => void {
+    const off = this.catalog.events.on("change", listener);
+    this.watchers.add(listener);
+    return () => {
+      off();
+      this.watchers.delete(listener);
+    };
+  }
+
+  resolve(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    out: Float64Array,
+  ): Float64Array {
+    if (frame === base) {
+      return m4.identity(out);
+    }
+    const a = this.reference(frame, this.localA);
+    const aLocal = this.hasLocal;
+    const b = this.reference(base, this.localB);
+    const bLocal = this.hasLocal;
+    if (a && b) {
+      this.askPrecise(a, b);
+      this.route(a, b, this.instant(seconds), out);
+    } else {
+      // An unbound end sits at the other's origin, in its axes (call 29).
+      m4.identity(out);
+    }
+    if (aLocal) {
+      m4.multiply(out, out, this.localA);
+    }
+    if (bLocal) {
+      m4.invertAffine(this.localB, this.localB);
+      m4.multiply(out, this.localB, out);
+    }
+    return this.rigid(out);
+  }
+
+  routeRevision(frame: FrameKey, base: FrameKey): number {
+    let sum = this.bindRevision;
+    const a = this.reference(frame, undefined);
+    const b = this.reference(base, undefined);
+    if (frame !== base && a && b) {
+      this.askPrecise(a, b);
+      sum += routeRevision(a, b);
+    }
+    for (const key of [frame, base]) {
+      if (isNode(key)) {
+        sum += (key as TransformFrameKey).world.transformRevision;
+      }
+    }
+    return sum;
+  }
+
+  motion(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    out: FrameMotion,
+  ): FrameMotion {
+    const p = this.resolve(frame, base, seconds + 0.5, this.plus);
+    const m = this.resolve(frame, base, seconds - 0.5, this.minus);
+    for (let i = 0; i < 3; i++) {
+      out.velocity[i] = p[12 + i]! - m[12 + i]!;
+    }
+    // The turn over the second, in the base's axes: Rp · Rmᵀ.
+    const d = this.rotation;
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        let sum = 0;
+        for (let k = 0; k < 3; k++) {
+          sum += p[k * 4 + i]! * m[k * 4 + j]!;
+        }
+        d[i * 3 + j] = sum;
+      }
+    }
+    const x = (d[7]! - d[5]!) / 2;
+    const y = (d[2]! - d[6]!) / 2;
+    const z = (d[3]! - d[1]!) / 2;
+    const sine = Math.hypot(x, y, z);
+    const angle = Math.atan2(sine, (d[0]! + d[4]! + d[8]! - 1) / 2);
+    const scale = sine > 0 ? angle / sine : 1;
+    out.angularVelocity[0] = x * scale;
+    out.angularVelocity[1] = y * scale;
+    out.angularVelocity[2] = z * scale;
+    return out;
+  }
+
+  /**
+   * The reference frame `key` is in, or undefined for the table root, an
+   * unbound anchor and a node under either. A node's anchor-relative
+   * matrix goes to `local` (when given), and `hasLocal` says so.
+   */
+  private reference(
+    key: FrameKey,
+    local: Float64Array<ArrayBuffer> | undefined,
+  ): Frame | undefined {
+    this.hasLocal = false;
+    if (key instanceof Frame) {
+      if (!this.rigFrames.has(key)) {
+        // Throws, naming it, for a reference frame outside the catalog's tree.
+        this.catalog.use(key, "rig");
+        this.rigFrames.add(key);
+      }
+      return key;
+    }
+    if ("slot" in key) {
+      return this.bound(key as AnchorHandle);
+    }
+    if (isNode(key)) {
+      const node = key as TransformFrameKey;
+      if (!node.world.transformAlive(node.transform)) {
+        throw new Error(
+          `frames resolver: the transform for ${key.name} was removed.`,
+        );
+      }
+      if (local) {
+        node.world.worldMatrix(node.transform, local);
+        this.hasLocal = true;
+      }
+      const anchor = node.world.anchorOf(node.transform);
+      return anchor ? this.bound(anchor) : undefined;
+    }
+    return undefined;
+  }
+
+  private bound(anchor: AnchorHandle): Frame | undefined {
+    let frame = this.bindings.get(anchor);
+    if (!frame && anchor.body) {
+      frame = this.catalog.bodyFixed(anchor.body);
+      this.catalog.use(frame, "application");
+      this.bindings.set(anchor, frame);
+    }
+    return frame;
+  }
+
+  /** At "precise", asks it of every catalog edge on the route from `a` to `b`. */
+  private askPrecise(a: Frame, b: Frame): void {
+    if (this.precision !== "precise") {
+      return;
+    }
+    const top = commonAncestor(a, b);
+    for (const start of [a, b]) {
+      for (let f: Frame = start; f !== top; f = f.parent!) {
+        if (!this.asked.has(f)) {
+          this.asked.add(f);
+          if (this.catalogName(f) !== undefined) {
+            this.catalog.get(f.name as CatalogFrameName, {
+              precision: "precise",
+            });
+          }
+        }
+      }
+    }
+  }
+
+  /** `f`'s name if it is one of the catalog's own reference frames. */
+  private catalogName(f: Frame): CatalogFrameName | undefined {
+    const name = f.name as CatalogFrameName;
+    return this.catalog.names.includes(name) && this.catalog.get(name) === f
+      ? name
+      : undefined;
+  }
+
+  /** `f`'s name if it is one of the catalog's reference frames with a stand-in. */
+  private standInName(f: Frame): StandInName | undefined {
+    let name = this.standInNames.get(f);
+    if (name === undefined) {
+      const n = this.catalogName(f);
+      name =
+        n !== undefined && n in ANALYTIC_ACCURACY ? (n as StandInName) : null;
+      this.standInNames.set(f, name);
+    }
+    return name ?? undefined;
+  }
+
+  /** `out`, p_to = out · p_from, composed as `frameTransform` does, edge by edge. */
+  private route(
+    from: Frame,
+    to: Frame,
+    instant: Instant,
+    out: Float64Array,
+  ): void {
+    const top = commonAncestor(from, to);
+    this.toAncestor(from, top, instant, this.up);
+    this.toAncestor(to, top, instant, this.down);
+    m4.invertAffine(this.inverse, this.down);
+    m4.multiply(out, this.inverse, this.up);
+  }
+
+  private toAncestor(
+    frame: Frame,
+    ancestor: Frame,
+    instant: Instant,
+    acc: Float64Array,
+  ): void {
+    m4.identity(acc);
+    for (let f = frame; f !== ancestor; f = f.parent!) {
+      this.edge(f, instant, this.step);
+      m4.multiply(acc, this.step, acc);
+    }
+  }
+
+  /**
+   * `f`'s edge at `instant`; for a catalog reference frame outside its
+   * data, its analytic stand-in, warned about once.
+   */
+  private edge(f: Frame, instant: Instant, out: Float64Array): void {
+    try {
+      f.toParent(instant, out);
+    } catch (error) {
+      const name =
+        error instanceof FrameUnavailableError && error.reason === "outsideData"
+          ? this.standInName(f)
+          : undefined;
+      if (name === undefined) {
+        throw error;
+      }
+      this.standIns ??= analyticEdges(() => this.catalog.leapSeconds);
+      this.standIns[name](instant, out);
+      this.warnStandIn(name, instant, error as FrameUnavailableError);
+    }
+  }
+
+  private warnStandIn(
+    name: StandInName,
+    instant: Instant,
+    cause: FrameUnavailableError,
+  ): void {
+    if (this.warned.has(name)) {
+      return;
+    }
+    this.warned.add(name);
+    const accuracy = ANALYTIC_ACCURACY[name];
+    const at = new Date(instant.toUtc(this.catalog.leapSeconds)).toISOString();
+    const warning: FrameStandInWarning = {
+      kind: "standIn",
+      frame: name,
+      accuracy,
+      message: `frames: ${name} is drawn on its analytic stand-in from ${at} on, outside its data (${cause.message}); measurements there still throw. The stand-in's accuracy: ${accuracy.note}`,
+    };
+    this.warningList.push(warning);
+    if (this.events.has("warning")) {
+      this.events.emit("warning", warning);
+    } else {
+      console.warn(warning.message);
+    }
+  }
+
+  /**
+   * A placement must be rigid. GCRF's precise edge scales by about 1.5e-8
+   * (IERS eq. 11.19), so a route through it is made rigid by its polar
+   * rotation, keeping its translation. Anything further from rigid is left
+   * for the camera layer to refuse.
+   */
+  private rigid(out: Float64Array): Float64Array {
+    if (
+      rigidMatrixError(out) === undefined ||
+      rigidMatrixError(out, NEARLY_RIGID) !== undefined
+    ) {
+      return out;
+    }
+    const r = rotationPart(out, this.rotation);
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        out[col * 4 + row] = r[row * 3 + col]!;
+      }
+    }
+    return out;
+  }
+}
+
+/** Whether `key` names a transform node (`World.frameOf`). */
+function isNode(key: FrameKey): boolean {
+  return "transform" in key && "world" in key;
+}
+
+/** The lowest common ancestor of two reference frames; throws across trees. */
+function commonAncestor(from: Frame, to: Frame): Frame {
+  const depth = (f: Frame) => {
+    let d = 0;
+    for (let p = f.parent; p; p = p.parent) {
+      d++;
+    }
+    return d;
+  };
+  let a = from;
+  let b = to;
+  let da = depth(a);
+  let db = depth(b);
+  for (; da > db; da--) {
+    a = a.parent!;
+  }
+  for (; db > da; db--) {
+    b = b.parent!;
+  }
+  while (a !== b) {
+    if (!a.parent || !b.parent) {
+      throw new Error(
+        `frames resolver: no common ancestor of "${from.name}" and "${to.name}"`,
+      );
+    }
+    a = a.parent;
+    b = b.parent;
+  }
+  return a;
+}
+
+/**
+ * The camera layer's frame resolver over `catalog` (spec section 7.2):
+ * `Engine.cameras.setResolver(world, createFramesResolver(catalog))`.
+ *
+ * - Keys: the catalog's reference frames (and those added to it); anchors,
+ *   at the reference frame they are bound to (`bindAnchor`; a body's
+ *   anchor binds itself to its body-fixed reference frame); a transform
+ *   node (`World.frameOf`), at its anchor's reference frame times its
+ *   anchor-relative matrix. The table root, an unbound anchor and nodes
+ *   under them sit at the render root's origin, in its axes (plan 5a's
+ *   call 29): a route with an unbound end is the identity between the
+ *   ends' reference frames.
+ * - Times: scene seconds, through the catalog's leap seconds (`instant`).
+ * - Revisions: `routeRevision` of the bound reference frames, plus bindings
+ *   and, through a node, its world's `transformRevision`. `watch` hears the
+ *   catalog's changes (data arriving), so the camera layer wakes for them.
+ *   An application's own reference frame whose data arrives says so with
+ *   `invalidate()`, and wakes the engine itself.
+ * - Rendering falls back where measuring throws: a catalog reference frame
+ *   running at "precise" at an instant outside its data is drawn on its
+ *   analytic stand-in, warned about once (`warnings`, the `warning` event,
+ *   else `console.warn`), stating the stand-in's accuracy;
+ *   `frameTransform` there still throws `FrameUnavailableError`. A
+ *   reference frame with no stand-in throws, and the camera layer keeps
+ *   the view's last good placement.
+ * - The reference frames named directly (a rig's) are marked as used by
+ *   `"rig"`; anchors' bindings as used by the application.
+ */
+export function createFramesResolver(
+  catalog: FrameCatalog,
+  options: FramesResolverOptions = {},
+): FramesResolver {
+  return new Resolver(catalog, options.precision ?? "analytic");
+}

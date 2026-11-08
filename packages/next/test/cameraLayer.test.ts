@@ -275,6 +275,31 @@ describe("the camera layer", () => {
     expect(view.anchorPlacement(earth)).toEqual(translation(0, 5, 0));
   });
 
+  it("a resolver that can watch wakes the loop; replacing it stops watching it", () => {
+    setup();
+    let listener: (() => void) | undefined;
+    const watched: FrameResolver = {
+      resolve: (_frame, _base, _seconds, out) => {
+        out.set(IDENTITY);
+        return out;
+      },
+      routeRevision: () => 0,
+      watch(l) {
+        listener = l;
+        return () => {
+          listener = undefined;
+        };
+      },
+    };
+    engine.cameras.setResolver(world, watched);
+    expect(listener).toBeDefined();
+    const wake = vi.spyOn(engine, "wake");
+    listener!();
+    expect(wake).toHaveBeenCalledTimes(1);
+    engine.cameras.setResolver(world, timedResolver(new Map()));
+    expect(listener).toBeUndefined();
+  });
+
   it("a rig follows a moving node of the transform table without the frames module", () => {
     setup();
     const node = world.addTransform(translation(0, 0, 0));
