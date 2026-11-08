@@ -50,6 +50,7 @@ import {
   RADIUS_WORD,
   CENTER_WORD,
   NO_PLACEMENT,
+  FEATURE_ID_WORD,
   FLAGS_WORD,
   VIEW_MASK_WORD,
   ALL_VIEWS,
@@ -206,6 +207,8 @@ export interface MeshHandle {
   /** Bounding sphere in mesh-local coordinates. */
   readonly center: readonly [number, number, number];
   readonly radius: number;
+  /** A globe tile's first skirt vertex (`MeshData.skirtStart`), if any. */
+  readonly skirtStart?: number;
 }
 
 /**
@@ -716,10 +719,18 @@ export class World {
   private readonly terrainClipBudget: number;
   /**
    * Terrain clip regions by slot: their first block, block count and rows
-   * (kept to move them: only the directory points at them).
+   * (kept to move them: only the directory points at them), their opacity
+   * (0: a clip) and whether they hold everywhere (no rows, no blocks).
    */
   private readonly terrainClipRuns: Array<
-    { block: number; blocks: number; rows: Float32Array } | undefined
+    | {
+        block: number;
+        blocks: number;
+        rows: Float32Array;
+        opacity: number;
+        everywhere: boolean;
+      }
+    | undefined
   > = [];
   private readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
   private nextMeshId = 0;
@@ -1380,6 +1391,9 @@ export class World {
       topology: mesh.topology ?? "triangle-list",
       center,
       radius,
+      ...(mesh.skirtStart !== undefined && mesh.skirtStart < vertexCount
+        ? { skirtStart: mesh.skirtStart }
+        : {}),
     };
   }
 
@@ -1684,9 +1698,14 @@ export class World {
       flags: options.flags ?? 0,
       ...(options.textures ? { textures: options.textures } : {}),
     });
+    return this.internMaterial(scratch.u32);
+  }
+
+  /** A material record's index, shared by content (`addMaterial`). */
+  private internMaterial(words: Uint32Array): number {
     // The record's words are the key (NaN payloads and -0 included, so
     // equal keys are bit-identical records).
-    const key = scratch.u32.join(",");
+    const key = words.join(",");
     const shared = this.materialByKey.get(key);
     if (shared !== undefined) {
       this.materialReferences[shared]!++;
@@ -1701,7 +1720,7 @@ export class World {
     if (index >= this.materialRows) {
       this.growMaterials(index + 1);
     }
-    this.materialsU32.set(scratch.u32, index * MATERIAL_WORDS);
+    this.materialsU32.set(words, index * MATERIAL_WORDS);
     this.materialByKey.set(key, index);
     this.materialKeys[index] = key;
     this.materialReferences[index] = 1;
@@ -2143,6 +2162,7 @@ export class World {
             billboardDepthTest: options.billboard.depthTestDistance ?? 0,
           }
         : {}),
+      ...(mesh.skirtStart !== undefined ? { skirtStart: mesh.skirtStart } : {}),
     });
     if (this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD] !== 0) {
       batch.shown++;
@@ -2411,6 +2431,108 @@ export class World {
     this.bundle = undefined;
     this.translucentDraws = undefined;
     this.version++;
+  }
+
+  /**
+   * @internal A draw's first global feature ID, as picks read it (0 for a
+   * removed draw).
+   */
+  featureIdOf(handle: DrawHandle): number {
+    return this.hasDraw(handle)
+      ? this.recordsU32[handle.index * RECORD_WORDS + FEATURE_ID_WORD]!
+      : 0;
+  }
+
+  /**
+   * @internal A draw's material index (`addMaterial`), as its record has
+   * it; undefined for a removed draw.
+   */
+  drawMaterial(handle: DrawHandle): number | undefined {
+    return this.hasDraw(handle)
+      ? this.drawBatches[handle.index]!.material
+      : undefined;
+  }
+
+  /**
+   * @internal Changes a draw's material in place (an index from
+   * `addMaterial`, or `materialWithFlags`), as `setDrawShader` its
+   * shader: the draw moves to the batch for its new material, keeping its
+   * record, instances, features and handle. The caller holds the
+   * material's reference while the draw uses it.
+   */
+  setDrawMaterial(handle: DrawHandle, material: number): void {
+    if (!this.hasDraw(handle)) {
+      throw new Error("setDrawMaterial: the draw was removed");
+    }
+    if (this.materialReferences[material] === undefined || material < 0) {
+      throw new RangeError(`setDrawMaterial: no material ${material}`);
+    }
+    const index = handle.index;
+    const old = this.drawBatches[index]!;
+    if (old.material === material) {
+      return;
+    }
+    const o = index * RECORD_WORDS;
+    const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
+    const items = instanceCount > 0 ? instanceCount : 1;
+    const batch = this.batchFor({
+      mesh: old.mesh,
+      material,
+      textureSet: old.textureSet,
+      doubleSided: old.doubleSided,
+      shader: old.shader,
+      billboard: old.billboard,
+      points: old.points,
+      instanced: old.instanced,
+      draw: index,
+    });
+    old.items -= items;
+    if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
+      old.shown--;
+      batch.shown++;
+    }
+    if (old.items === 0) {
+      this.batches.delete(old.key);
+      old.key = "";
+      this.freeBatches.push(old);
+    }
+    batch.items += items;
+    this.drawBatches[index] = batch;
+    this.drawConstants.setBatch(
+      index,
+      batch.index,
+      this.recordsF32[o + RADIUS_WORD]!,
+    );
+    this.drawConstants.setMaterial(index, material);
+    const point = this.pointDraws.get(index);
+    if (point) {
+      point.batch = batch;
+      this.writePointParams(point, index);
+    }
+    this.markDirty(index);
+    this.bundle = undefined;
+    this.translucentDraws = undefined;
+    this.version++;
+  }
+
+  /**
+   * @internal A material like `material` with `flags` (`MaterialFlags`)
+   * set too, shared by content as `addMaterial`'s: one more reference,
+   * balanced by one `removeMaterial`.
+   */
+  materialWithFlags(material: number, flags: number): number {
+    if (this.materialReferences[material] === undefined || material < 0) {
+      throw new RangeError(`materialWithFlags: no material ${material}`);
+    }
+    const scratch = this.materialScratch;
+    scratch.u32.set(
+      this.materialsU32.subarray(
+        material * MATERIAL_WORDS,
+        (material + 1) * MATERIAL_WORDS,
+      ),
+    );
+    scratch.u32[12] = (scratch.u32[12]! | flags) >>> 0;
+    return this.internMaterial(scratch.u32);
   }
 
   /** Whether `handle` still names a live draw. */
@@ -3296,11 +3418,16 @@ export class World {
    * @internal Uploads a terrain clip region (globe/terrainClip.ts
    * `packClipShape`: vec4 rows) into a run of whole clip blocks and points
    * its directory row (block 0) at it; returns its slot, the record mask's
-   * bit (`setTerrainClip`). Throws a `TerrainClipError` when all
+   * bit (`setTerrainClip`). `opacity` 0 (the default) is a clip: no
+   * terrain drawn inside; between 0 and 1 the terrain inside is that
+   * translucent (`Tileset3D.addTerrainTranslucency`). No rows: the slot
+   * holds everywhere a record's mask names it (`Tileset3D.terrainOpacity`),
+   * and takes no blocks. Throws a `TerrainClipError` when all
    * `MAX_TERRAIN_CLIPS` slots are taken, or the region doesn't fit the
    * blocks set aside for regions (`WorldOptions.maxClipBlocks`).
    */
-  addTerrainClipRegion(rows: Float32Array): number {
+  addTerrainClipRegion(rows: Float32Array, opacity = 0): number {
+    checkTerrainOpacity(opacity, rows.length === 0);
     let slot = 0;
     while (slot < MAX_TERRAIN_CLIPS && this.terrainClipRuns[slot]) {
       slot++;
@@ -3309,6 +3436,19 @@ export class World {
       throw new TerrainClipError(
         `at most ${MAX_TERRAIN_CLIPS} terrain clip regions per world are supported; remove one, or merge neighboring regions into one polygon.`,
       );
+    }
+    const everywhere = rows.length === 0;
+    if (everywhere) {
+      this.terrainClipRuns[slot] = {
+        block: 0,
+        blocks: 0,
+        rows,
+        opacity,
+        everywhere,
+      };
+      this.writeTerrainClip(slot);
+      this.version++;
+      return slot;
     }
     const blocks = Math.ceil(rows.length / (CLIP_BLOCK_ROWS * 4));
     if (blocks > MAX_TERRAIN_CLIP_BLOCKS) {
@@ -3332,7 +3472,7 @@ export class World {
         `no run of ${blocks} clip blocks is free for the region (placeholders hold the rest of the world's ${this.maxClipBlocks}, WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
       );
     }
-    this.terrainClipRuns[slot] = { block, blocks, rows };
+    this.terrainClipRuns[slot] = { block, blocks, rows, opacity, everywhere };
     this.terrainClipBlocks += blocks;
     this.writeTerrainClip(slot);
     this.version++;
@@ -3347,9 +3487,11 @@ export class World {
       return;
     }
     this.terrainClipRuns[slot] = undefined;
-    this.terrainClipBlocks -= run.blocks;
-    this.contentRevision_++;
-    this.freeRun(run.block, run.blocks);
+    if (run.blocks > 0) {
+      this.terrainClipBlocks -= run.blocks;
+      this.contentRevision_++;
+      this.freeRun(run.block, run.blocks);
+    }
     // An empty directory row: a stale mask bit would read a region of no
     // rows at row 0, never the freed blocks (removal also clears the
     // tiles' masks at once).
@@ -3361,16 +3503,53 @@ export class World {
     this.version++;
   }
 
+  /**
+   * @internal Changes a terrain region's opacity (`addTerrainClipRegion`):
+   * a translucent region stays translucent, a clip a clip.
+   */
+  setTerrainClipOpacity(slot: number, opacity: number): void {
+    const run = this.terrainClipRuns[slot];
+    if (!run || run.opacity === opacity) {
+      return;
+    }
+    checkTerrainOpacity(opacity, run.everywhere);
+    if ((run.opacity === 0) !== (opacity === 0)) {
+      throw new TerrainClipError(
+        "a clip can't become translucent, nor a translucent region a clip; remove it and add the other.",
+      );
+    }
+    run.opacity = opacity;
+    this.writeDirectoryRow(slot);
+    this.version++;
+  }
+
   /** A region's rows into its run's blocks, and its directory row. */
   private writeTerrainClip(slot: number): void {
     const run = this.terrainClipRuns[slot]!;
-    const floats = CLIP_BLOCK_ROWS * 4;
-    const data = new Float32Array(run.blocks * floats);
-    data.set(run.rows);
-    const { queue } = this.ctx.device;
-    queue.writeBuffer(this.clipBuffer, run.block * floats * 4, data);
-    const entry = new Uint32Array([run.block * CLIP_BLOCK_ROWS, 0, 0, 0]);
-    queue.writeBuffer(this.clipBuffer, slot * 16, entry);
+    if (run.blocks > 0) {
+      const floats = CLIP_BLOCK_ROWS * 4;
+      const data = new Float32Array(run.blocks * floats);
+      data.set(run.rows);
+      this.ctx.device.queue.writeBuffer(
+        this.clipBuffer,
+        run.block * floats * 4,
+        data,
+      );
+    }
+    this.writeDirectoryRow(slot);
+  }
+
+  /**
+   * A slot's directory row (surface.slang `terrainOpacity`): its region's
+   * first row, its opacity's bits, and 1 when it holds everywhere.
+   */
+  private writeDirectoryRow(slot: number): void {
+    const run = this.terrainClipRuns[slot]!;
+    const entry = new Uint32Array(4);
+    entry[0] = run.block * CLIP_BLOCK_ROWS;
+    new Float32Array(entry.buffer, 4, 1)[0] = run.opacity;
+    entry[2] = run.everywhere ? 1 : 0;
+    this.ctx.device.queue.writeBuffer(this.clipBuffer, slot * 16, entry);
   }
 
   /**
@@ -3415,7 +3594,7 @@ export class World {
    */
   private packTerrainClips(): void {
     const slots = this.terrainClipRuns
-      .map((run, slot) => (run ? slot : -1))
+      .map((run, slot) => (run && run.blocks > 0 ? slot : -1))
       .filter((slot) => slot >= 0)
       .sort(
         (a, b) =>
@@ -5147,4 +5326,19 @@ function tableColumnData(table: FeatureTable): TableColumn[] {
 
 function align4(bytes: number): number {
   return Math.ceil(bytes / 4) * 4;
+}
+
+/**
+ * Throws unless `opacity` is a terrain region's: 0 (a clip) or between 0
+ * and 1 (translucent); an everywhere slot is never a clip.
+ */
+function checkTerrainOpacity(opacity: number, everywhere: boolean): void {
+  if (
+    !(Number.isFinite(opacity) && opacity >= 0 && opacity < 1) ||
+    (everywhere && opacity === 0)
+  ) {
+    throw new RangeError(
+      `terrain opacity must be ${everywhere ? "above 0" : "0 (a clip) or above"} and below 1, got ${opacity}`,
+    );
+  }
 }

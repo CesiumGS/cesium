@@ -962,10 +962,15 @@ async function createPipelines(
       },
       // Masked: the material's alpha cutoff and placeholders' clip; else
       // the clip alone (a record turns placeholder without the bundle
-      // being recorded again, so every caster checks).
+      // being recorded again, so every caster checks). Height captures
+      // (no bias) keep translucent terrain as ground (`heightFs`).
       fragment: {
         module: shaders,
-        entryPoint: masked ? "shadowFs" : "shadowPlaceholderFs",
+        entryPoint: masked
+          ? bias
+            ? "shadowFs"
+            : "heightFs"
+          : "shadowPlaceholderFs",
         targets: [],
       },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },

@@ -469,7 +469,18 @@ export class TerrainSource {
       geometricError: data.geometricError,
     };
     this.rayTiles.set(tile, ray);
+    this.rayTileOwners.set(ray, tile);
     return ray;
+  }
+
+  private readonly rayTileOwners = new WeakMap<TerrainRayTile, Tile>();
+
+  /**
+   * @internal The tile a ray target's patch drew (`rayTarget`'s
+   * `patchAt(…).tile`), while it is loaded.
+   */
+  tileOf(rayTile: TerrainRayTile): Tile | undefined {
+    return this.rayTileOwners.get(rayTile);
   }
 
   /** Content left the cache: its height data goes too. */

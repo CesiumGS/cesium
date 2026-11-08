@@ -99,6 +99,7 @@ public struct DrawRecord {
   // scene/placementTable.ts), applied before the custom vertex stage;
   // 0xffffffff: none (the transform alone).
   public uint placement;
+  public uint skirtStart;        // a globe tile's first skirt vertex (mesh-local); 0xffffffff = none
 };
 
 // A placement composed in float64 on the CPU (World transform table),

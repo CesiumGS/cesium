@@ -2038,6 +2038,17 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "skirtStart",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
@@ -4850,6 +4861,17 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "skirtStart",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
@@ -5626,6 +5648,679 @@
     "entryPoints": [
         {
             "name": "shadowFs",
+            "stage": "fragment",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "in",
+                        "stage": "fragment",
+                        "binding": {"kind": "varyingInput", "index": 0, "count": 13},
+                        "type": {
+                            "kind": "struct",
+                            "name": "SurfaceVaryings",
+                            "fields": [
+                                {
+                                    "name": "position",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+
+                                        ]
+                                    },
+                                    "semanticName": "SV_POSITION"
+                                },
+                                {
+                                    "name": "normal",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 0},
+                                    "semanticName": "NORMAL"
+                                },
+                                {
+                                    "name": "uv",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 2,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 1},
+                                    "semanticName": "UV"
+                                },
+                                {
+                                    "name": "color",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 2},
+                                    "semanticName": "COLOR"
+                                },
+                                {
+                                    "name": "ids",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "uint32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 3},
+                                    "semanticName": "IDS"
+                                },
+                                {
+                                    "name": "relPosition",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 4},
+                                    "semanticName": "RELPOSITION"
+                                },
+                                {
+                                    "name": "tangent",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 5},
+                                    "semanticName": "TANGENT"
+                                },
+                                {
+                                    "name": "airInscatter",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 6},
+                                    "semanticName": "AIRINSCATTER"
+                                },
+                                {
+                                    "name": "airTransmittance",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 7},
+                                    "semanticName": "AIRTRANSMITTANCE"
+                                },
+                                {
+                                    "name": "positionMC",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 8},
+                                    "semanticName": "POSITIONMC"
+                                },
+                                {
+                                    "name": "named0",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 9},
+                                    "semanticName": "NAMEDA"
+                                },
+                                {
+                                    "name": "named1",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 10},
+                                    "semanticName": "NAMEDB"
+                                },
+                                {
+                                    "name": "named2",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 11},
+                                    "semanticName": "NAMEDC"
+                                },
+                                {
+                                    "name": "named3",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "varyingInput", "value": 1}
+                                        ]
+                                    },
+                                    "stage": "fragment",
+                                    "binding": {"kind": "varyingInput", "index": 12},
+                                    "semanticName": "NAMEDD"
+                                }
+                            ],
+                            "sizes": [
+                                {"kind": "varyingInput", "value": 13}
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "in",
+                    "stage": "fragment",
+                    "binding": {"kind": "varyingInput", "index": 0, "count": 13},
+                    "type": {
+                        "kind": "struct",
+                        "name": "SurfaceVaryings",
+                        "fields": [
+                            {
+                                "name": "position",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+
+                                    ]
+                                },
+                                "semanticName": "SV_POSITION"
+                            },
+                            {
+                                "name": "normal",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 0},
+                                "semanticName": "NORMAL"
+                            },
+                            {
+                                "name": "uv",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 2,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 1},
+                                "semanticName": "UV"
+                            },
+                            {
+                                "name": "color",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 2},
+                                "semanticName": "COLOR"
+                            },
+                            {
+                                "name": "ids",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 3},
+                                "semanticName": "IDS"
+                            },
+                            {
+                                "name": "relPosition",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 4},
+                                "semanticName": "RELPOSITION"
+                            },
+                            {
+                                "name": "tangent",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 5},
+                                "semanticName": "TANGENT"
+                            },
+                            {
+                                "name": "airInscatter",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 6},
+                                "semanticName": "AIRINSCATTER"
+                            },
+                            {
+                                "name": "airTransmittance",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 7},
+                                "semanticName": "AIRTRANSMITTANCE"
+                            },
+                            {
+                                "name": "positionMC",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 8},
+                                "semanticName": "POSITIONMC"
+                            },
+                            {
+                                "name": "named0",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 9},
+                                "semanticName": "NAMEDA"
+                            },
+                            {
+                                "name": "named1",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 10},
+                                "semanticName": "NAMEDB"
+                            },
+                            {
+                                "name": "named2",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 11},
+                                "semanticName": "NAMEDC"
+                            },
+                            {
+                                "name": "named3",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "varyingInput", "value": 1}
+                                    ]
+                                },
+                                "stage": "fragment",
+                                "binding": {"kind": "varyingInput", "index": 12},
+                                "semanticName": "NAMEDD"
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "varyingInput", "value": 13}
+                        ]
+                    }
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "view",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "specularEnvironment",
+                    "binding": {"kind": "descriptorTableSlot", "index": 1}
+                },
+                {
+                    "name": "environmentSampler",
+                    "binding": {"kind": "descriptorTableSlot", "index": 2}
+                },
+                {
+                    "name": "brdfLut",
+                    "binding": {"kind": "descriptorTableSlot", "index": 3}
+                },
+                {
+                    "name": "sunLightTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 5}
+                },
+                {
+                    "name": "irradianceCube",
+                    "binding": {"kind": "descriptorTableSlot", "index": 6}
+                },
+                {
+                    "name": "aerialVolume",
+                    "binding": {"kind": "descriptorTableSlot", "index": 7}
+                },
+                {
+                    "name": "air",
+                    "binding": {"kind": "descriptorTableSlot", "index": 9}
+                },
+                {
+                    "name": "airTransmittance",
+                    "binding": {"kind": "descriptorTableSlot", "index": 10}
+                },
+                {
+                    "name": "airMultipleScattering",
+                    "binding": {"kind": "descriptorTableSlot", "index": 11}
+                },
+                {
+                    "name": "shadows",
+                    "binding": {"kind": "descriptorTableSlot", "index": 12}
+                },
+                {
+                    "name": "shadowMap",
+                    "binding": {"kind": "descriptorTableSlot", "index": 13}
+                },
+                {
+                    "name": "shadowSampler",
+                    "binding": {"kind": "descriptorTableSlot", "index": 14}
+                },
+                {
+                    "name": "aoWords",
+                    "binding": {"kind": "descriptorTableSlot", "index": 15}
+                },
+                {
+                    "name": "aerialScreen",
+                    "binding": {"kind": "descriptorTableSlot", "index": 16}
+                },
+                {
+                    "name": "lightTable",
+                    "binding": {"kind": "descriptorTableSlot", "index": 18}
+                },
+                {
+                    "name": "records",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0}
+                },
+                {
+                    "name": "items",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "vertices",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "materials",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3}
+                },
+                {
+                    "name": "clipBoxes",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "imagery",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "imagerySampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "baseColorTexture",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "metallicRoughnessTexture",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
+                    "name": "normalTexture",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 2}
+                },
+                {
+                    "name": "occlusionTexture",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 3}
+                },
+                {
+                    "name": "emissiveTexture",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 4}
+                },
+                {
+                    "name": "baseColorSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 5}
+                },
+                {
+                    "name": "metallicRoughnessSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 6}
+                },
+                {
+                    "name": "normalSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 7}
+                },
+                {
+                    "name": "occlusionSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 8}
+                },
+                {
+                    "name": "emissiveSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 9}
+                },
+                {
+                    "name": "propertyTexture0",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 20}
+                },
+                {
+                    "name": "propertyTexture1",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 21}
+                },
+                {
+                    "name": "cutOutInDepth",
+                    "binding": {"kind": "specializationConstant", "index": 0}
+                },
+                {
+                    "name": "translucency",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 0}
+                },
+                {
+                    "name": "lists",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 1}
+                },
+                {
+                    "name": "opaqueDepth",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "placements",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7}
+                }
+            ]
+        },
+        {
+            "name": "heightFs",
             "stage": "fragment",
             "scope": {
                 "kind": "none",

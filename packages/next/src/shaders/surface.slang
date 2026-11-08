@@ -430,6 +430,10 @@ struct SurfaceVaryings {
   float4 named3 : NAMEDD;
 };
 
+// `ids.z`'s top bit: the fragment is on a globe tile's skirt (`vertexOut`);
+// the bits below are the instance.
+static const uint SKIRT_BIT = 0x80000000u;
+
 // The camera-relative position of what is being drawn, set before the
 // stages run, so styles compiled to them (vector/VectorStyle.ts) read a
 // feature's distance from the camera (`${view.distance}`): in the vertex
@@ -751,7 +755,10 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   v.directory = r.attributes;
   v.tableFeature = tableFeature;
   CesiumVertexResult stage = cesiumVertexStage(v);
-  out.ids.z = instance;
+  // A globe tile's skirt vertex (`DrawRecord.skirtStart`) sets SKIRT_BIT:
+  // each skirt triangle lists one first, so the provoking vertex marks
+  // every skirt fragment and no surface one (`terrainAlpha`).
+  out.ids.z = instance | (vertexIndex >= r.skirtStart ? SKIRT_BIT : 0u);
   out.named0 = stage.named0;
   out.named1 = stage.named1;
   out.named2 = stage.named2;
@@ -890,9 +897,13 @@ bool segmentsCross(float2 a, float2 b, float2 q, float2 s) {
   return qSide != sSide && aSide != bSide;
 }
 
-// Terrain clipping (a globe's `addTerrainClip`, globe/terrainClip.ts): the
-// world's regions live in `clipBoxes`, block 0's first 32 rows a directory
-// (a region's first row, as a uint; 0 for a free slot). A region's rows
+// Terrain clipping and translucency (a globe's `addTerrainClip` and
+// `addTerrainTranslucency`, globe/terrainClip.ts): the world's regions
+// live in `clipBoxes`, block 0's first 32 rows a directory, a row a slot:
+// the region's first row (x, a uint; 0 for a free slot), its opacity (y,
+// a float's bits: 0 a clip, the terrain not drawn inside; between 0 and 1
+// translucent), and whether it is everywhere (z, a uint: 1 for the
+// globe's `terrainOpacity`, a slot with no shape). A region's rows
 // (`packClipShape`): its anchor's position hi (xyz) with its gnomonic
 // radius (w); lo with its grid's columns and rows (w, a uint: columns in
 // the low 16 bits); its east, north and up axes; its box in its plane
@@ -921,16 +932,29 @@ static const uint MAX_CLIP_CELL_EDGES = 32u;
 static const uint MAX_CLIP_FRAGMENT_EDGES = 128u;
 static const uint CLIP_HEADER_ROWS = 6u;
 
-bool insideTerrainClip(uint mask, float3 p) {
+// The terrain's opacity at `p`: the least opacity of the regions of `mask`
+// that hold it (0 inside a clip), 1 where none does. A region that can't
+// lower the opacity found so far isn't tested; with `clipsOnly`, only
+// clips are (`clippedOut`: what isn't drawn at all).
+float terrainOpacity(uint mask, float3 p, bool clipsOnly) {
   SplitPosition camera = SplitPosition(view.cameraHi, view.cameraLo);
   uint budget = MAX_CLIP_FRAGMENT_EDGES;
+  float opacity = 1.0;
   for (uint n = 0u; n < MAX_TERRAIN_CLIPS; n++) {
     if (mask == 0u) {
       break;
     }
     uint slot = firstbitlow(mask);
     mask &= mask - 1u;
-    uint2 entry = asuint(clipBoxes[slot].xy);
+    uint4 entry = asuint(clipBoxes[slot]);
+    float alpha = asfloat(entry.y);
+    if (alpha >= opacity || (clipsOnly && alpha > 0.0)) {
+      continue;
+    }
+    if (entry.z != 0u) {
+      opacity = alpha; // everywhere
+      continue;
+    }
     uint o = entry.x;
     float4 hi = clipBoxes[o];
     float4 lo = clipBoxes[o + 1u];
@@ -968,21 +992,44 @@ bool insideTerrainClip(uint mask, float3 p) {
       }
     }
     if (inside) {
-      return true;
+      opacity = alpha;
+      if (opacity <= 0.0) {
+        return 0.0;
+      }
     }
   }
-  return false;
+  return opacity;
 }
 
 // What the record doesn't draw at `p` in this view: a mixed-LOD
 // placeholder outside its boxes, clipped terrain inside its regions.
+bool placeholderOut(DrawRecord r, float3 p) {
+  return (r.placeholderMask & view.viewBit) != 0u && !insideClipBoxes(r.clipBlock, p);
+}
 bool clippedOut(DrawRecord r, float3 p) {
-  if ((r.placeholderMask & view.viewBit) != 0u && !insideClipBoxes(r.clipBlock, p)) {
+  if (placeholderOut(r, p)) {
     return true;
   }
-  return r.terrainClip != 0u && insideTerrainClip(r.terrainClip, p);
+  return r.terrainClip != 0u && terrainOpacity(r.terrainClip, p, true) <= 0.0;
 }
 
+// Whether a pass sees terrain translucency: height captures don't (the
+// ground there is ground for clamping, `heightFs`).
+static bool terrainSeen = true;
+
+// A draw's opacity from its globe's translucency at the fragment
+// (`terrainOpacity`): 1 for other draws; 0 on a skirt wherever the terrain
+// is less than opaque (skirts only hide cracks in opaque ground).
+float terrainAlpha(DrawRecord r, SurfaceVaryings in) {
+  if (r.terrainClip == 0u) {
+    return 1.0;
+  }
+  float opacity = terrainOpacity(r.terrainClip, in.relPosition, !terrainSeen);
+  if (opacity < 1.0 && (in.ids.z & SKIRT_BIT) != 0u) {
+    return 0.0;
+  }
+  return opacity;
+}
 
 // Blended surfaces at least this opaque draw in the opaque pass (depth,
 // shadows, picks, ambient occlusion); the rest in the translucent passes.
@@ -997,15 +1044,6 @@ static const float OPAQUE_ALPHA = 0.999;
 // lines cut out here.
 [vk::constant_id(0)] const bool cutOutInDepth = false;
 
-// The shading's clip. After the depth prepass (`cutOutInDepth`) a clipped
-// terrain fragment has no depth of its own to equal, so the depth test
-// already left it out: only the placeholders' cheap test is repeated.
-bool shadingClippedOut(DrawRecord r, float3 p) {
-  if (cutOutInDepth) {
-    return (r.placeholderMask & view.viewBit) != 0u && !insideClipBoxes(r.clipBlock, p);
-  }
-  return clippedOut(r, p);
-}
 
 // A fragment as the custom shader's fragment stage takes it.
 CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric) {
@@ -1021,7 +1059,7 @@ CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric) {
   f.featureId = in.ids.y;
   f.screen = in.position.xy;
   f.time = view.time.x;
-  f.instanceIndex = in.ids.z;
+  f.instanceIndex = in.ids.z & ~SKIRT_BIT;
   f.draw = in.ids.x;
   f.directory = r.attributes;
   // The fragment's feature, local to the draw (feature tables).
@@ -1065,7 +1103,7 @@ float materialAlpha(SurfaceVaryings in) {
       color.rgb, color.a, material.metallic, material.roughness, geometric, 1.0,
       material.emissive, (material.flags & 1u) != 0u || (r.flags & 2u) != 0u);
   cesiumFragmentStage(fragmentOf(in, geometric), custom);
-  return custom.alpha;
+  return custom.alpha * terrainAlpha(r, in);
 }
 
 // The opaque pass's discards: alpha cutoff, blended surfaces' translucent
@@ -1087,9 +1125,18 @@ void cutOut(SurfaceVaryings in) {
 
 // A shadow map's caster: depth only, with the opaque pass's discards
 // (alpha cutoff, mixed-LOD placeholders), so cut-out leaves and clipped
-// coarse tiles cast what is drawn.
+// coarse tiles cast what is drawn. Translucent terrain casts none, as
+// glass.
 [shader("fragment")]
 void shadowFs(SurfaceVaryings in) {
+  cutOut(in);
+}
+
+// A height capture's masked caster (Engine `addHeightCapture`): as
+// `shadowFs`, but translucent terrain is ground (clips still aren't).
+[shader("fragment")]
+void heightFs(SurfaceVaryings in) {
+  terrainSeen = false;
   cutOut(in);
 }
 
@@ -1379,9 +1426,20 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   }
   // Mixed-LOD placeholder: a coarse tile fills only the volumes of its
   // missing finer descendants, at its true depth (plan §13.1); clipped
-  // terrain draws nothing inside its regions.
-  if (shadingClippedOut(r, in.relPosition)) {
+  // terrain draws nothing inside its regions, and translucent terrain is
+  // that much less opaque. After the depth prepass (`cutOutInDepth`) a
+  // clipped or translucent terrain fragment has no depth of its own to
+  // equal, so the depth test already left it out: only the placeholders'
+  // cheap test is repeated.
+  if (placeholderOut(r, in.relPosition)) {
     discard;
+  }
+  float terrain = 1.0;
+  if (translucent || !cutOutInDepth) {
+    terrain = terrainAlpha(r, in);
+    if (terrain <= 0.0) {
+      discard;
+    }
   }
   float3 emissive = material.emissive;
   if (materialHasTexture(material, TEXTURE_EMISSIVE)) {
@@ -1438,7 +1496,7 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
       baseColor.rgb, baseColor.a, metallic, roughness, n, occlusion, emissive,
       (flags & 1u) != 0u || (r.flags & 2u) != 0u);
   cesiumFragmentStage(fragment, custom);
-  baseColor = float4(custom.baseColor, custom.alpha);
+  baseColor = float4(custom.baseColor, custom.alpha * terrain);
   // Alpha mask, on the custom shader's alpha (the depth pass's cut, else here).
   if (!cutOutInDepth && (flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
     discard;

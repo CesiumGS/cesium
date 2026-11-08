@@ -131,6 +131,7 @@ export {
 export {
   Tileset3D,
   type PurposeStats,
+  type TerrainTranslucency,
   type TilesetEvents,
   type TilesetOptions,
   type TilesetStats,

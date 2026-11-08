@@ -165,6 +165,7 @@ entry	name	kind	tier
 .	TerrainRayResult	interface	-
 .	TerrainRayTarget	interface	-
 .	TerrainRayTile	interface	-
+.	TerrainTranslucency	interface	-
 .	TextureBinding	interface	-
 .	TextureSetOptions	interface	-
 .	TextureSource	type	-

@@ -8,6 +8,7 @@ import {
   IMAGERY_SLICE_WORD,
   INSTANCE_COUNT_WORD,
   LIGHTS_SLICE_WORD,
+  MATERIAL_INDEX_WORD,
   PLACEHOLDER_MASK_WORD,
   PLACEMENT_WORD,
   RADIUS_WORD,
@@ -145,6 +146,11 @@ export class DrawConstants {
    */
   setPlacement(index: number, row: number): boolean {
     return this.setWord(index, PLACEMENT_WORD, row);
+  }
+
+  /** The record's material (`World.setDrawMaterial`). */
+  setMaterial(index: number, material: number): void {
+    this.setWord(index, MATERIAL_INDEX_WORD, material);
   }
 
   /** A removed draw's record: hidden, with no instances. */

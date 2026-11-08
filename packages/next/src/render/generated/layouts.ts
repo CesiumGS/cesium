@@ -67,6 +67,7 @@ export const DrawRecordLayout = {
   billboardSize: 136,
   billboardDepthTest: 140,
   placement: 144,
+  skirtStart: 148,
 } as const;
 
 /** `Transform` as `transforms` holds it: byte offsets. */

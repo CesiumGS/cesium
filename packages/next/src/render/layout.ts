@@ -231,7 +231,7 @@ export function writeAnchorEye(
   }
 }
 
-/** `struct DrawRecord` — 160 bytes (148 used, padded to WGSL's 16-byte alignment). */
+/** `struct DrawRecord` — 160 bytes (152 used, padded to WGSL's 16-byte alignment). */
 export const RECORD_SIZE = DrawRecordLayout.size;
 export const RECORD_WORDS = R.size;
 /** Word offsets of `DrawRecord` fields written after creation. */
@@ -242,6 +242,10 @@ export const CENTER_WORD = R.center;
 /** Word offset of `DrawRecord.color`: the draw's tint, linear RGBA (f32). */
 export const COLOR_WORD = R.color;
 export const BATCH_WORD = R.batch;
+/** Word offset of `DrawRecord.featureId`: its first global feature ID. */
+export const FEATURE_ID_WORD = R.featureId;
+/** Word offset of `DrawRecord.materialIndex`. */
+export const MATERIAL_INDEX_WORD = R.materialIndex;
 export const TRANSFORM_WORD = R.transform;
 export const FLAGS_WORD = R.flags;
 /**
@@ -540,7 +544,16 @@ export interface DrawRecordData {
    * (1.x `disableDepthTestDistance`); 0: depth-tested.
    */
   billboardDepthTest?: number;
+  /**
+   * A globe tile's first skirt vertex, mesh-local (`MeshData.skirtStart`;
+   * `NO_SKIRT`: none). Its skirts are hidden where its terrain is
+   * translucent (surface.slang `terrainAlpha`).
+   */
+  skirtStart?: number;
 }
+
+/** `DrawRecord.skirtStart` of a mesh without skirts. */
+export const NO_SKIRT = 0xffffffff;
 
 export function writeDrawRecord(
   f32: Float32Array,
@@ -586,6 +599,7 @@ export function writeDrawRecord(
   f32[o + R.billboardSize] = r.billboardSize ?? 0;
   f32[o + R.billboardDepthTest] = r.billboardDepthTest ?? 0;
   u32[o + R.placement] = NO_PLACEMENT; // World.setPlacement
+  u32[o + R.skirtStart] = r.skirtStart ?? NO_SKIRT;
 }
 
 /** Bits of `Transform.flags` that hold its anchor slot (8 to 15). */

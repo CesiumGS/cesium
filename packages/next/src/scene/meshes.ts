@@ -22,6 +22,13 @@ export interface MeshData {
   /** Default "triangle-list". Lines are drawn unlit, like 1.x. */
   topology?: "triangle-list" | "line-list";
   /**
+   * A globe tile's first skirt vertex: the vertices from here on hang below
+   * its edges to hide cracks between levels, and each skirt triangle lists
+   * one of them first. Skirts are hidden where the terrain is translucent
+   * (`Tileset3D.addTerrainTranslucency`). Default: no skirts.
+   */
+  skirtStart?: number;
+  /**
    * More per-vertex data by name (glTF semantic, e.g. `_TEMPERATURE`), 1–4
    * float components each, read by custom shaders that declare them
    * (`CustomShaderOptions.attributes`).

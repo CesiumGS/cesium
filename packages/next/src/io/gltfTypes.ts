@@ -23,6 +23,8 @@ export interface GltfMesh {
   featureTable?: number;
   /** "line-list" for glTF LINES/LINE_STRIP/LINE_LOOP; default triangle-list. */
   topology?: "triangle-list" | "line-list";
+  /** A globe tile's first skirt vertex (`MeshData.skirtStart`). */
+  skirtStart?: number;
   /**
    * Attributes the engine doesn't read itself, by glTF semantic
    * (`_TEMPERATURE`, `TEXCOORD_1`), for custom shaders.

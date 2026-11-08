@@ -389,7 +389,7 @@ describe("terrain clip regions", () => {
 });
 
 /**
- * surface.slang `insideTerrainClip` for one region, in float32 as the GPU
+ * surface.slang `terrainOpacity` for one region, in float32 as the GPU
  * runs it: `rows` as packed, the camera split hi/lo, the fragment's
  * camera-relative position in float32.
  */
@@ -705,13 +705,13 @@ describe("the shader's constants and loops", () => {
         return Number(m![2]);
       });
     };
-    expect(bounds(body("insideTerrainClip_0"))).toEqual([
+    expect(bounds(body("terrainOpacity_0"))).toEqual([
       MAX_TERRAIN_CLIPS,
       MAX_CLIP_CELL_EDGES,
     ]);
     expect(bounds(body("insideClipBoxes_0"))).toEqual([CLIP_BOXES]);
     // The fragment's budget starts at its constant, and caps each cell.
-    const clip = body("insideTerrainClip_0");
+    const clip = body("terrainOpacity_0");
     expect(clip).toMatch(
       new RegExp(`budget_0 : u32 = u32\\(${MAX_CLIP_FRAGMENT_EDGES}\\)`),
     );

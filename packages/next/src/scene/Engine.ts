@@ -3497,7 +3497,63 @@ export class Engine {
       camera:
         request.resolvePosition &&
         this.positionCamera(view, tanX, tanY, ndcX, ndcY),
+      translucent: this.translucentTerrainPick(view, tanX, tanY, ndcX, ndcY),
     });
+  }
+
+  /**
+   * Translucent terrain a pick stops at (`Tileset3D.addTerrainTranslucency`
+   * without `pickThrough`): the opaque pass the pick reads doesn't hold it,
+   * so the drawn terrain is traced on the CPU along the pick's ray, in the
+   * tick the pick reads, and its depth and feature are kept to stand in for
+   * the GPU's where they are nearer (`resolvePicks`). Undefined without
+   * such terrain on the ray.
+   */
+  private translucentTerrainPick(
+    view: View,
+    tanX: number,
+    tanY: number,
+    ndcX: number,
+    ndcY: number,
+  ): { depth: number; featureId: number } | undefined {
+    const globes = this.tilesets.filter(
+      (t) =>
+        t.world === view.world &&
+        t.terrain &&
+        t.show &&
+        t.anchor === view.bodyAnchor,
+    );
+    if (globes.length === 0) {
+      return undefined;
+    }
+    const camera = this.bodyCamera(view);
+    // Along the view axis this direction is 1 long, so distances along it
+    // are the depth's.
+    const direction = [0, 1, 2].map(
+      (k) =>
+        camera.direction[k]! +
+        ndcX * tanX * camera.right[k]! +
+        ndcY * tanY * camera.up[k]!,
+    );
+    const id = this.viewIds.get(view);
+    const mask = id === undefined ? undefined : 1 << id;
+    let best: { depth: number; featureId: number } | undefined;
+    for (const globe of globes) {
+      const hit = globe.translucentTerrainHit(camera.position, direction, mask);
+      if (!hit || !(hit.distance >= camera.near)) {
+        continue;
+      }
+      // Reverse-Z, infinite far (`depthDistance`).
+      const depth = camera.near / hit.distance;
+      if (best === undefined || depth > best.depth) {
+        best = {
+          depth,
+          featureId:
+            hit.draw === undefined ? 0 : view.world.featureIdOf(hit.draw),
+        };
+      }
+    }
+    return best;
   }
 
   /**
@@ -4685,12 +4741,20 @@ export class Engine {
   }
 
   private resolvePicks(picks: PendingPick[]): void {
-    for (const { view, readback, request, camera: c, tick } of picks) {
+    for (const pick of picks) {
+      const { view, readback, request, camera: c, tick } = pick;
       whenMapped(readback, () => {
         const words = new Uint32Array(readback.getMappedRange());
-        const featureId = words[0]!;
-        const depth = new Float32Array(words.buffer, 4, 1)[0]!;
+        let featureId = words[0]!;
+        let depth = new Float32Array(words.buffer, 4, 1)[0]!;
         readback.unmap();
+        // Translucent terrain nearer than what the opaque pass holds
+        // (reverse-Z: nearer is greater) stands in for it.
+        const translucent = pick.translucent;
+        if (translucent && translucent.depth > depth) {
+          featureId = translucent.featureId;
+          depth = translucent.depth;
+        }
         this.pickReadback.push(readback);
         if (request.resolvePoint) {
           request.resolvePoint(corePick(tick!, featureId, depth));
@@ -4748,6 +4812,11 @@ interface PendingPick {
   tick: PickTick | undefined;
   /** The body anchor's camera, for a `View.pickPosition`. */
   camera: PendingCamera | undefined;
+  /**
+   * Translucent terrain the pick stops at, nearer than the GPU's hit or
+   * not (`translucentTerrainPick`).
+   */
+  translucent: { depth: number; featureId: number } | undefined;
 }
 
 interface PendingCamera {

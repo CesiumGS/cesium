@@ -1082,6 +1082,13 @@ export class View {
   /**
    * Feature under a pixel of this view (pixels relative to the view's
    * top-left). Resolves a few frames later; no extra render is needed.
+   *
+   * What a pick sees through, here and in `pickPosition` and `pickPoint`:
+   * blended surfaces (glass, ghosts) are not picked; what lies behind them
+   * is. Translucent terrain is the exception
+   * (`Tileset3D.addTerrainTranslucency`, `setTerrainOpacity`): picks stop
+   * at it as at opaque terrain, unless it was made with `pickThrough`, when
+   * they go on to what shows through it (a tunnel under the ground).
    */
   pick(x: number, y: number): Promise<PickResult | undefined> {
     return new Promise((resolve) => {
@@ -1104,7 +1111,8 @@ export class View {
    * (float64, from the depth buffer): the body anchor's coordinates
    * (`bodyAnchor`), whatever the render root. Undefined over the sky.
    * Resolves a few frames later, with the camera of the frame it was read
-   * in.
+   * in. Translucent terrain stops it unless made with `pickThrough`
+   * (`pick`).
    */
   pickPosition(x: number, y: number): Promise<Float64Array | undefined> {
     return new Promise((resolvePosition) => {
@@ -1122,6 +1130,7 @@ export class View {
    * resolves; only the draw and the feature are looked up when the
    * readback maps. Undefined over the sky. A pick interpreter turns it into
    * a point tagged with its reference frame (`createFramesPickInterpreter`).
+   * Translucent terrain stops it unless made with `pickThrough` (`pick`).
    */
   pickPoint(x: number, y: number): Promise<CorePick | undefined> {
     return new Promise((resolvePoint) => {

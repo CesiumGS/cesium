@@ -3,8 +3,10 @@
  * its terrain isn't drawn, so content placed there (a site's design, an
  * excavation) shows instead. Rectangles and simple polygons, their
  * vertices geodetic longitude and latitude in degrees on the globe's body.
+ * The same regions can make the terrain translucent instead
+ * (`Tileset3D.addTerrainTranslucency`): a region with an opacity.
  *
- * Each region is tested per fragment (surface.slang `insideTerrainClip`):
+ * Each region is tested per fragment (surface.slang `terrainOpacity`):
  * a fragment's position, relative to the region's anchor (the middle of
  * its vertices on the ellipsoid), is projected onto the anchor's tangent
  * plane from the point where the anchor's normal meets the polar axis
@@ -1076,12 +1078,20 @@ export function packClipShape(shape: ClipShape): Float32Array {
   return f;
 }
 
-/** @internal One region of a globe: its handle, shape and world slot. */
+/**
+ * @internal One region of a globe: its handle, shape and world slot, and
+ * its opacity: 0 for a clip (not drawn inside), between 0 and 1 for a
+ * translucent region (`Tileset3D.addTerrainTranslucency`).
+ */
 export interface ClipEntry {
-  readonly clip: TerrainClip;
+  readonly clip: object;
   readonly shape: ClipShape;
   /** Its bit in draw records' `terrainClip` (`World.addTerrainClipRegion`). */
   readonly slot: number;
+  /** 0: a clip. Default 0. */
+  readonly opacity?: number;
+  /** A translucent region picks don't stop at (`pickThrough`). */
+  readonly pickThrough?: boolean;
 }
 
 /**
@@ -1136,7 +1146,7 @@ export class TerrainClips {
     }
   }
 
-  remove(clip: TerrainClip): ClipEntry | undefined {
+  remove(clip: object): ClipEntry | undefined {
     const i = this.list.findIndex((e) => e.clip === clip);
     if (i < 0) {
       return undefined;
@@ -1237,13 +1247,64 @@ export class TerrainClips {
     return false;
   }
 
-  /** Whether an Earth-fixed point lies inside a region (not drawn). */
-  clippedPoint(p: ArrayLike<number>): boolean {
-    if (this.list.length === 0) {
-      return false;
+  /** The clips' entries (opacity 0), not the translucent regions'. */
+  get clips(): readonly ClipEntry[] {
+    return this.list.filter((e) => !(e.opacity! > 0));
+  }
+
+  /** The translucent regions' entries. */
+  get translucent(): readonly ClipEntry[] {
+    return this.list.filter((e) => e.opacity! > 0);
+  }
+
+  /** The translucent regions' slots, a bit each. */
+  get translucentMask(): number {
+    let mask = 0;
+    for (const e of this.list) {
+      if (e.opacity! > 0) {
+        mask |= 1 << e.slot;
+      }
     }
+    return mask >>> 0;
+  }
+
+  /**
+   * Whether an Earth-fixed point lies inside a clip (not drawn).
+   * Translucent regions are drawn: not here.
+   */
+  clippedPoint(p: ArrayLike<number>): boolean {
+    return this.inside(p, (e) => !(e.opacity! > 0));
+  }
+
+  /**
+   * At an Earth-fixed point: whether it lies inside a translucent region
+   * (`inside`), and inside one that picks stop at, not `pickThrough`
+   * (`stops`). Clips aren't counted.
+   */
+  translucentAt(p: ArrayLike<number>): { inside: boolean; stops: boolean } {
+    let inside = false;
+    let stops = false;
     for (const e of this.list) {
       if (
+        e.opacity! > 0 &&
+        clipPlane(e.shape, p, this.plane) &&
+        insideClipShape(e.shape, this.plane[0]!, this.plane[1]!)
+      ) {
+        inside = true;
+        stops ||= e.pickThrough !== true;
+      }
+    }
+    return { inside, stops };
+  }
+
+  /** Whether `p` lies inside a region `which` accepts. */
+  private inside(
+    p: ArrayLike<number>,
+    which: (e: ClipEntry) => boolean,
+  ): boolean {
+    for (const e of this.list) {
+      if (
+        which(e) &&
         clipPlane(e.shape, p, this.plane) &&
         insideClipShape(e.shape, this.plane[0]!, this.plane[1]!)
       ) {
@@ -1263,7 +1324,7 @@ export class TerrainClips {
     }
     let candidate = false;
     for (const e of this.list) {
-      if (inBounds(e.shape.bounds, longitude, latitude)) {
+      if (!(e.opacity! > 0) && inBounds(e.shape.bounds, longitude, latitude)) {
         candidate = true;
         break;
       }

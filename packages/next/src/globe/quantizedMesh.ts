@@ -852,7 +852,9 @@ function buildTerrainTile(d: TerrainTileData): {
     // Outward-facing, so the visible side is the front face and keeps its
     // (copied, surface) normal: with edges sorted along increasing u or v,
     // (a, b, a2) faces west on the west edge and north on the north edge,
-    // and inward on the south and east edges, which flip.
+    // and inward on the south and east edges, which flip. Each triangle
+    // starts at a skirt vertex (a rotation: the same winding), so its
+    // provoking vertex marks it as skirt (`MeshData.skirtStart`).
     const flip = e === 1 || e === 2;
     for (let k = 0; k + 1 < sorted.length; k++) {
       const a = sorted[k]!;
@@ -860,9 +862,9 @@ function buildTerrainTile(d: TerrainTileData): {
       const a2 = first + k;
       const b2 = first + k + 1;
       if (flip) {
-        skirtTriangles.push(a, a2, b, b, a2, b2);
+        skirtTriangles.push(a2, b, a, a2, b2, b);
       } else {
-        skirtTriangles.push(a, b, a2, b, b2, a2);
+        skirtTriangles.push(a2, a, b, a2, b, b2);
       }
     }
   });
@@ -876,7 +878,13 @@ function buildTerrainTile(d: TerrainTileData): {
     occludee = point ? [point[0]!, point[1]!, point[2]!] : undefined;
   }
 
-  const mesh: GltfMesh = { positions, normals, uvs, indices };
+  const mesh: GltfMesh = {
+    positions,
+    normals,
+    uvs,
+    indices,
+    ...(skirtCount > 0 ? { skirtStart: vertexCount } : {}),
+  };
   const matrix = new Float64Array(16);
   matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1;
   matrix[12] = center[0];
