@@ -333,11 +333,12 @@ describe("the Earth's content under its anchor (plan 5a, Task 10)", () => {
           a!.planes.subarray(k * 4, k * 4 + 3),
           1e-12,
         );
-        // An offset is -n·p (plus 5e8 m on the far plane): the camera's
-        // re-expressed coordinates carry about one float64 step of
-        // rounding (about 1e-9 m at 6.4e6 m), so 1e-9 m, or two float64
-        // steps of the larger of the offset and the camera's distance from
-        // the Earth's center (2.8e-9 m here; 2.2e-7 m on the far plane).
+        // An offset is -n·p (plus 500,000 km on the far plane): the
+        // camera's re-expressed coordinates carry about one float64 step of
+        // rounding (about a nanometer at 6,400 km), so a nanometer, or two
+        // float64 steps of the larger of the offset and the camera's
+        // distance from the Earth's center (2.8 nm here; 0.22 µm on the
+        // far plane).
         const d = a!.planes[k * 4 + 3]!;
         const scale = Math.max(Math.abs(d), v3.length(a!.position));
         expect(Math.abs(b!.planes[k * 4 + 3]! - d)).toBeLessThanOrEqual(
@@ -355,11 +356,18 @@ describe("the Earth's content under its anchor (plan 5a, Task 10)", () => {
       expect(
         Math.abs(b!.cartographic.height - a!.cartographic.height),
       ).toBeLessThanOrEqual(2 * Number.EPSILON * v3.length(a!.position));
-      // The site's tileset selects with the camera in the site's anchor.
-      const [, s] = selected.get(siteTileset)!;
-      const inSite = turned.anchorCamera(site);
-      expectClose(s!.position, inSite.position, 1e-9);
-      expectClose(s!.direction, inSite.direction, 1e-12);
+      // The site's tileset selects with each view's camera in the site's
+      // anchor (its own, not the last view's).
+      const [r, s] = selected.get(siteTileset)!;
+      for (const [entry, view] of [
+        [r, still],
+        [s, turned],
+      ] as const) {
+        const inSite = view.anchorCamera(site);
+        expectClose(entry!.position, inSite.position, 1e-9);
+        expectClose(entry!.direction, inSite.direction, 1e-12);
+      }
+      expect(v3.distance(r!.position, s!.position)).toBeGreaterThan(1000);
     } finally {
       engine.removeTileset(tileset);
       engine.removeTileset(siteTileset);
@@ -420,6 +428,19 @@ describe("the Earth's content under its anchor (plan 5a, Task 10)", () => {
     );
     expect(cast).toHaveBeenCalledTimes(1);
     expect(cast.mock.calls[0]![1]).toMatchObject({ anchor: earth, draws });
+    // A tileset given under another anchor is refused, naming both.
+    const elsewhere = {
+      ...sampled,
+      url: "https://tiles.test/site/tileset.json",
+      anchor: world.addAnchor("site"),
+    } as unknown as Tileset3D;
+    await expect(
+      engine.sampleHeightMostDetailed(world, [{ longitude: 0, latitude: 0 }], {
+        tilesets: [elsewhere],
+      }),
+    ).rejects.toThrow(
+      /sampleHeightMostDetailed: the tileset https:\/\/tiles\.test\/site\/tileset\.json is under site, not the Earth's anchor/,
+    );
   });
 
   it("a view link gives the target the source's pose in the Earth's anchor", () => {

@@ -253,7 +253,7 @@ export class ModelPool {
     u32[4] = p.anchors;
     u32[5] = p.streams;
     u32[6] = p.stride;
-    // The views' cameras, in the source's frame (through its anchor).
+    // The views' cameras, in its east-north-up frame (through its anchor).
     let cameras = 0;
     for (const view of this.engine.views) {
       if (view.world !== this.world || !view.enabled || cameras === 4) {

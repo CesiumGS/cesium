@@ -1311,8 +1311,6 @@ export class Engine {
     World,
     Map<AnchorHandle, SelectionView[]>
   >();
-  /** A view's camera in a tileset's anchor other than its body's. */
-  private readonly selectionCamera = new Camera();
   /** The prefetch camera re-expressed in such an anchor. */
   private readonly selectionAhead = new Camera();
 
@@ -1333,9 +1331,8 @@ export class Engine {
       const aspect = rect.width / rect.height;
       const body = view.bodyAnchor;
       const inBody = anchor === body;
-      const camera = inBody
-        ? this.bodyCamera(view)
-        : view.anchorCamera(anchor, this.selectionCamera);
+      // Each view its own camera: its SelectionView keeps the arrays.
+      const camera = inBody ? this.bodyCamera(view) : view.anchorCamera(anchor);
       const p = camera.position;
       const d = camera.direction;
       // World-space planes in float64: camera-relative planes shifted by the
@@ -1488,10 +1485,10 @@ export class Engine {
    * down to the leaves whatever the views show, then ray cast on the GPU
    * down the geodetic normal from 10 km (nearest hit), in the Earth's
    * anchor. Tilesets: those given, else the shown collision tilesets of
-   * the world; only those under the Earth's anchor (`Tileset3D.anchor`)
-   * give heights. Undefined where nothing is hit (a globe given here has
-   * none inside its terrain clips, `addTerrainClip`). Needs the frame loop
-   * running (`start`).
+   * the world under the Earth's anchor (`Tileset3D.anchor`); a tileset
+   * given under another anchor throws, naming it. Undefined where nothing
+   * is hit (a globe given here has none inside its terrain clips,
+   * `addTerrainClip`). Needs the frame loop running (`start`).
    */
   async sampleHeightMostDetailed(
     world: World,
@@ -1502,12 +1499,23 @@ export class Engine {
     // The rays are Earth-fixed: they meet the content under the Earth's
     // anchor (`World.castRays` tests only the cast's anchor).
     const earth = earthAnchor(world);
-    const tilesets = (
+    for (const t of options.tilesets ?? []) {
+      if (t.anchor !== earth) {
+        throw new Error(
+          `sampleHeightMostDetailed: the tileset ${t.url} is under ${t.anchor.name}, not the Earth's anchor; heights are the Earth's.`,
+        );
+      }
+    }
+    const tilesets =
       options.tilesets ??
       this.tilesets.filter(
-        (t) => t.world === world && t.show && t.enableCollision && !t.terrain,
-      )
-    ).filter((t) => t.anchor === earth);
+        (t) =>
+          t.world === world &&
+          t.show &&
+          t.enableCollision &&
+          !t.terrain &&
+          t.anchor === earth,
+      );
     const rays = positions.map(({ longitude, latitude }) => {
       const up = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
         { longitude, latitude, height: 0 },
