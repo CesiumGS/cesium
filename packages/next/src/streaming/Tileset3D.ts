@@ -64,6 +64,12 @@ import type { TilesetGeoreference } from "../engineering/georeference.ts";
 import type { TilesetPlacement } from "../engineering/placement.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
+import { TouchOrder } from "./TouchOrder.ts";
+import {
+  DRAW_ITEM_SIZE,
+  RECORD_SIZE,
+  TRANSFORM_SIZE,
+} from "../render/layout.ts";
 import {
   accumulate,
   emptyTotals,
@@ -75,13 +81,29 @@ import {
   type StageTimes,
 } from "./pipeline.ts";
 
-/** Recent content loads kept for stage percentiles. */
 /**
  * World pool pressure (World.pressure) past which streaming evicts as if
  * over its byte budget (§13.15).
  */
 const CAPACITY_PRESSURE = 0.9;
 const DEGREES_TO_RADIANS = Math.PI / 180;
+/**
+ * Bytes a loaded tile costs besides its content, counted in `Tile.bytes`
+ * and so against the byte budget. Per draw: its rows in the world's tables
+ * (a draw record, a draw item, five words of indirect arguments, and two
+ * transforms: the content root's and the node's), on the GPU and in their
+ * CPU copies, about 800 bytes.
+ */
+const DRAW_OVERHEAD_BYTES =
+  2 * (RECORD_SIZE + DRAW_ITEM_SIZE + 20 + 2 * TRANSFORM_SIZE);
+/**
+ * Per tile: its objects on the heap (the tile, its placement and handles,
+ * the map entries that find it), about 2 KB. Without these overheads the
+ * ellipsoid's tiles (about 17 KB each) fit the 512 MiB budget by the 30,000,
+ * and the transform table reached 90% before the budget did.
+ */
+const TILE_OVERHEAD_BYTES = 2048;
+/** Recent content loads kept for stage percentiles. */
 const PIPELINE_WINDOW = 256;
 /** Imagery priority offset of loading tiles: after drawn and waiting ones. */
 const LOADING_IMAGERY = 1e15;
@@ -243,6 +265,10 @@ export interface TilesetStats {
   tiles: number;
   loaded: number;
   loading: number;
+  /**
+   * Bytes of the loaded tiles: their content, and each tile's fixed cost
+   * in the world's tables and on the heap (about 3 KB for a one-draw tile).
+   */
   bytes: number;
   /** Content cache budget (eviction starts above it). */
   budget: number;
@@ -636,7 +662,7 @@ export class Tileset3D implements TileTree {
       const query = this.queries[q]!;
       if (query.done) {
         for (const tile of query.pinned) {
-          tile.touchedFrame = frame;
+          this.order.touch(tile, frame);
         }
         continue;
       }
@@ -646,7 +672,7 @@ export class Tileset3D implements TileTree {
       }
       let pending = false;
       for (const tile of tiles) {
-        tile.touchedFrame = frame;
+        this.order.touch(tile, frame);
         if (tile.state === "unloaded" || tile.state === "loading") {
           pending = true;
           if (tile.state === "unloaded") {
@@ -893,6 +919,8 @@ export class Tileset3D implements TileTree {
   private readonly uploadsPerFrame: number;
   private readonly headers?: Record<string, string>;
   private readonly loaded = new Set<Tile>();
+  /** The loaded tiles, least recently touched first (what eviction walks). */
+  private readonly order = new TouchOrder<Tile>();
   private readonly ready: Array<{
     tile: Tile;
     asset: GltfAsset;
@@ -1272,13 +1300,13 @@ export class Tileset3D implements TileTree {
         nowStandIns.add(tile);
       }
       for (const tile of result.touched) {
-        tile.touchedFrame = frame;
+        this.order.touch(tile, frame);
       }
       for (const tile of result.waiting ?? []) {
         waiting.add(tile);
       }
       for (const tile of result.requested) {
-        tile.touchedFrame = frame;
+        this.order.touch(tile, frame);
         // Nearest first across views (1.x orders by distance for REPLACE);
         // a policy may supply its own priority.
         const priority =
@@ -1634,7 +1662,10 @@ export class Tileset3D implements TileTree {
         if (this.source?.clips?.size) {
           this.applyTerrainClip(tile);
         }
-        tile.bytes = model.bytes;
+        tile.bytes =
+          model.bytes +
+          TILE_OVERHEAD_BYTES +
+          placement.draws.length * DRAW_OVERHEAD_BYTES;
         if (this.retainGeometry) {
           tile.geometry = this.retain(asset, placement);
           // A mesh drawn by several nodes is kept, and counted, once.
@@ -1682,6 +1713,7 @@ export class Tileset3D implements TileTree {
         tile.appliedMask = 0;
         tile.state = "ready";
         this.loaded.add(tile);
+        this.order.add(tile);
         for (let t = tile.parent; t; t = t.parent) {
           t.residentBelow++;
         }
@@ -1719,6 +1751,8 @@ export class Tileset3D implements TileTree {
 
   /** Least-recently-touched first, never a tile touched this frame. */
   private evict(frame: number): void {
+    // This frame's touches and loads, in the order eviction walks.
+    this.order.seal(frame);
     // A world pool at capacity (an upload's CapacityError), or nearly so
     // (World.pressure), evicts as being over the byte budget does, until
     // uploads fit again.
@@ -1736,9 +1770,6 @@ export class Tileset3D implements TileTree {
     if (this.stats.bytes <= this.cacheBytes) {
       return;
     }
-    const candidates = [...this.loaded]
-      .filter((t) => t.touchedFrame < frame)
-      .sort((a, b) => a.touchedFrame - b.touchedFrame);
     // Spread over frames, as uploads are: after a camera jump everything
     // shown before becomes evictable at once, and freeing it all in one
     // frame (textures and buffers by the hundred) stalls that frame. Past
@@ -1747,7 +1778,7 @@ export class Tileset3D implements TileTree {
       2 * this.engine.uploadBytesPerFrame,
       this.stats.bytes - (this.cacheBytes + this.overflowBytes),
     );
-    for (const tile of candidates) {
+    for (const tile of this.order.coldest(frame)) {
       if (this.stats.bytes <= this.cacheBytes || allowance <= 0) {
         break;
       }
@@ -1766,12 +1797,13 @@ export class Tileset3D implements TileTree {
       `capacity: world ${this.capacityFull} ${this.capacityFailed ? "full" : "nearly full"}, evicting`,
     );
     this.capacityFull = undefined;
-    const candidates = [...this.loaded]
-      .filter((t) => t.touchedFrame < frame)
-      .sort((a, b) => a.touchedFrame - b.touchedFrame);
-    const count = Math.min(candidates.length, this.uploadsPerFrame);
-    for (let k = 0; k < count; k++) {
-      this.unload(candidates[k]!);
+    let count = 0;
+    for (const tile of this.order.coldest(frame)) {
+      if (count >= this.uploadsPerFrame) {
+        break;
+      }
+      this.unload(tile);
+      count++;
     }
     // After a failed upload with nothing to free here (everything is in
     // view, or another tileset holds the pool): retry in half a second,
@@ -1855,6 +1887,7 @@ export class Tileset3D implements TileTree {
       tile.clip = undefined;
     }
     this.placeholders.delete(tile);
+    this.order.remove(tile);
     if (this.loaded.delete(tile)) {
       for (let t = tile.parent; t; t = t.parent) {
         t.residentBelow--;

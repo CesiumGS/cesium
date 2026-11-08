@@ -125,12 +125,24 @@ export class Tile {
   geometry?: TileGeometry[];
   /** Debug tint currently on the draws (linear RGBA; none is white). */
   debugColor?: readonly number[];
-  /** Bytes of the loaded content (geometry + textures). */
+  /**
+   * Bytes of the loaded content (geometry and textures), plus the tile's
+   * fixed cost in the world's tables and on the heap (`Tileset3D`).
+   */
   bytes = 0;
   /** Data credit of the loaded content (glTF asset.copyright). */
   copyright?: string;
-  /** Frame in which any view last touched (needed) the tile. */
+  /**
+   * Frame in which any view last touched (needed) the tile. Set through
+   * `Tileset3D`'s eviction order (`TouchOrder.touch`), which keeps loaded
+   * tiles least recently touched first.
+   */
   touchedFrame = -1;
+  /** Neighbors in the tileset's eviction order (`TouchOrder`). */
+  touchPrev: Tile | undefined = undefined;
+  touchNext: Tile | undefined = undefined;
+  /** Load sequence in the eviction order; 0 while not loaded. */
+  touchSeq = 0;
   /** Union of view bits selecting the tile this frame. */
   viewMask = 0;
   /** View mask currently written to the content's draw records. */
