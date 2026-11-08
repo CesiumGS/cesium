@@ -57,6 +57,7 @@ import { measurementModel } from "../../examples/design-globe/measureModel.ts";
 import type { SnapResult } from "../../src/engineering/snap.ts";
 import {
   corridorTree,
+  largestSlopeError,
   largestChordError,
   type CorridorNode,
 } from "../../scripts/designTiles/corridorMesh.mjs";
@@ -491,6 +492,8 @@ describe("the design globe's generated tiles", () => {
     expect(manifest.version).toBe(1);
     for (const file of [
       "examples/design-globe/corridor.ts",
+      "examples/design-globe/sideSlopes.ts",
+      "examples/design-globe/corridorDaylight.ts",
       "examples/design-globe/sites.ts",
       "scripts/designTiles.mjs",
       "scripts/designTiles/corridorMesh.mjs",
@@ -558,6 +561,20 @@ describe("the design globe's generated tiles", () => {
           const node = nodes.get(uri)!;
           expect(a[i]!.json.geometricError, uri).toBeGreaterThanOrEqual(
             largestChordError(alignment, node.stations),
+          );
+          // And what its side slopes miss of its leaves'.
+          const leaves: number[] = [];
+          const gather = (n: CorridorNode) =>
+            n.children.length === 0
+              ? leaves.push(...n.stations)
+              : n.children.forEach(gather);
+          gather(node);
+          expect(a[i]!.json.geometricError, uri).toBeGreaterThanOrEqual(
+            largestSlopeError(
+              alignment,
+              node.stations,
+              [...new Set(leaves)].sort((p, q) => p - q),
+            ),
           );
           checkedParents++;
         }

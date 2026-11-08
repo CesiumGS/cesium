@@ -8,9 +8,22 @@ import {
   STRUCTURES,
 } from "../examples/design-globe/corridor.ts";
 import {
+  CORRIDOR_PALETTE,
   corridorMesh,
+  decimate,
+  largestSlopeError,
   sampleStations,
 } from "../scripts/designTiles/corridorMesh.mjs";
+import {
+  EARTHWORK,
+  END_STATION,
+  HAS_SLOPES,
+  HINGE_RISE,
+  SIDE_SLOPES,
+  daylightBreaks,
+  daylightRise,
+  slopeSection,
+} from "../examples/design-globe/sideSlopes.ts";
 import {
   buildingAnchor,
   buildingMesh,
@@ -159,8 +172,18 @@ describe("corridorMesh", () => {
         "pier 471+80 right",
         "tick 437+00 left",
         "tick 473+00 right",
+        "left side slope",
+        "right side slope",
+        "abutment 437+00",
+        "abutment 473+00",
+        "portal 477+00 headwall",
+        "portal 477+00 mouth",
       ]),
     );
+    // A pick on a slope says so.
+    expect(
+      mesh.features.filter((f) => f.kind === "side slope").length,
+    ).toBeGreaterThanOrEqual(2);
     expect(mesh.featureIds.length * 3).toBe(mesh.design.length);
     expect(mesh.normals.length).toBe(mesh.design.length);
   });
@@ -197,6 +220,92 @@ describe("corridorMesh", () => {
       }
     }
     expect(found).toBe(true);
+  });
+});
+
+describe("the side slopes", () => {
+  const alignment = new Alignment(CORRIDOR_ALIGNMENT);
+
+  it("follow their rules: 2H:1V in fill and soil, 1H:1V in rock under 30 ftUS of soil", () => {
+    expect(slopeSection(-10)).toEqual({ rock: [0, 0], daylight: [20, -10] });
+    expect(slopeSection(20)).toEqual({ rock: [0, 0], daylight: [40, 20] });
+    expect(slopeSection(30)).toEqual({ rock: [0, 0], daylight: [60, 30] });
+    expect(slopeSection(50)).toEqual({ rock: [20, 20], daylight: [80, 50] });
+    expect(SIDE_SLOPES.hinge).toBe(41);
+    expect(HINGE_RISE).toBeCloseTo(-1.04, 12);
+  });
+
+  it("are on every earthwork stretch, and only there", () => {
+    expect(HAS_SLOPES).toBe(true);
+    const structures = STRUCTURES.reduce(
+      (sum, s) => sum + s.toStation - s.fromStation,
+      0,
+    );
+    const earthwork = EARTHWORK.reduce(
+      (sum, r) => sum + r.toStation - r.fromStation,
+      0,
+    );
+    expect(END_STATION).toBe(alignment.endStation);
+    expect(earthwork + structures).toBe(
+      alignment.endStation - alignment.startStation,
+    );
+    expect(daylightRise(45_500, 1)).toBeUndefined(); // on a viaduct
+    expect(daylightRise(90_000, -1)).toBeUndefined(); // in a tunnel
+    expect(daylightRise(86_300, -1)).toBeLessThan(0); // the anchor, on fill
+  });
+
+  it("reach the daylight line: the mesh's outermost slope vertices at each station", () => {
+    // The anchor's stretch, between a viaduct and a portal.
+    const stations = sampleStations(alignment, 85_800, 86_700, 0.003);
+    const mesh = corridorMesh(alignment, stations, { tickInterval: 100 });
+    const breaks = daylightBreaks().filter((b) => b > 85_800 && b < 86_700);
+    expect(Array.from(stations)).toEqual(expect.arrayContaining(breaks));
+    expect(facing(mesh)).toBe(mesh.indices.length / 3);
+    for (const station of [85_800, 86_300, 86_700]) {
+      for (const side of [-1, 1] as const) {
+        const rise = daylightRise(station, side)!;
+        const run = slopeSection(rise).daylight[0];
+        const p = alignment.pointAt(station, side * (SIDE_SLOPES.hinge + run));
+        let found = false;
+        for (let i = 0; i < mesh.design.length && !found; i += 3) {
+          found =
+            Math.hypot(
+              mesh.design[i]! - p[0]!,
+              mesh.design[i + 1]! - p[1]!,
+              mesh.design[i + 2]! - (p[2]! + HINGE_RISE + rise),
+            ) < 1e-6;
+        }
+        expect(found, `station ${station}, side ${side}`).toBe(true);
+      }
+    }
+    // Each slope vertex in the slopes' colours, the rest the pavement's.
+    const slopeIds = new Set(
+      mesh.features.flatMap((f, i) => (f.kind === "side slope" ? [i] : [])),
+    );
+    expect(mesh.colors.length).toBe((mesh.design.length / 3) * 4);
+    const f32 = (c: readonly number[]) => c.map((x) => Math.fround(x));
+    const slopeColours = [CORRIDOR_PALETTE.grass, CORRIDOR_PALETTE.rock].map(
+      f32,
+    );
+    for (let v = 0; v < mesh.featureIds.length; v++) {
+      const c = Array.from(mesh.colors.subarray(v * 4, v * 4 + 4));
+      expect(
+        slopeIds.has(mesh.featureIds[v]!)
+          ? slopeColours
+          : [
+              f32(CORRIDOR_PALETTE.pavement),
+              f32(CORRIDOR_PALETTE.concrete),
+              f32(CORRIDOR_PALETTE.mouth),
+            ],
+      ).toContainEqual(c);
+    }
+  });
+
+  it("measure what a parent's decimated slopes miss", () => {
+    const stations = sampleStations(alignment, 85_800, 86_700, 0.003);
+    expect(largestSlopeError(alignment, stations, stations)).toBe(0);
+    const coarse = decimate(alignment, decimate(alignment, stations));
+    expect(largestSlopeError(alignment, coarse, stations)).toBeGreaterThan(0);
   });
 });
 

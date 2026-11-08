@@ -11,10 +11,28 @@ export interface DesignTileMesh {
   indices: Uint32Array;
   featureIds: Uint16Array;
   features: { name: string; kind: string }[];
+  /** Each vertex's linear RGBA (`CORRIDOR_PALETTE`). */
+  colors: Float32Array;
 }
+type Rgba = [number, number, number, number];
+/** The corridor's colours, linear RGBA, by what they colour. */
+export const CORRIDOR_PALETTE: {
+  pavement: Rgba;
+  grass: Rgba;
+  rock: Rgba;
+  concrete: Rgba;
+  mouth: Rgba;
+};
+/** A portal's headwall: its mouth's clearance, its lintel and its parapet, ftUS. */
+export const PORTAL: { clearance: number; lintel: number; parapet: number };
+/** An abutment: its footing under the lowest ground, ftUS. */
+export const ABUTMENT: { footing: number };
 /** "601+20": a station as engineers write it. */
 export function stationLabel(station: number): string;
-/** The chord error at the middle of [a, b], at the centreline and both edges. */
+/**
+ * The chord error at the middle of [a, b], at the centreline and both edges
+ * (and, on earthwork, the side slopes' rock tops and daylight points).
+ */
 export function chordError(alignment: Alignment, a: number, b: number): number;
 /** The largest chord error of consecutive stations. */
 export function largestChordError(
@@ -22,8 +40,18 @@ export function largestChordError(
   stations: ArrayLike<number>,
 ): number;
 /**
+ * The largest distance between the side slopes at the `fine` stations and
+ * the chords between the `coarse` ones (a parent tile against its leaves).
+ */
+export function largestSlopeError(
+  alignment: Alignment,
+  coarse: ArrayLike<number>,
+  fine: ArrayLike<number>,
+): number;
+/**
  * Stations from `from` to `to`, within `chordTolerance` on curves and at most
- * TANGENT_SPACING apart on tangents, with every join and the structures' ends.
+ * TANGENT_SPACING apart on tangents, with every join, the structures' ends
+ * and the side slopes' breaks.
  */
 export function sampleStations(
   alignment: Alignment,
@@ -31,10 +59,17 @@ export function sampleStations(
   to: number,
   chordTolerance: number,
 ): Float64Array;
-/** Every other station, keeping the ends, the joins and the structures' ends. */
+/** How far a parent at level L may move the side slopes: this × 2^L. */
+export const SLOPE_TOLERANCE: number;
+/**
+ * Every other station, keeping the ends, the joins and the structures' ends,
+ * and any whose dropping would move the side slopes more than
+ * SLOPE_TOLERANCE × 2^level (level 1 by default).
+ */
 export function decimate(
   alignment: Alignment,
   stations: ArrayLike<number>,
+  level?: number,
 ): Float64Array;
 /** The corridor between the first and last of `stations`. */
 export function corridorMesh(

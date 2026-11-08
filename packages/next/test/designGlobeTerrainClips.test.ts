@@ -3,19 +3,33 @@
 import { describe, expect, it } from "vitest";
 import { Alignment } from "../src/engineering/alignment.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
-import {
-  CORRIDOR_ALIGNMENT,
-  STRUCTURES,
-} from "../examples/design-globe/corridor.ts";
+import { CORRIDOR_ALIGNMENT } from "../examples/design-globe/corridor.ts";
 import { PORTFOLIO, modelRoute } from "../examples/design-globe/sites.ts";
 import {
+  EARTHWORK,
+  SIDE_SLOPES,
+  daylightBreaks,
+  daylightLine,
+  daylightRise,
+  slopeSection,
+} from "../examples/design-globe/sideSlopes.ts";
+import {
+  CORRIDOR_CLIP_PLANS,
   STRIP_SLIVER,
+  daylightPieces,
+  daylightRegion,
   footprintRegion,
   geodeticOf,
   horizontalApart,
   routeRegion,
-  stripRegion,
+  type DaylightStretch,
 } from "../examples/design-globe/terrainClips.ts";
+import {
+  MAX_CLIP_CELL_EDGES,
+  MAX_CLIP_FRAGMENT_EDGES,
+  MAX_TERRAIN_CLIP_VERTICES,
+  compileTerrainClip,
+} from "../src/globe/terrainClip.ts";
 
 const R = Math.PI / 180;
 /** A toy placement: a design unit is 1e-5° east or north of (10°, 50°). */
@@ -57,20 +71,7 @@ describe("terrain clip regions", () => {
     expect(p[2]!.latitude).toBeCloseTo(50 + 110e-5, 9);
   });
 
-  it("runs the corridor's strip down one edge and back the other, within the clip's vertex limit", () => {
-    const alignment = new Alignment(CORRIDOR_ALIGNMENT);
-    const p = stripRegion(alignment, (d) => d, 52, 500);
-    const perSide =
-      Math.ceil((alignment.endStation - alignment.startStation) / 500) + 1;
-    expect(p).toHaveLength(2 * perSide);
-    expect(p.length).toBeLessThanOrEqual(1024);
-  });
-
-  it("narrows the strip to a sliver over the structures, within the clip's vertex limit", () => {
-    const alignment = new Alignment(CORRIDOR_ALIGNMENT);
-    const p = stripRegion(alignment, (d) => d, 52, 500, STRUCTURES);
-    expect(p.length).toBeLessThanOrEqual(1024);
-    // A toy: three gaps, two meeting and one at the very end.
+  it("runs the corridor's clip down its left daylight line and back its right, a sliver over its structures", () => {
     const toy = new Alignment({
       name: "toy",
       start: [0, 0],
@@ -79,29 +80,219 @@ describe("terrain clip regions", () => {
       horizontal: [{ kind: "line", length: 5_000 }],
     });
     const flat = (d: ArrayLike<number>) => displayed([d[0]!, d[1]!, 0]);
-    const q = stripRegion(toy, flat, 50, 500, [
-      { fromStation: 1_000, toStation: 2_000 },
-      { fromStation: 2_000, toStation: 2_500 },
-      { fromStation: 4_000, toStation: 5_000 },
-    ]).map(design);
-    const leftQ = q.slice(0, q.length / 2);
+    // Earthwork 0 to 1,000 and 2,500 to 4,000; structures between and after.
+    const stretches: DaylightStretch[] = [
+      {
+        fromStation: 0,
+        toStation: 1_000,
+        left: [
+          [0, 50],
+          [1_000, 60],
+        ],
+        right: [
+          [0, 45],
+          [1_000, 45],
+        ],
+      },
+      {
+        fromStation: 2_500,
+        toStation: 4_000,
+        left: [
+          [2_500, 70],
+          [4_000, 50],
+        ],
+        right: [
+          [2_500, 41],
+          [4_000, 80],
+        ],
+      },
+    ];
+    const r = daylightRegion(toy, flat, stretches, 1024);
+    expect(r.tolerance).toBe(0);
+    expect(r.outward).toBe(0);
+    const q = r.polygon.map(design);
+    const left = q.slice(0, q.length / 2);
     // East along the toy line; north is the offset, positive to the left.
     expect(
-      leftQ.map(([e, n]) => [Math.round(e!), Number(n!.toFixed(3))]),
+      left.map(([e, n]) => [Math.round(e!), Number(n!.toFixed(3))]),
     ).toEqual([
       [0, 50],
-      [500, 50],
-      [1_000, 50],
+      [1_000, 60],
       [1_000, STRIP_SLIVER],
-      [2_000, STRIP_SLIVER],
       [2_500, STRIP_SLIVER],
-      [2_500, 50],
-      [3_000, 50],
-      [3_500, 50],
+      [2_500, 70],
       [4_000, 50],
       [4_000, STRIP_SLIVER],
       [5_000, STRIP_SLIVER],
     ]);
+    const right = q.slice(q.length / 2).reverse();
+    expect(right.map(([, n]) => Number(n!.toFixed(3)))).toEqual([
+      -45,
+      -45,
+      -STRIP_SLIVER,
+      -STRIP_SLIVER,
+      -41,
+      -80,
+      -STRIP_SLIVER,
+      -STRIP_SLIVER,
+    ]);
+  });
+
+  it("simplifies a daylight line outward only, by the least tolerance that fits", () => {
+    const toy = new Alignment({
+      name: "toy",
+      start: [0, 0],
+      startAzimuth: Math.PI / 2,
+      startStation: 0,
+      horizontal: [{ kind: "line", length: 2_000 }],
+    });
+    const flat = (d: ArrayLike<number>) => displayed([d[0]!, d[1]!, 0]);
+    // A wiggling line, every 10 ft.
+    const line: [number, number][] = [];
+    for (let s = 0; s <= 2_000; s += 10) {
+      line.push([s, 60 + 15 * Math.sin(s / 70) + 5 * Math.sin(s / 13)]);
+    }
+    const stretches = [
+      { fromStation: 0, toStation: 2_000, left: line, right: line },
+    ];
+    const r = daylightRegion(toy, flat, stretches, 80);
+    expect(r.polygon.length).toBeLessThanOrEqual(80);
+    expect(r.exactVertices).toBe(2 * line.length);
+    expect(r.tolerance).toBeGreaterThan(0);
+    const left = r.polygon.slice(0, r.polygon.length / 2).map(design);
+    // The clip's edge at each of the line's stations: never inside it, and
+    // never more than the tolerance outside.
+    for (const [s, u] of line) {
+      const k = left.findIndex(([e]) => e! >= s - 1e-6);
+      const [e1, n1] = left[k]!;
+      const [e0, n0] = left[Math.max(0, k - 1)]!;
+      const t = e1 === e0 ? 1 : (s - e0!) / (e1! - e0!);
+      const at = n0! + (n1! - n0!) * t;
+      expect(at, `station ${s}`).toBeGreaterThanOrEqual(u - 1e-6);
+      expect(at - u, `station ${s}`).toBeLessThanOrEqual(r.tolerance + 1e-6);
+    }
+  });
+
+  describe("the corridor's clip", () => {
+    const alignment = new Alignment(CORRIDOR_ALIGNMENT);
+    // A local tangent mapping of the design's feet near the corridor
+    // (37.8° N, 122° W): close enough to the real placement for the clip's
+    // grid, and invertible, so containment is tested exactly.
+    const FT = 1200 / 3937;
+    const [E0, N0] = [6_080_000, 2_110_000];
+    const [LON0, LAT0] = [-122.17, 37.78];
+    const mPerDegLat = 110_990;
+    const mPerDegLon = 111_320 * Math.cos(LAT0 * R);
+    const place = (d: ArrayLike<number>) =>
+      Ellipsoid.WGS84.cartographicToCartesian(
+        {
+          longitude: (LON0 + ((d[0]! - E0) * FT) / mPerDegLon) * R,
+          latitude: (LAT0 + ((d[1]! - N0) * FT) / mPerDegLat) * R,
+          height: 0,
+        },
+        new Float64Array(3),
+      );
+    const breaks = daylightBreaks();
+    const stretches: DaylightStretch[] = EARTHWORK.map((range) => ({
+      ...range,
+      left: daylightLine(range, -1, breaks).map(([s, o]) => [s, -o] as const),
+      right: daylightLine(range, 1, breaks),
+    }));
+    // The first plan whose every piece the globe's grid takes, as the page
+    // does (the fragment budget over regions is checked as they're added).
+    const fitted = CORRIDOR_CLIP_PLANS.map((plan) => {
+      const regions = daylightPieces(alignment, stretches, plan.pieces).map(
+        (range) =>
+          daylightRegion(alignment, place, stretches, plan.vertices, range),
+      );
+      try {
+        const shapes = regions.map((r) =>
+          compileTerrainClip({ polygon: r.polygon }),
+        );
+        return { plan, regions, shapes };
+      } catch {
+        return undefined;
+      }
+    }).find((f) => f !== undefined)!;
+    /** A clip vertex back in design feet. */
+    const back = (v: { longitude: number; latitude: number }) => [
+      E0 + ((v.longitude - LON0) * mPerDegLon) / FT,
+      N0 + ((v.latitude - LAT0) * mPerDegLat) / FT,
+    ];
+    const rings = fitted.regions.map((r) => r.polygon.map(back));
+    const inside = (x: number, y: number) =>
+      rings.some((ring) => insideRing(ring, x, y));
+    const insideRing = (ring: number[][], x: number, y: number) => {
+      let odd = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i]!;
+        const [xj, yj] = ring[j]!;
+        if (
+          yi! > y !== yj! > y &&
+          x < ((xj! - xi!) * (y - yi!)) / (yj! - yi!) + xi!
+        ) {
+          odd = !odd;
+        }
+      }
+      return odd;
+    };
+
+    it("fits the globe's limits: 1,024 vertices a region, 32 edges a cell, 128 a fragment", () => {
+      expect(fitted).toBeDefined();
+      fitted.regions.forEach((r, k) => {
+        expect(r.polygon.length).toBeLessThanOrEqual(MAX_TERRAIN_CLIP_VERTICES);
+        expect(fitted.shapes[k]!.maxCellEdges).toBeLessThanOrEqual(
+          MAX_CLIP_CELL_EDGES,
+        );
+        // Neighbours touch in a structure's middle, where both are slivers.
+        if (k > 0) {
+          expect(r.fromStation).toBe(fitted.regions[k - 1]!.toStation);
+        }
+      });
+      // A fragment tests at most the edges of every region it lies in.
+      const overlapping = fitted.shapes.reduce(
+        (n, sh) => n + sh.maxCellEdges,
+        0,
+      );
+      expect(overlapping).toBeLessThanOrEqual(MAX_CLIP_FRAGMENT_EDGES);
+      const outward = Math.max(...fitted.regions.map((r) => r.outward));
+      expect(outward).toBeLessThan(1);
+      console.info(
+        `corridor clip: ${fitted.plan.pieces} regions of ${fitted.regions.map((r) => r.polygon.length).join(", ")} vertices (exact ${fitted.regions.map((r) => r.exactVertices).join(", ")}), tolerance ${Math.max(...fitted.regions.map((r) => r.tolerance)).toFixed(2)} ftUS, outward at most ${outward.toFixed(3)} ftUS, busiest cells ${fitted.shapes.map((sh) => sh.maxCellEdges).join(", ")} edges`,
+      );
+    });
+
+    it("holds every side slope out to its daylight line, every 10 ftUS", () => {
+      let checked = 0;
+      for (const range of EARTHWORK) {
+        // Within the stretch: its ends lie on the clip's cross edges.
+        const at = [range.fromStation + 0.01, range.toStation - 0.01];
+        for (let s = range.fromStation + 5; s < range.toStation; s += 10) {
+          at.push(s);
+        }
+        for (const s of at) {
+          for (const side of [-1, 1] as const) {
+            const run = slopeSection(daylightRise(s, side)!).daylight[0];
+            // A hair inside the daylight line is inside the clip.
+            const o = side * (SIDE_SLOPES.hinge + run - 0.01);
+            const p = alignment.pointAt(s, o);
+            expect(inside(p[0]!, p[1]!), `station ${s}, offset ${o}`).toBe(
+              true,
+            );
+            checked++;
+          }
+        }
+      }
+      expect(checked).toBeGreaterThan(10_000);
+    });
+
+    it("keeps the ground over a structure: a sliver there", () => {
+      // Mid-span of the viaduct the answers cross, 43,700 to 47,300.
+      for (const o of [-1, 1, -41, 41]) {
+        const p = alignment.pointAt(45_500, o);
+        expect(inside(p[0]!, p[1]!), `offset ${o}`).toBe(false);
+      }
+    });
   });
 
   it("buffers a route: mitred at its corner, squared off past its ends", () => {

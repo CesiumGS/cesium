@@ -83,6 +83,7 @@ import {
   corridorMesh,
   corridorTree,
   largestChordError,
+  largestSlopeError,
 } from "./designTiles/corridorMesh.mjs";
 import { writeGlb } from "./designTiles/gltf.mjs";
 import {
@@ -111,7 +112,6 @@ const NEAR_DISTANCES = [10_000, 20_000];
 /** The opening self-check's station (owner, 2026-11-07), on the centreline. */
 const MARKER_STATION = 170_000;
 /** Linear RGBA. */
-const CORRIDOR_COLOR = [0.45, 0.45, 0.43, 1];
 const BUILDING_COLOR = [0.62, 0.5, 0.38, 1];
 /** The ladder's models colour every vertex (COLOR_0); the material is white. */
 const WHITE = [1, 1, 1, 1];
@@ -121,6 +121,8 @@ const root = join(here, "..");
 /** The inputs whose SHA-256 the manifest records (paths from the package). */
 const INPUTS = [
   "examples/design-globe/corridor.ts",
+  "examples/design-globe/sideSlopes.ts",
+  "examples/design-globe/corridorDaylight.ts",
   "examples/design-globe/sites.ts",
   "examples/design-globe/answers.ts",
   "scripts/designTiles.mjs",
@@ -1049,9 +1051,17 @@ export async function ensureDesignTiles(
   });
   // A leaf states the sampling's tolerance; a parent twice its children's
   // largest, or its own stations' largest chord error where that is more
-  // (decimating 2× makes a curve's chords err about 4× as much). The ticks a
-  // parent drops (it keeps every 2^level-th) aren't counted: they are small
-  // marks 0.03 ft above the surface.
+  // (decimating 2× makes a curve's chords err about 4× as much), or what its
+  // side slopes miss of its leaves' (`largestSlopeError`: the slopes' runs
+  // and rises change at the sampled sections, which a parent skips). The
+  // ticks a parent drops (it keeps every 2^level-th) aren't counted: they
+  // are small marks 0.03 ft above the surface.
+  const leafStations = (node) =>
+    node.children.length === 0
+      ? node.stations
+      : Float64Array.from(
+          new Set(node.children.flatMap((c) => [...leafStations(c)])),
+        );
   const withErrors = (node) => {
     const children = node.children.map(withErrors);
     return {
@@ -1066,6 +1076,7 @@ export async function ensureDesignTiles(
           : Math.max(
               2 * Math.max(...children.map((c) => c.geometricError)),
               largestChordError(alignment, node.stations),
+              largestSlopeError(alignment, node.stations, leafStations(node)),
             ),
       children,
     };
@@ -1077,7 +1088,8 @@ export async function ensureDesignTiles(
     rigidDir: join(partial, "corridor-rigid"),
     reprojectedDir: join(partial, "corridor-reprojected"),
     name: "corridor (rigid and reprojected)",
-    color: CORRIDOR_COLOR,
+    // Each vertex's colour (corridorMesh.mjs `CORRIDOR_PALETTE`).
+    color: WHITE,
     log: logger,
   });
 

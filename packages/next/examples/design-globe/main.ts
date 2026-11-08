@@ -26,7 +26,7 @@ import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";
 import { checksView } from "./checksView.ts";
-import { ANCHOR_STATION, CORRIDOR_ALIGNMENT, STRUCTURES } from "./corridor.ts";
+import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
 import { createCursor, drawnPlacement } from "./cursor.ts";
 import { createMeasureTool } from "./measureTool.ts";
 import { pointsLink } from "./measureState.ts";
@@ -71,21 +71,32 @@ import { siteFacts } from "./siteFacts.ts";
 import { clearTimeControls, createStore, escapeHtml } from "./stores.ts";
 import { combinedFactorOf, corridorTerms, tourFactsOf } from "./storyFacts.ts";
 import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
+import { EARTHWORK, daylightBreaks, daylightLine } from "./sideSlopes.ts";
 import {
+  CORRIDOR_CLIP_PLANS,
   clearTerrainClips,
+  daylightPieces,
+  daylightRegion,
   footprintRegion,
   horizontalApart,
   routeRegion,
-  stripRegion,
   syncTerrainClip,
+  type DaylightStretch,
 } from "./terrainClips.ts";
 import { tourCard, type TourTarget } from "./tour.ts";
 import { createTour, type TourRuntime } from "./tourRuntime.ts";
 import { formatView, parseView, type ViewParams } from "./viewParams.ts";
 
 const deg = Math.PI / 180;
-/** The corridor's clipped strip, either side of the centreline, ftUS (terrainClips.ts). */
-const CORRIDOR_CLIP_HALF_WIDTH = 52;
+/** The corridor's daylight lines, by earthwork stretch (sideSlopes.ts). */
+const DAYLIGHT_STRETCHES: readonly DaylightStretch[] = (() => {
+  const breaks = daylightBreaks();
+  return EARTHWORK.map((range) => ({
+    ...range,
+    left: daylightLine(range, -1, breaks).map(([s, o]) => [s, -o] as const),
+    right: daylightLine(range, 1, breaks),
+  }));
+})();
 /** A site's clipped footprint reaches this far past rigid's error at its edge, metres. */
 const CLIP_MARGIN = 3;
 /** How far the tour's shots lift their subject, as a share of the range (shots.ts `CameraMoves.lift`). */
@@ -405,9 +416,10 @@ export function run(context: ExampleContext): ExampleRun {
   });
 
   /**
-   * The terrain under the site's design (feedback F11): its footprint, or
-   * the corridor's strip, padded by rigid's error there, so the ground
-   * never pokes through a flat design surface in either placement.
+   * The terrain under the site's design (feedback F11): its footprint,
+   * padded by rigid's error there, so the ground never pokes through a
+   * flat design surface in either placement; or the corridor out to its
+   * side slopes' daylight lines, so the ground meets the slopes.
    */
   function clipTerrain(site: SiteRuntime): void {
     const globe = viewer.globe;
@@ -427,35 +439,67 @@ export function run(context: ExampleContext): ExampleRun {
       site.rigidPlacement === undefined
         ? 0
         : horizontalApart(site.rigidPlacement.displayed(d), displayed(d));
-    const polygon =
-      site === corridor
-        ? // The paved section and its barriers (±41 ftUS), and room for
-          // the rigid copy's sideways shift (the scale factor's 2.3 m), on
-          // its earthwork: the ground stays under its viaducts and over its
-          // tunnels.
-          stripRegion(
+    if (site === corridor) {
+      // Out to the side slopes' daylight lines on its earthwork, so the
+      // ground meets the slopes; a sliver over its structures, so the
+      // ground stays under its viaducts and over its tunnels. No room for
+      // the rigid copy (it would leave a gap beside the true slopes): it
+      // moves sideways by the scale factor's share, but rises off the
+      // ground faster, by the curvature's d²/2R (2.3 m sideways and 34 m
+      // up at the far end), so the ground doesn't come through it.
+      // In a few regions (terrainClips.ts `CORRIDOR_CLIP_PLANS`), each
+      // keyed by its piece; the first plan the globe takes whole.
+      const key = (k: number) => `${site.entry.id}#${k}`;
+      const most = Math.max(...CORRIDOR_CLIP_PLANS.map((p) => p.pieces));
+      const clear = () => {
+        for (let k = 0; k < most; k++) {
+          syncTerrainClip(globe, key(k), undefined);
+        }
+      };
+      let why: string | undefined;
+      for (const plan of CORRIDOR_CLIP_PLANS) {
+        clear();
+        const ranges = daylightPieces(
+          alignment,
+          DAYLIGHT_STRETCHES,
+          plan.pieces,
+        );
+        why = undefined;
+        for (let k = 0; k < ranges.length && why === undefined; k++) {
+          const region = daylightRegion(
             alignment,
             displayed,
-            CORRIDOR_CLIP_HALF_WIDTH,
+            DAYLIGHT_STRETCHES,
+            plan.vertices,
+            ranges[k],
+          );
+          why = syncTerrainClip(globe, key(k), region.polygon);
+        }
+        if (why === undefined) {
+          return;
+        }
+      }
+      clear();
+      console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
+      return;
+    }
+    const polygon =
+      route !== undefined
+        ? // Around the line (London's poles and their stays), not the
+          // rectangle that holds it: a vertex every 500 design units.
+          routeRegion(
+            route.points,
+            displayed,
+            (d) => route.halfWidth + (rigidAcross(d) + CLIP_MARGIN) / mpu,
             500,
-            STRUCTURES,
           )
-        : route !== undefined
-          ? // Around the line (London's poles and their stays), not the
-            // rectangle that holds it: a vertex every 500 design units.
-            routeRegion(
-              route.points,
+        : corners !== undefined
+          ? footprintRegion(
+              corners,
               displayed,
-              (d) => route.halfWidth + (rigidAcross(d) + CLIP_MARGIN) / mpu,
-              500,
+              (Math.max(...corners.map(rigidError)) + CLIP_MARGIN) / mpu,
             )
-          : corners !== undefined
-            ? footprintRegion(
-                corners,
-                displayed,
-                (Math.max(...corners.map(rigidError)) + CLIP_MARGIN) / mpu,
-              )
-            : undefined;
+          : undefined;
     const why = syncTerrainClip(globe, site.entry.id, polygon);
     if (why !== undefined) {
       console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));

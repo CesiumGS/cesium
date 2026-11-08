@@ -1,5 +1,6 @@
 // The corridor's geometry for the design-globe generator (plan 4b Task 14):
 // station sampling, the swept cross-section (shoulders, lanes, barriers), the
+// side slopes on earthwork and the caps at its ends (abutments, portals), the
 // viaducts (decks and piers), the station ticks, and the tile tree of station
 // ranges. Everything is in design coordinates (US survey feet, E, N, U),
 // float64; the writer turns it into tile-relative float32.
@@ -10,6 +11,16 @@ import {
   TICKS,
   sectionSurface,
 } from "../../examples/design-globe/corridor.ts";
+import {
+  EARTHWORK,
+  HINGE_RISE,
+  SIDE_SLOPES,
+  acrossAt,
+  daylightBreaks,
+  daylightRise,
+  endGround,
+  slopeSection,
+} from "../../examples/design-globe/sideSlopes.ts";
 
 /** The most station spacing on a tangent, in design units. */
 export const TANGENT_SPACING = 30;
@@ -26,6 +37,93 @@ const STRUCTURE_ENDS = STRUCTURES.flatMap((s) => [s.fromStation, s.toStation]);
 /** The offsets a chord error is measured at: the centreline and both edges. */
 const MEASURED_OFFSETS = [-SECTION_REACH, 0, SECTION_REACH];
 
+/**
+ * Where the side slopes' sections change how they vary (sideSlopes.ts
+ * `daylightBreaks`): kept as stations at the leaves, so that between two
+ * of a leaf's stations a slope's run and rise are linear.
+ */
+const SLOPE_BREAKS = daylightBreaks();
+
+/** sRGB hex to linear RGBA. */
+function linear(hex) {
+  const v = Number.parseInt(hex.slice(1), 16);
+  const c = (x) => {
+    const u = x / 255;
+    return u <= 0.04045 ? u / 12.92 : ((u + 0.055) / 1.055) ** 2.4;
+  };
+  return [c((v >> 16) & 255), c((v >> 8) & 255), c(v & 255), 1];
+}
+
+/**
+ * The corridor's colours, linear RGBA, as each vertex's COLOR_0 (the
+ * material is white): the pavement, barriers, decks, piers and ticks in
+ * the 0.45 grey the corridor's one material had; a side slope in soil a
+ * grassed olive (sRGB #8a8f5c, a dry California hillside's grass); one in
+ * rock a weathered sandstone (sRGB #8f8576); an abutment or a portal's
+ * headwall a paler concrete (sRGB #b8b4aa); a tunnel's mouth near black
+ * (sRGB #1c1c1e). The page tints them all by placement.
+ */
+export const CORRIDOR_PALETTE = {
+  pavement: [0.45, 0.45, 0.43, 1],
+  grass: linear("#8a8f5c"),
+  rock: linear("#8f8576"),
+  concrete: linear("#b8b4aa"),
+  mouth: linear("#1c1c1e"),
+};
+
+/**
+ * A portal's headwall (a tunnel's end of an earthwork stretch): the mouth
+ * the full width of the paved section, its top `clearance` ftUS over the
+ * profile; the wall over it at least `lintel` ftUS deep, and its top
+ * `parapet` ftUS over the ground across the end (the upper hull of the
+ * sampled ground, sideSlopes.ts `endGround`), so the hill doesn't show
+ * over it.
+ */
+export const PORTAL = { clearance: 18, lintel: 3, parapet: 3 };
+
+/**
+ * An abutment (a viaduct's end of an earthwork stretch): a wall under the
+ * deck and the fill's slopes down to `footing` ftUS under the ground
+ * across the end (its lower hull), which the terrain hides.
+ */
+export const ABUTMENT = { footing: 5 };
+
+/** The earthwork stretch holding [a, b], if one does. */
+const earthworkOver = (a, b) =>
+  EARTHWORK.find((r) => a >= r.fromStation && b <= r.toStation);
+
+/**
+ * A side slope at a station, outward from the paved section: its hinge,
+ * the rock's top (the hinge where there's no rock) and its daylight line,
+ * each [offset, rise above the profile]. Undefined off earthwork.
+ */
+function slopePoints(station, side) {
+  const rise = daylightRise(station, side);
+  if (rise === undefined) {
+    return undefined;
+  }
+  const { rock, daylight } = slopeSection(rise);
+  const h = SIDE_SLOPES.hinge;
+  return [
+    [side * h, HINGE_RISE],
+    [side * (h + rock[0]), HINGE_RISE + rock[1]],
+    [side * (h + daylight[0]), HINGE_RISE + daylight[1]],
+  ];
+}
+
+/** Both slopes' rock tops and daylight points at a station, in design space. */
+function slopeTrace(alignment, station) {
+  const out = [];
+  for (const side of [-1, 1]) {
+    for (const [o, z] of slopePoints(station, side)?.slice(1) ?? []) {
+      out.push(sectionPoint(alignment, station, o, z));
+    }
+  }
+  return out;
+}
+
+const distance = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+
 /** "601+20": a station as engineers write it. */
 export function stationLabel(station) {
   const hundreds = Math.floor(station / 100);
@@ -39,11 +137,19 @@ export function stationLabel(station) {
 /**
  * The 3D distance, in design units, between the section's edges and
  * centreline at the middle of [a, b] and the middle of their chords: the
- * chord error there (exact for an arc's sagitta and a parabola's).
+ * chord error there (exact for an arc's sagitta and a parabola's). On
+ * earthwork, the side slopes' rock tops and daylight points too.
  */
 export function chordError(alignment, a, b) {
   const middle = (a + b) / 2;
   let worst = 0;
+  if (earthworkOver(a, b) !== undefined) {
+    const [ta, tb, tm] = [a, b, middle].map((s) => slopeTrace(alignment, s));
+    tm.forEach((pm, k) => {
+      const chord = [0, 1, 2].map((i) => (ta[k][i] + tb[k][i]) / 2);
+      worst = Math.max(worst, distance(pm, chord));
+    });
+  }
   for (const offset of MEASURED_OFFSETS) {
     const pa = alignment.pointAt(a, offset);
     const pb = alignment.pointAt(b, offset);
@@ -94,8 +200,8 @@ function withinTolerance(alignment, a, b, pieces, tolerance) {
 /**
  * Stations from `from` to `to` (both included) spaced so the chord error is
  * at most `chordTolerance` on curves, and at most TANGENT_SPACING apart on
- * tangents. The alignment's joins and the structures' ends within the range
- * are always included. On a curve the spacing starts from the element's largest
+ * tangents. The alignment's joins, the structures' ends and the side
+ * slopes' breaks (`SLOPE_BREAKS`) within the range are always included. On a curve the spacing starts from the element's largest
  * curvature at the section's outer edge (its radius plus SECTION_REACH, where
  * a chord errs most), and each piece is then checked at its middle
  * (`chordError`, which also counts the profile's vertical curves) and split
@@ -125,6 +231,7 @@ export function sampleStations(alignment, from, to, chordTolerance) {
   for (const station of [
     ...elements.map((e) => e.station),
     ...STRUCTURE_ENDS,
+    ...SLOPE_BREAKS,
   ]) {
     if (station > from && station < to) {
       breaks.add(station);
@@ -169,18 +276,56 @@ export function sampleStations(alignment, from, to, chordTolerance) {
 }
 
 /**
- * Every other station, keeping the first, the last, the alignment's joins
- * and the structures' ends: a parent tile's stations, decimated 2×.
+ * How far a parent tile `level` levels over the leaves may leave its side
+ * slopes from its children's when it drops a station, design units:
+ * SLOPE_TOLERANCE × 2^level (0.5 ftUS a level over the leaves, 32 ftUS at
+ * the corridor's top tile, seven levels over them), so the errors stay in step with the rule
+ * that a parent's is at least twice its children's. Where the ground
+ * changes sharply between sections (a gully under a fill), the slopes'
+ * runs jump, and a parent keeps the stations it needs there.
  */
-export function decimate(alignment, stations) {
+export const SLOPE_TOLERANCE = 0.25;
+
+/** The slopes' largest distance at `s` from their chord from `a` to `b`. */
+function slopeMiss(alignment, a, s, b) {
+  if (earthworkOver(a, b) === undefined) {
+    return 0;
+  }
+  const t = (s - a) / (b - a);
+  const [ta, ts, tb] = [a, s, b].map((x) => slopeTrace(alignment, x));
+  let worst = 0;
+  for (let q = 0; q < ts.length; q++) {
+    const chord = [0, 1, 2].map((c) => ta[q][c] + (tb[q][c] - ta[q][c]) * t);
+    worst = Math.max(worst, distance(ts[q], chord));
+  }
+  return worst;
+}
+
+/**
+ * Every other station, keeping the first, the last, the alignment's joins
+ * and the structures' ends, and a station whose dropping would move the
+ * side slopes more than SLOPE_TOLERANCE × 2^`level`: a parent tile's
+ * stations, decimated 2× where the slopes allow.
+ */
+export function decimate(alignment, stations, level = 1) {
   const kept = new Set([
     ...alignment.horizontalElements.map((e) => e.station),
     ...STRUCTURE_ENDS,
   ]);
   const last = stations.length - 1;
-  return Float64Array.from(
-    stations.filter((s, i) => i % 2 === 0 || i === last || kept.has(s)),
-  );
+  const tolerance = SLOPE_TOLERANCE * 2 ** level;
+  const out = [];
+  stations.forEach((s, i) => {
+    if (
+      i % 2 === 0 ||
+      i === last ||
+      kept.has(s) ||
+      slopeMiss(alignment, out[out.length - 1], s, stations[i + 1]) > tolerance
+    ) {
+      out.push(s);
+    }
+  });
+  return Float64Array.from(out);
 }
 
 /** A mesh in design coordinates, built a vertex and a triangle at a time. */
@@ -191,8 +336,10 @@ class MeshBuilder {
   indices = [];
   features = [];
   #byName = new Map();
+  #colors = [];
 
-  feature(name, kind) {
+  /** A feature's id, by name; `color` (linear RGBA) colours its vertices. */
+  feature(name, kind, color = CORRIDOR_PALETTE.pavement) {
     let id = this.#byName.get(name);
     if (id === undefined) {
       id = this.features.length;
@@ -200,6 +347,7 @@ class MeshBuilder {
         throw new Error("corridorMesh: more than 65,536 features in a tile");
       }
       this.features.push({ name, kind });
+      this.#colors.push(color);
       this.#byName.set(name, id);
     }
     return id;
@@ -214,7 +362,7 @@ class MeshBuilder {
 
   /**
    * A flat quad p0 p1 p2 p3 (in order around it), wound and lit to face
-   * along `outward`.
+   * along `outward`; none if it has no area.
    */
   quad(corners, outward, id) {
     const [p0, p1, p2, p3] = corners;
@@ -227,6 +375,9 @@ class MeshBuilder {
       n[1] += (a[2] - b[2]) * (a[0] + b[0]);
       n[2] += (a[0] - b[0]) * (a[1] + b[1]);
     }
+    if (!(Math.hypot(n[0], n[1], n[2]) > 1e-9)) {
+      return; // no area: nothing to draw
+    }
     const flip = n[0] * outward[0] + n[1] * outward[1] + n[2] * outward[2] < 0;
     const length = Math.hypot(n[0], n[1], n[2]) * (flip ? -1 : 1);
     const normal = n.map((v) => v / length);
@@ -235,13 +386,28 @@ class MeshBuilder {
     this.indices.push(a, b, c, a, c, d);
   }
 
+  /** Twice the area of the triangle on vertices `t`, design units squared. */
+  area([a, b, c]) {
+    const p = this.design;
+    const u = [0, 1, 2].map((k) => p[3 * b + k] - p[3 * a + k]);
+    const v = [0, 1, 2].map((k) => p[3 * c + k] - p[3 * a + k]);
+    return Math.hypot(
+      u[1] * v[2] - u[2] * v[1],
+      u[2] * v[0] - u[0] * v[2],
+      u[0] * v[1] - u[1] * v[0],
+    );
+  }
+
   build() {
+    const colors = new Float32Array(this.ids.length * 4);
+    this.ids.forEach((id, i) => colors.set(this.#colors[id], i * 4));
     return {
       design: Float64Array.from(this.design),
       normals: Float32Array.from(this.normals),
       indices: Uint32Array.from(this.indices),
       featureIds: Uint16Array.from(this.ids),
       features: this.features,
+      colors,
     };
   }
 }
@@ -274,13 +440,18 @@ function sectionPoint(alignment, station, offset, rise) {
  * Sweeps a cross-section polyline along `stations`: `profile` is its points
  * as [offset, rise above the profile], in the order whose direction, crossed
  * with the direction of travel, points outward (left to right for a surface
- * facing up). Each of its segments gets its own vertices, lit smoothly along
- * the alignment and sharply across it.
+ * facing up), or a function giving them at a station (the same count at
+ * each). Each of its segments gets its own vertices, lit smoothly along
+ * the alignment and sharply across it; a segment of no width at a station
+ * (a slope with no rock there) takes its row's nearest lit neighbour's
+ * normal, or up.
  */
-function sweep(builder, alignment, stations, profile, id) {
-  const segments = profile.length - 1;
+function sweep(builder, alignment, stations, sections, id) {
+  const at = typeof sections === "function" ? sections : () => sections;
+  const segments = at(stations[0]).length - 1;
   const rows = [];
   for (const station of stations) {
+    const profile = at(station);
     const azimuth = alignment.azimuthAt(station);
     const forward = [
       Math.sin(azimuth),
@@ -291,12 +462,21 @@ function sweep(builder, alignment, stations, profile, id) {
     const points = profile.map(([offset, rise]) =>
       sectionPoint(alignment, station, offset, rise),
     );
-    const row = [];
+    const lit = [];
     for (let j = 0; j < segments; j++) {
       const [o0, z0] = profile[j];
       const [o1, z1] = profile[j + 1];
       const across = [right[0] * (o1 - o0), right[1] * (o1 - o0), z1 - z0];
-      const normal = normalize(cross(across, forward));
+      const n = cross(across, forward);
+      lit.push(Math.hypot(n[0], n[1], n[2]) > 1e-12 ? normalize(n) : undefined);
+    }
+    const row = [];
+    for (let j = 0; j < segments; j++) {
+      let normal = lit[j];
+      for (let d = 1; normal === undefined && d < segments; d++) {
+        normal = lit[j - d] ?? lit[j + d];
+      }
+      normal ??= [0, 0, 1];
       row.push(
         builder.vertex(points[j], normal, id),
         builder.vertex(points[j + 1], normal, id),
@@ -309,7 +489,15 @@ function sweep(builder, alignment, stations, profile, id) {
     const b = rows[i];
     for (let j = 0; j < segments; j++) {
       const [a0, a1, b0, b1] = [a[2 * j], a[2 * j + 1], b[2 * j], b[2 * j + 1]];
-      builder.indices.push(a0, a1, b1, a0, b1, b0);
+      // A triangle with no area (a segment of no width at a station) isn't drawn.
+      for (const t of [
+        [a0, a1, b1],
+        [a0, b1, b0],
+      ]) {
+        if (builder.area(t) > 1e-6) {
+          builder.indices.push(...t);
+        }
+      }
     }
   }
 }
@@ -333,15 +521,163 @@ const owns = (alignment, from, to, station) =>
   (station < to || (station === to && to === alignment.endStation));
 
 /**
+ * An earthwork stretch's end at a structure, in the station plane, facing
+ * the structure (`sign` +1 ahead, −1 behind): between the section's line
+ * (the slopes and the pavement) and the ground. At a tunnel, a portal's
+ * headwall up to over the ground (`PORTAL`), its mouth dark; at a viaduct,
+ * an abutment under its deck and the fill's slopes down to under the
+ * ground (`ABUTMENT`).
+ */
+function endCap(builder, alignment, station, sign, structure) {
+  const left = slopePoints(station, -1);
+  const right = slopePoints(station, 1);
+  const ground = endGround(station);
+  if (left === undefined || right === undefined || ground === undefined) {
+    return;
+  }
+  // The section's line, left to right.
+  const line = [
+    left[2],
+    left[1],
+    ...BREAKS.map((o) => [o, sectionSurface(o)]),
+    right[1],
+    right[2],
+  ].filter((p, i, all) => i === 0 || p[0] > all[i - 1][0]);
+  const profile = alignment.elevationAt(station);
+  const hull = structure.kind === "tunnel" ? ground.upper : ground.lower;
+  // Strips between the section line's and the hull's breaks, each linear.
+  const offsets = [
+    ...new Set([
+      ...line.map(([o]) => o),
+      ...hull
+        .map(([o]) => o)
+        .filter((o) => o > line[0][0] && o < line[line.length - 1][0]),
+    ]),
+  ].sort((a, b) => a - b);
+  const lineAt = (o) => acrossAt(line, o);
+  const azimuth = alignment.azimuthAt(station);
+  const outward = [sign * Math.sin(azimuth), sign * Math.cos(azimuth), 0];
+  const at = (o, z) => sectionPoint(alignment, station, o, z);
+  const label = stationLabel(station);
+  const paved = (o0, o1) =>
+    o0 >= -SECTION_REACH - 1e-9 && o1 <= SECTION_REACH + 1e-9;
+  if (structure.kind === "tunnel") {
+    const wall = builder.feature(
+      `portal ${label} headwall`,
+      "portal",
+      CORRIDOR_PALETTE.concrete,
+    );
+    const mouth = builder.feature(
+      `portal ${label} mouth`,
+      "portal",
+      CORRIDOR_PALETTE.mouth,
+    );
+    const lintel = PORTAL.clearance;
+    // Over the ground's upper hull, and over the mouth by the lintel.
+    const topAt = (o, over) =>
+      Math.max(
+        acrossAt(hull, o) - profile + PORTAL.parapet,
+        over ? lintel + PORTAL.lintel : -Infinity,
+      );
+    for (let k = 1; k < offsets.length; k++) {
+      const [o0, o1] = [offsets[k - 1], offsets[k]];
+      const mouthed = paved(o0, o1);
+      const [z0, z1] = [lineAt(o0), lineAt(o1)];
+      const [t0, t1] = [topAt(o0, mouthed), topAt(o1, mouthed)];
+      if (mouthed) {
+        builder.quad(
+          [at(o0, z0), at(o1, z1), at(o1, lintel), at(o0, lintel)],
+          outward,
+          mouth,
+        );
+      }
+      const [b0, b1] = mouthed ? [lintel, lintel] : [z0, z1];
+      builder.quad(
+        [
+          at(o0, Math.min(b0, t0)),
+          at(o1, Math.min(b1, t1)),
+          at(o1, t1),
+          at(o0, t0),
+        ],
+        outward,
+        wall,
+      );
+    }
+    return;
+  }
+  const wall = builder.feature(
+    `abutment ${label}`,
+    "abutment",
+    CORRIDOR_PALETTE.concrete,
+  );
+  for (let k = 1; k < offsets.length; k++) {
+    const [o0, o1] = [offsets[k - 1], offsets[k]];
+    // Under the deck, which has its own end face.
+    const under = paved(o0, o1) ? structure.deckThickness : 0;
+    const [f0, f1] = [o0, o1].map(
+      (o) => acrossAt(hull, o) - profile - ABUTMENT.footing,
+    );
+    const [t0, t1] = [
+      Math.max(lineAt(o0) - under, f0),
+      Math.max(lineAt(o1) - under, f1),
+    ];
+    builder.quad(
+      [at(o0, t0), at(o1, t1), at(o1, f1), at(o0, f0)],
+      outward,
+      wall,
+    );
+  }
+}
+
+/**
+ * The largest distance, in design units, between the side slopes' rock
+ * tops and daylight points at the `fine` stations (a parent tile's
+ * leaves') and the chords between the `coarse` stations (its own) at the
+ * same share of the way: what a parent's decimated slopes miss. Measured
+ * at every leaf station, the side slopes' breaks among them, so it is
+ * exact for the slopes' runs and rises (linear between the breaks); the
+ * alignment's curves between leaf stations add at most the leaves' chord
+ * tolerance.
+ */
+export function largestSlopeError(alignment, coarse, fine) {
+  let worst = 0;
+  let k = 0;
+  for (let i = 1; i < coarse.length; i++) {
+    const [a, b] = [coarse[i - 1], coarse[i]];
+    while (k < fine.length && fine[k] <= a) {
+      k++;
+    }
+    if (earthworkOver(a, b) === undefined) {
+      continue;
+    }
+    const [ta, tb] = [slopeTrace(alignment, a), slopeTrace(alignment, b)];
+    for (let j = k; j < fine.length && fine[j] < b; j++) {
+      const t = (fine[j] - a) / (b - a);
+      const trace = slopeTrace(alignment, fine[j]);
+      for (let q = 0; q < trace.length; q++) {
+        const chord = [0, 1, 2].map(
+          (c) => ta[q][c] + (tb[q][c] - ta[q][c]) * t,
+        );
+        worst = Math.max(worst, distance(trace[q], chord));
+      }
+    }
+  }
+  return worst;
+}
+
+/**
  * The corridor between `stations`' first and last, in design coordinates:
- * the strips and barriers swept along every station, the bridge's deck and
+ * the strips and barriers swept along every station, the side slopes on
+ * earthwork and the caps at its ends (`endCap`), the viaducts' decks and
  * piers where they fall in the range, and a station tick every
- * `tickInterval` on each outer shoulder. A pier or tick belongs to the range
+ * `tickInterval` on each outer shoulder. A pier, cap or tick belongs to the range
  * [first, last) (the last included only at the alignment's end), so adjacent
  * tiles don't both draw it.
  *
  * @returns {{ design: Float64Array, normals: Float32Array, indices: Uint32Array,
- *   featureIds: Uint16Array, features: { name: string, kind: string }[] }}
+ *   featureIds: Uint16Array, features: { name: string, kind: string }[],
+ *   colors: Float32Array }} `colors` is each vertex's linear RGBA
+ *   (`CORRIDOR_PALETTE`).
  */
 export function corridorMesh(alignment, stations, options = {}) {
   const tickInterval = options.tickInterval ?? TICKS.interval;
@@ -376,6 +712,64 @@ export function corridorMesh(alignment, stations, options = {}) {
       ],
       builder.feature(barrier.name, "barrier"),
     );
+  }
+
+  // The side slopes on earthwork: from each hinge, rock (where the cut is
+  // deep enough to reach it) and then soil to the daylight line.
+  for (const range of EARTHWORK) {
+    const run = Array.from(stations).filter(
+      (s) => s >= range.fromStation && s <= range.toStation,
+    );
+    if (run.length < 2 || daylightRise(run[0], 1) === undefined) {
+      continue;
+    }
+    for (const side of [-1, 1]) {
+      const name = side < 0 ? "left" : "right";
+      // Left to right: outward on the left, inward on the right.
+      const order = (a, b) => (side < 0 ? [b, a] : [a, b]);
+      if (run.some((s) => daylightRise(s, side) > SIDE_SLOPES.soil)) {
+        sweep(
+          builder,
+          alignment,
+          run,
+          (s) => {
+            const p = slopePoints(s, side);
+            return order(p[0], p[1]);
+          },
+          builder.feature(
+            `${name} side slope, rock`,
+            "side slope",
+            CORRIDOR_PALETTE.rock,
+          ),
+        );
+      }
+      sweep(
+        builder,
+        alignment,
+        run,
+        (s) => {
+          const p = slopePoints(s, side);
+          return order(p[1], p[2]);
+        },
+        builder.feature(
+          `${name} side slope`,
+          "side slope",
+          CORRIDOR_PALETTE.grass,
+        ),
+      );
+    }
+    // Its ends at a structure: an abutment or a portal's headwall.
+    for (const [end, sign] of [
+      [range.fromStation, -1],
+      [range.toStation, 1],
+    ]) {
+      const structure = STRUCTURES.find((st) =>
+        sign > 0 ? st.fromStation === end : st.toStation === end,
+      );
+      if (structure !== undefined && owns(alignment, from, to, end)) {
+        endCap(builder, alignment, end, sign, structure);
+      }
+    }
   }
 
   // Each viaduct's deck and piers.
@@ -559,7 +953,8 @@ export function corridorMesh(alignment, stations, options = {}) {
  * The corridor's tile tree: leaves of `leafLength` of station (the last one
  * takes the remainder, when under half a leaf), each sampled by
  * `sampleStations`; parents pair their children level by level up to one
- * top tile, with their stations decimated 2× (`decimate`) and a tick every
+ * top tile, with their stations decimated 2× where the side slopes allow
+ * (`decimate`) and a tick every
  * `TICKS.interval` × 2^level. A node's `level` is 0 at the leaves.
  *
  * @returns {CorridorNode} the top tile
@@ -603,7 +998,7 @@ export function corridorTree(alignment, { leafLength, chordTolerance }) {
         level: depth,
         from: children[0].from,
         to: children[children.length - 1].to,
-        stations: decimate(alignment, merged),
+        stations: decimate(alignment, merged, depth),
         tickInterval: TICKS.interval * 2 ** depth,
         children,
       });

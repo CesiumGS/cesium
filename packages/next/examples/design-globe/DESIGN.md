@@ -280,8 +280,8 @@ number in a headline row is not repeated in its Details), no e-notation.
   (NAVD88 via GEOID18, and each country's own), so on real ground they sit
   where they are: on the ellipsoid, a NAVD88 design floated by the geoid's
   height (about 32 m in California, 46 m in London). Terrain is clipped
-  under each site's footprint and the corridor's strip (F11), so the
-  ground never pokes through a flat design surface. London's pole line
+  under each site's footprint and the corridor out to its daylight lines
+  (F11), so the ground never pokes through a design surface. London's pole line
   clips a buffer around its route, the wayleave and rigid's sideways
   error, not the 30 km rectangle that holds it.
 - **The corridor's profile follows the real ground** (round 2): a design
@@ -290,10 +290,31 @@ number in a headline row is not repeated in its Details), no e-notation.
   least K for 65 mph (corridor.ts has the PVIs, the K values and the fit's
   cut and fill). The hills are crossed against their grain, so no road
   within 6% can follow them: 18 viaducts and 19 tunnels carry 66% of it,
-  and its earthwork stays within 48 ftUS of fill and 80 ftUS of cut. The
-  clipped strip narrows to a sliver over each structure, so the ground
-  stays under a viaduct (its piers stand on it) and over a tunnel (the
-  road is hidden in the hill).
+  and its earthwork stays within 48 ftUS of fill and 80 ftUS of cut at
+  the centreline.
+- **The corridor meets the ground through side slopes** (round 3). On
+  earthwork, a slope runs from each edge of the paved section (±41 ftUS)
+  down to the ground in fill or up to it in cut, ending at the daylight
+  line: 2H:1V in fill and soil; a cut deeper than 30 ftUS is rock under
+  30 ftUS of soil, 1H:1V through the rock (sideSlopes.ts). The ground is
+  USGS 3DEP's, sampled in cross-sections every 50 ftUS of station and
+  every 10 ftUS across, linear between samples (scripts/corridorDaylight.mjs
+  writes corridorDaylight.ts). Across the hills the slopes reach 242 ftUS
+  of cut and 166 ftUS of fill above and below their edges, and up to
+  332 ftUS out. Slopes in soil are a grassed olive, in rock a weathered
+  sandstone, and picks name them "side slope". Each earthwork stretch
+  ends at a structure in a cap: a portal's headwall over a dark mouth, or
+  an abutment under a viaduct's deck. No slopes on a viaduct (its piers
+  reach the ground) or in a tunnel.
+- **The terrain clip follows the daylight lines** (round 3): exact, in
+  five regions cut in the middle of structures (557, 538, 499, 218 and 960
+  vertices; one region of 1,024 can't hold the 2,878 the exact lines need). Each
+  edge is moved out by its chord's sag on a curve, so it is never inside
+  the slopes and at most 0.36 ftUS outside them. Over each structure it
+  narrows to a sliver, so the ground stays under a viaduct (its piers
+  stand on it) and over a tunnel (the road is hidden in the hill). It
+  leaves no room for the rigid copy: rigid moves 2.3 m sideways at the
+  far end but rises 34 m, so the ground doesn't come through it.
 - **The anchor is on open road** (owner, 2026-11-07). The alignment's
   middle, station 92,021, is in a tunnel, and the nearest earthwork after
   it is a sidehill cut where the ground stands over the anchor ring. So
