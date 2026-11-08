@@ -356,6 +356,24 @@ const verdicts = (rows) => {
   return { pass, fail };
 };
 
+/** The latest selection parity run: how far Stepwise agrees with 1.x. */
+const selectionParity = (a) => {
+  const rows = (a.latest.selection ?? []).filter(
+    (row) => typeof row.jaccard === "number",
+  );
+  return rows.length === 0
+    ? {}
+    : {
+        selection: {
+          lastDate: a.suites.selection.lastDate,
+          comparisons: rows.length,
+          tilesets: new Set(rows.map((row) => row.tileset)).size,
+          exact: rows.filter((row) => row.jaccard === 1).length,
+          worst: Math.min(...rows.map((row) => row.jaccard)),
+        },
+      };
+};
+
 /**
  * bench/results: per adapter, each suite's latest run, plus the numeric
  * tables the benchmarks tab charts. Run errors stay out: they can quote
@@ -450,6 +468,7 @@ export function readBenchResults(root = packageRoot) {
     hitch: (a.latest.hitch ?? []).map((row) =>
       pick(row, ["step", "frames", "over34", "worst", "p99"]),
     ),
+    ...selectionParity(a),
   }));
   const baselineDir = join(root, "handbook/baselines");
   const baselines = existsSync(baselineDir)

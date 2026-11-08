@@ -136,10 +136,10 @@ export function Rendering() {
 
       <Section title="Streaming and selection">
         <p>
-          3D Tiles and terrain share one tile table, one selection framework,
-          one request scheduler and one content cache with an engine-wide
-          budget. Decoding runs in workers, and the main thread only uploads,
-          within a budget. Selection is pluggable:
+          3D Tiles and terrain go through the same selection, requests, cache
+          and view masks. Decoding runs in workers, and the main thread only
+          uploads, within a budget. Selection is pluggable, and the Tile
+          selection tab covers it:
         </p>
         <ul>
           <li>
@@ -147,9 +147,8 @@ export function Rendering() {
             deterministic parity tests.
           </li>
           <li>
-            <C>Budgeted</C>, the default, keeps 1.x's proven heuristics and adds
-            benefit-over-cost refinement, multi-view priority, stability and
-            prefetch along the camera's motion.
+            <C>Budgeted</C>, the default, keeps 1.x's visibility and error and
+            adds skipping levels, mixed LOD and prefetch ahead of the camera.
           </li>
         </ul>
       </Section>

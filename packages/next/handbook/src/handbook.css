@@ -255,6 +255,12 @@ pre.snippet:focus-visible,
   min-inline-size: 760px;
   block-size: auto;
 }
+.figure-narrow {
+  max-inline-size: 480px;
+}
+.figure-scroll .figure-narrow svg {
+  min-inline-size: 340px;
+}
 
 /* Diagram drawings: tokens only, so both themes come from one drawing. */
 .d-box {

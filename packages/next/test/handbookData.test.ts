@@ -80,6 +80,12 @@ it("summarizes bench results per adapter, with no run errors in them", () => {
     expect(adapter.runs).toBeGreaterThan(0);
     // Run errors can quote local paths, so they never reach the page.
     expect(adapter).not.toHaveProperty("errors");
+    const parity = adapter.selection as
+      { comparisons: number; exact: number; worst: number } | undefined;
+    if (parity) {
+      expect(parity.exact).toBeLessThanOrEqual(parity.comparisons);
+      expect(parity.worst).toBeLessThanOrEqual(1);
+    }
   }
 });
 

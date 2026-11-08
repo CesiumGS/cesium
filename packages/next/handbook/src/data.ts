@@ -50,6 +50,14 @@ export interface AdapterResults {
   alloc: BenchRow[];
   instances: BenchRow[];
   hitch: BenchRow[];
+  /** The latest selection parity run against 1.x, when there is one. */
+  selection?: {
+    lastDate: string;
+    comparisons: number;
+    tilesets: number;
+    exact: number;
+    worst: number;
+  };
 }
 export interface HandbookData {
   meta: {

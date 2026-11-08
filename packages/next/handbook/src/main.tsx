@@ -25,6 +25,7 @@ import { Ion } from "./tabs/ion.tsx";
 import { Overview } from "./tabs/overview.tsx";
 import { Precision } from "./tabs/precision.tsx";
 import { Rendering } from "./tabs/rendering.tsx";
+import { Selection } from "./tabs/selection.tsx";
 import { Shading } from "./tabs/shading.tsx";
 import { Specs } from "./tabs/specs.tsx";
 import { Vector } from "./tabs/vector.tsx";
@@ -59,6 +60,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "frames", label: "Frame tree", view: Frames },
       { id: "cameras", label: "Cameras", view: Cameras },
       { id: "rendering", label: "Rendering", view: Rendering },
+      { id: "selection", label: "Tile selection", view: Selection },
       { id: "precision", label: "Precision and accuracy", view: Precision },
       { id: "shading", label: "Shading and linker", view: Shading },
       { id: "vector", label: "Vector rendering", view: Vector },
