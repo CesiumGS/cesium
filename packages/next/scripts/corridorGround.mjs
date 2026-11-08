@@ -17,8 +17,8 @@
 //
 // The samples are cached in <file> (default: samples/corridor-ground.json
 // in the frames data directory, ~/.cesium-bench/frames, private to the
-// user; one at the old default in the OS temporary directory is moved
-// there), never in the repo: they are USGS's data, and only the fitted
+// user; a <file> of your own must be in a folder only you can write),
+// never in the repo: they are USGS's data, and only the fitted
 // profile, which is design data, is committed. The cache is checked as it
 // is read back (designTiles/sampleCache.mjs).
 import { writeFileSync } from "node:fs";
@@ -29,7 +29,6 @@ import { framesDataDirectory } from "./frameData.mjs";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
 import {
   checkedCorridorGround,
-  legacySampleCacheFile,
   readSampleCache,
   sampleCacheFile,
   writeSampleCache,
@@ -121,12 +120,8 @@ if (!(every > 0)) {
 }
 const CACHE = "corridor-ground.json";
 const file = argument("--samples", sampleCacheFile(CACHE));
-/** The old default, moved on first use; not for a file given with --samples. */
-const legacy =
-  file === sampleCacheFile(CACHE) ? legacySampleCacheFile(CACHE) : undefined;
 const samples =
-  readSampleCache(file, checkedCorridorGround, legacy) ??
-  (await sample(file, every));
+  readSampleCache(file, checkedCorridorGround) ?? (await sample(file, every));
 console.log(
   `${samples.points.length} ground samples, ${samples.sampled}, every ${samples.every} ftUS (${file})`,
 );

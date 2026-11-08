@@ -3,7 +3,8 @@
 // one-off design step samples, kept between runs so a re-run needn't fetch
 // it again. They live in the user's own frames data directory
 // (samples/, 0700, each file 0600), never in the repo or the shared
-// temporary directory, and are checked as they are read back: what they
+// temporary directory; a cache given with --samples must be in a folder
+// only its owner can write. They are checked as they are read back: what they
 // hold goes into generated source (a sampling date, in a comment and a
 // string) and into the design's heights, so only a strict date and finite
 // numbers are taken. Anything else is refused, not repaired.
@@ -12,11 +13,11 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  unlinkSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import process from "node:process";
 import { framesDataDirectory } from "../frameData.mjs";
 
 /** A sampling date, as generated files state it. */
@@ -27,38 +28,49 @@ export function sampleCacheFile(name) {
   return join(framesDataDirectory(), "samples", name);
 }
 
-/** Where the scripts used to cache <name>: the shared temporary directory. */
-export function legacySampleCacheFile(name) {
-  return join(tmpdir(), name);
+/**
+ * A cache's folder, checked: it must be the user's own and writable by no
+ * one else, or a file planted there could become design data. Throws.
+ */
+function privateFolder(dir, file) {
+  const st = statSync(dir);
+  const own = process.getuid === undefined || st.uid === process.getuid();
+  if (!st.isDirectory() || !own || (st.mode & 0o022) !== 0) {
+    throw new Error(
+      `sample cache: ${file}: its folder ${dir} isn't private (yours, written by no one else); give --samples a private folder`,
+    );
+  }
 }
 
-/** Writes a cache only the user can read or change: 0600 in a 0700 folder. */
+/**
+ * Writes a cache only the user can read or change: 0600 in a 0700 folder.
+ * Folders it makes are 0700, and the default samples folder is kept so;
+ * another folder that exists (a --samples path's) isn't changed, but must
+ * already be private.
+ */
 export function writeSampleCache(file, data) {
   const dir = dirname(file);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
-  chmodSync(dir, 0o700);
+  if (resolve(dir) === resolve(dirname(sampleCacheFile("-")))) {
+    chmodSync(dir, 0o700);
+  }
+  privateFolder(dir, file);
   writeFileSync(file, JSON.stringify(data), { mode: 0o600 });
   chmodSync(file, 0o600);
 }
 
 /**
  * A cache read back through `check` (which throws for anything it doesn't
- * take), or undefined when there is none. With `legacy`, a cache still at
- * the old shared-temporary path is checked the same way, written to `file`
- * and removed there, so its samples needn't be fetched again.
+ * take), or undefined when there is none. Only from a private folder: a
+ * cache anywhere else (the shared temporary directory the scripts once
+ * used) is never read.
  */
-export function readSampleCache(file, check, legacy) {
-  if (existsSync(file)) {
-    return check(JSON.parse(readFileSync(file, "utf8")), file);
+export function readSampleCache(file, check) {
+  if (!existsSync(file)) {
+    return undefined;
   }
-  if (legacy !== undefined && existsSync(legacy)) {
-    const data = check(JSON.parse(readFileSync(legacy, "utf8")), legacy);
-    writeSampleCache(file, data);
-    unlinkSync(legacy);
-    console.log(`moved the cached samples from ${legacy} to ${file}`);
-    return data;
-  }
-  return undefined;
+  privateFolder(dirname(file), file);
+  return check(JSON.parse(readFileSync(file, "utf8")), file);
 }
 
 const isRecord = (v) =>

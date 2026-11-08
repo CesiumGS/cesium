@@ -2,15 +2,12 @@
 export const SAMPLED_DATE: RegExp;
 /** A sample cache's default file: samples/<name> in the frames data directory. */
 export function sampleCacheFile(name: string): string;
-/** Where the scripts used to cache <name>: the shared temporary directory. */
-export function legacySampleCacheFile(name: string): string;
-/** Writes a cache only the user can read or change: 0600 in a 0700 folder. */
+/** Writes a cache only the user can read or change: 0600 in a private folder. */
 export function writeSampleCache(file: string, data: unknown): void;
-/** A cache read back through `check`, moving one from `legacy` first. */
+/** A cache read back through `check`, only from a private folder. */
 export function readSampleCache<T>(
   file: string,
   check: (json: unknown, path: string) => T,
-  legacy?: string,
 ): T | undefined;
 /** A lidar height, ODN metres. */
 export function lidarHeight(v: unknown): v is number;

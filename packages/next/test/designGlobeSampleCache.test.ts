@@ -1,16 +1,18 @@
 // The design globe's ground-sample caches (scripts/designTiles/
-// sampleCache.mjs; UX review M-d): private to the user, moved from the old
-// shared-temporary default, and read back checked, since their dates go
-// into generated source and their heights into the design.
+// sampleCache.mjs; UX review M-d, re-review N1 and N2): private to the
+// user, only ever read from a private folder, and read back checked, since
+// their dates go into generated source and their heights into the design.
 import {
+  chmodSync,
+  mkdirSync,
   mkdtempSync,
-  readFileSync,
   rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   checkedCache,
@@ -167,9 +169,15 @@ describe("the corridor's sections cache", () => {
 
 describe("a sample cache on disk", () => {
   const dirs: string[] = [];
+  const env = process.env.FRAMES_DATA_DIR;
   afterEach(() => {
     for (const d of dirs.splice(0)) {
       rmSync(d, { recursive: true, force: true });
+    }
+    if (env === undefined) {
+      delete process.env.FRAMES_DATA_DIR;
+    } else {
+      process.env.FRAMES_DATA_DIR = env;
     }
   });
   const scratch = () => {
@@ -177,57 +185,68 @@ describe("a sample cache on disk", () => {
     dirs.push(d);
     return d;
   };
+  const mode = (path: string) => statSync(path).mode & 0o777;
   const sections = { sampled: "2026-11-08", ground: { "10000,-41": 98.9 } };
 
-  it("defaults to samples/ in the frames data directory", () => {
+  it("defaults to samples/ in the frames data directory, never the shared temporary one", () => {
     expect(sampleCacheFile("x.json")).toMatch(/[/\\]samples[/\\]x\.json$/);
     expect(sampleCacheFile("x.json").startsWith(tmpdir())).toBe(false);
   });
 
-  it("writes 0600 in a 0700 folder", () => {
-    const file = join(scratch(), "samples", "s.json");
+  it("keeps the default samples folder 0700, each file 0600", () => {
+    const d = scratch();
+    process.env.FRAMES_DATA_DIR = d;
+    const file = sampleCacheFile("s.json");
+    // A samples folder left looser than it should be is made private.
+    mkdirSync(join(d, "samples"), { mode: 0o755 });
+    chmodSync(join(d, "samples"), 0o755);
     writeSampleCache(file, sections);
-    expect(statSync(file).mode & 0o777).toBe(0o600);
-    expect(statSync(join(file, "..")).mode & 0o777).toBe(0o700);
+    expect(mode(join(d, "samples"))).toBe(0o700);
+    expect(mode(file)).toBe(0o600);
+    expect(readSampleCache(file, checkedCorridorSections)).toEqual(sections);
   });
 
-  it("moves a cache from the old default, checked, so it needn't be sampled again", () => {
+  it("makes a --samples path's new folders 0700 (UX re-review N2)", () => {
     const d = scratch();
-    const legacy = join(d, "old.json");
-    const file = join(d, "samples", "s.json");
-    writeFileSync(legacy, JSON.stringify({ source: "x", ...sections }));
-    expect(readSampleCache(file, checkedCorridorSections, legacy)).toEqual(
-      sections,
-    );
-    expect(() => statSync(legacy)).toThrow();
-    expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(sections);
-    expect(statSync(file).mode & 0o777).toBe(0o600);
-    // Read again from its new place.
-    expect(readSampleCache(file, checkedCorridorSections, legacy)).toEqual(
-      sections,
-    );
+    const file = join(d, "mine", "deeper", "s.json");
+    writeSampleCache(file, sections);
+    expect(mode(join(d, "mine"))).toBe(0o700);
+    expect(mode(join(d, "mine", "deeper"))).toBe(0o700);
+    expect(mode(file)).toBe(0o600);
   });
 
-  it("refuses a bad cache at the old default and leaves it there", () => {
+  it("leaves a --samples path's own private folder as it is", () => {
     const d = scratch();
-    const legacy = join(d, "old.json");
-    const file = join(d, "samples", "s.json");
-    writeFileSync(legacy, JSON.stringify({ ...sections, sampled: "now\n" }));
-    expect(() =>
-      readSampleCache(file, checkedCorridorSections, legacy),
-    ).toThrow(/sampled date/);
-    expect(statSync(legacy).isFile()).toBe(true);
+    const folder = join(d, "mine");
+    mkdirSync(folder);
+    chmodSync(folder, 0o755);
+    writeSampleCache(join(folder, "s.json"), sections);
+    expect(mode(folder)).toBe(0o755);
+    expect(mode(join(folder, "s.json"))).toBe(0o600);
+  });
+
+  it("neither writes nor reads a cache in a folder others can write (UX re-review N1, N2)", () => {
+    const d = scratch();
+    const shared = join(d, "shared");
+    mkdirSync(shared);
+    chmodSync(shared, 0o777);
+    const file = join(shared, "s.json");
+    expect(() => writeSampleCache(file, sections)).toThrow(/isn't private/);
     expect(() => statSync(file)).toThrow();
+    // A file planted there, as one could be in /tmp, is never taken.
+    writeFileSync(file, JSON.stringify(sections));
+    expect(() => readSampleCache(file, checkedCorridorSections)).toThrow(
+      /isn't private/,
+    );
+    expect(mode(shared)).toBe(0o777);
   });
 
-  it("is undefined when there is none", () => {
+  it("is undefined when there is none, and reads nothing from the old shared-temporary default", () => {
     const d = scratch();
     expect(
-      readSampleCache(
-        join(d, "s.json"),
-        checkedCorridorSections,
-        join(d, "o.json"),
-      ),
+      readSampleCache(join(d, "s.json"), checkedCorridorSections),
     ).toBeUndefined();
+    // readSampleCache takes no second place to look (the move is gone).
+    expect(readSampleCache.length).toBe(2);
   });
 });

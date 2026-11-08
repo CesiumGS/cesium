@@ -27,7 +27,6 @@ import { moduleRunner } from "./designTiles/moduleRunner.mjs";
 import {
   SAMPLED_DATE,
   checkedCache,
-  legacySampleCacheFile,
   lidarHeight,
   readSampleCache,
   sampleCacheFile,
@@ -57,9 +56,6 @@ function argument(name, fallback) {
 }
 const CACHE = "pole-line-ground.json";
 const file = argument("--samples", sampleCacheFile(CACHE));
-/** The old default, moved on first use; not for a file given with --samples. */
-const legacy =
-  file === sampleCacheFile(CACHE) ? legacySampleCacheFile(CACHE) : undefined;
 const writeCache = (cache) => writeSampleCache(file, cache);
 
 /** The reply's body as text, refusing more than MAX_BYTES. */
@@ -147,7 +143,7 @@ try {
   const key = ([e, n]) => `${e.toFixed(2)},${n.toFixed(2)}`;
   const cache = {
     source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN metres`,
-    ...(readSampleCache(file, checkedCache, legacy) ?? {
+    ...(readSampleCache(file, checkedCache) ?? {
       sampled: new Date().toLocaleDateString("en-CA"),
       cells: {},
     }),

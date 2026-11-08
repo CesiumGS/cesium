@@ -13,8 +13,8 @@
 // `--reach` (further where a slope hasn't met the ground by then), linear
 // between samples. The samples are cached in <file> (default:
 // samples/corridor-sections.json in the frames data directory,
-// ~/.cesium-bench/frames, private to the user; one at the old default in
-// the OS temporary directory is moved there), never in the repo: they are
+// ~/.cesium-bench/frames, private to the user; a <file> of your own must be
+// in a folder only you can write), never in the repo: they are
 // USGS's data, and only the daylight rises, which are design data, are
 // committed. The cache is checked as it is read back
 // (designTiles/sampleCache.mjs), since its date goes into the generated
@@ -28,7 +28,6 @@ import { moduleRunner } from "./designTiles/moduleRunner.mjs";
 import {
   SAMPLED_DATE,
   checkedCorridorSections,
-  legacySampleCacheFile,
   readSampleCache,
   sampleCacheFile,
   writeSampleCache,
@@ -59,9 +58,6 @@ if (!(along > 0 && across > 0 && reach > across)) {
 }
 const CACHE = "corridor-sections.json";
 const file = argument("--samples", sampleCacheFile(CACHE));
-/** The old default, moved on first use; not for a file given with --samples. */
-const legacy =
-  file === sampleCacheFile(CACHE) ? legacySampleCacheFile(CACHE) : undefined;
 
 const runner = await moduleRunner(root);
 try {
@@ -86,7 +82,7 @@ try {
   // The cache: ground heights by "station,offset", NAVD88 metres.
   const cache = {
     source: `USGS 3DEP (${SERVICE}), NAVD88 metres`,
-    ...(readSampleCache(file, checkedCorridorSections, legacy) ?? {
+    ...(readSampleCache(file, checkedCorridorSections) ?? {
       sampled: new Date().toLocaleDateString("en-CA"),
       ground: {},
     }),
