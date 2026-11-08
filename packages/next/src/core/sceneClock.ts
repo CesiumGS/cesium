@@ -17,7 +17,11 @@ export interface SceneClock {
   readonly rate: number;
   /** Whether time stands still. */
   readonly paused: boolean;
-  /** How the time last changed. */
+  /**
+   * The kind of the most recent change; it stays until the next change.
+   * Read it inside `watch`, or against a time you remembered, never as a
+   * per-tick flag.
+   */
   readonly change: ClockChange;
   /** Calls `listener` once per change in time, rate or mode. Returns a remover. */
   watch(listener: () => void): () => void;

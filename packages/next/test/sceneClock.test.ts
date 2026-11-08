@@ -63,3 +63,20 @@ it("watch calls once per change and its remover stops it", () => {
   clock.time = 6;
   expect(calls).toBe(2);
 });
+
+it("repeats a second across a leap second", () => {
+  const clock = new Clock();
+  const before = clock.instant(Date.UTC(2016, 11, 31, 23, 59, 59, 999) / 1000);
+  const after = clock.instant(Date.UTC(2017, 0, 1) / 1000);
+  // One UTC millisecond apart, but the leap second sits between them: TT
+  // (in seconds) advances one second and a millisecond.
+  expect(after.tt - before.tt).toBeCloseTo(1.001, 3);
+});
+
+it("a tick that moves nothing keeps the last change", () => {
+  const clock = new Clock({ time: start, mode: "playing", rate: 0 });
+  clock.time = start + 1;
+  clock.tick(0);
+  clock.tick(16);
+  expect(clock.change).toBe("jump");
+});

@@ -52,14 +52,19 @@ export class Clock implements SceneClock {
     return this.mode_ === "paused";
   }
 
-  /** How the time last changed: a set time or live is a jump. */
+  /**
+   * The kind of the most recent change (a set time or live is a jump); it
+   * stays until the next change. Read it inside `watch`, or against a time
+   * you remembered, never as a per-tick flag.
+   */
   get change(): ClockChange {
     return this.change_;
   }
 
   /** The Instant at scene `seconds` (default: now), through `leapSeconds`. */
-  instant(seconds: number = this.seconds): Instant {
-    return Instant.fromUtc(seconds * 1000, this.leapSeconds);
+  instant(seconds?: number): Instant {
+    const ms = seconds === undefined ? this.time_ : seconds * 1000;
+    return Instant.fromUtc(ms, this.leapSeconds);
   }
 
   /** Calls `listener` once per change. Returns a function that stops it. */
