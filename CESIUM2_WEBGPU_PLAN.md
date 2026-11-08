@@ -7128,6 +7128,70 @@ so the options are:
 - requiring producers to subdivide, and stating the rule in
   `BENTLEY_engineering_frame`.
 
+_Plan 5 design input: clipping, beyond the first terrain clips (owner,
+2026-11-07)._ "If using CWT ends up with the terrain poking through some of the
+synthetic tilesets geometry we might need a quick clipping API for terrain,
+probably just clipping rects or simple polygons to start and a note to think
+more deeply about this later (like using vector tiles to specify clipping
+boundaries)." The quick API is built: a globe's `addTerrainClip` takes a
+rectangle or a simple polygon in geodetic degrees, at most 32 a world and
+1,024 vertices each. Each region is packed into the world's clip-box buffer
+and tested per fragment in the region's tangent plane, a gnomonic projection
+from where its anchor's normal meets the polar axis. A grid over the plane,
+refined until a cell lists at most about 8 edges, holds per cell a sample
+point and whether it is inside, so a fragment tests only its cell's edges.
+The CPU sets a bit per region in each globe tile's draw record for the tiles
+the region touches (by its grid, so a long strip masks only the tiles it
+crosses), and no region costs nothing. Picks, terrain rays and height
+queries treat clipped terrain as a hole (`globe/terrainClip.ts`). Measured on
+the MacBook Air at 1456×1360 (Cesium World Terrain, with other pages sharing
+the GPU, so ±2 ms noise): four site regions in view cost about 1 to 2 ms, and
+those with a 660-vertex, 50 km corridor strip about 4 ms. Most of it is in
+the depth, prepass and shadow passes, which test every fragment of a touched
+tile; the shading pass doesn't, since after the depth prepass a clipped
+fragment can't equal the depth. The 0.1 ms the owner asked for isn't met.
+Plan 5 designs the rest:
+
+- **Clipping boundaries from vector tiles.** Site footprints, parcels and
+  building outlines arrive as vector tiles, many more than 32 and with
+  thousands of vertices. Per-tile region lists replace the 32-bit mask (a
+  list per draw in the clip buffer), and the vector tile's own tiling can be
+  the prefilter. A coverage mask rasterized per terrain tile (a texture slice
+  like imagery's, composited from the vector tiles: inside, outside, or
+  "edge here") makes most fragments one sample, however many regions and
+  edges there are, with the exact edge test only in the mask's edge texels.
+  That is also the way to the 0.1 ms budget: today every fragment of a
+  touched tile projects into each region's plane.
+- **Holes and nested regions.** Today a region is one simple ring. Polygons
+  with holes (a courtyard left standing) and regions inside regions need
+  even-odd or nonzero winding across rings, tested in one pass, and a CPU
+  validator for rings that touch.
+- **Inverse clipping: terrain only inside.** A site shown on its own (the
+  terrain outside its boundary removed) is the same test inverted per globe,
+  or per region with a flag. The CPU's prefilter then inverts as well: a tile
+  wholly outside every region is dropped from selection, not drawn and
+  discarded.
+- **Clipping imagery and other content, not only terrain.** The record bit
+  and the clip buffer don't care what draws: 3D Tiles (the existing
+  buildings a design replaces), imagery layers (clip one layer, show the one
+  under it), models and point clouds. 1.x has `ClippingPolygonCollection` on
+  tilesets and the globe; 2.0 should have one clip collection that any
+  content can reference. GPU ray casts (`World.castRays`) need the clip test
+  too: today they still hit clipped terrain, and `raycast.slang` already
+  binds the base tier's eight storage buffers, so the clip data has to share
+  one of them.
+- **Clipping in a frame other than the body's.** Regions are geodetic on the
+  globe's body. A design's site boundary is in its engineering frame (a
+  projected CRS, or a local grid), and its edges are straight there, not on
+  the ellipsoid. Regions should be able to name a frame of the frame tree and
+  be tested in it: the projection plane is already per region, so a region
+  in a projected CRS is a different plane (that CRS's, linearized near the
+  site), and a moving frame updates the region's anchor per frame.
+- **Smaller things.** Edges are aliased: they discard per pixel, not per
+  sample. Height clamping inside a clip stands on collision tilesets, or keeps
+  its height. A clip can't be edited in place: changing one is remove then
+  add, and dragging a vertex re-uploads the region.
+
 _Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
 Today every camera controller quietly assumes the Earth. `GlobeController`
 works in Earth-fixed coordinates, constrains the camera to the ellipsoid, and

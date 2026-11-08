@@ -1314,7 +1314,8 @@ export class Engine {
    * down to the leaves whatever the views show, then ray cast on the GPU
    * down the geodetic normal from 10 km (nearest hit). Tilesets: those
    * given, else the shown collision tilesets of the world. Undefined where
-   * nothing is hit. Needs the frame loop running (`start`).
+   * nothing is hit (a globe given here has none inside its terrain clips,
+   * `addTerrainClip`). Needs the frame loop running (`start`).
    */
   async sampleHeightMostDetailed(
     world: World,
@@ -1348,7 +1349,17 @@ export class Engine {
         try {
           const hits = await world.castRays(rays, { draws: query.draws });
           hits.forEach((d, i) => {
-            if (d !== undefined) {
+            // Terrain clipped there is a hole (`addTerrainClip`): the ray
+            // runs down the normal, so the hit is at the point's own
+            // longitude and latitude.
+            if (
+              d !== undefined &&
+              !tileset.terrainClipped(
+                positions[i]!.longitude,
+                positions[i]!.latitude,
+                START - d,
+              )
+            ) {
               heights[i] = Math.max(heights[i] ?? -Infinity, START - d);
             }
           });

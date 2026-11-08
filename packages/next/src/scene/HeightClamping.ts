@@ -109,6 +109,11 @@ const CAST_INTERVAL = 10;
  *   tile hit along a geocentric ray). Casts are batched for all anchors and
  *   repeat only while those tilesets change.
  * - Ground is the highest of the surfaces the reference allows.
+ * - A globe's terrain clips (`Tileset3D.addTerrainClip`) are holes: inside
+ *   one the globe gives no ground, so content there stands on collision
+ *   tilesets (`clampToGround`, `clampTo3DTiles`), or keeps its height with
+ *   only terrain allowed (`clampToTerrain`). Adding or removing a clip
+ *   re-clamps the content under it.
  *
  * Content moves along the local vertical only, as 1.x models do: its root
  * transform (Earth-fixed, without a parent, e.g. `ModelPlacement.transform`)
@@ -276,7 +281,8 @@ export class HeightClamping {
         continue;
       }
       const reference = e.options.heightReference;
-      const surfaces = tilesets.filter(
+      const { longitude, latitude } = e.options;
+      const allowed = tilesets.filter(
         (t) =>
           t.world === e.world &&
           t.show &&
@@ -284,12 +290,21 @@ export class HeightClamping {
             ? !/3DTiles/.test(reference)
             : t.enableCollision && usesTiles(reference)),
       );
+      // A globe clipped here (`addTerrainClip`) has no ground to give.
+      const surfaces = allowed.filter(
+        (t) => !t.terrain || !t.terrainClipped(longitude, latitude),
+      );
       if (surfaces.length === 0) {
+        if (allowed.length > 0) {
+          // Only clipped terrain: it settles where it is.
+          e.exact = e.sampled = undefined;
+          e.phase = "sampled";
+          e.dirty = true;
+        }
         continue; // nothing to stand on yet: waits for a surface
       }
       // Surfaces whose height is known exactly (the ellipsoid) answer at
       // once; sampling them would load ever finer tiles that never end.
-      const { longitude, latitude } = e.options;
       const exact = surfaces
         .map((t) => t.exactHeight(longitude, latitude))
         .filter((h): h is number => h !== undefined);

@@ -204,12 +204,24 @@ export const LIGHTS_SLICE_WORD = R.lightsSlice;
 /** Word offset of `DrawRecord.viewMask`. */
 export const VIEW_MASK_WORD = R.viewMask;
 /**
- * Word offsets of a mixed-LOD placeholder's clip block, view mask and box
- * count: in those views the record draws only inside its clip boxes.
+ * Word offsets of a mixed-LOD placeholder's clip block (`packClip`: the
+ * block and its box count) and view mask: in those views the record draws
+ * only inside its clip boxes.
  */
 export const CLIP_BLOCK_WORD = R.clipBlock;
 export const PLACEHOLDER_MASK_WORD = R.placeholderMask;
-export const CLIP_COUNT_WORD = R.clipCount;
+/**
+ * Word offset of a globe tile's terrain clip mask: a bit per terrain clip
+ * region of its world (`World.addTerrainClipRegion`'s slot) that its
+ * rectangle touches; inside those it draws nothing. 0: none.
+ */
+export const TERRAIN_CLIP_WORD = R.terrainClip;
+/** Bits of `DrawRecord.clipBlock` holding the block; the box count above. */
+export const CLIP_BLOCK_BITS = 28;
+/** A placeholder's `DrawRecord.clipBlock`: its block and box count. */
+export function packClip(block: number, count: number): number {
+  return (block | (count << CLIP_BLOCK_BITS)) >>> 0;
+}
 /** Word offsets of a record's range in the instance table (count 0: none). */
 export const INSTANCE_FIRST_WORD = R.instanceFirst;
 export const INSTANCE_COUNT_WORD = R.instanceCount;
@@ -218,6 +230,13 @@ export const INSTANCE_STRIDE_WORD = R.instanceStride;
 /** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
 export const CLIP_BOXES = 8;
 export const CLIP_BOX_FLOATS = 20;
+/** A clip block's vec4 rows (terrain clip regions span whole blocks). */
+export const CLIP_BLOCK_ROWS = (CLIP_BOXES * CLIP_BOX_FLOATS) / 4;
+/**
+ * Terrain clip regions a world holds at once: a bit each in a record's
+ * `terrainClip`, a row each of the directory in clip block 0.
+ */
+export const MAX_TERRAIN_CLIPS = 32;
 
 /**
  * `struct Transform` — 80 bytes: a placement composed in float64 on the CPU
@@ -456,7 +475,7 @@ export function writeDrawRecord(
   u32[o + R.viewMask] = r.viewMask ?? ALL_VIEWS;
   u32[o + R.clipBlock] = 0;
   u32[o + R.placeholderMask] = 0;
-  u32[o + R.clipCount] = 0;
+  u32[o + R.terrainClip] = 0;
   u32[o + R.instanceFirst] = r.instanceFirst ?? 0;
   u32[o + R.instanceCount] = r.instanceCount ?? 0;
   u32[o + R.instanceStreams] = r.instanceStreams ?? NO_STREAM;

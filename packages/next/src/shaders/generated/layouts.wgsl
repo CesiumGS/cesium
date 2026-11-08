@@ -57,7 +57,7 @@ struct DrawRecord_std430_0
     @align(4) viewMask_0 : u32,
     @align(16) clipBlock_0 : u32,
     @align(4) placeholderMask_0 : u32,
-    @align(8) clipCount_0 : u32,
+    @align(8) terrainClip_0 : u32,
     @align(4) instanceFirst_0 : u32,
     @align(16) instanceCount_0 : u32,
     @align(4) instanceStreams_0 : u32,

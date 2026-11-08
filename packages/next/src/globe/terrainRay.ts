@@ -84,6 +84,12 @@ export interface TerrainRayTarget {
   readonly maximumHeight?: number;
   /** What is drawn at a longitude and latitude, radians. */
   patchAt(longitude: number, latitude: number): TerrainRayPatch;
+  /**
+   * Whether the terrain at an Earth-fixed point is clipped away (a globe's
+   * `addTerrainClip` regions): not drawn there, so rays pass through it,
+   * and clearance there is not measured.
+   */
+  clipped?(point: ArrayLike<number>): boolean;
 }
 
 export interface TerrainRayOptions {
@@ -307,6 +313,19 @@ export function castTerrainRay(
     samples++;
   };
 
+  // Clipped terrain is a hole: no hits or clearance there.
+  const clippedPoint = new Float64Array(3);
+  const isClipped = target.clipped?.bind(target);
+  const clippedAt = (t: number): boolean => {
+    if (!isClipped) {
+      return false;
+    }
+    clippedPoint[0] = ray.ox + ray.dx * t;
+    clippedPoint[1] = ray.oy + ray.dy * t;
+    clippedPoint[2] = ray.oz + ray.dz * t;
+    return isClipped(clippedPoint);
+  };
+
   // A cell's footprint ends: (u, v) and the geodetic normal at each.
   const uv0 = new Float64Array(2);
   const uv1 = new Float64Array(2);
@@ -409,7 +428,7 @@ export function castTerrainRay(
         stamp[k] = segment;
         // Only this tile's own span: elsewhere another tile is drawn.
         const t = intersect(ray, p, i0 * 3, i1 * 3, i2 * 3);
-        if (t > hitLo && t <= hitHi && t < hitT) {
+        if (t > hitLo && t <= hitHi && t < hitT && !clippedAt(t)) {
           hitT = t;
           hitLevel = level;
         }
@@ -462,7 +481,7 @@ export function castTerrainRay(
         n[1] /= l;
         n[2] /= l;
         const height = clearance(mesh, k, t, n);
-        if (height === Infinity) {
+        if (height === Infinity || clippedAt(t)) {
           continue;
         }
         addSample(t, height, error, mesh.id * 2 ** 26 + k);

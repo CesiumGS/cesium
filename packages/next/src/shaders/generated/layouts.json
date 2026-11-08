@@ -901,7 +901,7 @@
                             "binding": {"kind": "uniform", "offset": 100, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "clipCount",
+                            "name": "terrainClip",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -2544,7 +2544,7 @@
                                 "binding": {"kind": "uniform", "offset": 100, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "clipCount",
+                                "name": "terrainClip",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",

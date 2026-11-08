@@ -796,7 +796,11 @@ export __extern_cpp SurfaceVertex surfaceDepthVertex(uint vertexIndex, uint item
 
 // --- the opaque passes' fragments ---------------------------------------------
 
-bool insideClipBoxes(uint block, uint count, float3 p) {
+// A mixed-LOD placeholder's boxes: `packed` is the record's `clipBlock`,
+// the block in bits 0-27 and how many boxes it holds in bits 28-31.
+bool insideClipBoxes(uint packed, float3 p) {
+  uint block = packed & 0x0fffffffu;
+  uint count = packed >> 28u;
   for (uint i = 0u; i < count; i++) {
     uint b = (block * CLIP_BOXES + i) * 5u;
     float3 d = p - SplitPosition(clipBoxes[b].xyz, clipBoxes[b + 1u].xyz)
@@ -812,6 +816,102 @@ bool insideClipBoxes(uint block, uint count, float3 p) {
   return false;
 }
 
+// Whether segments a–b and q–s cross: each pair's ends on opposite sides
+// of the other's line, a side being "> 0" (half-open, so a segment through
+// a vertex shared by two edges crosses one of them, never both).
+bool segmentsCross(float2 a, float2 b, float2 q, float2 s) {
+  float2 e = b - a;
+  float2 t = s - q;
+  bool qSide = e.x * (q.y - a.y) - e.y * (q.x - a.x) > 0.0;
+  bool sSide = e.x * (s.y - a.y) - e.y * (s.x - a.x) > 0.0;
+  bool aSide = t.x * (a.y - q.y) - t.y * (a.x - q.x) > 0.0;
+  bool bSide = t.x * (b.y - q.y) - t.y * (b.x - q.x) > 0.0;
+  return qSide != sSide && aSide != bSide;
+}
+
+// Terrain clipping (a globe's `addTerrainClip`, globe/terrainClip.ts): the
+// world's regions live in `clipBoxes`, block 0's first 32 rows a directory
+// (a region's first row and vertex count, as uints). A region's rows
+// (`packClipShape`): its anchor's position hi (xyz) with its gnomonic
+// radius (w); lo with its grid's size; its east, north and up axes; its box
+// in its plane; its grid's cells (first edge row and count, the sample);
+// the cells' edges, one a row (both ends in the plane).
+//
+// A fragment projects from the point where the anchor's normal meets the
+// polar axis onto the anchor's tangent plane (gnomonic: exact at the
+// ellipsoid, meridians straight), all relative to the anchor, so float32
+// keeps millimeters near it. In the plane it finds its cell of the grid:
+// the cell's sample point is known inside or out, and the segment from the
+// fragment to it crosses only the cell's edges, so the fragment is inside
+// when it crosses an odd number of them and the sample isn't, or the
+// reverse. A fragment tests at most MAX_CLIP_CELL_EDGES edges per region.
+// `mask` is the record's `terrainClip`: the regions its tile's rectangle
+// touches (the CPU filters per tile). Every loop has a constant bound,
+// whatever the buffer holds.
+static const uint MAX_TERRAIN_CLIPS = 32u;
+static const uint MAX_CLIP_GRID = 128u;
+static const uint MAX_CLIP_CELL_EDGES = 128u;
+
+bool insideTerrainClip(uint mask, float3 p) {
+  SplitPosition camera = SplitPosition(view.cameraHi, view.cameraLo);
+  for (uint n = 0u; n < MAX_TERRAIN_CLIPS; n++) {
+    if (mask == 0u) {
+      break;
+    }
+    uint slot = firstbitlow(mask);
+    mask &= mask - 1u;
+    uint2 entry = asuint(clipBoxes[slot].xy);
+    uint o = entry.x;
+    float4 hi = clipBoxes[o];
+    float4 lo = clipBoxes[o + 1u];
+    float3 d = p - SplitPosition(hi.xyz, lo.xyz).difference(camera);
+    float3 l = float3(dot(clipBoxes[o + 2u].xyz, d), dot(clipBoxes[o + 3u].xyz, d),
+                      dot(clipBoxes[o + 4u].xyz, d));
+    float denominator = hi.w + l.z;
+    if (denominator <= 0.0) {
+      continue;
+    }
+    float2 q = l.xy * (hi.w / denominator);
+    float4 box = clipBoxes[o + 5u];
+    if (q.x < box.x || q.y < box.y || q.x > box.z || q.y > box.w) {
+      continue;
+    }
+    uint size = clamp(uint(lo.w), 1u, MAX_CLIP_GRID);
+    uint grid = o + 6u;
+    uint edges = grid + size * size;
+    float2 cell = max((box.zw - box.xy) / float(size), float2(1e-6));
+    uint2 at = min(uint2(max((q - box.xy) / cell, float2(0.0))), uint2(size - 1u));
+    float4 c = clipBoxes[grid + at.y * size + at.x];
+    uint start = asuint(c.x);
+    uint word = asuint(c.y);
+    uint count = min(word & 0x7fffffffu, MAX_CLIP_CELL_EDGES);
+    bool inside = (word >> 31u) != 0u;
+    for (uint j = 0u; j < MAX_CLIP_CELL_EDGES; j++) {
+      if (j >= count) {
+        break;
+      }
+      float4 edge = clipBoxes[edges + start + j];
+      if (segmentsCross(edge.xy, edge.zw, q, c.zw)) {
+        inside = !inside;
+      }
+    }
+    if (inside) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// What the record doesn't draw at `p` in this view: a mixed-LOD
+// placeholder outside its boxes, clipped terrain inside its regions.
+bool clippedOut(DrawRecord r, float3 p) {
+  if ((r.placeholderMask & view.viewBit) != 0u && !insideClipBoxes(r.clipBlock, p)) {
+    return true;
+  }
+  return r.terrainClip != 0u && insideTerrainClip(r.terrainClip, p);
+}
+
+
 // Blended surfaces at least this opaque draw in the opaque pass (depth,
 // shadows, picks, ambient occlusion); the rest in the translucent passes.
 // Near-opaque layers a few centimeters apart are what order-independent
@@ -824,6 +924,16 @@ static const float OPAQUE_ALPHA = 0.999;
 // opaque pass's triangle pipelines (RenderContext.ts, by its id, 0);
 // lines cut out here.
 [vk::constant_id(0)] const bool cutOutInDepth = false;
+
+// The shading's clip. After the depth prepass (`cutOutInDepth`) a clipped
+// terrain fragment has no depth of its own to equal, so the depth test
+// already left it out: only the placeholders' cheap test is repeated.
+bool shadingClippedOut(DrawRecord r, float3 p) {
+  if (cutOutInDepth) {
+    return (r.placeholderMask & view.viewBit) != 0u && !insideClipBoxes(r.clipBlock, p);
+  }
+  return clippedOut(r, p);
+}
 
 // A fragment as the custom shader's fragment stage takes it.
 CesiumFragment fragmentOf(SurfaceVaryings in, float3 geometric) {
@@ -898,8 +1008,7 @@ void cutOut(SurfaceVaryings in) {
       discard;
     }
   }
-  if ((r.placeholderMask & view.viewBit) != 0u &&
-      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+  if (clippedOut(r, in.relPosition)) {
     discard;
   }
 }
@@ -919,8 +1028,7 @@ void shadowFs(SurfaceVaryings in) {
 [shader("fragment")]
 void shadowPlaceholderFs(SurfaceVaryings in) {
   DrawRecord r = records[in.ids.x];
-  if ((r.placeholderMask & view.viewBit) != 0u &&
-      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+  if (clippedOut(r, in.relPosition)) {
     discard;
   }
 }
@@ -948,8 +1056,7 @@ float4 depthCoverageFs(SurfaceVaryings in) : SV_Target0 {
   Material material = materials[r.materialIndex];
   float alpha = materialAlpha(in);
   float ramp = max(fwidth(alpha), 1e-4);
-  if ((r.placeholderMask & view.viewBit) != 0u &&
-      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+  if (clippedOut(r, in.relPosition)) {
     discard;
   }
   float cutoff = (material.flags & 8u) != 0u ? OPAQUE_ALPHA : material.alphaCutoff;
@@ -1199,9 +1306,9 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
     baseColor = float4(srgbToLinear(imagerySample.rgb), 1.0) * r.color;
   }
   // Mixed-LOD placeholder: a coarse tile fills only the volumes of its
-  // missing finer descendants, at its true depth (plan §13.1).
-  if ((r.placeholderMask & view.viewBit) != 0u &&
-      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+  // missing finer descendants, at its true depth (plan §13.1); clipped
+  // terrain draws nothing inside its regions.
+  if (shadingClippedOut(r, in.relPosition)) {
     discard;
   }
   float3 emissive = material.emissive;
@@ -1623,8 +1730,7 @@ float momentDepth(float3 relPosition) {
 float blendedAlpha(SurfaceVaryings in) {
   DrawRecord r = records[in.ids.x];
   float alpha = materialAlpha(in);
-  if ((r.placeholderMask & view.viewBit) != 0u &&
-      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+  if (clippedOut(r, in.relPosition)) {
     discard;
   }
   return clamp(alpha, 0.0, 1.0);

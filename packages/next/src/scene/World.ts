@@ -39,7 +39,10 @@ import {
   CLIP_BLOCK_WORD,
   CLIP_BOXES,
   CLIP_BOX_FLOATS,
-  CLIP_COUNT_WORD,
+  CLIP_BLOCK_ROWS,
+  MAX_TERRAIN_CLIPS,
+  TERRAIN_CLIP_WORD,
+  packClip,
   MATERIAL_WORDS,
   NO_TEXTURE,
   PLACEHOLDER_MASK_WORD,
@@ -716,8 +719,16 @@ export class World {
   private nextFeatureId = 1;
   private readonly freeSlots: number[] = [];
   private readonly maxClipBlocks: number;
-  private clipBlockCount = 0;
+  /**
+   * Block 0 is the terrain clip regions' directory (`addTerrainClipRegion`),
+   * reserved so the shaders find it without a binding of its own.
+   */
+  private clipBlockCount = 1;
   private readonly freeClipBlocks: number[] = [];
+  /** Terrain clip regions by slot: their first block and block count. */
+  private readonly terrainClipRuns: Array<
+    { block: number; blocks: number } | undefined
+  > = [];
   private readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
   private nextMeshId = 0;
   private drawCount = 0;
@@ -917,9 +928,12 @@ export class World {
       this.materialRows * MATERIAL_SIZE,
       storage,
     );
-    this.maxClipBlocks = Math.min(
-      options.maxClipBlocks ?? 1 << 14,
-      fits(this.clipScratch.byteLength),
+    this.maxClipBlocks = Math.max(
+      1,
+      Math.min(
+        options.maxClipBlocks ?? 1 << 14,
+        fits(this.clipScratch.byteLength),
+      ),
     );
     this.clipRows = Math.min(this.maxClipBlocks, 256);
     // COPY_SRC: copied into a larger buffer as it grows.
@@ -2964,18 +2978,103 @@ export class World {
     }
     const o = handle.index * RECORD_WORDS;
     const m = clip ? mask >>> 0 : 0;
-    const block = clip?.block ?? 0;
-    const count = clip?.count ?? 0;
+    const packed = clip ? packClip(clip.block, clip.count) : 0;
     if (
       this.recordsU32[o + PLACEHOLDER_MASK_WORD] !== m ||
-      this.recordsU32[o + CLIP_BLOCK_WORD] !== block ||
-      this.recordsU32[o + CLIP_COUNT_WORD] !== count
+      this.recordsU32[o + CLIP_BLOCK_WORD] !== packed
     ) {
       this.recordsU32[o + PLACEHOLDER_MASK_WORD] = m;
-      this.recordsU32[o + CLIP_BLOCK_WORD] = block;
-      this.recordsU32[o + CLIP_COUNT_WORD] = count;
+      this.recordsU32[o + CLIP_BLOCK_WORD] = packed;
       this.markDirty(handle.index);
     }
+  }
+
+  /**
+   * @internal Uploads a terrain clip region (globe/terrainClip.ts
+   * `packClipShape`: vec4 rows, `vertices` of them after its header) into
+   * whole clip blocks and points its directory row (block 0) at it;
+   * returns its slot, the record mask's bit (`setTerrainClip`). Throws when
+   * all `MAX_TERRAIN_CLIPS` slots are taken or the clip blocks are full.
+   */
+  addTerrainClipRegion(rows: Float32Array, vertices: number): number {
+    let slot = 0;
+    while (slot < MAX_TERRAIN_CLIPS && this.terrainClipRuns[slot]) {
+      slot++;
+    }
+    if (slot === MAX_TERRAIN_CLIPS) {
+      throw new Error(
+        `At most ${MAX_TERRAIN_CLIPS} terrain clip regions per world are supported.`,
+      );
+    }
+    const floats = CLIP_BLOCK_ROWS * 4;
+    const blocks = Math.ceil(rows.length / floats);
+    const block = this.allocateClipRun(blocks);
+    const data = new Float32Array(blocks * floats);
+    data.set(rows);
+    const { queue } = this.ctx.device;
+    queue.writeBuffer(this.clipBuffer, block * floats * 4, data);
+    // The directory row: the region's first row and its vertex count.
+    const entry = new Uint32Array([block * CLIP_BLOCK_ROWS, vertices, 0, 0]);
+    queue.writeBuffer(this.clipBuffer, slot * 16, entry);
+    this.terrainClipRuns[slot] = { block, blocks };
+    this.version++;
+    return slot;
+  }
+
+  /** @internal Frees a terrain clip region's slot and blocks. */
+  removeTerrainClipRegion(slot: number): void {
+    const run = this.terrainClipRuns[slot];
+    if (!run) {
+      return;
+    }
+    this.terrainClipRuns[slot] = undefined;
+    for (let b = 0; b < run.blocks; b++) {
+      this.freeClipBlocks.push(run.block + b);
+    }
+    this.version++;
+  }
+
+  /**
+   * @internal Which terrain clip regions (a bit per slot) a globe tile's
+   * record tests per fragment: inside any of them it draws nothing.
+   */
+  setTerrainClip(handle: DrawHandle, mask: number): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const index = handle.index * RECORD_WORDS + TERRAIN_CLIP_WORD;
+    if (this.recordsU32[index] !== mask >>> 0) {
+      this.recordsU32[index] = mask >>> 0;
+      this.markDirty(handle.index);
+    }
+  }
+
+  /**
+   * `count` consecutive clip blocks: free ones where a run of them is
+   * free, else new ones (the buffer grows). Throws when the blocks are full.
+   */
+  private allocateClipRun(count: number): number {
+    const free = this.freeClipBlocks;
+    if (count === 1 && free.length > 0) {
+      return free.pop()!;
+    }
+    free.sort((a, b) => a - b);
+    for (let i = 0; i + count <= free.length; i++) {
+      if (free[i + count - 1]! - free[i]! === count - 1) {
+        const block = free[i]!;
+        free.splice(i, count);
+        return block;
+      }
+    }
+    const block = this.clipBlockCount;
+    if (block + count > this.maxClipBlocks) {
+      throw new CapacityError("clip blocks");
+    }
+    this.clipBlockCount += count;
+    if (block + count > this.clipRows) {
+      this.growClips(block + count);
+    }
+    return block;
   }
 
   /** Whether ray casts with `collisionOnly` may hit the draw. */

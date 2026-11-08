@@ -27,6 +27,13 @@ import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import type { TerrainRayTarget } from "../globe/terrainRay.ts";
 import {
+  compileTerrainClip,
+  packClipShape,
+  type TerrainClip,
+  type TerrainClipRegion,
+  type TerrainClips,
+} from "../globe/terrainClip.ts";
+import {
   StepwiseSelection,
   REQUEST_PURPOSES,
   type RequestPurpose,
@@ -167,6 +174,8 @@ export interface TileSource {
   rayTarget?(viewMask?: number): TerrainRayTarget;
   /** Called with each rectangle whose heights changed (terrain sources). */
   readonly heightListeners?: Set<(rectangle: Rectangle) => void>;
+  /** @internal Where the terrain isn't drawn (terrain sources, `addTerrainClip`). */
+  readonly clips?: TerrainClips;
   /** A tile's content left the cache. */
   unloadTile?(tile: Tile): void;
   /** A selection policy of its own for `options` (default: the tileset's). */
@@ -470,6 +479,101 @@ export class Tileset3D implements TileTree {
   /** True for terrain and the ellipsoid (a globe source), not 3D Tiles. */
   get terrain(): boolean {
     return this.source !== undefined;
+  }
+
+  /**
+   * Clips the globe's terrain (terrain and the ellipsoid; not 3D Tiles):
+   * inside `region` (a rectangle or a simple polygon, geodetic degrees on
+   * the globe's body) the terrain isn't drawn, so content placed there
+   * shows instead. Edges are exact per pixel. Returns the clip, for
+   * `removeTerrainClip`. Throws, saying why, for a region it can't clip:
+   * not a simple polygon, within 5° of a pole, spanning more than 10° from
+   * its middle, more than 1,024 vertices (`MAX_TERRAIN_CLIP_VERTICES`),
+   * edges crowded together (more than 128 in one cell of its grid), or past
+   * 32 regions in the world (`MAX_TERRAIN_CLIPS`).
+   *
+   * Clipped terrain is a hole for every query, as it is on screen: picks
+   * (`View.pick`) hit what shows through; `terrainRayTarget` rays
+   * (`terrainLineOfSight`) pass through it; `sampleHeight`,
+   * `surfaceHeight` and `exactHeight` are undefined there, and so is the
+   * terrain's part of `Engine.sampleHeightMostDetailed`. Height clamping
+   * follows: content clamped inside a clip stands on the tilesets with
+   * collision there (`clampToGround`, `clampTo3DTiles`); with only terrain
+   * to stand on (`clampToTerrain`) it keeps the height it has. GPU ray
+   * casts (`World.castRays`) don't see clips: a terrain with
+   * `enableCollision` is still hit there by them.
+   *
+   * Costs nothing without regions, or with none on screen. Only the tiles
+   * a region touches test it, per fragment, and only against the few edges
+   * of their place in the region's grid, so a long corridor strip costs
+   * only where it runs. Wakes the frame loop.
+   */
+  addTerrainClip(region: TerrainClipRegion): TerrainClip {
+    const clips = this.source?.clips;
+    if (!clips) {
+      throw new Error(
+        "Tileset3D.addTerrainClip: only a globe (Engine.addTerrain, addEllipsoid) has terrain to clip.",
+      );
+    }
+    const shape = compileTerrainClip(region, clips.ellipsoid);
+    const slot = this.world.addTerrainClipRegion(
+      packClipShape(shape),
+      shape.xy.length / 2,
+    );
+    const clip: TerrainClip = Object.freeze({ region: frozenRegion(region) });
+    const entry = { clip, shape, slot };
+    clips.add(entry);
+    this.terrainClipsChanged(clips.boundsOf(entry));
+    return clip;
+  }
+
+  /** Draws the terrain inside `clip` again (`addTerrainClip`). */
+  removeTerrainClip(clip: TerrainClip): void {
+    const clips = this.source?.clips;
+    const entry = clips?.remove(clip);
+    if (!clips || !entry) {
+      return;
+    }
+    this.world.removeTerrainClipRegion(entry.slot);
+    this.terrainClipsChanged(clips.boundsOf(entry));
+  }
+
+  /** The terrain clips in effect, oldest first (`addTerrainClip`). */
+  get terrainClips(): readonly TerrainClip[] {
+    return this.source?.clips?.entries.map((e) => e.clip) ?? [];
+  }
+
+  /**
+   * Whether the globe's terrain is clipped at a longitude and latitude
+   * (radians; `addTerrainClip`), at `height` m (default 0).
+   */
+  terrainClipped(longitude: number, latitude: number, height = 0): boolean {
+    return this.source?.clips?.clippedAt(longitude, latitude, height) ?? false;
+  }
+
+  /** Masks every loaded tile again, tells height listeners, wakes. */
+  private terrainClipsChanged(rectangles: readonly Rectangle[]): void {
+    for (const tile of this.loaded) {
+      this.applyTerrainClip(tile);
+    }
+    for (const listener of this.source?.heightListeners ?? []) {
+      for (const r of rectangles) {
+        listener(r);
+      }
+    }
+    this.changed();
+  }
+
+  /** Which clip regions a globe tile's draws test (a bit per region). */
+  private applyTerrainClip(tile: Tile): void {
+    const clips = this.source?.clips;
+    if (!clips || !tile.placement || !tile.globe) {
+      return;
+    }
+    const mask = clips.maskFor(tile.globe.rectangle);
+    for (const draw of tile.placement.draws) {
+      this.world.setTerrainClip(draw, mask);
+    }
   }
 
   /**
@@ -1504,6 +1608,9 @@ export class Tileset3D implements TileTree {
             tile,
           });
         }
+        if (this.source?.clips?.size) {
+          this.applyTerrainClip(tile);
+        }
         tile.bytes = model.bytes;
         if (this.retainGeometry) {
           tile.geometry = this.retain(asset, placement);
@@ -1800,9 +1907,29 @@ export class Tileset3D implements TileTree {
     this.ready.length = 0;
     this.boundingVolumes?.clear();
     this.contentVolumes?.clear();
+    for (const clip of this.terrainClips) {
+      this.removeTerrainClip(clip);
+    }
     this.world.removeTransform(this.transform);
     this.destroyed = true;
   }
+}
+
+/** A frozen copy of a clip region, as its handle keeps it. */
+function frozenRegion(region: TerrainClipRegion): TerrainClipRegion {
+  if (region.rectangle) {
+    const { west, south, east, north } = region.rectangle;
+    return Object.freeze({
+      rectangle: Object.freeze({ west, south, east, north }),
+    });
+  }
+  return Object.freeze({
+    polygon: Object.freeze(
+      region.polygon.map(({ longitude, latitude }) =>
+        Object.freeze({ longitude, latitude }),
+      ),
+    ),
+  });
 }
 
 function retarget(tile: Tile, tree: TileTree): void {

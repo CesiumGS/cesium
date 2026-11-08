@@ -10,3 +10,6 @@ examples/*/design-screenshots/
 
 # Python bytecode (importing scripts/frameFixtures.py writes it)
 __pycache__/
+
+# Browser checks' screenshots and pages at the package root: local only
+/design-screenshots/

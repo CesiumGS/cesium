@@ -131,6 +131,14 @@ export {
   type GlobeImageryOptions,
 } from "./globe/GlobeImagery.ts";
 export {
+  MAX_TERRAIN_CLIP_VERTICES,
+  type TerrainClip,
+  type TerrainClipPosition,
+  type TerrainClipRectangle,
+  type TerrainClipRegion,
+} from "./globe/terrainClip.ts";
+export { MAX_TERRAIN_CLIPS } from "./render/layout.ts";
+export {
   BudgetedSelection,
   type BudgetedOptions,
 } from "./streaming/Budgeted.ts";

@@ -64,9 +64,9 @@ public struct DrawRecord {
   public uint imagerySlice;
   public uint featureIdOffset;   // per-vertex local feature IDs (u32 words)
   public uint viewMask;          // views that draw this record (per-view LOD selection)
-  public uint clipBlock;         // mixed-LOD placeholder: block of clip boxes
+  public uint clipBlock;         // mixed-LOD placeholder: block of clip boxes (bits 0-27), boxes in it (28-31)
   public uint placeholderMask;   // views in which the record draws only inside them
-  public uint clipCount;         // boxes in the block
+  public uint terrainClip;       // globe tiles: a bit per terrain clip region of the world it touches
   public uint instanceFirst;     // range in `instanceTable`; count 0 = not instanced
   public uint instanceCount;
   public uint instanceStreams;   // per-instance streams in the arena (word offset)

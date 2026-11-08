@@ -55,7 +55,7 @@ export const DrawRecordLayout = {
   viewMask: 92,
   clipBlock: 96,
   placeholderMask: 100,
-  clipCount: 104,
+  terrainClip: 104,
   instanceFirst: 108,
   instanceCount: 112,
   instanceStreams: 116,

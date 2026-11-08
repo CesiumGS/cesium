@@ -37,6 +37,7 @@ import {
 } from "./quantizedMesh.ts";
 import { GlobeStepwiseSelection } from "./GlobeStepwise.ts";
 import { GlobeBudgetedSelection } from "./GlobeBudgeted.ts";
+import { TerrainClips } from "./terrainClip.ts";
 import type {
   TerrainRayPatch,
   TerrainRayTarget,
@@ -219,26 +220,40 @@ export class TerrainSource {
    * in radians, from the finest loaded tile there (1.x's globe samples the
    * same way); 0 for the ellipsoid; undefined where nothing is loaded.
    */
-  /** The ellipsoid's height is 0 everywhere; terrain's must be loaded. */
-  exactHeight(): number | undefined {
-    return this.flat ? 0 : undefined;
+  /**
+   * The ellipsoid's height is 0 everywhere; terrain's must be loaded.
+   * Inside a clip region there is none (`clips`).
+   */
+  exactHeight(longitude = 0, latitude = 0): number | undefined {
+    return this.flat && !this.clips.clippedAt(longitude, latitude)
+      ? 0
+      : undefined;
   }
 
   sampleHeight(longitude: number, latitude: number): number | undefined {
     if (this.flat) {
-      return 0;
+      return this.clips.clippedAt(longitude, latitude) ? undefined : 0;
     }
     const finest = this.finestTile(longitude, latitude);
     if (!finest) {
       return undefined;
     }
     const r = finest.rectangle;
-    return interpolateHeight(
+    const height = interpolateHeight(
       finest.heights!,
       (longitude - r.west) / (r.east - r.west),
       (latitude - r.south) / (r.north - r.south),
     );
+    return this.clips.clippedAt(longitude, latitude, height)
+      ? undefined
+      : height;
   }
+
+  /**
+   * @internal Regions where the terrain isn't drawn (`Tileset3D.addTerrainClip`):
+   * height queries find none there and ray queries pass through.
+   */
+  readonly clips = new TerrainClips();
 
   /**
    * Height of the drawn surface at a longitude and latitude in radians: a
@@ -248,6 +263,14 @@ export class TerrainSource {
    * below `sampleHeight`; clamped content stands on it, not in the air.
    */
   surfaceHeight(longitude: number, latitude: number): number | undefined {
+    const height = this.drawnHeight(longitude, latitude);
+    return height !== undefined &&
+      this.clips.clippedAt(longitude, latitude, height)
+      ? undefined
+      : height;
+  }
+
+  private drawnHeight(longitude: number, latitude: number): number | undefined {
     if (this.flat) {
       return 0;
     }
@@ -330,14 +353,17 @@ export class TerrainSource {
    * data is drawn by the tile above, the finest there is, so it is known.
    * Where no such tile exists it is unknown ("not drawn"). The answer holds
    * over the deepest tile on the path, which has no children and lies
-   * inside the drawn tile (the patch contract).
+   * inside the drawn tile (the patch contract). Clip regions (`clips`) are
+   * holes: rays pass through them.
    */
   rayTarget(viewMask = 0xffffffff): TerrainRayTarget {
     const mask = viewMask >>> 0;
+    const clips = this.clips;
     return {
       ellipsoid: Ellipsoid.WGS84,
       patchAt: (longitude, latitude) =>
         this.rayPatch(longitude, latitude, mask),
+      clipped: (p) => clips.clippedPoint(p),
     };
   }
 
