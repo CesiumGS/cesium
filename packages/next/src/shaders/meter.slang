@@ -16,6 +16,13 @@
 // reading fall as the exposure did, and the exposure with it. The meter
 // takes that share of the color, so a pixel half emission and half light
 // reads the light alone, and pure emission (share 0) is left out.
+//
+// Highlight guard: a small bright part of a dark image (a crescent Earth
+// against the night, a lamp in a street) is under 35% of the pixels, so the
+// band averaged what was dark and the bright part burned out. The reading
+// is no lower than the band's top (the 98th percentile) less
+// HIGHLIGHT_GUARD_STOPS. A daylight image's band lies within those stops
+// of its top, so the guard leaves it as it was.
 
 struct MeterParams {
   float exposure;
@@ -36,6 +43,8 @@ static const uint BINS = 144u;
 static const float LOW = -24.0;
 static const float BIN_STOPS = 48.0 / 144.0;
 static const float2 BAND = float2(0.65, 0.98);
+// The reading is no lower than the 98th percentile (BAND.y) less this many stops.
+static const float HIGHLIGHT_GUARD_STOPS = 4.0;
 
 groupshared Atomic<uint> photopic[BINS];
 groupshared Atomic<uint> scotopic[BINS];
@@ -52,6 +61,7 @@ uint binOf(float luminance) {
 static const uint THREADS = 256u;
 groupshared uint2 below[THREADS];   // photopic, scotopic counts, scanned
 groupshared float4 shares[THREADS];
+groupshared float2 peak;           // the BAND.y percentile's log2 luminance: photopic, scotopic
 
 // A bin's share of the band (the brighter part of the image, BAND): its
 // log2 luminance at its center times its count within the band, and that
@@ -69,6 +79,9 @@ void main(uint index : SV_GroupIndex, uint3 local : SV_GroupThreadID) {
   for (uint b = index; b < BINS; b += 256u) {
     photopic[b].store(0u);
     scotopic[b].store(0u);
+  }
+  if (index == 0u) {
+    peak = float2(LOW);
   }
   GroupMemoryBarrierWithGroupSync();
   for (uint gy = local.y; gy < GRID; gy += 16u) {
@@ -103,6 +116,18 @@ void main(uint index : SV_GroupIndex, uint3 local : SV_GroupThreadID) {
   }
   float2 total = float2(below[THREADS - 1u]);
   float2 under = float2(below[index] - counts);
+  if (index < BINS) {
+    // The bins' counts partition the pixels, so at most one bin holds the
+    // percentile; its center is the peak. An empty image holds none.
+    float center = LOW + (float(index) + 0.5) * BIN_STOPS;
+    float2 rank = total * BAND.y;
+    if (under.x <= rank.x && rank.x < under.x + float(counts.x)) {
+      peak.x = center;
+    }
+    if (under.y <= rank.y && rank.y < under.y + float(counts.y)) {
+      peak.y = center;
+    }
+  }
   shares[index] = index < BINS
                       ? float4(share(index, float(counts.x), under.x, total.x),
                                share(index, float(counts.y), under.y, total.y))
@@ -115,6 +140,10 @@ void main(uint index : SV_GroupIndex, uint3 local : SV_GroupThreadID) {
     GroupMemoryBarrierWithGroupSync();
   }
   if (index == 0u) {
-    result[0] = shares[0];
+    float4 r = shares[0];
+    // The sum of the log2 luminances is the weight times the mean, so the
+    // floor on the mean is a floor on the sum.
+    float2 floorSums = (peak - HIGHLIGHT_GUARD_STOPS) * float2(r.y, r.w);
+    result[0] = float4(max(r.x, floorSums.x), r.y, max(r.z, floorSums.y), r.w);
   }
 }

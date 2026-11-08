@@ -1,5 +1,6 @@
 // The eye's response (plan §4.2): Ferwerda et al. 1996's thresholds,
 // Tumblin and Rushmeier's brightness, and the calibration to daylight.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   DISPLAY_ADAPTATION,
@@ -54,12 +55,22 @@ describe("the rods' share and brightness", () => {
   });
 });
 
+describe("the eye's target", () => {
+  it("is the same in the shader", () => {
+    const slang = readFileSync(
+      new URL("../src/shaders/present.slang", import.meta.url),
+      "utf8",
+    );
+    expect(slang).toContain("float calibration = 0.18 /");
+  });
+});
+
 describe("eyeResponse", () => {
-  it("shows daylight's adaptation level as a metered camera does", () => {
+  it("shows daylight's adaptation level at the eye's target", () => {
     const day = 4000;
     const r = eyeResponse(day, day * SCOTOPIC_WHITE);
     expect(r.rods).toBe(0);
-    expect(r.cones * day).toBeCloseTo(0.104, 2);
+    expect(r.cones * day).toBeCloseTo(0.18, 2);
   });
 
   it("sees a moonlit scene with the rods, dimmer than day", () => {
@@ -68,7 +79,7 @@ describe("eyeResponse", () => {
     const rods = r.rods * moonlit * SCOTOPIC_WHITE;
     const cones = r.cones * moonlit;
     expect(rods).toBeGreaterThan(20 * cones);
-    expect(rods).toBeLessThan(0.104);
+    expect(rods).toBeLessThan(0.18);
     expect(rods).toBeGreaterThan(0.01);
   });
 

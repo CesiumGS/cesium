@@ -19,8 +19,11 @@
  * than day by moonlight, 3.1 on a moonless night.
  *
  * One calibration: by day the display shows the world's adaptation level
- * where a camera's metered exposure puts it (a reflected-light meter,
- * K = 12.5: 0.104 of white), so daylight looks as the camera's does.
+ * at 0.18 of white (`EYE_TARGET`). That target is a choice, made by
+ * comparison with 1.x and the owner's review on 2026-11-08, not a physical
+ * constant. It belongs to the eye alone: a camera's automatic exposure
+ * (a reflected-light meter, K = 12.5) is a separate mode, defined
+ * physically, and is unchanged.
  */
 
 /** A display's white, cd/m² (sRGB's reference display: 80-100). */
@@ -83,9 +86,15 @@ export function brightness(la: number): number {
   );
 }
 
-/** Daylight shows its adaptation level at a camera's metered 0.104 of white. */
+/**
+ * Daylight shows its adaptation level at this share of white: a choice (by
+ * comparison with 1.x, reviewed 2026-11-08), not a physical constant.
+ * present.slang `eyeSees` holds the same number.
+ */
+const EYE_TARGET = 0.18;
 const CALIBRATION =
-  0.104 / ((coneThreshold(DISPLAY_ADAPTATION) * 10 ** 1.255) / DISPLAY_WHITE);
+  EYE_TARGET /
+  ((coneThreshold(DISPLAY_ADAPTATION) * 10 ** 1.255) / DISPLAY_WHITE);
 
 /** Scotopic luminance of white light per unit of luminance (D65). */
 export const SCOTOPIC_WHITE = 2.573;

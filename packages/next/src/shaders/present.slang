@@ -181,8 +181,9 @@ float3 eyeSees(float3 image, float2 uv) {
   float2 adapted = clamp(lerp(global, local, EYE_LOCAL), global - EYE_LOCAL_REACH, global + EYE_LOCAL_REACH);
   float cones = pow(10.0, adapted.x);
   float rods = pow(10.0, adapted.y);
-  // Daylight's adaptation level shows where a metered camera puts it.
-  float calibration = 0.104 / (coneThreshold(50.0) * pow(10.0, 1.255) / 100.0);
+  // Daylight's adaptation level shows at 0.18 of white, the target chosen by
+  // comparison with 1.x (scene/eye.ts); not a physical constant.
+  float calibration = 0.18 / (coneThreshold(50.0) * pow(10.0, 1.255) / 100.0);
   float scale = calibration * brightness(cones) * exp2(params.compensation) / 100.0;
   float coneGain = scale * coneThreshold(50.0) / coneThreshold(cones);
   float rodGain = scale * rodWeight(cones) * rodThreshold(50.0) / rodThreshold(rods);

@@ -118,7 +118,7 @@ fn eyeSees_0( image_0 : vec3<f32>,  uv_1 : vec2<f32>) -> vec3<f32>
     var adapted_0 : vec2<f32> = clamp(mix(global_1, localAdaptation_0(uv_1, log2(max(y_0, 1.00000001168609742e-07f)), global_1), vec2<f32>(0.5f)), global_1 - _S5, global_1 + _S5);
     var cones_1 : f32 = pow(10.0f, adapted_0.x);
     var _S6 : f32 = coneThreshold_0(50.0f);
-    var scale_0 : f32 = 0.10400000214576721f / (_S6 * pow(10.0f, 1.2549999952316284f) / 100.0f) * brightness_0(cones_1) * exp2(params_0.compensation_0) / 100.0f;
+    var scale_0 : f32 = 0.18000000715255737f / (_S6 * pow(10.0f, 1.2549999952316284f) / 100.0f) * brightness_0(cones_1) * exp2(params_0.compensation_0) / 100.0f;
     return light_0 * vec3<f32>((scale_0 * _S6 / coneThreshold_0(cones_1))) + vec3<f32>((max(y_0 * (1.3300000429153442f * (1.0f + (y_0 + dot(light_0, vec3<f32>(0.019300000742077827f, 0.11919999867677689f, 0.9505000114440918f))) / max(dot(light_0, vec3<f32>(0.4124000072479248f, 0.35760000348091125f, 0.18050000071525574f)), 9.999999960041972e-13f)) - 1.6799999475479126f), 0.0f) * (scale_0 * rodWeight_0(cones_1) * rodThreshold_0(50.0f) / rodThreshold_0(pow(10.0f, adapted_0.y))))) * vec3<f32>(1.0410000085830688f, 0.96200001239776611f, 1.2589999437332153f);
 }
 

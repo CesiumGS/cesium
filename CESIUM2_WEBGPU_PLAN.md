@@ -1487,7 +1487,13 @@ mesopic range). Thresholds keep visibility, not brightness: alone they
 showed a moonlit scene about as bright as a sunlit one. How bright night
 looks follows Tumblin and Rushmeier (Stevens' brightness data): 1.8 stops
 darker by moonlight, 3.1 under starlight. One calibration: by day the
-adaptation level shows where a metered camera puts it (0.104 of white).
+adaptation level shows at 0.18 of white. That target is a choice, made by
+comparison with 1.x and the owner's review on 2026-11-08, not a physical
+constant; it is the eye's alone, and a metered camera's K = 12.5 (0.104 of
+white at the meter) is unchanged. The meter's reading is no lower than the
+98th percentile less 4 stops, so a small bright crescent in a dark image
+is not blown out (daylight, whose band lies within 4 stops, is
+unchanged).
 Adapting to light takes a moment (cones 0.1 s, rods 0.4 s), to dark longer
 (the eye's minutes compressed to 1.5 s and 4 s). The eye sees the stars
 against a dark sky. The plain mean had let the night half of the Earth
