@@ -187,10 +187,10 @@ export interface DataContext {
 /**
  * What a case gets. `frames` is there only for a case that declares the
  * "frames" need (or an Orion need); reading it otherwise throws, so an
- * undeclared use fails loudly, even where the data is loaded. It is
+ * undeclared use fails loudly, even where the data is loaded. The getter is
  * enumerable, so spreading the context reads it (and throws the same way
- * for a case without the need). Under an
- * optional need it throws `NeedMissingError` when the data didn't load.
+ * for a case without the need). Under an optional need it throws
+ * `NeedMissingError` when the data didn't load.
  */
 export interface StressContext extends DataContext {
   readonly frames: Frames;

@@ -8,6 +8,11 @@ const east = v3.vec3();
 const north = v3.vec3();
 const up = v3.vec3();
 
+/** True when `x` and `y` are both near zero: the point is on the polar axis. */
+export function isOnPolarAxis(x: number, y: number): boolean {
+  return Math.abs(x) <= EPSILON14 && Math.abs(y) <= EPSILON14;
+}
+
 /**
  * Local east-north-up frame at `origin`, expressed in the Earth-fixed frame.
  * Matches 1.x `Transforms.eastNorthUpToFixedFrame`, including the pole and
@@ -27,7 +32,7 @@ export function eastNorthUpToFixedFrame(
     v3.set(east, 0, 1, 0);
     v3.set(north, -1, 0, 0);
     v3.set(up, 0, 0, 1);
-  } else if (nearZero(x) && nearZero(y)) {
+  } else if (isOnPolarAxis(x, y)) {
     const sign = Math.sign(z);
     v3.set(east, 0, 1, 0);
     v3.set(north, -sign, 0, 0);

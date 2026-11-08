@@ -378,4 +378,65 @@ describe("frames in the world", () => {
       Math.abs(Math.hypot(north[0]!, north[1]!, north[2]!) - 1),
     ).toBeLessThan(1e-15);
   });
+
+  describe("eastNorthUpFrame bases", () => {
+    const ellipsoid = Ellipsoid.WGS84;
+    const earth = Frame.root("ITRF");
+    const b = ellipsoid.radii[2]!;
+    const cases: [
+      string,
+      number[],
+      { lat: number; lon: number; h: number } | null,
+    ][] = [
+      ["the pole", [0, 0, b], null],
+      ["above the pole", [0, 0, b + 1000], null],
+      ["89.9999999 degrees", [], { lat: 89.9999999, lon: 30, h: 100 }],
+      ["a height of 1000 km", [], { lat: 40, lon: -75, h: 1e6 }],
+    ];
+    for (const [label, xyz, c] of cases) {
+      it(`is orthonormal and right-handed at ${label}`, () => {
+        const cartographic = c ? fromDegrees(c.lon, c.lat, c.h) : undefined;
+        const position = cartographic
+          ? ellipsoid.cartographicToCartesian(cartographic, new Float64Array(3))
+          : Float64Array.from(xyz);
+        const m = frameTransform(
+          eastNorthUpFrame("enu", earth, ellipsoid, position),
+          earth,
+          t1,
+        );
+        const e = [m[0]!, m[1]!, m[2]!];
+        const n = [m[4]!, m[5]!, m[6]!];
+        const u = [m[8]!, m[9]!, m[10]!];
+        const dot = (a: number[], d: number[]) =>
+          a[0]! * d[0]! + a[1]! * d[1]! + a[2]! * d[2]!;
+        for (const a of [e, n, u]) {
+          expect(Math.abs(Math.hypot(a[0]!, a[1]!, a[2]!) - 1)).toBeLessThan(
+            1e-14,
+          );
+        }
+        expect(Math.abs(dot(e, n))).toBeLessThan(1e-14);
+        expect(Math.abs(dot(e, u))).toBeLessThan(1e-14);
+        expect(Math.abs(dot(n, u))).toBeLessThan(1e-14);
+        const cross = [
+          e[1]! * n[2]! - e[2]! * n[1]!,
+          e[2]! * n[0]! - e[0]! * n[2]!,
+          e[0]! * n[1]! - e[1]! * n[0]!,
+        ];
+        for (let i = 0; i < 3; i++) {
+          expect(Math.abs(cross[i]! - u[i]!)).toBeLessThan(1e-14);
+        }
+        if (cartographic) {
+          const foot = ellipsoid.geodeticSurfaceNormalCartographic(
+            cartographic,
+            new Float64Array(3),
+          );
+          for (let i = 0; i < 3; i++) {
+            expect(Math.abs(u[i]! - foot[i]!)).toBeLessThan(1e-14);
+          }
+        } else {
+          expect(u[2]).toBe(1);
+        }
+      });
+    }
+  });
 });

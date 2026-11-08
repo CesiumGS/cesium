@@ -1,6 +1,6 @@
 import { mat4 } from "../math/mat4.ts";
-import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
-import { EPSILON14, type Ellipsoid } from "../math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame, isOnPolarAxis } from "../math/transforms.ts";
+import type { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { TransformHandle, World } from "../scene/World.ts";
 import { Frame, frameTransform, type FrameOptions } from "./Frame.ts";
@@ -67,9 +67,11 @@ export function convertPoint<M extends string>(
  * The east-north-up frame at `position` (meters, in `bodyFixed`) on
  * `ellipsoid`: a constant child of `bodyFixed`. "Up" is the geodetic normal
  * at the position's foot on the ellipsoid (the normal through its
- * cartographic latitude), as body-fixed frames define it. That differs from
- * the ellipsoid's gradient normal at `position` itself by about 0.13 µrad
- * at 250 m height. `options.accuracy` states the placement's
+ * cartographic latitude). This matches the engineering frame's rigid
+ * placement. It differs from the ellipsoid's gradient normal at `position`
+ * itself, which `eastNorthUpToFixedFrame` (the engine's helper) keeps so
+ * that Earth-only scenes render unchanged, by about 0.13 µrad at 250 m
+ * height. `options.accuracy` states the placement's
  * accuracy (1σ); a frame defined at a chosen point is exact by definition.
  */
 export function eastNorthUpFrame<N extends string>(
@@ -79,33 +81,31 @@ export function eastNorthUpFrame<N extends string>(
   position: ArrayLike<number>,
   options?: Pick<FrameOptions, "accuracy">,
 ): Frame<N> {
-  const m = eastNorthUpToFixedFrame(
-    Float64Array.from(position),
-    ellipsoid,
-    mat4(),
-  );
-  // Off the polar axis, up is the normal at the foot: from the cartographic
-  // latitude and longitude, not the gradient at `position`. East is
-  // unchanged (it depends on longitude only); north is up x east.
   const p = Float64Array.from(position);
-  const cartographic = ellipsoid.cartesianToCartographic(p, {
-    longitude: 0,
-    latitude: 0,
-    height: 0,
-  });
-  if (Math.hypot(p[0]!, p[1]!) > EPSILON14 && cartographic !== undefined) {
-    const cosLat = Math.cos(cartographic.latitude);
-    const upX = cosLat * Math.cos(cartographic.longitude);
-    const upY = cosLat * Math.sin(cartographic.longitude);
-    const upZ = Math.sin(cartographic.latitude);
-    const eX = m[0]!,
-      eY = m[1]!;
-    m[8] = upX;
-    m[9] = upY;
-    m[10] = upZ;
-    m[4] = -upZ * eY;
-    m[5] = upZ * eX;
-    m[6] = upX * eY - upY * eX;
+  const m = eastNorthUpToFixedFrame(p, ellipsoid, mat4());
+  // Off the polar axis, up is the normal at the foot, not the gradient at
+  // `position`. The foot shares the position's meridian, so the horizontal
+  // direction comes from x and y (exact, even a few meters from the pole);
+  // the normal gives only how far up it leans.
+  const foot = isOnPolarAxis(p[0]!, p[1]!)
+    ? undefined
+    : ellipsoid.scaleToGeodeticSurface(p, new Float64Array(3));
+  if (foot !== undefined) {
+    const normal = ellipsoid.geodeticSurfaceNormal(foot, new Float64Array(3))!;
+    const horizontal = Math.hypot(normal[0]!, normal[1]!);
+    const lon = Math.atan2(p[1]!, p[0]!);
+    const sinLon = Math.sin(lon);
+    const cosLon = Math.cos(lon);
+    const cosLat = horizontal / Math.hypot(horizontal, normal[2]!);
+    const sinLat = normal[2]! / Math.hypot(horizontal, normal[2]!);
+    m[0] = -sinLon;
+    m[1] = cosLon;
+    m[4] = -sinLat * cosLon;
+    m[5] = -sinLat * sinLon;
+    m[6] = cosLat;
+    m[8] = cosLat * cosLon;
+    m[9] = cosLat * sinLon;
+    m[10] = sinLat;
   }
   return Frame.constant(name, bodyFixed, m, options);
 }
