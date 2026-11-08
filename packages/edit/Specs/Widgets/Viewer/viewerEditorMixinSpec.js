@@ -22,9 +22,9 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     return {
       modeChanged: new Event(),
       activeToolChanged: new Event(),
-      // Used by the outliner and its default provider.
-      meshAdded: new Event(),
-      meshRemoved: new Event(),
+      // Used by the outliner.
+      root: { children: [] },
+      meshGroupChanged: new Event(),
       meshActiveChanged: new Event(),
       meshes: [],
       hasMesh: () => false,
@@ -190,21 +190,10 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
       expect(viewer.container.children.length).toBe(1);
     });
 
-    it("forwards outliner options", function () {
-      const provider = {
-        changed: new Event(),
-        getChildren: () => [],
-        getLabel: () => "",
-        getMesh: () => undefined,
-      };
+    it("shows the editor's hierarchy", function () {
+      viewerEditorMixin(viewer, { editor, outliner: true });
 
-      viewerEditorMixin(viewer, {
-        editor,
-        outliner: true,
-        outlinerOptions: { provider },
-      });
-
-      expect(viewer.editorOutliner.viewModel.provider).toBe(provider);
+      expect(viewer.editorOutliner.viewModel.editor).toBe(editor);
     });
 
     it("is destroyed with the viewer", function () {
