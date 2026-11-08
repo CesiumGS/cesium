@@ -40,18 +40,33 @@ interface Step {
   run(): Promise<Outcome>;
 }
 
+/**
+ * Which GPU to ask for, from `?power=` (default low-power: the integrated GPU
+ * on a laptop with two). Browsers may ignore it; the adapter obtained is shown.
+ */
+const power: GPUPowerPreference =
+  new URLSearchParams(location.search).get("power") === "high-performance"
+    ? "high-performance"
+    : "low-power";
+
+const FORCE_INTEL =
+  "To force the Intel GPU on Windows: Settings, System, Display, Graphics, add Chrome or Edge, Options, choose Power saving, then restart the browser completely. Check chrome://gpu (or edge://gpu) shows the Intel GPU as the active one.";
+
 const $ = <T extends HTMLElement>(id: string) =>
   document.getElementById(id) as T;
 
 // -------------------------------------------------------------- the adapter
 
 interface AdapterReport {
+  /** HTML of the banner at the top: which adapter was obtained. */
+  banner: string;
   text: string[];
   html: string;
   tier: string;
 }
 
 async function adapterReport(): Promise<AdapterReport> {
+  let banner = "";
   const lines: string[] = [];
   const rows: string[] = [];
   const row = (k: string, v: string, cls = "") => {
@@ -63,6 +78,7 @@ async function adapterReport(): Promise<AdapterReport> {
     lines.push(`${k}: ${v}`);
     row(k, v, cls);
   };
+  add("Power preference requested", power);
   add("User agent", navigator.userAgent);
   const brands = (
     navigator as Navigator & {
@@ -77,16 +93,31 @@ async function adapterReport(): Promise<AdapterReport> {
   );
   if (!navigator.gpu) {
     add("WebGPU", "not available in this browser", "fail");
-    return { text: lines, html: table(rows), tier: "none" };
+    return { banner, text: lines, html: table(rows), tier: "none" };
   }
   const adapter = await navigator.gpu.requestAdapter({
-    powerPreference: "high-performance",
+    powerPreference: power,
   });
   if (!adapter) {
     add("Adapter", "none returned", "fail");
-    return { text: lines, html: table(rows), tier: "none" };
+    return { banner, text: lines, html: table(rows), tier: "none" };
   }
   const info = adapter.info;
+  const obtained =
+    `${info.vendor || "?"} ${info.architecture || "?"} ${info.description || ""}`.trim();
+  add("Adapter received", obtained, info.vendor === "intel" ? "pass" : "");
+  if (info.vendor !== "intel") {
+    add(
+      "Note",
+      `The adapter is not Intel (vendor "${info.vendor}"), so these steps do not test Intel. ${FORCE_INTEL}`,
+      "fail",
+    );
+  }
+  banner = `<p><strong>Asked for ${power}. Got: ${esc(obtained)}.</strong></p>${
+    info.vendor === "intel"
+      ? ""
+      : `<p class="fail">This is not an Intel GPU, so the steps below do not test Intel. ${esc(FORCE_INTEL)}</p>`
+  }`;
   add("Vendor", info.vendor || "(empty)");
   add("Architecture", info.architecture || "(empty)");
   add("Device", info.device || "(empty)");
@@ -145,7 +176,7 @@ async function adapterReport(): Promise<AdapterReport> {
   );
   const all = Object.keys(Object.getPrototypeOf(adapter.limits)).sort();
   add("All adapter limits", all.map((k) => `${k}=${limits[k]}`).join(", "));
-  return { text: lines, html: table(rows), tier };
+  return { banner, text: lines, html: table(rows), tier };
 }
 
 function table(rows: string[]): string {
@@ -327,7 +358,7 @@ async function rawStep(
 ): Promise<Outcome> {
   const out = outcome();
   const adapter = await navigator.gpu.requestAdapter({
-    powerPreference: "high-performance",
+    powerPreference: power,
   });
   if (!adapter) {
     out.status = "fail";
@@ -600,7 +631,10 @@ async function engineStep(
     // draw (Engine.warmUp), so a hang can show before any mode runs.
     let lostCallback: ((info: GPUDeviceLostInfo) => void) | undefined;
     const lostEarly: GPUDeviceLostInfo[] = [];
-    const creating = Engine.create({ recoverFromLoss: false });
+    const creating = Engine.create({
+      recoverFromLoss: false,
+      powerPreference: power,
+    });
     engine = await Promise.race([
       creating,
       delay(TIMEOUT_MS * 2).then(() => undefined),
@@ -611,6 +645,10 @@ async function engineStep(
       return out;
     }
     const gpu = engine.gpu;
+    const ei = gpu.adapter.info;
+    out.notes.push(
+      `engine adapter: ${ei.vendor} ${ei.architecture} ${ei.description}`,
+    );
     gpu.events.on("lost", (info) => {
       lostEarly.push(info);
       lostCallback?.(info);
@@ -863,6 +901,7 @@ function buildReport(): string {
     "- Driver version and GPU name: chrome://gpu (or edge://gpu), under Driver Information.",
     "- Windows version (winver), and whether the laptop was on battery or power.",
     "- Whether the screen froze or another app was affected.",
+    `- ${FORCE_INTEL}`,
   );
   return out.join("\n");
 }
@@ -896,6 +935,9 @@ async function main(): Promise<void> {
   try {
     const report = await adapterReport();
     adapterText = report.text;
+    // Every string reaches innerHTML through esc(), so this is not an XSS
+    // sink (a static-analysis finding here is a false positive).
+    $("banner").innerHTML = report.banner;
     $("adapter").innerHTML = report.html;
   } catch (e) {
     adapterText = [`Adapter report failed: ${message(e)}`];
