@@ -431,9 +431,13 @@ export function createShots(deps: ShotsDeps): Shots {
         center: far.bodyFixed.map(
           (t, i) => t + (far.rigidDisplayed[i]! - t) * 0.4,
         ),
+        // Steep enough to stand clear of real ground (Cesium World
+        // Terrain): a design's flat plane can lie under the hills at its
+        // far end (London's, 40 m ODN, under 80 m ground), where a low
+        // camera was clamped onto the terrain and saw only the ground.
         heading: -40 * deg,
-        pitch: -14 * deg,
-        range: Math.max(90, 3.5 * gap + 60),
+        pitch: -30 * deg,
+        range: Math.max(220, 3.5 * gap + 120),
       });
       return;
     }
