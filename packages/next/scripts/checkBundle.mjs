@@ -8,6 +8,13 @@
 // providers load by dynamic `import()`, so they belong in chunks of their
 // own, reached only through it.
 //
+// A second build, of an app that styles 3D Tiles (a Viewer and a
+// `FeatureStyle`), checks the same of the Slang compiler's modules
+// (src/scene/slang.ts and its worker): styling compiles to WGSL in
+// TypeScript, and only `CustomShader.fromSlang` imports them, dynamically,
+// so they must sit in a lazy chunk. The check reads each chunk's modules,
+// so it needs no marker in the code.
+//
 //   node scripts/checkBundle.mjs [--keep]
 //
 // `--keep` leaves the build in the temporary directory and prints where.
@@ -61,16 +68,18 @@ function hasRun(numbers, values) {
   return false;
 }
 
-const work = mkdtempSync(join(tmpdir(), "cesium-next-bundle-"));
-try {
-  const entry = join(work, "globeOnlyViewer.js");
-  // What an app that shows the globe writes: a Viewer with the defaults.
-  writeFileSync(
-    entry,
-    `import { Viewer } from ${JSON.stringify(join(root, "widgets/index.ts"))};\n` +
-      `void Viewer.create(document.body);\n`,
-  );
-  const outDir = join(work, "dist");
+/** The Slang compiler's modules (a module id may carry a `?worker&url` query). */
+const SLANG_MODULES = /[\\/]src[\\/]scene[\\/]slang(?:Worker)?\.ts(?:\?|$)/;
+
+/**
+ * Builds a page that runs `code` as its only entry (`name`) and returns
+ * what loads with it (`eager`: the main chunk and the chunks it imports
+ * statically, transitively) and what loads on demand (`lazy`).
+ */
+async function buildPage(work, name, code) {
+  const entry = join(work, `${name}.js`);
+  writeFileSync(entry, code);
+  const outDir = join(work, `dist-${name}`);
   const result = await build({
     configFile: false,
     root,
@@ -84,7 +93,7 @@ try {
       target: "es2023",
       assetsInlineLimit: 0,
       reportCompressedSize: false,
-      rollupOptions: { input: { globeOnlyViewer: entry } },
+      rollupOptions: { input: { [name]: entry } },
     },
     worker: { format: "es", plugins: () => [basisTranscoderEsm()] },
   });
@@ -92,13 +101,11 @@ try {
     (r) => r.output,
   );
   const main = outputs.find(
-    (o) => o.type === "chunk" && o.isEntry && o.name === "globeOnlyViewer",
+    (o) => o.type === "chunk" && o.isEntry && o.name === name,
   );
   if (!main) {
     throw new Error("checkBundle: the build has no main chunk");
   }
-  // What loads with the page: the main chunk and the chunks it imports
-  // statically (all of them, transitively). The rest loads on demand.
   const chunks = new Map(
     outputs.filter((o) => o.type === "chunk").map((c) => [c.fileName, c]),
   );
@@ -121,6 +128,18 @@ try {
       queue.push(...chunk.imports, ...chunk.dynamicImports);
     }
   }
+  return { main, eager, lazy, outDir };
+}
+
+const work = mkdtempSync(join(tmpdir(), "cesium-next-bundle-"));
+try {
+  // What an app that shows the globe writes: a Viewer with the defaults.
+  const { main, eager, lazy, outDir } = await buildPage(
+    work,
+    "globeOnlyViewer",
+    `import { Viewer } from ${JSON.stringify(join(root, "widgets/index.ts"))};\n` +
+      `void Viewer.create(document.body);\n`,
+  );
   const kb = (code) => (Buffer.byteLength(code) / 1024).toFixed(1);
   const code = eager.map((c) => c.code).join("\n");
   console.log(
@@ -142,9 +161,39 @@ try {
   if (keep) {
     console.log(`build kept in ${outDir}`);
   }
+  // An app that styles 3D Tiles and could compile Slang shaders at run
+  // time: the compiler must be a chunk of its own, loaded on demand.
+  const styled = await buildPage(
+    work,
+    "styledViewer",
+    `import { Viewer } from ${JSON.stringify(join(root, "widgets/index.ts"))};\n` +
+      `import { CustomShader, FeatureStyle } from ${JSON.stringify(join(root, "src/index.ts"))};\n` +
+      `const style = new FeatureStyle({ show: "\${name} !== 'Main St'", color: "color('red')" });\n` +
+      `void Viewer.create(document.body);\n` +
+      `void CustomShader.fromSlang("", { label: String(style.properties) });\n`,
+  );
+  const slangIn = (chunks) =>
+    chunks.filter((c) =>
+      Object.keys(c.modules).some((id) => SLANG_MODULES.test(id)),
+    );
+  const slangEager = slangIn(styled.eager);
+  const slangLazy = slangIn(styled.lazy);
+  if (slangEager.length > 0) {
+    found.push(
+      `the Slang compiler (src/scene/slang.ts) in ${slangEager.map((c) => c.fileName).join(", ")}, in what an app that styles 3D Tiles loads with the page`,
+    );
+  } else if (slangLazy.length === 0) {
+    found.push(
+      "no Slang compiler in any chunk of the styled build: this check can no longer tell where it is",
+    );
+  } else {
+    console.log(
+      `checkBundle: the Slang compiler is in ${slangLazy.map((c) => `${c.fileName} (${kb(c.code)} KB)`).join(", ")}, loaded on demand; not in the main chunk or its static imports of an app that styles 3D Tiles`,
+    );
+  }
   if (found.length > 0) {
     console.error(
-      `checkBundle: what a globe-only Viewer loads with the page holds ${found.join(", ")}; the precise providers must load by dynamic import()`,
+      `checkBundle: what loads with the page holds ${found.join(", ")}; the precise providers and the Slang compiler must load by dynamic import()`,
     );
     process.exitCode = 1;
   } else {
