@@ -20,8 +20,36 @@ export class Camera {
   readonly right = v3.vec3(1, 0, 0);
   fov = Math.PI / 3;
   near = 0.1;
-  /** Incremented on every change so views and links can detect motion cheaply. */
-  version = 0;
+  private version_ = 0;
+  private readonly watchers: Array<() => void> = [];
+
+  /**
+   * Incremented on every change so views and links can detect motion
+   * cheaply. Each increment (also `camera.version++` after writing the
+   * vectors in place) calls the watchers: the engine's frame loop, which
+   * sleeps on demand when nothing changes, wakes for it.
+   */
+  get version(): number {
+    return this.version_;
+  }
+  set version(version: number) {
+    this.version_ = version;
+    const watchers = this.watchers;
+    for (let i = 0; i < watchers.length; i++) {
+      watchers[i]!();
+    }
+  }
+
+  /** Calls `watcher` on each change (`version`); returns the remover. */
+  watch(watcher: () => void): () => void {
+    this.watchers.push(watcher);
+    return () => {
+      const i = this.watchers.indexOf(watcher);
+      if (i >= 0) {
+        this.watchers.splice(i, 1);
+      }
+    };
+  }
 
   copyFrom(other: Camera): this {
     v3.copy(this.position, other.position);

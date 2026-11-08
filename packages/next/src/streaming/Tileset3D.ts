@@ -370,7 +370,7 @@ export class Tileset3D implements TileTree {
       return;
     }
     this.collision = value;
-    this.lastChange = this.frame;
+    this.changed();
     const visit = (tile: Tile) => {
       for (const draw of tile.placement?.draws ?? []) {
         this.world.setCollision(draw, value);
@@ -415,7 +415,7 @@ export class Tileset3D implements TileTree {
       }
     }
     this.moveVolumes(this.root, change);
-    this.lastChange = this.frame;
+    this.changed();
     if (changed && this.placement !== undefined) {
       this.placement = undefined;
       this.warnings.add(
@@ -461,7 +461,7 @@ export class Tileset3D implements TileTree {
   ): Promise<{ draws: DrawHandle[]; release(): void }> {
     return new Promise((resolve, reject) => {
       this.queries.push({ rays, resolve, reject, pinned: [] });
-      this.lastChange = this.frame;
+      this.changed();
     });
   }
   private readonly queries: Array<{
@@ -558,7 +558,7 @@ export class Tileset3D implements TileTree {
   set show(value: boolean) {
     if (value !== this.shown) {
       this.shown = value;
-      this.lastChange = this.frame; // update the views' masks next frame
+      this.changed(); // update the views' masks next frame
     }
   }
   private shown = true;
@@ -573,7 +573,7 @@ export class Tileset3D implements TileTree {
   set freezeSelection(value: boolean) {
     if (value !== this.frozen) {
       this.frozen = value;
-      this.lastChange = this.frame; // select again as soon as it thaws
+      this.changed(); // select again as soon as it thaws
     }
   }
   private frozen = false;
@@ -590,7 +590,7 @@ export class Tileset3D implements TileTree {
       for (const tile of this.masked) {
         this.applyDebugColor(tile);
       }
-      this.lastChange = this.frame;
+      this.changed();
     }
   }
   private colorize = false;
@@ -606,7 +606,7 @@ export class Tileset3D implements TileTree {
   set debugTileColor(fn: ((tile: Tile) => DebugColor | undefined) | undefined) {
     this.tileColor = fn;
     this.updateDebug();
-    this.lastChange = this.frame;
+    this.changed();
   }
   private tileColor?: (tile: Tile) => DebugColor | undefined;
   private applyDebugColor(tile: Tile): void {
@@ -645,7 +645,7 @@ export class Tileset3D implements TileTree {
         ? new DebugVolumes(this.world, this.transform)
         : undefined;
       this.updateDebug();
-      this.lastChange = this.frame;
+      this.changed();
     }
   }
   private boundingVolumes?: DebugVolumes;
@@ -660,7 +660,7 @@ export class Tileset3D implements TileTree {
         ? new DebugVolumes(this.world, this.transform)
         : undefined;
       this.updateDebug();
-      this.lastChange = this.frame;
+      this.changed();
     }
   }
   private contentVolumes?: DebugVolumes;
@@ -716,6 +716,16 @@ export class Tileset3D implements TileTree {
   private source?: TileSource;
   /** Last frame in which an update changed anything. */
   private lastChange = 0;
+
+  /**
+   * What the tileset draws changed: it stays `active` for the next updates,
+   * and the engine's frame loop (asleep on demand once nothing changes)
+   * wakes for them.
+   */
+  private changed(): void {
+    this.lastChange = this.frame;
+    this.engine.wake();
+  }
   private readonly cacheBytes: number;
   /** The world pool an upload last found full (`CapacityError.pool`). */
   private capacityFull?: string;
@@ -909,7 +919,7 @@ export class Tileset3D implements TileTree {
       }
     };
     reset(this.root);
-    this.lastChange = this.frame;
+    this.changed();
   }
 
   /**
@@ -1000,7 +1010,7 @@ export class Tileset3D implements TileTree {
       }
       budget.ms -= performance.now() - start;
       budget.trees++;
-      this.lastChange = this.frame;
+      this.changed();
     }
   }
 
@@ -1016,6 +1026,27 @@ export class Tileset3D implements TileTree {
       // Wanted tiles still waiting for a request slot (the origin's window,
       // shared with other tilesets, may be full).
       this.wanted.size > 0 ||
+      this.frame - this.lastChange < 3 ||
+      this.imagery?.busy === true ||
+      this.imageryPending ||
+      this.selection.memoryAdjustedScreenSpaceError !==
+        this.selection.maximumScreenSpaceError
+    );
+  }
+
+  /**
+   * Needs the engine's loop to keep ticking: `active`, except for loads in
+   * flight alone (their completion wakes the loop, `changed`). Content
+   * waiting to upload, trees to build, tiles waiting for a request slot,
+   * height queries, a recent change, imagery, or the memory-adjusted SSE
+   * still moving.
+   */
+  get needsFrames(): boolean {
+    return (
+      this.ready.length > 0 ||
+      this.externals.length > 0 ||
+      this.wanted.size > 0 ||
+      this.queries.length > 0 ||
       this.frame - this.lastChange < 3 ||
       this.imagery?.busy === true ||
       this.imageryPending ||
@@ -1322,7 +1353,7 @@ export class Tileset3D implements TileTree {
           // Any completion is a change, also one without content to upload
           // (an external tileset's children need selecting, a failure needs
           // reporting): stay active for the next updates.
-          this.lastChange = this.frame;
+          this.changed();
         });
     }
   }

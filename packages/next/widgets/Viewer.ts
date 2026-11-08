@@ -270,7 +270,8 @@ export class Viewer {
   private zoomToken = 0;
   private credits_?: CreditsHandle;
   private inspector?: InspectorHandle;
-  private frameRequest = 0;
+  /** Stops the viewer's per-frame work (`Engine.onTick`). */
+  private readonly offTick: () => void;
   /** New views (a split's second) get the main view's shadows and AO. */
   private readonly shadows: boolean;
   private readonly ambientOcclusion: boolean;
@@ -465,14 +466,16 @@ export class Viewer {
       // background (or a loading screen) shows.
       this.resumeStart = this.suspendPresentation({ hide: true });
     }
-    engine.start();
-    const tick = () => {
+    // The viewer's per-frame work runs in the engine's ticks (one
+    // animation frame loop, which sleeps on demand once nothing changes).
+    // Busy while the clock runs, or a frame is still to show the canvas.
+    this.offTick = engine.onTick((now) => {
       if (this.destroyed) {
-        return;
+        return false;
       }
       this.controller.update();
       this.secondController?.update();
-      this.clock.tick(performance.now());
+      this.clock.tick(now);
       if (
         this.unhideAfter !== undefined &&
         (this.hidingSuspensions > 0 ||
@@ -483,9 +486,12 @@ export class Viewer {
         }
         this.unhideAfter = undefined;
       }
-      this.frameRequest = requestAnimationFrame(tick);
-    };
-    this.frameRequest = requestAnimationFrame(tick);
+      return (
+        this.clock.mode !== "paused" ||
+        (this.unhideAfter !== undefined && this.suspensions === 0)
+      );
+    });
+    engine.start();
   }
 
   /** A viewer filling `container` (made positioned if it isn't). */
@@ -1248,7 +1254,7 @@ export class Viewer {
     this.destroyed = true;
     this.moonMapLoad.abort();
     this.orbit_?.dispose();
-    cancelAnimationFrame(this.frameRequest);
+    this.offTick();
     this.credits_?.dispose();
     this.inspector?.dispose();
     this.time_?.dispose();

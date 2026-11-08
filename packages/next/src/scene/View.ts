@@ -368,9 +368,6 @@ export type ViewBackground = "atmosphere" | "color";
 export class View {
   readonly camera: Camera;
   readonly target: RenderTarget;
-  world: World;
-  viewport: Viewport;
-  exposure: Exposure;
   /**
    * The multiplier from the light in the scene to what is tonemapped, as
    * of the last frame (automatic exposure moves it). Shading applies it
@@ -395,22 +392,104 @@ export class View {
   };
   /** The body whose sky and light the view sees. */
   readonly body: Body;
-  background: ViewBackground;
-  sunDisk: boolean;
-  aerialPerspective: boolean;
   shadows: boolean;
   ambientOcclusion: boolean;
   ambientOcclusionRadius: number;
   translucency: Translucency;
   fxaa: boolean;
   cityLights: boolean;
-  clearColor: readonly [number, number, number];
-  outputEncoding: OutputEncoding;
-  toneMapping: ToneMapping;
   /** The sun's illuminance and image-based lighting factors. */
   lighting: ViewLighting;
+  /**
+   * @internal Wakes the engine's frame loop (it sleeps on demand when
+   * nothing changes): set by `Engine.addView`, called when what the view's
+   * on-demand fingerprint reads is set, and for a pick.
+   */
+  wake?: () => void;
+  private readonly state = {} as {
+    world: World;
+    viewport: Viewport;
+    exposure: Exposure;
+    background: ViewBackground;
+    sunDisk: boolean;
+    aerialPerspective: boolean;
+    clearColor: readonly [number, number, number];
+    outputEncoding: OutputEncoding;
+    toneMapping: ToneMapping;
+    enabled: boolean;
+  };
+
+  get world(): World {
+    return this.state.world;
+  }
+  set world(value: World) {
+    this.state.world = value;
+    this.wake?.();
+  }
+  get viewport(): Viewport {
+    return this.state.viewport;
+  }
+  set viewport(value: Viewport) {
+    this.state.viewport = value;
+    this.wake?.();
+  }
+  get exposure(): Exposure {
+    return this.state.exposure;
+  }
+  set exposure(value: Exposure) {
+    this.state.exposure = value;
+    this.wake?.();
+  }
+  get background(): ViewBackground {
+    return this.state.background;
+  }
+  set background(value: ViewBackground) {
+    this.state.background = value;
+    this.wake?.();
+  }
+  get sunDisk(): boolean {
+    return this.state.sunDisk;
+  }
+  set sunDisk(value: boolean) {
+    this.state.sunDisk = value;
+    this.wake?.();
+  }
+  get aerialPerspective(): boolean {
+    return this.state.aerialPerspective;
+  }
+  set aerialPerspective(value: boolean) {
+    this.state.aerialPerspective = value;
+    this.wake?.();
+  }
+  get clearColor(): readonly [number, number, number] {
+    return this.state.clearColor;
+  }
+  set clearColor(value: readonly [number, number, number]) {
+    this.state.clearColor = value;
+    this.wake?.();
+  }
+  get outputEncoding(): OutputEncoding {
+    return this.state.outputEncoding;
+  }
+  set outputEncoding(value: OutputEncoding) {
+    this.state.outputEncoding = value;
+    this.wake?.();
+  }
+  get toneMapping(): ToneMapping {
+    return this.state.toneMapping;
+  }
+  set toneMapping(value: ToneMapping) {
+    this.state.toneMapping = value;
+    this.wake?.();
+  }
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
-  enabled = true;
+  get enabled(): boolean {
+    return this.state.enabled;
+  }
+  set enabled(value: boolean) {
+    this.state.enabled = value;
+    this.wake?.();
+  }
   readonly overlays: Overlay[] = [];
   /** @internal */
   pendingPicks: Array<{
@@ -445,6 +524,7 @@ export class View {
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.toneMapping = options.toneMapping ?? "pbrNeutral";
+    this.enabled = true;
     this.lighting = {
       sunIlluminance: "atmosphere",
       environment: "atmosphere",
@@ -523,7 +603,10 @@ export class View {
    * top-left). Resolves a few frames later; no extra render is needed.
    */
   pick(x: number, y: number): Promise<PickResult | undefined> {
-    return new Promise((resolve) => this.pendingPicks.push({ x, y, resolve }));
+    return new Promise((resolve) => {
+      this.pendingPicks.push({ x, y, resolve });
+      this.wake?.();
+    });
   }
 
   /**
@@ -541,8 +624,9 @@ export class View {
    * few frames later, with the camera of the frame it was read in.
    */
   pickPosition(x: number, y: number): Promise<Float64Array | undefined> {
-    return new Promise((resolvePosition) =>
-      this.pendingPicks.push({ x, y, resolvePosition }),
-    );
+    return new Promise((resolvePosition) => {
+      this.pendingPicks.push({ x, y, resolvePosition });
+      this.wake?.();
+    });
   }
 }

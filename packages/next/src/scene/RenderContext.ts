@@ -278,6 +278,11 @@ export interface RenderContext {
   shaders: ShaderCache;
   /** Custom shaders' uniforms and textures (`flush` before frames). */
   shaderBindings: ShaderBindings;
+  /**
+   * Wakes the engine's frame loop, which sleeps on demand once nothing
+   * changes (`Engine.wake`): worlds and bindings call it on a change.
+   */
+  wake: () => void;
   defaults: Defaults;
   mips: MipGenerator;
   environment: Environment;
@@ -450,6 +455,7 @@ export async function createRenderContext(
     pipelines,
     shaders: new ShaderCache((shader) => pipelines.surface(shader), errors),
     shaderBindings: new ShaderBindings(device, { whiteView }, mips),
+    wake: () => {},
     defaults: {
       whiteView,
       sampler: device.createSampler({

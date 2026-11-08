@@ -131,7 +131,50 @@ export class HeightClamping {
     private readonly viewMask: (world: World) => number,
     /** Most detailed ground heights (`Engine.sampleHeightMostDetailed`). */
     private readonly sample: SampleHeights,
+    /**
+     * Wakes the engine's frame loop (it sleeps on demand once nothing
+     * changes): new content to clamp, and heights that arrived.
+     */
+    private readonly wake: () => void = () => {},
   ) {}
+
+  /**
+   * Work waits for a later `update`: re-clamps not yet applied, or a cast
+   * held back by `CAST_INTERVAL` while collision tilesets changed. The
+   * engine's loop keeps ticking meanwhile; what arrives asynchronously
+   * (samples, casts) wakes it.
+   */
+  get busy(): boolean {
+    if (this.entries.size === 0) {
+      return false;
+    }
+    for (const e of this.entries) {
+      if (e.dirty) {
+        return true;
+      }
+    }
+    if (this.casting) {
+      return false; // its end wakes the loop
+    }
+    const colliders = this.tilesets().filter(
+      (t) => t.show && t.enableCollision,
+    );
+    if (colliders.length === 0) {
+      return false;
+    }
+    const changed =
+      colliders.map((t) => t.changedAt).join("|") !== this.castSignature;
+    for (const e of this.entries) {
+      if (
+        usesTiles(e.options.heightReference) &&
+        (e.cast || changed) &&
+        colliders.some((t) => t.world === e.world)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /** Clamps what `transform` places (e.g. a model) per `options`. */
   add(world: World, transform: TransformHandle, options: ClampOptions): Clamp {
@@ -171,6 +214,7 @@ export class HeightClamping {
       },
     };
     this.entries.add(entry);
+    this.wake();
     return entry;
   }
 
@@ -292,6 +336,7 @@ export class HeightClamping {
               e.dirty = true;
             }
           });
+          this.wake();
         });
     }
   }
@@ -378,6 +423,7 @@ export class HeightClamping {
       })
       .finally(() => {
         this.casting = false;
+        this.wake();
       });
   }
 

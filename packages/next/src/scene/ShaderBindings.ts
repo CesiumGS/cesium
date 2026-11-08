@@ -36,6 +36,8 @@ export class ShaderBindings {
   private changed = false;
   /** Bumped when any shader's textures change: worlds record again. */
   generation = 0;
+  /** Wakes the engine's frame loop for a change (`RenderContext.wake`). */
+  wake: () => void = () => {};
 
   constructor(
     private readonly device: GPUDevice,
@@ -127,6 +129,7 @@ export class ShaderBindings {
     // Changes reach the device before the next frame, which they request.
     shader.onChange(() => {
       this.changed = true;
+      this.wake();
     });
     this.loadTextures(shader, r);
     return r;
@@ -186,6 +189,7 @@ export class ShaderBindings {
           r.version++;
           this.generation++;
           this.changed = true;
+          this.wake();
         },
         (error: unknown) => {
           console.error(

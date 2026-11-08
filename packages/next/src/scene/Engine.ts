@@ -137,7 +137,10 @@ export interface FrameStats {
   framesRendered: number;
   /** Frames the GPU rejected (validation): each drew nothing. */
   rejectedFrames: number;
-  /** The last tick rendered nothing (on demand, nothing changed). */
+  /**
+   * The last tick rendered nothing (on demand, nothing changed), or the
+   * loop sleeps (`Engine.wake`).
+   */
   idle: boolean;
   /** Environments rebuilt from an atmosphere since start (`ViewLighting`). */
   environmentBuilds: number;
@@ -255,6 +258,7 @@ export class Engine {
     },
     (world, positions, tilesets) =>
       this.sampleHeightMostDetailed(world, positions, { tilesets }),
+    () => this.wake(),
   );
   readonly stats: FrameStats = {
     cpuMs: 0,
@@ -280,8 +284,24 @@ export class Engine {
    * visible changed (a camera, view, world, the sun, streamed content) or
    * `requestRender()` was called; "continuous": every animation frame.
    * `renderFrame()` always renders.
+   *
+   * On demand, the loop also stops asking for animation frames once
+   * nothing is changing, and wakes (`wake`) for what changes: a camera
+   * (`Camera.version`), a view's fingerprinted state or a pick, a world's
+   * draws, a tileset's content or settings, a resized canvas, a custom
+   * shader's uniforms, clamping, `requestRender`, or a tick listener still
+   * busy (`onTick`). State changed in place where the engine can't see it
+   * (`sunDirection`, a camera's vectors without `version++`, a view's
+   * `lighting`) needs `requestRender()`, as it already did to render.
    */
-  renderMode: "onDemand" | "continuous" = "onDemand";
+  get renderMode(): "onDemand" | "continuous" {
+    return this.renderMode_;
+  }
+  set renderMode(mode: "onDemand" | "continuous") {
+    this.renderMode_ = mode;
+    this.wake();
+  }
+  private renderMode_: "onDemand" | "continuous" = "onDemand";
   /** Unit vector toward the sun in Earth-fixed axes. Placeholder until the 1.x sun model lands. */
   readonly sunDirection: Vec3 = v3.vec3(1, 0, 0);
   /**
@@ -423,6 +443,13 @@ export class Engine {
   private readonly commandBuffers: GPUCommandBuffer[] = [];
   private frameNumber = 0;
   private frameHandle = 0;
+  /** An animation frame is requested for the loop (`start`). */
+  private scheduled = false;
+  /** Inside the loop's tick: wakes then are seen by its end (`needsTicks`). */
+  private ticking = false;
+  private readonly tickListeners: Array<(now: number) => boolean> = [];
+  /** Per view: what stops watching its camera and canvas (`addView`). */
+  private readonly viewWatches = new Map<View, () => void>();
   private renderRequested = true;
   /** Fingerprints of the last rendered frame (see viewChanged). */
   private readonly viewKeys = new Map<View, Float64Array>();
@@ -465,6 +492,8 @@ export class Engine {
     this.gpu = gpu;
     this.ctx = ctx;
     this.sky = sky;
+    ctx.wake = () => this.wake();
+    ctx.shaderBindings.wake = ctx.wake;
     // Uncaptured device errors join the engine's (logged once each there).
     gpu.events.on("error", (error) =>
       ctx.errors.report("device", error.message),
@@ -984,6 +1013,7 @@ export class Engine {
       options,
     );
     this.tilesets.push(tileset);
+    this.wake();
     return tileset;
   }
 
@@ -1089,6 +1119,7 @@ export class Engine {
       tileset.imagery = drape(options.imagery);
     }
     this.tilesets.push(tileset);
+    this.wake();
     return tileset;
   }
 
@@ -1098,6 +1129,7 @@ export class Engine {
       this.tilesets.splice(index, 1);
     }
     tileset.destroy();
+    this.wake();
   }
 
   /** Render-target pool usage (transient textures shared by all views). */
@@ -1299,6 +1331,7 @@ export class Engine {
   createWorld(options?: WorldOptions): World {
     const world = new World(this.ctx, options);
     this.worlds.push(world);
+    this.wake();
     return world;
   }
 
@@ -1319,6 +1352,7 @@ export class Engine {
       this.worlds.splice(index, 1);
     }
     world.destroy();
+    this.wake();
   }
 
   addView(options: ViewOptions): View {
@@ -1339,6 +1373,8 @@ export class Engine {
     }
     this.views.push(view);
     this.viewIds.set(view, id);
+    this.watchView(view);
+    this.wake();
     return view;
   }
 
@@ -1351,6 +1387,9 @@ export class Engine {
   }
 
   removeView(view: View): void {
+    this.viewWatches.get(view)?.();
+    this.viewWatches.delete(view);
+    view.wake = undefined;
     this.dropPersistent(view);
     const probe = this.probes.get(view);
     if (probe) {
@@ -1380,11 +1419,43 @@ export class Engine {
     this.overlayResources.get(view)?.buffer.destroy();
     this.overlayResources.get(view)?.params.destroy();
     this.overlayResources.delete(view);
+    this.wake();
+  }
+
+  /**
+   * Wakes the loop for the view's changes: its camera (`Camera.version`),
+   * its fingerprinted state and picks (`View.wake`), and its canvas
+   * resizing (its CSS size or the device pixel ratio).
+   */
+  private watchView(view: View): void {
+    const wake = () => this.wake();
+    view.wake = wake;
+    const unwatch = view.camera.watch(wake);
+    const canvas = view.target instanceof CanvasTarget && view.target.canvas;
+    let resize: ResizeObserver | undefined;
+    if (
+      canvas &&
+      "clientWidth" in canvas &&
+      typeof ResizeObserver !== "undefined"
+    ) {
+      resize = new ResizeObserver(wake);
+      try {
+        // Also a moved window's new pixel ratio (not in Safari).
+        resize.observe(canvas, { box: "device-pixel-content-box" });
+      } catch {
+        resize.observe(canvas);
+      }
+    }
+    this.viewWatches.set(view, () => {
+      unwatch();
+      resize?.disconnect();
+    });
   }
 
   link(source: View, target: View, options: ViewLinkOptions): ViewLink {
     const link = new ViewLink(source, target, options);
     this.links.push(link);
+    this.wake();
     return link;
   }
 
@@ -1393,6 +1464,7 @@ export class Engine {
     if (index >= 0) {
       this.links.splice(index, 1);
       link.dispose();
+      this.wake();
     }
   }
 
@@ -1498,6 +1570,41 @@ export class Engine {
 
   requestRender(): void {
     this.renderRequested = true;
+    this.wake();
+  }
+
+  /**
+   * Asks the loop (`start`) for a tick: on demand it sleeps once nothing
+   * changes, requesting no animation frames, until something wakes it.
+   * The tick renders only if something visible changed; `requestRender`
+   * renders regardless. Engine-side changes wake it themselves (see
+   * `renderMode`); call this for state changed in place that the engine
+   * fingerprints (a camera's vectors written without `version++`).
+   */
+  wake(): void {
+    // A wake inside the tick: its end decides (`needsTicks`).
+    if (this.running && !this.ticking) {
+      this.schedule();
+    }
+  }
+
+  /**
+   * Calls `listener` at the start of each tick of the loop with the
+   * frame's timestamp, before the engine looks for changes (what it moves
+   * renders in the same frame). While a listener returns true (it is still
+   * changing something: a clock playing, an animation), the loop keeps
+   * ticking; returning false lets it sleep until a wake. Returns the
+   * remover.
+   */
+  onTick(listener: (now: number) => boolean): () => void {
+    this.tickListeners.push(listener);
+    this.wake();
+    return () => {
+      const i = this.tickListeners.indexOf(listener);
+      if (i >= 0) {
+        this.tickListeners.splice(i, 1);
+      }
+    };
   }
 
   /**
@@ -1580,18 +1687,74 @@ export class Engine {
     return (performance.now() - this.startTime) / 1000;
   }
 
-  /** Runs the frame loop with requestAnimationFrame until `stop()`. */
+  /**
+   * Runs the frame loop with requestAnimationFrame until `stop()`. On
+   * demand it requests frames only while something changes (`wake`).
+   */
   start(): void {
     // Once: several viewers may share the engine, each starting it.
     if (this.running) {
       return;
     }
     this.running = true;
-    const tick = () => {
+    this.schedule();
+  }
+
+  private schedule(): void {
+    if (!this.scheduled) {
+      this.scheduled = true;
+      this.frameHandle = requestAnimationFrame(this.loop);
+    }
+  }
+
+  private readonly loop = (now: number): void => {
+    this.scheduled = false;
+    if (!this.running) {
+      return;
+    }
+    let busy = false;
+    this.ticking = true;
+    try {
+      // A copy: a listener may remove itself.
+      for (const listener of this.tickListeners.slice()) {
+        busy = listener(now) || busy;
+      }
       this.tick();
-      this.frameHandle = requestAnimationFrame(tick);
-    };
-    this.frameHandle = requestAnimationFrame(tick);
+    } finally {
+      this.ticking = false;
+    }
+    if (busy || this.renderMode_ === "continuous" || this.needsTicks()) {
+      this.schedule();
+    } else {
+      this.stats.idle = true; // asleep: nothing more to render
+    }
+  };
+
+  /**
+   * On demand, what still needs the next tick after this one: a render
+   * asked for since (with a view to draw it), content loading or settling
+   * (`Tileset3D.needsFrames`; loads in flight wake the loop as they end),
+   * clamping, or picks waiting to be served. Anything else changes by a
+   * wake.
+   */
+  private needsTicks(): boolean {
+    const views = this.views;
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      if (
+        view.enabled &&
+        (this.renderRequested || view.pendingPicks.length > 0)
+      ) {
+        return true;
+      }
+    }
+    const tilesets = this.tilesets;
+    for (let i = 0; i < tilesets.length; i++) {
+      if (tilesets[i]!.needsFrames) {
+        return true;
+      }
+    }
+    return this.clamping.busy;
   }
 
   private frameRejected(error: GPUError): void {
@@ -1781,7 +1944,10 @@ export class Engine {
 
   stop(): void {
     this.running = false;
-    cancelAnimationFrame(this.frameHandle);
+    if (this.scheduled) {
+      this.scheduled = false;
+      cancelAnimationFrame(this.frameHandle);
+    }
   }
   private running = false;
 
@@ -3939,6 +4105,10 @@ export class Engine {
 
   destroy(): void {
     this.stop();
+    for (const unwatch of this.viewWatches.values()) {
+      unwatch();
+    }
+    this.viewWatches.clear();
     for (const world of this.worlds) {
       world.destroy();
     }

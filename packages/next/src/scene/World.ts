@@ -632,9 +632,20 @@ export class World {
    * View bits (`Engine.viewBit`) of every record changed since the engine
    * last rendered: the views that can see a change, so on-demand rendering
    * redraws only those. A changed view mask contributes its old and new
-   * bits; a material change, every view.
+   * bits; a material change, every view. A change wakes the engine's
+   * frame loop (`RenderContext.wake`).
    */
-  changedViews = 0;
+  get changedViews(): number {
+    return this.changedViews_;
+  }
+  set changedViews(views: number) {
+    const before = this.changedViews_;
+    this.changedViews_ = views;
+    if (views !== 0 && views !== before) {
+      this.ctx.wake();
+    }
+  }
+  private changedViews_ = 0;
   private readonly textureSets: Array<GPUBindGroup | undefined> = [];
   /** Each texture set's entries, for custom shaders' groups beside them. */
   private readonly textureSetEntries: Array<GPUBindGroupEntry[] | undefined> =
