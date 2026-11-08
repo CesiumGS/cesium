@@ -63,7 +63,7 @@ export interface RayQuery {
   /** The scene time the rays are at, UTC seconds since 1970. */
   readonly seconds: number;
   readonly rays: readonly QueryRay[];
-  /** What they may meet; each ray's answer covers all of them. */
+  /** What they may meet, each once; each ray's answer covers all of them. */
   readonly targets: readonly RayTarget[];
   /**
    * The view whose drawn content the rays meet: its world, and only what it
@@ -147,7 +147,10 @@ export interface StandingQuery {
 export interface SpatialQueries {
   /**
    * Answers the rays later, together with the other queries asked in this
-   * task. Rejects with the signal's reason when it is aborted first.
+   * task. Rejects with the signal's reason when it is aborted first, and
+   * for a query it can't route (a target named twice, an anchor of no
+   * world here, a world removed before the answer); the other queries of
+   * the batch are answered.
    */
   castRays(
     query: RayQuery,
@@ -220,31 +223,74 @@ export function createSpatialQueries(
   let pending: Pending[] = [];
   let scheduled = false;
 
-  const flush = async (): Promise<void> => {
-    scheduled = false;
-    const batch = pending.filter((p) => !p.settled);
-    pending = [];
+  /** Rejects `p` with `error` unless it has settled. */
+  const fail = (p: Pending, error: unknown): void => {
+    if (settle(p)) {
+      p.reject(error);
+    }
+  };
+
+  /**
+   * `routed`'s answers from `backend`, in one batch; when the batch
+   * throws, query by query, so one bad query fails only itself.
+   */
+  const answerAll = async (
+    backend: RayBackend,
+    routed: readonly RayQuery[],
+  ): Promise<Array<RayAnswer[] | { error: unknown }>> => {
+    try {
+      return await backend.answer(routed);
+    } catch (error) {
+      if (routed.length === 1) {
+        return [{ error }];
+      }
+      return Promise.all(
+        routed.map(async (query) => {
+          try {
+            return (await backend.answer([query]))[0]!;
+          } catch (one) {
+            return { error: one };
+          }
+        }),
+      );
+    }
+  };
+
+  const flush = async (queued: readonly Pending[]): Promise<void> => {
+    // What each answer reflects: the state at dispatch. A query whose
+    // route no longer holds (its world removed since it was asked) fails
+    // alone.
+    const batch: Pending[] = [];
+    const revisions: number[] = [];
+    for (const p of queued) {
+      if (p.settled) {
+        continue;
+      }
+      try {
+        host.check?.(p.query);
+        revisions.push(host.revision(p.query));
+        batch.push(p);
+      } catch (error) {
+        fail(p, error);
+      }
+    }
     if (batch.length === 0) {
       return;
     }
-    // What each answer reflects: the state at dispatch.
-    const revisions = batch.map((p) => host.revision(p.query));
     const targets = [...new Set(batch.flatMap((p) => p.query.targets))];
-    const parts = new Map<RayTarget, RayAnswer[][] | { error: unknown }>();
+    const parts = new Map<RayTarget, Array<RayAnswer[] | { error: unknown }>>();
     await Promise.all(
       targets.map(async (target) => {
-        const routed = batch.filter((p) => p.query.targets.includes(target));
+        const routed = batch
+          .filter((p) => p.query.targets.includes(target))
+          .map((p) => p.query);
         const backend = backends[target];
-        try {
-          parts.set(
-            target,
-            backend
-              ? await backend.answer(routed.map((p) => p.query))
-              : routed.map((p) => p.query.rays.map(() => unsupported(target))),
-          );
-        } catch (error) {
-          parts.set(target, { error });
-        }
+        parts.set(
+          target,
+          backend
+            ? await answerAll(backend, routed)
+            : routed.map((q) => q.rays.map(() => unsupported(target))),
+        );
       }),
     );
     const index = new Map<RayTarget, number>();
@@ -255,21 +301,28 @@ export function createSpatialQueries(
       for (const target of query.targets) {
         const k = index.get(target) ?? 0;
         index.set(target, k + 1);
-        const part = parts.get(target)!;
+        const part = parts.get(target)![k]!;
         if ("error" in part) {
           failed ??= part;
         } else {
-          answers.push(part[k]!);
+          answers.push(part);
         }
       }
-      if (!settle(p)) {
+      if (p.settled) {
         return;
       }
       if (failed) {
-        p.reject(failed.error);
+        fail(p, failed.error);
         return;
       }
-      p.resolve({
+      let final: boolean;
+      try {
+        final = !host.loading(query);
+      } catch (error) {
+        fail(p, error);
+        return;
+      }
+      const answer: QueryAnswer = {
         rays: query.rays.map((_, r) =>
           query.targets.length === 0
             ? unsupported(undefined)
@@ -279,8 +332,11 @@ export function createSpatialQueries(
               ),
         ),
         revision: revisions[i]!,
-        final: !host.loading(query),
-      });
+        final,
+      };
+      if (settle(p)) {
+        p.resolve(answer);
+      }
     });
   };
 
@@ -290,6 +346,11 @@ export function createSpatialQueries(
       return Promise.reject(signal.reason);
     }
     try {
+      if (new Set(query.targets).size !== query.targets.length) {
+        throw new Error(
+          `castRays: a target is listed twice (${query.targets.join(", ")}); name each once.`,
+        );
+      }
       host.check?.(query);
     } catch (error) {
       return Promise.reject(error);
@@ -304,11 +365,7 @@ export function createSpatialQueries(
         settled: false,
       };
       if (signal) {
-        entry.onAbort = () => {
-          if (settle(entry)) {
-            reject(signal.reason);
-          }
-        };
+        entry.onAbort = () => fail(entry, signal.reason);
         signal.addEventListener("abort", entry.onAbort, { once: true });
       }
       pending.push(entry);
@@ -317,7 +374,16 @@ export function createSpatialQueries(
         // A task of its own: the caller's code after the call runs first,
         // and every query asked meanwhile joins the batch.
         queueMicrotask(() => {
-          flush().catch((error) => (host.report ?? console.error)(error));
+          scheduled = false;
+          const queued = pending;
+          pending = [];
+          flush(queued).catch((error: unknown) => {
+            // A fault of the interface itself: no query waits for ever.
+            for (const p of queued) {
+              fail(p, error);
+            }
+            (host.report ?? console.error)(error);
+          });
         });
       }
     });
@@ -334,8 +400,13 @@ export function createSpatialQueries(
     let lastFinal = true;
     const report = host.report ?? console.error;
     const ask = (q: RayQuery): void => {
+      try {
+        asked = host.revision(q);
+      } catch (error) {
+        report(error);
+        return;
+      }
       busy = true;
-      asked = host.revision(q);
       castRays(q).then(
         (answer) => {
           busy = false;
@@ -361,16 +432,24 @@ export function createSpatialQueries(
       if (disposed || busy) {
         return; // the answer in flight comes first; the next tick looks again
       }
-      const q = query();
-      if (
-        options.everyTick ||
-        host.revision(q) > asked ||
-        (!lastFinal && !host.loading(q))
-      ) {
-        ask(q);
+      try {
+        const q = query();
+        if (
+          options.everyTick ||
+          host.revision(q) > asked ||
+          (!lastFinal && !host.loading(q))
+        ) {
+          ask(q);
+        }
+      } catch (error) {
+        report(error);
       }
     });
-    ask(query());
+    try {
+      ask(query());
+    } catch (error) {
+      report(error);
+    }
     return {
       dispose: () => {
         disposed = true;
@@ -399,8 +478,9 @@ export function unsupported(target: RayTarget | undefined): RayAnswer {
 /**
  * One ray's answers from each of `targets`, as one: blocked when any is (at
  * the nearest hit), else unknown when any is, else clear; the undecided
- * spans of all; the largest stated error; each target's note. A single
- * target's answer is returned as it is.
+ * spans of all; the largest stated error; each target's note; the
+ * clearance only when its target's block decides, or nothing blocks. A
+ * single target's answer is returned as it is.
  */
 export function combineRayAnswers(
   parts: readonly RayAnswer[],
@@ -410,9 +490,11 @@ export function combineRayAnswers(
     return parts[0]!;
   }
   let hit: RayAnswer["hit"];
+  let decider: RayAnswer | undefined;
   for (const p of parts) {
     if (p.verdict === "blocked" && p.hit && (!hit || p.hit.t < hit.t)) {
       hit = p.hit;
+      decider = p;
     }
   }
   const verdict: RayVerdict = parts.some((p) => p.verdict === "blocked")
@@ -429,7 +511,13 @@ export function combineRayAnswers(
   const note = parts
     .map((p, i) => `${targets[i]}: ${p.accuracy.note}`)
     .join("; ");
-  const clearance = parts.find((p) => p.clearance)?.clearance;
+  // Heights above one target's surface: kept only when that target
+  // decides (its block is the nearest), or when nothing blocks.
+  const measured = parts.find((p) => p.clearance);
+  const clearance =
+    measured && (decider === undefined || decider === measured)
+      ? measured.clearance
+      : undefined;
   return {
     verdict,
     ...(hit && { hit }),

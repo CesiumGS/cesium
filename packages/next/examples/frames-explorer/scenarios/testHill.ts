@@ -7,10 +7,9 @@
 // (frame-tree.body-frame.sight-over-hill) and the tests trace the same hill
 // through the library's `terrainLineOfSight`.
 import { EARTH_MEAN_RADIUS } from "../units.ts";
-import type {
-  TerrainRayTarget,
-  TerrainRayTile,
-} from "../../../src/globe/terrainRay.ts";
+// The terrain a ray query reads, as the package publishes it: rays go
+// through the query interface (`terrainQueries`), never the tracer itself.
+import type { TerrainRayTarget, TerrainRayTile } from "../../../src/index.ts";
 import { LEVEL_ZERO_ERROR } from "../../../src/globe/TerrainSource.ts";
 import { Ellipsoid } from "../../../src/math/ellipsoid.ts";
 

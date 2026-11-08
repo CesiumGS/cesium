@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { Engine } from "../src/scene/Engine.ts";
 import type { MeshData } from "../src/scene/meshes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import { RAY_MODULES, rayBypasses, rayProgram } from "./raySeam.ts";
 
 /**
  * Seams for later WebGPU features (CESIUM2_WEBGPU_PLAN.md §7.1's bindless
@@ -311,33 +312,6 @@ export function bufferBinds(text: string): string[] {
 }
 
 /**
- * Lines of a TypeScript module that reach rays around the query interface:
- * `castTerrainRay` named (imported or called), a tileset's CPU triangles
- * read for rays (`terrainRayTarget(`, `rayTarget(`), a world's GPU cast
- * called (`world.castRays(`), or a tileset's retained geometry read or
- * kept (`tile.geometry`, `retainGeometry`) — `retained` lists those apart,
- * since a module may keep geometry for something other than rays.
- */
-export function raysOutsideQueries(text: string): {
-  rays: number[];
-  retained: number[];
-} {
-  const source = stripComments(text);
-  const find = (pattern: RegExp) =>
-    [
-      ...new Set(
-        [...source.matchAll(pattern)].map((m) => lineAt(source, m.index)),
-      ),
-    ].sort((a, b) => a - b);
-  return {
-    rays: find(
-      /\bcastTerrainRay\b|\.\s*(?:terrainRayTarget|rayTarget)\s*\??\.?\s*\(|\b[Ww]orld\s*\??\.\s*castRays\s*\(/g,
-    ),
-    retained: find(/\b\w*[Tt]ile\s*\??\.\s*geometry\b|\bretainGeometry\b/g),
-  };
-}
-
-/**
  * Modules under `examples/` that keep or read retained geometry for
  * something other than rays, and what for. Rays through it are still
  * flagged by the other rules.
@@ -475,21 +449,61 @@ function overlay() {
 });
 
 describe("the ray seam's detector flags bypasses", () => {
-  it("rays around the query interface, and retained geometry", () => {
-    const module = `import { castTerrainRay } from "../../src/globe/terrainRay.ts";
-// castTerrainRay in a comment is not a call.
-const target = globe.terrainRayTarget(mask);
-const other = source?.rayTarget?.(mask);
-const hits = await viewer.world.castRays(rays, {});
-const fine = await engine.queries.castRays(query);
-const g = tile.geometry?.[0];
-const kept = rigidTile?.geometry;
-const options = { retainGeometry: true };
-const overlay = out.geometry();
-const r = castTerrainRay(from, to, target);`;
-    expect(raysOutsideQueries(module)).toEqual({
-      rays: [1, 3, 4, 5, 11],
-      retained: [7, 8, 9],
+  it("by what imports and names resolve to, and members of any spelling", () => {
+    // Each line marked "rays" or "retained" must be flagged so, and no
+    // other line: aliases, namespaces, the package's index, dynamic and
+    // type imports, members bracketed or destructured, a tile under
+    // another name.
+    const lines = [
+      `import { castTerrainRay } from "../src/globe/terrainRay.ts"; // rays`,
+      `import { castTerrainRay as trace } from "../src/index.ts"; // rays`,
+      `import * as next from "../src/index.ts";`,
+      `import type { TerrainRayTarget } from "../src/globe/terrainRay.ts"; // rays`,
+      `import { drawBackend } from "../src/query/drawBackend.ts"; // rays`,
+      `import { terrainQueries, terrainBackend } from "../src/query/terrainBackend.ts"; // rays`,
+      `import { terrainQueries as fine } from "../src/query/terrainBackend.ts";`,
+      `import type { Tile } from "../src/streaming/Tile.ts";`,
+      `import type { World } from "../src/scene/World.ts";`,
+      `import type { Engine } from "../src/scene/Engine.ts";`,
+      `export * from "../src/query/drawBackend.ts"; // rays`,
+      `export { globeTarget } from "../src/query/terrainBackend.ts"; // rays`,
+      `declare const tile: Tile;`,
+      `declare const world: World;`,
+      `declare const engine: Engine;`,
+      `declare const target: TerrainRayTarget;`,
+      `// castTerrainRay and world.castRays in a comment are no call.`,
+      `void next.castTerrainRay; // rays`,
+      `void trace; // rays`,
+      `const w = world;`,
+      `void w.castRays([], {}); // rays`,
+      `void engine.queries.castRays({ anchor: undefined, seconds: 0, rays: [], targets: [] });`,
+      `const q = engine.queries;`,
+      `void q.castRays({ anchor: undefined, seconds: 0, rays: [], targets: [] });`,
+      `void world["castRays"]; // rays`,
+      `const { castRays } = world; // rays`,
+      `void castRays;`,
+      `void engine.tilesets[0]!.terrainRayTarget(1); // rays`,
+      `const t = tile;`,
+      `void t.geometry; // retained`,
+      `const { geometry } = tile; // retained`,
+      `void geometry;`,
+      `void tile["geometry"]; // retained`,
+      `const overlay = { geometry: 1 };`,
+      `void overlay.geometry;`,
+      `const options = { retainGeometry: true }; // retained`,
+      `void options;`,
+      `void (await import("../src/globe/terrainRay.ts")); // rays`,
+      `void fine; void target;`,
+      `void terrainQueries; void terrainBackend; // rays`,
+      `export {};`,
+    ];
+    const marked = (mark: string) =>
+      lines.flatMap((l, i) => (l.endsWith(`// ${mark}`) ? [i + 1] : []));
+    const path = join(root, "examples", "__ray_seam_snippet__.ts");
+    const program = rayProgram([], { [path]: lines.join("\n") });
+    expect(rayBypasses(program, program.getSourceFile(path)!)).toEqual({
+      rays: marked("rays"),
+      retained: marked("retained"),
     });
   });
 });
@@ -701,17 +715,19 @@ describe("DrawArguments.slotOf", () => {
 describe("the ray seam", () => {
   const examples = join(root, "examples");
   const measure = join(src, "measure");
-  const query = join(src, "query");
+  let program: ReturnType<typeof rayProgram>;
+  let scanned: string[];
+  beforeAll(() => {
+    scanned = [...files(examples, /\.ts$/), ...files(measure, /\.ts$/)];
+    program = rayProgram(scanned);
+  });
 
   it("examples and measure reach rays only through the query interface", () => {
     const violations: string[] = [];
     const allowed = new Set<string>();
-    for (const path of [
-      ...files(examples, /\.ts$/),
-      ...files(measure, /\.ts$/),
-    ]) {
+    for (const path of scanned) {
       const where = relative(root, path);
-      const found = raysOutsideQueries(readFileSync(path, "utf8"));
+      const found = rayBypasses(program, program.getSourceFile(path)!);
       for (const line of found.rays) {
         violations.push(`${where}:${line} reaches rays around src/query`);
       }
@@ -730,17 +746,14 @@ describe("the ray seam", () => {
     expect([...allowed].sort()).toEqual(
       Object.keys(RETAINED_NOT_FOR_RAYS).sort(),
     );
-  });
+  }, 120_000);
 
   it("the query interface's backends are where rays are reached", () => {
-    const terrain = raysOutsideQueries(
-      readFileSync(join(query, "terrainBackend.ts"), "utf8"),
-    ).rays;
-    const draws = raysOutsideQueries(
-      readFileSync(join(query, "drawBackend.ts"), "utf8"),
-    ).rays;
+    const scan = (path: string) =>
+      rayBypasses(program, program.getSourceFile(path)!).rays;
     // castTerrainRay imported and called, the globe's ray target read.
-    expect(terrain.length).toBeGreaterThanOrEqual(3);
-    expect(draws.length).toBeGreaterThanOrEqual(1);
+    expect(scan(RAY_MODULES.terrainBackend).length).toBeGreaterThanOrEqual(3);
+    // The world's GPU cast called.
+    expect(scan(RAY_MODULES.drawBackend).length).toBeGreaterThanOrEqual(1);
   });
 });

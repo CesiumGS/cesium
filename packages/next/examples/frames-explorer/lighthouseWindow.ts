@@ -12,16 +12,20 @@
 //
 // A minute over terrain not drawn, or drawn only coarsely, is in no window,
 // and nothing is "in sight" within the terrain's error (Review Focus 2).
-// Each minute is asked through the engine's query interface and answered
-// asynchronously; a scan cancelled or replaced meanwhile (its generation)
-// publishes nothing. It runs on demand, in slices of about 8 ms so no
-// frame waits long: when the mast's height or the datum changes (what was
-// found for the old one goes at once), and 1.5 s after the terrain's
-// heights last changed as tiles load. A running scan finishes; heights that
-// change meanwhile queue one more. Never per frame.
+// Each slice asks its minutes through the engine's query interface as one
+// batch, answered asynchronously; a scan cancelled or replaced meanwhile
+// (its generation) publishes nothing. It runs on demand, in slices of
+// about 8 ms so no tick waits long: when the mast's height or the datum
+// changes (what was found for the old one goes at once), and 1.5 s after
+// the terrain's heights last changed as tiles load. A running scan
+// finishes; heights that change meanwhile queue one more. Never on every
+// tick.
 import { frameTransform } from "../../src/frames/Frame.ts";
 import type { Frames } from "../../src/frames/frames.ts";
-import { terrainLineOfSight } from "../../src/measure/terrainLineOfSight.ts";
+import {
+  terrainLineOfSight,
+  type TerrainLineOfSight,
+} from "../../src/measure/terrainLineOfSight.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import type { Moment, ScenarioEvaluation } from "./scenarios/evaluate.ts";
@@ -265,31 +269,40 @@ export function createLighthouseWindow(deps: {
       view: viewer.view,
       groundRadius: LIGHTHOUSE_GROUND,
     };
+    /** The last slice's cost per minute traced, ms (none yet: one minute first). */
+    let perSample: number | undefined;
     const step = async (): Promise<void> => {
       if (mine !== generation) {
         return;
       }
       // About 8 ms of the main thread per slice (review finding 1), at
-      // least one trace.
+      // least one trace: the minutes the last slice's cost says fit, asked
+      // together as one batch.
       const t0 = performance.now();
-      do {
-        const t = startTdb + out.length * WINDOW_STEP;
+      const count = Math.min(
+        samples - out.length,
+        perSample === undefined
+          ? 1
+          : Math.max(1, Math.floor(SLICE_MS / Math.max(perSample, 1e-3))),
+      );
+      const asked: Promise<TerrainLineOfSight>[] = [];
+      for (let k = 0; k < count; k++) {
+        const t = startTdb + (out.length + k) * WINDOW_STEP;
         const m = frameTransform(mast, frames.itrf, Instant.fromTdb(t));
         const placed = placeObserver(
           { from: [m[12]!, m[13]!, m[14]!], to: Array.from(light) },
           (lon, lat) => globe.surfaceHeight(lon, lat),
         );
-        const r = await terrainLineOfSight(
-          placed.from,
-          placed.to,
-          queries,
-          options,
+        asked.push(
+          terrainLineOfSight(placed.from, placed.to, queries, options),
         );
-        if (mine !== generation) {
-          return; // cancelled, or a newer scan began: this one publishes nothing
-        }
-        out.push(sampleOf(r));
-      } while (out.length < samples && performance.now() - t0 < SLICE_MS);
+      }
+      const answers = await Promise.all(asked);
+      if (mine !== generation) {
+        return; // cancelled, or a newer scan began: this one publishes nothing
+      }
+      out.push(...answers.map(sampleOf));
+      perSample = (performance.now() - t0) / count;
       busy += performance.now() - t0;
       if (out.length < samples) {
         slice = window.setTimeout(run, 0);

@@ -543,14 +543,16 @@ export class World {
   }
   private anchorPlaceRevision_ = 0;
   /**
-   * Counts draws added and removed (`addDraw`, `removeDraw`): as tiles
-   * load and unload, among the rest. The query interface reports it as the
-   * revision of what a ray may meet (`Engine.queries`).
+   * Counts changes to what a ray may meet: draws added and removed
+   * (`addDraw`, `removeDraw`), a draw's views changed (`setViewMask`, as
+   * selections show and hide cached tiles), and terrain clip regions added
+   * or removed. The query interface reports it as the revision of what a
+   * ray may meet (`Engine.queries`).
    */
-  get drawRevision(): number {
-    return this.drawRevision_;
+  get contentRevision(): number {
+    return this.contentRevision_;
   }
-  private drawRevision_ = 0;
+  private contentRevision_ = 0;
   /**
    * The acceleration-structure lifetime hook (spec section 7.10): told of
    * each draw added and removed here, and of each tile placed and unloaded
@@ -2109,7 +2111,7 @@ export class World {
       generation: this.drawGeneration[index]!,
       name: options.name,
     };
-    this.drawRevision_++;
+    this.contentRevision_++;
     this.acceleration.drawAdded(handle);
     return handle;
   }
@@ -2355,7 +2357,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return; // already removed
     }
-    this.drawRevision_++;
+    this.contentRevision_++;
     this.acceleration.drawRemoved(handle);
     const batch = this.drawBatches[handle.index]!;
     const o = handle.index * RECORD_WORDS;
@@ -3120,6 +3122,7 @@ export class World {
     }
     const old = this.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     if (old !== mask >>> 0) {
+      this.contentRevision_++;
       this.changedViews |= old; // the views it left
       this.drawConstants.setViewMask(handle.index, mask);
       this.markDirty(handle.index);
@@ -3264,6 +3267,7 @@ export class World {
     this.terrainClipBlocks += blocks;
     this.writeTerrainClip(slot);
     this.version++;
+    this.contentRevision_++; // rays pass through clipped terrain
     return slot;
   }
 
@@ -3275,6 +3279,7 @@ export class World {
     }
     this.terrainClipRuns[slot] = undefined;
     this.terrainClipBlocks -= run.blocks;
+    this.contentRevision_++;
     this.freeRun(run.block, run.blocks);
     // An empty directory row: a stale mask bit would read a region of no
     // rows at row 0, never the freed blocks (removal also clears the

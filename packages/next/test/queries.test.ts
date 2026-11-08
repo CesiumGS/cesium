@@ -5,6 +5,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LEVEL_ZERO_ERROR } from "../src/globe/TerrainSource.ts";
 import {
+  combineRayAnswers,
   createSpatialQueries,
   type QueryAnswer,
   type QueryHost,
@@ -279,6 +280,126 @@ describe("asynchronous and batched", () => {
     );
     expect(answer.rays[1]!.verdict).toBe("unknown");
     expect(answer.rays[1]!.accuracy.meters).toBe(5);
+  });
+
+  it("refuses a target named twice", async () => {
+    const queries = terrainQueries(hillTarget());
+    await expect(
+      queries.castRays(query([], ["terrain", "terrain"])),
+    ).rejects.toThrow(/a target is listed twice/);
+  });
+
+  it("carries a target's unknown spans through a join, and keeps the clearance only when its target decides", async () => {
+    const measured: RayAnswer = {
+      verdict: "clear",
+      unknown: [],
+      accuracy: { meters: 2, note: "terrain words" },
+      clearance: { min: { meters: 40, t: 0.5 } },
+    };
+    const untested: RayAnswer = {
+      verdict: "unknown",
+      unknown: [{ from: 0.2, to: 0.3, reason: "notLoaded" }],
+      accuracy: { note: "draw words" },
+    };
+    const blocks: RayAnswer = {
+      verdict: "blocked",
+      hit: { t: 0.1, position: Float64Array.of(1, 0, 0) },
+      unknown: [],
+      accuracy: { note: "draw words" },
+    };
+    const joined = combineRayAnswers(
+      [measured, untested],
+      ["terrain", "draws"],
+    );
+    expect(joined.verdict).toBe("unknown");
+    expect(joined.unknown).toEqual(untested.unknown);
+    expect(joined.clearance).toEqual(measured.clearance); // nothing blocks
+    const blocked = combineRayAnswers([measured, blocks], ["terrain", "draws"]);
+    expect(blocked.verdict).toBe("blocked");
+    expect(blocked.clearance).toBeUndefined(); // the draw's block decides
+    const own = combineRayAnswers(
+      [
+        {
+          ...measured,
+          verdict: "blocked",
+          hit: { t: 0.05, position: Float64Array.of(0, 0, 0) },
+        },
+        blocks,
+      ],
+      ["terrain", "draws"],
+    );
+    expect(own.hit!.t).toBe(0.05);
+    expect(own.clearance).toEqual(measured.clearance); // the terrain's block decides
+  });
+
+  it("fails only the query whose revision, loading or engine throws; the rest of the batch is answered", async () => {
+    const host = testHost();
+    const bad = (q: RayQuery) => q.seconds === 13;
+    const queries = createSpatialQueries(
+      {
+        terrain: {
+          answer: (qs) => {
+            if (qs.some((q) => q.seconds === 7)) {
+              throw new Error("the engine failed on 7");
+            }
+            return qs.map((q) => q.rays.map(() => clearAnswer()));
+          },
+        },
+      },
+      {
+        ...host,
+        revision: (q) => {
+          if (bad(q)) {
+            throw new Error("no route for 13");
+          }
+          return 0;
+        },
+        loading: (q) => {
+          if (q.seconds === 21) {
+            throw new Error("no loading for 21");
+          }
+          return false;
+        },
+      },
+    );
+    const at = (seconds: number) =>
+      queries.castRays({
+        ...query([{ from: [0, 0, 0], to: [1, 0, 0] }]),
+        seconds,
+      });
+    const [ok, route, engine, loading] = await Promise.allSettled([
+      at(0),
+      at(13),
+      at(7),
+      at(21),
+    ]);
+    expect(ok.status).toBe("fulfilled");
+    expect(route).toMatchObject({
+      status: "rejected",
+      reason: { message: "no route for 13" },
+    });
+    expect(engine).toMatchObject({
+      status: "rejected",
+      reason: { message: "the engine failed on 7" },
+    });
+    expect(loading).toMatchObject({
+      status: "rejected",
+      reason: { message: "no loading for 21" },
+    });
+  });
+
+  it("rejects every query of a batch the interface itself fails on, none left waiting", async () => {
+    const report = vi.fn();
+    const queries = createSpatialQueries(
+      { terrain: { answer: () => [] } }, // answers no query: a broken engine
+      { ...testHost(), report },
+    );
+    const asked = [0, 1].map(() =>
+      queries.castRays(query([{ from: [0, 0, 0], to: [1, 0, 0] }])),
+    );
+    const settled = await Promise.allSettled(asked);
+    expect(settled.map((s) => s.status)).toEqual(["rejected", "rejected"]);
+    expect(report).toHaveBeenCalledTimes(1);
   });
 
   it("rejects with the signal's reason when aborted", async () => {

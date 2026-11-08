@@ -298,16 +298,27 @@ export class Engine {
             ...(route.viewMask !== undefined && { viewMask: route.viewMask }),
           },
           key: `${route.world.id}/${query.anchor?.slot ?? 0}/${route.viewMask ?? "all"}`,
+          // Where these aren't drawn the cast tests nothing: unknown there.
+          tilesets: this.tilesets
+            .filter(
+              (t) =>
+                t.world === route.world &&
+                !t.terrain &&
+                t.show &&
+                t.anchor === query.anchor,
+            )
+            .map((t) => t.root),
         };
       }),
     },
     {
       revision: (query) => {
         const { world } = this.queryRoute(query);
-        // Draws come and go as tiles load (terrain's too); draws under an
+        // Draws come, go and change views as tiles load and selections
+        // move (terrain's too), and terrain clips change; draws under an
         // anchor also move with its nodes.
         return (
-          world.drawRevision +
+          world.contentRevision +
           (query.targets.includes("draws") ? world.transformRevision : 0)
         );
       },

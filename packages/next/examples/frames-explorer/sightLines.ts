@@ -290,7 +290,10 @@ export function createSightLines(deps: {
         : shown === "ellipsoid"
           ? "this view has no terrain globe"
           : undefined);
-    const next: TerrainSightView[] = await Promise.all(
+    // One batch: every line and every azimuth of the mask check asked in
+    // this task (a camera ray's check short of its first hit needs that
+    // hit, so those follow together in a second).
+    const tracing = Promise.all(
       lines.map(async (l): Promise<TerrainSightView> => {
         if (!target || !globe) {
           const v = terrainSightText(l.id, l.label, undefined, why, l.subject);
@@ -344,6 +347,28 @@ export function createSightLines(deps: {
           : v;
       }),
     );
+    const masked =
+      check && target && globe
+        ? Promise.all(
+            check.samples.map(async (x) => {
+              const placed = placeObserver(
+                { from: check.from, to: x.to },
+                (lon, lat) => globe.surfaceHeight(lon, lat),
+              );
+              return {
+                azimuth: x.azimuth,
+                elevation: x.elevation,
+                r: await terrainLineOfSight(
+                  placed.from,
+                  placed.to,
+                  target.queries,
+                  target.options,
+                ),
+              };
+            }),
+          )
+        : undefined;
+    const [next, results] = await Promise.all([tracing, masked]);
     if (check && !(target && globe)) {
       // Not traced: loading while the terrain globe comes, and "can't
       // tell" (never clear) where this view has none or it failed.
@@ -356,26 +381,7 @@ export function createSightLines(deps: {
             : "waiting",
         text: `Our terrain against ${check.label}: not traced, ${why ?? "waiting for the terrain"}.`,
       });
-    } else if (check && target && globe) {
-      // One batch: every azimuth's ray asked in this task.
-      const results = await Promise.all(
-        check.samples.map(async (x) => {
-          const placed = placeObserver(
-            { from: check.from, to: x.to },
-            (lon, lat) => globe.surfaceHeight(lon, lat),
-          );
-          return {
-            azimuth: x.azimuth,
-            elevation: x.elevation,
-            r: await terrainLineOfSight(
-              placed.from,
-              placed.to,
-              target.queries,
-              target.options,
-            ),
-          };
-        }),
-      );
+    } else if (check && results) {
       next.push(maskCheckText(check.label, results));
     }
     if (!current()) {

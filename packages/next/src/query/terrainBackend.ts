@@ -96,7 +96,9 @@ export function terrainRayAnswer(
         ? "unknown"
         : "clear";
   if (verdict === "unknown" && spans.length === 0) {
-    spans.push({ from: 0, to: 1, reason: "notLoaded" }); // nothing drawn under it
+    // Nothing traced at all (a segment touching the height band at one
+    // point): a span of no width, so the unknown share stays 0.
+    spans.push({ from: 0, to: 0, reason: "notLoaded" });
   }
 
   const meters = known

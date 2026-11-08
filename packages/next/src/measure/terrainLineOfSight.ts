@@ -62,7 +62,7 @@ export interface TerrainLineOfSight {
 
 /**
  * Whether the straight segment `from`–`to` (metres, Earth-fixed under the
- * Earth's anchor) clears the terrain as drawn, answered through the query
+ * Earth's anchor: pass it, `options.anchor`) clears the terrain as drawn, answered through the query
  * interface (`queries`: `Engine.queries`, or `terrainQueries` over a
  * terrain the caller built) for the view the answer is shown in
  * (`options.view`). Today's engine is an exact ray query against the drawn
@@ -88,7 +88,13 @@ export async function terrainLineOfSight(
   to: ArrayLike<number>,
   queries: SpatialQueries,
   options: TerrainLineOfSightOptions & {
-    /** The anchor whose coordinates `from` and `to` are in (the globe's: the Earth's). */
+    /**
+     * The anchor whose coordinates `from` and `to` are in. On
+     * `Engine.queries` pass the globe's (`globe.anchor`, the Earth's): it
+     * has no default, and without one the rays are in the transform
+     * table's root, where no globe is, so every answer is "unknown"
+     * (`"unsupported"`). `terrainQueries` ignores it.
+     */
     anchor?: AnchorHandle;
     /** Only the terrain this view draws (default: any view's). */
     view?: View;
