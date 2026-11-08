@@ -24,6 +24,7 @@ import {
 } from "../examples/frames-explorer/scenarios/vehicles.ts";
 import { Frame, frameTransform } from "../src/frames/Frame.ts";
 import { terrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
+import { terrainQueries } from "../src/query/terrainBackend.ts";
 import { Instant } from "../src/time/Instant.ts";
 
 const deg = Math.PI / 180;
@@ -117,7 +118,7 @@ describe("trackFrame", () => {
 });
 
 describe("the drone's footprint over flat ground", () => {
-  it("lands where the hand ray-plane intersection puts it: H / tan(tilt) ahead of the nadir, along the heading", () => {
+  it("lands where the hand ray-plane intersection puts it: H / tan(tilt) ahead of the nadir, along the heading", async () => {
     // Level ground at the drone's site, 0 m; the drone 150 m above it.
     const ground = testHill({
       longitude: -122.4427,
@@ -134,7 +135,11 @@ describe("the drone's footprint over flat ground", () => {
       const origin = [m[12]!, m[13]!, m[14]!];
       const ray = col(m, 0);
       const to = origin.map((x, i) => x + 2000 * ray[i]!);
-      const r = terrainLineOfSight(origin, to, ground.target);
+      const r = await terrainLineOfSight(
+        origin,
+        to,
+        terrainQueries(ground.target),
+      );
       expect(r.clear, `${tilt}°`).toBe(false);
       const hit = r.blockedAt!;
       // By hand, on the tangent plane at the nadir: the camera is the
@@ -163,44 +168,48 @@ describe("the ship's sight line to the buoy over a hill", () => {
   const hill = testHill({ longitude: -122.5, latitude: 37.8, height: 40 });
   // The mast 3 km west of the crest, the buoy's light 7 km east, 3 m up.
   const buoy = hill.at(7000, 3);
-  const verdict = (mast: number) => {
+  const queries = terrainQueries(hill.target);
+  /** The hand clearance over the crest from a `mast` m mast. */
+  const hand = (mast: number) =>
+    heightOverMeridian(hill.at(-3000, mast), buoy, hill.crest.longitude)! -
+    hill.crest.height;
+  const verdict = async (mast: number) => {
     const from = hill.at(-3000, mast);
-    const r = terrainLineOfSight(from, buoy, hill.target);
-    const hand = heightOverMeridian(from, buoy, hill.crest.longitude)!;
-    return { r, clearance: hand - hill.crest.height };
+    const r = await terrainLineOfSight(from, buoy, queries);
+    return { r, clearance: hand(mast) };
   };
 
-  it("is blocked by the hill from a 25 m mast, as the hand clearance says", () => {
-    const { r, clearance } = verdict(25);
+  it("is blocked by the hill from a 25 m mast, as the hand clearance says", async () => {
+    const { r, clearance } = await verdict(25);
     expect(clearance).toBeLessThan(0);
     expect(r.clear).toBe(false);
     // It meets the hill on its near side.
     expect(r.blockedAt).toBeDefined();
   });
 
-  it("clears it when the mast rises above it, by the hand clearance", () => {
-    const { r, clearance } = verdict(80);
+  it("clears it when the mast rises above it, by the hand clearance", async () => {
+    const { r, clearance } = await verdict(80);
     expect(clearance).toBeGreaterThan(10);
     expect(r.clear).toBe(true);
     // The lowest clearance is the crest's (the sea sags less than the ridge).
     expect(r.minClearance!).toBeCloseTo(Math.min(clearance, 80, 3), 1);
   });
 
-  it("finds the mast height where it opens within the terrain's error, by hand", () => {
+  it("finds the mast height where it opens within the terrain's error, by hand", async () => {
     // Bisect the hand clearance's zero and check both sides a metre off.
     let lo = 25;
     let hi = 80;
     for (let i = 0; i < 40; i++) {
       const mid = (lo + hi) / 2;
-      if (verdict(mid).clearance < 0) {
+      if (hand(mid) < 0) {
         lo = mid;
       } else {
         hi = mid;
       }
     }
-    expect(verdict(hi - 1).r.clear).toBe(false);
+    expect((await verdict(hi - 1)).r.clear).toBe(false);
     // Clear needs the terrain's error too: a little more.
-    expect(verdict(hi + 3).r.clear).toBe(true);
+    expect((await verdict(hi + 3)).r.clear).toBe(true);
     expect(tiltDown(0)[0]).toBe(1);
   });
 });

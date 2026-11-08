@@ -136,6 +136,16 @@ export interface TerrainRayResult {
   margin?: { meters: number; clearance: number; error: number; t: number };
   /** Lengths, m, over which the terrain is unknown, by reason. */
   unknown: { notDrawn: number; notRefined: number };
+  /**
+   * Where it is unknown: spans of the segment (fractions `from` to `to`),
+   * nearest first, neighbours of one reason merged. A zero-length segment
+   * over unknown terrain has one span of no width.
+   */
+  unknownSpans: {
+    from: number;
+    to: number;
+    reason: "not drawn" | "not refined";
+  }[];
   /** Levels the known spans crossed, and the largest geometric error. */
   known?: { minLevel: number; maxLevel: number; geometricError: number };
 }
@@ -254,6 +264,7 @@ export function castTerrainRay(
     length,
     above: 0,
     unknown: { notDrawn: 0, notRefined: 0 },
+    unknownSpans: [],
   };
   const top = (target.maximumHeight ?? DEFAULT_MAXIMUM_HEIGHT) + BAND_PAD;
   const band = bandInterval(ray, a + top, radii[2]! + top);
@@ -605,6 +616,7 @@ export function castTerrainRay(
     if (!c) {
       // Near the ellipsoid's center, or too many patches: unknown from here.
       result.unknown.notDrawn += (bandHi - cur) * length;
+      unknownSpan(result, cur, bandHi, "not drawn", length);
       break;
     }
     const patch = target.patchAt(c.longitude, c.latitude);
@@ -637,8 +649,10 @@ export function castTerrainRay(
           };
     } else if (patch.unknown === "not refined" && kept) {
       result.unknown.notRefined += (exit - cur) * length;
+      unknownSpan(result, cur, exit, "not refined", length);
     } else {
       result.unknown.notDrawn += (exit - cur) * length;
+      unknownSpan(result, cur, exit, "not drawn", length);
     }
     if (atAxis) {
       carryMesh = undefined; // across the axis the footprint's cell jumps
@@ -714,6 +728,30 @@ export function castTerrainRay(
     result.known = known;
   }
   return result;
+}
+
+/**
+ * Adds [from, to] to the result's unknown spans, merged into the last when
+ * it continues it with the same reason. Spans of no width are kept only
+ * on a zero-length segment, where they are all there is.
+ */
+function unknownSpan(
+  result: TerrainRayResult,
+  from: number,
+  to: number,
+  reason: "not drawn" | "not refined",
+  length: number,
+): void {
+  if (!(to > from) && length > 0) {
+    return;
+  }
+  const spans = result.unknownSpans;
+  const last = spans[spans.length - 1];
+  if (last && last.reason === reason && last.to === from) {
+    last.to = to;
+  } else {
+    spans.push({ from, to, reason });
+  }
 }
 
 /**

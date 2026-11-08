@@ -63,6 +63,7 @@ import {
 } from "../../examples/frames-explorer/scenarios/testHill.ts";
 import { terrainSightText } from "../../examples/frames-explorer/sightLines.ts";
 import { terrainLineOfSight } from "../../src/measure/terrainLineOfSight.ts";
+import { terrainQueries } from "../../src/query/terrainBackend.ts";
 import { LEVEL_ZERO_ERROR } from "../../src/globe/TerrainSource.ts";
 import references from "../../examples/frames-explorer/references.json";
 import { enuAxes } from "../../examples/frames-explorer/scenarios/bodyFrame.ts";
@@ -727,10 +728,13 @@ describe("the ship's lighthouse (the owner's follow-up, 2026-11-07)", () => {
         span: 40_000,
         level,
       });
-    const traced = (level: number) => {
-      const r = terrainLineOfSight(line.from, line.to, sea(level).target, {
-        groundRadius: line.groundRadius!,
-      });
+    const traced = async (level: number) => {
+      const r = await terrainLineOfSight(
+        line.from,
+        line.to,
+        terrainQueries(sea(level).target),
+        { groundRadius: line.groundRadius! },
+      );
       const v = terrainSightText(
         line.id,
         line.label,
@@ -745,7 +749,7 @@ describe("the ship's lighthouse (the owner's follow-up, 2026-11-07)", () => {
         ]),
       };
     };
-    const fine = traced(12);
+    const fine = await traced(12);
     expect(fine.r.clear).toBe(true);
     const m = fine.r.margin!;
     expect(m.error).toBeCloseTo(LEVEL_ZERO_ERROR / 2 ** 12, 9);
@@ -764,7 +768,7 @@ describe("the ship's lighthouse (the owner's follow-up, 2026-11-07)", () => {
     );
     // One level coarser, the same clearance sits inside the error: never
     // in sight.
-    const coarse = traced(11);
+    const coarse = await traced(11);
     expect(coarse.r.clear).toBeUndefined();
     expect(coarse.answer.label).toMatch(/· lighthouse: can't tell$/);
   }, 120_000);
@@ -804,11 +808,14 @@ describe("the ship's bounded verdict at the checked setup, given level-13 tiles 
       });
     const crest = ridge(1, 13).crest.longitude;
     const over = heightOverMeridian(line.from, line.to, crest)! - sight.sea;
-    const traced = (level: number) => {
+    const traced = async (level: number) => {
       const hill = ridge(over - 24, level);
-      const r = terrainLineOfSight(line.from, line.to, hill.target, {
-        groundRadius: line.groundRadius!,
-      });
+      const r = await terrainLineOfSight(
+        line.from,
+        line.to,
+        terrainQueries(hill.target),
+        { groundRadius: line.groundRadius! },
+      );
       const v = terrainSightText(
         line.id,
         line.label,
@@ -823,7 +830,7 @@ describe("the ship's bounded verdict at the checked setup, given level-13 tiles 
         ]),
       };
     };
-    const fine = traced(13);
+    const fine = await traced(13);
     expect(fine.r.clear).toBe(true);
     expect(fine.r.margin!.clearance).toBeCloseTo(24, 0);
     expect(fine.r.margin!.error).toBeCloseTo(LEVEL_ZERO_ERROR / 2 ** 13, 9);
@@ -831,7 +838,7 @@ describe("the ship's bounded verdict at the checked setup, given level-13 tiles 
     expect(fine.answer.aside).toMatch(
       /^Alcatraz Light in sight: the line passes 24 m over the drawn land 5\.1 km short of Alcatraz Light at its lowest, beyond the terrain's ±9\.4 m/,
     );
-    const coarse = traced(11);
+    const coarse = await traced(11);
     expect(coarse.r.clear).toBeUndefined();
     expect(coarse.answer.label).toMatch(/· lighthouse: can't tell$/);
   }, 120_000);

@@ -280,7 +280,7 @@ export const evaluateDrone: ScenarioEvaluator = async (
       itrf,
       epochTdb,
     ),
-    footprintResult(
+    await footprintResult(
       {
         group: "frame-tree",
         id: "frame-tree.body-frame.footprint.live",

@@ -1,5 +1,6 @@
 entry	name	kind	tier
 .	AEROSOLS	const	-
+.	AccelerationStructures	interface	-
 .	AerosolType	type	-
 .	AnchorHandle	interface	-
 .	BASE_BINDING_LIMITS	const	-
@@ -93,6 +94,7 @@ entry	name	kind	tier
 .	ModelResourceOptions	interface	-
 .	ModelUsage	interface	-
 .	MoonMap	interface	-
+.	NO_ACCELERATION	const	-
 .	NamedType	type	-
 .	OffscreenTarget	class	-
 .	OrbitBasis	interface	-
@@ -109,7 +111,15 @@ entry	name	kind	tier
 .	PointSource	class	-
 .	PointSourceOptions	interface	-
 .	PurposeStats	interface	-
+.	QueryAnswer	interface	-
+.	QueryHost	interface	-
+.	QueryRay	interface	-
 .	REQUEST_PURPOSES	const	-
+.	RayAnswer	interface	-
+.	RayBackend	interface	-
+.	RayQuery	interface	-
+.	RayTarget	type	-
+.	RayVerdict	type	-
 .	RenderTarget	interface	-
 .	RequestPurpose	type	-
 .	Rig	interface	-
@@ -124,8 +134,10 @@ entry	name	kind	tier
 .	SlangCache	interface	-
 .	SlicePool	class	-
 .	SliceUser	interface	-
+.	SpatialQueries	interface	-
 .	Stage	type	-
 .	StageStats	interface	-
+.	StandingQuery	interface	-
 .	StepwiseSelection	class	-
 .	StyleExpression	type	-
 .	StyleField	type	-
@@ -139,6 +151,7 @@ entry	name	kind	tier
 .	TerrainClipPosition	interface	-
 .	TerrainClipRectangle	interface	-
 .	TerrainClipRegion	type	-
+.	TerrainQueryOptions	interface	-
 .	TerrainRayOptions	interface	-
 .	TerrainRayPatch	interface	-
 .	TerrainRayResult	interface	-
@@ -164,6 +177,8 @@ entry	name	kind	tier
 .	UNITLESS_SUN_ILLUMINANCE	const	-
 .	UniformDeclaration	type	-
 .	UniformType	type	-
+.	UnknownReason	type	-
+.	UnknownSpan	interface	-
 .	UrlTemplateImagery	class	-
 .	Usage	interface	-
 .	ValueUniform	interface	-
@@ -185,6 +200,7 @@ entry	name	kind	tier
 .	compileVectorStyle	function	-
 .	createBillboard	function	-
 .	createBox	function	-
+.	createSpatialQueries	function	-
 .	createSurfacePatch	function	-
 .	defaultRig	function	-
 .	eastNorthUpToFixedFrame	function	-
@@ -220,6 +236,7 @@ entry	name	kind	tier
 .	resolveUri	function	-
 .	summarizeContent	function	-
 .	tableResolver	function	-
+.	terrainQueries	function	-
 .	tileHeaderKey	function	-
 .	vec3	namespace	-
 .	vec3.Vec3	type	-

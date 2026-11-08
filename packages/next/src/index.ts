@@ -245,6 +245,30 @@ export {
   type TerrainRayTile,
 } from "./globe/terrainRay.ts";
 export { LEVEL_ZERO_ERROR } from "./globe/TerrainSource.ts";
+// One query interface for rays (spec section 7.10): Engine.queries, or
+// terrainQueries over a terrain built by hand; a later engine plugs in
+// through createSpatialQueries.
+export {
+  createSpatialQueries,
+  type QueryAnswer,
+  type QueryHost,
+  type QueryRay,
+  type RayAnswer,
+  type RayBackend,
+  type RayQuery,
+  type RayTarget,
+  type RayVerdict,
+  type SpatialQueries,
+  type StandingQuery,
+  type TerrainQueryOptions,
+  type UnknownReason,
+  type UnknownSpan,
+} from "./query/queries.ts";
+export { terrainQueries } from "./query/terrainBackend.ts";
+export {
+  NO_ACCELERATION,
+  type AccelerationStructures,
+} from "./streaming/acceleration.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export {
   FrameUnavailableError,

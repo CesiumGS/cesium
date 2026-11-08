@@ -19,7 +19,12 @@ import { fakeEngine } from "./fakeGpu.ts";
  *   draws are issued only by `src/render/drawArguments.ts`, and a record's
  *   batch's argument slot (`DrawArguments.slotOf`) is its pointer to them;
  * - geometry submission: vertex and index buffers are bound only on the
- *   submission path.
+ *   submission path;
+ * - rays (a hardware ray-query engine, spec section 7.10): the examples and
+ *   `measure` reach rays only through the query interface
+ *   (`src/query/queries.ts`, `Engine.queries`), never `castTerrainRay`, a
+ *   tileset's ray target, `World.castRays` or a tileset's retained
+ *   geometry, so swapping the engine changes the answers, not the callers.
  *
  * Like test/bindless.test.ts, each check scans the sources, and each
  * detector is first shown to flag a bypass.
@@ -305,6 +310,45 @@ export function bufferBinds(text: string): string[] {
   return out;
 }
 
+/**
+ * Lines of a TypeScript module that reach rays around the query interface:
+ * `castTerrainRay` named (imported or called), a tileset's CPU triangles
+ * read for rays (`terrainRayTarget(`, `rayTarget(`), a world's GPU cast
+ * called (`world.castRays(`), or a tileset's retained geometry read or
+ * kept (`tile.geometry`, `retainGeometry`) — `retained` lists those apart,
+ * since a module may keep geometry for something other than rays.
+ */
+export function raysOutsideQueries(text: string): {
+  rays: number[];
+  retained: number[];
+} {
+  const source = stripComments(text);
+  const find = (pattern: RegExp) =>
+    [
+      ...new Set(
+        [...source.matchAll(pattern)].map((m) => lineAt(source, m.index)),
+      ),
+    ].sort((a, b) => a - b);
+  return {
+    rays: find(
+      /\bcastTerrainRay\b|\.\s*(?:terrainRayTarget|rayTarget)\s*\??\.?\s*\(|\b[Ww]orld\s*\??\.\s*castRays\s*\(/g,
+    ),
+    retained: find(/\b\w*[Tt]ile\s*\??\.\s*geometry\b|\bretainGeometry\b/g),
+  };
+}
+
+/**
+ * Modules under `examples/` that keep or read retained geometry for
+ * something other than rays, and what for. Rays through it are still
+ * flagged by the other rules.
+ */
+const RETAINED_NOT_FOR_RAYS: Record<string, string> = {
+  "examples/design-globe/placementPair.ts":
+    "the rigid and reprojected tiles' vertices, paired into the morph's meshes",
+  "examples/design-globe/siteLoader.ts":
+    "keeps both placements' geometry for placementPair's morph",
+};
+
 describe("seam detectors flag bypasses", () => {
   it("record writes", () => {
     const module = `function one() {
@@ -427,6 +471,26 @@ function overlay() {
       "World.recordBundle",
       "World.encodeTranslucent",
     ]);
+  });
+});
+
+describe("the ray seam's detector flags bypasses", () => {
+  it("rays around the query interface, and retained geometry", () => {
+    const module = `import { castTerrainRay } from "../../src/globe/terrainRay.ts";
+// castTerrainRay in a comment is not a call.
+const target = globe.terrainRayTarget(mask);
+const other = source?.rayTarget?.(mask);
+const hits = await viewer.world.castRays(rays, {});
+const fine = await engine.queries.castRays(query);
+const g = tile.geometry?.[0];
+const kept = rigidTile?.geometry;
+const options = { retainGeometry: true };
+const overlay = out.geometry();
+const r = castTerrainRay(from, to, target);`;
+    expect(raysOutsideQueries(module)).toEqual({
+      rays: [1, 3, 4, 5, 11],
+      retained: [7, 8, 9],
+    });
   });
 });
 
@@ -631,5 +695,52 @@ describe("DrawArguments.slotOf", () => {
     expect(() => args.slotOf(-1)).toThrow(RangeError);
     expect(() => args.slotOf(0.5)).toThrow(RangeError);
     world.destroy();
+  });
+});
+
+describe("the ray seam", () => {
+  const examples = join(root, "examples");
+  const measure = join(src, "measure");
+  const query = join(src, "query");
+
+  it("examples and measure reach rays only through the query interface", () => {
+    const violations: string[] = [];
+    const allowed = new Set<string>();
+    for (const path of [
+      ...files(examples, /\.ts$/),
+      ...files(measure, /\.ts$/),
+    ]) {
+      const where = relative(root, path);
+      const found = raysOutsideQueries(readFileSync(path, "utf8"));
+      for (const line of found.rays) {
+        violations.push(`${where}:${line} reaches rays around src/query`);
+      }
+      if (found.retained.length > 0 && where in RETAINED_NOT_FOR_RAYS) {
+        allowed.add(where);
+      } else {
+        for (const line of found.retained) {
+          violations.push(
+            `${where}:${line} reads a tileset's retained geometry (rays go through src/query; another use goes in RETAINED_NOT_FOR_RAYS with its reason)`,
+          );
+        }
+      }
+    }
+    expect(violations).toEqual([]);
+    // Each allowance still holds: a stale one would let rays in unseen.
+    expect([...allowed].sort()).toEqual(
+      Object.keys(RETAINED_NOT_FOR_RAYS).sort(),
+    );
+  });
+
+  it("the query interface's backends are where rays are reached", () => {
+    const terrain = raysOutsideQueries(
+      readFileSync(join(query, "terrainBackend.ts"), "utf8"),
+    ).rays;
+    const draws = raysOutsideQueries(
+      readFileSync(join(query, "drawBackend.ts"), "utf8"),
+    ).rays;
+    // castTerrainRay imported and called, the globe's ray target read.
+    expect(terrain.length).toBeGreaterThanOrEqual(3);
+    expect(draws.length).toBeGreaterThanOrEqual(1);
   });
 });

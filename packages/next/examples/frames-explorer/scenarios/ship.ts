@@ -184,7 +184,7 @@ export const evaluateShip: ScenarioEvaluator = async (
       epochTdb,
       attitude,
     ),
-    sightOverHillResult(
+    await sightOverHillResult(
       {
         group: "frame-tree",
         id: "frame-tree.body-frame.sight-over-hill.live",

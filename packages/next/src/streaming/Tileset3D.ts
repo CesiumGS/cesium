@@ -1704,6 +1704,11 @@ export class Tileset3D implements TileTree {
           `upload failed: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+      // Placed: the one point that announces it (a hook's own error is
+      // not the upload's).
+      if (tile.state === "ready" && tile.placement) {
+        this.world.acceleration.tilePlaced(this, tile, tile.placement.draws);
+      }
     }
     const selection = this.policy;
     if (this.stats.bytes < this.cacheBytes) {
@@ -1820,6 +1825,9 @@ export class Tileset3D implements TileTree {
   }
 
   private unload(tile: Tile): void {
+    if (tile.placement) {
+      this.world.acceleration.tileUnloaded(this, tile);
+    }
     this.source?.unloadTile?.(tile);
     if (tile.purpose) {
       this.stats.purposes[tile.purpose].unused++;

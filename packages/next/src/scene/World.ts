@@ -72,6 +72,10 @@ import type { CustomShader } from "./CustomShader.ts";
 import { PointCuller } from "./PointCuller.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
 import type { LightHandle, LightOptions } from "./lights.ts";
+import {
+  NO_ACCELERATION,
+  type AccelerationStructures,
+} from "../streaming/acceleration.ts";
 
 /**
  * A world's ceilings (CESIUM2_WEBGPU_PLAN.md §13.15, "Growable tables"):
@@ -538,6 +542,22 @@ export class World {
     return this.anchorPlaceRevision_;
   }
   private anchorPlaceRevision_ = 0;
+  /**
+   * Counts draws added and removed (`addDraw`, `removeDraw`): as tiles
+   * load and unload, among the rest. The query interface reports it as the
+   * revision of what a ray may meet (`Engine.queries`).
+   */
+  get drawRevision(): number {
+    return this.drawRevision_;
+  }
+  private drawRevision_ = 0;
+  /**
+   * The acceleration-structure lifetime hook (spec section 7.10): told of
+   * each draw added and removed here, and of each tile placed and unloaded
+   * by the world's tilesets. A no-op by default; a ray-query engine sets
+   * its own.
+   */
+  acceleration: AccelerationStructures = NO_ACCELERATION;
   /** Point and spot lights by slot (`addLight`), free slots undefined. */
   private readonly lights: Array<LightOptions | undefined> = [];
   private readonly lightGenerations: number[] = [];
@@ -2084,11 +2104,14 @@ export class World {
       draw.group = this.pointGroup(draw);
       this.pointDraws.set(index, draw);
     }
-    return {
+    const handle: DrawHandle = {
       index,
       generation: this.drawGeneration[index]!,
       name: options.name,
     };
+    this.drawRevision_++;
+    this.acceleration.drawAdded(handle);
+    return handle;
   }
 
   /**
@@ -2332,6 +2355,8 @@ export class World {
     if (!this.hasDraw(handle)) {
       return; // already removed
     }
+    this.drawRevision_++;
+    this.acceleration.drawRemoved(handle);
     const batch = this.drawBatches[handle.index]!;
     const o = handle.index * RECORD_WORDS;
     const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;

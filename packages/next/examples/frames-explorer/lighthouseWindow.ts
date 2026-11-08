@@ -12,11 +12,13 @@
 //
 // A minute over terrain not drawn, or drawn only coarsely, is in no window,
 // and nothing is "in sight" within the terrain's error (Review Focus 2).
-// It runs on demand, in slices of about 8 ms so no frame waits long: when
-// the mast's height or the datum changes (what was found for the old one
-// goes at once), and 1.5 s after the terrain's heights last changed as
-// tiles load. A running scan finishes; heights that change meanwhile queue
-// one more. Never per frame.
+// Each minute is asked through the engine's query interface and answered
+// asynchronously; a scan cancelled or replaced meanwhile (its generation)
+// publishes nothing. It runs on demand, in slices of about 8 ms so no
+// frame waits long: when the mast's height or the datum changes (what was
+// found for the old one goes at once), and 1.5 s after the terrain's
+// heights last changed as tiles load. A running scan finishes; heights that
+// change meanwhile queue one more. Never per frame.
 import { frameTransform } from "../../src/frames/Frame.ts";
 import type { Frames } from "../../src/frames/frames.ts";
 import { terrainLineOfSight } from "../../src/measure/terrainLineOfSight.ts";
@@ -230,9 +232,8 @@ export function createLighthouseWindow(deps: {
     const key = keyNow();
     const frames = deps.frames();
     const globe = viewer.globe;
-    const target = globe?.terrainRayTarget(viewer.engine.viewBit(viewer.view));
     const e = deps.evaluation();
-    if (key === "" || !frames || !globe || !target || !e?.track) {
+    if (key === "" || !frames || !globe || !e?.track) {
       // Nothing to trace over yet: a later height change or knob asks again.
       if (key === "") {
         unpublish();
@@ -256,7 +257,15 @@ export function createLighthouseWindow(deps: {
     );
     const samples = Math.floor(shipSpan(heights).seconds / WINDOW_STEP) + 1;
     const out: SightSample[] = [];
-    const step = (): void => {
+    // The view's terrain, through the engine's query interface, in the
+    // globe's (the Earth's) anchor: Earth-fixed.
+    const queries = viewer.engine.queries;
+    const options = {
+      anchor: globe.anchor,
+      view: viewer.view,
+      groundRadius: LIGHTHOUSE_GROUND,
+    };
+    const step = async (): Promise<void> => {
       if (mine !== generation) {
         return;
       }
@@ -270,17 +279,20 @@ export function createLighthouseWindow(deps: {
           { from: [m[12]!, m[13]!, m[14]!], to: Array.from(light) },
           (lon, lat) => globe.surfaceHeight(lon, lat),
         );
-        out.push(
-          sampleOf(
-            terrainLineOfSight(placed.from, placed.to, target, {
-              groundRadius: LIGHTHOUSE_GROUND,
-            }),
-          ),
+        const r = await terrainLineOfSight(
+          placed.from,
+          placed.to,
+          queries,
+          options,
         );
+        if (mine !== generation) {
+          return; // cancelled, or a newer scan began: this one publishes nothing
+        }
+        out.push(sampleOf(r));
       } while (out.length < samples && performance.now() - t0 < SLICE_MS);
       busy += performance.now() - t0;
       if (out.length < samples) {
-        slice = window.setTimeout(step, 0);
+        slice = window.setTimeout(run, 0);
         return;
       }
       running = undefined;
@@ -304,7 +316,15 @@ export function createLighthouseWindow(deps: {
         schedule(SETTLE);
       }
     };
-    step();
+    const run = (): void => {
+      step().catch((error: unknown) => {
+        if (mine === generation) {
+          running = undefined;
+        }
+        console.error("lighthouse window: the scan failed", error);
+      });
+    };
+    run();
   }
 
   function schedule(delay: number): void {

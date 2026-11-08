@@ -100,6 +100,13 @@ import {
 } from "./gltfModel.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import { corePick, depthDistance, pickResult, type PickTick } from "./pick.ts";
+import {
+  createSpatialQueries,
+  type RayQuery,
+  type SpatialQueries,
+} from "../query/queries.ts";
+import { globeTarget, terrainBackend } from "../query/terrainBackend.ts";
+import { drawBackend } from "../query/drawBackend.ts";
 
 /** Tone mappings by their index in present.slang's `PresentParams`. */
 const TONE_MAPPINGS: readonly ToneMapping[] = ["pbrNeutral", "agx", "aces"];
@@ -260,6 +267,65 @@ export class Engine {
   readonly cameras: CameraLayer;
   /** Streamed 3D Tiles tilesets, updated before each frame. */
   readonly tilesets: Tileset3D[] = [];
+  /**
+   * The query interface for rays (spec section 7.10, `query/queries.ts`):
+   * asynchronous, batched, standing queries, three-way answers that
+   * improve. The rays are in the coordinates of the query's anchor (the
+   * Earth's: Earth-fixed), in the world of its view, else of its anchor,
+   * else the engine's only world. The terrain target is the globe under
+   * that anchor (a ray under an anchor with none answers "unknown",
+   * `"unsupported"`), traced exactly on the CPU; the draws target is
+   * `World.castRays` on the GPU. Standing queries look again after each
+   * tick (`onAfterTick`).
+   */
+  readonly queries: SpatialQueries = createSpatialQueries(
+    {
+      terrain: terrainBackend((query) => {
+        const route = this.queryRoute(query);
+        return globeTarget(
+          this.tilesets,
+          route.world,
+          query.anchor,
+          route.viewMask ?? 0xffffffff,
+        );
+      }),
+      draws: drawBackend((query) => {
+        const route = this.queryRoute(query);
+        return {
+          world: route.world,
+          options: {
+            ...(query.anchor && { anchor: query.anchor }),
+            ...(route.viewMask !== undefined && { viewMask: route.viewMask }),
+          },
+          key: `${route.world.id}/${query.anchor?.slot ?? 0}/${route.viewMask ?? "all"}`,
+        };
+      }),
+    },
+    {
+      revision: (query) => {
+        const { world } = this.queryRoute(query);
+        // Draws come and go as tiles load (terrain's too); draws under an
+        // anchor also move with its nodes.
+        return (
+          world.drawRevision +
+          (query.targets.includes("draws") ? world.transformRevision : 0)
+        );
+      },
+      loading: (query) => {
+        const { world } = this.queryRoute(query);
+        return this.tilesets.some(
+          (t) =>
+            t.world === world &&
+            t.anchor === query.anchor &&
+            query.targets.includes(t.terrain ? "terrain" : "draws") &&
+            !t.idle,
+        );
+      },
+      onTick: (listener) => this.onAfterTick(() => listener()),
+      check: (query) => void this.queryRoute(query),
+      report: (error) => this.reportLoopError("a standing query", error),
+    },
+  );
   /**
    * Keeps content with a `heightReference` on terrain and collision
    * tilesets as they load (`heightReference` placements).
@@ -2071,6 +2137,39 @@ export class Engine {
       this.stats.idle = true; // asleep: nothing more to render
     }
   };
+
+  /**
+   * The world a query's rays are in, and the views whose drawn content
+   * they meet (undefined: any view). Throws for an anchor of another world
+   * or one removed, or for no view nor anchor among several worlds.
+   */
+  private queryRoute(query: RayQuery): {
+    world: World;
+    viewMask: number | undefined;
+  } {
+    const { view, anchor } = query;
+    let world: World | undefined;
+    if (view) {
+      world = view.world;
+    } else if (anchor) {
+      world = this.worlds.find((w) => w.anchorOf(anchor) === anchor);
+    } else if (this.worlds.length === 1) {
+      world = this.worlds[0];
+    }
+    if (!world) {
+      throw new Error(
+        anchor
+          ? `queries: ${anchor.name} is not an anchor of any world of this engine.`
+          : `queries: name a view or an anchor: the engine has ${this.worlds.length} worlds.`,
+      );
+    }
+    if (anchor && world.anchorOf(anchor) !== anchor) {
+      throw new Error(
+        `queries: ${anchor.name} is not an anchor of the view's world.`,
+      );
+    }
+    return { world, viewMask: view ? this.viewBit(view) : undefined };
+  }
 
   private reportLoopError(where: string, error: unknown): void {
     this.ctx.errors.report(

@@ -6,6 +6,7 @@
 import { frameTransform, type Frame } from "../../../../src/frames/Frame.ts";
 import { Ellipsoid } from "../../../../src/math/ellipsoid.ts";
 import { terrainLineOfSight } from "../../../../src/measure/terrainLineOfSight.ts";
+import { terrainQueries } from "../../../../src/query/terrainBackend.ts";
 import { Instant } from "../../../../src/time/Instant.ts";
 import { trackFrame, type BodyTrack } from "../../scenarios/bodyFrame.ts";
 import { heightOverMeridian, testHill } from "../../scenarios/testHill.ts";
@@ -163,14 +164,14 @@ export function rollResult(
  * the curved ground by d²/2R, which moves the spot d²/2R ÷ sin(tilt)
  * further along the ray: the tolerance carries it.
  */
-export function footprintResult(
+export async function footprintResult(
   base: Base & { id: string },
   where: string,
   mount: Frame,
   itrf: Frame,
   tilt: number,
   ground: number,
-): StressResult {
+): Promise<StressResult> {
   const m = frameTransform(mount, itrf, Instant.fromTdb(0));
   const origin = [m[12]!, m[13]!, m[14]!];
   const { up, height } = handEnu(origin);
@@ -189,7 +190,8 @@ export function footprintResult(
   const ray = col(m, 0);
   const reach = 3500;
   const to = origin.map((x, i) => x + reach * ray[i]!);
-  const r = terrainLineOfSight(origin, to, flat.target);
+  // Through the query interface, over the test tile alone.
+  const r = await terrainLineOfSight(origin, to, terrainQueries(flat.target));
   const h = height - ground;
   const d = tilt > 0 ? h / Math.tan(tilt * deg) : Infinity;
   const forward = [0, 1, 2].map((i) => ray[i]! - dot(ray, up) * up[i]!);
@@ -287,31 +289,35 @@ export const HILL = {
  * is negative; clear when it is more than the tile's error; between, the
  * library may say "may block", which the hand formula can't contradict.
  */
-export function sightOverHillResult(
+export async function sightOverHillResult(
   base: Base & { id: string },
   where: string,
   masts: readonly number[],
-): StressResult {
+): Promise<StressResult> {
   const hill = testHill({
     longitude: -122.5,
     latitude: 37.8,
     height: HILL.height,
   });
   const buoy = hill.at(HILL.buoyEast, 3);
-  const rows = masts.map((mast) => {
-    const from = hill.at(HILL.mastEast, mast);
-    const r = terrainLineOfSight(from, buoy, hill.target);
-    const clearance =
-      heightOverMeridian(from, buoy, hill.crest.longitude)! - hill.crest.height;
-    const error = r.accuracy.meters ?? 0;
-    const agrees =
-      clearance < 0
-        ? r.clear === false
-        : clearance > error + 1
-          ? r.clear === true
-          : r.clear !== false || clearance < error;
-    return { mast, clearance, clear: r.clear, agrees };
-  });
+  const queries = terrainQueries(hill.target);
+  const rows = await Promise.all(
+    masts.map(async (mast) => {
+      const from = hill.at(HILL.mastEast, mast);
+      const r = await terrainLineOfSight(from, buoy, queries);
+      const clearance =
+        heightOverMeridian(from, buoy, hill.crest.longitude)! -
+        hill.crest.height;
+      const error = r.accuracy.meters ?? 0;
+      const agrees =
+        clearance < 0
+          ? r.clear === false
+          : clearance > error + 1
+            ? r.clear === true
+            : r.clear !== false || clearance < error;
+      return { mast, clearance, clear: r.clear, agrees };
+    }),
+  );
   const words = (c: boolean | undefined) =>
     c === true ? "clear" : c === false ? "blocked" : "may block";
   return {
@@ -381,7 +387,7 @@ export const bodyFrameCase: StressCase = stressCase(
         pitch: 0,
         roll: 10 * deg,
       }),
-      footprintResult(
+      await footprintResult(
         where("footprint"),
         `The drone ${d.height} m over flat ground`,
         mount,
@@ -396,7 +402,11 @@ export const bodyFrameCase: StressCase = stressCase(
         itrf,
         t,
       ),
-      sightOverHillResult(where("sight-over-hill"), "A test hill", [25, 80]),
+      await sightOverHillResult(
+        where("sight-over-hill"),
+        "A test hill",
+        [25, 80],
+      ),
     ];
   },
 );

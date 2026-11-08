@@ -1,4 +1,6 @@
-import { castTerrainRay, type TerrainRayTarget } from "../globe/terrainRay.ts";
+import type { SpatialQueries } from "../query/queries.ts";
+import type { View } from "../scene/View.ts";
+import type { AnchorHandle } from "../scene/World.ts";
 
 export interface TerrainLineOfSightOptions {
   /**
@@ -59,13 +61,15 @@ export interface TerrainLineOfSight {
 }
 
 /**
- * Whether the straight segment `from`–`to` (Earth-fixed metres) clears the
- * terrain as drawn (`target`: `Tileset3D.terrainRayTarget`, the globe's,
- * for the view the answer is shown in). It is an exact ray query against the
- * drawn triangles (`castTerrainRay`, plan §13.10): no sampling step, so a
- * ridge one cell wide is caught wherever it sits, and the earth's curvature
- * comes with the Earth-fixed triangles. Endpoints are observers standing on
- * or above the terrain: a hit within 1 mm of either end is their own ground.
+ * Whether the straight segment `from`–`to` (metres, Earth-fixed under the
+ * Earth's anchor) clears the terrain as drawn, answered through the query
+ * interface (`queries`: `Engine.queries`, or `terrainQueries` over a
+ * terrain the caller built) for the view the answer is shown in
+ * (`options.view`). Today's engine is an exact ray query against the drawn
+ * triangles (plan §13.10): no sampling step, so a ridge one cell wide is
+ * caught wherever it sits, and the earth's curvature comes with the
+ * Earth-fixed triangles. Endpoints are observers standing on or above the
+ * terrain: a hit within 1 mm of either end is their own ground.
  *
  * Place observers on `surfaceHeight` (the drawn surface), not
  * `sampleHeight`, and again as finer tiles load: an observer left below a
@@ -75,143 +79,75 @@ export interface TerrainLineOfSight {
  * geometric error among them (the coarsest level's), plus the source's own
  * when given. The answer is exact for the drawn surface; the true terrain
  * may lie that far from it, so `clear` asks for that much room.
+ *
+ * Asynchronous (plan 5a's call 39): a GPU engine answers a tick or more
+ * later. Terrain only; buildings and BIM are the query's `"draws"` target.
  */
-export function terrainLineOfSight(
+export async function terrainLineOfSight(
   from: ArrayLike<number>,
   to: ArrayLike<number>,
-  target: TerrainRayTarget,
-  options: TerrainLineOfSightOptions = {},
-): TerrainLineOfSight {
-  const source = options.sourceAccuracy;
-  const ray = castTerrainRay(from, to, target, {
-    ...(source ? { sourceAccuracy: source.meters } : {}),
-    ...(options.groundRadius !== undefined
-      ? { groundRadius: options.groundRadius }
-      : {}),
-  });
-  if (!ray) {
-    return {
-      clear: undefined,
-      unknownFraction: 1,
-      accuracy: { note: "endpoints are not finite; nothing traced" },
-    };
-  }
-  const { length, known, unknown, band } = ray;
-  const unknownLength = unknown.notDrawn + unknown.notRefined;
-  const unknownFraction =
-    length === 0
-      ? known || !band
-        ? 0
-        : 1
-      : Math.min(1, unknownLength / length);
-  // Extension point (plan §13.10): buildings and BIM (3D Tiles) keep no CPU
-  // triangles, so they are ray cast on the GPU (`World.castRays`, batched and
-  // asynchronous). A caller that casts this segment there too would merge
-  // its nearest hit with `ray.hit` here, nearest first. Until then this is
-  // terrain only.
-  const blocked = ray.hit !== undefined;
-  const roomy = ray.margin !== undefined && ray.margin.meters > 0;
-  const clear = blocked
-    ? false
-    : !band
-      ? true // never enters the height band terrain can occupy
-      : unknownLength > 0 || !known || !roomy
-        ? undefined
-        : true;
-
-  const meters = known
-    ? known.geometricError + (source ? source.meters : 0)
-    : undefined;
-  const notes: string[] = [];
-  const ceiling = (target.maximumHeight ?? 9000) + 100;
-  if (!band) {
-    notes.push(
-      `the path stays above ${ceiling} m, higher than any terrain: clear`,
-    );
-  } else if (known) {
-    const levels =
-      known.minLevel === known.maxLevel
-        ? `level ${known.minLevel}`
-        : `levels ${known.minLevel}–${known.maxLevel}`;
-    notes.push(
-      `exact against the drawn terrain triangles (${levels}); the drawn surface may lie up to ±${round(known.geometricError)} m from the source's heights (level ${known.minLevel}'s geometric error, the coarsest crossed)`,
-    );
-    notes.push(
-      "that per-level error (level zero's, halving each level, as 1.x) is a heuristic, not a bound: quantized-mesh carries no per-tile error (a real bound is plan §13.16's)",
-    );
-    notes.push(
-      source
-        ? `plus the source's own ±${source.meters} m (${source.statistic})`
-        : "the source's own accuracy is not stated",
-    );
-  } else {
-    notes.push("no drawn terrain under the path");
-  }
-  if (band && ray.above > 0) {
-    notes.push(
-      `${percent(ray.above / length)}% of the path is above ${ceiling} m, clear there`,
-    );
-  }
-  if (unknownLength > 0) {
-    const why: string[] = [];
-    if (unknown.notDrawn > 0) {
-      why.push(
-        `${percent(unknown.notDrawn / length)}% not drawn (not loaded, or out of view)`,
-      );
+  queries: SpatialQueries,
+  options: TerrainLineOfSightOptions & {
+    /** The anchor whose coordinates `from` and `to` are in (the globe's: the Earth's). */
+    anchor?: AnchorHandle;
+    /** Only the terrain this view draws (default: any view's). */
+    view?: View;
+    /** The scene time, UTC seconds since 1970 (default 0; the Earth-fixed terrain doesn't move with it). */
+    seconds?: number;
+    signal?: AbortSignal;
+  } = {},
+): Promise<TerrainLineOfSight> {
+  const { sourceAccuracy, groundRadius, anchor, view, seconds, signal } =
+    options;
+  const answer = await queries.castRays(
+    {
+      anchor,
+      seconds: seconds ?? 0,
+      rays: [{ from, to }],
+      targets: ["terrain"],
+      ...(view && { view }),
+      terrain: {
+        ...(sourceAccuracy && { sourceAccuracy }),
+        ...(groundRadius !== undefined && { groundRadius }),
+      },
+    },
+    signal ? { signal } : {},
+  );
+  const ray = answer.rays[0]!;
+  let unknown = 0;
+  for (const span of ray.unknown) {
+    if (span.reason !== "withinError") {
+      unknown += span.to - span.from;
     }
-    if (unknown.notRefined > 0) {
-      why.push(
-        `${percent(unknown.notRefined / length)}% not refined (a coarser tile stands in while finer ones load)`,
-      );
-    }
-    notes.push(
-      `terrain unknown over ${percent(unknownFraction)}% of the path: ${why.join(", ")}${clear === undefined ? ", so clearance is unknown" : ""}`,
-    );
   }
-  const min = ray.minClearance?.meters;
-  if (blocked) {
-    if (min !== undefined && meters !== undefined && -min < meters) {
-      notes.push(
-        `the block (${round(-min)} m deep) is within the terrain's error, so the true terrain may not block`,
-      );
-    }
-  } else if (ray.margin && !roomy) {
-    notes.push(
-      `away from the observers' own ground the path passes ${round(ray.margin.clearance)} m above the drawn terrain, within its ±${round(ray.margin.error)} m error, so the true terrain may block`,
-    );
-  }
-  const note = notes.join("; ");
   const result: TerrainLineOfSight = {
-    clear,
-    unknownFraction,
-    accuracy: meters === undefined ? { note } : { meters, note },
+    clear:
+      ray.verdict === "clear"
+        ? true
+        : ray.verdict === "blocked"
+          ? false
+          : undefined,
+    unknownFraction: Math.min(1, unknown),
+    accuracy:
+      ray.accuracy.meters === undefined
+        ? { note: ray.accuracy.note }
+        : { meters: ray.accuracy.meters, note: ray.accuracy.note },
   };
+  const min = ray.clearance?.min;
   if (min !== undefined) {
-    result.minClearance = min;
+    result.minClearance = min.meters;
   }
   if (ray.hit) {
-    result.blockedAt = ray.hit.point;
+    result.blockedAt = ray.hit.position;
   }
-  if (ray.margin) {
-    const { meters: m, clearance, error, t } = ray.margin;
+  const margin = ray.clearance?.margin;
+  if (margin) {
+    const { meters, clearance, error, t } = margin;
     const at = new Float64Array(3);
     for (let i = 0; i < 3; i++) {
       at[i] = from[i]! + t * (to[i]! - from[i]!);
     }
-    result.margin = { meters: m, clearance, error, t, at };
+    result.margin = { meters, clearance, error, t, at };
   }
   return result;
-}
-
-function round(x: number): string {
-  return Math.abs(x) >= 10 ? x.toFixed(0) : x.toFixed(1);
-}
-
-/** A share as a whole percent that is never 0 or 100 unless it is. */
-function percent(fraction: number): string {
-  const p = fraction * 100;
-  if (p <= 0 || p >= 100) {
-    return p <= 0 ? "0" : "100";
-  }
-  return String(Math.min(99, Math.max(1, Math.round(p))));
 }

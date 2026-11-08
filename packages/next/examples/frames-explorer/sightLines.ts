@@ -2,8 +2,10 @@
 // page's thread: the worker says where each starts and which way it goes
 // (`ScenarioEvaluation.sightLines`, Earth-fixed); here each is traced
 // exactly against the terrain triangles the view draws
-// (`terrainLineOfSight` over `Tileset3D.terrainRayTarget`), for the local
-// horizon: the dish's own hills, or the ridges round Sacramento.
+// (`terrainLineOfSight` through the engine's query interface,
+// `Engine.queries`), for the local horizon: the dish's own hills, or the
+// ridges round Sacramento. The answers come back asynchronously; a trace
+// that a newer one has replaced publishes nothing.
 //
 // The first trace over freshly loaded tiles costs about 30 ms, so it runs
 // on demand: when the evaluation changes, and 300 ms after the terrain's
@@ -18,6 +20,7 @@ import {
   terrainLineOfSight,
   type TerrainLineOfSight,
 } from "../../src/measure/terrainLineOfSight.ts";
+import type { SpatialQueries } from "../../src/query/queries.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import { length, share } from "./panel/format.ts";
 import type { ScenarioEvaluation, SightLine } from "./scenarios/evaluate.ts";
@@ -196,16 +199,17 @@ export const BEFORE_HIT = 1;
  * and clears the terrain by more than its error (Task 9 C1). Its error is
  * the coarsest level's it crossed.
  */
-export function beforeHit(
+export async function beforeHit(
   from: ArrayLike<number>,
   hit: ArrayLike<number>,
-  target: Parameters<typeof terrainLineOfSight>[2],
-): NonNullable<TerrainSightView["beforeHit"]> {
+  queries: SpatialQueries,
+  options: Parameters<typeof terrainLineOfSight>[3] = {},
+): Promise<NonNullable<TerrainSightView["beforeHit"]>> {
   const d = [0, 1, 2].map((i) => hit[i]! - from[i]!);
   const len = Math.hypot(d[0]!, d[1]!, d[2]!);
   const k = len > BEFORE_HIT ? (len - BEFORE_HIT) / len : 0;
   const short = [0, 1, 2].map((i) => from[i]! + k * d[i]!);
-  const r = terrainLineOfSight(from, short, target);
+  const r = await terrainLineOfSight(from, short, queries, options);
   return {
     clear: r.clear,
     unknownFraction: r.unknownFraction,
@@ -245,10 +249,22 @@ export function createSightLines(deps: {
   let settle = 0;
   /** When the pending trace was first asked for (performance.now), if one is. */
   let waitingSince: number | undefined;
+  /** Counts traces: an answer for an older one is dropped. */
+  let generation = 0;
+  let disposed = false;
 
   function trace(): void {
+    void traceNow().catch((error: unknown) => {
+      console.error("sight lines: the trace failed", error);
+    });
+  }
+
+  async function traceNow(): Promise<void> {
     waitingSince = undefined;
-    const lines = deps.lines() ?? [];
+    const mine = ++generation;
+    const current = () => mine === generation && !disposed;
+    const asked = deps.lines();
+    const lines = asked ?? [];
     const check = deps.maskCheck?.();
     if (lines.length === 0 && !check) {
       if (views !== undefined) {
@@ -259,9 +275,13 @@ export function createSightLines(deps: {
     }
     const globe = viewer.globe;
     const shown = deps.globeShown();
+    // The view's terrain, in the globe's (the Earth's) anchor: Earth-fixed.
     const target =
-      shown === "terrain"
-        ? globe?.terrainRayTarget(viewer.engine.viewBit(viewer.view))
+      shown === "terrain" && globe
+        ? {
+            queries: viewer.engine.queries,
+            options: { anchor: globe.anchor, view: viewer.view },
+          }
         : undefined;
     const why =
       deps.globeProblem() ??
@@ -270,52 +290,64 @@ export function createSightLines(deps: {
         : shown === "ellipsoid"
           ? "this view has no terrain globe"
           : undefined);
-    views = lines.map((l) => {
-      if (!target || !globe) {
-        const v = terrainSightText(l.id, l.label, undefined, why, l.subject);
-        return {
-          ...v,
-          // No terrain here, or it failed: can't tell, never "tracing" for
-          // ever (review finding 7); loading while the terrain globe comes.
-          ...(shown === "ellipsoid" || deps.globeProblem() !== undefined
-            ? { state: "unknown" as const, unknownFraction: 1 }
-            : {}),
-          ...(l.key !== undefined && { traced: l.key }),
-        };
-      }
-      const placed = placeObserver(l, (lon, lat) =>
-        globe.surfaceHeight(lon, lat),
-      );
-      const r = terrainLineOfSight(
-        placed.from,
-        placed.to,
-        target,
-        l.groundRadius !== undefined ? { groundRadius: l.groundRadius } : {},
-      );
-      const v: TerrainSightView = {
-        ...terrainSightText(l.id, l.label, r, undefined, l.subject),
-        // What it was traced for: an answer takes only its own (Task 6c's rule).
-        ...(l.key !== undefined && { traced: l.key }),
-        from: placed.from,
-        to: placed.to,
-        // A camera's ray: is the terrain before its first hit drawn, and
-        // clear by more than its error? (Task 9 C1.)
-        ...(l.firstHit === true &&
-          r.blockedAt && {
-            beforeHit: beforeHit(placed.from, r.blockedAt, target),
-          }),
-      };
-      return placed.lifted > 0
-        ? {
+    const next: TerrainSightView[] = await Promise.all(
+      lines.map(async (l): Promise<TerrainSightView> => {
+        if (!target || !globe) {
+          const v = terrainSightText(l.id, l.label, undefined, why, l.subject);
+          return {
             ...v,
-            text: `${v.text} (The observer stands ${OBSERVER_LIFT} m above the drawn ground, lifted ${length(placed.lifted)} onto it.)`,
-          }
-        : v;
-    });
+            // No terrain here, or it failed: can't tell, never "tracing" for
+            // ever (review finding 7); loading while the terrain globe comes.
+            ...(shown === "ellipsoid" || deps.globeProblem() !== undefined
+              ? { state: "unknown" as const, unknownFraction: 1 }
+              : {}),
+            ...(l.key !== undefined && { traced: l.key }),
+          };
+        }
+        const placed = placeObserver(l, (lon, lat) =>
+          globe.surfaceHeight(lon, lat),
+        );
+        const r = await terrainLineOfSight(
+          placed.from,
+          placed.to,
+          target.queries,
+          {
+            ...target.options,
+            ...(l.groundRadius !== undefined && {
+              groundRadius: l.groundRadius,
+            }),
+          },
+        );
+        const v: TerrainSightView = {
+          ...terrainSightText(l.id, l.label, r, undefined, l.subject),
+          // What it was traced for: an answer takes only its own (Task 6c's rule).
+          ...(l.key !== undefined && { traced: l.key }),
+          from: placed.from,
+          to: placed.to,
+          // A camera's ray: is the terrain before its first hit drawn, and
+          // clear by more than its error? (Task 9 C1.)
+          ...(l.firstHit === true &&
+            r.blockedAt && {
+              beforeHit: await beforeHit(
+                placed.from,
+                r.blockedAt,
+                target.queries,
+                target.options,
+              ),
+            }),
+        };
+        return placed.lifted > 0
+          ? {
+              ...v,
+              text: `${v.text} (The observer stands ${OBSERVER_LIFT} m above the drawn ground, lifted ${length(placed.lifted)} onto it.)`,
+            }
+          : v;
+      }),
+    );
     if (check && !(target && globe)) {
       // Not traced: loading while the terrain globe comes, and "can't
       // tell" (never clear) where this view has none or it failed.
-      views.push({
+      next.push({
         id: "mask-check",
         traced: check.label,
         state:
@@ -325,20 +357,32 @@ export function createSightLines(deps: {
         text: `Our terrain against ${check.label}: not traced, ${why ?? "waiting for the terrain"}.`,
       });
     } else if (check && target && globe) {
-      const results = check.samples.map((x) => {
-        const placed = placeObserver(
-          { from: check.from, to: x.to },
-          (lon, lat) => globe.surfaceHeight(lon, lat),
-        );
-        return {
-          azimuth: x.azimuth,
-          elevation: x.elevation,
-          r: terrainLineOfSight(placed.from, placed.to, target),
-        };
-      });
-      views.push(maskCheckText(check.label, results));
+      // One batch: every azimuth's ray asked in this task.
+      const results = await Promise.all(
+        check.samples.map(async (x) => {
+          const placed = placeObserver(
+            { from: check.from, to: x.to },
+            (lon, lat) => globe.surfaceHeight(lon, lat),
+          );
+          return {
+            azimuth: x.azimuth,
+            elevation: x.elevation,
+            r: await terrainLineOfSight(
+              placed.from,
+              placed.to,
+              target.queries,
+              target.options,
+            ),
+          };
+        }),
+      );
+      next.push(maskCheckText(check.label, results));
     }
-    traced = deps.lines();
+    if (!current()) {
+      return; // a newer trace has begun: its answer replaces this one
+    }
+    views = next;
+    traced = asked;
     tracedMask = check;
     deps.changed();
   }
@@ -387,6 +431,7 @@ export function createSightLines(deps: {
       }
     },
     dispose: () => {
+      disposed = true;
       clearTimeout(settle);
       offHeights?.();
     },

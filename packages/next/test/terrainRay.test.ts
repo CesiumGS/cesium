@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { castTerrainRay } from "../src/globe/terrainRay.ts";
 import { terrainLineOfSight } from "../src/measure/terrainLineOfSight.ts";
+import { terrainQueries } from "../src/query/terrainBackend.ts";
 import {
   LEVEL_ZERO_ERROR,
   TerrainSource,
@@ -382,7 +383,7 @@ describe("castTerrainRay", () => {
     expect(tried).toBe(30);
   });
 
-  it("traces only the part of a ground-to-space segment that terrain can reach", () => {
+  it("traces only the part of a ground-to-space segment that terrain can reach", async () => {
     // A dish 10 m up at (0, 0) to a point about 2,000 km up, 60° high.
     const W = 0.001;
     const rects = strip(-0.0005, 0.0025, 6, -W, W);
@@ -403,7 +404,7 @@ describe("castTerrainRay", () => {
     expect(r.band![1]).toBeLessThan(0.01);
     expect(r.above).toBeGreaterThan(0.99 * r.length);
     expect(r.unknown.notDrawn).toBe(0);
-    const sight = terrainLineOfSight(from, to, target);
+    const sight = await terrainLineOfSight(from, to, terrainQueries(target));
     expect(sight.clear).toBe(true);
     expect(sight.unknownFraction).toBe(0);
     expect(sight.accuracy.note).toMatch(
