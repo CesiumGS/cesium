@@ -34,7 +34,7 @@ The GPU is shared with every other app on the machine. A hung shader resets it f
 
 ## Seams and boundaries
 
-- The dependency rule between entry points (core, `/time`, `/frames`, `/proj`, `/measure`) is enforced by `test/importBoundary.test.ts`.
+- The dependency rule between entry points (core, `/time`, `/frames`, `/proj`, `/measure`, `/widgets`) is enforced by `test/importBoundary.test.ts`. The widgets import the other entry points by the package's name and nothing under `src/`.
 - Per-draw constants, draw arguments, geometry submission, bindless resources and ray queries each go through one seam, and a bypass test fails naming the line (`test/seams.test.ts` and its neighbours). Add to the seam; don't go around it.
 - Examples use the public API only. Where an example has to reach past it, record that for the API review.
 

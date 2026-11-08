@@ -2,7 +2,10 @@
   // The widgets' declarations (`dist-lib/types/widgets`), compiled against the
   // core's emitted declarations (`tsconfig.lib.json` runs first): the widgets
   // import the entry points by the package's name, so they see exactly what
-  // a consumer of the library sees, and nothing under `src/`.
+  // a consumer of the library sees, and nothing under `src/`. The `paths` are
+  // only for this compile, where the package's own `exports` name `src/`; the
+  // emitted files keep the bare names, which `dist-lib/package.json` resolves
+  // for a consumer (`scripts/checkDeclarations.mjs` checks that without them).
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,

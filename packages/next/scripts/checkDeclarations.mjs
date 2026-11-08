@@ -18,8 +18,16 @@
 // audited; the rest of the API, ~100 types in scene, streaming, io and gpu,
 // waits for plan 5's API review). Exits 1, listing each dangling type, where it is
 // declared and an exported declaration that names it, when there are any.
-import { readFileSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
@@ -55,13 +63,8 @@ const program = ts.createProgram([...new Set([...entryPoints, ...walked])], {
   target: ts.ScriptTarget.ESNext,
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
-  // The widgets' declarations import the entry points by the package's name.
-  paths: Object.fromEntries(
-    Object.entries(entries).map(([key, path]) => [
-      key === "." ? "@cesium/next" : `@cesium/next${key.slice(1)}`,
-      [declarationsOf(path)],
-    ]),
-  ),
+  // No `paths`: the widgets' declarations import the entry points by the
+  // package's name, and `dist-lib/package.json` has to be what resolves them.
 });
 const checker = program.getTypeChecker();
 const indexOf = (entry) => {
@@ -200,6 +203,103 @@ if (dangling.size > 0) {
   }
   process.exit(1);
 }
+/**
+ * What a TypeScript project that has the built folder as the package
+ * `@cesium/next` writes. Each `@ts-expect-error` fails the check if the type
+ * it names resolved to `any`, as one that couldn't be found does under
+ * `skipLibCheck`.
+ */
+const CONSUMER = `import { Emitter } from "@cesium/next";
+import { Clock } from "@cesium/next/time";
+import { Viewer, type ViewerOptions } from "@cesium/next/widgets";
+
+const options: ViewerOptions = { clock: new Clock({ mode: "paused" }) };
+// @ts-expect-error a number is not a Clock
+const wrong: ViewerOptions = { clock: 5 };
+const viewer: Promise<Viewer> = Viewer.create(document.body, options);
+const events: Emitter<object> = Emitter.prototype;
+void viewer.then((v) =>
+  // @ts-expect-error "warnings" is not one of the viewer's events
+  v.events.on("warnings", () => undefined),
+);
+void [wrong, events];
+`;
+
+/**
+ * Checks the built folder as a consumer meets it, with no \`paths\`: a project
+ * with \`dist-lib\` as \`node_modules/@cesium/next\` imports Viewer from
+ * \`@cesium/next/widgets\`, and every \`@cesium/next\` import in the emitted
+ * declarations resolves, by \`dist-lib/package.json\`, to emitted declarations.
+ */
+function checkConsumer() {
+  const work = mkdtempSync(join(tmpdir(), "cesium-next-consumer-"));
+  const problems = [];
+  try {
+    mkdirSync(join(work, "node_modules/@cesium"), { recursive: true });
+    symlinkSync(
+      resolve(root, "dist-lib"),
+      join(work, "node_modules/@cesium/next"),
+      "dir",
+    );
+    const file = join(work, "consumer.ts");
+    writeFileSync(file, CONSUMER);
+    const options = {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: [],
+      lib: ["lib.es2023.d.ts", "lib.dom.d.ts"],
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+    };
+    const consumer = ts.createProgram([file], options);
+    for (const diagnostic of ts.getPreEmitDiagnostics(consumer)) {
+      problems.push(
+        `consumer.ts: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`,
+      );
+    }
+    // Under `skipLibCheck` an unresolved import in a declaration is silent.
+    for (const source of consumer.getSourceFiles()) {
+      if (relative(typesDir, source.fileName).startsWith("..")) {
+        continue;
+      }
+      for (const statement of source.statements) {
+        const specifier =
+          (ts.isImportDeclaration(statement) ||
+            ts.isExportDeclaration(statement)) &&
+          statement.moduleSpecifier &&
+          ts.isStringLiteral(statement.moduleSpecifier)
+            ? statement.moduleSpecifier.text
+            : "";
+        if (!specifier.startsWith("@cesium/next")) {
+          continue;
+        }
+        const target = ts.resolveModuleName(
+          specifier,
+          source.fileName,
+          options,
+          ts.sys,
+        ).resolvedModule?.resolvedFileName;
+        if (!target || relative(typesDir, target).startsWith("..")) {
+          problems.push(
+            `${relative(typesDir, source.fileName)}: "${specifier}" does not resolve to the built declarations (${target ?? "not found"})`,
+          );
+        }
+      }
+    }
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
+  if (problems.length > 0) {
+    console.error(
+      `checkDeclarations: a consumer of dist-lib as @cesium/next can't use its types:\n  ${problems.join("\n  ")}`,
+    );
+    process.exit(1);
+  }
+}
+checkConsumer();
+
 console.log(
-  `checkDeclarations: ${roots.size} exports walked (${walked.map((entry) => relative(typesDir, entry)).join(", ")}), no dangling type references${only.length > 0 ? ` into ${only.join(", ")}` : ""}`,
+  `checkDeclarations: ${roots.size} exports walked (${walked.map((entry) => relative(typesDir, entry)).join(", ")}), no dangling type references, and a consumer of dist-lib as @cesium/next resolves them${only.length > 0 ? ` into ${only.join(", ")}` : ""}`,
 );

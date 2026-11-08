@@ -9,6 +9,8 @@
 //                              the module that loads it (import.meta.url)
 //   dist-lib/types/            type declarations (tsconfig.lib.json)
 //   dist-lib/LICENSE.md        the license and third-party notices
+//   dist-lib/package.json      the folder as the package `@cesium/next`: each
+//                              entry point's module and declarations by name
 //
 // A page imports it as a module:
 //
@@ -42,11 +44,57 @@ function licenses(): Plugin {
   };
 }
 
+/**
+ * `dist-lib/package.json`: the library as the package `@cesium/next`, so its
+ * entry points resolve by name for a bundler, for Node and for TypeScript
+ * (the emitted declarations of the widgets import `@cesium/next`, `/time` and
+ * `/frames` by name). Each export maps to its module and its declarations.
+ */
+function libraryPackage(): Plugin {
+  return {
+    name: "library-package",
+    generateBundle() {
+      const source = JSON.parse(
+        readFileSync(
+          fileURLToPath(new URL("./package.json", import.meta.url)),
+          "utf8",
+        ),
+      ) as {
+        version: string;
+        license: string;
+        exports: Record<string, string>;
+      };
+      const exports: Record<string, { types: string; import: string }> = {};
+      for (const [key, path] of Object.entries(source.exports)) {
+        exports[key] = {
+          types: `./types/${path.replace(/^\.\/(src\/)?/, "").replace(/\.ts$/, ".d.ts")}`,
+          import: `./cesium-next${key === "." ? "" : `-${key.slice(2)}`}.mjs`,
+        };
+      }
+      this.emitFile({
+        type: "asset",
+        fileName: "package.json",
+        source: `${JSON.stringify(
+          {
+            name: "@cesium/next",
+            version: source.version,
+            license: source.license,
+            type: "module",
+            exports,
+          },
+          null,
+          2,
+        )}\n`,
+      });
+    },
+  };
+}
+
 export default defineConfig({
   // Asset URLs relative to the module that references them, not the page.
   base: "./",
   publicDir: false,
-  plugins: [basisTranscoderEsm(), licenses()],
+  plugins: [basisTranscoderEsm(), licenses(), libraryPackage()],
   build: {
     outDir: "dist-lib",
     emptyOutDir: true,
@@ -59,7 +107,8 @@ export default defineConfig({
       input: {
         "cesium-next": "src/index.ts",
         "cesium-next-time": "src/time/index.ts",
-        "cesium-next-frames": "src/frames/index.ts",
+        // Not `src/frames/index.ts` itself: see the file.
+        "cesium-next-frames": "scripts/libEntries/frames.ts",
         "cesium-next-proj": "src/proj/index.ts",
         "cesium-next-measure": "src/measure/index.ts",
         "cesium-next-widgets": "widgets/index.ts",
