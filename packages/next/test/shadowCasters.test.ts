@@ -15,11 +15,14 @@ import * as v3 from "../src/math/vec3.ts";
 import {
   CASTER_MASK_WORD,
   FLAGS_WORD,
+  NO_PLACEMENT,
+  PLACEMENT_WORD,
   RADIUS_WORD,
   RECORD_WORDS,
   TRANSFORM_WORD,
   TRANSFORM_WORDS,
   VIEW_MASK_WORD,
+  VIEW_TIME_WORD,
 } from "../src/render/layout.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { OffscreenTarget } from "../src/scene/View.ts";
@@ -32,6 +35,8 @@ import {
   fitShadowCascades,
 } from "../src/scene/shadows.ts";
 import { Camera } from "../src/scene/Camera.ts";
+import { readFileSync } from "node:fs";
+import { PLACEMENT_TERMS } from "../src/scene/placement.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;
@@ -288,7 +293,7 @@ describe("shadow casters off screen", () => {
     const parent = tile("roof.gltf", [R + 15, 0, -5], [1, 5, 5], 500, [
       tile("roofChild.gltf", [0, 0, 0], [1, 5, 5]),
     ]);
-    const s = await scene([FLOOR, parent], { casterErrorScale: 1000 });
+    const s = await scene([FLOOR, parent], { casterErrorScale: 200 });
     try {
       const roof = tiles(s)[1]!;
       const child = roof.children[0]!;
@@ -317,17 +322,17 @@ describe("shadow casters off screen", () => {
     }
   });
 
-  it("doesn't load what stands too far toward the sun", async () => {
-    // 4,950 m up-sun: over its shadow's cap (about 400 m with 200 m shadows).
+  it("doesn't load what can't shadow what the view draws", async () => {
+    // Up-sun, but 500 m to the side: its shadow falls beside the floor.
     const s = await scene([
       FLOOR,
       ROOF,
-      tile("far.gltf", [R + 3500, 0, -3500], [1, 5, 5]),
+      tile("beside.gltf", [R + 15, 500, -5], [1, 5, 5]),
     ]);
     try {
-      const [, roof, far] = tiles(s) as [Tile, Tile, Tile];
+      const [, roof, beside] = tiles(s) as [Tile, Tile, Tile];
       expect(roof.state).toBe("ready");
-      expect(far.state).toBe("unloaded");
+      expect(beside.state).toBe("unloaded");
     } finally {
       s.remove();
     }
@@ -360,6 +365,43 @@ describe("shadow casters off screen", () => {
       await s.frames(4);
       expect(roof.state).toBe("ready");
       expect(roof.casterMask).not.toBe(0);
+    } finally {
+      s.remove();
+    }
+  });
+
+  it("casts a placed tile through the cascades: the placement and the caster mask are both on its record", async () => {
+    const s = await scene([FLOOR, ROOF]);
+    try {
+      const [, roof] = tiles(s) as [Tile, Tile];
+      const draw = roof.placement!.draws[0]!;
+      const u = (s.world as unknown as { recordsU32: ArrayLike<number> })
+        .recordsU32;
+      const f = (s.world as unknown as { recordsF32: ArrayLike<number> })
+        .recordsF32;
+      const o = draw.index * RECORD_WORDS;
+      expect(u[o + PLACEMENT_WORD]).toBe(NO_PLACEMENT);
+      const radius = f[o + RADIUS_WORD]!;
+      const coefficients = new Float64Array(PLACEMENT_TERMS * 3);
+      coefficients.set([0.5, 0, 0], 3);
+      s.world.setPlacement(draw, {
+        kind: "fitted",
+        center: [0, 0, 0],
+        scale: 2,
+        coefficients,
+        errorBound: 0.01,
+      });
+      // The word set, the bounding radius grown by the displacement (the
+      // cascade's cull reads it), and the caster mask untouched by both.
+      expect(u[o + PLACEMENT_WORD]).not.toBe(NO_PLACEMENT);
+      expect(f[o + RADIUS_WORD]!).toBeGreaterThan(radius);
+      expect(u[o + CASTER_MASK_WORD]).not.toBe(0);
+      expect(casts(s, roof)).toBe(true);
+      // The next selection keeps it a caster.
+      s.view.camera.version++;
+      await s.frames(3);
+      expect(u[o + PLACEMENT_WORD]).not.toBe(NO_PLACEMENT);
+      expect(u[o + CASTER_MASK_WORD]).not.toBe(0);
     } finally {
       s.remove();
     }
@@ -424,8 +466,132 @@ describe("shadow casters off screen", () => {
   });
 });
 
+describe("the cascades' block", () => {
+  it("sets View.time.z in each cascade's view block and in no other", async () => {
+    const engine = await fakeEngine();
+    const writes: Array<{ buffer: unknown; time: number }> = [];
+    const device = engine.gpu.device as unknown as Record<string, unknown>;
+    device.queue = new Proxy(
+      {},
+      {
+        get: (_t, key) =>
+          key === "writeBuffer"
+            ? (
+                buffer: unknown,
+                _offset: number,
+                data: Float32Array,
+                dataOffset: number,
+                size: number,
+              ) => {
+                if (size > VIEW_TIME_WORD + 3) {
+                  writes.push({
+                    buffer,
+                    time: data[dataOffset + VIEW_TIME_WORD + 2]!,
+                  });
+                }
+              }
+            : () => Promise.resolve(),
+      },
+    );
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(JSON.stringify(tilesetJson([FLOOR])), {
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
+    const world = engine.createWorld({ maxDraws: 8 });
+    const view = engine.addView({
+      target: new OffscreenTarget(64, 48),
+      world,
+      shadows: true,
+    });
+    try {
+      view.camera.position.set([R + 2, 0, 0]);
+      view.camera.direction.set([0, 0, 1]);
+      view.camera.orient(Float64Array.of(1, 0, 0));
+      view.camera.version++;
+      v3.normalize(engine.sunDirection, v3.vec3(1, 0, -1));
+      engine.renderFrame();
+      const internals = engine as unknown as {
+        cascadeStaging: unknown;
+        viewStaging: unknown;
+      };
+      const cascades = writes.filter(
+        (w) => w.buffer === internals.cascadeStaging,
+      );
+      const views = writes.filter((w) => w.buffer === internals.viewStaging);
+      expect(cascades.length).toBe(4);
+      expect(cascades.every((w) => w.time === 1)).toBe(true);
+      expect(views.length).toBeGreaterThan(0);
+      expect(views.every((w) => w.time === 0)).toBe(true);
+    } finally {
+      engine.removeView(view);
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("the shadow pipeline", () => {
+  const source = (path: string) =>
+    readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+
+  it("places vertices as the view's passes do: the cascades' vertex stage is the common one", () => {
+    const surface = source("src/shaders/surface.slang");
+    // Both vertex entries end in the one function that applies the placement.
+    expect(surface).toMatch(
+      /surfaceDepthVertex\(uint vertexIndex, uint item\) \{\s*return vertexOut\(vertexIndex, item, false\);/,
+    );
+    expect(surface).toMatch(
+      /surfaceVertex\(uint vertexIndex, uint item\) \{\s*return vertexOut\(vertexIndex, item, true\);/,
+    );
+    expect(surface.match(/placePosition\(/g)!.length).toBe(1);
+    // The caster pipelines use the depth entry, of the engine's own module.
+    const context = source("src/scene/RenderContext.ts");
+    const shadow = context.slice(context.indexOf("const shadowPipeline = ("));
+    expect(shadow.slice(0, 600)).toContain('entryPoint: "vsDepth"');
+    expect(source("src/shaders/surfaceVertex.wgsl")).toMatch(
+      /fn vsDepth[^}]*surfaceDepthVertex/,
+    );
+  });
+});
+
+describe("the cull", () => {
+  const source = (path: string) =>
+    readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+
+  it("reads the caster mask only in a cascade's view, in `drawable`", () => {
+    const tables = source("src/shaders/cullTables.slang");
+    const start = tables.indexOf("public bool drawable(");
+    expect(start).toBeGreaterThan(0);
+    const end = tables.indexOf("\n}\n", start);
+    const body = tables.slice(start, end);
+    expect(end).toBeGreaterThan(start);
+    // The mask joins the view mask only where View.time.z says cascade.
+    expect(body).toMatch(
+      /view\.time\.z\s*>\s*0\.5\s*\?\s*r\.viewMask\s*\|\s*r\.casterMask\s*:\s*r\.viewMask/,
+    );
+    expect(body.match(/casterMask/g)!.length).toBe(1);
+    // Nothing else reads it, and nothing else reads the view mask but
+    // this function (passes without a cascade's block draw views' only).
+    for (const file of [
+      "src/shaders/cull.slang",
+      "src/shaders/pointCull.slang",
+      "src/shaders/raycast.slang",
+      "src/shaders/surface.slang",
+      "src/shaders/cullTables.slang",
+    ]) {
+      const text = source(file)
+        .replace(body, "")
+        .replace(/\/\/.*$/gm, "");
+      expect(text, file).not.toMatch(/\.casterMask/);
+      expect(text, file).not.toMatch(/\.viewMask/);
+    }
+  });
+});
+
 describe("casterPlanes", () => {
-  it("closes each cascade's box twice the shadows' far past its sphere, in the coordinates given", () => {
+  it("closes each cascade's box 50 km past its sphere toward the light, in the coordinates given", () => {
     const cascades = createShadowCascades();
     const camera = new Camera();
     const at = [R + 2, 0, 0];
@@ -451,20 +617,18 @@ describe("casterPlanes", () => {
       }
       return true;
     };
-    // The last cascade's sphere: well inside it, and up-sun within reach.
     const ahead = [at[0]!, at[1]!, at[2]! + 200];
     const along = (d: number) => ahead.map((x, i) => x + sun[i]! * d);
     expect(inside(3, ahead)).toBe(true);
+    // No reach set by the shadows' far distance: a tile 20 km toward the
+    // sun, as one 100 m away, is inside; the ceiling is 50 km past the
+    // sphere.
     expect(inside(3, along(cascades.far))).toBe(true);
-    // Past the cap of 2 × far beyond the sphere (its radius under 2 × far).
-    expect(inside(3, along(6 * cascades.far))).toBe(false);
-    // Never closer than the cap's floor, for shadows shortened by the view.
-    fitShadowCascades(cascades, camera, 4 / 3, sun, 2, { near: 1, far: 5 });
-    const short = casterPlanes(cascades, at);
-    const o = 3 * 24 + 20;
-    const top = cascades.tops[3]!;
-    const camera0 =
-      short[o]! * at[0]! + short[o + 1]! * at[1]! + short[o + 2]! * at[2]!;
-    expect(camera0 + short[o + 3]!).toBeCloseTo(top + 100, 3);
+    expect(inside(3, along(20_000))).toBe(true);
+    expect(inside(3, along(60_000))).toBe(false);
+    // Plane 4 faces the light: selection reads its direction.
+    for (let k = 0; k < 3; k++) {
+      expect(planes[16 + k]).toBeCloseTo(sun[k]!, 5);
+    }
   });
 });

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { Engine } from "../src/scene/Engine.ts";
 import type { DrawHandle, World } from "../src/scene/World.ts";
 import type { MeshData } from "../src/scene/meshes.ts";
+import { CustomShader } from "../src/scene/CustomShader.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /**
@@ -129,6 +130,58 @@ describe("draw bundles and caster masks", () => {
     world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
     frame(world);
     expect(draws.get("world.shadowBundle")).toBeUndefined();
+  });
+
+  it("keeps the count through a real shader change", () => {
+    const { world, handles } = tiles(1);
+    world.setViewMask(handles[0]!, 0);
+    const mesh = world.addMesh(square);
+    const a = world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    const b = world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    world.setCasterMask(a, 1);
+    world.setCasterMask(b, 1);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    // `a` moves to the batch of its own shader: two batches, each with a caster.
+    const shader = new CustomShader({
+      label: "tint",
+      fragment:
+        "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {}",
+    });
+    world.setDrawShader(a, shader);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(2);
+    // Taking the caster off `a` leaves its batch out of the bundle again.
+    world.setCasterMask(a, 0);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    // `b` changes shader as well, into `a`'s batch, empty of casters: held.
+    world.setDrawShader(b, shader);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    world.removeDraw(b);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBeUndefined();
+  });
+
+  it("records the shadow bundle again only when a batch's first caster joins or its last leaves", () => {
+    const { world, handles } = tiles(1);
+    world.setViewMask(handles[0]!, 0);
+    const mesh = world.addMesh(square);
+    const a = world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    const b = world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    world.setCasterMask(a, 1);
+    frame(world);
+    // A second caster in the same batch: nothing to record again.
+    world.setCasterMask(b, 1);
+    frame(world);
+    expect(recorded.get("world.shadowBundle")).toBeUndefined();
+    world.setCasterMask(a, 0);
+    frame(world);
+    expect(recorded.get("world.shadowBundle")).toBeUndefined();
+    world.setCasterMask(b, 0);
+    frame(world);
+    expect(recorded.get("world.shadowBundle")).toBe(1);
   });
 
   it("wakes the views it casts for", () => {

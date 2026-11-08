@@ -43,7 +43,9 @@ export interface SelectionView {
   /**
    * Where shadow casters may stand for this view's cascades (scene/shadows.ts
    * `casterPlanes`): `CASTER_PLANES` planes per box; none without shadows.
-   * `Budgeted` selects casters inside them; 1.x's `Stepwise` doesn't, as 1.x
+   * Plane 4 of a box faces the light: its normal is the direction toward it.
+   * `Budgeted` selects casters inside them, and inside the light-space
+   * rectangle around what the view draws; 1.x's `Stepwise` doesn't, as 1.x
    * draws shadows only from the tiles the camera selected.
    */
   casterPlanes?: Float64Array;
@@ -81,13 +83,14 @@ export const REQUEST_PURPOSES: readonly RequestPurpose[] = [
 ];
 
 /**
- * How far selection may go for shadow casters, by the cache's use: `"load"`
- * under 90% of the budget, requests and keeps them; `"keep"` up to the
- * budget, keeps those loaded and requests no more, so that evicting a few
- * doesn't load them again; `"none"` over it, doesn't touch them, so they
- * are evicted first (`Tileset3D`). They cast until they go.
+ * Whether selection may request shadow casters (`Tileset3D` sets it each
+ * update). `"load"`: it requests and touches them, within the bytes the
+ * cache has for them (`TileSelection.casterBytes`). `"none"`: a world pool
+ * is under pressure: it requests none and touches none, so eviction may take
+ * them. It walks the least recently touched first: tiles nothing has touched
+ * for longer go before them, and none a view drew this tick.
  */
-export type CasterBudget = "load" | "keep" | "none";
+export type CasterBudget = "load" | "none";
 
 /** A tile selection policy (3D Tiles or globe), run per view each frame. */
 export interface TileSelection {
@@ -125,8 +128,21 @@ export interface TileSelection {
    * loads; `Tileset3D` sets it): what loading in motion weighs against.
    */
   expectedLoadSeconds?: number;
-  /** How far to go for shadow casters (`Tileset3D` sets it each update). */
+  /** Whether to request shadow casters (`Tileset3D` sets it each update). */
   casterBudget?: CasterBudget;
+  /**
+   * Bytes the cache has for shadow casters this update: the casters' target
+   * share of what the views leave (`Tileset3D`). Selection admits casters
+   * nearest first until they would pass it.
+   */
+  casterBytes?: number;
+  /**
+   * Multiplies `casterErrorScale` while wanted casters don't fit
+   * (`Tileset3D` raises it slowly, and lowers it when there is room).
+   */
+  casterScale?: number;
+  /** Bytes assumed for an unloaded caster that never loaded (`Tileset3D`). */
+  casterEstimate?: number;
 }
 
 export interface SelectionResult {
@@ -158,6 +174,11 @@ export interface SelectionResult {
    * inside `SelectionView.casterPlanes`.
    */
   casters?: Tile[];
+  /** Unloaded tiles the caster walk wanted, the ones it didn't request too. */
+  casterWanted?: Tile[];
+  /** Bytes of the casters it admitted, and of those wanted that didn't fit. */
+  casterUsed?: number;
+  casterDenied?: number;
 }
 
 // 1.x CullingVolume plane masks.

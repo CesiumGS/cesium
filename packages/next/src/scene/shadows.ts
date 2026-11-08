@@ -189,23 +189,27 @@ export function fitShadowCascades(
   }
 }
 
-/** How far toward the light casters are selected, at least, m. */
-const CASTER_MIN_REACH = 100;
+/**
+ * How far toward the light casters may stand past a cascade's sphere, m. A
+ * guard against loose volumes (a region's height range, a tileset's root),
+ * not a shadow length: the receivers' rectangle (`Budgeted`) says what can
+ * shadow the view, and bounds it by each tile's own height.
+ */
+const CASTER_CEILING = 50_000;
 /**
  * Where selection looks for shadow casters (`SelectionView.casterPlanes`):
  * each fitted cascade's box in `position`'s coordinates, (nx, ny, nz, d)
  * with inward normals, `CASTER_PLANES` per box. A box's four sides and its
  * far side are the cull's; toward the light, where the cull has no plane
- * (the depth range bounds it, tens of kilometres), it stops twice the
- * cascades' far distance past the box's sphere, and at least 100 m: what
- * stands further toward the light than that isn't worth loading for its
- * shadow, though a loaded tile there still casts.
+ * (the depth range bounds it, tens of kilometres), the box ends
+ * `CASTER_CEILING` past its sphere. Selection narrows these to the light-space
+ * rectangle around what the view draws.
  */
 export function casterPlanes(
   cascades: ShadowCascades,
   position: ArrayLike<number>,
 ): Float64Array {
-  const reach = Math.max(2 * cascades.far, CASTER_MIN_REACH);
+  const reach = CASTER_CEILING;
   const out = new Float64Array(SHADOW_CASCADES * CASTER_PLANES * 4);
   for (let c = 0; c < SHADOW_CASCADES; c++) {
     const p = cascades.planes[c]!;

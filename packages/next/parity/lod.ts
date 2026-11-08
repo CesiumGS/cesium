@@ -142,6 +142,19 @@ interface Row {
   selected?: number;
   /** Requests and MB by purpose over the move (`Budgeted`'s bands). */
   purposes?: Record<string, { requests: number; megabytes: number }>;
+  /**
+   * With `?shadows=1`: ms from the view settling until the loop could
+   * sleep (`needsFrames` false, no caster loading), and the resident bytes
+   * by class, caster tiles drawn only by cascades, the caster scale and the
+   * casters' target share at that point.
+   */
+  sleepMs?: number;
+  residentMb?: number;
+  casterMb?: number;
+  coldMb?: number;
+  casters?: number;
+  casterScale?: number;
+  casterTarget?: number;
 }
 
 const frame = () => new Promise((resolve) => setTimeout(resolve, 16));
@@ -265,6 +278,13 @@ interface Measurement {
   traceTarget: number[];
   selected: number;
   purposes: Record<string, { requests: number; megabytes: number }>;
+  sleepMs?: number;
+  residentMb?: number;
+  casterMb?: number;
+  coldMb?: number;
+  casters?: number;
+  casterScale?: number;
+  casterTarget?: number;
 }
 
 async function measure(
@@ -286,12 +306,16 @@ async function measure(
     world,
     background: "color",
     clearColor: [0, 0, 0],
+    // ?shadows=1: the sun's shadows, and off-screen casters with them;
+    // ?casters=0 turns those off (`casterErrorScale` 0) for the comparison.
+    ...(params.get("shadows") === "1" ? { shadows: true } : {}),
   });
   view.camera.near = 1;
   const tileset = await e.addTileset(world, s.url, {
     ...(s.headers ? { headers: s.headers } : {}),
-    cacheBytes: 4 * 1024 * 1024 * 1024,
+    cacheBytes: Number(params.get("cache") ?? 4 * 1024 * 1024 * 1024),
     ...options,
+    ...(params.get("casters") === "0" ? { casterErrorScale: 0 } : {}),
   });
   const id = Math.log2(e.viewBit(view));
   try {
@@ -360,6 +384,19 @@ async function measure(
       }
     }
     const settleMs = performance.now() - start;
+    // With shadows: how long until the loop could sleep (casters finish).
+    let sleepMs: number | undefined;
+    if (params.get("shadows") === "1") {
+      const sleepStart = performance.now();
+      while (
+        (tileset.needsFrames || !tileset.casterIdle) &&
+        performance.now() - sleepStart < 120000
+      ) {
+        e.renderFrame();
+        await frame();
+      }
+      sleepMs = performance.now() - sleepStart;
+    }
     e.renderFrame();
     const image = await target.read();
     if (reference) {
@@ -377,6 +414,17 @@ async function measure(
       trace: samples,
       traceTarget: goalSamples,
       selected: tileset.stats.selected.get(id) ?? 0,
+      ...(sleepMs === undefined
+        ? {}
+        : {
+            sleepMs,
+            residentMb: tileset.stats.bytes / 1048576,
+            casterMb: tileset.stats.casterBytes / 1048576,
+            coldMb: tileset.stats.coldBytes / 1048576,
+            casters: tileset.stats.casters,
+            casterScale: tileset.stats.casterScale,
+            casterTarget: tileset.stats.casterTarget,
+          }),
       purposes: Object.fromEntries(
         Object.entries(tileset.stats.purposes)
           .map(([k, v]) => [
@@ -451,6 +499,17 @@ async function runLod(): Promise<Row[]> {
           flipSettledTarget: (await flip(goal, r.image, WIDTH, HEIGHT)).mean,
           selected: r.selected,
           purposes: r.purposes,
+          ...(r.sleepMs === undefined
+            ? {}
+            : {
+                sleepMs: r.sleepMs,
+                residentMb: r.residentMb!,
+                casterMb: r.casterMb!,
+                coldMb: r.coldMb!,
+                casters: r.casters!,
+                casterScale: r.casterScale!,
+                casterTarget: r.casterTarget!,
+              }),
         });
       } catch (error) {
         rows.push({

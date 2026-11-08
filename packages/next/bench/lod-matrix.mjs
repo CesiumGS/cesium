@@ -6,6 +6,10 @@
 //   node packages/next/bench/lod-matrix.mjs [--content a,b] [--links fast,slow]
 //        [--policies stepwise,adaptive] [--note "what changed"]
 //
+// SHADOWS=1 draws the sun's shadows, with off-screen casters in the
+// budgeted tilesets; SHADOWS=1 CASTERS=0 is the same without casters. Rows
+// then also hold the ms until the loop could sleep, and resident MB by class.
+//
 // Each cell runs `run.mjs lod` (its own server and browser; BENCH_COMMIT
 // serves a commit, so development can continue). Results go outside the
 // repo: ~/.cesium-bench/lod/<stamp>.json (or BENCH_LOD_RESULTS).

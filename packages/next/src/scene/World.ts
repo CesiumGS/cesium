@@ -3450,8 +3450,9 @@ export class World {
       if ((old === 0) !== (mask === 0)) {
         const batch = this.drawBatches[handle.index]!;
         batch.casters += mask === 0 ? -1 : 1;
-        // Joining or leaving the shadow bundle alone: recorded again.
-        if (batch.shown === 0) {
+        // Its first caster, or its last, with no view drawing it: it joins
+        // the shadow bundle alone, or leaves it, and that is recorded again.
+        if (batch.shown === 0 && batch.casters === (mask === 0 ? 0 : 1)) {
           this.casters = undefined;
         }
       }
@@ -5268,8 +5269,10 @@ export class World {
     this.drawConstants.mark(index);
     this.uploadsPending = true;
     this.version++;
+    // The views that draw it, and those whose cascades do.
     this.changedViews |=
-      this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+      this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]! |
+      this.recordsU32[index * RECORD_WORDS + CASTER_MASK_WORD]!;
   }
 
   /** The world was destroyed (`destroy`): its GPU resources are gone. */

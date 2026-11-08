@@ -151,6 +151,13 @@ export class Tile {
   casterMask = 0;
   /** `casterMask` as currently written to the draw records. */
   appliedCasterMask = 0;
+  /**
+   * Its bytes when last loaded, kept after it unloads: what a caster costs
+   * before it loads again (0: it never loaded).
+   */
+  lastBytes = 0;
+  /** Last used only as a shadow caster, no view having drawn it since it loaded. */
+  castsOnly = false;
   /** Views drawing this tile as a mixed-LOD placeholder this frame. */
   placeholderMask = 0;
   /** The volumes it fills as a placeholder, over all views this frame. */

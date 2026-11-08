@@ -777,6 +777,37 @@ export function volumeIntersectPlane(
   }
 }
 
+/**
+ * The range a volume spans along the unit direction `n`, written to `out`
+ * as [lowest, highest] of `n·p` over the volume (its box, or its sphere).
+ */
+export function volumeSpan(
+  v: TileVolume,
+  n: ArrayLike<number>,
+  out: Float64Array,
+): void {
+  const box = volumeObb(v);
+  const nx = n[0]!,
+    ny = n[1]!,
+    nz = n[2]!;
+  let center: Vec3;
+  let radius: number;
+  if (box) {
+    const h = box.halfAxes;
+    center = box.center;
+    radius =
+      Math.abs(nx * h[0]! + ny * h[1]! + nz * h[2]!) +
+      Math.abs(nx * h[3]! + ny * h[4]! + nz * h[5]!) +
+      Math.abs(nx * h[6]! + ny * h[7]! + nz * h[8]!);
+  } else {
+    center = v.sphere.center;
+    radius = v.sphere.radius;
+  }
+  const c = nx * center[0]! + ny * center[1]! + nz * center[2]!;
+  out[0] = c - radius;
+  out[1] = c + radius;
+}
+
 /** The OBB used for plane tests, or undefined for spheres. */
 export function volumeObb(v: TileVolume): Obb | undefined {
   return v.kind === "box"
