@@ -136,6 +136,14 @@ export interface MeasureTool {
   retry(): void;
   /** What the measure section shows, for the checks (Task 20). */
   shownValues(): ShownValues | undefined;
+  /** The viewer's own finished measurement's ends, design units (for the checks). */
+  userEnds():
+    | {
+        readonly a: Float64Array;
+        readonly b: Float64Array;
+        readonly site: string;
+      }
+    | undefined;
   /** Measures the openers and the user's line again (after a failure). */
   retryMeasure(): void;
   /**
@@ -928,6 +936,11 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
           },
         }),
       });
+    },
+    userEnds() {
+      return state.phase === "done"
+        ? { a: state.a.design, b: state.b.design, site: state.a.site }
+        : undefined;
     },
     openerFocus(id) {
       const o = openers.find((x) => x.id === id);

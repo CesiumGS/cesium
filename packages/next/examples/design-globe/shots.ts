@@ -7,7 +7,7 @@ import type { Alignment } from "../../src/engineering/alignment.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import type { AnswerSite, Answers } from "./answers.ts";
-import type { SagSample } from "./overlays.ts";
+import { enuAt, type SagSample } from "./overlays.ts";
 import { morphEase } from "./page.ts";
 
 const deg = Math.PI / 180;
@@ -53,6 +53,12 @@ export const reducedMotion = (): boolean =>
 export class CameraMoves {
   private token = 0;
   private flying_ = false;
+  /**
+   * Where a framing's subject sits above the view's centre, as a share of
+   * its range (0: centred). The tour's card covers the lower middle of the
+   * view, so its shots lift their subject clear of it (`cut`, `flyTo`).
+   */
+  lift = 0;
 
   constructor(
     private readonly viewer: Viewer,
@@ -63,8 +69,38 @@ export class CameraMoves {
     return this.flying_;
   }
 
-  /** Places the camera at `to` at once. */
-  cut(to: Framing): void {
+  /**
+   * `to` with its look point moved down the view (perpendicular to the line
+   * of sight) by `lift` × range, so its subject shows that much higher.
+   */
+  private lifted(to: Framing): Framing {
+    if (this.lift === 0) {
+      return to;
+    }
+    const { east, north, up } = enuAt(to.center);
+    const sh = Math.sin(to.heading);
+    const ch = Math.cos(to.heading);
+    const sp = Math.sin(to.pitch);
+    const cp = Math.cos(to.pitch);
+    // The camera's up, in east-north-up: (−sin h sin p, −cos h sin p, cos p).
+    const s = this.lift * to.range;
+    return {
+      ...to,
+      center: [0, 1, 2].map(
+        (k) =>
+          to.center[k]! -
+          s * (-sh * sp * east[k]! - ch * sp * north[k]! + cp * up[k]!),
+      ),
+    };
+  }
+
+  /** Places the camera at `framing` at once (lifted for the tour). */
+  cut(framing: Framing): void {
+    this.place(this.lifted(framing));
+  }
+
+  /** Places the camera at `to` at once, as given. */
+  private place(to: Framing): void {
     this.stop();
     this.viewer.controller.focus(
       Float64Array.from(to.center),
@@ -95,7 +131,7 @@ export class CameraMoves {
   ): void {
     this.stop();
     if (reducedMotion() || ms <= 0) {
-      this.cut(path(1));
+      this.place(path(1));
       options.done?.();
       return;
     }
@@ -143,7 +179,8 @@ export class CameraMoves {
    * Flies from where the camera looks now to `to`: the look point and range
    * eased (range on a log scale), heading and pitch the short way round.
    */
-  flyTo(to: Framing, done?: () => void): void {
+  flyTo(framing: Framing, done?: () => void): void {
+    const to = this.lifted(framing);
     const cam = this.viewer.view.camera;
     const from = this.viewer.controller;
     const fromCenter = Float64Array.from(from.target);

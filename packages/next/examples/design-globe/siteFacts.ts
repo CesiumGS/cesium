@@ -28,6 +28,11 @@ export interface SiteFactsInput {
    * The generator's answer for a ladder site (answers.json `sites`): its
    * extent and the rigid error at its farthest point, exact.
    */
+  /**
+   * The combined factor k at the rigid anchor (grid distance = ground
+   * distance × k): answers.json's for a ladder site, PROJ's for the corridor.
+   */
+  readonly combinedFactor?: number;
   readonly answer?: {
     readonly extent: number;
     readonly displayError: number;
@@ -57,6 +62,20 @@ export function cause(
   ];
   const [size, name] = parts.reduce((a, b) => (b[0] > a[0] ? b : a));
   return size > 0 ? `, mostly ${name}` : "";
+}
+
+/**
+ * "0.99989106 at the anchor (−108.9 ppm): ground distances are 108.9 ppm
+ * longer than the grid's; rigid ignores it, taking grid distances as ground ones."
+ */
+export function scaleText(k: number): string {
+  const ppm = (k - 1) * 1e6;
+  const size = fixed(Math.abs(ppm), 1);
+  const relation =
+    fixed(ppm, 1) === fixed(0, 1)
+      ? "ground and grid distances agree to 0.1 ppm"
+      : `ground distances are ${size} ppm ${ppm < 0 ? "longer" : "shorter"} than the grid's`;
+  return `${k.toFixed(8)} at the anchor (${fixed(ppm, 1)} ppm): ${relation}; rigid ignores it, taking grid distances as ground ones.`;
 }
 
 /** The site's frame and story; no story where its rigid error can't be found. */
@@ -110,6 +129,10 @@ export function siteFacts(input: SiteFactsInput): {
     accuracy,
     credits: frame.gridCredits,
     ...(fallback && { fallback }),
+    ...(input.combinedFactor !== undefined &&
+      Number.isFinite(input.combinedFactor) && {
+        scale: scaleText(input.combinedFactor),
+      }),
   };
   if (edge === undefined) {
     return { frame: view };

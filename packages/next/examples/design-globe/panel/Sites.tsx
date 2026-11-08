@@ -35,6 +35,12 @@ function SiteDetail({ site }: { site: SiteView }) {
         <dd>{frame.units}</dd>
         <dt>Operation</dt>
         <dd>{frame.accuracy}</dd>
+        {frame.scale !== undefined && (
+          <>
+            <dt>Combined factor</dt>
+            <dd className="dg-num">{frame.scale}</dd>
+          </>
+        )}
         {frame.credits.length > 0 && (
           <>
             <dt>Grids</dt>

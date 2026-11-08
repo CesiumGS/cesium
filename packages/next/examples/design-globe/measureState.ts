@@ -144,11 +144,24 @@ export function formatMeasureLink(state: MeasureState): {
   if (state.phase !== "done") {
     return { a: undefined, b: undefined, on: undefined };
   }
-  const text = (d: Float64Array) => [...d].map(linkNumber).join(",");
+  return pointsLink(state.a.design, state.b.design, state.a.site);
+}
+
+/** The link's `a`, `b` and `on` for a measurement between two design points of `site`. */
+export function pointsLink(
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  site: string,
+): {
+  readonly a: string;
+  readonly b: string;
+  readonly on: string | undefined;
+} {
+  const text = (d: ArrayLike<number>) => Array.from(d, linkNumber).join(",");
   return {
-    a: text(state.a.design),
-    b: text(state.b.design),
-    on: state.a.site === "corridor" ? undefined : state.a.site,
+    a: text(a),
+    b: text(b),
+    on: site === "corridor" ? undefined : site,
   };
 }
 

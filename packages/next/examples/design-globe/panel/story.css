@@ -1,0 +1,463 @@
+/*
+ * Task 20's parts of the design globe's panel and HUD: the bar (the tour's
+ * way in and Copy link), the viewer toggles' hints, the checks, the ion
+ * slots, the tour's card and the convergence compass. StrataKit tokens,
+ * with the frames explorer's two check-kind tints (its tokens.css: the
+ * explorer's second exception to StrataKit, which has no categorical
+ * palette; neither tint is a status hue, each 6.3:1 or more in both
+ * schemes) and the placements' colours.
+ */
+.dg-panel {
+  --dg-kind-exact-bg: light-dark(#fbeaf0, #72243e);
+  --dg-kind-exact-fg: light-dark(#72243e, #f4c0d1);
+  --dg-kind-published-bg: light-dark(#eeedfe, #3c3489);
+  --dg-kind-published-fg: light-dark(#3c3489, #cecbf6);
+}
+
+/* ------------------------------------------------------------ the bar */
+
+.dg-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+  margin-block-start: calc(-1 * var(--stratakit-space-300));
+}
+.dg-bar-note {
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+
+/* --------------------------------------------------------- the toggles */
+
+.dg-toggle.two-line {
+  align-items: flex-start;
+}
+.dg-toggle.two-line .MuiSwitch-root {
+  margin-block-start: 2px;
+}
+.dg-toggle.two-line > span {
+  display: flex;
+  flex-direction: column;
+}
+.dg-toggle-hint {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+
+/* ---------------------------------------------------------- the checks */
+
+.dg-check-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-150);
+  margin: 0;
+}
+.dg-check-summary svg,
+.dg-check-summary .MuiCircularProgress-root {
+  flex: none;
+  margin-block-start: 3px;
+}
+.dg-check-summary.pass svg {
+  color: var(--stratakit-color-icon-positive-base);
+}
+.dg-check-summary.fail {
+  color: var(--stratakit-color-text-critical-base);
+}
+.dg-check-summary.fail svg {
+  color: var(--stratakit-color-icon-critical-base);
+}
+.dg-check-summary.waiting {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-checks > .dg-m-disclose {
+  align-self: flex-start;
+}
+.dg-check-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-kind {
+  display: inline-block;
+  justify-self: start;
+  padding: 1px var(--stratakit-space-150);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--dg-kind-bg);
+  color: var(--dg-kind-fg);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dg-kind-exact {
+  --dg-kind-bg: var(--dg-kind-exact-bg);
+  --dg-kind-fg: var(--dg-kind-exact-fg);
+}
+.dg-kind-published {
+  --dg-kind-bg: var(--dg-kind-published-bg);
+  --dg-kind-fg: var(--dg-kind-published-fg);
+}
+.dg-check-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.dg-check-legend li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+}
+.dg-check-user {
+  display: flex;
+  gap: var(--stratakit-space-150);
+  margin: 0;
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.dg-check-user svg {
+  flex: none;
+  margin-block-start: 1px;
+  color: var(--stratakit-color-icon-info-base);
+}
+.dg-check-subhead {
+  margin: 0;
+  font-weight: 500;
+}
+.dg-check-groups,
+.dg-check-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dg-check-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.dg-check-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+  padding-block-end: var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.dg-check-count {
+  flex: none;
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.dg-check-count.fail {
+  color: var(--stratakit-color-text-critical-base);
+  font-weight: 600;
+}
+/* Kind | the label over its numbers | status: the explorer's columns. */
+.dg-check-row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-150) 0;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-check-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-inline-size: 0;
+}
+.dg-check-label {
+  color: var(--stratakit-color-text-neutral-primary);
+  overflow-wrap: anywhere;
+}
+.dg-check-values {
+  color: var(--stratakit-color-text-neutral-secondary);
+  overflow-wrap: anywhere;
+}
+.dg-check-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-check-status.pass {
+  color: var(--stratakit-color-text-positive-base);
+}
+.dg-check-status.pass svg {
+  color: var(--stratakit-color-icon-positive-base);
+}
+.dg-check-status.fail {
+  color: var(--stratakit-color-text-critical-base);
+}
+.dg-check-status.fail svg {
+  color: var(--stratakit-color-icon-critical-base);
+}
+/* Not shown: a dash, never the pass tone. */
+.dg-check-dash {
+  inline-size: 10px;
+  block-size: 0;
+  border-block-start: 1.5px solid currentColor;
+}
+.dg-check-row.not-shown .dg-check-label {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-check-group.unshown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  padding-block-start: var(--stratakit-space-150);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-check-unshown {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.dg-check-group.unshown .MuiButton-root {
+  flex: none;
+}
+/* A narrow column: the kind and status on top, the text under them. */
+@media (max-width: 480px) {
+  .dg-check-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "kind . status"
+      "text text text";
+    row-gap: var(--stratakit-space-100);
+  }
+  .dg-check-row > .dg-kind {
+    grid-area: kind;
+  }
+  .dg-check-row > .dg-check-text {
+    grid-area: text;
+  }
+  .dg-check-row > .dg-check-status {
+    grid-area: status;
+  }
+}
+
+/* ------------------------------------------------------- the ion slots */
+
+.dg-slots-lead {
+  margin: 0;
+}
+.dg-slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+/* Drawn empty: a dashed outline, the slot's shape with nothing in it. */
+.dg-slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  padding: var(--stratakit-space-300);
+  border: 1px dashed var(--stratakit-color-border-neutral-base);
+  border-radius: var(--stratakit-radius-md);
+}
+.dg-slot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.dg-slot-source {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-slot-needs {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+  margin: var(--stratakit-space-100) 0 0;
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-slot-needs > div {
+  display: contents;
+}
+.dg-slot-needs dt {
+  font-weight: 600;
+}
+.dg-slot-needs dd {
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* ------------------------------------------------------------ the tour */
+
+/*
+ * Over the globe, bottom centre, above the time controls (they stand 52 to
+ * 116 px up in the gallery's narrow view, 8 to 72 px in a wide one).
+ */
+.dg-tour {
+  inset-block-end: 128px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  inline-size: min(480px, calc(100% - 24px));
+  max-inline-size: none;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  pointer-events: auto;
+}
+.dg-tour-head {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.dg-tour-steps {
+  display: flex;
+  flex: 1;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dg-tour-steps li {
+  flex: 1;
+  block-size: 3px;
+  border-radius: 2px;
+  background: color-mix(in oklab, currentColor 22%, transparent);
+}
+.dg-tour-steps li.done {
+  background: color-mix(in oklab, currentColor 60%, transparent);
+}
+.dg-tour-steps li.now {
+  background: var(--dg-reprojected);
+}
+.dg-tour-say {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.dg-tour-title {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 600;
+}
+.dg-tour-narration {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  /* Room for the longest sentence, so the buttons don't jump step to step. */
+  min-block-size: calc(3 * var(--stratakit-line-height-body-md));
+}
+.dg-tour-stops {
+  align-self: flex-start;
+}
+.dg-tour-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-100);
+}
+.dg-tour-leave {
+  margin-inline-start: auto;
+}
+/*
+ * The step's primary action, light on the always-dark card in either app
+ * theme (the HUD's own tokens: MUI's contained button takes the app's
+ * palette, white on white in the light theme).
+ */
+.dg-tour .dg-tour-primary {
+  border-color: transparent;
+  background: var(--stratakit-color-text-neutral-primary);
+  color: var(--stratakit-color-bg-elevation-base);
+  font-weight: 600;
+}
+.dg-tour .dg-tour-primary:hover {
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-text-neutral-primary) 86%,
+    transparent
+  );
+}
+.dg-tour .dg-tour-primary:focus-visible {
+  outline: 2px solid var(--dg-reprojected);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------- the compass */
+
+.dg-compass {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+.dg-compass svg {
+  overflow: visible;
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.8));
+}
+.dg-compass-ring {
+  fill: color-mix(in oklab, #000 40%, transparent);
+  stroke: rgb(255 255 255 / 0.5);
+  stroke-width: 1;
+}
+.dg-compass line {
+  stroke-linecap: round;
+}
+.dg-compass-true line {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+.dg-compass-true circle,
+.dg-compass-n {
+  fill: #fff;
+}
+.dg-compass-n {
+  font-size: 11px;
+  font-weight: 700;
+}
+.dg-compass-grid line {
+  stroke: var(--dg-reprojected);
+  stroke-width: 3.5;
+}
+.dg-compass-grid circle {
+  fill: var(--dg-reprojected);
+}
+.dg-compass-hub {
+  fill: #fff;
+}
+.dg-compass-label {
+  padding: 1px var(--stratakit-space-150);
+  border-radius: var(--stratakit-radius-sm);
+  background: color-mix(in oklab, #000 62%, transparent);
+  color: var(--dg-reprojected);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dg-hud-compass-text {
+  padding-block-start: var(--stratakit-space-100);
+  border-block-start: 1px solid
+    color-mix(
+      in oklab,
+      var(--stratakit-color-text-neutral-secondary) 35%,
+      transparent
+    );
+}
+.dg-ramp.tall {
+  block-size: 10px;
+}

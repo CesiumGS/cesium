@@ -30,7 +30,7 @@ import {
 } from "../examples/design-globe/panelModel.ts";
 import { creaseEdges } from "../examples/design-globe/placementPair.ts";
 import { judgePick } from "../examples/design-globe/cursor.ts";
-import { cause } from "../examples/design-globe/siteFacts.ts";
+import { cause, scaleText } from "../examples/design-globe/siteFacts.ts";
 import type { SiteRuntime } from "../examples/design-globe/siteLoader.ts";
 import type { DesignPick } from "../src/engineering/pick.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
@@ -615,5 +615,16 @@ describe("design globe error causes", () => {
       ", mostly the geoid's rise from the anchor",
     );
     expect(cause(undefined)).toBe("");
+  });
+});
+
+describe("design globe combined factor (Task 20)", () => {
+  it("says the anchor's combined factor in ppm and what rigid does with it", () => {
+    const t = scaleText(0.9998910622771672);
+    expect(t).toMatch(/^0\.99989106 at the anchor \(−108\.9 ppm\)/);
+    expect(t).toMatch(/ground distances are 108\.9 ppm longer than the grid's/);
+    expect(t).toMatch(/rigid ignores it/);
+    expect(scaleText(1.0001373259917115)).toMatch(/137\.3 ppm shorter/);
+    expect(scaleText(1 + 1e-9)).toMatch(/agree to 0\.1 ppm/);
   });
 });

@@ -2,7 +2,9 @@
 // main.ts from the page's state (page.ts) and the loaded frames; the panel
 // only reads it and calls `PanelActions`. Every string here is final copy:
 // units and datums named, numbers stated once.
+import type { ChecksView } from "../checksView.ts";
 import type { LoadItem, Placement } from "../page.ts";
+import type { TourAction, TourCardView } from "../tour.ts";
 
 /** A site's frame as PROJ resolved it: "every country, done right". */
 export interface SiteFrameView {
@@ -18,6 +20,8 @@ export interface SiteFrameView {
   readonly credits: readonly string[];
   /** A fallback that applies, and what it costs. */
   readonly fallback?: string;
+  /** The combined scale factor at the anchor, in words (siteFacts `scaleText`). */
+  readonly scale?: string;
 }
 
 /** One line of the story, from the site's own geometry. */
@@ -74,6 +78,22 @@ export interface CursorView {
   readonly tolerance?: string;
   /** No design answer here (moving, exaggerated): drawn quieter. */
   readonly muted: boolean;
+  /** The convergence compass at the picked point, when its toggle is on. */
+  readonly compass?: CompassView;
+}
+
+/** Grid north against true north at the cursor (compass.ts). */
+export interface CompassView {
+  /** The picked point, CSS pixels over the view. */
+  readonly x: number;
+  readonly y: number;
+  /** The needles' screen angles, degrees clockwise from up; absent end-on. */
+  readonly trueNorth?: number;
+  readonly gridNorth?: number;
+  /** "Grid north is 0.878° west of true north (convergence −0°52′39.1″)". */
+  readonly text: string;
+  /** "Grid north 0.878° W", the compass's own label. */
+  readonly short: string;
 }
 
 export interface LegendView {
@@ -86,6 +106,16 @@ export interface LegendView {
   /** The anchor ring is drawn (the corridor). */
   readonly anchor: boolean;
   readonly exaggeration: number;
+  /** The error ribbon's range, when it is drawn. */
+  readonly ribbon?: { readonly min: string; readonly max: string };
+}
+
+/** The viewer toggles (DESIGN.md "Visuals in the viewer"), off by default. */
+export interface ViewToggles {
+  readonly compass: boolean;
+  readonly ribbon: boolean;
+  /** The ribbon can be drawn: the corridor's placements are in. */
+  readonly ribbonReady: boolean;
 }
 
 export interface PanelModel {
@@ -110,6 +140,11 @@ export interface PanelModel {
   readonly sites: readonly SiteView[];
   readonly cursor: CursorView;
   readonly legend: LegendView;
+  /** The checks against the generator's answers and NGS's datasheet (Task 20). */
+  readonly checks?: ChecksView;
+  /** The tour's card, while the tour runs. */
+  readonly tour?: TourCardView;
+  readonly view?: ViewToggles;
 }
 
 export interface PanelActions {
@@ -120,6 +155,13 @@ export interface PanelActions {
   stopFlight(): void;
   selectSite(id: string): void;
   retry(): void;
+  /** The page's link as it is now (absolute; the host builds it). */
+  link(): string;
+  setCompass(on: boolean): void;
+  setRibbon(on: boolean): void;
+  tour(action: TourAction): void;
+  /** Measures an answer pair the page doesn't show, so its checks run. */
+  measurePair(id: string): void;
 }
 
 /** What the page changes every frame, kept out of the model. */

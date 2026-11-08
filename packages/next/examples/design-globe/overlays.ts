@@ -14,6 +14,7 @@ import type { Alignment } from "../../src/engineering/alignment.ts";
 import type { TilesetPlacement } from "../../src/engineering/placement.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { CustomShader } from "../../src/scene/CustomShader.ts";
+import { MaterialFlags } from "../../src/render/layout.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { visibleRise } from "./exactSnap.ts";
 import { rampAt } from "./colors.ts";
@@ -203,5 +204,100 @@ export class AnchorRing extends Drawn {
       name: "design globe anchor ring",
     });
     this.keep(mesh, draw);
+  }
+}
+
+/** The error ribbon's half width either side of the centreline, design units (the road is ±41): wide enough to read from kilometres up. */
+const RIBBON_HALF_WIDTH = 300;
+/** Below the profile, design units: under the bridge deck's underside (1.5), so nothing on the road meets it. */
+const RIBBON_DROP = 2.5;
+
+/** The ribbon's opacity: a tint, so the imagery and the true road read through it. */
+const RIBBON_ALPHA = 0.4;
+
+/**
+ * The error ribbon (DESIGN.md "Visuals in the viewer", a toggle, off by
+ * default): the ground under the corridor, where it truly is, tinted by
+ * rigid's error at each station on the whiskers' ramp (zero at the anchor,
+ * the largest at the far end). Unlit and translucent, a band either side of
+ * the road a little under its surface, so the road draws over its middle.
+ */
+export class ErrorRibbon extends Drawn {
+  private readonly draw: DrawHandle;
+  private readonly material: number;
+  /** The largest error it is coloured against, metres. */
+  readonly max: number;
+
+  constructor(
+    world: World,
+    alignment: Alignment,
+    rigid: TilesetPlacement,
+    reprojected: TilesetPlacement,
+    every: number,
+  ) {
+    super(world);
+    const stations: number[] = [];
+    for (let s = alignment.startStation; ; s += every) {
+      stations.push(Math.min(s, alignment.endStation));
+      if (s >= alignment.endStation) {
+        break;
+      }
+    }
+    const errors = stations.map((s) => {
+      const [e, n] = alignment.pointAt(s, 0);
+      const d = [e!, n!, alignment.elevationAt(s)];
+      const r = rigid.displayed(d);
+      const t = reprojected.displayed(d);
+      return Math.hypot(r[0]! - t[0]!, r[1]! - t[1]!, r[2]! - t[2]!);
+    });
+    this.max = Math.max(...errors) || 1;
+    const n = stations.length;
+    const positions = new Float32Array(n * 6);
+    const colors = new Float32Array(n * 8);
+    let origin: Float64Array | undefined;
+    stations.forEach((s, i) => {
+      const z = alignment.elevationAt(s) - RIBBON_DROP;
+      [-RIBBON_HALF_WIDTH, RIBBON_HALF_WIDTH].forEach((offset, j) => {
+        const [e, nn] = alignment.pointAt(s, offset);
+        const p = reprojected.displayed([e!, nn!, z]);
+        origin ??= Float64Array.from(p);
+        for (let k = 0; k < 3; k++) {
+          positions[(i * 2 + j) * 3 + k] = p[k]! - origin[k]!;
+        }
+        colors.set(rampAt(errors[i]! / this.max), (i * 2 + j) * 4);
+      });
+    });
+    const indices = new Uint32Array((n - 1) * 6);
+    for (let i = 0; i < n - 1; i++) {
+      const a = i * 2;
+      indices.set([a, a + 1, a + 2, a + 1, a + 3, a + 2], i * 6);
+    }
+    const mesh = world.addMesh({ positions, colors, indices });
+    this.material = world.addMaterial({
+      baseColor: [1, 1, 1, RIBBON_ALPHA],
+      metallic: 0,
+      roughness: 1,
+      flags: MaterialFlags.alphaBlend,
+    });
+    this.draw = world.addDraw({
+      mesh,
+      material: this.material,
+      origin: origin!,
+      unlit: true,
+      doubleSided: true,
+      name: "design globe error ribbon",
+    });
+    this.keep(mesh, this.draw);
+  }
+
+  override dispose(): void {
+    super.dispose();
+    if (!this.world.destroyed) {
+      this.world.removeMaterial(this.material);
+    }
+  }
+
+  setVisible(visible: boolean): void {
+    this.world.setVisible(this.draw, visible);
   }
 }

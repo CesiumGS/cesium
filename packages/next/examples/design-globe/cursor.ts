@@ -9,17 +9,24 @@
 // tileset whose placement isn't the one drawn there. A pick's answer is
 // applied only if nothing changed while it ran (a generation counter: the
 // camera, the cursor's position, the morph and the exaggeration).
+import { gridFactors } from "../../src/engineering/factors.ts";
 import { pickDesign, type DesignPick } from "../../src/engineering/pick.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Viewer } from "../../widgets/index.ts";
+import {
+  compassNeedles,
+  convergenceShort,
+  convergenceText,
+} from "./compass.ts";
 import { fixed, unitSymbol } from "./measureModel.ts";
+import { enuAt } from "./overlays.ts";
 import {
   cursorReadout,
   designRefusal,
   errorText,
   type Placement,
 } from "./page.ts";
-import type { CursorView } from "./panel/model.ts";
+import type { CompassView, CursorView } from "./panel/model.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
 
 /**
@@ -48,6 +55,8 @@ export interface CursorDeps {
   /** The readout changed. */
   changed(): void;
   disposed(): boolean;
+  /** The convergence compass toggle is on. */
+  compass?(): boolean;
 }
 
 /** A pick as the page gives it: design coordinates only where honest. */
@@ -114,6 +123,63 @@ export function judgePick(
   const rest: DesignPick = { ...hit };
   delete (rest as { design?: unknown }).design;
   return { hit: rest, site, refused, drawn };
+}
+
+/** How long the compass's directions are taken, in pixels' footprints at the hit. */
+const COMPASS_REACH_PX = 40;
+
+/**
+ * The compass at a design pick: PROJ's convergence at the design point, and
+ * true north and grid north there as the view projects them. Undefined on a
+ * site grid, where the projection has no convergence (a singular point), or
+ * where the point is off screen.
+ */
+function compassAt(
+  viewer: Viewer,
+  hit: DesignPick,
+  frame: Parameters<typeof gridFactors>[0],
+  design: ArrayLike<number>,
+): CompassView | undefined {
+  // A site grid's north is turned from the CRS's by its own rotation: the
+  // compass would show the CRS's grid north, not the design's, so it shows none.
+  if (frame.definition.site !== undefined) {
+    return undefined;
+  }
+  let convergence: number;
+  try {
+    convergence = gridFactors(frame, design).convergence;
+  } catch {
+    return undefined;
+  }
+  const p = hit.position;
+  const { east, north } = enuAt(p);
+  const reach = Math.max(hit.tolerance, 1e-3) * COMPASS_REACH_PX;
+  const c = Math.cos(convergence);
+  const s = Math.sin(convergence);
+  const along = (dir: (k: number) => number) =>
+    Float64Array.from([0, 1, 2], (k) => p[k]! + dir(k) * reach);
+  const at = viewer.view.toPixel(p);
+  const trueTip = viewer.view.toPixel(along((k) => north[k]!));
+  const gridTip = viewer.view.toPixel(
+    along((k) => c * north[k]! + s * east[k]!),
+  );
+  if (at === undefined) {
+    return undefined;
+  }
+  const needles =
+    trueTip !== undefined && gridTip !== undefined
+      ? compassNeedles(at, trueTip, gridTip)
+      : undefined;
+  return {
+    x: at[0]!,
+    y: at[1]!,
+    ...(needles && {
+      trueNorth: needles.trueNorth,
+      gridNorth: needles.gridNorth,
+    }),
+    text: convergenceText(convergence),
+    short: convergenceShort(convergence),
+  };
 }
 
 export function createCursor(deps: CursorDeps): Cursor {
@@ -257,11 +323,16 @@ export function createCursor(deps: CursorDeps): Cursor {
           },
         });
         const vertical = site.view?.frame?.vertical;
+        const compass =
+          deps.compass?.() === true
+            ? compassAt(viewer, hit!, design.engineeringFrame, d)
+            : undefined;
         cursor = {
           text: read.text,
           coordinates: `E ${fixed(d[0]!, 2)}  N ${fixed(d[1]!, 2)} ${symbol}  ·  H ${fixed(d[2]!, 2)} ${vertical ?? symbol}`,
           tolerance: `pick ±${errorText(hit!.tolerance)} (one pixel there)`,
           muted: false,
+          ...(compass !== undefined && { compass }),
         };
       })
       .catch(() => {

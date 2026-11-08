@@ -56,7 +56,16 @@ export interface PairLook {
   readonly reprojectedLine: Rgba;
   /** The content's own material, for the pair's surfaces. */
   readonly baseColor: Rgba;
+  /**
+   * How the other placement's deck is drawn: translucent (the default), or
+   * hatched in the opaque pass for viewers who ask for less transparency
+   * (`prefers-reduced-transparency`).
+   */
+  readonly ghostDeck?: GhostDeck;
 }
+
+/** The ghost deck's look: blended at `GHOST_ALPHA`, or hatched (screen-door). */
+export type GhostDeck = "translucent" | "hatch";
 
 export interface PairOptions {
   /**
@@ -109,25 +118,44 @@ fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
 }
 `;
 
-/** The ghost deck's hatch: its period in framebuffer pixels, and the share of it drawn. */
+/** The translucent ghost deck's opacity (owner, Task 20: about 0.3). */
+export const GHOST_ALPHA = 0.3;
+
+/** The hatched deck's period in framebuffer pixels, and the share of it drawn. */
 const GHOST_PERIOD = 6;
 const GHOST_COVER = 0.34;
 
-/**
- * The ghost deck: the other placement's surface, hatched (screen-door
- * transparency: diagonal stripes cut out of an opaque surface, so it draws
- * in the opaque pass; a blended surface makes the engine run its whole
- * translucency pipeline, about 50 ms a frame on a MacBook Air). The hatch
- * thins out where the two placements are within a couple of metres of each
- * other (near the anchor, where they coincide and a second surface would
- * only fight the first for depth).
- */
-const GHOST_WGSL = /* wgsl */ `
+/** The ghost deck's vertex stage, either look: the other placement's positions. */
+const GHOST_VERTEX = /* wgsl */ `
 fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
   let reprojected = vsInput.attributes.reprojected;
   let rigid = reprojected + (vsInput.positionMC - reprojected) * uniforms.exaggeration;
   (*vsOutput).positionMC = mix(rigid, reprojected, uniforms.t);
 }
+`;
+
+/**
+ * The ghost deck: the other placement's surface, unlit in its colour, at
+ * `GHOST_ALPHA`, blended and writing no depth (the engine's translucent
+ * passes), so the measure lines and the ruler under it show through. The
+ * engine's fix 62a56785d4 put those passes at about 1 ms here (an earlier
+ * reading of 46 ms was the GPU timer summing overlapped passes). It thins
+ * out where the two placements are within a couple of metres of each other
+ * (near the anchor, where they coincide and a second surface would only
+ * tint the first).
+ */
+const GHOST_WGSL = /* wgsl */ `${GHOST_VERTEX}
+fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
+  let apart = smoothstep(0.25, 2.5, fsInput.attributes.error * uniforms.exaggeration);
+  (*material).alpha = ${GHOST_ALPHA.toFixed(2)} * apart;
+}
+`;
+
+/**
+ * The hatched deck, for `prefers-reduced-transparency`: diagonal stripes cut
+ * out of an opaque surface (screen-door), drawn in the opaque pass.
+ */
+const GHOST_HATCH_WGSL = /* wgsl */ `${GHOST_VERTEX}
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   let apart = smoothstep(0.25, 2.5, fsInput.attributes.error * uniforms.exaggeration);
   let stripe = fract((fsInput.screen.x + fsInput.screen.y) / ${GHOST_PERIOD.toFixed(1)});
@@ -135,13 +163,18 @@ fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>)
 }
 `;
 
+/** Whether the viewer asked for less transparency (the hatched ghost then). */
+export const reducedTransparency = (): boolean =>
+  typeof matchMedia === "function" &&
+  matchMedia("(prefers-reduced-transparency: reduce)").matches;
+
 /** The attribute carrying each vertex's reprojected partner. */
 export const PARTNER_SEMANTIC = "_DG_REPROJECTED";
 /** The attribute carrying each vertex's rigid error, metres. */
 export const ERROR_SEMANTIC = "_DG_ERROR";
 
-/** What a morph shader draws: the solid surface, a ghost deck, or lines. */
-export type MorphShaderKind = "surface" | "ghost" | "line";
+/** What a morph shader draws: the solid surface, a ghost deck (translucent or hatched), or lines. */
+export type MorphShaderKind = "surface" | "ghost" | "ghost-hatch" | "line";
 
 /** A shader that blends a mesh's rigid positions toward their partners. */
 export function morphShader(
@@ -156,10 +189,12 @@ export function morphShader(
         ? SURFACE_WGSL
         : kind === "ghost"
           ? GHOST_WGSL
-          : LINE_WGSL,
+          : kind === "ghost-hatch"
+            ? GHOST_HATCH_WGSL
+            : LINE_WGSL,
     attributes: {
       reprojected: { semantic: PARTNER_SEMANTIC, type: "vec3f" },
-      ...(kind === "ghost" && {
+      ...((kind === "ghost" || kind === "ghost-hatch") && {
         error: { semantic: ERROR_SEMANTIC, type: "f32" as const },
       }),
     },
@@ -537,11 +572,17 @@ export class PlacementPair {
       pad,
       "line",
     );
-    this.rigidDeckShader = morphShader("design globe rigid deck", pad, "ghost");
+    const hatch = look.ghostDeck === "hatch";
+    const deckKind = hatch ? "ghost-hatch" : "ghost";
+    this.rigidDeckShader = morphShader(
+      "design globe rigid deck",
+      pad,
+      deckKind,
+    );
     this.reprojectedDeckShader = morphShader(
       "design globe reprojected deck",
       pad,
-      "ghost",
+      deckKind,
     );
     this.whiskerShader = morphShader("design globe whiskers", pad, "line");
     this.reprojectedLineShader.setUniform("t", 1);
@@ -553,15 +594,24 @@ export class PlacementPair {
       metallic: 0,
       roughness: 1,
     });
-    // The ghost deck: white, cut out (the hatch), tinted per draw by its
-    // placement.
-    this.deckMaterial = world.addMaterial({
-      baseColor: [1, 1, 1, 1],
-      metallic: 0,
-      roughness: 1,
-      alphaCutoff: 0.5,
-      flags: MaterialFlags.alphaMask,
-    });
+    // The ghost deck: white, tinted per draw by its placement; blended (no
+    // depth written), or cut out (the hatch).
+    this.deckMaterial = world.addMaterial(
+      hatch
+        ? {
+            baseColor: [1, 1, 1, 1],
+            metallic: 0,
+            roughness: 1,
+            alphaCutoff: 0.5,
+            flags: MaterialFlags.alphaMask,
+          }
+        : {
+            baseColor: [1, 1, 1, 1],
+            metallic: 0,
+            roughness: 1,
+            flags: MaterialFlags.alphaBlend,
+          },
+    );
     rigid.debugTileColor = (tile) => this.onTile("rigid", tile);
     reprojected.debugTileColor = (tile) => this.onTile("reprojected", tile);
   }
@@ -794,8 +844,8 @@ export class PlacementPair {
         doubleSided: true,
       },
     );
-    // The other placement's deck: the same mesh, hatched, unlit, in its
-    // placement's colour (the "before" beside the solid "after").
+    // The other placement's deck: the same mesh, translucent (or hatched),
+    // unlit, in its placement's colour (the "before" beside the solid "after").
     const deck = (shader: CustomShader, color: Rgba, name: string) =>
       draw(surfaceMesh, shader, name, {
         material: this.deckMaterial,

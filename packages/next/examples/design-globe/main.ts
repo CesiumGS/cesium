@@ -15,22 +15,30 @@
 //   - measureTool.ts, measureOverlay.ts: the measure tool, the openers and
 //     their lines on the globe (Task 19);
 //   - shots.ts: the camera;
-//   - panelModel.ts: the panel's model from a snapshot of the state here.
+//   - panelModel.ts: the panel's model from a snapshot of the state here;
+//   - checksView.ts: the checks (Task 20), from the measure tool's shown values;
+//   - tour.ts, tourRuntime.ts: the short tour (Task 20);
+//   - viewParams.ts: the compass and error ribbon toggles (Task 20).
 import { createElement } from "react";
 import { Alignment } from "../../src/engineering/alignment.ts";
+import { gridFactors } from "../../src/engineering/factors.ts";
 import type { ProjApi } from "../../src/engineering/proj.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";
+import { checksView } from "./checksView.ts";
 import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
 import { createCursor, drawnPlacement } from "./cursor.ts";
 import { createMeasureTool } from "./measureTool.ts";
+import { unitSymbol } from "./measureModel.ts";
+import { pointsLink } from "./measureState.ts";
 import type { MeasurePanel } from "./measureView.ts";
 import { createFrameDriver } from "./frameDriver.ts";
 import { MorphDriver, type MorphTarget } from "./morphDriver.ts";
 import { hexLinear } from "./colors.ts";
 import {
   AnchorRing,
+  ErrorRibbon,
   Whiskers,
   sagSamples,
   type SagSample,
@@ -38,6 +46,7 @@ import {
 import {
   EXAGGERATION,
   SITES,
+  errorText,
   formatParams,
   nextLoading,
   parseParams,
@@ -50,7 +59,7 @@ import { Measure, type MeasureActions } from "./panel/Measure.tsx";
 import { Panel } from "./panel/Panel.tsx";
 import type { LiveValues, PanelActions, PanelModel } from "./panel/model.ts";
 import { buildPanelModel, type SiteSnapshot } from "./panelModel.ts";
-import type { PairLook } from "./placementPair.ts";
+import { reducedTransparency, type PairLook } from "./placementPair.ts";
 import {
   CameraMoves,
   OPENING_VIEW,
@@ -59,8 +68,18 @@ import {
 } from "./shots.ts";
 import { siteFacts } from "./siteFacts.ts";
 import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
+import {
+  TOUR_LADDER,
+  tourCard,
+  type TourFacts,
+  type TourTarget,
+} from "./tour.ts";
+import { createTour, type TourRuntime } from "./tourRuntime.ts";
+import { formatView, parseView, type ViewParams } from "./viewParams.ts";
 
 const deg = Math.PI / 180;
+/** How far the tour's shots lift their subject, as a share of the range (shots.ts `CameraMoves.lift`). */
+const TOUR_LIFT = 0.2;
 
 /** The placements' colours (DESIGN.md "On the globe"): orange rigid, cyan true. */
 export const RIGID_HEX = "#fc9252";
@@ -156,11 +175,20 @@ export function run(context: ExampleContext): ExampleRun {
 
   // ------------------------------------------------------------ state
   let params: PageParams = parseParams(context.params);
+  /** The viewer toggles, off by default (viewParams.ts). */
+  let view: ViewParams = parseView(context.params);
+  /** The link as it is now, for "Copy link": every parameter the page set. */
+  const linkParams: Record<string, string | undefined> = { ...context.params };
+  const setLink = (next: Readonly<Record<string, string | undefined>>) => {
+    Object.assign(linkParams, next);
+    context.setParams(next);
+  };
   let loading: readonly LoadItem[] = [];
   let answers: Answers | undefined;
   let samples: readonly SagSample[] | undefined;
   let whiskers: Whiskers | undefined;
   let ring: AnchorRing | undefined;
+  let ribbon: ErrorRibbon | undefined;
   let anchorPoint: Float64Array | undefined;
   const sites = new Map<string, SiteRuntime>(
     SITES.map((entry) => [entry.id, { entry }]),
@@ -169,6 +197,7 @@ export function run(context: ExampleContext): ExampleRun {
   scope.defer(() => {
     whiskers?.dispose();
     ring?.dispose();
+    ribbon?.dispose();
   });
 
   const live = createStore<LiveValues>({});
@@ -180,6 +209,10 @@ export function run(context: ExampleContext): ExampleRun {
   } = {};
   const refresh = () => {
     if (!disposed) {
+      // A linked tour step that waited for its data (the openers, the answers).
+      if (model.store !== undefined) {
+        tour?.flush();
+      }
       model.store?.set(buildModel());
       model.measure?.set(tool.view());
     }
@@ -225,7 +258,7 @@ export function run(context: ExampleContext): ExampleRun {
       morphing: morph.morphing,
       ghost: morph.ghost,
     }),
-    setLink: (link) => context.setParams(link),
+    setLink: (link) => setLink(link),
     changed: refresh,
     wake: () => {
       viewer.engine.requestRender();
@@ -276,6 +309,7 @@ export function run(context: ExampleContext): ExampleRun {
     },
     changed: refresh,
     disposed: () => disposed,
+    compass: () => view.compass,
   });
 
   const camera = new CameraMoves(viewer, () => {
@@ -304,7 +338,11 @@ export function run(context: ExampleContext): ExampleRun {
     viewer,
     scope,
     signal,
-    look: LOOK,
+    // The ghost deck translucent, or hatched for less transparency.
+    look: {
+      ...LOOK,
+      ghostDeck: reducedTransparency() ? "hatch" : "translucent",
+    },
     report,
     disposed: () => disposed,
     paired: () => morph.apply(),
@@ -341,6 +379,7 @@ export function run(context: ExampleContext): ExampleRun {
       computeFacts(site);
       // The openers and exact snapping (the corridor), or a linked measurement.
       tool.placementsChanged();
+      tour?.flush();
       // The grids' credits, with the data credits (bottom left).
       const credits = (site.rigidPlacement ?? site.reprojectedPlacement)!.frame
         .gridCredits;
@@ -374,6 +413,7 @@ export function run(context: ExampleContext): ExampleRun {
         reprojected: site.reprojectedPlacement,
       }),
       api,
+      ...combinedFactorOf(site),
       ...(site === corridor &&
         samples !== undefined && {
           along: { alignment, errors: samples.map((s) => s.error) },
@@ -382,6 +422,60 @@ export function run(context: ExampleContext): ExampleRun {
         answer: answers.sites[site.entry.id]!,
       }),
     });
+  }
+
+  /**
+   * The combined factor at a site's rigid anchor: the answers' for a ladder
+   * site; else PROJ's, at the corridor's anchor station or the model's middle
+   * (none for a site grid, whose own scale `gridFactors` leaves out).
+   */
+  function combinedFactorOf(site: SiteRuntime): { combinedFactor?: number } {
+    const k = answers?.sites[site.entry.id]?.combinedFactor;
+    if (k !== undefined) {
+      return { combinedFactor: k };
+    }
+    const frame = (site.rigidPlacement ?? site.reprojectedPlacement)?.frame;
+    const station = answers?.anchorStation ?? ANCHOR_STATION;
+    const at = alignment.pointAt(station, 0);
+    const anchor =
+      site === corridor
+        ? [at[0]!, at[1]!, alignment.elevationAt(station)]
+        : site.entry.anchor;
+    // A site grid's own scale isn't in the grid's factor: none is stated.
+    if (
+      frame === undefined ||
+      anchor === undefined ||
+      site.entry.frame.site !== undefined
+    ) {
+      return {};
+    }
+    try {
+      return { combinedFactor: gridFactors(frame, anchor).combinedFactor };
+    } catch {
+      return {};
+    }
+  }
+
+  /** The error ribbon, drawn while its toggle is on (built once the corridor is placed). */
+  function syncRibbon(): void {
+    const site = corridor;
+    if (
+      view.ribbon &&
+      ribbon === undefined &&
+      site.rigidPlacement &&
+      site.reprojectedPlacement
+    ) {
+      ribbon = new ErrorRibbon(
+        viewer.world,
+        alignment,
+        site.rigidPlacement,
+        site.reprojectedPlacement,
+        100,
+      );
+    }
+    ribbon?.setVisible(view.ribbon);
+    viewer.engine.requestRender();
+    frames.wake();
   }
 
   /** The whiskers and the anchor ring. */
@@ -404,6 +498,10 @@ export function run(context: ExampleContext): ExampleRun {
     ]);
     ring?.dispose();
     ring = new AnchorRing(viewer.world, anchorPoint, 30);
+    // The ribbon again on the new placements.
+    ribbon?.dispose();
+    ribbon = undefined;
+    syncRibbon();
     placeAnchorLabel();
     morph.apply();
   }
@@ -479,7 +577,7 @@ export function run(context: ExampleContext): ExampleRun {
 
   // ---------------------------------------------------------- the model
   function buildModel(): PanelModel {
-    return buildPanelModel({
+    const base = buildPanelModel({
       params,
       loading,
       t: morph.t(),
@@ -516,6 +614,76 @@ export function run(context: ExampleContext): ExampleRun {
       flyingAlong: camera.flying && shots.alongStation() !== undefined,
       evidence: whiskers !== undefined && ring !== undefined,
     });
+    const user = tool.userEnds();
+    const state = tour?.state();
+    return {
+      ...base,
+      legend: {
+        ...base.legend,
+        ...(view.ribbon &&
+          ribbon !== undefined && {
+            ribbon: { min: "0 m", max: errorText(ribbon.max) },
+          }),
+      },
+      checks: checksView(answers, tool.shownValues(), user),
+      ...(state !== undefined && { tour: tourCard(state, tourFacts()) }),
+      view: {
+        compass: view.compass,
+        ribbon: view.ribbon,
+        ribbonReady:
+          corridor.rigidPlacement !== undefined &&
+          corridor.reprojectedPlacement !== undefined,
+      },
+    };
+  }
+
+  /** What the tour's sentences read: the answers and the corridor's placements. */
+  function tourFacts(): TourFacts {
+    const rigid = corridor.rigidPlacement;
+    const pair = answers?.pairs[0];
+    const ends =
+      pair && answers
+        ? [answers.points[pair.from], answers.points[pair.to]]
+        : undefined;
+    const drawn =
+      rigid && ends?.[0] && ends[1]
+        ? (() => {
+            const a = rigid.displayed(ends[0].design);
+            const b = rigid.displayed(ends[1].design);
+            return Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
+          })()
+        : undefined;
+    return {
+      codes: corridor.entry.codes,
+      ladder: new Map(
+        TOUR_LADDER.flatMap((s) => {
+          const a = answers?.sites[s.site];
+          return a
+            ? [[s.site, { error: a.displayError, extent: a.extent }]]
+            : [];
+        }),
+      ),
+      ...(answers && {
+        markerSeparation: answers.marker.separation,
+        mark: {
+          pid: answers.mark.pid,
+          name: answers.mark.name,
+          ...(rigid && {
+            rigidOffset: rigid.displayError(answers.mark.nearestDesign),
+          }),
+        },
+      }),
+      ...(pair &&
+        answers && {
+          pair: {
+            horizontal: pair.horizontalDistance,
+            symbol: unitSymbol(answers.frame.unitName),
+            ...(drawn !== undefined && {
+              rigidShort: pair.trueDistance - drawn,
+            }),
+          },
+        }),
+    };
   }
 
   // -------------------------------------------------------- the actions
@@ -524,9 +692,80 @@ export function run(context: ExampleContext): ExampleRun {
       return;
     }
     params = { ...params, mode };
-    context.setParams(formatParams(params));
+    setLink(formatParams(params));
     morph.setMode(mode, reducedMotion());
     refresh();
+  }
+
+  /** Selects a site: its tiles and frame load; the camera flies to it when `fly`. */
+  function selectSite(id: string, fly: boolean): void {
+    const site = sites.get(id);
+    if (site === undefined) {
+      return;
+    }
+    params = { ...params, site: id };
+    setLink(formatParams(params));
+    refresh();
+    void loader
+      .loadTiles(site)
+      .then(() => {
+        const t = site.rigid;
+        if (fly && t !== undefined && params.site === id && !disposed) {
+          shots.flyToTileset(t, id === "corridor", answers?.sites[id]);
+        }
+        refresh();
+        return loader.loadFrame(site);
+      })
+      .catch(() => {})
+      .finally(refresh);
+  }
+
+  /** Flies to a framing in its own daylight. */
+  function flyLit(to: Parameters<typeof camera.flyTo>[0]): void {
+    shots.daylight(to.center);
+    camera.flyTo(to, () => shots.daylight(to.center));
+  }
+
+  /**
+   * Shows a tour step (tour.ts `tourTarget`): its site, its placement (the
+   * morph runs, or cuts under reduced motion) and its shot, at true scale.
+   * False while what it shows isn't in yet; the tour tries again.
+   */
+  function applyTour(target: TourTarget): boolean {
+    if (target.shot === "keep") {
+      return true;
+    }
+    if (
+      answers === undefined ||
+      corridor.rigidPlacement === undefined ||
+      corridor.reprojectedPlacement === undefined
+    ) {
+      return false;
+    }
+    if (
+      (target.shot === "mark" || target.shot === "pair") &&
+      tool.openerFocus(target.shot) === undefined
+    ) {
+      return false;
+    }
+    if (morph.exaggerate) {
+      morph.exaggerate = false;
+      morph.apply();
+      cursor.update();
+    }
+    if (target.site !== params.site || target.shot === "site") {
+      selectSite(target.site, target.shot === "site");
+    }
+    setMode(target.mode);
+    if (target.shot === "opening") {
+      const f = shots.openingShot(answers);
+      if (f !== undefined) {
+        flyLit(f);
+      }
+    } else if (target.shot === "mark" || target.shot === "pair") {
+      measureActions.show(target.shot);
+    }
+    return true;
   }
 
   const actions: PanelActions = {
@@ -556,27 +795,7 @@ export function run(context: ExampleContext): ExampleRun {
     },
     flyAlong: () => shots.flyAlong(),
     stopFlight: () => camera.stop(),
-    selectSite(id) {
-      const site = sites.get(id);
-      if (site === undefined) {
-        return;
-      }
-      params = { ...params, site: id };
-      context.setParams(formatParams(params));
-      refresh();
-      void loader
-        .loadTiles(site)
-        .then(() => {
-          const t = site.rigid;
-          if (t !== undefined && params.site === id && !disposed) {
-            shots.flyToTileset(t, id === "corridor", answers?.sites[id]);
-          }
-          refresh();
-          return loader.loadFrame(site);
-        })
-        .catch(() => {})
-        .finally(refresh);
-    },
+    selectSite: (id) => selectSite(id, true),
     // Everything that failed, answers included: the corridor, the selected
     // site, and any site whose tiles failed.
     retry() {
@@ -593,12 +812,50 @@ export function run(context: ExampleContext): ExampleRun {
       void fetchAnswers();
       tool.retry();
     },
+    link: () => context.link(linkParams),
+    setCompass(on) {
+      view = { ...view, compass: on };
+      setLink(formatView(view));
+      // The compass shows with the next pick; off, it goes now.
+      cursor.cameraMoved();
+      refresh();
+    },
+    setRibbon(on) {
+      view = { ...view, ribbon: on };
+      setLink(formatView(view));
+      syncRibbon();
+      refresh();
+    },
+    tour: (action) => tour?.go(action),
+    measurePair(id) {
+      const pair = answers?.pairs.find((p) => p.id === id);
+      const a = pair && answers?.points[pair.from];
+      const b = pair && answers?.points[pair.to];
+      if (a === undefined || b === undefined) {
+        return;
+      }
+      const link = pointsLink(a.design, b.design, "corridor");
+      setLink(link);
+      tool.applyLink({ ...linkParams });
+      // Over the pair, where it truly is.
+      const center = a.bodyFixed.map((x, k) => (x + b.bodyFixed[k]!) / 2);
+      const length = Math.hypot(
+        ...a.bodyFixed.map((x, k) => x - b.bodyFixed[k]!),
+      );
+      flyLit({
+        center,
+        heading: -35 * deg,
+        pitch: -40 * deg,
+        range: Math.max(200, length * 1.3),
+      });
+      refresh();
+    },
   };
 
   const measureActions: MeasureActions = {
     setSnap(snap) {
       params = { ...params, snap };
-      context.setParams(formatParams(params));
+      setLink(formatParams(params));
       refresh();
     },
     clear: () => tool.clear(),
@@ -609,10 +866,10 @@ export function run(context: ExampleContext): ExampleRun {
       if (focus === undefined) {
         return;
       }
-      // Along the line, looking down at its far end from about 7 m: the
+      // Along the line, looking down at its far end from about 22 m: the
       // bracket between ground's last foot tick and design's, about 0.23 m
-      // across, reads at some 20 px; and the camera stays under the other
-      // placement's ghost deck (8 m above at the pair's far end).
+      // across, reads, seen through the other placement's translucent ghost
+      // deck (8 m above at the pair's far end; Task 20).
       const up = new Float64Array(3);
       Ellipsoid.WGS84.geodeticSurfaceNormal(focus.center, up);
       const east = [-up[1]!, up[0]!, 0];
@@ -630,8 +887,8 @@ export function run(context: ExampleContext): ExampleRun {
       const to = {
         center: focus.center,
         heading,
-        pitch: -50 * deg,
-        range: 7,
+        pitch: -70 * deg,
+        range: 22,
       };
       shots.daylight(to.center);
       camera.flyTo(to, () => shots.daylight(to.center));
@@ -665,18 +922,48 @@ export function run(context: ExampleContext): ExampleRun {
   // -------------------------------------------------------- deep links
   scope.defer(
     context.watchParams((next) => {
+      for (const key of Object.keys(linkParams)) {
+        delete linkParams[key];
+      }
+      Object.assign(linkParams, next);
+      const v = parseView(next);
+      if (v.compass !== view.compass) {
+        actions.setCompass(v.compass);
+      }
+      if (v.ribbon !== view.ribbon) {
+        actions.setRibbon(v.ribbon);
+      }
+      tour?.fromLink(next);
       const p = parseParams(next);
+      // The snap first: the mode and the site write the link with it.
+      params = { ...params, snap: p.snap };
       if (p.mode !== params.mode) {
         setMode(p.mode);
       }
       if (p.site !== params.site) {
         actions.selectSite(p.site);
       }
-      params = { ...params, snap: p.snap };
       tool.applyLink(next);
       refresh();
     }),
   );
+
+  // The tour (tour.ts): on a bare link from its first step, which is the
+  // page's own opening; at a linked step once that step's data is in.
+  const tour: TourRuntime | undefined = createTour({
+    initial: context.params,
+    setLink,
+    apply: applyTour,
+    changed: () => {
+      liftForTour();
+      refresh();
+    },
+  });
+  /** While the tour's card covers the view's lower middle, shots lift their subject above it. */
+  function liftForTour(): void {
+    camera.lift = tour?.state() !== undefined ? TOUR_LIFT : 0;
+  }
+  liftForTour();
 
   const store = createStore<PanelModel>(buildModel());
   model.store = store;
@@ -697,13 +984,20 @@ export function run(context: ExampleContext): ExampleRun {
       }
       answers = a;
       tool.answersChanged();
+      tour?.flush();
       // Ladder sites placed before the answers: their story is the answers'.
       for (const site of sites.values()) {
         computeFacts(site);
       }
       // The opening shot (DESIGN.md "The story"): true scale, near the far
       // end; once, and not over a view the user has chosen since.
-      if (params.site === "corridor" && !opened && !userMoved) {
+      // A linked tour step past the first frames its own shot.
+      if (
+        params.site === "corridor" &&
+        !opened &&
+        !userMoved &&
+        (tour?.state()?.step ?? 0) === 0
+      ) {
         opened = true;
         const f = shots.openingShot(a);
         if (f) {
