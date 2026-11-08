@@ -308,9 +308,11 @@ const goals = (): readonly Goal[] => [
     state: "measured",
     oneX: (
       <>
-        1.x has one <C>Scene</C> and WebGL context per viewer, so several views
-        are several copies, and browsers limit live contexts. Four views of
-        1,000 draws measured 11.9 ms of CPU per tick, with four scene copies.
+        1.x has one <C>Scene</C> and, by default, one WebGL context per viewer,
+        so several views are several copies, and browsers limit live contexts.{" "}
+        <C>SharedContext</C>, marked private, lets scenes share a context. Four
+        views of 1,000 draws measured 11.9 ms of CPU per tick, with four scene
+        copies.
       </>
     ),
     today: [

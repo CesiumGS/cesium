@@ -1,4 +1,5 @@
 import { C, DataTable, Page, Section, Written } from "../parts.tsx";
+import { WhyApiChanges } from "../whyApi.tsx";
 
 const CONCEPTS = [
   {
@@ -13,7 +14,7 @@ const CONCEPTS = [
   },
   {
     topic: "Several views",
-    old: "Separate viewers, each with its own copy of the scene",
+    old: "Separate viewers, each with its own copy of the scene. SharedContext, marked private, lets scenes share a WebGL context.",
     next: "Any number of views of one world, on one device and tile cache, with links between them (ViewLink).",
   },
   {
@@ -161,6 +162,8 @@ export function Differences() {
         </>
       }
     >
+      <WhyApiChanges />
+
       <Section title="Concept by concept">
         <p>
           For API names and code, area by area, the 1.x to 2.0 API tab shows

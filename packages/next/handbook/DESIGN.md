@@ -83,6 +83,14 @@ estimates or dates for the work. Its facts each say what kind of evidence they a
 and only pages re-opened and read are cited: search summaries don't count. Leave out
 market sizes and anything about a particular customer's or company's plans.
 
+## Why the API changes
+
+Differences from 1.x opens with what each break is for, in `src/whyApi.tsx`, written
+by hand from both sources. State 1.x's shapes as consequences of WebGL and of their
+time, not faults. Each entry says where 2.0 still leaks. When a watched setting, a
+public type or an API review decision changes, update its entry. Drop an entry if 1.x
+gains a good answer.
+
 ## Layout
 
 Nineteen tabs don't fit a horizontal strip, so they're a grouped side list on a

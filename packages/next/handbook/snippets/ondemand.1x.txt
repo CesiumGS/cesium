@@ -1,0 +1,8 @@
+// Opt-in. The scene watches the camera, loads and time.
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  requestRenderMode: true,
+});
+
+entity.box.material = Cesium.Color.YELLOW;
+// Without this, the image stays as it was.
+viewer.scene.requestRender();

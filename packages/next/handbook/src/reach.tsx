@@ -889,9 +889,9 @@ export function ReachFacts() {
       <Section title="Short notes">
         <ul>
           <li>
-            <strong>iPad.</strong> Every browser there uses WebKit, so WebGPU
-            needs iPadOS 26. On 7 June 2026, 68% of devices transacting on the
-            App Store used it, and 79% of iPhones used iOS 26 (
+            <strong>iPad.</strong> WebGPU in Safari there needs iPadOS 26. On 7
+            June 2026, 68% of devices transacting on the App Store used it, and
+            79% of iPhones used iOS 26 (
             <Cite id="appleShare" />
             ). Trimble Connect's mobile floor is iOS 18, with iOS 26 recommended
             (

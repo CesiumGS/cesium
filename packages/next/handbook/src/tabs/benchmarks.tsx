@@ -18,18 +18,21 @@ import {
   Written,
 } from "../parts.tsx";
 
-const num = (row: BenchRow | undefined, key: string): number | undefined => {
+export const num = (
+  row: BenchRow | undefined,
+  key: string,
+): number | undefined => {
   const v = row?.[key];
   return typeof v === "number" ? v : undefined;
 };
 
-const ms = (v: number | undefined) =>
+export const ms = (v: number | undefined) =>
   v === undefined
     ? "not measured"
     : `${v < 10 ? v.toFixed(1) : v.toFixed(0)} ms`;
 
 /** Rows of a suite in the baseline run, 1.x beside 2.0 by draw count. */
-function drawScaling(a: AdapterResults) {
+export function drawScaling(a: AdapterResults) {
   const rows = a.baseline.filter((r) => r.suite === "draw scaling");
   const draws = [...new Set(rows.map((r) => Number(r.draws)))].sort(
     (x, y) => x - y,

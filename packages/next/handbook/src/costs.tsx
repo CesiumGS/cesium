@@ -354,8 +354,10 @@ export function Costs() {
         This falls on applications built on 1.x. Their code changes: {breaking}{" "}
         of the {API_ROWS.length} areas in the{" "}
         <a href="#/compare">1.x to 2.0 API</a> comparison break it. So do their
-        custom shaders, and anything that relied on internals. Nobody has
-        estimated or measured the effort, and there's no migration tool.
+        custom shaders, and anything that relied on internals. The{" "}
+        <a href="#/differences">Differences</a> tab's "Why the API changes" says
+        what each break is for. Nobody has estimated or measured the effort, and
+        there's no migration tool.
       </p>
       <p>
         <strong>Content doesn't need converting.</strong> 3D Tiles in glTF,

@@ -1765,6 +1765,34 @@ span.api-source {
   }
 }
 
+/* Why the API changes: one block per break. */
+.why {
+  margin-block: var(--stratakit-space-500);
+}
+.why dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--stratakit-space-400);
+  row-gap: var(--stratakit-space-200);
+  max-inline-size: 86ch;
+  margin: 0 0 var(--stratakit-space-300);
+}
+.why dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.why dd {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .why dl {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0;
+  }
+  .why dd {
+    margin-block-end: var(--stratakit-space-200);
+  }
+}
+
 /* The seams' table. */
 .seams {
   border-collapse: collapse;
