@@ -1,0 +1,567 @@
+/*
+ * The handbook's styles (DESIGN.md), on StrataKit's tokens. A reading column
+ * with figures that may run wider; a side list of tabs that becomes a strip
+ * on a phone. No cards: tables and figures sit on the page.
+ */
+
+html,
+body {
+  margin: 0;
+}
+body {
+  background: var(--stratakit-color-bg-page-base);
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: 1.55;
+}
+
+/* ---------------------------------------------------------------- the tabs */
+
+.side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  block-size: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+  padding: var(--stratakit-space-600) var(--stratakit-space-300)
+    var(--stratakit-space-400);
+  border-inline-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.brand {
+  padding-inline: var(--stratakit-space-300);
+}
+.brand-name {
+  margin: 0;
+  font-size: var(--stratakit-font-size-headline-sm);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.brand-sub {
+  margin: var(--stratakit-space-100) 0 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.side nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-400);
+}
+.nav-group > h2 {
+  margin: 0 0 var(--stratakit-space-100);
+  padding-inline: var(--stratakit-space-300);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.side-foot {
+  margin-block-start: auto;
+  padding-inline: var(--stratakit-space-300);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.side-foot p {
+  margin: 0;
+}
+
+/* The strip that replaces the side list on a phone. */
+.strip {
+  display: none;
+}
+
+/* --------------------------------------------------------------- the page */
+
+.main {
+  min-width: 0;
+  padding: var(--stratakit-space-800) var(--stratakit-space-800)
+    var(--stratakit-space-1000);
+}
+.page {
+  max-inline-size: 1000px;
+  margin-inline: auto;
+}
+.page-head h1 {
+  margin: 0;
+  font-size: var(--stratakit-font-size-display-sm);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+.status {
+  margin: var(--stratakit-space-200) 0 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-150, 6px);
+}
+.status::before {
+  content: "";
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--stratakit-color-icon-positive-base);
+}
+.status-sketch::before {
+  background: var(--stratakit-color-icon-attention-base);
+}
+.status-stub::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--stratakit-color-icon-neutral-secondary);
+}
+.lede {
+  margin: var(--stratakit-space-400) 0 0;
+  max-inline-size: 68ch;
+  font-size: var(--stratakit-font-size-body-lg);
+  line-height: 1.5;
+}
+
+.section {
+  margin-block-start: var(--stratakit-space-800);
+}
+.section h2 {
+  margin: 0 0 var(--stratakit-space-300);
+  font-size: var(--stratakit-font-size-headline-md);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.section h3 {
+  margin: var(--stratakit-space-500) 0 var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-lg);
+  font-weight: 600;
+}
+.section p,
+.section > ul,
+.section > ol {
+  max-inline-size: 72ch;
+}
+.section p {
+  margin: 0 0 var(--stratakit-space-300);
+}
+.section li {
+  margin-block-end: var(--stratakit-space-150, 6px);
+}
+.section > ul,
+.section > ol {
+  padding-inline-start: 1.25em;
+  margin: 0 0 var(--stratakit-space-300);
+}
+.main a {
+  color: var(--stratakit-color-text-accent-strong);
+}
+.code,
+pre {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.92em;
+}
+.code {
+  overflow-wrap: anywhere;
+}
+pre.snippet {
+  margin: 0 0 var(--stratakit-space-300);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  overflow-x: auto;
+  border-radius: 6px;
+  background: var(--stratakit-color-bg-neutral-base);
+  line-height: 1.5;
+}
+pre.snippet:focus-visible,
+.figure-scroll:focus-visible,
+.table-wrap:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.provenance {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.note {
+  margin-block: var(--stratakit-space-400);
+  padding-inline-start: var(--stratakit-space-400);
+  border-inline-start: 3px solid var(--stratakit-color-border-attention-base);
+  max-inline-size: 72ch;
+}
+.note h3 {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-md);
+}
+.note p:last-child,
+.note ul:last-child {
+  margin-block-end: 0;
+}
+.note ul {
+  padding-inline-start: 1.25em;
+  margin-block: 0;
+}
+
+/* -------------------------------------------------------------- the tables */
+
+.table-wrap {
+  margin-block-end: var(--stratakit-space-300);
+}
+.table-wrap td,
+.table-wrap th {
+  vertical-align: top;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- the figures */
+
+.figure {
+  margin: var(--stratakit-space-500) 0;
+}
+.figure figcaption {
+  margin-block-start: var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+  max-inline-size: 72ch;
+}
+.figure-scroll {
+  overflow-x: auto;
+}
+.figure-scroll svg {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 760px;
+  block-size: auto;
+}
+
+/* Diagram drawings: tokens only, so both themes come from one drawing. */
+.d-box {
+  fill: var(--stratakit-color-bg-neutral-base);
+  stroke: var(--stratakit-color-border-neutral-base);
+}
+.d-box-accent {
+  fill: var(--stratakit-color-bg-accent-muted);
+  stroke: var(--stratakit-color-border-accent-base);
+}
+.d-box-plain {
+  fill: none;
+  stroke: var(--stratakit-color-border-neutral-base);
+  stroke-dasharray: 5 4;
+}
+.d-title {
+  fill: var(--stratakit-color-text-neutral-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+.d-text {
+  fill: var(--stratakit-color-text-neutral-secondary);
+  font-size: 12.5px;
+}
+.d-mono {
+  font-family: var(--stratakit-font-family-mono);
+}
+.d-edge {
+  fill: none;
+  stroke: var(--stratakit-color-icon-neutral-secondary);
+}
+.d-head {
+  fill: var(--stratakit-color-icon-neutral-secondary);
+}
+.d-edge-label {
+  fill: var(--stratakit-color-text-neutral-primary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke;
+  stroke: var(--stratakit-color-bg-page-base);
+  stroke-width: 4px;
+}
+
+/* Steps in order. */
+.flow {
+  list-style: none;
+  counter-reset: step;
+  margin: var(--stratakit-space-400) 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--stratakit-space-400);
+}
+.flow li {
+  counter-increment: step;
+  padding-block-start: var(--stratakit-space-200);
+  border-block-start: 2px solid var(--stratakit-color-border-neutral-base);
+}
+.flow h3 {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-md);
+  font-weight: 600;
+}
+.flow h3::before {
+  content: counter(step) ". ";
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+}
+.flow-body {
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.5;
+}
+.flow .flow-aside {
+  margin: var(--stratakit-space-200) 0 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+
+/* The camera chain: layers, top to bottom, each owning one thing. */
+.stack {
+  margin: var(--stratakit-space-400) 0;
+  display: grid;
+  gap: 2px;
+}
+.stack-row {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--stratakit-space-400);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  background: var(--stratakit-color-bg-neutral-base);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.stack-row.accent {
+  background: var(--stratakit-color-bg-accent-muted);
+}
+.stack-name {
+  font-weight: 600;
+}
+.stack-head {
+  background: none;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* Engine, worlds and views: boxes that contain. */
+.nest {
+  margin: var(--stratakit-space-400) 0;
+  padding: var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 8px;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.nest-title {
+  font-weight: 600;
+}
+.nest-row {
+  margin-block-start: var(--stratakit-space-300);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+.nest-row > div {
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  background: var(--stratakit-color-bg-neutral-base);
+  border-radius: 6px;
+}
+
+/* Bars. Colors: Dyno's validated chart palette (bench/suite/charts.mjs). */
+.bars {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  margin: 0;
+  display: grid;
+  gap: var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+[data-theme="dark"] .bars {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: var(--stratakit-space-300);
+  align-items: center;
+}
+.bar-track {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+}
+.bar {
+  flex: none;
+  block-size: 14px;
+  min-inline-size: 2px;
+  border-radius: 0 4px 4px 0;
+  background: var(--series-1);
+}
+.bar.alt {
+  background: var(--series-2);
+}
+.bar-value {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.bar-group {
+  margin-block-start: var(--stratakit-space-200);
+  font-weight: 600;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-400);
+  margin-block-end: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.legend i {
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: 3px;
+  background: var(--series-1);
+}
+.legend i.alt {
+  background: var(--series-2);
+}
+
+/* The API list. */
+.api-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-300);
+  align-items: center;
+  margin-block: var(--stratakit-space-300);
+}
+.api-names {
+  margin: var(--stratakit-space-200) 0 0;
+  padding: 0;
+  list-style: none;
+  columns: 3 220px;
+  column-gap: var(--stratakit-space-500);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.api-names li {
+  break-inside: avoid;
+  padding-block: 1px;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.api-kind {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* The sources. */
+.sources {
+  list-style: none;
+  padding: 0;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.source-meta {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.source-stale {
+  color: var(--stratakit-color-text-attention-base);
+  font-weight: 600;
+}
+.cite {
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ a phone, etc */
+
+@media (max-width: 900px) {
+  .shell {
+    display: block;
+  }
+  .side {
+    position: static;
+    block-size: auto;
+    border-inline-end: none;
+    padding: var(--stratakit-space-400) var(--stratakit-space-300) 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--stratakit-space-300);
+  }
+  .side > nav,
+  .side-foot > p {
+    display: none;
+  }
+  .side-foot {
+    margin: 0;
+    padding: 0;
+  }
+  .strip {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    gap: var(--stratakit-space-100);
+    overflow-x: auto;
+    padding: var(--stratakit-space-200) var(--stratakit-space-300);
+    background: var(--stratakit-color-bg-page-base);
+    border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+    font-size: var(--stratakit-font-size-body-sm);
+  }
+  .strip a {
+    flex: none;
+    padding: var(--stratakit-space-100) var(--stratakit-space-200);
+    border-radius: 6px;
+    color: var(--stratakit-color-text-neutral-primary);
+    text-decoration: none;
+  }
+  .strip a[aria-current="page"] {
+    background: var(--stratakit-color-bg-accent-muted);
+    font-weight: 600;
+  }
+  .main {
+    padding: var(--stratakit-space-500) var(--stratakit-space-300)
+      var(--stratakit-space-800);
+  }
+  .stack-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--stratakit-space-100);
+  }
+  .stack-head {
+    display: none;
+  }
+  .stack-row > div:nth-child(2)::before {
+    content: "Owns: ";
+    font-weight: 600;
+  }
+  .stack-row > div:nth-child(3)::before {
+    content: "Knows nothing about: ";
+    font-weight: 600;
+  }
+  .bar-row {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media print {
+  .side,
+  .strip {
+    display: none;
+  }
+  .shell {
+    display: block;
+  }
+}

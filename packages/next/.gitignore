@@ -13,3 +13,6 @@ __pycache__/
 
 # Browser checks' screenshots and pages at the package root: local only
 /design-screenshots/
+
+# The handbook's generated figures (npm run handbook:data); its build goes to handbook/dist/
+/handbook/generated/

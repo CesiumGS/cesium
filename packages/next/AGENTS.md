@@ -53,6 +53,15 @@ Example pages are documentation and demos at once. They have to work as a visual
 - Do a design pass while implementing: write the page's `DESIGN.md` (its story, audience and layout), then run a UX review on the real page and fix what it finds.
 - Check every page in both themes, at desktop and at 380 px wide, with the keyboard only, with reduced motion, and with a clean console.
 
+## The handbook
+
+`handbook/` is the engine's document for stakeholders and the 1.x team: a static, tabbed site on StrataKit, built into one HTML file by `npm run handbook`. Its figures are generated from `api/surface.txt`, `test/importBoundary.test.ts`, `scripts/checkBundle.mjs`, the library build and `bench/results`, so they stay current by rebuilding.
+
+- When a plan lands, or you change what a deep dive describes, update its tab in `handbook/src/tabs/` in the same change: the prose, its "checked" date, and the tab's status (stub, sketch, accurate today).
+- Outside facts live in `handbook/src/sources.ts`, each with the date it was read. Read the page before changing one.
+- The handbook is for outside readers. Describe the engine as an embeddable rendering core whose host application can supply its own services, and add nothing about the roadmap beyond the plans in this repository without the owner's agreement.
+- `handbook/DESIGN.md` has the full list of what to update by hand.
+
 ## Coding agents
 
 - Implementation follows the plans in `docs/superpowers/plans/`, task by task, with a fresh reviewer per task.

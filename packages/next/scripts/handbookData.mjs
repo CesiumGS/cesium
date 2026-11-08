@@ -1,0 +1,529 @@
+// The handbook's generated data (handbook/DESIGN.md): figures read from the
+// sources that stay current, never copied into the site by hand.
+//
+//   node scripts/handbookData.mjs [--no-bundles]
+//
+// It writes handbook/generated/data.json (not committed):
+//
+//   surface   api/surface.txt, the public API map (`npm run surface`)
+//   layers    test/importBoundary.test.ts's layer table and rules, run over
+//             today's import graph
+//   bundles   scripts/checkBundle.mjs's chunks for a globe-only Viewer, and
+//             the library build of vite.lib.config.ts, into a temporary
+//             directory
+//   runtime   files the engine fetches at run time, measured in the setup
+//             store when this machine has it
+//   bench     bench/results (`node bench/run.mjs`) and handbook/baselines
+//
+// `--no-bundles` keeps the bundle section of the last run, for quick
+// iteration on the site (each build takes a few seconds).
+import { execFileSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
+import { runInNewContext } from "node:vm";
+import { gzipSync } from "node:zlib";
+import ts from "typescript";
+
+const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+const kib = (bytes) => Math.round((bytes / 1024) * 10) / 10;
+
+/** The public API map: per entry point, its names, kinds and tiers. */
+export function readSurface(root = packageRoot) {
+  const lines = readFileSync(join(root, "api/surface.txt"), "utf8")
+    .split("\n")
+    .filter((line) => line.length > 0);
+  if (lines[0] !== "entry\tname\tkind\ttier") {
+    throw new Error(`api/surface.txt: unexpected header "${lines[0]}"`);
+  }
+  const entries = new Map();
+  const tiers = {};
+  for (const line of lines.slice(1)) {
+    const [entry, name, kind, tier] = line.split("\t");
+    if (!entries.has(entry)) {
+      entries.set(entry, { entry, total: 0, kinds: {}, names: [] });
+    }
+    const e = entries.get(entry);
+    e.total++;
+    e.kinds[kind] = (e.kinds[kind] ?? 0) + 1;
+    e.names.push({ name, kind, tier });
+    tiers[tier] = (tiers[tier] ?? 0) + 1;
+  }
+  return {
+    total: lines.length - 1,
+    tiers,
+    entries: [...entries.values()],
+  };
+}
+
+/** The declarations the layer table is made of, by name, in the test. */
+const TEST_DECLARATIONS = [
+  "TIME_FILES",
+  "layerOf",
+  "FRAMES_CORE_VALUES",
+  "ALLOWED",
+  "listTs",
+  "edgesOfText",
+];
+
+/**
+ * The boundary test's own table and import reader, taken from the test file
+ * rather than copied, so a change to the rule changes the site. Fails naming
+ * any declaration the test no longer has.
+ */
+export function readBoundaryRules(root = packageRoot) {
+  const file = join(root, "test/importBoundary.test.ts");
+  const text = readFileSync(file, "utf8");
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const found = new Map();
+  for (const statement of source.statements) {
+    if (ts.isFunctionDeclaration(statement) && statement.name) {
+      found.set(statement.name.text, statement.getText(source));
+    } else if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (ts.isIdentifier(declaration.name)) {
+          found.set(declaration.name.text, statement.getText(source));
+        }
+      }
+    }
+  }
+  const missing = TEST_DECLARATIONS.filter((name) => !found.has(name));
+  if (missing.length > 0) {
+    throw new Error(
+      `test/importBoundary.test.ts no longer declares ${missing.join(", ")}; update scripts/handbookData.mjs`,
+    );
+  }
+  const { outputText } = ts.transpileModule(
+    TEST_DECLARATIONS.map((name) => found.get(name)).join("\n"),
+    {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.None,
+      },
+    },
+  );
+  const scope = { ts, root, readdirSync, readFileSync, join, dirname, relative };
+  return runInNewContext(
+    `${outputText}\n({ layerOf, ALLOWED, FRAMES_CORE_VALUES: [...FRAMES_CORE_VALUES], listTs, edgesOfText })`,
+    scope,
+  );
+}
+
+/** Layers, their sizes, the rules, and the imports that exist today. */
+export function readLayers(root = packageRoot) {
+  const rules = readBoundaryRules(root);
+  const files = [...rules.listTs("src"), ...rules.listTs("widgets")];
+  const layers = new Map();
+  const edges = new Map();
+  const dynamicImports = [];
+  for (const file of files) {
+    const text = readFileSync(join(root, file), "utf8");
+    const from = rules.layerOf(file);
+    if (!layers.has(from)) {
+      layers.set(from, { id: from, files: 0, lines: 0 });
+    }
+    const layer = layers.get(from);
+    layer.files++;
+    layer.lines += text.split("\n").length;
+    for (const edge of rules.edgesOfText(file, text)) {
+      const to = rules.layerOf(edge.to);
+      if (edge.dynamic) {
+        dynamicImports.push({ from: file, to: edge.to, fromLayer: from, toLayer: to });
+      }
+      if (from === to) {
+        continue;
+      }
+      const key = `${from}>${to}`;
+      if (!edges.has(key)) {
+        edges.set(key, { from, to, value: 0, typeOnly: 0, dynamic: 0 });
+      }
+      const e = edges.get(key);
+      if (edge.dynamic) {
+        e.dynamic++;
+      } else if (edge.typeOnly) {
+        e.typeOnly++;
+      } else {
+        e.value++;
+      }
+    }
+  }
+  return {
+    layers: [...layers.values()],
+    allowed: JSON.parse(JSON.stringify(rules.ALLOWED)),
+    framesCoreValues: rules.FRAMES_CORE_VALUES,
+    edges: [...edges.values()],
+    dynamicImports,
+  };
+}
+
+/** `node scripts/checkBundle.mjs`'s report, parsed from its stdout. */
+export function parseCheckBundle(stdout) {
+  const main = /main chunk (\S+): ([\d.]+) KB \(([\d.]+) KB gzipped\)/.exec(
+    stdout,
+  );
+  if (!main) {
+    throw new Error("scripts/checkBundle.mjs: no main chunk line in its output");
+  }
+  const chunks = (pattern) =>
+    [...stdout.matchAll(pattern)].map((m) => ({
+      name: chunkName(m[1]),
+      kb: Number(m[2]),
+    }));
+  return {
+    main: { kb: Number(main[2]), gzipKb: Number(main[3]) },
+    eager: chunks(/imported with it: (\S+): ([\d.]+) KB/g),
+    lazy: chunks(/lazy chunk (\S+): ([\d.]+) KB/g),
+    clean: /no X, Y or s series and no DAF reader/.test(stdout),
+  };
+}
+
+/** A built file's name without its directory or content hash. */
+function chunkName(fileName) {
+  return fileName
+    .replace(/^.*\//, "")
+    .replace(/-[\w-]{8}(\.\w+)$/, "$1")
+    .replace(/\.m?js$/, "");
+}
+
+/** The five entry points of the library build: what each pulls in, sized. */
+async function buildLibrary(root) {
+  const { build } = await import("vite");
+  const outDir = mkdtempSync(join(tmpdir(), "cesium-next-handbook-"));
+  try {
+    const result = await build({
+      root,
+      configFile: join(root, "vite.lib.config.ts"),
+      logLevel: "error",
+      build: { outDir, emptyOutDir: true },
+    });
+    const outputs = (Array.isArray(result) ? result : [result]).flatMap(
+      (r) => r.output,
+    );
+    const chunks = new Map(
+      outputs.filter((o) => o.type === "chunk").map((c) => [c.fileName, c]),
+    );
+    const reach = (starts, follow) => {
+      const seen = new Set();
+      for (const queue = [...starts]; queue.length > 0; ) {
+        const chunk = chunks.get(queue.pop());
+        if (chunk && !seen.has(chunk)) {
+          seen.add(chunk);
+          queue.push(...follow(chunk));
+        }
+      }
+      return seen;
+    };
+    const entries = [...chunks.values()]
+      .filter((c) => c.isEntry)
+      .map((entry) => {
+        const eager = reach([entry.fileName], (c) => c.imports);
+        const lazy = reach(
+          [...eager].flatMap((c) => c.dynamicImports),
+          (c) => [...c.imports, ...c.dynamicImports],
+        );
+        for (const c of eager) {
+          lazy.delete(c);
+        }
+        const code = [...eager].map((c) => c.code).join("\n");
+        return {
+          entry: entry.name
+            .replace(/^cesium-next-?/, "")
+            .replace(/^$/, "core"),
+          ownKb: kib(Buffer.byteLength(entry.code)),
+          loadKb: kib(Buffer.byteLength(code)),
+          loadGzipKb: kib(gzipSync(code).length),
+          sharedChunks: eager.size - 1,
+          lazyKb: kib(
+            [...lazy].reduce((n, c) => n + Buffer.byteLength(c.code), 0),
+          ),
+          lazy: [...lazy]
+            .map((c) => ({
+              name: chunkName(c.fileName),
+              kb: kib(Buffer.byteLength(c.code)),
+            }))
+            .sort((a, b) => b.kb - a.kb),
+        };
+      });
+    const assets = outputs
+      .filter(
+        (o) =>
+          o.type === "asset" && /\.(wasm|mjs)$/.test(o.fileName),
+      )
+      .map((o) => ({
+        name: chunkName(o.fileName).replace(/\.wasm$/, " (wasm)"),
+        kb: kib(
+          typeof o.source === "string"
+            ? Buffer.byteLength(o.source)
+            : o.source.length,
+        ),
+      }))
+      .sort((a, b) => b.kb - a.kb);
+    return { entries, assets };
+  } finally {
+    rmSync(outDir, { recursive: true, force: true });
+  }
+}
+
+/** Both bundle measurements. */
+async function readBundles(root) {
+  const stdout = execFileSync(
+    process.execPath,
+    [join(root, "scripts/checkBundle.mjs")],
+    { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
+  );
+  return {
+    globeOnly: parseCheckBundle(stdout),
+    library: await buildLibrary(root),
+  };
+}
+
+/** Files fetched at run time, measured in this machine's setup store. */
+function readRuntimeAssets() {
+  const store = join(homedir(), ".cesium-bench");
+  const frames = process.env.FRAMES_DATA_DIR ?? join(store, "frames");
+  const slangRoot = process.env.SLANG_WASM_DIR ?? join(store, "slang-wasm");
+  const slangVersions = existsSync(slangRoot)
+    ? readdirSync(slangRoot).filter((d) => /^\d/.test(d))
+    : [];
+  const slang = slangVersions.at(-1);
+  const groups = [
+    {
+      what: `Slang compiler${slang ? ` ${slang}` : ""}`,
+      dir: slang ? join(slangRoot, slang) : undefined,
+      names: ["slang-wasm.wasm", "slang-wasm.js"],
+    },
+    {
+      what: "PROJ 9.7.1",
+      dir: join(frames, "proj"),
+      names: ["proj_capi.wasm", "proj.db"],
+    },
+    {
+      what: "Ephemeris packs, 2000 to 2050",
+      dir: frames,
+      names: [
+        "planets-de440-2000-2050.pack",
+        "moon-pa-de440-2000-2050.pack",
+      ],
+    },
+  ];
+  return groups.map(({ what, dir, names }) => ({
+    what,
+    files: names.map((name) => {
+      const path = dir && join(dir, name);
+      return {
+        name,
+        kb: path && existsSync(path) ? kib(statSync(path).size) : null,
+      };
+    }),
+  }));
+}
+
+/** Rows of one run's result for a suite, or undefined. */
+const rowsOf = (run, suite) => {
+  const rows = run.results?.[suite];
+  return Array.isArray(rows) ? rows : undefined;
+};
+
+/** Whether a result row reports a pass or fail, and which. */
+const verdicts = (rows) => {
+  let pass = 0;
+  let fail = 0;
+  for (const row of rows) {
+    if (row?.pass === true) {
+      pass++;
+    } else if (row?.pass === false) {
+      fail++;
+    }
+  }
+  return { pass, fail };
+};
+
+/**
+ * bench/results: per adapter, each suite's latest run, plus the numeric
+ * tables the benchmarks tab charts. Run errors stay out: they can quote
+ * local paths.
+ */
+export function readBenchResults(root = packageRoot) {
+  const dir = join(root, "bench/results");
+  const runs = [];
+  for (const name of existsSync(dir) ? readdirSync(dir).sort() : []) {
+    if (!name.endsWith(".json")) {
+      continue;
+    }
+    try {
+      const run = JSON.parse(readFileSync(join(dir, name), "utf8"));
+      if (run?.date && run.results) {
+        runs.push(run);
+      }
+    } catch {
+      console.warn(`bench/results/${name}: not readable JSON, skipped`);
+    }
+  }
+  const adapters = new Map();
+  for (const run of runs) {
+    const adapter =
+      run.environment?.adapter?.description ??
+      run.environment?.adapter?.architecture ??
+      "unknown adapter";
+    if (!adapters.has(adapter)) {
+      adapters.set(adapter, {
+        adapter,
+        runs: 0,
+        firstDate: run.date,
+        lastDate: run.date,
+        suites: {},
+        latest: {},
+      });
+    }
+    const a = adapters.get(adapter);
+    a.runs++;
+    if (run.date < a.firstDate) {
+      a.firstDate = run.date;
+    }
+    if (run.date > a.lastDate) {
+      a.lastDate = run.date;
+    }
+    for (const suite of Object.keys(run.results)) {
+      const rows = rowsOf(run, suite);
+      if (!rows) {
+        continue;
+      }
+      const seen = a.suites[suite];
+      if (!seen || run.date >= seen.lastDate) {
+        a.suites[suite] = {
+          runs: (seen?.runs ?? 0) + 1,
+          lastDate: run.date,
+          rows: rows.length,
+          ...verdicts(rows),
+        };
+        a.latest[suite] = rows;
+      } else {
+        seen.runs++;
+      }
+    }
+  }
+  const pick = (row, keys) =>
+    Object.fromEntries(keys.filter((k) => k in row).map((k) => [k, row[k]]));
+  const adapterList = [...adapters.values()].map((a) => ({
+    adapter: a.adapter,
+    runs: a.runs,
+    firstDate: a.firstDate,
+    lastDate: a.lastDate,
+    suites: a.suites,
+    baseline: (a.latest.baseline ?? []).map((row) =>
+      pick(row, [
+        "suite",
+        "engine",
+        "draws",
+        "cpu/frame ms",
+        "frame incl. GPU ms",
+        "API calls/frame",
+        "first frame ms",
+        "gpu ms",
+        "main-thread ms",
+        "latency ms",
+        "scene copies",
+      ]),
+    ),
+    alloc: (a.latest.alloc ?? []).map((row) =>
+      pick(row, ["draws", "bytesPerFrame", "engineBytesPerFrame", "frames"]),
+    ),
+    instances: a.latest.instances ?? [],
+    hitch: (a.latest.hitch ?? []).map((row) =>
+      pick(row, ["step", "frames", "over34", "worst", "p99"]),
+    ),
+  }));
+  const baselineDir = join(root, "handbook/baselines");
+  const baselines = existsSync(baselineDir)
+    ? readdirSync(baselineDir)
+        .filter((name) => name.endsWith(".json"))
+        .map((name) => {
+          const run = JSON.parse(
+            readFileSync(join(baselineDir, name), "utf8"),
+          );
+          return { name, date: run.date ?? null, note: run.note ?? null };
+        })
+    : [];
+  return { runs: runs.length, adapters: adapterList, baselines };
+}
+
+/** Counts for the overview. */
+function readCounts(root) {
+  const count = (dir, pattern) => {
+    let n = 0;
+    for (const entry of readdirSync(join(root, dir), { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== "generated") {
+          n += count(path, pattern);
+        }
+      } else if (pattern.test(entry.name)) {
+        n++;
+      }
+    }
+    return n;
+  };
+  return {
+    testFiles: count("test", /\.test\.tsx?$/),
+    slangFiles: count("src", /\.slang$/),
+    examples: readdirSync(join(root, "examples"), {
+      withFileTypes: true,
+    }).filter((e) => e.isDirectory()).length,
+  };
+}
+
+function git(root, ...args) {
+  return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+}
+
+export async function generate({ root = packageRoot, bundles = true } = {}) {
+  const outDir = join(root, "handbook/generated");
+  const outFile = join(outDir, "data.json");
+  const previous = existsSync(outFile)
+    ? JSON.parse(readFileSync(outFile, "utf8"))
+    : undefined;
+  const dirty =
+    git(root, "status", "--porcelain", "--", "src", "widgets").length > 0;
+  const data = {
+    meta: {
+      generatedAt: new Date().toISOString(),
+      commit: git(root, "rev-parse", "--short", "HEAD"),
+      commitDate: git(root, "log", "-1", "--format=%cs"),
+      dirty,
+      version: JSON.parse(readFileSync(join(root, "package.json"), "utf8"))
+        .version,
+    },
+    surface: readSurface(root),
+    layers: readLayers(root),
+    bundles: bundles ? await readBundles(root) : previous?.bundles,
+    runtime: readRuntimeAssets(),
+    bench: readBenchResults(root),
+    counts: readCounts(root),
+  };
+  if (!data.bundles) {
+    throw new Error("--no-bundles needs an earlier full run to keep from");
+  }
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(outFile, `${JSON.stringify(data, null, 1)}\n`);
+  return data;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const data = await generate({
+    bundles: !process.argv.includes("--no-bundles"),
+  });
+  console.log(
+    `handbook data: ${data.surface.total} exports, ${data.layers.layers.length} layers, core ${data.bundles.library.entries.find((e) => e.entry === "core")?.loadKb} KB, ${data.bench.runs} bench runs`,
+  );
+}
