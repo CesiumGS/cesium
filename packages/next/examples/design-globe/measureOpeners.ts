@@ -521,7 +521,7 @@ export function openerDetails(
         rows.push(
           ...exactness([
             { label: "Combined scale factor", value: v.combinedFactorPpm },
-            ...accuracyRows(measure.m.accuracy),
+            ...accuracyRows(measure.m.accuracy, { mark: m.pid }),
           ]),
         );
       }

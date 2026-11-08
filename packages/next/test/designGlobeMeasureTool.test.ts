@@ -645,7 +645,7 @@ describe("the accuracy's parts", () => {
   const grid =
     'engineering frame "Highway corridor": PROJ operation (us_noaa_g2018u0.tif)';
 
-  it("on one grid: the distance's own figure, apart from each end's absolute position", () => {
+  it("on one grid: the distance's accuracy not stated, its known part the snaps, apart from each end's position", () => {
     const rows = accuracyRows({
       meters: Math.hypot(2.015, 2.015, 0.002, 0.002),
       terms: [
@@ -663,10 +663,13 @@ describe("the accuracy's parts", () => {
       "Pick or snap at A",
       "Pick or snap at B",
     ]);
-    // The snaps alone are the distance's (√2 × 2 mm); the grid's ±2 m is
-    // each end's, common to both, never combined as independent.
-    expect(rows[0]!.value).toMatch(/^±2\.8 mm \(1σ\): the ends' snaps/);
-    expect(rows[0]!.value).toMatch(/common to both ends/);
+    // The grid's common error cancels, but how much it varies between the
+    // ends is unknown, so no total: the snaps (√2 × 2 mm) are a known part
+    // only (UX review C1).
+    expect(rows[0]!.value).toBe(
+      "Not stated. The grid's common error cancels, and Earth orientation turns both ends together and cancels exactly. Not known: how much the grid varies between the ends (PROJ gives no figure). Known part: the snaps and picks, ±2.8 mm (1σ, combined as independent).",
+    );
+    expect(rows[0]!.value).not.toMatch(/doesn't enter|neither enters/);
     expect(rows[1]!.value).toMatch(/^±2\.0 m \(1σ\) on the globe/);
     expect(rows[2]!.value).toBe(
       "±2.0 m: PROJ's stated accuracy for the design CRS's operation (us_noaa_g2018u0.tif)",
@@ -674,16 +677,109 @@ describe("the accuracy's parts", () => {
     expect(rows.map((r) => r.value).join(" ")).not.toMatch(/2\.8 m\b/);
   });
 
-  it("design points as given: no snap, so no figure but the grid's common error", () => {
+  it("never states a total from exact snaps, and never reads ±0 m", () => {
+    // The page's default: two exact alignment snaps, tolerance 0.
     const rows = accuracyRows({
       meters: Math.hypot(2.015, 2.015),
       terms: [
         term("projection", "a", 2.015, grid),
+        term("earthOrientation", "a", 3e-9, "EOP interpolation"),
+        term(
+          "pick",
+          "a",
+          0,
+          "the design point was snapped to a segment: the snap's tolerance",
+        ),
         term("projection", "b", 2.015, grid),
+        term("earthOrientation", "b", 3e-9, "EOP interpolation"),
+        term(
+          "pick",
+          "b",
+          0,
+          "the design point was snapped to a segment: the snap's tolerance",
+        ),
       ],
       warnings: [],
     });
-    expect(rows[0]!.value).toMatch(/^Far finer than either end's/);
+    const all = rows.map((r) => r.value).join(" ");
+    expect(all).not.toMatch(/±0 m|±0\b/);
+    expect(rows[0]!.value).toMatch(/^Not stated\. /);
+    expect(rows[0]!.value).toMatch(
+      /Known part: the snaps, exact \(no pick error\)\.$/,
+    );
+    expect(rows.find((r) => r.label === "Pick or snap at A")!.value).toBe(
+      "exact (no pick error): the design point was snapped to a segment",
+    );
+  });
+
+  it("a line as long as London's, on one grid, states no distance total either", () => {
+    // 30 km through OSTN15 and OSGM15: the grid isn't uniform over it.
+    const london =
+      'engineering frame "London": PROJ operation (uk_os_OSTN15_NTv2_OSGBtoETRS.tif, uk_os_OSGM15_GB.tif)';
+    const rows = accuracyRows({
+      meters: Math.hypot(0.1, 0.1, 0.003, 0.003),
+      terms: [
+        term("projection", "a", 0.1, london),
+        term("projection", "b", 0.1, london),
+        term("pick", "a", 0.003, "the design point was snapped to a point"),
+        term("pick", "b", 0.003, "the design point was snapped to a point"),
+      ],
+      warnings: [],
+    });
+    expect(rows[0]!.label).toBe("The distance");
+    expect(rows[0]!.value).toMatch(/^Not stated\. /);
+    expect(rows[0]!.value).toMatch(/how much the grid varies between the ends/);
+    expect(rows[0]!.value).toMatch(/±4\.2 mm \(1σ, combined as independent\)/);
+  });
+
+  it("a geoid fallback's common error cancels too, and its variation is named", () => {
+    const rows = accuracyRows({
+      meters: undefined,
+      terms: [
+        term("projection", "a", 1.0, grid),
+        {
+          source: "geoidFallback",
+          meters: undefined,
+          note: "End a: EGM96 heights stand in",
+        },
+        term("projection", "b", 1.0, grid),
+        {
+          source: "geoidFallback",
+          meters: undefined,
+          note: "End b: EGM96 heights stand in",
+        },
+      ],
+      warnings: [],
+    });
+    expect(rows[0]!.value).toMatch(
+      /^Not stated\. The grid's and the geoid fallback's common errors cancel/,
+    );
+    expect(rows[0]!.value).toMatch(
+      /how much the geoid fallback's error varies between them/,
+    );
+    expect(rows[1]!.value).toMatch(/^not stated/);
+  });
+
+  it("design points as given: no snap, so no known part; the mark's own accuracy named", () => {
+    const rows = accuracyRows(
+      {
+        meters: Math.hypot(2.015, 2.015),
+        terms: [
+          term("projection", "a", 2.015, grid),
+          term("projection", "b", 2.015, grid),
+        ],
+        warnings: [],
+      },
+      { mark: "HS5109" },
+    );
+    expect(rows[0]!.value).toMatch(/^Not stated\. /);
+    expect(rows[0]!.value).not.toMatch(/[Ff]ar finer/);
+    expect(rows[0]!.value).toMatch(
+      /HS5109's own survey accuracy, which is not a term/,
+    );
+    expect(rows[0]!.value).toMatch(
+      /Known part: none: the ends are design points as given, with no snap\.$/,
+    );
   });
 
   it("ends on different grids: the parts combined as independent, as the statement gives them", () => {

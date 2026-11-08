@@ -283,12 +283,25 @@ function projectionWhat(note: string): string {
   return `PROJ's stated accuracy for the design CRS's operation${grids !== undefined && grids !== "no grids" ? ` (${grids})` : ""}`;
 }
 
+/** An exact snap: its pick term is 0 m, which reads "exact", never "±0 m". */
+const exactPick = (term: AccuracyTerm) =>
+  term.source === "pick" && term.meters === 0;
+
 /** A term's row: its source, its end, its size and what it is. */
 function termRow(term: AccuracyTerm, where?: string): AccuracyRow {
   const { end, note } = termEnd(term);
   const size =
-    term.meters === undefined ? "not stated" : `±${meters(term.meters)}`;
-  const what = term.source === "projection" ? projectionWhat(note) : note;
+    term.meters === undefined
+      ? "not stated"
+      : exactPick(term)
+        ? "exact (no pick error)"
+        : `±${meters(term.meters)}`;
+  const what =
+    term.source === "projection"
+      ? projectionWhat(note)
+      : exactPick(term)
+        ? note.replace(/: the (snap|pick)'s tolerance$/, "")
+        : note;
   return {
     label: `${SOURCE_LABEL[term.source]}${where ?? (end ? ` at ${end.toUpperCase()}` : "")}`,
     value: `${size}: ${what}`,
@@ -302,19 +315,34 @@ const COMMON: ReadonlySet<AccuracyTerm["source"]> = new Set([
   "geoidFallback",
 ]);
 
+/** What a measurement's accuracy rows say beyond its statement. */
+export interface AccuracyContext {
+  /**
+   * One end is a survey mark (its PID), placed from its published
+   * position: its own survey accuracy is in no term.
+   */
+  readonly mark?: string;
+}
+
 /**
  * A measurement's accuracy with its parts. When both ends are design points
  * on one grid (the same operation, the same stated figure), the statement's
- * total is each end's absolute accuracy, not the distance's: the grid's
- * error is common to both ends and Earth orientation turns both together,
- * so neither enters the distance between them. The rows then say so: the
- * distance's own figure from what is the ends' alone (the snaps and picks),
- * each end's position on the globe, and the parts, a common one once.
- * Otherwise (ends in different frames, or not design points) the total is
- * the parts combined as independent, as the statement gives it. A term of
- * unknown size reads "not stated", and makes the total so.
+ * total is each end's absolute accuracy, not the distance's. The grid's
+ * common error cancels in the distance and Earth orientation turns both
+ * ends together, but how much the grid varies between the ends is a part
+ * PROJ states no figure for, so the distance's accuracy is not stated (R7:
+ * a part of unknown size makes the total so, never small). The rows say
+ * so, with the known part (the snaps and picks) beside it; then each end's
+ * position on the globe, and the parts, a common one once. Otherwise (ends
+ * in different frames, or not design points) the total is the parts
+ * combined as independent, as the statement gives it. A term of unknown
+ * size reads "not stated", and makes the total so. An exact snap reads
+ * "exact (no pick error)", never "±0 m".
  */
-export function accuracyRows(statement: AccuracyStatement): AccuracyRow[] {
+export function accuracyRows(
+  statement: AccuracyStatement,
+  context: AccuracyContext = {},
+): AccuracyRow[] {
   const terms = statement.terms;
   const projection = terms.filter((t) => t.source === "projection");
   const grids = (t: AccuracyTerm) =>
@@ -328,15 +356,19 @@ export function accuracyRows(statement: AccuracyStatement): AccuracyRow[] {
     terms.every((t) => COMMON.has(t.source) || t.source === "pick");
   const notes = statement.warnings.map((w) => ({ label: "Note", value: w }));
   if (!oneGrid) {
-    const total =
+    const parts =
       statement.meters === undefined
-        ? "not stated (a part's size isn't known)"
+        ? undefined
         : `±${meters(statement.meters)} (1σ)`;
+    // The mark's own survey accuracy is a part of unknown size: no total.
+    const value =
+      context.mark !== undefined
+        ? `not stated, of the true distance: ${context.mark}'s own survey accuracy is not a term. The parts below${parts !== undefined ? `, combined as independent, are ${parts}` : ""}.`
+        : parts === undefined
+          ? "not stated (a part's size isn't known), of the true distance: the parts below, combined as independent"
+          : `${parts}, of the true distance: the parts below, combined as independent`;
     return [
-      {
-        label: "Accuracy",
-        value: `${total}, of the true distance: the parts below, combined as independent`,
-      },
+      { label: "Accuracy", value },
       ...terms.map((t) => termRow(t)),
       ...notes,
     ];
@@ -344,14 +376,28 @@ export function accuracyRows(statement: AccuracyStatement): AccuracyRow[] {
   const own = terms.filter((t) => t.source === "pick");
   const ownKnown = own.every((t) => t.meters !== undefined);
   const ownTotal = Math.hypot(...own.map((t) => t.meters ?? 0));
-  const shared =
-    "The grid's error is common to both ends and Earth orientation turns both together, so neither enters the distance. PROJ states no figure for how much the grid varies between them.";
-  const distance =
+  const fallback = terms.some((t) => t.source === "geoidFallback");
+  const cancels = fallback
+    ? "The grid's and the geoid fallback's common errors cancel, and Earth orientation turns both ends together and cancels exactly."
+    : "The grid's common error cancels, and Earth orientation turns both ends together and cancels exactly.";
+  const unknown = [
+    "how much the grid varies between the ends (PROJ gives no figure)",
+    ...(fallback
+      ? ["how much the geoid fallback's error varies between them"]
+      : []),
+    ...(context.mark !== undefined
+      ? [`${context.mark}'s own survey accuracy, which is not a term`]
+      : []),
+  ];
+  const known =
     own.length === 0
-      ? `Far finer than either end's position: the ends are design points as given, with no snap. ${shared}`
-      : ownKnown
-        ? `±${meters(ownTotal)} (1σ): the ends' snaps and picks, combined as independent. ${shared}`
-        : `Not stated: a snap's size isn't known. ${shared}`;
+      ? "none: the ends are design points as given, with no snap"
+      : !ownKnown
+        ? "none: a snap's size isn't known"
+        : ownTotal === 0
+          ? "the snaps, exact (no pick error)"
+          : `the snaps and picks, ±${meters(ownTotal)} (1σ, combined as independent)`;
+  const distance = `Not stated. ${cancels} Not known: ${unknown.join("; ")}. Known part: ${known}.`;
   const endA = terms.filter(
     (t) => COMMON.has(t.source) && termEnd(t).end === "a",
   );
