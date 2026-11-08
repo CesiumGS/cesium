@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Frame, frameTransform } from "../src/frames/Frame.ts";
+import { Frame, frameTransform, routeRevision } from "../src/frames/Frame.ts";
 import {
   convertPoint,
   eastNorthUpFrame,
@@ -291,6 +291,25 @@ describe("frames in the world", () => {
     expect(Array.from(convertPoint(p, earth).position)).toEqual([101, 0, 0]);
     world.setTransform(handle, translation(0, 500, 0));
     expect(Array.from(convertPoint(p, earth).position)).toEqual([1, 500, 0]);
+  });
+
+  it("worldTransformFrame's revision follows its transform, and a route through it", () => {
+    const world = engine.createWorld();
+    const handle = world.addTransform(translation(100, 0, 0));
+    const earth = Frame.root("ITRF");
+    const placed = worldTransformFrame("placed", world, handle, earth);
+    const other = world.addTransform(translation(0, 0, 7));
+    const unrelated = worldTransformFrame("unrelated", world, other, earth);
+    const before = placed.revision;
+    const route = routeRevision(placed, earth);
+    expect(placed.revision).toBe(before);
+    world.setTransform(handle, translation(100, 0, 0));
+    expect(placed.revision).toBe(before);
+    world.setTransform(handle, translation(0, 500, 0));
+    expect(placed.revision).toBe(before + 1);
+    expect(routeRevision(placed, earth)).toBe(route + 1);
+    expect(placed.revision).toBe(before + 1);
+    expect(unrelated.revision).toBe(0);
   });
 
   it("eastNorthUpFrame's z axis is the ellipsoid normal", () => {

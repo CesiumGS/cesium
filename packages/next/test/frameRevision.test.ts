@@ -51,6 +51,23 @@ describe("frame revision", () => {
     expect(calls).toBe(2);
   });
 
+  it("invalidate drops the cache even when a subclass overrides revision", () => {
+    let calls = 0;
+    class Fixed extends Frame {
+      override get revision(): number {
+        return 5;
+      }
+    }
+    const f = new Fixed("X", root, (_i, out) => {
+      calls++;
+      identity(out);
+    });
+    f.toParent(at);
+    f.invalidate();
+    f.toParent(at);
+    expect(calls).toBe(2);
+  });
+
   it("a route's revision sums the revisions along it", () => {
     const a = new Frame("A", root, (_i, out) => void identity(out));
     const b = new Frame("B", root, (_i, out) => void identity(out));
@@ -110,6 +127,15 @@ describe("publishedAccuracy", () => {
     expect(f.publishedAccuracy(at).radians).toBe(1e-9);
     fig.value = radians(1.2e-9); // 2.0e-10 apart
     expect(f.publishedAccuracy(at).radians).toBe(1.2e-9);
+    expect(f.revision).toBe(1);
+  });
+
+  it("publishes a metre figure moving while radians stays stated", () => {
+    const fig = { value: { meters: 1, radians: 1e-6, note: "test" } };
+    const f = drifting(fig);
+    f.publishedAccuracy(at);
+    fig.value = { meters: 1.5, radians: 1e-6, note: "test" };
+    expect(f.publishedAccuracy(at).meters).toBe(1.5);
     expect(f.revision).toBe(1);
   });
 

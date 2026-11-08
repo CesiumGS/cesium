@@ -93,7 +93,8 @@ export class Frame<N extends string = string> {
 
   /**
    * Says the edge changed: bumps `revision` and drops the cached matrix,
-   * so the next `toParent` recomputes even at the same instant.
+   * so the next `toParent` recomputes even at the same instant (also when a
+   * subclass overrides `revision`).
    */
   invalidate(): void {
     this.count++;

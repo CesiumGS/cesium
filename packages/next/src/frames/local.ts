@@ -87,20 +87,51 @@ export function eastNorthUpFrame<N extends string>(
 /**
  * A frame placed by a world transform, as a child of the Earth-fixed
  * frame. Uncached: it reads `world.worldMatrix` on every call, so moving
- * the transform moves the frame even at the same instant (R6).
+ * the transform moves the frame even at the same instant (R6). Its
+ * `revision` follows the transform: it goes up when the transform's world
+ * matrix (its own or a parent's move) differs from the one last seen.
  */
+class WorldTransformFrame<N extends string> extends Frame<N> {
+  private readonly seen = new Float64Array(16);
+  private readonly now = new Float64Array(16);
+  private moves = 0;
+  private known = false;
+
+  constructor(
+    name: N,
+    private readonly world: World,
+    private readonly handle: TransformHandle,
+    earthFixed: Frame,
+  ) {
+    super(
+      name,
+      earthFixed,
+      (_instant, out) => {
+        world.worldMatrix(handle, out as Float64Array<ArrayBuffer>);
+      },
+      { cache: false },
+    );
+  }
+
+  override get revision(): number {
+    this.world.worldMatrix(this.handle, this.now);
+    if (!this.known) {
+      this.known = true;
+      this.seen.set(this.now);
+    } else if (this.now.some((v, i) => v !== this.seen[i])) {
+      this.seen.set(this.now);
+      this.moves++;
+    }
+    return this.moves + super.revision;
+  }
+}
+
+/** A frame placed by a world transform; see `WorldTransformFrame`. */
 export function worldTransformFrame<N extends string>(
   name: N,
   world: World,
   handle: TransformHandle,
   earthFixed: Frame,
 ): Frame<N> {
-  return new Frame(
-    name,
-    earthFixed,
-    (_instant, out) => {
-      world.worldMatrix(handle, out as Float64Array<ArrayBuffer>);
-    },
-    { cache: false },
-  );
+  return new WorldTransformFrame(name, world, handle, earthFixed);
 }
