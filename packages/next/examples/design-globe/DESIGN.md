@@ -37,7 +37,7 @@ the second audience: every number is there and honest, but quieter.
      placements; only reprojected also draws it in the right place.
   5. Down the ladder: the single building (rigid is fine), the airport
      (metres), the pole line (tens of metres).
-  6. Hand-off: the panel, the flight list and the measure tool, yours.
+  6. Hand-off: the panel, the flight list and the measure toolbar, yours.
 
   The tour respects reduced motion: steps cut instead of flying.
 
@@ -144,51 +144,161 @@ and that a measurement on the globe gives the number their CAD gives.
    data gives the one command; an error says what failed, with Retry, and
    nothing falls back silently.
 
-## Layout (side column, 400 px; stacks under the globe below 900 px)
+## Layout (owner's feedback round F, 2026-11-07)
 
-1. Title and one sentence.
-2. **Placement:** a segmented switch, Rigid at the anchor or Reprojected,
-   and "Show the other" (on by default, drawn thin and dashed); the sag
-   chart; one sentence with the worst rigid error and the reprojected
-   tolerance.
-3. **Measure** (up front, after the placement, as "The story" orders the
-   headline: Task 19): the openers first, each with its headline. The
-   self-check and the survey mark lead with how far rigid draws the
-   design from where it is, shrinking to 0.000 m through the morph; the
-   design and true distances come from the page's own `measure` (the
-   checks compare them with answers.json), side by side and labelled; the
-   10,000 ft pair is quieter. Then your own measurement: snap mode
-   (Alignment, exact; Geometry; None), a one-line instruction, the design
-   and true distances, and behind "Details" the ellipsoid, scale-factor
-   and accuracy rows (the accuracy with its parts, and what it is the
-   accuracy of), then each point's station, offset and elevation (with
-   its datum).
-4. **Sites:** the portfolio as a list. Each row: the name, then CRS,
-   units and height system on a second line; "Fly to"; a warning badge
-   where a fallback applies. The selected row is tinted.
-5. **Checks:** the explorer's rows and kind tags. Every value on the page
-   is compared with the generator's exact answer (hand formula), the
-   round trips, and published geoid values.
-6. **Your own models:** the empty ion slots, each saying what the app must
-   supply (CRS, units, site transform, placement mode).
+The owner, after using the page: "overall I find the sidebar UX busy and
+poorly organized, you can do better"; "measurement tools being in the
+sidebar are confusing, turn that into a small toolbar over the viewer, like
+a cad tool. the measurement error explanation can stay in the sidebar."
+This section is the structure that answers it, written before it was
+built.
+
+### What goes where, and why
+
+The split follows the two audiences. **The viewer** is for doing: looking,
+switching what is drawn, measuring, reading the point under the cursor.
+**The sidebar** is for understanding: the story of the selected site, its
+facts, the ladder to fly through, and, folded away, the surveyor's
+details. Anything that changes what the globe draws, or is used with the
+pointer on the globe, moves to the viewer; anything that explains a
+number stays in the sidebar, next to that number.
+
+```text
+┌ the view ──────────────────────────────────────┐ ┌ Controls ─────────────────────┐
+│ [inspector line]                 ┌ At cursor ┐ │ │ ✓ All data ready, 38.5 MB  ⧉ │ 1 status, Copy link
+│ ┌ toolbar ─────────────────────┐ │ Design    │ │ │                               │
+│ │ ⌖ ◇ ⊙ │ ⊕ ✕ ║ ▨ ⇕ ✣ ▤      │ │ E N H     │ │ │ Highway corridor              │ 2 the story
+│ └──────────────────────────────┘ │ Globe     │ │ │ Oakland hills to Livermore    │   (the selected
+│  Click a first point on a model  │ lat lon h │ │ │ [Rigid at the anchor|Reproj.] │    site's)
+│                                  │ error     │ │ │ One transform at the anchor…  │
+│            ◌·  snap preview      └───────────┘ │ │ 30.586 m  station 1700+00 … ▸ │   the evidence
+│                                                │ │ 19.278 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
+│                                                │ │ 10,000.000 ftUS = 3,048.848 m ▸│
+│        ┌ tour card ─────────────┐   ┌ legend ┐ │ │ sag chart        Fly along    │
+│        └────────────────────────┘   └────────┘ │ │ Take the short tour           │
+│ credits      [ time controls ]                 │ │ CRS, heights, units ▸ details │ 3 the site's facts
+└────────────────────────────────────────────────┘ │ Your measurement (when one)   │ 4
+                                                   │ Sites, smallest first         │ 5 the ladder
+                                                   │ Checks: 20 within tolerance ▸ │ 6 folded
+                                                   └───────────────────────────────┘
+```
+
+### The sidebar, top to bottom
+
+1. **Status**: one quiet line once everything is in, with Copy link on
+   the same row; while loading, a row per item with its bytes; missing
+   data, the one command; an error, what failed and Retry.
+2. **The story**, of the selected site, the one area that reads first:
+   - the site's name (h2) and where it is, one line;
+   - the placement switch, full width, and one sentence under it (what
+     the drawn placement is, or the morph under way);
+   - **the evidence**: on the corridor, the three opening measurements as
+     rows, each a headline number and one caption line, with Show (fly
+     there) and a Details disclosure holding the rest (both distances
+     labelled, the line as the globe draws it, Close in on the ruler, each
+     end's rows, NGS's datasheet). Elsewhere, the site's story: its
+     extent, rigid's error at its edge and whether rigid is acceptable
+     there;
+   - on the corridor, the sag chart and Fly along;
+   - Take the short tour (while the tour isn't running).
+3. **The site's facts**: CRS, heights (with the geoid model) and units,
+   always visible; "Frame details" folded: the operation's stated accuracy,
+   the combined factor, rigid's error in its three parts, a site grid,
+   the grids' credits, a fallback.
+4. **Your measurement**, only once there is one: the design and true
+   distances side by side, labelled; the line as drawn; "How exact this
+   is" folded: the ellipsoid distance, the combined factor, the accuracy
+   with its parts and what it is the accuracy of, each end's station,
+   offset and elevation. This is the measurement error explanation the
+   owner kept in the sidebar. With none, nothing: the toolbar says how.
+5. **Sites, smallest first**: one row per site, the whole row the button
+   (Fly to), two lines: the name, then its extent and rigid's error at its
+   edge (or its CRS codes until its frame is in), a fallback badge where
+   one applies. The selected row has the accent bar. The codes, place and
+   grids are the story's and the facts' once it is selected, not every
+   row's.
+6. **Checks**, folded to their one summary line.
+
+Gone from the sidebar: "On the globe" (its toggles are the toolbar's; its
+sag chart and Fly along are the story's) and "Your own models" (the ion
+slots, F7: the owner removed them; the frames explorer's "Try your own"
+covers bringing a model).
+
+Honesty rules unchanged: every unit named, every number stated once (a
+number in a headline row is not repeated in its Details), no e-notation.
+
+### The viewer
+
+- **The toolbar** (F8), top left under Dyno's inspector line, StrataKit's
+  solid `Toolbar` of ghost icon buttons, each with a tooltip, in two groups
+  as CAD tools group them:
+  - **Measure**: the snap mode as three exclusive buttons (Alignment,
+    exact; Geometry; None, a plain pick), Point at the view's centre (the
+    keyboard's way), Clear (Escape too). A click on a model always
+    measures; under the toolbar a one-line prompt appears while a
+    measurement is under way or a click was refused ("Click a second
+    point on the same model").
+  - **View**: Show the other placement (the ghost), Exaggerate the error
+    (its factor beside it while on), the compass at the cursor, the error
+    ribbon; each a toggle (`active`), disabled with why where it can't
+    apply.
+- **The snap preview** (F5), as CAD's AccuSnap: while the pointer rests on
+  the view in a snapping mode, a throttled snap runs (one at a time, the
+  last aborted), and a translucent dot marks where a click would land,
+  with the snap kind's small glyph (a square on a point, a bar on a line,
+  an arc on a curve, a cross on a surface), solid once the exact snap has
+  answered, and a faint ring of the snap's reach around the cursor.
+- **The cursor card** (F12), top right, compact: the design coordinates
+  first (E, N, H with units, the CRS's codes and height system), then the
+  globe's (latitude, longitude, ellipsoidal height, WGS 84), then the
+  error as one line. Moving the cursor shows the design space being
+  reprojected: the design numbers and the globe numbers change together.
+- **The legend**, bottom right above the time controls.
+- **The tour's card**, bottom centre above the time controls.
+- **Layering** (F2): the inspector is topmost. The viewer's own overlays
+  stack canvas, then the page's overlays, then the credits and the time
+  controls, then the inspector; Dyno's view isolates them, so its own
+  overlays sit above the whole viewer.
 
 ## On the globe
 
-- Reprojected corridor: solid, 5 px, the repro colour (cyan family).
-  Rigid: 2 px dashed, the rigid colour (orange family). Neither reuses a
-  status colour.
+- Reprojected: solid, the repro colour (cyan family); rigid: the rigid
+  colour (orange family). Neither reuses a status colour. The other
+  placement is the ghost: its deck translucent, its creases as lines.
+- The ghost never tints the solid placement (F4): where the two placements
+  coincide, the ghost isn't drawn, and during a morph the moving surface is
+  the only one drawn at either end (see "The ghost" below).
 - The anchor: a white ring, labelled.
 - The measure line and its points: yellow, with a dark label pill giving
   the design distance.
-- HUD top-left: the placement and CRS, and the legend. At the cursor (rigid
-  shown): the error at that station. Bottom-left: grid credits from the
-  pinned licenses list.
-- The globe is the ellipsoid, not terrain, so a NAVD88 design is never
-  buried in or floating over a terrain model with its own datum.
+- **The globe is Cesium World Terrain** (owner, F3), with the ion token
+  Dyno's setting supplies. The designs carry their own height systems
+  (NAVD88 via GEOID18, and each country's own), so on real ground they sit
+  where they are: on the ellipsoid, a NAVD88 design floated by the geoid's
+  height (about 32 m in California, 46 m in London). Terrain is clipped
+  under each site's footprint and the corridor's strip (F11), so the
+  ground never pokes through a flat design surface.
 
-## Open for the owner (2026-11-07)
+### The ghost (F4)
 
-- The two placement colours (cyan for true, orange for rigid).
-- Whether "Show the other" defaults on.
-- Whether the sag chart earns its place, or the HUD's cursor readout is
-  enough.
+Root causes of what the owner saw, and the fixes:
+
+- **Coplanar partners.** The ghost deck is the other placement's surface,
+  drawn translucent and depth-tested against the opaque pass. Where the two
+  placements are within a few centimetres (near the anchor; along a
+  surface's own plane, where a horizontal offset keeps them coplanar), the
+  ghost's fragments pass the depth test on some pixels and fail on
+  others: z-fighting. The ghost is now pushed back in depth by a few
+  centimetres at its own distance (a polygon offset in the morph shader),
+  and fades out wherever its partner is under one pixel apart, so it
+  never competes with the solid surface for the same depth.
+- **The ghost on the active shape.** During a morph both decks were drawn
+  as well as the moving surface; at t = 0 the rigid deck is exactly the
+  moving surface, and at t = 1 the reprojected deck is, so the
+  translucent tint lay on the active shape itself. Now, during a morph,
+  only the deck of the placement being left is drawn, and it fades with
+  the morph's progress; the destination's deck is never drawn under the
+  moving surface.
+- **The morph's artifacts.** The ghost's crease lines are opaque and drawn
+  with the deck's positions: at the anchor end they sat exactly on the
+  solid surface (more z-fighting). They take the same depth offset.
