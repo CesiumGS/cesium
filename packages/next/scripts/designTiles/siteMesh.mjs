@@ -2,8 +2,9 @@
 // 14): a box per story, in the site's design coordinates (its CRS's units,
 // easting first), from the site's corner `origin`, `width` along design east
 // and `depth` along design north. The site-grid building is this mesh as
-// one rigid tile; the ladder's single building (Task 17b) is the same
-// stories as a part of one leaf (`buildingPlan`).
+// one rigid tile, on a plinth carried down into the slope it stands on; the
+// ladder's single building (Task 17b) is the same stories as a part of one
+// leaf (`buildingPlan`).
 import { srgb } from "./meshBuilder.mjs";
 
 /** Each story's walls step in this fraction of the footprint's shorter side, above the ground floor, so the stories read apart. */
@@ -105,6 +106,70 @@ export function buildingMesh(site) {
         design.push(...corner);
         normals.push(...normal);
         ids.push(story);
+      }
+      indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
+    }
+  }
+  // The plinth: the ground floor's walls carried down to its foot, closed
+  // underneath (a building on a slope, on real ground).
+  const foot = site.model.plinth;
+  if (foot !== undefined && foot < u0) {
+    const id = features.length;
+    features.push({ name: `${site.name}, plinth`, kind: "plinth" });
+    const [w0, w1, s0, s1, z0, z1] = [e0, e0 + width, n0, n0 + depth, foot, u0];
+    const faces = [
+      [
+        [
+          [w0, s1, z0],
+          [w1, s1, z0],
+          [w1, s0, z0],
+          [w0, s0, z0],
+        ],
+        [0, 0, -1],
+      ],
+      [
+        [
+          [w0, s0, z0],
+          [w1, s0, z0],
+          [w1, s0, z1],
+          [w0, s0, z1],
+        ],
+        [0, -1, 0],
+      ],
+      [
+        [
+          [w1, s1, z0],
+          [w0, s1, z0],
+          [w0, s1, z1],
+          [w1, s1, z1],
+        ],
+        [0, 1, 0],
+      ],
+      [
+        [
+          [w1, s0, z0],
+          [w1, s1, z0],
+          [w1, s1, z1],
+          [w1, s0, z1],
+        ],
+        [1, 0, 0],
+      ],
+      [
+        [
+          [w0, s1, z0],
+          [w0, s0, z0],
+          [w0, s0, z1],
+          [w0, s1, z1],
+        ],
+        [-1, 0, 0],
+      ],
+    ];
+    for (const [corners, normal] of faces) {
+      const first = ids.length;
+      for (const corner of corners) {
+        design.push(...corner);
+        normals.push(...normal);
+        ids.push(id);
       }
       indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
     }

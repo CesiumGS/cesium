@@ -491,10 +491,15 @@ export function run(context: ExampleContext): ExampleRun {
       console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
       return;
     }
+    if (site.entry.onGround === true) {
+      // Its poles stand on the ground (London's): nothing to clip.
+      syncTerrainClip(globe, site.entry.id, undefined);
+      return;
+    }
     const polygon =
       route !== undefined
-        ? // Around the line (London's poles and their stays), not the
-          // rectangle that holds it: a vertex every 500 design units.
+        ? // Around a line model's route, not the rectangle that holds
+          // it: a vertex every 500 design units.
           routeRegion(
             route.points,
             displayed,

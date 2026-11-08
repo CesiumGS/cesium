@@ -72,6 +72,8 @@ import {
   rigidErrorTerms,
 } from "../../scripts/designTiles.mjs";
 import { MIN_RADIUS } from "../../scripts/designTiles/meshBuilder.mjs";
+import { poleLinePoles } from "../../scripts/designTiles/poleLineMesh.mjs";
+import { poleLineShot } from "../../examples/design-globe/shots.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import { Alignment } from "../../src/engineering/alignment.ts";
 import {
@@ -1384,5 +1386,44 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
       ...answers.points.map((p: Json) => p.displayError),
     );
     expect(corridor).toBeGreaterThan(previous);
+  });
+
+  it("stands London's poles on the ground, and its Fly to looks at them (UX review M1)", () => {
+    const site = PORTFOLIO.find((s) => s.id === "london")!;
+    const m = site.model as { ground?: readonly number[]; poleHeight: number };
+    const { poles } = poleLinePoles(site);
+    // The ground the poles stand on, from the lidar: far off the origin's
+    // 40 m plane at the line's ends, where the poles used to be buried.
+    expect(m.ground).toHaveLength(poles.length);
+    expect(Math.min(...m.ground!)).toBeLessThan(25);
+    expect(Math.max(...m.ground!)).toBeGreaterThan(75);
+    // The farthest vertex is a foot set into that ground, not the plane.
+    const a = answers.sites.london;
+    const far = a.points[1].design;
+    const nearest = poles.reduce(
+      (best, p, i) =>
+        Math.hypot(p[0] - far[0], p[1] - far[1]) <
+        Math.hypot(poles[best]![0] - far[0], poles[best]![1] - far[1])
+          ? i
+          : best,
+      0,
+    );
+    expect(far[2]).toBeGreaterThan(m.ground![nearest]! - 3);
+    expect(far[2]).toBeLessThanOrEqual(m.ground![nearest]!);
+    // The shot's centre is among the poles: within a pole's height of the
+    // top of one, as it truly is or as rigid draws it.
+    const { rigid, reprojected } = loaded.get("london")!;
+    const shot = poleLineShot(a.points[2], a.points[0]);
+    let closest = Infinity;
+    poles.forEach((p, i) => {
+      const top = [p[0], p[1], m.ground![i]! + m.poleHeight];
+      for (const at of [rigid.displayed(top), reprojected.displayed(top)]) {
+        closest = Math.min(
+          closest,
+          Math.hypot(...[0, 1, 2].map((k) => at[k]! - shot.center[k]!)),
+        );
+      }
+    });
+    expect(closest).toBeLessThan(m.poleHeight);
   });
 });

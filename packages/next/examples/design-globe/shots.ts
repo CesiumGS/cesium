@@ -427,14 +427,22 @@ export function createShots(deps: ShotsDeps): Shots {
       // enough to read the model and the gap (the pole line is thin at
       // full extent).
       const gap = far.displayError;
+      const pole = answer?.kind === "poleLine" ? answer.points[2] : undefined;
+      const anchor = answer?.points[0];
+      if (pole !== undefined && anchor !== undefined) {
+        // A pole line is thin (0.3 m poles, 11 m tall): from just behind
+        // its far pole, along the line toward the anchor, so the poles
+        // recede in a row, each with rigid's copy standing in the air over
+        // it (UX review M1).
+        flyLit(poleLineShot(pole, anchor));
+        return;
+      }
       flyLit({
         center: far.bodyFixed.map(
           (t, i) => t + (far.rigidDisplayed[i]! - t) * 0.4,
         ),
         // Steep enough to stand clear of real ground (Cesium World
-        // Terrain): a design's flat plane can lie under the hills at its
-        // far end (London's, 40 m ODN, under 80 m ground), where a low
-        // camera was clamped onto the terrain and saw only the ground.
+        // Terrain), where a low camera would be clamped onto it.
         heading: -40 * deg,
         pitch: -30 * deg,
         range: Math.max(220, 3.5 * gap + 120),
@@ -457,6 +465,39 @@ export function createShots(deps: ShotsDeps): Shots {
     alongStation: () => alongStation,
     daylight,
     flyToTileset,
+  };
+}
+
+/**
+ * A pole line's shot: looking along the line from behind its far pole
+ * (`pole`, its top) toward the anchor, at the height between where the
+ * pole is and where rigid draws it, so both placements' poles are in view.
+ */
+export function poleLineShot(
+  pole: {
+    readonly bodyFixed: ArrayLike<number>;
+    readonly rigidDisplayed: ArrayLike<number>;
+  },
+  anchor: { readonly bodyFixed: ArrayLike<number> },
+): Framing {
+  const p = pole.bodyFixed;
+  const { east, north } = enuAt(p);
+  const d = [0, 1, 2].map((k) => anchor.bodyFixed[k]! - p[k]!);
+  const heading = Math.atan2(
+    d[0]! * east[0]! + d[1]! * east[1]! + d[2]! * east[2]!,
+    d[0]! * north[0]! + d[1]! * north[1]! + d[2]! * north[2]!,
+  );
+  const length = Math.hypot(d[0]!, d[1]!, d[2]!);
+  // Three spans along the line, halfway up to rigid's copy, seen from
+  // off to one side so the poles stand apart rather than in one file.
+  const ahead = 150 / length;
+  return {
+    center: [0, 1, 2].map(
+      (k) => p[k]! + d[k]! * ahead + (pole.rigidDisplayed[k]! - p[k]!) * 0.5,
+    ),
+    heading: heading + 35 * deg,
+    pitch: -10 * deg,
+    range: 200,
   };
 }
 

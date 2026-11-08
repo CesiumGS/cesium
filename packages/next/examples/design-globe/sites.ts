@@ -5,7 +5,7 @@
 // that the reprojection error is real and matters"): from a single
 // building through a city block, a port, a solar farm, an airport and a
 // campus to a 30 km pole line, each a `PortfolioModel` on one flat design
-// plane. The generator (scripts/designTiles.mjs) builds a rigid and a
+// plane but the pole line, whose poles stand on the ground. The generator (scripts/designTiles.mjs) builds a rigid and a
 // reprojected tileset for each, and a rigid one for the site-grid building.
 //
 // A site's `grids` are exactly the grids its frame's operation reads, as
@@ -29,6 +29,7 @@ import {
   CORRIDOR_CRS,
   CORRIDOR_PIPELINE,
 } from "./corridor.ts";
+import { POLE_LINE_GROUND } from "./poleLineGround.ts";
 
 /** One building, a box per storey (the site-grid building, and Amsterdam's). */
 export interface BuildingModel {
@@ -38,6 +39,12 @@ export interface BuildingModel {
   readonly depth: number;
   readonly stories: number;
   readonly storyHeight: number;
+  /**
+   * The plinth's foot, design height units: the ground floor's walls carried
+   * down into the ground below it, so a building on a slope stands on real
+   * ground without a clipped pit around it. Absent: no plinth.
+   */
+  readonly plinth?: number;
 }
 
 /** A district of city blocks between streets, its buildings from `seed`. */
@@ -148,11 +155,18 @@ export interface PoleLineModel {
   /** The conductors' sag at mid-span, and the wayleave strip's width. */
   readonly sag: number;
   readonly wayleave: number;
+  /**
+   * Each pole's ground height, design height units, in the order the
+   * generator lays the poles out (poleLineMesh.mjs `poleLinePoles`): the
+   * poles stand on it. Absent: every pole on the origin's plane.
+   */
+  readonly ground?: readonly number[];
 }
 
 /**
  * A portfolio site's model, by kind, in design units (the CRS's own) and
- * radians. Every one is on one flat design plane at the origin's height, so
+ * radians. Every one is on one flat design plane at the origin's height
+ * (the pole line's poles stand on the ground, its `ground`), so
  * a rigid placement of it errs at d from its anchor by the curvature it
  * ignores (d²/2R, below the plane), the combined scale factor k it ignores
  * (d·|1 − 1/k|, along it) and the geoid's slope: the scale factor
@@ -278,6 +292,19 @@ export function modelFootprint(
 }
 
 /**
+ * The model stands on the real ground, so the terrain isn't clipped under
+ * it: London's poles, set into the ground, and the site-grid building on
+ * its plinth.
+ */
+export function modelOnGround(site: PortfolioSite): boolean {
+  const m = site.model;
+  return (
+    (m.kind === "poleLine" && m.ground !== undefined) ||
+    (m.kind === "building" && m.plinth !== undefined)
+  );
+}
+
+/**
  * A model laid along a line rather than over an area: its route at its
  * ground's height (design units, absolute) and how far its foundations reach
  * either side and past its ends. London's pole line: the wayleave strip, 6 m
@@ -346,9 +373,9 @@ export const PHOENIX_PIPELINE =
 
 /**
  * The site-grid building: 200 × 120 ftUS, three stories of 13 ft, on a site
- * grid of the corridor's CRS 2,000 ftUS east and 1,500 ftUS north of the
- * alignment's start, rotated 12.5° and scaled by 1.0000375 (a ground-to-grid
- * factor). Rigid by design: curvature doesn't matter over 200 ft.
+ * grid of the corridor's CRS 1,000 ftUS south of the alignment's start,
+ * rotated 12.5° and scaled by 1.0000375 (a ground-to-grid factor). Rigid by
+ * design: curvature doesn't matter over 200 ft.
  *
  * It pins the corridor's GEOID18 operation (`CORRIDOR_PIPELINE`), so its one
  * grid is `us_noaa_g2018u0.tif`: PROJ ranks NADCON5 with GEOID99 or GEOID03
@@ -367,27 +394,30 @@ export const SITE_BUILDING: PortfolioSite<BuildingModel> = {
     pipeline: CORRIDOR_PIPELINE,
     site: {
       origin: [
-        CORRIDOR_ALIGNMENT.start[0] + 2_000,
-        CORRIDOR_ALIGNMENT.start[1] + 1_500,
+        CORRIDOR_ALIGNMENT.start[0],
+        CORRIDOR_ALIGNMENT.start[1] - 1_000,
         0,
       ],
       rotation: (12.5 * Math.PI) / 180,
       scale: 1.0000375,
     },
-    areaOfInterest: around(-122.16, 37.782),
+    areaOfInterest: around(-122.166, 37.775),
   },
-  // Its corner at the ground's height there, NAVD88 ftUS: the hillside is
-  // about 291.6 m above NAVD88 (Cesium World Terrain's 259.3 m above the
-  // ellipsoid, less GEOID18's −32.2 m). At 0 it stood 290 m underground,
-  // drawn through the ellipsoid globe's coarse tiles, whose chords sag
-  // below the ellipsoid by more than the geoid's 32 m (feedback F3).
-  origin: [0, 0, 956],
+  // On a gentle slope (UX review M5; it stood on a 40% hillside, 81 ft of
+  // fall under its 200 ft, in a clipped pit): USGS 3DEP's bare earth under
+  // its footprint is 287.9 to 295.2 ftUS NAVD88 (287.3 within 30 ft of it,
+  // sampled 2026-11-08). The ground floor is at 297, clear of the highest
+  // ground by more than Cesium World Terrain is likely to differ from 3DEP,
+  // and the plinth's foot at 282, under the lowest: the terrain isn't
+  // clipped, and meets the plinth's walls.
+  origin: [0, 0, 297],
   model: {
     kind: "building",
     width: 200,
     depth: 120,
     stories: 3,
     storyHeight: 13,
+    plinth: 282,
   },
   grids: [GEOID18_GRID],
 };
@@ -429,6 +459,9 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
       armLength: 2.4,
       sag: 0.9,
       wayleave: 12,
+      // On the ground (UX review M1): the Environment Agency's lidar, 15 m
+      // to 85 m ODN along the line (poleLineGround.ts).
+      ground: POLE_LINE_GROUND,
     },
     // OSTN15 (horizontal) and OSGM15 (ODN), 1.038 m.
     grids: ["uk_os_OSGM15_GB.tif", "uk_os_OSTN15_NTv2_OSGBtoETRS.tif"],

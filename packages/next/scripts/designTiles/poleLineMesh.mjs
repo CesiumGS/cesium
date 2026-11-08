@@ -1,16 +1,16 @@
 // London's model on the scale ladder (plan 4b Task 17b): an overhead pole
-// line about 30 km long on one flat design plane, across farmland. Wooden
+// line about 30 km long across farmland, on the ground. Wooden
 // poles every `span` along a route of straight legs, each with a steel
 // cross-arm and three pin insulators (two on the arm, one on the pole's
 // top), the three conductors sagging between poles, stays at the angle and
-// end poles, a pole-mounted transformer every 40th pole, and the line's
-// wayleave strip as its ground.
+// end poles, and a pole-mounted transformer every 40th pole. Each pole
+// stands on the ground at its place (the model's `ground`, ODN heights),
+// set 1.8 m into it.
 //
 // Design units are the CRS's (metres, OSGB36 / British National Grid). The
 // route is relative to the site's origin.
 import { srgb } from "./meshBuilder.mjs";
 
-const WAYLEAVE = srgb("#7d9a52");
 const POLE = srgb("#5b4636");
 const STEEL = srgb("#8c8f90");
 const INSULATOR = srgb("#7a6a5c");
@@ -23,14 +23,19 @@ const SEGMENTS = 6;
 const PHASES = [-1, 0, 1];
 const WIRE = 0.03;
 
-/** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
-export function poleLinePlan(site) {
+/**
+ * The pole line's poles ([e, n], design units, absolute) along its route:
+ * every leg in whole spans, the angle points shared; and the indices of the
+ * route's corners' poles (its start, its angles and its end). The ground
+ * script (scripts/poleLineGround.mjs) samples the ground at these.
+ *
+ * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ */
+export function poleLinePoles(site) {
   const m = site.model;
-  const [e0, n0, z0] = site.origin;
+  const [e0, n0] = site.origin;
   const route = m.route.map(([e, n]) => [e0 + e, n0 + n]);
-  // The poles: every leg in whole spans, the angle points shared.
   const poles = [route[0]];
-  // The route's corners' poles (its start, its angles and its end).
   const corners = [0];
   for (let k = 1; k < route.length; k++) {
     const [a, b] = [route[k - 1], route[k]];
@@ -44,6 +49,26 @@ export function poleLinePlan(site) {
     }
     corners.push(poles.length - 1);
   }
+  return { route, poles, corners };
+}
+
+/** How far a pole is set into the ground, metres: about a sixth of it. */
+export const POLE_EMBED = 1.8;
+
+/** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
+export function poleLinePlan(site) {
+  const m = site.model;
+  const [e0, n0, z0] = site.origin;
+  const { poles, corners } = poleLinePoles(site);
+  // Each pole stands on the ground there (ODN metres, sampled from the
+  // Environment Agency's lidar by scripts/poleLineGround.mjs), or on the
+  // origin's plane where the model has none.
+  if (m.ground !== undefined && m.ground.length !== poles.length) {
+    throw new Error(
+      `poleLinePlan: ${site.id}: ${m.ground.length} ground heights for ${poles.length} poles`,
+    );
+  }
+  const groundAt = (i) => m.ground?.[i] ?? z0;
   const angles = new Set(corners);
   const direction = (i) => {
     const a = poles[Math.max(0, i - 1)];
@@ -51,24 +76,27 @@ export function poleLinePlan(site) {
     const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
     return [(b[0] - a[0]) / d, (b[1] - a[1]) / d];
   };
-  const armZ = z0 + m.poleHeight - 0.4;
+  // Heights above each pole's ground.
+  const armAbove = m.poleHeight - 0.4;
   // The outer conductors' place: across from the pole, and below the middle one.
   const reach = m.armLength / 2 - 0.2;
-  const middleZ = z0 + m.poleHeight + 0.25;
-  const outerZ = armZ + 0.05 + 0.25;
+  const middleAbove = m.poleHeight + 0.25;
+  const outerAbove = armAbove + 0.05 + 0.25;
   /** Where conductor `phase` is held on pole i: its insulator's top. */
   const attach = (i, phase) => {
     const [de, dn] = direction(i);
     const across = [-dn, de];
     const x = PHASES[phase] * reach;
-    const z = PHASES[phase] === 0 ? middleZ : outerZ;
+    const z = groundAt(i) + (PHASES[phase] === 0 ? middleAbove : outerAbove);
     return [poles[i][0] + across[0] * x, poles[i][1] + across[1] * x, z];
   };
   // The outer conductors from the middle one, sagging below its chord.
-  const outerError = Math.hypot(reach, middleZ - outerZ + m.sag);
+  const outerError = Math.hypot(reach, middleAbove - outerAbove + m.sag);
 
   const parts = [];
   poles.forEach((at, i) => {
+    const z0 = groundAt(i);
+    const armZ = z0 + armAbove;
     const pole = { name: `Pole ${i + 1}`, kind: "pole" };
     const span = { name: `Span ${i + 1}–${i + 2}`, kind: "conductor" };
     const last = i === poles.length - 1;
@@ -95,15 +123,26 @@ export function poleLinePlan(site) {
         pull = ui;
       }
       const p = unit(pull);
+      // Into the ground at its anchor, 6 m out.
       stay = [
         [at[0], at[1], z0 + m.poleHeight - 1],
-        [at[0] + p[0] * 6, at[1] + p[1] * 6, z0],
+        [at[0] + p[0] * 6, at[1] + p[1] * 6, z0 - 0.5],
       ];
     }
     const drawPole = (b, { arm, insulators }) => {
-      b.box(at, z0, 0.32, 0.32, m.poleHeight, turn, POLE, pole, {
-        topScale: 0.7,
-      });
+      // Set into the ground, so ground a little off the lidar's never
+      // shows its foot.
+      b.box(
+        at,
+        z0 - POLE_EMBED,
+        0.32,
+        0.32,
+        m.poleHeight + POLE_EMBED,
+        turn,
+        POLE,
+        pole,
+        { topScale: 0.7 },
+      );
       if (arm) {
         b.beam(
           [
@@ -207,53 +246,26 @@ export function poleLinePlan(site) {
         {
           // The pole dropped: every point of it is within half its height
           // of the ground or the conductor at its top; and its stay.
-          error: Math.max(m.poleHeight / 2, 6),
+          error: Math.max((m.poleHeight + POLE_EMBED) / 2, 6),
           draw: (b) => conductors(b, [1], false),
         },
       ],
     });
   });
 
-  // The wayleave: a strip along each leg, and a square at each angle.
-  const grounds = [];
-  const strip = { name: "Wayleave", kind: "ground" };
-  for (let k = 1; k < route.length; k++) {
-    const [a, b] = [route[k - 1], route[k]];
-    grounds.push({
-      at: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
-      length: Math.hypot(b[0] - a[0], b[1] - a[1]),
-      width: m.wayleave,
-      angle: Math.atan2(b[1] - a[1], b[0] - a[0]),
-      z: z0,
-      color: WAYLEAVE,
-      feature: strip,
-      lods: [{ error: 0, keep: true }],
-    });
-  }
-  for (const i of corners.slice(1, -1)) {
-    const [de, dn] = direction(i);
-    grounds.push({
-      at: poles[i],
-      length: m.wayleave,
-      width: m.wayleave,
-      angle: Math.atan2(dn, de),
-      z: z0,
-      color: WAYLEAVE,
-      feature: strip,
-      lods: [{ error: 0, keep: true }],
-    });
-  }
-
+  // No ground of its own: the poles stand on the real ground, which isn't
+  // clipped under them (UX review M1; the wayleave strip on one flat plane
+  // lay under the hills at the line's far ends).
   const anchor = [e0, n0, z0];
   return {
     anchor,
     leafSize: 1_000,
     parts,
-    grounds,
+    grounds: [],
     poles: poles.length,
     landmark: {
       label: "Pole 1's top",
-      design: [poles[0][0], poles[0][1], z0 + m.poleHeight],
+      design: [poles[0][0], poles[0][1], groundAt(0) + m.poleHeight],
     },
   };
 }

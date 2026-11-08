@@ -16,6 +16,7 @@ import {
   SITE_BUILDING,
   modelAnchor,
   modelFootprint,
+  modelOnGround,
   modelRoute,
   type PortfolioSite,
 } from "./sites.ts";
@@ -380,6 +381,8 @@ export interface SiteEntry {
     readonly points: readonly (readonly [number, number, number])[];
     readonly halfWidth: number;
   };
+  /** The model stands on the real ground: its terrain isn't clipped. */
+  readonly onGround?: boolean;
   /** Where rigid is exact: the model's middle, design units. */
   readonly anchor?: readonly [number, number, number];
   readonly frame: EngineeringFrameDefinition;
@@ -454,6 +457,7 @@ function siteEntry(site: PortfolioSite, store: string): SiteEntry {
     },
     corners,
     ...(route !== undefined && { route }),
+    ...(modelOnGround(site) && { onGround: true }),
     anchor: modelAnchor(site),
     frame: site.frame,
     ...(site.frame.geoidFallback !== undefined && {

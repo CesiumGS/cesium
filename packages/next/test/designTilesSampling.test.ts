@@ -312,15 +312,20 @@ describe("the side slopes", () => {
 describe("buildingMesh", () => {
   it("stacks a story box per story, wound to face its normals", () => {
     const mesh = buildingMesh(SITE_BUILDING);
-    const { stories, storyHeight } = SITE_BUILDING.model;
-    expect(mesh.features).toHaveLength(stories);
-    expect(mesh.design.length / 3).toBe(24 * stories);
+    const { stories, storyHeight, plinth } = SITE_BUILDING.model;
+    // The stories, and the plinth under them (five faces, open at the top).
+    expect(mesh.features).toHaveLength(stories + 1);
+    expect(mesh.features.at(-1)!.kind).toBe("plinth");
+    expect(mesh.design.length / 3).toBe(24 * stories + 20);
     expect(facing(mesh)).toBe(mesh.indices.length / 3);
     let top = -Infinity;
+    let bottom = Infinity;
     for (let i = 2; i < mesh.design.length; i += 3) {
       top = Math.max(top, mesh.design[i]!);
+      bottom = Math.min(bottom, mesh.design[i]!);
     }
     expect(top).toBe(SITE_BUILDING.origin[2] + stories * storyHeight);
-    expect(buildingAnchor(SITE_BUILDING)).toEqual([100, 60, 956]);
+    expect(bottom).toBe(plinth);
+    expect(buildingAnchor(SITE_BUILDING)).toEqual([100, 60, 297]);
   });
 });

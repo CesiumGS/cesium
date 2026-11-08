@@ -113,6 +113,8 @@ const NEAR_DISTANCES = [10_000, 20_000];
 const MARKER_STATION = 170_000;
 /** Linear RGBA. */
 const BUILDING_COLOR = [0.62, 0.5, 0.38, 1];
+/** The site-grid building's plinth: weathered concrete, linear RGBA. */
+const PLINTH_COLOR = [0.36, 0.35, 0.33, 1];
 /** The ladder's models colour every vertex (COLOR_0); the material is white. */
 const WHITE = [1, 1, 1, 1];
 
@@ -124,6 +126,7 @@ const INPUTS = [
   "examples/design-globe/sideSlopes.ts",
   "examples/design-globe/corridorDaylight.ts",
   "examples/design-globe/sites.ts",
+  "examples/design-globe/poleLineGround.ts",
   "examples/design-globe/answers.ts",
   "scripts/designTiles.mjs",
   "scripts/designTiles/corridorMesh.mjs",
@@ -1115,12 +1118,25 @@ export async function ensureDesignTiles(
     const mesh = buildingMesh(SITE_BUILDING);
     // Exact boxes: a leaf errs only by float32 rounding, half an ulp of its
     // largest coordinate from its centre.
-    const { width, depth, stories, storyHeight } = SITE_BUILDING.model;
-    const reach = Math.max(width, depth, stories * storyHeight);
+    const { width, depth, stories, storyHeight, plinth } = SITE_BUILDING.model;
+    const reach = Math.max(
+      width,
+      depth,
+      stories * storyHeight +
+        (SITE_BUILDING.origin[2] - (plinth ?? SITE_BUILDING.origin[2])),
+    );
+    // The plinth in concrete, the stories in the building's colour.
+    const colors = new Float32Array(mesh.featureIds.length * 4);
+    mesh.featureIds.forEach((id, v) => {
+      colors.set(
+        mesh.features[id].kind === "plinth" ? PLINTH_COLOR : BUILDING_COLOR,
+        v * 4,
+      );
+    });
     writeTilesets({
       top: {
         id: "0-0",
-        mesh: () => mesh,
+        mesh: () => ({ ...mesh, colors }),
         geometricError: reach * 2 ** -24,
         children: [],
       },

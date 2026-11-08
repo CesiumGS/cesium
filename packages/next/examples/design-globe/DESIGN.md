@@ -281,9 +281,13 @@ number in a headline row is not repeated in its Details), no e-notation.
   where they are: on the ellipsoid, a NAVD88 design floated by the geoid's
   height (about 32 m in California, 46 m in London). Terrain is clipped
   under each site's footprint and the corridor out to its daylight lines
-  (F11), so the ground never pokes through a design surface. London's pole line
-  clips a buffer around its route, the wayleave and rigid's sideways
-  error, not the 30 km rectangle that holds it.
+  (F11), so the ground never pokes through a design surface. Two models
+  stand on the real ground instead, unclipped (UX review M1, M5): London's
+  poles, each on the Environment Agency's lidar ground (ODN) at its place
+  and set 1.8 m into it, so rigid's copy stands in the air over them at the
+  line's ends; and the site-grid building, on gentle ground 1,000 ftUS
+  south of the corridor's start, its ground floor above the highest 3DEP
+  ground under it and a concrete plinth carried down below the lowest.
 - **The corridor's profile follows the real ground** (round 2): a design
   vertical alignment fitted to USGS 3DEP ground heights along the
   alignment, grades from 0.3% (so the road drains) to 6% and AASHTO's
