@@ -170,6 +170,9 @@ const DEG = Math.PI / 180;
 /** The right rail's corner (the cursor card over the legend), CSS pixels from the view's top right. */
 const CARD_REACH = { x: 350, y: 260 };
 
+/** How long the pointer is out of the rail's corner before the rail steps back, ms. */
+const RAIL_RETURN_MS = 300;
+
 /** How long the compass's directions are taken, in pixels' footprints at the hit. */
 const COMPASS_REACH_PX = 40;
 
@@ -402,9 +405,6 @@ export function createCursor(deps: CursorDeps): Cursor {
             ],
           },
           ...(globe !== undefined && { globe }),
-          // Under the card's corner: the card steps to the other side.
-          ...(x > viewer.canvas.clientWidth - CARD_REACH.x &&
-            y < CARD_REACH.y && { aside: true }),
           tolerance: `pick ±${errorText(hit!.tolerance)} (one pixel there)`,
           muted: false,
           ...(compass !== undefined && { compass }),
@@ -422,17 +422,52 @@ export function createCursor(deps: CursorDeps): Cursor {
       });
   }
 
+  /**
+   * The rail steps aside while the pointer is under its corner, and back
+   * once the pointer has been out of it for a moment (UX review S7): by the
+   * pointer itself, not the last pick, so it never stays parked over the
+   * model after the pointer has gone.
+   */
+  let aside = false;
+  let stepBack: ReturnType<typeof setTimeout> | undefined;
+  const setAside = (on: boolean) => {
+    clearTimeout(stepBack);
+    stepBack = undefined;
+    if (on === aside) {
+      return;
+    }
+    if (on) {
+      aside = true;
+      deps.changed();
+    } else {
+      stepBack = setTimeout(() => {
+        stepBack = undefined;
+        aside = false;
+        if (!deps.disposed()) {
+          deps.changed();
+        }
+      }, RAIL_RETURN_MS);
+    }
+  };
+  deps.signal.addEventListener("abort", () => clearTimeout(stepBack));
+
   viewer.canvas.addEventListener(
     "pointermove",
     (e: PointerEvent) => {
+      const r = viewer.canvas.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      setAside(x > r.width - CARD_REACH.x && y < CARD_REACH.y);
       if (e.buttons !== 0) {
         return;
       }
-      const r = viewer.canvas.getBoundingClientRect();
-      update([e.clientX - r.left, e.clientY - r.top]);
+      update([x, y]);
     },
     { signal: deps.signal },
   );
+  viewer.canvas.addEventListener("pointerleave", () => setAside(false), {
+    signal: deps.signal,
+  });
 
   return {
     pickAt,
@@ -443,6 +478,7 @@ export function createCursor(deps: CursorDeps): Cursor {
         set(idle(st().mode));
       }
     },
-    view: () => cursor,
+    view: () =>
+      aside === (cursor.aside ?? false) ? cursor : { ...cursor, aside },
   };
 }
