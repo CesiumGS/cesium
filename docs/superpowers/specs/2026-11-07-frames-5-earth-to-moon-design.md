@@ -12,43 +12,56 @@ made many design decisions about plan 5. They are recorded in
 the "Carried forward" lists. This document turns them into a buildable design.
 
 **How to read it.** Everything stated plainly was decided by the owner, in the
-frames spec or in §13.14. The owner's words are quoted where they settle a
-point. Calls marked **(author's call)** were made by the author of this
-document; each is cheap to undo unless it says otherwise. Section 17 lists the
-questions only the owner can answer.
+frames spec, in §13.14, or in the review of this document's first draft. The
+owner's words are quoted where they settle a point. Calls marked **(author's
+call)** were made by the author of this document; each is cheap to undo unless
+it says otherwise. Section 17 lists the questions only the owner can answer.
 
 ## 1. Intent
 
 Plans 1 to 4b gave the engine a frame tree, time, ephemerides, measurement,
-engineering frames, placement modes and design picking. The rendering is still
-drawn Earth-fixed (plans 2 and 3, R6: "the world is not re-rooted"). Every
-camera controller assumes the Earth. The sky shows the Earth's sunrise colours
-in orbit. A globe-only Viewer bundle carries the ERFA tables.
+engineering frames, placement modes and design picking. They did not touch
+how the engine draws. **Today the engine draws everything Earth-fixed:** plans
+2 and 3 decided "the world is not re-rooted" (R6), so that the frames work
+could land without changing the renderer. Every camera controller assumes the
+Earth. The sky shows the Earth's sunrise colours in orbit. A globe-only Viewer
+bundle carries the ERFA tables.
+
+**Plan 5 drops R6.** A view renders in its camera rig's position reference
+frame: on the Earth's surface that is ITRF, as today; following Orion it is
+Orion's own reference frame; on the Moon it is MOON_ME; in design view it is
+the engineering frame. Moving the camera between reference frames is a change
+of render root, which the application never has to manage.
 
 Plan 5 makes the engine work the way the frames spec described, across bodies,
 in design space, and for applications that want none of it:
 
-- **One flat render space in the core, and frames above it.** The owner: "The
-  default frame tree that's needed for a scene is application dependent and we
-  don't need to load up a bunch of frame tree stuff for an app that's never
-  going to go into space." The core draws in a Cartesian space with no meaning
-  attached. An optional frames module resolves frames into it.
+- **One flat render space in the core, and reference frames above it.** The
+  owner: "The default frame tree that's needed for a scene is application
+  dependent and we don't need to load up a bunch of frame tree stuff for an
+  app that's never going to go into space." The core draws in a Cartesian
+  space with no meaning attached. An optional frames module resolves
+  reference frames into it.
+- **A camera chain in layers.** The renderer knows render space; a camera
+  layer holds rigs, controllers and transitions; the frames module answers
+  where one reference frame is in another; the application chooses rigs and
+  never sees render space (section 7.2).
 - **Modules with interfaces.** The owner: "We should generally be thinking
   about how to make 2.0 more modular so pieces of it can be reused and composed
   in interesting ways and we can easily plug different module implementations
   in for places where that makes sense." The engine is also meant to be an
   embeddable rendering core whose host application supplies its own services:
   its own frame manager, coordinate conversion, snapping or measurement tools.
-- **Cameras that belong to frames.** A camera rig is a pose in a frame of the
-  tree, controllers are policies over it, and gestures are data.
+- **Cameras that belong to reference frames.** A camera rig is a pose in a
+  reference frame, controllers are policies over it, and gestures are data.
 - **A sky that is physical on every body,** evaluated from the camera's true
   place relative to each body.
 - **Animation as a small, general core,** first used by camera transitions and
   the design-space morph.
 - **The Artemis II example,** which exercises all of it: the Earth's and the
   Moon's tilesets together, cameras that follow Orion or fly freely, readouts
-  in several frames, and a communications overlay that shows measurement
-  accuracy.
+  in several reference frames, and a communications overlay that shows
+  measurement accuracy.
 
 ## 2. Where things stand
 
@@ -66,53 +79,60 @@ What plan 5 builds on, as of 2026-11-07:
 - **Plan 4a** (r64): engineering frames over PROJ (`src/engineering/`),
   factors, alignments, the site transform.
 - **The frames explorer** (r65 and the scenarios plan): eleven scenarios, the
-  stated accuracy of app-defined frames (`Frame.accuracy`, `pointAccuracy`),
-  terrain line of sight (`castTerrainRay`, `terrainLineOfSight`).
-- **Plan 4b** (nearly done): lazy grids against a pinned PROJ-data catalog,
-  tileset placement modes (`TilesetPlacement`: rigid and reprojected), the
-  tileset declaration `BENTLEY_engineering_frame` (composed with `ESRI_crs`,
+  stated accuracy of app-defined reference frames (`Frame.accuracy`,
+  `pointAccuracy`), terrain line of sight (`castTerrainRay`,
+  `terrainLineOfSight`).
+- **Plan 4b** (done; its final review closed with `dfb12be069`): lazy grids
+  against a pinned PROJ-data catalog, tileset placement modes
+  (`TilesetPlacement`: rigid and reprojected), the tileset declaration
+  `BENTLEY_engineering_frame` (composed with `ESRI_crs`,
   `EXT_geospatial_crs_source` and `3DTILES_ellipsoid`), `pickDesign`, the
   snapping split (`SnapService`, a CPU `ClientSnapService` over retained tile
-  geometry), and the design-globe example with a placement morph built in the
-  example from paired tilesets.
-
-**Plan 5 starts when 4b's last task has landed** (author's call). Sub-plan 5a
-changes how `Tileset3D` places content and moves the design-globe example's
-morph onto the core, so it should not race 4b's Tasks 18 to 22.
+  geometry), the design-globe example with a placement morph built in the
+  example from paired tilesets, and one engine loop that sleeps when settled.
+- **The design globe's feedback round** (in progress beside plan 5's start):
+  Cesium World Terrain under the design globe, and a quick terrain clipping
+  API (geodetic rectangles and simple polygons). Plan 5 treats the clipping
+  API as existing Earth content (sections 3 and 7.4).
 
 ## 3. Goals, non-goals and anti-goals
 
 ### Goals
 
-1. **A core that knows nothing about frames.** It draws in one flat render
-   space, in metres, with a transform per draw and a camera pose in it.
+1. **A core that knows nothing about reference frames.** It draws in one flat
+   render space, in metres, with a transform per draw and a camera pose in it.
    Precision stays camera-relative, so one core serves a site, the Earth and
    the Moon.
-2. **An optional frames module above it,** which resolves the frames in use
+2. **A camera chain in layers,** each with one job and an interface to the
+   next (section 7.2). A view's render space is its rig's position reference
+   frame.
+3. **An optional frames module,** which resolves the reference frames in use
    into each view's render space at the tick's time. An application can
    include it, leave it out, or replace it.
-3. **Pay for what you use.** Frame providers (Earth orientation, ephemerides,
-   PROJ, trajectories) load when a frame that needs them is first asked for. A
-   globe-only Viewer loads none of them.
-4. **Content on any body,** drawn together: the Earth's terrain and imagery,
+4. **Pay for what you use.** Providers (Earth orientation, ephemerides, PROJ,
+   trajectories) load when a reference frame that needs them is first asked
+   for. A globe-only Viewer loads none of them, and fetches no Moon content.
+5. **Content on any body,** drawn together: the Earth's terrain and imagery,
    Cesium Moon, models on either, a spacecraft between them. Two views of one
    world may be on different bodies.
-5. **Camera rigs in frames,** with controllers that own their constraints,
-   underground as a first-class case, a CAD-style controller for design space,
-   and gestures as bindings with presets.
-6. **A general animation core,** with camera transitions as blends between
+6. **Camera rigs in reference frames,** with controllers that own their
+   constraints, underground as a first-class case, a CAD-style controller for
+   design space, and gestures as bindings with presets.
+7. **A general animation core,** with camera transitions as blends between
    live rigs.
-7. **A physical sky on every body,** composited physically wherever the camera
+8. **A physical sky on every body,** composited physically wherever the camera
    is.
-8. **Design space and the global view, with a morph between them,** as two
+9. **Design space and the global view, with a morph between them,** as two
    render roots.
-9. **Design CRSs routed to the tree's root** (ITRF2020), with defaults as
-   data and every choice configurable.
-10. **GPU snapping** on the client side, keeping the client/server split.
-11. **Frame revisions,** so consumers and the renderer redo work only when
-    something moved.
-12. **The Artemis II example** (frames spec §8.2), with its effects.
-13. **A public API review:** a map of the surface and proposed moves.
+10. **Design CRSs routed to the tree's root** (ITRF2020), with defaults as
+    data and every choice configurable.
+11. **GPU snapping** on the client side, keeping the client/server split.
+12. **Revisions of reference frames,** so consumers and the renderer redo work
+    only when something moved.
+13. **Seams for later WebGPU features,** as for bindless, where they cost
+    nothing today (section 7.10).
+14. **The Artemis II example** (frames spec §8.2), with its effects.
+15. **A public API review:** a map of the surface and proposed moves.
 
 ### Non-goals
 
@@ -123,17 +143,29 @@ morph onto the core, so it should not race 4b's Tasks 18 to 22.
   keeps the seam open (section 8.4).
 - **The architecture of ray queries** (§13.16: where a query runs, when
   acceleration structures are built, which level of detail a ray sees). §13.16
-  is open, for its own brainstorm. Plan 5 makes rays frame-aware on the CPU
-  paths that exist (section 9.3). Section 17, question 1, asks whether the owner wants more.
+  is open, for its own brainstorm. Plan 5 puts every ray and spatial query
+  through one query seam (section 7.10) and makes rays go through the frame
+  tree on the CPU paths that exist (section 9.4). Section 17, question 1, asks
+  whether the owner wants more.
+- **Terrain clipping's later design.** The quick API from the design globe's
+  feedback round stays as it is, apart from moving under the Earth's anchor
+  (section 7.4). The owner's later design (boundaries from vector tiles,
+  polygons with holes, inverse clipping that keeps only the inside, and
+  clipping tilesets as well as terrain) is its own brainstorm after plan 5
+  **(author's call)**. Plan 5 keeps it possible: clip regions are geodetic on
+  their body, evaluated in that body's anchor, so they work under any render
+  root and on any body.
 - **TEME and SGP4.** Listed as "Plan 5 or a frames add-on". The Artemis
   example needs neither (LRO comes from JPL Horizons). They become the first
   add-on provider once 5a's provider interface exists **(author's call)**.
 - **The drawing layer's portability** (WebGPU compatibility mode, WebGL 2).
   The owner: later, after prototyping, with "no design compromises in the
   WebGPU approach while the prototype is built".
+- **Adopting post-V1 WebGPU features.** Plan 5 only lays their seams (section
+  7.10).
 - **glTF animation playback** (skins, morph targets, animated nodes from the
   file). The animation core is shaped to drive it later. Plan 5 adds only
-  per-node transforms that an application sets (section 11.6) **(author's
+  per-node transforms that an application sets (section 11.5) **(author's
   call)**.
 - **Inherited from the frames spec:** mission planning, link analysis as a
   product, a globe (terrain and imagery tiling) on bodies other than the
@@ -148,8 +180,8 @@ morph onto the core, so it should not race 4b's Tasks 18 to 22.
   anti-goal, unchanged).
 - **A result that claims more accuracy than its inputs have,** including a
   stand-in model that doesn't say it is one.
-- **A globe-only application that pays for frames it never uses:** in bytes
-  downloaded, in data fetched, or in work per frame.
+- **A globe-only application that pays for reference frames it never uses:**
+  in bytes downloaded, in data fetched, in ion traffic, or in work per tick.
 - **A constraint where a controller can't turn it off.** "Underground
   visualization is a first-class case, so no constraint lives anywhere a
   controller can't turn it off."
@@ -159,6 +191,8 @@ morph onto the core, so it should not race 4b's Tasks 18 to 22.
   naive blending."
 - **Effects that look like a game's while claiming to be physical** (frames
   spec, unchanged).
+- **An application that has to manage render roots.** It chooses rigs; the
+  root follows.
 
 ## 4. Constraints
 
@@ -184,6 +218,8 @@ morph onto the core, so it should not race 4b's Tasks 18 to 22.
   evaluation token. Production builds never embed `.env.local`'s token
   (merged 2026-11-07, `d2cca2f34a`), so the built gallery asks the viewer to
   paste one where ion content is needed.
+- **The library never adds ion content on its own.** Only the application or
+  the Viewer, on the application's say-so, declares ion assets (section 10.4).
 - **Examples are documentation.** They use only the public API. Where an
   example has to reach past it, that is a finding for the API review (5i).
 - **UI quality.** The owner wants polished UI and UX: no cramped quick mockups,
@@ -201,9 +237,9 @@ The owner's terms (2026-11-07), used throughout:
 
 - **Render space:** the core's one flat Cartesian space, in metres, with no
   meaning attached.
-- **Render root:** the frame the frames module chooses as a view's render
-  space: ITRF for the globe view, an engineering frame for design view,
-  MOON_ME on the Moon.
+- **Render root:** the reference frame a view's render space is, at a tick.
+  It is the view's rig's position reference frame (section 7.5): ITRF for the
+  globe view, an engineering frame for design view, MOON_ME on the Moon.
 - **A draw's placement:** how its content coordinates reach the render space.
   It is **affine** (a matrix) or **per vertex**.
 - **Coordinate operation:** what the frames module computes a placement from
@@ -212,15 +248,36 @@ The owner's terms (2026-11-07), used throughout:
   motion in geodesy, as in PROJ's `defmodel`), and neither is "projection",
   which is the camera's. A map projection is called that in full.
 
+**"Frame" is never used alone** (the owner, 2026-11-07: it gets ambiguous
+between a render frame and a reference frame):
+
+- **Reference frame:** a node of the frame tree (ITRF, GCRF, MOON_ME, an
+  engineering frame, a trajectory's frame, a two-vector frame).
+- **Tick:** one pass of the engine loop, which renders one image. "Per tick",
+  never "per frame".
+- **The rig's position reference frame** and **orientation reference frame**,
+  and a transition's **blend reference frame**, are the reference frames those
+  parts of a rig or transition name.
+- Compounds that can't be misread keep their names: the frame tree, the frames
+  module, the frames spec, the frames explorer, a two-vector frame, an
+  engineering frame, a body-fixed frame, a keyframe, and code names such as
+  `Frame` and `FrameData`.
+- Quotations keep their own words.
+
 And this document's own:
 
 - **A tileset's placement mode** is 4b's declared `rigid` or `reprojected`
   (how its producer placed it). It is input to the draw's placement, not the
   same thing.
-- **Anchor:** a node of the core's transform table that the frames module (or
-  the application) places per view. Bodies, engineering frames and
-  trajectories each get one (section 7.3).
-- **Rig:** a camera pose in a frame (section 11).
+- **Anchor:** a node of the core's transform table that the camera layer
+  places per view. Bodies, engineering frames and trajectories each get one
+  (section 7.4).
+- **Rig:** a camera pose in a reference frame (section 7.5).
+- **Frame resolver:** the interface that answers where one reference frame is
+  in another at a scene time (section 7.2).
+- **Impostor:** a body's cheap visual stand-in for its content, drawn when
+  the body is far (section 10.4). "Stand-in" alone keeps its accuracy meaning:
+  an analytic model used in place of data, which states its wider accuracy.
 
 ## 6. The decomposition
 
@@ -229,15 +286,15 @@ something testable on its own.
 
 | Sub-plan | What it builds | Testable result | Needs |
 | --- | --- | --- | --- |
-| **5a** The core and the frames module | Render space, anchors and render roots per view, a draw's placement, the frames module as its own entry point, providers on demand, frame revisions, frame-tagged picking and the coordinate service as interfaces | Earth-only parity unchanged; a globe-only bundle without the frames data path; the explorer and design globe on the new seam; an import-boundary test | 4b done |
-| **5b** The frames library | Two-vector dynamic frames, accuracy beyond first order, frame-aware rays on the CPU, bulk work with `AbortSignal` and progress | SPICE fixtures for two-vector frames; accuracy tests; explorer numbers move only where bounds tighten | 5a's module move |
-| **5c** Bodies in one world | Content on any body, per-body culling, volumes and clamping, the Moon as a tileset at every distance, two views on two bodies | A view on MOON_ME drawing Cesium Moon and the Earth; Earth parity unchanged | 5a |
-| **5d** Cameras, controllers, bindings and animation | The animation core, rigs, controllers that own constraints, free-fly and CAD-style controllers, an orthographic camera, gestures as bindings, transitions between live rigs | Controllers driven by synthetic input; transitions tracked against a moving target; deterministic animation tests | 5a; 5b for two-vector frames; 5c for per-body globe controls |
+| **5a** The core, the camera chain and the frames module | Render space; anchors; the frame resolver; rigs and the render root per view; the Earth's content under its anchor; a draw's placement; the frames module as its own entry point; providers on demand; revisions; picks tagged with their reference frame; the coordinate service; seams for later WebGPU features | Earth-only parity unchanged; a rig on GCRF draws the Earth turning; re-rooting changes no pixel; a globe-only bundle without the frames data path; the explorer and design globe on the new seam; an import-boundary test | 4b done |
+| **5b** The frames library | Two-vector frames, rig presets on them, accuracy beyond first order, rays through the frame tree on the CPU, bulk work with `AbortSignal` and progress, a time-display formatter | SPICE fixtures for two-vector frames; presets checked against them; accuracy tests; explorer numbers move only where bounds tighten | 5a |
+| **5c** Bodies in one world | A second body: content on any body, per-body culling, volumes and clamping, each body's impostor and its handover to the body's tileset, two views on two bodies | A rig on MOON_ME drawing Cesium Moon and the Earth; the Moon an impostor from the Earth's ground with no ion request; Earth parity unchanged | 5a |
+| **5d** Controllers, bindings, transitions and the animation core | The animation core, controllers that own constraints, free-fly and CAD-style controllers, an orthographic camera, gestures as bindings, damping, transitions between live rigs | Controllers driven by synthetic input; transitions tracked against a moving target; deterministic animation tests | 5a; 5b for presets; 5c for per-body globe controls |
 | **5e** The physical sky and light per body | An atmosphere per body, evaluated from the camera's true place, composited physically; light, shadows and earthshine per body; the Moon's surface reflectance | Sky radiance against the reference model at many altitudes; black space in orbit; the Moon through the Earth's air | 5c |
-| **5f** Design space | Routing a design CRS to ITRF2020, design view as a render root, the morph as a blend of two render roots, the GPU snap pass, the rule for reprojected models | The design globe in design view and morphing; GPU snaps agree with the CPU stand-in; routes match NGS's published values | Routing: 4b only. The rest: 5a, 5d |
+| **5f** Design space | Routing a design CRS to ITRF2020, design view as a render root, the morph as one transition, the GPU snap pass, the rule for reprojected models | The design globe in design view and morphing; GPU snaps agree with the CPU stand-in; routes match NGS's published values | Routing: 4b only. The rest: 5a, 5d |
 | **5g** Earth to Moon: Artemis II | The §8.2 example, without its effects | The published occultation against SPICE; DSN Now as a sanity check; browser checks | 5b, 5c, 5d, 5e |
 | **5h** Plumes, plasma and the phases outside the data | The effects and the illustrative phases (frames spec §8.2) | Visual review against the physical facts; labels and exclusions | 5g |
-| **5i** The public API review | A map of the surface, stability tiers, the measurement module's seam, proposed moves | The surface map checked in CI; moves the owner approves | Last; its map tool lands in 5a |
+| **5i** The public API review | A map of the surface, stability tiers, the measurement module's seam, an audit of the WebGPU seams, proposed moves | The surface map checked in CI; moves the owner approves | Last; its map tool lands in 5a |
 
 **Order** **(author's call)**:
 
@@ -248,68 +305,146 @@ something testable on its own.
           │           (5d needs 5b) │
           └─► 5f (morph after 5d) ──┘ (5f and 5g may run side by side)
 5f's routing may start as soon as 4b is done.
+5d's animation core needs only 5a's clock interface and may start with 5a.
 5i runs last; its surface map is built in 5a's first task.
 ```
 
-The critical path is 4b, 5a, 5c, 5e, 5g, 5h. 5d runs beside 5e. The
-animation core inside 5d needs only 5a and can start first. Section 16 places
-every carried-forward item in a sub-plan.
+The critical path is 4b, 5a, 5c, 5e, 5g, 5h. 5d runs beside 5e. 5a is the
+largest sub-plan, because the rig and the render root are what every later
+sub-plan stands on. Section 16 places every carried-forward item in a
+sub-plan.
 
-## 7. Sub-plan 5a: the core and the frames module
+## 7. Sub-plan 5a: the core, the camera chain and the frames module
 
 ### 7.1 Why
 
 Everything else in plan 5 hangs on this seam. Without it, a Moon view, design
 view and per-body cameras would each be special cases inside an Earth-fixed
-core.
+core. The rig belongs here, not in 5d, because 5c's Moon view needs a camera
+on MOON_ME, and because the render root is defined by the rig.
 
-### 7.2 What the owner decided
+### 7.2 The layers of the camera chain
+
+Decided by the owner (2026-11-07, in review of the first draft). Each layer
+owns one thing and reaches the next through an interface:
+
+| Layer | Owns | Knows nothing about |
+| --- | --- | --- |
+| **GPU renderer** | Camera-relative shaders: an eye position (hi/lo) and a rotation per anchor | Reference frames, rigs, time |
+| **Scene core** (World, View, Camera) | Render space; the camera's pose and projection in it; the transform table; anchors; each draw's placement | What render space means |
+| **Camera layer** (in the core package) | Rigs, controllers and their constraints, gesture bindings, transitions. Each tick it decides each view's render root | Which library answers its questions about reference frames |
+| **Animation core** (in the core package) | Values over a timeline, easing, playback, a wall-clock or scene-clock choice per animation | Cameras, reference frames, `Instant` |
+| **Frame resolver** (an interface) | "Where is reference frame A in reference frame B at this scene time, and how fast is it moving?" | Who asks |
+| **Frames module** (optional) | Implements the resolver over the frame tree, two-vector frames included; binds anchors to reference frames; computes per-vertex placements for a given render root | Cameras, controllers |
+| **Viewer** | Defaults: a rig on ITRF, globe controls, the default gestures, an ellipsoid-only Earth, the Moon as an impostor | — |
+| **Application or host** | Which rig and controller, presets, what "zoom to fit" fits, tours, which content it declares. It may bring its own resolver | Render space |
+
+**The rule: a view's render space is its rig's position reference frame,**
+or the blend reference frame while a transition runs. Each tick, the camera
+layer, for each view:
+
+1. picks the render root: the rig's position reference frame, or the running
+   transition's blend reference frame;
+2. evaluates the rig in that root, which gives the camera's pose in render
+   space;
+3. asks the frame resolver where each anchor is relative to the root, and
+   asks the frames module for the per-vertex placements that depend on the
+   root.
+
+**Without the frames module,** the resolver is the core's own transform
+table: its nodes and anchors are the only reference frames, so a rig can still
+follow a moving node. A rig on render space, with every anchor at the
+identity, is exactly today's behaviour.
+
+**What "invisible" means.** Re-rooting is invisible to the application. It
+chooses the rig's reference frame, and that choice is visible, because it
+decides what holds still: on MOON_ME the Moon stays put; on GCRF the Earth
+turns underneath; on a trajectory the camera rides along. The root that
+follows from it never changes pixels for content placed rigidly. Below the
+application, the root is real:
+
+- **Per-vertex placements depend on it.** Design view works because the CAD
+  rig is in the engineering frame, so straight design lines draw straight.
+- **Picks come back in it.** A pick in the camera's own reference frame costs
+  nothing.
+- **The sky gets the camera's position per body through it** (section 12.2).
+- **Anything that compares across ticks works per anchor:** on-demand
+  wake-up, label placement, cached screen positions, and later motion vectors
+  or temporal accumulation. With a rig on GCRF, the whole Earth moves in
+  render space every tick while the clock runs, so nothing may assume that
+  content standing still in its anchor stands still in render space.
+
+**Two-vector frames are just reference frames** a rig names (section 9.1).
+The camera layer can't tell them from any other. Presets such as "orbital"
+and "cockpit" are rig data on top (section 9.2).
+
+**Animation in the same layers.** The animation core is generic: it animates
+a value through a setter its caller gives it, and it knows no reference
+frames. It gets the scene clock through a small clock interface (the scene
+time in seconds, the rate, whether it is paused, and whether time just
+jumped or runs backward), not through `Instant`, so the core never depends on
+the time library. A camera transition is the camera layer's, built on the
+animation core: its setter evaluates both live rigs through the resolver at
+the current scene time, blends them in the blend reference frame, and makes
+that reference frame the view's root while it runs. At the end, the target
+rig's position reference frame becomes the root and its controller takes
+over. The owner's "interpolate in a common frame, then re-attach" is exactly
+that change of root. Interruption policies are the camera layer's, because
+they need the controller's input. Path shapes are the transition's. Easing
+and clocks are the animation core's (section 11).
+
+### 7.3 What the owner decided
 
 - "The rendering core knows one flat space and nothing about frames: a
   Cartesian render space in metres with no meaning attached, a transform per
-  draw, and a camera pose in it." The core's only frame-adjacent feature is
-  that a draw has a placement, affine or per vertex. Without the frames module,
-  a draw's transform is a matrix the application sets.
-- The frames module is optional and above the core. At each tick's time it
-  resolves every frame in use into the render space and hands the core each
-  draw's placement. The render space is the view's render root. "Design view
-  is not a special mode, and the design-space morph blends two render roots."
+  draw, and a camera pose in it." The core's only reference-frame-adjacent
+  feature is that a draw has a placement, affine or per vertex. Without the
+  frames module, a draw's transform is a matrix the application sets.
+- The frames module is optional and sits above the core. At each tick's time
+  it resolves every reference frame in use into the render space and hands the
+  core each draw's placement. The render space is the view's render root.
+  "Design view is not a special mode, and the design-space morph blends two
+  render roots."
 - **Render roots are per view** (approved by the owner with the split,
   2026-11-07). Two views of one world can be on different bodies (frames spec
-  §6.4).
-- Frames are built on demand. Providers load when a frame that needs them is
-  first asked for. "Whoever asks chooses the precision."
-- The Viewer picks defaults: for a globe app, ITRF as the render root, the
-  ellipsoid Earth, nothing else. Lower-level applications choose for
-  themselves, or leave the module out.
-- Frame management is its own module, behind interfaces to the drawing code, so
-  an application can include it, leave it out or replace it (for example with
-  a frame manager not built on PROJ). Coordinate conversion is a service the
-  module supplies, and PROJ is one implementation. Picking reports frame-tagged
-  positions through an interface the module fills in.
+  §6.4). **The render root is the rig's position reference frame** (the
+  layering above).
+- Reference frames are built on demand. Providers load when a reference frame
+  that needs them is first asked for. "Whoever asks chooses the precision."
+- The Viewer picks defaults: for a globe app, a rig on ITRF (so ITRF is the
+  render root), the ellipsoid Earth, nothing else. Lower-level applications
+  choose for themselves, or leave the module out.
+- Frame management is its own module, behind interfaces to the drawing code,
+  so an application can include it, leave it out or replace it (for example
+  with a frame manager not built on PROJ). Coordinate conversion is a service
+  the module supplies, and PROJ is one implementation. Picking reports
+  positions tagged with their reference frame through an interface the module
+  fills in.
 - Placement takes a third mode beside rigid and reprojected: content that
   arrives already reprojected by its producer or host.
-- The catalog and the tree in use are separate. The catalog is every frame the
-  library knows by name and costs nothing until used. The tree in use is the
-  frames a scene touches plus their ancestors. "The renderer's own use counts
-  as use": the sky's GCRF and the Moon disk's MOON_ICRF and MOON_ME are shown
-  as "used by the sky". The root stays ICRF.
-- A stand-in model declares its accuracy. A frame may work on an analytic
-  stand-in before its data arrives, but the edge then states the stand-in's
-  wider accuracy and visibly changes when the data loads. Otherwise the frame
-  is unavailable until its data loads. "Choose per frame, never silently."
+- The catalog and the tree in use are separate. The catalog is every
+  reference frame the library knows by name and costs nothing until used. The
+  tree in use is the reference frames a scene touches plus their ancestors.
+  "The renderer's own use counts as use": the sky's GCRF and the Moon's
+  MOON_ICRF and MOON_ME are shown as "used by the sky". The root stays ICRF.
+- A stand-in model declares its accuracy. A reference frame may work on an
+  analytic stand-in before its data arrives, but the edge then states the
+  stand-in's wider accuracy and visibly changes when the data loads.
+  Otherwise the reference frame is unavailable until its data loads. "Choose
+  per frame, never silently."
 - Change tracking: "Each frame carries a revision, which goes up when its
   placement's inputs change." The tree and single queries stay synchronous.
   Time-dependent values (an accuracy that drifts with time) publish only when
   they change by a visible amount.
 
-### 7.3 Anchors and render roots
+### 7.4 Anchors
 
 The core keeps its transform table (`World.addTransform`, parent × local in
 float64), with one addition: a top-level transform can be an **anchor**. An
-anchor's placement in render space is set per view. Bodies, engineering frames
-and trajectories each get an anchor, and content hangs under them. A draw that
-hangs under no anchor is in render space directly, as every draw is today.
+anchor's placement in render space is set per view, each tick, by the camera
+layer (from the resolver). Bodies, engineering frames and trajectories each
+get an anchor, and content hangs under them. A draw that hangs under no
+anchor is in render space directly, as every draw is today.
 
 **How a view uses anchors** **(author's call; the builder may choose another
 mechanism that keeps the precision rule and the cost rule below).** The core
@@ -323,19 +458,77 @@ scheme, with an eye per anchor instead of one per view.
 
 - **Precision rule:** nothing large is ever rotated in float32.
 - **Cost rule:** per-view work grows with the number of anchors (a handful),
-  not the number of draws or tiles.
-- **Without the frames module,** every anchor's placement is the identity, so
-  render space is whatever the application uses (Earth-fixed in practice), and
-  today's behaviour is unchanged.
+  not the number of draws or tiles. A render root that rotates (a rig on GCRF,
+  or on a two-vector frame) costs only the anchors' recomputation each tick.
 
-A view's render root is a choice of frame, made by whoever drives the view
-(the frames module, or the application). Changing it between frames is
-re-rooting: the camera pose is re-expressed in the new root, and nothing on
-screen moves, because the root is rigid and the scheme is camera-relative. Only
-a per-vertex placement (design view, section 13) depends on which root is
-chosen.
+**The Earth's content hangs under the Earth's anchor from 5a.** The globe,
+tilesets, vector content, models and the terrain clipping regions from the
+design globe's feedback round all move under it, so that a rig on GCRF draws
+the same Earth. Earth-only code then works with the camera expressed in the
+Earth's anchor, not in render space:
 
-### 7.4 A draw's placement
+- horizon culling (`math/horizon.ts`, `Budgeted`, `Stepwise`);
+- tile volumes (`streaming/volumes.ts`);
+- height clamping;
+- terrain clipping, evaluated geodetically in the anchor's coordinates;
+- view links (`ViewLink`) and the Viewer widget;
+- picking results;
+- the atmosphere's camera position (5e generalizes it per body);
+- on-demand wake-up and label placement, compared per anchor (section 7.2).
+
+5c generalizes each to any body. With the Earth's anchor at the identity (a
+rig on ITRF), every one of them computes what it computes today.
+
+### 7.5 The rig and the render root
+
+Decided by the owner (§13.14, "camera rigs attached to frames"):
+
+- "The rig is only a pose in a frame." It holds no rules about where the camera
+  may go. Controllers own the constraints (section 11.3).
+- It splits position from orientation, after Cinemachine's Body and Aim:
+  - **position:** an anchor (a reference frame's origin, such as Orion's), an
+    offset, and the reference frame the offset is expressed in, which is the
+    rig's **position reference frame**;
+  - **orientation:** an orientation reference frame whose axes the camera's
+    up and forward follow, or an aim (look at a target, with an up vector
+    taken from a reference frame);
+  - **damping,** optional, per part (section 11.3).
+- Every orientation choice is a reference frame (two-vector frames, section
+  9.1). Named presets sit on top of the generic form (section 9.2).
+- The rig's reference frame decides what holds still: on MOON_ME the Moon
+  stays put; on GCRF the Earth turns underneath; on a trajectory the camera
+  rides along.
+- Inputs are expressed in the rig's reference frame: the pivot is a point in
+  it, "up" is one of its axes, and heading is measured from a reference axis
+  in it.
+
+Design:
+
+- **The rig lives in the camera layer** and resolves every reference frame
+  through the frame resolver (section 7.2). Without the frames module, a rig
+  is a pose in render space or on a node of the transform table, and today's
+  controllers work unchanged.
+- **The render root is the rig's position reference frame** (owner, with the
+  layering). Changing a rig's position reference frame is re-rooting: the
+  camera pose is re-expressed in the new root, and nothing placed rigidly
+  moves on screen. Every change of root happens in the camera layer: a
+  transition starting or ending, a controller re-attaching (free flight's
+  nearest body, section 11.3), or the application setting a new rig.
+- **The rig is evaluated at the tick's scene time,** from the clock interface.
+  The frames module's clock (the time library's) is what turns that scene time
+  into an `Instant` for its providers **(author's call)**.
+- **A rig on a reference frame that moves keeps on-demand rendering awake
+  while the clock runs,** because its anchors move. A paused clock lets it
+  settle.
+- **Picks in the rig's reference frame.** The core's picks come back in render
+  space, which is the rig's position reference frame, so a readout of "where I
+  clicked" in the camera's reference frame needs no conversion.
+- **5a ships the rig in its generic form.** The presets, which need two-vector
+  frames, come in 5b; damping, controllers beyond today's and transitions come
+  in 5d. Until 5d, a rig is set directly, and today's globe controller drives a
+  rig on ITRF.
+
+### 7.6 A draw's placement
 
 A placement is one of:
 
@@ -363,42 +556,46 @@ Every per-vertex kind has three parts: a Slang function with a fixed signature
 origin in render space out), its float64 CPU twin (for picking, bounds and
 culling), and its error bound. **The core never bakes a placement into vertex
 buffers** (author's call). That keeps the GPU tessellation engine's seam open
-(section 8.4).
+(section 8.4). A per-vertex placement is computed for a given render root;
+when the root changes, the frames module recomputes it.
 
 Bounds and culling use the placement. A per-vertex placement states how far it
 can move a vertex from the affine part's result, and the tile's bounding volume
 grows by that amount.
 
-### 7.5 The frames module
+### 7.7 The frames module
 
-**Packaging** **(author's call; section 17, question 2, asks whether the owner wants
-separate packages instead):** entry points of the one package, not separate
-packages:
+**Packaging** **(author's call; section 17, question 2, asks whether the owner
+wants separate packages instead):** entry points of the one package, not
+separate packages:
 
 - `@cesium/next`: the core (World, View, Camera, Engine, tilesets, globe,
-  vector, controllers, animation);
-- `@cesium/next/frames`: the tree, the catalog, providers, trajectories, rigs'
-  frame resolution;
+  vector), the camera layer (rigs, controllers, bindings, transitions) and the
+  animation core;
+- `@cesium/next/frames`: the tree, the catalog, providers, trajectories, the
+  frame resolver over the tree, and the time library;
 - `@cesium/next/proj`: the PROJ coordinate service (lazy, as today);
 - `@cesium/next/measure`: measurement (5i settles its tool seam).
 
 **The dependency rule:** the core imports nothing from `frames`, `proj` or
 `measure`. `frames` imports core types only (`Body`, `Ellipsoid`, the math
-module). `measure` imports `frames`. An import-graph test enforces it, and
-`src/frames/frames.ts`'s import of `src/measure/constants.ts` moves to a
-neutral module (carried forward from plan 3).
+module, the resolver and clock interfaces). `measure` imports `frames`. An
+import-graph test enforces it, and `src/frames/frames.ts`'s import of
+`src/measure/constants.ts` moves to a neutral module (carried forward from
+plan 3).
 
-**The resolver.** The core exposes one hook, run per view before it renders,
-with the tick's time. The frames module registers there. For each anchor bound
-to a frame, it sets the anchor's placement into the view's render root at the
-tick's `Instant`. It also hands the core the sky inputs the core used to get
-from the Viewer (the sun's direction, the celestial rotation, the Moon's
-placement), so they come through the same seam. An application without the
-module sets anchors and sky inputs itself, or leaves them at their defaults.
+**The resolver and anchor bindings.** The frames module implements the frame
+resolver over the tree and binds anchors to reference frames (the Earth's
+anchor to ITRF, the Moon's to MOON_ME, a trajectory's anchor to its
+trajectory's reference frame). The camera layer calls it each tick, per view,
+before rendering (section 7.2). It also hands the core the sky inputs the core
+used to get from the Viewer (the sun's direction, the celestial rotation), so
+they come through the same seam. An application without the module sets
+anchors and sky inputs itself, or leaves them at their defaults.
 
-**Providers on demand.** Each catalog frame names its provider:
+**Providers on demand.** Each catalog reference frame names its provider:
 
-| Frame | Provider | Loads |
+| Reference frame | Provider | Loads |
 | --- | --- | --- |
 | ITRF (ellipsoid only) | built in | nothing |
 | GCRF, EME2000, EARTH_ICRF | Earth orientation | the ERFA series; EOP for precision |
@@ -407,13 +604,14 @@ module sets anchors and sky inputs itself, or leaves them at their defaults.
 | an engineering frame | coordinate service | PROJ and its grids |
 | a trajectory | trajectory | its OEM or SPK |
 
-Asking for a frame states the precision wanted: `"analytic"` or `"precise"`
-**(the names are the builder's)**. A frame runs at the highest precision anyone
-has asked for. While its precise data loads, it runs on its declared stand-in
-if it has one, stating the stand-in's accuracy, and its revision goes up when
-the data arrives. Without a stand-in, a query on it throws a named error until
-the data loads (plan 2 R3: frames throw, rendering falls back). Loading is
-async and cancellable (`AbortSignal`); queries stay synchronous.
+Asking for a reference frame states the precision wanted: `"analytic"` or
+`"precise"` **(the names are the builder's)**. A reference frame runs at the
+highest precision anyone has asked for. While its precise data loads, it runs
+on its declared stand-in if it has one, stating the stand-in's accuracy, and
+its revision goes up when the data arrives. Without a stand-in, a query on it
+throws a named error until the data loads (plan 2 R3: reference frames throw,
+rendering falls back). Loading is async and cancellable (`AbortSignal`);
+queries stay synchronous.
 
 **The sky in a globe-only app** asks for GCRF and the Sun at `"analytic"`. That
 means today's analytic sky, unchanged: `icrfToFixed`'s IAU 1976 precession
@@ -424,39 +622,42 @@ model, as plan 1 measured. The IAU 2006/2000A series (about 100 KB) load only
 when someone asks for `"precise"`. So a globe-only Viewer downloads nothing new,
 its stars and sun are unchanged against the parity pages, and R10's default
 (the Viewer keeps the analytic sky unless `frameData` is given) holds.
-(Answered from the code after the builder check.)
 
-**The catalog and the tree in use.** The catalog answers "what frames exist"
-without loading anything. The tree in use answers "what does this scene touch",
-with each frame marked by who uses it (the application, the renderer's sky,
-measurement). The explorer's tree diagram draws from it.
+**The catalog and the tree in use.** The catalog answers "what reference
+frames exist" without loading anything. The tree in use answers "what does
+this scene touch", with each reference frame marked by who uses it (the
+application, the renderer's sky, a rig, measurement). The explorer's tree
+diagram draws from it.
 
-### 7.6 Frame revisions
+### 7.8 Revisions of reference frames
 
-- Each frame has a `revision` that goes up when its placement's inputs change:
-  a joint angle, a newly loaded kernel, a new EOP table, a revised accuracy.
-  Time alone is not a revision. Time-dependent frames are keyed by the
-  instant.
-- A frame whose matrix depends on state calls `invalidate()` when the state
-  changes. It can then stay cached, keyed by (instant, revision). `cache:
-  false` stays for compatibility **(author's call)**.
+- Each reference frame has a `revision` that goes up when its placement's
+  inputs change: a joint angle, a newly loaded kernel, a new EOP table, a
+  revised accuracy. Time alone is not a revision. Time-dependent reference
+  frames are keyed by the instant.
+- A reference frame whose matrix depends on state calls `invalidate()` when
+  the state changes. It can then stay cached, keyed by (instant, revision).
+  `cache: false` stays for compatibility **(author's call)**.
 - A route's revision combines the revisions along it, so a consumer (a label,
   an overlay, a statement, a diagram) keys its work on the route and skips it
   when nothing moved.
 - **The renderer counts as a consumer.** On-demand rendering redraws when a
-  revision on a route an anchor uses goes up.
+  revision on a route an anchor or a rig uses goes up, as well as when the
+  clock moves a rig's reference frame (section 7.5).
 - An edge whose accuracy drifts with time publishes a new value only when it
   changes by more than a stated fraction (author's call: 1% of the figure, or
   1 mm, whichever is larger).
 
-### 7.7 Frame-tagged picking and the coordinate service
+### 7.9 Picks and the coordinate service
 
-- **Picking.** The core's pick returns a render-space position, the view, the
-  anchor, the draw and the feature. A **pick interpreter**, an interface the
-  frames module implements, turns that into a frame-tagged point: the body, the
-  body-fixed position, the design coordinates where the content has an
-  engineering frame, and the composed accuracy. This closes plan 3 R8.
-  `pickDesign` and `pickInFrame` (4b) are rebuilt on it.
+- **Picking.** The core's pick returns a render-space position (in the rig's
+  position reference frame), the view, the anchor, the draw and the feature. A
+  **pick interpreter**, an interface the frames module implements, turns that
+  into a point tagged with its reference frame: the body, the body-fixed
+  position, the design coordinates where the content has an engineering
+  frame, and the composed accuracy. It can also report the point in any
+  reference frame the caller names. This closes plan 3 R8. `pickDesign` and
+  `pickInFrame` (4b) are rebuilt on it.
 - **The coordinate service** is an interface: forward and inverse between a
   design CRS and the body's geodetic coordinates, grid factors, the recorded
   operation, and its accuracy. `EngineeringFrame` is built on it, and PROJ is
@@ -468,7 +669,45 @@ measurement). The explorer's tree diagram draws from it.
   one reports true values only. This follows the frames spec's rule: the
   engine never guesses a placement mode.
 
-### 7.8 Carried-forward items 5a closes
+### 7.10 Seams for later WebGPU features
+
+Decided by the owner (§13.14, "groundwork for post-V1 WebGPU features"):
+apply the bindless pattern (§7.1: "design for it; don't build it": one seam
+every caller goes through, plus a test that fails on any bypass) to the
+features the WebGPU working group has tagged for after V1, so adopting them
+later is a backend swap rather than a refactor. "Only where the seam costs
+nothing today; no design compromises in the current WebGPU path."
+
+5a lays the seams that plan 5's own work touches **(author's call)**:
+
+- **One query interface for rays and spatial queries** (picking, snapping,
+  line of sight, height queries, §13.16), naming its reference frame and its
+  scene time. Today it runs on CPU structures or compute traversal; a
+  hardware ray-query backend drops in behind it later. 5b's rays (section
+  9.4) and 5f's snap pass (section 13.3) go through it. Section 17, question
+  1, asks whether plan 5 designs more of §13.16 than this.
+- **Acceleration-structure lifetime** (build, refit, evict) hangs off tile
+  and draw lifetime in streaming through one hook, so a per-tile bottom-level
+  structure and a per-tick top-level one have a place to live. 5a adds the
+  hook with no structure behind it.
+- **Per-draw constants and draw-argument buffers** go through one seam each,
+  so multi-draw indirect and immediates (push constants) later replace an
+  emulation rather than call sites. Placements add per-draw data, so 5a routes
+  it through these seams, and section 8.2's indirect draw arguments use the
+  second.
+- **Geometry reaches the GPU through the GPU-driven submission path only**
+  (§7, M1), and the content pipeline may carry meshlet or cluster data, so a
+  mesh-shader backend later replaces the compute-plus-indirect stage, not the
+  content format or the callers.
+- **Each seam gets a bypass test,** like `test/bindless.test.ts`.
+
+The seams plan 5 doesn't touch (subgroup and matrix fast paths behind
+capability checks, queue affinity in the job graph for async compute, 64-bit
+atomics for a later visibility buffer, one registry of probed features and
+limits read by every backend choice, Slang shaders organized per capability)
+are audited in 5i, which lists each seam, its bypass test, and any gap.
+
+### 7.11 Carried-forward items 5a closes
 
 - The Viewer imports `skyState` and `loadFrameData` with a dynamic `import()`,
   so the ERFA tables (about 100 KB) and the pack readers leave the main
@@ -484,22 +723,29 @@ measurement). The explorer's tree diagram draws from it.
 - `readWithProgress` caps its preallocation (author's call: it trusts a
   `Content-Length` up to 64 MB, and grows its buffer beyond that).
 - **One ENU convention:** up at the foot, along the ellipsoid's geodetic
-  normal, as body frames already do. `eastNorthUpFrame` changes to match
+  normal, as body-fixed frames already do. `eastNorthUpFrame` changes to match
   (about 0.13 µrad at 250 m), with a note in its doc comment **(author's
   call)**.
 - The stress context's `frames` getter becomes enumerable.
 
-### 7.9 Done when
+### 7.12 Done when
 
 - Every parity page and gate passes, and a globe-only scene's pixels are
-  unchanged.
+  unchanged (a rig on ITRF).
+- A rig on GCRF, with the clock running, draws the Earth turning beneath a
+  still star field, with the globe's culling, clamping and clipping unchanged
+  against the same scene on ITRF at each instant.
+- Re-rooting a view between ITRF and GCRF at a paused instant changes no
+  pixel beyond the gate's tolerance.
+- A test application with the frames module left out draws a scene, and a rig
+  in it follows a moving node of the transform table.
 - The import-boundary test passes, and a globe-only Viewer bundle measures
   smaller by the ERFA tables.
 - The frames explorer, the design globe and the realtime-tracks example run on
   the new seam. The design globe's morph uses the core's dual-position
   placement, and its custom morph shader is gone. Its pairing of the two
   tilesets stays in the example.
-- A test application with the frames module left out draws a scene.
+- Each new WebGPU seam has its bypass test.
 - The surface-map tool for 5i is in place (section 15.2), and every later
   sub-plan shows its surface diff.
 
@@ -521,10 +767,10 @@ draw indirectly. "Plan 5 only keeps the seam open."
   behaviour (author's call: a bound on its second derivative over the tile) for
   a subdivider to choose a sampling rate by screen-space error.
 - The frames module answers, **per draw and per view, which placement applies
-  and why** (the coordinate operation and its accuracy), as a query, not only
-  as something it pushes into the core.
-- Draw records can point at **indirect draw arguments,** so a later compute
-  pass can write the counts.
+  and why** (the coordinate operation, the render root it was computed for, and
+  its accuracy), as a query, not only as something it pushes into the core.
+- Draw records can point at **indirect draw arguments** (through section
+  7.10's seam), so a later compute pass can write the counts.
 
 ### 8.3 What 5a does not do
 
@@ -538,29 +784,51 @@ what the tessellation engine will consume.
 
 ## 9. Sub-plan 5b: the frames library
 
-### 9.1 Two-vector dynamic frames
+### 9.1 Two-vector frames
 
-The owner: every orientation choice for a rig is a frame in the tree, "built
-with SPICE's two-vector dynamic frames (a primary axis along one vector, a
-secondary toward another, re-evaluated over time)", and "two-vector frames are
-a frame-tree feature in their own right (antenna pointing, sun-relative
-frames), not just a camera one".
+The owner: every orientation choice for a rig is a reference frame in the
+tree, "built with SPICE's two-vector dynamic frames (a primary axis along one
+vector, a secondary toward another, re-evaluated over time)", and "two-vector
+frames are a frame-tree feature in their own right (antenna pointing,
+sun-relative frames), not just a camera one".
 
 - **Vector definitions,** after SPICE's: the position of a target from an
-  observer, the velocity of a target from an observer in a stated frame, a
-  constant vector in a stated frame, and the near point on a body's ellipsoid.
+  observer, the velocity of a target from an observer in a stated reference
+  frame, a constant vector in a stated reference frame, and the near point on
+  a body's ellipsoid.
 - **Axis assignments:** the primary along ±X, ±Y or ±Z, the secondary in the
   plane of the primary and that axis.
-- **Freezing:** a frame evaluated once at a stated instant and kept constant
-  (SPICE's freeze epoch). A stars-fixed camera is GCRF-frozen at the moment the
-  rig attaches.
-- **Velocities** come from central differences, as plan 3 R3.
+- **Freezing:** a two-vector frame evaluated once at a stated instant and kept
+  constant (SPICE's freeze epoch).
+- **Velocities** come from central differences, as plan 3 R3. The resolver
+  reports them, so a transition can blend a rig on a rotating two-vector frame
+  smoothly.
 - **Degenerate cases** (the two vectors nearly parallel) throw a named error
-  below a stated angle **(author's call: 1 mrad, SPICE's default)**.
+  below a stated angle **(author's call: 1 mrad, SPICE's default)**. A rig on
+  such a reference frame keeps its last good orientation and says why, rather
+  than spinning **(author's call)**.
 - **Validation:** against SPICE (spiceypy, run offline, as the other fixtures),
   for an orbital frame on Orion and an Earth–Moon rotating frame.
 
-### 9.2 Accuracy beyond first order
+### 9.2 Rig presets
+
+Named presets sit on the rig's generic form (section 7.5), each a rig built
+from reference frames:
+
+- **`"cockpit"`:** the target's body-fixed frame, for both position and
+  orientation.
+- **`"orbital"`:** a two-vector frame with the primary up from the central
+  body and the secondary along the velocity (local vertical, local
+  horizontal).
+- **`"inertial"`:** a two-vector frame frozen in GCRF when the rig attaches,
+  so the stars hold still.
+- **`"level"`:** a level-horizon follow, primary the target's forward axis,
+  secondary up from the central body.
+
+Each preset is data: an application can read it, change one part, and set
+the result. A test checks each preset's axes against the SPICE fixtures.
+
+### 9.3 Accuracy beyond first order
 
 The owner: "Seems easy for a user to screw up." The app declares each edge's
 error in its own terms, and the library composes it. 5b builds the rest of
@@ -579,35 +847,39 @@ error in its own terms, and the library composes it. 5b builds the rest of
 - **Time-varying accuracy.** The query takes the instant, and the breakdown
   says when a term is a prediction.
 - **Terms on no edge** (light time, relativity) get a home on the route.
-- **A trajectory's covariance** becomes its frame's accuracy (Orion's).
+- **A trajectory's covariance** becomes its reference frame's accuracy
+  (Orion's).
 - **MOON_ME states an orientation accuracy.** Until a published figure is
   found, it is the explorer's estimate, 3 × 10⁻⁷ rad, labelled "estimated".
 - **`accuracyOf` is rebuilt on `pointAccuracy`.** The explorer's catalog
   numbers may move only where a bound tightens, and a test lists each move.
 
-### 9.3 Rays through the frame tree
+### 9.4 Rays through the frame tree
 
-From §13.14 "Ray queries through the frame tree", on the CPU paths that exist:
+From §13.14 "Ray queries through the frame tree", on the CPU paths that exist,
+behind section 7.10's query interface:
 
-- A ray is given in any frame at an instant, and is carried to each target's
-  frame. A query states whether it is geometric or light-time corrected.
-- **Targets in plan 5:** body ellipsoids, the globe's terrain (`castTerrainRay`),
-  and a tileset's retained geometry (needed for the Moon's terrain, which is a
-  tileset, not a globe).
-- Hits are float64, reported in the frame the caller asks for, with the
-  composed accuracy of the route plus the target's own.
+- A ray is given in any reference frame at an instant, and is carried to each
+  target's reference frame. A query states whether it is geometric or
+  light-time corrected.
+- **Targets in plan 5:** body ellipsoids, the globe's terrain
+  (`castTerrainRay`), a tileset's retained geometry (needed for the Moon's
+  terrain, which is a tileset, not a globe), and a body's impostor (section
+  10.4), which answers as its ellipsoid with its relief as the accuracy.
+- Hits are float64, reported in the reference frame the caller asks for, with
+  the composed accuracy of the route plus the target's own.
 - Unknown stays unknown. §13.16's question 4 (clip to the body's terrain band
   before counting unloaded spans as unknown) is applied here, for the Earth and
   the Moon, because ground-to-space rays need it **(author's call)**.
 
-### 9.4 Bulk work
+### 9.5 Bulk work
 
 The owner: "Plan 5 decides only whether the library offers them as
 cancellable (`AbortSignal`), progress-reporting operations that run in a
 worker or under the engine's per-frame budget." **Decided here (author's call):
 yes.** One shape for every bulk operation: options with `signal` and
 `onProgress`, and a promise of the result. An operation runs in a worker when
-its inputs can be transferred, and otherwise in slices under the per-frame
+its inputs can be transferred, and otherwise in slices under the per-tick
 budget. Plan 5's bulk operations:
 
 - sampling a trajectory into a path (5g's flight path);
@@ -616,19 +888,53 @@ budget. Plan 5's bulk operations:
   forward from 4a);
 - PROJ batches.
 
-### 9.5 Carried-forward items 5b closes
+### 9.6 Showing time
+
+The owner (design globe feedback F9): the timeline should show the time at
+the site, and asked whether there is an API for it. Today `widgets/
+timeControls.ts` offers `TimeZoneChoice` (`"nominal"`, `"solar"`, `"utc"`,
+`"local"`, or a civil zone `{ iana }` the application gives), with the
+formatting inside the widget. Design **(author's calls)**:
+
+- **A formatter in the time library,** beside `Instant`, not in the renderer
+  or the widget: it turns an `Instant` into the parts a UI shows (date, time,
+  the zone's short and long names, its offset from UTC) in one of:
+  - UTC, including a leap second (23:59:60, which `Intl.DateTimeFormat` can't
+    show);
+  - a civil zone by its IANA name, through `Intl.DateTimeFormat`, daylight
+    saving included;
+  - local mean solar time at a longitude, and the "nominal" zone of whole
+    hours from it;
+  - the computer's own zone.
+- **Finding a place's civil zone is a lookup the application owns,** through
+  a small interface (a position in, an IANA name out). A boundary table may be
+  offered later as a lazy provider, as other providers are; plan 5 ships none
+  **(author's call)**. Without a lookup, a place's time is its solar time,
+  labelled so.
+- `timeControls` takes the formatter, and the design globe gives each site
+  its IANA zone. The Artemis example shows UTC, with mission elapsed time
+  beside it.
+
+### 9.7 Carried-forward items 5b closes
 
 - `measure` solves the downlink light time once, not twice.
 - Explicit timeouts on the slow data tests (`test/data/trajectory.test.ts:147`
   and `:197`, `test/data/sky.test.ts:86`).
+
+### 9.8 Done when
+
+- Two-vector frames and the presets agree with the SPICE fixtures.
+- The accuracy tests pass, and the explorer's moves are listed.
+- The formatter's tests cover a leap second, a daylight-saving change, and
+  solar time at the date line.
 
 ## 10. Sub-plan 5c: bodies in one world
 
 ### 10.1 Why
 
 The Artemis example needs the Earth's and the Moon's tilesets drawn together,
-from the Earth, from the Moon and from anywhere between. Plans 2 and 3 left
-the world Earth-fixed on purpose (R6). This sub-plan re-roots it.
+from the Earth, from the Moon and from anywhere between. 5a re-roots views and
+puts the Earth's content under its anchor. 5c adds the second body.
 
 ### 10.2 What was decided
 
@@ -643,34 +949,26 @@ From the frames spec §6.4 and §13.14:
 - The globe's tiling stays Earth-only. The Moon is Cesium Moon (ion 2684829), a
   tileset.
 - "When the Moon tileset is in the world, the disk is off and the tileset draws
-  at every distance (its root tile far away)."
-- In free flight, the view's body follows the nearest body (frames spec §6.4,
-  its author's call, kept).
+  at every distance (its root tile far away)." Section 10.4 generalizes this
+  into a handover between the Moon's impostor and its tileset.
+- In free flight, the rig re-attaches to the nearest body's body-fixed frame
+  (frames spec §6.4, its author's call, kept; section 11.3).
 
 ### 10.3 Design
 
-- **A body is a core concept; its frame is the module's.** A body gets an
-  anchor (section 7.3). The globe hangs under the Earth's anchor, and a
-  tileset under its body's. Without the frames module, the Earth's anchor is
-  the identity and render space is Earth-fixed, as today.
-- **Earth-only code converted** (the frames spec counted about 20 places; 24
-  files name `Ellipsoid.WGS84` today). Each takes its body from the content it
-  serves:
-  - horizon culling (`math/horizon.ts`, `Budgeted`, `Stepwise`) per body,
-    with the camera expressed in that body's anchor;
-  - tile volumes (`streaming/volumes.ts`) on the content's ellipsoid;
+- **A body is a core concept; its reference frame is the frames module's.** A
+  body gets an anchor (section 7.4). The globe hangs under the Earth's anchor,
+  and a tileset under its body's.
+- **Earth-only code becomes per body** (the frames spec counted about 20
+  places; 24 files name `Ellipsoid.WGS84` today). 5a already made each one use
+  the camera in the Earth's anchor. 5c makes each take its body from the
+  content it serves:
+  - horizon culling per body, with the camera in that body's anchor;
+  - tile volumes on the content's ellipsoid;
   - height clamping per body;
-  - view links (`ViewLink`) and the Viewer widget;
+  - view links and the Viewer widget;
   - picking results.
   The globe controller per body is 5d's.
-- **The Moon at every distance.** Cesium Moon's root tile must be selected from
-  the Earth's surface, about 384,000 km away. Its screen-space error decides
-  how deep it refines, and that is enough (frames spec). The sky's Moon disk
-  turns off while a Moon tileset is in the world, and the disk's texture stays
-  for applications without one.
-- **Cesium Moon's frame is assumed MOON_ME,** and its heights are taken as
-  published, both stated in the example and each a single setting (frames spec
-  §11, unchanged).
 - **`View.body`** keeps working through 5c. In 5e the sky stops needing it, and
   in 5d controllers name their own body. 5i decides whether it stays as a
   convenience **(author's call)**.
@@ -679,23 +977,103 @@ From the frames spec §6.4 and §13.14:
   one depth range. 5c tests z-fighting at the Moon's limb seen from the Earth,
   and at the Earth's limb seen from the Moon.
 
-### 10.4 Done when
+### 10.4 The Moon's impostor and its tileset
 
-- A view with MOON_ME as its render root draws Cesium Moon near the camera and
-  the Earth with terrain and imagery behind it, in the right place at the
-  clock's time (checked against `frameTransform` to 1 m at the screen).
+The owner asked how an application decides between the Moon's impostor and
+its real tileset. **Design (author's calls throughout this section):** the
+application doesn't decide per tick. It declares what it has, and the scene
+core decides by level of detail.
+
+Today the Moon is a ray-cast sphere in the sky pass (`moonDisk` in
+`src/atmosphere/sky.slang`): MOON_ME-oriented axes, an albedo map, a
+Lommel-Seeliger-like shading, and earthshine. It sits at infinity behind
+everything, placed from the sky inputs.
+
+- **An impostor is a body's coarsest level of detail.** Every body with an
+  appearance (radii, an albedo map, a reflectance model) gets one. A tileset on
+  that body (named by `3DTILES_ellipsoid`, or by the body option when it is
+  added) refines from it by the ordinary screen-space-error rule: the impostor
+  acts as the root tile's virtual parent, with a geometric error of the body's
+  relief or the map's texel size, whichever is larger (for the Moon, about
+  10 km of relief). From the Earth's ground the Moon stays an impostor. As the
+  camera approaches, the root tile is requested when the impostor's error
+  passes the threshold.
+- **No hole.** The impostor keeps drawing until the tiles replacing it are
+  loaded, as any parent tile does.
+- **No pop.** The impostor and the tileset hang under the same anchor (one
+  ephemeris, one MOON_ME orientation). Today's sky inputs can come from Meeus,
+  about 10″ or some 20 km at the Moon, so the impostor stops taking them: it
+  is placed by its anchor like the tileset. Both use the same reflectance
+  model (5e's Hapke, or Lommel-Seeliger for both) and the same exposure, so
+  the swap is an ordinary refinement.
+- **Depth-correct.** The impostor moves out of the sky pass into the opaque
+  pass, as a ray-cast ellipsoid that writes depth at its true distance. From
+  behind the Moon (Earthset), the Moon is in front of the Earth, which a
+  sky-pass disk at infinity gets wrong.
+- **Picks on an impostor** hit its ellipsoid and say so, with the relief as
+  the accuracy term.
+- **The application can override per body:** impostor only, tileset only, or
+  a bias on the error threshold.
+- **The same works for any body:** the Earth seen from far away without a
+  globe, and later bodies.
+
+**The impostor and ion access to Cesium Moon:**
+
+- **What's automatic is the handover, not getting the data.** The library
+  never adds ion content or contacts ion on its own, because of the token, the
+  account's access, ion usage, and the "a globe-only app pays nothing"
+  anti-goal. The application or the Viewer declares the Moon's tileset. The
+  Viewer offers it as an opt-in (for example `moon: "impostor" | "ion" |
+  <a tileset>`; the names are the builder's), using the Viewer's ion token
+  (in examples, Dyno's `ionToken()`). The Viewer's default is the impostor
+  only: no token, no download.
+- **Lazy all the way down.** Declaring Cesium Moon makes no request, not even
+  the call to ion's asset endpoint, until the impostor's error passes the
+  threshold. An application that never leaves the Earth costs no ion traffic
+  and no ion usage for the Moon.
+- **Failure falls back to the impostor, never a hole.** No token, an expired
+  token, a token without the asset in its scope, or the asset not in the
+  user's ion account (Asset Depot assets have to be added to My Assets first)
+  each leave the impostor drawing and raise one warning, naming the cause and
+  what to do. The ion resource layer refreshes the endpoint's short-lived
+  access token, as it does for other ion assets.
+- **Credits follow what's drawn.** ion's credit for Cesium Moon shows only
+  while its tiles draw; the impostor's map credit shows while the impostor
+  does.
+- **The tileset needn't be ion.** Any tileset on the Moon body works the same,
+  self-hosted included.
+- The Artemis example declares Cesium Moon (section 14.2).
+
+**Cesium Moon's reference frame is assumed MOON_ME,** and its heights are taken
+as published, both stated in the example and each a single setting (frames
+spec §11, unchanged).
+
+### 10.5 Done when
+
+- A view whose rig is on MOON_ME draws Cesium Moon near the camera and the
+  Earth with terrain and imagery behind it, in the right place at the clock's
+  time (checked against `frameTransform` to 1 m at the screen).
+- From the Earth's ground, with Cesium Moon declared, the Moon draws as its
+  impostor and the network log shows no request to ion for it. Flying toward
+  the Moon, the impostor hands over to the tileset with no hole and no visible
+  jump in place or brightness.
+- With Cesium Moon declared and no usable token, the impostor keeps drawing
+  and one warning names the cause.
+- From behind the Moon, the Moon's impostor and its tileset each hide the
+  Earth correctly.
 - Two views of one world, one on each body, render side by side.
 - Earth-only parity is unchanged.
 - A pick on the Moon reports MOON_ME coordinates, and on the Earth ITRF.
 
-## 11. Sub-plan 5d: cameras, controllers, bindings and animation
+## 11. Sub-plan 5d: controllers, bindings, transitions and the animation core
 
 ### 11.1 Why
 
 "Today every camera controller quietly assumes the Earth." `GlobeController`
 needs a pick under the cursor, so in space the only way to start a rotation is
 to grab the Earth. `InspectController` takes "up" from the ellipsoid. The
-explorer's camera rig is "a stepping stone, not the design".
+explorer's camera rig is "a stepping stone, not the design". 5a gave every
+view a rig; 5d gives the rig controllers, bindings and transitions.
 
 ### 11.2 The animation core
 
@@ -710,6 +1088,9 @@ transitions"):
 - **Keyframed values** use glTF's samplers: step, linear and cubic spline.
 - **Every animation chooses its clock:** "configurable between wall clock and
   scene clock for all animations".
+- **It knows no reference frames** (section 7.2). Values are written through a
+  setter the caller gives it, and the scene clock comes through the clock
+  interface.
 
 Design **(author's calls)**:
 
@@ -717,53 +1098,15 @@ Design **(author's calls)**:
   time is the scene clock's: it pauses with the clock, follows its rate, and
   evaluates at the clock's time when the clock is scrubbed, backwards
   included.
-- One timeline per engine, advanced in the tick before the resolver runs, so a
-  frame never shows an animation one tick behind its frames.
+- One timeline per engine, advanced in the tick before the camera layer poses
+  the views, so a tick never shows an animation one tick behind its
+  reference frames.
 - A running animation keeps on-demand rendering awake. A settled one doesn't.
-- Values are written through a setter the animation is given. The core ships
-  setters for a camera rig's parts, a placement's blend `t`, and a model
-  node's transform (section 11.6).
+- The core ships setters for a placement's blend `t` and a model node's
+  transform (section 11.5). The camera layer's transitions are its own
+  setters.
 
-### 11.3 The rig
-
-Decided by the owner:
-
-- "The rig is only a pose in a frame." It holds no rules about where the camera
-  may go.
-- It splits position from orientation, after Cinemachine's Body and Aim:
-  - **position:** an anchor (a frame's origin, such as Orion's), an offset, and
-    the frame the offset is expressed in;
-  - **orientation:** a frame whose axes the camera's up and forward follow,
-    or an aim (look at a target, with an up vector taken from a frame);
-  - **damping,** optional, per part.
-- Every orientation choice is a frame (two-vector frames, 5b). A cockpit view
-  is the target's body frame. An orbital view is primary up from the central
-  body, secondary along the velocity. A stars-fixed view is a constant frame
-  captured in GCRF when the rig attaches. A level-horizon follow is primary the
-  target's forward axis, secondary up from the central body.
-- Named presets (`"cockpit"`, `"orbital"`, `"inertial"`) sit on top of the
-  generic form.
-- The rig's frame decides what holds still: on MOON_ME the Moon stays put; on
-  GCRF the Earth turns underneath; on a trajectory the camera rides along.
-- Inputs are expressed in the rig's frame: the pivot is a point in it, "up" is
-  one of its axes, and heading is measured from a reference axis in it.
-
-Design **(author's calls)**:
-
-- **The rig lives in the core, with frames resolved through an interface.** The
-  core knows one frame, render space. The frames module supplies a resolver for
-  every other frame (the same seam as anchors). Without the module, a rig is a
-  pose in render space, and today's controllers work unchanged.
-- **Damping** is a critically damped spring per part, with a time constant in
-  seconds. It runs on the wall clock, so a paused scene still settles.
-- **A view's render root follows its rig:** the body frame nearest the rig's
-  anchor, or the engineering frame in design view. The root is invisible
-  (section 7.3), so this is about cost and per-vertex placement only.
-- **Picks in the rig's frame.** The pick interpreter (section 7.7) can report a
-  point in the rig's frame, so a readout of "where I clicked" can be in the
-  frame the camera thinks in.
-
-### 11.4 Controllers
+### 11.3 Controllers
 
 Decided by the owner:
 
@@ -788,30 +1131,37 @@ Decided by the owner:
 Design:
 
 - **Every controller works on any body.** The globe controller takes a body.
-  Orbit needs no pick to start: it rotates about its pivot in the rig's frame,
-  so a camera in space can orbit Orion or the Moon without grabbing a surface.
+  Orbit needs no pick to start: it rotates about its pivot in the rig's
+  reference frame, so a camera in space can orbit Orion or the Moon without
+  grabbing a surface.
 - **Every constraint has an off switch,** including the minimum height, the
   collision test and pitch limits. A test turns each one off and drives the
   camera through the surface.
-- **Rolled frames** **(author's call):** a controller takes "up" from the
-  orientation frame's chosen axis. Free-fly has no up, with an optional
-  "level" assist toward the nearest body's up.
+- **Free flight re-attaches** to the nearest body's body-fixed frame as it
+  goes (frames spec §6.4). That is a controller policy, and a change of root
+  in the camera layer: the pose is re-expressed, and nothing on screen jumps.
+- **Rolled reference frames** **(author's call):** a controller takes "up"
+  from the orientation reference frame's chosen axis. Free-fly has no up, with
+  an optional "level" assist toward the nearest body's up.
 - **The hand-over near a body** **(author's call):** below a stated height (a
   fraction of the body's radius, the builder's number), free-fly offers the
   body's globe controls through a transition, never a jump.
+- **Damping** **(author's call)** is a critically damped spring per rig part,
+  with a time constant in seconds. It runs on the wall clock, so a paused scene
+  still settles.
 - **The orthographic camera** is new in the core (reverse-Z, as the
   perspective one). Picking, culling, horizon culling and screen-space error
   get orthographic forms. Tile selection's screen-space error uses the
   orthographic pixel size, which doesn't vary with distance.
 
-### 11.5 Gestures as bindings
+### 11.4 Gestures as bindings
 
 Decided by the owner: "Gestures are bindings, not subclasses." One gesture set
 works the same on the globe and in design space by default, and a host can
 change it without writing a controller:
 
 - **actions:** a controller's named operations (orbit, pan, zoom, look, tilt,
-  roll, fly forward, frame selection, the standard views), each done once by
+  roll, fly forward, fit the selection, the standard views), each done once by
   the controller;
 - **bindings:** a plain, serializable map from input to action, such as
   `{ "drag:left": "orbit", "drag:middle": "pan", "wheel": "zoom" }`, covering
@@ -834,19 +1184,19 @@ Design **(author's calls)**:
   `cad` (orbit on middle drag, pan on shift and middle drag, zoom on the wheel
   to the cursor), after the common CAD convention. More are data.
 
-### 11.6 Transitions between rigs
+### 11.5 Transitions between rigs
 
 Decided by the owner:
 
 - Flights need to be configurable: "an instant jump vs a linear movement vs
   something eased in and out".
 - "A camera transition is a blend between two live rigs," after Cinemachine:
-  each frame evaluates the source and target rigs at the current time (so a
-  moving target such as Orion is tracked throughout) and blends them by the
-  eased weight in a common frame of the tree. A cut is duration 0.
-- Path and timing are separate. The path is straight in the blend frame, an
-  arc over the surface (1.x's `flyTo` with its maximum height), or a spline.
-  The easing maps time onto it.
+  each tick evaluates the source and target rigs at the current scene time
+  (so a moving target such as Orion is tracked throughout) and blends them by
+  the eased weight in a common reference frame. A cut is duration 0.
+- Path and timing are separate. The path is straight in the blend reference
+  frame, an arc over the surface (1.x's `flyTo` with its maximum height), or a
+  spline. The easing maps time onto it.
 - **Interruption is configurable per transition,** with a default for user
   input: `stop` (the camera stays where it is, on the rig it was nearer to),
   `handover` (the transition's velocity carries into the user's drag,
@@ -855,34 +1205,44 @@ Decided by the owner:
 - Configurable at three levels: per call, per pair of rig kinds (a table of
   defaults, such as "globe → ride-along: 3 s ease-in-out"), and app-wide.
 - Flights between rigs need a defined hand-off: "interpolate in a common frame,
-  then re-attach".
+  then re-attach". In the layering (section 7.2), that is a change of root:
+  the blend reference frame is the view's root while the transition runs, and
+  the target rig's position reference frame is the root after.
+
+Who owns what (section 7.2): the transition is the camera layer's, built on
+the animation core. The interruption policies are the camera layer's, because
+they need the controller's input. The path shape is the transition's. Easing
+and the clock are the animation core's.
 
 Design **(author's calls)**:
 
-- **The blend frame** is the deepest common ancestor of the two rigs' position
-  frames, unless the transition names one. Earth to a lunar site blends in
-  ICRF; two rigs on ITRF blend in ITRF.
-- **Orientation** blends by slerp in the blend frame. Field of view blends
-  linearly. A switch between perspective and orthographic happens at the end
-  that has it, through a field-of-view dolly (the "dolly zoom" trick), so the
-  image doesn't jump.
-- **The default interruption for user input is `stop`,** as 1.x's `flyTo` does.
-- **At the end** the target rig becomes the camera's rig, and its controller
+- **The blend reference frame** is the deepest common ancestor of the two
+  rigs' position reference frames, unless the transition names one. Earth to a
+  lunar site blends in ICRF; two rigs on ITRF blend in ITRF.
+- **Orientation** blends by slerp in the blend reference frame. Field of view
+  blends linearly. A switch between perspective and orthographic happens at the
+  end that has it, through a field-of-view dolly (the "dolly zoom" trick), so
+  the image doesn't jump.
+- **The default interruption for user input is `stop`,** as 1.x's `flyTo`
+  does.
+- **At the end** the target rig becomes the view's rig, and its controller
   takes over.
 - **Per-node transforms on a placed model,** set by the application (for the
   DSN dishes' azimuth and elevation in 5g), are added to `ModelPlacement`,
   because the engine has no per-node control today. The animation core can
   drive them.
 
-### 11.7 Done when
+### 11.6 Done when
 
 - Animation tests run on injected clocks, with no wall-clock flake.
 - Each controller is driven by synthetic pointer, wheel, touch and key events,
   on the Earth, on the Moon and in render space without the frames module.
 - A transition to a rig following Orion ends on Orion while the clock plays at
-  3600×, within a pixel at the target.
-- The explorer's camera rig is rebuilt on 5d's rig and controllers, and its own
-  `cameraRig.ts` and `orbit.ts` shrink to configuration.
+  3600×, within a pixel at the target, and the view's root is the blend
+  reference frame throughout and Orion's after.
+- Free flight from the Earth to the Moon re-attaches with no visible jump.
+- The explorer's camera rig is rebuilt on 5a's rig and 5d's controllers, and
+  its own `cameraRig.ts` and `orbit.ts` shrink to configuration.
 
 ## 12. Sub-plan 5e: the physical sky and light per body
 
@@ -894,10 +1254,10 @@ Design **(author's calls)**:
   atmosphere at all.
 - Physically, not by blending. Every body declares its atmosphere, or none.
   Each atmosphere is evaluated from the camera's true position relative to that
-  body, in the body's own frame, whatever frame the rig is attached to. What is
-  seen through each is composited physically: the Moon seen through the
-  Earth's air from the ground; the Earth's limb shell against a black sky from
-  the Moon.
+  body, in the body's own reference frame, whatever reference frame the rig is
+  attached to. What is seen through each is composited physically: the Moon
+  seen through the Earth's air from the ground; the Earth's limb shell against
+  a black sky from the Moon.
 - The explorer's orbit scenes showing the Earth's sunrise colours in space are
   "a bug in how the camera's position reaches the atmosphere, not a missing
   blend".
@@ -912,14 +1272,15 @@ Design **(author's calls)**:
 - **An atmosphere per body that has one.** The engine builds each body's
   tables (today it builds the Earth's and refuses a view of another body with
   an atmosphere). Bodies without one cost nothing.
-- **The camera's place, per body.** Each frame, each atmosphere gets the
-  camera's position in its body's anchor (section 7.3), not a height along the
-  ellipsoid normal under a render-space camera. This is the bug's likely fix;
-  the builder confirms the cause first.
+- **The camera's place, per body.** Each tick, each atmosphere gets the
+  camera's position in its body's anchor (section 7.4), not a height along the
+  ellipsoid normal under a render-space camera. 5a already does this for the
+  Earth; 5e does it for every body. This is the sunrise bug's likely fix; the
+  builder confirms the cause first.
 - **Compositing.** Along each view ray, the atmospheres the ray crosses are
-  applied in depth order: what lies behind (a surface, another body, the stars,
-  the sun's disk) is attenuated by each atmosphere's transmittance, and each
-  adds its in-scattered light.
+  applied in depth order: what lies behind (a surface, another body, its
+  impostor, the stars, the sun's disk) is attenuated by each atmosphere's
+  transmittance, and each adds its in-scattered light.
 - **Aerial perspective** **(author's call):** one aerial-perspective volume
   per view, for the atmosphere the camera is in or nearest. Atmospheres seen
   from outside use their sky-from-space path, as zooming out of the Earth does
@@ -934,8 +1295,10 @@ Design **(author's calls)**:
   (`atmosphere/albedo.ts`), and the Moon's light on the Earth at night, as
   today.
 - **The Moon's surface reflectance** **(author's call: Hapke's model with its
-  opposition surge, as a material on Cesium Moon, with Lommel-Seeliger as the
-  fallback if Hapke's parameters can't be sourced)**.
+  opposition surge, as one material shared by the Moon's impostor and Cesium
+  Moon, with Lommel-Seeliger for both as the fallback if Hapke's parameters
+  can't be sourced)**. Sharing it is what lets section 10.4's handover avoid a
+  jump in brightness.
 - **Stars and the sun's disk** turn with the render root's rotation from ICRF,
   from any body.
 - **Exposure** from day on the Earth to black space is automatic exposure's
@@ -958,18 +1321,18 @@ Design **(author's calls)**:
 Decided by the owner (§13.14, "routing a design CRS into the frame tree"):
 
 - **Route to the frame tree's own root, not to WGS 84.** Relate a design CRS
-  to ITRF2020 at the frame's epoch, through the published transformation for
-  its datum (for NAD83(2011), NGS's 14-parameter Helmert to ITRF2020; check
-  that `proj.db` carries it).
+  to ITRF2020 at the engineering frame's epoch, through the published
+  transformation for its datum (for NAD83(2011), NGS's 14-parameter Helmert to
+  ITRF2020; check that `proj.db` carries it).
 - **Reasonable defaults, decided by the engine.** Per height system, prefer the
   current geoid model (GEOID18 for NAVD88). Per horizontal datum, prefer the
   published, time-dependent route to ITRF. Rank by stated accuracy only among
   candidates that agree on those. "The defaults should be data (a small table
   the engine ships, with sources), not code paths."
 - **Explicitly configurable through the API.** An application can name the
-  geoid model, the datum route or a whole pinned pipeline per frame, and read
-  back which route was taken and why (`RecordedOperation`, and the skipped
-  candidates with their reasons).
+  geoid model, the datum route or a whole pinned pipeline per engineering
+  frame, and read back which route was taken and why (`RecordedOperation`, and
+  the skipped candidates with their reasons).
 
 Design:
 
@@ -977,10 +1340,10 @@ Design:
   ITRF as WGS84 (they agree to centimetres). Naming the realization lets a route
   end there. WGS84 (G2296) stays an alias, stated as agreeing to a few
   centimetres.
-- **Epochs.** A design point is related at the frame's coordinate epoch.
-  Plate motion between that epoch and the scene's instant (a few centimetres a
-  year) is stated as an accuracy term when it exceeds 1 cm, never ignored
-  silently **(author's call)**.
+- **Epochs.** A design point is related at the engineering frame's coordinate
+  epoch. Plate motion between that epoch and the scene's instant (a few
+  centimetres a year) is stated as an accuracy term when it exceeds 1 cm, never
+  ignored silently **(author's call)**.
 - **4b's pins** (`CORRIDOR_PIPELINE`, `PHOENIX_PIPELINE`) become unnecessary
   when the defaults pick GEOID18. They stay as tests that the defaults choose
   the same operation. The explorer's `fingerprints.json` changes where routes
@@ -994,10 +1357,11 @@ Design:
 Decided by the owner (§13.14, "design space and the global view, with a morph
 between them"):
 
-- In isolation, in its native design space, the render root is the engineering
-  frame: design E, N and up as straight axes, in design units. Straight design
-  lines draw straight. Nothing is reprojected, and picking reports design
-  coordinates.
+- In isolation, in its native design space, the render root is the
+  engineering frame: design E, N and up as straight axes, in design units.
+  Straight design lines draw straight. Nothing is reprojected, and picking
+  reports design coordinates. In the layering, this is a CAD-style rig whose
+  position reference frame is the engineering frame.
 - In the global view, the same model is drawn Earth-fixed through its recorded
   operation (4b's reprojected placement).
 - "A camera transition between the two morphs the content." The model goes
@@ -1008,17 +1372,21 @@ between them"):
   tiles need design-space positions too. PROJ per vertex is too slow, so the
   operation is fitted per tile (affine or low-order polynomial) with a stated
   error bound. The accuracy display says what the fit costs.
-- The rig's frame changes from the engineering frame to the Earth-fixed one
-  across the morph. Heading follows grid north at one end and true north at the
-  other.
+- The rig's reference frame changes from the engineering frame to the
+  Earth-fixed one across the morph. Heading follows grid north at one end and
+  true north at the other.
 
 Design **(author's calls)**:
 
-- **The blend space** is the rigid tangent frame at the design frame's anchor
-  (4b's `RigidPlacement`). At `t = 0`, a draw's position is its design
-  position, in metres. At `t = 1`, it is its Earth-fixed position, carried into
-  that tangent frame rigidly. Both ends are in one Cartesian space, so the
-  blend is a per-vertex mix. When the morph completes, the view re-roots to
+- **The morph is one transition** (section 11.5): one animation drives the rig
+  blend and the placement blend `t`, with the CAD-style controller at the
+  design end and the globe controller at the other.
+- **Its blend reference frame** is the rigid tangent frame at the
+  engineering frame's anchor (4b's `RigidPlacement`). At `t = 0`, a draw's
+  position is its design position, in metres. At `t = 1`, it is its
+  Earth-fixed position, carried into that tangent frame rigidly. Both ends are
+  in one Cartesian space, so the blend is a per-vertex mix. While the morph
+  runs, the tangent frame is the view's root; when it completes, the root is
   ITRF, which is invisible.
 - **Per draw:**
   - design content placed rigidly: the identity at one end and the fitted
@@ -1032,9 +1400,6 @@ Design **(author's calls)**:
 - **During the morph a pick gives no design coordinates,** as in 4b, and the
   HUD says so. In design view, a pick on a fitted tile carries the fit's error
   bound as a term.
-- **The morph is a transition:** one animation drives the rig blend and the
-  placement blend `t`, with the CAD-style controller at the design end and the
-  globe controller at the other.
 - **The design globe gains design view and the morph,** as 5f's testable
   result. Its placement morph (rigid against reprojected) stays.
 
@@ -1052,7 +1417,8 @@ can supply.
 Design:
 
 - Within the snap aperture (CSS pixels), the pass finds vertices, then edges,
-  then surface, with occlusion from the depth it renders.
+  then surface, with occlusion from the depth it renders. It is reached
+  through section 7.10's query interface.
 - **No retained CPU geometry is needed** for client snapping
   (`retainGeometry` stays for other uses). The pass writes enough to place
   the snapped point camera-relative in float32 (author's call: the snapped
@@ -1099,9 +1465,10 @@ d²/8R at its middle: 2 cm for 1 km, 2 m for 10 km.
 The frames spec §8.2 stands: the data, the timeline from 2026-04-02 01:58 UTC
 (after the upper stage separated) to 2026-04-10 23:53 UTC (entry interface),
 the follow and free-flight cameras and their presets, the flight path in a
-chosen frame, readouts in four frames, the communications overlay with every
-quantity marked published, computed or assumed, and the models. 5g builds all
-of it except the effects and the phases outside the data, which are 5h's.
+chosen reference frame, readouts in four reference frames, the communications
+overlay with every quantity marked published, computed or assumed, and the
+models. 5g builds all of it except the effects and the phases outside the
+data, which are 5h's.
 
 ### 14.2 Design
 
@@ -1114,24 +1481,26 @@ of it except the effects and the phases outside the data, which are 5h's.
   810-005 figures and masks; LRO (NAIF id −85) from JPL Horizons, fetched by
   setup and self-hosted as an excerpt; the archived DSN Now readings (plan 3's
   22 rows). Cesium World Terrain, imagery and Cesium Moon stream from ion with
-  the user's token.
+  the user's token. The example declares Cesium Moon, which loads only when the
+  camera nears the Moon (section 10.4).
 - **The hypothetical lunar south-pole antenna** in its own site grid (IAU 2015
   south polar stereographic, as 4a's Moon case), labelled hypothetical. A
   hypothetical relay may be added, labelled the same way.
 - **Cameras:** the presets from §8.2 (departure after the TLI burn, the far-side
   flyby, Earthset over the lunar horizon, the loss of signal behind the Moon,
   closest approach, a DSN dish slewing to track Orion near a handover, and
-  entry), each a rig and a transition. "Follow" is an orbit rig on Orion.
-  Free flight is 5d's free-fly.
+  entry), each a rig (5b's presets where they fit) and a transition. "Follow"
+  is an orbit rig on Orion. Free flight is 5d's free-fly.
 - **The flight path,** sampled as a bulk operation (5b), drawn in a chosen
-  frame. **The "figure-eight" needs the Earth–Moon rotating frame** **(author's
-  call):** the frames spec says "the Earth's: the figure-eight", but in GCRF
-  the path is a loop, not a figure-eight. The figure-eight shows in an
-  Earth-centred frame with x toward the Moon and the Moon's orbit in the xy
-  plane, which is a two-vector frame (5b). The path offers GCRF, ITRF, MOON_ME
-  and that rotating frame.
+  reference frame. **The "figure-eight" needs the Earth–Moon rotating frame**
+  **(author's call):** the frames spec says "the Earth's: the figure-eight",
+  but in GCRF the path is a loop, not a figure-eight. The figure-eight shows in
+  an Earth-centred reference frame with x toward the Moon and the Moon's orbit
+  in the xy plane, which is a two-vector frame (5b). The path offers GCRF,
+  ITRF, MOON_ME and that rotating frame.
 - **Readouts** for Orion and a picked point in ITRF, MOON_ME, GCRF and a
-  Sun-centred frame (ICRF axes at the Sun), each with its accuracy.
+  Sun-centred reference frame (ICRF axes at the Sun), each with its accuracy.
+  The time shows in UTC, with mission elapsed time beside it (section 9.6).
 - **The communications overlay,** as §8.2 lists it, on `measure`: the DSN
   links while they exist, range, light time, range rate, Doppler at 2216.5 MHz,
   free-space path loss, and received power, G/T, C/N0, Eb/N0 and margin from
@@ -1205,14 +1574,14 @@ interfaces"):
 - Two outputs: a map of today's surface, and proposed moves.
 - **Promote** what examples had to build that every app will need: the accuracy
   types and their composition, `branchPath` and the tree model, app-defined
-  frames with their accuracy, point placement for labels and markers, camera
-  rigs and orbit controls, the stale-answer and generation patterns around
-  async work.
+  reference frames with their accuracy, point placement for labels and
+  markers, camera rigs and orbit controls, the stale-answer and generation
+  patterns around async work.
 - **Demote** what is exported only because an example reaches into it, or
   exposes internals.
 - **Shape:** sync against async, `AbortSignal` wherever work can be cancelled,
   `dispose` lifetimes, events or subscriptions against polling, units and
-  frames named in types, and errors that say what to do.
+  reference frames named in types, and errors that say what to do.
 - **Stability tiers:** which parts are stable and which experimental, how that
   is marked, and what examples may import. Bundle size and tree-shaking follow
   from the split.
@@ -1221,6 +1590,10 @@ interfaces"):
   the frame tree; the module provides the tools and their UI. A host
   application can use it or bring its own."
 - **Snapping** keeps its client/server split.
+- **The camera chain's layers** (section 7.2): each layer's surface is
+  checked against what it may know. The renderer and the scene core name no
+  reference frame, the animation core no `Instant`, and the application no
+  render root.
 
 Candidates already recorded: `LEVEL_ZERO_ERROR`; `castTerrainRay` and five
 terrain tile types; production modules exporting test-only helpers;
@@ -1237,6 +1610,8 @@ Design **(author's calls)**:
 - **Tiers are TSDoc tags** (`@stable`, `@experimental`, `@internal`), with
   `@internal` stripped from the published types. Examples may import
   `@stable` and `@experimental`, never `@internal`.
+- **The WebGPU seams are audited** (section 7.10): every seam, its bypass
+  test, and the seams still missing, as a list for the owner.
 - **5i proposes, the owner approves, and then 5i moves.** Each move lists what
   it breaks among the examples and the bench. The measurement tool module's
   seam is designed and its entry point made in 5i. Its tools and their UI are
@@ -1253,7 +1628,8 @@ mode are candidates to add to that list **(author's call)**.
 
 ## 16. Carried-forward items, by sub-plan
 
-Every "Plan 5" item in §13.14's carried-forward lists and results notes:
+Every "Plan 5" item in §13.14's carried-forward lists and results notes, and
+the inputs that arrived after the first draft:
 
 | Item | Sub-plan |
 | --- | --- |
@@ -1269,16 +1645,20 @@ Every "Plan 5" item in §13.14's carried-forward lists and results notes:
 | `readWithProgress` trusts a huge `Content-Length` | 5a |
 | The stress context's `frames` getter is non-enumerable | 5a |
 | Explicit timeouts for slow data tests | 5b |
-| A frame's revision (change) signal | 5a |
+| A reference frame's revision (change) signal | 5a |
 | Composed accuracy beyond 1σ, independent terms | 5b |
 | `accuracyOf` on `pointAccuracy` (both entries) | 5b |
 | TEME and SGP4 ("Plan 5 or a frames add-on") | Add-on after 5a (section 3) |
 | A GPU viewshed | Not plan 5 unless the owner says so (section 17, question 1) |
-| The Moon as a tileset | 5c |
+| The Moon as a tileset | 5c, with its impostor (section 10.4) |
 | A near-field bounded terrain trace (§13.16) | As the GPU viewshed |
 | A per-tile terrain error over open water (§13.16) | As the GPU viewshed |
 | One ENU convention | 5a |
 | The API review of the scenarios plan's additions | 5i |
+| Groundwork for post-V1 WebGPU features | Seams 5a (section 7.10); audit 5i |
+| Terrain clipping under the Earth's anchor | 5a |
+| Terrain clipping's later design (vector-tile boundaries, holes, inverse) | After plan 5 (section 3) |
+| A time-display API for local time per site | 5b (section 9.6) |
 
 ## 17. Questions for the owner
 
@@ -1286,22 +1666,23 @@ A builder check (a fresh reader planning from this document) raised these.
 Only the owner can answer them, and each changes what gets built. Each has
 the default plan 5 follows if the owner says nothing.
 
-1. **Does plan 5 take on any of §13.16's ray-query design?** Plan 5 has
-   frame-aware CPU rays only (section 9.3). At the lunar south pole the Earth
-   sits near the horizon, so the antenna's line of sight runs far over the
-   Moon's terrain, mostly across tiles no view loaded, and will mostly read
-   "can't tell". A real answer needs a bounded terrain load along the ray (the
-   carried "near-field bounded terrain trace"), which is part of §13.16's open
-   design. The GPU viewshed and the per-tile water error wait on the same
-   design. _Why it matters:_ yes adds a sub-plan (the §13.16 brainstorm, then
-   its build) before 5g's line-of-sight readouts. _Default:_ no; 5g says
-   "can't tell" honestly.
-2. **One package with entry points, or separate packages?** Section 7.5
-   chose entry points of `@cesium/next` (`/frames`, `/proj`, `/measure`).
-   _Why it matters:_ it sets 5a's first tasks (the build, the import
-   boundary, where the Viewer sits) and what 5i's surface map treats as a
-   unit; moving to packages after 5a redoes that work. _Default:_ entry
-   points.
+1. **Does plan 5 take on any of §13.16's ray-query design?** Plan 5 has one
+   query seam (section 7.10) with CPU rays behind it (section 9.4). At the
+   lunar south pole the Earth sits near the horizon, so the antenna's line of
+   sight runs far over the Moon's terrain, mostly across tiles no view loaded,
+   and will mostly read "can't tell". A real answer needs a bounded terrain
+   load along the ray (the carried "near-field bounded terrain trace"), which
+   is part of §13.16's open design. The GPU viewshed and the per-tile water
+   error wait on the same design. _Why it matters:_ yes adds a sub-plan (the
+   §13.16 brainstorm, then its build) before 5g's line-of-sight readouts.
+   _Default:_ no; 5g says "can't tell" honestly.
+2. **One package with entry points, or separate packages?** Section 7.7
+   chose entry points of `@cesium/next` (`/frames`, `/proj`, `/measure`), with
+   the camera layer and the animation core in the core entry point and the
+   time library in `/frames`. _Why it matters:_ it sets 5a's first tasks (the
+   build, the import boundary, where the Viewer sits) and what 5i's surface map
+   treats as a unit; moving to packages after 5a redoes that work. _Default:_
+   entry points.
 3. **What is the Artemis example's story?** Who it is for first (a viewer
    audience, or space and comms engineers), what the opening shot is, and
    which of §8.2's presets the tour visits. _Why it matters:_ the tour, the
@@ -1324,8 +1705,14 @@ the default plan 5 follows if the owner says nothing.
 
 ## 18. Assumptions and open items
 
-- **Cesium Moon's frame is MOON_ME,** and its heights are taken as published
-  (frames spec §11).
+- **Cesium Moon's reference frame is MOON_ME,** and its heights are taken as
+  published (frames spec §11).
+- **Cesium Moon and the user's ion account** are to be checked before 5c
+  builds the handover: whether Cesium Moon has to be added to the user's ion
+  account (My Assets) first, and what ion's asset endpoint returns when it
+  isn't, so the warning in section 10.4 names the right cause.
+- **The impostor's albedo map** is today's sky map; its source and credit are
+  checked when the impostor gets its own credit (section 10.4).
 - **Orion's comms parameters** are assumed and labelled.
 - **ion's terms** for an open-source demo with a user-supplied token are the
   normal Sandcastle pattern, not confirmed with Cesium.
@@ -1343,14 +1730,23 @@ the default plan 5 follows if the owner says nothing.
 ## 19. Left to the builder
 
 - Exact API names and type shapes throughout, including the anchor, placement,
-  resolver, pick interpreter and coordinate service interfaces.
-- How anchors are implemented, within section 7.3's precision and cost rules.
+  frame resolver, clock, pick interpreter and coordinate service interfaces.
+- The clock interface's shape, within section 7.2 (scene seconds, rate,
+  paused, and a flag for jumps and reverse play), and how the time library's
+  clock maps it to an `Instant`.
+- How anchors are implemented, within section 7.4's precision and cost rules.
+- Where a rig's position reference frame puts its origin when the anchor is
+  not that reference frame's own origin, within the precision rule.
 - The polynomial order and tile fit for the fitted operation, within a stated
   error bound.
+- The impostor's thresholds: its geometric error per body, the error bias
+  default, and the Viewer option's names (section 10.4).
 - The animation core's internals, and the spring's parameterization.
-- The free-fly mapping, speeds and hand-over height.
-- The CAD preset's details beyond section 11.5.
+- The free-fly mapping, speeds, hand-over height, and where free flight
+  re-attaches between bodies.
+- The CAD preset's details beyond section 11.4.
 - The sky's compositing shader structure, within the physical rule.
+- The time formatter's API shape and the zone lookup interface (section 9.6).
 - The Artemis example's layout, timeline design and preset framing, after the
   owner's story and a design pass.
 - Shader techniques for plumes and plasma, within the physical facts.
