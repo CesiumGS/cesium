@@ -7,7 +7,10 @@
 // a stubbed `fetch` (synthetic packs, TDB -200 s to 200 s around J2000, and
 // an EOP table that ends in January 2000).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadFrameData } from "../src/ephemeris/loadFrameData.ts";
+import {
+  loadFrameData,
+  type FrameData,
+} from "../src/ephemeris/loadFrameData.ts";
 import { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { createSkyState, skyState, type SkyState } from "../src/frames/sky.ts";
@@ -416,6 +419,37 @@ describe("setFrameData keeps what the application set", () => {
     expect(v.frames).toBe(old);
     expect(resolverOf(v)).toBe(before);
     expect(resolverOf(v).binding(site)).toBe(pad);
+  });
+
+  it("a world with another body's anchor (no fixed reference frame in the catalog) still takes new data", async () => {
+    const v = await viewer();
+    const mars = v.world.bodyAnchor({ ...EARTH, name: "Mars", naifId: 499 });
+    const site = v.world.addAnchor("site");
+    resolverOf(v).bindAnchor(site, v.frames.get("MOON_ME"));
+    expect(() => v.setFrameData(syntheticFrameData())).not.toThrow();
+    expect(resolverOf(v).catalog).toBe(v.frames);
+    expect(resolverOf(v).binding(site)).toBe(v.frames.get("MOON_ME"));
+    // Never asked of the new resolver: still unbound.
+    expect(v.world.anchors).toContain(mars);
+  });
+
+  it("malformed data changes nothing: the catalog, the resolver, the warnings", async () => {
+    const v = await viewer({
+      frameData: {
+        ...syntheticFrameData(),
+        warnings: [{ kind: "eopEnded", message: "old" }],
+      },
+    });
+    const old = v.frames;
+    const before = resolverOf(v);
+    const cleared = vi.fn();
+    v.events.on("warningsCleared", cleared);
+    const malformed = { leapSeconds: undefined } as unknown as FrameData;
+    expect(() => v.setFrameData(malformed)).toThrow();
+    expect(v.frames).toBe(old);
+    expect(resolverOf(v)).toBe(before);
+    expect(v.warnings.map((w) => w.kind)).toEqual(["eopEnded"]);
+    expect(cleared).not.toHaveBeenCalled();
   });
 
   it("an application's frame resolver stays", async () => {

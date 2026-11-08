@@ -1077,21 +1077,23 @@ export class Viewer {
     if (this.destroyed) {
       return;
     }
+    // Everything that can throw first: malformed data or a stranded
+    // binding changes nothing.
     const bindings = this.carriedBindings();
+    const { catalog } = Viewer.catalog(data, this.framesAbort);
     this.warningList.length = 0;
     this.showWarnings();
     this.emit("warningsCleared", this);
-    this.useFrames(
-      Viewer.catalog(data, this.framesAbort).catalog,
-      data !== undefined,
-      bindings,
-    );
+    this.useFrames(catalog, data !== undefined, bindings);
   }
 
   /**
    * The anchor bindings of the viewer's own resolver, by reference frame
    * name, for a new catalog; throws, naming them, for anchors bound to a
-   * reference frame that isn't one of the catalog's built-in ones.
+   * reference frame that isn't one of the catalog's built-in ones. A body's
+   * anchor is skipped: the new resolver binds it to its body's fixed
+   * reference frame when it is first used (asking for it here would bind it,
+   * and throw for a body the catalog has no fixed reference frame for).
    */
   private carriedBindings(): Array<[AnchorHandle, CatalogFrameName]> {
     const resolver = this.ownResolver;
@@ -1102,6 +1104,9 @@ export class Viewer {
     const carried: Array<[AnchorHandle, CatalogFrameName]> = [];
     const stranded: string[] = [];
     for (const anchor of this.world.anchors) {
+      if (anchor.body) {
+        continue;
+      }
       const frame: Frame | undefined = resolver.binding(anchor);
       if (!frame) {
         continue;
