@@ -145,8 +145,10 @@ What plan 5 builds on, as of 2026-11-07:
   acceleration structures are built, which level of detail a ray sees). §13.16
   is open, for its own brainstorm. Plan 5 puts every ray and spatial query
   through one query seam (section 7.10) and makes rays go through the frame
-  tree on the CPU paths that exist (section 9.4). Section 17, question 1, asks
-  whether the owner wants more.
+  tree on the CPU paths that exist (section 9.4). The owner, 2026-11-07:
+  deferred, "since that's a whole project unto itself"; for now many ray
+  queries may answer "can't tell", and a later GPU ray-query engine must pass
+  up to the examples "without a ton of rewriting". Section 7.10 says how.
 - **Terrain clipping's later design.** The quick API from the design globe's
   feedback round stays as it is, apart from moving under the Earth's anchor
   (section 7.4). The owner's later design (boundaries from vector tiles,
@@ -692,8 +694,33 @@ nothing today; no design compromises in the current WebGPU path."
   line of sight, height queries, §13.16), naming its reference frame and its
   scene time. Today it runs on CPU structures or compute traversal; a
   hardware ray-query backend drops in behind it later. 5b's rays (section
-  9.4) and 5f's snap pass (section 13.3) go through it. Section 17, question
-  1, asks whether plan 5 designs more of §13.16 than this.
+  9.4) and 5f's snap pass (section 13.3) go through it. The owner deferred the
+  ray-query engine itself (section 3) and asked that it later reach the
+  examples without a rewrite, so the interface already has the shape a GPU
+  engine needs **(author's calls)**:
+  - **Asynchronous.** Every query returns its answer later (a promise, or the
+    next tick's result), even where the CPU answers at once, because a GPU
+    engine reads results back a tick or more later. No caller is written
+    against a synchronous answer.
+  - **Batched.** A query takes many rays at once (a line of sight per station,
+    a viewshed's fan), so a GPU engine can dispatch them together.
+  - **Standing queries.** A caller can register a query that is re-answered
+    each tick, or when a revision on its route goes up, and subscribe to its
+    answers. The Artemis overlay's line of sight is one: it asks the same
+    question every tick.
+  - **Three-way answers with reasons.** Each ray answers clear, blocked or
+    can't tell, with the spans it couldn't decide, why (tiles not loaded,
+    inside the terrain's error, outside the data), and the accuracy of what it
+    did decide. "Can't tell" is a first-class answer, not an error.
+  - **Answers that improve.** An answer carries a revision and says whether a
+    better one may follow (more tiles loading, a finer engine), after 4b's
+    snapping split, where a client snap is provisional until the server's
+    exact one arrives. A later engine sends better answers through the same
+    subscription.
+  - **Only through the interface.** Examples and `measure` reach rays only
+    through it, never `castTerrainRay` or a tileset's retained geometry
+    directly. The bypass test enforces it, so swapping the engine changes the
+    answers, not the callers.
 - **Acceleration-structure lifetime** (build, refit, evict) hangs off tile
   and draw lifetime in streaming through one hook, so a per-tile bottom-level
   structure and a per-tick top-level one have a place to live. 5a adds the
@@ -1525,7 +1552,10 @@ data, which are 5h's.
   near the horizon, so the Moon's terrain decides the line of sight. 5g traces
   it with 5b's CPU rays against Cesium Moon's retained geometry, and says
   "can't tell" inside the terrain's error, as the explorer does for the Earth.
-  Section 17, question 1, asks whether the owner wants more.
+  The owner accepts that it will often say "can't tell" until the ray-query
+  engine exists (section 3). The overlay is a standing query through section
+  7.10's interface and shows the undecided spans as such, so a later engine
+  changes its answers, not the example.
 - **Dish models** (NASA's DSN 34 m and 70 m GLBs) track Orion in azimuth and
   elevation from the apparent directions, through 5d's per-node transforms. If
   a model has no separate azimuth and elevation nodes, setup splits it
@@ -1674,7 +1704,11 @@ A builder check (a fresh reader planning from this document) raised these.
 Only the owner can answer them, and each changes what gets built. Each has
 the default plan 5 follows if the owner says nothing.
 
-1. **Does plan 5 take on any of §13.16's ray-query design?** Plan 5 has one
+1. _Answered (2026-11-07): no, deferred to its own project._ "Can't tell" is
+   acceptable for many of plan 5's ray queries, and a later GPU engine must
+   reach the examples without a rewrite (section 7.10's interface shape).
+   The question was: **does plan 5 take on any of §13.16's ray-query
+   design?** Plan 5 has one
    query seam (section 7.10) with CPU rays behind it (section 9.4). At the
    lunar south pole the Earth sits near the horizon, so the antenna's line of
    sight runs far over the Moon's terrain, mostly across tiles no view loaded,
