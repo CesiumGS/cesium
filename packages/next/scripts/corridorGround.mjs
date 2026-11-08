@@ -15,16 +15,25 @@
 // The fit's own controls (--spacing, --share, --huber, --tunnel, --viaduct,
 // --join) default to what made corridor.ts's profile.
 //
-// The samples are cached in <file> (default: corridor-ground.json in the OS
-// temporary directory), never in the repo: they are USGS's data, and only
-// the fitted profile, which is design data, is committed.
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+// The samples are cached in <file> (default: samples/corridor-ground.json
+// in the frames data directory, ~/.cesium-bench/frames, private to the
+// user; one at the old default in the OS temporary directory is moved
+// there), never in the repo: they are USGS's data, and only the fitted
+// profile, which is design data, is committed. The cache is checked as it
+// is read back (designTiles/sampleCache.mjs).
+import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { framesDataDirectory } from "./frameData.mjs";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
+import {
+  checkedCorridorGround,
+  legacySampleCacheFile,
+  readSampleCache,
+  sampleCacheFile,
+  writeSampleCache,
+} from "./designTiles/sampleCache.mjs";
 import { SERVICE, groundHeights } from "./threeDep.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -98,8 +107,9 @@ async function sample(file, every) {
       every,
       points,
     };
-    writeFileSync(file, JSON.stringify(out));
-    return out;
+    writeSampleCache(file, out);
+    // Read back as a later run would, so this run fits what it keeps.
+    return checkedCorridorGround(out, file);
   } finally {
     await runner.close();
   }
@@ -109,10 +119,14 @@ const every = Number(argument("--every", "500"));
 if (!(every > 0)) {
   throw new RangeError("corridorGround: --every must be a positive length");
 }
-const file = argument("--samples", join(tmpdir(), "corridor-ground.json"));
-const samples = existsSync(file)
-  ? JSON.parse(readFileSync(file, "utf8"))
-  : await sample(file, every);
+const CACHE = "corridor-ground.json";
+const file = argument("--samples", sampleCacheFile(CACHE));
+/** The old default, moved on first use; not for a file given with --samples. */
+const legacy =
+  file === sampleCacheFile(CACHE) ? legacySampleCacheFile(CACHE) : undefined;
+const samples =
+  readSampleCache(file, checkedCorridorGround, legacy) ??
+  (await sample(file, every));
 console.log(
   `${samples.points.length} ground samples, ${samples.sampled}, every ${samples.every} ftUS (${file})`,
 );

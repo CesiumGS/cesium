@@ -19,17 +19,20 @@
 //
 // Contains Environment Agency information © Environment Agency and/or
 // database right 2022, under the Open Government Licence v3.0.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
-import { framesDataDirectory } from "./frameData.mjs";
 import {
   SAMPLED_DATE,
   checkedCache,
+  legacySampleCacheFile,
   lidarHeight,
-} from "./designTiles/poleLineCache.mjs";
+  readSampleCache,
+  sampleCacheFile,
+  writeSampleCache,
+} from "./designTiles/sampleCache.mjs";
 import { poleLinePoles } from "./designTiles/poleLineMesh.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -52,16 +55,12 @@ function argument(name, fallback) {
   const i = process.argv.indexOf(name);
   return i >= 0 && i + 1 < process.argv.length ? process.argv[i + 1] : fallback;
 }
-const file = argument(
-  "--samples",
-  join(framesDataDirectory(), "samples", "pole-line-ground.json"),
-);
-
-/** Writes the cache where only the user can read or change it. */
-function writeCache(cache) {
-  mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
-  writeFileSync(file, JSON.stringify(cache), { mode: 0o600 });
-}
+const CACHE = "pole-line-ground.json";
+const file = argument("--samples", sampleCacheFile(CACHE));
+/** The old default, moved on first use; not for a file given with --samples. */
+const legacy =
+  file === sampleCacheFile(CACHE) ? legacySampleCacheFile(CACHE) : undefined;
+const writeCache = (cache) => writeSampleCache(file, cache);
 
 /** The reply's body as text, refusing more than MAX_BYTES. */
 async function cappedText(response) {
@@ -146,16 +145,13 @@ try {
   const site = PORTFOLIO.find((s) => s.id === "london");
   const { poles } = poleLinePoles(site);
   const key = ([e, n]) => `${e.toFixed(2)},${n.toFixed(2)}`;
-  const cache = existsSync(file)
-    ? {
-        source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN metres`,
-        ...checkedCache(JSON.parse(readFileSync(file, "utf8")), file),
-      }
-    : {
-        source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN metres`,
-        sampled: new Date().toLocaleDateString("en-CA"),
-        cells: {},
-      };
+  const cache = {
+    source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN metres`,
+    ...(readSampleCache(file, checkedCache, legacy) ?? {
+      sampled: new Date().toLocaleDateString("en-CA"),
+      cells: {},
+    }),
+  };
   const missing = poles.filter((p) => !(key(p) in cache.cells));
   let done = 0;
   const queue = [...missing];
