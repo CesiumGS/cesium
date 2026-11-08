@@ -585,13 +585,16 @@ const added = new WeakMap<Globe, Map<string, TerrainRegion>>();
 
 /**
  * Clips `globe`'s terrain inside `polygon`, for `site` (replacing what
- * was clipped for it before). Returns why it couldn't, if it couldn't
- * (the globe refuses some regions, saying why); nothing is clipped then.
+ * was clipped for it before), drawing `opacity` of it there (default 0, a
+ * cut). Never ground, so nothing stands on what the design replaces, whatever
+ * the opacity. Returns why it couldn't, if it couldn't (the globe refuses some
+ * regions, saying why); nothing is clipped then.
  */
 export function syncTerrainClip(
   globe: Globe,
   site: string,
   polygon: readonly ClipVertex[] | undefined,
+  opacity = 0,
 ): string | undefined {
   let mine = added.get(globe);
   if (mine === undefined) {
@@ -607,10 +610,30 @@ export function syncTerrainClip(
     return undefined;
   }
   try {
-    mine.set(site, globe.terrain.addRegion({ polygon }));
+    mine.set(
+      site,
+      globe.terrain.addRegion({ polygon }, { opacity, ground: false }),
+    );
     return undefined;
   } catch (error) {
     return error instanceof Error ? error.message : String(error);
+  }
+}
+
+/**
+ * How much of the terrain shows in the clips whose keys start with `prefix`
+ * (`TerrainRegion.opacity`: a small write, no recompile, so the morph can set
+ * it every tick).
+ */
+export function setTerrainClipOpacity(
+  globe: Globe,
+  prefix: string,
+  opacity: number,
+): void {
+  for (const [key, region] of added.get(globe) ?? []) {
+    if (key.startsWith(prefix)) {
+      region.opacity = opacity;
+    }
   }
 }
 

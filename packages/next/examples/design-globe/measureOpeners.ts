@@ -6,7 +6,7 @@
 //      published NAD83(2011) position, to the nearest drawn centreline point;
 //   3. quieter, two stations 10,000 ft apart: the design distance is the
 //      same in both placements, and only reprojected draws it true.
-// And `drawnAt`, the morph shader's blend on the CPU, so the figures and the
+// And `drawnAt`, the morph's dual position on the CPU, so the figures and the
 // labels follow the morph. Pure: test/designGlobeMeasureTool.test.ts.
 import type { TilesetPlacement } from "../../src/engineering/placement.ts";
 import type { Answers } from "./answers.ts";
@@ -55,8 +55,9 @@ export interface Opener {
 }
 
 /**
- * Where a morph draws an end: the shader's blend (placementPair.ts), rigid's
- * error scaled by `exaggeration`, then mixed toward reprojected by `t`.
+ * Where a morph draws an end: as a dual position at the morph's parameter
+ * (morphDriver.ts `morphParameter`), rigid's error scaled by `exaggeration`,
+ * then mixed toward reprojected by `t`.
  */
 export function drawnAt(
   end: DrawnEnd,

@@ -1,12 +1,15 @@
 // What the design globe loads, and in what order (plan 4b Task 18): each
-// site's tilesets (both placements where it has them, retaining geometry
-// for the morph and the snaps), the generator's answers, then PROJ, the
-// grid catalog and the site's grids, through which `georeferenceTileset`
-// places each tileset from its own declaration. Each step reports a named
+// site's one tileset (retaining geometry for the snaps), the generator's
+// answers, then PROJ, the grid catalog and the site's grids, through which
+// `georeferenceTileset` places the tileset from its own declaration, and the
+// frame gives its second position's placement. Each step reports a named
 // item to the status (page.ts `nextLoading`); a failed step clears its
 // promise, so `retry` runs it again.
 import { georeferenceTileset } from "../../src/engineering/georeferenceTileset.ts";
-import type { TilesetPlacement } from "../../src/engineering/placement.ts";
+import {
+  placeReprojected,
+  type TilesetPlacement,
+} from "../../src/engineering/placement.ts";
 import {
   gridSource,
   loadGrids,
@@ -18,7 +21,6 @@ import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import { loadAnswers, type Answers } from "./answers.ts";
 import {
-  EXAGGERATION,
   GRID_MODELS,
   probeVerdict,
   type LoadEvent,
@@ -26,13 +28,13 @@ import {
 } from "./page.ts";
 import type { SiteView } from "./panel/model.ts";
 import {
-  PlacementPair,
-  type PairLook,
-  type PairOptions,
-} from "./placementPair.ts";
+  SiteDrawings,
+  dualPositionOf,
+  type PlacementLook,
+} from "./siteDrawings.ts";
 
 /** Where the store's design-globe directory is served. */
-export const STORE = "/frames-data/design-globe/";
+export const STORE = "/frames-data/design-globe-dual/";
 export const PROJ_BASE = "/frames-data/proj/";
 export const GRID_BASE = "/proj-grids/";
 /** The one command that writes the store's design-globe data. */
@@ -41,11 +43,11 @@ export const SETUP = "npm run setup -- --skip-build";
 /** What one site has loaded. */
 export interface SiteRuntime {
   readonly entry: SiteEntry;
-  rigid?: Tileset3D;
-  reprojected?: Tileset3D;
+  tileset?: Tileset3D;
   rigidPlacement?: TilesetPlacement;
   reprojectedPlacement?: TilesetPlacement;
-  pair?: PlacementPair;
+  /** How its tileset is drawn, where it carries both placements. */
+  drawings?: SiteDrawings;
   /** The loads under way (cleared on failure, so Retry runs them again). */
   tiles?: Promise<void>;
   /** Its tiles' content failed: Retry reloads its tilesets. */
@@ -71,13 +73,11 @@ export interface LoaderDeps {
   readonly viewer: Viewer;
   readonly scope: DisposableStack;
   readonly signal: AbortSignal;
-  readonly look: PairLook;
+  readonly look: PlacementLook;
   report(event: LoadEvent): void;
   disposed(): boolean;
-  /** A site's pair was made (the morph applies its state to it). */
+  /** A site's drawings were made (the morph applies its state to them). */
   paired(site: SiteRuntime): void;
-  /** A site's whiskers from its pairs, if it gets them that way. */
-  pairOptions(site: SiteRuntime): Pick<PairOptions, "whiskers" | "wake">;
   /** A site's placements are in. */
   placed(site: SiteRuntime, api: ProjApi): void;
   /** Logged without the token (`scrub`). */
@@ -85,7 +85,7 @@ export interface LoaderDeps {
 }
 
 export interface SiteLoader {
-  /** Adds a site's tilesets (both placements where it has them). */
+  /** Adds a site's tileset. */
   loadTiles(site: SiteRuntime): Promise<void>;
   /** The site's grids, each its own item with bytes, then its placements. */
   loadFrame(site: SiteRuntime): Promise<void>;
@@ -131,68 +131,35 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
         label: `${site.entry.name}: tiles`,
         ...siteTag(site),
       });
-      const add = (path: string) =>
-        viewer.addTileset(`${STORE}${path}tileset.json`, {
-          retainGeometry: true,
-        });
       try {
-        const { tilesets } = site.entry;
-        let pair = tilesets.reprojected
-          ? { rigid: tilesets.rigid, reprojected: tilesets.reprojected }
-          : undefined;
-        if (pair === undefined && tilesets.pair !== undefined) {
-          // The scale ladder's pair, when setup has written it (Task 17b):
-          // rigid-only only when the reprojected tileset is missing; a
-          // failing server is an error, with Retry.
-          const twin = await probe(tilesets.pair.reprojected);
-          if (twin.verdict === "ok") {
-            pair = tilesets.pair;
-          } else if (twin.verdict === "error") {
-            throw new Error(
-              `${STORE}${tilesets.pair.reprojected}tileset.json: ${twin.status !== undefined ? `HTTP ${twin.status}` : "no answer"}`,
-            );
-          }
-        }
-        const first = pair?.rigid ?? tilesets.rigid;
-        const found = await probe(first);
+        const path = site.entry.tileset;
+        const found = await probe(path);
         if (found.verdict === "missing") {
-          throw new MissingError(`${STORE}${first}`);
+          throw new MissingError(`${STORE}${path}`);
         }
         if (found.verdict === "error") {
           throw new Error(
-            `${STORE}${first}tileset.json: ${found.status !== undefined ? `HTTP ${found.status}` : "no answer"}`,
+            `${STORE}${path}tileset.json: ${found.status !== undefined ? `HTTP ${found.status}` : "no answer"}`,
           );
         }
-        const [rigid, reprojected] = await Promise.all([
-          add(pair?.rigid ?? tilesets.rigid),
-          pair ? add(pair.reprojected) : undefined,
-        ]);
+        const tileset = await viewer.addTileset(`${STORE}${path}tileset.json`, {
+          retainGeometry: true,
+        });
         if (deps.disposed()) {
-          viewer.remove(rigid);
-          if (reprojected) {
-            viewer.remove(reprojected);
-          }
+          viewer.remove(tileset);
           return;
         }
-        site.rigid = rigid;
-        scope.defer(() => viewer.remove(rigid));
-        if (reprojected !== undefined) {
-          site.reprojected = reprojected;
-          scope.defer(() => viewer.remove(reprojected));
-          // The farthest a vertex moves, in the rigid tiles' model units
-          // (US survey feet for the corridor), at the largest exaggeration:
-          // 40 m of error at most anywhere on the ladder (Task 17b's table).
-          site.pair = new PlacementPair(
+        site.tileset = tileset;
+        scope.defer(() => viewer.remove(tileset));
+        const dual = dualPositionOf(tileset);
+        if (dual !== undefined) {
+          site.drawings = new SiteDrawings(
             viewer.world,
-            rigid,
-            reprojected,
+            tileset,
+            dual,
             deps.look,
-            {
-              maxDisplacement: (40 * EXAGGERATION) / 0.3,
-              ...deps.pairOptions(site),
-            },
           );
-          scope.defer(() => site.pair?.dispose());
+          scope.defer(() => site.drawings?.dispose());
           deps.paired(site);
         }
         watchTiles(site, id);
@@ -237,11 +204,12 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
       ) {
         return;
       }
-      const sets = [site.rigid, site.reprojected].filter(
-        (t): t is Tileset3D => t !== undefined,
-      );
-      const failed = sets.flatMap((t) =>
-        [...t.warnings].filter((w) => w.startsWith("content failed")),
+      const tileset = site.tileset;
+      if (tileset === undefined) {
+        return;
+      }
+      const failed = [...tileset.warnings].filter((w) =>
+        w.startsWith("content failed"),
       );
       if (failed.length > 0) {
         site.tilesFailed = true;
@@ -257,17 +225,13 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
         setTimeout(step, 1000);
         return;
       }
-      const received = sets.reduce((n, t) => n + t.stats.bytesReceived, 0);
-      const settled = sets.every(
-        (t) => t.firstContentAt !== undefined && t.idle,
-      );
-      if (settled) {
-        const tiles = sets.reduce((n, t) => n + t.stats.loaded, 0);
+      const received = tileset.stats.bytesReceived;
+      if (tileset.firstContentAt !== undefined && tileset.idle) {
         report({ type: "progress", id, file: "tiles", received });
         report({
           type: "ready",
           id,
-          detail: `${tiles} tiles in view${sets.length > 1 ? ", both placements" : ""}`,
+          detail: `${tileset.stats.loaded} tiles in view${site.drawings !== undefined ? ", both placements" : ""}`,
         });
         ready = true;
         setTimeout(step, 1000);
@@ -408,23 +372,24 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
           ...siteTag(site),
         });
         try {
-          const options = { proj: api, grids: source };
-          const placed = await Promise.all(
-            [site.rigid, site.reprojected].map((t) =>
-              t ? georeferenceTileset(t, options) : undefined,
-            ),
-          );
-          for (const p of placed) {
-            if (p?.mode === "rigid") {
-              site.rigidPlacement = p;
-            } else if (p?.mode === "reprojected") {
-              site.reprojectedPlacement = p;
+          const placed =
+            site.tileset &&
+            (await georeferenceTileset(site.tileset, {
+              proj: api,
+              grids: source,
+            }));
+          if (placed?.mode === "rigid") {
+            site.rigidPlacement = placed;
+            if (site.drawings !== undefined) {
+              // The second position is the frame's image of each design point.
+              site.reprojectedPlacement = placeReprojected(placed.frame);
+              site.drawings.setReprojectedPlacement(site.reprojectedPlacement);
             }
           }
           report({
             type: "ready",
             id: placeId,
-            detail: "placed from each tileset's own declaration",
+            detail: "placed from its tileset's own declaration",
           });
         } catch (error) {
           report({
@@ -490,7 +455,7 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
     return answers;
   }
 
-  /** Takes a site's tilesets out, so its tiles load again from the start. */
+  /** Takes a site's tileset out, so its tiles load again from the start. */
   function unload(site: SiteRuntime): void {
     // Its old watcher stops (a new one starts with the new tilesets).
     site.watching = (site.watching ?? 0) + 1;
@@ -500,15 +465,12 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
     ]) {
       report({ type: "clear", id });
     }
-    site.pair?.dispose();
-    for (const t of [site.rigid, site.reprojected]) {
-      if (t !== undefined) {
-        viewer.remove(t);
-      }
+    site.drawings?.dispose();
+    if (site.tileset !== undefined) {
+      viewer.remove(site.tileset);
     }
-    delete site.pair;
-    delete site.rigid;
-    delete site.reprojected;
+    delete site.drawings;
+    delete site.tileset;
     delete site.rigidPlacement;
     delete site.reprojectedPlacement;
     delete site.tiles;

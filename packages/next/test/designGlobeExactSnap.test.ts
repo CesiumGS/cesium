@@ -408,6 +408,8 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
       placement,
       retainGeometry: true,
       warnings: new Set<string>(),
+      itemOfDraw: () => undefined,
+      sourceOfDraw: () => undefined,
       tileOfDraw: (d: DrawHandle) =>
         d.index === DRAW.index && d.generation === DRAW.generation
           ? tile

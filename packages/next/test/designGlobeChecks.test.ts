@@ -39,7 +39,7 @@ function answersJson(): Record<string, unknown> {
     distanceFromAnchor: 12_929.4,
   });
   return {
-    version: 2,
+    version: 3,
     instant: "2026-01-01T00:00:00.000Z",
     anchorStation: 92_021,
     alignment: "Mainline",
@@ -128,6 +128,7 @@ function answersJson(): Record<string, unknown> {
           }),
         ),
         tiles: { count: 61, levels: 4, vertices: 41_000, leafError: 0.001 },
+        whiskers: [0, 0, 0],
       },
     },
   };

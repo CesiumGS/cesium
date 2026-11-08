@@ -93,7 +93,7 @@ export interface Cursor {
 
 /** The placement a site draws its own tiles in now. */
 export function drawnPlacement(site: SiteRuntime, t: number): Placement {
-  return site.pair === undefined || t < 0.5 ? "rigid" : "reprojected";
+  return site.drawings === undefined || t < 0.5 ? "rigid" : "reprojected";
 }
 
 /**
@@ -108,12 +108,11 @@ export function hitRefusal(
   state: PickState,
 ): { readonly refused?: string; readonly drawn: Placement } {
   const drawn = drawnPlacement(site, state.t);
-  const drawnTileset = drawn === "rigid" ? site.rigid : site.reprojected;
   const refused = designRefusal({
     mode: drawn,
-    morphing: site.pair !== undefined && state.morphing,
-    exaggeration: site.pair !== undefined ? state.exaggeration : 1,
-    hitIsDrawn: tileset === drawnTileset,
+    morphing: site.drawings !== undefined && state.morphing,
+    exaggeration: site.drawings !== undefined ? state.exaggeration : 1,
+    hitIsDrawn: tileset === site.tileset,
   });
   return refused === undefined ? { drawn } : { refused, drawn };
 }
@@ -254,15 +253,13 @@ export function createCursor(deps: CursorDeps): Cursor {
 
   const pickable = () =>
     [...deps.sites()].flatMap((s) =>
-      [s.rigid, s.reprojected].filter((t): t is Tileset3D => t !== undefined),
+      s.tileset !== undefined ? [s.tileset] : [],
     );
 
   async function pickAt(x: number, y: number): Promise<PagePick> {
     const hit = await pickDesign(viewer.view, x, y, pickable());
     const site = [...deps.sites()].find(
-      (s) =>
-        hit?.tileset !== undefined &&
-        (s.rigid === hit.tileset || s.reprojected === hit.tileset),
+      (s) => hit?.tileset !== undefined && s.tileset === hit.tileset,
     );
     return judgePick(hit, site, st());
   }
@@ -346,9 +343,7 @@ export function createCursor(deps: CursorDeps): Cursor {
               : {
                   text:
                     site === undefined
-                      ? /ghost|deck/.test(hit.feature?.name ?? "")
-                        ? "That's the other placement's ghost: point at the solid model for design coordinates."
-                        : "No design model here."
+                      ? "No design model here."
                       : "This site's frame is still loading: no design coordinates yet.",
                   muted: true,
                 };

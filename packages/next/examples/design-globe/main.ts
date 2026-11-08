@@ -5,12 +5,12 @@
 // each in its own country's CRS and height system.
 //
 // `run` returns its panel at once and loads afterwards (siteLoader.ts): the
-// corridor's two tilesets draw, and morph, before PROJ is in; once each
+// corridor's tileset draws, and morphs, before PROJ is in; once each
 // site's placements are in, its facts (siteFacts.ts) and, for the corridor,
 // the whiskers, the anchor ring and the sag chart appear. The parts:
 //   - siteLoader.ts: tilesets, answers, PROJ, the catalog, grids, placements;
 //   - morphDriver.ts: the morph's clock (plan 5's animation core replaces it);
-//   - placementPair.ts, overlays.ts: what the placements draw;
+//   - siteDrawings.ts, overlays.ts: what the placements draw;
 //   - cursor.ts: picks and the HUD readout (`pickAt`, the measure tool's seam);
 //   - measureTool.ts, measureOverlay.ts: the measure tool, the openers and
 //     their lines on the globe (Task 19);
@@ -43,7 +43,6 @@ import {
   type SagSample,
 } from "./overlays.ts";
 import {
-  EXAGGERATION,
   SITES,
   errorText,
   formatParams,
@@ -59,7 +58,7 @@ import type { MeasureActions } from "./panel/Measure.tsx";
 import { Panel } from "./panel/Panel.tsx";
 import type { LiveValues, PanelActions, PanelModel } from "./panel/model.ts";
 import { buildPanelModel, type SiteSnapshot } from "./panelModel.ts";
-import { reducedTransparency, type PairLook } from "./placementPair.ts";
+import { reducedTransparency, type PlacementLook } from "./siteDrawings.ts";
 import {
   CameraMoves,
   createShots,
@@ -77,6 +76,7 @@ import { EARTHWORK, daylightBreaks, daylightLine } from "./sideSlopes.ts";
 import {
   CORRIDOR_CLIP_PLANS,
   clearTerrainClips,
+  setTerrainClipOpacity,
   daylightPieces,
   daylightRegion,
   horizontalApart,
@@ -112,15 +112,11 @@ const TOUR_LIFT = 0.2;
 /** The placements' colours (DESIGN.md "On the globe"): orange rigid, cyan true. */
 export const RIGID_HEX = "#fc9252";
 export const REPROJECTED_HEX = "#3bcddc";
-const LOOK: PairLook = {
+const LOOK: PlacementLook = {
   rigidTint: hexLinear("#ffc8a0"),
   reprojectedTint: hexLinear("#a8eef4"),
-  rigidLine: hexLinear(RIGID_HEX),
-  reprojectedLine: hexLinear(REPROJECTED_HEX),
-  // The generator's one material (scripts/designTiles/gltf.mjs).
-  // Lifted from the generator's 0.45 grey, so the true road reads over the
-  // fainter rigid ghost (Task 20 fix 1, I4).
-  baseColor: [0.58, 0.58, 0.56, 1],
+  rigidGhost: hexLinear(RIGID_HEX),
+  reprojectedGhost: hexLinear(REPROJECTED_HEX),
 };
 
 export function run(context: ExampleContext): ExampleRun {
@@ -268,7 +264,7 @@ export function run(context: ExampleContext): ExampleRun {
         t: morph.t(),
         morphing: morph.morphing,
         exaggeration: morph.exaggeration,
-        selectedPaired: selected.pair !== undefined,
+        selectedPaired: selected.drawings !== undefined,
       };
     },
     pickAt: (x, y) => cursor.pickAt(x, y),
@@ -301,12 +297,65 @@ export function run(context: ExampleContext): ExampleRun {
   });
   scope.defer(() => tool.dispose());
 
+  /**
+   * The corridor's ground follows the morph (plan 5a Task 20): cut for the true
+   * slopes at the reprojected end, fading back as the geometry leaves, whole
+   * at the rigid end, which stands clear of it. The same regions throughout,
+   * with no remove and add again.
+   */
+  const corridorGround: MorphTarget = {
+    setState: ({ t }) => {
+      const globe = viewer.globe;
+      if (globe !== undefined && !globe.isDestroyed()) {
+        setTerrainClipOpacity(globe, `${corridor.entry.id}#`, 1 - t);
+      }
+    },
+  };
+  /** Each ladder site's whiskers, from its own vertices (the generator's). */
+  const siteWhiskers = new Map<SiteRuntime, Whiskers>();
+  scope.defer(() => {
+    for (const w of siteWhiskers.values()) {
+      w.dispose();
+    }
+  });
+  function buildSiteWhiskers(site: SiteRuntime): void {
+    const points = answers?.sites[site.entry.id]?.whiskers;
+    const { rigidPlacement: rigid, reprojectedPlacement: truth } = site;
+    if (
+      points === undefined ||
+      points.length === 0 ||
+      rigid === undefined ||
+      truth === undefined ||
+      siteWhiskers.has(site)
+    ) {
+      return;
+    }
+    const placed: SagSample[] = [];
+    for (let i = 0; i + 2 < points.length; i += 3) {
+      const design = Float64Array.from(points.slice(i, i + 3));
+      const r = rigid.displayed(design);
+      const p = truth.displayed(design);
+      placed.push({
+        station: i / 3,
+        design,
+        rigid: r,
+        truth: p,
+        error: Math.hypot(r[0]! - p[0]!, r[1]! - p[1]!, r[2]! - p[2]!),
+      });
+    }
+    siteWhiskers.set(site, new Whiskers(viewer.world, placed));
+    morph.apply();
+  }
+
   const morph = new MorphDriver(
     {
       targets: () =>
         [...sites.values()]
-          .map((s): MorphTarget | undefined => s.pair)
-          .concat(whiskers, tool.target)
+          .flatMap((s): (MorphTarget | undefined)[] => [
+            s.drawings,
+            siteWhiskers.get(s),
+          ])
+          .concat(whiskers, corridorGround, tool.target)
           .filter((x): x is MorphTarget => x !== undefined),
       requestRender: () => viewer.engine.requestRender(),
       changed: () => {
@@ -328,7 +377,7 @@ export function run(context: ExampleContext): ExampleRun {
     // As the selected site is drawn: a one-tileset site is rigid, unmoving.
     state: () => {
       const selected = sites.get(params.site) ?? corridor;
-      const paired = selected.pair !== undefined;
+      const paired = selected.drawings !== undefined;
       return {
         mode: drawnPlacement(selected, morph.t()),
         t: morph.t(),
@@ -379,21 +428,6 @@ export function run(context: ExampleContext): ExampleRun {
     report,
     disposed: () => disposed,
     paired: () => morph.apply(),
-    // Every paired site but the corridor (whose whiskers stand on its
-    // alignment) gets whiskers from its own vertices: about twelve across
-    // it, coloured against its largest rigid error.
-    pairOptions: (site) =>
-      site === corridor
-        ? { wake: () => frames.wake() }
-        : {
-            wake: () => frames.wake(),
-            whiskers: {
-              spacing: Math.max(2, site.entry.extent / 12),
-              scale:
-                answers?.sites[site.entry.id]?.displayError ??
-                Math.max(1e-3, (site.entry.extent / 2) ** 2 / (2 * 6_371_000)),
-            },
-          },
     placed: (site, api) => {
       placedApi.set(site, api);
       if (
@@ -410,6 +444,7 @@ export function run(context: ExampleContext): ExampleRun {
         buildCorridorEvidence(site);
       }
       computeFacts(site);
+      buildSiteWhiskers(site);
       clipTerrain(site);
       // The openers and exact snapping (the corridor), or a linked measurement.
       tool.placementsChanged();
@@ -459,7 +494,8 @@ export function run(context: ExampleContext): ExampleRun {
       // the rigid copy (it would leave a gap beside the true slopes): it
       // moves sideways by the scale factor's share, but rises off the
       // ground faster, by the curvature's d²/2R (2.3 m sideways and 38.1 m
-      // up at the far end), so the ground doesn't come through it.
+      // up at the far end), so the ground doesn't come through it. At the
+      // rigid end the ground comes back whole (`corridorGround`).
       // In a few regions (terrainClips.ts `CORRIDOR_CLIP_PLANS`), each
       // keyed by its piece; the first plan the globe takes whole.
       const key = (k: number) => `${site.entry.id}#${k}`;
@@ -486,7 +522,7 @@ export function run(context: ExampleContext): ExampleRun {
             plan.vertices,
             ranges[k],
           );
-          why = syncTerrainClip(globe, key(k), region.polygon);
+          why = syncTerrainClip(globe, key(k), region.polygon, 1 - morph.t());
         }
         if (why === undefined) {
           syncUndergroundTerrain();
@@ -645,7 +681,7 @@ export function run(context: ExampleContext): ExampleRun {
       return;
     }
     whiskers?.dispose();
-    whiskers = new Whiskers(viewer.world, samples, 40 * EXAGGERATION + 1);
+    whiskers = new Whiskers(viewer.world, samples);
     const station = answers?.anchorStation ?? ANCHOR_STATION;
     const [e, n] = alignment.pointAt(station, 0);
     anchorPoint = site.reprojectedPlacement.displayed([
@@ -679,12 +715,6 @@ export function run(context: ExampleContext): ExampleRun {
     viewer.engine.onTick(() => {
       if (disposed) {
         return false;
-      }
-      for (const site of sites.values()) {
-        site.pair?.sweep();
-        if (site.pair?.takeChanged()) {
-          viewer.engine.requestRender();
-        }
       }
       return false;
     }),
@@ -755,9 +785,9 @@ export function run(context: ExampleContext): ExampleRun {
           id,
           {
             entry: s.entry,
-            paired: s.pair !== undefined,
+            paired: s.drawings !== undefined,
             started: s.tiles !== undefined || s.frame !== undefined,
-            drawn: s.rigid !== undefined,
+            drawn: s.tileset !== undefined,
             ...(s.view && { view: s.view }),
           },
         ]),
@@ -831,7 +861,7 @@ export function run(context: ExampleContext): ExampleRun {
     siteClock(site.entry);
     // In the site's daylight at once (again on arrival, shots.ts `flyLit`),
     // whatever time it was where the camera was.
-    const known = site.rigid?.root.volume.sphere.center;
+    const known = site.tileset?.root.volume.sphere.center;
     if (fly && known !== undefined) {
       shots.daylight(known);
     }
@@ -841,7 +871,7 @@ export function run(context: ExampleContext): ExampleRun {
     void loader
       .loadTiles(site)
       .then(() => {
-        const t = site.rigid;
+        const t = site.tileset;
         if (fly && t !== undefined && params.site === id && !disposed) {
           shots.flyToTileset(t, id === "corridor", answers?.sites[id]);
         }
@@ -1185,6 +1215,9 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       answers = a;
+      for (const site of sites.values()) {
+        buildSiteWhiskers(site);
+      }
       tool.answersChanged();
       tour?.flush();
       // Ladder sites placed before the answers: their story is the answers'.

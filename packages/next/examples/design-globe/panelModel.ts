@@ -60,7 +60,7 @@ export interface PageSnapshot {
   readonly evidence: boolean;
 }
 
-/** Under this rigid error everywhere, a model's ghost isn't drawn (placementPair.ts fades it below 5 cm). */
+/** Under this rigid error everywhere, a model's ghost isn't drawn (siteDrawings.ts fades it below 5 cm). */
 const GHOST_CLEAR_M = 0.05;
 
 /** A site's design unit symbol, from its CRS (US survey feet for California zone 3). */
@@ -104,10 +104,10 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
   const corridor = s.sites.get("corridor")!;
   const selected = s.sites.get(s.params.site) ?? corridor;
   const paired = selected.paired;
-  const twoTilesets =
-    paired || selected.entry.tilesets.reprojected !== undefined;
-  // A site with one tileset is drawn rigid, whatever the page's mode.
-  const solid: Placement = !twoTilesets
+  // (Once drawn, its tileset has said which it is.)
+  const twoPlacements = paired || (!selected.drawn && selected.entry.dual);
+  // A site with one placement is drawn rigid, whatever the page's mode.
+  const solid: Placement = !twoPlacements
     ? "rigid"
     : s.t >= 0.5
       ? "reprojected"
@@ -158,20 +158,15 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
       }),
       selected: entry.id === s.params.site,
       busy: site.started && site.view === undefined,
-      // "Rigid only" once its tiles say so: a ladder site's pair is probed
-      // when it loads.
-      paired:
-        site.paired ||
-        (!site.drawn &&
-          (entry.tilesets.reprojected !== undefined ||
-            entry.tilesets.pair !== undefined)),
+      // "Rigid only" once its tileset says so.
+      paired: site.paired || (!site.drawn && entry.dual),
       ...(entry.fallback && { fallback: `${entry.fallback} fallback` }),
       ...(site.view?.frame && { frame: site.view.frame }),
       ...(site.view?.story && { story: site.view.story }),
     };
   });
   const anchor = stationShort(s.anchorStation ?? ANCHOR_STATION);
-  const solidText = !twoTilesets
+  const solidText = !twoPlacements
     ? "Rigid: this site's one tileset"
     : solid === "rigid"
       ? isCorridor
@@ -180,7 +175,7 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
       : `Reprojected through ${selected.entry.codes}`;
   return {
     loading: s.loading,
-    mode: twoTilesets ? s.params.mode : "rigid",
+    mode: twoPlacements ? s.params.mode : "rigid",
     morphing: s.morphing,
     // Off while there is no other placement to show or exaggerate.
     ghost: paired && s.ghost,
@@ -188,7 +183,7 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
     exaggeration: EXAGGERATION,
     switchable: paired,
     ...(!paired && {
-      switchNote: twoTilesets
+      switchNote: twoPlacements
         ? "The switch works once both placements' tiles are in."
         : selected.entry.frame.site !== undefined
           ? `Drawn rigid: one tileset, on a site grid (${siteGridText(selected.entry.frame.site, unitOf(selected.entry))}). Rigid by design: its rigid error is in its story below.`
@@ -228,7 +223,7 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
               : "Rigid, where one transform puts it"
           } (ghost${
             // The ghost is drawn only where it stands clear of the solid
-            // (placementPair.ts, 5 to 50 cm): on a model whose rigid
+            // (siteDrawings.ts, 5 to 50 cm): on a model whose rigid
             // error is under that everywhere, nothing is drawn (UX review P4).
             !isCorridor &&
             !s.exaggerate &&

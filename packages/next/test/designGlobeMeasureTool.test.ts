@@ -225,7 +225,7 @@ function answers(): Answers {
   });
   const markerPoint = point(170_000, 6_160_821.674872547, 910);
   return {
-    version: 2,
+    version: 3,
     instant: "2026-01-01T00:00:00.000Z",
     anchorStation: 92_021,
     alignment: "Mainline",

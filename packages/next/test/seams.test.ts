@@ -341,10 +341,8 @@ export function bufferBinds(text: string): string[] {
  * flagged by the other rules.
  */
 const RETAINED_NOT_FOR_RAYS: Record<string, string> = {
-  "examples/design-globe/placementPair.ts":
-    "the rigid and reprojected tiles' vertices, paired into the morph's meshes",
   "examples/design-globe/siteLoader.ts":
-    "keeps both placements' geometry for placementPair's morph",
+    "keeps its tiles' geometry for the measure tool's snaps",
 };
 
 describe("seam detectors flag bypasses", () => {

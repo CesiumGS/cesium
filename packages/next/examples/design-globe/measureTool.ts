@@ -246,7 +246,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
 
   // --------------------------------------------------- the placements
   const corridor = () => deps.site("corridor");
-  /** The corridor's tilesets and placements the openers were built from. */
+  /** The corridor's tileset and placements the openers were built from. */
   let corridorSeen: readonly unknown[] = [];
   /**
    * A site's heights as the frame names them, with the model they're read
@@ -271,7 +271,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
 
   function pickable(): Tileset3D[] {
     return [...deps.sites()].flatMap((s) =>
-      [s.rigid, s.reprojected].filter((t): t is Tileset3D => t !== undefined),
+      s.tileset !== undefined ? [s.tileset] : [],
     );
   }
   function clientService(): ClientSnapService {
@@ -285,16 +285,14 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     }
     return client.service;
   }
-  /** One `ExactSnapService` per corridor tileset, routed by the request's. */
+  /** The corridor's `ExactSnapService`, routed by the request's tileset. */
   const server: SnapService = routeByTileset(exact);
 
   function siteOf(tileset: Tileset3D | undefined): SiteRuntime | undefined {
     if (tileset === undefined) {
       return undefined;
     }
-    return [...deps.sites()].find(
-      (s) => s.rigid === tileset || s.reprojected === tileset,
-    );
+    return [...deps.sites()].find((s) => s.tileset === tileset);
   }
 
   /** Where each placement of `site` draws `design` (a one-tileset site: rigid in both). */
@@ -308,7 +306,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     }
     const r = rigid.displayed(design);
     const p =
-      site.pair !== undefined && site.reprojectedPlacement !== undefined
+      site.drawings !== undefined && site.reprojectedPlacement !== undefined
         ? site.reprojectedPlacement.displayed(design)
         : r;
     return { rigid: r, reprojected: p };
@@ -534,13 +532,13 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     }
     const site = siteOf(result.tileset);
     if (site === undefined) {
-      return "No design model there: the ghost and the ground aren't measurable.";
+      return "No design model there: the ground isn't measurable.";
     }
     const judged = hitRefusal(site, result.tileset, deps.pickState());
     if (judged.refused !== undefined) {
       return judged.refused;
     }
-    const placement = result.tileset?.placement;
+    const placement = result.item?.designPlacement;
     if (result.design === undefined || placement === undefined) {
       return "This site's frame is still loading: no design coordinates yet.";
     }
@@ -905,7 +903,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
           ? userResult(
               measured,
               s,
-              site?.pair !== undefined,
+              site?.drawings !== undefined,
               site && frameOf(site),
               datumOf(site),
             )
@@ -939,18 +937,16 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       // Only the corridor's placements make the openers and exact snapping.
       const site = corridor();
       const now = [
-        site?.rigid,
-        site?.reprojected,
+        site?.tileset,
         site?.rigidPlacement,
         site?.reprojectedPlacement,
       ];
       if (now.some((x, i) => x !== corridorSeen[i])) {
         corridorSeen = now;
         exact.clear();
-        for (const t of [site?.rigid, site?.reprojected]) {
-          if (t !== undefined && t.placement !== undefined) {
-            exact.set(t, new ExactSnapService(t, deps.alignment));
-          }
+        const t = site?.tileset;
+        if (t !== undefined && t.placement !== undefined) {
+          exact.set(t, new ExactSnapService(t, deps.alignment));
         }
         buildOpeners();
       }

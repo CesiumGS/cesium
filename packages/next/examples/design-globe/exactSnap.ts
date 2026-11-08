@@ -130,7 +130,12 @@ export class ExactSnapService implements SnapService {
     signal?: AbortSignal,
   ): Promise<SnapResult | undefined> {
     signal?.throwIfAborted();
-    const placement = engineeringPlacement(this.tileset.placement);
+    // As the item hit draws it: its answer must be where that one is.
+    const placement = engineeringPlacement(
+      request.item !== undefined
+        ? request.item.designPlacement
+        : this.tileset.placement,
+    );
     if (request.tileset !== this.tileset || placement === undefined) {
       return undefined;
     }

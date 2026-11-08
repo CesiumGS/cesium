@@ -1,7 +1,7 @@
 // The placement morph's driver (plan 4b Task 18): the one place that turns
 // the wall clock into the morph's `t` and hands it, with the exaggeration
-// and the ghost, to everything that draws the placements (each site's pair,
-// the whiskers). Its frames are the engine's (frameDriver.ts `animate`): each
+// and the ghost, to everything that draws the placements (each site's
+// drawings, the whiskers). Its frames are the engine's (frameDriver.ts `animate`): each
 // step sets the state before the engine renders, busy while the morph runs,
 // and `t()` is the value last drawn, which the labels placed after the
 // render read. Plan 5's animation core replaces this module: its tween is
@@ -14,11 +14,36 @@ import {
   type MorphTween,
   type Placement,
 } from "./page.ts";
-import type { PairState } from "./placementPair.ts";
+
+/** What is drawn of the placements. */
+export interface PlacementState {
+  /** The morph: 0 rigid, 1 reprojected. */
+  readonly t: number;
+  /** Between placements (a morph under way). */
+  readonly morphing: boolean;
+  /** Each rigid error drawn this many times its size (1: true scale). */
+  readonly exaggeration: number;
+  /** Draw the other placement's ghost. */
+  readonly ghost: boolean;
+}
+
+/**
+ * A dual position's parameter (0 the rigid position, 1 the reprojected one)
+ * for morph `t` with each rigid error drawn `exaggeration` times its size:
+ * 1 − k(1 − t). Past 0 it extrapolates, which is what stretches the error.
+ */
+export function morphParameter(t: number, exaggeration: number): number {
+  return 1 - exaggeration * (1 - t);
+}
+
+/** The rigid end's parameter at `exaggeration` (`morphParameter` at t = 0). */
+export function rigidEndParameter(exaggeration: number): number {
+  return 1 - exaggeration;
+}
 
 /** Something drawn in both placements: it takes the morph's state. */
 export interface MorphTarget {
-  setState(state: PairState): void;
+  setState(state: PlacementState): void;
 }
 
 export interface MorphDriverDeps {
@@ -100,7 +125,7 @@ export class MorphDriver {
     const t = morphValue(this.tween, Math.max(now, this.tween.start));
     this.t_ = t;
     const settled = t === this.tween.to;
-    const state: PairState = {
+    const state: PlacementState = {
       t,
       morphing: !settled,
       exaggeration: this.exaggeration,

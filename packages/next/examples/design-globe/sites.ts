@@ -187,7 +187,7 @@ export type PortfolioModel =
   | PoleLineModel;
 
 export interface PortfolioSite<M extends PortfolioModel = PortfolioModel> {
-  /** Unique; names its generated tilesets (`portfolio-<id>-rigid/` and `-reprojected/`, or `site-building/`). */
+  /** Unique; names its generated tileset (`portfolio-<id>/`, or `site-building/`). */
   readonly id: string;
   readonly name: string;
   /** Where it is, in words. */

@@ -31,7 +31,6 @@ import {
   buildPanelModel,
   type PageSnapshot,
 } from "../examples/design-globe/panelModel.ts";
-import { creaseEdges } from "../examples/design-globe/placementPair.ts";
 import { judgePick } from "../examples/design-globe/cursor.ts";
 import {
   cause,
@@ -457,64 +456,17 @@ describe("design globe panel model", () => {
   });
 });
 
-describe("design globe creases", () => {
-  it("finds a box's 12 edges and nothing on a flat strip", () => {
-    // A unit box, flat-shaded: 6 faces × 2 triangles, own vertices each.
-    const corners = [
-      [0, 0, 0],
-      [1, 0, 0],
-      [1, 1, 0],
-      [0, 1, 0],
-      [0, 0, 1],
-      [1, 0, 1],
-      [1, 1, 1],
-      [0, 1, 1],
-    ];
-    const faces = [
-      [0, 3, 2, 1],
-      [4, 5, 6, 7],
-      [0, 1, 5, 4],
-      [1, 2, 6, 5],
-      [2, 3, 7, 6],
-      [3, 0, 4, 7],
-    ];
-    const positions: number[] = [];
-    const indices: number[] = [];
-    for (const f of faces) {
-      const base = positions.length / 3;
-      for (const c of f) {
-        positions.push(...corners[c]!);
-      }
-      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-    }
-    const box = creaseEdges(
-      Float32Array.from(positions),
-      Uint32Array.from(indices),
-    );
-    expect(box.length / 2).toBe(12);
-    // A strip of three coplanar quads: its shared edges don't fold.
-    const strip = creaseEdges(
-      Float32Array.from([
-        0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0, 0, 1, 0, 1, 1, 0, 2, 1, 0, 3, 1, 0,
-      ]),
-      Uint32Array.from([0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6]),
-    );
-    expect(strip.length).toBe(0);
-  });
-});
-
 describe("design globe pick seam (judgePick)", () => {
   const rigidSet = { name: "rigid" } as unknown as Tileset3D;
   const reproSet = { name: "reprojected" } as unknown as Tileset3D;
   const site = {
     entry: SITES.at(-1)!,
-    rigid: rigidSet,
-    reprojected: reproSet,
-    pair: {},
+    tileset: rigidSet,
+    drawings: {},
   } as unknown as SiteRuntime;
   const oneTileset = {
     entry: SITES[0]!,
-    rigid: rigidSet,
+    tileset: rigidSet,
   } as unknown as SiteRuntime;
   const pick = (tileset: Tileset3D) =>
     ({
@@ -536,7 +488,7 @@ describe("design globe pick seam (judgePick)", () => {
     expect(r.refused).toBeUndefined();
     expect(r.hit?.design).toBeDefined();
     expect(r.drawn).toBe("rigid");
-    const p = judgePick(pick(reproSet), site, {
+    const p = judgePick(pick(rigidSet), site, {
       ...settled,
       mode: "reprojected",
       t: 1,
@@ -557,12 +509,12 @@ describe("design globe pick seam (judgePick)", () => {
       exaggeration: EXAGGERATION,
     });
     expect(exaggerated.hit?.design).toBeUndefined();
-    // The reprojected tileset hit while rigid is drawn (a stale tile).
+    // Another tileset's hit, judged by this site (a stale tile).
     const other = judgePick(pick(reproSet), site, settled);
     expect(other.hit?.design).toBeUndefined();
     expect(other.refused).toMatch(/not drawn/);
     // Reprojected and exaggerated: the drawn geometry is true.
-    const trueScale = judgePick(pick(reproSet), site, {
+    const trueScale = judgePick(pick(rigidSet), site, {
       mode: "reprojected",
       t: 1,
       morphing: false,

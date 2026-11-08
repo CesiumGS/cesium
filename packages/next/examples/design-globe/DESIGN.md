@@ -19,9 +19,10 @@ the second audience: every number is there and honest, but quieter.
 
 - **The placement switch morphs.** Flipping between rigid and reprojected
   animates every vertex from one placement to the other, "as this is really
-  demonstrating the change in coordinate frames". The two corridor tilesets
-  share tile ids, trees and vertex order (call 15), so each vertex has a
-  partner. Reduced motion switches at once.
+  demonstrating the change in coordinate frames". Each site has one tileset
+  whose vertices carry both placements, so the morph is the engine's placement
+  parameter on a scene item, with one tile selection and one tile cache
+  (plan 5a Task 20). Reduced motion switches at once.
 - **The other placement stays as a ghost**, a secondary visual for the before
   and after.
 - **A short tour you can leave at any point** (owner, 2026-11-07), then free
@@ -323,7 +324,8 @@ engine's `accuracyOf`).
 
 - Reprojected: solid, the repro colour (cyan family); rigid: the rigid
   colour (orange family). Neither reuses a status colour. The other
-  placement is the ghost: its deck translucent, its creases as lines.
+  placement is the ghost, a second scene item of the same tileset: translucent
+  and tinted, drawn unlit in the content's colours.
 - The ghost never tints the solid placement (F4): where the two placements
   coincide, the ghost isn't drawn, and during a morph the moving surface is
   the only one drawn at either end (see "The ghost" below).
@@ -398,7 +400,7 @@ engine's `accuracyOf`).
 
 ### The ghost (F4)
 
-Root causes of what the owner saw, and the fixes (placementPair.ts):
+Root causes of what the owner saw, and the fixes (siteDrawings.ts):
 
 - **Coplanar partners.** The ghost deck is the other placement's surface,
   drawn translucent and depth-tested against the opaque pass. Where a
@@ -411,14 +413,21 @@ Root causes of what the owner saw, and the fixes (placementPair.ts):
   it is only drawn where it stands clear of the solid surface. (The
   custom shader stages can't write depth or see the camera, so a depth
   offset wasn't available; the stand-off is exact instead.)
-- **The ghost on the active shape.** During a morph both decks were drawn
-  with the moving surface; at t = 0 the rigid deck is the moving surface
-  and at t = 1 the reprojected deck is, so the translucent colour lay on
-  the active shape itself. Each ghost is now drawn as far as the morph has
-  moved the surface off it: the rigid ghost by t, the reprojected one by
-  1 − t, so neither is ever drawn on the surface it coincides with, and
-  the settled states are unchanged.
-- **The morph's artifacts.** The ghost's creases are opaque lines on the
-  deck's positions: they z-fought the solid surface the same way, and both
-  sets were drawn mid-morph. They take the same stand-off and presence,
-  cut out by an alpha mask (lines draw opaque).
+- **The ghost on the active shape.** During a morph the ghost was once laid on
+  the moving surface. It now stands at the far end only as far as the morph has
+  moved the surface off it: from the destination it fades out by the halfway
+  point, where it is drawn nowhere, moves to the origin, and fades in. So the
+  settled states are unchanged, and it is never drawn on what it coincides with.
+- **Two selections.** The rigid and reprojected copies were two tilesets, paired
+  tile by tile on the page, and a tile of one could be drawn where the other's
+  selection differed: a ghost tile cut off. Both are now scene items of one
+  tileset (`World.add`): one selection, one cache, and bounds that cover both,
+  each item's draws culled by its own placement. The ghost is unlit and
+  translucent, so it casts no shadow and picks see through it. The ghost's
+  crease lines went with the pairing: they were built per tile on the page.
+- **The ground at the rigid end.** The corridor's terrain regions follow the
+  morph's opacity, 0 at the reprojected end, where the true slopes meet the
+  ground, and 1 at the rigid end, where the rigid copy stands clear of it. The
+  same regions throughout. A small step shows where the ground goes from opaque
+  to blended, at the very start of a morph from rigid: blended ground has no
+  shadows and no skirts, and a thin line shows along the region's edge.

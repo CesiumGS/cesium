@@ -3,27 +3,25 @@
 //
 // - Whiskers: every 1,000 ft along the centreline, at the median barrier's
 //   top, a leader from where the rigid placement draws the point to where it
-//   truly is, coloured by its length. They carry both ends as the pair's
-//   surfaces do (placementPair.ts), so the same morph uniform shrinks them to
+//   truly is, coloured by its length. They carry both ends as the tiles'
+//   vertices do, as a dual position, so the morph's parameter shrinks them to
 //   nothing as the geometry settles into the reprojected placement, and the
-//   same exaggeration stretches them.
+//   exaggeration stretches them.
 // - The anchor ring: a white ring on the ground at the rigid placement's
 //   anchor, where the placements agree.
 // (The camera's moves are in shots.ts.)
 import type { Alignment } from "../../src/engineering/alignment.ts";
 import type { TilesetPlacement } from "../../src/engineering/placement.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
-import type { CustomShader } from "../../src/scene/CustomShader.ts";
 import { MaterialFlags } from "../../src/render/layout.ts";
+import { EARTH } from "../../src/scene/Body.ts";
+import type { PlacementParameter } from "../../src/scene/placement.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { visibleRise } from "./exactSnap.ts";
 import { rampAt } from "./colors.ts";
 import { sectionSurface } from "./corridor.ts";
-import {
-  PARTNER_SEMANTIC,
-  morphShader,
-  type PairState,
-} from "./placementPair.ts";
+import { REPROJECTED_SEMANTIC } from "./dualPosition.ts";
+import { morphParameter, type PlacementState } from "./morphDriver.ts";
 
 /** One sample along the centreline. */
 export interface SagSample {
@@ -96,16 +94,11 @@ class Drawn {
 
 /** The error whiskers: one line per sample, rigid end to true end. */
 export class Whiskers extends Drawn {
-  readonly shader: CustomShader;
+  private readonly t: PlacementParameter;
   private readonly draw: DrawHandle;
 
-  constructor(
-    world: World,
-    samples: readonly SagSample[],
-    maxDisplacement: number,
-  ) {
+  constructor(world: World, samples: readonly SagSample[]) {
     super(world);
-    this.shader = morphShader("design globe whiskers", maxDisplacement, "line");
     const origin = samples[0]!.truth;
     const max = Math.max(...samples.map((s) => s.error)) || 1;
     const n = samples.length;
@@ -128,22 +121,28 @@ export class Whiskers extends Drawn {
       colors,
       indices: Uint32Array.from({ length: n * 2 }, (_, i) => i),
       topology: "line-list",
-      attributes: { [PARTNER_SEMANTIC]: { data: partners, components: 3 } },
+      attributes: { [REPROJECTED_SEMANTIC]: { data: partners, components: 3 } },
     });
     this.draw = world.addDraw({
       mesh,
+      parent: world.bodyAnchor(EARTH),
       origin: Float64Array.from(origin),
       unlit: true,
-      shader: this.shader,
       name: "design globe whiskers",
+    });
+    this.t = world.createPlacementParameter(0);
+    world.setPlacement(this.draw, {
+      kind: "dual",
+      semantic: REPROJECTED_SEMANTIC,
+      t: this.t,
+      maxDistance: max,
     });
     this.keep(mesh, this.draw);
   }
 
-  /** The morph's `t` and the exaggeration, as the pair's (morphDriver.ts). */
-  setState(state: PairState): void {
-    this.shader.setUniform("t", state.t);
-    this.shader.setUniform("exaggeration", state.exaggeration);
+  /** The morph's `t` and the exaggeration, as a site's drawings take them. */
+  setState(state: PlacementState): void {
+    this.t.value = morphParameter(state.t, state.exaggeration);
   }
 
   setVisible(visible: boolean): void {
@@ -240,6 +239,7 @@ export class AnchorRing extends Drawn {
     });
     const draw = world.addDraw({
       mesh,
+      parent: world.bodyAnchor(EARTH),
       origin: Float64Array.from(
         [0, 1, 2].map((k) => center[k]! + up[k]! * RING_LIFT),
       ),
@@ -349,6 +349,7 @@ export class ErrorRibbon extends Drawn {
     this.draw = world.addDraw({
       mesh,
       material: this.material,
+      parent: world.bodyAnchor(EARTH),
       origin: origin!,
       unlit: true,
       doubleSided: true,

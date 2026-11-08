@@ -1,16 +1,15 @@
 // The frame data the measure tool's `measure` needs (plan 4b Task 19): the
 // Earth orientation and the leap seconds, for the accuracy statement, from
-// the viewer's own frame data or else the store's (about 5 MB), reported as
-// a loading item: missing data gives the setup command, an error Retry.
+// the viewer's catalog (`viewer.frames.tree()`; plan 5a's call 45; about 5 MB
+// from the store), reported as a loading item: missing data gives the setup
+// command, an error Retry.
 import type {
   DesignPoint,
   EngineeringFrame,
 } from "../../src/engineering/EngineeringFrame.ts";
-import { loadFrameData } from "../../src/ephemeris/loadFrameData.ts";
-import { createFrames, type Frames } from "../../src/frames/frames.ts";
+import type { Frames } from "../../src/frames/frames.ts";
 import { measure, type Measurement } from "../../src/measure/measure.ts";
 import { Instant } from "../../src/time/Instant.ts";
-import type { LeapSeconds } from "../../src/time/leapSeconds.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { LoadEvent } from "./page.ts";
 
@@ -48,7 +47,7 @@ export interface MeasureFrames {
 }
 
 export function createMeasureFrames(deps: MeasureFramesDeps): MeasureFrames {
-  let frames: { frames: Frames; leap: LeapSeconds } | undefined;
+  let frames: Frames | undefined;
   let framesLoad: Promise<void> | undefined;
   let framesFailed: string | undefined;
   function loadFrames(): Promise<void> {
@@ -60,22 +59,25 @@ export function createMeasureFrames(deps: MeasureFramesDeps): MeasureFrames {
         label: "Earth orientation and leap seconds, for measure",
       });
       try {
-        const given = await deps.viewer.frameData;
-        const data =
-          given ??
-          (await loadFrameData("/frames-data/", (file, received, total) =>
-            deps.report({
-              type: "progress",
-              id,
-              file,
-              received,
-              ...(total !== undefined && { total }),
-            }),
-          ));
+        const off = deps.viewer.frames.events.on("progress", (p) =>
+          deps.report({
+            type: "progress",
+            id,
+            file: p.item,
+            received: p.received,
+            ...(p.total !== undefined && { total: p.total }),
+          }),
+        );
+        let tree: Frames;
+        try {
+          tree = await deps.viewer.frames.tree();
+        } finally {
+          off();
+        }
         if (deps.disposed()) {
           return;
         }
-        frames = { frames: createFrames(data), leap: data.leapSeconds };
+        frames = tree;
         framesFailed = undefined;
         deps.report({ type: "ready", id });
         deps.loaded();
@@ -116,8 +118,8 @@ export function createMeasureFrames(deps: MeasureFramesDeps): MeasureFrames {
         m: measure(
           a,
           b,
-          Instant.fromUtc(deps.viewer.clock.time, frames.leap),
-          frames.frames,
+          Instant.fromUtc(deps.viewer.clock.time, frames.data.leapSeconds),
+          frames,
           { signal: false, ...(alignment !== undefined && { alignment }) },
         ),
       };

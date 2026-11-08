@@ -6,16 +6,21 @@
 // labels HTML (measureTool.ts, panel/Measure.tsx).
 //
 // Every vertex carries both placements' positions, as the whiskers do
-// (overlays.ts): the same morph shader blends them by the morph's `t` and
-// scales rigid's error by the exaggeration, so a line follows the geometry
-// it measures through the morph with no vertex buffer written. The ghosts
-// are the same dashed mesh drawn twice, pinned at either end (rigid, `t` 0;
-// reprojected, `t` 1), shown as the pair's ghosts are (placementPair.ts):
-// the other placement's while settled, both while moving.
+// (overlays.ts): a dual position, whose parameter is the morph's, so a line
+// follows the geometry it measures through the morph with no vertex buffer
+// written, and past the rigid end when rigid's error is exaggerated. The
+// ghosts are the same dashed mesh drawn twice, pinned at either end, shown as
+// a site's ghost is (siteDrawings.ts): the other placement's while
+// settled, both while moving.
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
-import type { CustomShader } from "../../src/scene/CustomShader.ts";
+import { EARTH } from "../../src/scene/Body.ts";
+import type {
+  DualPosition,
+  PlacementParameter,
+} from "../../src/scene/placement.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { hexLinear } from "./colors.ts";
+import { REPROJECTED_SEMANTIC } from "./dualPosition.ts";
 import {
   fixedEnd,
   type DrawnEnd,
@@ -23,12 +28,11 @@ import {
   type RulerEnd,
 } from "./measureOpeners.ts";
 import type { MeasureState } from "./measureState.ts";
-import { EXAGGERATION } from "./page.ts";
 import {
-  PARTNER_SEMANTIC,
-  morphShader,
-  type PairState,
-} from "./placementPair.ts";
+  morphParameter,
+  rigidEndParameter,
+  type PlacementState,
+} from "./morphDriver.ts";
 
 /** A set of segments drawn together. */
 export interface OverlayLine {
@@ -46,8 +50,6 @@ export interface OverlayLine {
   readonly width?: number;
 }
 
-/** The farthest a vertex moves (metres): the corridor's ~34 m, exaggerated, and some. */
-const PAD = 40 * EXAGGERATION + 1;
 /**
  * How far a line stands over the ends it joins, metres, along the vertical:
  * a 1 px line in the plane of the surface it marks (the median barrier's top,
@@ -68,11 +70,12 @@ interface Drawn {
 }
 
 export class MeasureOverlay {
-  private readonly solidShader: CustomShader;
-  private readonly rigidGhostShader: CustomShader;
-  private readonly reprojectedGhostShader: CustomShader;
+  /** The lines' parameter, the morph's; the rigid ghost's; the reprojected ghost's. */
+  private readonly solidT: PlacementParameter;
+  private readonly rigidGhostT: PlacementParameter;
+  private readonly reprojectedGhostT: PlacementParameter;
   private drawn: Drawn[] = [];
-  private state: PairState = {
+  private state: PlacementState = {
     t: 0,
     morphing: false,
     exaggeration: 1,
@@ -80,18 +83,9 @@ export class MeasureOverlay {
   };
 
   constructor(private readonly world: World) {
-    this.solidShader = morphShader("design globe measure", PAD, "line");
-    this.rigidGhostShader = morphShader(
-      "design globe measure rigid ghost",
-      PAD,
-      "line",
-    );
-    this.reprojectedGhostShader = morphShader(
-      "design globe measure reprojected ghost",
-      PAD,
-      "line",
-    );
-    this.reprojectedGhostShader.setUniform("t", 1);
+    this.solidT = world.createPlacementParameter(0);
+    this.rigidGhostT = world.createPlacementParameter(0);
+    this.reprojectedGhostT = world.createPlacementParameter(1);
   }
 
   /** Replaces what is drawn. */
@@ -105,12 +99,11 @@ export class MeasureOverlay {
     this.visibility();
   }
 
-  /** The morph's state, as the pairs and the whiskers take it. */
-  setState(next: PairState): void {
+  /** The morph's state, as a site's drawings and the whiskers take it. */
+  setState(next: PlacementState): void {
     this.state = next;
-    this.solidShader.setUniform("t", next.t);
-    this.solidShader.setUniform("exaggeration", next.exaggeration);
-    this.rigidGhostShader.setUniform("exaggeration", next.exaggeration);
+    this.solidT.value = morphParameter(next.t, next.exaggeration);
+    this.rigidGhostT.value = rigidEndParameter(next.exaggeration);
     this.visibility();
   }
 
@@ -138,6 +131,7 @@ export class MeasureOverlay {
       hexLinear(line.colors?.[i] ?? line.color),
     );
     const name = `design globe measure ${line.key}`;
+    const reach = farthest(line);
     const meshes: MeshHandle[] = [];
     const mesh = (
       pairs: readonly { a: DrawnEnd; b: DrawnEnd; color: readonly number[] }[],
@@ -163,36 +157,46 @@ export class MeasureOverlay {
         colors: rgba,
         indices: Uint32Array.from({ length: n }, (_, i) => i),
         topology: "line-list",
-        attributes: { [PARTNER_SEMANTIC]: { data: partners, components: 3 } },
+        attributes: {
+          [REPROJECTED_SEMANTIC]: { data: partners, components: 3 },
+        },
       });
       meshes.push(handle);
       return handle;
     };
-    const draw = (m: MeshHandle, shader: CustomShader, suffix: string) =>
-      this.world.addDraw({
-        mesh: m,
-        origin,
-        unlit: true,
-        shader,
-        name: `${name}${suffix}`,
-      });
+    const draw = (m: MeshHandle, t: PlacementParameter, suffix: string) =>
+      this.placed(
+        this.world.addDraw({
+          mesh: m,
+          parent: this.world.bodyAnchor(EARTH),
+          origin,
+          unlit: true,
+          name: `${name}${suffix}`,
+        }),
+        t,
+        reach,
+      );
 
     if (line.width !== undefined) {
       const strip = this.strips(line, colors, origin);
       meshes.push(strip);
-      const solid = this.world.addDraw({
-        mesh: strip,
-        origin,
-        unlit: true,
-        doubleSided: true,
-        shader: this.solidShader,
-        name: `${name} strips`,
-      });
+      const solid = this.placed(
+        this.world.addDraw({
+          mesh: strip,
+          parent: this.world.bodyAnchor(EARTH),
+          origin,
+          unlit: true,
+          doubleSided: true,
+          name: `${name} strips`,
+        }),
+        this.solidT,
+        reach,
+      );
       return { meshes, solid };
     }
     const solid = draw(
       mesh(line.segments.map((s, i) => ({ ...s, color: colors[i]! }))),
-      this.solidShader,
+      this.solidT,
       "",
     );
     // A line both placements draw in the same place has no ghost.
@@ -225,13 +229,29 @@ export class MeasureOverlay {
     return {
       meshes,
       solid,
-      rigidGhost: draw(ghostMesh, this.rigidGhostShader, " rigid ghost"),
+      rigidGhost: draw(ghostMesh, this.rigidGhostT, " rigid ghost"),
       reprojectedGhost: draw(
         ghostMesh,
-        this.reprojectedGhostShader,
+        this.reprojectedGhostT,
         " reprojected ghost",
       ),
     };
+  }
+
+  /** `draw`, moved by a dual position at `t`. */
+  private placed(
+    draw: DrawHandle,
+    t: PlacementParameter,
+    maxDistance: number,
+  ): DrawHandle {
+    const placement: DualPosition = {
+      kind: "dual",
+      semantic: REPROJECTED_SEMANTIC,
+      t,
+      maxDistance,
+    };
+    this.world.setPlacement(draw, placement);
+    return draw;
   }
 
   /** A line's segments as level strips `line.width` metres wide (two triangles each). */
@@ -278,7 +298,7 @@ export class MeasureOverlay {
       positions,
       colors: rgba,
       indices,
-      attributes: { [PARTNER_SEMANTIC]: { data: partners, components: 3 } },
+      attributes: { [REPROJECTED_SEMANTIC]: { data: partners, components: 3 } },
     });
   }
 
@@ -434,6 +454,16 @@ export function rulerTips(o: Opener, end: RulerEnd): [DrawnEnd, DrawnEnd] {
   const line = rulerLine(o, end);
   const n = line.segments.length;
   return [line.segments[n - 1]!.a, line.segments[n - 1]!.b];
+}
+
+/** The farthest apart a line's ends are in the two placements, metres. */
+function farthest(line: OverlayLine): number {
+  let reach = 0;
+  for (const s of line.segments) {
+    reach = Math.max(reach, apart(s.a.rigid, s.a.reprojected));
+    reach = Math.max(reach, apart(s.b.rigid, s.b.reprojected));
+  }
+  return reach;
 }
 
 /** East, north and up at a body-fixed point (WGS 84). */

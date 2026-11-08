@@ -9,9 +9,11 @@
 // time (as test/frameLoopSleep.test.ts).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFrameDriver } from "../examples/design-globe/frameDriver.ts";
-import { MorphDriver } from "../examples/design-globe/morphDriver.ts";
+import {
+  MorphDriver,
+  type PlacementState,
+} from "../examples/design-globe/morphDriver.ts";
 import { MORPH_MS } from "../examples/design-globe/page.ts";
-import type { PairState } from "../examples/design-globe/placementPair.ts";
 import { CameraMoves, type Framing } from "../examples/design-globe/shots.ts";
 import { createStore } from "../examples/design-globe/stores.ts";
 import * as v3 from "../src/math/vec3.ts";
@@ -90,7 +92,7 @@ describe("the design globe in the engine's frames", () => {
       {
         targets: () => [
           {
-            setState: (state: PairState) => void drawn.push(state.t),
+            setState: (state: PlacementState) => void drawn.push(state.t),
           },
         ],
         requestRender: () => engine.requestRender(),

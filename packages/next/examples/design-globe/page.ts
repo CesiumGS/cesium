@@ -362,14 +362,16 @@ export interface SiteEntry {
   readonly models: readonly string[];
   /** About how far across it is, metres, for the order (the shown extent comes from PROJ). */
   readonly extent: number;
-  /** Its tilesets in the store, under `/frames-data/design-globe/`. */
-  readonly tilesets: {
-    readonly rigid: string;
-    /** Absent: one tileset only (a rigid one), until the scale ladder (Task 17b). */
-    readonly reprojected?: string;
-    /** Tried first, and the pair used when present (Task 17b's names). */
-    readonly pair?: { readonly rigid: string; readonly reprojected: string };
-  };
+  /**
+   * Its tileset in the store, under `/frames-data/design-globe-dual/`. One a
+   * site.
+   */
+  readonly tileset: string;
+  /**
+   * The tileset carries both placements (it declares so itself,
+   * siteDrawings.ts `dualPositionOf`): false, drawn rigid only.
+   */
+  readonly dual: boolean;
   /** The model's footprint corners at its ground, design units. */
   readonly corners?: readonly (readonly [number, number, number])[];
   /**
@@ -446,15 +448,8 @@ function siteEntry(site: PortfolioSite, store: string): SiteEntry {
     grids: site.grids,
     models: site.grids.map((g) => GRID_MODELS[g] ?? g),
     extent: across * unit,
-    tilesets: {
-      rigid: `${store}/`,
-      ...(store.startsWith("portfolio-") && {
-        pair: {
-          rigid: `${store}-rigid/`,
-          reprojected: `${store}-reprojected/`,
-        },
-      }),
-    },
+    tileset: `${store}/`,
+    dual: store.startsWith("portfolio-"),
     corners,
     ...(route !== undefined && { route }),
     ...(modelOnGround(site) && { onGround: true }),
@@ -482,10 +477,8 @@ export const CORRIDOR_SITE: SiteEntry = {
   grids: ["us_noaa_g2018u0.tif"],
   models: ["GEOID18"],
   extent: CORRIDOR_LENGTH * (1200 / 3937),
-  tilesets: {
-    rigid: "corridor-rigid/",
-    reprojected: "corridor-reprojected/",
-  },
+  tileset: "corridor/",
+  dual: true,
   frame: corridorFrame(),
 };
 
