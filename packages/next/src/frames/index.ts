@@ -38,6 +38,7 @@ export {
   type CatalogFrameName,
   type FrameCatalog,
   type FrameCatalogOptions,
+  type FrameLoadProgress,
   type FrameInUse,
   type FrameUser,
   type Precision,

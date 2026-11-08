@@ -1,9 +1,10 @@
 // The frame data on the main thread (R13: the triads follow the clock every
-// frame): DE440, the Earth orientation and the leap seconds, with the
-// frames store's manifest for the report. Its progress is the loading
-// model's "frame data" (the worker's own fetch shows only when it fails).
-import { loadFrameData } from "../../src/ephemeris/loadFrameData.ts";
-import { createFrames, type Frames } from "../../src/frames/frames.ts";
+// frame): the `Frames` of the Viewer's catalog (`viewer.frames.tree()`, plan
+// 5a's call 45), so the sky, the rig and the triads share one tree, with the
+// frames store's manifest for the report. Its progress is the catalog's
+// `progress` events, shown as the loading model's "frame data" (the worker's
+// own fetch shows only when it fails).
+import type { Frames } from "../../src/frames/frames.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import type { LoadingModel } from "./loading.ts";
 import { messageOf } from "./page.ts";
@@ -30,7 +31,7 @@ export interface FrameData {
 }
 
 export function createFrameData(deps: {
-  viewer: Viewer;
+  viewer: Pick<Viewer, "frames" | "setFrameData">;
   loading: LoadingModel;
   signal: AbortSignal;
   /** The frame data is in. */
@@ -41,6 +42,12 @@ export function createFrameData(deps: {
   const { viewer, loading, signal } = deps;
   let frames: Frames | undefined;
   let manifest: Manifest | undefined;
+  /**
+   * A catalog's failed load stays failed: a reload asks a new one
+   * (`setFrameData(undefined)`; it reads the same store, and `tree()` brings
+   * its reference frames, the sky's among them, to "precise").
+   */
+  let loadedBefore = false;
 
   async function load(): Promise<void> {
     loading.apply("frames", { type: "fetching" });
@@ -49,37 +56,36 @@ export function createFrameData(deps: {
       string,
       { received: number; total: number | undefined }
     >();
+    if (loadedBefore) {
+      viewer.setFrameData(undefined);
+    }
+    loadedBefore = true;
+    const off = viewer.frames.events.on("progress", (p) => {
+      bytes.set(p.item, { received: p.received, total: p.total });
+      let sum = 0;
+      let size = 0;
+      let known = true;
+      for (const b of bytes.values()) {
+        sum += b.received;
+        size += b.total ?? 0;
+        known &&= b.total !== undefined;
+      }
+      loading.apply("frames", {
+        type: "progress",
+        received: sum,
+        ...(known && { total: size }),
+      });
+    });
     try {
       const manifestResponse = fetch(`${DATA}manifest.json`, { signal })
         .then((r) => (r.ok ? r.json() : undefined))
         .catch(() => undefined);
-      const data = await loadFrameData(DATA, (file, received, total) => {
-        bytes.set(file, { received, total });
-        let sum = 0;
-        let size = 0;
-        let known = true;
-        for (const b of bytes.values()) {
-          sum += b.received;
-          size += b.total ?? 0;
-          known &&= b.total !== undefined;
-        }
-        loading.apply("frames", {
-          type: "progress",
-          received: sum,
-          ...(known && { total: size }),
-        });
-      });
+      const tree = await viewer.frames.tree();
       manifest = (await manifestResponse) as Manifest | undefined;
       if (signal.aborted) {
         return;
       }
-      frames = createFrames(data);
-      // The sky's Moon and Sun from the same DE440 the frames use: the
-      // analytic Moon is about 400 km off, which put the imagery's pole
-      // 400 km from the lunar site's triad (lunar-pole-investigation.md).
-      // Not undone on leave: the sky's data is the Viewer's, and the Viewer
-      // goes with the example.
-      viewer.setFrameData(data);
+      frames = tree;
       const sum = [...bytes.values()].reduce((a, b) => a + b.received, 0);
       loading.apply("frames", {
         type: "ready",
@@ -99,6 +105,8 @@ export function createFrameData(deps: {
       });
       deps.failed(message);
       return;
+    } finally {
+      off();
     }
     deps.ready();
   }

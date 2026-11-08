@@ -428,6 +428,26 @@ describe("the frame catalog", () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("ITRF"));
   });
 
+  it("emits each data file's bytes as progress events, and still calls onProgress", async () => {
+    const calls: string[] = [];
+    const catalog = createFrameCatalog({
+      data: BASE,
+      onProgress: (item) => calls.push(item),
+    });
+    const events: string[] = [];
+    let most = 0;
+    catalog.events.on("progress", (p) => {
+      events.push(p.item);
+      most = Math.max(most, p.received);
+    });
+    await catalog.tree();
+    expect(new Set(events)).toEqual(
+      new Set(["EOP-All.csv", "Leap_Second.dat", "planets.pack", "moon.pack"]),
+    );
+    expect(most).toBeGreaterThan(0);
+    expect(calls).toEqual(events);
+  });
+
   it("the Earth orientation provider fetches only the EOP and leap-second files", async () => {
     const catalog = createFrameCatalog({ data: BASE });
     await catalog.ready("ITRF", "precise");

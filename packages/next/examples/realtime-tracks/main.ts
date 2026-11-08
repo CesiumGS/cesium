@@ -1,4 +1,5 @@
 import {
+  EARTH,
   Ellipsoid,
   PointSource,
   VectorLayer,
@@ -239,6 +240,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     fromDegrees(SITE.longitude, SITE.latitude, SITE.height),
     vec3.vec3(),
   );
+  // The view's rig, named: the camera's position on the Earth-fixed
+  // reference frame, free to look anywhere (the viewer's own default, set
+  // here so the example doesn't lean on it).
+  engine.cameras.setRig(viewer.view, {
+    position: { frame: viewer.frames.get("ITRF") },
+    orientation: { kind: "free" },
+  });
   const renderMode = engine.renderMode;
   // Vehicles move between reports: render every frame.
   engine.renderMode = "continuous";
@@ -330,6 +338,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     const next = new PointSource(engine, world, {
       capacity: n,
       origin,
+      // Earth-fixed coordinates: the origin above is in the Earth's anchor.
+      anchor: world.bodyAnchor(EARTH),
       properties: { affiliation: { enum: AFFILIATIONS } },
       clamp: {
         halfExtent: half * 1.05,

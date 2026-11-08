@@ -1669,10 +1669,11 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
 - **The sky's Moon is DE440's.** The examples host builds its Viewer without
   frame data, so the sky placed the Moon with the analytic model (Simon
   1994), about 400 km from DE440's: the imagery's pole sat about 404 km from
-  the site's triad (lunar-pole-investigation.md). Once its frame data loads,
-  the example hands it to the sky (`viewer.setFrameData`). It isn't undone on
-  leave: the sky's data is the Viewer's, the Viewer is destroyed with the
-  example, and the next Viewer sets the shared engine's Moon from its own.
+  the site's triad (lunar-pole-investigation.md). The example now asks the Viewer's
+  catalog for its whole tree at "precise" (`viewer.frames.tree()`), and the
+  sky reads the same reference frames, so it gets DE440 with no
+  `viewer.setFrameData`. The catalog is the Viewer's, which is destroyed with
+  the example; the next Viewer sets the shared engine's Moon from its own.
 - **Stop 6 tells the truth about the backdrop.** The site is deliberately at
   89.5° S, 0° E, height 0 in MOON_ME (15.2 km from the pole; east-north-up
   is defined there), and the caption says "near the south pole, at

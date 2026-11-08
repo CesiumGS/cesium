@@ -22,7 +22,12 @@ import type { Frames } from "../../src/frames/frames.ts";
 import { rotationPart } from "../../src/frames/matrix.ts";
 import type { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { MeshData } from "../../src/scene/meshes.ts";
-import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
+import type {
+  DrawHandle,
+  MeshHandle,
+  TransformHandle,
+  World,
+} from "../../src/scene/World.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
 
@@ -1215,8 +1220,8 @@ function buildChunk(
 }
 
 /**
- * Draws geometry as unlit line-list meshes in `world` (R3), Earth-fixed, one
- * per chunk (see `overlayMesh`). Returns a remover (idempotent) that removes
+ * Draws geometry as unlit line-list meshes in `world` (R3), one per chunk
+ * (see `overlayMesh`), Earth-fixed under `parent` (the Earth's anchor). Returns a remover (idempotent) that removes
  * every chunk, and registers it in `scope`. Geometry with no vertices draws
  * nothing.
  */
@@ -1224,8 +1229,9 @@ export function addOverlay(
   world: World,
   geometry: Geometry,
   scope: DisposableStack,
+  parent: TransformHandle,
 ): () => void {
-  return addOverlayChunks(world, overlayMesh(geometry), scope);
+  return addOverlayChunks(world, overlayMesh(geometry), scope, parent);
 }
 
 /**
@@ -1236,6 +1242,7 @@ export function addOverlayChunks(
   world: World,
   chunks: readonly OverlayChunk[],
   scope: DisposableStack,
+  parent: TransformHandle,
 ): () => void {
   const added: { mesh: MeshHandle; draw: DrawHandle }[] = [];
   let removed = false;
@@ -1254,6 +1261,7 @@ export function addOverlayChunks(
       try {
         const draw = world.addDraw({
           mesh,
+          parent,
           origin: chunk.origin,
           unlit: true,
           name: "frames explorer overlay",

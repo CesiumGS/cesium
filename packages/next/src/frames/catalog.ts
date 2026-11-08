@@ -143,7 +143,25 @@ export interface FrameCatalog {
   readonly leapSeconds: LeapSeconds;
   /** Staleness notices and failed loads, in order. */
   readonly warnings: readonly FrameDataWarning[];
-  readonly events: Emitter<{ change: FrameCatalog; warning: FrameDataWarning }>;
+  /**
+   * `change`: a reference frame's data arrived; `warning`: a notice;
+   * `progress`: bytes of a data file arrived (`FrameCatalogOptions.onProgress`
+   * as an event, for a catalog someone else made, such as the Viewer's).
+   */
+  readonly events: Emitter<{
+    change: FrameCatalog;
+    warning: FrameDataWarning;
+    progress: FrameLoadProgress;
+  }>;
+}
+
+/** Bytes of one data file received (`FrameCatalog.events`' `progress`). */
+export interface FrameLoadProgress {
+  /** The file's name. */
+  readonly item: string;
+  readonly received: number;
+  /** The response's `Content-Length`, when it has one. */
+  readonly total: number | undefined;
 }
 
 const NAMES: readonly CatalogFrameName[] = Object.freeze([
@@ -237,6 +255,7 @@ class Catalog implements FrameCatalog {
   readonly events = new Emitter<{
     change: FrameCatalog;
     warning: FrameDataWarning;
+    progress: FrameLoadProgress;
   }>();
   private leap: LeapSeconds;
   private readonly warningList: FrameDataWarning[];
@@ -579,9 +598,12 @@ class Catalog implements FrameCatalog {
     if (this.signal) {
       options.signal = this.signal;
     }
-    if (this.onProgress) {
-      options.onProgress = this.onProgress;
-    }
+    options.onProgress = (item, received, total) => {
+      this.onProgress?.(item, received, total);
+      if (this.events.has("progress")) {
+        this.events.emit("progress", { item, received, total });
+      }
+    };
     const source = this.source;
     if (provider === "earthOrientation") {
       const module = await import("./providers/earthOrientation.ts");

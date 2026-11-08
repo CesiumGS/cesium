@@ -6,9 +6,11 @@
 // removed with the example.
 import { EARTH_POLAR_RADIUS } from "./units.ts";
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
+import { EARTH } from "../../src/scene/Body.ts";
 import type { MeshData } from "../../src/scene/meshes.ts";
 import type {
   DrawHandle,
+  AnchorHandle,
   MeshHandle,
   TransformHandle,
 } from "../../src/scene/World.ts";
@@ -361,7 +363,7 @@ export class Globe {
         // Its proportions change with its scale: a new mesh.
         this.removeTriad(spec.id);
       }
-      const transform = world.addTransform(identity());
+      const transform = world.addTransform(identity(), this.earth());
       world.setTransformVisible(transform, false);
       this.triads.set(spec.id, {
         spec,
@@ -373,6 +375,11 @@ export class Globe {
       });
     }
     this.retint();
+  }
+
+  /** The Earth's anchor: the triads and overlays hang under it, Earth-fixed. */
+  private earth(): AnchorHandle {
+    return this.viewer.world.bodyAnchor(EARTH);
   }
 
   private removeTriad(id: string): void {
@@ -583,7 +590,7 @@ export class Globe {
     const meshes: MeshHandle[] = [];
     const placement =
       options.placement !== undefined
-        ? world.addTransform(options.placement)
+        ? world.addTransform(options.placement, this.earth())
         : undefined;
     const remove = () => {
       for (const { draw } of draws.splice(0)) {
@@ -625,6 +632,7 @@ export class Globe {
           } else {
             draw = world.addDraw({
               mesh,
+              parent: this.earth(),
               origin: chunk.origin,
               unlit: true,
               name: `frames explorer ${id}`,

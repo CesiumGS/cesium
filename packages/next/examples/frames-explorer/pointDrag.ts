@@ -1,7 +1,9 @@
 // The corridor's point, dragged on the globe (spec scenario 6: "a draggable
 // point"): a hit target over the point's marker (the marker is the label
 // board's, as Orion's is), followed every frame. Dragged, the pointer's ray
-// meets the ellipsoid, the evaluation's local placement takes that to the
+// meets what is drawn there (`View.pickPoint`, read in ITRF through the
+// frames pick interpreter; the ellipsoid where nothing is drawn), the
+// evaluation's local placement takes that to the
 // site grid's design feet, and the road gives its station and offset
 // (`knobsAt`): the knobs move to them, rounded to their steps, and the
 // worker answers there exactly. The sliders stay the keyboard's way in; the
@@ -9,6 +11,8 @@
 import { Alignment } from "../../src/engineering/alignment.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { vec3 } from "../../src/math/vec3.ts";
+import { createFramesPickInterpreter } from "../../src/frames/pickInterpreter.ts";
+import { createFramesResolver } from "../../src/frames/resolver.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import { snapToStep } from "./panel/knobText.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
@@ -76,8 +80,17 @@ export function createPointDrag(deps: {
   let dragged: Float64Array | undefined;
   let pointer: number | undefined;
 
+  /** Reads a pick as a point tagged with its reference frame (the Viewer's catalog's). */
+  const interpreter = createFramesPickInterpreter(
+    createFramesResolver(viewer.frames),
+    viewer.frames,
+  );
+  const itrf = () => viewer.frames.get("ITRF");
+  /** Each move's number: an answer older than the latest is dropped. */
+  let moves = 0;
+
   /** Where the pointer's ray meets the ellipsoid, Earth-fixed metres. */
-  function ground(e: PointerEvent): Float64Array | undefined {
+  function ellipsoidAt(e: PointerEvent): Float64Array | undefined {
     const rect = viewer.canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
       return undefined;
@@ -90,10 +103,40 @@ export function createPointDrag(deps: {
     return hit && Float64Array.from(hit);
   }
 
-  function move(e: PointerEvent): void {
+  /**
+   * Where the pointer is on what is drawn there, Earth-fixed metres (the
+   * pick, in ITRF); the ellipsoid's point over the sky or when the pick
+   * can't say.
+   */
+  async function ground(e: PointerEvent): Promise<Float64Array | undefined> {
+    const rect = viewer.canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      const scale = viewer.canvas.width / rect.width;
+      const area = viewer.view.pixelRect();
+      try {
+        const pick = await viewer.view.pickPoint(
+          (e.clientX - rect.left) * scale - area.x,
+          (e.clientY - rect.top) * scale - area.y,
+        );
+        const point = pick && interpreter.interpret(pick);
+        if (point) {
+          return point.in(itrf());
+        }
+      } catch {
+        // A pick the frames can't read at this instant: the ellipsoid's.
+      }
+    }
+    return ellipsoidAt(e);
+  }
+
+  async function move(e: PointerEvent): Promise<void> {
     const drag = deps.evaluation()?.drag;
-    const p = drag && ground(e);
-    if (!drag || !p) {
+    if (!drag) {
+      return;
+    }
+    const mine = ++moves;
+    const p = await ground(e);
+    if (!p || mine !== moves || pointer === undefined) {
       return;
     }
     const k = knobsAt(p, drag.toDesign, deps.knobs());
@@ -128,7 +171,7 @@ export function createPointDrag(deps: {
     "pointermove",
     (e) => {
       if (e.pointerId === pointer) {
-        move(e);
+        void move(e);
       }
     },
     { signal },

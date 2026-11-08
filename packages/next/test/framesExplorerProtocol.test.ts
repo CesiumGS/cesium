@@ -531,7 +531,13 @@ describe("overlay", () => {
       removeMesh: vi.fn(),
     };
     const scope = new DisposableStack();
-    const remove = addOverlayChunks(world as unknown as World, chunks, scope);
+    const earth = { index: 1, generation: 0 };
+    const remove = addOverlayChunks(
+      world as unknown as World,
+      chunks,
+      scope,
+      earth,
+    );
     expect(world.addMesh.mock.calls.map((c) => c[0])).toEqual(
       chunks.map((c) => c.mesh),
     );
@@ -539,6 +545,7 @@ describe("overlay", () => {
       chunks.map((c) => [
         {
           mesh: { mesh: c.mesh },
+          parent: earth,
           origin: c.origin,
           unlit: true,
           name: "frames explorer overlay",
