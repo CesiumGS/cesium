@@ -206,21 +206,34 @@ export class Tile {
       throw new Error("tile has no supported bounding volume");
     }
     this.volumeJson = bv;
-    const content = json.content ?? json.contents?.[0];
-    if (json.contents && json.contents.length > 1) {
+    // 3D Tiles 1.1's `contents`, or 1.0's extension of it (earlier drafts
+    // named its list `content`).
+    const multiple = json.extensions?.["3DTILES_multiple_contents"];
+    const contents = json.contents ?? multiple?.contents ?? multiple?.content;
+    const content = json.content ?? contents?.[0];
+    if (contents && contents.length > 1) {
       tileset.warnings.add(
         "multiple contents per tile: only the first is drawn",
       );
     }
-    const uri: string | undefined = content?.uri ?? content?.url;
+    // Implicit tiling: its content URI is a template, and its tiles are in
+    // subtree files this engine doesn't read yet. Asking for the template
+    // would only fail.
+    const implicit =
+      json.implicitTiling ?? json.extensions?.["3DTILES_implicit_tiling"];
+    const uri: string | undefined = implicit
+      ? undefined
+      : (content?.uri ?? content?.url);
     if (uri) {
       this.contentUri = uri;
       this.contentVolumeJson = content?.boundingVolume;
     }
     this.external = !!uri && /\.json(\?|$)/i.test(uri);
     this.requestVolumeJson = json.viewerRequestVolume;
-    if (json.implicitTiling) {
-      tileset.warnings.add("implicit tiling not supported yet");
+    if (implicit) {
+      tileset.warnings.add(
+        "implicit tiling not supported yet: its tiles are not drawn",
+      );
     }
     this.state = uri ? "unloaded" : "ready";
     for (const child of json.children ?? []) {
@@ -495,6 +508,16 @@ export async function fetchTilesetJson(
  * `modelMatrix`). Costs milliseconds for large files, so streaming builds
  * them within a per-frame budget.
  */
+/**
+ * Tileset extensions this engine draws correctly without further reading:
+ * glTF content (`3DTILES_content_gltf`), and batch tables' hierarchies
+ * (`3DTILES_batch_table_hierarchy`, in `readLegacyBatchTable`).
+ */
+const READ_TILESET_EXTENSIONS = new Set([
+  "3DTILES_content_gltf",
+  "3DTILES_batch_table_hierarchy",
+]);
+
 export function treeFromJson(
   json: TileJson,
   url: string,
@@ -503,8 +526,14 @@ export function treeFromJson(
   rootTransform?: Mat4,
 ): { root: Tile; geometricError: number } {
   const up = json.asset?.gltfUpAxis;
-  if (up && up.toUpperCase() !== "Y") {
-    tree.warnings.add(`gltfUpAxis ${up} not supported (treated as Y)`);
+  if (up && !["X", "Y", "Z"].includes(up.toUpperCase())) {
+    tree.warnings.add(`gltfUpAxis ${up} is not an axis (treated as Y)`);
+  }
+  for (const name of json.extensionsRequired ?? []) {
+    if (!READ_TILESET_EXTENSIONS.has(name)) {
+      // 1.x refuses the tileset; here what can be drawn still is.
+      tree.warnings.add(`required extension ${name} is not supported`);
+    }
   }
   const root = new Tile(
     parent,

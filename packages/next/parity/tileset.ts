@@ -109,6 +109,18 @@ const PUBLIC: Source[] = [
     url: "/specs-data/Cesium3DTiles/Instanced/InstancedRTC/tileset.json",
   },
   {
+    label: "Composite (cmpt: a b3dm and an i3dm)",
+    url: "/specs-data/Cesium3DTiles/Composite/Composite/tileset.json",
+  },
+  {
+    label: "CompositeOfComposite (cmpt in a cmpt)",
+    url: "/specs-data/Cesium3DTiles/Composite/CompositeOfComposite/tileset.json",
+  },
+  {
+    label: "CompositeOfInstanced (cmpt of i3dm)",
+    url: "/specs-data/Cesium3DTiles/Composite/CompositeOfInstanced/tileset.json",
+  },
+  {
     label: "InstancedGltfExternal (i3dm, glTF by URI)",
     url: "/specs-data/Cesium3DTiles/Instanced/InstancedGltfExternal/tileset.json",
   },

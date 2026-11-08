@@ -16,6 +16,12 @@ import {
   type B3dm,
   type I3dm,
 } from "./features.ts";
+import {
+  deferredReason,
+  isComposite,
+  mergeAssets,
+  splitComposite,
+} from "./composite.ts";
 import { splitGlb } from "./glb.ts";
 import { resolveUri } from "./ion.ts";
 import type {
@@ -100,27 +106,129 @@ export async function parseGltf(
     ...(headers ? { headers } : {}),
     ...(signal ? { signal } : {}),
   };
+  const fetchStart = performance.now();
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  }
+  const bytes: Uint8Array = new Uint8Array(await response.arrayBuffer());
+  const decodeStart = performance.now();
+  const arrival: Arrival = {
+    decodeStart,
+    networkMs: decodeStart - fetchStart,
+    network: resourceTiming(url),
+    received: bytes.byteLength,
+  };
+  return isComposite(bytes)
+    ? parseComposite(bytes, url, init, textureSupport, arrival)
+    : parseTile(bytes, url, init, textureSupport, arrival);
+}
+
+/** How a content's bytes arrived, for its timing. */
+interface Arrival {
+  /** When decoding started (the bytes had arrived). */
+  decodeStart: number;
+  networkMs: number;
+  network: ReturnType<typeof resourceTiming>;
+  received: number;
+}
+
+type Parsed = { asset: GltfAsset; transfer: Transferable[] };
+
+/**
+ * A composite tile: its inner tiles parsed as any tile is, then merged into
+ * one asset (`mergeAssets`). One inner tile failing fails the tile's content,
+ * as in 1.x.
+ */
+async function parseComposite(
+  bytes: Uint8Array,
+  url: string,
+  init: RequestInit,
+  textureSupport: TextureFormatSupport,
+  arrival: Arrival,
+): Promise<Parsed> {
+  const warnings: string[] = [];
+  const inner = splitComposite(bytes, warnings);
+  if (inner.length === 0) {
+    throw new Error(
+      `unsupported tile format: cmpt with nothing to draw (${warnings.join("; ") || "no inner tiles"})`,
+    );
+  }
+  const settled = await Promise.allSettled(
+    inner.map((tile) => parseTile(tile, url, init, textureSupport, arrival)),
+  );
+  const parsed: Parsed[] = [];
+  settled.forEach((result) => {
+    if (result.status === "fulfilled") {
+      parsed.push(result.value);
+    }
+  });
+  const failed = settled.findIndex((result) => result.status === "rejected");
+  if (failed >= 0) {
+    // The others' decoded images aren't going anywhere.
+    for (const { asset } of parsed) {
+      for (const image of asset.images) {
+        if (image instanceof ImageBitmap) {
+          image.close();
+        }
+      }
+    }
+    const reason = (settled[failed] as PromiseRejectedResult).reason;
+    if (reason instanceof DOMException) {
+      throw reason; // a cancelled load stays a cancelled load
+    }
+    throw new Error(
+      `composite inner tile ${failed}: ${reason instanceof Error ? reason.message : String(reason)}`,
+    );
+  }
+  const asset = mergeAssets(parsed.map((p) => p.asset));
+  const images: Record<string, number> = {};
+  for (const { asset: part } of parsed) {
+    for (const [type, n] of Object.entries(part.timing?.images ?? {})) {
+      images[type] = (images[type] ?? 0) + n;
+    }
+  }
+  return {
+    asset: {
+      ...asset,
+      warnings: [...new Set([...warnings, ...asset.warnings])],
+      timing: {
+        ...asset.timing!,
+        format: "cmpt",
+        // Each part's timing held the whole tile's arrival already.
+        bytes: arrival.received,
+        decodeMs: performance.now() - arrival.decodeStart,
+        images,
+      },
+    },
+    // Inner tiles can share a buffer (the composite's); transferring one
+    // twice is an error.
+    transfer: [...new Set(parsed.flatMap((p) => p.transfer))],
+  };
+}
+
+/** One tile's (or glTF's) bytes as an asset. */
+async function parseTile(
+  tileBytes: Uint8Array,
+  url: string,
+  init: RequestInit,
+  textureSupport: TextureFormatSupport,
+  arrival: Arrival,
+): Promise<Parsed> {
   // External resources resolve against the glTF (an i3dm may point at one).
   let base = url;
   const fetchUri = (uri: string) =>
     uri.startsWith("data:")
       ? Promise.resolve(dataUriResponse(uri))
       : fetch(resolveUri(uri, base), init);
-  const fetchStart = performance.now();
-  const response = await fetch(url, init);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status}`);
-  }
-  let bytes: Uint8Array = new Uint8Array(await response.arrayBuffer());
-  const decodeStart = performance.now();
-  const network = resourceTiming(url);
-  const received = bytes.byteLength;
+  let bytes = tileBytes;
   const imageTypes: Record<string, number> = {};
   let b3dm: B3dm | undefined;
   let i3dm: I3dm | undefined;
   const magic = String.fromCharCode(...bytes.subarray(0, 4));
-  if (["pnts", "cmpt", "vctr", "geom"].includes(magic)) {
-    throw new Error(`unsupported tile format: ${magic}`);
+  const deferred = deferredReason(magic);
+  if (deferred) {
+    throw new Error(`unsupported tile format: ${magic} (${deferred})`);
   }
   if (isB3dm(bytes)) {
     b3dm = unwrapB3dm(bytes);
@@ -450,10 +558,10 @@ export async function parseGltf(
             : bin !== undefined || isGlb
               ? "glb"
               : "gltf",
-        networkMs: decodeStart - fetchStart,
-        ...network,
-        bytes: received,
-        decodeMs: performance.now() - decodeStart,
+        networkMs: arrival.networkMs,
+        ...arrival.network,
+        bytes: arrival.received,
+        decodeMs: performance.now() - arrival.decodeStart,
         images: imageTypes,
       },
     },

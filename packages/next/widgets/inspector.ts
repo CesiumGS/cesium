@@ -520,6 +520,9 @@ function streamingHtml(
           : "",
     ),
   );
+  if (t.undrawn) {
+    tiles.push(tile("Can't draw", count(t.undrawn), "see Problems"));
+  }
   if (t.window) {
     const w = t.window;
     tiles.push(

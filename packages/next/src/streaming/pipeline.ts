@@ -9,7 +9,7 @@ import type { GltfAsset } from "../io/gltfTypes.ts";
 
 /** What one decoded content holds. */
 export interface ContentSummary {
-  /** Container format: "glb", "gltf" or "b3dm" (later pnts, i3dm, ...). */
+  /** Container format: "glb", "gltf", "b3dm", "i3dm" or "cmpt" (later pnts). */
   format: string;
   triangles: number;
   lines: number;

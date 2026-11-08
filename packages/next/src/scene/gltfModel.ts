@@ -11,6 +11,7 @@ import type {
   CompressedImage,
   FeatureTable,
   GltfAsset,
+  GltfAssetPart,
   GltfDraw,
   GltfImage,
   GltfLight,
@@ -52,10 +53,11 @@ export interface ModelResourceOptions {
   /**
    * The data's axis convention: "gltf" (default) is y-up, z-forward like
    * 1.x `Model`; "3d-tiles" is tile content (b3dm/glb in a tileset), y-up,
-   * x-forward, like 1.x `Cesium3DTileset`; "none": already in the frame of
-   * the placement's matrix (terrain, georeferenced data).
+   * x-forward, like 1.x `Cesium3DTileset`; "3d-tiles-x-up": tile content of
+   * a tileset with `asset.gltfUpAxis` "X"; "none": already in the frame of
+   * the placement's matrix (terrain, georeferenced data, `gltfUpAxis` "Z").
    */
-  axes?: "gltf" | "3d-tiles" | "none";
+  axes?: "gltf" | "3d-tiles" | "3d-tiles-x-up" | "none";
   /**
    * Close the asset's decoded images once they are on the GPU (default
    * true), freeing the CPU copy; the asset can't be uploaded again. False
@@ -200,8 +202,8 @@ interface UploadedAsset {
 interface PlacementTemplate {
   draws: GltfDraw[];
   lights: GltfLight[];
-  rtcCenter?: [number, number, number];
-  instances?: GltfAsset["instances"];
+  /** At least one: a composite's inner tiles, or the asset itself. */
+  parts: GltfAssetPart[];
   /** Per draw, the feature table of its mesh, if any. */
   drawTables: Array<FeatureTable | undefined>;
   /** The first table (i3dm's batch table, for its instances). */
@@ -285,7 +287,7 @@ export class ModelResource implements Disposable {
   readonly world: World;
   readonly name: string | undefined;
   readonly colorTransfer: "srgb" | "gamma2.2";
-  readonly axes: "gltf" | "3d-tiles" | "none";
+  readonly axes: NonNullable<ModelResourceOptions["axes"]>;
   /** @internal The GPU resources. */
   readonly upload: UploadedAsset;
   /** @internal What placing needs. */
@@ -314,8 +316,12 @@ export class ModelResource implements Disposable {
     this.template = {
       draws: asset.draws,
       lights: asset.lights ?? [],
-      ...(asset.rtcCenter ? { rtcCenter: asset.rtcCenter } : {}),
-      ...(asset.instances ? { instances: asset.instances } : {}),
+      parts: asset.parts ?? [
+        {
+          ...(asset.rtcCenter ? { rtcCenter: asset.rtcCenter } : {}),
+          ...(asset.instances ? { instances: asset.instances } : {}),
+        },
+      ],
       drawTables: asset.draws.map((d) => {
         const table = asset.meshes[d.mesh]?.featureTable;
         return table !== undefined ? asset.featureTables[table] : undefined;
@@ -441,6 +447,9 @@ const Z_UP_TO_X_UP = Float64Array.from([
   0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
 ]);
 const AXIS_CORRECTION = m4.multiply(m4.mat4(), Y_UP_TO_Z_UP, Z_UP_TO_X_UP);
+const X_UP_TO_Z_UP = Float64Array.from([
+  0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 1,
+]);
 
 /**
  * Uploads a parsed glTF asset into a world: textures (sRGB where glTF says
@@ -686,63 +695,83 @@ function placeGltf(
 ): ModelPlacement {
   const { world, upload, template: asset } = model;
   const modelMatrix = placementMatrix(options);
+  const composite = asset.parts.length > 1;
   // i3dm content: its instances, relative to their origin in tile space.
-  const assetInstances =
-    options.instances === undefined ? asset.instances : undefined;
-  let rootMatrix: Mat4 = modelMatrix;
-  if (assetInstances) {
-    const [x, y, z] = assetInstances.origin;
+  const contentInstances = (part: GltfAssetPart) =>
+    options.instances === undefined ? part.instances : undefined;
+  const originOf = (instances: NonNullable<GltfAssetPart["instances"]>) => {
     const translation = m4.mat4();
-    translation[12] = x;
-    translation[13] = y;
-    translation[14] = z;
-    rootMatrix = m4.multiply(m4.mat4(), modelMatrix, translation);
-  }
+    translation[12] = instances.origin[0];
+    translation[13] = instances.origin[1];
+    translation[14] = instances.origin[2];
+    return translation;
+  };
+  // One part's origin is the placement's root; a composite's are below it.
+  const only = composite ? undefined : contentInstances(asset.parts[0]!);
   const root = world.addTransform(
-    rootMatrix,
+    only ? m4.multiply(m4.mat4(), modelMatrix, originOf(only)) : modelMatrix,
     options.parent ?? contentAnchor(world, options.anchor, "place"),
   );
   onRoot(root);
-
-  // Below the root: RTC_CENTER × axis correction × node, as 1.x
-  // ModelSceneGraph composes modelMatrix × RTC_CENTER × axis × node.
-  const correction = m4.mat4();
-  if (asset.rtcCenter) {
-    correction[12] = asset.rtcCenter[0];
-    correction[13] = asset.rtcCenter[1];
-    correction[14] = asset.rtcCenter[2];
-  }
-  if (model.axes !== "none") {
-    m4.multiply(
-      correction,
-      correction,
-      model.axes === "3d-tiles" ? Y_UP_TO_Z_UP : AXIS_CORRECTION,
-    );
-  }
   const rootWorld = world.worldMatrix(root);
+  const parts = asset.parts.map((part) => {
+    const instances = contentInstances(part);
+    const frame =
+      composite && instances
+        ? world.addTransform(originOf(instances), root)
+        : root;
+    // Below the root: RTC_CENTER × axis correction × node, as 1.x
+    // ModelSceneGraph composes modelMatrix × RTC_CENTER × axis × node.
+    const correction = m4.mat4();
+    if (part.rtcCenter) {
+      correction[12] = part.rtcCenter[0];
+      correction[13] = part.rtcCenter[1];
+      correction[14] = part.rtcCenter[2];
+    }
+    if (model.axes !== "none") {
+      m4.multiply(
+        correction,
+        correction,
+        model.axes === "3d-tiles"
+          ? Y_UP_TO_Z_UP
+          : model.axes === "3d-tiles-x-up"
+            ? X_UP_TO_Z_UP
+            : AXIS_CORRECTION,
+      );
+    }
+    const user: ModelInstances | undefined =
+      options.instances ??
+      (instances
+        ? { matrices: instances.matrices, featureIds: instances.featureIds }
+        : undefined);
+    return {
+      frame,
+      frameWorld: frame === root ? rootWorld : world.worldMatrix(frame),
+      correction,
+      user,
+      spheres: [] as Array<{ center: Vec3; radius: number }>,
+    };
+  });
   const nodes = new Map<Float64Array, TransformHandle>();
   const draws = placed.draws;
-  const spheres: Array<{ center: Vec3; radius: number }> = [];
-  const user: ModelInstances | undefined =
-    options.instances ??
-    (assetInstances
-      ? {
-          matrices: assetInstances.matrices,
-          featureIds: assetInstances.featureIds,
-        }
-      : undefined);
-  const userCount = user ? user.matrices.length / 16 : 0;
-  const frames: InstanceFrame[] | undefined = user ? [] : undefined;
+  // `setInstance` moves one set of instances: an application's, or a lone
+  // i3dm's. A composite's parts each have their own, so none.
+  const instanced =
+    options.instances ?? (composite ? undefined : parts[0]!.user);
+  const userCount = instanced ? instanced.matrices.length / 16 : 0;
+  const frames: InstanceFrame[] | undefined = instanced ? [] : undefined;
   for (let d = 0; d < asset.draws.length; d++) {
     const draw = asset.draws[d]!;
+    const part = parts[draw.part ?? 0]!;
+    const { user, spheres } = part;
     // One transform per node: its primitives share the node's matrix.
-    const local = m4.multiply(m4.mat4(), correction, draw.matrix);
+    const local = m4.multiply(m4.mat4(), part.correction, draw.matrix);
     let node = nodes.get(draw.matrix);
     if (!node) {
-      node = world.addTransform(local, root);
+      node = world.addTransform(local, part.frame);
       nodes.set(draw.matrix, node);
     }
-    const worldMatrix = m4.multiply(m4.mat4(), rootWorld, local);
+    const worldMatrix = m4.multiply(m4.mat4(), part.frameWorld, local);
     const material =
       upload.drawMaterials[
         draw.material >= 0 ? draw.material : upload.drawMaterials.length - 1
@@ -766,9 +795,17 @@ function placeGltf(
       name: options.name,
       viewMask: options.viewMask,
       features:
-        asset.drawTables[d] ?? (assetInstances ? asset.firstTable : undefined),
+        asset.drawTables[d] ??
+        (!composite && only ? asset.firstTable : undefined),
       ...(user
-        ? { instances: modelInstances(user, local, draw.instances, frames!) }
+        ? {
+            instances: modelInstances(
+              user,
+              local,
+              draw.instances,
+              frames ?? [],
+            ),
+          }
         : draw.instances
           ? {
               instances: {
@@ -801,12 +838,16 @@ function placeGltf(
   }
   // Its lights, at their nodes (one placement: not for instanced models).
   const lights = placed.lights;
-  for (const light of user ? [] : asset.lights) {
+  for (const light of asset.lights) {
+    const part = parts[light.part ?? 0]!;
+    if (part.user) {
+      continue;
+    }
     let node = nodes.get(light.matrix);
     if (!node) {
       node = world.addTransform(
-        m4.multiply(m4.mat4(), correction, light.matrix),
-        root,
+        m4.multiply(m4.mat4(), part.correction, light.matrix),
+        part.frame,
       );
       nodes.set(light.matrix, node);
     }
@@ -822,10 +863,11 @@ function placeGltf(
       }),
     );
   }
-  let bounds = unionSphere(spheres);
-  if (user) {
-    bounds = instanceBounds(bounds, rootWorld, user.matrices);
-  }
+  const partBounds = parts.map(({ spheres, user, frameWorld }) => {
+    const sphere = unionSphere(spheres);
+    return user ? instanceBounds(sphere, frameWorld, user.matrices) : sphere;
+  });
+  const bounds = composite ? unionSphere(partBounds) : partBounds[0]!;
   const placement = new ModelPlacement(
     model,
     draws,

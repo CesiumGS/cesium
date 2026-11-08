@@ -108,6 +108,15 @@ const PIPELINE_WINDOW = 256;
 const LOADING_IMAGERY = 1e15;
 /** Frames without any view touching an in-flight tile before it is cancelled. */
 const CANCEL_AFTER_FRAMES = 30;
+/**
+ * A 3D Tiles 1.0 tileset's `asset.gltfUpAxis` as its content's axes, read
+ * from the root tileset only (as 1.x). The default is Y.
+ */
+function contentAxes(json: TileJson | undefined): ModelResourceOptions["axes"] {
+  const up = json?.asset?.gltfUpAxis?.toUpperCase();
+  return up === "Z" ? "none" : up === "X" ? "3d-tiles-x-up" : "3d-tiles";
+}
+
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
 /** `Tileset3D.rootJson` of a tileset.json without a root (and of terrain). */
@@ -249,6 +258,12 @@ export interface TilesetStats {
   bytesTotal: number;
   /** Cumulative content bytes received over the network. */
   bytesReceived: number;
+  /**
+   * Tiles whose content can't be drawn, unsupported or failed: they still
+   * select and refine (as in 1.x's tree), and nothing more is coming for
+   * them, so the tileset can settle. Why: `Tileset3D.undrawnReasons`.
+   */
+  undrawn: number;
   /** Tiles selected per view id in the last update. */
   selected: Map<number, number>;
   /** Cumulative requests by what they were for (`RequestPurpose`). */
@@ -298,6 +313,8 @@ const WHITE = [1, 1, 1, 1] as const;
 
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
+  /** Why tiles draw nothing (`TilesetStats.undrawn`), each reason once. */
+  readonly undrawnReasons = new Set<string>();
   /** Whether loaded tiles keep their triangles (`TilesetOptions.retainGeometry`). */
   readonly retainGeometry: boolean;
   readonly events = new Emitter<TilesetEvents>();
@@ -359,6 +376,8 @@ export class Tileset3D implements TileTree {
   private policy: TileSelection;
   private watchedPolicy?: { policy: TileSelection; proxy: TileSelection };
   private readonly options: TilesetOptions;
+  /** How its content is turned upright (`asset.gltfUpAxis`). */
+  private readonly contentAxes: ModelResourceOptions["axes"];
   readonly stats: TilesetStats = {
     tiles: 0,
     loaded: 0,
@@ -376,6 +395,7 @@ export class Tileset3D implements TileTree {
     requestsTotal: 0,
     bytesTotal: 0,
     bytesReceived: 0,
+    undrawn: 0,
     selected: new Map(),
     purposes: emptyPurposes(),
   };
@@ -934,6 +954,7 @@ export class Tileset3D implements TileTree {
       throw new Error("Tileset3D: give a customShader or a style, not both.");
     }
     this.options = options;
+    this.contentAxes = contentAxes(tilesetJson);
     this.collision = options.enableCollision ?? false;
     this.retainGeometry = options.retainGeometry ?? false;
     this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
@@ -1550,13 +1571,20 @@ export class Tileset3D implements TileTree {
         // Loaded but drawing nothing: selection and refinement behave as in
         // 1.x, which does decode these formats.
         tile.state = "ready";
-        this.warnings.add(`${message} (drawn empty)`);
+        this.undrawnTile(`${message} (drawn empty)`);
         return undefined;
       }
       tile.state = "failed";
-      this.warnings.add(`content failed: ${message}`);
+      this.undrawnTile(`content failed: ${message}`);
       return undefined;
     }
+  }
+
+  /** One more tile that draws nothing, and why (`TilesetStats.undrawn`). */
+  private undrawnTile(reason: string): void {
+    this.stats.undrawn++;
+    this.undrawnReasons.add(reason);
+    this.warnings.add(reason);
   }
 
   /**
@@ -1598,7 +1626,7 @@ export class Tileset3D implements TileTree {
         // The source kept until the placement succeeds: a capacity failure
         // anywhere leaves the asset whole for the retry.
         const model = this.engine.uploadModel(this.world, asset, {
-          axes: placing?.axes ?? "3d-tiles",
+          axes: placing?.axes ?? this.contentAxes,
           releaseSourceData: false,
         });
         let placement: ModelPlacement;
@@ -1700,7 +1728,7 @@ export class Tileset3D implements TileTree {
           break;
         }
         tile.state = "failed";
-        this.warnings.add(
+        this.undrawnTile(
           `upload failed: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
@@ -1808,6 +1836,8 @@ export class Tileset3D implements TileTree {
         mesh === undefined ||
         matrix === undefined ||
         d.instances !== undefined ||
+        // A composite's i3dm, as a lone one above.
+        (d.part !== undefined && asset.parts?.[d.part]?.instances) ||
         (mesh.topology ?? "triangle-list") !== "triangle-list"
       ) {
         return;

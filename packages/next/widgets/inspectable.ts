@@ -71,6 +71,8 @@ export interface InspectorSnapshot {
     perView?: Array<[string, number]>;
     /** Tiles the engine knows of (loaded headers). */
     known?: number;
+    /** Tiles whose content can't be drawn (the problems say why). */
+    undrawn?: number;
     /** Content requests in flight. */
     loading: number;
     /** The request window: how many may be in flight. */

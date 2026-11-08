@@ -119,11 +119,16 @@ export interface GltfDraw {
   instances?: Float32Array;
   /** Local feature ID per instance (0xffffffff: none). */
   instanceFeatureIds?: Uint32Array;
+  /** Which of `GltfAsset.parts` it belongs to (a composite's). */
+  part?: number;
 }
 
 /** How a content load spent its time in the worker, and its image types. */
 export interface ContentTiming {
-  /** Container: "glb", "gltf" (JSON with external resources), "b3dm" or "i3dm". */
+  /**
+   * Container: "glb", "gltf" (JSON with external resources), "b3dm", "i3dm"
+   * or "cmpt".
+   */
   format: string;
   /** Request start to the last byte of the main resource, ms. */
   networkMs: number;
@@ -156,6 +161,14 @@ export interface GltfLight {
   outerConeAngle?: number;
   /** Its node's world matrix in glTF space (column-major float64). */
   matrix: Float64Array;
+  /** Which of `GltfAsset.parts` it belongs to (a composite's). */
+  part?: number;
+}
+
+/** What differs between a composite's inner tiles: see `GltfAsset.parts`. */
+export interface GltfAssetPart {
+  rtcCenter?: GltfAsset["rtcCenter"];
+  instances?: GltfAsset["instances"];
 }
 
 export interface GltfAsset {
@@ -180,6 +193,13 @@ export interface GltfAsset {
     origin: [number, number, number];
     featureIds: Uint32Array;
   };
+  /**
+   * A composite (cmpt) tile of two or more inner tiles: each one's RTC center
+   * and instances, which its draws and lights name (`part`), in place of the
+   * asset's own `rtcCenter` and `instances`. Everything else is one asset's:
+   * a tile's content is one model, one placement, one byte count.
+   */
+  parts?: GltfAssetPart[];
   /** glTF `asset.copyright`: data credit to show while the content is on screen. */
   copyright?: string;
   /** Features skipped while parsing (unsupported extensions, attributes, modes). */

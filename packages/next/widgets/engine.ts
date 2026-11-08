@@ -138,6 +138,9 @@ export function engineSnapshot(
           }
         : {}),
       known: sum((t) => t.stats.tiles),
+      ...(sum((t) => t.stats.undrawn) > 0
+        ? { undrawn: sum((t) => t.stats.undrawn) }
+        : {}),
       loading: sum((t) => t.stats.inFlight),
       window: {
         max: widest.stats.maxInFlight,

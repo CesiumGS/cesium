@@ -521,6 +521,13 @@ export function unwrapI3dm(bytes: Uint8Array): I3dm {
   const gltf = bytes.subarray(offset, byteLength);
 
   const n: number = ft.INSTANCES_LENGTH ?? 0;
+  // The smallest position is 6 bytes (POSITION_QUANTIZED): a count the
+  // feature table can't hold would size the arrays below from a bad header.
+  if (!Number.isInteger(n) || n < 0 || n * 6 > ftBinLength) {
+    throw new Error(
+      `i3dm: INSTANCES_LENGTH ${n} doesn't fit a ${ftBinLength}-byte feature table`,
+    );
+  }
   const fb = new DataView(
     ftBinary.buffer,
     ftBinary.byteOffset,
