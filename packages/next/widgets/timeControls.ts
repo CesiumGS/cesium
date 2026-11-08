@@ -29,7 +29,10 @@
  * camera. Styled in Cesium's 1.x widget palette.
  *
  * A place's legal time zone needs a boundary table (a follow-up); local
- * solar time is what the light follows.
+ * solar time is what the light follows. An app that knows its place's zone
+ * gives it (`zone: { iana: "Europe/London" }`): the controls then show that
+ * civil time, daylight saving included, labelled with the zone's
+ * abbreviation ("BST"), as the browser's Intl knows it.
  */
 import type { Clock } from "../src/time/Clock.ts";
 import { sunElevation, sunTimes, type SunTimes } from "../src/time/sun.ts";
@@ -46,7 +49,9 @@ export interface TimeControlsOptions {
   /**
    * The zone the controls open on (default "nominal", the place's by
    * longitude); ⚙ still offers the others. An app whose time isn't about a
-   * place on the Earth opens on "utc".
+   * place on the Earth opens on "utc"; one that knows its place's civil
+   * zone gives its IANA name (`{ iana: "Europe/London" }`), which ⚙ then
+   * offers too.
    */
   zone?: TimeZoneChoice;
   /** The group's accessible name (default "Date and time of the sun"). */
@@ -85,9 +90,17 @@ export interface TimeMark {
   title: string;
 }
 
-/** The zones ⚙ offers. */
-export type TimeZoneChoice = "nominal" | "solar" | "utc" | "local";
+/**
+ * The zones ⚙ offers, and a civil zone by its IANA name ("Europe/London"),
+ * which the app gives (`TimeControlsOptions.zone`, `setZone`).
+ */
+export type TimeZoneChoice =
+  "nominal" | "solar" | "utc" | "local" | { readonly iana: string };
 type Zone = TimeZoneChoice;
+type NamedZone = Exclude<Zone, { readonly iana: string }>;
+
+/** The value ⚙'s select gives a civil zone. */
+const IANA_OPTION = "iana";
 
 const DAY = 86_400_000;
 const MINUTE = 60_000;
@@ -109,7 +122,7 @@ const SEASONS: Array<[string, number, number]> = [
   ["December solstice", 11, 21],
 ];
 
-const ZONES: Record<Zone, { short: string; long: string }> = {
+const ZONES: Record<NamedZone, { short: string; long: string }> = {
   nominal: {
     short: "",
     long:
@@ -239,13 +252,28 @@ export function attachTimeControls(
   zoneSelect.className = "ct-select";
   const computerZone =
     Intl.DateTimeFormat().resolvedOptions().timeZone ?? "This computer";
+  const civilOption = option(IANA_OPTION, "");
   zoneSelect.append(
     option("nominal", "The place's (by longitude)"),
     option("solar", "Solar time at the place"),
     option("utc", "UTC"),
     option("local", `This computer (${computerZone})`),
   );
-  zoneSelect.value = zone;
+  /** The app's civil zone, offered in ⚙ once it has given one. */
+  let civil: string | undefined;
+  const showZone = () => {
+    if (typeof zone === "object") {
+      civil = zone.iana;
+    }
+    if (civil !== undefined) {
+      civilOption.textContent = `The place's civil time (${civil})`;
+      if (civilOption.parentElement === null) {
+        zoneSelect.prepend(civilOption);
+      }
+    }
+    zoneSelect.value = typeof zone === "object" ? IANA_OPTION : zone;
+  };
+  showZone();
 
   // The sun: always shown, its action reserved (no shift when it sets).
   const sunRow = el("div", "ct-sun");
@@ -314,6 +342,9 @@ export function attachTimeControls(
     if (zone === "local") {
       return -new Date(ms).getTimezoneOffset();
     }
+    if (typeof zone === "object") {
+      return ianaOffsetMinutes(ms, zone.iana);
+    }
     const p = place();
     if (!p) {
       return 0;
@@ -344,6 +375,9 @@ export function attachTimeControls(
     minute: "2-digit",
   });
   const zoneShort = () => {
+    if (typeof zone === "object") {
+      return ianaAbbreviation(clock.time, zone.iana);
+    }
     if (zone === "local") {
       return (
         new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
@@ -417,7 +451,10 @@ export function attachTimeControls(
     moveToDay(utcMidnight - offset(utcMidnight) * MINUTE);
   });
   zoneSelect.addEventListener("change", () => {
-    zone = zoneSelect.value as Zone;
+    zone =
+      zoneSelect.value === IANA_OPTION && civil !== undefined
+        ? { iana: civil }
+        : (zoneSelect.value as NamedZone);
     lastDrawn = "";
     render();
   });
@@ -539,10 +576,14 @@ export function attachTimeControls(
     const clockText = formatClock.format(local);
     timeText.textContent = clockText;
     zoneTag.textContent = zoneShort();
+    const long =
+      typeof zone === "object"
+        ? `Civil time at the place (${zone.iana})`
+        : ZONES[zone].long;
     time.title =
       clock.mode === "live"
-        ? `Now, following this computer's clock (${ZONES[zone].long})`
-        : ZONES[zone].long;
+        ? `Now, following this computer's clock (${long})`
+        : long;
     dateButton.textContent = formatDate.format(local);
     dateButton.title = `${formatYear.format(local)}: choose a date`;
     date.value = local.toISOString().slice(0, 10);
@@ -609,7 +650,7 @@ export function attachTimeControls(
     const g = strip.getContext("2d")!;
     const p = place();
     // The day's shading only changes with the day, the place or the zone.
-    const key = `${start}|${zone}|${p ? `${p.longitude.toFixed(3)},${p.latitude.toFixed(3)}` : ""}|${width}`;
+    const key = `${start}|${zoneKey(zone)}|${p ? `${p.longitude.toFixed(3)},${p.latitude.toFixed(3)}` : ""}|${width}`;
     if (key !== lastDrawn) {
       lastDrawn = key;
       for (let x = 0; x < width; x++) {
@@ -696,7 +737,7 @@ export function attachTimeControls(
     },
     setZone(next) {
       zone = next;
-      zoneSelect.value = next;
+      showZone();
       lastDrawn = "";
       render();
     },
@@ -713,6 +754,97 @@ export function attachTimeControls(
       root.remove();
     },
   };
+}
+
+/** A zone as a string, for the strip's cache key. */
+const zoneKey = (zone: Zone): string =>
+  typeof zone === "object" ? `iana:${zone.iana}` : zone;
+
+const ianaFormats = new Map<string, Intl.DateTimeFormat>();
+
+/**
+ * Minutes the IANA zone `iana` is ahead of UTC at `ms` (daylight saving
+ * included), from the browser's Intl: its wall clock read back as UTC.
+ * An unknown zone throws (Intl's RangeError).
+ */
+export function ianaOffsetMinutes(ms: number, iana: string): number {
+  let format = ianaFormats.get(iana);
+  if (format === undefined) {
+    format = new Intl.DateTimeFormat("en-US", {
+      timeZone: iana,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    });
+    ianaFormats.set(iana, format);
+  }
+  const part: Record<string, number> = {};
+  for (const p of format.formatToParts(new Date(ms))) {
+    if (p.type !== "literal") {
+      part[p.type] = Number(p.value);
+    }
+  }
+  const wall = Date.UTC(
+    part.year!,
+    part.month! - 1,
+    part.day!,
+    part.hour!,
+    part.minute!,
+    part.second!,
+  );
+  const whole = Math.floor(ms / 1000) * 1000;
+  return Math.round((wall - whole) / 60_000);
+}
+
+/**
+ * Locales whose short zone names are the abbreviations people there use
+ * ("BST", "AEST", "JST"), tried in turn when the reader's own locale
+ * names the zone only by its offset ("GMT+1").
+ */
+const ABBREVIATION_LOCALES = [
+  "en-GB",
+  "en-AU",
+  "en-US",
+  "en-IN",
+  "en-NZ",
+  "ja-JP",
+  "id-ID",
+] as const;
+
+/**
+ * The IANA zone's abbreviation at `ms` ("BST", "PDT", "AEDT"), by Intl:
+ * the reader's locale's short name, else the first of a few English
+ * locales' (and the zone's own country's) that isn't just an offset, else
+ * the offset itself ("UTC+3").
+ */
+export function ianaAbbreviation(
+  ms: number,
+  iana: string,
+  locale?: string,
+): string {
+  const shortName = (loc: string | undefined) =>
+    new Intl.DateTimeFormat(loc, { timeZone: iana, timeZoneName: "short" })
+      .formatToParts(new Date(ms))
+      .find((p) => p.type === "timeZoneName")?.value ?? "";
+  const offsetOnly = (name: string) => /^(GMT|UTC)[+−-]/.test(name);
+  for (const loc of [locale, ...ABBREVIATION_LOCALES]) {
+    const name = shortName(loc);
+    if (name !== "" && !offsetOnly(name) && !/^[+−-]/.test(name)) {
+      return name;
+    }
+  }
+  const minutes = ianaOffsetMinutes(ms, iana);
+  if (minutes === 0) {
+    return "UTC";
+  }
+  const sign = minutes > 0 ? "+" : "−";
+  const h = Math.floor(Math.abs(minutes) / 60);
+  const m = Math.abs(minutes) % 60;
+  return `UTC${sign}${h}${m === 0 ? "" : `:${String(m).padStart(2, "0")}`}`;
 }
 
 /**
