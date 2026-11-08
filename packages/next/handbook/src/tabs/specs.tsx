@@ -196,6 +196,13 @@ export function Specs() {
           placement mode for content a producer or host reprojected itself
           (section 7.9).
         </p>
+        <p>
+          <strong>Proposed, not built:</strong> an explicit colour space in the
+          styling language, using CSS Color 4 syntax (
+          <C>color(srgb-linear 1 0.5 0)</C>, <C>color(display-p3 ...)</C>)
+          passed through the existing <C>color('...')</C> string (the overall
+          plan, section 13.18).
+        </p>
         <h3>What the engine declares today</h3>
         <DataTable
           label="Tileset declarations in use"
