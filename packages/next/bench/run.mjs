@@ -87,7 +87,7 @@ const suites = {
   // Public Specs tilesets; ION_ASSET=<id> (with VITE_ION_TOKEN in .env.local)
   // runs a private ion asset instead, without the id entering the repo.
   lod: [
-    `/parity/lod.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.IMODEL ? `&imodel=${process.env.IMODEL}` : ""}${process.env.AT ? `&at=${process.env.AT}` : ""}${process.env.SCENARIOS ? `&scenarios=${encodeURIComponent(process.env.SCENARIOS)}` : ""}${process.env.POLICIES ? `&policies=${process.env.POLICIES}` : ""}${process.env.ION_TOKEN === "default" ? "&token=default" : ""}${process.env.SHADOWS === "1" ? "&shadows=1" : ""}${process.env.CASTERS === "0" ? "&casters=0" : ""}${process.env.CACHE_BYTES ? `&cache=${process.env.CACHE_BYTES}` : ""}${process.env.CLOSE ? `&close=${process.env.CLOSE}` : ""}${process.env.NO_FLIP === "1" ? "&flip=0" : ""}`,
+    `/parity/lod.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.IMODEL ? `&imodel=${process.env.IMODEL}` : ""}${process.env.AT ? `&at=${process.env.AT}` : ""}${process.env.SCENARIOS ? `&scenarios=${encodeURIComponent(process.env.SCENARIOS)}` : ""}${process.env.POLICIES ? `&policies=${process.env.POLICIES}` : ""}${process.env.ION_TOKEN === "default" ? "&token=default" : ""}${process.env.SHADOWS === "1" ? "&shadows=1" : ""}${process.env.CASTERS === "0" ? "&casters=0" : ""}${process.env.CACHE_BYTES ? `&cache=${process.env.CACHE_BYTES}` : ""}${process.env.CLOSE ? `&close=${process.env.CLOSE}` : ""}${process.env.NO_FLIP === "1" ? "&flip=0" : ""}${process.env.SIZE ? `&size=${process.env.SIZE}` : ""}${process.env.SUN ? `&sun=${process.env.SUN}` : ""}`,
     "runLod",
   ],
   selection: [

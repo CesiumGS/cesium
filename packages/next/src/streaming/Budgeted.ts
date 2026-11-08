@@ -36,6 +36,7 @@ import {
 import { CLIP_BOXES } from "../render/layout.ts";
 import type { Tile, TileViewState } from "./Tile.ts";
 import {
+  INSIDE,
   OUTSIDE,
   aboveHorizon,
   volumeIntersectPlane,
@@ -138,6 +139,8 @@ export class BudgetedSelection extends StepwiseSelection {
   readonly prefetchAfterVisible = true;
   /** Selects shadow casters off screen (not terrain, which has its own rules). */
   protected selectsCasters = true;
+  /** Each view's last `select`: the caster walk needn't test its tiles again. */
+  private readonly viewPasses = new Map<number, number>();
 
   constructor(options: BudgetedOptions = {}) {
     super(options);
@@ -191,6 +194,7 @@ export class BudgetedSelection extends StepwiseSelection {
     view: SelectionView,
   ): SelectionResult {
     const pass = ++this.pass;
+    this.viewPasses.set(view.id, pass);
     const result: SelectionResult = {
       selected: [],
       requested: [],
@@ -279,16 +283,21 @@ export class BudgetedSelection extends StepwiseSelection {
     if (!region) {
       return found;
     }
-    const pass = ++this.pass;
+    const pass = this.viewPasses.get(view.id) ?? ++this.pass;
     const threshold = this.memoryAdjustedScreenSpaceError;
     const drawn = new Set(selected);
     let scale = this.casterErrorScale;
     let candidates: CasterCandidate[] = [];
-    const visit = (tile: Tile, above: Tile | undefined): void => {
-      if (
-        (tile.refine === "REPLACE" && drawn.has(tile)) ||
-        !region.reaches(tile)
-      ) {
+    const visit = (
+      tile: Tile,
+      above: Tile | undefined,
+      within: number,
+    ): void => {
+      if (tile.refine === "REPLACE" && drawn.has(tile)) {
+        return;
+      }
+      const inside = region.reaches(tile, within);
+      if (inside < 0) {
         return;
       }
       const state = tile.viewState(view.id);
@@ -350,7 +359,7 @@ export class BudgetedSelection extends StepwiseSelection {
       const next =
         tile.refine === "REPLACE" && loaded && !onScreen ? tile : above;
       for (const child of tile.children) {
-        visit(child, next);
+        visit(child, next, inside);
       }
     };
     // What a tile adds: nothing if another walk admitted it, or if it stays
@@ -384,7 +393,7 @@ export class BudgetedSelection extends StepwiseSelection {
     const maxScale = this.casterErrorScale * CASTER_SCALE_MAX;
     for (;;) {
       candidates = [];
-      visit(root, undefined);
+      visit(root, undefined, 0);
       if (scale >= maxScale || !room.load || fits()) {
         break;
       }
@@ -416,9 +425,14 @@ export class BudgetedSelection extends StepwiseSelection {
         continue;
       }
       if (room.load) {
+        // No room: nothing to look for, not even in a sub-tileset's JSON.
+        // No size yet: the first one's size decides.
         const probe = c.bytes === 0 && !c.tile.external;
-        if (probe && (sizeKnown || room.bytes <= 0)) {
-          continue; // the first one's size decides
+        if (room.bytes <= 0 || (probe && sizeKnown)) {
+          if (c.standIn && admit(c.standIn, c.standIn.bytes)) {
+            casters.add(c.standIn);
+          }
+          continue;
         }
         sizeKnown ||= probe;
         if (!admit(c.tile, c.bytes)) {
@@ -980,21 +994,50 @@ class CasterRegion {
     return new CasterRegion(boxes, rectangle);
   }
 
-  /** Whether the tile's volume reaches inside the region. */
-  reaches(tile: Tile): boolean {
-    return (
-      this.inside(tile, this.rectangle) &&
-      this.boxes.some((box) => this.inside(tile, box))
-    );
-  }
-
-  private inside(tile: Tile, planes: readonly RegionPlane[]): boolean {
-    for (const { n, d } of planes) {
-      if (volumeIntersectPlane(tile.volume, n, d) === OUTSIDE) {
-        return false;
+  /**
+   * Whether the tile's volume reaches inside the region: negative if not,
+   * else what its children needn't test again, given what its parent's call
+   * returned (`within`): 1, the rectangle; 2, a box; 3, both.
+   */
+  reaches(tile: Tile, within: number): number {
+    let inside = within;
+    if ((inside & 1) === 0) {
+      const r = this.side(tile, this.rectangle);
+      if (r === OUTSIDE) {
+        return -1;
+      }
+      inside |= r === INSIDE ? 1 : 0;
+    }
+    if ((inside & 2) === 0) {
+      let reached = false;
+      for (const box of this.boxes) {
+        const r = this.side(tile, box);
+        reached ||= r !== OUTSIDE;
+        if (r === INSIDE) {
+          inside |= 2;
+          break;
+        }
+      }
+      if (!reached) {
+        return -1;
       }
     }
-    return true;
+    return inside;
+  }
+
+  /** Where the tile's volume is against `planes`, all of them. */
+  private side(tile: Tile, planes: readonly RegionPlane[]): number {
+    let side = INSIDE;
+    for (const { n, d } of planes) {
+      const r = volumeIntersectPlane(tile.volume, n, d);
+      if (r === OUTSIDE) {
+        return OUTSIDE;
+      }
+      if (r !== INSIDE) {
+        side = r;
+      }
+    }
+    return side;
   }
 }
 

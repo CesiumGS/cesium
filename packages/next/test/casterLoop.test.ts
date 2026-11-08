@@ -755,6 +755,54 @@ describe("casters on the on-demand loop", () => {
     });
   });
 
+  it("a sub-tileset loading for a caster doesn't unsettle a view", async () => {
+    const url = (name: string) => `https://tiles.test/a/${name}`;
+    documents.set(url("sub.json"), {
+      asset: { version: "1.1" },
+      geometricError: 100,
+      root: box(15, 0, -5, [1, 5, 5], 0, "subRoof.glb"),
+    });
+    const s = await scene({
+      root: group([floor(), box(15, 0, -5, [1, 5, 5], 100, "sub.json")]),
+      bytes: tileBytes(1),
+      latency: 2,
+      size: [640, 480],
+    });
+    s.look(s.view, 2, 0, 0, 0, 0);
+    let wentBusy = false;
+    let settled = false;
+    for (let i = 0; i < 100; i++) {
+      await tick();
+      settled ||= s.tiles[0]!.viewMask !== 0 && s.tileset.idle;
+      wentBusy ||= settled && !s.tileset.idle;
+    }
+    expect(settled).toBe(true);
+    expect(wentBusy).toBe(false);
+    // And the sub-tileset's tile does cast in the end.
+    expect((s.tiles[1]!.children[0] as Tile).casterMask).not.toBe(0);
+    s.remove();
+  });
+
+  it("no room: a sub-tileset isn't fetched for casters either", async () => {
+    documents.set("https://tiles.test/a/sub.json", {
+      asset: { version: "1.1" },
+      geometricError: 100,
+      root: box(15, 0, -5, [1, 5, 5], 0, "subRoof.glb"),
+    });
+    const s = await scene({
+      root: group([floor(), box(15, 0, -5, [1, 5, 5], 100, "sub.json")]),
+      bytes: tileBytes(600),
+      latency: 2,
+      size: [640, 480],
+    });
+    s.look(s.view, 2, 0, 0, 0, 0);
+    await ticks(60);
+    expect(s.tiles[0]!.state).toBe("ready");
+    expect(s.stats.purposes.caster.requests).toBe(0);
+    expect(s.tiles[1]!.state).toBe("unloaded");
+    s.remove();
+  });
+
   it("a tileset of content it can't draw, such as point clouds, loads no casters", async () => {
     const s = await scene({
       root: group([floor(), roof(), roof(1), roof(2)]),

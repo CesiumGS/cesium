@@ -1197,7 +1197,7 @@ export class Tileset3D implements TileTree {
    * settled while they load, and answers made then are final.
    */
   get idle(): boolean {
-    if (this.externals.length > 0) {
+    if (this.externals.some((e) => !isCaster(e.tile))) {
       return false;
     }
     for (const tile of this.loading.keys()) {
@@ -1223,7 +1223,10 @@ export class Tileset3D implements TileTree {
       if (budget.trees > 0 && budget.ms <= 0) {
         break;
       }
-      const { tile, json } = this.externals.shift()!;
+      // What views wait for first, as for uploads.
+      const next = this.externals.findIndex((e) => !isCaster(e.tile));
+      const { tile, json } = this.externals.splice(Math.max(next, 0), 1)[0]!;
+      tile.purpose = undefined; // structure, never drawn itself
       const start = performance.now();
       try {
         const { root } = treeFromJson(json, tile.contentUrl!, tile, this);
@@ -1745,6 +1748,11 @@ export class Tileset3D implements TileTree {
         }
       }
     }
+    // Casters wait as well for what a view has here and hasn't placed: its
+    // next requests are a tick away, and a gap isn't the end of them.
+    const casterWaiting =
+      this.ready.some((r) => !isCaster(r.tile)) ||
+      this.externals.some((e) => !isCaster(e.tile));
     for (const [tile] of order) {
       if (tile.state !== "unloaded") {
         continue;
@@ -1752,7 +1760,10 @@ export class Tileset3D implements TileTree {
       // Shadow casters wait with prefetch: never ahead of what views draw.
       const purpose = purposes.get(tile) ?? "view";
       const prefetch = purpose === "prefetch" || purpose === "caster";
-      if (prefetch && visibleWaiting) {
+      if (
+        prefetch &&
+        (visibleWaiting || (casterWaiting && purpose === "caster"))
+      ) {
         continue;
       }
       const origin = tile.contentOrigin;
@@ -1818,7 +1829,6 @@ export class Tileset3D implements TileTree {
         if (!this.destroyed) {
           this.externals.push({ tile, json });
         }
-        tile.purpose = undefined; // structure, never drawn itself
         return undefined;
       }
       const asset = this.source

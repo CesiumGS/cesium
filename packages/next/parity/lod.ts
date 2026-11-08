@@ -8,6 +8,7 @@ import {
   type TilesetOptions,
   type View,
 } from "../src/index.ts";
+import type { TileSelection } from "../src/streaming/Stepwise.ts";
 import type { Harness } from "../lab/harness.ts";
 import { createGpuFlip, type GpuFlip } from "./flipGpu.ts";
 import { DEFAULT_ION_TOKEN, requireToken } from "../bench/suite/ionToken.ts";
@@ -62,8 +63,12 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
  * had converged at 500 ms decided its average (r37).
  */
 const SAMPLE_MS = 100;
-const WIDTH = 480;
-const HEIGHT = 270;
+// ?size=WxH (with ?flip=0): the view as an application's would be.
+const [WIDTH, HEIGHT] = (
+  new URLSearchParams(location.search).get("size") ?? "480x270"
+)
+  .split("x")
+  .map(Number) as [number, number];
 const deg = Math.PI / 180;
 
 interface Policy {
@@ -165,6 +170,8 @@ const frame = () => new Promise((resolve) => setTimeout(resolve, 16));
 interface Source {
   label: string;
   url: string;
+  /** Where the moves look. */
+  center: Float64Array;
   headers?: Record<string, string>;
   scenarios: Scenario[];
 }
@@ -247,6 +254,7 @@ function source(): Promise<Source> {
     return {
       label,
       url,
+      center: Float64Array.from(center),
       ...(headers ? { headers } : {}),
       scenarios: [
         {
@@ -323,6 +331,32 @@ async function measure(
     ...(params.get("shadows") === "1" ? { shadows: true } : {}),
   });
   view.camera.near = 1;
+  // ?sun=<elevation degrees>: the sun behind the camera (azimuth 210 degrees,
+  // the moves' heading of 30), so what casts into view is off screen.
+  const sun = params.get("sun");
+  if (sun) {
+    const up = Ellipsoid.WGS84.geodeticSurfaceNormal(
+      s.center,
+      new Float64Array(3),
+    )!;
+    const east = Float64Array.of(-up[1]!, up[0]!, 0);
+    const length = Math.hypot(east[0]!, east[1]!);
+    east[0] = east[0]! / length;
+    east[1] = east[1]! / length;
+    const north = Float64Array.of(
+      up[1]! * east[2]! - up[2]! * east[1]!,
+      up[2]! * east[0]! - up[0]! * east[2]!,
+      up[0]! * east[1]! - up[1]! * east[0]!,
+    );
+    const elevation = Number(sun) * deg;
+    const azimuth = 210 * deg;
+    for (let k = 0; k < 3; k++) {
+      e.sunDirection[k] =
+        Math.sin(elevation) * up[k]! +
+        Math.cos(elevation) *
+          (Math.sin(azimuth) * east[k]! + Math.cos(azimuth) * north[k]!);
+    }
+  }
   const tileset = await e.addTileset(world, s.url, {
     ...(s.headers ? { headers: s.headers } : {}),
     cacheBytes: Number(params.get("cache") ?? 4 * 1024 * 1024 * 1024),
@@ -342,7 +376,8 @@ async function measure(
     updateMs.push(performance.now() - t);
     walkMs.push(walked);
   };
-  const policy = tileset.selection;
+  // The tileset's own: `selection` is a proxy that counts any write as a change.
+  const { policy } = tileset as unknown as { policy: TileSelection };
   if (policy.selectCasters) {
     const walk = policy.selectCasters.bind(policy);
     policy.selectCasters = (...args) => {
