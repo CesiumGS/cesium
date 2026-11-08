@@ -76,6 +76,28 @@ export function drawnPlacement(site: SiteRuntime, t: number): Placement {
   return site.pair === undefined || t < 0.5 ? "rigid" : "reprojected";
 }
 
+/**
+ * The page's rule (`designRefusal`) for a hit on `tileset` of `site`: why
+ * there are no design coordinates there, if there are none, and the
+ * placement drawn there. Picks (`judgePick`) and the measure tool's snaps
+ * (measureTool.ts) are both judged by it, by the site that was hit.
+ */
+export function hitRefusal(
+  site: SiteRuntime,
+  tileset: Tileset3D | undefined,
+  state: PickState,
+): { readonly refused?: string; readonly drawn: Placement } {
+  const drawn = drawnPlacement(site, state.t);
+  const drawnTileset = drawn === "rigid" ? site.rigid : site.reprojected;
+  const refused = designRefusal({
+    mode: drawn,
+    morphing: site.pair !== undefined && state.morphing,
+    exaggeration: site.pair !== undefined ? state.exaggeration : 1,
+    hitIsDrawn: tileset === drawnTileset,
+  });
+  return refused === undefined ? { drawn } : { refused, drawn };
+}
+
 /** `pick` with the page's rule applied (`designRefusal`). */
 export function judgePick(
   hit: DesignPick | undefined,
@@ -85,14 +107,7 @@ export function judgePick(
   if (hit === undefined || site === undefined) {
     return { hit, site };
   }
-  const drawn = drawnPlacement(site, state.t);
-  const drawnTileset = drawn === "rigid" ? site.rigid : site.reprojected;
-  const refused = designRefusal({
-    mode: drawn,
-    morphing: site.pair !== undefined && state.morphing,
-    exaggeration: site.pair !== undefined ? state.exaggeration : 1,
-    hitIsDrawn: hit.tileset === drawnTileset,
-  });
+  const { refused, drawn } = hitRefusal(site, hit.tileset, state);
   if (refused === undefined || hit.design === undefined) {
     return { hit, site, drawn };
   }

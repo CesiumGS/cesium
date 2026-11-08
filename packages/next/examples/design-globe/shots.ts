@@ -222,7 +222,10 @@ export function createShots(deps: ShotsDeps): Shots {
    * pulled back with the drawn gap so the rigid deck stays in frame.
    */
   function openingShot(a: Answers, k = 1): Framing | undefined {
+    // At station 170,000, the opening measurement's (the design against
+    // itself, Task 19), about 20 km from the anchor.
     const p =
+      a.points[a.marker.point] ??
       a.points.find((q) => q.nearKm === 20) ??
       a.points.reduce((x, y) => (y.displayError > x.displayError ? y : x));
     if (p === undefined) {

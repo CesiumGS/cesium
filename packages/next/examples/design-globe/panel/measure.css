@@ -1,0 +1,443 @@
+/*
+ * The measure section and its labels over the globe (DESIGN.md "The story",
+ * "On the globe"). StrataKit tokens; the placements' colours from panel.css;
+ * the measure line's yellow and the survey disk's bronze are the 3D view's
+ * own colours (Dyno's guide exempts them), used over the dark HUD only.
+ */
+.dg-measure {
+  --dg-measure: #fde047;
+  --dg-measure-ink: #fef9c3;
+  --dg-bronze: #c9963f;
+  --dg-bronze-dark: #7a5419;
+}
+
+.dg-m-wait {
+  margin: 0;
+}
+
+/* The openers: rules between them, as the sites list; the quiet pair quieter. */
+.dg-m-list {
+  display: flex;
+  flex-direction: column;
+}
+.dg-m {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding-block: var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-m:last-child {
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.dg-m-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+}
+.dg-m-title {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 600;
+}
+.dg-m.quiet .dg-m-title {
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+  font-weight: 500;
+}
+.dg-m-head .MuiButton-root {
+  flex: none;
+}
+
+/* The self-check's headline: the drawn gap, large, in the drawn placement's colour. */
+.dg-m-hero {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+}
+.dg-m-big {
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.dg-m-hero.rigid .dg-m-big {
+  color: var(--dg-rigid);
+}
+.dg-m-hero.reprojected .dg-m-big {
+  color: var(--dg-reprojected);
+}
+.dg-m-hero.moving .dg-m-big,
+.dg-m-hero.muted .dg-m-big {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-m-hero-text {
+  flex: 1 1 14em;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* The design and true distances, side by side, the same weight: neither is the other's footnote. */
+.dg-m-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--stratakit-space-300);
+  margin: 0;
+}
+.dg-m-pair div {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.dg-m-pair dt {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-m-pair dd {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-lg);
+  line-height: var(--stratakit-line-height-body-lg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dg-m-pair.small dd {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 500;
+}
+
+/* The line as the globe draws it: a sentence with its placement's dot. */
+.dg-m-globe {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-150);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-m-globe .dg-dot {
+  flex: none;
+  margin: 0;
+  transform: translateY(-1px);
+}
+.dg-m-globe.rigid {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.dg-m-globe.muted {
+  color: var(--stratakit-color-text-attention-base);
+}
+
+/* Details: a disclosure, its caret turning. */
+.dg-m-disclose {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  padding: var(--stratakit-space-50) 0;
+  border: 0;
+  background: none;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+.dg-m-disclose:hover {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.dg-m-disclose:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: var(--stratakit-radius-sm);
+}
+.dg-m-caret {
+  transform: rotate(-90deg);
+}
+.dg-m-disclose[aria-expanded="true"] .dg-m-caret {
+  transform: none;
+}
+.dg-m-more {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-150);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-m-sheet p {
+  margin: 0;
+}
+.dg-m-sheet .dg-code-block {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-caption-md);
+}
+.dg-m-end {
+  display: grid;
+  grid-template-columns: 1.5em minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+}
+.dg-m-end-label {
+  font-weight: 600;
+}
+
+/* The user's own measurement. */
+.dg-m-user {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-200);
+}
+.dg-m-subhead {
+  margin: 0;
+}
+.dg-m-snap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+}
+.dg-m-next {
+  margin: 0;
+  min-block-size: 2.9em;
+}
+.dg-m-next.refused {
+  color: var(--stratakit-color-text-attention-base);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dg-m-caret {
+    transition: transform 120ms var(--dg-ease);
+  }
+  .dg-m-more {
+    animation: dg-open 160ms var(--dg-ease);
+  }
+}
+
+/* ------------------------------------------------------ over the globe */
+
+.dg-hud-host {
+  --dg-measure: #fde047;
+  --dg-measure-ink: #fef9c3;
+  --dg-bronze: #c9963f;
+  --dg-bronze-dark: #7a5419;
+}
+.dg-m-dot,
+.dg-m-pill,
+.dg-m-pin,
+.dg-m-disk,
+.dg-m-glyph {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+}
+.dg-m-dot {
+  inline-size: 0;
+  block-size: 0;
+  pointer-events: none;
+}
+.dg-m-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--dg-measure);
+  box-shadow: 0 0 0 1.5px rgb(0 0 0 / 0.6);
+}
+.dg-m-dot.truth::after {
+  background: var(--dg-reprojected);
+}
+
+/* The design-distance pill: dark, the measure line's yellow ink. */
+.dg-m-pill {
+  pointer-events: none;
+}
+.dg-m-pill span {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  padding: 2px var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: color-mix(in oklab, #0b1018 84%, transparent);
+  color: var(--dg-measure-ink);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--dg-measure) 40%, transparent);
+}
+.dg-m-pill.quiet span {
+  font-weight: 500;
+  color: color-mix(in oklab, var(--dg-measure-ink) 80%, #9ca3af);
+  box-shadow: none;
+}
+.dg-m-pill.ruler span {
+  transform: translate(-50%, 0);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 500;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Station 170,000 where it truly is: a cyan diamond, labelled. */
+.dg-m-pin {
+  pointer-events: none;
+}
+.dg-m-pin i {
+  position: absolute;
+  inset: -5px;
+  inline-size: 10px;
+  block-size: 10px;
+  transform: rotate(45deg);
+  background: var(--dg-reprojected);
+  box-shadow: 0 0 0 1.5px rgb(0 0 0 / 0.6);
+}
+.dg-m-pin span {
+  position: absolute;
+  transform: translate(12px, 4px);
+  color: #fff;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  white-space: nowrap;
+  paint-order: stroke;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
+}
+
+/* NGS's survey disk: a bronze benchmark disk with its PID, the datasheet on hover or focus. */
+.dg-m-disk {
+  pointer-events: auto;
+}
+.dg-m-disk:hover,
+.dg-m-disk:focus-within {
+  z-index: 5;
+}
+.dg-m-disk-face {
+  position: absolute;
+  transform: translate(-11px, -11px);
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  cursor: help;
+}
+.dg-m-disk-face svg {
+  flex: none;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
+}
+.dg-m-disk-face .rim {
+  fill: var(--dg-bronze);
+  stroke: var(--dg-bronze-dark);
+  stroke-width: 1.5;
+}
+.dg-m-disk-face .ring {
+  fill: none;
+  stroke: var(--dg-bronze-dark);
+  stroke-width: 1;
+  stroke-dasharray: 1.2 1.6;
+}
+.dg-m-disk-face .mark {
+  fill: var(--dg-bronze-dark);
+}
+.dg-m-disk-pid {
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  white-space: nowrap;
+  paint-order: stroke;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
+}
+.dg-m-disk-face:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+.dg-m-disk-card {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-start: -11px;
+  display: none;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  inline-size: max-content;
+  max-inline-size: min(300px, 70vw);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-bg-elevation-base) 94%,
+    transparent
+  );
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow: var(--stratakit-shadow-surface-md);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.dg-m-disk.left .dg-m-disk-card {
+  inset-inline-start: auto;
+  inset-inline-end: -11px;
+}
+.dg-m-disk.up .dg-m-disk-card {
+  inset-block-start: auto;
+  inset-block-end: 16px;
+}
+.dg-m-disk:hover .dg-m-disk-card,
+.dg-m-disk:focus-within .dg-m-disk-card {
+  display: flex;
+}
+.dg-m-disk-line {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-caption-md);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The snap under the pointer: its kind's glyph; yellow when exact. */
+.dg-m-glyph {
+  pointer-events: none;
+}
+.dg-m-glyph svg {
+  position: absolute;
+  transform: translate(-9px, -9px);
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
+}
+.dg-m-glyph span {
+  position: absolute;
+  transform: translate(12px, -22px);
+  color: #fff;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  white-space: nowrap;
+  paint-order: stroke;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
+}
+.dg-m-glyph.exact svg {
+  stroke: var(--dg-measure);
+}
+.dg-m-glyph.exact span {
+  color: var(--dg-measure-ink);
+}
+
+/* The keyboard's crosshair at the view's centre. */
+.dg-m-crosshair {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  inline-size: 24px;
+  block-size: 24px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background:
+    linear-gradient(#fff, #fff) center / 1.5px 100% no-repeat,
+    linear-gradient(#fff, #fff) center / 100% 1.5px no-repeat;
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
+}

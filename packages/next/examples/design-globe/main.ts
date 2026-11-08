@@ -11,7 +11,9 @@
 //   - siteLoader.ts: tilesets, answers, PROJ, the catalog, grids, placements;
 //   - morphDriver.ts: the morph's clock (plan 5's animation core replaces it);
 //   - placementPair.ts, overlays.ts: what the placements draw;
-//   - cursor.ts: picks and the HUD readout (`pickAt`, Task 19's seam);
+//   - cursor.ts: picks and the HUD readout (`pickAt`, the measure tool's seam);
+//   - measureTool.ts, measureOverlay.ts: the measure tool, the openers and
+//     their lines on the globe (Task 19);
 //   - shots.ts: the camera;
 //   - panelModel.ts: the panel's model from a snapshot of the state here.
 import { createElement } from "react";
@@ -22,6 +24,7 @@ import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";
 import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
 import { createCursor, drawnPlacement } from "./cursor.ts";
+import { createMeasureTool, type MeasurePanel } from "./measureTool.ts";
 import { createFrameDriver } from "./frameDriver.ts";
 import { MorphDriver, type MorphTarget } from "./morphDriver.ts";
 import { hexLinear } from "./colors.ts";
@@ -42,11 +45,17 @@ import {
   type PageParams,
   type Placement,
 } from "./page.ts";
+import { Measure, type MeasureActions } from "./panel/Measure.tsx";
 import { Panel } from "./panel/Panel.tsx";
 import type { LiveValues, PanelActions, PanelModel } from "./panel/model.ts";
 import { buildPanelModel, type SiteSnapshot } from "./panelModel.ts";
 import type { PairLook } from "./placementPair.ts";
-import { CameraMoves, createShots, reducedMotion } from "./shots.ts";
+import {
+  CameraMoves,
+  OPENING_VIEW,
+  createShots,
+  reducedMotion,
+} from "./shots.ts";
 import { siteFacts } from "./siteFacts.ts";
 import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
 
@@ -164,10 +173,14 @@ export function run(context: ExampleContext): ExampleRun {
   const live = createStore<LiveValues>({});
   scope.defer(() => live.dispose());
   /** The panel's model: made once everything it reads is set up (below). */
-  const model: { store?: ReturnType<typeof createStore<PanelModel>> } = {};
+  const model: {
+    store?: ReturnType<typeof createStore<PanelModel>>;
+    measure?: ReturnType<typeof createStore<MeasurePanel>>;
+  } = {};
   const refresh = () => {
     if (!disposed) {
       model.store?.set(buildModel());
+      model.measure?.set(tool.view());
     }
   };
   const report = (event: LoadEvent) => {
@@ -187,7 +200,7 @@ export function run(context: ExampleContext): ExampleRun {
       targets: () =>
         [...sites.values()]
           .map((s): MorphTarget | undefined => s.pair)
-          .concat(whiskers)
+          .concat(whiskers, tool.target)
           .filter((x): x is MorphTarget => x !== undefined),
       requestRender: () => {
         viewer.engine.requestRender();
@@ -195,6 +208,7 @@ export function run(context: ExampleContext): ExampleRun {
       },
       changed: () => {
         cursor.update();
+        tool.place();
         refresh();
       },
       disposed: () => disposed,
@@ -222,6 +236,44 @@ export function run(context: ExampleContext): ExampleRun {
     changed: refresh,
     disposed: () => disposed,
   });
+
+  // The measure tool (measureTool.ts): its snaps are judged by the cursor's
+  // seam, by the site they hit.
+  const tool = createMeasureTool({
+    viewer,
+    signal,
+    sites: () => sites.values(),
+    site: (id) => sites.get(id),
+    alignment,
+    answers: () => answers,
+    pickState: () => {
+      const selected = sites.get(params.site) ?? corridor;
+      return {
+        mode: drawnPlacement(selected, morph.t()),
+        t: morph.t(),
+        morphing: morph.morphing,
+        exaggeration: morph.exaggeration,
+        selectedPaired: selected.pair !== undefined,
+      };
+    },
+    pickAt: (x, y) => cursor.pickAt(x, y),
+    snapMode: () => params.snap,
+    drawState: () => ({
+      t: morph.t(),
+      exaggeration: morph.exaggeration,
+      morphing: morph.morphing,
+      ghost: morph.ghost,
+    }),
+    setLink: (link) => context.setParams(link),
+    changed: refresh,
+    wake: () => {
+      viewer.engine.requestRender();
+      frames.wake();
+    },
+    report,
+    disposed: () => disposed,
+  });
+  scope.defer(() => tool.dispose());
 
   const camera = new CameraMoves(viewer, () => {
     frames.wake();
@@ -284,6 +336,8 @@ export function run(context: ExampleContext): ExampleRun {
         buildCorridorEvidence(site);
       }
       computeFacts(site);
+      // The openers and exact snapping (the corridor), or a linked measurement.
+      tool.placementsChanged();
       // The grids' credits, with the data credits (bottom left).
       const credits = (site.rigidPlacement ?? site.reprojectedPlacement)!.frame
         .gridCredits;
@@ -377,6 +431,9 @@ export function run(context: ExampleContext): ExampleRun {
         // What was under the cursor no longer is.
         cursor.cameraMoved();
         placeAnchorLabel();
+        tool.place();
+      } else if (morph.morphing) {
+        tool.place();
       }
       return busy || camera.flying || morph.morphing;
     },
@@ -531,6 +588,41 @@ export function run(context: ExampleContext): ExampleRun {
         )
         .finally(refresh);
       void fetchAnswers();
+      tool.retry();
+    },
+  };
+
+  const measureActions: MeasureActions = {
+    setSnap(snap) {
+      params = { ...params, snap };
+      context.setParams(formatParams(params));
+      refresh();
+    },
+    clear: () => tool.clear(),
+    pointAtCentre: () => tool.pointAtCentre(),
+    show(id) {
+      const focus = tool.openerFocus(id);
+      if (focus === undefined) {
+        return;
+      }
+      const station =
+        id === "marker"
+          ? answers?.marker.station
+          : id === "mark"
+            ? answers?.mark.nearest.station
+            : undefined;
+      const heading =
+        station !== undefined
+          ? alignment.azimuthAt(station) + OPENING_VIEW.heading
+          : -35 * deg;
+      const to = {
+        center: focus.center,
+        heading,
+        pitch: id === "pair" ? -32 * deg : -10 * deg,
+        range: Math.max(140, focus.length * (id === "pair" ? 1.4 : 2.2)),
+      };
+      shots.daylight(to.center);
+      camera.flyTo(to, () => shots.daylight(to.center));
     },
   };
 
@@ -545,6 +637,7 @@ export function run(context: ExampleContext): ExampleRun {
         actions.selectSite(p.site);
       }
       params = { ...params, snap: p.snap };
+      tool.applyLink(next);
       refresh();
     }),
   );
@@ -552,6 +645,11 @@ export function run(context: ExampleContext): ExampleRun {
   const store = createStore<PanelModel>(buildModel());
   model.store = store;
   scope.defer(() => store.dispose());
+  const measureStore = createStore<MeasurePanel>(tool.view());
+  model.measure = measureStore;
+  scope.defer(() => measureStore.dispose());
+  // A deep link's measurement, once its site's placements are in.
+  tool.applyLink(context.params);
 
   /** The answers (again on Retry); the opening shot once they're in. */
   let opened = false;
@@ -562,6 +660,7 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       answers = a;
+      tool.answersChanged();
       // Ladder sites placed before the answers: their story is the answers'.
       for (const site of sites.values()) {
         computeFacts(site);
@@ -606,6 +705,15 @@ export function run(context: ExampleContext): ExampleRun {
       disposed = true;
       camera.stop();
     },
-    panel: createElement(Panel, { source: store, live, actions, hud }),
+    panel: createElement(
+      Panel,
+      { source: store, live, actions, hud },
+      createElement(Measure, {
+        source: measureStore,
+        live: tool.live,
+        actions: measureActions,
+        hud,
+      }),
+    ),
   };
 }
