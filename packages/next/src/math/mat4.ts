@@ -83,6 +83,21 @@ export function transformPoint(out: Vec3, m: Mat4, p: Vec3): Vec3 {
   return out;
 }
 
+/** Transforms a direction (w = 0) by `m`'s 3×3 part; `out` may be `v`. */
+export function transformDirection(
+  out: Vec3,
+  m: ArrayLike<number>,
+  v: ArrayLike<number>,
+): Vec3 {
+  const x = v[0]!,
+    y = v[1]!,
+    z = v[2]!;
+  out[0] = m[0]! * x + m[4]! * y + m[8]! * z;
+  out[1] = m[1]! * x + m[5]! * y + m[9]! * z;
+  out[2] = m[2]! * x + m[6]! * y + m[10]! * z;
+  return out;
+}
+
 /** Multiplies a homogeneous point, writing x, y, z, w into `out`. */
 export function transformVec4(
   out: Float64Array,

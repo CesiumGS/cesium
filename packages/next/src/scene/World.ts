@@ -687,12 +687,22 @@ export class World {
   /**
    * Counts changes that move a transform node or an anchor in the table
    * root: `setTransform`, `placeAnchor` and removals. The core's frame
-   * resolver (`tableResolver`) reports it as every route's revision.
+   * resolver (`tableResolver`) reports it as the revision of any route
+   * through a node (`frameOf`).
    */
   get transformRevision(): number {
     return this.transformRevision_;
   }
   private transformRevision_ = 0;
+  /**
+   * Counts changes to the anchors' places in the table root: `placeAnchor`
+   * and `removeAnchor` only. A route between anchors and the root changes
+   * only with it, so animating a node re-places no anchor.
+   */
+  get anchorPlaceRevision(): number {
+    return this.anchorPlaceRevision_;
+  }
+  private anchorPlaceRevision_ = 0;
   /** Point and spot lights by slot (`addLight`), free slots undefined. */
   private readonly lights: Array<LightOptions | undefined> = [];
   private readonly lightGenerations: number[] = [];
@@ -2928,8 +2938,9 @@ export class World {
     for (let i = 0; i < 16; i++) {
       this.anchorPlaces[anchor.slot * 16 + i] = matrix[i]!;
     }
-    // A rig placed through the table resolver follows on the next tick.
+    // Views placed through the table resolver follow on the next tick.
     this.transformRevision_++;
+    this.anchorPlaceRevision_++;
     this.ctx.wake();
   }
 
@@ -2967,6 +2978,7 @@ export class World {
     this.anchorList = undefined;
     this.freeTransformTree(anchor.index);
     this.anchorRemovals_++;
+    this.anchorPlaceRevision_++;
     this.version++;
     this.changedViews = ALL_VIEWS;
   }
@@ -2974,7 +2986,10 @@ export class World {
   /**
    * A transform node as a reference frame a rig can name, carrying its
    * world and handle: the same key for the same node, under the name it
-   * was first given.
+   * was first given. A reference frame is rigid: a node whose matrix
+   * (or a parent's) scales or shears can't be a rig's reference frame;
+   * the camera layer refuses its place, reporting it, and keeps the
+   * view's last good placement and pose.
    */
   frameOf(handle: TransformHandle, name: string): TransformFrameKey {
     if (!this.transformAlive(handle)) {

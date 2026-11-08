@@ -203,6 +203,7 @@ entry	name	kind	tier
 .	mat4.multiply	function	-
 .	mat4.perspectiveReverseZInfinite	function	-
 .	mat4.setTranslation	function	-
+.	mat4.transformDirection	function	-
 .	mat4.transformPoint	function	-
 .	mat4.transformVec4	function	-
 .	mat4.viewRotation	function	-

@@ -6,6 +6,7 @@ import type { SceneClock } from "../core/sceneClock.ts";
 import type { EngineErrors } from "../gpu/EngineErrors.ts";
 import * as m4 from "../math/mat4.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
+import * as v3 from "../math/vec3.ts";
 import type { View } from "../scene/View.ts";
 import type { AnchorHandle, TransformFrameKey, World } from "../scene/World.ts";
 import {
@@ -23,12 +24,17 @@ export interface CameraLayerHost {
   readonly errors: EngineErrors;
 }
 
-/** A view with a rig of its own. */
-interface RigState {
+/** Report keys for what isn't a reference frame failing to resolve. */
+const POSE = "pose";
+const RIG = "rig";
+
+/** A view's rig, its root, and the inputs of its last evaluation. */
+interface ViewState {
   rig: Rig;
-  /** `rig` is the default: placed once on arriving, then left alone. */
+  /** Set by `setRig` (otherwise the world's `defaultRig`). */
+  explicit: boolean;
+  /** `rig` is the default in substance (`isDefaultRig`). */
   isDefault: boolean;
-  settled: boolean;
   /** The world `root` belongs to. */
   world: World;
   /** The render root: the reference frame the camera's numbers are in. */
@@ -36,37 +42,51 @@ interface RigState {
   // The last evaluation's inputs (the per-tick skip).
   resolver: FrameResolver | undefined;
   anchors: readonly AnchorHandle[] | undefined;
+  anchorPlaces: number;
   seconds: number;
   evaluatedRoot: FrameKey | undefined;
   evaluatedRig: Rig | undefined;
-  revisions: number[];
-  /** The camera's version after the last evaluation. */
+  /** Every route's revision, `revisionCount` of them (grown, never per tick). */
+  revisions: Float64Array;
+  revisionCount: number;
+  /** The camera's and the placements' versions after the last evaluation. */
   cameraVersion: number;
-  /** Reference frames already reported for this view. */
-  readonly reported: Set<FrameKey>;
+  anchorRevision: number;
+  // A re-root that is waiting: retried when one of these changes.
+  rerootTo: FrameKey | undefined;
+  rerootResolver: FrameResolver | undefined;
+  rerootRevision: number;
+  rerootSeconds: number;
+  /**
+   * Failures reported and not yet recovered, by reference frame (or
+   * `POSE`, `RIG`): the failure reported (its kind and message).
+   */
+  readonly reported: Map<FrameKey | string, string>;
 }
 
 /**
  * Each view's rig and render root (`Engine.cameras`, plan 5a's call 23).
  *
- * A view starts on the default rig (`defaultRig`): render space is the
- * transform table's root, and the layer leaves the view's anchor
- * placements to the application (`View.setAnchorPlacement`), at no cost
- * per tick. Any other rig hands them to the layer: each tick (and at the
- * start of a `renderFrame` outside the loop) it evaluates the rig at the
- * clock's seconds and places every anchor of the view's world with its
- * world's resolver (`resolve(anchor, root, seconds)`), skipping the work
- * while the time, the root and every route's revision stay as they were.
+ * Each tick (and at the start of a `renderFrame` outside the loop) it
+ * evaluates each view's rig at the clock's seconds and places every anchor
+ * of the view's world, and the table's root, with the world's resolver
+ * (`resolve(anchor, root, seconds)`), skipping the work while the time,
+ * the root and every route's revision stay as they were. A view starts on
+ * the default rig (`defaultRig`): on the transform table's resolver it is
+ * gated on the world's anchor places alone (`World.anchorPlaceRevision`),
+ * so a globe-only scene resolves nothing, and every placement stays at
+ * the identity until `World.placeAnchor` is called.
  *
  * A reference frame that can't be resolved (a `FrameUnavailableError`, any
  * other throw, a matrix that isn't finite and rigid) leaves the view's last
- * good placement of it and the camera's last good pose; it is reported
- * once per view and reference frame in the engine's errors (kind
- * `"camera"`), and the tick goes on (plan 5a's call 28).
+ * good placement of it and the camera's last good pose. Each failure is
+ * reported once in the engine's errors (kind `"camera"`) until that
+ * reference frame resolves again, and the tick goes on (plan 5a's call 28).
  */
 export class CameraLayer {
-  private readonly states = new WeakMap<View, RigState>();
+  private readonly states = new WeakMap<View, ViewState>();
   private readonly resolvers = new WeakMap<World, FrameResolver>();
+  private readonly tables = new WeakMap<World, FrameResolver>();
   private readonly clocks = new WeakMap<
     World,
     { clock: SceneClock; unwatch: () => void }
@@ -80,17 +100,20 @@ export class CameraLayer {
 
   /** The frame resolver of `world`'s views: by default, `tableResolver(world)`. */
   resolver(world: World): FrameResolver {
-    let resolver = this.resolvers.get(world);
-    if (!resolver) {
-      resolver = tableResolver(world);
-      this.resolvers.set(world, resolver);
-    }
-    return resolver;
+    return this.resolvers.get(world) ?? this.table(world);
   }
 
-  /** Sets the frame resolver of `world`'s views; their rigs re-evaluate next tick. */
+  /**
+   * Sets the frame resolver of `world`'s views; they re-evaluate on the
+   * next tick, and failures are reported afresh.
+   */
   setResolver(world: World, resolver: FrameResolver): void {
     this.resolvers.set(world, resolver);
+    for (const view of this.host.views) {
+      if (view.world === world) {
+        this.states.get(view)?.reported.clear();
+      }
+    }
     this.host.wake();
   }
 
@@ -108,7 +131,7 @@ export class CameraLayer {
     this.clocks.delete(world);
     if (clock) {
       const unwatch = clock.watch(() => {
-        if (this.hasRig(world)) {
+        if (this.host.views.some((view) => view.world === world)) {
           this.host.wake();
         }
       });
@@ -119,7 +142,8 @@ export class CameraLayer {
 
   /** The view's rig (`defaultRig` until one is set). */
   rig(view: View): Rig {
-    return this.states.get(view)?.rig ?? defaultRig(view.world);
+    const state = this.states.get(view);
+    return state?.explicit ? state.rig : defaultRig(view.world);
   }
 
   /** The view's render root: the reference frame its camera's numbers are in. */
@@ -142,178 +166,247 @@ export class CameraLayer {
     if (error) {
       throw new Error(`setRig: ${error}.`);
     }
-    const isDefault = isDefaultRig(rig, view.world);
-    let state = this.states.get(view);
-    if (!state) {
-      if (isDefault) {
-        return;
-      }
-      state = {
-        rig,
-        isDefault,
-        settled: false,
-        world: view.world,
-        root: view.world.root,
-        resolver: undefined,
-        anchors: undefined,
-        seconds: Number.NaN,
-        evaluatedRoot: undefined,
-        evaluatedRig: undefined,
-        revisions: [],
-        cameraVersion: -1,
-        reported: new Set(),
-      };
-      this.states.set(view, state);
-    }
+    const state = this.state(view);
     state.rig = rig;
-    state.isDefault = isDefault;
-    state.settled = false;
+    state.explicit = true;
+    state.isDefault = isDefaultRig(rig, state.world);
+    state.rerootTo = undefined;
+    state.reported.clear();
     this.evaluateSafely(view, state, true);
     this.host.wake();
   }
 
   /**
-   * Per tick (plan 5a's call 24): each view with a rig re-roots if its rig
-   * asks, then is placed and posed when anything it depends on changed.
-   * Returns true, keeping the loop awake, while a clock isn't paused and a
-   * placement or pose moved.
+   * Per tick (plan 5a's call 24): each view re-roots if its rig asks, then
+   * is placed and posed when anything it depends on changed. Returns true,
+   * keeping the loop awake, while a clock isn't paused and a placement or
+   * pose moved.
    */
   update(): boolean {
     let busy = false;
     const views = this.host.views;
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
-      const state = this.states.get(view);
-      if (state !== undefined && this.evaluateSafely(view, state, false)) {
+      if (this.evaluateSafely(view, this.state(view), false)) {
         busy = true;
       }
     }
     return busy;
   }
 
-  private hasRig(world: World): boolean {
-    for (const view of this.host.views) {
-      const state = this.states.get(view);
-      if (
-        view.world === world &&
-        state &&
-        !(state.isDefault && state.settled)
-      ) {
-        return true;
-      }
+  /** The world's own table resolver (the default). */
+  private table(world: World): FrameResolver {
+    let table = this.tables.get(world);
+    if (!table) {
+      table = tableResolver(world);
+      this.tables.set(world, table);
     }
-    return false;
+    return table;
+  }
+
+  private state(view: View): ViewState {
+    let state = this.states.get(view);
+    if (!state) {
+      const world = view.world;
+      state = {
+        rig: defaultRig(world),
+        explicit: false,
+        isDefault: true,
+        world,
+        root: world.root,
+        // As if evaluated on the table with no anchor placed: every
+        // placement is the identity, as a view's start.
+        resolver: this.table(world),
+        anchors: undefined,
+        anchorPlaces: 0,
+        seconds: Number.NaN,
+        evaluatedRoot: undefined,
+        evaluatedRig: undefined,
+        revisions: new Float64Array(8),
+        revisionCount: 0,
+        cameraVersion: -1,
+        anchorRevision: -1,
+        rerootTo: undefined,
+        rerootResolver: undefined,
+        rerootRevision: Number.NaN,
+        rerootSeconds: Number.NaN,
+        reported: new Map(),
+      };
+      this.states.set(view, state);
+    }
+    return state;
   }
 
   /** `evaluate`, never throwing: the tick goes on. */
-  private evaluateSafely(view: View, state: RigState, force: boolean): boolean {
+  private evaluateSafely(
+    view: View,
+    state: ViewState,
+    force: boolean,
+  ): boolean {
     try {
       return this.evaluate(view, state, force);
     } catch (error) {
-      this.report(state, state.rig.position.frame, "a view's rig", error);
+      this.report(state, RIG, "a view's rig", error);
       return false;
     }
   }
 
-  private evaluate(view: View, state: RigState, force: boolean): boolean {
+  private evaluate(view: View, state: ViewState, force: boolean): boolean {
     const world = view.world;
     if (state.world !== world) {
       // Another world: nothing of the old root carries over.
       state.world = world;
+      if (!state.explicit) {
+        state.rig = defaultRig(world);
+      }
+      state.isDefault = isDefaultRig(state.rig, world);
       state.root = state.rig.position.frame;
+      state.rerootTo = undefined;
+      state.reported.clear();
       force = true;
     }
     const resolver = this.resolver(world);
     const clock = this.clocks.get(world)?.clock;
     const seconds = clock?.seconds ?? 0;
+    const rig = state.rig;
     let rerooted = false;
-    if (state.root !== state.rig.position.frame) {
+    if (state.root !== rig.position.frame) {
       rerooted = this.reroot(view, state, resolver, seconds);
     }
-    if (state.isDefault && state.settled && !rerooted) {
-      return false;
-    }
     const root = state.root;
-    const rig = state.rig;
     const anchors = world.anchors;
-    const revisions = this.revisions(world, resolver, root, anchors, rig);
-    const followsCamera =
-      rig.orientation.kind === "aim" && rig.position.offset === undefined;
+    const places = world.anchorPlaceRevision;
     if (
-      !force &&
-      !rerooted &&
-      state.resolver === resolver &&
-      state.anchors === anchors &&
-      state.seconds === seconds &&
-      state.evaluatedRoot === root &&
-      state.evaluatedRig === rig &&
-      sameNumbers(state.revisions, revisions) &&
-      (!followsCamera || view.camera.version === state.cameraVersion)
+      state.isDefault &&
+      root === world.root &&
+      resolver === this.tables.get(world)
     ) {
-      return false;
+      // The default rig on the table: the placements are the anchors'
+      // places, which change only with `anchorPlaceRevision`. Never placed,
+      // every one is the identity, and nothing is resolved.
+      if (
+        !force &&
+        !rerooted &&
+        state.resolver === resolver &&
+        state.anchorPlaces === places &&
+        (places === 0 || state.anchors === anchors)
+      ) {
+        return false;
+      }
+    } else {
+      const camera = view.camera;
+      const ownsPose =
+        rig.position.offset !== undefined || rig.orientation.kind !== "free";
+      let changed =
+        force ||
+        rerooted ||
+        state.resolver !== resolver ||
+        state.anchors !== anchors ||
+        state.seconds !== seconds ||
+        state.evaluatedRoot !== root ||
+        state.evaluatedRig !== rig ||
+        (ownsPose && camera.version !== state.cameraVersion) ||
+        view.anchorRevision !== state.anchorRevision;
+      // Always: it leaves the current revisions in the state's buffer.
+      if (this.revisions(state, world, resolver, root, anchors, rig)) {
+        changed = true;
+      }
+      if (!changed) {
+        return false;
+      }
     }
     state.resolver = resolver;
     state.anchors = anchors;
+    state.anchorPlaces = places;
     state.seconds = seconds;
     state.evaluatedRoot = root;
     state.evaluatedRig = rig;
-    state.revisions = revisions;
     let moved = this.place(view, state, resolver, root, seconds, anchors);
     if (this.pose(view, state, resolver, root, seconds)) {
       moved = true;
     }
     state.cameraVersion = view.camera.version;
-    if (state.isDefault && state.root === rig.position.frame) {
-      state.settled = true;
-    }
+    state.anchorRevision = view.anchorRevision;
+    this.recovered(state, RIG);
     return moved && clock !== undefined && !clock.paused;
   }
 
-  /** Every route the view's evaluation reads: its revision, NaN if it threw. */
+  /**
+   * Writes every route's revision the evaluation reads into the state's
+   * buffer (NaN for one that threw); true if any differs from the last.
+   */
   private revisions(
+    state: ViewState,
     world: World,
     resolver: FrameResolver,
     root: FrameKey,
     anchors: readonly AnchorHandle[],
     rig: Rig,
-  ): number[] {
-    const out: number[] = [];
-    const add = (key: FrameKey | undefined) => {
-      if (key === undefined) {
-        return;
-      }
-      try {
-        out.push(resolver.routeRevision(key, root));
-      } catch {
-        out.push(Number.NaN); // never the same: evaluated, and reported there
-      }
-    };
-    add(world.root);
-    for (let i = 0; i < anchors.length; i++) {
-      add(anchors[i]);
+  ): boolean {
+    const o = rig.orientation;
+    const count =
+      1 +
+      anchors.length +
+      (rig.position.offset !== undefined ? 2 : 0) +
+      (o.kind === "axes" ? 1 : o.kind === "aim" ? 2 : 0);
+    if (state.revisions.length < count) {
+      state.revisions = new Float64Array(
+        Math.max(count, 2 * state.revisions.length),
+      );
+    }
+    let changed = state.revisionCount !== count;
+    state.revisionCount = count;
+    let i = 0;
+    changed = this.revision(state, i++, resolver, world.root, root) || changed;
+    for (let k = 0; k < anchors.length; k++) {
+      changed =
+        this.revision(state, i++, resolver, anchors[k]!, root) || changed;
     }
     if (rig.position.offset !== undefined) {
-      add(rig.position.anchor ?? rig.position.frame);
-      add(rig.position.frame);
+      const p = rig.position;
+      changed =
+        this.revision(state, i++, resolver, p.anchor ?? p.frame, root) ||
+        changed;
+      changed = this.revision(state, i++, resolver, p.frame, root) || changed;
     }
-    const o = rig.orientation;
     if (o.kind === "axes") {
-      add(o.frame);
+      changed = this.revision(state, i, resolver, o.frame, root) || changed;
     } else if (o.kind === "aim") {
-      add(o.target);
-      add(o.upFrame);
+      changed = this.revision(state, i++, resolver, o.target, root) || changed;
+      changed = this.revision(state, i, resolver, o.upFrame, root) || changed;
     }
-    return out;
+    return changed;
+  }
+
+  /** Writes one route's revision at `i` (NaN if it threw); true if it changed. */
+  private revision(
+    state: ViewState,
+    i: number,
+    resolver: FrameResolver,
+    key: FrameKey,
+    root: FrameKey,
+  ): boolean {
+    let revision: number;
+    try {
+      revision = resolver.routeRevision(key, root);
+    } catch {
+      revision = Number.NaN; // never the same: evaluated, and reported there
+    }
+    // NaN differs from everything, itself included.
+    const changed = !(state.revisions[i] === revision);
+    state.revisions[i] = revision;
+    return changed;
   }
 
   /**
    * Moves the view's root to its rig's position reference frame,
    * re-expressing the camera; false while that can't be resolved (the
-   * view stays on its old root).
+   * view stays on its old root, and retries when the resolver, the route's
+   * revision or the time changes).
    */
   private reroot(
     view: View,
-    state: RigState,
+    state: ViewState,
     resolver: FrameResolver,
     seconds: number,
   ): boolean {
@@ -322,12 +415,31 @@ export class CameraLayer {
     if (gone(state.world, from)) {
       // The old root was removed: there is nothing to re-express from.
       state.root = to;
+      state.rerootTo = undefined;
       return true;
+    }
+    let revision: number;
+    try {
+      revision = resolver.routeRevision(from, to);
+    } catch {
+      revision = Number.NaN;
+    }
+    if (
+      state.rerootTo === to &&
+      state.rerootResolver === resolver &&
+      state.rerootRevision === revision &&
+      state.rerootSeconds === seconds
+    ) {
+      return false; // nothing it depends on changed since it failed
     }
     let x: Float64Array;
     try {
       x = this.checked(resolver, from, to, seconds, this.x);
     } catch (error) {
+      state.rerootTo = to;
+      state.rerootResolver = resolver;
+      state.rerootRevision = revision;
+      state.rerootSeconds = seconds;
       this.report(
         state,
         to,
@@ -337,19 +449,21 @@ export class CameraLayer {
       return false;
     }
     const camera = view.camera;
-    transformPoint(x, camera.position);
-    transformVector(x, camera.direction);
-    transformVector(x, camera.up);
-    transformVector(x, camera.right);
+    m4.transformPoint(camera.position, x, camera.position);
+    m4.transformDirection(camera.direction, x, camera.direction);
+    m4.transformDirection(camera.up, x, camera.up);
+    m4.transformDirection(camera.right, x, camera.right);
     camera.version++;
     state.root = to;
+    state.rerootTo = undefined;
+    this.recovered(state, to);
     return true;
   }
 
   /** Places every anchor (and the table's root); true if one moved. */
   private place(
     view: View,
-    state: RigState,
+    state: ViewState,
     resolver: FrameResolver,
     root: FrameKey,
     seconds: number,
@@ -372,6 +486,7 @@ export class CameraLayer {
       if (m === undefined) {
         continue;
       }
+      this.recovered(state, key);
       const current = view.anchorPlacement(anchor, this.current);
       if (!sameNumbers(current, m)) {
         view.setAnchorPlacement(anchor, m);
@@ -384,7 +499,7 @@ export class CameraLayer {
   /** Evaluates the rig's pose in `root`; true if the camera moved. */
   private pose(
     view: View,
-    state: RigState,
+    state: ViewState,
     resolver: FrameResolver,
     root: FrameKey,
     seconds: number,
@@ -395,32 +510,38 @@ export class CameraLayer {
     }
     const camera = view.camera;
     const what = "a view keeps its last good pose";
-    const resolve = (key: FrameKey, out: Float64Array) =>
-      this.resolveOrReport(state, resolver, key, root, seconds, out, what);
-    const pos = scratchPosition;
-    copy3(camera.position, pos);
+    const used: FrameKey[] = [];
+    const resolve = (key: FrameKey, out: Float64Array) => {
+      used.push(key);
+      return this.resolveOrReport(
+        state,
+        resolver,
+        key,
+        root,
+        seconds,
+        out,
+        what,
+      );
+    };
+    const pos = v3.copy(scratchPosition, camera.position);
     if (p.offset !== undefined) {
       const at = resolve(p.anchor ?? p.frame, this.m[0]!);
       const axes = at && resolve(p.frame, this.m[1]!);
       if (!at || !axes) {
         return false;
       }
-      const o3 = p.offset;
+      m4.transformDirection(pos, axes, p.offset);
       for (let r = 0; r < 3; r++) {
-        pos[r] =
-          at[12 + r]! +
-          axes[r]! * o3[0]! +
-          axes[4 + r]! * o3[1]! +
-          axes[8 + r]! * o3[2]!;
+        pos[r] = pos[r]! + at[12 + r]!;
       }
     }
     const dir = scratchDirection;
     const up = scratchUp;
     const right = scratchRight;
     if (o.kind === "free") {
-      copy3(camera.direction, dir);
-      copy3(camera.up, up);
-      copy3(camera.right, right);
+      v3.copy(dir, camera.direction);
+      v3.copy(up, camera.up);
+      v3.copy(right, camera.right);
     } else {
       let upAxes: Float64Array | undefined;
       if (o.kind === "axes") {
@@ -428,7 +549,7 @@ export class CameraLayer {
         if (!upAxes) {
           return false;
         }
-        rotate(upAxes, o.forward, dir);
+        m4.transformDirection(dir, upAxes, o.forward);
       } else {
         const target = resolve(o.target, this.m[2]!);
         upAxes = target && resolve(o.upFrame, this.m[3]!);
@@ -439,13 +560,13 @@ export class CameraLayer {
           dir[r] = target[12 + r]! - pos[r]!;
         }
       }
-      rotate(upAxes, o.up, up);
-      const length = Math.hypot(dir[0]!, dir[1]!, dir[2]!);
+      m4.transformDirection(up, upAxes, o.up);
+      const length = v3.length(dir);
       if (!(length > 0) || !Number.isFinite(length)) {
         const key = o.kind === "aim" ? o.target : o.frame;
         this.report(
           state,
-          key,
+          POSE,
           what,
           new Error(
             o.kind === "aim"
@@ -455,22 +576,26 @@ export class CameraLayer {
         );
         return false;
       }
-      scale3(dir, 1 / length);
-      cross(dir, up, right);
-      const r = Math.hypot(right[0]!, right[1]!, right[2]!);
+      v3.scale(dir, dir, 1 / length);
+      v3.cross(right, dir, up);
+      const r = v3.length(right);
       if (!(r > 1e-12)) {
         const key = o.kind === "aim" ? o.upFrame : o.frame;
         this.report(
           state,
-          key,
+          POSE,
           what,
           new Error(`its rig's up in ${key.name} is along the view direction`),
         );
         return false;
       }
-      scale3(right, 1 / r);
-      cross(right, dir, up);
+      v3.scale(right, right, 1 / r);
+      v3.cross(up, right, dir);
     }
+    for (const key of used) {
+      this.recovered(state, key);
+    }
+    this.recovered(state, POSE);
     if (
       sameNumbers(camera.position, pos) &&
       sameNumbers(camera.direction, dir) &&
@@ -479,17 +604,17 @@ export class CameraLayer {
     ) {
       return false;
     }
-    copy3(pos, camera.position);
-    copy3(dir, camera.direction);
-    copy3(up, camera.up);
-    copy3(right, camera.right);
+    v3.copy(camera.position, pos);
+    v3.copy(camera.direction, dir);
+    v3.copy(camera.up, up);
+    v3.copy(camera.right, right);
     camera.version++;
     return true;
   }
 
   /** `frame` in `root`, or undefined after reporting why not. */
   private resolveOrReport(
-    state: RigState,
+    state: ViewState,
     resolver: FrameResolver,
     frame: FrameKey,
     root: FrameKey,
@@ -529,21 +654,35 @@ export class CameraLayer {
     return out;
   }
 
-  /** Reports once per view and reference frame (plan 5a's call 28). */
+  /**
+   * Reports a failure once per episode: again only after `key` recovered,
+   * or when it fails differently (loading, then failed to load; plan 5a's
+   * call 28).
+   */
   private report(
-    state: RigState,
-    frame: FrameKey,
+    state: ViewState,
+    key: FrameKey | string,
     what: string,
     error: unknown,
   ): void {
-    if (state.reported.has(frame)) {
-      return;
-    }
-    state.reported.add(frame);
     const reason = error instanceof Error ? error.message : String(error);
     const kind =
       error instanceof FrameUnavailableError ? ` (${error.reason})` : "";
-    this.host.errors.report("camera", `${what}${kind}: ${reason}`);
+    // The failure itself, whatever asked: one reference frame failing for
+    // a placement and for the pose is one episode.
+    const failure = `${kind}: ${reason}`;
+    if (state.reported.get(key) === failure) {
+      return;
+    }
+    state.reported.set(key, failure);
+    this.host.errors.report("camera", `${what}${failure}`);
+  }
+
+  /** Ends `key`'s failure episode; free while nothing is failing. */
+  private recovered(state: ViewState, key: FrameKey | string): void {
+    if (state.reported.size > 0) {
+      state.reported.delete(key);
+    }
   }
 }
 
@@ -574,57 +713,7 @@ function sameNumbers(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
   return true;
 }
 
-function copy3(from: ArrayLike<number>, to: Float64Array): void {
-  to[0] = from[0]!;
-  to[1] = from[1]!;
-  to[2] = from[2]!;
-}
-
-function scale3(v: Float64Array, s: number): void {
-  v[0] = v[0]! * s;
-  v[1] = v[1]! * s;
-  v[2] = v[2]! * s;
-}
-
-function cross(a: Float64Array, b: Float64Array, out: Float64Array): void {
-  const x = a[1]! * b[2]! - a[2]! * b[1]!;
-  const y = a[2]! * b[0]! - a[0]! * b[2]!;
-  const z = a[0]! * b[1]! - a[1]! * b[0]!;
-  out[0] = x;
-  out[1] = y;
-  out[2] = z;
-}
-
-/** `m`'s rotation applied to `v`, into `out`. */
-function rotate(
-  m: Float64Array,
-  v: ArrayLike<number>,
-  out: Float64Array,
-): void {
-  const x = v[0]!,
-    y = v[1]!,
-    z = v[2]!;
-  for (let r = 0; r < 3; r++) {
-    out[r] = m[r]! * x + m[4 + r]! * y + m[8 + r]! * z;
-  }
-}
-
-/** `p` ← `m` · `p` (a point). */
-function transformPoint(m: Float64Array, p: Float64Array): void {
-  const x = p[0]!,
-    y = p[1]!,
-    z = p[2]!;
-  for (let r = 0; r < 3; r++) {
-    p[r] = m[r]! * x + m[4 + r]! * y + m[8 + r]! * z + m[12 + r]!;
-  }
-}
-
-/** `v` ← `m`'s rotation · `v` (a direction). */
-function transformVector(m: Float64Array, v: Float64Array): void {
-  rotate(m, Float64Array.of(v[0]!, v[1]!, v[2]!), v);
-}
-
-const scratchPosition = new Float64Array(3);
-const scratchDirection = new Float64Array(3);
-const scratchUp = new Float64Array(3);
-const scratchRight = new Float64Array(3);
+const scratchPosition = v3.vec3();
+const scratchDirection = v3.vec3();
+const scratchUp = v3.vec3();
+const scratchRight = v3.vec3();

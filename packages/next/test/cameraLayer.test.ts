@@ -10,7 +10,6 @@ import {
   type FrameResolver,
 } from "../src/camera/frameResolver.ts";
 import { defaultRig, type Rig } from "../src/camera/rig.ts";
-import { tableResolver } from "../src/camera/tableResolver.ts";
 import type { ClockChange, SceneClock } from "../src/core/sceneClock.ts";
 import { EARTH, MOON } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
@@ -184,32 +183,27 @@ describe("the camera layer", () => {
     vi.restoreAllMocks();
   });
 
-  it("the default rig does no work per tick", () => {
+  it("a globe-only tick does no resolve work on the default rig", () => {
     setup();
-    const base = tableResolver(world);
-    let calls = 0;
-    let revisions = 0;
-    engine.cameras.setResolver(world, {
-      resolve: (frame, b, seconds, out) => {
-        calls++;
-        return base.resolve(frame, b, seconds, out);
-      },
-      routeRevision: (frame, b) => {
-        revisions++;
-        return base.routeRevision(frame, b);
-      },
-    });
+    // Spies on what the table resolver reads: an anchor's place, a node's matrix.
+    const places = vi.spyOn(world, "anchorMatrix");
+    const nodes = vi.spyOn(world, "worldMatrix");
     const clock = new FakeClock();
     engine.cameras.setClock(world, clock);
-    world.placeAnchor(moon, translation(384_400_000, 0, 0));
+    const node = world.addTransform(IDENTITY, earth);
     const revision = view.anchorRevision;
     for (let i = 0; i < 10; i++) {
+      // A running clock and an animated node under the Earth: neither is
+      // an input of the default rig's placements.
       clock.set(1_000 + i, "steady");
+      world.setTransform(node, translation(i, 0, 0));
       expect(engine.cameras.update()).toBe(false);
       engine.renderFrame();
     }
-    expect(calls).toBe(0);
-    expect(revisions).toBe(0);
+    expect(places).not.toHaveBeenCalled();
+    expect(nodes.mock.calls.every(([h]) => h !== earth && h !== moon)).toBe(
+      true,
+    );
     expect(view.anchorRevision).toBe(revision);
     for (const anchor of [earth, moon, undefined]) {
       expect(view.anchorPlacement(anchor)).toEqual(IDENTITY);
@@ -217,6 +211,68 @@ describe("the camera layer", () => {
     expect(engine.cameras.root(view)).toBe(world.root);
     expect(engine.cameras.rig(view)).toEqual(defaultRig(world));
     expect(engine.cameras.clock(world)).toBe(clock);
+  });
+
+  it("the default rig places what the table places: placeAnchor reaches the view", () => {
+    setup();
+    const moonPlace = rigid([0, 0, 1], 0.3, [384_400_000, 0, 0]);
+    world.placeAnchor(moon, moonPlace);
+    engine.cameras.update();
+    expect(view.anchorPlacement(moon)).toEqual(moonPlace);
+    expect(view.anchorPlacement(earth)).toEqual(IDENTITY);
+    // Then nothing again until a place changes.
+    const places = vi.spyOn(world, "anchorMatrix");
+    expect(engine.cameras.update()).toBe(false);
+    expect(places).not.toHaveBeenCalled();
+    // A new place reaches it too.
+    world.placeAnchor(moon, translation(1, 2, 3));
+    engine.cameras.update();
+    expect(view.anchorPlacement(moon)).toEqual(translation(1, 2, 3));
+    // The default rig set explicitly is the same rig.
+    engine.cameras.setRig(view, defaultRig(world));
+    expect(view.anchorPlacement(moon)).toEqual(translation(1, 2, 3));
+    // A new anchor, placed.
+    const site = world.addAnchor("site");
+    world.placeAnchor(site, translation(5, 0, 0));
+    engine.cameras.update();
+    expect(view.anchorPlacement(site)).toEqual(translation(5, 0, 0));
+  });
+
+  it("setResolver under the default rig: the host's resolver places the anchors each tick", () => {
+    setup();
+    const resolver = timedResolver(
+      new Map<FrameKey, (s: number) => Float64Array>([
+        [world.root, () => IDENTITY],
+        [earth, (s) => translation(0, s, 0)],
+        [moon, () => translation(9, 0, 0)],
+      ]),
+    );
+    let revisions = 0;
+    engine.cameras.setResolver(world, {
+      resolve: (f, b, s, out) => resolver.resolve(f, b, s, out),
+      routeRevision: (f, b) => {
+        revisions++;
+        return resolver.routeRevision(f, b);
+      },
+    });
+    const clock = new FakeClock();
+    clock.set(4);
+    engine.cameras.setClock(world, clock);
+    expect(engine.cameras.update()).toBe(true);
+    expect(view.anchorPlacement(earth)).toEqual(translation(0, 4, 0));
+    expect(view.anchorPlacement(moon)).toEqual(translation(9, 0, 0));
+    // The normal per-route check: no resolve while nothing changes.
+    const calls = resolver.calls;
+    expect(engine.cameras.update()).toBe(false);
+    expect(resolver.calls).toBe(calls);
+    expect(revisions).toBeGreaterThan(0);
+    // A placement set by hand is put back on the next tick.
+    view.setAnchorPlacement(moon, translation(0, 0, 1));
+    engine.cameras.update();
+    expect(view.anchorPlacement(moon)).toEqual(translation(9, 0, 0));
+    clock.set(5, "steady");
+    expect(engine.cameras.update()).toBe(true);
+    expect(view.anchorPlacement(earth)).toEqual(translation(0, 5, 0));
   });
 
   it("a rig follows a moving node of the transform table without the frames module", () => {
@@ -682,6 +738,133 @@ describe("the camera layer", () => {
     );
   });
 
+  it("reports each failure episode once: fail, recover, fail again", () => {
+    setup();
+    let state: "ok" | "loading" | "failed" = "ok";
+    const resolver = timedResolver(
+      new Map<FrameKey, (s: number) => Float64Array>([
+        [world.root, () => IDENTITY],
+        [earth, () => IDENTITY],
+        [
+          moon,
+          (s) => {
+            if (state !== "ok") {
+              throw new FrameUnavailableError("MOON_PA", state);
+            }
+            return translation(s, 0, 0);
+          },
+        ],
+      ]),
+    );
+    engine.cameras.setResolver(world, resolver);
+    const clock = new FakeClock();
+    engine.cameras.setClock(world, clock);
+    engine.cameras.setRig(view, {
+      position: { frame: earth },
+      orientation: { kind: "free" },
+    });
+    const episodes = () =>
+      cameraErrors(engine)
+        .filter((e) => e.message.includes("MOON_PA"))
+        .map((e) => [e.message.match(/\((\w+)\)/)![1], e.count]);
+    const tick = (s: number) => {
+      clock.set(s, "steady");
+      engine.cameras.update();
+    };
+    state = "loading";
+    tick(1);
+    tick(2);
+    expect(episodes()).toEqual([["loading", 1]]);
+    // Loading turns into a failed load: a new report.
+    state = "failed";
+    tick(3);
+    expect(episodes()).toEqual([
+      ["loading", 1],
+      ["failed", 1],
+    ]);
+    // Recovered, then failing again: reported again.
+    state = "ok";
+    tick(4);
+    expect(view.anchorPlacement(moon)).toEqual(translation(4, 0, 0));
+    state = "loading";
+    tick(5);
+    tick(6);
+    expect(episodes()).toEqual([
+      ["loading", 2],
+      ["failed", 1],
+    ]);
+    // setResolver and setRig start afresh too.
+    engine.cameras.setResolver(world, resolver);
+    tick(7);
+    expect(episodes()).toEqual([
+      ["loading", 3],
+      ["failed", 1],
+    ]);
+    engine.cameras.setRig(view, {
+      position: { frame: earth },
+      orientation: { kind: "free" },
+    });
+    expect(episodes()).toEqual([
+      ["loading", 4],
+      ["failed", 1],
+    ]);
+    expect(view.anchorPlacement(moon)).toEqual(translation(4, 0, 0));
+  });
+
+  it("re-roots away from a removed root without re-expressing, and retries a waiting re-root only on change", () => {
+    setup();
+    const node = world.addTransform(translation(10, 0, 0), earth);
+    const car = world.frameOf(node, "car");
+    engine.cameras.setRig(view, {
+      position: { frame: car },
+      orientation: { kind: "free" },
+    });
+    view.camera.position.set([1, 2, 3]);
+    view.camera.version++;
+    world.removeTransform(node);
+    // The old root is gone: the camera's numbers stay as they are, now in
+    // the Earth's anchor.
+    engine.cameras.setRig(view, {
+      position: { frame: earth },
+      orientation: { kind: "free" },
+    });
+    expect(engine.cameras.root(view)).toBe(earth);
+    expect(Array.from(view.camera.position)).toEqual([1, 2, 3]);
+    expect(view.anchorPlacement(earth)).toEqual(IDENTITY);
+    // A re-root that can't resolve is retried only when its inputs change.
+    let failing = true;
+    const resolver = timedResolver(
+      new Map<FrameKey, (s: number) => Float64Array>([
+        [world.root, () => IDENTITY],
+        [earth, () => IDENTITY],
+        [
+          moon,
+          () => {
+            if (failing) {
+              throw new FrameUnavailableError("MOON_ME", "loading");
+            }
+            return translation(100, 0, 0);
+          },
+        ],
+      ]),
+    );
+    engine.cameras.setResolver(world, resolver);
+    engine.cameras.setRig(view, {
+      position: { frame: moon },
+      orientation: { kind: "free" },
+    });
+    expect(engine.cameras.root(view)).toBe(earth);
+    const calls = resolver.calls;
+    engine.cameras.update();
+    engine.cameras.update();
+    expect(resolver.calls).toBe(calls);
+    failing = false;
+    resolver.revision++;
+    engine.cameras.update();
+    expect(engine.cameras.root(view)).toBe(moon);
+    expect(Array.from(view.camera.position)).toEqual([-99, 2, 3]);
+  });
+
   it("globe controls ignore input while the Earth's anchor isn't at identity, and warn once", () => {
     setup();
     world.placeAnchor(moon, translation(384_400_000, 0, 0));
@@ -735,6 +918,30 @@ describe("the camera layer", () => {
     globe.stop();
     expect(warn).not.toHaveBeenCalled();
 
+    // A drag under way when the view re-roots off the Earth ends there.
+    for (const c of [globe, inspect, orbit]) {
+      fire(c.element, "pointerdown");
+      fire(c.element, "pointermove", { clientX: 330 });
+    }
+    engine.cameras.setRig(view, {
+      position: { frame: moon },
+      orientation: { kind: "free" },
+    });
+    version = view.camera.version;
+    for (const c of [globe, inspect, orbit]) {
+      fire(c.element, "pointermove", { clientX: 400, clientY: 250 });
+    }
+    expect(view.camera.version).toBe(version);
+    expect(inspect.dragging).toBe(false);
+    for (const c of [globe, inspect, orbit]) {
+      fire(c.element, "pointerup");
+    }
+    engine.cameras.setRig(view, {
+      position: { frame: earth },
+      orientation: { kind: "free" },
+    });
+    expect(warn).not.toHaveBeenCalled();
+
     // A rig on the Moon: the Earth's anchor is 384,400 km away.
     engine.cameras.setRig(view, {
       position: { frame: moon },
@@ -747,7 +954,7 @@ describe("the camera layer", () => {
     poke();
     globe.update();
     expect(view.camera.version).toBe(version);
-    expect(globe.inputs).toBe(1);
+    expect(globe.inputs).toBe(2); // the wheel, and the mid-drag press
     expect(inspect.range).toBe(range);
     // One warning per controller, naming it.
     expect(warn).toHaveBeenCalledTimes(3);
@@ -766,7 +973,7 @@ describe("the camera layer", () => {
       orientation: { kind: "free" },
     });
     fire(globe.element, "wheel");
-    expect(globe.inputs).toBe(2);
+    expect(globe.inputs).toBe(3);
     for (const c of [globe, inspect, orbit]) {
       c.dispose();
     }

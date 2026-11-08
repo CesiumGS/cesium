@@ -9,8 +9,9 @@ import type { FrameKey, FrameResolver } from "./frameResolver.ts";
  * A resolver over `world`'s transform table: `world.root`; its anchors, at
  * their places in the root (`World.placeAnchor`); and its nodes, named by
  * `World.frameOf`, at their anchor's place times their anchor-relative
- * matrix. Nothing in it moves with time, and every route's revision is
- * the world's `transformRevision`. Any other key throws, naming it.
+ * matrix. Nothing in it moves with time. A route between anchors and the
+ * root has the world's `anchorPlaceRevision` as its revision; one through
+ * a node, the world's `transformRevision`. Any other key throws, naming it.
  */
 export function tableResolver(world: World): FrameResolver {
   const a = new Float64Array(16);
@@ -65,8 +66,17 @@ export function tableResolver(world: World): FrameResolver {
       m4.invertAffine(b, b);
       return m4.multiply(out, b, a);
     },
-    routeRevision() {
-      return world.transformRevision;
+    routeRevision(frame, base) {
+      // Between anchors and the root only anchor places matter; through a
+      // node, any transform.
+      return isNode(frame) || isNode(base)
+        ? world.transformRevision
+        : world.anchorPlaceRevision;
     },
   };
+}
+
+/** Whether `key` names a transform node (`World.frameOf`). */
+function isNode(key: FrameKey): boolean {
+  return "transform" in key;
 }
