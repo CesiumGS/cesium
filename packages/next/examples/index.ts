@@ -28,6 +28,7 @@ export const EXAMPLES: ExampleInfo[] = [
     labels: ["Translucency", "Rendering"],
     globe: false,
     layout: "side",
+    stackNarrow: true,
     load: () => import("./translucency/main.ts"),
     source: () => import("./translucency/main.ts?raw").then((m) => m.default),
   },
@@ -39,6 +40,7 @@ export const EXAMPLES: ExampleInfo[] = [
     labels: ["Custom shading", "Slang"],
     globe: false,
     layout: "side",
+    stackNarrow: true,
     load: () => import("./slang-playground/main.ts"),
     source: () =>
       import("./slang-playground/main.ts?raw").then((m) => m.default),
