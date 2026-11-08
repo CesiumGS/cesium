@@ -458,7 +458,9 @@ export interface ViewOptions {
    * The sun's shadows (cascaded shadow maps, out to 20 times the camera's
    * height above the ground, 200 m to 150 km). Default false in the
    * engine (its tests compare with 1.x, which draws none); the `Viewer`
-   * turns them on.
+   * turns them on. A budgeted 3D tileset also loads tiles off screen that
+   * may cast into view, coarser, and only with room in its cache
+   * (`TilesetOptions.casterErrorScale`).
    */
   shadows?: boolean;
   /**

@@ -112,6 +112,14 @@ function contentAxes(json: TileJson | undefined): ModelResourceOptions["axes"] {
   return up === "Z" ? "none" : up === "X" ? "3d-tiles-x-up" : "3d-tiles";
 }
 
+/**
+ * Shadow casters load under this share of the content budget (`CasterBudget`).
+ * Off-screen casters count against the budget and only ever yield: over it
+ * they aren't touched, so eviction takes them before anything a view draws,
+ * and they don't raise the error threshold for what views draw. The gap to
+ * the budget keeps a few evictions from loading them straight back.
+ */
+const CASTER_LOAD_SHARE = 0.9;
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
 /** `Tileset3D.rootJson` of a tileset.json without a root (and of terrain). */
@@ -242,6 +250,8 @@ export interface TilesetStats {
   screenSpaceError: number;
   /** Tiles drawn as mixed-LOD placeholders this frame, over all views. */
   placeholders: number;
+  /** Tiles only shadow cascades draw, over all views, in the last update. */
+  casters: number;
   /** Content requests in flight, and the origin's current window. */
   inFlight: number;
   maxInFlight: number;
@@ -405,6 +415,7 @@ export class Tileset3D implements TileTree {
     overflow: 0,
     screenSpaceError: 16,
     placeholders: 0,
+    casters: 0,
     inFlight: 0,
     maxInFlight: 0,
     adaptive: true,
@@ -929,6 +940,8 @@ export class Tileset3D implements TileTree {
   firstContentAt?: number;
   settledAt?: number;
   private masked = new Set<Tile>();
+  /** Tiles with a caster mask (`SelectionResult.casters`). */
+  private casters = new Set<Tile>();
   private placeholders = new Set<Tile>();
   /** Tiles drawn whole while finer content loads, in some view. */
   private standIns = new Set<Tile>();
@@ -1250,10 +1263,20 @@ export class Tileset3D implements TileTree {
     for (const tile of this.standIns) {
       tile.standInMask = 0;
     }
+    const nowCasters = new Set<Tile>();
+    for (const tile of this.casters) {
+      tile.casterMask = 0;
+    }
     this.policy.imageryReady =
       this.imagery || this.imageryPending ? this.imageryReady : undefined;
     this.policy.imageryRefines = this.imagery ? this.imageryRefines : undefined;
     this.policy.expectedLoadSeconds = this.loadEstimateMs / 1000;
+    this.policy.casterBudget =
+      this.stats.bytes < CASTER_LOAD_SHARE * this.cacheBytes
+        ? "load"
+        : this.stats.bytes <= this.cacheBytes
+          ? "keep"
+          : "none";
     const waiting = new Set<Tile>();
     for (const view of views) {
       const result = this.policy.select(this.root, this.geometricError, view);
@@ -1273,6 +1296,10 @@ export class Tileset3D implements TileTree {
       for (const tile of result.standIns ?? []) {
         tile.standInMask = (tile.standInMask | bit) >>> 0;
         nowStandIns.add(tile);
+      }
+      for (const tile of result.casters ?? []) {
+        tile.casterMask = (tile.casterMask | bit) >>> 0;
+        nowCasters.add(tile);
       }
       for (const tile of result.touched) {
         this.order.touch(tile, frame);
@@ -1311,6 +1338,23 @@ export class Tileset3D implements TileTree {
       }
     }
     this.masked = nowMasked;
+    // Off-screen casters: as for view masks, and the tint's callback sees
+    // them too (it may hide a tile, and a hidden draw doesn't cast).
+    for (const tile of new Set([...this.casters, ...nowCasters])) {
+      this.applyDebugColor(tile);
+      if (tile.placement && tile.appliedCasterMask !== tile.casterMask) {
+        if (tile.casterMask !== 0 && tile.purpose === "caster") {
+          this.stats.purposes.caster.drawn++;
+          tile.purpose = undefined;
+        }
+        for (const draw of tile.placement.draws) {
+          this.world.setCasterMask(draw, tile.casterMask);
+        }
+        tile.appliedCasterMask = tile.casterMask;
+      }
+    }
+    this.casters = nowCasters;
+    this.stats.casters = nowCasters.size;
     // Mixed-LOD placeholders: clipped to their holes (unioned over views)
     // in the views where finer content draws beside them.
     for (const tile of new Set([...this.placeholders, ...nowPlaceholders])) {
@@ -1454,7 +1498,9 @@ export class Tileset3D implements TileTree {
       if (tile.state !== "unloaded") {
         continue;
       }
-      const prefetch = purposes.get(tile) === "prefetch";
+      // Shadow casters wait with prefetch: never ahead of what views draw.
+      const purpose = purposes.get(tile) ?? "view";
+      const prefetch = purpose === "prefetch" || purpose === "caster";
       if (prefetch && visibleWaiting) {
         continue;
       }
@@ -1477,9 +1523,8 @@ export class Tileset3D implements TileTree {
       this.wanted.delete(tile);
       this.inFlight++;
       this.stats.requestsTotal++;
-      const purpose = purposes.get(tile) ?? "view";
       tile.purpose = purpose;
-      const visible = purpose !== "prefetch";
+      const visible = !prefetch;
       if (visible) {
         this.visibleInFlight++;
         visibleWaiting ||= this.policy.prefetchAfterVisible === true;
@@ -1874,6 +1919,8 @@ export class Tileset3D implements TileTree {
     tile.bytes = 0;
     tile.state = "unloaded";
     tile.appliedMask = -1;
+    tile.casterMask = tile.appliedCasterMask = 0;
+    this.casters.delete(tile);
     tile.debugColor = undefined;
     tile.appliedPlaceholderMask = 0;
     tile.placeholderMask = 0;

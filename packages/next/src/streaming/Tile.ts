@@ -147,6 +147,10 @@ export class Tile {
   viewMask = 0;
   /** View mask currently written to the content's draw records. */
   appliedMask = -1;
+  /** Views whose shadow cascades alone draw this tile this frame. */
+  casterMask = 0;
+  /** `casterMask` as currently written to the draw records. */
+  appliedCasterMask = 0;
   /** Views drawing this tile as a mixed-LOD placeholder this frame. */
   placeholderMask = 0;
   /** The volumes it fills as a placeholder, over all views this frame. */

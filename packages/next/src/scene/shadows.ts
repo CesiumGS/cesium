@@ -1,3 +1,4 @@
+import { CASTER_PLANES } from "../streaming/Stepwise.ts";
 import type { Camera } from "./Camera.ts";
 
 /** Cascades of the sun's shadow map (each a layer of a 2D array). */
@@ -27,6 +28,11 @@ export interface ShadowCascades {
   splits: Float32Array;
   /** Each cascade's texel size, m (the receivers' normal offset). */
   texels: Float32Array;
+  /**
+   * Each cascade's sphere's side toward the light, along the light's
+   * direction from the camera, m (`casterPlanes`).
+   */
+  tops: Float32Array;
   /** Distance along the view where shadows start to fade, and end, m. */
   fadeStart: number;
   far: number;
@@ -38,6 +44,7 @@ export function createShadowCascades(): ShadowCascades {
     planes: Array.from({ length: SHADOW_CASCADES }, () => new Float32Array(20)),
     splits: new Float32Array(SHADOW_CASCADES),
     texels: new Float32Array(SHADOW_CASCADES),
+    tops: new Float32Array(SHADOW_CASCADES),
     fadeStart: 0,
     far: 0,
   };
@@ -149,6 +156,7 @@ export function fitShadowCascades(
     // to the sun is 1.
     const behind = cz - radius;
     const reach = cz + radius + Math.max(30_000, 2 * radius);
+    out.tops[c] = cz + radius;
     const m = out.matrices;
     const o = c * 16;
     const sx = 1 / radius;
@@ -179,6 +187,45 @@ export function fitShadowCascades(
     setPlane(p, 3, [-ly[0]!, -ly[1]!, -ly[2]!], cy + radius);
     setPlane(p, 4, lz, -behind);
   }
+}
+
+/** How far toward the light casters are selected, at least, m. */
+const CASTER_MIN_REACH = 100;
+/**
+ * Where selection looks for shadow casters (`SelectionView.casterPlanes`):
+ * each fitted cascade's box in `position`'s coordinates, (nx, ny, nz, d)
+ * with inward normals, `CASTER_PLANES` per box. A box's four sides and its
+ * far side are the cull's; toward the light, where the cull has no plane
+ * (the depth range bounds it, tens of kilometres), it stops twice the
+ * cascades' far distance past the box's sphere, and at least 100 m: what
+ * stands further toward the light than that isn't worth loading for its
+ * shadow, though a loaded tile there still casts.
+ */
+export function casterPlanes(
+  cascades: ShadowCascades,
+  position: ArrayLike<number>,
+): Float64Array {
+  const reach = Math.max(2 * cascades.far, CASTER_MIN_REACH);
+  const out = new Float64Array(SHADOW_CASCADES * CASTER_PLANES * 4);
+  for (let c = 0; c < SHADOW_CASCADES; c++) {
+    const p = cascades.planes[c]!;
+    const o = c * CASTER_PLANES * 4;
+    out.set(p, o);
+    // Plane 4's normal is toward the light: this one faces it.
+    out[o + 20] = -p[16]!;
+    out[o + 21] = -p[17]!;
+    out[o + 22] = -p[18]!;
+    out[o + 23] = cascades.tops[c]! + reach;
+    for (let k = 0; k < CASTER_PLANES; k++) {
+      const q = o + k * 4;
+      out[q + 3] =
+        out[q + 3]! -
+        (out[q]! * position[0]! +
+          out[q + 1]! * position[1]! +
+          out[q + 2]! * position[2]!);
+    }
+  }
+  return out;
 }
 
 function setPlane(

@@ -23,8 +23,10 @@
  *   computes NaN and never skips the root).
  */
 import {
+  CASTER_PLANES,
   StepwiseSelection,
   isVisible,
+  type CasterBudget,
   type StepwiseOptions,
   type RequestPurpose,
   type SelectionResult,
@@ -54,6 +56,12 @@ export interface BudgetedOptions extends StepwiseOptions {
    */
   prefetchErrorScale?: number;
   /**
+   * Shadow casters off screen (`SelectionView.casterPlanes`) load at this
+   * multiple of the SSE threshold (default 2). 0 selects none: what casts
+   * is then what the view draws, as in 1.x.
+   */
+  casterErrorScale?: number;
+  /**
    * Mixed LOD: while a region refines, draw the finer content that has
    * arrived and let the coarse tile fill only the volumes still missing.
    * "auto" (default) mixes where a tile's children partition its volume
@@ -77,8 +85,10 @@ export interface BudgetedOptions extends StepwiseOptions {
 const BASE = 0;
 const INTERMEDIATE = 1e11;
 const FRONTIER = 1e12;
-/** Content outside the view, after everything visible. */
-const PREFETCH = 1e13;
+/** Shadow casters off screen, after everything visible. */
+const CASTER = 1e13;
+/** Content outside the view, after everything else. */
+const PREFETCH = 2e13;
 /** No renderable ancestor is loaded (or requested) in this region yet. */
 const NONE = Number.POSITIVE_INFINITY;
 /** Levels below a missing frontier tile searched for resident content. */
@@ -101,6 +111,7 @@ export class BudgetedSelection extends StepwiseSelection {
   opportunisticRatio: number;
   skipLevels: number;
   prefetchErrorScale: number;
+  casterErrorScale: number;
   mixedLod: "auto" | "always" | "never";
   motionBenefit: number;
   /** Set by the tileset each update (`TileSelection`). */
@@ -111,12 +122,17 @@ export class BudgetedSelection extends StepwiseSelection {
    */
   horizonCulling = true;
   readonly prefetchAfterVisible = true;
+  /** Set by the tileset each update (`TileSelection`). */
+  casterBudget?: CasterBudget;
+  /** Selects shadow casters off screen (not terrain, which has its own rules). */
+  protected selectsCasters = true;
 
   constructor(options: BudgetedOptions = {}) {
     super(options);
     this.opportunisticRatio = options.opportunisticRatio ?? 0;
     this.skipLevels = options.skipLevels ?? 2;
     this.prefetchErrorScale = options.prefetchErrorScale ?? 2;
+    this.casterErrorScale = options.casterErrorScale ?? 2;
     this.mixedLod = options.mixedLod ?? "auto";
     this.motionBenefit = options.motionBenefit ?? 1;
   }
@@ -150,9 +166,11 @@ export class BudgetedSelection extends StepwiseSelection {
       ? "base"
       : priority < FRONTIER
         ? "intermediate"
-        : priority < PREFETCH
+        : priority < CASTER
           ? "view"
-          : "prefetch";
+          : priority < PREFETCH
+            ? "caster"
+            : "prefetch";
   }
 
   override select(
@@ -176,6 +194,7 @@ export class BudgetedSelection extends StepwiseSelection {
       : 0;
     this.updateTile(root, view, pass, rootError);
     if (!isVisible(root.viewState(view.id))) {
+      this.selectCasters(root, view, pass, result);
       return result;
     }
     // The tileset's own geometric error says when the whole tileset is too
@@ -195,7 +214,90 @@ export class BudgetedSelection extends StepwiseSelection {
       const selected = new Set(result.selected);
       result.standIns = result.standIns.filter((t) => selected.has(t));
     }
+    this.selectCasters(root, view, pass, result);
     return result;
+  }
+
+  /**
+   * Shadow casters for the view's cascades: the tiles inside their boxes
+   * the view doesn't draw. What it draws casts already; off screen, a tile
+   * refines by `casterErrorScale` times the threshold, so casters are
+   * coarser than what the view would draw there. While one loads, the
+   * nearest loaded ancestor casts for it, so a shadow doesn't blink as the
+   * frontier moves.
+   */
+  private selectCasters(
+    root: Tile,
+    view: SelectionView,
+    pass: number,
+    result: SelectionResult,
+  ): void {
+    const boxes = view.casterPlanes;
+    if (!boxes || !this.selectsCasters || this.casterErrorScale <= 0) {
+      return;
+    }
+    const casters = new Set<Tile>();
+    const drawn = new Set(result.selected);
+    const budget = this.casterBudget ?? "load";
+    const visit = (tile: Tile, above: Tile | undefined): void => {
+      if (
+        (tile.refine === "REPLACE" && drawn.has(tile)) ||
+        !insideAnyBox(tile, boxes)
+      ) {
+        return;
+      }
+      const state = tile.viewState(view.id);
+      this.updateVisibility(tile, state, view, pass);
+      if (!state.inRequestVolume || tile.fillFromParent) {
+        return;
+      }
+      const onScreen = isVisible(state);
+      if (budget !== "none") {
+        result.touched.push(tile);
+      }
+      const wanted = () => {
+        if (budget === "load" && this.worthLoading(tile, view)) {
+          this.request(tile, CASTER, state.distance, result);
+        }
+      };
+      if (tile.external && tile.state !== "ready") {
+        wanted();
+        return;
+      }
+      const refine =
+        tile.children.length > 0 &&
+        ((tile.external && !tile.renderable) ||
+          state.sse >
+            this.memoryAdjustedScreenSpaceError *
+              (onScreen ? 1 : this.casterErrorScale));
+      const loaded = tile.contentAvailable;
+      if (!refine) {
+        // On screen, it is the view's to draw and request.
+        if (onScreen || drawn.has(tile)) {
+          return;
+        }
+        if (loaded) {
+          casters.add(tile);
+        } else if (tile.renderable) {
+          wanted();
+          if (above) {
+            casters.add(above);
+          }
+        }
+        return;
+      }
+      if (tile.refine === "ADD" && loaded && !drawn.has(tile) && !onScreen) {
+        casters.add(tile);
+      }
+      const next = tile.refine === "REPLACE" && loaded ? tile : above;
+      for (const child of tile.children) {
+        visit(child, next);
+      }
+    };
+    visit(root, undefined);
+    if (casters.size > 0) {
+      result.casters = [...casters];
+    }
   }
 
   /**
@@ -650,6 +752,17 @@ export class BudgetedSelection extends StepwiseSelection {
 /** Whether this view drew the tile's content in the previous frame. */
 function drawnLastFrame(tile: Tile, view: SelectionView): boolean {
   return tile.appliedMask !== -1 && (tile.appliedMask & (1 << view.id)) !== 0;
+}
+
+/** Whether the tile's volume reaches inside any of the `CASTER_PLANES` boxes. */
+function insideAnyBox(tile: Tile, boxes: Float64Array): boolean {
+  const size = CASTER_PLANES * 4;
+  for (let b = 0; b < boxes.length; b += size) {
+    if (insidePlanes(tile, boxes.subarray(b, b + size))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** Whether the tile's volume reaches inside all of `planes`. */

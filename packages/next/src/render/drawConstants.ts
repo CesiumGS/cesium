@@ -2,6 +2,7 @@ import { MirroredTable } from "../scene/MirroredTable.ts";
 import type { RenderContext } from "../scene/RenderContext.ts";
 import {
   BATCH_WORD,
+  CASTER_MASK_WORD,
   CLIP_BLOCK_WORD,
   COLOR_WORD,
   FLAGS_WORD,
@@ -116,6 +117,11 @@ export class DrawConstants {
   /** The views that draw the record, a bit each; true when it changed. */
   setViewMask(index: number, mask: number): boolean {
     return this.setWord(index, VIEW_MASK_WORD, mask);
+  }
+
+  /** The views whose shadow cascades alone draw it; true when it changed. */
+  setCasterMask(index: number, mask: number): boolean {
+    return this.setWord(index, CASTER_MASK_WORD, mask);
   }
 
   /**

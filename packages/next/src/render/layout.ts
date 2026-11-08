@@ -231,7 +231,7 @@ export function writeAnchorEye(
   }
 }
 
-/** `struct DrawRecord` — 160 bytes (152 used, padded to WGSL's 16-byte alignment). */
+/** `struct DrawRecord` — 160 bytes (156 used, padded to WGSL's 16-byte alignment). */
 export const RECORD_SIZE = DrawRecordLayout.size;
 export const RECORD_WORDS = R.size;
 /** Word offsets of `DrawRecord` fields written after creation. */
@@ -260,6 +260,11 @@ export const IMAGERY_SLICE_WORD = R.imagerySlice;
 export const LIGHTS_SLICE_WORD = R.lightsSlice;
 /** Word offset of `DrawRecord.viewMask`. */
 export const VIEW_MASK_WORD = R.viewMask;
+/**
+ * Word offset of `DrawRecord.casterMask`: the views whose shadow cascades,
+ * and nothing else of theirs, draw the record (`World.setCasterMask`).
+ */
+export const CASTER_MASK_WORD = R.casterMask;
 /**
  * Word offsets of a mixed-LOD placeholder's clip block (`packClip`: the
  * block and its box count) and view mask: in those views the record draws
@@ -602,6 +607,7 @@ export function writeDrawRecord(
   f32[o + R.billboardDepthTest] = r.billboardDepthTest ?? 0;
   u32[o + R.placement] = NO_PLACEMENT; // World.setPlacement
   u32[o + R.skirtStart] = r.skirtStart ?? NO_SKIRT;
+  u32[o + R.casterMask] = 0;
 }
 
 /** Bits of `Transform.flags` that hold its anchor slot (8 to 15). */

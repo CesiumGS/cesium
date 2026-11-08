@@ -22,6 +22,9 @@ import {
   type TileVolume,
 } from "./volumes.ts";
 
+/** Planes per box in `SelectionView.casterPlanes`. */
+export const CASTER_PLANES = 6;
+
 /** What a policy needs to know about a view for one selection pass. */
 export interface SelectionView {
   /** View id: index into `Tile.views` and bit in record view masks. */
@@ -37,6 +40,13 @@ export interface SelectionView {
    * camera is still or jumps.
    */
   prefetchPlanes?: Float64Array;
+  /**
+   * Where shadow casters may stand for this view's cascades (scene/shadows.ts
+   * `casterPlanes`): `CASTER_PLANES` planes per box; none without shadows.
+   * `Budgeted` selects casters inside them; 1.x's `Stepwise` doesn't, as 1.x
+   * draws shadows only from the tiles the camera selected.
+   */
+  casterPlanes?: Float64Array;
   /**
    * While the camera moves steadily: its velocity (m/s) and angular
    * velocity (rad/s, direction × its rate of change), for loading in
@@ -54,19 +64,30 @@ export interface SelectionView {
 /**
  * What a content request is for: a first coarse level where nothing is
  * loaded (`base`), a step between skipped levels (`intermediate`), the
- * view's own detail (`view`), content just outside the view or preloaded
- * (`prefetch`), or a height query's most detailed ground (`sample`).
+ * view's own detail (`view`), content off screen whose shadow may be in
+ * view (`caster`), content just outside the view or preloaded (`prefetch`),
+ * or a height query's most detailed ground (`sample`).
  */
 export type RequestPurpose =
-  "base" | "intermediate" | "view" | "prefetch" | "sample";
+  "base" | "intermediate" | "view" | "caster" | "prefetch" | "sample";
 
 export const REQUEST_PURPOSES: readonly RequestPurpose[] = [
   "base",
   "intermediate",
   "view",
+  "caster",
   "prefetch",
   "sample",
 ];
+
+/**
+ * How far selection may go for shadow casters, by the cache's use: `"load"`
+ * under 90% of the budget, requests and keeps them; `"keep"` up to the
+ * budget, keeps those loaded and requests no more, so that evicting a few
+ * doesn't load them again; `"none"` over it, doesn't touch them, so they
+ * are evicted first (`Tileset3D`). They cast until they go.
+ */
+export type CasterBudget = "load" | "keep" | "none";
 
 /** A tile selection policy (3D Tiles or globe), run per view each frame. */
 export interface TileSelection {
@@ -104,6 +125,8 @@ export interface TileSelection {
    * loads; `Tileset3D` sets it): what loading in motion weighs against.
    */
   expectedLoadSeconds?: number;
+  /** How far to go for shadow casters (`Tileset3D` sets it each update). */
+  casterBudget?: CasterBudget;
 }
 
 export interface SelectionResult {
@@ -130,6 +153,11 @@ export interface SelectionResult {
   standIns?: Tile[];
   /** Loaded tiles not drawn for want of imagery (terrain): it loads for them. */
   waiting?: Tile[];
+  /**
+   * Tiles not drawn in this view that its shadow cascades draw: off screen,
+   * inside `SelectionView.casterPlanes`.
+   */
+  casters?: Tile[];
 }
 
 // 1.x CullingVolume plane masks.

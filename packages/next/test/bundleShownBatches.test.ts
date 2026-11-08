@@ -80,6 +80,67 @@ function frame(world: World): number {
   return draws.get("world.bundle") ?? 0;
 }
 
+describe("draw bundles and caster masks", () => {
+  it("holds a batch only its view's cascades draw in the shadow bundle alone", () => {
+    const { world, handles } = tiles(3);
+    for (const handle of handles) {
+      world.setViewMask(handle, 0);
+    }
+    expect(frame(world)).toBe(0);
+    world.setCasterMask(handles[0]!, 1);
+    expect(frame(world)).toBe(0);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    expect(draws.get("world.depthBundle")).toBeUndefined();
+    expect(draws.get("world.prepassBundle")).toBeUndefined();
+    // The shadow bundle alone was recorded again.
+    expect(recorded.get("world.bundle")).toBeUndefined();
+    expect(recorded.get("world.shadowBundle")).toBe(1);
+    // Drawn by the view as well: held once. Leaving the view keeps it.
+    world.setViewMask(handles[0]!, 1);
+    expect(frame(world)).toBe(1);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    world.setViewMask(handles[0]!, 0);
+    expect(frame(world)).toBe(0);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    world.setCasterMask(handles[0]!, 0);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBeUndefined();
+  });
+
+  it("keeps the count through a shader change and a removal", () => {
+    const { world, handles } = tiles(2);
+    const mesh = world.addMesh(square);
+    const a = world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    const b = world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    for (const handle of handles) {
+      world.setViewMask(handle, 0);
+    }
+    world.setCasterMask(a, 1);
+    world.setCasterMask(b, 1);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    world.removeDraw(a);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    world.removeDraw(b);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBeUndefined();
+    // The freed batch's next draw starts with no caster.
+    world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBeUndefined();
+  });
+
+  it("wakes the views it casts for", () => {
+    const { world, handles } = tiles(1);
+    world.setViewMask(handles[0]!, 0);
+    frame(world);
+    world.changedViews = 0;
+    world.setCasterMask(handles[0]!, 2);
+    expect(world.changedViews & 2).not.toBe(0);
+  });
+});
+
 describe("draw bundles and view masks", () => {
   it("leaves out batches no view draws, in every bundle", () => {
     const { world, handles } = tiles(10);

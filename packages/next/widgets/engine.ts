@@ -26,6 +26,7 @@ const PURPOSE_LABELS: Record<RequestPurpose, string> = {
   base: "Base",
   intermediate: "Intermediate",
   view: "View",
+  caster: "Shadow casters",
   prefetch: "Prefetch",
   sample: "Height samples",
 };

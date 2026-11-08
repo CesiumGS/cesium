@@ -52,6 +52,7 @@ import {
   NO_PLACEMENT,
   FEATURE_ID_WORD,
   FLAGS_WORD,
+  CASTER_MASK_WORD,
   VIEW_MASK_WORD,
   ALL_VIEWS,
   CLIP_BOXES,
@@ -464,6 +465,11 @@ interface Batch {
    * bundles' recording, for as long as it stays resident.
    */
   shown: number;
+  /**
+   * Its records some view's shadow cascades alone draw (`setCasterMask`).
+   * Only the shadow bundle holds a batch with these and none shown.
+   */
+  casters: number;
 }
 
 /**
@@ -2428,6 +2434,7 @@ export class World {
       batch.points = f.points;
       batch.instanced = f.instanced;
       batch.shown = 0;
+      batch.casters = 0;
     } else {
       batch = {
         index: this.batchList.length,
@@ -2443,6 +2450,7 @@ export class World {
         items: 0,
         itemBase: 0,
         shown: 0,
+        casters: 0,
       };
       this.batchList.push(batch);
     }
@@ -2486,6 +2494,10 @@ export class World {
     if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
       old.shown--;
       batch.shown++;
+    }
+    if (this.recordsU32[o + CASTER_MASK_WORD] !== 0) {
+      old.casters--;
+      batch.casters++;
     }
     if (old.items === 0) {
       this.batches.delete(old.key);
@@ -2645,6 +2657,9 @@ export class World {
     batch.items -= instanceCount > 0 ? instanceCount : 1;
     if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
       batch.shown--;
+    }
+    if (this.recordsU32[o + CASTER_MASK_WORD] !== 0) {
+      batch.casters--;
     }
     if (batch.items === 0) {
       this.batches.delete(batch.key);
@@ -3412,6 +3427,32 @@ export class World {
         batch.shown += mask === 0 ? -1 : 1;
         if (batch.shown === (mask === 0 ? 0 : 1)) {
           this.batchesShownChanged = true;
+        }
+      }
+    }
+  }
+
+  /**
+   * The views whose shadow cascades draw this record though the view itself
+   * doesn't (a tile off screen whose shadow may be in view). Only their
+   * cascades see it: not the view's own passes, picks, ray casts or depth
+   * ranges, which read the view mask.
+   */
+  setCasterMask(handle: DrawHandle, mask: number): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const old =
+      this.recordsU32[handle.index * RECORD_WORDS + CASTER_MASK_WORD]!;
+    if (this.drawConstants.setCasterMask(handle.index, mask)) {
+      this.changedViews |= old | (mask >>> 0);
+      this.markDirty(handle.index);
+      if ((old === 0) !== (mask === 0)) {
+        const batch = this.drawBatches[handle.index]!;
+        batch.casters += mask === 0 ? -1 : 1;
+        // Joining or leaving the shadow bundle alone: recorded again.
+        if (batch.shown === 0) {
+          this.casters = undefined;
         }
       }
     }
@@ -4720,10 +4761,13 @@ export class World {
                       : "opaque";
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
-    // Only batches some view draws (`Batch.shown`): the cache's resident
-    // tiles that no view selected cost nothing here.
+    // Only batches some view draws (`Batch.shown`), and for shadows those
+    // some view's cascades alone do: the cache's resident tiles that no
+    // view selected cost nothing here.
     const order = this.batchList
-      .filter((batch) => batch.shown > 0)
+      .filter(
+        (batch) => batch.shown > 0 || (kind === "shadow" && batch.casters > 0),
+      )
       .sort(
         (a, b) =>
           rank(a) - rank(b) ||

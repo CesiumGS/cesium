@@ -44,6 +44,7 @@ import { FOG_SSE, fog, fogDensity } from "./GlobeStepwise.ts";
 const EXPAND_MS = 4;
 
 export class GlobeBudgetedSelection extends BudgetedSelection {
+  protected override selectsCasters = false;
   /**
    * 1.x scene.fog.enabled: fog lowers the SSE of distant tiles. Off while
    * 2.0 draws no fog (M4): detail is only worth dropping where fog hides it.

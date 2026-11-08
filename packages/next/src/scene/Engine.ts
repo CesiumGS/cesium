@@ -61,6 +61,7 @@ import {
   SHADOW_CASCADES,
   SHADOWS_SIZE,
   SHADOWS_STRIDE,
+  casterPlanes,
   createShadowCascades,
   fitShadowCascades,
   shadowRange,
@@ -1449,6 +1450,7 @@ export class Engine {
         return planes;
       };
       const planes = worldPlanes(camera, 1);
+      const casters = this.selectionCasters(view, anchor, camera, aspect);
       // Prefetch: the view the camera will have shortly at its current
       // velocity, so only content it is about to reveal loads ahead. None
       // while it is still: a margin around a still view (r37) was half the
@@ -1483,6 +1485,7 @@ export class Engine {
           height: 0,
         }) ?? { longitude: 0, latitude: 0, height: 0 },
         planes,
+        ...(casters ? { casterPlanes: casters } : {}),
         ...(ahead && motion
           ? {
               prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
@@ -1495,6 +1498,76 @@ export class Engine {
       });
     }
     return out;
+  }
+
+  /**
+   * Where `view`'s shadow casters may stand, for selection, in `anchor`'s
+   * coordinates (`camera`, the view's there): the cascades as fitted now,
+   * from the last depth range; undefined without shadows.
+   */
+  private selectionCasters(
+    view: View,
+    anchor: AnchorHandle,
+    camera: Camera,
+    aspect: number,
+  ): Float64Array | undefined {
+    const body = this.bodyCamera(view);
+    const light = this.shadowLight(
+      view,
+      body.position,
+      this.moonFrom(body.position),
+    );
+    if (!light) {
+      return undefined;
+    }
+    let direction: ArrayLike<number> = light.direction;
+    if (anchor !== view.bodyAnchor) {
+      // The light is in the body anchor's axes: re-expressed in this one.
+      const m = m4.multiply(
+        scratchSelection,
+        m4.invertAffine(scratchSelectionInverse, view.anchorPlacement(anchor)),
+        view.anchorPlacement(view.bodyAnchor, scratchSelectionBody),
+      );
+      direction = rotateVector(m, light.direction, v3.vec3());
+    }
+    const height = view.body.ellipsoid.cartesianToCartographic(
+      body.position,
+      scratchCartographic,
+    )?.height;
+    const frame = this.viewFrames.get(view);
+    fitShadowCascades(
+      this.selectionCascades,
+      camera,
+      aspect,
+      direction,
+      Math.max(height ?? 0, 2),
+      frame?.cascadeRange,
+    );
+    return casterPlanes(this.selectionCascades, camera.position);
+  }
+  /** `selectionCasters`' fit (the frame's own is `cascades`). */
+  private readonly selectionCascades = createShadowCascades();
+
+  /**
+   * The light `view`'s shadows follow from `position` (its body camera's):
+   * the sun's, or at night the Moon's when it's up; undefined when the view
+   * has no shadows or neither is up. `moon` is the Moon from there.
+   */
+  private shadowLight(
+    view: View,
+    position: Vec3,
+    moon: { readonly direction: Vec3 } | undefined,
+  ): { direction: Vec3; moon: boolean } | undefined {
+    if (!view.shadows || view.lighting.sunIlluminance === 0) {
+      return undefined;
+    }
+    const up = v3.normalize(scratchShadowUp, position);
+    if (v3.dot(up, this.sunDirection) > -0.05) {
+      return { direction: this.sunDirection, moon: false };
+    }
+    return moon !== undefined && v3.dot(up, moon.direction) > 0
+      ? { direction: moon.direction, moon: true }
+      : undefined;
   }
 
   /**
@@ -3168,17 +3241,12 @@ export class Engine {
   private writeShadows(view: View, index: number, aspect: number): void {
     const frame = this.viewFrames.get(view)!;
     const camera = this.bodyCamera(view);
-    const up = v3.normalize(scratchShadowUp, camera.position);
-    // The sun's, or at night the Moon's when it's up.
-    const sunUp = v3.dot(up, this.sunDirection) > -0.05;
-    const moon = this.viewBlock.moon;
-    const moonUp =
-      !sunUp && moon !== undefined && v3.dot(up, moon.direction) > 0;
-    const sun = moonUp ? moon.direction : this.sunDirection;
-    frame.shadowed =
-      view.shadows && view.lighting.sunIlluminance !== 0 && (sunUp || moonUp);
+    const light = this.shadowLight(view, camera.position, this.viewBlock.moon);
+    frame.shadowed = light !== undefined;
+    const moonUp = light?.moon === true;
     const cascades = this.cascades;
-    if (frame.shadowed) {
+    if (light) {
+      const sun = light.direction;
       const c = view.body.ellipsoid.cartesianToCartographic(
         camera.position,
         scratchCartographic,
@@ -3206,6 +3274,7 @@ export class Engine {
         writeViewBlock(this.cascadeData, o, block);
         writeAnchorEyes(this.cascadeData, o, camera, view, this.anchorEyes);
         this.cascadeDataU32[o + VIEW_BIT_WORD] = this.viewBit(view);
+        this.cascadeData[o + VIEW_TIME_WORD + 2] = 1; // View.time.z: casters too
         this.ctx.device.queue.writeBuffer(
           this.cascadeStaging,
           o * 4,

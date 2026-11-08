@@ -133,11 +133,14 @@ public float4x4 relativeMatrix(Transform t) {
 // Hidden, empty, or not selected for this view (multi-view tile selection
 // shares one draw table and picks LOD per view through the mask). A height
 // capture's view (View.time.y 1) culls what isn't ground
-// (RecordFlags.notGround). Under an anchor the eye is too far from
-// (AnchorEye.eyeHi.w 1), nothing draws.
+// (RecordFlags.notGround). A shadow cascade's view (View.time.z 1) also
+// draws the casters its view selected off screen (DrawRecord.casterMask).
+// Under an anchor the eye is too far from (AnchorEye.eyeHi.w 1), nothing
+// draws.
 public bool drawable(DrawRecord r, Transform t) {
+  uint mask = view.time.z > 0.5 ? r.viewMask | r.casterMask : r.viewMask;
   return (r.flags & 1u) == 0u && (t.flags & 1u) == 0u && r.indexCount != 0u &&
-         (r.viewMask & view.viewBit) != 0u &&
+         (mask & view.viewBit) != 0u &&
          !(view.time.y > 0.5 && (r.flags & 32u) != 0u) &&
          anchorEye(t).eyeHi.w < 0.5;
 }

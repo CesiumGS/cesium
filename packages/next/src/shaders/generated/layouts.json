@@ -1179,6 +1179,17 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "casterMask",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
@@ -3065,6 +3076,17 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "casterMask",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [

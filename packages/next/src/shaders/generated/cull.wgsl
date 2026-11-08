@@ -44,6 +44,7 @@ struct DrawRecord_std430_0
     @align(4) billboardDepthTest_0 : f32,
     @align(16) placement_0 : u32,
     @align(4) skirtStart_0 : u32,
+    @align(8) casterMask_0 : u32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;
@@ -244,6 +245,15 @@ fn append_0( batch_1 : u32,  item_1 : u32)
 
 fn drawable_0( _S5 : u32,  _S6 : ptr<function, Transform_std430_0>) -> bool
 {
+    var mask_0 : u32;
+    if(((view_0.time_0.z) > 0.5f))
+    {
+        mask_0 = ((records_0[_S5].viewMask_0) | ((records_0[_S5].casterMask_0)));
+    }
+    else
+    {
+        mask_0 = records_0[_S5].viewMask_0;
+    }
     var _S7 : u32 = records_0[_S5].flags_0;
     var _S8 : bool;
     if((((records_0[_S5].flags_0) & (u32(1)))) == u32(0))
@@ -264,7 +274,7 @@ fn drawable_0( _S5 : u32,  _S6 : ptr<function, Transform_std430_0>) -> bool
     }
     if(_S8)
     {
-        _S8 = (((records_0[_S5].viewMask_0) & ((view_0.viewBit_0)))) != u32(0);
+        _S8 = ((mask_0 & ((view_0.viewBit_0)))) != u32(0);
     }
     else
     {

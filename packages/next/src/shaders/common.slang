@@ -55,7 +55,8 @@ public struct View {
   // share of the sun's above the atmosphere (w; 0: none).
   public float4 moonLight;
   // Seconds since the engine started (x), for custom shaders' animation;
-  // y: 1 in a height capture's view (cull `drawable`).
+  // y: 1 in a height capture's view; z: 1 in a shadow cascade's, whose cull
+  // also draws its view's casters (cull `drawable`).
   public float4 time;
   // Per anchor slot (Transform.flags bits 8 to 15): the eye in the
   // anchor's coordinates and its axes into the shading axes (cullTables
@@ -100,6 +101,7 @@ public struct DrawRecord {
   // 0xffffffff: none (the transform alone).
   public uint placement;
   public uint skirtStart;        // a globe tile's first skirt vertex (mesh-local); 0xffffffff = none
+  public uint casterMask;        // views whose shadow cascades alone draw this record
 };
 
 // A placement composed in float64 on the CPU (World transform table),
