@@ -53,7 +53,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute, render",
     summary: "Each cascade: its own cull, then the casters' depth.",
     detail:
-      "For each of the 4 cascades, the cascade's view block is copied in, the world is culled again for it, without point sets, and the casters' bundle draws depth into that layer of the shadow map.",
+      "For each of the 4 cascades, the cascade's view block is copied in, the world is culled again for it, without point sets, and the casters' bundle draws depth into that layer of the shadow map. The Shadows tab follows this through.",
     skipped: "When the view has no shadows this tick.",
     reads: ["view block", "draw records", "transforms", "clip regions"],
     writes: ["items", "draw arguments", "shadow map"],

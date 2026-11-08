@@ -834,6 +834,96 @@ pre.snippet:focus-visible,
   vertical-align: baseline;
 }
 
+/* How far the cascades reach, on one log scale. */
+.reach {
+  display: grid;
+  gap: var(--stratakit-space-400);
+}
+.reach-axis {
+  position: relative;
+  block-size: 18px;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-variant-numeric: tabular-nums;
+}
+.reach-axis span {
+  position: absolute;
+  white-space: nowrap;
+}
+.reach-axis span:last-child {
+  transform: translateX(-60%);
+}
+.section .reach-row h3 {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.reach-bar {
+  position: relative;
+  block-size: 14px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--stratakit-color-bg-neutral-base);
+}
+.reach-bar span {
+  position: absolute;
+  inset-block: 0;
+  border-inline-end: 2px solid var(--stratakit-color-bg-page-base, Canvas);
+}
+.reach-c0 {
+  background: var(--stratakit-color-icon-accent-base);
+}
+.reach-c1 {
+  background: color-mix(
+    in srgb,
+    var(--stratakit-color-icon-accent-base) 72%,
+    transparent
+  );
+}
+.reach-c2 {
+  background: color-mix(
+    in srgb,
+    var(--stratakit-color-icon-accent-base) 48%,
+    transparent
+  );
+}
+.reach-c3 {
+  background: color-mix(
+    in srgb,
+    var(--stratakit-color-icon-accent-base) 28%,
+    transparent
+  );
+}
+.section .reach-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0 var(--stratakit-space-300);
+  margin: var(--stratakit-space-100) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.reach-swatch {
+  display: inline-block;
+  inline-size: 10px;
+  block-size: 10px;
+  margin-inline-end: var(--stratakit-space-100);
+  border-radius: 2px;
+}
+.d-hill {
+  fill: var(--stratakit-color-icon-neutral-secondary);
+}
+.d-shadow {
+  fill: var(--stratakit-color-text-neutral-primary);
+  opacity: 0.35;
+}
+.d-shadow-missing {
+  fill: none;
+  stroke: var(--stratakit-color-text-neutral-primary);
+  stroke-dasharray: 4 3;
+}
+
 /* The seams' table. */
 .seams {
   border-collapse: collapse;

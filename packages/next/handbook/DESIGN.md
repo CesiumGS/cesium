@@ -48,7 +48,7 @@ only the committed runs.
 
 ## Layout
 
-Fifteen tabs don't fit a horizontal strip, so they're a grouped side list on a
+Sixteen tabs don't fit a horizontal strip, so they're a grouped side list on a
 desktop and a scrolling strip on a phone. A reading column of about 72 characters
 holds the prose; tables and figures may run to 1000 px. Nothing sits on a card:
 tables and figures sit on the page, separated by space and headings.
@@ -95,6 +95,8 @@ Details closed on screen print open.
 | Rendering: one tick, on three lanes                                         | By hand, in `src/tabs/rendering.tsx`                                                                                          | 2026-11-08                   |
 | System architecture: the module stack; what an app loads                    | Layers, rules and sizes generated; each block's words by hand, in `src/modules.tsx`. A new layer shows as "Not yet described" | Each build; words 2026-11-08 |
 | System architecture: what loads when; bundle bars                           | Sizes generated; the board by hand, in `src/flows.tsx`                                                                        | 2026-11-08                   |
+| Shadows: one tick; a cascade seen from above                                | By hand, in `src/tabs/shadows.tsx`                                                                                            | 2026-11-08                   |
+| Shadows: how far the cascades reach                                         | Computed at build time by `src/scene/shadows.ts` itself                                                                       | Each build                   |
 | Tile selection: a tile's states; levels per policy; mixed LOD; cache levels | By hand, in `src/flows.tsx` and `src/tabs/selection.tsx`                                                                      | 2026-11-08                   |
 | Frame tree: the tree; one tick of answering                                 | By hand, in `src/tabs/frames.tsx` and `src/flows.tsx`                                                                         | 2026-11-08                   |
 | Cameras: one tick down the chain                                            | By hand, in `src/flows.tsx`                                                                                                   | 2026-11-08                   |
