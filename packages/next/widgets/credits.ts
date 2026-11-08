@@ -261,6 +261,8 @@ const CSS = `
   font: 400 11px/16px var(--cc-font); color: var(--cc-text-muted);
 }
 .cesium-credits[hidden] { display: none; }
+/* Open, the list stands over the time controls (the same layer, later in the document), still under the inspector. */
+.cesium-credits:has(.cc-panel:not([hidden])) { z-index: 3; }
 .cesium-credits .cc-bar {
   display: inline-flex; align-items: center; gap: 10px; max-width: 100%; box-sizing: border-box;
   height: 36px; padding: 0 10px; border-radius: 8px; pointer-events: auto;
