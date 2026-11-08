@@ -34,7 +34,8 @@ the second audience: every number is there and honest, but quieter.
      moves into the globe's frame.
   3. The survey mark: the design against NGS's own control.
   4. The 10,000 ft pair: the design distance is the same in both
-     placements; only reprojected also draws it in the right place.
+     placements; only reprojected also draws it in the right place. Seen
+     close in at the ruler's far end, where its bracket reads (UX review).
   5. Down the ladder: the single building (rigid is fine), the airport
      (metres), the pole line (tens of metres).
   6. Hand-off: the panel, the flight list and the measure toolbar, yours.
@@ -96,7 +97,8 @@ the second audience: every number is there and honest, but quieter.
 
   Later, as toggles, off by default: a grid-north-against-true-north compass
   at the cursor (convergence, about 1° across the corridor), and an error
-  ribbon tinting the ground under the corridor by rigid error.
+  ribbon tinting the road where it truly is by rigid's error there (the
+  paved section, just over its surface: UX review).
 
 - **The portfolio is a scale ladder to fly through** (owner, 2026-11-07),
   ordered by size, from a single building (rigid error 2.6 mm at its
@@ -255,7 +257,8 @@ number in a headline row is not repeated in its Details), no e-notation.
   error as one line. Moving the cursor shows the design space being
   reprojected: the design numbers and the globe numbers change together.
   When the pointer is under the rail (the card and the legend), the rail
-  steps to the left under the toolbar.
+  steps to the left under the toolbar, and back 300 ms after the pointer
+  has left its corner.
 - **The legend**, under the cursor card in the top right rail: the bottom
   is the tour's card and the time controls'.
 - **The tour's card**, bottom centre above the time controls.
