@@ -113,11 +113,30 @@ function stop(engine: Engine | undefined): void {
   }
 }
 
-/** How many modules of the frames module and the time library have loaded. */
-function framesModulesLoaded(): number {
-  return performance
-    .getEntriesByType("resource")
-    .filter((e) => /\/src\/(frames|time|ephemeris)\//.test(e.name)).length;
+/**
+ * How many modules of the frames module, the time library and the
+ * ephemeris have loaded, and whether the count can be trusted. Read from
+ * resource timing, so it counts only on the dev server, where each module
+ * is its own request (a bundle has none to count). rerooting.html raises
+ * the resource timing buffer (250 entries by default; a full buffer drops
+ * later entries silently) before any module loads, and records whether it
+ * filled (`resourceTimingFull`).
+ */
+function framesModulesLoaded(): {
+  modules: number;
+  entries: number;
+  full: boolean;
+} {
+  const entries = performance.getEntriesByType("resource");
+  return {
+    modules: entries.filter((e) =>
+      /\/src\/(frames|time|ephemeris)\//.test(e.name),
+    ).length,
+    entries: entries.length,
+    full: Boolean(
+      (globalThis as { resourceTimingFull?: boolean }).resourceTimingFull,
+    ),
+  };
 }
 
 /** Column-major translation by (x, y, z). */
@@ -144,6 +163,20 @@ function compare(a: Uint8ClampedArray, b: Uint8ClampedArray) {
 
 const within = (c: { mean: number; p95: number }) =>
   c.mean <= TOLERANCE.mean && c.p95 <= TOLERANCE.p95;
+
+/** Check 1's images must show this much globe (about 45% of the image). */
+const MIN_GLOBE_PIXELS = 20_000;
+
+/** Pixels brighter than the background (any channel at 16 or more). */
+function drawn(pixels: Uint8ClampedArray): number {
+  let n = 0;
+  for (let i = 0; i < pixels.length; i += 4) {
+    if (Math.max(pixels[i]!, pixels[i + 1]!, pixels[i + 2]!) >= 16) {
+      n++;
+    }
+  }
+  return n;
+}
 
 /** Shows an image under a caption. */
 function show(caption: string, pixels: Uint8ClampedArray): void {
@@ -253,6 +286,7 @@ function turn(a: Float64Array, b: Float64Array): number {
  */
 async function coreOnly(engine: Engine, lost: () => void): Promise<Check> {
   const loaded = framesModulesLoaded();
+  const modules = loaded.full ? Infinity : loaded.modules;
   const world = engine.createWorld({
     maxDraws: 4,
     vertexBytes: 1 << 16,
@@ -322,13 +356,15 @@ async function coreOnly(engine: Engine, lost: () => void): Promise<Check> {
     id: 4,
     name: "core-only: a rig follows a box on a moving node",
     measured: {
-      "frames or time modules loaded": loaded,
+      "frames or time modules loaded": modules,
+      "resource timing entries": loaded.entries,
       ticks,
       "box pixels (fewest)": covered,
       "centroid off centre (px, worst)": worst,
     },
-    limit: "within 1 px of the centre each tick; nothing of /frames loaded",
-    pass: loaded === 0 && covered > 50 && worst <= 1,
+    limit:
+      "within 1 px of the centre each tick; nothing of /frames loaded (dev server, resource timing not full)",
+    pass: modules === 0 && covered > 50 && worst <= 1,
   };
 }
 
@@ -439,12 +475,16 @@ async function runRerooting(): Promise<RerootingResult> {
       one[`day ${k}: FLIP mean`] = c.mean;
       one[`day ${k}: FLIP p95`] = c.p95;
       one[`day ${k}: pixels differing`] = c.differing;
-      one[`day ${k}: Moon from the view's axis (°)`] = moonAngle(onGcrf.view);
-      one[`day ${k}: the Earth's anchor turned on GCRF (°)`] = turn(
+      // Not vacuous: the rigs place the Earth apart, and the globe shows.
+      const placed = turn(
         onItrf.view.anchorPlacement(earth),
         onGcrf.view.anchorPlacement(earth),
       );
-      onePass &&= within(c);
+      const shown = drawn(b);
+      one[`day ${k}: Moon from the view's axis (°)`] = moonAngle(onGcrf.view);
+      one[`day ${k}: the Earth's anchor turned on GCRF (°)`] = placed;
+      one[`day ${k}: globe pixels`] = shown;
+      onePass &&= within(c) && placed > 1 && shown >= MIN_GLOBE_PIXELS;
       if (k === 0) {
         show("1 · rig on ITRF", a);
         show("1 · rig on GCRF", b);
@@ -454,13 +494,14 @@ async function runRerooting(): Promise<RerootingResult> {
       id: 1,
       name: "ITRF and GCRF at the same instants",
       measured: one,
-      limit: `FLIP mean ≤ ${TOLERANCE.mean}, p95 ≤ ${TOLERANCE.p95}`,
+      limit: `FLIP mean ≤ ${TOLERANCE.mean}, p95 ≤ ${TOLERANCE.p95}; the Earth's anchor turned > 1°; ≥ ${MIN_GLOBE_PIXELS.toLocaleString("en-US")} globe pixels`,
       pass: onePass,
     });
 
     // 2. GCRF with the clock playing at 3,600×: the sky stays, the Earth turns.
     status.textContent = "2: GCRF with the clock playing…";
     onItrf.view.enabled = false;
+    // 5i: nothing public says the star map has loaded; Sky's starsOn does.
     const starsOn = () =>
       (engine.sky as unknown as { starsOn: number }).starsOn === 1;
     await settle(engine, starsOn, 30_000);
@@ -592,9 +633,7 @@ async function runRerooting(): Promise<RerootingResult> {
     });
     detachSky();
   } finally {
-    const info = engine.gpu.adapter.info;
-    const adapter = `${info.vendor} ${info.architecture} ${info.description}`;
-    $("adapter").textContent = `Adapter: ${adapter}`;
+    $("adapter").textContent = `Adapter: ${describe(engine)}`;
     stop(engine);
     checks.sort((a, b) => a.id - b.id);
     render(checks);
@@ -608,12 +647,18 @@ async function runRerooting(): Promise<RerootingResult> {
         `[rerooting] failed: ${failed.map((c) => `${c.id} ${c.name}`).join("; ")}`,
       );
     }
-    result = { adapter, checks, pass: checks.length === 4 && !failed.length };
   }
-  return result;
+  return {
+    adapter: describe(engine),
+    checks,
+    pass: checks.length === 4 && checks.every((c) => c.pass),
+  };
 }
 
-let result: RerootingResult;
+function describe(engine: Engine): string {
+  const info = engine.gpu.adapter.info;
+  return `${info.vendor} ${info.architecture} ${info.description}`;
+}
 
 function format(value: number): string {
   if (Number.isInteger(value)) {

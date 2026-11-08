@@ -86,34 +86,58 @@ const POINTS = [
 const CLIP = { west: -75.18, south: 39.94, east: -75.15, north: 39.96 };
 const DEG = Math.PI / 180;
 
-/** The view block's fields before the anchor table, as [name, word, words]. */
-const HEADER: Array<[string, number, number]> = [
-  ["viewProj", ViewLayout.viewProj / 4, 16],
-  ["viewRotation", ViewLayout.viewRotation / 4, 16],
-  ["cameraHi", ViewLayout.cameraHi / 4, 3],
-  ["near", ViewLayout.near / 4, 1],
-  ["cameraLo", ViewLayout.cameraLo / 4, 3],
-  ["aspect", ViewLayout.aspect / 4, 1],
-  ["planes", ViewLayout.planes / 4, 20],
-  ["sunDirection", ViewLayout.sunDirection / 4, 4],
-  ["viewport", ViewLayout.viewport / 4, 4],
-  ["iblFrame", ViewLayout.iblFrame / 4, 12],
-  ["sunIlluminance", ViewLayout.sunIlluminance / 4, 1],
-  ["diffuseIbl", ViewLayout.diffuseIbl / 4, 1],
-  ["specularIbl", ViewLayout.specularIbl / 4, 1],
-  ["specularMaxLod", ViewLayout.specularMaxLod / 4, 1],
+type Group = [string, number, number];
+const word = (field: keyof typeof ViewLayout) => ViewLayout[field] / 4;
+/** `n` scalars from `at`, each its own group. */
+const scalars = (name: string, at: number, n: number): Group[] =>
+  Array.from({ length: n }, (_, i) => [`${name}[${i}]`, at + i, 1]);
+/** A column-major 4 × 4 matrix: each column one group. */
+const columns = (name: string, at: number): Group[] =>
+  Array.from({ length: 4 }, (_, c) => [`${name} column ${c}`, at + c * 4, 4]);
+
+/**
+ * The view block's fields before the anchor table, as groups [name, word,
+ * words] that each are one vector (a matrix column, a plane's normal, an
+ * axis) or one scalar: a step is the float32 step of the group's largest
+ * value. A rotated vector's components round by its length's step (a
+ * component that is 0 by construction in one reference frame isn't
+ * exactly 0 through another), never by another vector's.
+ */
+const HEADER: Group[] = [
+  ...columns("viewProj", word("viewProj")),
+  ...columns("viewRotation", word("viewRotation")),
+  ["cameraHi", word("cameraHi"), 3],
+  ["near", word("near"), 1],
+  ["cameraLo", word("cameraLo"), 3],
+  ["aspect", word("aspect"), 1],
+  ...Array.from({ length: 5 }, (_, k): Group[] => [
+    [`plane ${k} normal`, word("planes") + k * 4, 3],
+    [`plane ${k} offset`, word("planes") + k * 4 + 3, 1],
+  ]).flat(),
+  ["sunDirection", word("sunDirection"), 3],
+  ["sunDirection.w", word("sunDirection") + 3, 1],
+  ...scalars("viewport", word("viewport"), 4),
+  ...Array.from({ length: 3 }, (_, k): Group[] => [
+    [`iblFrame axis ${k}`, word("iblFrame") + k * 4, 3],
+    [`iblFrame.w ${k}`, word("iblFrame") + k * 4 + 3, 1],
+  ]).flat(),
+  ["sunIlluminance", word("sunIlluminance"), 1],
+  ["diffuseIbl", word("diffuseIbl"), 1],
+  ["specularIbl", word("specularIbl"), 1],
+  ["specularMaxLod", word("specularMaxLod"), 1],
   // viewBit (a word between them) names the view: not compared.
-  ["exposure", ViewLayout.exposure / 4, 1],
-  ["aerialStart", ViewLayout.aerialStart / 4, 1],
-  ["aerialEnd", ViewLayout.aerialEnd / 4, 1],
-  ["sunLight", ViewLayout.sunLight / 4, 4],
-  ["bodyRadii", ViewLayout.bodyRadii / 4, 4],
-  ["moonLight", ViewLayout.moonLight / 4, 4],
-  ["time", ViewLayout.time / 4, 4],
+  ["exposure", word("exposure"), 1],
+  ["aerialStart", word("aerialStart"), 1],
+  ["aerialEnd", word("aerialEnd"), 1],
+  ...scalars("sunLight", word("sunLight"), 4),
+  ...scalars("bodyRadii", word("bodyRadii"), 4),
+  ["moonLight direction", word("moonLight"), 3],
+  ["moonLight share", word("moonLight") + 3, 1],
+  ...scalars("time", word("time"), 4),
 ];
 
 /** One anchor slot's fields: [name, word within the slot, words]. */
-const SLOT: Array<[string, number, number]> = [
+const SLOT: Group[] = [
   ["eyeHi", 0, 3],
   ["hidden", 3, 1],
   ["eyeLo", 4, 3],
@@ -126,7 +150,7 @@ const SLOT: Array<[string, number, number]> = [
  * The view's sky uniform (Sky.write), as [name, float, floats]: what the
  * sky's passes read of the camera, the sun and the Moon.
  */
-const SKY: Array<[string, number, number]> = [
+const SKY: Group[] = [
   ["camera (km)", 0, 3],
   ["exposure", 3, 1],
   ["sun", 4, 3],
@@ -154,36 +178,36 @@ const SKY: Array<[string, number, number]> = [
   ["pixel ratio", 79, 1],
 ];
 
+/** One float32 step (unit in the last place) at `y`: 2^(e − 23), e its exponent. */
+function f32Ulp(y: number): number {
+  const m = Math.abs(Math.fround(y));
+  return m < 2 ** -126 ? 2 ** -149 : 2 ** (Math.floor(Math.log2(m)) - 23);
+}
+
 /**
- * The worst difference of `a` from `b` over `fields`, in float32 steps of
- * each field: a step is the float32 step of the field's largest value of
- * `b` (a vector's small components move by its rounding too), as
- * test/anchorEyes.test.ts's closeF32. 0 where they are identical.
+ * The worst difference of `a` from `b` over `groups`, in float32 steps: a
+ * step is `f32Ulp` of the group's largest value of `b` (one vector or one
+ * scalar, `HEADER`). 0 where they are identical.
  */
 function ulps(
   a: ArrayLike<number>,
   b: ArrayLike<number>,
-  fields: ReadonlyArray<[string, number, number]>,
+  groups: readonly Group[],
   offset = 0,
 ): { worst: number; field: string } {
   let worst = 0;
   let field = "";
-  for (const [name, at, n] of fields) {
+  for (const [name, at, n] of groups) {
     let largest = 0;
     for (let i = 0; i < n; i++) {
       largest = Math.max(largest, Math.abs(b[offset + at + i]!));
     }
+    const step = f32Ulp(largest);
     for (let i = 0; i < n; i++) {
-      const x = a[offset + at + i]!;
-      const y = b[offset + at + i]!;
-      if (x === y) {
-        continue;
-      }
-      const step = Math.max(Math.abs(y), largest) * 2 ** -23;
-      const d = step > 0 ? Math.abs(x - y) / step : Infinity;
+      const d = Math.abs(a[offset + at + i]! - b[offset + at + i]!) / step;
       if (d > worst) {
         worst = d;
-        field = `${name}[${i}]`;
+        field = n > 1 ? `${name}[${i}]` : name;
       }
     }
   }
@@ -505,12 +529,12 @@ describe("a rig on GCRF draws what a rig on ITRF draws (plan 5a, Task 14)", () =
             `slot ${s} ${name}`,
             VIEW_ANCHORS_WORD + s * ANCHOR_EYE_WORDS + at,
             n,
-          ] as [string, number, number],
+          ] as Group,
       ),
     ).flat();
     const all = [
       ...HEADER,
-      ["viewBit", VIEW_BIT_WORD, 1] as [string, number, number],
+      ["viewBit", VIEW_BIT_WORD, 1] as Group,
       ...everySlot,
     ];
     // Every word of the uploaded block is one of these fields, or padding.
