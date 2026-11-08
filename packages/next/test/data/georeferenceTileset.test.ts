@@ -11,7 +11,7 @@ import { ENGINEERING_FRAME_EXTENSION } from "../../src/engineering/georeference.
 import {
   checkRigidTransform,
   georeferenceTileset,
-  readGeoreference,
+  tilesetGeoreference,
 } from "../../src/engineering/georeferenceTileset.ts";
 import { placeRigid } from "../../src/engineering/placement.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
@@ -58,7 +58,7 @@ function rotatedAbout(m: m4.Mat4, about: ArrayLike<number>, angle: number) {
 
 /**
  * The parts of a loaded Tileset3D that georeferenceTileset reads, around a
- * parsed declaration (the unit test runs the real class).
+ * declaration (the unit test runs the real class).
  */
 function standIn(
   rootTransform: m4.Mat4,
@@ -68,9 +68,8 @@ function standIn(
   return {
     url: "https://tiles.test/corridor/tileset.json",
     warnings: new Set<string>(),
-    georeference: readGeoreference({
-      extensions: { [ENGINEERING_FRAME_EXTENSION]: declaration, ...others },
-    }),
+    extensions: { [ENGINEERING_FRAME_EXTENSION]: declaration, ...others },
+    rootJson: {},
     modelMatrix: m4.mat4(),
     root: { transform: rootTransform },
     placement: undefined,
@@ -221,7 +220,7 @@ describe("a wkt2 CRS reference", () => {
     expect(trailing.placement).toBeUndefined();
     // A BOM-led WKT2 is stored trimmed by the reader, and places.
     const bom = declared(`\uFEFF${good}`);
-    expect(bom.georeference!.crs).toEqual({
+    expect(tilesetGeoreference(bom)!.crs).toEqual({
       format: "wkt2",
       wkt2: good.trim(),
     });
@@ -248,7 +247,9 @@ describe("a CRS from ESRI_crs or EXT_geospatial_crs_source alone", () => {
         },
       },
     );
-    expect(tileset.georeference!.sources.crs).toBe("extensions.ESRI_crs");
+    expect(tilesetGeoreference(tileset)!.sources.crs).toBe(
+      "extensions.ESRI_crs",
+    );
     const placement = await georeferenceTileset(tileset, { proj });
     expect(placement.mode).toBe("rigid");
     expect(placement.frame.definition.crs).toEqual({
@@ -332,7 +333,7 @@ describe("two declared CRSs, judged by PROJ", () => {
       proj.PJ_WKT2_2019,
     );
     const tileset = reprojectedWith(sourceWkt2(wkt2));
-    expect(tileset.georeference!.otherCrs).toHaveLength(1);
+    expect(tilesetGeoreference(tileset)!.otherCrs).toHaveLength(1);
     const placement = await georeferenceTileset(tileset, { proj });
     expect(placement.mode).toBe("reprojected");
     expect(tileset.warnings.size).toBe(0);
@@ -364,11 +365,12 @@ describe("two declared CRSs, judged by PROJ", () => {
 describe("a vertical CRS in another registry (vcsAuthority)", () => {
   it("resolves Esri's EPSG:32610 with ESRI:115700, read from ESRI_crs", async () => {
     const proj = await loadProj({ base, grids: GRIDS });
-    const declared = standIn(
+    const tileset = standIn(
       m4.mat4(),
       { placement: { mode: "reprojected" } },
       { ESRI_crs: { wkid: 32610, vcsWkid: 115700 } },
-    ).georeference!;
+    );
+    const declared = tilesetGeoreference(tileset)!;
     expect(crsDefinition(declared.crs)).toBe("EPSG:32610+ESRI:115700");
     expect(() =>
       crsObject(proj, declared.crs, "the declared CRS"),

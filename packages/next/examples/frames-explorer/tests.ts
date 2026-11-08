@@ -8,11 +8,12 @@
 // groups and the cases are in stress/, and everything a caller needs is
 // re-exported here.
 //
-// Library names are imported from their modules, not src/index.ts, because the
-// index can't load under vitest (it reaches the basis transcoder). Every name
-// the catalog imports from src/ is also exported by the index (ruling F7,
-// checked by test/framesExplorerRunner.test.ts), so the example stays a user
-// of the public API.
+// Library names are imported from their modules, not the entry points, because
+// those can't load under vitest (the core reaches the basis transcoder). Every
+// name the catalog imports from src/ is also exported by an entry point
+// (`@cesium/next`, `/time`, `/frames`, `/proj`, `/measure`; ruling F7, checked
+// by test/framesExplorerRunner.test.ts), so the example stays a user of the
+// public API.
 //
 // Results are structured-clone plain data: no class instances and no
 // functions. Accuracy statements are plain objects; instants are TDB seconds

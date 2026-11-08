@@ -7,7 +7,10 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import { ENGINEERING_FRAME_EXTENSION } from "../src/engineering/georeference.ts";
-import { georeferenceTileset } from "../src/engineering/georeferenceTileset.ts";
+import {
+  georeferenceTileset,
+  tilesetGeoreference,
+} from "../src/engineering/georeferenceTileset.ts";
 import { GridCatalog } from "../src/engineering/gridCatalog.ts";
 import type { GridSource } from "../src/engineering/proj.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
@@ -123,7 +126,10 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       "EXT_other",
     ]);
     expect(tileset.extensions.EXT_other).toEqual({ a: 1 });
-    expect(tileset.georeference).toEqual({
+    // The engine reads no declaration: the proj entry does, on first ask.
+    expect([...tileset.warnings]).toEqual([]);
+    const georeference = tilesetGeoreference(tileset);
+    expect(georeference).toEqual({
       name: "Corridor",
       body: EARTH,
       crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
@@ -137,7 +143,9 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       },
       warnings: [],
     });
-    const area = tileset.georeference!.areaOfInterest!;
+    // Remembered: the same object on every read.
+    expect(tilesetGeoreference(tileset)).toBe(georeference);
+    const area = georeference!.areaOfInterest!;
     for (const degrees of Object.values(area)) {
       expect(Math.abs(degrees)).toBeLessThan(1e-3);
     }
@@ -154,8 +162,10 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
         EXT_engineering_frame: { name: "Corridor", ...reprojected },
       }),
     );
-    expect(tileset.georeference!.name).toBe("Corridor");
-    expect(tileset.georeference!.sources.declaration).toBe(
+    expect([...tileset.warnings]).toEqual([]);
+    const georeference = tilesetGeoreference(tileset);
+    expect(georeference!.name).toBe("Corridor");
+    expect(georeference!.sources.declaration).toBe(
       "extensions.EXT_engineering_frame",
     );
     expect([...tileset.warnings]).toEqual([
@@ -167,7 +177,7 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
     const tileset = await load(
       tilesetJson({ ESRI_crs: { wkid: 6420, vcsWkid: 6360 } }),
     );
-    expect(tileset.georeference).toBeUndefined();
+    expect(tilesetGeoreference(tileset)).toBeUndefined();
     expect([...tileset.warnings]).toEqual([
       "tileset.json has ESRI_crs but no BENTLEY_engineering_frame placement; not placed",
     ]);
@@ -177,7 +187,7 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
     const json = tilesetJson({ [ENGINEERING_FRAME_EXTENSION]: reprojected });
     delete (json.root as { transform?: number[] }).transform;
     const tileset = await load(json);
-    expect(tileset.georeference!.areaOfInterest).toBeUndefined();
+    expect(tilesetGeoreference(tileset)!.areaOfInterest).toBeUndefined();
     const warnings = [...tileset.warnings];
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatch(
@@ -188,11 +198,12 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
   it("has no extensions and no declaration when the tileset has none", async () => {
     const tileset = await load(tilesetJson());
     expect(tileset.extensions).toEqual({});
-    expect(tileset.georeference).toBeUndefined();
+    expect(tilesetGeoreference(tileset)).toBeUndefined();
+    expect([...tileset.warnings]).toEqual([]);
     expect(tileset.placement).toBeUndefined();
   });
 
-  it("warns about a malformed declaration, naming the path, and still loads", async () => {
+  it("warns about a malformed declaration on first read, naming the path; the load succeeds", async () => {
     const tileset = await load(
       tilesetJson({
         [ENGINEERING_FRAME_EXTENSION]: {
@@ -201,13 +212,18 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
         },
       }),
     );
-    expect(tileset.georeference).toBeUndefined();
+    expect(tileset.root).toBeDefined();
+    expect([...tileset.warnings]).toEqual([]);
+    expect(tilesetGeoreference(tileset)).toBeUndefined();
     const warnings = [...tileset.warnings];
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain(
       "extensions.BENTLEY_engineering_frame.placement.mode",
     );
-    expect(tileset.root).toBeDefined();
+    // Once: a second read neither parses nor warns again.
+    tileset.warnings.clear();
+    expect(tilesetGeoreference(tileset)).toBeUndefined();
+    expect([...tileset.warnings]).toEqual([]);
   });
 
   it("takes an application's placement for an undeclared tileset", async () => {

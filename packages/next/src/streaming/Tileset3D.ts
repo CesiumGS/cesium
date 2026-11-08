@@ -7,7 +7,6 @@
  * exceeds its byte budget; a tile touched by any view stays.
  */
 import type { Engine } from "../scene/Engine.ts";
-import { EARTH, MOON } from "../scene/Body.ts";
 import type {
   CastRay,
   ClipBox,
@@ -59,9 +58,7 @@ import {
   type DebugColor,
 } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
-// Types only: the parser loads on demand (`readDeclaration`).
-import type { TilesetGeoreference } from "../engineering/georeference.ts";
-import type { TilesetPlacement } from "../engineering/placement.ts";
+import type { DesignPlacement } from "./designPlacement.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import { TouchOrder } from "./TouchOrder.ts";
@@ -111,60 +108,6 @@ const LOADING_IMAGERY = 1e15;
 const CANCEL_AFTER_FRAMES = 30;
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
-/**
- * georeference.ts's ENGINEERING_FRAME_EXTENSION and its old name, written
- * out so the parser is imported only for a tileset.json that has one.
- */
-const ENGINEERING_FRAME = "BENTLEY_engineering_frame";
-const OLD_ENGINEERING_FRAME = "EXT_engineering_frame";
-/** CRS extensions read only beside a frame declaration. */
-const CRS_ONLY = ["ESRI_crs", "EXT_geospatial_crs_source"];
-
-/** A tileset.json's declaration as read: parsed, or why not. */
-type Declaration =
-  { readonly georeference: TilesetGeoreference } | { readonly warning: string };
-
-/**
- * Reads a tileset.json's BENTLEY_engineering_frame (or its old name,
- * EXT_engineering_frame), importing the parser only when one is there
- * (other tilesets pay nothing). A malformed declaration, or anything else
- * that goes wrong reading it, is a warning: it never fails the load. What
- * the parser warns about (the old name, in-frame alignments) is added too.
- */
-async function readDeclaration(
-  json: TileJson,
-): Promise<Declaration | undefined> {
-  const extensions: unknown = json?.extensions;
-  if (typeof extensions !== "object" || extensions === null) {
-    return undefined;
-  }
-  if (!(
-    ENGINEERING_FRAME in extensions || OLD_ENGINEERING_FRAME in extensions
-  )) {
-    // A CRS alone has no placement mode: nothing is guessed, but say so.
-    const crs = CRS_ONLY.find((name) => name in extensions);
-    return crs === undefined
-      ? undefined
-      : {
-          warning: `tileset.json has ${crs} but no ${ENGINEERING_FRAME} placement; not placed`,
-        };
-  }
-  try {
-    const { parseGeoreference } =
-      await import("../engineering/georeference.ts");
-    const georeference = parseGeoreference(json, { EARTH, MOON });
-    return georeference === undefined ? undefined : { georeference };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    // The parser's own errors name the extension and the field.
-    return {
-      warning: message.startsWith(`${ENGINEERING_FRAME}:`)
-        ? message
-        : `${ENGINEERING_FRAME}: unreadable (${message.slice(0, 200)})`,
-    };
-  }
-}
-
 /**
  * A hierarchical content source other than a 3D Tiles tileset.json (plan
  * §3.7): its own root, content loader and placement; selection, requests,
@@ -249,10 +192,11 @@ export interface TilesetOptions extends BudgetedOptions {
   modelMatrix?: Mat4;
   /**
    * Where its design coordinates are drawn (`Tileset3D.placement`), for a
-   * tileset that declares none: the application supplies the engineering
-   * frame and mode, since the engine never guesses one.
+   * tileset that declares none: the application supplies the placement
+   * (the proj entry's `TilesetPlacement`, or its own), since the engine
+   * never guesses one.
    */
-  placement?: TilesetPlacement;
+  placement?: DesignPlacement;
   /**
    * Keeps each loaded tile's triangles on the CPU (`Tile.geometry`) for
    * client-side snapping (`ClientSnapService`), released when the tile
@@ -348,26 +292,32 @@ export class Tileset3D implements TileTree {
   readonly events = new Emitter<TilesetEvents>();
   /**
    * tileset.json's top-level `extensions` (none for terrain), frozen at the
-   * top level only: the objects inside are the parsed JSON itself.
+   * top level only: the objects inside are the parsed JSON itself. The
+   * engine doesn't read the engineering-frame declaration among them; the
+   * proj entry's `tilesetGeoreference(tileset)` does.
    */
   readonly extensions: Readonly<Record<string, unknown>>;
   /**
-   * Its `BENTLEY_engineering_frame` declaration, parsed at load. Undefined when
-   * there is none, or when it is malformed: that adds a `warnings` entry
-   * naming the field, and never fails the load. Nothing is resolved here;
-   * `georeferenceTileset` loads the frame and sets `placement`.
+   * @internal The root tile's `boundingVolume` and `transform` as
+   * tileset.json writes them (the parsed JSON itself; neither for terrain),
+   * for the proj entry's `tilesetGeoreference`, which derives an area of
+   * interest from them.
    */
-  readonly georeference?: TilesetGeoreference;
+  readonly rootJson: {
+    readonly boundingVolume?: unknown;
+    readonly transform?: unknown;
+  };
   /**
    * Where the tileset's design coordinates are drawn, and the way back
-   * (`TilesetPlacement`): set by `georeferenceTileset` from the declaration,
-   * or by the application (`TilesetOptions.placement`). Without one, picks on
+   * (`DesignPlacement`): set by the proj entry's `georeferenceTileset` from
+   * the declaration, or by the application (`TilesetOptions.placement`).
+   * Without one, picks on
    * it have no design coordinates. Unrelated to `Tile.placement`, which is a
    * tile's loaded content in the world (a `ModelPlacement`). Changing
    * `modelMatrix` drops it, with a warning: it would no longer describe what
    * is drawn.
    */
-  placement?: TilesetPlacement;
+  placement?: DesignPlacement;
   /**
    * The selection policy (`setPolicy` replaces it). Its knobs set here
    * (`maximumScreenSpaceError`, ...) select again and wake the engine's
@@ -958,7 +908,6 @@ export class Tileset3D implements TileTree {
     readonly geometricError: number,
     source?: TileSource,
     tilesetJson?: TileJson,
-    declaration?: Declaration,
   ) {
     if (options.customShader && options.style) {
       throw new Error("Tileset3D: give a customShader or a style, not both.");
@@ -988,16 +937,15 @@ export class Tileset3D implements TileTree {
       !Array.isArray(extensions)
         ? Object.freeze({ ...extensions })
         : NO_EXTENSIONS;
-    if (declaration !== undefined) {
-      if ("georeference" in declaration) {
-        this.georeference = declaration.georeference;
-        for (const warning of declaration.georeference.warnings) {
-          this.warnings.add(warning);
-        }
-      } else {
-        this.warnings.add(declaration.warning);
-      }
-    }
+    const rootJson: unknown = tilesetJson?.root;
+    this.rootJson =
+      typeof rootJson === "object" && rootJson !== null
+        ? Object.freeze({
+            boundingVolume: (rootJson as Record<string, unknown>)
+              .boundingVolume,
+            transform: (rootJson as Record<string, unknown>).transform,
+          })
+        : NO_EXTENSIONS;
     if (options.placement !== undefined) {
       this.placement = options.placement;
     }
@@ -1032,7 +980,6 @@ export class Tileset3D implements TileTree {
       { warnings },
       options.modelMatrix,
     );
-    const declaration = await readDeclaration(json);
     const tileset = new Tileset3D(
       engine,
       world,
@@ -1042,7 +989,6 @@ export class Tileset3D implements TileTree {
       geometricError,
       undefined,
       json,
-      declaration,
     );
     warnings.forEach((w) => tileset.warnings.add(w));
     tileset.stats.tiles = countTiles(root);

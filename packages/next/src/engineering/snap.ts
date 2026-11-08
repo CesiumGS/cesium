@@ -16,6 +16,7 @@ import {
   type SnapKind,
 } from "./EngineeringFrame.ts";
 import { pickInFrame, type PickCamera, type PickView } from "./pick.ts";
+import { engineeringPlacement } from "./placement.ts";
 
 /**
  * The camera a snap's pick was read with, and its view's size in CSS
@@ -276,7 +277,7 @@ export class ClientSnapService {
       return kept(surface(surfaceTolerance));
     }
     const tolerance = tile.geometricError;
-    const placement = tileset.placement;
+    const placement = engineeringPlacement(tileset.placement);
     return kept({
       ...common,
       snapPoint: found.point,
@@ -519,7 +520,7 @@ function refusal(
     return "curve is not two or more points of 3 finite numbers";
   }
   if (r.design !== undefined) {
-    const placement = (r.tileset ?? tileset).placement;
+    const placement = engineeringPlacement((r.tileset ?? tileset).placement);
     if (placement === undefined) {
       return "design coordinates on a tileset without a placement";
     }

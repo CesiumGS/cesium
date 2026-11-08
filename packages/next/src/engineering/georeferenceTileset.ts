@@ -11,8 +11,11 @@ import {
   type EngineeringFrameDefinition,
 } from "./EngineeringFrame.ts";
 import {
+  CRS_SOURCE_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
+  ESRI_CRS_EXTENSION,
   GEOREFERENCE_PATH,
+  OLD_ENGINEERING_FRAME_EXTENSION,
   GeoreferenceError,
   checkDeclaredGrids,
   parseGeoreference,
@@ -48,6 +51,76 @@ export function readGeoreference(
   tilesetJson: unknown,
 ): TilesetGeoreference | undefined {
   return parseGeoreference(tilesetJson, { EARTH, MOON });
+}
+
+/** A tileset's declaration as first read: parsed, or undefined. */
+const declarations = new WeakMap<
+  Tileset3D,
+  { readonly georeference: TilesetGeoreference | undefined }
+>();
+
+/**
+ * A tileset's `BENTLEY_engineering_frame` declaration (or its old name,
+ * `EXT_engineering_frame`), read from `tileset.extensions` (and the root
+ * tile's bounding volume, for a derived area of interest) on the first call
+ * and remembered for the tileset (`readGeoreference`). Undefined when
+ * there is none, or when it is malformed. The first read adds to
+ * `tileset.warnings` what the reader warns about (the old name, in-frame
+ * alignments), why a malformed declaration was refused (naming the field),
+ * or that a CRS extension came without a declaration (no placement is
+ * guessed). It never throws, and nothing is resolved here:
+ * `georeferenceTileset` loads the frame and sets `tileset.placement`.
+ */
+export function tilesetGeoreference(
+  tileset: Tileset3D,
+): TilesetGeoreference | undefined {
+  const known = declarations.get(tileset);
+  if (known !== undefined) {
+    return known.georeference;
+  }
+  const georeference = readTilesetDeclaration(tileset);
+  declarations.set(tileset, { georeference });
+  return georeference;
+}
+
+function readTilesetDeclaration(
+  tileset: Tileset3D,
+): TilesetGeoreference | undefined {
+  const { extensions } = tileset;
+  if (
+    !(ENGINEERING_FRAME_EXTENSION in extensions) &&
+    !(OLD_ENGINEERING_FRAME_EXTENSION in extensions)
+  ) {
+    // A CRS alone has no placement mode: nothing is guessed, but say so.
+    const crs = [ESRI_CRS_EXTENSION, CRS_SOURCE_EXTENSION].find(
+      (name) => name in extensions,
+    );
+    if (crs !== undefined) {
+      tileset.warnings.add(
+        `tileset.json has ${crs} but no ${ENGINEERING_FRAME_EXTENSION} placement; not placed`,
+      );
+    }
+    return undefined;
+  }
+  try {
+    const georeference = readGeoreference({
+      extensions,
+      root: tileset.rootJson,
+    });
+    for (const warning of georeference?.warnings ?? []) {
+      tileset.warnings.add(warning);
+    }
+    return georeference;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // The reader's own errors name the extension and the field.
+    tileset.warnings.add(
+      message.startsWith(`${ENGINEERING_FRAME_EXTENSION}:`)
+        ? message
+        : `${ENGINEERING_FRAME_EXTENSION}: unreadable (${message.slice(0, MAX_SHOWN)})`,
+    );
+    return undefined;
+  }
 }
 
 /**
@@ -238,7 +311,7 @@ export async function georeferenceTileset(
     new Error(
       `georeferenceTileset: ${tileset.url} has a modelMatrix other than the identity, so its declared placement wouldn't be what is drawn; place it without one`,
     );
-  const declared = tileset.georeference;
+  const declared = tilesetGeoreference(tileset);
   if (declared === undefined) {
     return refuse(
       new Error(

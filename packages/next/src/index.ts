@@ -1,3 +1,7 @@
+// @cesium/next: the engine. The time library, the frames module, PROJ and
+// engineering frames, and measuring are their own entry points
+// (`@cesium/next/time`, `/frames`, `/proj`, `/measure`); the core imports
+// none of them (spec section 7.7, test/importBoundary.test.ts).
 export {
   Engine,
   type EngineOptions,
@@ -113,6 +117,10 @@ export {
   type TilesetOptions,
   type TilesetStats,
 } from "./streaming/Tileset3D.ts";
+export type {
+  DesignPlacement,
+  PlacementMode,
+} from "./streaming/designPlacement.ts";
 export {
   StepwiseSelection,
   REQUEST_PURPOSES,
@@ -167,138 +175,6 @@ export {
   fromDegrees,
   type Cartographic,
 } from "./math/ellipsoid.ts";
-export {
-  EngineeringFrame,
-  RigidPlacement,
-  designPoint,
-  type DesignPoint,
-  type DesignPointObtained,
-  type EngineeringFrameDefinition,
-  type EngineeringFrameFallback,
-  type EngineeringFrameLoadOptions,
-  type FallbackSigmaSource,
-  type GeoidModel,
-  type SiteTransform,
-  type SnapKind,
-} from "./engineering/EngineeringFrame.ts";
-export {
-  placeReprojected,
-  placeRigid,
-  type PlacementMode,
-  type TilesetPlacement,
-} from "./engineering/placement.ts";
-export {
-  ALIGNMENTS_EXTENSION,
-  ENGINEERING_FRAME_EXTENSION,
-  GeoreferenceError,
-  alignmentsExtension,
-  type DeclaredCrs,
-  type DeclaredPlacement,
-  type GeoreferenceSources,
-  type TilesetGeoreference,
-} from "./engineering/georeference.ts";
-export {
-  checkRigidTransform,
-  georeferenceTileset,
-  readGeoreference,
-} from "./engineering/georeferenceTileset.ts";
-export { WKT2_CRS_KEYWORDS, wkt2Problem } from "./engineering/wkt2.ts";
-// @internal, both: for the frames explorer, whose catalog uses only the index.
-export { projTokenProblem } from "./engineering/wkt2.ts";
-export { strictWkt2 } from "./engineering/crs.ts";
-export {
-  Alignment,
-  type AlignmentDefinition,
-  type AlignmentElement,
-  type HorizontalElement,
-  type ProfileGrade,
-  type ProfileParabola,
-  type ProfileSegment,
-  type StationOffset,
-  type VerticalProfile,
-} from "./engineering/alignment.ts";
-export { fresnel } from "./engineering/fresnel.ts";
-export {
-  DESIGN_NOT_INVERTED,
-  pickDesign,
-  type DesignPick,
-  type PickCamera,
-  type PickView,
-} from "./engineering/pick.ts";
-// Snapping, split as 1.x splits Scene#snap (client) and SnapService
-// (server); plan 5 replaces the CPU client side with a GPU snap pass.
-export {
-  ClientSnapService,
-  GEOMETRY_NOT_RETAINED,
-  SNAP_SERVER_FAILED,
-  SNAP_SERVER_REFUSED,
-  SNAP_UPDATE_FAILED,
-  refiningSnap,
-  type ServiceSnapRequest,
-  type SnapCamera,
-  type SnapRequest,
-  type SnapResult,
-  type SnapService,
-} from "./engineering/snap.ts";
-export {
-  gridSource,
-  loadedGrids,
-  loadGrids,
-  loadProj,
-  type GridSource,
-  type GridSourceOptions,
-  type LoadGridsOptions,
-  type LoadProjOptions,
-  type ProjApi,
-} from "./engineering/proj.ts";
-// The types ProjApi's methods name (proj.js's C API, handles and records).
-export type {
-  PJ,
-  PjAxisInfo,
-  PjComparisonCriterion,
-  PjCoord,
-  PjDirection,
-  PjEllipsoidParameters,
-  PjFactors,
-  PjGridAvailabilityUse,
-  PjGridInfo,
-  PjGridUsed,
-  PjInfo,
-  PjLogLevel,
-  PjMethodInfo,
-  PjObjList,
-  PjOperationFactoryContext,
-  PjProjStringType,
-  PjType,
-  PjWktType,
-} from "./engineering/projApi.ts";
-export { GridCatalog, type GridEntry } from "./engineering/gridCatalog.ts";
-export {
-  crsDefinition,
-  crsUnits,
-  listOperations,
-  MOON_GEOGRAPHIC_CRS,
-  resolveOperation,
-  type AreaOfInterest,
-  type BetterCandidate,
-  type CrsRef,
-  type CrsUnits,
-  type ListOperationsOptions,
-  type OperationCandidate,
-  type RecordedOperation,
-  type ResolveOptions,
-} from "./engineering/crs.ts";
-export {
-  formatPipeline,
-  parsePipeline,
-  pipelineGrids,
-  type GridKey,
-  type ParamValue,
-  type Pipeline,
-  type PipelineGrid,
-  type PipelineStep,
-} from "./engineering/pipeline.ts";
-export { gridFactors, type GridFactors } from "./engineering/factors.ts";
 export { eastNorthUpToFixedFrame } from "./math/transforms.ts";
 export * as vec3 from "./math/vec3.ts";
 export * as mat4 from "./math/mat4.ts";
@@ -349,84 +225,13 @@ export {
   UNITLESS_SKY,
   type SkyOptions,
 } from "./gpu/Environment.ts";
-
-// Time: the scene's clock and the sun's position from it (plan §13.13).
-export { Clock, type ClockMode } from "./time/Clock.ts";
-export { icrfToFixed } from "./time/celestial.ts";
-export {
-  MOON_ALBEDO,
-  MOON_RADIUS,
-  moonAxes,
-  moonPosition,
-} from "./time/moon.ts";
+export { MOON_ALBEDO } from "./atmosphere/moonLight.ts";
 export { CESIUM_MOON_TERRAIN } from "./io/moonMap.ts";
 export { loadIonMoonMap, type MoonMap } from "./io/moonMapLoad.ts";
-export {
-  greenwichSiderealTime,
-  julianDate,
-  sunDirection,
-  sunElevation,
-  sunTimes,
-  type SunTimes,
-} from "./time/sun.ts";
 
 // The atmosphere's haze: kinds of aerosols (Engine.visibility, .aerosol).
 export { AEROSOLS, type AerosolType } from "./atmosphere/model.ts";
-
-// Frames: exact time scales, Earth orientation and ephemerides (data from `npm run setup`).
-export { Instant } from "./time/Instant.ts";
-export { LeapSeconds } from "./time/leapSeconds.ts";
-export { EarthOrientationParameters, type EopSample } from "./time/eop.ts";
-export { celestialToTerrestrial } from "./time/earthOrientation.ts";
-export { tdbMinusTt } from "./time/erfa/dtdb.ts";
-export { Ephemeris } from "./ephemeris/Ephemeris.ts";
-export {
-  FRAME_DATA_ROLES,
-  loadFrameData,
-  type FrameData,
-  type FrameDataWarning,
-} from "./ephemeris/loadFrameData.ts";
 export { readWithProgress, type LoadProgress } from "./io/readWithProgress.ts";
-export { Frame, frameTransform, type FrameOptions } from "./frames/Frame.ts";
-export type { FrameAccuracy } from "./frames/frameAccuracy.ts";
-export {
-  pointAccuracy,
-  dominantTerm,
-  type PointAccuracy,
-  type PointAccuracyTerm,
-} from "./frames/pointAccuracy.ts";
-export { rotationPart, toParentMatrix } from "./frames/matrix.ts";
-export {
-  C,
-  GM_SUN,
-  GM_EARTH,
-  GM_MOON,
-  L_C,
-  EARTH_ROTATION_RATE,
-} from "./measure/constants.ts";
-export {
-  measure,
-  measureSpan,
-  type AlignmentMeasurement,
-  type DesignMeasurement,
-  type MeasurePoint,
-  type Measurement,
-  type MeasureOptions,
-} from "./measure/measure.ts";
-export { properTimeRate, type Leg } from "./measure/doppler.ts";
-export {
-  earthOrientationSigma,
-  type AccuracyStatement,
-  type AccuracyTerm,
-  type EarthOrientationSigma,
-  type WarningCode,
-} from "./measure/accuracy.ts";
-export { surfaceDistance, type SurfaceDistance } from "./measure/surface.ts";
-export {
-  terrainLineOfSight,
-  type TerrainLineOfSight,
-  type TerrainLineOfSightOptions,
-} from "./measure/terrainLineOfSight.ts";
 export {
   castTerrainRay,
   type TerrainRayOptions,
@@ -436,21 +241,4 @@ export {
   type TerrainRayTile,
 } from "./globe/terrainRay.ts";
 export { LEVEL_ZERO_ERROR } from "./globe/TerrainSource.ts";
-export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
-export { frameBias } from "./time/erfa/bias.ts";
-export { createFrames, type Frames } from "./frames/frames.ts";
-export { createSkyState, skyState, type SkyState } from "./frames/sky.ts";
-export {
-  framePoint,
-  convertPoint,
-  eastNorthUpFrame,
-  worldTransformFrame,
-  type FramePoint,
-} from "./frames/local.ts";
-export {
-  Trajectory,
-  type TrajectoryAccuracy,
-} from "./trajectory/Trajectory.ts";
-export { parseOem, type OemSegment } from "./trajectory/oem.ts";
-export { readSpk, type StateSegment } from "./ephemeris/spk.ts";

@@ -22,7 +22,7 @@
 // generator imports this file directly.
 import type { AreaOfInterest, CrsRef } from "../../src/engineering/crs.ts";
 import type { EngineeringFrameDefinition } from "../../src/engineering/EngineeringFrame.ts";
-import type { PlacementMode } from "../../src/engineering/placement.ts";
+import type { PlacementMode } from "../../src/streaming/designPlacement.ts";
 import { EARTH } from "../../src/scene/Body.ts";
 import {
   CORRIDOR_ALIGNMENT,

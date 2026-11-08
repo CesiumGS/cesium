@@ -9,12 +9,16 @@
     "node": ">=24"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./time": "./src/time/index.ts",
+    "./frames": "./src/frames/index.ts",
+    "./proj": "./src/proj/index.ts",
+    "./measure": "./src/measure/index.ts"
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/checkDeclarations.mjs --only engineering,measure",
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/checkDeclarations.mjs --only engineering,measure dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts",
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -11,6 +11,7 @@ import {
 } from "../streaming/volumes.ts";
 import type { CameraPose } from "../scene/Camera.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
+import { engineeringPlacement } from "./placement.ts";
 
 /**
  * The part of a `View` that `pickDesign` uses, so tests can pass fakes.
@@ -235,7 +236,7 @@ export async function pickInFrame(
         }
       }
     }
-    const placement = tileset?.placement;
+    const placement = engineeringPlacement(tileset?.placement);
     const inside =
       volume !== undefined && nearVolume(volume, position, tolerance + 1);
     let design: DesignPoint | undefined;

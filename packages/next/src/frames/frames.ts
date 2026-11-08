@@ -5,7 +5,7 @@ import {
   GM_MOON,
   GM_SUN,
   L_C,
-} from "../measure/constants.ts";
+} from "../math/constants.ts";
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
 import { EARTH, MOON, type Body } from "../scene/Body.ts";
 import { celestialToTerrestrial } from "../time/earthOrientation.ts";

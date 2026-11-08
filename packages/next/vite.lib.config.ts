@@ -1,7 +1,9 @@
 // The library build (`npm run build:lib`): 2.0 as files a page can load
 // with no build step of its own, from its server or another origin.
 //
-//   dist-lib/cesium-next.mjs   the ES module (shaders inlined)
+//   dist-lib/cesium-next.mjs   the core's ES module (shaders inlined)
+//   dist-lib/cesium-next-{time,frames,proj,measure}.mjs
+//                              the other entry points (`@cesium/next/time`, ...)
 //   dist-lib/assets/           the content worker, its chunks, and the
 //                              Draco and Basis wasm, each found relative to
 //                              the module that loads it (import.meta.url)
@@ -52,8 +54,16 @@ export default defineConfig({
     // Wasm and images as files, not data: URLs in the bundle.
     assetsInlineLimit: 0,
     rollupOptions: {
-      input: { "cesium-next": "src/index.ts" },
-      // Keep the entry's exports (a library, not an app).
+      // The five entry points; what they share goes into chunks under
+      // assets/, so a page loads only what its imports reach.
+      input: {
+        "cesium-next": "src/index.ts",
+        "cesium-next-time": "src/time/index.ts",
+        "cesium-next-frames": "src/frames/index.ts",
+        "cesium-next-proj": "src/proj/index.ts",
+        "cesium-next-measure": "src/measure/index.ts",
+      },
+      // Keep the entries' exports (a library, not an app).
       preserveEntrySignatures: "strict",
       output: {
         entryFileNames: "[name].mjs",

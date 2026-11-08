@@ -46,6 +46,7 @@ const ORIGIN = alignment.pointAt(31_000);
 
 const placement: TilesetPlacement = {
   mode: "reprojected",
+  frameName: "corridor",
   frame,
   displayed: (d, out = new Float64Array(3)) => {
     out[0] = R + (d[2]! - ORIGIN[2]!) * MPU;

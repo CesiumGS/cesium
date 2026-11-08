@@ -19,7 +19,6 @@ import {
   BingImagery,
   CanvasTarget,
   IonTmsImagery,
-  Clock,
   EYE,
   Ellipsoid,
   DEFAULT_SKY,
@@ -28,13 +27,11 @@ import {
   InspectController,
   eastNorthUpToFixedFrame,
   fromDegrees,
-  loadFrameData,
   loadIonMoonMap,
   mat4,
   resolveIonAsset,
   vec3,
   type EngineOptions,
-  type FrameData,
   type Exposure,
   type ImageryProvider,
   type IonAttribution,
@@ -48,7 +45,9 @@ import {
   type ViewLink,
   type World,
 } from "../src/index.ts";
+import { loadFrameData, type FrameData } from "../src/frames/index.ts";
 import { FrameSky } from "../src/frames/frameSky.ts";
+import { Clock } from "../src/time/index.ts";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
 import {

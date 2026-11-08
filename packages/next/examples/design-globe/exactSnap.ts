@@ -42,7 +42,10 @@ import type {
   SnapResult,
   SnapService,
 } from "../../src/engineering/snap.ts";
-import type { TilesetPlacement } from "../../src/engineering/placement.ts";
+import {
+  engineeringPlacement,
+  type TilesetPlacement,
+} from "../../src/engineering/placement.ts";
 import { projectToPixel } from "../../src/scene/Camera.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import { CROSS_SECTION, TICKS, sectionSurface } from "./corridor.ts";
@@ -126,7 +129,7 @@ export class ExactSnapService implements SnapService {
     signal?: AbortSignal,
   ): Promise<SnapResult | undefined> {
     signal?.throwIfAborted();
-    const placement = this.tileset.placement;
+    const placement = engineeringPlacement(this.tileset.placement);
     if (request.tileset !== this.tileset || placement === undefined) {
       return undefined;
     }

@@ -45,7 +45,7 @@ import {
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky, type SkyView } from "../atmosphere/Sky.ts";
-import { MOON_ALBEDO, MOON_RADIUS, moonPhaseBrightness } from "../time/moon.ts";
+import { MOON_ALBEDO, moonPhaseBrightness } from "../atmosphere/moonLight.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
 import {
@@ -884,7 +884,7 @@ export class Engine {
       m.toSun[i] = sun[i]! * ASTRONOMICAL_UNIT - moon[i]!;
     }
     v3.normalize(m.toSun, m.toSun);
-    m.sinRadius = Math.min(MOON_RADIUS / distance, 1);
+    m.sinRadius = Math.min(Ellipsoid.MOON.maximumRadius / distance, 1);
     m.earthRadius = Math.min(EARTH_RADIUS / v3.length(moon), 1);
     m.phaseAngle = Math.acos(
       Math.min(Math.max(-v3.dot(m.toSun, toward), -1), 1),

@@ -12,7 +12,7 @@ import {
   MOON_ALBEDO,
   lommelSeeliger,
   moonPhaseBrightness,
-} from "../time/moon.ts";
+} from "./moonLight.ts";
 
 /** The sun's angular diameter seen from the Earth, radians (mean). */
 export const SUN_ANGULAR_DIAMETER = 0.00935;

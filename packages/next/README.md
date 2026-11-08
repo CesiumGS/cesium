@@ -258,21 +258,22 @@ unchanged. The bench Explorer opts in.
 CRS on a body: a projected CRS such as a State Plane zone, with an optional
 site transform, in the CRS's own units. PROJ does the projection and datum
 work. The engine's `Ellipsoid` does geodetic to body-fixed, and body-fixed
-coordinates are in meters, as everywhere else. `src/index.ts` exports all of
-it: the frame, placement, alignment and measure types, and `loadProj`,
+coordinates are in meters, as everywhere else. The proj entry
+(`@cesium/next/proj`, `src/proj/index.ts`) exports all of it: the frame,
+placement and alignment types, and `loadProj`,
 `gridFactors`, `resolveOperation`, `listOperations`, `crsUnits`,
 `crsDefinition` and `MOON_GEOGRAPHIC_CRS` with their types (`CrsRef`,
 `CrsUnits`, `RecordedOperation`, `OperationCandidate`, `GridFactors`,
 `ProjApi`, `LoadProjOptions` and `ResolveOptions`).
 
 ```ts
+import { EARTH } from "./src/index.ts";
 import {
-  EARTH,
   EngineeringFrame,
   designPoint,
   gridFactors,
   loadProj,
-} from "./src/index.ts";
+} from "./src/proj/index.ts";
 
 // Browser: base is where the dev server serves the store's `proj/`. Name the
 // grid files the frame will need. Node: base is the store's `proj/` path.
@@ -691,7 +692,10 @@ npm run build:lib --workspace @cesium/next  # the library for pages without a bu
 ```
 
 **The library build** (`build:lib`, `vite.lib.config.ts`) writes
-`dist-lib/`: `cesium-next.mjs` (one ES module, the shaders inlined),
+`dist-lib/`: `cesium-next.mjs` (the core's ES module, the shaders
+inlined), `cesium-next-time.mjs`, `cesium-next-frames.mjs`,
+`cesium-next-proj.mjs` and `cesium-next-measure.mjs` (the other entry
+points, `@cesium/next/time` and so on, sharing chunks under `assets/`),
 `assets/` (the content worker and the Draco and Basis wasm, each found
 relative to the module that loads it) and `types/` (declarations). A page
 needs no bundler or TypeScript: a module script imports it, from its own

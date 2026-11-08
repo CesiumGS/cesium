@@ -1,13 +1,12 @@
 // The Moon (plan §13.14): its position (Simon et al. 1994, as 1.x) against
 // Meeus's worked example, and its brightness by phase.
 import { describe, expect, it } from "vitest";
-import { icrfToFixed } from "../src/time/celestial.ts";
 import {
   lommelSeeliger,
   moonPhaseBrightness,
-  moonAxes,
-  moonPosition,
-} from "../src/time/moon.ts";
+} from "../src/atmosphere/moonLight.ts";
+import { icrfToFixed } from "../src/time/celestial.ts";
+import { moonAxes, moonPosition } from "../src/time/moon.ts";
 import { sunDirection } from "../src/time/sun.ts";
 
 const deg = Math.PI / 180;

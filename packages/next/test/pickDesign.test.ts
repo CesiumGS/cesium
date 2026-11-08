@@ -19,6 +19,7 @@ const HIT = new Float64Array([6378137, 0, 100]);
 function placement(mode: "rigid" | "reprojected"): TilesetPlacement {
   return {
     mode,
+    frameName: "fake",
     frame,
     displayed: (d) => Float64Array.from(d),
     designOf: vi.fn((p: ArrayLike<number>) =>

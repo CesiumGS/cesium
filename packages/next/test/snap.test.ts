@@ -57,6 +57,7 @@ function geometry(): TileGeometry {
 function placement(): TilesetPlacement {
   return {
     mode: "rigid",
+    frameName: "fake",
     frame,
     // The inverse of designOf.
     displayed: (d) => Float64Array.from([d[0]! + R, d[1]! / 2, d[2]! / 3]),

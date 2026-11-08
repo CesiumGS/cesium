@@ -710,12 +710,13 @@ describe("the catalog's groups and lenses (R14)", () => {
 });
 
 describe("the catalog uses only the package's public API (F7)", () => {
-  // The catalog imports library names from their modules, because the index
-  // can't load under vitest; each name must also be exported by the index.
+  // The catalog imports library names from their modules, because the entry
+  // points can't load under vitest; each name must also be exported by one
+  // of them (package.json `exports`).
   const read = (path: string) =>
     readFileSync(new URL(path, import.meta.url), "utf8");
 
-  it("imports from src/ only names src/index.ts exports", () => {
+  it("imports from src/ only names an entry point exports", () => {
     // Every module of the catalog: tests.ts and stress/ (its runner, helpers
     // and groups).
     const root = new URL("../examples/frames-explorer/", import.meta.url);
@@ -730,7 +731,15 @@ describe("the catalog uses only the package's public API (F7)", () => {
     const tests = files
       .map((f) => readFileSync(new URL(f, root), "utf8"))
       .join("\n");
-    const index = read("../src/index.ts");
+    const entries = Object.values(
+      (
+        JSON.parse(read("../package.json")) as {
+          exports: Record<string, string>;
+        }
+      ).exports,
+    );
+    expect(entries).toContain("./src/index.ts");
+    const index = entries.map((e) => read(`../${e.slice(2)}`)).join("\n");
     const exported = new Set<string>();
     for (const m of index.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g)) {
       for (const part of m[1]!.split(",")) {
@@ -770,9 +779,7 @@ describe("the catalog uses only the package's public API (F7)", () => {
     }
     expect(imported.length).toBeGreaterThan(10);
     for (const name of imported) {
-      expect(exported.has(name), `${name} is exported by src/index.ts`).toBe(
-        true,
-      );
+      expect(exported.has(name), `${name} is exported by an entry`).toBe(true);
     }
     // Every library import goes through a named import that the check sees.
     expect(tests).not.toMatch(/import\s+\*\s+as\s+\w+\s+from\s+"(\.\.\/)+src/);

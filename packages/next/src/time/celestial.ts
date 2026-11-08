@@ -1,6 +1,3 @@
-import type { FrameData } from "../ephemeris/loadFrameData.ts";
-import { celestialToTerrestrial } from "./earthOrientation.ts";
-import { Instant } from "./Instant.ts";
 import { greenwichSiderealTime, julianDate } from "./sun.ts";
 
 const arcsecond = Math.PI / (180 * 3600);
@@ -15,26 +12,14 @@ const arcsecond = Math.PI / (180 * 3600);
  * sky box turns by sidereal time alone (`computeTemeToPseudoFixedMatrix`),
  * which leaves out precession too (0.36° by 2026).
  *
- * With frames `data` and an instant inside its ephemeris span, it is the
- * IAU 2006/2000A rotation instead (`celestialToTerrestrial`, the frame
- * tree's ITRF); outside the span it falls back to the model above, which
- * never throws.
+ * This is the analytic model only, and never throws. The IAU 2006/2000A
+ * rotation from frames data (the frame tree's ITRF) is the frames module's:
+ * `skyState(ms, data, out).icrfToFixed`.
  */
 export function icrfToFixed(
   ms: number,
   out: Float64Array = new Float64Array(9),
-  data?: FrameData,
 ): Float64Array {
-  if (data) {
-    const instant = Instant.fromUtc(ms, data.leapSeconds);
-    if (data.ephemeris.contains(instant)) {
-      return celestialToTerrestrial(
-        instant,
-        data.eop.atInstant(instant, data.leapSeconds),
-        out,
-      );
-    }
-  }
   const t = (julianDate(ms) - 2_451_545.0) / 36_525;
   const zeta =
     (2306.2181 * t + 0.30188 * t * t + 0.017998 * t * t * t) * arcsecond;

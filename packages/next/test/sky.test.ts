@@ -92,15 +92,12 @@ describe("skyState", () => {
     expect([...out.moonAxes]).toEqual([...a.axes]);
   });
 
-  it("icrfToFixed(ms, out, data) is skyState's matrix", () => {
+  it("icrfToFixed is the analytic model; skyState answers from data", () => {
     const data = syntheticFrameData();
-    const out = skyState(inside, data, createSkyState());
-    expect([...icrfToFixed(inside, undefined, data)]).toEqual([
-      ...out.icrfToFixed,
-    ]);
-    // Outside the span, or without data, it is the analytic model.
-    expect([...icrfToFixed(outside, undefined, data)]).toEqual([
-      ...icrfToFixed(outside),
-    ]);
+    const precise = skyState(inside, data, createSkyState());
+    const model = skyState(inside, undefined, createSkyState());
+    expect(precise.source).toBe("ephemeris");
+    expect([...icrfToFixed(inside)]).toEqual([...model.icrfToFixed]);
+    expect([...icrfToFixed(inside)]).not.toEqual([...precise.icrfToFixed]);
   });
 });
