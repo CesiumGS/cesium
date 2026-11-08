@@ -7112,7 +7112,8 @@ Plan 5's API review designs the seams:
 - **Later, after prototyping: the drawing layer's portability.** Whether
   drawing can be modularized enough to support WebGPU's compatibility mode,
   or a WebGL 2 backend. Not now: the owner wants no design compromises in
-  the WebGPU approach while the prototype is built.
+  the WebGPU approach while the prototype is built. Notes on the layers this
+  would need are in §13.17.
 
 _Plan 5 design input: tessellating reprojected models (owner, 2026-11-07)._ A
 reprojected model's edges are straight chords between reprojected vertices,
@@ -8297,6 +8298,71 @@ the questions below:
    camera-relative origins. Hits are refined on the CPU when an exact answer
    matters, the way 1.x refines picks.
 9. **Validation data.** Published horizon masks, such as the DSN's for DSS-14, DSS-43 and DSS-63 (810-005, as used by the frames example's dish scenario), are measured horizons. Comparing ray-query terrain horizons against them, across terrain sources and levels of detail, is a standing validation test for this work (owner, 2026-11-06).
+
+### 13.17 Layers: engine, renderer and GPU backend (notes for later, 2026-11-08)
+
+The owner's question: Cesium is a rendering engine that contains a renderer, so is "core" descriptive enough, and how would a WebGL 2 backend go in? These are notes, not a design. The rule from §13.14 still holds: no compromises in the WebGPU approach while the prototype is built.
+
+**The usual terms.** These names are from general knowledge of those engines, so check them before quoting them to outside readers.
+
+- **Engine:** the whole runtime: the loop, the scene, streaming, content, queries.
+- **Renderer:** turns a description of what is in view into GPU work: passes, pipelines, culling, shadows. Filament separates its engine, renderer and backend this way. Bevy copies the scene into a "render world" in an extract step, and Unreal keeps render-side proxies of its scene objects.
+- **GPU backend** (Unreal's RHI, wgpu-hal): a thin layer over a graphics API.
+
+"Core" names none of these. Today it means everything in the main entry point (`.`), from `GpuDevice` to `Tileset3D`, while the `src/core` folder is 62 lines holding an emitter and a clock.
+
+**Where the code stands (grep counts on 2026-11-08; rough, and they count matching lines).**
+
+| Measure                                                                              | Today                                                                                                                                                   |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lines with raw WebGPU calls (pipelines, passes, buffers, dispatches, indirect draws) | `Engine.ts` 82, `World.ts` 39, `GlobeImagery.ts` 6, `View.ts` 1                                                                                         |
+| `src/streaming`                                                                      | No files use the GPU API directly, but it imports from `scene` (11 imports) and `render` (2), and `src/globe` imports from `scene` (4) and `render` (4) |
+| `scene` files mentioning WGSL                                                        | 15, including the style compiler, which emits WGSL text                                                                                                 |
+| Compute entry points in Slang                                                        | 43                                                                                                                                                      |
+| `src/shaders` modules using storage buffers                                          | 16 of 25                                                                                                                                                |
+| GPU types in the public entry point                                                  | `GpuDevice`, `Capabilities` and limits are exported; `CustomShader` takes `wgsl`                                                                        |
+
+So streaming's logic is already free of the GPU API. The tangle is in `Engine.ts` and `World.ts`, where the loop, the scene's bookkeeping and the passes live together. The seams (`DrawConstants`, `DrawArguments`, geometry submission, bindless resources, ray queries) already narrow how draws are written, but they are inside the renderer. They aren't a boundary between the renderer and the scene.
+
+**A thin backend can't carry WebGL 2.** Today's renderer is GPU-driven: compute culls records, indirect draws consume the result, and vertex shaders pull from storage buffers. WebGL 2 has no compute, no storage buffers and no indirect draws. A wrapper at the API level would have to emulate all three. So there are two different seams, and they do different jobs:
+
+| Seam               | What it enables                                        | Fits                                                                                                                                                               |
+| ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GPU backend        | Another API with the same abilities                    | A native WebGPU implementation needs nothing, since it's the same API. Not useful for WebGL 2                                                                      |
+| Renderer interface | A second renderer over one scene and one content layer | WebGL 2: CPU culling, attributes and uniform buffers or data textures, one draw call per record or batch, fewer features, declared through capability tiers (§3.1) |
+
+**The options for reaching browsers without WebGPU, cheapest first.** Choose from the browser compatibility data when the time comes.
+
+1. **Nothing new:** an application that needs those browsers uses 1.x there. This costs only documentation.
+2. **WebGPU compatibility mode:** closer to today's renderer. Its known problem is storage buffers in the vertex stage (§3.1, §13.9), so it probably needs a second vertex path rather than a second renderer. Not examined further.
+3. **A WebGL 2 renderer:** a second renderer, loaded as its own chunk so WebGPU users don't pay for it. It's real work to build and to keep at parity.
+
+**What a second renderer would need besides drawing.** Shaders are the hard part:
+
+- Slang can target GLSL, but whether its output fits GLSL ES 3.00 needs a spike. Nothing has been tested.
+- 43 compute kernels need CPU equivalents or a design without them. Some, such as culling, have obvious ones. Others, such as atmosphere tables or FLIP, may need fragment passes or to be dropped.
+- The style compiler (`styleExpression.ts`) needs a GLSL emitter or an intermediate form.
+- User shaders written in WGSL wouldn't port. Slang ones might, which would be a reason to steer portable shaders to Slang.
+- Picks and depth readback need another path, and queries need their CPU backend.
+
+**The proposed layers.** This is a sketch, and folder names follow later:
+
+| Layer      | Holds                                                                                     | Must not depend on  |
+| ---------- | ----------------------------------------------------------------------------------------- | ------------------- |
+| Foundation | Math, events, errors, byte readers                                                        | Everything below    |
+| Content    | Tile trees, selection, requests, cache, parsers, terrain and imagery logic                | Renderer, GPU types |
+| Scene      | The loop, views, cameras, lights, clocks, what exists and where, queries                  | Renderer internals  |
+| Renderer   | Passes, pipelines, draw records, culling, shadows, atmosphere, shaders, the shader linker | Content's internals |
+| GPU        | Device, limits, errors, timers                                                            | Renderer            |
+
+**What to do when.**
+
+- **At the big file split (before 5b), at no cost to WebGPU:** split `Engine.ts` and `World.ts` along these lines instead of by size alone, so the loop and scene bookkeeping separate from the passes. These are pure moves, as already planned.
+- **After that split, when it's cheap:** give `src/streaming` and `src/globe` a narrow interface for adding, updating and removing draws, in place of importing `World` and `render/layout`. Add the layers to `test/importBoundary.test.ts`, so content can't import GPU types. That test already assigns layers by file rather than by folder.
+- **Not yet:** an abstract `Renderer` or backend interface. With one implementation it would be a guess, and it would pull WebGPU's design toward the lowest common case. Write it when a second renderer is actually chosen, using the spike to shape it.
+- **Open for the API review (5i):** what to call the main entry point and "core" in the docs, and whether `GpuDevice` and `World` belong in the public surface. A host application that shares a device may need `GpuDevice`, so don't remove it without checking.
+
+**Measure before choosing.** Share of target browsers without core WebGPU, from the handbook's compatibility tab; whether compatibility mode covers most of that share; and the Slang to GLSL ES spike on two kernels and one material.
 
 ## 14. Follow-ups
 
