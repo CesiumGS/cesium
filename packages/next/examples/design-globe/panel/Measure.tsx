@@ -19,16 +19,14 @@ import { svgMeasureDistance } from "@stratakit/icons/measure-distance";
 import { Icon } from "@stratakit/mui";
 import { type ReactNode, useId, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import type { MeasureLive } from "../measureLabels.ts";
+import type { GlobeTone, OpenerFigures, OpenerId } from "../measureOpeners.ts";
 import type {
   DatasheetView,
   DetailRow,
-  GlobeTone,
-  MeasureLive,
   MeasurePanel,
-  OpenerFigures,
-  OpenerId,
   OpenerPanel,
-} from "../measureTool.ts";
+} from "../measureView.ts";
 import type { SnapMode } from "../page.ts";
 
 export interface MeasureSource {

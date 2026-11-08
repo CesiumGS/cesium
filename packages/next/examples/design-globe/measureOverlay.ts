@@ -12,10 +12,13 @@
 // are the same dashed mesh drawn twice, pinned at either end (rigid, `t` 0;
 // reprojected, `t` 1), shown as the pair's ghosts are (placementPair.ts):
 // the other placement's while settled, both while moving.
+import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { CustomShader } from "../../src/scene/CustomShader.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { hexLinear } from "./colors.ts";
-import type { DrawnEnd } from "./measureTool.ts";
+import type { Answers } from "./answers.ts";
+import { fixedEnd, type DrawnEnd, type Opener } from "./measureOpeners.ts";
+import type { MeasureState } from "./measureState.ts";
 import { EXAGGERATION } from "./page.ts";
 import {
   PARTNER_SEMANTIC,
@@ -233,4 +236,134 @@ function lerpEnd(a: DrawnEnd, b: DrawnEnd, f: number): DrawnEnd {
     rigid: at(a.rigid, b.rigid),
     reprojected: at(a.reprojected, b.reprojected),
   };
+}
+
+/** The measure line's yellow (DESIGN.md "On the globe"). */
+const YELLOW = "#fde047";
+
+/**
+ * The lines for the openers (each with its ghost; the ruler along the pair;
+ * a small cross at the marker and at the survey disk) and the user's line.
+ */
+export function measureLines(
+  openers: readonly Opener[],
+  a: Answers | undefined,
+  state: MeasureState,
+): OverlayLine[] {
+  const lines: OverlayLine[] = [];
+  for (const o of openers) {
+    lines.push({
+      key: o.id,
+      segments: [o.shown],
+      color: o.quiet ? "#fef08a" : YELLOW,
+      ghost: true,
+    });
+    if (o.id === "pair" && a !== undefined) {
+      lines.push(rulerLine(o, a));
+    }
+    if (o.id === "marker" || o.id === "mark") {
+      // A small cross on the ground at the fixed end: the marker or the disk.
+      lines.push({
+        key: `${o.id}-cross`,
+        segments: groundCross(o.a.reprojected, o.id === "mark" ? 4 : 3),
+        color: o.id === "mark" ? "#d6a84a" : "#a8eef4",
+        ghost: false,
+      });
+    }
+  }
+  if (state.phase === "done") {
+    lines.push({
+      key: "user",
+      segments: [{ a: state.a, b: state.b }],
+      color: YELLOW,
+      ghost: true,
+    });
+  }
+  return lines;
+}
+
+/** Ticks in design feet (yellow, left) against true ground feet (white, right). */
+export function rulerLine(o: Opener, a: Answers): OverlayLine {
+  const pair = a.pairs[0]!;
+  const step = 1000;
+  const segments: { a: DrawnEnd; b: DrawnEnd }[] = [];
+  const colors: string[] = [];
+  const across = (f: number, side: number, length: number) => {
+    const at = (p: "rigid" | "reprojected") => {
+      const x = o.shown.a[p];
+      const y = o.shown.b[p];
+      return Float64Array.from(
+        [0, 1, 2].map((k) => x[k]! + (y[k]! - x[k]!) * f),
+      );
+    };
+    const base = { rigid: at("rigid"), reprojected: at("reprojected") };
+    const { east, north, up } = enu(base.reprojected);
+    const d = [0, 1, 2].map(
+      (k) => o.shown.b.reprojected[k]! - o.shown.a.reprojected[k]!,
+    );
+    const de = d[0]! * east[0]! + d[1]! * east[1]! + d[2]! * east[2]!;
+    const dn = d[0]! * north[0]! + d[1]! * north[1]! + d[2]! * north[2]!;
+    const l = Math.hypot(de, dn) || 1;
+    // Square to the line, level, `side` of it; lifted a little off the deck.
+    const off = [0, 1, 2].map(
+      (k) =>
+        ((-dn / l) * east[k]! + (de / l) * north[k]!) * side * length +
+        up[k]! * 0.05,
+    );
+    const lift = [0, 1, 2].map((k) => up[k]! * 0.05);
+    const shift = (p: Float64Array, v: number[]) =>
+      Float64Array.from([0, 1, 2].map((k) => p[k]! + v[k]!));
+    segments.push({
+      a: {
+        rigid: shift(base.rigid, lift),
+        reprojected: shift(base.reprojected, lift),
+      },
+      b: {
+        rigid: shift(base.rigid, off),
+        reprojected: shift(base.reprojected, off),
+      },
+    });
+  };
+  const designFeet = pair.designDistance;
+  const groundFeet = pair.trueDistance / a.frame.metersPerUnit;
+  for (let i = 0; i * step <= designFeet + 1e-9; i++) {
+    across((i * step) / designFeet, 1, i % 5 === 0 ? 2.5 : 1.5);
+    colors.push(YELLOW);
+  }
+  for (let i = 0; i * step <= groundFeet + 1e-9; i++) {
+    across((i * step) / groundFeet, -1, i % 5 === 0 ? 2.5 : 1.5);
+    colors.push("#ffffff");
+  }
+  return { key: "ruler", segments, colors, color: YELLOW, ghost: false };
+}
+
+/** East, north and up at a body-fixed point (WGS 84). */
+function enu(p: ArrayLike<number>): {
+  east: Float64Array;
+  north: Float64Array;
+  up: Float64Array;
+} {
+  const up = new Float64Array(3);
+  Ellipsoid.WGS84.geodeticSurfaceNormal(Float64Array.from(p), up);
+  const l = Math.hypot(up[0]!, up[1]!) || 1;
+  const east = Float64Array.from([-up[1]! / l, up[0]! / l, 0]);
+  const north = Float64Array.from([
+    up[1]! * east[2]! - up[2]! * east[1]!,
+    up[2]! * east[0]! - up[0]! * east[2]!,
+    up[0]! * east[1]! - up[1]! * east[0]!,
+  ]);
+  return { east, north, up };
+}
+
+/** A small level cross on the ground at `p`, `r` metres each way. */
+function groundCross(
+  p: ArrayLike<number>,
+  r: number,
+): { a: DrawnEnd; b: DrawnEnd }[] {
+  const { east, north } = enu(p);
+  return [east, north].map((axis) => {
+    const at = (s: number) =>
+      fixedEnd([0, 1, 2].map((k) => p[k]! + axis[k]! * s));
+    return { a: at(-r), b: at(r) };
+  });
 }

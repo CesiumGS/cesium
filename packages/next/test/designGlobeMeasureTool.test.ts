@@ -7,17 +7,19 @@ import { describe, expect, it, vi } from "vitest";
 import type { Answers } from "../examples/design-globe/answers.ts";
 import {
   drawnAt,
-  formatMeasureLink,
-  nextMeasure,
   openerView,
   openingMeasurements,
+  type OpenerPlacements,
+} from "../examples/design-globe/measureOpeners.ts";
+import { shownValues } from "../examples/design-globe/measureShown.ts";
+import {
+  formatMeasureLink,
+  nextMeasure,
   parseMeasureLink,
   snapWith,
   type MeasureEnd,
   type MeasureState,
-  type OpenerPlacements,
-  shownValues,
-} from "../examples/design-globe/measureTool.ts";
+} from "../examples/design-globe/measureState.ts";
 import { checkRows } from "../examples/design-globe/checks.ts";
 import type {
   ClientSnapService,
