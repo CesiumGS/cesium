@@ -14,185 +14,285 @@ export const MOON_RADIUS = Ellipsoid.MOON.maximumRadius;
 const TT_MINUS_UTC = 69_184;
 
 /**
+ * Meeus's table 47.A (ELP-2000/82, Chapront-Touzé and Chapront, truncated):
+ * multiples of D, M, M′ and F, then the longitude's sine coefficient
+ * (10⁻⁶ degree) and the distance's cosine coefficient (meters).
+ */
+// prettier-ignore
+const LONGITUDE_DISTANCE = [
+  0, 0, 1, 0, 6288774, -20905355,
+  2, 0, -1, 0, 1274027, -3699111,
+  2, 0, 0, 0, 658314, -2955968,
+  0, 0, 2, 0, 213618, -569925,
+  0, 1, 0, 0, -185116, 48888,
+  0, 0, 0, 2, -114332, -3149,
+  2, 0, -2, 0, 58793, 246158,
+  2, -1, -1, 0, 57066, -152138,
+  2, 0, 1, 0, 53322, -170733,
+  2, -1, 0, 0, 45758, -204586,
+  0, 1, -1, 0, -40923, -129620,
+  1, 0, 0, 0, -34720, 108743,
+  0, 1, 1, 0, -30383, 104755,
+  2, 0, 0, -2, 15327, 10321,
+  0, 0, 1, 2, -12528, 0,
+  0, 0, 1, -2, 10980, 79661,
+  4, 0, -1, 0, 10675, -34782,
+  0, 0, 3, 0, 10034, -23210,
+  4, 0, -2, 0, 8548, -21636,
+  2, 1, -1, 0, -7888, 24208,
+  2, 1, 0, 0, -6766, 30824,
+  1, 0, -1, 0, -5163, -8379,
+  1, 1, 0, 0, 4987, -16675,
+  2, -1, 1, 0, 4036, -12831,
+  2, 0, 2, 0, 3994, -10445,
+  4, 0, 0, 0, 3861, -11650,
+  2, 0, -3, 0, 3665, 14403,
+  0, 1, -2, 0, -2689, -7003,
+  2, 0, -1, 2, -2602, 0,
+  2, -1, -2, 0, 2390, 10056,
+  1, 0, 1, 0, -2348, 6322,
+  2, -2, 0, 0, 2236, -9884,
+  0, 1, 2, 0, -2120, 5751,
+  0, 2, 0, 0, -2069, 0,
+  2, -2, -1, 0, 2048, -4950,
+  2, 0, 1, -2, -1773, 4130,
+  2, 0, 0, 2, -1595, 0,
+  4, -1, -1, 0, 1215, -3958,
+  0, 0, 2, 2, -1110, 0,
+  3, 0, -1, 0, -892, 3258,
+  2, 1, 1, 0, -810, 2616,
+  4, -1, -2, 0, 759, -1897,
+  0, 2, -1, 0, -713, -2117,
+  2, 2, -1, 0, -700, 2354,
+  2, 1, -2, 0, 691, 0,
+  2, -1, 0, -2, 596, 0,
+  4, 0, 1, 0, 549, -1423,
+  0, 0, 4, 0, 537, -1117,
+  4, -1, 0, 0, 520, -1571,
+  1, 0, -2, 0, -487, -1739,
+  2, 1, 0, -2, -399, 0,
+  0, 0, 2, -2, -381, -4421,
+  1, 1, 1, 0, 351, 0,
+  3, 0, -2, 0, -340, 0,
+  4, 0, -3, 0, 330, 0,
+  2, -1, 2, 0, 327, 0,
+  0, 2, 1, 0, -323, 1165,
+  1, 1, -1, 0, 299, 0,
+  2, 0, 3, 0, 294, 0,
+  2, 0, -1, -2, 0, 8752,
+];
+
+/**
+ * Meeus's table 47.B: multiples of D, M, M′ and F, then the latitude's sine
+ * coefficient (10⁻⁶ degree).
+ */
+// prettier-ignore
+const LATITUDE = [
+  0, 0, 0, 1, 5128122,
+  0, 0, 1, 1, 280602,
+  0, 0, 1, -1, 277693,
+  2, 0, 0, -1, 173237,
+  2, 0, -1, 1, 55413,
+  2, 0, -1, -1, 46271,
+  2, 0, 0, 1, 32573,
+  0, 0, 2, 1, 17198,
+  2, 0, 1, -1, 9266,
+  0, 0, 2, -1, 8822,
+  2, -1, 0, -1, 8216,
+  2, 0, -2, -1, 4324,
+  2, 0, 1, 1, 4200,
+  2, 1, 0, -1, -3359,
+  2, -1, -1, 1, 2463,
+  2, -1, 0, 1, 2211,
+  2, -1, -1, -1, 2065,
+  0, 1, -1, -1, -1870,
+  4, 0, -1, -1, 1828,
+  0, 1, 0, 1, -1794,
+  0, 0, 0, 3, -1749,
+  0, 1, -1, 1, -1565,
+  1, 0, 0, 1, -1491,
+  0, 1, 1, 1, -1475,
+  0, 1, 1, -1, -1410,
+  0, 1, 0, -1, -1344,
+  1, 0, 0, -1, -1335,
+  0, 0, 3, 1, 1107,
+  4, 0, 0, -1, 1021,
+  4, 0, -1, 1, 833,
+  0, 0, 1, -3, 777,
+  4, 0, -2, 1, 671,
+  2, 0, 0, -3, 607,
+  2, 0, 2, -1, 596,
+  2, -1, 1, -1, 491,
+  2, 0, -2, 1, -451,
+  0, 0, 3, -1, 439,
+  2, 0, 2, 1, 422,
+  2, 0, -3, -1, 421,
+  2, 1, -1, 1, -366,
+  2, 1, 0, 1, -351,
+  4, 0, 0, 1, 331,
+  2, -1, 1, 1, 315,
+  2, -2, 0, -1, 302,
+  0, 0, 1, 3, -283,
+  2, 1, 1, -1, -229,
+  1, 1, 0, -1, 223,
+  1, 1, 0, 1, 223,
+  0, 1, -2, -1, -220,
+  2, 1, -1, -1, -220,
+  1, 0, 1, 1, -185,
+  2, -1, -2, -1, 181,
+  0, 1, 2, 1, -177,
+  4, 0, -2, -1, 176,
+  4, -1, -1, -1, 166,
+  1, 0, 1, -1, -164,
+  4, 0, 1, -1, 132,
+  1, 0, -1, -1, -119,
+  4, -1, 0, -1, 115,
+  2, -2, 0, 1, 107,
+];
+
+/**
+ * The Moon's geocentric ecliptic longitude and latitude (radians) and
+ * distance (meters), of the mean ecliptic and equinox of the date, at
+ * Julian centuries `t` of dynamical time from J2000: Meeus's chapter 47
+ * (Astronomical Algorithms, 2nd ed.), the main periodic terms of
+ * ELP-2000/82, without nutation.
+ */
+export function moonEcliptic(t: number): {
+  longitude: number;
+  latitude: number;
+  distance: number;
+} {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const t4 = t3 * t;
+  // Mean longitude, elongation, the Sun's and the Moon's mean anomalies,
+  // the argument of latitude (degrees).
+  const Lp =
+    218.3164477 +
+    481267.88123421 * t -
+    0.0015786 * t2 +
+    t3 / 538841 -
+    t4 / 65194000;
+  const D =
+    (297.8501921 +
+      445267.1114034 * t -
+      0.0018819 * t2 +
+      t3 / 545868 -
+      t4 / 113065000) *
+    deg;
+  const M =
+    (357.5291092 + 35999.0502909 * t - 0.0001536 * t2 + t3 / 24490000) * deg;
+  const Mp =
+    (134.9633964 +
+      477198.8675055 * t +
+      0.0087414 * t2 +
+      t3 / 69699 -
+      t4 / 14712000) *
+    deg;
+  const F =
+    (93.272095 +
+      483202.0175233 * t -
+      0.0036539 * t2 -
+      t3 / 3526000 +
+      t4 / 863310000) *
+    deg;
+  // Venus, Jupiter and the Earth's flattening.
+  const A1 = (119.75 + 131.849 * t) * deg;
+  const A2 = (53.09 + 479264.29 * t) * deg;
+  const A3 = (313.45 + 481266.484 * t) * deg;
+  // The Earth's orbit's decreasing eccentricity scales the terms in M.
+  const E = 1 - 0.002516 * t - 0.0000074 * t2;
+  const E2 = E * E;
+  const { sin, cos } = Math;
+  let sl = 0;
+  let sr = 0;
+  for (let k = 0; k < LONGITUDE_DISTANCE.length; k += 6) {
+    const m = LONGITUDE_DISTANCE[k + 1]!;
+    const a =
+      LONGITUDE_DISTANCE[k]! * D +
+      m * M +
+      LONGITUDE_DISTANCE[k + 2]! * Mp +
+      LONGITUDE_DISTANCE[k + 3]! * F;
+    const e = m === 0 ? 1 : m === 1 || m === -1 ? E : E2;
+    sl += e * LONGITUDE_DISTANCE[k + 4]! * sin(a);
+    sr += e * LONGITUDE_DISTANCE[k + 5]! * cos(a);
+  }
+  let sb = 0;
+  for (let k = 0; k < LATITUDE.length; k += 5) {
+    const m = LATITUDE[k + 1]!;
+    const a =
+      LATITUDE[k]! * D + m * M + LATITUDE[k + 2]! * Mp + LATITUDE[k + 3]! * F;
+    const e = m === 0 ? 1 : m === 1 || m === -1 ? E : E2;
+    sb += e * LATITUDE[k + 4]! * sin(a);
+  }
+  const L = Lp * deg;
+  sl += 3958 * sin(A1) + 1962 * sin(L - F) + 318 * sin(A2);
+  sb +=
+    -2235 * sin(L) +
+    382 * sin(A3) +
+    175 * sin(A1 - F) +
+    175 * sin(A1 + F) +
+    127 * sin(L - Mp) -
+    115 * sin(L + Mp);
+  return {
+    longitude: (Lp + sl / 1e6) * deg,
+    latitude: (sb / 1e6) * deg,
+    distance: 385_000_560 + sr,
+  };
+}
+
+/**
  * The Moon's center at a time, meters from the Earth's center in the
- * celestial frame (ICRF): Simon et al. (1994) §4, mean elements with their
- * main periodic terms, as 1.x's `Simon1994PlanetaryPositions` computes it
- * (`computeMoonPositionInEarthInertialFrame`). Its periodic terms are
- * truncated: against DE440 it is up to 0.31° (2,051 km) off, sampled daily
- * over 2000 to 2050 (test/data/frameCatalog.test.ts); Meeus's example 47.a
- * agrees within 0.05° and 0.1% of distance. Turn it to Earth-fixed axes with
- * `icrfToFixed`.
+ * celestial frame (ICRF): Meeus's chapter 47, the main periodic terms of
+ * the ELP-2000/82 lunar theory (`moonEcliptic`), turned from the ecliptic
+ * and equinox of the date to the J2000 equator by the mean obliquity and
+ * precession (IAU 1976). Against DE440 it is within 16″ of direction and
+ * 27 km, sampled daily over 2000 to 2050 (test/data/frameCatalog.test.ts);
+ * the series it replaced (Simon et al. 1994's main terms, as 1.x's
+ * `Simon1994PlanetaryPositions`) was up to 0.31° (2,051 km) off. Turn it to
+ * Earth-fixed axes with `icrfToFixed`.
  */
 export function moonPosition(
   ms: number,
   out: Float64Array = new Float64Array(3),
 ): Float64Array {
   const t = (julianDate(ms + TT_MINUS_UTC) - 2_451_545.0) / 36_525;
-  const t2 = t * t;
-  const t3 = t2 * t;
-  const t4 = t3 * t;
-
-  // §3.4 (b.1): mean elements, then their periodic terms (tables 4, 5).
-  let semimajorAxis = 383_397.7725 + 0.004 * t;
-  let eccentricity = 0.055545526 - 0.000000016 * t;
-  let inclination =
-    -0.00008 * t + 0.02966 * t2 - 0.000042 * t3 - 0.00000013 * t4;
-  let perigee =
-    14_643_420.2669 * t - 38.2702 * t2 - 0.045047 * t3 + 0.00021301 * t4;
-  let node =
-    -6_967_919.3631 * t + 6.3602 * t2 + 0.007625 * t3 - 0.00003586 * t4;
-  let meanLongitude =
-    1_732_559_343.4847 * t - 6.391 * t2 + 0.006588 * t3 - 0.00003169 * t4;
-
-  // Delaunay arguments (§3.5 b).
-  const D =
-    297.85019547 * deg +
-    arcsecond *
-      (1_602_961_601.209 * t - 6.3706 * t2 + 0.006593 * t3 - 0.00003169 * t4);
-  const F =
-    93.27209062 * deg +
-    arcsecond *
-      (1_739_527_262.8478 * t - 12.7512 * t2 - 0.001037 * t3 + 0.00000417 * t4);
-  const l =
-    134.96340251 * deg +
-    arcsecond *
-      (1_717_915_923.2178 * t + 31.8792 * t2 + 0.051635 * t3 - 0.0002447 * t4);
-  const lp =
-    357.52910918 * deg +
-    arcsecond *
-      (129_596_581.0481 * t - 0.5532 * t2 + 0.000136 * t3 - 0.00001149 * t4);
-  const psi =
-    310.17137918 * deg -
-    arcsecond *
-      (6_967_051.436 * t + 6.2068 * t2 + 0.007618 * t3 - 0.00003219 * t4);
-
-  const D2 = 2 * D;
-  const D4 = 4 * D;
-  const D6 = 6 * D;
-  const l2 = 2 * l;
-  const l3 = 3 * l;
-  const l4 = 4 * l;
-  const F2 = 2 * F;
-  const { cos, sin } = Math;
-  semimajorAxis +=
-    3400.4 * cos(D2) -
-    635.6 * cos(D2 - l) -
-    235.6 * cos(l) +
-    218.1 * cos(D2 - lp) +
-    181.0 * cos(D2 + l);
-  eccentricity +=
-    0.014216 * cos(D2 - l) +
-    0.008551 * cos(D2 - l2) -
-    0.001383 * cos(l) +
-    0.001356 * cos(D2 + l) -
-    0.001147 * cos(D4 - l3) -
-    0.000914 * cos(D4 - l2) +
-    0.000869 * cos(D2 - lp - l) -
-    0.000627 * cos(D2) -
-    0.000394 * cos(D4 - l4) +
-    0.000282 * cos(D2 - lp - l2) -
-    0.000279 * cos(D - l) -
-    0.000236 * cos(l2) +
-    0.000231 * cos(D4) +
-    0.000229 * cos(D6 - l4) -
-    0.000201 * cos(l2 - F2);
-  inclination +=
-    486.26 * cos(D2 - F2) -
-    40.13 * cos(D2) +
-    37.51 * cos(F2) +
-    25.73 * cos(l2 - F2) +
-    19.97 * cos(D2 - lp - F2);
-  perigee +=
-    -55609 * sin(D2 - l) -
-    34711 * sin(D2 - l2) -
-    9792 * sin(l) +
-    9385 * sin(D4 - l3) +
-    7505 * sin(D4 - l2) +
-    5318 * sin(D2 + l) +
-    3484 * sin(D4 - l4) -
-    3417 * sin(D2 - lp - l) -
-    2530 * sin(D6 - l4) -
-    2376 * sin(D2) -
-    2075 * sin(D2 - l3) -
-    1883 * sin(l2) -
-    1736 * sin(D6 - 5 * l) +
-    1626 * sin(lp) -
-    1370 * sin(D6 - l3);
-  node +=
-    -5392 * sin(D2 - F2) -
-    540 * sin(lp) -
-    441 * sin(D2) +
-    423 * sin(F2) -
-    288 * sin(l2 - F2);
-  meanLongitude +=
-    -3332.9 * sin(D2) +
-    1197.4 * sin(D2 - l) -
-    662.5 * sin(lp) +
-    396.3 * sin(l) -
-    218.0 * sin(D2 - lp);
-  const psi2 = 2 * psi;
-  const psi3 = 3 * psi;
-  inclination +=
-    46.997 * cos(psi) * t -
-    0.614 * cos(D2 - F2 + psi) * t +
-    0.614 * cos(D2 - F2 - psi) * t -
-    0.0297 * cos(psi2) * t2 -
-    0.0335 * cos(psi) * t2 +
-    0.0012 * cos(D2 - F2 + psi2) * t2 -
-    0.00016 * cos(psi) * t3 +
-    0.00004 * cos(psi3) * t3 +
-    0.00004 * cos(psi2) * t3;
-  const both =
-    2.116 * sin(psi) * t -
-    0.111 * sin(D2 - F2 - psi) * t -
-    0.0015 * sin(psi) * t2;
-  perigee += both;
-  meanLongitude += both;
-  node +=
-    -520.77 * sin(psi) * t +
-    13.66 * sin(D2 - F2 + psi) * t +
-    1.12 * sin(D2 - psi) * t -
-    1.06 * sin(F2 - psi) * t +
-    0.66 * sin(psi2) * t2 +
-    0.371 * sin(psi) * t2 -
-    0.035 * sin(D2 - F2 + psi2) * t2 -
-    0.015 * sin(D2 - F2 + psi) * t2 +
-    0.0014 * sin(psi) * t3 -
-    0.0011 * sin(psi3) * t3 -
-    0.0009 * sin(psi2) * t3;
-
-  const a = semimajorAxis * 1000;
-  const i = 5.15668983 * deg + inclination * arcsecond;
-  const varpi = 83.35324312 * deg + perigee * arcsecond;
-  const omega = 125.04455501 * deg + node * arcsecond;
-  const lambda = 218.31664563 * deg + meanLongitude * arcsecond;
-
-  // Kepler's equation for the eccentric anomaly (Newton), then the orbit's
-  // plane turned into the ecliptic (J2000).
-  const e = eccentricity;
-  const M = lambda - varpi;
-  let E = M + e * sin(M);
-  for (let k = 0; k < 8; k++) {
-    E -= (E - e * sin(E) - M) / (1 - e * cos(E));
-  }
-  const x = a * (cos(E) - e);
-  const y = a * Math.sqrt(1 - e * e) * sin(E);
-  const w = varpi - omega; // argument of perigee
-  const cw = cos(w);
-  const sw = sin(w);
-  const ci = cos(i);
-  const si = sin(i);
-  const cn = cos(omega);
-  const sn = sin(omega);
-  const ex = (cn * cw - sn * sw * ci) * x + (-cn * sw - sn * cw * ci) * y;
-  const ey = (sn * cw + cn * sw * ci) * x + (-sn * sw + cn * cw * ci) * y;
-  const ez = sw * si * x + cw * si * y;
-  // The ecliptic to the equator (J2000 obliquity, 23.4392911°).
-  const ce = 0.9174820620691819;
-  const se = 0.39777715593191376;
-  out[0] = ex;
-  out[1] = ce * ey - se * ez;
-  out[2] = se * ey + ce * ez;
+  const { longitude, latitude, distance } = moonEcliptic(t);
+  const { sin, cos } = Math;
+  // The ecliptic of the date, then its equator (the mean obliquity, IAU
+  // 1976: 23°26′21.448″ at J2000).
+  const cb = cos(latitude);
+  const x = distance * cb * cos(longitude);
+  const y0 = distance * cb * sin(longitude);
+  const z0 = distance * sin(latitude);
+  const epsilon =
+    (84381.448 - 46.815 * t - 0.00059 * t * t + 0.001813 * t * t * t) *
+    arcsecond;
+  const ce = cos(epsilon);
+  const se = sin(epsilon);
+  const y = ce * y0 - se * z0;
+  const z = se * y0 + ce * z0;
+  // Precession back to J2000 (IAU 1976, as `icrfToFixed`): J2000 =
+  // R3(ζ) · R2(−θ) · R3(z) · of date.
+  const zeta =
+    (2306.2181 * t + 0.30188 * t * t + 0.017998 * t * t * t) * arcsecond;
+  const zz =
+    (2306.2181 * t + 1.09468 * t * t + 0.018203 * t * t * t) * arcsecond;
+  const theta =
+    (2004.3109 * t - 0.42665 * t * t - 0.041833 * t * t * t) * arcsecond;
+  const cz = cos(zz);
+  const sz = sin(zz);
+  const x1 = cz * x + sz * y;
+  const y1 = -sz * x + cz * y;
+  const ct = cos(theta);
+  const st = sin(theta);
+  const x2 = ct * x1 + st * z;
+  const z2 = -st * x1 + ct * z;
+  const cs = cos(zeta);
+  const ss = sin(zeta);
+  out[0] = cs * x2 + ss * y1;
+  out[1] = -ss * x2 + cs * y1;
+  out[2] = z2;
   return out;
 }
 

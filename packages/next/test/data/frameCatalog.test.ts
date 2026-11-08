@@ -4,7 +4,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
-import { ANALYTIC_ACCURACY } from "../../src/frames/analytic.ts";
+import {
+  ANALYTIC_ACCURACY,
+  MEEUS_MOON_METERS,
+  MEEUS_MOON_RADIANS,
+} from "../../src/frames/analytic.ts";
 import {
   createFrameCatalog,
   type CatalogFrameName,
@@ -161,13 +165,27 @@ describe("the frame catalog over the store", () => {
       for (const name of ["HCRS", "GCRF", "EARTH_ICRF"] as const) {
         note(name, apart(origin(toIcrf(name, "a")), origin(toIcrf(name, "p"))));
       }
-      // The Moon from the Earth: Simon's series against DE440.
+      // The Moon from the Earth: Meeus's ELP-2000/82 series against DE440,
+      // in meters and in direction.
       const moonFromEarth = (tree: "a" | "p") => {
         const m = origin(toIcrf("MOON_ICRF", tree));
         const e = origin(toIcrf("EARTH_ICRF", tree));
         return [m[0]! - e[0]!, m[1]! - e[1]!, m[2]! - e[2]!];
       };
-      note("moonFromEarth", apart(moonFromEarth("a"), moonFromEarth("p")));
+      const ma = moonFromEarth("a");
+      const mp = moonFromEarth("p");
+      note("moonFromEarth", apart(ma, mp));
+      note(
+        "moonDirection",
+        Math.acos(
+          Math.min(
+            1,
+            (ma[0]! * mp[0]! + ma[1]! * mp[1]! + ma[2]! * mp[2]!) /
+              (Math.hypot(ma[0]!, ma[1]!, ma[2]!) *
+                Math.hypot(mp[0]!, mp[1]!, mp[2]!)),
+          ),
+        ),
+      );
       note(
         "MOON_ICRF",
         apart(
@@ -271,11 +289,23 @@ describe("the frame catalog over the store", () => {
       km,
     );
     // The parts the notes state: the Sun's offset from the barycentre (about
-    // 1.5 million km), Meeus's Sun (33,000 km) and Simon's Moon (2,100 km)
-    // from the Earth.
+    // 1.5 million km), Meeus's Sun (33,000 km) and Meeus's Moon (27 km,
+    // 16″) from the Earth.
     within("the barycentre's offset", worst.HCRS!, 1.5e9, km);
     within("Meeus's Sun", worst.sunFromEarth!, 3.3e7, km);
-    within("Simon's Moon", worst.moonFromEarth!, 2.1e6, km);
+    within("Meeus's Moon", worst.moonFromEarth!, MEEUS_MOON_METERS, km);
+    within(
+      "Meeus's Moon's direction",
+      worst.moonDirection!,
+      MEEUS_MOON_RADIANS,
+      arcsec,
+    );
+    // Rounded up from the measured figures, not padded past the next
+    // kilometer and arcsecond.
+    expect(worst.moonFromEarth!).toBeGreaterThan(MEEUS_MOON_METERS - 1000);
+    expect(worst.moonDirection!).toBeGreaterThan(
+      MEEUS_MOON_RADIANS - Math.PI / 648000,
+    );
     expect(analytic.precisionOf("MOON_ME")).toBe("analytic");
-  }, 60_000);
+  }, 120_000);
 });

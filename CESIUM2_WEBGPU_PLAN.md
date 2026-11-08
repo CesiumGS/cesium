@@ -1484,7 +1484,9 @@ Later:
 
 Progress (r43): **the Moon**. `moonPosition(time)` (time/moon.ts) ports
 1.x's Simon et al. (1994) lunar theory (within 0.04° and 0.05% of
-distance of Meeus's example 47.a), turned to Earth-fixed axes with
+distance of Meeus's example 47.a; since replaced by Meeus's chapter 47,
+ELP-2000/82's main terms, within 16″ and 27 km of DE440 over 2000 to
+2050, where Simon's main terms were 0.31° and 2,051 km), turned to Earth-fixed axes with
 `icrfToFixed`; `Engine.moonPosition` places it (the `Viewer` sets it from
 its clock; unset, no Moon, as in the comparisons with 1.x). The sky draws
 its disk from the camera's own position (the Moon's parallax reaches 1°),

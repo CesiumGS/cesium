@@ -1,6 +1,6 @@
 // The catalog's analytic stand-ins (plan 5a's call 12): today's analytic sky
 // as edges of the built-in tree, each with its stated accuracy. They load
-// nothing and cost nothing: Meeus's Sun, Simon's Moon, the IAU rotation
+// nothing and cost nothing: Meeus's Sun, Meeus's Moon, the IAU rotation
 // model's lunar axes, and `icrfToFixed`'s precession and sidereal time.
 // EME2000 and MOON_PA are constant and built in; their matrices live here so
 // the catalog and `createFrames` share them.
@@ -36,11 +36,14 @@ const SUN_BARYCENTRE_METERS = 2.2e9;
  */
 const MEEUS_SUN_METERS = 3.3e7;
 /**
- * The Moon from the Earth by Simon et al. (1994)'s main terms, against
- * DE440: 2,051 km at most, sampled daily over 2000 to 2050 (about 0.31°),
- * rounded up (test/data/frameCatalog.test.ts).
+ * The Moon from the Earth by Meeus's chapter 47 (ELP-2000/82's main terms),
+ * against DE440: 26.95 km and 15.54″ of direction at most, sampled daily
+ * over 2000 to 2050, rounded up (test/data/frameCatalog.test.ts). Simon et
+ * al. (1994)'s main terms, before it, were 2,051 km (0.31°) off.
  */
-const SIMON_MOON_METERS = 2.1e6;
+export const MEEUS_MOON_METERS = 2.7e4;
+/** The same series' direction from the Earth, at most. */
+export const MEEUS_MOON_RADIANS = 16 * ARCSECOND;
 /**
  * The IAU rotation model's lunar axes against the lunar PCK's mean-Earth
  * axes: 20.01″ at most, sampled daily over 2000 to 2050, rounded up
@@ -83,8 +86,8 @@ export const ANALYTIC_ACCURACY = deepFreeze({
   GCRF: { meters: EARTH_METERS, note: EARTH_NOTE },
   EARTH_ICRF: { meters: EARTH_METERS, note: EARTH_NOTE },
   MOON_ICRF: {
-    meters: EARTH_METERS + SIMON_MOON_METERS,
-    note: "analytic stand-in: the Moon from the Earth by Simon et al. (1994), within about 0.31° (2,100 km) of DE440, sampled daily over 2000 to 2050, on the Earth's stand-in (Meeus's Sun, the Sun at the barycentre)",
+    meters: EARTH_METERS + MEEUS_MOON_METERS,
+    note: "analytic stand-in: the Moon from the Earth by Meeus's chapter 47 (ELP-2000/82's main terms), within 16″ (27 km) of DE440, sampled daily over 2000 to 2050, on the Earth's stand-in (Meeus's Sun, the Sun at the barycentre)",
   },
   ITRF: {
     radians: ITRF_RADIANS,

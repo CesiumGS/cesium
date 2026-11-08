@@ -1,35 +1,51 @@
-// The Moon (plan §13.14): its position (Simon et al. 1994, as 1.x) against
-// Meeus's worked example, and its brightness by phase.
+// The Moon (plan §13.14): its position (Meeus's chapter 47, ELP-2000/82's main
+// terms) against Meeus's worked example, and its brightness by phase.
 import { describe, expect, it } from "vitest";
 import {
   lommelSeeliger,
   moonPhaseBrightness,
 } from "../src/atmosphere/moonLight.ts";
 import { icrfToFixed } from "../src/time/celestial.ts";
-import { moonAxes, moonPosition } from "../src/time/moon.ts";
-import { sunDirection } from "../src/time/sun.ts";
+import { moonAxes, moonEcliptic, moonPosition } from "../src/time/moon.ts";
+import { greenwichSiderealTime, sunDirection } from "../src/time/sun.ts";
 
 const deg = Math.PI / 180;
 
 describe("moonPosition", () => {
-  it("matches Meeus's example 47.a (1992 April 12, 0h TD)", () => {
-    // 0h dynamical time is 59 s earlier in UTC (ΔT in 1992).
-    const p = moonPosition(Date.UTC(1992, 3, 11, 23, 59, 1));
-    // The ecliptic of J2000, then precessed to the date's equinox (5029″
-    // per century in longitude; the example's λ is of date, before
-    // nutation).
-    const ce = Math.cos(23.4392911 * deg);
-    const se = Math.sin(23.4392911 * deg);
-    const x = p[0]!;
-    const y = ce * p[1]! + se * p[2]!;
-    const z = -se * p[1]! + ce * p[2]!;
-    const distance = Math.hypot(x, y, z);
+  it("matches Meeus's example 47.a (1992 April 12, 0h TD) to its digits", () => {
     const t = (2_448_724.5 - 2_451_545.0) / 36_525;
-    const longitude = Math.atan2(y, x) / deg + (5029.0966 * t) / 3600;
-    const latitude = Math.asin(z / distance) / deg;
-    expect(Math.abs(longitude - 133.162655)).toBeLessThan(0.05);
-    expect(Math.abs(latitude - -3.229126)).toBeLessThan(0.05);
-    expect(Math.abs(distance / 1000 / 368_409.7 - 1)).toBeLessThan(1e-3);
+    const { longitude, latitude, distance } = moonEcliptic(t);
+    const turns = ((longitude / deg) % 360) + 360;
+    expect(turns % 360).toBeCloseTo(133.162655, 5);
+    expect(latitude / deg).toBeCloseTo(-3.229126, 5);
+    expect(distance / 1000).toBeCloseTo(368_409.7, 0);
+  });
+
+  it("turns the series to the J2000 equator (example 47.a again)", () => {
+    // 0h dynamical time is 59 s earlier in UTC (ΔT in 1992); the series
+    // takes UTC plus today's 69.184 s, so ask 10.184 s earlier.
+    const p = moonPosition(Date.UTC(1992, 3, 11, 23, 59, 1) - 10_184);
+    // Forward again: precession to the date (as `icrfToFixed`, without the
+    // spin), then the ecliptic of the date by its mean obliquity.
+    const m = icrfToFixed(Date.UTC(1992, 3, 11, 23, 59, 1));
+    const gmst = greenwichSiderealTime(Date.UTC(1992, 3, 11, 23, 59, 1));
+    const c = Math.cos(gmst);
+    const s = Math.sin(gmst);
+    const fixed = [0, 1, 2].map(
+      (i) => m[i * 3]! * p[0]! + m[i * 3 + 1]! * p[1]! + m[i * 3 + 2]! * p[2]!,
+    );
+    const x = c * fixed[0]! - s * fixed[1]!;
+    const yq = s * fixed[0]! + c * fixed[1]!;
+    const zq = fixed[2]!;
+    const t = (2_448_724.5 - 2_451_545.0) / 36_525;
+    const epsilon = ((84381.448 - 46.815 * t) / 3600) * deg;
+    const y = Math.cos(epsilon) * yq + Math.sin(epsilon) * zq;
+    const z = -Math.sin(epsilon) * yq + Math.cos(epsilon) * zq;
+    const distance = Math.hypot(x, y, z);
+    // 1 mas in the rotations, the example's rounding.
+    expect(Math.atan2(y, x) / deg).toBeCloseTo(133.162655, 3);
+    expect(Math.asin(z / distance) / deg).toBeCloseTo(-3.229126, 3);
+    expect(distance / 1000).toBeCloseTo(368_409.7, -1);
   });
 
   it("is opposite the sun at a full moon (2024 April 23, 23:49 UTC)", () => {

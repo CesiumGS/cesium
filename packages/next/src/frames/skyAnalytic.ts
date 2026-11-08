@@ -61,7 +61,7 @@ function turn(
 }
 
 /**
- * The analytic sky at UTC `ms`, into `out`: Meeus's sun, Simon's Moon, the
+ * The analytic sky at UTC `ms`, into `out`: Meeus's sun, Meeus's Moon, the
  * IAU rotation model's lunar axes, and `icrfToFixed`'s precession and
  * sidereal time. It loads nothing. `skyState(ms, undefined, out)` is this.
  */
