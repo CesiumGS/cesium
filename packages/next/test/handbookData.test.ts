@@ -19,6 +19,7 @@ import {
   parseCheckBundle,
   readBenchResults,
   readLayers,
+  readHistory,
   readOneX,
   readSurface,
 } from "../scripts/handbookData.mjs";
@@ -326,4 +327,11 @@ it("keeps ion tokens out of the snippets, and links rows to tasks", () => {
       expect(ids, row.snippet).toContain(row.snippet);
     }
   }
+});
+
+it("reads this package's history from git", () => {
+  const history = readHistory();
+  expect(history.commits).toBeGreaterThan(0);
+  expect(history.withAgent).toBeLessThanOrEqual(history.commits);
+  expect(history.firstDate <= history.lastDate).toBe(true);
 });

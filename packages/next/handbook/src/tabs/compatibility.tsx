@@ -12,6 +12,7 @@ import {
   Sources,
   Written,
 } from "../parts.tsx";
+import { WEBGPU_USAGE } from "../sources.ts";
 
 const SUPPORT: { browser: string; platform: string; state: ReactNode }[] = [
   {
@@ -184,9 +185,9 @@ export function Compatibility() {
       <Section title="How many people that is">
         <ul>
           <li>
-            <strong>88.63% of global browser usage</strong> has WebGPU: 86.83%
-            full and 1.8% partial, per <Cite id="caniuse" />, using StatCounter
-            for October 2026.
+            <strong>{WEBGPU_USAGE} of global browser usage</strong> has WebGPU:
+            86.83% full and 1.8% partial, per <Cite id="caniuse" />, using
+            StatCounter for October 2026.
           </li>
           <li>
             <strong>81.18% of reports</strong> returned a working adapter, per{" "}

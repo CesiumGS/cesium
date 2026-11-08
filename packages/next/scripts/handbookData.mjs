@@ -129,6 +129,29 @@ export function readOneX(root = packageRoot) {
   };
 }
 
+/**
+ * This package's history, from git: commits touching it, how many name a
+ * coding agent as co-author, and the calendar span. Nothing about spend.
+ */
+export function readHistory(root = packageRoot) {
+  const log = execFileSync(
+    "git",
+    ["log", "--format=%as%x09%b%x00", "--", "."],
+    { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  )
+    .split("\0")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const dates = log.map((entry) => entry.slice(0, 10)).sort();
+  return {
+    commits: log.length,
+    withAgent: log.filter((entry) => /Co-Authored-By: Claude/.test(entry))
+      .length,
+    firstDate: dates[0],
+    lastDate: dates[dates.length - 1],
+  };
+}
+
 /** The declarations the layer table is made of, by name, in the test. */
 const TEST_DECLARATIONS = [
   "TIME_FILES",
@@ -950,6 +973,7 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
     pipeline: { ...readFrameGraph(root), figures: readPipelineFigures(root) },
     bench: readBenchResults(root),
     counts: readCounts(root),
+    history: readHistory(root),
   };
   if (!data.bundles) {
     throw new Error("--no-bundles needs an earlier full run to keep from");

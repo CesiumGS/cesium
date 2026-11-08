@@ -81,3 +81,9 @@ export function readOneX(root?: string): {
   names: string[];
   files: Record<string, string>;
 };
+export function readHistory(root?: string): {
+  commits: number;
+  withAgent: number;
+  firstDate: string;
+  lastDate: string;
+};

@@ -132,6 +132,12 @@ export interface HandbookData {
     baselines: { name: string; date: string | null; note: string | null }[];
   };
   counts: { testFiles: number; slangFiles: number; examples: number };
+  history: {
+    commits: number;
+    withAgent: number;
+    firstDate: string;
+    lastDate: string;
+  };
 }
 
 export const data = generated as unknown as HandbookData;

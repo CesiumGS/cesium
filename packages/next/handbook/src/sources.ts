@@ -18,6 +18,9 @@ export interface Source {
 
 export const STALE_AFTER_DAYS = 90;
 
+/** Global browser usage with WebGPU, from Can I use with StatCounter. */
+export const WEBGPU_USAGE = "88.63%";
+
 export const SOURCES = {
   impl: {
     short: "gpuweb implementation status",

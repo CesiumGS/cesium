@@ -1,4 +1,7 @@
-import { count, data, size, libraryEntry } from "../data.ts";
+import { API_ROWS } from "../apiMap.ts";
+import { count, data, day, size, libraryEntry } from "../data.ts";
+import { GoalList } from "../goals.tsx";
+import { WEBGPU_USAGE } from "../sources.ts";
 import { C, DataTable, Generated, Page, Section, Written } from "../parts.tsx";
 
 const MILESTONES = [
@@ -41,6 +44,10 @@ const MILESTONES = [
 
 export function Overview() {
   const core = libraryEntry("core");
+  const breaking = API_ROWS.filter(
+    (r) =>
+      r.status === "absent" || r.status === "changed" || r.status === "renamed",
+  ).length;
   return (
     <Page
       title="A WebGPU engine for CesiumJS 2.0"
@@ -56,31 +63,101 @@ export function Overview() {
         </>
       }
     >
-      <Section title="What it is for">
-        <ul>
+      <Section title="What it's aiming for">
+        <p>
+          Fourteen targets. Each has a state today, and opens to show where 1.x
+          stands, what 2.0 has, and the tab that goes deeper. 1.x is the visual
+          and behavioural reference the tests compare against, not an
+          architectural template, and the differences below come from when and
+          for what each was designed.
+        </p>
+        <GoalList />
+        <Written
+          from="the overall plan, sections 1, 2, 8, 10 and 14, the plan 5 spec, 1.x's source, and generated data"
+          on="2026-11-08"
+        />
+      </Section>
+
+      <Section title="What it costs">
+        <ul className="costs">
           <li>
-            Stream 3D Tiles into a real geospatial context: a globe with terrain
-            and imagery, photorealistic tiles, photogrammetry, and CAD and BIM
-            tilesets.
+            <strong>A breaking API.</strong> {breaking} of the {API_ROWS.length}{" "}
+            areas in the <a href="#/compare">1.x to 2.0 API</a> comparison break
+            existing code. Apps change; they don't just recompile.
           </li>
           <li>
-            Render close to 1.x when asked to, and do better by default. 1.x is
-            the visual and behavioral oracle the tests compare against, not an
-            architectural template.
+            <strong>WebGPU only.</strong> There's no WebGL fallback and no
+            compatibility mode. {WEBGPU_USAGE} of global browser usage has
+            WebGPU, and the <a href="#/browsers">Browser compatibility</a> tab
+            says who that leaves out.
           </li>
           <li>
-            Be measurably faster, mostly in main-thread CPU time, steady-state
-            allocations, and the time from a tile's request to its appearance.
+            <strong>What 1.x has that isn't built.</strong> Entities and
+            DataSources; Primitive, Geometry and Appearance; 2D and Columbus
+            view; CZML, KML and GeoJSON; imagery on 3D Tiles; underground
+            viewing; camera flights; glTF animation; labels and polylines;
+            clipping planes on tilesets; post-processing stages; point clouds,
+            splats and vector tiles. Since the plan's first list of non-goals,
+            globe translucency has been built, and widgets partly.
           </li>
           <li>
-            Share one GPU device and one tile cache across split views, multiple
-            canvases and offscreen views.
-          </li>
-          <li>
-            Last: absorb vectors, splats, point clouds, bindless and later
-            WebGPU features without another rewrite.
+            <strong>Migration effort.</strong> Nobody has estimated or measured
+            it, and there's no migration tool. 1.x shader text has to be
+            rewritten, every pick has to be awaited, and math code changes.
           </li>
         </ul>
+        <div className="open-question">
+          <h3>An open question: the real cost of reaching production</h3>
+          <p>
+            How do evolving AI-driven development workflows change the real time
+            and money costs here? Nobody has that answer yet, and this is an
+            invitation to discuss it, not a conclusion.
+          </p>
+          <p>
+            The prototype was developed with heavy use of coding agents, under
+            human direction. From git, <C>packages/next</C> has{" "}
+            {count(data.history.commits)} commits between{" "}
+            {day(data.history.firstDate)} and {day(data.history.lastDate)}, of
+            which {count(data.history.withAgent)} name a coding agent as
+            co-author, and {count(data.counts.testFiles)} test files. That pace
+            may not predict the cost of production.
+          </p>
+          <p>Whatever the tooling, going to production involves:</p>
+          <ul>
+            <li>the API review (plan 5i) and documentation</li>
+            <li>1.x parity gaps, and migration</li>
+            <li>the plan's open performance and compute milestones (M5, M6)</li>
+            <li>browser reach, and testing on real hardware</li>
+            <li>a security review, and licensing, including of data</li>
+            <li>human review capacity</li>
+            <li>long-term maintenance, and who owns it</li>
+            <li>how community contribution works</li>
+          </ul>
+          <p>Questions to discuss:</p>
+          <ul>
+            <li>
+              Which of these does the tooling change, and which does it leave as
+              they are?
+            </li>
+            <li>
+              How much human review does production code need, and how would we
+              know it's enough?
+            </li>
+            <li>What does maintaining this code take, years from now?</li>
+            <li>
+              How does the community contribute to, and trust, code written this
+              way?
+            </li>
+            <li>
+              What should be measured from here, so that any later estimate
+              rests on evidence?
+            </li>
+          </ul>
+        </div>
+        <Written
+          from="the overall plan's non-goals and milestones, checked against api/surface.txt and git"
+          on="2026-11-08"
+        />
       </Section>
 
       <Section title="Where it stands">
@@ -117,8 +194,8 @@ export function Overview() {
         <ul>
           <li>
             Across the benchmark catalog against 1.x, at plan revision r38: time
-            to settle 26% lower and main-thread CPU 73% lower, with no guardrail
-            metric broken.
+            to settle 26% lower and main-thread CPU 73% lower. That run failed
+            two guardrails, later fixed, and the rerun of those scenes passes.
           </li>
           <li>
             100,000 moving points hold 60 fps at 1.0 ms of CPU and 3.7 ms of GPU
