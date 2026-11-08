@@ -23,8 +23,9 @@ import { convertPoint, framePoint, type FramePoint } from "./local.ts";
  * no edge's:
  *
  * - `pick`: how the pick itself places the point: `part` `"footprint"`,
- *   one CSS pixel's footprint at the hit; `"depth"`, the rounding of the
- *   depth buffer's float32 depth at the hit.
+ *   one CSS pixel's footprint at the hit (the pick reads the pixel's
+ *   centre, which may be this far from where the click was meant);
+ *   `"depth"`, the rounding of the depth buffer's float32 depth at the hit.
  * - `content`: how far the content's placement draws its design from where
  *   it truly is (`DesignPlacement.displayError`; 0 m when reprojected).
  */

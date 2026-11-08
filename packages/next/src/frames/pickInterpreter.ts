@@ -2,24 +2,15 @@
 // closes plan 3's R8): a core pick (`View.pickPoint`) tagged with its
 // reference frame, its body, its body-fixed position, design coordinates
 // where the content has a placement, and its composed accuracy.
-import {
-  FrameUnavailableError,
-  type FrameKey,
-} from "../camera/frameResolver.ts";
+import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Body } from "../scene/Body.ts";
 import type { CorePick, PickInterpreter } from "../scene/pick.ts";
 import type { AnchorHandle, DrawHandle } from "../scene/World.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { DesignPlacement } from "../streaming/designPlacement.ts";
-import {
-  ANALYTIC_ACCURACY,
-  analyticEdges,
-  type StandInName,
-} from "./analytic.ts";
-import type { FrameCatalog } from "./catalog.ts";
-import type { FrameEdge } from "./edges.ts";
+import type { CatalogFrameName, FrameCatalog } from "./catalog.ts";
 import { Frame } from "./Frame.ts";
-import { isUnstated, type FrameAccuracy } from "./frameAccuracy.ts";
+import { isUnstated } from "./frameAccuracy.ts";
 import { convertPoint, framePoint } from "./local.ts";
 import type { PointAccuracy, PointAccuracyTerm } from "./pointAccuracy.ts";
 import type { FramesResolver } from "./resolver.ts";
@@ -53,21 +44,31 @@ export interface FramedPoint {
    * - the content's (`kind: "content"`), with design coordinates: how far
    *   its placement draws the design from where it truly is
    *   (`displayError`; 0 m when reprojected);
-   * - `frame`'s own, as drawn: each edge from `frame` up to its body's
-   *   fixed reference frame (ITRF, MOON_ME), as it states its accuracy at
-   *   the pick's instant, so an edge on its analytic stand-in (loading, or
-   *   outside its data) states the stand-in's wider figure. A point tagged
-   *   in the body-fixed reference frame itself has none; one in an
-   *   engineering, trajectory or application reference frame has that
-   *   frame's edges up to it. A point with no body walks to the tree's
-   *   root, and `combination` says so.
+   * - `frame`'s own: each edge from `frame` up to the nearest catalog
+   *   reference frame at or above it, as it states its accuracy at the
+   *   pick's instant. For content on a body that is its body-fixed
+   *   reference frame (ITRF, MOON_ME); an engineering, trajectory or
+   *   application reference frame keeps its own edges (a spacecraft's
+   *   covariance relative to GCRF); a point tagged in a catalog reference
+   *   frame has none. `combination` names where the walk stopped.
    *
-   * Not included: the edges above the body-fixed reference frame (the
-   * body's orientation, its place among the planets) and the route to the
-   * render root, which move the point and the body together (the point
-   * comes back through the placement that drew it); the content's own
-   * error against the world (a mesh's simplification, a survey's), which
-   * the content doesn't state; correlations between terms.
+   * Not included:
+   *
+   * - catalog-to-catalog edges (a body's orientation, its place among the
+   *   planets) and the route to the render root: the point comes back
+   *   through the placement that drew it, so they move it and its
+   *   reference frame together;
+   * - the GPU's float32 arithmetic in producing the depth (only the stored
+   *   depth's rounding is counted);
+   * - the footprint's orientation: it is measured across the ray, so it
+   *   understates where the surface is grazed;
+   * - content the `placements` callback gives no placement for: it has no
+   *   content term;
+   * - the coordinate operation's own accuracy behind `design` (the
+   *   engineering frame's, from PROJ);
+   * - the content's own error against the world (a mesh's simplification,
+   *   a survey's), which the content doesn't state;
+   * - correlations between terms.
    */
   readonly accuracy: PointAccuracy;
   /**
@@ -95,6 +96,13 @@ export interface FramesPickInterpreterOptions {
  * tagged with its reference frame, through `resolver`'s anchor bindings, at
  * the pick's scene seconds (`resolver.instant`).
  *
+ * `interpret` throws when an edge it needs can't answer at that instant
+ * (`FrameUnavailableError`, as `frameTransform` and `pointAccuracy` throw):
+ * an application's or a trajectory's edge between the point's reference
+ * frame and the nearest catalog one (for the accuracy), or one between it
+ * and the body-fixed reference frame (for `bodyFixed`). The catalog's own
+ * edges aren't walked for the accuracy.
+ *
  * - The point's reference frame is the hit draw's anchor's binding, with
  *   its coordinates `anchorPosition`. Content under an unbound anchor, or
  *   under none, sits in the render root's reference frame (the resolver
@@ -119,9 +127,6 @@ export function createFramesPickInterpreter(
     }
     return undefined;
   };
-  let edges: Readonly<Record<StandInName, FrameEdge>> | undefined;
-  /** The analytic stand-ins, as the resolver draws them, made on first need. */
-  const standIns = () => (edges ??= analyticEdges(() => catalog.leapSeconds));
   return {
     interpret(pick: CorePick): FramedPoint | undefined {
       // The render root names the reference frame of content under no
@@ -168,15 +173,7 @@ export function createFramesPickInterpreter(
         ...(body !== undefined && { body }),
         ...(bodyFixed !== undefined && { bodyFixed }),
         ...(design !== undefined && { design }),
-        accuracy: composed(
-          pick,
-          frame,
-          coordinates,
-          instant,
-          design,
-          catalog,
-          standIns,
-        ),
+        accuracy: composed(pick, frame, coordinates, instant, design, catalog),
         in: (target: Frame) => convertPoint(point, target).position,
       };
     },
@@ -195,7 +192,6 @@ function composed(
   instant: Instant,
   design: FramedPoint["design"],
   catalog: FrameCatalog,
-  standIns: () => Readonly<Record<StandInName, FrameEdge>>,
 ): PointAccuracy {
   const terms: PointAccuracyTerm[] = [...pickTerms(pick, frame.name)];
   if (design !== undefined) {
@@ -207,15 +203,14 @@ function composed(
       note: `the ${placement.mode} placement draws the design this far from where it truly is (displayError)`,
     });
   }
-  // The point is recovered through the placement that drew it, so nothing
-  // between its body's fixed reference frame and the rest of the tree moves
-  // it relative to the body: the walk stops there. Without a body it goes
-  // to the tree's root.
-  const body = catalog.bodyOf(frame);
-  const stop = body ? catalog.bodyFixed(body) : undefined;
-  terms.push(
-    ...frameTerms(frame, stop, coordinates, instant, catalog, standIns),
-  );
+  // The point is recovered through the placement that drew it, so no
+  // catalog-to-catalog edge moves it relative to its reference frame: the
+  // walk stops at the nearest catalog reference frame.
+  let stop: Frame | undefined = frame;
+  while (stop && !isCatalogFrame(stop, catalog)) {
+    stop = stop.parent;
+  }
+  terms.push(...frameTerms(frame, stop, coordinates, instant));
   const unstated = terms.find((t) => t.kind === "unstated");
   return {
     meters:
@@ -225,9 +220,11 @@ function composed(
     terms,
     ...(unstated !== undefined && { unboundedBy: unstated.frame }),
     combination: combination(
-      stop
-        ? `up to its body's fixed reference frame (${stop.name})`
-        : `up to the tree's root: the point has no body`,
+      stop === frame
+        ? `(none: the point is in a catalog reference frame, ${frame.name})`
+        : stop
+          ? `up to the nearest catalog reference frame, ${stop.name}`
+          : "up to the tree's root (no catalog reference frame above it)",
     ),
   };
 }
@@ -251,7 +248,7 @@ function pickTerms(pick: CorePick, frame: string): PointAccuracyTerm[] {
       kind: "pick",
       part: "footprint",
       meters: (distance * 2 * Math.tan(c.fovy / 2)) / c.height,
-      note: "one CSS pixel's footprint at the hit: where in the pixel the surface was hit isn't known",
+      note: "one CSS pixel's footprint at the hit: the pick reads the pixel's centre, which may be this far from where the click was meant",
     },
   ];
   // Reverse-Z: the stored depth is near / z, z along the view axis; its
@@ -272,21 +269,17 @@ function pickTerms(pick: CorePick, frame: string): PointAccuracyTerm[] {
 }
 
 /**
- * `frame`'s edges up to `stop` (its body's fixed reference frame), or to
- * the tree's root without one, each as it is drawn at `instant`
- * and states its accuracy there (the terms `pointAccuracy` gives). A
- * catalog edge outside its data (`FrameUnavailableError`) is drawn on its
- * analytic stand-in, as the frames resolver draws it: it states the
- * stand-in's accuracy, and carries the point on with the stand-in. A
- * rotation's lever is the point's distance from that edge's frame origin.
+ * `frame`'s edges up to `stop` (the nearest catalog reference frame), or
+ * to the tree's root without one, each stating its accuracy at `instant`
+ * (the terms `pointAccuracy` gives). A rotation's lever is the point's
+ * distance from that edge's frame origin. Throws, as the edge does, when
+ * an edge can't answer at `instant`.
  */
 function frameTerms(
   frame: Frame,
   stop: Frame | undefined,
   coordinates: ArrayLike<number>,
   instant: Instant,
-  catalog: FrameCatalog,
-  standIns: () => Readonly<Record<StandInName, FrameEdge>>,
 ): readonly PointAccuracyTerm[] {
   const p = Float64Array.from([
     coordinates[0]!,
@@ -296,19 +289,9 @@ function frameTerms(
   const m = new Float64Array(16);
   const terms: PointAccuracyTerm[] = [];
   for (let edge = frame; edge !== stop && edge.parent; edge = edge.parent) {
-    let a: Readonly<FrameAccuracy> = edge.accuracy(instant);
-    let note = a.note;
-    try {
-      edge.toParent(instant, m);
-    } catch (error) {
-      const standIn = standInName(edge, catalog);
-      if (!(error instanceof FrameUnavailableError) || !standIn) {
-        throw error;
-      }
-      a = ANALYTIC_ACCURACY[standIn];
-      note = `drawn on its stand-in at this instant (${error.message}): ${a.note}`;
-      standIns()[standIn](instant, m);
-    }
+    const a = edge.accuracy(instant);
+    const { note } = a;
+    edge.toParent(instant, m);
     const name = edge.name;
     if (a.byDefinition === true) {
       terms.push({ frame: name, kind: "exact", meters: 0, note });
@@ -341,15 +324,10 @@ function frameTerms(
   return terms;
 }
 
-/** The stand-in name of a catalog reference frame that has an analytic stand-in. */
-function standInName(
-  frame: Frame,
-  catalog: FrameCatalog,
-): StandInName | undefined {
-  const name = frame.name as StandInName;
-  return name in ANALYTIC_ACCURACY &&
-    (catalog.names as readonly string[]).includes(name) &&
-    catalog.get(name) === frame
-    ? name
-    : undefined;
+/** Whether `frame` is one of the catalog's own (built-in) reference frames. */
+function isCatalogFrame(frame: Frame, catalog: FrameCatalog): boolean {
+  return (
+    (catalog.names as readonly string[]).includes(frame.name) &&
+    catalog.get(frame.name as CatalogFrameName) === frame
+  );
 }

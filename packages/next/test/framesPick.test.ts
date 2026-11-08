@@ -3,16 +3,14 @@
 // its body, its body-fixed position, design coordinates where the content
 // has a placement, and the composed accuracy. Closes plan 3's R8.
 import { beforeAll, describe, expect, it } from "vitest";
-import { ANALYTIC_ACCURACY } from "../src/frames/analytic.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
-import type { FrameData } from "../src/ephemeris/loadFrameData.ts";
-import type { EarthOrientationParameters } from "../src/time/eop.ts";
-import { Instant } from "../src/time/Instant.ts";
-import { LeapSeconds } from "../src/time/leapSeconds.ts";
 import { Frame, frameTransform } from "../src/frames/Frame.ts";
 import { createFramesPickInterpreter } from "../src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import type { FrameKey } from "../src/camera/frameResolver.ts";
+import {
+  FrameUnavailableError,
+  type FrameKey,
+} from "../src/camera/frameResolver.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
@@ -21,7 +19,6 @@ import { OffscreenTarget, View } from "../src/scene/View.ts";
 import type { AnchorHandle, DrawHandle, World } from "../src/scene/World.ts";
 import type { DesignPlacement } from "../src/streaming/designPlacement.ts";
 import { fakeEngine } from "./fakeGpu.ts";
-import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 
 const R = 6_378_137;
 const SECONDS = Date.UTC(2026, 2, 20, 14, 3, 7, 250) / 1000;
@@ -189,9 +186,9 @@ describe("createFramesPickInterpreter", () => {
     it("an Earth pick on the default analytic catalog: no reference frame term, so metres (the pick's and the content's)", () => {
       for (const root of [gcrf, world.root]) {
         const { accuracy } = interpreter.interpret(corePick(root, site))!;
-        // Tagged in ITRF, the body-fixed frame itself: nothing above it
-        // (the Earth's orientation, its place among the planets) moves the
-        // point relative to the Earth.
+        // Tagged in ITRF, a catalog reference frame: no catalog-to-catalog
+        // edge (the Earth's orientation, its place among the planets) moves
+        // the point, which comes back through the placement that drew it.
         expect(accuracy.terms.map((t) => t.kind)).toEqual([
           "pick",
           "pick",
@@ -203,11 +200,13 @@ describe("createFramesPickInterpreter", () => {
         expect(accuracy.meters).toBeGreaterThan(20);
         expect(accuracy.meters).toBeLessThan(30);
         expect(accuracy.unboundedBy).toBeUndefined();
-        expect(accuracy.combination).toMatch(/fixed reference frame \(ITRF\)/);
+        expect(accuracy.combination).toMatch(
+          /none: the point is in a catalog reference frame, ITRF/,
+        );
       }
     });
 
-    it("a point in an application's reference frame: its edges up to the body-fixed frame, as drawn", () => {
+    it("a point in an application's reference frame under ITRF: its own edges, up to ITRF", () => {
       const site = Frame.constant("site", itrf, translation(R, 0, 0), {
         accuracy: { meters: 0.5, note: "surveyed site origin" },
       });
@@ -247,25 +246,70 @@ describe("createFramesPickInterpreter", () => {
           note: "surveyed site origin",
         },
       ]);
-      expect(point.accuracy.combination).toMatch(/\(ITRF\)/);
+      expect(point.accuracy.combination).toMatch(
+        /up to the nearest catalog reference frame, ITRF/,
+      );
     });
 
-    it("a point with no body walks to the tree's root, and says so", () => {
-      const { accuracy } = interpreter.interpret(
-        corePick(gcrf, undefined, "none"),
-      )!;
-      const edges = accuracy.terms.filter((t) => t.kind !== "pick");
-      expect(edges).toEqual([
+    it("a point with no body tagged in GCRF: no reference frame term, so metres", () => {
+      const point = interpreter.interpret(corePick(gcrf, undefined, "none"))!;
+      expect(point.body).toBeUndefined();
+      const { accuracy } = point;
+      expect(accuracy.terms.map((t) => t.kind)).toEqual(["pick", "pick"]);
+      expect(accuracy.meters).toBeGreaterThan(20);
+      expect(accuracy.meters).toBeLessThan(30);
+      expect(accuracy.combination).toMatch(
+        /none: the point is in a catalog reference frame, GCRF/,
+      );
+    });
+
+    it("a point in an application's reference frame under GCRF (a spacecraft's): only its own edge", () => {
+      const craft = Frame.constant("craft", gcrf, translation(7e6, 0, 0), {
+        accuracy: { meters: 120, note: "the trajectory's covariance" },
+      });
+      catalog.add(craft);
+      const probe = world.addAnchor("probe");
+      resolver.bindAnchor(probe, craft);
+      const pick = {
+        ...corePick(gcrf, undefined),
+        anchor: probe,
+        anchorPosition: Float64Array.of(1, 2, 3),
+      };
+      const point = interpreter.interpret(pick)!;
+      expect(point.frame).toBe(craft);
+      expect(point.body).toBeUndefined();
+      expect(point.accuracy.terms.filter((t) => t.kind !== "pick")).toEqual([
         {
-          frame: "GCRF",
+          frame: "craft",
           kind: "meters",
-          meters: ANALYTIC_ACCURACY.GCRF.meters,
-          note: ANALYTIC_ACCURACY.GCRF.note,
+          meters: 120,
+          note: "the trajectory's covariance",
         },
       ]);
-      expect(accuracy.combination).toMatch(
-        /tree's root: the point has no body/,
+      // The pick's terms (the test's camera is far from this point) and
+      // 120 m, nothing for GCRF's place.
+      expect(point.accuracy.meters).toBe(
+        Math.hypot(...point.accuracy.terms.map((t) => t.meters!)),
       );
+      expect(point.accuracy.combination).toMatch(
+        /up to the nearest catalog reference frame, GCRF/,
+      );
+    });
+
+    it("throws, naming it, when an application's edge can't answer at the pick's instant", () => {
+      const lost = new Frame(
+        "lost",
+        gcrf,
+        () => {
+          throw new FrameUnavailableError("lost", "outsideData");
+        },
+        { accuracy: { meters: 1, note: "a trajectory's" } },
+      );
+      catalog.add(lost);
+      const anchor = world.addAnchor("lost probe");
+      resolver.bindAnchor(anchor, lost);
+      const pick = { ...corePick(gcrf, undefined), anchor };
+      expect(() => interpreter.interpret(pick)).toThrow(FrameUnavailableError);
     });
 
     it("never 0 m: on the default rig too, the pick's own terms remain", () => {
@@ -333,51 +377,5 @@ describe("createFramesPickInterpreter", () => {
     const point = failing.interpret(corePick(gcrf, site))!;
     expect(point.frame).toBe(itrf);
     expect(point.design).toBeUndefined();
-  });
-});
-
-describe("createFramesPickInterpreter, at precise", () => {
-  const leap = LeapSeconds.builtIn();
-  /** UTC ms at TT `tt` seconds past J2000. */
-  const utcMsAt = (tt: number): number => Instant.fromTt(tt).toUtc(leap);
-  /** The synthetic EOP ends (degraded) 1,000 s of TT past J2000. */
-  const EOP_END_TT = 1000;
-
-  /** Synthetic frame data whose EOP ends, as test/framesResolver.test.ts's. */
-  function dataWithEopEnd(): FrameData {
-    const data = syntheticFrameData();
-    const eop = {
-      atInstant: (at: Instant) =>
-        at.tt > EOP_END_TT ? { ...SAMPLE, degraded: true } : SAMPLE,
-      first: Date.UTC(1999, 11, 1),
-      last: utcMsAt(EOP_END_TT),
-    } as unknown as EarthOrientationParameters;
-    return { ...data, eop };
-  }
-
-  it("states an edge's precise accuracy inside its data, and the wider stand-in's outside it, without throwing", async () => {
-    const precise = createFrameCatalog({ data: dataWithEopEnd() });
-    const gcrfPrecise = precise.get("GCRF", { precision: "precise" });
-    await precise.ready("GCRF", "precise");
-    const r = createFramesResolver(precise, { precision: "precise" });
-    const interpreter = createFramesPickInterpreter(r, precise);
-    // Content under no anchor, a GCRF render root: no body, so GCRF's edge.
-    const at = (ms: number) => {
-      const pick = {
-        ...corePick(gcrfPrecise, undefined, "none"),
-        seconds: ms / 1000,
-      };
-      const terms = interpreter.interpret(pick)!.accuracy.terms;
-      return terms.find((t) => t.frame === "GCRF" && t.kind === "meters")!;
-    };
-    const inside = at(utcMsAt(0));
-    expect(inside.meters).toBe(
-      gcrfPrecise.accuracy(Instant.fromUtc(utcMsAt(0), leap)).meters,
-    );
-    // A day past the synthetic packs: the resolver draws GCRF on its stand-in.
-    const outside = at(utcMsAt(0) + 86_400_000);
-    expect(outside.meters).toBe(ANALYTIC_ACCURACY.GCRF.meters);
-    expect(outside.note).toMatch(/drawn on its stand-in at this instant/);
-    expect(outside.meters).toBeGreaterThan(inside.meters!);
   });
 });
