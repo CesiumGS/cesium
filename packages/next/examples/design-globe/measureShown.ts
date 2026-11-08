@@ -58,6 +58,8 @@ export function shownValues(
     };
     /** PROJ's zone 3 E and N for the mark, design units. */
     readonly mark?: ArrayLike<number>;
+    /** The page's measured horizontal distance from the mark to the centreline, design units. */
+    readonly markOffset?: number;
     readonly user?: {
       readonly a: MeasureEnd;
       readonly b: MeasureEnd;
@@ -146,8 +148,14 @@ export function shownValues(
         basis: "exact",
       },
     }),
-    ...(shown.mark !== undefined && {
-      mark: { easting: shown.mark[0]!, northing: shown.mark[1]! },
+    ...((shown.mark !== undefined || shown.markOffset !== undefined) && {
+      mark: {
+        ...(shown.mark !== undefined && {
+          easting: shown.mark[0]!,
+          northing: shown.mark[1]!,
+        }),
+        ...(shown.markOffset !== undefined && { offset: shown.markOffset }),
+      },
     }),
   };
 }

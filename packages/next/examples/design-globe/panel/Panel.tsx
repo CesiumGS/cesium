@@ -7,7 +7,6 @@ import "./story.css";
 // between the placement and the sites (`children`).
 import {
   Button,
-  Snackbar,
   Switch,
   ToggleButton,
   ToggleButtonGroup,
@@ -51,11 +50,9 @@ const MODE_LABEL: Record<Placement, string> = {
 
 function PlacementSection({
   model,
-  live,
   actions,
 }: {
   model: PanelModel;
-  live: LiveSource;
   actions: PanelActions;
 }) {
   const id = useId();
@@ -92,6 +89,30 @@ function PlacementSection({
               ? "One transform at the anchor, as most viewers place a model: the design sags off the globe away from it."
               : "Every vertex through the design CRS, as the design means it."))}
       </p>
+    </section>
+  );
+}
+
+/**
+ * On the globe (Task 20 fix 1, I8): the placement's toggles, the viewer
+ * toggles, the sag chart and Fly along, after the measurements, so the
+ * headline numbers come first.
+ */
+function GlobeSection({
+  model,
+  live,
+  actions,
+}: {
+  model: PanelModel;
+  live: LiveSource;
+  actions: PanelActions;
+}) {
+  const id = useId();
+  return (
+    <section className="dg-section" aria-labelledby={`${id}-h`}>
+      <Typography variant="subtitle-md" render={<h2 id={`${id}-h`} />}>
+        On the globe
+      </Typography>
       <div className="dg-toggles">
         <label className="dg-toggle">
           <Switch
@@ -123,10 +144,11 @@ function PlacementSection({
                 size="small"
                 checked={model.view.compass}
                 onChange={(_, on) => actions.setCompass(on)}
+                slotProps={{ input: { "aria-describedby": `${id}-compass` } }}
               />
               <span>
                 Compass at the cursor
-                <span className="dg-toggle-hint dg-muted">
+                <span id={`${id}-compass`} className="dg-toggle-hint dg-muted">
                   Grid north against true north where you point
                 </span>
               </span>
@@ -137,10 +159,11 @@ function PlacementSection({
                 disabled={!model.view.ribbonReady}
                 checked={model.view.ribbon}
                 onChange={(_, on) => actions.setRibbon(on)}
+                slotProps={{ input: { "aria-describedby": `${id}-ribbon` } }}
               />
               <span>
                 Error ribbon
-                <span className="dg-toggle-hint dg-muted">
+                <span id={`${id}-ribbon`} className="dg-toggle-hint dg-muted">
                   {model.view.ribbonReady
                     ? "The ground under the corridor tinted by rigid's error"
                     : "Once the corridor's frame is in"}
@@ -184,40 +207,46 @@ function PlacementSection({
   );
 }
 
-/** The page's link, copied; the browser may refuse the clipboard. */
-function CopyLink({
-  actions,
-  onDone,
-}: {
-  actions: PanelActions;
-  onDone: (message: string) => void;
-}) {
+/**
+ * The page's link, copied. The button says so itself for two seconds, by
+ * the button rather than in a corner far from it; the browser may refuse.
+ */
+function CopyLink({ actions }: { actions: PanelActions }) {
+  const [said, setSaid] = useState<{ ok: boolean; text: string }>();
+  const say = (ok: boolean, text: string) => {
+    setSaid({ ok, text });
+    setTimeout(() => setSaid(undefined), 2000);
+  };
   return (
-    <Button
-      size="small"
-      variant="text"
-      startIcon={<Icon href={svgLink} aria-hidden />}
-      onClick={() => {
-        const link = actions.link();
-        const clipboard = navigator.clipboard as Clipboard | undefined;
-        if (clipboard === undefined) {
-          onDone("Couldn't copy: this browser gives the page no clipboard");
-          return;
-        }
-        clipboard.writeText(link).then(
-          () => onDone("Link copied"),
-          () => onDone("Couldn't copy: the browser refused the clipboard"),
-        );
-      }}
-    >
-      Copy link
-    </Button>
+    <>
+      <Button
+        size="small"
+        variant="text"
+        startIcon={<Icon href={svgLink} aria-hidden />}
+        className={said?.ok ? "dg-copied" : undefined}
+        onClick={() => {
+          const clipboard = navigator.clipboard as Clipboard | undefined;
+          if (clipboard === undefined) {
+            say(false, "Couldn't copy: no clipboard here");
+            return;
+          }
+          clipboard.writeText(actions.link()).then(
+            () => say(true, "Link copied"),
+            () => say(false, "Couldn't copy: the browser refused"),
+          );
+        }}
+      >
+        {said?.text ?? "Copy link"}
+      </Button>
+      <span className="dg-visually-hidden" role="status">
+        {said?.text ?? ""}
+      </span>
+    </>
   );
 }
 
 export function Panel({ source, live, actions, hud, children }: PanelProps) {
   const model = useSyncExternalStore(source.subscribe, source.get);
-  const [toast, setToast] = useState<string | undefined>();
   return (
     <div className="dg-panel">
       <Status items={model.loading} actions={actions} />
@@ -229,21 +258,16 @@ export function Panel({ source, live, actions, hud, children }: PanelProps) {
             On the tour: {model.tour.progress.toLowerCase()}
           </span>
         )}
-        <CopyLink actions={actions} onDone={setToast} />
+        <CopyLink actions={actions} />
       </div>
-      <PlacementSection model={model} live={live} actions={actions} />
+      <PlacementSection model={model} actions={actions} />
       {children}
+      <GlobeSection model={model} live={live} actions={actions} />
       <Sites sites={model.sites} actions={actions} />
       {model.checks !== undefined && (
         <Checks checks={model.checks} actions={actions} />
       )}
       <Slots />
-      <Snackbar
-        open={toast !== undefined}
-        message={toast}
-        autoHideDuration={3000}
-        onClose={() => setToast(undefined)}
-      />
       {createPortal(
         <>
           <CursorCard cursor={model.cursor} />

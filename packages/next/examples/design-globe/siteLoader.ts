@@ -125,7 +125,12 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
   function loadTiles(site: SiteRuntime): Promise<void> {
     site.tiles ??= (async () => {
       const id = `tiles:${site.entry.id}`;
-      report({ type: "start", id, label: `${site.entry.name}: tiles` });
+      report({
+        type: "start",
+        id,
+        label: `${site.entry.name}: tiles`,
+        ...siteTag(site),
+      });
       const add = (path: string) =>
         viewer.addTileset(`${STORE}${path}tileset.json`, {
           retainGeometry: true,
@@ -242,6 +247,7 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
         site.tilesFailed = true;
         report({
           type: "error",
+          ...siteTag(site),
           id: ready ? `${id}:later` : id,
           detail: `${site.entry.name}: ${failed.length === 1 ? "a tile" : `${failed.length} tiles`} didn't load (${failed[0]!.replace(/^content failed: /, "")}).`,
         });
@@ -399,6 +405,7 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
           type: "start",
           id: placeId,
           label: `${site.entry.name}: placements`,
+          ...siteTag(site),
         });
         try {
           const options = { proj: api, grids: source };
@@ -420,7 +427,12 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
             detail: "placed from each tileset's own declaration",
           });
         } catch (error) {
-          report({ type: "error", id: placeId, detail: messageOf(error) });
+          report({
+            type: "error",
+            id: placeId,
+            detail: `${site.entry.name}: its placement failed the engine's check of the tileset's own declaration, so it is drawn but has no facts or story.`,
+            technical: messageOf(error),
+          });
           throw error;
         }
         deps.placed(site, api);
@@ -432,6 +444,14 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
       }
     })();
     return site.frame;
+  }
+
+  /**
+   * One site's own items stay on that site (page.ts `loadingFor`); the
+   * corridor's are everyone's, as it loads first and its openers are the page's.
+   */
+  function siteTag(site: SiteRuntime): { site?: string } {
+    return site.entry.id === "corridor" ? {} : { site: site.entry.id };
   }
 
   function loadTheAnswers(): Promise<Answers> {

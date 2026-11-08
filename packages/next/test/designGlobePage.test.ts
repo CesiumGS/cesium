@@ -12,6 +12,7 @@ import {
   designRefusal,
   errorText,
   formatParams,
+  loadingFor,
   loadingSummary,
   morphEase,
   morphValue,
@@ -20,6 +21,7 @@ import {
   probeVerdict,
   retargetMorph,
   rigidVerdict,
+  siteGridText,
   type LoadEvent,
   type LoadItem,
   type PageParams,
@@ -30,7 +32,12 @@ import {
 } from "../examples/design-globe/panelModel.ts";
 import { creaseEdges } from "../examples/design-globe/placementPair.ts";
 import { judgePick } from "../examples/design-globe/cursor.ts";
-import { cause, scaleText } from "../examples/design-globe/siteFacts.ts";
+import {
+  cause,
+  partsText,
+  rigidErrorTerms,
+  scaleText,
+} from "../examples/design-globe/siteFacts.ts";
 import type { SiteRuntime } from "../examples/design-globe/siteLoader.ts";
 import type { DesignPick } from "../src/engineering/pick.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
@@ -312,6 +319,8 @@ describe("design globe portfolio and words", () => {
     expect(errorText(1.04)).toBe("1.0 m");
     expect(errorText(0.0844)).toBe("84 mm");
     expect(errorText(0.00031)).toBe("0.3 mm");
+    // Under a centimetre, to 0.1 mm: one figure for Amsterdam's 2.6 mm everywhere.
+    expect(errorText(0.0025631575)).toBe("2.6 mm");
     expect(errorText(0.00001)).toBe("under 0.1 mm");
     expect(errorText(0)).toBe("0 mm");
   });
@@ -421,7 +430,7 @@ describe("design globe panel model", () => {
     expect(m.switchable).toBe(false);
     expect(m.ghost).toBe(false);
     expect(m.exaggerate).toBe(false);
-    expect(m.switchNote).toMatch(/reprojected tiles are on the way/);
+    expect(m.switchNote).toMatch(/^Drawn rigid: one tileset/);
     expect(m.legend.solid).toBe("rigid");
     expect(m.legend.ghostText).toBeUndefined();
     expect(m.legend.exaggeration).toBe(1);
@@ -626,5 +635,167 @@ describe("design globe combined factor (Task 20)", () => {
     expect(t).toMatch(/rigid ignores it/);
     expect(scaleText(1.0001373259917115)).toMatch(/137\.3 ppm shorter/);
     expect(scaleText(1 + 1e-9)).toMatch(/agree to 0\.1 ppm/);
+  });
+});
+
+describe("design globe Task 20 fix 1: per-site loading, site grids, words", () => {
+  it("keeps a site's items to that site, with the engine's words apart", () => {
+    let items: readonly LoadItem[] = [];
+    for (const e of [
+      { type: "start", id: "proj", label: "PROJ" },
+      {
+        type: "start",
+        id: "frame:jakarta",
+        label: "Jakarta: placements",
+        site: "jakarta",
+      },
+      {
+        type: "error",
+        id: "frame:jakarta",
+        detail: "Jakarta: its placement failed the engine's check.",
+        technical: "BENTLEY_engineering_frame: … at most 1e-9",
+      },
+      {
+        type: "error",
+        id: "tiles:tokyo:later",
+        detail: "Tokyo: a tile didn't load.",
+        site: "tokyo",
+      },
+    ] as LoadEvent[]) {
+      items = nextLoading(items, e);
+    }
+    const jakarta = items.find((i) => i.id === "frame:jakarta")!;
+    expect(jakarta.site).toBe("jakarta");
+    expect(jakarta.state).toBe("error");
+    expect(jakarta.technical).toMatch(/at most 1e-9/);
+    expect(loadingFor(items, "jakarta").map((i) => i.id)).toEqual([
+      "proj",
+      "frame:jakarta",
+    ]);
+    expect(loadingFor(items, "london").map((i) => i.id)).toEqual(["proj"]);
+    expect(loadingFor(items, "tokyo").map((i) => i.id)).toEqual([
+      "proj",
+      "tiles:tokyo:later",
+    ]);
+  });
+
+  it("says a site grid in words: origin, rotation and scale", () => {
+    const t = siteGridText(
+      {
+        origin: [6_050_000, 2_100_000, 0],
+        rotation: (12.5 * Math.PI) / 180,
+        scale: 1.0000375,
+      },
+      "ftUS",
+    );
+    expect(t).toBe(
+      "origin E 6,050,000.000, N 2,100,000.000 ftUS; rotated 12.5° from grid east; scale 1.0000375",
+    );
+  });
+
+  it("says a rigid-only site is so by design, with its site grid", () => {
+    const m = buildPanelModel({
+      params: { mode: "rigid", site: "site-building", snap: "exact" },
+      loading: [],
+      t: 0,
+      morphing: false,
+      ghost: true,
+      exaggerate: false,
+      sites: new Map(
+        SITES.map((entry) => [
+          entry.id,
+          {
+            entry,
+            paired: entry.id === "corridor",
+            started: true,
+            drawn: true,
+          },
+        ]),
+      ),
+      stations: { start: 10_000, end: 174_042 },
+      cursor: { text: "", muted: false },
+      flyingAlong: false,
+      evidence: true,
+    });
+    expect(m.switchNote).toMatch(
+      /^Drawn rigid: one tileset, on a site grid \(/,
+    );
+    expect(m.switchNote).toContain("12.5°");
+    expect(m.switchNote).not.toMatch(/on the way/);
+  });
+
+  it("starts Fly along at the self-check's station, and says which", () => {
+    const m = buildPanelModel({
+      params: { mode: "rigid", site: "corridor", snap: "exact" },
+      loading: [],
+      t: 0,
+      morphing: false,
+      ghost: true,
+      exaggerate: false,
+      sites: new Map(
+        SITES.map((entry) => [
+          entry.id,
+          {
+            entry,
+            paired: entry.id === "corridor",
+            started: true,
+            drawn: true,
+          },
+        ]),
+      ),
+      samples: [
+        { station: 92_021, error: 0 },
+        { station: 170_000, error: 30.6 },
+        { station: 171_255, error: 31.4 },
+      ] as never,
+      anchorStation: 92_021,
+      alongFrom: 170_000,
+      stations: { start: 10_000, end: 174_042 },
+      cursor: { text: "", muted: false },
+      flyingAlong: false,
+      evidence: true,
+    });
+    expect(m.alongNote).toBe(
+      "From station 1700+00, where rigid is 30.6 m off, down the corridor to the anchor.",
+    );
+    // The anchor's station explained once.
+    expect(m.legend.solidText).toBe(
+      "Rigid, anchored at station 920+21 (92,021 ftUS along the road)",
+    );
+  });
+
+  it("doesn't repeat the error's size in the verdict", () => {
+    expect(rigidVerdict(34.1).text).toBe("Rigid can't place it: reproject it.");
+  });
+});
+
+describe("design globe Task 20 fix 1: the error's parts (I11)", () => {
+  it("says the three parts as numbers", () => {
+    expect(partsText({ curvature: 17.93, scale: 1.204, geoid: -0.41 })).toBe(
+      "curvature 17.9 m, the scale factor 1.2 m, the geoid's rise −410 mm",
+    );
+  });
+
+  it("finds the parts as the generator does: d²/2R, d·|1 − 1/k|, the geoid's rise", () => {
+    const deg = Math.PI / 180;
+    const frame = {
+      units: { metersPerUnit: 1 },
+      metersPerHeightUnit: 1,
+      body: { ellipsoid: { radii: [6_378_137, 6_378_137, 6_356_752.314245] } },
+      toGeodetic: (d: ArrayLike<number>) => ({
+        longitude: 0,
+        latitude: 37.7 * deg,
+        // The geoid rises 0.5 m over the 20 km.
+        height: d[2]! - 30 + (d[0]! / 20_000) * 0.5,
+      }),
+    };
+    const t = rigidErrorTerms(frame, [0, 0, 100], [20_000, 0, 120], 0.9999);
+    const a = 6_378_137;
+    const e2 = 1 - (6_356_752.314245 / a) ** 2;
+    const w = Math.sqrt(1 - e2 * Math.sin(37.7 * deg) ** 2);
+    const r = Math.sqrt(((a * (1 - e2)) / w ** 3) * (a / w));
+    expect(t.curvature).toBeCloseTo((20_000 * 20_000) / (2 * r), 9);
+    expect(t.scale).toBeCloseTo(20_000 * Math.abs(1 - 1 / 0.9999), 9);
+    expect(t.geoid).toBeCloseTo(0.5, 9);
   });
 });

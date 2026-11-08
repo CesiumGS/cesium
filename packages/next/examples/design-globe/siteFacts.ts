@@ -8,7 +8,12 @@ import { compoundParts, crsUnits } from "../../src/engineering/crs.ts";
 import type { TilesetPlacement } from "../../src/engineering/placement.ts";
 import type { ProjApi } from "../../src/engineering/proj.ts";
 import { fixed, unitSymbol } from "./measureModel.ts";
-import { errorText, rigidVerdict, type SiteEntry } from "./page.ts";
+import {
+  errorText,
+  rigidVerdict,
+  siteGridText,
+  type SiteEntry,
+} from "./page.ts";
 import type { SiteFrameView, SiteStory } from "./panel/model.ts";
 
 export interface SiteFactsInput {
@@ -23,6 +28,8 @@ export interface SiteFactsInput {
   readonly along?: {
     readonly alignment: Alignment;
     readonly errors: readonly number[];
+    /** The error's parts at the far end, metres (`rigidErrorTerms`). */
+    readonly terms?: ErrorTerms;
   };
   /**
    * The generator's answer for a ladder site (answers.json `sites`): its
@@ -42,6 +49,63 @@ export interface SiteFactsInput {
       readonly scale: number;
       readonly geoid: number;
     };
+  };
+}
+
+/** A rigid error's three parts, metres (answers.ts `AnswerSite.terms`). */
+export interface ErrorTerms {
+  readonly curvature: number;
+  readonly scale: number;
+  readonly geoid: number;
+}
+
+/** "curvature 17.9 m, the scale factor 1.2 m, the geoid's rise −410 mm". */
+export function partsText(t: ErrorTerms): string {
+  const signed = (m: number) => `${m < 0 ? "\u2212" : ""}${errorText(m)}`;
+  return `curvature ${errorText(t.curvature)}, the scale factor ${errorText(t.scale)}, the geoid's rise ${signed(t.geoid)}`;
+}
+
+/**
+ * The parts of a rigid placement's error at a design point, metres, as the
+ * generator finds them (scripts/designTiles.mjs `rigidErrorTerms`): the
+ * curvature d²/2R (R the Gaussian radius √(MN) at the anchor), the scale
+ * d·|1 − 1/k| (`k` the combined factor at the anchor) and the geoid's rise
+ * from the anchor (the change in ellipsoidal height less the change in
+ * design height).
+ */
+export function rigidErrorTerms(
+  frame: {
+    readonly units: { readonly metersPerUnit: number };
+    readonly metersPerHeightUnit: number;
+    readonly body: {
+      readonly ellipsoid: { readonly radii: ArrayLike<number> };
+    };
+    toGeodetic(design: ArrayLike<number>): {
+      readonly latitude: number;
+      readonly height: number;
+    };
+  },
+  anchor: ArrayLike<number>,
+  point: ArrayLike<number>,
+  k: number,
+): ErrorTerms {
+  const d =
+    Math.hypot(point[0]! - anchor[0]!, point[1]! - anchor[1]!) *
+    frame.units.metersPerUnit;
+  const from = frame.toGeodetic(anchor);
+  const to = frame.toGeodetic(point);
+  const a = frame.body.ellipsoid.radii[0]!;
+  const c = frame.body.ellipsoid.radii[2]!;
+  const e2 = 1 - (c * c) / (a * a);
+  const w = Math.sqrt(1 - e2 * Math.sin(from.latitude) ** 2);
+  const radius = Math.sqrt(((a * (1 - e2)) / w ** 3) * (a / w));
+  return {
+    curvature: (d * d) / (2 * radius),
+    scale: d * Math.abs(1 - 1 / k),
+    geoid:
+      to.height -
+      from.height -
+      (point[2]! - anchor[2]!) * frame.metersPerHeightUnit,
   };
 }
 
@@ -122,6 +186,7 @@ export function siteFacts(input: SiteFactsInput): {
       ),
     );
   }
+  const terms = input.answer?.terms ?? input.along?.terms;
   const view: SiteFrameView = {
     horizontal: parts?.horizontal.name ?? entry.codes,
     ...(parts?.vertical && { vertical: parts.vertical.name }),
@@ -133,6 +198,10 @@ export function siteFacts(input: SiteFactsInput): {
       Number.isFinite(input.combinedFactor) && {
         scale: scaleText(input.combinedFactor),
       }),
+    ...(entry.frame.site !== undefined && {
+      siteGrid: siteGridText(entry.frame.site, symbol),
+    }),
+    ...(terms !== undefined && { parts: partsText(terms) }),
   };
   if (edge === undefined) {
     return { frame: view };
@@ -147,7 +216,7 @@ export function siteFacts(input: SiteFactsInput): {
           : `${fixed(extent, 0)} m`
       } ${input.along !== undefined ? "long" : "across"}`,
       edgeError: errorText(edge),
-      cause: cause(input.answer?.terms),
+      cause: cause(terms),
       acceptable: verdict.acceptable,
       verdict: verdict.text,
     },

@@ -322,6 +322,7 @@ describe("checkRows", () => {
       "marker.separation",
       "mark.easting",
       "mark.northing",
+      "mark.offset",
     ]) {
       expect(row(rows, id).status, id).toBe("not-shown");
     }
@@ -353,6 +354,28 @@ describe("checkRows", () => {
     expect(e.unit).toBe("ftUS");
     expect(e.status).toBe("pass");
     expect(row(rows, "mark.northing").status).toBe("fail");
+  });
+
+  it("checks the design's horizontal offset from the mark against NGS's own zone 3 (Task 20 fix 1, I6)", () => {
+    const a = answers();
+    // NGS's zone 3 to the nearest centreline point, horizontally.
+    const published = Math.hypot(
+      a.mark.publishedSpc.easting - a.mark.nearestDesign[0],
+      a.mark.publishedSpc.northing - a.mark.nearestDesign[1],
+    );
+    const shown = empty();
+    expect(row(checkRows(a, shown), "mark.offset").status).toBe("not-shown");
+    shown.mark = { offset: published - 0.005 };
+    const r = row(checkRows(a, shown), "mark.offset");
+    expect(r.kind).toBe("published reference");
+    expect(r.basis).toBe("published");
+    expect(r.expected).toBeCloseTo(published, 9);
+    // Each published coordinate's precision, along the line between them.
+    expect(r.tolerance).toBeCloseTo(MARK_SPC_TOLERANCE * Math.SQRT2, 12);
+    expect(r.unit).toBe("ftUS");
+    expect(r.status).toBe("pass");
+    shown.mark = { offset: published + 0.02 };
+    expect(row(checkRows(a, shown), "mark.offset").status).toBe("fail");
   });
 
   it("throws for a shown id that isn't an answer", () => {

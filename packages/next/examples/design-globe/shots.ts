@@ -71,27 +71,32 @@ export class CameraMoves {
   }
 
   /**
-   * `to` with its look point moved down the view (perpendicular to the line
-   * of sight) by `lift` × range, so its subject shows that much higher.
+   * `to` from the same camera position, turned to look `atan(lift)` lower,
+   * so its subject shows that much above the view's centre. (Moving the look
+   * point down instead lowered the camera with it, under the true road in
+   * the opening shot: Task 20 fix 1.)
    */
   private lifted(to: Framing): Framing {
     if (this.lift === 0) {
       return to;
     }
     const { east, north, up } = enuAt(to.center);
-    const sh = Math.sin(to.heading);
-    const ch = Math.cos(to.heading);
-    const sp = Math.sin(to.pitch);
-    const cp = Math.cos(to.pitch);
-    // The camera's up, in east-north-up: (−sin h sin p, −cos h sin p, cos p).
-    const s = this.lift * to.range;
+    const forward = (pitch: number) =>
+      [0, 1, 2].map(
+        (k) =>
+          Math.cos(pitch) *
+            (Math.sin(to.heading) * east[k]! +
+              Math.cos(to.heading) * north[k]!) +
+          Math.sin(pitch) * up[k]!,
+      );
+    const f0 = forward(to.pitch);
+    const camera = [0, 1, 2].map((k) => to.center[k]! - to.range * f0[k]!);
+    const pitch = Math.max(-89 * deg, to.pitch - Math.atan(this.lift));
+    const f1 = forward(pitch);
     return {
       ...to,
-      center: [0, 1, 2].map(
-        (k) =>
-          to.center[k]! -
-          s * (-sh * sp * east[k]! - ch * sp * north[k]! + cp * up[k]!),
-      ),
+      pitch,
+      center: [0, 1, 2].map((k) => camera[k]! + to.range * f1[k]!),
     };
   }
 
@@ -350,9 +355,9 @@ export function createShots(deps: ShotsDeps): Shots {
     if (answers === undefined || deps.samples() === undefined) {
       return;
     }
-    const from =
-      answers.points.find((q) => q.nearKm === 20)?.station ??
-      alignment.endStation;
+    // The self-check's station, where the opening shot looks (one figure
+    // for "where rigid is 30.6 m off", Task 20 fix 1).
+    const from = answers.marker.station;
     const to = answers.anchorStation;
     const first = framingAlong(from, 0);
     if (first === undefined) {
@@ -481,5 +486,32 @@ export function openerFraming(
         : -35 * deg,
     pitch: id === "pair" ? -32 * deg : -10 * deg,
     range: Math.max(140, focus.length * (id === "pair" ? 1.4 : 2.2)),
+  };
+}
+
+/**
+ * The survey mark's shot (Task 20 fix 1, I5): from behind the disk, looking
+ * at the road's two centrelines at the mark's nearest point (where it truly
+ * is and where rigid draws it, about 19 m apart), the disk in the
+ * foreground: both ends of the measurement and the gap in one view.
+ */
+export function markGapFraming(
+  disk: ArrayLike<number>,
+  road: ArrayLike<number>,
+  ghost: ArrayLike<number>,
+): Framing {
+  const far = [0, 1, 2].map((k) => (road[k]! + ghost[k]!) / 2);
+  const { east, north } = enuAt(disk);
+  const d = [0, 1, 2].map((k) => far[k]! - disk[k]!);
+  const heading = Math.atan2(
+    d[0]! * east[0]! + d[1]! * east[1]! + d[2]! * east[2]!,
+    d[0]! * north[0]! + d[1]! * north[1]! + d[2]! * north[2]!,
+  );
+  const length = Math.hypot(d[0]!, d[1]!, d[2]!);
+  return {
+    center: [0, 1, 2].map((k) => disk[k]! + 0.62 * d[k]!),
+    heading,
+    pitch: -50 * deg,
+    range: Math.max(200, 3.4 * length),
   };
 }

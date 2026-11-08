@@ -5,7 +5,6 @@
 // a line under 24 px on the screen gets none (far off, it would only
 // clutter), and two pills that would overlap keep the earlier one.
 import type { SnapKind } from "../../src/engineering/EngineeringFrame.ts";
-import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { Answers } from "./answers.ts";
 import { stationText } from "./measureModel.ts";
 import {
@@ -70,6 +69,11 @@ const LABEL_RANGE = 30_000;
 export const RULER_PX = 4;
 /** A quiet line's label shows within this of the camera, metres (not at the horizon). */
 const QUIET_RANGE = 15_000;
+/** The user's pill shows within this of the camera, or three times its line's length, metres. */
+const USER_RANGE = 5_000;
+
+const distance = (p: ArrayLike<number>, q: ArrayLike<number>) =>
+  Math.hypot(p[0]! - q[0]!, p[1]! - q[1]!, p[2]! - q[2]!);
 
 /** A store whose listeners are told once per animation frame. */
 export function liveStore<T>(initial: T) {
@@ -123,21 +127,48 @@ export interface LabelInput {
   readonly crosshair: boolean;
 }
 
+/**
+ * Whether the Earth hides `p` from the camera at `c`: the straight line
+ * between them dips under a sphere a little inside the ground at both ends.
+ * (A point above the camera's height but in view is seen: the tour's lifted
+ * shots look up at the marker's line.)
+ */
+export function behindEarth(
+  c: ArrayLike<number>,
+  p: ArrayLike<number>,
+): boolean {
+  const d = [0, 1, 2].map((k) => p[k]! - c[k]!);
+  const dd = d[0]! * d[0]! + d[1]! * d[1]! + d[2]! * d[2]!;
+  if (dd === 0) {
+    return false;
+  }
+  const t = Math.min(
+    1,
+    Math.max(0, -(c[0]! * d[0]! + c[1]! * d[1]! + c[2]! * d[2]!) / dd),
+  );
+  const closest = Math.hypot(...[0, 1, 2].map((k) => c[k]! + t * d[k]!));
+  const radius = Math.min(
+    Math.hypot(c[0]!, c[1]!, c[2]!),
+    Math.hypot(p[0]!, p[1]!, p[2]!),
+  );
+  return closest < radius - EARTH_MARGIN;
+}
+
+/** How far under the lower end the line may dip before the Earth hides it, metres. */
+const EARTH_MARGIN = 200;
+
 /** The labels and the openers' live figures, for this frame. */
 export function placeLabels(input: LabelInput): MeasureLive {
   const { view, answers: a, draw: s, openers, state, hover, crosshair } = input;
   const seen = (p: ArrayLike<number>): Float64Array | undefined => {
-    const cam = view.camera;
-    const to = [0, 1, 2].map((k) => cam.position[k]! - p[k]!);
-    const up = new Float64Array(3);
-    Ellipsoid.WGS84.geodeticSurfaceNormal(Float64Array.from(p), up);
+    const c = view.camera.position;
     if (
-      Math.hypot(to[0]!, to[1]!, to[2]!) > LABEL_RANGE ||
-      // Below the camera's horizon from there.
-      to[0]! * up[0]! + to[1]! * up[1]! + to[2]! * up[2]! < 0
+      Math.hypot(c[0]! - p[0]!, c[1]! - p[1]!, c[2]! - p[2]!) > LABEL_RANGE ||
+      behindEarth(c, p)
     ) {
       return undefined;
     }
+    // In front of the camera (`toPixel` is undefined behind it).
     return view.toPixel(p);
   };
   const pills: MeasureLive["pills"][number][] = [];
@@ -209,7 +240,7 @@ export function placeLabels(input: LabelInput): MeasureLive {
           : "Not to scale"
         : f.design === PENDING
           ? "Measuring…"
-          : `${f.design} design`;
+          : `${f.design} ${o.id === "pair" ? "horizontal" : "design"}`;
     if (!o.quiet || cameraTo(middle(pa, pb)) < QUIET_RANGE) {
       label(o.id, pa, pb, text, o.quiet ? "quiet" : "measure");
     }
@@ -258,14 +289,13 @@ export function placeLabels(input: LabelInput): MeasureLive {
       dots.push({ key: "user-0", x: p[0]!, y: p[1]!, tone: "measure" });
     }
   } else if (state.phase === "done") {
-    label(
-      "user",
-      drawnAt(state.a, s.t, s.exaggeration),
-      drawnAt(state.b, s.t, s.exaggeration),
-      input.userText,
-      "measure",
-      true,
-    );
+    const ua = drawnAt(state.a, s.t, s.exaggeration);
+    const ub = drawnAt(state.b, s.t, s.exaggeration);
+    // Not from anywhere: within a few times its length, or 5 km (page M7).
+    const reach = Math.max(USER_RANGE, 3 * distance(ua, ub));
+    if (cameraTo(middle(ua, ub)) < reach) {
+      label("user", ua, ub, input.userText, "measure", true);
+    }
   }
   return {
     pills: declutter(pills.map((p) => keepInside(p, input.width))),

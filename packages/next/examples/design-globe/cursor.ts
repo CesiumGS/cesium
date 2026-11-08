@@ -173,6 +173,8 @@ function compassAt(
   return {
     x: at[0]!,
     y: at[1]!,
+    width: viewer.canvas.clientWidth,
+    height: viewer.canvas.clientHeight,
     ...(needles && {
       trueNorth: needles.trueNorth,
       gridNorth: needles.gridNorth,

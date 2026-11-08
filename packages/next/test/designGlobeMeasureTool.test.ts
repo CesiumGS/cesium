@@ -334,9 +334,17 @@ describe("the measurements the page opens with", () => {
 
   /** What the page's `measure` gives, distinct from answers.json's to show which is shown. */
   const measured = {
-    marker: { design: 0, trueDistance: 0 },
-    mark: { design: 608.4293727, trueDistance: 185.4635994097 },
-    pair: { design: 10_001.9998000402, trueDistance: 3_048.8484955078 },
+    marker: { design: 0, horizontal: 0, trueDistance: 0 },
+    mark: {
+      design: 608.4293727,
+      horizontal: 501.1878926694,
+      trueDistance: 185.4635994097,
+    },
+    pair: {
+      design: 10_001.9998000402,
+      horizontal: 10_000.000000000253,
+      trueDistance: 3_048.8484955078,
+    },
   };
 
   it("the design against itself: a marker at station 170,000's true position, to the drawn station", () => {
@@ -413,6 +421,19 @@ describe("the measurements the page opens with", () => {
     expect(hero(0.5)).toBe(`${(Math.hypot(10, 20, 21) / 2).toFixed(3)} m`);
     expect(hero(1)).toBe("0.000 m");
     const rigid = openerView(mark!, a, settled("rigid"), measured.mark);
+    // The caption names its place, never "here" (C1).
+    expect(rigid.heroCaption).toBe(
+      "Rigid draws the road this far from where it truly is, at the mark.",
+    );
+    // Reprojected, 0.000 m is by construction: the independent test is named (I6).
+    const reprojected = openerView(
+      mark!,
+      a,
+      settled("reprojected"),
+      measured.mark,
+    );
+    expect(reprojected.heroCaption).toMatch(/by construction/);
+    expect(reprojected.heroCaption).toMatch(/NGS's own zone 3.*Checks/);
     expect(rigid.globe).toMatch(
       /^On the globe the mark measures [\d,.]+ m, [\d,.]+ m too (far|near)\.$/,
     );
@@ -435,7 +456,10 @@ describe("the measurements the page opens with", () => {
       settled("reprojected"),
       measured.pair,
     );
-    expect(rigid.design).toBe("10,002.000 ftUS");
+    // The horizontal design distance leads (what CAD reports), the slope beside it.
+    expect(rigid.design).toBe("10,000.000 ftUS");
+    expect(rigid.designLabel).toBe("Design distance, horizontal");
+    expect(rigid.slope).toBe("10,002.000 ftUS");
     expect(reprojected.design).toBe(rigid.design);
     expect(rigid.trueDistance).toBe("3,048.848 m");
     expect(reprojected.trueDistance).toBe(rigid.trueDistance);
@@ -574,7 +598,11 @@ describe("the datasheet's link", () => {
 describe("the ruler's far end", () => {
   it("parts ground's last 1,000 ft from design's by the measured scale", () => {
     const end = rulerEnd(
-      { design: 10_001.9998000402, trueDistance: 3_048.8484955078 },
+      {
+        design: 10_001.9998000402,
+        horizontal: 10_000,
+        trueDistance: 3_048.8484955078,
+      },
       MPU,
       "ftUS",
     );

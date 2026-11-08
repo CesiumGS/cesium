@@ -7,7 +7,8 @@
 // figure the page doesn't have yet is left out of the sentence. Pure, so
 // test/designGlobeTour.test.ts runs it in Node.
 import { fixed } from "./measureModel.ts";
-import { errorText, type Placement } from "./page.ts";
+import { errorText, rigidVerdict, type Placement } from "./page.ts";
+import { cause } from "./siteFacts.ts";
 
 /** Where a step points the camera: main.ts's shots. */
 export type TourShot = "opening" | "mark" | "pair" | "site" | "keep";
@@ -115,8 +116,12 @@ export function tourTarget(state: TourState): TourTarget {
 
 /** The page's figures the narration reads; any may be missing. */
 export interface TourFacts {
-  /** answers.json's marker: rigid's separation at station 1700+00, metres. */
+  /** answers.json's marker: rigid's separation at its station, metres. */
   readonly markerSeparation?: number;
+  /** The marker's station (the self-check's, where the opening shot looks), design units. */
+  readonly markerStation?: number;
+  /** How far the marker's station is from the anchor, km. */
+  readonly markerKm?: number;
   /** The corridor CRS's codes, "EPSG:6420+6360". */
   readonly codes: string;
   readonly mark?: {
@@ -131,26 +136,75 @@ export interface TourFacts {
     readonly symbol: string;
     /** How much shorter rigid draws the pair than its true distance, metres. */
     readonly rigidShort?: number;
+    /** How far rigid draws the pair's ends from where they are, metres (their mean). */
+    readonly rigidOffset?: number;
   };
-  /** Each ladder site's rigid error at its edge and its extent, metres (answers.json). */
-  readonly ladder: ReadonlyMap<
-    string,
-    { readonly error: number; readonly extent: number }
-  >;
+  /**
+   * Each ladder site's rigid error at its edge and its extent, metres, its
+   * error's parts and its combined factor at the anchor (answers.json).
+   */
+  readonly ladder: ReadonlyMap<string, LadderFacts>;
+}
+
+export interface LadderFacts {
+  readonly error: number;
+  readonly extent: number;
+  readonly terms?: {
+    readonly curvature: number;
+    readonly scale: number;
+    readonly geoid: number;
+  };
+  readonly combinedFactor?: number;
 }
 
 /** A small error as DESIGN.md says it: "2.6 mm", "390 mm", "18.3 m". */
 const small = (m: number): string =>
   Math.abs(m) < 0.01 ? `${fixed(m * 1000, 1)} mm` : errorText(m);
 
+/** "60 m", "4.0 km". */
+const extentText = (m: number): string =>
+  m >= 1000 ? `${fixed(m / 1000, 1)} km` : `${fixed(m, 0)} m`;
+
+/** "station 1700+00". */
+const stationShort = (station: number): string =>
+  `station ${Math.floor(station / 100)}+${String(Math.round(station % 100)).padStart(2, "0")}`;
+
+/** A ladder stop in one sentence: its size, its rigid error, the cause, the verdict. */
+function ladderStop(stop: number, f: LadderFacts | undefined): string {
+  const what = ["A canal building", "An airport", "A pole line"][stop]!;
+  if (f === undefined) {
+    return `${what}: its figures come with the generator's answers.`;
+  }
+  const why = cause(f.terms);
+  const verdict = rigidVerdict(f.error);
+  if (stop === 2) {
+    return `A ${extentText(f.extent)} pole line: rigid is ${small(f.error)} off at its far end${why}, so reproject it.`;
+  }
+  if (verdict.acceptable) {
+    const k =
+      f.combinedFactor !== undefined && why.includes("scale")
+        ? ` (${f.combinedFactor.toFixed(5)})`
+        : "";
+    return `${what}, ${extentText(f.extent)} across: rigid is fine here, ${small(f.error)} off at its edge${why}${k}, under a centimetre.`;
+  }
+  return `${what}, ${extentText(f.extent)} across: rigid is ${small(f.error)} off at its edge${why}, more than a centimetre, so reproject it.`;
+}
+
 function narration(state: TourState, f: TourFacts): string {
   switch (TOUR_STEPS[state.step]?.id) {
-    case "rigid":
-      return f.markerSeparation !== undefined
-        ? `Placed rigidly at one anchor, as most viewers place a model, the road here, 20 km out, is drawn ${errorText(f.markerSeparation)} from where its own design puts it.`
-        : "Placed rigidly at one anchor, as most viewers place a model, the road here, 20 km out, is drawn metres from where its own design puts it.";
+    case "rigid": {
+      const where =
+        f.markerStation !== undefined
+          ? `the road at ${stationShort(f.markerStation)}${f.markerKm !== undefined ? `, ${fixed(f.markerKm, 1)} km from the anchor,` : ""}`
+          : "the road here";
+      const off =
+        f.markerSeparation !== undefined
+          ? errorText(f.markerSeparation)
+          : "metres";
+      return `Placed rigidly at one anchor, as most viewers place a model, ${where} is drawn ${off} from where its own design puts it.`;
+    }
     case "morph":
-      return `Reprojected through ${f.codes}, every vertex moves into the globe's frame and the gap closes to 0.000 m.`;
+      return `Reprojected through ${f.codes}, every vertex moves into the globe's frame and the gap closes to 0.000 m; the faint orange above is where rigid drew it, kept as a ghost.`;
     case "mark": {
       const name = f.mark
         ? `${f.mark.pid} ${f.mark.name}`
@@ -165,33 +219,23 @@ function narration(state: TourState, f: TourFacts): string {
       const apart = f.pair
         ? `${fixed(f.pair.horizontal, 0)} ${f.pair.symbol}`
         : "10,000 ft";
+      const away =
+        f.pair?.rigidOffset !== undefined
+          ? ` about ${errorText(f.pair.rigidOffset)} away`
+          : " away";
       const short =
         f.pair?.rigidShort !== undefined
-          ? ` (rigid draws it ${small(f.pair.rigidShort)} short)`
+          ? ` and ${small(f.pair.rigidShort)} short`
           : "";
-      return `Two stations ${apart} apart have the same design distance in both placements, but only reprojected draws the line where it is${short}.`;
+      return `Two stations ${apart} apart measure ${apart} in both placements; reprojected draws the line where it is, while rigid draws it${away}${short}.`;
     }
-    case "ladder": {
-      const [building, airport, poles] = TOUR_LADDER.map((s) =>
-        f.ladder.get(s.site),
+    case "ladder":
+      return ladderStop(
+        state.stop,
+        f.ladder.get(TOUR_LADDER[state.stop]?.site ?? ""),
       );
-      const parts = [
-        building && `${small(building.error)} off at a canal building's edge`,
-        airport && `${small(airport.error)} at an airport's`,
-        poles &&
-          `${small(poles.error)} along a ${fixed(poles.extent / 1000, 1)} km pole line`,
-      ].filter((p): p is string => typeof p === "string");
-      if (parts.length === 0) {
-        return "Down the scale ladder, from a canal building to a pole line, rigid's error grows with the model's size.";
-      }
-      const list =
-        parts.length === 1
-          ? parts[0]!
-          : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)!}`;
-      return `Down the scale ladder, rigid is ${list}: its error grows with the model's size.`;
-    }
     default:
-      return "The rest is yours: switch placements, fly to any site and measure with the tool in the panel, where every number is checked against the generator's exact answers.";
+      return "The rest is yours: switch placements, fly to any site and measure with the tool in the panel; the page's own figures are checked against the generator's exact answers in Checks, where you can measure an answer pair to see it checked.";
   }
 }
 

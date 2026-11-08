@@ -46,6 +46,8 @@ export interface MeasureActions {
   closeInOnRuler(): void;
   /** Measures again after `measure` failed. */
   retryMeasure(): void;
+  /** Selects the corridor (its openers), flying there. */
+  toCorridor(): void;
 }
 
 const SNAP_LABEL: Record<SnapMode, string> = {
@@ -104,18 +106,27 @@ function Row({ row }: { row: DetailRow }) {
 /** The design and true distances, side by side and labelled. */
 function Distances({
   design,
+  designLabel = "Design distance",
+  slope,
   trueDistance,
   small,
 }: {
   design: string;
+  designLabel?: string | undefined;
+  slope?: string | undefined;
   trueDistance: string;
   small?: boolean;
 }) {
   return (
     <dl className={`dg-m-pair dg-num${small ? " small" : ""}`}>
       <div>
-        <dt>Design distance</dt>
-        <dd>{design}</dd>
+        <dt>{designLabel}</dt>
+        <dd>
+          {design}
+          {slope !== undefined && (
+            <span className="dg-m-slope dg-muted">{slope} slope</span>
+          )}
+        </dd>
       </div>
       <div>
         <dt>True distance</dt>
@@ -217,6 +228,8 @@ function Opener({
           {opener.id === "mark" && <Globe text={f.globe} tone={f.tone} />}
           <Distances
             design={opener.design}
+            designLabel={opener.designLabel}
+            slope={opener.slope}
             trueDistance={opener.trueDistance}
             small
           />
@@ -233,7 +246,8 @@ function Opener({
             Close in on the ruler
           </Button>
           <span className="dg-muted dg-actions-note">
-            Its far end, where ground's feet and design's part.
+            Its far end, where ground's feet and design's part; the ghost and
+            the ribbon step aside until you move the camera.
           </span>
         </div>
       )}
@@ -385,6 +399,27 @@ export function Measure({
         <p className="dg-muted dg-m-wait" role="status">
           {model.waiting}
         </p>
+      )}
+      {model.away !== undefined && (
+        <div className="dg-m-away">
+          <p className="dg-m-away-story">
+            <span className="dg-strong">{model.away.name}</span>
+            {model.away.story !== undefined
+              ? `: ${model.away.story}`
+              : ": its story comes with its frame."}
+          </p>
+          <p className="dg-muted dg-m-away-note">
+            The opening measurements, the self-check and the NGS mark, are the
+            corridor's.{" "}
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => actions.toCorridor()}
+            >
+              Fly to the corridor
+            </Button>
+          </p>
+        </div>
       )}
       {model.openers.length > 0 && (
         <div className="dg-m-list">

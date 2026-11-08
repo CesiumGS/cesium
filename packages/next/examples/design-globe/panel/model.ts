@@ -22,6 +22,10 @@ export interface SiteFrameView {
   readonly fallback?: string;
   /** The combined scale factor at the anchor, in words (siteFacts `scaleText`). */
   readonly scale?: string;
+  /** A site grid's origin, rotation and scale, in words. */
+  readonly siteGrid?: string;
+  /** The rigid error's three parts at the edge, as numbers (siteFacts `partsText`). */
+  readonly parts?: string;
 }
 
 /** One line of the story, from the site's own geometry. */
@@ -87,6 +91,9 @@ export interface CompassView {
   /** The picked point, CSS pixels over the view. */
   readonly x: number;
   readonly y: number;
+  /** The view's size, CSS pixels (the compass turns away from its edges). */
+  readonly width: number;
+  readonly height: number;
   /** The needles' screen angles, degrees clockwise from up; absent end-on. */
   readonly trueNorth?: number;
   readonly gridNorth?: number;

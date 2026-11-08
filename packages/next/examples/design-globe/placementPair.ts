@@ -118,8 +118,12 @@ fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
 }
 `;
 
-/** The translucent ghost deck's opacity (owner, Task 20: about 0.3). */
-export const GHOST_ALPHA = 0.3;
+/**
+ * The translucent ghost decks' opacity: the reprojected one, where the
+ * design truly is, about 0.3 (owner, Task 20); the rigid one, the "before",
+ * fainter, so it never outshines the true road (Task 20 fix 1, I4).
+ */
+export const GHOST_ALPHA = { reprojected: 0.3, rigid: 0.15 } as const;
 
 /** The hatched deck's period in framebuffer pixels, and the share of it drawn. */
 const GHOST_PERIOD = 6;
@@ -147,7 +151,7 @@ fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
 const GHOST_WGSL = /* wgsl */ `${GHOST_VERTEX}
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   let apart = smoothstep(0.25, 2.5, fsInput.attributes.error * uniforms.exaggeration);
-  (*material).alpha = ${GHOST_ALPHA.toFixed(2)} * apart;
+  (*material).alpha = uniforms.alpha * apart;
 }
 `;
 
@@ -204,6 +208,9 @@ export function morphShader(
       ...(kind === "surface" && {
         rigidTint: { type: "vec4f", value: [1, 1, 1, 1] },
         reprojectedTint: { type: "vec4f", value: [1, 1, 1, 1] },
+      }),
+      ...(kind === "ghost" && {
+        alpha: { type: "f32", value: GHOST_ALPHA.reprojected },
       }),
     },
     displacement,
@@ -587,6 +594,9 @@ export class PlacementPair {
     this.whiskerShader = morphShader("design globe whiskers", pad, "line");
     this.reprojectedLineShader.setUniform("t", 1);
     this.reprojectedDeckShader.setUniform("t", 1);
+    if (!hatch) {
+      this.rigidDeckShader.setUniform("alpha", GHOST_ALPHA.rigid);
+    }
     this.surfaceShader.setUniform("rigidTint", look.rigidTint);
     this.surfaceShader.setUniform("reprojectedTint", look.reprojectedTint);
     this.material = world.addMaterial({

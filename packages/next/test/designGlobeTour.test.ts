@@ -22,13 +22,42 @@ import {
 
 const FACTS: TourFacts = {
   markerSeparation: 30.58593643467373,
+  markerStation: 170_000,
+  markerKm: 23.78,
   codes: "EPSG:6420+6360",
   mark: { pid: "HS5109", name: "GOLD CREEK", rigidOffset: 19.278 },
-  pair: { horizontal: 10_000.000000000253, symbol: "ftUS", rigidShort: 0.233 },
+  pair: {
+    horizontal: 10_000.000000000253,
+    symbol: "ftUS",
+    rigidShort: 0.233,
+    rigidOffset: 37.4,
+  },
   ladder: new Map([
-    ["amsterdam", { error: 0.0025631575, extent: 60.03 }],
-    ["sydney", { error: 0.39011286, extent: 3970.34 }],
-    ["london", { error: 18.338542359, extent: 30_726.8 }],
+    [
+      "amsterdam",
+      {
+        error: 0.0025631575,
+        extent: 60.03,
+        combinedFactor: 0.99991163,
+        terms: { curvature: 0.00007, scale: 0.00265, geoid: 0 },
+      },
+    ],
+    [
+      "sydney",
+      {
+        error: 0.39011286,
+        extent: 3970.34,
+        terms: { curvature: 0.309, scale: 0.11, geoid: -0.02 },
+      },
+    ],
+    [
+      "london",
+      {
+        error: 18.338542359,
+        extent: 30_726.8,
+        terms: { curvature: 18.5, scale: 1.2, geoid: 0.3 },
+      },
+    ],
   ]),
 };
 
@@ -114,16 +143,42 @@ describe("design globe tour", () => {
       expect(t.endsWith(".")).toBe(true);
       expect(t.slice(0, -1)).not.toMatch(/[.!?]\s/);
     }
+    // Step 1 names the point it means (the self-check's station), as Fly along does.
+    expect(texts[0]).toContain("station 1700+00");
+    expect(texts[0]).toContain("23.8 km from the anchor");
     expect(texts[0]).toContain("30.6 m");
+    expect(texts[0]).not.toContain("20 km");
     expect(texts[1]).toContain("EPSG:6420+6360");
     expect(texts[1]).toContain("0.000 m");
+    // Step 2 names the orange ghost.
+    expect(texts[1]).toMatch(/orange.*ghost/);
     expect(texts[2]).toContain("HS5109 GOLD CREEK");
     expect(texts[2]).toContain("19.3 m");
-    expect(texts[3]).toContain("10,000 ftUS");
-    expect(texts[3]).toContain("233 mm");
-    expect(texts[4]).toContain("2.6 mm");
-    expect(texts[4]).toContain("390 mm");
-    expect(texts[4]).toContain("18.3 m");
+    // Step 4: the length error apart from the position.
+    expect(texts[3]).toMatch(/measure 10,000 ftUS in both placements/);
+    expect(texts[3]).toContain("37.4 m away");
+    expect(texts[3]).toContain("233 mm short");
+    // Step 6 says what is checked, no more.
+    expect(texts[5]).not.toMatch(/every number/);
+    expect(texts[5]).toContain("Checks");
+  });
+
+  it("says each ladder stop's verdict and cause", () => {
+    const at = (stop: number) => tourCard({ step: 4, stop }, FACTS).narration;
+    expect(at(0)).toMatch(/^A canal building, 60 m across: rigid is fine here/);
+    expect(at(0)).toContain("2.6 mm");
+    expect(at(0)).toContain("mostly the scale factor rigid ignores");
+    expect(at(0)).toContain("0.99991");
+    expect(at(1)).toMatch(/^An airport, 4\.0 km across/);
+    expect(at(1)).toContain("390 mm");
+    expect(at(1)).toContain("mostly the Earth's curvature");
+    expect(at(1)).toMatch(/reproject it\.$/);
+    expect(at(2)).toMatch(/30\.7 km pole line/);
+    expect(at(2)).toContain("18.3 m");
+    expect(at(2)).toMatch(/reproject it\.$/);
+    for (const t of [at(0), at(1), at(2)]) {
+      expect(t.slice(0, -1)).not.toMatch(/[.!?]\s/);
+    }
   });
 
   it("leaves a figure out rather than inventing one", () => {

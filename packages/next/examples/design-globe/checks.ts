@@ -73,8 +73,16 @@ export interface ShownValues {
     readonly basis: CheckBasis;
     readonly tolerance?: number;
   };
-  /** PROJ's zone 3 easting and northing for the survey mark, design units. */
-  mark?: { readonly easting?: number; readonly northing?: number };
+  /**
+   * PROJ's zone 3 easting and northing for the survey mark, and the page's
+   * measured horizontal distance from the mark to the nearest centreline
+   * point, design units.
+   */
+  mark?: {
+    readonly easting?: number;
+    readonly northing?: number;
+    readonly offset?: number;
+  };
 }
 
 /** An exact snap's tolerance, design units (Global Constraints). */
@@ -305,6 +313,26 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
         tolerance: MARK_SPC_TOLERANCE,
       },
       shown.mark?.northing,
+    ),
+    // The independent test of the design against the control it was
+    // surveyed from: the design's offset from the mark by the page's
+    // measurement (PROJ's position of NGS's mark) against the same offset
+    // from NGS's own published zone 3. Each published coordinate carries
+    // the datasheet's precision, so a distance from them carries up to √2
+    // of it.
+    compare(
+      {
+        ...published,
+        id: "mark.offset",
+        label: `${mark.pid} ${mark.name}: horizontal offset to the centreline against NGS's own zone 3`,
+        unit: symbol,
+        expected: Math.hypot(
+          mark.publishedSpc.easting - mark.nearestDesign[0],
+          mark.publishedSpc.northing - mark.nearestDesign[1],
+        ),
+        tolerance: MARK_SPC_TOLERANCE * Math.SQRT2,
+      },
+      shown.mark?.offset,
     ),
   );
   return rows;

@@ -207,20 +207,29 @@ export class AnchorRing extends Drawn {
   }
 }
 
-/** The error ribbon's half width either side of the centreline, design units (the road is ±41): wide enough to read from kilometres up. */
-const RIBBON_HALF_WIDTH = 300;
+/** The error ribbon's columns across the centreline, design units: soft outer edges (the road is ±41). */
+const RIBBON_COLUMNS = [-300, -200, 200, 300] as const;
+/** Each column's opacity: the outer edges fade to nothing. */
+const RIBBON_EDGE = [0, 1, 1, 0] as const;
 /** Below the profile, design units: under the bridge deck's underside (1.5), so nothing on the road meets it. */
 const RIBBON_DROP = 2.5;
 
-/** The ribbon's opacity: a tint, so the imagery and the true road read through it. */
-const RIBBON_ALPHA = 0.4;
+/** The ribbon's opacity: a light tint, so the imagery and the true road read through it. */
+const RIBBON_ALPHA = 0.22;
+
+/** No tint where rigid's error is under about half a metre: the ribbon shows where the story is. */
+const ribbonFade = (error: number) => {
+  const x = Math.min(1, Math.max(0, (error - 0.3) / 0.7));
+  return x * x * (3 - 2 * x);
+};
 
 /**
  * The error ribbon (DESIGN.md "Visuals in the viewer", a toggle, off by
  * default): the ground under the corridor, where it truly is, tinted by
- * rigid's error at each station on the whiskers' ramp (zero at the anchor,
- * the largest at the far end). Unlit and translucent, a band either side of
- * the road a little under its surface, so the road draws over its middle.
+ * rigid's error at each station on the whiskers' ramp (the largest at the
+ * far end, none near the anchor). Unlit and translucent, a band either
+ * side of the road a little under its surface with soft edges, so the road
+ * draws over its middle (Task 20 fix 1: a tint, not a slab).
  */
 export class ErrorRibbon extends Drawn {
   private readonly draw: DrawHandle;
@@ -252,25 +261,34 @@ export class ErrorRibbon extends Drawn {
     });
     this.max = Math.max(...errors) || 1;
     const n = stations.length;
-    const positions = new Float32Array(n * 6);
-    const colors = new Float32Array(n * 8);
+    const cols = RIBBON_COLUMNS.length;
+    const positions = new Float32Array(n * cols * 3);
+    const colors = new Float32Array(n * cols * 4);
     let origin: Float64Array | undefined;
     stations.forEach((s, i) => {
       const z = alignment.elevationAt(s) - RIBBON_DROP;
-      [-RIBBON_HALF_WIDTH, RIBBON_HALF_WIDTH].forEach((offset, j) => {
+      const c = rampAt(errors[i]! / this.max);
+      const fade = ribbonFade(errors[i]!);
+      RIBBON_COLUMNS.forEach((offset, j) => {
         const [e, nn] = alignment.pointAt(s, offset);
         const p = reprojected.displayed([e!, nn!, z]);
         origin ??= Float64Array.from(p);
+        const v = i * cols + j;
         for (let k = 0; k < 3; k++) {
-          positions[(i * 2 + j) * 3 + k] = p[k]! - origin[k]!;
+          positions[v * 3 + k] = p[k]! - origin[k]!;
         }
-        colors.set(rampAt(errors[i]! / this.max), (i * 2 + j) * 4);
+        colors.set([c[0], c[1], c[2], RIBBON_EDGE[j]! * fade], v * 4);
       });
     });
-    const indices = new Uint32Array((n - 1) * 6);
+    const indices = new Uint32Array((n - 1) * (cols - 1) * 6);
+    let o = 0;
     for (let i = 0; i < n - 1; i++) {
-      const a = i * 2;
-      indices.set([a, a + 1, a + 2, a + 1, a + 3, a + 2], i * 6);
+      for (let j = 0; j < cols - 1; j++) {
+        const a = i * cols + j;
+        const b = a + cols;
+        indices.set([a, a + 1, b, a + 1, b + 1, b], o);
+        o += 6;
+      }
     }
     const mesh = world.addMesh({ positions, colors, indices });
     this.material = world.addMaterial({

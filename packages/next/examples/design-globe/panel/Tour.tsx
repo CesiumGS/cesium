@@ -40,6 +40,7 @@ export function TourCard({
         <span className="dg-hud-muted dg-num">{card.progress}</span>
       </div>
       <div aria-live="polite" className="dg-tour-say">
+        <span className="dg-visually-hidden">{card.progress}.</span>
         <h2 id={`${id}-t`} className="dg-tour-title">
           {card.title}
         </h2>
@@ -99,7 +100,11 @@ export function TourCard({
           variant={card.canNext ? "text" : "outlined"}
           ref={leave}
           className={`dg-tour-leave${card.canNext ? "" : " dg-tour-primary"}`}
-          onClick={() => actions.tour({ type: "leave" })}
+          onClick={() => {
+            actions.tour({ type: "leave" });
+            // The card goes: focus moves to the panel's way back in, not the page's top.
+            focusSoon(".dg-tour-entry");
+          }}
         >
           Explore on your own
         </Button>
@@ -115,10 +120,28 @@ export function TourEntry({ actions }: { actions: PanelActions }) {
       <Button
         size="small"
         variant="outlined"
+        className="dg-tour-entry"
         onClick={() => actions.tour({ type: "start" })}
       >
         Take the short tour
       </Button>
     </Typography>
   );
+}
+
+/**
+ * Focuses the first element matching `selector` once it is in the page
+ * (within about 2 s): the panel re-renders a frame or two after an action.
+ */
+export function focusSoon(selector: string): void {
+  let tries = 0;
+  const step = () => {
+    const el = document.querySelector<HTMLElement>(selector);
+    if (el !== null) {
+      el.focus();
+    } else if (tries++ < 40) {
+      setTimeout(step, 50);
+    }
+  };
+  setTimeout(step, 50);
 }

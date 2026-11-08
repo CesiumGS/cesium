@@ -39,6 +39,11 @@ export interface OverlayLine {
   readonly colors?: readonly string[];
   /** Draw the other placement's line, dashed. */
   readonly ghost: boolean;
+  /**
+   * Metres: draw each segment as a level strip this wide instead of a 1 px
+   * line (the engine has no wide lines), so a mark close up has real width.
+   */
+  readonly width?: number;
 }
 
 /** The farthest a vertex moves (metres): the corridor's ~34 m, exaggerated, and some. */
@@ -163,6 +168,19 @@ export class MeasureOverlay {
         name: `${name}${suffix}`,
       });
 
+    if (line.width !== undefined) {
+      const strip = this.strips(line, colors, origin);
+      meshes.push(strip);
+      const solid = this.world.addDraw({
+        mesh: strip,
+        origin,
+        unlit: true,
+        doubleSided: true,
+        shader: this.solidShader,
+        name: `${name} strips`,
+      });
+      return { meshes, solid };
+    }
     const solid = draw(
       mesh(line.segments.map((s, i) => ({ ...s, color: colors[i]! }))),
       this.solidShader,
@@ -205,6 +223,54 @@ export class MeasureOverlay {
         " reprojected ghost",
       ),
     };
+  }
+
+  /** A line's segments as level strips `line.width` metres wide (two triangles each). */
+  private strips(
+    line: OverlayLine,
+    colors: readonly (readonly number[])[],
+    origin: Float64Array,
+  ): MeshHandle {
+    const half = line.width! / 2;
+    const n = line.segments.length;
+    const positions = new Float32Array(n * 12);
+    const partners = new Float32Array(n * 12);
+    const rgba = new Float32Array(n * 16);
+    const indices = new Uint32Array(n * 6);
+    line.segments.forEach((s, i) => {
+      const { up } = enu(s.a.reprojected);
+      const d = [0, 1, 2].map((k) => s.b.reprojected[k]! - s.a.reprojected[k]!);
+      // Across the segment, level: up × d.
+      const across = [
+        up[1]! * d[2]! - up[2]! * d[1]!,
+        up[2]! * d[0]! - up[0]! * d[2]!,
+        up[0]! * d[1]! - up[1]! * d[0]!,
+      ];
+      const l = Math.hypot(across[0]!, across[1]!, across[2]!) || 1;
+      const corners = [
+        [s.a, -1],
+        [s.a, 1],
+        [s.b, -1],
+        [s.b, 1],
+      ] as const;
+      corners.forEach(([e, side], j) => {
+        const v = i * 4 + j;
+        for (let k = 0; k < 3; k++) {
+          const off = (across[k]! / l) * half * side;
+          positions[v * 3 + k] = e.rigid[k]! + off - origin[k]!;
+          partners[v * 3 + k] = e.reprojected[k]! + off - origin[k]!;
+        }
+        rgba.set(colors[i]!, v * 4);
+      });
+      const b = i * 4;
+      indices.set([b, b + 1, b + 2, b + 1, b + 3, b + 2], i * 6);
+    });
+    return this.world.addMesh({
+      positions,
+      colors: rgba,
+      indices,
+      attributes: { [PARTNER_SEMANTIC]: { data: partners, components: 3 } },
+    });
   }
 
   private clear(): void {
@@ -264,7 +330,9 @@ export function measureLines(
       ghost: true,
     });
     if (o.id === "pair" && ruler !== undefined) {
-      lines.push(rulerLine(o, ruler));
+      const r = rulerLine(o, ruler);
+      // 1 px from afar; close up, strips with real width (Task 20 fix 1, I7).
+      lines.push(r, { ...r, key: "ruler-strips", width: RULER_WIDTH });
     }
     if (o.id === "marker" || o.id === "mark") {
       // A small cross on the ground at the fixed end: the marker or the disk.
@@ -286,6 +354,9 @@ export function measureLines(
   }
   return lines;
 }
+
+/** The ruler's ticks and bracket as strips, metres wide: about 4 px at "Close in on the ruler". */
+const RULER_WIDTH = 0.05;
 
 /** How far a ruler tick reaches from the line, metres: every 1,000 ft, every 5,000, and the end's. */
 const TICK = { minor: 1.5, major: 2.5, end: 4 } as const;

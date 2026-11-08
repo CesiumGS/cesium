@@ -111,6 +111,12 @@ export interface MeasureToolDeps {
   /** Loading items (the frame data `measure` needs). */
   report(event: LoadEvent): void;
   disposed(): boolean;
+  /**
+   * The selected site, when it isn't the corridor: the corridor's openers
+   * belong to the corridor, so they aren't drawn or shown there; the panel
+   * says the site's own story instead (Task 20 fix 1, C1).
+   */
+  away?(): { readonly name: string; readonly story?: string } | undefined;
 }
 
 export interface MeasureTool {
@@ -136,6 +142,8 @@ export interface MeasureTool {
   retry(): void;
   /** What the measure section shows, for the checks (Task 20). */
   shownValues(): ShownValues | undefined;
+  /** The selected site changed: the corridor's openers are drawn on the corridor only. */
+  siteChanged(): void;
   /** The viewer's own finished measurement's ends, design units (for the checks). */
   userEnds():
     | {
@@ -415,8 +423,13 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
   }
 
   // -------------------------------------------------------- the globe
+  /** The corridor's openers are drawn and shown: the corridor is selected. */
+  const here = () => deps.away?.() === undefined;
+
   function redraw(): void {
-    overlay.set(measureLines(openers, ruler, state));
+    overlay.set(
+      measureLines(here() ? openers : [], here() ? ruler : undefined, state),
+    );
     overlay.setState(deps.drawState());
     deps.wake();
     place();
@@ -434,7 +447,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       height: r.height,
       answers: deps.answers(),
       draw: deps.drawState(),
-      openers,
+      openers: here() ? openers : [],
       state,
       userText:
         measured !== undefined
@@ -806,10 +819,12 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
   function view(): MeasurePanel {
     const s = deps.drawState();
     const site = state.phase === "done" ? deps.site(state.a.site) : undefined;
+    const away = deps.away?.();
     return measurePanel({
       answers: deps.answers(),
       draw: s,
-      openers,
+      openers: away === undefined ? openers : [],
+      ...(away !== undefined && { away }),
       details: (id, a) =>
         openerDetails(id, a, openerMeasures, markDesign, datumOf(corridor())),
       measured: (id) => measuredOf(openerMeasures.get(id)),
@@ -900,6 +915,10 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
         along: Float64Array.from([0, 1, 2].map((k) => pb[k]! - pa[k]!)),
       };
     },
+    siteChanged() {
+      redraw();
+      deps.changed();
+    },
     shownValues() {
       const a = deps.answers();
       if (a === undefined) {
@@ -928,6 +947,9 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
             },
           }),
         ...(markDesign !== undefined && { mark: markDesign }),
+        ...(openerMeasures.get("mark")?.m.design !== undefined && {
+          markOffset: openerMeasures.get("mark")!.m.design!.horizontalDistance,
+        }),
         ...(done !== undefined && {
           user: {
             a: done.a,

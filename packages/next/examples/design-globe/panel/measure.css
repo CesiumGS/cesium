@@ -135,7 +135,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--stratakit-space-100);
-  padding: var(--stratakit-space-50) 0;
+  /* At least 24 px tall (WCAG 2.5.8). */
+  min-block-size: 24px;
+  padding: var(--stratakit-space-100) 0;
   border: 0;
   background: none;
   color: var(--stratakit-color-text-neutral-secondary);
@@ -474,4 +476,27 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* The slope distance beside a horizontal headline (Task 20 fix 1, I2). */
+.dg-m-slope {
+  display: block;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 400;
+}
+
+/* Another site selected: its story leads; the corridor's openers stay on it (Task 20 fix 1, C1). */
+.dg-m-away {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.dg-m-away-story {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+}
+.dg-m-away-note {
+  margin: 0;
+  font-size: var(--stratakit-font-size-caption-lg);
 }

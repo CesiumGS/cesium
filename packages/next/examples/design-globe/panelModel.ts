@@ -3,10 +3,12 @@
 // No engine in it, so it is tested in Node (test/designGlobePage.test.ts).
 import { ANCHOR_STATION } from "./corridor.ts";
 import type { SagSample } from "./overlays.ts";
+import { fixed, unitSymbol } from "./measureModel.ts";
 import {
   EXAGGERATION,
   SITES,
   errorText,
+  siteGridText,
   type LoadItem,
   type PageParams,
   type Placement,
@@ -49,12 +51,22 @@ export interface PageSnapshot {
   readonly extents?: ReadonlyMap<string, number>;
   /** Each ladder site's rigid error at its edge (answers), metres: its whiskers' range. */
   readonly edgeErrors?: ReadonlyMap<string, number>;
-  /** Where "Fly along" starts (the answers' point about 20 km out), station. */
+  /** Where "Fly along" starts: the self-check's station (the opening shot's), station. */
   readonly alongFrom?: number;
   /** The camera flies along the corridor now. */
   readonly flyingAlong: boolean;
   /** The whiskers and the ring are drawn. */
   readonly evidence: boolean;
+}
+
+/** A site's design unit symbol, from its CRS (US survey feet for California zone 3). */
+function unitOf(entry: SiteEntry): string {
+  const crs = entry.crs;
+  return crs.format === "wkid" && crs.wkid === 6420
+    ? unitSymbol("US survey foot")
+    : crs.format === "wkid" && crs.wkid === 6405
+      ? unitSymbol("foot")
+      : "m";
 }
 
 /** "EPSG:6420+6360  ·  GEOID18": a site row's second line. */
@@ -98,7 +110,7 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
             endStation: s.stations.end,
             max: max.error,
             maxStation: max.station,
-            caption: `Rigid is exact at the anchor and ${errorText(max.error)} off at the far end; reprojected draws every vertex through ${corridor.entry.codes}, to its PROJ round trip.`,
+            caption: `Rigid is exact at the anchor and ${errorText(max.error)} off at the far end; reprojected draws every vertex through ${corridor.entry.codes}, by PROJ.`,
           };
         })()
       : undefined;
@@ -136,7 +148,9 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
   const solidText = !twoTilesets
     ? "Rigid: this site's one tileset"
     : solid === "rigid"
-      ? `Rigid, anchored at ${isCorridor ? anchor : "its middle"}`
+      ? isCorridor
+        ? `Rigid, anchored at ${anchor} (${fixed(s.anchorStation ?? ANCHOR_STATION, 0)} ftUS along the road)`
+        : "Rigid, anchored at its middle"
       : `Reprojected through ${selected.entry.codes}`;
   return {
     loading: s.loading,
@@ -150,7 +164,9 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
     ...(!paired && {
       switchNote: twoTilesets
         ? "The switch works once both placements' tiles are in."
-        : "Drawn rigid: this site's reprojected tiles are on the way (the scale ladder). Its rigid error is in its story below.",
+        : selected.entry.frame.site !== undefined
+          ? `Drawn rigid: one tileset, on a site grid (${siteGridText(selected.entry.frame.site, unitOf(selected.entry))}). Rigid by design: its rigid error is in its story below.`
+          : "Drawn rigid: one tileset. Its rigid error is in its story below.",
     }),
     ...(sag && { sag }),
     ...(samples !== undefined &&
@@ -162,7 +178,7 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
               ? b
               : a,
           );
-          return `From 20 km out, where rigid is ${errorText(at.error)} off, down the corridor to the anchor.`;
+          return `From ${stationShort(s.alongFrom!)}, where rigid is ${errorText(at.error)} off, down the corridor to the anchor.`;
         })(),
       }),
     drawn: selected.drawn,

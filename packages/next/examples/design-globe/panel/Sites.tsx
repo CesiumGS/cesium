@@ -33,12 +33,24 @@ function SiteDetail({ site }: { site: SiteView }) {
         )}
         <dt>Units</dt>
         <dd>{frame.units}</dd>
+        {frame.siteGrid !== undefined && (
+          <>
+            <dt>Site grid</dt>
+            <dd className="dg-num">{frame.siteGrid}</dd>
+          </>
+        )}
         <dt>Operation</dt>
         <dd>{frame.accuracy}</dd>
         {frame.scale !== undefined && (
           <>
             <dt>Combined factor</dt>
             <dd className="dg-num">{frame.scale}</dd>
+          </>
+        )}
+        {frame.parts !== undefined && (
+          <>
+            <dt>Rigid's error at the edge</dt>
+            <dd className="dg-num">{frame.parts}</dd>
           </>
         )}
         {frame.credits.length > 0 && (

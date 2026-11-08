@@ -46,6 +46,7 @@ import {
   SITES,
   errorText,
   formatParams,
+  loadingFor,
   nextLoading,
   parseParams,
   type LoadEvent,
@@ -61,12 +62,14 @@ import { reducedTransparency, type PairLook } from "./placementPair.ts";
 import {
   CameraMoves,
   createShots,
+  markGapFraming,
   openerFraming,
   reducedMotion,
   rulerFraming,
 } from "./shots.ts";
 import { siteFacts } from "./siteFacts.ts";
-import { combinedFactorOf, tourFactsOf } from "./storyFacts.ts";
+import { clearTimeControls, createStore, escapeHtml } from "./stores.ts";
+import { combinedFactorOf, corridorTerms, tourFactsOf } from "./storyFacts.ts";
 import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
 import { tourCard, type TourTarget } from "./tour.ts";
 import { createTour, type TourRuntime } from "./tourRuntime.ts";
@@ -85,47 +88,10 @@ const LOOK: PairLook = {
   rigidLine: hexLinear(RIGID_HEX),
   reprojectedLine: hexLinear(REPROJECTED_HEX),
   // The generator's one material (scripts/designTiles/gltf.mjs).
-  baseColor: [0.45, 0.45, 0.43, 1],
+  // Lifted from the generator's 0.45 grey, so the true road reads over the
+  // fainter rigid ghost (Task 20 fix 1, I4).
+  baseColor: [0.58, 0.58, 0.56, 1],
 };
-
-/** A small store: `get` the current value; listeners told once per frame. */
-function createStore<T>(initial: T) {
-  let value = initial;
-  const listeners = new Set<() => void>();
-  let queued = 0;
-  return {
-    get: () => value,
-    set(next: T) {
-      if (next === value) {
-        return;
-      }
-      value = next;
-      if (queued === 0) {
-        queued = requestAnimationFrame(() => {
-          queued = 0;
-          for (const l of [...listeners]) {
-            l();
-          }
-        });
-      }
-    },
-    subscribe(l: () => void) {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    dispose: () => cancelAnimationFrame(queued),
-  };
-}
-
-/** Text that goes into an HTML credit: escaped (catalog fields are data). */
-const escapeHtml = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ]!,
-  );
 
 export function run(context: ExampleContext): ExampleRun {
   const { viewer, scope, signal } = context;
@@ -261,6 +227,19 @@ export function run(context: ExampleContext): ExampleRun {
     },
     report,
     disposed: () => disposed,
+    away: () => {
+      const site = sites.get(params.site);
+      if (site === undefined || site === corridor) {
+        return undefined;
+      }
+      const story = site.view?.story;
+      return {
+        name: site.entry.name,
+        ...(story !== undefined && {
+          story: `${story.extent}; rigid is ${story.edgeError} off at its edge${story.cause}. ${story.verdict}`,
+        }),
+      };
+    },
   });
   scope.defer(() => tool.dispose());
 
@@ -411,7 +390,11 @@ export function run(context: ExampleContext): ExampleRun {
       ...combinedFactorOf(site, { answers, corridor, alignment }),
       ...(site === corridor &&
         samples !== undefined && {
-          along: { alignment, errors: samples.map((s) => s.error) },
+          along: {
+            alignment,
+            errors: samples.map((s) => s.error),
+            ...corridorTerms(site, samples, { answers, corridor, alignment }),
+          },
         }),
       ...(answers?.sites[site.entry.id] !== undefined && {
         answer: answers.sites[site.entry.id]!,
@@ -512,10 +495,12 @@ export function run(context: ExampleContext): ExampleRun {
   const resized = new ResizeObserver(wake);
   resized.observe(viewer.canvas);
   scope.defer(() => resized.disconnect());
+  scope.defer(clearTimeControls(viewer.container, hud, viewer.canvas));
   /** The user has taken the camera: no opening shot cuts it away after. */
   let userMoved = false;
   const tookCamera = () => {
     userMoved = true;
+    endRulerView();
   };
   for (const type of ["pointerdown", "wheel", "keydown"]) {
     viewer.canvas.addEventListener(type, tookCamera, { signal, passive: true });
@@ -542,10 +527,11 @@ export function run(context: ExampleContext): ExampleRun {
   function buildModel(): PanelModel {
     const base = buildPanelModel({
       params,
-      loading,
+      // Another site's own failures stay on it.
+      loading: loadingFor(loading, params.site),
       t: morph.t(),
       morphing: morph.morphing,
-      ghost: morph.ghost,
+      ghost: userGhost(),
       exaggerate: morph.exaggerate,
       sites: new Map(
         [...sites].map(([id, s]): [string, SiteSnapshot] => [
@@ -561,9 +547,8 @@ export function run(context: ExampleContext): ExampleRun {
       ),
       ...(samples && { samples }),
       ...(answers && { anchorStation: answers.anchorStation }),
-      ...(answers?.points.find((q) => q.nearKm === 20) !== undefined && {
-        alongFrom: answers.points.find((q) => q.nearKm === 20)!.station,
-      }),
+      // Fly along starts at the self-check's station, the opening shot's.
+      ...(answers !== undefined && { alongFrom: answers.marker.station }),
       stations: { start: alignment.startStation, end: alignment.endStation },
       cursor: cursor.view(),
       ...(answers && {
@@ -589,9 +574,11 @@ export function run(context: ExampleContext): ExampleRun {
           }),
       },
       checks: checksView(answers, tool.shownValues(), user),
-      ...(state !== undefined && {
-        tour: tourCard(state, tourFactsOf(answers, corridor)),
-      }),
+      // The card waits for the answers and the opening shot (story M7).
+      ...(state !== undefined &&
+        answers !== undefined && {
+          tour: tourCard(state, tourFactsOf(answers, corridor)),
+        }),
       view: {
         compass: view.compass,
         ribbon: view.ribbon,
@@ -621,6 +608,8 @@ export function run(context: ExampleContext): ExampleRun {
     }
     params = { ...params, site: id };
     setLink(formatParams(params));
+    // The corridor's openers are drawn on the corridor only.
+    tool.siteChanged();
     refresh();
     void loader
       .loadTiles(site)
@@ -684,11 +673,40 @@ export function run(context: ExampleContext): ExampleRun {
     return true;
   }
 
+  /**
+   * "Close in on the ruler" sets the ghost deck and the ribbon aside, so the
+   * ruler isn't seen through an orange field (Task 20 fix 1, I7); the next
+   * time the user takes the camera, or sets either, they come back.
+   */
+  let rulerView: { readonly ghost: boolean } | undefined;
+  function beginRulerView(): void {
+    rulerView ??= { ghost: morph.ghost };
+    morph.ghost = false;
+    morph.apply();
+    ribbon?.setVisible(false);
+    viewer.engine.requestRender();
+    frames.wake();
+  }
+  function endRulerView(): void {
+    if (rulerView === undefined) {
+      return;
+    }
+    morph.ghost = rulerView.ghost;
+    rulerView = undefined;
+    morph.apply();
+    syncRibbon();
+    refresh();
+  }
+  /** The ghost as the user set it (the ruler's view sets it aside for a while). */
+  const userGhost = () => rulerView?.ghost ?? morph.ghost;
+
   const actions: PanelActions = {
     setMode,
     setGhost(on) {
+      rulerView = undefined;
       morph.ghost = on;
       morph.apply();
+      syncRibbon();
       refresh();
     },
     setExaggerate(on) {
@@ -777,18 +795,33 @@ export function run(context: ExampleContext): ExampleRun {
     clear: () => tool.clear(),
     pointAtCentre: () => tool.pointAtCentre(),
     retryMeasure: () => tool.retryMeasure(),
+    toCorridor: () => selectSite("corridor", true),
     closeInOnRuler() {
       const focus = tool.rulerFocus();
       if (focus === undefined) {
         return;
       }
       const to = rulerFraming(focus);
+      beginRulerView();
       shots.daylight(to.center);
       camera.flyTo(to, () => shots.daylight(to.center));
     },
     show(id) {
       const focus = tool.openerFocus(id);
       if (focus === undefined) {
+        return;
+      }
+      const rigid = corridor.rigidPlacement;
+      const reprojected = corridor.reprojectedPlacement;
+      if (id === "mark" && answers && rigid && reprojected) {
+        const near = answers.mark.nearestDesign;
+        flyLit(
+          markGapFraming(
+            answers.mark.bodyFixed,
+            reprojected.displayed(near),
+            rigid.displayed(near),
+          ),
+        );
         return;
       }
       const to = openerFraming(id, focus, answers, alignment);
@@ -906,6 +939,8 @@ export function run(context: ExampleContext): ExampleRun {
       center,
     );
     viewer.controller.focus(center, 0, -50 * deg, 60_000);
+    // In daylight from the start, even if nothing loads (story M12).
+    shots.daylight(center);
   }
 
   return {

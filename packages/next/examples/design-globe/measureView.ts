@@ -88,6 +88,11 @@ export interface MeasurePanel {
   readonly user: UserMeasurePanel;
   /** Why measure isn't ready (the frame data, the answers). */
   readonly waiting?: string;
+  /**
+   * Another site is selected: the corridor's openers are the corridor's,
+   * so the section leads with this site's own story and a way back.
+   */
+  readonly away?: { readonly name: string; readonly story?: string };
 }
 
 /** NGS's datasheet link, only when it is https on NGS's own host, with no userinfo. */
@@ -148,6 +153,8 @@ export interface MeasurePanelInput {
   readonly result: UserMeasurePanel["result"] | undefined;
   readonly framesFailed: string | undefined;
   readonly framesLoaded: boolean;
+  /** Another site is selected: its name and story, in place of the corridor's openers. */
+  readonly away?: { readonly name: string; readonly story?: string };
 }
 
 /** The measure section's strings. */
@@ -191,6 +198,7 @@ export function measurePanel(input: MeasurePanelInput): MeasurePanel {
   return {
     snap: mode,
     openers: panels,
+    ...(input.away !== undefined && { away: input.away }),
     ...(a !== undefined && {
       datasheet: {
         pid: a.mark.pid,

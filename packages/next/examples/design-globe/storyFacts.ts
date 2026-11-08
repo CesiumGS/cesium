@@ -5,6 +5,8 @@
 import type { Alignment } from "../../src/engineering/alignment.ts";
 import { gridFactors } from "../../src/engineering/factors.ts";
 import type { Answers } from "./answers.ts";
+import type { SagSample } from "./overlays.ts";
+import { rigidErrorTerms, type ErrorTerms } from "./siteFacts.ts";
 import { ANCHOR_STATION } from "./corridor.ts";
 import { unitSymbol } from "./measureModel.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
@@ -34,11 +36,28 @@ export function tourFactsOf(
     ladder: new Map(
       TOUR_LADDER.flatMap((s) => {
         const a = answers?.sites[s.site];
-        return a ? [[s.site, { error: a.displayError, extent: a.extent }]] : [];
+        return a
+          ? [
+              [
+                s.site,
+                {
+                  error: a.displayError,
+                  extent: a.extent,
+                  terms: a.terms,
+                  combinedFactor: a.combinedFactor,
+                },
+              ],
+            ]
+          : [];
       }),
     ),
     ...(answers && {
       markerSeparation: answers.marker.separation,
+      markerStation: answers.marker.station,
+      ...(answers.points[answers.marker.point] !== undefined && {
+        markerKm:
+          answers.points[answers.marker.point]!.distanceFromAnchor / 1000,
+      }),
       mark: {
         pid: answers.mark.pid,
         name: answers.mark.name,
@@ -55,6 +74,14 @@ export function tourFactsOf(
           ...(drawn !== undefined && {
             rigidShort: pair.trueDistance - drawn,
           }),
+          ...(rigid &&
+            ends?.[0] &&
+            ends[1] && {
+              rigidOffset:
+                (rigid.displayError(ends[0].design) +
+                  rigid.displayError(ends[1].design)) /
+                2,
+            }),
         },
       }),
   };
@@ -95,6 +122,44 @@ export function combinedFactorOf(
   }
   try {
     return { combinedFactor: gridFactors(frame, anchor).combinedFactor };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * The corridor's rigid error in its parts at its worst sample (the far
+ * end), as the generator gives the ladder sites' (siteFacts.ts
+ * `rigidErrorTerms`), for its story's cause and its details (Task 20 fix 1,
+ * I11).
+ */
+export function corridorTerms(
+  site: SiteRuntime,
+  samples: readonly SagSample[],
+  context: {
+    readonly answers: Answers | undefined;
+    readonly corridor: SiteRuntime;
+    readonly alignment: Alignment;
+  },
+): { terms?: ErrorTerms } {
+  const { answers, alignment } = context;
+  const frame = site.reprojectedPlacement?.frame;
+  const k = combinedFactorOf(site, context).combinedFactor;
+  if (frame === undefined || k === undefined || samples.length === 0) {
+    return {};
+  }
+  const far = samples.reduce((a, b) => (b.error > a.error ? b : a));
+  const station = answers?.anchorStation ?? ANCHOR_STATION;
+  const at = alignment.pointAt(station, 0);
+  const anchor = [at[0]!, at[1]!, alignment.elevationAt(station)];
+  // The far sample's point at the profile, as the anchor's.
+  const point = [
+    far.design[0]!,
+    far.design[1]!,
+    alignment.elevationAt(far.station),
+  ];
+  try {
+    return { terms: rigidErrorTerms(frame, anchor, point, k) };
   } catch {
     return {};
   }

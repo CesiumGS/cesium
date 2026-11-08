@@ -21,6 +21,7 @@ import type {
   ChecksView,
 } from "../checksView.ts";
 import type { PanelActions } from "./model.ts";
+import { focusSoon } from "./Tour.tsx";
 
 const KIND_MEANING: Record<CheckRowView["kind"], string> = {
   exact: "the generator's exact answer, by hand formula (answers.json)",
@@ -88,7 +89,11 @@ function Group({
   // An answer pair the page doesn't show: one line, and the way to show it.
   if (group.measurable !== undefined) {
     return (
-      <li className="dg-check-group unshown" aria-labelledby={id}>
+      <li
+        className="dg-check-group unshown"
+        aria-labelledby={id}
+        data-check-group={group.id}
+      >
         <div className="dg-check-unshown">
           <span id={id} className="dg-check-label">
             {group.title}
@@ -100,7 +105,13 @@ function Group({
         <Button
           size="small"
           variant="text"
-          onClick={() => actions.measurePair(group.measurable!)}
+          onClick={() => {
+            actions.measurePair(group.measurable!);
+            // The pair's group moves up once measured: focus follows it.
+            focusSoon(
+              `[data-check-group="${group.id}"]:not(.unshown) .dg-check-group-title`,
+            );
+          }}
           startIcon={<Icon href={svgMeasureDistance} aria-hidden />}
           aria-label={`Measure ${group.title}`}
         >
@@ -110,9 +121,13 @@ function Group({
     );
   }
   return (
-    <li className="dg-check-group" aria-labelledby={id}>
+    <li
+      className="dg-check-group"
+      aria-labelledby={id}
+      data-check-group={group.id}
+    >
       <div className="dg-check-group-head">
-        <span id={id} className="dg-strong">
+        <span id={id} className="dg-strong dg-check-group-title" tabIndex={-1}>
           {group.title}
         </span>
         <span

@@ -11,6 +11,7 @@ import {
   convergenceShort,
   convergenceText,
 } from "../examples/design-globe/compass.ts";
+import { behindEarth } from "../examples/design-globe/measureLabels.ts";
 import { ION_SLOTS } from "../examples/design-globe/slots.ts";
 
 const MPU = 1200 / 3937;
@@ -70,6 +71,7 @@ function answers(): Answers {
       pid: "HS5109",
       name: "GOLD CREEK",
       publishedSpc: { easting: 6_146_924.9, northing: 2_075_186.11 },
+      nearestDesign: [6_146_710.878865431, 2_074_732.9107658817, 910],
     },
   } as unknown as Answers;
 }
@@ -117,7 +119,7 @@ function shown(over: Partial<ShownValues> = {}): ShownValues {
       ],
     ]),
     marker: { separation: 30.586, mode: "rigid", basis: "exact" },
-    mark: { easting: 6_146_924.898, northing: 2_075_186.105 },
+    mark: { easting: 6_146_924.898, northing: 2_075_186.105, offset: 501.188 },
     ...over,
   };
 }
@@ -166,7 +168,7 @@ describe("design globe checks view", () => {
     expect(curve.rows.every((r) => r.statusText === "Not shown")).toBe(true);
     expect(curve.measurable).toBe("curve");
     expect(v.summary).toMatch(/^\d+ values checked, all within tolerance/);
-    expect(v.summary).toMatch(/8 not shown/);
+    expect(v.summary).toMatch(/8 answers not shown on the page now/);
   });
 
   it("words a row's numbers once: shown against expected, the difference within the tolerance", () => {
@@ -187,7 +189,13 @@ describe("design globe checks view", () => {
   it("puts a failure first in the summary and the tone", () => {
     const v = checksView(
       answers(),
-      shown({ mark: { easting: 6_146_925.2, northing: 2_075_186.105 } }),
+      shown({
+        mark: {
+          easting: 6_146_925.2,
+          northing: 2_075_186.105,
+          offset: 501.188,
+        },
+      }),
     );
     expect(v.tone).toBe("fail");
     expect(v.counts.failed).toBe(1);
@@ -274,5 +282,33 @@ describe("design globe convergence compass", () => {
     // The compass's own label, short.
     expect(convergenceShort(-0.0148)).toBe("Grid north 0.848° W");
     expect(convergenceShort(0.002)).toBe("Grid north 0.115° E");
+  });
+});
+
+describe("design globe labels: what the Earth hides (Task 20 fix 1, page I1)", () => {
+  const R = 6_370_000;
+  const at = (lat: number, lon: number, h: number) => {
+    const r = R + h;
+    return [
+      r * Math.cos(lat) * Math.cos(lon),
+      r * Math.cos(lat) * Math.sin(lon),
+      r * Math.sin(lat),
+    ];
+  };
+  it("sees a point above the camera's height nearby (the tour's lifted shots)", () => {
+    const cam = at(0.66, -2.13, 110);
+    const up = at(0.66, -2.13 + 1e-5, 140);
+    expect(behindEarth(cam, up)).toBe(false);
+  });
+  it("sees a point at the same height 30 km off", () => {
+    expect(
+      behindEarth(at(0.66, -2.13, 150), at(0.66, -2.13 + 0.006, 150)),
+    ).toBe(false);
+  });
+  it("hides a point beyond the horizon", () => {
+    expect(behindEarth(at(0.66, -2.13, 150), at(0.66, -2.13 + 0.1, 150))).toBe(
+      true,
+    );
+    expect(behindEarth(at(0, 0, 150), at(0, Math.PI, 150))).toBe(true);
   });
 });

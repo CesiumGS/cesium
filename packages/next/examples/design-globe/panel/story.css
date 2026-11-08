@@ -300,11 +300,11 @@
 /* ------------------------------------------------------------ the tour */
 
 /*
- * Over the globe, bottom centre, above the time controls (they stand 52 to
- * 116 px up in the gallery's narrow view, 8 to 72 px in a wide one).
+ * Over the globe, bottom centre, above the time controls: main.ts sets
+ * --dg-time-clear from their real top, as they wrap.
  */
 .dg-tour {
-  inset-block-end: 128px;
+  inset-block-end: var(--dg-time-clear, 128px);
   inset-inline-start: 50%;
   transform: translateX(-50%);
   inline-size: min(480px, calc(100% - 24px));
@@ -355,7 +355,7 @@
   font-size: var(--stratakit-font-size-body-md);
   line-height: var(--stratakit-line-height-body-md);
   /* Room for the longest sentence, so the buttons don't jump step to step. */
-  min-block-size: calc(3 * var(--stratakit-line-height-body-md));
+  min-block-size: calc(4 * var(--stratakit-line-height-body-md));
 }
 .dg-tour-stops {
   align-self: flex-start;
@@ -460,4 +460,67 @@
 }
 .dg-ramp.tall {
   block-size: 10px;
+}
+
+/* An error's technical words, behind a disclosure (Task 20 fix 1, I9). */
+.dg-technical {
+  margin-block-start: var(--stratakit-space-100);
+}
+.dg-technical summary {
+  min-block-size: 24px;
+  cursor: pointer;
+}
+.dg-technical code {
+  display: block;
+  margin-block-start: var(--stratakit-space-100);
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * A narrow view (Task 20 fix 1, page I5): the legend folds to one button,
+ * and the cursor card shows only while it has a pick.
+ */
+.dg-hud-host {
+  container: dg-hud / inline-size;
+}
+.dg-legend-toggle {
+  display: none;
+}
+@container dg-hud (max-width: 600px) {
+  .dg-legend-toggle {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--stratakit-space-100);
+    min-block-size: 24px;
+    cursor: pointer;
+    pointer-events: auto;
+    font-weight: 600;
+  }
+  .dg-legend-toggle:focus-visible {
+    outline: 2px solid var(--dg-reprojected);
+    outline-offset: 2px;
+  }
+  .dg-legend-body:not([data-open="true"]) {
+    display: none;
+  }
+  .dg-hud-cursor:not(.has-pick) {
+    display: none;
+  }
+  .dg-hud-legend {
+    max-inline-size: calc(100% - 24px);
+  }
+}
+
+/* A measured pair's heading takes focus after "Measure it" (page I3). */
+.dg-check-group-title:focus {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: var(--stratakit-radius-sm);
+}
+/* Copy link's confirmation, on the button itself (page M1). */
+.dg-copied {
+  color: var(--stratakit-color-text-positive-base);
 }

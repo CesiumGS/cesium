@@ -237,7 +237,8 @@ export function checksView(
   const failed = rows.filter((r) => r.status === "fail");
   const notShown = rows.filter((r) => r.status === "not-shown").length;
   const judged = checked + failed.length;
-  const unshown = notShown > 0 ? `; ${notShown} not shown` : "";
+  const unshown =
+    notShown > 0 ? `; ${notShown} answers not shown on the page now` : "";
   const summary =
     failed.length > 0
       ? `${failed.length} of ${judged} failed: ${failed[0]!.label}${unshown}.`

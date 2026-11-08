@@ -160,6 +160,10 @@ export interface OpenerFigures {
   readonly title: string;
   /** Design distance, design units, from the page's `measure`; "…" until it has run. */
   readonly design: string;
+  /** What `design` is, when not the 3D design distance ("Design distance, horizontal"). */
+  readonly designLabel?: string;
+  /** The slope (3D) design distance, beside a horizontal headline. */
+  readonly slope?: string;
   /** True distance, metres, from the page's `measure`; "…" until it has run. */
   readonly trueDistance: string;
   /**
@@ -179,8 +183,10 @@ export interface OpenerFigures {
 
 /** What the page's `measure` gave between an opener's two design points. */
 export interface OpenerMeasured {
-  /** Design units. */
+  /** Design units: the 3D (slope) design distance. */
   readonly design: number;
+  /** Design units: the horizontal design distance (what CAD reports). */
+  readonly horizontal: number;
   /** Metres. */
   readonly trueDistance: number;
 }
@@ -275,8 +281,8 @@ export function openerView(
       const heroCaption = s.morphing
         ? "The road drawn from where it is, moving."
         : tone === "rigid"
-          ? "Rigid draws the road here this far from where it is."
-          : "The road drawn where it is.";
+          ? "Rigid draws the road this far from where it truly is, at the mark."
+          : "0.000 m by construction: the page draws the road and the mark through PROJ alike. The independent test is NGS's own zone 3 against the design, in Checks.";
       return {
         title: `${m.pid} ${m.name} to the centreline`,
         design,
@@ -299,7 +305,14 @@ export function openerView(
               : `Drawn ${drawn} long.`;
       return {
         title: answers.pairs[0]!.label,
-        design,
+        // The horizontal design distance leads, as CAD reports it; the
+        // slope distance beside it.
+        design:
+          measured === undefined
+            ? PENDING
+            : `${fixed(measured.horizontal, 3)} ${symbol}`,
+        designLabel: "Design distance, horizontal",
+        slope: design,
         trueDistance,
         ...(drawn !== undefined && { drawn }),
         globe,
@@ -361,7 +374,11 @@ export function measuredOf(
   const d = measure?.m.design;
   return measure === undefined || d === undefined
     ? undefined
-    : { design: d.distance, trueDistance: measure.m.distance };
+    : {
+        design: d.distance,
+        horizontal: d.horizontalDistance,
+        trueDistance: measure.m.distance,
+      };
 }
 
 /**

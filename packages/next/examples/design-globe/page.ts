@@ -105,6 +105,10 @@ export interface LoadItem {
   readonly detail?: string;
   /** The one command that fixes it, shown as code. */
   readonly command?: string;
+  /** The site it belongs to, when it is one site's own (shown only on that site). */
+  readonly site?: string;
+  /** The engine's own words for a failure, behind a disclosure. */
+  readonly technical?: string;
   /** Bytes per file, for an item fetched as several (PROJ: glue, wasm, db). */
   readonly files?: Readonly<
     Record<string, { received: number; total?: number }>
@@ -112,7 +116,13 @@ export interface LoadItem {
 }
 
 export type LoadEvent =
-  | { readonly type: "start"; readonly id: string; readonly label: string }
+  | {
+      readonly type: "start";
+      readonly id: string;
+      readonly label: string;
+      /** One site's own item (its tiles, its placements). */
+      readonly site?: string;
+    }
   /** The item is gone (its site was reloaded): it leaves the list. */
   | { readonly type: "clear"; readonly id: string }
   | {
@@ -130,6 +140,10 @@ export type LoadEvent =
       readonly detail: string;
       /** The one command that fixes it (missing data: setup). */
       readonly command?: string;
+      /** The engine's own message, shown behind a disclosure. */
+      readonly technical?: string;
+      /** One site's own item, when no start named it. */
+      readonly site?: string;
     };
 
 const FINAL: ReadonlySet<ItemState> = new Set(["ready", "missing", "error"]);
@@ -171,7 +185,12 @@ export function nextLoading(
       ) {
         return items;
       }
-      return put({ id: event.id, label: event.label, state: "waiting" });
+      return put({
+        id: event.id,
+        label: event.label,
+        state: "waiting",
+        ...(event.site !== undefined && { site: event.site }),
+      });
     case "progress": {
       if (item !== undefined && FINAL.has(item.state)) {
         return items;
@@ -222,8 +241,20 @@ export function nextLoading(
         state: event.type,
         detail: event.detail,
         ...(event.command !== undefined && { command: event.command }),
+        ...(event.technical !== undefined && { technical: event.technical }),
+        ...((event.site ?? item?.site) !== undefined && {
+          site: (event.site ?? item?.site)!,
+        }),
       });
   }
+}
+
+/** The items the selected site shows: everyone's, and its own (another site's stay on it). */
+export function loadingFor(
+  items: readonly LoadItem[],
+  site: string,
+): readonly LoadItem[] {
+  return items.filter((i) => i.site === undefined || i.site === site);
 }
 
 /** The loading as one line: an error first, then missing data, then loading. */
@@ -455,6 +486,22 @@ export const siteById = (id: string): SiteEntry =>
 
 // ------------------------------------------------------------------ words
 
+/**
+ * A site grid in words: "origin E 6,050,000.000, N 2,100,000.000 ftUS;
+ * rotated 12.5° from grid east; scale 1.0000375".
+ */
+export function siteGridText(
+  site: {
+    readonly origin: readonly [number, number, number];
+    readonly rotation: number;
+    readonly scale: number;
+  },
+  symbol: string,
+): string {
+  const degrees = (site.rotation * 180) / Math.PI;
+  return `origin E ${fixed(site.origin[0], 3)}, N ${fixed(site.origin[1], 3)} ${symbol}; rotated ${fixed(degrees, 1)}° from grid east; scale ${site.scale}`;
+}
+
 /** A rigid error as the panel and HUD say it: "31.6 m", "84 mm", "0.3 mm". */
 export function errorText(meters: number): string {
   const a = Math.abs(meters);
@@ -464,7 +511,7 @@ export function errorText(meters: number): string {
   if (a >= 0.9995) {
     return `${fixed(a, 1)} m`;
   }
-  if (a >= 0.00095) {
+  if (a >= 0.00995) {
     return `${fixed(a * 1000, 0)} mm`;
   }
   if (a >= 0.00005) {
@@ -498,7 +545,7 @@ export function rigidVerdict(edgeError: number): {
   }
   return {
     acceptable: false,
-    text: "Rigid draws the edge metres from where it is: reproject it.",
+    text: "Rigid can't place it: reproject it.",
   };
 }
 

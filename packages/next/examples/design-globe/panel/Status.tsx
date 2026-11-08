@@ -91,7 +91,15 @@ export function Status({
         }
       >
         {summary.items.map((i) => (
-          <div key={i.id}>{i.detail}</div>
+          <div key={i.id}>
+            {i.detail}
+            {i.technical !== undefined && (
+              <details className="dg-technical">
+                <summary>The engine's message</summary>
+                <code>{i.technical}</code>
+              </details>
+            )}
+          </div>
         ))}
       </Alert>
     );
