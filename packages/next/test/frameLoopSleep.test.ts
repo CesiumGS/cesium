@@ -183,6 +183,53 @@ describe("the frame loop sleeps when settled", () => {
       1,
     ],
     ["a pick", (view) => void view.pick(320, 180), 0],
+    ["a position pick", (view) => void view.pickPosition(320, 180), 0],
+    ["the camera's field of view", (view) => (view.camera.fov = 0.5), 1],
+    ["the camera's near plane", (view) => (view.camera.near = 1), 1],
+    ["a view's world", (view) => (view.world = engine.createWorld()), 1],
+    ["a view's background", (view) => (view.background = "color"), 1],
+    ["a view's sun disk", (view) => (view.sunDisk = false), 1],
+    [
+      "a view's aerial perspective",
+      (view) => (view.aerialPerspective = false),
+      1,
+    ],
+    ["a view's clear color", (view) => (view.clearColor = [1, 0, 0]), 1],
+    [
+      "a view's output encoding",
+      (view) => (view.outputEncoding = "gamma2.2"),
+      1,
+    ],
+    ["a view's tone mapping", (view) => (view.toneMapping = "agx"), 1],
+    [
+      "a view's lighting",
+      (view) => (view.lighting = { ...view.lighting, diffuseIbl: 0.5 }),
+      1,
+    ],
+    ["a view disabled", (view) => (view.enabled = false), 0],
+    ["a viewport written in place", (view) => (view.viewport.width = 0.5), 1],
+    [
+      "an exposure written in place",
+      (view) => ((view.exposure as { ev100: number }).ev100 = 13),
+      1,
+    ],
+    [
+      "lighting written in place",
+      (view) => (view.lighting.sunIlluminance = 1234),
+      1,
+    ],
+    [
+      "a height capture",
+      (view) =>
+        void engine.addHeightCapture(view.world, {
+          origin: v3.vec3(R, 0, 0),
+          halfExtent: 100,
+          size: 16,
+        }),
+      1,
+    ],
+    ["a world created", () => void engine.createWorld(), 0],
+    ["a world removed", () => engine.removeWorld(engine.createWorld()), 0],
   ])(
     "%s requests exactly one frame, then sleeps again",
     async (_name, change, frameCount) => {
@@ -352,5 +399,407 @@ describe("the frame loop sleeps when settled", () => {
     expect(queue.size).toBe(0);
     engine.start();
     expect(queue.size).toBe(1);
+  });
+
+  it.each<[string, (view: View) => void]>([
+    ["the sun set in place", () => engine.sunDirection.set([0, 1, 0])],
+    [
+      "a camera written in place without version++",
+      (view) => (view.camera.position[0]! += 5),
+    ],
+    ["state outside the fingerprint", (view) => (view.shadows = true)],
+  ])(
+    "%s needs requestRender (documented): no frame until then",
+    async (_name, change) => {
+      const view = await settled();
+      change(view);
+      expect(queue.size).toBe(0);
+      expect(await rendered(() => frames(60))).toBe(0);
+      engine.requestRender();
+      expect(queue.size).toBe(1);
+      expect(await rendered(() => frames(60))).toBe(1);
+    },
+  );
+
+  it("an enabled view again renders once", async () => {
+    const view = await settled();
+    view.enabled = false;
+    await frames(10);
+    expect(queue.size).toBe(0);
+    view.enabled = true;
+    expect(queue.size).toBe(1);
+    expect(await rendered(() => frames(600))).toBe(1);
+    expect(queue.size).toBe(0);
+  });
+
+  it("a mirror link sleeps when settled; its source's camera wakes it", async () => {
+    const a = addView();
+    const b = addView();
+    engine.start();
+    await frames(30);
+    const link = engine.link(a, b, { modes: ["mirror"] });
+    expect(queue.size).toBe(1);
+    await frames(30);
+    // The link copies the camera every tick (a version bump inside the
+    // tick): that wake is the tick's own, and the loop sleeps.
+    expect(queue.size).toBe(0);
+    expect(await frames(300)).toBe(0);
+    a.camera.lookAt(v3.vec3(R, 0, 0), 0.5, -1, 150);
+    expect(queue.size).toBe(1);
+    expect(await rendered(() => frames(300))).toBe(1);
+    expect(b.camera.position).toEqual(a.camera.position);
+    expect(queue.size).toBe(0);
+    engine.unlink(link);
+    expect(queue.size).toBe(1);
+    expect(await frames(300)).toBe(1);
+  });
+
+  it("removing a view wakes it, and the views left render", async () => {
+    await settled();
+    const second = addView();
+    await frames(30);
+    expect(queue.size).toBe(0);
+    engine.removeView(second);
+    expect(queue.size).toBe(1);
+    expect(await rendered(() => frames(300))).toBe(1);
+    // Its camera no longer wakes the loop.
+    second.camera.lookAt(v3.vec3(R, 0, 0), 1, -1, 100);
+    second.viewport = { x: 0, y: 0, width: 0.5, height: 0.5 };
+    expect(queue.size).toBe(0);
+  });
+
+  /** A canvas the fake device can draw into. */
+  function fakeCanvas(html: boolean) {
+    const device = fakeDevice({});
+    const canvas: Record<string, unknown> & { width: number; height: number } =
+      {
+        width: 300,
+        height: 150,
+        getContext: () => ({
+          configure: () => {},
+          unconfigure: () => {},
+          getCurrentTexture: () =>
+            device.createTexture({
+              size: [canvas.width, canvas.height],
+              format: "bgra8unorm",
+              usage: 0x10,
+            }),
+        }),
+      };
+    if (html) {
+      canvas.clientWidth = 300;
+      canvas.clientHeight = 150;
+    }
+    return canvas;
+  }
+
+  async function settledOn(canvas: object): Promise<CanvasTarget> {
+    vi.stubGlobal("devicePixelRatio", 1);
+    const target = new CanvasTarget(canvas as unknown as HTMLCanvasElement);
+    const view = engine.addView({
+      target,
+      world: engine.createWorld(),
+      exposure: { ev100: 15 },
+    });
+    view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
+    engine.start();
+    await frames(30);
+    expect(queue.size).toBe(0);
+    return target;
+  }
+
+  it("a canvas's fixed pixel ratio wakes it", async () => {
+    const canvas = fakeCanvas(true);
+    const target = await settledOn(canvas);
+    target.fixedPixelRatio = 2;
+    expect(queue.size).toBe(1);
+    expect(await rendered(() => frames(300))).toBe(1);
+    expect(canvas.width).toBe(600);
+    expect(queue.size).toBe(0);
+  });
+
+  it("an OffscreenCanvas resized by its owner wakes it", async () => {
+    const canvas = fakeCanvas(false);
+    await settledOn(canvas);
+    canvas.width = 400;
+    expect(queue.size).toBe(1);
+    expect(await rendered(() => frames(300))).toBe(1);
+    expect(canvas.width).toBe(400);
+    canvas.height = 200;
+    expect(await rendered(() => frames(300))).toBe(1);
+    expect(queue.size).toBe(0);
+  });
+
+  it("a tileset's selection knob (maximumScreenSpaceError) wakes it", async () => {
+    vi.spyOn(engine, "loadGltf").mockResolvedValue(triangle());
+    vi.stubGlobal("fetch", async () =>
+      Response.json(TILESET, {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const view = await settled();
+    const tileset = await engine.addTileset(view.world, URL_);
+    await frames(120);
+    expect(queue.size).toBe(0);
+    tileset.selection.maximumScreenSpaceError = 8;
+    expect(queue.size).toBe(1);
+    expect(await frames(300)).toBeGreaterThan(0);
+    expect(tileset.selection.maximumScreenSpaceError).toBe(8);
+    expect(queue.size).toBe(0);
+    // The tileset's own per-frame writes (the memory-adjusted SSE) don't.
+    expect(await frames(300)).toBe(0);
+    engine.removeTileset(tileset);
+    expect(queue.size).toBe(1);
+  });
+
+  describe("custom shaders", () => {
+    async function shaded(uniforms: Record<string, unknown>) {
+      const { CustomShader } = await import("../src/scene/CustomShader.ts");
+      const shader = new CustomShader({
+        uniforms: uniforms as never,
+        fragment:
+          "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {}",
+      });
+      const view = await settled();
+      const placement = engine
+        .uploadModel(view.world, triangle())
+        .place({ modelMatrix: m4.mat4() });
+      placement.setShader(shader);
+      return { shader, placement };
+    }
+
+    it("its pipeline becoming ready wakes it", async () => {
+      await shaded({ amount: { type: "f32", value: 1 } });
+      // The placement's frame draws with the engine's stand-in. Nothing
+      // else needs a frame after it: the shader's compile and pipeline
+      // (asynchronous) arriving are what wake the loop, for a frame drawn
+      // with it (here they resolve between frames, so it never sleeps).
+      expect(await rendered(() => frames(300))).toBeGreaterThanOrEqual(2);
+      expect(queue.size).toBe(0);
+    });
+
+    it("a uniform set wakes it", async () => {
+      const { shader } = await shaded({ amount: { type: "f32", value: 1 } });
+      await frames(300);
+      expect(queue.size).toBe(0);
+      shader.setUniform("amount", 2);
+      expect(queue.size).toBe(1);
+      expect(await rendered(() => frames(300))).toBe(1);
+      expect(queue.size).toBe(0);
+    });
+
+    it("a texture that loaded wakes it", async () => {
+      const image = { width: 1, height: 1 } as unknown as ImageBitmap;
+      const { shader } = await shaded({
+        tint: { type: "texture2d", value: image },
+      });
+      await frames(300);
+      expect(queue.size).toBe(0);
+      // Set, it wakes; the frame starts its load; loaded, it wakes again.
+      shader.setUniform("tint", { width: 2, height: 2 } as never);
+      expect(queue.size).toBe(1);
+      const drawn = await rendered(() => frames(300));
+      expect(drawn).toBeGreaterThanOrEqual(2);
+      expect(queue.size).toBe(0);
+    });
+  });
+
+  describe("height clamping", () => {
+    /** A surface the clamping stands content on (a collision tileset). */
+    function collider(world: View["world"]) {
+      const tileset = {
+        world,
+        url: "collider",
+        show: true,
+        enableCollision: true,
+        terrain: false,
+        lights: undefined,
+        changedAt: 0,
+        active: false,
+        needsFrames: false,
+        exactHeight: () => undefined,
+        onHeightsChanged: () => () => {},
+        update: () => {},
+        destroy: () => {},
+      };
+      (engine.tilesets as unknown[]).push(tileset);
+      return tileset;
+    }
+
+    it("add, a sample's arrival and a cast's end wake it; busy holds it through the cast interval", async () => {
+      const view = await settled();
+      const surface = collider(view.world);
+      let sampled!: (heights: Array<number | undefined>) => void;
+      vi.spyOn(engine, "sampleHeightMostDetailed").mockImplementation(
+        () => new Promise((resolve) => (sampled = resolve)),
+      );
+      const casts: Array<(hits: Array<number | undefined>) => void> = [];
+      vi.spyOn(view.world, "castRays").mockImplementation(
+        () => new Promise((resolve) => casts.push(resolve)),
+      );
+      const transform = view.world.addTransform(m4.mat4());
+      await frames(10);
+      expect(queue.size).toBe(0);
+
+      const clamp = engine.clamping.add(view.world, transform, {
+        heightReference: "clampTo3DTiles",
+        longitude: 0,
+        latitude: 0,
+        height: 0,
+      });
+      expect(queue.size).toBe(1);
+      await frames(10);
+      // Sampling and casting: both in flight, the loop asleep.
+      expect(sampled).toBeDefined();
+      expect(casts).toHaveLength(1);
+      expect(queue.size).toBe(0);
+      expect(engine.clamping.busy).toBe(false);
+
+      casts[0]!([5]);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(queue.size).toBe(1);
+      await frames(10);
+      expect(queue.size).toBe(0);
+
+      sampled([5]);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(queue.size).toBe(1);
+      expect(await rendered(() => frames(10))).toBe(1);
+      expect(clamp.settled).toBe(true);
+      expect(queue.size).toBe(0);
+
+      // The collider changed what it draws: a cast is due but held back by
+      // CAST_INTERVAL; busy keeps the loop going until it goes out.
+      surface.changedAt = 1;
+      engine.wake();
+      let n = 0;
+      while (casts.length < 2 && n < 30) {
+        n += await frames(1);
+      }
+      expect(casts).toHaveLength(2);
+      expect(n).toBeGreaterThan(1);
+      expect(n).toBeLessThanOrEqual(11);
+      await frames(5);
+      expect(queue.size).toBe(0);
+      casts[1]!([5]);
+      await frames(5);
+      expect(queue.size).toBe(0);
+      expect(engine.clamping.busy).toBe(false);
+    });
+  });
+
+  describe("the frame's order and failures", () => {
+    it("tick listeners, the render, then after-tick listeners; a wake after the tick asks for the next frame", async () => {
+      const view = await settled();
+      const order: string[] = [];
+      const renderFrame = engine.stats.framesRendered;
+      engine.onTick(() => {
+        order.push("before");
+        return false;
+      });
+      let moved = false;
+      engine.onAfterTick(() => {
+        order.push(
+          engine.stats.framesRendered > renderFrame ? "after-render" : "after",
+        );
+        if (!moved) {
+          moved = true;
+          view.camera.lookAt(v3.vec3(R, 0, 0), 0.6, -1, 100);
+        }
+      });
+      view.camera.lookAt(v3.vec3(R, 0, 0), 0.5, -1, 100);
+      expect(await frames(1)).toBe(1);
+      expect(order).toEqual(["before", "after-render"]);
+      // The after-tick camera move: the next frame renders it.
+      expect(queue.size).toBe(1);
+      expect(await rendered(() => frames(300))).toBe(1);
+      expect(queue.size).toBe(0);
+    });
+
+    it("a throwing tick listener is reported; the frame and later wakes go on", async () => {
+      const view = await settled();
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const errors = () => engine.errors.map((e) => e.message);
+      let throwOnce = true;
+      engine.onTick(() => {
+        if (throwOnce) {
+          throwOnce = false;
+          throw new Error("boom");
+        }
+        return false;
+      });
+      view.world.changedViews = 0xffffffff;
+      expect(await rendered(() => frames(5))).toBe(1);
+      expect(errors().some((m) => /tick listener threw: boom/.test(m))).toBe(
+        true,
+      );
+      expect(queue.size).toBe(0);
+      // World edits still wake it.
+      const t = view.world.addTransform(m4.mat4());
+      await frames(5);
+      expect(queue.size).toBe(0);
+      const moved = m4.mat4();
+      moved[12] = 5;
+      view.world.setTransform(t, moved);
+      expect(queue.size).toBe(1);
+    });
+
+    it("a throwing tick is reported, and the loop waits for the next wake", async () => {
+      const view = await settled();
+      const internals = engine as unknown as { tick(): void };
+      const tick = internals.tick.bind(engine);
+      let throwOnce = true;
+      internals.tick = () => {
+        if (throwOnce) {
+          throwOnce = false;
+          throw new Error("bad frame");
+        }
+        tick();
+      };
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const errors = () => engine.errors.map((e) => e.message);
+      const t = view.world.addTransform(m4.mat4());
+      await frames(5);
+      // The failed frame leaves the world's changes unconsumed.
+      view.world.changedViews = 0xffffffff;
+      expect(await frames(5)).toBe(1);
+      expect(errors().some((m) => /the tick threw: bad frame/.test(m))).toBe(
+        true,
+      );
+      expect(queue.size).toBe(0);
+      // A later world edit still wakes it, and renders.
+      const moved = m4.mat4();
+      moved[12] = 5;
+      view.world.setTransform(t, moved);
+      expect(queue.size).toBe(1);
+      expect(await rendered(() => frames(300))).toBe(1);
+    });
+
+    it("stop from a tick listener skips the tick and asks for no frame", async () => {
+      await settled();
+      const before = engine.stats.framesRendered;
+      engine.onTick(() => {
+        engine.stop();
+        return true;
+      });
+      engine.requestRender();
+      await frames(5);
+      expect(engine.stats.framesRendered).toBe(before);
+      expect(queue.size).toBe(0);
+      engine.requestRender();
+      expect(queue.size).toBe(0);
+    });
+
+    it("destroy from a tick listener skips the tick", async () => {
+      await settled();
+      const before = engine.stats.framesRendered;
+      engine.onTick(() => {
+        engine.destroy();
+        return true;
+      });
+      await frames(5);
+      expect(engine.stats.framesRendered).toBe(before);
+      expect(queue.size).toBe(0);
+    });
   });
 });

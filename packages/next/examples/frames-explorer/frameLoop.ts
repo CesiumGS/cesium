@@ -1,10 +1,11 @@
-// Every frame (R13): first the labels, against what the canvas shows this
-// frame (what the last frame placed: the engine renders before this loop
-// runs); then the triads at the clock's instant, Orion's path moved with its
-// drawing frame, the orbit carried with its subject, the headlight; now and
-// then, what depends on the clock: the tree's statements, the walk, Orion's
-// statement and the bias triad, each at most so often in real time (at
-// 3,600× the clock passes a minute every frame).
+// Every frame (R13), in the engine's frame (`Engine.onTick`, after the
+// viewer's clock): the triads at the clock's instant, Orion's path moved
+// with its drawing frame, the orbit carried with its subject, the
+// headlight; now and then, what depends on the clock: the tree's
+// statements, the walk, Orion's statement and the bias triad, each at most
+// so often in real time (at 3,600× the clock passes a minute every frame).
+// Then the engine renders, and the labels are placed against what the
+// canvas now shows (`Engine.onAfterTick`), whatever woke the frame.
 import type { PageCore } from "./page.ts";
 
 export interface FrameLoop {
@@ -36,7 +37,6 @@ export function createFrameLoop(deps: {
   const running = new Set<() => void>();
 
   function start(): () => void {
-    let raf = 0;
     let lastTree = viewer.clock.time;
     // Real time too: at the tour's 3,600× the clock passes a minute every
     // frame, and rebuilding the walk's statements each frame cost frames
@@ -45,12 +45,10 @@ export function createFrameLoop(deps: {
     let lastBiasReal = performance.now();
     let walkAt = viewer.clock.time;
     let walkReal = performance.now();
-    const tick = () => {
+    const tick = (): boolean => {
       if (disposed()) {
-        return;
+        return false;
       }
-      // The labels first, against what this frame shows (globe.ts).
-      globe.placeLabels();
       const frames = framesNow();
       const instant = instantNow();
       if (frames && instant) {
@@ -95,11 +93,19 @@ export function createFrameLoop(deps: {
           deps.overlays.drawBias();
         }
       }
-      raf = requestAnimationFrame(tick);
+      // Every frame, as its own animation frame loop did.
+      return true;
     };
-    raf = requestAnimationFrame(tick);
+    const offTick = viewer.engine.onTick(tick);
+    // The labels, against what the engine just rendered (globe.ts).
+    const offAfter = viewer.engine.onAfterTick(() => {
+      if (!disposed()) {
+        globe.placeLabels();
+      }
+    });
     const stop = () => {
-      cancelAnimationFrame(raf);
+      offTick();
+      offAfter();
       running.delete(stop);
     };
     running.add(stop);

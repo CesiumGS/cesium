@@ -286,13 +286,26 @@ export class Engine {
    * `renderFrame()` always renders.
    *
    * On demand, the loop also stops asking for animation frames once
-   * nothing is changing, and wakes (`wake`) for what changes: a camera
-   * (`Camera.version`), a view's fingerprinted state or a pick, a world's
-   * draws, a tileset's content or settings, a resized canvas, a custom
-   * shader's uniforms, clamping, `requestRender`, or a tick listener still
-   * busy (`onTick`). State changed in place where the engine can't see it
-   * (`sunDirection`, a camera's vectors without `version++`, a view's
-   * `lighting`) needs `requestRender()`, as it already did to render.
+   * nothing is changing, and wakes (`wake`) for what changes:
+   * - a camera (`Camera.version`, which `fov`, `near` and every method
+   *   bump);
+   * - a view's fingerprinted state (its world, viewport, exposure,
+   *   lighting, background, sun disk, aerial perspective, clear color,
+   *   output encoding, tone mapping, enabled; viewport, exposure and
+   *   lighting also written in place) or a pick;
+   * - a world's draws, a custom shader's uniforms or textures;
+   * - a tileset's content, settings or selection knobs
+   *   (`tileset.selection.maximumScreenSpaceError`);
+   * - a canvas resized (its CSS box; `CanvasTarget.fixedPixelRatio`; an
+   *   `OffscreenCanvas`'s width or height);
+   * - height clamping and captures, `requestRender`, and tick listeners
+   *   still busy (`onTick`).
+   *
+   * What the engine can't watch needs `requestRender()`, as anything
+   * outside the fingerprint always did: `sunDirection` set in place, a
+   * camera's `position`, `direction` or `up` written without
+   * `version++`, and state outside the fingerprint (`View.shadows`,
+   * `fxaa`, `overlays`, `icrfToFixed`, the sky).
    */
   get renderMode(): "onDemand" | "continuous" {
     return this.renderMode_;
@@ -302,7 +315,11 @@ export class Engine {
     this.wake();
   }
   private renderMode_: "onDemand" | "continuous" = "onDemand";
-  /** Unit vector toward the sun in Earth-fixed axes. Placeholder until the 1.x sun model lands. */
+  /**
+   * Unit vector toward the sun in Earth-fixed axes. Placeholder until the
+   * 1.x sun model lands. Set in place, it needs `requestRender()` (the
+   * loop sleeps on demand and can't see it).
+   */
   readonly sunDirection: Vec3 = v3.vec3(1, 0, 0);
   /**
    * The celestial frame's rotation to Earth-fixed axes (row-major 3 × 3,
@@ -448,6 +465,7 @@ export class Engine {
   /** Inside the loop's tick: wakes then are seen by its end (`needsTicks`). */
   private ticking = false;
   private readonly tickListeners: Array<(now: number) => boolean> = [];
+  private readonly afterTickListeners: Array<(now: number) => void> = [];
   /** Per view: what stops watching its camera and canvas (`addView`). */
   private readonly viewWatches = new Map<View, () => void>();
   private renderRequested = true;
@@ -1335,7 +1353,6 @@ export class Engine {
     return world;
   }
 
-  /** Removes a world from the engine and frees its GPU resources. */
   /**
    * Removes a world with everything in it: its tilesets and the views
    * that draw it go too, then its GPU resources.
@@ -1446,8 +1463,11 @@ export class Engine {
         resize.observe(canvas);
       }
     }
+    const unwatchTarget =
+      view.target instanceof CanvasTarget ? view.target.watch(wake) : undefined;
     this.viewWatches.set(view, () => {
       unwatch();
+      unwatchTarget?.();
       resize?.disconnect();
     });
   }
@@ -1468,10 +1488,6 @@ export class Engine {
     }
   }
 
-  /**
-   * Asks for a frame in on-demand mode, for changes the engine can't see
-   * (state an application keeps outside the engine).
-   */
   /**
    * GPU bytes of content (geometry and textures) all tilesets may upload
    * per frame together. Uploads share the queue with rendering: a fixed
@@ -1568,6 +1584,11 @@ export class Engine {
     }
   }
 
+  /**
+   * Asks for a frame in on-demand mode, for changes the engine can't see:
+   * state an application keeps outside the engine, and state changed in
+   * place that it doesn't watch (`renderMode`).
+   */
   requestRender(): void {
     this.renderRequested = true;
     this.wake();
@@ -1589,12 +1610,17 @@ export class Engine {
   }
 
   /**
-   * Calls `listener` at the start of each tick of the loop with the
-   * frame's timestamp, before the engine looks for changes (what it moves
-   * renders in the same frame). While a listener returns true (it is still
-   * changing something: a clock playing, an animation), the loop keeps
-   * ticking; returning false lets it sleep until a wake. Returns the
-   * remover.
+   * Calls `listener` at the start of each frame of the loop (`start`) with
+   * the frame's timestamp, before the engine looks for changes: what it
+   * moves renders in the same frame (wakes from it are not needed, and are
+   * ignored). While a listener returns true (it is still changing
+   * something: a clock playing, an animation), the loop keeps going;
+   * returning false lets it sleep until a wake. Returns the remover.
+   *
+   * The engine's frame has no fixed place among an application's own
+   * `requestAnimationFrame` callbacks (it asks for a frame when woken): work
+   * that must come before or after the engine renders belongs here or in
+   * `onAfterTick`.
    */
   onTick(listener: (now: number) => boolean): () => void {
     this.tickListeners.push(listener);
@@ -1603,6 +1629,24 @@ export class Engine {
       const i = this.tickListeners.indexOf(listener);
       if (i >= 0) {
         this.tickListeners.splice(i, 1);
+      }
+    };
+  }
+
+  /**
+   * Calls `listener` at the end of each frame of the loop, after the engine
+   * rendered what changed: for what is placed against what the canvas now
+   * shows (DOM labels over the scene). A change it makes to the scene
+   * wakes the loop for the next frame. It doesn't keep the loop going by
+   * itself; it runs whenever the loop does. Returns the remover.
+   */
+  onAfterTick(listener: (now: number) => void): () => void {
+    this.afterTickListeners.push(listener);
+    this.wake();
+    return () => {
+      const i = this.afterTickListeners.indexOf(listener);
+      if (i >= 0) {
+        this.afterTickListeners.splice(i, 1);
       }
     };
   }
@@ -1669,7 +1713,7 @@ export class Engine {
       }),
     };
     this.captures.push(capture);
-    this.renderRequested = true;
+    this.requestRender();
     return capture;
   }
 
@@ -1701,27 +1745,59 @@ export class Engine {
   }
 
   private schedule(): void {
-    if (!this.scheduled) {
+    if (this.running && !this.scheduled) {
       this.scheduled = true;
       this.frameHandle = requestAnimationFrame(this.loop);
     }
   }
 
+  /**
+   * One frame of the loop, in a fixed order whatever woke it: the tick
+   * listeners (`onTick`), the engine's tick (it renders what changed), the
+   * after-tick listeners (`onAfterTick`), then whether to ask for the next
+   * frame. A listener's or the tick's error is reported (`errors`) and the
+   * frame goes on; after a failed tick the loop waits for the next wake
+   * rather than failing every frame.
+   */
   private readonly loop = (now: number): void => {
     this.scheduled = false;
     if (!this.running) {
       return;
     }
     let busy = false;
+    let failed = false;
     this.ticking = true;
     try {
-      // A copy: a listener may remove itself.
+      // Copies: a listener may remove itself.
       for (const listener of this.tickListeners.slice()) {
-        busy = listener(now) || busy;
+        try {
+          busy = listener(now) || busy;
+        } catch (error) {
+          this.reportLoopError("a tick listener", error);
+        }
       }
-      this.tick();
+      if (!this.running) {
+        return; // stopped (or destroyed) by a listener
+      }
+      try {
+        this.tick();
+      } catch (error) {
+        failed = true;
+        this.reportLoopError("the tick", error);
+      }
     } finally {
       this.ticking = false;
+    }
+    // Wakes from here on ask for the next frame.
+    for (const listener of this.afterTickListeners.slice()) {
+      try {
+        listener(now);
+      } catch (error) {
+        this.reportLoopError("an after-tick listener", error);
+      }
+    }
+    if (!this.running || failed) {
+      return;
     }
     if (busy || this.renderMode_ === "continuous" || this.needsTicks()) {
       this.schedule();
@@ -1729,6 +1805,13 @@ export class Engine {
       this.stats.idle = true; // asleep: nothing more to render
     }
   };
+
+  private reportLoopError(where: string, error: unknown): void {
+    this.ctx.errors.report(
+      "frame",
+      `${where} threw: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 
   /**
    * On demand, what still needs the next tick after this one: a render

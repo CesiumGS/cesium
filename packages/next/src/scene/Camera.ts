@@ -14,13 +14,39 @@ import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
  * the larger viewport dimension.
  */
 export class Camera {
+  /**
+   * Where it is (Earth-fixed meters). Written in place, it needs
+   * `version++` (as `direction` and `up` do): that is how views, links and
+   * the engine's sleeping loop see the change.
+   */
   readonly position = v3.vec3();
   readonly direction = v3.vec3(0, 0, -1);
   readonly up = v3.vec3(0, 1, 0);
   readonly right = v3.vec3(1, 0, 0);
-  fov = Math.PI / 3;
-  near = 0.1;
+  private fov_ = Math.PI / 3;
+  private near_ = 0.1;
   private version_ = 0;
+
+  /**
+   * The field of view of the larger viewport dimension (radians). Setting
+   * it bumps `version`.
+   */
+  get fov(): number {
+    return this.fov_;
+  }
+  set fov(fov: number) {
+    this.fov_ = fov;
+    this.version++;
+  }
+
+  /** The near plane's distance (meters). Setting it bumps `version`. */
+  get near(): number {
+    return this.near_;
+  }
+  set near(near: number) {
+    this.near_ = near;
+    this.version++;
+  }
   private readonly watchers: Array<() => void> = [];
 
   /**
@@ -56,8 +82,8 @@ export class Camera {
     v3.copy(this.direction, other.direction);
     v3.copy(this.up, other.up);
     v3.copy(this.right, other.right);
-    this.fov = other.fov;
-    this.near = other.near;
+    this.fov_ = other.fov_;
+    this.near_ = other.near_;
     this.version++;
     return this;
   }

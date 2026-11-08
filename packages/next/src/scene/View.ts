@@ -50,11 +50,53 @@ export class CanvasTarget implements RenderTarget {
     readonly canvas: HTMLCanvasElement | OffscreenCanvas,
     options: { pixelRatio?: number } = {},
   ) {
-    this.fixedPixelRatio = options.pixelRatio;
+    this.fixedPixelRatio_ = options.pixelRatio;
+    if (!("clientWidth" in canvas)) {
+      // An OffscreenCanvas keeps the size its owner sets (no ResizeObserver
+      // sees it): setting its width or height calls the watchers.
+      for (const key of ["width", "height"] as const) {
+        watchProperty(canvas, key, this.changed);
+      }
+    }
   }
 
-  /** Fixed pixel ratio, or undefined to follow devicePixelRatio. */
-  fixedPixelRatio: number | undefined;
+  private fixedPixelRatio_: number | undefined;
+  private readonly watchers: Array<() => void> = [];
+  private readonly changed = () => {
+    const watchers = this.watchers;
+    for (let i = 0; i < watchers.length; i++) {
+      watchers[i]!();
+    }
+  };
+
+  /**
+   * Fixed pixel ratio, or undefined to follow devicePixelRatio. Setting it
+   * calls the watchers.
+   */
+  get fixedPixelRatio(): number | undefined {
+    return this.fixedPixelRatio_;
+  }
+  set fixedPixelRatio(ratio: number | undefined) {
+    this.fixedPixelRatio_ = ratio;
+    this.changed();
+  }
+
+  /**
+   * Calls `watcher` when the drawing-buffer size may change without a
+   * resize the page can observe: `fixedPixelRatio` set, or an
+   * `OffscreenCanvas`'s width or height. The engine's loop, which sleeps on
+   * demand, wakes for it (and observes an HTML canvas's CSS box itself).
+   * Returns the remover.
+   */
+  watch(watcher: () => void): () => void {
+    this.watchers.push(watcher);
+    return () => {
+      const i = this.watchers.indexOf(watcher);
+      if (i >= 0) {
+        this.watchers.splice(i, 1);
+      }
+    };
+  }
 
   /** Releases the canvas's context (its textures) from the device. */
   destroy(): void {
@@ -107,6 +149,44 @@ export class CanvasTarget implements RenderTarget {
     }
     this.texture = this.context!.getCurrentTexture();
     return this.texture.createView();
+  }
+}
+
+/**
+ * Makes setting `object[key]` also call `changed`, with an own property
+ * that keeps the inherited accessor's (or the data property's) behaviour.
+ * Leaves an object it can't redefine as it is.
+ */
+function watchProperty(object: object, key: string, changed: () => void): void {
+  let descriptor: PropertyDescriptor | undefined;
+  for (
+    let o: object | null = object;
+    o && !descriptor;
+    o = Object.getPrototypeOf(o) as object | null
+  ) {
+    descriptor = Object.getOwnPropertyDescriptor(o, key);
+  }
+  if (!descriptor || descriptor.configurable === false) {
+    return;
+  }
+  let value: unknown = descriptor.value;
+  const { get, set } = descriptor;
+  try {
+    Object.defineProperty(object, key, {
+      configurable: true,
+      enumerable: descriptor.enumerable ?? true,
+      get: get ? () => get.call(object) : () => value,
+      set: (v: unknown) => {
+        if (set) {
+          set.call(object, v);
+        } else {
+          value = v;
+        }
+        changed();
+      },
+    });
+  } catch {
+    // A sealed object: its writes need `Engine.requestRender`.
   }
 }
 
@@ -362,6 +442,29 @@ export type ToneMapping = "pbrNeutral" | "agx" | "aces";
 export type ViewBackground = "atmosphere" | "color";
 
 /**
+ * A copy of `value` whose writes call `changed`: a view's viewport,
+ * exposure and lighting edited in place wake the engine's loop, as
+ * assigning them does.
+ */
+function watched<T extends object>(value: T, changed: () => void): T {
+  return new Proxy(
+    { ...value },
+    {
+      set(target, key, v) {
+        (target as Record<PropertyKey, unknown>)[key] = v;
+        changed();
+        return true;
+      },
+      deleteProperty(target, key) {
+        delete (target as Record<PropertyKey, unknown>)[key];
+        changed();
+        return true;
+      },
+    },
+  );
+}
+
+/**
  * A camera looking at a world through a rectangle of a target. Views are
  * cheap: they own no geometry, only per-view state.
  */
@@ -398,12 +501,11 @@ export class View {
   translucency: Translucency;
   fxaa: boolean;
   cityLights: boolean;
-  /** The sun's illuminance and image-based lighting factors. */
-  lighting: ViewLighting;
   /**
    * @internal Wakes the engine's frame loop (it sleeps on demand when
    * nothing changes): set by `Engine.addView`, called when what the view's
-   * on-demand fingerprint reads is set, and for a pick.
+   * on-demand fingerprint reads is set (`viewport`, `exposure` and
+   * `lighting` also when written in place), and for a pick.
    */
   wake?: () => void;
   private readonly state = {} as {
@@ -417,7 +519,9 @@ export class View {
     outputEncoding: OutputEncoding;
     toneMapping: ToneMapping;
     enabled: boolean;
+    lighting: ViewLighting;
   };
+  private readonly changed = () => this.wake?.();
 
   get world(): World {
     return this.state.world;
@@ -430,14 +534,26 @@ export class View {
     return this.state.viewport;
   }
   set viewport(value: Viewport) {
-    this.state.viewport = value;
+    this.state.viewport = watched(value, this.changed);
     this.wake?.();
   }
   get exposure(): Exposure {
     return this.state.exposure;
   }
   set exposure(value: Exposure) {
-    this.state.exposure = value;
+    this.state.exposure = watched(value, this.changed);
+    this.wake?.();
+  }
+  /**
+   * The sun's illuminance and image-based lighting factors. Like
+   * `viewport` and `exposure`, a copy of what is set: written in place
+   * too, it wakes the engine's loop.
+   */
+  get lighting(): ViewLighting {
+    return this.state.lighting;
+  }
+  set lighting(value: ViewLighting) {
+    this.state.lighting = watched(value, this.changed);
     this.wake?.();
   }
   get background(): ViewBackground {

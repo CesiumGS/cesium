@@ -639,9 +639,11 @@ export class World {
     return this.changedViews_;
   }
   set changedViews(views: number) {
-    const before = this.changedViews_;
     this.changedViews_ = views;
-    if (views !== 0 && views !== before) {
+    // Every change, not only the first since a frame: a frame that failed
+    // leaves the bits set, and the loop must still wake (`wake` is cheap
+    // once a frame is asked for).
+    if (views !== 0) {
       this.ctx.wake();
     }
   }

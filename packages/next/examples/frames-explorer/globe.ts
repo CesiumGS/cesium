@@ -775,8 +775,8 @@ export class Globe {
       l.el.classList.toggle("fx-globe-label-marker", spec.marker === true);
     }
     this.retint();
-    // While the frame loop runs, it places the labels at the start of the
-    // next frame, against what that frame renders. Placed here, mid-frame
+    // While the frame loop runs, it places the labels at the end of the
+    // next frame, against what that frame rendered. Placed here, mid-frame
     // (Orion's minute changes every frame at 1 h/s), they would take the new
     // instant with the camera not yet carried, and wobble (Task 4c).
     if (this.shown === undefined) {
@@ -786,12 +786,12 @@ export class Globe {
 
   /**
    * Projects each label's point and hides the ones that collide or are out
-   * of sight. The frame loop calls it first in its frame, before it moves
-   * anything: the canvas shows this frame what the loop placed in the last
-   * one (the engine renders before the loop runs), so the labels are placed
-   * against that same camera and those same points (Task 4c: placed after
-   * the update, they used the new instant with the camera not yet carried,
-   * and wobbled by a frame's motion as frame times varied).
+   * of sight. The frame loop calls it at the end of the engine's frame
+   * (`Engine.onAfterTick`), after the engine rendered what the loop moved:
+   * the labels are placed against the camera and points the canvas shows
+   * (Task 4c: placed against a newer instant than the one drawn, with the
+   * camera not yet carried, they wobbled by a frame's motion as frame times
+   * varied).
    */
   placeLabels(): void {
     const { view } = this.viewer;

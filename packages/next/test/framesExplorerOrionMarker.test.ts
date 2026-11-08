@@ -2,9 +2,10 @@
 // "the Orion dot wobbles around" and "the MOON_ME label is jittering"): the
 // page's own parts (orionLayer.ts, callouts.ts, frameLoop.ts) over a fake
 // globe, camera and engine, driven a frame at a time with uneven frame
-// times. Each frame the engine renders first, what the loop placed in the
-// frame before; then the clock ticks; then the loop runs. The labels must be
-// placed against exactly what is rendered (the same camera, the same
+// times. Each frame runs in the engine's order (Engine.ts `loop`): the
+// clock ticks and the loop moves the scene, the engine renders, then the
+// labels are placed (`onAfterTick`). The labels must be placed against
+// exactly what is rendered (the same camera, the same
 // points), so they ride with the canvas without wobble, and Orion's dot,
 // placed on this thread from its trajectory, is drawn every frame on the
 // path at the instant shown, with no worker statement to wait for.
@@ -51,19 +52,10 @@ const dot = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
 
 let real = 0;
-let frame: (() => void) | undefined;
 
 beforeEach(() => {
   real = 1000;
-  frame = undefined;
   vi.spyOn(performance, "now").mockImplementation(() => real);
-  vi.stubGlobal("requestAnimationFrame", (fn: () => void) => {
-    frame = fn;
-    return 1;
-  });
-  vi.stubGlobal("cancelAnimationFrame", () => {
-    frame = undefined;
-  });
 });
 
 afterEach(() => {
@@ -179,8 +171,19 @@ function page() {
     ms: 0,
   };
   let loaded: (() => void) | undefined;
+  // The engine's frame (Engine.ts `loop`): its tick listeners (the frame
+  // loop's update), the render, then its after-tick listeners (the labels).
+  const before: Array<(now: number) => boolean> = [];
+  const after: Array<(now: number) => void> = [];
+  const hook =
+    <T>(list: T[]) =>
+    (listener: T) => {
+      list.push(listener);
+      return () => void list.splice(list.indexOf(listener), 1);
+    };
+  const engine = { onTick: hook(before), onAfterTick: hook(after) };
   const core = {
-    viewer: { clock },
+    viewer: { clock, engine },
     globe,
     loading: {
       get: () => ({ state: "ready" }),
@@ -239,7 +242,7 @@ function page() {
     walk: { active: () => false, draw: () => {} },
   });
 
-  /** What the engine draws this frame: the last frame's camera and world. */
+  /** What the engine drew this frame: its camera and world when it rendered. */
   let rendered: { camera: Camera; instant?: Instant; far?: number[] } = {
     camera,
   };
@@ -249,10 +252,20 @@ function page() {
     }
   };
   let n = 0;
-  /** One frame: the engine renders, the clock ticks, the loop runs. */
+  /**
+   * One frame: the clock ticks and the loop moves the scene (tick
+   * listeners), the engine renders, the labels are placed (after-tick).
+   */
   const tick = async () => {
     const ms = FRAME_MS[n++ % FRAME_MS.length]!;
     real += ms;
+    if (clock.mode === "playing") {
+      clock.time += clock.rate * ms;
+    }
+    await settle();
+    for (const listener of [...before]) {
+      listener(real);
+    }
     rendered = {
       camera: {
         position: [...camera.position],
@@ -261,11 +274,9 @@ function page() {
       ...(shown && { instant: shown }),
       ...(farOrigin && { far: [...farOrigin] }),
     };
-    if (clock.mode === "playing") {
-      clock.time += clock.rate * ms;
+    for (const listener of [...after]) {
+      listener(real);
     }
-    await settle();
-    frame?.();
   };
   /** Orion's dot and the far triad, where the canvas draws them this frame. */
   const drawn = () => {

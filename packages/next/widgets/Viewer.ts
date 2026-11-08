@@ -270,7 +270,7 @@ export class Viewer {
   private zoomToken = 0;
   private credits_?: CreditsHandle;
   private inspector?: InspectorHandle;
-  /** Stops the viewer's per-frame work (`Engine.onTick`). */
+  /** Stops the viewer's per-frame work (`Engine.onTick`, `onAfterTick`). */
   private readonly offTick: () => void;
   /** New views (a split's second) get the main view's shadows and AO. */
   private readonly shadows: boolean;
@@ -466,16 +466,20 @@ export class Viewer {
       // background (or a loading screen) shows.
       this.resumeStart = this.suspendPresentation({ hide: true });
     }
-    // The viewer's per-frame work runs in the engine's ticks (one
-    // animation frame loop, which sleeps on demand once nothing changes).
-    // Busy while the clock runs, or a frame is still to show the canvas.
-    this.offTick = engine.onTick((now) => {
+    // The viewer's per-frame work runs in the engine's frames (one
+    // animation frame loop, which sleeps on demand once nothing changes):
+    // the controllers and the clock before the engine renders, busy while
+    // the clock runs; the canvas shown after, once a frame is drawn.
+    const offTick = engine.onTick((now) => {
       if (this.destroyed) {
         return false;
       }
       this.controller.update();
       this.secondController?.update();
       this.clock.tick(now);
+      return this.clock.mode !== "paused";
+    });
+    const offAfter = engine.onAfterTick(() => {
       if (
         this.unhideAfter !== undefined &&
         (this.hidingSuspensions > 0 ||
@@ -486,11 +490,11 @@ export class Viewer {
         }
         this.unhideAfter = undefined;
       }
-      return (
-        this.clock.mode !== "paused" ||
-        (this.unhideAfter !== undefined && this.suspensions === 0)
-      );
     });
+    this.offTick = () => {
+      offTick();
+      offAfter();
+    };
     engine.start();
   }
 
@@ -1196,7 +1200,7 @@ export class Viewer {
       }
       resumed = true;
       if (hide && --this.hidingSuspensions === 0) {
-        // Shown once a new frame is drawn (`tick`): shown now, the canvas
+        // Shown once a new frame is drawn (`onAfterTick`): shown now, the canvas
         // would present its last frame, of what went away, for a frame.
         this.unhideAfter = this.engine.stats.framesRendered;
       }

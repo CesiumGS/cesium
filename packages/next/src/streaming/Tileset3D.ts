@@ -332,11 +332,28 @@ export class Tileset3D implements TileTree {
    * is drawn.
    */
   placement?: TilesetPlacement;
-  /** The selection policy (`setPolicy` replaces it). */
+  /**
+   * The selection policy (`setPolicy` replaces it). Its knobs set here
+   * (`maximumScreenSpaceError`, ...) select again and wake the engine's
+   * loop.
+   */
   get selection(): TileSelection {
-    return this.policy;
+    if (this.watchedPolicy?.policy !== this.policy) {
+      this.watchedPolicy = {
+        policy: this.policy,
+        proxy: new Proxy(this.policy, {
+          set: (target, key, value) => {
+            (target as unknown as Record<PropertyKey, unknown>)[key] = value;
+            this.changed();
+            return true;
+          },
+        }),
+      };
+    }
+    return this.watchedPolicy.proxy;
   }
   private policy: TileSelection;
+  private watchedPolicy?: { policy: TileSelection; proxy: TileSelection };
   private readonly options: TilesetOptions;
   readonly stats: TilesetStats = {
     tiles: 0,
@@ -1029,8 +1046,8 @@ export class Tileset3D implements TileTree {
       this.frame - this.lastChange < 3 ||
       this.imagery?.busy === true ||
       this.imageryPending ||
-      this.selection.memoryAdjustedScreenSpaceError !==
-        this.selection.maximumScreenSpaceError
+      this.policy.memoryAdjustedScreenSpaceError !==
+        this.policy.maximumScreenSpaceError
     );
   }
 
@@ -1050,8 +1067,8 @@ export class Tileset3D implements TileTree {
       this.frame - this.lastChange < 3 ||
       this.imagery?.busy === true ||
       this.imageryPending ||
-      this.selection.memoryAdjustedScreenSpaceError !==
-        this.selection.maximumScreenSpaceError
+      this.policy.memoryAdjustedScreenSpaceError !==
+        this.policy.maximumScreenSpaceError
     );
   }
 
@@ -1101,16 +1118,12 @@ export class Tileset3D implements TileTree {
     for (const tile of this.standIns) {
       tile.standInMask = 0;
     }
-    this.selection.imageryReady =
+    this.policy.imageryReady =
       this.imagery || this.imageryPending ? this.imageryReady : undefined;
-    this.selection.expectedLoadSeconds = this.loadEstimateMs / 1000;
+    this.policy.expectedLoadSeconds = this.loadEstimateMs / 1000;
     const waiting = new Set<Tile>();
     for (const view of views) {
-      const result = this.selection.select(
-        this.root,
-        this.geometricError,
-        view,
-      );
+      const result = this.policy.select(this.root, this.geometricError, view);
       const bit = (1 << view.id) >>> 0;
       for (const tile of result.selected) {
         tile.viewMask = (tile.viewMask | bit) >>> 0;
@@ -1303,7 +1316,7 @@ export class Tileset3D implements TileTree {
     const full = new Set<string>();
     // Prefetch after everything visible (`prefetchAfterVisible`).
     let visibleWaiting =
-      this.selection.prefetchAfterVisible === true && this.visibleInFlight > 0;
+      this.policy.prefetchAfterVisible === true && this.visibleInFlight > 0;
     for (const [tile] of order) {
       if (tile.state !== "unloaded") {
         continue;
@@ -1315,14 +1328,14 @@ export class Tileset3D implements TileTree {
       const origin = tile.contentOrigin;
       if (full.has(origin)) {
         visibleWaiting ||=
-          !prefetch && this.selection.prefetchAfterVisible === true;
+          !prefetch && this.policy.prefetchAfterVisible === true;
         continue;
       }
       this.useOrigin(origin);
       if (!this.engine.requests.tryAcquire(origin)) {
         full.add(origin);
         visibleWaiting ||=
-          !prefetch && this.selection.prefetchAfterVisible === true;
+          !prefetch && this.policy.prefetchAfterVisible === true;
         continue;
       }
       tile.state = "loading";
@@ -1336,7 +1349,7 @@ export class Tileset3D implements TileTree {
       const visible = purpose !== "prefetch";
       if (visible) {
         this.visibleInFlight++;
-        visibleWaiting ||= this.selection.prefetchAfterVisible === true;
+        visibleWaiting ||= this.policy.prefetchAfterVisible === true;
       }
       this.stats.purposes[purpose].requests++;
       this.events.emit("request", { url: tile.contentUrl!, purpose });
@@ -1559,7 +1572,7 @@ export class Tileset3D implements TileTree {
         );
       }
     }
-    const selection = this.selection;
+    const selection = this.policy;
     if (this.stats.bytes < this.cacheBytes) {
       selection.memoryAdjustedScreenSpaceError = Math.max(
         selection.memoryAdjustedScreenSpaceError / 1.02,
