@@ -913,6 +913,8 @@ it("placementOf answers which placement applies, for which root, and why", ...);
 
 ### Task 20: The design globe on the new seam
 
+> **Revised again 2026-11-08 (owner):** "presentations" below became scene items: `world.add(tileset, { placement, opacity, tint, viewMask })`, tilesets only. See the overall plan's §13.25.
+>
 > **Revised 2026-11-08 (owner):** this task's design changed; the original text below is superseded where they differ. The example loaded the rigid and reprojected copies as two tilesets and paired their tiles itself (`PlacementPair`), so the morph and the ghost depended on two independent tile selections agreeing. They didn't, and a ghost tile was cut off where the selections differed. The engine shouldn't know what a ghost is; that's app logic. The general design:
 >
 > - **Presentations of a tileset (engine, generic).** A tileset can be drawn more than once. Each *presentation* draws the same loaded tiles with its own placement parameter, appearance (tint, opacity) and view mask. There is one selection, one tile cache and one set of bounds covering every presentation (Task 19's `maxDisplacement`). Not two loaded copies of the tileset.

@@ -8393,6 +8393,14 @@ Not built. Air-gapped and offline use can't download data at runtime, so ephemer
 
 **Sizes:** `de440s.bsp` 32.7 MB, Moon orientation 12.9 MB, and the engine's own 2000 to 2050 packs 2.84 MB in all. EGM2008 at 2.5 arcminutes is 80.6 MB, GEOID18 16.7 MB, `proj.db` 9.6 MB. So small packs are cheap, and a full geoid set isn't. Stay on DE440 for now (2026-11-08): DE442's stated purpose is updating the Uranus barycenter, and NAIF lists no matching lunar orientation kernel, while the Moon's orientation here pairs with DE440 (`moon_pa_de440_200625.bpc`). Revisit if a DE442 lunar kernel appears or Uranus's satellites come into scope. Keep the ephemeris version a provider's choice rather than a constant.
 
+### 13.25 Scene items (owner, 2026-11-08)
+
+**Decided, in its small version, in plan 5a Task 20.** The API separates content from being in the scene. `engine.loadTileset(url)` gives the content (tree, selection, cache), and `world.add(tileset, { placement, opacity, tint, viewMask })` gives a `SceneItem`: that content placed in a world, with its own appearance. A tileset can have several items, with one selection and one cache. This replaces the working name "presentation", which reads as the swap chain's present to a graphics programmer.
+
+**Not a scene graph.** Items are a flat list in a world, with no tree walked per tick, since GPU-driven drawing wants flat records. Hierarchy stays with the reference frame tree: an item attaches to a reference frame or anchor.
+
+**For a later brainstorm:** the full version. Models and per-node transforms (5d), `DrawHandle`, `MeshHandle` and `ModelPlacement` as items, the globe as an item, one tileset shared across worlds, groups, editing (§13.20), and how far this should resemble USD's references. Take it up before or with the API review (5i).
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
