@@ -430,6 +430,32 @@ describe("frame data as a need (R5, F44)", () => {
     expect(r!.error).toMatch(/"frames" need/);
   });
 
+  it("makes frames enumerable for a case with the need, and throws on spread without it", async () => {
+    let keys: string[] = [];
+    let spreadError = "";
+    await runStress(context(), {
+      cases: [
+        stub(
+          (ctx?: StressContext) => {
+            keys = Object.keys(ctx!);
+            return Promise.resolve([]);
+          },
+          { needs: ["frames"] },
+        ),
+        stub((ctx?: StressContext) => {
+          try {
+            void { ...ctx! };
+          } catch (error) {
+            spreadError = String(error);
+          }
+          return Promise.resolve([]);
+        }),
+      ],
+    });
+    expect(keys).toContain("frames");
+    expect(spreadError).toMatch(/"frames" need/);
+  });
+
   it("gives an optional need when it loads, and says so when it doesn't", async () => {
     const read = (ctx?: StressContext) => {
       try {

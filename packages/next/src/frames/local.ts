@@ -1,6 +1,6 @@
 import { mat4 } from "../math/mat4.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
-import type { Ellipsoid } from "../math/ellipsoid.ts";
+import { EPSILON14, type Ellipsoid } from "../math/ellipsoid.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { TransformHandle, World } from "../scene/World.ts";
 import { Frame, frameTransform, type FrameOptions } from "./Frame.ts";
@@ -65,8 +65,11 @@ export function convertPoint<M extends string>(
 
 /**
  * The east-north-up frame at `position` (meters, in `bodyFixed`) on
- * `ellipsoid`: a constant child of `bodyFixed`. "Up" is the ellipsoid's
- * normal at `position` itself. `options.accuracy` states the placement's
+ * `ellipsoid`: a constant child of `bodyFixed`. "Up" is the geodetic normal
+ * at the position's foot on the ellipsoid (the normal through its
+ * cartographic latitude), as body-fixed frames define it. That differs from
+ * the ellipsoid's gradient normal at `position` itself by about 0.13 µrad
+ * at 250 m height. `options.accuracy` states the placement's
  * accuracy (1σ); a frame defined at a chosen point is exact by definition.
  */
 export function eastNorthUpFrame<N extends string>(
@@ -81,6 +84,29 @@ export function eastNorthUpFrame<N extends string>(
     ellipsoid,
     mat4(),
   );
+  // Off the polar axis, up is the normal at the foot: from the cartographic
+  // latitude and longitude, not the gradient at `position`. East is
+  // unchanged (it depends on longitude only); north is up x east.
+  const p = Float64Array.from(position);
+  const cartographic = ellipsoid.cartesianToCartographic(p, {
+    longitude: 0,
+    latitude: 0,
+    height: 0,
+  });
+  if (Math.hypot(p[0]!, p[1]!) > EPSILON14 && cartographic !== undefined) {
+    const cosLat = Math.cos(cartographic.latitude);
+    const upX = cosLat * Math.cos(cartographic.longitude);
+    const upY = cosLat * Math.sin(cartographic.longitude);
+    const upZ = Math.sin(cartographic.latitude);
+    const eX = m[0]!,
+      eY = m[1]!;
+    m[8] = upX;
+    m[9] = upY;
+    m[10] = upZ;
+    m[4] = -upZ * eY;
+    m[5] = upZ * eX;
+    m[6] = upX * eY - upY * eX;
+  }
   return Frame.constant(name, bodyFixed, m, options);
 }
 

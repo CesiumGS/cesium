@@ -187,7 +187,9 @@ export interface DataContext {
 /**
  * What a case gets. `frames` is there only for a case that declares the
  * "frames" need (or an Orion need); reading it otherwise throws, so an
- * undeclared use fails loudly, even where the data is loaded. Under an
+ * undeclared use fails loudly, even where the data is loaded. It is
+ * enumerable, so spreading the context reads it (and throws the same way
+ * for a case without the need). Under an
  * optional need it throws `NeedMissingError` when the data didn't load.
  */
 export interface StressContext extends DataContext {
@@ -849,7 +851,7 @@ export class Needs {
     // The frames, only for a case that said it reads them (F44).
     return {
       ctx: Object.defineProperty(ctxFor, "frames", {
-        enumerable: false,
+        enumerable: true,
         get(): Frames {
           if (!readsFrames) {
             throw new Error(

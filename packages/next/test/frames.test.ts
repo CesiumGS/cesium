@@ -333,4 +333,49 @@ describe("frames in the world", () => {
       expect(Math.abs(m[8 + i]! - normal[i]!)).toBeLessThan(1e-15);
     }
   });
+
+  it("eastNorthUpFrame's up is the geodetic normal at the position's foot", () => {
+    const ellipsoid = Ellipsoid.WGS84;
+    const earth = Frame.root("ITRF");
+    const cartographic = fromDegrees(-75, 40, 250);
+    const position = ellipsoid.cartographicToCartesian(
+      cartographic,
+      new Float64Array(3),
+    );
+    const enu = eastNorthUpFrame("enu", earth, ellipsoid, position);
+    const m = frameTransform(enu, earth, t1);
+    const foot = ellipsoid.geodeticSurfaceNormalCartographic(
+      cartographic,
+      new Float64Array(3),
+    );
+    for (let i = 0; i < 3; i++) {
+      expect(Math.abs(m[8 + i]! - foot[i]!)).toBeLessThan(1e-15);
+    }
+    const gradient = ellipsoid.geodeticSurfaceNormal(
+      position,
+      new Float64Array(3),
+    )!;
+    const dot =
+      foot[0]! * gradient[0]! +
+      foot[1]! * gradient[1]! +
+      foot[2]! * gradient[2]!;
+    const cross = Math.hypot(
+      foot[1]! * gradient[2]! - foot[2]! * gradient[1]!,
+      foot[2]! * gradient[0]! - foot[0]! * gradient[2]!,
+      foot[0]! * gradient[1]! - foot[1]! * gradient[0]!,
+    );
+    const microradians = Math.atan2(cross, dot) * 1e6;
+    expect(Math.abs(microradians - 0.13)).toBeLessThan(0.05);
+    // Still a right-handed orthonormal basis.
+    const east = [m[0]!, m[1]!, m[2]!];
+    const north = [m[4]!, m[5]!, m[6]!];
+    expect(
+      Math.abs(
+        east[0]! * north[0]! + east[1]! * north[1]! + east[2]! * north[2]!,
+      ),
+    ).toBeLessThan(1e-15);
+    expect(
+      Math.abs(Math.hypot(north[0]!, north[1]!, north[2]!) - 1),
+    ).toBeLessThan(1e-15);
+  });
 });
