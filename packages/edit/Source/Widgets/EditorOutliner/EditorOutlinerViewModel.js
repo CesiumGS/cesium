@@ -90,7 +90,7 @@ class EditorOutlinerViewModel {
    * Whether each mesh shown in a row is active. Rows read these, so every row
    * showing a mesh updates when it changes.
    *
-   * @type {WeakMap<Mesh, ReturnType<typeof knockout.observable>>}
+   * @type {WeakMap<Mesh, *>}
    */
   #meshActiveStates = new WeakMap();
 
@@ -421,7 +421,7 @@ class EditorOutlinerViewModel {
    * Gets whether a mesh is active, reading it from the editor the first time.
    *
    * @param {Mesh} mesh The mesh.
-   * @returns {ReturnType<typeof knockout.observable>} The observable state.
+   * @returns {*} The observable state.
    * @ignore
    */
   #getActiveState(mesh) {
