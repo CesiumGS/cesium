@@ -361,7 +361,8 @@ const COLOR_BY_HAND = new CustomShader({
   } else if (h > 7.0) {
     c = vec3f(30.0, 144.0, 255.0) / 255.0;
   }
-  (*material).baseColor *= c;
+  // The style's colors are sRGB as written; the material's are linear.
+  (*material).baseColor *= pow(c, vec3f(2.2));
 }`,
 });
 

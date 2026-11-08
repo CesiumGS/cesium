@@ -70,7 +70,12 @@ interface Source {
   /** ion asset id, for loading the same asset in 1.x. */
   ionAsset?: number;
   /** A 3D Tiles style (1.x's JSON), applied in both engines. */
-  style?: { show?: string; color?: { conditions: Array<[string, string]> } };
+  style?: {
+    show?: string;
+    color?: { conditions: Array<[string, string]> };
+  };
+  /** How the style's color applies (1.x `colorBlendMode`; default highlight). */
+  blend?: { mode: "replace" | "mix"; amount?: number };
 }
 
 /** Public tilesets from Specs/Data. */
@@ -280,6 +285,11 @@ async function renderLegacy(
   if (source.style) {
     tileset.style = new Cesium.Cesium3DTileStyle(source.style);
   }
+  if (source.blend) {
+    tileset.colorBlendMode =
+      Cesium.Cesium3DTileColorBlendMode[source.blend.mode.toUpperCase()];
+    tileset.colorBlendAmount = source.blend.amount ?? 0.5;
+  }
   viewer.scene.primitives.add(tileset);
   const deadline = performance.now() + 120000;
   let frames = 0;
@@ -369,26 +379,40 @@ async function stringTileset(): Promise<string> {
   return blob(JSON.stringify(rewritten), "application/json");
 }
 
+const COLORS: Source["style"] = {
+  color: {
+    conditions: [
+      ["${kind} === 'park'", "color('#32cd32')"],
+      ["${kind} === 'school' || ${kind} === 'hospital'", "color('#ff8800')"],
+      ["${Height} > 10 && ${kind} === 'tower'", "rgb(200, 30, 30)"],
+      ["true", "hsl(0.6, 0.5, 0.7)"],
+    ],
+  },
+};
+
 /**
- * Styles with string comparisons (the unstyled row is the baseline). Their
- * colors have channels 0 or 1 only: 2.0 reads a style's color as linear and
- * 1.x shows it as written, so mid-range colors differ between the engines
- * whatever the style compares (checked apart from strings: #ff8800 shows as
- * (255, 136, 0) in 1.x and (255, 192, 0) in 2.0).
+ * Styles with string comparisons (the unstyled row is the baseline), with
+ * mid-range colors, in each blend mode, and an alpha of 0 (which hides).
  */
-const STRING_STYLES: Array<[string, Source["style"]]> = [
-  ["no style (baseline)", undefined],
-  ["show by strings", { show: "${kind} !== 'tower' && ${kind} !== 'road'" }],
+const STRING_STYLES: Array<[string, Partial<Source>]> = [
+  ["no style (baseline)", {}],
   [
-    "color by strings and numbers",
+    "show by strings",
+    { style: { show: "${kind} !== 'tower' && ${kind} !== 'road'" } },
+  ],
+  ["color by strings and numbers", { style: COLORS }],
+  ["color, replace", { style: COLORS, blend: { mode: "replace" } }],
+  ["color, mix", { style: COLORS, blend: { mode: "mix", amount: 0.4 } }],
+  [
+    "color with alpha 0 hides",
     {
-      color: {
-        conditions: [
-          ["${kind} === 'park'", "color('lime')"],
-          ["${kind} === 'school' || ${kind} === 'hospital'", "color('yellow')"],
-          ["${Height} > 10 && ${kind} === 'tower'", "color('red')"],
-          ["true", "color('white')"],
-        ],
+      style: {
+        color: {
+          conditions: [
+            ["${kind} === 'tower'", "color('red', 0)"],
+            ["true", "color('#ff8800')"],
+          ],
+        },
       },
     },
   ],
@@ -398,10 +422,10 @@ async function sources(): Promise<Source[]> {
   const asset = params.get("asset");
   if (params.get("styles") !== null) {
     const url = await stringTileset();
-    return STRING_STYLES.map(([label, style]) => ({
+    return STRING_STYLES.map(([label, rest]) => ({
       label: `string styles: ${label}`,
       url,
-      ...(style ? { style } : {}),
+      ...rest,
     }));
   }
   if (!asset) {
@@ -461,7 +485,17 @@ async function runTileset(): Promise<Row[]> {
         let batches = 0;
         let properties = "";
         let nextPicks: unknown[] = [];
-        const style = source.style ? new FeatureStyle(source.style) : undefined;
+        const style = source.style
+          ? new FeatureStyle({
+              ...source.style,
+              ...(source.blend
+                ? {
+                    colorBlendMode: source.blend.mode,
+                    colorBlendAmount: source.blend.amount ?? 0.5,
+                  }
+                : {}),
+            })
+          : undefined;
         for (const colorTransfer of ["srgb", "gamma2.2"] as const) {
           const assets: GltfAsset[] = await Promise.all(
             contents.map((c) =>
