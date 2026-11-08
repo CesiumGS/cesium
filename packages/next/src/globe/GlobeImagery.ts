@@ -27,7 +27,7 @@ import {
 } from "../render/layout.ts";
 import type { ImageryProvider } from "./ImageryProvider.ts";
 import imageryWgsl from "../shaders/generated/imagery.wgsl?raw";
-import { SlicePool } from "./SlicePool.ts";
+import { SlicePool, type SliceUser } from "./SlicePool.ts";
 
 const WGS84_RADIUS = 6378137;
 /** Web Mercator's latitude limit. */
@@ -92,7 +92,10 @@ interface Job {
   tiles: [number, number][];
 }
 
-export class GlobeImagery {
+/** Slices a layer adds to the world's array by default. */
+export const DEFAULT_IMAGERY_SLICES = 512;
+
+export class GlobeImagery implements SliceUser {
   /** The world's slices, shared with its other imagery layers. */
   private readonly pool: SlicePool;
   /** Slices this layer asked the pool for. */
@@ -109,6 +112,13 @@ export class GlobeImagery {
   private readonly jobs = new Map<Tile, Job>();
   private readonly sources = new Map<string, Source>();
   private readonly applied = new WeakMap<ModelPlacement, number>();
+  /**
+   * Slices this frame's tiles need (`update`): the distinct slices they
+   * draw with (their own, or an ancestor's while theirs composites), and
+   * one for each still waiting for its own. Past the layer's share of the
+   * pool, it recycles slices it needs again.
+   */
+  needed = 0;
   /** Compiled asynchronously: a synchronous compile stalls frames. */
   private pipelines?: {
     fill: GPUComputePipeline;
@@ -138,12 +148,16 @@ export class GlobeImagery {
     const device = ctx.device;
     // Every layer of a world composites into one array (SlicePool), so
     // they share its size: the first layer's.
-    this.requested = Math.min(options.slices ?? 512, MAX_IMAGERY_SLICES);
+    this.requested = Math.min(
+      options.slices ?? DEFAULT_IMAGERY_SLICES,
+      MAX_IMAGERY_SLICES,
+    );
     this.pool = SlicePool.acquire(
       device,
       world,
       options.size ?? 256,
       this.requested,
+      this,
     );
     this.size = this.pool.size;
     this.role = options.role ?? "surface";
@@ -261,10 +275,12 @@ export class GlobeImagery {
   update(wanted: Map<Tile, number>): void {
     const frame = ++this.frame;
     const order = [...wanted.entries()].sort((a, b) => a[1] - b[1]);
+    const inUse = new Set<number>();
     for (const [tile] of order) {
       const own = this.slices.get(tile);
       if (own) {
         own.used = frame;
+        inUse.add(own.slice);
       } else {
         if (!this.jobs.has(tile)) {
           this.jobs.set(tile, this.job(tile));
@@ -274,6 +290,7 @@ export class GlobeImagery {
         const stand = this.standIn(tile);
         if (stand) {
           stand.used = frame;
+          inUse.add(stand.slice);
         }
       }
     }
@@ -283,6 +300,8 @@ export class GlobeImagery {
         this.jobs.delete(tile);
       }
     }
+    // Every job is a wanted tile without its own slice: it needs one.
+    this.needed = inUse.size + this.jobs.size;
     // Fetch sources, nearest tiles first, within the origin's window.
     for (const [tile] of order) {
       const job = this.jobs.get(tile);
@@ -374,7 +393,8 @@ export class GlobeImagery {
     this.sources.clear();
     this.pool.give([...this.slices.values()].map((s) => s.slice));
     this.slices.clear();
-    this.pool.release(this.requested);
+    this.needed = 0;
+    this.pool.release(this);
     this.params.destroy();
   }
 

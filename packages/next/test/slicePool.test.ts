@@ -1,7 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { SlicePool } from "../src/globe/SlicePool.ts";
+import { SlicePool, type SliceUser } from "../src/globe/SlicePool.ts";
 import type { World } from "../src/scene/World.ts";
 import { fakeDevice, installGpuGlobals } from "./fakeGpu.ts";
+
+/** A layer holding no slices. */
+function user(): SliceUser {
+  return { needed: 0 };
+}
 
 describe("SlicePool", () => {
   beforeAll(() => installGpuGlobals());
@@ -15,9 +20,10 @@ describe("SlicePool", () => {
         log.push(view === undefined ? "unbind" : "bind");
       },
     } as unknown as World;
-    const pool = SlicePool.acquire(fakeDevice({}), world, 256, 4);
+    const only = user();
+    const pool = SlicePool.acquire(fakeDevice({}), world, 256, 4, only);
     pool.texture.destroy = () => void log.push("destroy");
-    pool.release(4);
+    pool.release(only);
     expect(log).toEqual(["bind", "unbind", "destroy"]);
   });
 
@@ -29,10 +35,11 @@ describe("SlicePool", () => {
       },
     } as unknown as World;
     const device = fakeDevice({});
-    const pool = SlicePool.acquire(device, world, 256, 4);
-    SlicePool.acquire(device, world, 256, 4);
+    const first = user();
+    const pool = SlicePool.acquire(device, world, 256, 4, first);
+    SlicePool.acquire(device, world, 256, 4, user());
     pool.texture.destroy = () => void log.push("destroy");
-    pool.release(4);
+    pool.release(first);
     expect(log).not.toContain("unbind");
     expect(log).not.toContain("destroy");
   });
@@ -49,11 +56,11 @@ describe("SlicePool growth", () => {
       },
     } as unknown as World;
     const device = fakeDevice({});
-    const pool = SlicePool.acquire(device, world, 256, 1);
+    const pool = SlicePool.acquire(device, world, 256, 1, user());
     const first = pool.texture;
     first.destroy = () => void log.push("destroy old");
     log.length = 0;
-    SlicePool.acquire(device, world, 256, 8); // grows
+    SlicePool.acquire(device, world, 256, 8, user()); // grows
     expect(log).toEqual(["bind", "destroy old"]);
   });
 });

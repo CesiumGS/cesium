@@ -1,6 +1,12 @@
 import { MAX_IMAGERY_SLICES } from "../render/layout.ts";
 import type { World } from "../scene/World.ts";
 
+/** A layer using the pool (GlobeImagery). */
+export interface SliceUser {
+  /** Slices its tiles need this frame (`SlicePool.usage`). */
+  readonly needed: number;
+}
+
 /**
  * A world's globe imagery slices: one `texture_2d_array` that every
  * imagery layer of the world composites into (surface imagery and night
@@ -15,6 +21,11 @@ import type { World } from "../scene/World.ts";
  * holds its share, so a late layer (night lights resolve after the
  * imagery) still gets slices.
  *
+ * The slices are a cache, so "used" reaches capacity soon after a flight
+ * starts, by design. What a frame needs (`needed`: the slices its tiles
+ * draw with or wait for) is what to hold against capacity: past it, layers
+ * recycle slices they need again and imagery thrashes.
+ *
  * Bindless: the pool is already a physical cache addressed by index (a
  * virtual-texture-like design); with resource tables its slices could
  * become separate textures named by index without changing its users.
@@ -22,36 +33,54 @@ import type { World } from "../scene/World.ts";
 export class SlicePool {
   private static readonly pools = new WeakMap<World, SlicePool>();
 
-  /** The world's pool, created on first use at `size` texels a side. */
+  /**
+   * The world's pool, created on first use at `size` texels a side, with
+   * room for `slices` more for `user`.
+   */
   static acquire(
     device: GPUDevice,
     world: World,
     size: number,
     slices: number,
+    user: SliceUser,
   ): SlicePool {
     let pool = SlicePool.pools.get(world);
     if (!pool || pool.destroyed) {
       pool = new SlicePool(device, world, size);
       SlicePool.pools.set(world, pool);
     }
-    pool.users++;
     pool.reserve(pool.wanted + slices);
-    pool.wanted += slices;
+    pool.users.set(user, slices);
     return pool;
   }
 
   /**
-   * A world's slices in use, the array's layers, and the most it may grow
-   * to (the inspector's memory section), or undefined without imagery.
+   * A world's slices for the inspector's memory section, or undefined
+   * without imagery:
+   * - `needed`: what this frame's tiles need, summed over layers. Warn as
+   *   it nears `capacity`.
+   * - `used`: slices holding imagery (cached). It reaches capacity by
+   *   design.
+   * - `capacity`: the array's layers; `ceiling`: the most it may grow to.
    */
-  static usage(
-    world: World,
-  ): { used: number; capacity: number; ceiling: number } | undefined {
+  static usage(world: World):
+    | {
+        needed: number;
+        used: number;
+        capacity: number;
+        ceiling: number;
+      }
+    | undefined {
     const pool = SlicePool.pools.get(world);
     if (!pool || pool.destroyed) {
       return undefined;
     }
+    let needed = 0;
+    for (const user of pool.users.keys()) {
+      needed += user.needed;
+    }
     return {
+      needed,
       used: pool.capacity - pool.free.length,
       capacity: pool.capacity,
       ceiling: pool.ceiling,
@@ -62,9 +91,8 @@ export class SlicePool {
   /** Layers in the array. */
   capacity = 0;
   private readonly free: number[] = [];
-  private users = 0;
-  /** Slices the users asked for together (what the pool grows toward). */
-  private wanted = 0;
+  /** Its layers, and the slices each asked for. */
+  private readonly users = new Map<SliceUser, number>();
   private destroyed = false;
   readonly mipLevelCount: number;
 
@@ -85,9 +113,18 @@ export class SlicePool {
     );
   }
 
+  /** Slices the users asked for together (what the pool grows toward). */
+  private get wanted(): number {
+    let wanted = 0;
+    for (const slices of this.users.values()) {
+      wanted += slices;
+    }
+    return wanted;
+  }
+
   /** A user's fair share: past it, the user recycles its own slices first. */
   get share(): number {
-    return Math.floor(this.capacity / Math.max(1, this.users));
+    return Math.floor(this.capacity / Math.max(1, this.users.size));
   }
 
   /** A free slice, or undefined when none is left. */
@@ -103,9 +140,8 @@ export class SlicePool {
   }
 
   /** A user leaves with its slices (given back first); the last destroys. */
-  release(slices: number): void {
-    this.wanted = Math.max(0, this.wanted - slices);
-    if (--this.users > 0) {
+  release(user: SliceUser): void {
+    if (!this.users.delete(user) || this.users.size > 0) {
       return;
     }
     this.destroyed = true;

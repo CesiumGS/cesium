@@ -127,6 +127,7 @@ export {
   type ImageryProvider,
 } from "./globe/ImageryProvider.ts";
 export {
+  DEFAULT_IMAGERY_SLICES,
   GlobeImagery,
   type GlobeImageryOptions,
 } from "./globe/GlobeImagery.ts";
@@ -158,7 +159,7 @@ export {
   BASE_CAPACITY_LIMITS,
   type LimitsTier,
 } from "./gpu/limits.ts";
-export { SlicePool } from "./globe/SlicePool.ts";
+export { SlicePool, type SliceUser } from "./globe/SlicePool.ts";
 export { CapacityError, isCapacityError } from "./scene/CapacityError.ts";
 export {
   Ellipsoid,

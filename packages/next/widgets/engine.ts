@@ -283,18 +283,7 @@ export function engineSnapshot(
       },
       { label: "Clip blocks", unit: "count", ...m.clipBlocks },
       { label: "Point sets", unit: "count", ...m.pointSets },
-      ...(slices
-        ? [
-            {
-              label: "Imagery slices",
-              unit: "count" as const,
-              used: slices.used,
-              capacity: slices.capacity,
-              text: `${slices.used} of ${slices.capacity}`,
-              detail: `Globe imagery and night lights share one array; it grows to ${slices.ceiling} layers.`,
-            },
-          ]
-        : []),
+      ...(slices ? [imagerySlicesRow(slices)] : []),
       {
         label: "Models",
         unit: "bytes",
@@ -360,6 +349,29 @@ export function engineSnapshot(
  * over the tilesets shown: a hidden one (the globe under photorealistic
  * tiles) draws nothing, so it never settles and the load never ended.
  */
+/**
+ * The imagery slices' meter: this frame's need against capacity. The
+ * slices are a cache, so how many hold imagery reaches capacity within
+ * seconds by design; that count is in the text and the tooltip, and the
+ * meter (its warning past 90%) follows the need, which is when imagery
+ * would start to thrash.
+ */
+export function imagerySlicesRow(slices: {
+  needed: number;
+  used: number;
+  capacity: number;
+  ceiling: number;
+}): MemoryRow {
+  return {
+    label: "Imagery slices",
+    unit: "count",
+    used: slices.needed,
+    capacity: slices.capacity,
+    text: `${slices.needed} needed of ${slices.capacity} · ${slices.used} cached`,
+    detail: `Needed: the slices this frame's tiles draw with or wait for. Cached: slices holding imagery, a cache that fills by design and recycles its least recently used. Globe imagery and night lights share one array; it grows to ${slices.ceiling} layers.`,
+  };
+}
+
 function loadPhases(
   all: readonly Tileset3D[],
   options: EngineSnapshotOptions,
