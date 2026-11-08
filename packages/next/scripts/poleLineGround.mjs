@@ -11,17 +11,25 @@
 // 4 m square), so a fence post or a ditch under one cell doesn't stand in
 // for the field; a pole with no lidar cells there takes the heights of its
 // neighbours, linear between them. The samples are cached in <file>
-// (default: pole-line-ground.json in the OS temporary directory), never in
-// the repo: only the poles' heights, which are design data, are committed.
+// (default: samples/pole-line-ground.json in the frames data directory,
+// ~/.cesium-bench/frames, private to the user), never in the repo: only the
+// poles' heights, which are design data, are committed. The cache is
+// checked as it is read back (a date, and numbers only), since what it
+// holds goes into a generated source file.
 //
 // Contains Environment Agency information © Environment Agency and/or
 // database right 2022, under the Open Government Licence v3.0.
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
+import { framesDataDirectory } from "./frameData.mjs";
+import {
+  SAMPLED_DATE,
+  checkedCache,
+  lidarHeight,
+} from "./designTiles/poleLineCache.mjs";
 import { poleLinePoles } from "./designTiles/poleLineMesh.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -44,7 +52,16 @@ function argument(name, fallback) {
   const i = process.argv.indexOf(name);
   return i >= 0 && i + 1 < process.argv.length ? process.argv[i + 1] : fallback;
 }
-const file = argument("--samples", join(tmpdir(), "pole-line-ground.json"));
+const file = argument(
+  "--samples",
+  join(framesDataDirectory(), "samples", "pole-line-ground.json"),
+);
+
+/** Writes the cache where only the user can read or change it. */
+function writeCache(cache) {
+  mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
+  writeFileSync(file, JSON.stringify(cache), { mode: 0o600 });
+}
 
 /** The reply's body as text, refusing more than MAX_BYTES. */
 async function cappedText(response) {
@@ -103,7 +120,7 @@ async function cells(e, n) {
         .split(/\s+/)
         .filter((t) => t !== "")
         .map(Number)
-        .filter((v) => Number.isFinite(v) && v > -100 && v < 1_400);
+        .filter(lidarHeight);
     } catch (error) {
       if (attempt >= 5) {
         throw error;
@@ -130,7 +147,10 @@ try {
   const { poles } = poleLinePoles(site);
   const key = ([e, n]) => `${e.toFixed(2)},${n.toFixed(2)}`;
   const cache = existsSync(file)
-    ? JSON.parse(readFileSync(file, "utf8"))
+    ? {
+        source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN metres`,
+        ...checkedCache(JSON.parse(readFileSync(file, "utf8")), file),
+      }
     : {
         source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN metres`,
         sampled: new Date().toLocaleDateString("en-CA"),
@@ -144,12 +164,15 @@ try {
       cache.cells[key(p)] = await cells(p[0], p[1]);
       if (++done % 25 === 0 || done === missing.length) {
         console.log(`  ${done} of ${missing.length} poles`);
-        writeFileSync(file, JSON.stringify(cache));
+        writeCache(cache);
       }
     }
   };
   await Promise.all(Array.from({ length: PARALLEL }, work));
-  writeFileSync(file, JSON.stringify(cache));
+  writeCache(cache);
+  if (!SAMPLED_DATE.test(cache.sampled)) {
+    throw new Error(`poleLineGround: a sampled date that isn't YYYY-MM-DD`);
+  }
 
   // Each pole's ground; a pole without cells, linear between its neighbours.
   const ground = poles.map((p) => {
