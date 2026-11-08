@@ -714,13 +714,9 @@ pre.snippet:focus-visible,
   display: grid;
   gap: var(--stratakit-space-200);
 }
-.stack-middle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
-  gap: var(--stratakit-space-200);
-}
 .stack-optional {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--stratakit-space-200);
 }
 .section .stack-rule {
@@ -728,12 +724,6 @@ pre.snippet:focus-visible,
   padding-block-start: var(--stratakit-space-200);
   border-block-start: 1px solid var(--stratakit-color-border-accent-base);
   max-inline-size: none;
-}
-.stack-arrow {
-  align-self: center;
-  text-align: center;
-  font-size: var(--stratakit-font-size-headline-md);
-  line-height: 1;
 }
 .module {
   padding: var(--stratakit-space-300);
@@ -953,11 +943,8 @@ pre.snippet:focus-visible,
 /* ------------------------------------------------------------ a phone, etc */
 
 @media (max-width: 900px) {
-  .stack-middle {
+  .stack-optional {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .stack-arrow {
-    transform: rotate(90deg);
   }
   .board {
     grid-template-columns: minmax(0, 1fr);

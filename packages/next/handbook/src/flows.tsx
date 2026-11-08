@@ -531,6 +531,113 @@ export function LoadingStages() {
   );
 }
 
+const TRANSLUCENT_TERRAIN: BoardStep[] = [
+  {
+    id: "slot",
+    lane: 0,
+    row: 0,
+    title: "A region takes a slot",
+    body: (
+      <>
+        A rectangle or polygon compiles to rows in <C>clipBoxes</C>, in one of
+        32 slots shared with clips. Its directory row holds its opacity: 0 is a
+        clip, and above 0 is translucent. <C>setTerrainOpacity</C> takes a slot
+        with no shape, which holds everywhere.
+      </>
+    ),
+  },
+  {
+    id: "mask",
+    lane: 0,
+    row: 1,
+    title: "Each tile gets a mask",
+    body: (
+      <>
+        A tile's draw records hold the slots its rectangle touches, in{" "}
+        <C>terrainClip</C>. The CPU filters per tile, so only tiles a region
+        touches change.
+      </>
+    ),
+  },
+  {
+    id: "twin",
+    lane: 0,
+    row: 2,
+    title: "A blended twin of the material",
+    body: (
+      <>
+        A tile a translucent slot reaches draws with a twin of its material,
+        flagged <C>alphaBlend</C>, through <C>World.setDrawMaterial</C>.
+        Changing a region's opacity needs no new twin and no recompile, so a
+        fade can run every tick.
+      </>
+    ),
+  },
+  {
+    id: "opacity",
+    lane: 1,
+    row: 0,
+    title: "Opacity per fragment",
+    body: (
+      <>
+        <C>terrainOpacity</C> takes the least opacity of the slots in the mask
+        that hold the fragment. A clip gives 0, so it wins over any translucent
+        region. The loops have constant bounds, and a budget caps edges tested
+        per fragment.
+      </>
+    ),
+  },
+  {
+    id: "skirt",
+    lane: 1,
+    row: 1,
+    title: "Skirts hide",
+    body: (
+      <>
+        A skirt's opacity is 0 wherever the terrain is less than opaque. Each
+        skirt triangle starts at a skirt vertex (<C>skirtStart</C> in the
+        record), and a flat bit in <C>ids.z</C> tells the fragment shader.
+      </>
+    ),
+  },
+  {
+    id: "opaque",
+    lane: 2,
+    row: 0,
+    title: "Opacity 0.999 and up: the opaque pass",
+    body: "With depth, shadows, picks and ambient occlusion as usual, so the rest of the tile looks as it did.",
+  },
+  {
+    id: "translucent",
+    lane: 2,
+    row: 1,
+    title: "Below that: the translucent passes",
+    body: "Ordered with all other blended content by the view's translucency mode, and tested against the opaque depth per sample. It casts no shadow and takes no ambient occlusion.",
+  },
+];
+
+/** Translucent terrain, from a region to the passes that draw it. */
+export function TranslucentTerrainFlow() {
+  return (
+    <Board
+      label="How translucent terrain draws"
+      lanes={[
+        "On the CPU, when regions change",
+        "In the shader",
+        "Where it lands",
+      ]}
+      steps={TRANSLUCENT_TERRAIN}
+      edges={[
+        { from: "slot", to: "mask", vertical: true },
+        { from: "mask", to: "twin", vertical: true },
+        { from: "opacity", to: "skirt", vertical: true },
+        { from: "opacity", to: "opaque" },
+        { from: "skirt", to: "translucent" },
+      ]}
+    />
+  );
+}
+
 const VECTOR: BoardStep[] = [
   {
     id: "feed",

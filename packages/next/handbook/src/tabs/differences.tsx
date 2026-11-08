@@ -199,7 +199,7 @@ export function Differences() {
         <p>
           Not in the proof of concept: Entities and DataSources; Primitive,
           Geometry and Appearance; 2D and Columbus view; CZML, KML and GeoJSON;
-          underground and globe translucency; imagery draped on 3D Tiles.
+          underground viewing; imagery draped on 3D Tiles.
         </p>
         <h3>Tileset and glTF extensions</h3>
         <DataTable

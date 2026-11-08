@@ -212,23 +212,18 @@ export function ModuleStack() {
   return (
     <div className="stack-map">
       <ModuleBlock id="widgets" wide />
-      <div className="stack-middle">
-        <div className="stack-optional">
-          {stackOrder().map((id) => (
-            <ModuleBlock id={id} key={id} />
-          ))}
-        </div>
-        <span className="stack-arrow" aria-hidden="true">
-          →
-        </span>
-        <ModuleBlock id="core">
-          <p className="stack-rule">
-            Optional modules may use the core. The core never uses them: it
-            reaches them only through its frame resolver and clock interfaces,
-            so an app that doesn't import them doesn't load them.
-          </p>
-        </ModuleBlock>
+      <div className="stack-optional">
+        {stackOrder().map((id) => (
+          <ModuleBlock id={id} key={id} />
+        ))}
       </div>
+      <ModuleBlock id="core" wide>
+        <p className="stack-rule">
+          Optional modules may use the core. The core never uses them: it
+          reaches them only through its frame resolver and clock interfaces, so
+          an app that doesn't import them doesn't load them.
+        </p>
+      </ModuleBlock>
       <ModuleBlock id="utilities" wide />
     </div>
   );

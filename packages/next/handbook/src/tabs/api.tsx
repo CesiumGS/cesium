@@ -42,6 +42,21 @@ await engine.addTileset(world, url);
 // Picks read back from the GPU, so the answer is a promise.
 const hit = await view.pick(x, y);`;
 
+const TERRAIN = `const globe = await engine.addTerrain(world, url);
+
+// A region, in geodetic degrees. Picks go on to what shows through it.
+const site = globe.addTerrainTranslucency(
+  { rectangle: { west: -75.6, south: 40.0, east: -75.5, north: 40.1 } },
+  { opacity: 0.3, pickThrough: true },
+);
+
+// In place, with no recompile, so a fade can call it every tick.
+globe.setTerrainTranslucency(site, { opacity: 0.5 });
+globe.removeTerrainTranslucency(site);
+
+// The whole globe. 1 is opaque again.
+globe.setTerrainOpacity(0.6, { pickThrough: true });`;
+
 const PRINCIPLES = [
   "Creation is asynchronous, and nothing has a ready flag.",
   "No update(frameState) contract: objects register with the world, and changes mark them dirty.",
@@ -126,6 +141,45 @@ export function Api() {
           Calls follow <C>src/scene/Engine.ts</C> and <C>widgets/Viewer.ts</C>;
           options are left out. The snippets aren't compiled yet.
         </p>
+      </Section>
+
+      <Section title="Translucent terrain">
+        <p>
+          Terrain is translucent in a region or everywhere, through four methods
+          on a globe's <C>Tileset3D</C>. The Rendering tab shows how it draws.
+        </p>
+        <pre className="snippet" tabIndex={0}>
+          <code>{TERRAIN}</code>
+        </pre>
+        <ul>
+          <li>
+            <C>addTerrainTranslucency(region, {"{ opacity, pickThrough }"})</C>{" "}
+            takes a region as <C>addTerrainClip</C> does, with an opacity above
+            0 and below 1, and returns a handle.
+          </li>
+          <li>
+            <C>setTerrainTranslucency(handle, {"{ opacity, pickThrough }"})</C>{" "}
+            changes either in place. To make a region opaque, remove it with{" "}
+            <C>removeTerrainTranslucency</C>.
+          </li>
+          <li>
+            <C>setTerrainOpacity(opacity, {"{ pickThrough }"})</C> applies to
+            the whole globe, above 0 and up to 1. Where it meets a region, the
+            least opacity wins, and a clip wins over both.
+          </li>
+          <li>
+            <C>pickThrough</C> decides whether picks stop at the translucent
+            ground or go on to what shows through it. Omitted, it's false for a
+            new region, and <C>setTerrainTranslucency</C> and{" "}
+            <C>setTerrainOpacity</C> keep the current value.
+          </li>
+        </ul>
+        <p>
+          Only a globe has terrain to make translucent, so these throw on any
+          other tileset. Heights, terrain rays and clamping treat translucent
+          terrain as ground.
+        </p>
+        <Written from={<C>src/streaming/Tileset3D.ts</C>} on="2026-11-08" />
       </Section>
 
       <Section title="The principles behind it">

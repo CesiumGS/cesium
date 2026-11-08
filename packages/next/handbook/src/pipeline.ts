@@ -30,6 +30,7 @@ export const BUFFERS = [
   "view block",
   "draw records",
   "transforms",
+  "clip regions",
   "items",
   "draw arguments",
   "lights and froxels",
@@ -54,7 +55,7 @@ export const PASSES: Record<string, PassNote> = {
     detail:
       "For each of the 4 cascades, the cascade's view block is copied in, the world is culled again for it, without point sets, and the casters' bundle draws depth into that layer of the shadow map.",
     skipped: "When the view has no shadows this tick.",
-    reads: ["view block", "draw records", "transforms"],
+    reads: ["view block", "draw records", "transforms", "clip regions"],
     writes: ["items", "draw arguments", "shadow map"],
   },
   "height-captures": {
@@ -64,7 +65,7 @@ export const PASSES: Record<string, PassNote> = {
     detail:
       "A capture this view owes draws the ground into its own depth texture from above, after a cull of its own. Reverse-Z clears to 0, which means nothing below the capture's bottom.",
     skipped: "When no capture is due from this view.",
-    reads: ["view block", "draw records", "transforms"],
+    reads: ["view block", "draw records", "transforms", "clip regions"],
     writes: ["items", "draw arguments"],
   },
   "select-view": {
@@ -126,7 +127,13 @@ export const PASSES: Record<string, PassNote> = {
     detail:
       "Draws what the view culled, with the casters' vertex stage and the opaque pass's discards. Its targets are what screen-space passes read.",
     skipped: "When ambient occlusion is off for the view.",
-    reads: ["view block", "draw records", "items", "draw arguments"],
+    reads: [
+      "view block",
+      "draw records",
+      "clip regions",
+      "items",
+      "draw arguments",
+    ],
   },
   "ambient-occlusion": {
     group: "Depth and occlusion",
@@ -153,6 +160,7 @@ export const PASSES: Record<string, PassNote> = {
     reads: [
       "view block",
       "draw records",
+      "clip regions",
       "items",
       "draw arguments",
       "lights and froxels",
@@ -165,8 +173,14 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute, render",
     summary: "Per-pixel lists, or moments, chosen per view.",
     detail:
-      'In "exact" mode, blended fragments go into per-pixel lists, and a compute pass sorts and blends each list. In "moments" mode, one pass writes their moments and a second their weighted light.',
-    reads: ["view block", "draw records", "items", "draw arguments"],
+      'In "exact" mode, blended fragments go into per-pixel lists, and a compute pass sorts and blends each list. In "moments" mode, one pass writes their moments and a second their weighted light. Translucent terrain is drawn here like any other blended surface, with no pass of its own.',
+    reads: [
+      "view block",
+      "draw records",
+      "clip regions",
+      "items",
+      "draw arguments",
+    ],
   },
   composite: {
     group: "Translucency",
@@ -540,6 +554,5 @@ export const DECISIONS: readonly DecisionNote[] = [
 
 export const COMING = [
   "Shadow casters: off-screen tiles selected to cast into view, which will change what the shadows pass draws.",
-  "Translucent terrain, which will add terrain to the translucency passes.",
   "Presentations of a tileset: one selection with several draws.",
 ];

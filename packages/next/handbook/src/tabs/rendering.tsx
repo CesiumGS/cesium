@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { data } from "../data.ts";
 import { Board, Tag, useLayers, type BoardStep } from "../diagram.tsx";
+import { TranslucentTerrainFlow } from "../flows.tsx";
 import {
   C,
   DataTable,
@@ -725,6 +726,83 @@ export function Rendering() {
             </div>
           </div>
         </Figure>
+      </Section>
+
+      <Section title="Translucent terrain">
+        <p>
+          The globe's terrain can turn translucent inside a region, or
+          everywhere, so that what lies under the ground shows through it in
+          place. It adds no pass. Regions use the slots terrain clips already
+          had, and the blended tiles go through the alpha split every blended
+          surface already goes through.
+        </p>
+        <Figure caption="Tiles a region doesn't touch draw exactly as they would without it. A tile it does touch keeps its own draws and swaps only their material.">
+          <TranslucentTerrainFlow />
+        </Figure>
+        <div
+          className="table-wrap"
+          tabIndex={0}
+          role="group"
+          aria-label="What translucent terrain changes"
+        >
+          <table className="seams">
+            <thead>
+              <tr>
+                <th scope="col">For</th>
+                <th scope="col">Inside a translucent region</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Shadows</th>
+                <td>
+                  It casts none, as glass: below the opaque cutoff, the casters'
+                  fragment stage discards it.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Heights and clamping</th>
+                <td>
+                  Still ground. Height captures draw it opaque (<C>heightFs</C>
+                  ), and terrain rays and lines of sight are unaffected. Clips
+                  still apply.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Picks</th>
+                <td>
+                  Stop at it as at opaque terrain, unless <C>pickThrough</C> is
+                  set. The opaque pass a pick reads doesn't hold it, so a pick
+                  that may stop at it also traces the drawn terrain on the CPU,
+                  in the same tick, over the region's reach.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">The draw record</th>
+                <td>
+                  <C>skirtStart</C> took the record from 144 bytes, which was
+                  full, to 160.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Limits</th>
+                <td>
+                  32 slots and one edge budget, shared with clips. While below
+                  1, <C>setTerrainOpacity</C> holds one of those slots.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <Written
+          from={
+            <>
+              <C>src/streaming/Tileset3D.ts</C>, <C>src/globe/terrainClip.ts</C>{" "}
+              and <C>src/shaders/surface.slang</C>
+            </>
+          }
+          on="2026-11-08"
+        />
       </Section>
 
       <Section title="Precision and limits">
