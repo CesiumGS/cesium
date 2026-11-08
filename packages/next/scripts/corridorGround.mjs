@@ -2,8 +2,9 @@
 // part of setup. It samples USGS 3DEP ground heights (NAVD88 metres, from the
 // public 3DEP elevation service, no token) along the corridor's
 // horizontal alignment, then fits a vertical alignment to them as a highway
-// designer would (grades within 6%, PVIs with parabolic vertical curves of
-// AASHTO's least K, the ends tied in, Huber's loss against the ground) and
+// designer would (grades from 0.3% to 6%, PVIs with parabolic vertical
+// curves of AASHTO's least K, the ends tied in, Huber's loss against the
+// ground) and
 // prints it, with its PVIs, K values, largest cut and fill, and the
 // viaducts and tunnels where the ground is too far from it, for
 // examples/design-globe/corridor.ts.
@@ -205,7 +206,8 @@ const ground = samples.points.map((p) => p.groundMeters / FT_US);
 // ---- The fit ----
 
 /**
- * The design controls: a 65 mph freeway. Grades within 6%; each vertical
+ * The design controls: a 65 mph freeway. Grades within 6%, and at least
+ * 0.3% so the road drains (a level tangent ponds in its gutters); each vertical
  * curve at least AASHTO's least K for stopping sight distance at 65 mph
  * (A Policy on Geometric Design of Highways and Streets, 2018, tables 3-35
  * and 3-37: crest 193, sag 157, feet per percent of grade change) and at
@@ -213,6 +215,7 @@ const ground = samples.points.map((p) => p.groundMeters / FT_US);
  * 100 ft; grades to 0.01%.
  */
 const MAX_GRADE = 0.06;
+const MIN_GRADE = 0.003;
 const CREST_K = 193;
 const SAG_K = 157;
 const MIN_CURVE = 200;
@@ -303,14 +306,15 @@ function curvesFor(at, z) {
   return curves;
 }
 
-/** Whether every curve fits between its neighbours' and every grade is within 6%. */
+/** Whether every curve fits between its neighbours' and every grade is from 0.3% to 6%. */
 function feasible(at, z, curves) {
   for (let k = 0; k < at.length - 1; k++) {
     const gap = at[k + 1] - at[k];
     if (curves[k] / 2 + curves[k + 1] / 2 > gap) {
       return false;
     }
-    if (Math.abs((z[k + 1] - z[k]) / gap) > MAX_GRADE + 1e-9) {
+    const g = Math.abs((z[k + 1] - z[k]) / gap);
+    if (g > MAX_GRADE + 1e-9 || g < MIN_GRADE - 1e-9) {
       return false;
     }
   }
@@ -320,7 +324,8 @@ function feasible(at, z, curves) {
 /**
  * The PVI elevations nearest the ground in least squares, for these PVIs
  * and curves (the profile is linear in them), with any grade over 6% pulled
- * back to it by a penalty that grows until none is.
+ * back to it, and any under 0.3% pushed out to it on its own side of level,
+ * by a penalty that grows until none is out of range.
  */
 function fitElevations(at, curves, weights) {
   const n = at.length;
@@ -371,22 +376,30 @@ function fitElevations(at, curves, weights) {
     for (let k = 0; k < n - 1; k++) {
       const gap = at[k + 1] - at[k];
       const g = (z[k + 1] - z[k]) / gap;
-      if (Math.abs(g) > MAX_GRADE * 0.999) {
-        const existing = penalties.find((p) => p.k === k);
-        const target = Math.sign(g) * MAX_GRADE * 0.995 * gap;
+      const existing = penalties.find((p) => p.k === k);
+      const steep = Math.abs(g) > MAX_GRADE * 0.999;
+      // A grade held off level keeps its side of it.
+      const side = existing?.flat
+        ? Math.sign(existing.target)
+        : Math.sign(g) || 1;
+      const flat = !steep && side * g < MIN_GRADE * 1.001;
+      if (steep || flat) {
         if (existing) {
           existing.weight *= 4;
         } else {
-          penalties.push({ k, target, weight: 10 });
+          const target = steep
+            ? Math.sign(g) * MAX_GRADE * 0.995 * gap
+            : side * MIN_GRADE * 1.005 * gap;
+          penalties.push({ k, target, weight: 10, flat });
         }
-        over = over || Math.abs(g) > MAX_GRADE;
+        over = over || Math.abs(g) > MAX_GRADE || side * g < MIN_GRADE;
       }
     }
     if (!over) {
       return z;
     }
   }
-  throw new Error("corridorGround: the grades won't come within 6%");
+  throw new Error("corridorGround: the grades won't come within 0.3% to 6%");
 }
 
 /** The fit for these PVI stations: elevations, curves, and its cut and fill. */
@@ -477,19 +490,23 @@ for (let removed = true; removed;) {
   }
 }
 if (!feasible(best.at, best.z, best.curves)) {
-  throw new Error("corridorGround: the curves overlap or a grade is over 6%");
+  throw new Error(
+    "corridorGround: the curves overlap or a grade is outside 0.3% to 6%",
+  );
 }
 
 // Rounded as a designer writes it: the start elevation to 0.01 ft and each
-// grade to 0.01%, carried from the rounded elevation so far (no drift).
+// grade to 0.01%, carried from the rounded elevation so far (no drift), and
+// kept from 0.3% to 6% (both on the 0.01% grid).
 const at = best.at;
 const startElevation = Math.round(best.z[0] * 100) / 100;
 const grades = [];
 const z = [startElevation];
 for (let k = 0; k < at.length - 1; k++) {
+  const raw = (best.z[k + 1] - z[k]) / (at[k + 1] - at[k]);
+  const magnitude = Math.round(Math.abs(raw) * 10_000) / 10_000;
   const g =
-    Math.round(((best.z[k + 1] - z[k]) / (at[k + 1] - at[k])) * 10_000) /
-    10_000;
+    (Math.sign(raw) || 1) * Math.min(MAX_GRADE, Math.max(MIN_GRADE, magnitude));
   grades.push(g);
   z.push(z[k] + g * (at[k + 1] - at[k]));
 }
