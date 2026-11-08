@@ -1,11 +1,6 @@
 import { Event } from "@cesium/core";
 import { knockout } from "@cesium/widgets";
-import {
-  EditMode,
-  EditorToolbar,
-  SelectTool,
-  TranslateTool,
-} from "../../../index.js";
+import { EditMode, EditorToolbar } from "../../../index.js";
 
 describe("Widgets/EditorToolbar/EditorToolbar", function () {
   let container;
@@ -13,6 +8,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   let toolbar;
   let selectTool;
   let translateTool;
+  let tools;
 
   beforeEach(function () {
     container = document.createElement("div");
@@ -26,8 +22,11 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     };
     selectTool = { supportsMode: () => true };
     translateTool = { supportsMode: (mode) => mode !== EditMode.NONE };
-    spyOn(SelectTool, "addTo").and.returnValue(selectTool);
-    spyOn(TranslateTool, "addTo").and.returnValue(translateTool);
+    tools = [
+      { id: "none", label: "Tools", tool: undefined },
+      { id: "select", label: "Select", tool: selectTool },
+      { id: "translate", label: "Translate", tool: translateTool },
+    ];
   });
 
   afterEach(function () {
@@ -59,14 +58,14 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   }
 
   it("creates the toolbar in the supplied element or element ID", function () {
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
     expect(toolbar.container).toBe(container);
     expect(container.querySelectorAll(".cesium-editor-toolbar").length).toBe(1);
     expect(getDropdown("mode").children.length).toBe(4);
     expect(getDropdown("tool").children.length).toBe(3);
 
     toolbar.destroy();
-    toolbar = new EditorToolbar(container.id, editor);
+    toolbar = new EditorToolbar(container.id, editor, { tools });
     expect(toolbar.container).toBe(container);
     expect(container.querySelectorAll(".cesium-editor-toolbar").length).toBe(1);
   });
@@ -81,7 +80,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   });
 
   it("shows the current mode and tool icons and labels", function () {
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
     const modeButton = getMainButton("mode");
     const toolButton = getMainButton("tool");
     const initialModeIcon = modeButton.querySelector("path").getAttribute("d");
@@ -161,7 +160,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   });
 
   it("displays neutral labels when the editor state is not represented", function () {
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
 
     changeMode(EditMode.VERTEX | EditMode.EDGE);
     changeTool({});
@@ -183,7 +182,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   });
 
   it("opens and closes the dropdowns", function () {
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
     const modeButton = getMainButton("mode");
     const toolButton = getMainButton("tool");
 
@@ -203,7 +202,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   });
 
   it("selects entries and closes their dropdowns", function () {
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
 
     getMainButton("mode").click();
     getDropdown("mode").children[1].click();
@@ -218,7 +217,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   });
 
   it("disables unsupported tool buttons", function () {
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
     const buttons = getDropdown("tool").children;
 
     expect(buttons[0].disabled).toBe(false);
@@ -229,7 +228,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   });
 
   it("updates tool availability after a mode change", function () {
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
     const translateButton = getDropdown("tool").children[2];
 
     changeMode(EditMode.VERTEX);
@@ -240,7 +239,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
 
   ["pointerdown", "mousedown", "touchstart"].forEach(function (type) {
     it(`closes dropdowns on outside ${type} but not inside`, function () {
-      toolbar = new EditorToolbar(container, editor);
+      toolbar = new EditorToolbar(container, editor, { tools });
       toolbar.viewModel.modeDropDownVisible = true;
       getMainButton("mode").dispatchEvent(
         new window.Event(type, { bubbles: true }),
@@ -258,7 +257,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
   it("removes DOM, bindings, and listeners on destroy", function () {
     const sibling = document.createElement("span");
     container.appendChild(sibling);
-    toolbar = new EditorToolbar(container, editor);
+    toolbar = new EditorToolbar(container, editor, { tools });
     const viewModel = toolbar.viewModel;
     const wrapper = container.querySelector(".cesium-editor-toolbar");
     const modeButton = getMainButton("mode");

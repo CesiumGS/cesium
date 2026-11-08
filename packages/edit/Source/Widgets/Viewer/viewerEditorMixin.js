@@ -1,6 +1,8 @@
 // @ts-check
 
 import { Check, DeveloperError, defined } from "@cesium/core";
+import SelectTool from "../../Editor/SelectTool.js";
+import TranslateTool from "../../Editor/TranslateTool.js";
 import EditorOutliner from "../EditorOutliner/EditorOutliner.js";
 import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
 
@@ -22,10 +24,19 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
  * @typedef {object} ViewerEditorMixinOptions
  * @property {MeshEditor} editor An editor in the viewer's scene.
  * @property {boolean} [toolbar=true] Whether to add a toolbar.
- * @property {EditorToolbarOptions} [toolbarOptions] The toolbar's options.
+ * @property {EditorToolbarOptions} [toolbarOptions] The toolbar's options. Without <code>tools</code>, the toolbar offers the {@link ViewerEditorTools}.
  * @property {boolean} [outliner=false] Whether to add an outliner.
  * @property {EditorOutlinerOptions} [outlinerOptions] The outliner's options.
  * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them.
+ */
+
+/**
+ * The tools the mixin adds to the editor, exposed as <code>viewer.editorTools</code>.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @typedef {object} ViewerEditorTools
+ * @property {SelectTool} select A select tool.
+ * @property {TranslateTool} translate A translate tool.
  */
 
 /**
@@ -42,14 +53,19 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
  *
  * @ignore
  */
-const viewerPropertyNames = ["editor", "editorToolbar", "editorOutliner"];
+const viewerPropertyNames = [
+  "editor",
+  "editorTools",
+  "editorToolbar",
+  "editorOutliner",
+];
 
 /**
- * Adds an {@link EditorToolbar}, optionally an {@link EditorOutliner}, and
- * keyboard shortcuts to a {@link Viewer}, exposing them as
- * <code>viewer.editor</code>, <code>viewer.editorToolbar</code> and
- * <code>viewer.editorOutliner</code>. Escape cancels the active tool's
- * interaction.
+ * Adds default tools to the editor, and an {@link EditorToolbar}, optionally
+ * an {@link EditorOutliner}, and keyboard shortcuts to a {@link Viewer},
+ * exposing them as <code>viewer.editor</code>, <code>viewer.editorTools</code>,
+ * <code>viewer.editorToolbar</code> and <code>viewer.editorOutliner</code>.
+ * Escape cancels the active tool's interaction.
  *
  * @function viewerEditorMixin
  *
@@ -59,13 +75,14 @@ const viewerPropertyNames = ["editor", "editorToolbar", "editorOutliner"];
  * @param {ViewerEditorMixinOptions} options The editor and widget options.
  *
  * @exception {DeveloperError} options.editor must be in the viewer's scene.
- * @exception {DeveloperError} editor, editorToolbar or editorOutliner is already defined by another mixin.
+ * @exception {DeveloperError} editor, editorTools, editorToolbar or editorOutliner is already defined by another mixin.
  * @exception {DeveloperError} A key binding refers to an unknown entry.
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer");
  * const editor = await Cesium.MeshEditor.addToScene(viewer.scene);
  * viewer.extend(Cesium.viewerEditorMixin, { editor, outliner: true });
+ * editor.activeTool = viewer.editorTools.select;
  */
 function viewerEditorMixin(viewer, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -86,11 +103,20 @@ function viewerEditorMixin(viewer, options) {
   }
 
   const editor = options.editor;
+  /** @type {ViewerEditorTools} */
+  const tools = Object.freeze({
+    select: SelectTool.addTo(editor),
+    translate: TranslateTool.addTo(editor),
+  });
+  const toolbarOptions = {
+    ...options.toolbarOptions,
+    tools: options.toolbarOptions?.tools ?? createToolEntries(tools),
+  };
   const toolbar = createWidget(
     viewer,
     options.toolbar !== false,
     "cesium-viewer-editorToolbarContainer",
-    (container) => new EditorToolbar(container, editor, options.toolbarOptions),
+    (container) => new EditorToolbar(container, editor, toolbarOptions),
   );
   let outliner;
   let removeKeyBindings;
@@ -113,7 +139,7 @@ function viewerEditorMixin(viewer, options) {
     destroyWidget(toolbar);
     throw error;
   }
-  defineViewerEditorProperties(viewer, editor, toolbar, outliner);
+  defineViewerEditorProperties(viewer, editor, tools, toolbar, outliner);
   installCleanup(viewer, [toolbar, outliner], removeKeyBindings);
 }
 
@@ -122,6 +148,21 @@ const defaultKeyBindings = Object.freeze({
   modes: Object.freeze({ 0: "none", 1: "vertex", 2: "edge", 3: "face" }),
   tools: Object.freeze({ s: "select", g: "translate" }),
 });
+
+/**
+ * Creates the toolbar's default tool entries.
+ *
+ * @param {ViewerEditorTools} tools
+ * @returns {EditorToolbarToolEntry[]}
+ * @ignore
+ */
+function createToolEntries(tools) {
+  return [
+    { id: "none", label: "Tools", tool: undefined },
+    { id: "select", label: "Select", tool: tools.select },
+    { id: "translate", label: "Translate", tool: tools.translate },
+  ];
+}
 
 /**
  * Creates a widget in a new container in the viewer's container.
@@ -168,14 +209,24 @@ function destroyWidget(widget) {
 /**
  * @param {Viewer} viewer
  * @param {MeshEditor} editor
+ * @param {ViewerEditorTools} tools
  * @param {EditorToolbar|undefined} toolbar
  * @param {EditorOutliner|undefined} outliner
  * @ignore
  */
-function defineViewerEditorProperties(viewer, editor, toolbar, outliner) {
+function defineViewerEditorProperties(
+  viewer,
+  editor,
+  tools,
+  toolbar,
+  outliner,
+) {
   Object.defineProperties(viewer, {
     editor: {
       get: () => editor,
+    },
+    editorTools: {
+      get: () => tools,
     },
     editorToolbar: {
       get: () => toolbar,
