@@ -206,7 +206,7 @@ const GIVEN_UP: readonly {
         <C>PostProcessStage</C> shaders
       </>
     ),
-    why: "2.0 runs WGSL, and writes it from Slang. Nothing in it reads GLSL or 1.x's built-ins.",
+    why: "2.0 runs WGSL, with Slang as its authoring language. It doesn't read GLSL or 1.x's built-ins.",
     cost: "Anyone with custom shaders rewrites them. Even if those features return, the old shader text doesn't.",
   },
   {
@@ -248,7 +248,8 @@ const GIVEN_UP: readonly {
       <>
         Apps that draw into 1.x's context lose that route. WebGL libraries need
         their own canvas. 2.0 exposes its device as <C>engine.gpu.device</C>,
-        and whether a host can bring its own is open for the API review.
+        and whether that stays public, for a host that shares it, is open for
+        the API review.
       </>
     ),
   },
@@ -294,7 +295,9 @@ export function Costs() {
       </div>
       <p className="provenance">
         "Not planned yet" means no plan or spec commits to it. We found nothing
-        in the architecture that rules these out, but none has a design.
+        in the architecture that rules these out, but none has a design. The 1.x
+        comparison groups those the proof of concept left out as "not built
+        yet".
       </p>
 
       <h3>What the architecture gives up</h3>
@@ -327,8 +330,8 @@ export function Costs() {
         1.x's rendering on purpose. Style colours blend in linear light, so{" "}
         <C>colorBlendMode</C> <C>"mix"</C> and <C>"replace"</C> and translucent
         colours differ, and shading follows physics over 1.x. Apps tuned to
-        1.x's look will see changes. The plan keeps these open to revisit, and
-        the <a href="#/differences">Differences</a> tab lists them.
+        1.x's look will see changes. The plan records why, and the{" "}
+        <a href="#/differences">Differences</a> tab lists them.
       </p>
 
       <h3>Migration</h3>

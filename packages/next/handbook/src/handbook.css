@@ -1402,6 +1402,15 @@ span.api-source {
   inline-size: 34%;
   white-space: normal;
 }
+@media (max-width: 900px) {
+  .cost-table td:first-child,
+  .cost-table td:nth-child(2),
+  .cost-wide td:first-child,
+  .cost-wide td:nth-child(2) {
+    inline-size: auto;
+    white-space: normal;
+  }
+}
 .open-question {
   margin-block: var(--stratakit-space-400);
   padding: var(--stratakit-space-400);
