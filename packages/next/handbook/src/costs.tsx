@@ -44,7 +44,8 @@ const GAPS: readonly {
     state: "covered",
     today: (
       <>
-        <C>setTerrainOpacity</C> and <C>addTerrainTranslucency</C>.
+        <C>globe.terrain.addRegion</C>, in a region or everywhere, at an
+        opacity.
       </>
     ),
   },
@@ -53,7 +54,7 @@ const GAPS: readonly {
     state: "covered",
     today: (
       <>
-        <C>addTerrainClip</C>, on terrain only.
+        <C>globe.terrain.addRegion</C> at opacity 0, on terrain only.
       </>
     ),
   },

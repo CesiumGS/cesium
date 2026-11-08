@@ -279,7 +279,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "GlobeStepwiseSelection",
     ],
     status: "changed",
-    note: 'The globe is a tileset: `engine.addTerrain` or `engine.addEllipsoid` returns a `Tileset3D`, and `Viewer` takes `globe: "terrain"`.',
+    note: 'The globe is a tileset: `engine.addTerrain` or `engine.addEllipsoid` returns a `Globe`, a `Tileset3D` with terrain regions, and `Viewer` takes `globe: "terrain"`.',
     snippet: "viewer",
   },
   {
@@ -320,7 +320,7 @@ export const API_ROWS: readonly ApiRow[] = [
     nextLabel: "Not built yet: would sit behind `TileSource`",
     status: "absent",
     gap: "later",
-    note: "A tileset draws today through `addTileset`, and `sampleHeightMostDetailed` reads it, but it isn't a globe: `sampleHeight` is undefined for it, and it takes no terrain clips. The plan chooses from demand, so this isn't promised.",
+    note: "A tileset draws today through `addTileset`, and `sampleHeightMostDetailed` reads it, but it isn't a globe: `sampleHeight` is undefined for it, and it takes no terrain regions. The plan chooses from demand, so this isn't promised.",
     source: 'Overall plan, section 13.21, "Two layers, not one"',
   },
   {
