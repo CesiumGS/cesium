@@ -49,6 +49,16 @@ also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
   `proj.db` carries the EPSG Dataset, credited to IOGP
   (https://epsg.org/terms-of-use.html). `loadProj` (`src/engineering/proj.ts`)
   loads it lazily.
+- PROJ-data grids under `grids/` (manifest roles `gridCatalog` and `grid`):
+  PROJ-data 1.25.0's catalog, `files.geojson`, and its
+  `copyright_and_licenses.csv`, both pinned by SHA-256, and the grids of the
+  named sets in `scripts/gridSets.mjs`, each checked against the catalog's
+  size and SHA-256. `--grids portfolio,tests` is the default; `--grids
+egm2008` adds EGM2008 (80.6 MB), and `--grids all` every grid in the
+  catalog (about 0.9 GB). See "Grids" below.
+- The design globe's tilesets and exact answers under `design-globe/`,
+  written by `scripts/designTiles.mjs` from the frames data and grids above
+  (about 80 MB). They are regenerated only when an input changes.
 
 NAIF's generic kernels are public, but what the runtime loads are packs,
 derived excerpts of them (each pack's manifest names its source file, that
@@ -408,9 +418,238 @@ and keeps `proj_capi.mjs`, `proj_capi.wasm`, `proj_capi.node` and `proj.db`
 under `proj/` in the frames store (see above). The WebAssembly build serves
 the browser and the native build serves Node. Both expose the same PROJ C API.
 Nothing loads PROJ until a frame is created. The only npm dependency is
-`@emnapi/runtime` 1.8.1, which the WebAssembly build needs. The grids you need
-sit beside it: setup fetches GEOID18, and `loadProj` takes the names of any
-others in the browser.
+`@emnapi/runtime` 1.8.1, which the WebAssembly build needs. PROJ's own files
+are pinned in `src/engineering/projPins.ts`, which setup and the loader share.
+The browser hashes the glue, the WebAssembly and `proj.db` before using them,
+and imports the glue from a Blob URL of the bytes it checked, so what runs is
+what was hashed. Node re-hashes `proj.db` against the pin and the native
+`.node` against setup's manifest entry (its extracted hash differs by
+platform). A mismatch is refused, naming the file and both hashes.
+
+**Grids** (`src/engineering/proj.ts`, `gridCatalog.ts`). PROJ reads exactly the
+grids loaded explicitly, in the browser and in Node alike; nothing it finds
+lying around counts.
+
+- **The catalog is the trust root.** PROJ-data 1.25.0's `files.geojson`
+  (331,044 bytes) and `copyright_and_licenses.csv` are pinned by SHA-256
+  (`PROJ_DATA_CATALOG`). Every grid's name, size, SHA-256, agency and license
+  come from them. A name that isn't a current (not removed) catalog key is
+  never fetched or loaded.
+- **`GridSource` and its layout.** `gridSource({ base })` reads
+  `<base>files.geojson` and `<base>copyright_and_licenses.csv`, checks both
+  against the pins and parses the catalog. Grids are then `<base><name>`:
+  cdn.proj.org's own layout, so any mirror with that layout is a source.
+  cdn.proj.org sends no CORS headers, so in the browser grids come from your
+  own server (the dev server's `/proj-grids/`, or a mirror). A newer catalog
+  is taken with `catalogSha256`, `licensesSha256` and `version`.
+- **`loadGrids(proj, source, names)`** checks every name first, then fetches
+  (browser) or reads (Node) each grid, checks its length and SHA-256, and puts
+  it where PROJ looks: the WebAssembly file system, or a private per-process
+  staging directory beside `proj.db` in Node. PROJ must then find it at
+  exactly that path. A TIN or deformation-model `.json` is confirmed by
+  building the operation that reads it. `loadedGrids(proj)` lists what is
+  loaded. A Node process supports one PROJ base. `loadProj`'s `grids` option
+  is `loadGrids` over `gridSource({ base })`, and omitted it loads none.
+- **One rule for every operation.** An operation may read only plain-named
+  grids that `loadGrids` verified, whether it came from PROJ's own choice, a
+  pinned pipeline or a tileset's declaration. Anything else is refused before
+  PROJ creates it.
+- **`/proj-grids/`** is the dev server's grid endpoint
+  (`scripts/projGrids.mjs`). It mounts only when the store's catalog matches
+  the pin. It serves the store's `grids/`, and the first time a page on the
+  same site asks for a grid that isn't stored it fetches it from
+  cdn.proj.org, verifies it against the catalog, caches it and serves it.
+  Only a name that is exactly a current catalog key is served: there is no
+  path traversal, no other origin, no redirect followed, the catalog's size
+  is the cap, at most two fetches run at once, a request from another origin
+  on the same site gets only stored grids and one from another site gets
+  nothing, and error bodies say nothing (details go to the server log).
+  `/frames-data/` doesn't serve `grids/` or `*.partial` files; its `proj/`
+  serves only the pinned GEOID18 grid, which setup verified.
+
+**`EngineeringFrame.load`** is `create` after fetching the grids the best
+operation needs: `EngineeringFrame.load(definition, { proj, grids })`. It
+lists PROJ's candidates within `definition.areaOfInterest`, loads the missing
+grids of the first accurate (not ballpark) candidate whose grids the catalog
+has (for a pinned pipeline, the grids it names), then resolves as `create`
+does. Without `grids` it is `create`. `frame.gridCredits` names the agency,
+license and PROJ-data version of each grid the operation reads.
+
+- **Better candidates.** A candidate skipped because its grids aren't loaded
+  is recorded in `operation.betterCandidates`, with the grids it needs, when
+  it is better: not a ballpark, a strictly smaller stated accuracy, and the
+  same vertical grids as the chosen operation (PROJ's stated accuracies don't
+  compare geoid models, so one that swaps GEOID18 for GEOID99 isn't better).
+  A design measurement then warns `coarser-operation`, and the `projection`
+  term's note names them.
+- **Pinned pipelines** are structured: a `Pipeline` (global parameters and
+  steps), with `parsePipeline` and `formatPipeline`, values held to a
+  character allowlist both ways. `pipelineGrids` reads every grid key
+  (`grids`, `nadgrids`, `geoidgrids`, `xy_grids`, `z_grids`, `file`,
+  `model`), with `@` marking an optional grid. A pin that matches one of
+  PROJ's candidates keeps that candidate's stated accuracy; one that matches
+  none states none. The corridor and Phoenix pin GEOID18 this way, because
+  PROJ ranks NADCON5 with GEOID99 (±1.14 m) ahead of GEOID18 (±2.015 m).
+- **Geoid fallbacks are opt-in and named.** `geoidFallback: "EGM96" |
+"EGM2008"` applies only when the compound CRS's horizontal part resolves
+  with no missing grids and its vertical part does not. Design heights are
+  then read as that model's heights, `frame.fallback` says which model
+  replaced which vertical CRS and why, and the operation is the fallback
+  CRS's. The `geoidFallback` accuracy term is undefined, never small, unless
+  you give `fallbackSigma` (metres), and a measurement warns
+  `geoid-fallback`. EGM2008's grid is 80.6 MB and loads whole.
+- **A height system with no grid** throws, naming the vertical CRS and what
+  was checked: for example "no PROJ-data grid relates it to the ellipsoid"
+  for MLLW depth (EPSG:5866), or that its grids are on another horizontal
+  datum, naming the CRS to use instead.
+- **Depth axes.** `CrsUnits.verticalDirection` is `"down"` for a depth CRS:
+  a depth of +10 lies 10 units below 0, and a rigid placement's up axis
+  points down. **Tidal and chart datums** work where PROJ-data has a grid:
+  Denmark's lowest astronomical tide, DKLAT(2023) (EPSG:25832+10550,
+  `dk_sdfi_dklat_2023.tif`), is tested. NOAA's VDatum surfaces (MLLW, MHW and
+  others) aren't in PROJ-data and are reported as unavailable. `proj.db`
+  9.7.1 relates the Dutch LAT depth only by a ballpark.
+
+**Placement modes** (`src/engineering/placement.ts`). A `TilesetPlacement` says
+how a tileset's design coordinates become drawn positions, and the exact way
+back:
+
+- `placeRigid(frame, anchor)`: one rigid transform at the anchor, as an
+  iModel's `ecefLocation` does. It is exact at the anchor and sags away from
+  it: 7.96 m at 10 km and 31.6 m at 20 km on the corridor.
+- `placeReprojected(frame)`: every vertex through the frame's recorded
+  operation, with no sag.
+
+Each has `displayed(design)` (body-fixed metres, as drawn), `designOf(position)`
+(its exact inverse, so a measurement agrees with the design data in either
+mode) and `displayError(design)` (how far the placement draws the point from
+where it truly is; 0 when reprojected).
+
+`georeferenceTileset(tileset, { proj, grids })` places a tileset by its
+declaration (below): it loads the frame with `EngineeringFrame.load`, builds
+the declared placement, checks a rigid one against the tileset's root
+transform (`checkRigidTransform`) and sets `tileset.placement`.
+`Tileset3D.load` only parses the declaration (`tileset.georeference`); PROJ
+loads when `georeferenceTileset` is called. Each refusal is an error and a
+`tileset.warnings` entry: a tileset that declares nothing (no placement is
+guessed), a `modelMatrix` other than the identity, a WKT2 PROJ's strict parser
+refuses, two declared CRSs that aren't the same CRS, a declared grid that
+isn't a current catalog key, a frame that doesn't load, or a rigid anchor the
+root transform disagrees with. `tileset.placement` is the whole tileset's
+design placement; `Tile.placement` is still a content's model placement.
+
+**Picking design coordinates.** `pickDesign(view, x, y, tilesets)` takes CSS
+pixels from the view's top-left and resolves a `DesignPick`: the body-fixed
+`position`, the listed tileset and feature hit, and `design` coordinates when
+that tileset has a placement. Design coordinates come only when the position,
+the feature and the camera all come from one frame and the hit tile's bounds
+contain the position; if the camera moved during the pick it is tried once
+more, then only the position returns. Over the sky it resolves undefined.
+`tolerance` is one CSS pixel's footprint at the hit, in metres.
+
+**Snapping**, split as CesiumJS 1.x splits it (`src/engineering/snap.ts`):
+
+- **The client side, `ClientSnapService`** (1.x's `Scene#snap`), snaps at once
+  to what is drawn, on the CPU over the triangles that tiles keep with
+  `retainGeometry: true`. From `pickDesign`'s hit it takes the nearest vertex
+  within the aperture (`point`), else the nearest edge point (`segment`), else
+  the surface. Points the hit draw's own triangles hide from the camera are
+  passed over. The tolerance is the tile's geometric error, and no client snap
+  is exact. A 200,000-vertex draw snaps in about 3 ms. Plan 5 replaces it with
+  a GPU snap pass.
+- **The server side, `SnapService`** (1.x's `SnapService`), snaps against the
+  source design data. It takes a `ServiceSnapRequest` (the tileset, the
+  feature, `testPoint`, `closePoint`, the camera, the canvas size and the
+  aperture) and an `AbortSignal`. The design globe's exact alignment snap is
+  one.
+- **`refiningSnap(request, client, server, onUpdate, signal)`** shows the
+  client's snap at once (`provisional`), then updates it with the server's.
+  A server answer that is malformed, claims `exact` with a tolerance, puts
+  `design` anywhere but where the placement draws `snapPoint`, lands outside
+  the aperture or behind the camera, or is hidden by the hit draw is refused,
+  with a warning on the tileset, and the client snap stands. Aborting stops
+  further updates.
+- **A `SnapResult`** has `snapPoint` (the answer to use; with `design`, the
+  exact design point), `hitPoint` (where the cursor hit), `kind`, `normal`,
+  `curve`, `tolerance`, `exact` and `source`. `shownPoint`, at most 2 m from
+  `snapPoint`, is where to draw the marker when the exact point lies inside
+  the drawn mesh, such as an alignment's profile grade line under a median
+  barrier. Readouts use `snapPoint` and `design`.
+
+**The pick term.** A design point made from a pick or a snap carries
+`obtained: { how: "pick" | "snap", tolerance, kind? }`, and `measure` adds a
+`pick` accuracy term for it: the pick's pixel footprint, the client snap's
+geometric error, or 0 for an exact snap.
+
+**`BENTLEY_engineering_frame`** (`src/engineering/georeference.ts`) is a vendor
+extension in `tileset.json`'s `extensions` that declares a tileset's design
+CRS and placement:
+
+```json
+"extensions": {
+  "BENTLEY_engineering_frame": {
+    "name": "Mainline",
+    "body": "EARTH",
+    "crs": {
+      "format": "wkid",
+      "extensions": {
+        "EXT_geospatial_crs_wkid": { "authority": "EPSG", "wkid": 6420, "vcsWkid": 6360 }
+      }
+    },
+    "site": { "origin": [6082000, 2111500, 0], "rotation": 0.218, "scale": 1.0000375 },
+    "areaOfInterest": { "west": -122.5, "south": 37.5, "east": -121.5, "north": 38.2 },
+    "placement": { "mode": "rigid", "anchor": [0, 0, 0] },
+    "pipeline": "+proj=pipeline +step …"
+  },
+  "BENTLEY_alignments": { "alignments": [ … ] }
+}
+```
+
+- **It builds on `EXT_geospatial_crs`.** `crs` has the 3D Tiles 2.0 draft's
+  object shape: `format` plus an `EXT_geospatial_crs_wkid` or
+  `EXT_geospatial_crs_wkt2` companion (the draft's `epoch` is a decimal-year
+  string). It maps to `CrsRef` unchanged.
+- **It composes with what exists.** The source CRS comes from
+  `EXT_geospatial_crs_source` (CesiumGS/glTF#131, an open draft), else
+  `ESRI_crs` (3D Tiles 1.1), else our `crs`. All present must agree, judged by
+  PROJ, or the tileset is refused naming both. The body comes from
+  `3DTILES_ellipsoid` when present. The area of interest comes from the root
+  bounding volume unless `areaOfInterest` overrides it. A tileset with only
+  `ESRI_crs` gets a warning and no placement, because nothing says which mode.
+- **What the draft lacks, and this adds:** the placement mode (`rigid` with
+  an `anchor` in design coordinates, or `reprojected`), the site transform
+  with its scale (`site`: origin, rotation and scale, as IFC 4.3's
+  `IfcMapConversionScaled`), a declared pinned `pipeline` (only catalog grids,
+  and only allowlisted operations and keys) or `geoidFallback` with
+  `fallbackSigma`, and alignments, as their own extension,
+  `BENTLEY_alignments`, beside it. Alignment segments use IFC 4.3's
+  `IfcAlignment` segment types (`LINE`, `CIRCULARARC`, `CLOTHOID`,
+  `CONSTANTGRADIENT`, `PARABOLICARC`); the field names are ours, and
+  `georeference.ts` maps each to IFC's.
+- **A rigid tileset uses the standard root `transform`,** equal to the rigid
+  placement's matrix, and a reprojected one is plain Earth-fixed tiles, so
+  both draw in any 3D Tiles 1.1 viewer.
+- **Every string is untrusted.** A WKT2 must start with a WKT2 CRS keyword,
+  may hold no PROJ tokens or `PARAMETERFILE` paths outside the catalog, is at
+  most 65,536 characters and goes through PROJ's strict WKT parser. There are
+  at most 64 alignments of at most 4,096 segments each. A malformed field
+  throws a `GeoreferenceError` naming its JSON path, and nothing is guessed.
+  The old name, `EXT_engineering_frame`, is still read, with a warning.
+
+**Design globe example.** `examples/design-globe/` (in the gallery, "Design
+coordinates on the globe") shows why a long design can't be placed rigidly: a
+50 km highway in California zone 3 (US survey feet, NAVD88 through GEOID18),
+generated twice by setup (rigid and reprojected, with identical tile trees and
+vertex order), which the placement switch morphs between, the other placement
+ghosted. It opens with two measurements: station 1700+00 against its own true
+position (30.586 m apart when rigid, 0.000 m reprojected) and NGS mark HS5109
+against the centreline. A scale ladder of sites in seven countries' height
+systems (a building, a city block, a port, an airport, a solar farm, a campus
+and a 30 km pole line) shows the rigid error growing from 2.6 mm to 18 m, with
+its parts (curvature, scale factor, geoid). The measure tool snaps to the
+alignment's exact design (server) and to the drawn mesh (client), and every
+figure is checked against the generator's exact answers in Checks. It needs
+`npm run setup` (the tiles and grids) and the dev server's `/proj-grids/`.
 
 **Frames explorer example.** `examples/frames-explorer/` (in the gallery) opens
 on eleven scenarios, each a real problem solved by the frame tree it builds:
@@ -422,7 +661,25 @@ Verification tab (`npm run test:data` runs the same catalog).
 
 **Credits.** The EPSG Dataset in `proj.db` is credited to IOGP, under its
 terms of use (https://epsg.org/terms-of-use.html). PROJ and proj.js are MIT.
-GEOID18 is a NOAA/NGS product, public domain, served from cdn.proj.org.
+Each PROJ-data grid carries its own license, from the pinned
+`copyright_and_licenses.csv`, and a frame names them in `gridCredits` as
+`"<agency> (<license>), via PROJ-data 1.25.0"`; a page that shows a grid's
+result credits it. The grids setup stores by default:
+
+| Grids                                   | Agency                                                          | License       |
+| --------------------------------------- | --------------------------------------------------------------- | ------------- |
+| GEOID18, CONUS NADCON, California HPGN  | US National Oceanographic and Atmospheric Administration (NOAA) | Public domain |
+| EGM96, EGM2008 (opt-in)                 | US National Geospatial Intelligence Agency (NGA)                | Public domain |
+| OSTN15, OSGM15                          | Ordnance Survey                                                 | BSD-2-Clause  |
+| AUSGeoid2020                            | Geoscience Australia                                            | CC-BY-4.0     |
+| JPGEO2024, GSIGEO2011                   | Geospatial Information Authority of Japan                       | CC-BY-4.0     |
+| RDNAPTRANS2018 (rdtrans2018, nlgeo2018) | Nederlandse Samenwerking Geodetische Infrastructuur (NSGI)      | CC-BY-4.0     |
+| FIN2000, YKJ to ETRS-TM35FIN            | National Land Survey of Finland (MML)                           | CC-BY-4.0     |
+| DKLAT(2023)                             | Danish Agency for Data Supply and Infrastructure                | CC-BY-4.0     |
+
+Other grids in the catalog carry other licenses: OGL-Canada-2.0, the Etalab
+Open Licence (France), CC-BY-SA-4.0, CC0-1.0 and the Data licence Germany,
+among others. `GridCatalog.credit` reads each from the CSV.
 
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness

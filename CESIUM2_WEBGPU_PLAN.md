@@ -6364,8 +6364,14 @@ out, because none of them changes a result.
 - **Plan 4 or later:** `measure` solves the downlink light time twice, once
   inside `downlink` and again for line of sight. Return the solution from
   the leg internally.
-- **Plan 4b (owner's requirement, 2026-11-06): global geoid and
-  height-system coverage, lazily loaded.** The portfolio needs the country
+- ~~**Plan 4b (owner's requirement, 2026-11-06): global geoid and
+  height-system coverage, lazily loaded.**~~ Done in plan 4b (see "Frames 4b
+  results" below): the catalog pin and grid store (Task 1), verified PROJ
+  bytes (Task 2), one verified grid set on both platforms (Task 3), the dev
+  server's `/proj-grids/` (Task 4), `EngineeringFrame.load` (Task 6), the
+  opt-in EGM96 and EGM2008 fallbacks (Task 7), and the geoid cases checked
+  against their publishers (Task 9). Cropped regional tiles aren't built
+  (carried forward). The original entry follows. The portfolio needs the country
   and region geoids and height systems, with EGM96 and EGM2008 as fallbacks,
   not only GEOID18. Facts checked 2026-11-06:
   - **PROJ-data's catalog** (`cdn.proj.org/files.geojson`) lists 458 grids
@@ -6402,7 +6408,9 @@ out, because none of them changes a result.
   and stress-tests them. **What 4b adds to it:** tileset placement modes
   (rigid and exact placement of a tileset on a frame) and the global-geoid
   cases (EGM96, EGM2008 and the country geoids, from the entry above). Both
-  need library work that the example could not use. The list below is the
+  need library work that the example could not use. Both are done: plan 4b's
+  Task 21 added them to the explorer's catalog as two groups, global geoids
+  and tileset placement. The list below is the
   original request, kept as the record of what was asked.
   - **The tree, visualized live at the clock's time.** It covers:
     - ICRF, HCRS and EARTH_ICRF;
@@ -6564,39 +6572,49 @@ _Carried forward from frames plan 4a._ These are deferred items that are real
 work. The test-strength and wording nits the reviews raised are left out,
 because none of them changes a result.
 
-- **Plan 4b:** tests for design points on the Moon, across two frames and with
-  `signal: false`. Today's design-measurement tests cover the Earth, one frame
-  and the signal path.
-- **Plan 4b: grid names in pinned pipelines.** They are read from `+grids=`
+- ~~**Plan 4b:** tests for design points on the Moon, across two frames and
+  with `signal: false`.~~ Done (plan 4b, Task 8). Today's design-measurement
+  tests cover the Earth, one frame and the signal path.
+- ~~**Plan 4b: grid names in pinned pipelines.**~~ They are read from `+grids=`
   only. A pinned pipeline using `+nadgrids` or `+geoidgrids`, or an optional
   `@` grid, reports an empty or partial grid list. The missing-grid check and
   the accuracy note then don't name its files. Parse those keys as well, in the
-  same step that fetches grids.
-- **Plan 4b: a coarser operation taken silently.** Without its NADCON grid,
+  same step that fetches grids. Done (plan 4b, Task 5): `pipelineGrids` reads
+  every grid key, with `@` for an optional grid.
+- ~~**Plan 4b: a coarser operation taken silently.**~~ Done (plan 4b, Tasks 6
+  and 8: `betterCandidates` and the `coarser-operation` warning; the "better"
+  rule as the owner amended it). Without its NADCON grid,
   PROJ ranks EPSG:26741's 7 m Helmert first, and the 5 m and 2.15 m candidates
   are never reported. The stated accuracy is honest, but R2 and Review Focus 1
   disagree here. Record the better candidates and the grids they need.
-- **Plan 4b: grids differ by platform.** Node sees every grid in `base`; the
-  browser sees only the listed ones. Make both see the same set.
+- ~~**Plan 4b: grids differ by platform.**~~ Done (plan 4b, Task 3; Task 21
+  removed Node's legacy default). Node saw every grid in `base`; the
+  browser saw only the listed ones. Both now see exactly the grids loaded.
 - **Plan 4b:** after a PROJ upgrade, regenerate `test/fixtures/frames/proj.json`
   with `scripts/frameFixtures.py`. The 1e-12 factor tolerance against pyproj
   holds because both sides see bit-identical inputs, and sits at PROJ's
-  numerical-differentiation noise floor.
-- **Plan 4b: the native loader.** In `loadNode` (`src/engineering/proj.ts`),
-  the native `.node` is not re-hashed at load, and `PROJ_DATA` is set
-  process-wide.
-- **Plan 4b: PROJ's log noise.** Listing candidates whose grids are missing
-  makes PROJ write to stderr (and the browser console). Lower PROJ's log level
-  while listing, and report missing grids through the error instead.
+  numerical-differentiation noise floor. Folded into plan 4b's Task 2: the
+  fixture records `engineProjVersion`, and a test fails, saying to regenerate,
+  when the loaded PROJ's version differs.
+- ~~**Plan 4b: the native loader.**~~ Done (plan 4b, Tasks 2 and 3). In
+  `loadNode` (`src/engineering/proj.ts`), the native `.node` was not re-hashed
+  at load, and `PROJ_DATA` was set process-wide. The `.node` is now checked
+  against setup's manifest entry, and `PROJ_DATA` points at a private
+  per-process staging directory (one PROJ base per process).
+- ~~**Plan 4b: PROJ's log noise.**~~ Done (plan 4b, Task 3: `PJ_LOG_NONE`
+  while listing; `test:data`'s PROJ lines went from 243 to 1). Listing
+  candidates whose grids are missing made PROJ write to stderr (and the
+  browser console).
 - **Plan 5:** `measureSpan` runs `gridFactors` twice per sample, a `proj_factors`
   call at each end. Cache the factors by design point, or compute them once for
   a span's fixed ends.
-- **Frames example: PROJ object lifetimes.** Neither build exposes
+- ~~**Frames example: PROJ object lifetimes.**~~ Neither build exposes
   `proj_destroy`, and the binding's glue uses a `FinalizationRegistry`. PROJ
   objects are probably freed on garbage collection. The example's cases make
   many frames, but it measured no heap, so this is still unverified. Check it
   with a heap measurement over repeated "Run all" runs, rather than planning
-  explicit destroy calls.
+  explicit destroy calls. Done (plan 4b, Task 6): the resident memory stayed
+  flat over 300,000 probes, so PROJ objects are freed on garbage collection.
 
 _Frames example results (r65): the frames-and-projections gallery example._
 The example from the entry above landed in
@@ -6822,14 +6840,15 @@ asset 2: no access token`, on every example.~~ Done (ion token setting): the
   and possibly throw.** Cap the preallocation, or grow the buffer.
 - **Plan 5: the stress context's `frames` getter is non-enumerable,** so
   spreading the context loses it. Nothing spreads it today.
-- **Plan 4b: a test case for Mercator (Spherical)** (EPSG methods 1026 and
-  9841). The derivative path handles it, and `checkSphere` throws if a radius
-  differs, but `proj.db` has no such CRS, so nothing tests it. Add one when
-  4b's CRS coverage includes it.
+- ~~**Plan 4b: a test case for Mercator (Spherical)**~~ (EPSG methods 1026 and
+  9841). Folded into plan 4b's Task 9: WKT2 cases on a sphere agree with
+  1/cos φ to 6.1 × 10⁻¹³, and on an ellipsoid `gridFactors` refuses, saying
+  PROJ projects it on the conformal sphere R_C(φ0). Supporting R_C is carried
+  forward. PROJ 9.7.1 can't build 9841 at all.
 - ~~**Plan 4b: `frameCache` is unbounded** in the worker.~~ Closed by
   `e9f362f3a5`, which bounds it.
-- **Plan 4b: verify PROJ's served bytes in the browser.** `loadProj`'s
-  browser path doesn't check the SHA-256 of `proj.db` or the WebAssembly it
+- ~~**Plan 4b: verify PROJ's served bytes in the browser.**~~ Done (plan 4b,
+  Task 2). `loadProj`'s browser path didn't check the SHA-256 of `proj.db` or the WebAssembly it
   fetches. The example's report labels them "manifest SHA-256 (not verified
   in the browser)". Hash the bytes after the fetch, and refuse a mismatch, as
   setup already does in Node.
@@ -7369,9 +7388,11 @@ stress tests. The example can't test them until the library has them.
 - **Later: rail alignments.** Rail chainage crosses station equations
   ("station back = station ahead"), and rail uses non-clothoid transitions:
   Bloss, cubic parabola and sine half-wave. `Alignment` has neither.
-- **Plan 4b: tidal and chart datums.** Hydrography and coastal work use
-  lowest astronomical tide and mean lower low water (as in NOAA's VDatum).
-  They belong with 4b's height systems.
+- ~~**Plan 4b: tidal and chart datums.**~~ Done where PROJ-data has grids
+  (plan 4b, Task 7): depth axes (`verticalDirection`), and Denmark's
+  DKLAT(2023) tested. Hydrography and coastal work use lowest astronomical
+  tide and mean lower low water (as in NOAA's VDatum). NOAA's surfaces
+  aren't in PROJ-data; hosting them is held for the owner.
 - **Later: grid references and accuracy reporting.** MGRS and the US
   National Grid aren't in PROJ, and defense and emergency response use both.
   Accuracy statements also need a CE90/LE90 form: 90% horizontal and
@@ -7532,8 +7553,10 @@ are left out.
   "not judged from this far out" rule, for an end whose terrain error is
   above `COARSE_TERRAIN_METERS`, belongs in the shared line-of-sight text, so
   every scenario's trace gets it.
-- **Plan 4b: the chart datum (MLLW).** The ship's heights are NAVD88, and the
-  answer says that charts use MLLW.
+- ~~**Plan 4b: the chart datum (MLLW).**~~ Folded (plan 4b, Task 7): MLLW
+  depth (EPSG:5866) is reported as unavailable, naming it, because PROJ-data
+  has no grid for it. The ship's heights stay NAVD88, and the answer says
+  that charts use MLLW.
 - **Library: widgets expose their occluders** (`occluders()` or
   `data-occludes`) instead of the example matching Dyno class names in
   `labelPanels.ts`. The credits and the time bar also overlap (a z-index fix
@@ -7568,11 +7591,257 @@ are left out.
   from a third-party compilation. Fixing it is one constant.
 - **Dyno: the shell overflows at a 380 px viewport.** See the resizable side
   column item above.
-- **Dyno (security): `npm run build` inlines `VITE_ION_TOKEN`** into 10
-  bundles, so a deployed build would ship the token. How the gallery gets a
-  token in production is the owner's call.
+- ~~**Dyno (security): `npm run build` inlines `VITE_ION_TOKEN`**~~ Done
+  (`d2cca2f34a`, the ion token setting): production builds contain the token
+  in 0 files. It was inlined into 10 bundles.
 - **Bisect gap:** `de5a508f52` doesn't type-check on its own; the next commit
   fixes it.
+
+**Frames 4b results (2026-11-07).** Plan 4b
+(docs/superpowers/plans/2026-11-07-frames-4b-placement-and-geoids.md) places
+long design models on the globe rigidly or reprojected per vertex, picks and
+snaps on them in design coordinates, and measures in design and true terms, in
+any country's height system. Grids are fetched lazily and checked against a
+pinned PROJ-data catalog. The library work is in `src/engineering/` (grids,
+`EngineeringFrame.load`, structured pipelines, geoid fallbacks, depth axes,
+`TilesetPlacement`, the tileset declaration, `pickDesign` and snapping),
+`src/measure/` (the `pick` and `geoidFallback` terms and two warnings) and
+`src/streaming/` (`Tileset3D`'s declaration, placement and retained geometry).
+The §8.1 example is the new gallery page `examples/design-globe/`, with a
+generator in `scripts/designTiles*` that setup runs. The README documents the
+API.
+
+- **Round trips** (design to displayed to design):
+  - the corridor's tilesets, over 4,617 vertices (every 50th of every leaf):
+    rigid 2.9 × 10⁻⁹ m, reprojected 1.5 × 10⁻⁵ m, against 10⁻⁴ m;
+  - the site-grid building in the explorer's tileset-placement group: a rigid
+    placement's inverse of its own forward is 8.2 × 10⁻¹⁰ m, against 4 ULPs
+    of an Earth-radius coordinate (about 3.7 × 10⁻⁹ m), and reprojected
+    3.0 × 10⁻⁹ m;
+  - every leaf vertex of the seven ladder sites, both placements: within
+    10⁻⁴ m. Each pair of tilesets draws the same design point per vertex.
+- **Rigid sag on the corridor,** from `answers.json`: 7.955 m and 8.053 m at
+  the stations nearest 10 km from the anchor (one on each side; the spec says
+  7.8 m ± 1.5 m), 31.645 m at 20 km (31 m ± 3 m), and 34.08 m at the far end,
+  20.76 km away. Task 10's test on plan 4a's California frame reads 7.80 m and
+  31.16 m. The site-grid building's sag 20 km along its x axis is 31.199 m,
+  and a hand formula that includes GEOID18's rise agrees within 0.089 mm.
+- **Geoid cases against their publishers** (Task 9; each tolerance is the
+  publisher's stated precision):
+  - Ordnance Survey, OSTN15 and OSGM15, 28 points: worst 7.4 mm horizontal
+    and 2.0 mm in height, within 1 cm;
+  - NSGI, RDNAPTRANS2018, 15 points: 0.098 mm, within 1 mm;
+  - Geoscience Australia, AUSGeoid2020, 6 grid nodes: 0.0018 mm, within 1 mm;
+  - GSI, JPGEO2024 and GSIGEO2011, 7 points each: 0.047 mm and 0.050 mm,
+    within 0.1 mm;
+  - NGS, GEOID18, 8 grid nodes: 0.40 mm, within 1 mm;
+  - NGA, EGM2008, 4 points from NGA's archived test output: 9.92 mm, within
+    1 cm (the margin is thin: PROJ's bilinear against NGA's interpolation);
+  - EGM96 has no reference: NGA's test values are spline-interpolated, and NGA
+    states no precision for interpolating the grid.
+
+  GA and NGS are checked at grid nodes, because their calculators don't
+  interpolate bilinearly between them (1 to 2 mm off the nodes).
+
+- **NGS mark HS5109 (GOLD CREEK) against PROJ.** PROJ's California zone 3,
+  through the corridor's own operation, gives the datasheet's easting to
+  0.0016 ftUS and its northing to 0.0051 ftUS, within 0.00664 ftUS (the
+  datasheet's millimetre rounding converted to feet, plus its 0.005). Its
+  body-fixed position matches the datasheet's X, Y, Z within 0.6 mm. The
+  page's distance from the mark to the centreline is 501.188 ftUS against
+  501.193 ftUS from NGS's own zone 3 values, within 0.0094 ftUS.
+- **Snapping.** An exact snap on the alignment lands on the analytic geometry
+  within 10⁻¹⁰ ft in the browser (the check allows 10⁻⁶ design units). The
+  10,000 ft pair measures 10,000.000 ftUS horizontal, 10,001.9998 ftUS in 3D
+  and 3,048.8485 m true, equal to the answers. A client snap to a barrier
+  edge was within 1.1 × 10⁻⁸ m of the analytic barrier top, and a surface
+  fallback 8 mm off, inside its stated ±77 mm. A client snap over a
+  200,000-vertex draw takes about 3 ms.
+- **The opening measurements.** Station 1700+00 against its own true position
+  reads 30.586 m when rigid and 0.000 m reprojected. The mark leads with its
+  live rigid offset, 19.278 m, and 0.000 m reprojected.
+- **The scale ladder's rigid error at each model's edge,** with its parts
+  (curvature d²/2R, the scale factor rigid ignores, and the geoid's rise):
+
+  | Site      | Model      | Error at the edge  | Mostly              |
+  | --------- | ---------- | ------------------ | ------------------- |
+  | Amsterdam | building   | 2.56 mm at 30 m    | the scale factor    |
+  | Tokyo     | city block | 69.1 mm at 489 m   | the scale factor    |
+  | Jakarta   | port       | 0.293 m at 1.52 km | curvature and scale |
+  | Sydney    | airport    | 0.390 m at 1.99 km | curvature           |
+  | Phoenix   | solar farm | 0.474 m at 2.00 km | curvature and scale |
+  | Nairobi   | campus     | 2.04 m at 5.07 km  | curvature           |
+  | London    | pole line  | 18.34 m at 15.4 km | curvature           |
+
+  The three parts predict every measured error within 3.7%.
+
+- **Gates.**
+  - `npm test`: 2,046 pass. `npm run test:data`: 457 pass and 1 skipped
+    (EGM96's missing reference).
+  - The frames explorer: 240 results unchanged, 251 in all; `fingerprints.json`
+    only gains 8 keys.
+  - Both tsc configs, eslint and prettier are clean, and `npm run build` and
+    `npm run build:lib` build. Eslint needed one fix: it now ignores
+    `packages/next/dist/` and `dist-lib/` (flat config doesn't read
+    `.gitignore`).
+  - `snyk_code_scan` finds 0 issues in `src/engineering`, `src/streaming`,
+    `src/measure`, `src/io`, `src/scene`, `examples/design-globe` and
+    `widgets`. Every finding elsewhere predates the plan: in `scripts/`,
+    three Low CWE-23 in `erfaTables.mjs`, `leapTable.mjs` and
+    `frameFixtures.py`; in `vite.config.ts`, the five the frames example carried forward;
+    in `bench/suite`, seven (below); in `test/projGrids.test.ts`, two Low
+    CWE-319 on its loopback servers, accepted. The CWE-23 in `proj.ts` that
+    plan 4a accepted no longer appears.
+  - Browser checks on the final page: the design globe loads with no console
+    errors, the corridor's "Rigid's error at the edge" row reads "curvature
+    33.8 m, the scale factor 2.3 m, the geoid's rise −159 mm", and Copy link
+    with a real click says "Link copied".
+
+Calls made, one line each (the plan lists all 23 with their undo costs):
+
+- **GEOID18 pinned (owner).** The corridor, its building and Phoenix pin
+  GEOID18's operation, because PROJ ranks NADCON5 with GEOID99 (±1.14 m)
+  ahead of it (±2.015 m). A pin that matches a PROJ candidate keeps that
+  candidate's stated accuracy.
+- **The "better operation" rule (owner).** A skipped candidate is better only
+  if it isn't a ballpark, states a strictly smaller accuracy and reads the
+  same vertical grids. A ballpark choice still lists every accurate candidate.
+- **Phoenix is on NAD83(2011) / Arizona Central in international feet**
+  (EPSG:6405+8228), not the original NAD83, so it needs only GEOID18.
+- **`BENTLEY_engineering_frame` and `BENTLEY_alignments` (owner),** vendor
+  extensions in `tileset.json`, composed with `ESRI_crs`,
+  `EXT_geospatial_crs_source` and `3DTILES_ellipsoid`: the source CRS from
+  those when present (they must agree), the body from `3DTILES_ellipsoid`.
+  The old name, `EXT_engineering_frame`, is read with a warning.
+- **The design globe's story (owner):** a viewer audience first; the rigid
+  placement's error is the point; a morph between placements with the other
+  ghosted (translucent, once the GPU timer fix showed its true cost); true
+  scale by default; two opening measurements; a six-step tour you can leave.
+- **The scale ladder (owner):** seven sites from a building to a 30 km pole
+  line, each as rigid and reprojected tilesets. Rigid stays as most viewers do
+  it, without the scale factor, and each site's error is split into its
+  parts, so the small rungs teach grid against ground and the big ones
+  curvature.
+- **Snapping keeps 1.x's client/server split (owner):** `ClientSnapService`
+  (the client, on the CPU over retained geometry until plan 5's GPU pass),
+  `SnapService` (the server), and `refiningSnap`, which shows the client's
+  answer and updates it with the server's after checking it. `shownPoint`
+  draws an exact point that lies inside the mesh on the surface above it.
+- **Only verified grids.** An operation may read only plain-named grids that
+  `loadGrids` verified against the catalog, whatever chose it: PROJ, a pin or a
+  tileset's declaration. Both platforms see exactly the grids loaded.
+- **A coarser operation warns, never throws** (`coarser-operation`); 4a's R2
+  stands.
+- **Jakarta replaced São Paulo** (SRGI2013 with INAGeoid2020 heights, on the
+  EGM96 fallback): `proj.db` 9.7.1 has no Brazilian vertical CRS.
+- **Tokyo reads JPGEO2024,** PROJ's first choice and GSI's official geoid;
+  GSIGEO2011 is a test case.
+- **Tidal datums:** Denmark's DKLAT(2023) is the tested LAT; `proj.db`
+  relates the Dutch LAT depth only by a ballpark.
+- **EGM2008 is opt-in** (80.6 MB, `--grids egm2008`), loaded whole.
+- **Strict WKT2 everywhere** for declared and app-supplied CRSs; the
+  explorer's "Try your own" still takes WKT1, labelled, under the grid rule.
+- **`/frames-data/proj/` still serves the pinned GEOID18 grid** that setup
+  verified; every other grid comes through `/proj-grids/`.
+
+Held for the owner, still open:
+
+- The owner's real long models for the design globe's ion slots (built empty),
+  with their CRS, units, site transform and placement mode.
+- Hosting NOAA's VDatum surfaces (MLLW, MHW and others).
+- Taking the upstream proposals (the placement mode, alignments, a declared
+  operation, the site transform) to the right people.
+- A hosted grid service, with CORS and possibly cropped tiles.
+- Plan 5's spec (`docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md`)
+  and its four questions.
+- Whether a frame with `geoidFallback` and `allowBallpark` should take the
+  ballpark, as it does today.
+
+_Carried forward from frames plan 4b._ These are deferred items that are real
+work. The wording and test-strength nits the reviews raised are left out.
+
+- **Grids: cropped regional tiles** for large grids such as EGM2008 (setup
+  could make them).
+- **Grids: deformation models.** `load` skips a candidate that needs a
+  deformation model's `.json`, because PROJ names its component grids only
+  inside it. Read them from the model and load them.
+- **Grids: stale files in the store.** A crashed run leaves a uniquely named
+  `.partial` (sweep them in `ensureGrids`), and grids dropped from the sets
+  (NADCON5, GEOID99 and GEOID03 tiles, Arizona's HPGN, the Dutch LAT) stay in
+  `grids/`.
+- **Engineering: Mercator (Spherical) on an ellipsoid** (EPSG 1026): support
+  PROJ's conformal sphere R_C(φ0) in `gridFactors`, with tests.
+- **Engineering: the vertical-grid diagnosis compares datums by name,** and
+  a named best operation may itself need an absent grid. Compare by code where
+  PROJ gives one.
+- **Engineering: an ESRI_crs-only tileset isn't placed** (it has no placement
+  mode), a `wkid` of 32767 or less is read as EPSG, and the area of interest
+  derived from a bounding volume is untested on the Moon.
+- **Engineering: EGM96 against its publisher.** Add a case if NGA's grid-node
+  or bilinear values become reachable.
+- **Streaming: the content worker grows 7.9 kB** because Vite inlines the
+  declaration parser's dynamic import in workers, and `modelMatrix`'s setter
+  compares exactly.
+- **Snapping: occlusion is tested only against the hit draw,** and not at all
+  when it kept no geometry; the scratch buffers stay at about 11 MB after a
+  200,000-vertex snap. Plan 5's GPU snap pass handles both by construction.
+- **Plan 5 API review:** `@internal` test options (`pins`, `importGlue`,
+  `catalogPins`) ship in the public `.d.ts` (no `stripInternal`);
+  `projTokenProblem` and `Alignment.horizontalElements` are newly exported.
+- **Renderer / engine: translucency passes** could clip to the blended draws'
+  screen rectangle, the exact-mode sort could skip empty pixels
+  (`composite.slang`), and `translucentRange` ignores the frustum.
+- **Renderer / engine: the sleeping frame loop.** Wake on the inputs it still
+  can't see (`View.readHdr`, `PointCuller`'s pipelines, Safari's pixel-ratio
+  changes), let per-frame sync loops (the translucency example) sleep, and
+  document the accessors' behaviour change (`Camera.version` and the View
+  fields lose their own keys). The Viewer's clock listener isn't removed on
+  destroy (older), and MOON_ME's label jumps 10 px for one frame while
+  playing (untraced).
+- **Example (design globe):** external camera changes don't wake its driver;
+  the accuracy's ±2.0 m per end is GEOID18's height figure and should say so
+  or split horizontal from vertical; a snap that falls back to the surface
+  should say so in the status line; the legend lists the ghost and ribbon
+  while the ruler view sets them aside.
+- **Example (frames explorer):** its legend and tree read `operation.accuracy`
+  for a fallback frame, and the accuracy bar's shares ignore unknown terms;
+  an EGM2008 opted in stays loaded for the page's later runs; the split
+  between a failed and a missing grid is untested.
+- **Dyno (security): `bench/suite`'s Snyk findings,** all from before plan 4b:
+  a High DOM XSS in `suite.html`'s `document.write` of the 1.x build URL, two
+  Medium DOM XSS from stored chart HTML (Compare, Trends), one from an error
+  into a script `src` (Explorer), a CWE-770 in `frozen.mjs`'s static server, an
+  open redirect in `limitsTier.ts`, and a false positive on `ionToken.ts`'s
+  storage key.
+- **Repo: prettier in `packages/next`.** Run there, `prettier --check .` flags
+  37 files from before plan 4b (generated shader JSON, bench results,
+  `tsconfig.lib.json`, three scripts), because the root `.prettierignore`,
+  which leaves JSON out, applies only from the root.
+- **CI: run `packages/next`'s vitest on Node 24.** CI runs only the root's
+  Karma tests, and the package now declares Node 24 in `engines`.
+
+_Engine fixes made alongside plan 4b (2026-11-07)._
+
+- **On-demand rendering stays idle again** (`2bfc87e395`, `4df1579ad4`): a
+  settled exposure ignores the meter's own half-float rounding, which had kept
+  OSM Buildings rendering every frame; the test runs on Node 22 and pins the
+  band's edges.
+- **Translucency and the GPU timer** (`62a56785d4`, `8c8e87361a`):
+  translucency passes run only for translucent draws a view shows, and the
+  GPU timer counts overlapping passes once (Apple GPUs had counted a small
+  translucent quad as about 46 ms, not about 1 ms). Benchmark results carry
+  the timer's version, and older GPU medians are kept apart as
+  `gpuSummedP50`.
+- **The frame loop sleeps when settled** (`075cd8b27e`, `2f2940e6bb`): no
+  requestAnimationFrame while nothing changes, woken by every fingerprinted
+  change, with the order tick, render, then after-tick work.
+- **No native PROJ call on an object PROJ couldn't create** (`4cc6030f87`),
+  which had segfaulted Node.
+- **Node 24 in `packages/next`'s `engines`** (`ce15acf113`), as the gallery's
+  `DisposableStack` and the tests need.
+- **Dyno shows Scenes without runs** (`95371f3fff`).
+- **Dyno has one ion token setting** for every view (`d2cca2f34a`), and builds
+  never embed `.env.local`'s token.
 
 ### 13.15 GPU resource limits and capacities (r50, design)
 
