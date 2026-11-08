@@ -294,7 +294,8 @@ export const SEAMS: readonly SeamNote[] = [
     ],
     passes: ["shadows", "cull", "prepass", "opaque", "translucent"],
     today: "One indirect draw per batch, its items bound as a vertex buffer.",
-    readyFor: "Multi-draw indirect, GPU-driven submission",
+    readyFor:
+      "Multi-draw indirect, GPU-driven submission, or a later compute pass writing the counts",
     guards: [
       {
         file: "test/seams.test.ts",
@@ -328,6 +329,7 @@ export const SEAMS: readonly SeamNote[] = [
     code: [
       { name: "placementRow", file: "src/shaders/placement.slang" },
       { name: "placements", file: "src/scene/placementTable.ts" },
+      { name: "placementOf", file: "src/frames/placementQuery.ts" },
     ],
     passes: ["shadows", "prepass", "opaque", "translucent"],
     today: "A placements buffer, evaluated in the vertex stage.",
@@ -555,4 +557,15 @@ export const DECISIONS: readonly DecisionNote[] = [
 export const COMING = [
   "Shadow casters: off-screen tiles selected to cast into view, which will change what the shadows pass draws.",
   "Presentations of a tileset: one selection with several draws.",
+  "A GPU tessellation engine, later: not built, with its seam (S4 and S2) kept open. The Tessellation tab holds its place.",
 ];
+
+/** A pass the plan calls for and nothing builds: the chart's dashed row. */
+export const PLANNED_PASS = {
+  after: "cull",
+  name: "tessellation",
+  kind: "compute, not built",
+  seams: ["S4", "S2"],
+  reads: ["draw records"],
+  writes: ["draw arguments"],
+};

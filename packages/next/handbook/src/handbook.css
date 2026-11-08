@@ -924,6 +924,23 @@ pre.snippet:focus-visible,
   stroke-dasharray: 4 3;
 }
 
+/* What the plan calls for and nothing builds. */
+.board-card.planned {
+  border-style: dashed;
+  background: transparent;
+}
+.graph tr.graph-planned th,
+.graph tr.graph-planned td {
+  border-block: 1px dashed var(--stratakit-color-border-neutral-base);
+}
+.graph-planned .graph-pass-name {
+  font-style: italic;
+}
+.graph-planned .graph-mark {
+  background: transparent;
+  border: 1px dashed var(--stratakit-color-icon-neutral-secondary);
+}
+
 /* The seams' table. */
 .seams {
   border-collapse: collapse;

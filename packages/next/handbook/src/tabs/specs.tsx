@@ -130,7 +130,7 @@ const WEBGPU: {
       </>
     ),
     engine:
-      "A later seam for reprojected curves, specified in plan 5, section 8.",
+      "A later seam for reprojected models and B-reps, in plan 5, section 8. See the Tessellation tab.",
   },
   {
     feature: "Subgroups",

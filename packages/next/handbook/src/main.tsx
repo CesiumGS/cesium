@@ -27,6 +27,7 @@ import { Precision } from "./tabs/precision.tsx";
 import { Rendering } from "./tabs/rendering.tsx";
 import { Selection } from "./tabs/selection.tsx";
 import { Shadows } from "./tabs/shadows.tsx";
+import { Tessellation } from "./tabs/tessellation.tsx";
 import { Shading } from "./tabs/shading.tsx";
 import { Specs } from "./tabs/specs.tsx";
 import { Vector } from "./tabs/vector.tsx";
@@ -66,6 +67,11 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "precision", label: "Precision and accuracy", view: Precision },
       { id: "shading", label: "Shading and linker", view: Shading },
       { id: "vector", label: "Vector rendering", view: Vector },
+      {
+        id: "tessellation",
+        label: "Tessellation (not built)",
+        view: Tessellation,
+      },
       { id: "ion", label: "Cesium ion", view: Ion },
     ],
   },

@@ -28,6 +28,8 @@ export interface BoardStep {
   /** Rows it spans, stretched to fill them. */
   rows?: number;
   accent?: boolean;
+  /** Not built: drawn dashed. */
+  planned?: boolean;
 }
 
 export interface BoardEdge {
@@ -207,7 +209,13 @@ export function Board({
         ))}
         {steps.map((step, i) => (
           <div
-            className={step.accent ? "board-card accent" : "board-card"}
+            className={[
+              "board-card",
+              step.accent ? "accent" : "",
+              step.planned ? "planned" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             data-step={step.id}
             style={{
               gridColumn: step.lane + 1,

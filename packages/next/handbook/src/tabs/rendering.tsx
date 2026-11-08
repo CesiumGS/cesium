@@ -20,6 +20,7 @@ import {
   IMPORTED_FORMATS,
   PASSES,
   PASS_GROUPS,
+  PLANNED_PASS,
   SEAMS,
 } from "../pipeline.ts";
 
@@ -303,54 +304,97 @@ function FrameGraphChart() {
                       ? decisionsOn(p.name)
                       : [];
                     return (
-                      <tr key={p.name}>
-                        <th className="graph-pass" scope="row">
-                          <span className="graph-pass-name">{p.name}</span>
-                          <span className="graph-pass-kind">
-                            {PASSES[p.name]?.kind}
-                          </span>
-                          {seams.length + decisions.length > 0 ? (
-                            <div className="tags">
-                              {seams.map((s) => seamTag(s.id))}
-                              {decisions.map((d) => decisionTag(d.id))}
-                            </div>
-                          ) : null}
-                        </th>
-                        {columns.map((column, i) => {
-                          const { read, write } = uses(p.name, column);
-                          const [first, last] = lifetime.get(column)!;
-                          const live = row >= first && row <= last;
-                          return (
-                            <td
-                              className={[
-                                "graph-cell",
-                                live ? "live" : "",
-                                startsBuffers(i) ? "graph-split" : "",
-                              ]
-                                .filter(Boolean)
-                                .join(" ")}
-                              key={column}
-                            >
-                              {read || write ? (
-                                <span
-                                  className={
-                                    write ? "graph-mark writes" : "graph-mark"
-                                  }
-                                  title={`${p.name} ${
-                                    read && write
-                                      ? "reads and writes"
-                                      : write
-                                        ? "writes"
-                                        : "reads"
-                                  } ${column}`}
-                                >
-                                  {read && write ? "RW" : write ? "W" : "R"}
-                                </span>
+                      <Fragment key={p.name}>
+                        <tr>
+                          <th className="graph-pass" scope="row">
+                            <span className="graph-pass-name">{p.name}</span>
+                            <span className="graph-pass-kind">
+                              {PASSES[p.name]?.kind}
+                            </span>
+                            {seams.length + decisions.length > 0 ? (
+                              <div className="tags">
+                                {seams.map((s) => seamTag(s.id))}
+                                {decisions.map((d) => decisionTag(d.id))}
+                              </div>
+                            ) : null}
+                          </th>
+                          {columns.map((column, i) => {
+                            const { read, write } = uses(p.name, column);
+                            const [first, last] = lifetime.get(column)!;
+                            const live = row >= first && row <= last;
+                            return (
+                              <td
+                                className={[
+                                  "graph-cell",
+                                  live ? "live" : "",
+                                  startsBuffers(i) ? "graph-split" : "",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" ")}
+                                key={column}
+                              >
+                                {read || write ? (
+                                  <span
+                                    className={
+                                      write ? "graph-mark writes" : "graph-mark"
+                                    }
+                                    title={`${p.name} ${
+                                      read && write
+                                        ? "reads and writes"
+                                        : write
+                                          ? "writes"
+                                          : "reads"
+                                    } ${column}`}
+                                  >
+                                    {read && write ? "RW" : write ? "W" : "R"}
+                                  </span>
+                                ) : null}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        {p.name === PLANNED_PASS.after ? (
+                          <tr className="graph-planned">
+                            <th className="graph-pass" scope="row">
+                              <span className="graph-pass-name">
+                                {PLANNED_PASS.name}
+                              </span>
+                              <span className="graph-pass-kind">
+                                {PLANNED_PASS.kind}
+                              </span>
+                              {shown("Seams") ? (
+                                <div className="tags">
+                                  {PLANNED_PASS.seams.map(seamTag)}
+                                </div>
                               ) : null}
-                            </td>
-                          );
-                        })}
-                      </tr>
+                            </th>
+                            {columns.map((column, i) => {
+                              const write =
+                                PLANNED_PASS.writes.includes(column);
+                              const read = PLANNED_PASS.reads.includes(column);
+                              return (
+                                <td
+                                  className={
+                                    startsBuffers(i)
+                                      ? "graph-cell graph-split"
+                                      : "graph-cell"
+                                  }
+                                  key={column}
+                                >
+                                  {read || write ? (
+                                    <span
+                                      className="graph-mark"
+                                      title={`Not built: it would ${write ? "write" : "read"} ${column}`}
+                                    >
+                                      {write ? "W" : "R"}
+                                    </span>
+                                  ) : null}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ) : null}
+                      </Fragment>
                     );
                   })}
               </Fragment>
