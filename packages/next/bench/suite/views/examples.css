@@ -417,9 +417,6 @@
 }
 
 /* The Slang playground's panel (examples/slang-playground). */
-.examples-stage.side .examples-panel-body:has(.slang-editor) {
-  overflow: hidden;
-}
 .slang-toolbar {
   display: flex;
   flex-direction: column;
@@ -680,21 +677,6 @@
 }
 .slang-help {
   color: var(--stratakit-color-text-neutral-secondary);
-}
-/* The playground's tone mapping and exposure, under the stage's controls. */
-.slang-looks {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-150, 6px);
-  margin-top: var(--stratakit-space-100, 4px);
-  padding-top: var(--stratakit-space-150, 6px);
-  border-top: 1px solid var(--stratakit-color-border-neutral-muted, #ffffff22);
-}
-.slang-looks-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
 }
 .slang-looks-reset {
   font-weight: 400;
