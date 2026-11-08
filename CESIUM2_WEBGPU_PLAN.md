@@ -7050,6 +7050,42 @@ feature-adaptive subdivision (OpenSubdiv), and direct ray-casting of trimmed
 NURBS. Plan 5 only keeps the seam open: per-vertex placement and the frames
 module's per-draw projection are what this engine would consume.
 
+_Plan 5 design input: groundwork for post-V1 WebGPU features (owner,
+2026-11-07)._ Apply the bindless pattern (§7.1: "design for it; don't build
+it": one seam every caller goes through, plus a test that fails on any
+bypass) to the features the WebGPU working group has tagged for after V1, so
+adopting them later is a backend swap rather than a refactor. Only where the
+seam costs nothing today; no design compromises in the current WebGPU path.
+
+- **Ray queries and acceleration structures.** Every ray or spatial query
+  (picking, snapping, line of sight, height queries, §13.16) goes through one
+  query interface that names its frame and instant. Today it runs on CPU BVHs
+  or compute traversal; a hardware ray-query backend drops in behind it.
+  Acceleration-structure lifetime (build, refit, evict) hangs off tile and
+  draw lifetime in streaming through one hook, so a per-tile BLAS and a
+  per-frame TLAS have a place to live.
+- **Mesh shaders.** Geometry reaches the GPU through the GPU-driven
+  submission path only (§7, M1), and the content pipeline can carry
+  meshlet or cluster data, consumed today by compute culling and indirect
+  draws. A mesh-shader backend replaces the compute-plus-indirect stage, not
+  the content format or the callers.
+- **Multi-draw indirect, push constants (immediates), texel buffers and
+  64-bit atomics:** per-draw constants and draw-argument buffers go through
+  one seam each, so multi-draw indirect and immediates replace an emulation
+  rather than call sites; 64-bit atomics would enable a visibility buffer or
+  software rasterization later (§7.1's reassessment).
+- **Subgroups and cooperative matrices:** keep the portable kernels with
+  subgroup fast paths behind a capability check (§7.2), and extend the same
+  rule to any matrix-unit work.
+- **Multiple queues and async compute:** the job graph marks each pass's
+  queue affinity and dependencies now, so async compute is a scheduling
+  change.
+- **Capability tiers:** one registry of probed features and limits (§13.15's
+  tiers), read by every backend choice; Slang shaders are organized per
+  capability, so a new stage (mesh, ray query) adds a module rather than
+  editing every shader. Each seam gets a bypass test like
+  `test/bindless.test.ts`.
+
 _Plan 5 design input: modules with interfaces (owner, 2026-11-07)._ "We
 should generally be thinking about how to make 2.0 more modular so pieces of
 it can be reused and composed in interesting ways and we can easily plug
