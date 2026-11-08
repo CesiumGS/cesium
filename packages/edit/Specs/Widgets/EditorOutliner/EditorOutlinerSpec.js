@@ -165,11 +165,20 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
       expect(getLabels()).toEqual(["group", "i1", "i2", "unused", "i3"]);
     });
 
-    it("are indented by depth", function () {
+    it("are indented with a guide line per level of depth", function () {
       outliner = new EditorOutliner(container, editor, { provider });
+      const guideCount = (label) =>
+        getRow(label).querySelectorAll(".cesium-editor-outliner-guide").length;
 
-      expect(getRow("group").style.paddingLeft).toBe("0px");
-      expect(getRow("i1").style.paddingLeft).toBe("16px");
+      expect(guideCount("group")).toBe(0);
+      expect(guideCount("i1")).toBe(1);
+
+      const i1 = provider.roots[0].children[0];
+      i1.children = [item("child")];
+      provider.changed.raiseEvent(i1);
+      clickExpander("i1");
+
+      expect(guideCount("child")).toBe(2);
     });
 
     it("show whether they're expandable and expanded", function () {
@@ -376,7 +385,10 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     it("focuses the first row when the outliner gains focus", function () {
       outliner = new EditorOutliner(container, editor, { provider });
 
-      container.querySelector(".cesium-editor-outliner").focus();
+      // Dispatched, since focus() only raises it while the window has focus.
+      container
+        .querySelector(".cesium-editor-outliner")
+        .dispatchEvent(new FocusEvent("focus"));
 
       expect(focusedLabel()).toBe("group");
     });
@@ -385,7 +397,10 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
       outliner = new EditorOutliner(container, editor, { provider });
       click(getRow("i3"));
 
-      container.querySelector(".cesium-editor-outliner").focus();
+      // Dispatched, since focus() only raises it while the window has focus.
+      container
+        .querySelector(".cesium-editor-outliner")
+        .dispatchEvent(new FocusEvent("focus"));
 
       expect(focusedLabel()).toBe("i3");
     });
