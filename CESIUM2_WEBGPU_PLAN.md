@@ -8334,6 +8334,10 @@ So streaming's logic is already free of the GPU API. The tangle is in `Engine.ts
 
 Not designed. A question to take up in its own session, then add to this plan: how semantic metadata interacts with the engine as world models mature, and what that means for picking in Gaussian splats and point clouds. Those representations have no surfaces or per-feature triangles, so "what did I pick?" may come from a learned or labelled field, not from a feature id on a mesh. Related: the query interface (§13.16), point clouds and vector tiles with the vector renderer, and 3D Tiles metadata, which isn't planned yet.
 
+### 13.20 For a later brainstorm: editing (owner, 2026-11-08)
+
+Not designed. A question to take up in its own session, then add to this plan: editing use cases, and how the engine can efficiently support things like CAD-style mesh editing or b-rep-based solid modeling. Today's content is streamed, immutable and tiled, so questions include how edited geometry coexists with tiles, how often buffers change, and where a modeling kernel would sit relative to the engine's seams. Related: geometry submission and per-draw constants (the seams), snapping and measurement, the later tessellation engine (§13.14), and design space (plan 5f).
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
