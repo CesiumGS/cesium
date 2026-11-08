@@ -124,7 +124,8 @@ const rigidBudgetCase = stressCase(
 
 /**
  * The gap between rigid and exact placement `meters` along a site grid's x
- * axis from its origin (design 0, 0, 0): the library's (`rigidSeparation`),
+ * axis from its origin (design 0, 0, `height`, the line level at that design
+ * height): the library's (`rigidSeparation`),
  * its parts as the inset splits them (`gapParts`: the drop, and the part
  * along the line, positive where the rigid point falls short), and the hand
  * formula's (`rigidGapByHand`). The hand takes the radius of curvature in
@@ -133,30 +134,39 @@ const rigidBudgetCase = stressCase(
  * line (Simpson's rule over five points), from the library as grid to ground
  * takes its combined factor. One computation: the catalog's checks below and
  * the BIM site's answer (scenarios/bimSite.ts) both call it.
+ *
+ * Off the ellipsoid, the line is on a surface of radius R + h, h the
+ * origin's ellipsoidal height, and the grid's combined factor carries its
+ * elevation factor: both are taken at `height` (design height units). At
+ * 290 m up (the design globe's site-grid building) R + h moves the drop by
+ * 1.4 mm at 20 km, more than the 1 mm each part is checked to.
  */
 export function siteGap(
   frame: EngineeringFrame,
   site: SiteTransform,
   meters: number,
+  height = 0,
 ) {
-  const rigid = RigidPlacement.at(frame, [0, 0, 0]);
+  const onOrigin = [0, 0, height];
+  const rigid = RigidPlacement.at(frame, onOrigin);
   const length = meters / frame.units.metersPerUnit;
-  const design = [length, 0, 0];
+  const design = [length, 0, height];
   const exact = Float64Array.from(frame.toBodyFixed(design));
   const placed = Float64Array.from(rigid.toBodyFixed(design));
-  const start = rigid.toBodyFixed([0, 0, 0]);
+  const start = rigid.toBodyFixed(onOrigin);
   const along = [0, 1, 2].map((i) => placed[i]! - start[i]!);
   const parts = gapParts(exact, placed, along);
-  const origin = WGS84.cartesianToCartographic(frame.toBodyFixed([0, 0, 0]), {
+  const origin = WGS84.cartesianToCartographic(frame.toBodyFixed(onOrigin), {
     longitude: 0,
     latitude: 0,
     height: 0,
   })!;
   const latitude = origin.latitude / DEGREE;
-  const at = (t: number) => gridFactors(frame, [length * t, 0, 0]);
+  const at = (t: number) => gridFactors(frame, [length * t, 0, height]);
   const convergence = at(0).convergence / DEGREE;
   const azimuth = siteAxisAzimuth(site.rotation / DEGREE) + convergence;
-  const radius = normalRadius(WGS84_A, WGS84_E2, latitude, azimuth);
+  const radius =
+    normalRadius(WGS84_A, WGS84_E2, latitude, azimuth) + origin.height;
   const k = [0, 0.25, 0.5, 0.75, 1].map((t) => at(t).combinedFactor);
   const gridScale = (k[0]! + 4 * k[1]! + 2 * k[2]! + 4 * k[3]! + k[4]!) / 12;
   const hand = rigidGapByHand({
@@ -178,7 +188,7 @@ export function siteGap(
     latitude,
     exact,
     placed,
-    fingerprintDesigns: [[0, 0, 0], design],
+    fingerprintDesigns: [onOrigin, design],
   };
 }
 

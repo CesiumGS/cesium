@@ -40,15 +40,22 @@ const SAG_AT = 20_000;
 const site = SITE_BUILDING.frame.site!;
 
 /**
- * Design points (design units): the building's footprint corners at its
- * roof, and points along both site axes out to 25 km each way (the 50 km
- * corridor), at design heights 0 and 100.
+ * The building's ground, design height units (NAVD88 ftUS): its corner,
+ * the origin, stands at the hillside's height, not at design height 0.
+ */
+const GROUND = SITE_BUILDING.origin[2];
+
+/**
+ * Design points (design units): the building's corner on the ground, its
+ * footprint's other corners at its roof, and points along both site axes out
+ * to 25 km each way (the 50 km corridor), at the building's ground and
+ * 100 ftUS above it.
  */
 function designs(frame: EngineeringFrame): number[][] {
   const { width, depth, stories, storyHeight } = SITE_BUILDING.model;
-  const roof = stories * storyHeight;
+  const roof = GROUND + stories * storyHeight;
   const out: number[][] = [
-    [0, 0, 0],
+    [0, 0, GROUND],
     [width, 0, roof],
     [width, depth, roof],
     [0, depth, roof],
@@ -56,7 +63,7 @@ function designs(frame: EngineeringFrame): number[][] {
   const step = 5_000 / frame.units.metersPerUnit;
   for (let i = -5; i <= 5; i++) {
     if (i !== 0) {
-      out.push([i * step, 0, 0], [0, i * step, 100]);
+      out.push([i * step, 0, GROUND], [0, i * step, GROUND + 100]);
     }
   }
   return out;
@@ -129,14 +136,16 @@ const placementCase = stressCase(
       fingerprint: fingerprintOf(ctx, frame, points),
     });
 
-    // 3. The rigid sag 20 km along the site grid's x axis: the library's
-    // display error against the hand formula. The hand: the drop d²/2R (R in
-    // the axis's true azimuth) less GEOID18's rise from the origin to the
-    // far point (design height 0 is NAVD88 0, so the exact point follows the
-    // geoid and the rigid one keeps the origin's), and along the line
-    // d(s/k̄ − 1) + d³/3R² (siteGap's, the rigid placement budget's).
-    const g = siteGap(frame, site, SAG_AT);
-    const far = [SAG_AT / frame.units.metersPerUnit, 0, 0];
+    // 3. The rigid sag 20 km along the site grid's x axis, at the building's
+    // ground height: the library's display error against the hand formula.
+    // The hand: the drop d²/2R (R in the axis's true azimuth, at the line's
+    // height) less GEOID18's rise from the origin to the far point (both at
+    // the same NAVD88 height, so the exact point follows the geoid and the
+    // rigid one keeps the origin's), and along the line d(s/k̄ − 1) + d³/3R²
+    // (siteGap's, the rigid placement budget's, with k̄ the combined factor
+    // at that height).
+    const g = siteGap(frame, site, SAG_AT, GROUND);
+    const far = [SAG_AT / frame.units.metersPerUnit, 0, GROUND];
     const sag = rigid.displayError(far);
     const rise =
       frame.toGeodetic(far).height -
