@@ -426,13 +426,14 @@ describe("loadFrameRoles", () => {
     );
   });
 
-  it("rejects with AbortError when aborted during the planets fetch, and starts no later fetch", async () => {
+  it("rejects with AbortError when aborted from outside while all four fetches are pending, and all four saw it", async () => {
     const s = await store(
       leapText("28 June 2027"),
       eopText(Math.floor(nowMjd), 400),
     );
     const controller = new AbortController();
     const requested: string[] = [];
+    const seen: string[] = [];
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string, init?: RequestInit) => {
@@ -440,26 +441,104 @@ describe("loadFrameRoles", () => {
         if (input.endsWith("manifest.json")) {
           return new Response(JSON.stringify(s.manifest));
         }
-        // The planets fetch hangs until the signal aborts it.
         return new Promise<Response>((_, reject) => {
-          init?.signal?.addEventListener("abort", () =>
-            reject(init.signal!.reason),
-          );
-          controller.abort();
+          init!.signal!.addEventListener("abort", () => {
+            seen.push(input);
+            reject(init!.signal!.reason);
+          });
         });
       }),
     );
-    const error = await loadFrameRoles(
+    const promise = loadFrameRoles(
       "/frames-data/",
       ["planets", "moon", "eop", "leapSeconds"],
       { signal: controller.signal },
     ).catch((e: unknown) => e);
+    await vi.waitFor(() => expect(requested).toHaveLength(5));
+    controller.abort();
+    const error = await promise;
     expect((error as DOMException).name).toBe("AbortError");
+    expect(seen.sort()).toEqual(requested.slice(1).sort());
+    expect(requested).toHaveLength(5);
+  });
+
+  it("rejects with the signal's reason when aborted after the manifest loaded, fetching no file", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    const controller = new AbortController();
+    const reason = new Error("stop now");
+    const requested: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        requested.push(input);
+        const response = new Response(JSON.stringify(s.manifest));
+        controller.abort(reason);
+        return response;
+      }),
+    );
+    const error = await loadFrameRoles("/frames-data/", ["eop"], {
+      signal: controller.signal,
+    }).catch((e: unknown) => e);
+    expect(error).toBe(reason);
+    expect(requested).toEqual(["/frames-data/manifest.json"]);
+  });
+
+  it("rethrows the signal's reason, not 'not valid JSON', when aborted while the manifest body is read", async () => {
+    const controller = new AbortController();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_: string, init?: RequestInit) => {
+        const body = new ReadableStream<Uint8Array>({
+          start(c) {
+            init!.signal!.addEventListener("abort", () =>
+              c.error(init!.signal!.reason),
+            );
+          },
+        });
+        return new Response(body);
+      }),
+    );
+    const promise = loadFrameRoles("/frames-data/", ["eop"], {
+      signal: controller.signal,
+    }).catch((e: unknown) => e);
     await new Promise((r) => setTimeout(r, 0));
-    expect(requested).toEqual([
-      "/frames-data/manifest.json",
-      "/frames-data/planets.pack",
-    ]);
+    controller.abort();
+    const error = await promise;
+    expect((error as DOMException).name).toBe("AbortError");
+  });
+
+  it("aborts the other roles' downloads when one fails", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    s.manifest.files.find((f) => f.role === "eop")!.sha256 = "0".repeat(64);
+    const aborted: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        const name = input.slice("/frames-data/".length);
+        if (name === "manifest.json") {
+          return new Response(JSON.stringify(s.manifest));
+        }
+        if (name === "EOP-All.csv") {
+          return new Response(s.files[name]!.slice(0));
+        }
+        return new Promise<Response>((_, reject) => {
+          init!.signal!.addEventListener("abort", () => {
+            aborted.push(name);
+            reject(init!.signal!.reason);
+          });
+        });
+      }),
+    );
+    await expect(
+      loadFrameRoles("/frames-data/", ["planets", "moon", "eop"]),
+    ).rejects.toThrow(/SHA-256/);
+    expect(aborted.sort()).toEqual(["moon.pack", "planets.pack"]);
   });
 
   it("rejects with the signal's reason when already aborted, fetching nothing", async () => {

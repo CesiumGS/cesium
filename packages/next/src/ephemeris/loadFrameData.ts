@@ -101,6 +101,9 @@ async function loadManifest(
   try {
     parsed = (await response.json()) as { files?: ManifestEntry[] };
   } catch (cause) {
+    if (signal?.aborted) {
+      throw signal.reason;
+    }
     throw new Error(
       `frames data: ${url} is not valid JSON (the store may be stale or the server may serve another page); ${SETUP_HINT}`,
       { cause },
@@ -179,9 +182,20 @@ export async function loadFrameRoles(
     }
     return entry ? [[role, entry] as const] : [];
   });
-  const loaded = await Promise.all(
-    entries.map(([, entry]) => loadFile(base, entry, onProgress, signal)),
-  );
+  // The first role to fail aborts the others' downloads.
+  const failed = new AbortController();
+  const linked = signal
+    ? AbortSignal.any([signal, failed.signal])
+    : failed.signal;
+  let loaded: ArrayBuffer[];
+  try {
+    loaded = await Promise.all(
+      entries.map(([, entry]) => loadFile(base, entry, onProgress, linked)),
+    );
+  } catch (error) {
+    failed.abort(error);
+    throw error;
+  }
   const out: Partial<Record<FrameDataRole, ArrayBuffer>> = {};
   entries.forEach(([role], i) => {
     out[role] = loaded[i]!;
