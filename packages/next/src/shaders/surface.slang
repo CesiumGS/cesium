@@ -1388,10 +1388,14 @@ float3 srgbToLinear(float3 c) {
 
 // A surface's light toward the camera: scene-referred (pre-exposed, through
 // the air) or, unlit, display-referred; its alpha for blended materials.
+// `sceneShare` is the share of a scene-referred color's luminance that is
+// scene light, not display-relative emission: it goes to the scene target's
+// alpha, and the exposure meter (meter.slang) takes that share of the color.
 struct Surface {
   float3 color;
   float alpha;
   bool unlit;
+  float sceneShare;
 };
 
 Surface surface(float3 color, float alpha, bool unlit) {
@@ -1399,6 +1403,7 @@ Surface surface(float3 color, float alpha, bool unlit) {
   s.color = color;
   s.alpha = alpha;
   s.unlit = unlit;
+  s.sceneShare = 1.0;
   return s;
 }
 
@@ -1626,7 +1631,19 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
   }
   // Below fp16's largest value: an overflow to infinity (a lit scene at a
   // night exposure) poisoned the exposure meter's average with NaN.
-  return surface(min(lit + shown, float3(60000.0)), baseColor.a, false);
+  float3 total = min(lit + shown, float3(60000.0));
+  Surface s = surface(total, baseColor.a, false);
+  // The exposure meter reads the scene's light only: emission is added
+  // after the exposure, so metered with it, a bright emitter lowered the
+  // exposure, which raised the emission's share of the image, and so on
+  // down to the floor. Pure emission (no scene light) has share 0, like
+  // unlit content, and is left out of the reading.
+  float3 luminance = float3(0.2126, 0.7152, 0.0722);
+  float shownLuminance = dot(shown, luminance);
+  if (shownLuminance > 0.0) {
+    s.sceneShare = clamp(dot(lit, luminance) / (dot(lit, luminance) + shownLuminance), 0.0, 1.0);
+  }
+  return s;
 }
 
 struct FsOut {
@@ -1656,7 +1673,7 @@ FsOut fs(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
     out.color = float4(0.0);
     out.display = float4(s.color, 1.0);
   } else {
-    out.color = float4(s.color, 1.0);
+    out.color = float4(s.color, s.sceneShare);
     out.display = float4(0.0);
   }
   return out;
@@ -1690,7 +1707,7 @@ FsPointsOut fsPoints(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace) {
     out.color = float4(0.0);
     out.display = float4(s.color, 1.0);
   } else {
-    out.color = float4(s.color, 1.0);
+    out.color = float4(s.color, s.sceneShare);
     out.display = float4(0.0);
   }
   return out;

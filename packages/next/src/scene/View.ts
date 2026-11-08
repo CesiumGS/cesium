@@ -363,7 +363,9 @@ export interface HdrImage {
    * the scene before exposure and tonemapping, in the scene's units
    * (cd/m² by default). Unlit content is display-referred and not in it.
    * Emission is display-relative (added after exposure), so it appears
-   * divided by the exposure scale here.
+   * divided by the exposure scale here. Alpha is not divided: it is the
+   * share of the pixel's luminance that is scene light (1 without
+   * emission), which the exposure meter takes of the color.
    */
   data: Float32Array;
 }

@@ -10,7 +10,12 @@
 // lamps) is left out too. Center-weighted, as the eye adapts mostly to
 // where it looks and cameras meter: the middle of the view counts up to
 // four times its edges. Pixels with no scene light (alpha 0: the
-// background, and unlit content, which isn't exposed) are left out.
+// background, and unlit content, which isn't exposed) are left out. Alpha
+// is also the share of a pixel's luminance that is scene light: emission
+// is added after the exposure (surface.slang), so counting it made the
+// reading fall as the exposure did, and the exposure with it. The meter
+// takes that share of the color, so a pixel half emission and half light
+// reads the light alone, and pure emission (share 0) is left out.
 
 struct MeterParams {
   float exposure;
@@ -73,7 +78,7 @@ void main(uint index : SV_GroupIndex, uint3 local : SV_GroupThreadID) {
                           min(uint(unit.y * float(params.height)), params.height - 1u));
       float4 color = image.Load(int3(int2(pixel), 0));
       if (color.a > 0.0) {
-        float3 light = max(color.rgb, float3(0.0)) / params.exposure;
+        float3 light = max(color.rgb, float3(0.0)) * min(color.a, 1.0) / params.exposure;
         float x = dot(light, float3(0.4124, 0.3576, 0.1805));
         float y = dot(light, float3(0.2126, 0.7152, 0.0722));
         float z = dot(light, float3(0.0193, 0.1192, 0.9505));
