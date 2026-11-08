@@ -6,7 +6,7 @@ Rules for anyone working in this package, people and coding agents alike. The RE
 
 - Commit by path only: `git add -- <paths>`, then `git commit -- <paths>`. Never `git add -A`, `git stash`, `git reset` or `git checkout --` on files you didn't change. Several people or agents may share a checkout.
 - The lint-staged pre-commit hook can sweep someone else's unfinished work into your commit. It has happened with files that were staged and with one that wasn't: its backup and restore steps run across the whole working tree. So when several people or agents are working at once:
-  - Work in your own `git worktree` whenever you can. Sharing a checkout is the cause; everything below only reduces the risk.
+  - Work in your own `git worktree` whenever you can. It removes most of the risk, but not all: lint-staged's backup is a stash, and every worktree shares one stash list. So don't leave stashes behind, and don't commit while someone else's hook is running.
   - In a shared checkout, check that `git diff --cached --name-only` is empty first, stage and commit in one command, and never leave files staged.
   - Afterwards, check `git show --stat HEAD`. If another person's file went in, tell them rather than amending or reverting it: their working copy is still intact, and their next commit carries the rest.
 - If `.git/index.lock` exists, wait and retry rather than removing it.
@@ -41,6 +41,7 @@ The GPU is shared with every other app on the machine. A hung shader resets it f
 ## Wording
 
 - Plain, short sentences. Name units and datums. No e-notation in prose ("10⁻⁹", not "1e-9").
+- Use inclusive terms: "overall plan" or "main", not "master"; "allowlist", not "whitelist".
 - In frames and camera code, never write "frame" alone: say reference frame, tick (one pass of the engine loop, never "per frame"), render space or render root. Code names (`Frame`, `FrameData`) keep their names.
 - A stated accuracy never claims more than its inputs support. "Can't tell" is an honest answer.
 
