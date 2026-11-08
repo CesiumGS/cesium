@@ -51,6 +51,13 @@ export interface StyleCompileOptions {
   >;
   /** A string literal's value outside `color()` (a shape's name, say). */
   string?: (value: string) => StyleValue | undefined;
+  /**
+   * Colors written in CSS notation (`color()`, `rgb()`, `rgba()`, `hsl()`,
+   * `hsla()`) come out as linear values, which is what shading uses
+   * (`cssNotation`). Without it they stay as written, for a caller that
+   * converts them itself (the vector language does).
+   */
+  linearColors?: boolean;
 }
 
 /** What expressions read: each `${property}` as WGSL of a type. */
@@ -382,6 +389,16 @@ const COMPONENTWISE: Record<string, { args: number; wgsl: string }> = {
   clamp: { args: 3, wgsl: "clamp" },
   mix: { args: 3, wgsl: "mix" },
 };
+
+/** Functions that write a color in CSS notation (`cssNotation`). */
+const CSS_NOTATION = new Set(["color", "rgb", "rgba", "hsl", "hsla"]);
+
+/**
+ * WGSL for `linearColors`: sRGB as written to linear (`cssNotation`'s
+ * gamma), the alpha as it is. Added by callers that ask for them.
+ */
+export const STYLE_LINEAR_HELPER = `fn styleLinear(c: vec4f) -> vec4f { return vec4f(pow(c.rgb, vec3f(2.2)), c.a); }
+`;
 
 /**
  * WGSL helpers the compiled expressions may call: `styleRound` (1.x's
@@ -757,7 +774,26 @@ export function compileStyleExpression(
           : fail(source, `${name} needs ${count} arguments`),
       );
 
+  /**
+   * The default color rule, in one place: CSS notation is sRGB, and shading
+   * is linear. A color that became a value through CSS notation (hex, a
+   * name, `rgb()`, `hsl()`) is converted here, with a gamma of 2.2 (as 1.x
+   * and the vector language); numbers and vectors (`vec4(…)`, properties)
+   * are values already and stay as they are. The alpha isn't converted.
+   */
+  const cssNotation = (color: StyleValue): StyleValue =>
+    options.linearColors
+      ? { wgsl: `styleLinear(${color.wgsl})`, type: color.type }
+      : color;
+
   const call = (name: string, args: Node[]): StyleValue => {
+    const value = callPlain(name, args);
+    return CSS_NOTATION.has(name) && !options.functions?.[name]
+      ? cssNotation(value)
+      : value;
+  };
+
+  const callPlain = (name: string, args: Node[]): StyleValue => {
     const extension = options.functions?.[name];
     if (extension) {
       return extension(args, compile);

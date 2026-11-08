@@ -51,6 +51,7 @@ function expression(code: string, stage: "show" | "color") {
     "vec4f",
     "styleHsl",
     "styleRound",
+    "styleLinear",
     `return ${javascript};`,
   ) as (m: Record<string, number>, ...helpers: unknown[]) => boolean | number[];
 }
@@ -79,6 +80,8 @@ const helpers = [
     return Vec.from([c.red, c.green, c.blue, c.alpha]);
   },
   (x: number) => Math.floor(x + 0.5),
+  // As the helper: sRGB as written to linear, the alpha as it is.
+  (c: number[]) => Vec.from([...c.slice(0, 3).map((v) => v ** 2.2), c[3]]),
 ] as const;
 
 /** 1.x and 2.0 style `rows` with `options`: what each says per feature. */
@@ -134,8 +137,10 @@ function styled(
       }
       if (color) {
         const c = old.color.evaluateColor(feature, new Color());
+        // 1.x multiplies the material by the style's color gamma
+        // corrected, which is the linear value 2.0 computes.
         result.color = [
-          [c.red, c.green, c.blue, c.alpha],
+          [c.red ** 2.2, c.green ** 2.2, c.blue ** 2.2, c.alpha],
           [...(color(m, ...helpers) as number[])],
         ];
       }

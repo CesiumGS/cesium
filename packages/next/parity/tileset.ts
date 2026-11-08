@@ -72,8 +72,10 @@ interface Source {
   /** A 3D Tiles style (1.x's JSON), applied in both engines. */
   style?: {
     show?: string;
-    color?: { conditions: Array<[string, string]> };
+    color?: string | { conditions: Array<[string, string]> };
   };
+  /** What 1.x is given instead of `style`, where its shading differs (see STRING_STYLES). */
+  oracle?: Source["style"];
   /** How the style's color applies (1.x `colorBlendMode`; default highlight). */
   blend?: { mode: "replace" | "mix"; amount?: number };
 }
@@ -283,7 +285,7 @@ async function renderLegacy(
       ? await Cesium.Cesium3DTileset.fromIonAssetId(source.ionAsset, options)
       : await Cesium.Cesium3DTileset.fromUrl(source.url, options);
   if (source.style) {
-    tileset.style = new Cesium.Cesium3DTileStyle(source.style);
+    tileset.style = new Cesium.Cesium3DTileStyle(source.oracle ?? source.style);
   }
   if (source.blend) {
     tileset.colorBlendMode =
@@ -379,20 +381,44 @@ async function stringTileset(): Promise<string> {
   return blob(JSON.stringify(rewritten), "application/json");
 }
 
-const COLORS: Source["style"] = {
-  color: {
-    conditions: [
-      ["${kind} === 'park'", "color('#32cd32')"],
-      ["${kind} === 'school' || ${kind} === 'hospital'", "color('#ff8800')"],
-      ["${Height} > 10 && ${kind} === 'tower'", "rgb(200, 30, 30)"],
-      ["true", "hsl(0.6, 0.5, 0.7)"],
-    ],
-  },
-};
+/** Colors in CSS notation by rule: what they show as written, in bytes. */
+const RULES: Array<[string, string, [number, number, number]]> = [
+  ["${kind} === 'park'", "#32cd32", [0x32, 0xcd, 0x32]],
+  ["${kind} === 'school' || ${kind} === 'hospital'", "#ff8800", [255, 136, 0]],
+  ["${Height} > 10 && ${kind} === 'tower'", "#c81e1e", [200, 30, 30]],
+  ["true", "#8fa8d9", [0x8f, 0xa8, 0xd9]],
+];
+
+/**
+ * The rules as a style: in CSS notation as written (2.0 reads it as sRGB),
+ * or each color as the linear value it shades as, in bytes (`linear`).
+ */
+function colorRules(linear: boolean): NonNullable<Source["style"]> {
+  const byte = (v: number) => (255 * (v / 255) ** 2.2).toFixed(3);
+  return {
+    color: {
+      conditions: RULES.map(([when, css, bytes]) => [
+        when,
+        linear ? `rgb(${bytes.map(byte).join(", ")})` : `color('${css}')`,
+      ]),
+    },
+  };
+}
 
 /**
  * Styles with string comparisons (the unstyled row is the baseline), with
  * mid-range colors, in each blend mode, and an alpha of 0 (which hides).
+ *
+ * 2.0 blends in linear light. 1.x's blend of a style's color is known to
+ * give incorrect results: "replace" and "mix" use a color written in CSS
+ * notation (sRGB) as if it were linear, so it shows lighter than written,
+ * and a white one counts as unstyled. 1.x is therefore not the oracle for
+ * them: it is given each color already as the linear value (`oracle`), for
+ * which its arithmetic is right, so what is compared is 2.0's result
+ * against the correct linear one. The same for a `vec4`, a value that 2.0
+ * takes as linear and 1.x as written. Highlight and alpha 0 (the opaque
+ * colors) are compared with 1.x as it is. Translucent colors aren't
+ * compared: 2.0's style alpha doesn't blend (the material's does).
  */
 const STRING_STYLES: Array<[string, Partial<Source>]> = [
   ["no style (baseline)", {}],
@@ -400,9 +426,23 @@ const STRING_STYLES: Array<[string, Partial<Source>]> = [
     "show by strings",
     { style: { show: "${kind} !== 'tower' && ${kind} !== 'road'" } },
   ],
-  ["color by strings and numbers", { style: COLORS }],
-  ["color, replace", { style: COLORS, blend: { mode: "replace" } }],
-  ["color, mix", { style: COLORS, blend: { mode: "mix", amount: 0.4 } }],
+  ["color by strings and numbers", { style: colorRules(false) }],
+  [
+    "color, replace (vs linear colors)",
+    {
+      style: colorRules(false),
+      oracle: colorRules(true),
+      blend: { mode: "replace" },
+    },
+  ],
+  [
+    "color, mix (vs linear colors)",
+    {
+      style: colorRules(false),
+      oracle: colorRules(true),
+      blend: { mode: "mix", amount: 0.4 },
+    },
+  ],
   [
     "color with alpha 0 hides",
     {
@@ -413,6 +453,17 @@ const STRING_STYLES: Array<[string, Partial<Source>]> = [
             ["true", "color('#ff8800')"],
           ],
         },
+      },
+    },
+  ],
+  ["color: rgb(255, 136, 0)", { style: { color: "rgb(255, 136, 0)" } }],
+  ["color: #ff8800", { style: { color: "color('#ff8800')" } }],
+  [
+    "color: vec4(1.0, 0.533, 0.0, 1.0), a linear value",
+    {
+      style: { color: "vec4(1.0, 0.533, 0.0, 1.0)" },
+      oracle: {
+        color: `vec4(1.0, ${(0.533 ** (1 / 2.2)).toFixed(4)}, 0.0, 1.0)`,
       },
     },
   ],

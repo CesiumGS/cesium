@@ -3,6 +3,7 @@ import { CapacityError } from "./CapacityError.ts";
 import { stringIds } from "./stringIds.ts";
 import {
   STYLE_HELPERS,
+  STYLE_LINEAR_HELPER,
   compileStyleExpression,
   f32,
   type StyleType,
@@ -46,6 +47,9 @@ const literalsHeld = new FinalizationRegistry<string[]>((literals) => {
     stringIds.unliteral(value);
   }
 });
+
+/** Colors in CSS notation are sRGB as written; the material's are linear. */
+const SHADING = { linearColors: true } as const;
 
 const STYLE_TYPES: Record<NamedType, StyleType> = {
   f32: "number",
@@ -123,7 +127,7 @@ export class FeatureStyle {
           }
           reading.add(name);
           try {
-            return compileStyleExpression(define, reader(stage));
+            return compileStyleExpression(define, reader(stage), SHADING);
           } finally {
             reading.delete(name);
           }
@@ -184,17 +188,20 @@ export class FeatureStyle {
         return v.wgsl;
       };
       if (typeof value === "string") {
-        return check(compileStyleExpression(value, reader(stage)), value);
+        return check(
+          compileStyleExpression(value, reader(stage), SHADING),
+          value,
+        );
       }
       // Conditions: the first true one's value, else `otherwise`.
       let result = otherwise;
       for (const [condition, expression] of [...value.conditions].reverse()) {
-        const cond = compileStyleExpression(condition, reader(stage));
+        const cond = compileStyleExpression(condition, reader(stage), SHADING);
         if (cond.type !== "boolean") {
           throw new Error(`Style: condition "${condition}" isn't a boolean.`);
         }
         const then = check(
-          compileStyleExpression(expression, reader(stage)),
+          compileStyleExpression(expression, reader(stage), SHADING),
           expression,
         );
         result = `select(${result}, ${then}, ${cond.wgsl})`;
@@ -218,18 +225,17 @@ export class FeatureStyle {
     ].filter((h) => h !== undefined);
     const mode = options.colorBlendMode ?? "highlight";
     const amount = options.colorBlendAmount ?? 0.5;
-    // As 1.x's shaders do (ModelColorStage, CPUStylingStageFS and
-    // MaterialStageFS): "highlight" multiplies the material's linear color
-    // by the style's, converted from sRGB as written (the same 2.2 power
-    // as the vector styles' colors); "replace" and "mix" use the style's
-    // color as it is, as linear, and leave the material's where the style's
-    // is white (1.x reads white as "unstyled").
+    // Colors come out of the expression compiler linear (SHADING), so they
+    // apply to the material's linear color as they are. "Mix" and "replace"
+    // blend in linear light: 1.x's blend of a CSS color is known to be
+    // wrong (it uses the color as linear, so it shows lighter than
+    // written), and isn't matched.
     const apply =
       mode === "replace"
-        ? "select((*material).baseColor, c.rgb, styled)"
+        ? "c.rgb"
         : mode === "mix"
-          ? `select((*material).baseColor, mix((*material).baseColor, c.rgb, ${f32(amount)}), styled)`
-          : "(*material).baseColor * pow(c.rgb, vec3f(2.2))";
+          ? `mix((*material).baseColor, c.rgb, ${f32(amount)})`
+          : "(*material).baseColor * c.rgb";
     this.properties = [...fields.keys()];
     // Tiles upload the string columns a style reads, no others.
     for (const property of this.properties) {
@@ -270,6 +276,7 @@ export class FeatureStyle {
       metadata,
       wgsl: [
         STYLE_HELPERS,
+        STYLE_LINEAR_HELPER,
         hidden.length > 0
           ? `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
   // Hidden: every vertex of the feature at one point, so its triangles
@@ -282,7 +289,6 @@ export class FeatureStyle {
         color !== undefined
           ? `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   let c = ${color};
-  let styled = !all(c.rgb > vec3f(0.999));
   (*material).baseColor = ${apply};
   (*material).alpha *= c.a;
 }`

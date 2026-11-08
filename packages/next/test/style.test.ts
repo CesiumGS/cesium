@@ -182,27 +182,47 @@ describe("the properties a style reads", () => {
 });
 
 describe("a style's colors", () => {
-  it("apply as 1.x's shaders do in each blend mode", () => {
+  const linear = (source: string) =>
+    compileStyleExpression(source, read, { linearColors: true }).wgsl;
+
+  it("are converted where CSS notation becomes a value, and nowhere else", () => {
+    // Hex, names, rgb() and hsl() are sRGB as written; shading is linear.
+    expect(linear("color('#ff8800')")).toBe(
+      "styleLinear(vec4f(1.0f, 0.5333333333333333f, 0.0f, 1.0f))",
+    );
+    expect(linear("color('red', 0.5)")).toMatch(
+      /^styleLinear\(vec4f\(.*0\.5f\)\)$/,
+    );
+    expect(linear("rgb(255, 136, ${b})")).toMatch(/^styleLinear\(vec4f\(/);
+    expect(linear("hsl(0.5, 1, 0.5)")).toMatch(/^styleLinear\(styleHsl\(/);
+    expect(linear("rgba(1, 2, 3, 0.5)")).toMatch(/^styleLinear\(/);
+    // Numbers and vectors are values already.
+    expect(linear("vec4(1.0, 0.533, 0.0, 1.0)")).toBe(
+      "vec4f(1.0f, 0.533f, 0.0f, 1.0f)",
+    );
+    expect(linear("vec4(${a})")).toBe("vec4f(p.a)");
+    // Without the option (the vector language, which converts itself) the
+    // color stays as written.
+    expect(wgsl("color('#ff8800')").wgsl).toBe(
+      "vec4f(1.0f, 0.5333333333333333f, 0.0f, 1.0f)",
+    );
+  });
+
+  it("apply to the material in linear light in every blend mode", () => {
     const apply = (colorBlendMode?: "highlight" | "replace" | "mix") =>
       new FeatureStyle({
         color: "color('#ff8800')",
         ...(colorBlendMode ? { colorBlendMode } : {}),
         colorBlendAmount: 0.25,
       }).shader.code;
-    // Highlight: from sRGB as written to the material's linear values.
-    expect(apply()).toContain(
-      "(*material).baseColor = (*material).baseColor * pow(c.rgb, vec3f(2.2));",
-    );
-    // Replace and mix: as 1.x, as they are, and white leaves the material's.
-    expect(apply("replace")).toContain(
-      "(*material).baseColor = select((*material).baseColor, c.rgb, styled);",
-    );
+    expect(apply()).toContain("(*material).baseColor * c.rgb;");
+    expect(apply("replace")).toContain("(*material).baseColor = c.rgb;");
     expect(apply("mix")).toContain(
-      "select((*material).baseColor, mix((*material).baseColor, c.rgb, 0.25f), styled);",
+      "(*material).baseColor = mix((*material).baseColor, c.rgb, 0.25f);",
     );
-    expect(apply()).toContain("let styled = !all(c.rgb > vec3f(0.999));");
     // The alpha is not converted.
     expect(apply()).toContain("(*material).alpha *= c.a;");
+    expect(apply()).toContain("fn styleLinear(c: vec4f)");
   });
 });
 
@@ -232,10 +252,10 @@ describe("FeatureStyle", () => {
     const code = style.shader.code;
     // Hidden by show, or by a color's alpha 0, in the vertex stage.
     expect(code).toContain(
-      "if (!((vsInput.metadata.p0 >= 2.0f)) || (select(select(vec4f(1.0), vec4f(1.0f, 1.0f, 1.0f, 0.5f), true), vec4f(1.0f, 0.0f, 0.0f, 1.0f), (vsInput.metadata.Height > 60.0f))).a == 0.0)",
+      "if (!((vsInput.metadata.p0 >= 2.0f)) || (select(select(vec4f(1.0), styleLinear(vec4f(1.0f, 1.0f, 1.0f, 0.5f)), true), styleLinear(vec4f(1.0f, 0.0f, 0.0f, 1.0f)), (vsInput.metadata.Height > 60.0f))).a == 0.0)",
     );
     expect(code).toContain(
-      "let c = select(select(vec4f(1.0), vec4f(1.0f, 1.0f, 1.0f, 0.5f), true), vec4f(1.0f, 0.0f, 0.0f, 1.0f), (fsInput.metadata.Height > 60.0f));",
+      "let c = select(select(vec4f(1.0), styleLinear(vec4f(1.0f, 1.0f, 1.0f, 0.5f)), true), styleLinear(vec4f(1.0f, 0.0f, 0.0f, 1.0f)), (fsInput.metadata.Height > 60.0f));",
     );
     expect(style.shader.named.metadata).toEqual({ p0: "f32", Height: "f32" });
     expect(style.shader.named.properties).toEqual({
