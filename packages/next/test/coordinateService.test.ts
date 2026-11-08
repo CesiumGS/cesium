@@ -277,6 +277,44 @@ describe("an EngineeringFrame on a host's coordinate service", () => {
     expect(requests).toHaveLength(0);
   });
 
+  it("refuses a host's service for a definition with neither a site nor an area of interest, before asking it", async () => {
+    const { coordinates, requests } = service(async () => resolved());
+    const nowhere: EngineeringFrameDefinition = {
+      name: definition.name,
+      body: definition.body,
+      crs: definition.crs,
+    };
+    await expect(
+      EngineeringFrame.load(nowhere, { coordinates }),
+    ).rejects.toThrow(
+      /EngineeringFrame "Host site grid": a host's coordinate service needs a site or an areaOfInterest/,
+    );
+    expect(requests).toHaveLength(0);
+    // A site alone is enough.
+    const frame = await EngineeringFrame.load(
+      { ...nowhere, site: { origin: [0, 0, 0], rotation: 0, scale: 1 } },
+      { coordinates },
+    );
+    expect(frame.definition.name).toBe("Host site grid");
+  });
+
+  it("gridFactors refuses a host's non-finite factors, naming the frame", async () => {
+    const { coordinates } = service(async () =>
+      resolved({
+        gridFactors: () => ({
+          ...FACTORS,
+          pointScale: NaN,
+          convergence: Infinity,
+        }),
+      }),
+    );
+    const frame = await EngineeringFrame.load(definition, { coordinates });
+    expect(() => gridFactors(frame, [1, 2, 3])).toThrow(RangeError);
+    expect(() => gridFactors(frame, [1, 2, 3])).toThrow(
+      /EngineeringFrame "Host site grid".*grid factors.*pointScale, convergence/,
+    );
+  });
+
   it("refuses a geographic (not projected) answer, naming the frame", async () => {
     const { coordinates } = service(async () =>
       resolved({

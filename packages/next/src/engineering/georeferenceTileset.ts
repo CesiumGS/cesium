@@ -213,6 +213,27 @@ const ANCHOR_TOLERANCE = 1e-3;
 const COLUMN_TOLERANCE = 1e-8;
 /** The longest piece of a PROJ message repeated in a warning. */
 const MAX_SHOWN = 200;
+/** The longest piece of a declared frame name repeated in a warning. */
+const MAX_SHOWN_NAME = 60;
+
+/** `text`, at most `max` characters: cut with "..." when longer. */
+const shortened = (text: string, max: number) =>
+  text.length > max ? `${text.slice(0, max - 3)}...` : text;
+
+/**
+ * A frame's failure for a warning: the frame's own `EngineeringFrame
+ * "<name>": ` prefix with the declared name (up to 256 characters of a
+ * tileset's text) shortened, and the reason after it given up to
+ * `MAX_SHOWN`, so the actual failure stays visible.
+ */
+function shownFailure(error: unknown, name: string): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const prefix = `EngineeringFrame "${name}": `;
+  if (!message.startsWith(prefix)) {
+    return shortened(message, MAX_SHOWN);
+  }
+  return `EngineeringFrame "${shortened(name, MAX_SHOWN_NAME)}": ${shortened(message.slice(prefix.length), MAX_SHOWN)}`;
+}
 
 /**
  * Throws a `GeoreferenceError` naming `placement.anchor` unless a rigid
@@ -363,14 +384,9 @@ export async function georeferenceTileset(
         : { proj: options.proj },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const shown =
-      message.length > MAX_SHOWN
-        ? `${message.slice(0, MAX_SHOWN - 3)}...`
-        : message;
     return refuse(
       new Error(
-        `georeferenceTileset: ${tileset.url}'s engineering frame doesn't load: ${shown}`,
+        `georeferenceTileset: ${tileset.url}'s engineering frame doesn't load: ${shownFailure(error, definition.name)}`,
         { cause: error },
       ),
     );
@@ -407,7 +423,7 @@ export async function georeferenceTileset(
         ? error
         : new GeoreferenceError(
             `${declared.sources.declaration}.placement.anchor`,
-            `the frame can't place the anchor (${(error as Error).message.slice(0, MAX_SHOWN)})`,
+            `the frame can't place the anchor (${shownFailure(error, definition.name)})`,
           ),
     );
   }

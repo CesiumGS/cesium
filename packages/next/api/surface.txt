@@ -389,6 +389,7 @@ proj	ProfileParabola	interface	-
 proj	ProfileSegment	type	-
 proj	ProjApi	interface	-
 proj	ProjCoordinateRequest	interface	-
+proj	ProjRequestOptions	interface	-
 proj	ProjResolvedCoordinates	interface	-
 proj	RecordedOperation	interface	-
 proj	ResolveOptions	interface	-

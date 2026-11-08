@@ -32,6 +32,8 @@ function stubFrame(factors: Record<string, number>): EngineeringFrame {
     proj_factors: () => factors,
   } as unknown as ProjApi;
   return {
+    // A frame PROJ's service resolved has its PROJ.
+    proj,
     coordinates: {
       gridFactors: projGridFactors(
         proj,

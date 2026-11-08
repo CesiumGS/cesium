@@ -169,7 +169,8 @@ function projectionOf(P: ProjApi, ref: CrsRef): Projection {
  * the elevation factor for its ellipsoidal height, from the frame's
  * coordinate service (`ResolvedCoordinates.gridFactors`) at the point's
  * projected coordinates. A site scale factor does not enter: the site
- * transform's `scale` is reported separately by callers.
+ * transform's `scale` is reported separately by callers. A host's service's
+ * factors must all be finite numbers: else a RangeError names the frame.
  *
  * For PROJ's service (`projGridFactors`), the height h of the elevation
  * factor is the ellipsoidal height on the target datum (WGS84 through
@@ -182,8 +183,34 @@ export function gridFactors(
   frame: EngineeringFrame<CoordinateOperation>,
   design: ArrayLike<number>,
 ): GridFactors {
-  return frame.coordinates.gridFactors(frame.projected(design));
+  const projected = frame.projected(design);
+  const factors = frame.coordinates.gridFactors(projected);
+  // `proj` is set only on a frame PROJ's service resolved.
+  if (frame.proj === undefined) {
+    // A host's service: every figure finite (PROJ's path checks its own).
+    const bad = FACTOR_KEYS.filter(
+      (key) => !Number.isFinite((factors as Partial<GridFactors>)?.[key]),
+    );
+    if (bad.length > 0) {
+      throw new RangeError(
+        `EngineeringFrame "${frame.definition.name}": the coordinate service's grid factors at (${Array.from(projected).join(", ")}) aren't finite numbers: ${bad.join(", ")}`,
+      );
+    }
+  }
+  return factors;
 }
+
+/** Every figure of `GridFactors`. */
+const FACTOR_KEYS = [
+  "pointScale",
+  "meridionalScale",
+  "arealScale",
+  "angularDistortion",
+  "meridianParallelAngle",
+  "elevationFactor",
+  "combinedFactor",
+  "convergence",
+] as const satisfies readonly (keyof GridFactors)[];
 
 /**
  * @internal PROJ's grid factors for a projected CRS (`ref`, whose horizontal

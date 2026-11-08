@@ -481,6 +481,31 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       }
     });
 
+    it("a long declared name is shortened in the warning, not the reason", async () => {
+      const long = "N".repeat(256);
+      const tileset = await load(
+        tilesetJson({
+          [ENGINEERING_FRAME_EXTENSION]: { ...reprojected, name: long },
+        }),
+      );
+      const reason = `the actual failure ${"r".repeat(150)} END`;
+      const spy = vi
+        .spyOn(EngineeringFrame, "load")
+        .mockRejectedValue(new Error(`EngineeringFrame "${long}": ${reason}`));
+      try {
+        await expect(
+          georeferenceTileset(tileset, { proj: {} as ProjApi }),
+        ).rejects.toThrow(
+          /doesn't load: EngineeringFrame "N{57}\.\.\.": the actual failure r+ END/,
+        );
+        const warning = [...tileset.warnings].join("\n");
+        expect(warning).toContain(reason);
+        expect(warning).not.toContain("N".repeat(61));
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
     it("refuses, and warns, when the frame doesn't load", async () => {
       const tileset = await load(declared());
       const spy = vi

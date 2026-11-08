@@ -32,8 +32,10 @@ import type { Pipeline } from "./pipeline.ts";
 import type { GridSource } from "./proj.ts";
 import type { ProjApi } from "./projApi.ts";
 import {
+  PROJ_REQUEST_KEYS,
   isProjService,
   projCoordinateService,
+  projRequestOptions,
   projResolution,
   resolveProjCoordinates,
   type EngineeringFrameFallback,
@@ -138,14 +140,6 @@ export interface EngineeringFrameLoadOptions {
   readonly signal?: AbortSignal;
 }
 
-/** The definition's PROJ-only options, which a host's service can't honour. */
-const PROJ_ONLY = [
-  "allowBallpark",
-  "geoidFallback",
-  "fallbackSigma",
-  "fallbackSigmaSource",
-] as const;
-
 /** The definition's site checks, before any service is asked. */
 function checkSite(site: SiteTransform | undefined): void {
   if (site === undefined) {
@@ -179,18 +173,7 @@ function requestOf(
       areaOfInterest: definition.areaOfInterest,
     }),
     ...(definition.pipeline !== undefined && { pinned: definition.pipeline }),
-    ...(definition.allowBallpark !== undefined && {
-      allowBallpark: definition.allowBallpark,
-    }),
-    ...(definition.geoidFallback !== undefined && {
-      geoidFallback: definition.geoidFallback,
-    }),
-    ...(definition.fallbackSigma !== undefined && {
-      fallbackSigma: definition.fallbackSigma,
-    }),
-    ...(definition.fallbackSigmaSource !== undefined && {
-      fallbackSigmaSource: definition.fallbackSigmaSource,
-    }),
+    ...projRequestOptions(definition),
   };
 }
 
@@ -200,11 +183,20 @@ const finite3 = (v: ArrayLike<number>) =>
 const positive = (value: unknown) =>
   typeof value === "number" && value > 0 && Number.isFinite(value);
 
+/** Whether a definition has a point to check a host's operation at. */
+const hasCheckPoint = (definition: EngineeringFrameDefinition) =>
+  definition.site !== undefined || definition.areaOfInterest !== undefined;
+
+/** Why a host's service is refused for a definition without one. */
+const NO_CHECK_POINT =
+  "a host's coordinate service needs a site or an areaOfInterest in the definition, where its operation is checked before the frame is built";
+
 /**
  * A service's answer, checked: well formed, its numbers finite, and (for a
  * host's service) its operation finite at the definition's own point (the
- * site origin, else the middle of the area of interest), both ways. PROJ's
- * operations refuse non-finite results themselves. Throws what is wrong.
+ * site origin, else the middle of the area of interest), both ways; a
+ * definition with neither is refused for a host. PROJ's operations refuse
+ * non-finite results themselves. Throws what is wrong.
  */
 function checkAnswer(
   answer: ResolvedCoordinates,
@@ -303,6 +295,8 @@ function checkAnswer(
         `the operation's forward is not finite at (${Array.from(design).join(", ")}): (${Array.from(there).join(", ")})`,
       );
     }
+  } else {
+    throw new Error(NO_CHECK_POINT);
   }
 }
 
@@ -479,7 +473,11 @@ export class EngineeringFrame<
     proj: ProjApi,
   ): EngineeringFrame<RecordedOperation> {
     checkSite(definition.site);
-    const coordinates = resolveProjCoordinates(proj, requestOf(definition));
+    const coordinates = resolveProjCoordinates(
+      proj,
+      requestOf(definition),
+      definition.name,
+    );
     checkAnswer(coordinates, definition, true);
     return new EngineeringFrame<RecordedOperation>(definition, coordinates);
   }
@@ -492,7 +490,9 @@ export class EngineeringFrame<
    * The service is asked once for the definition's CRS, body, area of
    * interest and pinned operation (`pipeline`); PROJ's also gets the
    * definition's PROJ options (`ProjCoordinateRequest`). A host's service
-   * can't honour those, so `load` refuses them with it.
+   * can't honour those, so `load` refuses them with it; and it refuses a
+   * host's service for a definition with neither a `site` nor an
+   * `areaOfInterest`, which leaves nowhere to check its operation.
    *
    * With PROJ this is `create`, after fetching the grids the best operation
    * needs. With `grids`, it lists PROJ's candidates (within
@@ -562,11 +562,16 @@ export class EngineeringFrame<
         });
       host = !isProjService(service);
       if (host) {
-        const given = PROJ_ONLY.filter((key) => definition[key] !== undefined);
+        const given = PROJ_REQUEST_KEYS.filter(
+          (key) => definition[key] !== undefined,
+        );
         if (given.length > 0) {
           throw new Error(
             `${given.join(", ")} ${given.length === 1 ? "is" : "are"} PROJ's (projCoordinateService); a host's coordinate service doesn't take ${given.length === 1 ? "it" : "them"}`,
           );
+        }
+        if (!hasCheckPoint(definition)) {
+          throw new Error(NO_CHECK_POINT);
         }
       }
       const request = requestOf(definition);

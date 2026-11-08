@@ -24,6 +24,7 @@ export {
 export {
   projCoordinateService,
   type ProjCoordinateRequest,
+  type ProjRequestOptions,
   type ProjResolvedCoordinates,
 } from "../engineering/projCoordinates.ts";
 export {

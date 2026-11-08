@@ -62,13 +62,10 @@ export interface EngineeringFrameFallback {
 }
 
 /**
- * A `CoordinateRequest` as PROJ's service reads it: `pinned` is a PROJ
- * pipeline (a string or a structured `Pipeline`, R2), and the rest are
- * the engineering frame definition's PROJ options of the same names
- * (`EngineeringFrameDefinition`), which an engineering frame passes on.
+ * The engineering frame definition's PROJ options, which ride along in a
+ * `ProjCoordinateRequest` (`PROJ_REQUEST_KEYS` names them).
  */
-export interface ProjCoordinateRequest extends CoordinateRequest {
-  readonly pinned?: string | Pipeline;
+export interface ProjRequestOptions {
   /** Accept a ballpark operation; its accuracy is then undefined. */
   readonly allowBallpark?: boolean;
   /** `EngineeringFrameDefinition.geoidFallback`. */
@@ -77,6 +74,46 @@ export interface ProjCoordinateRequest extends CoordinateRequest {
   readonly fallbackSigma?: number;
   /** `EngineeringFrameDefinition.fallbackSigmaSource`. */
   readonly fallbackSigmaSource?: FallbackSigmaSource;
+}
+
+/**
+ * A `CoordinateRequest` as PROJ's service reads it: `pinned` is a PROJ
+ * pipeline (a string or a structured `Pipeline`, R2), and the rest are
+ * the engineering frame definition's PROJ options of the same names
+ * (`EngineeringFrameDefinition`), which an engineering frame passes on.
+ */
+export interface ProjCoordinateRequest
+  extends CoordinateRequest, ProjRequestOptions {
+  readonly pinned?: string | Pipeline;
+}
+
+/**
+ * @internal The one list of `ProjRequestOptions`' keys: what an engineering
+ * frame passes PROJ's service, and refuses for a host's.
+ */
+export const PROJ_REQUEST_KEYS = [
+  "allowBallpark",
+  "geoidFallback",
+  "fallbackSigma",
+  "fallbackSigmaSource",
+] as const satisfies readonly (keyof ProjRequestOptions)[];
+
+/**
+ * @internal `from`'s `PROJ_REQUEST_KEYS` that are defined, copied (so an
+ * absent option stays absent, never undefined).
+ */
+export function projRequestOptions(
+  from: ProjRequestOptions,
+): ProjRequestOptions {
+  const out: {
+    -readonly [K in keyof ProjRequestOptions]: ProjRequestOptions[K];
+  } = {};
+  for (const key of PROJ_REQUEST_KEYS) {
+    if (from[key] !== undefined) {
+      (out as Record<string, unknown>)[key] = from[key];
+    }
+  }
+  return out;
 }
 
 /**
@@ -115,15 +152,13 @@ export function isProjService(service: CoordinateService): boolean {
 }
 
 /** What the resolution path reads of a request (a definition's PROJ options). */
-interface Wanted {
+interface Wanted extends ProjRequestOptions {
   readonly crs: CrsRef;
   readonly body: Body;
   readonly pipeline?: string | Pipeline;
-  readonly allowBallpark?: boolean;
   readonly areaOfInterest?: AreaOfInterest;
-  readonly geoidFallback?: GeoidModel;
-  readonly fallbackSigma?: number;
-  readonly fallbackSigmaSource?: FallbackSigmaSource;
+  /** The engineering frame's name, for `create`'s messages. */
+  readonly frameName?: string;
 }
 
 function wantedOf(request: CoordinateRequest): Wanted {
@@ -144,13 +179,8 @@ function wantedOf(request: CoordinateRequest): Wanted {
     crs: r.crs,
     body: r.body,
     ...(pinned !== undefined && { pipeline: pinned }),
-    ...(r.allowBallpark !== undefined && { allowBallpark: r.allowBallpark }),
     ...(r.areaOfInterest !== undefined && { areaOfInterest: r.areaOfInterest }),
-    ...(r.geoidFallback !== undefined && { geoidFallback: r.geoidFallback }),
-    ...(r.fallbackSigma !== undefined && { fallbackSigma: r.fallbackSigma }),
-    ...(r.fallbackSigmaSource !== undefined && {
-      fallbackSigmaSource: r.fallbackSigmaSource,
-    }),
+    ...projRequestOptions(r),
   };
 }
 
@@ -545,8 +575,13 @@ function resolveProj(
     try {
       operation = resolveOperation(proj, replacement, target, options);
     } catch (fallbackError) {
+      // `load` names the frame itself; `create` names it here.
+      const named =
+        wanted.frameName === undefined
+          ? ""
+          : `EngineeringFrame "${wanted.frameName}": `;
       throw new Error(
-        `the ${model} fallback for ${shownCrs(wanted.crs)} (${(error as Error).message}) can't be resolved either: ${(fallbackError as Error).message}`,
+        `${named}the ${model} fallback for ${shownCrs(wanted.crs)} (${(error as Error).message}) can't be resolved either: ${(fallbackError as Error).message}`,
         { cause: fallbackError },
       );
     }
@@ -639,12 +674,19 @@ function withHeights(
   };
 }
 
-/** @internal `create`'s resolution, synchronous: the grids loaded now, no catalog. */
+/**
+ * @internal `create`'s resolution, synchronous: the grids loaded now, no
+ * catalog. `frameName` names the frame in the messages that name it.
+ */
 export function resolveProjCoordinates(
   proj: ProjApi,
   request: CoordinateRequest,
+  frameName?: string,
 ): ProjResolvedCoordinates {
-  const wanted = wantedOf(request);
+  const wanted: Wanted = {
+    ...wantedOf(request),
+    ...(frameName !== undefined && { frameName }),
+  };
   return resolveProj(proj, wanted, checked(proj, wanted), undefined);
 }
 
