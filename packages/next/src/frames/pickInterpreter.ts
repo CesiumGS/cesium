@@ -53,15 +53,21 @@ export interface FramedPoint {
    * - the content's (`kind: "content"`), with design coordinates: how far
    *   its placement draws the design from where it truly is
    *   (`displayError`; 0 m when reprojected);
-   * - `frame`'s own, as drawn: every edge from `frame` up to the tree's
-   *   root (ICRF), each as it states its accuracy at the pick's instant,
-   *   so a reference frame on its analytic stand-in (loading, or outside
-   *   its data) states the stand-in's wider figure.
+   * - `frame`'s own, as drawn: each edge from `frame` up to its body's
+   *   fixed reference frame (ITRF, MOON_ME), as it states its accuracy at
+   *   the pick's instant, so an edge on its analytic stand-in (loading, or
+   *   outside its data) states the stand-in's wider figure. A point tagged
+   *   in the body-fixed reference frame itself has none; one in an
+   *   engineering, trajectory or application reference frame has that
+   *   frame's edges up to it. A point with no body walks to the tree's
+   *   root, and `combination` says so.
    *
-   * Not included: the content's own error against the world (a mesh's
-   * simplification, a survey's), which the content doesn't state; the
-   * route to the render root, which cancels (the point comes back through
-   * the placement that drew it); correlations between terms.
+   * Not included: the edges above the body-fixed reference frame (the
+   * body's orientation, its place among the planets) and the route to the
+   * render root, which move the point and the body together (the point
+   * comes back through the placement that drew it); the content's own
+   * error against the world (a mesh's simplification, a survey's), which
+   * the content doesn't state; correlations between terms.
    */
   readonly accuracy: PointAccuracy;
   /**
@@ -177,8 +183,9 @@ export function createFramesPickInterpreter(
   };
 }
 
-const COMBINATION =
-  "root-sum-square of independent 1σ terms: the pick's (a pixel's footprint and the depth's rounding, each a bound taken as 1σ), the content's placement, and each edge from the point's reference frame up to the tree's root (each rotation error times the point's distance from that frame's origin, an upper bound: the accuracy names no axis)";
+/** How a picked point's terms combine, with where its reference frame terms stop. */
+const combination = (upTo: string) =>
+  `root-sum-square of independent 1σ terms: the pick's (a pixel's footprint and the depth's rounding, each a bound taken as 1σ), the content's placement, and each edge from the point's reference frame ${upTo} (each rotation error times the point's distance from that frame's origin, an upper bound: the accuracy names no axis)`;
 
 /** A picked point's accuracy: its pick, content and reference frame terms. */
 function composed(
@@ -200,7 +207,15 @@ function composed(
       note: `the ${placement.mode} placement draws the design this far from where it truly is (displayError)`,
     });
   }
-  terms.push(...frameTerms(frame, coordinates, instant, catalog, standIns));
+  // The point is recovered through the placement that drew it, so nothing
+  // between its body's fixed reference frame and the rest of the tree moves
+  // it relative to the body: the walk stops there. Without a body it goes
+  // to the tree's root.
+  const body = catalog.bodyOf(frame);
+  const stop = body ? catalog.bodyFixed(body) : undefined;
+  terms.push(
+    ...frameTerms(frame, stop, coordinates, instant, catalog, standIns),
+  );
   const unstated = terms.find((t) => t.kind === "unstated");
   return {
     meters:
@@ -209,7 +224,11 @@ function composed(
         : undefined,
     terms,
     ...(unstated !== undefined && { unboundedBy: unstated.frame }),
-    combination: COMBINATION,
+    combination: combination(
+      stop
+        ? `up to its body's fixed reference frame (${stop.name})`
+        : `up to the tree's root: the point has no body`,
+    ),
   };
 }
 
@@ -253,7 +272,8 @@ function pickTerms(pick: CorePick, frame: string): PointAccuracyTerm[] {
 }
 
 /**
- * `frame`'s edges up to the tree's root, each as it is drawn at `instant`
+ * `frame`'s edges up to `stop` (its body's fixed reference frame), or to
+ * the tree's root without one, each as it is drawn at `instant`
  * and states its accuracy there (the terms `pointAccuracy` gives). A
  * catalog edge outside its data (`FrameUnavailableError`) is drawn on its
  * analytic stand-in, as the frames resolver draws it: it states the
@@ -262,6 +282,7 @@ function pickTerms(pick: CorePick, frame: string): PointAccuracyTerm[] {
  */
 function frameTerms(
   frame: Frame,
+  stop: Frame | undefined,
   coordinates: ArrayLike<number>,
   instant: Instant,
   catalog: FrameCatalog,
@@ -274,7 +295,7 @@ function frameTerms(
   ]);
   const m = new Float64Array(16);
   const terms: PointAccuracyTerm[] = [];
-  for (let edge = frame; edge.parent; edge = edge.parent) {
+  for (let edge = frame; edge !== stop && edge.parent; edge = edge.parent) {
     let a: Readonly<FrameAccuracy> = edge.accuracy(instant);
     let note = a.note;
     try {
