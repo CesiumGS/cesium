@@ -49,6 +49,17 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     spyOn(TranslateTool, "addTo").and.returnValue(translateTool);
   });
 
+  function createViewModel(options) {
+    return new EditorToolbarViewModel(editor, {
+      tools: [
+        { id: "none", label: "Tools", tool: undefined },
+        { id: "select", label: "Select", tool: selectTool },
+        { id: "translate", label: "Translate", tool: translateTool },
+      ],
+      ...options,
+    });
+  }
+
   afterEach(function () {
     viewModel?.destroy();
     viewModel = undefined;
@@ -74,32 +85,14 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     expect(viewModel.toolDropDownVisible).toBe(false);
   });
 
-  it("registers separate default tools for each editor", function () {
+  it("doesn't add tools to the editor by default", function () {
     viewModel = new EditorToolbarViewModel(editor);
-    const otherEditor = { ...editor };
-    const otherSelectTool = {};
-    const otherTranslateTool = {};
-    SelectTool.addTo.and.returnValue(otherSelectTool);
-    TranslateTool.addTo.and.returnValue(otherTranslateTool);
-    const otherViewModel = new EditorToolbarViewModel(otherEditor);
 
-    expect(SelectTool.addTo.calls.allArgs()).toEqual([[editor], [otherEditor]]);
-    expect(TranslateTool.addTo.calls.allArgs()).toEqual([
-      [editor],
-      [otherEditor],
+    expect(viewModel.toolEntries).toEqual([
+      { id: "none", label: "Tools", tool: undefined },
     ]);
-    expect(viewModel.toolEntries.map((entry) => entry.tool)).toEqual([
-      undefined,
-      selectTool,
-      translateTool,
-    ]);
-    expect(otherViewModel.toolEntries.map((entry) => entry.tool)).toEqual([
-      undefined,
-      otherSelectTool,
-      otherTranslateTool,
-    ]);
-
-    otherViewModel.destroy();
+    expect(SelectTool.addTo).not.toHaveBeenCalled();
+    expect(TranslateTool.addTo).not.toHaveBeenCalled();
   });
 
   it("uses custom mode and tool entries without registering default tools", function () {
@@ -116,14 +109,14 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   it("reflects the editor's initial mode and tool", function () {
     editor.mode = EditMode.EDGE;
     editor.activeTool = translateTool;
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
 
     expect(viewModel.modeId).toBe("edge");
     expect(viewModel.toolId).toBe("translate");
   });
 
   it("reflects external mode and tool changes observably", function () {
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
     const modeListener = jasmine.createSpy();
     const toolListener = jasmine.createSpy();
     const modeSubscription = knockout
@@ -147,7 +140,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   it("reflects a mode change that clears the active tool", function () {
     editor.mode = EditMode.VERTEX;
     editor.activeTool = translateTool;
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
 
     editor.mode = EditMode.NONE;
 
@@ -156,7 +149,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   });
 
   it("leaves the selected ID undefined when no entry matches", function () {
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
 
     editor.mode = EditMode.VERTEX | EditMode.EDGE;
     editor.activeTool = {};
@@ -175,7 +168,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   });
 
   it("changes modes and tools through its commands", function () {
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
 
     viewModel.selectModeEntry(viewModel.modeEntries[1]);
     viewModel.selectToolEntry(viewModel.toolEntries[2]);
@@ -188,7 +181,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
 
   it("clears the active tool through the no-tool entry", function () {
     editor.activeTool = selectTool;
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
 
     viewModel.selectToolEntry(viewModel.toolEntries[0]);
 
@@ -197,7 +190,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   });
 
   it("disables unsupported tools using supportsMode", function () {
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
 
     expect(viewModel.isToolEnabled(viewModel.toolEntries[0])).toBe(true);
     expect(viewModel.isToolEnabled(viewModel.toolEntries[1])).toBe(true);
@@ -211,7 +204,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   });
 
   it("updates observable availability even when no mode entry matches", function () {
-    viewModel = new EditorToolbarViewModel(editor, { modes: [] });
+    viewModel = createViewModel({ modes: [] });
     const availability = knockout.pureComputed(() =>
       viewModel.isToolEnabled(viewModel.toolEntries[2]),
     );
@@ -230,7 +223,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
 
   it("rejects an unsupported tool without changing state", function () {
     editor.activeTool = selectTool;
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
     viewModel.toolDropDownVisible = true;
 
     expect(() =>
@@ -243,7 +236,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   });
 
   it("closes the other dropdown when opening a dropdown", function () {
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
 
     viewModel.toggleModeDropDown();
     expect(viewModel.modeDropDownVisible).toBe(true);
@@ -261,7 +254,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   });
 
   it("closes a dropdown after selecting an entry", function () {
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
     viewModel.modeDropDownVisible = true;
     viewModel.selectModeEntry(viewModel.modeEntries[1]);
     expect(viewModel.modeDropDownVisible).toBe(false);
@@ -275,7 +268,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     editor.activeTool = selectTool;
     const modeListener = jasmine.createSpy();
     editor.modeChanged.addEventListener(modeListener);
-    viewModel = new EditorToolbarViewModel(editor);
+    viewModel = createViewModel();
     expect(editor.modeChanged.numberOfListeners).toBe(2);
     expect(editor.activeToolChanged.numberOfListeners).toBe(1);
 
