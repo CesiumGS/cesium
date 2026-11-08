@@ -1,10 +1,12 @@
 // @ts-check
 
 import { Check, DeveloperError, defined } from "@cesium/core";
+import EditorOutliner from "../EditorOutliner/EditorOutliner.js";
 import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
 
 /** @import { Viewer } from "@cesium/widgets"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
+/** @import { EditorOutlinerOptions } from "../EditorOutliner/EditorOutliner.js"; */
 /** @import { EditorToolbarOptions, EditorToolbarModeEntry, EditorToolbarToolEntry } from "../EditorToolbar/EditorToolbarViewModel.js"; */
 /** @import { Command } from "@cesium/widgets"; */
 
@@ -21,13 +23,33 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
  * @property {MeshEditor} editor An editor in the viewer's scene.
  * @property {boolean} [toolbar=true] Whether to add a toolbar.
  * @property {EditorToolbarOptions} [toolbarOptions] The toolbar's options.
+ * @property {boolean} [outliner=false] Whether to add an outliner.
+ * @property {EditorOutlinerOptions} [outlinerOptions] The outliner's options.
  * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them.
  */
 
 /**
- * Adds an {@link EditorToolbar} and keyboard shortcuts to a {@link Viewer},
- * exposing them as <code>viewer.editor</code> and <code>viewer.editorToolbar</code>.
- * Escape cancels the active tool's interaction.
+ * A widget the mixin adds to the viewer, in a container of its own.
+ *
+ * @typedef {object} ViewerEditorWidget
+ * @property {Element} container The widget's container.
+ * @property {function(): void} destroy Destroys the widget.
+ * @ignore
+ */
+
+/**
+ * The properties the mixin defines on the viewer.
+ *
+ * @ignore
+ */
+const viewerPropertyNames = ["editor", "editorToolbar", "editorOutliner"];
+
+/**
+ * Adds an {@link EditorToolbar}, optionally an {@link EditorOutliner}, and
+ * keyboard shortcuts to a {@link Viewer}, exposing them as
+ * <code>viewer.editor</code>, <code>viewer.editorToolbar</code> and
+ * <code>viewer.editorOutliner</code>. Escape cancels the active tool's
+ * interaction.
  *
  * @function viewerEditorMixin
  *
@@ -37,13 +59,13 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
  * @param {ViewerEditorMixinOptions} options The editor and widget options.
  *
  * @exception {DeveloperError} options.editor must be in the viewer's scene.
- * @exception {DeveloperError} editor or editorToolbar is already defined by another mixin.
+ * @exception {DeveloperError} editor, editorToolbar or editorOutliner is already defined by another mixin.
  * @exception {DeveloperError} A key binding refers to an unknown entry.
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer");
  * const editor = await Cesium.MeshEditor.addToScene(viewer.scene);
- * viewer.extend(Cesium.viewerEditorMixin, { editor });
+ * viewer.extend(Cesium.viewerEditorMixin, { editor, outliner: true });
  */
 function viewerEditorMixin(viewer, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -57,31 +79,42 @@ function viewerEditorMixin(viewer, options) {
   }
   //>>includeEnd('debug');
 
-  if (viewer.hasOwnProperty("editor")) {
-    throw new DeveloperError("editor is already defined by another mixin.");
+  for (const name of viewerPropertyNames) {
+    if (viewer.hasOwnProperty(name)) {
+      throw new DeveloperError(`${name} is already defined by another mixin.`);
+    }
   }
 
-  if (viewer.hasOwnProperty("editorToolbar")) {
-    throw new DeveloperError(
-      "editorToolbar is already defined by another mixin.",
-    );
-  }
-
-  const toolbar = createToolbar(viewer, options);
+  const editor = options.editor;
+  const toolbar = createWidget(
+    viewer,
+    options.toolbar !== false,
+    "cesium-viewer-editorToolbarContainer",
+    (container) => new EditorToolbar(container, editor, options.toolbarOptions),
+  );
+  let outliner;
   let removeKeyBindings;
   try {
+    outliner = createWidget(
+      viewer,
+      options.outliner === true,
+      "cesium-viewer-editorOutlinerContainer",
+      (container) =>
+        new EditorOutliner(container, editor, options.outlinerOptions),
+    );
     removeKeyBindings = installKeyBindings(
       viewer,
       toolbar,
-      options.editor,
+      editor,
       options.keyBindings,
     );
   } catch (error) {
-    destroyToolbar(toolbar);
+    destroyWidget(outliner);
+    destroyWidget(toolbar);
     throw error;
   }
-  defineViewerEditorProperties(viewer, options.editor, toolbar);
-  installCleanup(viewer, toolbar, removeKeyBindings);
+  defineViewerEditorProperties(viewer, editor, toolbar, outliner);
+  installCleanup(viewer, [toolbar, outliner], removeKeyBindings);
 }
 
 /** @ignore */
@@ -91,57 +124,64 @@ const defaultKeyBindings = Object.freeze({
 });
 
 /**
+ * Creates a widget in a new container in the viewer's container.
+ *
+ * @template {ViewerEditorWidget} T
  * @param {Viewer} viewer
- * @param {ViewerEditorMixinOptions} options
- * @returns {EditorToolbar|undefined}
+ * @param {boolean} enabled Whether to create the widget.
+ * @param {string} className The container's class.
+ * @param {function(HTMLDivElement): T} create Creates the widget in a container.
+ * @returns {T|undefined} The widget, or undefined if it's not enabled.
  * @ignore
  */
-function createToolbar(viewer, options) {
-  if (options.toolbar === false) {
+function createWidget(viewer, enabled, className, create) {
+  if (!enabled) {
     return undefined;
   }
 
-  const toolbarContainer = document.createElement("div");
-  toolbarContainer.className = "cesium-viewer-editorToolbarContainer";
-  viewer.container.appendChild(toolbarContainer);
+  const container = document.createElement("div");
+  container.className = className;
+  viewer.container.appendChild(container);
   try {
-    return new EditorToolbar(
-      toolbarContainer,
-      options.editor,
-      options.toolbarOptions,
-    );
+    return create(container);
   } catch (error) {
-    toolbarContainer.remove();
+    container.remove();
     throw error;
   }
 }
 
 /**
- * @param {EditorToolbar|undefined} toolbar
+ * Destroys a widget and removes its container.
+ *
+ * @param {ViewerEditorWidget|undefined} widget
  * @ignore
  */
-function destroyToolbar(toolbar) {
-  if (!defined(toolbar)) {
+function destroyWidget(widget) {
+  if (!defined(widget)) {
     return;
   }
-  const toolbarContainer = toolbar.container;
-  toolbar.destroy();
-  toolbarContainer.remove();
+  const container = widget.container;
+  widget.destroy();
+  container.remove();
 }
 
 /**
  * @param {Viewer} viewer
  * @param {MeshEditor} editor
  * @param {EditorToolbar|undefined} toolbar
+ * @param {EditorOutliner|undefined} outliner
  * @ignore
  */
-function defineViewerEditorProperties(viewer, editor, toolbar) {
+function defineViewerEditorProperties(viewer, editor, toolbar, outliner) {
   Object.defineProperties(viewer, {
     editor: {
       get: () => editor,
     },
     editorToolbar: {
       get: () => toolbar,
+    },
+    editorOutliner: {
+      get: () => outliner,
     },
   });
 }
@@ -150,15 +190,17 @@ function defineViewerEditorProperties(viewer, editor, toolbar) {
  * Cleans up before the viewer destroys the scene, which owns the editor.
  *
  * @param {Viewer} viewer
- * @param {EditorToolbar|undefined} toolbar
+ * @param {Array<ViewerEditorWidget|undefined>} widgets
  * @param {Function} removeKeyBindings
  * @ignore
  */
-function installCleanup(viewer, toolbar, removeKeyBindings) {
+function installCleanup(viewer, widgets, removeKeyBindings) {
   const destroyViewer = viewer.destroy;
   viewer.destroy = function () {
     removeKeyBindings();
-    destroyToolbar(toolbar);
+    for (const widget of widgets) {
+      destroyWidget(widget);
+    }
     return destroyViewer.apply(viewer, arguments);
   };
 }

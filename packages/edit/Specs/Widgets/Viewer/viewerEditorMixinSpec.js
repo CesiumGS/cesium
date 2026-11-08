@@ -1,6 +1,7 @@
 import { Event } from "@cesium/core";
 import {
   EditMode,
+  EditorOutliner,
   EditorToolbar,
   SelectTool,
   TranslateTool,
@@ -21,6 +22,13 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     return {
       modeChanged: new Event(),
       activeToolChanged: new Event(),
+      // Used by the outliner and its default provider.
+      meshAdded: new Event(),
+      meshRemoved: new Event(),
+      meshActiveChanged: new Event(),
+      meshes: [],
+      hasMesh: () => false,
+      isMeshActive: () => false,
       destroy: jasmine.createSpy("editor.destroy"),
       get mode() {
         return mode;
@@ -121,7 +129,81 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
     viewer.editorToolbar = {};
     expect(() => viewerEditorMixin(viewer, { editor })).toThrowDeveloperError();
+    delete viewer.editorToolbar;
+
+    viewer.editorOutliner = {};
+    expect(() => viewerEditorMixin(viewer, { editor })).toThrowDeveloperError();
     expect(viewer.container.children.length).toBe(0);
+  });
+
+  describe("outliner", function () {
+    it("is not created by default", function () {
+      viewerEditorMixin(viewer, { editor });
+
+      expect(viewer.editorOutliner).toBeUndefined();
+      expect(viewer.container.children.length).toBe(1);
+    });
+
+    it("is created in its own container with outliner", function () {
+      viewerEditorMixin(viewer, { editor, outliner: true });
+
+      const outliner = viewer.editorOutliner;
+      expect(outliner).toBeInstanceOf(EditorOutliner);
+      expect(outliner.viewModel.editor).toBe(editor);
+      expect(outliner.container.parentNode).toBe(viewer.container);
+      expect(outliner.container.className).toBe(
+        "cesium-viewer-editorOutlinerContainer",
+      );
+    });
+
+    it("can be created without the toolbar", function () {
+      viewerEditorMixin(viewer, { editor, toolbar: false, outliner: true });
+
+      expect(viewer.editorToolbar).toBeUndefined();
+      expect(viewer.editorOutliner).toBeInstanceOf(EditorOutliner);
+      expect(viewer.container.children.length).toBe(1);
+    });
+
+    it("forwards outliner options", function () {
+      const provider = {
+        changed: new Event(),
+        getChildren: () => [],
+        getLabel: () => "",
+        getMesh: () => undefined,
+      };
+
+      viewerEditorMixin(viewer, {
+        editor,
+        outliner: true,
+        outlinerOptions: { provider },
+      });
+
+      expect(viewer.editorOutliner.viewModel.provider).toBe(provider);
+    });
+
+    it("is destroyed with the viewer", function () {
+      viewerEditorMixin(viewer, { editor, outliner: true });
+      const outliner = viewer.editorOutliner;
+      const outlinerContainer = outliner.container;
+      spyOn(outliner, "destroy").and.callThrough();
+
+      viewer.destroy();
+
+      expect(outliner.destroy).toHaveBeenCalled();
+      expect(outlinerContainer.parentNode).toBeNull();
+    });
+
+    it("is removed if the mixin fails", function () {
+      expect(() =>
+        viewerEditorMixin(viewer, {
+          editor,
+          outliner: true,
+          keyBindings: { modes: { x: "missing" } },
+        }),
+      ).toThrowDeveloperError();
+
+      expect(viewer.container.children.length).toBe(0);
+    });
   });
 
   it("forwards toolbar options", function () {
