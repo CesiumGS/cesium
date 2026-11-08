@@ -11,6 +11,7 @@ import {
   type ModelResource,
   type ShaderControl,
   type SkyOptions,
+  type ToneMapping,
 } from "../../src/index.ts";
 import type { ExampleContext } from "../types.ts";
 import { createContractView, createSlangEditor } from "./editor.ts";
@@ -188,6 +189,30 @@ const KEYS: Record<
   Off: { azimuth: 135, elevation: 40, illuminance: 0 },
 };
 
+/**
+ * How the image is exposed, as the Viewer page offers it (its defaults:
+ * the eye, no compensation, EV100 15 when fixed, PBR Neutral).
+ */
+type ExposureMode = "eye" | "camera" | "fixed";
+const EXPOSURE_MODES: Array<[ExposureMode, string]> = [
+  ["eye", "Eye"],
+  ["camera", "Camera (metered)"],
+  ["fixed", "Fixed"],
+];
+const TONE_MAPPINGS: Array<[ToneMapping, string]> = [
+  ["pbrNeutral", "PBR Neutral"],
+  ["agx", "AgX"],
+  ["aces", "ACES (as 1.x)"],
+];
+const VIEW_DEFAULTS = {
+  toneMapping: "pbrNeutral" as ToneMapping,
+  exposureMode: "eye" as ExposureMode,
+  compensation: 0,
+  ev100: 15,
+};
+/** The EV100 an exposure scale stands for (the inverse of the public `ev100ToScale`). */
+const scaleToEv100 = (scale: number) => -Math.log2(1.2 * scale);
+
 const STORAGE = "dyno.slangPlayground";
 
 export async function run({ viewer, panel, signal }: ExampleContext) {
@@ -259,6 +284,35 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     key: pick(KEYS, read("key") ?? "Key light", "Key light"),
     turntable: read("turntable") === "1",
   };
+  // How the image is exposed and tonemapped (kept like the stage).
+  const number = (key: string, fallback: number, min: number, max: number) => {
+    const v = Number(read(key));
+    return read(key) && Number.isFinite(v)
+      ? Math.min(max, Math.max(min, v))
+      : fallback;
+  };
+  const looks = {
+    toneMapping: TONE_MAPPINGS.some(([k]) => k === read("toneMapping"))
+      ? (read("toneMapping") as ToneMapping)
+      : VIEW_DEFAULTS.toneMapping,
+    exposureMode: EXPOSURE_MODES.some(([k]) => k === read("exposureMode"))
+      ? (read("exposureMode") as ExposureMode)
+      : VIEW_DEFAULTS.exposureMode,
+    compensation: number("compensation", VIEW_DEFAULTS.compensation, -3, 3),
+    ev100: number("ev100", VIEW_DEFAULTS.ev100, -12, 18),
+  };
+  const applyLooks = () => {
+    view.toneMapping = looks.toneMapping;
+    view.exposure =
+      looks.exposureMode === "eye"
+        ? { eye: true, compensation: looks.compensation }
+        : looks.exposureMode === "camera"
+          ? { auto: true, compensation: looks.compensation }
+          : { ev100: looks.ev100 };
+    engine.requestRender();
+  };
+  /** Shows the EV100 the meter landed on (set once the controls exist). */
+  const meterReadout: { show?: () => void } = {};
   /** The key light, by direction at the stage (after framing moves it). */
   const applyKey = () => {
     const key = KEYS[settings.key]!;
@@ -492,6 +546,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         world.setTransform(placed.transform, stageMatrix(placed.radius));
       }
     }
+    meterReadout.show?.();
     raf = requestAnimationFrame(turn);
   });
 
@@ -664,6 +719,124 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       write("turntable", turntable.checked ? "1" : "0");
     },
   });
+
+  // ------------------------------------------------------------ the looks
+  const compensationRow = el("div", { className: "slang-range" });
+  const ev100Row = el("div", { className: "slang-range" });
+  const meter = el("output", { className: "slang-meter" });
+  const meterRow = el(
+    "div",
+    { className: "slang-meter-row" },
+    "Metered ",
+    meter,
+  );
+  const range = (
+    label: string,
+    key: "compensation" | "ev100",
+    min: number,
+    max: number,
+    host: HTMLElement,
+  ) => {
+    const shown = el("output", {}, looks[key].toFixed(1));
+    const input = el("input", {
+      type: "range",
+      min: String(min),
+      max: String(max),
+      step: "0.1",
+      value: String(looks[key]),
+      ariaLabel: label,
+      oninput: () => {
+        looks[key] = Number(input.value);
+        shown.textContent = looks[key].toFixed(1);
+        write(key, String(looks[key]));
+        applyLooks();
+      },
+    });
+    host.replaceChildren(
+      el("span", {}, label),
+      el("span", { className: "slang-row" }, input, shown),
+    );
+    return (value: number) => {
+      input.value = String(value);
+      shown.textContent = value.toFixed(1);
+    };
+  };
+  const setCompensation = range(
+    "Compensation (stops)",
+    "compensation",
+    -3,
+    3,
+    compensationRow,
+  );
+  const setEv100 = range("Fixed EV100", "ev100", -12, 18, ev100Row);
+  const toneSelect = select(
+    TONE_MAPPINGS.map(([k]) => k),
+    looks.toneMapping,
+    (v) => {
+      looks.toneMapping = v as ToneMapping;
+      write("toneMapping", v);
+      applyLooks();
+    },
+  );
+  const modeSelect = select(
+    EXPOSURE_MODES.map(([k]) => k),
+    looks.exposureMode,
+    (v) => {
+      looks.exposureMode = v as ExposureMode;
+      write("exposureMode", v);
+      showMode();
+      applyLooks();
+    },
+  );
+  // The selects show names, not keys.
+  for (const [menu, table] of [
+    [toneSelect, TONE_MAPPINGS],
+    [modeSelect, EXPOSURE_MODES],
+  ] as const) {
+    for (const option of menu.options) {
+      option.textContent = table.find(([k]) => k === option.value)![1];
+    }
+  }
+  const showMode = () => {
+    compensationRow.hidden = looks.exposureMode === "fixed";
+    ev100Row.hidden = looks.exposureMode !== "fixed";
+    meterRow.hidden = looks.exposureMode !== "camera";
+  };
+  showMode();
+  let shownEv100 = "";
+  meterReadout.show = () => {
+    if (looks.exposureMode !== "camera") {
+      return;
+    }
+    // Public: the multiplier the view applied on its last frame.
+    const text = `EV100 ${scaleToEv100(view.exposureScale).toFixed(1)}`;
+    if (text !== shownEv100) {
+      shownEv100 = text;
+      meter.textContent = text;
+    }
+  };
+  const resetLooks = el(
+    "button",
+    {
+      type: "button",
+      className: "slang-looks-reset",
+      title: "Tone mapping and exposure back to the Viewer's defaults",
+      onclick: () => {
+        Object.assign(looks, VIEW_DEFAULTS);
+        // Emptied, so the defaults apply next visit.
+        for (const key of Object.keys(VIEW_DEFAULTS)) {
+          write(key, "");
+        }
+        toneSelect.value = looks.toneMapping;
+        modeSelect.value = looks.exposureMode;
+        setCompensation(looks.compensation);
+        setEv100(looks.ev100);
+        showMode();
+        applyLooks();
+      },
+    },
+    "Reset",
+  );
 
   const editorHost = el("div", { className: "slang-editor" });
 
@@ -913,6 +1086,21 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         stageControl("Environment light", ENVIRONMENTS, "environment"),
         stageControl("Key light", KEYS, "key"),
         el("label", {}, "Turntable", turntable),
+        el(
+          "div",
+          { className: "slang-looks", role: "group", ariaLabel: "Exposure" },
+          el(
+            "div",
+            { className: "slang-looks-header" },
+            el("span", {}, "Exposure"),
+            resetLooks,
+          ),
+          el("label", {}, "Tone mapping", toneSelect),
+          el("label", {}, "Mode", modeSelect),
+          compensationRow,
+          ev100Row,
+          meterRow,
+        ),
       ),
     ),
     editorHost,
@@ -981,6 +1169,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
 
   // The stage and the model before the gallery shows the view.
   applyStage();
+  applyLooks();
   if (!served) {
     status.compile.textContent =
       "The Slang WebAssembly build isn't served here: run `npm run setup --workspace @cesium/next` (it fetches it) and restart the dev server.";
