@@ -208,6 +208,6 @@ describe("buildingMesh", () => {
       top = Math.max(top, mesh.design[i]!);
     }
     expect(top).toBe(SITE_BUILDING.origin[2] + stories * storyHeight);
-    expect(buildingAnchor(SITE_BUILDING)).toEqual([100, 60, 0]);
+    expect(buildingAnchor(SITE_BUILDING)).toEqual([100, 60, 956]);
   });
 });

@@ -348,7 +348,12 @@ export const SITE_BUILDING: PortfolioSite<BuildingModel> = {
     },
     areaOfInterest: around(-122.16, 37.782),
   },
-  origin: [0, 0, 0],
+  // Its corner at the ground's height there, NAVD88 ftUS: the hillside is
+  // about 291.6 m above NAVD88 (Cesium World Terrain's 259.3 m above the
+  // ellipsoid, less GEOID18's −32.2 m). At 0 it stood 290 m underground,
+  // drawn through the ellipsoid globe's coarse tiles, whose chords sag
+  // below the ellipsoid by more than the geoid's 32 m (feedback F3).
+  origin: [0, 0, 956],
   model: {
     kind: "building",
     width: 200,
