@@ -26,7 +26,7 @@ import { svgPathAnimationSingle } from "@stratakit/icons/path-animation-single";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { svgStop } from "@stratakit/icons/stop";
 import { Icon } from "@stratakit/mui";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import type { Placement } from "../page.ts";
 import { Checks } from "./Checks.tsx";
@@ -230,6 +230,47 @@ function Story({
   );
 }
 
+/** The nearest ancestor of `el` that scrolls vertically, if any. */
+function scroller(el: HTMLElement): HTMLElement | undefined {
+  for (let p = el.parentElement; p !== null; p = p.parentElement) {
+    const y = getComputedStyle(p).overflowY;
+    if ((y === "auto" || y === "scroll") && p.scrollHeight > p.clientHeight) {
+      return p;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * After a Fly to or the tour's start (UX review S1): the story in view. In
+ * the side layout the panel scrolls on its own, so it goes back to its top,
+ * where the status line and then the story are (the top, not the story's
+ * heading: the status grows and shrinks as the new site loads); where the
+ * panel is under the view and the page scrolls (a phone), the page scrolls
+ * to the view, where the flight and the tour's card are. At once under
+ * reduced motion.
+ */
+function revealStory(story: HTMLElement, view: HTMLElement): void {
+  const behavior: ScrollBehavior = matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches
+    ? "auto"
+    : "smooth";
+  const box = scroller(story);
+  if (box === undefined) {
+    return;
+  }
+  if (box.contains(view)) {
+    const top =
+      view.getBoundingClientRect().top - box.getBoundingClientRect().top;
+    if (top < 0 || top > box.clientHeight / 2) {
+      box.scrollBy({ top, behavior });
+    }
+    return;
+  }
+  box.scrollTo({ top: 0, behavior });
+}
+
 /**
  * The page's link, copied. The button says so itself for two seconds, by
  * the button rather than in a corner far from it; the browser may refuse.
@@ -297,8 +338,23 @@ export function Panel({ source, live, actions, hud, measure }: PanelProps) {
   const model = useSyncExternalStore(source.subscribe, source.get);
   const m = useSyncExternalStore(measure.source.subscribe, measure.source.get);
   const site = model.sites.find((s) => s.selected);
+  const panel = useRef<HTMLDivElement>(null);
+  const touring = model.tour !== undefined;
+  const last = useRef({ site: site?.id, touring });
+  useEffect(() => {
+    const before = last.current;
+    last.current = { site: site?.id, touring };
+    const story =
+      panel.current?.querySelector<HTMLElement>(".dg-story-area") ?? null;
+    if (
+      story !== null &&
+      (before.site !== site?.id || (touring && !before.touring))
+    ) {
+      revealStory(story, hud);
+    }
+  }, [site?.id, touring, hud]);
   return (
-    <div className="dg-panel">
+    <div className="dg-panel" ref={panel}>
       <div className="dg-bar">
         <Status items={model.loading} actions={actions} />
         <CopyLink actions={actions} />
