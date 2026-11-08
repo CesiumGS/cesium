@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GPU check</title>
+    <style>
+      body {
+        font:
+          15px/1.45 system-ui,
+          sans-serif;
+        max-width: 60rem;
+        margin: 1.5rem auto;
+        padding: 0 1rem;
+        color: #1b1b1b;
+        background: #fff;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      h2 {
+        font-size: 1.1rem;
+        margin-top: 1.6rem;
+      }
+      .warning {
+        border: 2px solid #b00020;
+        padding: 0.6rem 0.9rem;
+        background: #fff1f1;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th,
+      td {
+        border: 1px solid #bbb;
+        padding: 0.25rem 0.5rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      pre {
+        white-space: pre-wrap;
+        margin: 0;
+      }
+      .pass {
+        color: #0a6b2d;
+        font-weight: 600;
+      }
+      .fail,
+      .lost {
+        color: #b00020;
+        font-weight: 600;
+      }
+      .idle {
+        color: #666;
+      }
+      button {
+        font: inherit;
+        padding: 0.3rem 0.8rem;
+      }
+      canvas {
+        width: 320px;
+        height: 180px;
+        background: #000;
+        display: block;
+      }
+      textarea {
+        width: 100%;
+        height: 14rem;
+        font:
+          12px/1.4 ui-monospace,
+          monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>GPU check</h1>
+    <p>
+      Checks a WebGPU engine on an unfamiliar GPU. Reason: Intel reports a hang
+      with indirect draws on UHD 7xx and Iris Xe graphics under Windows 11
+      (article 000102979, with <code>DXGI_ERROR_DEVICE_REMOVED</code>).
+    </p>
+    <div class="warning">
+      <strong>Read first.</strong> A real hang can reset the graphics driver for
+      every app on this machine, and may freeze the screen for a few seconds.
+      Save your other work first. Steps run one at a time, each from a click,
+      smallest first. If the device is lost the run stops: nothing retries and
+      nothing starts by itself. Reload the page to start again.
+    </div>
+
+    <h2>Adapter</h2>
+    <div id="adapter">Reading the adapter…</div>
+
+    <h2>Steps</h2>
+    <p id="state">Run each step in order.</p>
+    <table id="steps"></table>
+    <canvas id="view" width="640" height="360"></canvas>
+
+    <h2>Report</h2>
+    <p>
+      <button id="copy" type="button">Copy report</button>
+      <span id="copied"></span>
+    </p>
+    <textarea id="report" readonly></textarea>
+    <p>
+      Look up by hand: the driver version and the GPU's name in
+      <code>chrome://gpu</code> (or <code>edge://gpu</code>), under "Driver
+      Information". Add the Windows version.
+    </p>
+    <script type="module" src="./gpu-check.ts"></script>
+  </body>
+</html>
