@@ -15,6 +15,7 @@ import {
   readLayers,
   readSurface,
 } from "../scripts/handbookData.mjs";
+import { highlight } from "../handbook/src/highlight.ts";
 
 it("reads the API map per entry point", () => {
   const surface = readSurface();
@@ -153,4 +154,37 @@ it("reports where the pipeline's notes no longer match the code", () => {
   expect(drift).toHaveLength(6);
   expect(drift.join()).toContain('"new-pass" has no note');
   expect(drift.join()).toContain('no test "no such test"');
+});
+
+it("highlights code without changing a character", () => {
+  const ts = `// A comment
+import { Engine } from "@cesium/next";
+const engine: Engine = await Engine.create({ count: 3 });
+const name = \`a \${engine} b\`;
+class A<T> extends B { private x?: number = 1; }`;
+  const shell = `# A comment
+node bench/run.mjs baseline --tier full --note "RTX"`;
+  const json = `{ "a": [1, true, null], "b": "c" }`;
+  for (const [code, language] of [
+    [ts, "ts"],
+    [ts, "js"],
+    [shell, "shell"],
+    [json, "json"],
+    ["plain × text", "text"],
+  ] as const) {
+    const tokens = highlight(code, language);
+    expect(tokens.map((t) => t.text).join("")).toBe(code);
+  }
+  const kinds = new Set(highlight(ts, "ts").map((t) => t.kind));
+  expect(kinds).toEqual(
+    new Set([
+      undefined,
+      "comment",
+      "keyword",
+      "string",
+      "number",
+      "type",
+      "property",
+    ]),
+  );
 });

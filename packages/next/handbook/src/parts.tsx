@@ -6,8 +6,9 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { data, day } from "./data.ts";
+import { highlight, LANGUAGE_NAMES, type CodeLanguage } from "./highlight.ts";
 import { SOURCES, STALE_AFTER_DAYS, type SourceId } from "./sources.ts";
 
 /** How far a tab's content goes. Shown at the top of each tab. */
@@ -206,6 +207,64 @@ export function Flow({
 }
 
 /** An inline citation: a named link to the source. */
+/** A block of code: real, selectable text, with its edges plain. */
+export function CodeBlock({
+  code,
+  language,
+}: {
+  code: string;
+  language: CodeLanguage;
+}) {
+  const name = LANGUAGE_NAMES[language];
+  return (
+    <div className="codeblock">
+      {name ? (
+        <div className="codeblock-head">
+          <span>{name}</span>
+          <CopyButton text={code} />
+        </div>
+      ) : null}
+      <pre tabIndex={0}>
+        <code>
+          {highlight(code, language).map((token, i) =>
+            token.kind ? (
+              <span className={`tk-${token.kind}`} key={i}>
+                {token.text}
+              </span>
+            ) : (
+              token.text
+            ),
+          )}
+        </code>
+      </pre>
+    </div>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // A page opened from a file may have no clipboard API.
+      const area = document.createElement("textarea");
+      area.value = text;
+      document.body.append(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button className="codeblock-copy" type="button" onClick={copy}>
+      <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
+    </button>
+  );
+}
+
 export function Cite({ id }: { id: SourceId }) {
   const source = SOURCES[id];
   return (

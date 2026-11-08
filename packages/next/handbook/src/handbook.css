@@ -172,16 +172,95 @@ pre {
 }
 .code {
   overflow-wrap: anywhere;
+  /* A tint, with no border: a block has the border. Works on any surface. */
+  padding: 0.05em 0.3em;
+  border-radius: 3px;
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-pressed);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
-pre.snippet {
+/* A block of code: its own surface, with a border that shows where it ends. */
+.codeblock {
+  --code-bg: #eef1f5;
+  --code-head: #e1e5eb;
+  --code-text: #1f2329;
+  --tk-comment: #566070;
+  --tk-keyword: #7b1fa2;
+  --tk-string: #0b6b3a;
+  --tk-number: #a23c00;
+  --tk-type: #0b5aa6;
+  --tk-property: #00606f;
   margin: 0 0 var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--code-bg);
+  color: var(--code-text);
+}
+[data-_sk-color-scheme="dark"] .codeblock {
+  --code-bg: #121418;
+  --code-head: #23262c;
+  --code-text: #eef0f3;
+  --tk-comment: #a3adba;
+  --tk-keyword: #d8aaff;
+  --tk-string: #8fdca8;
+  --tk-number: #f4b47c;
+  --tk-type: #8fc6ff;
+  --tk-property: #7ddbe8;
+}
+.codeblock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  padding: 2px var(--stratakit-space-100) 2px var(--stratakit-space-400);
+  background: var(--code-head);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-base);
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--code-text);
+}
+.codeblock-copy {
+  padding: 2px var(--stratakit-space-200);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.codeblock-copy:hover {
+  border-color: var(--stratakit-color-border-neutral-base);
+}
+.codeblock-copy:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: -2px;
+}
+.codeblock pre {
+  margin: 0;
   padding: var(--stratakit-space-300) var(--stratakit-space-400);
   overflow-x: auto;
-  border-radius: 6px;
-  background: var(--stratakit-color-bg-neutral-base);
   line-height: 1.5;
 }
-pre.snippet:focus-visible,
+.tk-comment {
+  color: var(--tk-comment);
+  font-style: italic;
+}
+.tk-keyword {
+  color: var(--tk-keyword);
+}
+.tk-string {
+  color: var(--tk-string);
+}
+.tk-number {
+  color: var(--tk-number);
+}
+.tk-type {
+  color: var(--tk-type);
+}
+.tk-property {
+  color: var(--tk-property);
+}
+.codeblock pre:focus-visible,
 .figure-scroll:focus-visible,
 .table-wrap:focus-visible {
   outline: 2px solid var(--stratakit-color-border-accent-strong);
@@ -1148,6 +1227,12 @@ pre.snippet:focus-visible,
 }
 
 @media print {
+  .codeblock-copy {
+    display: none;
+  }
+  .codeblock pre {
+    white-space: pre-wrap;
+  }
   .side,
   .strip,
   .layers,

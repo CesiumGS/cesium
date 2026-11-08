@@ -3,6 +3,7 @@ import { count, day, referenceAdapter } from "../data.ts";
 import { TileLifecycle } from "../flows.tsx";
 import {
   C,
+  CodeBlock,
   DataTable,
   Figure,
   Flow,
@@ -431,9 +432,10 @@ export function Selection() {
           A tile's <strong>screen-space error</strong> is how many pixels its
           geometric error would span at its distance:
         </p>
-        <pre className="snippet" tabIndex={0}>
-          <code>sse = error × height ÷ (distance × 2 tan(fovy ÷ 2))</code>
-        </pre>
+        <CodeBlock
+          language="text"
+          code="sse = error × height ÷ (distance × 2 tan(fovy ÷ 2))"
+        />
         <p>
           A tile refines while its error is above the threshold: 16 pixels for
           3D Tiles and 2 for terrain, as in 1.x. Dynamic screen-space error

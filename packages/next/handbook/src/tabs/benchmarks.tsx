@@ -8,6 +8,7 @@ import {
 } from "../data.ts";
 import {
   C,
+  CodeBlock,
   DataTable,
   Figure,
   Generated,
@@ -142,9 +143,7 @@ export function Benchmarks() {
             </p>
           </Note>
         )}
-        <pre className="snippet" tabIndex={0}>
-          <code>{COMMANDS}</code>
-        </pre>
+        <CodeBlock language="shell" code={COMMANDS} />
       </Section>
 
       {reference ? (

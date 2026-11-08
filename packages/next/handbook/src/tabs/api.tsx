@@ -2,7 +2,15 @@ import { TextField } from "@mui/material";
 import { Tabs } from "@stratakit/structures";
 import { useMemo, useState } from "react";
 import { count, data } from "../data.ts";
-import { C, DataTable, Generated, Page, Section, Written } from "../parts.tsx";
+import {
+  C,
+  CodeBlock,
+  DataTable,
+  Generated,
+  Page,
+  Section,
+  Written,
+} from "../parts.tsx";
 
 const ENTRY_LABEL: Record<string, string> = {
   ".": "core",
@@ -130,13 +138,9 @@ export function Api() {
       }
     >
       <Section title="In brief">
-        <pre className="snippet" tabIndex={0}>
-          <code>{QUICK}</code>
-        </pre>
+        <CodeBlock language="ts" code={QUICK} />
         <p>For more control, the engine directly:</p>
-        <pre className="snippet" tabIndex={0}>
-          <code>{ENGINE}</code>
-        </pre>
+        <CodeBlock language="ts" code={ENGINE} />
         <p className="provenance">
           Calls follow <C>src/scene/Engine.ts</C> and <C>widgets/Viewer.ts</C>;
           options are left out. The snippets aren't compiled yet.
@@ -148,9 +152,7 @@ export function Api() {
           Terrain is translucent in a region or everywhere, through four methods
           on a globe's <C>Tileset3D</C>. The Rendering tab shows how it draws.
         </p>
-        <pre className="snippet" tabIndex={0}>
-          <code>{TERRAIN}</code>
-        </pre>
+        <CodeBlock language="ts" code={TERRAIN} />
         <ul>
           <li>
             <C>addTerrainTranslucency(region, {"{ opacity, pickThrough }"})</C>{" "}
