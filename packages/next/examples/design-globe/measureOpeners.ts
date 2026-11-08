@@ -19,6 +19,8 @@ import {
   type MeasureView,
 } from "./measureModel.ts";
 import type { DetailRow } from "./measureView.ts";
+import { MARK_OFFSET_TOLERANCE } from "./checks.ts";
+import { amount } from "./checksView.ts";
 
 // --------------------------------------------------------- the openers
 
@@ -199,12 +201,6 @@ export const metres3 = (x: number) => `${fixed(x, 3)} m`;
 export const PENDING = "…";
 
 /**
- * The datasheet's zone 3 coordinates are given to 0.01 US survey foot, so
- * each is within half of that; a distance from them, within √2 of it.
- */
-const PUBLISHED_ROUNDING = 0.005 * Math.SQRT2;
-
-/**
  * The survey mark's independent test (the checks' `mark.offset`): the
  * design's horizontal distance to the mark by the page's `measure` (PROJ's
  * position of NGS's mark), against the same from NGS's own published zone
@@ -234,7 +230,7 @@ export function markTest(
     design: measured.horizontal,
     published,
     apart,
-    within: apart <= PUBLISHED_ROUNDING,
+    within: apart <= MARK_OFFSET_TOLERANCE,
   };
 }
 
@@ -350,7 +346,7 @@ export function openerView(
           ? "Rigid draws the road this far from where it truly is, at the mark."
           : test === undefined
             ? `The design's distance to the mark against the same from NGS's own zone 3, measuring…`
-            : `The design's distance to the mark against the same from NGS's own zone 3, an independent test: ${test.within ? "within" : "outside"} the datasheet's rounding. Rigid drew the road ${rigidOffset} from where it is, at the mark.`;
+            : `The design's distance to the mark against the same from NGS's own zone 3, an independent test: ${test.within ? "within" : "outside"} the datasheet's precision, ±${amount(MARK_OFFSET_TOLERANCE, symbol)}. Rigid drew the road ${rigidOffset} from where it is, at the mark.`;
       return {
         title: `${m.pid} ${m.name} to the centreline`,
         // One figure for the line: the horizontal design distance, as CAD

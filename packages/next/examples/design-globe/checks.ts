@@ -98,6 +98,13 @@ export const VERTEX_TOLERANCE_M = 1e-4;
  * (PROJ's, 632,517.98982 m) is 2,075,186.1049.
  */
 export const MARK_SPC_TOLERANCE = 0.005 + (0.0005 * 3937) / 1200;
+/**
+ * The mark's independent test (`mark.offset`, and the headline that shows
+ * it, measureOpeners.ts `markTest`): a horizontal distance from the two
+ * published coordinates, so within √2 of each one's precision, 0.0094 ftUS.
+ * One tolerance for one test, so the headline and Checks can't disagree.
+ */
+export const MARK_OFFSET_TOLERANCE = MARK_SPC_TOLERANCE * Math.SQRT2;
 
 /**
  * A tolerance in metres for a basis (a pick's must be stated), for a value
@@ -330,7 +337,7 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
           mark.publishedSpc.easting - mark.nearestDesign[0],
           mark.publishedSpc.northing - mark.nearestDesign[1],
         ),
-        tolerance: MARK_SPC_TOLERANCE * Math.SQRT2,
+        tolerance: MARK_OFFSET_TOLERANCE,
       },
       shown.mark?.offset,
     ),

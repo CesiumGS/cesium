@@ -9,12 +9,15 @@ import {
 } from "../examples/design-globe/answers.ts";
 import {
   EXACT_TOLERANCE,
+  MARK_OFFSET_TOLERANCE,
   MARK_SPC_TOLERANCE,
   VERTEX_TOLERANCE_M,
   checkRows,
   type CheckRow,
   type ShownValues,
 } from "../examples/design-globe/checks.ts";
+import { amount, checksView } from "../examples/design-globe/checksView.ts";
+import { markTest } from "../examples/design-globe/measureOpeners.ts";
 
 const MPU = 1200 / 3937;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -376,6 +379,40 @@ describe("checkRows", () => {
     expect(r.status).toBe("pass");
     shown.mark = { offset: published + 0.02 };
     expect(row(checkRows(a, shown), "mark.offset").status).toBe("fail");
+  });
+
+  it("judges the mark's test against one tolerance, in the headline and in Checks (UX review I1)", () => {
+    const a = answers();
+    const published = Math.hypot(
+      a.mark.publishedSpc.easting - a.mark.nearestDesign[0],
+      a.mark.publishedSpc.northing - a.mark.nearestDesign[1],
+    );
+    // Each coordinate's precision with the datasheet's double rounding
+    // (metric to the millimetre, then to 0.01 ftUS), along the line: √2.
+    expect(MARK_OFFSET_TOLERANCE).toBe(MARK_SPC_TOLERANCE * Math.SQRT2);
+    expect(amount(MARK_OFFSET_TOLERANCE, "ftUS")).toBe("0.0094 ftUS");
+    // Either side of the bound, and between the old headline's 0.0071
+    // ftUS and it: the headline and the check give one verdict.
+    for (const off of [0, 0.005, 0.0072, 0.008, 0.0093, 0.0095, 0.02]) {
+      for (const sign of [1, -1]) {
+        const horizontal = published + sign * off;
+        const test = markTest(a, {
+          design: horizontal,
+          horizontal,
+          trueDistance: horizontal * MPU,
+        })!;
+        const shown = empty();
+        shown.mark = { offset: horizontal };
+        const check = row(checkRows(a, shown), "mark.offset");
+        expect(test.within, `${sign * off} ftUS`).toBe(check.status === "pass");
+        expect(check.tolerance).toBe(MARK_OFFSET_TOLERANCE);
+      }
+    }
+    // Checks states the same bound the headline's caption does.
+    const shown = empty();
+    shown.mark = { offset: published + 0.005 };
+    const view = checksView(a, shown);
+    expect(JSON.stringify(view)).toContain("within 0.0094 ftUS");
   });
 
   it("throws for a shown id that isn't an answer", () => {

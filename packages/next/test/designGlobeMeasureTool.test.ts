@@ -448,7 +448,7 @@ describe("the measurements the page opens with", () => {
     );
     expect(reprojected.hero).toBe("0.005 ftUS");
     expect(reprojected.heroCaption).toBe(
-      `The design's distance to the mark against the same from NGS's own zone 3, an independent test: within the datasheet's rounding. Rigid drew the road ${Math.hypot(10, 20, 21).toFixed(3)} m from where it is, at the mark.`,
+      `The design's distance to the mark against the same from NGS's own zone 3, an independent test: within the datasheet's precision, ±0.0094 ftUS. Rigid drew the road ${Math.hypot(10, 20, 21).toFixed(3)} m from where it is, at the mark.`,
     );
     expect(rigid.globe).toMatch(
       /^On the globe the mark measures [\d,.]+ m, [\d,.]+ m too (far|near)\.$/,
