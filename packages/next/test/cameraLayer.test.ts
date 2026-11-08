@@ -811,6 +811,58 @@ describe("the camera layer", () => {
     expect(view.anchorPlacement(moon)).toEqual(translation(4, 0, 0));
   });
 
+  it("a non-rigid answer while a re-root waits and the clock runs reports once, in either direction", () => {
+    setup();
+    // The review's case: every answer involving Deimos has a NaN, so the
+    // re-root (table root in Deimos) and the placement (Deimos in the
+    // table root) fail alike, tick after tick.
+    const deimos = world.addAnchor("Deimos");
+    const resolver: FrameResolver = {
+      resolve(frame, base, _seconds, out) {
+        out.set(IDENTITY);
+        if (frame === deimos || base === deimos) {
+          out[12] = Number.NaN;
+        }
+        return out;
+      },
+      routeRevision: () => 0,
+    };
+    engine.cameras.setResolver(world, resolver);
+    const clock = new FakeClock();
+    engine.cameras.setClock(world, clock);
+    engine.cameras.setRig(view, {
+      position: { frame: deimos },
+      orientation: { kind: "free" },
+    });
+    for (let s = 1; s <= 5; s++) {
+      clock.set(s, "steady");
+      engine.cameras.update();
+    }
+    expect(engine.cameras.root(view)).toBe(world.root);
+    const errors = cameraErrors(engine).filter((e) =>
+      e.message.includes("Deimos"),
+    );
+    expect(errors.map((e) => e.count)).toEqual([1]);
+    expect(errors[0]!.message).toMatch(
+      /until it can re-root on Deimos: .*is not rigid: it has a value that is not finite/,
+    );
+  });
+
+  it("a hand-set placement doesn't survive once anything is placed", () => {
+    setup();
+    world.placeAnchor(moon, translation(7, 0, 0));
+    engine.cameras.update();
+    const places = vi.spyOn(world, "anchorMatrix");
+    view.setAnchorPlacement(moon, translation(0, 0, 1));
+    engine.cameras.update();
+    expect(view.anchorPlacement(moon)).toEqual(translation(7, 0, 0));
+    expect(places).toHaveBeenCalled();
+    // And nothing after that.
+    places.mockClear();
+    expect(engine.cameras.update()).toBe(false);
+    expect(places).not.toHaveBeenCalled();
+  });
+
   it("re-roots away from a removed root without re-expressing, and retries a waiting re-root only on change", () => {
     setup();
     const node = world.addTransform(translation(10, 0, 0), earth);

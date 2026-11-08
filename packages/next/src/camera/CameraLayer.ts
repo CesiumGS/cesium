@@ -131,8 +131,13 @@ export class CameraLayer {
     this.clocks.delete(world);
     if (clock) {
       const unwatch = clock.watch(() => {
-        if (this.host.views.some((view) => view.world === world)) {
-          this.host.wake();
+        // A plain loop: a playing clock calls this every tick.
+        const views = this.host.views;
+        for (let i = 0; i < views.length; i++) {
+          if (views[i]!.world === world) {
+            this.host.wake();
+            return;
+          }
         }
       });
       this.clocks.set(world, { clock, unwatch });
@@ -289,7 +294,9 @@ export class CameraLayer {
         !rerooted &&
         state.resolver === resolver &&
         state.anchorPlaces === places &&
-        (places === 0 || state.anchors === anchors)
+        (places === 0 ||
+          (state.anchors === anchors &&
+            view.anchorRevision === state.anchorRevision))
       ) {
         return false;
       }
@@ -647,9 +654,7 @@ export class CameraLayer {
     }
     const error = rigidMatrixError(out);
     if (error) {
-      throw new Error(
-        `${frame.name}'s place in ${base.name} is not rigid: ${error}`,
-      );
+      throw new NotRigidError(frame, base, error);
     }
     return out;
   }
@@ -668,14 +673,18 @@ export class CameraLayer {
     const reason = error instanceof Error ? error.message : String(error);
     const kind =
       error instanceof FrameUnavailableError ? ` (${error.reason})` : "";
-    // The failure itself, whatever asked: one reference frame failing for
-    // a placement and for the pose is one episode.
-    const failure = `${kind}: ${reason}`;
+    // The failure itself, whatever asked and in whichever direction: one
+    // reference frame failing for a re-root, a placement and the pose is
+    // one episode.
+    const failure =
+      error instanceof NotRigidError
+        ? `not rigid: ${error.reason}`
+        : `${kind}: ${reason}`;
     if (state.reported.get(key) === failure) {
       return;
     }
     state.reported.set(key, failure);
-    this.host.errors.report("camera", `${what}${failure}`);
+    this.host.errors.report("camera", `${what}${kind}: ${reason}`);
   }
 
   /** Ends `key`'s failure episode; free while nothing is failing. */
@@ -683,6 +692,19 @@ export class CameraLayer {
     if (state.reported.size > 0) {
       state.reported.delete(key);
     }
+  }
+}
+
+/** A resolver's answer that isn't a finite rigid matrix. */
+class NotRigidError extends Error {
+  constructor(
+    frame: FrameKey,
+    base: FrameKey,
+    /** `rigidMatrixError`'s reason, the same in either direction. */
+    readonly reason: string,
+  ) {
+    super(`${frame.name}'s place in ${base.name} is not rigid: ${reason}`);
+    this.name = "NotRigidError";
   }
 }
 
