@@ -8368,6 +8368,14 @@ Not designed. A question to take up in its own session, then add to this plan: e
 
 Not designed. Custom post-processing stages should be exposed through a proper public interface, and FXAA and ambient occlusion should be built on that interface, to flesh it out and prove it. Maybe this needs a graph-based compositing structure, as other engines have. `src/render/FrameGraph.ts` already orders the passes internally, so the question is what to expose and how a stage declares what it reads and writes. It should use the shader linker's named boundaries, and it replaces 1.x's `PostProcessStage`. Also consider where a stage sits relative to exposure and tone mapping (scene-referred or display-referred), and depth and id access.
 
+### 13.23 Risk: indirect draws on Intel integrated GPUs (found 2026-11-08)
+
+Not yet tested. Intel's article 000102979 ("Simple WebGPU application Hangs with Indirect Draw Calls on UHD 700 and Iris Xe iGPUs", last reviewed July 2026) reports a hang with `DXGI_ERROR_DEVICE_REMOVED` on Windows 11, with no fix or workaround, and no driver or draw pattern named. This engine renders with indirect draws by default. All results so far come from two adapters, an NVIDIA RTX 3000 Ada laptop and an Apple M2, with none from Intel or AMD. Do before relying on any reach claim:
+
+- Run the engine on UHD 7xx and Iris Xe under Windows 11, with Chrome and Edge, and record driver versions and any device loss. Find out whether Chrome already works around it.
+- Check whether `SubmissionMode = "direct"` avoids the hang and covers every draw path, and what it costs. If so, fall back per adapter.
+- Add Intel integrated and AMD machines to the bench's coverage.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
