@@ -80,6 +80,9 @@ function inlineIntoPage(): Plugin {
 
 export default defineConfig({
   root: here,
+  // Its own cache: a dev server sharing the default one replaces the other's
+  // bundled dependencies, and that server's pages then fail with a 504.
+  cacheDir: join(here, "../node_modules/.vite-handbook"),
   base: "./",
   // No env file reaches this build: the page is for handing out.
   envDir: false,

@@ -374,7 +374,14 @@ const projGrids = existsSync(
 const framesDataTests = !["", "0"].includes(process.env.FRAMES_DATA ?? "");
 
 export default defineConfig({
-  server: { host: "127.0.0.1", port: 5190, strictPort: true },
+  server: {
+    host: "127.0.0.1",
+    port: 5190,
+    strictPort: true,
+    // The handbook has its own server. Without this, every handbook build
+    // reloads the pages open on this one, mid-example.
+    watch: { ignored: ["**/handbook/**"] },
+  },
   // Every bare import, bundled at startup: a dependency discovered later
   // (say Dyno's React) re-bundles them all under a new hash, and a content
   // worker that already loaded keeps importing the old one (a 504 from the
