@@ -8,13 +8,14 @@
  * A 2.0 name is written as it is in api/surface.txt: its name, or
  * `entry:name` outside the core entry point.
  */
-export type ApiStatus = "same" | "renamed" | "changed" | "absent" | "new";
+export type ApiStatus =
+  "same" | "renamed" | "changed" | "covered" | "absent" | "new";
 
 /** Why a 1.x feature isn't in 2.0. */
 export type ApiGap =
   /** The plan chooses not to have it. */
   | "design"
-  /** Not built, and a plan or spec says it's out of scope for now or later. */
+  /** Not built: a plan or spec leaves it for later, or says how it would go in. */
   | "later"
   /** Not built, and no plan or spec says what happens to it. */
   | "unknown";
@@ -52,6 +53,8 @@ export interface ApiRow {
   familyLabel?: string;
   /** The 2.0 names the row is about. */
   next?: readonly string[];
+  /** Words for the 2.0 side, where names alone wouldn't say what's true. */
+  nextLabel?: string;
   /** Options, results and other names that go with them. */
   supporting?: readonly string[];
   status: ApiStatus;
@@ -71,6 +74,10 @@ const NON_GOALS = "Overall plan, section 1, non-goals for the PoC";
 const LASTS =
   "Overall plan, section 1: the architecture is to absorb this later";
 const EXTENSIONS = "Overall plan, section 4, the extension table: missing";
+
+/** Rows that code written against 1.x has to change for. */
+export const isBreaking = (row: ApiRow) =>
+  row.status !== "same" && row.status !== "new";
 
 export const API_ROWS: readonly ApiRow[] = [
   // ------------------------------------------------------- Viewer and setup
@@ -139,6 +146,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "viewerPerformanceWatchdogMixin",
       "viewerVoxelInspectorMixin",
     ],
+    nextLabel: "`ViewerOptions`, and the `attach` functions",
     status: "changed",
     note: "2.0's `Viewer` has no mixins: pass `inspector`, `timeControls` or `credits` as options, or call the `attach` functions.",
   },
@@ -156,6 +164,7 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "scene",
     old: ["Scene.requestRender", "Scene.requestRenderMode"],
+    nextLabel: "`Engine.renderMode` and `engine.requestRender()`",
     status: "changed",
     note: "Rendering on demand is `Engine.renderMode` or `ViewerOptions.renderMode`, and the on-demand mode is `onDemand`. `engine.requestRender()` asks for a tick.",
   },
@@ -185,6 +194,7 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "scene",
     old: ["Camera.flyTo", "Camera.flyToBoundingSphere", "Camera.flyHome"],
+    nextLabel: "Not built yet: `Viewer.zoomTo` moves at once",
     status: "absent",
     gap: "later",
     note: "No timed flights yet: `Viewer.zoomTo` and `Camera.lookAt` move the camera at once. Transitions are planned on a general animation core.",
@@ -249,6 +259,7 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "scene",
     old: ["ShadowMode", "ShadowMap"],
+    nextLabel: "`View.shadows`",
     status: "changed",
     note: "Shadows are per view, through `View.shadows`, not per object. What casts is covered on the Shadows tab.",
   },
@@ -274,31 +285,55 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "globe",
     old: ["CesiumTerrainProvider", "EllipsoidTerrainProvider"],
+    nextLabel: "`engine.addTerrain` and `engine.addEllipsoid`",
     status: "renamed",
     note: "Quantized-mesh terrain loads with `engine.addTerrain(world, url)`, and the bare ellipsoid with `engine.addEllipsoid`, with no provider object.",
   },
   {
     group: "globe",
+    old: ["createWorldBathymetryAsync"],
+    next: ["resolveIonAsset"],
+    status: "covered",
+    note: "World Bathymetry is a quantized-mesh ion asset, so `resolveIonAsset(2426648)` gives the URL and headers for `engine.addTerrain`.",
+  },
+  {
+    group: "globe",
     old: [
       "ArcGISTiledElevationTerrainProvider",
-      "Cesium3DTilesTerrainProvider",
-      "Cesium3DTilesTerrainData",
       "CustomHeightmapTerrainProvider",
       "GoogleEarthEnterpriseTerrainProvider",
       "GoogleEarthEnterpriseTerrainData",
       "GoogleEarthEnterpriseMetadata",
       "HeightmapEncoding",
       "HeightmapTerrainData",
-      "QuantizedMeshTerrainData",
-      "TerrainData",
-      "TerrainProvider",
-      "TileAvailability",
       "VRTheWorldTerrainProvider",
-      "createWorldBathymetryAsync",
     ],
+    nextLabel: "Not built yet: needs a decoder behind the terrain seam",
     status: "absent",
-    gap: "unknown",
-    note: "These providers and the provider interface have no 2.0 equivalent, and no plan says whether they will.",
+    gap: "later",
+    note: "`TerrainLoader` has a general shape: a URL goes in, and a mesh and its heights come out. But the worker decodes only quantized mesh, `TerrainSource` refuses other formats, and neither seam is public yet. The plan chooses which to build from demand, each as an optional module, so none is promised.",
+    source: 'Overall plan, section 13.21, "Two layers, not one"',
+  },
+  {
+    group: "globe",
+    old: ["Cesium3DTilesTerrainProvider", "Cesium3DTilesTerrainData"],
+    nextLabel: "Not built yet: would sit behind `TileSource`",
+    status: "absent",
+    gap: "later",
+    note: "A tileset draws today through `addTileset`, and `sampleHeightMostDetailed` reads it, but it isn't a globe: `sampleHeight` is undefined for it, and it takes no terrain clips. The plan chooses from demand, so this isn't promised.",
+    source: 'Overall plan, section 13.21, "Two layers, not one"',
+  },
+  {
+    group: "globe",
+    old: [
+      "TerrainProvider",
+      "TerrainData",
+      "TileAvailability",
+      "QuantizedMeshTerrainData",
+    ],
+    nextLabel: "Inside `engine.addTerrain`",
+    status: "changed",
+    note: "Quantized mesh decodes inside the engine, so there's no public terrain interface to implement yet. `TileSource` and `TerrainLoader` are internal.",
   },
   {
     group: "globe",
@@ -371,10 +406,10 @@ export const API_ROWS: readonly ApiRow[] = [
   },
   {
     group: "imagery",
-    old: ["UrlTemplateImageryProvider", "OpenStreetMapImageryProvider"],
+    old: ["UrlTemplateImageryProvider"],
     next: ["UrlTemplateImagery"],
     status: "renamed",
-    note: "`UrlTemplateImagery` takes XYZ templates with `{x}`, `{y}` and `{z}`.",
+    note: "`UrlTemplateImagery` takes `{x}`, `{y}`, `{z}` and `{s}`, in Web Mercator. 1.x's other tags, such as `{reverseY}` and `{westDegrees}`, aren't there, so those URLs need their own `ImageryProvider`.",
   },
   {
     group: "imagery",
@@ -390,35 +425,80 @@ export const API_ROWS: readonly ApiRow[] = [
   },
   {
     group: "imagery",
+    old: ["OpenStreetMapImageryProvider"],
+    next: ["UrlTemplateImagery"],
+    status: "covered",
+    note: '`new UrlTemplateImagery("OpenStreetMap", "https://tile.openstreetmap.org/{z}/{x}/{y}.png", { credit })`, with the credit its licence asks for.',
+  },
+  {
+    group: "imagery",
+    old: ["MapboxImageryProvider", "MapboxStyleImageryProvider"],
+    next: ["UrlTemplateImagery"],
+    status: "covered",
+    note: "These are XYZ URLs, so a template works: `https://api.mapbox.com/v4/<map>/{z}/{x}/{y}.png?access_token=<token>`. You write the URL and the credit yourself.",
+  },
+  {
+    group: "imagery",
+    old: ["ArcGisMapServerImageryProvider"],
+    next: ["UrlTemplateImagery"],
+    status: "covered",
+    note: "For a cached Web Mercator service: `.../MapServer/tile/{z}/{y}/{x}`. A geographic or uncached service needs its own `ImageryProvider`, and the 1.x class's other features, such as picking features, aren't covered.",
+  },
+  {
+    group: "imagery",
+    old: ["WebMapTileServiceImageryProvider"],
+    next: ["UrlTemplateImagery", "ImageryProvider"],
+    status: "covered",
+    note: "For Web Mercator tile matrices named by level, in the URL as `{z}`, `{y}` and `{x}`, such as `TileMatrix={z}&TileRow={y}&TileCol={x}`. A geographic set needs its own `ImageryProvider`.",
+  },
+  {
+    group: "imagery",
     old: [
-      "ArcGisBaseMapType",
-      "ArcGisMapServerImageryProvider",
-      "ArcGisMapService",
+      "TileMapServiceImageryProvider",
+      "WebMapServiceImageryProvider",
       "Azure2DImageryProvider",
+      "Google2DImageryProvider",
+      "GoogleEarthEnterpriseMapsProvider",
+      "ArcGisMapService",
+      "ArcGisBaseMapType",
+    ],
+    next: ["ImageryProvider"],
+    nextLabel: "Not built yet: the interface exists",
+    status: "absent",
+    gap: "later",
+    note: "A provider gives a URL per tile, so an app can write these today: TMS flips its row, and WMS builds a bounding box. The templates can't do either. The plan chooses which to ship from demand, each as an optional module, so none is promised.",
+    source: 'Overall plan, section 13.21, "Two layers, not one"',
+  },
+  {
+    group: "imagery",
+    old: [
+      "GoogleEarthEnterpriseImageryProvider",
+      "SingleTileImageryProvider",
+      "GridImageryProvider",
+      "TileCoordinatesImageryProvider",
+    ],
+    nextLabel: "Not built yet: doesn't fit the interface as it stands",
+    status: "absent",
+    gap: "later",
+    note: "`ImageryProvider` fetches an image from a URL per tile. Google Earth Enterprise's tiles need decoding first, and these others have no URL per tile.",
+    source: 'Overall plan, section 13.21, "Two layers, not one"',
+  },
+  {
+    group: "imagery",
+    old: [
       "DiscardEmptyTileImagePolicy",
       "DiscardMissingTileImagePolicy",
       "GetFeatureInfoFormat",
-      "Google2DImageryProvider",
-      "GoogleEarthEnterpriseImageryProvider",
-      "GoogleEarthEnterpriseMapsProvider",
-      "GridImageryProvider",
       "ImageryLayerFeatureInfo",
-      "MapboxImageryProvider",
-      "MapboxStyleImageryProvider",
       "NeverTileDiscardPolicy",
-      "SingleTileImageryProvider",
-      "TileMapServiceImageryProvider",
       "SplitDirection",
-      "TileCoordinatesImageryProvider",
       "TileDiscardPolicy",
       "TileProviderError",
       "TimeDynamicImagery",
-      "WebMapServiceImageryProvider",
-      "WebMapTileServiceImageryProvider",
     ],
     status: "absent",
     gap: "unknown",
-    note: "Not built as named providers. Some services may work through `UrlTemplateImagery`, and that hasn't been checked for each one.",
+    note: "Features of 1.x's imagery layers, not sources: discard policies, picking features, split screen and time-dynamic imagery. No plan covers them.",
   },
 
   // ---------------------------------------------------- 3D Tiles and styling
@@ -549,6 +629,7 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "tiles",
     old: ["Color"],
+    nextLabel: "Numbers, and strings in styles",
     status: "changed",
     note: 'No `Color` class: colours are numbers, and strings in styles. CSS notation such as `#ff8800` is sRGB in both, so an opaque, unlit colour matches. Blending happens in linear, so `colorBlendMode` `"mix"` and `"replace"` and translucent colours differ, and `vec4` colours are linear in 2.0 and plain numbers in 1.x.',
     source: "Overall plan, section 13.18",
@@ -704,6 +785,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "PixelDatatype",
       "PixelFormat",
     ],
+    nextLabel: "WebGPU's own state, inside the engine",
     status: "absent",
     gap: "design",
     note: "These describe WebGL render state. 2.0 is core WebGPU only, with no WebGL fallback.",
@@ -770,6 +852,7 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "light",
     old: ["ImageBasedLighting", "DynamicEnvironmentMapManager"],
+    nextLabel: "The atmosphere's environment, in each `View`",
     status: "changed",
     note: "Views lit by their atmosphere use its own environment, so these settings have no direct equivalent.",
   },
@@ -796,8 +879,9 @@ export const API_ROWS: readonly ApiRow[] = [
       "PostProcessStageSampleMode",
     ],
     status: "absent",
-    gap: "unknown",
-    note: "No custom post-processing stages. FXAA and ambient occlusion are `View` settings, and no plan says whether stages will return.",
+    gap: "later",
+    note: "No custom post-processing stages yet. FXAA and ambient occlusion are `View` settings. The plan has a public interface for later, not designed, with those two built on it.",
+    source: "Overall plan, section 13.22",
   },
   {
     group: "light",
@@ -1016,6 +1100,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "CompositeEntityCollection",
       "Viewer.entities",
     ],
+    nextLabel: "Not built yet. For points: `PointSource`",
     status: "absent",
     gap: "later",
     note: "No Entity API. Apps built on entities have no direct path yet: for points, see `PointSource`.",
@@ -1682,6 +1767,7 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "events",
     old: ["ScreenSpaceEventHandler", "ScreenSpaceEventType"],
+    nextLabel: "The DOM's own events",
     status: "absent",
     gap: "design",
     note: "Use the DOM's own events on the canvas. The core touches no DOM, so it has no input handler to wrap them.",
@@ -1715,11 +1801,19 @@ export const API_ROWS: readonly ApiRow[] = [
   // ------------------------------------------------------- Requests and ion
   {
     group: "network",
-    old: ["Ion", "IonResource", "IonAssetElementService"],
+    old: ["Ion", "IonResource"],
     next: ["resolveIonAsset", "ionDefaults", "IonAsset", "IonOptions"],
     status: "changed",
     note: "Set `ionDefaults` or pass a token per call, as `accessToken`; `Ion.defaultAccessToken` doesn't exist.",
     snippet: "viewer",
+  },
+  {
+    group: "network",
+    old: ["IonAssetElementService"],
+    status: "absent",
+    gap: "later",
+    note: "Wrappers around ion's REST calls, such as element metadata, are noted for later in the ion module's plan.",
+    source: "Overall plan, section 13.21",
   },
   {
     group: "network",
@@ -1740,6 +1834,8 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "network",
     old: ["Request", "RequestScheduler", "RequestState", "RequestType"],
+    nextLabel:
+      "One scheduler inside the engine, with `maximumRequests` on a tileset",
     status: "changed",
     note: "One scheduler serves the globe and tilesets, with limits such as `maximumRequests` on the tileset. It's not a public object to configure.",
     source: "Overall plan, section 3",

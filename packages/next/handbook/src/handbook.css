@@ -1067,6 +1067,38 @@ pre {
   --api-bg: #2e1f52;
   --api-text: #cbb5ff;
 }
+.api-later {
+  --api-bg: #ffe6d0;
+  --api-text: #7a3500;
+}
+.api-unknown {
+  --api-bg: #e9ecef;
+  --api-text: #3d4650;
+}
+.api-design {
+  --api-bg: #fde2e1;
+  --api-text: #8f1d18;
+}
+.api-covered {
+  --api-bg: #d6f1f1;
+  --api-text: #0f5257;
+}
+[data-_sk-color-scheme="dark"] .api-later {
+  --api-bg: #44260c;
+  --api-text: #ffc48a;
+}
+[data-_sk-color-scheme="dark"] .api-unknown {
+  --api-bg: #2c3138;
+  --api-text: #c5ccd6;
+}
+[data-_sk-color-scheme="dark"] .api-design {
+  --api-bg: #4a1616;
+  --api-text: #ffb4ae;
+}
+[data-_sk-color-scheme="dark"] .api-covered {
+  --api-bg: #0f3a3d;
+  --api-text: #86e0e0;
+}
 .api-badge {
   display: inline-block;
   padding: 1px var(--stratakit-space-200);
@@ -1103,8 +1135,14 @@ pre {
 }
 .api-matrix tbody th,
 .api-matrix thead th:first-child {
+  min-inline-size: 11em;
   text-align: start;
-  white-space: nowrap;
+}
+.api-matrix thead th {
+  padding-inline: 2px;
+}
+.api-matrix thead .api-badge {
+  padding-inline: var(--stratakit-space-100);
 }
 .api-count {
   min-inline-size: 36px;
@@ -1187,7 +1225,10 @@ pre {
   inline-size: 22%;
 }
 .api-edge-absent {
-  --api-edge: #c8322b;
+  --api-edge: #d9742b;
+}
+.api-edge-covered {
+  --api-edge: #2a9d9d;
 }
 .api-edge-changed {
   --api-edge: #c98a00;
@@ -1223,8 +1264,8 @@ pre {
   font-size: var(--stratakit-font-size-caption-md);
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.api-none {
-  color: var(--stratakit-color-text-neutral-secondary);
+.section .api-next {
+  margin: 0 0 3px;
 }
 .api-more {
   margin-block-start: 3px;

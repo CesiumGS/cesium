@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { API_ROWS } from "./apiMap.ts";
+import { API_ROWS, isBreaking } from "./apiMap.ts";
 import { C } from "./parts.tsx";
 import { WEBGPU_USAGE } from "./sources.ts";
 
@@ -125,6 +125,17 @@ const GAPS: readonly {
     today: "Later: its own design round after plan 5 (plan 5 spec, section 3).",
   },
   {
+    what: "Post-process stages",
+    state: "planned",
+    today: (
+      <>
+        Later, not designed: a public interface, with FXAA and ambient occlusion
+        built on it (overall plan, section 13.22). Today those two are{" "}
+        <C>View</C> settings.
+      </>
+    ),
+  },
+  {
     what: "XR",
     state: "planned",
     today:
@@ -135,6 +146,18 @@ const GAPS: readonly {
     state: "unplanned",
     today:
       "Out of scope for the proof of concept, with no plan yet beyond that. The vector design in section 13.9 reads GeoJSON from a service, not as a data source.",
+  },
+  {
+    what: "Other imagery and terrain sources",
+    state: "unplanned",
+    today: (
+      <>
+        The overall plan's section 13.21 says how they'd go in, and to choose
+        from demand, each as an optional module. Some imagery works today
+        through <C>UrlTemplateImagery</C>, and an app can write its own{" "}
+        <C>ImageryProvider</C>. Terrain needs a decoder and a public seam first.
+      </>
+    ),
   },
   {
     what: "Primitive, Geometry and Appearance",
@@ -158,17 +181,12 @@ const GAPS: readonly {
       "Out of scope for the proof of concept. Section 13.9 mentions a draping plan, but none is written.",
   },
   {
-    what: "Post-process stages, particles, clouds and panoramas",
+    what: "Particles, clouds and panoramas",
     state: "unplanned",
-    today: (
-      <>
-        No plan covers these. FXAA and ambient occlusion are <C>View</C>{" "}
-        settings.
-      </>
-    ),
+    today: "No plan covers these.",
   },
   {
-    what: "Other imagery and terrain providers, I3S, voxels, clipping planes, time-dynamic content, and other widgets",
+    what: "I3S, voxels, clipping planes, time-dynamic content, and other widgets",
     state: "unplanned",
     today: (
       <>
@@ -256,10 +274,7 @@ const GIVEN_UP: readonly {
 ];
 
 export function Costs() {
-  const breaking = API_ROWS.filter(
-    (r) =>
-      r.status === "absent" || r.status === "changed" || r.status === "renamed",
-  ).length;
+  const breaking = API_ROWS.filter(isBreaking).length;
   return (
     <>
       <p>

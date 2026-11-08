@@ -24,6 +24,7 @@ import {
   readSurface,
 } from "../scripts/handbookData.mjs";
 import ts from "typescript";
+import { UrlTemplateImagery } from "../src/globe/ImageryProvider.ts";
 import { API_ROWS } from "../handbook/src/apiMap.ts";
 import { highlight } from "../handbook/src/highlight.ts";
 
@@ -334,4 +335,29 @@ it("reads this package's history from git", () => {
   expect(history.commits).toBeGreaterThan(0);
   expect(history.withAgent).toBeLessThanOrEqual(history.commits);
   expect(history.firstDate <= history.lastDate).toBe(true);
+});
+
+it("says something true on every row's 2.0 side", () => {
+  for (const row of API_ROWS) {
+    if (row.status !== "absent") {
+      expect(
+        (row.next?.length ?? 0) > 0 || row.nextLabel !== undefined,
+        row.note,
+      ).toBe(true);
+    }
+  }
+});
+
+it("builds the imagery URLs the comparison says a template covers", () => {
+  const url = (template: string) =>
+    new UrlTemplateImagery("test", template).tileUrl(3, 5, 7);
+  expect(url("https://tile.openstreetmap.org/{z}/{x}/{y}.png")).toBe(
+    "https://tile.openstreetmap.org/7/3/5.png",
+  );
+  expect(url("https://a.example/MapServer/tile/{z}/{y}/{x}")).toBe(
+    "https://a.example/MapServer/tile/7/5/3",
+  );
+  expect(
+    url("https://a.example/wmts?TileMatrix={z}&TileRow={y}&TileCol={x}"),
+  ).toBe("https://a.example/wmts?TileMatrix=7&TileRow=5&TileCol=3");
 });

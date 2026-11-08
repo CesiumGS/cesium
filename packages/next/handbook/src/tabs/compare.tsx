@@ -4,32 +4,61 @@ import {
   API_GROUPS,
   API_ROWS,
   type ApiGap,
+  isBreaking,
   type ApiRow,
-  type ApiStatus,
 } from "../apiMap.ts";
 import { count, data } from "../data.ts";
 import { C, CodeBlock, Note, Page, Section, Written } from "../parts.tsx";
 import { snippetText, TASKS } from "../snippets.ts";
 
-const STATUSES: { id: ApiStatus; label: string; mark: string }[] = [
-  { id: "absent", label: "Not in 2.0", mark: "×" },
-  { id: "changed", label: "Changed behaviour", mark: "≠" },
-  { id: "renamed", label: "Renamed", mark: "→" },
-  { id: "same", label: "Same", mark: "=" },
-  { id: "new", label: "New in 2.0", mark: "+" },
+/** A row's kind: its status, with "not in 2.0" split by why. */
+type Kind =
+  | "later"
+  | "unknown"
+  | "design"
+  | "changed"
+  | "renamed"
+  | "covered"
+  | "same"
+  | "new";
+
+const KINDS: { id: Kind; label: string; short: string; mark: string }[] = [
+  { id: "later", label: "Not built yet", short: "Not built yet", mark: "○" },
+  {
+    id: "unknown",
+    label: "Not built, no plan says",
+    short: "No plan says",
+    mark: "?",
+  },
+  { id: "design", label: "Gone by design", short: "By design", mark: "×" },
+  {
+    id: "changed",
+    label: "Changed behaviour",
+    short: "Changed",
+    mark: "≠",
+  },
+  { id: "renamed", label: "Renamed", short: "Renamed", mark: "→" },
+  {
+    id: "covered",
+    label: "Covered another way",
+    short: "Covered",
+    mark: "≈",
+  },
+  { id: "same", label: "Same", short: "Same", mark: "=" },
+  { id: "new", label: "New in 2.0", short: "New", mark: "+" },
 ];
 
-const GAPS: Record<ApiGap, string> = {
-  design: "By design",
+const kindOf = (row: ApiRow): Kind =>
+  row.status === "absent" ? (row.gap ?? "unknown") : row.status;
+
+const rowsOf = (kind: Kind) => API_ROWS.filter((r) => kindOf(r) === kind);
+
+/** What a row with no 2.0 names says on that side, when it says nothing else. */
+const NO_NAMES: Record<ApiGap, string> = {
   later: "Not built yet",
-  unknown: "Unknown",
+  unknown: "Not built, and no plan says",
+  design: "Gone by design",
 };
-
-/** What breaks code written against 1.x. */
-const BREAKING = new Set<ApiStatus>(["absent", "changed", "renamed"]);
-
-const rowsOf = (status: ApiStatus) =>
-  API_ROWS.filter((r) => r.status === status);
 
 /** A row's 1.x names, with its family spelled out. */
 function oldNames(row: ApiRow): string[] {
@@ -83,12 +112,11 @@ function share() {
   };
 }
 
-function Badge({ row }: { row: Pick<ApiRow, "status" | "gap"> }) {
-  const status = STATUSES.find((s) => s.id === row.status)!;
+function Badge({ row }: { row: ApiRow }) {
+  const kind = KINDS.find((k) => k.id === kindOf(row))!;
   return (
-    <span className={`api-badge api-${row.status}`}>
-      <span aria-hidden="true">{status.mark}</span> {status.label}
-      {row.gap ? `: ${GAPS[row.gap].toLowerCase()}` : ""}
+    <span className={`api-badge api-${kind.id}`}>
+      <span aria-hidden="true">{kind.mark}</span> {kind.label}
     </span>
   );
 }
@@ -134,9 +162,6 @@ function Names({
 }) {
   const shown = names.slice(0, 6);
   const rest = [...names.slice(6), ...(more ?? [])];
-  if (names.length === 0 && rest.length === 0) {
-    return <span className="api-none">None</span>;
-  }
   return (
     <>
       <span className="api-names-list">
@@ -162,6 +187,9 @@ function Row({ row }: { row: ApiRow }) {
   const named = row.old ?? [];
   const known = new Set(named.map((n) => n.split(".")[0]!));
   const family = oldNames(row).filter((n) => !known.has(n));
+  const nextWords =
+    row.nextLabel ??
+    (row.gap && (row.next ?? []).length === 0 ? NO_NAMES[row.gap] : undefined);
   return (
     <tr className={`api-row api-edge-${row.status}`}>
       <td data-label="1.x">
@@ -174,6 +202,11 @@ function Row({ row }: { row: ApiRow }) {
         />
       </td>
       <td data-label="2.0">
+        {nextWords ? (
+          <p className="api-next">
+            <Inline text={nextWords} />
+          </p>
+        ) : null}
         <Names
           names={row.next ?? []}
           more={row.supporting ?? []}
@@ -212,13 +245,11 @@ function Row({ row }: { row: ApiRow }) {
   );
 }
 
-type Filter = ApiStatus | "breaking" | "all";
+type Filter = Kind | "breaking" | "all";
 
 const matches = (row: ApiRow, filter: Filter) =>
   filter === "all" ||
-  (filter === "breaking" ? BREAKING.has(row.status) : row.status === filter);
-
-const ORDER: ApiStatus[] = ["absent", "changed", "renamed", "same", "new"];
+  (filter === "breaking" ? isBreaking(row) : kindOf(row) === filter);
 
 function Summary({
   filter,
@@ -229,8 +260,8 @@ function Summary({
   group: string;
   choose: (filter: Filter, group: string) => void;
 }) {
-  const cell = (id: string, status: ApiStatus) =>
-    API_ROWS.filter((r) => r.group === id && r.status === status).length;
+  const cell = (id: string, status: Kind) =>
+    API_ROWS.filter((r) => r.group === id && kindOf(r) === status).length;
   return (
     <div
       className="table-wrap"
@@ -242,10 +273,10 @@ function Summary({
         <thead>
           <tr>
             <th scope="col">Group</th>
-            {STATUSES.map((s) => (
+            {KINDS.map((s) => (
               <th scope="col" key={s.id}>
                 <span className={`api-badge api-${s.id}`}>
-                  <span aria-hidden="true">{s.mark}</span> {s.label}
+                  <span aria-hidden="true">{s.mark}</span> {s.short}
                 </span>
               </th>
             ))}
@@ -255,7 +286,7 @@ function Summary({
           {API_GROUPS.map((g) => (
             <tr key={g.id}>
               <th scope="row">{g.title}</th>
-              {STATUSES.map((s) => {
+              {KINDS.map((s) => {
                 const n = cell(g.id, s.id);
                 return (
                   <td key={s.id}>
@@ -337,11 +368,11 @@ export function Compare() {
           ].some((text) => text.toLowerCase().includes(q))),
     );
   }, [filter, group, query]);
-  const breaking = API_ROWS.filter((r) => BREAKING.has(r.status)).length;
+  const breaking = API_ROWS.filter(isBreaking).length;
   const percent = Math.round((100 * s.mapped) / s.total);
   const choices: { id: Filter; label: ReactNode; n: number }[] = [
     { id: "breaking", label: "Breaking", n: breaking },
-    ...STATUSES.map((st) => ({
+    ...KINDS.map((st) => ({
       id: st.id as Filter,
       label: (
         <>
@@ -362,7 +393,7 @@ export function Compare() {
           without changes. {count(breaking)} of the {count(API_ROWS.length)}{" "}
           areas below break it, and the overall shape changes: picks and queries
           are asynchronous, math is typed arrays, and Entities and DataSources
-          aren't there.
+          aren't built.
         </>
       }
     >
@@ -402,15 +433,20 @@ export function Compare() {
         <Note title="What the gaps mean">
           <ul>
             <li>
-              <strong>By design:</strong> a plan chooses not to have it.
+              <strong>Not built yet:</strong> a plan or spec leaves it for
+              later, or says how it would go in. That isn't a promise that it
+              will be built.
             </li>
             <li>
-              <strong>Not built yet:</strong> a plan or spec leaves it out of
-              this stage. That isn't a promise of when.
+              <strong>Not built, no plan says:</strong> it isn't in 2.0, and no
+              plan or spec says what happens to it.
             </li>
             <li>
-              <strong>Unknown:</strong> it isn't in 2.0, and no plan or spec
-              says what happens to it.
+              <strong>Gone by design:</strong> a plan chooses not to have it.
+            </li>
+            <li>
+              <strong>Covered another way:</strong> 2.0 can do this today, in a
+              different form. Your code still changes.
             </li>
           </ul>
         </Note>
@@ -478,9 +514,9 @@ export function Compare() {
                       {g.title}
                     </th>
                   </tr>
-                  {ORDER.flatMap((status) =>
+                  {KINDS.flatMap((kind) =>
                     shown.filter(
-                      (r) => r.group === g.id && r.status === status,
+                      (r) => r.group === g.id && kindOf(r) === kind.id,
                     ),
                   ).map((row) => (
                     <Row row={row} key={row.note} />
