@@ -278,7 +278,29 @@ async function buildLibrary(root) {
         ),
       }))
       .sort((a, b) => b.kb - a.kb);
-    return { entries, assets };
+    // What an app importing several entries loads: their shared chunks once.
+    const named = (id) =>
+      [...chunks.values()].find(
+        (c) =>
+          c.isEntry &&
+          c.name.replace(/^cesium-next-?/, "").replace(/^$/, "core") === id,
+      );
+    const combinations = [
+      ["core", "time"],
+      ["core", "measure"],
+    ].map((ids) => {
+      const eager = reach(
+        ids.map((id) => named(id).fileName),
+        (c) => c.imports,
+      );
+      const code = [...eager].map((c) => c.code).join("\n");
+      return {
+        id: ids.join("+"),
+        loadKb: kib(Buffer.byteLength(code)),
+        loadGzipKb: kib(gzipSync(code).length),
+      };
+    });
+    return { entries, assets, combinations };
   } finally {
     rmSync(outDir, { recursive: true, force: true });
   }
@@ -318,11 +340,12 @@ function readRuntimeAssets() {
       names: ["proj_capi.wasm", "proj.db"],
     },
     {
-      what: "Ephemeris packs, 2000 to 2050",
+      what: "Ephemeris packs, 2000 to 2050, and Earth orientation",
       dir: frames,
       names: [
         "planets-de440-2000-2050.pack",
         "moon-pa-de440-2000-2050.pack",
+        "EOP-All.csv",
       ],
     },
   ];

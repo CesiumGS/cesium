@@ -15,7 +15,7 @@ const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
 };
 
 type Layer =
-  "neutral" | "time" | "frames" | "proj" | "measure" | "widgets" | "core";
+  "utilities" | "time" | "frames" | "proj" | "measure" | "widgets" | "core";
 
 const TIME_FILES = new Set(
   [
@@ -39,7 +39,7 @@ function layerOf(file: string): Layer {
     file.startsWith("src/core/") ||
     file === "src/io/readWithProgress.ts"
   ) {
-    return "neutral";
+    return "utilities";
   }
   if (TIME_FILES.has(file)) {
     return "time";
@@ -72,12 +72,12 @@ const FRAMES_CORE_VALUES = new Set([
 
 /** The layers each layer may import (values and types). */
 const ALLOWED: Record<Exclude<Layer, "widgets">, readonly Layer[]> = {
-  neutral: ["neutral"],
-  core: ["core", "neutral"],
-  time: ["time", "neutral"],
-  frames: ["frames", "time", "neutral"],
-  proj: ["proj", "frames", "time", "core", "neutral"],
-  measure: ["measure", "proj", "frames", "time", "core", "neutral"],
+  utilities: ["utilities"],
+  core: ["core", "utilities"],
+  time: ["time", "utilities"],
+  frames: ["frames", "time", "utilities"],
+  proj: ["proj", "frames", "time", "core", "utilities"],
+  measure: ["measure", "proj", "frames", "time", "core", "utilities"],
 };
 
 interface Edge {
@@ -275,13 +275,13 @@ function publishedNames(): Published[] {
 
 /**
  * Each name an entry publishes that is declared outside its layer and the
- * neutral modules, as "<entry> → <declaring file> (<name>)".
+ * utilities, as "<entry> → <declaring file> (<name>)".
  */
 function entryLeaks(): string[] {
   const out = new Set<string>();
   for (const { entry, name, file } of publishedNames()) {
     const to = layerOf(file);
-    if (!file.startsWith("..") && to !== layerOf(entry) && to !== "neutral") {
+    if (!file.startsWith("..") && to !== layerOf(entry) && to !== "utilities") {
       out.add(`${entry} → ${file} (${name})`);
     }
   }
@@ -291,11 +291,11 @@ function entryLeaks(): string[] {
 it("the core imports nothing from time, frames, proj or measure", () => {
   expect(violations("core")).toEqual([]);
 });
-it("the neutral modules import only each other", () =>
-  expect(violations("neutral")).toEqual([]));
-it("time imports only time and neutral modules", () =>
+it("the utilities import only each other", () =>
+  expect(violations("utilities")).toEqual([]));
+it("time imports only time and utilities", () =>
   expect(violations("time")).toEqual([]));
-it("frames imports time, neutral modules, core types, Body and the resolver", () =>
+it("frames imports time, utilities, core types, Body and the resolver", () =>
   expect(violations("frames")).toEqual([]));
 it("proj and measure follow their rules", () => {
   expect(violations("proj")).toEqual([]);
@@ -357,7 +357,7 @@ it("finds imports of every kind and classifies them", () => {
   // The checker is only as good as its parser: a sample of known edges.
   expect(layerOf("src/time/erfa/xy06.ts")).toBe("frames");
   expect(layerOf("src/time/erfa/dtdb.ts")).toBe("time");
-  expect(layerOf("src/io/readWithProgress.ts")).toBe("neutral");
+  expect(layerOf("src/io/readWithProgress.ts")).toBe("utilities");
   expect(layerOf("src/io/ion.ts")).toBe("core");
   expect(edgesOf("src/time/Instant.ts")).toContainEqual({
     to: "src/time/leapSeconds.ts",

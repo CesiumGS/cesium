@@ -531,53 +531,6 @@ export function LoadingStages() {
   );
 }
 
-/** Each entry point's size, with what it imports. */
-export function BundleBars() {
-  const entries = ["core", "time", "frames", "proj", "measure"].flatMap((id) =>
-    data.bundles.library.entries.filter((e) => e.entry === id),
-  );
-  const max = Math.max(...entries.map((e) => e.loadKb));
-  return (
-    <div className="bars">
-      <div className="legend" aria-hidden="true">
-        <span>
-          <i />
-          Loaded with what it imports
-        </span>
-        <span>
-          <i className="alt" />
-          Gzipped
-        </span>
-      </div>
-      {entries.map((e) => (
-        <div key={e.entry}>
-          <div className="bar-group">{e.entry}</div>
-          <div className="bar-row">
-            <span>Loaded</span>
-            <span className="bar-track">
-              <span
-                className="bar"
-                style={{ inlineSize: `${(e.loadKb / max) * 70}%` }}
-              />
-              <span className="bar-value">{size(e.loadKb)}</span>
-            </span>
-          </div>
-          <div className="bar-row">
-            <span>Gzipped</span>
-            <span className="bar-track">
-              <span
-                className="bar alt"
-                style={{ inlineSize: `${(e.loadGzipKb / max) * 70}%` }}
-              />
-              <span className="bar-value">{size(e.loadGzipKb)}</span>
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 const VECTOR: BoardStep[] = [
   {
     id: "feed",

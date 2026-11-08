@@ -86,7 +86,11 @@ export interface HandbookData {
       lazy: Chunk[];
       clean: boolean;
     };
-    library: { entries: LibraryEntry[]; assets: Chunk[] };
+    library: {
+      entries: LibraryEntry[];
+      assets: Chunk[];
+      combinations: { id: string; loadKb: number; loadGzipKb: number }[];
+    };
   };
   runtime: {
     what: string;

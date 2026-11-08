@@ -1,6 +1,6 @@
-import { useId } from "react";
-import { count, data, libraryEntry, size, type LayerEdge } from "../data.ts";
-import { BundleBars, LoadingStages } from "../flows.tsx";
+import { data, size } from "../data.ts";
+import { LoadingStages } from "../flows.tsx";
+import { LoadStories, ModuleRules, ModuleStack } from "../modules.tsx";
 import {
   C,
   DataTable,
@@ -11,209 +11,13 @@ import {
   Written,
 } from "../parts.tsx";
 
-/** What each layer is, and how it's imported. Layers come from the test. */
-const ABOUT: Record<string, { path: string; what: string }> = {
-  core: {
-    path: "@cesium/next",
-    what: "Engine, World, View, Camera, tilesets, globe, vector layers, the camera layer. It sees time only through a clock interface.",
-  },
-  time: {
-    path: "@cesium/next/time",
-    what: "Instant, time scales, leap seconds, the scene clock, the analytic sun and Moon. An app with a timeline needs no frame tree.",
-  },
-  frames: {
-    path: "@cesium/next/frames",
-    what: "The frame tree, its catalog, providers on demand, trajectories, and the resolver over the tree.",
-  },
-  proj: {
-    path: "@cesium/next/proj",
-    what: "Engineering coordinates, PROJ and grids (loaded lazily), tileset placement, snapping, alignments.",
-  },
-  measure: {
-    path: "@cesium/next/measure",
-    what: "Light time, Doppler, geodesics, occultation, line of sight, and stated accuracy.",
-  },
-  widgets: {
-    path: "widgets/index.ts",
-    what: "Viewer and the inspector, kept apart from the engine as 1.x keeps its widgets. Not yet an entry point in package.json.",
-  },
-  neutral: {
-    path: "no entry point",
-    what: "Math, shared core utilities and the byte reader. Everything may import it, and it imports nothing else.",
-  },
+const PATHS: Record<string, string> = {
+  core: "@cesium/next",
+  time: "@cesium/next/time",
+  frames: "@cesium/next/frames",
+  proj: "@cesium/next/proj",
+  measure: "@cesium/next/measure",
 };
-
-const edgesBetween = (from: string, to: string): LayerEdge | undefined =>
-  data.layers.edges.find((e) => e.from === from && e.to === to);
-
-const edgeLabel = (e: LayerEdge) =>
-  e.typeOnly > 0 && e.value > 0
-    ? `${e.value} + ${e.typeOnly}`
-    : e.value > 0
-      ? `${e.value}`
-      : `${e.typeOnly} types`;
-
-const edgeWeight = (e: LayerEdge) =>
-  1 + Math.log2(1 + e.value + e.typeOnly / 2) * 0.55;
-
-/** The layer diagram. Its boxes are placed here; everything in them is read. */
-function LayerDiagram() {
-  const head = useId();
-  const stack = ["measure", "proj", "frames", "time"];
-  const X = 600;
-  const W = 300;
-  const H = 62;
-  const GAP = 34;
-  const TOP = 118;
-  const yOf = (i: number) => TOP + i * (H + GAP);
-  const coreBottom = yOf(stack.length - 1) + H;
-  const layer = (id: string) => data.layers.layers.find((l) => l.id === id);
-  const sub = (id: string) => {
-    const l = layer(id);
-    const load = libraryEntry(id);
-    return `${count(l?.lines ?? 0)} lines${load ? `, loads ${size(load.loadKb)}` : ""}`;
-  };
-  const edges: React.ReactNode[] = [];
-  const arrow = (
-    key: string,
-    d: string,
-    e: LayerEdge,
-    lx: number,
-    ly: number,
-  ) =>
-    edges.push(
-      <g key={key}>
-        <path
-          className="d-edge"
-          d={d}
-          strokeWidth={edgeWeight(e)}
-          strokeDasharray={e.value === 0 ? "5 4" : undefined}
-          markerEnd={`url(#${CSS.escape(head)})`}
-        />
-        <text className="d-edge-label" x={lx} y={ly} textAnchor="middle">
-          {edgeLabel(e)}
-        </text>
-      </g>,
-    );
-  // Into the core: each stack layer, straight left. Nothing comes back.
-  stack.forEach((id, i) => {
-    const e = edgesBetween(id, "core");
-    if (e) {
-      const y = yOf(i) + H / 2;
-      arrow(`${id}-core`, `M${X} ${y} L${348} ${y}`, e, 472, y - 6);
-    }
-  });
-  // Down the stack: straight between neighbours, an arc to the right otherwise.
-  stack.forEach((from, i) => {
-    stack.forEach((to, j) => {
-      const e = j > i ? edgesBetween(from, to) : undefined;
-      if (!e) {
-        return;
-      }
-      if (j === i + 1) {
-        const x = X + W / 2;
-        arrow(
-          `${from}-${to}`,
-          `M${x} ${yOf(i) + H} L${x} ${yOf(j) - 2}`,
-          e,
-          x + 44,
-          yOf(i) + H + GAP / 2 + 4,
-        );
-      } else {
-        const bulge = X + W + 26 + (j - i) * 24;
-        const y1 = yOf(i) + H / 2 + 8;
-        const y2 = yOf(j) + H / 2 - 8;
-        arrow(
-          `${from}-${to}`,
-          `M${X + W} ${y1} C${bulge} ${y1} ${bulge} ${y2} ${X + W + 4} ${y2}`,
-          e,
-          // The curve's rightmost point, where its label sits.
-          (X + W) * 0.25 + bulge * 0.75,
-          (y1 + y2) / 2 + 4,
-        );
-      }
-    });
-  });
-  // Widgets, across the top.
-  const wc = edgesBetween("widgets", "core");
-  if (wc) {
-    arrow("widgets-core", `M190 90 L190 ${TOP - 2}`, wc, 214, 108);
-  }
-  stack.forEach((to, j) => {
-    const e = edgesBetween("widgets", to);
-    if (e) {
-      const bulge = X + W + 90 + j * 26;
-      const y2 = yOf(j) + H / 2 + 14;
-      arrow(
-        `widgets-${to}`,
-        `M${X + W} 56 C${bulge} 56 ${bulge} ${y2} ${X + W + 4} ${y2}`,
-        e,
-        (X + W) * 0.25 + bulge * 0.75,
-        (56 + y2) / 2 + 4,
-      );
-    }
-  });
-  const box = (id: string, x: number, y: number, w: number, h: number) => (
-    <g key={id}>
-      <rect
-        className={id === "core" ? "d-box d-box-accent" : "d-box"}
-        x={x}
-        y={y}
-        width={w}
-        height={h}
-        rx={8}
-      />
-      <text className="d-title" x={x + 14} y={y + 24}>
-        {id}
-      </text>
-      <text className="d-text d-mono" x={x + 14} y={y + 42}>
-        {ABOUT[id]?.path ?? ""}
-      </text>
-      <text className="d-text" x={x + w - 14} y={y + 24} textAnchor="end">
-        {sub(id)}
-      </text>
-    </g>
-  );
-  const coreWords = [
-    "Nothing leaves the core toward",
-    "time, frames, proj or measure.",
-    "Reference frames reach it through",
-    "the frame resolver interface, and",
-    "time through the clock interface.",
-  ];
-  return (
-    <svg viewBox="0 0 1064 576" role="img" aria-labelledby={`${head}t`}>
-      <title id={`${head}t`}>
-        The engine's layers and the imports between them. Every arrow points
-        toward the core or down the stack; none leaves the core.
-      </title>
-      <defs>
-        <marker
-          id={head}
-          viewBox="0 0 8 8"
-          refX="7"
-          refY="4"
-          markerWidth="7"
-          markerHeight="7"
-          markerUnits="userSpaceOnUse"
-          orient="auto"
-        >
-          <path className="d-head" d="M0 0 L8 4 L0 8 z" />
-        </marker>
-      </defs>
-      {edges}
-      {box("widgets", 20, 22, X + W - 20, 68)}
-      {box("core", 20, TOP, 326, coreBottom - TOP)}
-      {coreWords.map((line, i) => (
-        <text className="d-text" x={34} y={TOP + 112 + i * 20} key={line}>
-          {line}
-        </text>
-      ))}
-      {stack.map((id, i) => box(id, X, yOf(i), W, H))}
-      {box("neutral", 20, coreBottom + 34, X + W - 20, 62)}
-    </svg>
-  );
-}
 
 /** Dynamic imports, and what makes each one load. */
 const TRIGGERS: Record<string, string> = {
@@ -270,77 +74,53 @@ export function Architecture() {
       status="current"
       lede={
         <>
-          One package with five entry points and a widgets module. A dependency
-          rule keeps the core free of time, reference frames, coordinates and
-          measurement, so an app pays only for what it imports, and a host
-          application can replace any of them.
+          One package, where only the core is required. Time, reference frames,
+          coordinates and measurement are optional modules on top of it, so an
+          app pays only for what it imports, and a host application can replace
+          any of them.
         </>
       }
     >
-      <Section title="Modules and how they depend on each other">
-        <Figure
-          scroll
-          label="Layer diagram"
-          caption="Every arrow points toward the core or down the stack, and none leaves the core: the boundary test fails on any import that would. An arrow means imports. Labels count them as value + type-only, and dashes mean types only. Arrows into neutral are left out, as every layer has one."
-        >
-          <LayerDiagram />
+      <Section title="The modules, and what each one costs">
+        <p>
+          Read the stack from the top: each block can use what's under it. Only
+          the core is always there. Everything marked optional stays out of your
+          app unless you import it.
+        </p>
+        <Figure caption="Sizes are uncompressed unless they say gzipped. They count shared code, so they don't add up.">
+          <ModuleStack />
         </Figure>
         <Generated
           from={
             <>
-              <C>test/importBoundary.test.ts</C>'s layer table, run over today's
-              imports
+              <C>test/importBoundary.test.ts</C>'s layers, a library build, the
+              bundle check and the setup store
             </>
           }
         />
-        <DataTable
-          label="Layers and their rules"
-          columns={[
-            { head: "Layer", cell: (r) => <strong>{r.id}</strong> },
-            { head: "What it holds", cell: (r) => ABOUT[r.id]?.what ?? "" },
-            {
-              head: "May import",
-              cell: (r) =>
-                r.id === "widgets"
-                  ? "anything"
-                  : (data.layers.allowed[r.id] ?? [])
-                      .filter((l) => l !== r.id)
-                      .join(", ") || "only itself",
-            },
-            {
-              head: "Files",
-              numeric: true,
-              cell: (r) => count(r.files),
-            },
-            {
-              head: "Lines",
-              numeric: true,
-              cell: (r) => count(r.lines),
-            },
-          ]}
-          rows={[
-            "core",
-            "time",
-            "frames",
-            "proj",
-            "measure",
-            "widgets",
-            "neutral",
-          ].flatMap((id) => data.layers.layers.filter((l) => l.id === id))}
-        />
+        <ModuleRules />
         <p>
-          One allowed exception: <C>frames</C> may import core types, and values
-          from only{" "}
+          Two details the stack leaves out. <C>frames</C> may import core types,
+          and values from only{" "}
           {data.layers.framesCoreValues.map((f, i) => (
             <span key={f}>
               {i > 0 ? " and " : ""}
               <C>{f}</C>
             </span>
           ))}
-          . The test assigns layers by file rather than by folder: the ERFA
-          series in <C>src/time/erfa/</C> count as <C>frames</C>, not{" "}
-          <C>time</C>.
+          . And <C>time</C> uses only utilities, not the core. The boundary test
+          fails on any import that breaks these rules.
         </p>
+      </Section>
+
+      <Section title="What your app loads">
+        <p>
+          What you pay for depends on what you import, and most of the weight
+          only arrives if it's used.
+        </p>
+        <Figure caption="Generated from a library build, the bundle check and the setup store on the machine that built this page. A Viewer also brings its widgets.">
+          <LoadStories />
+        </Figure>
       </Section>
 
       <Section title="What loads when">
@@ -371,13 +151,10 @@ export function Architecture() {
       </Section>
 
       <Section title="Bundle sizes">
-        <Figure caption="Each entry point with everything it imports. They share chunks, so these don't add up. Generated from a library build.">
-          <BundleBars />
-        </Figure>
         <DataTable
           label="Bundle sizes per entry point"
           columns={[
-            { head: "Entry point", cell: (r) => <C>{ABOUT[r.entry]?.path}</C> },
+            { head: "Entry point", cell: (r) => <C>{PATHS[r.entry]}</C> },
             {
               head: "Its own module",
               numeric: true,

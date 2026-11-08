@@ -44,16 +44,16 @@ it("runs the boundary test's table over the import graph", () => {
     "core",
     "frames",
     "measure",
-    "neutral",
     "proj",
     "time",
+    "utilities",
     "widgets",
   ]);
-  expect(allowed.core).toEqual(["core", "neutral"]);
-  // The rule the layer diagram draws: nothing leaves the core but to neutral.
-  expect(edges.filter((e) => e.from === "core" && e.to !== "neutral")).toEqual(
-    [],
-  );
+  expect(allowed.core).toEqual(["core", "utilities"]);
+  // The rule the layer diagram draws: nothing leaves the core but to utilities.
+  expect(
+    edges.filter((e) => e.from === "core" && e.to !== "utilities"),
+  ).toEqual([]);
   expect(dynamicImports.length).toBeGreaterThan(0);
 });
 

@@ -709,6 +709,141 @@ pre.snippet:focus-visible,
   margin: 0;
 }
 
+/* The module stack: each block can use what's under it. */
+.stack-map {
+  display: grid;
+  gap: var(--stratakit-space-200);
+}
+.stack-middle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+}
+.stack-optional {
+  display: grid;
+  gap: var(--stratakit-space-200);
+}
+.section .stack-rule {
+  margin: var(--stratakit-space-300) 0 0;
+  padding-block-start: var(--stratakit-space-200);
+  border-block-start: 1px solid var(--stratakit-color-border-accent-base);
+  max-inline-size: none;
+}
+.stack-arrow {
+  align-self: center;
+  text-align: center;
+  font-size: var(--stratakit-font-size-headline-md);
+  line-height: 1;
+}
+.module {
+  padding: var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 8px;
+  background: var(--stratakit-color-bg-neutral-base);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.45;
+}
+.module.optional {
+  border-style: dashed;
+  background: transparent;
+}
+.module.core {
+  background: var(--stratakit-color-bg-accent-muted);
+  border-color: var(--stratakit-color-border-accent-base);
+}
+.module header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.section .module h3 {
+  margin: 0;
+  font-size: var(--stratakit-font-size-headline-sm);
+}
+.module-tag {
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.section .module-for {
+  margin: var(--stratakit-space-100) 0 var(--stratakit-space-200);
+  max-inline-size: none;
+}
+.module dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--stratakit-space-300);
+  row-gap: var(--stratakit-space-100);
+  margin: 0;
+}
+.module dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.module dd {
+  margin: 0;
+}
+
+/* What an app loads. */
+.stories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--stratakit-space-500);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.45;
+}
+.section .story h3 {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-lg);
+}
+.section .story-imports {
+  margin: var(--stratakit-space-100) 0 var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.story-bar {
+  display: flex;
+  block-size: 14px;
+  margin-block-end: var(--stratakit-space-200);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--stratakit-color-bg-neutral-base);
+}
+.story-bar .startup,
+.story-key .startup {
+  background: var(--stratakit-color-icon-accent-base);
+  min-inline-size: 3px;
+}
+.story-bar .later,
+.story-key .later {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--stratakit-color-icon-neutral-secondary) 0 2px,
+    transparent 2px 5px
+  );
+}
+.story dl {
+  margin: 0;
+}
+.story dt {
+  font-weight: 600;
+  margin-block-start: var(--stratakit-space-100);
+}
+.story dd {
+  margin: 0;
+}
+.section .story-key {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-inline-size: none;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.story-key span {
+  display: inline-block;
+  inline-size: 18px;
+  block-size: 10px;
+  margin-inline-start: var(--stratakit-space-200);
+  vertical-align: baseline;
+}
+
 /* The seams' table. */
 .seams {
   border-collapse: collapse;
@@ -818,6 +953,12 @@ pre.snippet:focus-visible,
 /* ------------------------------------------------------------ a phone, etc */
 
 @media (max-width: 900px) {
+  .stack-middle {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stack-arrow {
+    transform: rotate(90deg);
+  }
   .board {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--stratakit-space-300);
