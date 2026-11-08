@@ -281,7 +281,11 @@ number in a headline row is not repeated in its Details), no e-notation.
   where they are: on the ellipsoid, a NAVD88 design floated by the geoid's
   height (about 32 m in California, 46 m in London). Terrain is clipped
   under each site's footprint and the corridor's strip (F11), so the
-  ground never pokes through a flat design surface.
+  ground never pokes through a flat design surface. (The corridor's
+  profile is synthetic and doesn't follow the ground: where it floats over
+  the Livermore valley, its clipped strip shows as a slot in the ground
+  below it. A profile that follows the terrain is the generator's to
+  make.)
 
 ### The ghost (F4)
 
