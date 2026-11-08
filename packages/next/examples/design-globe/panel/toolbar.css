@@ -185,6 +185,26 @@
   border: 0;
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/* A phone's view: the toolbar's buttons wrap rather than run off its edge. */
+/*
+ * A narrow view: the inspector's line spans the top, so the rail starts
+ * under the toolbar (one row of buttons, or two where they wrap on a
+ * phone, rather than running off the view's edge).
+ */
+@container dg-hud (max-width: 600px) {
+  .dg-hud-rail:not(.aside) {
+    inset-block-start: 92px;
+  }
+}
+@container dg-hud (max-width: 420px) {
+  .dg-toolbar > :first-child {
+    flex-wrap: wrap;
+    max-inline-size: 100%;
+  }
+  .dg-hud-rail:not(.aside) {
+    inset-block-start: 128px;
+  }
+}
 @container dg-hud (max-width: 560px) {
   .dg-cc-blocks {
     grid-template-columns: max-content;

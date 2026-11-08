@@ -443,6 +443,25 @@
     max-inline-size: calc(100% - 24px);
   }
 }
+/* A phone's view: the tour's card as small as its sentence allows. */
+@container dg-hud (max-width: 420px) {
+  .dg-tour {
+    inline-size: calc(100% - 16px);
+    gap: var(--stratakit-space-100);
+    padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  }
+  .dg-tour-title,
+  .dg-tour-narration {
+    font-size: var(--stratakit-font-size-body-sm);
+    line-height: var(--stratakit-line-height-body-sm);
+  }
+  .dg-tour-narration {
+    min-block-size: 0;
+  }
+  .dg-tour-actions {
+    margin-block-start: 0;
+  }
+}
 
 /* A measured pair's heading takes focus after "Measure it" (page I3). */
 .dg-check-group-title:focus {
