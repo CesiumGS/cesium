@@ -8340,6 +8340,22 @@ Not designed. A question to take up in its own session, then add to this plan: e
 
 **Vector data and GIS sources (owner, 2026-11-08).** Part of the same brainstorm, for the vector rendering engine. Vector data commonly comes from databases such as PostGIS and similar. How would editing vectors interact with the engine, with ion and with 3D Tiles? The same question applies to MVT servers that stream, to WMS, and to the other common GIS streaming protocols: which of them the engine should read, what happens to an edit when the data is tiled or served by someone else, and how updates reach a view that's already drawing them.
 
+### 13.21 Ion as a swappable module (owner, 2026-11-08)
+
+**Decided to plan.** Ion stays the easiest path and the Viewer's default, but it's one implementation behind an interface, so other tile servers can be swapped in. Not built. Fits the layers in §13.17, and goes in after the big file split or as part of it.
+
+**Today (grep counts on 2026-11-08).** Tile streaming already takes a URL and headers, so a server of plain 3D Tiles works now. Ion appears in `src/io/ion.ts`, `src/globe/ImageryProvider.ts` (`IonTmsImagery`, `BingImagery.fromIon`), `widgets/Viewer.ts` (29 lines, including the `{ ion: id }` source, default terrain and imagery, and credits) and the Moon map loaders. Core imports `resolveUri` from `ion.ts`, which is generic and should move.
+
+**The missing pieces.**
+
+- **A content source interface in core:** an asset reference goes in; where it lives, how to authenticate, what credit it needs and what kind of content it is come out.
+- **Credentials that can be renewed:** headers are fixed for a tileset's lifetime, and nothing was found that retries after a 401, so a long session can lose access when a token expires. Worth fixing for ion too.
+- **`@cesium/next/ion`:** the ion implementation, plus `IonTmsImagery`, the Bing lookup and Moon loading. `test/importBoundary.test.ts` stops core importing it.
+- **The Viewer:** `new Viewer()` still gets terrain and imagery from ion with no setup, loaded on demand, and an application can pass its own source.
+- **`src/io/itwin.ts`:** a second implementation, to test that the interface isn't shaped around ion.
+
+**Later: ion's public REST API.** Wrappers around ion's API calls, separate from what the renderer needs to fetch tiles. 1.147 added wrappers for ion's newly public iModel (BIM and CAD) calls, which 2.0 should cover here. Check 1.147's source and `CHANGES.md` when this work starts. Name the module for what it does, such as an ion client. The GIS protocols question in §13.20 builds on the same content source interface.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
