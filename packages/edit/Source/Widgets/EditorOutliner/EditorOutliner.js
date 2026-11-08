@@ -18,13 +18,6 @@ import EditorOutlinerViewModel from "./EditorOutlinerViewModel.js";
  */
 
 /**
- * The indentation of each level of the tree, in pixels.
- *
- * @ignore
- */
-const INDENT_WIDTH = 16;
-
-/**
  * Calls a command; its generated type isn't callable.
  *
  * @param {Command} command The command.
@@ -226,9 +219,18 @@ class EditorOutliner {
          'cesium-editor-outliner-row-active': active,
          'cesium-editor-outliner-row-disabled': $parent.isDisabled($data),
          'cesium-editor-outliner-row-focused': $data === $parent.viewModel.focusedRow
-       },
-       style: { paddingLeft: $parent.indent(depth) }`,
+       }`,
     );
+
+    // One guide per level of depth indents the row and draws a line down
+    // from the arrow of the ancestor at that level.
+    const guides = document.createElement("span");
+    guides.className = "cesium-editor-outliner-guides";
+    guides.setAttribute("aria-hidden", "true");
+    guides.setAttribute("data-bind", "foreach: $parent.levels(depth)");
+    const guide = document.createElement("span");
+    guide.className = "cesium-editor-outliner-guide";
+    guides.appendChild(guide);
 
     const expander = document.createElement("span");
     expander.className = "cesium-editor-outliner-expander";
@@ -246,6 +248,7 @@ class EditorOutliner {
     label.className = "cesium-editor-outliner-label";
     label.setAttribute("data-bind", "text: label, attr: { title: label }");
 
+    row.appendChild(guides);
     row.appendChild(expander);
     row.appendChild(label);
     wrapper.appendChild(row);
@@ -264,8 +267,11 @@ class EditorOutliner {
       {
         viewModel,
         isDisabled,
-        /** @param {number} depth */
-        indent: (depth) => `${depth * INDENT_WIDTH}px`,
+        /**
+         * @param {number} depth
+         * @returns {number[]} One entry per level of depth.
+         */
+        levels: (depth) => Array.from({ length: depth }, (_, level) => level),
         /** @param {number} index */
         rowId: (index) => this.#getRowId(index),
         focusedRowId: () => {
