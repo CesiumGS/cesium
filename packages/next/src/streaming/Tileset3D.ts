@@ -131,6 +131,13 @@ const CASTER_PRESSURE = 0.75;
  * becomes twice that absence, up to `COLD_AGE_MAX_MS`. So the worst a view
  * pays is one return after each longer absence, and stale cold tiles always
  * give way in the end.
+ *
+ * The age stops growing at `COLD_AGE_MAX_MS`. A view that returns after an
+ * absence longer than that can't raise it further, so every such return can
+ * cost reloads of what casters took in the meantime (a third to under half of
+ * the view's requests, on a cache that casters off would have kept). The cap
+ * is chosen: with none, casters would get less room for longer after each
+ * long return.
  */
 const COLD_AGE_MS = 8_000;
 const COLD_AGE_MAX_MS = 60_000;
@@ -1653,7 +1660,11 @@ export class Tileset3D implements TileTree {
       }
     }
     const { fraction } = this.world.pressure();
-    this.casterLoad = fraction <= CASTER_PRESSURE && !this.viewCapacityWait;
+    this.casterLoad =
+      fraction <= CASTER_PRESSURE &&
+      !this.engine.tilesets.some(
+        (other) => other.world === this.world && other.viewCapacityWait,
+      );
     return {
       bytes: Math.max(0, this.cacheBytes - this.viewBytes - held),
       load: this.casterLoad,
@@ -2108,6 +2119,27 @@ export class Tileset3D implements TileTree {
   private evict(frame: number): void {
     // This frame's touches and loads, in the order eviction walks.
     this.order.seal(frame);
+    // Another tileset's view tile is waiting for a pool: casters yield it.
+    if (
+      this.casterResident > 0 &&
+      this.engine.tilesets.some(
+        (other) =>
+          other !== this &&
+          other.world === this.world &&
+          other.viewCapacityWait,
+      )
+    ) {
+      let count = 0;
+      for (const tile of this.order.coldest(frame)) {
+        if (count >= this.uploadsPerFrame) {
+          break;
+        }
+        if (tile.castsOnly) {
+          this.unload(tile);
+          count++;
+        }
+      }
+    }
     // A world pool at capacity (an upload's CapacityError), or nearly so
     // (World.pressure), evicts as being over the byte budget does, until
     // uploads fit again.
@@ -2191,9 +2223,11 @@ export class Tileset3D implements TileTree {
     if (recent.length > CASTER_BYTES_WINDOW) {
       recent.shift();
     }
-    this.casterBytesEstimate = [...recent].sort((a, b) => a - b)[
-      recent.length >> 1
-    ]!;
+    // Three first: one huge tile, or one that fails, isn't what casters cost.
+    this.casterBytesEstimate =
+      recent.length < 3
+        ? 0
+        : [...recent].sort((a, b) => a - b)[recent.length >> 1]!;
   }
 
   /**

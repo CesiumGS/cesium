@@ -521,6 +521,37 @@ describe("casters on the on-demand loop", () => {
       s.remove();
     });
 
+    it("a cache full to the byte still sets the timer, and the roof loads when the cold tile is stale", async () => {
+      // The view's floor and one cold floor take the cache exactly.
+      const s = await scene({
+        root: box(0, 4000, 0, [5000, 9000, 5000], 1000, undefined, [
+          floor(),
+          box(0, 4000, 20, [1, 10, 10], 0, "coldA.glb"),
+          roof(),
+        ]),
+        bytes: (name) => (name === "roof.glb" ? 20 : 100) * MiB,
+        latency: 2,
+        size: [640, 480],
+        // Each 100 MiB tile also holds 2,888 bytes of geometry.
+        options: { cacheBytes: 2 * (100 * MiB + 2888) },
+      });
+      const [, coldA, roofTile] = s.tiles as [Tile, Tile, Tile];
+      s.look(s.view, 2, 4000, 0, 0, 0);
+      await ticks(30);
+      s.look(s.view, 2, 0, 0, 0, 0);
+      await ticks(60);
+      expect(s.stats.bytes).toBe(s.internals.cacheBytes);
+      expect(roofTile.state).toBe("unloaded");
+      expect(coldA.state).toBe("ready");
+      expect(asleep()).toBe(true);
+      await ticks(Math.ceil(9_000 / TICK_MS));
+      expect(roofTile.state).toBe("ready");
+      expect(roofTile.casterMask).not.toBe(0);
+      expect(coldA.state).toBe("unloaded");
+      expect(await untilAsleep(120)).toBeGreaterThanOrEqual(0);
+      s.remove();
+    });
+
     it("a loop waiting on cold tiles only ticks now and then", async () => {
       const s = await coldScene();
       s.look(s.view, 2, 4000, 0, 0, 0);
@@ -620,6 +651,33 @@ describe("casters on the on-demand loop", () => {
       s.remove();
     });
 
+    it("holds its scale on a slow orbit with little room, instead of flipping", async () => {
+      // Without a memory of the last scale, this changed 19 times in 60 s.
+      const s = await scene({ root: city(), bytes: tileBytes(1) });
+      let angle = 0;
+      const place = () => {
+        const y = 1500 * Math.sin(angle);
+        const z = -1500 * Math.cos(angle);
+        s.look(s.view, 150, y, z, (Math.atan2(-y, -z) * 180) / Math.PI, -6);
+      };
+      place();
+      await ticks(600);
+      let last = s.stats.casterScale;
+      let changes = 0;
+      for (let i = 0; i < 3600; i++) {
+        angle += Math.PI / 180 / 60;
+        place();
+        await tick();
+        if (s.stats.casterScale !== last) {
+          changes++;
+          last = s.stats.casterScale;
+        }
+      }
+      expect(changes).toBeLessThanOrEqual(6);
+      expect(s.stats.casters).toBeGreaterThan(0);
+      s.remove();
+    }, 60_000);
+
     it("doesn't stay coarse in continuous mode either", async () => {
       engine.renderMode = "continuous";
       const s = await scene({ root: city(), bytes: tileBytes(0.75) });
@@ -629,6 +687,66 @@ describe("casters on the on-demand loop", () => {
       expect(s.stats.casterBytes).toBeGreaterThan(100 * MiB);
       s.remove();
     });
+  });
+
+  describe("the first casters, before their size is known", () => {
+    /** A floor, one nearest caster, and six smaller ones behind it. */
+    async function withNearest(
+      nearest: string,
+      bytes: (name: string) => number,
+    ) {
+      const others = [1, 2, 3, 4, 5, 6].map(roof);
+      const s = await scene({
+        root: group([
+          floor(),
+          box(15, 0, -5, [1, 5, 5], 0, nearest),
+          ...others,
+        ]),
+        bytes,
+        latency: 2,
+        size: [640, 480],
+      });
+      return { ...s, others: s.tiles.slice(2) };
+    }
+
+    it("a nearest caster that fails doesn't stop the others", async () => {
+      const load = vi.mocked(engine.loadGltf);
+      const impl = load.getMockImplementation()!;
+      load.mockImplementation(async (url, options) => {
+        if (String(url).endsWith("bad.glb")) {
+          throw new Error("HTTP 404");
+        }
+        return impl(url, options);
+      });
+      const s = await withNearest("bad.glb", tileBytes(1));
+      s.look(s.view, 2, 0, 0, 0, 0);
+      await ticks(300);
+      expect(s.tiles[1]!.state).toBe("failed");
+      expect(s.others.filter((t) => t.casterMask !== 0)).toHaveLength(6);
+      expect(asleep()).toBe(true);
+      s.remove();
+    });
+
+    it.each([
+      ["600 MiB, over the cache", 600, 10],
+      ["300 MiB, with a floor of 300 MiB", 300, 300],
+    ])(
+      "a nearest caster of %s doesn't stop the others",
+      async (_, huge, floorSize) => {
+        const s = await withNearest("huge.glb", (name) =>
+          name === "huge.glb"
+            ? huge * MiB
+            : name === "floor.glb"
+              ? floorSize * MiB
+              : MiB,
+        );
+        s.look(s.view, 2, 0, 0, 0, 0);
+        await ticks(300);
+        expect(s.others.filter((t) => t.casterMask !== 0)).toHaveLength(6);
+        expect(asleep()).toBe(true);
+        s.remove();
+      },
+    );
   });
 
   describe("small world pools", () => {
@@ -651,6 +769,33 @@ describe("casters on the on-demand loop", () => {
       await ticks(12);
       expect(sideTile.viewMask).not.toBe(0);
       expect(await untilAsleep(120)).toBeGreaterThanOrEqual(0);
+      s.remove();
+    });
+
+    it("a view's tile in one tileset isn't held back by casters of another", async () => {
+      const s = await scene({
+        root: group([floor(), box(0, 60, 20, [1, 10, 10], 0, "side.glb")]),
+        bytes: tileBytes(1),
+        latency: 2,
+        size: [640, 480],
+        world: { maxDraws: 8, maxTransforms: 64 },
+        drawsOf: (name) => (name === "side.glb" ? 3 : 1),
+      });
+      const b = await addTileset(
+        s.world,
+        "b",
+        group([0, 1, 2, 3, 4, 5].map(roof)),
+      );
+      s.look(s.view, 2, 0, 0, 0, 0);
+      await ticks(120);
+      expect(b.stats.casters).toBeGreaterThan(0);
+      const sideTile = s.tiles[1]!;
+      s.look(s.view, 2, 0, 0, (Math.atan2(60, 20) * 180) / Math.PI, 0);
+      await ticks(120);
+      // The 30-tick capacity wait, then the casters give a pool slot back.
+      expect(sideTile.viewMask).not.toBe(0);
+      expect(await untilAsleep(300)).toBeGreaterThanOrEqual(0);
+      engine.removeTileset(b);
       s.remove();
     });
 
@@ -1027,6 +1172,17 @@ describe("casters on the on-demand loop", () => {
       },
       30_000,
     );
+
+    it("a return after longer than the cold age cap can cost reloads: a recorded limit", async () => {
+      // The cap is 60 s. A view that comes back after more than that can't
+      // raise the age, so each return reloads what casters took.
+      const on = await run(2, 0.75, flips(4), 70 * 60);
+      const off = await run(0, 0.75, flips(4), 70 * 60);
+      expect(on.viewRequests).toBeGreaterThan(off.viewRequests);
+      // What views draw is the same.
+      expect(on.selected).toEqual(off.selected);
+      expect(on.threshold).toBe(off.threshold);
+    }, 120_000);
 
     it("in forward flight", async () => {
       let z = -4000;

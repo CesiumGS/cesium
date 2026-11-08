@@ -141,6 +141,7 @@ export class BudgetedSelection extends StepwiseSelection {
   protected selectsCasters = true;
   /** Each view's last `select`: the caster walk needn't test its tiles again. */
   private readonly viewPasses = new Map<number, number>();
+  private readonly heldScale = new Map<number, number>();
 
   constructor(options: BudgetedOptions = {}) {
     super(options);
@@ -333,7 +334,11 @@ export class BudgetedSelection extends StepwiseSelection {
         }
         if (loaded) {
           candidates.push({ tile, distance, wanted: false, bytes: tile.bytes });
-        } else if (tile.renderable && room.pressure < tile.noFitAt) {
+        } else if (
+          tile.renderable &&
+          tile.state !== "failed" &&
+          room.pressure < tile.noFitAt
+        ) {
           candidates.push({
             tile,
             distance,
@@ -371,26 +376,34 @@ export class BudgetedSelection extends StepwiseSelection {
         tile.viewedAt > room.heldSince)
         ? 0
         : bytes;
-    const fits = (): boolean => {
+    const fits = (share = 1): boolean => {
       let used = 0;
+      const limit = room.bytes * share;
       const standIns = new Set<Tile>();
       for (const c of candidates) {
         const bytes = cost(c.tile, c.bytes);
         // Too large at any scale: it stays out, and needn't coarsen the rest.
         if (bytes <= room.bytes) {
           used += bytes;
+        } else if (share < 1) {
+          return false; // going finer needs room to spare, not nothing that fits
         }
         if (c.standIn && !standIns.has(c.standIn)) {
           standIns.add(c.standIn);
           used += cost(c.standIn, c.standIn.bytes);
         }
-        if (used > room.bytes) {
+        if (used > limit) {
           return false;
         }
       }
       return true;
     };
     const maxScale = this.casterErrorScale * CASTER_SCALE_MAX;
+    const base = this.casterErrorScale;
+    const held = room.load
+      ? Math.min(this.heldScale.get(view.id) ?? base, maxScale)
+      : base;
+    scale = Math.max(held, base);
     for (;;) {
       candidates = [];
       visit(root, undefined, 0);
@@ -399,6 +412,21 @@ export class BudgetedSelection extends StepwiseSelection {
       }
       scale *= CASTER_COARSEN;
     }
+    // Finer only with a quarter of the room to spare.
+    if (room.load && scale === held) {
+      while (scale > base) {
+        const saved = candidates;
+        scale /= CASTER_COARSEN;
+        candidates = [];
+        visit(root, undefined, 0);
+        if (!fits(0.75)) {
+          scale *= CASTER_COARSEN;
+          candidates = saved;
+          break;
+        }
+      }
+    }
+    this.heldScale.set(view.id, scale);
     room.scale = Math.max(room.scale, scale / this.casterErrorScale);
     candidates.sort((a, b) => a.distance - b.distance);
     const casters = new Set<Tile>();
@@ -429,6 +457,8 @@ export class BudgetedSelection extends StepwiseSelection {
         // No size yet: the first one's size decides.
         const probe = c.bytes === 0 && !c.tile.external;
         if (room.bytes <= 0 || (probe && sizeKnown)) {
+          // Room may open as cold tiles go stale: the timer must know.
+          room.denied += room.bytes <= 0 ? 1 : 0;
           if (c.standIn && admit(c.standIn, c.standIn.bytes)) {
             casters.add(c.standIn);
           }
