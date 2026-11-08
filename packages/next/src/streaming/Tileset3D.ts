@@ -26,19 +26,8 @@ import type { FeatureStyle } from "../scene/FeatureStyle.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
-import {
-  castTerrainRay,
-  TERRAIN_BAND,
-  type TerrainRayTarget,
-  type TerrainRayTile,
-} from "../globe/terrainRay.ts";
-import {
-  compileTerrainClip,
-  packClipShape,
-  type TerrainClip,
-  type TerrainClipRegion,
-  type TerrainClips,
-} from "../globe/terrainClip.ts";
+import type { TerrainRayTarget, TerrainRayTile } from "../globe/terrainRay.ts";
+import { rectanglesOverlap, type TerrainClips } from "../globe/terrainClip.ts";
 import {
   StepwiseSelection,
   REQUEST_PURPOSES,
@@ -160,8 +149,8 @@ export interface TileSource {
   /** Called with each rectangle whose heights changed (terrain sources). */
   readonly heightListeners?: Set<(rectangle: Rectangle) => void>;
   /**
-   * @internal Where the terrain isn't drawn, or is translucent (terrain
-   * sources, `addTerrainClip`, `addTerrainTranslucency`).
+   * @internal Where the terrain isn't drawn, or is drawn at an opacity (terrain
+   * sources, `Globe.terrain.addRegion`).
    */
   readonly clips?: TerrainClips;
   /** @internal The tile a ray target's patch drew, while loaded. */
@@ -518,392 +507,26 @@ export class Tileset3D implements TileTree {
     }
   }
 
-  /** True for terrain and the ellipsoid (a globe source), not 3D Tiles. */
-  get terrain(): boolean {
+  /**
+   * True for a globe (`Engine.addTerrain`, `addEllipsoid`: terrain and the
+   * ellipsoid, which are `Globe`s), false for 3D Tiles.
+   */
+  get isGlobe(): boolean {
     return this.source !== undefined;
   }
 
   /**
-   * Clips the globe's terrain (terrain and the ellipsoid; not 3D Tiles):
-   * inside `region` (a rectangle or a simple polygon, geodetic degrees on
-   * the globe's body) the terrain isn't drawn, so content placed there
-   * shows instead. Edges are exact per pixel. Returns the clip, for
-   * `removeTerrainClip`. Throws a `TerrainClipError`, saying why and what
-   * to change, for a region it can't clip: not a simple polygon; reaching
-   * within 5° of a pole, or going round one; spanning more than 10° from
-   * its middle; more than 1,024 vertices (`MAX_TERRAIN_CLIP_VERTICES`);
-   * edges crowded together (more than 32 in one cell of its grid); with
-   * the regions it overlaps, more than 128 edges for a fragment to test
-   * (`MAX_CLIP_FRAGMENT_EDGES`); past the clip blocks the world sets aside
-   * for regions (`WorldOptions.maxClipBlocks`); or past 32 regions in the
-   * world (`MAX_TERRAIN_CLIPS`). Also throws on a destroyed globe.
-   *
-   * Clipped terrain is a hole for every query, as it is on screen: picks
-   * (`View.pick`) hit what shows through; `terrainRayTarget` rays
-   * (`terrainLineOfSight`) pass through it; `sampleHeight`,
-   * `surfaceHeight` and `exactHeight` are undefined there, and so is the
-   * terrain's part of `Engine.sampleHeightMostDetailed`. Height clamping
-   * follows: content clamped inside a clip stands on the tilesets with
-   * collision there (`clampToGround`, `clampTo3DTiles`); with only terrain
-   * to stand on (`clampToTerrain`) it keeps the height it has. GPU ray
-   * casts (`World.castRays`) don't see clips: a terrain with
-   * `enableCollision` is still hit there by them.
-   *
-   * Costs nothing without regions, or with none on screen. Only the tiles
-   * a region touches test it, per fragment, and only against the few edges
-   * of their place in the region's grid, so a long corridor strip costs
-   * only where it runs. Wakes the frame loop.
-   *
-   * Regions are geodetic on the Earth, evaluated in the globe's anchor
-   * (`anchor`, the Earth's): a view's camera there (its body camera) is
-   * what the shader compares fragments with, so clips stay put wherever a
-   * view's render space places the Earth.
-   */
-  addTerrainClip(region: TerrainClipRegion): TerrainClip {
-    const clips = this.source?.clips;
-    if (!clips) {
-      throw new Error(
-        "Tileset3D.addTerrainClip: only a globe (Engine.addTerrain, addEllipsoid) has terrain to clip.",
-      );
-    }
-    if (this.destroyed) {
-      throw new Error(
-        "Tileset3D.addTerrainClip: the globe was destroyed; add clips to the globe that replaced it.",
-      );
-    }
-    const shape = compileTerrainClip(region, clips.ellipsoid);
-    clips.checkBudget(shape);
-    const slot = this.world.addTerrainClipRegion(packClipShape(shape));
-    const clip: TerrainClip = Object.freeze({ region: frozenRegion(region) });
-    const entry = { clip, shape, slot };
-    clips.add(entry);
-    this.terrainClipsChanged(clips.boundsOf(entry));
-    return clip;
-  }
-
-  /** Draws the terrain inside `clip` again (`addTerrainClip`). */
-  removeTerrainClip(clip: TerrainClip): void {
-    const clips = this.source?.clips;
-    const entry = clips?.remove(clip);
-    if (!clips || !entry) {
-      return;
-    }
-    this.world.removeTerrainClipRegion(entry.slot);
-    this.terrainClipsChanged(clips.boundsOf(entry));
-  }
-
-  /** The terrain clips in effect, oldest first (`addTerrainClip`). */
-  get terrainClips(): readonly TerrainClip[] {
-    return (this.source?.clips?.clips.map((e) => e.clip) ??
-      []) as TerrainClip[];
-  }
-
-  /**
-   * Makes the globe's terrain translucent inside `region` (a rectangle or
-   * a simple polygon, geodetic degrees on the globe's body, as
-   * `addTerrainClip` takes), at `opacity` (above 0, below 1), so what lies
-   * under the ground there (a tunnel, a culvert, a utility) shows through
-   * it in place. Returns the region, for `removeTerrainTranslucency`.
-   * Throws as `addTerrainClip` does for a region it can't take (the same
-   * limits, and the same 32 slots and edge budget, shared with clips),
-   * and a RangeError for an opacity outside (0, 1).
-   *
-   * Drawing: the translucent terrain is a blended surface like any other,
-   * ordered with the rest by the view's translucency (`View.translucency`)
-   * and tested against the opaque depth per sample, so content under it
-   * shows at its true depth and still hides what lies behind it. Its tile
-   * skirts are hidden where it is translucent. Where regions overlap, the
-   * least opacity wins; a clip (`addTerrainClip`) wins over all. Inside
-   * it the terrain casts no shadow (as glass) and takes no ambient
-   * occlusion. Only the tiles a region touches change: elsewhere the
-   * terrain draws exactly as without it.
-   *
-   * Queries are unaffected: translucent terrain is ground for
-   * `sampleHeight`, `surfaceHeight`, `exactHeight`, terrain rays and lines
-   * of sight, and height clamping (height captures draw it opaque). Picks
-   * (`View.pick`, `pickPosition`, `pickPoint`) still stop at it, as at
-   * opaque terrain, unless `pickThrough` is true: then they go on to what
-   * shows through it (a tunnel under the ground). A pick that may stop at
-   * it costs one exact CPU ray through the drawn terrain
-   * (`terrainRayTarget`), over the region's reach only, in the tick it
-   * reads.
-   */
-  addTerrainTranslucency(
-    region: TerrainClipRegion,
-    options: { opacity: number; pickThrough?: boolean },
-  ): TerrainTranslucency {
-    const clips = this.source?.clips;
-    if (!clips) {
-      throw new Error(
-        "Tileset3D.addTerrainTranslucency: only a globe (Engine.addTerrain, addEllipsoid) has terrain to make translucent.",
-      );
-    }
-    if (this.destroyed) {
-      throw new Error(
-        "Tileset3D.addTerrainTranslucency: the globe was destroyed; add regions to the globe that replaced it.",
-      );
-    }
-    const { opacity } = options;
-    if (!(Number.isFinite(opacity) && opacity > 0 && opacity < 1)) {
-      throw new RangeError(
-        `Tileset3D.addTerrainTranslucency: opacity must be above 0 and below 1, got ${opacity}`,
-      );
-    }
-    const shape = compileTerrainClip(region, clips.ellipsoid);
-    clips.checkBudget(shape);
-    const slot = this.world.addTerrainClipRegion(packClipShape(shape), opacity);
-    const pickThrough = options.pickThrough === true;
-    // Its `opacity` and `pickThrough` follow `setTerrainTranslucency`.
-    const translucency: Mutable<TerrainTranslucency> = {
-      region: frozenRegion(region),
-      opacity,
-      pickThrough,
-    };
-    const entry = { clip: translucency, shape, slot, opacity, pickThrough };
-    clips.add(entry);
-    this.terrainClipsChanged([]);
-    return translucency;
-  }
-
-  /**
-   * Changes a translucent region's opacity (above 0, below 1) and, when
-   * given, its `pickThrough`, in place: no recompile, no material swap, so
-   * a fade can call it every tick. The handle's `opacity` follows. A
-   * region can't become opaque this way: remove it
-   * (`removeTerrainTranslucency`). Throws a RangeError for an opacity
-   * outside (0, 1); does nothing for a region already removed.
-   */
-  setTerrainTranslucency(
-    translucency: TerrainTranslucency,
-    options: { opacity?: number; pickThrough?: boolean },
-  ): void {
-    const entry = this.source?.clips?.entries.find(
-      (e) => e.clip === translucency,
-    );
-    if (!entry || this.destroyed) {
-      return;
-    }
-    const opacity = options.opacity ?? entry.opacity!;
-    if (!(Number.isFinite(opacity) && opacity > 0 && opacity < 1)) {
-      throw new RangeError(
-        `Tileset3D.setTerrainTranslucency: opacity must be above 0 and below 1, got ${opacity}`,
-      );
-    }
-    const pickThrough = options.pickThrough ?? entry.pickThrough === true;
-    this.world.setTerrainClipOpacity(entry.slot, opacity);
-    entry.opacity = opacity;
-    entry.pickThrough = pickThrough;
-    const handle = translucency as Mutable<TerrainTranslucency>;
-    handle.opacity = opacity;
-    handle.pickThrough = pickThrough;
-    this.changed();
-  }
-
-  /** Draws the terrain inside `translucency` opaque again. */
-  removeTerrainTranslucency(translucency: TerrainTranslucency): void {
-    const clips = this.source?.clips;
-    const entry = clips?.remove(translucency);
-    if (!clips || !entry) {
-      return;
-    }
-    this.world.removeTerrainClipRegion(entry.slot);
-    this.terrainClipsChanged([]);
-  }
-
-  /**
-   * The translucent regions in effect, oldest first
-   * (`addTerrainTranslucency`).
-   */
-  get terrainTranslucencies(): readonly TerrainTranslucency[] {
-    return (this.source?.clips?.translucent.map((e) => e.clip) ??
-      []) as TerrainTranslucency[];
-  }
-
-  /** The whole globe's terrain opacity (`setTerrainOpacity`): 1, opaque. */
-  get terrainOpacity(): number {
-    return this.globalTranslucency?.opacity ?? 1;
-  }
-
-  /**
-   * Makes the whole globe's terrain translucent at `opacity` (above 0; 1,
-   * the default, is opaque again), as `addTerrainTranslucency` does inside
-   * a region, with the same drawing, queries and picks (`pickThrough`; kept
-   * while omitted).
-   * Regions still apply: the least opacity wins. Takes one of the 32 region
-   * slots while below 1.
-   */
-  setTerrainOpacity(
-    opacity: number,
-    options: { pickThrough?: boolean } = {},
-  ): void {
-    if (!this.source?.clips) {
-      throw new Error(
-        "Tileset3D.setTerrainOpacity: only a globe (Engine.addTerrain, addEllipsoid) has terrain to make translucent.",
-      );
-    }
-    if (!(Number.isFinite(opacity) && opacity > 0 && opacity <= 1)) {
-      throw new RangeError(
-        `Tileset3D.setTerrainOpacity: opacity must be above 0 and at most 1, got ${opacity}`,
-      );
-    }
-    if (this.destroyed) {
-      throw new Error(
-        "Tileset3D.setTerrainOpacity: the globe was destroyed; set it on the globe that replaced it.",
-      );
-    }
-    const current = this.globalTranslucency;
-    // A slider that gives only the opacity keeps the pick setting.
-    const pickThrough = options.pickThrough ?? current?.pickThrough === true;
-    if (opacity === 1) {
-      if (current) {
-        this.world.removeTerrainClipRegion(current.slot);
-        this.globalTranslucency = undefined;
-        this.terrainClipsChanged([]);
-      }
-      return;
-    }
-    if (current) {
-      this.world.setTerrainClipOpacity(current.slot, opacity);
-      current.opacity = opacity;
-      current.pickThrough = pickThrough;
-      this.changed();
-      return;
-    }
-    const slot = this.world.addTerrainClipRegion(new Float32Array(0), opacity);
-    this.globalTranslucency = { slot, opacity, pickThrough };
-    this.terrainClipsChanged([]);
-  }
-
-  /** The whole globe's translucency (`setTerrainOpacity`), while below 1. */
-  private globalTranslucency?: {
-    readonly slot: number;
-    opacity: number;
-    pickThrough: boolean;
-  };
-
-  /**
    * The terrain material each tile draws with (shared by content), and
-   * its blended twin for tiles under translucency, both ways.
+   * its blended twin for tiles under a region that blends, both ways.
    */
   private readonly blendedTwins = new Map<number, number>();
   private readonly ownMaterials = new Map<number, number>();
 
   /**
-   * @internal Where a pick ray (Earth-fixed, in the globe's anchor's
-   * coordinates; `direction` need not be unit) first meets translucent
-   * terrain that picks stop at, before any opaque terrain: the distance
-   * along it in `direction`'s units, and the tile's draw there. Undefined
-   * without such terrain, or when the ray meets opaque terrain or nothing
-   * first. Only the stretch of the ray within the regions' reach is traced
-   * (the whole globe's while its translucency picks).
-   */
-  translucentTerrainHit(
-    origin: ArrayLike<number>,
-    direction: ArrayLike<number>,
-    viewMask?: number,
-  ): { distance: number; draw: DrawHandle | undefined } | undefined {
-    const source = this.source;
-    const clips = source?.clips;
-    if (!source || !clips || !source.rayTarget || !this.show) {
-      return undefined;
-    }
-    const global = this.globalTranslucency;
-    const globalPicks = global !== undefined && !global.pickThrough;
-    const regions = clips.translucent.filter((e) => e.pickThrough !== true);
-    if (!globalPicks && regions.length === 0) {
-      return undefined;
-    }
-    const length = Math.hypot(direction[0]!, direction[1]!, direction[2]!);
-    if (!(length > 0)) {
-      return undefined;
-    }
-    const d = [0, 1, 2].map((k) => direction[k]! / length);
-    // The stretch to trace, m along the unit ray.
-    let near = Infinity;
-    let far = -Infinity;
-    const take = (center: ArrayLike<number>, radius: number) => {
-      const o = [0, 1, 2].map((k) => origin[k]! - center[k]!);
-      const b = o[0]! * d[0]! + o[1]! * d[1]! + o[2]! * d[2]!;
-      const c = o[0]! ** 2 + o[1]! ** 2 + o[2]! ** 2 - radius * radius;
-      const disc = b * b - c;
-      if (disc < 0) {
-        return;
-      }
-      const root = Math.sqrt(disc);
-      near = Math.min(near, Math.max(0, -b - root));
-      far = Math.max(far, -b + root);
-    };
-    const ellipsoid = clips.ellipsoid;
-    if (globalPicks) {
-      // The ray's part inside the highest terrain's shell, and no further
-      // than where it dives under the lowest terrain (a ray looking down
-      // would otherwise cross the whole globe); `castTerrainRay` clips it to
-      // the height band from there.
-      take([0, 0, 0], Math.max(...ellipsoid.radii) + TERRAIN_BAND);
-      near = 0;
-      const inner = Math.min(...ellipsoid.radii) - TERRAIN_BAND;
-      const b = origin[0]! * d[0]! + origin[1]! * d[1]! + origin[2]! * d[2]!;
-      const c =
-        origin[0]! ** 2 + origin[1]! ** 2 + origin[2]! ** 2 - inner ** 2;
-      if (b < 0 && c > 0 && b * b - c >= 0) {
-        far = Math.min(far, -b - Math.sqrt(b * b - c));
-      }
-    } else {
-      for (const e of regions) {
-        const [x0, y0, x1, y1] = e.shape.box;
-        const extent = Math.max(
-          Math.hypot(x0, y0),
-          Math.hypot(x0, y1),
-          Math.hypot(x1, y0),
-          Math.hypot(x1, y1),
-        );
-        take(e.shape.anchor, extent + TERRAIN_BAND);
-      }
-    }
-    if (!(far > near)) {
-      return undefined;
-    }
-    const base = source.rayTarget(viewMask);
-    // Where terrain is translucent and every translucency there lets picks
-    // through, it is a hole for the ray, as clips are.
-    const passes = (p: ArrayLike<number>): boolean => {
-      const at = clips.translucentAt(p);
-      return global ? global.pickThrough && !at.stops : at.inside && !at.stops;
-    };
-    const target: TerrainRayTarget = {
-      ...base,
-      clipped: (p) => clips.clippedPoint(p) || passes(p),
-    };
-    const from = [0, 1, 2].map((k) => origin[k]! + d[k]! * near);
-    const to = [0, 1, 2].map((k) => origin[k]! + d[k]! * far);
-    const ray = castTerrainRay(from, to, target);
-    // Surface crossings only: `hit` also counts the first sample below the
-    // surface, which for a camera under the ground is next to the camera.
-    const hit = ray?.surface;
-    if (!hit || !(hit.t > 0)) {
-      return undefined;
-    }
-    if (!global && !clips.translucentAt(hit.point).inside) {
-      return undefined; // opaque terrain first: the GPU's pick has it
-    }
-    const carto = ellipsoid.cartesianToCartographic(hit.point, {
-      longitude: 0,
-      latitude: 0,
-      height: 0,
-    });
-    const rayTile =
-      carto && target.patchAt(carto.longitude, carto.latitude).tile;
-    const tile = rayTile ? source.tileOf?.(rayTile) : undefined;
-    return {
-      distance: (near + hit.t * (far - near)) / length,
-      draw: tile?.placement?.draws[0],
-    };
-  }
-
-  /**
-   * Whether the globe's terrain is clipped (`addTerrainClip`) at a
-   * longitude and latitude in degrees, as the regions' vertices are, and
-   * `height` m above the ellipsoid (default 0).
+   * Whether the globe's terrain is a hole for queries at a longitude and
+   * latitude in degrees, as the regions' vertices are, and `height` m above
+   * the ellipsoid (default 0): inside a region that isn't ground
+   * (`TerrainRegion.ground`).
    */
   terrainClipped(longitude: number, latitude: number, height = 0): boolean {
     return (
@@ -923,39 +546,48 @@ export class Tileset3D implements TileTree {
     return this.drawTiles.has(index);
   }
 
-  /** Masks every loaded tile again, tells height listeners, wakes. */
-  private terrainClipsChanged(rectangles: readonly Rectangle[]): void {
-    this.terrainRegions =
-      (this.source?.clips?.size ?? 0) > 0 ||
-      this.globalTranslucency !== undefined;
-    for (const tile of this.loaded) {
-      this.applyTerrainClip(tile);
+  /**
+   * @internal Masks again the loaded tiles that overlap `reach` (a region
+   * that joined or left what tiles test, or went on or off the blended
+   * path), tells height listeners of the `heights` rectangles whose ground
+   * changed, wakes.
+   */
+  regionsChanged(
+    reach: readonly Rectangle[],
+    heights: readonly Rectangle[],
+  ): void {
+    this.terrainRegions = (this.source?.clips?.size ?? 0) > 0;
+    if (reach.length > 0) {
+      for (const tile of this.loaded) {
+        const r = tile.globe?.rectangle;
+        if (r && reach.some((b) => rectanglesOverlap(b, r))) {
+          this.applyTerrainClip(tile);
+        }
+      }
     }
     for (const listener of this.source?.heightListeners ?? []) {
-      for (const r of rectangles) {
+      for (const r of heights) {
         listener(r);
       }
     }
     this.changed();
   }
 
-  /** The globe has clip or translucent regions, or whole translucency. */
+  /** The globe has regions: loading tiles test them. */
   private terrainRegions = false;
 
   /**
-   * Which clip and translucent regions a globe tile's draws test (a bit
-   * per region), and its material: the terrain's own, or its blended twin
-   * where a translucent region (or the whole globe's) reaches the tile.
+   * Which regions a globe tile's draws test (a bit per region that changes
+   * how it draws), and its material: the terrain's own, or its blended
+   * twin where a region of opacity above 0 and below 1 reaches the tile.
    */
   private applyTerrainClip(tile: Tile): void {
     const clips = this.source?.clips;
     if (!clips || !tile.placement || !tile.globe) {
       return;
     }
-    const global = this.globalTranslucency;
-    const everywhere = global ? 1 << global.slot : 0;
-    const mask = (clips.maskFor(tile.globe.rectangle) | everywhere) >>> 0;
-    const translucent = (mask & (clips.translucentMask | everywhere)) !== 0;
+    const mask = clips.maskFor(tile.globe.rectangle);
+    const blended = (mask & clips.blendedMask) !== 0;
     for (const draw of tile.placement.draws) {
       this.world.setTerrainClip(draw, mask);
       const current = this.world.drawMaterial(draw);
@@ -964,7 +596,7 @@ export class Tileset3D implements TileTree {
       }
       const own = this.ownMaterials.get(current) ?? current;
       let wanted = own;
-      if (translucent) {
+      if (blended) {
         let twin = this.blendedTwins.get(own);
         if (twin === undefined) {
           twin = this.world.materialWithFlags(own, MaterialFlags.alphaBlend);
@@ -1246,7 +878,7 @@ export class Tileset3D implements TileTree {
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
   /** A non-3D-Tiles source, when streaming one (fromSource). */
-  private source?: TileSource;
+  protected source?: TileSource;
   /** Last frame in which an update changed anything. */
   private lastChange = 0;
 
@@ -1255,7 +887,7 @@ export class Tileset3D implements TileTree {
    * and the engine's frame loop (asleep on demand once nothing changes)
    * wakes for them.
    */
-  private changed(): void {
+  protected changed(): void {
     this.lastChange = this.frame;
     this.engine.wake();
   }
@@ -1305,7 +937,7 @@ export class Tileset3D implements TileTree {
   private visibleInFlight = 0;
   private destroyed = false;
 
-  private constructor(
+  protected constructor(
     private readonly engine: Engine,
     readonly world: World,
     readonly url: string,
@@ -1405,27 +1037,15 @@ export class Tileset3D implements TileTree {
     return tileset;
   }
 
-  /** Streams a non-3D-Tiles source (terrain) through the same machinery. */
-  static fromSource(
-    engine: Engine,
-    world: World,
-    source: TileSource,
-    options: TilesetOptions = {},
-  ): Tileset3D {
-    const tileset = new Tileset3D(
-      engine,
-      world,
-      source.url,
-      options,
-      source.root,
-      source.geometricError,
-      source,
-    );
-    tileset.source = source;
-    source.tree = tileset;
-    tileset.stats.tiles = countTiles(source.root);
-    retarget(source.root, tileset);
-    return tileset;
+  /**
+   * Points a non-3D-Tiles source's tiles (terrain) at this tileset, which
+   * streams them through the same machinery (`Globe.create`).
+   */
+  protected attachSource(source: TileSource): void {
+    this.source = source;
+    source.tree = this;
+    this.stats.tiles = countTiles(source.root);
+    retarget(source.root, this);
   }
 
   /**
@@ -2319,6 +1939,19 @@ export class Tileset3D implements TileTree {
     return this.destroyed;
   }
 
+  /**
+   * Frees the regions' world slots; a globe has them (`Globe`).
+   * @internal
+   */
+  protected releaseRegions(): void {
+    for (const entry of [...(this.source?.clips?.entries ?? [])]) {
+      this.source!.clips!.remove(entry.clip);
+      if (entry.slot >= 0) {
+        this.world.removeTerrainClipRegion(entry.slot);
+      }
+    }
+  }
+
   /** Unloads all content. The tileset can't be used afterwards. */
   destroy(): void {
     for (const controller of this.loading.values()) {
@@ -2341,16 +1974,7 @@ export class Tileset3D implements TileTree {
     this.ready.length = 0;
     this.boundingVolumes?.clear();
     this.contentVolumes?.clear();
-    for (const clip of this.terrainClips) {
-      this.removeTerrainClip(clip);
-    }
-    for (const translucency of this.terrainTranslucencies) {
-      this.removeTerrainTranslucency(translucency);
-    }
-    if (this.globalTranslucency) {
-      this.world.removeTerrainClipRegion(this.globalTranslucency.slot);
-      this.globalTranslucency = undefined;
-    }
+    this.releaseRegions();
     // Every tile is unloaded: no draw uses a blended twin now.
     for (const twin of this.blendedTwins.values()) {
       this.world.removeMaterial(twin);
@@ -2360,37 +1984,6 @@ export class Tileset3D implements TileTree {
     this.world.removeTransform(this.transform);
     this.destroyed = true;
   }
-}
-
-/**
- * A translucent region of a globe's terrain
- * (`Tileset3D.addTerrainTranslucency`), as it was given.
- */
-export interface TerrainTranslucency {
-  readonly region: TerrainClipRegion;
-  /** Above 0, below 1. */
-  readonly opacity: number;
-  /** Picks go through it to what shows through. */
-  readonly pickThrough: boolean;
-}
-
-type Mutable<T> = { -readonly [K in keyof T]: T[K] };
-
-/** A frozen copy of a clip region, as its handle keeps it. */
-function frozenRegion(region: TerrainClipRegion): TerrainClipRegion {
-  if (region.rectangle) {
-    const { west, south, east, north } = region.rectangle;
-    return Object.freeze({
-      rectangle: Object.freeze({ west, south, east, north }),
-    });
-  }
-  return Object.freeze({
-    polygon: Object.freeze(
-      region.polygon.map(({ longitude, latitude }) =>
-        Object.freeze({ longitude, latitude }),
-      ),
-    ),
-  });
 }
 
 function retarget(tile: Tile, tree: TileTree): void {

@@ -774,11 +774,13 @@ export function Rendering() {
 
       <Section title="Translucent terrain">
         <p>
-          The globe's terrain can turn translucent inside a region, or
+          The globe's terrain can draw at an opacity inside a region, or
           everywhere, so that what lies under the ground shows through it in
-          place. It adds no pass. Regions use the slots terrain clips already
-          had, and the blended tiles go through the alpha split every blended
-          surface already goes through.
+          place. It adds no pass. The blended tiles go through the split every
+          blended surface already goes through. At opacity 0.999 the terrain
+          moves between the opaque pass and the blended passes: its shadows,
+          ambient occlusion and depth stop there, so a fade steps in lighting at
+          that opacity.
         </p>
         <Figure caption="Tiles a region doesn't touch draw exactly as they would without it. A tile it does touch keeps its own draws and swaps only their material.">
           <TranslucentTerrainFlow />
@@ -831,8 +833,8 @@ export function Rendering() {
               <tr>
                 <th scope="row">Limits</th>
                 <td>
-                  32 slots and one edge budget, shared with clips. While below
-                  1, <C>setTerrainOpacity</C> holds one of those slots.
+                  32 slots and one edge budget, shared by all regions.
+                  "everywhere" holds one of those slots while below 1.
                 </td>
               </tr>
             </tbody>

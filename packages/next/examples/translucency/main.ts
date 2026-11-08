@@ -8,7 +8,7 @@ import {
   vec3,
   type DrawHandle,
   type MeshData,
-  type Translucency,
+  type TranslucencyMethod,
   type View,
 } from "../../src/index.ts";
 import type { ExampleContext } from "../types.ts";
@@ -62,10 +62,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   view.background = "color";
   view.clearColor = [0.02, 0.025, 0.035];
   view.lighting.environment = "procedural";
-  view.translucency = "moments";
+  view.translucencyMethod = "moments";
 
   const settings = {
-    compare: "split" as "split" | Translucency,
+    compare: "split" as "split" | TranslucencyMethod,
     layers: 8,
     /** Between a stack's layers, m. */
     spacing: 0.12,
@@ -309,7 +309,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         viewport: { x: 0, y: 0.5, width: 1, height: 0.5 },
         background: "color",
         clearColor: view.clearColor,
-        translucency: "exact",
+        translucencyMethod: "exact",
         fxaa: settings.fxaa,
       });
       Object.assign(lower.lighting, view.lighting);
@@ -321,7 +321,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       lower = undefined;
       view.viewport = { x: 0, y: 0, width: 1, height: 1 };
     }
-    view.translucency = shown === "split" ? "moments" : shown;
+    view.translucencyMethod = shown === "split" ? "moments" : shown;
     labels.replaceChildren(
       ...(split
         ? [label(MOMENTS, "10px"), label(EXACT, "calc(50% + 10px)")]
@@ -525,7 +525,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         world.setVisible(g.draw, on);
       }
     };
-    type Way = "none" | Translucency;
+    type Way = "none" | TranslucencyMethod;
     const ways: Way[] = ["none", "moments", "exact"];
     const best: Record<Way, number> = {
       none: Infinity,
@@ -545,7 +545,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             el("dt", {}, `Measuring… ${round + 1} of ${ROUNDS}`),
           );
           visible(way !== "none");
-          view.translucency = way === "none" ? "moments" : way;
+          view.translucencyMethod = way === "none" ? "moments" : way;
           await frames(8);
           const start = performance.now();
           await frames(30);
@@ -558,7 +558,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       layout();
     }
     const { width, height } = viewer.target;
-    const added = (way: Translucency) => {
+    const added = (way: TranslucencyMethod) => {
       const d = best[way] - best.none;
       return `${d < 0 ? "−" : "+"}${Math.abs(d).toFixed(2)} ms`;
     };

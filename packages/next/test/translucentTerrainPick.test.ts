@@ -1,5 +1,5 @@
 // The engine's part of a pick on translucent terrain: the CPU ray's hit
-// (Tileset3D.translucentTerrainHit) is turned into a reverse-Z depth and a
+// (Globe.stoppingTerrainHit) is turned into a reverse-Z depth and a
 // feature, and stands in for the GPU's pick where it is nearer
 // (Engine.translucentTerrainPick, resolvePicks). The globe is a stub that
 // answers the ray; test/terrainTranslucency.test.ts covers the real ray.
@@ -7,6 +7,7 @@
 // answer each pick's readback as the GPU's pick pass would, as
 // test/corePick.test.ts does.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Globe } from "../src/globe/Globe.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { Camera } from "../src/scene/Camera.ts";
 import type { Engine } from "../src/scene/Engine.ts";
@@ -74,14 +75,17 @@ function addGlobe(
   hit: HitFn,
   options: { show?: boolean; anchor?: AnchorHandle | undefined } = {},
 ) {
-  const globe = {
-    world,
-    terrain: true,
-    show: options.show ?? true,
-    anchor: "anchor" in options ? options.anchor : earth,
-    update: () => {},
-    translucentTerrainHit: vi.fn(hit),
-  };
+  // A Globe in the engine's eyes (instanceof) that answers only the ray.
+  const globe = Object.defineProperties(Object.create(Globe.prototype), {
+    world: { value: world, writable: true },
+    show: { value: options.show ?? true, writable: true },
+    anchor: {
+      value: "anchor" in options ? options.anchor : earth,
+      writable: true,
+    },
+    update: { value: () => {} },
+    stoppingTerrainHit: { value: vi.fn(hit) },
+  }) as { stoppingTerrainHit: ReturnType<typeof vi.fn<HitFn>> };
   (engine.tilesets as unknown[]).push(globe);
   return globe;
 }
@@ -142,9 +146,8 @@ describe("a pick that translucent terrain may stop", () => {
   it("is asked with the pick's ray: from the camera, 1 long along the view axis, in the view's bit", async () => {
     const globe = addGlobe(() => undefined);
     await pickAt();
-    expect(globe.translucentTerrainHit).toHaveBeenCalledTimes(1);
-    const [origin, direction, mask] =
-      globe.translucentTerrainHit.mock.calls[0]!;
+    expect(globe.stoppingTerrainHit).toHaveBeenCalledTimes(1);
+    const [origin, direction, mask] = globe.stoppingTerrainHit.mock.calls[0]!;
     expect(Array.from(origin)).toEqual(Array.from(view.camera.position));
     const along = [0, 1, 2].reduce(
       (sum, k) => sum + direction[k]! * view.camera.direction[k]!,
@@ -233,7 +236,7 @@ describe("a pick that translucent terrain may stop", () => {
     const pick = (await pickAt())!;
     expect(pick.feature?.featureId).toBe(feature);
     for (const g of [hidden, elsewhere, foreign]) {
-      expect(g.translucentTerrainHit).not.toHaveBeenCalled();
+      expect(g.stoppingTerrainHit).not.toHaveBeenCalled();
     }
   });
 });

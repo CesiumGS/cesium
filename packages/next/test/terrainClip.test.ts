@@ -7,7 +7,7 @@ import {
   MAX_CLIP_GRID,
   MAX_CLIP_REGION_ROWS,
   MAX_TERRAIN_CLIP_VERTICES,
-  TerrainClipError,
+  TerrainRegionError,
   TerrainClips,
   clipPlane,
   compileTerrainClip,
@@ -15,7 +15,8 @@ import {
   packClipShape,
   parallelSag,
   rectanglesOverlap,
-  type TerrainClipRegion,
+  type ClipEntry,
+  type TerrainRegionShape,
 } from "../src/globe/terrainClip.ts";
 import { castTerrainRay } from "../src/globe/terrainRay.ts";
 import { TerrainSource } from "../src/globe/TerrainSource.ts";
@@ -37,12 +38,26 @@ import { shaderInside } from "./terrainClipShader.ts";
 const R = Math.PI / 180;
 const WGS84 = Ellipsoid.WGS84;
 
-/** A set of clips, each at its own slot, from regions. */
-function clipsOf(...regions: TerrainClipRegion[]): TerrainClips {
+/** A region as a cut (opacity 0, not ground) in a world slot. */
+function cut(
+  region: TerrainRegionShape,
+  slot: number,
+  shape = compileTerrainClip(region),
+): ClipEntry {
+  return {
+    clip: { region },
+    shape,
+    slot,
+    opacity: 0,
+    ground: false,
+    pickThrough: false,
+  };
+}
+
+/** A set of cuts, each at its own slot, from regions. */
+function clipsOf(...regions: TerrainRegionShape[]): TerrainClips {
   const clips = new TerrainClips();
-  regions.forEach((region, slot) =>
-    clips.add({ clip: { region }, shape: compileTerrainClip(region), slot }),
-  );
+  regions.forEach((region, slot) => clips.add(cut(region, slot)));
   return clips;
 }
 
@@ -63,7 +78,7 @@ describe("terrain clip regions", () => {
     expect(clips.clippedAt(180 * R, 10.2 * R)).toBe(false);
     expect(clips.clippedAt(180 * R, 9.9 * R)).toBe(false);
     // Its bounds wrap: west > east, and both sides of 180° overlap it.
-    const b = clips.entries[0]!.shape.bounds;
+    const b = clips.entries[0]!.shape!.bounds;
     expect(b.west).toBeGreaterThan(b.east);
     expect(
       rectanglesOverlap(b, { west: 3, south: 0, east: Math.PI, north: 0.5 }),
@@ -106,7 +121,7 @@ describe("terrain clip regions", () => {
       { longitude: 7.43, latitude: 46.95 },
     ];
     const clips = clipsOf({ polygon });
-    const shape = clips.entries[0]!.shape;
+    const shape = clips.entries[0]!.shape!;
     const q = new Float64Array(2);
     polygon.forEach((v, i) => {
       clipPlane(
@@ -142,7 +157,7 @@ describe("terrain clip regions", () => {
   });
 
   it("refuses regions it can't clip, saying why", () => {
-    const cases: Array<[TerrainClipRegion, RegExp]> = [
+    const cases: Array<[TerrainRegionShape, RegExp]> = [
       [
         {
           polygon: [
@@ -264,7 +279,7 @@ describe("terrain clip regions", () => {
       expect(() => compileTerrainClip(region), String(message)).toThrow(
         message,
       );
-      expect(() => compileTerrainClip(region)).toThrow(TerrainClipError);
+      expect(() => compileTerrainClip(region)).toThrow(TerrainRegionError);
     }
     // Close to a pole, but clear of the limit: fine. A rectangle's
     // parallels are its edges, so one may run along 85°.
@@ -286,11 +301,11 @@ describe("terrain clip regions", () => {
 
   it("puts a polar region's cap neither in its bounds nor past the limit", () => {
     // The near-pole region that is accepted: its bounds hold all of it.
-    const region: TerrainClipRegion = {
+    const region: TerrainRegionShape = {
       rectangle: { west: 0, south: 84, east: 10, north: 85 },
     };
     const clips = clipsOf(region);
-    const b = clips.entries[0]!.shape.bounds;
+    const b = clips.entries[0]!.shape!.bounds;
     expect(b.north).toBeGreaterThan(85 * R);
     expect(b.north).toBeLessThan(85.001 * R);
     expect(clips.clippedAt(5 * R, 84.999 * R)).toBe(true);
@@ -349,11 +364,7 @@ describe("terrain clip regions", () => {
     expect(clips.maskFor(tile(-179.9, -17.1, -179.8, -16.9))).toBe(0);
     // Slot 31 is the sign bit: still a positive mask.
     const high = new TerrainClips();
-    high.add({
-      clip: { region: site },
-      shape: compileTerrainClip(site),
-      slot: 31,
-    });
+    high.add(cut(site, 31));
     expect(high.maskFor(tile(7, 46, 8, 47))).toBe(0x80000000);
   });
 
@@ -420,7 +431,7 @@ const alignment = (t: number) => ({
 });
 
 /** A corridor's strip: both edges of the alignment, 16 m either side. */
-function strip(points: number): TerrainClipRegion {
+function strip(points: number): TerrainRegionShape {
   const half = points / 2;
   const offset = metersNorth(16);
   const side = (sign: number, t: number) => {
@@ -437,7 +448,7 @@ function strip(points: number): TerrainClipRegion {
 
 describe("the shader's float32 test", () => {
   it("agrees with the CPU's to a centimeter, seen from 1.5 km", () => {
-    const region: TerrainClipRegion = {
+    const region: TerrainRegionShape = {
       polygon: [
         { longitude: -121.738, latitude: 46.7845 },
         { longitude: -121.7325, latitude: 46.784 },
@@ -447,7 +458,7 @@ describe("the shader's float32 test", () => {
       ],
     };
     const clips = clipsOf(region);
-    const shape = clips.entries[0]!.shape;
+    const shape = clips.entries[0]!.shape!;
     const rows = packClipShape(shape);
     const camera = WGS84.cartographicToCartesian(
       { longitude: -121.74 * R, latitude: 46.775 * R, height: 2600 },
@@ -483,7 +494,7 @@ describe("the shader's float32 test", () => {
 describe("a corridor's strip", () => {
   it("keeps every cell's edges few, and the shader agrees with the CPU", () => {
     const clips = clipsOf(strip(660));
-    const shape = clips.entries[0]!.shape;
+    const shape = clips.entries[0]!.shape!;
     const { grid } = shape;
     // Refined while its rows fit a region's blocks: a few thousand cells,
     // about square, and few edges in each.
@@ -646,7 +657,7 @@ describe("a fragment's edge budget", () => {
   it("refuses a cell of more than 32 edges, saying to simplify or split", () => {
     // A comb: 1,020 teeth 0.43 m apart in a 5.5 km site (101 edges a
     // cell at the old 128 limit).
-    const comb = (width: number): TerrainClipRegion => ({
+    const comb = (width: number): TerrainRegionShape => ({
       polygon: [
         { longitude: 0, latitude: 0 },
         { longitude: 0.05, latitude: 0 },
@@ -679,10 +690,10 @@ describe("a fragment's edge budget", () => {
       const shape = compileTerrainClip(region);
       expect(shape.maxCellEdges).toBe(most);
       clips.checkBudget(shape);
-      clips.add({ clip: { region }, shape, slot });
+      clips.add(cut(region, slot, shape));
     }
     const next = compileTerrainClip(ring(16, 7.004, 46));
-    expect(() => clips.checkBudget(next)).toThrow(TerrainClipError);
+    expect(() => clips.checkBudget(next)).toThrow(TerrainRegionError);
     expect(() => clips.checkBudget(next)).toThrow(
       new RegExp(
         `overlaps ${fit} others, a fragment could test ${(fit + 1) * most} edges \\(at most 128; .*simplify the polygon .*, split it, or remove a region it overlaps`,
@@ -704,7 +715,7 @@ describe("a fragment's edge budget", () => {
       ring(16, 7 + i * 0.0005, 46),
     );
     const clips = clipsOf(...regions);
-    const most = clips.entries.reduce((m, e) => m + e.shape.maxCellEdges, 0);
+    const most = clips.entries.reduce((m, e) => m + e.shape!.maxCellEdges, 0);
     expect(most).toBeLessThanOrEqual(MAX_CLIP_FRAGMENT_EDGES);
     let tested = 0;
     const camera = WGS84.cartographicToCartesian(
@@ -727,7 +738,7 @@ describe("a fragment's edge budget", () => {
         };
         const gpu = regions.some((_, k) =>
           shaderInside(
-            packClipShape(clips.entries[k]!.shape),
+            packClipShape(clips.entries[k]!.shape!),
             camera,
             p,
             budget,
@@ -742,8 +753,8 @@ describe("a fragment's edge budget", () => {
           const q = new Float64Array(2);
           const near = clips.entries.some(
             (e) =>
-              clipPlane(e.shape, p, q) &&
-              edgeDistance(e.shape.xy, q[0]!, q[1]!) < 0.01,
+              clipPlane(e.shape!, p, q) &&
+              edgeDistance(e.shape!.xy, q[0]!, q[1]!) < 0.01,
           );
           expect(near).toBe(true);
         }
@@ -751,7 +762,7 @@ describe("a fragment's edge budget", () => {
     }
     // Some fragment lay in several regions' cells at once.
     expect(tested).toBeGreaterThan(
-      Math.max(...regions.map((_, k) => clips.entries[k]!.shape.maxCellEdges)),
+      Math.max(...regions.map((_, k) => clips.entries[k]!.shape!.maxCellEdges)),
     );
   });
 });
@@ -760,7 +771,7 @@ describe("the per-tile prefilter", () => {
   it("sets a tile's bit wherever a point in it, up to 9,000 m high, is clipped", () => {
     // Random tiles about each region, a few meters to 5 km wide, points in
     // them at random heights: a clipped point's tile must test the region.
-    const wide: TerrainClipRegion = {
+    const wide: TerrainRegionShape = {
       polygon: [
         { longitude: 20, latitude: 30 },
         { longitude: 28.5, latitude: 31 },
@@ -768,7 +779,7 @@ describe("the per-tile prefilter", () => {
         { longitude: 21, latitude: 37 },
       ],
     };
-    const regions: TerrainClipRegion[] = [
+    const regions: TerrainRegionShape[] = [
       strip(660),
       {
         polygon: [
@@ -788,7 +799,7 @@ describe("the per-tile prefilter", () => {
     let clipped = 0;
     for (const region of regions) {
       const clips = clipsOf(region);
-      const b = clips.entries[0]!.shape.bounds;
+      const b = clips.entries[0]!.shape!.bounds;
       const east = b.east < b.west ? b.east + 2 * Math.PI : b.east;
       for (let k = 0; k < 1500; k++) {
         const size = (0.0001 + random() * 0.05) * R;
@@ -873,11 +884,9 @@ describe("queries skip clipped terrain", () => {
     const site = compileTerrainClip({
       rectangle: { west: 7.4, south: 46.9, east: 7.45, north: 46.95 },
     });
-    source.clips.add({
-      clip: { region: { rectangle: { west: 0, south: 0, east: 0, north: 0 } } },
-      shape: site,
-      slot: 0,
-    });
+    source.clips.add(
+      cut({ rectangle: { west: 0, south: 0, east: 0, north: 0 } }, 0, site),
+    );
     expect(source.sampleHeight(7.42 * R, 46.92 * R)).toBeUndefined();
     expect(source.surfaceHeight(7.42 * R, 46.92 * R)).toBeUndefined();
     expect(source.exactHeight(7.42 * R, 46.92 * R)).toBeUndefined();
@@ -916,7 +925,7 @@ describe("globe terrain clips", () => {
           : (t as unknown as Record<PropertyKey, unknown>)[key],
     });
     try {
-      const clip = globe.addTerrainClip({
+      const clip = globe.terrain.addRegion({
         polygon: [
           { longitude: 7.4, latitude: 46.9 },
           { longitude: 7.45, latitude: 46.9 },
@@ -924,8 +933,8 @@ describe("globe terrain clips", () => {
         ],
       });
       expect(wake).toHaveBeenCalled();
-      expect(globe.terrainClips).toEqual([clip]);
-      expect(Object.isFrozen(clip.region)).toBe(true);
+      expect(globe.terrain.regions).toEqual([clip]);
+      expect(Object.isFrozen(clip.shape)).toBe(true);
       // Degrees, as the region's vertices are.
       expect(globe.terrainClipped(7.43, 46.92)).toBe(true);
       expect(globe.terrainClipped(7.43, 46.96)).toBe(false);
@@ -939,16 +948,16 @@ describe("globe terrain clips", () => {
       expect([...entry.subarray(1)]).toEqual([0, 0, 0]);
       wake.mockClear();
       writes.length = 0;
-      globe.removeTerrainClip(clip);
+      clip.remove();
       expect(wake).toHaveBeenCalled();
-      expect(globe.terrainClips).toEqual([]);
+      expect(globe.terrain.regions).toEqual([]);
       expect(globe.terrainClipped(7.43, 46.92)).toBe(false);
       // Its directory row is emptied.
       const cleared = writes.find((w) => w.offset === 0)!;
       expect([...new Uint32Array(cleared.data.buffer)]).toEqual([0, 0, 0, 0]);
       expect(globe.exactHeight(7.43 * R, 46.92 * R)).toBe(0);
       // Removing it again does nothing.
-      globe.removeTerrainClip(clip);
+      clip.remove();
     } finally {
       device.queue = queue;
       wake.mockRestore();
@@ -959,18 +968,18 @@ describe("globe terrain clips", () => {
   it("refuses a 33rd region in a world, and frees slots with the globe", () => {
     const world = engine.createWorld();
     const globe = engine.addEllipsoid(world);
-    const square = (i: number): TerrainClipRegion => ({
+    const square = (i: number): TerrainRegionShape => ({
       rectangle: { west: i, south: 0, east: i + 0.01, north: 0.01 },
     });
     for (let i = 0; i < MAX_TERRAIN_CLIPS; i++) {
-      globe.addTerrainClip(square(i));
+      globe.terrain.addRegion(square(i));
     }
-    expect(() => globe.addTerrainClip(square(40))).toThrow(
-      /at most 32 terrain clip regions per world .*; remove one, or merge/,
+    expect(() => globe.terrain.addRegion(square(40))).toThrow(
+      /at most 32 terrain regions per world .*; remove one, or merge/,
     );
     engine.removeTileset(globe);
     const again = engine.addEllipsoid(world);
-    expect(() => again.addTerrainClip(square(40))).not.toThrow();
+    expect(() => again.terrain.addRegion(square(40))).not.toThrow();
     engine.removeTileset(again);
   });
 

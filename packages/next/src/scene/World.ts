@@ -76,7 +76,7 @@ import {
 import { rigidMatrixError, splitHigh, splitVec3 } from "../math/transforms.ts";
 import { bodyKey, type Body } from "./Body.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
-import { TerrainClipError } from "../globe/terrainClip.ts";
+import { TerrainRegionError } from "../globe/terrainClip.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { MeshData } from "./meshes.ts";
@@ -121,7 +121,7 @@ export interface WorldOptions {
    * Clip blocks, of 8 boxes each (default 16,384, at least 2). Block 0 is
    * the terrain clip regions' directory. A quarter of the rest, at most
    * 3,840 blocks (32 regions of `MAX_TERRAIN_CLIP_BLOCKS`), is set aside
-   * for terrain clip regions (`Tileset3D.addTerrainClip`); the others
+   * for terrain regions (`Globe.terrain.addRegion`); the others
    * hold mixed-LOD placeholders, a block for each placeholder tile drawn
    * at once (12,544 by default).
    */
@@ -728,9 +728,9 @@ export class World {
   private terrainClipBlocks = 0;
   private readonly terrainClipBudget: number;
   /**
-   * Terrain clip regions by slot: their first block, block count and rows
+   * Terrain regions by slot: their first block, block count and rows
    * (kept to move them: only the directory points at them), their opacity
-   * (0: a clip) and whether they hold everywhere (no rows, no blocks).
+   * (0 to 1) and whether they hold everywhere (no rows, no blocks).
    */
   private readonly terrainClipRuns: Array<
     | {
@@ -3502,26 +3502,26 @@ export class World {
   }
 
   /**
-   * @internal Uploads a terrain clip region (globe/terrainClip.ts
+   * @internal Uploads a terrain region (globe/terrainClip.ts
    * `packClipShape`: vec4 rows) into a run of whole clip blocks and points
    * its directory row (block 0) at it; returns its slot, the record mask's
-   * bit (`setTerrainClip`). `opacity` 0 (the default) is a clip: no
-   * terrain drawn inside; between 0 and 1 the terrain inside is that
-   * translucent (`Tileset3D.addTerrainTranslucency`). No rows: the slot
-   * holds everywhere a record's mask names it (`Tileset3D.terrainOpacity`),
-   * and takes no blocks. Throws a `TerrainClipError` when all
+   * bit (`setTerrainClip`). `opacity` 0 (the default): no terrain drawn
+   * inside; between 0 and 1 the terrain inside is drawn at that opacity
+   * (`Globe.terrain.addRegion`); 1 changes nothing. No rows: the slot
+   * holds everywhere a record's mask names it (`addRegion("everywhere")`),
+   * and takes no blocks. Throws a `TerrainRegionError` when all
    * `MAX_TERRAIN_CLIPS` slots are taken, or the region doesn't fit the
    * blocks set aside for regions (`WorldOptions.maxClipBlocks`).
    */
   addTerrainClipRegion(rows: Float32Array, opacity = 0): number {
-    checkTerrainOpacity(opacity, rows.length === 0);
+    checkTerrainOpacity(opacity);
     let slot = 0;
     while (slot < MAX_TERRAIN_CLIPS && this.terrainClipRuns[slot]) {
       slot++;
     }
     if (slot === MAX_TERRAIN_CLIPS) {
-      throw new TerrainClipError(
-        `at most ${MAX_TERRAIN_CLIPS} terrain clip regions per world are supported; remove one, or merge neighboring regions into one polygon.`,
+      throw new TerrainRegionError(
+        `at most ${MAX_TERRAIN_CLIPS} terrain regions per world are supported; remove one, or merge neighboring regions into one polygon.`,
       );
     }
     const everywhere = rows.length === 0;
@@ -3539,13 +3539,13 @@ export class World {
     }
     const blocks = Math.ceil(rows.length / (CLIP_BLOCK_ROWS * 4));
     if (blocks > MAX_TERRAIN_CLIP_BLOCKS) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `the region takes ${blocks} clip blocks, more than the ${MAX_TERRAIN_CLIP_BLOCKS} a region may; simplify the polygon, or split it.`,
       );
     }
     if (this.terrainClipBlocks + blocks > this.terrainClipBudget) {
-      throw new TerrainClipError(
-        `the world's terrain clip regions would take ${this.terrainClipBlocks + blocks} clip blocks, more than the ${this.terrainClipBudget} set aside for them (WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
+      throw new TerrainRegionError(
+        `the world's terrain regions would take ${this.terrainClipBlocks + blocks} clip blocks, more than the ${this.terrainClipBudget} set aside for them (WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
       );
     }
     let block = this.allocateClipRun(blocks);
@@ -3555,7 +3555,7 @@ export class World {
       block = this.allocateClipRun(blocks);
     }
     if (block < 0) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `no run of ${blocks} clip blocks is free for the region (placeholders hold the rest of the world's ${this.maxClipBlocks}, WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
       );
     }
@@ -3591,20 +3591,15 @@ export class World {
   }
 
   /**
-   * @internal Changes a terrain region's opacity (`addTerrainClipRegion`):
-   * a translucent region stays translucent, a clip a clip.
+   * @internal Changes a terrain region's opacity (`addTerrainClipRegion`),
+   * 0 to 1, in place: one directory row, nothing re-uploaded.
    */
   setTerrainClipOpacity(slot: number, opacity: number): void {
     const run = this.terrainClipRuns[slot];
     if (!run || run.opacity === opacity) {
       return;
     }
-    checkTerrainOpacity(opacity, run.everywhere);
-    if ((run.opacity === 0) !== (opacity === 0)) {
-      throw new TerrainClipError(
-        "a clip can't become translucent, nor a translucent region a clip; remove it and add the other.",
-      );
-    }
+    checkTerrainOpacity(opacity);
     run.opacity = opacity;
     this.writeDirectoryRow(slot);
     this.version++;
@@ -5548,17 +5543,9 @@ function align4(bytes: number): number {
   return Math.ceil(bytes / 4) * 4;
 }
 
-/**
- * Throws unless `opacity` is a terrain region's: 0 (a clip) or between 0
- * and 1 (translucent); an everywhere slot is never a clip.
- */
-function checkTerrainOpacity(opacity: number, everywhere: boolean): void {
-  if (
-    !(Number.isFinite(opacity) && opacity >= 0 && opacity < 1) ||
-    (everywhere && opacity === 0)
-  ) {
-    throw new RangeError(
-      `terrain opacity must be ${everywhere ? "above 0" : "0 (a clip) or above"} and below 1, got ${opacity}`,
-    );
+/** Throws unless `opacity` is a terrain region's: 0 to 1, both included. */
+function checkTerrainOpacity(opacity: number): void {
+  if (!(Number.isFinite(opacity) && opacity >= 0 && opacity <= 1)) {
+    throw new RangeError(`terrain opacity must be from 0 to 1, got ${opacity}`);
   }
 }

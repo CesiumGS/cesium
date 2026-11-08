@@ -540,9 +540,9 @@ const TRANSLUCENT_TERRAIN: BoardStep[] = [
     body: (
       <>
         A rectangle or polygon compiles to rows in <C>clipBoxes</C>, in one of
-        32 slots shared with clips. Its directory row holds its opacity: 0 is a
-        clip, and above 0 is translucent. <C>setTerrainOpacity</C> takes a slot
-        with no shape, which holds everywhere.
+        32 slots. Its directory row holds its opacity: 0 draws nothing inside,
+        and 1 has no effect. <C>"everywhere"</C> takes a slot with no shape
+        while its opacity is below 1.
       </>
     ),
   },
@@ -554,8 +554,9 @@ const TRANSLUCENT_TERRAIN: BoardStep[] = [
     body: (
       <>
         A tile's draw records hold the slots its rectangle touches, in{" "}
-        <C>terrainClip</C>. The CPU filters per tile, so only tiles a region
-        touches change.
+        <C>terrainClip</C>, for regions below opacity 1. The CPU filters per
+        tile, so only tiles a region touches change, and only when its opacity
+        crosses 0 or 1.
       </>
     ),
   },
@@ -566,10 +567,10 @@ const TRANSLUCENT_TERRAIN: BoardStep[] = [
     title: "A blended twin of the material",
     body: (
       <>
-        A tile a translucent slot reaches draws with a twin of its material,
-        flagged <C>alphaBlend</C>, through <C>World.setDrawMaterial</C>.
-        Changing a region's opacity needs no new twin and no recompile, so a
-        fade can run every tick.
+        A tile a slot of opacity above 0 and below 1 reaches draws with a twin
+        of its material, flagged <C>alphaBlend</C>, through{" "}
+        <C>World.setDrawMaterial</C>. Changing a region's opacity needs no new
+        twin and no recompile, so a fade can run every tick.
       </>
     ),
   },
@@ -581,9 +582,9 @@ const TRANSLUCENT_TERRAIN: BoardStep[] = [
     body: (
       <>
         <C>terrainOpacity</C> takes the least opacity of the slots in the mask
-        that hold the fragment. A clip gives 0, so it wins over any translucent
-        region. The loops have constant bounds, and a budget caps edges tested
-        per fragment.
+        that hold the fragment. A cut gives 0, so it wins over any region of
+        higher opacity. The loops have constant bounds, and a budget caps edges
+        tested per fragment.
       </>
     ),
   },
@@ -594,7 +595,7 @@ const TRANSLUCENT_TERRAIN: BoardStep[] = [
     title: "Skirts hide",
     body: (
       <>
-        A skirt's opacity is 0 wherever the terrain is less than opaque. Each
+        A skirt's opacity is 0 wherever the terrain is below opacity 0.999. Each
         skirt triangle starts at a skirt vertex (<C>skirtStart</C> in the
         record), and a flat bit in <C>ids.z</C> tells the fragment shader.
       </>

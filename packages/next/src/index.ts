@@ -86,7 +86,7 @@ export {
   ev100ToScale,
   type OutputEncoding,
   type ToneMapping,
-  type Translucency,
+  type TranslucencyMethod,
   type ViewBackground,
   type PickResult,
   type RenderTarget,
@@ -131,7 +131,6 @@ export {
 export {
   Tileset3D,
   type PurposeStats,
-  type TerrainTranslucency,
   type TilesetEvents,
   type TilesetOptions,
   type TilesetStats,
@@ -161,12 +160,17 @@ export {
 export {
   MAX_CLIP_FRAGMENT_EDGES,
   MAX_TERRAIN_CLIP_VERTICES,
-  TerrainClipError,
-  type TerrainClip,
-  type TerrainClipPosition,
-  type TerrainClipRectangle,
-  type TerrainClipRegion,
+  TerrainRegionError,
+  type TerrainRegionPosition,
+  type TerrainRegionRectangle,
+  type TerrainRegionShape,
 } from "./globe/terrainClip.ts";
+export {
+  Globe,
+  GlobeTerrain,
+  type TerrainRegion,
+  type TerrainRegionOptions,
+} from "./globe/Globe.ts";
 export { MAX_ANCHORS, MAX_TERRAIN_CLIPS } from "./render/layout.ts";
 export {
   BudgetedSelection,

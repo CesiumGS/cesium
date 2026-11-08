@@ -15,7 +15,7 @@ import type { Engine } from "../src/scene/Engine.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import type { SelectionView } from "../src/streaming/Stepwise.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
-import { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import { Globe } from "../src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { layer, provider } from "./sliceFakes.ts";
 import { at, gridTile } from "./terrainRayFixtures.ts";
@@ -100,7 +100,7 @@ describe("a globe over terrain that ends at level 5, through Tileset3D", () => {
   ): Promise<{ level: number; upsampled: boolean; imagery: number }> {
     const terrain = await source();
     const world = engine.createWorld();
-    const globe = Tileset3D.fromSource(engine, world, terrain, {
+    const globe = Globe.create(engine, world, terrain, {
       policy: "budgeted",
     });
     // The real layer, for `refines`; nothing it draws is under test.

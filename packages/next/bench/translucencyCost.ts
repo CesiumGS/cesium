@@ -10,7 +10,7 @@ import {
   vec3,
   type DrawHandle,
   type MeshData,
-  type Translucency,
+  type TranslucencyMethod,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 
@@ -71,7 +71,7 @@ const median = (values: number[]) => {
 };
 
 async function measure(
-  translucency: Translucency,
+  translucency: TranslucencyMethod,
   settle: number,
   status: Element,
 ): Promise<Row[]> {
@@ -128,7 +128,7 @@ async function measure(
       target: new CanvasTarget(canvas),
       world,
       shadows: true,
-      translucency,
+      translucencyMethod: translucency,
     });
     view.camera.near = 0.5;
     view.camera.lookAt(origin, 30 * deg, -20 * deg, 160);
@@ -273,7 +273,7 @@ export const harness: Harness = {
     root = element;
     root.innerHTML = TEMPLATE;
     const translucency = (params.get("translucency") ??
-      "moments") as Translucency;
+      "moments") as TranslucencyMethod;
     const settle = Number(params.get("settle") ?? 3000);
     return {
       run: () =>

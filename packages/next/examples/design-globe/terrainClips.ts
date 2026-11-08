@@ -2,7 +2,7 @@
 // World Terrain): each site's footprint, and the corridor out to its side
 // slopes' daylight lines, so the ground never pokes through a design
 // surface and meets the corridor's slopes. The regions are
-// polygons in geodetic degrees (the globe's `addTerrainClip`), from the
+// polygons in geodetic degrees (the globe's `terrain.addRegion`), from the
 // design's own outline carried through the site's reprojected placement
 // (where the design truly is), padded by rigid's error there so the rigid
 // placement, drawn up to that far away, is clear of the ground too (all
@@ -11,9 +11,9 @@
 // runs it in Node.
 import type { Alignment } from "../../src/engineering/alignment.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
-import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
+import type { Globe, TerrainRegion } from "../../src/index.ts";
 
-/** A polygon vertex, degrees (the globe's `TerrainClipPosition`). */
+/** A polygon vertex, degrees (the globe's `TerrainRegionPosition`). */
 export interface ClipVertex {
   readonly longitude: number;
   readonly latitude: number;
@@ -581,7 +581,7 @@ export function daylightRegion(
 }
 
 /** The regions clipped now, by site, so a site placed again replaces its own. */
-const added = new WeakMap<Tileset3D, Map<string, unknown>>();
+const added = new WeakMap<Globe, Map<string, TerrainRegion>>();
 
 /**
  * Clips `globe`'s terrain inside `polygon`, for `site` (replacing what
@@ -589,7 +589,7 @@ const added = new WeakMap<Tileset3D, Map<string, unknown>>();
  * (the globe refuses some regions, saying why); nothing is clipped then.
  */
 export function syncTerrainClip(
-  globe: Tileset3D,
+  globe: Globe,
   site: string,
   polygon: readonly ClipVertex[] | undefined,
 ): string | undefined {
@@ -600,16 +600,14 @@ export function syncTerrainClip(
   }
   const before = mine.get(site);
   if (before !== undefined) {
-    globe.removeTerrainClip(
-      before as Parameters<typeof globe.removeTerrainClip>[0],
-    );
+    before.remove();
     mine.delete(site);
   }
   if (polygon === undefined) {
     return undefined;
   }
   try {
-    mine.set(site, globe.addTerrainClip({ polygon }));
+    mine.set(site, globe.terrain.addRegion({ polygon }));
     return undefined;
   } catch (error) {
     return error instanceof Error ? error.message : String(error);
@@ -617,7 +615,7 @@ export function syncTerrainClip(
 }
 
 /** Draws `globe`'s terrain everywhere again (the page is leaving). */
-export function clearTerrainClips(globe: Tileset3D): void {
+export function clearTerrainClips(globe: Globe): void {
   for (const site of [...(added.get(globe)?.keys() ?? [])]) {
     syncTerrainClip(globe, site, undefined);
   }
@@ -643,8 +641,7 @@ export const UNDERGROUND_OPACITY = 0.3;
  * centreline ±`halfWidth` design units, a vertex each `step` along each
  * side and at both ends, through the reprojected placement. The edges are
  * chords: on the tightest curve (radius 3,000 ftUS) a 500 ftUS chord sags
- * 12 ftUS inside the inner side's line, which a translucency region can
- * take.
+ * 12 ftUS inside the inner side's line, which a region can take.
  */
 export function undergroundRegion(
   alignment: Alignment,
@@ -670,39 +667,31 @@ export function undergroundRegion(
 }
 
 /** The see-underground strips made now, by globe. */
-const underground = new WeakMap<Tileset3D, unknown[]>();
+const underground = new WeakMap<Globe, TerrainRegion[]>();
 
 /**
- * Makes `globe`'s terrain translucent inside `pieces` (or opaque again,
- * with none), at `opacity`, picks going through it to what shows under
- * it. Returns why the globe refused a piece, if it did; none is left then.
+ * Draws `globe`'s terrain at `opacity` inside `pieces` (or in full again,
+ * with none), picks going through it to what shows under it. Returns why the globe refused a piece, if it did; none is left then.
  */
 export function syncUnderground(
-  globe: Tileset3D,
+  globe: Globe,
   pieces: readonly (readonly ClipVertex[])[],
   opacity: number,
 ): string | undefined {
-  for (const t of underground.get(globe) ?? []) {
-    globe.removeTerrainTranslucency(
-      t as Parameters<typeof globe.removeTerrainTranslucency>[0],
-    );
+  for (const region of underground.get(globe) ?? []) {
+    region.remove();
   }
   underground.delete(globe);
-  const made: unknown[] = [];
+  const made: TerrainRegion[] = [];
   try {
     for (const polygon of pieces) {
       made.push(
-        globe.addTerrainTranslucency(
-          { polygon },
-          { opacity, pickThrough: true },
-        ),
+        globe.terrain.addRegion({ polygon }, { opacity, pickThrough: true }),
       );
     }
   } catch (error) {
-    for (const t of made) {
-      globe.removeTerrainTranslucency(
-        t as Parameters<typeof globe.removeTerrainTranslucency>[0],
-      );
+    for (const region of made) {
+      region.remove();
     }
     return error instanceof Error ? error.message : String(error);
   }

@@ -281,9 +281,9 @@ engine's `accuracyOf`).
     ribbon, See underground; each a toggle (`active`), disabled with why
     where it can't apply.
 - **See underground** (owner, 2026-11-08), as civil design tools show
-  buried work: the ground within 500 ftUS of the corridor's centreline turns
-  translucent, at 30% opaque, through the engine's translucent terrain
-  (`Tileset3D.addTerrainTranslucency`). Its tunnels show in place under their
+  buried work: the ground within 500 ftUS of the corridor's centreline draws
+  at 30% opacity, through a terrain region
+  (`Globe.terrain.addRegion`). Its tunnels show in place under their
   hills, drawn as ever, with depth, so what is in front still hides them.
   While it's on, clicks and snaps go through that ground to the road
   (`pickThrough`), so an engineer can measure a tunnel. Heights and clamping

@@ -35,7 +35,7 @@ import {
   UNDERGROUND_OPACITY,
   type DaylightStretch,
 } from "../examples/design-globe/terrainClips.ts";
-import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import type { Globe } from "../src/globe/Globe.ts";
 import {
   MAX_CLIP_CELL_EDGES,
   MAX_CLIP_FRAGMENT_EDGES,
@@ -435,26 +435,31 @@ describe("see underground", () => {
     );
   });
 
-  it("makes pieces translucent, picks through, replacing what it made; and says why it couldn't", () => {
-    const added: { region: unknown; options: unknown }[] = [];
+  it("draws pieces at an opacity, picks through, replacing what it made; and says why it couldn't", () => {
+    const added: { region: unknown; options: unknown; remove(): void }[] = [];
     let refuse = false;
     const globe = {
-      addTerrainTranslucency(region: unknown, options: unknown) {
-        if (refuse && added.length > 0) {
-          throw new Error("too many edges");
-        }
-        const handle = { region, options };
-        added.push(handle);
-        return handle;
+      terrain: {
+        addRegion(region: unknown, options: unknown) {
+          if (refuse && added.length > 0) {
+            throw new Error("too many edges");
+          }
+          const handle = {
+            region,
+            options,
+            remove() {
+              added.splice(added.indexOf(handle), 1);
+            },
+          };
+          added.push(handle);
+          return handle;
+        },
       },
-      removeTerrainTranslucency(handle: never) {
-        added.splice(added.indexOf(handle), 1);
-      },
-    } as unknown as Tileset3D;
+    } as unknown as Globe;
     const a = [{ longitude: 0, latitude: 0 }];
     const b = [{ longitude: 1, latitude: 1 }];
     expect(syncUnderground(globe, [a], UNDERGROUND_OPACITY)).toBeUndefined();
-    expect(added).toEqual([
+    expect(added.map(({ region, options }) => ({ region, options }))).toEqual([
       {
         region: { polygon: a },
         options: { opacity: UNDERGROUND_OPACITY, pickThrough: true },

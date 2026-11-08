@@ -24,7 +24,7 @@ import {
   type World,
   type AerosolType,
   type ToneMapping,
-  type Translucency,
+  type TranslucencyMethod,
 } from "../../../src/index.ts";
 import { DEFAULT_ION_TOKEN } from "../ionToken.ts";
 import { limitsTier } from "../limitsTier.ts";
@@ -185,7 +185,7 @@ export interface Lighting {
   /** How exposed light becomes display color (1.x: no AgX, PBR Neutral). */
   toneMapping: ToneMapping;
   /** 2.0: how blended surfaces are put in order (moments, or exact lists). */
-  translucency: Translucency;
+  translucency: TranslucencyMethod;
   /** FXAA after tonemapping (both engines; on top of 4× MSAA). */
   fxaa: boolean;
 }
@@ -542,7 +542,7 @@ export class NextViewerHost implements ViewerHost {
             : { ev100: lighting.ev100 };
       view.outputEncoding = lighting.encoding;
       view.toneMapping = lighting.toneMapping;
-      view.translucency = lighting.translucency;
+      view.translucencyMethod = lighting.translucency;
       view.fxaa = lighting.fxaa;
     }
     viewer.engine.requestRender();

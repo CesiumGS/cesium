@@ -6,8 +6,8 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { EARTH } from "../src/scene/Body.ts";
 import {
-  TerrainClipError,
-  type TerrainClipRegion,
+  TerrainRegionError,
+  type TerrainRegionShape,
 } from "../src/globe/terrainClip.ts";
 import {
   CLIP_BLOCK_BITS,
@@ -122,7 +122,7 @@ describe("terrain clip regions' blocks", () => {
       (1 + MAX_TERRAIN_CLIPS * MAX_TERRAIN_CLIP_BLOCKS) * CLIP_BLOCK_ROWS * 16,
     );
     expect(() => world.addTerrainClipRegion(rowsOf(1))).toThrow(
-      /at most 32 terrain clip regions per world/,
+      /at most 32 terrain regions per world/,
     );
   });
 
@@ -132,7 +132,7 @@ describe("terrain clip regions' blocks", () => {
     expect(world.memory.terrainClipBlocks.capacity).toBe(100);
     world.addTerrainClipRegion(rowsOf(60));
     expect(() => world.addTerrainClipRegion(rowsOf(41))).toThrow(
-      TerrainClipError,
+      TerrainRegionError,
     );
     expect(() => world.addTerrainClipRegion(rowsOf(41))).toThrow(
       /would take 101 clip blocks, more than the 100 set aside .*maxClipBlocks.*simplify the polygon, or remove a region/,
@@ -274,7 +274,7 @@ describe("terrain clip regions' blocks", () => {
   it("frees a globe's regions and blocks when it goes", () => {
     const world = engine.createWorld();
     const globe = engine.addEllipsoid(world);
-    globe.addTerrainClip({
+    globe.terrain.addRegion({
       rectangle: { west: 7.4, south: 46.9, east: 7.45, north: 46.95 },
     });
     expect(world.memory.terrainClipBlocks.used).toBeGreaterThan(0);
@@ -282,18 +282,18 @@ describe("terrain clip regions' blocks", () => {
     expect(world.memory.terrainClipBlocks.used).toBe(0);
     // A destroyed globe takes no new region (its slot would never free).
     expect(() =>
-      globe.addTerrainClip({
+      globe.terrain.addRegion({
         rectangle: { west: 7.4, south: 46.9, east: 7.45, north: 46.95 },
       }),
     ).toThrow(/destroyed/);
     expect(world.memory.terrainClipBlocks.used).toBe(0);
   });
 
-  it("refuses an overlap past a fragment's edge budget at addTerrainClip", () => {
+  it("refuses an overlap past a fragment's edge budget at addRegion", () => {
     const world = engine.createWorld();
     const globe = engine.addEllipsoid(world);
     // Rings of 16 edges, as many on one spot as the budget allows.
-    const ring = (lon: number): TerrainClipRegion => ({
+    const ring = (lon: number): TerrainRegionShape => ({
       polygon: Array.from({ length: 16 }, (_, k) => ({
         longitude: lon + 0.01 * Math.cos((2 * Math.PI * k) / 16),
         latitude: 46 + 0.01 * Math.sin((2 * Math.PI * k) / 16),
@@ -303,17 +303,17 @@ describe("terrain clip regions' blocks", () => {
     let refused: unknown;
     for (; added < MAX_TERRAIN_CLIPS; added++) {
       try {
-        globe.addTerrainClip(ring(7 + added * 0.0001));
+        globe.terrain.addRegion(ring(7 + added * 0.0001));
       } catch (error) {
         refused = error;
         break;
       }
     }
-    expect(refused).toBeInstanceOf(TerrainClipError);
+    expect(refused).toBeInstanceOf(TerrainRegionError);
     expect((refused as Error).message).toMatch(/at most 128/);
     // Refused before taking a slot or blocks.
-    expect(globe.terrainClips.length).toBe(added);
-    expect(() => globe.addTerrainClip(ring(9))).not.toThrow();
+    expect(globe.terrain.regions.length).toBe(added);
+    expect(() => globe.terrain.addRegion(ring(9))).not.toThrow();
     engine.removeTileset(globe);
   });
 });
@@ -344,20 +344,20 @@ describe("tiles' masks as regions come and go", () => {
     const u = blocks(world).recordsU32;
     const mask = (draw: typeof under) =>
       u[draw.index * RECORD_WORDS + TERRAIN_CLIP_WORD];
-    const site = globe.addTerrainClip({
+    const site = globe.terrain.addRegion({
       rectangle: { west: 7.42, south: 46.92, east: 7.44, north: 46.94 },
     });
     expect(mask(under)).toBe(1); // slot 0
     expect(mask(beside)).toBe(0);
-    const east = globe.addTerrainClip({
+    const east = globe.terrain.addRegion({
       rectangle: { west: 8.45, south: 46.92, east: 8.46, north: 46.94 },
     });
     expect(mask(under)).toBe(0b01);
     expect(mask(beside)).toBe(0b10);
-    globe.removeTerrainClip(site);
+    site.remove();
     expect(mask(under)).toBe(0);
     expect(mask(beside)).toBe(0b10);
-    globe.removeTerrainClip(east);
+    east.remove();
     expect(mask(beside)).toBe(0);
     loaded.clear();
     engine.removeTileset(globe);
@@ -386,7 +386,7 @@ function fakeTileset(
     url: options.url,
     show: true,
     enableCollision: options.collision,
-    terrain: options.terrain,
+    isGlobe: options.terrain,
     changedAt: 0,
     listeners,
     onHeightsChanged: (l: (r: unknown) => void) => listeners.push(l),
@@ -546,7 +546,7 @@ describe("sampleHeightMostDetailed under terrain clips", () => {
     const engine = await fakeEngine();
     const world = engine.createWorld();
     const globe = engine.addEllipsoid(world);
-    globe.addTerrainClip({
+    globe.terrain.addRegion({
       rectangle: { west: 7.4, south: 46.9, east: 7.45, north: 46.95 },
     });
     vi.spyOn(globe, "queryRays").mockResolvedValue({

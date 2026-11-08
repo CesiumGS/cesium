@@ -43,6 +43,7 @@ The GPU is shared with every other app on the machine. A hung shader resets it f
 - Plain, short sentences. Name units and datums. No e-notation in prose ("10⁻⁹", not "1e-9").
 - Use inclusive terms: "overall plan" or "main", not "master"; "allowlist", not "whitelist".
 - In frames and camera code, never write "frame" alone: say reference frame, tick (one pass of the engine loop, never "per frame"), render space or render root. Code names (`Frame`, `FrameData`) keep their names.
+- "Opacity" is the value from 0 to 1, "translucent" is an adjective in prose, and "alpha" means a colour's channel.
 - A stated accuracy never claims more than its inputs support. "Can't tell" is an honest answer.
 
 ## UI and examples

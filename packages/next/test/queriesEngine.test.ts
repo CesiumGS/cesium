@@ -18,7 +18,7 @@ import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { OffscreenTarget, type View } from "../src/scene/View.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
-import { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import { Globe } from "../src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { at, contains, gridTile } from "./terrainRayFixtures.ts";
 
@@ -373,7 +373,7 @@ describe("Engine.queries through a real globe, as one view draws it", () => {
     tile.state = "ready";
 
     const world = engine.createWorld();
-    const globe = Tileset3D.fromSource(engine, world, source, {});
+    const globe = Globe.create(engine, world, source, {});
     engine.tilesets.push(globe);
     const view = (target: OffscreenTarget) =>
       engine.addView({ target, world, exposure: { ev100: 15 } });

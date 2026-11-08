@@ -897,13 +897,12 @@ bool segmentsCross(float2 a, float2 b, float2 q, float2 s) {
   return qSide != sSide && aSide != bSide;
 }
 
-// Terrain clipping and translucency (a globe's `addTerrainClip` and
-// `addTerrainTranslucency`, globe/terrainClip.ts): the world's regions
-// live in `clipBoxes`, block 0's first 32 rows a directory, a row a slot:
-// the region's first row (x, a uint; 0 for a free slot), its opacity (y,
-// a float's bits: 0 a clip, the terrain not drawn inside; between 0 and 1
-// translucent), and whether it is everywhere (z, a uint: 1 for the
-// globe's `terrainOpacity`, a slot with no shape). A region's rows
+// Terrain regions (a globe's `terrain.addRegion`, globe/terrainClip.ts):
+// the world's regions live in `clipBoxes`, block 0's first 32 rows a
+// directory, a row a slot: the region's first row (x, a uint; 0 for a free
+// slot), its opacity (y, a float's bits: 0 the terrain not drawn inside,
+// between 0 and 1 drawn at that opacity, 1 no effect), and whether it is
+// everywhere (z, a uint: 1 for "everywhere", a slot with no shape). A region's rows
 // (`packClipShape`): its anchor's position hi (xyz) with its gnomonic
 // radius (w); lo with its grid's columns and rows (w, a uint: columns in
 // the low 16 bits); its east, north and up axes; its box in its plane

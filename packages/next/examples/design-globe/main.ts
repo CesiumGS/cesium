@@ -439,7 +439,7 @@ export function run(context: ExampleContext): ExampleRun {
   function clipTerrain(site: SiteRuntime): void {
     const globe = viewer.globe;
     const placement = site.reprojectedPlacement ?? site.rigidPlacement;
-    if (globe === undefined || !globe.terrain || placement === undefined) {
+    if (globe === undefined || placement === undefined) {
       return;
     }
     const displayed = (d: ArrayLike<number>) => placement.displayed(d);
@@ -573,7 +573,7 @@ export function run(context: ExampleContext): ExampleRun {
   function syncUndergroundTerrain(): void {
     const globe = viewer.globe;
     const placement = corridor.reprojectedPlacement;
-    if (globe === undefined || globe.isDestroyed() || !globe.terrain) {
+    if (globe === undefined || globe.isDestroyed()) {
       undergroundNote = view.underground ? "once the terrain is in" : undefined;
       return;
     }

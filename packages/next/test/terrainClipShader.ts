@@ -91,7 +91,7 @@ export function shaderInside(
 
 /** A region as the world's directory holds it (surface.slang `clipBoxes`). */
 export interface ShaderRegion {
-  /** 0: a clip. */
+  /** 0 (not drawn) to 1 (no effect). */
   opacity: number;
   /** The whole globe's slot: no shape. */
   everywhere?: boolean;
@@ -102,8 +102,8 @@ export interface ShaderRegion {
 /**
  * surface.slang `terrainOpacity`: the least opacity of the regions of
  * `mask` (a bit per slot, tested from the lowest) that hold `point`, 1
- * where none does, 0 at a clip. A region that can't lower what was found
- * isn't tested, nor a translucent one with `clipsOnly`; the edge budget is
+ * where none does, 0 in a cut. A region that can't lower what was found
+ * isn't tested, nor one above 0 with `clipsOnly`; the edge budget is
  * shared by the regions tested.
  */
 export function shaderOpacity(
@@ -119,7 +119,7 @@ export function shaderOpacity(
     if ((mask & (1 << slot)) === 0) {
       continue;
     }
-    // A slot with no region reads as a clip of no shape: never inside.
+    // A slot with no region reads as a cut of no shape: never inside.
     const region = regions[slot] ?? { opacity: 0, rows: undefined };
     const alpha = Math.fround(region.opacity);
     if (alpha >= opacity || (clipsOnly && alpha > 0)) {

@@ -10,7 +10,7 @@ import {
   mat4,
   vec3,
   type MeshData,
-  type Translucency,
+  type TranslucencyMethod,
   type World,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
@@ -486,7 +486,7 @@ async function withView<T>(
   engine: Engine,
   target: OffscreenTarget,
   scene: Scene,
-  translucency: Translucency,
+  translucency: TranslucencyMethod,
   reversed: boolean,
   body: () => Promise<T>,
 ): Promise<T> {
@@ -515,7 +515,7 @@ async function withView<T>(
     camera,
     background: "color",
     clearColor: [0.03, 0.04, 0.06],
-    translucency,
+    translucencyMethod: translucency,
     lighting: { environment: "procedural" },
   });
   try {
@@ -531,7 +531,7 @@ async function render(
   engine: Engine,
   target: OffscreenTarget,
   scene: Scene,
-  translucency: Translucency,
+  translucency: TranslucencyMethod,
   reversed = false,
 ): Promise<ImageData> {
   return withView(engine, target, scene, translucency, reversed, async () => {
@@ -696,7 +696,7 @@ async function runTranslucencyCost(): Promise<CostRow[]> {
   const engine = await Engine.create();
   const target = new OffscreenTarget(1920, 1080);
   const queue = engine.gpu.device.queue;
-  const perFrame = (scene: Scene, way: Translucency) =>
+  const perFrame = (scene: Scene, way: TranslucencyMethod) =>
     withView(engine, target, scene, way, false, async () => {
       const run = async (frames: number) => {
         for (let i = 0; i < frames; i++) {

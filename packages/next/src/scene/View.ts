@@ -468,8 +468,8 @@ export interface ViewOptions {
   ambientOcclusion?: boolean;
   /** How far ambient occlusion looks for occluders, m. Default 3. */
   ambientOcclusionRadius?: number;
-  /** How blended surfaces are put in order (`Translucency`). */
-  translucency?: Translucency;
+  /** How blended surfaces are put in order (`TranslucencyMethod`). */
+  translucencyMethod?: TranslucencyMethod;
   /**
    * FXAA after tonemapping, on top of 4× MSAA: smooths the edges MSAA
    * leaves (within shading, and translucency's moments). Default false.
@@ -502,7 +502,7 @@ export type OutputEncoding = "srgb" | "gamma2.2";
  *   in order. Memory grows with the layers on screen (16 bytes each); the
  *   reference "moments" is tested against.
  */
-export type Translucency = "moments" | "exact";
+export type TranslucencyMethod = "moments" | "exact";
 
 /**
  * How exposed scene light becomes display color:
@@ -583,7 +583,7 @@ export class View {
   shadows: boolean;
   ambientOcclusion: boolean;
   ambientOcclusionRadius: number;
-  translucency: Translucency;
+  translucencyMethod: TranslucencyMethod;
   fxaa: boolean;
   cityLights: boolean;
   /**
@@ -726,7 +726,7 @@ export class View {
     this.shadows = options.shadows ?? false;
     this.ambientOcclusion = options.ambientOcclusion ?? false;
     this.ambientOcclusionRadius = options.ambientOcclusionRadius ?? 3;
-    this.translucency = options.translucency ?? "moments";
+    this.translucencyMethod = options.translucencyMethod ?? "moments";
     this.fxaa = options.fxaa ?? false;
     this.cityLights = options.cityLights ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
@@ -1085,10 +1085,10 @@ export class View {
    *
    * What a pick sees through, here and in `pickPosition` and `pickPoint`:
    * blended surfaces (glass, ghosts) are not picked; what lies behind them
-   * is. Translucent terrain is the exception
-   * (`Tileset3D.addTerrainTranslucency`, `setTerrainOpacity`): picks stop
-   * at it as at opaque terrain, unless it was made with `pickThrough`, when
-   * they go on to what shows through it (a tunnel under the ground).
+   * is. Terrain drawn below full opacity by a region is the exception
+   * (`Globe.terrain.addRegion`): where it is ground, picks stop at it as
+   * at opaque terrain, unless the region has `pickThrough`, when they go
+   * on to what shows through it (a tunnel under the ground).
    */
   pick(x: number, y: number): Promise<PickResult | undefined> {
     return new Promise((resolve) => {

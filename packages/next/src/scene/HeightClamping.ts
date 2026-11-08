@@ -113,10 +113,10 @@ const CAST_INTERVAL = 10;
  *   tile hit along a geocentric ray). Casts are batched for all anchors and
  *   repeat only while those tilesets change.
  * - Ground is the highest of the surfaces the reference allows.
- * - A globe's terrain clips (`Tileset3D.addTerrainClip`) are holes: inside
- *   one the globe gives no ground, so content there stands on collision
+ * - A globe's terrain regions that aren't ground (`TerrainRegion.ground`,
+ *   false for a cut) are holes: inside one the globe gives no ground, so content there stands on collision
  *   tilesets (`clampToGround`, `clampTo3DTiles`), or keeps its height with
- *   only terrain allowed (`clampToTerrain`). Adding or removing a clip
+ *   only terrain allowed (`clampToTerrain`). Adding, removing or changing the ground of a region
  *   re-clamps the content under it.
  *
  * Content moves along the local vertical only, as 1.x models do: its root
@@ -293,14 +293,14 @@ export class HeightClamping {
           t.world === e.world &&
           t.show &&
           onEarth(t) &&
-          (t.terrain
+          (t.isGlobe
             ? !/3DTiles/.test(reference)
             : t.enableCollision && usesTiles(reference)),
       );
-      // A globe clipped here (`addTerrainClip`) has no ground to give.
+      // A globe with a region here that is not ground has none to give.
       const surfaces = allowed.filter(
         (t) =>
-          !t.terrain ||
+          !t.isGlobe ||
           !t.terrainClipped(longitude / DEGREES, latitude / DEGREES),
       );
       if (surfaces.length === 0) {
@@ -427,7 +427,7 @@ export class HeightClamping {
       // Not the globes' draws, even with collision: their ground comes
       // from `surfaceHeight`, which knows their clips; a cast would stand
       // content on the clipped terrain it can't see.
-      const globes = tilesets.filter((t) => t.terrain && t.world === world);
+      const globes = tilesets.filter((t) => t.isGlobe && t.world === world);
       const hits = await world.castRays(rays, {
         // The rays are Earth-fixed: the content under the Earth's anchor.
         anchor: earthAnchor(world),
@@ -533,7 +533,7 @@ function settle(e: Entry): void {
  * clips and all.
  */
 function isCollider(t: Tileset3D): boolean {
-  return t.show && t.enableCollision && !t.terrain && onEarth(t);
+  return t.show && t.enableCollision && !t.isGlobe && onEarth(t);
 }
 
 /** Under the Earth's anchor: its ground is the Earth's. */

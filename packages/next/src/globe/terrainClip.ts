@@ -1,10 +1,10 @@
 /**
- * Terrain clipping: regions of a globe (`Tileset3D.addTerrainClip`) where
- * its terrain isn't drawn, so content placed there (a site's design, an
- * excavation) shows instead. Rectangles and simple polygons, their
- * vertices geodetic longitude and latitude in degrees on the globe's body.
- * The same regions can make the terrain translucent instead
- * (`Tileset3D.addTerrainTranslucency`): a region with an opacity.
+ * Terrain regions: parts of a globe (`Globe.terrain.addRegion`) where its
+ * terrain is drawn at an opacity from 0 (not drawn, so content placed there,
+ * a site's design or an excavation, shows instead) to 1 (as if there were no
+ * region). Rectangles and simple polygons, their vertices geodetic
+ * longitude and latitude in degrees on the globe's body, or the whole
+ * globe.
  *
  * Each region is tested per fragment (surface.slang `terrainOpacity`):
  * a fragment's position, relative to the region's anchor (the middle of
@@ -61,18 +61,18 @@ import {
 import type { Rectangle } from "./quantizedMesh.ts";
 
 /**
- * Why `Tileset3D.addTerrainClip` refused a region; the message says what
+ * Why `Globe.terrain.addRegion` refused a region; the message says what
  * to change.
  */
-export class TerrainClipError extends Error {
+export class TerrainRegionError extends Error {
   constructor(message: string) {
-    super(`TerrainClip: ${message}`);
-    this.name = "TerrainClipError";
+    super(`TerrainRegion: ${message}`);
+    this.name = "TerrainRegionError";
   }
 }
 
 /** A rectangle in degrees; `west` > `east` crosses the antimeridian. */
-export interface TerrainClipRectangle {
+export interface TerrainRegionRectangle {
   west: number;
   south: number;
   east: number;
@@ -80,13 +80,13 @@ export interface TerrainClipRectangle {
 }
 
 /** A polygon vertex: geodetic longitude and latitude, degrees. */
-export interface TerrainClipPosition {
+export interface TerrainRegionPosition {
   longitude: number;
   latitude: number;
 }
 
 /**
- * Where a globe's terrain isn't drawn (`Tileset3D.addTerrainClip`): a
+ * Where a region of a globe's terrain lies (`Globe.terrain.addRegion`): a
  * rectangle, or a simple polygon (no holes, edges that don't cross; either
  * winding; a closing vertex equal to the first is dropped). Vertices are
  * geodetic, in degrees, on the globe's body. Regions are for sites: every
@@ -94,18 +94,12 @@ export interface TerrainClipPosition {
  * (its edges too) below 85° of latitude: regions that reach within 5° of
  * a pole, or go round one, are refused.
  */
-export type TerrainClipRegion =
-  | { readonly rectangle: TerrainClipRectangle; readonly polygon?: undefined }
+export type TerrainRegionShape =
+  | { readonly rectangle: TerrainRegionRectangle; readonly polygon?: undefined }
   | {
-      readonly polygon: readonly TerrainClipPosition[];
+      readonly polygon: readonly TerrainRegionPosition[];
       readonly rectangle?: undefined;
     };
-
-/** A region added to a globe, for `Tileset3D.removeTerrainClip`. */
-export interface TerrainClip {
-  /** The region as it was given. */
-  readonly region: TerrainClipRegion;
-}
 
 /** Vertices of one region at most (its edges are tested per fragment). */
 export const MAX_TERRAIN_CLIP_VERTICES = 1024;
@@ -300,12 +294,12 @@ function wrapRadians(longitude: number): number {
 
 function checkLatitude(latitude: number, what: string): void {
   if (!Number.isFinite(latitude) || Math.abs(latitude) > 90) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       `${what} latitude ${latitude} is not in [-90, 90]; give degrees.`,
     );
   }
   if (Math.abs(latitude) > MAX_LATITUDE) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       `${what} latitude ${latitude}° is within ${90 - MAX_LATITUDE}° of a pole; regions near the poles aren't supported yet, so keep the region below ${MAX_LATITUDE}°.`,
     );
   }
@@ -316,23 +310,23 @@ function checkLatitude(latitude: number, what: string): void {
  * saying what is wrong with it.
  */
 export function compileTerrainClip(
-  region: TerrainClipRegion,
+  region: TerrainRegionShape,
   ellipsoid: Ellipsoid = Ellipsoid.WGS84,
 ): ClipShape {
   if (region.rectangle && region.polygon) {
-    throw new TerrainClipError("give a rectangle or a polygon, not both.");
+    throw new TerrainRegionError("give a rectangle or a polygon, not both.");
   }
   if (region.rectangle) {
     return compileRectangle(region.rectangle, ellipsoid);
   }
   const polygon = region.polygon;
   if (!Array.isArray(polygon)) {
-    throw new TerrainClipError("give a rectangle or a polygon.");
+    throw new TerrainRegionError("give a rectangle or a polygon.");
   }
   const points: Array<[number, number]> = [];
-  polygon.forEach((p: TerrainClipPosition, i: number) => {
+  polygon.forEach((p: TerrainRegionPosition, i: number) => {
     if (!Number.isFinite(p?.longitude)) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `vertex ${i}'s longitude is not a number; give degrees.`,
       );
     }
@@ -346,13 +340,13 @@ export function compileTerrainClip(
     }
   }
   if (points.length < 3) {
-    throw new TerrainClipError("a polygon needs at least 3 vertices.");
+    throw new TerrainRegionError("a polygon needs at least 3 vertices.");
   }
   // Longitudes continued from the first, each edge the short way round.
   for (let i = 1; i < points.length; i++) {
     const step = wrapDegrees(points[i]![0] - points[i - 1]![0]);
     if (Math.abs(step) >= 180) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `edge ${i - 1} spans 180° of longitude; regions are for sites, so split a larger area into regions.`,
       );
     }
@@ -374,12 +368,12 @@ export function compileTerrainClip(
 }
 
 function compileRectangle(
-  r: TerrainClipRectangle,
+  r: TerrainRegionRectangle,
   ellipsoid: Ellipsoid,
 ): ClipShape {
   for (const key of ["west", "east"] as const) {
     if (!Number.isFinite(r[key])) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `the rectangle's ${key} is not a number; give degrees.`,
       );
     }
@@ -387,12 +381,14 @@ function compileRectangle(
   checkLatitude(r.south, "the rectangle's south");
   checkLatitude(r.north, "the rectangle's north");
   if (!(r.north > r.south)) {
-    throw new TerrainClipError("the rectangle's north must exceed its south.");
+    throw new TerrainRegionError(
+      "the rectangle's north must exceed its south.",
+    );
   }
   const west = wrapDegrees(r.west);
   let east = wrapDegrees(r.east);
   if (east === west) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       "the rectangle's east equals its west; give an east that differs (west > east crosses the antimeridian).",
     );
   }
@@ -400,7 +396,7 @@ function compileRectangle(
     east += 360; // across the antimeridian
   }
   if (east - west >= 180) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       `the rectangle spans ${east - west}° of longitude; regions are for sites, so split a larger area into regions.`,
     );
   }
@@ -479,7 +475,7 @@ function compileShape(
   base = frame(lon0, lat0, ellipsoid),
 ): ClipShape {
   if (points.length > MAX_TERRAIN_CLIP_VERTICES) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       `${points.length} vertices; at most ${MAX_TERRAIN_CLIP_VERTICES} are supported, so simplify the polygon.`,
     );
   }
@@ -497,7 +493,7 @@ function compileShape(
       cp * Math.sin(longitude) * base.up[1]! +
       Math.sin(latitude) * base.up[2]!;
     if (along < reach || !clipPlane(base, p, q)) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `vertex ${i} lies more than ${MAX_REACH}° from the region's middle; regions are for sites, so split a larger area into regions.`,
       );
     }
@@ -522,21 +518,21 @@ function compileShape(
   }
   const crossing = crossingEdges(xy);
   if (crossing) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       `edges ${crossing[0]} and ${crossing[1]} cross; give a simple polygon (no holes, no crossing edges).`,
     );
   }
   // No area, to rounding (meridians are straight: points along one).
   const size = Math.hypot(box[2] - box[0], box[3] - box[1]);
   if (!(Math.abs(area) > 1e-6 + 1e-12 * size * size)) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       "the polygon has no area; give at least 3 vertices not all on one line.",
     );
   }
   // Round a pole: the edges' bounds below miss its cap.
   for (const z of [ellipsoid.radii[2]!, -ellipsoid.radii[2]!]) {
     if (clipPlane(base, [0, 0, z], q) && insideRing(xy, q[0]!, q[1]!)) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `the polygon goes round the ${z > 0 ? "north" : "south"} pole; regions near the poles aren't supported yet, so keep the region below ${MAX_LATITUDE}°.`,
       );
     }
@@ -547,7 +543,7 @@ function compileShape(
     // their vertices (a rectangle's follow its parallels).
     const reach = Math.max(-sampled.south, sampled.north);
     if (reach > MAX_LATITUDE * RADIANS) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `edge ${sampled.poleward} reaches ${(reach / RADIANS).toFixed(4)}° of latitude, within ${90 - MAX_LATITUDE}° of a pole; regions near the poles aren't supported yet, so keep the region below ${MAX_LATITUDE}° (vertices closer together bow less).`,
       );
     }
@@ -839,7 +835,7 @@ function buildGrid(
   }
   const most = crowd(best.lists);
   if (most > MAX_CLIP_CELL_EDGES) {
-    throw new TerrainClipError(
+    throw new TerrainRegionError(
       `${most} edges crowd into one cell of the region's grid (at most ${MAX_CLIP_CELL_EDGES}); simplify the polygon where its edges are densest, or split it into smaller regions.`,
     );
   }
@@ -1079,24 +1075,45 @@ export function packClipShape(shape: ClipShape): Float32Array {
 }
 
 /**
- * @internal One region of a globe: its handle, shape and world slot, and
- * its opacity: 0 for a clip (not drawn inside), between 0 and 1 for a
- * translucent region (`Tileset3D.addTerrainTranslucency`).
+ * @internal One region of a globe: its handle, its shape (none for the
+ * whole globe) and world slot, and what it does (`opacity`, `ground`,
+ * `pickThrough`).
  */
 export interface ClipEntry {
   readonly clip: object;
-  readonly shape: ClipShape;
-  /** Its bit in draw records' `terrainClip` (`World.addTerrainClipRegion`). */
-  readonly slot: number;
-  /** 0: a clip. Default 0. */
-  opacity?: number;
-  /** A translucent region picks don't stop at (`pickThrough`). */
-  pickThrough?: boolean;
+  /** Undefined for the whole globe ("everywhere"). */
+  readonly shape: ClipShape | undefined;
+  /**
+   * Its bit in draw records' `terrainClip` (`World.addTerrainClipRegion`);
+   * -1 for the whole globe while its opacity is 1, which holds no slot.
+   */
+  slot: number;
+  /** 0 (not drawn) to 1 (no effect). */
+  opacity: number;
+  /** Terrain inside is ground for queries. */
+  ground: boolean;
+  /** Picks go through the ground inside to what shows through. */
+  pickThrough: boolean;
+}
+
+/** The whole globe's longitude and latitude bounds, radians. */
+const WHOLE_GLOBE: Rectangle = {
+  west: -Math.PI,
+  south: -Math.PI / 2,
+  east: Math.PI,
+  north: Math.PI / 2,
+};
+
+/** Whether a region's opacity changes how the terrain draws (below 1). */
+function acts(e: ClipEntry): boolean {
+  return e.opacity < 1 && e.slot >= 0;
 }
 
 /**
- * @internal A globe's clip regions as the CPU tests them: per tile (which
+ * @internal A globe's regions as the CPU tests them: per tile (which
  * regions its draws test) and per point (picks, rays, height queries).
+ * A region at opacity 1 draws nothing different, so tiles don't test it;
+ * it still answers the queries its `ground` sets.
  */
 export class TerrainClips {
   private readonly list: ClipEntry[] = [];
@@ -1116,7 +1133,7 @@ export class TerrainClips {
   }
 
   add(entry: ClipEntry): void {
-    if (entry.slot < 0 || entry.slot >= MAX_TERRAIN_CLIPS) {
+    if (entry.slot >= MAX_TERRAIN_CLIPS) {
       throw new Error(`TerrainClips: slot ${entry.slot} out of range`);
     }
     this.list.push(entry);
@@ -1134,13 +1151,13 @@ export class TerrainClips {
     let edges = shape.maxCellEdges;
     let others = 0;
     for (const e of this.list) {
-      if (rectanglesOverlap(e.shape.cost, shape.cost)) {
+      if (e.shape && rectanglesOverlap(e.shape.cost, shape.cost)) {
         edges += e.shape.maxCellEdges;
         others++;
       }
     }
     if (edges > MAX_CLIP_FRAGMENT_EDGES) {
-      throw new TerrainClipError(
+      throw new TerrainRegionError(
         `where this region overlaps ${others} other${others === 1 ? "" : "s"}, a fragment could test ${edges} edges (at most ${MAX_CLIP_FRAGMENT_EDGES}; this region's most crowded cell has ${shape.maxCellEdges}); simplify the polygon where its edges are densest, split it, or remove a region it overlaps.`,
       );
     }
@@ -1156,13 +1173,20 @@ export class TerrainClips {
     return entry;
   }
 
-  /** The regions (a bit per slot) touching a tile's rectangle, radians. */
+  /**
+   * The regions (a bit per slot) a tile's rectangle (radians) touches and
+   * that change how it draws (opacity below 1); the whole globe's always.
+   */
   maskFor(rectangle: Rectangle): number {
     let mask = 0;
     for (const e of this.list) {
+      if (!acts(e)) {
+        continue;
+      }
       if (
-        rectanglesOverlap(e.shape.bounds, rectangle) &&
-        this.touches(e.shape, rectangle)
+        !e.shape ||
+        (rectanglesOverlap(e.shape.bounds, rectangle) &&
+          this.touches(e.shape, rectangle))
       ) {
         mask |= 1 << e.slot;
       }
@@ -1247,21 +1271,19 @@ export class TerrainClips {
     return false;
   }
 
-  /** The clips' entries (opacity 0), not the translucent regions'. */
-  get clips(): readonly ClipEntry[] {
-    return this.list.filter((e) => !(e.opacity! > 0));
+  /**
+   * The regions whose terrain is ground and drawn below full opacity,
+   * which picks stop at unless `pickThrough` (they may be invisible).
+   */
+  get partial(): readonly ClipEntry[] {
+    return this.list.filter((e) => e.ground && e.opacity < 1);
   }
 
-  /** The translucent regions' entries. */
-  get translucent(): readonly ClipEntry[] {
-    return this.list.filter((e) => e.opacity! > 0);
-  }
-
-  /** The translucent regions' slots, a bit each. */
-  get translucentMask(): number {
+  /** The slots (a bit each) of regions that draw blended: 0 < opacity < 1. */
+  get blendedMask(): number {
     let mask = 0;
     for (const e of this.list) {
-      if (e.opacity! > 0) {
+      if (acts(e) && e.opacity > 0) {
         mask |= 1 << e.slot;
       }
     }
@@ -1269,29 +1291,25 @@ export class TerrainClips {
   }
 
   /**
-   * Whether an Earth-fixed point lies inside a clip (not drawn).
-   * Translucent regions are drawn: not here.
+   * Whether an Earth-fixed point lies inside a region that isn't ground (a
+   * hole for rays and heights).
    */
   clippedPoint(p: ArrayLike<number>): boolean {
-    return this.inside(p, (e) => !(e.opacity! > 0));
+    return this.inside(p, (e) => !e.ground);
   }
 
   /**
-   * At an Earth-fixed point: whether it lies inside a translucent region
-   * (`inside`), and inside one that picks stop at, not `pickThrough`
-   * (`stops`). Clips aren't counted.
+   * At an Earth-fixed point: whether it lies inside ground drawn below full
+   * opacity (`inside`), and inside such ground that picks stop at, not
+   * `pickThrough` (`stops`). Regions that aren't ground aren't counted.
    */
-  translucentAt(p: ArrayLike<number>): { inside: boolean; stops: boolean } {
+  partialAt(p: ArrayLike<number>): { inside: boolean; stops: boolean } {
     let inside = false;
     let stops = false;
     for (const e of this.list) {
-      if (
-        e.opacity! > 0 &&
-        clipPlane(e.shape, p, this.plane) &&
-        insideClipShape(e.shape, this.plane[0]!, this.plane[1]!)
-      ) {
+      if (e.ground && e.opacity < 1 && this.contains(e, p)) {
         inside = true;
-        stops ||= e.pickThrough !== true;
+        stops ||= !e.pickThrough;
       }
     }
     return { inside, stops };
@@ -1303,20 +1321,25 @@ export class TerrainClips {
     which: (e: ClipEntry) => boolean,
   ): boolean {
     for (const e of this.list) {
-      if (
-        which(e) &&
-        clipPlane(e.shape, p, this.plane) &&
-        insideClipShape(e.shape, this.plane[0]!, this.plane[1]!)
-      ) {
+      if (which(e) && this.contains(e, p)) {
         return true;
       }
     }
     return false;
   }
 
+  /** Whether an Earth-fixed point lies inside a region's shape. */
+  private contains(e: ClipEntry, p: ArrayLike<number>): boolean {
+    return (
+      !e.shape ||
+      (clipPlane(e.shape, p, this.plane) &&
+        insideClipShape(e.shape, this.plane[0]!, this.plane[1]!))
+    );
+  }
+
   /**
    * Whether the terrain at a longitude, latitude (radians) and height (m)
-   * is clipped.
+   * lies inside a region that isn't ground.
    */
   clippedAt(longitude: number, latitude: number, height = 0): boolean {
     if (this.list.length === 0) {
@@ -1324,7 +1347,10 @@ export class TerrainClips {
     }
     let candidate = false;
     for (const e of this.list) {
-      if (!(e.opacity! > 0) && inBounds(e.shape.bounds, longitude, latitude)) {
+      if (
+        !e.ground &&
+        (!e.shape || inBounds(e.shape.bounds, longitude, latitude))
+      ) {
         candidate = true;
         break;
       }
@@ -1339,9 +1365,9 @@ export class TerrainClips {
     return this.clippedPoint(this.scratch);
   }
 
-  /** The union of the regions' bounds, per region (height listeners). */
+  /** A region's bounds, one rectangle or two across 180° (listeners). */
   boundsOf(entry: ClipEntry): Rectangle[] {
-    const b = entry.shape.bounds;
+    const b = entry.shape ? entry.shape.bounds : WHOLE_GLOBE;
     return b.west <= b.east
       ? [b]
       : [

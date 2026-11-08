@@ -6,11 +6,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { flatTerrainTile } from "../src/globe/quantizedMesh.ts";
-import {
-  TerrainClipError,
-  compileTerrainClip,
-  packClipShape,
-} from "../src/globe/terrainClip.ts";
+import { compileTerrainClip, packClipShape } from "../src/globe/terrainClip.ts";
 import { castTerrainRay } from "../src/globe/terrainRay.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import {
@@ -24,7 +20,7 @@ import {
 } from "../src/render/layout.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import type { DrawHandle } from "../src/scene/World.ts";
-import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import type { Globe } from "../src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import {
   shaderOpacity,
@@ -208,27 +204,33 @@ describe("the world's region slots with an opacity", () => {
     }
   });
 
-  it("refuse an opacity out of range, a clip everywhere, and a change of kind", async () => {
-    const { world, restore } = await spy();
+  it("accept 0 and 1 for any region, everywhere too, and refuse an opacity out of range", async () => {
+    const { world, row, restore } = await spy();
     try {
-      expect(() => world.addTerrainClipRegion(rows(1), 1)).toThrow(RangeError);
-      expect(() => world.addTerrainClipRegion(rows(1), -0.1)).toThrow(
-        RangeError,
-      );
-      expect(() => world.addTerrainClipRegion(rows(1), Number.NaN)).toThrow(
-        RangeError,
-      );
-      expect(() => world.addTerrainClipRegion(new Float32Array(0))).toThrow(
-        RangeError,
-      );
-      const clip = world.addTerrainClipRegion(rows(1));
-      expect(() => world.setTerrainClipOpacity(clip, 0.5)).toThrow(
-        TerrainClipError,
-      );
-      const glass = world.addTerrainClipRegion(rows(1), 0.5);
-      expect(() => world.setTerrainClipOpacity(glass, 0)).toThrow(
-        TerrainClipError,
-      );
+      for (const opacity of [0, 0.5, 1]) {
+        expect(() =>
+          world.addTerrainClipRegion(rows(1), opacity),
+        ).not.toThrow();
+        expect(() =>
+          world.addTerrainClipRegion(new Float32Array(0), opacity),
+        ).not.toThrow();
+      }
+      for (const opacity of [-0.1, 1.1, Number.NaN, Infinity]) {
+        expect(() => world.addTerrainClipRegion(rows(1), opacity)).toThrow(
+          RangeError,
+        );
+        expect(() =>
+          world.addTerrainClipRegion(new Float32Array(0), opacity),
+        ).toThrow(RangeError);
+      }
+      // Any opacity moves to any other, through 0 and 1: a cut becomes
+      // glass, and glass a cut, in the one directory row.
+      const slot = world.addTerrainClipRegion(rows(1));
+      for (const opacity of [0.5, 1, 0.25, 0, 1]) {
+        world.setTerrainClipOpacity(slot, opacity);
+        expect(row(slot).opacity).toBe(opacity);
+      }
+      expect(() => world.setTerrainClipOpacity(slot, 1.5)).toThrow(RangeError);
     } finally {
       restore();
     }
@@ -439,11 +441,11 @@ const SITE = {
   rectangle: { west: 7.42, south: 46.92, east: 7.44, north: 46.94 },
 };
 
-describe("a globe's translucent regions", () => {
+describe("a globe's regions that blend", () => {
   it("mask the tiles they touch and give those the blended twin, and only those", async () => {
     const { world, globe, own, under, beside, mask, done } =
       await globeWithTiles();
-    const glass = globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    const glass = globe.terrain.addRegion(SITE, { opacity: 0.35 });
     expect(glass.opacity).toBe(0.35);
     expect(glass.pickThrough).toBe(false);
     expect(mask(under)).toBe(1);
@@ -451,67 +453,84 @@ describe("a globe's translucent regions", () => {
     expect(twin).not.toBe(own);
     expect(world.drawMaterial(beside)).toBe(own);
     expect(mask(beside)).toBe(0);
-    expect(globe.terrainTranslucencies).toEqual([glass]);
-    expect(globe.terrainClips).toEqual([]);
-    globe.removeTerrainTranslucency(glass);
+    expect(globe.terrain.regions).toEqual([glass]);
+    glass.remove();
+    expect(globe.terrain.regions).toEqual([]);
     expect(mask(under)).toBe(0);
     expect(world.drawMaterial(under)).toBe(own);
     done();
   });
 
-  it("make the whole globe translucent, and opaque again at 1", async () => {
+  it("make the whole globe translucent, and draw as before at 1", async () => {
     const { world, globe, own, under, beside, mask, done } =
       await globeWithTiles();
-    expect(globe.terrainOpacity).toBe(1);
-    globe.setTerrainOpacity(0.4);
-    expect(globe.terrainOpacity).toBe(0.4);
+    const all = globe.terrain.addRegion("everywhere", { opacity: 0.4 });
+    expect(all.shape).toBe("everywhere");
+    expect(all.opacity).toBe(0.4);
     expect(mask(under)).toBe(1);
     expect(mask(beside)).toBe(1);
     expect(world.drawMaterial(beside)).not.toBe(own);
-    globe.setTerrainOpacity(0.6);
-    expect(globe.terrainOpacity).toBe(0.6);
-    globe.setTerrainOpacity(1);
+    all.opacity = 0.6;
+    expect(all.opacity).toBe(0.6);
+    all.opacity = 1;
+    expect(all.opacity).toBe(1);
     expect(mask(beside)).toBe(0);
     expect(world.drawMaterial(beside)).toBe(own);
     expect(world.drawMaterial(under)).toBe(own);
-    expect(() => globe.setTerrainOpacity(0)).toThrow(RangeError);
+    // It stays in the list, holding no slot, and can come back.
+    expect(globe.terrain.regions).toEqual([all]);
+    all.opacity = 0.5;
+    expect(mask(beside)).toBe(1);
+    expect(world.drawMaterial(beside)).not.toBe(own);
     done();
   });
 
   it("leave a clip's tiles on their own material (clips alone change nothing but the mask)", async () => {
     const { world, globe, own, under, mask, done } = await globeWithTiles();
-    globe.addTerrainClip(SITE);
+    globe.terrain.addRegion(SITE);
     expect(mask(under)).toBe(1);
     expect(world.drawMaterial(under)).toBe(own);
     done();
   });
 
-  it("refuse an opacity outside (0, 1)", async () => {
+  it("accept an opacity of 0 and of 1, and refuse one outside", async () => {
     const { globe, done } = await globeWithTiles();
-    for (const opacity of [0, 1, -1, Number.NaN]) {
-      expect(() => globe.addTerrainTranslucency(SITE, { opacity })).toThrow(
+    for (const opacity of [0, 0.5, 1]) {
+      expect(() => globe.terrain.addRegion(SITE, { opacity })).not.toThrow();
+    }
+    for (const opacity of [-0.01, 1.01, -1, 2, Number.NaN, Infinity]) {
+      expect(() => globe.terrain.addRegion(SITE, { opacity })).toThrow(
+        RangeError,
+      );
+      expect(() => globe.terrain.addRegion("everywhere", { opacity })).toThrow(
         RangeError,
       );
     }
+    // Nothing was added by a refusal.
+    expect(globe.terrain.regions.map((r) => r.opacity)).toEqual([0, 0.5, 1]);
     done();
   });
 
-  it("are ground for queries: only clips are holes", async () => {
+  it("are ground for queries, unless they are cuts or say otherwise", async () => {
     const { globe, done } = await globeWithTiles();
-    globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    const glass = globe.terrain.addRegion(SITE, { opacity: 0.35 });
+    expect(glass.ground).toBe(true);
     expect(globe.terrainClipped(7.43, 46.93)).toBe(false);
-    globe.addTerrainClip({
+    const cut = globe.terrain.addRegion({
       rectangle: { west: 7.425, south: 46.925, east: 7.435, north: 46.935 },
     });
+    expect(cut.ground).toBe(false);
     expect(globe.terrainClipped(7.43, 46.93)).toBe(true);
     expect(globe.terrainClipped(7.422, 46.922)).toBe(false);
+    glass.ground = false;
+    expect(globe.terrainClipped(7.422, 46.922)).toBe(true);
     done();
   });
 
   it("free their slots and the twin when the globe goes", async () => {
     const { engine, world, globe, own } = await globeWithTiles();
-    globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
-    globe.setTerrainOpacity(0.5);
+    globe.terrain.addRegion(SITE, { opacity: 0.35 });
+    globe.terrain.addRegion("everywhere", { opacity: 0.5 });
     (globe as unknown as { loaded: Set<unknown> }).loaded.clear();
     engine.removeTileset(globe);
     // All 32 slots are free again.
@@ -543,18 +562,18 @@ describe("picks on translucent terrain (the CPU ray)", () => {
       rayTile === tile ? t.underTile : undefined;
     return t;
   };
-  const down = (globe: Tileset3D, lon: number, lat: number) => {
+  const down = (globe: Globe, lon: number, lat: number) => {
     const origin = at(lon * R, lat * R, 2100);
     const ground = at(lon * R, lat * R, 0);
     // Not unit (2 m long): the distance comes back in its units.
     const direction = [0, 1, 2].map((k) => (ground[k]! - origin[k]!) / 1050);
-    return globe.translucentTerrainHit(origin, direction);
+    return globe.stoppingTerrainHit(origin, direction);
   };
 
   it("finds the translucent ground under the camera, and its tile's draw", async () => {
     const { globe, under, done } = await setUp();
-    expect(down(globe, 7.43, 46.93)).toBeUndefined(); // no translucency yet
-    globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    expect(down(globe, 7.43, 46.93)).toBeUndefined(); // no region yet
+    globe.terrain.addRegion(SITE, { opacity: 0.35 });
     const hit = down(globe, 7.43, 46.93)!;
     expect(hit.distance).toBeCloseTo(1000, 1);
     expect(hit.draw).toBe(under);
@@ -563,35 +582,59 @@ describe("picks on translucent terrain (the CPU ray)", () => {
 
   it("leaves opaque ground to the GPU's pick", async () => {
     const { globe, done } = await setUp();
-    globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    globe.terrain.addRegion(SITE, { opacity: 0.35 });
     expect(down(globe, 7.45, 46.93)).toBeUndefined();
     done();
   });
 
-  it("goes through with pickThrough, and through clips", async () => {
+  it("goes through with pickThrough, and through cuts", async () => {
     const { globe, done } = await setUp();
-    globe.addTerrainTranslucency(SITE, { opacity: 0.35, pickThrough: true });
+    globe.terrain.addRegion(SITE, { opacity: 0.35, pickThrough: true });
     expect(down(globe, 7.43, 46.93)).toBeUndefined();
     done();
     const second = await setUp();
-    second.globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
-    second.globe.addTerrainClip({
+    second.globe.terrain.addRegion(SITE, { opacity: 0.35 });
+    second.globe.terrain.addRegion({
       rectangle: { west: 7.425, south: 46.925, east: 7.435, north: 46.935 },
     });
-    // Through the clip's hole the flat ground below is clipped too: nothing.
+    // Through the cut's hole the flat ground below is cut too: nothing.
     expect(down(second.globe, 7.43, 46.93)).toBeUndefined();
     second.done();
   });
 
-  it("stops at the whole globe's translucency unless it lets picks through", async () => {
+  it("stops at the whole globe's region unless it lets picks through", async () => {
     const { globe, done } = await setUp();
-    globe.setTerrainOpacity(0.5);
+    const all = globe.terrain.addRegion("everywhere", { opacity: 0.5 });
     expect(down(globe, 7.45, 46.93)?.distance).toBeCloseTo(1000, 1);
-    globe.setTerrainOpacity(0.5, { pickThrough: true });
+    all.pickThrough = true;
     expect(down(globe, 7.45, 46.93)).toBeUndefined();
     // A region that stops picks still does, inside the see-through globe.
-    globe.addTerrainTranslucency(SITE, { opacity: 0.3 });
+    globe.terrain.addRegion(SITE, { opacity: 0.3 });
     expect(down(globe, 7.43, 46.93)?.distance).toBeCloseTo(1000, 1);
+    done();
+  });
+
+  it("stops at invisible ground (opacity 0, ground true), and not at a cut", async () => {
+    const { globe, under, done } = await setUp();
+    const invisible = globe.terrain.addRegion(SITE, {
+      opacity: 0,
+      ground: true,
+    });
+    const hit = down(globe, 7.43, 46.93)!;
+    expect(hit.distance).toBeCloseTo(1000, 1);
+    expect(hit.draw).toBe(under);
+    invisible.pickThrough = true;
+    expect(down(globe, 7.43, 46.93)).toBeUndefined();
+    invisible.remove();
+    globe.terrain.addRegion(SITE); // a cut: a hole for picks, always
+    expect(down(globe, 7.43, 46.93)).toBeUndefined();
+    done();
+  });
+
+  it("goes through a region that isn't ground, whatever its opacity", async () => {
+    const { globe, done } = await setUp();
+    globe.terrain.addRegion(SITE, { opacity: 0.35, ground: false });
+    expect(down(globe, 7.43, 46.93)).toBeUndefined();
     done();
   });
 });
@@ -634,23 +677,23 @@ describe("picks from under the ground", () => {
     return { ...t, tile };
   };
   const cast = (
-    globe: Tileset3D,
+    globe: Globe,
     east: number,
     up: number,
   ): { distance: number } | undefined => {
     const origin = offset(0, 0);
     const to = offset(east, up);
     const length = Math.hypot(...[0, 1, 2].map((k) => to[k]! - origin[k]!));
-    return globe.translucentTerrainHit(
+    return globe.stoppingTerrainHit(
       origin,
       [0, 1, 2].map((k) => (to[k]! - origin[k]!) / length),
     );
   };
 
   /** The ray due east along the tangent plane, level. */
-  const level = (globe: Tileset3D) => {
+  const level = (globe: Globe) => {
     const east = [-Math.sin(lon * R), Math.cos(lon * R), 0];
-    return globe.translucentTerrainHit(offset(0, 0), east);
+    return globe.stoppingTerrainHit(offset(0, 0), east);
   };
 
   it("castTerrainRay's surface is a crossing, where its hit counts a sample below the surface", async () => {
@@ -669,7 +712,7 @@ describe("picks from under the ground", () => {
 
   it("stop where the ray crosses the ground above, not near the camera", async () => {
     const { globe, under, done } = await setUp();
-    globe.addTerrainTranslucency(
+    globe.terrain.addRegion(
       { rectangle: { west: 3, south: 44, east: 12, north: 49 } },
       { opacity: 0.4 },
     );
@@ -690,9 +733,9 @@ describe("picks from under the ground", () => {
     done();
   });
 
-  it("do the same under the whole globe's translucency, and a ray looking down stops short of the far side", async () => {
+  it("do the same under the whole globe's region, and a ray looking down stops short of the far side", async () => {
     const { globe, done } = await setUp();
-    globe.setTerrainOpacity(0.5);
+    globe.terrain.addRegion("everywhere", { opacity: 0.5 });
     expect(Math.abs(cast(globe, 0, 60)!.distance - 30)).toBeLessThan(1.5);
     expect(cast(globe, 28, 30)!.distance).toBeGreaterThan(40);
     expect(level(globe)!.distance).toBeGreaterThan(15_000);
@@ -705,16 +748,16 @@ describe("picks from under the ground", () => {
   });
 });
 
-describe("a translucent region's opacity, changed in place", () => {
+describe("a region's opacity, ground and pickThrough, changed in place", () => {
   it("changes the opacity and pickThrough without a recompile or a material swap", async () => {
     const { world, globe, under, done } = await globeWithTiles();
-    const glass = globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    const glass = globe.terrain.addRegion(SITE, { opacity: 0.35 });
     const twin = world.drawMaterial(under);
     const add = vi.spyOn(world, "addTerrainClipRegion");
     const swap = vi.spyOn(world, "setDrawMaterial");
     const set = vi.spyOn(world, "setTerrainClipOpacity");
     world.changedViews = 0;
-    globe.setTerrainTranslucency(glass, { opacity: 0.6 });
+    glass.opacity = 0.6;
     expect(glass.opacity).toBe(0.6);
     expect(glass.pickThrough).toBe(false);
     expect(set).toHaveBeenCalledTimes(1);
@@ -725,34 +768,35 @@ describe("a translucent region's opacity, changed in place", () => {
     // An on-demand loop redraws: the second change, as much as the first.
     expect(world.changedViews).toBe(ALL_VIEWS);
     world.changedViews = 0;
-    globe.setTerrainTranslucency(glass, { opacity: 0.8, pickThrough: true });
+    glass.opacity = 0.8;
+    glass.pickThrough = true;
     expect(glass.opacity).toBe(0.8);
     expect(glass.pickThrough).toBe(true);
     expect(world.changedViews).toBe(ALL_VIEWS);
-    // Only what is given changes.
-    globe.setTerrainTranslucency(glass, { pickThrough: false });
+    glass.pickThrough = false;
     expect(glass.opacity).toBe(0.8);
     expect(glass.pickThrough).toBe(false);
-    expect(globe.terrainTranslucencies).toEqual([glass]);
+    expect(globe.terrain.regions).toEqual([glass]);
     // Removing it still works through the same handle.
-    globe.removeTerrainTranslucency(glass);
-    expect(globe.terrainTranslucencies).toEqual([]);
+    glass.remove();
+    expect(globe.terrain.regions).toEqual([]);
+    expect(glass.removed).toBe(true);
     done();
   });
 
-  it("refuses an opacity outside (0, 1) and ignores a removed region", async () => {
+  it("refuses an opacity outside 0 to 1 and ignores a removed region", async () => {
     const { globe, done } = await globeWithTiles();
-    const glass = globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
-    for (const opacity of [0, 1, -1, Number.NaN]) {
-      expect(() => globe.setTerrainTranslucency(glass, { opacity })).toThrow(
-        RangeError,
-      );
+    const glass = globe.terrain.addRegion(SITE, { opacity: 0.35 });
+    for (const opacity of [-0.1, 1.1, Number.NaN]) {
+      expect(() => {
+        glass.opacity = opacity;
+      }).toThrow(RangeError);
     }
     expect(glass.opacity).toBe(0.35);
-    globe.removeTerrainTranslucency(glass);
-    expect(() =>
-      globe.setTerrainTranslucency(glass, { opacity: 0.5 }),
-    ).not.toThrow();
+    glass.remove();
+    expect(() => {
+      glass.opacity = 0.5;
+    }).not.toThrow();
     expect(glass.opacity).toBe(0.35);
     done();
   });
@@ -770,36 +814,37 @@ describe("a translucent region's opacity, changed in place", () => {
     const tile = gridTile(rect, 17, () => 100);
     source.rayTarget = () => stripTarget([{ rectangle: rect, tile }]);
     source.tileOf = () => t.underTile;
-    const glass = t.globe.addTerrainTranslucency(SITE, { opacity: 0.35 });
+    const glass = t.globe.terrain.addRegion(SITE, { opacity: 0.35 });
     const origin = at(7.43 * R, 46.93 * R, 2100);
     const ground = at(7.43 * R, 46.93 * R, 0);
     const direction = [0, 1, 2].map((k) => (ground[k]! - origin[k]!) / 2100);
-    expect(t.globe.translucentTerrainHit(origin, direction)).toBeDefined();
-    t.globe.setTerrainTranslucency(glass, { pickThrough: true });
-    expect(t.globe.translucentTerrainHit(origin, direction)).toBeUndefined();
+    expect(t.globe.stoppingTerrainHit(origin, direction)).toBeDefined();
+    glass.pickThrough = true;
+    expect(t.globe.stoppingTerrainHit(origin, direction)).toBeUndefined();
     t.done();
   });
 
-  it("keeps the whole globe's pickThrough when setTerrainOpacity omits it, and refuses a destroyed globe", async () => {
+  it("refuses to add a region to a destroyed globe, naming what to do", async () => {
     const { engine, globe } = await globeWithTiles();
-    globe.setTerrainOpacity(0.5, { pickThrough: true });
-    globe.setTerrainOpacity(0.6);
-    const state = (
-      globe as unknown as { globalTranslucency: { pickThrough: boolean } }
-    ).globalTranslucency;
-    expect(state.pickThrough).toBe(true);
-    globe.setTerrainOpacity(0.6, { pickThrough: false });
-    expect(state.pickThrough).toBe(false);
+    const glass = globe.terrain.addRegion(SITE, { opacity: 0.5 });
     (globe as unknown as { loaded: Set<unknown> }).loaded.clear();
     engine.removeTileset(globe);
-    expect(() => globe.setTerrainOpacity(0.5)).toThrow(/destroyed/);
+    expect(() => globe.terrain.addRegion(SITE)).toThrow(
+      /destroyed; add regions to the globe that replaced it/,
+    );
+    // Its regions went with it.
+    expect(glass.removed).toBe(true);
+    expect(globe.terrain.regions).toEqual([]);
   });
 
   it("wakes the views for the whole globe's opacity, the second change as much as the first", async () => {
     const { world, globe, done } = await globeWithTiles();
-    globe.setTerrainOpacity(0.4);
+    const all = globe.terrain.addRegion("everywhere", { opacity: 0.4 });
     world.changedViews = 0;
-    globe.setTerrainOpacity(0.6);
+    all.opacity = 0.6;
+    expect(world.changedViews).toBe(ALL_VIEWS);
+    world.changedViews = 0;
+    all.opacity = 0.7;
     expect(world.changedViews).toBe(ALL_VIEWS);
     done();
   });

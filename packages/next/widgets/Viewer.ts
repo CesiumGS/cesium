@@ -51,6 +51,7 @@ import {
   type AnchorHandle,
   type Rig,
   type Tileset3D,
+  type Globe,
   type TilesetOptions,
   type View,
   type ViewLink,
@@ -289,7 +290,7 @@ export class Viewer {
   /** Builds the globe; content added before it is ready still loads. */
   readonly ready: Promise<void>;
 
-  private globe_?: Tileset3D;
+  private globe_?: Globe;
   private globeKind: GlobeKind;
   private globeShown = true;
   private globeToken = 0;
@@ -674,8 +675,11 @@ export class Viewer {
     );
   }
 
-  /** The globe's tileset (terrain or the ellipsoid), once built. */
-  get globe(): Tileset3D | undefined {
+  /**
+   * The globe's tileset (terrain or the ellipsoid), once built: its
+   * `terrain` holds the regions that cut or fade the terrain.
+   */
+  get globe(): Globe | undefined {
     return this.globe_;
   }
 
@@ -727,7 +731,7 @@ export class Viewer {
   async setGlobe(kind: GlobeKind): Promise<void> {
     const token = ++this.globeToken;
     this.globeKind = kind;
-    let next: Tileset3D | undefined;
+    let next: Globe | undefined;
     let attributions: IonAttribution[] = [];
     const imagery = this.imagery ?? this.imageryLoading;
     const options = {

@@ -300,7 +300,7 @@ async function side(name: "GCRF" | "ITRF"): Promise<Side> {
     return addRegion(rows);
   });
   const globe = engine.addEllipsoid(world);
-  globe.addTerrainClip({ rectangle: CLIP });
+  globe.terrain.addRegion({ rectangle: CLIP });
   const tileset = await engine.addTileset(world, URL_);
   const view = engine.addView({ target: new OffscreenTarget(64, 48), world });
   const s: Side = {

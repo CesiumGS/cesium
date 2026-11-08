@@ -225,7 +225,7 @@ export function globeTarget(
   viewMask: number,
 ): TerrainRayTarget | string {
   const globes = tilesets.filter(
-    (t) => t.world === world && t.terrain && t.anchor === anchor,
+    (t) => t.world === world && t.isGlobe && t.anchor === anchor,
   );
   const globe = globes.find((t) => t.show) ?? globes[0];
   if (!globe) {

@@ -272,8 +272,8 @@ export class TerrainSource {
   }
 
   /**
-   * @internal Regions where the terrain isn't drawn (`Tileset3D.addTerrainClip`):
-   * height queries find none there and ray queries pass through.
+   * @internal The globe's terrain regions (`Globe.terrain.addRegion`): where
+   * one isn't ground, height queries find none and ray queries pass through.
    */
   readonly clips = new TerrainClips();
 

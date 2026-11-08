@@ -123,14 +123,14 @@ export function Api() {
         <CodeBlock language="ts" code={snippetText("terrain.next.ts")} />
         <ul>
           <li>
-            <C>addTerrainTranslucency(region, {"{ opacity, pickThrough }"})</C>{" "}
-            takes a region as <C>addTerrainClip</C> does, with an opacity above
-            0 and below 1, and returns a handle.
+            <C>globe.terrain.addRegion(shape, options)</C> returns a region.
+            Opacity runs from 0, a cut, to 1, no effect, and a set never
+            recompiles.
           </li>
           <li>
-            <C>setTerrainTranslucency(handle, {"{ opacity, pickThrough }"})</C>{" "}
-            changes either in place. To make a region opaque, remove it with{" "}
-            <C>removeTerrainTranslucency</C>.
+            <C>ground</C> says whether heights and rays still treat it as
+            ground. It defaults to true, unless the region is added at opacity
+            0, and an opacity change never alters it.
           </li>
           <li>
             <C>setTerrainOpacity(opacity, {"{ pickThrough }"})</C> applies to

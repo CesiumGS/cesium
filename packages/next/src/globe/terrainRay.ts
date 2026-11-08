@@ -88,9 +88,9 @@ export interface TerrainRayTarget {
   /** What is drawn at a longitude and latitude, radians. */
   patchAt(longitude: number, latitude: number): TerrainRayPatch;
   /**
-   * Whether the terrain at an Earth-fixed point is clipped away (a globe's
-   * `addTerrainClip` regions): not drawn there, so rays pass through it,
-   * and clearance there is not measured.
+   * Whether the terrain at an Earth-fixed point is a hole (inside a region of
+   * a globe's `terrain` that isn't ground): rays pass through it, and
+   * clearance there is not measured.
    */
   clipped?(point: ArrayLike<number>): boolean;
 }

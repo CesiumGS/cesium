@@ -91,6 +91,7 @@ import {
 } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
 import { Tileset3D, type TilesetOptions } from "../streaming/Tileset3D.ts";
+import { Globe } from "../globe/Globe.ts";
 import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import {
@@ -305,7 +306,7 @@ export class Engine {
             .filter(
               (t) =>
                 t.world === route.world &&
-                !t.terrain &&
+                !t.isGlobe &&
                 t.show &&
                 t.anchor === query.anchor,
             )
@@ -330,7 +331,7 @@ export class Engine {
           (t) =>
             t.world === world &&
             t.anchor === query.anchor &&
-            query.targets.includes(t.terrain ? "terrain" : "draws") &&
+            query.targets.includes(t.isGlobe ? "terrain" : "draws") &&
             !t.idle,
         );
       },
@@ -1192,7 +1193,7 @@ export class Engine {
     world: World,
     url: string | URL,
     options: GlobeOptions = {},
-  ): Promise<Tileset3D> {
+  ): Promise<Globe> {
     const base = new URL(url, globalThis.location?.href);
     const layer = base.pathname.endsWith(".json")
       ? base
@@ -1213,7 +1214,7 @@ export class Engine {
    * culled and draped with imagery like terrain. Under the Earth's anchor
    * unless `options.anchor` names another.
    */
-  addEllipsoid(world: World, options: GlobeOptions = {}): Tileset3D {
+  addEllipsoid(world: World, options: GlobeOptions = {}): Globe {
     const source = TerrainSource.ellipsoid(this.terrainLoader, {
       warnings: new Set(),
     });
@@ -1234,8 +1235,8 @@ export class Engine {
     world: World,
     source: TerrainSource,
     options: GlobeOptions,
-  ): Tileset3D {
-    const tileset = Tileset3D.fromSource(this, world, source, {
+  ): Globe {
+    const tileset = Globe.create(this, world, source, {
       maximumScreenSpaceError: 2,
       ...options,
     });
@@ -1579,8 +1580,8 @@ export class Engine {
    * anchor. Tilesets: those given, else the shown collision tilesets of
    * the world under the Earth's anchor (`Tileset3D.anchor`); a tileset
    * given under another anchor throws, naming it. Undefined where nothing
-   * is hit (a globe given here has none inside its terrain clips,
-   * `addTerrainClip`). Needs the frame loop running (`start`).
+   * is hit (a globe given here has none inside its terrain regions
+   * that aren't ground, `Globe.terrain.addRegion`). Needs the frame loop running (`start`).
    */
   async sampleHeightMostDetailed(
     world: World,
@@ -1605,7 +1606,7 @@ export class Engine {
           t.world === world &&
           t.show &&
           t.enableCollision &&
-          !t.terrain &&
+          !t.isGlobe &&
           t.anchor === earth,
       );
     const rays = positions.map(({ longitude, latitude }) => {
@@ -1632,7 +1633,7 @@ export class Engine {
             anchor: earth,
           });
           hits.forEach((d, i) => {
-            // Terrain clipped there is a hole (`addTerrainClip`): the ray
+            // Terrain that isn't ground there is a hole (`TerrainRegion.ground`): the ray
             // runs down the normal, so the hit is at the point's own
             // longitude and latitude.
             if (
@@ -2937,7 +2938,7 @@ export class Engine {
     }
     const pixels = frame.width * frame.height;
     let capacity = 0;
-    if (view.translucency === "exact") {
+    if (view.translucencyMethod === "exact") {
       const { limits } = this.ctx.device;
       const heads = (LIST_HEADER + pixels) * 4;
       // At most what a node's `next` can address (translucent.wgsl
@@ -3502,8 +3503,8 @@ export class Engine {
   }
 
   /**
-   * Translucent terrain a pick stops at (`Tileset3D.addTerrainTranslucency`
-   * without `pickThrough`): the opaque pass the pick reads doesn't hold it,
+   * Ground below full opacity that a pick stops at (a region of
+   * `Globe.terrain` without `pickThrough`): the opaque pass the pick reads doesn't hold it,
    * so the drawn terrain is traced on the CPU along the pick's ray, in the
    * tick the pick reads, and its depth and feature are kept to stand in for
    * the GPU's where they are nearer (`resolvePicks`). Undefined without
@@ -3517,9 +3518,9 @@ export class Engine {
     ndcY: number,
   ): { depth: number; featureId: number } | undefined {
     const globes = this.tilesets.filter(
-      (t) =>
+      (t): t is Globe =>
+        t instanceof Globe &&
         t.world === view.world &&
-        t.terrain &&
         t.show &&
         t.anchor === view.bodyAnchor,
     );
@@ -3539,7 +3540,7 @@ export class Engine {
     const mask = id === undefined ? undefined : 1 << id;
     let best: { depth: number; featureId: number } | undefined;
     for (const globe of globes) {
-      const hit = globe.translucentTerrainHit(camera.position, direction, mask);
+      const hit = globe.stoppingTerrainHit(camera.position, direction, mask);
       if (!hit || !(hit.distance >= camera.near)) {
         continue;
       }
@@ -4210,7 +4211,7 @@ export class Engine {
         }
         const world = view.world;
         const dummies = this.translucentInputs();
-        if (view.translucency === "exact") {
+        if (view.translucencyMethod === "exact") {
           const lists = this.lists!;
           enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
           listTarget.view = get(color);
@@ -4329,7 +4330,7 @@ export class Engine {
           "translucent-composite",
         );
         const pass = enc.beginRenderPass(compositePass);
-        if (view.translucency === "exact") {
+        if (view.translucencyMethod === "exact") {
           pass.setPipeline(pipelines.compositeExact);
           pass.setBindGroup(
             0,
