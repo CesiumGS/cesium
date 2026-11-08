@@ -22,13 +22,22 @@ import {
 import type { CursorView } from "./panel/model.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
 
-/** The page's state a pick is judged by. */
+/**
+ * The page's state a pick is judged by. The morph and the exaggeration are
+ * global (the morph driver's): every paired site draws them, so a pick is
+ * gated by the site it hits (`judgePick`), whatever site is selected.
+ */
 export interface PickState {
+  /** The selected site's drawn placement (for the HUD's words). */
   readonly mode: Placement;
   /** The morph's `t`: which placement a paired site draws its own tiles in. */
   readonly t: number;
+  /** A morph runs (the driver's, global). */
   readonly morphing: boolean;
+  /** The exaggeration paired sites are drawn at (global). */
   readonly exaggeration: number;
+  /** The selected site has both placements (the HUD's gate). */
+  readonly selectedPaired: boolean;
 }
 
 export interface CursorDeps {
@@ -133,15 +142,19 @@ export function createCursor(deps: CursorDeps): Cursor {
   });
 
   function update(at?: [number, number]): void {
+    // A new pointer position doesn't make a pick in flight stale: under
+    // continuous motion its answer (a few pixels behind) still shows, and the
+    // latest position is picked next.
     if (at !== undefined) {
       pending = at;
-      generation++;
     }
     const s = st();
+    // The HUD's words follow the selected site; picks are gated by the
+    // site they hit (`judgePick`).
     const base = cursorReadout({
       mode: s.mode,
-      morphing: s.morphing,
-      exaggeration: s.exaggeration,
+      morphing: s.selectedPaired && s.morphing,
+      exaggeration: s.selectedPaired ? s.exaggeration : 1,
     });
     if (!base.design) {
       if (!blocked) {

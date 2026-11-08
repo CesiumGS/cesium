@@ -50,6 +50,8 @@ export interface SiteRuntime {
   tiles?: Promise<void>;
   /** Its tiles' content failed: Retry reloads its tilesets. */
   tilesFailed?: boolean;
+  /** Bumped when its tiles (re)load: an older `watchTiles` loop stops. */
+  watching?: number;
   frame?: Promise<void>;
   view?: Pick<SiteView, "frame" | "story">;
 }
@@ -134,9 +136,16 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
           ? { rigid: tilesets.rigid, reprojected: tilesets.reprojected }
           : undefined;
         if (pair === undefined && tilesets.pair !== undefined) {
-          // The scale ladder's pair, when setup has written it (Task 17b).
-          if ((await probe(tilesets.pair.reprojected)).verdict === "ok") {
+          // The scale ladder's pair, when setup has written it (Task 17b):
+          // rigid-only only when the reprojected tileset is missing; a
+          // failing server is an error, with Retry.
+          const twin = await probe(tilesets.pair.reprojected);
+          if (twin.verdict === "ok") {
             pair = tilesets.pair;
+          } else if (twin.verdict === "error") {
+            throw new Error(
+              `${STORE}${tilesets.pair.reprojected}tileset.json: ${twin.status !== undefined ? `HTTP ${twin.status}` : "no answer"}`,
+            );
           }
         }
         const first = pair?.rigid ?? tilesets.rigid;
@@ -214,8 +223,13 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
    */
   function watchTiles(site: SiteRuntime, id: string): void {
     let ready = false;
+    const generation = (site.watching = (site.watching ?? 0) + 1);
     const step = () => {
-      if (deps.disposed() || site.tiles === undefined) {
+      if (
+        deps.disposed() ||
+        site.tiles === undefined ||
+        site.watching !== generation
+      ) {
         return;
       }
       const sets = [site.rigid, site.reprojected].filter(
@@ -458,6 +472,8 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
 
   /** Takes a site's tilesets out, so its tiles load again from the start. */
   function unload(site: SiteRuntime): void {
+    // Its old watcher stops (a new one starts with the new tilesets).
+    site.watching = (site.watching ?? 0) + 1;
     for (const id of [
       `tiles:${site.entry.id}`,
       `tiles:${site.entry.id}:later`,

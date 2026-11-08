@@ -512,6 +512,7 @@ describe("design globe pick seam (judgePick)", () => {
     t: 0,
     morphing: false,
     exaggeration: 1,
+    selectedPaired: true,
   };
 
   it("gives design coordinates on the drawn placement, settled at true scale", () => {
@@ -550,8 +551,43 @@ describe("design globe pick seam (judgePick)", () => {
       t: 1,
       morphing: false,
       exaggeration: EXAGGERATION,
+      selectedPaired: true,
     });
     expect(trueScale.hit?.design).toBeDefined();
+  });
+
+  it("gates a pick by the site it hits, with an unpaired site selected", () => {
+    // The site-grid building (one tileset) is selected; the corridor beside
+    // it still morphs and is still drawn exaggerated: a pick on it gives no
+    // design coordinates.
+    const selectedOne = {
+      mode: "rigid" as const,
+      selectedPaired: false,
+    };
+    const moving = judgePick(pick(rigidSet), site, {
+      ...selectedOne,
+      t: 0.4,
+      morphing: true,
+      exaggeration: 1,
+    });
+    expect(moving.hit?.design).toBeUndefined();
+    expect(moving.refused).toMatch(/between placements/);
+    const exaggerated = judgePick(pick(rigidSet), site, {
+      ...selectedOne,
+      t: 0,
+      morphing: false,
+      exaggeration: EXAGGERATION,
+    });
+    expect(exaggerated.hit?.design).toBeUndefined();
+    expect(exaggerated.refused).toMatch(new RegExp(`×${EXAGGERATION}`));
+    // The selected one-tileset site itself still gives them.
+    const own = judgePick(pick(rigidSet), oneTileset, {
+      ...selectedOne,
+      t: 0.4,
+      morphing: true,
+      exaggeration: EXAGGERATION,
+    });
+    expect(own.hit?.design).toBeDefined();
   });
 
   it("treats a one-tileset site as rigid, whatever the page's mode", () => {
@@ -560,6 +596,7 @@ describe("design globe pick seam (judgePick)", () => {
       t: 1,
       morphing: true,
       exaggeration: EXAGGERATION,
+      selectedPaired: true,
     });
     expect(r.drawn).toBe("rigid");
     expect(r.hit?.design).toBeDefined();

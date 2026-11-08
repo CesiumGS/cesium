@@ -214,8 +214,9 @@ export function run(context: ExampleContext): ExampleRun {
       return {
         mode: drawnPlacement(selected, morph.t()),
         t: morph.t(),
-        morphing: paired && morph.morphing,
-        exaggeration: paired ? morph.exaggeration : 1,
+        morphing: morph.morphing,
+        exaggeration: morph.exaggeration,
+        selectedPaired: paired,
       };
     },
     changed: refresh,
@@ -386,7 +387,18 @@ export function run(context: ExampleContext): ExampleRun {
   for (const type of ["pointerdown", "pointermove", "wheel", "keydown"]) {
     viewer.canvas.addEventListener(type, wake, { signal, passive: true });
   }
-  window.addEventListener("resize", wake, { signal });
+  // The canvas resizing (a window resize, or the gallery's columns).
+  const resized = new ResizeObserver(wake);
+  resized.observe(viewer.canvas);
+  scope.defer(() => resized.disconnect());
+  /** The user has taken the camera: no opening shot cuts it away after. */
+  let userMoved = false;
+  const tookCamera = () => {
+    userMoved = true;
+  };
+  for (const type of ["pointerdown", "wheel", "keydown"]) {
+    viewer.canvas.addEventListener(type, tookCamera, { signal, passive: true });
+  }
 
   /** The anchor's label: in front of the camera, above its horizon and near. */
   function placeAnchorLabel(): void {
@@ -556,7 +568,7 @@ export function run(context: ExampleContext): ExampleRun {
       }
       // The opening shot (DESIGN.md "The story"): true scale, near the far
       // end; once, and not over a view the user has chosen since.
-      if (params.site === "corridor" && !opened) {
+      if (params.site === "corridor" && !opened && !userMoved) {
         opened = true;
         const f = shots.openingShot(a);
         if (f) {
