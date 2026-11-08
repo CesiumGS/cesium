@@ -58,10 +58,12 @@ in design space, and for applications that want none of it:
   place relative to each body.
 - **Animation as a small, general core,** first used by camera transitions and
   the design-space morph.
-- **The Artemis II example,** which exercises all of it: the Earth's and the
-  Moon's tilesets together, cameras that follow Orion or fly freely, readouts
-  in several reference frames, and a communications overlay that shows
-  measurement accuracy.
+- **The Artemis II example,** which exercises all of it: a replay of the
+  mission from the launch pad to splashdown, with every stage on its own
+  trajectory, the Earth's and the Moon's tilesets together, cameras that
+  follow any stage or fly freely, a live frame-tree diagram that moves the
+  camera between reference frames, readouts in several reference frames, and
+  a communications overlay that shows measurement accuracy.
 
 ## 2. Where things stand
 
@@ -131,7 +133,8 @@ What plan 5 builds on, as of 2026-11-07:
     only when something moved.
 13. **Seams for later WebGPU features,** as for bindless, where they cost
     nothing today (section 7.10).
-14. **The Artemis II example** (frames spec §8.2), with its effects.
+14. **The Artemis II example** (frames spec §8.2), a mission replay from the
+    pad to splashdown, with its effects.
 15. **A public API review:** a map of the surface and proposed moves.
 
 ### Non-goals
@@ -145,7 +148,7 @@ What plan 5 builds on, as of 2026-11-07:
   acceleration structures are built, which level of detail a ray sees). §13.16
   is open, for its own brainstorm. Plan 5 puts every ray and spatial query
   through one query seam (section 7.10) and makes rays go through the frame
-  tree on the CPU paths that exist (section 9.4). The owner, 2026-11-07:
+  tree on the CPU paths that exist (section 9.5). The owner, 2026-11-07:
   deferred, "since that's a whole project unto itself"; for now many ray
   queries may answer "can't tell", and a later GPU ray-query engine must pass
   up to the examples "without a ton of rewriting". Section 7.10 says how.
@@ -289,13 +292,13 @@ something testable on its own.
 | Sub-plan | What it builds | Testable result | Needs |
 | --- | --- | --- | --- |
 | **5a** The core, the camera chain and the frames module | Render space; anchors; the frame resolver; rigs and the render root per view; the Earth's content under its anchor; a draw's placement; the frames module as its own entry point; providers on demand; revisions; picks tagged with their reference frame; the coordinate service; seams for later WebGPU features | Earth-only parity unchanged; a rig on GCRF draws the Earth turning; re-rooting changes no pixel; a globe-only bundle without the frames data path; the explorer and design globe on the new seam; an import-boundary test | 4b done |
-| **5b** The frames library | Two-vector frames, rig presets on them, accuracy beyond first order, rays through the frame tree on the CPU, bulk work with `AbortSignal` and progress, a time-display formatter | SPICE fixtures for two-vector frames; presets checked against them; accuracy tests; explorer numbers move only where bounds tighten | 5a |
+| **5b** The frames library | Two-vector frames, rig presets on them, reference frames that change at an instant, accuracy beyond first order, rays through the frame tree on the CPU, bulk work with `AbortSignal` and progress, a time-display formatter | SPICE fixtures for two-vector frames; presets checked against them; continuity at each change; accuracy tests; explorer numbers move only where bounds tighten | 5a |
 | **5c** Bodies in one world | A second body: content on any body, per-body culling, volumes and clamping, each body's impostor and its handover to the body's tileset, two views on two bodies | A rig on MOON_ME drawing Cesium Moon and the Earth; the Moon an impostor from the Earth's ground with no ion request; Earth parity unchanged | 5a |
 | **5d** Controllers, bindings, transitions and the animation core | The animation core, controllers that own constraints, free-fly and CAD-style controllers, an orthographic camera, gestures as bindings, damping, transitions between live rigs | Controllers driven by synthetic input; transitions tracked against a moving target; deterministic animation tests | 5a; 5b for presets; 5c for per-body globe controls |
 | **5e** The physical sky and light per body | An atmosphere per body, evaluated from the camera's true place, composited physically; light, shadows and earthshine per body; the Moon's surface reflectance | Sky radiance against the reference model at many altitudes; black space in orbit; the Moon through the Earth's air | 5c |
 | **5f** Design space | Routing a design CRS to ITRF2020, design view as a render root, the morph as one transition, the GPU snap pass, the rule for reprojected models | The design globe in design view and morphing; GPU snaps agree with the CPU stand-in; routes match NGS's published values | Routing: 4b only. The rest: 5a, 5d |
-| **5g** Earth to Moon: Artemis II | The §8.2 example, without its effects | The published occultation against SPICE; DSN Now as a sanity check; browser checks | 5b, 5c, 5d, 5e |
-| **5h** Plumes, plasma and the phases outside the data | The effects and the illustrative phases (frames spec §8.2) | Visual review against the physical facts; labels and exclusions | 5g |
+| **5g** Earth to Moon: the Artemis II replay | The replay over the trajectory data: the pad scene, the mission clock, the self-directing replay, stage reference frames, the live frame-tree widget, cameras, the communications overlay, the models | The published occultation against SPICE; DSN Now as a sanity check; the directors on an injected clock; browser checks | 5b, 5c, 5d, 5e |
+| **5h** The simulated ascent and entry, and their effects | Stage trajectories before the data (the ascent from the pad, each stage's own path) and after it (entry, parachutes, splashdown); plumes with ambient pressure, re-entry heating and plasma; approximations of launch smoke and the splash | The hand-offs to the data continuous in position and velocity; event times match the published ones; visual review against the physical facts; labels and exclusions | 5g |
 | **5i** The public API review | A map of the surface, stability tiers, the measurement module's seam, an audit of the WebGPU seams, proposed moves | The surface map checked in CI; moves the owner approves | Last; its map tool lands in 5a |
 
 **Order** **(author's call)**:
@@ -576,7 +579,7 @@ separate packages:
   animation core;
 - `@cesium/next/time`: the time library: `Instant`, time scales and leap
   seconds, the scene clock (which implements the core's clock interface), and
-  the time formatter (section 9.6). The owner, 2026-11-07: its own entry
+  the time formatter (section 9.7). The owner, 2026-11-07: its own entry
   point, so a globe-only app with a timeline needs time and dates without the
   frame tree. It carries no Earth orientation series and no ephemeris data;
 - `@cesium/next/frames`: the tree, the catalog, providers, trajectories and the
@@ -694,7 +697,7 @@ nothing today; no design compromises in the current WebGPU path."
   line of sight, height queries, §13.16), naming its reference frame and its
   scene time. Today it runs on CPU structures or compute traversal; a
   hardware ray-query backend drops in behind it later. 5b's rays (section
-  9.4) and 5f's snap pass (section 13.3) go through it. The owner deferred the
+  9.5) and 5f's snap pass (section 13.3) go through it. The owner deferred the
   ray-query engine itself (section 3) and asked that it later reach the
   examples without a rewrite, so the interface already has the shape a GPU
   engine needs **(author's calls)**:
@@ -863,7 +866,29 @@ from reference frames:
 Each preset is data: an application can read it, change one part, and set
 the result. A test checks each preset's axes against the SPICE fixtures.
 
-### 9.3 Accuracy beyond first order
+### 9.3 Reference frames that change at an instant
+
+The Artemis replay needs it twice (section 14): a stage rides the stack until
+it separates and then flies its own path, and Orion's own path is simulated
+before the data begins and after it ends. **Design (author's calls):**
+
+- **A piecewise reference frame:** a reference frame defined by a list of
+  pieces, each valid over a span of time and each a definition of its own (a
+  fixed offset in a parent reference frame, a trajectory, any other kind). Its
+  parent is the current piece's, so the tree's shape at an instant is the
+  shape the pieces give at that instant.
+- **Continuity is stated and checked.** At each change, the two pieces' states
+  are compared; a change that jumps by more than a stated tolerance in
+  position or velocity throws a named error when the reference frame is
+  built, unless the change is declared a jump (a cut the application wants).
+- **Accuracy is per piece.** A simulated piece states that it is simulated and
+  makes no accuracy claim, so a measurement whose route crosses it says so
+  (the frames spec's rule that illustrative phases are excluded from accuracy
+  claims).
+- **Revisions don't change at the switch.** The pieces are keyed by the
+  instant, as any time-dependent reference frame is (section 7.8).
+
+### 9.4 Accuracy beyond first order
 
 The owner: "Seems easy for a user to screw up." The app declares each edge's
 error in its own terms, and the library composes it. 5b builds the rest of
@@ -889,7 +914,7 @@ error in its own terms, and the library composes it. 5b builds the rest of
 - **`accuracyOf` is rebuilt on `pointAccuracy`.** The explorer's catalog
   numbers may move only where a bound tightens, and a test lists each move.
 
-### 9.4 Rays through the frame tree
+### 9.5 Rays through the frame tree
 
 From §13.14 "Ray queries through the frame tree", on the CPU paths that exist,
 behind section 7.10's query interface:
@@ -907,7 +932,7 @@ behind section 7.10's query interface:
   before counting unloaded spans as unknown) is applied here, for the Earth and
   the Moon, because ground-to-space rays need it **(author's call)**.
 
-### 9.5 Bulk work
+### 9.6 Bulk work
 
 The owner: "Plan 5 decides only whether the library offers them as
 cancellable (`AbortSignal`), progress-reporting operations that run in a
@@ -923,7 +948,7 @@ budget. Plan 5's bulk operations:
   forward from 4a);
 - PROJ batches.
 
-### 9.6 Showing time
+### 9.7 Showing time
 
 The owner (design globe feedback F9): the timeline should show the time at
 the site, and asked whether there is an API for it. Today `widgets/
@@ -950,15 +975,17 @@ formatting inside the widget. Design **(author's calls)**:
   its IANA zone. The Artemis example shows UTC, with mission elapsed time
   beside it.
 
-### 9.7 Carried-forward items 5b closes
+### 9.8 Carried-forward items 5b closes
 
 - `measure` solves the downlink light time once, not twice.
 - Explicit timeouts on the slow data tests (`test/data/trajectory.test.ts:147`
   and `:197`, `test/data/sky.test.ts:86`).
 
-### 9.8 Done when
+### 9.9 Done when
 
 - Two-vector frames and the presets agree with the SPICE fixtures.
+- A piecewise reference frame is continuous at each change within its stated
+  tolerance, throws at an undeclared jump, and draws its parent per piece.
 - The accuracy tests pass, and the explorer's moves are listed.
 - The formatter's tests cover a leap second, a daylight-saving change, and
   solar time at the date line.
@@ -1077,7 +1104,7 @@ everything, placed from the sky inputs.
   does.
 - **The tileset needn't be ion.** Any tileset on the Moon body works the same,
   self-hosted included.
-- The Artemis example declares Cesium Moon (section 14.2).
+- The Artemis example declares Cesium Moon (section 14.5).
 
 **Cesium Moon's reference frame is assumed MOON_ME,** and its heights are taken
 as published, both stated in the example and each a single setting (frames
@@ -1493,24 +1520,126 @@ d²/8R at its middle: 2 cm for 1 km, 2 m for 10 km.
   changes are listed.
 - GPU snaps agree with the CPU stand-in.
 
-## 14. Sub-plan 5g: Earth to Moon: Artemis II
+## 14. Sub-plan 5g: Earth to Moon: the Artemis II replay
 
 ### 14.1 What the frames spec decided
 
-The frames spec §8.2 stands: the data, the timeline from 2026-04-02 01:58 UTC
-(after the upper stage separated) to 2026-04-10 23:53 UTC (entry interface),
-the follow and free-flight cameras and their presets, the flight path in a
-chosen reference frame, readouts in four reference frames, the communications
-overlay with every quantity marked published, computed or assumed, and the
-models. 5g builds all of it except the effects and the phases outside the
-data, which are 5h's.
+The frames spec §8.2 stands where the owner's story (section 14.2) doesn't
+replace it: the data, with the trajectory data from 2026-04-02 01:58 UTC
+(after the upper stage separated) to 2026-04-10 23:53 UTC (entry interface);
+the follow and free-flight cameras and their presets; the flight path in a
+chosen reference frame; readouts in four reference frames; the communications
+overlay with every quantity marked published, computed or assumed; and the
+models. The story replaces §8.2's opening and short tour, and widens its
+"phases outside the data" into a simulated ascent and entry (5h, section
+15.1).
 
-### 14.2 Design
+### 14.2 The story
+
+The owner's (2026-11-07): a replay of the whole mission, from the launch pad
+to splashdown. It should feel like watching a real flight unfold, true to real
+physics as far as the data and public figures allow, with no control of the
+spacecraft. "This is just the mission replay/visualizer."
+
+- **Audience:** a viewer first, with the engineering readouts (frames,
+  accuracy, the link budget) on toggles, as the design globe does **(author's
+  call; the owner didn't say)**.
+- **The opening:** SLS with Orion on Launch Complex 39B, dressed with as many
+  public models as can be found (section 14.5). A mission clock is always
+  visible, and it starts at T−10 s. **Launch is play (author's call):** before
+  T−0 the play control reads "Launch", and the clock counts down. Pressing it
+  starts the countdown's last seconds and the replay.
+- **The flight:** the stack lifts off, and each stage moves through the
+  simulated ascent (5h) until it meets the trajectory data. Events are shown as
+  they happen: ignition, liftoff, booster separation, the fairing panels' and
+  the launch abort system's jettison, core-stage cutoff and separation, the
+  upper stage's burns, Orion's burns, crew module separation, entry,
+  parachutes, splashdown.
+- **Effects:** plumes that look right in the air and in space, re-entry
+  heating and plasma, all in Slang custom shaders (5h). Launch smoke and the
+  splash are approximations, without a particle system, and secondary: either
+  may be dropped if it is too hard.
+- **The communications layer** (links, direction, visibility windows, dishes
+  slewing to track Orion) toggles on and off at any time.
+- **A live frame-tree widget** (section 14.4) shows where the camera is
+  attached and moves it to any reference frame with that reference frame's
+  controller.
+- **The end:** after splashdown the capsule floats in place, and the replay
+  ends there.
+
+### 14.3 The self-directing replay
+
+The mission is about ten days, with a few minutes of action between long
+coasts. The owner asked for the arrangement that gives the best experience,
+to be tried and tuned. **Design (author's calls, to be tried):**
+
+- **"Follow the mission" is on by default.** Two directors run the replay:
+  one for the scene clock, one for the camera.
+- **The time director.** The scene clock runs at 1× from T−10 s through the
+  ascent to orbit insertion. Each later event has a lead-in at 1× and plays at
+  1×. Between events, the rate eases up to a coast rate chosen so each quiet
+  stretch plays in about 20 s of wall time, capped at 20,000×, and eases back
+  down to arrive at 1× at the next lead-in. A ramp eases the logarithm of the
+  rate over about 2 s of wall time. A hands-off replay of the whole mission
+  lasts roughly ten to fifteen minutes.
+- **The camera director** picks a shot per event: a rig preset and a framing,
+  such as a pad camera, a tracking camera from the ground, an onboard view, or
+  a wide Earth–Moon view during a coast. It moves between shots with 5d's
+  transitions.
+- **Taking over.** Moving the camera stops the camera director only. Touching
+  the clock (scrubbing, the rate, pausing) stops the time director only. One
+  "Follow the mission" control resumes both, through a transition, never a
+  jump.
+- **The event list** is visible, with a "next event in" readout. Clicking an
+  event goes there through a transition, and the time director takes up from
+  that event if it is on.
+- **Clocks.** Stage motion and effects run on the scene clock, so scrubbing
+  and warp replay deterministically, backwards included. The directors' ramps
+  run on the wall clock (section 11.2's per-animation clock choice).
+- **Where it lives.** The directors are the example's: data (an event table
+  with lead-ins and shots) over the public animation core, camera layer and
+  clock. If 5i finds them general, a "replay director" is a candidate to
+  promote.
+
+### 14.4 Stages, reference frames and the tree widget
+
+- **Every stage is a trajectory with its own reference frame:** the two
+  boosters, the core stage, the upper stage (ICPS), the launch abort system,
+  the service module's three fairing panels, and Orion's crew module and
+  service module, which separate before entry. Each is a piecewise reference
+  frame (section 9.3): a fixed offset in the stack's body-fixed frame until it
+  separates, then its own path. After separation each follows its own path,
+  simulated where there is no data (5h).
+- **Orion's own reference frame is piecewise too:** the simulated ascent, the
+  trajectory data, then the simulated entry, continuous at each change.
+- **A stage's path ends** where its simulation ends (a booster's splash, the
+  core stage's break-up, a panel's fall). Its reference frame then stays in
+  the tree, shown as ended, and a camera on it holds at the last state and
+  says so **(author's call)**.
+- **The live frame-tree widget** shows the tree in use at the clock's time,
+  where the camera is attached (its rig's position reference frame, and the
+  orientation reference frame if different), and changes as stages separate,
+  because a piecewise reference frame's parent changes. Clicking a reference
+  frame starts a transition to a rig on it, handing over to that reference
+  frame's controller (the camera chain, sections 7.2, 7.5 and 11).
+- **Which rig and controller per reference frame** is a small table of data
+  **(author's call)**: a stage's body-fixed frame gets an orbit rig about it
+  with the orbit controller; ITRF and MOON_ME get their body's globe controls;
+  GCRF gets an orbit rig about the Earth's centre on the `"inertial"` preset;
+  the pad's site frame gets the globe controls near the pad. The application
+  can change the table.
+- **The widget is public.** The frames explorer's tree diagram is promoted
+  into it (5i's "`branchPath` and the tree model" promotion), and the explorer
+  uses the widget.
+
+### 14.5 Design
 
 - **A new gallery example,** `examples/earth-to-moon/`, on the public API only
-  **(author's call)**. It opens with a story and a short tour that can be left
-  at any point for free exploration, as the design globe does. Its story is
-  the owner's (section 17, question 3).
+  **(author's call)**. The self-directing replay (section 14.3) is its tour,
+  and it can be left at any point for free exploration.
+- **Before 5h lands,** the stack stands on the pad until T−0, and the replay
+  then jumps, labelled as a jump, to the first state of the trajectory data
+  **(author's call)**. 5g ships without 5h.
 - **Data, from setup into the store:** the Artemis II OEM (primary, plan 2 R9)
   and SPK; DE440 and the lunar PCK; EOP; NAIF's DSN station SPK; the DSN
   810-005 figures and masks; LRO (NAIF id −85) from JPL Horizons, fetched by
@@ -1518,30 +1647,46 @@ data, which are 5h's.
   22 rows). Cesium World Terrain, imagery and Cesium Moon stream from ion with
   the user's token. The example declares Cesium Moon, which loads only when the
   camera nears the Moon (section 10.4).
+- **Models.** The setup surveys NASA's 3D resources and other public sources
+  for SLS Block 1, Orion, the mobile launcher, Launch Complex 39B and the
+  crawler, and credits each model it uses. Orion is the CC-BY Sketchfab model,
+  which the owner downloads (it needs a login) and which is credited; NASA's
+  crew-module mesh is the fallback. A stage with no public model is modelled
+  simply, from published dimensions.
+- **The mission clock** shows T− and T+ mission elapsed time, with UTC beside
+  it (section 9.7).
 - **The hypothetical lunar south-pole antenna** in its own site grid (IAU 2015
   south polar stereographic, as 4a's Moon case), labelled hypothetical. A
   hypothetical relay may be added, labelled the same way.
 - **Cameras:** the presets from §8.2 (departure after the TLI burn, the far-side
   flyby, Earthset over the lunar horizon, the loss of signal behind the Moon,
   closest approach, a DSN dish slewing to track Orion near a handover, and
-  entry), each a rig (5b's presets where they fit) and a transition. "Follow"
-  is an orbit rig on Orion. Free flight is 5d's free-fly.
+  entry), plus the story's launch shots (the pad camera, a tracking camera,
+  onboard), each a rig (5b's presets where they fit) and a transition. They
+  are the camera director's shots. "Follow" is an orbit rig on any stage. Free
+  flight is 5d's free-fly.
 - **The flight path,** sampled as a bulk operation (5b), drawn in a chosen
-  reference frame. **The "figure-eight" needs the Earth–Moon rotating frame**
+  reference frame, with the simulated spans drawn and labelled differently
+  from the data. **The "figure-eight" needs the Earth–Moon rotating frame**
   **(author's call):** the frames spec says "the Earth's: the figure-eight",
   but in GCRF the path is a loop, not a figure-eight. The figure-eight shows in
   an Earth-centred reference frame with x toward the Moon and the Moon's orbit
   in the xy plane, which is a two-vector frame (5b). The path offers GCRF,
   ITRF, MOON_ME and that rotating frame.
-- **Readouts** for Orion and a picked point in ITRF, MOON_ME, GCRF and a
-  Sun-centred reference frame (ICRF axes at the Sun), each with its accuracy.
-  The time shows in UTC, with mission elapsed time beside it (section 9.6).
+- **Readouts** for any stage and a picked point in ITRF, MOON_ME, GCRF and a
+  Sun-centred reference frame (ICRF axes at the Sun), each with its accuracy,
+  or "simulated" on a simulated span.
 - **The communications overlay,** as §8.2 lists it, on `measure`: the DSN
   links while they exist, range, light time, range rate, Doppler at 2216.5 MHz,
   free-space path loss, and received power, G/T, C/N0, Eb/N0 and margin from
   DSN 810-005's ground figures and assumed Orion figures (EIRP about 15 dBW,
   labelled assumed). Visibility windows and handovers against each station's
   masks. The data rate as observed, and the O2O laser demo as an annotation.
+  **Before the DSN acquires Orion** (launch and ascent go through the Near
+  Space Network's relay satellites), the overlay says the links are the Near
+  Space Network's and aren't modelled: the relays' positions need TEME and
+  SGP4, an add-on outside plan 5 (section 3) **(author's call)**. If the add-on
+  lands first, the relay links join the overlay.
 - **The Moon's occultation,** checked two ways: against the published
   22:44–23:25 UTC on April 6 (plan 3 R10's ±2 min), and against a SPICE
   `gfoclt` fixture for DSS-43, generated offline, to under a second (carried
@@ -1560,46 +1705,83 @@ data, which are 5h's.
   elevation from the apparent directions, through 5d's per-node transforms. If
   a model has no separate azimuth and elevation nodes, setup splits it
   **(author's call)**.
-- **Orion** from the CC-BY Sketchfab model, which the owner downloads (it needs
-  a login) and which is credited; NASA's crew-module mesh is the fallback. The
-  ICPS is modelled simply.
 - **Lines and labels** use what the engine has when 5g is built. The wide-line
   material and GPU labels are carried forward as renderer work, not 5g's.
 - **A design pass:** a UX review on the most capable model against the story,
   then the owner's review in context (the design globe's process).
 
-### 14.3 Done when
+### 14.6 Done when
 
 - The occultation agrees with `gfoclt` to under a second, and with the
   published minutes to ±2 min.
 - Every quantity in the overlay shows whether it is published, computed or
-  assumed, and an accuracy where one applies.
+  assumed, and an accuracy where one applies; simulated spans say so.
+- On an injected clock, a hands-off replay plays every event at 1× and the
+  whole mission in ten to fifteen minutes of wall time. Moving the camera
+  stops only the camera director, touching the clock stops only the time
+  director, and "Follow the mission" resumes both through a transition.
+- Clicking each reference frame in the widget moves the camera there with that
+  reference frame's controller, and the widget shows the new attachment on the
+  next tick.
+- Scrubbing backwards across a separation shows the stack whole again.
 - The browser checks pass: both themes, 1440 px and 380 px, keyboard-only use,
   reduced motion, the console, and the token search.
 
 ## 15. Sub-plans 5h and 5i
 
-### 15.1 5h: plumes, plasma and the phases outside the data
+### 15.1 5h: the simulated ascent and entry, and their effects
 
-The frames spec §8.2 stands:
+The frames spec §8.2's "phases outside the data" grow, with the owner's story
+(section 14.2), into the whole flight before and after the trajectory data.
 
-- The builder first searches for published data: an ICPS trajectory, a descent
-  or splashdown trajectory, and NASA's airborne entry imagery. Where none
-  exists, the phases outside the data (the RL10 burns before separation, the
-  service module's break-up, the descent and its re-entry plasma) are modelled
-  simply from published milestones and labelled illustrative. They are kept
-  apart from the exact data and excluded from measurements' accuracy claims.
-- Effects are physical by default, with a stated exaggeration control for the
-  presets: plumes on proxy geometry with a vacuum expansion density model
-  (checked against Simons 1972); the RL10 nearly invisible, its nozzle
-  extension glowing dull red to orange; the OMS-E during TLI (5 min 49 s at
-  7:49 pm EDT, April 2) a faint warm haze with puffs at ignition and shutdown;
-  attitude-thruster puffs of 20 to 200 ms; re-entry plasma with a shock layer
-  about 0.3 m over the heat shield, the heat shield glowing at 1,900 to
-  3,000 K, the service module breaking up separately, and the six-minute
-  blackout.
-- Custom shaders in Slang, drawn in the existing translucency pipeline.
-- The timeline gains the illustrative spans, marked as such.
+**The phases outside the data:**
+
+- **Search first,** as §8.2 says: a published ascent trajectory, an ICPS
+  trajectory, a descent or splashdown trajectory, and NASA's airborne entry
+  imagery. Published data wins wherever it exists.
+- **The simulated ascent,** where there is none: from public figures (the
+  press kit's event times, altitudes and speeds, and published engine
+  figures), propagated with real gravity, drag and thrust, from liftoff
+  through booster separation, core-stage cutoff and the upper stage's burns,
+  to the first state of the trajectory data. It must meet that state in both
+  position and velocity, so the hand-off doesn't jump: a boundary-value fit,
+  for example propagating backward from the data's first state and fitting the
+  ascent forward to meet it **(the method is the builder's)**. The piecewise
+  reference frame's continuity check (section 9.3) proves it.
+- **Each separated stage's own path:** the boosters' and the panels' fall with
+  drag to the ocean, the core stage to its break-up, the launch abort system
+  after jettison, the upper stage after Orion leaves it. Each is simulated
+  from its separation state, unless published data exists.
+- **The simulated entry,** from the data's last state at entry interface:
+  the service module's separation and break-up, the crew module's entry,
+  the six-minute blackout, the parachutes, and splashdown. The capsule then
+  floats in place and the replay ends.
+- **Labelled and excluded.** Every simulated span is labelled simulated, kept
+  apart from the exact data, and excluded from measurements' accuracy claims.
+  The timeline marks the simulated spans as such.
+- **The launch time and event times** come from public sources, cited in the
+  example; none is taken from memory.
+
+**Effects,** physical by default, with a stated exaggeration control for the
+presets, as §8.2 says, in Slang custom shaders drawn in the existing
+translucency pipeline:
+
+- **Plumes change with ambient pressure:** compact in the thick lower air
+  (shock diamonds where the nozzle is over- or underexpanded) and spreading
+  wide and faint in vacuum. The boosters' plumes bright and opaque; the core
+  stage's RS-25s pale with visible shock diamonds at sea level; plumes on proxy
+  geometry with a vacuum expansion density model (checked against Simons
+  1972); the RL10 nearly invisible, its nozzle extension glowing dull red to
+  orange; the OMS-E during TLI (5 min 49 s at 7:49 pm EDT, April 2) a faint
+  warm haze with puffs at ignition and shutdown; attitude-thruster puffs of 20
+  to 200 ms.
+- **Re-entry:** plasma with a shock layer about 0.3 m over the heat shield,
+  the heat shield glowing at 1,900 to 3,000 K, the service module breaking up
+  separately, and the six-minute blackout.
+- **Launch smoke** as an approximation without a particle system (for example
+  ray-marched noise volumes or textured proxies): secondary, and dropped if it
+  is too hard.
+- **The splashdown splash** as an approximation: secondary in the same way.
 
 5h is separate so that 5g ships without it, and so that a slip in the effects
 never holds up the engine work.
@@ -1696,7 +1878,9 @@ the inputs that arrived after the first draft:
 | Groundwork for post-V1 WebGPU features | Seams 5a (section 7.10); audit 5i |
 | Terrain clipping under the Earth's anchor | 5a |
 | Terrain clipping's later design (vector-tile boundaries, holes, inverse) | After plan 5 (section 3) |
-| A time-display API for local time per site | 5b (section 9.6) |
+| A time-display API for local time per site | 5b (section 9.7) |
+| The frames explorer's tree diagram as a public widget | 5g (section 14.4); promoted in 5i |
+| Reference frames that change at an instant (stage separation, simulated spans) | 5b (section 9.3) |
 
 ## 17. Questions for the owner
 
@@ -1709,7 +1893,7 @@ the default plan 5 follows if the owner says nothing.
    reach the examples without a rewrite (section 7.10's interface shape).
    The question was: **does plan 5 take on any of §13.16's ray-query
    design?** Plan 5 has one
-   query seam (section 7.10) with CPU rays behind it (section 9.4). At the
+   query seam (section 7.10) with CPU rays behind it (section 9.5). At the
    lunar south pole the Earth sits near the horizon, so the antenna's line of
    sight runs far over the Moon's terrain, mostly across tiles no view loaded,
    and will mostly read "can't tell". A real answer needs a bounded terrain
@@ -1726,12 +1910,13 @@ the default plan 5 follows if the owner says nothing.
    build, the import boundary, where the Viewer sits) and what 5i's surface map
    treats as a unit; moving to packages after 5a redoes that work. _Default:_
    entry points.
-3. **What is the Artemis example's story?** Who it is for first (a viewer
-   audience, or space and comms engineers), what the opening shot is, and
-   which of §8.2's presets the tour visits. _Why it matters:_ the tour, the
-   presets' transitions, the design pass and 5g's done checks hang on it, as
-   the design globe's did. _Default:_ none; 5g's UI tasks wait for it, and its
-   engine tasks go ahead.
+3. _Answered (2026-11-07):_ a replay of the whole mission from the launch
+   pad to splashdown, with each stage on its own trajectory, a mission clock,
+   effects in Slang, the communications layer on a toggle, and a live
+   frame-tree widget that moves the camera between reference frames (section
+   14.2). The self-directing replay (section 14.3) and a viewer-first audience
+   are the author's calls, to be tried. The question was: **what is the
+   Artemis example's story?**
 4. **Reprojected models the engine didn't generate: is "state the rule and
    measure the sag" enough for plan 5?** Section 13.4 adds a declared chord
    tolerance to `BENTLEY_engineering_frame`, measures the sag of tiles that
@@ -1761,7 +1946,15 @@ the default plan 5 follows if the owner says nothing.
   normal Sandcastle pattern, not confirmed with Cesium.
 - **The Sketchfab Orion** needs the owner to download it.
 - **Published data before separation and after entry interface** is still to
-  be searched for (5h).
+  be searched for (5h): an ascent trajectory, the ICPS's, the stages' after
+  separation, and the descent to splashdown.
+- **The launch time and the event times** are to be taken from public sources
+  (NASA's press kit and mission updates) and cited, before 5h fits the ascent.
+- **The models survey** (section 14.5): which public models of SLS Block 1,
+  Orion, the mobile launcher, Launch Complex 39B and the crawler exist, their
+  licences and credits.
+- **The Near Space Network's links** during launch and ascent are not modelled
+  in plan 5 (section 14.5) unless the TEME and SGP4 add-on lands first.
 - **The lunar reference systems** (§13.14 "Watch"): LunaNet's LRS standard,
   ILuRF2026 and a lunar height system are to be checked before 5g builds the
   lunar antenna's site grid. When one is adopted, it is added beside MOON_ME
@@ -1789,9 +1982,17 @@ the default plan 5 follows if the owner says nothing.
   re-attaches between bodies.
 - The CAD preset's details beyond section 11.4.
 - The sky's compositing shader structure, within the physical rule.
-- The time formatter's API shape and the zone lookup interface (section 9.6).
-- The Artemis example's layout, timeline design and preset framing, after the
-  owner's story and a design pass.
+- The time formatter's API shape and the zone lookup interface (section 9.7).
+- The Artemis example's layout, timeline design and preset framing, within
+  the owner's story (section 14.2) and after a design pass.
+- The replay's tuning (section 14.3): each coast's wall-time length (about
+  20 s), the rate cap (20,000×), the ramp (about 2 s), the lead-ins, and the
+  camera director's shot per event.
+- The table of a rig and controller per kind of reference frame (section
+  14.4).
+- The continuity tolerance for piecewise reference frames (section 9.3), and
+  the ascent's fitting method (section 15.1).
+- The techniques for launch smoke and the splash, or dropping them.
 - Shader techniques for plumes and plasma, within the physical facts.
 - The order of tasks inside each sub-plan, provided each leaves the engine
   working.
