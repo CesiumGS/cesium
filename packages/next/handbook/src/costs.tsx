@@ -213,8 +213,7 @@ const GIVEN_UP: readonly {
         About {usageWithout}% of global browser usage, by the{" "}
         <a href="#/browsers">Browser compatibility</a> tab's figure. Apps that
         need those browsers stay on 1.x there. The other options are
-        compatibility mode, not yet examined, or a second renderer (overall
-        plan, section 13.17).
+        compatibility mode or a second renderer, compared on that tab.
       </>
     ),
   },

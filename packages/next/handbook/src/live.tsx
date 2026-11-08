@@ -4,7 +4,7 @@ import still from "../shots/live-globe.webp?inline";
 /**
  * A live 2.0 globe inside the page. The engine is inert text in the built
  * file until a reader asks for it, so reading the handbook uses no GPU and
- * parses none of it. It draws nothing while out of view or on another tab.
+ * parses none of it. It draws nothing out of view, and ends on leaving the tab.
  */
 interface LiveGlobe {
   setHour(hour: number): void;
@@ -88,7 +88,7 @@ export function LiveGlobeFigure() {
     }
   };
 
-  // Out of view, on another tab included, it draws nothing.
+  // Out of view, it draws nothing. Leaving the tab ends it.
   useEffect(() => {
     if (!box.current) {
       return undefined;

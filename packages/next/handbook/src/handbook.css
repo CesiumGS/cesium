@@ -1722,6 +1722,49 @@ span.api-source {
   }
 }
 
+/* Three options side by side, their rows lined up; stacked when narrow. */
+.options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto repeat(7, auto);
+  column-gap: var(--stratakit-space-500);
+  margin-block: var(--stratakit-space-400) var(--stratakit-space-500);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.45;
+}
+.option,
+.option dl {
+  display: grid;
+  grid-row: span 8;
+  grid-template-rows: subgrid;
+}
+.option dl {
+  grid-row: span 7;
+  margin: 0;
+}
+.section .option h3 {
+  margin: 0;
+  padding-block-end: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-lg);
+}
+.option dl > div {
+  padding-block: var(--stratakit-space-200);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.option dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.option dd {
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .options {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: var(--stratakit-space-500);
+  }
+}
+
 /* The seams' table. */
 .seams {
   border-collapse: collapse;

@@ -74,6 +74,15 @@ starts on a click, the map and shadows look right, dragging orbits, and it submi
 no GPU work before the click, while idle, out of view or on another tab. A lost
 device shows the message and doesn't retry.
 
+## Devices without core WebGPU
+
+Browser compatibility compares three ways to reach them, in `src/reach.tsx`. Its
+work pieces are read from the code, by hand, so a change to the vertex stage, the
+scene targets, depth reads or the kernels' list should update them. It holds no time
+estimates or dates for the work. Its facts each say what kind of evidence they are,
+and only pages re-opened and read are cited: search summaries don't count. Leave out
+market sizes and anything about a particular customer's or company's plans.
+
 ## Layout
 
 Nineteen tabs don't fit a horizontal strip, so they're a grouped side list on a

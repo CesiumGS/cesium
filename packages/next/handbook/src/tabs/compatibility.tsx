@@ -12,6 +12,7 @@ import {
   Sources,
   Written,
 } from "../parts.tsx";
+import { ReachFacts, ReachOptions } from "../reach.tsx";
 import { WEBGPU_USAGE } from "../sources.ts";
 
 const SUPPORT: { browser: string; platform: string; state: ReactNode }[] = [
@@ -235,10 +236,10 @@ export function Compatibility() {
       <Section title="What the engine requires of a device">
         <p>
           Core WebGPU, by requesting <C>core-features-and-limits</C>.
-          Compatibility mode is out of scope, because it defaults{" "}
+          Compatibility mode is out of scope today, because it defaults{" "}
           <C>maxStorageBuffersInVertexStage</C> to 0, which rules out vertex
-          pulling. Chromium is the gate for releases; Safari and Firefox are
-          best effort so far.
+          pulling: the options below say what changing that would take. Chromium
+          is the gate for releases; Safari and Firefox are best effort so far.
         </p>
         <h3>Optional features, each with a fallback</h3>
         <DataTable
@@ -287,13 +288,77 @@ export function Compatibility() {
         />
         <Generated from={<C>bench/results</C>} />
         <p>
-          Runs in Safari and Firefox aren't recorded here yet. A compatibility
-          matrix from real runs would replace much of this tab's reliance on
-          outside tables.
+          All of it comes from those two adapters, with none from Intel or AMD,
+          and none on Linux or Android. Runs in Safari and Firefox aren't
+          recorded here yet. A compatibility matrix from real runs would replace
+          much of this tab's reliance on outside tables.
         </p>
+        <p>
+          The one try outside Chromium: the engine doesn't start in WebKit 27.2,
+          driven by Playwright on a Mac, on 2026-11-08. Its compiler rejects a{" "}
+          <C>workgroupBarrier</C> in <C>adapt.slang</C>, as needing uniform
+          control flow, and Chrome's accepts it. Which is right hasn't been
+          looked into, and Safari itself wasn't tried. Firefox 157 offered no
+          adapter there, with WebGPU blocklisted.
+        </p>
+        <Note title="A reported risk, not yet tested: indirect draws on Intel integrated GPUs">
+          <p>
+            Intel's article reports a simple WebGPU application hanging with
+            indirect draw calls on UHD 700 and Iris Xe GPUs under Windows 11:
+            the driver fails to create a command allocator, and the device is
+            removed with <C>DXGI_ERROR_DEVICE_REMOVED</C>. It lists no
+            workaround (
+            <Cite id="intel" />
+            ). This engine renders with indirect draws by default, and{" "}
+            <C>SubmissionMode</C>'s <C>"direct"</C> may avoid it. We haven't
+            reproduced it, or tried that. The overall plan, section 13.23, holds
+            the work.
+          </p>
+        </Note>
       </Section>
 
-      <Sources ids={["impl", "caniuse", "mdn", "survey", "webgpu", "wgsl"]} />
+      <ReachOptions />
+      <ReachFacts />
+
+      <Sources
+        ids={[
+          "impl",
+          "caniuse",
+          "mdn",
+          "survey",
+          "webgpu",
+          "wgsl",
+          "chrome146",
+          "chrome136",
+          "compatLesson",
+          "compatProposal",
+          "compatIntent",
+          "blocklist",
+          "dawn",
+          "webgl2Usage",
+          "webgl2Survey",
+          "surveyCore",
+          "swiftshader",
+          "azure",
+          "ec2Thread",
+          "unattendedThread",
+          "cisa",
+          "extendedStable",
+          "stig",
+          "disable3d",
+          "troubleshooting",
+          "usaAnalytics",
+          "intel",
+          "jpr",
+          "steam",
+          "arcgis",
+          "mapbox",
+          "aps",
+          "figma",
+          "unity",
+          "cesium1140",
+        ]}
+      />
     </Page>
   );
 }
