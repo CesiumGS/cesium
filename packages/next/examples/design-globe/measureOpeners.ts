@@ -404,7 +404,7 @@ export interface RulerEnd {
   readonly ground: number;
   /** How far apart they are, design units. */
   readonly gap: number;
-  /** "Ground's 10,000 ft ends 0.764 ftUS before design's". */
+  /** "Ground's 10,000 ftUS ends 0.764 ftUS before design's". */
   readonly text: string;
 }
 
@@ -430,7 +430,7 @@ export function rulerEnd(
     design,
     ground,
     gap,
-    text: `Ground's ${fixed(feet, 0)} ft ends ${fixed(gap, 3)} ${symbol} ${ground <= design ? "before" : "after"} design's`,
+    text: `Ground's ${fixed(feet, 0)} ${symbol} ends ${fixed(gap, 3)} ${symbol} ${ground <= design ? "before" : "after"} design's`,
   };
 }
 

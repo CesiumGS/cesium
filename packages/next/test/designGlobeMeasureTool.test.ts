@@ -630,7 +630,7 @@ describe("the ruler's far end", () => {
     );
     expect(end.ground).toBeLessThan(end.design);
     expect(end.text).toBe(
-      `Ground's 10,000 ft ends ${end.gap.toFixed(3)} ftUS before design's`,
+      `Ground's 10,000 ftUS ends ${end.gap.toFixed(3)} ftUS before design's`,
     );
   });
 });

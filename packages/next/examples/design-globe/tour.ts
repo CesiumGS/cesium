@@ -23,7 +23,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
   { id: "rigid", title: "Rigid at one anchor" },
   { id: "morph", title: "Reprojected" },
   { id: "mark", title: "Against a survey mark" },
-  { id: "pair", title: "The 10,000 ft pair" },
+  { id: "pair", title: "The 10,000 ftUS pair" },
   { id: "ladder", title: "Down the scale ladder" },
   { id: "yours", title: "Yours to explore" },
 ];
@@ -219,7 +219,7 @@ function narration(state: TourState, f: TourFacts): string {
     case "pair": {
       const apart = f.pair
         ? `${fixed(f.pair.horizontal, 0)} ${f.pair.symbol}`
-        : "10,000 ft";
+        : "10,000 ftUS";
       const away =
         f.pair?.rigidOffset !== undefined
           ? ` about ${errorText(f.pair.rigidOffset)} away`
@@ -228,12 +228,13 @@ function narration(state: TourState, f: TourFacts): string {
         f.pair?.rigidShort !== undefined
           ? ` and ${small(f.pair.rigidShort)} short`
           : "";
-      // One sentence, read at the ruler's far end where the shot is.
+      // One sentence, read at the ruler's far end where the shot is: the
+      // claim (only reprojected draws it where it is), then the ruler.
       const ruler =
         f.pair?.ruler !== undefined
-          ? `; up close at its far end, ground's ${fixed(f.pair.ruler.feet, 0)} ft ends ${fixed(f.pair.ruler.gap, 3)} ${f.pair.symbol} before design's`
+          ? `; up close at its far end, ground's ${fixed(f.pair.ruler.feet, 0)} ${f.pair.symbol} ends ${fixed(f.pair.ruler.gap, 3)} ${f.pair.symbol} before design's`
           : "";
-      return `Two stations ${apart} apart measure ${apart} in both placements, while rigid draws the line${away}${short}${ruler}.`;
+      return `Two stations ${apart} apart measure ${apart} in both placements, but only reprojected draws the line where it is (rigid draws it${away}${short})${ruler}.`;
     }
     case "ladder":
       return ladderStop(

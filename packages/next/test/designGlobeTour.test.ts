@@ -161,10 +161,15 @@ describe("design globe tour", () => {
     expect(texts[2]).toContain("19.3 m");
     // Step 4: the length error apart from the position.
     expect(texts[3]).toMatch(/measure 10,000 ftUS in both placements/);
+    // The step's claim: only reprojected draws it where it is (UX review M-c).
+    expect(texts[3]).toMatch(
+      /only reprojected draws the line where it is \(rigid draws it about/,
+    );
     // Read at the ruler's far end, where the tour's shot is (UX review S10).
     expect(texts[3]).toMatch(
-      /ground's 10,000 ft ends 0\.938 ftUS before design's/,
+      /ground's 10,000 ftUS ends 0\.938 ftUS before design's/,
     );
+    expect(texts[3]).not.toMatch(/\d ft\b/);
     expect(texts[3]).toContain("37.4 m away");
     expect(texts[3]).toContain("233 mm short");
     // Step 6 says what is checked, no more.
