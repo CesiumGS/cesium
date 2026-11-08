@@ -577,9 +577,10 @@ describe("refiningSnap: the client's snap, then the server's", () => {
       () => {},
     );
     expect(refused?.source).toBe("client");
-    expect([...hidden.warnings]).toEqual([
-      `${SNAP_SERVER_REFUSED}: snapPoint hidden from the camera by the drawn mesh`,
-    ]);
+    expect(refused?.serverOutOfSight).toBe(
+      "snapPoint hidden from the camera by the drawn mesh",
+    );
+    expect([...hidden.warnings]).toEqual([]);
   });
 
   describe("refuses a server answer that doesn't check out", () => {
@@ -707,7 +708,17 @@ describe("refiningSnap: the client's snap, then the server's", () => {
         ]);
         expect(r?.source).toBe("client");
         expect(Array.from(r!.snapPoint)).toEqual([R, 40, 0]);
-        expect([...ts.warnings]).toEqual([`${SNAP_SERVER_REFUSED}: ${reason}`]);
+        // Out of sight is a correct refusal, said on the result; the rest
+        // don't check out, and warn.
+        if (reason.endsWith("hidden from the camera by the drawn mesh")) {
+          expect(r!.serverOutOfSight).toBe(reason);
+          expect([...ts.warnings]).toEqual([]);
+        } else {
+          expect(r!.serverOutOfSight).toBeUndefined();
+          expect([...ts.warnings]).toEqual([
+            `${SNAP_SERVER_REFUSED}: ${reason}`,
+          ]);
+        }
       });
     }
 

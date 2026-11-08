@@ -97,6 +97,14 @@ export interface SnapResult {
    * pick.
    */
   readonly camera?: SnapCamera;
+  /**
+   * On a client snap a server was asked to refine: the server's answer was
+   * sound, but the point it is shown at is out of sight from this camera,
+   * and this says which ("snapPoint hidden from the camera by the drawn
+   * mesh"). A correct refusal, not a failure: a server knows the design,
+   * not what is drawn in front of it (`refiningSnap`).
+   */
+  readonly serverOutOfSight?: string;
 }
 
 /**
@@ -149,13 +157,17 @@ export const SNAP_SERVER_FAILED =
   "snap: the snap server failed; client snaps stand";
 
 /**
- * Begins the warning added once per reason when a server snap is refused
- * (`refiningSnap`): "snap: a server snap was refused: <reason>".
+ * Begins the warning added once per reason when a server's answer doesn't
+ * check out (`refiningSnap`): "snap: a server snap was refused: <reason>".
+ * A point merely out of sight isn't one (`SnapResult.serverOutOfSight`).
  */
 export const SNAP_SERVER_REFUSED = "snap: a server snap was refused";
 
 /** Added once to a tileset's `warnings` when `refiningSnap`'s `onUpdate` throws. */
 export const SNAP_UPDATE_FAILED = "snap: onUpdate threw; it must not";
+
+/** Ends a refusal that is the camera's view, not the server's fault. */
+const OUT_OF_SIGHT = "hidden from the camera by the drawn mesh";
 
 const SNAP_KINDS: readonly SnapKind[] = ["point", "segment", "arc", "surface"];
 
@@ -328,7 +340,8 @@ function warnOnce(tileset: Tileset3D, warning: string): void {
  * server finds no snap (undefined or null), fails, or gives an answer that
  * doesn't check out, the client snap stands: `onUpdate` gets it again, no
  * longer provisional, and the promise resolves with it. A failure, and each
- * reason for refusing an answer, adds a warning to the tileset once.
+ * reason for refusing an answer that doesn't check out, adds a warning to
+ * the tileset once.
  *
  * A server answer is refused when it is malformed (points, tolerance,
  * `kind`, `normal`, `curve`, `shownPoint`); when it is `exact` with a
@@ -342,6 +355,11 @@ function warnOnce(tileset: Tileset3D, warning: string): void {
  * point a little inside the drawn mesh still passes; one well inside it,
  * such as a profile grade line under a barrier, passes when its
  * `shownPoint` is on the surface over it).
+ *
+ * That last refusal is no fault of the server's: a server knows the design,
+ * not what is drawn in front of it from here (a barrier's far face seen
+ * from the road, a road under a deck). So it adds no warning: the client
+ * snap stands and says why (`SnapResult.serverOutOfSight`).
  *
  * Abort `signal` when a newer snap supersedes this one: the server request
  * is aborted with it, and `onUpdate` is not called again, even if the server
@@ -385,6 +403,7 @@ export async function refiningSnap(
   update({ ...found, provisional: true });
   let refined: SnapResult | undefined;
   let warning: string | undefined;
+  let outOfSight: string | undefined;
   try {
     const answer = await server.snap(
       {
@@ -404,7 +423,9 @@ export async function refiningSnap(
     }
     if (answer !== undefined && answer !== null) {
       const reason = refusal(answer, found, client, request, tileset, camera);
-      if (reason !== undefined) {
+      if (reason?.endsWith(OUT_OF_SIGHT)) {
+        outOfSight = reason;
+      } else if (reason !== undefined) {
         warning = `${SNAP_SERVER_REFUSED}: ${reason}`;
       } else {
         // The client's feature and camera, never the server's.
@@ -435,7 +456,11 @@ export async function refiningSnap(
   if (warning !== undefined) {
     warnOnce(tileset, warning);
   }
-  const result = refined ?? settled;
+  const result =
+    refined ??
+    (outOfSight !== undefined
+      ? { ...settled, serverOutOfSight: outOfSight }
+      : settled);
   update(result);
   return result;
 }
@@ -554,7 +579,7 @@ function refusal(
     return `${name} outside the aperture`;
   }
   if (client.hides(found, shown)) {
-    return `${name} hidden from the camera by the drawn mesh`;
+    return `${name} ${OUT_OF_SIGHT}`;
   }
   return undefined;
 }

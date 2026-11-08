@@ -29,7 +29,6 @@ import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";
 import {
   ClientSnapService,
-  SNAP_SERVER_REFUSED,
   refiningSnap,
   type ServiceSnapRequest,
   type SnapCamera,
@@ -577,9 +576,11 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
       () => {},
     );
     expect(refused!.source).toBe("client");
-    expect([...plain.warnings]).toEqual([
-      `${SNAP_SERVER_REFUSED}: snapPoint hidden from the camera by the drawn mesh`,
-    ]);
+    // A correct refusal, said on the result, not a warning.
+    expect(refused!.serverOutOfSight).toBe(
+      "snapPoint hidden from the camera by the drawn mesh",
+    );
+    expect([...plain.warnings]).toEqual([]);
   });
 
   it("judges the aperture where the snap is shown, in a close oblique view", async () => {
