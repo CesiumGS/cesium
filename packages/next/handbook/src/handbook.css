@@ -39,7 +39,9 @@ body {
   border-inline-end: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 .brand {
-  padding-inline: var(--stratakit-space-300);
+  /* One left edge for the brand, headings and footer. Items sit indented under
+     their heading, as StrataKit's list pads its items. */
+  padding-inline: 0;
 }
 .brand-name {
   margin: 0;
@@ -59,14 +61,14 @@ body {
 }
 .nav-group > h2 {
   margin: 0 0 var(--stratakit-space-100);
-  padding-inline: var(--stratakit-space-300);
+  padding-inline: 0;
   font-size: var(--stratakit-font-size-body-sm);
   font-weight: 600;
   color: var(--stratakit-color-text-neutral-secondary);
 }
 .side-foot {
   margin-block-start: auto;
-  padding-inline: var(--stratakit-space-300);
+  padding-inline: 0;
   display: flex;
   flex-direction: column;
   gap: var(--stratakit-space-200);
