@@ -33,9 +33,11 @@ the second audience: every number is there and honest, but quieter.
   2. The morph to reprojected: the gap closes to 0.000 m as the geometry
      moves into the globe's frame.
   3. The survey mark: the design against NGS's own control.
-  4. The 10,000 ft pair: the design distance is the same in both
+  4. The 10,000 ftUS pair: the design distance is the same in both
      placements; only reprojected also draws it in the right place. Seen
      close in at the ruler's far end, where its bracket reads (UX review).
+     The close-in sets the ghost and the ribbon aside; any other step,
+     leaving the tour or another site brings them back (rulerView.ts).
   5. Down the ladder: the single building (rigid is fine), the airport
      (metres), the pole line (tens of metres).
   6. Hand-off: the panel, the flight list and the measure toolbar, yours.
@@ -66,6 +68,14 @@ the second audience: every number is there and honest, but quieter.
      centreline. Reprojected matches the distance from NGS's published zone 3
      coordinates; rigid is off by about 23 m there (HS5109 "GOLD CREEK"). The surveyor's question:
      does the design line up with the control it was surveyed from?
+     Reprojected, the drawn offset is 0.000 m by construction, so the
+     headline is the independent test (UX review M4): the design's
+     horizontal distance to the mark against the same from NGS's own
+     zone 3, with its bound in the caption, "within the datasheet's
+     precision, ±0.0094 ftUS" (each coordinate's 0.01 ftUS rounding and the
+     metric-to-feet double rounding, √2 along the line). The headline and
+     Checks' `mark.offset` row use the one tolerance
+     (`MARK_OFFSET_TOLERANCE`), so they can't disagree.
 
   A quieter third pair, two stations 10,000 ft apart, shows the design
   distance identical in both placements.
@@ -230,6 +240,25 @@ covers bringing a model).
 Honesty rules unchanged: every unit named, every number stated once (a
 number in a headline row is not repeated in its Details), no e-notation.
 
+**What an accuracy is of** (UX review S3, C1). "How exact this is" never
+claims more than its parts support. When both ends are design points on
+one grid, it splits two things:
+
+- **The distance**: not stated. The grid's common error cancels, and
+  Earth orientation turns both ends together, but PROJ gives no figure for
+  how much the grid varies between the ends (nor for a geoid fallback's
+  variation), and a part of unknown size makes the total not stated, never
+  small (R7). The known part is given beside it: the snaps and picks as a
+  1σ figure, "exact (no pick error)" for an exact snap (never "±0 m"), or
+  none for design points as given. Against the survey mark, the mark's own
+  survey accuracy is named as unknown too: it is in no term.
+- **Each end's position**: PROJ's stated ±2.0 m (1σ) for the corridor,
+  absolute, where each end is on the globe; the common parts once.
+
+Ends in different frames keep the parts combined as independent, as the
+engine's statement gives them (a relative statement belongs in the
+engine's `accuracyOf`).
+
 ### The viewer
 
 - **The toolbar** (F8), top left under Dyno's inspector line, StrataKit's
@@ -258,10 +287,19 @@ number in a headline row is not repeated in its Details), no e-notation.
   reprojected: the design numbers and the globe numbers change together.
   When the pointer is under the rail (the card and the legend), the rail
   steps to the left under the toolbar, and back 300 ms after the pointer
-  has left its corner.
+  has left its corner; while the pointer is on the rail itself, it stays
+  put, so its controls can be reached.
 - **The legend**, under the cursor card in the top right rail: the bottom
   is the tour's card and the time controls'.
-- **The tour's card**, bottom centre above the time controls.
+- **The tour's card**, bottom centre above the time controls. Its step
+  segments are one Tab stop, the arrow keys moving between them.
+- **Narrow windows**: at 900 px or less the page stacks, the view over
+  the panel, the page scrolling (it opts in with Dyno's `stackNarrow`).
+- **Credits**: with the grids', the ground data's, in the viewer's data
+  attribution while the site is drawn: the Environment Agency's lidar
+  under the Open Government Licence v3.0 with London, USGS 3DEP (public
+  domain) with the corridor and the site-grid building
+  (dataCredits.ts).
 - **Layering** (F2): the inspector is topmost. The viewer's own overlays
   stack canvas, then the page's overlays, then the credits and the time
   controls, then the inspector; Dyno's view isolates them, so its own
