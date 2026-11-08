@@ -10,6 +10,7 @@ import type { AnswerSite, Answers } from "./answers.ts";
 import type { OpenerId } from "./measureOpeners.ts";
 import { enuAt, type SagSample } from "./overlays.ts";
 import { morphEase } from "./page.ts";
+import { EARTHWORK, daylightRise, type Side } from "./sideSlopes.ts";
 
 const deg = Math.PI / 180;
 
@@ -34,6 +35,58 @@ const VISIBLE_GAP = 3;
 
 /** "Fly along" looks across the road, relative to the alignment's azimuth. */
 const ALONG_HEADING = -75 * deg;
+/** "Fly along" keeps this many metres over the cuts' tops nearby. */
+const ALONG_CLEAR = 50;
+/** How far along the road "Fly along" looks for a cut, ftUS either way. */
+const ALONG_REACH = 2_000;
+/** Metres per US survey foot. */
+const FT_US = 1200 / 3937;
+
+/**
+ * A side's daylight rise at `station`, ftUS; over a structure, linear
+ * between the rises at its two ends (a tunnel's portals stand in deep cuts,
+ * and the hill is over the road between them); undefined past the ends.
+ */
+function riseAt(station: number, side: Side): number | undefined {
+  const rise = daylightRise(station, side);
+  if (rise !== undefined) {
+    return rise;
+  }
+  const next = EARTHWORK.findIndex((e) => e.fromStation > station);
+  const before = next < 0 ? EARTHWORK.at(-1) : EARTHWORK[next - 1];
+  const after = next < 0 ? undefined : EARTHWORK[next];
+  if (before === undefined || after === undefined) {
+    return undefined;
+  }
+  const a = daylightRise(before.toStation, side);
+  const b = daylightRise(after.fromStation, side);
+  if (a === undefined || b === undefined) {
+    return undefined;
+  }
+  const t =
+    (station - before.toStation) / (after.fromStation - before.toStation);
+  return a + (b - a) * t;
+}
+
+/**
+ * The deepest cut near `station`, metres above its hinge: each side's
+ * daylight rise within ALONG_REACH (over a structure, between its ends'),
+ * weighted down linearly with its distance, so it changes smoothly as the
+ * station moves; 0 in fill.
+ */
+export function cutRise(station: number): number {
+  let most = 0;
+  for (let d = -ALONG_REACH; d <= ALONG_REACH; d += 25) {
+    const weight = 1 - Math.abs(d) / ALONG_REACH;
+    for (const side of [-1, 1] as const) {
+      const rise = riseAt(station + d, side);
+      if (rise !== undefined && rise > 0) {
+        most = Math.max(most, rise * weight);
+      }
+    }
+  }
+  return most * FT_US;
+}
 /** "Fly along": about 24 km in 24 s, slow enough for the tiles to keep up. */
 export const ALONG_MS = 24_000;
 
@@ -341,6 +394,15 @@ export function createShots(deps: ShotsDeps): Shots {
   function framingAlong(station: number, u: number): Framing | undefined {
     const center = corridorAt(station);
     const k = u * u;
+    const range = 220 + (420 - 220) * k;
+    // High enough to look over the cuts' daylight lines nearby (UX review
+    // S11: low in a deep cut, the camera sat between its slopes with the
+    // road out of view): ALONG_CLEAR above the deepest cut's top within
+    // ALONG_REACH, each weighted down with its distance, so the camera
+    // rises and falls smoothly.
+    const clear = Math.asin(
+      Math.min(0.9, (cutRise(station) + ALONG_CLEAR) / range),
+    );
     return center === undefined
       ? undefined
       : {
@@ -348,8 +410,8 @@ export function createShots(deps: ShotsDeps): Shots {
           // Across the road from its right, so the deck and the road below
           // slide past side by side; rising as the gap closes.
           heading: alignment.azimuthAt(station) + ALONG_HEADING,
-          pitch: -8 * deg + (-30 * deg + 8 * deg) * k,
-          range: 220 + (420 - 220) * k,
+          pitch: Math.min(-8 * deg + (-30 * deg + 8 * deg) * k, -clear),
+          range,
         };
   }
 
