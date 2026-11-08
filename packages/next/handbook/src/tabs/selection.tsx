@@ -275,6 +275,11 @@ const BANDS = [
     order:
       "Nearest first, and only with no visible request in flight or waiting",
   },
+  {
+    band: "Caster",
+    when: "Off screen, and may shadow what a view draws (the Shadows tab)",
+    order: "After everything else, and only with room",
+  },
 ];
 
 const WINDOW = [

@@ -2,6 +2,7 @@ import { useId } from "react";
 import { Board, type BoardStep } from "../diagram.tsx";
 import {
   C,
+  DataTable,
   Figure,
   Generated,
   Note,
@@ -63,8 +64,8 @@ const TICK: BoardStep[] = [
     body: (
       <>
         Each has the cascade's matrix and culling planes, and the view's own
-        bit, so it sees what that view draws. They wait in <C>cascadeStaging</C>
-        .
+        bit, so it sees what that view draws and the casters it selected. They
+        wait in <C>cascadeStaging</C>.
       </>
     ),
   },
@@ -277,9 +278,10 @@ function CascadeBox() {
       <title id={titleId}>
         Seen from above. A camera looks right along a wedge. One cascade's
         sphere holds a slice of that wedge, and its box runs up from the sphere
-        toward the sun. A hill inside the wedge casts a shadow. A hill beside
-        the wedge is inside the box, but no view selected its tile, so it casts
-        nothing, and the shadow it should throw into the view is missing.
+        toward the sun. A hill inside the wedge casts a shadow. A hill up-sun of
+        the wedge is off screen but inside the box, so a budgeted tileset
+        selects it as a caster when it has room, and its shadow falls into the
+        view.
       </title>
       <path className="d-box" d="M50 330 L580 213 L580 447 Z" strokeWidth={1} />
       <rect
@@ -303,13 +305,7 @@ function CascadeBox() {
 
       <rect className="d-shadow" x={352} y={300} width={36} height={70} />
       <ellipse className="d-hill" cx={370} cy={292} rx={22} ry={16} />
-      <rect
-        className="d-shadow-missing"
-        x={428}
-        y={120}
-        width={44}
-        height={190}
-      />
+      <rect className="d-shadow" x={428} y={120} width={44} height={190} />
       <ellipse className="d-hill" cx={450} cy={108} rx={28} ry={20} />
 
       <circle className="d-head" cx={50} cy={330} r={5} />
@@ -334,13 +330,13 @@ function CascadeBox() {
 
       <path className="d-edge" strokeWidth={1} d="M480 108 H600" />
       <text className="d-title" x={608} y={100}>
-        A hill beside the view
+        A hill off screen
       </text>
       <text className="d-text" x={608} y={120}>
-        In the box, but no view selected its tile,
+        In the box, so a budgeted tileset selects
       </text>
       <text className="d-text" x={608} y={138}>
-        so it casts nothing. Its shadow is missing.
+        it as a caster when it has room.
       </text>
 
       <path className="d-edge" strokeWidth={1} d="M525 40 H600" />
@@ -394,7 +390,31 @@ const WHAT_CASTS: [string, string][] = [
   ],
   ["Point sets", "None: the shadow pass's cull leaves them out."],
   ["Billboards and lines", "None: they aren't in the casters' bundle."],
-  ["Tiles no view selected", "None. See the limits below."],
+  [
+    "Tiles off screen",
+    "Those a budgeted 3D tileset selects as casters, below. Stepwise and terrain select none.",
+  ],
+];
+
+const CASTER_COSTS: { what: string; figure: string; measured: string }[] = [
+  {
+    what: "The selection walk",
+    figure: "2.75 ms",
+    measured:
+      "The median of four 95th percentiles, on Google's tileset at 150 m.",
+  },
+  {
+    what: "Bytes casters hold",
+    figure: "2.09 and 2.45 times the view's",
+    measured:
+      "One photogrammetry tileset, with a 4 GiB cache. Other content hasn't been measured.",
+  },
+  {
+    what: "A return after more than 60 s, with a full cache",
+    figure: "A third to under half of the view's requests",
+    measured:
+      "Reloads of what casters took in the meantime, on a cache that casters off would have kept.",
+  },
 ];
 
 const COMPARE: [string, string, string][] = [
@@ -415,6 +435,11 @@ const COMPARE: [string, string, string][] = [
     "On by default",
     "No: options.shadows is false",
     "No in the engine; the Viewer turns them on",
+  ],
+  [
+    "Tiles off screen",
+    "Only tiles the camera selected cast",
+    "A budgeted tileset selects casters. Stepwise keeps 1.x's behaviour",
   ],
 ];
 
@@ -478,11 +503,11 @@ export function Shadows() {
 
       <Section title="What each cascade draws">
         <p>
-          A cascade sees only what a view draws. Its block carries the view's
-          bit, so the cull passes only what that view selected, and tests it
-          against the box's four sides and its far side. Toward the sun, the
-          depth range bounds it, at least 30 km past the sphere, for casters
-          such as mountains at a low sun.
+          A cascade draws what its view draws, and that view's casters off
+          screen. Its block carries the view's bit, so the cull passes only
+          those, and tests them against the box's four sides and its far side.
+          Toward the sun, the depth range bounds it, at least 30 km past the
+          sphere, for casters such as mountains at a low sun.
         </p>
         <Figure
           scroll
@@ -533,6 +558,96 @@ export function Shadows() {
         />
       </Section>
 
+      <Section title="Off-screen casters">
+        <p>
+          Selection follows the camera, so a tile behind it, toward the sun,
+          isn't selected though its shadow falls in view. So a budgeted 3D
+          tileset looks for casters too, after every view's walk.
+        </p>
+        <Note title="Not judged yet">
+          <p>
+            Nobody has yet judged the shadow pixels on real content, so nothing
+            here claims how they look.
+          </p>
+        </Note>
+        <h3>Which tiles cast</h3>
+        <p>
+          A caster is a tile the view doesn't draw, inside the cascades' boxes
+          and inside a rectangle in light space around every receiver: each tile
+          the view draws in this tileset, in the world's others and on the
+          globe. With nothing drawn yet there are no casters. If a receiver
+          stands in another anchor's coordinates, only the boxes limit them, up
+          to 50 km past a cascade's sphere toward the light.
+        </p>
+        <h3>How much room they get</h3>
+        <p>
+          There's one cache budget, and casters have no share of it. What views
+          use this tick is never evicted. Casters get free bytes first: the
+          cache, less what views use, less cold tiles that a view may come back
+          to. Only then do they get a cold tile's room, once it's stale.
+        </p>
+        <p>
+          A cold tile counts as stale after 8 s without a view. A view returning
+          after a longer absence makes that twice its absence, up to 60 s. So
+          the worst a view pays is one return after each longer absence, until
+          60 s, and past that every return can cost reloads. The cap is chosen:
+          without it, casters would get less room for longer after each long
+          return. Eviction takes casters that aren't casting first, then cold
+          tiles as it would with casters off, then stale ones for casters.
+        </p>
+        <h3>Coarsening before dropping</h3>
+        <p>
+          Off screen, a tile refines at <C>casterErrorScale</C> times the
+          threshold, 2 by default. If those don't fit, the walk uses the finest
+          of 2, 4, 8 and 16 times that scale whose casters do, leaving out any
+          tile too large to fit at all. If none fits, the nearest of the
+          coarsest are admitted while their bytes fit. What isn't admitted isn't
+          requested and doesn't cast. While a caster loads, its nearest loaded
+          ancestor casts for it, unless that ancestor is drawn on screen.
+        </p>
+        <h3>Giving way to views</h3>
+        <p>
+          Casters come last in the request band, the upload queue and the
+          in-flight slots. A view's request that finds its origin's window full
+          cancels a caster in flight. They stop loading when a world pool is
+          past 75% full, or while another tileset's view tile waits for
+          capacity. A still view doesn't count as loading because of them.
+        </p>
+        <h3>Who sees them</h3>
+        <p>
+          A draw record has a <C>casterMask</C> beside its view mask. Only a
+          cascade's cull reads it, as <C>viewMask | casterMask</C>. Picks, ray
+          casts, depth ranges, translucency and the drawn-tile stats read the
+          view mask, so they never see a caster. A batch that only cascades draw
+          is in the shadow bundle alone.
+        </p>
+        <h3>What it costs</h3>
+        <DataTable
+          label="Measured costs of off-screen casters"
+          columns={[
+            { head: "What", cell: (r) => r.what },
+            { head: "Figure", cell: (r) => r.figure },
+            { head: "What it measured", cell: (r) => r.measured },
+          ]}
+          rows={CASTER_COSTS}
+        />
+        <p className="provenance">
+          From the engine's <C>lod</C> bench, as the commits and the code's own
+          comment record them. They aren't in this page's generated results, and
+          none has been addressed yet.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/streaming/Tileset3D.ts</C>,{" "}
+              <C>src/streaming/Budgeted.ts</C>, <C>src/scene/shadows.ts</C> and{" "}
+              <C>src/shaders/cullTables.slang</C>
+            </>
+          }
+          on="2026-11-08"
+        />
+      </Section>
+
       <Section title="Filtering">
         <p>
           A surface finds its cascade by its distance along the view. It moves
@@ -552,10 +667,9 @@ export function Shadows() {
       <Section title="What's limited today">
         <ul>
           <li>
-            <strong>Off-screen casters share the cache.</strong> Tiles out of
-            view cast into it, but only with room: they take bytes no view uses
-            and no recent view may come back to, and they give way to what views
-            draw. With little room, they coarsen first.
+            <strong>Off-screen casters share the cache.</strong> With little
+            room they coarsen, then drop, so a shadow from off screen can be
+            coarse or missing. Stepwise and terrain select none.
           </li>
           <li>
             <strong>Reach.</strong> Past the far distance there are no shadows,
@@ -620,17 +734,6 @@ export function Shadows() {
           }
           on="2026-11-08"
         />
-      </Section>
-
-      <Section title="Off-screen casters">
-        <Note title="In this build">
-          <p>
-            A tileset selects tiles off screen that cast into view, and only the
-            cascades see them. They load after everything a view needs, and
-            never evict what a view uses. They can cost reloads when a view
-            returns after more than 60 s away.
-          </p>
-        </Note>
       </Section>
     </Page>
   );
