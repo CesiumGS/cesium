@@ -376,6 +376,13 @@ interface Batch {
   /** Draw items: records without instances plus instances. */
   items: number;
   itemBase: number;
+  /**
+   * Its records some view draws (a view mask not 0). The bundles skip a
+   * batch with none: a streamed tile kept in the cache but not selected
+   * would otherwise cost an empty indirect draw in every pass, and its
+   * bundles' recording, for as long as it stays resident.
+   */
+  shown: number;
 }
 
 /**
@@ -715,6 +722,11 @@ export class World {
   private nextMeshId = 0;
   private drawCount = 0;
   private bundle?: GPURenderBundle;
+  /**
+   * A batch gained its first shown record or lost its last (`Batch.shown`):
+   * the bundles are recorded again, without rewriting the batch table.
+   */
+  private batchesShownChanged = false;
   /** Draws of blended surfaces (`translucentRange`), until draws change. */
   private translucentDraws?: number[];
   /** The shadow casters' bundle, and the draw bundle it was recorded with. */
@@ -2080,6 +2092,9 @@ export class World {
           }
         : {}),
     });
+    if (this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD] !== 0) {
+      batch.shown++;
+    }
     this.markDirty(index);
     this.bundle = undefined;
     this.translucentDraws = undefined;
@@ -2255,6 +2270,7 @@ export class World {
       batch.billboard = f.billboard;
       batch.points = f.points;
       batch.instanced = f.instanced;
+      batch.shown = 0;
     } else {
       batch = {
         index: this.batchList.length,
@@ -2269,6 +2285,7 @@ export class World {
         instanced: f.instanced,
         items: 0,
         itemBase: 0,
+        shown: 0,
       };
       this.batchList.push(batch);
     }
@@ -2306,6 +2323,10 @@ export class World {
       draw: index,
     });
     old.items -= items;
+    if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
+      old.shown--;
+      batch.shown++;
+    }
     if (old.items === 0) {
       this.batches.delete(old.key);
       old.key = "";
@@ -2348,6 +2369,9 @@ export class World {
     this.drawBatches[handle.index] = undefined;
     this.drawGeneration[handle.index] = this.drawGeneration[handle.index]! + 1;
     batch.items -= instanceCount > 0 ? instanceCount : 1;
+    if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
+      batch.shown--;
+    }
     if (batch.items === 0) {
       this.batches.delete(batch.key);
       batch.key = "";
@@ -2876,10 +2900,20 @@ export class World {
       return;
     }
     const index = handle.index * RECORD_WORDS + VIEW_MASK_WORD;
-    if (this.recordsU32[index] !== mask >>> 0) {
-      this.changedViews |= this.recordsU32[index]!; // the views it left
+    const old = this.recordsU32[index]!;
+    if (old !== mask >>> 0) {
+      this.changedViews |= old; // the views it left
       this.recordsU32[index] = mask >>> 0;
       this.markDirty(handle.index);
+      if ((old === 0) !== (mask === 0)) {
+        // Its batch joins or leaves the bundles: they're recorded again
+        // (the batch table and item list stay as they are).
+        const batch = this.drawBatches[handle.index]!;
+        batch.shown += mask === 0 ? -1 : 1;
+        if (batch.shown === (mask === 0 ? 0 : 1)) {
+          this.batchesShownChanged = true;
+        }
+      }
     }
   }
 
@@ -3288,7 +3322,10 @@ export class World {
     if (!this.bundle) {
       this.writeBatches();
       this.bundle = this.recordBundle();
+    } else if (this.batchesShownChanged) {
+      this.bundle = this.recordBundle();
     }
+    this.batchesShownChanged = false;
     this.cullParamsData[0] = this.drawCount;
     this.cullParamsData[1] = this.batchList.length;
     this.cullParamsData[2] = this.instanceHighWater;
@@ -3605,13 +3642,17 @@ export class World {
                       : "opaque";
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
-    const order = [...this.batchList].sort(
-      (a, b) =>
-        rank(a) - rank(b) ||
-        (a.shader?.id ?? 0) - (b.shader?.id ?? 0) ||
-        a.textureSet - b.textureSet ||
-        a.mesh.slab - b.mesh.slab,
-    );
+    // Only batches some view draws (`Batch.shown`): the cache's resident
+    // tiles that no view selected cost nothing here.
+    const order = this.batchList
+      .filter((batch) => batch.shown > 0)
+      .sort(
+        (a, b) =>
+          rank(a) - rank(b) ||
+          (a.shader?.id ?? 0) - (b.shader?.id ?? 0) ||
+          a.textureSet - b.textureSet ||
+          a.mesh.slab - b.mesh.slab,
+      );
     const direct = this._submission === "direct";
     const list = direct ? this.directListBuffer : this.itemListBuffer;
     let pipeline: GPURenderPipeline | undefined;
@@ -3840,7 +3881,7 @@ export class World {
     let slab = -1;
     for (const batch of this.batchList) {
       if (
-        batch.items === 0 ||
+        batch.shown === 0 ||
         !this.translucent(batch) ||
         this.brokenTextureSets.has(batch.textureSet)
       ) {
