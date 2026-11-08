@@ -428,6 +428,30 @@ describe("the frame catalog", () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("ITRF"));
   });
 
+  it("without a progress listener no onProgress reaches the loader: loads don't stream", async () => {
+    const whole = vi.spyOn(Response.prototype, "arrayBuffer");
+    await createFrameCatalog({ data: BASE }).tree();
+    // Whole-body reads: the non-streaming path.
+    expect(whole).toHaveBeenCalled();
+  });
+
+  it("with a progress listener (or onProgress) the loads stream and report", async () => {
+    const whole = vi.spyOn(Response.prototype, "arrayBuffer");
+    const catalog = createFrameCatalog({ data: BASE });
+    const items = new Set<string>();
+    catalog.events.on("progress", (p) => items.add(p.item));
+    await catalog.tree();
+    // Streamed: no whole-body read, one report stream per file.
+    expect(whole).not.toHaveBeenCalled();
+    expect(items.size).toBe(4);
+    const viaOption: string[] = [];
+    await createFrameCatalog({
+      data: BASE,
+      onProgress: (item) => viaOption.push(item),
+    }).tree();
+    expect(viaOption.length).toBeGreaterThan(0);
+  });
+
   it("emits each data file's bytes as progress events, and still calls onProgress", async () => {
     const calls: string[] = [];
     const catalog = createFrameCatalog({

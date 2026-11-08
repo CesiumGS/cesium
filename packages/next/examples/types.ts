@@ -105,6 +105,11 @@ export interface ExampleInfo {
    * layout, which gives them a bounded height.
    */
   stackNarrow?: boolean;
+  /**
+   * Its viewer shows no warning notice over the view (`ViewerOptions.warningNotice`):
+   * the example lists the problems in its own panel.
+   */
+  noWarningNotice?: boolean;
   load: () => Promise<ExampleModule>;
   /** Its module's source, as shown beside it. */
   source: () => Promise<string>;

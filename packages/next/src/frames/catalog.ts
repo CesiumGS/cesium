@@ -146,7 +146,9 @@ export interface FrameCatalog {
   /**
    * `change`: a reference frame's data arrived; `warning`: a notice;
    * `progress`: bytes of a data file arrived (`FrameCatalogOptions.onProgress`
-   * as an event, for a catalog someone else made, such as the Viewer's).
+   * as an event, for a catalog someone else made, such as the Viewer's). A
+   * listener must attach before the first load starts: without one (or an
+   * `onProgress`), loads don't report progress at all.
    */
   readonly events: Emitter<{
     change: FrameCatalog;
@@ -598,12 +600,16 @@ class Catalog implements FrameCatalog {
     if (this.signal) {
       options.signal = this.signal;
     }
-    options.onProgress = (item, received, total) => {
-      this.onProgress?.(item, received, total);
-      if (this.events.has("progress")) {
-        this.events.emit("progress", { item, received, total });
-      }
-    };
+    // Progress makes a load stream its body: only when someone listens
+    // (a listener attaches before the first load starts).
+    if (this.onProgress || this.events.has("progress")) {
+      options.onProgress = (item, received, total) => {
+        this.onProgress?.(item, received, total);
+        if (this.events.has("progress")) {
+          this.events.emit("progress", { item, received, total });
+        }
+      };
+    }
     const source = this.source;
     if (provider === "earthOrientation") {
       const module = await import("./providers/earthOrientation.ts");

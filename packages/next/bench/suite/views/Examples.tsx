@@ -452,6 +452,7 @@ function ExampleRunner({
           engine,
           suspendPresentation: true,
           globe: info.globe,
+          ...(info.noWarningNotice ? { warningNotice: false } : {}),
           maxInstances: MAX_INSTANCES,
           // Frame rate, timings, memory; top left (panels are top right).
           inspector: {

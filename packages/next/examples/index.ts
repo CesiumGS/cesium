@@ -53,6 +53,8 @@ export const EXAMPLES: ExampleInfo[] = [
     labels: ["Frames", "Projections", "Measurement"],
     globe: "ellipsoid",
     layout: "side",
+    // Its own "missing" item says when frame data didn't load.
+    noWarningNotice: true,
     load: () => import("./frames-explorer/main.ts"),
     source: () =>
       import("./frames-explorer/main.ts?raw").then((m) => m.default),

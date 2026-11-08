@@ -47,7 +47,7 @@ export function createFrameData(deps: {
    * (`setFrameData(undefined)`; it reads the same store, and `tree()` brings
    * its reference frames, the sky's among them, to "precise").
    */
-  let loadedBefore = false;
+  let failedBefore = false;
 
   async function load(): Promise<void> {
     loading.apply("frames", { type: "fetching" });
@@ -56,10 +56,10 @@ export function createFrameData(deps: {
       string,
       { received: number; total: number | undefined }
     >();
-    if (loadedBefore) {
+    if (failedBefore) {
       viewer.setFrameData(undefined);
+      failedBefore = false;
     }
-    loadedBefore = true;
     const off = viewer.frames.events.on("progress", (p) => {
       bytes.set(p.item, { received: p.received, total: p.total });
       let sum = 0;
@@ -103,6 +103,7 @@ export function createFrameData(deps: {
           : "error",
         detail: message,
       });
+      failedBefore = true;
       deps.failed(message);
       return;
     } finally {
