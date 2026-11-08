@@ -478,6 +478,10 @@ describe("following the subject during a drag (fix round 1)", () => {
       target: { width: SIZE, height: SIZE },
       contains: () => true,
       pixelRect: () => ({ x: 0, y: 0, width: SIZE, height: SIZE }),
+      // No Earth anchor, the table's root at the identity: input is taken.
+      world: { findBodyAnchor: () => undefined },
+      anchorPlacement: () =>
+        Float64Array.of(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
     } as unknown as View;
     const element = new EventTarget() as EventTarget & {
       getBoundingClientRect(): object;
@@ -613,6 +617,10 @@ describe("landing far outside the destination's range (fix rounds 2 and 3)", () 
       target: { width: 100, height: 100 },
       contains: () => true,
       pixelRect: () => ({ x: 0, y: 0, width: 100, height: 100 }),
+      // No Earth anchor, the table's root at the identity: input is taken.
+      world: { findBodyAnchor: () => undefined },
+      anchorPlacement: () =>
+        Float64Array.of(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
     } as unknown as View;
     const element = new EventTarget() as EventTarget & {
       getBoundingClientRect(): object;

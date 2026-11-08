@@ -2,11 +2,14 @@ import * as v3 from "../math/vec3.ts";
 import { Ellipsoid, cartographic } from "../math/ellipsoid.ts";
 import type { Camera } from "./Camera.ts";
 import type { View } from "./View.ts";
+import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
 
 /**
  * Minimal globe navigation for the PoC: drag spins the globe under the
  * camera, wheel zooms toward the surface. Listens on the view's canvas but
- * only reacts inside the view's rectangle.
+ * only reacts inside the view's rectangle, and only while the Earth's
+ * anchor is at the identity in the view's render space (it warns once
+ * otherwise).
  *
  * `camera` defaults to the view's camera; point it at another view's camera
  * to make this view a controller for that one (a "control" link).
@@ -20,12 +23,14 @@ export class OrbitController {
   private lastY = 0;
   private readonly ellipsoid = Ellipsoid.WGS84;
   private readonly abort = new AbortController();
+  private readonly guard: EarthFixedGuard;
 
   constructor(
     readonly view: View,
     readonly element: HTMLElement,
   ) {
     this.camera = view.camera;
+    this.guard = new EarthFixedGuard(view, "OrbitController");
     const signal = this.abort.signal;
     element.addEventListener("pointerdown", (e) => this.onDown(e), { signal });
     element.addEventListener("pointermove", (e) => this.onMove(e), { signal });
@@ -53,7 +58,9 @@ export class OrbitController {
   }
 
   private accepts(x: number, y: number): boolean {
-    return this.view.contains(x, y) && !this.ignore?.(x, y);
+    return (
+      this.view.contains(x, y) && !this.ignore?.(x, y) && this.guard.accepts()
+    );
   }
 
   private onDown(e: PointerEvent): void {
@@ -68,6 +75,10 @@ export class OrbitController {
 
   private onMove(e: PointerEvent): void {
     if (!this.dragging) {
+      return;
+    }
+    if (!earthFixed(this.view)) {
+      this.dragging = false; // re-rooted off the Earth mid-drag
       return;
     }
     const [x, y] = this.targetPixel(e);

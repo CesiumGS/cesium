@@ -684,6 +684,15 @@ export class World {
    * sit (render space, as every draw was before anchors).
    */
   readonly root: FrameKey = Object.freeze({ name: "transform table" });
+  /**
+   * Counts changes that move a transform node or an anchor in the table
+   * root: `setTransform`, `placeAnchor` and removals. The core's frame
+   * resolver (`tableResolver`) reports it as every route's revision.
+   */
+  get transformRevision(): number {
+    return this.transformRevision_;
+  }
+  private transformRevision_ = 0;
   /** Point and spot lights by slot (`addLight`), free slots undefined. */
   private readonly lights: Array<LightOptions | undefined> = [];
   private readonly lightGenerations: number[] = [];
@@ -2705,6 +2714,7 @@ export class World {
     }
     this.transformLocal.set(matrix, handle.index * 16);
     this.pendTransform(handle.index);
+    this.transformRevision_++;
     this.changedViews = ALL_VIEWS;
   }
 
@@ -2802,6 +2812,7 @@ export class World {
   }
 
   private freeTransformTree(index: number): void {
+    this.transformRevision_++;
     for (const child of this.transformChildren[index] ?? []) {
       this.freeTransformTree(child);
     }
@@ -2901,9 +2912,10 @@ export class World {
 
   /**
    * Sets an anchor's place in the table root (column-major float64, rigid):
-   * where the core's own frame resolver finds it. Views place anchors in
-   * render space themselves (`View.setAnchorPlacement`); this moves no
-   * content. Default: the identity.
+   * where the core's own frame resolver (`tableResolver`) finds it. Views
+   * place anchors in render space themselves (`View.setAnchorPlacement`,
+   * or the camera layer for a view with a rig); this moves no content by
+   * itself. Default: the identity.
    */
   placeAnchor(anchor: AnchorHandle, matrix: ArrayLike<number>): void {
     this.checkAnchor(anchor, "placeAnchor");
@@ -2916,6 +2928,9 @@ export class World {
     for (let i = 0; i < 16; i++) {
       this.anchorPlaces[anchor.slot * 16 + i] = matrix[i]!;
     }
+    // A rig placed through the table resolver follows on the next tick.
+    this.transformRevision_++;
+    this.ctx.wake();
   }
 
   /** An anchor's place in the table root (`placeAnchor`), float64. */

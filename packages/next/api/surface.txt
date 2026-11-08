@@ -10,6 +10,7 @@ entry	name	kind	tier
 .	BudgetedSelection	class	-
 .	CESIUM_MOON_TERRAIN	const	-
 .	Camera	class	-
+.	CameraLayer	class	-
 .	CameraPose	interface	-
 .	CanvasTarget	class	-
 .	Capabilities	interface	-
@@ -47,6 +48,8 @@ entry	name	kind	tier
 .	FeatureTable	interface	-
 .	FeatureValue	type	-
 .	FrameKey	interface	-
+.	FrameMotion	interface	-
+.	FrameResolver	interface	-
 .	FrameStats	interface	-
 .	FrameUnavailableError	class	-
 .	GlobeController	class	-
@@ -106,6 +109,9 @@ entry	name	kind	tier
 .	REQUEST_PURPOSES	const	-
 .	RenderTarget	interface	-
 .	RequestPurpose	type	-
+.	Rig	interface	-
+.	RigOrientation	type	-
+.	RigPosition	interface	-
 .	STAGES	const	-
 .	SceneClock	interface	-
 .	SelectionView	interface	-
@@ -177,6 +183,7 @@ entry	name	kind	tier
 .	createBillboard	function	-
 .	createBox	function	-
 .	createSurfacePatch	function	-
+.	defaultRig	function	-
 .	eastNorthUpToFixedFrame	function	-
 .	enuBasis	function	-
 .	ev100ToScale	const	-
@@ -208,6 +215,7 @@ entry	name	kind	tier
 .	resolveIonAsset	function	-
 .	resolveUri	function	-
 .	summarizeContent	function	-
+.	tableResolver	function	-
 .	tileHeaderKey	function	-
 .	vec3	namespace	-
 .	vec3.Vec3	type	-

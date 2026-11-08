@@ -1,7 +1,8 @@
 /**
  * What went wrong in the engine, where an application can see it: shader
  * and pipeline failures, resources destroyed while still in use, frames
- * the GPU rejected, uncaptured device errors. Each distinct message is
+ * the GPU rejected, uncaptured device errors, reference frames a view's
+ * rig couldn't resolve (`"camera"`). Each distinct message is
  * kept once with a count (a broken frame repeats every frame), the first
  * occurrence logged; `on` hears every report (a gallery's banner, the
  * inspector). The engine isolates what it can around each: a shader that
@@ -9,7 +10,7 @@
  * skipped, a world whose frame failed is bound again from its state.
  */
 export type EngineErrorKind =
-  "shader" | "pipeline" | "resource" | "frame" | "device";
+  "shader" | "pipeline" | "resource" | "frame" | "device" | "camera";
 
 export interface EngineError {
   readonly kind: EngineErrorKind;

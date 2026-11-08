@@ -248,4 +248,14 @@ export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export {
   FrameUnavailableError,
   type FrameKey,
+  type FrameMotion,
+  type FrameResolver,
 } from "./camera/frameResolver.ts";
+export { tableResolver } from "./camera/tableResolver.ts";
+export {
+  defaultRig,
+  type Rig,
+  type RigOrientation,
+  type RigPosition,
+} from "./camera/rig.ts";
+export { CameraLayer } from "./camera/CameraLayer.ts";

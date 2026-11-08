@@ -76,6 +76,7 @@ import {
   packViewLights,
 } from "./lights.ts";
 import { World, type AnchorHandle, type WorldOptions } from "./World.ts";
+import { CameraLayer } from "../camera/CameraLayer.ts";
 import {
   ANCHOR_EYE_REACH,
   computeAnchorEyes,
@@ -250,6 +251,13 @@ export class Engine {
   readonly worlds: World[] = [];
   readonly views: View[] = [];
   readonly links: ViewLink[] = [];
+  /**
+   * Each view's rig and render root, and each world's frame resolver and
+   * scene clock (plan 5a's call 23). A view starts on the default rig,
+   * which costs nothing per tick; a rig set with `cameras.setRig` places
+   * the view's anchors each tick.
+   */
+  readonly cameras: CameraLayer;
   /** Streamed 3D Tiles tilesets, updated before each frame. */
   readonly tilesets: Tileset3D[] = [];
   /**
@@ -561,6 +569,11 @@ export class Engine {
     this.sky = sky;
     ctx.wake = () => this.wake();
     ctx.shaderBindings.wake = ctx.wake;
+    this.cameras = new CameraLayer({
+      views: this.views,
+      wake: () => this.wake(),
+      errors: ctx.errors,
+    });
     // Uncaptured device errors join the engine's (logged once each there).
     gpu.events.on("error", (error) =>
       ctx.errors.report("device", error.message),
@@ -1584,6 +1597,7 @@ export class Engine {
     if (index >= 0) {
       this.worlds.splice(index, 1);
     }
+    this.cameras.setClock(world, undefined);
     world.destroy();
     this.wake();
   }
@@ -2009,6 +2023,14 @@ export class Engine {
           this.reportLoopError("a tick listener", error);
         }
       }
+      // The camera layer after the listeners (they may move the clock or a
+      // rig's node), before change detection: its placements render in
+      // this tick, and it keeps the loop awake while they move.
+      try {
+        busy = this.cameras.update() || busy;
+      } catch (error) {
+        this.reportLoopError("the camera layer", error);
+      }
       // Each view's placements, checked against its world (a removed
       // anchor, another world: `View.anchorRevision`), so the wake that
       // finding raises is this tick's own, like the listeners'.
@@ -2299,8 +2321,14 @@ export class Engine {
   }
   private running = false;
 
-  /** Renders every enabled view now, whatever the render mode. */
+  /**
+   * Renders every enabled view now, whatever the render mode. Outside the
+   * loop, the camera layer places each view's anchors first.
+   */
   renderFrame(): void {
+    if (!this.ticking) {
+      this.cameras.update();
+    }
     this.render(false);
   }
 

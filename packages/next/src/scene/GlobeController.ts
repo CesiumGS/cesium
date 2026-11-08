@@ -4,6 +4,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { View } from "./View.ts";
+import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
 
 /**
  * Globe camera input in the manner of CesiumJS 1.x's 3D
@@ -29,6 +30,10 @@ import type { View } from "./View.ts";
  *
  * The camera keeps `minimumHeight` above the ellipsoid (terrain height
  * queries come later in M3).
+ *
+ * It works in Earth-fixed coordinates: while the Earth's anchor isn't at
+ * the identity in the view's render space (a rig off the Earth), it
+ * ignores input and warns once (plan 5a's call 27).
  */
 export class GlobeController {
   /** Ignore input at these target pixels, e.g. where another view sits on top. */
@@ -112,6 +117,7 @@ export class GlobeController {
   private animating = false;
   private readonly abort = new AbortController();
   private readonly ellipsoid = Ellipsoid.WGS84;
+  private readonly guard: EarthFixedGuard;
 
   /**
    * `frames`: the engine's frame loop (`Engine.onTick`), for the momentum
@@ -127,6 +133,7 @@ export class GlobeController {
       onTick(listener: (now: number) => boolean): () => void;
     },
   ) {
+    this.guard = new EarthFixedGuard(view, "GlobeController");
     const signal = this.abort.signal;
     element.addEventListener("pointerdown", (e) => this.onDown(e), { signal });
     element.addEventListener("pointermove", (e) => this.onMove(e), { signal });
@@ -219,6 +226,12 @@ export class GlobeController {
     const [x, y] = this.targetPixel(e);
     if (this.mode === "none") {
       this.trackHover(x, y);
+      return;
+    }
+    if (!earthFixed(this.view)) {
+      // The view re-rooted off the Earth mid-drag: the drag ends.
+      this.mode = "none";
+      this.stop();
       return;
     }
     const dx = x - this.lastX;
@@ -582,7 +595,12 @@ export class GlobeController {
    * it was put (unless something moved it since).
    */
   update(): void {
-    if (!this.enabled || this.mode !== "none" || this.animating) {
+    if (
+      !this.enabled ||
+      this.mode !== "none" ||
+      this.animating ||
+      !earthFixed(this.view)
+    ) {
       return;
     }
     const camera = this.view.camera;
@@ -641,6 +659,10 @@ export class GlobeController {
     const step = (now: number): boolean => {
       const frames = Math.min((now - last) / (1000 / 60), 4);
       last = now;
+      if (!earthFixed(this.view)) {
+        // Off the Earth since the gesture: its momentum stops.
+        this.stop();
+      }
       if (this.mode === "none" && Math.abs(this.spinRate) > 1e-6) {
         this.rotateGlobe(this.spinAxis, this.spinRate * frames);
         this.spinRate *= this.inertiaSpin ** frames;
@@ -803,7 +825,12 @@ export class GlobeController {
   }
 
   private accepts(x: number, y: number): boolean {
-    return this.enabled && this.view.contains(x, y) && !this.ignore?.(x, y);
+    return (
+      this.enabled &&
+      this.view.contains(x, y) &&
+      !this.ignore?.(x, y) &&
+      this.guard.accepts()
+    );
   }
 }
 

@@ -4,6 +4,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { View } from "./View.ts";
+import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
 
 /**
  * A reference frame to orbit in, instead of the ellipsoid's east-north-up
@@ -131,6 +132,10 @@ export function orbitPose(
  * In a frame, a camera moved by someone else since the controller last
  * placed it (`camera.version`) is re-read at the next drag or wheel
  * (`syncFromCamera`) rather than snapped back.
+ *
+ * Its points are Earth-fixed: while the Earth's anchor isn't at the
+ * identity in the view's render space (a rig off the Earth), it ignores
+ * input and warns once.
  */
 export class InspectController {
   readonly target: Vec3 = v3.vec3();
@@ -152,12 +157,14 @@ export class InspectController {
   private appliedVersion = -1;
   private readonly abort = new AbortController();
   private readonly ellipsoid = Ellipsoid.WGS84;
+  private readonly guard: EarthFixedGuard;
 
   constructor(
     readonly view: View,
     readonly element: HTMLElement,
     options: InspectControllerOptions = {},
   ) {
+    this.guard = new EarthFixedGuard(view, "InspectController");
     this.frame = options.frame;
     this.minRange = options.minRange ?? this.minRange;
     this.maxRange = options.maxRange ?? this.maxRange;
@@ -306,7 +313,9 @@ export class InspectController {
   }
 
   private accepts(x: number, y: number): boolean {
-    return this.view.contains(x, y) && !this.ignore?.(x, y);
+    return (
+      this.view.contains(x, y) && !this.ignore?.(x, y) && this.guard.accepts()
+    );
   }
 
   private onDown(e: PointerEvent): void {
@@ -323,6 +332,10 @@ export class InspectController {
 
   private onMove(e: PointerEvent): void {
     if (this.mode === "none") {
+      return;
+    }
+    if (!earthFixed(this.view)) {
+      this.end(); // re-rooted off the Earth mid-drag
       return;
     }
     const [x, y] = this.targetPixel(e);

@@ -50,3 +50,43 @@ function defaultMessage(
       return `${frame}: the instant is outside its data`;
   }
 }
+
+/** How fast a reference frame moves in a base: m/s and rad/s, in the base's axes. */
+export interface FrameMotion {
+  readonly velocity: Float64Array;
+  readonly angularVelocity: Float64Array;
+}
+
+/**
+ * "Where is reference frame A in reference frame B at this scene time, and
+ * how fast is it moving?" (spec section 7.2). The core's own answers over
+ * its transform table (`tableResolver`); the frames module's over its
+ * catalog; a host's over its own services.
+ */
+export interface FrameResolver {
+  /**
+   * `frame`'s place in `base` at scene `seconds` (UTC seconds since 1970):
+   * `out` such that p_base = out · p_frame, column-major float64, metres.
+   * Throws `FrameUnavailableError` when it can't answer yet.
+   */
+  resolve(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    out: Float64Array,
+  ): Float64Array;
+  /** How fast `frame` moves in `base` at `seconds`, written into `out`. */
+  motion?(
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+    out: FrameMotion,
+  ): FrameMotion;
+  /**
+   * Goes up when the inputs of the route from `frame` to `base` change
+   * (data arriving, a transform set), never with time alone: the camera
+   * layer skips a tick's work while the time, the root and every route's
+   * revision stay as they were.
+   */
+  routeRevision(frame: FrameKey, base: FrameKey): number;
+}

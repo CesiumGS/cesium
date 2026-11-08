@@ -25,7 +25,9 @@ function setup(options?: InspectControllerOptions) {
   const earth = { index: 0, generation: 0, name: "Earth", slot: 1 };
   const view = {
     camera,
-    world: { bodyAnchor: () => earth },
+    world: { bodyAnchor: () => earth, findBodyAnchor: () => earth },
+    // At the identity: the controls take input (plan 5a's call 27).
+    anchorPlacement: () => m4.mat4(),
     setCameraFromAnchor: (_anchor: unknown, pose: Camera) => {
       if (pose !== camera) {
         camera.copyFrom(pose);
