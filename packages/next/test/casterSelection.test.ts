@@ -10,7 +10,7 @@ import {
   fitShadowCascades,
 } from "../src/scene/shadows.ts";
 import { BudgetedSelection } from "../src/streaming/Budgeted.ts";
-import type { SelectionView } from "../src/streaming/Stepwise.ts";
+import type { CasterRoom, SelectionView } from "../src/streaming/Stepwise.ts";
 import { treeFromJson, type Tile } from "../src/streaming/Tile.ts";
 import type { TerrainSource } from "../src/globe/TerrainSource.ts";
 
@@ -138,6 +138,43 @@ const policy = () =>
     dynamicScreenSpaceError: false,
   });
 
+/** Room for everything, as `Tileset3D` makes it each update. */
+const room = (overrides: Partial<CasterRoom> = {}): CasterRoom => ({
+  bytes: Infinity,
+  load: true,
+  estimate: 1,
+  pressure: 0,
+  heldSince: Infinity,
+  receivers: (_, selected) => [selected],
+  counted: new Set(),
+  denied: 0,
+  scale: 1,
+  ...overrides,
+});
+
+/** A view's walk, then its casters' walk, as `Tileset3D.update` runs them. */
+function select(
+  selection: BudgetedSelection,
+  root: Tile,
+  rootError: number,
+  view: SelectionView,
+  into: CasterRoom = room(),
+) {
+  const result = selection.select(root, rootError, view);
+  const { casters, wanted } = selection.selectCasters(
+    root,
+    rootError,
+    view,
+    result.selected,
+    into,
+  );
+  return {
+    selected: result.selected,
+    casters,
+    wanted: wanted.map(([tile]) => tile),
+  };
+}
+
 describe("caster selection", () => {
   it("drops the children of an ADD tile that are too small to see, as the view does", () => {
     // 10,000 building leaves under one ADD parent, 1,500 m up, the sun low
@@ -158,22 +195,22 @@ describe("caster selection", () => {
     );
     ready(root);
     const view = viewAt(1500, -45, sunAt(20, 180), { near: 800, far: 12000 });
-    const result = policy().select(root, 400, view);
-    const casters = result.casters?.length ?? 0;
+    const result = select(policy(), root, 400, view);
+    const casters = result.casters.length;
     // Before: 93% of the tileset (9,338 of 10,000). Now it follows the
     // children's apparent size, as the view's own walk does.
     expect(result.selected.length + casters).toBeLessThan(n * n * 0.5);
-    expect(result.requested.length).toBe(0);
+    expect(result.wanted.length).toBe(0);
   });
 
   it("selects none and requests none with no tile selected yet", () => {
     const root = build(box(30, 0, 500, 30, 50, 50, 0, "a.glb"));
     ready(root);
     const view = viewAt(2, 90, sunAt(45, 180)); // looking at the sky
-    const result = policy().select(root, 100, view);
+    const result = select(policy(), root, 100, view);
     expect(result.selected).toEqual([]);
-    expect(result.casters).toBeUndefined();
-    expect(result.requested).toEqual([]);
+    expect(result.casters).toEqual([]);
+    expect(result.wanted).toEqual([]);
   });
 
   it("selects none for terrain", () => {
@@ -183,7 +220,8 @@ describe("caster selection", () => {
     const globe = new GlobeBudgetedSelection({} as unknown as TerrainSource, {
       casterErrorScale: 2,
     });
-    expect(globe.select(root, 100, view).casters).toBeUndefined();
+    expect(globe.castsShadows).toBe(false);
+    expect(select(globe, root, 100, view).casters).toEqual([]);
   });
 
   it("doesn't cast a coarse parent that is on screen over the finer tile it draws", () => {
@@ -198,14 +236,19 @@ describe("caster selection", () => {
     root.bytes = 1000;
     c1Tile.state = "ready";
     c1Tile.bytes = 1000;
-    const result = new BudgetedSelection({
-      casterErrorScale: 1,
-      dynamicScreenSpaceError: false,
-    }).select(root, 1000, viewAt(2, 0, sunAt(45, 180), { near: 1, far: 300 }));
+    const result = select(
+      new BudgetedSelection({
+        casterErrorScale: 1,
+        dynamicScreenSpaceError: false,
+      }),
+      root,
+      1000,
+      viewAt(2, 0, sunAt(45, 180), { near: 1, far: 300 }),
+    );
     expect(result.selected).toContain(c1Tile);
-    expect(result.casters ?? []).not.toContain(root);
-    // C2 is wanted and requested; nothing stands in for it.
-    expect(result.requested).toContain(c2Tile);
+    expect(result.casters).not.toContain(root);
+    // C2 is wanted; nothing stands in for it.
+    expect(result.wanted).toContain(c2Tile);
   });
 
   it("selects a roof 40 m up at a low sun, which a cap along the ray dropped", () => {
@@ -230,12 +273,12 @@ describe("caster selection", () => {
     );
     ready(root);
     const view = viewAt(2, 0, sunAt(10, 180), { near: 0.5, far: 30 });
-    const result = policy().select(root, 1000, view);
+    const result = select(policy(), root, 1000, view);
     const [floorTile, roofTile, besideTile] = root.children as Tile[];
     expect(result.selected).toContain(floorTile);
     expect(result.casters).toContain(roofTile);
     // Beside the receivers' rectangle, in the light's view: no shadow in view.
-    expect(result.casters ?? []).not.toContain(besideTile);
+    expect(result.casters).not.toContain(besideTile);
   });
 
   it("admits the nearest casters first, and not what would pass the bytes", () => {
@@ -246,13 +289,98 @@ describe("caster selection", () => {
       box(0, 0, 0, 500, 500, 500, 1000, undefined, [floor, far, near], "ADD"),
     );
     ready(root, 1000);
-    const selection = policy();
-    selection.casterBytes = 1500;
     const view = viewAt(2, 0, sunAt(45, 180), { near: 0.5, far: 300 });
-    const result = selection.select(root, 1000, view);
+    const into = room({ bytes: 1500 });
+    const result = select(policy(), root, 1000, view, into);
     const [, farTile, nearTile] = root.children as Tile[];
     expect(result.casters).toEqual([nearTile]);
     expect(result.casters).not.toContain(farTile);
-    expect(result.casterDenied).toBe(1000);
+    expect(into.denied).toBe(1000);
+    expect(into.bytes).toBe(500);
+  });
+
+  it("counts a caster two views share once, and what stays in the cache anyway not at all", () => {
+    const floor = box(0, 0, 20, 1, 10, 10, 0, "floor.glb");
+    const near = box(15, 0, -5, 1, 5, 5, 0, "near.glb");
+    const root = build(
+      box(0, 0, 0, 500, 500, 500, 1000, undefined, [floor, near], "ADD"),
+    );
+    ready(root);
+    const [, nearTile] = root.children as [Tile, Tile];
+    const view = viewAt(2, 0, sunAt(45, 180), { near: 0.5, far: 300 });
+    const selection = policy();
+    const into = room({ bytes: 1000 });
+    expect(select(selection, root, 1000, view, into).casters).toEqual([
+      nearTile,
+    ]);
+    expect(into.bytes).toBe(0);
+    expect(select(selection, root, 1000, view, into).casters).toEqual([
+      nearTile,
+    ]);
+    expect(into.bytes).toBe(0);
+    // A tile a view used lately stays anyway: casting costs nothing.
+    nearTile.viewedAt = 10;
+    const held = room({ bytes: 0, heldSince: 5 });
+    expect(select(selection, root, 1000, view, held).casters).toEqual([
+      nearTile,
+    ]);
+    expect(held.denied).toBe(0);
+  });
+
+  it("coarsens to the finest scale that fits, and needn't for a tile that can't fit at all", () => {
+    // A parent off screen and up-sun, its four children finer: the parent
+    // alone at a coarser scale, and a floor in view.
+    const kids = [-1, 1].flatMap((a) =>
+      [-1, 1].map((b) =>
+        box(15, a * 2.5, -5 + b * 2.5, 1, 2.5, 2.5, 0, `k${a}${b}.glb`),
+      ),
+    );
+    const parent = box(15, 0, -5, 1, 5, 5, 2, "parent.glb", kids, "REPLACE");
+    const floor = box(0, 0, 20, 1, 10, 10, 0, "floor.glb");
+    const root = build(
+      box(0, 0, 0, 500, 500, 500, 1000, undefined, [floor, parent], "ADD"),
+    );
+    ready(root);
+    const parentTile = root.children[1] as Tile;
+    const view = viewAt(2, 0, sunAt(45, 180), { near: 0.5, far: 300 });
+    const fine = room();
+    const finer = select(policy(), root, 1000, view, fine).casters;
+    expect(finer.length).toBe(4);
+    expect(finer.every((t) => parentTile.children.includes(t))).toBe(true);
+    expect(fine.scale).toBe(1);
+    // Room for one tile: the parent, coarser, not one child of four.
+    const coarse = room({ bytes: 1000 });
+    expect(select(policy(), root, 1000, view, coarse).casters).toEqual([
+      parentTile,
+    ]);
+    expect(coarse.scale).toBeGreaterThan(1);
+    expect(coarse.denied).toBe(0);
+    // One child far too large stays out, and the others stay fine.
+    (parentTile.children[0] as Tile).bytes = 1_000_000;
+    const huge = room({ bytes: 3000 });
+    const rest = select(policy(), root, 1000, view, huge).casters;
+    expect(rest.length).toBe(3);
+    expect(rest).not.toContain(parentTile.children[0]);
+    expect(huge.scale).toBe(1);
+    expect(huge.denied).toBe(1_000_000);
+  });
+
+  it("doesn't want a tile that failed to fit until the pools have more room", () => {
+    const floor = box(0, 0, 20, 1, 10, 10, 0, "floor.glb");
+    const roof = box(15, 0, -5, 1, 5, 5, 0, "roof.glb");
+    const root = build(
+      box(0, 0, 0, 500, 500, 500, 1000, undefined, [floor, roof], "ADD"),
+    );
+    ready(root);
+    const roofTile = root.children[1] as Tile;
+    roofTile.state = "unloaded";
+    roofTile.noFitAt = 0.5;
+    const view = viewAt(2, 0, sunAt(45, 180), { near: 0.5, far: 300 });
+    expect(
+      select(policy(), root, 1000, view, room({ pressure: 0.5 })).wanted,
+    ).toEqual([]);
+    expect(
+      select(policy(), root, 1000, view, room({ pressure: 0.4 })).wanted,
+    ).toEqual([roofTile]);
   });
 });

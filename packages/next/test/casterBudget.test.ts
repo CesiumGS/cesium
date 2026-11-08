@@ -1,7 +1,6 @@
 // How off-screen shadow casters share the cache and the world's pools with
-// what views draw: through the real tileset on the fake engine. The cache is
-// one pool; views' tiles are never evicted; casters and cold tiles split
-// the rest by a target that adapts (ARC, the Adaptive Replacement Cache).
+// what views draw: through the real tileset on the fake engine, in
+// continuous mode. `casterLoop.test.ts` runs them on the on-demand loop.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
@@ -10,7 +9,6 @@ import type { Engine } from "../src/scene/Engine.ts";
 import { OffscreenTarget } from "../src/scene/View.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import type { Tileset3D, TilesetOptions } from "../src/streaming/Tileset3D.ts";
-import { RecentlyEvicted } from "../src/streaming/RecentlyEvicted.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;
@@ -81,10 +79,7 @@ const json = (children: readonly TileJson[]) => ({
 
 interface Internals {
   cacheBytes: number;
-  casterTarget: number;
-  casterScale: number;
-  evictedCasters: RecentlyEvicted;
-  evictedCold: RecentlyEvicted;
+  casterLoad: boolean;
   ready: Array<{ tile: Tile; asset: GltfAsset; arrivedAt: number }>;
 }
 
@@ -232,39 +227,6 @@ describe("casters share the cache", () => {
     }
   });
 
-  it("cold tiles no view has wanted for a while don't keep a caster out of a full cache", async () => {
-    const s = await scene(
-      [floorAt(0), floorAt(4000), floorAt(8000), roofAt(0)],
-      { casterErrorScale: 0 },
-    );
-    try {
-      s.look(4000);
-      await s.frames(12);
-      s.look(8000);
-      await s.frames(12);
-      s.look(0);
-      await s.frames(12);
-      const [floor, coldA, coldB, roof] = s.tiles as [Tile, Tile, Tile, Tile];
-      // The cache is 95% full of the floor and two cold tiles.
-      s.internals.cacheBytes = Math.round(
-        (floor.bytes + coldA.bytes + coldB.bytes) / 0.95,
-      );
-      (
-        s.tileset.selection as unknown as { casterErrorScale: number }
-      ).casterErrorScale = 2;
-      await s.frames(60);
-      expect(roof.state).toBe("ready");
-      expect(roof.casterMask).not.toBe(0);
-      expect(floor.state).toBe("ready");
-      // One cold tile went for it, the older one first.
-      expect([coldA.state, coldB.state].sort()).toEqual(["ready", "unloaded"]);
-      expect(coldA.state).toBe("unloaded");
-      expect(s.tileset.stats.bytes).toBeLessThanOrEqual(s.internals.cacheBytes);
-    } finally {
-      s.remove();
-    }
-  });
-
   it("settles on a still view while a caster is still loading, and a view isn't waiting for it", async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => (release = resolve));
@@ -322,181 +284,13 @@ describe("casters share the cache", () => {
       expect(roof.state).not.toBe("ready");
       expect(queue.length).toBe(1);
       // Over a pool's pressure, a decoded caster is dropped, not kept.
-      s.tileset.selection.casterBudget = "none";
+      roof.touchedFrame = (s.tileset as unknown as { frame: number }).frame;
+      s.internals.casterLoad = false;
       t.upload();
       expect(queue.length).toBe(0);
       expect(roof.state).toBe("unloaded");
     } finally {
       s.remove();
     }
-  });
-});
-
-describe("the casters' share adapts", () => {
-  let engine: Engine;
-  beforeAll(async () => {
-    engine = await fakeEngine();
-    vi.spyOn(engine, "loadGltf").mockImplementation(async () => slab(5));
-  });
-  afterEach(() => vi.unstubAllGlobals());
-
-  async function scene(
-    children: readonly TileJson[],
-    options: TilesetOptions = {},
-  ) {
-    vi.stubGlobal("fetch", async (input: string | URL) =>
-      String(input) === URL_
-        ? new Response(JSON.stringify(json(children)), {
-            headers: { "Content-Type": "application/json" },
-          })
-        : new Response("not found", { status: 404 }),
-    );
-    const world = engine.createWorld({ maxDraws: 64 });
-    const tileset = await engine.addTileset(world, URL_, options);
-    const view = engine.addView({
-      target: new OffscreenTarget(64, 48),
-      world,
-      shadows: true,
-    });
-    v3.normalize(engine.sunDirection, v3.vec3(1, 0, -1));
-    const frames = async (count: number) => {
-      for (let i = 0; i < count; i++) {
-        engine.renderFrame();
-        await new Promise((resolve) => setTimeout(resolve, 1));
-      }
-    };
-    const look = (y: number) => {
-      view.camera.position.set([R + 2, y, 0]);
-      view.camera.direction.set([0, 0, 1]);
-      view.camera.orient(Float64Array.of(1, 0, 0));
-      view.camera.version++;
-    };
-    look(0);
-    return {
-      tileset,
-      frames,
-      look,
-      internals: tileset as unknown as Internals,
-      tiles: tileset.root.children as Tile[],
-      remove() {
-        engine.removeView(view);
-        engine.removeTileset(tileset);
-      },
-    };
-  }
-
-  it("falls when views ask again for cold tiles it evicted, and the cold tiles then survive", async () => {
-    const s = await scene([
-      floorAt(0),
-      floorAt(4000),
-      floorAt(8000),
-      roofAt(0),
-      roofAt(1),
-    ]);
-    try {
-      await s.frames(12);
-      const b = s.tiles[0]!.bytes;
-      // Room for three view tiles at most with a little over.
-      s.internals.cacheBytes = Math.round(3.5 * b);
-      const start = s.internals.casterTarget;
-      expect(start).toBe(0.5);
-      const legs = [0, 4000, 8000, 0, 8000, 0, 8000, 0, 4000, 0];
-      const requests: number[] = [];
-      for (const y of legs) {
-        s.look(y);
-        await s.frames(14);
-        requests.push(s.tileset.stats.requestsTotal);
-        expect(s.tileset.stats.bytes).toBeLessThanOrEqual(
-          s.internals.cacheBytes + 1,
-        );
-      }
-      expect(s.internals.casterTarget).toBeLessThan(start);
-      // The last leg, back to a tile the cold ones kept, loads nothing.
-      expect(requests[requests.length - 1]).toBe(requests[requests.length - 2]);
-      expect(s.internals.evictedCold.size).toBeLessThanOrEqual(1024);
-      expect(s.internals.evictedCasters.size).toBeLessThanOrEqual(1024);
-    } finally {
-      s.remove();
-    }
-  });
-
-  it("coarsens casters that don't fit instead of dropping the far ones, and refines again with room", async () => {
-    // Four children under a parent, 12 m from the camera: at the base scale
-    // the parent's error (23 pixels) refines them; coarsened to over 1.45
-    // times the scale, the parent casts alone.
-    const kids = [0, 1, 2, 3].map((i) =>
-      tile(`kid${i}.gltf`, [0, 0, 0], [1, 5, 5]),
-    );
-    const parent = tile("parent.gltf", [R + 15, 0, -5], [1, 5, 5], 5, kids);
-    const s = await scene([floorAt(0), parent], { casterErrorScale: 1 });
-    try {
-      await s.frames(12);
-      const p = s.tiles[1]!;
-      const b = s.tiles[0]!.bytes;
-      // Room for the floor and about a caster and a half.
-      s.internals.cacheBytes = Math.round(4 * b);
-      await s.frames(400);
-      expect(s.tileset.stats.casterScale).toBeGreaterThan(1);
-      expect(p.state).toBe("ready");
-      expect(p.casterMask).not.toBe(0);
-      expect(p.children.every((c) => c.casterMask === 0)).toBe(true);
-      // Room returns: they refine again.
-      s.internals.cacheBytes = Math.round(40 * b);
-      await s.frames(1500);
-      expect(s.tileset.stats.casterScale).toBe(1);
-      expect(p.children.every((c) => c.casterMask !== 0)).toBe(true);
-      expect(p.casterMask).toBe(0);
-    } finally {
-      s.remove();
-    }
-  });
-
-  it("holds the target and the scale on a still camera", async () => {
-    const s = await scene([
-      floorAt(0),
-      floorAt(4000),
-      roofAt(0),
-      roofAt(1),
-      roofAt(2),
-    ]);
-    try {
-      s.look(4000);
-      await s.frames(12);
-      s.look(0);
-      await s.frames(12);
-      s.internals.cacheBytes = Math.round(3.5 * s.tiles[0]!.bytes);
-      await s.frames(1200);
-      const targets = new Set<number>();
-      const scales = new Set<number>();
-      for (let i = 0; i < 40; i++) {
-        await s.frames(10);
-        targets.add(s.internals.casterTarget);
-        scales.add(s.tileset.stats.casterScale);
-      }
-      expect(targets.size).toBe(1);
-      expect(scales.size).toBe(1);
-    } finally {
-      s.remove();
-    }
-  });
-});
-
-describe("recently evicted tiles", () => {
-  it("keeps at most its capacity, newest, and returns what it held once", () => {
-    const list = new RecentlyEvicted(1024);
-    for (let i = 0; i < 3000; i++) {
-      list.add(`tile${i}`, i);
-    }
-    expect(list.size).toBe(1024);
-    expect(list.take("tile0")).toBeUndefined();
-    expect(list.take("tile2999")).toBe(2999);
-    expect(list.take("tile2999")).toBeUndefined();
-    expect(list.size).toBe(1023);
-    // Listed again, a tile is the newest.
-    list.add("tile1976", 1);
-    for (let i = 0; i < 1022; i++) {
-      list.add(`more${i}`, 0);
-    }
-    expect(list.take("tile1976")).toBe(1);
   });
 });

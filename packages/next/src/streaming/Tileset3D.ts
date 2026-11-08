@@ -31,6 +31,7 @@ import { rectanglesOverlap, type TerrainClips } from "../globe/terrainClip.ts";
 import {
   StepwiseSelection,
   REQUEST_PURPOSES,
+  type CasterRoom,
   type RequestPurpose,
   type SelectionView,
   type TileSelection,
@@ -58,7 +59,6 @@ import type { DesignPlacement } from "./designPlacement.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import { TouchOrder } from "./TouchOrder.ts";
-import { RecentlyEvicted } from "./RecentlyEvicted.ts";
 import {
   DRAW_ITEM_SIZE,
   MaterialFlags,
@@ -115,37 +115,34 @@ function contentAxes(json: TileJson | undefined): ModelResourceOptions["axes"] {
 
 /**
  * World pool pressure (World.pressure) past which shadow casters aren't
- * requested or touched: they yield the pools to what views draw.
+ * requested: they yield the pools to what views draw.
  */
 const CASTER_PRESSURE = 0.75;
 /**
- * The cache has one budget. What views selected this tick never leaves it;
- * the rest is shared between shadow casters and cold tiles (no view wants
- * them now) by `casterTarget`, the casters' share. It starts at half and
- * moves as in ARC (the Adaptive Replacement Cache): when a view asks for a
- * tile evicted from the cold tiles, it falls; when the caster walk wants
- * one evicted from the casters, it rises.
+ * The cache has one budget, and casters have no share of it. What views use
+ * this tick is never evicted. Casters get what is left after that and after
+ * the cold tiles (no view uses them now) that may yet come back, so a view
+ * never loses a tile to a caster that it would have kept with casters off.
+ * A cold tile may come back until it has gone `COLD_AGE_MS` without a view.
+ * After that, casters may take its room.
+ *
+ * Time, not ticks: a still camera on demand doesn't tick. A view coming back
+ * to a tile after a longer absence shows that was too soon, and the age
+ * becomes twice that absence, up to `COLD_AGE_MAX_MS`. So the worst a view
+ * pays is one return after each longer absence, and stale cold tiles always
+ * give way in the end.
  */
-const CASTER_TARGET_START = 0.5;
-/** Ids each list of recently evicted tiles keeps (`RecentlyEvicted`). */
-const RECENTLY_EVICTED_TILES = 1024;
+const COLD_AGE_MS = 8_000;
+const COLD_AGE_MAX_MS = 60_000;
 /**
- * Casters coarsen before they are dropped: `casterScale` multiplies the
- * caster error scale by `CASTER_COARSEN` once wanted casters haven't fit for
- * `CASTER_RAISE_TICKS` updates, up to `CASTER_SCALE_MAX`; it comes back down
- * when casters use under `CASTER_LOWER_SHARE` of their bytes for the wait
- * below. Each change holds the scale for `CASTER_HOLD_TICKS`, and a raise
- * right after a lowering doubles the wait before the next one (to
- * `CASTER_LOWER_WAIT_MAX`), so a still camera settles.
+ * Casters waiting for cold tiles to age wake the loop for one tick when the
+ * next goes stale, this far apart at least, ms. On a still camera that ends
+ * when the last cold tile is stale, within the age.
  */
-const CASTER_COARSEN = 1.25;
-const CASTER_SCALE_MAX = 16;
-const CASTER_RAISE_TICKS = 8;
-const CASTER_HOLD_TICKS = 60;
-const CASTER_LOWER_SHARE = 0.35;
-const CASTER_LOWER_WAIT = 30;
-const CASTER_LOWER_WAIT_MAX = 960;
-/** Loaded for its shadow alone and no view draws it now (`Tile.castsOnly`). */
+const COLD_WAKE_MIN_MS = 1_000;
+/** Recent casters whose median is what one not yet loaded is assumed to cost. */
+const CASTER_BYTES_WINDOW = 31;
+/** Loading or waiting to upload for its shadow alone. */
 function isCaster(tile: Tile): boolean {
   return tile.purpose === "caster" && tile.viewMask === 0;
 }
@@ -284,8 +281,6 @@ export interface TilesetStats {
   /** Their bytes, and the bytes of loaded tiles no view or cascade wants. */
   casterBytes: number;
   coldBytes: number;
-  /** The casters' target share of the bytes the views leave (0 to 1). */
-  casterTarget: number;
   /** What the caster error scale is multiplied by (1: not coarsened). */
   casterScale: number;
   /** Content requests in flight, and the origin's current window. */
@@ -454,7 +449,6 @@ export class Tileset3D implements TileTree {
     casters: 0,
     casterBytes: 0,
     coldBytes: 0,
-    casterTarget: CASTER_TARGET_START,
     casterScale: 1,
     inFlight: 0,
     maxInFlight: 0,
@@ -980,29 +974,33 @@ export class Tileset3D implements TileTree {
   firstContentAt?: number;
   settledAt?: number;
   private masked = new Set<Tile>();
-  /** Tiles with a caster mask (`SelectionResult.casters`). */
+  /** Tiles with a caster mask (`CasterSelection.casters`). */
   private casters = new Set<Tile>();
-  /** The casters' target share of what the views leave (`CASTER_TARGET_START`). */
-  private casterTarget = CASTER_TARGET_START;
-  /** Bytes of the tiles views selected in the last update. */
+  /** Bytes of what views used in the last update. */
   private viewBytes = 0;
-  private readonly evictedCasters = new RecentlyEvicted(RECENTLY_EVICTED_TILES);
-  private readonly evictedCold = new RecentlyEvicted(RECENTLY_EVICTED_TILES);
-  /** The caster scale's controller (`CASTER_COARSEN`). */
-  private casterScale = 1;
-  private casterDeniedTicks = 0;
-  private casterRoomTicks = 0;
-  private casterHold = 0;
-  private casterLowerWait = CASTER_LOWER_WAIT;
-  private casterLoweredAt = -Infinity;
+  /** How long a cold tile may yet come back, ms (`COLD_AGE_MS`). */
+  private coldAgeMs = COLD_AGE_MS;
+  /** The last update selected shadow casters. */
+  private casting = false;
+  /** `World.contentRevision` after the last update. */
+  private revisionSeen = 0;
+  /** The timer that wakes the loop for cold tiles going stale. */
+  private casterTimer: ReturnType<typeof setTimeout> | undefined;
+  /** That timer fired, and the next update is due. */
+  private casterWake = false;
+  /** Bytes of recent casters (`CASTER_BYTES_WINDOW`), and their median. */
+  private readonly recentCasterBytes: number[] = [];
+  private casterBytesEstimate = 0;
+  /** Whether casters may load this tick (`CasterRoom.load`). */
+  private casterLoad = true;
+  /** A view's tile found a pool full: casters wait until it has uploaded. */
+  private viewCapacityWait = false;
   /** Bytes of loaded tiles that are `castsOnly`, drawn by cascades or not. */
   private casterResident = 0;
   private placeholders = new Set<Tile>();
   /** Tiles drawn whole while finer content loads, in some view. */
   private standIns = new Set<Tile>();
   private inFlight = 0;
-  /** In flight for anything but prefetch (`prefetchAfterVisible`). */
-  private visibleInFlight = 0;
   private destroyed = false;
 
   protected constructor(
@@ -1255,7 +1253,12 @@ export class Tileset3D implements TileTree {
    * target.
    */
   get active(): boolean {
-    return this.inFlight > 0 || this.settling;
+    return (
+      this.inFlight > 0 ||
+      this.settling ||
+      // Another tileset's selection decides where its casters may stand.
+      (this.casting && this.world.contentRevision !== this.revisionSeen)
+    );
   }
 
   /**
@@ -1278,6 +1281,7 @@ export class Tileset3D implements TileTree {
       // shared with other tilesets, may be full).
       this.wanted.size > 0 ||
       this.frame - this.lastChange < 3 ||
+      this.casterWake ||
       this.imagery?.busy === true ||
       this.imageryPending ||
       this.policy.memoryAdjustedScreenSpaceError !==
@@ -1296,6 +1300,7 @@ export class Tileset3D implements TileTree {
 
   /** One frame: select per view, apply view masks, request, upload, evict. */
   update(allViews: SelectionView[]): void {
+    this.casterWake = false;
     if (this.destroyed) {
       return;
     }
@@ -1339,18 +1344,40 @@ export class Tileset3D implements TileTree {
       this.imagery || this.imageryPending ? this.imageryReady : undefined;
     this.policy.imageryRefines = this.imagery ? this.imageryRefines : undefined;
     this.policy.expectedLoadSeconds = this.loadEstimateMs / 1000;
-    // Casters yield to world pools, and share what the views leave of the
-    // cache with the cold tiles (`CASTER_TARGET_START`).
-    const available = Math.max(0, this.cacheBytes - this.viewBytes);
-    this.policy.casterBudget =
-      this.world.pressure().fraction > CASTER_PRESSURE ? "none" : "load";
-    this.policy.casterBytes = this.casterTarget * available;
-    this.policy.casterScale = this.casterScale;
-    this.policy.casterEstimate =
-      this.stats.loaded > 0 ? this.stats.bytes / this.stats.loaded : 0;
-    let casterUsed = 0;
-    let casterDenied = 0;
-    const casterWanted = new Set<Tile>();
+    const now = performance.now();
+    let viewBytes = 0;
+    // What a view uses this tick stays, and is the view's: counted once.
+    const useInView = (tile: Tile): void => {
+      if (tile.touchedFrame < frame) {
+        viewBytes += tile.bytes;
+        tile.viewedAt = now;
+      }
+      this.order.touch(tile, frame);
+    };
+    // A view drawing or asking for a tile after longer than the age: cold
+    // tiles do come back.
+    const cameBack = (tile: Tile): void => {
+      const away = now - tile.viewedAt;
+      if (
+        tile.touchedFrame < frame - 1 &&
+        tile.viewedAt > 0 &&
+        away > this.coldAgeMs
+      ) {
+        this.coldAgeMs = Math.min(COLD_AGE_MAX_MS, 2 * away);
+      }
+    };
+    const addRequest = (
+      tile: Tile,
+      priority: number,
+      purpose: RequestPurpose,
+    ): void => {
+      const previous = requests.get(tile);
+      if (previous === undefined || priority < previous) {
+        // The most urgent view's purpose.
+        requests.set(tile, priority);
+        purposes.set(tile, purpose);
+      }
+    };
     const waiting = new Set<Tile>();
     for (const view of views) {
       const result = this.policy.select(this.root, this.geometricError, view);
@@ -1358,6 +1385,9 @@ export class Tileset3D implements TileTree {
       for (const tile of result.selected) {
         tile.viewMask = (tile.viewMask | bit) >>> 0;
         nowMasked.add(tile);
+        cameBack(tile);
+        useInView(tile);
+        this.markCastsOnly(tile, false);
       }
       for (const [tile, holes] of result.placeholders ?? []) {
         tile.placeholderMask = (tile.placeholderMask | bit) >>> 0;
@@ -1371,36 +1401,49 @@ export class Tileset3D implements TileTree {
         tile.standInMask = (tile.standInMask | bit) >>> 0;
         nowStandIns.add(tile);
       }
-      for (const tile of result.casters ?? []) {
-        tile.casterMask = (tile.casterMask | bit) >>> 0;
-        nowCasters.add(tile);
-      }
-      casterUsed += result.casterUsed ?? 0;
-      casterDenied += result.casterDenied ?? 0;
-      for (const tile of result.casterWanted ?? []) {
-        casterWanted.add(tile);
-      }
       for (const tile of result.touched) {
-        this.order.touch(tile, frame);
+        useInView(tile);
       }
       for (const tile of result.waiting ?? []) {
         waiting.add(tile);
       }
       for (const tile of result.requested) {
-        this.order.touch(tile, frame);
+        cameBack(tile);
+        useInView(tile);
         // Nearest first across views (1.x orders by distance for REPLACE);
         // a policy may supply its own priority.
         const priority =
           result.priority?.get(tile) ?? tile.viewState(view.id).distance;
-        const previous = requests.get(tile);
-        if (previous === undefined || priority < previous) {
-          // The most urgent view's purpose.
-          requests.set(tile, priority);
-          purposes.set(tile, this.policy.purpose?.(priority) ?? "view");
-        }
+        addRequest(tile, priority, this.policy.purpose?.(priority) ?? "view");
       }
       this.lastSelected.set(view.id, result.selected);
       this.stats.selected.set(view.id, result.selected.length);
+    }
+    this.viewBytes = viewBytes;
+    // Shadow casters, now that the bytes views use are known.
+    const room = this.casterRoom(views, frame, now);
+    if (room) {
+      for (const view of views) {
+        const found = this.policy.selectCasters!(
+          this.root,
+          this.geometricError,
+          view,
+          this.lastSelected.get(view.id)!,
+          room,
+        );
+        const bit = (1 << view.id) >>> 0;
+        for (const tile of found.casters) {
+          tile.casterMask = (tile.casterMask | bit) >>> 0;
+          nowCasters.add(tile);
+        }
+        for (const [tile, priority] of found.wanted) {
+          // Kept from cancelling while it loads, as a view's tile is.
+          this.order.touch(tile, frame);
+          if (tile.state === "unloaded") {
+            addRequest(tile, priority, "caster");
+          }
+        }
+      }
     }
     // View masks: only tiles whose mask changed touch their draw records.
     for (const tile of new Set([...this.masked, ...nowMasked])) {
@@ -1434,23 +1477,14 @@ export class Tileset3D implements TileTree {
     }
     this.casters = nowCasters;
     this.stats.casters = nowCasters.size;
-    let viewBytes = 0;
-    for (const tile of nowMasked) {
-      viewBytes += tile.bytes;
-      this.markCastsOnly(tile, false);
+    this.stats.casterScale = room?.scale ?? 1;
+    if (
+      room &&
+      room.nextStale < Infinity &&
+      (room.denied > 0 || room.scale > 1)
+    ) {
+      this.wakeForStale(Math.max(room.nextStale - now, COLD_WAKE_MIN_MS));
     }
-    this.viewBytes = viewBytes;
-    for (const tile of nowCasters) {
-      if (tile.viewMask === 0) {
-        this.markCastsOnly(tile, true);
-      }
-    }
-    this.adaptCasters(requests, purposes, casterWanted, {
-      used: casterUsed,
-      denied: casterDenied,
-      budget: this.policy.casterBytes ?? 0,
-      available,
-    });
     // Mixed-LOD placeholders: clipped to their holes (unioned over views)
     // in the views where finer content draws beside them.
     for (const tile of new Set([...this.placeholders, ...nowPlaceholders])) {
@@ -1481,7 +1515,6 @@ export class Tileset3D implements TileTree {
     this.stats.placeholders = nowPlaceholders.size;
 
     // Queue time: since a still-unloaded tile was first wanted.
-    const now = performance.now();
     for (const tile of requests.keys()) {
       if (tile.state === "unloaded" && !this.wanted.has(tile)) {
         this.wanted.set(tile, now);
@@ -1574,11 +1607,89 @@ export class Tileset3D implements TileTree {
       0,
       this.stats.bytes - this.viewBytes - this.casterResident,
     );
-    this.stats.casterTarget = this.casterTarget;
-    this.stats.casterScale = this.casterScale;
     this.stats.loading = this.inFlight + this.ready.length;
     this.stats.inFlight = this.inFlight;
     this.stats.uploadQueue = this.ready.length;
+    this.revisionSeen = this.world.contentRevision;
+  }
+
+  /**
+   * What shadow casters may use this tick, or undefined when none are
+   * selected: the cache less what views use and less the cold tiles that may
+   * yet come back (`COLD_AGE_MS`). Free room always counts, so does the room
+   * of stale cold tiles, which eviction then takes.
+   */
+  private casterRoom(
+    views: readonly SelectionView[],
+    frame: number,
+    now: number,
+  ): (CasterRoom & { nextStale: number }) | undefined {
+    // A tileset that has drawn nothing yet but content this engine can't draw
+    // (point clouds today: `deferredReason`) has no casters to load.
+    this.casting =
+      this.policy.castsShadows === true &&
+      views.some((view) => view.casterPlanes !== undefined) &&
+      (this.stats.undrawn === 0 || this.stats.loaded > 0);
+    if (!this.casting) {
+      return undefined;
+    }
+    const heldSince = now - this.coldAgeMs;
+    let held = 0;
+    let nextStale = Infinity;
+    for (const tile of this.loaded) {
+      if (tile.castsOnly || tile.touchedFrame === frame) {
+        continue;
+      }
+      // Just left the views, as far as a tick can tell.
+      if (tile.touchedFrame === frame - 1) {
+        tile.viewedAt = now;
+      }
+      if (tile.viewedAt > heldSince) {
+        held += tile.bytes;
+        nextStale = Math.min(nextStale, tile.viewedAt + this.coldAgeMs);
+      }
+    }
+    const { fraction } = this.world.pressure();
+    this.casterLoad = fraction <= CASTER_PRESSURE && !this.viewCapacityWait;
+    return {
+      bytes: Math.max(0, this.cacheBytes - this.viewBytes - held),
+      load: this.casterLoad,
+      estimate: this.casterBytesEstimate,
+      pressure: fraction,
+      heldSince,
+      receivers: (view, selected) => {
+        const lists: Array<readonly Tile[]> = [selected];
+        for (const tileset of this.engine.tilesets) {
+          if (
+            tileset !== this &&
+            tileset.world === this.world &&
+            tileset.show
+          ) {
+            const tiles = tileset.lastSelected.get(view.id);
+            if (tiles && tiles.length > 0) {
+              if (tileset.anchor !== this.anchor) {
+                return undefined;
+              }
+              lists.push(tiles);
+            }
+          }
+        }
+        return lists;
+      },
+      counted: new Set(),
+      denied: 0,
+      scale: 1,
+      nextStale,
+    };
+  }
+
+  /** One tick when the next cold tile goes stale: the loop may be asleep. */
+  private wakeForStale(delayMs: number): void {
+    this.casterTimer ??= setTimeout(() => {
+      this.casterTimer = undefined;
+      this.casterWake = true;
+      this.engine.wake();
+    }, delayMs);
   }
 
   private cancelLoad(tile: Tile, controller: AbortController): void {
@@ -1591,18 +1702,20 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * A view's request found the origin's window full: cancels one shadow
-   * caster in flight there, whose slot comes back for it.
+   * A view's request found the origin's window, which tilesets share, full:
+   * cancels one shadow caster in flight there, whose slot comes back for it.
    */
   private yieldToView(origin: string): void {
-    for (const [tile, controller] of this.loading) {
-      if (
-        !controller.signal.aborted &&
-        tile.contentOrigin === origin &&
-        isCaster(tile)
-      ) {
-        this.cancelLoad(tile, controller);
-        return;
+    for (const tileset of this.engine.tilesets) {
+      for (const [tile, controller] of tileset.loading) {
+        if (
+          !controller.signal.aborted &&
+          tile.contentOrigin === origin &&
+          isCaster(tile)
+        ) {
+          tileset.cancelLoad(tile, controller);
+          return;
+        }
       }
     }
   }
@@ -1614,10 +1727,24 @@ export class Tileset3D implements TileTree {
     const order = [...requests.entries()].sort(
       (a, b) => a[1] - b[1] || a[0].depth - b[0].depth,
     );
+    // A caster in flight that a view now wants is the view's from here on.
+    for (const tile of requests.keys()) {
+      const purpose = purposes.get(tile);
+      if (tile.state === "loading" && isCaster(tile) && purpose !== "caster") {
+        tile.purpose = purpose;
+      }
+    }
     const full = new Set<string>();
     // Prefetch after everything visible (`prefetchAfterVisible`).
-    let visibleWaiting =
-      this.policy.prefetchAfterVisible === true && this.visibleInFlight > 0;
+    let visibleWaiting = false;
+    if (this.policy.prefetchAfterVisible === true) {
+      for (const tile of this.loading.keys()) {
+        if (tile.purpose !== "prefetch" && tile.purpose !== "caster") {
+          visibleWaiting = true;
+          break;
+        }
+      }
+    }
     for (const [tile] of order) {
       if (tile.state !== "unloaded") {
         continue;
@@ -1630,6 +1757,9 @@ export class Tileset3D implements TileTree {
       }
       const origin = tile.contentOrigin;
       if (full.has(origin)) {
+        if (!prefetch) {
+          this.yieldToView(origin);
+        }
         visibleWaiting ||=
           !prefetch && this.policy.prefetchAfterVisible === true;
         continue;
@@ -1651,9 +1781,7 @@ export class Tileset3D implements TileTree {
       this.inFlight++;
       this.stats.requestsTotal++;
       tile.purpose = purpose;
-      const visible = !prefetch;
-      if (visible) {
-        this.visibleInFlight++;
+      if (!prefetch) {
         visibleWaiting ||= this.policy.prefetchAfterVisible === true;
       }
       this.stats.purposes[purpose].requests++;
@@ -1664,9 +1792,6 @@ export class Tileset3D implements TileTree {
         .then((sample) => this.engine.requests.release(origin, sample))
         .finally(() => {
           this.inFlight--;
-          if (visible) {
-            this.visibleInFlight--;
-          }
           this.loading.delete(tile);
           // Any completion is a change, also one without content to upload
           // (an external tileset's children need selecting, a failure needs
@@ -1772,7 +1897,8 @@ export class Tileset3D implements TileTree {
       n < this.uploadsPerFrame && this.ready.length > 0 && !exceeded;
       n++
     ) {
-      if (this.stats.bytes > limit) {
+      // Casters don't hold back what views need: they leave first.
+      if (this.stats.bytes - this.casterResident > limit) {
         exceeded = true;
         break;
       }
@@ -1780,18 +1906,28 @@ export class Tileset3D implements TileTree {
       if (budget.uploads > 0 && budget.bytes <= 0) {
         break;
       }
-      // Views' content first; casters only after it (`isCaster`).
+      // Views' content first, in any tileset: the engine's budget is shared.
       const next = this.ready.findIndex((r) => !isCaster(r.tile));
+      if (
+        next < 0 &&
+        this.engine.tilesets.some((t) => t.ready.some((r) => !isCaster(r.tile)))
+      ) {
+        break;
+      }
       const { tile, asset, arrivedAt } = this.ready.splice(
         Math.max(next, 0),
         1,
       )[0]!;
-      // A caster decoded while casters aren't wanted (a pool under
-      // pressure, no bytes for it) is dropped, not uploaded.
+      // A caster decoded while casters can't load, or that nothing wants
+      // any more, is dropped, not uploaded. One over the byte budget isn't:
+      // admission decided, and eviction makes the room.
+      const caster = isCaster(tile);
+      const pressure = caster ? this.world.pressure().fraction : 0;
       if (
-        isCaster(tile) &&
-        (this.policy.casterBudget !== "load" ||
-          this.stats.bytes > this.cacheBytes)
+        caster &&
+        (!this.casterLoad ||
+          pressure > CASTER_PRESSURE ||
+          tile.touchedFrame < this.frame)
       ) {
         this.dropCaster(tile, asset);
         n--;
@@ -1854,6 +1990,16 @@ export class Tileset3D implements TileTree {
           }
         }
         tile.lastBytes = tile.bytes;
+        if (caster) {
+          this.noteCasterBytes(tile.bytes);
+          // It stays while it may, and doesn't come back at this pressure.
+          tile.noFitAt =
+            this.world.pressure().fraction > CASTER_PRESSURE
+              ? pressure
+              : Infinity;
+        } else {
+          this.viewCapacityWait = false;
+        }
         budget.bytes -= model.bytes;
         budget.uploads++;
         const uploaded = performance.now();
@@ -1899,8 +2045,10 @@ export class Tileset3D implements TileTree {
         this.stats.bytes += tile.bytes;
         this.stats.bytesTotal += model.bytes;
       } catch (error) {
-        if (isCapacityError(error) && isCaster(tile)) {
-          // Casters yield: no wait, no eviction, nothing held in the queue.
+        if (isCapacityError(error) && caster) {
+          // Casters yield: no wait, no eviction, nothing held in the queue,
+          // and no second try until the pools have more room.
+          tile.noFitAt = pressure;
           this.dropCaster(tile, asset);
           continue;
         }
@@ -1909,12 +2057,14 @@ export class Tileset3D implements TileTree {
           // nothing, so the tile waits at the front of the queue while
           // eviction frees room and the error threshold rises, as for bytes.
           this.ready.unshift({ tile, asset, arrivedAt });
+          this.viewCapacityWait = true;
           this.capacityFull = error.pool;
           this.capacityFailed = true;
           exceeded = true;
           break;
         }
         tile.state = "failed";
+        this.viewCapacityWait &&= caster;
         this.undrawnTile(
           `upload failed: ${error instanceof Error ? error.message : String(error)}`,
         );
@@ -1926,24 +2076,24 @@ export class Tileset3D implements TileTree {
       }
     }
     const selection = this.policy;
-    if (this.stats.bytes < this.cacheBytes) {
+    if (this.stats.bytes - this.casterResident < this.cacheBytes) {
       selection.memoryAdjustedScreenSpaceError = Math.max(
         selection.memoryAdjustedScreenSpaceError / 1.02,
         selection.maximumScreenSpaceError,
       );
-    } else if (exceeded && this.ready.some((r) => !isCaster(r.tile))) {
-      // Casters waiting don't raise it: they give up their bytes first.
+    } else if (exceeded) {
       selection.memoryAdjustedScreenSpaceError *= 1.02;
     }
     this.stats.screenSpaceError = selection.memoryAdjustedScreenSpaceError;
   }
 
   /**
-   * Over the byte budget, evicts by class and then by recency. What views
-   * selected this tick is never evicted; casters and cold tiles split the
-   * rest by `casterTarget`. A class over its share goes first, least
-   * recently touched first within it, and any tile not touched this tick
-   * follows if that isn't enough.
+   * Over the byte budget. Casters that don't cast this tick go first. Then
+   * cold tiles, least recently touched first: as they would with casters off
+   * while what views use and the cold tiles alone pass the budget, and
+   * otherwise only those gone stale (`COLD_AGE_MS`), for casters that took
+   * their room. A caster still casting goes when admission stops admitting it,
+   * on the next tick, as what is left shrinks.
    */
   private evict(frame: number): void {
     // This frame's touches and loads, in the order eviction walks.
@@ -1973,43 +2123,35 @@ export class Tileset3D implements TileTree {
       2 * this.engine.uploadBytesPerFrame,
       this.stats.bytes - (this.cacheBytes + this.overflowBytes),
     );
-    const available = Math.max(0, this.cacheBytes - this.viewBytes);
-    let overCasters = this.casterResident - this.casterTarget * available;
-    let overCold =
-      this.stats.bytes -
-      this.viewBytes -
-      this.casterResident -
-      (1 - this.casterTarget) * available;
-    for (const anyClass of [false, true]) {
+    const evict = (tile: Tile): void => {
+      allowance -= tile.bytes;
+      this.unload(tile);
+    };
+    if (this.casterResident > 0) {
       for (const tile of this.order.coldest(frame)) {
         if (this.stats.bytes <= this.cacheBytes || allowance <= 0) {
           return;
         }
-        const over = tile.castsOnly ? overCasters : overCold;
-        if (!anyClass && over <= 0) {
-          continue;
+        if (tile.castsOnly && tile.casterMask === 0) {
+          evict(tile);
         }
-        allowance -= tile.bytes;
-        if (tile.castsOnly) {
-          overCasters -= tile.bytes;
-        } else {
-          overCold -= tile.bytes;
-        }
-        this.evictTile(tile);
       }
     }
-  }
-
-  /** Unloads a tile the cache lets go, and remembers its id and class. */
-  private evictTile(tile: Tile): void {
-    const id = tile.contentUrl;
-    if (id) {
-      (tile.castsOnly ? this.evictedCasters : this.evictedCold).add(
-        id,
-        tile.bytes,
-      );
+    const heldSince = performance.now() - this.coldAgeMs;
+    for (const tile of this.order.coldest(frame)) {
+      if (this.stats.bytes <= this.cacheBytes || allowance <= 0) {
+        return;
+      }
+      if (tile.castsOnly) {
+        continue;
+      }
+      if (
+        this.stats.bytes - this.casterResident > this.cacheBytes ||
+        (tile.casterMask === 0 && tile.viewedAt <= heldSince)
+      ) {
+        evict(tile);
+      }
     }
-    this.unload(tile);
   }
 
   /** Drops decoded content of a caster that isn't wanted after all. */
@@ -2029,89 +2171,19 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * Adapts the casters' share and the caster scale to this update. As in
-   * ARC, a view asking for a tile evicted from the cold ones lowers the
-   * casters' target, and the caster walk wanting one evicted from the
-   * casters raises it, each by the tile's bytes (as a share of what the
-   * views leave), times the ratio of the two lists' sizes when that is over
-   * one. Then the scale: wanted casters that didn't fit, update after update,
-   * coarsen them (`CASTER_COARSEN`); room for a long while lets them refine.
+   * One more caster's bytes for `casterBytesEstimate`. The median of casters
+   * alone: one huge tile, or a view's, doesn't keep small ones out, and a
+   * wrong guess corrects itself when the tile loads.
    */
-  private adaptCasters(
-    requests: Map<Tile, number>,
-    purposes: Map<Tile, RequestPurpose>,
-    wanted: Set<Tile>,
-    room: { used: number; denied: number; budget: number; available: number },
-  ): void {
-    const share = (bytes: number, ratio: number): number =>
-      (bytes * Math.max(ratio, 1)) / Math.max(room.available, bytes, 1);
-    const cold = this.evictedCold.size;
-    const casters = this.evictedCasters.size;
-    for (const [tile] of requests) {
-      const id = tile.contentUrl;
-      if (!id || purposes.get(tile) === "caster") {
-        continue;
-      }
-      const bytes = this.evictedCold.take(id);
-      if (bytes !== undefined) {
-        this.casterTarget -= share(bytes, casters / Math.max(cold, 1));
-      }
-      this.evictedCasters.take(id);
+  private noteCasterBytes(bytes: number): void {
+    const recent = this.recentCasterBytes;
+    recent.push(bytes);
+    if (recent.length > CASTER_BYTES_WINDOW) {
+      recent.shift();
     }
-    for (const tile of wanted) {
-      const bytes = tile.contentUrl
-        ? this.evictedCasters.take(tile.contentUrl)
-        : undefined;
-      if (bytes !== undefined) {
-        this.casterTarget += share(bytes, cold / Math.max(casters, 1));
-      }
-    }
-    this.casterTarget = Math.min(1, Math.max(0, this.casterTarget));
-    if (this.casterHold > 0) {
-      this.casterHold--;
-    }
-    if (room.denied > 0) {
-      this.casterDeniedTicks++;
-      this.casterRoomTicks = 0;
-    } else {
-      this.casterDeniedTicks = 0;
-      this.casterRoomTicks =
-        room.used < CASTER_LOWER_SHARE * room.budget
-          ? this.casterRoomTicks + 1
-          : 0;
-    }
-    if (this.casterHold > 0) {
-      return;
-    }
-    if (
-      this.casterDeniedTicks >= CASTER_RAISE_TICKS &&
-      this.casterScale < CASTER_SCALE_MAX
-    ) {
-      this.casterScale = Math.min(
-        CASTER_SCALE_MAX,
-        this.casterScale * CASTER_COARSEN,
-      );
-      // Raising soon after lowering: lowering was too eager. Wait longer.
-      if (this.frame - this.casterLoweredAt < 3 * CASTER_HOLD_TICKS) {
-        this.casterLowerWait = Math.min(
-          2 * this.casterLowerWait,
-          CASTER_LOWER_WAIT_MAX,
-        );
-      }
-      this.casterHold = CASTER_HOLD_TICKS;
-      this.casterDeniedTicks = 0;
-    } else if (
-      this.casterRoomTicks >= this.casterLowerWait &&
-      this.casterScale > 1
-    ) {
-      this.casterScale = Math.max(1, this.casterScale / CASTER_COARSEN);
-      if (this.casterScale === 1) {
-        this.casterLowerWait = CASTER_LOWER_WAIT;
-      }
-      this.casterLoweredAt = this.frame;
-      this.casterHold = CASTER_HOLD_TICKS;
-      this.casterRoomTicks = 0;
-    }
+    this.casterBytesEstimate = [...recent].sort((a, b) => a - b)[
+      recent.length >> 1
+    ]!;
   }
 
   /**
@@ -2125,12 +2197,17 @@ export class Tileset3D implements TileTree {
     );
     this.capacityFull = undefined;
     let count = 0;
-    for (const tile of this.order.coldest(frame)) {
-      if (count >= this.uploadsPerFrame) {
-        break;
+    // Casters first, casting or not: they yield the pools.
+    for (const castsOnly of [true, false]) {
+      for (const tile of this.order.coldest(frame)) {
+        if (count >= this.uploadsPerFrame) {
+          break;
+        }
+        if (tile.castsOnly === castsOnly) {
+          this.unload(tile);
+          count++;
+        }
       }
-      this.evictTile(tile);
-      count++;
     }
     // After a failed upload with nothing to free here (everything is in
     // view, or another tileset holds the pool): retry in half a second,
@@ -2291,6 +2368,7 @@ export class Tileset3D implements TileTree {
 
   /** Unloads all content. The tileset can't be used afterwards. */
   destroy(): void {
+    clearTimeout(this.casterTimer);
     for (const controller of this.loading.values()) {
       controller.abort();
     }

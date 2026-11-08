@@ -156,8 +156,20 @@ export class Tile {
    * before it loads again (0: it never loaded).
    */
   lastBytes = 0;
-  /** Last used only as a shadow caster, no view having drawn it since it loaded. */
+  /** Loaded as a shadow caster, and no view has drawn it since. */
   castsOnly = false;
+  /**
+   * When a tick last found a view using it, or found it just left, ms; 0:
+   * none has. Kept after it unloads: how long a tile has been cold, and how
+   * long a tile the view comes back to was away.
+   */
+  viewedAt = 0;
+  /**
+   * World pool pressure at or above which it isn't loaded as a caster: it
+   * failed to fit there, or its upload took the pools past what casters may
+   * use. Infinity: no such failure.
+   */
+  noFitAt = Infinity;
   /** Views drawing this tile as a mixed-LOD placeholder this frame. */
   placeholderMask = 0;
   /** The volumes it fills as a placeholder, over all views this frame. */

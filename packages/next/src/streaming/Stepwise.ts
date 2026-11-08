@@ -83,14 +83,51 @@ export const REQUEST_PURPOSES: readonly RequestPurpose[] = [
 ];
 
 /**
- * Whether selection may request shadow casters (`Tileset3D` sets it each
- * update). `"load"`: it requests and touches them, within the bytes the
- * cache has for them (`TileSelection.casterBytes`). `"none"`: a world pool
- * is under pressure: it requests none and touches none, so eviction may take
- * them. It walks the least recently touched first: tiles nothing has touched
- * for longer go before them, and none a view drew this tick.
+ * What shadow casters may use this tick: `Tileset3D` makes one per update,
+ * and every view's walk draws on it, so views share one budget and a caster
+ * two views share counts once (`TileSelection.selectCasters`).
  */
-export type CasterBudget = "load" | "none";
+export interface CasterRoom {
+  /** Bytes casters may still take. Each walk lowers it as it admits. */
+  bytes: number;
+  /** Whether a walk may request casters (no: a world pool is short). */
+  load: boolean;
+  /**
+   * Bytes assumed for a caster that never loaded. 0 while no caster has
+   * loaded: then one at a time is requested, until one tells the size.
+   */
+  estimate: number;
+  /** World pool pressure, against `Tile.noFitAt`. */
+  pressure: number;
+  /**
+   * A resident tile a view used after this time, ms, stays in the cache
+   * whether it casts or not, so casting costs no bytes.
+   */
+  heldSince: number;
+  /**
+   * The tiles this view draws here and in the world's other tilesets and
+   * globe, which casters may shadow. Undefined when some stand in another
+   * anchor's coordinates: then only the cascades limit where casters stand.
+   */
+  receivers(
+    view: SelectionView,
+    selected: readonly Tile[],
+  ): ReadonlyArray<readonly Tile[]> | undefined;
+  /** Tiles an earlier walk of this tick admitted. */
+  counted: Set<Tile>;
+  /** The walks' bytes of casters that didn't fit. */
+  denied: number;
+  /** The largest `casterErrorScale` multiple a walk had to use (1: none). */
+  scale: number;
+}
+
+/** What one view's walk found (`TileSelection.selectCasters`). */
+export interface CasterSelection {
+  /** Loaded tiles not drawn in this view that its shadow cascades draw. */
+  casters: Tile[];
+  /** Admitted and not loaded yet, each with its request priority. */
+  wanted: Array<[Tile, number]>;
+}
 
 /** A tile selection policy (3D Tiles or globe), run per view each frame. */
 export interface TileSelection {
@@ -128,21 +165,19 @@ export interface TileSelection {
    * loads; `Tileset3D` sets it): what loading in motion weighs against.
    */
   expectedLoadSeconds?: number;
-  /** Whether to request shadow casters (`Tileset3D` sets it each update). */
-  casterBudget?: CasterBudget;
+  /** Whether `selectCasters` can find anything (not terrain, not 1.x's walk). */
+  castsShadows?: boolean;
   /**
-   * Bytes the cache has for shadow casters this update: the casters' target
-   * share of what the views leave (`Tileset3D`). Selection admits casters
-   * nearest first until they would pass it.
+   * Shadow casters off screen for this view, within `room`. Runs after every
+   * view's `select`, so `room` knows what views use this tick.
    */
-  casterBytes?: number;
-  /**
-   * Multiplies `casterErrorScale` while wanted casters don't fit
-   * (`Tileset3D` raises it slowly, and lowers it when there is room).
-   */
-  casterScale?: number;
-  /** Bytes assumed for an unloaded caster that never loaded (`Tileset3D`). */
-  casterEstimate?: number;
+  selectCasters?(
+    root: Tile,
+    rootGeometricError: number,
+    view: SelectionView,
+    selected: readonly Tile[],
+    room: CasterRoom,
+  ): CasterSelection;
 }
 
 export interface SelectionResult {
@@ -169,16 +204,6 @@ export interface SelectionResult {
   standIns?: Tile[];
   /** Loaded tiles not drawn for want of imagery (terrain): it loads for them. */
   waiting?: Tile[];
-  /**
-   * Tiles not drawn in this view that its shadow cascades draw: off screen,
-   * inside `SelectionView.casterPlanes`.
-   */
-  casters?: Tile[];
-  /** Unloaded tiles the caster walk wanted, the ones it didn't request too. */
-  casterWanted?: Tile[];
-  /** Bytes of the casters it admitted, and of those wanted that didn't fit. */
-  casterUsed?: number;
-  casterDenied?: number;
 }
 
 // 1.x CullingVolume plane masks.

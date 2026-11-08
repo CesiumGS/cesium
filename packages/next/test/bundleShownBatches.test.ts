@@ -164,6 +164,28 @@ describe("draw bundles and caster masks", () => {
     expect(draws.get("world.shadowBundle")).toBeUndefined();
   });
 
+  it("moves a caster's count with it when the draw changes material", () => {
+    const { world, handles } = tiles(1);
+    world.setViewMask(handles[0]!, 0);
+    const mesh = world.addMesh(square);
+    const a = world.addDraw({ mesh, origin: new Float64Array(3), viewMask: 0 });
+    world.setCasterMask(a, 1);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    // Off screen, to the blended twin: the new batch's shadow draw stays.
+    const twin = world.materialWithFlags(world.drawMaterial(a)!, 1);
+    world.setDrawMaterial(a, twin);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+    // Its last caster leaves, from the new batch: the count stays at zero.
+    world.setCasterMask(a, 0);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBeUndefined();
+    world.setCasterMask(a, 1);
+    frame(world);
+    expect(draws.get("world.shadowBundle")).toBe(1);
+  });
+
   it("records the shadow bundle again only when a batch's first caster joins or its last leaves", () => {
     const { world, handles } = tiles(1);
     world.setViewMask(handles[0]!, 0);

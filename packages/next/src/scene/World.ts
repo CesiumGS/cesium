@@ -2583,12 +2583,17 @@ export class World {
       instanced: old.instanced,
       draw: index,
     });
-    // Any count a batch keeps per draw (items, shown, and one a later
-    // change adds) must move with the record here, as in `setDrawShader`.
+    // Any count a batch keeps per draw (items, shown, casters, and one a
+    // later change adds) must move with the record here, as in
+    // `setDrawShader`.
     old.items -= items;
     if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
       old.shown--;
       batch.shown++;
+    }
+    if (this.recordsU32[o + CASTER_MASK_WORD] !== 0) {
+      old.casters--;
+      batch.casters++;
     }
     if (old.items === 0) {
       this.batches.delete(old.key);

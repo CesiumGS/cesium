@@ -154,7 +154,10 @@ interface Row {
   coldMb?: number;
   casters?: number;
   casterScale?: number;
-  casterTarget?: number;
+  /** With `?shadows=1`: p95 per tick of the caster walks and the whole update, ms. */
+  casterWalkP95Ms?: number;
+  updateP95Ms?: number;
+  loadedTiles?: number;
 }
 
 const frame = () => new Promise((resolve) => setTimeout(resolve, 16));
@@ -220,7 +223,8 @@ function source(): Promise<Source> {
         )
       : sphere.center;
     const far = at ? 6000 : sphere.radius * 2.5;
-    const close = at ? 450 : sphere.radius * 0.3;
+    const close =
+      Number(params.get("close")) || (at ? 450 : sphere.radius * 0.3);
     // A second spot ~600 m east (or 0.3 radii) for the pan.
     const east = at
       ? Ellipsoid.WGS84.cartographicToCartesian(
@@ -284,7 +288,15 @@ interface Measurement {
   coldMb?: number;
   casters?: number;
   casterScale?: number;
-  casterTarget?: number;
+  casterWalkP95Ms?: number;
+  updateP95Ms?: number;
+  loadedTiles?: number;
+}
+
+/** The 95th percentile. */
+function p95(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length * 0.95)] ?? 0;
 }
 
 async function measure(
@@ -318,6 +330,28 @@ async function measure(
     ...(params.get("casters") === "0" ? { casterErrorScale: 0 } : {}),
   });
   const id = Math.log2(e.viewBit(view));
+  // What selecting casters costs: the walks in a tick, and the whole update.
+  const walkMs: number[] = [];
+  const updateMs: number[] = [];
+  let walked = 0;
+  const update = tileset.update.bind(tileset);
+  tileset.update = (views) => {
+    const t = performance.now();
+    walked = 0;
+    update(views);
+    updateMs.push(performance.now() - t);
+    walkMs.push(walked);
+  };
+  const policy = tileset.selection;
+  if (policy.selectCasters) {
+    const walk = policy.selectCasters.bind(policy);
+    policy.selectCasters = (...args) => {
+      const t = performance.now();
+      const found = walk(...args);
+      walked += performance.now() - t;
+      return found;
+    };
+  }
   try {
     const settle = async (maxMs = 180000) => {
       const start = performance.now();
@@ -340,6 +374,7 @@ async function measure(
     };
     scenario.start(view);
     await settle();
+    walkMs.length = updateMs.length = 0;
     const requests0 = tileset.stats.requestsTotal;
     const bytes0 = tileset.stats.bytesTotal;
     const purposes0 = structuredClone(tileset.stats.purposes);
@@ -423,7 +458,9 @@ async function measure(
             coldMb: tileset.stats.coldBytes / 1048576,
             casters: tileset.stats.casters,
             casterScale: tileset.stats.casterScale,
-            casterTarget: tileset.stats.casterTarget,
+            casterWalkP95Ms: p95(walkMs),
+            updateP95Ms: p95(updateMs),
+            loadedTiles: tileset.stats.loaded,
           }),
       purposes: Object.fromEntries(
         Object.entries(tileset.stats.purposes)
@@ -474,12 +511,16 @@ async function runLod(): Promise<Row[]> {
   const rows: Row[] = [];
   const s = await source();
   root.querySelector("h1")!.textContent += ` (${s.label})`;
-  await runLodReference();
+  // ?flip=0: settle and bytes alone, without the reference images' cost.
+  const noFlip = params.get("flip") === "0";
+  if (!noFlip) {
+    await runLodReference();
+  }
   const only = params.get("policies")?.split(",");
   const policies = POLICIES.filter((p) => !only || only.includes(p.id));
   for (const scenario of s.scenarios) {
-    const reference = references.get(scenario.name)!;
-    const goal = targets.get(scenario.name)!;
+    const reference = references.get(scenario.name);
+    const goal = targets.get(scenario.name);
     for (const policy of policies) {
       status.textContent = `${scenario.name}: ${policy.label}…`;
       try {
@@ -495,8 +536,14 @@ async function runLod(): Promise<Row[]> {
           flip1000: r.flips[1000],
           trace: r.trace,
           traceTarget: r.traceTarget,
-          flipSettled: (await flip(reference, r.image, WIDTH, HEIGHT)).mean,
-          flipSettledTarget: (await flip(goal, r.image, WIDTH, HEIGHT)).mean,
+          ...(reference && goal
+            ? {
+                flipSettled: (await flip(reference, r.image, WIDTH, HEIGHT))
+                  .mean,
+                flipSettledTarget: (await flip(goal, r.image, WIDTH, HEIGHT))
+                  .mean,
+              }
+            : {}),
           selected: r.selected,
           purposes: r.purposes,
           ...(r.sleepMs === undefined
@@ -508,7 +555,9 @@ async function runLod(): Promise<Row[]> {
                 coldMb: r.coldMb!,
                 casters: r.casters!,
                 casterScale: r.casterScale!,
-                casterTarget: r.casterTarget!,
+                casterWalkP95Ms: r.casterWalkP95Ms!,
+                updateP95Ms: r.updateP95Ms!,
+                loadedTiles: r.loadedTiles!,
               }),
         });
       } catch (error) {
