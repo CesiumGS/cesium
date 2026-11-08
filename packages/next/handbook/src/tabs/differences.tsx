@@ -57,6 +57,11 @@ const CONCEPTS = [
     next: "FeatureStyle compiles the same language to WGSL, evaluated on the GPU. Comparing strings, regular expressions and undefined checks are refused for now.",
   },
   {
+    topic: "The analytic Moon",
+    old: "Simon et al. (1994)'s main terms: up to 0.31° and 2,051 km from DE440, sampled daily over 2000 to 2050",
+    next: "Meeus's chapter 47: within 16″ and 27 km of DE440 over the same span. The globe-only sky's Moon disk no longer matches 1.x's.",
+  },
+  {
     topic: "Large point data",
     old: "Entities and billboard collections, re-clamped on the CPU",
     next: "PointSource and VectorLayer: typed-array updates, clamped and culled on the GPU. Entities and DataSources aren't in the proof of concept.",

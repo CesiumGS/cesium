@@ -711,21 +711,37 @@ export function Selection() {
         <ul>
           <li>
             <strong>Terrain with no data below:</strong> under <C>Budgeted</C>,
-            a tile with no available children stays a leaf and draws at the
-            detail it has, whatever its screen-space error.
+            a loaded leaf the view wants finer gets four children, while the
+            imagery has finer levels. Each child's mesh is the nearest data
+            tile's, clipped to it in a worker, so it draws with imagery of its
+            own level. Without this, imagery stopped where the terrain data did:
+            Cesium World Terrain ends at level 13 over Amsterdam's polders, so
+            Bing drew at about 12 m a texel at every range.
           </li>
           <li>
-            <strong>Some quadrants without data:</strong> all four children are
-            created when any is available. The ones without data fill from their
-            parent: the nearest tile with data draws them, clipped to them.
+            <strong>Some quadrants without data:</strong> they upsample the same
+            way, in place of a stand-in that took the nearest ancestor's
+            imagery. Where imagery has no finer level, the nearest tile with
+            data draws them, clipped to them.
+          </li>
+          <li>
+            <strong>Skirts:</strong> an upsampled tile's edges on its data
+            tile's boundary hang that tile's skirt, to hide its cracks. Its
+            inner edges come from one clip of one mesh, so they hang only what
+            their own level's error asks.
+          </li>
+          <li>
+            <strong>What upsampling doesn't add:</strong> no height data, so its
+            accuracy stays the data tile's. Rays read an upsampled tile at its
+            data tile's level and error.
           </li>
           <li>
             <strong>
               Under <C>Stepwise</C>:
             </strong>{" "}
-            a leaf gets four data-less children, as 1.x upsamples, so its
-            selection matches 1.x. They draw from the tile with data, whose
-            bounds are less tight than 1.x's upsampled ones.
+            a leaf gets four placeholder children with no content of their own,
+            so its selection matches 1.x. They draw from the tile with data,
+            whose bounds are less tight than 1.x's upsampled ones.
           </li>
           <li>
             <strong>Imagery:</strong> a level past the provider's maximum uses
@@ -733,6 +749,22 @@ export function Selection() {
             nearest ancestor with imagery supplies it, as in 1.x.
           </li>
         </ul>
+        <Note title="Known gaps">
+          <ul>
+            <li>
+              Upsampling asks only whether the provider has finer levels at all,
+              so it doesn't stop where the imagery runs out locally.
+            </li>
+            <li>
+              Once a data tile has been evicted, each upsampled child fetches it
+              again.
+            </li>
+            <li>
+              Imagery slices sit outside the tileset's byte budget, which counts
+              tile content only.
+            </li>
+          </ul>
+        </Note>
         <Written
           from={
             <>
@@ -873,10 +905,6 @@ export function Selection() {
           <li>
             <strong>Shadow casters:</strong> selecting off-screen tiles to cast
             shadows into view. It's being reworked.
-          </li>
-          <li>
-            <strong>Terrain past the last data level:</strong> upsampling under{" "}
-            <C>Budgeted</C> is being fixed, so the section above may change.
           </li>
           <li>
             <strong>Presentations of a tileset:</strong> one selection with

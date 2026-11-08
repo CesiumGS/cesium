@@ -224,7 +224,10 @@ export function Frames() {
           sidereal time, no nutation, and the Meeus sun and Moon. That loads no
           series tables and no data. The stand-ins state their own accuracy:
           ITRF's is 18″ (0.005°) from IAU 2006/2000A with the EOP, a bound from
-          its parts. The Precision and accuracy tab lists the rest.
+          its parts. The Moon is Meeus's chapter 47: within 16″ and 27 km of
+          DE440 from the Earth, sampled daily over 2000 to 2050, and within
+          20.9″ and 36.5 km in the Earth-fixed sky. The Precision and accuracy
+          tab lists the rest.
         </p>
       </Section>
 

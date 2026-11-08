@@ -69,7 +69,7 @@ keep their names (`FrameGraph`).
 
 Keep precision and accuracy apart. Precision is how finely a value can be
 represented or repeated: a float32 step, the depth buffer's step. Accuracy is how
-close it is to the truth or the best reference: within 2,100 km of DE440, a stated
+close it is to the truth or the best reference: within 27 km of DE440, a stated
 ±. Two computations agreeing is numerical agreement, and the text says which it
 is. The catalog's `Precision` type and `"precise"` level keep their code names,
 but they set accuracy, so prose calls them levels.

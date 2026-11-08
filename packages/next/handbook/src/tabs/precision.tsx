@@ -246,9 +246,11 @@ const MEASURED = [
   },
   {
     what: "The analytic Moon against DE440",
-    result: "Within about 0.31° (2,100 km), sampled daily over 2000 to 2050.",
+    result:
+      "From the Earth, within 16″ and 27 km, sampled daily over 2000 to 2050. In the Earth-fixed sky, with the analytic turn included, within 20.9″ and 36.5 km.",
     kind: "Accuracy, against the best reference the engine has.",
-    where: "src/frames/analytic.ts",
+    where:
+      "src/frames/analytic.ts, test/data/frameCatalog.test.ts, the plan 5 spec",
   },
   {
     what: "The analytic ITRF against IAU 2006/2000A with the EOP",
@@ -290,7 +292,8 @@ const STATED = [
   {
     frame: "GCRF, EARTH_ICRF, MOON_ICRF",
     precise: "0.01 m: DE440's Earth-Moon fit to lunar laser ranging",
-    standIn: "About 2.2 million km, with the Sun placed at the barycenter",
+    standIn:
+      "About 2.2 million km as absolute positions, with the Sun placed at the barycenter. The Moon from the Earth alone is within 16″ and 27 km",
   },
   {
     frame: "HCRS",
@@ -372,9 +375,9 @@ export function Precision() {
         <p>
           A value can be very precise and still inaccurate. The analytic Moon's
           position is a float64 with a step of about 60 nm at the Moon's
-          distance, and it's within about 2,100 km of DE440. Precision can also
-          cap accuracy: a pick's position can't be known better than the depth
-          it was read from.
+          distance, and it's within about 27 km of DE440. Precision can also cap
+          accuracy: a pick's position can't be known better than the depth it
+          was read from.
         </p>
         <p>
           One name in the code crosses this line. The catalog's <C>Precision</C>{" "}
