@@ -1,0 +1,8 @@
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction((click) => {
+  // Synchronous: re-renders into a pick framebuffer.
+  const picked = viewer.scene.pick(click.position);
+  if (picked instanceof Cesium.Cesium3DTileFeature) {
+    console.log(picked.getProperty("Height"));
+  }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);

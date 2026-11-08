@@ -19,6 +19,7 @@ import { Architecture } from "./tabs/architecture.tsx";
 import { Benchmarks } from "./tabs/benchmarks.tsx";
 import { Cameras } from "./tabs/cameras.tsx";
 import { Compatibility } from "./tabs/compatibility.tsx";
+import { Compare } from "./tabs/compare.tsx";
 import { Differences } from "./tabs/differences.tsx";
 import { Frames } from "./tabs/frames.tsx";
 import { Ion } from "./tabs/ion.tsx";
@@ -46,6 +47,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "architecture", label: "System architecture", view: Architecture },
       { id: "api", label: "Public API", view: Api },
       { id: "differences", label: "Differences from 1.x", view: Differences },
+      { id: "compare", label: "1.x to 2.0 API", view: Compare },
     ],
   },
   {

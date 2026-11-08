@@ -1,0 +1,8 @@
+const position = Cesium.Cartesian3.fromDegrees(-75.6, 40.0);
+const model = await Cesium.Model.fromGltfAsync({
+  url: url,
+  modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(position),
+  heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+  scene: viewer.scene,
+});
+viewer.scene.primitives.add(model);

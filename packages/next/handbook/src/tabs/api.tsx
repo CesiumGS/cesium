@@ -11,6 +11,7 @@ import {
   Section,
   Written,
 } from "../parts.tsx";
+import { snippetText } from "../snippets.ts";
 
 const ENTRY_LABEL: Record<string, string> = {
   ".": "core",
@@ -31,39 +32,6 @@ const ENTRY_PATH: Record<string, string> = {
 };
 
 const KINDS = ["class", "function", "const", "interface", "type"];
-
-const QUICK = `import { Viewer } from "./widgets/index.ts";
-
-// A globe with terrain, imagery and controls, in one call.
-const viewer = await Viewer.create(container);`;
-
-const ENGINE = `import { Engine } from "@cesium/next";
-
-// One GPU device, shared by every world and view.
-const engine = await Engine.create();
-const world = engine.createWorld();
-const view = engine.addView({ target: canvas, world });
-
-// Content arrives asynchronously and registers with its world.
-await engine.addTileset(world, url);
-
-// Picks read back from the GPU, so the answer is a promise.
-const hit = await view.pick(x, y);`;
-
-const TERRAIN = `const globe = await engine.addTerrain(world, url);
-
-// A region, in geodetic degrees. Picks go on to what shows through it.
-const site = globe.addTerrainTranslucency(
-  { rectangle: { west: -75.6, south: 40.0, east: -75.5, north: 40.1 } },
-  { opacity: 0.3, pickThrough: true },
-);
-
-// In place, with no recompile, so a fade can call it every tick.
-globe.setTerrainTranslucency(site, { opacity: 0.5 });
-globe.removeTerrainTranslucency(site);
-
-// The whole globe. 1 is opaque again.
-globe.setTerrainOpacity(0.6, { pickThrough: true });`;
 
 const PRINCIPLES = [
   "Creation is asynchronous, and nothing has a ready flag.",
@@ -138,12 +106,12 @@ export function Api() {
       }
     >
       <Section title="In brief">
-        <CodeBlock language="ts" code={QUICK} />
+        <CodeBlock language="ts" code={snippetText("quick.next.ts")} />
         <p>For more control, the engine directly:</p>
-        <CodeBlock language="ts" code={ENGINE} />
+        <CodeBlock language="ts" code={snippetText("engine.next.ts")} />
         <p className="provenance">
-          Calls follow <C>src/scene/Engine.ts</C> and <C>widgets/Viewer.ts</C>;
-          options are left out. The snippets aren't compiled yet.
+          These compile against the real types as part of a test, and most
+          options are left out.
         </p>
       </Section>
 
@@ -152,7 +120,7 @@ export function Api() {
           Terrain is translucent in a region or everywhere, through four methods
           on a globe's <C>Tileset3D</C>. The Rendering tab shows how it draws.
         </p>
-        <CodeBlock language="ts" code={TERRAIN} />
+        <CodeBlock language="ts" code={snippetText("terrain.next.ts")} />
         <ul>
           <li>
             <C>addTerrainTranslucency(region, {"{ opacity, pickThrough }"})</C>{" "}
@@ -194,6 +162,10 @@ export function Api() {
       </Section>
 
       <Section title="The surface, by entry point">
+        <p>
+          For how this differs from 1.x, the 1.x to 2.0 API tab goes area by
+          area, with breaking changes first.
+        </p>
         <DataTable
           label="Exports per entry point"
           columns={[
@@ -242,7 +214,6 @@ export function Api() {
             Links from each name to its documentation, once generated reference
             docs exist.
           </li>
-          <li>Snippets compiled by a test, so they can't drift.</li>
         </ul>
       </Section>
     </Page>

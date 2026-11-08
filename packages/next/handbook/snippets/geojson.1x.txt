@@ -1,0 +1,2 @@
+const source = await Cesium.GeoJsonDataSource.load(url);
+await viewer.dataSources.add(source);

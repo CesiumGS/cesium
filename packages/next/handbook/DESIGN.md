@@ -48,7 +48,7 @@ only the committed runs.
 
 ## Layout
 
-Seventeen tabs don't fit a horizontal strip, so they're a grouped side list on a
+Eighteen tabs don't fit a horizontal strip, so they're a grouped side list on a
 desktop and a scrolling strip on a phone. A reading column of about 72 characters
 holds the prose; tables and figures may run to 1000 px. Nothing sits on a card:
 tables and figures sit on the page, separated by space and headings.
@@ -59,6 +59,19 @@ down the stack, because that shape is the architecture's main claim. Everything
 around it stays quiet. Diagrams use StrataKit's tokens, so one drawing serves
 both themes. Bars use Dyno's validated chart palette, and every bar carries its
 value.
+
+## The 1.x to 2.0 comparison
+
+`src/apiMap.ts` is written by hand, row by row, and each claim is checked against
+the code. `scripts/handbookData.mjs` reads 1.x's public names from its source, and
+`test/handbookData.test.ts` fails when a 2.0 name in a row no longer exists, an
+exported 2.0 name has no row, or a 1.x name or member doesn't exist. When the API
+changes, add or fix the row; a row marked `inFlight` needs checking when that work
+lands. `snippets/` holds its tasks: `<id>.next.ts` compiles against the real types
+in that test (and with `tsc -p handbook`), and `<id>.1x.txt` has its `Cesium.` names
+and static members checked against 1.x's source, while its instance members were read
+from that source by hand, checked 2026-11-08. Use `yourIonToken` as the placeholder
+in any snippet.
 
 ## Code blocks
 
@@ -108,6 +121,7 @@ Details closed on screen print open.
 | Shadows: one tick; a cascade seen from above                                     | By hand, in `src/tabs/shadows.tsx`                                                                                            | 2026-11-08                   |
 | Shadows: how far the cascades reach                                              | Computed at build time by `src/scene/shadows.ts` itself                                                                       | Each build                   |
 | Tessellation: the seam and the engine it leaves room for; the chart's dashed row | By hand, in `src/tabs/tessellation.tsx` and `src/pipeline.ts`, from the plan 5 spec                                           | 2026-11-08                   |
+| 1.x to 2.0 API: the mapping and its tasks                                        | By hand, in `src/apiMap.ts` and `src/snippets.ts`. Counts and shares generated                                                | 2026-11-08                   |
 | Tile selection: a tile's states; levels per policy; mixed LOD; cache levels      | By hand, in `src/flows.tsx` and `src/tabs/selection.tsx`                                                                      | 2026-11-08                   |
 | Frame tree: the tree; one tick of answering                                      | By hand, in `src/tabs/frames.tsx` and `src/flows.tsx`                                                                         | 2026-11-08                   |
 | Cameras: one tick down the chain                                                 | By hand, in `src/flows.tsx`                                                                                                   | 2026-11-08                   |

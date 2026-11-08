@@ -76,6 +76,59 @@ export function readSurface(root = packageRoot) {
   };
 }
 
+/**
+ * 1.x's public names, read from its source: every file `packages/engine`
+ * and `packages/widgets` export, except those whose doc comment says
+ * `@private`. A file in `Core/Deprecated` re-exports `packages/core`, where
+ * its doc comment is. A file with no doc comment on its export isn't in the
+ * reference docs, so it isn't counted.
+ */
+export function readOneX(root = packageRoot) {
+  const packages = dirname(root);
+  const json = (path) => JSON.parse(readFileSync(path, "utf8"));
+  const files = {};
+  const skip = new Set(["ThirdParty", "Workers", "Shaders", "Assets"]);
+  const isPublic = (text, name) => {
+    const declared = new RegExp(
+      `(/\\*\\*(?:(?!\\*/)[\\s\\S])*?\\*/)(?:\\s|//[^\\n]*\\n)*(?:export\\s+)?(?:(?:async\\s+)?function\\s+${name}\\b|class\\s+${name}\\b|(?:const|let|var)\\s+${name}\\b)`,
+    ).exec(text);
+    const aliased = new RegExp(
+      `/\\*\\*(?:(?!\\*/)[\\s\\S])*?@alias ${name}\\b(?:(?!\\*/)[\\s\\S])*?\\*/`,
+    ).exec(text);
+    const doc = declared?.[1] ?? aliased?.[0];
+    return doc !== undefined && !/@private\b/.test(doc);
+  };
+  const walk = (dir, rel) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!skip.has(entry.name)) {
+          walk(path, join(rel, entry.name));
+        }
+      } else if (entry.name.endsWith(".js") && !entry.name.startsWith("_")) {
+        const name = entry.name.slice(0, -3);
+        const core = join(packages, "core/Source", entry.name);
+        const source =
+          rel === join("Core", "Deprecated") && existsSync(core) ? core : path;
+        const text = readFileSync(source, "utf8");
+        const exported = /export default (\w+);/.exec(text)?.[1];
+        if (exported && isPublic(text, exported)) {
+          files[name] = source;
+        }
+      }
+    }
+  };
+  walk(join(packages, "engine/Source"), "");
+  walk(join(packages, "widgets/Source"), "");
+  const names = Object.keys(files).sort();
+  return {
+    version: json(join(dirname(packages), "package.json")).version,
+    total: names.length,
+    names,
+    files,
+  };
+}
+
 /** The declarations the layer table is made of, by name, in the test. */
 const TEST_DECLARATIONS = [
   "TIME_FILES",
@@ -122,7 +175,15 @@ export function readBoundaryRules(root = packageRoot) {
       },
     },
   );
-  const scope = { ts, root, readdirSync, readFileSync, join, dirname, relative };
+  const scope = {
+    ts,
+    root,
+    readdirSync,
+    readFileSync,
+    join,
+    dirname,
+    relative,
+  };
   return runInNewContext(
     `${outputText}\n({ layerOf, ALLOWED, FRAMES_CORE_VALUES: [...FRAMES_CORE_VALUES], listTs, edgesOfText })`,
     scope,
@@ -148,7 +209,12 @@ export function readLayers(root = packageRoot) {
     for (const edge of rules.edgesOfText(file, text)) {
       const to = rules.layerOf(edge.to);
       if (edge.dynamic) {
-        dynamicImports.push({ from: file, to: edge.to, fromLayer: from, toLayer: to });
+        dynamicImports.push({
+          from: file,
+          to: edge.to,
+          fromLayer: from,
+          toLayer: to,
+        });
       }
       if (from === to) {
         continue;
@@ -182,7 +248,9 @@ export function parseCheckBundle(stdout) {
     stdout,
   );
   if (!main) {
-    throw new Error("scripts/checkBundle.mjs: no main chunk line in its output");
+    throw new Error(
+      "scripts/checkBundle.mjs: no main chunk line in its output",
+    );
   }
   const chunks = (pattern) =>
     [...stdout.matchAll(pattern)].map((m) => ({
@@ -224,7 +292,7 @@ async function buildLibrary(root) {
     );
     const reach = (starts, follow) => {
       const seen = new Set();
-      for (const queue = [...starts]; queue.length > 0; ) {
+      for (const queue = [...starts]; queue.length > 0;) {
         const chunk = chunks.get(queue.pop());
         if (chunk && !seen.has(chunk)) {
           seen.add(chunk);
@@ -246,9 +314,7 @@ async function buildLibrary(root) {
         }
         const code = [...eager].map((c) => c.code).join("\n");
         return {
-          entry: entry.name
-            .replace(/^cesium-next-?/, "")
-            .replace(/^$/, "core"),
+          entry: entry.name.replace(/^cesium-next-?/, "").replace(/^$/, "core"),
           ownKb: kib(Buffer.byteLength(entry.code)),
           loadKb: kib(Buffer.byteLength(code)),
           loadGzipKb: kib(gzipSync(code).length),
@@ -265,10 +331,7 @@ async function buildLibrary(root) {
         };
       });
     const assets = outputs
-      .filter(
-        (o) =>
-          o.type === "asset" && /\.(wasm|mjs)$/.test(o.fileName),
-      )
+      .filter((o) => o.type === "asset" && /\.(wasm|mjs)$/.test(o.fileName))
       .map((o) => ({
         name: chunkName(o.fileName).replace(/\.wasm$/, " (wasm)"),
         kb: kib(
@@ -505,9 +568,7 @@ export function readBenchResults(root = packageRoot) {
     ? readdirSync(baselineDir)
         .filter((name) => name.endsWith(".json"))
         .map((name) => {
-          const run = JSON.parse(
-            readFileSync(join(baselineDir, name), "utf8"),
-          );
+          const run = JSON.parse(readFileSync(join(baselineDir, name), "utf8"));
           return { name, date: run.date ?? null, note: run.note ?? null };
         })
     : [];
@@ -540,7 +601,12 @@ export function readFrameGraph(root = packageRoot) {
     if (!text.includes(".addPass(")) {
       continue;
     }
-    const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+    const source = ts.createSourceFile(
+      path,
+      text,
+      ts.ScriptTarget.Latest,
+      true,
+    );
     const handles = new Map();
     const objects = new Map();
     const property = (object, name) =>
@@ -640,18 +706,15 @@ export function readPipelineFigures(root = packageRoot) {
       layouts,
     );
     if (!match) {
-      throw new Error(`layouts.ts: no ${name}Layout; update readPipelineFigures`);
+      throw new Error(
+        `layouts.ts: no ${name}Layout; update readPipelineFigures`,
+      );
     }
     return Number(match[1]);
   };
   const constant = (file, name) =>
     Number(
-      readConstant(
-        root,
-        file,
-        new RegExp(`const ${name} = (\\d+)`),
-        name,
-      ),
+      readConstant(root, file, new RegExp(`const ${name} = (\\d+)`), name),
     );
   return {
     drawRecordBytes: size("DrawRecord"),
@@ -699,7 +762,9 @@ export function pipelineDrift(graph, notes, root = packageRoot) {
   }
   for (const pass of Object.keys(notes.PASSES)) {
     if (!names.has(pass)) {
-      drift.push(`note for pass "${pass}", which the frame graph no longer has`);
+      drift.push(
+        `note for pass "${pass}", which the frame graph no longer has`,
+      );
     }
   }
   for (const seam of notes.SEAMS) {
@@ -876,6 +941,9 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
         .version,
     },
     surface: readSurface(root),
+    oneX: (({ version, total, names }) => ({ version, total, names }))(
+      readOneX(root),
+    ),
     layers: readLayers(root),
     bundles: bundles ? await readBundles(root) : previous?.bundles,
     runtime: readRuntimeAssets(),

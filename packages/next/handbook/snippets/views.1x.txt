@@ -1,0 +1,6 @@
+// Each Viewer has its own Scene, WebGL context and copy of the content.
+const left = new Cesium.Viewer("left");
+const right = new Cesium.Viewer("right");
+
+left.scene.primitives.add(await Cesium.Cesium3DTileset.fromUrl(url));
+right.scene.primitives.add(await Cesium.Cesium3DTileset.fromUrl(url));

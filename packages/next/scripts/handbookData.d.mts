@@ -75,3 +75,9 @@ export function generate(options?: {
   root?: string;
   bundles?: boolean;
 }): Promise<unknown>;
+export function readOneX(root?: string): {
+  version: string;
+  total: number;
+  names: string[];
+  files: Record<string, string>;
+};

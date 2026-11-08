@@ -1,0 +1,10 @@
+tileset.tileLoad.addEventListener((tile) => {
+  console.log(tile.content.url);
+});
+tileset.tileFailed.addEventListener((error) => {
+  console.error(error.url, error.message);
+});
+
+viewer.scene.renderError.addEventListener((scene, error) => {
+  console.error(error);
+});

@@ -1,0 +1,4 @@
+const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(96188);
+viewer.scene.primitives.add(tileset);
+
+await viewer.zoomTo(tileset);

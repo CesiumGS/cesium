@@ -1,7 +1,13 @@
 // The handbook reads its figures from sources that stay current
 // (handbook/DESIGN.md). These fail when one of them changes shape, so the
 // reader is updated rather than the page quietly going wrong.
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vitest";
@@ -13,8 +19,11 @@ import {
   parseCheckBundle,
   readBenchResults,
   readLayers,
+  readOneX,
   readSurface,
 } from "../scripts/handbookData.mjs";
+import ts from "typescript";
+import { API_ROWS } from "../handbook/src/apiMap.ts";
 import { highlight } from "../handbook/src/highlight.ts";
 
 it("reads the API map per entry point", () => {
@@ -187,4 +196,134 @@ node bench/run.mjs baseline --tier full --note "RTX"`;
       "property",
     ]),
   );
+});
+
+/** The comparison's names, as api/surface.txt writes them. */
+const surfaceNames = () =>
+  readSurface().entries.flatMap((e) =>
+    e.names.map((n) => (e.entry === "." ? n.name : `${e.entry}:${n.name}`)),
+  );
+
+const rowNext = (row: (typeof API_ROWS)[number]) => [
+  ...(row.next ?? []),
+  ...(row.supporting ?? []),
+];
+
+it("reads 1.x's public names from its source", () => {
+  const { names, total, version } = readOneX();
+  expect(version).toMatch(/^1\.\d+\.\d+$/);
+  expect(total).toBe(names.length);
+  // Moved to packages/core, public, private and a widget.
+  expect(names).toEqual(
+    expect.arrayContaining(["Cartesian3", "Viewer", "Cesium3DTileset", "Math"]),
+  );
+  expect(names).not.toContain("ShaderProgram");
+});
+
+it("maps only 2.0 names that exist", () => {
+  const known = new Set(surfaceNames());
+  const stale = API_ROWS.flatMap(rowNext).filter((n) => !known.has(n));
+  expect(stale).toEqual([]);
+});
+
+it("gives every exported 2.0 name a row", () => {
+  const mapped = new Set(API_ROWS.flatMap(rowNext));
+  const missing = surfaceNames().filter((n) => !mapped.has(n));
+  expect(missing).toEqual([]);
+});
+
+it("maps only 1.x names and members that exist", () => {
+  const { names, files } = readOneX();
+  const known = new Set(names);
+  const wrong = API_ROWS.flatMap((row) => row.old ?? []).filter((old) => {
+    const [name, member] = old.split(".");
+    if (!known.has(name!)) {
+      return true;
+    }
+    return (
+      member !== undefined &&
+      !new RegExp(`\\b${member}\\b`).test(readFileSync(files[name!]!, "utf8"))
+    );
+  });
+  expect(wrong).toEqual([]);
+  for (const row of API_ROWS) {
+    if (row.family) {
+      const pattern = new RegExp(row.family);
+      expect(names.some((n) => pattern.test(n))).toBe(true);
+    }
+  }
+});
+
+it("says why a 1.x feature is missing", () => {
+  for (const row of API_ROWS) {
+    if (row.status === "absent") {
+      expect(row.gap, row.note).toBeDefined();
+    }
+    if (row.gap === "design" || row.gap === "later") {
+      expect(row.source, row.note).toBeDefined();
+    }
+  }
+});
+
+const SNIPPETS = join(import.meta.dirname, "../handbook/snippets");
+
+it("compiles the 2.0 snippets against the real types", () => {
+  const configPath = join(import.meta.dirname, "../handbook/tsconfig.json");
+  const config = ts.parseJsonConfigFileContent(
+    ts.readConfigFile(configPath, ts.sys.readFile).config,
+    ts.sys,
+    join(import.meta.dirname, "../handbook"),
+  );
+  const files = readdirSync(SNIPPETS)
+    .filter((f) => f.endsWith(".next.ts"))
+    .map((f) => join(SNIPPETS, f));
+  expect(files.length).toBeGreaterThan(10);
+  const program = ts.createProgram(files, config.options);
+  const errors = files.flatMap((f) =>
+    [
+      ...program.getSyntacticDiagnostics(program.getSourceFile(f)),
+      ...program.getSemanticDiagnostics(program.getSourceFile(f)),
+    ].map(
+      (d) =>
+        `${f.split("/").pop()}: ${ts.flattenDiagnosticMessageText(d.messageText, " ")}`,
+    ),
+  );
+  expect(errors).toEqual([]);
+}, 120_000);
+
+it("checks the 1.x snippets' names against 1.x's source", () => {
+  const { names, files } = readOneX();
+  const known = new Set(names);
+  const wrong: string[] = [];
+  for (const file of readdirSync(SNIPPETS).filter((f) =>
+    f.endsWith(".1x.txt"),
+  )) {
+    const text = readFileSync(join(SNIPPETS, file), "utf8");
+    for (const [, name, member] of text.matchAll(
+      /Cesium\.(\w+)(?:\.(\w+))?/g,
+    )) {
+      if (!known.has(name!)) {
+        wrong.push(`${file}: ${name}`);
+      } else if (
+        member &&
+        !new RegExp(`\\b${member}\\b`).test(readFileSync(files[name!]!, "utf8"))
+      ) {
+        wrong.push(`${file}: ${name}.${member}`);
+      }
+    }
+  }
+  expect(wrong).toEqual([]);
+});
+
+it("keeps ion tokens out of the snippets, and links rows to tasks", () => {
+  for (const file of readdirSync(SNIPPETS)) {
+    const text = readFileSync(join(SNIPPETS, file), "utf8");
+    expect(text).not.toMatch(/eyJ[\w-]{10,}/);
+  }
+  const ids = readdirSync(SNIPPETS).map((f) => f.split(".")[0]);
+  for (const row of API_ROWS) {
+    if (row.snippet) {
+      expect(ids, row.snippet).toContain(row.snippet);
+    }
+  }
 });

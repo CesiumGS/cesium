@@ -1,0 +1,10 @@
+// Evaluated per feature on the CPU, and can be set at any time.
+tileset.style = new Cesium.Cesium3DTileStyle({
+  show: "${Height} > 10",
+  color: {
+    conditions: [
+      ["${Height} > 100", "color('red')"],
+      ["true", "color('white')"],
+    ],
+  },
+});

@@ -2,7 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "resolveJsonModule": true,
-    "types": ["vite/client", "@stratakit/mui/types.d.ts"]
+    "types": ["@webgpu/types", "vite/client", "@stratakit/mui/types.d.ts"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "snippets", "vite.config.ts"]
 }

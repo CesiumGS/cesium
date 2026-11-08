@@ -67,6 +67,7 @@ export interface HandbookData {
     dirty: boolean;
     version: string;
   };
+  oneX: { version: string; total: number; names: string[] };
   surface: {
     total: number;
     tiers: Record<string, number>;

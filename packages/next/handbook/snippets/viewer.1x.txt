@@ -1,0 +1,6 @@
+Cesium.Ion.defaultAccessToken = yourIonToken;
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrain: Cesium.Terrain.fromWorldTerrain(),
+  baseLayer: Cesium.ImageryLayer.fromWorldImagery(),
+});

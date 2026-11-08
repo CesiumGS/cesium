@@ -162,6 +162,10 @@ export function Differences() {
       }
     >
       <Section title="Concept by concept">
+        <p>
+          For API names and code, area by area, the 1.x to 2.0 API tab shows
+          breaking changes first.
+        </p>
         <DataTable
           label="1.x and 2.0, concept by concept"
           columns={[

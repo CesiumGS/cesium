@@ -1,0 +1,4 @@
+const start = Cesium.JulianDate.fromIso8601("2026-11-08T12:00:00Z");
+
+viewer.clock.currentTime = start;
+viewer.clock.shouldAnimate = true;
