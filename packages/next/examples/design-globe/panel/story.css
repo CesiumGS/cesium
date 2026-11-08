@@ -258,10 +258,23 @@
   list-style: none;
 }
 .dg-tour-steps li {
+  position: relative;
   flex: 1;
   block-size: 3px;
   border-radius: 2px;
   background: color-mix(in oklab, currentColor 22%, transparent);
+}
+/* Each segment a button, its target taller than the 3 px it draws. */
+.dg-tour-steps button {
+  all: unset;
+  position: absolute;
+  inset: -8px 0;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.dg-tour-steps button:focus-visible {
+  outline: 2px solid var(--dg-reprojected);
+  outline-offset: -6px;
 }
 .dg-tour-steps li.done {
   background: color-mix(in oklab, currentColor 60%, transparent);

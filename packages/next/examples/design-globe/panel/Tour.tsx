@@ -12,7 +12,7 @@ import { svgArrowLeft } from "@stratakit/icons/arrow-left";
 import { svgArrowRight } from "@stratakit/icons/arrow-right";
 import { Icon } from "@stratakit/mui";
 import { useId, useRef } from "react";
-import type { TourCardView } from "../tour.ts";
+import { TOUR_STEPS, type TourCardView } from "../tour.ts";
 import type { PanelActions } from "./model.ts";
 
 export function TourCard({
@@ -27,14 +27,22 @@ export function TourCard({
   return (
     <section className="dg-hud dg-tour" aria-labelledby={`${id}-t`}>
       <div className="dg-tour-head">
-        <ol className="dg-tour-steps" aria-hidden>
+        {/* The steps, each one a way to it (UX review P6). */}
+        <ol className="dg-tour-steps" aria-label="The tour's steps">
           {Array.from({ length: card.count }, (_, i) => (
             <li
               key={i}
               className={
                 i < card.index ? "done" : i === card.index ? "now" : undefined
               }
-            />
+            >
+              <button
+                type="button"
+                aria-label={`Step ${i + 1}: ${TOUR_STEPS[i]?.title ?? ""}`}
+                aria-current={i === card.index ? "step" : undefined}
+                onClick={() => actions.tour({ type: "start", step: i })}
+              />
+            </li>
           ))}
         </ol>
         <span className="dg-hud-muted dg-num">{card.progress}</span>

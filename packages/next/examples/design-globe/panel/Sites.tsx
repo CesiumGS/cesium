@@ -120,16 +120,21 @@ export function Sites({
               type="button"
               className={`dg-site${s.selected ? " selected" : ""}`}
               aria-current={s.selected ? "true" : undefined}
-              aria-label={`Fly to ${s.name}: ${s.row}`}
+              aria-label={`Fly to ${s.name}: ${s.row}${s.paired ? "" : "; rigid only"}${s.fallback !== undefined ? `; ${s.fallback}` : ""}`}
               onClick={() => actions.selectSite(s.id)}
             >
               <span className="dg-site-text">
                 <span className="dg-site-name">{s.name}</span>
-                <span className="dg-site-meta dg-num">
-                  {s.row}
-                  {!s.paired && <span>; rigid only</span>}
-                </span>
+                <span className="dg-site-meta dg-num">{s.row}</span>
               </span>
+              {!s.paired && (
+                <Badge
+                  variant="inline"
+                  size="small"
+                  className="dg-badge"
+                  badgeContent="Rigid only"
+                />
+              )}
               {s.fallback !== undefined && (
                 <Badge
                   variant="inline"

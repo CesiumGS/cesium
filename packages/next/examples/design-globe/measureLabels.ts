@@ -218,11 +218,16 @@ export function placeLabels(input: LabelInput): MeasureLive {
       o.id === "marker"
         ? f.drawn !== undefined
           ? `${f.drawn} drawn apart`
-          : "Not to scale"
+          : undefined
         : f.design === PENDING
           ? "Measuring…"
           : `${f.design} horizontal`;
-    if (!o.quiet || cameraTo(middle(pa, pb)) < QUIET_RANGE) {
+    // Exaggerated, the self-check's gap has no figure, and the toolbar's
+    // badge and the headlines already say so: no pill (UX review P5).
+    if (
+      text !== undefined &&
+      (!o.quiet || cameraTo(middle(pa, pb)) < QUIET_RANGE)
+    ) {
       label(o.id, pa, pb, text, o.quiet ? "quiet" : "measure");
     }
     // The fixed ends: the marker's pin and the survey disk.

@@ -67,6 +67,32 @@ function readyLine(ready: readonly LoadItem[], bytes: number): string {
   return `All data ready: ${parts.join(", ")}${bytes > 0 ? `; ${bytesText(bytes)} fetched` : ""}.`;
 }
 
+/**
+ * What is in while the rest loads, summarised (UX review P3): "Ready:
+ * PROJ, 2 grids, tiles for 1 site and 3 more." The rows are for what is
+ * still loading.
+ */
+function readySoFar(ready: readonly LoadItem[]): string {
+  const grids = ready.filter((i) => i.id.startsWith("grid:")).length;
+  const sites = ready.filter((i) => i.id.startsWith("tiles:")).length;
+  const proj = ready.some((i) => i.id === "proj");
+  const parts = [
+    ...(proj ? ["PROJ"] : []),
+    ...(grids > 0 ? [count(grids, "grid")] : []),
+    ...(sites > 0 ? [`tiles for ${count(sites, "site")}`] : []),
+  ];
+  const rest = ready.length - grids - sites - (proj ? 1 : 0);
+  const listed =
+    parts.length === 0
+      ? count(rest, "item")
+      : rest > 0
+        ? `${parts.join(", ")} and ${rest} more`
+        : parts.length === 1
+          ? parts[0]!
+          : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)!}`;
+  return `Ready: ${listed}.`;
+}
+
 export function Status({
   items,
   actions,
@@ -151,12 +177,7 @@ export function Status({
           component="p"
           className="dg-muted dg-status-done"
         >
-          Ready:{" "}
-          {items
-            .filter((i) => i.state === "ready")
-            .map((i) => i.label)
-            .join(", ")}
-          .
+          {readySoFar(items.filter((i) => i.state === "ready"))}
         </Typography>
       )}
     </div>

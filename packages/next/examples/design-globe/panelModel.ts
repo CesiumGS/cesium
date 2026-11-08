@@ -60,6 +60,9 @@ export interface PageSnapshot {
   readonly evidence: boolean;
 }
 
+/** Under this rigid error everywhere, a model's ghost isn't drawn (placementPair.ts fades it below 5 cm). */
+const GHOST_CLEAR_M = 0.05;
+
 /** A site's design unit symbol, from its CRS (US survey feet for California zone 3). */
 function unitOf(entry: SiteEntry): string {
   const crs = entry.crs;
@@ -219,10 +222,20 @@ export function buildPanelModel(s: PageSnapshot): PanelModel {
       solidText,
       ...(s.ghost &&
         paired && {
-          ghostText:
+          ghostText: `${
             solid === "rigid"
-              ? "Reprojected, where it truly is (ghost)"
-              : "Rigid, where one transform puts it (ghost)",
+              ? "Reprojected, where it truly is"
+              : "Rigid, where one transform puts it"
+          } (ghost${
+            // The ghost is drawn only where it stands clear of the solid
+            // (placementPair.ts, 5 to 50 cm): on a model whose rigid
+            // error is under that everywhere, nothing is drawn (UX review P4).
+            !isCorridor &&
+            !s.exaggerate &&
+            (s.edgeErrors?.get(selected.entry.id) ?? Infinity) < GHOST_CLEAR_M
+              ? ": it coincides here, so isn't drawn"
+              : ""
+          })`,
         }),
       ...(s.t < 1 &&
         (isCorridor
