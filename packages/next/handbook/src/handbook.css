@@ -1601,6 +1601,9 @@ span.api-source {
   border: 1px solid var(--stratakit-color-border-neutral-base);
   border-radius: 6px;
 }
+.dyno-shot.narrow img {
+  max-inline-size: 320px;
+}
 .dyno-shot .only-dark {
   display: none;
 }
@@ -1622,6 +1625,101 @@ span.api-source {
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+/* The live view. */
+.live-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-inline-size: 1000px;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #05070c;
+}
+.live-stage img,
+.live-stage canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.live-stage canvas {
+  touch-action: none;
+}
+.live-hidden {
+  position: absolute;
+  inline-size: 1px !important;
+  block-size: 1px !important;
+  opacity: 0;
+}
+.live-start {
+  position: absolute;
+  inset-block-end: var(--stratakit-space-400);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  padding: var(--stratakit-space-200) var(--stratakit-space-500);
+  border: 1px solid #fff;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.65);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.live-start:focus-visible,
+.live-controls button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.section .live-note {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  max-inline-size: none;
+  color: #fff;
+}
+.section .live-message {
+  margin-block: var(--stratakit-space-200) 0;
+  font-weight: 600;
+}
+.live-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+  margin-block-start: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.live-controls label {
+  display: flex;
+  flex: 1 1 260px;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.live-controls input {
+  flex: 1;
+  min-inline-size: 80px;
+}
+.live-controls output {
+  font-variant-numeric: tabular-nums;
+}
+.live-controls button {
+  padding: var(--stratakit-space-100) var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+@media print {
+  .live-start,
+  .live-controls {
+    display: none;
+  }
 }
 
 /* The seams' table. */

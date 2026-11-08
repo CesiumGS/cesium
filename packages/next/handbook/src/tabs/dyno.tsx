@@ -18,14 +18,22 @@ const SHOTS = import.meta.glob("../../shots/*.webp", {
 }) as Record<string, string>;
 
 /** A capture of the app, following the page's theme where both exist. */
-function Shot({ name, alt }: { name: string; alt: string }) {
+function Shot({
+  name,
+  alt,
+  narrow = false,
+}: {
+  name: string;
+  alt: string;
+  narrow?: boolean;
+}) {
   const light = SHOTS[`../../shots/${name}-light.webp`];
   const dark = SHOTS[`../../shots/${name}-dark.webp`];
   if (!light && !dark) {
     return null;
   }
   return (
-    <div className="dyno-shot">
+    <div className={narrow ? "dyno-shot narrow" : "dyno-shot"}>
       {light ? (
         <img
           className={dark ? "only-light" : undefined}
@@ -174,7 +182,7 @@ interface ViewNote {
   what: ReactNode;
   when: string;
   how: string;
-  shot?: { name: string; alt: string };
+  shot?: { name: string; alt: string; narrow?: boolean };
 }
 
 const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
@@ -196,6 +204,10 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
         what: "Every metric run to run, with intervals, a control band, budgets, and notes where the hardware or settings changed. A panel can split by scene, and clicking a point opens that run. A view can be saved or shared by its URL.",
         when: "To follow a metric over time, or see whether a change has held.",
         how: "Trends in the rail, or g t.",
+        shot: {
+          name: "trends",
+          alt: "Dyno's Trends: a list of runs beside charts of each headline metric, run to run.",
+        },
       },
       {
         name: "Runs and a run's report",
@@ -203,8 +215,8 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
         when: "To understand one run, or to find one.",
         how: "Runs in the rail, or g r. Runs start from the command line: the app can't start a measured one.",
         shot: {
-          name: "runs",
-          alt: "Dyno's Runs: a table of runs with commit, note, hardware, verdict and headline changes.",
+          name: "report",
+          alt: "A run's report in Dyno: its validity, then a scorecard with guardrails, then budgets.",
         },
       },
       {
@@ -212,6 +224,10 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
         what: "Two runs per scene, as a forest plot per metric, with the overall change in words. It warns when the machines or render settings differ.",
         when: "Before and after a change, commit to commit.",
         how: "Select two runs in Runs, or follow a link from an alert.",
+        shot: {
+          name: "compare",
+          alt: "Dyno's Compare: two runs picked at the top, metric chips, and a forest plot per metric.",
+        },
       },
       {
         name: "Alerts",
@@ -235,20 +251,21 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
       {
         name: "Explorer",
         partly:
-          "Picks show per engine: a click picks in that pane, and each engine's inspector shows its own, so comparing means clicking in both.",
+          "Picks show per engine: a click picks in that pane, and each engine's inspector shows its own, so comparing means clicking in both. It loads ion scenes: the generated fleet failed here with \"not an ion dataset\". There's no capture of it on this page, since most of its scenes show licensed content.",
         what: "A catalog scene live in one or two engines side by side. Play or scrub the benchmark's camera path, or fly with linked cameras. Pause streaming, tint tiles by depth or by which engine selects them, show bounding volumes, and read the tile table: selection by depth, with how many tiles only one engine draws.",
         when: "To see why two engines differ. It's for looking, since the two share a GPU and main thread, and it says so.",
         how: "Explorer in the rail, g e, or a link from a report to that place on the path.",
-        shot: {
-          name: "explorer",
-          alt: "Dyno's Explorer: 1.x and 2.0 side by side on the instanced milk truck scene, with each engine's inspector.",
-        },
       },
       {
         name: "Viewer and the inspector",
         what: "Any content in one engine at a time, with settings beside it for selection, lighting, globe and rendering. The inspector over it shows problems, frame, streaming and its load timeline, the content pipeline and mix, memory, the GPU, the last 30 seconds and the last pick.",
         when: "To debug content or try settings, with the whole machine for one engine.",
         how: "Viewer in the rail, or g v. An app can also attach the inspector itself.",
+        shot: {
+          name: "inspector",
+          alt: "Dyno's inspector panel: CPU and GPU time per tick, a sparkline per GPU pass, and streaming counts.",
+          narrow: true,
+        },
       },
       {
         name: "Images",
