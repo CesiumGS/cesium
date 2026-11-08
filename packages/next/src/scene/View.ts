@@ -1097,8 +1097,9 @@ export class View {
    * reference frame) and in the hit draw's anchor, the draw and the
    * feature, with the camera, the render root and the scene time. All of it
    * is from the tick whose image was read, however many ticks later it
-   * resolves. Undefined over the sky. A pick interpreter turns it into a
-   * point tagged with its reference frame (`createFramesPickInterpreter`).
+   * resolves; only the draw and the feature are looked up when the
+   * readback maps. Undefined over the sky. A pick interpreter turns it into
+   * a point tagged with its reference frame (`createFramesPickInterpreter`).
    */
   pickPoint(x: number, y: number): Promise<CorePick | undefined> {
     return new Promise((resolvePoint) => {

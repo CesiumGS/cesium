@@ -9,8 +9,8 @@ import { isUnstated } from "./frameAccuracy.ts";
 import { convertPoint, framePoint, type FramePoint } from "./local.ts";
 
 /**
- * One edge's part of a point's accuracy: what the edge states, as a
- * distance at the point (1σ, m).
+ * One part of a point's accuracy, as a distance at the point (1σ, m). An
+ * edge's part is what the edge states:
  *
  * - `meters`: the edge's position error, as it is.
  * - `angular`: its rotation error times the lever arm, the point's distance
@@ -18,8 +18,34 @@ import { convertPoint, framePoint, type FramePoint } from "./local.ts";
  * - `exact`: exact by definition, 0 m.
  * - `unstated`: the edge states no accuracy, so the total is unbounded;
  *   it has no `meters`.
+ *
+ * A picked point (`createFramesPickInterpreter`) also has parts that are
+ * no edge's:
+ *
+ * - `pick`: how the pick itself places the point: `part` `"footprint"`,
+ *   one CSS pixel's footprint at the hit; `"depth"`, the rounding of the
+ *   depth buffer's float32 depth at the hit.
+ * - `content`: how far the content's placement draws its design from where
+ *   it truly is (`DesignPlacement.displayError`; 0 m when reprojected).
  */
 export type PointAccuracyTerm =
+  | {
+      /** The reference frame the point is tagged in. */
+      readonly frame: string;
+      readonly kind: "pick";
+      readonly part: "footprint" | "depth";
+      /** 1σ, m. */
+      readonly meters: number;
+      readonly note: string;
+    }
+  | {
+      /** The placement's design reference frame (`DesignPlacement.frameName`). */
+      readonly frame: string;
+      readonly kind: "content";
+      /** 1σ, m. */
+      readonly meters: number;
+      readonly note: string;
+    }
   | {
       /** The frame whose edge (to its parent) it comes from. */
       readonly frame: string;
@@ -51,7 +77,10 @@ export type PointAccuracyTerm =
 export interface PointAccuracy {
   /** The root sum square of the terms, m; `undefined` when an edge is not stated. */
   readonly meters: number | undefined;
-  /** One term per figure on each edge of the route, nearest the point first. */
+  /**
+   * One term per figure on each edge of the route, nearest the point first
+   * (a picked point's `pick` and `content` terms before them).
+   */
   readonly terms: readonly PointAccuracyTerm[];
   /** The first edge on the route whose accuracy is not stated: the total is then unbounded. */
   readonly unboundedBy?: string;

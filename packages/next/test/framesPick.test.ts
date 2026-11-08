@@ -3,7 +3,12 @@
 // its body, its body-fixed position, design coordinates where the content
 // has a placement, and the composed accuracy. Closes plan 3's R8.
 import { beforeAll, describe, expect, it } from "vitest";
+import { ANALYTIC_ACCURACY } from "../src/frames/analytic.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
+import type { FrameData } from "../src/ephemeris/loadFrameData.ts";
+import type { EarthOrientationParameters } from "../src/time/eop.ts";
+import { Instant } from "../src/time/Instant.ts";
+import { LeapSeconds } from "../src/time/leapSeconds.ts";
 import { frameTransform } from "../src/frames/Frame.ts";
 import { framePoint } from "../src/frames/local.ts";
 import { createFramesPickInterpreter } from "../src/frames/pickInterpreter.ts";
@@ -18,6 +23,7 @@ import { OffscreenTarget, View } from "../src/scene/View.ts";
 import type { AnchorHandle, DrawHandle, World } from "../src/scene/World.ts";
 import type { DesignPlacement } from "../src/streaming/designPlacement.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 
 const R = 6_378_137;
 const SECONDS = Date.UTC(2026, 2, 20, 14, 3, 7, 250) / 1000;
@@ -49,7 +55,8 @@ const placement: DesignPlacement = {
     out.set([p[0]! - R, p[1]!, p[2]!]);
     return out;
   },
-  displayError: () => 0,
+  // Rigid: a sag of 4.2 cm at every point, for the content term.
+  displayError: () => 0.042,
 };
 
 beforeAll(async () => {
@@ -122,18 +129,85 @@ describe("createFramesPickInterpreter", () => {
     placements: (draw) => (draw.index === site.index ? placement : undefined),
   });
 
-  it("tags a pick under the Earth's anchor with ITRF, the Earth, its body-fixed position and its composed accuracy", () => {
+  it("tags a pick under the Earth's anchor with ITRF, the Earth and its body-fixed position", () => {
     const point = interpreter.interpret(corePick(gcrf, other))!;
     expect(point.frame).toBe(itrf);
     expect(point.body).toBe(EARTH);
     expect(Array.from(point.bodyFixed!)).toEqual(POINT);
-    // Composed along the route the pick was drawn through: ITRF to the
-    // render root (GCRF), each edge's stated accuracy at the point.
-    const composed = pointAccuracy(framePoint(itrf, POINT, instant), gcrf);
-    expect(point.accuracy).toEqual(composed);
-    expect(point.accuracy.terms.length).toBeGreaterThan(0);
-    expect(point.accuracy.meters).toBeGreaterThan(0);
     expect(point.design).toBeUndefined();
+  });
+
+  describe("its accuracy, composed from the point's own terms", () => {
+    // The pick's camera, as `corePick` gives it, is 990 m above the point
+    // along x: this far from it.
+    const distance = Math.hypot(990, 20, 30);
+
+    it("the pick's footprint: one CSS pixel at the hit's distance (pickDesign's tolerance)", () => {
+      const { terms } = interpreter.interpret(corePick(gcrf, other))!.accuracy;
+      const footprint = terms.find(
+        (t) => t.kind === "pick" && t.part === "footprint",
+      )!;
+      expect(footprint.frame).toBe("ITRF");
+      // fovy 1 rad over 48 CSS pixels.
+      expect(footprint.meters).toBeCloseTo(
+        (distance * 2 * Math.tan(0.5)) / 48,
+        12,
+      );
+      expect(footprint.meters).toBeGreaterThan(20);
+      expect(terms[0]).toBe(footprint);
+    });
+
+    it("the pick's depth: half a float32 step of the stored depth, along the ray", () => {
+      const { terms } = interpreter.interpret(corePick(gcrf, other))!.accuracy;
+      const depth = terms.find((t) => t.kind === "pick" && t.part === "depth")!;
+      // z = 990 m along the view axis; near 0.1 m: depth = 0.1 / 990.
+      const d = Math.fround(0.1 / 990);
+      const step = 2 ** (Math.floor(Math.log2(d)) - 23);
+      expect(depth.meters).toBeCloseTo((distance * step) / 2 / d, 15);
+      // About 30 µm at a kilometre: a float32 step is 2⁻²³ to 2⁻²⁴ of it.
+      expect(depth.meters).toBeGreaterThan(distance * 2 ** -25);
+      expect(depth.meters).toBeLessThan(distance * 2 ** -24);
+    });
+
+    it("the content's own error: the placement's displayError, only with design coordinates", () => {
+      const placed = interpreter.interpret(corePick(gcrf, site))!.accuracy;
+      const content = placed.terms.find((t) => t.kind === "content")!;
+      expect(content).toMatchObject({ frame: "site grid", meters: 0.042 });
+      expect(content.note).toMatch(/rigid placement/);
+      const bare = interpreter.interpret(corePick(gcrf, other))!.accuracy;
+      expect(bare.terms.some((t) => t.kind === "content")).toBe(false);
+    });
+
+    it("the reference frame's own, as drawn: ITRF's edge and up to the tree's root, whatever the render root", () => {
+      const icrf = catalog.get("ICRF");
+      const edges = pointAccuracy(framePoint(itrf, POINT, instant), icrf).terms;
+      expect(edges.map((t) => t.frame)).toEqual(["ITRF", "GCRF"]);
+      for (const root of [gcrf, world.root]) {
+        const { accuracy } = interpreter.interpret(corePick(root, site))!;
+        expect(accuracy.terms.slice(3)).toEqual(edges);
+        // Root-sum-square of every term, 1σ.
+        expect(accuracy.meters).toBe(
+          Math.hypot(...accuracy.terms.map((t) => t.meters!)),
+        );
+        expect(accuracy.unboundedBy).toBeUndefined();
+        expect(accuracy.combination).toMatch(/root-sum-square/);
+      }
+      // On the analytic stand-ins: ITRF's 18″ at the point's distance from
+      // the Earth's centre, and the Earth's place among the planets.
+      const angular = edges[0]!;
+      expect(angular.kind).toBe("angular");
+      expect(angular.meters).toBeCloseTo(
+        ANALYTIC_ACCURACY.ITRF.radians * Math.hypot(...POINT),
+        6,
+      );
+      expect(edges[1]!.meters).toBe(ANALYTIC_ACCURACY.GCRF.meters);
+    });
+
+    it("never 0 m: on the default rig too, the pick's own terms remain", () => {
+      const { accuracy } = interpreter.interpret(corePick(world.root, other))!;
+      expect(accuracy.terms.length).toBeGreaterThan(2);
+      expect(accuracy.meters).toBeGreaterThan(0);
+    });
   });
 
   it("gives the point in any reference frame: in(GCRF) is frameTransform of the body-fixed point", () => {
@@ -165,11 +239,9 @@ describe("createFramesPickInterpreter", () => {
     expect(bare.interpret(corePick(gcrf, site))!.design).toBeUndefined();
   });
 
-  it("on the default rig (render space Earth-fixed) the route is empty: no terms, 0 m", () => {
+  it("on the default rig (render space Earth-fixed) gives the same reference frame and design", () => {
     const point = interpreter.interpret(corePick(world.root, site))!;
     expect(point.frame).toBe(itrf);
-    expect(point.accuracy.terms).toEqual([]);
-    expect(point.accuracy.meters).toBe(0);
     expect(Array.from(point.design!.coordinates)).toEqual([10, 20, 30]);
   });
 
@@ -196,5 +268,49 @@ describe("createFramesPickInterpreter", () => {
     const point = failing.interpret(corePick(gcrf, site))!;
     expect(point.frame).toBe(itrf);
     expect(point.design).toBeUndefined();
+  });
+});
+
+describe("createFramesPickInterpreter, at precise", () => {
+  const leap = LeapSeconds.builtIn();
+  /** UTC ms at TT `tt` seconds past J2000. */
+  const utcMsAt = (tt: number): number => Instant.fromTt(tt).toUtc(leap);
+  /** The synthetic EOP ends (degraded) 1,000 s of TT past J2000. */
+  const EOP_END_TT = 1000;
+
+  /** Synthetic frame data whose EOP ends, as test/framesResolver.test.ts's. */
+  function dataWithEopEnd(): FrameData {
+    const data = syntheticFrameData();
+    const eop = {
+      atInstant: (at: Instant) =>
+        at.tt > EOP_END_TT ? { ...SAMPLE, degraded: true } : SAMPLE,
+      first: Date.UTC(1999, 11, 1),
+      last: utcMsAt(EOP_END_TT),
+    } as unknown as EarthOrientationParameters;
+    return { ...data, eop };
+  }
+
+  it("states ITRF's precise accuracy inside its data, and the wider stand-in's outside it, without throwing", async () => {
+    const precise = createFrameCatalog({ data: dataWithEopEnd() });
+    const itrfPrecise = precise.get("ITRF", { precision: "precise" });
+    await precise.ready("ITRF", "precise");
+    const r = createFramesResolver(precise, { precision: "precise" });
+    const interpreter = createFramesPickInterpreter(r, precise);
+    const at = (ms: number) => {
+      const pick = { ...corePick(world.root, other), seconds: ms / 1000 };
+      const terms = interpreter.interpret(pick)!.accuracy.terms;
+      return terms.find((t) => t.frame === "ITRF" && t.kind === "angular")!;
+    };
+    const inside = at(utcMsAt(0));
+    expect(inside.kind === "angular" && inside.radians).toBe(
+      itrfPrecise.accuracy(Instant.fromTt(0)).radians,
+    );
+    // A day past the EOP: the resolver draws ITRF on its stand-in.
+    const outside = at(utcMsAt(0) + 86_400_000);
+    expect(outside.kind === "angular" && outside.radians).toBe(
+      ANALYTIC_ACCURACY.ITRF.radians,
+    );
+    expect(outside.note).toMatch(/drawn on its stand-in at this instant/);
+    expect(outside.meters).toBeGreaterThan(inside.meters!);
   });
 });

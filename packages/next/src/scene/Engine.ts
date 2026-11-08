@@ -3344,10 +3344,7 @@ export class Engine {
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
       });
     enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
-    // The camera of this tick (in the body anchor, as drawn), to turn the
-    // depth into a position.
-    const camera = this.bodyCamera(view);
-    const tanY = Math.tan(camera.fovy(width / height) / 2);
+    const tanY = Math.tan(view.camera.fovy(width / height) / 2);
     const tanX = tanY * (width / height);
     const ndcX = ((this.pickParamsData[0]! + 0.5) / width) * 2 - 1;
     const ndcY = 1 - ((this.pickParamsData[1]! + 0.5) / height) * 2;
@@ -3358,18 +3355,35 @@ export class Engine {
       tick:
         request.resolvePoint &&
         this.pickTick(view, frame, tanX, tanY, ndcX, ndcY),
-      camera: {
-        position: Float64Array.from(camera.position),
-        direction: Float64Array.from(camera.direction),
-        up: Float64Array.from(camera.up),
-        right: Float64Array.from(camera.right),
-        near: camera.near,
-        tanY,
-        tanX,
-        ndcX,
-        ndcY,
-      },
+      camera:
+        request.resolvePosition &&
+        this.positionCamera(view, tanX, tanY, ndcX, ndcY),
     });
+  }
+
+  /**
+   * The camera of this tick in the body anchor (as drawn), to turn a
+   * `pickPosition`'s depth into a position.
+   */
+  private positionCamera(
+    view: View,
+    tanX: number,
+    tanY: number,
+    ndcX: number,
+    ndcY: number,
+  ): PendingCamera {
+    const camera = this.bodyCamera(view);
+    return {
+      position: Float64Array.from(camera.position),
+      direction: Float64Array.from(camera.direction),
+      up: Float64Array.from(camera.up),
+      right: Float64Array.from(camera.right),
+      near: camera.near,
+      tanY,
+      tanX,
+      ndcX,
+      ndcY,
+    };
   }
 
   /**
@@ -4536,7 +4550,7 @@ export class Engine {
           request.resolvePoint(corePick(tick!, featureId, depth));
           return;
         }
-        if (request.resolvePosition) {
+        if (request.resolvePosition && c) {
           // Reverse-Z, infinite far: distance along the view axis is
           // near / depth (`depthDistance`).
           const z = depthDistance(c.near, depth);
@@ -4586,17 +4600,20 @@ interface PendingPick {
   request: View["pendingPicks"][number];
   /** What a `View.pickPoint` keeps of its tick. */
   tick: PickTick | undefined;
-  camera: {
-    position: Float64Array;
-    direction: Float64Array;
-    up: Float64Array;
-    right: Float64Array;
-    near: number;
-    tanX: number;
-    tanY: number;
-    ndcX: number;
-    ndcY: number;
-  };
+  /** The body anchor's camera, for a `View.pickPosition`. */
+  camera: PendingCamera | undefined;
+}
+
+interface PendingCamera {
+  position: Float64Array;
+  direction: Float64Array;
+  up: Float64Array;
+  right: Float64Array;
+  near: number;
+  tanX: number;
+  tanY: number;
+  ndcX: number;
+  ndcY: number;
 }
 
 /** Per-view frame state: the frame graph plus inputs its passes read each frame. */

@@ -63,8 +63,17 @@ export interface PickView {
 
 /** What a pick found: a true position, and design coordinates when placed. */
 export interface DesignPick {
+  /**
+   * The hit anchor's body (`AnchorHandle.body`), else the view's: the
+   * view's for a `PickView` without `pickPoint`.
+   */
   readonly body: Body;
-  /** Body-fixed metres, as displayed. */
+  /**
+   * Metres, as displayed, in the hit anchor's coordinates
+   * (`CorePick.anchorPosition`): body-fixed under a body anchor (Earth-fixed
+   * for content on the Earth), else that anchor's own. Body-fixed always for
+   * a `PickView` without `pickPoint` (`pickPosition`).
+   */
   readonly position: Float64Array;
   /** The listed tileset whose content was hit. */
   readonly tileset?: Tileset3D;

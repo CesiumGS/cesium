@@ -33,6 +33,9 @@ export interface PickCamera extends CameraPose {
  * What is drawn under a pixel (`View.pickPoint`), all from the tick whose
  * image the pick read: its position, the anchors' placements, the camera and
  * the scene time, never mixed with a later tick's (plan 5a, Review Focus 3).
+ * `position` is in render space; `anchorPosition` and `camera` are in the
+ * hit anchor's coordinates. `draw` and `feature` are looked up in the world
+ * when the readback maps, from the feature ID the pick pass read.
  */
 export interface CorePick {
   readonly view: View;
@@ -48,8 +51,12 @@ export interface CorePick {
   readonly anchor: AnchorHandle | undefined;
   /** The same point in `anchor`'s coordinates (Earth-fixed under the Earth's anchor), m. */
   readonly anchorPosition: Float64Array;
-  /** The hit draw, if a draw was hit and is still in the world. */
+  /**
+   * The hit draw, if a draw was hit and is still in the world when the
+   * readback maps (looked up then, from the feature ID read).
+   */
   readonly draw: DrawHandle | undefined;
+  /** The hit feature, looked up when the readback maps, as `View.pick`. */
   readonly feature: PickResult | undefined;
   /** The scene clock's seconds at that tick (0 without a clock). */
   readonly seconds: number;
