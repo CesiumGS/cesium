@@ -45,7 +45,10 @@ export interface GlobeImageryOptions {
    * Slices this layer adds to the world's array (default 256, at most the
    * device limit). A 256-texel slice with its mips is 349 KB, so 256 cost
    * 89 MB. A view drew at most 61 tiles in measured flights, each needing
-   * a slice and sometimes an ancestor's while its own composites.
+   * a slice and sometimes an ancestor's while its own composites. Larger
+   * views get more: past 90% of its slices, the layer grows by this many
+   * at a time (`SlicePool.demand`), and shrinks back once its need stays
+   * low.
    */
   slices?: number;
   /** Slice width and height in texels (default 256). */
@@ -120,6 +123,8 @@ export class GlobeImagery implements SliceUser {
   private applied = new WeakMap<ModelPlacement, number>();
   /** Relocated: the drawn tiles' draws are pointed again on the next update. */
   private relocated = false;
+  /** The tiles the last update pointed (`refresh`). */
+  private drawn: Tile[] = [];
   /**
    * Slices this frame's tiles need (`update`): the distinct slices they
    * draw with (their own, or an ancestor's while theirs composites), and
@@ -318,6 +323,9 @@ export class GlobeImagery implements SliceUser {
     }
     // Every job is a wanted tile without its own slice: it needs one.
     this.needed = inUse.size + this.jobs.size;
+    // Grown before compositing, so this frame's tiles find free slices.
+    this.pool.demand(this, this.needed);
+    this.drawn = order.map(([tile]) => tile);
     // Fetch sources, nearest tiles first, within the origin's window.
     for (const [tile] of order) {
       const job = this.jobs.get(tile);
@@ -410,6 +418,7 @@ export class GlobeImagery implements SliceUser {
     this.sources.clear();
     this.pool.give([...this.slices.values()].map((s) => s.slice));
     this.slices.clear();
+    this.drawn = [];
     this.needed = 0;
     this.pool.release(this);
     this.params.destroy();
@@ -439,6 +448,21 @@ export class GlobeImagery implements SliceUser {
     }
     this.applied = new WeakMap();
     this.relocated = true;
+  }
+
+  /**
+   * After a relocation, points the last update's tiles at their slices
+   * again without a full update: what a frozen tileset (`freezeSelection`)
+   * calls, since it skips its updates but still draws those tiles.
+   */
+  refresh(): void {
+    if (!this.relocated) {
+      return;
+    }
+    for (const tile of this.drawn) {
+      this.apply(tile);
+    }
+    this.relocated = false;
   }
 
   // ------------------------------------------------------------- levels
@@ -768,7 +792,7 @@ export class GlobeImagery implements SliceUser {
    * pool, so layers sharing it can't starve one another.
    */
   private allocate(frame: number): number | undefined {
-    if (this.slices.size < this.pool.share) {
+    if (this.slices.size < this.pool.share(this)) {
       const free = this.pool.take();
       if (free !== undefined) {
         return free;

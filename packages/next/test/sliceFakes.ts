@@ -77,7 +77,7 @@ export function holder(
   return h;
 }
 
-const provider: ImageryProvider = {
+export const provider: ImageryProvider = {
   name: "test",
   tilingScheme: "webMercator",
   minimumLevel: 0,
@@ -96,11 +96,15 @@ const requests = {
   release: () => {},
 } as unknown as RequestScheduler;
 
-export function layer(world: World, device = fakeDevice({})): GlobeImagery {
+export function layer(
+  world: World,
+  device = fakeDevice({}),
+  source: ImageryProvider = provider,
+): GlobeImagery {
   return new GlobeImagery(
     { device } as unknown as RenderContext,
     world,
-    provider,
+    source,
     requests,
     {} as WorkerPool,
   );

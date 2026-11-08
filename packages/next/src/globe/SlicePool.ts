@@ -1,6 +1,22 @@
 import { MAX_IMAGERY_SLICES } from "../render/layout.ts";
 import type { World } from "../scene/World.ts";
 
+/**
+ * Growth on need: a layer's slices grow by a step (its first request) when
+ * this frame's need passes this fraction of them.
+ */
+export const SLICE_GROW_AT = 0.9;
+/**
+ * And shrink by a step when the need stays below this fraction of the size
+ * one step smaller, for `SLICE_SHRINK_AFTER` updates in a row. Growing at
+ * 90% of the size and shrinking at 50% of the next size down leaves a wide
+ * band in which nothing changes, so a need near either threshold doesn't
+ * grow and shrink back.
+ */
+export const SLICE_SHRINK_AT = 0.5;
+/** Updates in a row (about 10 seconds at 60 frames a second). */
+export const SLICE_SHRINK_AFTER = 600;
+
 /** A layer using the pool (GlobeImagery). */
 export interface SliceUser {
   /** Its slices, most recently used first. */
@@ -29,6 +45,11 @@ export interface SliceUser {
  * smaller array (`SliceUser.relocate`). Each layer recycles its own least
  * recently used slices once it holds its share, so a late layer (night
  * lights resolve after the imagery) still gets slices.
+ *
+ * A layer's slices also follow its need (`demand`): past 90% of what it
+ * has, they grow by whole steps (its first request) up to the ceiling, and
+ * they shrink back a step at a time, never below the first request, once
+ * the need has stayed below half the smaller size for 600 updates.
  *
  * The slices are a cache, so "used" reaches capacity soon after a flight
  * starts, by design. What a frame needs (`needed`: the slices its tiles
@@ -59,7 +80,7 @@ export class SlicePool {
       SlicePool.pools.set(world, pool);
     }
     pool.reserve(pool.wanted + slices);
-    pool.users.set(user, slices);
+    pool.users.set(user, { base: slices, asked: slices, low: 0 });
     return pool;
   }
 
@@ -100,8 +121,14 @@ export class SlicePool {
   /** Layers in the array. */
   capacity = 0;
   private free: number[] = [];
-  /** Its layers, and the slices each asked for. */
-  private readonly users = new Map<SliceUser, number>();
+  /**
+   * Its layers: the slices each first asked for (`base`, also the growth
+   * step), has now (`asked`), and updates in a row with a low need.
+   */
+  private readonly users = new Map<
+    SliceUser,
+    { base: number; asked: number; low: number }
+  >();
   private destroyed = false;
   readonly mipLevelCount: number;
 
@@ -125,15 +152,61 @@ export class SlicePool {
   /** Slices the users asked for together (what the pool grows toward). */
   private get wanted(): number {
     let wanted = 0;
-    for (const slices of this.users.values()) {
-      wanted += slices;
+    for (const { asked } of this.users.values()) {
+      wanted += asked;
     }
     return wanted;
   }
 
-  /** A user's fair share: past it, the user recycles its own slices first. */
-  get share(): number {
-    return Math.floor(this.capacity / Math.max(1, this.users.size));
+  /**
+   * A user's share, its slices of the capacity: past it, the user recycles
+   * its own slices first.
+   */
+  share(user: SliceUser): number {
+    const asked = this.users.get(user)?.asked ?? 0;
+    return Math.floor((asked * this.capacity) / Math.max(1, this.wanted));
+  }
+
+  /** The slices a user has now (grown or not), or 0 for a stranger. */
+  asked(user: SliceUser): number {
+    return this.users.get(user)?.asked ?? 0;
+  }
+
+  /**
+   * A user's need this frame (`SliceUser.needed`), once per update: grows
+   * its slices when the need passes 90% of them, shrinks them a step when
+   * it has stayed low (`SLICE_SHRINK_AT`, `SLICE_SHRINK_AFTER`).
+   */
+  demand(user: SliceUser, needed: number): void {
+    const d = this.users.get(user);
+    if (!d) {
+      return;
+    }
+    if (needed > SLICE_GROW_AT * d.asked) {
+      d.low = 0;
+      // Whole steps, the last one cut at the ceiling.
+      const room = this.ceiling - (this.wanted - d.asked);
+      let asked = d.asked;
+      while (needed > SLICE_GROW_AT * asked && asked < room) {
+        asked = Math.min(asked + d.base, room);
+      }
+      if (asked > d.asked) {
+        d.asked = asked;
+        this.reserve(this.wanted);
+      }
+      return;
+    }
+    const smaller = d.asked - d.base;
+    if (smaller < d.base || needed >= SLICE_SHRINK_AT * smaller) {
+      d.low = 0;
+      return;
+    }
+    if (++d.low < SLICE_SHRINK_AFTER) {
+      return;
+    }
+    d.low = 0;
+    d.asked = smaller;
+    this.shrink();
   }
 
   /** A free slice, or undefined when none is left. */
@@ -217,7 +290,7 @@ export class SlicePool {
     // Under the ceiling, each user's request scaled down to fit.
     const scale = target / wanted;
     const kept = [...this.users].map(
-      ([user, asked]) =>
+      ([user, { asked }]) =>
         [user, user.heldSlices().slice(0, Math.floor(asked * scale))] as const,
     );
     const staying = new Set<number>();
