@@ -1,4 +1,5 @@
-import { C, Flow, Page, Section, Written } from "../parts.tsx";
+import { CameraTick } from "../flows.tsx";
+import { C, Figure, Page, Section, Written } from "../parts.tsx";
 
 const LAYERS = [
   {
@@ -93,23 +94,9 @@ export function Cameras() {
       </Section>
 
       <Section title="What happens each tick, per view">
-        <Flow
-          label="The camera layer's steps"
-          steps={[
-            {
-              title: "Pick the render root",
-              body: "The rig's position reference frame, or a running transition's blend reference frame.",
-            },
-            {
-              title: "Evaluate the rig",
-              body: "In that root. This gives the camera's pose in render space.",
-            },
-            {
-              title: "Place what hangs under anchors",
-              body: "Ask the resolver where each anchor is relative to the root, and the frames module for per-vertex placements that depend on it.",
-            },
-          ]}
-        />
+        <Figure caption="One tick, from what an application does to what the GPU reads. The precision of the values crossing to the GPU is on the Precision and accuracy tab.">
+          <CameraTick />
+        </Figure>
         <p>
           <strong>The rule:</strong> a view's render space is its rig's position
           reference frame, or the blend reference frame while a transition runs.

@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { count, day, referenceAdapter } from "../data.ts";
+import { TileLifecycle } from "../flows.tsx";
 import {
   C,
   DataTable,
@@ -553,6 +554,18 @@ export function Selection() {
           raised threshold is still relaxing. Otherwise selection is skipped
           entirely, and on-demand rendering lets the engine loop sleep.
         </p>
+      </Section>
+
+      <Section title="A tile, from request to resident">
+        <p>
+          Content has four states in code: <C>unloaded</C>, <C>loading</C>,{" "}
+          <C>ready</C> and <C>failed</C>. Two more stages matter between them,
+          though the state doesn't change: waiting for a slot, and waiting to
+          upload.
+        </p>
+        <Figure caption="Solid arrows are the normal path. Dashed ones are the ways out: a request no view has touched for 30 ticks is cancelled, and eviction frees what's cold. A format the engine can't decode is marked ready and draws nothing, so refinement behaves as in 1.x.">
+          <TileLifecycle />
+        </Figure>
       </Section>
 
       <Section title="What happens in a tick">

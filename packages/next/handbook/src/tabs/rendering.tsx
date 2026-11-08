@@ -195,7 +195,7 @@ const TICK_EDGES = [
   { from: "prepare", to: "write" },
   { from: "write", to: "encode" },
   { from: "encode", to: "graph", label: "command buffer" },
-  { from: "graph", to: "readback", label: "mapped buffers", down: true },
+  { from: "graph", to: "readback", label: "mapped buffers", vertical: true },
   { from: "queries", to: "cast" },
 ];
 

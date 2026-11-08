@@ -87,12 +87,19 @@ hover. `src/diagram.tsx` has what they share:
 
 Details closed on screen print open.
 
-| Diagram                                                                   | Source                                                                                                  | Checked    |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
-| Rendering: the frame graph chart's passes and textures                    | Generated from `graph.addPass` and `graph.createTexture`                                                | Each build |
-| Rendering: the chart's buffer columns, each pass's note, seams, decisions | By hand, in `src/pipeline.ts`. The build warns about any pass, test or code name that no longer matches | 2026-11-08 |
-| Rendering: one tick, on three lanes                                       | By hand, in `src/tabs/rendering.tsx`                                                                    | 2026-11-08 |
-| System architecture: the layer diagram                                    | Generated, but its boxes are placed by hand                                                             | Each build |
+| Diagram                                                                     | Source                                                                                                  | Checked    |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
+| Rendering: the frame graph chart's passes and textures                      | Generated from `graph.addPass` and `graph.createTexture`                                                | Each build |
+| Rendering: the chart's buffer columns, each pass's note, seams, decisions   | By hand, in `src/pipeline.ts`. The build warns about any pass, test or code name that no longer matches | 2026-11-08 |
+| Rendering: one tick, on three lanes                                         | By hand, in `src/tabs/rendering.tsx`                                                                    | 2026-11-08 |
+| System architecture: the layer diagram                                      | Generated, but its boxes are placed by hand                                                             | Each build |
+| System architecture: what loads when; bundle bars                           | Sizes generated; the board by hand, in `src/flows.tsx`                                                  | 2026-11-08 |
+| Tile selection: a tile's states; levels per policy; mixed LOD; cache levels | By hand, in `src/flows.tsx` and `src/tabs/selection.tsx`                                                | 2026-11-08 |
+| Frame tree: the tree; one tick of answering                                 | By hand, in `src/tabs/frames.tsx` and `src/flows.tsx`                                                   | 2026-11-08 |
+| Cameras: one tick down the chain                                            | By hand, in `src/flows.tsx`                                                                             | 2026-11-08 |
+| Shading and linker: the routes to a pipeline                                | By hand, in `src/flows.tsx`                                                                             | 2026-11-08 |
+| Precision and accuracy: the chain                                           | By hand, in `src/tabs/precision.tsx`                                                                    | 2026-11-08 |
+| Vector rendering, Cesium ion: their flows                                   | By hand, in `src/flows.tsx`                                                                             | 2026-11-08 |
 
 When the frame graph gains a pass, the chart shows it under "Not yet described", and
 the build warns. Add its note in `src/pipeline.ts`.

@@ -1,10 +1,10 @@
 import { useId } from "react";
 import { count, data, libraryEntry, size, type LayerEdge } from "../data.ts";
+import { BundleBars, LoadingStages } from "../flows.tsx";
 import {
   C,
   DataTable,
   Figure,
-  Flow,
   Generated,
   Page,
   Section,
@@ -264,11 +264,6 @@ export function Architecture() {
     ...globeOnly.lazy.map((c) => c.name),
     ...library.entries.flatMap((e) => e.lazy.map((c) => c.name)),
   ];
-  const workerKb = library.assets.find((a) => a.name === "worker")?.kb;
-  const assetKb = (name: string) =>
-    library.assets.find((a) => a.name.startsWith(name))?.kb;
-  const runtimeKb = (name: string) =>
-    data.runtime.flatMap((g) => g.files).find((f) => f.name === name)?.kb;
   return (
     <Page
       title="System architecture"
@@ -349,52 +344,9 @@ export function Architecture() {
       </Section>
 
       <Section title="What loads when">
-        <Flow
-          label="Stages of loading"
-          steps={[
-            {
-              title: "With the page",
-              body: (
-                <>
-                  The main chunk of what the app imports. A globe-only Viewer is{" "}
-                  {size(globeOnly.main.kb)}, or {size(globeOnly.main.gzipKb)}{" "}
-                  gzipped.
-                </>
-              ),
-            },
-            {
-              title: "When the engine starts",
-              body: (
-                <>
-                  The content worker ({size(workerKb)}), found from{" "}
-                  <C>import.meta.url</C>. Nothing needs <C>CESIUM_BASE_URL</C>{" "}
-                  or files copied by hand.
-                </>
-              ),
-            },
-            {
-              title: "When content needs a decoder",
-              body: (
-                <>
-                  Basis ({size(assetKb("basis_transcoder"))}) and Draco (
-                  {size(assetKb("draco_decoder"))}) WebAssembly, in the worker.
-                </>
-              ),
-            },
-            {
-              title: "When a feature asks",
-              body: (
-                <>
-                  Earth orientation series, ephemeris readers, PROJ (
-                  {size(runtimeKb("proj_capi.wasm"))} of wasm,{" "}
-                  {size(runtimeKb("proj.db"))} database) and its grids, or the
-                  Slang compiler ({size(runtimeKb("slang-wasm.wasm"))}).
-                </>
-              ),
-              aside: "Asynchronous and cancellable.",
-            },
-          ]}
-        />
+        <Figure caption="Each stage loads only when something asks for it. Sizes are generated, from a library build and the setup store on the machine that built this page.">
+          <LoadingStages />
+        </Figure>
         <p>
           <C>scripts/checkBundle.mjs</C> guards the first stage: it fails if a
           globe-only Viewer's page-load chunks hold the X, Y or s series or the
@@ -419,6 +371,9 @@ export function Architecture() {
       </Section>
 
       <Section title="Bundle sizes">
+        <Figure caption="Each entry point with everything it imports. They share chunks, so these don't add up. Generated from a library build.">
+          <BundleBars />
+        </Figure>
         <DataTable
           label="Bundle sizes per entry point"
           columns={[

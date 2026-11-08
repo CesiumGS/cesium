@@ -1,4 +1,5 @@
-import { C, DataTable, Flow, Page, Section, Written } from "../parts.tsx";
+import { VectorFlow } from "../flows.tsx";
+import { C, DataTable, Figure, Page, Section, Written } from "../parts.tsx";
 
 const MEASURED = [
   {
@@ -39,44 +40,9 @@ export function Vector() {
       }
     >
       <Section title="How a point gets drawn">
-        <Flow
-          label="Point rendering steps"
-          steps={[
-            {
-              title: "Update",
-              body: (
-                <>
-                  A feed writes typed-array slices through{" "}
-                  <C>PointSource.update</C>. Decoding can run in a worker.
-                </>
-              ),
-            },
-            {
-              title: "Style",
-              body: (
-                <>
-                  <C>VectorStyle</C> compiles a style document to shader code,
-                  and the linker joins it through a boundary.
-                </>
-              ),
-            },
-            {
-              title: "Cull and clamp",
-              body: "Compute culls points and gives each its ground height from terrain and tilesets, and interpolates in time between feed samples.",
-            },
-            {
-              title: "Draw",
-              body: (
-                <>
-                  Symbols draw as quads, or as compute splats at 6 pixels and
-                  below. <C>ModelPool</C> gives a few thousand model slots to
-                  the nearest points, so memory follows the slots rather than
-                  the points.
-                </>
-              ),
-            },
-          ]}
-        />
+        <Figure caption="A style's pipelines are made when it compiles. The rest runs each tick, with no per-point JavaScript.">
+          <VectorFlow />
+        </Figure>
       </Section>
 
       <Section title="Measured">

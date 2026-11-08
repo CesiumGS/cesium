@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { FrameTick } from "../flows.tsx";
 import { C, DataTable, Figure, Page, Section, Written } from "../parts.tsx";
 
 interface TreeNode {
@@ -184,6 +185,26 @@ export function Frames() {
           from={
             <>
               <C>src/frames/frames.ts</C> and <C>src/frames/catalog.ts</C>
+            </>
+          }
+          on="2026-11-08"
+        />
+      </Section>
+
+      <Section title="One tick of answering">
+        <p>
+          The camera layer's question goes through one interface, so what
+          answers it can be replaced. Without the frames module, the core's
+          transform table answers instead.
+        </p>
+        <Figure caption="A query is always synchronous, and data arrives later. That's why every route has a revision: it says when an earlier answer is out of date, without the clock moving.">
+          <FrameTick />
+        </Figure>
+        <Written
+          from={
+            <>
+              <C>src/camera/frameResolver.ts</C>, <C>CameraLayer.ts</C> and{" "}
+              <C>src/frames/resolver.ts</C>
             </>
           }
           on="2026-11-08"

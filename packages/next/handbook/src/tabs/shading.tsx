@@ -1,7 +1,9 @@
 import { data, libraryEntry, size } from "../data.ts";
+import { ShaderRoutes } from "../flows.tsx";
 import {
   C,
   DataTable,
+  Figure,
   Flow,
   Generated,
   Note,
@@ -121,6 +123,9 @@ export function Shading() {
           All three end the same way: WGSL that joins through the linker. They
           differ in when Slang runs, and so in what a page pays when it loads.
         </p>
+        <Figure caption="Every route ends in the same linker, and each source's card says where its compile runs, and so who pays for it. A style's route never reaches the worker.">
+          <ShaderRoutes />
+        </Figure>
         <DataTable
           label="Routes for a user shader and what each costs at load"
           columns={[

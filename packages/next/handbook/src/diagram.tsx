@@ -25,6 +25,8 @@ export interface BoardStep {
   tags?: ReactNode;
   /** Its row; defaults to its place in the list. */
   row?: number;
+  /** Rows it spans, stretched to fill them. */
+  rows?: number;
   accent?: boolean;
 }
 
@@ -32,8 +34,8 @@ export interface BoardEdge {
   from: string;
   to: string;
   label?: string;
-  /** Leave from the bottom and arrive at the side. */
-  down?: boolean;
+  /** Leave from the top or bottom, and arrive at the side. */
+  vertical?: boolean;
 }
 
 interface DrawnEdge {
@@ -137,14 +139,15 @@ export function Board({
             dashed,
           };
         }
-        // Down first, then across into its side: the way back from a lane,
-        // clear of whatever sits beside the card it leaves.
-        if (edge.down) {
+        // Up or down first, then across into its side: clear of whatever
+        // sits beside the card it leaves.
+        if (edge.vertical) {
           const ty = (b.top + b.bottom) / 2;
           const tx = right ? b.left - 2 : b.right + 2;
+          const leave = ty > a.bottom ? a.bottom : a.top;
           return {
             key,
-            d: `M${ax} ${a.bottom} L${ax} ${ty} L${tx} ${ty}`,
+            d: `M${ax} ${leave} L${ax} ${ty} L${tx} ${ty}`,
             ...(edge.label ? { label: edge.label } : {}),
             x: (ax + tx) / 2,
             y: ty - 6,
@@ -208,7 +211,8 @@ export function Board({
             data-step={step.id}
             style={{
               gridColumn: step.lane + 1,
-              gridRow: (step.row ?? i) + 2,
+              gridRow: `${(step.row ?? i) + 2} / span ${step.rows ?? 1}`,
+              ...(step.rows ? { alignSelf: "stretch" } : {}),
             }}
             key={step.id}
           >

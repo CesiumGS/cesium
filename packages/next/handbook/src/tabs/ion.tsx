@@ -1,4 +1,5 @@
-import { C, DataTable, Flow, Page, Section, Written } from "../parts.tsx";
+import { IonFlow } from "../flows.tsx";
+import { C, DataTable, Figure, Page, Section, Written } from "../parts.tsx";
 
 const ASSETS = [
   { use: "Default imagery", how: "BingImagery.fromIon(2) in the Viewer" },
@@ -41,32 +42,9 @@ export function Ion() {
       }
     >
       <Section title="How an asset resolves">
-        <Flow
-          label="ion asset resolution"
-          steps={[
-            {
-              title: "Ask for the endpoint",
-              body: (
-                <>
-                  <C>resolveIonAsset</C> requests <C>v1/assets/id/endpoint</C>{" "}
-                  with the application's token.
-                </>
-              ),
-            },
-            {
-              title: "Keep it for 45 minutes",
-              body: "Asset tokens last about an hour and an endpoint costs a round trip of 300 ms or more, so resolved endpoints are reused. Failures aren't kept.",
-            },
-            {
-              title: "Carry its headers",
-              body: "Every request under the asset, through the shared request scheduler, sends the returned asset token. URLs keep ion's version parameter.",
-            },
-            {
-              title: "Show attributions",
-              body: "The asset's required credits come with the endpoint. Those not marked collapsible stay on screen.",
-            },
-          ]}
-        />
+        <Figure caption="A token goes to ion requests and nothing else. After the endpoint, requests carry the short-lived asset token, not the application's.">
+          <IonFlow />
+        </Figure>
         <p>
           <C>ionDefaults</C> holds the token and server, and a call's options
           override them. A self-hosted server is one setting away.
