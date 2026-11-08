@@ -40,9 +40,19 @@ interface ManifestEntry {
 const SETUP_HINT =
   "run `npm run setup` (it fills the store the dev server serves at /frames-data/; FRAMES_DATA_DIR moves the store)";
 
+/** A kind of frame data file in the store, by its role in `manifest.json`. */
+export type FrameDataRole = "planets" | "moon" | "eop" | "leapSeconds";
+
 /** Roles the store must have; `leapSeconds` is optional (there is a built-in table). */
 const ROLES = ["planets", "moon", "eop"] as const;
-type Role = (typeof ROLES)[number] | "leapSeconds";
+type Role = FrameDataRole;
+
+/** Options for loading frame data: cancel it, and watch each file arrive. */
+export interface FrameDataLoadOptions {
+  /** Aborting rejects with the signal's reason and starts no further fetch. */
+  signal?: AbortSignal;
+  onProgress?: LoadProgress;
+}
 
 /**
  * The manifest roles whose files `loadFrameData` fetches (and reports through
@@ -55,11 +65,19 @@ const hex = (bytes: ArrayBuffer): string =>
     b.toString(16).padStart(2, "0"),
   ).join("");
 
-async function fetchOk(url: string, what: string): Promise<Response> {
+async function fetchOk(
+  url: string,
+  what: string,
+  signal: AbortSignal | undefined,
+): Promise<Response> {
+  signal?.throwIfAborted();
   let response: Response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, signal ? { signal } : undefined);
   } catch (cause) {
+    if (signal?.aborted) {
+      throw signal.reason;
+    }
     throw new Error(
       `frames data: could not fetch ${what} (${url}); ${SETUP_HINT}`,
       { cause },
@@ -68,9 +86,12 @@ async function fetchOk(url: string, what: string): Promise<Response> {
   return response;
 }
 
-async function loadManifest(base: string): Promise<Map<Role, ManifestEntry>> {
+async function loadManifest(
+  base: string,
+  signal: AbortSignal | undefined,
+): Promise<Map<Role, ManifestEntry>> {
   const url = `${base}manifest.json`;
-  const response = await fetchOk(url, "manifest.json");
+  const response = await fetchOk(url, "manifest.json", signal);
   if (!response.ok) {
     throw new Error(
       `frames data: ${url} returned ${response.status}; ${SETUP_HINT}`,
@@ -89,13 +110,6 @@ async function loadManifest(base: string): Promise<Map<Role, ManifestEntry>> {
   for (const entry of parsed.files ?? []) {
     entries.set(entry.role as Role, entry);
   }
-  for (const role of ROLES) {
-    if (!entries.has(role)) {
-      throw new Error(
-        `frames data: manifest.json has no "${role}" entry; ${SETUP_HINT}`,
-      );
-    }
-  }
   return entries;
 }
 
@@ -103,9 +117,10 @@ async function loadFile(
   base: string,
   entry: ManifestEntry,
   onProgress: LoadProgress | undefined,
+  signal: AbortSignal | undefined,
 ): Promise<ArrayBuffer> {
   const url = `${base}${encodeURIComponent(entry.file)}`;
-  const response = await fetchOk(url, entry.file);
+  const response = await fetchOk(url, entry.file, signal);
   if (!response.ok) {
     throw new Error(
       `frames data: ${entry.file} is listed in manifest.json but ${url} returned ${response.status}; re-run \`npm run setup\``,
@@ -119,6 +134,9 @@ async function loadFile(
         ((received, total) => onProgress(entry.file, received, total)),
     );
   } catch (cause) {
+    if (signal?.aborted) {
+      throw signal.reason;
+    }
     throw new Error(
       `frames data: reading ${entry.file} (${url}) failed: ${cause instanceof Error ? cause.message : String(cause)}`,
       { cause },
@@ -134,30 +152,71 @@ async function loadFile(
 }
 
 /**
+ * Load only the asked roles' files that `npm run setup` wrote: fetch
+ * `manifest.json` once, then those files in parallel, each checked against its
+ * SHA-256. Rejects with a message saying to run setup when the store is
+ * missing or incomplete, or lacks an asked role. A role the manifest lacks and
+ * that is `leapSeconds` is left out of the result (there is a built-in table).
+ *
+ * `options.signal` cancels the load: it rejects with the signal's reason and no
+ * further fetch starts. `options.onProgress` is called as each file arrives.
+ */
+export async function loadFrameRoles(
+  baseUrl: string,
+  roles: readonly FrameDataRole[],
+  options: FrameDataLoadOptions = {},
+): Promise<Partial<Record<FrameDataRole, ArrayBuffer>>> {
+  const { signal, onProgress } = options;
+  const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  const manifest = await loadManifest(base, signal);
+  const wanted = [...new Set(roles)];
+  const entries = wanted.flatMap((role) => {
+    const entry = manifest.get(role);
+    if (!entry && role !== "leapSeconds") {
+      throw new Error(
+        `frames data: manifest.json has no "${role}" entry; ${SETUP_HINT}`,
+      );
+    }
+    return entry ? [[role, entry] as const] : [];
+  });
+  const loaded = await Promise.all(
+    entries.map(([, entry]) => loadFile(base, entry, onProgress, signal)),
+  );
+  const out: Partial<Record<FrameDataRole, ArrayBuffer>> = {};
+  entries.forEach(([role], i) => {
+    out[role] = loaded[i]!;
+  });
+  return out;
+}
+
+/**
  * Load the Earth orientation parameters, ephemeris and leap-second table that
- * `npm run setup` wrote: fetch `manifest.json`, then the role files in
- * parallel, each checked against its SHA-256. Rejects with a message saying to
- * run setup when the store is missing or incomplete. The leap-second table is
- * the store's only when it expires after the built-in one.
+ * `npm run setup` wrote: every role, through `loadFrameRoles`. Rejects with a
+ * message saying to run setup when the store is missing or incomplete. The
+ * leap-second table is the store's only when it expires after the built-in one.
  *
  * Data past its validity is not an error here (an instant outside the data is
  * handled where it is used), but `warnings` says so, and each warning is also
  * logged once.
  *
- * `onProgress`, when given, is called as each role file arrives, by its file
- * name, with the bytes received and the response's `Content-Length` (R9).
+ * `options` is a `FrameDataLoadOptions`; a bare `LoadProgress` function still
+ * works. `onProgress` is called as each role file arrives, by its file name,
+ * with the bytes received and the response's `Content-Length` (R9).
  */
 export async function loadFrameData(
   baseUrl = "/frames-data/",
-  onProgress?: LoadProgress,
+  options: FrameDataLoadOptions | LoadProgress = {},
 ): Promise<FrameData> {
-  const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-  const manifest = await loadManifest(base);
-  const leapEntry = manifest.get("leapSeconds");
-  const [planets, moon, eop, leap] = await Promise.all([
-    ...ROLES.map((role) => loadFile(base, manifest.get(role)!, onProgress)),
-    leapEntry ? loadFile(base, leapEntry, onProgress) : undefined,
-  ]);
+  const {
+    planets,
+    moon,
+    eop,
+    leapSeconds: leap,
+  } = await loadFrameRoles(
+    baseUrl,
+    FRAME_DATA_ROLES,
+    typeof options === "function" ? { onProgress: options } : options,
+  );
   const decode = (bytes: ArrayBuffer | undefined): string =>
     new TextDecoder().decode(bytes);
 

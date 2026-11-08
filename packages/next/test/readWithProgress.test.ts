@@ -1,7 +1,10 @@
 // readWithProgress (src/io/readWithProgress.ts): a body read as a stream with
 // its bytes reported (frames explorer R9), held once when its length is known.
 import { describe, expect, it } from "vitest";
-import { readWithProgress } from "../src/io/readWithProgress.ts";
+import {
+  READ_PREALLOCATE_LIMIT,
+  readWithProgress,
+} from "../src/io/readWithProgress.ts";
 
 const bytes = (n: number) => Uint8Array.from({ length: n }, (_, i) => i % 251);
 
@@ -80,5 +83,30 @@ describe("readWithProgress", () => {
     const body = bytes(100);
     const out = await readWithProgress(response(body, 7, 100));
     expect(new Uint8Array(out)).toEqual(body);
+  });
+
+  it("caps its preallocation: a 1 TB Content-Length with 10 bytes returns the 10 bytes", async () => {
+    const body = bytes(10);
+    const out = await readWithProgress(
+      response(body, 4, 1_000_000_000_000),
+      () => {},
+    );
+    expect(new Uint8Array(out)).toEqual(body);
+    expect(out.byteLength).toBe(10);
+  });
+
+  it("trusts a Content-Length up to 64 MB and grows beyond it", async () => {
+    expect(READ_PREALLOCATE_LIMIT).toBe(64 * 1024 * 1024);
+    const size = READ_PREALLOCATE_LIMIT + 1000;
+    const body = new Uint8Array(size).fill(7);
+    body[0] = 1;
+    body[READ_PREALLOCATE_LIMIT] = 2;
+    body[size - 1] = 3;
+    const out = await readWithProgress(
+      response(body, 8 * 1024 * 1024, size),
+      () => {},
+    );
+    expect(out.byteLength).toBe(size);
+    expect(Buffer.compare(new Uint8Array(out), body)).toBe(0);
   });
 });

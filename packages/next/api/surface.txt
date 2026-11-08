@@ -226,6 +226,8 @@ frames	FRAME_DATA_ROLES	const	-
 frames	Frame	class	-
 frames	FrameAccuracy	interface	-
 frames	FrameData	interface	-
+frames	FrameDataLoadOptions	interface	-
+frames	FrameDataRole	type	-
 frames	FrameDataWarning	interface	-
 frames	FrameOptions	interface	-
 frames	FramePoint	interface	-
@@ -248,6 +250,7 @@ frames	frameBias	function	-
 frames	framePoint	function	-
 frames	frameTransform	function	-
 frames	loadFrameData	function	-
+frames	loadFrameRoles	function	-
 frames	parseOem	function	-
 frames	pointAccuracy	function	-
 frames	readSpk	function	-

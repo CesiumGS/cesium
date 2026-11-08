@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadFrameData } from "../src/ephemeris/loadFrameData.ts";
+import {
+  loadFrameData,
+  loadFrameRoles,
+} from "../src/ephemeris/loadFrameData.ts";
 import { LeapSeconds } from "../src/time/leapSeconds.ts";
 import { COUNT, INIT, LEN, pack } from "./syntheticPacks.ts";
 
@@ -387,5 +390,89 @@ describe("loadFrameData's onProgress (R9)", () => {
       loadFrameData("/frames-data/", (...c) => calls.push(c)),
     ).rejects.toThrow(/network error/);
     expect(calls.length).toBeGreaterThan(0);
+  });
+});
+
+describe("loadFrameRoles", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("fetches the manifest and only the asked roles' files", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    const requested = serve(s);
+    const out = await loadFrameRoles("/frames-data/", ["eop"]);
+    expect(requested).toEqual([
+      "/frames-data/manifest.json",
+      "/frames-data/EOP-All.csv",
+    ]);
+    expect(Object.keys(out)).toEqual(["eop"]);
+    expect(out.eop!.byteLength).toBe(s.files["EOP-All.csv"]!.byteLength);
+  });
+
+  it("checks each file against its SHA-256", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    s.manifest.files.find((f) => f.role === "eop")!.sha256 = "0".repeat(64);
+    serve(s);
+    await expect(loadFrameRoles("/frames-data/", ["eop"])).rejects.toThrow(
+      /SHA-256/,
+    );
+  });
+
+  it("rejects with AbortError when aborted during the planets fetch, and starts no later fetch", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    const controller = new AbortController();
+    const requested: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: RequestInit) => {
+        requested.push(input);
+        if (input.endsWith("manifest.json")) {
+          return new Response(JSON.stringify(s.manifest));
+        }
+        // The planets fetch hangs until the signal aborts it.
+        return new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(init.signal!.reason),
+          );
+          controller.abort();
+        });
+      }),
+    );
+    const error = await loadFrameRoles(
+      "/frames-data/",
+      ["planets", "moon", "eop", "leapSeconds"],
+      { signal: controller.signal },
+    ).catch((e: unknown) => e);
+    expect((error as DOMException).name).toBe("AbortError");
+    await new Promise((r) => setTimeout(r, 0));
+    expect(requested).toEqual([
+      "/frames-data/manifest.json",
+      "/frames-data/planets.pack",
+    ]);
+  });
+
+  it("rejects with the signal's reason when already aborted, fetching nothing", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    const requested = serve(s);
+    const reason = new Error("stop");
+    const error = await loadFrameData("/frames-data/", {
+      signal: AbortSignal.abort(reason),
+    }).catch((e: unknown) => e);
+    expect(error).toBe(reason);
+    expect(requested).toEqual([]);
   });
 });

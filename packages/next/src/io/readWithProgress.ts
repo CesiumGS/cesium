@@ -14,6 +14,13 @@ export type LoadProgress = (
   total: number | undefined,
 ) => void;
 
+/**
+ * The most bytes `readWithProgress` preallocates from a `Content-Length` (64 MB).
+ * A header is only a claim; a larger one is not trusted, and the buffer grows
+ * as the body arrives instead.
+ */
+export const READ_PREALLOCATE_LIMIT = 64 * 1024 * 1024;
+
 /** The response's `Content-Length`, when it states a whole number of bytes. */
 function contentLength(response: Response): number | undefined {
   const header = response.headers?.get("Content-Length");
@@ -29,11 +36,12 @@ function contentLength(response: Response): number | undefined {
  * that fails part way rejects. Without `onProgress`, or for a response with no
  * stream, it is `response.arrayBuffer()` (reported once, whole).
  *
- * With a `Content-Length`, the chunks are copied into one buffer of that size
- * as they arrive and that buffer is returned, so the body is held once. A body
- * that outgrows its stated length (a compressed one) falls back to collecting
- * the chunks and joining them at the end, and one that falls short is cut to
- * what arrived.
+ * With a `Content-Length` of up to `READ_PREALLOCATE_LIMIT` (64 MB), the chunks
+ * are copied into one buffer of that size as they arrive and that buffer is
+ * returned, so the body is held once. A longer stated length preallocates only
+ * the limit. A body that outgrows its buffer (a compressed one, or a large
+ * one) falls back to collecting the chunks and joining them at the end, and
+ * one that falls short is cut to what arrived.
  */
 export async function readWithProgress(
   response: Response,
@@ -55,7 +63,9 @@ export async function readWithProgress(
   // One buffer of the stated size, filled in place; undefined once the body
   // outgrows it (or with no stated size), and the chunks are kept instead.
   let filled: Uint8Array | undefined =
-    stated === undefined ? undefined : new Uint8Array(stated);
+    stated === undefined
+      ? undefined
+      : new Uint8Array(Math.min(stated, READ_PREALLOCATE_LIMIT));
   const chunks: Uint8Array[] = [];
   let received = 0;
   const total = () =>

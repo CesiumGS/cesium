@@ -7,7 +7,10 @@ export { Ephemeris } from "../ephemeris/Ephemeris.ts";
 export {
   FRAME_DATA_ROLES,
   loadFrameData,
+  loadFrameRoles,
   type FrameData,
+  type FrameDataLoadOptions,
+  type FrameDataRole,
   type FrameDataWarning,
 } from "../ephemeris/loadFrameData.ts";
 export { readSpk, type StateSegment } from "../ephemeris/spk.ts";
