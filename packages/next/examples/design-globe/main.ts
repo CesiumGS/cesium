@@ -132,7 +132,15 @@ export function run(context: ExampleContext): ExampleRun {
   // The HUD over the canvas: the cursor readout, the legend, the anchor's label.
   const hud = document.createElement("div");
   hud.className = "dg-hud-host";
-  viewer.container.append(hud);
+  // Right after the canvas in the document (UX review S6): the keyboard
+  // reaches the toolbar, the cursor card and the tour's card before the
+  // credits, the time controls and the inspector. Layering is by z-index
+  // (toolbar.css), not by this order.
+  if (viewer.canvas.parentElement === viewer.container) {
+    viewer.canvas.after(hud);
+  } else {
+    viewer.container.prepend(hud);
+  }
   scope.defer(() => hud.remove());
   viewer.view.camera.near = 0.1;
   // The clock in the selected site's civil time (its IANA zone, feedback
