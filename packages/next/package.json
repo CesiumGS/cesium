@@ -23,6 +23,7 @@
     "slang": "node scripts/slangShader.mjs",
     "shaders": "node scripts/slangBuild.mjs",
     "shaders:check": "node scripts/slangBuild.mjs --check",
+    "surface": "node scripts/surfaceMap.mjs --write",
     "setup": "node scripts/setup.mjs"
   },
   "dependencies": {
