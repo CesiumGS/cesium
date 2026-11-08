@@ -119,8 +119,8 @@ export function Rendering() {
         <p>
           Vertex shaders see only small numbers: positions relative to the
           camera, from a subtraction in the cull kernel that no float
-          reassociation can touch. The Precision tab follows this from float64
-          on the CPU through to what a pick can claim.
+          reassociation can touch. The Precision and accuracy tab follows this
+          from float64 on the CPU through to what a pick can claim.
         </p>
       </Section>
 

@@ -67,6 +67,13 @@ camera prose never write "frame" alone: say reference frame, tick, render space
 or render root. "Tick" stands in for "per frame" across the handbook. Code names
 keep their names (`FrameGraph`).
 
+Keep precision and accuracy apart. Precision is how finely a value can be
+represented or repeated: a float32 step, the depth buffer's step. Accuracy is how
+close it is to the truth or the best reference: within 2,100 km of DE440, a stated
+±. Two computations agreeing is numerical agreement, and the text says which it
+is. The catalog's `Precision` type and `"precise"` level keep their code names,
+but they set accuracy, so prose calls them levels.
+
 ## Keeping it up to date
 
 `npm run handbook` regenerates the figures and builds the file to hand out.

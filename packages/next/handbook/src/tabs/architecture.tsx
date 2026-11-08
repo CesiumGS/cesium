@@ -218,7 +218,7 @@ function LayerDiagram() {
 /** Dynamic imports, and what makes each one load. */
 const TRIGGERS: Record<string, string> = {
   "src/frames/providers/earthOrientation.ts":
-    'A reference frame asks for "precise" Earth orientation (the IAU 2006/2000A series)',
+    'A reference frame asks for the "precise" level of Earth orientation (the IAU 2006/2000A series)',
   "src/frames/providers/ephemeris.ts":
     "A reference frame needs the ephemeris (DE440 packs)",
   "src/scene/slang.ts":

@@ -91,8 +91,8 @@ export function Overview() {
           {count(data.counts.slangFiles)} Slang shader modules. Its core loads
           at {size(core?.loadKb)} ({size(core?.loadGzipKb)} gzipped). A
           globe-only Viewer loads {size(data.bundles.globeOnly.main.kb)} (
-          {size(data.bundles.globeOnly.main.gzipKb)} gzipped), with no precise
-          reference-frame data in it.
+          {size(data.bundles.globeOnly.main.gzipKb)} gzipped), with none of the
+          data behind the reference frames' higher-accuracy level in it.
         </p>
         <Generated
           from={

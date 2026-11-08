@@ -59,7 +59,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "frames", label: "Frame tree", view: Frames },
       { id: "cameras", label: "Cameras", view: Cameras },
       { id: "rendering", label: "Rendering", view: Rendering },
-      { id: "precision", label: "Precision", view: Precision },
+      { id: "precision", label: "Precision and accuracy", view: Precision },
       { id: "shading", label: "Shading and linker", view: Shading },
       { id: "vector", label: "Vector rendering", view: Vector },
       { id: "ion", label: "Cesium ion", view: Ion },

@@ -96,8 +96,10 @@ export function Vector() {
           ambient occlusion, at a 20 km overview, on an NVIDIA RTX laptop GPU.
           Ten million points are bound by their 60 million vertex invocations
           per tick. These predate plan 5a. The <C>tracks</C> suite checks
-          correctness in <C>bench/results</C>, and a clamp on hills, for one,
-          agreed with ray casts to under 0.25 m.
+          correctness in <C>bench/results</C>. On its last Apple M2 run, a clamp
+          on hills agreed with ray casts within 5 mm, against a limit of 0.25 m.
+          That's agreement between two methods, not accuracy against surveyed
+          ground.
         </p>
         <Written
           from="the overall plan, Real-time tracks and section 13.11"

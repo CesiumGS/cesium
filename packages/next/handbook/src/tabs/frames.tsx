@@ -194,8 +194,10 @@ export function Frames() {
         <p>
           A globe-only app pays for none of this. Each reference frame in the
           catalog names its provider, and asking for a reference frame states
-          the precision wanted. It runs at the highest precision anyone has
-          asked for. Loading is asynchronous and cancellable, and queries stay
+          the level wanted: <C>"analytic"</C> or <C>"precise"</C>. The levels
+          choose a model and its data, so they set accuracy; values are float64
+          at both. A reference frame runs at the highest level anyone has asked
+          for. Loading is asynchronous and cancellable, and queries stay
           synchronous.
         </p>
         <DataTable
@@ -208,7 +210,7 @@ export function Frames() {
           rows={PROVIDERS}
         />
         <p>
-          While precise data loads, a reference frame runs on its declared
+          While its full data loads, a reference frame runs on its declared
           stand-in if it has one, stating that stand-in's accuracy, and its
           revision goes up when the data arrives. Without a stand-in, a query
           throws a named error until the data loads. Reference frames throw, and
@@ -218,11 +220,11 @@ export function Frames() {
 
       <Section title="The sky in a globe-only app">
         <p>
-          It asks for analytic precision: IAU 1976 precession with sidereal
-          time, no nutation, and the Meeus sun and Moon. That loads no series
-          tables and no data. These are the stand-ins' own stated figures:
+          It asks for the <C>"analytic"</C> level: IAU 1976 precession with
+          sidereal time, no nutation, and the Meeus sun and Moon. That loads no
+          series tables and no data. The stand-ins state their own accuracy:
           ITRF's is 18″ (0.005°) from IAU 2006/2000A with the EOP, a bound from
-          its parts. The Precision tab lists the rest.
+          its parts. The Precision and accuracy tab lists the rest.
         </p>
       </Section>
 

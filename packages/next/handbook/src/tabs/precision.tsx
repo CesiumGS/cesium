@@ -212,18 +212,21 @@ const MEASURED = [
     what: "Camera-relative offset, integer form",
     result:
       "0.04 µm at 1 m, 30 µm at 1 km, 3.8 mm at 100 km. Plain float32 at the same sites: 0.25 to 0.47 m.",
+    kind: "Precision: what float32 arithmetic loses against the float64 value.",
     where: "Browser, M-series Mac; matches D3D12. spikes/precision.html",
   },
   {
     what: "Camera-relative offset, float form",
     result:
       "As bad as plain float32 on Metal (0.45 m at Philadelphia), because relaxed math folded the split back. This is why the integer form exists.",
+    kind: "Precision: the failure the integer form fixes.",
     where: "Browser, M-series Mac. spikes/precision.html",
   },
   {
     what: "A rig on GCRF against one on ITRF, and re-rooting between them",
     result:
       "Every float of the view block within 0.125 of a float32 step of where it was. The test's limit is 1 step. Selection and terrain clip inputs agree to about 4 nm, and clamping rays exactly.",
+    kind: "Numerical agreement: the routes round alike. Both use the analytic stand-in, whose ITRF states 18″, so this says nothing about accuracy.",
     where:
       "Node, with no GPU: what the GPU would be given, not what it did. test/rerooting.test.ts",
   },
@@ -231,34 +234,53 @@ const MEASURED = [
     what: "Per-vertex placement, GPU against its float64 twin",
     result:
       "Worst vertex 0.028 px from the twin, with placements moving vertices 7.2 to 26.3 px.",
+    kind: "Numerical agreement: GPU float32 against CPU float64. How accurately the twin places a vertex is its stated errorBound, a separate figure.",
     where: "Browser, Apple M2",
   },
   {
     what: "Heights on 3D Tiles, by GPU ray casts",
     result:
       "Within 6 mm of what 1.x renders, on the points both hit. 1.x's depth precision limits this comparison.",
+    kind: "Agreement with 1.x, not accuracy against the ground.",
     where: "Browser, against 1.x",
+  },
+  {
+    what: "The analytic Moon against DE440",
+    result: "Within about 0.31° (2,100 km), sampled daily over 2000 to 2050.",
+    kind: "Accuracy, against the best reference the engine has.",
+    where: "src/frames/analytic.ts",
+  },
+  {
+    what: "The analytic ITRF against IAU 2006/2000A with the EOP",
+    result:
+      "Largest sample 14.49″ over the EOP table's observed rows, 2000 to 2026. It states 18″, a bound from its parts.",
+    kind: "Accuracy, against the best reference the engine has.",
+    where: "src/frames/analytic.ts",
   },
 ];
 
 const PICK_TERMS = [
   {
     term: "Footprint",
+    kind: "Precision limit: the pixel's resolution",
     size: "One CSS pixel across at the hit: distance × 2 tan(fov ÷ 2) ÷ height",
     why: "The pick reads the pixel's center, which may be this far from where the click was meant.",
   },
   {
     term: "Depth",
+    kind: "Precision limit: float32 rounding",
     size: "Half a float32 step of the stored depth, along the ray",
     why: "Only the stored value's rounding is counted, not the GPU's arithmetic before it.",
   },
   {
     term: "Content",
+    kind: "Accuracy",
     size: "A placement's display error, or a fitted operation's stated bound",
     why: "How far the content is drawn from where its design says it is. A hosted placement's reprojection is the host's to state.",
   },
   {
     term: "Reference frame",
+    kind: "Accuracy",
     size: "Each edge up to the nearest catalog reference frame, as it states itself",
     why: "A spacecraft's covariance counts. Catalog-to-catalog edges don't, because they move the point and its reference frame together.",
   },
@@ -315,19 +337,55 @@ const OLD_NEW = [
 export function Precision() {
   return (
     <Page
-      title="Precision"
+      title="Precision and accuracy"
       status="current"
       lede={
         <>
-          float32 can't hold an Earth-scale coordinate to better than about half
-          a meter, and an engine that spans Earth to Moon has much further to
-          go. So every large number stays in float64 on the CPU, the GPU only
-          ever sees small values relative to the camera, and any answer that
-          comes back says how far it can be trusted.
+          float32 can't represent an Earth-scale coordinate more finely than
+          about half a meter, and an engine that spans Earth to Moon has further
+          to go. So large numbers stay in float64 on the CPU, and the GPU only
+          sees small values relative to the camera. That settles precision. It
+          doesn't make a value true, so each answer also states its accuracy.
         </>
       }
     >
-      <Section title="The chain, end to end">
+      <Section title="Two words, kept apart">
+        <ul>
+          <li>
+            <strong>Precision</strong> is how finely a value can be represented
+            or repeated: a float32 or float64 step, the resolution of a split
+            position, the depth buffer's step. Rounding is a matter of
+            precision.
+          </li>
+          <li>
+            <strong>Accuracy</strong> is how close a value is to the truth, or
+            to the best reference there is: an ephemeris against DE440, a
+            stand-in's error, a stated ±, the figure composed for a pick.
+          </li>
+          <li>
+            <strong>Numerical agreement</strong> is two computations of one
+            thing giving the same answer, such as the GPU and its CPU twin. It
+            shows that rounding is under control. It doesn't show that either is
+            true.
+          </li>
+        </ul>
+        <p>
+          A value can be very precise and still inaccurate. The analytic Moon's
+          position is a float64 with a step of about 60 nm at the Moon's
+          distance, and it's within about 2,100 km of DE440. Precision can also
+          cap accuracy: a pick's position can't be known better than the depth
+          it was read from.
+        </p>
+        <p>
+          One name in the code crosses this line. The catalog's <C>Precision</C>{" "}
+          type, with its levels <C>"analytic"</C> and <C>"precise"</C>, chooses
+          which model and data answer, so what it sets is accuracy. Values are
+          float64 either way. The name is a candidate for the API review in
+          sub-plan 5i. This handbook calls them levels.
+        </p>
+      </Section>
+
+      <Section title="Precision: the chain, end to end">
         <Figure
           scroll
           label="Precision chain"
@@ -403,10 +461,11 @@ export function Precision() {
           is one pass, with no splitting of the view into several frustums.
         </p>
         <p>
-          Half a float32 step of that depth is 3 to 6 parts in 100 million of
-          the distance: 0.03 to 0.06 mm at 1 km, 3 to 6 mm at 100 km, and 11 to
-          23 m at the Moon's distance. The bare ellipsoid draws with its depth
-          scaled by 2⁻⁶⁴, behind everything, and picks undo the scale.
+          Half a float32 step of that depth is a precision limit of 3 to 6 parts
+          in 100 million of the distance: 0.03 to 0.06 mm at 1 km, 3 to 6 mm at
+          100 km, and 11 to 23 m at the Moon's distance. The bare ellipsoid
+          draws with its depth scaled by 2⁻⁶⁴, behind everything, and picks undo
+          the scale.
         </p>
       </Section>
 
@@ -420,17 +479,20 @@ export function Precision() {
         </p>
         <ul>
           <li>
-            <strong>Two evaluations:</strong> in Slang for drawing, and in a
-            float64 twin in <C>src/scene/placement.ts</C> for picks, bounds and
-            culling.
+            <strong>Two evaluations, in numerical agreement:</strong> in Slang
+            for drawing, and in a float64 twin in <C>src/scene/placement.ts</C>{" "}
+            for picks, bounds and culling.
           </li>
           <li>
-            <strong>What each states:</strong> a fitted operation states{" "}
+            <strong>Its accuracy:</strong> a fitted operation states{" "}
             <C>errorBound</C>, in meters, against the coordinate operation it
-            was fitted to. Every placement states <C>maxDisplacement</C>, and
-            the draw's bounds grow by that much. <C>secondDerivativeBound</C>{" "}
-            bounds how far its curve departs from the flat triangles between
-            vertices.
+            was fitted to. A dual position states none.
+          </li>
+          <li>
+            <strong>Its reach:</strong> every placement states{" "}
+            <C>maxDisplacement</C>, and the draw's bounds grow by that much. A
+            fitted operation's <C>secondDerivativeBound</C> bounds how far its
+            curve departs from the flat triangles between vertices.
           </li>
           <li>
             <strong>What's refused:</strong> a non-finite parameter,
@@ -447,17 +509,20 @@ export function Precision() {
           the CPU in float64, from the camera as it was at the pick's tick:{" "}
           <C>z = near ÷ depth</C>, then the eye plus <C>z</C> along the pixel's
           ray. Because it reads the depth that was drawn, a pick agrees with any
-          placement.
+          placement. Being a float64 says nothing about how well the point is
+          known, so the pick states that separately.
         </p>
         <p>
           With the frames module, <C>createFramesPickInterpreter</C> tags the
           point with its reference frame and composes its accuracy from these
-          terms, 1σ, as a root sum square:
+          terms, 1σ, as a root sum square. The composed figure is an accuracy.
+          Two of its terms are precision limits feeding into it:
         </p>
         <DataTable
           label="Terms of a pick's accuracy"
           columns={[
             { head: "Term", cell: (r) => <strong>{r.term}</strong> },
+            { head: "Kind", cell: (r) => r.kind },
             { head: "Its size", cell: (r) => r.size },
             { head: "What it means", cell: (r) => r.why },
           ]}
@@ -466,7 +531,8 @@ export function Precision() {
         <p>
           For scale: at 1 km with a 60° vertical field of view on a 1,000 px
           view, the footprint is about 1.15 m and the depth term 0.03 to 0.06
-          mm. The user's pixel limits a pick long before the depth buffer does.
+          mm. Of the two precision limits, the pixel binds long before the depth
+          buffer does.
         </p>
         <p>
           The result names what it leaves out, including the GPU's float32
@@ -486,22 +552,35 @@ export function Precision() {
           the same value or one within a float64 step.
         </p>
         <p>
-          The floor is that one float64: 2.4 × 10⁻⁷ s near 2050. That is about
-          0.1 mm of Earth rotation at the surface, 7 mm in positions relative to
-          the solar system's barycenter, and 0.2 mm from Earth to Moon. All are
-          well inside the goals so far, and a two-part <C>Instant</C> is the fix
-          if a later plan needs more.
+          Its precision floor is that float64's step: 2.4 × 10⁻⁷ s near 2050.
+          One step is about 0.1 mm of Earth rotation at the surface, 7 mm in
+          positions relative to the solar system's barycenter, and 0.2 mm from
+          Earth to Moon. All are well below the overall plan's 1 m goal, and a
+          two-part <C>Instant</C> is the fix if a later plan needs more. These
+          are precision limits: how accurate a position is depends on its
+          ephemeris, below, not on this step.
         </p>
       </Section>
 
       <Section title="Reference-frame accuracy">
-        <p>Every edge of the frame tree states what it can claim, 1σ:</p>
+        <p>
+          All of this is accuracy: every value here is a float64, whichever
+          column it comes from. Each edge of the frame tree states what it can
+          claim, 1σ. A stand-in's figure is the largest error measured against
+          the full data, rounded up, or for ITRF a bound from its parts.
+        </p>
         <DataTable
           label="Stated accuracy of reference frames"
           columns={[
             { head: "Reference frame", cell: (r) => <C>{r.frame}</C> },
-            { head: "With precise data", cell: (r) => r.precise },
-            { head: "On its analytic stand-in", cell: (r) => r.standIn },
+            {
+              head: 'With its full data, level "precise"',
+              cell: (r) => r.precise,
+            },
+            {
+              head: 'On its stand-in, level "analytic"',
+              cell: (r) => r.standIn,
+            },
           ]}
           rows={STATED}
         />
@@ -545,11 +624,16 @@ export function Precision() {
       </Section>
 
       <Section title="What's been measured">
+        <p>
+          Each row says what kind of result it is. Most are precision or
+          numerical agreement, which aren't accuracy against the truth.
+        </p>
         <DataTable
-          label="Measured precision"
+          label="Measured results"
           columns={[
             { head: "What", cell: (r) => r.what },
             { head: "Result", cell: (r) => r.result },
+            { head: "What it shows", cell: (r) => r.kind },
             { head: "How", cell: (r) => r.where },
           ]}
           rows={MEASURED}
@@ -567,13 +651,13 @@ export function Precision() {
           0.015948.
         </p>
         <p>
-          The new order wasn't less correct in any way worth acting on: both
-          orders stay within about one step, and neither WGSL nor Metal promises
+          Neither order loses precision worth acting on: both stay within about
+          one step of the exact float32 sum, and neither WGSL nor Metal promises
           either. So any kernel change can move results by a step on Metal. The
           working rule is to compare against the previous commit as well as a
           base commit, and explain any pixel difference before accepting it.
         </p>
-        <h3>What keeps it this way</h3>
+        <h3>What keeps the precision this way</h3>
         <ul>
           <li>
             <C>test/precision.test.ts</C> fails on arithmetic on split values
@@ -594,7 +678,7 @@ export function Precision() {
         />
       </Section>
 
-      <Section title="How this differs from 1.x">
+      <Section title="How precision differs from 1.x">
         <DataTable
           label="Precision in 1.x and 2.0"
           columns={[
@@ -627,6 +711,7 @@ export function Precision() {
             world.
           </li>
           <li>Precision on a D3D12 and Vulkan run of today's kernels.</li>
+          <li>Measured accuracy against SPICE and NGS fixtures, per route.</li>
         </ul>
       </Section>
     </Page>
