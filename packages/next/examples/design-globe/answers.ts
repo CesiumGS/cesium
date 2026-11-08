@@ -217,6 +217,11 @@ export interface AnswerSite {
     readonly vertices: number;
     readonly leafError: number;
   };
+  /**
+   * Design points (x, y, z, flat) a leaf's vertices about a twelfth of the
+   * model apart: where its whiskers stand.
+   */
+  readonly whiskers: readonly number[];
 }
 
 /** `<store>/design-globe/answers.json`. */
@@ -238,8 +243,8 @@ export interface Answers {
   readonly sites: Readonly<Record<string, AnswerSite>>;
 }
 
-/** The version this file reads: 2 since the scale ladder's `sites` (Task 17b). */
-export const ANSWERS_VERSION = 2;
+/** The version this file reads: 3 since a site's `whiskers` (plan 5a Task 20). */
+export const ANSWERS_VERSION = 3;
 
 type Json = Record<string, unknown>;
 
@@ -498,6 +503,9 @@ export function parseAnswers(json: unknown, source = "answers.json"): Answers {
           ),
         };
       }),
+      whiskers: r
+        .array(o.whiskers, `${path}.whiskers`)
+        .map((v, i) => r.number(v, `${path}.whiskers[${i}]`)),
       tiles: {
         count: r.number(tiles.count, `${path}.tiles.count`),
         levels: r.number(tiles.levels, `${path}.tiles.levels`),

@@ -6,6 +6,8 @@ import type { GridSource } from "../src/engineering/proj.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import type { Frames } from "../src/frames/frames.ts";
 
+/** Where in the store the generator writes. */
+export const DESIGN_TILES_DIRECTORY: string;
 /** The instant `measure` runs at for answers.json (2026-01-01T00:00:00 UTC). */
 export const DESIGN_TILES_INSTANT: string;
 /**
@@ -25,9 +27,9 @@ export function rigidErrorTerms(
   point: ArrayLike<number>,
 ): { curvature: number; scale: number; geoid: number };
 /**
- * Writes `<store>/design-globe/` (the corridor rigid and reprojected, the
- * site building, the scale ladder's sites rigid and reprojected,
- * answers.json and manifest.json) unless its manifest is current.
+ * Writes `<store>/design-globe-dual/` (the corridor and the scale ladder's
+ * sites, one tileset each with both placements in its vertices, the site
+ * building, answers.json and manifest.json) unless its manifest is current.
  */
 export function ensureDesignTiles(
   store: string,

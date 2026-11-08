@@ -46,6 +46,36 @@ const dataUrl = (bytes: Uint8Array) =>
 const textures = { bc7: false, astc: false, etc2: false } as never;
 
 describe("writeGlb", () => {
+  it("writes named float attributes the reader gives back", async () => {
+    const second = new Float32Array(18).map((_, i) => i * 0.5);
+    const standOff = new Float32Array(6).fill(0.25);
+    const bytes = writeGlb({
+      ...mesh(),
+      attributes: { _SECOND: second, _APART: standOff },
+    });
+    const { json, bin } = splitGlb(bytes);
+    const a = json.meshes[0].primitives[0].attributes;
+    const accessor = json.accessors[a._SECOND];
+    expect(accessor.type).toBe("VEC3");
+    expect(accessor.count).toBe(6);
+    expect(json.accessors[a._APART].type).toBe("SCALAR");
+    const view = json.bufferViews[accessor.bufferView];
+    expect(
+      new Float32Array(
+        bin!.buffer.slice(
+          bin!.byteOffset + view.byteOffset,
+          bin!.byteOffset + view.byteOffset + view.byteLength,
+        ),
+      )[5],
+    ).toBe(2.5);
+    expect(() =>
+      writeGlb({ ...mesh(), attributes: { NOT_OURS: second } }),
+    ).toThrow(/underscore/);
+    expect(() =>
+      writeGlb({ ...mesh(), attributes: { _SHORT: new Float32Array(2) } }),
+    ).toThrow(/1 or 3/);
+  });
+
   it("writes an aligned GLB 2.0 with a JSON and a BIN chunk", () => {
     const bytes = writeGlb(mesh());
     const view = new DataView(bytes.buffer, bytes.byteOffset);

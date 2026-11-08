@@ -5,8 +5,9 @@
 // feature's `name` and `kind` (EXT_structural_metadata), so a pick reports
 // the feature's name through `World.feature`. With `colors`, each vertex's
 // linear RGBA as COLOR_0 (normalized unsigned bytes), which glTF multiplies
-// by the material's base colour. Indices are 16-bit where every vertex
-// fits, 32-bit otherwise.
+// by the material's base colour. With `attributes`, named float attributes
+// by glTF semantic (a second position, a stand-off). Indices are 16-bit where
+// every vertex fits, 32-bit otherwise.
 
 const FLOAT = 5126;
 const UNSIGNED_BYTE = 5121;
@@ -25,13 +26,24 @@ const pad4 = (n) => (n + 3) & ~3;
  *   positions: Float32Array, normals?: Float32Array, indices: Uint32Array,
  *   featureIds: Uint16Array, features: readonly {name: string, kind: string}[],
  *   color: [number, number, number, number], colors?: Float32Array,
+ *   attributes?: Record<string, Float32Array>,
  * }} mesh Positions are glTF Y-up. `color` is linear RGBA, and `colors`
- *   four linear components a vertex in [0, 1].
+ *   four linear components a vertex in [0, 1]. Each of `attributes` has 1 or
+ *   3 floats a vertex; its name begins with an underscore, as glTF asks of an
+ *   application's own semantics.
  * @returns {Uint8Array}
  */
 export function writeGlb(mesh) {
-  const { positions, normals, indices, featureIds, features, color, colors } =
-    mesh;
+  const {
+    positions,
+    normals,
+    indices,
+    featureIds,
+    features,
+    color,
+    colors,
+    attributes: named = {},
+  } = mesh;
   if (positions.length === 0 || positions.length % 3 !== 0) {
     throw new Error("writeGlb: positions must be a non-empty multiple of 3");
   }
@@ -71,6 +83,18 @@ export function writeGlb(mesh) {
       if (!(c >= 0 && c <= 1)) {
         throw new Error("writeGlb: colors must be in [0, 1]");
       }
+    }
+  }
+
+  for (const [semantic, data] of Object.entries(named)) {
+    if (
+      !semantic.startsWith("_") ||
+      (data.length !== vertices && data.length !== vertices * 3) ||
+      !data.every(Number.isFinite)
+    ) {
+      throw new Error(
+        `writeGlb: attribute ${semantic} is 1 or 3 finite floats a vertex, under a name beginning with an underscore`,
+      );
     }
   }
 
@@ -147,6 +171,12 @@ export function writeGlb(mesh) {
         )
       : undefined;
 
+  const namedViews = Object.entries(named).map(([semantic, data]) => ({
+    semantic,
+    view: add(view(raw(data), ARRAY_BUFFER)),
+    type: data.length === vertices ? "SCALAR" : "VEC3",
+  }));
+
   const accessors = [];
   const accessor = (entry) => accessors.push(entry) - 1;
   const attributes = {
@@ -180,6 +210,14 @@ export function writeGlb(mesh) {
       normalized: true,
       count: vertices,
       type: "VEC4",
+    });
+  }
+  for (const { semantic, view: bufferView, type } of namedViews) {
+    attributes[semantic] = accessor({
+      bufferView,
+      componentType: FLOAT,
+      count: vertices,
+      type,
     });
   }
   const indexAccessor = accessor({

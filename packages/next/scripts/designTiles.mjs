@@ -1,33 +1,35 @@
 // The design globe's generated tiles and exact answers (plan 4b Task 14;
 // the plan's calls 15 and 17). `npm run setup` runs it, after the frames data
-// and the grids, into `<store>/design-globe/`:
-//  - corridor-rigid/ and corridor-reprojected/: the corridor twice, one tile
-//    tree with the same tile ids and vertex order (call 15, for plan 5's
-//    morph). The rigid one is design units under one root transform, the
-//    rigid placement's matrix at its anchor (near the middle); the reprojected one
-//    is every vertex through the frame, in Earth-fixed metres;
+// and the grids, into `<store>/design-globe-dual/`:
+//  - corridor/: the corridor, one tileset whose vertices carry both
+//    placements (plan 5a Task 20). POSITION is design units under one root
+//    transform, the rigid placement's matrix at its anchor (near the middle);
+//    `_DG_REPROJECTED` is every vertex through the frame, in that same model
+//    space, its second position (`Tileset3D.dualPosition`), so a scene item's
+//    placement draws either (or anything between);
 //  - site-building/: the site-grid building, rigid at its footprint's
-//    centre;
-//  - portfolio-<id>-rigid/ and portfolio-<id>-reprojected/: the scale
-//    ladder (Task 17b), each portfolio site's model twice, one tile tree
-//    with the same tile ids and vertex order as the corridor's pair, rigid
-//    at the model's middle (scripts/designTiles/ladder.mjs);
+//    centre, with no second position;
+//  - portfolio-<id>/: the scale ladder (Task 17b), each portfolio site's model
+//    as the corridor's, rigid at the model's middle
+//    (scripts/designTiles/ladder.mjs);
 //  - answers.json: exact values at points and between pairs, from the
 //    library, at DESIGN_TILES_INSTANT, for the example's checks, and each
-//    ladder site's extent and rigid error at its edge;
+//    ladder site's extent, rigid error at its edge and whisker points;
 //  - manifest.json: version 1 and the SHA-256 of the inputs, so it
 //    regenerates only when they change.
 //
-// Tiles are glTF Y-up: a tile-space (E, N, U) is written (E, U, −N), and an
-// Earth-fixed offset (X, Y, Z) is written (X, Z, −Y). Tile centres are whole
-// design units (rigid) and whole metres (reprojected), so the engine's sums
-// of tile translations are exact; a rigid vertex is the float32 nearest its
-// design point less its tile's centre, and the reprojected vertex is the
-// frame's image of exactly that design point (the centre plus the float32),
-// so both tilesets draw one set of design points.
+// Tiles are glTF Y-up: a tile-space (E, N, U) is written (E, U, −N). Tile
+// centres are whole design units, so the engine's sums of tile translations
+// are exact; a vertex is the float32 nearest its design point less its tile's
+// centre, and its reprojected position is the frame's image of exactly that
+// design point (the centre plus the float32), taken back through the rigid
+// placement's matrix to the float32 nearest in the tile's model space, so both
+// positions draw one set of design points.
 //
-// The output is built in `design-globe.<run>.partial/` (which the dev server's
-// /frames-data mount never serves) and renamed into place when complete.
+// The output is built in `design-globe-dual.<run>.partial/` (which the dev
+// server's /frames-data mount never serves) and renamed into place when
+// complete. An earlier generator's `design-globe/`, the two-tileset layout, is
+// left where it is: this one neither reads nor changes it.
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -60,6 +62,12 @@ import {
   SITE_BUILDING,
   modelAnchor,
 } from "../examples/design-globe/sites.ts";
+import {
+  DUAL_POSITION_EXTENSION,
+  REPROJECTED_SEMANTIC,
+  STANDOFF_SEMANTIC,
+  spacedPoints,
+} from "../examples/design-globe/dualPosition.ts";
 import { Ephemeris } from "../src/ephemeris/Ephemeris.ts";
 import {
   EngineeringFrame,
@@ -94,6 +102,9 @@ import {
 } from "./designTiles/ladder.mjs";
 import { buildingAnchor, buildingMesh } from "./designTiles/siteMesh.mjs";
 import { tilesetJson } from "./designTiles/tileset.mjs";
+
+/** Where in the store this generator writes (one tileset a site). */
+export const DESIGN_TILES_DIRECTORY = "design-globe-dual";
 
 /** The instant `measure` runs at, recorded in answers.json. */
 export const DESIGN_TILES_INSTANT = "2026-01-01T00:00:00.000Z";
@@ -134,6 +145,7 @@ const INPUTS = [
   "examples/design-globe/sites.ts",
   "examples/design-globe/poleLineGround.ts",
   "examples/design-globe/answers.ts",
+  "examples/design-globe/dualPosition.ts",
   "scripts/designTiles.mjs",
   "scripts/designTiles/corridorMesh.mjs",
   "scripts/designTiles/siteMesh.mjs",
@@ -230,15 +242,6 @@ export async function designTilesInputs(store) {
 
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const unit = (v) => {
-  const length = Math.hypot(v[0], v[1], v[2]);
-  return [v[0] / length, v[1] / length, v[2] / length];
-};
-const cross = (a, b) => [
-  a[1] * b[2] - a[2] * b[1],
-  a[2] * b[0] - a[0] * b[2],
-  a[0] * b[1] - a[1] * b[0],
-];
 const translation = (t) => [
   1,
   0,
@@ -317,27 +320,15 @@ const DESIGN_AXES = [
   [0, 0, 1],
 ];
 
-/** East, north and up at an Earth-fixed position on the frame's body. */
-function enuAxes(frame, position) {
-  const up = unit(
-    Array.from(
-      frame.body.ellipsoid.geodeticSurfaceNormal(
-        Float64Array.from(position),
-        new Float64Array(3),
-      ),
-    ),
-  );
-  const east = unit([-position[1], position[0], 0]);
-  return [east, cross(up, east), up];
-}
-
 /**
- * One tile's content in both placements, from its design-coordinate mesh.
- * The rigid content is the float32 nearest each design point less the tile's
- * centre (whole design units); the reprojected content is the frame's image
- * of exactly that point, less its own centre (whole metres).
+ * One tile's content, from its design-coordinate mesh: its positions, the
+ * float32 nearest each design point less the tile's centre (whole design
+ * units), and with `rigid` (the rigid placement's matrix) each vertex's second
+ * position, the frame's image of exactly that point, in the same model space,
+ * with how far apart the two stand along the vertex's normal, metres, and how
+ * far apart they are in design units.
  */
-function tileContents(mesh, frame, reprojected) {
+function tileContents(mesh, frame, rigid) {
   const { design, normals } = mesh;
   const count = design.length / 3;
   const lo = [Infinity, Infinity, Infinity];
@@ -356,84 +347,90 @@ function tileContents(mesh, frame, reprojected) {
   for (let i = 0; i < design.length; i++) {
     drawn[i] = centre[i % 3] + local[i];
   }
-  const rigid = {
-    centre,
-    positions: new Float32Array(design.length),
-    normals: new Float32Array(design.length),
-  };
+  const positions = new Float32Array(design.length);
+  const yUpNormals = new Float32Array(design.length);
   for (let i = 0; i < count; i++) {
     const [e, n, u] = [local[3 * i], local[3 * i + 1], local[3 * i + 2]];
-    rigid.positions.set([e, u, -n], 3 * i);
+    positions.set([e, u, -n], 3 * i);
     const [ne, nn, nu] = [
       normals[3 * i],
       normals[3 * i + 1],
       normals[3 * i + 2],
     ];
-    rigid.normals.set([ne, nu, -nn], 3 * i);
+    yUpNormals.set([ne, nu, -nn], 3 * i);
   }
-  if (!reprojected) {
-    return { drawn, rigid };
+  if (rigid === undefined) {
+    return { drawn, centre, positions, normals: yUpNormals };
   }
 
-  const fixed = new Float64Array(design.length);
-  const scratch = new Float64Array(3);
+  const inverse = invertAffine(rigid);
+  const reprojected = new Float32Array(design.length);
+  const standOff = new Float32Array(count);
+  let maxDistance = 0;
+  const fixed = new Float64Array(3);
   for (let i = 0; i < count; i++) {
-    frame.toBodyFixed(drawn.subarray(3 * i, 3 * i + 3), scratch);
-    fixed.set(scratch, 3 * i);
-  }
-  const flo = [Infinity, Infinity, Infinity];
-  const fhi = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i < fixed.length; i++) {
-    flo[i % 3] = Math.min(flo[i % 3], fixed[i]);
-    fhi[i % 3] = Math.max(fhi[i % 3], fixed[i]);
-  }
-  const fixedCentre = [0, 1, 2].map((k) => Math.round((flo[k] + fhi[k]) / 2));
-  // The frame's Jacobian at the tile's design centre, for the normals. The
-  // 3D map isn't exactly conformal (horizontal scale about mpu/k, vertical
-  // metersPerHeightUnit), so the inverse transpose would be exact; the
-  // difference is about 1e-4 rad, below shading's notice.
-  const at = frame.toBodyFixed(centre);
-  const columns = DESIGN_AXES.map((axis) =>
-    sub(
-      frame.toBodyFixed([
-        centre[0] + axis[0],
-        centre[1] + axis[1],
-        centre[2] + axis[2],
-      ]),
-      at,
-    ),
-  );
-  const positions = new Float32Array(design.length);
-  const fixedNormals = new Float32Array(design.length);
-  const exact = new Float64Array(design.length);
-  for (let i = 0; i < count; i++) {
-    const [x, y, z] = [0, 1, 2].map((k) => fixed[3 * i + k] - fixedCentre[k]);
-    positions.set([x, z, -y], 3 * i);
-    const n = [normals[3 * i], normals[3 * i + 1], normals[3 * i + 2]];
-    const m = unit(
-      [0, 1, 2].map(
-        (j) =>
-          columns[0][j] * n[0] + columns[1][j] * n[1] + columns[2][j] * n[2],
-      ),
+    frame.toBodyFixed(drawn.subarray(3 * i, 3 * i + 3), fixed);
+    const back = transformPoint(inverse, fixed);
+    const [e, n, u] = [0, 1, 2].map((k) => back[k] - centre[k]);
+    reprojected.set([e, u, -n], 3 * i);
+    maxDistance = Math.max(
+      maxDistance,
+      Math.hypot(e - local[3 * i], n - local[3 * i + 1], u - local[3 * i + 2]),
     );
-    fixedNormals.set([m[0], m[2], -m[1]], 3 * i);
-  }
-  // The reprojected points as drawn (centre + float32), for the box.
-  for (let i = 0; i < count; i++) {
-    exact[3 * i] = fixedCentre[0] + positions[3 * i];
-    exact[3 * i + 1] = fixedCentre[1] - positions[3 * i + 2];
-    exact[3 * i + 2] = fixedCentre[2] + positions[3 * i + 1];
+    // The gap and the normal Earth-fixed (the rigid matrix rotates and scales
+    // alike), the normal's length dividing out.
+    const at = transformPoint(rigid, drawn.subarray(3 * i, 3 * i + 3));
+    const normal = [0, 1, 2].map(
+      (k) =>
+        rigid[k] * normals[3 * i] +
+        rigid[4 + k] * normals[3 * i + 1] +
+        rigid[8 + k] * normals[3 * i + 2],
+    );
+    const length = Math.hypot(...normal) || 1;
+    standOff[i] =
+      Math.abs(
+        (fixed[0] - at[0]) * normal[0] +
+          (fixed[1] - at[1]) * normal[1] +
+          (fixed[2] - at[2]) * normal[2],
+      ) / length;
   }
   return {
     drawn,
-    rigid,
-    reprojected: {
-      centre: fixedCentre,
-      positions,
-      normals: fixedNormals,
-      drawn: exact,
-    },
+    centre,
+    positions,
+    normals: yUpNormals,
+    reprojected,
+    standOff,
+    maxDistance,
   };
+}
+
+/** `m⁻¹` of a column-major affine matrix (float64). */
+function invertAffine(m) {
+  const [a, b, c, , d, e, f, , g, h, i] = m;
+  const det = a * (e * i - f * h) - d * (b * i - c * h) + g * (b * f - c * e);
+  const r = new Float64Array(16);
+  r[0] = (e * i - f * h) / det;
+  r[1] = (c * h - b * i) / det;
+  r[2] = (b * f - c * e) / det;
+  r[4] = (f * g - d * i) / det;
+  r[5] = (a * i - c * g) / det;
+  r[6] = (c * d - a * f) / det;
+  r[8] = (d * h - e * g) / det;
+  r[9] = (b * g - a * h) / det;
+  r[10] = (a * e - b * d) / det;
+  r[12] = -(r[0] * m[12] + r[4] * m[13] + r[8] * m[14]);
+  r[13] = -(r[1] * m[12] + r[5] * m[13] + r[9] * m[14]);
+  r[14] = -(r[2] * m[12] + r[6] * m[13] + r[10] * m[14]);
+  r[15] = 1;
+  return r;
+}
+
+/** `m` applied to the point `p`, column-major affine (float64). */
+function transformPoint(m, p) {
+  return [0, 1, 2].map(
+    (k) => m[k] * p[0] + m[4 + k] * p[1] + m[8 + k] * p[2] + m[12 + k],
+  );
 }
 
 /**
@@ -515,166 +512,157 @@ const writeJson = (path, value) => {
 };
 
 /**
- * Writes a tileset or two from a tree of design meshes: `top` is the top
- * content tile, each node with `id`, `mesh()` (built on demand; null for a
- * tile with no content, placed between its children), `geometricError`
- * (design units) and `children`. Above it a contentless root holds the
- * rigid placement's matrix (rigid) or nothing (reprojected), so tile
- * centres stay small enough for float32. With `reprojectedDir`, the
- * reprojected tileset too. `normals: false` leaves NORMAL out (flat-shaded
+ * Writes a tileset from a tree of design meshes: `top` is the top content
+ * tile, each node with `id`, `mesh()` (built on demand; null for a tile with
+ * no content, placed between its children), `geometricError` (design units)
+ * and `children`. Above it a contentless root holds the rigid placement's
+ * matrix, so tile centres stay small enough for float32. With `dual`, each
+ * vertex carries its reprojected position too, and the tileset declares it
+ * (`DUAL_POSITION_EXTENSION`). `normals: false` leaves NORMAL out (flat-shaded
  * content: glTF's reader computes the faces' normals). Returns the vertex
- * count (one placement's), the GLB bytes written and the tile count.
+ * count, the GLB bytes written, the tile count, and with `whiskerSpacing`
+ * (design units) leaf design points at least that far apart, flat.
  */
-function writeTilesets({
+function writeTileset({
   top,
   frame,
   placement,
-  rigidDir,
-  reprojectedDir,
+  dir,
+  dual = false,
   name,
   color,
   log,
   normals = true,
+  whiskerSpacing,
 }) {
-  const mpu = frame.units.metersPerUnit;
   let vertices = 0;
   let bytes = 0;
   let tiles = 0;
+  let maxDistance = 0;
+  const leafPoints = [];
+  const rigid = placement.rigid.matrix;
   // Post-order: a node's box contains its children's.
   const visit = (node) => {
     const children = node.children.map(visit);
     const mesh = node.mesh();
     tiles++;
     if (mesh === null) {
-      // No content: centred among its children, its boxes holding theirs.
-      const among = (mode) =>
-        [0, 1, 2].map((k) =>
-          Math.round(
-            children.reduce((sum, c) => sum + c[mode].centre[k], 0) /
-              children.length,
-          ),
-        );
-      const result = {
+      // No content: centred among its children, its box holding theirs.
+      const centre = [0, 1, 2].map((k) =>
+        Math.round(
+          children.reduce((sum, c) => sum + c.centre[k], 0) / children.length,
+        ),
+      );
+      return {
         id: node.id,
         geometricError: node.geometricError,
         children,
-        rigid: {
-          centre: among("rigid"),
-          box: fitBox(
-            DESIGN_AXES,
-            [],
-            children.map((c) => c.rigid.box),
-          ),
-        },
+        centre,
+        box: fitBox(
+          DESIGN_AXES,
+          [],
+          children.map((c) => c.box),
+        ),
       };
-      if (reprojectedDir !== undefined) {
-        const centre = among("reprojected");
-        result.reprojected = {
-          centre,
-          box: fitBox(
-            enuAxes(frame, centre),
-            [],
-            children.map((c) => c.reprojected.box),
-          ),
-        };
-      }
-      return result;
     }
-    const contents = tileContents(mesh, frame, reprojectedDir !== undefined);
+    const contents = tileContents(mesh, frame, dual ? rigid : undefined);
     vertices += mesh.design.length / 3;
+    maxDistance = Math.max(maxDistance, contents.maxDistance ?? 0);
+    if (whiskerSpacing !== undefined && node.children.length === 0) {
+      leafPoints.push(contents.drawn);
+    }
     const uri = `tiles/${node.id}.glb`;
-    const glb = (positions, faceNormals) =>
-      writeGlb({
-        positions,
-        ...(normals && { normals: faceNormals }),
-        indices: mesh.indices,
-        featureIds: mesh.featureIds,
-        features: mesh.features,
-        color,
-        ...(mesh.colors !== undefined && { colors: mesh.colors }),
-      });
-    const rigidGlb = glb(contents.rigid.positions, contents.rigid.normals);
-    mkdirSync(join(rigidDir, "tiles"), { recursive: true });
-    writeFileSync(join(rigidDir, uri), rigidGlb);
-    bytes += rigidGlb.byteLength;
-    const result = {
+    const glb = writeGlb({
+      positions: contents.positions,
+      ...(normals && { normals: contents.normals }),
+      indices: mesh.indices,
+      featureIds: mesh.featureIds,
+      features: mesh.features,
+      color,
+      ...(mesh.colors !== undefined && { colors: mesh.colors }),
+      ...(dual && {
+        attributes: {
+          [REPROJECTED_SEMANTIC]: contents.reprojected,
+          [STANDOFF_SEMANTIC]: contents.standOff,
+        },
+      }),
+    });
+    mkdirSync(join(dir, "tiles"), { recursive: true });
+    writeFileSync(join(dir, uri), glb);
+    bytes += glb.byteLength;
+    return {
       id: node.id,
       uri,
       geometricError: node.geometricError,
       children,
-      rigid: {
-        centre: contents.rigid.centre,
-        box: fitBox(
-          DESIGN_AXES,
-          contents.drawn,
-          children.map((c) => c.rigid.box),
-        ),
-      },
+      centre: contents.centre,
+      box: fitBox(
+        DESIGN_AXES,
+        contents.drawn,
+        children.map((c) => c.box),
+      ),
     };
-    if (reprojectedDir !== undefined) {
-      const r = contents.reprojected;
-      const reprojectedGlb = glb(r.positions, r.normals);
-      mkdirSync(join(reprojectedDir, "tiles"), { recursive: true });
-      writeFileSync(join(reprojectedDir, uri), reprojectedGlb);
-      bytes += reprojectedGlb.byteLength;
-      result.reprojected = {
-        centre: r.centre,
-        box: fitBox(
-          enuAxes(frame, r.centre),
-          r.drawn,
-          children.map((c) => c.reprojected.box),
-        ),
-      };
-    }
-    return result;
   };
   const built = visit(top);
 
   // The tile JSON: translations from the parent's centre to the tile's.
-  const tileNode = (node, mode, parentCentre, scale) => ({
+  const tileNode = (node, parentCentre) => ({
     id: node.id,
-    box: boxJson(node[mode].box, node[mode].centre),
-    geometricError: node.geometricError * scale,
-    transform: translation(sub(node[mode].centre, parentCentre)),
+    box: boxJson(node.box, node.centre),
+    geometricError: node.geometricError,
+    transform: translation(sub(node.centre, parentCentre)),
     content: node.uri,
-    children: node.children.map((c) =>
-      tileNode(c, mode, node[mode].centre, scale),
-    ),
+    children: node.children.map((c) => tileNode(c, node.centre)),
   });
-  // The root: contentless, centred on the origin (design or Earth-fixed).
-  // Its error, in design units, is its rigid box's diagonal, so the top tile
-  // is drawn whenever the whole is more than a few pixels.
-  const half = built.rigid.box.halfAxes.map((a) => Math.hypot(...a));
+  // The root: contentless, centred on the origin of design space.
+  // Its error, in design units, is its box's diagonal, so the top tile is
+  // drawn whenever the whole is more than a few pixels.
+  const half = built.box.halfAxes.map((a) => Math.hypot(...a));
   const rootError = Math.max(2 * Math.hypot(...half), 2 * built.geometricError);
-  const rootNode = (mode, scale) => ({
-    id: "root",
-    box: boxJson(built[mode].box, [0, 0, 0]),
-    geometricError: rootError * scale,
-    children: [tileNode(built, mode, [0, 0, 0], scale)],
-  });
-  const rigidJson = tilesetJson(rootNode("rigid", 1), {
-    transform: Array.from(placement.rigid.matrix),
-    extensions: frameExtensions(frame.definition, {
-      mode: "rigid",
-      anchor: Array.from(placement.rigid.anchor),
-    }),
-  });
-  // The tileset's own error isn't scaled by any transform: metres in both.
-  rigidJson.geometricError = rootError * mpu;
-  writeJson(join(rigidDir, "tileset.json"), rigidJson);
-  if (reprojectedDir !== undefined) {
-    // Metres where the rigid tileset has design units: the engine scales the
-    // rigid one's errors by its root transform (metersPerUnit), so both state
-    // the same error.
-    const reprojectedJson = tilesetJson(rootNode("reprojected", mpu), {
-      extensions: frameExtensions(frame.definition, { mode: "reprojected" }),
-    });
-    writeJson(join(reprojectedDir, "tileset.json"), reprojectedJson);
-  }
+  const json = tilesetJson(
+    {
+      id: "root",
+      box: boxJson(built.box, [0, 0, 0]),
+      geometricError: rootError,
+      children: [tileNode(built, [0, 0, 0])],
+    },
+    {
+      transform: Array.from(rigid),
+      extensions: {
+        ...frameExtensions(frame.definition, {
+          mode: "rigid",
+          anchor: Array.from(placement.rigid.anchor),
+        }),
+        ...(dual && {
+          [DUAL_POSITION_EXTENSION]: {
+            semantic: REPROJECTED_SEMANTIC,
+            maxDistance,
+          },
+        }),
+      },
+    },
+  );
+  // The tileset's own error isn't scaled by any transform: metres.
+  json.geometricError = rootError * frame.units.metersPerUnit;
+  writeJson(join(dir, "tileset.json"), json);
   log(
     `  ${name}: ${tiles.toLocaleString("en-US")} tiles, ${vertices.toLocaleString("en-US")} vertices, ${(bytes / 1e6).toFixed(1)} MB of GLB`,
   );
-  return { vertices, bytes, tiles };
+  let whiskers;
+  if (whiskerSpacing !== undefined) {
+    const all = new Float64Array(leafPoints.reduce((n, p) => n + p.length, 0));
+    let at = 0;
+    for (const p of leafPoints) {
+      all.set(p, at);
+      at += p.length;
+    }
+    whiskers = spacedPoints(all, whiskerSpacing).flatMap((v) => [
+      all[3 * v],
+      all[3 * v + 1],
+      all[3 * v + 2],
+    ]);
+  }
+  return { vertices, bytes, tiles, maxDistance, whiskers };
 }
 
 /**
@@ -742,6 +730,7 @@ function siteAnswers(site, frame, placement, plan, tree, written) {
       vertices: written.vertices,
       leafError: LEAF_ERROR_METRES,
     },
+    whiskers: written.whiskers,
   };
 }
 
@@ -995,17 +984,13 @@ export async function ensureDesignTiles(
   frames,
   logger = console.log,
 ) {
-  const out = join(store, "design-globe");
+  const out = join(store, DESIGN_TILES_DIRECTORY);
   const wanted = wantedManifest(store);
   const outputs = [
     "answers.json",
-    "corridor-rigid/tileset.json",
-    "corridor-reprojected/tileset.json",
+    "corridor/tileset.json",
     "site-building/tileset.json",
-    ...PORTFOLIO.flatMap((site) => [
-      `portfolio-${site.id}-rigid/tileset.json`,
-      `portfolio-${site.id}-reprojected/tileset.json`,
-    ]),
+    ...PORTFOLIO.map((site) => `portfolio-${site.id}/tileset.json`),
   ];
   try {
     const current = JSON.parse(
@@ -1031,7 +1016,7 @@ export async function ensureDesignTiles(
   for (const name of readdirSync(store)) {
     const path = join(store, name);
     if (
-      name.startsWith("design-globe.") &&
+      name.startsWith(`${DESIGN_TILES_DIRECTORY}.`) &&
       name.endsWith(".partial") &&
       Date.now() - statSync(path).mtimeMs > 3_600_000
     ) {
@@ -1091,12 +1076,12 @@ export async function ensureDesignTiles(
       children,
     };
   };
-  const corridor = writeTilesets({
+  const corridor = writeTileset({
     top: withErrors(tree),
     frame,
     placement,
-    rigidDir: join(partial, "corridor-rigid"),
-    reprojectedDir: join(partial, "corridor-reprojected"),
+    dir: join(partial, "corridor"),
+    dual: true,
     name: "corridor (rigid and reprojected)",
     // Each vertex's colour (corridorMesh.mjs `CORRIDOR_PALETTE`).
     color: WHITE,
@@ -1140,7 +1125,7 @@ export async function ensureDesignTiles(
         v * 4,
       );
     });
-    writeTilesets({
+    writeTileset({
       top: {
         id: "0-0",
         mesh: () => ({ ...mesh, colors }),
@@ -1149,7 +1134,7 @@ export async function ensureDesignTiles(
       },
       frame: siteFrame,
       placement: placeRigid(siteFrame, buildingAnchor(SITE_BUILDING)),
-      rigidDir: join(partial, "site-building"),
+      dir: join(partial, "site-building"),
       name: SITE_BUILDING.name,
       // The vertices carry the colours; the material is white, or glTF
       // multiplies them (the stories would read BUILDING_COLOR squared).
@@ -1171,18 +1156,23 @@ export async function ensureDesignTiles(
       metersPerUnit: mpu,
     });
     const placement = placeRigid(siteFrame, modelAnchor(site));
-    const written = writeTilesets({
+    const written = writeTileset({
       top: tree.top,
       frame: siteFrame,
       placement,
-      rigidDir: join(partial, `portfolio-${site.id}-rigid`),
-      reprojectedDir: join(partial, `portfolio-${site.id}-reprojected`),
+      dir: join(partial, `portfolio-${site.id}`),
+      dual: true,
       name: `${site.name} (${site.model.kind}, rigid and reprojected)`,
       color: WHITE,
       log: logger,
       // Flat-shaded throughout: the reader's own face normals, a third of
       // the bytes saved.
       normals: false,
+      // About twelve across the model, 2 m apart at the least.
+      whiskerSpacing: Math.max(
+        2 / mpu,
+        planExtent(plan, modelAnchor(site)).extent / 12,
+      ),
     });
     sites[site.id] = siteAnswers(
       site,
@@ -1216,6 +1206,6 @@ export async function ensureDesignTiles(
   rmSync(old, { recursive: true, force: true });
   const seconds = (performance.now() - started) / 1000;
   logger(
-    `design globe: ${corridor.vertices.toLocaleString("en-US")} corridor vertices per placement and the ladder's seven sites, written in ${seconds.toFixed(1)} s`,
+    `design globe: ${corridor.vertices.toLocaleString("en-US")} corridor vertices and the ladder's seven sites, written in ${seconds.toFixed(1)} s`,
   );
 }

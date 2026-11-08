@@ -8,6 +8,8 @@ export interface DesignMesh {
   color: [number, number, number, number];
   /** Linear RGBA a vertex in [0, 1], written as COLOR_0 (normalized bytes). */
   colors?: Float32Array;
+  /** Named float attributes by glTF semantic, 1 or 3 floats a vertex. */
+  attributes?: Readonly<Record<string, Float32Array>>;
 }
 /** A GLB 2.0 of the mesh, with feature IDs, a name/kind property table and, given `colors`, COLOR_0. */
 export function writeGlb(mesh: DesignMesh): Uint8Array;
