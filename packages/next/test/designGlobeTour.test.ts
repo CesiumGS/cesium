@@ -31,6 +31,7 @@ const FACTS: TourFacts = {
     symbol: "ftUS",
     rigidShort: 0.233,
     rigidOffset: 37.4,
+    ruler: { feet: 10_000, gap: 0.938 },
   },
   ladder: new Map([
     [
@@ -156,6 +157,10 @@ describe("design globe tour", () => {
     expect(texts[2]).toContain("19.3 m");
     // Step 4: the length error apart from the position.
     expect(texts[3]).toMatch(/measure 10,000 ftUS in both placements/);
+    // Read at the ruler's far end, where the tour's shot is (UX review S10).
+    expect(texts[3]).toMatch(
+      /ground's 10,000 ft ends 0\.938 ftUS before design's/,
+    );
     expect(texts[3]).toContain("37.4 m away");
     expect(texts[3]).toContain("233 mm short");
     // Step 6 says what is checked, no more.

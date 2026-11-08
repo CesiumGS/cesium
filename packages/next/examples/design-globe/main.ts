@@ -820,8 +820,8 @@ export function run(context: ExampleContext): ExampleRun {
       return false;
     }
     if (
-      (target.shot === "mark" || target.shot === "pair") &&
-      tool.openerFocus(target.shot) === undefined
+      (target.shot === "mark" && tool.openerFocus("mark") === undefined) ||
+      (target.shot === "pair" && tool.rulerFocus() === undefined)
     ) {
       return false;
     }
@@ -839,8 +839,13 @@ export function run(context: ExampleContext): ExampleRun {
       if (f !== undefined) {
         flyLit(f);
       }
-    } else if (target.shot === "mark" || target.shot === "pair") {
-      measureActions.show(target.shot);
+    } else if (target.shot === "mark") {
+      measureActions.show("mark");
+    } else if (target.shot === "pair") {
+      // The pair's far end, close in (UX review S10): from its overview
+      // 4 km out the pair is a line and its figures a pixel; here the
+      // ruler's bracket between ground's feet and design's reads.
+      measureActions.closeInOnRuler();
     }
     return true;
   }

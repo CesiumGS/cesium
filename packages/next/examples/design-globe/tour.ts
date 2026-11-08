@@ -138,6 +138,8 @@ export interface TourFacts {
     readonly rigidShort?: number;
     /** How far rigid draws the pair's ends from where they are, metres (their mean). */
     readonly rigidOffset?: number;
+    /** The ruler at its far end: ground's last whole 1,000 ft and how far before design's it ends, design units. */
+    readonly ruler?: { readonly feet: number; readonly gap: number };
   };
   /**
    * Each ladder site's rigid error at its edge and its extent, metres, its
@@ -227,7 +229,12 @@ function narration(state: TourState, f: TourFacts): string {
         f.pair?.rigidShort !== undefined
           ? ` and ${small(f.pair.rigidShort)} short`
           : "";
-      return `Two stations ${apart} apart measure ${apart} in both placements; reprojected draws the line where it is, while rigid draws it${away}${short}.`;
+      // One sentence, read at the ruler's far end where the shot is.
+      const ruler =
+        f.pair?.ruler !== undefined
+          ? `; up close at its far end, ground's ${fixed(f.pair.ruler.feet, 0)} ft ends ${fixed(f.pair.ruler.gap, 3)} ${f.pair.symbol} before design's`
+          : "";
+      return `Two stations ${apart} apart measure ${apart} in both placements, while rigid draws the line${away}${short}${ruler}.`;
     }
     case "ladder":
       return ladderStop(

@@ -9,6 +9,7 @@ import type { SagSample } from "./overlays.ts";
 import { rigidErrorTerms, type ErrorTerms } from "./siteFacts.ts";
 import { ANCHOR_STATION } from "./corridor.ts";
 import { unitSymbol } from "./measureModel.ts";
+import { rulerEnd } from "./measureOpeners.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
 import { TOUR_LADDER, type TourFacts } from "./tour.ts";
 
@@ -71,6 +72,15 @@ export function tourFactsOf(
         pair: {
           horizontal: pair.horizontalDistance,
           symbol: unitSymbol(answers.frame.unitName),
+          ruler: rulerEnd(
+            {
+              design: pair.designDistance,
+              horizontal: pair.horizontalDistance,
+              trueDistance: pair.trueDistance,
+            },
+            answers.frame.metersPerUnit,
+            unitSymbol(answers.frame.unitName),
+          ),
           ...(drawn !== undefined && {
             rigidShort: pair.trueDistance - drawn,
           }),
