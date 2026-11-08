@@ -3,7 +3,15 @@
 // cmpt tile was "unsupported" and drew nothing while it still counted as
 // selected: 369 of the 1054 tiles of the BIM design model (ion 2464651).
 import { readFileSync } from "node:fs";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 vi.mock("../src/io/decoders.ts", () => ({
   decodeDraco: async () => {
@@ -381,6 +389,25 @@ describe("mergeAssets", () => {
   });
 });
 
+/** An i3dm of one instance whose glTF is fetched from `uri`. */
+function i3dmByUri(uri: string): Uint8Array {
+  const json = new TextEncoder().encode(
+    JSON.stringify({ INSTANCES_LENGTH: 1, POSITION: { byteOffset: 0 } }),
+  );
+  const bin = new Uint8Array(12);
+  const body = new TextEncoder().encode(uri);
+  const out = new Uint8Array(32 + json.length + bin.length + body.length);
+  out.set(new TextEncoder().encode("i3dm"));
+  const view = new DataView(out.buffer);
+  view.setUint32(4, 1, true);
+  view.setUint32(8, out.length, true);
+  view.setUint32(12, json.length, true);
+  view.setUint32(16, bin.length, true);
+  out.set(json, 32);
+  out.set(body, 32 + json.length + bin.length);
+  return out;
+}
+
 describe("parseGltf on composites", () => {
   const textures = {
     bc7: false,
@@ -403,6 +430,81 @@ describe("parseGltf on composites", () => {
     // Transferring one buffer twice is a DataCloneError.
     expect(new Set(transfer).size).toBe(transfer.length);
     expect(() => structuredClone(asset, { transfer })).not.toThrow();
+  });
+
+  it("keeps the composite's network timing, with more than one part", async () => {
+    const { asset } = await parseGltf(
+      dataUrl(specs("Composite/Composite/composite.cmpt")),
+      textures,
+    );
+    expect(asset.parts).toHaveLength(2);
+    expect(asset.timing!.networkMs).toBeGreaterThanOrEqual(0);
+    expect(typeof asset.timing!.networkMs).toBe("number");
+    expect(asset.timing!.bytes).toBe(
+      specs("Composite/Composite/composite.cmpt").byteLength,
+    );
+  });
+
+  describe("many inner tiles", () => {
+    const GLTF = JSON.stringify({ asset: { version: "2.0" } });
+    let started: string[];
+    let inFlight: number;
+    let peak: number;
+
+    beforeEach(() => {
+      started = [];
+      inFlight = 0;
+      peak = 0;
+    });
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    /** Fetches of the inner tiles' glTFs: each answers after a tick. */
+    function stubFetch(fail: (uri: string) => boolean = () => false) {
+      const realFetch = globalThis.fetch;
+      vi.stubGlobal("fetch", async (input: string | URL) => {
+        const uri = String(input);
+        if (!uri.startsWith("https://tiles.test/g")) {
+          return realFetch(input);
+        }
+        started.push(uri);
+        peak = Math.max(peak, ++inFlight);
+        await new Promise((resolve) => setImmediate(resolve));
+        inFlight--;
+        return fail(uri)
+          ? new Response("gone", { status: 404 })
+          : new Response(GLTF);
+      });
+    }
+
+    const many = (n: number) =>
+      composite(
+        Array.from({ length: n }, (_, i) =>
+          i3dmByUri(`https://tiles.test/g${i}.gltf`),
+        ),
+      );
+
+    it("parses a few at a time", async () => {
+      stubFetch();
+      const { asset } = await parseGltf(
+        dataUrl(many(MAX_COMPOSITE_TILES)),
+        textures,
+      );
+      expect(asset.parts).toHaveLength(MAX_COMPOSITE_TILES);
+      expect(started).toHaveLength(MAX_COMPOSITE_TILES);
+      expect(peak).toBeGreaterThan(1);
+      expect(peak).toBeLessThanOrEqual(4);
+    });
+
+    it("stops at the first failure, and names it", async () => {
+      stubFetch((uri) => uri.endsWith("/g1.gltf"));
+      await expect(parseGltf(dataUrl(many(40)), textures)).rejects.toThrow(
+        /composite inner tile 1: .*404/,
+      );
+      // Only the first batch started; the other 36 never did.
+      expect(started.length).toBeLessThanOrEqual(4);
+    });
   });
 
   it("gives each part's draws their own batch table", async () => {
@@ -669,7 +771,7 @@ describe("a composite placed as one tile's content", () => {
         }
         engine.renderFrame();
         expect(tileset.stats.undrawn).toBe(1);
-        expect([...tileset.undrawnReasons].join()).toContain(reason);
+        expect([...tileset.undrawnReasons.keys()].join()).toContain(reason);
         expect([...tileset.warnings].join()).toContain(reason);
         expect(tileset.stats.inFlight).toBe(0);
         expect(tileset.idle).toBe(true);

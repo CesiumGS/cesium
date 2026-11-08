@@ -8,6 +8,9 @@
 // test/frameLoopSleep.test.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Pose } from "../bench/suite/schema.ts";
+import type { GltfAsset } from "../src/io/gltfTypes.ts";
+import * as m4 from "../src/math/mat4.ts";
+import type { Engine } from "../src/scene/Engine.ts";
 import type { Adapter, RunSpec } from "../bench/suite/suite.ts";
 import type { ExplorerSession } from "../bench/suite/views/explorerSession.ts";
 import {
@@ -222,6 +225,110 @@ describe("the Explorer sleeps when nothing changes", () => {
     await frames(5);
     expect(queue.size).toBe(0);
     adapter!.setCamera(pose(7));
+    expect(queue.size).toBe(0);
+  });
+
+  it("a changed sun renders once; the same sun renders nothing", async () => {
+    const [adapter] = await loaded(1, "free");
+    const before = rendered(adapter!);
+    adapter!.setSun(Float64Array.of(0.6, 0.8, 0));
+    await frames(5);
+    expect(rendered(adapter!)).toBe(before + 1);
+    adapter!.setSun(Float64Array.of(0.6, 0.8, 0));
+    expect(queue.size).toBe(0);
+    await frames(60);
+    expect(rendered(adapter!)).toBe(before + 1);
+    adapter!.setSun(Float64Array.of(0, 0.6, 0.8));
+    await frames(5);
+    expect(rendered(adapter!)).toBe(before + 2);
+    expect(queue.size).toBe(0);
+  });
+
+  it("a camera linked from a 1.x pane wakes a sleeping 2.0 pane, once per move", async () => {
+    const [real, follower] = await loaded(2, "free");
+    // A 1.x pane isn't on demand: its loop runs every refresh, and the
+    // session copies its camera to the others.
+    let legacyPose = pose(0);
+    const legacy = new Proxy(real!, {
+      get: (target, key) =>
+        key === "getCamera"
+          ? () => legacyPose
+          : Reflect.get(target, key).bind?.(target),
+    });
+    const panes = (
+      session as unknown as {
+        panes: Array<{ adapter: Adapter; onDemand: boolean }>;
+      }
+    ).panes;
+    panes[0] = { ...panes[0]!, adapter: legacy, onDemand: false };
+    await frames(5);
+    const before = rendered(follower!);
+    legacyPose = pose(80);
+    await frames(5);
+    expect(follower!.getCamera().position).toEqual(pose(80).position);
+    expect(rendered(follower!)).toBe(before + 1);
+    // Written again each refresh, unmoved: no more renders.
+    await frames(120);
+    expect(rendered(follower!)).toBe(before + 1);
+  });
+
+  it("a tile's arrival wakes a sleeping pane", async () => {
+    const [adapter] = await loaded(1, "free");
+    const { engine, view } = adapter as unknown as {
+      engine: Engine;
+      view: { world: Parameters<Engine["addTileset"]>[0] };
+    };
+    let arrive!: (asset: GltfAsset) => void;
+    vi.spyOn(engine, "loadGltf").mockImplementation(
+      () => new Promise<GltfAsset>((resolve) => (arrive = resolve)),
+    );
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(
+          JSON.stringify({
+            asset: { version: "1.1" },
+            geometricError: 100,
+            root: {
+              geometricError: 0,
+              refine: "REPLACE",
+              transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, R, 0, 0, 1],
+              boundingVolume: { box: [0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0, 10] },
+              content: { uri: "tile.gltf" },
+            },
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    const tileset = await engine.addTileset(
+      view.world,
+      "https://tiles.test/explorer/tileset.json",
+    );
+    await frames(60);
+    expect(arrive).toBeDefined();
+    // Waiting on the network: nothing to do.
+    expect(queue.size).toBe(0);
+    const before = rendered(adapter!);
+    arrive({
+      meshes: [
+        {
+          positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+          normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+          indices: new Uint32Array([0, 1, 2]),
+        },
+      ],
+      materials: [],
+      textures: [],
+      images: [],
+      draws: [{ mesh: 0, material: -1, matrix: m4.mat4() }],
+      featureTables: [],
+      warnings: [],
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(queue.size).toBeGreaterThan(0);
+    await frames(60);
+    expect(tileset.stats.loaded).toBe(1);
+    expect(rendered(adapter!)).toBeGreaterThan(before);
     expect(queue.size).toBe(0);
   });
 

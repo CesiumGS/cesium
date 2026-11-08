@@ -10,7 +10,7 @@ import type { GltfAsset } from "./gltfTypes.ts";
 /** Composites inside composites: real data nests once, if at all. */
 export const MAX_COMPOSITE_DEPTH = 8;
 /** Inner tiles in one composite's whole tree. */
-export const MAX_COMPOSITE_TILES = 4096;
+export const MAX_COMPOSITE_TILES = 256;
 
 const HEADER_BYTES = 16;
 /** Every inner tile starts: magic, version, byteLength. */

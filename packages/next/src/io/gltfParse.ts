@@ -124,6 +124,9 @@ export async function parseGltf(
     : parseTile(bytes, url, init, textureSupport, arrival);
 }
 
+/** Inner tiles of a composite parsed at once. */
+const COMPOSITE_BATCH = 4;
+
 /** How a content's bytes arrived, for its timing. */
 interface Arrival {
   /** When decoding started (the bytes had arrived). */
@@ -154,17 +157,50 @@ async function parseComposite(
       `unsupported tile format: cmpt with nothing to draw (${warnings.join("; ") || "no inner tiles"})`,
     );
   }
-  const settled = await Promise.allSettled(
-    inner.map((tile) => parseTile(tile, url, init, textureSupport, arrival)),
-  );
-  const parsed: Parsed[] = [];
-  settled.forEach((result) => {
-    if (result.status === "fulfilled") {
-      parsed.push(result.value);
+  // A few inner tiles at a time: each can fetch and decode images, and a
+  // hostile composite must not decode hundreds at once. The first failure
+  // stops the rest.
+  const stop = new AbortController();
+  const outer = init.signal;
+  const onOuterAbort = () => stop.abort(outer!.reason);
+  if (outer) {
+    if (outer.aborted) {
+      stop.abort(outer.reason);
+    } else {
+      outer.addEventListener("abort", onOuterAbort, { once: true });
     }
-  });
-  const failed = settled.findIndex((result) => result.status === "rejected");
-  if (failed >= 0) {
+  }
+  const innerInit: RequestInit = { ...init, signal: stop.signal };
+  const parsed: Parsed[] = [];
+  const first: { failure?: { index: number; reason: unknown } } = {};
+  try {
+    for (
+      let start = 0;
+      start < inner.length && !first.failure;
+      start += COMPOSITE_BATCH
+    ) {
+      const batch = inner.slice(start, start + COMPOSITE_BATCH);
+      const results = await Promise.allSettled(
+        batch.map((tile, i) =>
+          parseTile(tile, url, innerInit, textureSupport, arrival).catch(
+            (reason: unknown) => {
+              first.failure ??= { index: start + i, reason };
+              stop.abort(reason);
+              throw reason;
+            },
+          ),
+        ),
+      );
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          parsed.push(result.value);
+        }
+      }
+    }
+  } finally {
+    outer?.removeEventListener("abort", onOuterAbort);
+  }
+  if (first.failure) {
     // The others' decoded images aren't going anywhere.
     for (const { asset } of parsed) {
       for (const image of asset.images) {
@@ -173,12 +209,12 @@ async function parseComposite(
         }
       }
     }
-    const reason = (settled[failed] as PromiseRejectedResult).reason;
+    const { index, reason } = first.failure;
     if (reason instanceof DOMException) {
       throw reason; // a cancelled load stays a cancelled load
     }
     throw new Error(
-      `composite inner tile ${failed}: ${reason instanceof Error ? reason.message : String(reason)}`,
+      `composite inner tile ${index}: ${reason instanceof Error ? reason.message : String(reason)}`,
     );
   }
   const asset = mergeAssets(parsed.map((p) => p.asset));
@@ -193,9 +229,11 @@ async function parseComposite(
       ...asset,
       warnings: [...new Set([...warnings, ...asset.warnings])],
       timing: {
-        ...asset.timing!,
         format: "cmpt",
-        // Each part's timing held the whole tile's arrival already.
+        // The composite's own arrival: a merged asset has no timing, and
+        // each part's held the whole tile's arrival already.
+        networkMs: arrival.networkMs,
+        ...arrival.network,
         bytes: arrival.received,
         decodeMs: performance.now() - arrival.decodeStart,
         images,

@@ -133,7 +133,14 @@ const PUBLIC: Source[] = [
 const MODES = ["unlit", "direct"] as const;
 type Mode = (typeof MODES)[number];
 
-/** Pick test grid, as fractions of the view. */
+/**
+ * Pick test grid, as fractions of the view.
+ *
+ * Known difference: on the Specs Composite tileset, (0.50, 0.83) is 2.0 `id 7`
+ * and 1.x no id. In 2.0 that pixel is on the b3dm building's silhouette edge,
+ * about nine pixels from the nearest i3dm box (hiding the b3dm part picks
+ * nothing there), so it is not a depth tie but a one-pixel edge difference.
+ */
 const PICK_GRID: Array<[number, number]> = [];
 for (let j = 1; j <= 5; j++) {
   for (let i = 1; i <= 7; i++) {

@@ -311,10 +311,28 @@ const DEPTH_COLORS: ReadonlyArray<readonly [number, number, number, number]> = [
 ];
 const WHITE = [1, 1, 1, 1] as const;
 
+/** Most distinct reasons kept for tiles that draw nothing. */
+export const MAX_UNDRAWN_REASONS = 20;
+
+/**
+ * A reason a tile draws nothing, without the tile in it: URLs (which can
+ * carry a query string) and an inner tile's number come out, so that a
+ * thousand failed tiles are one reason, not a thousand.
+ */
+export function undrawnKind(reason: string): string {
+  return reason
+    .replace(/[a-z][a-z0-9+.-]*:\/\/[^\s]*?(?=:\s|[\s;,)]|$)/gi, "<url>")
+    .replace(/composite inner tile \d+/g, "composite inner tile");
+}
+
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
-  /** Why tiles draw nothing (`TilesetStats.undrawn`), each reason once. */
-  readonly undrawnReasons = new Set<string>();
+  /**
+   * Why tiles draw nothing (`TilesetStats.undrawn`): each reason with tile
+   * URLs and numbers taken out, and how many tiles. Holds at most
+   * `MAX_UNDRAWN_REASONS` reasons.
+   */
+  readonly undrawnReasons = new Map<string, number>();
   /** Whether loaded tiles keep their triangles (`TilesetOptions.retainGeometry`). */
   readonly retainGeometry: boolean;
   readonly events = new Emitter<TilesetEvents>();
@@ -1172,7 +1190,7 @@ export class Tileset3D implements TileTree {
         this.stats.tiles += countTiles(root);
       } catch (error) {
         tile.state = "failed";
-        this.warnings.add(
+        this.undrawnTile(
           `tileset JSON failed: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
@@ -1581,10 +1599,16 @@ export class Tileset3D implements TileTree {
   }
 
   /** One more tile that draws nothing, and why (`TilesetStats.undrawn`). */
-  private undrawnTile(reason: string): void {
+  undrawnTile(reason: string): void {
     this.stats.undrawn++;
-    this.undrawnReasons.add(reason);
-    this.warnings.add(reason);
+    const kind = undrawnKind(reason);
+    if (
+      this.undrawnReasons.has(kind) ||
+      this.undrawnReasons.size < MAX_UNDRAWN_REASONS
+    ) {
+      this.undrawnReasons.set(kind, (this.undrawnReasons.get(kind) ?? 0) + 1);
+      this.warnings.add(kind);
+    }
   }
 
   /**

@@ -1,6 +1,11 @@
 // 3D Tiles 1.0's and 1.1's spellings in a tileset's JSON, read alike.
 import { describe, expect, it } from "vitest";
 import { treeFromJson, type TileJson } from "../src/streaming/Tile.ts";
+import {
+  MAX_UNDRAWN_REASONS,
+  Tileset3D,
+  undrawnKind,
+} from "../src/streaming/Tileset3D.ts";
 
 const BOX = { box: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1] };
 
@@ -106,5 +111,78 @@ describe("a tileset's JSON, 1.0 and 1.1", () => {
     expect(read(tile, { asset: { gltfUpAxis: "W" } }).warnings).toEqual([
       "gltfUpAxis W is not an axis (treated as Y)",
     ]);
+  });
+});
+
+describe("tiles that draw nothing", () => {
+  /** What `Tileset3D.undrawnTile` touches, without a tileset. */
+  function counter() {
+    const state = {
+      stats: { undrawn: 0 },
+      undrawnReasons: new Map<string, number>(),
+      warnings: new Set<string>(),
+    };
+    const add = (reason: string) =>
+      Tileset3D.prototype.undrawnTile.call(state as never, reason);
+    return { state, add };
+  }
+
+  it("takes the tile's URL out of a reason", () => {
+    expect(
+      undrawnKind(
+        "content failed: Failed to fetch https://tiles.test/a/b123.b3dm?token=x: 503",
+      ),
+    ).toBe("content failed: Failed to fetch <url>: 503");
+    expect(
+      undrawnKind(
+        "content failed: composite inner tile 17: Failed to fetch https://t.test/g.gltf: 404",
+      ),
+    ).toBe("content failed: composite inner tile: Failed to fetch <url>: 404");
+  });
+
+  it("groups tiles by reason, and counts each", () => {
+    const { state, add } = counter();
+    for (let i = 0; i < 369; i++) {
+      add(`content failed: Failed to fetch https://tiles.test/t${i}.cmpt: 503`);
+    }
+    expect(state.stats.undrawn).toBe(369);
+    expect([...state.undrawnReasons]).toEqual([
+      ["content failed: Failed to fetch <url>: 503", 369],
+    ]);
+    expect(state.warnings.size).toBe(1);
+  });
+
+  it("keeps at most a few reasons, and still counts the tiles", () => {
+    const { state, add } = counter();
+    for (let i = 0; i < MAX_UNDRAWN_REASONS + 30; i++) {
+      add(`kind ${i} of trouble`);
+    }
+    expect(state.undrawnReasons.size).toBe(MAX_UNDRAWN_REASONS);
+    expect(state.warnings.size).toBe(MAX_UNDRAWN_REASONS);
+    expect(state.stats.undrawn).toBe(MAX_UNDRAWN_REASONS + 30);
+    add("kind 0 of trouble");
+    expect(state.undrawnReasons.get("kind 0 of trouble")).toBe(2);
+  });
+
+  it("counts an implicit tile", () => {
+    const reasons: string[] = [];
+    const warnings = new Set<string>();
+    treeFromJson(
+      {
+        asset: { version: "1.1" },
+        geometricError: 1,
+        root: {
+          boundingVolume: BOX,
+          geometricError: 0,
+          implicitTiling: { subdivisionScheme: "QUADTREE" },
+          content: { uri: "t/{level}.glb" },
+        },
+      },
+      "https://tiles.test/tileset.json",
+      undefined,
+      { warnings, undrawnTile: (r: string) => reasons.push(r) } as never,
+    );
+    expect(reasons).toHaveLength(1);
+    expect(reasons[0]).toMatch(/implicit tiling not supported/);
   });
 });

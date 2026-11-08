@@ -342,9 +342,9 @@ export function Explorer() {
       </p>
       <p>
         <b>Inspect</b>: pause streaming freezes each engine's tile selection;
-        tint tiles by tree depth or by which engine draws them; show bounding
+        tint tiles by tree depth or by which engine selects them; show bounding
         volumes and content volumes. The selection by depth below the viewports
-        counts the tiles each engine draws per level.
+        counts the tiles each engine selects per level.
       </p>
     </>
   );
@@ -651,7 +651,9 @@ export function Explorer() {
                 {paneName(configs[i], index.branch)} can&rsquo;t draw the
                 content of {undrawn.tiles.toLocaleString()}{" "}
                 {undrawn.tiles === 1 ? "tile" : "tiles"} so far, though the tile
-                counts include them: {undrawn.reasons.join("; ")}
+                counts include them: {undrawn.reasons.slice(0, 3).join("; ")}
+                {undrawn.reasons.length > 3 &&
+                  `; and ${undrawn.reasons.length - 3} more kinds`}
               </Alert>
             ),
         )}
@@ -940,9 +942,9 @@ function Selection({
   return (
     <Section
       title="Selection by depth"
-      description={`Tiles each engine draws now, per level of the tree${
+      description={`Tiles each engine selects now, per level of the tree${
         configs.length > 1
-          ? "; “only” counts tiles the other engine doesn't draw"
+          ? "; “only” counts tiles the other engine doesn't select"
           : ""
       }. Updates as the camera moves.`}
     >
@@ -960,7 +962,7 @@ function Selection({
               </TableCell>
             ))}
             <TableCell className="explorer-bars-cell">
-              <span className="visually-hidden">Tiles drawn</span>
+              <span className="visually-hidden">Tiles selected</span>
             </TableCell>
           </TableRow>
         </TableHead>

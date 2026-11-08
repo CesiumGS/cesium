@@ -871,12 +871,20 @@ export class NextAdapter implements Adapter {
 
   undrawnTiles(): { tiles: number; reasons: string[] } | undefined {
     const tiles = this.tilesets.reduce((n, t) => n + t.stats.undrawn, 0);
+    const counts = new Map<string, number>();
+    for (const tileset of this.tilesets) {
+      for (const [reason, n] of tileset.undrawnReasons) {
+        counts.set(reason, (counts.get(reason) ?? 0) + n);
+      }
+    }
     return tiles > 0
       ? {
           tiles,
-          reasons: [
-            ...new Set(this.tilesets.flatMap((t) => [...t.undrawnReasons])),
-          ],
+          reasons: [...counts]
+            .sort((a, b) => b[1] - a[1])
+            .map(([reason, n]) =>
+              n > 1 ? `${reason} (${n.toLocaleString()} tiles)` : reason,
+            ),
         }
       : undefined;
   }
@@ -935,7 +943,7 @@ export class NextAdapter implements Adapter {
       sun[2] !== direction[2]
     ) {
       sun.set(direction);
-      this.engine.wake(); // set in place: the loop can't see it
+      this.engine.requestRender(); // set in place: the view's key can't see it
     }
   }
 

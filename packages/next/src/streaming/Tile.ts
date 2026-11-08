@@ -231,9 +231,13 @@ export class Tile {
     this.external = !!uri && /\.json(\?|$)/i.test(uri);
     this.requestVolumeJson = json.viewerRequestVolume;
     if (implicit) {
-      tileset.warnings.add(
-        "implicit tiling not supported yet: its tiles are not drawn",
-      );
+      const reason =
+        "implicit tiling not supported yet: its tiles are not drawn";
+      if (tileset.undrawnTile) {
+        tileset.undrawnTile(reason);
+      } else {
+        tileset.warnings.add(reason);
+      }
     }
     this.state = uri ? "unloaded" : "ready";
     for (const child of json.children ?? []) {
@@ -400,6 +404,8 @@ export interface TileTree {
   readonly warnings: Set<string>;
   /** Implicit trees (terrain) report tiles they create as they grow. */
   tilesAdded?(count: number): void;
+  /** A tile that draws nothing, and why; counted with the others. */
+  undrawnTile?(reason: string): void;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */
@@ -503,12 +509,6 @@ export async function fetchTilesetJson(
 }
 
 /**
- * The tile tree of a parsed tileset JSON, under `parent` (an external
- * tileset) or as a root, placed by `rootTransform` (a tileset's
- * `modelMatrix`). Costs milliseconds for large files, so streaming builds
- * them within a per-frame budget.
- */
-/**
  * Tileset extensions this engine draws correctly without further reading:
  * glTF content (`3DTILES_content_gltf`), and batch tables' hierarchies
  * (`3DTILES_batch_table_hierarchy`, in `readLegacyBatchTable`).
@@ -518,6 +518,12 @@ const READ_TILESET_EXTENSIONS = new Set([
   "3DTILES_batch_table_hierarchy",
 ]);
 
+/**
+ * The tile tree of a parsed tileset JSON, under `parent` (an external
+ * tileset) or as a root, placed by `rootTransform` (a tileset's
+ * `modelMatrix`). Costs milliseconds for large files, so streaming builds
+ * them within a per-frame budget.
+ */
 export function treeFromJson(
   json: TileJson,
   url: string,
