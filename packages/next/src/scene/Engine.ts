@@ -3320,6 +3320,7 @@ export class Engine {
         rods: Math.log10(4000 * SCOTOPIC_WHITE),
         time: performance.now(),
         pending: false,
+        skipped: false,
         metered: false,
       });
       if ("eye" in e) {
@@ -3369,8 +3370,17 @@ export class Engine {
     // Before the mode's check: a reading in flight as the exposure turned
     // fixed left it pending, and it never metered again on turning back.
     state.pending = false;
+    const skipped = state.skipped;
+    state.skipped = false;
     if (!("auto" in e || "eye" in e)) {
       return;
+    }
+    // A tick drew while this reading was in flight and metered nothing, so
+    // it may have drawn at a stale exposure (noon right after night, with
+    // the reading inside the band: nothing else would ask for a tick). The
+    // next tick isn't skipped, so this ends.
+    if (skipped) {
+      this.requestRender();
     }
     // A reading that isn't a number (infinities in the image) says
     // nothing; a state that isn't one starts over from the next reading.
@@ -4376,7 +4386,11 @@ export class Engine {
         // Not a column or a row: a canvas squeezed to 0 width draws 1 pixel
         // across, which says nothing of the view (stars alone, from a view
         // half full of a sunlit Earth, opened the eye: white on the way back).
-        if (!adapts || !auto || auto.pending || width < 2 || height < 2) {
+        if (adapts && auto?.pending) {
+          auto.skipped = true;
+          return;
+        }
+        if (!adapts || !auto || width < 2 || height < 2) {
           return;
         }
         auto.pending = true;

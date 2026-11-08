@@ -99,11 +99,14 @@ describe("adapting on demand, the loop asleep", () => {
   let nextHandle = 1;
   /** What the meter reads, cd/m² (photopic, scotopic). */
   let scene = { photopic: 0.2, scotopic: 0.4 };
+  /** While set, a reading's mapAsync waits here (a loaded GPU). */
+  let held: Array<() => void> | undefined;
 
   beforeEach(async () => {
     now = 1000;
     queue = new Map();
     nextHandle = 1;
+    held = undefined;
     scene = { photopic: 0.2, scotopic: 0.4 };
     vi.spyOn(performance, "now").mockImplementation(() => now);
     vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
@@ -126,8 +129,12 @@ describe("adapting on demand, the loop asleep", () => {
           Math.log2(scene.scotopic),
           1,
         );
+        const hold = held;
         meter.readback = {
-          mapAsync: () => Promise.resolve(),
+          mapAsync: () =>
+            hold
+              ? new Promise<void>((resolve) => hold.push(resolve))
+              : Promise.resolve(),
           getMappedRange: () => values.buffer.slice(0),
           destroy: () => {},
         } as unknown as GPUBuffer;
@@ -188,6 +195,39 @@ describe("adapting on demand, the loop asleep", () => {
     const noon = adaptedScale(view);
     expect(noon).toBeLessThan(night / 1000);
     // The last frame drawn used noon's exposure, not night's.
+    expect(view.exposureScale).toBeCloseTo(noon, 12);
+  });
+
+  it("the eye at noon, arriving while night's reading is in flight, still draws at noon's exposure", async () => {
+    const view = engine.addView({
+      target: new OffscreenTarget(64, 36),
+      world: engine.createWorld(),
+      exposure: EYE,
+    });
+    view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
+    engine.start();
+    await frames(2400);
+    expect(queue.size).toBe(0);
+    const night = view.exposureScale;
+    // A wake meters a tick at night, and its reading stays in flight.
+    held = [];
+    engine.requestRender();
+    await frames(1);
+    const inFlight = held;
+    expect(view.autoExposure!.pending).toBe(true);
+    held = undefined;
+    // Noon, before that reading lands: this tick can't meter.
+    scene = { photopic: 5651, scotopic: 14393 };
+    engine.requestRender();
+    await frames(1);
+    expect(view.autoExposure!.skipped).toBe(true);
+    // Night's reading lands inside the band, and a tick meters noon.
+    inFlight.forEach((resolve) => resolve());
+    await frames(600);
+    expect(queue.size).toBe(0);
+    expect(view.autoExposure!.skipped).toBe(false);
+    const noon = adaptedScale(view);
+    expect(noon).toBeLessThan(night / 1000);
     expect(view.exposureScale).toBeCloseTo(noon, 12);
   });
 });

@@ -570,6 +570,11 @@ export class View {
     time: number;
     /** A reading is in flight. */
     pending: boolean;
+    /**
+     * A rendered tick skipped its meter pass because a reading was in
+     * flight: the reading that lands asks for a tick to meter it.
+     */
+    skipped: boolean;
     /** At least one reading arrived (the first is taken as is). */
     metered: boolean;
   };
