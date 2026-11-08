@@ -27,7 +27,9 @@ export function TourCard({
   return (
     <section className="dg-hud dg-tour" aria-labelledby={`${id}-t`}>
       <div className="dg-tour-head">
-        {/* The steps, each one a way to it (UX review P6). */}
+        {/* The steps, each one a way to it (UX review P6): for the pointer
+            and a screen reader's own navigation, out of the Tab order,
+            which Back and Next already serve. */}
         <ol className="dg-tour-steps" aria-label="The tour's steps">
           {Array.from({ length: card.count }, (_, i) => (
             <li
@@ -38,6 +40,7 @@ export function TourCard({
             >
               <button
                 type="button"
+                tabIndex={-1}
                 aria-label={`Step ${i + 1}: ${TOUR_STEPS[i]?.title ?? ""}`}
                 aria-current={i === card.index ? "step" : undefined}
                 onClick={() => actions.tour({ type: "start", step: i })}
