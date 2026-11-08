@@ -196,6 +196,46 @@ export function run(context: ExampleContext): ExampleRun {
   };
 
   // ------------------------------------------------------------ parts
+  // The measure tool (measureTool.ts), first of the parts: the morph draws
+  // it and `refresh` reads it. Its snaps are judged by the cursor's seam, by
+  // the site they hit; what it reads of the morph, the cursor and the frame
+  // loop it reads when called, after they are made below.
+  const tool = createMeasureTool({
+    viewer,
+    signal,
+    sites: () => sites.values(),
+    site: (id) => sites.get(id),
+    alignment,
+    answers: () => answers,
+    pickState: () => {
+      const selected = sites.get(params.site) ?? corridor;
+      return {
+        mode: drawnPlacement(selected, morph.t()),
+        t: morph.t(),
+        morphing: morph.morphing,
+        exaggeration: morph.exaggeration,
+        selectedPaired: selected.pair !== undefined,
+      };
+    },
+    pickAt: (x, y) => cursor.pickAt(x, y),
+    snapMode: () => params.snap,
+    drawState: () => ({
+      t: morph.t(),
+      exaggeration: morph.exaggeration,
+      morphing: morph.morphing,
+      ghost: morph.ghost,
+    }),
+    setLink: (link) => context.setParams(link),
+    changed: refresh,
+    wake: () => {
+      viewer.engine.requestRender();
+      frames.wake();
+    },
+    report,
+    disposed: () => disposed,
+  });
+  scope.defer(() => tool.dispose());
+
   const morph = new MorphDriver(
     {
       targets: () =>
@@ -237,44 +277,6 @@ export function run(context: ExampleContext): ExampleRun {
     changed: refresh,
     disposed: () => disposed,
   });
-
-  // The measure tool (measureTool.ts): its snaps are judged by the cursor's
-  // seam, by the site they hit.
-  const tool = createMeasureTool({
-    viewer,
-    signal,
-    sites: () => sites.values(),
-    site: (id) => sites.get(id),
-    alignment,
-    answers: () => answers,
-    pickState: () => {
-      const selected = sites.get(params.site) ?? corridor;
-      return {
-        mode: drawnPlacement(selected, morph.t()),
-        t: morph.t(),
-        morphing: morph.morphing,
-        exaggeration: morph.exaggeration,
-        selectedPaired: selected.pair !== undefined,
-      };
-    },
-    pickAt: (x, y) => cursor.pickAt(x, y),
-    snapMode: () => params.snap,
-    drawState: () => ({
-      t: morph.t(),
-      exaggeration: morph.exaggeration,
-      morphing: morph.morphing,
-      ghost: morph.ghost,
-    }),
-    setLink: (link) => context.setParams(link),
-    changed: refresh,
-    wake: () => {
-      viewer.engine.requestRender();
-      frames.wake();
-    },
-    report,
-    disposed: () => disposed,
-  });
-  scope.defer(() => tool.dispose());
 
   const camera = new CameraMoves(viewer, () => {
     frames.wake();
@@ -601,6 +603,39 @@ export function run(context: ExampleContext): ExampleRun {
     },
     clear: () => tool.clear(),
     pointAtCentre: () => tool.pointAtCentre(),
+    retryMeasure: () => tool.retryMeasure(),
+    closeInOnRuler() {
+      const focus = tool.rulerFocus();
+      if (focus === undefined) {
+        return;
+      }
+      // Along the line, looking down at its far end from about 7 m: the
+      // bracket between ground's last foot tick and design's, about 0.23 m
+      // across, reads at some 20 px; and the camera stays under the other
+      // placement's ghost deck (8 m above at the pair's far end).
+      const up = new Float64Array(3);
+      Ellipsoid.WGS84.geodeticSurfaceNormal(focus.center, up);
+      const east = [-up[1]!, up[0]!, 0];
+      const el = Math.hypot(east[0]!, east[1]!) || 1;
+      const north = [
+        (-up[2]! * east[1]!) / el,
+        (up[2]! * east[0]!) / el,
+        (up[0]! * east[1]! - up[1]! * east[0]!) / el,
+      ];
+      const a = focus.along;
+      const heading = Math.atan2(
+        (a[0]! * east[0]! + a[1]! * east[1]!) / el,
+        a[0]! * north[0]! + a[1]! * north[1]! + a[2]! * north[2]!,
+      );
+      const to = {
+        center: focus.center,
+        heading,
+        pitch: -50 * deg,
+        range: 7,
+      };
+      shots.daylight(to.center);
+      camera.flyTo(to, () => shots.daylight(to.center));
+    },
     show(id) {
       const focus = tool.openerFocus(id);
       if (focus === undefined) {

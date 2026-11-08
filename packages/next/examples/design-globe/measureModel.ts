@@ -12,6 +12,10 @@
 // to 2. Heights are written in the horizontal unit's symbol: `Measurement`
 // carries no height unit, and the corridor's (NAVD88 ftUS) is the same.
 import type { SnapResult } from "../../src/engineering/snap.ts";
+import type {
+  AccuracyStatement,
+  AccuracyTerm,
+} from "../../src/measure/accuracy.ts";
 import type { Measurement } from "../../src/measure/measure.ts";
 
 /** One end of a measurement. */
@@ -245,4 +249,61 @@ export function measurementModel(
       accuracy === undefined ? "not stated" : `±${meters(accuracy)} (1σ)`,
     exact: a.exact && b.exact,
   };
+}
+
+/** A row of the accuracy's parts. */
+export interface AccuracyRow {
+  readonly label: string;
+  readonly value: string;
+}
+
+const SOURCE_LABEL: Readonly<Record<AccuracyTerm["source"], string>> = {
+  projection: "Projection",
+  earthOrientation: "Earth orientation",
+  pick: "Pick or snap",
+  geoidFallback: "Geoid fallback",
+  trajectory: "Trajectory",
+  coordinateScale: "Coordinate scale",
+  relativity: "Relativity",
+  lightTime: "Light time",
+  ephemeris: "Ephemeris",
+};
+
+/**
+ * A measurement's accuracy with its parts: what it is the accuracy of (the
+ * true distance), its total (the terms' root sum square, as independent),
+ * each term at its end with its size and what it is, and the statement's
+ * warnings. A term of unknown size reads "not stated", and makes the total
+ * so.
+ */
+export function accuracyRows(statement: AccuracyStatement): AccuracyRow[] {
+  const total =
+    statement.meters === undefined
+      ? "not stated (a part's size isn't known)"
+      : `±${meters(statement.meters)} (1σ)`;
+  const rows: AccuracyRow[] = [
+    {
+      label: "Accuracy",
+      value: `${total}, of the true distance: the parts below, combined as independent`,
+    },
+  ];
+  for (const term of statement.terms) {
+    const end = /^End ([ab]):\s*/.exec(term.note);
+    const note = end ? term.note.slice(end[0].length) : term.note;
+    const size =
+      term.meters === undefined ? "not stated" : `±${meters(term.meters)}`;
+    let what = note;
+    if (term.source === "projection") {
+      const grids = /PROJ operation \(([^)]*)\)/.exec(note)?.[1];
+      what = `PROJ's stated accuracy for the design CRS's operation${grids !== undefined && grids !== "no grids" ? ` (${grids})` : ""}`;
+    }
+    rows.push({
+      label: `${SOURCE_LABEL[term.source]}${end ? ` at ${end[1]!.toUpperCase()}` : ""}`,
+      value: `${size}: ${what}`,
+    });
+  }
+  for (const w of statement.warnings) {
+    rows.push({ label: "Note", value: w });
+  }
+  return rows;
 }

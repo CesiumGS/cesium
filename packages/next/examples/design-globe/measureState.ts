@@ -9,6 +9,7 @@ import {
   type SnapResult,
   type SnapService,
 } from "../../src/engineering/snap.ts";
+import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { SnapMode } from "./page.ts";
 
 // ------------------------------------------------------------ the points
@@ -115,10 +116,19 @@ export function snapWith(
 const LINK_LIMIT = 1e8;
 const LINK_NUMBER = /^-?\d+(\.\d+)?$/;
 
-/** A number for the link, exactly (float64's shortest round trip). */
+/** Seventeen significant digits, no grouping and no exponent: float64, exactly. */
+const EXACT = new Intl.NumberFormat("en-US", {
+  useGrouping: false,
+  maximumSignificantDigits: 17,
+});
+
+/**
+ * A number for the link, exactly: float64's shortest round trip, or, where
+ * that would take an exponent (a tiny coordinate), 17 significant digits.
+ */
 function linkNumber(x: number): string {
   const s = String(x);
-  return /e/i.test(s) ? x.toFixed(9) : s;
+  return /e/i.test(s) ? EXACT.format(x) : s;
 }
 
 /**
@@ -181,4 +191,19 @@ export function parseMeasureLink(
   const a = point(get("a"));
   const b = point(get("b"));
   return a !== undefined && b !== undefined ? { site, a, b } : undefined;
+}
+
+/**
+ * The exact (server) side for `refiningSnap`: each request goes to the one
+ * service of its tileset (one `ExactSnapService` per corridor tileset); a
+ * tileset with none gets no answer, so the client's snap stands.
+ */
+export function routeByTileset(
+  services: ReadonlyMap<Tileset3D, SnapService>,
+): SnapService {
+  return {
+    snap: (request, signal) =>
+      services.get(request.tileset)?.snap(request, signal) ??
+      Promise.resolve(undefined),
+  };
 }

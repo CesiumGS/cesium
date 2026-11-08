@@ -16,8 +16,12 @@ import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { CustomShader } from "../../src/scene/CustomShader.ts";
 import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { hexLinear } from "./colors.ts";
-import type { Answers } from "./answers.ts";
-import { fixedEnd, type DrawnEnd, type Opener } from "./measureOpeners.ts";
+import {
+  fixedEnd,
+  type DrawnEnd,
+  type Opener,
+  type RulerEnd,
+} from "./measureOpeners.ts";
 import type { MeasureState } from "./measureState.ts";
 import { EXAGGERATION } from "./page.ts";
 import {
@@ -242,12 +246,13 @@ function lerpEnd(a: DrawnEnd, b: DrawnEnd, f: number): DrawnEnd {
 const YELLOW = "#fde047";
 
 /**
- * The lines for the openers (each with its ghost; the ruler along the pair;
+ * The lines for the openers (each with its ghost; the ruler along the pair,
+ * once the page has measured it;
  * a small cross at the marker and at the survey disk) and the user's line.
  */
 export function measureLines(
   openers: readonly Opener[],
-  a: Answers | undefined,
+  ruler: RulerEnd | undefined,
   state: MeasureState,
 ): OverlayLine[] {
   const lines: OverlayLine[] = [];
@@ -258,8 +263,8 @@ export function measureLines(
       color: o.quiet ? "#fef08a" : YELLOW,
       ghost: true,
     });
-    if (o.id === "pair" && a !== undefined) {
-      lines.push(rulerLine(o, a));
+    if (o.id === "pair" && ruler !== undefined) {
+      lines.push(rulerLine(o, ruler));
     }
     if (o.id === "marker" || o.id === "mark") {
       // A small cross on the ground at the fixed end: the marker or the disk.
@@ -282,13 +287,21 @@ export function measureLines(
   return lines;
 }
 
-/** Ticks in design feet (yellow, left) against true ground feet (white, right). */
-export function rulerLine(o: Opener, a: Answers): OverlayLine {
-  const pair = a.pairs[0]!;
-  const step = 1000;
+/** How far a ruler tick reaches from the line, metres: every 1,000 ft, every 5,000, and the end's. */
+const TICK = { minor: 1.5, major: 2.5, end: 4 } as const;
+
+/**
+ * The ruler along the pair: ticks every 1,000 design feet (yellow, one side)
+ * against every 1,000 ground feet (white, the other), from the page's
+ * measurement of the line (`end`, measureOpeners.ts `rulerEnd`). At the far
+ * end, design's and ground's last ticks stand on the same side, longer,
+ * joined by a bracket across the gap the scale factor makes.
+ */
+export function rulerLine(o: Opener, end: RulerEnd): OverlayLine {
   const segments: { a: DrawnEnd; b: DrawnEnd }[] = [];
   const colors: string[] = [];
-  const across = (f: number, side: number, length: number) => {
+  /** A point `f` of the way along the line, `side × reach` metres square to it. */
+  const along = (f: number, side: number, reach: number): DrawnEnd => {
     const at = (p: "rigid" | "reprojected") => {
       const x = o.shown.a[p];
       const y = o.shown.b[p];
@@ -304,37 +317,43 @@ export function rulerLine(o: Opener, a: Answers): OverlayLine {
     const de = d[0]! * east[0]! + d[1]! * east[1]! + d[2]! * east[2]!;
     const dn = d[0]! * north[0]! + d[1]! * north[1]! + d[2]! * north[2]!;
     const l = Math.hypot(de, dn) || 1;
-    // Square to the line, level, `side` of it; lifted a little off the deck.
+    // Square to the line, level; lifted a little off the deck.
     const off = [0, 1, 2].map(
       (k) =>
-        ((-dn / l) * east[k]! + (de / l) * north[k]!) * side * length +
+        ((-dn / l) * east[k]! + (de / l) * north[k]!) * side * reach +
         up[k]! * 0.05,
     );
-    const lift = [0, 1, 2].map((k) => up[k]! * 0.05);
-    const shift = (p: Float64Array, v: number[]) =>
-      Float64Array.from([0, 1, 2].map((k) => p[k]! + v[k]!));
-    segments.push({
-      a: {
-        rigid: shift(base.rigid, lift),
-        reprojected: shift(base.reprojected, lift),
-      },
-      b: {
-        rigid: shift(base.rigid, off),
-        reprojected: shift(base.reprojected, off),
-      },
-    });
+    const shift = (p: Float64Array) =>
+      Float64Array.from([0, 1, 2].map((k) => p[k]! + off[k]!));
+    return { rigid: shift(base.rigid), reprojected: shift(base.reprojected) };
   };
-  const designFeet = pair.designDistance;
-  const groundFeet = pair.trueDistance / a.frame.metersPerUnit;
-  for (let i = 0; i * step <= designFeet + 1e-9; i++) {
-    across((i * step) / designFeet, 1, i % 5 === 0 ? 2.5 : 1.5);
-    colors.push(YELLOW);
+  const tick = (f: number, side: number, reach: number, color: string) => {
+    segments.push({ a: along(f, side, 0), b: along(f, side, reach) });
+    colors.push(color);
+  };
+  const design = end.design / end.feet;
+  const ground = end.ground / end.feet;
+  for (let ft = 0; ft < end.feet - 1e-9; ft += 1000) {
+    const major = ft % 5000 === 0 ? TICK.major : TICK.minor;
+    tick(ft * design, 1, major, YELLOW);
+    tick(ft * ground, -1, major, "#ffffff");
   }
-  for (let i = 0; i * step <= groundFeet + 1e-9; i++) {
-    across((i * step) / groundFeet, -1, i % 5 === 0 ? 2.5 : 1.5);
-    colors.push("#ffffff");
-  }
+  // The far end: both last ticks on one side, and the bracket between them.
+  tick(end.design, 1, TICK.end, YELLOW);
+  tick(end.ground, 1, TICK.end, "#ffffff");
+  segments.push({
+    a: along(end.design, 1, TICK.end),
+    b: along(end.ground, 1, TICK.end),
+  });
+  colors.push("#ffffff");
   return { key: "ruler", segments, colors, color: YELLOW, ghost: false };
+}
+
+/** Where the ruler's far end is marked: its two last ticks' tips, for the note and the camera. */
+export function rulerTips(o: Opener, end: RulerEnd): [DrawnEnd, DrawnEnd] {
+  const line = rulerLine(o, end);
+  const n = line.segments.length;
+  return [line.segments[n - 1]!.a, line.segments[n - 1]!.b];
 }
 
 /** East, north and up at a body-fixed point (WGS 84). */

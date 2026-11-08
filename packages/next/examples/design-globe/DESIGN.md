@@ -86,8 +86,11 @@ the second audience: every number is there and honest, but quieter.
   3. **The measurement lines,** with a label pill giving the design distance,
      and the other placement's line ghosted beside each one.
   4. **A ground-versus-grid ruler** along the 10,000 ft pair: tick marks in
-     design feet against true ground feet (the scale factor's gap, about
-     0.4 ft over 10,000 ft, visible when zoomed in).
+     design feet against true ground feet. The gap the scale factor makes
+     is read from the page's own measurement of the pair (0.764 ftUS at
+     10,000 ft with today's answers), never written here; it shows when
+     zoomed in on the far end, where the two last ticks stand side by side
+     with a bracket ("Close in on the ruler").
   5. **The survey mark** as a survey-disk marker with its PID; the datasheet
      values on hover or focus.
 
@@ -148,13 +151,21 @@ and that a measurement on the globe gives the number their CAD gives.
    and "Show the other" (on by default, drawn thin and dashed); the sag
    chart; one sentence with the worst rigid error and the reprojected
    tolerance.
-3. **Sites:** the portfolio as a list. Each row: the name, then CRS,
+3. **Measure** (up front, after the placement, as "The story" orders the
+   headline: Task 19): the openers first, each with its headline. The
+   self-check and the survey mark lead with how far rigid draws the
+   design from where it is, shrinking to 0.000 m through the morph; the
+   design and true distances come from the page's own `measure` (the
+   checks compare them with answers.json), side by side and labelled; the
+   10,000 ft pair is quieter. Then your own measurement: snap mode
+   (Alignment, exact; Geometry; None), a one-line instruction, the design
+   and true distances, and behind "Details" the ellipsoid, scale-factor
+   and accuracy rows (the accuracy with its parts, and what it is the
+   accuracy of), then each point's station, offset and elevation (with
+   its datum).
+4. **Sites:** the portfolio as a list. Each row: the name, then CRS,
    units and height system on a second line; "Fly to"; a warning badge
    where a fallback applies. The selected row is tinted.
-4. **Measure:** snap mode (Alignment, exact; Geometry; None), a one-line
-   instruction, the design distance as the headline, then the true,
-   ellipsoid, scale-factor and accuracy rows, then each point's station,
-   offset and elevation in a well.
 5. **Checks:** the explorer's rows and kind tags. Every value on the page
    is compared with the generator's exact answer (hand formula), the
    round trips, and published geoid values.

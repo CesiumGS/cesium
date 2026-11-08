@@ -170,9 +170,13 @@
 .dg-m-sheet p {
   margin: 0;
 }
+/* NGS's columns kept: no wrapping, scrolled sideways in the narrow column. */
 .dg-m-sheet .dg-code-block {
   margin: 0 0 var(--stratakit-space-100);
   font-size: var(--stratakit-font-size-caption-md);
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
 }
 .dg-m-end {
   display: grid;
@@ -366,7 +370,7 @@
   flex-direction: column;
   gap: var(--stratakit-space-100);
   inline-size: max-content;
-  max-inline-size: min(300px, 70vw);
+  max-inline-size: min(560px, 90vw);
   padding: var(--stratakit-space-200) var(--stratakit-space-300);
   border-radius: var(--stratakit-radius-md);
   background: color-mix(
@@ -391,11 +395,19 @@
 .dg-m-disk:focus-within .dg-m-disk-card {
   display: flex;
 }
+.dg-m-disk.dismissed .dg-m-disk-card {
+  display: none;
+}
+/* NGS's columns kept: no wrapping, the card scrolls sideways if it must. */
+.dg-m-disk-lines {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+}
 .dg-m-disk-line {
   font-family: var(--stratakit-font-family-mono);
   font-size: var(--stratakit-font-size-caption-md);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  white-space: pre;
 }
 
 /* The snap under the pointer: its kind's glyph; yellow when exact. */
@@ -440,4 +452,26 @@
     linear-gradient(#fff, #fff) center / 1.5px 100% no-repeat,
     linear-gradient(#fff, #fff) center / 100% 1.5px no-repeat;
   filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
+}
+
+/* A failed measure: what failed, with Retry. */
+.dg-m-failed {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+  color: var(--stratakit-color-text-attention-base);
+}
+/* The self-check's sentence: the figures, said once. */
+.dg-m-said {
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dg-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

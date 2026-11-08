@@ -36,7 +36,6 @@ import {
   type SnapResult,
   type SnapService,
 } from "../../src/engineering/snap.ts";
-import type { Measurement } from "../../src/measure/measure.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import type { Answers } from "./answers.ts";
@@ -45,24 +44,29 @@ import { hitRefusal, type PagePick, type PickState } from "./cursor.ts";
 import { sectionSurface } from "./corridor.ts";
 import { ExactSnapService, visibleRise } from "./exactSnap.ts";
 import { createMeasureFrames } from "./measureFrames.ts";
-import { measurementModel, type MeasureView } from "./measureModel.ts";
+import { measurementModel, unitSymbol } from "./measureModel.ts";
 import { liveStore, placeLabels, type MeasureLive } from "./measureLabels.ts";
 import {
   dist,
   drawnAt,
+  measuredOf,
   openerDetails,
   openingMeasurements,
+  rulerEnd,
+  type OpenerMeasure,
+  type RulerEnd,
   type DrawState,
   type DrawnEnd,
   type Opener,
   type OpenerId,
 } from "./measureOpeners.ts";
-import { MeasureOverlay, measureLines } from "./measureOverlay.ts";
+import { MeasureOverlay, measureLines, rulerTips } from "./measureOverlay.ts";
 import { shownOf, shownValues } from "./measureShown.ts";
 import {
   formatMeasureLink,
   nextMeasure,
   parseMeasureLink,
+  routeByTileset,
   snapWith,
   type MeasureEnd,
   type MeasureInput,
@@ -132,6 +136,13 @@ export interface MeasureTool {
   retry(): void;
   /** What the measure section shows, for the checks (Task 20). */
   shownValues(): ShownValues | undefined;
+  /** Measures the openers and the user's line again (after a failure). */
+  retryMeasure(): void;
+  /**
+   * Where to look closely at the ruler: its far end's bracket as drawn, and
+   * the line's direction there (body-fixed).
+   */
+  rulerFocus(): { center: Float64Array; along: Float64Array } | undefined;
   /** Where to look at an opener: its middle as drawn, and its length. */
   openerFocus(
     id: OpenerId,
@@ -163,8 +174,13 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
   /** The user's measurement through `measure`, once both ends are in. */
   let measured: Measured | undefined;
   let openers: Opener[] = [];
-  let openerViews = new Map<OpenerId, MeasureView>();
-  let openerMeasures = new Map<OpenerId, Measurement>();
+  /** The openers by the page's `measure`, and why it failed for any. */
+  let openerMeasures = new Map<OpenerId, OpenerMeasure>();
+  let openerErrors = new Map<OpenerId, string>();
+  /** The ruler's far end, from the pair's measurement. */
+  let ruler: RulerEnd | undefined;
+  /** Why the user's measurement failed, if it did. */
+  let userError: string | undefined;
   let markDesign: Float64Array | undefined;
   let hover: MeasureLive["hover"];
   let crosshair = false;
@@ -189,6 +205,25 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
 
   // --------------------------------------------------- the placements
   const corridor = () => deps.site("corridor");
+  /** The corridor's tilesets and placements the openers were built from. */
+  let corridorSeen: readonly unknown[] = [];
+  /**
+   * A site's heights as the frame names them, with the model they're read
+   * through: "NAVD88 height via GEOID18".
+   */
+  const datumOf = (site: SiteRuntime | undefined): string | undefined => {
+    const vertical = site?.view?.frame?.vertical?.replace(
+      /\s*\([^)]*\)\s*$/,
+      "",
+    );
+    if (vertical === undefined) {
+      return undefined;
+    }
+    const models = site!.entry.models;
+    return models.length > 0
+      ? `${vertical} via ${models.join(", ")}`
+      : vertical;
+  };
   let client:
     { tilesets: readonly Tileset3D[]; service: ClientSnapService } | undefined;
   const exact = new Map<Tileset3D, ExactSnapService>();
@@ -210,11 +245,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     return client.service;
   }
   /** One `ExactSnapService` per corridor tileset, routed by the request's. */
-  const server: SnapService = {
-    snap: (request, abort) =>
-      exact.get(request.tileset)?.snap(request, abort) ??
-      Promise.resolve(undefined),
-  };
+  const server: SnapService = routeByTileset(exact);
 
   function siteOf(tileset: Tileset3D | undefined): SiteRuntime | undefined {
     if (tileset === undefined) {
@@ -261,7 +292,8 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     );
     // PROJ's zone 3 for the mark, from NGS's published position.
     markDesign = reprojected.designOf(Float64Array.from(a.mark.bodyFixed));
-    openerViews = new Map();
+    openerMeasures = new Map();
+    ruler = undefined;
     remeasure();
     redraw();
   }
@@ -271,8 +303,8 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     const a = deps.answers();
     const frame = corridor()?.reprojectedPlacement?.frame;
     if (a !== undefined && frame !== undefined && frames.loaded()) {
-      const views = new Map<OpenerId, MeasureView>();
-      const measures = new Map<OpenerId, Measurement>();
+      const measures = new Map<OpenerId, OpenerMeasure>();
+      const errors = new Map<OpenerId, string>();
       const exactEnd = (design: ArrayLike<number>): MeasureEnd => ({
         site: "corridor",
         design: Float64Array.from(design),
@@ -282,7 +314,10 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
         kind: "point",
         tolerance: 0,
       });
+      // Each opener between its two design points: the marker is the
+      // station's own design point, so its two ends are one point.
       const pairs: [OpenerId, ArrayLike<number>, ArrayLike<number>][] = [
+        ["marker", a.marker.design, a.points[a.marker.point]!.design],
         ["mark", a.mark.design, a.mark.nearestDesign],
       ];
       const first = a.pairs[0];
@@ -296,32 +331,41 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       for (const [id, da, db] of pairs) {
         const pa = designPoint(frame, da);
         const pb = designPoint(frame, db);
-        const m = measureDesign(frame, pa, pb);
-        if (m !== undefined) {
-          measures.set(id, m);
-          views.set(
-            id,
-            measurementModel(
+        const outcome = measureDesign(frame, pa, pb);
+        if (outcome?.m !== undefined) {
+          measures.set(id, {
+            m: outcome.m,
+            view: measurementModel(
               asSnap(exactEnd(da), pa),
               asSnap(exactEnd(db), pb),
-              m,
+              outcome.m,
             ),
-          );
+          });
+        } else if (outcome?.error !== undefined) {
+          errors.set(id, outcome.error);
         }
       }
-      openerViews = views;
       openerMeasures = measures;
+      openerErrors = errors;
+      const pair = measuredOf(measures.get("pair"));
+      ruler =
+        pair === undefined
+          ? undefined
+          : rulerEnd(pair, a.frame.metersPerUnit, unitSymbol(a.frame.unitName));
+      redraw();
     }
-    measureUser();
+    measureUser(true);
     deps.changed();
   }
 
-  function measureUser(): void {
+  /** The user's measurement, when both points are in (`again`: even if measured). */
+  function measureUser(again = false): void {
     if (state.phase !== "done") {
       measured = undefined;
+      userError = undefined;
       return;
     }
-    if (measured?.state === state) {
+    if (!again && measured?.state === state) {
       return;
     }
     const site = deps.site(state.a.site);
@@ -346,20 +390,25 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       );
     const pa = point(state.a);
     const pb = point(state.b);
-    const m = measureDesign(frame, pa, pb);
+    const outcome = measureDesign(frame, pa, pb);
+    userError = outcome?.error;
     measured =
-      m === undefined
+      outcome?.m === undefined
         ? undefined
         : {
             state,
-            m,
-            view: measurementModel(asSnap(state.a, pa), asSnap(state.b, pb), m),
+            m: outcome.m,
+            view: measurementModel(
+              asSnap(state.a, pa),
+              asSnap(state.b, pb),
+              outcome.m,
+            ),
           };
   }
 
   // -------------------------------------------------------- the globe
   function redraw(): void {
-    overlay.set(measureLines(openers, deps.answers(), state));
+    overlay.set(measureLines(openers, ruler, state));
     overlay.setState(deps.drawState());
     deps.wake();
     place();
@@ -382,7 +431,16 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       userText:
         measured !== undefined
           ? `${measured.view.designDistance} design`
-          : "Measuring…",
+          : userError !== undefined
+            ? "No measurement"
+            : "Measuring…",
+      measured: new Map(
+        [...openerMeasures].flatMap(([id, m]) => {
+          const figures = measuredOf(m);
+          return figures === undefined ? [] : [[id, figures] as const];
+        }),
+      ),
+      ruler,
       hover,
       crosshair,
     });
@@ -744,7 +802,11 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       answers: deps.answers(),
       draw: s,
       openers,
-      details: (id, a) => openerDetails(id, a, openerViews, markDesign),
+      details: (id, a) =>
+        openerDetails(id, a, openerMeasures, markDesign, datumOf(corridor())),
+      measured: (id) => measuredOf(openerMeasures.get(id)),
+      openerError: (id) => openerErrors.get(id),
+      userError,
       snap: deps.snapMode(),
       state,
       instruction,
@@ -757,6 +819,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
               s,
               site?.pair !== undefined,
               site && frameOf(site),
+              datumOf(site),
             )
           : undefined,
       framesFailed: frames.failed(),
@@ -783,14 +846,24 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     target,
     place,
     placementsChanged() {
-      exact.clear();
+      // Only the corridor's placements make the openers and exact snapping.
       const site = corridor();
-      for (const t of [site?.rigid, site?.reprojected]) {
-        if (t !== undefined && t.placement !== undefined) {
-          exact.set(t, new ExactSnapService(t, deps.alignment));
+      const now = [
+        site?.rigid,
+        site?.reprojected,
+        site?.rigidPlacement,
+        site?.reprojectedPlacement,
+      ];
+      if (now.some((x, i) => x !== corridorSeen[i])) {
+        corridorSeen = now;
+        exact.clear();
+        for (const t of [site?.rigid, site?.reprojected]) {
+          if (t !== undefined && t.placement !== undefined) {
+            exact.set(t, new ExactSnapService(t, deps.alignment));
+          }
         }
+        buildOpeners();
       }
-      buildOpeners();
       resolveLink();
     },
     answersChanged() {
@@ -800,6 +873,25 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     clear,
     applyLink,
     retry: () => frames.retry(),
+    retryMeasure: () => remeasure(),
+    rulerFocus() {
+      const o = openers.find((x) => x.id === "pair");
+      if (o === undefined || ruler === undefined) {
+        return undefined;
+      }
+      const s = deps.drawState();
+      const [ta, tb] = rulerTips(o, ruler).map((e) =>
+        drawnAt(e, s.t, s.exaggeration),
+      );
+      const pa = drawnAt(o.a, s.t, s.exaggeration);
+      const pb = drawnAt(o.b, s.t, s.exaggeration);
+      return {
+        center: Float64Array.from(
+          [0, 1, 2].map((k) => (ta![k]! + tb![k]!) / 2),
+        ),
+        along: Float64Array.from([0, 1, 2].map((k) => pb[k]! - pa[k]!)),
+      };
+    },
     shownValues() {
       const a = deps.answers();
       if (a === undefined) {
@@ -807,7 +899,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       }
       const s = deps.drawState();
       const marker = openers.find((o) => o.id === "marker");
-      const pair = openerMeasures.get("pair");
+      const pair = openerMeasures.get("pair")?.m;
       const pairShown = pair && shownOf(pair);
       const settled = !s.morphing && s.exaggeration === 1;
       const done = state.phase === "done" ? state : undefined;

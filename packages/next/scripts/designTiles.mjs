@@ -924,9 +924,9 @@ function corridorAnswers(frame, alignment, placement, frames) {
     nearestDesign,
     designDistance: toMark.design.distance,
     horizontalDistance: toMark.design.horizontalDistance,
-    trueDistance: Math.hypot(
-      ...sub(markFixed, Array.from(frame.toBodyFixed(nearestDesign))),
-    ),
+    // `measure`'s, as the page's: the straight line between where the two
+    // design points truly are.
+    trueDistance: toMark.distance,
   };
 
   return {

@@ -657,6 +657,18 @@ describe("the design globe's generated tiles", () => {
     expect(mark.trueDistance).toBeGreaterThan(
       mark.horizontalDistance * frame.units.metersPerUnit * 0.99,
     );
+    // `measure`'s true distance between the two design points, as the page
+    // measures it: the straight line between where they truly are.
+    const ends = [mark.design, mark.nearestDesign].map((d: number[]) =>
+      frame.toBodyFixed(d),
+    );
+    expect(mark.trueDistance).toBe(
+      Math.hypot(
+        ends[1]![0]! - ends[0]![0]!,
+        ends[1]![1]! - ends[0]![1]!,
+        ends[1]![2]! - ends[0]![2]!,
+      ),
+    );
   });
 });
 

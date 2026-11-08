@@ -14,6 +14,11 @@ import type { LeapSeconds } from "../../src/time/leapSeconds.ts";
 import type { Viewer } from "../../widgets/index.ts";
 import type { LoadEvent } from "./page.ts";
 
+/** A `measure` that ran: its result, or why it failed. */
+export type MeasureOutcome =
+  | { readonly m: Measurement; readonly error?: undefined }
+  | { readonly m?: undefined; readonly error: string };
+
 export interface MeasureFramesDeps {
   readonly viewer: Viewer;
   report(event: LoadEvent): void;
@@ -31,12 +36,15 @@ export interface MeasureFrames {
   loaded(): boolean;
   /** Why it failed, if it did. */
   failed(): string | undefined;
-  /** `measure` between two design points of `frame`, at the clock's time. */
+  /**
+   * `measure` between two design points of `frame`, at the clock's time:
+   * its result, or why it failed; undefined until the frame data is in.
+   */
   measure(
     frame: EngineeringFrame,
     a: DesignPoint,
     b: DesignPoint,
-  ): Measurement | undefined;
+  ): MeasureOutcome | undefined;
 }
 
 export function createMeasureFrames(deps: MeasureFramesDeps): MeasureFrames {
@@ -98,24 +106,24 @@ export function createMeasureFrames(deps: MeasureFramesDeps): MeasureFrames {
     frame: EngineeringFrame,
     a: DesignPoint,
     b: DesignPoint,
-  ): Measurement | undefined {
+  ): MeasureOutcome | undefined {
     if (frames === undefined) {
       return undefined;
     }
     const alignment = frame.alignments[0]?.name;
     try {
-      return measure(
-        a,
-        b,
-        Instant.fromUtc(deps.viewer.clock.time, frames.leap),
-        frames.frames,
-        { signal: false, ...(alignment !== undefined && { alignment }) },
-      );
+      return {
+        m: measure(
+          a,
+          b,
+          Instant.fromUtc(deps.viewer.clock.time, frames.leap),
+          frames.frames,
+          { signal: false, ...(alignment !== undefined && { alignment }) },
+        ),
+      };
     } catch (error) {
-      console.warn(
-        `design globe: measure failed (${error instanceof Error ? error.message : String(error)})`,
-      );
-      return undefined;
+      // Shown where the measurement would be, with Retry: never swallowed.
+      return { error: error instanceof Error ? error.message : String(error) };
     }
   }
 

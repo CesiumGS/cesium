@@ -10,14 +10,15 @@
 // labels follow the morph. Pure: test/designGlobeMeasureTool.test.ts.
 import type { TilesetPlacement } from "../../src/engineering/placement.ts";
 import type { Answers } from "./answers.ts";
+import type { Measurement } from "../../src/measure/measure.ts";
 import {
+  accuracyRows,
   fixed,
   stationText,
   unitSymbol,
   type MeasureView,
 } from "./measureModel.ts";
 import type { DetailRow } from "./measureView.ts";
-import { errorText } from "./page.ts";
 
 // --------------------------------------------------------- the openers
 
@@ -111,7 +112,12 @@ export function openingMeasurements(
       quiet: false,
       a: fixedEnd(answers.marker.bodyFixed),
       b: marker.exact,
-      shown: { a: fixedEnd(answers.marker.bodyFixed), b: marker.shown },
+      // Marked where the station is marked in the true placement: on the
+      // visible top, so the line closes to nothing once reprojected.
+      shown: {
+        a: fixedEnd(marker.shown.reprojected),
+        b: marker.shown,
+      },
     },
     {
       id: "mark",
@@ -152,10 +158,18 @@ export type GlobeTone = "rigid" | "reprojected" | "moving" | "muted";
 /** An opener's words now. */
 export interface OpenerFigures {
   readonly title: string;
-  /** Design distance, design units. */
+  /** Design distance, design units, from the page's `measure`; "…" until it has run. */
   readonly design: string;
-  /** True distance, metres. */
+  /** True distance, metres, from the page's `measure`; "…" until it has run. */
   readonly trueDistance: string;
+  /**
+   * The card's headline, metres, absent while exaggerated: the self-check's
+   * drawn gap, the mark's rigid offset of the drawn centreline from where
+   * it is. Both shrink to 0.000 m through the morph.
+   */
+  readonly hero?: string;
+  /** What the headline is, beside it (the mark's); none for the self-check, whose sentence says. */
+  readonly heroCaption?: string;
   /** The line on the globe now, metres; absent while exaggerated. */
   readonly drawn?: string;
   /** One sentence on the line as drawn. */
@@ -163,18 +177,37 @@ export interface OpenerFigures {
   readonly tone: GlobeTone;
 }
 
+/** What the page's `measure` gave between an opener's two design points. */
+export interface OpenerMeasured {
+  /** Design units. */
+  readonly design: number;
+  /** Metres. */
+  readonly trueDistance: number;
+}
+
 export const dist = (p: ArrayLike<number>, q: ArrayLike<number>) =>
   Math.hypot(p[0]! - q[0]!, p[1]! - q[1]!, p[2]! - q[2]!);
 export const metres3 = (x: number) => `${fixed(x, 3)} m`;
 
-/** An opener's title, design and true distances, and the line as drawn now. */
+/** Shown in place of a figure the page's `measure` hasn't given yet. */
+export const PENDING = "…";
+
+/**
+ * An opener's title, its design and true distances (from the page's
+ * `measure`, `measured`; answers.json is only what the checks compare them
+ * with), its headline and the line as drawn now.
+ */
 export function openerView(
   o: Opener,
   answers: Answers,
   s: DrawState,
+  measured?: OpenerMeasured,
 ): OpenerFigures {
   const symbol = unitSymbol(answers.frame.unitName);
-  const designText = (x: number) => `${fixed(x, 3)} ${symbol}`;
+  const design =
+    measured === undefined ? PENDING : `${fixed(measured.design, 3)} ${symbol}`;
+  const trueDistance =
+    measured === undefined ? PENDING : metres3(measured.trueDistance);
   const exaggerated = s.exaggeration !== 1 && s.t < 1;
   const length = dist(
     drawnAt(o.a, s.t, s.exaggeration),
@@ -188,111 +221,166 @@ export function openerView(
       : s.t >= 0.5
         ? "reprojected"
         : "rigid";
-  const rigidDrawn = tone === "rigid";
+  const notToScale = `Errors drawn ×${s.exaggeration}: no measurement on the globe until true scale.`;
+  /** How far the true distance is from the line as drawn, in words. */
+  const against = (near: string, far: string) => {
+    if (measured === undefined) {
+      return "";
+    }
+    const off = length - measured.trueDistance;
+    return `, ${metres3(Math.abs(off))} ${off >= 0 ? far : near}`;
+  };
+  const isTrue =
+    measured !== undefined && Math.abs(length - measured.trueDistance) < 5e-4;
 
-  let title: string;
-  let design: number;
-  let trueDistance: number;
-  let globe: string;
   switch (o.id) {
     case "marker": {
-      const m = answers.marker;
-      const at = answers.points[m.point];
-      title = `Station ${stationText(m.station)} against its true position`;
-      // The marker is the station's own design point, where it truly is.
-      const ratio =
-        answers.frame.metersPerHeightUnit / answers.frame.metersPerUnit;
-      design =
-        at === undefined
-          ? 0
-          : Math.hypot(
-              m.design[0] - at.design[0],
-              m.design[1] - at.design[1],
-              (m.design[2] - at.design[2]) * ratio,
-            );
-      trueDistance = at === undefined ? 0 : dist(m.bodyFixed, at.bodyFixed);
-      globe = rigidDrawn
-        ? "Rigid draws the station this far from where it is."
-        : "Drawn where it is.";
-      break;
+      const station = stationText(answers.marker.station);
+      const same =
+        measured === undefined
+          ? `Both ends are station ${station}'s own design point; measuring…`
+          : `Both ends are station ${station}'s own design point: ${design} apart in the design, ${trueDistance} apart where it truly is`;
+      const rest = exaggerated
+        ? `. ${notToScale}`
+        : s.morphing
+          ? `. The ${drawn} between them now is the drawing, moving.`
+          : tone === "rigid"
+            ? `. All ${drawn} is rigid's drawing.`
+            : ", and reprojected draws it there.";
+      return {
+        title: `Station ${station} against its true position`,
+        design,
+        trueDistance,
+        ...(drawn !== undefined && { hero: drawn, drawn }),
+        globe: measured === undefined && !exaggerated ? same : `${same}${rest}`,
+        tone,
+      };
     }
     case "mark": {
       const m = answers.mark;
-      title = `${m.pid} ${m.name} to the centreline`;
-      design = m.designDistance;
-      trueDistance = m.trueDistance;
-      if (rigidDrawn) {
-        const off = length - m.trueDistance;
-        globe = `On the globe, rigid's centreline is ${metres3(length)} from the mark, ${metres3(Math.abs(off))} ${off >= 0 ? "too far" : "too near"}: it draws the road here ${errorText(dist(o.b.rigid, o.b.reprojected))} from where it is.`;
-      } else {
-        globe =
-          Math.abs(length - m.trueDistance) < 5e-4
-            ? "On the globe it measures the true distance: the drawn road lines up with NGS's mark."
-            : `On the globe it measures ${metres3(length)}.`;
-      }
-      break;
+      // Where the centreline is drawn against where it is: rigid's offset,
+      // to the millimetre, 0.000 m once reprojected.
+      const offset = metres3(
+        dist(drawnAt(o.b, s.t, s.exaggeration), o.b.reprojected),
+      );
+      const globe = exaggerated
+        ? notToScale
+        : s.morphing
+          ? `Moving between placements: on the globe the mark measures ${drawn} now.`
+          : tone === "rigid"
+            ? `On the globe the mark measures ${drawn}${against("too near", "too far")}.`
+            : isTrue
+              ? `On the globe the mark measures ${drawn}, its true distance.`
+              : `On the globe the mark measures ${drawn}.`;
+      const heroCaption = s.morphing
+        ? "The road drawn from where it is, moving."
+        : tone === "rigid"
+          ? "Rigid draws the road here this far from where it is."
+          : "The road drawn where it is.";
+      return {
+        title: `${m.pid} ${m.name} to the centreline`,
+        design,
+        trueDistance,
+        ...(!exaggerated && { hero: offset, heroCaption }),
+        ...(drawn !== undefined && { drawn }),
+        globe,
+        tone,
+      };
     }
     case "pair": {
-      const pair = answers.pairs[0]!;
-      title = pair.label;
-      design = pair.designDistance;
-      trueDistance = pair.trueDistance;
-      if (rigidDrawn) {
-        const off = length - pair.trueDistance;
-        globe = `Rigid draws it ${metres3(length)}, ${metres3(Math.abs(off))} ${off >= 0 ? "long" : "short"}; the design distance is the same in both placements.`;
-      } else {
-        globe =
-          Math.abs(length - pair.trueDistance) < 5e-4
-            ? "Drawn at its true length; the design distance is the same in both placements."
-            : `Drawn ${metres3(length)} long.`;
-      }
-      break;
+      const globe = exaggerated
+        ? notToScale
+        : s.morphing
+          ? `Moving between placements: drawn ${drawn} now.`
+          : tone === "rigid"
+            ? `Rigid draws it ${drawn}${against("short", "long")}; the design distance is the same in both placements.`
+            : isTrue
+              ? "Drawn at its true length; the design distance is the same in both placements."
+              : `Drawn ${drawn} long.`;
+      return {
+        title: answers.pairs[0]!.label,
+        design,
+        trueDistance,
+        ...(drawn !== undefined && { drawn }),
+        globe,
+        tone,
+      };
     }
   }
-  if (exaggerated) {
-    globe = `Errors drawn ×${s.exaggeration}: no measurement on the globe until true scale.`;
-  } else if (s.morphing) {
-    globe =
-      o.id === "marker"
-        ? "Moving between placements: the gap follows the geometry."
-        : `Moving between placements: drawn ${metres3(length)} now.`;
-  }
-  return {
-    title,
-    design: designText(design),
-    trueDistance: metres3(trueDistance),
-    ...(drawn !== undefined && { drawn }),
-    globe,
-    tone,
-  };
 }
 
-/** The ruler's gap at the end of its 10,000 ft, in design units. */
-export function rulerGap(a: Answers): string | undefined {
-  const pair = a.pairs[0];
-  if (pair === undefined) {
-    return undefined;
-  }
-  const symbol = unitSymbol(a.frame.unitName);
-  const groundFeet = pair.trueDistance / a.frame.metersPerUnit;
-  const gap = groundFeet - pair.designDistance;
-  return `Ground runs ${fixed(Math.abs(gap), 3)} ${symbol} ${gap >= 0 ? "longer" : "shorter"} than design`;
+/** The ruler's far end: where ground's last whole 1,000 ft falls against design's. */
+export interface RulerEnd {
+  /** The last whole 1,000 ft both scales reach, design and ground feet. */
+  readonly feet: number;
+  /** The ruler's ticks there, as fractions of the line: design's, ground's. */
+  readonly design: number;
+  readonly ground: number;
+  /** How far apart they are, design units. */
+  readonly gap: number;
+  /** "Ground's 10,000 ft ends 0.764 ftUS before design's". */
+  readonly text: string;
 }
 
 /**
- * An opener's rows behind "Details": `views`, the openers' measurements'
- * strings (`measurementModel`), and `markDesign`, PROJ's zone 3 for the mark.
+ * The ruler's far end from a measurement of its line (`measured`, from the
+ * page's `measure`): a design foot is the design unit, a ground foot the
+ * same length on the ground (metres per unit), and the two scales part by
+ * the combined scale factor.
+ */
+export function rulerEnd(
+  measured: OpenerMeasured,
+  metersPerUnit: number,
+  symbol: string,
+): RulerEnd {
+  const designFeet = measured.design;
+  const groundFeet = measured.trueDistance / metersPerUnit;
+  const feet = Math.floor(Math.min(designFeet, groundFeet) / 1000) * 1000;
+  const design = feet / designFeet;
+  const ground = feet / groundFeet;
+  const gap = Math.abs(design - ground) * designFeet;
+  return {
+    feet,
+    design,
+    ground,
+    gap,
+    text: `Ground's ${fixed(feet, 0)} ft ends ${fixed(gap, 3)} ${symbol} ${ground <= design ? "before" : "after"} design's`,
+  };
+}
+
+/** An opener's measurement by the page's `measure`, and its strings. */
+export interface OpenerMeasure {
+  readonly m: Measurement;
+  readonly view: MeasureView;
+}
+
+/** The figures the headline shows, from an opener's measurement. */
+export function measuredOf(
+  measure: OpenerMeasure | undefined,
+): OpenerMeasured | undefined {
+  const d = measure?.m.design;
+  return measure === undefined || d === undefined
+    ? undefined
+    : { design: d.distance, trueDistance: measure.m.distance };
+}
+
+/**
+ * An opener's rows behind "Details": `measures`, the openers' measurements
+ * by the page's `measure`; `markDesign`, PROJ's zone 3 for the mark; and
+ * `datum`, the heights' datum ("NAVD88 height via GEOID18").
  */
 export function openerDetails(
   id: OpenerId,
   a: Answers,
-  views: ReadonlyMap<OpenerId, MeasureView>,
+  measures: ReadonlyMap<OpenerId, OpenerMeasure>,
   markDesign: ArrayLike<number> | undefined,
+  datum: string | undefined,
 ): DetailRow[] {
   const symbol = unitSymbol(a.frame.unitName);
   const coords = (d: ArrayLike<number>) =>
-    `${fixed(d[0]!, 3)}, ${fixed(d[1]!, 3)} ${symbol}; ${fixed(d[2]!, 3)} ${symbol} NAVD88`;
-  const v = views.get(id);
+    `${fixed(d[0]!, 3)}, ${fixed(d[1]!, 3)} ${symbol}; ${fixed(d[2]!, 3)} ${symbol}${datum !== undefined ? `, ${datum}` : ""}`;
+  const measure = measures.get(id);
+  const v = measure?.view;
   switch (id) {
     case "marker":
       return [
@@ -324,20 +412,18 @@ export function openerDetails(
         m.publishedSpc.easting - m.nearestDesign[0],
         m.publishedSpc.northing - m.nearestDesign[1],
       );
-      rows.push(
-        {
-          label: "Horizontal design distance",
-          value: `${fixed(m.horizontalDistance, 3)} ${symbol}; from NGS's own zone 3, ${fixed(published, 3)} ${symbol}`,
-        },
-        {
-          label: "Nearest centreline",
-          value: `Sta. ${stationText(m.nearest.station)}, at ${coords(m.nearestDesign)}`,
-        },
-      );
-      if (v !== undefined) {
+      rows.push({
+        label: "Horizontal design distance",
+        value: `${v?.horizontalDistance ?? PENDING}; from NGS's own zone 3, ${fixed(published, 3)} ${symbol}`,
+      });
+      rows.push({
+        label: "Nearest centreline",
+        value: `Sta. ${stationText(m.nearest.station)}, at ${coords(m.nearestDesign)}`,
+      });
+      if (measure !== undefined && v !== undefined) {
         rows.push(
           { label: "Combined scale factor", value: v.combinedFactorPpm },
-          { label: "Accuracy", value: v.accuracy },
+          ...accuracyRows(measure.m.accuracy),
         );
       }
       return rows;
@@ -347,25 +433,26 @@ export function openerDetails(
       const rows: DetailRow[] = [
         {
           label: "Horizontal design distance",
-          value: `${fixed(pair.horizontalDistance, 3)} ${symbol}`,
+          value: v?.horizontalDistance ?? PENDING,
         },
         {
           label: "Ends",
           value: `Sta. ${stationText(pair.ends.a.station)} to ${stationText(pair.ends.b.station)}, on the centreline`,
         },
       ];
-      const gap = rulerGap(a);
-      if (gap !== undefined) {
+      const measured = measuredOf(measure);
+      if (measured !== undefined) {
+        const end = rulerEnd(measured, a.frame.metersPerUnit, symbol);
         rows.push({
           label: "The ruler",
-          value: `Design feet (yellow ticks) against ground feet (white): ${gap.charAt(0).toLowerCase()}${gap.slice(1)} over the line.`,
+          value: `Design feet (yellow ticks) against ground feet (white): ${end.text.charAt(0).toLowerCase()}${end.text.slice(1)}.`,
         });
       }
-      if (v !== undefined) {
+      if (measure !== undefined && v !== undefined) {
         rows.push(
           { label: "Combined scale factor", value: v.combinedFactorPpm },
           { label: "Grid convergence", value: v.convergence },
-          { label: "Accuracy", value: v.accuracy },
+          ...accuracyRows(measure.m.accuracy),
         );
       }
       return rows;

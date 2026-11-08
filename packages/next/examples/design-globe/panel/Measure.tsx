@@ -42,6 +42,10 @@ export interface MeasureActions {
   clear(): void;
   pointAtCentre(): void;
   show(id: OpenerId): void;
+  /** Flies close to the ruler's far end, where its gap shows. */
+  closeInOnRuler(): void;
+  /** Measures again after `measure` failed. */
+  retryMeasure(): void;
 }
 
 const SNAP_LABEL: Record<SnapMode, string> = {
@@ -132,6 +136,28 @@ function Globe({ text, tone }: { text: string; tone: GlobeTone }) {
   );
 }
 
+/** Why `measure` failed here, with Retry. */
+function Failed({
+  error,
+  actions,
+}: {
+  error: string;
+  actions: MeasureActions;
+}) {
+  return (
+    <div className="dg-m-failed" role="alert">
+      <span>Couldn't measure this: {error}</span>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={() => actions.retryMeasure()}
+      >
+        Retry
+      </Button>
+    </div>
+  );
+}
+
 function Opener({
   opener,
   figures,
@@ -146,6 +172,7 @@ function Opener({
   const id = useId();
   // The line as drawn changes every frame of a morph: the live figures.
   const f = figures ?? opener;
+  const headline = opener.id !== "pair";
   return (
     <article
       className={`dg-m${opener.quiet ? " quiet" : ""}`}
@@ -158,32 +185,57 @@ function Opener({
         <Button
           size="small"
           variant="text"
+          aria-label={`Show ${opener.title} on the globe`}
           onClick={() => actions.show(opener.id)}
         >
           Show
         </Button>
       </div>
-      {opener.id === "marker" ? (
+      {opener.error !== undefined && (
+        <Failed error={opener.error} actions={actions} />
+      )}
+      {headline && (
         <>
-          <p className={`dg-m-hero dg-num ${f.tone}`} aria-live="polite">
-            <span className="dg-m-big">{f.drawn ?? "Not to scale"}</span>
-            <span className="dg-m-hero-text">{f.globe}</span>
+          {/* Every frame of a morph, so not announced: the region below says it once settled. */}
+          <p className={`dg-m-hero dg-num ${f.tone}`}>
+            <span className="dg-m-big">{f.hero ?? "Not to scale"}</span>
+            {f.heroCaption !== undefined && (
+              <span className="dg-m-hero-text">{f.heroCaption}</span>
+            )}
           </p>
+          <span className="dg-visually-hidden" aria-live="polite">
+            {opener.tone === "moving"
+              ? ""
+              : `${opener.title}: ${opener.hero ?? "not to scale"}.`}
+          </span>
+        </>
+      )}
+      {opener.id === "marker" ? (
+        <p className="dg-m-said dg-num">{f.globe}</p>
+      ) : (
+        <>
+          {opener.id === "mark" && <Globe text={f.globe} tone={f.tone} />}
           <Distances
             design={opener.design}
             trueDistance={opener.trueDistance}
             small
           />
+          {opener.id === "pair" && <Globe text={f.globe} tone={f.tone} />}
         </>
-      ) : (
-        <>
-          <Distances
-            design={opener.design}
-            trueDistance={opener.trueDistance}
-            small={opener.quiet}
-          />
-          <Globe text={f.globe} tone={f.tone} />
-        </>
+      )}
+      {opener.id === "pair" && (
+        <div className="dg-actions">
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => actions.closeInOnRuler()}
+          >
+            Close in on the ruler
+          </Button>
+          <span className="dg-muted dg-actions-note">
+            Its far end, where ground's feet and design's part.
+          </span>
+        </div>
       )}
       <Details rows={opener.details}>
         {opener.id === "mark" && datasheet !== undefined && (
@@ -267,6 +319,7 @@ function Yours({
       >
         {u.busy ? "Snapping…" : u.instruction}
       </p>
+      {u.error !== undefined && <Failed error={u.error} actions={actions} />}
       {u.result !== undefined && (
         <>
           <Distances
@@ -392,6 +445,7 @@ function MeasureHud({
     transform: `translate(${x}px, ${y}px)`,
   });
   const sheetId = useId();
+  const [dismissed, setDismissed] = useState(false);
   return (
     <>
       {live.dots.map((d) => (
@@ -424,8 +478,17 @@ function MeasureHud({
       ))}
       {live.disk !== undefined && datasheet !== undefined && (
         <div
-          className={`dg-m-disk${live.disk.left ? " left" : ""}${live.disk.up ? " up" : ""}`}
+          className={`dg-m-disk${live.disk.left ? " left" : ""}${live.disk.up ? " up" : ""}${dismissed ? " dismissed" : ""}`}
           style={at(live.disk.x, live.disk.y)}
+          // Escape dismisses the card (WCAG 1.4.13); it comes back on the
+          // next hover or focus.
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setDismissed(true);
+            }
+          }}
+          onPointerEnter={() => setDismissed(false)}
+          onFocus={() => setDismissed(false)}
         >
           <button
             type="button"
@@ -443,11 +506,13 @@ function MeasureHud({
             <span className="dg-hud-title">
               NGS survey mark {datasheet.pid} {datasheet.name}
             </span>
-            {datasheet.lines.map((l) => (
-              <span key={l} className="dg-m-disk-line">
-                {l}
-              </span>
-            ))}
+            <span className="dg-m-disk-lines">
+              {datasheet.lines.map((l) => (
+                <span key={l} className="dg-m-disk-line">
+                  {l}
+                </span>
+              ))}
+            </span>
             <span className="dg-hud-muted">
               From NGS's datasheet, retrieved {datasheet.retrieved}. Placed from
               its NAD83(2011) position, independent of the design.

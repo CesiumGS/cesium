@@ -9,13 +9,18 @@ import {
   drawnAt,
   openerView,
   openingMeasurements,
+  rulerEnd,
   type OpenerPlacements,
 } from "../examples/design-globe/measureOpeners.ts";
 import { shownValues } from "../examples/design-globe/measureShown.ts";
+import { datasheetUrl } from "../examples/design-globe/measureView.ts";
+import { accuracyRows } from "../examples/design-globe/measureModel.ts";
+import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import {
   formatMeasureLink,
   nextMeasure,
   parseMeasureLink,
+  routeByTileset,
   snapWith,
   type MeasureEnd,
   type MeasureState,
@@ -23,6 +28,7 @@ import {
 import { checkRows } from "../examples/design-globe/checks.ts";
 import type {
   ClientSnapService,
+  ServiceSnapRequest,
   SnapResult,
   SnapService,
 } from "../src/engineering/snap.ts";
@@ -326,6 +332,13 @@ describe("the measurements the page opens with", () => {
     expect(openers.map((o) => o.quiet)).toEqual([false, false, true]);
   });
 
+  /** What the page's `measure` gives, distinct from answers.json's to show which is shown. */
+  const measured = {
+    marker: { design: 0, trueDistance: 0 },
+    mark: { design: 608.4293727, trueDistance: 185.4635994097 },
+    pair: { design: 10_001.9998000402, trueDistance: 3_048.8484955078 },
+  };
+
   it("the design against itself: a marker at station 170,000's true position, to the drawn station", () => {
     const [marker] = openingMeasurements(a, p);
     // The marker stands where the point truly is, in either placement.
@@ -335,14 +348,25 @@ describe("the measurements the page opens with", () => {
     expect([...marker!.b.rigid]).toEqual([
       ...p.rigid.displayed(a.marker.design),
     ]);
-    const rigid = openerView(marker!, a, settled("rigid"));
-    const reprojected = openerView(marker!, a, settled("reprojected"));
-    // The design says one point; the true positions agree.
-    expect(rigid.design).toBe("0.000 ftUS");
-    expect(rigid.trueDistance).toBe("0.000 m");
+    const rigid = openerView(marker!, a, settled("rigid"), measured.marker);
+    const reprojected = openerView(
+      marker!,
+      a,
+      settled("reprojected"),
+      measured.marker,
+    );
     // Rigid draws it apart (here the test's 31 m sag); reprojected, 0.000 m.
-    expect(rigid.drawn).toBe(`${Math.hypot(10, 20, 21).toFixed(3)} m`);
-    expect(reprojected.drawn).toBe("0.000 m");
+    const gap = `${Math.hypot(10, 20, 21).toFixed(3)} m`;
+    expect(rigid.hero).toBe(gap);
+    expect(reprojected.hero).toBe("0.000 m");
+    // The figures, said once: one design point, one true place, and all of
+    // the gap rigid's drawing.
+    expect(rigid.globe).toBe(
+      `Both ends are station 1700+00.000's own design point: 0.000 ftUS apart in the design, 0.000 m apart where it truly is. All ${gap} is rigid's drawing.`,
+    );
+    expect(reprojected.globe).toBe(
+      "Both ends are station 1700+00.000's own design point: 0.000 ftUS apart in the design, 0.000 m apart where it truly is, and reprojected draws it there.",
+    );
     expect(rigid.title).toBe("Station 1700+00.000 against its true position");
   });
 
@@ -351,7 +375,7 @@ describe("the measurements the page opens with", () => {
     const gap = (t: number) =>
       Number(
         openerView(marker!, a, { t, exaggeration: 1, morphing: true })
-          .drawn!.replace(" m", "")
+          .hero!.replace(" m", "")
           .replace(",", ""),
       );
     const full = Math.hypot(10, 20, 21);
@@ -364,28 +388,53 @@ describe("the measurements the page opens with", () => {
       exaggeration: 10,
       morphing: false,
     });
-    expect(exaggerated.drawn).toBeUndefined();
+    expect(exaggerated.hero).toBeUndefined();
     expect(exaggerated.globe).toMatch(/×10/);
   });
 
-  it("the design against NGS's mark: the figures from answers.json, the same in both placements", () => {
+  it("the design against NGS's mark: the page's measure, and rigid's offset of the road as the headline", () => {
     const [, mark] = openingMeasurements(a, p);
     expect([...mark!.a.rigid]).toEqual(a.mark.bodyFixed);
     expect([...mark!.b.reprojected]).toEqual([
       ...p.reprojected.displayed(a.mark.nearestDesign),
     ]);
     for (const mode of ["rigid", "reprojected"] as const) {
-      const v = openerView(mark!, a, settled(mode));
+      const v = openerView(mark!, a, settled(mode), measured.mark);
       expect(v.design).toBe("608.429 ftUS");
       expect(v.trueDistance).toBe("185.464 m");
       expect(v.title).toBe("HS5109 GOLD CREEK to the centreline");
+    }
+    // The headline: how far rigid draws the road from where it is, to the
+    // millimetre, shrinking to 0.000 m through the morph.
+    const hero = (t: number) =>
+      openerView(mark!, a, { t, exaggeration: 1, morphing: t > 0 && t < 1 })
+        .hero;
+    expect(hero(0)).toBe(`${Math.hypot(10, 20, 21).toFixed(3)} m`);
+    expect(hero(0.5)).toBe(`${(Math.hypot(10, 20, 21) / 2).toFixed(3)} m`);
+    expect(hero(1)).toBe("0.000 m");
+    const rigid = openerView(mark!, a, settled("rigid"), measured.mark);
+    expect(rigid.globe).toMatch(
+      /^On the globe the mark measures [\d,.]+ m, [\d,.]+ m too (far|near)\.$/,
+    );
+  });
+
+  it("shows no figure before the page has measured: answers.json is only the check", () => {
+    for (const o of openingMeasurements(a, p)) {
+      const v = openerView(o, a, settled("rigid"));
+      expect(v.design).toBe("…");
+      expect(v.trueDistance).toBe("…");
     }
   });
 
   it("the 10,000 ft pair: the design distance identical in both placements; only the drawn length differs", () => {
     const [, , pair] = openingMeasurements(a, p);
-    const rigid = openerView(pair!, a, settled("rigid"));
-    const reprojected = openerView(pair!, a, settled("reprojected"));
+    const rigid = openerView(pair!, a, settled("rigid"), measured.pair);
+    const reprojected = openerView(
+      pair!,
+      a,
+      settled("reprojected"),
+      measured.pair,
+    );
     expect(rigid.design).toBe("10,002.000 ftUS");
     expect(reprojected.design).toBe(rigid.design);
     expect(rigid.trueDistance).toBe("3,048.848 m");
@@ -396,8 +445,8 @@ describe("the measurements the page opens with", () => {
   it("writes no e-notation and names every unit", () => {
     for (const o of openingMeasurements(a, p)) {
       for (const mode of ["rigid", "reprojected"] as const) {
-        const v = openerView(o, a, settled(mode));
-        for (const text of [v.design, v.trueDistance, v.drawn, v.globe]) {
+        const v = openerView(o, a, settled(mode), measured[o.id]);
+        for (const text of [v.design, v.trueDistance, v.hero, v.globe]) {
           if (text !== undefined) {
             expect(text).not.toMatch(/\de[+-]?\d/i);
           }
@@ -474,5 +523,114 @@ describe("what the measure section shows, for the checks", () => {
       tolerance: 0.07,
     });
     expect(picked.pairs.size).toBe(0);
+  });
+});
+
+describe("the exact snap's routing", () => {
+  it("asks the one service of the request's tileset, and nothing for another", async () => {
+    const rigid = {} as Tileset3D;
+    const reprojected = {} as Tileset3D;
+    const other = {} as Tileset3D;
+    const answer = { kind: "point" } as unknown as SnapResult;
+    const services = new Map<Tileset3D, SnapService>([
+      [rigid, { snap: vi.fn(async () => answer) }],
+      [reprojected, { snap: vi.fn(async () => undefined) }],
+    ]);
+    const router = routeByTileset(services);
+    const ask = (tileset: Tileset3D) =>
+      router.snap({ tileset } as unknown as ServiceSnapRequest);
+    await expect(ask(rigid)).resolves.toBe(answer);
+    expect(services.get(rigid)!.snap).toHaveBeenCalledTimes(1);
+    expect(services.get(reprojected)!.snap).not.toHaveBeenCalled();
+    await expect(ask(other)).resolves.toBeUndefined();
+  });
+});
+
+describe("the datasheet's link", () => {
+  it("is rendered only for https on NGS's own host", () => {
+    expect(datasheetUrl(answers().mark.datasheetUrl)).toBe(
+      "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=HS5109",
+    );
+    expect(datasheetUrl("https://ngs.noaa.gov/x")).toBe(
+      "https://ngs.noaa.gov/x",
+    );
+    for (const hostile of [
+      "https://ngs.noaa.gov.evil.com/",
+      "https://evilngs.noaa.gov/",
+      "http://www.ngs.noaa.gov/",
+      "javascript:alert(1)",
+      "https://x@evil.com/",
+      "data:text/html,hi",
+      "//www.ngs.noaa.gov/",
+      "not a url",
+    ]) {
+      expect(datasheetUrl(hostile), hostile).toBeUndefined();
+    }
+    // Userinfo on NGS's host is still NGS's host, but no link carries it.
+    expect(datasheetUrl("https://x@www.ngs.noaa.gov/")).toBeUndefined();
+  });
+});
+
+describe("the ruler's far end", () => {
+  it("parts ground's last 1,000 ft from design's by the measured scale", () => {
+    const end = rulerEnd(
+      { design: 10_001.9998000402, trueDistance: 3_048.8484955078 },
+      MPU,
+      "ftUS",
+    );
+    expect(end.feet).toBe(10_000);
+    const groundFeet = 3_048.8484955078 / MPU;
+    expect(end.gap).toBeCloseTo(
+      10_000 * (1 - 10_001.9998000402 / groundFeet),
+      9,
+    );
+    expect(end.ground).toBeLessThan(end.design);
+    expect(end.text).toBe(
+      `Ground's 10,000 ft ends ${end.gap.toFixed(3)} ftUS before design's`,
+    );
+  });
+});
+
+describe("the accuracy's parts", () => {
+  it("says what it is the accuracy of, its total, and each end's term", () => {
+    const rows = accuracyRows({
+      meters: Math.hypot(2.015, 2.015),
+      terms: [
+        {
+          source: "projection",
+          meters: 2.015,
+          note: 'End a: engineering frame "Highway corridor": PROJ operation (us_noaa_g2018u0.tif)',
+        },
+        {
+          source: "projection",
+          meters: 2.015,
+          note: 'End b: engineering frame "Highway corridor": PROJ operation (us_noaa_g2018u0.tif); the rest as end a',
+        },
+      ],
+      warnings: [],
+    });
+    expect(rows.map((r) => r.label)).toEqual([
+      "Accuracy",
+      "Projection at A",
+      "Projection at B",
+    ]);
+    expect(rows[0]!.value).toBe(
+      "±2.8 m (1σ), of the true distance: the parts below, combined as independent",
+    );
+    expect(rows[1]!.value).toBe(
+      "±2.0 m: PROJ's stated accuracy for the design CRS's operation (us_noaa_g2018u0.tif)",
+    );
+  });
+});
+
+describe("the link's numbers", () => {
+  it("carry a tiny coordinate exactly, with no exponent", () => {
+    const tiny = end(0, {
+      design: Float64Array.from([Math.PI * 1e-7, -3e-12, 0]),
+    });
+    const link = formatMeasureLink({ phase: "done", a: tiny, b: tiny });
+    expect(link.a).not.toMatch(/e/i);
+    const back = parseMeasureLink({ a: link.a!, b: link.b! }, ["corridor"]);
+    expect([...back!.a]).toEqual([...tiny.design]);
   });
 });

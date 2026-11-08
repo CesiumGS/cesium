@@ -136,7 +136,11 @@ export interface AnswerMark {
   readonly designDistance: number;
   /** Mark to that point, E and N alone, design units (|offset|). */
   readonly horizontalDistance: number;
-  /** `bodyFixed` to that point's true position, metres. */
+  /**
+   * Mark to that point, metres: `measure`'s true distance between the two
+   * design points (the straight line between where they truly are), as the
+   * page measures it.
+   */
   readonly trueDistance: number;
 }
 

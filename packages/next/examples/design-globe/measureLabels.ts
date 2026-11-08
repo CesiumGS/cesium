@@ -11,12 +11,15 @@ import { stationText } from "./measureModel.ts";
 import {
   drawnAt,
   openerView,
-  rulerGap,
   type DrawState,
   type Opener,
   type OpenerFigures,
   type OpenerId,
+  PENDING,
+  type OpenerMeasured,
+  type RulerEnd,
 } from "./measureOpeners.ts";
+import { rulerTips } from "./measureOverlay.ts";
 import type { MeasureState } from "./measureState.ts";
 
 /** Labels over the canvas, placed each frame the camera or the morph moves. */
@@ -63,8 +66,10 @@ export interface MeasureLive {
 
 /** Labels farther than this from the camera are left out, metres. */
 const LABEL_RANGE = 30_000;
-/** The ruler's note shows within this of its far end, metres. */
-const RULER_RANGE = 400;
+/** The ruler's note shows once its last ticks are this far apart on the screen, CSS px. */
+export const RULER_PX = 4;
+/** A quiet line's label shows within this of the camera, metres (not at the horizon). */
+const QUIET_RANGE = 15_000;
 
 /** A store whose listeners are told once per animation frame. */
 export function liveStore<T>(initial: T) {
@@ -110,6 +115,10 @@ export interface LabelInput {
   readonly state: MeasureState;
   /** The user's pill: its design distance, or why there is none. */
   readonly userText: string;
+  /** The openers' figures from the page's `measure`, by opener. */
+  readonly measured: ReadonlyMap<OpenerId, OpenerMeasured>;
+  /** The ruler's far end, once the pair is measured. */
+  readonly ruler: RulerEnd | undefined;
   readonly hover: MeasureLive["hover"];
   readonly crosshair: boolean;
 }
@@ -189,7 +198,7 @@ export function placeLabels(input: LabelInput): MeasureLive {
     if (a === undefined) {
       break;
     }
-    const f = openerView(o, a, s);
+    const f = openerView(o, a, s, input.measured.get(o.id));
     figures[o.id] = f;
     const pa = drawnAt(o.shown.a, s.t, s.exaggeration);
     const pb = drawnAt(o.shown.b, s.t, s.exaggeration);
@@ -198,8 +207,12 @@ export function placeLabels(input: LabelInput): MeasureLive {
         ? f.drawn !== undefined
           ? `${f.drawn} drawn apart`
           : "Not to scale"
-        : `${f.design} design`;
-    label(o.id, pa, pb, text, o.quiet ? "quiet" : "measure");
+        : f.design === PENDING
+          ? "Measuring…"
+          : `${f.design} design`;
+    if (!o.quiet || cameraTo(middle(pa, pb)) < QUIET_RANGE) {
+      label(o.id, pa, pb, text, o.quiet ? "quiet" : "measure");
+    }
     // The fixed ends: the marker's pin and the survey disk.
     const fixedAt = seen(pa);
     if (o.id === "marker" && fixedAt !== undefined) {
@@ -218,15 +231,22 @@ export function placeLabels(input: LabelInput): MeasureLive {
     }
     // The ruler's gap shows only within a few hundred feet of its far
     // end, where its ticks can be told apart.
-    if (o.id === "pair" && cameraTo(pb) < RULER_RANGE) {
-      const gap = rulerGap(a);
-      const ruler = seen(pb);
-      if (ruler !== undefined && gap !== undefined) {
+    // The ruler's note, only where its bracket can be seen: the two last
+    // ticks' tips at least `RULER_PX` apart on the screen.
+    if (o.id === "pair" && input.ruler !== undefined) {
+      const [ta, tb] = rulerTips(o, input.ruler).map((e) =>
+        seen(drawnAt(e, s.t, s.exaggeration)),
+      );
+      if (
+        ta !== undefined &&
+        tb !== undefined &&
+        Math.hypot(ta[0]! - tb[0]!, ta[1]! - tb[1]!) >= RULER_PX
+      ) {
         pills.push({
           key: "ruler",
-          x: ruler[0]!,
-          y: ruler[1]! + 26,
-          text: gap,
+          x: (ta[0]! + tb[0]!) / 2,
+          y: (ta[1]! + tb[1]!) / 2 + 30,
+          text: input.ruler.text,
           tone: "ruler",
         });
       }

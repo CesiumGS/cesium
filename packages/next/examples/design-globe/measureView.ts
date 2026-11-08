@@ -8,6 +8,7 @@ import type {
 import type { Measurement } from "../../src/measure/measure.ts";
 import type { Answers } from "./answers.ts";
 import {
+  accuracyRows,
   fixed,
   unitSymbol,
   type EndView,
@@ -23,6 +24,7 @@ import {
   type Opener,
   type OpenerFigures,
   type OpenerId,
+  type OpenerMeasured,
 } from "./measureOpeners.ts";
 import type { MeasureEnd, MeasureHow, MeasureState } from "./measureState.ts";
 import type { SnapMode } from "./page.ts";
@@ -48,6 +50,8 @@ export interface OpenerPanel extends OpenerFigures {
   readonly id: OpenerId;
   readonly quiet: boolean;
   readonly details: readonly DetailRow[];
+  /** The page's `measure` failed for it: why (with Retry). */
+  readonly error?: string;
 }
 
 /** One end in the user's measurement's details. */
@@ -64,6 +68,8 @@ export interface UserMeasurePanel {
   readonly refused: boolean;
   /** A snap or the measurement runs. */
   readonly busy: boolean;
+  /** Both points are placed but `measure` failed: why (with Retry). */
+  readonly error?: string;
   readonly result?: {
     readonly design: string;
     readonly trueDistance: string;
@@ -84,11 +90,13 @@ export interface MeasurePanel {
   readonly waiting?: string;
 }
 
-/** NGS's datasheet link, only when it is https on NGS's own host. */
+/** NGS's datasheet link, only when it is https on NGS's own host, with no userinfo. */
 export function datasheetUrl(url: string): string | undefined {
   try {
     const u = new URL(url);
     return u.protocol === "https:" &&
+      u.username === "" &&
+      u.password === "" &&
       (u.hostname === "ngs.noaa.gov" || u.hostname === "www.ngs.noaa.gov")
       ? u.href
       : undefined;
@@ -125,6 +133,12 @@ export interface MeasurePanelInput {
   readonly openers: readonly Opener[];
   /** An opener's Details rows. */
   details(id: OpenerId, a: Answers): DetailRow[];
+  /** An opener's figures from the page's `measure`, once it has run. */
+  measured(id: OpenerId): OpenerMeasured | undefined;
+  /** Why the page's `measure` failed for an opener, if it did. */
+  openerError(id: OpenerId): string | undefined;
+  /** Why the user's measurement failed, if it did. */
+  readonly userError: string | undefined;
   readonly snap: SnapMode;
   readonly state: MeasureState;
   /** Why the last point wasn't placed, or undefined for the next step. */
@@ -151,11 +165,13 @@ export function measurePanel(input: MeasurePanelInput): MeasurePanel {
   const panels: OpenerPanel[] = [];
   if (a !== undefined) {
     for (const o of openers) {
+      const error = input.openerError(o.id);
       panels.push({
-        ...openerView(o, a, s),
+        ...openerView(o, a, s, input.measured(o.id)),
         id: o.id,
         quiet: o.quiet,
         details: input.details(o.id, a),
+        ...(error !== undefined && { error }),
       });
     }
   }
@@ -195,6 +211,7 @@ export function measurePanel(input: MeasurePanelInput): MeasurePanel {
       instruction: instruction ?? `${next} ${how}`,
       refused,
       busy,
+      ...(input.userError !== undefined && { error: input.userError }),
       ...(input.result !== undefined && { result: input.result }),
     },
     ...(framesFailed !== undefined
@@ -208,7 +225,8 @@ export function measurePanel(input: MeasurePanelInput): MeasurePanel {
 export function endRows(
   e: MeasureEnd,
   v: EndView,
-  frame?: EngineeringFrame,
+  frame: EngineeringFrame | undefined,
+  datum: string | undefined,
 ): DetailRow[] {
   const symbol = frame ? unitSymbol(frame.units.horizontalUnitName) : "";
   const rows: DetailRow[] = [];
@@ -221,7 +239,7 @@ export function endRows(
   if (v.elevation !== undefined) {
     rows.push({
       label: "Elevation",
-      value: `${v.elevation}${e.shownAbove ? " (marked on the barrier's top above it)" : ""}`,
+      value: `${v.elevation}${datum !== undefined ? `, ${datum}` : ""}${e.shownAbove ? " (marked on the barrier's top above it)" : ""}`,
     });
   }
   rows.push({
@@ -244,6 +262,7 @@ export function userResult(
   s: DrawState,
   paired: boolean,
   frame: EngineeringFrame | undefined,
+  datum: string | undefined,
 ): NonNullable<UserMeasurePanel["result"]> {
   const st = m.state;
   const v = m.view;
@@ -280,7 +299,7 @@ export function userResult(
   details.push(
     { label: "Combined scale factor", value: v.combinedFactorPpm },
     { label: "Grid convergence", value: v.convergence },
-    { label: "Accuracy", value: v.accuracy },
+    ...accuracyRows(m.m.accuracy),
   );
   return {
     design: v.designDistance,
@@ -289,8 +308,8 @@ export function userResult(
     tone,
     details,
     ends: [
-      { label: "A", rows: endRows(st.a, v.a, frame) },
-      { label: "B", rows: endRows(st.b, v.b, frame) },
+      { label: "A", rows: endRows(st.a, v.a, frame, datum) },
+      { label: "B", rows: endRows(st.b, v.b, frame, datum) },
     ],
   };
 }
