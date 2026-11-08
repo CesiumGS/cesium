@@ -1162,9 +1162,33 @@ export class Engine {
   }
 
   /**
-   * Streams a 3D Tiles tileset into `world`: selection runs per view each
-   * tick, and content is drawn only in the views that selected it. Its
-   * content hangs under the Earth's anchor (`TilesetOptions.anchor` names
+   * Loads a 3D Tiles tileset's tree, drawing nothing yet: `World.add` draws
+   * it, as often as asked, and streams its tiles. It belongs to the first
+   * world it is added to, and until then does no work.
+   */
+  async loadTileset(
+    url: string | URL,
+    options?: TilesetOptions,
+  ): Promise<Tileset3D> {
+    return Tileset3D.load(
+      this,
+      undefined,
+      new URL(url, globalThis.location?.href).href,
+      options,
+    );
+  }
+
+  /** @internal A tileset loaded alone was added to its world. */
+  adoptTileset(tileset: Tileset3D): void {
+    this.tilesets.push(tileset);
+    this.wake();
+  }
+
+  /**
+   * Streams a 3D Tiles tileset into `world`, as `loadTileset` then `World.add`
+   * with the default item, which is `tileset.items[0]`: selection runs per
+   * view each tick, and content is drawn only in the views that selected it.
+   * Its content hangs under the Earth's anchor (`TilesetOptions.anchor` names
    * another), and selection reads each view's camera there.
    */
   async addTileset(

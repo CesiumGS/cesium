@@ -44,6 +44,8 @@ function tileset(opts: {
   return {
     placement: opts.placement,
     warnings: new Set<string>(),
+    itemOfDraw: () => undefined,
+    sourceOfDraw: () => undefined,
     tileOfDraw: (d: { index: number }) =>
       (opts.owns ?? true) && d.index === DRAW.index
         ? ({

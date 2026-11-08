@@ -138,6 +138,8 @@ entry	name	kind	tier
 .	RigPosition	interface	-
 .	STAGES	const	-
 .	SceneClock	interface	-
+.	SceneItem	class	-
+.	SceneItemOptions	interface	-
 .	SelectionView	interface	-
 .	ShaderControl	interface	-
 .	ShaderOverrides	interface	-
@@ -177,6 +179,7 @@ entry	name	kind	tier
 .	TileContent	interface	-
 .	TileGeometry	interface	-
 .	Tileset3D	class	-
+.	TilesetDualPosition	interface	-
 .	TilesetEvents	interface	-
 .	TilesetOptions	interface	-
 .	TilesetStats	interface	-

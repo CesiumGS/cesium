@@ -2,6 +2,7 @@ import type { Body } from "../scene/Body.ts";
 import type { PickResult } from "../scene/View.ts";
 import type { DrawHandle } from "../scene/World.ts";
 import type { Tile } from "../streaming/Tile.ts";
+import type { SceneItem } from "../scene/SceneItem.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
   sphereDistance,
@@ -78,11 +79,17 @@ export interface DesignPick {
   readonly position: Float64Array;
   /** The listed tileset whose content was hit. */
   readonly tileset?: Tileset3D;
+  /**
+   * The item hit: which drawing of the tileset (a translucent one never is:
+   * picks see through it).
+   */
+  readonly item?: SceneItem;
   readonly feature?: PickResult;
   /**
    * Present only for a hit on a listed tileset that has a placement, when
    * the position, the feature and the camera all come from one tick and
-   * the hit tile's bounds contain the position.
+   * the hit tile's bounds contain the position. Drawn with a dual position, only at `t` exactly 0 or 1
+   * (`SceneItem.designPlacement`).
    */
   readonly design?: DesignPoint<CoordinateOperation>;
   /** Metres: one CSS pixel's footprint at the hit. */
@@ -210,6 +217,7 @@ function framed(
   let volume: TileVolume | undefined;
   let hitDraw: DrawHandle | undefined;
   let hitTile: Tile | undefined;
+  let item: SceneItem | undefined;
   if (feature !== undefined && draw !== undefined) {
     for (const t of tilesets) {
       const tile = t.isDestroyed() ? undefined : t.tileOfDraw(draw);
@@ -218,11 +226,14 @@ function framed(
         volume = tile.contentVolume ?? tile.volume;
         hitDraw = draw;
         hitTile = tile;
+        item = t.itemOfDraw(draw);
         break;
       }
     }
   }
-  const placement = engineeringPlacement(tileset?.placement);
+  const placement = engineeringPlacement(
+    item !== undefined ? item.designPlacement : tileset?.placement,
+  );
   const inside =
     volume !== undefined && nearVolume(volume, position, tolerance + 1);
   let design: DesignPoint<CoordinateOperation> | undefined;
@@ -243,6 +254,7 @@ function framed(
     body,
     position,
     ...(tileset !== undefined && { tileset }),
+    ...(item !== undefined && { item }),
     ...(feature !== undefined && { feature }),
     ...(design !== undefined && { design }),
     tolerance,

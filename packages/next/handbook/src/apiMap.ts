@@ -1380,6 +1380,9 @@ export const API_ROWS: readonly ApiRow[] = [
     ],
     supporting: [
       "ModelPlacement",
+      "SceneItem",
+      "SceneItemOptions",
+      "TilesetDualPosition",
       "Placement",
       "PlacementBlend",
       "PlacementMode",

@@ -24,6 +24,8 @@ import {
   type PlacementParameter,
 } from "./placement.ts";
 import { PlacementTable } from "./placementTable.ts";
+import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
+import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
   INSTANCE_WORDS,
   INSTANCE_COUNT_WORD,
@@ -327,6 +329,8 @@ export interface FeatureInfo {
   localId: number;
   name: string | undefined;
   properties?: Record<string, FeatureValue>;
+  /** The item that drew it, if an item did (`World.add`). */
+  item?: SceneItem;
 }
 
 export type SubmissionMode = "indirect" | "direct";
@@ -2640,6 +2644,145 @@ export class World {
     return this.internMaterial(scratch.u32);
   }
 
+  /**
+   * @internal A second draw of `source`'s mesh, on `source`'s transform and
+   * with its features, to draw a tileset's tile again (`SceneItem`): the geometry and the transform are shared, so it
+   * costs a record, a draw item and its feature IDs. Hidden until given a
+   * view mask. Not ground, and rays don't test it. Undefined for a draw that
+   * can't be drawn twice this way: instanced, points or a billboard, whose
+   * records are tied to their instance or point tables. Remove it before
+   * `source`'s transform goes.
+   */
+  twinDraw(
+    source: DrawHandle,
+    name: string | undefined,
+  ): DrawHandle | undefined {
+    if (!this.hasDraw(source)) {
+      throw new Error("twinDraw: the draw was removed.");
+    }
+    const index = source.index;
+    const batch = this.drawBatches[index]!;
+    const o = index * RECORD_WORDS;
+    if (
+      batch.points ||
+      batch.billboard ||
+      this.recordsU32[o + INSTANCE_COUNT_WORD]! > 0
+    ) {
+      return undefined;
+    }
+    const transform = this.recordsU32[o + TRANSFORM_WORD]!;
+    const flags = this.recordsU32[o + FLAGS_WORD]!;
+    const features = this.featureTables[index];
+    return this.addDraw({
+      mesh: batch.mesh,
+      transform: {
+        index: transform,
+        generation: this.transformGeneration[transform]!,
+      },
+      material: batch.material,
+      textureSet: batch.textureSet,
+      doubleSided: batch.doubleSided,
+      ...(batch.shader !== undefined && { shader: batch.shader }),
+      unlit: (flags & RecordFlags.unlit) !== 0,
+      underlay: (flags & RecordFlags.underlay) !== 0,
+      ground: false,
+      viewMask: 0,
+      ...(name !== undefined && { name }),
+      ...(features !== undefined && { features }),
+    });
+  }
+
+  /**
+   * @internal Whether the draw's mesh has the named attribute, with at least
+   * 3 components: what a dual position needs.
+   */
+  drawHasPosition(handle: DrawHandle, semantic: string): boolean {
+    if (!this.hasDraw(handle)) {
+      return false;
+    }
+    const { mesh, points, billboard } = this.drawBatches[handle.index]!;
+    const components = this.meshRanges.get(mesh.id)?.named?.get(semantic);
+    return !points && !billboard && components !== undefined && components >= 3;
+  }
+
+  /** @internal Lights the draw, or shows its colour as it is (lines always). */
+  setUnlit(handle: DrawHandle, unlit: boolean): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    const next =
+      unlit || this.drawBatches[handle.index]!.mesh.topology === "line-list"
+        ? flags | RecordFlags.unlit
+        : flags & ~RecordFlags.unlit;
+    if (this.drawConstants.setFlags(handle.index, next)) {
+      this.markDirty(handle.index);
+    }
+  }
+
+  /**
+   * @internal `parameter` is no longer used by anything: its float is free.
+   * Its draws must have left it.
+   */
+  releasePlacementParameter(parameter: PlacementParameter): void {
+    const slot = this.parameters.get(parameter);
+    if (slot !== undefined) {
+      this.parameters.delete(parameter);
+      this.placementTable.releaseParameter(slot.word);
+    }
+  }
+
+  /**
+   * Draws `tileset` in this world, once more if it is drawn already: the same
+   * loaded tiles, one selection and one cache, with this item's own placement,
+   * tint, opacity and view mask. Its draws share the tiles' geometry and
+   * transforms; after the first item each adds a draw record and a draw item
+   * (about 550 bytes a draw). Every tile that loads gets them too. Stop drawing
+   * it with `SceneItem.remove`.
+   *
+   * A tileset belongs to one world: the first it is added to, or the one it
+   * was loaded for (`Engine.addTileset`). Throws for a tileset of another
+   * world, a destroyed one, a globe's (its surface isn't an item), and what
+   * the options refuse: an opacity outside 0 to 1, a tint that isn't three
+   * finite numbers, a placement that isn't finite or, on a tileset with no
+   * second position (`Tileset3D.dualPosition`), isn't 0. Throws a
+   * `CapacityError` where a loaded tile's draws don't fit the world's tables,
+   * leaving nothing behind.
+   */
+  add(tileset: Tileset3D, options: SceneItemOptions = {}): SceneItem {
+    const item = tileset.addItem(this, options);
+    this.sceneItems.push(item);
+    return item;
+  }
+
+  /**
+   * Everything this world draws as an item (`add`), in the order added: a flat
+   * list. Nothing here walks it per tick. `Tileset3D.items` lists one tileset's.
+   */
+  get items(): readonly SceneItem[] {
+    return this.sceneItems;
+  }
+  private readonly sceneItems: SceneItem[] = [];
+
+  /** @internal The item left its tileset. */
+  itemRemoved(item: SceneItem): void {
+    const at = this.sceneItems.indexOf(item);
+    if (at >= 0) {
+      this.sceneItems.splice(at, 1);
+    }
+  }
+
+  /** The item that drew `draw`, if an item did. */
+  itemOfDraw(draw: DrawHandle): SceneItem | undefined {
+    for (const item of this.sceneItems) {
+      const hit = item.tileset.itemOfDraw(draw);
+      if (hit !== undefined) {
+        return hit;
+      }
+    }
+    return undefined;
+  }
+
   /** Whether `handle` still names a live draw. */
   hasDraw(handle: DrawHandle): boolean {
     return (
@@ -4411,14 +4554,21 @@ export class World {
       generation: this.drawGeneration[index]!,
       name: this.names[index],
     };
+    const item = this.itemOfDraw(draw);
     if (!table || localId >= table.count) {
-      return { draw, localId, name: this.names[index] };
+      return {
+        draw,
+        localId,
+        name: this.names[index],
+        ...(item && { item }),
+      };
     }
     return {
       draw,
       localId,
       name: featureName(table, localId) ?? this.names[index],
       properties: featureProperties(table, localId),
+      ...(item && { item }),
     };
   }
 
@@ -4772,7 +4922,14 @@ export class World {
     // view selected cost nothing here.
     const order = this.batchList
       .filter(
-        (batch) => batch.shown > 0 || (kind === "shadow" && batch.casters > 0),
+        (batch) =>
+          (batch.shown > 0 || (kind === "shadow" && batch.casters > 0)) &&
+          // Only the translucent passes draw it (`encodeTranslucent`); lines
+          // can't blend, and stay here.
+          (batch.mesh.topology === "line-list" ||
+            (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+              MaterialFlags.blendedOnly) ===
+              0),
       )
       .sort(
         (a, b) =>

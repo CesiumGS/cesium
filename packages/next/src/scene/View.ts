@@ -6,6 +6,7 @@ import { MAX_ANCHORS, type ViewLighting } from "../render/layout.ts";
 import { EARTH, bodyKey, type Body } from "./Body.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
 import type { CorePick } from "./pick.ts";
+import type { SceneItem } from "./SceneItem.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
 export interface Viewport {
@@ -376,6 +377,8 @@ export interface PickResult {
   name: string | undefined;
   /** Feature properties from the content's property or batch table. */
   properties?: Record<string, FeatureValue>;
+  /** The item that drew it, if an item did (`World.add`). */
+  item?: SceneItem;
 }
 
 /**

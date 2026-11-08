@@ -135,6 +135,7 @@ export {
   type TilesetEvents,
   type TilesetOptions,
   type TilesetStats,
+  type TilesetDualPosition,
 } from "./streaming/Tileset3D.ts";
 export type {
   DesignPlacement,
@@ -178,6 +179,7 @@ export {
   type BudgetedOptions,
 } from "./streaming/Budgeted.ts";
 export { Tile, tileHeaderKey, type TileGeometry } from "./streaming/Tile.ts";
+export { SceneItem, type SceneItemOptions } from "./scene/SceneItem.ts";
 export {
   createBillboard,
   createBox,

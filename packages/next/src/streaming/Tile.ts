@@ -6,6 +6,7 @@
 import type { ClipHandle, DrawHandle } from "../scene/World.ts";
 import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
+import type { SceneItem } from "../scene/SceneItem.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
@@ -14,6 +15,7 @@ import { resolveUri } from "../io/ion.ts";
 import type { ModelPlacement } from "../scene/gltfModel.ts";
 import {
   compactVolume,
+  padVolume,
   volumeFromJson,
   volumeObb,
   type Occludee,
@@ -33,9 +35,33 @@ export interface TileGeometry {
   readonly positions: Float32Array;
   readonly indices: Uint32Array;
   readonly matrix: Float64Array;
+  /**
+   * The mesh's named attributes of 3 float components, as loaded: where a
+   * dual position (`DualPosition.semantic`) moves `positions` to.
+   */
+  readonly attributes?: Readonly<Record<string, Float32Array>>;
 }
 
 export type ContentState = "unloaded" | "loading" | "ready" | "failed";
+
+/** A volume grown by a pad, and what it was grown from. */
+interface PaddedVolume {
+  readonly own: TileVolume;
+  readonly pad: number;
+  readonly volume: TileVolume;
+}
+
+/** A tile's draws by one item of its tileset (`SceneItem`). */
+export interface ItemDraws {
+  /** One per drawable draw of the tile's content, in its order. */
+  readonly draws: readonly DrawHandle[];
+  /** Each draw's material as the content has it. */
+  readonly materials: readonly number[];
+  /** Each draw's blended twin while it uses one (-1: none). */
+  readonly twins: number[];
+  /** Its mesh lacks the placement's attribute: this item skips it. */
+  denied: boolean;
+}
 
 /** Per-view traversal state, written by a selection policy each frame. */
 export interface TileViewState {
@@ -83,6 +109,9 @@ export class Tile {
   private builtVolume?: TileVolume;
   private builtContentVolume?: TileVolume;
   private builtRequestVolume?: TileVolume;
+  /** `volume` and `contentVolume` grown by the tree's `volumePad`, once used. */
+  private paddedVolume?: PaddedVolume;
+  private paddedContent?: PaddedVolume;
   /** The geometric error as written (`headerKey`). */
   private readonly jsonGeometricError?: number;
   /**
@@ -118,6 +147,11 @@ export class Tile {
    * `Tileset3D.placement` (where design coordinates are drawn).
    */
   placement?: ModelPlacement;
+  /**
+   * Its draws by each item of its tileset that isn't plain (`SceneItem`; none
+   * for a tileset drawn once, as loaded).
+   */
+  items?: Map<SceneItem, ItemDraws>;
   /**
    * Its loaded triangles, one entry per draw, kept with
    * `TilesetOptions.retainGeometry` (for snapping) and released on unload.
@@ -275,18 +309,54 @@ export class Tile {
     }
   }
 
-  /** Tightened by implicit trees once content loads (terrain heights). */
+  /**
+   * What selection, culling and picks test: the volume as written (`own`),
+   * grown by how far the tileset's items can move this tile's vertices (`TileTree.volumePad`). Tightened by implicit trees once content
+   * loads (terrain heights).
+   */
   get volume(): TileVolume {
+    const pad = this.tileset.volumePad;
+    if (pad === undefined || pad === 0) {
+      return this.ownVolume;
+    }
+    return (this.paddedVolume = this.grown(
+      this.paddedVolume,
+      this.ownVolume,
+      pad,
+    )).volume;
+  }
+
+  set volume(volume: TileVolume) {
+    this.builtVolume = volume;
+    this.paddedVolume = undefined;
+  }
+
+  /** The volume as written, whatever the items do. */
+  get ownVolume(): TileVolume {
     return (this.builtVolume ??= compactVolume(
       volumeFromJson(this.volumeJson, this.transform)!,
     ));
   }
 
-  set volume(volume: TileVolume) {
-    this.builtVolume = volume;
+  /** `contentVolume` as `volume`: grown by the tree's `volumePad`. */
+  get contentVolume(): TileVolume | undefined {
+    const own = this.ownContentVolume;
+    const pad = this.tileset.volumePad;
+    if (own === undefined || pad === undefined || pad === 0) {
+      return own;
+    }
+    return (this.paddedContent = this.grown(this.paddedContent, own, pad))
+      .volume;
   }
 
-  get contentVolume(): TileVolume | undefined {
+  set contentVolume(volume: TileVolume | undefined) {
+    this.contentVolumeJson = undefined;
+    this.builtContentVolume = volume;
+    this.paddedContent = undefined;
+  }
+
+  /** The content volume as written, whatever the items do. */
+  get ownContentVolume(): TileVolume | undefined {
     if (this.contentVolumeJson) {
       this.builtContentVolume = volumeFromJson(
         this.contentVolumeJson,
@@ -297,9 +367,25 @@ export class Tile {
     return this.builtContentVolume;
   }
 
-  set contentVolume(volume: TileVolume | undefined) {
-    this.contentVolumeJson = undefined;
-    this.builtContentVolume = volume;
+  /**
+   * `own` grown by `pad` model units, this tile's transform scaling them to
+   * metres: `kept` while it still is that.
+   */
+  private grown(
+    kept: PaddedVolume | undefined,
+    own: TileVolume,
+    pad: number,
+  ): PaddedVolume {
+    if (kept !== undefined && kept.own === own && kept.pad === pad) {
+      return kept;
+    }
+    const t = this.transform;
+    const scale = Math.max(
+      Math.hypot(t[0]!, t[1]!, t[2]!),
+      Math.hypot(t[4]!, t[5]!, t[6]!),
+      Math.hypot(t[8]!, t[9]!, t[10]!),
+    );
+    return { own, pad, volume: padVolume(own, pad * scale) };
   }
 
   get requestVolume(): TileVolume | undefined {
@@ -429,6 +515,17 @@ export interface TileTree {
   tilesAdded?(count: number): void;
   /** A tile that draws nothing, and why; counted with the others. */
   undrawnTile?(reason: string): void;
+  /**
+   * How far the tileset's items can move a vertex, in model units
+   * (`SceneItem.placement`): every tile's volume grows by this
+   * much, so one selection covers them all.
+   */
+  volumePad?: number;
+  /**
+   * An item moves vertices: tiles swap whole, never as clipped
+   * placeholders, whose boxes don't move with it (`Budgeted.mixedLod`).
+   */
+  movesVertices?: boolean;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */
@@ -463,23 +560,23 @@ function checkChildrenPartition(tile: Tile): boolean {
       )
     );
   };
-  const parentBox = volumeObb(tile.volume)!;
+  const parentBox = volumeObb(tile.ownVolume)!;
   let sum = 0;
   for (const child of tile.children) {
-    sum += volume(volumeObb(child.volume)!);
+    sum += volume(volumeObb(child.ownVolume)!);
   }
   return sum <= 1.25 * volume(parentBox);
 }
 
 /** 1.x `Cesium3DTileOptimizations.checkChildrenWithinParent`. */
 function checkChildrenWithinParent(tile: Tile): boolean {
-  const parentBox = volumeObb(tile.volume);
+  const parentBox = volumeObb(tile.ownVolume);
   if (!parentBox || tile.children.length === 0) {
     return false;
   }
   const axis = v3.vec3();
   for (const child of tile.children) {
-    const childBox = volumeObb(child.volume);
+    const childBox = volumeObb(child.ownVolume);
     if (!childBox) {
       return false;
     }

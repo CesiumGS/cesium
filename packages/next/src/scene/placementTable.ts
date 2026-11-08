@@ -76,6 +76,11 @@ export class PlacementTable {
     return word;
   }
 
+  /** A parameter's float is free for reuse. */
+  releaseParameter(word: number): void {
+    this.freeSlots.push(word);
+  }
+
   /** A parameter's float: one 4-byte write. */
   setParameter(word: number, value: number): void {
     this.f32[word] = value;

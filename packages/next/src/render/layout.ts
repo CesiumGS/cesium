@@ -446,6 +446,12 @@ export const MaterialFlags = {
    * as CesiumJS 1.x does (`czm_srgbToLinear`), instead of by an -srgb format.
    */
   gamma22Textures: 512,
+  /**
+   * With `alphaBlend`: none of it is opaque, whatever a fragment's alpha, so
+   * only the translucent passes draw it, not the opaque, depth, prepass,
+   * shadow or height passes (`SceneItem.opacity`). The shaders don't read it.
+   */
+  blendedOnly: 1024,
 } as const;
 
 /** Offsets (in 32-bit words) of each vertex attribute stream in the arena. */

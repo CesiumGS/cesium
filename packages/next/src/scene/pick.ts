@@ -9,6 +9,7 @@ import type { FrameKey } from "../camera/frameResolver.ts";
 import { UNDERLAY_DEPTH } from "../render/layout.ts";
 import type { CameraPose } from "./Camera.ts";
 import { inverseRotate, type PickResult, type View } from "./View.ts";
+import type { SceneItem } from "./SceneItem.ts";
 import type { AnchorHandle, DrawHandle, FeatureInfo, World } from "./World.ts";
 
 /**
@@ -58,6 +59,8 @@ export interface CorePick {
   readonly draw: DrawHandle | undefined;
   /** The hit feature, looked up when the readback maps, as `View.pick`. */
   readonly feature: PickResult | undefined;
+  /** The item that drew the hit, if an item did (`World.itemOfDraw`). */
+  readonly item?: SceneItem;
   /** The scene clock's seconds at that tick (0 without a clock). */
   readonly seconds: number;
   /** That tick's camera, in `anchor`'s coordinates. */
@@ -113,6 +116,7 @@ export function pickResult(
         featureId,
         name: info.name,
         ...(info.properties ? { properties: info.properties } : {}),
+        ...(info.item ? { item: info.item } : {}),
       }
     : undefined;
 }
@@ -201,6 +205,7 @@ export function corePick(
     anchorPosition: alongRay(camera, tanX, tanY, tick.ndcX, tick.ndcY, z),
     draw,
     feature: pickResult(featureId, info),
+    ...(info?.item && { item: info.item }),
     seconds: tick.seconds,
     camera,
   };

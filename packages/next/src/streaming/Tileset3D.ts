@@ -56,6 +56,12 @@ import {
 } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
 import type { DesignPlacement } from "./designPlacement.ts";
+import { finite32 } from "../scene/placement.ts";
+import {
+  SceneItem,
+  type SceneItemHost,
+  type SceneItemOptions,
+} from "../scene/SceneItem.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import { TouchOrder } from "./TouchOrder.ts";
@@ -157,6 +163,29 @@ function isCaster(tile: Tile): boolean {
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
 /** `Tileset3D.rootJson` of a tileset.json without a root (and of terrain). */
 const NO_ROOT_JSON: Tileset3D["rootJson"] = Object.freeze({});
+/** The tiles' second position (`Tileset3D.dualPosition`). */
+export interface TilesetDualPosition {
+  /** The named attribute of each mesh holding it (3 components, model space). */
+  readonly semantic: string;
+  /** The farthest any vertex in the tileset is from it, in model units. */
+  readonly maxDistance: number;
+}
+
+const NO_ITEMS: readonly SceneItem[] = Object.freeze([]);
+
+/** Refuses a second position with a number the GPU can't hold. */
+function checkDualPosition(dual: TilesetDualPosition): void {
+  if (typeof dual.semantic !== "string" || dual.semantic === "") {
+    throw new RangeError("Tileset3D.dualPosition: it needs a semantic.");
+  }
+  finite32("Tileset3D.dualPosition", "maxDistance", dual.maxDistance);
+  if (dual.maxDistance < 0) {
+    throw new RangeError(
+      `Tileset3D.dualPosition: maxDistance is ${dual.maxDistance}; a distance is not negative.`,
+    );
+  }
+}
+
 /**
  * A hierarchical content source other than a 3D Tiles tileset.json (plan
  * §3.7): its own root, content loader and placement; selection, requests,
@@ -244,6 +273,10 @@ export interface TilesetOptions extends BudgetedOptions {
    * 1.x); geometric errors keep the load-time scale. 3D Tiles only.
    */
   modelMatrix?: Mat4;
+  /**
+   * The tiles' second position (`Tileset3D.dualPosition`), when known at load.
+   */
+  dualPosition?: TilesetDualPosition;
   /**
    * Where its design coordinates are drawn (`Tileset3D.placement`), for a
    * tileset that declares none: the application supplies the placement
@@ -519,7 +552,9 @@ export class Tileset3D implements TileTree {
       m4.invertAffine(m4.mat4(), this.delta),
     );
     this.delta = delta;
-    this.world.setTransform(this.transform, delta);
+    if (this.world_ !== undefined) {
+      this.world_.setTransform(this.transform, delta);
+    }
     for (const tile of this.loaded) {
       for (const g of tile.geometry ?? []) {
         this.world.drawMatrix(g.draw, g.matrix);
@@ -533,23 +568,40 @@ export class Tileset3D implements TileTree {
         "modelMatrix changed: the tileset's placement no longer describes what is drawn, and was dropped",
       );
     }
+    if (changed) {
+      this.secondPlacement = undefined;
+    }
   }
   /** Load-time `modelMatrix`, built into tile transforms and volumes. */
   private readonly loadMatrix: Mat4;
   /** `modelMatrix` × loadMatrix⁻¹: the content root transform. */
   private delta: Mat4 = m4.mat4();
   /** Parent transform of all content: moves it with one write. */
-  private readonly transform: TransformHandle;
+  private transform!: TransformHandle;
   /**
    * The anchor its content hangs under (`TilesetOptions.anchor`; default
    * the Earth's): what its tiles' transforms and volumes are relative to.
    */
-  readonly anchor: AnchorHandle;
+  anchor!: AnchorHandle;
+
+  /**
+   * The world it draws in: the first it is added to (`World.add`), or the one
+   * it was loaded for. Reading it before then throws.
+   */
+  get world(): World {
+    if (this.world_ === undefined) {
+      throw new Error(
+        "This tileset isn't in a world yet: world.add(tileset) draws it there.",
+      );
+    }
+    return this.world_;
+  }
+  private world_: World | undefined;
 
   private moveVolumes(tile: Tile, change: Mat4): void {
-    tile.volume = transformVolume(tile.volume, change);
-    if (tile.contentVolume) {
-      tile.contentVolume = transformVolume(tile.contentVolume, change);
+    tile.volume = transformVolume(tile.ownVolume, change);
+    if (tile.ownContentVolume) {
+      tile.contentVolume = transformVolume(tile.ownContentVolume, change);
     }
     if (tile.requestVolume) {
       tile.requestVolume = transformVolume(tile.requestVolume, change);
@@ -841,7 +893,7 @@ export class Tileset3D implements TileTree {
       return;
     }
     for (const draw of tile.placement.draws) {
-      this.world.setColor(draw, color ?? WHITE);
+      this.world.setColor(draw, color ?? this.baseItem?.drawColor ?? WHITE);
     }
     tile.debugColor = color;
   }
@@ -1012,7 +1064,7 @@ export class Tileset3D implements TileTree {
 
   protected constructor(
     private readonly engine: Engine,
-    readonly world: World,
+    world: World | undefined,
     readonly url: string,
     options: TilesetOptions,
     public root: Tile,
@@ -1028,8 +1080,13 @@ export class Tileset3D implements TileTree {
     this.collision = options.enableCollision ?? false;
     this.retainGeometry = options.retainGeometry ?? false;
     this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
-    this.anchor = contentAnchor(world, options.anchor, "Tileset3D");
-    this.transform = world.addTransform(m4.mat4(), this.anchor);
+    if (options.dualPosition !== undefined) {
+      checkDualPosition(options.dualPosition);
+      this.dualPosition_ = options.dualPosition;
+    }
+    if (world !== undefined) {
+      this.bindWorld(world);
+    }
     this.policy = createSelection(options, source);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
@@ -1062,6 +1119,80 @@ export class Tileset3D implements TileTree {
     if (options.placement !== undefined) {
       this.placement = options.placement;
     }
+    const now = {
+      world: () => this.world,
+      dualPosition: () => this.dualPosition_,
+      designPlacement: () => this.placement,
+      secondPlacement: () => this.secondPlacement,
+      loadedTiles: () => this.loaded,
+      baseItem: () => this.baseItem,
+    };
+    this.itemHost = {
+      tileset: this,
+      get world() {
+        return now.world();
+      },
+      get dualPosition() {
+        return now.dualPosition();
+      },
+      get designPlacement() {
+        return now.designPlacement();
+      },
+      get secondPlacement() {
+        return now.secondPlacement();
+      },
+      contentShader: options.customShader ?? options.style?.shader,
+      get loadedTiles() {
+        return now.loadedTiles();
+      },
+      get baseItem() {
+        return now.baseItem();
+      },
+      noteDraw: (tile, draw, item, source) => {
+        this.drawTiles.set(draw.index, {
+          generation: draw.generation,
+          tile,
+          item,
+          source,
+        });
+      },
+      forgetDraw: (draw, tile) => {
+        if (this.drawTiles.get(draw.index)?.tile === tile) {
+          this.drawTiles.delete(draw.index);
+        }
+      },
+      tileBytes: (tile, delta) => {
+        tile.bytes += delta;
+        this.stats.bytes += delta;
+      },
+      changed: () => this.changed(),
+      warn: (message) => {
+        this.warnings.add(message);
+      },
+      removed: (item) => {
+        const at = this.itemList.indexOf(item);
+        if (at >= 0) {
+          this.itemList.splice(at, 1);
+        }
+        if (this.baseItem === item) {
+          this.baseItem = undefined;
+          item.holdsBase = false;
+        }
+        this.world.itemRemoved(item);
+      },
+    };
+    // A globe's surface isn't an item: its tiles draw as they load, always.
+    if (source) {
+      this.baseItem = new SceneItem(this.itemHost, {}, true);
+      this.itemList.push(this.baseItem);
+    }
+  }
+
+  /** The world it draws in, from here on (`World.add`). */
+  private bindWorld(world: World): void {
+    this.world_ = world;
+    this.anchor = contentAnchor(world, this.options.anchor, "Tileset3D");
+    this.transform = world.addTransform(this.delta, this.anchor);
   }
 
   /**
@@ -1073,15 +1204,161 @@ export class Tileset3D implements TileTree {
     const entry = this.drawTiles.get(draw.index);
     return entry?.generation === draw.generation ? entry.tile : undefined;
   }
+
+  /** Which of its items drew `draw`, while the tile is loaded. */
+  itemOfDraw(draw: DrawHandle): SceneItem | undefined {
+    const entry = this.drawTiles.get(draw.index);
+    return entry?.generation === draw.generation
+      ? (entry.item ?? this.baseItem)
+      : undefined;
+  }
+
+  /**
+   * @internal The tile's own draw that `draw` draws again (itself for the
+   * tile's own): what a tile's retained geometry is listed under.
+   */
+  sourceOfDraw(draw: DrawHandle): DrawHandle | undefined {
+    const entry = this.drawTiles.get(draw.index);
+    return entry?.generation === draw.generation
+      ? (entry.source ?? draw)
+      : undefined;
+  }
+
   /** Loaded tiles by draw slot: kept with placing and unloading content. */
   private readonly drawTiles = new Map<
     number,
-    { readonly generation: number; readonly tile: Tile }
+    {
+      readonly generation: number;
+      readonly tile: Tile;
+      /** Another item's draw of the tile, and the tile's own draw. */
+      readonly item?: SceneItem;
+      readonly source?: DrawHandle;
+    }
   >();
+
+  /**
+   * The items drawing this tileset (`World.add`), in the order added. The one
+   * `Engine.addTileset` adds is `items[0]`. Empty: it selects nothing and does
+   * no work per tick, and its loaded tiles stay cached until normal eviction.
+   * A globe's surface isn't an item, so a globe's is empty.
+   */
+  get items(): readonly SceneItem[] {
+    return this.source ? NO_ITEMS : this.itemList;
+  }
+
+  /** @internal `World.add`. */
+  addItem(world: World, options: SceneItemOptions): SceneItem {
+    if (this.destroyed) {
+      throw new Error("World.add: the tileset was destroyed.");
+    }
+    if (this.source) {
+      throw new Error(
+        "World.add: a globe's surface isn't an item; it stays as it is.",
+      );
+    }
+    if (this.world_ !== undefined && this.world_ !== world) {
+      throw new Error(
+        "World.add: this tileset belongs to another world. A tileset belongs to one world: load it again for this one.",
+      );
+    }
+    if (this.world_ === undefined) {
+      this.bindWorld(world);
+      this.engine.adoptTileset(this);
+    }
+    const item = new SceneItem(
+      this.itemHost,
+      options,
+      this.baseItem === undefined,
+    );
+    const placed: Tile[] = [];
+    try {
+      for (const tile of this.loaded) {
+        if (tile.placement) {
+          item.place(tile, tile.placement);
+          placed.push(tile);
+        }
+      }
+    } catch (error) {
+      for (const tile of placed) {
+        item.unplace(tile);
+      }
+      throw error;
+    }
+    for (const tile of placed) {
+      const bytes = item.bytes(tile);
+      tile.bytes += bytes;
+      this.stats.bytes += bytes;
+    }
+    if (item.holdsBase) {
+      this.baseItem = item;
+    }
+    this.itemList.push(item);
+    this.changed();
+    return item;
+  }
+
+  /**
+   * The tiles' second position, for a `SceneItem`'s placement: each mesh's
+   * named attribute `semantic` (3 components, model space), and `maxDistance`,
+   * how far any vertex in the tileset is from it, in model units, stated by
+   * whoever made the attribute. All tiles' bounds grow by that much, so a tile
+   * drawn away from where it was written is still selected, and each item's
+   * draws are culled by their own placement's bounds. A tile whose mesh lacks
+   * the attribute isn't drawn by its items, and the tileset warns. While a
+   * tileset has one, tiles swap whole (`BudgetedOptions.mixedLod`).
+   */
+  get dualPosition(): TilesetDualPosition | undefined {
+    return this.dualPosition_;
+  }
+  set dualPosition(dual: TilesetDualPosition | undefined) {
+    if (dual !== undefined) {
+      checkDualPosition(dual);
+    }
+    this.dualPosition_ = dual;
+    for (const item of this.itemList) {
+      item.dualChanged();
+    }
+    this.changed();
+  }
+  private dualPosition_: TilesetDualPosition | undefined;
+
+  /**
+   * Where the second position's points are drawn, for picks and snaps on an
+   * item at placement 1, as `placement` is for the positions at placement 0.
+   * Without one, a hit at placement 1 has no content coordinates. Changing
+   * `modelMatrix` drops it.
+   */
+  secondPlacement?: DesignPlacement;
+
+  /** @internal How far items can move a vertex (`TileTree.volumePad`). */
+  volumePad = 0;
+  /** @internal An item moves vertices (`TileTree.movesVertices`). */
+  movesVertices = false;
+  /** What an item needs of this tileset. */
+  private readonly itemHost: SceneItemHost;
+  /** The item drawing the tiles' own draws, if any. */
+  private baseItem: SceneItem | undefined;
+  private readonly itemList: SceneItem[] = [];
+
+  /**
+   * Bounds cover what every item draws, and a placement that moves vertices
+   * swaps tiles whole: both follow the items' placements and parameters, read
+   * here, before selection.
+   */
+  private updateVolumePad(): void {
+    let pad = 0;
+    let moves = false;
+    for (const item of this.itemList) {
+      pad = Math.max(pad, item.reach);
+      moves ||= item.moves;
+    }
+    this.volumePad = pad;
+    this.movesVertices = moves;
+  }
 
   static async load(
     engine: Engine,
-    world: World,
+    world: World | undefined,
     url: string,
     options: TilesetOptions = {},
   ): Promise<Tileset3D> {
@@ -1107,6 +1384,9 @@ export class Tileset3D implements TileTree {
     tileset.stats.tiles = countTiles(root);
     // Tiles keep a reference to the tree they were built for; point them here.
     retarget(root, tileset);
+    if (world !== undefined) {
+      world.add(tileset);
+    }
     return tileset;
   }
 
@@ -1319,8 +1599,10 @@ export class Tileset3D implements TileTree {
       return;
     }
     const frame = ++this.frame;
-    // Hidden: no view selects anything (drawn tiles leave every view).
-    const views = this.show ? allViews : [];
+    this.updateVolumePad();
+    // Hidden, or no item draws it: no view selects anything (drawn tiles leave
+    // every view), and it asks for no ticks of its own.
+    const views = this.show && this.itemList.length > 0 ? allViews : [];
     if (allViews.length === 0) {
       // No view yet (e.g. its world isn't shown yet): stay active, so the
       // first selection runs as soon as a view appears.
@@ -1463,10 +1745,10 @@ export class Tileset3D implements TileTree {
           this.stats.purposes[tile.purpose].drawn++;
           tile.purpose = undefined;
         }
-        for (const draw of tile.placement.draws) {
-          this.world.setViewMask(draw, tile.viewMask);
-        }
         tile.appliedMask = tile.viewMask;
+        for (const item of this.itemList) {
+          item.applyViewMask(tile);
+        }
       }
     }
     this.masked = nowMasked;
@@ -1479,10 +1761,10 @@ export class Tileset3D implements TileTree {
           this.stats.purposes.caster.drawn++;
           tile.purpose = undefined;
         }
-        for (const draw of tile.placement.draws) {
-          this.world.setCasterMask(draw, tile.casterMask);
-        }
         tile.appliedCasterMask = tile.casterMask;
+        for (const item of this.itemList) {
+          item.applyCasterMask(tile);
+        }
       }
     }
     this.casters = nowCasters;
@@ -1512,8 +1794,8 @@ export class Tileset3D implements TileTree {
             [...tile.holes].map((hole) => clipBox(hole, tile.geometricError)),
           );
         }
-        for (const draw of tile.placement.draws) {
-          this.world.setPlaceholder(draw, tile.placeholderMask, tile.clip);
+        for (const item of this.itemList) {
+          item.applyPlaceholder(tile);
         }
         tile.appliedPlaceholderMask = tile.placeholderMask;
         tile.appliedHoles = tile.holes;
@@ -1966,7 +2248,7 @@ export class Tileset3D implements TileTree {
           axes: placing?.axes ?? this.contentAxes,
           releaseSourceData: false,
         });
-        let placement: ModelPlacement;
+        let placement: ModelPlacement | undefined;
         try {
           const shader =
             this.options.customShader ?? this.options.style?.shader;
@@ -1978,7 +2260,14 @@ export class Tileset3D implements TileTree {
             collision: this.collision,
             ...(shader ? { shader } : {}),
           });
+          for (const item of this.itemList) {
+            item.place(tile, placement);
+          }
         } catch (error) {
+          for (const item of this.itemList) {
+            item.unplace(tile);
+          }
+          placement?.remove();
           model.release();
           throw error;
         }
@@ -1999,12 +2288,18 @@ export class Tileset3D implements TileTree {
           model.bytes +
           TILE_OVERHEAD_BYTES +
           placement.draws.length * DRAW_OVERHEAD_BYTES;
+        for (const item of this.itemList) {
+          tile.bytes += item.bytes(tile);
+        }
         if (this.retainGeometry) {
           tile.geometry = this.retain(asset, placement);
           // A mesh drawn by several nodes is kept, and counted, once.
           const arrays = new Set<Float32Array | Uint32Array>();
           for (const g of tile.geometry) {
             arrays.add(g.positions).add(g.indices);
+            for (const a of Object.values(g.attributes ?? {})) {
+              arrays.add(a);
+            }
           }
           for (const a of arrays) {
             tile.bytes += a.byteLength;
@@ -2273,7 +2568,11 @@ export class Tileset3D implements TileTree {
     }
     const meshes = new Map<
       number,
-      { positions: Float32Array; indices: Uint32Array }
+      {
+        positions: Float32Array;
+        indices: Uint32Array;
+        attributes?: Record<string, Float32Array>;
+      }
     >();
     asset.draws.forEach((d, i) => {
       const mesh = asset.meshes[d.mesh];
@@ -2294,6 +2593,12 @@ export class Tileset3D implements TileTree {
       let arrays = meshes.get(d.mesh);
       if (arrays === undefined) {
         arrays = { positions: own(mesh.positions), indices: own(mesh.indices) };
+        // Second positions, for a dual position (`TileGeometry`).
+        for (const [name, a] of Object.entries(mesh.attributes ?? {})) {
+          if (a.components === 3 && a.data instanceof Float32Array) {
+            (arrays.attributes ??= {})[name] = own(a.data);
+          }
+        }
         meshes.set(d.mesh, arrays);
       }
       kept.push({ draw: draw!, ...arrays, matrix });
@@ -2311,6 +2616,9 @@ export class Tileset3D implements TileTree {
       tile.purpose = undefined;
     }
     if (tile.placement) {
+      for (const item of this.itemList) {
+        item.unplace(tile);
+      }
       for (const draw of tile.placement.draws) {
         if (this.drawTiles.get(draw.index)?.tile === tile) {
           this.drawTiles.delete(draw.index);
@@ -2440,7 +2748,11 @@ export class Tileset3D implements TileTree {
     }
     this.blendedTwins.clear();
     this.ownMaterials.clear();
-    this.world.removeTransform(this.transform);
+    for (const item of this.itemList) {
+      item.destroyed();
+      this.world_?.itemRemoved(item);
+    }
+    this.world_?.removeTransform(this.transform);
     this.destroyed = true;
   }
 }
@@ -2499,8 +2811,8 @@ function sameTiles(a?: Set<Tile>, b?: Set<Tile>): boolean {
  * spill over finer neighbors.
  */
 function clipBox(tile: Tile, margin: number): ClipBox {
-  const box = volumeObb(tile.volume);
-  const sphere = tile.volume.sphere;
+  const box = volumeObb(tile.ownVolume);
+  const sphere = tile.ownVolume.sphere;
   const center = box ? box.center : sphere.center;
   const h = box
     ? box.halfAxes

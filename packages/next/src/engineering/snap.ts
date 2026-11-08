@@ -9,6 +9,7 @@
 import { projectToPixel } from "../scene/Camera.ts";
 import type { PickResult } from "../scene/View.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
+import type { SceneItem } from "../scene/SceneItem.ts";
 import type { TileGeometry } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
@@ -84,6 +85,8 @@ export interface SnapResult {
   readonly exact: boolean;
   /** The listed tileset whose content was hit. */
   readonly tileset?: Tileset3D;
+  /** The item hit (`DesignPick.item`). */
+  readonly item?: SceneItem;
   /** "client": snapped to what is drawn; "server": to the design data. */
   readonly source: "client" | "server";
   /** A client snap a server was asked to refine, still unanswered. */
@@ -114,6 +117,8 @@ export interface SnapResult {
  */
 export interface ServiceSnapRequest {
   readonly tileset: Tileset3D;
+  /** The item hit, whose placement the answer is to be drawn by. */
+  readonly item?: SceneItem;
   /** The element to snap to (1.x `elementId`). */
   readonly feature?: PickResult;
   /** The point to snap from: body-fixed, displayed. */
@@ -189,6 +194,29 @@ const OUT_OF_SIGHT = "hidden from the camera by the drawn mesh";
 const SNAP_KINDS: readonly SnapKind[] = ["point", "segment", "arc", "surface"];
 
 /**
+ * `g` as `item` draws it: its positions moved by the item's dual position, at `t` exactly 1 the attribute as loaded. Between, a new
+ * array each call (a snap there has no design coordinates; it is the surface
+ * as drawn). Without the attribute, `g` itself.
+ */
+function drawnGeometry(g: TileGeometry, item: SceneItem): TileGeometry {
+  const semantic = item.tileset.dualPosition?.semantic;
+  const second = semantic !== undefined ? g.attributes?.[semantic] : undefined;
+  const t = item.placement;
+  if (second === undefined || t === 0) {
+    return g;
+  }
+  if (t === 1) {
+    return { ...g, positions: second };
+  }
+  const p = g.positions;
+  const positions = new Float32Array(p.length);
+  for (let i = 0; i < p.length; i++) {
+    positions[i] = p[i]! + t * (second[i]! - p[i]!);
+  }
+  return { ...g, positions };
+}
+
+/**
  * The client side (1.x `Scene#snap`), on the CPU over the triangles tiles
  * keep with `retainGeometry` until plan 5's GPU snap pass replaces it. From
  * `pickDesign`'s hit, the hit draw's vertices are projected with the camera
@@ -258,6 +286,7 @@ export class ClientSnapService {
       source: "client",
       provisional: false,
       ...(tileset !== undefined && { tileset }),
+      ...(pick.item !== undefined && { item: pick.item }),
       ...(pick.feature !== undefined && { feature: pick.feature }),
       ...(camera !== undefined && { camera }),
     } as const;
@@ -292,10 +321,14 @@ export class ClientSnapService {
       }
       return surface(surfaceTolerance);
     }
-    const geometry = tile.geometry.find(
+    const source = tileset.sourceOfDraw(draw) ?? draw;
+    const listed = tile.geometry.find(
       (g) =>
-        g.draw.index === draw.index && g.draw.generation === draw.generation,
+        g.draw.index === source.index &&
+        g.draw.generation === source.generation,
     );
+    const geometry =
+      listed && pick.item ? drawnGeometry(listed, pick.item) : listed;
     const found =
       geometry === undefined
         ? undefined
@@ -310,7 +343,9 @@ export class ClientSnapService {
       return kept(surface(surfaceTolerance));
     }
     const tolerance = tile.geometricError;
-    const placement = engineeringPlacement(tileset.placement);
+    const placement = engineeringPlacement(
+      pick.item !== undefined ? pick.item.designPlacement : tileset.placement,
+    );
     return kept({
       ...common,
       snapPoint: found.point,
@@ -426,6 +461,7 @@ export async function refiningSnap(
     const answer = await server.snap(
       {
         tileset,
+        ...(found.item !== undefined && { item: found.item }),
         ...(found.feature !== undefined && { feature: found.feature }),
         testPoint: found.hitPoint,
         closePoint: found.snapPoint,
@@ -464,6 +500,7 @@ export async function refiningSnap(
             request,
           ),
           tileset: answer.tileset ?? tileset,
+          ...(found.item !== undefined && { item: found.item }),
           source: "server",
           provisional: false,
           ...(found.feature !== undefined && { feature: found.feature }),
@@ -573,7 +610,11 @@ function refusal(
     return "curve is not two or more points of 3 finite numbers";
   }
   if (r.design !== undefined) {
-    const placement = engineeringPlacement((r.tileset ?? tileset).placement);
+    const placement = engineeringPlacement(
+      found.item !== undefined
+        ? found.item.designPlacement
+        : (r.tileset ?? tileset).placement,
+    );
     if (placement === undefined) {
       return "design coordinates on a tileset without an engineering frame's placement";
     }

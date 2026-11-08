@@ -808,6 +808,64 @@ export function volumeSpan(
   out[1] = c + radius;
 }
 
+/**
+ * `volume` grown by `pad` metres on every side: what a per-vertex placement
+ * can move its content by (`SceneItem.placement`). A region comes
+ * back as its box grown, since a region can't reach past its own edges in a
+ * way a plane test keeps exact. A box's flat axis grows along the normal of
+ * the other two.
+ */
+export function padVolume(volume: TileVolume, pad: number): TileVolume {
+  if (volume.kind === "sphere") {
+    return {
+      kind: "sphere",
+      sphere: {
+        center: volume.sphere.center,
+        radius: volume.sphere.radius + pad,
+      },
+    };
+  }
+  const box = volumeObb(volume)!;
+  const h = box.halfAxes;
+  const out = new Float64Array(9);
+  const flat: number[] = [];
+  for (let a = 0; a < 3; a++) {
+    const o = a * 3;
+    const length = Math.hypot(h[o]!, h[o + 1]!, h[o + 2]!);
+    if (length < EPSILON7) {
+      flat.push(a);
+      continue;
+    }
+    const scale = (length + pad) / length;
+    out[o] = h[o]! * scale;
+    out[o + 1] = h[o + 1]! * scale;
+    out[o + 2] = h[o + 2]! * scale;
+  }
+  for (const a of flat) {
+    // Along the normal of the other two (world axes if they are flat too).
+    const [p, q] = [(a + 1) % 3, (a + 2) % 3].map((b) => [
+      out[b * 3]!,
+      out[b * 3 + 1]!,
+      out[b * 3 + 2]!,
+    ]) as [number[], number[]];
+    let n = [
+      p[1]! * q[2]! - p[2]! * q[1]!,
+      p[2]! * q[0]! - p[0]! * q[2]!,
+      p[0]! * q[1]! - p[1]! * q[0]!,
+    ];
+    let length = Math.hypot(n[0]!, n[1]!, n[2]!);
+    if (length < EPSILON7) {
+      n = [a === 0 ? 1 : 0, a === 1 ? 1 : 0, a === 2 ? 1 : 0];
+      length = 1;
+    }
+    out[a * 3] = (n[0]! / length) * pad;
+    out[a * 3 + 1] = (n[1]! / length) * pad;
+    out[a * 3 + 2] = (n[2]! / length) * pad;
+  }
+  const grown = obb(box.center, out);
+  return { kind: "box", obb: grown, sphere: sphereFromObb(grown) };
+}
+
 /** The OBB used for plane tests, or undefined for spheres. */
 export function volumeObb(v: TileVolume): Obb | undefined {
   return v.kind === "box"

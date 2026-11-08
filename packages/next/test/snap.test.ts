@@ -94,6 +94,8 @@ function tileset(
     placement: o.placement,
     retainGeometry: retain,
     warnings: new Set<string>(),
+    itemOfDraw: () => undefined,
+    sourceOfDraw: () => undefined,
     tileOfDraw: (d: DrawHandle) =>
       (o.owns ?? true) &&
       d.index === DRAW.index &&

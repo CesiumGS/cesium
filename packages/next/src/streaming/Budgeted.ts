@@ -75,7 +75,9 @@ export interface BudgetedOptions extends StepwiseOptions {
    * "auto" (default) mixes where a tile's children partition its volume
    * (photogrammetry, terrain-like quadtrees and octrees), and otherwise
    * swaps whole regions at once (design models, whose children overlap and
-   * whose coarse tiles drop whole elements).
+   * whose coarse tiles drop whole elements). Whatever this says, a tileset
+   * drawn with a placement that moves vertices (`SceneItem.placement`) swaps
+   * whole regions: a placeholder's clip boxes don't move with it.
    */
   mixedLod?: "auto" | "always" | "never";
   /**
@@ -728,6 +730,11 @@ export class BudgetedSelection extends StepwiseSelection {
   }
 
   private mixes(tile: Tile): boolean {
+    // A placeholder's clip boxes test drawn positions, and don't move with
+    // such a placement: such a tileset swaps whole regions.
+    if (tile.tileset.movesVertices === true) {
+      return false;
+    }
     return (
       this.mixedLod === "always" ||
       (this.mixedLod === "auto" && tile.childrenPartition)
