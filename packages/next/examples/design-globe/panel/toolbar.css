@@ -382,3 +382,8 @@
 .dg-site.selected .dg-site-go {
   opacity: 1;
 }
+
+/* The narrow view's folded legend: one line. */
+.dg-legend-toggle {
+  white-space: nowrap;
+}
