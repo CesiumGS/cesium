@@ -128,8 +128,14 @@ export function checkCrsAgreement(
 
 /** Metres: the drawn anchor's tolerance in `checkRigidTransform`. */
 const ANCHOR_TOLERANCE = 1e-3;
-/** Relative: a column's tolerance in `checkRigidTransform`. */
-const COLUMN_TOLERANCE = 1e-9;
+/**
+ * Relative: a column's tolerance in `checkRigidTransform`. A producer and a
+ * consumer may run different PROJ builds (native in Node, WebAssembly in the
+ * browser), which agree to about 1e-9 relative, so the bound sits ten times
+ * above that: 1e-8 is 0.2 mm over 20 km, inside the anchor's 1 mm, and still
+ * refuses a 1e-6 rad rotation a hundredfold.
+ */
+const COLUMN_TOLERANCE = 1e-8;
 /** The longest piece of a PROJ message repeated in a warning. */
 const MAX_SHOWN = 200;
 
@@ -137,7 +143,7 @@ const MAX_SHOWN = 200;
  * Throws a `GeoreferenceError` naming `placement.anchor` unless a rigid
  * tileset's root transform is its placement's matrix: the root transform
  * must draw the anchor within 1 mm of `placement.displayed(anchor)`, and each
- * of its columns must be within 1e-9 (relative to that column's length) of
+ * of its columns must be within 1e-8 (relative to that column's length) of
  * `rigid.matrix`'s. `declaration` is the declaration's JSON path (the old
  * name's, for a tileset that uses it).
  */
