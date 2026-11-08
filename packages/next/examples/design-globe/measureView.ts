@@ -68,6 +68,8 @@ export interface UserMeasurePanel {
   readonly instruction: string;
   /** The last click was refused (moving, exaggerated, nothing there). */
   readonly refused: boolean;
+  /** Said of the last point, when it wasn't refused but needs saying. */
+  readonly note?: string;
   /** A snap or the measurement runs. */
   readonly busy: boolean;
   /** Both points are placed but `measure` failed: why (with Retry). */
@@ -151,6 +153,7 @@ export interface MeasurePanelInput {
   /** Why the last point wasn't placed, or undefined for the next step. */
   readonly instruction: string | undefined;
   readonly refused: boolean;
+  readonly note?: string;
   readonly busy: boolean;
   readonly result: UserMeasurePanel["result"] | undefined;
   readonly framesFailed: string | undefined;
@@ -158,6 +161,15 @@ export interface MeasurePanelInput {
   /** Another site is selected: its name and story, in place of the corridor's openers. */
   readonly away?: { readonly name: string; readonly story?: string };
 }
+
+/**
+ * Said when exact snapping found the design's point, but it is out of sight
+ * from this camera (a barrier's far face, a road under a deck), so the
+ * point went on the drawn mesh: what the tool's tooltip promises, a correct
+ * refusal and no failure.
+ */
+export const OUT_OF_SIGHT_NOTE =
+  "The exact point is out of sight from here: this one is on the drawn mesh.";
 
 /** The measure section's strings. */
 export function measurePanel(input: MeasurePanelInput): MeasurePanel {
@@ -220,6 +232,7 @@ export function measurePanel(input: MeasurePanelInput): MeasurePanel {
       phase: state.phase,
       instruction: instruction ?? `${next} ${how}`,
       refused,
+      ...(input.note !== undefined && { note: input.note }),
       busy,
       ...(input.userError !== undefined && { error: input.userError }),
       ...(input.result !== undefined && { result: input.result }),

@@ -29,8 +29,13 @@ import {
   horizontalApart,
   routeRegion,
   siteClipRegion,
+  syncUnderground,
+  undergroundRegion,
+  UNDERGROUND_HALF_WIDTH,
+  UNDERGROUND_OPACITY,
   type DaylightStretch,
 } from "../examples/design-globe/terrainClips.ts";
+import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import {
   MAX_CLIP_CELL_EDGES,
   MAX_CLIP_FRAGMENT_EDGES,
@@ -394,5 +399,80 @@ describe("terrain clip regions", () => {
     // 1e-4° of latitude at 50°: about 11.1 m, whatever the height.
     const north = displayed([0, 10, 25]);
     expect(horizontalApart(north, a)).toBeCloseTo(11.12, 1);
+  });
+});
+
+describe("see underground", () => {
+  const alignment = new Alignment(CORRIDOR_ALIGNMENT);
+
+  it("is a strip the globe takes: within a region's limits, its edges either side", () => {
+    const polygon = undergroundRegion(
+      alignment,
+      displayed,
+      UNDERGROUND_HALF_WIDTH,
+      500,
+    );
+    // A vertex each 500 ftUS along both sides, ends included.
+    const stations = Math.ceil(
+      (alignment.endStation - alignment.startStation) / 500,
+    );
+    expect(polygon).toHaveLength(2 * (stations + 1));
+    expect(polygon.length).toBeLessThanOrEqual(MAX_TERRAIN_CLIP_VERTICES);
+    const shape = compileTerrainClip({ polygon }, Ellipsoid.WGS84);
+    expect(shape.maxCellEdges).toBeLessThanOrEqual(MAX_CLIP_CELL_EDGES);
+    // Each side stands off the centreline by the half-width.
+    for (const [i, s] of [
+      [0, alignment.startStation],
+      [stations, alignment.endStation],
+    ] as const) {
+      const left = design(polygon[i]!);
+      const [e, n] = alignment.pointAt(s, -UNDERGROUND_HALF_WIDTH);
+      expect(left[0]).toBeCloseTo(e!, 3);
+      expect(left[1]).toBeCloseTo(n!, 3);
+    }
+    expect(() => undergroundRegion(alignment, displayed, 0, 500)).toThrow(
+      RangeError,
+    );
+  });
+
+  it("makes pieces translucent, picks through, replacing what it made; and says why it couldn't", () => {
+    const added: { region: unknown; options: unknown }[] = [];
+    let refuse = false;
+    const globe = {
+      addTerrainTranslucency(region: unknown, options: unknown) {
+        if (refuse && added.length > 0) {
+          throw new Error("too many edges");
+        }
+        const handle = { region, options };
+        added.push(handle);
+        return handle;
+      },
+      removeTerrainTranslucency(handle: never) {
+        added.splice(added.indexOf(handle), 1);
+      },
+    } as unknown as Tileset3D;
+    const a = [{ longitude: 0, latitude: 0 }];
+    const b = [{ longitude: 1, latitude: 1 }];
+    expect(syncUnderground(globe, [a], UNDERGROUND_OPACITY)).toBeUndefined();
+    expect(added).toEqual([
+      {
+        region: { polygon: a },
+        options: { opacity: UNDERGROUND_OPACITY, pickThrough: true },
+      },
+    ]);
+    // Again: the old one goes first.
+    expect(syncUnderground(globe, [b], UNDERGROUND_OPACITY)).toBeUndefined();
+    expect(added.map((x) => x.region)).toEqual([{ polygon: b }]);
+    // A refused piece leaves nothing behind, and says why.
+    refuse = true;
+    expect(syncUnderground(globe, [a, b], UNDERGROUND_OPACITY)).toBe(
+      "too many edges",
+    );
+    expect(added).toEqual([]);
+    refuse = false;
+    // None: opaque again.
+    expect(syncUnderground(globe, [a], UNDERGROUND_OPACITY)).toBeUndefined();
+    expect(syncUnderground(globe, [], UNDERGROUND_OPACITY)).toBeUndefined();
+    expect(added).toEqual([]);
   });
 });

@@ -3,7 +3,7 @@
 // like a cad tool"). StrataKit's solid toolbar of ghost icon buttons, as
 // Dyno's Viewer has, in two groups: Measure (the snap mode, a point at the
 // view's centre, Clear) and View (the ghost, the exaggeration, the
-// compass, the error ribbon). Under it, while a measurement is under way or
+// compass, the error ribbon, see underground). Under it, while a measurement is under way or
 // a click was refused, one line saying what to do next.
 import { Divider, IconButton } from "@stratakit/bricks";
 import { svgCompass } from "@stratakit/icons/compass";
@@ -15,6 +15,7 @@ import { svgSelectionClear } from "@stratakit/icons/selection-clear";
 import { svgSnapKeypoint } from "@stratakit/icons/snap-keypoint";
 import { svgSnapNearest } from "@stratakit/icons/snap-nearest";
 import { svgTransparency } from "@stratakit/icons/transparency";
+import { svgUndergroundStorage } from "@stratakit/icons/underground-storage";
 import { unstable_Toolbar as Toolbar } from "@stratakit/structures";
 import type { MeasurePanel } from "../measureView.ts";
 import type { SnapMode } from "../page.ts";
@@ -85,8 +86,8 @@ export function MeasureToolbar({
   const prompt = u.busy
     ? "Snapping…"
     : u.refused || u.phase === "first"
-      ? u.instruction
-      : undefined;
+      ? [u.note, u.instruction].filter(Boolean).join(" ")
+      : u.note;
   return (
     <div className="dg-toolbar">
       <Toolbar.Group variant="solid" aria-label="Measure and view">
@@ -160,6 +161,13 @@ export function MeasureToolbar({
                 view.ribbonReady ? undefined : "once the corridor's frame is in"
               }
               onChange={(on) => actions.setRibbon(on)}
+            />
+            <Toggle
+              label="See underground: the ground around the road translucent, its tunnels in view (clicks go through it)"
+              icon={svgUndergroundStorage}
+              active={view.underground}
+              reason={view.undergroundNote}
+              onChange={(on) => actions.setUnderground(on)}
             />
           </>
         )}

@@ -171,11 +171,52 @@ export function enuAt(p: ArrayLike<number>): {
   return { east, north, up };
 }
 
-/** The anchor ring: two white circles on the ground around the anchor. */
+/** How far the anchor ring stands over the road's profile, metres: clear of its median barrier (0.81 m), so it never shares the deck's depth. */
+export const RING_LIFT = 1;
+
+/**
+ * The road's plane at `station`, for what is drawn on it: unit vectors along
+ * the road (with its grade) and across it, body-fixed. On the corridor's 6%
+ * grades, a level circle 30 m across would run a good 1.8 m under the deck
+ * on its uphill side (and out of sight, as the owner saw).
+ */
+export function roadPlaneAt(
+  alignment: Pick<Alignment, "pointAt">,
+  displayed: (design: ArrayLike<number>) => ArrayLike<number>,
+  station: number,
+): { along: Float64Array; across: Float64Array } {
+  const unit = (a: ArrayLike<number>, b: ArrayLike<number>) => {
+    const d = [0, 1, 2].map((k) => b[k]! - a[k]!);
+    const l = Math.hypot(d[0]!, d[1]!, d[2]!) || 1;
+    return Float64Array.from(d, (v) => v / l);
+  };
+  const reach = 10; // design units, either way
+  return {
+    along: unit(
+      displayed(alignment.pointAt(station - reach, 0)),
+      displayed(alignment.pointAt(station + reach, 0)),
+    ),
+    across: unit(
+      displayed(alignment.pointAt(station, -reach)),
+      displayed(alignment.pointAt(station, reach)),
+    ),
+  };
+}
+
+/**
+ * The anchor ring: two white circles around the anchor, in the road's plane
+ * (`plane`, or level where there is none), just over its surface.
+ */
 export class AnchorRing extends Drawn {
-  constructor(world: World, center: ArrayLike<number>, radius: number) {
+  constructor(
+    world: World,
+    center: ArrayLike<number>,
+    radius: number,
+    plane?: { readonly along: Float64Array; readonly across: Float64Array },
+  ) {
     super(world);
-    const { east, north } = enuAt(center);
+    const { east, north, up } = enuAt(center);
+    const [u, v] = plane ? [plane.along, plane.across] : [east, north];
     const segments = 96;
     const rings = [radius, radius * 1.08];
     const positions = new Float32Array(rings.length * segments * 6);
@@ -187,7 +228,7 @@ export class AnchorRing extends Drawn {
           const c = Math.cos(a) * r;
           const s = Math.sin(a) * r;
           for (let k = 0; k < 3; k++) {
-            positions[o++] = east[k]! * c + north[k]! * s;
+            positions[o++] = u[k]! * c + v[k]! * s;
           }
         }
       }
@@ -199,7 +240,9 @@ export class AnchorRing extends Drawn {
     });
     const draw = world.addDraw({
       mesh,
-      origin: Float64Array.from(center),
+      origin: Float64Array.from(
+        [0, 1, 2].map((k) => center[k]! + up[k]! * RING_LIFT),
+      ),
       unlit: true,
       color: [1, 1, 1, 1],
       name: "design globe anchor ring",

@@ -632,3 +632,28 @@ export function markGapFraming(
     range: Math.max(200, 3.4 * length),
   };
 }
+
+/**
+ * The tour's tunnel (DESIGN.md "Under the hills"): the tunnel from station
+ * `from` to `to`, seen from the side and above, across the hill it runs
+ * under, with "See underground" on so the road shows through the ground.
+ * `displayed` places a design point (the reprojected placement).
+ */
+export function tunnelFraming(
+  alignment: Alignment,
+  displayed: (design: ArrayLike<number>) => ArrayLike<number>,
+  from: number,
+  to: number,
+): Framing {
+  const middle = (from + to) / 2;
+  const lengthM = (to - from) * FT_US;
+  return {
+    center: Float64Array.from(displayed(alignment.pointAt(middle, 0))),
+    heading: alignment.azimuthAt(middle) + TUNNEL_VIEW.heading,
+    pitch: TUNNEL_VIEW.pitch,
+    range: Math.max(TUNNEL_VIEW.range, lengthM * 0.9),
+  };
+}
+
+/** The tunnel shot: across the road from its left, steeply down, so hills beside the strip don't hide it. */
+const TUNNEL_VIEW = { heading: 90 * deg, pitch: -58 * deg, range: 700 };

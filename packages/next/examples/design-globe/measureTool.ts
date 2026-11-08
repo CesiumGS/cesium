@@ -74,6 +74,7 @@ import {
   type SnapDeps,
 } from "./measureState.ts";
 import {
+  OUT_OF_SIGHT_NOTE,
   measurePanel,
   userResult,
   type MeasurePanel,
@@ -205,6 +206,8 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
   let state: MeasureState = { phase: "empty" };
   let instruction: string | undefined;
   let refused = false;
+  /** Said of the last point: its exact snap was out of sight from here. */
+  let note: string | undefined;
   let busy = false;
   /** The user's measurement through `measure`, once both ends are in. */
   let measured: Measured | undefined;
@@ -578,6 +581,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     state = next;
     instruction = undefined;
     refused = false;
+    note = undefined;
     measureUser();
     deps.setLink(formatMeasureLink(state));
     redraw();
@@ -622,6 +626,11 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
           return;
         }
         apply({ type: "point", end });
+        // A correct refusal, said plainly: the design's exact point is
+        // behind what is drawn from here (its far face, under a deck).
+        if (result?.serverOutOfSight !== undefined) {
+          note = OUT_OF_SIGHT_NOTE;
+        }
       })
       .catch(() => {
         instruction = "That snap failed: click again.";
@@ -889,6 +898,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
       state,
       instruction,
       refused,
+      ...(note !== undefined && { note }),
       busy,
       result:
         state.phase === "done" && measured !== undefined

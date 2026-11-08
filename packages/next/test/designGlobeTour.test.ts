@@ -1,5 +1,5 @@
 // Plan 4b Task 20: the design globe's short tour (examples/design-globe/
-// tour.ts; DESIGN.md "A short tour"): six steps, one sentence each, Next,
+// tour.ts; DESIGN.md "A short tour"): seven steps, one sentence each, Next,
 // Back and "Explore on your own" always there; a deep link opens at a step;
 // leaving keeps everything. And the viewer toggles' link (viewParams.ts).
 import { describe, expect, it } from "vitest";
@@ -29,6 +29,7 @@ const FACTS: TourFacts = {
   markerStation: 170_000,
   markerKm: 23.78,
   codes: "EPSG:6420+6360",
+  structures: { tunnels: 19, viaducts: 18, share: 0.662 },
   mark: { pid: "HS5109", name: "GOLD CREEK", rigidOffset: 19.278 },
   pair: {
     horizontal: 10_000.000000000253,
@@ -67,12 +68,13 @@ const FACTS: TourFacts = {
 };
 
 describe("design globe tour", () => {
-  it("has the six steps DESIGN.md lists, in order", () => {
+  it("has the seven steps DESIGN.md lists, in order", () => {
     expect(TOUR_STEPS.map((s) => s.id)).toEqual([
       "rigid",
       "morph",
       "mark",
       "pair",
+      "tunnel",
       "ladder",
       "yours",
     ]);
@@ -83,7 +85,7 @@ describe("design globe tour", () => {
     ]);
   });
 
-  it("steps forward and back, staying inside the six, and leaves", () => {
+  it("steps forward and back, staying inside the seven, and leaves", () => {
     let s = nextTour(undefined, { type: "start" });
     expect(s).toEqual({ step: 0, stop: 0 });
     s = nextTour(s, { type: "back" });
@@ -91,9 +93,9 @@ describe("design globe tour", () => {
     for (let i = 0; i < 9; i++) {
       s = nextTour(s, { type: "next" });
     }
-    expect(s).toEqual({ step: 5, stop: 0 });
+    expect(s).toEqual({ step: 6, stop: 0 });
     s = nextTour(s, { type: "back" });
-    expect(s?.step).toBe(4);
+    expect(s?.step).toBe(5);
     expect(nextTour(s, { type: "leave" })).toBeUndefined();
     expect(nextTour(undefined, { type: "next" })).toBeUndefined();
     expect(nextTour(undefined, { type: "start", step: 3 })).toEqual({
@@ -103,17 +105,17 @@ describe("design globe tour", () => {
   });
 
   it("chooses a ladder stop only on the ladder step", () => {
-    const ladder = nextTour(undefined, { type: "start", step: 4 });
+    const ladder = nextTour(undefined, { type: "start", step: 5 });
     expect(nextTour(ladder, { type: "stop", stop: 2 })).toEqual({
-      step: 4,
+      step: 5,
       stop: 2,
     });
     expect(nextTour(ladder, { type: "stop", stop: 7 })).toEqual(ladder);
     const first = nextTour(undefined, { type: "start" });
     expect(nextTour(first, { type: "stop", stop: 1 })).toEqual(first);
     // Leaving the step forgets its stop.
-    const back = nextTour({ step: 4, stop: 2 }, { type: "back" });
-    expect(back).toEqual({ step: 3, stop: 0 });
+    const back = nextTour({ step: 5, stop: 2 }, { type: "back" });
+    expect(back).toEqual({ step: 4, stop: 0 });
   });
 
   it("says what each step shows: its placement, site and shot", () => {
@@ -134,9 +136,14 @@ describe("design globe tour", () => {
       site: "corridor",
       shot: "pair",
     });
-    expect(at(4, 2)).toEqual({ mode: "rigid", site: "london", shot: "site" });
+    expect(at(4)).toEqual({
+      mode: "reprojected",
+      site: "corridor",
+      shot: "tunnel",
+    });
+    expect(at(5, 2)).toEqual({ mode: "rigid", site: "london", shot: "site" });
     // The hand-off keeps the view, the placement and the site.
-    expect(at(5)).toEqual({ shot: "keep" });
+    expect(at(6)).toEqual({ shot: "keep" });
   });
 
   it("narrates each step in one sentence, from the data", () => {
@@ -172,13 +179,18 @@ describe("design globe tour", () => {
     expect(texts[3]).not.toMatch(/\d ft\b/);
     expect(texts[3]).toContain("37.4 m away");
     expect(texts[3]).toContain("233 mm short");
-    // Step 6 says what is checked, no more.
-    expect(texts[5]).not.toMatch(/every number/);
-    expect(texts[5]).toContain("Checks");
+    // Step 5: the structures, from corridor.ts, and See underground.
+    expect(texts[4]).toContain(
+      "19 tunnels and 18 viaducts carry 66% of the road",
+    );
+    expect(texts[4]).toContain("See underground");
+    // Step 7 says what is checked, no more.
+    expect(texts[6]).not.toMatch(/every number/);
+    expect(texts[6]).toContain("Checks");
   });
 
   it("says each ladder stop's verdict and cause", () => {
-    const at = (stop: number) => tourCard({ step: 4, stop }, FACTS).narration;
+    const at = (stop: number) => tourCard({ step: 5, stop }, FACTS).narration;
     expect(at(0)).toMatch(/^A canal building, 60 m across: rigid is fine here/);
     expect(at(0)).toContain("2.6 mm");
     expect(at(0)).toContain("mostly the scale factor rigid ignores");
@@ -209,14 +221,14 @@ describe("design globe tour", () => {
     const first = tourCard({ step: 0, stop: 0 }, FACTS);
     expect(first).toMatchObject({
       index: 0,
-      count: 6,
-      progress: "Step 1 of 6",
+      count: 7,
+      progress: "Step 1 of 7",
       canBack: false,
       canNext: true,
     });
-    const last = tourCard({ step: 5, stop: 0 }, FACTS);
+    const last = tourCard({ step: 6, stop: 0 }, FACTS);
     expect(last).toMatchObject({ canBack: true, canNext: false });
-    const ladder = tourCard({ step: 4, stop: 1 }, FACTS);
+    const ladder = tourCard({ step: 5, stop: 1 }, FACTS);
     expect(ladder.stops?.map((s) => [s.label, s.selected])).toEqual([
       ["Building", false],
       ["Airport", true],
@@ -225,10 +237,11 @@ describe("design globe tour", () => {
     expect(first.stops).toBeUndefined();
   });
 
-  it("reads and writes its step in the link, 1 to 6", () => {
+  it("reads and writes its step in the link, 1 to 7", () => {
     expect(parseTourStep({ tour: "3" })).toBe(2);
     expect(parseTourStep({ tour: "1" })).toBe(0);
-    for (const bad of ["0", "7", "x", "2.5", "-1", " 3", ""]) {
+    expect(parseTourStep({ tour: "7" })).toBe(6);
+    for (const bad of ["0", "8", "x", "2.5", "-1", " 3", ""]) {
       expect(parseTourStep({ tour: bad })).toBeUndefined();
     }
     expect(parseTourStep({})).toBeUndefined();
@@ -317,26 +330,30 @@ describe("design globe tour: the ruler's close-in (UX review I2)", () => {
 
 describe("design globe view toggles", () => {
   it("are off by default and left out of the link", () => {
-    expect(DEFAULT_VIEW).toEqual({ compass: false, ribbon: false });
+    expect(DEFAULT_VIEW).toEqual({
+      compass: false,
+      ribbon: false,
+      underground: false,
+    });
     expect(parseView({})).toEqual(DEFAULT_VIEW);
     expect(formatView(DEFAULT_VIEW)).toEqual({
       compass: undefined,
       ribbon: undefined,
+      underground: undefined,
     });
   });
 
   it("round-trip on, each on its own", () => {
     for (const compass of [false, true]) {
       for (const ribbon of [false, true]) {
-        expect(parseView(formatView({ compass, ribbon }))).toEqual({
-          compass,
-          ribbon,
-        });
+        for (const underground of [false, true]) {
+          const v = { compass, ribbon, underground };
+          expect(parseView(formatView(v))).toEqual(v);
+        }
       }
     }
-    expect(parseView({ compass: "on", ribbon: "yes" })).toEqual({
-      compass: true,
-      ribbon: false,
-    });
+    expect(
+      parseView({ compass: "on", ribbon: "yes", underground: "on" }),
+    ).toEqual({ compass: true, ribbon: false, underground: true });
   });
 });

@@ -38,6 +38,7 @@ import {
   AnchorRing,
   ErrorRibbon,
   Whiskers,
+  roadPlaneAt,
   sagSamples,
   type SagSample,
 } from "./overlays.ts";
@@ -66,6 +67,7 @@ import {
   openerFraming,
   reducedMotion,
   rulerFraming,
+  tunnelFraming,
 } from "./shots.ts";
 import { siteFacts } from "./siteFacts.ts";
 import { clearTimeControls, createStore } from "./stores.ts";
@@ -80,11 +82,15 @@ import {
   horizontalApart,
   siteClipRegion,
   syncTerrainClip,
+  syncUnderground,
+  undergroundRegion,
+  UNDERGROUND_HALF_WIDTH,
+  UNDERGROUND_OPACITY,
   type DaylightStretch,
 } from "./terrainClips.ts";
 import { createRulerView } from "./rulerView.ts";
 import { siteCredits } from "./dataCredits.ts";
-import { tourCard, type TourTarget } from "./tour.ts";
+import { TOUR_TUNNEL, tourCard, type TourTarget } from "./tour.ts";
 import { createTour, type TourRuntime } from "./tourRuntime.ts";
 import { formatView, parseView, type ViewParams } from "./viewParams.ts";
 
@@ -191,6 +197,8 @@ export function run(context: ExampleContext): ExampleRun {
   let whiskers: Whiskers | undefined;
   let ring: AnchorRing | undefined;
   let ribbon: ErrorRibbon | undefined;
+  /** Why "See underground" isn't drawn while it's on (undefined: it is). */
+  let undergroundNote: string | undefined;
   let anchorPoint: Float64Array | undefined;
   const sites = new Map<string, SiteRuntime>(
     SITES.map((entry) => [entry.id, { entry }]),
@@ -481,11 +489,13 @@ export function run(context: ExampleContext): ExampleRun {
           why = syncTerrainClip(globe, key(k), region.polygon);
         }
         if (why === undefined) {
+          syncUndergroundTerrain();
           return;
         }
       }
       clear();
       console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
+      syncUndergroundTerrain();
       return;
     }
     // None under a model on the real ground: its clip, if any, cleared.
@@ -505,6 +515,7 @@ export function run(context: ExampleContext): ExampleRun {
     const globe = viewer.globe;
     if (globe !== undefined && !globe.isDestroyed()) {
       clearTerrainClips(globe);
+      syncUnderground(globe, [], UNDERGROUND_OPACITY);
     }
   });
   // A site placed before the terrain was built (the corridor, on a cold
@@ -551,6 +562,57 @@ export function run(context: ExampleContext): ExampleRun {
     });
   }
 
+  /**
+   * "See underground" (owner, 2026-11-08): while on, the ground around the
+   * corridor (`UNDERGROUND_HALF_WIDTH` either side) is translucent, so its
+   * tunnels show in place under their hills, drawn as ever (the engine's
+   * translucent terrain); clicks go through that ground to the road. In
+   * one region if the globe takes it, else in more pieces (each piece's
+   * edges are fewer to test where it overlaps the clips).
+   */
+  function syncUndergroundTerrain(): void {
+    const globe = viewer.globe;
+    const placement = corridor.reprojectedPlacement;
+    if (globe === undefined || globe.isDestroyed() || !globe.terrain) {
+      undergroundNote = view.underground ? "once the terrain is in" : undefined;
+      return;
+    }
+    if (!view.underground) {
+      syncUnderground(globe, [], UNDERGROUND_OPACITY);
+      undergroundNote = undefined;
+      return;
+    }
+    if (placement === undefined) {
+      undergroundNote = "once the corridor's frame is in";
+      return;
+    }
+    const displayed = (d: ArrayLike<number>) => placement.displayed(d);
+    const { startStation: start, endStation: end } = alignment;
+    let why: string | undefined;
+    for (const count of [1, 2, 3, 4]) {
+      const pieces = Array.from({ length: count }, (_, k) =>
+        undergroundRegion(
+          alignment,
+          displayed,
+          UNDERGROUND_HALF_WIDTH,
+          500,
+          start + ((end - start) * k) / count,
+          start + ((end - start) * (k + 1)) / count,
+        ),
+      );
+      why = syncUnderground(globe, pieces, UNDERGROUND_OPACITY);
+      if (why === undefined) {
+        break;
+      }
+    }
+    if (why !== undefined) {
+      console.warn(scrub(`See underground: not drawn: ${why}`));
+    }
+    undergroundNote = why === undefined ? undefined : "the globe refused it";
+    viewer.engine.requestRender();
+    frames.wake();
+  }
+
   /** The error ribbon, drawn while its toggle is on (built once the corridor is placed). */
   function syncRibbon(): void {
     const site = corridor;
@@ -592,7 +654,13 @@ export function run(context: ExampleContext): ExampleRun {
       alignment.elevationAt(station),
     ]);
     ring?.dispose();
-    ring = new AnchorRing(viewer.world, anchorPoint, 30);
+    const placed = site.reprojectedPlacement;
+    ring = new AnchorRing(
+      viewer.world,
+      anchorPoint,
+      30,
+      roadPlaneAt(alignment, (d) => placed.displayed(d), station),
+    );
     // The ribbon again on the new placements.
     ribbon?.dispose();
     ribbon = undefined;
@@ -734,6 +802,8 @@ export function run(context: ExampleContext): ExampleRun {
         ribbonReady:
           corridor.rigidPlacement !== undefined &&
           corridor.reprojectedPlacement !== undefined,
+        underground: view.underground,
+        ...(undergroundNote !== undefined && { undergroundNote }),
       },
     };
   }
@@ -796,6 +866,7 @@ export function run(context: ExampleContext): ExampleRun {
   function applyTour(target: TourTarget): boolean {
     // Off the pair step, the ghost and the ribbon come back (UX review I2).
     rulerFollowsTour(target);
+    undergroundFollowsTour(target);
     if (target.shot === "keep") {
       return true;
     }
@@ -833,8 +904,37 @@ export function run(context: ExampleContext): ExampleRun {
       // 4 km out the pair is a line and its figures a pixel; here the
       // ruler's bracket between ground's feet and design's reads.
       measureActions.closeInOnRuler();
+    } else if (target.shot === "tunnel") {
+      const placement = corridor.reprojectedPlacement!;
+      flyLit(
+        tunnelFraming(
+          alignment,
+          (d) => placement.displayed(d),
+          TOUR_TUNNEL.from,
+          TOUR_TUNNEL.to,
+        ),
+      );
     }
     return true;
+  }
+
+  /**
+   * The tour's tunnel step turns "See underground" on, if it was off, and
+   * any other step turns it off again (leaving the tour keeps it, as it
+   * keeps the view); the viewer's own toggle in between makes it theirs.
+   */
+  let undergroundByTour = false;
+  function undergroundFollowsTour(target: TourTarget): void {
+    const tunnel = target.shot === "tunnel";
+    if (tunnel && !view.underground) {
+      actions.setUnderground(true);
+      undergroundByTour = true;
+    } else if (!tunnel && target.shot !== "keep" && undergroundByTour) {
+      undergroundByTour = false;
+      if (view.underground) {
+        actions.setUnderground(false);
+      }
+    }
   }
 
   /**
@@ -935,6 +1035,13 @@ export function run(context: ExampleContext): ExampleRun {
       syncRibbon();
       refresh();
     },
+    setUnderground(on) {
+      undergroundByTour = false;
+      view = { ...view, underground: on };
+      setLink(formatView(view));
+      syncUndergroundTerrain();
+      refresh();
+    },
     holdRail: (on) => cursor.holdRail(on),
     tour: (action) => tour?.go(action),
     measurePair(id) {
@@ -1020,6 +1127,9 @@ export function run(context: ExampleContext): ExampleRun {
       }
       if (v.ribbon !== view.ribbon) {
         actions.setRibbon(v.ribbon);
+      }
+      if (v.underground !== view.underground) {
+        actions.setUnderground(v.underground);
       }
       tour?.fromLink(next);
       const p = parseParams(next);

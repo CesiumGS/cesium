@@ -7,7 +7,7 @@ import { gridFactors } from "../../src/engineering/factors.ts";
 import type { Answers } from "./answers.ts";
 import type { SagSample } from "./overlays.ts";
 import { rigidErrorTerms, type ErrorTerms } from "./siteFacts.ts";
-import { ANCHOR_STATION } from "./corridor.ts";
+import { ANCHOR_STATION, CORRIDOR_ALIGNMENT, STRUCTURES } from "./corridor.ts";
 import { unitSymbol } from "./measureModel.ts";
 import { rulerEnd } from "./measureOpeners.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
@@ -32,8 +32,19 @@ export function tourFactsOf(
           return Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
         })()
       : undefined;
+  const length = CORRIDOR_ALIGNMENT.horizontal.reduce(
+    (sum, e) => sum + e.length,
+    0,
+  );
   return {
     codes: corridor.entry.codes,
+    structures: {
+      tunnels: STRUCTURES.filter((s) => s.kind === "tunnel").length,
+      viaducts: STRUCTURES.filter((s) => s.kind === "viaduct").length,
+      share:
+        STRUCTURES.reduce((sum, s) => sum + s.toStation - s.fromStation, 0) /
+        length,
+    },
     ladder: new Map(
       TOUR_LADDER.flatMap((s) => {
         const a = answers?.sites[s.site];

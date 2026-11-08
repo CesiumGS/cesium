@@ -1,5 +1,5 @@
 // The short tour's card over the globe (DESIGN.md "A short tour"; plan 4b
-// Task 20): where the tour is (six segments and "Step 3 of 6"), the step's
+// Task 20): where the tour is (seven segments and "Step 3 of 7"), the step's
 // title, its one sentence, the ladder's stops on that step, and Back, Next
 // and "Explore on your own", always there. Leaving keeps everything.
 import {

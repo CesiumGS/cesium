@@ -147,6 +147,10 @@ export interface ViewToggles {
   readonly ribbon: boolean;
   /** The ribbon can be drawn: the corridor's placements are in. */
   readonly ribbonReady: boolean;
+  /** "See underground": the ground around the corridor translucent. */
+  readonly underground: boolean;
+  /** Why it can't apply now, when it can't. */
+  readonly undergroundNote?: string;
 }
 
 export interface PanelModel {
@@ -190,6 +194,8 @@ export interface PanelActions {
   link(): string;
   setCompass(on: boolean): void;
   setRibbon(on: boolean): void;
+  /** "See underground" on or off. */
+  setUnderground(on: boolean): void;
   /** The pointer is over the HUD's right rail, or has left it. */
   holdRail(on: boolean): void;
   tour(action: TourAction): void;

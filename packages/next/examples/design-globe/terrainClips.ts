@@ -622,3 +622,92 @@ export function clearTerrainClips(globe: Tileset3D): void {
     syncTerrainClip(globe, site, undefined);
   }
 }
+
+// ------------------------------------------------------- see underground
+
+/**
+ * "See underground" (owner, 2026-11-08: "is it possible to use some
+ * transparency to visualize the underground portions?"): the ground this
+ * far either side of the corridor's centreline, ftUS, made translucent so
+ * its tunnels show in place, as civil design tools show buried work. Wider
+ * than the side slopes reach (332 ftUS), so a tunnel's hill reads around
+ * it.
+ */
+export const UNDERGROUND_HALF_WIDTH = 500;
+
+/** The ground's opacity there: the hill still reads; the road shows. */
+export const UNDERGROUND_OPACITY = 0.3;
+
+/**
+ * The corridor's see-underground strip from station `from` to `to`: its
+ * centreline ±`halfWidth` design units, a vertex each `step` along each
+ * side and at both ends, through the reprojected placement. The edges are
+ * chords: on the tightest curve (radius 3,000 ftUS) a 500 ftUS chord sags
+ * 12 ftUS inside the inner side's line, which a translucency region can
+ * take.
+ */
+export function undergroundRegion(
+  alignment: Alignment,
+  displayed: Displayed,
+  halfWidth: number,
+  step: number,
+  from = alignment.startStation,
+  to = alignment.endStation,
+): ClipVertex[] {
+  if (!(halfWidth > 0 && step > 0 && to > from)) {
+    throw new RangeError(
+      `undergroundRegion: needs a width, a step and from < to, got ${halfWidth}, ${step}, ${from} to ${to}`,
+    );
+  }
+  const stations: number[] = [];
+  const count = Math.ceil((to - from) / step);
+  for (let i = 0; i <= count; i++) {
+    stations.push(i === count ? to : from + i * step);
+  }
+  const side = (offset: number) =>
+    stations.map((s) => geodeticOf(displayed(alignment.pointAt(s, offset))));
+  return [...side(-halfWidth), ...side(halfWidth).reverse()];
+}
+
+/** The see-underground strips made now, by globe. */
+const underground = new WeakMap<Tileset3D, unknown[]>();
+
+/**
+ * Makes `globe`'s terrain translucent inside `pieces` (or opaque again,
+ * with none), at `opacity`, picks going through it to what shows under
+ * it. Returns why the globe refused a piece, if it did; none is left then.
+ */
+export function syncUnderground(
+  globe: Tileset3D,
+  pieces: readonly (readonly ClipVertex[])[],
+  opacity: number,
+): string | undefined {
+  for (const t of underground.get(globe) ?? []) {
+    globe.removeTerrainTranslucency(
+      t as Parameters<typeof globe.removeTerrainTranslucency>[0],
+    );
+  }
+  underground.delete(globe);
+  const made: unknown[] = [];
+  try {
+    for (const polygon of pieces) {
+      made.push(
+        globe.addTerrainTranslucency(
+          { polygon },
+          { opacity, pickThrough: true },
+        ),
+      );
+    }
+  } catch (error) {
+    for (const t of made) {
+      globe.removeTerrainTranslucency(
+        t as Parameters<typeof globe.removeTerrainTranslucency>[0],
+      );
+    }
+    return error instanceof Error ? error.message : String(error);
+  }
+  if (made.length > 0) {
+    underground.set(globe, made);
+  }
+  return undefined;
+}

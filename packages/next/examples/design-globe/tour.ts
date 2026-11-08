@@ -1,5 +1,5 @@
 // The design globe's short tour (plan 4b Task 20; DESIGN.md "A short tour",
-// owner 2026-11-07): six steps, one sentence of narration each, with Next,
+// owner 2026-11-07): seven steps, one sentence of narration each, with Next,
 // Back and "Explore on your own" always there. Each step names what it
 // shows (a placement, a site and a camera shot); main.ts applies it, and
 // leaving keeps the view, the placement and the measurements. The steps'
@@ -11,22 +11,31 @@ import { errorText, lengthText, rigidVerdict, type Placement } from "./page.ts";
 import { cause } from "./siteFacts.ts";
 
 /** Where a step points the camera: main.ts's shots. */
-export type TourShot = "opening" | "mark" | "pair" | "site" | "keep";
+export type TourShot = "opening" | "mark" | "pair" | "tunnel" | "site" | "keep";
 
 export interface TourStep {
-  readonly id: "rigid" | "morph" | "mark" | "pair" | "ladder" | "yours";
+  readonly id:
+    "rigid" | "morph" | "mark" | "pair" | "tunnel" | "ladder" | "yours";
   readonly title: string;
 }
 
-/** DESIGN.md's six steps, in order. */
+/** DESIGN.md's seven steps, in order. */
 export const TOUR_STEPS: readonly TourStep[] = [
   { id: "rigid", title: "Rigid at one anchor" },
   { id: "morph", title: "Reprojected" },
   { id: "mark", title: "Against a survey mark" },
   { id: "pair", title: "The 10,000 ftUS pair" },
+  { id: "tunnel", title: "Under the hills" },
   { id: "ladder", title: "Down the scale ladder" },
   { id: "yours", title: "Yours to explore" },
 ];
+
+/**
+ * The tunnel the "Under the hills" step shows (with "See underground" on):
+ * the one under the alignment's middle, stations 86,700 to 92,300, under
+ * up to 680 ftUS of hill.
+ */
+export const TOUR_TUNNEL = { from: 86_700, to: 92_300 } as const;
 
 /** The ladder step's stops: the building, the airport and the pole line. */
 export const TOUR_LADDER: readonly {
@@ -103,6 +112,8 @@ export function tourTarget(state: TourState): TourTarget {
       return { mode: "reprojected", site: "corridor", shot: "mark" };
     case "pair":
       return { mode: "reprojected", site: "corridor", shot: "pair" };
+    case "tunnel":
+      return { mode: "reprojected", site: "corridor", shot: "tunnel" };
     case "ladder":
       return {
         mode: "rigid",
@@ -146,6 +157,13 @@ export interface TourFacts {
    * error's parts and its combined factor at the anchor (answers.json).
    */
   readonly ladder: ReadonlyMap<string, LadderFacts>;
+  /** The corridor's structures (corridor.ts `STRUCTURES`). */
+  readonly structures?: {
+    readonly tunnels: number;
+    readonly viaducts: number;
+    /** The share of the road they carry, 0 to 1. */
+    readonly share: number;
+  };
 }
 
 export interface LadderFacts {
@@ -236,6 +254,12 @@ function narration(state: TourState, f: TourFacts): string {
           : "";
       return `Two stations ${apart} apart measure ${apart} in both placements, but only reprojected draws the line where it is (rigid draws it${away}${short})${ruler}.`;
     }
+    case "tunnel": {
+      const carry = f.structures
+        ? `${f.structures.tunnels} tunnels and ${f.structures.viaducts} viaducts carry ${Math.round(f.structures.share * 100)}% of the road`
+        : "tunnels and viaducts carry most of the road";
+      return `Across the hills ${carry}; See underground makes the ground around it translucent, so this tunnel shows in place under its hill, and clicks reach the road through it.`;
+    }
     case "ladder":
       return ladderStop(
         state.stop,
@@ -287,7 +311,7 @@ export function tourCard(state: TourState, facts: TourFacts): TourCardView {
 
 const STEP_TEXT = /^[1-9]\d*$/;
 
-/** The link's `tour` (1 to 6) as a step index, or undefined. */
+/** The link's `tour` (1 to 7) as a step index, or undefined. */
 export function parseTourStep(
   params: Readonly<Record<string, string | undefined>>,
 ): number | undefined {
