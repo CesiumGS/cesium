@@ -72,10 +72,15 @@ export const US_SURVEY_FOOT = 1200 / 3937;
 
 export const INTERNATIONAL_FOOT = 0.3048;
 
+/**
+ * A grid's SHA-256 as setup's manifest records it: PROJ's own base first
+ * (`proj/`, GEOID18), then the PROJ-data catalog's grids (`grids/`, Task 21).
+ */
 function gridSha256(manifest: StoreManifest | undefined, grid: string) {
+  const sha256 = (file: string) =>
+    manifest?.files.find((f) => f.file === file)?.sha256;
   return (
-    manifest?.files.find((f) => f.file === `proj/${grid}`)?.sha256 ??
-    "not in the manifest"
+    sha256(`proj/${grid}`) ?? sha256(`grids/${grid}`) ?? "not in the manifest"
   );
 }
 

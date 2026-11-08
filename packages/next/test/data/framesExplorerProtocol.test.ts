@@ -50,7 +50,7 @@ import {
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
-import { loadProj } from "../../src/engineering/proj.ts";
+import { gridSource, loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../src/frames/frames.ts";
@@ -61,6 +61,8 @@ import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const base = `${join(dir, "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const bytes = (file: string): ArrayBuffer => {
   const b = readFileSync(join(dir, file));
   return b.buffer.slice(
@@ -83,8 +85,10 @@ const orion = orionFromOem(readFileSync(join(dir, ORION_OEM), "utf8"), frames);
 
 const context = (): StressContext => ({
   frames,
-  // Node's PROJ finds the grids beside proj.db, so GEOID18 needs no loading.
-  loadProj: () => loadProj({ base }),
+  // GEOID18 loads with PROJ (GRIDS), so it needs no loadGeoid.
+  loadProj: () => loadProj({ base, grids: GRIDS }),
+  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them.
+  loadGridSource: () => gridSource({ base: `${join(dir, "grids")}/` }),
   loadOrion: () => Promise.resolve(orion),
   manifest: JSON.parse(
     readFileSync(join(dir, "manifest.json"), "utf8"),
@@ -208,7 +212,7 @@ describe("overlays built in the worker", () => {
   const direct = async () => {
     frame ??= EngineeringFrame.create(
       { name: california.name, body: EARTH, crs: california.crs },
-      await loadProj({ base }),
+      await loadProj({ base, grids: GRIDS }),
     );
     return frame;
   };

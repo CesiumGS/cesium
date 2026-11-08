@@ -18,6 +18,8 @@ import { sha256Hex } from "../../src/io/sha256.ts";
 import fixture from "../fixtures/frames/proj.json";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: none (Node, like the browser, loads only grids it names; Task 21). */
+const GRIDS: string[] = [];
 
 // California zone 3 (NAD83, GRS80), metres: grid (1900000, 600000) → lon/lat in radians.
 const PIPELINE =
@@ -41,12 +43,12 @@ describe("PROJ (native, from the store)", () => {
   });
 
   it("loads once per base", async () => {
-    const a = await loadProj({ base });
-    expect(await loadProj({ base })).toBe(a);
+    const a = await loadProj({ base, grids: GRIDS });
+    expect(await loadProj({ base, grids: GRIDS })).toBe(a);
   });
 
   it("reports each CRS's axis unit from PROJ", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const axis = (code: string) =>
       P.proj_cs_get_axis_info(
         P.proj_crs_get_coordinate_system(P.proj_create(code)),
@@ -59,7 +61,7 @@ describe("PROJ (native, from the store)", () => {
   });
 
   it("transforms a pinned pipeline like pyproj, to 1e-6 m", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const pipeline = P.proj_create(PIPELINE);
     const out = P.proj_trans(
       pipeline,
@@ -75,7 +77,7 @@ describe("PROJ (native, from the store)", () => {
   });
 
   it("is the PROJ the fixture's references were checked against", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(P.proj_info().release).toMatch(/^Rel\. 9\.7\.1,/);
     expect(
       (fixture as { engineProjVersion?: string }).engineProjVersion,
@@ -117,7 +119,7 @@ describe("PROJ's Node files, checked before they load", () => {
   it("refuses a proj.db that doesn't match its pin", async () => {
     const dir = copyOfBase("proj.db");
     const got = await sha256Hex(readFileSync(join(dir, "proj.db")));
-    await expect(loadProj({ base: dir })).rejects.toThrow(
+    await expect(loadProj({ base: dir, grids: GRIDS })).rejects.toThrow(
       `PROJ: proj.db SHA-256 mismatch (expected ${PROJ_FILE_SHA256["proj.db"]}, got ${got})`,
     );
   });
@@ -125,7 +127,7 @@ describe("PROJ's Node files, checked before they load", () => {
   it("refuses a proj_capi.node that doesn't match setup's manifest", async () => {
     const dir = copyOfBase("proj_capi.node");
     const got = await sha256Hex(readFileSync(join(dir, "proj_capi.node")));
-    await expect(loadProj({ base: dir })).rejects.toThrow(
+    await expect(loadProj({ base: dir, grids: GRIDS })).rejects.toThrow(
       `PROJ: proj_capi.node SHA-256 mismatch (expected ${manifestSha256("proj/proj_capi.node")}, got ${got})`,
     );
   });
@@ -137,7 +139,7 @@ describe("PROJ's Node files, checked before they load", () => {
     const saved = process.env.FRAMES_DATA_DIR;
     process.env.FRAMES_DATA_DIR = empty;
     try {
-      await expect(loadProj({ base: dir })).rejects.toThrow(
+      await expect(loadProj({ base: dir, grids: GRIDS })).rejects.toThrow(
         /manifest\.json.*run `npm run setup`/,
       );
     } finally {

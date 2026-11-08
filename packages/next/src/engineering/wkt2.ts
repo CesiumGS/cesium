@@ -54,10 +54,9 @@ export function wkt2Problem(text: string): string | undefined {
 
 /**
  * `wkt2Problem`'s second check alone: a PROJ-string token, or a "+" and a
- * letter outside a quoted string. `crsObject` applies it to every `wkt2`
- * reference, WKT1 included (WKT1's EXTENSION["PROJ4", "+proj=..."] would
- * otherwise be read as a PROJ string); PROJ's strict WKT parser then refuses
- * anything that isn't WKT.
+ * letter outside a quoted string (WKT1's EXTENSION["PROJ4", "+proj=..."]
+ * among them). `strictWkt2`, which every `wkt2` reference goes through
+ * (`crsObject`), applies both checks, then PROJ's strict WKT parser.
  */
 export function projTokenProblem(text: string): string | undefined {
   const trimmed = text.trim();

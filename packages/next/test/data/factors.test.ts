@@ -11,6 +11,8 @@ import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
 import { EARTH, MOON } from "../../src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 
 interface Row {
   xyz: number[];
@@ -59,7 +61,7 @@ const US_FOOT = 0.3048006096012192;
 describe("grid factors against pyproj Proj.get_factors", () => {
   for (const testCase of fixture.cases) {
     it(`${testCase.name}: point scale and convergence`, async () => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const body = testCase.source.startsWith("IAU_2015") ? MOON : EARTH;
       const frame = EngineeringFrame.create(
         {
@@ -131,7 +133,7 @@ describe("grid factors against pyproj Proj.get_factors", () => {
   const utmFrame = async () =>
     EngineeringFrame.create(
       { name: "UTM 11N", body: EARTH, crs: crsRef("EPSG:32611") },
-      await loadProj({ base }),
+      await loadProj({ base, grids: GRIDS }),
     );
 
   it("the elevation factor is 1 at h = 0 and R / (R + h) at 1,000 m", async () => {
@@ -164,7 +166,7 @@ describe("grid factors against pyproj Proj.get_factors", () => {
     const ca = fixture.cases[0]!;
     const frame = EngineeringFrame.create(
       { name: "CA3", body: EARTH, crs: crsRef(ca.source) },
-      await loadProj({ base }),
+      await loadProj({ base, grids: GRIDS }),
     );
     const row = ca.rows[7]!; // 50 km north-east of the origin, about 37.5 degrees
     const design = [row.xyz[0]!, row.xyz[1]!, 3280.84];
@@ -210,7 +212,7 @@ describe("grid factors against the CRS's own ellipsoid", () => {
   it.each(["EPSG:3857", "ESRI:102100"])(
     "%s: h and k are the ellipsoid's, not the sphere's 1/cos phi",
     async (code) => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const frame = EngineeringFrame.create(
         { name: "Web Mercator", body: EARTH, crs: crsRef(code) },
         P,
@@ -270,7 +272,7 @@ describe("grid factors against the CRS's own ellipsoid", () => {
   };
 
   it("EPSG:26711 (NAD27, Clarke 1866): PROJ's own scale, to 1e-12", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const frame = EngineeringFrame.create(
       {
         name: "NAD27 / UTM 11N",
@@ -298,7 +300,7 @@ describe("grid factors against the CRS's own ellipsoid", () => {
   it.each(["EPSG:32661", "EPSG:5041", "EPSG:3413"])(
     "%s at the north pole: PROJ's own scale (the projection's k there)",
     async (code) => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const frame = EngineeringFrame.create(
         { name: code, body: EARTH, crs: crsRef(code) },
         P,
@@ -321,7 +323,7 @@ describe("grid factors against the CRS's own ellipsoid", () => {
   );
 
   it("a WGS 84 UTM zone keeps PROJ's own values, unchanged", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const frame = EngineeringFrame.create(
       { name: "UTM 11N", body: EARTH, crs: crsRef("EPSG:32611") },
       P,
@@ -375,7 +377,7 @@ describe("grid factors against the CRS's own ellipsoid", () => {
   ])(
     "$code: h and k against the WGS 84 ellipsoid on the authalic sphere's formulas",
     async ({ code, k, h }) => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const frame = EngineeringFrame.create(
         { name: code, body: EARTH, crs: crsRef(code) },
         P,
@@ -415,7 +417,7 @@ describe("grid factors against the CRS's own ellipsoid", () => {
   ])(
     "$code (Equidistant Cylindrical (Spherical), φ1 $phi1°): h and k against the WGS 84 ellipsoid",
     async ({ code, phi1 }) => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const frame = EngineeringFrame.create(
         { name: code, body: EARTH, crs: crsRef(code) },
         P,
@@ -445,7 +447,7 @@ describe("grid factors against the CRS's own ellipsoid", () => {
   );
 
   it("the spherical-formula path refuses a pole, where the derivatives are 0/0", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const frame = EngineeringFrame.create(
       { name: "EASE-Grid North", body: EARTH, crs: crsRef("EPSG:3973") },
       P,
@@ -499,7 +501,7 @@ describe("Mercator (Spherical), EPSG method 1026", () => {
   ];
 
   it("on a sphere: k = 1 / cos phi within 1e-12 and convergence 0, at 0°, 30° and 60°", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const frame = EngineeringFrame.create(
       {
         name: "Mercator (Spherical) on a sphere",
@@ -525,7 +527,7 @@ describe("Mercator (Spherical), EPSG method 1026", () => {
   });
 
   it("on an ellipsoid whose radii differ, gridFactors refuses it and says why", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const frame = EngineeringFrame.create(
       {
         name: "Mercator (Spherical) on WGS 84",

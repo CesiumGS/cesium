@@ -13,6 +13,7 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import { comparedFor } from "../../examples/frames-explorer/content.ts";
 import { takeCitations } from "../../examples/frames-explorer/stress/references.ts";
 import references from "../../examples/frames-explorer/references.json";
+import geoidsFixture from "../fixtures/frames/geoids.json";
 import {
   STRESS_CASES,
   STRESS_GROUPS,
@@ -28,7 +29,12 @@ import {
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
 import { SCENARIOS } from "../../examples/frames-explorer/scenarios/specs.ts";
-import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
+import type { GeoidsFixture } from "../../examples/frames-explorer/stress/groups/global-geoids.ts";
+import {
+  gridSource,
+  loadProj,
+  type ProjApi,
+} from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../src/frames/frames.ts";
@@ -37,6 +43,10 @@ import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const base = `${join(dir, "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
+/** The PROJ-data catalog's grids in the store, as the browser's /proj-grids/ serves them. */
+const catalog = `${join(dir, "grids")}/`;
 const bytes = (file: string): ArrayBuffer => {
   const b = readFileSync(join(dir, file));
   return b.buffer.slice(
@@ -56,6 +66,8 @@ const frames = createFrames({
   warnings: [],
 } satisfies FrameData);
 
+const geoids = geoidsFixture as unknown as GeoidsFixture;
+
 const example = new URL("../../examples/frames-explorer/", import.meta.url);
 const fingerprintsFile = new URL("fingerprints.json", example);
 const referencesFile = new URL("references.json", example);
@@ -68,8 +80,10 @@ interface FingerprintFile {
 
 const context: StressContext = {
   frames,
-  // Node's PROJ finds the grids beside proj.db, so GEOID18 needs no loading.
-  loadProj: () => loadProj({ base }),
+  // GEOID18, loaded with PROJ, so it needs no loadGeoid; the catalog's
+  // grids from the store's grids/ (the global geoids).
+  loadProj: () => loadProj({ base, grids: GRIDS }),
+  loadGridSource: () => gridSource({ base: catalog }),
   loadOrion: () =>
     Promise.resolve(
       orionFromOem(readFileSync(join(dir, ORION_OEM), "utf8"), frames),
@@ -386,6 +400,58 @@ describe("the frames explorer's stress tests, headless", () => {
     }
   });
 
+  it("gives one global-geoids result per geoids.json case: each referenced case against its publisher's values, a missing reference shown, never passed (Task 21)", () => {
+    const own = results.filter((r) => r.group === "global-geoids");
+    expect(own.map((r) => r.id).sort()).toEqual(
+      geoids.cases.map((c) => `global-geoids.${c.id}`).sort(),
+    );
+    for (const c of geoids.cases) {
+      const r = own.find((x) => x.id === `global-geoids.${c.id}`)!;
+      if ("missingReference" in c) {
+        expect(r.displayOnly, r.id).toBe(true);
+        expect(r.tolerance, r.id).toBeUndefined();
+        expect(r.title, r.id).toMatch(/no published reference/);
+        expect(r.detail, r.id).toContain(c.missingReference);
+        continue;
+      }
+      expect(r.displayOnly, r.id).toBeUndefined();
+      expect(r.missing, r.id).toBeUndefined();
+      expect(r.pass, describeResult(r)).toBe(true);
+      expect(r.tolerance, r.id).toBe(c.precision);
+      expect(r.unit, r.id).toBe("m");
+      expect(r.source?.url, r.id).toBe(c.source.url);
+      expect(r.fingerprint?.grids.map((g) => g.name).sort(), r.id).toEqual(
+        [...c.grids].sort(),
+      );
+      for (const g of r.fingerprint!.grids) {
+        expect(g.sha256, `${r.id} ${g.name}`).toMatch(/^[0-9a-f]{64}$/);
+      }
+    }
+  });
+
+  it("checks the design globe's site-grid building in both placements: the rigid inverse, the reprojected round trip and the 20 km sag against its hand formula (Task 21)", () => {
+    const own = new Map(
+      results
+        .filter((r) => r.group === "tileset-placement")
+        .map((r) => [r.id.slice("tileset-placement.site-building.".length), r]),
+    );
+    expect([...own.keys()].sort()).toEqual(
+      ["reprojected-round-trip", "rigid-inverse", "sag-20km"].sort(),
+    );
+    for (const r of own.values()) {
+      expect(r.pass, describeResult(r)).toBe(true);
+      expect(r.unit, r.id).toBe("m");
+    }
+    expect(own.get("rigid-inverse")!.tolerance).toBe(1e-9);
+    expect(own.get("reprojected-round-trip")!.tolerance).toBe(1e-4);
+    expect(own.get("reprojected-round-trip")!.fingerprint?.grids).toEqual([
+      expect.objectContaining({ name: "us_noaa_g2018u0.tif" }),
+    ]);
+    // The sag itself, 31 ± 3 m at 20 km (the plan's accuracy table).
+    const sag = own.get("sag-20km")!;
+    expect(Math.abs(sag.effect!.value - 31)).toBeLessThan(3);
+  });
+
   it("matches every recorded fingerprint, and records no stale ones (R12)", () => {
     if (UPDATE) {
       return;
@@ -472,7 +538,7 @@ describe('boundCrsChecks, R18\'s "Try your own"', () => {
   // A PROJ whose created operations use a Helmert 10 m off in X: what the
   // WKT says is unchanged, so the hand Helmert disagrees with the frame.
   const tampered = async (): Promise<ProjApi> => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     return new Proxy(P, {
       get(target, key, receiver) {
         if (key === "proj_create") {
@@ -502,10 +568,15 @@ describe('boundCrsChecks, R18\'s "Try your own"', () => {
   });
 
   it("names a non-Helmert bound transformation once, and says why it skips the hand comparison", async () => {
-    // A BOUNDCRS whose transformation is EPSG 9619 (Geographic2D offsets).
+    // A BOUNDCRS whose transformation is EPSG 9619 (Geographic2D offsets),
+    // -3.5″ and -4.5″. Strict WKT2: an ABRIDGEDTRANSFORMATION's PARAMETERs
+    // carry no unit (PROJ's grammar refuses one there, and the strict parse
+    // every wkt2 reference goes through with it), and PROJ reads a unit-less
+    // angle there in radians.
+    const arcsecond = 4.84813681109536e-6;
     const offsets = wkt("ed50-utm31n").replace(
       /ABRIDGEDTRANSFORMATION\[[\s\S]*\]\]\s*$/,
-      'ABRIDGEDTRANSFORMATION["offsets",METHOD["Geographic2D offsets",ID["EPSG",9619]],PARAMETER["Latitude offset",-3.5,ANGLEUNIT["arc-second",4.84813681109536E-06],ID["EPSG",8601]],PARAMETER["Longitude offset",-4.5,ANGLEUNIT["arc-second",4.84813681109536E-06],ID["EPSG",8602]]]]',
+      `ABRIDGEDTRANSFORMATION["offsets",METHOD["Geographic2D offsets",ID["EPSG",9619]],PARAMETER["Latitude offset",${-3.5 * arcsecond},ID["EPSG",8601]],PARAMETER["Longitude offset",${-4.5 * arcsecond},ID["EPSG",8602]]]]`,
     );
     const user = await boundCrsChecks(context, offsets, "Offsets");
     const ids = user.map((r) => r.id);
@@ -521,19 +592,34 @@ describe('boundCrsChecks, R18\'s "Try your own"', () => {
     expect(helmert.detail).not.toMatch(/no TOWGS84/);
   });
 
-  it("reads WKT1's TOWGS84 and checks it by hand", async () => {
-    const P = await loadProj({ base });
-    for (const definition of [
-      "+proj=utm +zone=31 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs +type=crs",
-      "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs +type=crs",
-    ]) {
-      const wkt1 = P.proj_as_wkt(
-        P.proj_create(definition),
-        (P as unknown as { PJ_WKT1_GDAL: ProjApi["PJ_WKT2_2019"] })
-          .PJ_WKT1_GDAL,
-      );
-      expect(wkt1).toMatch(/^PROJCS\[/);
-      const user = await boundCrsChecks(context, wkt1, "WKT1");
+  // A PROJ string's TOWGS84, as GDAL and PROJ write it in WKT2 (a BOUNDCRS
+  // whose ABRIDGEDTRANSFORMATION's rotations are arc-seconds and scale a
+  // factor), checked by hand. Its WKT1 is refused, as by every wkt2
+  // reference (strict WKT2, Task 21).
+  const TOWGS84_DEFINITIONS = [
+    "+proj=utm +zone=31 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs +type=crs",
+    "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs +type=crs",
+  ];
+
+  it("refuses WKT1 with one failed result naming WKT2, as every wkt2 reference is strict WKT2", async () => {
+    const P = await loadProj({ base, grids: GRIDS });
+    const wkt1 = P.proj_as_wkt(
+      P.proj_create(TOWGS84_DEFINITIONS[0]!),
+      (P as unknown as { PJ_WKT1_GDAL: ProjApi["PJ_WKT2_2019"] }).PJ_WKT1_GDAL,
+    );
+    expect(wkt1).toMatch(/^PROJCS\[/);
+    const user = await boundCrsChecks(context, wkt1, "WKT1");
+    expect(user).toHaveLength(1);
+    expect(user[0]!.pass).toBe(false);
+    expect(user[0]!.error).toMatch(/must be WKT2/);
+  });
+
+  it("reads the TOWGS84 of a PROJ string written as WKT2 and checks it by hand", async () => {
+    const P = await loadProj({ base, grids: GRIDS });
+    for (const definition of TOWGS84_DEFINITIONS) {
+      const wkt2 = P.proj_as_wkt(P.proj_create(definition), P.PJ_WKT2_2019);
+      expect(wkt2).toMatch(/^BOUNDCRS\[/);
+      const user = await boundCrsChecks(context, wkt2, "TOWGS84");
       const helmert = user.find((r) => r.id.endsWith(".helmert"))!;
       expect(helmert.displayOnly, helmert.detail).toBeUndefined();
       expect(helmert.pass, helmert.detail).toBe(true);
@@ -558,7 +644,8 @@ describe("without the frame data (R5, F44)", () => {
       const all = await runStress(
         {
           loadFrames: () => Promise.reject(new Error("no frame data here")),
-          loadProj: () => loadProj({ base }),
+          loadProj: () => loadProj({ base, grids: GRIDS }),
+          loadGridSource: () => gridSource({ base: catalog }),
           loadOrion,
           manifest: context.manifest,
         },

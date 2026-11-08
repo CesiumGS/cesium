@@ -58,7 +58,7 @@ import {
   type StressContext,
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
-import { loadProj } from "../../src/engineering/proj.ts";
+import { gridSource, loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
@@ -90,9 +90,13 @@ const frames = createFrames({
   warnings: [],
 } satisfies FrameData);
 const base = `${join(dir, "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const context = (): StressContext => ({
   frames,
-  loadProj: () => loadProj({ base }),
+  loadProj: () => loadProj({ base, grids: GRIDS }),
+  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them.
+  loadGridSource: () => gridSource({ base: `${join(dir, "grids")}/` }),
   loadOrion: () => Promise.reject(new Error("no Orion here")),
   manifest: JSON.parse(
     readFileSync(join(dir, "manifest.json"), "utf8"),
@@ -344,7 +348,7 @@ describe("the robot arm's pad and its walk (Task 7b fix 1)", () => {
     expect(PAD.latitude).toBeCloseTo(dms(pad.latitude), 12);
     expect(PAD.longitude).toBeCloseTo(dms(pad.longitude), 12);
     const op = resolveOperation(
-      await loadProj({ base }),
+      await loadProj({ base, grids: GRIDS }),
       {
         format: "wkid",
         authority: "EPSG",

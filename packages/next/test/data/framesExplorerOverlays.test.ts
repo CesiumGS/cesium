@@ -36,9 +36,11 @@ import { Instant } from "../../src/time/Instant.ts";
 import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 let proj: ProjApi;
 beforeAll(async () => {
-  proj = await loadProj({ base });
+  proj = await loadProj({ base, grids: GRIDS });
 });
 
 const epsg = (wkid: number): CrsRef => ({

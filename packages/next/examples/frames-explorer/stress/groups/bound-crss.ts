@@ -6,9 +6,12 @@ import {
   designPoint,
 } from "../../../../src/engineering/EngineeringFrame.ts";
 import {
+  type AreaOfInterest,
   type CrsRef,
   type RecordedOperation,
+  listOperations,
   resolveOperation,
+  strictWkt2,
 } from "../../../../src/engineering/crs.ts";
 import { gridFactors } from "../../../../src/engineering/factors.ts";
 import type { ProjApi } from "../../../../src/engineering/proj.ts";
@@ -157,6 +160,8 @@ export interface BoundCheckOptions {
 
 interface Located {
   readonly frame: EngineeringFrame;
+  /** The source CRS (a bound CRS's, else the CRS itself), as PROJ writes it in WKT2. */
+  readonly sourceWkt: string;
   /** The source CRS's conversion to its own geographic CRS (no datum step). */
   readonly conversion: RecordedOperation;
   readonly design: readonly [number, number, number];
@@ -170,7 +175,9 @@ function locate(
   label: string,
   at: readonly [number, number] | undefined,
 ): Located {
-  const crs = P.proj_create(wkt2);
+  // Strict WKT2, as the frame reads it (crsObject): WKT1, or WKT2 only
+  // PROJ's lax parser takes, is refused here, naming the problem.
+  const crs = strictWkt2(P, { format: "wkt2", wkt2 }, "the WKT");
   const source =
     P.proj_get_type(crs) === P.PJ_TYPE_BOUND_CRS
       ? P.proj_get_source_crs(crs)
@@ -193,16 +200,54 @@ function locate(
   const fromOrigin = projectionOrigin(sourceCrsNode(root));
   const place = at ?? fromBox ?? fromOrigin;
   if (place === undefined) {
-    return { frame, conversion, design: [0, 0, 0], where: "design (0, 0)" };
+    return {
+      frame,
+      sourceWkt,
+      conversion,
+      design: [0, 0, 0],
+      where: "design (0, 0)",
+    };
   }
   const projected = conversion.inverse([place[0], place[1], 0]);
   const where = `${at ? "" : fromBox ? "the area of use's centre, " : "the projection's origin, "}${fmt(place[1], 7)}°, ${fmt(place[0], 7)}°`;
   return {
     frame,
+    sourceWkt,
     conversion,
     design: [projected[0]!, projected[1]!, 0],
     where,
   };
+}
+
+/**
+ * PROJ's best registry operation from `crs` to WGS 84 within `box`. With an
+ * EPSG record to check it by (`gridless`: the catalog's cases), the best
+ * that reads no grid: the record is a Helmert, and a grid another case
+ * loaded into the run's PROJ (the global geoids' OSTN15, Task 21) would
+ * outrank it on a later run. Before any such load the two are the same
+ * operation: PROJ's list is in the same order, and the grid operations ahead
+ * of it are refused for their missing grids.
+ */
+function registryOperation(
+  P: ProjApi,
+  crs: CrsRef,
+  box: AreaOfInterest,
+  gridless: boolean,
+): RecordedOperation {
+  const options = { areaOfInterest: box };
+  if (!gridless) {
+    return resolveOperation(P, crs, "EPSG:4979", options);
+  }
+  const candidate = listOperations(P, crs, epsg(4979), options).find(
+    (c) => !c.ballpark && c.instantiable && c.gridsNeeded.length === 0,
+  );
+  if (candidate === undefined) {
+    throw new Error("PROJ lists no operation to WGS 84 that reads no grid");
+  }
+  return resolveOperation(P, crs, "EPSG:4979", {
+    ...options,
+    pipeline: candidate.pipeline,
+  });
 }
 
 async function boundChecks(
@@ -238,7 +283,7 @@ async function boundChecks(
       },
     ];
   }
-  const { frame, conversion, design, where } = located;
+  const { frame, sourceWkt, conversion, design, where } = located;
   const sourceNode = sourceCrsNode(root);
   const wgs84 = ellipsoidShape("epsg-ellipsoid-wgs84");
 
@@ -248,15 +293,7 @@ async function boundChecks(
       {
         name: `${label} (source)`,
         body: EARTH,
-        crs: {
-          format: "wkt2",
-          wkt2: P.proj_as_wkt(
-            P.proj_get_type(P.proj_create(wkt2)) === P.PJ_TYPE_BOUND_CRS
-              ? P.proj_get_source_crs(P.proj_create(wkt2))
-              : P.proj_create(wkt2),
-            P.PJ_WKT2_2019,
-          ),
-        },
+        crs: { format: "wkt2", wkt2: sourceWkt },
         allowBallpark: true,
       },
       P,
@@ -314,9 +351,12 @@ async function boundChecks(
   let registryError: string | undefined;
   if (registryCrs !== undefined) {
     try {
-      registry = resolveOperation(P, registryCrs, "EPSG:4979", {
-        areaOfInterest: box,
-      });
+      registry = registryOperation(
+        P,
+        registryCrs,
+        box,
+        options.registry?.record !== undefined,
+      );
     } catch (error) {
       registryError = messageOf(error);
     }

@@ -14,6 +14,8 @@ import { loadProj } from "../../src/engineering/proj.ts";
 import fixture from "../fixtures/frames/proj.json";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const GEOID = "us_noaa_g2018u0.tif";
 
 interface Case {
@@ -36,7 +38,7 @@ const normalized = (s: string) => s.trim().replace(/\s+/g, " ");
 describe("the pipelines PROJ records", () => {
   for (const c of cases) {
     it(`round-trips: ${c.name}`, async () => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const op = resolveOperation(P, ref(c.source), c.target);
       expect(formatPipeline(parsePipeline(op.pipeline))).toBe(
         normalized(op.pipeline),
@@ -45,7 +47,7 @@ describe("the pipelines PROJ records", () => {
   }
 
   it("records the optional grids of the operation", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const op = resolveOperation(
       P,
       { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
@@ -60,7 +62,7 @@ describe("a pinned pipeline", () => {
   const source: CrsRef = { format: "wkid", authority: "EPSG", wkid: 32611 };
 
   it("resolves the same as an object and as a string", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const text =
       "+proj=pipeline +step +inv +proj=utm +zone=11 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +xy_out=deg";
     const fromString = resolveOperation(P, source, "EPSG:4979", {
@@ -88,7 +90,7 @@ describe("a pinned pipeline", () => {
   });
 
   it("throws, naming a geoid grid that is not loaded", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(() =>
       resolveOperation(P, source, "EPSG:4979", {
         pipeline: {
@@ -104,7 +106,7 @@ describe("a pinned pipeline", () => {
   });
 
   it("refuses a quote that would hide a step from PROJ", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(() =>
       resolveOperation(P, source, "EPSG:4979", {
         pipeline:
@@ -114,7 +116,7 @@ describe("a pinned pipeline", () => {
   });
 
   it("counts a grid named optional and required as required", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(() =>
       resolveOperation(P, source, "EPSG:4979", {
         pipeline:
@@ -124,7 +126,7 @@ describe("a pinned pipeline", () => {
   });
 
   it("does not require a missing optional grid", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const op = resolveOperation(P, source, "EPSG:4979", {
       pipeline: `+proj=pipeline +step +proj=vgridshift +grids=@not_a_loaded_grid.tif,@null +multiplier=1`,
     });

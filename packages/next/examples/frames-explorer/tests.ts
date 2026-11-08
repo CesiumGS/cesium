@@ -23,6 +23,7 @@ import { boundCrssCases } from "./stress/groups/bound-crss.ts";
 import { coordinateEpochCases } from "./stress/groups/coordinate-epoch.ts";
 import { distortionCases } from "./stress/groups/distortion.ts";
 import { frameTreeCases } from "./stress/groups/frame-tree.ts";
+import { globalGeoidsCases } from "./stress/groups/global-geoids.ts";
 import { heightsAndWgs84Cases } from "./stress/groups/heights-and-wgs84.ts";
 import { ifcMapConversionCases } from "./stress/groups/ifc-map-conversion.ts";
 import { lunarTimeCases } from "./stress/groups/lunar-time.ts";
@@ -35,6 +36,7 @@ import { referenceValuesCases } from "./stress/groups/reference-values.ts";
 import { rigidPlacementBudgetCases } from "./stress/groups/rigid-placement-budget.ts";
 import { siteGridsCases } from "./stress/groups/site-grids.ts";
 import { spaceCases } from "./stress/groups/space.ts";
+import { tilesetPlacementCases } from "./stress/groups/tileset-placement.ts";
 import { timeCases } from "./stress/groups/time.ts";
 import { timeScalesCases } from "./stress/groups/time-scales.ts";
 import { trajectoryCases } from "./stress/groups/trajectory.ts";
@@ -94,7 +96,11 @@ export {
   type RotationConvention,
 } from "./stress/geodesy.ts";
 
-/** Every case, in the order the Verify tab lists them, group by group. */
+/**
+ * Every case, in the order the Verify tab lists them, group by group. The
+ * global geoids come last: the catalog grids they load stay in the run's
+ * PROJ, so every case before them sees only GEOID18, as before Task 21.
+ */
 export const STRESS_CASES: readonly StressCase[] = [
   ...projectionsCases,
   ...unitsCases,
@@ -119,6 +125,9 @@ export const STRESS_CASES: readonly StressCase[] = [
   ...boundCrssCases,
   ...timeScalesCases,
   ...lunarTimeCases,
+  ...tilesetPlacementCases,
+  // Last: its grids stay loaded in the run's PROJ (Task 21).
+  ...globalGeoidsCases,
 ];
 
 /**

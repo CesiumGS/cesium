@@ -30,6 +30,8 @@ import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const base = `${join(dir, "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const gridStore = `${join(dir, "grids")}/`;
 const bytes = (file: string): ArrayBuffer => {
   const b = readFileSync(join(dir, file));
@@ -86,7 +88,7 @@ async function frame(extra: { allowBallpark?: boolean } = {}) {
       alignments: [road],
       ...extra,
     },
-    await loadProj({ base }),
+    await loadProj({ base, grids: GRIDS }),
   );
 }
 
@@ -192,7 +194,7 @@ describe("measure in design terms", () => {
   });
 
   it("keeps PROJ's stated accuracy for a pinned pipeline that matches its candidate, and says so", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const known = await frame();
     const f = EngineeringFrame.create(
       {
@@ -222,7 +224,7 @@ describe("measure in design terms", () => {
   });
 
   it("leaves meters undefined when the operation's accuracy is unknown (a pinned pipeline that matches no candidate)", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const known = await frame();
     expect(known.operation.accuracy).toBeDefined();
     const f = EngineeringFrame.create(
@@ -255,7 +257,7 @@ describe("measure in design terms", () => {
   });
 
   it("marks a real ballpark operation: undefined meters and a ballpark note", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const crs = {
       format: "wkid",
       authority: "EPSG",
@@ -319,7 +321,7 @@ describe("measure in design terms", () => {
   });
 
   it("converts a differing vertical unit in the 3D distance (metre horizontal, ftUS vertical)", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const f = EngineeringFrame.create(
       {
         name: "UTM11 + NAVD88 ftUS",
@@ -441,7 +443,7 @@ describe("the projection term's note (amended R9)", () => {
   it("names the better candidates PROJ skipped for missing grids, with their accuracies and grids", async () => {
     const f = EngineeringFrame.create(
       { name: "CS27", body: EARTH, crs: CS27 },
-      await loadProj({ base }),
+      await loadProj({ base, grids: GRIDS }),
     );
     expect(f.operation.accuracy).toBe(7);
     expect(f.operation.betterCandidates.map((c) => c.accuracy)).toEqual([
@@ -473,7 +475,7 @@ describe("the projection term's note (amended R9)", () => {
   });
 
   it("names a pinned pipeline's optional grid that isn't loaded", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const known = await frame();
     const steps = parsePipeline(known.operation.pipeline).steps;
     const geoid = steps.findIndex((s) => s.operation === "vgridshift");
@@ -514,7 +516,7 @@ describe("the projection term's note (amended R9)", () => {
   });
 
   it("doesn't name a pinned pipeline's optional grid that is loaded", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const known = await frame();
     const steps = parsePipeline(known.operation.pipeline).steps;
     // GEOID18 written optional: loaded, so the operation runs with it.
@@ -568,7 +570,7 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
         ...(fallbackSigma !== undefined && { fallbackSigma }),
       },
       {
-        proj: await loadProj({ base }),
+        proj: await loadProj({ base, grids: GRIDS }),
         grids: await gridSource({ base: gridStore }),
       },
     );
@@ -646,7 +648,7 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
         body: EARTH,
         crs: { format: "wkid", authority: "EPSG", wkid: 26741 },
       },
-      await loadProj({ base }),
+      await loadProj({ base, grids: GRIDS }),
     );
     const m = measure(
       designPoint(f, [1_900_000, 600_000, 0]),
@@ -682,7 +684,7 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
         body: EARTH,
         crs: { format: "wkid", authority: "EPSG", wkid: 32610 },
       },
-      await loadProj({ base }),
+      await loadProj({ base, grids: GRIDS }),
     );
     expect(london.operation.betterCandidates).toEqual([]);
     const plain = measure(
@@ -698,7 +700,7 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
   });
 
   it("warns once per frame: two frames with better candidates give two warnings", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const cs27 = (name: string) =>
       EngineeringFrame.create(
         {
@@ -761,7 +763,7 @@ describe("the Earth: geoid fallbacks and coarser operations", () => {
 describe("the Moon (plan 4a's carried-forward item)", () => {
   const south = { format: "wkid", authority: "IAU_2015", wkid: 30135 } as const;
   const moonFrames = async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     return {
       polar: EngineeringFrame.create(
         { name: "Moon south", body: MOON, crs: south },

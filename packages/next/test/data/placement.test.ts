@@ -12,6 +12,8 @@ import { loadProj } from "../../src/engineering/proj.ts";
 import { EARTH } from "../../src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const US_FOOT = 0.3048006096012192;
 const distance = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
@@ -28,7 +30,7 @@ async function californiaFrame() {
         scale: 1.0000375,
       },
     },
-    await loadProj({ base }),
+    await loadProj({ base, grids: GRIDS }),
   );
 }
 

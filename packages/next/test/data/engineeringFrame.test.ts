@@ -13,6 +13,8 @@ import { loadProj } from "../../src/engineering/proj.ts";
 import { EARTH, MOON } from "../../src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const US_FOOT = 0.3048006096012192;
 const distance = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
@@ -31,7 +33,7 @@ const site: SiteTransform = {
 const FALSE_EASTING = 6_561_666.667; // ftUS, zone 3's central meridian
 
 async function californiaFrame() {
-  const P = await loadProj({ base });
+  const P = await loadProj({ base, grids: GRIDS });
   return EngineeringFrame.create(
     { name: "CA3", body: EARTH, crs: california, site },
     P,
@@ -91,7 +93,7 @@ describe("Earth: NAD83(2011) / California zone 3 ftUS + NAVD88 ftUS", () => {
 
 describe("design height without a vertical axis, and geographic CRSs", () => {
   it("EPSG:6420 alone passes design height through in CRS units (no geoid)", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const frame = EngineeringFrame.create(
       {
         name: "2D",
@@ -110,7 +112,7 @@ describe("design height without a vertical axis, and geographic CRSs", () => {
   });
 
   it("rejects a geographic CRS", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     for (const wkid of [4326, 4269]) {
       expect(() =>
         EngineeringFrame.create(
@@ -128,7 +130,7 @@ describe("design height without a vertical axis, and geographic CRSs", () => {
 
 describe("US survey foot against the international foot (R5)", () => {
   it("EPSG:2227 and EPSG:2223 report their own units", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const us = crsUnits(P, { format: "wkid", authority: "EPSG", wkid: 2227 });
     const intl = crsUnits(P, { format: "wkid", authority: "EPSG", wkid: 2223 });
     expect(us.metersPerUnit).toBeCloseTo(US_FOOT, 15);
@@ -143,7 +145,7 @@ describe("US survey foot against the international foot (R5)", () => {
   // foot (the conversion's parameters keep their own ftUS unit, so the map is
   // identical). Points 1 km from the false origin, same numeric coordinates.
   it("the same numbers differ by the 2 ppm scale, and each round trips", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const wkt = P.proj_as_wkt(P.proj_create("EPSG:6420"), P.PJ_WKT2_2019);
     // Only the coordinate system's axes change unit.
     const cs = wkt.indexOf("CS[");
@@ -210,7 +212,7 @@ describe("Moon: IAU 2015 south polar", () => {
   const south: CrsRef = { format: "wkid", authority: "IAU_2015", wkid: 30135 };
 
   it("round trips within 1e-4 m and lies on the sphere at the design height", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const frame = EngineeringFrame.create(
       { name: "Moon south", body: MOON, crs: south },
       P,
@@ -313,7 +315,7 @@ describe("2D projected CRSs with a geocentric Helmert operation", () => {
   ];
   for (const [label, crs, [e, n]] of crss) {
     it(`${label} round trips within 1e-6 m at h = 0, 100, 1000`, async () => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const frame = EngineeringFrame.create({ name: "f", body: EARTH, crs }, P);
       for (const h of [0, 100, 1000]) {
         const d = [e!, n!, h];

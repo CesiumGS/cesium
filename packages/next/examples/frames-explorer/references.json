@@ -2584,6 +2584,69 @@
       "MHW": "3.416",
       "NAVD88": "1.804",
       "units": "m above STND"
+    },
+    "geoid-uk-ostn15-osgm15": {
+      "source": {
+        "document": "OSTN15 and OSGM15 developer pack: OSTN15_OSGM15_TestInput_ETRStoOSGB.txt and its TestOutput",
+        "publisher": "Ordnance Survey",
+        "url": "https://www.ordnancesurvey.co.uk/documents/resources/OSTN15-OSGM15-DevelopersPack.zip",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The publisher's test values for the global geoids group's uk-ostn15-osgm15 case (stress/groups/global-geoids.ts). The values themselves, the stated precision and how they were read are in test/fixtures/frames/geoids.json (plan 4b Task 9), under the same id."
+    },
+    "geoid-nl-rdnaptrans2018": {
+      "source": {
+        "document": "RDNAPTRANS2018 self-validation file, Z001_ETRS89andRDNAP.txt",
+        "publisher": "NSGI",
+        "url": "https://github.com/GeodetischeInfrastructuur/transformations/blob/4b766710cd596e015c58a19046324eb71d2426e9/validation/data/Z001_ETRS89andRDNAP.txt",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The publisher's test values for the global geoids group's nl-rdnaptrans2018 case (stress/groups/global-geoids.ts). The values themselves, the stated precision and how they were read are in test/fixtures/frames/geoids.json (plan 4b Task 9), under the same id."
+    },
+    "geoid-au-ausgeoid2020": {
+      "source": {
+        "document": "AUSGeoid2020 calculator, ellipsoid to AUSGeoid2020 separation",
+        "publisher": "Geoscience Australia",
+        "url": "https://geodesyapps.ga.gov.au/ausgeoid2020",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The publisher's test values for the global geoids group's au-ausgeoid2020 case (stress/groups/global-geoids.ts). The values themselves, the stated precision and how they were read are in test/fixtures/frames/geoids.json (plan 4b Task 9), under the same id."
+    },
+    "geoid-jp-jpgeo2024": {
+      "source": {
+        "document": "Geoid height calculation API, JPGEO2024",
+        "publisher": "Geospatial Information Authority of Japan (GSI)",
+        "url": "https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh/cgi/geoidcalc.pl",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The publisher's test values for the global geoids group's jp-jpgeo2024 case (stress/groups/global-geoids.ts). The values themselves, the stated precision and how they were read are in test/fixtures/frames/geoids.json (plan 4b Task 9), under the same id."
+    },
+    "geoid-jp-gsigeo2011": {
+      "source": {
+        "document": "Geoid height calculation API (transitional), GSIGEO2011 Ver2.2",
+        "publisher": "Geospatial Information Authority of Japan (GSI)",
+        "url": "https://vldb.gsi.go.jp/sokuchi/surveycalc/geoid/calcgh2011/cgi/geoidcalc.pl",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The publisher's test values for the global geoids group's jp-gsigeo2011 case (stress/groups/global-geoids.ts). The values themselves, the stated precision and how they were read are in test/fixtures/frames/geoids.json (plan 4b Task 9), under the same id."
+    },
+    "geoid-us-geoid18": {
+      "source": {
+        "document": "Geoid Height Service, GEOID18 (model 14)",
+        "publisher": "NOAA National Geodetic Survey",
+        "url": "https://geodesy.noaa.gov/api/geoid/ght",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The publisher's test values for the global geoids group's us-geoid18 case (stress/groups/global-geoids.ts). The values themselves, the stated precision and how they were read are in test/fixtures/frames/geoids.json (plan 4b Task 9), under the same id."
+    },
+    "geoid-egm2008": {
+      "source": {
+        "document": "EGM2008 2.5 x 2.5-minute interpolation test output, OUTPUT3.DAT, from INPUT.DAT",
+        "publisher": "US National Geospatial-Intelligence Agency (NGA), through the Internet Archive",
+        "url": "https://web.archive.org/web/20090523142241/http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/OUTPUT3.DAT",
+        "retrieved": "2026-11-07"
+      },
+      "description": "The publisher's test values for the global geoids group's egm2008 case (stress/groups/global-geoids.ts). The values themselves, the stated precision and how they were read are in test/fixtures/frames/geoids.json (plan 4b Task 9), under the same id."
     }
   }
 }

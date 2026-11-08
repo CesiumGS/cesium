@@ -42,7 +42,7 @@ import {
   type Pipeline,
 } from "./pipeline.ts";
 import { loadedGrids } from "./proj.ts";
-import { projTokenProblem } from "./wkt2.ts";
+import { wkt2Problem } from "./wkt2.ts";
 
 /**
  * A reference to a coordinate reference system, with the shapes of the 3D Tiles
@@ -340,13 +340,12 @@ export function normalizeExisting(proj: ProjApi, object: PJ, what: string): PJ {
 }
 
 /**
- * The PJ of a CRS reference, through `proj_create`. A `wkt2` reference must
- * first hold no PROJ-string token (`projTokenProblem`), so a PROJ string in a
- * `wkt2` field is refused rather than read as one; WKT1 still parses (the
- * frames explorer's "Try your own" takes it, and hand-written WKT with
- * grammar slips that PROJ's lax path tolerates). Untrusted WKT2 (a tileset's)
- * also goes through `strictWkt2` first. Throws, naming `what`, for one PROJ
- * can't create.
+ * The PJ of a CRS reference. A code goes through `proj_create` (its
+ * definition, `crsDefinition`); a `wkt2` reference through `strictWkt2`,
+ * PROJ's strict WKT parser, never `proj_create`, which would also take a
+ * PROJ string, AUTH:CODE, PROJJSON or WKT1 in a `wkt2` field. A string is a
+ * definition this library or PROJ made (`proj_create`). Throws, naming
+ * `what`, for one PROJ can't create.
  */
 export function crsObject(
   proj: ProjApi,
@@ -359,19 +358,17 @@ export function crsObject(
   if (ref.format === "wkid") {
     return create(proj, crsDefinition(ref), what);
   }
-  const problem = projTokenProblem(ref.wkt2);
-  if (problem !== undefined) {
-    throw new Error(`PROJ: ${what} "${shownCrs(ref)}" ${problem}`);
-  }
-  return create(proj, ref.wkt2, what);
+  return strictWkt2(proj, ref, what);
 }
 
 /**
  * A WKT2 reference parsed by PROJ's strict WKT parser
  * (`proj_create_from_wkt`, STRICT=YES), never `proj_create`, which would also
- * take a PROJ string, AUTH:CODE or PROJJSON: for WKT from untrusted data,
- * checked before anything else uses it (`georeferenceTileset`). It must also
- * hold no PROJ-string token. Throws, naming `what` and PROJ's parse error.
+ * take a PROJ string, AUTH:CODE or PROJJSON: every `wkt2` reference
+ * (`crsObject`), and a tileset's declared WKT2 before anything else uses it
+ * (`georeferenceTileset`). It must first be WKT2 in form (`wkt2Problem`: a
+ * WKT2 CRS keyword, so not WKT1, and no PROJ-string token). Throws, naming
+ * `what` and the problem or PROJ's parse error.
  * The PJ needs no proj_destroy: proj.js frees it when its wrapper is
  * garbage-collected (see `creates` in proj.ts).
  */
@@ -380,7 +377,7 @@ export function strictWkt2(
   ref: { readonly format: "wkt2"; readonly wkt2: string },
   what: string,
 ): PJ {
-  const problem = projTokenProblem(ref.wkt2);
+  const problem = wkt2Problem(ref.wkt2);
   if (problem !== undefined) {
     throw new Error(`PROJ: ${what} "${shownCrs(ref)}" ${problem}`);
   }

@@ -105,7 +105,7 @@ import {
   loadOrionTrack,
   orionPlace,
 } from "../../examples/frames-explorer/orionTrack.ts";
-import { loadProj } from "../../src/engineering/proj.ts";
+import { gridSource, loadProj } from "../../src/engineering/proj.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
@@ -115,6 +115,8 @@ import { EarthOrientationParameters } from "../../src/time/eop.ts";
 import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
 const dir = framesDataDirectory();
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const bytes = (file: string): ArrayBuffer => {
   const b = readFileSync(join(dir, file));
   return b.buffer.slice(
@@ -136,7 +138,9 @@ const frames = createFrames({
 const orion = orionFromOem(readFileSync(join(dir, ORION_OEM), "utf8"), frames);
 const context = (): StressContext => ({
   frames,
-  loadProj: () => loadProj({ base: `${join(dir, "proj")}/` }),
+  loadProj: () => loadProj({ base: `${join(dir, "proj")}/`, grids: GRIDS }),
+  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them.
+  loadGridSource: () => gridSource({ base: `${join(dir, "grids")}/` }),
   loadOrion: () => Promise.resolve(orion),
   loadStations: () => Promise.resolve(bytes(STATIONS_SPK)),
   manifest: JSON.parse(

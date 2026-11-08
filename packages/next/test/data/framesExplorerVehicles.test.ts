@@ -83,7 +83,7 @@ import {
 } from "../../examples/frames-explorer/tests.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
-import { loadProj } from "../../src/engineering/proj.ts";
+import { gridSource, loadProj } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
@@ -115,9 +115,13 @@ const frames = createFrames({
   warnings: [],
 } satisfies FrameData);
 const base = `${join(dir, "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const context = (): StressContext => ({
   frames,
-  loadProj: () => loadProj({ base }),
+  loadProj: () => loadProj({ base, grids: GRIDS }),
+  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them.
+  loadGridSource: () => gridSource({ base: `${join(dir, "grids")}/` }),
   loadOrion: () => Promise.reject(new Error("no Orion here")),
   manifest: JSON.parse(
     readFileSync(join(dir, "manifest.json"), "utf8"),
@@ -281,7 +285,7 @@ describe("the drone: what the camera looks at, on the design grid", () => {
       checkedTdb("drone"),
     );
     const fp = e.answer.footprint!;
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const ca = EngineeringFrame.create(
       { name: "ca", body: EARTH, crs: BIM_CRS["ca-zone-3"].crs },
       P,
@@ -438,7 +442,7 @@ describe("the ship: its place on the port's grid, and its sight line to the ligh
     const s = spec("ship");
     const t = checkedTdb("ship");
     const e = await client.scenario("ship", s.checked.knobs, t);
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const ca = EngineeringFrame.create(
       { name: "ca", body: EARTH, crs: BIM_CRS["ca-zone-3"].crs },
       P,

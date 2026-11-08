@@ -110,6 +110,20 @@ describe("one explicit grid set (Node)", () => {
     expect(out[2]).toBeLessThan(55);
   });
 
+  it("loads no grid when grids is omitted: Node has no legacy default, so it sees exactly the grids listed (plan call 5, Task 21)", async () => {
+    // GEOID18 is in base and in setup's manifest, which the legacy default
+    // read; nothing in this file loads it.
+    const P = await loadProj({ base });
+    expect(loadedGrids(P).has(GEOID18)).toBe(false);
+    expect(
+      listOperations(
+        P,
+        { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+        WGS84_3D,
+      ).flatMap((c) => c.missingGrids),
+    ).toContain(GEOID18);
+  });
+
   it("keeps a grid that sits in base but wasn't named out of PROJ's reach", async () => {
     // GEOID18 is in the store's proj/, beside proj.db, but this PROJ was
     // loaded with grids: [], so it reads from its own staging directory.

@@ -426,6 +426,36 @@ export const GROUP_INFO: readonly GroupInfo[] = [
       text: "Ashby & Patla (2024): 56.02 µs/day.",
     },
   },
+  // 4b: tilesets and the PROJ-data catalog's geoids (Task 21).
+  {
+    id: "tileset-placement",
+    needs: ["proj", "geoid"],
+    name: "Tileset placement",
+    question:
+      "Does a tileset land where its design says, placed rigidly or reprojected?",
+    lenses: ["bim", "civil"],
+    focus: { frames: [...CALIFORNIA_SITE] },
+    accuracyNote:
+      "exact arithmetic: both placements through the same pinned GEOID18 operation",
+    compared: {
+      kind: "formula",
+      text: "Each placement's own inverse, and the rigid sag by hand: d²/2R less GEOID18's rise, and d(s/k̄ − 1) + d³/3R² along the line.",
+    },
+  },
+  {
+    id: "global-geoids",
+    needs: ["proj"],
+    name: "Global geoids",
+    question: "Do heights match each country's published geoid values?",
+    lenses: ["civil", "gis", "offshore"],
+    focus: { frames: ["ITRF"] },
+    accuracyNote:
+      "each publisher's stated precision, as geoids.json records it",
+    compared: {
+      kind: "published",
+      text: "Each geoid publisher's own test values (geoids.json): Ordnance Survey, NSGI, Geoscience Australia, GSI, NGS and NGA.",
+    },
+  },
   // Virtual: every fingerprinted result, whatever its own group.
   {
     id: "reproducibility",

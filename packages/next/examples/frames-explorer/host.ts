@@ -15,7 +15,11 @@
 import { MissingDataError, isMissing } from "./errors.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
-import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
+import {
+  gridSource,
+  loadProj,
+  type ProjApi,
+} from "../../src/engineering/proj.ts";
 import {
   FRAME_DATA_ROLES,
   loadFrameData,
@@ -454,6 +458,9 @@ export function createHost(
           }),
           ...(raw.loadStations !== undefined && {
             loadStations: () => raw.loadStations!(),
+          }),
+          ...(raw.loadGridSource !== undefined && {
+            loadGridSource: () => raw.loadGridSource!(),
           }),
         },
       }));
@@ -990,6 +997,9 @@ export function createHost(
 
 const SETUP = "run `npm run setup` and restart the dev server";
 
+/** The dev server's grid endpoint (vite.config.ts): catalog grids only, each verified. */
+const GRID_BASE = "/proj-grids/";
+
 /** The store's manifest, or `MissingDataError` when the store isn't served. */
 async function fetchManifest(root: string): Promise<StoreManifest> {
   const url = `${root}manifest.json`;
@@ -1163,6 +1173,9 @@ export function browserContext(base = "/frames-data/"): MakeContext {
         await need("GEOID18", [`proj/${GEOID}`]);
         await loadProj({ base: projBase, grids: [GEOID], onProgress: onProj });
       },
+      // The PROJ-data catalog's grids, served (and verified) by the dev
+      // server's /proj-grids/ (the global geoids, Task 21).
+      loadGridSource: () => gridSource({ base: GRID_BASE }),
       // 26 kB, checked against the manifest like the rest; fetched once.
       loadStations: once(async () => {
         const listed = await need("The DSN stations", [STATIONS_SPK]);

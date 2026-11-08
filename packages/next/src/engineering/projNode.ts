@@ -74,7 +74,6 @@ interface NodeFs {
     path: string,
     options: { recursive?: boolean; force: boolean },
   ): Promise<void>;
-  access(path: string): Promise<void>;
   lstat(path: string): Promise<NodeStats>;
   open(path: string, flags: number): Promise<NodeFileHandle>;
   readonly constants: {
@@ -180,30 +179,6 @@ async function manifestSha256(file: string): Promise<string> {
     throw new Error(`PROJ: ${path} lists no ${file}; ${SETUP}`);
   }
   return entry.sha256;
-}
-
-/**
- * The legacy default grid set: every `.tif` in `base` that setup's manifest
- * lists under `proj/` (GEOID18, in today's store).
- */
-export async function manifestGridNames(base: string): Promise<string[]> {
-  const { access } = await nodeImport<NodeFs>("node:fs/promises");
-  const { join } = await nodeImport<NodePath>("node:path");
-  const directory = await directoryOf(base);
-  const names: string[] = [];
-  for (const { file } of (await manifestFiles()).files) {
-    const name =
-      typeof file === "string" ? /^proj\/([\w.-]+\.tif)$/.exec(file)?.[1] : "";
-    if (name) {
-      try {
-        await access(join(directory, name));
-        names.push(name);
-      } catch {
-        // Listed, but not in this base.
-      }
-    }
-  }
-  return names;
 }
 
 /**

@@ -20,6 +20,8 @@ import { EARTH } from "../../src/scene/Body.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const ANCHOR = [6_080_000, 2_110_000, 100];
 const CRS = {
   format: "wkid",
@@ -35,7 +37,7 @@ async function californiaFrame() {
       body: EARTH,
       crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
     },
-    await loadProj({ base }),
+    await loadProj({ base, grids: GRIDS }),
   );
 }
 
@@ -120,7 +122,7 @@ describe("checkRigidTransform", () => {
 
 describe("georeferenceTileset", () => {
   it("places a rigid declaration whose root transform agrees", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const matrix = placeRigid(await californiaFrame(), ANCHOR).rigid!.matrix;
     const tileset = standIn(matrix, {
       name: "Corridor",
@@ -138,7 +140,7 @@ describe("georeferenceTileset", () => {
   });
 
   it("refuses an anchor that disagrees with the root transform, and warns", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const matrix = placeRigid(await californiaFrame(), ANCHOR).rigid!.matrix;
     // Declared 1 ftUS east of where the root transform was made.
     const tileset = standIn(matrix, {
@@ -156,7 +158,7 @@ describe("georeferenceTileset", () => {
   });
 
   it("names the frame after the tileset's URL when the declaration has no name", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const tileset = standIn(m4.mat4(), {
       crs: CRS,
       placement: { mode: "reprojected" },
@@ -182,13 +184,15 @@ describe("a wkt2 CRS reference", () => {
               wkt2: "+proj=utm +zone=11 +datum=WGS84 +units=m +type=crs",
             },
           },
-          await loadProj({ base }),
+          await loadProj({ base, grids: GRIDS }),
         ))(),
-    ).rejects.toThrow(/must be WKT: it holds a PROJ-string token/);
+      // Not WKT2 in form: strict WKT2 (Task 21) refuses it by its keyword
+      // first, before PROJ sees it.
+    ).rejects.toThrow(/must be WKT2: it must start with a WKT2 CRS keyword/);
   });
 
   it("from a tileset goes through PROJ's strict WKT parser", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const good = proj.proj_as_wkt(
       proj.proj_create("EPSG:32611"),
       proj.PJ_WKT2_2019,
@@ -231,7 +235,7 @@ describe("a wkt2 CRS reference", () => {
 
 describe("a CRS from ESRI_crs or EXT_geospatial_crs_source alone", () => {
   it("places a rigid tileset whose CRS is only ESRI_crs's", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const matrix = placeRigid(await californiaFrame(), ANCHOR).rigid!.matrix;
     const tileset = standIn(
       matrix,
@@ -260,7 +264,7 @@ describe("a CRS from ESRI_crs or EXT_geospatial_crs_source alone", () => {
   });
 
   it("places a tileset whose CRS is only EXT_geospatial_crs_source's WKT2, through the strict parser", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const good = proj.proj_as_wkt(
       proj.proj_create("EPSG:32611"),
       proj.PJ_WKT2_2019,
@@ -322,7 +326,7 @@ describe("two declared CRSs, judged by PROJ", () => {
   });
 
   it("agree when a code and its WKT2 are the same CRS, and place", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const wkt2 = proj.proj_as_wkt(
       proj.proj_create("EPSG:32611"),
       proj.PJ_WKT2_2019,
@@ -335,7 +339,7 @@ describe("two declared CRSs, judged by PROJ", () => {
   });
 
   it("are refused when PROJ says they differ, naming both paths, with a warning", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const wkt2 = proj.proj_as_wkt(
       proj.proj_create("EPSG:32610"),
       proj.PJ_WKT2_2019,
@@ -359,7 +363,7 @@ describe("two declared CRSs, judged by PROJ", () => {
 
 describe("a vertical CRS in another registry (vcsAuthority)", () => {
   it("resolves Esri's EPSG:32610 with ESRI:115700, read from ESRI_crs", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     const declared = standIn(
       m4.mat4(),
       { placement: { mode: "reprojected" } },
@@ -382,7 +386,7 @@ describe("a vertical CRS in another registry (vcsAuthority)", () => {
   });
 
   it("fails at PROJ's lookup, naming the definition, when the vertical code's registry is wrong", async () => {
-    const proj = await loadProj({ base });
+    const proj = await loadProj({ base, grids: GRIDS });
     await expect(
       (async () =>
         EngineeringFrame.create(

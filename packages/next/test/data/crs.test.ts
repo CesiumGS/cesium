@@ -1,8 +1,8 @@
 // CRS references and recorded PROJ operations (plan 4a task 2), against the
 // frames data store and pyproj's fixture (test/fixtures/frames/proj.json,
 // scripts/frameFixtures.py). `npm run test:data` runs it. PROJ here loads
-// with the legacy default grids (GEOID18); the cases without any grid are in
-// crsNoGrids.test.ts, a process of their own.
+// GEOID18, named (`GRIDS`; Node has no default grids since Task 21); the
+// cases without any grid are in crsNoGrids.test.ts, a process of their own.
 import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -21,6 +21,8 @@ import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
 import fixture from "../fixtures/frames/proj.json";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
 const GEOID = "us_noaa_g2018u0.tif";
 // 1200/3937 m. PROJ stores the double one ulp above JavaScript's 1200 / 3937
 // (0.30480060960121924 against 0.3048006096012192), so compare within 1e-16.
@@ -84,7 +86,7 @@ describe("CRS references", () => {
   });
 
   it("records the Moon's geographic CRS code found in proj.db (R4)", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(MOON_GEOGRAPHIC_CRS).toBe("IAU_2015:30100");
     expect(P.proj_get_name(P.proj_create(MOON_GEOGRAPHIC_CRS))).toBe(
       "Moon (2015) - Sphere / Ocentric",
@@ -96,7 +98,7 @@ describe("recorded operations against pyproj (to 1e-6 m)", () => {
   for (const c of cases) {
     describe(c.name, () => {
       it("records the operation pyproj chose, with its grids", async () => {
-        const P = await loadProj({ base });
+        const P = await loadProj({ base, grids: GRIDS });
         const op = resolveOperation(P, ref(c.source), c.target);
         const bare = (s: string) => s.replace(/\+/g, "").trim();
         expect(bare(op.pipeline)).toBe(bare(c.pyprojPipeline));
@@ -107,7 +109,7 @@ describe("recorded operations against pyproj (to 1e-6 m)", () => {
       });
 
       it("transforms forward and inverse like pyproj", async () => {
-        const P = await loadProj({ base });
+        const P = await loadProj({ base, grids: GRIDS });
         const op = resolveOperation(P, ref(c.source), c.target);
         const unit = c.metersPerUnit;
         const vertical = c.metersPerVerticalUnit;
@@ -131,7 +133,7 @@ describe("recorded operations against pyproj (to 1e-6 m)", () => {
   }
 
   it("writes into the caller's array and returns it", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const op = resolveOperation(P, ref("EPSG:32611"), "EPSG:4979");
     const out = new Float64Array(3);
     expect(op.forward([500000, 0, 7], out)).toBe(out);
@@ -142,7 +144,7 @@ describe("recorded operations against pyproj (to 1e-6 m)", () => {
 
 describe("the geoid (Review Focus 1)", () => {
   it("records GEOID18 as a grid of the NAVD88 operation", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const op = resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979");
     expect(op.grids).toContain(GEOID);
     expect(op.pipeline).toContain(GEOID);
@@ -154,7 +156,7 @@ describe("the geoid (Review Focus 1)", () => {
     // another would search the first one's (the old regression, when the
     // binding read PROJ_DATA at first use). Now the second throws. Its files
     // are good copies, so this is the base rule speaking, not a refusal.
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const other = mkdtempSync(join(tmpdir(), "proj-second-base-"));
     try {
       for (const name of ["proj_capi.node", "proj.db"]) {
@@ -164,7 +166,7 @@ describe("the geoid (Review Focus 1)", () => {
         `PROJ: this process loaded PROJ from ${base.slice(0, -1)}; it can't also load ${other}`,
       );
       // The first base is unaffected, and still reads its geoid.
-      expect(await loadProj({ base })).toBe(P);
+      expect(await loadProj({ base, grids: GRIDS })).toBe(P);
       const op = resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979");
       expect(op.grids).toContain(GEOID);
     } finally {
@@ -173,7 +175,7 @@ describe("the geoid (Review Focus 1)", () => {
   });
 
   it("uses a pinned pipeline as given", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const pipeline =
       "+proj=pipeline +step +inv +proj=utm +zone=11 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +xy_out=deg";
     const op = resolveOperation(P, ref("EPSG:32611"), "EPSG:4979", {
@@ -186,7 +188,7 @@ describe("the geoid (Review Focus 1)", () => {
 
 describe("units come from the CRS (R5, Review Focus 2)", () => {
   it("reads the US survey foot and the international foot", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const us = crsUnits(P, ref("EPSG:2227"));
     expect(Math.abs(us.metersPerUnit - US_SURVEY_FOOT)).toBeLessThan(1e-16);
     expect(us.horizontalUnitName).toBe("US survey foot");
@@ -196,7 +198,7 @@ describe("units come from the CRS (R5, Review Focus 2)", () => {
   });
 
   it("reads a compound CRS's vertical axis separately", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const units = crsUnits(P, ref("EPSG:6420+6360"));
     expect(Math.abs(units.metersPerUnit - US_SURVEY_FOOT)).toBeLessThan(1e-16);
     expect(units.verticalUnitName).toBe("US survey foot");
@@ -206,22 +208,58 @@ describe("units come from the CRS (R5, Review Focus 2)", () => {
   });
 
   it("reads units from a WKT2 definition too", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const wkt2 = P.proj_as_wkt(P.proj_create("EPSG:2223"), P.PJ_WKT2_2019);
     expect(crsUnits(P, { format: "wkt2", wkt2 }).metersPerUnit).toBe(0.3048);
   });
 });
 
+describe("a wkt2 reference is read as strict WKT2, wherever it is used (Task 11's carry-in, Task 21)", () => {
+  // A WKT2 BOUNDCRS whose ABRIDGEDTRANSFORMATION gives its parameters units:
+  // PROJ's lax path (proj_create) takes it, its WKT2 grammar doesn't.
+  const united = (P: ProjApi) =>
+    `BOUNDCRS[SOURCECRS[${P.proj_as_wkt(P.proj_create("EPSG:23031"), P.PJ_WKT2_2019)}],TARGETCRS[GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563]],CS[ellipsoidal,2],AXIS["latitude",north],AXIS["longitude",east],ANGLEUNIT["degree",0.0174532925199433]]],ABRIDGEDTRANSFORMATION["offsets",METHOD["Geographic2D offsets",ID["EPSG",9619]],PARAMETER["Latitude offset",-3.5,ANGLEUNIT["arc-second",4.84813681109536E-06]],PARAMETER["Longitude offset",-4.5,ANGLEUNIT["arc-second",4.84813681109536E-06]]]]`;
+
+  it("refuses WKT1, naming WKT2, in crsUnits, resolveOperation and listOperations alike", async () => {
+    const P = await loadProj({ base, grids: GRIDS });
+    const wkt1 = P.proj_as_wkt(
+      P.proj_create("EPSG:2223"),
+      (P as unknown as { PJ_WKT1_GDAL: ProjApi["PJ_WKT2_2019"] }).PJ_WKT1_GDAL,
+    );
+    expect(wkt1).toMatch(/^PROJCS\[/);
+    const wkt1Ref: CrsRef = { format: "wkt2", wkt2: wkt1 };
+    expect(() => crsUnits(P, wkt1Ref)).toThrow(/must be WKT2/);
+    expect(() => resolveOperation(P, wkt1Ref, "EPSG:4979")).toThrow(
+      /must be WKT2/,
+    );
+    expect(() => listOperations(P, wkt1Ref, ref("EPSG:4979"))).toThrow(
+      /must be WKT2/,
+    );
+  });
+
+  it("refuses WKT2 that only PROJ's lax parser takes, with PROJ's strict parse error", async () => {
+    const P = await loadProj({ base, grids: GRIDS });
+    const wkt2 = united(P);
+    // The lax path makes a bound CRS of it.
+    expect(P.proj_get_type(P.proj_create(wkt2))).toBe(P.PJ_TYPE_BOUND_CRS);
+    const laxRef: CrsRef = { format: "wkt2", wkt2 };
+    expect(() => crsUnits(P, laxRef)).toThrow(/strict WKT2/);
+    expect(() => resolveOperation(P, laxRef, "EPSG:4979")).toThrow(
+      /strict WKT2/,
+    );
+  });
+});
+
 describe("operations that cannot be done", () => {
   it("throws outside the geoid's coverage or for non-finite input", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const op = resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979");
     expect(() => op.forward([0, 0, 0])).toThrow(RangeError);
     expect(() => op.forward([Number.NaN, 1, 1])).toThrow();
   });
 
   it("throws for a code PROJ does not have", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(() =>
       resolveOperation(
         P,
@@ -232,7 +270,7 @@ describe("operations that cannot be done", () => {
   });
 
   it("throws for CRSs PROJ cannot relate, as a plain Error", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(() =>
       resolveOperation(P, ref(MOON_GEOGRAPHIC_CRS), "EPSG:4979"),
     ).toThrow(
@@ -273,7 +311,7 @@ describe("coordinate epoch (a dynamic datum's time-dependent operation)", () => 
   const point = [-2700000, -4290000, 3860000];
 
   it("evaluates at the source's epoch; none gives a stable result", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const at = (epoch?: number) =>
       resolveOperation(
         P,
@@ -295,7 +333,7 @@ describe("coordinate epoch (a dynamic datum's time-dependent operation)", () => 
   });
 
   it("round trips at the same epoch", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const op = resolveOperation(P, { ...itrf, epoch: 2030 }, "EPSG:6318");
     const back = op.inverse(op.forward(point));
     for (let i = 0; i < 3; i++) {
@@ -308,7 +346,7 @@ describe("Operation candidates (listOperations)", () => {
   const geographic3d = ref("EPSG:4979");
 
   it("lists PROJ's candidates, and resolveOperation records the first its rule accepts", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const candidates = listOperations(P, ref("EPSG:6420+6360"), geographic3d);
     expect(candidates.length).toBeGreaterThan(1);
     // The documented rule: the first instantiable, non-ballpark candidate
@@ -343,7 +381,7 @@ describe("Operation candidates (listOperations)", () => {
   });
 
   it("marks a ballpark candidate, with no accuracy", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const candidates = listOperations(P, ref("EPSG:4230"), geographic3d);
     const ballpark = candidates.filter((c) => c.ballpark);
     expect(ballpark.length).toBeGreaterThan(0);
@@ -354,7 +392,7 @@ describe("Operation candidates (listOperations)", () => {
   });
 
   it("lists nothing for CRSs PROJ cannot relate, and throws for an unknown code", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(listOperations(P, ref(MOON_GEOGRAPHIC_CRS), geographic3d)).toEqual(
       [],
     );
@@ -455,7 +493,7 @@ describe("Operation candidates (listOperations)", () => {
   });
 
   it("gives plain data (structured-clone safe)", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const candidates = listOperations(P, ref("EPSG:6420+6360"), geographic3d);
     expect(structuredClone(candidates)).toEqual(candidates);
   });
@@ -470,7 +508,7 @@ describe("an area of interest (ruling F8)", () => {
     c.instantiable && !c.ballpark && c.missingGrids.length === 0;
 
   it("lists the ED50 transformations that cover the point, which PROJ's default drops", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     // Without one, every real ED50 to WGS 84 transformation covers only part
     // of ED50's area, so PROJ keeps only the ballpark.
     const all = listOperations(P, ed50, geographic3d);
@@ -492,7 +530,7 @@ describe("an area of interest (ruling F8)", () => {
   });
 
   it("lets resolveOperation take the first of those candidates its rule accepts", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     expect(() => resolveOperation(P, ed50, "EPSG:4979")).toThrow(
       /only a ballpark operation/,
     );
@@ -509,7 +547,7 @@ describe("an area of interest (ruling F8)", () => {
   });
 
   it("refuses an area that is not a box of degrees", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     for (const areaOfInterest of [
       { west: 2.9, south: 56.1, east: 3.1, north: 55.9 },
       { west: 2.9, south: -91, east: 3.1, north: 55.9 },
@@ -526,7 +564,7 @@ describe("an area of interest (ruling F8)", () => {
   });
 
   it("reads a box across 180° (west greater than east) as across it", async () => {
-    const P = await loadProj({ base });
+    const P = await loadProj({ base, grids: GRIDS });
     const fiji = ref("EPSG:4720");
     const accurate = (areaOfInterest: {
       west: number;

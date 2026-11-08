@@ -11,6 +11,8 @@ import { loadProj } from "../../src/engineering/proj.ts";
 import { EARTH } from "../../src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: none (Node, like the browser, loads only grids it names; Task 21). */
+const GRIDS: string[] = [];
 // Lambert-93 (EPSG:2154) with a TOWGS84 translation that makes the datum
 // operation visible (a real one is metres; this one is ~11 m).
 const LAMBERT93 =
@@ -19,7 +21,7 @@ const SHIFT = [10, 5, 2];
 const design = [700_000, 6_600_000, 100];
 
 async function frames() {
-  const P = await loadProj({ base });
+  const P = await loadProj({ base, grids: GRIDS });
   const bound = P.proj_create(
     `${LAMBERT93} +towgs84=${SHIFT.join(",")},0,0,0,0`,
   );
@@ -119,7 +121,7 @@ describe("realistic datum shifts round-trip exactly", () => {
   ];
   for (const [label, definition, [e, n]] of cases) {
     it(`${label}: design to body-fixed and back within 1e-6 m at h = 0, 100, 1000`, async () => {
-      const P = await loadProj({ base });
+      const P = await loadProj({ base, grids: GRIDS });
       const wkt2 = P.proj_as_wkt(P.proj_create(definition), P.PJ_WKT2_2019);
       const frame = EngineeringFrame.create(
         { name: "f", body: EARTH, crs: { format: "wkt2", wkt2 } },

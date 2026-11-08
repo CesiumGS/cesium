@@ -1,7 +1,7 @@
 // The stress-test runner: result and case types, judging (R7, R12) and
 // running with needs loaded once (R6, R13).
 import { type CrsRef, resolveOperation } from "../../../src/engineering/crs.ts";
-import type { ProjApi } from "../../../src/engineering/proj.ts";
+import type { GridSource, ProjApi } from "../../../src/engineering/proj.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
 import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
 import { Trajectory } from "../../../src/trajectory/Trajectory.ts";
@@ -149,6 +149,13 @@ export interface DataContext {
    * proj.db). The runner then checks that NAVD88 heights resolve through it.
    */
   loadGeoid?(): Promise<void>;
+  /**
+   * The PROJ-data catalog's grids (a `GridSource`: the browser's
+   * `/proj-grids/`, Node's store `grids/`), for cases that load grids beyond
+   * GEOID18 into `loadProj`'s PROJ (the global geoids, Task 21). Absent, or
+   * rejecting, such a case reports its grids as missing.
+   */
+  loadGridSource?(): Promise<GridSource>;
   /** The frames store's manifest, for the fingerprints' grid SHA-256 values. */
   readonly manifest?: StoreManifest;
   /** Fetches the manifest, called once when a case with a need runs. */
@@ -744,6 +751,9 @@ export class Needs {
       loadOrion: () => ctx.loadOrion(),
       ...(ctx.loadGeoid && { loadGeoid: () => ctx.loadGeoid!() }),
       ...(ctx.loadStations && { loadStations: () => ctx.loadStations!() }),
+      ...(ctx.loadGridSource && {
+        loadGridSource: () => ctx.loadGridSource!(),
+      }),
       ...(manifest !== undefined &&
         "value" in manifest &&
         manifest.value !== undefined && { manifest: manifest.value }),

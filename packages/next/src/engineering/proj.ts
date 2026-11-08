@@ -29,7 +29,6 @@ import { checkGrid, verify } from "./projCheck.ts";
 import {
   isNode,
   loadNodeProj,
-  manifestGridNames,
   readNodeFile,
   RESERVED_NAMES,
   stageNodeGrid,
@@ -48,8 +47,8 @@ export interface LoadProjOptions {
   /**
    * Grids to load: `loadGrids(api, await gridSource({ base }), grids)`, so
    * `base` must then hold the PROJ-data catalog (setup links it into
-   * `proj/`). Omitted, the browser loads none, and Node loads every `.tif`
-   * in `base` that setup's manifest lists (a legacy default, to be removed).
+   * `proj/`). Omitted or empty, none is loaded, in the browser and in Node
+   * alike: PROJ sees exactly the grids loaded explicitly (plan 4b's call 5).
    */
   readonly grids?: readonly string[];
   /**
@@ -300,14 +299,8 @@ export async function loadProj(options: LoadProjOptions): Promise<ProjApi> {
       : undefined;
   source?.catch(() => {});
   const api = await entry;
-  const names = grids ?? (isNode() ? await manifestGridNames(base) : []);
-  if (names.length > 0) {
-    await loadGrids(
-      api,
-      await (source ?? gridSource({ base, ...catalogPins })),
-      names,
-      { onProgress },
-    );
+  if (source !== undefined) {
+    await loadGrids(api, await source, grids!, { onProgress });
   }
   return api;
 }
