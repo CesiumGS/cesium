@@ -46,3 +46,8 @@ export const MOON: Body = {
   ellipsoid: Ellipsoid.MOON,
   naifId: 301,
 };
+
+/** @internal Names a body by its name and NAIF id (`World.bodyAnchor`). */
+export function bodyKey(body: Body): string {
+  return `${body.name}\u0000${body.naifId ?? ""}`;
+}

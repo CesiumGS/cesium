@@ -58,6 +58,8 @@ export {
   type WorldMemory,
   type SubmissionMode,
   type TransformHandle,
+  type AnchorHandle,
+  type TransformFrameKey,
   type InstanceOptions,
   type CastRay,
   type CastOptions,
@@ -149,7 +151,7 @@ export {
   type TerrainClipRectangle,
   type TerrainClipRegion,
 } from "./globe/terrainClip.ts";
-export { MAX_TERRAIN_CLIPS } from "./render/layout.ts";
+export { MAX_ANCHORS, MAX_TERRAIN_CLIPS } from "./render/layout.ts";
 export {
   BudgetedSelection,
   type BudgetedOptions,

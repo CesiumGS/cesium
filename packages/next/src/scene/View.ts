@@ -1,8 +1,9 @@
-import { Camera, projectToPixel } from "./Camera.ts";
-import type { World } from "./World.ts";
+import { Camera, projectToPixel, type CameraPose } from "./Camera.ts";
+import type { AnchorHandle, World } from "./World.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
-import type { ViewLighting } from "../render/layout.ts";
+import { MAX_ANCHORS, type ViewLighting } from "../render/layout.ts";
 import { EARTH, type Body } from "./Body.ts";
+import { rigidMatrixError } from "../math/transforms.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
 export interface Viewport {
@@ -263,6 +264,70 @@ export class OffscreenTarget implements RenderTarget {
   destroy(): void {
     this.texture?.destroy();
   }
+}
+
+const IDENTITY_16 = Float64Array.of(
+  1,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  1,
+);
+const scratchPlacement = new Float64Array(16);
+
+/**
+ * `out` = R v (+ t for a point), for a column-major rigid `m`; a copy of
+ * `v` without one (the identity, bit for bit).
+ */
+function rotate(
+  m: ArrayLike<number> | undefined,
+  v: ArrayLike<number>,
+  out: Float64Array,
+  point: boolean,
+): void {
+  if (!m) {
+    out[0] = v[0]!;
+    out[1] = v[1]!;
+    out[2] = v[2]!;
+    return;
+  }
+  const x = v[0]!,
+    y = v[1]!,
+    z = v[2]!;
+  const w = point ? 1 : 0;
+  out[0] = m[0]! * x + m[4]! * y + m[8]! * z + m[12]! * w;
+  out[1] = m[1]! * x + m[5]! * y + m[9]! * z + m[13]! * w;
+  out[2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]! * w;
+}
+
+/** `out` = Rᵀ (v - t for a point), for a column-major rigid `m`; a copy without one. */
+function inverseRotate(
+  m: ArrayLike<number> | undefined,
+  v: ArrayLike<number>,
+  out: Float64Array,
+  point: boolean,
+): void {
+  if (!m) {
+    rotate(undefined, v, out, point);
+    return;
+  }
+  const x = v[0]! - (point ? m[12]! : 0),
+    y = v[1]! - (point ? m[13]! : 0),
+    z = v[2]! - (point ? m[14]! : 0);
+  out[0] = m[0]! * x + m[1]! * y + m[2]! * z;
+  out[1] = m[4]! * x + m[5]! * y + m[6]! * z;
+  out[2] = m[8]! * x + m[9]! * y + m[10]! * z;
 }
 
 /** A line list drawn on top of a view. */
@@ -652,6 +717,176 @@ export class View {
 
   private readonly rect: PixelRect = { x: 0, y: 0, width: 1, height: 1 };
 
+  // ------------------------------------------------------- anchor placements
+
+  /** Render space ← anchor, by slot (16 float64 each); slot 0: no anchor. */
+  private readonly placements = new Float64Array(MAX_ANCHORS * 16);
+  /**
+   * The anchor each slot's placement was set for; a slot whose anchor was
+   * removed (and the slot reused) reads as the identity again.
+   */
+  private readonly placementOwners: Array<AnchorHandle | undefined> = [];
+  /** Slots whose placement is not the identity. */
+  private readonly placed = new Uint8Array(MAX_ANCHORS);
+  private anchorRevision_ = 0;
+
+  /**
+   * Counts changes to this view's anchor placements (`setAnchorPlacement`):
+   * a placement set to the value it has doesn't count.
+   */
+  get anchorRevision(): number {
+    return this.anchorRevision_;
+  }
+
+  /**
+   * The view's body's anchor (`World.bodyAnchor(view.body)`) if the world
+   * has made it; undefined until then (content is then in render space).
+   */
+  get bodyAnchor(): AnchorHandle | undefined {
+    return this.world.findBodyAnchor(this.body);
+  }
+
+  /**
+   * Render space ← `anchor` for this view (column-major float64, rigid):
+   * the identity until set. `undefined` is no anchor: the transform
+   * table's root.
+   */
+  anchorPlacement(
+    anchor: AnchorHandle | undefined,
+    out = new Float64Array(16),
+  ): Float64Array {
+    const slot = this.placementSlot(anchor, "anchorPlacement");
+    if (this.placed[slot] === 1) {
+      out.set(this.placements.subarray(slot * 16, slot * 16 + 16));
+    } else {
+      out.fill(0);
+      out[0] = out[5] = out[10] = out[15] = 1;
+    }
+    return out;
+  }
+
+  /**
+   * Places `anchor` (or, with `undefined`, the table's root) in this view's
+   * render space: `matrix` is render space ← anchor, column-major float64,
+   * a rotation (columns orthonormal within 1e-9) and a translation. Refuses
+   * any other matrix, naming the anchor. Stored, and drawn from the
+   * following render; `anchorRevision` counts it only when a value changes.
+   */
+  setAnchorPlacement(
+    anchor: AnchorHandle | undefined,
+    matrix: ArrayLike<number>,
+  ): void {
+    const slot = this.placementSlot(anchor, "setAnchorPlacement");
+    const name = anchor ? anchor.name : "the transform table's root";
+    const error = rigidMatrixError(matrix);
+    if (error) {
+      throw new Error(
+        `setAnchorPlacement: ${name}'s placement is not rigid: ${error}.`,
+      );
+    }
+    const current = this.anchorPlacement(anchor, scratchPlacement);
+    let same = true;
+    for (let i = 0; i < 16; i++) {
+      if (current[i] !== matrix[i]) {
+        same = false;
+        break;
+      }
+    }
+    if (same) {
+      return;
+    }
+    let identity = true;
+    for (let i = 0; i < 16; i++) {
+      const v = matrix[i]!;
+      this.placements[slot * 16 + i] = v;
+      if (v !== IDENTITY_16[i]) {
+        identity = false;
+      }
+    }
+    this.placed[slot] = identity ? 0 : 1;
+    this.placementOwners[slot] = anchor;
+    this.anchorRevision_++;
+    this.wake?.();
+  }
+
+  /**
+   * This view's camera re-expressed in `anchor`'s coordinates (`undefined`:
+   * the table's root), through its placement: written into `out` (a new
+   * camera by default), field of view and near plane copied.
+   */
+  anchorCamera(anchor: AnchorHandle | undefined, out = new Camera()): Camera {
+    const m = this.placementOf(anchor, "anchorCamera");
+    const camera = this.camera;
+    // anchor ← render space is the transpose of the rotation, and minus the
+    // rotated-back translation: p' = Rᵀ (p - t).
+    inverseRotate(m, camera.position, out.position, true);
+    inverseRotate(m, camera.direction, out.direction, false);
+    inverseRotate(m, camera.up, out.up, false);
+    inverseRotate(m, camera.right, out.right, false);
+    if (out !== camera) {
+      out.fov = camera.fov;
+      out.near = camera.near;
+    }
+    out.version++;
+    return out;
+  }
+
+  /**
+   * Sets this view's camera from a pose in `anchor`'s coordinates
+   * (`undefined`: the table's root): `anchorCamera`'s inverse.
+   */
+  setCameraFromAnchor(
+    anchor: AnchorHandle | undefined,
+    pose: CameraPose,
+  ): void {
+    const m = this.placementOf(anchor, "setCameraFromAnchor");
+    const camera = this.camera;
+    // Read the pose first: it may be the camera itself.
+    const p0 = pose.position[0]!,
+      p1 = pose.position[1]!,
+      p2 = pose.position[2]!;
+    const d = Float64Array.from(pose.direction);
+    const u = Float64Array.from(pose.up);
+    const r = Float64Array.from(pose.right);
+    rotate(m, [p0, p1, p2], camera.position, true);
+    rotate(m, d, camera.direction, false);
+    rotate(m, u, camera.up, false);
+    rotate(m, r, camera.right, false);
+    camera.version++;
+  }
+
+  /** An anchor's placement, or undefined at the identity. */
+  private placementOf(
+    anchor: AnchorHandle | undefined,
+    caller: string,
+  ): Float64Array | undefined {
+    const slot = this.placementSlot(anchor, caller);
+    return this.placed[slot] === 1
+      ? this.placements.subarray(slot * 16, slot * 16 + 16)
+      : undefined;
+  }
+
+  /** An anchor's slot, checked against this view's world. */
+  private placementSlot(
+    anchor: AnchorHandle | undefined,
+    caller: string,
+  ): number {
+    if (!anchor) {
+      return 0;
+    }
+    if (this.world.anchorOf(anchor) !== anchor) {
+      throw new Error(
+        `${caller}: ${anchor.name} is not an anchor of this view's world.`,
+      );
+    }
+    if (this.placementOwners[anchor.slot] !== anchor) {
+      // The slot's last placement was for a removed anchor.
+      this.placementOwners[anchor.slot] = anchor;
+      this.placed[anchor.slot] = 0;
+    }
+    return anchor.slot;
+  }
+
   /**
    * Viewport in target pixels. The returned object is reused: it is current
    * until the next call.
@@ -681,13 +916,24 @@ export class View {
   }
 
   /**
-   * Where an Earth-fixed position shows in this view with its current camera:
-   * CSS pixels from the view's top-left (as `pickDesign` takes them), or
-   * undefined when the position is behind the camera or nearer than its
-   * near plane (not drawn). Off-screen positions in front of it give pixels
-   * outside the view.
+   * Where a position in `anchor`'s coordinates (by default the view's body
+   * anchor: Earth-fixed for the Earth; render space while the world has
+   * none) shows in this view with its current camera: CSS pixels from the
+   * view's top-left (as `pickDesign` takes them), or undefined when the
+   * position is behind the camera or nearer than its near plane (not
+   * drawn). Off-screen positions in front of it give pixels outside the
+   * view.
    */
-  toPixel(position: ArrayLike<number>): Float64Array | undefined {
+  toPixel(
+    position: ArrayLike<number>,
+    anchor: AnchorHandle | undefined = this.bodyAnchor,
+  ): Float64Array | undefined {
+    const m = this.placementOf(anchor, "toPixel");
+    if (m) {
+      const p = new Float64Array(3);
+      rotate(m, position, p, true);
+      position = p;
+    }
     const rect = this.pixelRect();
     const ratio =
       this.target instanceof CanvasTarget ? this.target.pixelRatio : 1;

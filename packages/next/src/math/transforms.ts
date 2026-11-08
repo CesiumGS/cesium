@@ -84,3 +84,45 @@ export function splitVec3(
     lo[loOffset + i] = Math.fround(value - h);
   }
 }
+
+/**
+ * Why a column-major 4×4 matrix is not a rigid placement (a rotation and a
+ * translation), or undefined when it is one: every value finite, the
+ * rotation's columns orthonormal within `tolerance`, no mirror, and the
+ * bottom row exactly (0, 0, 0, 1).
+ */
+export function rigidMatrixError(
+  m: ArrayLike<number>,
+  tolerance = 1e-9,
+): string | undefined {
+  if (m.length < 16) {
+    return "it has fewer than 16 values";
+  }
+  for (let i = 0; i < 16; i++) {
+    if (!Number.isFinite(m[i])) {
+      return "it has a value that is not finite";
+    }
+  }
+  if (m[3] !== 0 || m[7] !== 0 || m[11] !== 0 || m[15] !== 1) {
+    return "its bottom row is not (0, 0, 0, 1)";
+  }
+  for (let a = 0; a < 3; a++) {
+    for (let b = a; b < 3; b++) {
+      const dot =
+        m[a * 4]! * m[b * 4]! +
+        m[a * 4 + 1]! * m[b * 4 + 1]! +
+        m[a * 4 + 2]! * m[b * 4 + 2]!;
+      if (Math.abs(dot - (a === b ? 1 : 0)) > tolerance) {
+        return "its rotation's columns are not orthonormal";
+      }
+    }
+  }
+  const det =
+    m[0]! * (m[5]! * m[10]! - m[9]! * m[6]!) -
+    m[4]! * (m[1]! * m[10]! - m[9]! * m[2]!) +
+    m[8]! * (m[1]! * m[6]! - m[5]! * m[2]!);
+  if (det < 0) {
+    return "it mirrors";
+  }
+  return undefined;
+}

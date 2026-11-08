@@ -1,6 +1,7 @@
 entry	name	kind	tier
 .	AEROSOLS	const	-
 .	AerosolType	type	-
+.	AnchorHandle	interface	-
 .	BASE_BINDING_LIMITS	const	-
 .	BASE_CAPACITY_LIMITS	const	-
 .	BingImagery	class	-
@@ -71,6 +72,7 @@ entry	name	kind	tier
 .	LightOptions	interface	-
 .	LimitsTier	type	-
 .	LoadProgress	type	-
+.	MAX_ANCHORS	const	-
 .	MAX_CLIP_FRAGMENT_EDGES	const	-
 .	MAX_TERRAIN_CLIPS	const	-
 .	MAX_TERRAIN_CLIP_VERTICES	const	-
@@ -145,6 +147,7 @@ entry	name	kind	tier
 .	TilesetOptions	interface	-
 .	TilesetStats	interface	-
 .	ToneMapping	type	-
+.	TransformFrameKey	interface	-
 .	TransformHandle	interface	-
 .	Translucency	type	-
 .	UNITLESS_EXPOSURE	const	-

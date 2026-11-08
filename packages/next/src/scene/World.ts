@@ -40,6 +40,7 @@ import {
   CLIP_BOXES,
   CLIP_BOX_FLOATS,
   CLIP_BLOCK_ROWS,
+  MAX_ANCHORS,
   MAX_TERRAIN_CLIPS,
   MAX_TERRAIN_CLIP_BLOCKS,
   TERRAIN_CLIP_WORD,
@@ -57,7 +58,9 @@ import {
   type MaterialData,
   type MeshStreams,
 } from "../render/layout.ts";
-import { splitHigh, splitVec3 } from "../math/transforms.ts";
+import { rigidMatrixError, splitHigh, splitVec3 } from "../math/transforms.ts";
+import { bodyKey, type Body } from "./Body.ts";
+import type { FrameKey } from "../camera/frameResolver.ts";
 import { TerrainClipError } from "../globe/terrainClip.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -232,7 +235,17 @@ export interface DrawOptions {
    * it, `origin` and `model` place the draw and it owns its transform.
    */
   transform?: TransformHandle;
-  /** Float64 Earth-fixed origin of `model` (without `transform`). */
+  /**
+   * What the transform the draw owns (placed by `origin` and `model`)
+   * hangs under: an anchor (`addAnchor`, `bodyAnchor`) or any transform.
+   * Without it the draw is under no anchor, in render space, as every draw
+   * was before anchors. Not with `transform`.
+   */
+  parent?: TransformHandle;
+  /**
+   * Float64 origin of `model` (without `transform`), relative to `parent`:
+   * Earth-fixed under the Earth's anchor.
+   */
   origin?: Vec3;
   /** Rotation, scale and small offsets relative to `origin`. */
   model?: Mat4;
@@ -374,6 +387,25 @@ export interface CastOptions {
 export interface TransformHandle {
   readonly index: number;
   readonly generation: number;
+}
+
+/**
+ * A top-level transform whose placement in render space is set per view
+ * (`View.setAnchorPlacement`); content under it keeps its anchor-relative
+ * transforms (spec section 7.4). Its own matrix is the identity, forever.
+ * It names a reference frame: a body's fixed axes for a body anchor.
+ */
+export interface AnchorHandle extends TransformHandle, FrameKey {
+  /** Its slot in each view's anchor table, 1 to `MAX_ANCHORS` - 1. */
+  readonly slot: number;
+  /** The body it belongs to (`World.bodyAnchor`), if any. */
+  readonly body?: Body;
+}
+
+/** A transform node as a reference frame (`World.frameOf`). */
+export interface TransformFrameKey extends FrameKey {
+  readonly world: World;
+  readonly transform: TransformHandle;
 }
 
 interface Batch {
@@ -627,6 +659,24 @@ export class World {
   /** Hidden by itself, and by itself or an ancestor. */
   private transformHidden: Uint8Array;
   private transformHiddenWorld: Uint8Array;
+  /**
+   * The anchor slot a transform hangs under (0: none), inherited from its
+   * parent; an anchor's own slot for an anchor.
+   */
+  private transformAnchor: Uint8Array;
+  /** Anchors by slot; slot 0 ("no anchor") stays empty. */
+  private readonly anchorSlots: Array<AnchorHandle | undefined> = [];
+  /** Anchors' places in the table root, by slot (16 float64 each). */
+  private readonly anchorPlaces = new Float64Array(MAX_ANCHORS * 16);
+  private readonly bodyAnchors = new Map<string, AnchorHandle>();
+  private anchorList: readonly AnchorHandle[] | undefined;
+  /** `frameOf`'s keys by transform slot. */
+  private readonly transformFrames = new Map<number, TransformFrameKey>();
+  /**
+   * The transform table's own top level, where transforms under no anchor
+   * sit (render space, as every draw was before anchors).
+   */
+  readonly root: FrameKey = Object.freeze({ name: "transform table" });
   /** Point and spot lights by slot (`addLight`), free slots undefined. */
   private readonly lights: Array<LightOptions | undefined> = [];
   private readonly lightGenerations: number[] = [];
@@ -926,6 +976,7 @@ export class World {
     this.transformLive = new Uint8Array(t);
     this.transformHidden = new Uint8Array(t);
     this.transformHiddenWorld = new Uint8Array(t);
+    this.transformAnchor = new Uint8Array(t);
     this.transformPendingFlag = new Uint8Array(t);
     this.transformStamp = new Uint32Array(t);
     this.instances = new MirroredTable(
@@ -1666,6 +1717,7 @@ export class World {
       this.transformLive = resized(this.transformLive, t);
       this.transformHidden = resized(this.transformHidden, t);
       this.transformHiddenWorld = resized(this.transformHiddenWorld, t);
+      this.transformAnchor = resized(this.transformAnchor, t);
       this.transformPendingFlag = resized(this.transformPendingFlag, t);
       this.transformStamp = resized(this.transformStamp, t);
     }
@@ -1873,6 +1925,14 @@ export class World {
 
   addDraw(options: DrawOptions): DrawHandle {
     // Checked before anything is allocated.
+    if (options.parent && options.transform) {
+      throw new Error(
+        "addDraw: a parent is for the transform a draw owns (origin and model), not with a shared transform.",
+      );
+    }
+    if (options.parent && !this.transformAlive(options.parent)) {
+      throw new Error("addDraw: the parent was removed.");
+    }
     const streams = options.instances?.streams;
     for (const [name, { offset, components }] of Object.entries(
       streams?.layout ?? {},
@@ -1959,7 +2019,7 @@ export class World {
       m[13] = origin[1]! + m[13]!;
       m[14] = origin[2]! + m[14]!;
       try {
-        transform = this.addTransform(m).index;
+        transform = this.addTransform(m, options.parent).index;
       } catch (error) {
         this.freeSlots.push(index);
         releasePoints();
@@ -2581,8 +2641,10 @@ export class World {
 
   /**
    * Adds a placement: `matrix` (column-major float64) relative to `parent`,
-   * or Earth-fixed without one. Draws, other transforms and instanced
-   * draws' instances hang off it; moving it moves them all.
+   * or in the table's root (render space) without one. Under an anchor
+   * (`addAnchor`, `bodyAnchor`) it is in the anchor's coordinates: under
+   * the Earth's, Earth-fixed. Draws, other transforms and instanced draws'
+   * instances hang off it; moving it moves them all.
    */
   addTransform(
     matrix: ArrayLike<number>,
@@ -2608,6 +2670,9 @@ export class World {
     this.transformChildren[index] = undefined;
     this.transformLive[index] = 1;
     this.transformHidden[index] = 0;
+    this.transformAnchor[index] = parent
+      ? this.transformAnchor[parent.index]!
+      : 0;
     this.pendTransform(index);
     return { index, generation: this.transformGeneration[index]! };
   }
@@ -2616,6 +2681,12 @@ export class World {
   setTransform(handle: TransformHandle, matrix: ArrayLike<number>): void {
     if (!this.transformAlive(handle)) {
       return;
+    }
+    const anchor = this.anchorAt(handle.index);
+    if (anchor) {
+      throw new Error(
+        `setTransform: ${anchor.name} is an anchor, whose matrix is the identity; place it per view (View.setAnchorPlacement) or in the table root (placeAnchor).`,
+      );
     }
     this.transformLocal.set(matrix, handle.index * 16);
     this.pendTransform(handle.index);
@@ -2646,7 +2717,12 @@ export class World {
     return out;
   }
 
-  /** A transform's Earth-fixed matrix (float64), composed with its parents. */
+  /**
+   * A transform's matrix (float64) composed with its parents, relative to
+   * its anchor (`anchorOf`), or to the table root under no anchor: under
+   * the Earth's anchor, Earth-fixed. With every anchor placed at the
+   * identity, render space too.
+   */
   worldMatrix(
     handle: TransformHandle,
     out = new Float64Array(16),
@@ -2659,8 +2735,9 @@ export class World {
   }
 
   /**
-   * A draw's Earth-fixed matrix (float64): its transform's `worldMatrix`,
-   * shared or its own. Undefined once the draw is removed.
+   * A draw's matrix (float64) relative to its anchor, or to the table root
+   * under no anchor: its transform's `worldMatrix`, shared or its own.
+   * Undefined once the draw is removed.
    */
   drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
     handle: DrawHandle,
@@ -2677,13 +2754,19 @@ export class World {
 
   /**
    * Removes a transform and its descendants. Draws placed by them must be
-   * removed first.
+   * removed first. An anchor goes through `removeAnchor`.
    */
   removeTransform(handle: TransformHandle): void {
     if (!this.transformAlive(handle)) {
       return;
     }
     const index = handle.index;
+    const anchor = this.anchorAt(index);
+    if (anchor) {
+      throw new Error(
+        `removeTransform: ${anchor.name} is an anchor; remove it with removeAnchor.`,
+      );
+    }
     const parent = this.transformParent[index]!;
     if (parent >= 0) {
       const siblings = this.transformChildren[parent];
@@ -2710,8 +2793,183 @@ export class World {
     this.transformChildren[index] = undefined;
     this.transformLive[index] = 0;
     this.transformParent[index] = -1;
+    this.transformAnchor[index] = 0;
+    this.transformFrames.delete(index);
     this.transformGeneration[index] = this.transformGeneration[index]! + 1;
     this.freeTransforms.push(index);
+  }
+
+  // --------------------------------------------------------------- anchors
+
+  /**
+   * Adds an anchor: a top-level transform whose matrix is the identity,
+   * forever, and whose placement in render space each view sets
+   * (`View.setAnchorPlacement`). Content hangs under it (`addTransform`'s
+   * parent, `DrawOptions.parent`). With `body`, it is that body's anchor
+   * (`bodyAnchor`). A world holds `MAX_ANCHORS` - 1 (31); one more throws
+   * `CapacityError("anchor table")`.
+   */
+  addAnchor(name: string, options: { body?: Body } = {}): AnchorHandle {
+    const body = options.body;
+    const key = body ? bodyKey(body) : undefined;
+    if (key !== undefined && this.bodyAnchors.has(key)) {
+      throw new Error(
+        `addAnchor: ${body!.name} already has an anchor (${this.bodyAnchors.get(key)!.name}).`,
+      );
+    }
+    let slot = 1;
+    while (slot < MAX_ANCHORS && this.anchorSlots[slot]) {
+      slot++;
+    }
+    if (slot === MAX_ANCHORS) {
+      throw new CapacityError("anchor table");
+    }
+    const transform = this.addTransform(IDENTITY);
+    this.transformAnchor[transform.index] = slot;
+    const anchor: AnchorHandle = Object.freeze({
+      index: transform.index,
+      generation: transform.generation,
+      name,
+      slot,
+      ...(body ? { body } : {}),
+    });
+    this.anchorSlots[slot] = anchor;
+    this.anchorPlaces.set(IDENTITY, slot * 16);
+    if (key !== undefined) {
+      this.bodyAnchors.set(key, anchor);
+    }
+    this.anchorList = undefined;
+    return anchor;
+  }
+
+  /**
+   * The body's anchor, made on first ask and named after the body: one per
+   * body, by its name and NAIF id (plan 5a's call 19).
+   */
+  bodyAnchor(body: Body): AnchorHandle {
+    return (
+      this.bodyAnchors.get(bodyKey(body)) ?? this.addAnchor(body.name, { body })
+    );
+  }
+
+  /** @internal The body's anchor if the world has made it (`View.bodyAnchor`). */
+  findBodyAnchor(body: Body): AnchorHandle | undefined {
+    return this.bodyAnchors.get(bodyKey(body));
+  }
+
+  /** The world's anchors, by slot. */
+  get anchors(): readonly AnchorHandle[] {
+    return (this.anchorList ??= Object.freeze(
+      this.anchorSlots.filter((a): a is AnchorHandle => a !== undefined),
+    ));
+  }
+
+  /** The anchor a transform hangs under (itself for an anchor), or undefined under none. */
+  anchorOf(handle: TransformHandle): AnchorHandle | undefined {
+    if (!this.transformAlive(handle)) {
+      return undefined;
+    }
+    return this.anchorSlots[this.transformAnchor[handle.index]!];
+  }
+
+  /**
+   * Sets an anchor's place in the table root (column-major float64, rigid):
+   * where the core's own frame resolver finds it. Views place anchors in
+   * render space themselves (`View.setAnchorPlacement`); this moves no
+   * content. Default: the identity.
+   */
+  placeAnchor(anchor: AnchorHandle, matrix: ArrayLike<number>): void {
+    this.checkAnchor(anchor, "placeAnchor");
+    const error = rigidMatrixError(matrix);
+    if (error) {
+      throw new Error(
+        `placeAnchor: ${anchor.name}'s place is not rigid: ${error}.`,
+      );
+    }
+    for (let i = 0; i < 16; i++) {
+      this.anchorPlaces[anchor.slot * 16 + i] = matrix[i]!;
+    }
+  }
+
+  /** An anchor's place in the table root (`placeAnchor`), float64. */
+  anchorMatrix(anchor: AnchorHandle, out = new Float64Array(16)): Float64Array {
+    this.checkAnchor(anchor, "anchorMatrix");
+    out.set(
+      this.anchorPlaces.subarray(anchor.slot * 16, anchor.slot * 16 + 16),
+    );
+    return out;
+  }
+
+  /**
+   * Removes an anchor, freeing its slot. Throws, naming it, while any
+   * transform hangs under it.
+   */
+  removeAnchor(anchor: AnchorHandle): void {
+    if (
+      !this.transformAlive(anchor) ||
+      this.anchorSlots[anchor.slot] !== anchor
+    ) {
+      return;
+    }
+    if ((this.transformChildren[anchor.index]?.length ?? 0) > 0) {
+      throw new Error(
+        `removeAnchor: transforms still hang under ${anchor.name}; remove them first.`,
+      );
+    }
+    this.anchorSlots[anchor.slot] = undefined;
+    if (anchor.body) {
+      this.bodyAnchors.delete(bodyKey(anchor.body));
+    }
+    this.anchorList = undefined;
+    this.freeTransformTree(anchor.index);
+    this.version++;
+  }
+
+  /**
+   * A transform node as a reference frame a rig can name, carrying its
+   * world and handle: the same key for the same node, under the name it
+   * was first given.
+   */
+  frameOf(handle: TransformHandle, name: string): TransformFrameKey {
+    if (!this.transformAlive(handle)) {
+      throw new Error(`frameOf: the transform for ${name} was removed.`);
+    }
+    const known = this.transformFrames.get(handle.index);
+    if (known) {
+      if (known.name !== name) {
+        throw new Error(
+          `frameOf: the transform is already the reference frame ${known.name}, not ${name}.`,
+        );
+      }
+      return known;
+    }
+    const key: TransformFrameKey = Object.freeze({
+      name,
+      world: this,
+      transform: Object.freeze({
+        index: handle.index,
+        generation: handle.generation,
+      }),
+    });
+    this.transformFrames.set(handle.index, key);
+    return key;
+  }
+
+  /** The anchor at a transform slot, if that transform is one. */
+  private anchorAt(index: number): AnchorHandle | undefined {
+    const anchor = this.anchorSlots[this.transformAnchor[index]!];
+    return anchor?.index === index ? anchor : undefined;
+  }
+
+  private checkAnchor(anchor: AnchorHandle, caller: string): void {
+    if (
+      this.anchorSlots[anchor.slot] !== anchor ||
+      !this.transformAlive(anchor)
+    ) {
+      throw new Error(
+        `${caller}: ${anchor.name} is not an anchor of this world.`,
+      );
+    }
   }
 
   private pendTransform(index: number): void {
@@ -2757,7 +3015,9 @@ export class World {
     this.transformStamp[index] = stamp;
     const parent = this.transformParent[index]!;
     const world = this.transformWorld;
-    if (parent >= 0) {
+    // An anchor's matrix is the identity: its children's are their own,
+    // bit for bit (as before anchors, at the top level).
+    if (parent >= 0 && this.anchorAt(parent) === undefined) {
       multiplyInto(
         world,
         index * 16,

@@ -258,6 +258,11 @@ export const CLIP_BLOCK_ROWS = (CLIP_BOXES * CLIP_BOX_FLOATS) / 4;
  */
 export const MAX_TERRAIN_CLIPS = 32;
 /**
+ * Anchor slots per view (`World.addAnchor`). Slot 0 is "no anchor" (the
+ * transform table's root), so a world holds 31 anchors.
+ */
+export const MAX_ANCHORS = 32;
+/**
  * Clip blocks one terrain clip region takes at most (its packed rows,
  * `CLIP_BLOCK_ROWS` a block). All `MAX_TERRAIN_CLIPS` regions at this
  * size take 3,840 blocks, which the world sets aside from its placeholders'
