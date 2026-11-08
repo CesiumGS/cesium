@@ -16,6 +16,18 @@ export const SLICE_GROW_AT = 0.9;
 export const SLICE_SHRINK_AT = 0.5;
 /** Updates in a row (about 10 seconds at 60 frames a second). */
 export const SLICE_SHRINK_AFTER = 600;
+/**
+ * Ticks a growth's error scope may take to resolve (about 2 seconds at 60
+ * frames a second). Browsers always resolve it; past this the pending
+ * array is freed and growth stops as after an out-of-memory error.
+ */
+export const SLICE_GROWTH_TIMEOUT = 120;
+/**
+ * Ticks after growth stopped (out of memory, or a scope that timed out)
+ * before it tries once more (about 10 seconds at 60 frames a second). A
+ * second failure stops it for the pool's life.
+ */
+export const SLICE_GROWTH_RETRY_AFTER = 600;
 
 /** A layer using the pool (GlobeImagery). */
 export interface SliceUser {
@@ -53,8 +65,9 @@ export interface SliceUser {
  * - Growing on need allocates the larger array inside an out-of-memory
  *   error scope and switches to it once the scope reports no error: at
  *   most one growth is in flight, so at most one whole-array copy a frame.
- *   On an error the pool stays at its size, stops growing, and says so
- *   once (`usage().warning`).
+ *   On an error, or a scope still open after 120 ticks, the pool stays at
+ *   its size and says so once (`usage().warning`). It tries once more
+ *   after 600 ticks; a second failure stops growth for the pool's life.
  * - At the ceiling, layers short of slices take whole steps from layers
  *   holding more than their part of it, parts in proportion to need.
  *
@@ -104,7 +117,8 @@ export class SlicePool {
    * - `used`: slices holding imagery (cached). It reaches capacity by
    *   design.
    * - `capacity`: the array's layers; `ceiling`: the most it may grow to.
-   * - `warning`: why it stopped growing below the ceiling (out of memory).
+   * - `warning`: why it stopped growing below the ceiling (out of memory,
+   *   or an error scope that didn't resolve).
    */
   static usage(world: World):
     | {
@@ -148,10 +162,18 @@ export class SlicePool {
   private destroyed = false;
   /** The most it may grow to: the ceiling, or less after out of memory. */
   private limit: number;
-  /** A larger array is being allocated (`grow`). */
-  private growing = false;
+  /** The larger array being allocated (`grow`), and the tick it began. */
+  private pending?: { texture: GPUTexture; target: number; since: number };
   /** Bumped by every resize, so a growth that resolves late is dropped. */
   private version = 0;
+  /**
+   * Ticks: updates of the first user (every layer updates once a frame).
+   * Times growth's error scopes and its retry.
+   */
+  private tick = 0;
+  /** After growth stopped: the tick to try again at, while a retry is left. */
+  private retryAt?: number;
+  private retried = false;
   /** Why growth stopped below the ceiling, once it has. */
   private warning?: string;
   readonly mipLevelCount: number;
@@ -203,7 +225,7 @@ export class SlicePool {
 
   /** A larger array is being allocated: shares may lag what was asked. */
   get resizing(): boolean {
-    return this.growing;
+    return this.pending !== undefined;
   }
 
   /**
@@ -215,6 +237,9 @@ export class SlicePool {
     const d = this.users.get(user);
     if (!d) {
       return;
+    }
+    if (this.users.keys().next().value === user) {
+      this.advance();
     }
     d.need = needed;
     if (needed > SLICE_GROW_AT * d.asked) {
@@ -288,33 +313,69 @@ export class SlicePool {
   }
 
   /**
+   * One tick: times out a growth whose error scope hasn't resolved, and
+   * lifts the limit for the one retry once its cool-down is over.
+   */
+  private advance(): void {
+    this.tick++;
+    const pending = this.pending;
+    if (pending && this.tick - pending.since >= SLICE_GROWTH_TIMEOUT) {
+      // Freed now; its scope, if it ever resolves, finds it stale.
+      this.pending = undefined;
+      pending.texture.destroy();
+      this.stopGrowing(
+        `the error scope growing to ${pending.target} layers didn't resolve in ${SLICE_GROWTH_TIMEOUT} ticks`,
+      );
+    }
+    if (this.retryAt !== undefined && this.tick >= this.retryAt) {
+      this.retryAt = undefined;
+      this.retried = true;
+      this.limit = this.ceiling;
+    }
+  }
+
+  /**
    * Toward what the users asked for (within the limit): a larger array is
    * allocated inside an out-of-memory error scope, and switched to once the
    * scope reports no error. One at a time.
    */
   private grow(): void {
-    if (this.growing || this.destroyed) {
+    if (this.pending || this.destroyed) {
       return;
     }
     const target = Math.min(this.wanted, this.limit);
     if (target <= this.capacity) {
       return;
     }
-    this.growing = true;
     const version = this.version;
     this.device.pushErrorScope("out-of-memory");
     const texture = this.create(target);
+    const pending = { texture, target, since: this.tick };
+    this.pending = pending;
     const settle = (error: unknown) => {
-      this.growing = false;
-      if (error) {
-        texture.destroy();
-        this.outOfMemory(target);
+      if (this.pending !== pending) {
+        // Timed out: already freed.
         return;
       }
-      if (this.destroyed || version !== this.version) {
-        // Resized meanwhile (a layer joined or left): asked again later.
+      this.pending = undefined;
+      // Resized meanwhile (a layer joined or left), or no longer wanted
+      // this large: dropped, asked again later. An error for a size no
+      // longer asked for says nothing about the next.
+      if (
+        this.destroyed ||
+        version !== this.version ||
+        target > Math.min(this.wanted, this.limit)
+      ) {
         texture.destroy();
         return;
+      }
+      if (error) {
+        texture.destroy();
+        this.stopGrowing(`out of GPU memory growing to ${target} layers`);
+        return;
+      }
+      if (this.retried) {
+        this.warning = undefined;
       }
       this.switchTo(texture, target);
     };
@@ -322,16 +383,20 @@ export class SlicePool {
   }
 
   /**
-   * A larger array failed to allocate: stay at this size, scale the users'
-   * slices to fit it, and warn once.
+   * Growth failed (out of memory, or a scope that timed out): stay at this
+   * size, scale the users' slices to fit it, and warn once. It tries once
+   * more after `SLICE_GROWTH_RETRY_AFTER` ticks.
    */
-  private outOfMemory(target: number): void {
+  private stopGrowing(why: string): void {
     const wanted = this.wanted;
     this.limit = this.capacity;
     for (const d of this.users.values()) {
       d.asked = Math.floor((d.asked * this.capacity) / wanted);
     }
-    this.warning ??= `imagery slices: out of GPU memory growing to ${target} layers; staying at ${this.capacity}`;
+    this.warning ??= `imagery slices: ${why}; staying at ${this.capacity}`;
+    if (!this.retried) {
+      this.retryAt = this.tick + SLICE_GROWTH_RETRY_AFTER;
+    }
   }
 
   /** A free slice, or undefined when none is left. */
@@ -355,6 +420,9 @@ export class SlicePool {
       return;
     }
     if (this.users.size > 0) {
+      // Even when nothing shrinks: a growth pending for the leaver's
+      // slices is dropped, not switched to.
+      this.version++;
       this.shrink();
       return;
     }

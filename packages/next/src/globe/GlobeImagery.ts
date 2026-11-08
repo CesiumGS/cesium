@@ -37,6 +37,12 @@ const PARAMS_BYTES = 1056;
 const PARAMS_STRIDE = 1280;
 /** Compositing passes per frame (each a source tile or a mip). */
 const PASSES_PER_FRAME = 256;
+/**
+ * Drawn tiles a layer over its share gives up a slice for, per update, at
+ * the ceiling (`trim`): a step of 256 handed over in 16 updates, about a
+ * quarter of a second, near the pace the taker composites at (23 a frame).
+ */
+const HANDOVER_PER_UPDATE = 16;
 /** Decoded source tiles kept for later composites (about 256 KB each). */
 const MAX_SOURCES = 512;
 
@@ -319,7 +325,7 @@ export class GlobeImagery implements SliceUser {
     // Grown before compositing, so this frame's tiles find free slices.
     this.pool.demand(this, this.needed);
     this.drawn = order.map(([tile]) => tile);
-    this.trim(order);
+    this.trim(order, frame);
     // Fetch sources, nearest tiles first, within the origin's window.
     for (const [tile] of order) {
       const job = this.jobs.get(tile);
@@ -449,27 +455,35 @@ export class GlobeImagery implements SliceUser {
   /**
    * Gives back the slices over this layer's share, which falls below what
    * it holds only at the ceiling, when another layer took a step of its
-   * slices (`SlicePool.demand`): least recently used first, then this
-   * frame's farthest tiles. Not while a larger array is allocated.
+   * slices (`SlicePool.demand`). Those not drawn this update go first,
+   * least recently used first; then at most `HANDOVER_PER_UPDATE` drawn
+   * ones, farthest first, so the hand-over spreads over updates instead of
+   * dropping a step of drawn imagery at once. Not while a larger array is
+   * allocated.
    */
-  private trim(order: [Tile, number][]): void {
-    const over = this.slices.size - this.pool.share(this);
+  private trim(order: [Tile, number][], frame: number): void {
+    let over = this.slices.size - this.pool.share(this);
     if (over <= 0 || this.pool.resizing) {
       return;
     }
     const rank = new Map(order.map(([tile], i) => [tile, i]));
-    const victims = [...this.slices]
-      .sort(
-        (a, b) =>
-          a[1].used - b[1].used ||
-          (rank.get(b[0]) ?? 0) - (rank.get(a[0]) ?? 0),
-      )
-      .slice(0, over);
+    const victims = [...this.slices].sort(
+      (a, b) =>
+        a[1].used - b[1].used || (rank.get(b[0]) ?? 0) - (rank.get(a[0]) ?? 0),
+    );
     // A drawn tile left without its slice draws its ancestor's, and asks
     // again next update.
+    let drawn = 0;
     for (const [tile, s] of victims) {
+      if (over <= 0) {
+        break;
+      }
+      if (s.used === frame && ++drawn > HANDOVER_PER_UPDATE) {
+        break;
+      }
       this.slices.delete(tile);
       this.pool.give([s.slice]);
+      over--;
     }
   }
 
