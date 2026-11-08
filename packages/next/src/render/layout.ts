@@ -458,6 +458,13 @@ export interface MeshStreams {
  * A named attribute's key in mesh directories (FNV-1a of its name), which
  * custom shaders' generated readers compare against.
  */
+/**
+ * Entries a mesh's named-attribute directory holds at most (its
+ * attributes, metadata properties and feature table columns): the
+ * constant bounding surface.slang `readNamed`'s loop (the same there).
+ * `World.addMesh` refuses a mesh with more.
+ */
+export const MAX_DIRECTORY_ENTRIES = 256;
 /** Property textures a texture set binds, from this binding (group 2). */
 export const PROPERTY_TEXTURES = 2;
 export const PROPERTY_TEXTURE_BINDING = 20;

@@ -378,4 +378,68 @@ describe("createFramesPickInterpreter", () => {
     expect(point.frame).toBe(itrf);
     expect(point.design).toBeUndefined();
   });
+
+  it("a per-vertex placement: a dual position between its ends has no design; a fitted one adds its bound (plan 5a, Task 19)", () => {
+    const partner = "_PARTNER";
+    const mesh = world.addMesh({
+      ...createBox(),
+      attributes: {
+        [partner]: { data: createBox().positions, components: 3 },
+      },
+    });
+    const morphed = world.addDraw({
+      mesh,
+      origin: Float64Array.of(R, 0, 0),
+      parent: earth,
+    });
+    const interpret = createFramesPickInterpreter(resolver, catalog, {
+      placements: () => placement,
+    });
+    const t = world.createPlacementParameter(0.5);
+    world.setPlacement(morphed, {
+      kind: "dual",
+      semantic: partner,
+      t,
+      maxDistance: 0,
+    });
+    const contentTerms = (point: ReturnType<typeof interpret.interpret>) =>
+      point!.accuracy.terms.filter((term) => term.kind === "content");
+    // Between its ends: neither end's point, so no design coordinates.
+    let point = interpret.interpret(corePick(gcrf, morphed))!;
+    expect(point.design).toBeUndefined();
+    expect(contentTerms(point)).toEqual([]);
+    // At an end: the content's own point.
+    for (const end of [0, 1]) {
+      t.value = end;
+      point = interpret.interpret(corePick(gcrf, morphed))!;
+      expect(point.design?.placement).toBe(placement);
+      expect(contentTerms(point).map((term) => term.meters)).toEqual([0.042]);
+    }
+    // A fitted operation adds its stated bound as a content term.
+    const coefficients = new Float64Array(60);
+    const fitted = {
+      kind: "fitted" as const,
+      center: [0, 0, 0],
+      scale: 1,
+      coefficients,
+      errorBound: 0.03,
+    };
+    world.setPlacement(morphed, fitted);
+    point = interpret.interpret(corePick(gcrf, morphed))!;
+    expect(contentTerms(point).map((term) => term.meters)).toEqual([
+      0.03, 0.042,
+    ]);
+    // A blend weighs its ends' bounds by t.
+    t.value = 0.25;
+    world.setPlacement(morphed, {
+      kind: "blend",
+      from: "identity",
+      to: fitted,
+      t,
+    });
+    point = interpret.interpret(corePick(gcrf, morphed))!;
+    expect(contentTerms(point)[0]!.meters).toBeCloseTo(0.25 * 0.03, 15);
+    expect(contentTerms(point)[0]!.note).toMatch(/blend at t = 0.25/);
+    world.removeDraw(morphed);
+  });
 });

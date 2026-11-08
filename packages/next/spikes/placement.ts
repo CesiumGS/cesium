@@ -58,12 +58,15 @@ const LIMIT = 0.5;
 const MOVED = 5;
 const PARTNER = "_PARTNER";
 
-/** The quad's corners in model coordinates, counterclockwise. */
+/**
+ * The quad's corners in model coordinates, counterclockwise, off z = 0 so
+ * the fitted operations' z terms count.
+ */
 const CORNERS = [
-  [-1, -1, 0],
-  [1, -1, 0],
-  [1, 1, 0],
-  [-1, 1, 0],
+  [-1, -1, 0.15],
+  [1, -1, -0.2],
+  [1, 1, 0.25],
+  [-1, 1, -0.1],
 ] as const;
 /** Each corner's dual position. */
 const PARTNERS = [
@@ -110,7 +113,7 @@ function stop(engine: Engine | undefined): void {
   }
 }
 
-/** A fitted operation over the quad (its radius √2) with every order used. */
+/** A fitted operation over the quad (its radius about 1.44) with every order used. */
 function fitted(scale: number, sign = 1): FittedOperation {
   const coefficients = new Float64Array(PLACEMENT_TERMS * 3);
   const set = (k: number, x: number, y: number, z: number) =>
@@ -121,7 +124,9 @@ function fitted(scale: number, sign = 1): FittedOperation {
   set(4, 0, 0.08, 0); // u.x²
   set(5, 0.12, 0, 0.05); // u.x u.y
   set(10, 0.05, 0.05, 0); // u.x³
-  set(14, 0.02, 0.02, 0.02); // u.x u.y u.z (0 on the quad)
+  set(14, 0.3, 0.3, 0.3); // u.x u.y u.z
+  set(3, 0, 0.4, 0); // u.z
+  set(9, 0.5, 0, 0); // u.z²
   set(16, -0.1, 0, 0.1); // u.y³
   set(13, 0, -0.06, 0); // u.x u.y²
   return {
@@ -195,16 +200,16 @@ async function runPlacement(): Promise<PlacementResult> {
         "dual position, t = 1.5 (extrapolating)",
         { kind: "dual", semantic: PARTNER, t: dualT, maxDistance },
       ],
-      ["fitted operation (orders 0 to 3)", fitted(Math.SQRT2)],
+      ["fitted operation (orders 0 to 3)", fitted(1.5)],
       [
         "blend of the identity and a fitted operation, t = 0.75",
-        { kind: "blend", from: "identity", to: fitted(Math.SQRT2), t: blendT },
+        { kind: "blend", from: "identity", to: fitted(1.5), t: blendT },
       ],
       [
         "blend of two fitted operations, t = −0.5",
         {
           kind: "blend",
-          from: fitted(Math.SQRT2),
+          from: fitted(1.5),
           to: fitted(2, -1),
           t: twoT,
         },

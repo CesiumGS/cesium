@@ -17,6 +17,7 @@ import { DrawArguments } from "../render/drawArguments.ts";
 import {
   checkParameterValue,
   checkPlacement,
+  finite32,
   maxDisplacement,
   type FittedOperation,
   type Placement,
@@ -39,6 +40,7 @@ import {
   instanceDistanceFlags,
   TEXTURE_PROPERTY,
   TEXTURE_PROPERTY_WORDS,
+  MAX_DIRECTORY_ENTRIES,
   attributeHash,
   metadataKey,
   DRAW_ITEM_SIZE,
@@ -1293,6 +1295,16 @@ export class World {
     }
     const tableEntries = table?.entries ?? [];
     const entries = named.length + textured.length + tableEntries.length;
+    if (entries > MAX_DIRECTORY_ENTRIES) {
+      // surface.slang `readNamed` reads this many at most.
+      releaseRanges();
+      if (mesh.featureTable) {
+        this.releaseTable(mesh.featureTable, slab);
+      }
+      throw new RangeError(
+        `addMesh: ${entries} named attributes, metadata properties and feature table columns; a mesh holds at most ${MAX_DIRECTORY_ENTRIES}.`,
+      );
+    }
     if (entries > 0) {
       const directory = new Uint32Array(1 + entries * 3);
       directory[0] = entries;
@@ -3499,6 +3511,11 @@ export class World {
    * nearest hit distance in meters, or undefined. Brute force on the GPU
    * over the draws whose bounds a ray crosses (`raycast.slang`); one
    * readback.
+   *
+   * A draw's per-vertex placement (`setPlacement`) isn't applied: its
+   * triangles are tested where its vertex buffers have them, unplaced
+   * (only its bounds grow), and so is terrain line of sight through the
+   * query interface. Picks read the drawn depth and agree with it.
    */
   async castRays(
     rays: readonly CastRay[],
@@ -3767,7 +3784,7 @@ export class World {
     const word = this.placementTable.allocateParameter(value);
     const slot: ParameterSlot = { word, draws: new Set() };
     let current = value;
-    const changed = () => this.parameterChanged(slot, current);
+    const changed = (old: number) => this.parameterChanged(slot, old, current);
     const parameter: PlacementParameter = Object.seal({
       get value() {
         return current;
@@ -3777,8 +3794,14 @@ export class World {
         if (next === current) {
           return;
         }
+        const old = current;
         current = next;
-        changed();
+        try {
+          changed(old);
+        } catch (error) {
+          current = old; // refused: nothing was written
+          throw error;
+        }
       },
     });
     this.parameters.set(parameter, slot);
@@ -3795,8 +3818,13 @@ export class World {
    * changing its numbers (its parameters are read live). Vertex buffers
    * are never written.
    *
-   * Refuses (nothing changed) a non-finite number, naming its field (plan
-   * 5a's Review Focus 4); a parameter of another world; a dual position
+   * Rays don't see it: `castRays`, and terrain line of sight through the
+   * query interface, test the draw's triangles unplaced. Picks read the
+   * drawn depth, so they agree with it.
+   *
+   * Refuses (nothing changed) a non-finite number, or one past float32's
+   * range where the GPU reads it, naming its field (plan 5a's Review Focus
+   * 4); a parameter of another world; a dual position
    * whose semantic isn't one of the draw's mesh's attributes of 3
    * components; and a billboard or point draw, whose positions are
    * offsets on screen.
@@ -3840,6 +3868,11 @@ export class World {
     }
     const old = this.drawPlacements[index];
     const base = old ? old.base : this.recordsF32[o + RADIUS_WORD]!;
+    const reach = next ? this.placementReach(index, next, base) : 1;
+    const pad = next ? maxDisplacement(next, reach) : 0;
+    if (next) {
+      finite32("setPlacement", "the draw's grown bounding radius", base + pad);
+    }
     this.releasePlacement(index);
     if (!next) {
       if (old) {
@@ -3850,12 +3883,10 @@ export class World {
       }
       return;
     }
-    const reach = this.placementReach(index, next, base);
     const at = this.placementTable.add(
       next,
       (t) => this.parameters.get(t)!.word,
     );
-    const pad = maxDisplacement(next, reach);
     const slots = parametersOf(next).map((t) => this.parameters.get(t)!);
     for (const slot of slots) {
       slot.draws.add(index);
@@ -3882,15 +3913,42 @@ export class World {
   }
 
   /** A parameter changed: its float, and its draws' bounds and views. */
-  private parameterChanged(slot: ParameterSlot, value: number): void {
-    this.placementTable.setParameter(slot.word, value);
+  private parameterChanged(
+    slot: ParameterSlot,
+    old: number,
+    value: number,
+  ): void {
     if (slot.draws.size === 0) {
+      this.placementTable.setParameter(slot.word, value);
       return;
     }
-    let views = 0;
+    // Between 0 and 1 no kind's bounds move (a dual position's are fixed
+    // for |t| ≤ 1, a blend's for 0 ≤ t ≤ 1): the float alone, and every
+    // view redraws, with no walk over the draws (a morph's every tick).
+    if (old >= 0 && old <= 1 && value >= 0 && value <= 1) {
+      this.placementTable.setParameter(slot.word, value);
+      this.version++;
+      this.changedViews = ALL_VIEWS;
+      return;
+    }
+    // The bounds first, all checked before anything is written.
+    const pads: number[] = [];
     for (const index of slot.draws) {
       const placed = this.drawPlacements[index]!;
       const pad = maxDisplacement(placed.placement, placed.reach);
+      finite32(
+        "PlacementParameter",
+        "a draw's grown bounding radius",
+        placed.base + pad,
+      );
+      pads.push(pad);
+    }
+    this.placementTable.setParameter(slot.word, value);
+    let views = 0;
+    let k = 0;
+    for (const index of slot.draws) {
+      const placed = this.drawPlacements[index]!;
+      const pad = pads[k++]!;
       if (pad !== placed.pad) {
         placed.pad = pad;
         this.drawConstants.setRadius(index, placed.base + pad);

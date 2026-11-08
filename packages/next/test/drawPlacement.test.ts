@@ -3,12 +3,14 @@
 // placements buffer, and the frames module's placement query. The GPU
 // side (shaders/placement.slang) is checked against the twins in the
 // browser (spikes/placement.html).
+import { readFileSync } from "node:fs";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { placementOf } from "../src/frames/placementQuery.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import {
   CENTER_WORD,
+  MAX_DIRECTORY_ENTRIES,
   NO_PLACEMENT,
   PLACEMENT_WORD,
   RADIUS_WORD,
@@ -276,6 +278,10 @@ describe("World placements", () => {
     expect(() => {
       p.value = Number.NaN;
     }).toThrow(/value/);
+    expect(() => world.createPlacementParameter(1e39)).toThrow(/float32/);
+    expect(() => {
+      p.value = -4e38;
+    }).toThrow(/float32/);
     expect(p.value).toBe(0.5);
     const draw = addQuad();
     const before = words(draw);
@@ -286,6 +292,35 @@ describe("World placements", () => {
     };
     const cases: Array<[Placement, RegExp]> = [
       [bad(7, 1), /coefficients\[22\]/],
+      // Finite in float64, infinite as the GPU reads it (float32).
+      [
+        fitted({ 3: [0, 4e38, 0] }),
+        /coefficients\[10\] is 4e\+38, past float32/,
+      ],
+      [fitted({}, { center: [0, 0, -1e39] }), /center\[2\].*float32/],
+      [fitted({}, { scale: 1e39 }), /scale.*float32/],
+      [fitted({}, { scale: 1e-39 }), /1 \/ scale.*float32/],
+      [
+        {
+          kind: "blend",
+          from: "identity",
+          to: fitted({}, { scale: 1e-40 }),
+          t: p,
+        },
+        /1 \/ to\.scale/,
+      ],
+      [{ ...dual(p), maxDistance: 1e39 }, /maxDistance.*float32/],
+      // The grown radius itself (base + 2e38 · 2) past float32.
+      [{ ...dual(t(2)), maxDistance: 2e38 }, /grown bounding radius/],
+      // A blend's ends are the identity or fitted operations only.
+      [
+        { kind: "blend", from: dual(p) as never, to: "identity", t: p },
+        /blend's from is a placement of kind dual/,
+      ],
+      [
+        { kind: "blend", from: "identity", to: "fitted" as never, t: p },
+        /blend's to is "fitted"/,
+      ],
       [fitted({}, { center: [0, Infinity, 0] }), /center\[1\]/],
       [fitted({}, { scale: Number.NaN }), /scale/],
       [fitted({}, { scale: 0 }), /scale/],
@@ -330,6 +365,46 @@ describe("World placements", () => {
         new Float64Array(3),
       ),
     ).toThrow(/t \(its value\)/);
+  });
+
+  it("refuses a parameter change that grows a bound past float32, writing nothing", () => {
+    const draw = addQuad();
+    const p = t(0.5);
+    world.setPlacement(draw, dual(p, 1e38));
+    const before = words(draw);
+    const writes = writesDuring(() => {
+      expect(() => {
+        p.value = 5;
+      }).toThrow(/grown bounding radius/);
+    });
+    expect(writes).toEqual([]);
+    expect(p.value).toBe(0.5);
+    expect(words(draw)).toEqual(before);
+    expect(
+      before.table.parameter(before.table.words(before.placement, 1).u32[1]!),
+    ).toBe(0.5);
+    // Within float32 it goes through.
+    p.value = 2;
+    expect(words(draw).radius).toBeCloseTo(
+      Math.fround(before.radius - 1e38 + 2e38),
+      -32,
+    );
+    world.removeDraw(draw);
+  });
+
+  it("refuses a mesh whose named-attribute directory passes readNamed's bound", () => {
+    const attributes: MeshData["attributes"] = {};
+    for (let i = 0; i <= MAX_DIRECTORY_ENTRIES; i++) {
+      attributes[`_A${i}`] = { data: new Float32Array(4), components: 1 };
+    }
+    expect(() => world.addMesh({ ...quad, attributes })).toThrow(
+      new RegExp(
+        `${MAX_DIRECTORY_ENTRIES + 1} named attributes.*at most ${MAX_DIRECTORY_ENTRIES}`,
+      ),
+    );
+    delete attributes[`_A${MAX_DIRECTORY_ENTRIES}`];
+    const mesh = world.addMesh({ ...quad, attributes });
+    world.removeMesh(mesh);
   });
 
   it("refuses a dual position without its attribute, and billboards", () => {
@@ -530,5 +605,46 @@ describe("World placements", () => {
     expect(words(next).placement).toBe(NO_PLACEMENT);
     world.setPlacement(next, fitted({ 0: [0, 1, 0] }));
     expect(words(next).placement).toBe(at);
+  });
+});
+
+describe("placement.slang and the TypeScript agree", () => {
+  const slang = readFileSync(
+    new URL("../src/shaders/placement.slang", import.meta.url),
+    "utf8",
+  );
+  const constant = (name: string, source = slang): number => {
+    const m = new RegExp(
+      String.raw`static\s+const\s+uint\s+${name}\s*=\s*(0x[0-9a-f]+|\d+)u\s*;`,
+      "i",
+    ).exec(source);
+    expect(m, name).not.toBeNull();
+    return Number(m![1]);
+  };
+
+  it("on the terms' exponents, the kinds, NO_PLACEMENT and the bounds", () => {
+    const table = /TERM_POWERS\[(\d+)\]\s*=\s*\{([^}]*)\}/.exec(slang)!;
+    expect(Number(table[1])).toBe(PLACEMENT_TERMS);
+    const powers = table[2]!
+      .split(",")
+      .map((v) => Number(v.trim().replace(/u$/, "")));
+    expect(powers).toEqual(
+      PLACEMENT_MONOMIALS.map(([x, y, z]) => x | (y << 2) | (z << 4)),
+    );
+    expect(constant("PLACEMENT_TERMS")).toBe(PLACEMENT_TERMS);
+    expect(constant("NO_PLACEMENT")).toBe(NO_PLACEMENT);
+    expect(constant("PLACEMENT_DUAL")).toBe(PLACEMENT_KIND.dual);
+    expect(constant("PLACEMENT_FITTED")).toBe(PLACEMENT_KIND.fitted);
+    expect(constant("PLACEMENT_BLEND")).toBe(PLACEMENT_KIND.blend);
+    // A fitted body: its center row, then a row per term.
+    expect(slang).toMatch(/placementRow\(body \+ 1u \+ k\)/);
+    expect(FITTED_ROWS).toBe(1 + PLACEMENT_TERMS);
+    const surface = readFileSync(
+      new URL("../src/shaders/surface.slang", import.meta.url),
+      "utf8",
+    );
+    expect(constant("MAX_DIRECTORY_ENTRIES", surface)).toBe(
+      MAX_DIRECTORY_ENTRIES,
+    );
   });
 });

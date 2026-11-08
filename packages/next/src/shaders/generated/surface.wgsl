@@ -2060,10 +2060,14 @@ fn readNamed( directory_0 : u32,  hash_0 : u32,  vertexIndex_0 : u32,  feature_1
     var i_2 : u32 = u32(0);
     loop
     {
-        if((i_2 < _S210))
+        if((i_2 < u32(256)))
         {
         }
         else
+        {
+            break;
+        }
+        if((i_2 >= _S210))
         {
             break;
         }
@@ -2096,10 +2100,14 @@ fn readNamed( directory_0 : u32,  hash_0 : u32,  vertexIndex_0 : u32,  feature_1
             var c_5 : u32 = u32(0);
             loop
             {
-                if((c_5 < size_2))
+                if((c_5 < u32(4)))
                 {
                 }
                 else
+                {
+                    break;
+                }
+                if((c_5 >= size_2))
                 {
                     break;
                 }

@@ -24,7 +24,14 @@
  *
  * A non-finite parameter, coefficient, center, scale or bound is refused
  * with a `RangeError` naming it, never drawn in the wrong place (plan 5a's
- * Review Focus 4).
+ * Review Focus 4). So is one the GPU can't hold: a number finite in
+ * float64 but not in float32 (past about 3.4 × 10^38), where the GPU
+ * reads it.
+ *
+ * Rays don't see placements: `World.castRays`, and terrain line of sight
+ * through the query interface, test a placed draw's triangles where its
+ * vertex buffers have them, unplaced (its bounds do grow). Picks read the
+ * drawn depth, so they agree with the placement.
  */
 
 /**
@@ -144,9 +151,25 @@ function finite(caller: string, field: string, value: number): void {
   }
 }
 
-/** Refuses a parameter whose value isn't finite (Review Focus 4). */
+/**
+ * `finite`, and finite as the GPU reads it: float32 overflows past about
+ * 3.4 × 10^38 to infinity.
+ */
+export function finite32(caller: string, field: string, value: number): void {
+  finite(caller, field, value);
+  if (!Number.isFinite(Math.fround(value))) {
+    throw new RangeError(
+      `${caller}: ${field} is ${value}, past float32's range: the GPU would read it as infinite.`,
+    );
+  }
+}
+
+/**
+ * Refuses a parameter whose value isn't finite in float64 and float32
+ * (Review Focus 4).
+ */
 export function checkParameterValue(caller: string, value: number): void {
-  finite(caller, "the placement parameter's value", value);
+  finite32(caller, "the placement parameter's value", value);
 }
 
 function checkFitted(caller: string, f: FittedOperation, prefix: string): void {
@@ -156,21 +179,23 @@ function checkFitted(caller: string, f: FittedOperation, prefix: string): void {
     );
   }
   for (let i = 0; i < 3; i++) {
-    finite(caller, `${prefix}center[${i}]`, f.center[i]!);
+    finite32(caller, `${prefix}center[${i}]`, f.center[i]!);
   }
-  finite(caller, `${prefix}scale`, f.scale);
+  finite32(caller, `${prefix}scale`, f.scale);
   if (!(f.scale > 0)) {
     throw new RangeError(
       `${caller}: ${prefix}scale is ${f.scale}; it is the tile's radius, and must be positive.`,
     );
   }
+  // The GPU reads its reciprocal.
+  finite32(caller, `1 / ${prefix}scale`, 1 / f.scale);
   if (f.coefficients.length !== PLACEMENT_TERMS * 3) {
     throw new RangeError(
       `${caller}: ${prefix}coefficients has ${f.coefficients.length} values, not ${PLACEMENT_TERMS * 3} (${PLACEMENT_TERMS} terms per axis).`,
     );
   }
   for (let i = 0; i < f.coefficients.length; i++) {
-    finite(caller, `${prefix}coefficients[${i}]`, f.coefficients[i]!);
+    finite32(caller, `${prefix}coefficients[${i}]`, f.coefficients[i]!);
   }
   finite(caller, `${prefix}errorBound`, f.errorBound);
   if (f.errorBound < 0) {
@@ -192,8 +217,8 @@ export function checkPlacement(caller: string, placement: Placement): void {
       if (typeof placement.semantic !== "string" || !placement.semantic) {
         throw new RangeError(`${caller}: a dual position needs a semantic.`);
       }
-      finite(caller, "t (its value)", placement.t.value);
-      finite(caller, "maxDistance", placement.maxDistance);
+      finite32(caller, "t (its value)", placement.t.value);
+      finite32(caller, "maxDistance", placement.maxDistance);
       if (placement.maxDistance < 0) {
         throw new RangeError(
           `${caller}: maxDistance is ${placement.maxDistance}; a distance is not negative.`,
@@ -204,12 +229,22 @@ export function checkPlacement(caller: string, placement: Placement): void {
       checkFitted(caller, placement, "");
       return;
     case "blend":
-      finite(caller, "t (its value)", placement.t.value);
-      if (placement.from !== "identity") {
-        checkFitted(caller, placement.from, "from.");
-      }
-      if (placement.to !== "identity") {
-        checkFitted(caller, placement.to, "to.");
+      finite32(caller, "t (its value)", placement.t.value);
+      for (const end of ["from", "to"] as const) {
+        const e = placement[end] as unknown;
+        if (e === "identity") {
+          continue;
+        }
+        if (
+          typeof e !== "object" ||
+          e === null ||
+          (e as { kind?: unknown }).kind !== "fitted"
+        ) {
+          throw new RangeError(
+            `${caller}: a blend's ${end} is ${describeEnd(e)}; it takes "identity" or a fitted operation (plan 5a's call 43).`,
+          );
+        }
+        checkFitted(caller, e as FittedOperation, `${end}.`);
       }
       return;
     default:
@@ -217,6 +252,14 @@ export function checkPlacement(caller: string, placement: Placement): void {
         `${caller}: unknown placement kind ${String((placement as { kind: unknown }).kind)}.`,
       );
   }
+}
+
+/** A blend end as a refusal names it. */
+function describeEnd(e: unknown): string {
+  if (typeof e === "object" && e !== null && "kind" in e) {
+    return `a placement of kind ${String((e as { kind: unknown }).kind)}`;
+  }
+  return typeof e === "string" ? `"${e}"` : String(e);
 }
 
 /** `x` to the power `e` (0 to 3). */

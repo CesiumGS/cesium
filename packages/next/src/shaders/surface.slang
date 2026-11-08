@@ -140,6 +140,9 @@ DrawRecord drawRecord(uint index) {
 static const float CITY_LIGHTS_LUMINANCE = 0.3;
 static const float CITY_LIGHTS_FLOOR = 0.004;
 static const uint CLIP_BOXES = 8u;
+// Entries a mesh's named-attribute directory holds at most (layout.ts
+// MAX_DIRECTORY_ENTRIES): `readNamed`'s loop bound.
+static const uint MAX_DIRECTORY_ENTRIES = 256u;
 
 [[vk::binding(0, 2)]] Texture2D<float4> baseColorTexture;
 [[vk::binding(1, 2)]] Texture2D<float4> metallicRoughnessTexture;
@@ -481,13 +484,21 @@ float4 read4(uint offset, uint index) {
 // A named attribute or metadata property of a vertex from its mesh's
 // directory (layout.ts MeshStreams.attributes: count, then per entry the
 // name's hash, stream offset and components); zero where absent.
+//
+// Its loops are bounded by constants (GPU safety; the vertex stage runs it
+// for every dual-placed draw, placement.slang): at most
+// MAX_DIRECTORY_ENTRIES entries (layout.ts the same; `World.addMesh`
+// refuses more), and 4 components.
 export __extern_cpp float4 readNamed(uint directory, uint hash, uint vertexIndex, uint feature) {
   float4 value = float4(0.0);
   if (directory == NO_STREAM) {
     return value;
   }
   uint count = asuint(vertices[directory]);
-  for (uint i = 0u; i < count; i++) {
+  for (uint i = 0u; i < MAX_DIRECTORY_ENTRIES; i++) {
+    if (i >= count) {
+      break;
+    }
     uint entry = directory + 1u + i * 3u;
     if (asuint(vertices[entry]) == hash) {
       uint components = asuint(vertices[entry + 2u]);
@@ -506,7 +517,10 @@ export __extern_cpp float4 readNamed(uint directory, uint hash, uint vertexIndex
         size = components & 0xffu;
       }
       uint b = asuint(vertices[entry + 1u]) + row * size;
-      for (uint c = 0u; c < size; c++) {
+      for (uint c = 0u; c < 4u; c++) {
+        if (c >= size) {
+          break;
+        }
         value[c] = vertices[b + c];
       }
       break;

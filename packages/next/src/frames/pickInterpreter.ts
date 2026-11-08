@@ -5,6 +5,7 @@
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Body } from "../scene/Body.ts";
 import type { CorePick, PickInterpreter } from "../scene/pick.ts";
+import type { Placement } from "../scene/placement.ts";
 import type { AnchorHandle, DrawHandle } from "../scene/World.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { DesignPlacement } from "../streaming/designPlacement.ts";
@@ -30,7 +31,9 @@ export interface FramedPoint {
    * Design coordinates, where the hit draw's content has a placement
    * (`placements`) that can invert the point. A hosted placement's come
    * only from the host's coordinate service (`placeHosted`): without one
-   * the point has its true values only.
+   * the point has its true values only. None while the draw's per-vertex
+   * placement is a dual position between its ends (`t` not 0 or 1): the
+   * point drawn there is neither end's.
    */
   readonly design?: {
     readonly placement: DesignPlacement;
@@ -47,6 +50,9 @@ export interface FramedPoint {
    *   its placement draws the design from where it truly is
    *   (`displayError`; 0 m when reprojected, and when hosted: drawn as
    *   delivered);
+   * - the draw's per-vertex placement's (`kind: "content"`), for a fitted
+   *   operation or a blend (`World.setPlacement`): its stated error bound,
+   *   a blend's ends' weighted by `|1 − t|` and `|t|`, taken as 1σ;
    * - `frame`'s own: each edge from `frame` up to the nearest catalog
    *   reference frame at or above it, as it states its accuracy at the
    *   pick's instant. For content on a body that is its body-fixed
@@ -67,6 +73,13 @@ export interface FramedPoint {
    *   understates where the surface is grazed;
    * - content the `placements` callback gives no placement for: it has no
    *   content term;
+   * - a dual position's: it states no error bound (only its ends are the
+   *   content's points);
+   * - a per-vertex placement's parameter as it was at the pick's tick: the
+   *   placement is read when the pick is interpreted;
+   * - a per-vertex placement between the drawn vertices: the surface is
+   *   flat between the placed vertices, the placement itself curved (a
+   *   fitted operation's `secondDerivativeBound` bounds the difference);
    * - the coordinate operation's own accuracy behind `design` (the
    *   engineering frame's, from PROJ, or the host's coordinate service's);
    * - a hosted placement's reprojection by its producer or host, which the
@@ -158,8 +171,14 @@ export function createFramesPickInterpreter(
             : convertPoint(point, fixed).position;
       }
       let design: FramedPoint["design"];
+      const vertex = pick.draw
+        ? pick.view.world.drawPlacement(pick.draw)
+        : undefined;
+      // A dual position between its ends draws neither end's point.
+      const between =
+        vertex?.kind === "dual" && vertex.t.value !== 0 && vertex.t.value !== 1;
       const placement =
-        pick.draw && options.placements
+        pick.draw && options.placements && !between
           ? options.placements(pick.draw)
           : undefined;
       if (placement && bodyFixed) {
@@ -178,7 +197,15 @@ export function createFramesPickInterpreter(
         ...(body !== undefined && { body }),
         ...(bodyFixed !== undefined && { bodyFixed }),
         ...(design !== undefined && { design }),
-        accuracy: composed(pick, frame, coordinates, instant, design, catalog),
+        accuracy: composed(
+          pick,
+          frame,
+          coordinates,
+          instant,
+          design,
+          vertex,
+          catalog,
+        ),
         in: (target: Frame) => convertPoint(point, target).position,
       };
     },
@@ -196,9 +223,22 @@ function composed(
   coordinates: ArrayLike<number>,
   instant: Instant,
   design: FramedPoint["design"],
+  vertex: Placement | undefined,
   catalog: FrameCatalog,
 ): PointAccuracy {
   const terms: PointAccuracyTerm[] = [...pickTerms(pick, frame.name)];
+  const bound = vertexBound(vertex);
+  if (bound !== undefined) {
+    terms.push({
+      frame: frame.name,
+      kind: "content",
+      meters: bound,
+      note:
+        vertex!.kind === "fitted"
+          ? "the draw's fitted operation (its per-vertex placement): its stated error bound against the coordinate operation it was fitted to, taken as 1σ"
+          : `the draw's blend at t = ${(vertex as { t: { value: number } }).t.value} (its per-vertex placement): its ends' stated error bounds weighted by |1 − t| and |t|, taken as 1σ`,
+    });
+  }
   if (design !== undefined) {
     const { placement } = design;
     terms.push({
@@ -235,6 +275,23 @@ function composed(
           : "up to the tree's root (no catalog reference frame above it)",
     ),
   };
+}
+
+/**
+ * A fitted operation's or a blend's stated error bound, m (undefined for
+ * none, the affine placement and a dual position, which states none).
+ */
+function vertexBound(vertex: Placement | undefined): number | undefined {
+  if (vertex?.kind === "fitted") {
+    return vertex.errorBound;
+  }
+  if (vertex?.kind === "blend") {
+    const t = vertex.t.value;
+    const end = (e: typeof vertex.from) =>
+      e === "identity" ? 0 : e.errorBound;
+    return Math.abs(1 - t) * end(vertex.from) + Math.abs(t) * end(vertex.to);
+  }
+  return undefined;
 }
 
 /**
