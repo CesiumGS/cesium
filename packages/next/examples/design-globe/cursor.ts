@@ -82,6 +82,12 @@ export interface Cursor {
   update(): void;
   /** The camera moved: what was under the cursor no longer is. */
   cameraMoved(): void;
+  /**
+   * The pointer is over the rail itself (true) or has left it: the rail
+   * stays where it is while the pointer is on it, so its controls can be
+   * reached after it has stepped aside (UX review M-b).
+   */
+  holdRail(on: boolean): void;
   view(): CursorView;
 }
 
@@ -426,14 +432,16 @@ export function createCursor(deps: CursorDeps): Cursor {
    * The rail steps aside while the pointer is under its corner, and back
    * once the pointer has been out of it for a moment (UX review S7): by the
    * pointer itself, not the last pick, so it never stays parked over the
-   * model after the pointer has gone.
+   * model after the pointer has gone. While the pointer is on the rail
+   * itself, it stays put (`holdRail`).
    */
   let aside = false;
+  let held = false;
   let stepBack: ReturnType<typeof setTimeout> | undefined;
   const setAside = (on: boolean) => {
     clearTimeout(stepBack);
     stepBack = undefined;
-    if (on === aside) {
+    if (on === aside || held) {
       return;
     }
     if (on) {
@@ -472,6 +480,17 @@ export function createCursor(deps: CursorDeps): Cursor {
   return {
     pickAt,
     update: () => update(),
+    holdRail(on) {
+      if (on) {
+        // Off the canvas onto the rail: no step back while it is there.
+        clearTimeout(stepBack);
+        stepBack = undefined;
+        held = true;
+      } else {
+        held = false;
+        setAside(false);
+      }
+    },
     cameraMoved() {
       generation++;
       if (cursor.coordinates !== undefined || (!blocked && cursor.muted)) {

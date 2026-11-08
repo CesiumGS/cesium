@@ -376,7 +376,11 @@ export function Panel({ source, live, actions, hud, measure }: PanelProps) {
           <MeasureOverlay model={model} actions={actions} measure={measure} />
           {/* The right rail: the cursor card over the legend; it steps
               left, under the toolbar, when the pointer is under it. */}
-          <div className={`dg-hud-rail${model.cursor.aside ? " aside" : ""}`}>
+          <div
+            className={`dg-hud-rail${model.cursor.aside ? " aside" : ""}`}
+            onPointerEnter={() => actions.holdRail(true)}
+            onPointerLeave={() => actions.holdRail(false)}
+          >
             <CursorCard cursor={model.cursor} />
             {model.drawn && <Legend legend={model.legend} />}
           </div>

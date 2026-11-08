@@ -190,6 +190,8 @@ export interface PanelActions {
   link(): string;
   setCompass(on: boolean): void;
   setRibbon(on: boolean): void;
+  /** The pointer is over the HUD's right rail, or has left it. */
+  holdRail(on: boolean): void;
   tour(action: TourAction): void;
   /** Measures an answer pair the page doesn't show, so its checks run. */
   measurePair(id: string): void;

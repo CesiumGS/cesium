@@ -935,6 +935,7 @@ export function run(context: ExampleContext): ExampleRun {
       syncRibbon();
       refresh();
     },
+    holdRail: (on) => cursor.holdRail(on),
     tour: (action) => tour?.go(action),
     measurePair(id) {
       const pair = answers?.pairs.find((p) => p.id === id);
