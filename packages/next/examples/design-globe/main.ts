@@ -71,11 +71,21 @@ import { siteFacts } from "./siteFacts.ts";
 import { clearTimeControls, createStore, escapeHtml } from "./stores.ts";
 import { combinedFactorOf, corridorTerms, tourFactsOf } from "./storyFacts.ts";
 import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
+import {
+  clearTerrainClips,
+  footprintRegion,
+  stripRegion,
+  syncTerrainClip,
+} from "./terrainClips.ts";
 import { tourCard, type TourTarget } from "./tour.ts";
 import { createTour, type TourRuntime } from "./tourRuntime.ts";
 import { formatView, parseView, type ViewParams } from "./viewParams.ts";
 
 const deg = Math.PI / 180;
+/** The corridor's clipped strip, either side of the centreline, ftUS (terrainClips.ts). */
+const CORRIDOR_CLIP_HALF_WIDTH = 52;
+/** A site's clipped footprint reaches this far past rigid's error at its edge, metres. */
+const CLIP_MARGIN = 3;
 /** How far the tour's shots lift their subject, as a share of the range (shots.ts `CameraMoves.lift`). */
 const TOUR_LIFT = 0.2;
 
@@ -370,6 +380,7 @@ export function run(context: ExampleContext): ExampleRun {
         buildCorridorEvidence(site);
       }
       computeFacts(site);
+      clipTerrain(site);
       // The openers and exact snapping (the corridor), or a linked measurement.
       tool.placementsChanged();
       tour?.flush();
@@ -389,6 +400,46 @@ export function run(context: ExampleContext): ExampleRun {
       refresh();
     },
     warn: (message) => console.warn(scrub(message)),
+  });
+
+  /**
+   * The terrain under the site's design (feedback F11): its footprint, or
+   * the corridor's strip, padded by rigid's error there, so the ground
+   * never pokes through a flat design surface in either placement.
+   */
+  function clipTerrain(site: SiteRuntime): void {
+    const globe = viewer.globe;
+    const placement = site.reprojectedPlacement ?? site.rigidPlacement;
+    if (globe === undefined || !globe.terrain || placement === undefined) {
+      return;
+    }
+    const displayed = (d: ArrayLike<number>) => placement.displayed(d);
+    const mpu = placement.frame.units.metersPerUnit;
+    const corners = site.entry.corners;
+    const rigidError = (d: ArrayLike<number>) =>
+      site.rigidPlacement?.displayError(d) ?? 0;
+    const polygon =
+      site === corridor
+        ? // The paved section and its barriers (±41 ftUS), and room for
+          // the rigid copy's sideways shift (the scale factor's 2.3 m).
+          stripRegion(alignment, displayed, CORRIDOR_CLIP_HALF_WIDTH, 500)
+        : corners !== undefined
+          ? footprintRegion(
+              corners,
+              displayed,
+              (Math.max(...corners.map(rigidError)) + CLIP_MARGIN) / mpu,
+            )
+          : undefined;
+    const why = syncTerrainClip(globe, site.entry.id, polygon);
+    if (why !== undefined) {
+      console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
+    }
+  }
+  scope.defer(() => {
+    const globe = viewer.globe;
+    if (globe !== undefined && !globe.isDestroyed()) {
+      clearTerrainClips(globe);
+    }
   });
 
   /** PROJ, as each placed site was placed with (for its facts again). */
