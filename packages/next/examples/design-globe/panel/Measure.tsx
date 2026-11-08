@@ -42,20 +42,28 @@ export interface MeasureActions {
   toCorridor(): void;
 }
 
+/**
+ * A disclosure: `lead` first (the line's distances and how it is drawn),
+ * then its rows, then `children`, and how exact it is last.
+ */
 function Details({
   rows,
   label = "Details",
+  lead,
   children,
 }: {
   rows: readonly DetailRow[];
   label?: string;
+  lead?: ReactNode;
   children?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
-  if (rows.length === 0 && children === undefined) {
+  if (rows.length === 0 && children === undefined && lead === undefined) {
     return null;
   }
+  const main = rows.filter((r) => r.group === undefined);
+  const exact = rows.filter((r) => r.group === "exactness");
   return (
     <div className="dg-m-details">
       <button
@@ -70,12 +78,25 @@ function Details({
       </button>
       {open && (
         <div id={id} className="dg-m-more">
-          <dl className="dg-facts dg-num">
-            {rows.map((r) => (
-              <Row key={r.label} row={r} />
-            ))}
-          </dl>
+          {lead}
+          {main.length > 0 && (
+            <dl className="dg-facts dg-num">
+              {main.map((r) => (
+                <Row key={r.label} row={r} />
+              ))}
+            </dl>
+          )}
           {children}
+          {exact.length > 0 && (
+            <>
+              <h4 className="dg-m-subhead">How exact this is</h4>
+              <dl className="dg-facts dg-num">
+                {exact.map((r) => (
+                  <Row key={r.label} row={r} />
+                ))}
+              </dl>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -207,53 +228,53 @@ function Opener({
       <p className="dg-ev-caption">
         {pair
           ? `${opener.designLabel ?? "Design distance"}; true distance ${opener.trueDistance}, the same in both placements.`
-          : (f.heroCaption ??
-            "Rigid draws the station this far from where its own design puts it.")}
+          : f.heroCaption}
       </p>
       {opener.error !== undefined && (
         <Failed error={opener.error} actions={actions} />
       )}
-      <Details rows={opener.details}>
-        {opener.id === "marker" ? (
-          <p className="dg-m-said dg-num">{f.globe}</p>
-        ) : (
-          <>
-            {opener.id === "mark" && (
-              <>
-                <Globe text={f.globe} tone={f.tone} />
-                <Distances
-                  design={opener.design}
-                  designLabel={opener.designLabel}
-                  slope={opener.slope}
-                  trueDistance={opener.trueDistance}
-                  small
-                />
-              </>
-            )}
-            {pair && (
-              <>
-                {opener.slope !== undefined && (
-                  <p className="dg-m-said dg-num">
-                    {opener.slope} along the slope.
-                  </p>
-                )}
-                <Globe text={f.globe} tone={f.tone} />
-                <div className="dg-actions">
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => actions.closeInOnRuler()}
-                  >
-                    Close in on the ruler
-                  </Button>
-                  <span className="dg-muted dg-actions-note">
-                    Its far end, where ground's feet and design's part; the
-                    ghost and the ribbon step aside until you move the camera.
-                  </span>
-                </div>
-              </>
-            )}
-          </>
+      <Details
+        rows={opener.details}
+        lead={
+          opener.id === "marker" ? (
+            <p className="dg-m-said dg-num">{f.globe}</p>
+          ) : opener.id === "mark" ? (
+            <>
+              <Distances
+                design={opener.design}
+                designLabel={opener.designLabel}
+                slope={opener.slope}
+                trueDistance={opener.trueDistance}
+                small
+              />
+              <Globe text={f.globe} tone={f.tone} />
+            </>
+          ) : (
+            <>
+              {opener.slope !== undefined && (
+                <p className="dg-m-said dg-num">
+                  {opener.slope} along the slope.
+                </p>
+              )}
+              <Globe text={f.globe} tone={f.tone} />
+            </>
+          )
+        }
+      >
+        {pair && (
+          <div className="dg-actions">
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => actions.closeInOnRuler()}
+            >
+              Close in on the ruler
+            </Button>
+            <span className="dg-muted dg-actions-note">
+              Its far end, where ground's feet and design's part; the ghost and
+              the ribbon step aside until you move the camera.
+            </span>
+          </div>
         )}
         {opener.id === "mark" && datasheet !== undefined && (
           <Datasheet sheet={datasheet} />

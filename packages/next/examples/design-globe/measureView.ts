@@ -33,6 +33,8 @@ import type { SnapMode } from "./page.ts";
 export interface DetailRow {
   readonly label: string;
   readonly value: string;
+  /** "exactness": shown last, under "How exact this is". */
+  readonly group?: "exactness";
 }
 
 /** The survey mark's datasheet, for the disk's card. */

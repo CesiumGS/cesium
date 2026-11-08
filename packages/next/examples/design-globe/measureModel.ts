@@ -269,41 +269,124 @@ const SOURCE_LABEL: Readonly<Record<AccuracyTerm["source"], string>> = {
   ephemeris: "Ephemeris",
 };
 
+/** A term's end ("a", "b") and its note without the "End a: " prefix. */
+function termEnd(term: AccuracyTerm): { end?: "a" | "b"; note: string } {
+  const m = /^End ([ab]):\s*/.exec(term.note);
+  return m
+    ? { end: m[1] as "a" | "b", note: term.note.slice(m[0].length) }
+    : { note: term.note };
+}
+
+/** "PROJ's stated accuracy for the design CRS's operation (grid.tif)". */
+function projectionWhat(note: string): string {
+  const grids = /PROJ operation \(([^)]*)\)/.exec(note)?.[1];
+  return `PROJ's stated accuracy for the design CRS's operation${grids !== undefined && grids !== "no grids" ? ` (${grids})` : ""}`;
+}
+
+/** A term's row: its source, its end, its size and what it is. */
+function termRow(term: AccuracyTerm, where?: string): AccuracyRow {
+  const { end, note } = termEnd(term);
+  const size =
+    term.meters === undefined ? "not stated" : `±${meters(term.meters)}`;
+  const what = term.source === "projection" ? projectionWhat(note) : note;
+  return {
+    label: `${SOURCE_LABEL[term.source]}${where ?? (end ? ` at ${end.toUpperCase()}` : "")}`,
+    value: `${size}: ${what}`,
+  };
+}
+
+/** Terms that move both ends of a line on one grid together. */
+const COMMON: ReadonlySet<AccuracyTerm["source"]> = new Set([
+  "projection",
+  "earthOrientation",
+  "geoidFallback",
+]);
+
 /**
- * A measurement's accuracy with its parts: what it is the accuracy of (the
- * true distance), its total (the terms' root sum square, as independent),
- * each term at its end with its size and what it is, and the statement's
- * warnings. A term of unknown size reads "not stated", and makes the total
- * so.
+ * A measurement's accuracy with its parts. When both ends are design points
+ * on one grid (the same operation, the same stated figure), the statement's
+ * total is each end's absolute accuracy, not the distance's: the grid's
+ * error is common to both ends and Earth orientation turns both together,
+ * so neither enters the distance between them. The rows then say so: the
+ * distance's own figure from what is the ends' alone (the snaps and picks),
+ * each end's position on the globe, and the parts, a common one once.
+ * Otherwise (ends in different frames, or not design points) the total is
+ * the parts combined as independent, as the statement gives it. A term of
+ * unknown size reads "not stated", and makes the total so.
  */
 export function accuracyRows(statement: AccuracyStatement): AccuracyRow[] {
-  const total =
-    statement.meters === undefined
-      ? "not stated (a part's size isn't known)"
-      : `±${meters(statement.meters)} (1σ)`;
+  const terms = statement.terms;
+  const projection = terms.filter((t) => t.source === "projection");
+  const grids = (t: AccuracyTerm) =>
+    /PROJ operation \(([^)]*)\)/.exec(t.note)?.[1];
+  const oneGrid =
+    projection.length === 2 &&
+    projection[0]!.meters !== undefined &&
+    projection[0]!.meters === projection[1]!.meters &&
+    grids(projection[0]!) === grids(projection[1]!) &&
+    termEnd(projection[0]!).end !== termEnd(projection[1]!).end &&
+    terms.every((t) => COMMON.has(t.source) || t.source === "pick");
+  const notes = statement.warnings.map((w) => ({ label: "Note", value: w }));
+  if (!oneGrid) {
+    const total =
+      statement.meters === undefined
+        ? "not stated (a part's size isn't known)"
+        : `±${meters(statement.meters)} (1σ)`;
+    return [
+      {
+        label: "Accuracy",
+        value: `${total}, of the true distance: the parts below, combined as independent`,
+      },
+      ...terms.map((t) => termRow(t)),
+      ...notes,
+    ];
+  }
+  const own = terms.filter((t) => t.source === "pick");
+  const ownKnown = own.every((t) => t.meters !== undefined);
+  const ownTotal = Math.hypot(...own.map((t) => t.meters ?? 0));
+  const shared =
+    "The grid's error is common to both ends and Earth orientation turns both together, so neither enters the distance. PROJ states no figure for how much the grid varies between them.";
+  const distance =
+    own.length === 0
+      ? `Far finer than either end's position: the ends are design points as given, with no snap. ${shared}`
+      : ownKnown
+        ? `±${meters(ownTotal)} (1σ): the ends' snaps and picks, combined as independent. ${shared}`
+        : `Not stated: a snap's size isn't known. ${shared}`;
+  const endA = terms.filter(
+    (t) => COMMON.has(t.source) && termEnd(t).end === "a",
+  );
+  const absolute = endA.every((t) => t.meters !== undefined)
+    ? `±${meters(Math.hypot(...endA.map((t) => t.meters!)))} (1σ)`
+    : "not stated (a part's size isn't known)";
   const rows: AccuracyRow[] = [
+    { label: "The distance", value: distance },
     {
-      label: "Accuracy",
-      value: `${total}, of the true distance: the parts below, combined as independent`,
+      label: "Each end's position",
+      value: `${absolute} on the globe: the common parts below. It is where each end is, not the distance between them.`,
     },
   ];
-  for (const term of statement.terms) {
-    const end = /^End ([ab]):\s*/.exec(term.note);
-    const note = end ? term.note.slice(end[0].length) : term.note;
-    const size =
-      term.meters === undefined ? "not stated" : `±${meters(term.meters)}`;
-    let what = note;
-    if (term.source === "projection") {
-      const grids = /PROJ operation \(([^)]*)\)/.exec(note)?.[1];
-      what = `PROJ's stated accuracy for the design CRS's operation${grids !== undefined && grids !== "no grids" ? ` (${grids})` : ""}`;
+  // A common term once ("both ends"), where both ends state the same.
+  const said = new Set<string>();
+  for (const t of terms) {
+    if (!COMMON.has(t.source)) {
+      rows.push(termRow(t));
+      continue;
     }
-    rows.push({
-      label: `${SOURCE_LABEL[term.source]}${end ? ` at ${end[1]!.toUpperCase()}` : ""}`,
-      value: `${size}: ${what}`,
-    });
+    const twin = terms.find(
+      (u) =>
+        u !== t && u.source === t.source && termEnd(u).end !== termEnd(t).end,
+    );
+    if (twin === undefined) {
+      rows.push(termRow(t));
+    } else if (!said.has(t.source)) {
+      said.add(t.source);
+      // Both ends' sizes, the larger said (they differ in the last digits).
+      const most =
+        t.meters === undefined || twin.meters === undefined
+          ? undefined
+          : Math.max(t.meters, twin.meters);
+      rows.push(termRow({ ...t, meters: most }, ", each end"));
+    }
   }
-  for (const w of statement.warnings) {
-    rows.push({ label: "Note", value: w });
-  }
-  return rows;
+  return [...rows, ...notes];
 }

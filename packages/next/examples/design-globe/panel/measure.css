@@ -353,6 +353,13 @@
   gap: var(--stratakit-space-200) var(--stratakit-space-300);
   color: var(--stratakit-color-text-attention-base);
 }
+/* "How exact this is", last in a Details. */
+.dg-m-subhead {
+  margin: var(--stratakit-space-100) 0 0;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
 /* The self-check's sentence: the figures, said once. */
 .dg-m-said {
   margin: 0;

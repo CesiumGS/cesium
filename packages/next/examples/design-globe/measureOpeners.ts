@@ -199,6 +199,46 @@ export const metres3 = (x: number) => `${fixed(x, 3)} m`;
 export const PENDING = "…";
 
 /**
+ * The datasheet's zone 3 coordinates are given to 0.01 US survey foot, so
+ * each is within half of that; a distance from them, within √2 of it.
+ */
+const PUBLISHED_ROUNDING = 0.005 * Math.SQRT2;
+
+/**
+ * The survey mark's independent test (the checks' `mark.offset`): the
+ * design's horizontal distance to the mark by the page's `measure` (PROJ's
+ * position of NGS's mark), against the same from NGS's own published zone
+ * 3, design units; undefined until the page has measured.
+ */
+export function markTest(
+  answers: Answers,
+  measured: OpenerMeasured | undefined,
+):
+  | {
+      readonly design: number;
+      readonly published: number;
+      readonly apart: number;
+      readonly within: boolean;
+    }
+  | undefined {
+  if (measured === undefined) {
+    return undefined;
+  }
+  const m = answers.mark;
+  const published = Math.hypot(
+    m.publishedSpc.easting - m.nearestDesign[0],
+    m.publishedSpc.northing - m.nearestDesign[1],
+  );
+  const apart = Math.abs(measured.horizontal - published);
+  return {
+    design: measured.horizontal,
+    published,
+    apart,
+    within: apart <= PUBLISHED_ROUNDING,
+  };
+}
+
+/**
  * An opener's title, its design and true distances (from the page's
  * `measure`, `measured`; answers.json is only what the checks compare them
  * with), its headline and the line as drawn now.
@@ -253,11 +293,23 @@ export function openerView(
           : tone === "rigid"
             ? `. All ${drawn} is rigid's drawing.`
             : ", and reprojected draws it there.";
+      // The caption follows the placement: rigid's gap is the headline
+      // while rigid is drawn; once reprojected, the 0.000 m is where its
+      // own design puts it, and rigid's figure is said beside it.
+      const rigidGap = metres3(dist(drawnAt(o.a, 0, 1), drawnAt(o.b, 0, 1)));
+      const heroCaption = exaggerated
+        ? `Errors drawn ×${s.exaggeration}: the figure comes back at true scale.`
+        : s.morphing
+          ? "The station drawn from where its own design puts it, moving."
+          : tone === "rigid"
+            ? "Rigid draws the station this far from where its own design puts it."
+            : `Drawn where its own design puts it; rigid drew it ${rigidGap} away.`;
       return {
         title: `Station ${station} against its true position`,
         design,
         trueDistance,
         ...(drawn !== undefined && { hero: drawn, drawn }),
+        heroCaption,
         globe: measured === undefined && !exaggerated ? same : `${same}${rest}`,
         tone,
       };
@@ -269,6 +321,7 @@ export function openerView(
       const offset = metres3(
         dist(drawnAt(o.b, s.t, s.exaggeration), o.b.reprojected),
       );
+      const rigidOffset = metres3(dist(drawnAt(o.b, 0, 1), o.b.reprojected));
       const globe = exaggerated
         ? notToScale
         : s.morphing
@@ -278,16 +331,40 @@ export function openerView(
             : isTrue
               ? `On the globe the mark measures ${drawn}, its true distance.`
               : `On the globe the mark measures ${drawn}.`;
+      // Reprojected, the drawn offset is 0.000 m by construction (the page
+      // draws the road and the mark through PROJ alike), so the headline is
+      // the independent test: the design's horizontal distance to the mark
+      // against the same from NGS's own published zone 3.
+      const test = markTest(answers, measured);
+      const settledTrue = !exaggerated && !s.morphing && tone !== "rigid";
+      const hero = exaggerated
+        ? undefined
+        : settledTrue
+          ? test === undefined
+            ? PENDING
+            : `${fixed(test.apart, 3)} ${symbol}`
+          : offset;
       const heroCaption = s.morphing
-        ? "The road drawn from where it is, moving."
+        ? "The road drawn from where it truly is, moving."
         : tone === "rigid"
           ? "Rigid draws the road this far from where it truly is, at the mark."
-          : "0.000 m by construction: the page draws the road and the mark through PROJ alike. The independent test is NGS's own zone 3 against the design, in Checks.";
+          : test === undefined
+            ? `The design's distance to the mark against the same from NGS's own zone 3, measuring…`
+            : `The design's distance to the mark against the same from NGS's own zone 3, an independent test: ${test.within ? "within" : "outside"} the datasheet's rounding. Rigid drew the road ${rigidOffset} from where it is, at the mark.`;
       return {
         title: `${m.pid} ${m.name} to the centreline`,
-        design,
+        // One figure for the line: the horizontal design distance, as CAD
+        // reports it, here, on the globe's label and in the checks; the
+        // slope distance beside it in Details.
+        design:
+          measured === undefined
+            ? PENDING
+            : `${fixed(measured.horizontal, 3)} ${symbol}`,
+        designLabel: "Design distance, horizontal",
+        slope: design,
         trueDistance,
-        ...(!exaggerated && { hero: offset, heroCaption }),
+        ...(hero !== undefined && { hero }),
+        ...(!exaggerated && { heroCaption }),
         ...(drawn !== undefined && { drawn }),
         globe,
         tone,
@@ -381,6 +458,10 @@ export function measuredOf(
       };
 }
 
+/** Rows under "How exact this is", after the rest of a Details. */
+const exactness = (rows: readonly DetailRow[]): DetailRow[] =>
+  rows.map((r) => ({ ...r, group: "exactness" as const }));
+
 /**
  * An opener's rows behind "Details": `measures`, the openers' measurements
  * by the page's `measure`; `markDesign`, PROJ's zone 3 for the mark; and
@@ -413,45 +494,43 @@ export function openerDetails(
       ];
     case "mark": {
       const m = a.mark;
+      // The ends first, then the independent test, then how exact it is.
       const rows: DetailRow[] = [
         {
-          label: "NGS publishes",
-          value: `E ${fixed(m.publishedSpc.easting, 2)}, N ${fixed(m.publishedSpc.northing, 2)} ${symbol} (zone 3)`,
+          label: "Nearest centreline",
+          value: `Sta. ${stationText(m.nearest.station)}, at ${coords(m.nearestDesign)}`,
         },
       ];
       if (markDesign !== undefined) {
         rows.push({
-          label: "PROJ gives",
-          value: `E ${fixed(markDesign[0]!, 3)}, N ${fixed(markDesign[1]!, 3)} ${symbol}, from NGS's NAD83(2011) position`,
+          label: "The mark",
+          value: `E ${fixed(markDesign[0]!, 3)}, N ${fixed(markDesign[1]!, 3)} ${symbol}: PROJ's zone 3 from NGS's NAD83(2011) position`,
         });
       }
-      const published = Math.hypot(
-        m.publishedSpc.easting - m.nearestDesign[0],
-        m.publishedSpc.northing - m.nearestDesign[1],
+      rows.push(
+        {
+          label: "NGS publishes",
+          value: `E ${fixed(m.publishedSpc.easting, 2)}, N ${fixed(m.publishedSpc.northing, 2)} ${symbol} (zone 3, to 0.01 ${symbol})`,
+        },
+        {
+          label: "From NGS's zone 3",
+          value: `${fixed(Math.hypot(m.publishedSpc.easting - m.nearestDesign[0], m.publishedSpc.northing - m.nearestDesign[1]), 3)} ${symbol} to the same centreline point: the independent test of the design's distance`,
+        },
       );
-      rows.push({
-        label: "Horizontal design distance",
-        value: `${v?.horizontalDistance ?? PENDING}; from NGS's own zone 3, ${fixed(published, 3)} ${symbol}`,
-      });
-      rows.push({
-        label: "Nearest centreline",
-        value: `Sta. ${stationText(m.nearest.station)}, at ${coords(m.nearestDesign)}`,
-      });
       if (measure !== undefined && v !== undefined) {
         rows.push(
-          { label: "Combined scale factor", value: v.combinedFactorPpm },
-          ...accuracyRows(measure.m.accuracy),
+          ...exactness([
+            { label: "Combined scale factor", value: v.combinedFactorPpm },
+            ...accuracyRows(measure.m.accuracy),
+          ]),
         );
       }
       return rows;
     }
     case "pair": {
       const pair = a.pairs[0]!;
+      // The horizontal design distance is the headline: not again here.
       const rows: DetailRow[] = [
-        {
-          label: "Horizontal design distance",
-          value: v?.horizontalDistance ?? PENDING,
-        },
         {
           label: "Ends",
           value: `Sta. ${stationText(pair.ends.a.station)} to ${stationText(pair.ends.b.station)}, on the centreline`,
@@ -467,9 +546,11 @@ export function openerDetails(
       }
       if (measure !== undefined && v !== undefined) {
         rows.push(
-          { label: "Combined scale factor", value: v.combinedFactorPpm },
-          { label: "Grid convergence", value: v.convergence },
-          ...accuracyRows(measure.m.accuracy),
+          ...exactness([
+            { label: "Combined scale factor", value: v.combinedFactorPpm },
+            { label: "Grid convergence", value: v.convergence },
+            ...accuracyRows(measure.m.accuracy),
+          ]),
         );
       }
       return rows;

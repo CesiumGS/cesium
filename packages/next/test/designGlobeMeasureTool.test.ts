@@ -376,6 +376,14 @@ describe("the measurements the page opens with", () => {
       "Both ends are station 1700+00.000's own design point: 0.000 ftUS apart in the design, 0.000 m apart where it truly is, and reprojected draws it there.",
     );
     expect(rigid.title).toBe("Station 1700+00.000 against its true position");
+    // The caption follows the placement (UX review M4): reprojected's
+    // 0.000 m is where its design puts it, rigid's figure beside it.
+    expect(rigid.heroCaption).toBe(
+      "Rigid draws the station this far from where its own design puts it.",
+    );
+    expect(reprojected.heroCaption).toBe(
+      `Drawn where its own design puts it; rigid drew it ${gap} away.`,
+    );
   });
 
   it("the gap shrinks as the morph runs, and says no measurement while exaggerated", () => {
@@ -408,32 +416,40 @@ describe("the measurements the page opens with", () => {
     ]);
     for (const mode of ["rigid", "reprojected"] as const) {
       const v = openerView(mark!, a, settled(mode), measured.mark);
-      expect(v.design).toBe("608.429 ftUS");
+      // One figure for the line: the horizontal design distance, the
+      // slope distance beside it.
+      expect(v.design).toBe("501.188 ftUS");
+      expect(v.designLabel).toBe("Design distance, horizontal");
+      expect(v.slope).toBe("608.429 ftUS");
       expect(v.trueDistance).toBe("185.464 m");
       expect(v.title).toBe("HS5109 GOLD CREEK to the centreline");
     }
     // The headline: how far rigid draws the road from where it is, to the
-    // millimetre, shrinking to 0.000 m through the morph.
+    // millimetre, shrinking through the morph.
     const hero = (t: number) =>
       openerView(mark!, a, { t, exaggeration: 1, morphing: t > 0 && t < 1 })
         .hero;
     expect(hero(0)).toBe(`${Math.hypot(10, 20, 21).toFixed(3)} m`);
     expect(hero(0.5)).toBe(`${(Math.hypot(10, 20, 21) / 2).toFixed(3)} m`);
-    expect(hero(1)).toBe("0.000 m");
     const rigid = openerView(mark!, a, settled("rigid"), measured.mark);
     // The caption names its place, never "here" (C1).
     expect(rigid.heroCaption).toBe(
       "Rigid draws the road this far from where it truly is, at the mark.",
     );
-    // Reprojected, 0.000 m is by construction: the independent test is named (I6).
+    // Reprojected, the drawn 0.000 m is by construction, so the headline is
+    // the independent test: the design's distance to the mark against the
+    // same from NGS's own zone 3 (501.193 ftUS here), with rigid's offset
+    // in the caption (UX review M4).
     const reprojected = openerView(
       mark!,
       a,
       settled("reprojected"),
       measured.mark,
     );
-    expect(reprojected.heroCaption).toMatch(/by construction/);
-    expect(reprojected.heroCaption).toMatch(/NGS's own zone 3.*Checks/);
+    expect(reprojected.hero).toBe("0.005 ftUS");
+    expect(reprojected.heroCaption).toBe(
+      `The design's distance to the mark against the same from NGS's own zone 3, an independent test: within the datasheet's rounding. Rigid drew the road ${Math.hypot(10, 20, 21).toFixed(3)} m from where it is, at the mark.`,
+    );
     expect(rigid.globe).toMatch(
       /^On the globe the mark measures [\d,.]+ m, [\d,.]+ m too (far|near)\.$/,
     );
@@ -620,20 +636,67 @@ describe("the ruler's far end", () => {
 });
 
 describe("the accuracy's parts", () => {
-  it("says what it is the accuracy of, its total, and each end's term", () => {
+  const term = (
+    source: "projection" | "earthOrientation" | "pick",
+    end: "a" | "b",
+    meters: number,
+    note: string,
+  ) => ({ source, meters, note: `End ${end}: ${note}` });
+  const grid =
+    'engineering frame "Highway corridor": PROJ operation (us_noaa_g2018u0.tif)';
+
+  it("on one grid: the distance's own figure, apart from each end's absolute position", () => {
+    const rows = accuracyRows({
+      meters: Math.hypot(2.015, 2.015, 0.002, 0.002),
+      terms: [
+        term("projection", "a", 2.015, grid),
+        term("projection", "b", 2.015, `${grid}; the rest as end a`),
+        term("pick", "a", 0.002, "the design point was snapped to a segment"),
+        term("pick", "b", 0.002, "the design point was snapped to a segment"),
+      ],
+      warnings: [],
+    });
+    expect(rows.map((r) => r.label)).toEqual([
+      "The distance",
+      "Each end's position",
+      "Projection, each end",
+      "Pick or snap at A",
+      "Pick or snap at B",
+    ]);
+    // The snaps alone are the distance's (√2 × 2 mm); the grid's ±2 m is
+    // each end's, common to both, never combined as independent.
+    expect(rows[0]!.value).toMatch(/^±2\.8 mm \(1σ\): the ends' snaps/);
+    expect(rows[0]!.value).toMatch(/common to both ends/);
+    expect(rows[1]!.value).toMatch(/^±2\.0 m \(1σ\) on the globe/);
+    expect(rows[2]!.value).toBe(
+      "±2.0 m: PROJ's stated accuracy for the design CRS's operation (us_noaa_g2018u0.tif)",
+    );
+    expect(rows.map((r) => r.value).join(" ")).not.toMatch(/2\.8 m\b/);
+  });
+
+  it("design points as given: no snap, so no figure but the grid's common error", () => {
     const rows = accuracyRows({
       meters: Math.hypot(2.015, 2.015),
       terms: [
-        {
-          source: "projection",
-          meters: 2.015,
-          note: 'End a: engineering frame "Highway corridor": PROJ operation (us_noaa_g2018u0.tif)',
-        },
-        {
-          source: "projection",
-          meters: 2.015,
-          note: 'End b: engineering frame "Highway corridor": PROJ operation (us_noaa_g2018u0.tif); the rest as end a',
-        },
+        term("projection", "a", 2.015, grid),
+        term("projection", "b", 2.015, grid),
+      ],
+      warnings: [],
+    });
+    expect(rows[0]!.value).toMatch(/^Far finer than either end's/);
+  });
+
+  it("ends on different grids: the parts combined as independent, as the statement gives them", () => {
+    const rows = accuracyRows({
+      meters: Math.hypot(2.015, 1.0),
+      terms: [
+        term("projection", "a", 2.015, grid),
+        term(
+          "projection",
+          "b",
+          1.0,
+          'engineering frame "London": PROJ operation (uk_os_OSGM15_GB.tif)',
+        ),
       ],
       warnings: [],
     });
@@ -643,10 +706,7 @@ describe("the accuracy's parts", () => {
       "Projection at B",
     ]);
     expect(rows[0]!.value).toBe(
-      "±2.8 m (1σ), of the true distance: the parts below, combined as independent",
-    );
-    expect(rows[1]!.value).toBe(
-      "±2.0 m: PROJ's stated accuracy for the design CRS's operation (us_noaa_g2018u0.tif)",
+      "±2.2 m (1σ), of the true distance: the parts below, combined as independent",
     );
   });
 });

@@ -221,7 +221,7 @@ export function placeLabels(input: LabelInput): MeasureLive {
           : "Not to scale"
         : f.design === PENDING
           ? "Measuring…"
-          : `${f.design} ${o.id === "pair" ? "horizontal" : "design"}`;
+          : `${f.design} horizontal`;
     if (!o.quiet || cameraTo(middle(pa, pb)) < QUIET_RANGE) {
       label(o.id, pa, pb, text, o.quiet ? "quiet" : "measure");
     }
