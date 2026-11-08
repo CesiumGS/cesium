@@ -913,6 +913,14 @@ it("placementOf answers which placement applies, for which root, and why", ...);
 
 ### Task 20: The design globe on the new seam
 
+> **Revised 2026-11-08 (owner):** this task's design changed; the original text below is superseded where they differ. The example loaded the rigid and reprojected copies as two tilesets and paired their tiles itself (`PlacementPair`), so the morph and the ghost depended on two independent tile selections agreeing. They didn't, and a ghost tile was cut off where the selections differed. The engine shouldn't know what a ghost is; that's app logic. The general design:
+>
+> - **Presentations of a tileset (engine, generic).** A tileset can be drawn more than once. Each *presentation* draws the same loaded tiles with its own placement parameter, appearance (tint, opacity) and view mask. There is one selection, one tile cache and one set of bounds covering every presentation (Task 19's `maxDisplacement`). Not two loaded copies of the tileset.
+> - **One tileset with both placements.** The generator writes a single tileset per site whose vertices carry both positions (Task 19's dual position). Later, 5f's fitted operations let the frames module compute the reprojection per tile, so only design-space positions are needed.
+> - **The app defines what presentations mean.** The design globe makes a solid presentation at the morph's parameter and a translucent, tinted presentation at the other end (what it calls the ghost). The morph animates the first presentation's parameter. `PlacementPair` and the pairing of two tilesets are removed.
+> - Picks and snaps on a presentation report which presentation they hit; content coordinates still only at `t = 0` or `1` (Task 19).
+> - The other parts of this task stand: no custom vertex stage, frames from `viewer.frames.tree()`, overlays under the Earth's anchor.
+
 A browser check (port 5197).
 
 **Files:**
