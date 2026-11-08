@@ -1,10 +1,16 @@
 import { Event } from "@cesium/core";
-import { EditorOutliner } from "../../../index.js";
+import { EditorOutliner, Mesh } from "../../../index.js";
 
 describe("Widgets/EditorOutliner/EditorOutliner", function () {
   let container;
   let editor;
   let outliner;
+
+  // Groups are plain objects, so specs can change their children, then raise
+  // meshGroupChanged.
+  function group(name, children = []) {
+    return { name, children };
+  }
 
   // Like MeshEditor, setMeshActive and setMeshInactive don't raise
   // meshActiveChanged, which the editor raises on the next frame.
@@ -12,15 +18,16 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     const meshes = [];
     const activeMeshes = new Set();
     return {
-      meshAdded: new Event(),
-      meshRemoved: new Event(),
+      root: group(undefined),
+      meshGroupChanged: new Event(),
       meshActiveChanged: new Event(),
       get meshes() {
         return [...meshes];
       },
-      addMesh(mesh) {
+      addMesh(name) {
+        // The outliner recognizes meshes by their type.
+        const mesh = Object.create(Mesh.prototype, { name: { value: name } });
         meshes.push(mesh);
-        this.meshAdded.raiseEvent(mesh);
         return mesh;
       },
       hasMesh(mesh) {
@@ -35,27 +42,6 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
       setMeshInactive(mesh) {
         activeMeshes.delete(mesh);
       },
-    };
-  }
-
-  function item(label, children = [], mesh = undefined) {
-    return { label, children, mesh };
-  }
-
-  function createProvider(roots) {
-    return {
-      roots,
-      changed: new Event(),
-      getChildren(item) {
-        return item === undefined ? this.roots : item.children;
-      },
-      getLabel(item) {
-        return item.label;
-      },
-      getMesh(item) {
-        return item.mesh;
-      },
-      destroy: jasmine.createSpy("destroy"),
     };
   }
 
@@ -87,8 +73,16 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     click(getRow(label).querySelector(".cesium-editor-outliner-expander"));
   }
 
-  let m1, m2, m3, unused;
-  let provider;
+  let m1, m2, m3, unused, meshGroup;
+
+  // Adds a group holding a group to meshGroup, after unused.
+  function addNestedGroup() {
+    meshGroup.children = [
+      ...meshGroup.children,
+      group("nested", [group("child")]),
+    ];
+    editor.meshGroupChanged.raiseEvent(meshGroup);
+  }
 
   beforeEach(function () {
     container = document.createElement("div");
@@ -99,16 +93,14 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     // group
     //   i1 (m1)
     //   i2 (m2)
-    //   unused, whose primitive isn't in the editor
+    //   unused, an empty group
     // i3 (m3)
-    m1 = editor.addMesh({ name: "m1" });
-    m2 = editor.addMesh({ name: "m2" });
-    m3 = editor.addMesh({ name: "m3" });
-    unused = item("unused");
-    provider = createProvider([
-      item("group", [item("i1", [], m1), item("i2", [], m2), unused]),
-      item("i3", [], m3),
-    ]);
+    m1 = editor.addMesh("i1");
+    m2 = editor.addMesh("i2");
+    m3 = editor.addMesh("i3");
+    unused = group("unused");
+    meshGroup = group("group", [m1, m2, unused]);
+    editor.root.children = [meshGroup, m3];
   });
 
   afterEach(function () {
@@ -118,14 +110,14 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
   });
 
   it("creates the outliner in the supplied element or element ID", function () {
-    outliner = new EditorOutliner(container, editor, { provider });
+    outliner = new EditorOutliner(container, editor);
     expect(outliner.container).toBe(container);
     expect(container.querySelectorAll(".cesium-editor-outliner").length).toBe(
       1,
     );
 
     outliner.destroy();
-    outliner = new EditorOutliner(container.id, editor, { provider });
+    outliner = new EditorOutliner(container.id, editor);
     expect(outliner.container).toBe(container);
     expect(container.querySelectorAll(".cesium-editor-outliner").length).toBe(
       1,
@@ -141,48 +133,35 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     expect(container.children.length).toBe(0);
   });
 
-  it("exposes a view model for the provider", function () {
-    outliner = new EditorOutliner(container, editor, { provider });
-
-    expect(outliner.viewModel.editor).toBe(editor);
-    expect(outliner.viewModel.provider).toBe(provider);
-  });
-
-  it("lists the editor's meshes by default", function () {
+  it("exposes a view model for the editor", function () {
     outliner = new EditorOutliner(container, editor);
 
-    expect(getLabels()).toEqual(["Mesh 1", "Mesh 2", "Mesh 3"]);
-
-    editor.addMesh({ name: "m4" });
-
-    expect(getLabels()).toEqual(["Mesh 1", "Mesh 2", "Mesh 3", "Mesh 4"]);
+    expect(outliner.viewModel.editor).toBe(editor);
   });
 
   describe("rows", function () {
     it("show the visible rows' labels", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
       expect(getLabels()).toEqual(["group", "i1", "i2", "unused", "i3"]);
     });
 
     it("are indented with a guide line per level of depth", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const guideCount = (label) =>
         getRow(label).querySelectorAll(".cesium-editor-outliner-guide").length;
 
       expect(guideCount("group")).toBe(0);
       expect(guideCount("i1")).toBe(1);
 
-      const i1 = provider.roots[0].children[0];
-      i1.children = [item("child")];
-      provider.changed.raiseEvent(i1);
-      clickExpander("i1");
+      addNestedGroup();
+      clickExpander("nested");
 
       expect(guideCount("child")).toBe(2);
     });
 
     it("show whether they're expandable and expanded", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const expander = getRow("group").querySelector(
         ".cesium-editor-outliner-expander",
       );
@@ -196,7 +175,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("are dimmed when they can be neither selected nor expanded", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const disabled = "cesium-editor-outliner-row-disabled";
 
       expect(getRow("unused").classList).toContain(disabled);
@@ -205,7 +184,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("are highlighted while their meshes are active", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const active = "cesium-editor-outliner-row-active";
 
       editor.setMeshActive(m2);
@@ -216,10 +195,10 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("follow changes to the tree", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
-      provider.roots = [...provider.roots, item("added")];
-      provider.changed.raiseEvent(undefined);
+      editor.root.children = [...editor.root.children, group("added")];
+      editor.meshGroupChanged.raiseEvent(editor.root);
 
       expect(getLabels()).toEqual([
         "group",
@@ -234,7 +213,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
 
   describe("clicking", function () {
     it("a row makes its mesh the only active mesh", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       editor.setMeshActive(m3);
 
       click(getRow("i1"));
@@ -247,7 +226,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("a row with Ctrl or Cmd toggles its mesh", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       click(getRow("i1"));
 
       click(getRow("i3"), { ctrlKey: true });
@@ -259,7 +238,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("a row with Shift selects a range", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       click(getRow("i1"));
 
       click(getRow("i3"), { shiftKey: true });
@@ -269,35 +248,33 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
       expect(editor.isMeshActive(m3)).toBe(true);
     });
 
-    it("a row without a mesh expands or collapses it", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+    it("a group's row expands or collapses it", function () {
+      outliner = new EditorOutliner(container, editor);
 
       click(getRow("group"));
 
       expect(getLabels()).toEqual(["group", "i3"]);
     });
 
-    it("an expander expands or collapses its row without selecting it", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
-      const i1 = provider.roots[0].children[0];
-      i1.children = [item("child")];
-      provider.changed.raiseEvent(i1);
+    it("an expander expands or collapses its row once", function () {
+      outliner = new EditorOutliner(container, editor);
+      addNestedGroup();
 
-      clickExpander("i1");
+      clickExpander("nested");
 
       expect(getLabels()).toEqual([
         "group",
         "i1",
-        "child",
         "i2",
         "unused",
+        "nested",
+        "child",
         "i3",
       ]);
-      expect(editor.isMeshActive(m1)).toBe(false);
     });
 
-    it("a row that can't be selected or expanded does nothing", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+    it("an empty group's row does nothing", function () {
+      outliner = new EditorOutliner(container, editor);
       editor.setMeshActive(m3);
 
       click(getRow("unused"));
@@ -313,7 +290,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     }
 
     it("is a multiselectable tree in the tab order", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const tree = getTree();
 
       expect(tree.getAttribute("role")).toBe("tree");
@@ -322,7 +299,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("describes each row's level and state", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       editor.setMeshActive(m1);
       editor.meshActiveChanged.raiseEvent(m1, true);
 
@@ -343,8 +320,8 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("gives rows IDs unique to each outliner", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
-      const other = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
+      const other = new EditorOutliner(container, editor);
 
       const ids = getRows().map((row) => row.id);
       other.destroy();
@@ -353,7 +330,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("points to the focused row", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const tree = getTree();
       expect(tree.hasAttribute("aria-activedescendant")).toBe(false);
 
@@ -383,7 +360,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     }
 
     it("focuses the first row when the outliner gains focus", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
       // Dispatched, since focus() only raises it while the window has focus.
       container
@@ -394,7 +371,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("keeps the focused row when the outliner gains focus", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       click(getRow("i3"));
 
       // Dispatched, since focus() only raises it while the window has focus.
@@ -406,7 +383,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("moves the focus with the arrow keys, Home and End", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
       pressKey("ArrowDown");
       expect(focusedLabel()).toBe("group");
@@ -421,7 +398,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("collapses and expands with the left and right arrow keys", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       pressKey("ArrowDown");
 
       pressKey("ArrowLeft");
@@ -438,7 +415,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("acts on the focused row with Enter and Space, as clicking does", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       outliner.viewModel.focusedRow = outliner.viewModel.rows[1];
 
       pressKey("Enter");
@@ -455,7 +432,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("ignores Enter and Space without a focused row", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
       const event = pressKey("Enter");
 
@@ -464,7 +441,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("prevents the default action only for the keys it handles", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
       expect(pressKey("ArrowDown").defaultPrevented).toBe(true);
       expect(pressKey(" ").defaultPrevented).toBe(true);
@@ -473,7 +450,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("focuses a clicked row", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
       click(getRow("i2"));
       expect(focusedLabel()).toBe("i2");
@@ -483,7 +460,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
 
     it("scrolls the focused row into view", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const scrollIntoView = spyOn(Element.prototype, "scrollIntoView");
 
       pressKey("End");
@@ -495,7 +472,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
 
   describe("destroy", function () {
     it("stops scrolling rows into view", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
       const viewModel = outliner.viewModel;
       const scrollIntoView = spyOn(Element.prototype, "scrollIntoView");
 
@@ -506,7 +483,7 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
       expect(scrollIntoView).not.toHaveBeenCalled();
     });
     it("removes the outliner from the container", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
+      outliner = new EditorOutliner(container, editor);
 
       outliner.destroy();
       outliner = undefined;
@@ -514,33 +491,14 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
       expect(container.children.length).toBe(0);
     });
 
-    it("stops listening to the editor and provider", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
-
-      outliner.destroy();
-      outliner = undefined;
-
-      expect(editor.meshActiveChanged.numberOfListeners).toBe(0);
-      expect(provider.changed.numberOfListeners).toBe(0);
-    });
-
-    it("destroys the default provider", function () {
+    it("stops listening to the editor", function () {
       outliner = new EditorOutliner(container, editor);
 
       outliner.destroy();
       outliner = undefined;
 
-      expect(editor.meshAdded.numberOfListeners).toBe(0);
-      expect(editor.meshRemoved.numberOfListeners).toBe(0);
-    });
-
-    it("doesn't destroy a provider it was given", function () {
-      outliner = new EditorOutliner(container, editor, { provider });
-
-      outliner.destroy();
-      outliner = undefined;
-
-      expect(provider.destroy).not.toHaveBeenCalled();
+      expect(editor.meshActiveChanged.numberOfListeners).toBe(0);
+      expect(editor.meshGroupChanged.numberOfListeners).toBe(0);
     });
   });
 });

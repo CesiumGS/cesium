@@ -2,11 +2,11 @@
 
 import { Check, EventHelper, defined } from "@cesium/core";
 import { createCommand, knockout } from "@cesium/widgets";
+import Mesh from "../../Editor/Mesh.js";
 
 /** @import { Command } from "@cesium/widgets"; */
-/** @import Mesh from "../../Editor/Mesh.js"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
-/** @import MeshTreeProvider from "./MeshTreeProvider.js"; */
+/** @import MeshEditorGroup from "../../Editor/MeshEditorGroup.js"; */
 
 /**
  * A visible row of an {@link EditorOutliner}. A row is reused for as long as
@@ -15,12 +15,12 @@ import { createCommand, knockout } from "@cesium/widgets";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @typedef {object} EditorOutlinerRow
- * @property {*} item The provider's item.
- * @property {string} label The item's label.
- * @property {number} depth The item's depth in the tree. Root items are at depth 0.
+ * @property {Mesh|MeshEditorGroup} item The mesh or group the row shows.
+ * @property {string} label The item's name, or "Mesh" or "Group" and a number if it doesn't have one.
+ * @property {number} depth The item's depth in the tree. Items in the editor's root group are at depth 0.
  * @property {boolean} expandable Whether the item has children.
  * @property {boolean} expanded Whether the item's children are shown, if it has any.
- * @property {Mesh|undefined} mesh The mesh that selecting the row item selects, if any.
+ * @property {Mesh|undefined} mesh The row's mesh, if its item is a mesh.
  * @property {boolean} selectable Whether the row can be selected, which it can if it has a mesh.
  * @property {boolean} active Whether the row's mesh is active.
  */
@@ -35,23 +35,24 @@ import { createCommand, knockout } from "@cesium/widgets";
  */
 
 /**
- * An item the view model has read from the provider.
+ * An item the view model has read from the editor.
  *
  * @typedef {object} TreeNode
  * @property {EditorOutlinerRow} row The item's row.
- * @property {ReadonlyArray<*>} children The item's children when last read.
+ * @property {ReadonlyArray<Mesh|MeshEditorGroup>} children The item's children when last read.
  * @ignore
  */
 
 /**
- * The rows displayed by an {@link EditorOutliner}: the items of a
- * {@link MeshTreeProvider}, flattened in tree order, with the children of
- * collapsed items left out. Root items start expanded, and other items start
- * collapsed. Items keep whether they're expanded when the tree changes, as
- * long as they stay in it.
+ * The rows displayed by an {@link EditorOutliner}: the meshes and groups in a
+ * {@link MeshEditor}'s hierarchy, starting with those in its
+ * {@link MeshEditor#root} group, flattened in tree order, with the children
+ * of collapsed groups left out. Groups in the root group start expanded, and
+ * other groups start collapsed. Groups keep whether they're expanded when the
+ * hierarchy changes, as long as they stay in it.
  * <p>
- * Selecting a row makes its mesh active in the editor. A row shows whether
- * its mesh is active, however that changed.
+ * Selecting a mesh's row makes the mesh active in the editor. A row shows
+ * whether its mesh is active, however that changed.
  * </p>
  *
  * @alias EditorOutlinerViewModel
@@ -60,31 +61,39 @@ import { createCommand, knockout } from "@cesium/widgets";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {MeshEditor} editor The editor whose meshes are listed.
- * @param {MeshTreeProvider} provider The tree to display.
  */
 class EditorOutlinerViewModel {
   /** @type {MeshEditor} */
   #editor;
 
-  /** @type {MeshTreeProvider} */
-  #provider;
-
   #eventHelper = new EventHelper();
 
   /**
-   * The root items when last read.
+   * The items in the editor's root group when last read.
    *
-   * @type {ReadonlyArray<*>}
+   * @type {ReadonlyArray<Mesh|MeshEditorGroup>}
    */
   #roots = [];
 
   /**
-   * Every item read from the provider that's still in the tree, including the
-   * children of collapsed items, so they keep whether they're expanded.
+   * Every item read from the editor that's still in the tree, including the
+   * children of collapsed groups, so they keep whether they're expanded.
    *
-   * @type {Map<*, TreeNode>}
+   * @type {Map<Mesh|MeshEditorGroup, TreeNode>}
    */
   #nodes = new Map();
+
+  /**
+   * The numbers in the labels of items without names, in the order the view
+   * model first reads them. They don't change when other items are removed.
+   *
+   * @type {WeakMap<Mesh|MeshEditorGroup, number>}
+   */
+  #numbers = new WeakMap();
+
+  #nextMeshNumber = 1;
+
+  #nextGroupNumber = 1;
 
   /**
    * Whether each mesh shown in a row is active. Rows read these, so every row
@@ -109,16 +118,13 @@ class EditorOutlinerViewModel {
 
   /**
    * @param {MeshEditor} editor The editor whose meshes are listed.
-   * @param {MeshTreeProvider} provider The tree to display.
    */
-  constructor(editor, provider) {
+  constructor(editor) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("editor", editor);
-    Check.typeOf.object("provider", provider);
     //>>includeEnd('debug');
 
     this.#editor = editor;
-    this.#provider = provider;
 
     /**
      * The visible rows, in tree order. Observable.
@@ -153,8 +159,8 @@ class EditorOutlinerViewModel {
       },
     );
 
-    this.#eventHelper.add(provider.changed, (item) => {
-      this.#onTreeChanged(item);
+    this.#eventHelper.add(editor.meshGroupChanged, (group) => {
+      this.#onTreeChanged(group === editor.root ? undefined : group);
     });
 
     this.#eventHelper.add(editor.meshActiveChanged, (mesh, active) => {
@@ -172,16 +178,6 @@ class EditorOutlinerViewModel {
    */
   get editor() {
     return this.#editor;
-  }
-
-  /**
-   * The tree being displayed.
-   *
-   * @type {MeshTreeProvider}
-   * @readonly
-   */
-  get provider() {
-    return this.#provider;
   }
 
   /**
@@ -292,7 +288,7 @@ class EditorOutlinerViewModel {
    * Expands every item in the tree.
    */
   expandAll() {
-    /** @param {ReadonlyArray<*>} items */
+    /** @param {ReadonlyArray<Mesh|MeshEditorGroup>} items */
     const expand = (items) => {
       for (const item of items) {
         const node = this.#getNode(item);
@@ -315,19 +311,19 @@ class EditorOutlinerViewModel {
   }
 
   /**
-   * Re-reads an item and the items beneath it, or the whole tree for
+   * Re-reads a group and the items beneath it, or the whole tree for
    * <code>undefined</code>, then forgets items no longer in the tree and
    * updates the rows.
    *
-   * @param {*} item The item that changed, or <code>undefined</code>.
+   * @param {MeshEditorGroup|undefined} group The group whose children changed, or <code>undefined</code>.
    * @ignore
    */
-  #onTreeChanged(item) {
-    if (defined(item)) {
-      // Skips items not read yet, which are read when they're first shown.
-      this.#reload(item);
+  #onTreeChanged(group) {
+    if (defined(group)) {
+      // Skips groups not read yet, which are read when they're first shown.
+      this.#reload(group);
     } else {
-      this.#roots = this.#provider.getChildren();
+      this.#roots = this.#editor.root.children;
       for (const root of this.#roots) {
         this.#reload(root);
       }
@@ -341,7 +337,7 @@ class EditorOutlinerViewModel {
    * Re-reads an item, if it was read before, and the items beneath it that
    * were.
    *
-   * @param {*} item The item.
+   * @param {Mesh|MeshEditorGroup} item The item.
    * @ignore
    */
   #reload(item) {
@@ -359,7 +355,7 @@ class EditorOutlinerViewModel {
   /**
    * Gets an item's node, reading the item if it hasn't been yet.
    *
-   * @param {*} item The item.
+   * @param {Mesh|MeshEditorGroup} item The item.
    * @returns {TreeNode} The item's node.
    * @ignore
    */
@@ -374,7 +370,7 @@ class EditorOutlinerViewModel {
   }
 
   /**
-   * @param {*} item The item.
+   * @param {Mesh|MeshEditorGroup} item The item.
    * @returns {EditorOutlinerRow} A new row for the item, with the default state.
    * @ignore
    */
@@ -385,7 +381,7 @@ class EditorOutlinerViewModel {
       label: "",
       depth: 0,
       expandable: false,
-      // Root items start expanded.
+      // Items in the editor's root group start expanded.
       expanded: this.#roots.includes(item),
       mesh: undefined,
       selectable: false,
@@ -402,19 +398,38 @@ class EditorOutlinerViewModel {
   }
 
   /**
-   * Reads an item's label, mesh and children from the provider.
+   * Reads an item's label, mesh and children.
    *
-   * @param {*} item The item.
+   * @param {Mesh|MeshEditorGroup} item The item.
    * @param {TreeNode} node The item's node.
    * @ignore
    */
   #read(item, node) {
-    const provider = this.#provider;
     const row = node.row;
-    node.children = provider.getChildren(item);
-    row.label = provider.getLabel(item);
-    row.mesh = provider.getMesh(item);
+    if (item instanceof Mesh) {
+      node.children = [];
+      row.mesh = item;
+    } else {
+      node.children = item.children;
+      row.mesh = undefined;
+    }
+    row.label = item.name ?? this.#getDefaultLabel(item);
     row.expandable = node.children.length > 0;
+  }
+
+  /**
+   * @param {Mesh|MeshEditorGroup} item The item.
+   * @returns {string} "Mesh" or "Group" and the item's number, assigning the next one if it doesn't have one yet.
+   * @ignore
+   */
+  #getDefaultLabel(item) {
+    const isMesh = item instanceof Mesh;
+    let number = this.#numbers.get(item);
+    if (!defined(number)) {
+      number = isMesh ? this.#nextMeshNumber++ : this.#nextGroupNumber++;
+      this.#numbers.set(item, number);
+    }
+    return `${isMesh ? "Mesh" : "Group"} ${number}`;
   }
 
   /**
@@ -553,7 +568,7 @@ class EditorOutlinerViewModel {
 
   /**
    * @param {EditorOutlinerRow} row A visible row.
-   * @returns {EditorOutlinerRow|undefined} The row's parent, or <code>undefined</code> for a root item's row.
+   * @returns {EditorOutlinerRow|undefined} The row's parent, or <code>undefined</code> for the row of an item in the editor's root group.
    * @ignore
    */
   #getParentRow(row) {
@@ -602,15 +617,15 @@ class EditorOutlinerViewModel {
   }
 
   /**
-   * Forgets the items that can no longer be reached from the root items.
-   * Done after re-reading, rather than as children are removed, so an item
-   * that moved to another parent isn't forgotten.
+   * Forgets the items that can no longer be reached from the editor's root
+   * group. Done after re-reading, rather than as children are removed, so an
+   * item that moved to another parent isn't forgotten.
    *
    * @ignore
    */
   #forgetRemovedItems() {
     const reachable = new Set();
-    /** @param {ReadonlyArray<*>} items */
+    /** @param {ReadonlyArray<Mesh|MeshEditorGroup>} items */
     const visit = (items) => {
       for (const item of items) {
         const node = this.#nodes.get(item);
@@ -639,7 +654,7 @@ class EditorOutlinerViewModel {
     /** @type {EditorOutlinerRow[]} */
     const rows = [];
     /**
-     * @param {ReadonlyArray<*>} items
+     * @param {ReadonlyArray<Mesh|MeshEditorGroup>} items
      * @param {number} depth
      */
     const addRows = (items, depth) => {
@@ -662,7 +677,7 @@ class EditorOutlinerViewModel {
   }
 
   /**
-   * Stops listening to the provider and editor. Doesn't destroy the provider.
+   * Stops listening to the editor.
    */
   destroy() {
     this.#eventHelper.removeAll();
