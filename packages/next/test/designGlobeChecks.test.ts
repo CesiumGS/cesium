@@ -60,8 +60,8 @@ function answersJson(): Record<string, unknown> {
     ],
     pairs: [
       {
-        id: "first-tangent",
-        label: "10,000 ftUS on the first tangent",
+        id: "last-tangent",
+        label: "10,000 ftUS on the last tangent",
         from: 0,
         to: 1,
         designDistance: 10_001.999800040241,
@@ -278,16 +278,16 @@ describe("checkRows", () => {
         });
         const rows = checkRows(a, shown);
         for (const id of ["design", "horizontal", "true"]) {
-          const r = row(rows, `pair.first-tangent.${id}`);
+          const r = row(rows, `pair.last-tangent.${id}`);
           expect(r.basis, `${basis} ${id}`).toBe(basis);
           expect(r.status, `${basis} ${factor} ${id}`).toBe(status);
           expect(r.kind).toBe("exact answer");
         }
-        const d = row(rows, "pair.first-tangent.design");
+        const d = row(rows, "pair.last-tangent.design");
         expect(d.unit).toBe("ftUS");
         expect(d.tolerance).toBeCloseTo(toleranceDesign, 15);
         expect(d.expected).toBe(pair.designDistance);
-        expect(row(rows, "pair.first-tangent.true").unit).toBe("m");
+        expect(row(rows, "pair.last-tangent.true").unit).toBe("m");
       }
     }
   });
@@ -319,9 +319,9 @@ describe("checkRows", () => {
   it("marks what the page doesn't show as not-shown", () => {
     const rows = checkRows(answers(), empty());
     for (const id of [
-      "pair.first-tangent.design",
-      "pair.first-tangent.horizontal",
-      "pair.first-tangent.true",
+      "pair.last-tangent.design",
+      "pair.last-tangent.horizontal",
+      "pair.last-tangent.true",
       "marker.separation",
       "mark.easting",
       "mark.northing",
@@ -426,7 +426,7 @@ describe("checkRows", () => {
 
   it("throws for a pick with no stated tolerance", () => {
     const shown = empty();
-    shown.pairs.set("first-tangent", { designDistance: 1, basis: "pick" });
+    shown.pairs.set("last-tangent", { designDistance: 1, basis: "pick" });
     expect(() => checkRows(answers(), shown)).toThrow("tolerance");
   });
 });

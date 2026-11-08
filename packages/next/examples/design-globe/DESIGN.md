@@ -28,7 +28,7 @@ the second audience: every number is there and honest, but quieter.
   exploration. One sentence of narration per step, with Next, Back and
   "Explore on your own" always visible; leaving keeps the current view,
   placement and measurements. The steps:
-  1. The corridor at the far end, rigid: the road drawn about 34 m from
+  1. The corridor at the far end, rigid: the road drawn about 35 m from
      where it is (the self-check measurement and the whiskers).
   2. The morph to reprojected: the gap closes to 0.000 m as the geometry
      moves into the globe's frame.
@@ -38,9 +38,12 @@ the second audience: every number is there and honest, but quieter.
      close in at the ruler's far end, where its bracket reads (UX review).
      The close-in sets the ghost and the ribbon aside; any other step,
      leaving the tour or another site brings them back (rulerView.ts).
-  5. Down the ladder: the single building (rigid is fine), the airport
+  5. Under the hills: a tunnel seen through its hill, with "See underground"
+     on. Any other step turns it off again if the step turned it on; leaving
+     the tour keeps it, as it keeps the view.
+  6. Down the ladder: the single building (rigid is fine), the airport
      (metres), the pole line (tens of metres).
-  6. Hand-off: the panel, the flight list and the measure toolbar, yours.
+  7. Hand-off: the panel, the flight list and the measure toolbar, yours.
 
   The tour respects reduced motion: steps cut instead of flying.
 
@@ -49,7 +52,7 @@ the second audience: every number is there and honest, but quieter.
   its factor while on, because exaggeration "confuses the accuracy story"
   (owner). The opening shot is at true scale, low and oblique near the far
   end of the corridor (about 21 km from the anchor), where the rigid
-  placement is about 34 m off and the gap reads; a "Fly along" control runs
+  placement is about 35 m off and the gap reads; a "Fly along" control runs
   the camera down the corridor to the anchor, where the two placements meet.
 - **Measurement proves the second half of the claim.** The same two points
   give the same design distance in both placements; the drawn positions and
@@ -60,7 +63,7 @@ the second audience: every number is there and honest, but quieter.
   1. **The design against itself:** a ground marker at station 170,000's
      true position (placed through the design CRS by PROJ, and labelled as
      the design's own point, not a survey), measured to the drawn station.
-     Rigid: about 34 m apart (the page reads the figure from `answers.json`).
+     Rigid: about 35 m apart (the page reads the figure from `answers.json`).
      Reprojected: 0.000 m. The morph shrinks it live.
   2. **The design against a real survey mark:** an NGS mark near the far end,
      placed from NGS's published NAD83(2011) position, independent of the
@@ -98,7 +101,7 @@ the second audience: every number is there and honest, but quieter.
      and the other placement's line ghosted beside each one.
   4. **A ground-versus-grid ruler** along the 10,000 ft pair: tick marks in
      design feet against true ground feet. The gap the scale factor makes
-     is read from the page's own measurement of the pair (0.938 ftUS at
+     is read from the page's own measurement of the pair (0.811 ftUS at
      10,000 ft with today's answers), never written here; it shows when
      zoomed in on the far end, where the two last ticks stand side by side
      with a bracket ("Close in on the ruler").
@@ -183,8 +186,8 @@ number stays in the sidebar, next to that number.
 │ └──────────────────────────────┘ │ Globe     │ │ │ Oakland hills to Livermore    │   (the selected
 │  Click a first point on a model  │ lat lon h │ │ │ [Rigid at the anchor|Reproj.] │    site's)
 │                                  │ error     │ │ │ One transform at the anchor…  │
-│            ◌·  snap preview      └───────────┘ │ │ 34.447 m  station 1700+00 … ▸ │   the evidence
-│                                                │ │ 22.797 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
+│            ◌·  snap preview      └───────────┘ │ │ 34.541 m  station 1700+00 … ▸ │   the evidence
+│                                                │ │ 22.883 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
 │                                                │ │ 10,000.000 ftUS = 3,050.722 m ▸│
 │        ┌ tour card ─────────────┐              │ │ sag chart        Fly along    │
 │        └────────────────────────┘   └────────┘ │ │ Take the short tour           │
@@ -269,11 +272,22 @@ engine's `accuracyOf`).
     keyboard's way), Clear (Escape too). A click on a model always
     measures; under the toolbar a one-line prompt appears while a
     measurement is under way or a click was refused ("Click a second
-    point on the same model").
+    point on the same model"). In Alignment mode, a point whose exact snap
+    is out of sight from the camera (a barrier's far face, a road under a
+    deck) goes on the drawn mesh, as the tooltip says, and the line says so:
+    a correct refusal, not a failure, and no warning.
   - **View**: Show the other placement (the ghost), Exaggerate the error
     (its factor beside it while on), the compass at the cursor, the error
-    ribbon; each a toggle (`active`), disabled with why where it can't
-    apply.
+    ribbon, See underground; each a toggle (`active`), disabled with why
+    where it can't apply.
+- **See underground** (owner, 2026-11-08), as civil design tools show
+  buried work: the ground within 500 ftUS of the corridor's centreline turns
+  translucent, at 30% opaque, through the engine's translucent terrain
+  (`Tileset3D.addTerrainTranslucency`). Its tunnels show in place under their
+  hills, drawn as ever, with depth, so what is in front still hides them.
+  While it's on, clicks and snaps go through that ground to the road
+  (`pickThrough`), so an engineer can measure a tunnel. Heights and clamping
+  still see the ground. In the link as `underground=on`.
 - **The snap preview** (F5), as CAD's AccuSnap: while the pointer rests on
   the view in a snapping mode, a throttled snap runs (one at a time, the
   last aborted), and a translucent dot marks where a click would land,
@@ -360,14 +374,27 @@ engine's `accuracyOf`).
   stand on it) and over a tunnel (the road is hidden in the hill). It
   leaves no room for the rigid copy: rigid moves 2.3 m sideways at the
   far end but rises 34 m, so the ground doesn't come through it.
-- **The anchor is on open road** (owner, 2026-11-07). The alignment's
-  middle, station 92,021, is in a tunnel, and the nearest earthwork after
-  it is a sidehill cut where the ground stands over the anchor ring. So
-  the anchor is at station 86,300, on fill between a viaduct and a portal,
-  5,721 ftUS before the middle: the ring and the end of Fly along are in
-  the open. The far ends are 13.7 km and 21.9 km from it. The 10,000 ft
-  pair runs from station 11,200 to 21,200 on the first tangent, both ends
-  on earthwork where the road meets the ground.
+- **The anchor and the measured sections stand above the ground** (owner,
+  2026-11-08: "pick some different spots that are above ground"). The
+  alignment's middle, station 92,021, is in a tunnel, and the nearest
+  earthwork after it is a sidehill cut where the ground stands over the
+  ring. So the anchor is at station 86,170, on fill between a viaduct and a
+  portal, 5,851 ftUS before the middle, where the fill's slopes reach past
+  the whole ring (108 ftUS on the right, 167 ftUS on the left; the ring is
+  106 ftUS at its widest). The ring lies in the road's plane, 1 m over its
+  profile, clear of the median barrier: level on the 6% grade, it ran under
+  the deck on its uphill side. The far ends are 13.7 km and 22.0 km from it.
+  The 10,000 ftUS pair runs from station 162,000 to 172,000 on the last
+  tangent, on fill the whole way, on one grade, so its line runs along the
+  road; on the first tangent it crossed a crest and two tunnels, and its line
+  ran under the road. The marker, station 170,000, is on fill. The
+  survey mark stays where NGS set it, so its nearest road is in a cut of 75 to
+  82 ftUS: its shot looks down into the cut, where the road shows. The pair
+  across the first curve in Checks runs tangent to tangent (29,400 on a
+  viaduct, 38,400 on fill), since the curve's first spiral starts in a tunnel.
+- **Lines stand just over what they mark.** A measure line is lifted 5 cm
+  (measureOverlay.ts `LINE_LIFT`): a 1 px line in the plane of a surface (the
+  median barrier's top, a lane between two clicks) fought it for depth.
 
 ### The ghost (F4)
 

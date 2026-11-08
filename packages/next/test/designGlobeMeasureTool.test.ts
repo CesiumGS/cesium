@@ -246,8 +246,8 @@ function answers(): Answers {
     ],
     pairs: [
       {
-        id: "first-tangent",
-        label: "10,000 ftUS on the first tangent",
+        id: "last-tangent",
+        label: "10,000 ftUS on the last tangent",
         from: 0,
         to: 1,
         designDistance: 10_001.999800040241,
@@ -479,7 +479,7 @@ describe("the measurements the page opens with", () => {
     expect(reprojected.design).toBe(rigid.design);
     expect(rigid.trueDistance).toBe("3,048.848 m");
     expect(reprojected.trueDistance).toBe(rigid.trueDistance);
-    expect(rigid.title).toBe("10,000 ftUS on the first tangent");
+    expect(rigid.title).toBe("10,000 ftUS on the last tangent");
   });
 
   it("writes no e-notation and names every unit", () => {
@@ -528,12 +528,12 @@ describe("what the measure section shows, for the checks", () => {
       marker: { separation: a.marker.separation, mode: "rigid" },
       mark: [a.mark.publishedSpc.easting, a.mark.publishedSpc.northing],
     });
-    expect(shown.pairs.get("first-tangent")?.basis).toBe("exact");
+    expect(shown.pairs.get("last-tangent")?.basis).toBe("exact");
     expect([...shown.points.keys()].sort()).toEqual([0, 1, 2]);
     const rows = checkRows(a, shown);
     const status = Object.fromEntries(rows.map((r) => [r.id, r.status]));
-    expect(status["pair.first-tangent.design"]).toBe("pass");
-    expect(status["pair.first-tangent.true"]).toBe("pass");
+    expect(status["pair.last-tangent.design"]).toBe("pass");
+    expect(status["pair.last-tangent.true"]).toBe("pass");
     expect(status["point.0.station"]).toBe("pass");
     expect(status["marker.separation"]).toBe("pass");
     expect(status["mark.easting"]).toBe("pass");
@@ -550,7 +550,7 @@ describe("what the measure section shows, for the checks", () => {
       },
     });
     expect(shown.points.get(0)?.basis).toBe("vertex");
-    expect(shown.pairs.get("first-tangent")?.basis).toBe("vertex");
+    expect(shown.pairs.get("last-tangent")?.basis).toBe("vertex");
     // A surface pick states its tolerance; off an answer's point, no row.
     const picked = shownValues(a, {
       user: {

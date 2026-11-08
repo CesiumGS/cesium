@@ -33,8 +33,8 @@ function answers(): Answers {
     ],
     pairs: [
       {
-        id: "first-tangent",
-        label: "10,000 ftUS on the first tangent",
+        id: "last-tangent",
+        label: "10,000 ftUS on the last tangent",
         from: 0,
         to: 1,
         designDistance: 10_001.999800040241,
@@ -108,7 +108,7 @@ function shown(over: Partial<ShownValues> = {}): ShownValues {
     ]),
     pairs: new Map([
       [
-        "first-tangent",
+        "last-tangent",
         {
           designDistance: 10_001.999800040241,
           horizontalDistance: 10_000.000000000253,
@@ -136,7 +136,7 @@ describe("design globe checks view", () => {
     expect(v.state).toBe("ready");
     expect(v.groups.map((g) => g.id)).toEqual([
       "marker",
-      "pair:first-tangent",
+      "pair:last-tangent",
       "mark",
       "pair:curve",
       // It shares an end with the shown pair, but isn't shown itself.
@@ -145,7 +145,7 @@ describe("design globe checks view", () => {
     const pair = v.groups[1]!;
     // Its three distances, then its two ends' five values each.
     expect(pair.rows).toHaveLength(13);
-    expect(pair.title).toBe("10,000 ftUS on the first tangent");
+    expect(pair.title).toBe("10,000 ftUS on the last tangent");
     // Its rows don't repeat the group's title.
     expect(pair.rows[0]!.label).toBe("Design distance (3D)");
     expect(pair.rows[3]!.label).toMatch(/^Sta\. 100\+00\.000/);
@@ -242,7 +242,7 @@ describe("design globe checks view", () => {
       station: 10_000.01,
     });
     const v = checksView(answers(), s);
-    const pair = v.groups.find((g) => g.id === "pair:first-tangent")!;
+    const pair = v.groups.find((g) => g.id === "pair:last-tangent")!;
     expect(pair.failed).toBe(1);
     expect(pair.rows.find((r) => r.status === "fail")!.label).toMatch(
       /station/,

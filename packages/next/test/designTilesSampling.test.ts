@@ -251,7 +251,7 @@ describe("the side slopes", () => {
     );
     expect(daylightRise(45_500, 1)).toBeUndefined(); // on a viaduct
     expect(daylightRise(90_000, -1)).toBeUndefined(); // in a tunnel
-    expect(daylightRise(86_300, -1)).toBeLessThan(0); // the anchor, on fill
+    expect(daylightRise(86_170, -1)).toBeLessThan(0); // the anchor, on fill
   });
 
   it("reach the daylight line: the mesh's outermost slope vertices at each station", () => {
@@ -261,7 +261,7 @@ describe("the side slopes", () => {
     const breaks = daylightBreaks().filter((b) => b > 85_800 && b < 86_700);
     expect(Array.from(stations)).toEqual(expect.arrayContaining(breaks));
     expect(facing(mesh)).toBe(mesh.indices.length / 3);
-    for (const station of [85_800, 86_300, 86_700]) {
+    for (const station of [85_800, 86_150, 86_700]) {
       for (const side of [-1, 1] as const) {
         const rise = daylightRise(station, side)!;
         const run = slopeSection(rise).daylight[0];

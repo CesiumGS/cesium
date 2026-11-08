@@ -452,23 +452,30 @@ export const TICKS = {
 
 /**
  * The rigid placement's anchor: as near the middle of the alignment (station
- * 92,021, in a tunnel) as the ring around it is in the open. The nearest
- * earthwork, 92,300 to 92,700 between a portal and a viaduct, is a sidehill
- * cut: the ground stands over the ring on both sides. The next, 85,800 to
- * 86,700 between a viaduct and a portal, is on fill at 86,300 (3DEP's
- * ground 21 ftUS under the road there, and under it 100 ftUS either side;
- * sampled every 50 ftUS, 2026-11-07), so the ring and the end of Fly along
- * are on open road. It is 5,721 ftUS before the middle: the far ends are
- * 13.7 km (the start) and 21.9 km (the end) from it.
+ * 92,021, in a tunnel) as the ring around it stays above the ground (owner,
+ * 2026-11-08: "pick some different spots that are above ground"). The nearest
+ * earthwork after the middle, 92,300 to 92,700 between a portal and a viaduct,
+ * is a sidehill cut: the ground stands over the ring on both sides. The next
+ * before it, 85,800 to 86,700 between a viaduct and a portal, is on fill, and
+ * at 86,170 its slopes reach out past the whole ring (32.4 m, 106 ftUS, at
+ * its widest), 108 ftUS on the right and 167 ftUS on the left, so the ring
+ * and the end of Fly along stand over the road's own fill (at 86,300 the
+ * ring ran past the right slope's daylight line, over the hill rising to the
+ * portal). It is 5,851 ftUS before the middle.
  */
-export const ANCHOR_STATION = 86_300;
+export const ANCHOR_STATION = 86_170;
 
 /**
- * The 10,000 ft pair's ends, on the first tangent (stations 10,000 to
- * 30,000): both on earthwork, where 3DEP's ground meets the profile within
- * 3 ftUS (sampled every 100 ftUS, 2026-11-07).
+ * The 10,000 ft pair's ends, on the last tangent (stations 127,000 to
+ * 174,042), where the road runs on fill for more than 10,000 ftUS (owner,
+ * 2026-11-08: "above ground"; the first tangent's pair crossed a crest, so
+ * its line ran under the road, and two tunnels): 162,000 to 172,000, on fill
+ * all the way (its side slopes fall to 3DEP's ground on both sides at every
+ * section, by 3.3 ftUS at the least), no structure between, and all on the
+ * +0.33% grade after the sag at 1600+00, so the straight line between the
+ * ends runs along the road.
  */
-export const PAIR_STATIONS = [11_200, 21_200] as const;
+export const PAIR_STATIONS = [162_000, 172_000] as const;
 
 /**
  * Around the route, in degrees: the extent of its section (offsets ±41),

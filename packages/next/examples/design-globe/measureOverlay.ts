@@ -48,6 +48,13 @@ export interface OverlayLine {
 
 /** The farthest a vertex moves (metres): the corridor's ~34 m, exaggerated, and some. */
 const PAD = 40 * EXAGGERATION + 1;
+/**
+ * How far a line stands over the ends it joins, metres, along the vertical:
+ * a 1 px line in the plane of the surface it marks (the median barrier's top,
+ * a lane between two clicks) fights it for depth, dashing as the camera
+ * moves. Five centimetres clears a surface at any range the line reads.
+ */
+export const LINE_LIFT = 0.05;
 /** Dashes per ghost segment. */
 const DASHES = 24;
 /** A ghost's colour, of its line's (lines can't blend: darker instead). */
@@ -139,12 +146,14 @@ export class MeasureOverlay {
       const positions = new Float32Array(n * 3);
       const partners = new Float32Array(n * 3);
       const rgba = new Float32Array(n * 4);
+      const { up } = enu(origin);
       pairs.forEach((s, i) => {
         [s.a, s.b].forEach((e, j) => {
           const v = i * 2 + j;
           for (let k = 0; k < 3; k++) {
-            positions[v * 3 + k] = e.rigid[k]! - origin[k]!;
-            partners[v * 3 + k] = e.reprojected[k]! - origin[k]!;
+            const lift = up[k]! * LINE_LIFT;
+            positions[v * 3 + k] = e.rigid[k]! + lift - origin[k]!;
+            partners[v * 3 + k] = e.reprojected[k]! + lift - origin[k]!;
           }
           rgba.set(s.color, v * 4);
         });

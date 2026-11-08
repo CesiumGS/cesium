@@ -88,7 +88,7 @@ const designEnd = (
  * The three openers, from answers.json and the corridor's placements: the
  * station 170,000 marker (at its true position) to the drawn station; NGS's
  * mark (at its published position) to the nearest drawn centreline point;
- * and `pairs[0]`, 10,000 ftUS on the first tangent.
+ * and `pairs[0]`, 10,000 ftUS on the last tangent.
  */
 export function openingMeasurements(
   answers: Answers,

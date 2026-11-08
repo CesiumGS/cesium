@@ -111,6 +111,12 @@ const ANSWER_OFFSETS = [0, -17, 17, -40, 40];
 const NEAR_DISTANCES = [10_000, 20_000];
 /** The opening self-check's station (owner, 2026-11-07), on the centreline. */
 const MARKER_STATION = 170_000;
+/**
+ * The pair across the first curve, on the tangents either side of it, on or
+ * over the ground: on the viaduct before it (the curve's own first spiral
+ * starts in a tunnel) and on fill after it.
+ */
+const CURVE_PAIR_STATIONS = [29_400, 38_400];
 /** Linear RGBA. */
 const BUILDING_COLOR = [0.62, 0.5, 0.38, 1];
 /** The site-grid building's plinth: weathered concrete, linear RGBA. */
@@ -767,6 +773,8 @@ function corridorAnswers(frame, alignment, placement, frames) {
   tag(BRIDGE.toStation, "bridge end");
   tag(PAIR_STATIONS[0], "pair start");
   tag(PAIR_STATIONS[1], "pair end");
+  tag(CURVE_PAIR_STATIONS[0], "curve pair start");
+  tag(CURVE_PAIR_STATIONS[1], "curve pair end");
   tag(MARKER_STATION, "marker");
   // The whole stations nearest each distance on either side of the anchor.
   for (const target of NEAR_DISTANCES) {
@@ -827,7 +835,6 @@ function corridorAnswers(frame, alignment, placement, frames) {
     Date.parse(DESIGN_TILES_INSTANT),
     LeapSeconds.builtIn(),
   );
-  const elements = alignment.horizontalElements;
   const pointIndex = (station, offset) => {
     const i = points.findIndex(
       (p) => p.station === station && p.offset === offset,
@@ -846,16 +853,16 @@ function corridorAnswers(frame, alignment, placement, frames) {
     });
   const pairs = [
     {
-      id: "first-tangent",
-      label: "10,000 ftUS on the first tangent",
+      id: "last-tangent",
+      label: "10,000 ftUS on the last tangent",
       a: [PAIR_STATIONS[0], 0],
       b: [PAIR_STATIONS[1], 0],
     },
     {
       id: "curve",
-      label: "Across the 5,000 ft curve, spiral to spiral",
-      a: [elements[1].station, 0],
-      b: [elements[4].station, 0],
+      label: "Across the 5,000 ft curve, tangent to tangent",
+      a: [CURVE_PAIR_STATIONS[0], 0],
+      b: [CURVE_PAIR_STATIONS[1], 0],
     },
     {
       id: "bridge",

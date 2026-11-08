@@ -16,6 +16,12 @@ import {
   sectionSurface,
 } from "../examples/design-globe/corridor.ts";
 import {
+  SIDE_SLOPES,
+  daylightRise,
+  slopeSection,
+} from "../examples/design-globe/sideSlopes.ts";
+import { RING_LIFT, roadPlaneAt } from "../examples/design-globe/overlays.ts";
+import {
   Alignment,
   type HorizontalElement,
 } from "../src/engineering/alignment.ts";
@@ -109,7 +115,7 @@ describe("the corridor's alignment", () => {
   it("puts the anchor on open road near the middle of the alignment", () => {
     const middle = (alignment.startStation + alignment.endStation) / 2;
     expect(middle).toBe(92_021);
-    expect(ANCHOR_STATION).toBe(86_300);
+    expect(ANCHOR_STATION).toBe(86_170);
     expect(Math.abs(ANCHOR_STATION - middle)).toBeLessThan(6_000);
     // On earthwork: the ring (30 m, about 98 ftUS, across) clear of any structure.
     const ring = 30 / (1200 / 3937);
@@ -121,18 +127,72 @@ describe("the corridor's alignment", () => {
     expect(clear(middle)).toBe(false);
   });
 
-  it("puts the 10,000 ft pair on the first tangent, both ends on earthwork", () => {
+  it("keeps the anchor ring over the road's own fill, its whole circle inside the daylight lines", () => {
+    // Its outer circle: 30 m × 1.08 (overlays.ts `AnchorRing`), in ftUS.
+    const reach = (30 * 1.08) / (1200 / 3937);
+    for (let k = 0; k < 72; k++) {
+      const a = (k * Math.PI) / 36;
+      const station = ANCHOR_STATION + reach * Math.cos(a);
+      const offset = reach * Math.sin(a);
+      if (Math.abs(offset) <= SIDE_SLOPES.hinge) {
+        continue; // over the road
+      }
+      const rise = daylightRise(station, offset < 0 ? -1 : 1)!;
+      expect(rise, `station ${station}`).toBeLessThan(0); // on fill
+      expect(
+        SIDE_SLOPES.hinge + slopeSection(rise).daylight[0],
+        `station ${station}, offset ${offset}`,
+      ).toBeGreaterThan(Math.abs(offset));
+    }
+  });
+
+  it("draws the ring in the road's plane, over its barrier", () => {
+    // In design space (feet) the plane's along-vector holds the road's grade.
+    const { along, across } = roadPlaneAt(alignment, (d) => d, ANCHOR_STATION);
+    const grade = along[2]! / Math.hypot(along[0]!, along[1]!);
+    const rise =
+      (alignment.elevationAt(ANCHOR_STATION + 10) -
+        alignment.elevationAt(ANCHOR_STATION - 10)) /
+      20;
+    expect(grade).toBeCloseTo(rise, 6);
+    expect(Math.abs(grade)).toBeGreaterThan(0.05);
+    // Across it, level.
+    expect(across[2]).toBeCloseTo(0, 6);
+    expect(Math.hypot(across[0]!, across[1]!)).toBeCloseTo(1, 9);
+    // Over the median barrier's top (2.67 ftUS).
+    expect(RING_LIFT / (1200 / 3937)).toBeGreaterThan(2.67);
+  });
+
+  it("puts the 10,000 ft pair on the last tangent, both ends on fill", () => {
     const [a, b] = PAIR_STATIONS;
     expect(b - a).toBe(10_000);
-    const tangent = ranges[0]!;
+    const tangent = ranges.at(-1)!;
     expect(tangent.element.kind).toBe("line");
     expect(a).toBeGreaterThanOrEqual(tangent.from);
     expect(b).toBeLessThanOrEqual(tangent.to);
-    for (const s of PAIR_STATIONS) {
+    // No structure anywhere along it, and on fill both sides all the way.
+    expect(
+      STRUCTURES.every((st) => st.toStation < a || st.fromStation > b),
+    ).toBe(true);
+    for (let s = a; s <= b; s += 50) {
+      for (const side of [-1, 1] as const) {
+        expect(daylightRise(s, side)!, `station ${s}`).toBeLessThan(0);
+      }
+    }
+  });
+
+  it("runs the pair's line along the road: one grade between its ends", () => {
+    const [a, b] = PAIR_STATIONS;
+    const grade =
+      (alignment.elevationAt(b) - alignment.elevationAt(a)) / (b - a);
+    for (let s = a; s <= b; s += 100) {
       expect(
-        STRUCTURES.every((st) => s < st.fromStation || s > st.toStation),
+        Math.abs(
+          alignment.elevationAt(s) -
+            (alignment.elevationAt(a) + grade * (s - a)),
+        ),
         `station ${s}`,
-      ).toBe(true);
+      ).toBeLessThan(1e-6);
     }
   });
 });
