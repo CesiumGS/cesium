@@ -6,6 +6,12 @@
 // so often in real time (at 3,600× the clock passes a minute every frame).
 // Then the engine renders, and the labels are placed against what the
 // canvas now shows (`Engine.onAfterTick`), whatever woke the frame.
+//
+// It runs whenever the engine's loop does, and keeps it awake only while
+// something changes (final review I2): the clock playing, or a refresh held
+// back by its real-time limit and still owed. Flights and the ground's
+// dimming are the engine's own animations (globe.ts `animate`); the camera,
+// the world and the page's state changes (`invalidate`) wake the loop.
 import type { PageCore } from "./page.ts";
 
 export interface FrameLoop {
@@ -20,7 +26,8 @@ export function createFrameLoop(deps: {
   };
   /** The tree's values that drift with time, at the clock's instant (treeState.ts `refresh`). */
   refreshTree(): void;
-  orion: { place(): void; askIfMoved(now: number, real: number): void };
+  /** `askIfMoved`: true while an ask is owed (held back by its real-time limit). */
+  orion: { place(): void; askIfMoved(now: number, real: number): boolean };
   callouts: { changed(): boolean; refresh(): void };
   overlays: {
     updateMinorGrid(): void;
@@ -51,6 +58,8 @@ export function createFrameLoop(deps: {
       }
       const frames = framesNow();
       const instant = instantNow();
+      /** A refresh held back by its real-time limit: the next frames do it. */
+      let owed = false;
       if (frames && instant) {
         globe.update(frames.itrf, instant);
         const now = viewer.clock.time;
@@ -83,7 +92,7 @@ export function createFrameLoop(deps: {
           walkReal = real;
           deps.walk.draw();
         }
-        deps.orion.askIfMoved(now, real);
+        const orionOwed = deps.orion.askIfMoved(now, real);
         if (
           deps.overlays.biasOn() &&
           Math.abs(now - deps.overlays.biasAt()) > 60_000 &&
@@ -92,9 +101,15 @@ export function createFrameLoop(deps: {
           lastBiasReal = real;
           deps.overlays.drawBias();
         }
+        owed =
+          orionOwed ||
+          Math.abs(now - lastTree) > 60_000 ||
+          (deps.walk.active() && Math.abs(now - walkAt) > 1000) ||
+          (deps.overlays.biasOn() &&
+            Math.abs(now - deps.overlays.biasAt()) > 60_000);
       }
-      // Every frame, as its own animation frame loop did.
-      return true;
+      // Paused and nothing owed: the loop may sleep.
+      return viewer.clock.mode !== "paused" || owed;
     };
     const offTick = viewer.engine.onTick(tick);
     // The labels, against what the engine just rendered (globe.ts).

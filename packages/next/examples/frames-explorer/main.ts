@@ -173,7 +173,14 @@ export function run(context: ExampleContext): ExampleRun {
     build: () => panelModel.build(),
     disposed: () => disposed,
   });
-  const { source, invalidate } = modelSource;
+  const { source } = modelSource;
+  // A change to the page's state: the panel again, and a frame of the
+  // engine's loop (frameLoop.ts), which sleeps once nothing changes and
+  // can't see this state: what the scene and the labels show follows it.
+  const invalidate = () => {
+    modelSource.invalidate();
+    viewer.engine.wake();
+  };
   scope.defer(() => modelSource.dispose());
   loading.subscribe(invalidate);
 

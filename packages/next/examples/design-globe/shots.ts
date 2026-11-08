@@ -61,9 +61,17 @@ export class CameraMoves {
    */
   lift = 0;
 
+  /** Ends the running move's frames. */
+  private end: (() => void) | undefined;
+
+  /**
+   * `animate`: the engine's frames (frameDriver.ts): each step of a move
+   * places the camera before the render, busy while it flies.
+   */
   constructor(
-    private readonly viewer: Viewer,
+    private readonly viewer: Pick<Viewer, "controller" | "engine" | "view">,
     private readonly changed: () => void,
+    private readonly animate: (step: (now: number) => boolean) => () => void,
   ) {}
 
   get flying(): boolean {
@@ -119,6 +127,8 @@ export class CameraMoves {
 
   stop(): void {
     this.token++;
+    this.end?.();
+    this.end = undefined;
     if (this.flying_) {
       this.flying_ = false;
       this.changed();
@@ -147,15 +157,15 @@ export class CameraMoves {
     const start = performance.now();
     this.flying_ = true;
     this.changed();
-    const step = (now: number) => {
+    this.end = this.animate((now) => {
       if (token !== this.token) {
-        return;
+        return false;
       }
       if (controller.inputs !== inputs) {
         this.stop();
-        return;
+        return false;
       }
-      const u = Math.min(1, (now - start) / ms);
+      const u = Math.min(1, Math.max(0, (now - start) / ms));
       const f = path(options.ease === false ? u : morphEase(u));
       view.camera.lookAt(
         Float64Array.from(f.center),
@@ -165,8 +175,7 @@ export class CameraMoves {
       );
       engine.requestRender();
       if (u < 1) {
-        requestAnimationFrame(step);
-        return;
+        return true;
       }
       controller.focus(
         Float64Array.from(f.center),
@@ -174,11 +183,12 @@ export class CameraMoves {
         f.pitch,
         f.range,
       );
+      this.end = undefined;
       this.flying_ = false;
       this.changed();
       options.done?.();
-    };
-    requestAnimationFrame(step);
+      return false;
+    });
   }
 
   /**

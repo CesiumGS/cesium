@@ -332,7 +332,7 @@ export class Viewer {
       // As the eye sees the scene: adapting to it, night vision, the stars.
       exposure: options.exposure ?? EYE,
     });
-    this.controller = new GlobeController(this.view, canvas);
+    this.controller = new GlobeController(this.view, canvas, engine);
     // The whole Earth until the app frames something, as 1.x starts: the
     // camera at the Earth's center drew its first frames from inside it.
     this.view.camera.lookAt(
@@ -984,6 +984,7 @@ export class Viewer {
       const controller = (this.secondController = new GlobeController(
         second,
         this.canvas,
+        this.engine,
       ));
       second.camera.near = this.view.camera.near;
       controller.focus(

@@ -1,30 +1,45 @@
 // Small helpers main.ts uses (plan 4b Tasks 18 and 20), kept out of it.
-/** A small store: `get` the current value; listeners told once per frame. */
-export function createStore<T>(initial: T) {
+
+/**
+ * When a store's listeners are told: once, after the engine's next render
+ * (frameDriver.ts `queue`), so what they show matches the frame drawn.
+ */
+export interface StoreFrame {
+  queue(work: () => void): void;
+  cancel(work: () => void): void;
+}
+
+/**
+ * A small store: `get` the current value; listeners told once per frame,
+ * after the render (`frame`). `always`: told on every `set`, even of the
+ * same value.
+ */
+export function createStore<T>(
+  initial: T,
+  frame: StoreFrame,
+  options: { always?: boolean } = {},
+) {
   let value = initial;
   const listeners = new Set<() => void>();
-  let queued = 0;
+  const notify = () => {
+    for (const l of [...listeners]) {
+      l();
+    }
+  };
   return {
     get: () => value,
     set(next: T) {
-      if (next === value) {
+      if (next === value && options.always !== true) {
         return;
       }
       value = next;
-      if (queued === 0) {
-        queued = requestAnimationFrame(() => {
-          queued = 0;
-          for (const l of [...listeners]) {
-            l();
-          }
-        });
-      }
+      frame.queue(notify);
     },
     subscribe(l: () => void) {
       listeners.add(l);
       return () => listeners.delete(l);
     },
-    dispose: () => cancelAnimationFrame(queued),
+    dispose: () => frame.cancel(notify),
   };
 }
 

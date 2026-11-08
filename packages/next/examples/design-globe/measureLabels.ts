@@ -20,6 +20,7 @@ import {
 } from "./measureOpeners.ts";
 import { rulerTips } from "./measureOverlay.ts";
 import type { MeasureState } from "./measureState.ts";
+import { createStore, type StoreFrame } from "./stores.ts";
 
 /** Labels over the canvas, placed each frame the camera or the morph moves. */
 export interface MeasureLive {
@@ -75,31 +76,9 @@ const USER_RANGE = 5_000;
 const distance = (p: ArrayLike<number>, q: ArrayLike<number>) =>
   Math.hypot(p[0]! - q[0]!, p[1]! - q[1]!, p[2]! - q[2]!);
 
-/** A store whose listeners are told once per animation frame. */
-export function liveStore<T>(initial: T) {
-  let value = initial;
-  const listeners = new Set<() => void>();
-  let queued = 0;
-  return {
-    get: () => value,
-    set(next: T) {
-      value = next;
-      if (queued === 0) {
-        queued = requestAnimationFrame(() => {
-          queued = 0;
-          for (const l of [...listeners]) {
-            l();
-          }
-        });
-      }
-    },
-    subscribe(l: () => void) {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    dispose: () => cancelAnimationFrame(queued),
-  };
-}
+/** A store whose listeners are told once per frame, after the render, on every `set`. */
+export const liveStore = <T>(initial: T, frame: StoreFrame) =>
+  createStore(initial, frame, { always: true });
 
 /** The view the labels are projected with. */
 export interface LabelView {

@@ -350,6 +350,80 @@ describe("the frame loop sleeps when settled", () => {
     expect(queue.size).toBe(0);
   });
 
+  it("a wake inside the tick (a tileset's listener moving the camera) runs the next frame", async () => {
+    const view = await settled();
+    // A settled tileset whose update, inside the tick and after the camera
+    // was fingerprinted, moves the camera once (as a synchronous `request`
+    // listener can, Tileset3D.ts): nothing in needsTicks covers it.
+    let moves = 0;
+    const tileset = {
+      world: view.world,
+      url: "mover",
+      show: true,
+      enableCollision: false,
+      terrain: false,
+      lights: undefined,
+      changedAt: 0,
+      active: true,
+      needsFrames: false,
+      exactHeight: () => undefined,
+      onHeightsChanged: () => () => {},
+      update: () => {
+        if (moves++ === 0) {
+          view.camera.lookAt(v3.vec3(R, 0, 0), 0.4, -1, 130);
+        }
+      },
+      destroy: () => {},
+    };
+    (engine.tilesets as unknown[]).push(tileset);
+    engine.requestRender();
+    const drawn = await rendered(async () => {
+      expect(await frames(600)).toBe(2);
+    });
+    // The request's frame, then the camera's.
+    expect(drawn).toBe(2);
+    expect(moves).toBe(2);
+    expect(queue.size).toBe(0);
+  });
+
+  it("a tick listener's own wakes run no further frame", async () => {
+    const view = await settled();
+    let moves = 0;
+    // Its change renders in this tick: no wake is needed for it.
+    engine.onTick(() => {
+      if (moves < 3) {
+        moves++;
+        view.camera.lookAt(v3.vec3(R, 0, 0), 0.1 * moves, -1, 100);
+        engine.wake();
+      }
+      return false;
+    });
+    const drawn = await rendered(async () => {
+      expect(await frames(600)).toBe(1);
+    });
+    expect(drawn).toBe(1);
+    expect(queue.size).toBe(0);
+  });
+
+  it("a tick listener added inside a frame runs from the next one", async () => {
+    await settled();
+    let ran = 0;
+    let added = false;
+    engine.onTick(() => {
+      if (!added) {
+        added = true;
+        engine.onTick(() => {
+          ran++;
+          return ran < 5;
+        });
+      }
+      return false;
+    });
+    await frames(600);
+    expect(ran).toBe(5);
+    expect(queue.size).toBe(0);
+  });
+
   it("a playing clock keeps it running; paused, it sleeps", async () => {
     await settled();
     // As the Viewer drives its clock (widgets/Viewer.ts).
@@ -548,6 +622,14 @@ describe("the frame loop sleeps when settled", () => {
     expect(queue.size).toBe(0);
     // The tileset's own per-frame writes (the memory-adjusted SSE) don't.
     expect(await frames(300)).toBe(0);
+    // A proxy, stable until setPolicy replaces the policy (its documented
+    // identity), which carries the knob over.
+    const proxy = tileset.selection;
+    expect(tileset.selection).toBe(proxy);
+    tileset.setPolicy("budgeted");
+    expect(tileset.selection).not.toBe(proxy);
+    expect(tileset.selection.maximumScreenSpaceError).toBe(8);
+    await frames(300);
     engine.removeTileset(tileset);
     expect(queue.size).toBe(1);
   });

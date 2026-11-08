@@ -82,6 +82,7 @@ import {
 import type { MorphTarget } from "./morphDriver.ts";
 import type { LoadEvent, SnapMode } from "./page.ts";
 import type { SiteRuntime } from "./siteLoader.ts";
+import type { StoreFrame } from "./stores.ts";
 
 /** How far from the cursor a snap may land, CSS pixels. */
 export const APERTURE = 12;
@@ -108,6 +109,8 @@ export interface MeasureToolDeps {
   changed(): void;
   /** Something on the globe changed: draw a frame and run the frame loop. */
   wake(): void;
+  /** When the labels' listeners are told: after the render (frameDriver.ts). */
+  readonly frame: StoreFrame;
   /** Loading items (the frame data `measure` needs). */
   report(event: LoadEvent): void;
   disposed(): boolean;
@@ -201,12 +204,15 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
   let hover: MeasureLive["hover"];
   let crosshair = false;
 
-  const live = liveStore<MeasureLive>({
-    pills: [],
-    dots: [],
-    crosshair: false,
-    figures: {},
-  });
+  const live = liveStore<MeasureLive>(
+    {
+      pills: [],
+      dots: [],
+      crosshair: false,
+      figures: {},
+    },
+    deps.frame,
+  );
   const overlay = new MeasureOverlay(viewer.world);
 
   // ------------------------------------------------------ frame data

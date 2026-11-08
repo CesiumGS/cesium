@@ -78,7 +78,11 @@ export interface OrionLayer {
   /** Orion's track on this thread, once its OEM is in (the dish's line of sight, skyRay.ts). */
   track(): OrionTrack | undefined;
   /** Asks for the statement again if the clock moved since the last ask. */
-  askIfMoved(now: number, real: number): void;
+  /**
+   * Asks for Orion's statement again if the clock moved since (at most so
+   * often in real time); true while that ask is owed, held back.
+   */
+  askIfMoved(now: number, real: number): boolean;
   /** The legend's line (R8), from the statement at the clock's instant. */
   accuracy(): Pick<
     OverlayView,
@@ -429,12 +433,16 @@ export function createOrionLayer(deps: {
       // are asked for again within a moment (one in flight, the latest
       // waiting). Orion's dot doesn't wait for them (`markerPoint`).
       if (
-        orionInfoAsked !== undefined &&
-        Math.abs(now - orionInfoAsked.clock) > 1000 &&
-        real - orionInfoAsked.real > 150
+        orionInfoAsked === undefined ||
+        Math.abs(now - orionInfoAsked.clock) <= 1000
       ) {
-        askOrionInfo();
+        return false;
       }
+      if (real - orionInfoAsked.real > 150) {
+        askOrionInfo();
+        return false; // asked (or not ready: the loading's change asks)
+      }
+      return true;
     },
     accuracy,
     dispose: unsubscribe,

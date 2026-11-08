@@ -310,7 +310,10 @@ export class Globe {
   private flying_: number | undefined;
   /** The ground's exposure compensation now (stops; 0 undimmed). */
   private dimmed = 0;
-  private dimTimer = 0;
+  /** Ends the dimming's frames. */
+  private endDim: (() => void) | undefined;
+  /** Ends the flight's frames. */
+  private endFlight: (() => void) | undefined;
   /** The views the triads draw in (`World.setViewMask`): all but the gap inset's. */
   private triadMask = 0xffffffff;
 
@@ -325,7 +328,8 @@ export class Globe {
     hud.append(this.labelHost);
     scope.defer(() => {
       this.flight++;
-      cancelAnimationFrame(this.dimTimer);
+      this.endFlight?.();
+      this.endDim?.();
       this.labelHost.remove();
       for (const id of [...this.triads.keys()]) {
         this.removeTriad(id);
@@ -1007,15 +1011,17 @@ export class Globe {
       cam.near,
       Math.min(0.1, Math.max(0.001, to.range * 0.0008)),
     );
-    const step = (now: number) => {
+    // In the engine's frames: each step before its render (the labels
+    // after it see this camera), busy while it flies.
+    const step = (now: number): boolean => {
       if (token !== this.flight) {
-        return;
+        return false;
       }
       if (controller.inputs !== inputs) {
         this.flight++;
-        return;
+        return false;
       }
-      const u = Math.min(1, (now - start) / duration);
+      const u = Math.min(1, Math.max(0, (now - start) / duration));
       const e = u < 0.5 ? 4 * u * u * u : 1 - (-2 * u + 2) ** 3 / 2;
       const look = startLook.map((v, i) => v + (center[i]! - v) * e);
       const dir = normalize(
@@ -1034,12 +1040,36 @@ export class Globe {
       cam.version++;
       this.viewer.engine.requestRender();
       if (u < 1) {
-        requestAnimationFrame(step);
-      } else {
-        end();
+        return true;
       }
+      end();
+      return false;
     };
-    requestAnimationFrame(step);
+    this.endFlight?.();
+    this.endFlight = this.animate(step);
+  }
+
+  /**
+   * Runs `step(now)` in the engine's frames, before each render, until it
+   * returns false; the loop runs while it does. Returns what ends it.
+   */
+  private animate(step: (now: number) => boolean): () => void {
+    let done = false;
+    const off = this.viewer.engine.onTick((now) => {
+      if (done) {
+        return false;
+      }
+      if (step(now)) {
+        return true;
+      }
+      done = true;
+      off();
+      return false;
+    });
+    return () => {
+      done = true;
+      off();
+    };
   }
 
   /** Stops a flight in progress. */
@@ -1063,7 +1093,8 @@ export class Globe {
       return;
     }
     this.dimmed = target;
-    cancelAnimationFrame(this.dimTimer);
+    this.endDim?.();
+    this.endDim = undefined;
     const { view } = this.viewer;
     const exposure = view.exposure;
     if (!("eye" in exposure)) {
@@ -1072,15 +1103,12 @@ export class Globe {
     const from = exposure.compensation ?? 0;
     const to = target;
     const start = performance.now();
-    const step = (now: number) => {
-      const u = Math.min(1, (now - start) / 600);
+    this.endDim = this.animate((now) => {
+      const u = Math.min(1, Math.max(0, (now - start) / 600));
       view.exposure = { ...exposure, compensation: from + (to - from) * u };
       this.viewer.engine.requestRender();
-      if (u < 1) {
-        this.dimTimer = requestAnimationFrame(step);
-      }
-    };
-    this.dimTimer = requestAnimationFrame(step);
+      return u < 1;
+    });
   }
 }
 

@@ -161,7 +161,17 @@ export function run(context: ExampleContext): ExampleRun {
     ribbon?.dispose();
   });
 
-  const live = createStore<LiveValues>({});
+  // The page's frames are the engine's (frameDriver.ts): animations before
+  // its render, overlays and the stores' listeners after it.
+  const frames = createFrameDriver(viewer.engine);
+  scope.defer(() => frames.dispose());
+  /** The camera and canvas size the overlays were last placed for. */
+  let lastCamera = -1;
+  let lastSize = "";
+  /** The morph started or ended: the labels again after the render. */
+  let placeLabels = false;
+
+  const live = createStore<LiveValues>({}, frames);
   scope.defer(() => live.dispose());
   /** The panel's model: made once everything it reads is set up (below). */
   const model: {
@@ -221,10 +231,8 @@ export function run(context: ExampleContext): ExampleRun {
     }),
     setLink: (link) => setLink(link),
     changed: refresh,
-    wake: () => {
-      viewer.engine.requestRender();
-      frames.wake();
-    },
+    wake: () => viewer.engine.requestRender(),
+    frame: frames,
     report,
     disposed: () => disposed,
     away: () => {
@@ -250,16 +258,14 @@ export function run(context: ExampleContext): ExampleRun {
           .map((s): MorphTarget | undefined => s.pair)
           .concat(whiskers, tool.target)
           .filter((x): x is MorphTarget => x !== undefined),
-      requestRender: () => {
-        viewer.engine.requestRender();
-        frames.wake();
-      },
+      requestRender: () => viewer.engine.requestRender(),
       changed: () => {
         cursor.update();
-        tool.place();
+        placeLabels = true;
         refresh();
       },
       disposed: () => disposed,
+      animate: (step) => frames.animate(step),
     },
     params.mode,
   );
@@ -286,13 +292,16 @@ export function run(context: ExampleContext): ExampleRun {
     compass: () => view.compass,
   });
 
-  const camera = new CameraMoves(viewer, () => {
-    frames.wake();
-    if (!camera.flying && shots.alongStation() !== undefined) {
-      shots.endAlong();
-    }
-    refresh();
-  });
+  const camera = new CameraMoves(
+    viewer,
+    () => {
+      if (!camera.flying && shots.alongStation() !== undefined) {
+        shots.endAlong();
+      }
+      refresh();
+    },
+    (step) => frames.animate(step),
+  );
   scope.defer(() => camera.stop());
   const shots = createShots({
     viewer,
@@ -453,48 +462,47 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   // ----------------------------------------------------- the frame loop
-  // Only while something changes (frameDriver.ts): a settled page requests
-  // no frames, so on-demand rendering idles.
-  let lastCamera = -1;
-  const frames = createFrameDriver({
-    request: (cb) => requestAnimationFrame(cb),
-    cancel: (h) => cancelAnimationFrame(h),
-    step() {
+  // In the engine's frames (frameDriver.ts), which run only while something
+  // changes: a settled page requests no frames, so on-demand rendering
+  // idles. The camera, the tilesets and the world wake the engine
+  // themselves; the morph and the flights are its animations.
+  // Before the render: the pairs whose tiles unloaded since.
+  scope.defer(
+    viewer.engine.onTick(() => {
       if (disposed) {
         return false;
       }
-      let busy = false;
       for (const site of sites.values()) {
         site.pair?.sweep();
         if (site.pair?.takeChanged()) {
           viewer.engine.requestRender();
-          busy = true;
         }
       }
+      return false;
+    }),
+  );
+  // After it: what is placed against the frame drawn, from the camera and
+  // the morph it was drawn with.
+  scope.defer(
+    frames.afterRender(() => {
+      if (disposed) {
+        return;
+      }
       const cam = viewer.view.camera;
-      if (cam.version !== lastCamera) {
+      const size = `${viewer.canvas.clientWidth}x${viewer.canvas.clientHeight}`;
+      if (cam.version !== lastCamera || size !== lastSize) {
         lastCamera = cam.version;
-        busy = true;
+        lastSize = size;
         // What was under the cursor no longer is.
         cursor.cameraMoved();
         placeAnchorLabel();
         tool.place();
-      } else if (morph.morphing) {
+      } else if (morph.morphing || placeLabels) {
         tool.place();
       }
-      return busy || camera.flying || morph.morphing;
-    },
-  });
-  scope.defer(() => frames.dispose());
-  const wake = () => frames.wake();
-  // The user takes the camera (the controller's input), or the view resizes.
-  for (const type of ["pointerdown", "pointermove", "wheel", "keydown"]) {
-    viewer.canvas.addEventListener(type, wake, { signal, passive: true });
-  }
-  // The canvas resizing (a window resize, or the gallery's columns).
-  const resized = new ResizeObserver(wake);
-  resized.observe(viewer.canvas);
-  scope.defer(() => resized.disconnect());
+      placeLabels = false;
+    }),
+  );
   scope.defer(clearTimeControls(viewer.container, hud, viewer.canvas));
   /** The user has taken the camera: no opening shot cuts it away after. */
   let userMoved = false;
@@ -876,10 +884,10 @@ export function run(context: ExampleContext): ExampleRun {
   }
   liftForTour();
 
-  const store = createStore<PanelModel>(buildModel());
+  const store = createStore<PanelModel>(buildModel(), frames);
   model.store = store;
   scope.defer(() => store.dispose());
-  const measureStore = createStore<MeasurePanel>(tool.view());
+  const measureStore = createStore<MeasurePanel>(tool.view(), frames);
   model.measure = measureStore;
   scope.defer(() => measureStore.dispose());
   // A deep link's measurement, once its site's placements are in.

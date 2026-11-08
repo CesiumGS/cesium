@@ -336,6 +336,13 @@ export class Tileset3D implements TileTree {
    * The selection policy (`setPolicy` replaces it). Its knobs set here
    * (`maximumScreenSpaceError`, ...) select again and wake the engine's
    * loop.
+   *
+   * It is a proxy on the policy, so that a write through it wakes the
+   * loop: reads and writes reach the policy, but its identity is the
+   * proxy's. The same proxy comes back until `setPolicy` replaces the
+   * policy, so `tileset.selection === tileset.selection` holds, and a
+   * changed identity still means a new policy; the policy object itself is
+   * never handed out.
    */
   get selection(): TileSelection {
     if (this.watchedPolicy?.policy !== this.policy) {
@@ -1038,32 +1045,28 @@ export class Tileset3D implements TileTree {
    * target.
    */
   get active(): boolean {
-    return (
-      !this.idle ||
-      // Wanted tiles still waiting for a request slot (the origin's window,
-      // shared with other tilesets, may be full).
-      this.wanted.size > 0 ||
-      this.frame - this.lastChange < 3 ||
-      this.imagery?.busy === true ||
-      this.imageryPending ||
-      this.policy.memoryAdjustedScreenSpaceError !==
-        this.policy.maximumScreenSpaceError
-    );
+    return this.inFlight > 0 || this.settling;
   }
 
   /**
    * Needs the engine's loop to keep ticking: `active`, except for loads in
-   * flight alone (their completion wakes the loop, `changed`). Content
-   * waiting to upload, trees to build, tiles waiting for a request slot,
-   * height queries, a recent change, imagery, or the memory-adjusted SSE
-   * still moving.
+   * flight alone (their completion wakes the loop, `changed`), and with
+   * height queries. Content waiting to upload, trees to build, tiles
+   * waiting for a request slot, height queries, a recent change, imagery,
+   * or the memory-adjusted SSE still moving.
    */
   get needsFrames(): boolean {
+    return this.queries.length > 0 || this.settling;
+  }
+
+  /** What both `active` and `needsFrames` wait on: work an update does now. */
+  private get settling(): boolean {
     return (
       this.ready.length > 0 ||
       this.externals.length > 0 ||
+      // Wanted tiles still waiting for a request slot (the origin's window,
+      // shared with other tilesets, may be full).
       this.wanted.size > 0 ||
-      this.queries.length > 0 ||
       this.frame - this.lastChange < 3 ||
       this.imagery?.busy === true ||
       this.imageryPending ||

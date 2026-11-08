@@ -113,9 +113,19 @@ export class GlobeController {
   private readonly abort = new AbortController();
   private readonly ellipsoid = Ellipsoid.WGS84;
 
+  /**
+   * `frames`: the engine's frame loop (`Engine.onTick`), for the momentum
+   * and the wheel's glide: each step then moves the camera before the
+   * engine renders, in the frame it shows, and keeps the loop awake while
+   * it runs. Without it they run on their own animation frames (a camera
+   * an application renders itself, `renderFrame`).
+   */
   constructor(
     readonly view: View,
     readonly element: HTMLElement,
+    private readonly frames?: {
+      onTick(listener: (now: number) => boolean): () => void;
+    },
   ) {
     const signal = this.abort.signal;
     element.addEventListener("pointerdown", (e) => this.onDown(e), { signal });
@@ -155,6 +165,14 @@ export class GlobeController {
 
   dispose(): void {
     this.abort.abort();
+    this.offTick?.();
+    this.offTick = undefined;
+    this.animating = false;
+  }
+
+  /** Momentum or the wheel's glide is moving the camera. */
+  get moving(): boolean {
+    return this.animating;
   }
 
   // ------------------------------------------------------------- input
@@ -619,7 +637,8 @@ export class GlobeController {
     }
     this.animating = true;
     let last = performance.now();
-    const step = (now: number) => {
+    /** One step; true while there is momentum left. */
+    const step = (now: number): boolean => {
       const frames = Math.min((now - last) / (1000 / 60), 4);
       last = now;
       if (this.mode === "none" && Math.abs(this.spinRate) > 1e-6) {
@@ -646,16 +665,38 @@ export class GlobeController {
         Math.abs(this.pendingZoom) > 1e-4 ||
         Math.abs(this.zoomRate) > 1e-3
       ) {
-        requestAnimationFrame(step);
-      } else {
-        this.spinRate = 0;
-        this.pendingZoom = 0;
-        this.zoomRate = 0;
-        this.animating = false;
+        return true;
+      }
+      this.spinRate = 0;
+      this.pendingZoom = 0;
+      this.zoomRate = 0;
+      this.animating = false;
+      return false;
+    };
+    if (this.frames !== undefined) {
+      // In the engine's frame, before it renders; busy while it moves.
+      const off = this.frames.onTick((now) => {
+        const more = this.animating && step(now);
+        if (!more) {
+          off();
+          if (this.offTick === off) {
+            this.offTick = undefined;
+          }
+        }
+        return more;
+      });
+      this.offTick = off;
+      return;
+    }
+    const frame = (now: number) => {
+      if (this.animating && step(now)) {
+        requestAnimationFrame(frame);
       }
     };
-    requestAnimationFrame(step);
+    requestAnimationFrame(frame);
   }
+  /** Removes the momentum's tick listener (`frames`). */
+  private offTick: (() => void) | undefined;
 
   // ------------------------------------------------------------- picking
 

@@ -306,6 +306,12 @@ export class Engine {
    * camera's `position`, `direction` or `up` written without
    * `version++`, and state outside the fingerprint (`View.shadows`,
    * `fxaa`, `overlays`, `icrfToFixed`, the sky).
+   *
+   * An application's per-frame work belongs in the engine's frames, not a
+   * `requestAnimationFrame` loop of its own: what moves the scene (an
+   * animation, a flight) in `onTick`, returning true while it runs; DOM
+   * placed against the canvas in `onAfterTick`. A tick listener that always
+   * returns true keeps the loop awake for ever.
    */
   get renderMode(): "onDemand" | "continuous" {
     return this.renderMode_;
@@ -462,8 +468,16 @@ export class Engine {
   private frameHandle = 0;
   /** An animation frame is requested for the loop (`start`). */
   private scheduled = false;
-  /** Inside the loop's tick: wakes then are seen by its end (`needsTicks`). */
+  /** Inside the loop's frame (its tick listeners and tick): wakes then are held for its end. */
   private ticking = false;
+  /**
+   * A wake during the tick, after the tick listeners (a tileset's `request`
+   * listener moving a camera, say): the tick may have read the state
+   * before the change, so the next frame runs (`needsTicks`).
+   */
+  private wokenInTick = false;
+  /** A listener added inside the frame: the next frame runs it. */
+  private listenerAdded = false;
   private readonly tickListeners: Array<(now: number) => boolean> = [];
   private readonly afterTickListeners: Array<(now: number) => void> = [];
   /** Per view: what stops watching its camera and canvas (`addView`). */
@@ -1603,17 +1617,23 @@ export class Engine {
    * fingerprints (a camera's vectors written without `version++`).
    */
   wake(): void {
-    // A wake inside the tick: its end decides (`needsTicks`).
-    if (this.running && !this.ticking) {
-      this.schedule();
+    if (!this.running) {
+      return;
     }
+    if (this.ticking) {
+      // Inside the frame: its end decides (`needsTicks`).
+      this.wokenInTick = true;
+      return;
+    }
+    this.schedule();
   }
 
   /**
    * Calls `listener` at the start of each frame of the loop (`start`) with
    * the frame's timestamp, before the engine looks for changes: what it
    * moves renders in the same frame (wakes from it are not needed, and are
-   * ignored). While a listener returns true (it is still changing
+   * ignored; a wake raised later in the tick runs the next frame). While a
+   * listener returns true (it is still changing
    * something: a clock playing, an animation), the loop keeps going;
    * returning false lets it sleep until a wake. Returns the remover.
    *
@@ -1624,6 +1644,7 @@ export class Engine {
    */
   onTick(listener: (now: number) => boolean): () => void {
     this.tickListeners.push(listener);
+    this.listenerAdded ||= this.ticking;
     this.wake();
     return () => {
       const i = this.tickListeners.indexOf(listener);
@@ -1642,6 +1663,7 @@ export class Engine {
    */
   onAfterTick(listener: (now: number) => void): () => void {
     this.afterTickListeners.push(listener);
+    this.listenerAdded ||= this.ticking;
     this.wake();
     return () => {
       const i = this.afterTickListeners.indexOf(listener);
@@ -1767,6 +1789,7 @@ export class Engine {
     let busy = false;
     let failed = false;
     this.ticking = true;
+    this.listenerAdded = false;
     try {
       // Copies: a listener may remove itself.
       for (const listener of this.tickListeners.slice()) {
@@ -1776,6 +1799,9 @@ export class Engine {
           this.reportLoopError("a tick listener", error);
         }
       }
+      // What the listeners changed renders in this tick: their wakes are
+      // not needed. A listener they added runs from the next frame.
+      this.wokenInTick = this.listenerAdded;
       if (!this.running) {
         return; // stopped (or destroyed) by a listener
       }
@@ -1817,10 +1843,13 @@ export class Engine {
    * On demand, what still needs the next tick after this one: a render
    * asked for since (with a view to draw it), content loading or settling
    * (`Tileset3D.needsFrames`; loads in flight wake the loop as they end),
-   * clamping, or picks waiting to be served. Anything else changes by a
-   * wake.
+   * clamping, picks waiting to be served, or a wake raised during the
+   * tick. Anything else changes by a wake.
    */
   private needsTicks(): boolean {
+    if (this.wokenInTick) {
+      return true; // woken during the tick, perhaps after it read the change
+    }
     const views = this.views;
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
@@ -1857,9 +1886,13 @@ export class Engine {
       return;
     }
     const links = this.links;
+    // A link's camera write is this tick's own (seen below), not a change
+    // to come: it doesn't run the next frame.
+    const woken = this.wokenInTick;
     for (let i = 0; i < links.length; i++) {
       links[i]!.evaluate();
     }
+    this.wokenInTick = woken;
     // Which targets need a frame. A canvas gets a fresh texture each frame,
     // so a target redraws all its views when any of them changed; targets
     // with none changed are skipped and keep their last image.

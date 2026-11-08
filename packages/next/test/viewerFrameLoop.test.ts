@@ -161,6 +161,52 @@ describe("the Viewer in the engine's frame loop", () => {
     v.destroy();
   });
 
+  it("the wheel's glide runs in the engine's frames, before each render, then sleeps", async () => {
+    const v = await viewer();
+    v.view.camera.lookAt(new Float64Array([6_378_137, 0, 0]), 0, -1, 1000);
+    await frames(60);
+    expect(queue.size).toBe(0);
+    const camera = v.view.camera;
+    // Each frame: where the camera is when the engine renders it.
+    const seen: number[] = [];
+    let renderedAt = engine.stats.framesRendered;
+    const offAfter = engine.onAfterTick(() => {
+      if (engine.stats.framesRendered > renderedAt) {
+        renderedAt = engine.stats.framesRendered;
+        seen.push(camera.version);
+      }
+    });
+    // A wheel notch at the view's centre (the element listens on a real DOM).
+    (v.controller as unknown as { onWheel(e: unknown): void }).onWheel({
+      clientX: 150,
+      clientY: 75,
+      deltaY: 100,
+      deltaMode: 0,
+      preventDefault: () => {},
+    });
+    expect(v.controller.moving).toBe(true);
+    // One animation frame a refresh: the engine's (no loop of its own).
+    let gliding = 0;
+    while (v.controller.moving && gliding < 600) {
+      expect(queue.size).toBe(1);
+      const before = camera.version;
+      expect(await frames(1)).toBe(1);
+      gliding++;
+      // It moved the camera in this frame, and the frame rendered that.
+      if (v.controller.moving) {
+        expect(camera.version).toBeGreaterThan(before);
+        expect(seen.at(-1)).toBe(camera.version);
+      }
+    }
+    expect(gliding).toBeGreaterThan(5);
+    expect(gliding).toBeLessThan(600);
+    await frames(60);
+    expect(queue.size).toBe(0);
+    expect(await frames(300)).toBe(0);
+    offAfter();
+    v.destroy();
+  });
+
   it("destroy removes its listeners: the clock no longer runs the loop", async () => {
     const v = await viewer();
     await frames(60);
