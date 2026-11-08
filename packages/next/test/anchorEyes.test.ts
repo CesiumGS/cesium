@@ -10,6 +10,8 @@ import { splitVec3 } from "../src/math/transforms.ts";
 import {
   ANCHOR_EYE_WORDS,
   MAX_ANCHORS,
+  VIEW_STRIDE,
+  viewBlockBytes,
   RECORD_WORDS,
   TRANSFORM_WORD,
   TRANSFORM_WORDS,
@@ -81,17 +83,24 @@ function scene(): { world: World; view: View } {
 interface Internals {
   viewData: Float32Array;
   lightData: Float32Array;
-  viewFrames: Map<View, { slot: number }>;
+  viewFrames: Map<View, { slot: number; viewBytes: number }>;
+  scratchKey: Float64Array;
+  viewKey(view: View): number;
 }
 
-/** Renders a frame; the view's block as written to the staging buffer. */
+/** Renders the views once; the view's block as written to the staging buffer. */
 function block(view: View): Float32Array {
   engine.renderFrame();
   const internals = engine as unknown as Internals;
   const slot = internals.viewFrames.get(view)!.slot;
   const words = ViewLayout.size / 4;
-  const stride = Math.ceil(ViewLayout.size / 256) * 64;
+  const stride = VIEW_STRIDE / 4;
   return internals.viewData.slice(slot * stride, slot * stride + words);
+}
+
+/** Bytes of the view's block uploaded and copied in the last render. */
+function uploaded(view: View): number {
+  return (engine as unknown as Internals).viewFrames.get(view)!.viewBytes;
 }
 
 /** The camera floats `writeView` wrote before anchors, from `camera`. */
@@ -167,8 +176,15 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
     expect(b.slice(V.cameraHi, V.cameraHi + 3)).toEqual(want.hi);
     expect(b.slice(V.cameraLo, V.cameraLo + 3)).toEqual(want.lo);
     expect(b.slice(V.planes, V.planes + 20)).toEqual(want.planes);
-    // Every slot: the camera, the identity, shown.
-    for (let slot = 0; slot < MAX_ANCHORS; slot++) {
+    // Every slot in use (the root, the Earth's, the Moon's): the camera,
+    // the identity, shown. Only those go up: 656 bytes, not the struct's
+    // 2,976.
+    expect(earth.slot).toBe(1);
+    expect(uploaded(view)).toBe(viewBlockBytes(3));
+    expect(viewBlockBytes(3)).toBe(656);
+    expect(ViewLayout.size).toBe(2976);
+    expect(MAX_ANCHORS).toBe(32);
+    for (let slot = 0; slot < 3; slot++) {
       const e = eye(b, slot);
       expect(e.hi).toEqual(want.hi);
       expect(e.lo).toEqual(want.lo);
@@ -364,9 +380,58 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
     };
     expect(jobs(earth)).toEqual([under.index]);
     expect(jobs()).toEqual([root.index]);
+    // A listed draw must be under the cast's anchor.
+    const listed = (anchor: typeof earth | undefined, draws: unknown[]) =>
+      (
+        world as unknown as {
+          rayJobs(r: typeof rays, o: object): unknown;
+        }
+      ).rayJobs(rays, anchor ? { anchor, draws } : { draws });
+    expect(() => listed(earth, [under])).not.toThrow();
+    expect(() => listed(earth, [under, root])).toThrow(
+      `castRays: draw ${root.index} is under no anchor (the table's root); the cast's rays are under the anchor Earth.`,
+    );
+    expect(() => listed(undefined, [under])).toThrow(
+      `castRays: draw ${under.index} is under the anchor Earth; the cast's rays are under no anchor (the table's root).`,
+    );
     const other = engine.createWorld().addAnchor("elsewhere");
     expect(() => jobs(other)).toThrow(
       /castRays: elsewhere is not an anchor of this world/,
     );
+  });
+
+  it("a globe-only view uploads the root's and the Earth's slots", () => {
+    const { world, view } = scene();
+    view.camera.copyFrom(pose());
+    block(view);
+    // No anchor yet: the root's slot alone.
+    expect(uploaded(view)).toBe(496);
+    const earth = world.bodyAnchor(EARTH);
+    const mesh = world.addMesh(createBox());
+    world.addDraw({ mesh, origin: Float64Array.of(1, 2, 3), parent: earth });
+    block(view);
+    expect(uploaded(view)).toBe(576);
+  });
+
+  it("the body camera follows a camera written in place without version++", () => {
+    const { world, view } = scene();
+    world.bodyAnchor(EARTH);
+    view.camera.copyFrom(pose());
+    const before = block(view);
+    view.camera.position[0] = view.camera.position[0]! + 1000;
+    const after = block(view);
+    expect(after[V.cameraHi]! - before[V.cameraHi]!).toBe(1000);
+  });
+
+  it("the view's fingerprint fills exactly VIEW_KEY_LENGTH values", () => {
+    const { world, view } = scene();
+    world.bodyAnchor(EARTH);
+    const internals = engine as unknown as Internals;
+    internals.scratchKey.fill(Number.NaN);
+    const n = internals.viewKey(view);
+    expect(n).toBe(internals.scratchKey.length);
+    for (let i = 0; i < n; i++) {
+      expect(Number.isFinite(internals.scratchKey[i]), `value ${i}`).toBe(true);
+    }
   });
 });

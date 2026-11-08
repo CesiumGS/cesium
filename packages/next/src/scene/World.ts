@@ -379,7 +379,8 @@ export interface CastOptions {
   viewMask?: number;
   /**
    * Only these draws, drawn or not (content loaded for a query); the view
-   * mask is not checked.
+   * mask is not checked. Each must hang under the cast's `anchor` (or under
+   * none without one): a draw under another throws, naming both.
    */
   draws?: readonly DrawHandle[];
   /**
@@ -3719,6 +3720,21 @@ export class World {
           options.draws.filter((d) => this.hasDraw(d)).map((d) => d.index),
         )
       : undefined;
+    if (only) {
+      const name = (slot: number) =>
+        slot === 0
+          ? "no anchor (the table's root)"
+          : `the anchor ${this.anchorSlots[slot]?.name ?? `in slot ${slot}`}`;
+      for (const draw of only) {
+        const t = u[draw * RECORD_WORDS + TRANSFORM_WORD]!;
+        const slot = this.transformAnchor[t]!;
+        if (slot !== anchorSlot) {
+          throw new Error(
+            `castRays: draw ${draw} is under ${name(slot)}; the cast's rays are under ${name(anchorSlot)}.`,
+          );
+        }
+      }
+    }
     const center = new Float64Array(3);
     const world = this.transformWorld;
     const test = (record: number, instance: number, radius: number) => {

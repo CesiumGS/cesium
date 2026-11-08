@@ -42,6 +42,12 @@ export interface AnchorEyes {
   readonly hidden: Uint8Array;
   /** Per slot: the anchor (undefined for the root, slot 0, and empty slots). */
   readonly anchors: Array<AnchorHandle | undefined>;
+  /**
+   * Slots in use: one past the highest the world's anchors hold (at least
+   * 1, the root). Only these are written and uploaded: a draw names only
+   * its world's anchors' slots.
+   */
+  count: number;
 }
 
 /** A table to fill with `computeAnchorEyes`. */
@@ -51,6 +57,7 @@ export function createAnchorEyes(): AnchorEyes {
     identity: new Uint8Array(MAX_ANCHORS),
     hidden: new Uint8Array(MAX_ANCHORS),
     anchors: new Array<AnchorHandle | undefined>(MAX_ANCHORS).fill(undefined),
+    count: 1,
   };
 }
 
@@ -83,11 +90,17 @@ export function computeAnchorEyes(
   }
   out.anchors.fill(undefined);
   const anchors = view.world.anchors;
+  let count = bodySlot + 1;
   for (let i = 0; i < anchors.length; i++) {
-    out.anchors[anchors[i]!.slot] = anchors[i];
+    const slot = anchors[i]!.slot;
+    out.anchors[slot] = anchors[i];
+    count = Math.max(count, slot + 1);
   }
+  out.count = count;
+  out.hidden.fill(0, count);
+  out.identity.fill(1, count);
   const v = out.values;
-  for (let slot = 0; slot < MAX_ANCHORS; slot++) {
+  for (let slot = 0; slot < count; slot++) {
     const o = slot * ANCHOR_EYE_VALUES;
     const anchor = out.anchors[slot];
     if (slot === bodySlot) {
@@ -146,8 +159,9 @@ export function computeAnchorEyes(
 /**
  * Writes `view`'s anchor table into the view block at `offsetFloats` of
  * `out` (after `writeViewBlock`), for `camera`, the eye in the view's body
- * anchor (`computeAnchorEyes`). Every writer of a view block calls it: the
- * view's, its shadow cascades' and its height captures'.
+ * anchor (`computeAnchorEyes`): its first `eyes.count` slots, which
+ * `viewBlockBytes(eyes.count)` covers. Every writer of a view block calls
+ * it: the view's, its shadow cascades' and its height captures'.
  */
 export function writeAnchorEyes(
   out: Float32Array,
@@ -157,7 +171,7 @@ export function writeAnchorEyes(
   eyes: AnchorEyes = computeAnchorEyes(camera, view, scratchEyes),
 ): void {
   const v = eyes.values;
-  for (let slot = 0; slot < MAX_ANCHORS; slot++) {
+  for (let slot = 0; slot < eyes.count; slot++) {
     const o = slot * ANCHOR_EYE_VALUES;
     scratchEye[0] = v[o]!;
     scratchEye[1] = v[o + 1]!;

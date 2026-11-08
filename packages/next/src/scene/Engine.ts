@@ -15,6 +15,7 @@ import {
   VIEW_SIZE,
   VIEW_STRIDE,
   VIEW_TIME_WORD,
+  viewBlockBytes,
   writeViewBlock,
   type ViewBlock,
 } from "../render/layout.ts";
@@ -405,8 +406,15 @@ export class Engine {
       version: number;
       revision: number;
       anchor: AnchorHandle | undefined;
+      tick: number;
     }
   >();
+  /**
+   * Counts the loop's ticks (after their listeners) and renders: a body
+   * camera computed in an earlier one is computed again, so a camera
+   * written in place without `version++` is never drawn stale.
+   */
+  private cameraTick = 0;
   /** The view being written's anchor table, float64 (`writeView`). */
   private readonly anchorEyes = createAnchorEyes();
   /** Per view, the anchors its eye was last too far from (reported once). */
@@ -1200,8 +1208,8 @@ export class Engine {
    * bodyAnchor)`; the table's root while the world has none): what the
    * engine shades, culls, clamps and clips the body with, since the
    * shading axes are the body anchor's (plan 5a's call 18). Recomputed
-   * when the camera (`Camera.version`), the placements
-   * (`View.anchorRevision`) or the body anchor change. With the body
+   * each tick and render, and when the camera (`Camera.version`), the
+   * placements (`View.anchorRevision`) or the body anchor change. With the body
    * anchor at the identity it equals `view.camera`, bit for bit.
    */
   private bodyCamera(view: View): Camera {
@@ -1215,10 +1223,12 @@ export class Engine {
         version: Number.NaN,
         revision: Number.NaN,
         anchor: undefined,
+        tick: Number.NaN,
       };
       this.bodyCameras.set(view, entry);
     }
     if (
+      entry.tick !== this.cameraTick ||
       entry.version !== version ||
       entry.revision !== revision ||
       entry.anchor !== anchor
@@ -1227,6 +1237,7 @@ export class Engine {
       entry.version = version;
       entry.revision = revision;
       entry.anchor = anchor;
+      entry.tick = this.cameraTick;
     }
     return entry.camera;
   }
@@ -1838,6 +1849,7 @@ export class Engine {
       stamp: -1,
       by: undefined,
       data: new Float32Array(VIEW_SIZE / 4),
+      viewBytes: VIEW_SIZE,
       block: device.createBuffer({
         label: "heightCapture.view",
         size: VIEW_SIZE,
@@ -1915,6 +1927,8 @@ export class Engine {
       for (const view of this.views) {
         void view.anchorRevision;
       }
+      // Body cameras are computed afresh from here (`bodyCamera`).
+      this.cameraTick++;
       // What the listeners changed renders in this tick: their wakes are
       // not needed. A listener they added runs from the next frame.
       this.wokenInTick = this.listenerAdded;
@@ -2126,6 +2140,24 @@ export class Engine {
       this.viewKeys.set(view, key);
     }
     const s = this.scratchKey;
+    const n = this.viewKey(view);
+    let changed = false;
+    for (let i = 0; i < n; i++) {
+      if (s[i] !== key[i]) {
+        changed = true;
+        key[i] = s[i]!;
+      }
+    }
+    return changed;
+  }
+
+  /**
+   * Writes a view's fingerprint into `scratchKey` (`viewChanged`) and
+   * returns how many values it wrote: `VIEW_KEY_LENGTH`, which a test
+   * holds it to (a value past the end is silently dropped).
+   */
+  private viewKey(view: View): number {
+    const s = this.scratchKey;
     let n = 0;
     const target = view.target;
     if (target instanceof CanvasTarget && "clientWidth" in target.canvas) {
@@ -2167,14 +2199,7 @@ export class Engine {
     // The placements, and the body anchor (the body camera's).
     s[n++] = view.anchorRevision;
     s[n++] = view.bodyAnchor?.slot ?? -1;
-    let changed = false;
-    for (let i = 0; i < n; i++) {
-      if (s[i] !== key[i]) {
-        changed = true;
-        key[i] = s[i]!;
-      }
-    }
-    return changed;
+    return n;
   }
 
   stop(): void {
@@ -2204,6 +2229,7 @@ export class Engine {
   ): void {
     const start = performance.now();
     this.renderRequested = false;
+    this.cameraTick++;
     this.stats.idle = false;
     // Custom shaders' uniforms changed since the tick (or no tick ran);
     // the tick still sees what changed for its views.
@@ -2318,20 +2344,8 @@ export class Engine {
       // After the world's transforms are resolved for the frame.
       this.writeTranslucency(view);
     }
-    device.queue.writeBuffer(
-      this.viewStaging,
-      0,
-      this.viewData,
-      0,
-      (slots * VIEW_STRIDE) / 4,
-    );
-    device.queue.writeBuffer(
-      this.cascadeStaging,
-      0,
-      this.cascadeData,
-      0,
-      (slots * SHADOW_CASCADES * VIEW_STRIDE) / 4,
-    );
+    // The views' and cascades' blocks went up as they were written
+    // (`writeView`, `writeShadows`: each to its anchor table's used slots).
     device.queue.writeBuffer(
       this.shadowStaging,
       0,
@@ -2654,6 +2668,15 @@ export class Engine {
     );
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
+    const bytes = viewBlockBytes(this.anchorEyes.count);
+    this.viewFrames.get(view)!.viewBytes = bytes;
+    this.ctx.device.queue.writeBuffer(
+      this.viewStaging,
+      index * VIEW_STRIDE,
+      this.viewData,
+      (index * VIEW_STRIDE) / 4,
+      bytes / 4,
+    );
     this.writeShadows(view, index, aspect);
     this.writeLights(view, index, aspect);
   }
@@ -2881,7 +2904,8 @@ export class Engine {
       block.aerial = aerial;
       new Uint32Array(c.data.buffer)[VIEW_BIT_WORD] = this.viewBit(view);
       c.data[VIEW_TIME_WORD + 1] = 1; // View.time.y: ground only
-      this.ctx.device.queue.writeBuffer(c.block, 0, c.data);
+      c.viewBytes = viewBlockBytes(this.anchorEyes.count);
+      this.ctx.device.queue.writeBuffer(c.block, 0, c.data, 0, c.viewBytes / 4);
     }
   }
 
@@ -2926,6 +2950,13 @@ export class Engine {
         writeViewBlock(this.cascadeData, o, block);
         writeAnchorEyes(this.cascadeData, o, camera, view, this.anchorEyes);
         this.cascadeDataU32[o + VIEW_BIT_WORD] = this.viewBit(view);
+        this.ctx.device.queue.writeBuffer(
+          this.cascadeStaging,
+          o * 4,
+          this.cascadeData,
+          o,
+          frame.viewBytes / 4,
+        );
       }
       block.viewProj = viewProj;
       block.planes = planes;
@@ -3177,7 +3208,7 @@ export class Engine {
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
       });
     enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
-    // The camera of this frame (in the body anchor, as drawn), to turn the
+    // The camera of this tick (in the body anchor, as drawn), to turn the
     // depth into a position.
     const camera = this.bodyCamera(view);
     this.picks.push({
@@ -3348,6 +3379,7 @@ export class Engine {
       graph,
       output,
       slot: 0,
+      viewBytes: VIEW_SIZE,
       clearTarget: true,
       bundle: undefined,
       bundles: [],
@@ -3424,7 +3456,7 @@ export class Engine {
           (frame.slot * SHADOW_CASCADES + k) * VIEW_STRIDE,
           this.ctx.currentViewBuffer,
           0,
-          VIEW_SIZE,
+          frame.viewBytes,
         );
         // Point sets cast no shadows: their cull is the view's alone.
         view.world.encodeCull(enc, undefined, false);
@@ -3447,7 +3479,7 @@ export class Engine {
           0,
           this.ctx.currentViewBuffer,
           0,
-          VIEW_SIZE,
+          c.viewBytes,
         );
         view.world.encodeCull(enc, undefined, false);
         const pass = enc.beginRenderPass({
@@ -3472,7 +3504,7 @@ export class Engine {
         frame.slot * VIEW_STRIDE,
         this.ctx.currentViewBuffer,
         0,
-        VIEW_SIZE,
+        frame.viewBytes,
       );
       enc.copyBufferToBuffer(
         this.shadowStaging,
@@ -4409,6 +4441,11 @@ interface ViewFrame {
   readonly output: TextureHandle;
   /** Index of this view's block in the view staging buffer this frame. */
   slot: number;
+  /**
+   * Bytes of its view blocks uploaded and copied this frame: up to its
+   * anchor table's used slots (`viewBlockBytes`).
+   */
+  viewBytes: number;
   /** First view drawn into its target this frame. */
   clearTarget: boolean;
   bundle: GPURenderBundle | undefined;
@@ -4597,6 +4634,8 @@ export interface HeightCapture {
   by: View | undefined;
   readonly data: Float32Array;
   readonly block: GPUBuffer;
+  /** @internal Bytes of `data` written for its last draw (`viewBlockBytes`). */
+  viewBytes: number;
 }
 
 const scratchCapture = m4.mat4();

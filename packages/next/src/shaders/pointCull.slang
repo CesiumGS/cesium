@@ -84,6 +84,11 @@ float4 placePoint(uint i) {
   }
   DrawRecord r = records[pointCull.record];
   Transform t = transforms[r.transform];
+  // Under an anchor the eye is too far from (cullTables `drawable`): the
+  // quads draw nothing then, and neither may the splats.
+  if (anchorEye(t).eyeHi.w > 0.5) {
+    return float4(0.0);
+  }
   float3 c = mul(relativeMatrix(t),
                  float4(x, asfloat(arena[a + 1u]), asfloat(arena[a + 2u]), 1.0))
                  .xyz;

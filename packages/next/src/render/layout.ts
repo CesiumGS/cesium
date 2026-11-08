@@ -189,11 +189,17 @@ export function writeViewBlock(
   out[o + V.time + 1] = 0;
   out[o + V.time + 2] = 0;
   out[o + V.time + 3] = 0;
-  // Every anchor at the identity: each slot's eye is the camera, its axes
-  // the shading axes (scene/anchorEyes.ts writes a view's own after).
-  for (let slot = 0; slot < MAX_ANCHORS; slot++) {
-    writeAnchorEye(out, o, slot, block.cameraPosition, undefined, false);
-  }
+  // The anchor table (`View.anchors`) is the caller's to write after:
+  // scene/anchorEyes.ts `writeAnchorEyes`, through `writeAnchorEye`.
+}
+
+/**
+ * Bytes of a view block whose anchor table holds its first `slots` slots:
+ * what is uploaded and copied (`View.anchors` is last, and a world's draws
+ * name only the slots it uses).
+ */
+export function viewBlockBytes(slots: number): number {
+  return ViewLayout.anchors + slots * AnchorEyeLayout.size;
 }
 
 /**
