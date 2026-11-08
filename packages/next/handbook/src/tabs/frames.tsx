@@ -218,11 +218,11 @@ export function Frames() {
 
       <Section title="The sky in a globe-only app">
         <p>
-          It asks for GCRF and the Sun at analytic precision: IAU 1976
-          precession with sidereal time, no nutation, and the Meeus sun and
-          Moon. That loads no series tables and no data. It is GCRF's declared
-          stand-in, with a stated accuracy of 0.0023° (about 8″) from the IAU
-          2006/2000A model.
+          It asks for analytic precision: IAU 1976 precession with sidereal
+          time, no nutation, and the Meeus sun and Moon. That loads no series
+          tables and no data. These are the stand-ins' own stated figures:
+          ITRF's is 18″ (0.005°) from IAU 2006/2000A with the EOP, a bound from
+          its parts. The Precision tab lists the rest.
         </p>
       </Section>
 

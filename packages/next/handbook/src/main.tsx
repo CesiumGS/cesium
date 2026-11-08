@@ -23,6 +23,7 @@ import { Differences } from "./tabs/differences.tsx";
 import { Frames } from "./tabs/frames.tsx";
 import { Ion } from "./tabs/ion.tsx";
 import { Overview } from "./tabs/overview.tsx";
+import { Precision } from "./tabs/precision.tsx";
 import { Rendering } from "./tabs/rendering.tsx";
 import { Shading } from "./tabs/shading.tsx";
 import { Specs } from "./tabs/specs.tsx";
@@ -58,6 +59,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
       { id: "frames", label: "Frame tree", view: Frames },
       { id: "cameras", label: "Cameras", view: Cameras },
       { id: "rendering", label: "Rendering", view: Rendering },
+      { id: "precision", label: "Precision", view: Precision },
       { id: "shading", label: "Shading and linker", view: Shading },
       { id: "vector", label: "Vector rendering", view: Vector },
       { id: "ion", label: "Cesium ion", view: Ion },

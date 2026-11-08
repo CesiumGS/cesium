@@ -48,7 +48,7 @@ only the committed runs.
 
 ## Layout
 
-Thirteen tabs don't fit a horizontal strip, so they're a grouped side list on a
+Fourteen tabs don't fit a horizontal strip, so they're a grouped side list on a
 desktop and a scrolling strip on a phone. A reading column of about 72 characters
 holds the prose; tables and figures may run to 1000 px. Nothing sits on a card:
 tables and figures sit on the page, separated by space and headings.

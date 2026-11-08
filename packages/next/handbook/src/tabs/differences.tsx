@@ -33,7 +33,7 @@ const CONCEPTS = [
   },
   {
     topic: "Depth",
-    old: "Logarithmic depth on by default, multi-frustum as fallback",
+    old: "Logarithmic depth on by default, with the view split into several frustums by a far-to-near ratio",
     next: "Reverse-Z depth32float, a fixed 0.1 m near plane and an infinite far plane.",
   },
   {

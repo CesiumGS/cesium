@@ -118,15 +118,9 @@ export function Rendering() {
       <Section title="Precision">
         <p>
           Vertex shaders see only small numbers: positions relative to the
-          camera. The obvious way to compute them, subtracting split high and
-          low parts in floating point, failed on Metal. On an M-series Mac the
-          error read the same as plain float32 (0.25 to 0.47 m), because relaxed
-          math folded the split back together.
-        </p>
-        <p>
-          So the high part is whole meters, and shaders subtract the highs as{" "}
-          <C>i32</C>. No float reassociation can touch that. It is one path on
-          every machine, not a Metal branch, and valid to ±2³¹ m.
+          camera, from a subtraction in the cull kernel that no float
+          reassociation can touch. The Precision tab follows this from float64
+          on the CPU through to what a pick can claim.
         </p>
       </Section>
 
