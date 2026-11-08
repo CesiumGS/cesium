@@ -19,7 +19,7 @@ export interface CheckRowView {
   readonly statusText: string;
   /** "6,146,924.898 shown; NGS publishes 6,146,924.900 ftUS". */
   readonly values: string;
-  /** "0.0020 ftUS apart, within 0.0066 ftUS (the datasheet's precision)"; absent when not shown. */
+  /** "0.002 ftUS apart, within 0.0066 ftUS (the datasheet's precision)"; absent when not shown. */
   readonly difference?: string;
 }
 
@@ -68,16 +68,31 @@ const BASIS_TEXT: Record<CheckRow["basis"], string> = {
   published: "the datasheet's precision",
 };
 
-/** A small quantity once: "0", "1e-6", "2.3e-10", "0.0066", "1.250". */
-function amount(x: number): string {
+/** Two significant figures, never in e-notation: "3.5", "0.0066", "0.000001". */
+const two = (a: number): string =>
+  a.toLocaleString("en-US", {
+    maximumSignificantDigits: 2,
+    maximumFractionDigits: 20,
+  });
+
+/**
+ * A small quantity and its unit, never in e-notation (the page's rule):
+ * metres in the SI prefix that keeps it readable ("4 nm", "0.3 µm",
+ * "0.0066 m"); another unit as a decimal to a millionth of it, below which
+ * "under 0.000001 ftUS".
+ */
+export function amount(x: number, unit: string): string {
   const a = Math.abs(x);
   if (a === 0) {
-    return "0";
+    return `0 ${unit}`;
   }
-  if (a < 1e-3) {
-    return a.toExponential(1).replace(".0e", "e");
+  if (unit === "m" && a < 1e-3) {
+    return a >= 1e-7 ? `${two(a * 1e6)} µm` : `${two(a * 1e9)} nm`;
   }
-  return a < 1 ? a.toPrecision(2) : fixed(a, 3);
+  if (a < 1e-6) {
+    return `under 0.000001 ${unit}`;
+  }
+  return `${a < 1 ? two(a) : fixed(a, 3)} ${unit}`;
 }
 
 /** A row's label inside its group: the group's own words taken off the front. */
@@ -105,7 +120,7 @@ function rowView(r: CheckRow, prefix?: string): CheckRowView {
     statusText: statusText(r.status),
     values,
     ...(r.shown !== undefined && {
-      difference: `${amount(r.shown - r.expected)} ${r.unit} apart, within ${amount(r.tolerance)} ${r.unit} (${BASIS_TEXT[r.basis]})`,
+      difference: `${amount(r.shown - r.expected, r.unit)} apart, within ${amount(r.tolerance, r.unit)} (${BASIS_TEXT[r.basis]})`,
     }),
   };
 }

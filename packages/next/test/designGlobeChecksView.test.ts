@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import type { Answers } from "../examples/design-globe/answers.ts";
 import type { ShownValues } from "../examples/design-globe/checks.ts";
-import { checksView } from "../examples/design-globe/checksView.ts";
+import { amount, checksView } from "../examples/design-globe/checksView.ts";
 import {
   compassNeedles,
   convergenceShort,
@@ -179,10 +179,20 @@ describe("design globe checks view", () => {
       "6,146,924.898 shown; NGS publishes 6,146,924.900 ftUS",
     );
     expect(easting.difference).toMatch(
-      /^0\.0020 ftUS apart, within 0\.0066 ftUS \(the datasheet's precision\)$/,
+      /^0\.002 ftUS apart, within 0\.0066 ftUS \(the datasheet's precision\)$/,
     );
     const design = v.groups[1]!.rows[0]!;
-    expect(design.difference).toMatch(/within 1e-6 ftUS \(exact\)$/);
+    expect(design.difference).toMatch(/within 0\.000001 ftUS \(exact\)$/);
+  });
+
+  it("writes small amounts without e-notation: SI prefixes for metres, decimals otherwise", () => {
+    expect(amount(3.5e-9, "m")).toBe("3.5 nm");
+    expect(amount(3e-7, "m")).toBe("0.3 µm");
+    expect(amount(-0.0066, "m")).toBe("0.0066 m");
+    expect(amount(1e-6, "ftUS")).toBe("0.000001 ftUS");
+    expect(amount(2.3e-10, "ftUS")).toBe("under 0.000001 ftUS");
+    expect(amount(0, "ftUS")).toBe("0 ftUS");
+    expect(amount(1.25, "m")).toBe("1.250 m");
   });
 
   it("puts a failure first in the summary and the tone", () => {
