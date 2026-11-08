@@ -8322,6 +8322,14 @@ So streaming's logic is already free of the GPU API. The tangle is in `Engine.ts
 
 **Measure before choosing.** Share of target browsers without core WebGPU, from the handbook's compatibility tab; whether compatibility mode covers most of that share; and the Slang to GLSL ES spike on two kernels and one material.
 
+### 13.18 Colour in the styling language (owner, 2026-11-08)
+
+**Decided.** CSS notation (`#ff8800`, `rgb()`, `hsl()`, named colours) is sRGB, as CSS defines it, and is converted to linear where it enters the style. Shading stays linear. An opaque, unlit colour therefore looks as written and matches 1.x. Numeric values such as `vec4(...)` stay raw linear.
+
+**For the styling spec work, with the vector language's other changes.** An explicit colour space. CSS Color 4 already has syntax for it (`color(srgb-linear 1 0.5 0)`, `color(display-p3 ...)`), which can pass through the existing `color('...')` string without new grammar, and brings wide-gamut colours with it. Not built.
+
+**Differences from 1.x to document.** Blending happens in linear, so `colorBlendMode: "mix"` and translucent colours differ from 1.x even with matching inputs. `vec4` colours are linear in 2.0, and plain numbers in 1.x.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
