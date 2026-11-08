@@ -68,7 +68,7 @@ import {
   rulerFraming,
 } from "./shots.ts";
 import { siteFacts } from "./siteFacts.ts";
-import { clearTimeControls, createStore, escapeHtml } from "./stores.ts";
+import { clearTimeControls, createStore } from "./stores.ts";
 import { combinedFactorOf, corridorTerms, tourFactsOf } from "./storyFacts.ts";
 import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
 import { EARTHWORK, daylightBreaks, daylightLine } from "./sideSlopes.ts";
@@ -84,6 +84,7 @@ import {
   type DaylightStretch,
 } from "./terrainClips.ts";
 import { createRulerView } from "./rulerView.ts";
+import { siteCredits } from "./dataCredits.ts";
 import { tourCard, type TourTarget } from "./tour.ts";
 import { createTour, type TourRuntime } from "./tourRuntime.ts";
 import { formatView, parseView, type ViewParams } from "./viewParams.ts";
@@ -406,17 +407,14 @@ export function run(context: ExampleContext): ExampleRun {
       // The openers and exact snapping (the corridor), or a linked measurement.
       tool.placementsChanged();
       tour?.flush();
-      // The grids' credits, with the data credits (bottom left).
-      const credits = (site.rigidPlacement ?? site.reprojectedPlacement)!.frame
-        .gridCredits;
+      // The grids' and the ground data's credits, with the data credits
+      // (bottom left), while the site is drawn (UX review I3).
+      const credits = siteCredits(
+        site.entry.id,
+        (site.rigidPlacement ?? site.reprojectedPlacement)!.frame.gridCredits,
+      );
       if (credits.length > 0) {
-        viewer.addAttributions(
-          site,
-          credits.map((c) => ({
-            html: `Grids: ${escapeHtml(c)}`,
-            collapsible: true,
-          })),
-        );
+        viewer.addAttributions(site, credits);
         scope.defer(() => viewer.addAttributions(site, []));
       }
       refresh();

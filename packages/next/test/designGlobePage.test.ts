@@ -41,6 +41,12 @@ import {
 import type { SiteRuntime } from "../examples/design-globe/siteLoader.ts";
 import type { DesignPick } from "../src/engineering/pick.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import {
+  EA_LIDAR_CREDIT,
+  OGL_V3,
+  USGS_3DEP,
+  siteCredits,
+} from "../examples/design-globe/dataCredits.ts";
 
 describe("design globe params", () => {
   it("defaults to the corridor, rigid, with exact snapping", () => {
@@ -797,5 +803,33 @@ describe("design globe Task 20 fix 1: the error's parts (I11)", () => {
     expect(t.curvature).toBeCloseTo((20_000 * 20_000) / (2 * r), 9);
     expect(t.scale).toBeCloseTo(20_000 * Math.abs(1 - 1 / 0.9999), 9);
     expect(t.geoid).toBeCloseTo(0.5, 9);
+  });
+});
+
+describe("design globe data credits (UX review I3)", () => {
+  it("credits the Environment Agency's lidar under the OGL v3.0 with London", () => {
+    const credits = siteCredits("london", ["OSTN15: Ordnance Survey <OGL>"]);
+    expect(credits).toHaveLength(2);
+    // The grids' credits first, escaped (catalog fields are data).
+    expect(credits[0]!.html).toBe("Grids: OSTN15: Ordnance Survey &lt;OGL&gt;");
+    const ea = credits[1]!;
+    expect(ea.html).toBe(`<a href="${OGL_V3}">${EA_LIDAR_CREDIT}</a>`);
+    expect(EA_LIDAR_CREDIT).toBe(
+      "Contains Environment Agency information © Environment Agency and/or database right 2022, Open Government Licence v3.0",
+    );
+  });
+
+  it("credits USGS 3DEP for the corridor's ground and the building's", () => {
+    for (const site of ["corridor", "site-building"]) {
+      const credits = siteCredits(site, []);
+      expect(credits, site).toHaveLength(1);
+      expect(credits[0]!.html, site).toContain(`href="${USGS_3DEP}"`);
+      expect(credits[0]!.html, site).toContain("3DEP");
+    }
+    // Every site is in the list the page draws; no other ground data.
+    expect(siteCredits("tokyo", [])).toEqual([]);
+    expect(SITES.map((s) => s.id)).toEqual(
+      expect.arrayContaining(["london", "corridor", "site-building"]),
+    );
   });
 });
