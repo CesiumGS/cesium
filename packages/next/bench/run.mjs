@@ -113,7 +113,7 @@ const suites = {
   // Clamping heights on OSM Buildings vs 1.x (needs VITE_ION_TOKEN).
   heights: ["/parity/heights.html?bench", "runHeights"],
   tileset: [
-    `/parity/tileset.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.PICK_PROPERTY ? `&pick=${process.env.PICK_PROPERTY}` : ""}${process.env.TILESET_ZOOM ? `&zoom=${process.env.TILESET_ZOOM}` : ""}`,
+    `/parity/tileset.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.PICK_PROPERTY ? `&pick=${process.env.PICK_PROPERTY}` : ""}${process.env.TILESET_ZOOM ? `&zoom=${process.env.TILESET_ZOOM}` : ""}${process.env.TILESET_STYLES ? "&styles" : ""}`,
     "runTileset",
   ],
   // Driven through CDP by `allocSuite` below.

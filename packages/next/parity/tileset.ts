@@ -1,6 +1,7 @@
 import {
   Camera,
   Engine,
+  FeatureStyle,
   OffscreenTarget,
   eastNorthUpToFixedFrame,
   Ellipsoid,
@@ -68,6 +69,8 @@ interface Source {
   headers?: Record<string, string>;
   /** ion asset id, for loading the same asset in 1.x. */
   ionAsset?: number;
+  /** A 3D Tiles style (1.x's JSON), applied in both engines. */
+  style?: { show?: string; color?: { conditions: Array<[string, string]> } };
 }
 
 /** Public tilesets from Specs/Data. */
@@ -274,6 +277,9 @@ async function renderLegacy(
     source.ionAsset !== undefined
       ? await Cesium.Cesium3DTileset.fromIonAssetId(source.ionAsset, options)
       : await Cesium.Cesium3DTileset.fromUrl(source.url, options);
+  if (source.style) {
+    tileset.style = new Cesium.Cesium3DTileStyle(source.style);
+  }
   viewer.scene.primitives.add(tileset);
   const deadline = performance.now() + 120000;
   let frames = 0;
@@ -313,8 +319,91 @@ type Json = any;
 
 let lastImages: RowImages[] = [];
 
+/** The b3dm and tileset the string-styled rows use (BatchedWithBatchTable). */
+const STYLED_TILESET =
+  "/specs-data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
+
+/** Strings given to the ten buildings, in turn (a column the spec data lacks). */
+const KINDS = ["school", "road", "park", "tower", "hospital"];
+
+/**
+ * BatchedWithBatchTable with a string column, `kind`, added to its batch
+ * table: the b3dm rewritten in memory (its batch table's JSON gets the
+ * column and is padded to eight bytes, the header's lengths follow) and a
+ * tileset pointing at it, both as blob URLs, which 1.x and 2.0 read alike.
+ */
+async function stringTileset(): Promise<string> {
+  const base = new URL(STYLED_TILESET, location.href);
+  const tileset = await (await fetch(base)).json();
+  const content = tileset.root.content;
+  const uri = content.uri ?? content.url;
+  const bytes = new Uint8Array(
+    await (await fetch(new URL(uri, base))).arrayBuffer(),
+  );
+  const view = new DataView(bytes.buffer);
+  const featureJson = view.getUint32(12, true);
+  const featureBinary = view.getUint32(16, true);
+  const batchJson = view.getUint32(20, true);
+  const at = 28 + featureJson + featureBinary;
+  const table = JSON.parse(
+    new TextDecoder().decode(bytes.subarray(at, at + batchJson)),
+  );
+  const length = (table.id as unknown[]).length;
+  table.kind = Array.from({ length }, (_, i) => KINDS[i % KINDS.length]);
+  const text = new TextEncoder().encode(JSON.stringify(table));
+  const padded = new Uint8Array(Math.ceil(text.length / 8) * 8).fill(0x20);
+  padded.set(text);
+  const out = new Uint8Array(bytes.length - batchJson + padded.length);
+  out.set(bytes.subarray(0, at));
+  out.set(padded, at);
+  out.set(bytes.subarray(at + batchJson), at + padded.length);
+  const header = new DataView(out.buffer);
+  header.setUint32(8, out.length, true);
+  header.setUint32(20, padded.length, true);
+  const blob = (part: BlobPart, type: string) =>
+    URL.createObjectURL(new Blob([part], { type }));
+  const b3dm = blob(out, "application/octet-stream");
+  const rewritten = { ...tileset, root: { ...tileset.root } };
+  rewritten.root.content = { ...content, uri: b3dm };
+  delete rewritten.root.content.url;
+  return blob(JSON.stringify(rewritten), "application/json");
+}
+
+/**
+ * Styles with string comparisons (the unstyled row is the baseline). Their
+ * colors have channels 0 or 1 only: 2.0 reads a style's color as linear and
+ * 1.x shows it as written, so mid-range colors differ between the engines
+ * whatever the style compares (checked apart from strings: #ff8800 shows as
+ * (255, 136, 0) in 1.x and (255, 192, 0) in 2.0).
+ */
+const STRING_STYLES: Array<[string, Source["style"]]> = [
+  ["no style (baseline)", undefined],
+  ["show by strings", { show: "${kind} !== 'tower' && ${kind} !== 'road'" }],
+  [
+    "color by strings and numbers",
+    {
+      color: {
+        conditions: [
+          ["${kind} === 'park'", "color('lime')"],
+          ["${kind} === 'school' || ${kind} === 'hospital'", "color('yellow')"],
+          ["${Height} > 10 && ${kind} === 'tower'", "color('red')"],
+          ["true", "color('white')"],
+        ],
+      },
+    },
+  ],
+];
+
 async function sources(): Promise<Source[]> {
   const asset = params.get("asset");
+  if (params.get("styles") !== null) {
+    const url = await stringTileset();
+    return STRING_STYLES.map(([label, style]) => ({
+      label: `string styles: ${label}`,
+      url,
+      ...(style ? { style } : {}),
+    }));
+  }
   if (!asset) {
     return PUBLIC;
   }
@@ -372,6 +461,7 @@ async function runTileset(): Promise<Row[]> {
         let batches = 0;
         let properties = "";
         let nextPicks: unknown[] = [];
+        const style = source.style ? new FeatureStyle(source.style) : undefined;
         for (const colorTransfer of ["srgb", "gamma2.2"] as const) {
           const assets: GltfAsset[] = await Promise.all(
             contents.map((c) =>
@@ -396,6 +486,7 @@ async function runTileset(): Promise<Row[]> {
             return model.place({
               modelMatrix: contents[i]!.transform,
               unlit: mode === "unlit",
+              ...(style ? { shader: style.shader } : {}),
             });
           });
           draws = spheres.reduce((n, s) => n + s.draws.length, 0);
@@ -451,6 +542,11 @@ async function runTileset(): Promise<Row[]> {
               specularIbl: 0,
             },
           });
+          // A shader's pipelines compile in the background: until they have,
+          // content draws with the default material.
+          if (style) {
+            await engine.compileShader(style.shader);
+          }
           engine.renderFrame();
           batches = world.batchCount;
           images[colorTransfer] = new ImageData(
