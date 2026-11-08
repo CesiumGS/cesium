@@ -20,9 +20,22 @@ it("reads tiers from TSDoc tags", () => {
   });
   expect(lines).toEqual([
     "entry\tname\tkind\ttier",
+    "fixture\tBoth\tconst+type\texperimental",
     "fixture\tExperimental\tinterface\texperimental",
     "fixture\tHidden\tconst\tinternal",
+    "fixture\tMode\tenum\t-",
+    "fixture\tRenamed\tfunction\tstable",
     "fixture\tStable\tfunction\tstable",
     "fixture\tUntiered\ttype\t-",
+    "fixture\tWidget\tclass\tstable",
+    "fixture\tns\tnamespace\t-",
+    "fixture\tns.member\tconst\t-",
+    "fixture\tns.nested\tfunction\texperimental",
+    "fixture\tns.original\tfunction\tstable",
   ]);
+});
+it("throws naming an export whose declarations disagree on the tier", () => {
+  expect(() =>
+    surfaceLines({ entries: { fixture: "test/fixtures/surface/conflict.ts" } }),
+  ).toThrow(/Clash/);
 });

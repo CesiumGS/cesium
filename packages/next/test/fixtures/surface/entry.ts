@@ -12,3 +12,19 @@ export const Hidden = 1;
 export function Stable(): void {}
 
 export type Untiered = string;
+
+/** @stable */
+export class Widget {}
+
+export enum Mode {
+  Fast,
+  Slow,
+}
+
+/** A value, then a type of the same name; the tag is on the second. */
+export const Both = 1;
+/** @experimental */
+export type Both = number;
+
+export { original as Renamed } from "./other.ts";
+export * as ns from "./other.ts";

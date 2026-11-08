@@ -46,41 +46,45 @@ const compilerOptions = (root) => {
   return { ...parsed.options, noEmit: true };
 };
 
-const kindOf = (symbol) => {
-  const { flags } = symbol;
-  if (flags & ts.SymbolFlags.Class) {
-    return "class";
+const KINDS = [
+  ["class", ts.SymbolFlags.Class],
+  ["function", ts.SymbolFlags.Function],
+  ["enum", ts.SymbolFlags.Enum],
+  ["const", ts.SymbolFlags.Variable],
+  ["interface", ts.SymbolFlags.Interface],
+  ["type", ts.SymbolFlags.TypeAlias],
+  ["namespace", ts.SymbolFlags.Module],
+];
+
+/** Every kind the symbol has, in a fixed order (`const`, then `type`, say). */
+const kindsOf = (symbol, name) => {
+  const kinds = KINDS.filter(([, flag]) => symbol.flags & flag).map(
+    ([kind]) => kind,
+  );
+  if (kinds.length === 0) {
+    throw new Error(
+      `surfaceMap: ${name} has an unrecognised kind (symbol flags ${symbol.flags})`,
+    );
   }
-  if (flags & ts.SymbolFlags.Enum) {
-    return "enum";
-  }
-  if (flags & ts.SymbolFlags.Function) {
-    return "function";
-  }
-  if (flags & ts.SymbolFlags.Interface) {
-    return "interface";
-  }
-  if (flags & ts.SymbolFlags.TypeAlias) {
-    return "type";
-  }
-  if (flags & ts.SymbolFlags.Variable) {
-    return "const";
-  }
-  if (flags & ts.SymbolFlags.Module) {
-    return "namespace";
-  }
-  return "const";
+  return kinds;
 };
 
-const tierOf = (symbol) => {
-  const declaration = symbol.declarations?.[0];
-  if (!declaration) {
-    return "-";
+/** The tier tag found on any declaration of the symbol; `-` without one. */
+const tierOf = (symbol, name) => {
+  const found = new Set();
+  for (const declaration of symbol.declarations ?? []) {
+    for (const tag of ts.getJSDocTags(declaration)) {
+      if (TIERS.includes(tag.tagName.text)) {
+        found.add(tag.tagName.text);
+      }
+    }
   }
-  const names = new Set(
-    ts.getJSDocTags(declaration).map((tag) => tag.tagName.text),
-  );
-  return TIERS.find((tier) => names.has(tier)) ?? "-";
+  if (found.size > 1) {
+    throw new Error(
+      `surfaceMap: ${name} has declarations with different tiers (${[...found].join(", ")})`,
+    );
+  }
+  return [...found][0] ?? "-";
 };
 
 /**
@@ -104,13 +108,13 @@ export function surfaceLines({ root = defaultRoot, entries } = {}) {
           ? checker.getAliasedSymbol(exported)
           : exported;
       const name = `${prefix}${exported.name}`;
-      const kind = kindOf(symbol);
+      const kinds = kindsOf(symbol, name);
       rows.push({
         entry,
         name,
-        line: `${entry}\t${name}\t${kind}\t${tierOf(symbol)}`,
+        line: `${entry}\t${name}\t${kinds.join("+")}\t${tierOf(symbol, name)}`,
       });
-      if (kind === "namespace" && !seen.has(symbol)) {
+      if (kinds.includes("namespace") && !seen.has(symbol)) {
         list(entry, `${name}.`, symbol, new Set(seen).add(symbol));
       }
     }
