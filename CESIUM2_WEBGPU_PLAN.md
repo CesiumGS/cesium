@@ -8389,7 +8389,7 @@ Not built. Air-gapped and offline use can't download data at runtime, so ephemer
 - **EPSG (in `proj.db`):** may be used and distributed, including in a commercial product with added value, but not sold as a dataset, and its terms must pass to recipients. Apache SIS is reported not to ship it for license reasons. Check this one with legal.
 - **Earth orientation and leap seconds:** no primary terms found for IERS, USNO or CelesTrak. Open question. These also expire, so a bundle needs a stated date, a refresh path and an honest accuracy statement once it's stale.
 
-**Sizes:** `de440s.bsp` 32.7 MB, Moon orientation 12.9 MB, and the engine's own 2000 to 2050 packs 2.84 MB in all. EGM2008 at 2.5 arcminutes is 80.6 MB, GEOID18 16.7 MB, `proj.db` 9.6 MB. So small packs are cheap, and a full geoid set isn't. NAIF also lists DE442, so check which to pin.
+**Sizes:** `de440s.bsp` 32.7 MB, Moon orientation 12.9 MB, and the engine's own 2000 to 2050 packs 2.84 MB in all. EGM2008 at 2.5 arcminutes is 80.6 MB, GEOID18 16.7 MB, `proj.db` 9.6 MB. So small packs are cheap, and a full geoid set isn't. Stay on DE440 for now (2026-11-08): DE442's stated purpose is updating the Uranus barycenter, and NAIF lists no matching lunar orientation kernel, while the Moon's orientation here pairs with DE440 (`moon_pa_de440_200625.bpc`). Revisit if a DE442 lunar kernel appears or Uranus's satellites come into scope. Keep the ephemeris version a provider's choice rather than a constant.
 
 ## 14. Follow-ups
 
