@@ -36,41 +36,41 @@ export const CORRIDOR_CRS: CrsRef = {
  * no token) at 330 points every 500 ftUS along the horizontal alignment,
  * sampled 2026-11-07 by scripts/corridorGround.mjs, which also made the fit
  * (the samples are not in the repo). The fit, as a highway designer would
- * set it for a 65 mph freeway: grades within 6%, to 0.01%; PVIs on whole
- * stations, each with a symmetric parabolic vertical curve of at least
- * AASHTO's least K for stopping sight distance (crest 193, sag 157, ft per
- * percent of grade change; 2018 Green Book), in whole 100 ft; the ends tied
- * in to the ground; Huber's loss against the ground (40 ftUS), so that it
- * follows the ground where a road can and leaves to a structure what it
- * can't. Its PVIs (station, elevation in ftUS, the grades either side, the
- * curve and its K):
+ * set it for a 65 mph freeway: grades from 0.3% (so the road drains) to
+ * 6%, to 0.01%; PVIs on whole stations, each with a symmetric parabolic
+ * vertical curve of at least AASHTO's least K for stopping sight distance
+ * (crest 193, sag 157, ft per percent of grade change; 2018 Green Book), in
+ * whole 100 ft; the ends tied in to the ground; Huber's loss against the
+ * ground (40 ftUS), so that it follows the ground where a road can and
+ * leaves to a structure what it can't. Its PVIs (station, elevation in
+ * ftUS, the grades either side, the curve and its K):
  *
- *        100+00    316.71  (start)
- *        190+00    791.01  +5.27% to +0.82%, crest 900 ft, K 202
- *        220+00    815.61  +0.82% to −2.41%, crest 700 ft, K 217
- *        340+00    526.41  −2.41% to +4.79%, sag 1,200 ft, K 167
- *        520+00  1,388.61  +4.79% to −5.98%, crest 2,100 ft, K 195
- *        700+00    312.21  −5.98% to +0.60%, sag 1,100 ft, K 167
- *        790+00    366.21  +0.60% to +5.98%, sag 900 ft, K 167
- *        910+00  1,083.81  +5.98% to −5.85%, crest 2,300 ft, K 194
- *        940+00    908.31  −5.85% to +4.01%, sag 1,600 ft, K 162
- *       1000+00  1,148.91  +4.01% to −5.98%, crest 2,000 ft, K 200
- *       1090+00    610.71  −5.98% to −0.20%, sag 1,000 ft, K 173
- *       1210+00    586.71  −0.20% to +4.52%, sag 800 ft, K 169
- *       1270+00    857.91  +4.52% to −6.00%, crest 2,100 ft, K 200
- *       1300+00    677.91  −6.00% to +3.10%, sag 1,500 ft, K 165
- *       1390+00    956.91  +3.10% to −4.78%, crest 1,600 ft, K 203
- *       1480+00    526.71  −4.78% to +4.96%, sag 1,600 ft, K 164
- *       1510+00    675.51  +4.96% to −4.15%, crest 1,800 ft, K 198
- *       1600+00    302.01  −4.15% to +0.46%, sag 800 ft, K 174
- *       1740+42    366.60  (end)
+ *        100+00    316.70  (start)
+ *        190+00    825.20  +5.65% to −1.88%, crest 1,500 ft, K 199
+ *        340+00    543.20  −1.88% to +4.52%, sag 1,100 ft, K 172
+ *        520+00  1,356.80  +4.52% to −5.97%, crest 2,100 ft, K 200
+ *        640+00    640.40  −5.97% to −5.99%, crest 200 ft, K 10,000
+ *        700+00    281.00  −5.99% to +2.77%, sag 1,400 ft, K 160
+ *        760+00    447.20  +2.77% to −5.95%, crest 1,700 ft, K 195
+ *        790+00    268.70  −5.95% to +5.98%, sag 1,900 ft, K 159
+ *        910+00    986.30  +5.98% to +1.66%, crest 900 ft, K 208
+ *       1000+00  1,135.70  +1.66% to −5.98%, crest 1,500 ft, K 196
+ *       1090+00    597.50  −5.98% to +0.37%, sag 1,000 ft, K 157
+ *       1210+00    641.90  +0.37% to +1.38%, sag 200 ft, K 198
+ *       1390+00    890.30  +1.38% to −2.24%, crest 700 ft, K 193
+ *       1480+00    688.70  −2.24% to −3.07%, crest 200 ft, K 241
+ *       1600+00    320.30  −3.07% to +0.33%, sag 600 ft, K 176
+ *       1740+42    366.64  (end)
+ *
+ * (The PVI at 640+00 bends the grade by 0.02%: the fit kept it, with both
+ * its grades at the 6% limit.)
  *
  * The ground is steep hills crossed against their grain, so no profile
  * within 6% can follow it: against the samples the fit's largest fill is
- * 330.8 ftUS (100.8 m, at station 64,500) and its largest cut 605.2 ftUS
- * (184.5 m, at station 51,000), and both are structures (`STRUCTURES`). Outside them,
- * on earthwork, the fill reaches 49.4 ftUS (15.1 m) and the cut 79.8 ftUS
- * (24.3 m). Its RMS against the ground is 161.8 ftUS.
+ * 300.1 ftUS (91.5 m, at station 64,500) and its largest cut 679.9 ftUS
+ * (207.2 m, at station 89,500), and both are structures (`STRUCTURES`).
+ * Outside them, on earthwork, the fill reaches 47.9 ftUS (14.6 m) and the
+ * cut 79.7 ftUS (24.3 m). Its RMS against the ground is 168.2 ftUS.
  */
 export const CORRIDOR_ALIGNMENT: AlignmentDefinition = {
   name: "Mainline",
@@ -94,128 +94,107 @@ export const CORRIDOR_ALIGNMENT: AlignmentDefinition = {
   ],
   vertical: {
     startStation: 10_000,
-    startElevation: 316.71,
+    startElevation: 316.7,
     segments: [
-      { kind: "grade", length: 8550, grade: 0.0527 },
+      { kind: "grade", length: 8250, grade: 0.0565 },
       {
         kind: "parabola",
-        length: 900,
-        startGrade: 0.0527,
-        endGrade: 0.0082,
+        length: 1500,
+        startGrade: 0.0565,
+        endGrade: -0.0188,
       },
-      { kind: "grade", length: 2200, grade: 0.0082 },
-      {
-        kind: "parabola",
-        length: 700,
-        startGrade: 0.0082,
-        endGrade: -0.0241,
-      },
-      { kind: "grade", length: 11_050, grade: -0.0241 },
-      {
-        kind: "parabola",
-        length: 1200,
-        startGrade: -0.0241,
-        endGrade: 0.0479,
-      },
-      { kind: "grade", length: 16_350, grade: 0.0479 },
-      {
-        kind: "parabola",
-        length: 2100,
-        startGrade: 0.0479,
-        endGrade: -0.0598,
-      },
-      { kind: "grade", length: 16_400, grade: -0.0598 },
+      { kind: "grade", length: 13_700, grade: -0.0188 },
       {
         kind: "parabola",
         length: 1100,
-        startGrade: -0.0598,
-        endGrade: 0.006,
-      },
-      { kind: "grade", length: 8000, grade: 0.006 },
-      {
-        kind: "parabola",
-        length: 900,
-        startGrade: 0.006,
-        endGrade: 0.0598,
-      },
-      { kind: "grade", length: 10_400, grade: 0.0598 },
-      {
-        kind: "parabola",
-        length: 2300,
-        startGrade: 0.0598,
-        endGrade: -0.0585,
-      },
-      { kind: "grade", length: 1050, grade: -0.0585 },
-      {
-        kind: "parabola",
-        length: 1600,
-        startGrade: -0.0585,
-        endGrade: 0.0401,
-      },
-      { kind: "grade", length: 4200, grade: 0.0401 },
-      {
-        kind: "parabola",
-        length: 2000,
-        startGrade: 0.0401,
-        endGrade: -0.0598,
-      },
-      { kind: "grade", length: 7500, grade: -0.0598 },
-      {
-        kind: "parabola",
-        length: 1000,
-        startGrade: -0.0598,
-        endGrade: -0.002,
-      },
-      { kind: "grade", length: 11_100, grade: -0.002 },
-      {
-        kind: "parabola",
-        length: 800,
-        startGrade: -0.002,
+        startGrade: -0.0188,
         endGrade: 0.0452,
       },
-      { kind: "grade", length: 4550, grade: 0.0452 },
+      { kind: "grade", length: 16_400, grade: 0.0452 },
       {
         kind: "parabola",
         length: 2100,
         startGrade: 0.0452,
-        endGrade: -0.06,
+        endGrade: -0.0597,
       },
-      { kind: "grade", length: 1200, grade: -0.06 },
+      { kind: "grade", length: 10_850, grade: -0.0597 },
+      {
+        kind: "parabola",
+        length: 200,
+        startGrade: -0.0597,
+        endGrade: -0.0599,
+      },
+      { kind: "grade", length: 5200, grade: -0.0599 },
+      {
+        kind: "parabola",
+        length: 1400,
+        startGrade: -0.0599,
+        endGrade: 0.0277,
+      },
+      { kind: "grade", length: 4450, grade: 0.0277 },
+      {
+        kind: "parabola",
+        length: 1700,
+        startGrade: 0.0277,
+        endGrade: -0.0595,
+      },
+      { kind: "grade", length: 1200, grade: -0.0595 },
+      {
+        kind: "parabola",
+        length: 1900,
+        startGrade: -0.0595,
+        endGrade: 0.0598,
+      },
+      { kind: "grade", length: 10_600, grade: 0.0598 },
+      {
+        kind: "parabola",
+        length: 900,
+        startGrade: 0.0598,
+        endGrade: 0.0166,
+      },
+      { kind: "grade", length: 7800, grade: 0.0166 },
       {
         kind: "parabola",
         length: 1500,
-        startGrade: -0.06,
-        endGrade: 0.031,
+        startGrade: 0.0166,
+        endGrade: -0.0598,
       },
-      { kind: "grade", length: 7450, grade: 0.031 },
+      { kind: "grade", length: 7750, grade: -0.0598 },
       {
         kind: "parabola",
-        length: 1600,
-        startGrade: 0.031,
-        endGrade: -0.0478,
+        length: 1000,
+        startGrade: -0.0598,
+        endGrade: 0.0037,
       },
-      { kind: "grade", length: 7400, grade: -0.0478 },
+      { kind: "grade", length: 11_400, grade: 0.0037 },
       {
         kind: "parabola",
-        length: 1600,
-        startGrade: -0.0478,
-        endGrade: 0.0496,
+        length: 200,
+        startGrade: 0.0037,
+        endGrade: 0.0138,
       },
-      { kind: "grade", length: 1300, grade: 0.0496 },
+      { kind: "grade", length: 17_550, grade: 0.0138 },
       {
         kind: "parabola",
-        length: 1800,
-        startGrade: 0.0496,
-        endGrade: -0.0415,
+        length: 700,
+        startGrade: 0.0138,
+        endGrade: -0.0224,
       },
-      { kind: "grade", length: 7700, grade: -0.0415 },
+      { kind: "grade", length: 8550, grade: -0.0224 },
       {
         kind: "parabola",
-        length: 800,
-        startGrade: -0.0415,
-        endGrade: 0.0046,
+        length: 200,
+        startGrade: -0.0224,
+        endGrade: -0.0307,
       },
-      { kind: "grade", length: 13_642, grade: 0.0046 },
+      { kind: "grade", length: 11_600, grade: -0.0307 },
+      {
+        kind: "parabola",
+        length: 600,
+        startGrade: -0.0307,
+        endGrade: 0.0033,
+      },
+      { kind: "grade", length: 13_742, grade: 0.0033 },
     ],
   },
 };
@@ -403,48 +382,47 @@ const tunnel = (from: number, to: number): Structure => ({
  * for half the way to its neighbours, and a viaduct reaches on to where the
  * ground meets the road; structures of a kind within 1,500 ft are joined
  * over ground on their own side of the road; their ends are in whole
- * 100 ft. 19 viaducts (52,600 ft) and 19 tunnels (44,400 ft): 59% of the
+ * 100 ft. 18 viaducts (58,300 ft) and 19 tunnels (50,500 ft): 66% of the
  * 164,042 ft.
  */
 export const STRUCTURES: readonly Structure[] = [
-  tunnel(11_700, 14_800),
-  viaduct(15_100, 17_900, 225),
-  viaduct(18_600, 19_300, 85),
-  tunnel(19_700, 20_800),
-  viaduct(21_700, 23_800, 280),
-  tunnel(26_200, 26_800),
-  viaduct(27_700, 29_300, 245),
+  tunnel(12_700, 14_800),
+  viaduct(15_100, 18_000, 245),
+  viaduct(18_700, 19_800, 110),
+  tunnel(19_800, 20_800),
+  viaduct(21_700, 23_300, 240),
+  tunnel(23_700, 27_300),
+  viaduct(27_700, 29_500, 230),
   tunnel(29_700, 31_300),
-  viaduct(31_700, 34_300, 170),
-  tunnel(36_200, 36_800),
+  viaduct(31_700, 36_300, 185),
+  tunnel(36_300, 36_800),
   tunnel(39_200, 40_300),
   tunnel(41_700, 43_300),
-  viaduct(43_700, 47_800, 235),
-  tunnel(48_200, 52_800),
-  viaduct(53_700, 54_400, 120),
-  tunnel(54_700, 59_800),
-  viaduct(60_200, 69_300, 350),
-  tunnel(75_700, 78_300),
-  viaduct(79_200, 86_800, 295),
-  tunnel(87_700, 94_300),
-  viaduct(94_700, 96_300, 150),
+  viaduct(43_700, 47_300, 215),
+  tunnel(47_700, 52_800),
+  viaduct(53_500, 54_300, 90),
+  tunnel(54_300, 59_800),
+  viaduct(60_000, 69_300, 320),
+  viaduct(73_200, 74_800, 85),
+  tunnel(75_700, 78_800),
+  viaduct(80_700, 85_800, 195),
+  tunnel(86_700, 92_300),
+  viaduct(92_700, 97_000, 250),
   tunnel(97_200, 101_300),
-  viaduct(102_200, 107_300, 215),
-  viaduct(108_700, 109_300, 105),
-  tunnel(109_700, 110_300),
+  viaduct(103_700, 107_300, 200),
+  viaduct(108_700, 109_300, 95),
+  tunnel(109_700, 110_800),
   tunnel(111_700, 114_300),
-  viaduct(114_700, 115_300, 100),
-  tunnel(115_700, 117_800),
-  viaduct(119_200, 122_300, 210),
-  tunnel(124_700, 125_300),
-  viaduct(128_700, 130_300, 260),
-  viaduct(131_700, 134_900, 245),
-  tunnel(135_700, 138_300),
-  viaduct(139_500, 143_800, 105),
-  tunnel(144_200, 145_800),
-  viaduct(147_700, 148_300, 70),
-  tunnel(149_200, 150_800),
-  viaduct(152_200, 152_800, 100),
+  viaduct(114_600, 115_800, 120),
+  tunnel(115_800, 117_800),
+  viaduct(117_800, 122_300, 260),
+  tunnel(123_700, 127_800),
+  viaduct(128_700, 135_000, 275),
+  tunnel(135_700, 138_800),
+  viaduct(142_200, 144_400, 125),
+  tunnel(144_700, 145_300),
+  viaduct(145_600, 148_800, 215),
+  tunnel(149_200, 151_300),
 ];
 
 /** The viaducts, in order of station. */
@@ -454,7 +432,7 @@ export const VIADUCTS: readonly Bridge[] = STRUCTURES.filter(
 
 /**
  * The bridge the answers measure across: the viaduct on the long tangent,
- * stations 43,700 to 47,800.
+ * stations 43,700 to 47,300.
  */
 export const BRIDGE: Bridge = VIADUCTS.find((v) => v.fromStation === 43_700)!;
 
@@ -472,8 +450,25 @@ export const TICKS = {
   raise: 0.03,
 } as const;
 
-/** The rigid placement's anchor: the middle of the alignment. */
-export const ANCHOR_STATION = 92_021;
+/**
+ * The rigid placement's anchor: as near the middle of the alignment (station
+ * 92,021, in a tunnel) as the ring around it is in the open. The nearest
+ * earthwork, 92,300 to 92,700 between a portal and a viaduct, is a sidehill
+ * cut: the ground stands over the ring on both sides. The next, 85,800 to
+ * 86,700 between a viaduct and a portal, is on fill at 86,300 (3DEP's
+ * ground 21 ftUS under the road there, and under it 100 ftUS either side;
+ * sampled every 50 ftUS, 2026-11-07), so the ring and the end of Fly along
+ * are on open road. It is 5,721 ftUS before the middle: the far ends are
+ * 13.7 km (the start) and 21.9 km (the end) from it.
+ */
+export const ANCHOR_STATION = 86_300;
+
+/**
+ * The 10,000 ft pair's ends, on the first tangent (stations 10,000 to
+ * 30,000): both on earthwork, where 3DEP's ground meets the profile within
+ * 3 ftUS (sampled every 100 ftUS, 2026-11-07).
+ */
+export const PAIR_STATIONS = [11_200, 21_200] as const;
 
 /**
  * Around the route, in degrees: the extent of its section (offsets ±41),

@@ -4,7 +4,7 @@
 //  - corridor-rigid/ and corridor-reprojected/: the corridor twice, one tile
 //    tree with the same tile ids and vertex order (call 15, for plan 5's
 //    morph). The rigid one is design units under one root transform, the
-//    rigid placement's matrix at the alignment's middle; the reprojected one
+//    rigid placement's matrix at its anchor (near the middle); the reprojected one
 //    is every vertex through the frame, in Earth-fixed metres;
 //  - site-building/: the site-grid building, rigid at its footprint's
 //    centre;
@@ -46,6 +46,7 @@ import {
   ANCHOR_STATION,
   BRIDGE,
   CORRIDOR_ALIGNMENT,
+  PAIR_STATIONS,
   SURVEY_MARK,
   corridorFrame,
   sectionSurface,
@@ -759,7 +760,8 @@ function corridorAnswers(frame, alignment, placement, frames) {
   tag(alignment.endStation, "end");
   tag(BRIDGE.fromStation, "bridge start");
   tag(BRIDGE.toStation, "bridge end");
-  tag(alignment.startStation + 10_000, "pair end");
+  tag(PAIR_STATIONS[0], "pair start");
+  tag(PAIR_STATIONS[1], "pair end");
   tag(MARKER_STATION, "marker");
   // The whole stations nearest each distance on either side of the anchor.
   for (const target of NEAR_DISTANCES) {
@@ -841,8 +843,8 @@ function corridorAnswers(frame, alignment, placement, frames) {
     {
       id: "first-tangent",
       label: "10,000 ft on the first tangent",
-      a: [alignment.startStation, 0],
-      b: [alignment.startStation + 10_000, 0],
+      a: [PAIR_STATIONS[0], 0],
+      b: [PAIR_STATIONS[1], 0],
     },
     {
       id: "curve",

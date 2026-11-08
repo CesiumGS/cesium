@@ -154,11 +154,11 @@ describe("corridorMesh", () => {
         "left lanes",
         "right outer shoulder",
         "median barrier",
-        "viaduct 437+00 to 478+00",
-        "pier 438+20.59 left",
-        "pier 476+79.41 right",
+        "viaduct 437+00 to 473+00",
+        "pier 438+20 left",
+        "pier 471+80 right",
         "tick 437+00 left",
-        "tick 478+00 right",
+        "tick 473+00 right",
       ]),
     );
     expect(mesh.featureIds.length * 3).toBe(mesh.design.length);

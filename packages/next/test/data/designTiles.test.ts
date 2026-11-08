@@ -43,6 +43,7 @@ import {
   ANCHOR_STATION,
   BRIDGE,
   CORRIDOR_ALIGNMENT,
+  PAIR_STATIONS,
   SURVEY_MARK,
   corridorFrame,
   sectionSurface,
@@ -710,7 +711,7 @@ describe("the design globe's generated tiles", () => {
     const end = answers.points.find(
       (p: Json) => p.station === alignment.endStation && p.offset === 0,
     );
-    expect(end.distanceFromAnchor / 1000).toBeCloseTo(20.8, 1);
+    expect(end.distanceFromAnchor / 1000).toBeCloseTo(21.95, 2);
     expect(answers.pairs).toHaveLength(4);
   });
 
@@ -795,8 +796,8 @@ describe("the design globe's generated tiles", () => {
     expect(m.design!.horizontalDistance).toBe(pair.horizontalDistance);
     expect(m.distance).toBe(pair.trueDistance);
 
-    // The measurement model on pairs[0], 10,000 ft on the first tangent, up
-    // the profile's +5.27% grade: the horizontal and 3D design distances, and
+    // The measurement model on pairs[0], 10,000 ft on the first tangent, over
+    // the profile's crest at station 19,000: the horizontal and 3D design distances, and
     // the true one.
     const first = answers.pairs[0];
     const [a, b] = [first.from, first.to].map(
@@ -828,7 +829,9 @@ describe("the design globe's generated tiles", () => {
     expect(view.horizontalDistance).toBe("10,000.000 ftUS");
     // The straight line between the ends: 10,000 ft across, and the climb
     // between their elevations.
-    const climb = alignment.elevationAt(20_000) - alignment.elevationAt(10_000);
+    const climb =
+      alignment.elevationAt(PAIR_STATIONS[1]) -
+      alignment.elevationAt(PAIR_STATIONS[0]);
     expect(view.designDistance).toBe(
       `${Math.hypot(10_000, climb).toLocaleString("en-US", {
         minimumFractionDigits: 3,
@@ -841,8 +844,8 @@ describe("the design globe's generated tiles", () => {
         maximumFractionDigits: 3,
       })} m`,
     );
-    expect(view.a.station).toBe("100+00.000");
-    expect(view.b.station).toBe("200+00.000");
+    expect(view.a.station).toBe("112+00.000");
+    expect(view.b.station).toBe("212+00.000");
   });
 
   it("writes answers.json as Answers' shape", () => {
@@ -853,8 +856,8 @@ describe("the design globe's generated tiles", () => {
   });
 
   // The owner's "about 31.6 m" is the rigid error at the station nearest 20
-  // km from the anchor (171,255); at station 170,000 it is about 30.6 m.
-  it("records the station 170,000 marker: about 30.6 m between its true and rigid positions", () => {
+  // km from the anchor (166,627); at station 170,000 it is about 34.4 m.
+  it("records the station 170,000 marker: about 34.4 m between its true and rigid positions", () => {
     const marker = answers.marker;
     expect(marker.station).toBe(170_000);
     const point = answers.points[marker.point];
@@ -866,7 +869,7 @@ describe("the design globe's generated tiles", () => {
       marker.rigidDisplayed,
     );
     expect(marker.separation).toBe(rigid.displayError(marker.design));
-    expect(Math.abs(marker.separation - 30.6)).toBeLessThan(0.1);
+    expect(Math.abs(marker.separation - 34.4)).toBeLessThan(0.1);
     expect(reprojected.displayError(marker.design)).toBe(0);
   });
 

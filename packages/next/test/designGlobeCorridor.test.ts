@@ -8,6 +8,7 @@ import {
   CORRIDOR_ALIGNMENT,
   CORRIDOR_CRS,
   CROSS_SECTION,
+  PAIR_STATIONS,
   STRUCTURES,
   TICKS,
   VIADUCTS,
@@ -105,31 +106,55 @@ describe("the corridor's alignment", () => {
     }
   });
 
-  it("puts the anchor at the middle of the alignment", () => {
-    expect(ANCHOR_STATION).toBe(92_021);
-    expect(ANCHOR_STATION).toBe(
-      (alignment.startStation + alignment.endStation) / 2,
-    );
+  it("puts the anchor on open road near the middle of the alignment", () => {
+    const middle = (alignment.startStation + alignment.endStation) / 2;
+    expect(middle).toBe(92_021);
+    expect(ANCHOR_STATION).toBe(86_300);
+    expect(Math.abs(ANCHOR_STATION - middle)).toBeLessThan(6_000);
+    // On earthwork: the ring (30 m, about 98 ftUS, across) clear of any structure.
+    const ring = 30 / (1200 / 3937);
+    const clear = (s: number) =>
+      STRUCTURES.every((st) => s < st.fromStation || s > st.toStation);
+    expect(clear(ANCHOR_STATION - ring)).toBe(true);
+    expect(clear(ANCHOR_STATION + ring)).toBe(true);
+    // The middle itself is in a tunnel.
+    expect(clear(middle)).toBe(false);
+  });
+
+  it("puts the 10,000 ft pair on the first tangent, both ends on earthwork", () => {
+    const [a, b] = PAIR_STATIONS;
+    expect(b - a).toBe(10_000);
+    const tangent = ranges[0]!;
+    expect(tangent.element.kind).toBe("line");
+    expect(a).toBeGreaterThanOrEqual(tangent.from);
+    expect(b).toBeLessThanOrEqual(tangent.to);
+    for (const s of PAIR_STATIONS) {
+      expect(
+        STRUCTURES.every((st) => s < st.fromStation || s > st.toStation),
+        `station ${s}`,
+      ).toBe(true);
+    }
   });
 });
 
 describe("the corridor's vertical profile", () => {
   const profile = CORRIDOR_ALIGNMENT.vertical!;
 
-  it("runs from station 10,000, tied in to the ground at 316.71 ftUS, to the alignment's end", () => {
+  it("runs from station 10,000, tied in to the ground at 316.70 ftUS, to the alignment's end", () => {
     expect(profile.startStation).toBe(10_000);
-    expect(profile.startElevation).toBe(316.71);
+    expect(profile.startElevation).toBe(316.7);
     const length = profile.segments.reduce((sum, s) => sum + s.length, 0);
     expect(profile.startStation + length).toBe(alignment.endStation);
-    expect(alignment.elevationAt(10_000)).toBeCloseTo(316.71, 9);
+    expect(alignment.elevationAt(10_000)).toBeCloseTo(316.7, 9);
   });
 
-  it("keeps its grades within 6% and its vertical curves at AASHTO's least K for 65 mph", () => {
+  it("keeps its grades from 0.3% (drainage) to 6% and its vertical curves at AASHTO's least K for 65 mph", () => {
     for (const s of profile.segments) {
       const grades =
         s.kind === "grade" ? [s.grade] : [s.startGrade, s.endGrade];
       for (const g of grades) {
         expect(Math.abs(g)).toBeLessThanOrEqual(0.06);
+        expect(Math.abs(g)).toBeGreaterThanOrEqual(0.003);
       }
       if (s.kind === "parabola") {
         // K: the curve's length per percent of grade change; crest 193, sag 157.
@@ -165,7 +190,7 @@ describe("the structures", () => {
       at = s.toStation;
     }
     expect(at).toBeLessThanOrEqual(alignment.endStation);
-    expect(STRUCTURES.filter((s) => s.kind === "viaduct")).toHaveLength(19);
+    expect(STRUCTURES.filter((s) => s.kind === "viaduct")).toHaveLength(18);
     expect(STRUCTURES.filter((s) => s.kind === "tunnel")).toHaveLength(19);
   });
 
@@ -190,7 +215,7 @@ describe("the structures", () => {
     );
     expect(tangent?.element.kind).toBe("line");
     expect([tangent?.from, tangent?.to]).toEqual([37_000, 67_000]);
-    expect([BRIDGE.fromStation, BRIDGE.toStation]).toEqual([43_700, 47_800]);
+    expect([BRIDGE.fromStation, BRIDGE.toStation]).toEqual([43_700, 47_300]);
   });
 });
 

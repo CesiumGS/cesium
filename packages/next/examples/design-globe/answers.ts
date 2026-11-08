@@ -79,8 +79,8 @@ export interface AnswerMarker extends AnswerStationOffset {
   readonly bodyFixed: readonly [number, number, number];
   readonly rigidDisplayed: readonly [number, number, number];
   /**
-   * |rigidDisplayed − bodyFixed|, metres: the headline, about 30.6 m at
-   * station 170,000 (31.6 m is station 171,255, nearest 20 km from the anchor).
+   * |rigidDisplayed − bodyFixed|, metres: the headline, about 34.4 m at
+   * station 170,000 (31.6 m is station 166,627, nearest 20 km from the anchor).
    */
   readonly separation: number;
 }

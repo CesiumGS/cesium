@@ -28,7 +28,7 @@ the second audience: every number is there and honest, but quieter.
   exploration. One sentence of narration per step, with Next, Back and
   "Explore on your own" always visible; leaving keeps the current view,
   placement and measurements. The steps:
-  1. The corridor at the far end, rigid: the road drawn about 30 m from
+  1. The corridor at the far end, rigid: the road drawn about 34 m from
      where it is (the self-check measurement and the whiskers).
   2. The morph to reprojected: the gap closes to 0.000 m as the geometry
      moves into the globe's frame.
@@ -45,8 +45,8 @@ the second audience: every number is there and honest, but quieter.
   asks: an "Exaggerate the error" toggle, off by default and labelled with
   its factor while on, because exaggeration "confuses the accuracy story"
   (owner). The opening shot is at true scale, low and oblique near the far
-  end of the corridor (about 20 km from the anchor), where the rigid
-  placement is about 31 m off and the gap reads; a "Fly along" control runs
+  end of the corridor (about 21 km from the anchor), where the rigid
+  placement is about 34 m off and the gap reads; a "Fly along" control runs
   the camera down the corridor to the anchor, where the two placements meet.
 - **Measurement proves the second half of the claim.** The same two points
   give the same design distance in both placements; the drawn positions and
@@ -57,13 +57,13 @@ the second audience: every number is there and honest, but quieter.
   1. **The design against itself:** a ground marker at station 170,000's
      true position (placed through the design CRS by PROJ, and labelled as
      the design's own point, not a survey), measured to the drawn station.
-     Rigid: about 30 m apart (the page reads the figure from `answers.json`).
+     Rigid: about 34 m apart (the page reads the figure from `answers.json`).
      Reprojected: 0.000 m. The morph shrinks it live.
   2. **The design against a real survey mark:** an NGS mark near the far end,
      placed from NGS's published NAD83(2011) position, independent of the
      design's pipeline, measured to the nearest point on the drawn
      centreline. Reprojected matches the distance from NGS's published zone 3
-     coordinates; rigid is off by about 19 m there (HS5109 "GOLD CREEK"). The surveyor's question:
+     coordinates; rigid is off by about 23 m there (HS5109 "GOLD CREEK"). The surveyor's question:
      does the design line up with the control it was surveyed from?
 
   A quieter third pair, two stations 10,000 ft apart, shows the design
@@ -80,14 +80,14 @@ the second audience: every number is there and honest, but quieter.
   with visuals in the viewer the better"). First version:
   1. **Error whiskers:** a leader every 1,000 ft along the corridor from each
      rigid position to its reprojected partner, coloured by length: zero at
-     the anchor, about 34 m at the far end, shrinking to nothing as the morph
+     the anchor, about 38 m at the far end, shrinking to nothing as the morph
      completes.
   2. **The anchor ring:** "the placements agree here".
   3. **The measurement lines,** with a label pill giving the design distance,
      and the other placement's line ghosted beside each one.
   4. **A ground-versus-grid ruler** along the 10,000 ft pair: tick marks in
      design feet against true ground feet. The gap the scale factor makes
-     is read from the page's own measurement of the pair (0.927 ftUS at
+     is read from the page's own measurement of the pair (0.938 ftUS at
      10,000 ft with today's answers), never written here; it shows when
      zoomed in on the far end, where the two last ticks stand side by side
      with a bracket ("Close in on the ruler").
@@ -103,7 +103,7 @@ the second audience: every number is there and honest, but quieter.
   corners, nearly all of it the 0.99991 scale factor rigid ignores) through a
   block, a port, an airport, a solar farm and a campus, to a 30 km utility
   pole line (18 m, nearly all of it curvature), and the 50 km corridor
-  (about 34 m at its far end). Each rung's error at its edge comes in its parts: curvature
+  (about 38 m at its far end). Each rung's error at its edge comes in its parts: curvature
   (d²/2R), the scale factor rigid ignores, and the geoid's slope. Each site is "every
   country, done right" (its CRS, units, height system and national geoid,
   credited) and tells the story in one line: its extent, its rigid error at
@@ -171,9 +171,9 @@ number stays in the sidebar, next to that number.
 │ └──────────────────────────────┘ │ Globe     │ │ │ Oakland hills to Livermore    │   (the selected
 │  Click a first point on a model  │ lat lon h │ │ │ [Rigid at the anchor|Reproj.] │    site's)
 │                                  │ error     │ │ │ One transform at the anchor…  │
-│            ◌·  snap preview      └───────────┘ │ │ 30.551 m  station 1700+00 … ▸ │   the evidence
-│                                                │ │ 19.253 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
-│                                                │ │ 10,000.000 ftUS = 3,051.835 m ▸│
+│            ◌·  snap preview      └───────────┘ │ │ 34.447 m  station 1700+00 … ▸ │   the evidence
+│                                                │ │ 22.797 m  HS5109 GOLD CREEK ▸ │   rows (corridor)
+│                                                │ │ 10,000.000 ftUS = 3,050.722 m ▸│
 │        ┌ tour card ─────────────┐              │ │ sag chart        Fly along    │
 │        └────────────────────────┘   └────────┘ │ │ Take the short tour           │
 │ credits      [ time controls ]                 │ │ CRS, heights, units ▸ details │ 3 the site's facts
@@ -286,15 +286,22 @@ number in a headline row is not repeated in its Details), no e-notation.
   error, not the 30 km rectangle that holds it.
 - **The corridor's profile follows the real ground** (round 2): a design
   vertical alignment fitted to USGS 3DEP ground heights along the
-  alignment, grades within 6% and AASHTO's least K for 65 mph
-  (corridor.ts has the PVIs, the K values and the fit's cut and fill). The
-  hills are crossed against their grain, so no road within 6% can follow
-  them: 19 viaducts and 19 tunnels carry 59% of it, and its earthwork stays
-  within 49 ftUS of fill and 80 ftUS of cut. The clipped strip narrows to
-  a sliver over each structure, so the ground stays under a viaduct (its
-  piers stand on it) and over a tunnel (the road is hidden in the hill).
-  The anchor, at the alignment's middle, is in a 6,600 ft tunnel, so the
-  anchor ring and the end of Fly along are inside the hill.
+  alignment, grades from 0.3% (so the road drains) to 6% and AASHTO's
+  least K for 65 mph (corridor.ts has the PVIs, the K values and the fit's
+  cut and fill). The hills are crossed against their grain, so no road
+  within 6% can follow them: 18 viaducts and 19 tunnels carry 66% of it,
+  and its earthwork stays within 48 ftUS of fill and 80 ftUS of cut. The
+  clipped strip narrows to a sliver over each structure, so the ground
+  stays under a viaduct (its piers stand on it) and over a tunnel (the
+  road is hidden in the hill).
+- **The anchor is on open road** (owner, 2026-11-07). The alignment's
+  middle, station 92,021, is in a tunnel, and the nearest earthwork after
+  it is a sidehill cut where the ground stands over the anchor ring. So
+  the anchor is at station 86,300, on fill between a viaduct and a portal,
+  5,721 ftUS before the middle: the ring and the end of Fly along are in
+  the open. The far ends are 13.7 km and 21.9 km from it. The 10,000 ft
+  pair runs from station 11,200 to 21,200 on the first tangent, both ends
+  on earthwork where the road meets the ground.
 
 ### The ghost (F4)
 
