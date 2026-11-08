@@ -5,6 +5,7 @@ import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { OffscreenTarget, View } from "../src/scene/View.ts";
 import type { World } from "../src/scene/World.ts";
+import { CapacityError } from "../src/scene/CapacityError.ts";
 import { MAX_ANCHORS } from "../src/render/layout.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
@@ -66,13 +67,29 @@ describe("anchors", () => {
     expect(world.anchorOf(earth)).toBe(earth);
     expect(world.worldMatrix(earth)).toEqual(IDENTITY);
     expect(() => world.setTransform(earth, translation(1, 0, 0))).toThrow(
-      /Earth/,
+      /setTransform: Earth is an anchor/,
+    );
+    expect(() => world.removeTransform(earth)).toThrow(
+      /removeTransform: Earth is an anchor; remove it with removeAnchor/,
     );
     // Placing it in the table root changes no anchor-relative matrix.
     world.placeAnchor(earth, translation(7, 0, 0));
     expect(world.anchorMatrix(earth)).toEqual(translation(7, 0, 0));
     expect(world.worldMatrix(t)).toEqual(translation(1, 2, 3));
     expect(world.root).toEqual({ name: "transform table" });
+    // Only a rigid place, and only for this world's anchors.
+    const scaled = translation(0, 0, 0);
+    scaled[5] = 2;
+    expect(() => world.placeAnchor(earth, scaled)).toThrow(
+      /placeAnchor: Earth's place is not rigid/,
+    );
+    const other = engine.createWorld().addAnchor("elsewhere");
+    expect(() => world.placeAnchor(other, IDENTITY)).toThrow(
+      /placeAnchor: elsewhere is not an anchor of this world/,
+    );
+    expect(() => view.setAnchorPlacement(other, IDENTITY)).toThrow(
+      /setAnchorPlacement: elsewhere is not an anchor of this view's world/,
+    );
   });
 
   it("a draw's parent hangs its own transform under an anchor", () => {
@@ -87,14 +104,28 @@ describe("anchors", () => {
     // Under no anchor without a parent, as today.
     const plain = world.addDraw({ mesh, origin: Float64Array.of(10, 20, 30) });
     expect(world.drawMatrix(plain)).toEqual(translation(10, 20, 30));
-    expect(() => world.removeAnchor(moon)).toThrow(/Moon/);
+    expect(() => world.removeAnchor(moon)).toThrow(
+      /removeAnchor: transforms still hang under Moon/,
+    );
     world.removeDraw(draw);
     expect(() => world.removeAnchor(moon)).not.toThrow();
     // A parent means nothing beside a shared transform.
     const shared = world.addTransform(IDENTITY);
     expect(() =>
       world.addDraw({ mesh, transform: shared, parent: shared }),
-    ).toThrow(/parent/);
+    ).toThrow(/addDraw: a parent is for the transform a draw owns/);
+    // Not on a removed parent, nor on an anchor itself (removeAnchor would
+    // free the transform under the draw).
+    const gone = world.addTransform(IDENTITY);
+    world.removeTransform(gone);
+    expect(() => world.addDraw({ mesh, parent: gone })).toThrow(
+      /addDraw: the parent was removed/,
+    );
+    const site = world.addAnchor("site");
+    expect(() => world.addDraw({ mesh, transform: site })).toThrow(
+      /addDraw: site is an anchor; hang the draw under it with parent/,
+    );
+    expect(world.anchorOf(world.addTransform(IDENTITY, site))).toBe(site);
   });
 
   it("bodyAnchor makes one anchor per body, on first ask", () => {
@@ -111,7 +142,7 @@ describe("anchors", () => {
     const moon = world.bodyAnchor(MOON);
     expect(world.anchors).toEqual([earth, expect.anything(), moon]);
     expect(() => world.addAnchor("Earth again", { body: EARTH })).toThrow(
-      /Earth/,
+      /addAnchor: Earth already has an anchor \(Earth\)/,
     );
     // A transform node as a reference frame: one key per node.
     const site = world.addTransform(translation(1, 0, 0), earth);
@@ -120,7 +151,9 @@ describe("anchors", () => {
     expect(key.world).toBe(world);
     expect(key.transform).toEqual(site);
     expect(world.frameOf(site, "site")).toBe(key);
-    expect(() => world.frameOf(site, "other")).toThrow(/site/);
+    expect(() => world.frameOf(site, "other")).toThrow(
+      /already the reference frame site, not other/,
+    );
   });
 
   it("view placements default to identity; a change bumps anchorRevision once", () => {
@@ -148,7 +181,24 @@ describe("anchors", () => {
     const next = world.addAnchor("next");
     expect(next.slot).toBe(earth.slot);
     expect(view.anchorPlacement(next)).toEqual(IDENTITY);
-    expect(() => view.anchorPlacement(earth)).toThrow(/Earth/);
+    expect(() => view.anchorPlacement(earth)).toThrow(
+      /anchorPlacement: Earth is not an anchor of this view's world/,
+    );
+  });
+
+  it("a removed anchor, or another world, bumps anchorRevision and wakes", () => {
+    const earth = world.bodyAnchor(EARTH);
+    view.setAnchorPlacement(earth, translation(5, 0, 0));
+    let wakes = 0;
+    view.wake = () => wakes++;
+    const revision = view.anchorRevision;
+    world.removeAnchor(earth);
+    expect(view.anchorRevision).toBe(revision + 1);
+    expect(wakes).toBe(1);
+    // Read again: counted once.
+    expect(view.anchorRevision).toBe(revision + 1);
+    view.world = engine.createWorld();
+    expect(view.anchorRevision).toBe(revision + 2);
   });
 
   it("anchorCamera and setCameraFromAnchor invert each other to 1e-9 m at 400,000 km", () => {
@@ -204,26 +254,35 @@ describe("anchors", () => {
     for (let i = 0; i < 31; i++) {
       world.addAnchor(`a${i}`);
     }
-    expect(() => world.addAnchor("one too many")).toThrow(/anchor table/);
+    expect(() => world.addAnchor("one too many")).toThrow(CapacityError);
+    expect(() => world.addAnchor("one too many")).toThrow(
+      "World anchor table is full.",
+    );
     const a0 = world.anchors[0]!;
     expect(() =>
       view.setAnchorPlacement(a0, translation(Number.NaN, 0, 0)),
-    ).toThrow(/a0/);
+    ).toThrow(/setAnchorPlacement: a0's placement is not rigid: .*not finite/);
     const scaled = translation(0, 0, 0);
     scaled[0] = 1 + 1e-6;
-    expect(() => view.setAnchorPlacement(a0, scaled)).toThrow(/a0/);
+    expect(() => view.setAnchorPlacement(a0, scaled)).toThrow(
+      /a0's placement is not rigid: .*not orthonormal/,
+    );
     const mirrored = translation(0, 0, 0);
     mirrored[0] = -1;
-    expect(() => view.setAnchorPlacement(a0, mirrored)).toThrow(/a0/);
+    expect(() => view.setAnchorPlacement(a0, mirrored)).toThrow(
+      /a0's placement is not rigid: it mirrors/,
+    );
     expect(() => view.setAnchorPlacement(undefined, scaled)).toThrow(
-      /transform table/,
+      /the transform table's root's placement is not rigid/,
     );
     // Rigid within 1e-9 passes.
     const nearly = rigid([0, 1, 0], 0.5, [1, 2, 3]);
     nearly[0] = nearly[0]! + 1e-12;
     expect(() => view.setAnchorPlacement(a0, nearly)).not.toThrow();
     world.addTransform(IDENTITY, a0);
-    expect(() => world.removeAnchor(a0)).toThrow(/a0/);
+    expect(() => world.removeAnchor(a0)).toThrow(
+      /removeAnchor: transforms still hang under a0/,
+    );
   });
 
   it("toPixel takes an anchor", () => {
@@ -243,5 +302,17 @@ describe("anchors", () => {
     // Another anchor, at the identity: render space's numbers.
     const site = world.addAnchor("site");
     expect(Array.from(view.toPixel([0, 0, 0], site)!)).toEqual(centre);
+    // The table's root differs from the placed body anchor.
+    const atRoot = view.toPixel([0, 0, 0], world.root)!;
+    expect(Array.from(atRoot)).toEqual(centre);
+    expect(Array.from(atRoot)).not.toEqual(
+      Array.from(view.toPixel([0, 0, 0])!),
+    );
+    // An explicit undefined is refused, by the type and at run time,
+    // rather than read as either.
+    expect(() =>
+      // @ts-expect-error: no undefined anchor
+      view.toPixel([0, 0, 0], undefined),
+    ).toThrow(/toPixel: the anchor is undefined; pass world.root/);
   });
 });

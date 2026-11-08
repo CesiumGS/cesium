@@ -88,8 +88,8 @@ export function splitVec3(
 /**
  * Why a column-major 4×4 matrix is not a rigid placement (a rotation and a
  * translation), or undefined when it is one: every value finite, the
- * rotation's columns orthonormal within `tolerance`, no mirror, and the
- * bottom row exactly (0, 0, 0, 1).
+ * rotation's columns orthonormal within `tolerance` (default 10⁻⁹), no
+ * mirror, and the bottom row exactly (0, 0, 0, 1).
  */
 export function rigidMatrixError(
   m: ArrayLike<number>,

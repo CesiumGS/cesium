@@ -1933,6 +1933,14 @@ export class World {
     if (options.parent && !this.transformAlive(options.parent)) {
       throw new Error("addDraw: the parent was removed.");
     }
+    const onAnchor = options.transform
+      ? this.anchorAt(options.transform.index)
+      : undefined;
+    if (onAnchor && this.transformAlive(options.transform!)) {
+      throw new Error(
+        `addDraw: ${onAnchor.name} is an anchor; hang the draw under it with parent (and origin or model), or under a transform added under it.`,
+      );
+    }
     const streams = options.instances?.streams;
     for (const [name, { offset, components }] of Object.entries(
       streams?.layout ?? {},
@@ -2852,10 +2860,22 @@ export class World {
     );
   }
 
-  /** @internal The body's anchor if the world has made it (`View.bodyAnchor`). */
-  findBodyAnchor(body: Body): AnchorHandle | undefined {
-    return this.bodyAnchors.get(bodyKey(body));
+  /**
+   * @internal The anchor of the body with this key (`bodyKey`) if the
+   * world has made it (`View.bodyAnchor`).
+   */
+  findBodyAnchor(key: string): AnchorHandle | undefined {
+    return this.bodyAnchors.get(key);
   }
+
+  /**
+   * @internal Counts `removeAnchor` calls that removed one, so a view can
+   * forget the placements it held for removed anchors.
+   */
+  get anchorRemovals(): number {
+    return this.anchorRemovals_;
+  }
+  private anchorRemovals_ = 0;
 
   /** The world's anchors, by slot. */
   get anchors(): readonly AnchorHandle[] {
@@ -2902,7 +2922,9 @@ export class World {
 
   /**
    * Removes an anchor, freeing its slot. Throws, naming it, while any
-   * transform hangs under it.
+   * transform hangs under it; draws hang under transforms (a draw can't sit
+   * on an anchor itself), so none can be left on it. Views forget their
+   * placements of it (`View.anchorRevision` counts that).
    */
   removeAnchor(anchor: AnchorHandle): void {
     if (
@@ -2922,7 +2944,9 @@ export class World {
     }
     this.anchorList = undefined;
     this.freeTransformTree(anchor.index);
+    this.anchorRemovals_++;
     this.version++;
+    this.changedViews = ALL_VIEWS;
   }
 
   /**

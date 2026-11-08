@@ -970,7 +970,11 @@ describe("ClientSnapService: what the camera can't see", () => {
 describe("View.toPixel", () => {
   function realView(target: OffscreenTarget | CanvasTarget): View {
     // A world without anchors: toPixel's positions are in render space.
-    const world = { findBodyAnchor: () => undefined } as unknown as World;
+    const world = {
+      root: { name: "transform table" },
+      anchorRemovals: 0,
+      findBodyAnchor: () => undefined,
+    } as unknown as World;
     const v = new View({ target, world });
     v.camera.position.set([R + 1000, 0, 0]);
     v.camera.direction.set([-1, 0, 0]);
