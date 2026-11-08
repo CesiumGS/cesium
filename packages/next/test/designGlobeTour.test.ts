@@ -12,13 +12,17 @@ import {
   tourAutoStart,
   tourCard,
   tourTarget,
+  type TourAction,
   type TourFacts,
+  type TourTarget,
 } from "../examples/design-globe/tour.ts";
 import {
   DEFAULT_VIEW,
   formatView,
   parseView,
 } from "../examples/design-globe/viewParams.ts";
+import { createRulerView } from "../examples/design-globe/rulerView.ts";
+import { createTour } from "../examples/design-globe/tourRuntime.ts";
 
 const FACTS: TourFacts = {
   markerSeparation: 30.58593643467373,
@@ -234,6 +238,75 @@ describe("design globe tour", () => {
     expect(tourAutoStart({ tour: "4" }, true)).toBe(3);
     expect(tourAutoStart({ site: "london" }, false)).toBeUndefined();
     expect(tourAutoStart({ a: "1,2,3", b: "4,5,6" }, false)).toBeUndefined();
+  });
+});
+
+describe("design globe tour: the ruler's close-in (UX review I2)", () => {
+  /**
+   * The page as main.ts drives it: a ghost and a ribbon the user set on;
+   * each step's `apply` first lets the ruler's view follow the tour, and
+   * the pair step closes in on the ruler (which sets both aside).
+   */
+  function page() {
+    const drawn = { ghost: true, ribbonHidden: false };
+    const ruler = createRulerView({
+      ghost: () => drawn.ghost,
+      setGhost: (on) => (drawn.ghost = on),
+      setRibbonHidden: (hidden) => (drawn.ribbonHidden = hidden),
+    });
+    const tour = createTour({
+      initial: { tour: "1" },
+      setLink: () => {},
+      apply(target: TourTarget) {
+        ruler.tourStep(target);
+        if (target.shot === "pair") {
+          ruler.begin();
+        }
+        return true;
+      },
+      left: () => ruler.tourStep(undefined),
+      changed: () => {},
+    });
+    /** The toolbar and the legend: what is drawn. */
+    const shown = () => ({
+      ghost: drawn.ghost,
+      ribbon: ruler.ribbonShown(true) && !drawn.ribbonHidden,
+    });
+    const go = (action: TourAction) => tour.go(action);
+    return { drawn, ruler, tour, shown, go };
+  }
+  const pairStep = TOUR_STEPS.findIndex((s) => s.id === "pair");
+
+  it("sets the ghost and the ribbon aside on the pair step, and says so", () => {
+    const p = page();
+    p.go({ type: "start", step: pairStep });
+    expect(p.ruler.active).toBe(true);
+    expect(p.drawn).toEqual({ ghost: false, ribbonHidden: true });
+    expect(p.shown()).toEqual({ ghost: false, ribbon: false });
+  });
+
+  for (const [name, action] of [
+    ["Next", { type: "next" }],
+    ["Back", { type: "back" }],
+    ["a step button", { type: "start", step: 0 }],
+    ["Explore on your own", { type: "leave" }],
+  ] as const) {
+    it(`brings them back when the pair step is left by ${name}`, () => {
+      const p = page();
+      p.go({ type: "start", step: pairStep });
+      p.go(action);
+      expect(p.ruler.active).toBe(false);
+      expect(p.drawn).toEqual({ ghost: true, ribbonHidden: false });
+      expect(p.shown()).toEqual({ ghost: true, ribbon: true });
+    });
+  }
+
+  it("keeps the user's ghost off when it was off before", () => {
+    const p = page();
+    p.drawn.ghost = false;
+    p.go({ type: "start", step: pairStep });
+    p.go({ type: "next" });
+    expect(p.drawn.ghost).toBe(false);
   });
 });
 

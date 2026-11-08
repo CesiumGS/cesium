@@ -40,6 +40,8 @@ export interface TourDeps {
   setLink(params: { readonly tour: string | undefined }): void;
   /** Shows a step's target; false when what it shows isn't in yet (tried again by `flush`). */
   apply(target: TourTarget): boolean;
+  /** The tour was left: what a step set aside for itself comes back. */
+  left?(): void;
   changed(): void;
 }
 
@@ -81,6 +83,7 @@ export function createTour(deps: TourDeps): TourRuntime {
     if (next === undefined) {
       pending = undefined;
       writeLeft();
+      deps.left?.();
       deps.setLink({ tour: undefined });
     } else {
       deps.setLink(formatTourStep(next.step));

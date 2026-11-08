@@ -83,6 +83,7 @@ import {
   syncTerrainClip,
   type DaylightStretch,
 } from "./terrainClips.ts";
+import { createRulerView } from "./rulerView.ts";
 import { tourCard, type TourTarget } from "./tour.ts";
 import { createTour, type TourRuntime } from "./tourRuntime.ts";
 import { formatView, parseView, type ViewParams } from "./viewParams.ts";
@@ -696,7 +697,8 @@ export function run(context: ExampleContext): ExampleRun {
       loading: loadingFor(loading, params.site),
       t: morph.t(),
       morphing: morph.morphing,
-      ghost: userGhost(),
+      // What is drawn: the ruler's view sets the ghost aside for a while.
+      ghost: morph.ghost,
       exaggerate: morph.exaggerate,
       sites: new Map(
         [...sites].map(([id, s]): [string, SiteSnapshot] => [
@@ -733,7 +735,7 @@ export function run(context: ExampleContext): ExampleRun {
       ...base,
       legend: {
         ...base.legend,
-        ...(view.ribbon &&
+        ...(rulerView.ribbonShown(view.ribbon) &&
           ribbon !== undefined && {
             ribbon: { min: "0 m", max: errorText(ribbon.max) },
           }),
@@ -746,7 +748,7 @@ export function run(context: ExampleContext): ExampleRun {
         }),
       view: {
         compass: view.compass,
-        ribbon: view.ribbon,
+        ribbon: rulerView.ribbonShown(view.ribbon),
         ribbonReady:
           corridor.rigidPlacement !== undefined &&
           corridor.reprojectedPlacement !== undefined,
@@ -771,6 +773,7 @@ export function run(context: ExampleContext): ExampleRun {
     if (site === undefined) {
       return;
     }
+    endRulerView();
     params = { ...params, site: id };
     setLink(formatParams(params));
     siteClock(site.entry);
@@ -809,6 +812,8 @@ export function run(context: ExampleContext): ExampleRun {
    * False while what it shows isn't in yet; the tour tries again.
    */
   function applyTour(target: TourTarget): boolean {
+    // Off the pair step, the ghost and the ribbon come back (UX review I2).
+    rulerFollowsTour(target);
     if (target.shot === "keep") {
       return true;
     }
@@ -852,35 +857,45 @@ export function run(context: ExampleContext): ExampleRun {
 
   /**
    * "Close in on the ruler" sets the ghost deck and the ribbon aside, so the
-   * ruler isn't seen through an orange field (Task 20 fix 1, I7); the next
-   * time the user takes the camera, or sets either, they come back.
+   * ruler isn't seen through an orange field (rulerView.ts): until the user
+   * takes the camera or sets either, the tour moves off its pair step or is
+   * left, or another site is selected.
    */
-  let rulerView: { readonly ghost: boolean } | undefined;
-  function beginRulerView(): void {
-    rulerView ??= { ghost: morph.ghost };
-    morph.ghost = false;
-    morph.apply();
-    ribbon?.setVisible(false);
-    viewer.engine.requestRender();
-    frames.wake();
-  }
+  const rulerView = createRulerView({
+    ghost: () => morph.ghost,
+    setGhost(on) {
+      morph.ghost = on;
+      morph.apply();
+    },
+    setRibbonHidden(hidden) {
+      if (hidden) {
+        ribbon?.setVisible(false);
+        viewer.engine.requestRender();
+        frames.wake();
+      } else {
+        syncRibbon();
+      }
+    },
+  });
   function endRulerView(): void {
-    if (rulerView === undefined) {
-      return;
+    if (rulerView.active) {
+      rulerView.end();
+      refresh();
     }
-    morph.ghost = rulerView.ghost;
-    rulerView = undefined;
-    morph.apply();
-    syncRibbon();
-    refresh();
   }
-  /** The ghost as the user set it (the ruler's view sets it aside for a while). */
-  const userGhost = () => rulerView?.ghost ?? morph.ghost;
+  /** A tour step is shown, or the tour is left (undefined). */
+  function rulerFollowsTour(target: TourTarget | undefined): void {
+    const was = rulerView.active;
+    rulerView.tourStep(target);
+    if (was && !rulerView.active) {
+      refresh();
+    }
+  }
 
   const actions: PanelActions = {
     setMode,
     setGhost(on) {
-      rulerView = undefined;
+      rulerView.end();
       morph.ghost = on;
       morph.apply();
       syncRibbon();
@@ -932,6 +947,7 @@ export function run(context: ExampleContext): ExampleRun {
       refresh();
     },
     setRibbon(on) {
+      rulerView.end();
       view = { ...view, ribbon: on };
       setLink(formatView(view));
       syncRibbon();
@@ -980,7 +996,7 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       const to = rulerFraming(focus);
-      beginRulerView();
+      rulerView.begin();
       shots.daylight(to.center);
       camera.flyTo(to, () => shots.daylight(to.center));
     },
@@ -1046,6 +1062,7 @@ export function run(context: ExampleContext): ExampleRun {
     initial: context.params,
     setLink,
     apply: applyTour,
+    left: () => rulerFollowsTour(undefined),
     changed: () => {
       liftForTour();
       refresh();
