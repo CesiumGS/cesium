@@ -2,6 +2,7 @@
 // engineering frames, and measuring are their own entry points
 // (`@cesium/next/time`, `/frames`, `/proj`, `/measure`); the core imports
 // none of them (spec section 7.7, test/importBoundary.test.ts).
+export type { ClockChange, SceneClock } from "./core/sceneClock.ts";
 export {
   Engine,
   type EngineOptions,

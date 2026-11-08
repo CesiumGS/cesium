@@ -18,6 +18,7 @@ entry	name	kind	tier
 .	CastRay	interface	-
 .	Clamp	interface	-
 .	ClampOptions	interface	-
+.	ClockChange	type	-
 .	CompiledSlangEntry	interface	-
 .	CompiledStyle	interface	-
 .	ContentSummary	interface	-
@@ -104,6 +105,7 @@ entry	name	kind	tier
 .	RenderTarget	interface	-
 .	RequestPurpose	type	-
 .	STAGES	const	-
+.	SceneClock	interface	-
 .	SelectionView	interface	-
 .	ShaderControl	interface	-
 .	ShaderOverrides	interface	-

@@ -1,4 +1,7 @@
 import { Emitter } from "../core/Emitter.ts";
+import type { ClockChange, SceneClock } from "../core/sceneClock.ts";
+import { Instant } from "./Instant.ts";
+import { LeapSeconds } from "./leapSeconds.ts";
 
 /**
  * Paused: time stands still. Playing: it advances at `rate`. Live: it
@@ -17,12 +20,15 @@ interface ClockEvents {
  * steps for now; views share one (per-view clocks, for comparing two
  * times side by side, come with time on views).
  */
-export class Clock {
+export class Clock implements SceneClock {
   /** Milliseconds since 1970, UTC. */
   private time_: number;
   private rate_: number;
   private mode_: ClockMode;
   private lastTick: number | undefined;
+  private change_: ClockChange = "steady";
+  /** The leap-second table that turns scene seconds into an Instant. */
+  leapSeconds: LeapSeconds = LeapSeconds.builtIn();
   readonly events = new Emitter<ClockEvents>();
 
   constructor(
@@ -37,11 +43,36 @@ export class Clock {
     return this.time_;
   }
 
+  /** The scene time: UTC seconds since 1970 (`time / 1000`). */
+  get seconds(): number {
+    return this.time_ / 1000;
+  }
+
+  get paused(): boolean {
+    return this.mode_ === "paused";
+  }
+
+  /** How the time last changed: a set time or live is a jump. */
+  get change(): ClockChange {
+    return this.change_;
+  }
+
+  /** The Instant at scene `seconds` (default: now), through `leapSeconds`. */
+  instant(seconds: number = this.seconds): Instant {
+    return Instant.fromUtc(seconds * 1000, this.leapSeconds);
+  }
+
+  /** Calls `listener` once per change. Returns a function that stops it. */
+  watch(listener: () => void): () => void {
+    return this.events.on("change", () => listener());
+  }
+
   set time(ms: number) {
     if (ms === this.time_) {
       return;
     }
     this.time_ = ms;
+    this.change_ = "jump";
     // Setting a time leaves live (it no longer follows the wall clock).
     if (this.mode_ === "live") {
       this.mode_ = "paused";
@@ -73,6 +104,7 @@ export class Clock {
     this.lastTick = undefined;
     if (mode === "live") {
       this.time_ = Date.now();
+      this.change_ = "jump";
     }
     this.events.emit("change", this);
   }
@@ -96,6 +128,7 @@ export class Clock {
     if (this.time_ === before) {
       return false;
     }
+    this.change_ = this.time_ < before ? "reverse" : "steady";
     this.events.emit("change", this);
     return true;
   }
