@@ -1,37 +1,57 @@
-import { data, size } from "../data.ts";
+import { data, libraryEntry, size } from "../data.ts";
 import {
   C,
   DataTable,
   Flow,
   Generated,
+  Note,
   Page,
   Section,
   Written,
 } from "../parts.tsx";
 
-const FRONT_ENDS = [
-  { source: "WGSL custom shader", when: "As written", how: "Links directly" },
-  {
-    source: "Slang custom shader, build time",
-    when: "npm run slang (recommended)",
-    how: "Native slangc to WGSL",
-  },
-  {
-    source: "Slang custom shader, run time",
-    when: "CustomShader.fromSlang",
-    how: "The WebAssembly compiler in a worker, cached",
-  },
-  {
-    source: "A style",
-    when: "When the style compiles",
-    how: "Its expression compiler writes the helpers",
-  },
-];
-
 export function Shading() {
-  const compiler = data.runtime
-    .flatMap((g) => g.files)
-    .find((f) => f.name === "slang-wasm.wasm");
+  const files = data.runtime.flatMap((g) => g.files);
+  const compiler = files.find((f) => f.name === "slang-wasm.wasm");
+  const compilerGlue = files.find((f) => f.name === "slang-wasm.js");
+  const slangChunk = libraryEntry("core")?.lazy.find((c) => c.name === "slang");
+  const slangWorker = data.bundles.library.assets.find(
+    (a) => a.name === "slangWorker",
+  );
+  const routes = [
+    {
+      route: "WGSL, written directly",
+      how: (
+        <>
+          The <C>wgsl</C> option of <C>CustomShader</C>
+        </>
+      ),
+      cost: "Nothing extra to download. The shader is a string in your code.",
+    },
+    {
+      route: "Slang, compiled at build time",
+      how: (
+        <>
+          <C>scripts/slangShader.mjs</C> (<C>npm run slang</C>), with its output
+          passed as <C>wgsl</C>. The recommended route.
+        </>
+      ),
+      cost: "Nothing extra to download: it ships as WGSL. The cost is having slangc on the build machine.",
+    },
+    {
+      route: "Slang, compiled at run time",
+      how: <C>CustomShader.fromSlang</C>,
+      cost: (
+        <>
+          The first compile downloads a chunk of {size(slangChunk?.kb)}, a
+          worker of {size(slangWorker?.kb)}, {size(compilerGlue?.kb)} of glue
+          and the compiler's WebAssembly: {size(compiler?.kb)}, or{" "}
+          {size(compiler?.gzipKb)} gzipped. A shader compiled before comes from
+          IndexedDB, and then the compiler doesn't load at all.
+        </>
+      ),
+    },
+  ];
   return (
     <Page
       title="Shading and linker"
@@ -41,7 +61,8 @@ export function Shading() {
           Slang is the one source of engine shaders, and WGSL is generated from
           it. User shaders join through a linker against a named boundary, so a
           mismatch is a diagnostic that names the unit and line, not a string
-          that happened to concatenate.
+          that happened to concatenate. 3D Tiles styling joins the same way,
+          without loading Slang at all.
         </>
       }
     >
@@ -95,23 +116,137 @@ export function Shading() {
         </p>
       </Section>
 
-      <Section title="Front ends">
+      <Section title="Three routes for a user shader">
+        <p>
+          All three end the same way: WGSL that joins through the linker. They
+          differ in when Slang runs, and so in what a page pays when it loads.
+        </p>
         <DataTable
-          label="Shader front ends"
+          label="Routes for a user shader and what each costs at load"
           columns={[
-            { head: "Source", cell: (r) => r.source },
-            { head: "When", cell: (r) => r.when },
+            { head: "Route", cell: (r) => <strong>{r.route}</strong> },
             { head: "How", cell: (r) => r.how },
+            { head: "Cost at load", cell: (r) => r.cost },
           ]}
-          rows={FRONT_ENDS}
+          rows={routes}
+        />
+        <Generated
+          from={
+            <>
+              a library build and the setup store on the machine that built this
+              page
+            </>
+          }
         />
         <p>
-          Run-time Slang is optional because of its weight: the compiler's
-          WebAssembly is {size(compiler?.kb)}, and it loads only when something
-          asks for it. A compile that fails leaves the draws on the engine's
-          shader and reports the error with its line.
+          With Brotli at its highest setting, the compiler's WebAssembly comes
+          to about 7.4 MB, measured once. What a reader actually downloads
+          depends on what the host serves, and the host has to serve these files
+          itself. The default path is <C>/slang-wasm/</C>.
         </p>
-        <Generated from="the setup store on the machine that built this page" />
+        <p>
+          On any route, content draws with its default material until its
+          pipelines have compiled, in the background. If they fail, it stays
+          that way, and the error is reported with its line.
+        </p>
+      </Section>
+
+      <Section title="3D Tiles styling">
+        <p>
+          Styling is a common use, so it doesn't pay for the compiler. The 1.x
+          style language compiles straight to WGSL in TypeScript, and never
+          loads Slang. The only way to reach the compiler is the dynamic import
+          inside <C>CustomShader.fromSlang</C>.
+        </p>
+        <Flow
+          label="How a 3D Tiles style compiles"
+          steps={[
+            {
+              title: "Compile the expressions",
+              body: (
+                <>
+                  <C>compileStyleExpression</C> parses each expression, types it
+                  as number, boolean, vector or color, and writes WGSL.
+                </>
+              ),
+            },
+            {
+              title: "Write the stages",
+              body: (
+                <>
+                  <C>FeatureStyle</C> writes a <C>vertexMain</C> that hides
+                  features and a <C>fragmentMain</C> that applies color.
+                </>
+              ),
+            },
+            {
+              title: "Hand it over",
+              body: (
+                <>
+                  It passes that WGSL to <C>CustomShader</C>'s <C>wgsl</C>{" "}
+                  option, the same as a shader written by hand.
+                </>
+              ),
+            },
+            {
+              title: "Link",
+              body: "The stages join through the linker, and pipelines are made from the link.",
+            },
+          ]}
+        />
+        <p>
+          A feature with <C>show</C> false, or a color with alpha 0, is hidden
+          by collapsing its triangles in the vertex stage. So it's gone from
+          every pass: depth, shadows and picking.
+        </p>
+        <h3>Limits today</h3>
+        <ul>
+          <li>
+            <strong>Refused, with an error naming them:</strong> comparing
+            string properties, regular expressions, and <C>undefined</C> or{" "}
+            <C>null</C> checks. Strings aren't on the GPU, and a missing
+            property reads 0.
+          </li>
+          <li>
+            <strong>Properties:</strong> what a shader reads shares four
+            four-component slots: 4 vectors, or up to 16 plain numbers. Beyond
+            that, the style is refused when it compiles.
+          </li>
+          <li>
+            <strong>Translucency:</strong> a color's alpha scales the
+            material's, but blended translucency comes from the material, not
+            yet from the style.
+          </li>
+          <li>
+            <strong>Pipelines:</strong> each distinct style source compiles its
+            own. Identical sources share them, because pipelines are cached by
+            the linked code.
+          </li>
+          <li>
+            <strong>Property textures:</strong> hiding reads properties per
+            vertex, so a property stored in a texture reads 0 there.
+          </li>
+        </ul>
+        <p className="provenance">
+          The 16 comes from the check made when a style compiles. A style with
+          more than 4 properties hasn't yet been run on a GPU for this page.
+        </p>
+        <Note title="In progress, not in this build">
+          <p>
+            Work is under way on string properties, the property limit, and a
+            build check that keeps Slang out of the main chunk. Today nothing
+            but the code's structure keeps it out.
+          </p>
+        </Note>
+        <Written
+          from={
+            <>
+              <C>src/scene/styleExpression.ts</C>, <C>FeatureStyle.ts</C>,{" "}
+              <C>CustomShader.ts</C> and <C>slang.ts</C>
+            </>
+          }
+          on="2026-11-08"
+        />
       </Section>
 
       <Section title="The user contract">

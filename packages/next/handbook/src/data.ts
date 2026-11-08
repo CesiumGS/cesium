@@ -88,7 +88,10 @@ export interface HandbookData {
     };
     library: { entries: LibraryEntry[]; assets: Chunk[] };
   };
-  runtime: { what: string; files: { name: string; kb: number | null }[] }[];
+  runtime: {
+    what: string;
+    files: { name: string; kb: number | null; gzipKb?: number }[];
+  }[];
   bench: {
     runs: number;
     adapters: AdapterResults[];

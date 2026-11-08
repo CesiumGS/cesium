@@ -52,6 +52,11 @@ const CONCEPTS = [
     next: "CustomShader in WGSL or Slang, against a versioned contract, joined by a linker. A shader that fails falls back to the engine's, with the error reported.",
   },
   {
+    topic: "3D Tiles styling",
+    old: "Cesium3DTileStyle expressions evaluated per feature on the CPU, including strings and regExp",
+    next: "FeatureStyle compiles the same language to WGSL, evaluated on the GPU. Comparing strings, regular expressions and undefined checks are refused for now.",
+  },
+  {
     topic: "Large point data",
     old: "Entities and billboard collections, re-clamped on the CPU",
     next: "PointSource and VectorLayer: typed-array updates, clamped and culled on the GPU. Entities and DataSources aren't in the proof of concept.",

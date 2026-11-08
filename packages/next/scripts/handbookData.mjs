@@ -328,9 +328,14 @@ function readRuntimeAssets() {
     what,
     files: names.map((name) => {
       const path = dir && join(dir, name);
+      const there = path && existsSync(path);
       return {
         name,
-        kb: path && existsSync(path) ? kib(statSync(path).size) : null,
+        kb: there ? kib(statSync(path).size) : null,
+        // WebAssembly is what a page waits for, so its transfer size matters.
+        ...(there && name.endsWith(".wasm")
+          ? { gzipKb: kib(gzipSync(readFileSync(path)).length) }
+          : {}),
       };
     }),
   }));
