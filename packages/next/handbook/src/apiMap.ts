@@ -479,7 +479,6 @@ export const API_ROWS: readonly ApiRow[] = [
     ],
     status: "changed",
     note: "`FeatureStyle` compiles the same expression language to run on the GPU, and it's given when the tileset is added, so it can't be swapped afterwards by assignment. `colorBlendMode` is a string.",
-    inFlight: "Comparing strings in styles is in review.",
     snippet: "style",
   },
   {
@@ -504,8 +503,7 @@ export const API_ROWS: readonly ApiRow[] = [
     old: ["StyleExpression"],
     next: ["StyleExpression"],
     status: "same",
-    note: "Expressions and conditions such as `${Height} > 10` and `color('red')` are written the same. The Shading tab lists what doesn't compile.",
-    inFlight: "Comparing strings in styles is in review.",
+    note: "Expressions and conditions such as `${Height} > 10` and `color('red')` are written the same, and strings compare with `===` and `!==`. Regular expressions, `isDefined()` and `undefined` are refused with an error, and the Shading tab lists the rest.",
     snippet: "style",
   },
   {
@@ -552,10 +550,8 @@ export const API_ROWS: readonly ApiRow[] = [
     group: "tiles",
     old: ["Color"],
     status: "changed",
-    note: 'No `Color` class: colours are numbers, and strings in styles. CSS notation such as `#ff8800` is sRGB in both, so an opaque, unlit colour matches. Blending happens in linear, so `colorBlendMode: "mix"` and translucent colours differ, and `vec4` colours are linear in 2.0 and plain numbers in 1.x.',
+    note: 'No `Color` class: colours are numbers, and strings in styles. CSS notation such as `#ff8800` is sRGB in both, so an opaque, unlit colour matches. Blending happens in linear, so `colorBlendMode` `"mix"` and `"replace"` and translucent colours differ, and `vec4` colours are linear in 2.0 and plain numbers in 1.x.',
     source: "Overall plan, section 13.18",
-    inFlight:
-      "The colour fix is on the styling branch, in review. Its behaviour is checked when it lands.",
   },
   {
     group: "tiles",

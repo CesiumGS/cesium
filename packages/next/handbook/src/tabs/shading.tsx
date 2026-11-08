@@ -1,4 +1,4 @@
-import { data, libraryEntry, size } from "../data.ts";
+import { count, data, libraryEntry, size } from "../data.ts";
 import { ShaderRoutes } from "../flows.tsx";
 import {
   C,
@@ -6,7 +6,6 @@ import {
   Figure,
   Flow,
   Generated,
-  Note,
   Page,
   Section,
   Written,
@@ -204,18 +203,55 @@ export function Shading() {
           by collapsing its triangles in the vertex stage. So it's gone from
           every pass: depth, shadows and picking.
         </p>
+        <h3>Strings</h3>
+        <p>
+          Strings aren't on the GPU, so a tile's string columns upload as
+          numbers: each string's id, from one table shared by every tile and
+          style. A literal compiles to its id, so{" "}
+          <C>{"${name} === 'Main St'"}</C>, <C>!==</C> and the keys of{" "}
+          <C>match()</C>, a 2.0 addition from the vector language, are integer
+          tests. Only the columns a style reads are uploaded, so an unstyled
+          scene pays nothing for its strings.
+        </p>
+        <h3>Colours</h3>
+        <p>
+          CSS notation (<C>#ff8800</C>, <C>rgb()</C>, <C>hsl()</C> and named
+          colours) is sRGB as written, and converts to linear with gamma 2.2
+          where it becomes a value. <C>vec4</C> and plain numbers stay as they
+          are, so they're linear in 2.0 and plain numbers in 1.x. Replace and
+          mix blend in linear light, so they differ from 1.x on purpose, and 1.x
+          isn't the reference for them.
+        </p>
         <h3>Limits today</h3>
         <ul>
           <li>
-            <strong>Refused, with an error naming them:</strong> comparing
-            string properties, regular expressions, and <C>undefined</C> or{" "}
-            <C>null</C> checks. Strings aren't on the GPU, and a missing
-            property reads 0.
+            <strong>Refused, with an error naming them:</strong> regular
+            expressions, string concatenation, <C>.toString()</C>,{" "}
+            <C>isDefined()</C>, and <C>undefined</C> or <C>null</C>. A missing
+            property reads 0 on the GPU, so it can't be told from a 0 value.
           </li>
           <li>
-            <strong>Properties:</strong> what a shader reads shares four
-            four-component slots: 4 vectors, or up to 16 plain numbers. Beyond
-            that, the style is refused when it compiles.
+            <strong>Missing and null strings:</strong> both read as 0. So a null
+            property and a missing one compare equal, which they don't in 1.x.
+          </li>
+          <li>
+            <strong>Make the style first:</strong> a tile uploaded before its
+            style lacks the string columns that style reads, and the engine
+            reports it in <C>Engine.errors</C>. So it does for a column that
+            mixes strings with numbers, or doesn't fit. Such a property reads 0,
+            which makes <C>!==</C> true.
+          </li>
+          <li>
+            <strong>String columns:</strong> a string column used as a number
+            reads its id. The table holds up to {count(8_388_608)} distinct
+            strings, and a style's literal that doesn't fit is an error. A
+            mesh's directory holds up to 256 entries.
+          </li>
+          <li>
+            <strong>Properties:</strong> <C>show</C> can read any number, since
+            it runs per vertex and passes nothing on. <C>color</C> shares 16
+            float components between stages, with its colours' own alpha, and
+            beyond that the style is refused when it compiles.
           </li>
           <li>
             <strong>Translucency:</strong> a color's alpha scales the
@@ -233,16 +269,11 @@ export function Shading() {
           </li>
         </ul>
         <p className="provenance">
-          The 16 comes from the check made when a style compiles. A style with
-          more than 4 properties hasn't yet been run on a GPU for this page.
+          <C>test/styleParity.test.ts</C> checks expressions against 1.x's{" "}
+          <C>Cesium3DTileStyle</C> in Node. <C>scripts/checkBundle.mjs</C>{" "}
+          builds an app that styles 3D Tiles, and fails if Slang's modules
+          aren't in a lazy chunk.
         </p>
-        <Note title="In progress, not in this build">
-          <p>
-            Work is under way on string properties, the property limit, and a
-            build check that keeps Slang out of the main chunk. Today nothing
-            but the code's structure keeps it out.
-          </p>
-        </Note>
         <Written
           from={
             <>

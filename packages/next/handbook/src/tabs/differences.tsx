@@ -54,7 +54,7 @@ const CONCEPTS = [
   {
     topic: "3D Tiles styling",
     old: "Cesium3DTileStyle expressions evaluated per feature on the CPU, including strings and regExp",
-    next: "FeatureStyle compiles the same language to WGSL, evaluated on the GPU. Comparing strings, regular expressions and undefined checks are refused for now.",
+    next: "FeatureStyle compiles the same language to WGSL, evaluated on the GPU. Strings compare with === and !==. Regular expressions, isDefined() and undefined checks are refused, and blends are in linear light.",
   },
   {
     topic: "The analytic Moon",
