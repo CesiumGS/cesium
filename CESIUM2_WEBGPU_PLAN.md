@@ -8338,6 +8338,8 @@ Not designed. A question to take up in its own session, then add to this plan: h
 
 Not designed. A question to take up in its own session, then add to this plan: editing use cases, and how the engine can efficiently support things like CAD-style mesh editing or b-rep-based solid modeling. Today's content is streamed, immutable and tiled, so questions include how edited geometry coexists with tiles, how often buffers change, and where a modeling kernel would sit relative to the engine's seams. Related: geometry submission and per-draw constants (the seams), snapping and measurement, the later tessellation engine (§13.14), and design space (plan 5f).
 
+**Vector data and GIS sources (owner, 2026-11-08).** Part of the same brainstorm, for the vector rendering engine. Vector data commonly comes from databases such as PostGIS and similar. How would editing vectors interact with the engine, with ion and with 3D Tiles? The same question applies to MVT servers that stream, to WMS, and to the other common GIS streaming protocols: which of them the engine should read, what happens to an edit when the data is tiled or served by someone else, and how updates reach a view that's already drawing them.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
