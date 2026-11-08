@@ -1,41 +1,53 @@
 // Engineering frames: a design CRS (an engineer's projected, ground or site
-// coordinates) placed on a body through a recorded PROJ operation (plan 4a).
+// coordinates) placed on a body through a coordinate service's operation
+// (plan 4a; plan 5a's call 36).
 //
 // The chain from design to body-fixed is
 //
 //   design (site grid, design units)
 //     -> site transform (R6)            -> projected CRS coordinates, CRS units
-//     -> PROJ operation (R2, R4)        -> geographic: degrees, height
+//     -> the coordinate operation       -> geographic: degrees, metres
 //     -> body.ellipsoid                 -> body-fixed metres
 //
-// PROJ ends at the body's geographic CRS (EPSG:4979 for the Earth,
-// MOON_GEOGRAPHIC_CRS for the Moon); the engine's own `Ellipsoid` does geodetic
-// to body-fixed (R4).
-import { EARTH, MOON, type Body } from "../scene/Body.ts";
+// The operation comes from a `CoordinateService` (the frames module's
+// interface): PROJ's (`projCoordinateService`, R2 and R4: it ends at the
+// body's geographic CRS, EPSG:4979 for the Earth and MOON_GEOGRAPHIC_CRS for
+// the Moon), or a host application's own. The engine's own `Ellipsoid` does
+// geodetic to body-fixed (R4).
+import type { Body } from "../scene/Body.ts";
 import { cartographic, type Cartographic } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
-import {
-  MOON_GEOGRAPHIC_CRS,
-  crsUnits,
-  crsDefinition,
-  shownCrs,
-  listOperations,
-  compoundParts,
-  resolveOperation,
-  verticalGridDatums,
-  type AreaOfInterest,
-  type CrsRef,
-  type CrsUnits,
-  type OperationCandidate,
-  type RecordedOperation,
-} from "./crs.ts";
-import type { GridCatalog } from "./gridCatalog.ts";
-import { parsePipeline, pipelineGrids, type Pipeline } from "./pipeline.ts";
-import { loadedGrids, loadGrids, type GridSource } from "./proj.ts";
+import type {
+  AreaOfInterest,
+  CoordinateOperation,
+  CoordinateService,
+  CrsRef,
+  CrsUnits,
+  ResolvedCoordinates,
+} from "../frames/coordinates.ts";
+import type { RecordedOperation } from "./crs.ts";
+import type { Pipeline } from "./pipeline.ts";
+import type { GridSource } from "./proj.ts";
 import type { ProjApi } from "./projApi.ts";
+import {
+  isProjService,
+  projCoordinateService,
+  projResolution,
+  resolveProjCoordinates,
+  type EngineeringFrameFallback,
+  type FallbackSigmaSource,
+  type GeoidModel,
+  type ProjCoordinateRequest,
+} from "./projCoordinates.ts";
 import { Alignment, type AlignmentDefinition } from "./alignment.ts";
+
+export type {
+  EngineeringFrameFallback,
+  FallbackSigmaSource,
+  GeoidModel,
+} from "./projCoordinates.ts";
 
 /**
  * A site (ground) coordinate system on the projected CRS, R6:
@@ -63,390 +75,343 @@ export interface EngineeringFrameDefinition {
   /** Alignments in this frame's design (site-grid) coordinates, by unique name. */
   readonly alignments?: readonly AlignmentDefinition[];
   /**
-   * A PROJ pipeline to use as is (R2) instead of PROJ's candidate search: a
-   * string, or a structured `Pipeline`.
+   * An operation to use as is instead of the service's own choice: the
+   * request's `pinned`. For PROJ, a pipeline (R2) instead of PROJ's
+   * candidate search: a string, or a structured `Pipeline`. A host's
+   * coordinate service reads it in its own terms.
    */
   readonly pipeline?: string | Pipeline;
-  /** Accept a ballpark operation; its accuracy is then undefined. */
+  /** PROJ's only: accept a ballpark operation; its accuracy is then undefined. */
   readonly allowBallpark?: boolean;
   /**
    * Where the design coordinates are, in degrees. PROJ then offers the
-   * operations whose area of use contains it (see `ResolveOptions`).
+   * operations whose area of use contains it (see `ResolveOptions`); a
+   * host's coordinate service gets it as the request's `areaOfInterest`.
    */
   readonly areaOfInterest?: AreaOfInterest;
   /**
-   * A global geoid to read design heights against when the CRS's own
-   * vertical datum can't be used (the plan's call 9). It applies only when
-   * `crs` is a `wkid` reference with a `vcsWkid` (EPSG), PROJ's candidates
-   * for it fail for want of grids, and the horizontal CRS alone resolves with
-   * none missing. The frame then resolves `{ ...crs, vcsWkid: 5773 }`
-   * (EGM96) or `3855` (EGM2008) and records it in `fallback`; `load` fetches
-   * the model's grid. Design heights keep the CRS's vertical unit and
-   * direction. Not with `pipeline`.
+   * PROJ's only. A global geoid to read design heights against when the
+   * CRS's own vertical datum can't be used (the plan's call 9). It applies
+   * only when `crs` is a `wkid` reference with a `vcsWkid` (EPSG), PROJ's
+   * candidates for it fail for want of grids, and the horizontal CRS alone
+   * resolves with none missing. The frame then resolves
+   * `{ ...crs, vcsWkid: 5773 }` (EGM96) or `3855` (EGM2008) and records it
+   * in `fallback`; `load` fetches the model's grid. Design heights keep the
+   * CRS's vertical unit and direction. Not with `pipeline`.
    */
   readonly geoidFallback?: GeoidModel;
   /**
-   * The fallback's standard uncertainty in metres, as the app knows it (the
-   * gap between the replaced datum and the model). Without it the fallback's
-   * accuracy is undefined, never small. Positive; only with `geoidFallback`.
+   * PROJ's only. The fallback's standard uncertainty in metres, as the app
+   * knows it (the gap between the replaced datum and the model). Without it
+   * the fallback's accuracy is undefined, never small. Positive; only with
+   * `geoidFallback`.
    */
   readonly fallbackSigma?: number;
   /**
-   * Who states `fallbackSigma`: `"app"` (the default) or `"declaration"`, a
-   * tileset's `BENTLEY_engineering_frame` (`declaredDefinition` sets it), so
-   * the accuracy says whose claim the figure is.
+   * PROJ's only. Who states `fallbackSigma`: `"app"` (the default) or
+   * `"declaration"`, a tileset's `BENTLEY_engineering_frame`
+   * (`declaredDefinition` sets it), so the accuracy says whose claim the
+   * figure is.
    */
   readonly fallbackSigmaSource?: FallbackSigmaSource;
 }
 
-/** Who states a frame's `fallbackSigma`. */
-export type FallbackSigmaSource = "app" | "declaration";
-
-/** A global geoid model a frame can fall back to (`geoidFallback`). */
-export type GeoidModel = "EGM96" | "EGM2008";
-
-/** The EPSG vertical CRS of each model's heights. */
-const GEOID_MODEL_CRS: Readonly<Record<GeoidModel, number>> = {
-  EGM96: 5773,
-  EGM2008: 3855,
-};
-
-/** A geoid fallback a frame took (`EngineeringFrameDefinition.geoidFallback`). */
-export interface EngineeringFrameFallback {
-  readonly model: GeoidModel;
-  /** The EPSG code of the vertical CRS the model replaced (`crs.vcsWkid`). */
-  readonly replacedVertical: number;
-  /** `fallbackSigma`, metres; absent when none was given (accuracy undefined). */
-  readonly sigma?: number;
-  /** Who states `sigma` (`fallbackSigmaSource`); present with it. */
-  readonly sigmaSource?: FallbackSigmaSource;
-  /** The grids PROJ's best candidate for the CRS lacked: why it fell back. */
-  readonly missingGrids: readonly string[];
-}
-
-/** Options for `EngineeringFrame.load`. */
+/**
+ * Options for `EngineeringFrame.load`: a coordinate service, or PROJ (with
+ * `grids`, which build a `projCoordinateService`). One of the two, not
+ * both.
+ */
 export interface EngineeringFrameLoadOptions {
-  /** PROJ, from `loadProj`. */
-  readonly proj: ProjApi;
+  /** The coordinate service to resolve the frame's operation with. */
+  readonly coordinates?: CoordinateService;
+  /** PROJ, from `loadProj`: `projCoordinateService({ proj, grids })`. */
+  readonly proj?: ProjApi;
   /**
-   * Where grids come from. Without it `load` loads nothing and is `create`
-   * (and `gridCredits` is empty).
+   * With `proj`: where grids come from. Without it `load` loads nothing
+   * and is `create` (and `gridCredits` is empty).
    */
   readonly grids?: GridSource;
+  /**
+   * Stops the load: it rejects with an `AbortError` naming the frame, the
+   * service is handed the signal, and a late answer is dropped.
+   */
+  readonly signal?: AbortSignal;
 }
 
-/** The geographic CRS where PROJ stops for a body (R4). */
-function geographicTarget(body: Body): CrsRef {
-  if (body === EARTH || body.naifId === EARTH.naifId) {
-    return { format: "wkid", authority: "EPSG", wkid: 4979 };
+/** The definition's PROJ-only options, which a host's service can't honour. */
+const PROJ_ONLY = [
+  "allowBallpark",
+  "geoidFallback",
+  "fallbackSigma",
+  "fallbackSigmaSource",
+] as const;
+
+/** The definition's site checks, before any service is asked. */
+function checkSite(site: SiteTransform | undefined): void {
+  if (site === undefined) {
+    return;
   }
-  if (body === MOON || body.naifId === MOON.naifId) {
-    const [authority, code] = MOON_GEOGRAPHIC_CRS.split(":") as [
-      string,
-      string,
-    ];
-    return { format: "wkid", authority, wkid: Number(code) };
-  }
-  throw new Error(
-    `EngineeringFrame: no geographic CRS is known for the body "${body.name}"`,
-  );
-}
-
-/** Whether `catalog` has `name` as a current (not removed) grid. */
-function inCatalog(catalog: GridCatalog, name: string): boolean {
-  const entry = catalog.get(name);
-  return entry !== undefined && !entry.removed;
-}
-
-/**
- * Whether `load` fetches `name`: a current catalog entry that isn't a
- * deformation model. A model's `.json` names component grids inside it,
- * which neither the pipeline nor PROJ's list of grids names, and PROJ can't
- * build the model without them; so `load` leaves it to `create`'s fallback.
- */
-function fetchable(catalog: GridCatalog, name: string): boolean {
-  return (
-    inCatalog(catalog, name) && catalog.get(name)!.type !== "DEFORMATION_MODEL"
-  );
-}
-
-/**
- * The grids `load` fetches for a frame: a pinned pipeline's (required and
- * optional) that are `fetchable`; otherwise the missing grids of the first
- * non-ballpark candidate, in `listOperations`' order, that has a PROJ string
- * and whose missing grids are every one `fetchable`. A candidate needing a
- * grid that isn't gets nothing fetched (part of its grids wouldn't make it
- * usable); `create` then skips it and records it as a better candidate.
- *
- * This mirrors the candidate rule of `resolveOperation`'s walk (crs.ts): the
- * first non-ballpark, instantiable candidate with a PROJ string and all its
- * grids. Keep the two together. It doesn't mirror the better rule
- * (`betterThan`): it fetches the first candidate's grids, whatever its geoid.
- */
-function gridsToLoad(
-  definition: EngineeringFrameDefinition,
-  proj: ProjApi,
-  target: CrsRef,
-  catalog: GridCatalog,
-): readonly string[] {
-  const loaded = loadedGrids(proj);
-  const { pipeline } = definition;
-  if (pipeline !== undefined) {
-    const named = pipelineGrids(
-      typeof pipeline === "string" ? parsePipeline(pipeline) : pipeline,
-    ).map((grid) => grid.name);
-    return [...new Set(named)].filter(
-      (name) => !loaded.has(name) && fetchable(catalog, name),
+  if (!(site.scale > 0 && Number.isFinite(site.scale))) {
+    throw new RangeError(
+      `EngineeringFrame: site scale must be positive, got ${site.scale}`,
     );
   }
-  const candidates = listOperations(
-    proj,
-    definition.crs,
-    target,
-    listOptions(definition),
-  );
-  for (const candidate of candidates) {
-    if (candidate.ballpark || candidate.pipeline === "") {
-      continue;
-    }
-    if (candidate.missingGrids.length === 0) {
-      if (candidate.instantiable) {
-        return [];
-      }
-      continue;
-    }
-    if (candidate.missingGrids.every((name) => fetchable(catalog, name))) {
-      return candidate.missingGrids;
-    }
+  if (!Number.isFinite(site.rotation)) {
+    throw new RangeError(
+      `EngineeringFrame: site rotation must be finite, got ${site.rotation}`,
+    );
   }
-  return [];
+  if (site.origin.length !== 3 || !site.origin.every(Number.isFinite)) {
+    throw new RangeError(
+      `EngineeringFrame: site origin must be three finite numbers, got [${site.origin.join(", ")}]`,
+    );
+  }
 }
 
-/**
- * Whether `resolveOperation`'s walk (crs.ts) can take a candidate now: not a
- * ballpark (unless `allowBallpark`), with a PROJ string, every grid loaded,
- * and instantiable. Keep with that walk and `gridsToLoad`.
- */
-function usable(
-  candidate: OperationCandidate,
-  allowBallpark: boolean,
-): boolean {
-  return (
-    (allowBallpark || !candidate.ballpark) &&
-    candidate.pipeline !== "" &&
-    candidate.missingGrids.length === 0 &&
-    candidate.instantiable
-  );
-}
-
-/** `listOperations`' options for a definition: its area of interest. */
-function listOptions(definition: EngineeringFrameDefinition): {
-  areaOfInterest?: AreaOfInterest;
-} {
-  return definition.areaOfInterest === undefined
-    ? {}
-    : { areaOfInterest: definition.areaOfInterest };
-}
-
-/**
- * Whether a definition's `geoidFallback` applies (call 9), and so the CRS it
- * makes the frame resolve instead, with the grids the CRS's best candidate
- * lacks: `crs` is an EPSG `wkid` reference with a `vcsWkid`; none of PROJ's
- * candidates for it is usable now and a non-ballpark one lacks grids (its
- * resolution fails for missing grids); and the horizontal CRS alone has a
- * usable non-ballpark candidate (it resolves with none missing). Otherwise
- * why it doesn't apply; undefined without a `geoidFallback`.
- */
-function fallbackCrs(
+/** The request an engineering frame makes of its coordinate service. */
+function requestOf(
   definition: EngineeringFrameDefinition,
-  proj: ProjApi,
-  target: CrsRef,
-):
-  | { readonly crs: CrsRef; readonly missingGrids: readonly string[] }
-  | { readonly reason: string }
-  | undefined {
-  const { crs, geoidFallback } = definition;
-  if (geoidFallback === undefined) {
-    return undefined;
-  }
-  if (
-    crs.format !== "wkid" ||
-    crs.vcsWkid === undefined ||
-    crs.authority.toUpperCase() !== "EPSG" ||
-    (crs.vcsAuthority ?? "EPSG").toUpperCase() !== "EPSG"
-  ) {
-    return { reason: "the CRS isn't an EPSG code with a vcsWkid" };
-  }
-  const options = listOptions(definition);
-  const allowBallpark = definition.allowBallpark ?? false;
-  const candidates = listOperations(proj, crs, target, options);
-  const lacking = candidates.find(
-    (c) => !c.ballpark && c.pipeline !== "" && c.missingGrids.length > 0,
-  );
-  if (
-    candidates.some((c) => usable(c, allowBallpark)) ||
-    lacking === undefined
-  ) {
-    return { reason: "the CRS doesn't fail for missing grids" };
-  }
-  const horizontal = compoundParts(proj, crs)!.horizontal;
-  if (
-    !listOperations(proj, horizontal.ref, target, options).some((c) =>
-      usable(c, false),
-    )
-  ) {
-    return {
-      reason: `the horizontal CRS ${shownCrs(horizontal.ref)} doesn't resolve alone`,
-    };
-  }
+): ProjCoordinateRequest {
   return {
-    crs: { ...crs, vcsWkid: GEOID_MODEL_CRS[geoidFallback] },
-    missingGrids: lacking.missingGrids,
+    crs: definition.crs,
+    body: definition.body,
+    ...(definition.areaOfInterest !== undefined && {
+      areaOfInterest: definition.areaOfInterest,
+    }),
+    ...(definition.pipeline !== undefined && { pinned: definition.pipeline }),
+    ...(definition.allowBallpark !== undefined && {
+      allowBallpark: definition.allowBallpark,
+    }),
+    ...(definition.geoidFallback !== undefined && {
+      geoidFallback: definition.geoidFallback,
+    }),
+    ...(definition.fallbackSigma !== undefined && {
+      fallbackSigma: definition.fallbackSigma,
+    }),
+    ...(definition.fallbackSigmaSource !== undefined && {
+      fallbackSigmaSource: definition.fallbackSigmaSource,
+    }),
   };
 }
 
-/** At most `max` names, then "and N more". */
-function someOf(names: readonly string[], max = 3): string {
-  return names.length <= max
-    ? names.join(", ")
-    : `${names.slice(0, max).join(", ")} and ${names.length - max} more`;
+const finite3 = (v: ArrayLike<number>) =>
+  Number.isFinite(v[0]) && Number.isFinite(v[1]) && Number.isFinite(v[2]);
+
+const positive = (value: unknown) =>
+  typeof value === "number" && value > 0 && Number.isFinite(value);
+
+/**
+ * A service's answer, checked: well formed, its numbers finite, and (for a
+ * host's service) its operation finite at the definition's own point (the
+ * site origin, else the middle of the area of interest), both ways. PROJ's
+ * operations refuse non-finite results themselves. Throws what is wrong.
+ */
+function checkAnswer(
+  answer: ResolvedCoordinates,
+  definition: EngineeringFrameDefinition,
+  fromProj: boolean,
+): void {
+  if (typeof answer !== "object" || answer === null) {
+    throw new TypeError(`the answer isn't an object (${String(answer)})`);
+  }
+  const { operation, units, credits } = answer;
+  if (
+    typeof operation !== "object" ||
+    operation === null ||
+    typeof operation.forward !== "function" ||
+    typeof operation.inverse !== "function"
+  ) {
+    throw new TypeError("the answer's operation has no forward and inverse");
+  }
+  if (typeof operation.description !== "string") {
+    throw new TypeError("the operation's description isn't a string");
+  }
+  const { accuracy } = operation;
+  if (accuracy !== undefined && !(Number.isFinite(accuracy) && accuracy >= 0)) {
+    throw new RangeError(
+      `the operation's accuracy must be finite metres, not negative, or undefined; got ${accuracy}`,
+    );
+  }
+  if (typeof units !== "object" || units === null) {
+    throw new TypeError("the answer has no units");
+  }
+  if (!units.projected) {
+    throw new Error(
+      "an engineering frame needs a projected CRS; the coordinate service resolved it as geographic or not projected",
+    );
+  }
+  if (!positive(units.metersPerUnit)) {
+    throw new RangeError(
+      `units.metersPerUnit must be a positive finite number, got ${units.metersPerUnit}`,
+    );
+  }
+  if (
+    units.metersPerVerticalUnit !== undefined &&
+    !positive(units.metersPerVerticalUnit)
+  ) {
+    throw new RangeError(
+      `units.metersPerVerticalUnit must be a positive finite number, got ${units.metersPerVerticalUnit}`,
+    );
+  }
+  if (
+    units.verticalDirection !== undefined &&
+    units.verticalDirection !== "up" &&
+    units.verticalDirection !== "down"
+  ) {
+    throw new RangeError(
+      `units.verticalDirection must be "up" or "down", got ${JSON.stringify(units.verticalDirection)}`,
+    );
+  }
+  if (typeof answer.gridFactors !== "function") {
+    throw new TypeError("the answer has no gridFactors");
+  }
+  if (!Array.isArray(credits) || !credits.every((c) => typeof c === "string")) {
+    throw new TypeError("the answer's credits aren't a list of strings");
+  }
+  if (fromProj) {
+    return;
+  }
+  const { site, areaOfInterest: area } = definition;
+  if (site !== undefined) {
+    const there = operation.forward(site.origin);
+    if (!finite3(there)) {
+      throw new RangeError(
+        `the operation's forward is not finite at the site origin (${site.origin.join(", ")}): (${Array.from(there).join(", ")})`,
+      );
+    }
+    const back = operation.inverse(there);
+    if (!finite3(back)) {
+      throw new RangeError(
+        `the operation's inverse is not finite at the site origin's geodetic position: (${Array.from(back).join(", ")})`,
+      );
+    }
+  } else if (area !== undefined) {
+    // The box's middle, across 180° when west exceeds east.
+    const east = area.east < area.west ? area.east + 360 : area.east;
+    let lon = (area.west + east) / 2;
+    lon -= 360 * Math.round(lon / 360);
+    const middle = [lon, (area.south + area.north) / 2, 0];
+    const design = operation.inverse(middle);
+    if (!finite3(design)) {
+      throw new RangeError(
+        `the operation's inverse is not finite at the area of interest's middle (${middle.join(", ")}): (${Array.from(design).join(", ")})`,
+      );
+    }
+    const there = operation.forward(design);
+    if (!finite3(there)) {
+      throw new RangeError(
+        `the operation's forward is not finite at (${Array.from(design).join(", ")}): (${Array.from(there).join(", ")})`,
+      );
+    }
+  }
 }
 
 /**
- * Call 11's message, for a compound CRS that only ballparks relate to the
- * ellipsoid although its horizontal CRS alone has an operation that isn't
- * one: the vertical part is to blame. `proj.db` then tells two cases apart
- * (`verticalGridDatums`):
- *
- *  - grids for the vertical datum exist, defined on another geographic CRS
- *    (NAVD88 with WGS 84 / UTM: GEOID18 is on NAD83(2011)): the message names
- *    that CRS and the fix;
- *  - none found (NOAA's MLLW depth, EPSG:5866, has no transformation): "<the
- *    vertical CRS>: no PROJ-data grid relates it to the ellipsoid", saying
- *    what proj.db was searched for.
- *
- * Before either: with an `areaOfInterest`, when PROJ has an accurate
- * operation for the compound CRS without it, the area is to blame (British
- * National Grid + ODN with a box reaching south of OSGM15's 49.93° N), and
- * the message says so, with that operation's area of use (plan 4b Task 9).
- *
- * The search is by name, which is conclusive only for an EPSG vertical CRS;
- * for any other (ESRI:105703, NAVD88_height_(ftUS), finds nothing although
- * GEOID18 relates NAVD88 to NAD83(2011)) the generic message stands. So it
- * does when nothing applies.
+ * `error` as `load`'s rejection: it names the frame, and keeps the cause;
+ * `serviceFailed` when a host's service threw or rejected; an AbortError
+ * once `signal` aborted.
  */
-function noVerticalGrid(
-  proj: ProjApi,
-  definition: EngineeringFrameDefinition,
-  target: CrsRef,
-): string | undefined {
-  const parts = compoundParts(proj, definition.crs);
-  if (parts === undefined) {
-    return undefined;
-  }
-  const options = listOptions(definition);
-  const compound = listOperations(proj, definition.crs, target, options);
-  if (
-    compound.length === 0 ||
-    !compound.every((c) => c.ballpark) ||
-    listOperations(proj, parts.horizontal.ref, target, options).every(
-      (c) => c.ballpark,
-    )
-  ) {
-    return undefined;
-  }
-  const from = shownCrs(definition.crs);
-  const ballpark =
-    "PROJ offers only a ballpark operation, with undefined accuracy (pass allowBallpark: true to accept it)";
-  const { name } = parts.vertical;
-  const area = definition.areaOfInterest;
-  if (area !== undefined) {
-    const anywhere = listOperations(proj, definition.crs, target).find(
-      (c) => !c.ballpark,
+function named(
+  error: unknown,
+  name: string,
+  serviceFailed: boolean,
+  signal: AbortSignal | undefined,
+): Error {
+  if (signal?.aborted) {
+    return new DOMException(
+      `EngineeringFrame "${name}": the load was aborted`,
+      "AbortError",
     );
-    if (anywhere !== undefined) {
-      const degrees = (value: number) => `${value.toFixed(4)}°`;
-      const box = (b: AreaOfInterest) =>
-        `W ${degrees(b.west)}, S ${degrees(b.south)}, E ${degrees(b.east)}, N ${degrees(b.north)}`;
-      const accuracy =
-        anywhere.accuracy === undefined ? "" : ` (${anywhere.accuracy} m)`;
-      const applies =
-        anywhere.areaOfUse === undefined
-          ? ""
-          : `, applies to ${box(anywhere.areaOfUse)}`;
-      return `${name}: no accurate operation from ${from} covers the area of interest (${box(area)}); PROJ's best without the area, ${anywhere.name}${accuracy}${applies}. ${ballpark}`;
-    }
   }
-  const here = parts.horizontal.geodeticName ?? parts.horizontal.name;
-  const { datums, geoidModels, authority } = verticalGridDatums(
-    proj,
-    parts.vertical.ref,
+  const message = error instanceof Error ? error.message : String(error);
+  const prefix = `EngineeringFrame "${name}": `;
+  if (message.startsWith(prefix)) {
+    return error instanceof Error ? error : new Error(message);
+  }
+  const shown = message.replace(/^EngineeringFrame: /, "");
+  return new Error(
+    `${prefix}${serviceFailed ? `the coordinate service failed: ${shown}` : shown}`,
+    { cause: error },
   );
-  if (authority?.toUpperCase() !== "EPSG") {
-    return undefined;
-  }
-  if (datums.some((datum) => datum.name === here)) {
-    // Grids on this very datum, and still only ballparks: not this case.
-    return undefined;
-  }
-  if (datums.length > 0) {
-    const best = datums[0]!;
-    const vertical = parts.vertical.ref;
-    const compoundCode =
-      best.geographic2d !== undefined && vertical.format === "wkid"
-        ? `, or the compound ${best.geographic2d}+${vertical.wkid}`
-        : "";
-    const accuracy = best.accuracy === undefined ? "" : `, ${best.accuracy} m`;
-    return `${name}: its grids are defined on ${someOf(datums.map((d) => d.name))}, not on ${here} (from ${from}); use a horizontal CRS on ${best.name}${compoundCode} (best: ${best.transformation}${accuracy}). ${ballpark}`;
-  }
-  // What follows is only what the search found: say so.
-  if (geoidModels.length > 0) {
-    return `${name}: proj.db names geoid models for it (${someOf(geoidModels)}) but lists no grid transformation by its name, so which horizontal datum they need isn't known here (from ${from}); ${ballpark}`;
-  }
-  return `${name}: no PROJ-data grid relates it to the ellipsoid, as far as proj.db shows: it lists no grid transformation by its name (or by a vertical CRS's on its datum) and no geoid model for it (from ${from}); ${ballpark}`;
 }
 
-/** `f()`, or undefined if it throws. */
-function unlessThrows<T>(f: () => T): T | undefined {
-  try {
-    return f();
-  } catch {
-    return undefined;
+/**
+ * `promise`, or a rejection as soon as `signal` aborts (the promise's own
+ * answer is then dropped).
+ */
+function untilAborted<T>(
+  promise: Promise<T>,
+  signal: AbortSignal | undefined,
+): Promise<T> {
+  if (signal === undefined) {
+    return promise;
   }
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(signal.reason);
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      },
+    );
+  });
 }
 
 const RADIANS_PER_DEGREE = Math.PI / 180;
 
 /**
  * A design CRS on a body. Design coordinates are (e, n, u) in the CRS's own
- * units (`units`, from PROJ, never assumed; R5): the projected CRS's easting
- * and northing in `units.metersPerUnit`, and its height. When `definition.site`
- * is set they are site-grid coordinates instead (see `SiteTransform`).
+ * units (`units`, from the coordinate service, never assumed; R5): the
+ * projected CRS's easting and northing in `units.metersPerUnit`, and its
+ * height. When `definition.site` is set they are site-grid coordinates
+ * instead (see `SiteTransform`).
  *
  * Heights. A design height is in the CRS's vertical unit (its horizontal unit
  * when the CRS has no vertical axis) and the geodetic height is in metres above
- * the body's ellipsoid. For the Earth with a vertical axis PROJ converts the
- * unit on the way to EPSG:4979 (100 ftUS on EPSG:6420+6360 is 30.48 m above the
- * geoid, plus the geoid separation). Otherwise, including the Moon, whose
- * operation to MOON_GEOGRAPHIC_CRS passes heights through unchanged, the frame
- * converts the unit itself; a Moon height is above the IAU 1,737,400 m sphere.
+ * the body's ellipsoid: the coordinate operation takes one to the other. For
+ * the Earth with a vertical axis PROJ converts the unit on the way to
+ * EPSG:4979 (100 ftUS on EPSG:6420+6360 is 30.48 m above the geoid, plus the
+ * geoid separation). Otherwise, including the Moon, whose operation to
+ * MOON_GEOGRAPHIC_CRS passes heights through unchanged, PROJ's service
+ * converts the unit itself; a Moon height is above the IAU 1,737,400 m
+ * sphere.
+ *
+ * `O` is the operation's type: PROJ's `RecordedOperation` (the default:
+ * PROJ is the service the engine ships) for a frame `create` or `load` with
+ * `proj` made, and `CoordinateOperation` for one `load` made with
+ * `coordinates`, whose operation may be a host's. Code that takes any
+ * frame names `EngineeringFrame<CoordinateOperation>`.
  */
-export class EngineeringFrame {
+export class EngineeringFrame<
+  O extends CoordinateOperation = RecordedOperation,
+> {
   readonly definition: EngineeringFrameDefinition;
   readonly units: CrsUnits;
-  readonly operation: RecordedOperation;
+  /**
+   * The coordinate service's operation: the CRS's units to degrees and
+   * metres. PROJ's is its `RecordedOperation`, heights in metres
+   * (`ProjResolvedCoordinates`).
+   */
+  readonly operation: O;
+  /** What the coordinate service resolved: the operation, units, factors and credits. */
+  readonly coordinates: ResolvedCoordinates;
   readonly body: Body;
-  /** The PROJ the frame's operation was resolved with. */
-  readonly proj: ProjApi;
+  /** The PROJ the frame's operation was resolved with; undefined on a host's service. */
+  readonly proj?: ProjApi;
   /** The frame's alignments, built from `definition.alignments`. */
   readonly alignments: readonly Alignment[];
   /** Metres per design height unit: the vertical unit, else the horizontal. */
   readonly metersPerHeightUnit: number;
   /**
-   * Credits for the grids the operation reads (`GridCatalog.credit`: agency,
-   * license and PROJ-data version), each once, in the operation's grid
-   * order, when the frame was made by `load` with a `GridSource`; otherwise
-   * empty.
+   * Credits for the data the operation reads (the service's `credits`): for
+   * PROJ, the grids' (`GridCatalog.credit`: agency, license and PROJ-data
+   * version), each once, in the operation's grid order, when the frame was
+   * made by `load` with a `GridSource`; otherwise empty.
    */
   readonly gridCredits: readonly string[];
   /**
@@ -455,30 +420,20 @@ export class EngineeringFrame {
    * that model's heights, in `units`' vertical unit and direction.
    */
   readonly fallback?: EngineeringFrameFallback;
-  // Metres per design height unit the operation leaves unconverted; 1 where
-  // PROJ already returns metres.
-  private readonly heightScale: number;
-  // The operation's input height per design height unit: 1, except for a
-  // fallback whose CRS's vertical unit or direction differs from the
-  // model's (metres, up).
-  private readonly operationHeight: number;
 
   private constructor(
     definition: EngineeringFrameDefinition,
-    units: CrsUnits,
-    operation: RecordedOperation,
-    heightScale: number,
-    proj: ProjApi,
-    gridCredits: readonly string[],
-    fallback: EngineeringFrameFallback | undefined,
-    operationHeight: number,
+    coordinates: ResolvedCoordinates,
   ) {
-    this.proj = proj;
-    if (fallback !== undefined) {
-      this.fallback = fallback;
+    const proj = projResolution(coordinates);
+    if (proj !== undefined) {
+      this.proj = proj.proj;
+      if (proj.fallback !== undefined) {
+        this.fallback = proj.fallback;
+      }
     }
-    this.operationHeight = operationHeight;
-    this.gridCredits = gridCredits;
+    this.coordinates = coordinates;
+    this.gridCredits = coordinates.credits;
     this.definition = definition;
     this.alignments = (definition.alignments ?? []).map(
       (a) => new Alignment(a),
@@ -492,10 +447,10 @@ export class EngineeringFrame {
       }
       names.add(name);
     }
+    const { units } = coordinates;
     this.units = units;
-    this.operation = operation;
+    this.operation = coordinates.operation as O;
     this.body = definition.body;
-    this.heightScale = heightScale;
     this.metersPerHeightUnit =
       units.metersPerVerticalUnit ?? units.metersPerUnit;
   }
@@ -522,239 +477,124 @@ export class EngineeringFrame {
   static create(
     definition: EngineeringFrameDefinition,
     proj: ProjApi,
-  ): EngineeringFrame {
-    return EngineeringFrame.resolve(
-      definition,
-      proj,
-      EngineeringFrame.checked(definition, proj),
-      undefined,
-    );
+  ): EngineeringFrame<RecordedOperation> {
+    checkSite(definition.site);
+    const coordinates = resolveProjCoordinates(proj, requestOf(definition));
+    checkAnswer(coordinates, definition, true);
+    return new EngineeringFrame<RecordedOperation>(definition, coordinates);
   }
 
   /**
-   * `create`, after fetching the grids the best operation needs. With
-   * `grids`, it lists PROJ's candidates (within `definition.areaOfInterest`)
-   * and loads, from `grids`, the missing grids of the first non-ballpark one
-   * whose missing grids the catalog has (a pinned pipeline: the grids it
-   * names that the catalog has), then calls `create`. A grid the catalog
-   * lacks is never fetched: `create` then takes the next candidate and
-   * records the skipped one in `operation.betterCandidates` if it is better
-   * by `create`'s rule (not a ballpark; the same vertical grids, unless the
-   * one taken is a ballpark; a strictly smaller stated accuracy). Which
-   * grids `load` fetches doesn't follow that rule: it fetches the first
-   * candidate's. When a
-   * `geoidFallback` will apply, it also fetches what the fallback CRS's
-   * best operation needs (the model's grid, `us_nga_egm96_15.tif` or
-   * `us_nga_egm08_25.tif`). Rejects as `create` throws, before fetching
-   * anything for a definition `create` refuses, and as `loadGrids` rejects.
+   * The frame on a coordinate service: `options.coordinates`, or PROJ's
+   * built from `options.proj` and `options.grids`
+   * (`projCoordinateService`). One of the two is required, not both.
+   *
+   * The service is asked once for the definition's CRS, body, area of
+   * interest and pinned operation (`pipeline`); PROJ's also gets the
+   * definition's PROJ options (`ProjCoordinateRequest`). A host's service
+   * can't honour those, so `load` refuses them with it.
+   *
+   * With PROJ this is `create`, after fetching the grids the best operation
+   * needs. With `grids`, it lists PROJ's candidates (within
+   * `definition.areaOfInterest`) and loads, from `grids`, the missing grids
+   * of the first non-ballpark one whose missing grids the catalog has (a
+   * pinned pipeline: the grids it names that the catalog has), then
+   * resolves as `create` does. A grid the catalog lacks is never fetched:
+   * the resolution then takes the next candidate and records the skipped
+   * one in `operation.betterCandidates` if it is better by `create`'s rule
+   * (not a ballpark; the same vertical grids, unless the one taken is a
+   * ballpark; a strictly smaller stated accuracy). Which grids `load`
+   * fetches doesn't follow that rule: it fetches the first candidate's.
+   * When a `geoidFallback` will apply, it also fetches what the fallback
+   * CRS's best operation needs (the model's grid, `us_nga_egm96_15.tif` or
+   * `us_nga_egm08_25.tif`). Nothing is fetched for a definition `create`
+   * refuses.
+   *
+   * Never throws: it rejects, with a message that names the frame
+   * (`EngineeringFrame "<name>": ...`, the failure's own error as its
+   * `cause`), when the definition is refused, when the service throws or
+   * rejects ("the coordinate service failed", for a host's), and when its
+   * answer is malformed or not finite (its units, its accuracy, or its
+   * operation at the site origin or the area of interest's middle, both
+   * ways). An aborted `signal` rejects with an `AbortError` naming the
+   * frame, at once, however long the service takes; its late answer is
+   * dropped. A failed load leaves nothing behind for the next one: each
+   * load asks its service again (Review Focus 5).
    */
+  static load(
+    definition: EngineeringFrameDefinition,
+    options: EngineeringFrameLoadOptions & { readonly proj: ProjApi },
+  ): Promise<EngineeringFrame<RecordedOperation>>;
+  static load(
+    definition: EngineeringFrameDefinition,
+    options: EngineeringFrameLoadOptions,
+  ): Promise<EngineeringFrame<CoordinateOperation>>;
   static async load(
     definition: EngineeringFrameDefinition,
     options: EngineeringFrameLoadOptions,
-  ): Promise<EngineeringFrame> {
-    const { proj, grids } = options;
-    const checked = EngineeringFrame.checked(definition, proj);
-    if (grids !== undefined) {
-      const names = gridsToLoad(
-        definition,
-        proj,
-        checked.target,
-        grids.catalog,
-      );
-      if (names.length > 0) {
-        await loadGrids(proj, grids, names);
-      }
-      // A fallback that will apply: fetch what its CRS's best operation
-      // needs (the model's grid).
-      const fallback = unlessThrows(() =>
-        fallbackCrs(definition, proj, checked.target),
-      );
-      if (fallback !== undefined && "crs" in fallback) {
-        const more = gridsToLoad(
-          { ...definition, crs: fallback.crs },
-          proj,
-          checked.target,
-          grids.catalog,
-        );
-        if (more.length > 0) {
-          await loadGrids(proj, grids, more);
-        }
-      }
-    }
-    return EngineeringFrame.resolve(definition, proj, checked, grids?.catalog);
-  }
-
-  /** The definition's checks, before PROJ resolves anything. */
-  private static checked(
-    definition: EngineeringFrameDefinition,
-    proj: ProjApi,
-  ): { readonly target: CrsRef; readonly units: CrsUnits } {
-    const target = geographicTarget(definition.body);
-    const { site, geoidFallback, fallbackSigma, fallbackSigmaSource } =
-      definition;
-    if (
-      geoidFallback !== undefined &&
-      !Object.hasOwn(GEOID_MODEL_CRS, geoidFallback)
-    ) {
-      throw new RangeError(
-        `EngineeringFrame: geoidFallback must be "EGM96" or "EGM2008", got ${JSON.stringify(geoidFallback)}`,
-      );
-    }
-    if (fallbackSigma !== undefined) {
-      if (!(fallbackSigma > 0 && Number.isFinite(fallbackSigma))) {
-        throw new RangeError(
-          `EngineeringFrame: fallbackSigma must be a positive number of metres, got ${fallbackSigma}`,
-        );
-      }
-      if (geoidFallback === undefined) {
-        throw new RangeError(
-          "EngineeringFrame: fallbackSigma is given without a geoidFallback",
-        );
-      }
-    }
-    if (
-      fallbackSigmaSource !== undefined &&
-      fallbackSigmaSource !== "app" &&
-      fallbackSigmaSource !== "declaration"
-    ) {
-      throw new RangeError(
-        `EngineeringFrame: fallbackSigmaSource must be "app" or "declaration", got ${JSON.stringify(fallbackSigmaSource)}`,
-      );
-    }
-    if (geoidFallback !== undefined && definition.pipeline !== undefined) {
-      throw new Error(
-        "EngineeringFrame: geoidFallback doesn't apply to a pinned pipeline; pin the fallback CRS's pipeline instead",
-      );
-    }
-    if (site !== undefined) {
-      if (!(site.scale > 0 && Number.isFinite(site.scale))) {
-        throw new RangeError(
-          `EngineeringFrame: site scale must be positive, got ${site.scale}`,
-        );
-      }
-      if (!Number.isFinite(site.rotation)) {
-        throw new RangeError(
-          `EngineeringFrame: site rotation must be finite, got ${site.rotation}`,
-        );
-      }
-      if (site.origin.length !== 3 || !site.origin.every(Number.isFinite)) {
-        throw new RangeError(
-          `EngineeringFrame: site origin must be three finite numbers, got [${site.origin.join(", ")}]`,
-        );
-      }
-    }
-    const units = crsUnits(proj, definition.crs);
-    if (!units.projected) {
-      throw new Error(
-        `EngineeringFrame: an engineering frame needs a projected CRS; ${shownCrs(definition.crs)} is geographic or not projected`,
-      );
-    }
-    return { target, units };
-  }
-
-  private static resolve(
-    definition: EngineeringFrameDefinition,
-    proj: ProjApi,
-    { target: targetRef, units }: { target: CrsRef; units: CrsUnits },
-    catalog: GridCatalog | undefined,
-  ): EngineeringFrame {
-    const target = crsDefinition(targetRef);
-    const options = {
-      ...(definition.pipeline !== undefined && {
-        pipeline: definition.pipeline,
-      }),
-      ...(definition.allowBallpark !== undefined && {
-        allowBallpark: definition.allowBallpark,
-      }),
-      ...(definition.areaOfInterest !== undefined && {
-        areaOfInterest: definition.areaOfInterest,
-      }),
-    };
-    let operation: RecordedOperation;
-    let fallback: EngineeringFrameFallback | undefined;
-    let operationHeight = 1;
+  ): Promise<EngineeringFrame<CoordinateOperation>> {
+    const { coordinates, proj, grids, signal } = options;
+    // Whether a host's service was being asked when the load failed: its
+    // failure is then "the coordinate service failed".
+    let asking = false;
+    let host = false;
     try {
-      operation = resolveOperation(proj, definition.crs, target, options);
-    } catch (error) {
-      // The diagnoses list PROJ's candidates again; should that fail, the
-      // resolution's own error stands.
-      const decided = unlessThrows(() =>
-        fallbackCrs(definition, proj, targetRef),
-      );
-      if (decided === undefined || !("crs" in decided)) {
-        // Only PROJ's own search, refused for its ballpark: a pinned
-        // pipeline's error, or one with allowBallpark, stands as it is.
-        const message =
-          definition.pipeline === undefined && definition.allowBallpark !== true
-            ? unlessThrows(() => noVerticalGrid(proj, definition, targetRef))
-            : undefined;
-        const why =
-          decided === undefined
-            ? ""
-            : ` (geoidFallback "${definition.geoidFallback}" doesn't apply: ${decided.reason})`;
-        if (message !== undefined) {
-          throw new Error(`${message}${why}`, { cause: error });
-        }
-        if (why !== "" && error instanceof Error) {
-          // The same error, its class kept, with the reason appended.
-          error.message += why;
-        }
-        throw error;
+      if (signal?.aborted) {
+        throw signal.reason;
       }
-      const replacement = decided.crs;
-      const model = definition.geoidFallback!;
-      try {
-        operation = resolveOperation(proj, replacement, target, options);
-      } catch (fallbackError) {
+      if (
+        coordinates !== undefined &&
+        (proj !== undefined || grids !== undefined)
+      ) {
         throw new Error(
-          `EngineeringFrame "${definition.name}": the ${model} fallback for ${shownCrs(definition.crs)} (${(error as Error).message}) can't be resolved either: ${(fallbackError as Error).message}`,
-          { cause: fallbackError },
+          "load takes a coordinate service or PROJ (proj, grids), not both",
         );
       }
-      fallback = {
-        model,
-        replacedVertical: (definition.crs as { vcsWkid: number }).vcsWkid,
-        missingGrids: decided.missingGrids,
-        ...(definition.fallbackSigma !== undefined && {
-          sigma: definition.fallbackSigma,
-          sigmaSource: definition.fallbackSigmaSource ?? "app",
-        }),
-      };
-      // Design heights keep the CRS's vertical unit and direction; the
-      // operation takes the model's.
-      const model3d = crsUnits(proj, replacement);
-      const signed = (u: CrsUnits) =>
-        (u.metersPerVerticalUnit ?? 1) *
-        (u.verticalDirection === "down" ? -1 : 1);
-      operationHeight = signed(units) / signed(model3d);
-    }
-    // PROJ converts a vertical axis's unit on the way to EPSG:4979. Where it
-    // does not (the Moon's target passes heights through; a CRS with no
-    // vertical axis has nothing to convert), the design height is in the
-    // vertical unit, or else the horizontal one, and the frame converts it.
-    const projConverts =
-      target === "EPSG:4979" && units.metersPerVerticalUnit !== undefined;
-    const heightScale = projConverts
-      ? 1
-      : (units.metersPerVerticalUnit ?? units.metersPerUnit);
-    let gridCredits: string[] = [];
-    if (catalog !== undefined) {
-      const loaded = loadedGrids(proj);
-      const credited = operation.grids.filter(
-        (name) => loaded.has(name) && inCatalog(catalog, name),
+      if (coordinates === undefined && proj === undefined) {
+        throw new Error("load needs a coordinate service or PROJ (proj)");
+      }
+      checkSite(definition.site);
+      const service =
+        coordinates ??
+        projCoordinateService({
+          proj: proj!,
+          ...(grids !== undefined && { grids }),
+        });
+      host = !isProjService(service);
+      if (host) {
+        const given = PROJ_ONLY.filter((key) => definition[key] !== undefined);
+        if (given.length > 0) {
+          throw new Error(
+            `${given.join(", ")} ${given.length === 1 ? "is" : "are"} PROJ's (projCoordinateService); a host's coordinate service doesn't take ${given.length === 1 ? "it" : "them"}`,
+          );
+        }
+      }
+      const request = requestOf(definition);
+      asking = true;
+      const answer = await untilAborted(
+        // A service that throws synchronously rejects the same way.
+        Promise.resolve().then(() =>
+          service.resolve(request, signal !== undefined ? { signal } : {}),
+        ),
+        signal,
       );
-      gridCredits = [...new Set(credited.map((name) => catalog.credit(name)))];
+      asking = false;
+      if (signal?.aborted) {
+        throw signal.reason;
+      }
+      const fromProj = projResolution(answer) !== undefined;
+      try {
+        checkAnswer(answer, definition, fromProj);
+      } catch (error) {
+        throw new Error(
+          `${host ? "the coordinate service's answer is refused" : "PROJ's answer is refused"}: ${(error as Error).message}`,
+          { cause: error },
+        );
+      }
+      return new EngineeringFrame<CoordinateOperation>(definition, answer);
+    } catch (error) {
+      throw named(error, definition.name, host && asking, signal);
     }
-    return new EngineeringFrame(
-      definition,
-      units,
-      operation,
-      heightScale,
-      proj,
-      gridCredits,
-      fallback,
-      operationHeight,
-    );
   }
 
   /**
@@ -808,17 +648,23 @@ export class EngineeringFrame {
     return out;
   }
 
-  /** Geodetic position of a design point: radians and metres (R4). */
+  /**
+   * Geodetic position of a design point: radians and metres (R4). Throws a
+   * RangeError naming the frame when the operation answers a non-finite
+   * number (PROJ's refuses first, outside its domain).
+   */
   toGeodetic(design: ArrayLike<number>): Cartographic {
     const projected = this.projected(design);
-    if (this.operationHeight !== 1) {
-      projected[2] = projected[2]! * this.operationHeight;
-    }
     const geographic = this.operation.forward(projected);
+    if (!finite3(geographic)) {
+      throw new RangeError(
+        `EngineeringFrame "${this.definition.name}": the coordinate operation's forward is not finite at (${Array.from(projected).join(", ")})`,
+      );
+    }
     return cartographic(
       geographic[0]! * RADIANS_PER_DEGREE,
       geographic[1]! * RADIANS_PER_DEGREE,
-      geographic[2]! * this.heightScale,
+      geographic[2]!,
     );
   }
 
@@ -831,7 +677,11 @@ export class EngineeringFrame {
     return out;
   }
 
-  /** Body-fixed metres to design units: the exact reverse of `toBodyFixed`. */
+  /**
+   * Body-fixed metres to design units: the exact reverse of `toBodyFixed`.
+   * Throws a RangeError naming the frame when the operation answers a
+   * non-finite number.
+   */
   fromBodyFixed(
     position: ArrayLike<number>,
     out = new Float64Array(3),
@@ -848,10 +698,12 @@ export class EngineeringFrame {
     const projected = this.operation.inverse([
       geodetic.longitude / RADIANS_PER_DEGREE,
       geodetic.latitude / RADIANS_PER_DEGREE,
-      geodetic.height / this.heightScale,
+      geodetic.height,
     ]);
-    if (this.operationHeight !== 1) {
-      projected[2] = projected[2]! / this.operationHeight;
+    if (!finite3(projected)) {
+      throw new RangeError(
+        `EngineeringFrame "${this.definition.name}": the coordinate operation's inverse is not finite at (${geodetic.longitude / RADIANS_PER_DEGREE}°, ${geodetic.latitude / RADIANS_PER_DEGREE}°, ${geodetic.height} m)`,
+      );
     }
     return this.fromProjected(projected, out);
   }
@@ -872,9 +724,14 @@ export interface DesignPointObtained {
   readonly kind?: SnapKind;
 }
 
-/** A position in design coordinates, with the frame that gives them meaning. */
-export interface DesignPoint {
-  readonly engineeringFrame: EngineeringFrame;
+/**
+ * A position in design coordinates, with the frame that gives them meaning.
+ * `O` is the frame's operation type (`EngineeringFrame`).
+ */
+export interface DesignPoint<
+  O extends CoordinateOperation = RecordedOperation,
+> {
+  readonly engineeringFrame: EngineeringFrame<O>;
   readonly design: Float64Array;
   /** How the point was obtained; absent for a point given as numbers. */
   readonly obtained?: DesignPointObtained;
@@ -885,11 +742,11 @@ export interface DesignPoint {
  * throws for a tolerance that is negative or not finite, or a `kind` on a
  * pick.
  */
-export function designPoint(
-  frame: EngineeringFrame,
+export function designPoint<O extends CoordinateOperation>(
+  frame: EngineeringFrame<O>,
   design: ArrayLike<number>,
   obtained?: DesignPointObtained,
-): DesignPoint {
+): DesignPoint<O> {
   if (obtained !== undefined) {
     const { how, tolerance, kind } = obtained;
     if (how !== "pick" && how !== "snap") {
@@ -945,8 +802,8 @@ export function designPoint(
  *    the matrix's third column points down, and design depth +10 lies 10
  *    units below the anchor along the surface normal.
  */
-export class RigidPlacement {
-  readonly frame: EngineeringFrame;
+export class RigidPlacement<O extends CoordinateOperation = RecordedOperation> {
+  readonly frame: EngineeringFrame<O>;
   readonly anchor: Float64Array;
   /** Design units to body-fixed metres, column-major. */
   readonly matrix: Mat4;
@@ -958,7 +815,7 @@ export class RigidPlacement {
   // Metres along up per design height unit: negative for a depth CRS.
   private readonly heightUnit: number;
 
-  private constructor(frame: EngineeringFrame, anchorDesign: Float64Array) {
+  private constructor(frame: EngineeringFrame<O>, anchorDesign: Float64Array) {
     this.frame = frame;
     this.anchor = anchorDesign;
     this.scale = frame.units.metersPerUnit;
@@ -1011,11 +868,11 @@ export class RigidPlacement {
     );
   }
 
-  static at(
-    frame: EngineeringFrame,
+  static at<O extends CoordinateOperation>(
+    frame: EngineeringFrame<O>,
     anchorDesign: ArrayLike<number>,
-  ): RigidPlacement {
-    return new RigidPlacement(
+  ): RigidPlacement<O> {
+    return new RigidPlacement<O>(
       frame,
       new Float64Array([
         anchorDesign[0]!,

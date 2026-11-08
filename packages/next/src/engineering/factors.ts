@@ -12,32 +12,17 @@
 // position: that is on the target's datum (WGS84 for EPSG:4979) after the
 // datum operation, a metre or two away, which would change k by about 1e-10
 // (and the results would not match pyproj's Proj.get_factors at 1e-12).
+import type {
+  CoordinateOperation,
+  CrsRef,
+  GridFactors,
+} from "../frames/coordinates.ts";
 import { crsObject, normalizeExisting, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
 import { exists, type PJ, type ProjApi } from "./projApi.ts";
 
-export interface GridFactors {
-  /**
-   * The projection's point scale k: its scale along the parallel against the
-   * CRS's own ellipsoid (equal to the meridional scale for a conformal
-   * projection, to ~1e-11).
-   */
-  readonly pointScale: number;
-  /** The scale h along the meridian, against the CRS's own ellipsoid. */
-  readonly meridionalScale: number;
-  /** The areal scale s = h k sin θ′ (Tissot). */
-  readonly arealScale: number;
-  /** Tissot's maximum angular distortion ω, radians: 2 asin((a′ − b′)/(a′ + b′)), 0 for a conformal projection. */
-  readonly angularDistortion: number;
-  /** The angle θ′ between the projected meridian and parallel, radians (π/2 for a conformal projection). */
-  readonly meridianParallelAngle: number;
-  /** R / (R + h): R the geometric-mean radius sqrt(M N), h the ellipsoidal height. */
-  readonly elevationFactor: number;
-  /** k x elevationFactor: grid distance = ground distance x combinedFactor. */
-  readonly combinedFactor: number;
-  /** Radians, from true north to grid north, positive east (PROJ's meridian convergence). */
-  readonly convergence: number;
-}
+// The data type lives with the coordinate service (the plan's call 36).
+export type { GridFactors } from "../frames/coordinates.ts";
 
 interface Projection {
   /** The horizontal projected CRS, for proj_factors. */
@@ -116,19 +101,11 @@ const POLE = 1e-9;
 /** How closely a_p must match the scale of PROJ's own coordinates (a central difference). */
 const SPHERE_CHECK = 1e-6;
 
-const projections = new WeakMap<EngineeringFrame, Projection>();
-
-function projectionOf(frame: EngineeringFrame): Projection {
-  const cached = projections.get(frame);
-  if (cached !== undefined) {
-    return cached;
-  }
-  const P: ProjApi = frame.proj;
+function projectionOf(P: ProjApi, ref: CrsRef): Projection {
   // A bound CRS's projection is its source CRS's; a compound CRS's horizontal
   // part is its first component (itself possibly bound).
   // A WKT2 refused if it holds a PROJ-string token (crsObject); a code as
   // before.
-  const ref = frame.definition.crs;
   const crs = unbound(P, crsObject(P, ref, "the CRS"));
   const horizontal =
     P.proj_get_type(crs) === P.PJ_TYPE_COMPOUND_CRS
@@ -173,7 +150,7 @@ function projectionOf(frame: EngineeringFrame): Projection {
     method.method_auth_name === "EPSG" && e2 > 0
       ? SPHERICAL_METHODS[method.method_code]
       : undefined;
-  const result: Projection = {
+  return {
     crs: horizontal,
     conversion,
     a,
@@ -185,28 +162,61 @@ function projectionOf(frame: EngineeringFrame): Projection {
       },
     }),
   };
-  projections.set(frame, result);
-  return result;
 }
 
 /**
  * The scale and convergence of the frame's projection at a design point, and
- * the elevation factor for its ellipsoidal height. A site scale factor does not
- * enter: the site transform's `scale` is reported separately by callers.
+ * the elevation factor for its ellipsoidal height, from the frame's
+ * coordinate service (`ResolvedCoordinates.gridFactors`) at the point's
+ * projected coordinates. A site scale factor does not enter: the site
+ * transform's `scale` is reported separately by callers.
  *
- * The height h of the elevation factor is the ellipsoidal height on the
- * target datum (WGS84 through EPSG:4979), as `frame.toGeodetic` gives it. For
- * NAD83 it differs from the height on the CRS's own datum by about 1-2 m,
- * which moves the elevation factor by about 1e-7: negligible for CAD practice.
- * Throws a RangeError where PROJ has no valid scale (a singular point).
+ * For PROJ's service (`projGridFactors`), the height h of the elevation
+ * factor is the ellipsoidal height on the target datum (WGS84 through
+ * EPSG:4979), as `frame.toGeodetic` gives it. For NAD83 it differs from the
+ * height on the CRS's own datum by about 1-2 m, which moves the elevation
+ * factor by about 1e-7: negligible for CAD practice. Throws a RangeError
+ * where PROJ has no valid scale (a singular point).
  */
 export function gridFactors(
-  frame: EngineeringFrame,
+  frame: EngineeringFrame<CoordinateOperation>,
   design: ArrayLike<number>,
 ): GridFactors {
-  const P = frame.proj;
-  const { crs, conversion, a, e2, sphere } = projectionOf(frame);
-  const projected = frame.projected(design);
+  return frame.coordinates.gridFactors(frame.projected(design));
+}
+
+/**
+ * @internal PROJ's grid factors for a projected CRS (`ref`, whose horizontal
+ * unit is `metersPerUnit` metres), as `ResolvedCoordinates.gridFactors`:
+ * at projected coordinates (E, N, U) in the CRS's units, with the
+ * ellipsoidal height in metres that `heightOf` gives for them (the
+ * operation's). The CRS's projection is read from PROJ once, at the first
+ * call.
+ */
+export function projGridFactors(
+  P: ProjApi,
+  ref: CrsRef,
+  metersPerUnit: number,
+  heightOf: (projected: ArrayLike<number>) => number,
+): (projected: ArrayLike<number>) => GridFactors {
+  let projection: Projection | undefined;
+  return (projected) =>
+    factorsAt(
+      P,
+      (projection ??= projectionOf(P, ref)),
+      metersPerUnit,
+      heightOf,
+      projected,
+    );
+}
+
+function factorsAt(
+  P: ProjApi,
+  { crs, conversion, a, e2, sphere }: Projection,
+  metersPerUnit: number,
+  heightOf: (projected: ArrayLike<number>) => number,
+  projected: ArrayLike<number>,
+): GridFactors {
   // Longitude and latitude, radians, on the CRS's own datum.
   const lp = P.proj_trans(
     conversion,
@@ -224,7 +234,7 @@ export function gridFactors(
   const w = 1 - e2 * Math.sin(phi) ** 2;
   // sqrt(M N) = a sqrt(1 - e2) / (1 - e2 sin^2 phi).
   const R = (a * Math.sqrt(1 - e2)) / w;
-  const height = frame.toGeodetic(design).height;
+  const height = heightOf(projected);
   const elevationFactor = R / (R + height);
   // The images K and H of the east and north unit vectors: their directions
   // from PROJ's derivatives, d(x, y)/d lambda and d(x, y)/d phi.
@@ -251,7 +261,7 @@ export function gridFactors(
         `gridFactors: (${projected[0]}, ${projected[1]}) is at a pole, where ${sphere.method}'s scales against the ellipsoid are not defined by its derivatives`,
       );
     }
-    checkSphere(frame, conversion, lambda, phi, factors, sphere);
+    checkSphere(P, metersPerUnit, conversion, lambda, phi, factors, sphere);
     const k = (sphere.radius * Math.sqrt(w)) / (a * Math.cos(phi));
     const h = (sphere.radius * w * Math.sqrt(w)) / (a * (1 - e2));
     kx = factors.dx_dlam * k;
@@ -328,14 +338,14 @@ export function gridFactors(
  * series, about 1e-10 from the closed form, well inside this check.)
  */
 function checkSphere(
-  frame: EngineeringFrame,
+  P: ProjApi,
+  metersPerUnit: number,
   conversion: PJ,
   lambda: number,
   phi: number,
   factors: { readonly dx_dlam: number; readonly dy_dlam: number },
   sphere: NonNullable<Projection["sphere"]>,
 ): void {
-  const P = frame.proj;
   const step = 1e-6;
   const at = (l: number) =>
     P.proj_trans(
@@ -347,7 +357,7 @@ function checkSphere(
   const west = at(lambda - step);
   const measured =
     (Math.hypot(east[0]! - west[0]!, east[1]! - west[1]!) / (2 * step)) *
-    frame.units.metersPerUnit;
+    metersPerUnit;
   const expected = Math.hypot(factors.dx_dlam, factors.dy_dlam) * sphere.radius;
   if (!(Math.abs(measured / expected - 1) <= SPHERE_CHECK)) {
     throw new Error(

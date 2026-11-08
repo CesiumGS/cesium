@@ -66,6 +66,16 @@ export {
   type FramedPoint,
   type FramesPickInterpreterOptions,
 } from "./pickInterpreter.ts";
+export type {
+  AreaOfInterest,
+  CoordinateOperation,
+  CoordinateRequest,
+  CoordinateService,
+  CrsRef,
+  CrsUnits,
+  GridFactors,
+  ResolvedCoordinates,
+} from "./coordinates.ts";
 export {
   attachSky,
   type AttachSkyOptions,

@@ -44,29 +44,19 @@ import {
 import { isPlainGridName } from "./gridCatalog.ts";
 import { loadedGrids } from "./proj.ts";
 import { startsAsWkt2, wkt2Problem } from "./wkt2.ts";
+import type {
+  AreaOfInterest,
+  CoordinateOperation,
+  CrsRef,
+  CrsUnits,
+} from "../frames/coordinates.ts";
 
-/**
- * A reference to a coordinate reference system, with the shapes of the 3D Tiles
- * 2.0 draft's `EXT_geospatial_crs` (`_wkid` and `_wkt2`; plan 4a R3).
- */
-export type CrsRef =
-  | {
-      readonly format: "wkid";
-      /** The registry, such as "EPSG" or "IAU_2015". */
-      readonly authority: string;
-      readonly wkid: number;
-      /** The vertical CRS's code (a compound CRS), in `vcsAuthority`. */
-      readonly vcsWkid?: number;
-      /**
-       * The vertical CRS's registry when it isn't `authority` (an EPSG
-       * horizontal CRS with an ESRI vertical code, as Esri writes them);
-       * `authority` when absent.
-       */
-      readonly vcsAuthority?: string;
-      /** Coordinate epoch, decimal year, for a dynamic datum. */
-      readonly epoch?: number;
-    }
-  | { readonly format: "wkt2"; readonly wkt2: string };
+// The CRS data types live with the coordinate service (the plan's call 36).
+export type {
+  AreaOfInterest,
+  CrsRef,
+  CrsUnits,
+} from "../frames/coordinates.ts";
 
 /**
  * The string PROJ accepts for a reference: "EPSG:2227", "EPSG:6420+6360",
@@ -110,25 +100,6 @@ export function shownCrs(ref: CrsRef): string {
  */
 export const MOON_GEOGRAPHIC_CRS = "IAU_2015:30100";
 
-/** Units of a CRS's axes, read from PROJ (never assumed; plan 4a R5). */
-export interface CrsUnits {
-  /** Whether the horizontal CRS is projected (linear axes), not geographic. */
-  readonly projected: boolean;
-  /** The first axis's unit (a projected CRS's easting). */
-  readonly horizontalUnitName: string;
-  /** Metres per horizontal unit (radians per unit for a geographic CRS). */
-  readonly metersPerUnit: number;
-  /** The height axis's unit, for a compound or 3D CRS. */
-  readonly verticalUnitName?: string;
-  readonly metersPerVerticalUnit?: number;
-  /**
-   * The height axis's direction, for a compound or 3D CRS whose third axis
-   * PROJ gives as "up" or "down": "down" for a depth CRS (such as a LAT or
-   * MLLW depth, where +10 lies 10 units below 0).
-   */
-  readonly verticalDirection?: "up" | "down";
-}
-
 /**
  * One PROJ operation between two CRSs, fixed at creation.
  *
@@ -140,9 +111,11 @@ export interface CrsUnits {
  * exact inverse of `forward` (refined against it, to 1e-6 m), at about three
  * times the PROJ calls of one raw inverse.
  */
-export interface RecordedOperation {
+export interface RecordedOperation extends CoordinateOperation {
   /** The PROJ pipeline string, identical for both directions. */
   readonly pipeline: string;
+  /** `pipeline`, as a `CoordinateOperation` describes itself. */
+  readonly description: string;
   /**
    * PROJ's stated accuracy in metres; undefined when PROJ reports none. For
    * a pinned pipeline, the figure PROJ states for the listed candidate it
@@ -247,17 +220,6 @@ export interface BetterCandidate {
   readonly accuracy?: number;
   /** The grids it needs that `loadGrids` hasn't loaded. */
   readonly missingGrids: readonly string[];
-}
-
-/**
- * Where the coordinates are, in degrees of longitude and latitude: west may
- * exceed east for a box across 180°.
- */
-export interface AreaOfInterest {
-  readonly west: number;
-  readonly south: number;
-  readonly east: number;
-  readonly north: number;
 }
 
 export interface ResolveOptions {
@@ -485,6 +447,7 @@ function record(
   const loaded = loadedGrids(proj);
   return {
     pipeline,
+    description: pipeline,
     accuracy,
     grids,
     optionalGrids,

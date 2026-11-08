@@ -10,6 +10,8 @@ import type {
   SnapKind,
 } from "../engineering/EngineeringFrame.ts";
 import type { BetterCandidate } from "../engineering/crs.ts";
+import { projResolution } from "../engineering/projCoordinates.ts";
+import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { earthOrientationSigma } from "../frames/orientationSigma.ts";
 import { EARTH_ROTATION_RATE } from "./constants.ts";
 
@@ -186,10 +188,21 @@ function candidatesFact(candidates: readonly BetterCandidate[]): string {
  */
 function projectionTerm(
   end: string,
-  frame: EngineeringFrame,
+  frame: EngineeringFrame<CoordinateOperation>,
   asEndA: boolean,
 ): AccuracyTerm {
-  const { operation, fallback } = frame;
+  const { fallback } = frame;
+  const operation = projResolution(frame.coordinates)?.operation;
+  if (operation === undefined) {
+    // A host's coordinate service: its operation and its own figure, which
+    // the engine can't check (outside PROJ's grid trust chain).
+    const { accuracy, description } = frame.operation;
+    return {
+      source: "projection",
+      meters: accuracy,
+      note: `End ${end}: engineering frame "${frame.definition.name}": the host's coordinate operation (${description})${accuracy === undefined ? "; its accuracy is not known" : ": the accuracy the host states for it"}`,
+    };
+  }
   const grids =
     operation.grids.length > 0 ? operation.grids.join(", ") : "no grids";
   const known = !operation.ballpark && operation.accuracy !== undefined;
@@ -236,7 +249,10 @@ function sigmaStatedBy(fallback: EngineeringFrameFallback): string {
  * gap between the model and the replaced datum, as `fallbackSigma` states
  * it, else not known (Review Focus 5): never PROJ's figure for the model.
  */
-function fallbackTerm(end: string, frame: EngineeringFrame): AccuracyTerm {
+function fallbackTerm(
+  end: string,
+  frame: EngineeringFrame<CoordinateOperation>,
+): AccuracyTerm {
   const fallback = frame.fallback!;
   const why = `End ${end}: engineering frame "${frame.definition.name}": ${fallback.model} heights stand in for EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")})`;
   return {
@@ -274,13 +290,14 @@ function pickTerm(end: string, obtained: DesignPointObtained): AccuracyTerm {
  * geoid fallback.
  */
 function frameWarnings(
-  frame: EngineeringFrame,
+  frame: EngineeringFrame<CoordinateOperation>,
 ): { code: WarningCode; text: string; detail?: string }[] {
   const out: { code: WarningCode; text: string; detail?: string }[] = [];
-  const { operation, fallback } = frame;
+  const { fallback } = frame;
+  const operation = projResolution(frame.coordinates)?.operation;
   const name = `Engineering frame "${frame.definition.name}"`;
-  const better = operation.betterCandidates;
-  if (better.length > 0) {
+  const better = operation?.betterCandidates ?? [];
+  if (operation !== undefined && better.length > 0) {
     const used =
       !operation.ballpark && operation.accuracy !== undefined
         ? `states ±${metres(operation.accuracy)}`
@@ -318,7 +335,10 @@ export function accuracyOf(
   options: {
     signal: boolean;
     /** The engineering frame of an end given as a design point (R9). */
-    design?: { a?: EngineeringFrame; b?: EngineeringFrame };
+    design?: {
+      a?: EngineeringFrame<CoordinateOperation>;
+      b?: EngineeringFrame<CoordinateOperation>;
+    };
     /** How an end given as a design point was picked or snapped (its `pick` term). */
     obtained?: { a?: DesignPointObtained; b?: DesignPointObtained };
   },

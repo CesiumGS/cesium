@@ -28,7 +28,9 @@ export interface FramedPoint {
   readonly bodyFixed?: Float64Array;
   /**
    * Design coordinates, where the hit draw's content has a placement
-   * (`placements`) that can invert the point.
+   * (`placements`) that can invert the point. A hosted placement's come
+   * only from the host's coordinate service (`placeHosted`): without one
+   * the point has its true values only.
    */
   readonly design?: {
     readonly placement: DesignPlacement;
@@ -43,7 +45,8 @@ export interface FramedPoint {
    *   the position was read from (half a step);
    * - the content's (`kind: "content"`), with design coordinates: how far
    *   its placement draws the design from where it truly is
-   *   (`displayError`; 0 m when reprojected);
+   *   (`displayError`; 0 m when reprojected, and when hosted: drawn as
+   *   delivered);
    * - `frame`'s own: each edge from `frame` up to the nearest catalog
    *   reference frame at or above it, as it states its accuracy at the
    *   pick's instant. For content on a body that is its body-fixed
@@ -65,7 +68,9 @@ export interface FramedPoint {
    * - content the `placements` callback gives no placement for: it has no
    *   content term;
    * - the coordinate operation's own accuracy behind `design` (the
-   *   engineering frame's, from PROJ);
+   *   engineering frame's, from PROJ, or the host's coordinate service's);
+   * - a hosted placement's reprojection by its producer or host, which the
+   *   engine doesn't reproduce: its error is the host's to state;
    * - the content's own error against the world (a mesh's simplification,
    *   a survey's), which the content doesn't state;
    * - correlations between terms.
@@ -200,7 +205,10 @@ function composed(
       frame: placement.frameName,
       kind: "content",
       meters: placement.displayError(design.coordinates),
-      note: `the ${placement.mode} placement draws the design this far from where it truly is (displayError)`,
+      note:
+        placement.mode === "hosted"
+          ? "the hosted placement draws the content as delivered (displayError): the host's reprojection, which the engine doesn't reproduce, isn't in this figure"
+          : `the ${placement.mode} placement draws the design this far from where it truly is (displayError)`,
     });
   }
   // The point is recovered through the placement that drew it, so no

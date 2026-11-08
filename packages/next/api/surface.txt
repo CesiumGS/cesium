@@ -237,8 +237,14 @@ entry	name	kind	tier
 .	vec3.set	function	-
 .	vec3.sub	function	-
 .	vec3.vec3	function	-
+frames	AreaOfInterest	interface	-
 frames	AttachSkyOptions	interface	-
 frames	CatalogFrameName	type	-
+frames	CoordinateOperation	interface	-
+frames	CoordinateRequest	interface	-
+frames	CoordinateService	interface	-
+frames	CrsRef	type	-
+frames	CrsUnits	interface	-
 frames	EarthOrientationParameters	class	-
 frames	EarthOrientationSigma	type	-
 frames	EopSample	interface	-
@@ -262,10 +268,12 @@ frames	Frames	interface	-
 frames	FramesPickInterpreterOptions	interface	-
 frames	FramesResolver	interface	-
 frames	FramesResolverOptions	interface	-
+frames	GridFactors	interface	-
 frames	OemSegment	interface	-
 frames	PointAccuracy	interface	-
 frames	PointAccuracyTerm	type	-
 frames	Precision	type	-
+frames	ResolvedCoordinates	interface	-
 frames	SkyInputs	type	-
 frames	SkyState	interface	-
 frames	StateSegment	interface	-
@@ -323,11 +331,8 @@ proj	ALIGNMENTS_EXTENSION	const	-
 proj	Alignment	class	-
 proj	AlignmentDefinition	interface	-
 proj	AlignmentElement	interface	-
-proj	AreaOfInterest	interface	-
 proj	BetterCandidate	interface	-
 proj	ClientSnapService	class	-
-proj	CrsRef	type	-
-proj	CrsUnits	interface	-
 proj	DESIGN_NOT_INVERTED	const	-
 proj	DeclaredCrs	interface	-
 proj	DeclaredPlacement	type	-
@@ -346,7 +351,6 @@ proj	GeoreferenceError	class	-
 proj	GeoreferenceSources	interface	-
 proj	GridCatalog	class	-
 proj	GridEntry	interface	-
-proj	GridFactors	interface	-
 proj	GridKey	type	-
 proj	GridSource	interface	-
 proj	GridSourceOptions	interface	-
@@ -384,6 +388,8 @@ proj	ProfileGrade	interface	-
 proj	ProfileParabola	interface	-
 proj	ProfileSegment	type	-
 proj	ProjApi	interface	-
+proj	ProjCoordinateRequest	interface	-
+proj	ProjResolvedCoordinates	interface	-
 proj	RecordedOperation	interface	-
 proj	ResolveOptions	interface	-
 proj	RigidPlacement	class	-
@@ -420,8 +426,10 @@ proj	loadedGrids	function	-
 proj	parsePipeline	function	-
 proj	pickDesign	function	-
 proj	pipelineGrids	function	-
+proj	placeHosted	function	-
 proj	placeReprojected	function	-
 proj	placeRigid	function	-
+proj	projCoordinateService	function	-
 proj	projTokenProblem	function	internal
 proj	readGeoreference	function	-
 proj	refiningSnap	function	-

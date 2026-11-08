@@ -10,8 +10,9 @@ import {
   type TileVolume,
 } from "../streaming/volumes.ts";
 import type { CorePick, PickInterpreter } from "../scene/pick.ts";
+import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
-import { engineeringPlacement } from "./placement.ts";
+import { DESIGN_NOT_INVERTED, engineeringPlacement } from "./placement.ts";
 
 /**
  * The camera a pick's position and feature were read with, for projecting
@@ -83,7 +84,7 @@ export interface DesignPick {
    * the position, the feature and the camera all come from one tick and
    * the hit tile's bounds contain the position.
    */
-  readonly design?: DesignPoint;
+  readonly design?: DesignPoint<CoordinateOperation>;
   /** Metres: one CSS pixel's footprint at the hit. */
   readonly tolerance: number;
 }
@@ -115,9 +116,7 @@ function targetPixelRatio(target: PickView["target"]): number {
   return ratio;
 }
 
-/** The hit tileset's warning when its placement can't invert a pick. */
-export const DESIGN_NOT_INVERTED =
-  "a pick on this tileset has no design coordinates: its placement can't invert the hit (outside the operation's domain, or at the body's centre)";
+export { DESIGN_NOT_INVERTED } from "./placement.ts";
 
 /** Whether `p` is within `margin` metres of the tile volume. */
 function nearVolume(
@@ -226,7 +225,7 @@ function framed(
   const placement = engineeringPlacement(tileset?.placement);
   const inside =
     volume !== undefined && nearVolume(volume, position, tolerance + 1);
-  let design: DesignPoint | undefined;
+  let design: DesignPoint<CoordinateOperation> | undefined;
   if (placement !== undefined && inside) {
     try {
       design = designPoint(placement.frame, placement.designOf(position), {

@@ -8,6 +8,7 @@
  */
 import { projectToPixel } from "../scene/Camera.ts";
 import type { PickResult } from "../scene/View.ts";
+import type { CoordinateOperation } from "../frames/coordinates.ts";
 import type { TileGeometry } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
@@ -76,7 +77,7 @@ export interface SnapResult {
    * kind }`). A client snap gives them only where `pickDesign` gives the
    * pick design coordinates.
    */
-  readonly design?: DesignPoint;
+  readonly design?: DesignPoint<CoordinateOperation>;
   /** Metres: how far `snapPoint` may be from the geometry it stands for. */
   readonly tolerance: number;
   /** Whether `snapPoint` lies on the analytic geometry (tolerance 0). */

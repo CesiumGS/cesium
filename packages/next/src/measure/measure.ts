@@ -7,6 +7,7 @@ import {
   type EngineeringFrame,
 } from "../engineering/EngineeringFrame.ts";
 import { gridFactors } from "../engineering/factors.ts";
+import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { cartographic } from "../math/ellipsoid.ts";
 import { mat4 } from "../math/mat4.ts";
 import { vec3 } from "../math/vec3.ts";
@@ -44,7 +45,7 @@ export interface MeasureOptions {
 }
 
 /** A point for `measure`: in a frame, or in an engineering frame's design coordinates. */
-export type MeasurePoint = FramePoint | DesignPoint;
+export type MeasurePoint = FramePoint | DesignPoint<CoordinateOperation>;
 
 /** What both ends being design points in one engineering frame adds (R7, R9). */
 export interface DesignMeasurement {
@@ -122,7 +123,8 @@ const scratch = mat4();
 /** The most samples `measureSpan` will run. */
 const MAX_SAMPLES = 1_000_000;
 
-const isDesign = (p: MeasurePoint): p is DesignPoint => "engineeringFrame" in p;
+const isDesign = (p: MeasurePoint): p is DesignPoint<CoordinateOperation> =>
+  "engineeringFrame" in p;
 
 /** A design point as a point in its body's body-fixed frame. */
 function resolvePoint(p: MeasurePoint, frames: Frames): FramePoint {
@@ -136,11 +138,11 @@ function resolvePoint(p: MeasurePoint, frames: Frames): FramePoint {
 
 /** The design result and alignment for two design points in one frame. */
 function designResult(
-  a: DesignPoint,
-  b: DesignPoint,
+  a: DesignPoint<CoordinateOperation>,
+  b: DesignPoint<CoordinateOperation>,
   options: MeasureOptions,
 ): { design: DesignMeasurement; alignment?: AlignmentMeasurement } {
-  const frame: EngineeringFrame = a.engineeringFrame;
+  const frame: EngineeringFrame<CoordinateOperation> = a.engineeringFrame;
   const { units } = frame;
   const delta = Float64Array.from([
     b.design[0]! - a.design[0]!,

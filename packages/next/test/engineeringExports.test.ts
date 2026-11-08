@@ -10,14 +10,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type {
   AlignmentElement,
-  CrsRef,
-  CrsUnits,
   DeclaredCrs,
   EngineeringFrameFallback,
   GeoidModel,
   GridCatalog,
   GridEntry,
-  GridFactors,
   GridSource,
   LoadProjOptions,
   OperationCandidate,
@@ -28,6 +25,9 @@ import type {
   RecordedOperation,
   ResolveOptions,
 } from "../src/proj/index.ts";
+// The CRS data types the proj entry's functions name are the frames entry's
+// (with the coordinate service; plan 5a's call 36).
+import type { CrsRef, CrsUnits, GridFactors } from "../src/frames/index.ts";
 
 /**
  * Compile-time only: each type is exported from the entry, among them the

@@ -1,7 +1,8 @@
-// gridFactors rejects PROJ's non-answers (plan 4a task 4), with a stub PROJ.
+// gridFactors rejects PROJ's non-answers (plan 4a task 4), with a stub PROJ:
+// PROJ's coordinate service's factors (projGridFactors), through a frame.
 import { describe, expect, it } from "vitest";
 import type { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../src/engineering/factors.ts";
+import { gridFactors, projGridFactors } from "../src/engineering/factors.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 
 function stubFrame(factors: Record<string, number>): EngineeringFrame {
@@ -31,10 +32,15 @@ function stubFrame(factors: Record<string, number>): EngineeringFrame {
     proj_factors: () => factors,
   } as unknown as ProjApi;
   return {
-    proj,
-    definition: { crs: { format: "wkid", authority: "EPSG", wkid: 3395 } },
+    coordinates: {
+      gridFactors: projGridFactors(
+        proj,
+        { format: "wkid", authority: "EPSG", wkid: 3395 },
+        1,
+        () => 0,
+      ),
+    },
     projected: () => new Float64Array([1, 2, 0]),
-    toGeodetic: () => ({ longitude: 0.1, latitude: 0.2, height: 0 }),
   } as unknown as EngineeringFrame;
 }
 

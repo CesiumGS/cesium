@@ -46,6 +46,7 @@ import {
   engineeringPlacement,
   type TilesetPlacement,
 } from "../../src/engineering/placement.ts";
+import type { CoordinateOperation } from "../../src/frames/coordinates.ts";
 import { projectToPixel } from "../../src/scene/Camera.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import { CROSS_SECTION, TICKS, sectionSurface } from "./corridor.ts";
@@ -111,7 +112,7 @@ interface Found {
 /** What a candidate is judged with: the request, the placement and the cursor's pixel. */
 interface Judge {
   readonly request: ServiceSnapRequest;
-  readonly placement: TilesetPlacement;
+  readonly placement: TilesetPlacement<CoordinateOperation>;
   readonly cursor: Float64Array;
 }
 

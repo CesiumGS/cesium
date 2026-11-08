@@ -16,10 +16,16 @@ export {
 } from "../engineering/EngineeringFrame.ts";
 export {
   engineeringPlacement,
+  placeHosted,
   placeReprojected,
   placeRigid,
   type TilesetPlacement,
 } from "../engineering/placement.ts";
+export {
+  projCoordinateService,
+  type ProjCoordinateRequest,
+  type ProjResolvedCoordinates,
+} from "../engineering/projCoordinates.ts";
 export {
   ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
@@ -113,10 +119,7 @@ export {
   listOperations,
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,
-  type AreaOfInterest,
   type BetterCandidate,
-  type CrsRef,
-  type CrsUnits,
   type ListOperationsOptions,
   type OperationCandidate,
   type RecordedOperation,
@@ -132,4 +135,6 @@ export {
   type PipelineGrid,
   type PipelineStep,
 } from "../engineering/pipeline.ts";
-export { gridFactors, type GridFactors } from "../engineering/factors.ts";
+export { gridFactors } from "../engineering/factors.ts";
+// AreaOfInterest, CrsRef, CrsUnits and GridFactors are the frames entry's
+// (with the coordinate service they belong to; the plan's call 36).
