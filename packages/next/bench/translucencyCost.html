@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Translucency fixed cost</title>
+  </head>
+  <body>
+    <!-- Opened by hand (a Run button) or by the runner with ?bench (runTranslucencyCost). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./translucencyCost.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runTranslucencyCost");
+    </script>
+  </body>
+</html>

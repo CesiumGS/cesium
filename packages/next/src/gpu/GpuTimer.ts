@@ -8,7 +8,11 @@
  */
 export class GpuTimer {
   private static readonly maxPasses = 32;
-  /** Smoothed GPU frame time in milliseconds, or NaN when unsupported. */
+  /**
+   * Smoothed GPU frame time in milliseconds, or NaN when unsupported: the
+   * time any measured pass ran, passes that overlap counted once
+   * (`passTimes`).
+   */
   milliseconds = Number.NaN;
   /**
    * Smoothed span from the first measured pass's start to the last one's end.
@@ -19,6 +23,10 @@ export class GpuTimer {
   /**
    * Smoothed GPU time per pass label (`passWrites`), ms; passes sharing a
    * label (the shadow cascades) add up. For benchmarks: where the time goes.
+   * A pass's time is what no earlier pass overlapped (`passTimes`): on a
+   * tiler a pass begins while the last one's fragments still run, so its
+   * own interval would count the last one's time again; they add up to
+   * `milliseconds`.
    * In the order frames run them, kept stable: a pass a frame skips (the
    * cull on a frame that draws nothing new) keeps its place instead of
    * dropping to the end, and a new pass goes after the one it followed.
@@ -54,6 +62,10 @@ export class GpuTimer {
   private readonly labelIndex = new Map<string, number>();
   private readonly labelMs = new Float64Array(GpuTimer.maxPasses);
   private readonly labelSum = new Float64Array(GpuTimer.maxPasses);
+  /** A measured frame's passes' timestamps and own times (`passTimes`). */
+  private readonly begins = new Float64Array(GpuTimer.maxPasses);
+  private readonly ends = new Float64Array(GpuTimer.maxPasses);
+  private readonly own = new Float64Array(GpuTimer.maxPasses);
   /** This frame's passes' label indices. */
   private readonly frameLabels = new Uint8Array(GpuTimer.maxPasses);
   /** Per-pass timestamp-write descriptors, created once. */
@@ -181,26 +193,31 @@ export class GpuTimer {
   private onMapped(buffer: GPUBuffer): void {
     const { count, labels } = this.handlers.get(buffer)!;
     const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
-    let total = 0;
     let first = timestamp(words, 0);
     let last = timestamp(words, 1);
     this.labelSum.fill(0);
     const order: number[] = [];
+    const passes = count / 2;
     for (let i = 0; i < count; i += 2) {
       if (!order.includes(labels[i / 2]!)) {
         order.push(labels[i / 2]!);
       }
       const begin = timestamp(words, i),
         end = timestamp(words, i + 1);
-      if (end > begin) {
-        total += end - begin;
-        const k = labels[i / 2]!;
-        this.labelSum[k] = this.labelSum[k]! + end - begin;
-      }
+      this.begins[i / 2] = begin;
+      this.ends[i / 2] = end;
       first = begin < first ? begin : first;
       last = end > last ? end : last;
     }
     buffer.unmap();
+    // Passes overlap on a tiler (an Apple GPU starts a pass's vertex stage
+    // while the last one's fragments run): each pass counts only its time
+    // no earlier pass covered, so the total is the time any pass ran.
+    const total = passTimes(this.begins, this.ends, passes, this.own);
+    for (let i = 0; i < passes; i++) {
+      const k = labels[i]!;
+      this.labelSum[k] = this.labelSum[k]! + this.own[i]!;
+    }
     this.idle.push(buffer);
     this.order = mergeOrder(this.order, order);
     this.milliseconds = smooth(this.milliseconds, total / 1e6);
@@ -234,6 +251,63 @@ function timestamp(words: Uint32Array, i: number): number {
 
 function smooth(previous: number, sample: number): number {
   return Number.isNaN(previous) ? sample : previous * 0.9 + sample * 0.1;
+}
+
+/** The union so far of `passTimes`'s intervals: sorted, disjoint. */
+let unionBegin = new Float64Array(64);
+let unionEnd = new Float64Array(64);
+
+/**
+ * Each of `count` passes' own time (into `own`): the part of its interval,
+ * `begin[i]` to `end[i]`, that no earlier pass's covers. Returns their sum,
+ * the time any pass ran (overlap counted once, gaps not at all). A pass
+ * whose end isn't after its begin has none.
+ */
+export function passTimes(
+  begin: ArrayLike<number>,
+  end: ArrayLike<number>,
+  count: number,
+  own: Float64Array,
+): number {
+  if (unionBegin.length < count + 1) {
+    unionBegin = new Float64Array(count + 1);
+    unionEnd = new Float64Array(count + 1);
+  }
+  let n = 0;
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    const b = begin[i]!;
+    const e = end[i]!;
+    if (!(e > b)) {
+      own[i] = 0;
+      continue;
+    }
+    // The union's intervals before it stay; those it touches merge with it.
+    let first = 0;
+    while (first < n && unionEnd[first]! < b) {
+      first++;
+    }
+    let after = first;
+    let covered = 0;
+    let lo = b;
+    let hi = e;
+    while (after < n && unionBegin[after]! <= e) {
+      covered +=
+        Math.min(unionEnd[after]!, e) - Math.max(unionBegin[after]!, b);
+      lo = Math.min(lo, unionBegin[after]!);
+      hi = Math.max(hi, unionEnd[after]!);
+      after++;
+    }
+    // Those `first` to `after` become one, at `first`.
+    unionBegin.copyWithin(first + 1, after, n);
+    unionEnd.copyWithin(first + 1, after, n);
+    n += 1 - (after - first);
+    unionBegin[first] = lo;
+    unionEnd[first] = hi;
+    own[i] = e - b - covered;
+    total += own[i]!;
+  }
+  return total;
 }
 
 /**

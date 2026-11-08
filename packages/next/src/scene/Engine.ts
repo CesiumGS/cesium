@@ -122,7 +122,10 @@ function whenMapped(buffer: GPUBuffer, then: () => void): void {
 export interface FrameStats {
   /** Smoothed main-thread time spent in `renderFrame`, ms. */
   cpuMs: number;
-  /** Smoothed GPU time inside our passes, ms (NaN without `timestamp-query`). */
+  /**
+   * Smoothed GPU time inside our passes, ms (NaN without `timestamp-query`):
+   * the time any of them ran, overlapping passes counted once.
+   */
   gpuMs: number;
   /** Smoothed GPU span from first pass start to last pass end, ms. */
   gpuSpanMs: number;
@@ -2251,7 +2254,12 @@ export class Engine {
    */
   private writeTranslucency(view: View): void {
     const frame = this.viewFrames.get(view)!;
-    const range = view.world.translucentRange(view.camera.position);
+    // Only what this view draws: a blended draw in no view (viewMask) or
+    // hidden switches none of the passes on.
+    const range = view.world.translucentRange(
+      view.camera.position,
+      this.viewBit(view),
+    );
     frame.translucent = range !== undefined;
     if (!range) {
       return;

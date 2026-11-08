@@ -3715,12 +3715,14 @@ export class World {
   }
 
   /**
-   * The nearest and farthest a blended surface may be from `eye` (their
-   * draws' bounding spheres, shown or not, as of the last `prepareFrame`),
-   * m; undefined without any.
+   * The nearest and farthest a blended surface may be from `eye` (the
+   * bounding spheres of the draws the view of `viewBit` draws: shown and
+   * in its view mask, as the cull's `drawable`; the frustum aside), m;
+   * undefined without any, and the view then runs no translucent passes.
    */
   translucentRange(
     eye: ArrayLike<number>,
+    viewBit: number = ALL_VIEWS,
   ): { near: number; far: number } | undefined {
     if (!this.translucentDraws) {
       this.translucentDraws = [];
@@ -3749,6 +3751,7 @@ export class World {
       const t = u[o + TRANSFORM_WORD]!;
       if (
         u[o + FLAGS_WORD]! & RecordFlags.hidden ||
+        (u[o + VIEW_MASK_WORD]! & viewBit) === 0 ||
         this.transformHiddenWorld[t] === 1
       ) {
         continue;
