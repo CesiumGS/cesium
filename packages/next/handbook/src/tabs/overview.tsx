@@ -110,7 +110,7 @@ export function Overview() {
           ]}
           rows={MILESTONES}
         />
-        <Written from="the master plan and the plan 5 spec" on="2026-11-08" />
+        <Written from="the overall plan and the plan 5 spec" on="2026-11-08" />
       </Section>
 
       <Section title="What the numbers say so far">
@@ -144,7 +144,7 @@ export function Overview() {
         <p>
           Each tab says how far it goes: accurate today, a sketch, or a stub.
           Each figure says whether it was generated from the repository or
-          written by hand, and when. The master plan,{" "}
+          written by hand, and when. The overall plan,{" "}
           <C>CESIUM2_WEBGPU_PLAN.md</C>, holds the full reasoning behind all of
           it.
         </p>

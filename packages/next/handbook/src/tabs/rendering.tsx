@@ -171,7 +171,7 @@ export function Rendering() {
           rows={SEAMS}
         />
         <Written
-          from="the master plan, sections 3.1 to 3.7, and AGENTS.md"
+          from="the overall plan, sections 3.1 to 3.7, and AGENTS.md"
           on="2026-11-08"
         />
       </Section>
@@ -181,7 +181,7 @@ export function Rendering() {
           <li>The draw record, its tables and the transform table.</li>
           <li>Translucency: lists, compositing and their cost.</li>
           <li>
-            Lighting and atmosphere, which the master plan's section 4.2 covers
+            Lighting and atmosphere, which the overall plan's section 4.2 covers
             at length.
           </li>
           <li>Device loss and recovery, and rendering on demand.</li>

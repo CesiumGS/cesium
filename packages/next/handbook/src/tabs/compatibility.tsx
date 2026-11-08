@@ -265,7 +265,7 @@ export function Compatibility() {
           rows={LIMITS}
         />
         <Written
-          from="the master plan, sections 3.1 and 13.15, whose device figures were read from Web3D Survey in November 2026"
+          from="the overall plan, sections 3.1 and 13.15, whose device figures were read from Web3D Survey in November 2026"
           on="2026-11-08"
         />
       </Section>

@@ -207,7 +207,7 @@ export function Specs() {
           rows={DECLARATIONS}
         />
         <Written
-          from="the master plan, section 13.14, and the plan 5 spec, section 15.3"
+          from="the overall plan, section 13.14, and the plan 5 spec, section 15.3"
           on="2026-11-08"
         />
       </Section>
@@ -248,7 +248,7 @@ export function Specs() {
           still to raise with both, and to check on Tint's HLSL and SPIR-V
           writers.
         </p>
-        <Written from="the master plan, section 3.4" on="2026-11-08" />
+        <Written from="the overall plan, section 3.4" on="2026-11-08" />
       </Section>
 
       <Sources

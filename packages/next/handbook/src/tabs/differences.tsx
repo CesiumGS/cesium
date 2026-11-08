@@ -162,7 +162,7 @@ export function Differences() {
           rows={CONCEPTS}
         />
         <Written
-          from="the master plan, sections 2, 3 and 8, and the source"
+          from="the overall plan, sections 2, 3 and 8, and the source"
           on="2026-11-08"
         />
       </Section>
@@ -182,7 +182,7 @@ export function Differences() {
           ]}
           rows={CHOICES}
         />
-        <Written from="the master plan, section 8" on="2026-11-08" />
+        <Written from="the overall plan, section 8" on="2026-11-08" />
       </Section>
 
       <Section title="What 2.0 doesn't do yet">
@@ -201,7 +201,7 @@ export function Differences() {
           rows={EXTENSIONS}
         />
         <p className="provenance">
-          Summarized from the master plan, section 4.1, whose table dates from
+          Summarized from the overall plan, section 4.1, whose table dates from
           revision r33. It needs a refresh against M4's work before anyone
           relies on the details.
         </p>
@@ -218,7 +218,7 @@ export function Differences() {
           ))}
         </ul>
         <p>
-          Details are in the master plan's section 14 and{" "}
+          Details are in the overall plan's section 14 and{" "}
           <C>packages/next/docs/clamping-1x-spec.md</C>.
         </p>
         <h3>Worth backporting to 1.x</h3>

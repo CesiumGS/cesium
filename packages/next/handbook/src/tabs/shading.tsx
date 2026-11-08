@@ -143,7 +143,7 @@ export function Shading() {
           run.
         </p>
         <Written
-          from="the master plan, section 3.4, and AGENTS.md"
+          from="the overall plan, section 3.4, and AGENTS.md"
           on="2026-11-08"
         />
       </Section>

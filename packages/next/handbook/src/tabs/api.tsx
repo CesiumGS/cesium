@@ -134,7 +134,7 @@ export function Api() {
             <li key={p}>{p}</li>
           ))}
         </ul>
-        <Written from="the master plan, section 3.10" on="2026-11-08" />
+        <Written from="the overall plan, section 3.10" on="2026-11-08" />
       </Section>
 
       <Section title="The surface, by entry point">

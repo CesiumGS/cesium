@@ -104,7 +104,7 @@ export function Ion() {
           rows={ASKS}
         />
         <Written
-          from="src/io/ion.ts and the master plan, section 14"
+          from="src/io/ion.ts and the overall plan, section 14"
           on="2026-11-08"
         />
       </Section>

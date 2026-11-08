@@ -272,7 +272,7 @@ export function Benchmarks() {
           ]}
           rows={TARGETS}
         />
-        <Written from="the master plan, sections 5 and 16" on="2026-11-08" />
+        <Written from="the overall plan, sections 5 and 16" on="2026-11-08" />
       </Section>
 
       <Section title="Still to write">

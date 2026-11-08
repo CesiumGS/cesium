@@ -100,7 +100,7 @@ export function Vector() {
           agreed with ray casts to under 0.25 m.
         </p>
         <Written
-          from="the master plan, Real-time tracks and section 13.11"
+          from="the overall plan, Real-time tracks and section 13.11"
           on="2026-11-08"
         />
       </Section>
