@@ -13,6 +13,8 @@
 //             directory
 //   runtime   files the engine fetches at run time, measured in the setup
 //             store when this machine has it
+//   pipeline  the frame graph's passes and targets as src/scene declares them,
+//             and the layouts' sizes, checked against handbook/src/pipeline.ts
 //   bench     bench/results (`node bench/run.mjs`, or BENCH_RESULTS_DIR) and
 //             handbook/baselines
 //
@@ -36,7 +38,7 @@ import {
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { runInNewContext } from "node:vm";
 import { gzipSync } from "node:zlib";
 import ts from "typescript";
@@ -489,6 +491,227 @@ export function readBenchResults(root = packageRoot) {
   return { runs: runs.length, adapters: adapterList, baselines };
 }
 
+/** The `.ts` files under `dir`, recursively. */
+function tsFiles(root, dir) {
+  return readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) => {
+    const path = join(dir, e.name);
+    return e.isDirectory()
+      ? tsFiles(root, path)
+      : e.name.endsWith(".ts") && !e.name.endsWith(".d.ts")
+        ? [path]
+        : [];
+  });
+}
+
+/**
+ * The frame graph as the source declares it: each `graph.addPass`, in order,
+ * with what it reads and writes, and each `createTexture` or `importTexture`
+ * with its format. Found by walking the syntax of every file that adds a
+ * pass, so a file split doesn't lose it. Fails naming what it can't read.
+ */
+export function readFrameGraph(root = packageRoot) {
+  const textures = new Map();
+  const passes = [];
+  for (const path of tsFiles(root, "src")) {
+    const text = readFileSync(join(root, path), "utf8");
+    if (!text.includes(".addPass(")) {
+      continue;
+    }
+    const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+    const handles = new Map();
+    const objects = new Map();
+    const property = (object, name) =>
+      object.properties.find((p) => p.name?.getText() === name)?.initializer;
+    const collect = (node) => {
+      if (ts.isVariableDeclaration(node) && node.initializer) {
+        let init = node.initializer;
+        if (ts.isAsExpression(init)) {
+          init = init.expression;
+        }
+        if (ts.isObjectLiteralExpression(init)) {
+          objects.set(node.name.getText(), init);
+        }
+        if (
+          ts.isCallExpression(init) &&
+          ts.isPropertyAccessExpression(init.expression) &&
+          ["createTexture", "importTexture"].includes(
+            init.expression.name.text,
+          ) &&
+          init.expression.expression.getText() === "graph"
+        ) {
+          const [name, descriptor] = init.arguments;
+          const object = ts.isObjectLiteralExpression(descriptor)
+            ? descriptor
+            : objects.get(descriptor?.getText());
+          const format = object && property(object, "format");
+          const samples = object && property(object, "sampleCount");
+          const texture = {
+            name: name.text,
+            imported: init.expression.name.text === "importTexture",
+            ...(format
+              ? {
+                  format: ts.isStringLiteralLike(
+                    ts.isAsExpression(format) ? format.expression : format,
+                  )
+                    ? (ts.isAsExpression(format) ? format.expression : format)
+                        .text
+                    : undefined,
+                }
+              : {}),
+            multisampled: samples !== undefined,
+          };
+          handles.set(node.name.getText(), texture);
+          textures.set(texture.name, texture);
+        }
+      }
+      if (
+        ts.isCallExpression(node) &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === "addPass"
+      ) {
+        const [name, setup] = node.arguments;
+        const named = (key) =>
+          (property(setup, key)?.elements ?? []).map((e) => {
+            const handle = handles.get(e.getText());
+            if (!handle) {
+              throw new Error(
+                `${path}: pass "${name.text}" names ${e.getText()}, not a graph texture; update readFrameGraph`,
+              );
+            }
+            return handle.name;
+          });
+        passes.push({
+          name: name.text,
+          reads: named("reads"),
+          writes: named("writes"),
+          sideEffect: property(setup, "sideEffect") !== undefined,
+        });
+      }
+      ts.forEachChild(node, collect);
+    };
+    collect(source);
+  }
+  if (passes.length === 0) {
+    throw new Error("no graph.addPass found under src; update readFrameGraph");
+  }
+  return { passes, textures: [...textures.values()] };
+}
+
+/** A constant's value in a file, read from its text. Fails if it has gone. */
+function readConstant(root, file, pattern, what) {
+  const match = pattern.exec(readFileSync(join(root, file), "utf8"));
+  if (!match) {
+    throw new Error(`${file}: no ${what}; update scripts/handbookData.mjs`);
+  }
+  return match[1];
+}
+
+/** Sizes and fixed limits the pipeline's figures state. */
+export function readPipelineFigures(root = packageRoot) {
+  const layouts = readFileSync(
+    join(root, "src/render/generated/layouts.ts"),
+    "utf8",
+  );
+  const size = (name) => {
+    const match = new RegExp(`${name}Layout = \\{\\s*size: (\\d+)`).exec(
+      layouts,
+    );
+    if (!match) {
+      throw new Error(`layouts.ts: no ${name}Layout; update readPipelineFigures`);
+    }
+    return Number(match[1]);
+  };
+  const constant = (file, name) =>
+    Number(
+      readConstant(
+        root,
+        file,
+        new RegExp(`const ${name} = (\\d+)`),
+        name,
+      ),
+    );
+  return {
+    drawRecordBytes: size("DrawRecord"),
+    transformBytes: size("Transform"),
+    instanceBytes: size("Instance"),
+    drawItemBytes: size("DrawItem"),
+    materialBytes: size("Material"),
+    anchorEyeBytes: size("AnchorEye"),
+    viewBytes: size("View"),
+    indirectBytes: constant("src/render/layout.ts", "INDIRECT_SIZE"),
+    maxAnchors: constant("src/render/layout.ts", "MAX_ANCHORS"),
+    shadowCascades: constant("src/scene/shadows.ts", "SHADOW_CASCADES"),
+    shadowSize: constant("src/scene/shadows.ts", "SHADOW_SIZE"),
+    clusters: readConstant(
+      root,
+      "src/scene/lights.ts",
+      /CLUSTERS = \[([^\]]+)\]/,
+      "CLUSTERS",
+    )
+      .split(",")
+      .map((n) => Number(n)),
+    sampleCount: Number(
+      readConstant(
+        root,
+        "src/scene/RenderContext.ts",
+        /sampleCount: (\d+)/,
+        "sampleCount",
+      ),
+    ),
+  };
+}
+
+/**
+ * Where handbook/src/pipeline.ts no longer matches the code: passes without
+ * a note, notes for passes that have gone, tests or code names that have
+ * gone. The page shows an unnoted pass as such, so these warn, not fail.
+ */
+export function pipelineDrift(graph, notes, root = packageRoot) {
+  const drift = [];
+  const names = new Set(graph.passes.map((p) => p.name));
+  for (const pass of names) {
+    if (!notes.PASSES[pass]) {
+      drift.push(`pass "${pass}" has no note in handbook/src/pipeline.ts`);
+    }
+  }
+  for (const pass of Object.keys(notes.PASSES)) {
+    if (!names.has(pass)) {
+      drift.push(`note for pass "${pass}", which the frame graph no longer has`);
+    }
+  }
+  for (const seam of notes.SEAMS) {
+    for (const { file, title } of seam.guards) {
+      const text = existsSync(join(root, file))
+        ? readFileSync(join(root, file), "utf8")
+        : "";
+      if (!text.includes(title)) {
+        drift.push(`${seam.id}: no test "${title}" in ${file}`);
+      }
+    }
+    for (const { name, file } of seam.code) {
+      const text = existsSync(join(root, file))
+        ? readFileSync(join(root, file), "utf8")
+        : "";
+      if (!text.includes(name)) {
+        drift.push(`${seam.id}: no ${name} in ${file}`);
+      }
+    }
+    for (const pass of seam.passes) {
+      if (!names.has(pass)) {
+        drift.push(`${seam.id}: names pass "${pass}", which has gone`);
+      }
+    }
+  }
+  for (const decision of notes.DECISIONS) {
+    for (const pass of decision.passes) {
+      if (!names.has(pass)) {
+        drift.push(`${decision.id}: names pass "${pass}", which has gone`);
+      }
+    }
+  }
+  return drift;
+}
+
 /** Counts for the overview. */
 function readCounts(root) {
   const count = (dir, pattern) => {
@@ -633,11 +856,18 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
     layers: readLayers(root),
     bundles: bundles ? await readBundles(root) : previous?.bundles,
     runtime: readRuntimeAssets(),
+    pipeline: { ...readFrameGraph(root), figures: readPipelineFigures(root) },
     bench: readBenchResults(root),
     counts: readCounts(root),
   };
   if (!data.bundles) {
     throw new Error("--no-bundles needs an earlier full run to keep from");
+  }
+  const notes = await import(
+    pathToFileURL(join(root, "handbook/src/pipeline.ts")).href
+  );
+  for (const line of pipelineDrift(data.pipeline, notes, root)) {
+    console.warn(`handbook: ${line}`);
   }
   mkdirSync(outDir, { recursive: true });
   await provideFont(outDir);

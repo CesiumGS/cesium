@@ -92,6 +92,35 @@ export interface HandbookData {
     what: string;
     files: { name: string; kb: number | null; gzipKb?: number }[];
   }[];
+  pipeline: {
+    passes: {
+      name: string;
+      reads: string[];
+      writes: string[];
+      sideEffect: boolean;
+    }[];
+    textures: {
+      name: string;
+      imported: boolean;
+      format?: string;
+      multisampled: boolean;
+    }[];
+    figures: {
+      drawRecordBytes: number;
+      transformBytes: number;
+      instanceBytes: number;
+      drawItemBytes: number;
+      materialBytes: number;
+      anchorEyeBytes: number;
+      viewBytes: number;
+      indirectBytes: number;
+      maxAnchors: number;
+      shadowCascades: number;
+      shadowSize: number;
+      clusters: number[];
+      sampleCount: number;
+    };
+  };
   bench: {
     runs: number;
     adapters: AdapterResults[];

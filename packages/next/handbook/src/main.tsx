@@ -221,6 +221,24 @@ function App() {
   );
 }
 
+// On paper nothing can be clicked open, so everything prints open.
+addEventListener("beforeprint", () => {
+  for (const details of document.querySelectorAll("details")) {
+    if (!details.open) {
+      details.open = true;
+      details.dataset.printOpened = "true";
+    }
+  }
+});
+addEventListener("afterprint", () => {
+  for (const details of document.querySelectorAll<HTMLDetailsElement>(
+    "details[data-print-opened]",
+  )) {
+    details.open = false;
+    delete details.dataset.printOpened;
+  }
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

@@ -74,20 +74,44 @@ close it is to the truth or the best reference: within 27 km of DE440, a stated
 is. The catalog's `Precision` type and `"precise"` level keep their code names,
 but they set accuracy, so prose calls them levels.
 
+## Diagrams
+
+A diagram earns its place by showing a mechanism better than prose. Everything in
+one is real text, so it can be searched and printed, and nothing hides only behind
+hover. `src/diagram.tsx` has what they share:
+
+- `Board`: steps on swim lanes, with arrows drawn from where the cards really are. On
+  a phone it becomes one column, each card naming its lane.
+- `Tag`: a seam or decision named on a figure, which jumps to its entry.
+- `useLayers`: layers of a dense figure that a reader can hide. All start on.
+
+Details closed on screen print open.
+
+| Diagram                                                                   | Source                                                                                                  | Checked    |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
+| Rendering: the frame graph chart's passes and textures                    | Generated from `graph.addPass` and `graph.createTexture`                                                | Each build |
+| Rendering: the chart's buffer columns, each pass's note, seams, decisions | By hand, in `src/pipeline.ts`. The build warns about any pass, test or code name that no longer matches | 2026-11-08 |
+| Rendering: one tick, on three lanes                                       | By hand, in `src/tabs/rendering.tsx`                                                                    | 2026-11-08 |
+| System architecture: the layer diagram                                    | Generated, but its boxes are placed by hand                                                             | Each build |
+
+When the frame graph gains a pass, the chart shows it under "Not yet described", and
+the build warns. Add its note in `src/pipeline.ts`.
+
 ## Keeping it up to date
 
 `npm run handbook` regenerates the figures and builds the file to hand out.
 `npm run handbook:dev -- --port <yours>` serves the same page with hot reload.
 
-| What                                    | Where it comes from                                      | When it changes                                                      |
-| --------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------- |
-| API map                                 | `api/surface.txt`                                        | Each build                                                           |
-| Layers, rules, imports, dynamic imports | `test/importBoundary.test.ts`, run over the import graph | Each build                                                           |
-| Bundle sizes                            | `scripts/checkBundle.mjs`, a `vite.lib.config.ts` build  | Each build                                                           |
-| Run-time file sizes                     | The setup store on the building machine                  | Each build                                                           |
-| Benchmarks                              | `bench/results`, `handbook/baselines`                    | Each build                                                           |
-| Outside facts                           | `src/sources.ts`, cited from each tab                    | By hand; a source is marked for rechecking 90 days after it was read |
-| Prose and hand-drawn diagrams           | `src/tabs/*.tsx`, each with a "checked" date             | By hand, with the change they describe                               |
+| What                                    | Where it comes from                                                                       | When it changes                                                      |
+| --------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| API map                                 | `api/surface.txt`                                                                         | Each build                                                           |
+| Layers, rules, imports, dynamic imports | `test/importBoundary.test.ts`, run over the import graph                                  | Each build                                                           |
+| Bundle sizes                            | `scripts/checkBundle.mjs`, a `vite.lib.config.ts` build                                   | Each build                                                           |
+| Frame graph, layout sizes               | `graph.addPass` and `graph.createTexture` under `src/`, `src/render/generated/layouts.ts` | Each build                                                           |
+| Run-time file sizes                     | The setup store on the building machine                                                   | Each build                                                           |
+| Benchmarks                              | `bench/results`, `handbook/baselines`                                                     | Each build                                                           |
+| Outside facts                           | `src/sources.ts`, cited from each tab                                                     | By hand; a source is marked for rechecking 90 days after it was read |
+| Prose and hand-drawn diagrams           | `src/tabs/*.tsx`, each with a "checked" date                                              | By hand, with the change they describe                               |
 
 `test/handbookData.test.ts` fails when a source changes shape, naming what to
 update in `scripts/handbookData.mjs`.

@@ -7,6 +7,9 @@ import { join } from "node:path";
 import { expect, it } from "vitest";
 import {
   findSecrets,
+  pipelineDrift,
+  readFrameGraph,
+  readPipelineFigures,
   parseCheckBundle,
   readBenchResults,
   readLayers,
@@ -113,4 +116,41 @@ it("finds what must not be in a page that gets passed around", () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+it("reads the frame graph's passes and targets from the source", () => {
+  const { passes, textures } = readFrameGraph();
+  const names = passes.map((p) => p.name);
+  // In order, as they run.
+  expect(names.indexOf("cull")).toBeLessThan(names.indexOf("opaque"));
+  expect(names.indexOf("opaque")).toBeLessThan(names.indexOf("present"));
+  const opaque = passes.find((p) => p.name === "opaque")!;
+  expect(opaque.writes).toContain("depth.msaa");
+  expect(textures.find((t) => t.name === "color.msaa")).toMatchObject({
+    format: "rgba16float",
+    multisampled: true,
+  });
+  expect(readPipelineFigures()).toMatchObject({
+    drawRecordBytes: expect.any(Number),
+    shadowCascades: expect.any(Number),
+  });
+});
+
+it("reports where the pipeline's notes no longer match the code", () => {
+  const graph = { passes: [{ name: "cull" }, { name: "new-pass" }] };
+  const drift = pipelineDrift(graph, {
+    PASSES: { cull: {}, "gone-pass": {} },
+    SEAMS: [
+      {
+        id: "S1",
+        guards: [{ file: "test/seams.test.ts", title: "no such test" }],
+        code: [{ name: "NoSuchName", file: "src/render/layout.ts" }],
+        passes: ["gone-pass"],
+      },
+    ],
+    DECISIONS: [{ id: "D1", passes: ["gone-pass"] }],
+  });
+  expect(drift).toHaveLength(6);
+  expect(drift.join()).toContain('"new-pass" has no note');
+  expect(drift.join()).toContain('no test "no such test"');
 });

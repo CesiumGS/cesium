@@ -38,6 +38,35 @@ export function readBenchResults(root?: string): {
   adapters: { adapter: string; runs: number; [key: string]: unknown }[];
   baselines: { name: string; date: string | null; note: string | null }[];
 };
+export function readFrameGraph(root?: string): {
+  passes: {
+    name: string;
+    reads: string[];
+    writes: string[];
+    sideEffect: boolean;
+  }[];
+  textures: {
+    name: string;
+    imported: boolean;
+    format?: string;
+    multisampled: boolean;
+  }[];
+};
+export function readPipelineFigures(root?: string): Record<string, unknown>;
+export function pipelineDrift(
+  graph: { passes: { name: string }[] },
+  notes: {
+    PASSES: Record<string, unknown>;
+    SEAMS: readonly {
+      id: string;
+      guards: readonly { file: string; title: string }[];
+      code: readonly { name: string; file: string }[];
+      passes: readonly string[];
+    }[];
+    DECISIONS: readonly { id: string; passes: readonly string[] }[];
+  },
+  root?: string,
+): string[];
 export function findSecrets(
   html: string,
   options?: { files?: string[]; home?: string },

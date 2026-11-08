@@ -224,6 +224,7 @@ pre.snippet:focus-visible,
 /* -------------------------------------------------------------- the tables */
 
 .table-wrap {
+  overflow-x: auto;
   margin-block-end: var(--stratakit-space-300);
 }
 .table-wrap td,
@@ -452,6 +453,322 @@ pre.snippet:focus-visible,
   background: var(--series-2);
 }
 
+/* A board: steps on swim lanes, joined by arrows drawn over the grid. */
+.board-wrap {
+  margin-block: var(--stratakit-space-400);
+}
+.board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--lanes), minmax(0, 1fr));
+  column-gap: var(--stratakit-space-800);
+  row-gap: var(--stratakit-space-500);
+  align-items: start;
+}
+.board-lane-head {
+  padding-block-end: var(--stratakit-space-100);
+  border-block-end: 2px solid var(--stratakit-color-border-neutral-base);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.board-card {
+  position: relative;
+  z-index: 1;
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 8px;
+  background: var(--stratakit-color-bg-neutral-base);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.45;
+}
+.board-card.accent {
+  background: var(--stratakit-color-bg-accent-muted);
+  border-color: var(--stratakit-color-border-accent-base);
+}
+.section .board-card h4,
+.board-card h4 {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-md);
+  font-weight: 600;
+}
+.board-card-lane {
+  display: none;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.section .board-flow,
+.board-flow {
+  margin: var(--stratakit-space-100) 0 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.board-edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Tags: a seam or decision named on a figure, which jumps to its entry. */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100);
+  margin-block-start: var(--stratakit-space-100);
+}
+.tag {
+  padding: 0 var(--stratakit-space-150, 6px);
+  min-block-size: 22px;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 4px;
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  font: inherit;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+.tag-seam {
+  border-color: var(--stratakit-color-border-accent-base);
+  color: var(--stratakit-color-text-accent-strong);
+}
+.tag-decision {
+  border-color: var(--stratakit-color-border-attention-base);
+}
+.tag:focus-visible,
+.layer:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+[id^="seam-"],
+[id^="decision-"] {
+  scroll-margin-block: var(--stratakit-space-800);
+}
+[id^="seam-"]:focus,
+[id^="decision-"]:focus {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+
+/* Layers of a dense figure. */
+.layers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  margin-block-end: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.layer {
+  min-block-size: 28px;
+  padding-inline: var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 6px;
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+.layer[aria-pressed="true"] {
+  background: var(--stratakit-color-bg-accent-muted);
+  border-color: var(--stratakit-color-border-accent-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-weight: 600;
+}
+
+/* The frame graph chart: passes down, resources across. */
+.graph-wrap {
+  overflow-x: auto;
+  margin-block-end: var(--stratakit-space-200);
+}
+.graph-wrap:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.graph {
+  border-collapse: collapse;
+  font-size: var(--stratakit-font-size-body-sm);
+  min-inline-size: 100%;
+}
+.graph th,
+.graph td {
+  padding: 0;
+  font-weight: 400;
+}
+.graph thead th {
+  vertical-align: bottom;
+  block-size: 136px;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.graph-col {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  margin-inline: auto;
+  padding-block: var(--stratakit-space-100);
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.graph-col-hand {
+  font-family: inherit;
+}
+.graph .graph-pass {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  min-inline-size: 190px;
+  max-inline-size: 230px;
+  padding: var(--stratakit-space-100) var(--stratakit-space-200)
+    var(--stratakit-space-100) 0;
+  background: var(--stratakit-color-bg-page-base);
+  text-align: start;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.graph-pass-name {
+  font-family: var(--stratakit-font-family-mono);
+  font-weight: 600;
+}
+.graph-pass-kind {
+  margin-inline-start: var(--stratakit-space-150, 6px);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.graph .graph-group {
+  position: sticky;
+  inset-inline-start: 0;
+  padding: var(--stratakit-space-300) 0 var(--stratakit-space-100);
+  font-weight: 600;
+  text-align: start;
+  color: var(--stratakit-color-text-neutral-secondary);
+  background: var(--stratakit-color-bg-page-base);
+}
+.graph-cell {
+  position: relative;
+  inline-size: 27px;
+  min-inline-size: 27px;
+  text-align: center;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.graph-cell.live::before {
+  content: "";
+  position: absolute;
+  inset-block: -1px;
+  inset-inline-start: calc(50% - 1px);
+  inline-size: 2px;
+  background: var(--stratakit-color-border-accent-base);
+}
+.graph-mark {
+  position: relative;
+  display: inline-block;
+  min-inline-size: 20px;
+  block-size: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--stratakit-color-border-accent-base);
+  background: var(--stratakit-color-bg-page-base);
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  line-height: 18px;
+}
+.graph-mark.writes {
+  background: var(--stratakit-color-bg-accent-muted);
+}
+.graph-split {
+  border-inline-start: 2px solid var(--stratakit-color-border-neutral-base);
+}
+
+/* A pass's entry, open or closed. */
+.pass-entry {
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  padding-block: var(--stratakit-space-200);
+  max-inline-size: 80ch;
+}
+.pass-entry summary {
+  cursor: pointer;
+}
+.pass-entry summary:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.pass-entry-name {
+  font-family: var(--stratakit-font-family-mono);
+  font-weight: 600;
+  margin-inline-end: var(--stratakit-space-200);
+}
+.pass-entry dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--stratakit-space-300);
+  row-gap: var(--stratakit-space-100);
+  margin: var(--stratakit-space-200) 0 0;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.pass-entry dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.pass-entry dd {
+  margin: 0;
+}
+
+/* The seams' table. */
+.seams {
+  border-collapse: collapse;
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.45;
+  min-inline-size: 760px;
+}
+.seams th,
+.seams td {
+  padding: var(--stratakit-space-200) var(--stratakit-space-200);
+  vertical-align: top;
+  text-align: start;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.seams thead th {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.seams tbody th {
+  font-weight: 600;
+  min-inline-size: 150px;
+}
+.seam-id {
+  color: var(--stratakit-color-text-accent-strong);
+}
+.seam-passes {
+  margin-block-start: var(--stratakit-space-100);
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.seam-guard + .seam-guard {
+  margin-block-start: var(--stratakit-space-100);
+}
+
+/* A decision. */
+.decisions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--stratakit-space-500);
+  margin-block: var(--stratakit-space-300);
+}
+.decision {
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.5;
+  padding-block-start: var(--stratakit-space-200);
+  border-block-start: 2px solid var(--stratakit-color-border-attention-base);
+}
+.section .decision h3 {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-md);
+}
+.decision dl {
+  margin: 0;
+}
+.decision dt {
+  font-weight: 600;
+  margin-block-start: var(--stratakit-space-100);
+}
+.decision dd {
+  margin: 0;
+}
+
 /* The API list. */
 .api-tools {
   display: flex;
@@ -499,6 +816,24 @@ pre.snippet:focus-visible,
 /* ------------------------------------------------------------ a phone, etc */
 
 @media (max-width: 900px) {
+  .board {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--stratakit-space-300);
+  }
+  .board-lane-head,
+  .board-edges {
+    display: none;
+  }
+  .board-card {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .board-card-lane {
+    display: block;
+  }
+  .decisions {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .shell {
     display: block;
   }
@@ -524,7 +859,7 @@ pre.snippet:focus-visible,
     display: flex;
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 3;
     gap: var(--stratakit-space-100);
     overflow-x: auto;
     padding: var(--stratakit-space-200) var(--stratakit-space-300);
@@ -577,8 +912,14 @@ pre.snippet:focus-visible,
 
 @media print {
   .side,
-  .strip {
+  .strip,
+  .layers,
+  .board-edges {
     display: none;
+  }
+  .tag {
+    border: none;
+    padding: 0;
   }
   .shell {
     display: block;
