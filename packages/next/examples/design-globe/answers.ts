@@ -198,6 +198,12 @@ export interface AnswerSite {
     readonly scale: number;
     readonly geoid: number;
   };
+  /**
+   * The combined factor k at the anchor (grid distance = ground distance ×
+   * k), which rigid ignores: the scale term's cause ("mostly the 0.99991
+   * scale factor rigid ignores").
+   */
+  readonly combinedFactor: number;
   /** The anchor, the farthest point and the model's landmark, in that order. */
   readonly points: readonly AnswerSitePoint[];
   /** Both placements' one tile tree: its tiles, levels, vertices (one placement's) and leaf error (metres). */
@@ -228,8 +234,8 @@ export interface Answers {
   readonly sites: Readonly<Record<string, AnswerSite>>;
 }
 
-/** The version this file reads. */
-export const ANSWERS_VERSION = 1;
+/** The version this file reads: 2 since the scale ladder's `sites` (Task 17b). */
+export const ANSWERS_VERSION = 2;
 
 type Json = Record<string, unknown>;
 
@@ -472,6 +478,7 @@ export function parseAnswers(json: unknown, source = "answers.json"): Answers {
         scale: r.number(terms.scale, `${path}.terms.scale`),
         geoid: r.number(terms.geoid, `${path}.terms.geoid`),
       },
+      combinedFactor: r.number(o.combinedFactor, `${path}.combinedFactor`),
       points: sitePoints.map((pv, i) => {
         const pp = `${path}.points[${i}]`;
         const p = r.object(pv, pp);

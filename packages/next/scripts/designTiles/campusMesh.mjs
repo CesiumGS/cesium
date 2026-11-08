@@ -8,7 +8,7 @@
 //
 // Design units are the CRS's (metres, WGS 84 / UTM zone 37S); the grid runs
 // along design east and north.
-import { between, pick, random, srgb } from "./meshBuilder.mjs";
+import { LAYER_METRES, between, pick, random, srgb } from "./meshBuilder.mjs";
 
 const LAND = srgb("#8e8a55");
 const ROAD = srgb("#3c3e40");
@@ -38,13 +38,21 @@ const GLASS = srgb("#58707f");
 const STOREY = 4;
 const LAB_STOREY = 5.2;
 const HOME_STOREY = 3.1;
-const PAINT = 0.1;
+/**
+ * The layer stack (meshBuilder's LAYER_METRES steps): the site plan at 0;
+ * roads, lawns and the plaza at 1; paths, ponds, the track, courts, car
+ * parks and road paint at 2; the pitch and car-park bays at 3.
+ */
 
-/** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
-export function campusPlan(site) {
+/**
+ * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ * @param {{ metersPerUnit: number }} units
+ */
+export function campusPlan(site, { metersPerUnit }) {
   const m = site.model;
   const rand = random(m.seed);
   const [e0, n0, z0] = site.origin;
+  const layer = (k) => z0 + (k * LAYER_METRES) / metersPerUnit;
   const nE = Math.round(m.width / m.superBlock);
   const nN = Math.round(m.depth / m.superBlock);
   const W = nE * m.superBlock;
@@ -185,13 +193,13 @@ export function campusPlan(site) {
       [e, n0],
       m.road,
       D + m.road,
-      z0 + 0.05,
+      layer(1),
       ROAD,
       `Avenue ${i + 1}`,
       "road",
     );
     for (let n = south + 20; n < south + D - 20; n += 24) {
-      flat([e, n + 4], 0.15, 8, z0 + PAINT, LINE, roadLine, 1);
+      flat([e, n + 4], 0.15, 8, layer(2), LINE, roadLine, 1);
     }
   }
   for (let j = 0; j <= nN; j++) {
@@ -200,13 +208,13 @@ export function campusPlan(site) {
       [e0, n],
       W + m.road,
       m.road,
-      z0 + 0.05,
+      layer(1),
       ROAD,
       `Street ${j + 1}`,
       "road",
     );
     for (let e = west + 20; e < west + W - 20; e += 24) {
-      flat([e + 4, n], 8, 0.15, z0 + PAINT, LINE, roadLine, 1);
+      flat([e + 4, n], 8, 0.15, layer(2), LINE, roadLine, 1);
     }
   }
 
@@ -221,7 +229,7 @@ export function campusPlan(site) {
       const label = `${String.fromCharCode(65 + j)}${i + 1}`;
       const off = (de, dn) => [c[0] + de, c[1] + dn];
       if (i === core[0] && j === core[1]) {
-        ground(c, inner, inner, z0 + 0.05, PLAZA, "Central plaza", "plaza");
+        ground(c, inner, inner, layer(1), PLAZA, "Central plaza", "plaza");
         building(
           off(-150, 120),
           [[0, 0, 50, 40, 14]],
@@ -291,7 +299,7 @@ export function campusPlan(site) {
               -inner / 2 + 20 + (t % 12) * ((inner - 40) / 11),
               t < 12 ? -inner / 2 + 15 : inner / 2 - 15,
             ),
-            z0 + 0.05,
+            layer(1),
           );
         }
         continue;
@@ -313,10 +321,10 @@ export function campusPlan(site) {
         // A lawn crossed by two paths, a ring of halls round it, and a
         // row of long buildings along the superblock's edges.
         const lawn = inner * 0.46;
-        ground(c, lawn, lawn, z0 + 0.05, LAWN, `Quadrangle ${label}`, "lawn");
+        ground(c, lawn, lawn, layer(1), LAWN, `Quadrangle ${label}`, "lawn");
         const paths = { name: `Quadrangle ${label} paths`, kind: "path" };
-        flat(c, lawn, 5, z0 + 0.08, PLAZA, paths, 2);
-        flat(c, 5, lawn, z0 + 0.08, PLAZA, paths, 2);
+        flat(c, lawn, 5, layer(2), PLAZA, paths, 2);
+        flat(c, 5, lawn, layer(2), PLAZA, paths, 2);
         const ring = Math.floor(between(rand, 8, 13));
         for (let k = 0; k < ring; k++) {
           const t = (2 * Math.PI * (k + 0.5)) / ring;
@@ -368,7 +376,7 @@ export function campusPlan(site) {
               between(rand, -0.21, 0.21) * inner,
               between(rand, -0.21, 0.21) * inner,
             ),
-            z0 + 0.05,
+            layer(1),
           );
         }
       } else if (kind === "labs") {
@@ -428,12 +436,12 @@ export function campusPlan(site) {
           );
         }
       } else if (kind === "park") {
-        ground(c, inner, inner, z0 + 0.05, LAWN, `Park ${label}`, "lawn");
+        ground(c, inner, inner, layer(1), LAWN, `Park ${label}`, "lawn");
         ground(
           off(between(rand, -80, 80), between(rand, -80, 80)),
           between(rand, 120, 220),
           between(rand, 80, 140),
-          z0 + 0.1,
+          layer(2),
           WATER,
           `Pond ${label}`,
           "water",
@@ -444,13 +452,13 @@ export function campusPlan(site) {
               between(rand, -0.45, 0.45) * inner,
               between(rand, -0.45, 0.45) * inner,
             ),
-            z0 + 0.1,
+            layer(2),
           );
         }
       } else if (kind === "sports") {
         const fields = { name: `Sports fields ${label}`, kind: "sports" };
-        flat(off(-120, 0), 180, 110, z0 + 0.06, TRACK, fields, 3);
-        flat(off(-120, 0), 105, 68, z0 + 0.08, PITCH, fields, 3);
+        flat(off(-120, 0), 180, 110, layer(2), TRACK, fields, 3);
+        flat(off(-120, 0), 105, 68, layer(3), PITCH, fields, 3);
         building(
           off(-120, 75),
           [[0, 0, 120, 18, 3]],
@@ -462,7 +470,7 @@ export function campusPlan(site) {
             off(150 + (k % 2) * 40, -120 + Math.floor(k / 2) * 45),
             36,
             18,
-            z0 + 0.06,
+            layer(2),
             COURT,
             fields,
             2,
@@ -470,7 +478,7 @@ export function campusPlan(site) {
         }
       } else {
         const bays = { name: `Car park ${label}`, kind: "car park" };
-        flat(c, inner * 0.8, inner * 0.5, z0 + 0.06, ASPHALT, bays, 3);
+        flat(c, inner * 0.8, inner * 0.5, layer(2), ASPHALT, bays, 3);
         for (let r = 0; r < 8; r++) {
           for (let k = 0; k < 40; k++) {
             flat(
@@ -480,7 +488,7 @@ export function campusPlan(site) {
               ),
               0.12,
               5,
-              z0 + PAINT,
+              layer(3),
               LINE,
               bays,
               1,

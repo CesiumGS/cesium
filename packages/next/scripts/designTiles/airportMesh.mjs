@@ -10,7 +10,14 @@
 // Design units are the CRS's (metres, GDA2020 / MGA zone 56). The model's
 // frame: u along the runways, in the direction a "16" runway is flown
 // (`azimuth`, clockwise from grid north), v across, to the left of u.
-import { between, frameAt, placeIn, random, srgb } from "./meshBuilder.mjs";
+import {
+  LAYER_METRES,
+  between,
+  frameAt,
+  placeIn,
+  random,
+  srgb,
+} from "./meshBuilder.mjs";
 
 const GRASS = srgb("#6f8a4e");
 const ASPHALT = srgb("#3a3c3e");
@@ -29,10 +36,17 @@ const CAB = srgb("#2f3d48");
 const LIVERIES = ["#f2f2f0", "#e8e8e4", "#dfe3e8"].map((c) => srgb(c));
 const TAIL = ["#c8312b", "#1f4f8f", "#e07b1a", "#2b2b2b"].map((c) => srgb(c));
 
-/** Paint's height above the pavement, and the pavement's above the grass. */
-const PAVEMENT = 0.05;
-const PAINT = 0.1;
 const SHOULDER_WIDTH = 7.5;
+/**
+ * The layer stack (meshBuilder's LAYER_METRES steps): the grass, then the
+ * shoulders, then the pavement (runways, taxiways, links, exits, apron),
+ * then the paint. Paint never crosses paint of another colour: the yellow
+ * taxiway lines start beyond the runway's shoulder.
+ */
+const GRASS_LAYER = 0;
+const SHOULDER_LAYER = 1;
+const PAVEMENT_LAYER = 2;
+const PAINT_LAYER = 3;
 
 /** A 3 × 5 pixel font for runway designations: rows top to bottom. */
 const GLYPHS = {
@@ -95,14 +109,19 @@ function designationStrokes(text) {
   return strokes;
 }
 
-/** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
-export function airportPlan(site) {
+/**
+ * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ * @param {{ metersPerUnit: number }} units
+ */
+export function airportPlan(site, { metersPerUnit }) {
   const m = site.model;
   const rand = random(m.seed);
   const angle = Math.PI / 2 - m.azimuth;
   const f = frameAt(angle);
   const centre = [site.origin[0], site.origin[1]];
   const z0 = site.origin[2];
+  const layer = (k) => z0 + (k * LAYER_METRES) / metersPerUnit;
+  const zPaint = layer(PAINT_LAYER);
   const spot = (along, across, z) => placeIn(f, centre, along, across, z);
   const at2 = (along, across) => {
     const p = spot(along, across, 0);
@@ -138,7 +157,7 @@ export function airportPlan(site) {
   ) => {
     const at = at2(along, across);
     const draw = (b) =>
-      b.flat(at, z0 + PAINT, len, wid, angle + turn, color, feature);
+      b.flat(at, zPaint, len, wid, angle + turn, color, feature);
     const lods = [{ error: 0, draw }];
     for (let l = 1; l <= Math.min(through, 3); l++) {
       lods.push({ error: 0, draw });
@@ -159,15 +178,23 @@ export function airportPlan(site) {
   const u1 = Math.max(...ends) + 150;
   const v0 = Math.min(...across) - 200;
   const v1 = Math.max(...across) + 200;
-  ground((u0 + u1) / 2, (v0 + v1) / 2, u1 - u0, v1 - v0, z0, GRASS, {
-    name: "Airfield grass",
-    kind: "grass",
-  });
+  ground(
+    (u0 + u1) / 2,
+    (v0 + v1) / 2,
+    u1 - u0,
+    v1 - v0,
+    layer(GRASS_LAYER),
+    GRASS,
+    {
+      name: "Airfield grass",
+      kind: "grass",
+    },
+  );
 
   for (const r of m.runways) {
     const label = r.designations.join("/");
     const pavement = { name: `Runway ${label}`, kind: "runway" };
-    const zp = z0 + PAVEMENT;
+    const zp = layer(PAVEMENT_LAYER);
     ground(r.along, r.across, r.length, r.width, zp, ASPHALT, pavement);
     for (const side of [-1, 1]) {
       ground(
@@ -175,7 +202,7 @@ export function airportPlan(site) {
         r.across + (side * (r.width + SHOULDER_WIDTH)) / 2,
         r.length,
         SHOULDER_WIDTH,
-        zp,
+        layer(SHOULDER_LAYER),
         SHOULDER,
         {
           name: `Runway ${label} shoulders`,
@@ -212,7 +239,9 @@ export function airportPlan(site) {
         ASPHALT,
         feature,
       );
-      paint(a, (r.across + tv) / 2, 0.3, linkLength, YELLOW, feature, 1);
+      // Its centreline from beyond the shoulder to the taxiway's.
+      const from = r.across + toward * (r.width / 2 + SHOULDER_WIDTH + 1);
+      paint(a, (from + tv) / 2, 0.3, Math.abs(tv - from), YELLOW, feature, 1);
       // Holding position: two solid and two dashed lines across the link.
       const hold = {
         name: `${label} link ${k + 1} holding position`,
@@ -246,7 +275,23 @@ export function airportPlan(site) {
         kind: "taxiway",
       };
       ground(a, v, length, m.taxiwayWidth, zp, ASPHALT, feature, toward * turn);
-      paint(a, v, length, 0.3, YELLOW, feature, 1, toward * turn);
+      // Its centreline from beyond the shoulder (s from the exit's middle,
+      // toward the taxiway, along its axis) to its end.
+      const sin = Math.sin(Math.PI / 6);
+      const cos = Math.cos(Math.PI / 6);
+      const s0 =
+        (r.width / 2 + SHOULDER_WIDTH + 1 - toward * (v - r.across)) / sin;
+      const sc = (s0 + length / 2) / 2;
+      paint(
+        a + direction * sc * cos,
+        v + toward * sc * sin,
+        length / 2 - s0,
+        0.3,
+        YELLOW,
+        feature,
+        1,
+        toward * turn,
+      );
     }
 
     // The runway's markings, at each end in its reader's frame.
@@ -334,7 +379,7 @@ export function airportPlan(site) {
     m.taxiwayWidth / 2 -
     8;
   const apronLength = m.terminal.length + 500;
-  ground(0, 0, apronLength, 2 * inner, z0 + PAVEMENT, APRON, {
+  ground(0, 0, apronLength, 2 * inner, layer(PAVEMENT_LAYER), APRON, {
     name: "Apron",
     kind: "apron",
   });
@@ -343,7 +388,7 @@ export function airportPlan(site) {
   // taxiways, a jet bridge and a stand at each gate.
   const t = m.terminal;
   const hall = { name: "Terminal", kind: "terminal" };
-  const zp = z0 + PAVEMENT;
+  const zp = layer(PAVEMENT_LAYER);
   const hallDraw = (b) => {
     b.cuboid(spot(0, 0, zp), f, [t.length, t.depth, 22], TERMINAL, hall, {
       topColor: ROOF,
@@ -530,7 +575,7 @@ export function airportPlan(site) {
     grounds,
     landmark: {
       label: `Runway ${first.designations[0]} threshold, on the centreline`,
-      design: spot(first.along - first.length / 2, first.across, z0 + PAINT),
+      design: spot(first.along - first.length / 2, first.across, zPaint),
     },
   };
 }

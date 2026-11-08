@@ -1,6 +1,7 @@
 export interface DesignMesh {
   positions: Float32Array;
-  normals: Float32Array;
+  /** Absent: the reader shades flat (glTF's rule). */
+  normals?: Float32Array;
   indices: Uint32Array;
   featureIds: Uint16Array;
   features: readonly { name: string; kind: string }[];

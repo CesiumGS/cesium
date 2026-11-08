@@ -50,7 +50,10 @@ import {
   corridorFrame,
   sectionSurface,
 } from "../examples/design-globe/corridor.ts";
-import { parseAnswers } from "../examples/design-globe/answers.ts";
+import {
+  ANSWERS_VERSION,
+  parseAnswers,
+} from "../examples/design-globe/answers.ts";
 import {
   PORTFOLIO,
   SITE_BUILDING,
@@ -500,8 +503,9 @@ const writeJson = (path, value) => {
  * (design units) and `children`. Above it a contentless root holds the
  * rigid placement's matrix (rigid) or nothing (reprojected), so tile
  * centres stay small enough for float32. With `reprojectedDir`, the
- * reprojected tileset too. Returns the vertex count (one placement's), the
- * GLB bytes written and the tile count.
+ * reprojected tileset too. `normals: false` leaves NORMAL out (flat-shaded
+ * content: glTF's reader computes the faces' normals). Returns the vertex
+ * count (one placement's), the GLB bytes written and the tile count.
  */
 function writeTilesets({
   top,
@@ -512,6 +516,7 @@ function writeTilesets({
   name,
   color,
   log,
+  normals = true,
 }) {
   const mpu = frame.units.metersPerUnit;
   let vertices = 0;
@@ -560,10 +565,10 @@ function writeTilesets({
     const contents = tileContents(mesh, frame, reprojectedDir !== undefined);
     vertices += mesh.design.length / 3;
     const uri = `tiles/${node.id}.glb`;
-    const glb = (positions, normals) =>
+    const glb = (positions, faceNormals) =>
       writeGlb({
         positions,
-        normals,
+        ...(normals && { normals: faceNormals }),
         indices: mesh.indices,
         featureIds: mesh.featureIds,
         features: mesh.features,
@@ -711,6 +716,7 @@ function siteAnswers(site, frame, placement, plan, tree, written) {
     displayError: points[1].displayError,
     distanceFromAnchor: points[1].distanceFromAnchor,
     terms: rigidErrorTerms(frame, anchor, farthest),
+    combinedFactor: gridFactors(frame, anchor).combinedFactor,
     points,
     tiles: {
       count: written.tiles,
@@ -924,7 +930,7 @@ function corridorAnswers(frame, alignment, placement, frames) {
   };
 
   return {
-    version: VERSION,
+    version: ANSWERS_VERSION,
     instant: DESIGN_TILES_INSTANT,
     anchorStation: ANCHOR_STATION,
     alignment: alignment.name,
@@ -1114,7 +1120,7 @@ export async function ensureDesignTiles(
     const at = performance.now();
     const siteFrame = await loadSite(site);
     const mpu = siteFrame.units.metersPerUnit;
-    const plan = ladderPlan(site);
+    const plan = ladderPlan(site, { metersPerUnit: mpu });
     const tree = ladderTree(plan, {
       leafError: LEAF_ERROR_METRES / mpu,
       metersPerUnit: mpu,
@@ -1129,6 +1135,9 @@ export async function ensureDesignTiles(
       name: `${site.name} (${site.model.kind}, rigid and reprojected)`,
       color: WHITE,
       log: logger,
+      // Flat-shaded throughout: the reader's own face normals, a third of
+      // the bytes saved.
+      normals: false,
     });
     sites[site.id] = siteAnswers(
       site,

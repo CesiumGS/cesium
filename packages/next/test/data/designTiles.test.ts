@@ -899,6 +899,14 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
       const { frame } = loaded.get(site.id)!;
       const terms = rigidErrorTerms(frame, a.anchor, a.points[1].design);
       expect(terms).toEqual(a.terms);
+      expect(a.combinedFactor).toBe(
+        gridFactors(frame, a.anchor).combinedFactor,
+      );
+      // The scale term is the combined factor's, at the edge's distance.
+      expect(terms.scale).toBeCloseTo(
+        a.distanceFromAnchor * Math.abs(1 - 1 / a.combinedFactor),
+        12,
+      );
       const e = a.displayError;
       const predicted = Math.hypot(terms.curvature - terms.geoid, terms.scale);
       expect(Math.abs(e - predicted) / e, site.id).toBeLessThan(0.1);

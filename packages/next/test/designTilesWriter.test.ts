@@ -169,6 +169,38 @@ describe("writeGlb", () => {
     ).toThrow(/\[0, 1\]/);
   });
 
+  it("writes 16-bit indices where every vertex fits, and leaves NORMAL out when not given, which the loader shades flat", async () => {
+    const m = mesh();
+    const bare = writeGlb({ ...m, normals: undefined });
+    const { json } = splitGlb(bare);
+    const primitive = json.meshes[0].primitives[0];
+    expect(primitive.attributes.NORMAL).toBeUndefined();
+    expect(json.accessors[primitive.indices].componentType).toBe(5123);
+    const { asset } = await parseGltf(dataUrl(bare), textures);
+    const out = asset.meshes[0]!;
+    // Unwelded, one vertex a corner, each with its face's normal.
+    expect(out.indices).toHaveLength(m.indices.length);
+    expect(Array.from(out.normals!.subarray(0, 3), (v) => v + 0)).toEqual([
+      0, 1, 0,
+    ]);
+    expect(Array.from(out.featureIds!)).toEqual(
+      Array.from(m.indices, (v) => m.featureIds[v]!),
+    );
+    // From 65,536 vertices, 32-bit.
+    const many = 65_536;
+    const big = writeGlb({
+      ...m,
+      positions: new Float32Array(many * 3).map((_, i) => i % 7),
+      normals: undefined,
+      featureIds: new Uint16Array(many),
+      indices: new Uint32Array([0, 1, many - 1]),
+    });
+    const j = splitGlb(big).json;
+    expect(j.accessors[j.meshes[0].primitives[0].indices].componentType).toBe(
+      5125,
+    );
+  });
+
   it("refuses inconsistent meshes", () => {
     expect(() =>
       writeGlb({ ...mesh(), featureIds: new Uint16Array(3) }),

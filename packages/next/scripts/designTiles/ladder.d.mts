@@ -40,7 +40,10 @@ export interface LadderNode {
 }
 
 /** A portfolio site's model as parts, grounds, a leaf size and a landmark. */
-export function ladderPlan(site: PortfolioSite): LadderPlan;
+export function ladderPlan(
+  site: PortfolioSite,
+  units: { metersPerUnit: number },
+): LadderPlan;
 /** The plan's tile tree (leaves at level 0), with its levels and tile count. */
 export function ladderTree(
   plan: LadderPlan,

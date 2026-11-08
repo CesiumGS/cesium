@@ -36,7 +36,7 @@ function answersJson(): Record<string, unknown> {
     distanceFromAnchor: 12_929.4,
   });
   return {
-    version: 1,
+    version: 2,
     instant: "2026-01-01T00:00:00.000Z",
     anchorStation: 92_021,
     alignment: "Mainline",
@@ -113,6 +113,7 @@ function answersJson(): Record<string, unknown> {
         displayError: 0.371,
         distanceFromAnchor: 1_985.1,
         terms: { curvature: 0.309, scale: 0.13, geoid: -0.02 },
+        combinedFactor: 0.999935,
         points: ["Anchor", "Farthest point", "Runway 16R threshold"].map(
           (label, i) => ({
             label,
@@ -171,11 +172,16 @@ describe("parseAnswers", () => {
       (j) => (j.marker.bodyFixed = [1, 2]),
       "marker.bodyFixed is not 3 numbers",
     ],
-    ["another version", (j) => (j.version = 2), "version is 2"],
+    ["another version", (j) => (j.version = 1), "version is 1"],
     [
       "a site without its three points",
       (j) => j.sites.sydney.points.pop(),
       "sites.sydney.points is not 3 points",
+    ],
+    [
+      "a site without its combined factor",
+      (j) => delete j.sites.sydney.combinedFactor,
+      "sites.sydney.combinedFactor is not a finite number",
     ],
     [
       "a site's term as a string",

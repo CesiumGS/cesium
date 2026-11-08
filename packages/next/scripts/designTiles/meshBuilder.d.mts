@@ -6,6 +6,8 @@ type Feature = { name: string; kind: string };
 
 /** WGS 84's smallest radius of curvature, a(1 − e²), metres: the sag rule's R. */
 export const MIN_RADIUS: number;
+/** The ground layer stack's step, metres (5 cm). */
+export const LAYER_METRES: number;
 /** The sag at the middle of a chord this many metres long (d²/8R), metres. */
 export function edgeSag(metres: number): number;
 /** The longest chord whose sag is at most `errorMetres`, metres. */

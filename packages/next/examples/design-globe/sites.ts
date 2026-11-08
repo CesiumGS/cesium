@@ -153,7 +153,11 @@ export interface PoleLineModel {
 /**
  * A portfolio site's model, by kind, in design units (the CRS's own) and
  * radians. Every one is on one flat design plane at the origin's height, so
- * a rigid placement of it errs about d²/2R at d from its anchor.
+ * a rigid placement of it errs at d from its anchor by the curvature it
+ * ignores (d²/2R, below the plane), the combined scale factor k it ignores
+ * (d·|1 − 1/k|, along it) and the geoid's slope: the scale factor
+ * dominates the small models, the curvature the large ones (the generator's
+ * `answers.sites[id].terms`).
  */
 export type PortfolioModel =
   | BuildingModel

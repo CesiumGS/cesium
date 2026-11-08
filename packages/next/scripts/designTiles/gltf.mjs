@@ -1,10 +1,12 @@
 // A minimal GLB 2.0 writer for the generated design tiles (plan 4b task 13).
-// Plain Node, no dependencies. One mesh, one primitive: POSITION, NORMAL, a
+// Plain Node, no dependencies. One mesh, one primitive: POSITION, NORMAL
+// (optional: without it, glTF's reader shades flat, as these tiles are), a
 // `_FEATURE_ID_0` attribute (EXT_mesh_features) and a property table of each
 // feature's `name` and `kind` (EXT_structural_metadata), so a pick reports
 // the feature's name through `World.feature`. With `colors`, each vertex's
 // linear RGBA as COLOR_0 (normalized unsigned bytes), which glTF multiplies
-// by the material's base colour.
+// by the material's base colour. Indices are 16-bit where every vertex
+// fits, 32-bit otherwise.
 
 const FLOAT = 5126;
 const UNSIGNED_BYTE = 5121;
@@ -20,7 +22,7 @@ const pad4 = (n) => (n + 3) & ~3;
 
 /**
  * @param {{
- *   positions: Float32Array, normals: Float32Array, indices: Uint32Array,
+ *   positions: Float32Array, normals?: Float32Array, indices: Uint32Array,
  *   featureIds: Uint16Array, features: readonly {name: string, kind: string}[],
  *   color: [number, number, number, number], colors?: Float32Array,
  * }} mesh Positions are glTF Y-up. `color` is linear RGBA, and `colors`
@@ -34,7 +36,7 @@ export function writeGlb(mesh) {
     throw new Error("writeGlb: positions must be a non-empty multiple of 3");
   }
   const vertices = positions.length / 3;
-  if (normals.length !== positions.length) {
+  if (normals !== undefined && normals.length !== positions.length) {
     throw new Error("writeGlb: normals must match positions");
   }
   if (featureIds.length !== vertices) {
@@ -120,21 +122,72 @@ export function writeGlb(mesh) {
   const slots = new Uint8Array(vertices * 4);
   const slotView = new DataView(slots.buffer);
   featureIds.forEach((id, i) => slotView.setUint16(i * 4, id, true));
-  const bufferViews = [
-    view(raw(positions), ARRAY_BUFFER),
-    view(raw(normals), ARRAY_BUFFER),
-    view(slots, ARRAY_BUFFER, 4),
-    view(raw(indices), ELEMENT_ARRAY_BUFFER),
-    view(names.values),
-    view(raw(names.offsets)),
-    view(kinds.values),
-    view(raw(kinds.offsets)),
-  ];
-  if (colors !== undefined) {
-    const bytes = Uint8Array.from(colors, (c) => Math.round(c * 255));
-    bufferViews.push(view(bytes, ARRAY_BUFFER, 4));
+  // 65,535 stays free (a strip's restart value in some APIs).
+  const short = vertices <= 65_535;
+  const indexData = short ? Uint16Array.from(indices) : indices;
+  const bufferViews = [];
+  const add = (entry) => bufferViews.push({ buffer: 0, ...entry }) - 1;
+  const positionView = add(view(raw(positions), ARRAY_BUFFER));
+  const normalView =
+    normals !== undefined ? add(view(raw(normals), ARRAY_BUFFER)) : undefined;
+  const idView = add(view(slots, ARRAY_BUFFER, 4));
+  const indexView = add(view(raw(indexData), ELEMENT_ARRAY_BUFFER));
+  const nameValues = add(view(names.values));
+  const nameOffsets = add(view(raw(names.offsets)));
+  const kindValues = add(view(kinds.values));
+  const kindOffsets = add(view(raw(kinds.offsets)));
+  const colorView =
+    colors !== undefined
+      ? add(
+          view(
+            Uint8Array.from(colors, (c) => Math.round(c * 255)),
+            ARRAY_BUFFER,
+            4,
+          ),
+        )
+      : undefined;
+
+  const accessors = [];
+  const accessor = (entry) => accessors.push(entry) - 1;
+  const attributes = {
+    POSITION: accessor({
+      bufferView: positionView,
+      componentType: FLOAT,
+      count: vertices,
+      type: "VEC3",
+      min,
+      max,
+    }),
+  };
+  if (normalView !== undefined) {
+    attributes.NORMAL = accessor({
+      bufferView: normalView,
+      componentType: FLOAT,
+      count: vertices,
+      type: "VEC3",
+    });
   }
-  bufferViews.forEach((v, i) => (bufferViews[i] = { buffer: 0, ...v }));
+  attributes._FEATURE_ID_0 = accessor({
+    bufferView: idView,
+    componentType: UNSIGNED_SHORT,
+    count: vertices,
+    type: "SCALAR",
+  });
+  if (colorView !== undefined) {
+    attributes.COLOR_0 = accessor({
+      bufferView: colorView,
+      componentType: UNSIGNED_BYTE,
+      normalized: true,
+      count: vertices,
+      type: "VEC4",
+    });
+  }
+  const indexAccessor = accessor({
+    bufferView: indexView,
+    componentType: short ? UNSIGNED_SHORT : UNSIGNED_INT,
+    count: indices.length,
+    type: "SCALAR",
+  });
 
   const json = {
     asset: { version: "2.0", generator: "cesium-next design tiles" },
@@ -146,13 +199,8 @@ export function writeGlb(mesh) {
       {
         primitives: [
           {
-            attributes: {
-              POSITION: 0,
-              NORMAL: 1,
-              _FEATURE_ID_0: 2,
-              ...(colors !== undefined && { COLOR_0: 4 }),
-            },
-            indices: 3,
+            attributes,
+            indices: indexAccessor,
             material: 0,
             mode: 4,
             extensions: {
@@ -181,40 +229,7 @@ export function writeGlb(mesh) {
         ...(color[3] < 1 ? { alphaMode: "BLEND" } : {}),
       },
     ],
-    accessors: [
-      {
-        bufferView: 0,
-        componentType: FLOAT,
-        count: vertices,
-        type: "VEC3",
-        min,
-        max,
-      },
-      { bufferView: 1, componentType: FLOAT, count: vertices, type: "VEC3" },
-      {
-        bufferView: 2,
-        componentType: UNSIGNED_SHORT,
-        count: vertices,
-        type: "SCALAR",
-      },
-      {
-        bufferView: 3,
-        componentType: UNSIGNED_INT,
-        count: indices.length,
-        type: "SCALAR",
-      },
-      ...(colors !== undefined
-        ? [
-            {
-              bufferView: 8,
-              componentType: UNSIGNED_BYTE,
-              normalized: true,
-              count: vertices,
-              type: "VEC4",
-            },
-          ]
-        : []),
-    ],
+    accessors,
     bufferViews,
     buffers: [{ byteLength: length }],
     extensions: {
@@ -236,8 +251,8 @@ export function writeGlb(mesh) {
             name: "features",
             count: features.length,
             properties: {
-              name: { values: 4, stringOffsets: 5 },
-              kind: { values: 6, stringOffsets: 7 },
+              name: { values: nameValues, stringOffsets: nameOffsets },
+              kind: { values: kindValues, stringOffsets: kindOffsets },
             },
           },
         ],

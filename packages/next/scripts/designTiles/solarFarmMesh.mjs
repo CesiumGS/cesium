@@ -7,7 +7,7 @@
 //
 // Design units are the CRS's: international feet (EPSG:6405 + 8228). The
 // rows run along design east.
-import { srgb } from "./meshBuilder.mjs";
+import { LAYER_METRES, srgb } from "./meshBuilder.mjs";
 
 const GRAVEL = srgb("#c2ad88");
 const SOIL = srgb("#a88f6c");
@@ -19,8 +19,11 @@ const TRANSFORMER = srgb("#6f7f72");
 const HOUSE = srgb("#c9c2b2");
 const ROOF = srgb("#6b6e70");
 
-/** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
-export function solarFarmPlan(site) {
+/**
+ * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ * @param {{ metersPerUnit: number }} units
+ */
+export function solarFarmPlan(site, { metersPerUnit }) {
   const m = site.model;
   const [e0, n0, z0] = site.origin;
   const E = m.blocksEast * m.blockLength + (m.blocksEast + 1) * m.road;
@@ -56,7 +59,8 @@ export function solarFarmPlan(site) {
         length: m.blockLength,
         width: m.blockWidth,
         angle: 0,
-        z: z0 + 0.1,
+        // One layer (meshBuilder's LAYER_METRES) above the roads' gravel.
+        z: z0 + LAYER_METRES / metersPerUnit,
         color: SOIL,
         feature: { name: `${label} ground`, kind: "ground" },
         lods: [{ error: 0, keep: true }],

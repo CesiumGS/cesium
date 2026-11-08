@@ -8,6 +8,7 @@
 // Design units are the CRS's (metres, for JGD2011 / Japan Plane Rectangular
 // CS IX); the model's `angle` turns the street grid from design east.
 import {
+  LAYER_METRES,
   between,
   frameAt,
   pick,
@@ -35,8 +36,12 @@ const FLOOR = 4.2;
 /** Pavement height above the street (the kerb), and the sidewalk's width. */
 const KERB = 0.15;
 const SIDEWALK = 5;
-/** A painted line's height above the street, so it isn't level with it. */
-const PAINT = 0.03;
+/**
+ * The layer stack (meshBuilder's LAYER_METRES steps): paint one layer above
+ * the street; a park's lawn one layer above its pavement's top.
+ */
+const PAINT_LAYER = 1;
+const LAWN_LAYER = 1;
 
 /**
  * Sides and a roof of its own colour for a box in frame `f`: centre
@@ -142,13 +147,18 @@ function roundTowerPart(f, centre, z0, podium, radius, height, facade, name) {
   };
 }
 
-/** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
-export function blockPlan(site) {
+/**
+ * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ * @param {{ metersPerUnit: number }} units
+ */
+export function blockPlan(site, { metersPerUnit }) {
   const m = site.model;
   const rand = random(m.seed);
   const f = frameAt(m.angle);
   const centre = [site.origin[0], site.origin[1]];
   const z0 = site.origin[2];
+  const step = LAYER_METRES / metersPerUnit;
+  const zPaint = z0 + PAINT_LAYER * step;
   const pitchA = m.blockLength + m.street;
   const pitchX = m.blockWidth + m.street;
   const L = m.blocksAlong * m.blockLength + (m.blocksAlong + 1) * m.street;
@@ -184,7 +194,7 @@ export function blockPlan(site) {
     for (let i = 0; i < m.blocksAlong; i++) {
       const from = -L / 2 + m.street + i * pitchA + 8;
       for (let a = from; a + 6 <= from + m.blockLength - 16; a += 12) {
-        flat(a + 3, across, 6, 0.15, z0 + PAINT, LINE, lines, 0.075);
+        flat(a + 3, across, 6, 0.15, zPaint, LINE, lines, 0.075);
       }
     }
   }
@@ -192,26 +202,35 @@ export function blockPlan(site) {
     for (let j = 0; j < m.blocksAcross; j++) {
       const from = -W / 2 + m.street + j * pitchX + 8;
       for (let c = from; c + 6 <= from + m.blockWidth - 16; c += 12) {
-        flat(along, c + 3, 0.15, 6, z0 + PAINT, LINE, lines, 0.075);
+        flat(along, c + 3, 0.15, 6, zPaint, LINE, lines, 0.075);
       }
     }
   }
-  for (const along of streetsAcross) {
-    for (const across of streetsAlong) {
+  streetsAcross.forEach((along, i) => {
+    streetsAlong.forEach((across, j) => {
       // Stripes 0.45 m wide every 0.9 m across the street, 4 m long, just
       // outside the crossing on each side.
+      // None beyond the outermost streets: the asphalt ends there.
       for (const side of [-1, 1]) {
+        const outsideAlong =
+          (i === 0 && side < 0) || (i === streetsAcross.length - 1 && side > 0);
+        const outsideAcross =
+          (j === 0 && side < 0) || (j === streetsAlong.length - 1 && side > 0);
         const a = along + side * (m.street / 2 + 3);
         for (let s = -m.street / 2 + 1.5; s <= m.street / 2 - 1.5; s += 0.9) {
-          flat(a, across + s, 4, 0.45, z0 + PAINT, LINE, zebra, 0.225);
+          if (!outsideAlong) {
+            flat(a, across + s, 4, 0.45, zPaint, LINE, zebra, 0.225);
+          }
         }
         const c = across + side * (m.street / 2 + 3);
         for (let s = -m.street / 2 + 1.5; s <= m.street / 2 - 1.5; s += 0.9) {
-          flat(along + s, c, 0.45, 4, z0 + PAINT, LINE, zebra, 0.225);
+          if (!outsideAcross) {
+            flat(along + s, c, 0.45, 4, zPaint, LINE, zebra, 0.225);
+          }
         }
       }
-    }
-  }
+    });
+  });
 
   let tallest = { height: 0 };
   for (let i = 0; i < m.blocksAlong; i++) {
@@ -393,14 +412,15 @@ export function blockPlan(site) {
         );
       } else {
         const lawn = { name: `${label} park`, kind: "park" };
-        const lc = placeIn(f, centre, ba, bx, z + 0.05);
+        const zLawn = z + LAWN_LAYER * step;
+        const lc = placeIn(f, centre, ba, bx, zLawn);
         parts.push({
           at: [lc[0], lc[1]],
           lods: [
             {
               error: 0,
               draw: (b) =>
-                b.flat([lc[0], lc[1]], z + 0.05, inL, inW, m.angle, LAWN, lawn),
+                b.flat([lc[0], lc[1]], zLawn, inL, inW, m.angle, LAWN, lawn),
             },
           ],
         });

@@ -29,6 +29,7 @@ import {
   planExtent,
 } from "../scripts/designTiles/ladder.mjs";
 import {
+  LAYER_METRES,
   MIN_RADIUS,
   edgeSag,
   longestEdge,
@@ -96,7 +97,7 @@ function facing(mesh: DesignTileMesh): number {
 const site = (id: string) => PORTFOLIO.find((s) => s.id === id)!;
 const trees = new Map<string, ReturnType<typeof build>>();
 function build(s: PortfolioSite) {
-  const plan = ladderPlan(s);
+  const plan = ladderPlan(s, { metersPerUnit: unit(s) });
   const mpu = unit(s);
   const tree = ladderTree(plan, {
     leafError: LEAF_ERROR_METRES / mpu,
@@ -249,6 +250,174 @@ function cellSides(
   }
   return x < y ? [x, y] : [y, x];
 }
+
+type Flat = { z: number; color: string; xy: [number, number][] };
+
+/** The up-facing triangles of a mesh, with their height and colour. */
+function flats(mesh: DesignTileMesh & { colors: Float32Array }): Flat[] {
+  const out: Flat[] = [];
+  const { design, normals, indices, colors } = mesh;
+  for (let t = 0; t < indices.length; t += 3) {
+    const [a, b, c] = [indices[t]!, indices[t + 1]!, indices[t + 2]!];
+    if (normals[3 * a + 2]! < 0.9999) {
+      continue;
+    }
+    out.push({
+      z: (design[3 * a + 2]! + design[3 * b + 2]! + design[3 * c + 2]!) / 3,
+      color: Array.from(colors.subarray(4 * a, 4 * a + 4)).join(","),
+      xy: [a, b, c].map((i) => [design[3 * i]!, design[3 * i + 1]!]) as [
+        number,
+        number,
+      ][],
+    });
+  }
+  return out;
+}
+
+/**
+ * Whether two triangles overlap by more than `depth` (separating axes: on
+ * every edge normal of either, their projections share more than it), so
+ * touching edges don't count.
+ */
+function overlap(p: [number, number][], q: [number, number][], depth: number) {
+  for (const poly of [p, q]) {
+    for (let i = 0; i < 3; i++) {
+      const [x0, y0] = poly[i]!;
+      const [x1, y1] = poly[(i + 1) % 3]!;
+      const length = Math.hypot(x1 - x0, y1 - y0);
+      const [nx, ny] = [(y0 - y1) / length, (x1 - x0) / length];
+      const span = (r: [number, number][]) => {
+        const d = r.map(([x, y]) => x * nx + y * ny);
+        return [Math.min(...d), Math.max(...d)] as const;
+      };
+      const [a0, a1] = span(p);
+      const [b0, b1] = span(q);
+      if (Math.min(a1, b1) - Math.max(a0, b0) <= depth) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/**
+ * Pairs of up-facing triangles of different colours within `near` of the
+ * same height that overlap (by more than 1 cm): where a renderer z-fights.
+ */
+function coplanarOverlaps(
+  mesh: DesignTileMesh & { colors: Float32Array },
+  near: number,
+  cell: number,
+): string[] {
+  const all = flats(mesh);
+  const grid = new Map<string, number[]>();
+  all.forEach((f, i) => {
+    const xs = f.xy.map((p) => p[0]);
+    const ys = f.xy.map((p) => p[1]);
+    for (
+      let x = Math.floor(Math.min(...xs) / cell);
+      x <= Math.floor(Math.max(...xs) / cell);
+      x++
+    ) {
+      for (
+        let y = Math.floor(Math.min(...ys) / cell);
+        y <= Math.floor(Math.max(...ys) / cell);
+        y++
+      ) {
+        const key = `${x},${y}`;
+        const list = grid.get(key);
+        if (list) {
+          list.push(i);
+        } else {
+          grid.set(key, [i]);
+        }
+      }
+    }
+  });
+  const found: string[] = [];
+  const seen = new Set<string>();
+  for (const list of grid.values()) {
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const [a, b] = [all[list[i]!]!, all[list[j]!]!];
+        if (a.color === b.color || Math.abs(a.z - b.z) >= near) {
+          continue;
+        }
+        const key = `${list[i]},${list[j]}`;
+        if (seen.has(key)) {
+          continue;
+        }
+        seen.add(key);
+        if (overlap(a.xy, b.xy, (0.01 * near) / 0.02)) {
+          found.push(
+            `(${a.xy[0]!.map((v) => v.toFixed(1))}) z ${a.z.toFixed(3)} and ${b.z.toFixed(3)}`,
+          );
+          if (found.length >= 5) {
+            return found;
+          }
+        }
+      }
+    }
+  }
+  return found;
+}
+
+describe("no polygon z-fights another (fix round 1)", () => {
+  it("uses one layer stack of 5 cm", () => {
+    expect(LAYER_METRES).toBe(0.05);
+  });
+
+  for (const [id] of TABLE) {
+    it(`${id}: no two differently coloured up-facing surfaces overlap within 2 cm of one height, at any level`, () => {
+      const s = site(id);
+      const { top, mpu } = built(s);
+      for (const node of nodes(top)) {
+        const mesh = node.mesh();
+        if (mesh === null) {
+          continue;
+        }
+        expect(
+          coplanarOverlaps(mesh, 0.02 / mpu, 25 / mpu),
+          `${id} ${node.id}`,
+        ).toEqual([]);
+      }
+    });
+  }
+
+  it("Tokyo: every zebra crossing lies on the streets' asphalt", () => {
+    const s = site("tokyo");
+    const { plan } = built(s);
+    const streets = plan.grounds.find(
+      (g) => g.lods[0]!.keep && g.z === s.origin[2],
+    )!;
+    const [c, sn] = [Math.cos(streets.angle), Math.sin(streets.angle)];
+    let stripes = 0;
+    for (const mesh of leafMeshes(s)) {
+      const fid = mesh.features.findIndex(
+        (f) => f.name === "Pedestrian crossings",
+      );
+      if (fid < 0) {
+        continue;
+      }
+      for (let i = 0; i < mesh.featureIds.length; i++) {
+        if (mesh.featureIds[i] !== fid) {
+          continue;
+        }
+        stripes++;
+        const de = mesh.design[3 * i]! - streets.at[0];
+        const dn = mesh.design[3 * i + 1]! - streets.at[1];
+        // In the streets' frame, inside their rectangle.
+        expect(Math.abs(c * de + sn * dn)).toBeLessThanOrEqual(
+          streets.length / 2 + 1e-6,
+        );
+        expect(Math.abs(-sn * de + c * dn)).toBeLessThanOrEqual(
+          streets.width / 2 + 1e-6,
+        );
+      }
+    }
+    expect(stripes).toBeGreaterThan(1_000);
+  });
+});
 
 /** Every full-detail feature of a model, by kind. */
 function featuresOf(s: PortfolioSite) {

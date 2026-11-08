@@ -96,9 +96,12 @@ the second audience: every number is there and honest, but quieter.
   ribbon tinting the ground under the corridor by rigid error.
 
 - **The portfolio is a scale ladder to fly through** (owner, 2026-11-07),
-  ordered by size, from a single building (rigid error under 1 mm) through a
-  block, a port, a solar farm, an airport and a campus, to a 30 km utility
-  pole line, and the 50 km corridor (about 31 m). Each site is "every
+  ordered by size, from a single building (rigid error 2.6 mm at its
+  corners, nearly all of it the 0.99991 scale factor rigid ignores) through a
+  block, a port, an airport, a solar farm and a campus, to a 30 km utility
+  pole line (18 m, nearly all of it curvature), and the 50 km corridor
+  (about 31 m). Each rung's error at its edge comes in its parts: curvature
+  (d²/2R), the scale factor rigid ignores, and the geoid's slope. Each site is "every
   country, done right" (its CRS, units, height system and national geoid,
   credited) and tells the story in one line: its extent, its rigid error at
   the edge, and whether rigid is an acceptable approximation there. All of it

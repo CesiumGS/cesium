@@ -19,6 +19,16 @@
  */
 export const MIN_RADIUS = 6_378_137 * (1 - 1 / 298.257223563) ** 2;
 
+/**
+ * The ground layer stack, metres: every flat surface that lies on another
+ * (a road on a site plan, paint on a road) is a whole number of layers
+ * above it, never level with a surface of another colour. Each model
+ * stacks its own grounds: layer 0 the base (grass, site plan, gravel),
+ * then the surfaces on it, then the paint. 5 cm is far above the worst
+ * sag (1 mm at the leaves, 2^l mm at level l) and invisible at any scale.
+ */
+export const LAYER_METRES = 0.05;
+
 /** The sag at the middle of a chord this many metres long (d²/8R), metres. */
 export const edgeSag = (metres) => (metres * metres) / (8 * MIN_RADIUS);
 
@@ -129,7 +139,11 @@ export class MeshBuilder {
 
   /**
    * A triangle, counterclockwise seen from the side it faces; split into
-   * four at its edges' midpoints until every edge is at most `maxEdge`.
+   * four at its edges' midpoints until every edge is at most √3/2 of
+   * `maxEdge`. A face's interior sags up to r²/2R (r its circumradius):
+   * for a quad cell's right triangles that is its diagonal's d²/8R, but up
+   * to 4/3 of the longest edge's for an equilateral one, which the √3/2
+   * makes up.
    */
   triangle(a, b, c, color, feature, normal) {
     const n = normal ?? normalize(cross(sub(b, a), sub(c, a)));
@@ -138,7 +152,7 @@ export class MeshBuilder {
       length(sub(c, b)),
       length(sub(a, c)),
     );
-    if (longest > this.maxEdge) {
+    if (longest > (this.maxEdge * Math.sqrt(3)) / 2) {
       const ab = lerp(a, b, 0.5);
       const bc = lerp(b, c, 0.5);
       const ca = lerp(c, a, 0.5);
@@ -287,16 +301,18 @@ export class MeshBuilder {
     );
   }
 
-  /** A thin wire from p to q: two crossed ribbons `thickness` wide, seen from any side (the material is double-sided). */
+  /**
+   * A thin wire from p to q: one ribbon `thickness` wide, turned 45° about
+   * the wire so it shows from above and from the side (the material is
+   * double-sided).
+   */
   wire(p, q, thickness, color, feature) {
     const u = normalize(sub(q, p));
     let side = cross(u, UP);
     side = length(side) < 1e-6 ? [1, 0, 0] : normalize(side);
     const up = normalize(cross(side, u));
-    for (const across of [side, up]) {
-      const h = scale(across, thickness / 2);
-      this.quad(sub(p, h), sub(q, h), add(q, h), add(p, h), color, feature);
-    }
+    const h = scale(add(side, up), thickness / 2 / Math.SQRT2);
+    this.quad(sub(p, h), sub(q, h), add(q, h), add(p, h), color, feature);
   }
 
   /** A vertical prism of a regular `sides`-gon: centre `at`, from z0 up `height`. */

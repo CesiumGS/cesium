@@ -15,6 +15,7 @@ import {
   PORT_BREAKWATER as BREAKWATER,
 } from "../../examples/design-globe/sites.ts";
 import {
+  LAYER_METRES,
   between,
   frameAt,
   pick,
@@ -60,14 +61,27 @@ const TIER = 2.6;
 const GAUGE = 30;
 const SEA_RAIL = 3;
 
-/** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
-export function portPlan(site) {
+/**
+ * The layer stack (meshBuilder's LAYER_METRES steps) on the deck: the
+ * apron, yard and back strip at layer 0, roads, lots and paint at 1, paint
+ * on a lot at 2.
+ */
+const ROAD_LAYER = 1;
+const PAINT_LAYER = 1;
+const LOT_PAINT_LAYER = 2;
+
+/**
+ * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ * @param {{ metersPerUnit: number }} units
+ */
+export function portPlan(site, { metersPerUnit }) {
   const m = site.model;
   const rand = random(m.seed);
   const f = frameAt(m.angle);
   const centre = [site.origin[0], site.origin[1]];
   const z0 = site.origin[2];
   const zw = z0 - m.deckHeight;
+  const layer = (k) => z0 + (k * LAYER_METRES) / metersPerUnit;
   const L = m.quayLength;
   const H = BREAKWATER + m.basinWidth + m.apronDepth + m.yardDepth + BACK_STRIP;
   // Across positions, from the sea (+v) inward.
@@ -148,7 +162,7 @@ export function portPlan(site) {
     yardBottom - BACK_STRIP + 25,
     L,
     30,
-    z0 + 0.05,
+    layer(ROAD_LAYER),
     ROAD,
     "Port road",
     "road",
@@ -209,7 +223,7 @@ export function portPlan(site) {
             draw: (b) =>
               b.flat(
                 at2(a + len / 2, across),
-                z0 + 0.03,
+                layer(PAINT_LAYER),
                 len,
                 width,
                 m.angle,
@@ -222,7 +236,7 @@ export function portPlan(site) {
             draw: (b) =>
               b.flat(
                 at2(a + len / 2, across),
-                z0 + 0.03,
+                layer(PAINT_LAYER),
                 len,
                 width,
                 m.angle,
@@ -605,7 +619,7 @@ export function portPlan(site) {
         const len = Math.min(200, L / 2 - 50 - a);
         const at = at2(a + len / 2, v + gauge);
         const draw = (b) =>
-          b.flat(at, z0 + 0.05, len, 0.15, m.angle, RAIL, sidings);
+          b.flat(at, layer(PAINT_LAYER), len, 0.15, m.angle, RAIL, sidings);
         parts.push({
           at,
           lods: [
@@ -655,6 +669,179 @@ export function portPlan(site) {
         ],
       });
     }
+  }
+
+  // Behind the rail terminal: an empty-container depot (tall stacks in
+  // runs of four bays), a truck holding lot with its bays and trucks, the
+  // repair workshops and the terminal offices.
+  const depotTop = railTop - 4 * 6 - 25;
+  const depotRows = 4;
+  const depotWidth = depotRows * ROW;
+  for (let band = 0; band < 2; band++) {
+    const bv = depotTop - depotWidth / 2 - band * (depotWidth + 22);
+    for (let i = 0; i < nA; i++) {
+      const ba = -((nA - 1) * pitchA) / 2 + i * pitchA;
+      const feature = {
+        name: `Empty depot ${band + 1}-${i + 1}`,
+        kind: "container stack",
+      };
+      const runs = [];
+      for (let r = 0; r < depotRows; r++) {
+        for (let k = 0; k < 4; k++) {
+          runs.push({
+            a: ba - blockLength / 2 + (k + 0.5) * (blockLength / 4),
+            v: bv - depotWidth / 2 + (r + 0.5) * ROW,
+            tiers: Math.floor(between(rand, 4, 8)),
+            color: pick(rand, CONTAINERS),
+          });
+        }
+      }
+      const top = Math.max(...runs.map((x) => x.tiers));
+      const low = Math.min(...runs.map((x) => x.tiers));
+      parts.push({
+        at: at2(ba, bv),
+        lods: [
+          {
+            error: 0,
+            draw: (b) => {
+              for (const x of runs) {
+                b.cuboid(
+                  spot(x.a, x.v, z0),
+                  f,
+                  [blockLength / 4 - 0.4, ROW - 0.16, x.tiers * TIER],
+                  x.color,
+                  feature,
+                );
+              }
+            },
+          },
+          {
+            // The band as one box at its highest run.
+            error: (top - low) * TIER + ROW,
+            draw: (b) =>
+              b.cuboid(
+                spot(ba, bv, z0),
+                f,
+                [blockLength, depotWidth, top * TIER],
+                runs[0].color,
+                feature,
+              ),
+          },
+        ],
+      });
+    }
+  }
+  const lotV = depotTop - 2 * (depotWidth + 22) - 60;
+  const lotLength = L * 0.45;
+  const lotA = -L / 2 + 60 + lotLength / 2;
+  grounds.push({
+    at: at2(lotA, lotV),
+    length: lotLength,
+    width: 90,
+    angle: m.angle,
+    z: layer(ROAD_LAYER),
+    color: ROAD,
+    feature: { name: "Truck holding lot", kind: "parking" },
+    lods: [{ error: 0, keep: true }],
+  });
+  const bays = { name: "Truck holding lot bays", kind: "parking" };
+  const trucks = { name: "Trucks waiting", kind: "truck" };
+  for (let k = 0; k * 6 < lotLength - 10; k++) {
+    const a = lotA - lotLength / 2 + 5 + k * 6;
+    for (const side of [-1, 1]) {
+      const v = lotV + side * 22;
+      const at = at2(a, v);
+      const line = (b) =>
+        b.flat(
+          at,
+          layer(LOT_PAINT_LAYER),
+          0.15,
+          20,
+          m.angle,
+          BRIDGE_WHITE,
+          bays,
+        );
+      parts.push({
+        at,
+        lods: [
+          { error: 0, draw: line },
+          { error: 0, draw: line },
+          { error: 0.075, draw: null },
+        ],
+      });
+      if (k > 0 && rand() < 0.45) {
+        const ta = a - 3;
+        const color = pick(rand, CONTAINERS);
+        parts.push({
+          at: at2(ta, v),
+          lods: [
+            {
+              error: 0,
+              draw: (b) => {
+                b.cuboid(
+                  spot(ta, v + side * 7.5, z0),
+                  f,
+                  [2.5, 5, 3.2],
+                  CRANE_HOUSE,
+                  trucks,
+                );
+                b.cuboid(
+                  spot(ta, v - side * 2, z0 + 1.2),
+                  f,
+                  [2.5, 12.2, TIER],
+                  color,
+                  trucks,
+                );
+              },
+            },
+            // Dropped: a truck stands 3.8 m.
+            { error: 3.8, draw: null },
+          ],
+        });
+      }
+    }
+  }
+  for (let k = 0; k < 2; k++) {
+    const a = L / 2 - 200 - k * 180;
+    const feature = { name: `Repair workshop ${k + 1}`, kind: "shed" };
+    parts.push({
+      at: at2(a, lotV),
+      lods: [
+        {
+          error: 0,
+          draw: (b) =>
+            b.cuboid(spot(a, lotV, z0), f, [130, 55, 18], SHED, feature, {
+              topColor: SHED_ROOF,
+            }),
+        },
+      ],
+    });
+  }
+  for (let k = 0; k < 3; k++) {
+    const a = 60 + k * 70;
+    const feature = { name: `Terminal office ${k + 1}`, kind: "office" };
+    parts.push({
+      at: at2(a, lotV),
+      lods: [
+        {
+          error: 0,
+          draw: (b) =>
+            b.cuboid(
+              spot(a, lotV, z0),
+              f,
+              [45, 22, 12 + 8 * k],
+              BRIDGE_WHITE,
+              feature,
+              {
+                topColor: SHED_ROOF,
+              },
+            ),
+        },
+      ],
+    });
+  }
+  if (lotV - 45 < yardBottom) {
+    throw new Error("portPlan: the yard is too shallow for its depot and lot");
   }
 
   // The back strip: sheds, the gate's canopy and booths, the office.

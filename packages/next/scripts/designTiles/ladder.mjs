@@ -49,18 +49,23 @@ const PLANS = {
 
 /**
  * A portfolio site's model as parts, grounds, its leaf size, its anchor and
- * its landmark (a named design point for the answers).
+ * its landmark (a named design point for the answers). `metersPerUnit` is
+ * the site's design unit, for the layer stack's metric steps.
  *
  * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
+ * @param {{ metersPerUnit: number }} units
  */
-export function ladderPlan(site) {
+export function ladderPlan(site, units) {
   const plan = PLANS[site.model.kind];
   if (plan === undefined) {
     throw new Error(
       `ladderPlan: ${site.id}: no model of kind ${site.model.kind}`,
     );
   }
-  return plan(site);
+  if (!(units?.metersPerUnit > 0)) {
+    throw new Error(`ladderPlan: ${site.id}: metersPerUnit is not positive`);
+  }
+  return plan(site, units);
 }
 
 /** The lod a part (or ground) uses at a level: the last for every coarser one. */
