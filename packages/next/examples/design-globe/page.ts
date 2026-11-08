@@ -528,11 +528,13 @@ export function siteGridText(
  * doesn't change its digits when its site loads).
  */
 export function lengthText(m: number): string {
-  if (m < 1000) {
+  // The steps where rounding would add a figure: 999.6 m is "1.00 km",
+  // not "1,000 m" (UX review M-k).
+  if (m < 999.5) {
     return `${fixed(m, 0)} m`;
   }
   const km = m / 1000;
-  return `${fixed(km, km >= 100 ? 0 : km >= 10 ? 1 : 2)} km`;
+  return `${fixed(km, km >= 99.95 ? 0 : km >= 9.995 ? 1 : 2)} km`;
 }
 
 /** A rigid error as the panel and HUD say it: "31.6 m", "84 mm", "0.3 mm". */

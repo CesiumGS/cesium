@@ -11,6 +11,7 @@ import {
   cursorReadout,
   designRefusal,
   errorText,
+  lengthText,
   formatParams,
   loadingFor,
   loadingSummary,
@@ -831,5 +832,17 @@ describe("design globe data credits (UX review I3)", () => {
     expect(SITES.map((s) => s.id)).toEqual(
       expect.arrayContaining(["london", "corridor", "site-building"]),
     );
+  });
+});
+
+describe("design globe lengths", () => {
+  it("say three figures, across the unit's steps too (UX review M-k)", () => {
+    expect(lengthText(60)).toBe("60 m");
+    expect(lengthText(999.4)).toBe("999 m");
+    expect(lengthText(999.6)).toBe("1.00 km");
+    expect(lengthText(3_050)).toBe("3.05 km");
+    expect(lengthText(9_996)).toBe("10.0 km");
+    expect(lengthText(30_700)).toBe("30.7 km");
+    expect(lengthText(99_960)).toBe("100 km");
   });
 });
