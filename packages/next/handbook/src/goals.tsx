@@ -388,6 +388,12 @@ const goals = (): readonly Goal[] => [
     today: [
       [
         "built",
+        <>
+          <a href="#/dyno">Dyno</a>, the workbench that runs and reads all this.
+        </>,
+      ],
+      [
+        "built",
         `${count(data.counts.testFiles)} test files, parity suites that run both engines, and a scene catalog with verdicts and FLIP image checks. ${count(data.bench.runs)} benchmark runs are on record here.`,
       ],
       [

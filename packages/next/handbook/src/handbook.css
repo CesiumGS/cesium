@@ -1478,6 +1478,152 @@ span.api-source {
   }
 }
 
+/* Dyno's scene, its space, and the three kinds of control. */
+.dyno-pair,
+.dyno-held,
+.dyno-control {
+  display: grid;
+  gap: var(--stratakit-space-300);
+  margin-block: var(--stratakit-space-300);
+}
+.dyno-pair,
+.dyno-held {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.dyno-pair {
+  align-items: start;
+}
+.dyno-control {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.45;
+}
+.section .dyno-held h3 {
+  margin-block-start: 0;
+}
+.dyno-held ul,
+.dyno-control ul {
+  margin: 0;
+  padding-inline-start: 1.1em;
+}
+.dyno-held li,
+.dyno-control li {
+  margin-block-end: var(--stratakit-space-100);
+}
+.section .dyno-control h4 {
+  margin: 0 0 var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.dyno-control h4 .api-badge {
+  display: block;
+  inline-size: fit-content;
+  margin-block-end: var(--stratakit-space-100);
+}
+.section .dyno-formula {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  margin-block: var(--stratakit-space-300);
+  max-inline-size: none;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.dyno-formula span {
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 6px;
+  font-weight: 600;
+}
+.dyno-slices {
+  border-collapse: collapse;
+  inline-size: 100%;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.dyno-slices th,
+.dyno-slices td {
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  text-align: start;
+  font-weight: 400;
+}
+.dyno-slices thead th {
+  font-weight: 600;
+}
+.dyno-slices tbody th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .dyno-pair,
+  .dyno-held,
+  .dyno-control {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Dyno's views, each with its job and maybe a capture. */
+.dyno-group {
+  margin-block-end: var(--stratakit-space-500);
+}
+.dyno-view {
+  padding-block: var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.section .dyno-view h4 {
+  margin: 0 0 var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-body-lg);
+}
+.section .dyno-view p {
+  margin: 0 0 var(--stratakit-space-200);
+}
+.dyno-view dl {
+  display: grid;
+  grid-template-columns: 7em minmax(0, 1fr);
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+  margin: 0;
+  max-inline-size: 72ch;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.dyno-view dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.dyno-view dd {
+  margin: 0;
+}
+.dyno-shot {
+  margin-block-start: var(--stratakit-space-300);
+}
+.dyno-shot img {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 1000px;
+  block-size: auto;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 6px;
+}
+.dyno-shot .only-dark {
+  display: none;
+}
+[data-_sk-color-scheme="dark"] .dyno-shot .only-dark {
+  display: block;
+}
+[data-_sk-color-scheme="dark"] .dyno-shot .only-light {
+  display: none;
+}
+
+.tab-error {
+  padding-block: var(--stratakit-space-500);
+}
+.tab-error button {
+  padding: var(--stratakit-space-100) var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
 /* The seams' table. */
 .seams {
   border-collapse: collapse;

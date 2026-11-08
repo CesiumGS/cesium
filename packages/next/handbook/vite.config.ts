@@ -4,11 +4,12 @@
 //   npm run handbook        data, typecheck, then the one file to hand out:
 //                           handbook/dist/cesium-2.0-handbook-<date>-<commit>.html
 //   npm run handbook:dev    the same page on a dev server (--port is yours)
+import { execFile } from "node:child_process";
 import { readFileSync, renameSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
-import { findSecrets } from "../scripts/handbookData.mjs";
+import { findSecrets, findUnembeddedImages } from "../scripts/handbookData.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 
@@ -22,7 +23,7 @@ const meta = () =>
 
 /**
  * Moves the built script and styles into the page, stamps it, refuses it if it
- * holds a secret, and names the file for handing out.
+ * holds a secret or needs an image beside it, and names the file for handing out.
  */
 function inlineIntoPage(): Plugin {
   return {
@@ -66,6 +67,15 @@ function inlineIntoPage(): Plugin {
       if (secrets.length > 0) {
         this.error(`the page would hold ${secrets.join(", ")}`);
       }
+      const left = [
+        ...Object.keys(bundle).filter((name) =>
+          /\.(?:webp|png|jpe?g|gif|svg|avif)$/i.test(name),
+        ),
+        ...findUnembeddedImages(html),
+      ];
+      if (left.length > 0) {
+        this.error(`the page would need images beside it: ${left.join(", ")}`);
+      }
       page.source = html;
     },
     writeBundle({ dir = "dist" }) {
@@ -74,6 +84,31 @@ function inlineIntoPage(): Plugin {
       renameSync(join(dir, "index.html"), join(dir, name));
       const mb = statSync(join(dir, name)).size / (1024 * 1024);
       console.log(`handbook: dist/${name}, ${mb.toFixed(2)} MB`);
+    },
+  };
+}
+
+/**
+ * Keeps the generated data current in development. Vite restarts this server
+ * when the data script changes, since this file imports it, so the data is
+ * regenerated at each start and arrives over hot reload.
+ */
+function regenerateData(): Plugin {
+  return {
+    name: "handbook-regenerate-data",
+    apply: "serve",
+    configureServer(server) {
+      execFile(
+        process.execPath,
+        [join(here, "../scripts/handbookData.mjs"), "--no-bundles"],
+        (error) => {
+          if (error) {
+            server.config.logger.error(
+              `handbook: the data didn't regenerate: ${error.message}`,
+            );
+          }
+        },
+      );
     },
   };
 }
@@ -87,7 +122,7 @@ export default defineConfig({
   // No env file reaches this build: the page is for handing out.
   envDir: false,
   publicDir: false,
-  plugins: [inlineIntoPage()],
+  plugins: [inlineIntoPage(), regenerateData()],
   server: { host: "127.0.0.1", strictPort: true },
   build: {
     outDir: "dist",

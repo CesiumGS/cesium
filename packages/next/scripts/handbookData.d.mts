@@ -87,3 +87,13 @@ export function readHistory(root?: string): {
   firstDate: string;
   lastDate: string;
 };
+export function findUnembeddedImages(html: string): string[];
+export function readCatalog(root?: string): {
+  scenes: number;
+  scenarios: { id: string; title: string }[];
+  tiers: { id: string; title: string; scenarios: number; reps: number }[];
+  setups: Record<string, unknown>[];
+  render: Record<string, unknown>;
+  example: Record<string, unknown>;
+  exampleScenario: Record<string, unknown>;
+};

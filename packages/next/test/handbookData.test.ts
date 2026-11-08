@@ -13,12 +13,14 @@ import { join } from "node:path";
 import { expect, it } from "vitest";
 import {
   findSecrets,
+  findUnembeddedImages,
   pipelineDrift,
   readFrameGraph,
   readPipelineFigures,
   parseCheckBundle,
   readBenchResults,
   readLayers,
+  readCatalog,
   readHistory,
   readOneX,
   readSurface,
@@ -360,4 +362,33 @@ it("builds the imagery URLs the comparison says a template covers", () => {
   expect(
     url("https://a.example/wmts?TileMatrix={z}&TileRow={y}&TileCol={x}"),
   ).toBe("https://a.example/wmts?TileMatrix=7&TileRow=5&TileCol=3");
+});
+
+it("finds images the single file refers to and doesn't hold", () => {
+  expect(
+    findUnembeddedImages('<img src="data:image/webp;base64,AAAA">'),
+  ).toEqual([]);
+  expect(
+    findUnembeddedImages('a{background:url("data:image/png;base64,A")}'),
+  ).toEqual([]);
+  expect(findUnembeddedImages('<img src="./shots/a.webp">')).toEqual([
+    "./shots/a.webp",
+  ]);
+  expect(findUnembeddedImages('h("img",{src:"https://x.test/a.png"})')).toEqual(
+    ["https://x.test/a.png"],
+  );
+  expect(findUnembeddedImages("a{background:url(assets/b-1a2b.jpg)}")).toEqual([
+    "assets/b-1a2b.jpg",
+  ]);
+  expect(findUnembeddedImages('const u="./assets/c-1a2b.svg"')).toEqual([
+    "./assets/c-1a2b.svg",
+  ]);
+});
+
+it("shows the catalog's shape and one scene, without its datasets", () => {
+  const catalog = readCatalog();
+  expect(catalog.scenes).toBeGreaterThan(0);
+  expect(catalog.example.id).toBe("osm-philadelphia");
+  expect(catalog.render.msaaSamples).toBeDefined();
+  expect(JSON.stringify(catalog)).not.toMatch(/"asset"|"license"|\$comment/);
 });

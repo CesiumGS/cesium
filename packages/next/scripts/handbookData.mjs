@@ -152,6 +152,56 @@ export function readHistory(root = packageRoot) {
   };
 }
 
+/**
+ * Images the handbook's single file refers to and doesn't hold: anything an
+ * image attribute, style or built asset path names, other than a data URI.
+ */
+export function findUnembeddedImages(html) {
+  const image = String.raw`[^"'()\s]+\.(?:webp|png|jpe?g|gif|svg|avif)`;
+  const patterns = [
+    new RegExp(String.raw`\bsrc(?:Set)?["']?\s*[=:]\s*["'](${image})`, "gi"),
+    new RegExp(String.raw`url\(\s*["']?(${image})`, "gi"),
+    new RegExp(String.raw`["'](\.{0,2}/?assets/${image})["']`, "gi"),
+  ];
+  const found = new Set();
+  for (const pattern of patterns) {
+    for (const match of html.matchAll(pattern)) {
+      if (!match[1].startsWith("data:")) {
+        found.add(match[1]);
+      }
+    }
+  }
+  return [...found];
+}
+
+/**
+ * What the Dyno tab shows of the public catalog: its shape and one scene.
+ * Dataset entries stay out: the page needs no asset IDs or licence notes.
+ */
+export function readCatalog(root = packageRoot) {
+  const catalog = JSON.parse(
+    readFileSync(join(root, "bench/suite/catalog/public.json"), "utf8"),
+  );
+  const drop = (entry) =>
+    Object.fromEntries(
+      Object.entries(entry).filter(([key]) => key !== "$comment"),
+    );
+  return {
+    scenes: catalog.scenes.length,
+    scenarios: catalog.scenarios.map((c) => ({ id: c.id, title: c.title })),
+    tiers: catalog.tiers.map(({ id, title, scenarios, reps }) => ({
+      id,
+      title,
+      scenarios: scenarios.length,
+      reps,
+    })),
+    setups: catalog.setups.map(drop),
+    render: drop(catalog.render),
+    example: drop(catalog.scenes.find((c) => c.id === "osm-philadelphia")),
+    exampleScenario: drop(catalog.scenarios.find((c) => c.id === "cold-orbit")),
+  };
+}
+
 /** The declarations the layer table is made of, by name, in the test. */
 const TEST_DECLARATIONS = [
   "TIME_FILES",
@@ -974,6 +1024,7 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
     bench: readBenchResults(root),
     counts: readCounts(root),
     history: readHistory(root),
+    catalog: readCatalog(root),
   };
   if (!data.bundles) {
     throw new Error("--no-bundles needs an earlier full run to keep from");

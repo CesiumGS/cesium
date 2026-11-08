@@ -132,6 +132,15 @@ export interface HandbookData {
     baselines: { name: string; date: string | null; note: string | null }[];
   };
   counts: { testFiles: number; slangFiles: number; examples: number };
+  catalog: {
+    scenes: number;
+    scenarios: { id: string; title: string }[];
+    tiers: { id: string; title: string; scenarios: number; reps: number }[];
+    setups: Record<string, unknown>[];
+    render: Record<string, unknown>;
+    example: Record<string, unknown>;
+    exampleScenario: Record<string, unknown>;
+  };
   history: {
     commits: number;
     withAgent: number;

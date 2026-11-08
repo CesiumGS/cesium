@@ -116,9 +116,9 @@ export function Benchmarks() {
       lede={
         <>
           Two kinds of runs feed this tab: the engine suites in{" "}
-          <C>bench/results</C>, and Dyno's scene catalog, which runs real
-          content in 1.x and 2.0 side by side. Each result records its GPU, so
-          numbers from different machines never mix.
+          <C>bench/results</C>, and <a href="#/dyno">Dyno</a>'s scene catalog,
+          which runs real content in 1.x and 2.0 side by side. Each result
+          records its GPU, so numbers from different machines never mix.
         </>
       }
     >

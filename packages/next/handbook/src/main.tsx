@@ -11,6 +11,8 @@ import {
   useLayoutEffect,
   useState,
   type ComponentType,
+  Component,
+  type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
 import { data, day } from "./data.ts";
@@ -21,6 +23,7 @@ import { Cameras } from "./tabs/cameras.tsx";
 import { Compatibility } from "./tabs/compatibility.tsx";
 import { Compare } from "./tabs/compare.tsx";
 import { Differences } from "./tabs/differences.tsx";
+import { Dyno } from "./tabs/dyno.tsx";
 import { Frames } from "./tabs/frames.tsx";
 import { Ion } from "./tabs/ion.tsx";
 import { Overview } from "./tabs/overview.tsx";
@@ -54,6 +57,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
     title: "Evidence and proposals",
     tabs: [
       { id: "benchmarks", label: "Benchmarks", view: Benchmarks },
+      { id: "dyno", label: "Dyno", view: Dyno },
       { id: "browsers", label: "Browser compatibility", view: Compatibility },
       { id: "specs", label: "Spec extensions", view: Specs },
     ],
@@ -133,6 +137,41 @@ function useScheme(): [Scheme, () => void] {
   ];
 }
 
+/** One tab's failure stays in that tab, and the rest of the handbook works. */
+class TabBoundary extends Component<
+  { label: string; children: ReactNode },
+  { error?: Error }
+> {
+  override state: { error?: Error } = {};
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  override render() {
+    const { error } = this.state;
+    if (!error) {
+      return this.props.children;
+    }
+    return (
+      <div className="tab-error" role="alert">
+        <h1>{this.props.label} couldn't draw</h1>
+        <p>
+          The other tabs still work. If this page is being edited, it may just
+          be waiting for new data.
+        </p>
+        <p className="provenance">{error.message}</p>
+        <button
+          type="button"
+          onClick={() => this.setState({ error: undefined })}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+}
+
 function App() {
   const tab = useTab();
   const [scheme, toggle] = useScheme();
@@ -205,7 +244,9 @@ function App() {
           ))}
         </nav>
         <main className="main">
-          <View />
+          <TabBoundary key={tab.id} label={tab.label}>
+            <View />
+          </TabBoundary>
           <footer className="stamp">
             <p>
               Built {day(data.meta.generatedAt)} from commit {data.meta.commit}
