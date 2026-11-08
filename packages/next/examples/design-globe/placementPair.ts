@@ -71,6 +71,8 @@ export interface PairOptions {
    * corridor's, along its alignment).
    */
   readonly whiskers?: { readonly spacing: number; readonly scale: number };
+  /** Called when something on the globe changed (the page's frame driver wakes). */
+  readonly wake?: () => void;
 }
 
 /** What the pair draws. */
@@ -381,15 +383,35 @@ export function creaseEdges(
   positions: Float32Array,
   indices: Uint32Array,
 ): Uint32Array {
-  // Weld: the first vertex at each position (to 1e-4 model units).
+  // Weld: the first vertex at each position (to 1e-4 model units), by a
+  // numeric hash of the quantized position (no per-vertex string), each
+  // bucket checked exactly.
   const weld = new Uint32Array(positions.length / 3);
-  const seen = new Map<string, number>();
+  const buckets = new Map<number, number[]>();
+  const q = (x: number) => Math.round(x * 1e4);
   for (let v = 0; v < weld.length; v++) {
-    const key = `${Math.round(positions[3 * v]! * 1e4)},${Math.round(positions[3 * v + 1]! * 1e4)},${Math.round(positions[3 * v + 2]! * 1e4)}`;
-    const first = seen.get(key);
+    const x = q(positions[3 * v]!);
+    const y = q(positions[3 * v + 1]!);
+    const z = q(positions[3 * v + 2]!);
+    const key =
+      (Math.imul(x, 73_856_093) ^
+        Math.imul(y, 19_349_663) ^
+        Math.imul(z, 83_492_791)) >>>
+      0;
+    const bucket = buckets.get(key);
+    const first = bucket?.find(
+      (u) =>
+        q(positions[3 * u]!) === x &&
+        q(positions[3 * u + 1]!) === y &&
+        q(positions[3 * u + 2]!) === z,
+    );
     weld[v] = first ?? v;
     if (first === undefined) {
-      seen.set(key, v);
+      if (bucket === undefined) {
+        buckets.set(key, [v]);
+      } else {
+        bucket.push(v);
+      }
     }
   }
   const normal = (t: number): [number, number, number] => {
@@ -582,7 +604,7 @@ export class PlacementPair {
     if (structural) {
       this.reapply();
     }
-    this.changed = true;
+    this.markChanged();
   }
 
   /** Re-runs every drawn tile's visibility (both tilesets' callbacks). */
@@ -594,6 +616,11 @@ export class PlacementPair {
     const reprojected = this.reprojected.debugTileColor;
     this.rigid.debugTileColor = rigid;
     this.reprojected.debugTileColor = reprojected;
+  }
+
+  private markChanged(): void {
+    this.changed = true;
+    this.options.wake?.();
   }
 
   /** True once after anything on the globe changed (for on-demand rendering). */
@@ -624,7 +651,7 @@ export class PlacementPair {
     if (role !== solid) {
       // The ghost's own tiles never show; its pair draws for it.
       if (showTile(this.world, tile, false)) {
-        this.changed = true;
+        this.markChanged();
       }
       return undefined;
     }
@@ -636,7 +663,7 @@ export class PlacementPair {
     // not between: a brief hole is more honest than a wrong position.
     const show = !standIn && !(morphing && pair === undefined);
     if (showTile(this.world, tile, show)) {
-      this.changed = true;
+      this.markChanged();
     }
     if (pair !== undefined) {
       this.setMasks(pair, {
@@ -674,7 +701,7 @@ export class PlacementPair {
       set(part.whiskers, m.whiskers, next.whiskers);
     }
     pair.masks = next;
-    this.changed = true;
+    this.markChanged();
   }
 
   /** The pair for a tile of `role`'s tileset, built once both tiles have loaded. */
@@ -883,7 +910,7 @@ export class PlacementPair {
       }
     }
     this.pairs.delete(path);
-    this.changed = true;
+    this.markChanged();
   }
 
   /** Releases pairs whose tiles unloaded (call once a frame). */

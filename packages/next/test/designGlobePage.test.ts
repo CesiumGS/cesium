@@ -30,6 +30,7 @@ import {
 } from "../examples/design-globe/panelModel.ts";
 import { creaseEdges } from "../examples/design-globe/placementPair.ts";
 import { judgePick } from "../examples/design-globe/cursor.ts";
+import { cause } from "../examples/design-globe/siteFacts.ts";
 import type { SiteRuntime } from "../examples/design-globe/siteLoader.ts";
 import type { DesignPick } from "../src/engineering/pick.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
@@ -562,5 +563,20 @@ describe("design globe pick seam (judgePick)", () => {
     });
     expect(r.drawn).toBe("rigid");
     expect(r.hit?.design).toBeDefined();
+  });
+});
+
+describe("design globe error causes", () => {
+  it("names the largest part of a rigid error", () => {
+    expect(cause({ curvature: 0.0001, scale: 0.0026, geoid: 0.0003 })).toBe(
+      ", mostly the scale factor rigid ignores",
+    );
+    expect(cause({ curvature: 18, scale: 2, geoid: -1 })).toBe(
+      ", mostly the Earth's curvature",
+    );
+    expect(cause({ curvature: 0.1, scale: 0.05, geoid: 0.4 })).toBe(
+      ", mostly the geoid's rise from the anchor",
+    );
+    expect(cause(undefined)).toBe("");
   });
 });

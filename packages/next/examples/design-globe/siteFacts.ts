@@ -28,7 +28,35 @@ export interface SiteFactsInput {
    * The generator's answer for a ladder site (answers.json `sites`): its
    * extent and the rigid error at its farthest point, exact.
    */
-  readonly answer?: { readonly extent: number; readonly displayError: number };
+  readonly answer?: {
+    readonly extent: number;
+    readonly displayError: number;
+    /** The error's parts there, metres (answers.ts `AnswerSite.terms`). */
+    readonly terms?: {
+      readonly curvature: number;
+      readonly scale: number;
+      readonly geoid: number;
+    };
+  };
+}
+
+/**
+ * What the rigid error at the edge mostly is, from its parts: ", mostly the
+ * scale factor rigid ignores". Empty without parts.
+ */
+export function cause(
+  terms: { curvature: number; scale: number; geoid: number } | undefined,
+): string {
+  if (terms === undefined) {
+    return "";
+  }
+  const parts: [number, string][] = [
+    [Math.abs(terms.curvature), "the Earth's curvature"],
+    [Math.abs(terms.scale), "the scale factor rigid ignores"],
+    [Math.abs(terms.geoid), "the geoid's rise from the anchor"],
+  ];
+  const [size, name] = parts.reduce((a, b) => (b[0] > a[0] ? b : a));
+  return size > 0 ? `, mostly ${name}` : "";
 }
 
 /** The site's frame and story; no story where its rigid error can't be found. */
@@ -96,6 +124,7 @@ export function siteFacts(input: SiteFactsInput): {
           : `${fixed(extent, 0)} m`
       } ${input.along !== undefined ? "long" : "across"}`,
       edgeError: errorText(edge),
+      cause: cause(input.answer?.terms),
       acceptable: verdict.acceptable,
       verdict: verdict.text,
     },

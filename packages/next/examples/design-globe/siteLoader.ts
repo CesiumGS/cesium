@@ -75,7 +75,7 @@ export interface LoaderDeps {
   /** A site's pair was made (the morph applies its state to it). */
   paired(site: SiteRuntime): void;
   /** A site's whiskers from its pairs, if it gets them that way. */
-  pairOptions(site: SiteRuntime): Pick<PairOptions, "whiskers">;
+  pairOptions(site: SiteRuntime): Pick<PairOptions, "whiskers" | "wake">;
   /** A site's placements are in. */
   placed(site: SiteRuntime, api: ProjApi): void;
   /** Logged without the token (`scrub`). */

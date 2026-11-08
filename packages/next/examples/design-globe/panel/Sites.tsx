@@ -55,7 +55,8 @@ function SiteDetail({ site }: { site: SiteView }) {
       {story !== undefined && (
         <p className={`dg-story${story.acceptable ? " ok" : " bad"}`}>
           <span className="dg-num">
-            {story.extent}; rigid is {story.edgeError} off at its edge.
+            {story.extent}; rigid is {story.edgeError} off at its edge
+            {story.cause}.
           </span>{" "}
           {story.acceptable && <Icon href={svgStatusSuccess} aria-hidden />}
           {story.verdict}

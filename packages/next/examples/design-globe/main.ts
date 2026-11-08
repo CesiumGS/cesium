@@ -22,6 +22,7 @@ import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";
 import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
 import { createCursor, drawnPlacement } from "./cursor.ts";
+import { createFrameDriver } from "./frameDriver.ts";
 import { MorphDriver, type MorphTarget } from "./morphDriver.ts";
 import { hexLinear } from "./colors.ts";
 import {
@@ -188,7 +189,10 @@ export function run(context: ExampleContext): ExampleRun {
           .map((s): MorphTarget | undefined => s.pair)
           .concat(whiskers)
           .filter((x): x is MorphTarget => x !== undefined),
-      requestRender: () => viewer.engine.requestRender(),
+      requestRender: () => {
+        viewer.engine.requestRender();
+        frames.wake();
+      },
       changed: () => {
         cursor.update();
         refresh();
@@ -219,6 +223,7 @@ export function run(context: ExampleContext): ExampleRun {
   });
 
   const camera = new CameraMoves(viewer, () => {
+    frames.wake();
     if (!camera.flying && shots.alongStation() !== undefined) {
       shots.endAlong();
     }
@@ -252,8 +257,9 @@ export function run(context: ExampleContext): ExampleRun {
     // it, coloured against its largest rigid error.
     pairOptions: (site) =>
       site === corridor
-        ? {}
+        ? { wake: () => frames.wake() }
         : {
+            wake: () => frames.wake(),
             whiskers: {
               spacing: Math.max(2, site.entry.extent / 12),
               scale:
@@ -340,46 +346,64 @@ export function run(context: ExampleContext): ExampleRun {
     ]);
     ring?.dispose();
     ring = new AnchorRing(viewer.world, anchorPoint, 30);
+    placeAnchorLabel();
     morph.apply();
   }
 
   // ----------------------------------------------------- the frame loop
-  let frame = 0;
+  // Only while something changes (frameDriver.ts): a settled page requests
+  // no frames, so on-demand rendering idles.
   let lastCamera = -1;
-  let lastPickCamera = -1;
-  const tick = () => {
-    if (disposed) {
+  const frames = createFrameDriver({
+    request: (cb) => requestAnimationFrame(cb),
+    cancel: (h) => cancelAnimationFrame(h),
+    step() {
+      if (disposed) {
+        return false;
+      }
+      let busy = false;
+      for (const site of sites.values()) {
+        site.pair?.sweep();
+        if (site.pair?.takeChanged()) {
+          viewer.engine.requestRender();
+          busy = true;
+        }
+      }
+      const cam = viewer.view.camera;
+      if (cam.version !== lastCamera) {
+        lastCamera = cam.version;
+        busy = true;
+        // What was under the cursor no longer is.
+        cursor.cameraMoved();
+        placeAnchorLabel();
+      }
+      return busy || camera.flying || morph.morphing;
+    },
+  });
+  scope.defer(() => frames.dispose());
+  const wake = () => frames.wake();
+  // The user takes the camera (the controller's input), or the view resizes.
+  for (const type of ["pointerdown", "pointermove", "wheel", "keydown"]) {
+    viewer.canvas.addEventListener(type, wake, { signal, passive: true });
+  }
+  window.addEventListener("resize", wake, { signal });
+
+  /** The anchor's label: in front of the camera, above its horizon and near. */
+  function placeAnchorLabel(): void {
+    if (anchorPoint === undefined) {
       return;
     }
-    for (const site of sites.values()) {
-      site.pair?.sweep();
-      if (site.pair?.takeChanged()) {
-        viewer.engine.requestRender();
-      }
-    }
     const cam = viewer.view.camera;
-    if (cam.version !== lastPickCamera) {
-      lastPickCamera = cam.version;
-      cursor.cameraMoved();
-    }
-    // The anchor's label, when the camera moved.
-    if (cam.version !== lastCamera && anchorPoint !== undefined) {
-      lastCamera = cam.version;
-      // Only in front of the camera, above the anchor's horizon and near.
-      const to = [0, 1, 2].map((k) => cam.position[k]! - anchorPoint![k]!);
-      const up = new Float64Array(3);
-      Ellipsoid.WGS84.geodeticSurfaceNormal(anchorPoint, up);
-      const seen =
-        Math.hypot(to[0]!, to[1]!, to[2]!) < 60_000 &&
-        to[0]! * up[0]! + to[1]! * up[1]! + to[2]! * up[2]! > 0;
-      const px = seen ? viewer.view.toPixel(anchorPoint) : undefined;
-      const anchor = px ? { x: px[0]!, y: px[1]! } : undefined;
-      live.set({ ...live.get(), anchor });
-    }
-    frame = requestAnimationFrame(tick);
-  };
-  frame = requestAnimationFrame(tick);
-  scope.defer(() => cancelAnimationFrame(frame));
+    const to = [0, 1, 2].map((k) => cam.position[k]! - anchorPoint![k]!);
+    const up = new Float64Array(3);
+    Ellipsoid.WGS84.geodeticSurfaceNormal(anchorPoint, up);
+    const seen =
+      Math.hypot(to[0]!, to[1]!, to[2]!) < 60_000 &&
+      to[0]! * up[0]! + to[1]! * up[1]! + to[2]! * up[2]! > 0;
+    const px = seen ? viewer.view.toPixel(anchorPoint) : undefined;
+    const anchor = px ? { x: px[0]!, y: px[1]! } : undefined;
+    live.set({ ...live.get(), anchor });
+  }
 
   // ---------------------------------------------------------- the model
   function buildModel(): PanelModel {
@@ -538,6 +562,7 @@ export function run(context: ExampleContext): ExampleRun {
         if (f) {
           camera.cut(f);
           shots.daylight(f.center);
+          frames.wake();
         }
       }
       refresh();

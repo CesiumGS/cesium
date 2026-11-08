@@ -26,6 +26,8 @@ export interface SiteStory {
   readonly extent: string;
   /** The rigid error at the model's farthest point from its anchor. */
   readonly edgeError: string;
+  /** ", mostly the scale factor rigid ignores", or empty. */
+  readonly cause: string;
   readonly acceptable: boolean;
   readonly verdict: string;
 }
