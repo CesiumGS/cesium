@@ -297,6 +297,13 @@ export function createCursor(deps: CursorDeps): Cursor {
       blocked = false;
       generation++;
       set(idle(s.mode));
+    } else if (
+      cursor.coordinates === undefined &&
+      !cursor.muted &&
+      cursor.text !== idle(s.mode).text
+    ) {
+      // Idle, but for the placement drawn before (the pair came in since).
+      set(idle(s.mode));
     }
     if (picking || pending === undefined) {
       return;
