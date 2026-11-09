@@ -10,6 +10,7 @@ import {
   PostStageError,
   SLOT_FORMAT,
   type PostStageBinding,
+  type PostStageImage,
   type PostStageKind,
   type PostStageSlot,
   type PostStageTexture,
@@ -492,9 +493,8 @@ export class ViewChain {
   image(
     device: GPUDevice,
     label: string,
-    { format, image }: PostStageTexture,
+    { width, height, data, format = "rgba8unorm" }: PostStageImage,
   ): GPUTextureView {
-    const { width, height, data } = image!;
     const texture = device.createTexture({
       label,
       size: [width, height],
@@ -856,7 +856,7 @@ function stageTexture(
   const label = `post.${stage.name}.${texture.name}`;
   if (texture.image) {
     return {
-      image: chain.image(device, label, texture),
+      image: chain.image(device, label, texture.image),
       width: texture.image.width,
       height: texture.image.height,
     };
