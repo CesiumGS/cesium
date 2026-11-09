@@ -1,6 +1,7 @@
 // A tileset's tick: select tiles for its views, then casters, then requests,
 // uploads and eviction. The order matters: casters follow view selection, and
 // `receivers` reads other tilesets' `lastSelected`.
+import type { DrawSink, TilesetHost } from "./DrawSink.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { ClipBox } from "../scene/world/types.ts";
 import type { SelectionView, RequestPurpose } from "./Stepwise.ts";
@@ -25,7 +26,6 @@ export interface TilesetUpdate extends Pick<
   Tileset3D,
   | "anchor"
   | "changed"
-  | "engine"
   | "events"
   | "evict"
   | "firstContentAt"
@@ -50,8 +50,9 @@ export interface TilesetUpdate extends Pick<
   | "updateVolumePad"
   | "useOrigin"
   | "warnings"
-  | "world"
 > {
+  readonly world: DrawSink;
+  readonly engine: TilesetHost;
   readonly state: Pick<
     TilesetState,
     | "baseItem"

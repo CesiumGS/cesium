@@ -389,6 +389,149 @@ it("resolves each published name to the file that declares it", () => {
   ]);
   expect(where("src/index.ts", "Engine")).toEqual(["src/scene/Engine.ts"]);
 }, 30_000);
+
+// Layers inside the core (plan section 13.17): content, scene, renderer and
+// GPU. Assigned by file, like the rest. Content must not reach the renderer,
+// the GPU layer or the classes that hold them; the renderer may not reach
+// content's internals.
+type CoreTier = "gpu" | "renderer" | "scene" | "content";
+
+/** Whole classes that give access to both sides. Content uses `DrawSink`. */
+const WHOLES = new Set([
+  "src/scene/World.ts",
+  "src/scene/Engine.ts",
+  "src/scene/RenderContext.ts",
+]);
+
+function tierOf(file: string): CoreTier | undefined {
+  if (file.startsWith("src/gpu/")) {
+    return "gpu";
+  }
+  if (
+    file.startsWith("src/render/") ||
+    file.startsWith("src/shaders/") ||
+    /^src\/atmosphere\/(RealtimeAtmosphere|Sky|AtmosphereReference)\.ts$/.test(
+      file,
+    ) ||
+    file.startsWith("src/lighting/")
+  ) {
+    return "renderer";
+  }
+  if (
+    file.startsWith("src/streaming/") ||
+    file.startsWith("src/globe/") ||
+    file.startsWith("src/tiles/") ||
+    (file.startsWith("src/io/") && layerOf(file) === "core")
+  ) {
+    return "content";
+  }
+  return layerOf(file) === "core" ? "scene" : undefined;
+}
+
+/**
+ * Edges the layers don't allow yet, each with why. A stale entry fails too.
+ */
+const TIER_EXCEPTIONS: Readonly<Record<string, string>> = {
+  // Public signatures, for the API review (5i): `Tileset3D.world`,
+  // `Tileset3D.load`, `Globe.create`.
+  "src/streaming/Tileset3D.ts → src/scene/World.ts": "public signature",
+  "src/streaming/Tileset3D.ts → src/scene/Engine.ts": "public signature",
+  "src/globe/Globe.ts → src/scene/World.ts": "public signature",
+  "src/globe/Globe.ts → src/scene/Engine.ts": "public signature",
+  // Imagery composites on the GPU: rasterizer code that lives with content.
+  "src/globe/GlobeImagery.ts → src/scene/RenderContext.ts":
+    "composites on the GPU",
+  "src/globe/GlobeImagery.ts → src/shaders/generated/imagery.wgsl":
+    "composites on the GPU",
+};
+
+/** The renderer's imports from content (plan section 13.17 wants none). */
+const RENDERER_READS_CONTENT = [
+  "src/render/view/engineRaster.ts → src/globe/ImageryProvider.ts",
+  "src/render/view/engineRaster.ts → src/globe/cityLight.ts",
+  "src/render/view/picks.ts → src/globe/Globe.ts",
+  "src/render/view/viewBlocks.ts → src/globe/cityLight.ts",
+];
+
+/** Each edge from a tier that its rule refuses, as "<from> → <to>". */
+function tierViolations(
+  tier: CoreTier,
+  refuses: (to: string, edge: Edge) => boolean,
+): string[] {
+  const out = new Set<string>();
+  for (const file of files.filter((f) => tierOf(f) === tier)) {
+    for (const edge of edgesOf(file)) {
+      if (refuses(edge.to, edge)) {
+        out.add(`${file} → ${edge.to}`);
+      }
+    }
+  }
+  return [...out];
+}
+
+const contentRefuses = (to: string) =>
+  WHOLES.has(to) || tierOf(to) === "renderer" || tierOf(to) === "gpu";
+
+it("content imports no renderer, GPU types or the classes holding them, but for its named exceptions", () => {
+  const found = tierViolations("content", contentRefuses);
+  expect(found.filter((edge) => !(edge in TIER_EXCEPTIONS))).toEqual([]);
+  // An exception that no longer happens is one to delete.
+  expect(
+    Object.keys(TIER_EXCEPTIONS).filter((edge) => !found.includes(edge)),
+  ).toEqual([]);
+});
+it("refuses a content file that imports the renderer or a whole class", () => {
+  const edges = edgesOfText(
+    "src/streaming/sample.ts",
+    [
+      'import { RECORD_SIZE } from "../render/layout.ts";',
+      'import type { World } from "../scene/World.ts";',
+      'import type { GpuDevice } from "../gpu/GpuDevice.ts";',
+      'import type { DrawHandle } from "../scene/world/types.ts";',
+      'import { Tile } from "./Tile.ts";',
+    ].join("\n"),
+  );
+  expect(
+    edges.filter((edge) => contentRefuses(edge.to)).map((edge) => edge.to),
+  ).toEqual([
+    "src/render/layout.ts",
+    "src/scene/World.ts",
+    "src/gpu/GpuDevice.ts",
+  ]);
+  expect(tierOf("src/streaming/sample.ts")).toBe("content");
+});
+it("content never reads a world's rasterizer data", () => {
+  const reads = files
+    .filter((f) => tierOf(f) === "content")
+    .filter((f) => /\.raster\b/.test(readFileSync(join(root, f), "utf8")));
+  expect(reads).toEqual([]);
+});
+it("the GPU layer imports nothing above it, but for the environment kernel", () =>
+  expect(
+    tierViolations("gpu", (to) => {
+      const tier = tierOf(to);
+      return tier !== undefined && tier !== "gpu";
+    }),
+  ).toEqual(["src/gpu/Environment.ts → src/shaders/generated/ibl.wgsl"]));
+it("the renderer reaches content only where named", () =>
+  // `picks.ts` asks a Globe for its rays; the rest is the city lights' data.
+  expect(
+    tierViolations("renderer", (to) => tierOf(to) === "content").sort(),
+  ).toEqual(RENDERER_READS_CONTENT));
+it("scene data doesn't import rasterizer data", () => {
+  const scenes = ["src/scene/world/worldScene.ts", "src/scene/engineScene.ts"];
+  const rasters = new Set([
+    "src/render/world/worldRaster.ts",
+    "src/render/view/engineRaster.ts",
+  ]);
+  for (const file of scenes) {
+    expect(
+      edgesOf(file)
+        .map((edge) => edge.to)
+        .filter((to) => rasters.has(to)),
+    ).toEqual([]);
+  }
+});
 it("package.json exports the entry points", () =>
   expect(Object.keys(pkg.exports)).toEqual([
     ".",

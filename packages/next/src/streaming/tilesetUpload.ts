@@ -1,11 +1,7 @@
 // Puts a tileset's decoded tiles into its world, within the tick's upload budget.
+import type { DrawSink, TilesetHost } from "./DrawSink.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
-import {
-  RECORD_SIZE,
-  DRAW_ITEM_SIZE,
-  TRANSFORM_SIZE,
-  MaterialFlags,
-} from "../render/layout.ts";
+import { MaterialFlags } from "../scene/contentLimits.ts";
 import { isCapacityError } from "../scene/CapacityError.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
 import { type ModelPlacement, placeModel } from "../scene/gltfModel.ts";
@@ -24,7 +20,6 @@ import type { TilesetState } from "./tilesetState.ts";
 export interface TilesetUpload extends Pick<
   Tileset3D,
   | "anchor"
-  | "engine"
   | "firstContentAt"
   | "markCastsOnly"
   | "resident"
@@ -32,8 +27,9 @@ export interface TilesetUpload extends Pick<
   | "stats"
   | "undrawnTile"
   | "warnings"
-  | "world"
 > {
+  readonly world: DrawSink;
+  readonly engine: TilesetHost;
   readonly state: Pick<
     TilesetState,
     | "baseItem"
@@ -73,15 +69,6 @@ export interface TilesetUpload extends Pick<
   >;
 }
 
-/**
- * Bytes a loaded tile costs besides its content, counted in `Tile.bytes`
- * and so against the byte budget. Per draw: its rows in the world's tables
- * (a draw record, a draw item, five words of indirect arguments, and two
- * transforms: the content root's and the node's), on the GPU and in their
- * CPU copies, about 800 bytes.
- */
-const DRAW_OVERHEAD_BYTES =
-  2 * (RECORD_SIZE + DRAW_ITEM_SIZE + 20 + 2 * TRANSFORM_SIZE);
 /**
  * Per tile: its objects on the heap (the tile, its placement and handles,
  * the map entries that find it), about 2 KB. Without these overheads the
@@ -206,7 +193,7 @@ export function upload(tileset: TilesetUpload): void {
       tile.bytes =
         model.bytes +
         TILE_OVERHEAD_BYTES +
-        placement.draws.length * DRAW_OVERHEAD_BYTES;
+        placement.draws.length * tileset.world.drawOverheadBytes;
       for (const item of tileset.state.itemList) {
         tile.bytes += item.bytes(tile);
       }

@@ -1,12 +1,13 @@
 // A tileset's debug views: tiles colored by depth, and bounding volumes drawn.
+import type { DrawSink } from "./DrawSink.ts";
 import type { Tile } from "./Tile.ts";
-import type { Tileset3D } from "./Tileset3D.ts";
 import { type DebugColor, VOLUME_COLORS } from "./debugVolumes.ts";
 import type { TileVolume } from "./volumes.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
 /** @internal Content side: debug colors and volumes. */
-export interface TilesetDebug extends Pick<Tileset3D, "world"> {
+export interface TilesetDebug {
+  readonly world: DrawSink;
   readonly state: Pick<
     TilesetState,
     | "baseItem"

@@ -28,7 +28,7 @@ import {
   type Region,
 } from "../streaming/volumes.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
-import { CLIP_BOXES } from "../render/layout.ts";
+import { CLIP_BOXES } from "../scene/contentLimits.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import {
   horizonCullingPoint,

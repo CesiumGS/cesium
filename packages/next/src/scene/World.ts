@@ -21,6 +21,7 @@ import {
   CASTER_MASK_WORD,
   VIEW_MASK_WORD,
   ALL_VIEWS,
+  DRAW_OVERHEAD_BYTES,
   MAX_TERRAIN_CLIPS,
   MAX_TERRAIN_CLIP_BLOCKS,
   RecordFlags,
@@ -164,6 +165,8 @@ export class World {
   readonly raster: WorldRaster = new WorldRaster();
   /** @internal Scene data: transforms, anchors, material keys, placements, feature tables. */
   readonly scene: WorldScene = new WorldScene();
+  /** @internal What one draw costs the tables (`DrawSink.drawOverheadBytes`). */
+  readonly drawOverheadBytes = DRAW_OVERHEAD_BYTES;
   /** @internal A custom shader's pipeline is ready: draw with it from now on. */
   readonly shaderReady = () => {
     this.raster.bundle = undefined;

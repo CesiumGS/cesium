@@ -1,5 +1,6 @@
 // Shadow casters' share of a tileset's streaming: their room, their age and
 // their bytes. Casters follow view selection (`casterRoom` reads `viewBytes`).
+import type { DrawSink, TilesetHost } from "./DrawSink.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { SelectionView, CasterRoom } from "./Stepwise.ts";
 import type { Tile } from "./Tile.ts";
@@ -7,10 +8,9 @@ import type { Tileset3D } from "./Tileset3D.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
 /** @internal Content side: casters' share of streaming. */
-export interface TilesetCasters extends Pick<
-  Tileset3D,
-  "anchor" | "engine" | "stats" | "world"
-> {
+export interface TilesetCasters extends Pick<Tileset3D, "anchor" | "stats"> {
+  readonly world: DrawSink;
+  readonly engine: TilesetHost;
   readonly state: Pick<
     TilesetState,
     | "cacheBytes"

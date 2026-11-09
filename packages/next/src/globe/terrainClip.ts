@@ -57,7 +57,7 @@ import {
   CLIP_BLOCK_ROWS,
   MAX_TERRAIN_CLIP_BLOCKS,
   MAX_TERRAIN_CLIPS,
-} from "../render/layout.ts";
+} from "../scene/contentLimits.ts";
 import type { Rectangle } from "./quantizedMesh.ts";
 
 /**

@@ -11,6 +11,18 @@ import {
   TransformLayout,
   ViewLayout,
 } from "./generated/layouts.ts";
+import { CLIP_BOXES } from "../scene/contentLimits.ts";
+export {
+  CLIP_BLOCK_ROWS,
+  CLIP_BOX_FLOATS,
+  CLIP_BOXES,
+  MAX_IMAGERY_LEVELS_UP,
+  MAX_IMAGERY_SLICES,
+  MAX_TERRAIN_CLIP_BLOCKS,
+  MAX_TERRAIN_CLIPS,
+  MaterialFlags,
+  packImagery,
+} from "../scene/contentLimits.ts";
 
 /**
  * Byte layouts shared between TypeScript and the shaders. The structs are
@@ -315,29 +327,11 @@ export const INSTANCE_FIRST_WORD = R.instanceFirst;
 export const INSTANCE_COUNT_WORD = R.instanceCount;
 /** Word offset of a record's instance streams' stride (words). */
 export const INSTANCE_STRIDE_WORD = R.instanceStride;
-/** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
-export const CLIP_BOXES = 8;
-export const CLIP_BOX_FLOATS = 20;
-/** A clip block's vec4 rows (terrain clip regions span whole blocks). */
-export const CLIP_BLOCK_ROWS = (CLIP_BOXES * CLIP_BOX_FLOATS) / 4;
-/**
- * Terrain clip regions a world holds at once: a bit each in a record's
- * `terrainClip`, a row each of the directory in clip block 0
- * (surface.slang `MAX_TERRAIN_CLIPS`).
- */
-export const MAX_TERRAIN_CLIPS = 32;
 /**
  * Anchor slots per view (`World.addAnchor`). Slot 0 is "no anchor" (the
  * transform table's root), so a world holds 31 anchors.
  */
 export const MAX_ANCHORS = 32;
-/**
- * Clip blocks one terrain clip region takes at most (its packed rows,
- * `CLIP_BLOCK_ROWS` a block). All `MAX_TERRAIN_CLIPS` regions at this
- * size take 3,840 blocks, which the world sets aside from its placeholders'
- * (`WorldOptions.maxClipBlocks`).
- */
-export const MAX_TERRAIN_CLIP_BLOCKS = 120;
 
 /**
  * `struct Transform` — 80 bytes: a placement composed in float64 on the CPU
@@ -356,20 +350,6 @@ export const INSTANCE_WORDS = I.size;
 export const NO_RECORD = 0xffffffff;
 /** `Instance.feature` of an instance without its own feature ID. */
 export const NO_FEATURE = 0xffffffff;
-/** Slices an imagery array can address (`packImagery`). */
-export const MAX_IMAGERY_SLICES = 4095;
-/** Levels above a tile its imagery may come from (`packImagery`). */
-export const MAX_IMAGERY_LEVELS_UP = 8;
-
-/**
- * Packs a tile's imagery reference: bits 0-11 the slice + 1, bits 12-15 how
- * many levels up the tile owning the slice is, bits 16-23 and 24-31 this
- * tile's x and y (rows from the south) within it, in this tile's units.
- * An ancestor's slice draws a tile until its own is composited.
- */
-export function packImagery(slice: number, levelsUp = 0, x = 0, y = 0): number {
-  return ((slice + 1) | (levelsUp << 12) | (x << 16) | (y << 24)) >>> 0;
-}
 
 /** Default view mask: drawn in every view. */
 export const ALL_VIEWS = 0xffffffff;
@@ -430,29 +410,6 @@ export const RecordFlags = {
  * distances up to 10^9 m.
  */
 export const UNDERLAY_DEPTH = 2 ** -64;
-
-export const MaterialFlags = {
-  unlit: 1,
-  doubleSided: 2,
-  alphaMask: 4,
-  alphaBlend: 8,
-  baseColorTexture: 16,
-  metallicRoughnessTexture: 32,
-  normalTexture: 64,
-  occlusionTexture: 128,
-  emissiveTexture: 256,
-  /**
-   * Color textures are stored unorm and decoded with pow(c, 2.2) in the shader,
-   * as CesiumJS 1.x does (`czm_srgbToLinear`), instead of by an -srgb format.
-   */
-  gamma22Textures: 512,
-  /**
-   * With `alphaBlend`: none of it is opaque, whatever a fragment's alpha, so
-   * only the translucent passes draw it, not the opaque, depth, prepass,
-   * shadow or height passes (`SceneItem.opacity`). The shaders don't read it.
-   */
-  blendedOnly: 1024,
-} as const;
 
 /** Offsets (in 32-bit words) of each vertex attribute stream in the arena. */
 export interface MeshStreams {
@@ -789,3 +746,12 @@ export function writeMaterial(
   u32[o + M.textures23] = (ref(2) | (ref(3) << 16)) >>> 0;
   u32[o + M.textures4] = (ref(4) | (NO_TEXTURE << 16)) >>> 0;
 }
+
+/**
+ * Bytes one draw costs a world's tables, counted in `Tile.bytes` and so
+ * against a tileset's byte budget: a draw record, a draw item, five words of
+ * indirect arguments and two transforms (the content root's and the node's),
+ * on the GPU and in their CPU copies, about 800 bytes.
+ */
+export const DRAW_OVERHEAD_BYTES =
+  2 * (RECORD_SIZE + DRAW_ITEM_SIZE + 20 + 2 * TRANSFORM_SIZE);

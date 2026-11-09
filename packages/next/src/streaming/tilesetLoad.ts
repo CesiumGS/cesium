@@ -1,4 +1,5 @@
 // Requests a tileset's tiles and decodes them, within the tick's budget.
+import type { TilesetHost } from "./DrawSink.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
 import { type Tile, fetchTilesetJson } from "./Tile.ts";
@@ -10,7 +11,6 @@ import type { TilesetState } from "./tilesetState.ts";
 export interface TilesetLoad extends Pick<
   Tileset3D,
   | "changed"
-  | "engine"
   | "events"
   | "stats"
   | "undrawnReasons"
@@ -18,6 +18,7 @@ export interface TilesetLoad extends Pick<
   | "useOrigin"
   | "warnings"
 > {
+  readonly engine: TilesetHost;
   readonly state: Pick<
     TilesetState,
     | "destroyed"

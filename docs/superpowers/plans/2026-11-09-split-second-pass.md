@@ -40,7 +40,7 @@ The keys say the side: a context with only `scene` is scene data, and one with b
 
 Their member lists are in the code; each says its side in its first line. Functions that pass the whole class on to public API keep taking it: `addGlobeSource`, `addTileset`, `loadTileset`, `addTerrain`, `addEllipsoid`, `frameOf`.
 
-**The content layer's seam (goal 3):** `DrawSink` in `src/streaming/DrawSink.ts`, owned by content and satisfied by `World`: the world methods streaming and the globe call today (`addMesh`, `addDraw`, `removeDraw`, `addTransform`, `setColor`, the clip and imagery setters, `pressure`, `contentRevision` …). `TilesetHost` likewise for what they read of `Engine`. Constants in `render/layout.ts` that content needs move to `src/scene/contentLimits.ts`, and `layout.ts` re-exports them.
+**The content layer's seam (goal 3):** `DrawSink` and `TilesetHost` in `src/streaming/DrawSink.ts`, owned by content and satisfied by `World` and `Engine` as they are. `SliceWorld` and `GlobeImageryWorld` do the same for imagery, as their one method takes a GPU type. Constants in `render/layout.ts` that content needs move to `src/scene/contentLimits.ts`, and `layout.ts` exports them again. A tile's cost in draw rows comes through `DrawSink.drawOverheadBytes`, since it's derived from the generated layouts.
 
 ## Batches
 
@@ -51,7 +51,7 @@ Every commit: both tsc configs, and the tests it changed. Each batch ends with o
 - [x] **3. Engine's state.** `EngineRaster`, `EngineScene`, likewise. Tests: `anchorEyes`, `rerooting`, `shadowCasters`, `meterEmission`, `translucencyGating`. Full suite.
 - [x] **4. Narrow contexts for World and Engine.** Function parameters become the contexts above. Tests: type checks; full suite once.
 - [x] **5. Tileset and Viewer.** `TilesetState`, `ViewerState`, their contexts. `Globe`'s construction order checked: the state is the first field initializer, so it exists before `Tileset3D`'s own and before `Globe`'s. Tests: `casterBudget`, `casterLoop`, `tilesetEviction`, `sceneItems`, viewer tests. Full suite.
-- [ ] **6. Real layers.** `DrawSink`, `TilesetHost`, constants; `test/importBoundary.test.ts` gets content, scene, renderer and GPU layers, with named exceptions that fail when stale. Full suite.
+- [x] **6. Real layers.** `DrawSink`, `TilesetHost`, constants; `test/importBoundary.test.ts` gets content, scene, renderer and GPU layers, with named exceptions that fail when stale. Full suite.
 - [ ] **7. End.** Stale pointers; note for post-processing; `translucency`, `customShader`, `parity`, `alloc`, `imagery` (bench, against main), `checkBundle`, `libraryWidgets`, `surface`, `shaders:check`, eslint, prettier, Snyk.
 
 ## Calls, and what undoing costs

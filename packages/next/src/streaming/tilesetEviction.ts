@@ -1,4 +1,5 @@
 // What a tileset unloads, over its byte budget or a world pool's pressure.
+import type { DrawSink, TilesetHost } from "./DrawSink.ts";
 import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import { accumulate } from "./pipeline.ts";
@@ -7,14 +8,10 @@ import type { TilesetState } from "./tilesetState.ts";
 /** @internal Content side: what's evicted, and when. */
 export interface TilesetEviction extends Pick<
   Tileset3D,
-  | "engine"
-  | "evictForCapacity"
-  | "markCastsOnly"
-  | "resident"
-  | "stats"
-  | "warnings"
-  | "world"
+  "evictForCapacity" | "markCastsOnly" | "resident" | "stats" | "warnings"
 > {
+  readonly world: DrawSink;
+  readonly engine: TilesetHost;
   readonly state: Pick<
     TilesetState,
     | "cacheBytes"

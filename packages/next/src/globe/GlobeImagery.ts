@@ -15,7 +15,6 @@
  *   through the origin's request window and decoded in workers.
  */
 import type { Tile } from "../streaming/Tile.ts";
-import type { World } from "../scene/World.ts";
 import type { RenderContext } from "../scene/RenderContext.ts";
 import type { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import type { WorkerPool } from "../io/WorkerPool.ts";
@@ -24,10 +23,17 @@ import {
   MAX_IMAGERY_LEVELS_UP,
   MAX_IMAGERY_SLICES,
   packImagery,
-} from "../render/layout.ts";
+} from "../scene/contentLimits.ts";
+import type { DrawHandle } from "../scene/world/types.ts";
 import type { ImageryProvider } from "./ImageryProvider.ts";
 import imageryWgsl from "../shaders/generated/imagery.wgsl?raw";
-import { SlicePool, type SliceUser } from "./SlicePool.ts";
+import { SlicePool, type SliceUser, type SliceWorld } from "./SlicePool.ts";
+
+/** What a layer asks of the world it composites for. */
+export interface GlobeImageryWorld extends SliceWorld {
+  setImagery(handle: DrawHandle, packed: number, unlit?: boolean): void;
+  setLights(handle: DrawHandle, packed: number): void;
+}
 
 const WGS84_RADIUS = 6378137;
 /** Web Mercator's latitude limit. */
@@ -178,7 +184,7 @@ export class GlobeImagery implements SliceUser {
 
   constructor(
     private readonly ctx: RenderContext,
-    private readonly world: World,
+    private readonly world: GlobeImageryWorld,
     readonly provider: ImageryProvider,
     private readonly requests: RequestScheduler,
     private readonly workers: WorkerPool,

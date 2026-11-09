@@ -33,7 +33,7 @@ import {
   type SelectionResult,
   type SelectionView,
 } from "./Stepwise.ts";
-import { CLIP_BOXES } from "../render/layout.ts";
+import { CLIP_BOXES } from "../scene/contentLimits.ts";
 import type { Tile, TileViewState } from "./Tile.ts";
 import {
   INSIDE,

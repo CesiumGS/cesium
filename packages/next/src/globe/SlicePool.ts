@@ -1,5 +1,4 @@
-import { MAX_IMAGERY_SLICES } from "../render/layout.ts";
-import type { World } from "../scene/World.ts";
+import { MAX_IMAGERY_SLICES } from "../scene/contentLimits.ts";
 
 /**
  * Growth on need: a layer's slices grow by a step (its first request) when
@@ -42,6 +41,11 @@ export interface SliceUser {
   readonly needed: number;
 }
 
+/** What the pool asks of a world: to bind its array of slices. */
+export interface SliceWorld {
+  setImageryArray(view: GPUTextureView | undefined): void;
+}
+
 /**
  * A world's globe imagery slices: one `texture_2d_array` that every
  * imagery layer of the world composites into (surface imagery and night
@@ -81,7 +85,7 @@ export interface SliceUser {
  * become separate textures named by index without changing its users.
  */
 export class SlicePool {
-  private static readonly pools = new WeakMap<World, SlicePool>();
+  private static readonly pools = new WeakMap<SliceWorld, SlicePool>();
 
   /**
    * The world's pool, created on first use at `size` texels a side, with
@@ -89,7 +93,7 @@ export class SlicePool {
    */
   static acquire(
     device: GPUDevice,
-    world: World,
+    world: SliceWorld,
     size: number,
     slices: number,
     user: SliceUser,
@@ -120,7 +124,7 @@ export class SlicePool {
    * - `warning`: why it stopped growing below the ceiling (out of memory,
    *   or an error scope that didn't resolve).
    */
-  static usage(world: World):
+  static usage(world: SliceWorld):
     | {
         needed: number;
         used: number;
@@ -180,7 +184,7 @@ export class SlicePool {
 
   private constructor(
     private readonly device: GPUDevice,
-    private readonly world: World,
+    private readonly world: SliceWorld,
     readonly size: number,
   ) {
     this.mipLevelCount = Math.log2(size) + 1;

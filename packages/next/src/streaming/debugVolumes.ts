@@ -5,7 +5,7 @@
  * placed under the tileset's transform so a runtime `modelMatrix` moves
  * them with the content.
  */
-import type { World } from "../scene/World.ts";
+import type { DrawSink } from "./DrawSink.ts";
 import type {
   DrawHandle,
   MeshHandle,
@@ -46,7 +46,7 @@ export class DebugVolumes {
   private readonly shown = new Map<Tile, Shown>();
 
   constructor(
-    private readonly world: World,
+    private readonly world: DrawSink,
     private readonly parent: TransformHandle,
   ) {}
 
