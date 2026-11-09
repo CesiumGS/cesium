@@ -5,7 +5,8 @@ Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <sectio
 Sections: dtdb, bias, earth, earthLeap <store>, utc <store> (needs jplephem), ephemeris
 <store> (needs jplephem), moon <store> <frame kernel> (needs spiceypy and jplephem),
 trajectories <store> <frame kernel> (needs spiceypy), geodesic (needs geographiclib only),
-signal <store> <frame kernel> <earth pck> (needs spiceypy), proj <store> (needs pyproj and numpy).
+signal <store> <frame kernel> <earth pck> (needs spiceypy), twoVector <store> [frame kernel] [earth pck]
+(needs spiceypy; ORION_NADIR needs the Earth PCK), proj <store> (needs pyproj and numpy).
 earthLeap reads the store's EOP-All.csv; the others read the NAIF kernels
 `npm run setup` downloaded to <store>. Only their small JSON output is committed.
 """
@@ -423,6 +424,190 @@ def trajectories(store, frame_kernel):
     write("trajectories", {"orion": orion, "moonMe": moon_me, "stations": stations})
 
 
+def two_vector(store, frame_kernel=None, earth_pck=None):
+    """Two-vector reference frames from SPICE (frames 5b, Task 2), defined in the
+    kernel pool with lmpool: ORION_LVLH, ORION_INERTIAL (the same, frozen),
+    EARTH_MOON_ROT, ORION_NADIR (a near-point vector, WGS84 and ITRF93),
+    ORION_BODY (a fixed offset on Orion, 30, 20 and 10 degrees about axes 3, 2
+    and 1) and ORION_LEVEL (a constant in ORION_BODY). Twelve TDB instants,
+    seconds past J2000: ten spread from 60 s after the Artemis data's start to
+    60 s before its end, the closest approach to the Moon, and one hour later.
+    Per frame and instant: the rotation to J2000 (pxform, row-major) and the
+    angular velocity in J2000 (rad/s, from sxform)."""
+    import spiceypy as sp
+
+    store = Path(store)
+    for kernel in ("de440s.bsp", "moon_pa_de440_200625.bpc"):
+        sp.furnsh(str(store / kernel))
+    if frame_kernel:
+        sp.furnsh(str(frame_kernel))
+    # ITRF93 (the near-point frame) needs NAIF's earth_latest_high_prec.bpc;
+    # without it ORION_NADIR is left out.
+    if earth_pck:
+        sp.furnsh(str(earth_pck))
+    for kernel in (ARTEMIS_MAIN, ARTEMIS_GAPFILL, STATIONS):
+        sp.furnsh(str(store / kernel))
+
+    segments = type13_segments(store / ARTEMIS_MAIN) + type13_segments(store / ARTEMIS_GAPFILL)
+    low = min(s[0] for s in segments)
+    high = max(s[1] for s in segments)
+    # 2026-04-04T00:00:00 TDB as seconds past J2000 (2000-01-01T12:00:00 TDB).
+    from datetime import datetime
+
+    freeze = (datetime(2026, 4, 4) - datetime(2000, 1, 1, 12)).total_seconds()
+
+    ids = {
+        "ORION_LVLH": -9124001,
+        "ORION_INERTIAL": -9124002,
+        "EARTH_MOON_ROT": -9124003,
+        "ORION_NADIR": -9124004,
+        "ORION_BODY": -9124010,
+        "ORION_LEVEL": -9124011,
+    }
+    pool = []
+
+    def kv(key, value):
+        pool.append(f"{key} = {value}")
+
+    def head(name, center, cls):
+        i = ids[name]
+        kv(f"FRAME_{name}", i)
+        kv(f"FRAME_{i}_NAME", f"'{name}'")
+        kv(f"FRAME_{i}_CLASS", cls)
+        kv(f"FRAME_{i}_CLASS_ID", i)
+        kv(f"FRAME_{i}_CENTER", center)
+        return i
+
+    def vector(i, which, axis, spec):
+        kv(f"FRAME_{i}_{which}_AXIS", f"'{axis}'")
+        for key, value in spec.items():
+            kv(f"FRAME_{i}_{which}_{key}", value)
+
+    def position(observer, target):
+        return {
+            "VECTOR_DEF": "'OBSERVER_TARGET_POSITION'",
+            "OBSERVER": f"'{observer}'",
+            "TARGET": f"'{target}'",
+            "ABCORR": "'NONE'",
+        }
+
+    def velocity(observer, target):
+        return {
+            "VECTOR_DEF": "'OBSERVER_TARGET_VELOCITY'",
+            "OBSERVER": f"'{observer}'",
+            "TARGET": f"'{target}'",
+            "ABCORR": "'NONE'",
+            "FRAME": "'J2000'",
+        }
+
+    def two_vector_frame(name, center, primary, secondary, freeze_epoch=None):
+        i = head(name, center, 5)
+        kv(f"FRAME_{i}_RELATIVE", "'J2000'")
+        kv(f"FRAME_{i}_DEF_STYLE", "'PARAMETERIZED'")
+        kv(f"FRAME_{i}_FAMILY", "'TWO-VECTOR'")
+        vector(i, "PRI", *primary)
+        vector(i, "SEC", *secondary)
+        if freeze_epoch is not None:
+            kv(f"FRAME_{i}_FREEZE_EPOCH", f"@{freeze_epoch!r}")
+
+    lvlh = (("Z", position("EARTH", "-24")), ("X", velocity("EARTH", "-24")))
+    two_vector_frame("ORION_LVLH", -24, lvlh[0], lvlh[1])
+    two_vector_frame("ORION_INERTIAL", -24, lvlh[0], lvlh[1], 0)
+    two_vector_frame(
+        "EARTH_MOON_ROT",
+        399,
+        ("X", position("EARTH", "MOON")),
+        ("Y", velocity("EARTH", "MOON")),
+    )
+    # The Earth's WGS84 radii and ITRF93 for the near point.
+    kv("BODY399_RADII", "( 6378.137, 6378.137, 6356.7523142 )")
+    kv("OBJECT_EARTH_FRAME", "'ITRF93'")
+    two_vector_frame(
+        "ORION_NADIR",
+        -24,
+        (
+            "-Z",
+            {
+                "VECTOR_DEF": "'TARGET_NEAR_POINT'",
+                "OBSERVER": "'-24'",
+                "TARGET": "'EARTH'",
+                "ABCORR": "'NONE'",
+            },
+        ),
+        lvlh[1],
+    )
+    body = head("ORION_BODY", -24, 4)
+    kv(f"TKFRAME_{body}_RELATIVE", "'J2000'")
+    kv(f"TKFRAME_{body}_SPEC", "'ANGLES'")
+    kv(f"TKFRAME_{body}_UNITS", "'DEGREES'")
+    kv(f"TKFRAME_{body}_AXES", "( 3, 2, 1 )")
+    kv(f"TKFRAME_{body}_ANGLES", "( 30.0, 20.0, 10.0 )")
+    two_vector_frame(
+        "ORION_LEVEL",
+        -24,
+        (
+            "X",
+            {
+                "VECTOR_DEF": "'CONSTANT'",
+                "SPEC": "'RECTANGULAR'",
+                "FRAME": "'ORION_BODY'",
+                "VECTOR": "( 1.0, 0.0, 0.0 )",
+            },
+        ),
+        ("Z", position("EARTH", "-24")),
+    )
+    # lmpool takes lines; FREEZE_EPOCH is TDB seconds past J2000, set apart
+    # because its value is an expression of the instant, not a literal.
+    pool = [
+        line.replace("@0", repr(freeze)) if "FREEZE_EPOCH" in line else line
+        for line in pool
+    ]
+    sp.lmpool(pool)
+
+    # Closest approach to the Moon from a coarse scan, refined twice.
+    def moon_distance(et):
+        position_, _ = sp.spkpos("301", et, "J2000", "NONE", "-24")
+        return float(np.linalg.norm(position_))
+
+    grid = np.linspace(low, high, 2001)
+    best = min(grid, key=moon_distance)
+    step = grid[1] - grid[0]
+    for _ in range(2):
+        fine = np.linspace(best - step, best + step, 201)
+        best = min(fine, key=moon_distance)
+        step = fine[1] - fine[0]
+    spread = list(np.linspace(low + 60.0, high - 60.0, 10))
+    times = [float(t) for t in spread + [best, best + 3600.0]]
+    assert len(times) == 12
+
+    def row(name, et):
+        r = sp.pxform(name, "J2000", et)
+        sx = sp.sxform(name, "J2000", et)
+        dr = np.array([[sx[3 + i][j] for j in range(3)] for i in range(3)])
+        m = dr @ np.array(r).T
+        return {
+            "toJ2000": [float(v) for v in np.array(r).flatten()],
+            "angularVelocity": [
+                float((m[2][1] - m[1][2]) / 2),
+                float((m[0][2] - m[2][0]) / 2),
+                float((m[1][0] - m[0][1]) / 2),
+            ],
+        }
+
+    names = ["ORION_LVLH", "ORION_INERTIAL", "EARTH_MOON_ROT", "ORION_BODY", "ORION_LEVEL"]
+    if earth_pck:
+        names.insert(3, "ORION_NADIR")
+    rows = [{"tdb": et, **{n: row(n, et) for n in names}} for et in times]
+    write(
+        "twoVector",
+        {
+            "freezeTdb": freeze,
+            "orionBodyToJ2000": [float(v) for v in np.array(sp.pxform("ORION_BODY", "J2000", times[0])).flatten()],
+            "rows": rows,
+        },
+    )
+
+
 def geodesic():
     """Geodesic inverse problems from Python's geographiclib (Karney): 40 pairs on WGS84
     (30 seeded random, 4 nearly antipodal at 0.1 and 0.001 degrees, 2 coincident, pole
@@ -677,6 +862,7 @@ SECTIONS = {
     "trajectories": trajectories,
     "geodesic": geodesic,
     "signal": signal,
+    "twoVector": two_vector,
     "proj": proj,
 }
 

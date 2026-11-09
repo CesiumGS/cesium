@@ -32,6 +32,16 @@ export {
   type EarthOrientationSigma,
 } from "./orientationSigma.ts";
 export { rotationPart, toParentMatrix } from "./matrix.ts";
+export {
+  twoVectorFrame,
+  axesAt,
+  TwoVectorFrame,
+  TwoVectorDegenerateError,
+  type Axis,
+  type TwoVectorDefinition,
+  type VectorDefinition,
+} from "./twoVector.ts";
+export { frameVelocity, angularVelocity } from "./motion.ts";
 export { createFrames, type Frames } from "./frames.ts";
 export {
   createFrameCatalog,

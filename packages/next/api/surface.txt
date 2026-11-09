@@ -307,6 +307,7 @@ entry	name	kind	tier
 .	wgslUnit	function	-
 frames	AreaOfInterest	interface	-
 frames	AttachSkyOptions	interface	-
+frames	Axis	type	-
 frames	CatalogFrameName	type	-
 frames	CoordinateOperation	interface	-
 frames	CoordinateRequest	interface	-
@@ -349,7 +350,13 @@ frames	SkyState	interface	-
 frames	StateSegment	interface	-
 frames	Trajectory	class	-
 frames	TrajectoryAccuracy	type	-
+frames	TwoVectorDefinition	interface	-
+frames	TwoVectorDegenerateError	class	-
+frames	TwoVectorFrame	class	-
+frames	VectorDefinition	type	-
+frames	angularVelocity	function	-
 frames	attachSky	function	-
+frames	axesAt	function	-
 frames	celestialToTerrestrial	function	-
 frames	convertPoint	function	-
 frames	createFrameCatalog	function	-
@@ -363,6 +370,7 @@ frames	eastNorthUpFrame	function	-
 frames	frameBias	function	-
 frames	framePoint	function	-
 frames	frameTransform	function	-
+frames	frameVelocity	function	-
 frames	loadFrameData	function	-
 frames	loadFrameRoles	function	-
 frames	parseOem	function	-
@@ -373,6 +381,7 @@ frames	rotationPart	function	-
 frames	routeRevision	function	-
 frames	skyState	function	-
 frames	toParentMatrix	function	-
+frames	twoVectorFrame	function	-
 frames	worldTransformFrame	function	-
 measure	AccuracyStatement	interface	-
 measure	AccuracyTerm	interface	-

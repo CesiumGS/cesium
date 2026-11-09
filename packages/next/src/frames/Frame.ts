@@ -92,6 +92,16 @@ export class Frame<N extends string = string> {
   }
 
   /**
+   * The reference frame this one hangs under at `instant`, for display and
+   * accuracy: `parent` by default. A piecewise reference frame reports its
+   * current piece's parent, while `parent` stays the fixed hub the tree's
+   * routes use.
+   */
+  parentAt(_instant: Instant): Frame | undefined {
+    return this.parent;
+  }
+
+  /**
    * Says the edge changed: bumps `revision` and drops the cached matrix,
    * so the next `toParent` recomputes even at the same instant (also when a
    * subclass overrides `revision`).
