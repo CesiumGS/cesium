@@ -8692,6 +8692,17 @@ Read together, the recent sketches (§13.22, §13.28, §13.29, §13.30, §13.31,
 
 **Accumulation is optional, and off by default (owner).** Accumulating over time is one mechanism with several uses: long shutter, motion blur and other long-shutter effects, progressive refinement when the view is still, and later path tracing support, where the reference tracer is the first step. Each is configurable and off by default, with a stated cost, and turning one on never changes what the default path draws.
 
+**Path tracing as a pluggable renderer (owner, 2026-11-08; to think through).** It sits next to the rasterizing renderer rather than next to WebGPU: §13.17's renderer interface is the same seam a WebGL 2 renderer would use, and a tracer can run on WebGPU compute, since WebGPU has no ray tracing. Loaded as its own chunk, it costs nothing when it's off. What it implies:
+
+- **The contract.** A renderer takes a scene description and a view and gives linear HDR light, with depth, ids and whatever else stages read. The observer turns that into pixels, for either renderer, so exposure and glare match between them.
+- **What must be renderer-neutral:** materials, the media stack, the light list, placements, and scene items. Draw records, culling and pipelines stay inside the rasterizer. Geometry already sits in storage buffers, which a compute tracer can read.
+- **Custom shaders are the hard part.** A surface stage could compile to a callable function; a vertex stage or anything that assumes rasterization can't carry over. A renderer declares what it supports, and an unsupported feature says so, rather than silently dropping.
+- **Streaming.** Secondary rays see what's outside the view, so tile selection can't follow only the camera, as shadow casters already found, and each tile needs a BVH within the budget.
+- **Time and accumulation.** Samples taken across a shutter are natural here, given scene state as a function of time, and rendering becomes progressive: a view reports its samples and restarts when the camera moves. A per-view choice lets one view rasterize beside one that traces, which is also the comparison a reference needs.
+- **Queries.** Picks and heights stay independent of the renderer, through the ray seam.
+
+Don't build the interface until a second renderer needs it: the second pass only keeps scene data and rasterizer data apart, so the seam can open later. Two consumers (a tracer and a WebGL 2 renderer) will shape it better than guessing at one.
+
 **Order.** The second pass of the file split comes first, since its contexts and passes are the seams these plug into: it should be designed with this section open. Then the medium stack, starting from the `sky-measure` results; the observer with §13.22's design; the point pipeline from the star measurements. Settle 1 and 2 before 5e and the API review (5i), since they change public API.
 
 ## 14. Follow-ups
