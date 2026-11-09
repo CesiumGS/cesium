@@ -8,7 +8,7 @@ import {
 } from "@cesium/engine";
 
 /** @import { Cartesian2 } from "@cesium/core"; */
-/** @import { Scene, ScreenSpaceCameraController } from "@cesium/engine"; */
+/** @import { Controller, ControllerHost, Scene, ScreenSpaceCameraController } from "@cesium/engine"; */
 /** @import { MeshEditor as WasmMeshEditor, PickHit, PointerModifiers, SceneInput } from "@cesium/mesh-editor"; */
 /** @import Mesh from "./Mesh.js"; */
 /** @import { OverlayPickObject } from "./OverlayRenderer.js"; */
@@ -53,6 +53,13 @@ class MeshEditorInputHandler {
    */
   #cameraController;
 
+  /**
+   * Its controllers are paused along with the camera controller.
+   *
+   * @type {ControllerHost}
+   */
+  #controllerHost;
+
   /** @type {WasmMeshEditor} */
   #wasmEditor;
 
@@ -71,6 +78,14 @@ class MeshEditorInputHandler {
   #cameraEnableInputs = true;
 
   /**
+   * Each controller's <code>enabled</code> before a drag paused it, restored
+   * when the drag ends.
+   *
+   * @type {Map<Controller, boolean>}
+   */
+  #controllersEnabled = new Map();
+
+  /**
    * @param {object} options
    * @param {Scene} options.scene The scene whose canvas, camera and picking to use.
    * @param {WasmMeshEditor} options.wasmEditor The wasm editor that receives pointer input.
@@ -79,6 +94,7 @@ class MeshEditorInputHandler {
   constructor(options) {
     this.#scene = options.scene;
     this.#cameraController = options.scene.screenSpaceCameraController;
+    this.#controllerHost = options.scene.controllerHost;
     this.#wasmEditor = options.wasmEditor;
     this.#meshes = options.meshes;
 
@@ -270,7 +286,8 @@ class MeshEditorInputHandler {
   }
 
   /**
-   * Stops the camera reacting to the pointer during a drag.
+   * Stops the camera reacting to the pointer during a drag: disables the
+   * camera controller's inputs and the scene's controllers.
    *
    * @ignore
    */
@@ -282,6 +299,10 @@ class MeshEditorInputHandler {
     this.#isCameraPaused = true;
     this.#cameraEnableInputs = this.#cameraController.enableInputs;
     this.#cameraController.enableInputs = false;
+    for (const controller of this.#controllerHost.controllers) {
+      this.#controllersEnabled.set(controller, controller.enabled);
+      controller.enabled = false;
+    }
   }
 
   /**
@@ -296,6 +317,10 @@ class MeshEditorInputHandler {
 
     this.#isCameraPaused = false;
     this.#cameraController.enableInputs = this.#cameraEnableInputs;
+    for (const [controller, enabled] of this.#controllersEnabled) {
+      controller.enabled = enabled;
+    }
+    this.#controllersEnabled.clear();
   }
 
   /**
