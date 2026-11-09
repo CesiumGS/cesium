@@ -50,6 +50,9 @@ const MILESTONES = [
   },
 ];
 
+const CLONE =
+  "git clone --branch cesium-2.0-webgpu-poc https://github.com/CesiumGS/cesium.git";
+
 const QUICK_START = `npm install
 npm run setup --workspace @cesium/next   # once per machine
 npm run dev --workspace @cesium/next     # then open http://127.0.0.1:5190`;
@@ -74,7 +77,16 @@ export function Overview() {
       <Section title="Quick start: run Dyno">
         <p>
           Dyno is the app for measuring and exploring the engine. You need Node
-          24 or later and a browser with WebGPU. From the repository root:
+          24 or later and a browser with WebGPU. The engine is on the{" "}
+          <C>cesium-2.0-webgpu-poc</C> branch of the{" "}
+          <a href="https://github.com/CesiumGS/cesium/tree/cesium-2.0-webgpu-poc">
+            CesiumGS/cesium
+          </a>{" "}
+          repository:
+        </p>
+        <CodeBlock language="shell" code={CLONE} />
+        <p>
+          Then, from the new <C>cesium</C> folder:
         </p>
         <CodeBlock language="shell" code={QUICK_START} />
         <p>
