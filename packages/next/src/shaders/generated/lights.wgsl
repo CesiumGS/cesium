@@ -61,14 +61,18 @@ fn assign(@builtin(workgroup_id) tile_0 : vec3<u32>, @builtin(local_invocation_i
         atomicStore(&(tileCount_0), u32(0));
     }
     workgroupBarrier();
-    var _S30 : u32 = u32(_S5);
+    var _S30 : u32 = min(u32(_S5), u32(1024));
     var l_1 : u32 = k_0;
     loop
     {
-        if((l_1 < _S30))
+        if((l_1 < u32(1024)))
         {
         }
         else
+        {
+            break;
+        }
+        if((l_1 >= _S30))
         {
             break;
         }
@@ -125,21 +129,25 @@ fn assign(@builtin(workgroup_id) tile_0 : vec3<u32>, @builtin(local_invocation_i
     var t_0 : u32 = u32(0);
     loop
     {
-        if((t_0 < _S33))
+        if((t_0 < u32(1024)))
         {
         }
         else
         {
             break;
         }
-        var l_2 : u32 = tileLights_0[t_0];
-        var light_1 : Light_0 = lightAt_0(tileLights_0[t_0]);
+        if((t_0 >= _S33))
+        {
+            break;
+        }
+        var _S36 : u32 = min(tileLights_0[t_0], u32(1023));
+        var light_1 : Light_0 = lightAt_0(_S36);
         var c_1 : vec3<f32> = light_1.position_0.xyz;
         var v_1 : vec3<f32> = vec3<f32>(dot(c_1, vec3<f32>(_S11, _S12, _S13)), dot(c_1, vec3<f32>(_S14, _S15, _S16)), dot(c_1, vec3<f32>(_S8, _S9, _S10)));
         var d_0 : vec3<f32> = v_1 - clamp(v_1, _S34, _S35);
         var d2_0 : f32 = dot(d_0, d_0);
-        var _S36 : f32 = light_1.position_0.w;
-        if((d2_0 > (_S36 * _S36)))
+        var _S37 : f32 = light_1.position_0.w;
+        if((d2_0 > (_S37 * _S37)))
         {
             t_0 = t_0 + u32(1);
             continue;
@@ -176,12 +184,12 @@ fn assign(@builtin(workgroup_id) tile_0 : vec3<u32>, @builtin(local_invocation_i
             {
                 break;
             }
-            var _S37 : u32 = at_1 - u32(1);
-            kept_0[at_1] = kept_0[_S37];
-            score_0[at_1] = score_0[_S37];
-            at_1 = _S37;
+            var _S38 : u32 = at_1 - u32(1);
+            kept_0[at_1] = kept_0[_S38];
+            score_0[at_1] = score_0[_S38];
+            at_1 = _S38;
         }
-        kept_0[at_1] = l_2;
+        kept_0[at_1] = _S36;
         score_0[at_1] = s_0;
         count_0 = min(count_0 + u32(1), u32(16));
         t_0 = t_0 + u32(1);
@@ -189,10 +197,14 @@ fn assign(@builtin(workgroup_id) tile_0 : vec3<u32>, @builtin(local_invocation_i
     t_0 = u32(0);
     loop
     {
-        if((t_0 < count_0))
+        if((t_0 < u32(16)))
         {
         }
         else
+        {
+            break;
+        }
+        if((t_0 >= count_0))
         {
             break;
         }

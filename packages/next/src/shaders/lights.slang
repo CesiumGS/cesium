@@ -49,7 +49,11 @@ void assign(uint3 tile : SV_GroupID, uint k : SV_GroupIndex) {
   }
   GroupMemoryBarrierWithGroupSync();
   uint total = uint(h.grid.w);
-  for (uint l = k; l < total; l += SLICES) {
+  total = min(total, MAX_VIEW_LIGHTS);
+  for (uint l = k; l < MAX_VIEW_LIGHTS; l += SLICES) {
+    if (l >= total) {
+      break;
+    }
     Light light = lightAt(l);
     float3 c = light.position.xyz;
     float3 v = float3(dot(c, h.right.xyz), dot(c, h.up.xyz), dot(c, h.forward.xyz));
@@ -74,8 +78,11 @@ void assign(uint3 tile : SV_GroupID, uint k : SV_GroupIndex) {
   uint kept[CLUSTER_LIGHTS];
   float score[CLUSTER_LIGHTS];
   uint count = 0u;
-  for (uint t = 0u; t < listed; t++) {
-    uint l = tileLights[t];
+  for (uint t = 0u; t < TILE_LIGHTS; t++) {
+    if (t >= listed) {
+      break;
+    }
+    uint l = min(tileLights[t], MAX_VIEW_LIGHTS - 1u);
     Light light = lightAt(l);
     float3 c = light.position.xyz;
     float3 v = float3(dot(c, h.right.xyz), dot(c, h.up.xyz), dot(c, h.forward.xyz));
@@ -98,7 +105,10 @@ void assign(uint3 tile : SV_GroupID, uint k : SV_GroupIndex) {
     score[at] = s;
     count = min(count + 1u, CLUSTER_LIGHTS);
   }
-  for (uint t = 0u; t < count; t++) {
+  for (uint t = 0u; t < CLUSTER_LIGHTS; t++) {
+    if (t >= count) {
+      break;
+    }
     lightTable.Store(CLUSTERS_BYTES + (base + 1u + t) * 4u, kept[t]);
   }
   lightTable.Store(CLUSTERS_BYTES + base * 4u, count);

@@ -1260,9 +1260,12 @@ float3 punctualLight(float2 pixel, float3 relPosition, float3 n, float3 v, float
   uint j = min(uint(uv.y * float(dims.y)), dims.y - 1u);
   uint k = min(uint(log(z / h.depth.x) * h.depth.y), dims.z - 1u);
   uint base = ((k * dims.y + j) * dims.x + i) * (1u + CLUSTER_LIGHTS);
-  uint count = lightTable.Load(CLUSTERS_BYTES + base * 4u);
-  for (uint t = 0u; t < count; t++) {
-    uint index = lightTable.Load(CLUSTERS_BYTES + (base + 1u + t) * 4u);
+  uint count = min(lightTable.Load(CLUSTERS_BYTES + base * 4u), CLUSTER_LIGHTS);
+  for (uint t = 0u; t < CLUSTER_LIGHTS; t++) {
+    if (t >= count) {
+      break;
+    }
+    uint index = min(lightTable.Load(CLUSTERS_BYTES + (base + 1u + t) * 4u), MAX_VIEW_LIGHTS - 1u);
     Light light = lightTable.Load<Light>(LIGHT_HEADER_BYTES + index * LIGHT_BYTES);
     float3 toLight = light.position.xyz - relPosition;
     float d2 = max(dot(toLight, toLight), 1e-4);
@@ -1798,6 +1801,9 @@ static const float2 SAMPLE_OFFSETS[4] = {
   float2(-0.125, -0.375), float2(0.375, -0.125), float2(-0.375, 0.125), float2(0.125, 0.375)
 };
 
+// The most samples a pixel has (4× MSAA); the loop below ends by this.
+static const uint MAX_SAMPLES = 4u;
+
 // Of the samples in `mask`, those where a fragment is in front of the
 // opaque pass's depth (reverse-Z: nearer is greater), its depth taken at
 // each from its slope (`depthSlope`), as the hardware tests it: at the
@@ -1811,7 +1817,10 @@ uint visibleSamples(float4 position, float2 slope, uint mask) {
   opaqueDepth.GetDimensions(width, height, samples);
   float2 center = frac(position.xy) - 0.5;
   uint visible = 0u;
-  for (uint i = 0u; i < samples; i++) {
+  for (uint i = 0u; i < MAX_SAMPLES; i++) {
+    if (i >= samples) {
+      break;
+    }
     float z = position.z;
     if (samples == 4u) {
       z += dot(slope, SAMPLE_OFFSETS[i] - center);

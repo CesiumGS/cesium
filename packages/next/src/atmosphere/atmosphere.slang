@@ -22,7 +22,7 @@ void transmittanceLut(uint3 id : SV_DispatchThreadID) {
   float r = rMu.x;
   float mu = rMu.y;
   float length = max(0.0, sphereDistance(r, mu, atmosphere.topRadius, false));
-  int steps = 500;
+  static const int steps = 500;
   float dt = length / float(steps);
   float4 depth = float4(0.0);
   for (int i = 0; i < steps; i++) {
@@ -52,7 +52,7 @@ void multipleScatteringLut(uint3 id : SV_DispatchThreadID) {
   float3 sun = float3(sqrt(max(0.0, 1.0 - muSun * muSun)), 0.0, muSun);
   // Second-order light and the transfer f_ms, averaged over the sphere of
   // directions (uniform phase): Ψ_ms = L2 / (1 − f_ms).
-  uint n = 8u;
+  static const uint n = 8u;
   float4 second = float4(0.0);
   float4 transfer = float4(0.0);
   for (uint i = 0u; i < n; i++) {

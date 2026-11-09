@@ -1233,19 +1233,23 @@ fn punctualLight_0( pixel_0 : vec2<f32>,  relPosition_10 : vec3<f32>,  n_6 : vec
     var _S121 : u32 = _S120.x;
     var _S122 : u32 = _S120.y;
     var base_1 : u32 = ((min(u32(log(z_0 / _S113) * _S114), _S120.z - u32(1)) * _S122 + min(u32(uv_9.y * f32(_S122)), _S122 - u32(1))) * _S121 + min(u32(uv_9.x * f32(_S121)), _S121 - u32(1))) * u32(17);
-    var _S123 : u32 = lightTable_0[(u32(i32(u32(65616) + base_1 * u32(4))))/4];
+    var _S123 : u32 = min(lightTable_0[(u32(i32(u32(65616) + base_1 * u32(4))))/4], u32(16));
     var t_2 : u32 = u32(0);
     var sum_2 : vec3<f32> = sum_1;
     loop
     {
-        if((t_2 < _S123))
+        if((t_2 < u32(16)))
         {
         }
         else
         {
             break;
         }
-        var _S124 : u32 = u32(80) + lightTable_0[(u32(i32(u32(65616) + (base_1 + u32(1) + t_2) * u32(4))))/4] * u32(64);
+        if((t_2 >= _S123))
+        {
+            break;
+        }
+        var _S124 : u32 = u32(80) + min(lightTable_0[(u32(i32(u32(65616) + (base_1 + u32(1) + t_2) * u32(4))))/4], u32(1023)) * u32(64);
         var _S125 : f32 = bitcast<f32>(lightTable_0[(_S124 + u32(12))/4]);
         var _S126 : f32 = bitcast<f32>(lightTable_0[(_S124 + u32(16))/4]);
         var _S127 : f32 = bitcast<f32>(lightTable_0[(_S124 + u32(20))/4]);
@@ -1836,10 +1840,14 @@ fn visibleSamples_0( position_9 : vec4<f32>,  slope_0 : vec2<f32>,  mask_2 : u32
     var visible_0 : u32 = u32(0);
     loop
     {
-        if((i_1 < samples_1))
+        if((i_1 < u32(4)))
         {
         }
         else
+        {
+            break;
+        }
+        if((i_1 >= samples_1))
         {
             break;
         }

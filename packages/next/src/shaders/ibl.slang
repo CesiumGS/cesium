@@ -26,6 +26,10 @@ struct SkyParams {
 
 [[vk::binding(0, 0)]] ConstantBuffer<SkyParams> params;
 
+// The most GGX samples a prefiltered texel takes (gpu/Environment.ts uses 64
+// at most); the loop ends by this, with an early break at the count.
+static const uint MAX_PREFILTER_SAMPLES = 256u;
+
 // Direction for texel (x, y) of cube face `face` (WebGPU/D3D layer order:
 // +X, -X, +Y, -Y, +Z, -Z), sampled at texel centers.
 float3 cubeDirection(uint face, uint x, uint y, uint size) {
@@ -114,8 +118,12 @@ void prefilter(uint3 id : SV_DispatchThreadID) {
     float weight = 0.0;
     uint sourceSize, sourceHeight;
     source.GetDimensions(sourceSize, sourceHeight);
-    for (uint i = 0u; i < params.sampleCount; i++) {
-      float3 h = importanceSampleGgx(hammersley(i, params.sampleCount), n, alpha);
+    uint sampleCount = min(params.sampleCount, MAX_PREFILTER_SAMPLES);
+    for (uint i = 0u; i < MAX_PREFILTER_SAMPLES; i++) {
+      if (i >= sampleCount) {
+        break;
+      }
+      float3 h = importanceSampleGgx(hammersley(i, sampleCount), n, alpha);
       float3 l = normalize(2.0 * dot(n, h) * h - n);
       float nDotL = dot(n, l);
       if (nDotL > 0.0) {
@@ -126,7 +134,7 @@ void prefilter(uint3 id : SV_DispatchThreadID) {
         float d = a2 / (PI * pow(nDotH * nDotH * (a2 - 1.0) + 1.0, 2.0));
         float pdf = d * 0.25 + 1e-4;
         float texelAngle = 4.0 * PI / (6.0 * float(sourceSize) * float(sourceSize));
-        float sampleAngle = 1.0 / (float(params.sampleCount) * pdf);
+        float sampleAngle = 1.0 / (float(sampleCount) * pdf);
         float lod = max(0.5 * log2(sampleAngle / texelAngle) + 1.0, 0.0);
         color += source.SampleLevel(linearSampler, l, lod).rgb * nDotL;
         weight += nDotL;
@@ -256,6 +264,9 @@ void shFinal() {
 [[vk::binding(9, 1)]] [[vk::image_format("rgba16f")]] WTexture2DArray<float4> irradianceTarget;
 
 static const uint IRRADIANCE_CHUNK = 256u; // a 16 × 16 face
+// The source's texels a face, at most (a 64 × 64 face); the loops below end
+// by this constant, not by the source's size.
+static const uint MAX_IRRADIANCE_CHUNKS = 16u;
 groupshared float3 chunkRadiance[IRRADIANCE_CHUNK];
 groupshared float4 chunkDirection[IRRADIANCE_CHUNK]; // xyz, solid angle
 
@@ -272,9 +283,16 @@ void irradianceCube(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
   uint texels = sourceSize * sourceSize;
   float3 sum = float3(0.0);
   for (uint face = 0u; face < 6u; face++) {
-    for (uint base = 0u; base < texels; base += IRRADIANCE_CHUNK) {
+    for (uint chunk = 0u; chunk < MAX_IRRADIANCE_CHUNKS; chunk++) {
+      uint base = chunk * IRRADIANCE_CHUNK;
+      if (base >= texels) {
+        break;
+      }
       uint count = min(IRRADIANCE_CHUNK, texels - base);
-      for (uint t = lane; t < count; t += 64u) {
+      for (uint t = lane; t < IRRADIANCE_CHUNK; t += 64u) {
+        if (t >= count) {
+          break;
+        }
         uint x = (base + t) % sourceSize;
         uint y = (base + t) / sourceSize;
         chunkRadiance[t] = irradianceSource.Load(int4(int(x), int(y), int(face), 0)).rgb;
@@ -282,7 +300,10 @@ void irradianceCube(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
                                    texelSolidAngle(x, y, sourceSize));
       }
       GroupMemoryBarrierWithGroupSync();
-      for (uint t = 0u; t < count; t++) {
+      for (uint t = 0u; t < IRRADIANCE_CHUNK; t++) {
+        if (t >= count) {
+          break;
+        }
         float4 d = chunkDirection[t];
         float cosine = dot(n, d.xyz);
         if (cosine > 0.0) {
