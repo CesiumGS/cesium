@@ -4,7 +4,7 @@
  * The render pass for a command.
  *
  * @enum {number}
- * @private
+ * @internal
  */
 const Pass = {
   // If you add/modify/remove Pass constants, also change the automatic GLSL constants

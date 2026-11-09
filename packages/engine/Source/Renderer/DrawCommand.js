@@ -55,13 +55,13 @@ const Flags = {
  * @property {boolean} [pickOnly=false]
  * @property {boolean} [depthForTranslucentClassification=false]
  *
- * @ignore
+ * @internal
  */
 
 /**
  * Represents a command to the renderer for drawing.
  *
- * @private
+ * @internal
  */
 class DrawCommand {
   /**
@@ -617,10 +617,14 @@ class DrawCommand {
   }
 
   /**
-   * @param {DrawCommand} command
-   * @param {DrawCommand} result
-   * @returns {DrawCommand}
-   * @private
+   * Copies a command's properties, sharing its objects such as its uniform
+   * map and render state. Set a property on the copy to replace it without
+   * changing the original.
+   *
+   * @param {DrawCommand} command The command to copy.
+   * @param {DrawCommand} [result] The object onto which to store the result.
+   * @returns {DrawCommand} The modified result parameter or a new DrawCommand instance if one was not provided.
+   * @internal
    */
   static shallowClone(command, result) {
     if (!defined(command)) {
@@ -662,6 +666,7 @@ class DrawCommand {
    *
    * @param {Context} context The renderer context in which to draw.
    * @param {PassState} [passState] The state for the current render pass.
+   * @private
    */
   execute(context, passState) {
     context.draw(this, passState);

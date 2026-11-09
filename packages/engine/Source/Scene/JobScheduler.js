@@ -60,7 +60,8 @@ Object.defineProperties(JobTypeBudget.prototype, {
  *   </li>
  * </ul>
  *
- * @private
+ * @constructor
+ * @internal
  */
 function JobScheduler(budgets) {
   //>>includeStart('debug', pragmas.debug);
