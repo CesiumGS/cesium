@@ -29,7 +29,6 @@ import { rectanglesOverlap } from "../globe/terrainClip.ts";
 import {
   StepwiseSelection,
   REQUEST_PURPOSES,
-  type CasterRoom,
   type RequestPurpose,
   type SelectionView,
   type TileSelection,
@@ -87,6 +86,19 @@ import { readDualPosition, type DualDeclaration } from "./dualPosition.ts";
 import { applyDebugColor, updateDebug } from "./tilesetDebug.ts";
 import { serveQueries } from "./tilesetQueries.ts";
 import { evict, evictForCapacity, unload } from "./tilesetEviction.ts";
+import {
+  COLD_AGE_MS,
+  isCaster,
+  COLD_AGE_MAX_MS,
+  casterRoom,
+  wakeForStale,
+  COLD_WAKE_MIN_MS,
+  closeImages,
+  CASTER_PRESSURE,
+  dropCaster,
+  noteCasterBytes,
+  markCastsOnly,
+} from "./tilesetCasters.ts";
 const DEGREES_TO_RADIANS = Math.PI / 180;
 /**
  * Bytes a loaded tile costs besides its content, counted in `Tile.bytes`
@@ -117,47 +129,6 @@ const CANCEL_AFTER_FRAMES = 30;
 function contentAxes(json: TileJson | undefined): ModelResourceOptions["axes"] {
   const up = json?.asset?.gltfUpAxis?.toUpperCase();
   return up === "Z" ? "none" : up === "X" ? "3d-tiles-x-up" : "3d-tiles";
-}
-
-/**
- * World pool pressure (World.pressure) past which shadow casters aren't
- * requested: they yield the pools to what views draw.
- */
-const CASTER_PRESSURE = 0.75;
-/**
- * The cache has one budget, and casters have no share of it. What views use
- * this tick is never evicted. Casters get what is left after that and after
- * the cold tiles (no view uses them now) that may yet come back, so a view
- * never loses a tile to a caster that it would have kept with casters off.
- * A cold tile may come back until it has gone `COLD_AGE_MS` without a view.
- * After that, casters may take its room.
- *
- * Time, not ticks: a still camera on demand doesn't tick. A view coming back
- * to a tile after a longer absence shows that was too soon, and the age
- * becomes twice that absence, up to `COLD_AGE_MAX_MS`. So the worst a view
- * pays is one return after each longer absence, and stale cold tiles always
- * give way in the end.
- *
- * The age stops growing at `COLD_AGE_MAX_MS`. A view that returns after an
- * absence longer than that can't raise it further, so every such return can
- * cost reloads of what casters took in the meantime (a third to under half of
- * the view's requests, on a cache that casters off would have kept). The cap
- * is chosen: with none, casters would get less room for longer after each
- * long return.
- */
-const COLD_AGE_MS = 8_000;
-const COLD_AGE_MAX_MS = 60_000;
-/**
- * Casters waiting for cold tiles to age wake the loop for one tick when the
- * next goes stale, this far apart at least, ms. On a still camera that ends
- * when the last cold tile is stale, within the age.
- */
-const COLD_WAKE_MIN_MS = 1_000;
-/** Recent casters whose median is what one not yet loaded is assumed to cost. */
-const CASTER_BYTES_WINDOW = 31;
-/** Loading or waiting to upload for its shadow alone. */
-function isCaster(tile: Tile): boolean {
-  return tile.purpose === "caster" && tile.viewMask === 0;
 }
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
@@ -255,7 +226,8 @@ export class Tileset3D implements TileTree {
     }
     return this.watchedPolicy.proxy;
   }
-  private policy: TileSelection;
+  /** @internal */
+  policy: TileSelection;
   private watchedPolicy?: { policy: TileSelection; proxy: TileSelection };
   private readonly options: TilesetOptions;
   /** How its content is turned upright (`asset.gltfUpAxis`). */
@@ -758,23 +730,24 @@ export class Tileset3D implements TileTree {
   masked = new Set<Tile>();
   /** @internal Tiles with a caster mask (`CasterSelection.casters`). */
   casters = new Set<Tile>();
-  /** Bytes of what views used in the last update. */
-  private viewBytes = 0;
+  /** @internal Bytes of what views used in the last update. */
+  viewBytes = 0;
   /** @internal How long a cold tile may yet come back, ms (`COLD_AGE_MS`). */
   coldAgeMs = COLD_AGE_MS;
-  /** The last update selected shadow casters. */
-  private casting = false;
+  /** @internal The last update selected shadow casters. */
+  casting = false;
   /** `World.contentRevision` after the last update. */
   private revisionSeen = 0;
-  /** The timer that wakes the loop for cold tiles going stale. */
-  private casterTimer: ReturnType<typeof setTimeout> | undefined;
-  /** That timer fired, and the next update is due. */
-  private casterWake = false;
-  /** Bytes of recent casters (`CASTER_BYTES_WINDOW`), and their median. */
-  private readonly recentCasterBytes: number[] = [];
-  private casterBytesEstimate = 0;
-  /** Whether casters may load this tick (`CasterRoom.load`). */
-  private casterLoad = true;
+  /** @internal The timer that wakes the loop for cold tiles going stale. */
+  casterTimer: ReturnType<typeof setTimeout> | undefined;
+  /** @internal That timer fired, and the next update is due. */
+  casterWake = false;
+  /** @internal Bytes of recent casters (`CASTER_BYTES_WINDOW`), and their median. */
+  readonly recentCasterBytes: number[] = [];
+  /** @internal */
+  casterBytesEstimate = 0;
+  /** @internal Whether casters may load this tick (`CasterRoom.load`). */
+  casterLoad = true;
   /** @internal A view's tile found a pool full: casters wait until it has uploaded. */
   viewCapacityWait = false;
   /** @internal Bytes of loaded tiles that are `castsOnly`, drawn by cascades or not. */
@@ -1479,7 +1452,7 @@ export class Tileset3D implements TileTree {
     const casterViews = views.filter(
       (view) => ((castingIn >>> view.id) & 1) !== 0,
     );
-    const room = this.casterRoom(casterViews, frame, now);
+    const room = casterRoom(this, casterViews, frame, now);
     if (room) {
       for (const view of casterViews) {
         const found = this.policy.selectCasters!(
@@ -1541,7 +1514,7 @@ export class Tileset3D implements TileTree {
       room.nextStale < Infinity &&
       (room.denied > 0 || room.scale > 1)
     ) {
-      this.wakeForStale(Math.max(room.nextStale - now, COLD_WAKE_MIN_MS));
+      wakeForStale(this, Math.max(room.nextStale - now, COLD_WAKE_MIN_MS));
     }
     // Mixed-LOD placeholders: clipped to their holes (unioned over views)
     // in the views where finer content draws beside them.
@@ -1669,89 +1642,6 @@ export class Tileset3D implements TileTree {
     this.stats.inFlight = this.inFlight;
     this.stats.uploadQueue = this.ready.length;
     this.revisionSeen = this.world.contentRevision;
-  }
-
-  /**
-   * What shadow casters may use this tick, or undefined when none are
-   * selected: the cache less what views use and less the cold tiles that may
-   * yet come back (`COLD_AGE_MS`). Free room always counts, so does the room
-   * of stale cold tiles, which eviction then takes.
-   */
-  private casterRoom(
-    views: readonly SelectionView[],
-    frame: number,
-    now: number,
-  ): (CasterRoom & { nextStale: number }) | undefined {
-    // A tileset that has drawn nothing yet but content this engine can't draw
-    // (point clouds today: `deferredReason`) has no casters to load.
-    this.casting =
-      this.policy.castsShadows === true &&
-      views.some((view) => view.casterPlanes !== undefined) &&
-      (this.stats.undrawn === 0 || this.stats.loaded > 0);
-    if (!this.casting) {
-      return undefined;
-    }
-    const heldSince = now - this.coldAgeMs;
-    let held = 0;
-    let nextStale = Infinity;
-    for (const tile of this.loaded) {
-      if (tile.castsOnly || tile.touchedFrame === frame) {
-        continue;
-      }
-      // Just left the views, as far as a tick can tell.
-      if (tile.touchedFrame === frame - 1) {
-        tile.viewedAt = now;
-      }
-      if (tile.viewedAt > heldSince) {
-        held += tile.bytes;
-        nextStale = Math.min(nextStale, tile.viewedAt + this.coldAgeMs);
-      }
-    }
-    const { fraction } = this.world.pressure();
-    this.casterLoad =
-      fraction <= CASTER_PRESSURE &&
-      !this.engine.tilesets.some(
-        (other) => other.world === this.world && other.viewCapacityWait,
-      );
-    return {
-      bytes: Math.max(0, this.cacheBytes - this.viewBytes - held),
-      load: this.casterLoad,
-      estimate: this.casterBytesEstimate,
-      pressure: fraction,
-      heldSince,
-      receivers: (view, selected) => {
-        const lists: Array<readonly Tile[]> = [selected];
-        for (const tileset of this.engine.tilesets) {
-          if (
-            tileset !== this &&
-            tileset.world === this.world &&
-            tileset.show
-          ) {
-            const tiles = tileset.lastSelected.get(view.id);
-            if (tiles && tiles.length > 0) {
-              if (tileset.anchor !== this.anchor) {
-                return undefined;
-              }
-              lists.push(tiles);
-            }
-          }
-        }
-        return lists;
-      },
-      counted: new Set(),
-      denied: 0,
-      scale: 1,
-      nextStale,
-    };
-  }
-
-  /** One tick when the next cold tile goes stale: the loop may be asleep. */
-  private wakeForStale(delayMs: number): void {
-    this.casterTimer ??= setTimeout(() => {
-      this.casterTimer = undefined;
-      this.casterWake = true;
-      this.engine.wake();
-    }, delayMs);
   }
 
   private cancelLoad(tile: Tile, controller: AbortController): void {
@@ -1998,7 +1888,7 @@ export class Tileset3D implements TileTree {
           pressure > CASTER_PRESSURE ||
           tile.touchedFrame < this.frame)
       ) {
-        this.dropCaster(tile, asset);
+        dropCaster(this, tile, asset);
         n--;
         continue;
       }
@@ -2074,7 +1964,7 @@ export class Tileset3D implements TileTree {
         }
         tile.lastBytes = tile.bytes;
         if (caster) {
-          this.noteCasterBytes(tile.bytes);
+          noteCasterBytes(this, tile.bytes);
           // It stays while it may, and doesn't come back at this pressure.
           tile.noFitAt =
             this.world.pressure().fraction > CASTER_PRESSURE
@@ -2132,7 +2022,7 @@ export class Tileset3D implements TileTree {
           // Casters yield: no wait, no eviction, nothing held in the queue,
           // and no second try until the pools have more room.
           tile.noFitAt = pressure;
-          this.dropCaster(tile, asset);
+          dropCaster(this, tile, asset);
           continue;
         }
         if (isCapacityError(error)) {
@@ -2182,38 +2072,9 @@ export class Tileset3D implements TileTree {
     evict(this, frame);
   }
 
-  /** Drops decoded content of a caster that isn't wanted after all. */
-  private dropCaster(tile: Tile, asset: GltfAsset): void {
-    closeImages(asset);
-    tile.state = "unloaded";
-    this.stats.purposes.caster.unused++;
-    tile.purpose = undefined;
-  }
-
   /** @internal Counts a loaded tile in or out of the caster class (`castsOnly`). */
   markCastsOnly(tile: Tile, value: boolean): void {
-    if (tile.castsOnly !== value && tile.state === "ready") {
-      tile.castsOnly = value;
-      this.casterResident += value ? tile.bytes : -tile.bytes;
-    }
-  }
-
-  /**
-   * One more caster's bytes for `casterBytesEstimate`. The median of casters
-   * alone: one huge tile, or a view's, doesn't keep small ones out, and a
-   * wrong guess corrects itself when the tile loads.
-   */
-  private noteCasterBytes(bytes: number): void {
-    const recent = this.recentCasterBytes;
-    recent.push(bytes);
-    if (recent.length > CASTER_BYTES_WINDOW) {
-      recent.shift();
-    }
-    // Three first: one huge tile, or one that fails, isn't what casters cost.
-    this.casterBytesEstimate =
-      recent.length < 3
-        ? 0
-        : [...recent].sort((a, b) => a - b)[recent.length >> 1]!;
+    markCastsOnly(this, tile, value);
   }
 
   /**
@@ -2395,14 +2256,6 @@ function createSelection(
 
 function countTiles(tile: Tile): number {
   return 1 + tile.children.reduce((n, c) => n + countTiles(c), 0);
-}
-
-function closeImages(asset: GltfAsset): void {
-  for (const image of asset.images) {
-    if (image instanceof ImageBitmap) {
-      image.close();
-    }
-  }
 }
 
 function sameTiles(a?: Set<Tile>, b?: Set<Tile>): boolean {
