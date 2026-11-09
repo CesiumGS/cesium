@@ -2,15 +2,23 @@
 
 ## 1.148 - 2026-12-01
 
+### cesium
+
+#### Breaking Changes :mega:
+
+- CesiumJS builds now target ES2022 instead of ES2020. Class fields are no longer rewritten into helper functions, so browsers must support ES2022 syntax such as public and private class fields. [#14023](https://github.com/CesiumGS/cesium/pull/14023)
+
 ### @cesium/engine
 
 #### Additions :tada:
 
+- Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 
 #### Fixes :wrench:
 
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
 - Fixed `MVTDataProvider` freezing or running out of memory on load when `maxZoom` is high. Tiles are now created as they come into view. [#13867](https://github.com/CesiumGS/cesium/pull/13867)
 
 ## 1.147 - 2026-11-02

@@ -52,8 +52,8 @@
   ],
   "dependencies": {
     "@cesium/core": "^0.1.1",
-    "@cesium/gltf": "^0.1.1",
     "@cesium/engine": "^26.5.0",
+    "@cesium/gltf": "^0.1.1",
     "@cesium/widgets": "^16.3.1",
     "protobufjs": "^8.8.0"
   },
@@ -62,6 +62,11 @@
     "@cesium/eslint-config": "^14.0.0",
     "@playwright/test": "^1.62.1",
     "@types/express": "^5.0.6",
+    "@types/gulp": "^4.0.18",
+    "@types/istanbul-lib-instrument": "^1.7.8",
+    "@types/karma": "^6.3.9",
+    "@types/yargs": "^17.0.35",
+    "@types/yazl": "^3.3.1",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
@@ -77,9 +82,6 @@
     "globals": "^17.11.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
-    "gulp-rename": "^2.0.0",
-    "gulp-tap": "^2.0.0",
-    "gulp-zip": "^6.0.0",
     "husky": "^9.0.7",
     "istanbul-lib-instrument": "^6.0.0",
     "jasmine-core": "^5.9.0",
@@ -104,7 +106,8 @@
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.68.0",
-    "yargs": "^18.1.0"
+    "yargs": "^18.1.0",
+    "yazl": "^3.3.1"
   },
   "scripts": {
     "prepare": "gulp prepare && husky && node scripts/isCI.js || playwright install --with-deps",
@@ -152,7 +155,17 @@
     "cspell": "npx cspell lint -c .vscode/cspell.json --unique --no-progress"
   },
   "engines": {
-    "node": ">=22.17.0"
+    "node": ">=22.0.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=22.17.0"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.16.0"
+    }
   },
   "workspaces": [
     "packages/core",
@@ -174,5 +187,11 @@
         "react-dom": "^19.0.0"
       }
     }
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "onnxruntime-node@1.30.0": true,
+    "protobufjs@7.6.6": true,
+    "@ast-grep/cli@0.51.1": true
   }
 }
