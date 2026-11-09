@@ -7975,10 +7975,10 @@ real work. The wording and test-strength nits the reviews raised are left out.
   treat 1 as "fully lit", and read literally they'd go black outside the night.
   An override per item or material (`emission: "physical"` or `"display"`)
   handles the jump this leaves between no extension and a strength just past 1;
-  display-relative stays out of the meter. A custom shader keeps
-  `custom.emissive` display-relative and gets `custom.emissiveNits` for
-  physical light. Emitters only show to the camera, and don't light their
-  surroundings. Try it on real models, since the default may change. Today
+  display-relative stays out of the meter. A custom shader has one field,
+  `custom.emissive`, in nits: a draw with a custom shader is physical unless its
+  item or material says `emission: "display"`, which a stylistic glow can use.
+  Emitters only show to the camera, and don't light their surroundings. Try it on real models, since the default may change. Today
   `gltfParse.ts` ignores the extension and `surface.slang` treats all emission
   as display-relative.
 - **Exact lists and the meter.** A layer with emission writes a second list
