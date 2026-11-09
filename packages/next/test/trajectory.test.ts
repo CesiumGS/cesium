@@ -820,6 +820,51 @@ describe("Trajectory accuracy inputs", () => {
     expect(build(undefined).positionSigma(at(300))).toBeUndefined();
   });
 
+  it("states its covariance on its frame (5b's call 21), with meters its position sigma", () => {
+    const traj = build(COVS, { covarianceUnits: "m" });
+    const c = traj.positionCovariance(at(240))!;
+    expect(Array.from(c)).toEqual([4, 0, 0, 0, 9, 0, 0, 0, 36]);
+    const a = traj.frame.accuracy(at(240));
+    expect(a.meters).toBeCloseTo(7, 9);
+    expect(Array.from(a.covariance!)).toEqual(Array.from(c));
+    expect(a.term).toBe("trajectory");
+    expect(traj.positionCovariance(at(60))).toBeUndefined();
+  });
+
+  it("states its position sigma option as metres, a zero as exact, and nothing else as not stated", () => {
+    expect(
+      build(undefined, { positionSigma: 5 }).frame.accuracy(at(300)).meters,
+    ).toBe(5);
+    expect(
+      build(undefined, { positionSigma: 0 }).frame.accuracy(at(300))
+        .byDefinition,
+    ).toBe(true);
+    const none = build(undefined).frame.accuracy(at(300));
+    expect(none.meters).toBeUndefined();
+    expect(none.note).toMatch(/no position sigma/);
+    expect(
+      build(undefined, { positionSigma: 5 }).frame.accuracy(at(5000)).note,
+    ).toMatch(/outside its data|not known/);
+  });
+
+  it("adds the coordinate-scale figure for an unknown scale under EARTH_ICRF", () => {
+    const traj = build(undefined, { positionSigma: 5 });
+    const a = traj.frame.accuracy(at(300));
+    expect(a.parts).toHaveLength(1);
+    expect(a.parts![0]!.term).toBe("coordinate scale");
+    const s = traj.state(at(300));
+    expect(a.parts![0]!.meters).toBeCloseTo(
+      2.5e-8 * Math.hypot(s[0]!, s[1]!, s[2]!),
+      12,
+    );
+    expect(
+      build(undefined, {
+        positionSigma: 5,
+        coordinateScale: "tdb",
+      }).frame.accuracy(at(300)).parts,
+    ).toBeUndefined();
+  });
+
   it("reads km^2 by default and m^2 on request, 1000 times apart", () => {
     const km = build(COVS).positionSigma(at(240))!;
     const m = build(COVS, { covarianceUnits: "m" }).positionSigma(at(240))!;

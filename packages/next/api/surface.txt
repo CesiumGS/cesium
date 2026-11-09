@@ -342,6 +342,7 @@ frames	FramesPickInterpreterOptions	interface	-
 frames	FramesResolver	interface	-
 frames	FramesResolverOptions	interface	-
 frames	GridFactors	interface	-
+frames	MOON_ME_ORIENTATION_RADIANS	const	-
 frames	OemSegment	interface	-
 frames	PointAccuracy	interface	-
 frames	PointAccuracyOptions	interface	-

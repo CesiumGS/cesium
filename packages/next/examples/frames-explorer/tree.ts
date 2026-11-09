@@ -106,7 +106,26 @@ function earthOrientationAccuracy(
       "not stated without an instant: Earth orientation depends on time (pass one to buildTree)",
     );
   }
-  return { ...frames.itrf.accuracy(instant) };
+  // The library states two figures (UT1 about the spin axis, polar motion);
+  // the tree shows their root sum square in radians, as one rotation bound.
+  const {
+    parts,
+    axis: _axis,
+    term: _term,
+    ...edge
+  } = frames.itrf.accuracy(instant);
+  void _axis;
+  void _term;
+  if (edge.radians !== undefined) {
+    return {
+      ...edge,
+      radians: Math.hypot(
+        edge.radians,
+        ...(parts ?? []).map((p) => p.radians ?? 0),
+      ),
+    };
+  }
+  return edge;
 }
 
 /**

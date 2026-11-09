@@ -3,7 +3,10 @@
 // root-sum-square, and an unstated edge named, never dropped.
 import { describe, expect, it } from "vitest";
 import { Frame } from "../src/frames/Frame.ts";
-import { NOT_STATED } from "../src/frames/frameAccuracy.ts";
+import {
+  MOON_ME_ORIENTATION_RADIANS,
+  NOT_STATED,
+} from "../src/frames/frameAccuracy.ts";
 import {
   BUILT_IN_ACCURACY,
   DE440_EARTH_MOON_METERS,
@@ -11,7 +14,10 @@ import {
 import { eastNorthUpFrame, framePoint } from "../src/frames/local.ts";
 import { dominantTerm, pointAccuracy } from "../src/frames/pointAccuracy.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
+import { itrfAccuracy } from "../src/frames/itrfEdge.ts";
+import { EARTH_ROTATION_RATE } from "../src/math/constants.ts";
 import { Instant } from "../src/time/Instant.ts";
+import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const instant = Instant.fromTdb(0);
 
@@ -198,6 +204,40 @@ describe("pointAccuracy", () => {
     );
     expect(() => pointAccuracy(framePoint(a, [0, 0, 0]), a)).toThrow(
       /no instant/,
+    );
+  });
+});
+
+describe("the built-in edges state every term (frames 5b, Task 5)", () => {
+  it("shares one difference source across the ephemeris edges", () => {
+    for (const name of ["GCRF", "EARTH_ICRF", "MOON_ICRF"] as const) {
+      expect(BUILT_IN_ACCURACY[name].source).toEqual({
+        id: "DE440 Earth–Moon",
+        rule: "difference",
+      });
+    }
+    expect(
+      (BUILT_IN_ACCURACY.HCRS as { source?: unknown }).source,
+    ).toBeUndefined();
+  });
+
+  it("states MOON_ME's orientation as an estimate", () => {
+    expect(BUILT_IN_ACCURACY.MOON_ME.radians).toBe(MOON_ME_ORIENTATION_RADIANS);
+    expect(BUILT_IN_ACCURACY.MOON_ME.estimated).toBe(true);
+    expect(MOON_ME_ORIENTATION_RADIANS).toBe(3e-7);
+  });
+
+  it("states ITRF's two figures: UT1 about +Z and polar motion about no axis", () => {
+    const a = itrfAccuracy(syntheticFrameData(), Instant.fromTdb(0));
+    expect(a.axis).toEqual([0, 0, 1]);
+    expect(a.term).toBe("UT1");
+    expect(a.radians).toBeCloseTo(35e-6 * EARTH_ROTATION_RATE, 18);
+    expect(a.parts).toHaveLength(1);
+    expect(a.parts![0]!.term).toBe("polar motion");
+    expect(a.parts![0]!.axis).toBeUndefined();
+    expect(a.parts![0]!.radians).toBeCloseTo(
+      1e-4 * (Math.PI / (180 * 3600)),
+      18,
     );
   });
 });

@@ -141,10 +141,12 @@ describe("buildTree: the built-in frames", () => {
       /^estimated, illustrative: DE440 publishes no orientation uncertainty/,
     );
     expect(me.note).toMatch(/3\.07 × 10⁻⁷ rad .*moon_de440_250416\.tf/);
-    // The library's own statement stays "not stated", and the LLR residual
-    // is context there, never the edge's accuracy.
+    // The library states the same figure since 5b (MOON_ME_ORIENTATION_RADIANS,
+    // estimated), and the LLR residual is context in its note, never the
+    // edge's accuracy.
     const lib = frames.moonMe.accuracy(Instant.fromTdb(0));
-    expect(lib.radians).toBeUndefined();
+    expect(lib.radians).toBe(3e-7);
+    expect(lib.estimated).toBe(true);
     expect(lib.note).toMatch(/1\.3 cm rms .*not an orientation accuracy/);
     const pa = find(tree, "MOON_PA")!.edge.accuracy;
     expect(pa.byDefinition).toBe(true);

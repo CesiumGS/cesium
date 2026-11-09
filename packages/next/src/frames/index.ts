@@ -41,6 +41,7 @@ export {
   type EarthOrientationSigma,
 } from "./orientationSigma.ts";
 export { rotationPart, toParentMatrix } from "./matrix.ts";
+export { MOON_ME_ORIENTATION_RADIANS } from "./frameAccuracy.ts";
 export {
   twoVectorFrame,
   axesAt,

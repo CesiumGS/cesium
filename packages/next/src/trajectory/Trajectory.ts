@@ -1,5 +1,7 @@
 import { readSpk, type StateSegment } from "../ephemeris/spk.ts";
 import { Frame } from "../frames/Frame.ts";
+import { eigenSymmetric } from "../frames/covariance.ts";
+import type { FrameAccuracy } from "../frames/frameAccuracy.ts";
 import type { Frames } from "../frames/frames.ts";
 import { toParentMatrix } from "../frames/matrix.ts";
 import { Instant } from "../time/Instant.ts";
@@ -41,6 +43,14 @@ type Center = "EARTH" | "MOON" | "SUN" | "SSB";
 type Axes = "EME2000" | "ICRF" | "ITRF";
 
 const IDENTITY = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+/** A trajectory's TDB-versus-TT ambiguity (its `coordinateScale` is "unknown"), as a fraction of the geocentric distance. */
+const COORDINATE_SCALE = 2.5e-8;
+
+/** Whether the symmetric 3×3 `c` is positive semi-definite, as a stated covariance must be. */
+function positiveSemiDefinite(c: Float64Array): boolean {
+  const { values } = eigenSymmetric(c);
+  return values[2]! >= -1e-9 * Math.max(Math.abs(values[0]!), 1e-300);
+}
 const CENTER_IDS: Readonly<Record<number, Center>> = {
   399: "EARTH",
   301: "MOON",
@@ -287,10 +297,15 @@ export class Trajectory<N extends string = string> {
     }
     this.pieces = pieces;
     this.spans = mergeSpans(pieces);
-    this.frame = new Frame(name, reference, (instant, out) => {
-      this.state(instant, this.scratch);
-      toParentMatrix(IDENTITY, this.scratch, out);
-    });
+    this.frame = new Frame(
+      name,
+      reference,
+      (instant, out) => {
+        this.state(instant, this.scratch);
+        toParentMatrix(IDENTITY, this.scratch, out);
+      },
+      { accuracy: (instant) => this.frameAccuracy(instant) },
+    );
     byFrame.set(this.frame, this);
   }
 
@@ -357,6 +372,127 @@ export class Trajectory<N extends string = string> {
    */
   velocitySigma(instant: Instant): number | undefined {
     return this.covarianceSigma(instant, VELOCITY_DIAGONAL);
+  }
+
+  /**
+   * The position block of the 6×6 covariance at `instant`: row-major 3×3, m²,
+   * in the reference's axes, from the same covariance epoch as
+   * `positionSigma` (the one of the latest at or before the instant and the
+   * next with the larger trace); `undefined` where the segment has no
+   * covariance, or outside the data. Never throws.
+   */
+  positionCovariance(instant: Instant): Float64Array | undefined {
+    const t = instant.tdb();
+    const piece = this.find(t);
+    const cov = piece?.covariances;
+    if (!piece || !cov) {
+      return undefined;
+    }
+    let lo = 0;
+    let hi = cov.epochs.length - 1;
+    let at = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (cov.epochs[mid]! <= t) {
+        at = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    if (at < 0) {
+      return undefined;
+    }
+    const v = cov.values;
+    const k = piece.varianceToM2!;
+    const block = (e: number): Float64Array => {
+      const o = e * 21;
+      // The lower triangle's first six values: c11, c21 c22, c31 c32 c33.
+      return Float64Array.from(
+        [
+          v[o]!,
+          v[o + 1]!,
+          v[o + 3]!,
+          v[o + 1]!,
+          v[o + 2]!,
+          v[o + 4]!,
+          v[o + 3]!,
+          v[o + 4]!,
+          v[o + 5]!,
+        ],
+        (x) => x * k,
+      );
+    };
+    const trace = (c: Float64Array): number => c[0]! + c[4]! + c[8]!;
+    const here = block(at);
+    if (at + 1 < cov.epochs.length) {
+      const next = block(at + 1);
+      return trace(next) > trace(here) ? next : here;
+    }
+    return here;
+  }
+
+  /**
+   * What the trajectory's reference frame states (plan 5b's call 21): the
+   * position covariance, else `positionSigma`, as 1σ; a coordinate-scale
+   * figure of 2.5 × 10⁻⁸ of the geocentric distance as a second figure
+   * where the scale is "unknown" and the reference is under EARTH_ICRF. A
+   * zero sigma is exact by definition. Not stated without either, or
+   * outside the data.
+   */
+  private frameAccuracy(instant: Instant): FrameAccuracy {
+    const approximate =
+      this.accuracy === "approximate" ? " (approximate trajectory)" : "";
+    const notStated = (why: string): FrameAccuracy => ({
+      note: `Trajectory "${this.name}": ${why}${this.accuracy === "approximate" ? "; its accuracy is approximate" : ""}`,
+    });
+    if (!this.contains(instant)) {
+      return notStated("not known outside its data");
+    }
+    const sigma = this.positionSigma(instant);
+    if (sigma === undefined) {
+      return notStated(
+        "no position sigma (no covariance, no positionSigma option)",
+      );
+    }
+    if (sigma === 0) {
+      return {
+        byDefinition: true,
+        note: `Trajectory "${this.name}": exact by definition (a position sigma of 0)`,
+      };
+    }
+    const covariance = this.positionCovariance(instant);
+    const figure: FrameAccuracy =
+      covariance !== undefined && positiveSemiDefinite(covariance)
+        ? {
+            meters: sigma,
+            covariance,
+            term: "trajectory",
+            note: `Trajectory "${this.name}": position covariance${approximate}`,
+          }
+        : {
+            meters: sigma,
+            term: "trajectory",
+            note: `Trajectory "${this.name}": position sigma${approximate}`,
+          };
+    let reference: Frame | undefined = this.reference;
+    while (reference !== undefined && reference.name !== "EARTH_ICRF") {
+      reference = reference.parent;
+    }
+    if (this.coordinateScale !== "unknown" || reference === undefined) {
+      return figure;
+    }
+    const s = this.state(instant);
+    return {
+      ...figure,
+      parts: [
+        {
+          meters: COORDINATE_SCALE * Math.hypot(s[0]!, s[1]!, s[2]!),
+          term: "coordinate scale",
+          note: `Trajectory "${this.name}": the scale of its coordinates (TDB or TT) is not stated, taken as TDB-compatible: 2.5 × 10⁻⁸ of the geocentric distance`,
+        },
+      ],
+    };
   }
 
   /** `sqrt` of the summed diagonal terms `diagonal` (indices into a 21-value lower triangle) at `instant`. */

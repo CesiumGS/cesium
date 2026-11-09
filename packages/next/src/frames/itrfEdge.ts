@@ -39,10 +39,12 @@ export function itrfEdge(
 
 /**
  * The GCRF to ITRF rotation's accuracy at `instant`: the Earth-orientation
- * sigma. UT1 error turns the Earth by `σ_t · ω` radians and polar motion
- * tilts its axis by `σ_p`; the edge states their root sum square in radians
- * (a point's error is this times its distance from the geocentre). Not
- * known outside the EOP table.
+ * sigma, as two figures (plan's call 19). UT1 error turns the Earth by
+ * `σ_t · ω` radians about +Z of ITRF (`axis`); polar motion tilts its axis
+ * by `σ_p` radians, about no one axis. Each is flagged when predicted. A
+ * point's error is the first times its distance from the spin axis, and the
+ * second times its distance from the geocentre. Not known outside the EOP
+ * table.
  */
 export function itrfAccuracy(
   data: Pick<FrameData, "eop" | "leapSeconds">,
@@ -57,14 +59,28 @@ export function itrfAccuracy(
   const note = sigma.predicted
     ? `predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last observed row (IERS Bulletin A)`
     : "measured Earth orientation (UT1 35 µs, polar motion 0.1 mas)";
-  const radians = Math.hypot(
-    sigma.ut1Seconds * EARTH_ROTATION_RATE,
-    sigma.polarRadians,
-  );
-  return Number.isFinite(radians) && radians > 0
-    ? {
-        radians,
-        note: `${note}. An angular bound: the Earth's spin (UT1) and the tilt of its axis (polar motion) combined, in radians; a point's error in metres is this times its distance from the geocentre`,
-      }
-    : { note: "not known: Earth orientation is not finite" };
+  const ut1 = sigma.ut1Seconds * EARTH_ROTATION_RATE;
+  const polar = sigma.polarRadians;
+  if (!(
+    Number.isFinite(ut1) &&
+    ut1 > 0 &&
+    Number.isFinite(polar) &&
+    polar > 0
+  )) {
+    return { note: "not known: Earth orientation is not finite" };
+  }
+  return {
+    radians: ut1,
+    axis: [0, 0, 1],
+    term: "UT1",
+    ...(sigma.predicted && { predicted: true }),
+    parts: [
+      {
+        radians: polar,
+        term: "polar motion",
+        ...(sigma.predicted && { predicted: true }),
+      },
+    ],
+    note: `${note}. An angular bound, in two figures: the Earth's spin (UT1: its error about ITRF's +Z) and the tilt of its axis (polar motion), in radians; a point's error in metres is the first times its distance from the spin axis, the second times its distance from the geocentre`,
+  };
 }
