@@ -4,5 +4,5 @@
     "resolveJsonModule": true,
     "types": ["@webgpu/types", "vite/client", "@stratakit/mui/types.d.ts"]
   },
-  "include": ["src", "snippets", "viewer", "vite.config.ts"]
+  "include": ["src", "snippets", "viewer", "vite.config.ts", "../src/io/vendor.d.ts", "../src/io/basisTranscoder.d.ts"]
 }

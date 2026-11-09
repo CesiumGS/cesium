@@ -1,7 +1,7 @@
 import { count, data, day, size, libraryEntry } from "../data.ts";
 import { Costs } from "../costs.tsx";
 import { GoalList } from "../goals.tsx";
-import { LiveGlobeFigure } from "../live.tsx";
+import { Reel } from "../reel.tsx";
 import {
   C,
   CodeBlock,
@@ -87,25 +87,28 @@ export function Overview() {
 
       <Section title="See it run">
         <p>
-          This is the engine, live, from inside this one file. It starts only
-          when you ask, draws only when something changes, and stops when it's
-          out of view. Drag to orbit.
+          This is the engine, live, from inside this one file, in five short
+          chapters. It starts only when you ask, and it stops when it's out of
+          view. Take the camera at any point: drag, or use the arrow keys.
         </p>
-        <LiveGlobeFigure />
+        <Reel />
         <p className="provenance">
-          It's a small, simple scene: an ellipsoid with no terrain, one image of
-          Natural Earth II (public domain, naturalearthdata.com), and a block of
-          boxes. There's no streaming, no 3D Tiles, no ion and no stars. The
-          time of day is a simple model, not an ephemeris. It decodes on the
-          main thread, because a page opened from disk can't start the engine's
-          workers. For the full experience, with real content and both engines,
-          run <a href="#/dyno">Dyno</a>.
+          Everything it draws is embedded here, which is why this file is about
+          96 MB: nothing is fetched, and no token is used. So it has limits. Its
+          imagery is tiles baked for this page, finest around one valley, and
+          the ground is flat outside that valley. The corridor is cut down to
+          its coarser levels, and the road is made up. It decodes on the main
+          thread, because a page opened from disk can't start the engine's
+          workers. The timings are what your machine did just now, not a
+          benchmark. For the full experience, with real content and both
+          engines, run <a href="#/dyno">Dyno</a>.
         </p>
         <p className="provenance">
-          Run from a file on disk in Chrome 156 and Edge 157 on a Mac. It can't
-          start yet in WebKit 27.2: its shader compiler rejects one of the
+          Run from a file on disk in Chrome 156 and Edge 157 on an Apple M2. It
+          can't start yet in WebKit 27.2: its shader compiler rejects one of the
           engine's kernels. Firefox 157 offered no GPU adapter on that machine.
-          Where it can't run, you see the picture and a note saying why.
+          Where it can't run, you see pictures of each chapter and a note saying
+          why.
         </p>
       </Section>
 

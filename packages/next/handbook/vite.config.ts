@@ -5,10 +5,19 @@
 //                           handbook/dist/cesium-2.0-handbook-<date>-<commit>.html
 //   npm run handbook:dev    the same page on a dev server (--port is yours)
 import { execFile } from "node:child_process";
-import { readFileSync, renameSync, statSync } from "node:fs";
-import { join } from "node:path";
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  statSync,
+} from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { build, defineConfig, type Plugin } from "vite";
+import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
 import { findSecrets, findUnembeddedImages } from "../scripts/handbookData.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -72,10 +81,13 @@ function inlineIntoPage(): Plugin {
       const engine = (await buildLiveEngine())
         .replaceAll("</script", "<\\/script")
         .replaceAll("<!--", "<\\!--");
+      const reel = reelData();
       html = html.replace(
         "</body>",
         () =>
-          `<script type="text/plain" id="live-engine">${engine}</script></body>`,
+          `<script type="text/plain" id="live-engine">${engine}</script>` +
+          `<script type="text/plain" id="reel-index">${reel.index}</script>` +
+          `<script type="text/plain" id="reel-data">${reel.block}</script></body>`,
       );
       const { commit, generatedAt, dirty } = meta();
       html = html.replace(
@@ -108,6 +120,122 @@ function inlineIntoPage(): Plugin {
 }
 
 /**
+ * What the reel embeds, from the setup store: its imagery, the ground, the
+ * model, the sky's data and a coarse cut of the corridor's tiles. One base64
+ * block with an index, inert text until a reader starts the reel. It fails if
+ * the data isn't there: `npm run setup`, then `node handbook/reel/fetchData.mjs`.
+ */
+function reelData(): { index: string; block: string } {
+  const root =
+    process.env.FRAMES_DATA_DIR ?? join(homedir(), ".cesium-bench/frames");
+  const store = join(dirname(root), "handbook-reel");
+  const parts: { path: string; bytes: Buffer }[] = [];
+  const add = (path: string, bytes: Buffer) => parts.push({ path, bytes });
+  const walk = (folder: string) => {
+    for (const entry of readdirSync(join(store, folder), {
+      withFileTypes: true,
+    })) {
+      const path = `${folder}/${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(path);
+      } else {
+        add(path, readFileSync(join(store, path)));
+      }
+    }
+  };
+  if (!existsSync(join(store, "dem.json"))) {
+    throw new Error(
+      `handbook: no reel data in ${store}: run node handbook/reel/fetchData.mjs`,
+    );
+  }
+  walk("day");
+  walk("night");
+  add("dem.json", readFileSync(join(store, "dem.json")));
+  add("dem.f32", readFileSync(join(store, "dem.f32")));
+  add("Lantern.glb", readFileSync(join(store, "Lantern.glb")));
+  add("planets.pack", readFileSync(join(root, "planets-de440-2000-2050.pack")));
+  add("moon.pack", readFileSync(join(root, "moon-pa-de440-2000-2050.pack")));
+  add("EOP-All.csv", readFileSync(join(root, "EOP-All.csv")));
+
+  // The corridor down to a level that reads well from a kilometre away.
+  const corridor = join(root, "design-globe-dual/corridor");
+  const description = JSON.parse(
+    readFileSync(join(corridor, "tileset.json"), "utf8"),
+  ) as {
+    extensionsUsed?: string[];
+    extensions?: Record<string, unknown>;
+    root: ReelNode;
+  };
+  description.extensionsUsed = ["CESIUM_dual_position"];
+  description.extensions = {
+    CESIUM_dual_position: description.extensions?.CESIUM_dual_position,
+  };
+  const prune = (node: ReelNode, depth: number) => {
+    if (node.content) {
+      add(
+        `corridor/${node.content.uri}`,
+        readFileSync(join(corridor, node.content.uri)),
+      );
+    }
+    if (depth >= REEL_DEPTH) {
+      delete node.children;
+    } else {
+      for (const child of node.children ?? []) {
+        prune(child, depth + 1);
+      }
+    }
+  };
+  prune(description.root, 0);
+  add("corridor/tileset.json", Buffer.from(JSON.stringify(description)));
+  const answers = JSON.parse(
+    readFileSync(join(root, "design-globe-dual/answers.json"), "utf8"),
+  ) as {
+    points: {
+      station: number;
+      offset: number;
+      bodyFixed: number[];
+      displayError: number;
+      geodetic: { longitude: number; latitude: number };
+    }[];
+  };
+  add(
+    "corridor/points.json",
+    Buffer.from(
+      JSON.stringify(
+        answers.points
+          .filter((p) => p.offset === 0)
+          .map((p) => ({
+            s: p.station,
+            lon: (p.geodetic.longitude * 180) / Math.PI,
+            lat: (p.geodetic.latitude * 180) / Math.PI,
+            p: p.bodyFixed,
+            e: p.displayError,
+          })),
+      ),
+    ),
+  );
+
+  let offset = 0;
+  const index: Record<string, [number, number]> = {};
+  for (const part of parts) {
+    index[part.path] = [offset, part.bytes.length];
+    offset += part.bytes.length;
+  }
+  return {
+    index: JSON.stringify(index),
+    block: Buffer.concat(parts.map((p) => p.bytes)).toString("base64"),
+  };
+}
+
+interface ReelNode {
+  content?: { uri: string };
+  children?: ReelNode[];
+}
+
+/** The tree's levels the reel takes: its root holds the first level's content. */
+const REEL_DEPTH = 4;
+
+/**
  * Swaps two engine modules for the live view's: its workers, which a page
  * opened from disk can't start, and its Slang compiler, which it doesn't use.
  */
@@ -138,7 +266,7 @@ async function buildLiveEngine(): Promise<string> {
     envDir: false,
     publicDir: false,
     logLevel: "warn",
-    plugins: [liveViewModules()],
+    plugins: [liveViewModules(), basisTranscoderEsm()],
     build: {
       write: false,
       target: "es2023",

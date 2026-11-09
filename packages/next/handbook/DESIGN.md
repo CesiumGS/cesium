@@ -46,33 +46,45 @@ build at all (`envDir: false`).
 `BENCH_RESULTS_DIR` points the build at another `bench/results`, as a worktree has
 only the committed runs.
 
-## The live view
+## The reel
 
-Overview's "See it run" draws a small scene with the real engine, from inside the
-one file, with no network and no token. `viewer/` holds its scene. `vite.config.ts`
-builds that as one module and puts it in the page as inert text
-(`<script type="text/plain" id="live-engine">`), so nothing parses it until a reader
-presses Start, when `src/live.tsx` imports it from a blob.
+Overview's "See it run" is a guided reel of the real engine, in five chapters, from
+inside the one file, with no network and no token. `viewer/` holds its scenes.
+`vite.config.ts` builds them as one module, and puts that in the page as inert text
+(`<script type="text/plain" id="live-engine">`) beside one base64 block of data and
+its index (`reel-data`, `reel-index`). Nothing parses any of it until a reader presses
+Start, when `src/reel.tsx` imports the module from a blob.
 
-It reaches past the public API in three places, all in `viewer/`:
+The data isn't in the repository. `node handbook/reel/fetchData.mjs` fetches it into
+the setup store's `handbook-reel` directory, and the build reads that and the store's
+packs and corridor, and fails if they're missing. `handbook/reel/CREDITS.md` lists
+each source and its terms. `handbook/reel/shaders/compile.mjs` compiles the Slang
+presets to `presets.json`, with their sliders as constants.
+
+It reaches past the public API in these places, all in `viewer/`:
 
 - `viewer/workerPool.ts` replaces `src/io/WorkerPool.ts`, because Chromium won't
-  start module workers from a page opened from disk, even from a blob. It decodes
-  on the main thread and answers only terrain and image requests.
-- It imports `flatTerrainTile` from `src/globe/quantizedMesh.ts`, for those requests.
-- `viewer/slang.ts` replaces `src/scene/slang.ts`, as the scene compiles no Slang.
+  start module workers from a page opened from disk, even from a blob. It runs the
+  decoders on the main thread: `parseGltf`, `decodeQuantizedMesh`, `flatTerrainTile`
+  and `extractStars`.
+- That stand-in also gives `addEllipsoid`'s tiles the valley's ground, from
+  `viewer/terrain.ts`, which writes quantized-mesh bytes from 3DEP heights. So in the
+  reel an "ellipsoid" isn't flat around the corridor.
+- `viewer/slang.ts` replaces `src/scene/slang.ts`, as nothing compiles Slang here.
 
-`viewer/natural-earth-world.jpg` is Natural Earth II (public domain,
-naturalearthdata.com), stitched from the engine's level 2 tiles at 2048 by 1024.
-It's one tile because the engine addresses a geographic provider's level as a square
-grid, with Mercator rows in `GlobeImagery.job()`, which doesn't suit a geographic
-pyramid. If that changes, check the map still sits in the right place: the towers
-stand in Switzerland.
+Its imagery is Web Mercator tiles, as the engine addresses a geographic provider's
+levels as a square grid (`GlobeImagery.job()`), which doesn't suit a geographic pyramid.
+
+The vehicles step up one count at a time. Each step must settle and average under
+26 ms a tick before the next. Three ticks over 250 ms, an average over 50 ms or a GPU
+error steps back down and sets a ceiling for the visit, and the page says which.
 
 Check by hand when the engine changes: from `file://`, with stock browser flags, it
-starts on a click, the map and shadows look right, dragging orbits, and it submits
-no GPU work before the click, while idle, out of view or on another tab. A lost
-device shows the message and doesn't retry.
+starts on a click, each chapter looks right, dragging and the arrow keys take the
+camera, reduced motion neither advances nor moves, and it submits no GPU work before
+the click, out of view or after leaving the tab. A lost device shows the message and
+doesn't retry. Recapture `shots/reel-*.webp` if a chapter changes. A Moon chapter can
+go after plan 5c lands.
 
 ## Devices without core WebGPU
 
@@ -172,7 +184,7 @@ Details closed on screen print open.
 | Tessellation: the seam and the engine it leaves room for; the chart's dashed row | By hand, in `src/tabs/tessellation.tsx` and `src/pipeline.ts`, from the plan 5 spec                                                                                            | 2026-11-08                   |
 | 1.x to 2.0 API: the mapping and its tasks                                        | By hand, in `src/apiMap.ts` and `src/snippets.ts`. Counts and shares generated                                                                                                 | 2026-11-08                   |
 | Overview: the design targets and what they cost                                  | By hand, in `src/goals.tsx`, `src/costs.tsx` and `src/tabs/overview.tsx`, from the plans and 1.x source. Figures generated where the data exists; others cite the plan         | 2026-11-08                   |
-| Overview: the live view's still, `shots/live-globe.webp`                         | Captured by hand from the live view itself, in Edge. Holds only the globe                                                                                                      | 2026-11-08                   |
+| Overview: the reel's stills, `shots/reel-*.webp`                                 | Captured from the reel itself in Chrome, with its words hidden                                                                                                                 | 2026-11-08                   |
 | Dyno: how the pieces fit; each view by its job                                   | By hand, in `src/tabs/dyno.tsx`, from `bench/suite` and the overall plan, section 16                                                                                           | 2026-11-08                   |
 | Dyno: screenshots in `shots/`                                                    | Captured by hand from a short run of the one redistributable scene, in both themes where cheap. Check each by eye for tokens and account details. Licensed renders never go in | 2026-11-08                   |
 | Scene representation: what owns what                                             | By hand, in `src/tabs/scene.tsx`, from `SceneItem.ts`, `World.ts` and `Engine.ts`                                                                                              | 2026-11-08                   |
