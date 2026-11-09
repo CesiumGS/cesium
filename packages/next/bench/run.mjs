@@ -115,6 +115,11 @@ const suites = {
     "/bench/translucencyCost.html?bench",
     "runTranslucencyCost",
   ],
+  // What the observer, stars and glare cost, with synthetic stars (no data).
+  observerCost: [
+    `/bench/observerCost.html?bench${process.env.COST_RUNS ? `&runs=${process.env.COST_RUNS}` : ""}${process.env.COST_SUBMISSION === "direct" ? "&submission=direct" : ""}${process.env.COST_PACK === "local" ? "&pack=local" : ""}`,
+    "runObserverCost",
+  ],
   // Clamping heights on OSM Buildings vs 1.x (needs VITE_ION_TOKEN).
   heights: ["/parity/heights.html?bench", "runHeights"],
   tileset: [

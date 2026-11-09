@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Observer cost</title>
+  </head>
+  <body>
+    <!-- The runner's entry (bench/run.mjs observerCost). A person opens
+         ?bench=1&runs=5, which starts at once and offers "Copy results". -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./observerCost.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runObserverCost");
+    </script>
+  </body>
+</html>

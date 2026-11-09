@@ -157,6 +157,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../bench/translucencyCost.ts").then((m) => m.harness),
   },
   {
+    id: "observer-cost",
+    group: "microbenchmarks",
+    title: "Observer, stars and glare cost",
+    description:
+      "GPU time at 2560 × 1440 of star quads, strips and cells (by indirect draw and on the CPU), each glare tier, each stage and the eye's point limit, over synthetic stars that need no data.",
+    page: "/bench/observerCost.html",
+    entry: "runObserverCost",
+    load: () => import("../bench/observerCost.ts").then((m) => m.harness),
+  },
+  {
     id: "hitch",
     group: "microbenchmarks",
     title: "Hitches",
