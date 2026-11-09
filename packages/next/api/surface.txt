@@ -13,6 +13,7 @@ entry	name	kind	tier
 .	BudgetedSelection	class	-
 .	CESIUM_MOON_TERRAIN	const	-
 .	Camera	class	-
+.	CameraExposure	type	-
 .	CameraLayer	class	-
 .	CameraPose	interface	-
 .	CanvasTarget	class	-
@@ -49,6 +50,7 @@ entry	name	kind	tier
 .	EngineErrors	class	-
 .	EngineOptions	interface	-
 .	Exposure	type	-
+.	EyeExposure	type	-
 .	FeatureStyle	class	-
 .	FeatureStyleOptions	interface	-
 .	FeatureTable	interface	-
@@ -261,6 +263,7 @@ entry	name	kind	tier
 .	maxDisplacement	function	-
 .	memorySlangCache	function	-
 .	modelUsage	function	-
+.	observerPointSpread	function	-
 .	orbitBasis	function	-
 .	orbitPose	function	-
 .	placePosition	function	-

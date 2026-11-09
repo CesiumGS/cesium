@@ -311,17 +311,19 @@ export class View {
   }
   /**
    * Who is looking: everything between the scene's light and a pixel. A
-   * copy of what is set, which belongs to this view alone: written in
-   * place too, at any depth (`view.observer.exposure.ev100 = 12`), it wakes
-   * the engine's loop.
+   * copy of what is set, over what it has, which belongs to this view alone:
+   * written in place too, at any depth (`view.observer.exposure.ev100 = 12`),
+   * it wakes the engine's loop. A stage in the list can be in another view's
+   * list too (`PostStage`).
    */
   get observer(): ObserverSettings {
     return this.state.observer;
   }
-  set observer(value: ObserverSettings) {
-    checkStageList(value.stages);
+  set observer(value: Partial<ObserverSettings>) {
+    const settings = { ...this.state.observer, ...value };
+    checkStageList(settings.stages);
     this.state.observer = watchedTree(
-      value,
+      settings,
       this.observerChanged,
       (key, stages) => {
         if (key === "stages") {

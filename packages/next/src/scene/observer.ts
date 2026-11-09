@@ -47,14 +47,20 @@ export type Exposure =
    */
   | { eye: true; compensation?: number; speed?: number };
 
+/** The exposure of the eye, as against a camera's (`CameraExposure`). */
+export type EyeExposure = Extract<Exposure, { eye: true }>;
+
+/** An exposure a camera can have: all but the eye. */
+export type CameraExposure = Exclude<Exposure, { eye: true }>;
+
 /** The eye (`Exposure`): the `Viewer`'s default. */
-export const EYE: Exposure = { eye: true };
+export const EYE: EyeExposure = { eye: true };
 
 /** No exposure: for scenes lit without units (1.x's terms). */
-export const UNITLESS_EXPOSURE: Exposure = { scale: 1 };
+export const UNITLESS_EXPOSURE: CameraExposure = { scale: 1 };
 
 /** Daylight: EV100 15. */
-export const DAYLIGHT_EXPOSURE: Exposure = { ev100: 15 };
+export const DAYLIGHT_EXPOSURE: CameraExposure = { ev100: 15 };
 
 /** The exposure scale for an EV100 (Lagarde and de Rousiers 2014). */
 export const ev100ToScale = (ev100: number): number => 1 / (1.2 * 2 ** ev100);
@@ -112,8 +118,11 @@ export interface ObserverSettings {
   exposure: Exposure;
   /** How exposed light becomes display color. */
   toneMapping: ToneMapping;
-  /** The stars' point spread. */
-  pointSpread: PointSpread;
+  /**
+   * The stars' point spread. Unset, it follows `exposure`: the eye's, or a
+   * camera's (`observerPointSpread`), so one can't have the other's.
+   */
+  pointSpread?: PointSpread;
   /** Glare; null for none. */
   glare: GlareSettings | null;
   /**
@@ -124,9 +133,19 @@ export interface ObserverSettings {
 }
 
 /** The eye's point spread, CSS pixels. */
-const EYE_CORE = 0.85;
+const EYE_SPREAD: PointSpread = { core: 0.85 };
 /** A camera's point spread, CSS pixels. */
-const CAMERA_CORE = 0.55;
+const CAMERA_SPREAD: PointSpread = { core: 0.55 };
+
+/** The point spread an observer draws with: its own, or what its exposure implies. */
+export function observerPointSpread(
+  settings: Pick<ObserverSettings, "exposure" | "pointSpread">,
+): PointSpread {
+  return (
+    settings.pointSpread ??
+    ("eye" in settings.exposure ? EYE_SPREAD : CAMERA_SPREAD)
+  );
+}
 
 /**
  * A person looking (`Exposure`'s "eye"): `compensation` (stops) brightens
@@ -139,18 +158,16 @@ export function eyeObserver(
   return {
     exposure: { eye: true, ...options },
     toneMapping: "pbrNeutral",
-    pointSpread: { core: EYE_CORE },
     glare: null,
     stages: [],
   };
 }
 
 /** A camera at `exposure`: `{ ev100: 15 }` is direct sun. */
-export function cameraObserver(exposure: Exposure): ObserverSettings {
+export function cameraObserver(exposure: CameraExposure): ObserverSettings {
   return {
     exposure,
     toneMapping: "pbrNeutral",
-    pointSpread: { core: CAMERA_CORE },
     glare: null,
     stages: [],
   };

@@ -11,6 +11,7 @@ import {
   cameraObserver,
   ev100ToScale,
   eyeObserver,
+  observerPointSpread,
   scaleToEv100,
   type Exposure,
 } from "../src/scene/observer.ts";
@@ -61,20 +62,47 @@ describe("view.observer", () => {
     const { observer } = addView();
     expect(observer.exposure).toEqual({ ev100: 15 });
     expect(observer.toneMapping).toBe("pbrNeutral");
-    expect(observer.pointSpread.core).toBe(0.55);
+    expect(observerPointSpread(observer).core).toBe(0.55);
     expect(observer.glare).toBeNull();
     expect(observer.stages).toEqual([]);
   });
 
   it("has presets for the eye and a camera", () => {
-    expect(eyeObserver().pointSpread.core).toBe(0.85);
+    expect(observerPointSpread(eyeObserver()).core).toBe(0.85);
     expect(eyeObserver().exposure).toEqual({ eye: true });
     expect(eyeObserver({ compensation: 1 }).exposure).toEqual({
       eye: true,
       compensation: 1,
     });
     expect(cameraObserver({ ev100: 3 }).exposure).toEqual({ ev100: 3 });
-    expect(cameraObserver({ ev100: 3 }).pointSpread.core).toBe(0.55);
+    expect(observerPointSpread(cameraObserver({ ev100: 3 })).core).toBe(0.55);
+  });
+
+  it("is never half eye: the point spread follows the exposure", () => {
+    const eyeOnDefaults = addView(EYE);
+    expect(observerPointSpread(eyeOnDefaults.observer).core).toBe(0.85);
+    const camera = { ...eyeObserver(), exposure: { ev100: 3 } };
+    expect(observerPointSpread(camera).core).toBe(0.55);
+    const view = addView();
+    view.observer.exposure = EYE;
+    expect(observerPointSpread(view.observer).core).toBe(0.85);
+    view.observer.exposure = { scale: 1 };
+    expect(observerPointSpread(view.observer).core).toBe(0.55);
+    // One set outright stays set.
+    view.observer.pointSpread = { core: 2 };
+    view.observer.exposure = EYE;
+    expect(observerPointSpread(view.observer).core).toBe(2);
+    // @ts-expect-error The eye isn't a camera's exposure.
+    cameraObserver(EYE);
+  });
+
+  it("takes part of an observer, over what it has", () => {
+    const view = addView({ ev100: 3 });
+    view.observer.toneMapping = "agx";
+    view.observer = { exposure: { ev100: 5 } };
+    expect(view.observer.exposure).toEqual({ ev100: 5 });
+    expect(view.observer.toneMapping).toBe("agx");
+    expect(view.observer.stages).toEqual([]);
   });
 
   it("inverts ev100ToScale", () => {
@@ -93,7 +121,12 @@ describe("view.observer", () => {
       },
     ],
     ["its exposure", (v) => (v.observer.exposure = { ev100: 3 })],
-    ["a field of its point spread", (v) => (v.observer.pointSpread.core = 1)],
+    [
+      "a field of its point spread",
+      (v) => {
+        v.observer.pointSpread = { core: 0.5 };
+      },
+    ],
     [
       "a field of its glare",
       (v) => {
@@ -128,11 +161,11 @@ describe("view.observer", () => {
 
   it("keeps a copy: writes to what was set don't reach the view", () => {
     const view = addView();
-    const settings = eyeObserver();
+    const settings = { ...eyeObserver(), pointSpread: { core: 0.85 } };
     view.observer = settings;
     settings.pointSpread.core = 9;
     (settings.exposure as { compensation?: number }).compensation = 9;
-    expect(view.observer.pointSpread.core).toBe(0.85);
+    expect(view.observer.pointSpread?.core).toBe(0.85);
     expect(view.observer.exposure).toEqual({ eye: true });
   });
 
@@ -254,9 +287,9 @@ describe("Viewer.setSplit", () => {
     });
     second.observer = first.observer;
     (second.observer.exposure as { compensation: number }).compensation = 2;
-    second.observer.pointSpread.core = 3;
+    second.observer.pointSpread = { core: 3 };
     expect(first.observer.exposure).toEqual({ eye: true, compensation: 1 });
-    expect(first.observer.pointSpread.core).toBe(0.85);
+    expect(observerPointSpread(first.observer).core).toBe(0.85);
     expect(second.observer.exposure).toEqual({ eye: true, compensation: 2 });
     // The method itself assigns as above (a source pin: it needs a canvas).
     expect(

@@ -84,6 +84,8 @@ export {
   type PickResult,
 } from "./scene/View.ts";
 export {
+  type CameraExposure,
+  type EyeExposure,
   type GlarePupil,
   type Exposure,
   type GlareSettings,
@@ -98,6 +100,7 @@ export {
   cameraObserver,
   ev100ToScale,
   eyeObserver,
+  observerPointSpread,
   scaleToEv100,
 } from "./scene/observer.ts";
 export {
