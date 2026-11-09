@@ -218,7 +218,7 @@ async function allocSuite(page) {
       engineBytesPerFrame: Math.round(sum(engine) / ALLOC_FRAMES),
       topEngineSites: engine
         .sort((a, b) => b.bytes - a.bytes)
-        .slice(0, 12)
+        .slice(0, 40)
         .map((s) => ({
           site: s.site,
           bytesPerFrame: Math.round(s.bytes / ALLOC_FRAMES),
@@ -300,7 +300,10 @@ for (const name of names) {
   const [path, fn] = suites[name];
   const started = performance.now();
   process.stdout.write(`${name}… `);
-  await page.goto(`${BASE}${path}`);
+  // ALLOC_GLARE=1: the allocation gate with glare on, in every view.
+  const query =
+    name === "alloc" && process.env.ALLOC_GLARE === "1" ? "?glare=1" : "";
+  await page.goto(`${BASE}${path}${query}`);
   await page.waitForFunction((f) => typeof globalThis[f] === "function", fn, {
     timeout: 60_000,
   });

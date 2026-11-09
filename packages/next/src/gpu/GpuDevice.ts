@@ -52,6 +52,13 @@ export interface DeviceEvents {
   error: GPUError;
 }
 
+/** What the adapter says of itself (`GpuDevice.adapterInfo`). */
+export interface GpuAdapterInfo {
+  vendor: string;
+  architecture: string;
+  isFallbackAdapter: boolean;
+}
+
 /**
  * Owns the GPUDevice. Requires core WebGPU (compatibility mode is a
  * non-goal) and treats device loss as a normal event: when the browser drops
@@ -65,6 +72,8 @@ export class GpuDevice {
   private _adapter: GPUAdapter;
   private _caps: Capabilities;
   private _destroyed = false;
+  private infoFor: GPUAdapter | undefined;
+  private info: GpuAdapterInfo | undefined;
 
   private constructor(
     adapter: GPUAdapter,
@@ -97,6 +106,22 @@ export class GpuDevice {
 
   get adapter(): GPUAdapter {
     return this._adapter;
+  }
+
+  /** What glare's tiers go by: read once from the adapter (a new one on recovery). */
+  get adapterInfo(): GpuAdapterInfo {
+    if (this.infoFor !== this._adapter) {
+      this.infoFor = this._adapter;
+      const { info } = this._adapter;
+      const fallback = (info as { isFallbackAdapter?: boolean })
+        .isFallbackAdapter;
+      this.info = {
+        vendor: `${info.vendor}`,
+        architecture: `${info.architecture}`,
+        isFallbackAdapter: fallback === true,
+      };
+    }
+    return this.info!;
   }
 
   get caps(): Capabilities {

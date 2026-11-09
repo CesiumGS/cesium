@@ -232,6 +232,7 @@ entry	name	kind	tier
 .	World	class	-
 .	WorldMemory	interface	-
 .	astrophotoCurveStage	function	-
+.	cameraGlare	function	-
 .	cameraObserver	function	-
 .	cartographic	function	-
 .	castTerrainRay	function	-
@@ -246,6 +247,7 @@ entry	name	kind	tier
 .	eastNorthUpToFixedFrame	function	-
 .	enuBasis	function	-
 .	ev100ToScale	const	-
+.	eyeGlare	function	-
 .	eyeLimitStage	function	-
 .	eyeObserver	function	-
 .	fromDegrees	function	-

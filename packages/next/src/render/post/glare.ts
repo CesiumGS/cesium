@@ -6,7 +6,11 @@ import { GLARE_BRIGHT_STARS } from "../../atmosphere/starCells.ts";
 import type { GpuTimer } from "../../gpu/GpuTimer.ts";
 import type { Camera } from "../../scene/Camera.ts";
 import { lightListFor, type LightList } from "../../scene/lightList.ts";
-import type { GlarePupil } from "../../scene/observer.ts";
+import type {
+  GlarePupil,
+  GlareSettings,
+  GlareTier,
+} from "../../scene/observer.ts";
 import type { View } from "../../scene/View.ts";
 import type { FrameGraph } from "../FrameGraph.ts";
 import {
@@ -160,7 +164,103 @@ export interface GlareEngine {
     readonly timer: Pick<GpuTimer, "passWrites">;
     readonly glareKernels: GlareKernels;
   };
+  readonly gpu: { readonly adapterInfo: GlareAdapter };
   requestRender(): void;
+}
+
+/** What a tier goes by (`GpuDevice.adapterInfo`). */
+export interface GlareAdapter {
+  readonly vendor: string;
+  readonly isFallbackAdapter: boolean;
+}
+
+/**
+ * The tier for an adapter at `pixels` of view: a fallback adapter has none; Intel starts
+ * reduced, and only sources above 3.7 million pixels; anything else is full, and reduced
+ * above 8.3 million. Starting values: nothing but an M2 has been measured.
+ */
+export function glareTier(adapter: GlareAdapter, pixels: number): GlareTier {
+  if (adapter.isFallbackAdapter) {
+    return "off";
+  }
+  if (adapter.vendor.toLowerCase().includes("intel")) {
+    return pixels > 3_700_000 ? "sources" : "reduced";
+  }
+  return pixels > 8_300_000 ? "reduced" : "full";
+}
+
+/** What a view's glare settings mean on its adapter. */
+export interface ResolvedGlare {
+  tier: GlareTier;
+  /** The pyramid's levels; 0 for no pyramid. */
+  levels: number;
+  /** A level's σ is this × 2^i pixels, and the pyramid's base 1 / this of the view. */
+  basePixels: number;
+  /** The sun's veil, in closed form, and the veil from the image with `levels`. */
+  sunVeil: boolean;
+  spikes: boolean;
+  /** Records the list may hold, the sun's among them. */
+  sprites: number;
+  /** The pixels its sprites may cover. */
+  spritePixels: number;
+}
+
+const OFF: ResolvedGlare = {
+  tier: "off",
+  levels: 0,
+  basePixels: 2,
+  sunVeil: false,
+  spikes: false,
+  sprites: 0,
+  spritePixels: 0,
+};
+
+/** Levels, base, and sprites and pixels, by tier (the plan's "GPU safety"). */
+const TIERS: Readonly<
+  Record<
+    Exclude<GlareTier, "off">,
+    {
+      levels: number;
+      basePixels: number;
+      sprites: number;
+      spritePixels: number;
+    }
+  >
+> = {
+  full: {
+    levels: VEIL_LEVELS,
+    basePixels: 2,
+    sprites: GLARE_SOURCES,
+    spritePixels: GLARE_SPRITE_PIXELS,
+  },
+  reduced: { levels: 7, basePixels: 4, sprites: 64, spritePixels: 1_000_000 },
+  sources: { levels: 0, basePixels: 2, sprites: 16, spritePixels: 1_000_000 },
+};
+
+/** What `settings` mean for this adapter at `pixels` of view. */
+export function resolveGlare(
+  settings: GlareSettings | null,
+  adapter: GlareAdapter,
+  pixels: number,
+): ResolvedGlare {
+  if (!settings || (!settings.veil && !settings.spikes)) {
+    return OFF;
+  }
+  const tier =
+    settings.tier === "auto" ? glareTier(adapter, pixels) : settings.tier;
+  if (tier === "off") {
+    return OFF;
+  }
+  const { levels, basePixels, sprites, spritePixels } = TIERS[tier];
+  return {
+    tier,
+    levels: settings.veil ? levels : 0,
+    basePixels,
+    sunVeil: !!settings.veil,
+    spikes: !!settings.spikes,
+    sprites,
+    spritePixels,
+  };
 }
 
 /** A view's glare: its list, and what fills it. */
@@ -183,6 +283,7 @@ export class GlareViewState {
   constructor(
     private readonly engine: GlareEngine,
     private readonly view: View,
+    private readonly resolved: ResolvedGlare,
   ) {
     const { device } = engine.ctx;
     this.sources = device.createBuffer({
@@ -240,8 +341,8 @@ export class GlareViewState {
       data[51] = 0;
       data.fill(0, 52, 84);
     }
-    data[48] = GLARE_SPRITE_PIXELS;
-    data[49] = GLARE_SOURCES;
+    data[48] = this.resolved.spritePixels;
+    data[49] = this.resolved.sprites;
     engine.ctx.device.queue.writeBuffer(this.frameBuffer, 0, data);
     this.fresh = true;
   }
@@ -702,15 +803,23 @@ export function glareFor(
   width: number,
   height: number,
 ): { entries: readonly ChainEntry[]; state: GlareViewState } | undefined {
-  if (view.observer.glare === null || width < 2 || height < 2) {
+  if (width < 2 || height < 2) {
     return undefined;
   }
-  const state = new GlareViewState(engine, view);
+  const resolved = resolveGlare(
+    view.observer.glare,
+    engine.gpu.adapterInfo,
+    width * height,
+  );
+  if (resolved.tier === "off") {
+    return undefined;
+  }
+  const state = new GlareViewState(engine, view, resolved);
   const entries: ChainEntry[] = [
     state.sourcesStage(),
-    veilStage(VEIL_LEVELS, 2),
+    veilStage(resolved.levels, resolved.basePixels),
   ];
-  if (view.observer.glare.spikes) {
+  if (resolved.spikes) {
     entries.push(state.spritesStage());
   }
   return { entries, state };

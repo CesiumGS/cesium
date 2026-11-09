@@ -158,6 +158,28 @@ export function cameraObserver(exposure: CameraExposure): ObserverSettings {
   };
 }
 
+/**
+ * The eye's glare, for `ObserverSettings.glare`: a veil, and no spikes. The veil's
+ * share of the light is the paper's 0.2, a choice and not a measurement.
+ */
+export function eyeGlare(): GlareSettings {
+  return { tier: "auto", veil: { share: 0.2 }, spikes: null };
+}
+
+/**
+ * A camera's glare, for `ObserverSettings.glare`: a veil, and the spikes of its
+ * `aperture` (default "vanes"), computed once in a worker.
+ */
+export function cameraGlare(
+  options: { aperture?: GlarePupil } = {},
+): GlareSettings {
+  return {
+    tier: "auto",
+    veil: { share: 0.2 },
+    spikes: { aperture: options.aperture ?? "vanes", share: 0.05, extent: 3 },
+  };
+}
+
 /** What a view's observer is doing now (`View.readout`). */
 export interface ObserverReadout {
   /**

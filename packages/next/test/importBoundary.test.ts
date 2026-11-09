@@ -432,6 +432,9 @@ function tierOf(file: string): CoreTier | undefined {
  * Edges the layers don't allow yet, each with why. A stale entry fails too.
  */
 const TIER_EXCEPTIONS: Readonly<Record<string, string>> = {
+  // A plain function with no GPU types: a kernel is computed once, off the main thread.
+  "src/io/worker.ts → src/render/post/glareKernel.ts":
+    "the worker computes a glare kernel",
   // Public signatures, for the API review (5i): `Tileset3D.world`,
   // `Tileset3D.load`, `Globe.create`.
   "src/streaming/Tileset3D.ts → src/scene/World.ts": "public signature",
@@ -636,13 +639,20 @@ it("the observer's settings, a stage's definition and the sky pack's format hold
     "src/scene/observer.ts",
     "src/scene/postStage.ts",
     "src/atmosphere/skyPack.ts",
+    "src/scene/lightList.ts",
+    "src/render/post/veilWeights.ts",
+    "src/render/post/glareKernel.ts",
   ]) {
     const code = readFileSync(join(root, file), "utf8");
     expect(code.match(/\bGPU[A-Z]\w*/g) ?? [], file).toEqual([]);
     expect(
       edgesOf(file)
         .map((edge) => edge.to)
-        .filter((to) => /^src\/(gpu|render)\//.test(to)),
+        .filter(
+          (to) =>
+            /^src\/(gpu|render)\//.test(to) &&
+            !/^src\/render\/post\/(veilWeights|glareKernel)/.test(to),
+        ),
       file,
     ).toEqual([]);
   }

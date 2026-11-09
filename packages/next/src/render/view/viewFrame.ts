@@ -48,6 +48,7 @@ export interface ViewFrameEngine extends Pick<
   | "bodyCamera"
   | "cameras"
   | "ctx"
+  | "gpu"
   | "requestRender"
   | "stats"
   | "sunDirection"

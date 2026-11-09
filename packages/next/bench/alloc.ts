@@ -2,6 +2,7 @@ import {
   CanvasTarget,
   Ellipsoid,
   Engine,
+  cameraGlare,
   createBox,
   eastNorthUpToFixedFrame,
   fromDegrees,
@@ -105,6 +106,17 @@ async function allocSetup(
   });
   second.camera.lookAt(centerCartesian, 210 * deg, -25 * deg, side * 14);
   engine.link(main, inset, { modes: ["footprint"] });
+  if (new URLSearchParams(location.search).get("glare") === "1") {
+    for (const view of [main, inset, second]) {
+      view.observer.glare = cameraGlare();
+    }
+    await engine.ctx.pipelines.glare();
+    // Its kernel arrives once; steady state is after that.
+    while (!engine.raster.glareKernels.get("vanes")) {
+      engine.renderFrame();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  }
 
   // Long enough for the optimizing JIT to settle, so the gate measures
   // steady state rather than interpreter boxing.

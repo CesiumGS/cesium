@@ -37,6 +37,7 @@ export interface RenderTickEngine extends Pick<
   | "cameras"
   | "clamping"
   | "ctx"
+  | "gpu"
   | "icrfToFixed"
   | "links"
   | "maximumUploadBytesPerFrame"

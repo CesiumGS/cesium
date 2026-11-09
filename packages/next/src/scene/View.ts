@@ -292,11 +292,12 @@ export class View {
   private observerRevision_ = 0;
   /** The stages it listens to: their changes wake the loop too. */
   private stages_: readonly PostStage[] = [];
-  /** Glare was on when `stagesRevision` last moved. */
-  private glared_ = false;
+  /** What glare's passes were when `stagesRevision` last moved. */
+  private glareShape_ = "";
   /**
    * @internal Counts changes to what's in the view's chain, each of which
-   * rebuilds its graph: the list of stages, and glare turned on or off.
+   * rebuilds its graph: the list of stages, and glare's shape: on or off, its tier,
+   * whether it has a veil and spikes. A value within them, a share, doesn't.
    */
   stagesRevision = 0;
 
@@ -342,9 +343,12 @@ export class View {
   private syncStages(): void {
     const stages = this.state.observer.stages;
     const old = this.stages_;
-    const glared = this.state.observer.glare !== null;
-    if (glared !== this.glared_) {
-      this.glared_ = glared;
+    const { glare } = this.state.observer;
+    const shape = glare
+      ? `${glare.tier}|${glare.veil ? 1 : 0}|${glare.spikes ? 1 : 0}`
+      : "";
+    if (shape !== this.glareShape_) {
+      this.glareShape_ = shape;
       this.stagesRevision++;
     }
     if (
