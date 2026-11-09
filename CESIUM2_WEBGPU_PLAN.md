@@ -8418,6 +8418,7 @@ Do this around plan 5f's fitted operations, before building them. Goal: one eleg
 - **Everything else carried per vertex or per instance:** instances, skins and morph targets when animation arrives, and what custom shaders see (`positionMC`, `normalMC`, design and placed).
 - **Bounds, picks and snaps, and shadow casters** through the same model, and the inter-stage varying budget, which is full.
 - **What the tile format carries,** and how it relates to glTF 2.1 external assets and 3D Tiles (§13.25).
+- **Curves through placement.** Vector geometry as render curves: an exact source (a circle or clothoid in its own CRS), then placement, then quadratic segments with an optional rational weight and a per-segment error bound, refined by view. A conic stays a conic only under projective maps, and a reprojection isn't one, so a circle is exact in design coordinates only, and a measure or snap goes back to the source. Quadratics through a perspective view become rational. Planar faces with curved trims and 3D Tiles 2.0's 3D-native vectors both meet this; curved surfaces meet the tessellation seam, and b-reps (§13.20).
 
 ## 14. Follow-ups
 
