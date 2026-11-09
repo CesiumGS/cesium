@@ -8407,6 +8407,16 @@ Not built. Air-gapped and offline use can't download data at runtime, so ephemer
 
 **For a later brainstorm:** the full version. Models and per-node transforms (5d), `DrawHandle`, `MeshHandle` and `ModelPlacement` as items, the globe as an item, one tileset shared across worlds, groups, editing (§13.20), and how far this should resemble USD's references. Take it up before or with the API review (5i). The owner leans toward following USD's concepts, anticipating a possible convergence of USD with 3D Tiles and glTF: read USD's model of prims, references, payloads and composition, and today's OpenUSD and glTF interoperability work, before settling names and structure. Also read glTF 2.1, in development in the open at Khronos (tracking issue `KhronosGroup/glTF#2585`, read 2026-11-08; explainers, with schema and normative text still to come). A node can reference an external glTF or GLB, loaded once and instantiated many times; bounding volumes on nodes can drive deferred loading; streaming and level of detail aren't defined in its core, and it cites 3D Tiles' extensions for those. So an item's content could be one glTF that refers to others, and 3D Tiles and external assets overlap on loading content on demand. Khronos calls it complementary to OpenUSD.
 
+### 13.26 For later: an architectural review of geometry through placement (owner, 2026-11-08)
+
+Do this around plan 5f's fitted operations, before building them. Goal: one elegant way of handling reference frames and reprojection through the geometry pipeline, without patched-together machinery. Things it has to settle:
+
+- **One model of a placement:** rigid, dual position and fitted operation as cases of a single idea, and what each layer owns: the frame tree (rigid), coordinate operations (non-rigid), content (precomputed results), and the renderer's placement seam (applying the mapping per vertex).
+- **Normals and tangents.** Today a dual-position vertex moves but keeps its rigid normal: 0.197 degrees on the 44 km corridor, 0.225 calculated at 50 km. Tried on 2026-11-08: deriving it per fragment from both positions. It fails, because the design position isn't in the fragment stage, a varying would cost every draw, and float32 derivative noise is estimated at about 0.13 degrees up close. Other options: a second normal, 12 bytes a vertex or about 4 octahedrally encoded; a displacement varying on placed draws; or dropping dual positions for a fitted operation with its Jacobian.
+- **Everything else carried per vertex or per instance:** instances, skins and morph targets when animation arrives, and what custom shaders see (`positionMC`, `normalMC`, design and placed).
+- **Bounds, picks and snaps, and shadow casters** through the same model, and the inter-stage varying budget, which is full.
+- **What the tile format carries,** and how it relates to glTF 2.1 external assets and 3D Tiles (§13.25).
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
