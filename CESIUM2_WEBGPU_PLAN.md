@@ -8384,6 +8384,8 @@ Not yet tested. Intel's article 000102979 ("Simple WebGPU application Hangs with
 - Check whether `SubmissionMode = "direct"` avoids the hang and covers every draw path, and what it costs. If so, fall back per adapter.
 - Add Intel integrated and AMD machines to the bench's coverage.
 
+**First result (owner, 2026-11-08):** `spikes/gpu-check.html` passed all its steps on an Intel adapter reporting architecture xe-lpg, with no device loss. Driver version and full report still to record. Xe-LPG is a newer architecture than the Xe-LP (UHD 7xx, Iris Xe) that the article names, so that case is still untested.
+
 ### 13.24 Reference data shipped with the engine (owner, 2026-11-08)
 
 Not built. Air-gapped and offline use can't download data at runtime, so ephemerides and related reference data should be available bundled, license permitting. Today `scripts/frameData.mjs` and `scripts/setup.mjs` download them into a store outside the repo.
