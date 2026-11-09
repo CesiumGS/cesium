@@ -1383,6 +1383,13 @@ export class Tileset3D implements TileTree {
     }
     if (item.holdsBase) {
       this.baseItem = item;
+      // The tile's own draws, hidden when the last base item left: a tile that
+      // stays selected has masks that don't change, so `update` won't write
+      // them. A plain item's `place` writes nothing, so it happens here.
+      for (const tile of placed) {
+        item.applyViewMask(tile);
+        item.applyCasterMask(tile);
+      }
     }
     this.itemList.push(item);
     this.surfaceChanged();
@@ -1813,11 +1820,28 @@ export class Tileset3D implements TileTree {
       this.lastSelected.set(view.id, result.selected);
       this.stats.selected.set(view.id, result.selected.length);
     }
+    // A view that left has no selection: other tilesets' casters look for
+    // their receivers in this list, and credits read it.
+    for (const id of this.lastSelected.keys()) {
+      if (!views.some((view) => view.id === id)) {
+        this.lastSelected.delete(id);
+        this.stats.selected.delete(id);
+      }
+    }
     this.viewBytes = viewBytes;
-    // Shadow casters, now that the bytes views use are known.
-    const room = this.casterRoom(views, frame, now);
+    // Shadow casters, now that the bytes views use are known: only for the
+    // views some item can cast in. Elsewhere a caster would be fetched and
+    // counted, and its records would cast nothing.
+    let castingIn = 0;
+    for (const item of this.itemList) {
+      castingIn |= item.castViews;
+    }
+    const casterViews = views.filter(
+      (view) => ((castingIn >>> view.id) & 1) !== 0,
+    );
+    const room = this.casterRoom(casterViews, frame, now);
     if (room) {
-      for (const view of views) {
+      for (const view of casterViews) {
         const found = this.policy.selectCasters!(
           this.root,
           this.geometricError,

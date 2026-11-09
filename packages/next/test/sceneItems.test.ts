@@ -4,6 +4,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
+import * as v3 from "../src/math/vec3.ts";
 import {
   CASTER_MASK_WORD,
   COLOR_WORD,
@@ -17,8 +18,9 @@ import {
   RecordFlags,
   VIEW_MASK_WORD,
 } from "../src/render/layout.ts";
+import { CapacityError } from "../src/scene/CapacityError.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { OffscreenTarget } from "../src/scene/View.ts";
+import { OffscreenTarget, type View } from "../src/scene/View.ts";
 import type { DrawHandle, World } from "../src/scene/World.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import type { Tileset3D, TilesetOptions } from "../src/streaming/Tileset3D.ts";
@@ -941,6 +943,242 @@ describe("scene items", () => {
       const names = (s.world as unknown as { names: (string | undefined)[] })
         .names;
       expect(names[twin.index]).toBe(names[own.index]);
+      s.remove();
+    });
+  });
+
+  describe("an item added after the base item left", () => {
+    it("drawn again when added in the same tick its base item left", async () => {
+      const s = await scene();
+      const own = s.first().placement!.draws[0]!;
+      s.tileset.items[0]!.remove();
+      const again = s.world.add(s.tileset); // plain, and now the base item
+      expect(again.holdsBase).toBe(true);
+      await frames(6);
+      expect(s.record(own).viewMask & s.bit).not.toBe(0);
+      s.remove();
+    });
+
+    it("drawn again when a further item kept the tile selected", async () => {
+      const s = await scene();
+      const own = s.first().placement!.draws[0]!;
+      s.world.add(s.tileset, { tint: [1, 0, 0] });
+      s.tileset.items[0]!.remove();
+      await frames(5);
+      expect(s.record(own).viewMask).toBe(0);
+      const c = s.world.add(s.tileset);
+      expect(c.holdsBase).toBe(true);
+      await frames(8);
+      expect(s.record(own).viewMask & s.bit).not.toBe(0);
+      s.remove();
+    });
+
+    it("hidden or masked, it doesn't show the tile's own draws", async () => {
+      const s = await scene();
+      const own = s.first().placement!.draws[0]!;
+      s.world.add(s.tileset, { tint: [1, 0, 0] });
+      s.tileset.items[0]!.remove();
+      await frames(2);
+      const hidden = s.world.add(s.tileset, { show: false });
+      expect(hidden.holdsBase).toBe(true);
+      await frames(2);
+      expect(s.record(own).viewMask).toBe(0);
+      hidden.show = true;
+      expect(s.record(own).viewMask & s.bit).not.toBe(0);
+      s.remove();
+    });
+  });
+
+  describe("casters and what items can cast", () => {
+    const FLOOR = tile("floor.gltf", [R, 0, 20]);
+    /** Behind the camera, toward the sun: reaches the view by its shadow alone. */
+    const ROOF = tile("roof.gltf", [R + 15, 0, -5], 5);
+
+    /** A loaded tileset with no item yet, two shadowed views on `serve`'s site. */
+    async function shadowed(viewCount = 1) {
+      contents = { "floor.gltf": () => slab(10), "roof.gltf": () => slab(5) };
+      serve([FLOOR, ROOF]);
+      vi.mocked(engine.loadGltf).mockClear();
+      const world: World = engine.createWorld({ maxDraws: 64 });
+      const tileset = await engine.loadTileset(URL_);
+      const views = Array.from({ length: viewCount }, () =>
+        engine.addView({
+          target: new OffscreenTarget(64, 48),
+          world,
+          shadows: true,
+        }),
+      );
+      for (const view of views) {
+        view.camera.position.set([R + 2, 0, 0]);
+        view.camera.direction.set([0, 0, 1]);
+        view.camera.orient(Float64Array.of(1, 0, 0));
+        view.camera.version++;
+      }
+      v3.normalize(engine.sunDirection, v3.vec3(1, 0, -1));
+      const fetched = () =>
+        vi
+          .mocked(engine.loadGltf)
+          .mock.calls.map((call) => String(call[0]).split("/").pop());
+      const [floor, roof] = tileset.root.children as Tile[];
+      return {
+        world,
+        tileset,
+        views,
+        fetched,
+        floor: floor!,
+        roof: roof!,
+        remove() {
+          for (const view of views) {
+            engine.removeView(view);
+          }
+          engine.removeTileset(tileset);
+        },
+      };
+    }
+
+    it("the control: an opaque item fetches and casts its off-screen caster", async () => {
+      const s = await shadowed();
+      s.world.add(s.tileset);
+      await frames(15);
+      expect(s.fetched()).toContain("roof.gltf");
+      expect(s.tileset.stats.casters).toBe(1);
+      expect(s.tileset.stats.purposes.caster.drawn).toBe(1);
+      s.remove();
+    });
+
+    it("a translucent only item fetches no caster, and the stats say so", async () => {
+      const s = await shadowed();
+      s.world.add(s.tileset, { opacity: 0.5 });
+      await frames(15);
+      expect(s.fetched()).toContain("floor.gltf");
+      expect(s.fetched()).not.toContain("roof.gltf");
+      expect(s.tileset.stats.casters).toBe(0);
+      expect(s.tileset.stats.casterBytes).toBe(0);
+      expect(s.tileset.stats.purposes.caster.requests).toBe(0);
+      expect(s.tileset.stats.purposes.caster.drawn).toBe(0);
+      s.remove();
+    });
+
+    it("a hidden only item fetches no caster", async () => {
+      const s = await shadowed();
+      s.world.add(s.tileset, { show: false });
+      await frames(15);
+      expect(s.fetched()).not.toContain("roof.gltf");
+      expect(s.tileset.stats.casters).toBe(0);
+      expect(s.tileset.stats.purposes.caster.drawn).toBe(0);
+      s.remove();
+    });
+
+    it("per view: A opaque in view 1 only, B translucent in view 2 only", async () => {
+      const s = await shadowed(2);
+      const [v1, v2] = s.views as [View, View];
+      const bit1 = engine.viewBit(v1);
+      const bit2 = engine.viewBit(v2);
+      s.world.add(s.tileset, { viewMask: bit1 });
+      s.world.add(s.tileset, { opacity: 0.4, viewMask: bit2 });
+      // View 1 is far from the site, so the roof casts into view 2 alone, if
+      // it casts at all.
+      v1.camera.position.set([R + 2, 0, 4000]);
+      v1.camera.version++;
+      await frames(15);
+      expect(s.floor.viewMask & bit2).not.toBe(0);
+      expect(s.fetched()).not.toContain("roof.gltf");
+      expect(s.roof.casterMask).toBe(0);
+      expect(s.tileset.stats.purposes.caster.drawn).toBe(0);
+      // Back at the site, view 1 has an item that can cast.
+      v1.camera.position.set([R + 2, 0, 0]);
+      v1.camera.version++;
+      await frames(15);
+      expect(s.fetched()).toContain("roof.gltf");
+      expect(s.roof.casterMask & bit1).not.toBe(0);
+      expect(s.roof.casterMask & bit2).toBe(0);
+      s.remove();
+    });
+
+    it("an item turned opaque starts casting, turned translucent it lets its casters go", async () => {
+      const s = await shadowed();
+      const item = s.world.add(s.tileset, { opacity: 0.5 });
+      await frames(10);
+      expect(s.fetched()).not.toContain("roof.gltf");
+      item.opacity = 1;
+      await frames(15);
+      expect(s.fetched()).toContain("roof.gltf");
+      expect(s.tileset.stats.casters).toBe(1);
+      item.opacity = 0.5;
+      await frames(4);
+      expect(s.tileset.stats.casters).toBe(0);
+      expect(s.roof.casterMask).toBe(0);
+      s.remove();
+    });
+
+    it("a view an item left stops being a receiver for other tilesets", async () => {
+      contents = {
+        "a/floor.gltf": () => slab(10),
+        "b/roof.gltf": () => slab(5),
+      };
+      const urlA = `${BASE}a/tileset.json`;
+      const urlB = `${BASE}b/tileset.json`;
+      vi.stubGlobal("fetch", async (input: string | URL) => {
+        const name = String(input);
+        const child = name === urlA ? FLOOR : name === urlB ? ROOF : undefined;
+        return child
+          ? new Response(JSON.stringify(tilesetJson([child], false)))
+          : new Response("not found", { status: 404 });
+      });
+      const world: World = engine.createWorld({ maxDraws: 64 });
+      const a = await engine.addTileset(world, urlA);
+      const b = await engine.addTileset(world, urlB);
+      const view = engine.addView({
+        target: new OffscreenTarget(64, 48),
+        world,
+        shadows: true,
+      });
+      view.camera.position.set([R + 2, 0, 0]);
+      view.camera.direction.set([0, 0, 1]);
+      view.camera.orient(Float64Array.of(1, 0, 0));
+      view.camera.version++;
+      v3.normalize(engine.sunDirection, v3.vec3(1, 0, -1));
+      await frames(15);
+      const roof = b.root.children[0] as Tile;
+      expect(roof.casterMask).not.toBe(0);
+      a.items[0]!.remove();
+      await frames(6);
+      expect(roof.casterMask).toBe(0);
+      expect(a.lastSelected.size).toBe(0);
+      expect(a.stats.selected.size).toBe(0);
+      engine.removeView(view);
+      engine.removeTileset(a);
+      engine.removeTileset(b);
+    });
+  });
+
+  describe("a setter the world can't honour", () => {
+    it("opacity stays as it was after a CapacityError, and can be asked again", async () => {
+      serve([tile("a.gltf", [R, 0, 50])]);
+      // Room for the content's material and no twin.
+      const world: World = engine.createWorld({
+        maxDraws: 16,
+        maxMaterials: 2,
+      });
+      const tileset = await engine.addTileset(world, URL_);
+      const view = aimed(world);
+      await frames();
+      const s = helpers(world, tileset, view);
+      const item = tileset.items[0]!;
+      const own = s.first().placement!.draws[0]!;
+      const material = world.drawMaterial(own);
+      expect(() => {
+        item.opacity = 0.5;
+      }).toThrow(CapacityError);
+      expect(item.opacity).toBe(1);
+      expect(s.record(own).color[3]).toBe(1);
+      expect(world.drawMaterial(own)).toBe(material);
+      expect(s.record(own).viewMask & s.bit).not.toBe(0);
+      // The same value again tries again, rather than doing nothing.
+      expect(() => {
+        item.opacity = 0.5;
+      }).toThrow(CapacityError);
+      expect(item.opacity).toBe(1);
       s.remove();
     });
   });

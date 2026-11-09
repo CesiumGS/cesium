@@ -74,9 +74,11 @@ export interface SceneItemOptions {
   /**
    * Its custom shader: full control of how this item looks, the same
    * `CustomShader` a tileset takes. A `FeatureStyle`'s shader (`style.shader`)
-   * works here too, per item. Default the tileset's (`TilesetOptions.customShader`
-   * or `style`), or none; an item's own shader replaces the tileset's, and
-   * doesn't combine with it. A shader that wants no lighting sets
+   * works here too, per item, with one limit: a string property's column is
+   * uploaded only for a style made before its content, so on a tile already
+   * loaded when the style was made it reads 0, and `Engine.errors` says so.
+   * Default the tileset's (`TilesetOptions.customShader` or `style`), or none;
+   * an item's own shader replaces the tileset's, and doesn't combine with it. A shader that wants no lighting sets
    * `material.unlit`. Until a new shader's pipelines compile it draws with the
    * engine's.
    */
@@ -274,11 +276,27 @@ export class SceneItem {
       return;
     }
     const was = this.opacity_;
-    this.opacity_ = opacity;
-    this.setColorWords();
     const passes =
       was >= OPAQUE_OPACITY !== opacity >= OPAQUE_OPACITY ||
       (was === 0) !== (opacity === 0);
+    try {
+      this.applyOpacity(opacity, passes);
+    } catch (error) {
+      // No room for a blended twin (`CapacityError`): back as it was, so it
+      // reads as it draws and asking again tries again. Going back makes no
+      // twins, it only frees the ones just made.
+      this.applyOpacity(was, passes);
+      throw error;
+    }
+    if (passes) {
+      this.host.surfaceChanged();
+    }
+    this.host.changed();
+  }
+
+  private applyOpacity(opacity: number, passes: boolean): void {
+    this.opacity_ = opacity;
+    this.setColorWords();
     this.forEachLoaded((tile, entry) => {
       this.applyColor(entry);
       if (passes) {
@@ -287,13 +305,6 @@ export class SceneItem {
         this.applyCasterMask(tile);
       }
     });
-    if (
-      was >= OPAQUE_OPACITY !== opacity >= OPAQUE_OPACITY ||
-      (was === 0) !== (opacity === 0)
-    ) {
-      this.host.surfaceChanged();
-    }
-    this.host.changed();
   }
 
   /** See `SceneItemOptions.viewMask`. */
@@ -409,6 +420,16 @@ export class SceneItem {
    */
   get views(): number {
     return this.removed_ ? 0 : this.viewMask_;
+  }
+
+  /**
+   * @internal The views it can cast shadows in, as `applyCasterMask` lets it:
+   * shown and opaque.
+   */
+  get castViews(): number {
+    return !this.removed_ && this.show_ && this.opacity_ >= OPAQUE_OPACITY
+      ? this.viewMask_
+      : 0;
   }
 
   /** Whether it draws tiles as they load, changing nothing. */
