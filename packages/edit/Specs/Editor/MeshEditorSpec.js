@@ -2,7 +2,9 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
+  Matrix3,
   Matrix4,
+  OrientedBoundingBox,
   RuntimeError,
 } from "@cesium/core";
 import {
@@ -920,21 +922,35 @@ describe(
         }
       });
 
-      it("follows changes to the source's world transform", async function () {
+      it("has the oriented bounding box of its geometry at the source's world transform", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const source = createSource(square);
-        const mesh = editor.addMesh(source);
-        renderCommands(mesh);
-
         Matrix4.fromTranslation(
-          new Cartesian3(-1.0, 0.0, 0.0),
+          new Cartesian3(1.0, 2.0, 3.0),
           source.worldMatrix,
         );
+        const mesh = editor.addMesh(source);
+        expect(mesh.orientedBoundingBox).toBeUndefined();
+
+        scene.renderForSpecs();
+
+        expect(mesh.orientedBoundingBox).toEqual(
+          new OrientedBoundingBox(
+            new Cartesian3(1.0, 2.0, 3.0),
+            Matrix3.fromScale(new Cartesian3(1.0, 1.0, 0.0)),
+          ),
+        );
+      });
+
+      it("culls the overlay with its bounding volume", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
 
         const commands = renderCommands(mesh);
         expect(commands.length).toBeGreaterThan(0);
         for (const command of commands) {
-          expect(command.modelMatrix).toEqual(source.worldMatrix);
+          expect(command.boundingVolume).toBeDefined();
+          expect(command.boundingVolume).toBe(mesh._renderer.boundingVolume);
         }
       });
 

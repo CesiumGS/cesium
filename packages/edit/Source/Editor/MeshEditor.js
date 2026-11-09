@@ -1,6 +1,8 @@
 // @ts-check
 
 import {
+  AxisAlignedBoundingBox,
+  Cartesian3,
   Check,
   DeveloperError,
   Event,
@@ -43,6 +45,12 @@ const INACTIVE_COMPONENTS = 1 << ComponentType.Face;
 // points and edges that are not visible (because they're behind a face) can't be picked.
 // Also, _something_ needs to be pickable in EditMode.NONE, in order to select an object to be active.
 const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
+
+// [minX, minY, minZ, maxX, maxY, maxZ], written by wasm.
+const scratchBoundsArray = new Float64Array(6);
+const scratchMinimum = new Cartesian3();
+const scratchMaximum = new Cartesian3();
+const scratchAabb = new AxisAlignedBoundingBox();
 
 /**
  * <div class="notice">
@@ -604,8 +612,8 @@ class MeshEditor {
 
   /**
    * Called when rendering the scene. On render passes, runs the wasm update.
-   * Then updates each mesh's renderer, passing overlay views for meshes whose
-   * overlays changed, and adds the outlines.
+   * Then updates each mesh, passing the bounds and overlay views of meshes
+   * whose overlays changed, and adds the outlines.
    * <p>
    * Do not call this function directly.
    * </p>
@@ -622,10 +630,12 @@ class MeshEditor {
     }
 
     for (const mesh of this.#meshes) {
-      // Any call into wasm can invalidate the views, so use and dispose.
-      const overlayViews = changedKeys?.has(mesh._key)
-        ? this.#wasmEditor.overlayViews(mesh._key)
-        : undefined;
+      let overlayViews;
+      if (changedKeys?.has(mesh._key)) {
+        mesh._renderer.setLocalBounds(this.#getMeshAABB(mesh._key));
+        // Any call into wasm can invalidate the views, so read them last.
+        overlayViews = this.#wasmEditor.overlayViews(mesh._key);
+      }
 
       mesh._update(frameState, overlayViews);
     }
@@ -662,6 +672,24 @@ class MeshEditor {
     this.#wasmEditor.free();
 
     return destroyObject(this);
+  }
+
+  /**
+   * @param {bigint} key The mesh's key.
+   * @returns {AxisAlignedBoundingBox|undefined} The mesh's local-space bounds, in a scratch object, or undefined if it has no vertices.
+   * @ignore
+   */
+  #getMeshAABB(key) {
+    const bounds = scratchBoundsArray;
+    if (!this.#wasmEditor.meshBounds(key, bounds)) {
+      return undefined;
+    }
+
+    return AxisAlignedBoundingBox.fromCorners(
+      Cartesian3.fromElements(bounds[0], bounds[1], bounds[2], scratchMinimum),
+      Cartesian3.fromElements(bounds[3], bounds[4], bounds[5], scratchMaximum),
+      scratchAabb,
+    );
   }
 }
 
