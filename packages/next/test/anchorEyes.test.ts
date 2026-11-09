@@ -279,10 +279,7 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
       s = Math.sin(0.7);
     closeF32(e.axes, [c, -s, 0, s, c, 0, 0, 0, 1].map(Math.fround));
     // The draw's transform carries the Moon's slot in flags bits 8 to 15.
-    const internals = world as unknown as {
-      transforms: { u32: Uint32Array };
-      recordsU32: Uint32Array;
-    };
+    const internals = world.raster;
     const t = internals.recordsU32[draw.index * RECORD_WORDS + TRANSFORM_WORD]!;
     const flags =
       internals.transforms.u32[

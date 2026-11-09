@@ -4,6 +4,7 @@
 // terrain as ground, the shader's opacity and skirt rules, and the CPU
 // ray that lets picks stop at it. CPU only (fakeGpu).
 import { readFileSync } from "node:fs";
+import type { World } from "../src/scene/World.ts";
 import { describe, expect, it, vi } from "vitest";
 import { flatTerrainTile } from "../src/globe/quantizedMesh.ts";
 import { compileTerrainClip, packClipShape } from "../src/globe/terrainClip.ts";
@@ -100,7 +101,7 @@ describe("a terrain tile's skirts", () => {
     });
     expect(handle.skirtStart).toBe(start);
     const draw = world.addDraw({ mesh: handle });
-    const u = (world as unknown as { recordsU32: Uint32Array }).recordsU32;
+    const u = world.raster.recordsU32;
     const o = draw.index * RECORD_WORDS;
     const layout = await import("../src/render/generated/layouts.ts");
     expect(u[o + layout.DrawRecordLayout.skirtStart / 4]).toBe(start);
@@ -296,20 +297,7 @@ describe("a draw's material, changed in place", () => {
 });
 
 describe("setDrawMaterial's batches", () => {
-  interface Batch {
-    index: number;
-    key: string;
-    items: number;
-    shown: number;
-    material: number;
-  }
-  const internals = (world: unknown) =>
-    world as unknown as {
-      drawBatches: Array<Batch | undefined>;
-      batches: Map<string, Batch>;
-      freeBatches: Batch[];
-      pointDraws: Map<number, { batch: Batch; params: GPUBuffer }>;
-    };
+  const internals = (world: World) => world.raster;
 
   it("moves a draw's counts to the new batch: items, and shown unless hidden", async () => {
     const engine = await fakeEngine();
@@ -348,7 +336,7 @@ describe("setDrawMaterial's batches", () => {
     expect([...w.batches.values()]).not.toContain(first);
     expect(w.freeBatches).toContain(first);
     // Its record follows: the batch's index and the material's.
-    const u = (world as unknown as { recordsU32: Uint32Array }).recordsU32;
+    const u = world.raster.recordsU32;
     expect(u[a.index * RECORD_WORDS + BATCH_WORD]).toBe(twin.index);
     expect(world.drawMaterial(b)).toBe(blended);
     // And back.
@@ -420,7 +408,7 @@ describe("setDrawMaterial's batches", () => {
     const blended = world.materialWithFlags(opaque, MaterialFlags.alphaBlend);
     const mesh = world.addMesh(createBox());
     const draw = world.addDraw({ mesh, material: opaque });
-    const u = (world as unknown as { recordsU32: Uint32Array }).recordsU32;
+    const u = world.raster.recordsU32 as Uint32Array;
     const o = draw.index * RECORD_WORDS;
     const before = Array.from(u.subarray(o, o + RECORD_WORDS));
     world.setDrawMaterial(draw, blended);
@@ -460,7 +448,7 @@ async function globeWithTiles() {
   const underTile = tile(7.4, under);
   loaded.add(underTile);
   loaded.add(tile(8.4, beside));
-  const u = (world as unknown as { recordsU32: Uint32Array }).recordsU32;
+  const u = world.raster.recordsU32;
   const mask = (draw: DrawHandle) =>
     u[draw.index * RECORD_WORDS + TERRAIN_CLIP_WORD];
   const done = () => {
@@ -571,8 +559,7 @@ describe("a globe's regions that blend", () => {
       world.addTerrainClipRegion(new Float32Array(0), 0.5);
     }
     // The twin's slot is free: the next new material may take it.
-    const refs = (world as unknown as { materialReferences: number[] })
-      .materialReferences;
+    const refs = world.scene.materialReferences;
     expect(refs[own]).toBe(1);
   });
 });

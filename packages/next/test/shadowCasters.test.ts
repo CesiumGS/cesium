@@ -172,26 +172,20 @@ describe("shadow casters off screen", () => {
   /** What a cascade's cull draws (cull.slang `drawable`, `inFrustum`). */
   function casts({ world, view }: Scene, tile: Tile): boolean {
     const bit = engine.viewBit(view);
-    const internals = world as unknown as {
-      recordsU32: ArrayLike<number>;
-      recordsF32: ArrayLike<number>;
-      transformWorld: Float64Array;
-      transforms: { f32: Float32Array };
-    };
     const { planes } = (
       engine as unknown as { cascades: { planes: Float32Array[] } }
     ).cascades;
     const draws: readonly DrawHandle[] = tile.placement?.draws ?? [];
     return draws.some((draw) => {
-      const u = internals.recordsU32;
-      const f = internals.recordsF32;
+      const u = world.raster.recordsU32;
+      const f = world.raster.recordsF32;
       const o = draw.index * RECORD_WORDS;
       const mask = u[o + VIEW_MASK_WORD]! | u[o + CASTER_MASK_WORD]!;
       if ((mask & bit) === 0 || u[o + FLAGS_WORD]! & 1) {
         return false;
       }
       const t = u[o + TRANSFORM_WORD]!;
-      const m = internals.transformWorld.subarray(t * 16, t * 16 + 16);
+      const m = world.scene.transformWorld.subarray(t * 16, t * 16 + 16);
       const c = [0, 1, 2].map(
         (k) =>
           m[k]! * f[o]! +
@@ -202,7 +196,7 @@ describe("shadow casters off screen", () => {
       );
       const radius =
         f[o + RADIUS_WORD]! *
-        internals.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+        world.raster.transforms.f32[t * TRANSFORM_WORDS + 3]!;
       return planes.some((p) => {
         for (let k = 0; k < 5; k++) {
           const d =
@@ -376,10 +370,8 @@ describe("shadow casters off screen", () => {
     try {
       const [, roof] = tiles(s) as [Tile, Tile];
       const draw = roof.placement!.draws[0]!;
-      const u = (s.world as unknown as { recordsU32: ArrayLike<number> })
-        .recordsU32;
-      const f = (s.world as unknown as { recordsF32: ArrayLike<number> })
-        .recordsF32;
+      const u = s.world.raster.recordsU32;
+      const f = s.world.raster.recordsF32;
       const o = draw.index * RECORD_WORDS;
       expect(u[o + PLACEMENT_WORD]).toBe(NO_PLACEMENT);
       const radius = f[o + RADIUS_WORD]!;

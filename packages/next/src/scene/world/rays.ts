@@ -139,8 +139,8 @@ export function rayJobs(
 ): Map<number, Uint32Array<ArrayBuffer>> {
   const bySlab = new Map<number, number[]>();
   let jobs: number[] = [];
-  const u = owner.recordsU32;
-  const f = owner.recordsF32;
+  const u = owner.raster.recordsU32;
+  const f = owner.raster.recordsF32;
   const mask = options.viewMask ?? ALL_VIEWS;
   let anchorSlot = 0;
   if (options.anchor) {
@@ -154,10 +154,10 @@ export function rayJobs(
     const name = (slot: number) =>
       slot === 0
         ? "no anchor (the table's root)"
-        : `the anchor ${owner.anchorSlots[slot]?.name ?? `in slot ${slot}`}`;
+        : `the anchor ${owner.scene.anchorSlots[slot]?.name ?? `in slot ${slot}`}`;
     for (const draw of only) {
       const t = u[draw * RECORD_WORDS + TRANSFORM_WORD]!;
-      const slot = owner.transformAnchor[t]!;
+      const slot = owner.scene.transformAnchor[t]!;
       if (slot !== anchorSlot) {
         throw new Error(
           `castRays: draw ${draw} is under ${name(slot)}; the cast's rays are under ${name(anchorSlot)}.`,
@@ -167,7 +167,7 @@ export function rayJobs(
   }
   const center = new Float64Array(3);
   const drawn = new Set<string>();
-  const world = owner.transformWorld;
+  const world = owner.scene.transformWorld;
   const test = (record: number, instance: number, radius: number) => {
     const triangles = Math.floor(u[record * RECORD_WORDS + 11]! / 3);
     rays.forEach((ray, r) => {
@@ -189,8 +189,8 @@ export function rayJobs(
       }
     });
   };
-  for (let i = 0; i < owner.drawCount; i++) {
-    const batch = owner.drawBatches[i];
+  for (let i = 0; i < owner.raster.drawCount; i++) {
+    const batch = owner.raster.drawBatches[i];
     if (
       !batch ||
       batch.mesh.topology !== "triangle-list" ||
@@ -216,13 +216,13 @@ export function rayJobs(
     }
     const t = u[o + TRANSFORM_WORD]!;
     if (
-      owner.transformHiddenWorld[t] === 1 ||
-      owner.transformAnchor[t] !== anchorSlot
+      owner.scene.transformHiddenWorld[t] === 1 ||
+      owner.scene.transformAnchor[t] !== anchorSlot
     ) {
       continue;
     }
     const w = t * 16;
-    const scale = owner.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+    const scale = owner.raster.transforms.f32[t * TRANSFORM_WORDS + 3]!;
     const local = [f[o]!, f[o + 1]!, f[o + 2]!];
     const radius = f[o + 3]!;
     const count = u[o + INSTANCE_COUNT_WORD]!;
@@ -245,10 +245,10 @@ export function rayJobs(
       continue;
     }
     const first = u[o + INSTANCE_FIRST_WORD]!;
-    const it = owner.instances.f32;
+    const it = owner.raster.instances.f32;
     for (let j = first; j < first + count; j++) {
       const a = j * INSTANCE_WORDS;
-      if (owner.instances.u32[a + 14]! & 1) {
+      if (owner.raster.instances.u32[a + 14]! & 1) {
         continue;
       }
       // The instance's affine (rows), then the transform.

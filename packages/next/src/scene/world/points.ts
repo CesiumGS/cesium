@@ -1,6 +1,7 @@
 // A world's point sets: their cull parameters and their splats.
 import { PointCuller } from "../PointCuller.ts";
 import type { World } from "../World.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { UniformDeclaration } from "../uniforms.ts";
 import type { DrawHandle, PointDraw } from "./types.ts";
 
@@ -15,7 +16,7 @@ export function setPointCuller(
   culler: PointCuller | undefined,
   tiny = 0,
 ): void {
-  const draw = world.pointDraws.get(handle.index);
+  const draw = world.raster.pointDraws.get(handle.index);
   if (!draw || !world.hasDraw(handle)) {
     throw new Error("setPointCuller: not a point draw");
   }
@@ -43,16 +44,19 @@ export function pointGroup(world: World, draw: PointDraw): GPUBindGroup {
     entries: [
       draw.params,
       world.slabs.get(draw.mesh.slab).vertexBuffer,
-      world.pointCounts,
-      world.splats.depth,
-      world.splats.color,
-      world.splats.feature,
+      world.raster.pointCounts,
+      world.raster.splats.depth,
+      world.raster.splats.color,
+      world.raster.splats.feature,
     ].map((buffer, binding) => ({ binding, resource: { buffer } })),
   });
 }
 
 /** Splat buffers for `pixels` (a word each), and the resolve's group. */
-export function createSplats(world: World, pixels: number): World["splats"] {
+export function createSplats(
+  world: World,
+  pixels: number,
+): WorldRaster["splats"] {
   const { device } = world.ctx;
   const make = (label: string) =>
     device.createBuffer({
@@ -103,11 +107,11 @@ export function writePointParams(
 }
 
 export function drawSplats(world: World, pass: GPURenderPassEncoder): void {
-  if (![...world.pointDraws.values()].some((d) => d.tiny > 0)) {
+  if (![...world.raster.pointDraws.values()].some((d) => d.tiny > 0)) {
     return;
   }
   pass.setPipeline(world.ctx.pipelines.splatResolve);
   pass.setBindGroup(0, world.ctx.currentViewBindGroup);
-  pass.setBindGroup(1, world.splats.group);
+  pass.setBindGroup(1, world.raster.splats.group);
   pass.draw(3);
 }

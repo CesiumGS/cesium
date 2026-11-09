@@ -168,10 +168,8 @@ describe("scene items", () => {
     tileset: Tileset3D,
     view: ReturnType<typeof aimed>,
   ) {
-    const u = () =>
-      (world as unknown as { recordsU32: ArrayLike<number> }).recordsU32;
-    const f = () =>
-      (world as unknown as { recordsF32: ArrayLike<number> }).recordsF32;
+    const u = () => world.raster.recordsU32;
+    const f = () => world.raster.recordsF32;
     const record = (draw: DrawHandle) => {
       const o = draw.index * RECORD_WORDS;
       return {
@@ -183,7 +181,7 @@ describe("scene items", () => {
       };
     };
     const materialFlags = (draw: DrawHandle) =>
-      (world as unknown as { materialsU32: ArrayLike<number> }).materialsU32[
+      world.raster.materialsU32[
         world.drawMaterial(draw)! * MATERIAL_WORDS + 12
       ]!;
     return {
@@ -556,10 +554,7 @@ describe("scene items", () => {
     const item = s.world.add(s.tileset, { opacity: 0.3 });
     await frames(2);
     const twin = s.first().items!.get(item)!.draws[0]!;
-    const internals = s.world as unknown as {
-      drawBatches: Array<{ material: number; shown: number } | undefined>;
-      drawArguments: { drawBatch(...args: unknown[]): void };
-    };
+    const internals = s.world.raster;
     expect(internals.drawBatches[twin.index]!.shown).toBe(1);
     // A blended surface all the same: the view runs its translucent passes.
     expect(s.world.translucentRange([R, 0, 0], s.bit)).toBeDefined();
@@ -596,9 +591,7 @@ describe("scene items", () => {
     expect(s.record(own).casterMask).toBe(s.bit);
     expect(s.record(solid).casterMask).toBe(s.bit);
     expect(s.record(blended).casterMask).toBe(0);
-    const batches = s.world as unknown as {
-      drawBatches: Array<{ casters: number }>;
-    };
+    const batches = s.world.raster;
     expect(batches.drawBatches[solid.index]!.casters).toBeGreaterThan(0);
     expect(batches.drawBatches[blended.index]!.casters).toBe(0);
     // Turned opaque it casts, turned translucent it stops, and the batch's
@@ -655,9 +648,7 @@ describe("scene items", () => {
       return count;
     };
     const flags = (s: ReturnType<typeof helpers>, draw: DrawHandle) =>
-      (s.world as unknown as { recordsU32: ArrayLike<number> }).recordsU32[
-        draw.index * RECORD_WORDS + FLAGS_WORD
-      ]!;
+      s.world.raster.recordsU32[draw.index * RECORD_WORDS + FLAGS_WORD]!;
     const ground = (s: ReturnType<typeof helpers>, draw: DrawHandle) =>
       (flags(s, draw) & RecordFlags.notGround) === 0;
     const solid = (s: ReturnType<typeof helpers>, draw: DrawHandle) =>
@@ -809,8 +800,7 @@ describe("scene items", () => {
 
   describe("fixes from the review", () => {
     const live = (world: World) => {
-      const w = world as unknown as { freeSlots: number[] };
-      return world.recordCount - w.freeSlots.length;
+      return world.recordCount - world.raster.freeSlots.length;
     };
 
     it("a setter on a removed item does nothing, and no draw outlives removeTileset", async () => {
@@ -928,11 +918,7 @@ describe("scene items", () => {
       const own = s.first().placement!.draws[0]!;
       const twin = s.first().items!.get(item)!.draws[0]!;
       const shaderOf = (draw: DrawHandle) =>
-        (
-          world(s.world) as unknown as {
-            drawBatches: { shader?: unknown }[];
-          }
-        ).drawBatches[draw.index]!.shader;
+        world(s.world).raster.drawBatches[draw.index]!.shader;
       expect(shaderOf(twin)).toBe(style.shader);
       expect(shaderOf(own)).toBeUndefined();
       item.shader = undefined;
@@ -946,8 +932,7 @@ describe("scene items", () => {
       await frames(2);
       const own = s.first().placement!.draws[0]!;
       const twin = s.first().items!.get(item)!.draws[0]!;
-      const names = (s.world as unknown as { names: (string | undefined)[] })
-        .names;
+      const names = s.world.scene.names;
       expect(names[twin.index]).toBe(names[own.index]);
       s.remove();
     });

@@ -193,8 +193,8 @@ export function addMesh(world: World, mesh: MeshData): MeshHandle {
   }
   queueUpload(world, slab.indexBuffer, indexOffset, mesh.indices);
   const { center, radius } = boundingSphere(mesh.positions);
-  const id = world.nextMeshId++;
-  world.meshRanges.set(id, {
+  const id = world.scene.nextMeshId++;
+  world.scene.meshRanges.set(id, {
     slab: slab.id,
     vertex: vertexRanges,
     index: [indexOffset, mesh.indices.byteLength],
@@ -283,8 +283,8 @@ export function addPointMesh(
       directory,
     );
   }
-  const id = world.nextMeshId++;
-  world.meshRanges.set(id, {
+  const id = world.scene.nextMeshId++;
+  world.scene.meshRanges.set(id, {
     slab: slab.id,
     vertex: [[offset, bytes]],
     index: [0, 0],
@@ -349,14 +349,14 @@ export function setPointProperties(
 }
 
 export function removeMesh(world: World, mesh: MeshHandle): number {
-  const ranges = world.meshRanges.get(mesh.id);
+  const ranges = world.scene.meshRanges.get(mesh.id);
   if (!ranges) {
     return 0;
   }
   // Its ranges may be reused before the next frame: its queued data
   // must not land on their next owner's.
   world.flushUploads();
-  world.meshRanges.delete(mesh.id);
+  world.scene.meshRanges.delete(mesh.id);
   const slab = world.slabs.get(ranges.slab);
   let bytes = 0;
   if (ranges.table) {

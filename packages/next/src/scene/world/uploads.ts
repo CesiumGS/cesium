@@ -12,7 +12,7 @@ export function queueUpload(
   data: Float32Array | Uint32Array,
 ): void {
   const size = data.byteLength;
-  let chunk = world.uploadChunks.at(-1);
+  let chunk = world.raster.uploadChunks.at(-1);
   if (!chunk || chunk.used + size > chunk.bytes.length) {
     const buffer = world.ctx.device.createBuffer({
       label: "world.uploads",
@@ -25,13 +25,13 @@ export function queueUpload(
       bytes: new Uint8Array(buffer.getMappedRange()),
       used: 0,
     };
-    world.uploadChunks.push(chunk);
+    world.raster.uploadChunks.push(chunk);
   }
   chunk.bytes.set(
     new Uint8Array(data.buffer, data.byteOffset, size),
     chunk.used,
   );
-  world.pendingUploads.push({
+  world.raster.pendingUploads.push({
     target,
     offset,
     source: chunk.buffer,
@@ -42,22 +42,23 @@ export function queueUpload(
 }
 
 export function flushUploads(world: World): void {
-  if (world.pendingUploads.length === 0) {
+  if (world.raster.pendingUploads.length === 0) {
     return;
   }
-  for (const chunk of world.uploadChunks) {
+  for (const chunk of world.raster.uploadChunks) {
     chunk.buffer.unmap();
   }
   const encoder = world.ctx.device.createCommandEncoder({
     label: "world.uploads",
   });
-  for (const { target, offset, source, at, size } of world.pendingUploads) {
+  for (const { target, offset, source, at, size } of world.raster
+    .pendingUploads) {
     encoder.copyBufferToBuffer(source, at, target, offset, size);
   }
   world.ctx.device.queue.submit([encoder.finish()]);
-  for (const chunk of world.uploadChunks) {
+  for (const chunk of world.raster.uploadChunks) {
     chunk.buffer.destroy(); // released once the copies have run
   }
-  world.uploadChunks.length = 0;
-  world.pendingUploads.length = 0;
+  world.raster.uploadChunks.length = 0;
+  world.raster.pendingUploads.length = 0;
 }

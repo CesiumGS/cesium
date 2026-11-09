@@ -21,9 +21,6 @@ import {
   CASTER_MASK_WORD,
   VIEW_MASK_WORD,
   ALL_VIEWS,
-  CLIP_BOXES,
-  CLIP_BOX_FLOATS,
-  MAX_ANCHORS,
   MAX_TERRAIN_CLIPS,
   MAX_TERRAIN_CLIP_BLOCKS,
   RecordFlags,
@@ -31,7 +28,6 @@ import {
 import type { Body } from "./Body.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { MeshData } from "./meshes.ts";
-import type { FeatureTable } from "../io/gltfTypes.ts";
 import { featureName, featureProperties } from "../io/features.ts";
 import type { RenderContext, SurfaceKey } from "./RenderContext.ts";
 import type { CustomShader } from "./CustomShader.ts";
@@ -47,10 +43,6 @@ import type {
   SubmissionMode,
   AnchorHandle,
   TransformFrameKey,
-  DrawPlacement,
-  ParameterSlot,
-  Batch,
-  PointDraw,
   WorldOptions,
   WorldMemory,
   MeshHandle,
@@ -154,6 +146,8 @@ import {
   translucentRange,
   encodeTranslucent,
 } from "../render/world/bundles.ts";
+import { WorldScene } from "./world/worldScene.ts";
+import { WorldRaster } from "../render/world/worldRaster.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -166,6 +160,17 @@ import {
  * one indirect draw per batch. The bundle is rebuilt only when draws are added.
  */
 export class World {
+  /** @internal Rasterizer data: records, batches, bundles, culling, GPU tables. */
+  readonly raster: WorldRaster = new WorldRaster();
+  /** @internal Scene data: transforms, anchors, material keys, placements, feature tables. */
+  readonly scene: WorldScene = new WorldScene();
+  /** @internal A custom shader's pipeline is ready: draw with it from now on. */
+  readonly shaderReady = () => {
+    this.raster.bundle = undefined;
+    this.version++;
+    this.changedViews = ALL_VIEWS;
+  };
+
   private static nextId = 1;
   /** Stable identity (indexes in lists shift as worlds come and go). */
   readonly id = World.nextId++;
@@ -173,70 +178,8 @@ export class World {
   readonly maxTransforms: number;
   readonly maxInstances: number;
   readonly maxMaterials: number;
-  /** @internal */
-  _submission: SubmissionMode = "indirect";
   /** Geometry, in slabs of one storage binding each (scene/Slabs.ts). */
   readonly slabs: Slabs;
-  // Per-slot CPU tables (records, transforms, instances, materials) start
-  // small and grow as slots are used; the GPU tables are full size (a
-  // 65536-draw world's CPU tables held 37 MB on NYC, r39).
-  /**
-   * @internal The draw records (the per-draw constants seam): every
-   * record write goes through it.
-   */
-  readonly drawConstants: DrawConstants;
-  /** @internal The records' words, to read (written through `drawConstants`). */
-  get recordsU32(): ArrayLike<number> {
-    return this.drawConstants.u32;
-  }
-  /** @internal */
-  get recordsF32(): ArrayLike<number> {
-    return this.drawConstants.f32;
-  }
-  /** @internal Generation per draw slot (`DrawHandle.generation`). */
-  drawGeneration: Uint32Array;
-  /** @internal Transform a draw owns (placed by origin and model), or -1. */
-  drawOwnedTransform: Int32Array;
-  /** @internal Per-instance stream ranges in their mesh's slab, by draw slot. */
-  readonly instanceStreamRanges: Array<
-    [offset: number, size: number, dataBytes: number, slab: number] | undefined
-  > = [];
-
-  // The transform table: float64 local and world matrices on the CPU,
-  // composed parents first; GPU entries mirror the world matrices.
-  /** @internal */
-  readonly transforms: MirroredTable;
-  /** @internal */
-  transformLocal: Float64Array;
-  /** @internal */
-  transformWorld: Float64Array;
-  /** @internal */
-  transformParent: Int32Array;
-  /** @internal */
-  readonly transformChildren: Array<number[] | undefined> = [];
-  /** @internal */
-  transformGeneration: Uint32Array;
-  /** @internal */
-  transformLive: Uint8Array;
-  /** @internal Hidden by itself, and by itself or an ancestor. */
-  transformHidden: Uint8Array;
-  /** @internal */
-  transformHiddenWorld: Uint8Array;
-  /**
-   * @internal The anchor slot a transform hangs under (0: none), inherited from its
-   * parent; an anchor's own slot for an anchor.
-   */
-  transformAnchor: Uint8Array;
-  /** @internal Anchors by slot; slot 0 ("no anchor") stays empty. */
-  readonly anchorSlots: Array<AnchorHandle | undefined> = [];
-  /** @internal Anchors' places in the table root, by slot (16 float64 each). */
-  readonly anchorPlaces = new Float64Array(MAX_ANCHORS * 16);
-  /** @internal */
-  readonly bodyAnchors = new Map<string, AnchorHandle>();
-  /** @internal */
-  anchorList: readonly AnchorHandle[] | undefined;
-  /** @internal `frameOf`'s keys by transform slot. */
-  readonly transformFrames = new Map<number, TransformFrameKey>();
   /**
    * The transform table's own top level, where transforms under no anchor
    * sit (render space, as every draw was before anchors).
@@ -249,20 +192,16 @@ export class World {
    * through a node (`frameOf`).
    */
   get transformRevision(): number {
-    return this.transformRevision_;
+    return this.scene.transformRevision_;
   }
-  /** @internal */
-  transformRevision_ = 0;
   /**
    * Counts changes to the anchors' places in the table root: `placeAnchor`
    * and `removeAnchor` only. A route between anchors and the root changes
    * only with it, so animating a node re-places no anchor.
    */
   get anchorPlaceRevision(): number {
-    return this.anchorPlaceRevision_;
+    return this.scene.anchorPlaceRevision_;
   }
-  /** @internal */
-  anchorPlaceRevision_ = 0;
   /**
    * Counts changes to what a ray may meet: draws added and removed
    * (`addDraw`, `removeDraw`), a draw's views changed (`setViewMask`, as
@@ -271,10 +210,8 @@ export class World {
    * ray may meet (`Engine.queries`).
    */
   get contentRevision(): number {
-    return this.contentRevision_;
+    return this.scene.contentRevision_;
   }
-  /** @internal */
-  contentRevision_ = 0;
   /**
    * The acceleration-structure lifetime hook (spec section 7.10): told of
    * each draw added and removed here, and of each tile placed and unloaded
@@ -286,47 +223,6 @@ export class World {
   private readonly lights: Array<LightOptions | undefined> = [];
   private readonly lightGenerations: number[] = [];
   private readonly freeLights: number[] = [];
-  /** @internal */
-  readonly transformPending: number[] = [];
-  /** @internal */
-  transformPendingFlag: Uint8Array;
-  /** @internal */
-  transformStamp: Uint32Array;
-  /** @internal */
-  transformResolve = 0;
-  /** @internal */
-  transformCount = 0;
-  /** @internal */
-  readonly freeTransforms: number[] = [];
-
-  // The instance table: ranges owned by instanced draws.
-  /** @internal */
-  readonly instances: MirroredTable;
-  /** @internal */
-  readonly instanceAllocator: RangeAllocator;
-  /** @internal Instance slots in use or freed below the highest (cull dispatch size). */
-  instanceHighWater = 0;
-  /** @internal */
-  uploadsPending = false;
-  /**
-   * @internal The placements buffer (plan 5a's call 42): parameters and each placed
-   * draw's block, bound in the draw group for the vertex stage.
-   */
-  readonly placementTable: PlacementTable;
-  /** @internal Each draw's per-vertex placement, by draw slot (`setPlacement`). */
-  readonly drawPlacements: Array<DrawPlacement | undefined> = [];
-  /** @internal This world's placement parameters: their float and their draws. */
-  readonly parameters = new WeakMap<PlacementParameter, ParameterSlot>();
-  /** @internal */
-  readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> = [];
-  /** @internal */
-  materialsF32: Float32Array;
-  /** @internal */
-  materialsU32: Uint32Array;
-  /** @internal */
-  materialCount = 0;
-  /** @internal */
-  materialsDirty = false;
   /**
    * Bumped by every change that can alter a rendered frame (records,
    * materials).
@@ -352,160 +248,6 @@ export class World {
     }
   }
   private changedViews_ = 0;
-  /** @internal */
-  readonly textureSets: Array<GPUBindGroup | undefined> = [];
-  /** @internal Each texture set's entries, for custom shaders' groups beside them. */
-  readonly textureSetEntries: Array<GPUBindGroupEntry[] | undefined> = [];
-  /** @internal */
-  readonly freeTextureSets: number[] = [];
-  /**
-   * @internal Group 2 of batches drawing with a custom shader that has uniforms:
-   * its texture set's entries and the shader's (ShaderBindings), by texture
-   * set, shader and the shader's texture version.
-   */
-  readonly shaderGroups = new Map<string, GPUBindGroup>();
-  /** @internal `ShaderBindings.generation` the bundles were recorded at. */
-  bindingsGeneration = 0;
-  /** @internal */
-  readonly freeMaterials: number[] = [];
-  /** @internal Shared materials: slot by record key, key and references by slot. */
-  readonly materialByKey = new Map<string, number>();
-  /** @internal */
-  readonly materialKeys: Array<string | undefined> = [];
-  /** @internal */
-  readonly materialReferences: number[] = [];
-  /** @internal */
-  readonly materialScratch = (() => {
-    const data = new ArrayBuffer(MATERIAL_SIZE);
-    return { f32: new Float32Array(data), u32: new Uint32Array(data) };
-  })();
-  /** @internal */
-  readonly batches = new Map<string, Batch>();
-  /** @internal */
-  readonly batchList: Batch[] = [];
-  /** @internal Emptied batches, reused (index kept) so live records stay valid. */
-  readonly freeBatches: Batch[] = [];
-  /** @internal */
-  readonly drawBatches: Array<Batch | undefined> = [];
-  /** @internal Slab ranges per mesh id, as [byte offset, byte size]. */
-  readonly meshRanges = new Map<
-    number,
-    {
-      slab: number;
-      vertex: Array<[number, number]>;
-      index: [number, number];
-      /** Its feature table's columns (`tableColumns`), shared. */
-      table?: FeatureTable;
-      /** Its named attributes' components (a dual position's check). */
-      named?: Map<string, number>;
-    }
-  >();
-  /**
-   * @internal Feature tables' columns in the arena (directory entries: hash, offset,
-   * components with `TABLE_PROPERTY`), shared by the meshes using them.
-   */
-  readonly tableColumns = new Map<
-    string,
-    {
-      entries: number[][];
-      ranges: Array<[number, number]>;
-      meshes: number;
-      /** The strings its string columns hold references on (`stringIds`). */
-      strings: string[];
-      /** Columns left out, by name, with why (`warnUnavailable`). */
-      skipped: Map<string, string>;
-    }
-  >();
-  /** @internal An id per feature table object, for `tableColumns`' slab keys. */
-  readonly tableIds = new WeakMap<FeatureTable, number>();
-  /** @internal */
-  nextTableId = 1;
-  /** @internal */
-  readonly names: Array<string | undefined> = [];
-  /** @internal */
-  readonly featureTables: Array<FeatureTable | undefined> = [];
-  /**
-   * @internal Global feature-ID ranges in allocation order (so sorted by first ID):
-   * first ID and draw index, for resolving picks by binary search.
-   */
-  readonly featureRangeFirst: number[] = [];
-  /** @internal */
-  readonly featureRangeDraw: number[] = [];
-  /** @internal */
-  readonly drawFeatureFirst: number[] = [];
-  /** @internal */
-  nextFeatureId = 1;
-  /** @internal */
-  readonly freeSlots: number[] = [];
-  /** @internal */
-  readonly maxClipBlocks: number;
-  /**
-   * @internal Block 0 is the terrain clip regions' directory (`addTerrainClipRegion`),
-   * reserved so the shaders find it without a binding of its own. Blocks
-   * past it are placeholders' (one each) or terrain regions' (runs); each
-   * kind keeps its own free list, so placeholders don't break up the runs
-   * regions free.
-   */
-  clipBlockCount = 1;
-  /** @internal Placeholders' free blocks. */
-  readonly freeClipBlocks: number[] = [];
-  /** @internal Blocks placeholders hold, and the most they may. */
-  placeholderBlocks = 0;
-  /** @internal */
-  readonly placeholderCapacity: number;
-  /** @internal Free runs terrain regions left: sorted by block, never touching. */
-  readonly freeClipRuns: Array<{ block: number; blocks: number }> = [];
-  /** @internal Blocks terrain regions hold, and the most they may. */
-  terrainClipBlocks = 0;
-  /** @internal */
-  readonly terrainClipBudget: number;
-  /**
-   * @internal Terrain regions by slot: their first block, block count and rows
-   * (kept to move them: only the directory points at them), their opacity
-   * (0 to 1) and whether they hold everywhere (no rows, no blocks).
-   */
-  readonly terrainClipRuns: Array<
-    | {
-        block: number;
-        blocks: number;
-        rows: Float32Array;
-        opacity: number;
-        ground: boolean;
-        everywhere: boolean;
-      }
-    | undefined
-  > = [];
-  /** @internal */
-  readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
-  /** @internal */
-  nextMeshId = 0;
-  /** @internal */
-  drawCount = 0;
-  /** @internal */
-  bundle?: GPURenderBundle;
-  /**
-   * @internal A batch gained its first shown record or lost its last (`Batch.shown`):
-   * the bundles are recorded again, without rewriting the batch table.
-   */
-  batchesShownChanged = false;
-  /** @internal Draws of blended surfaces (`translucentRange`), until draws change. */
-  translucentDraws?: number[];
-  /** @internal The shadow casters' bundle, and the draw bundle it was recorded with. */
-  casters?: GPURenderBundle;
-  /** @internal */
-  castersFor?: GPURenderBundle;
-  /** @internal The depth and normal prepass's bundle, likewise. */
-  prepassBundle_?: GPURenderBundle;
-  /** @internal */
-  depthBundle_?: GPURenderBundle;
-  /** @internal */
-  depthFor?: GPURenderBundle;
-  /** @internal */
-  prepassFor?: GPURenderBundle;
-  /** @internal */
-  readonly cullParamsData = new Uint32Array(4);
-  /** @internal */
-  readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
 
   /** Replaced as the tables grow (`tableGeneration`). */
   recordBuffer: GPUBuffer;
@@ -518,11 +260,6 @@ export class World {
   /** Mixed-LOD clip boxes, `CLIP_BOXES` per block. */
   clipBuffer: GPUBuffer;
   /**
-   * @internal The draw arguments, the item lists and the batches' draws
-   * (the draw-arguments seam).
-   */
-  readonly drawArguments: DrawArguments;
-  /**
    * Counts table growths: whatever binds a world table's buffer (the
    * instance table, records, transforms, materials) rebinds when it
    * changes. Bindless: with resource tables the buffers would stay bound by
@@ -533,56 +270,8 @@ export class World {
   get tableGeneration(): number {
     return this.instanceGeneration;
   }
-  /** @internal Point draws by draw index: their per-view cull (pointCull.slang). */
-  readonly pointDraws = new Map<number, PointDraw>();
-  /** @internal */
-  pointCounts: GPUBuffer;
-  /** @internal */
-  readonly freePointCounters: number[] = [];
-  /** @internal A view's point splats, a word per pixel each (pointCull.slang). */
-  splats: {
-    pixels: number;
-    depth: GPUBuffer;
-    color: GPUBuffer;
-    feature: GPUBuffer;
-    group: GPUBindGroup;
-  };
-  /** @internal */
-  batchBuffer: GPUBuffer;
-  /**
-   * @internal GPU rows of the draw tables (records, batches, their counts and
-   * arguments, the items' draw part); grows to `maxDraws`.
-   */
-  drawRows: number;
-  /** @internal GPU rows of the material table; grows to `maxMaterials`. */
-  materialRows: number;
-  /** @internal GPU blocks of clip boxes; grows to `maxClipBlocks`. */
-  clipRows: number;
   readonly maxPointSets: number;
-  /** @internal */
-  pointSetCount = 0;
-  /** @internal */
-  readonly cullParams: GPUBuffer;
-  /** @internal */
-  cullBindGroup!: GPUBindGroup;
-  /** @internal */
-  pointCullBindGroup!: GPUBindGroup;
-  /** @internal Globe imagery array (a 1×1 placeholder until imagery is attached). */
-  imageryView: GPUTextureView;
-  /** @internal Bound while no imagery array is (no globe imagery in this world). */
-  readonly imageryPlaceholder: GPUTextureView;
-  /** @internal Each texture set's (tracked) textures, for `textureDestroyed`. */
-  readonly textureSetTextures: Array<GPUTexture[] | undefined> = [];
-  /** @internal */
-  readonly setsOfTexture = new WeakMap<GPUTexture, Set<number>>();
-  /**
-   * @internal Texture sets binding a destroyed texture: their batches are skipped
-   * (a bind group naming a destroyed texture fails the whole submit).
-   */
-  readonly brokenTextureSets = new Set<number>();
   private readonly stopTracking: () => void;
-  /** @internal */
-  readonly imagerySampler: GPUSampler;
 
   constructor(
     /** @internal */ readonly ctx: RenderContext,
@@ -613,14 +302,14 @@ export class World {
       fits(MATERIAL_SIZE),
     );
     this.maxPointSets = options.maxPointSets ?? 4096;
-    this.drawRows = Math.min(this.maxDraws, INITIAL_ROWS);
-    this.materialRows = Math.min(this.maxMaterials, INITIAL_ROWS);
+    this.raster.drawRows = Math.min(this.maxDraws, INITIAL_ROWS);
+    this.raster.materialRows = Math.min(this.maxMaterials, INITIAL_ROWS);
     this.maxInstances = Math.min(
       options.maxInstances ?? 16384,
       itemLimit - this.maxDraws,
     );
     const instanceRows = Math.max(1, Math.min(this.maxInstances, 16384));
-    const items = this.drawRows + instanceRows;
+    const items = this.raster.drawRows + instanceRows;
     // A slab is one storage binding at most, and 256 MiB (growing to it).
     this.slabs = new Slabs(
       device,
@@ -634,47 +323,55 @@ export class World {
       (slab) => slabReplaced(this, slab),
     );
 
-    this.drawConstants = new DrawConstants(ctx, this.maxDraws, this.drawRows);
-    this.drawGeneration = new Uint32Array(this.drawConstants.rows);
-    this.drawOwnedTransform = new Int32Array(this.drawConstants.rows).fill(-1);
-    this.transforms = new MirroredTable(
+    this.raster.drawConstants = new DrawConstants(
+      ctx,
+      this.maxDraws,
+      this.raster.drawRows,
+    );
+    this.raster.drawGeneration = new Uint32Array(
+      this.raster.drawConstants.rows,
+    );
+    this.raster.drawOwnedTransform = new Int32Array(
+      this.raster.drawConstants.rows,
+    ).fill(-1);
+    this.raster.transforms = new MirroredTable(
       ctx,
       "transforms",
       TRANSFORM_WORDS,
       this.maxTransforms,
       Math.min(this.maxTransforms, INITIAL_ROWS),
     );
-    const t = this.transforms.rows;
-    this.transformLocal = new Float64Array(t * 16);
-    this.transformWorld = new Float64Array(t * 16);
-    this.transformParent = new Int32Array(t).fill(-1);
-    this.transformGeneration = new Uint32Array(t);
-    this.transformLive = new Uint8Array(t);
-    this.transformHidden = new Uint8Array(t);
-    this.transformHiddenWorld = new Uint8Array(t);
-    this.transformAnchor = new Uint8Array(t);
-    this.transformPendingFlag = new Uint8Array(t);
-    this.transformStamp = new Uint32Array(t);
-    this.instances = new MirroredTable(
+    const t = this.raster.transforms.rows;
+    this.scene.transformLocal = new Float64Array(t * 16);
+    this.scene.transformWorld = new Float64Array(t * 16);
+    this.scene.transformParent = new Int32Array(t).fill(-1);
+    this.scene.transformGeneration = new Uint32Array(t);
+    this.scene.transformLive = new Uint8Array(t);
+    this.scene.transformHidden = new Uint8Array(t);
+    this.scene.transformHiddenWorld = new Uint8Array(t);
+    this.scene.transformAnchor = new Uint8Array(t);
+    this.scene.transformPendingFlag = new Uint8Array(t);
+    this.scene.transformStamp = new Uint32Array(t);
+    this.raster.instances = new MirroredTable(
       ctx,
       "instances",
       INSTANCE_WORDS,
       Math.max(1, this.maxInstances),
       instanceRows,
     );
-    this.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
+    this.raster.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
     const materials = new ArrayBuffer(
       Math.min(this.maxMaterials, INITIAL_ROWS) * MATERIAL_SIZE,
     );
-    this.materialsF32 = new Float32Array(materials);
-    this.materialsU32 = new Uint32Array(materials);
+    this.raster.materialsF32 = new Float32Array(materials);
+    this.raster.materialsU32 = new Uint32Array(materials);
 
     const buffer = (label: string, size: number, usage: GPUBufferUsageFlags) =>
       device.createBuffer({ label: `world.${label}`, size, usage });
     const storage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
-    this.recordBuffer = this.drawConstants.buffer;
-    this.transformBuffer = this.transforms.buffer;
-    this.instanceBuffer = this.instances.buffer;
+    this.recordBuffer = this.raster.drawConstants.buffer;
+    this.transformBuffer = this.raster.transforms.buffer;
+    this.instanceBuffer = this.raster.instances.buffer;
     // COPY_SRC lets precision tests read back the cull kernels' output.
     this.itemBuffer = buffer(
       "items",
@@ -684,47 +381,48 @@ export class World {
     // Grows with the CPU mirror (`addMaterial`), rewritten when changed.
     this.materialBuffer = buffer(
       "materials",
-      this.materialRows * MATERIAL_SIZE,
+      this.raster.materialRows * MATERIAL_SIZE,
       storage,
     );
-    this.maxClipBlocks = Math.max(
+    this.scene.maxClipBlocks = Math.max(
       2,
       Math.min(
         options.maxClipBlocks ?? 1 << 14,
-        fits(this.clipScratch.byteLength),
+        fits(this.raster.clipScratch.byteLength),
       ),
     );
-    this.terrainClipBudget = Math.min(
+    this.scene.terrainClipBudget = Math.min(
       MAX_TERRAIN_CLIPS * MAX_TERRAIN_CLIP_BLOCKS,
-      Math.floor((this.maxClipBlocks - 1) / 4),
+      Math.floor((this.scene.maxClipBlocks - 1) / 4),
     );
-    this.placeholderCapacity = this.maxClipBlocks - 1 - this.terrainClipBudget;
-    this.clipRows = Math.min(this.maxClipBlocks, 256);
+    this.scene.placeholderCapacity =
+      this.scene.maxClipBlocks - 1 - this.scene.terrainClipBudget;
+    this.raster.clipRows = Math.min(this.scene.maxClipBlocks, 256);
     // COPY_SRC: copied into a larger buffer as it grows.
     this.clipBuffer = buffer(
       "clipBoxes",
-      this.clipRows * this.clipScratch.byteLength,
+      this.raster.clipRows * this.raster.clipScratch.byteLength,
       storage | GPUBufferUsage.COPY_SRC,
     );
-    this.drawArguments = new DrawArguments(
+    this.raster.drawArguments = new DrawArguments(
       device,
-      this.drawConstants,
-      (record) => this.drawBatches[record] !== undefined,
-      this.drawRows,
+      this.raster.drawConstants,
+      (record) => this.raster.drawBatches[record] !== undefined,
+      this.raster.drawRows,
       items,
     );
-    this.batchBuffer = createBatchBuffer(this, this.drawRows);
-    this.cullParams = buffer(
+    this.raster.batchBuffer = createBatchBuffer(this, this.raster.drawRows);
+    this.raster.cullParams = buffer(
       "cullParams",
       16,
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
-    this.pointCounts = buffer("pointCounts", 64 * 4, storage);
+    this.raster.pointCounts = buffer("pointCounts", 64 * 4, storage);
     growPointSets(this, 64);
-    this.splats = createSplats(this, 1);
+    this.raster.splats = createSplats(this, 1);
 
     createCullBindGroup(this);
-    this.imageryPlaceholder = device
+    this.raster.imageryPlaceholder = device
       .createTexture({
         label: "world.imagery.placeholder",
         size: [1, 1, 1],
@@ -732,8 +430,8 @@ export class World {
         usage: GPUTextureUsage.TEXTURE_BINDING,
       })
       .createView({ dimension: "2d-array" });
-    this.imageryView = this.imageryPlaceholder;
-    this.imagerySampler = device.createSampler({
+    this.raster.imageryView = this.raster.imageryPlaceholder;
+    this.raster.imagerySampler = device.createSampler({
       label: "world.imagery",
       magFilter: "linear",
       minFilter: "linear",
@@ -742,7 +440,7 @@ export class World {
       addressModeV: "clamp-to-edge",
       maxAnisotropy: 16,
     });
-    this.placementTable = new PlacementTable(device, () =>
+    this.raster.placementTable = new PlacementTable(device, () =>
       tablesReplaced(this),
     );
     createDrawBindGroup(this);
@@ -763,7 +461,7 @@ export class World {
 
   /** Number of record slots in use, including hidden and freed-but-trailing slots. */
   get recordCount(): number {
-    return this.drawCount;
+    return this.raster.drawCount;
   }
 
   /** Number of batches, i.e. indirect draw calls per view. */
@@ -779,31 +477,34 @@ export class World {
         capacity: this.slabs.options.indexBudget,
       },
       draws: {
-        used: this.drawCount - this.freeSlots.length,
+        used: this.raster.drawCount - this.raster.freeSlots.length,
         capacity: this.maxDraws,
       },
       transforms: {
-        used: this.transformCount - this.freeTransforms.length,
+        used: this.scene.transformCount - this.scene.freeTransforms.length,
         capacity: this.maxTransforms,
       },
       instances: {
-        used: this.instanceAllocator.used,
+        used: this.raster.instanceAllocator.used,
         capacity: this.maxInstances,
       },
       materials: {
-        used: this.materialByKey.size,
+        used: this.scene.materialByKey.size,
         capacity: this.maxMaterials,
       },
       clipBlocks: {
-        used: this.placeholderBlocks,
-        capacity: this.placeholderCapacity,
+        used: this.scene.placeholderBlocks,
+        capacity: this.scene.placeholderCapacity,
       },
       terrainClipBlocks: {
-        used: this.terrainClipBlocks,
-        capacity: this.terrainClipBudget,
+        used: this.scene.terrainClipBlocks,
+        capacity: this.scene.terrainClipBudget,
       },
-      pointSets: { used: this.pointDraws.size, capacity: this.maxPointSets },
-      batches: this.batches.size,
+      pointSets: {
+        used: this.raster.pointDraws.size,
+        capacity: this.maxPointSets,
+      },
+      batches: this.raster.batches.size,
       slabs: this.slabs.slabs
         .filter((x) => x !== undefined)
         .map((x) => ({
@@ -821,8 +522,8 @@ export class World {
         this.itemBuffer.size +
         this.materialBuffer.size +
         this.clipBuffer.size +
-        this.drawArguments.itemList.size +
-        this.drawArguments.buffer.size,
+        this.raster.drawArguments.itemList.size +
+        this.raster.drawArguments.buffer.size,
     };
   }
 
@@ -835,20 +536,28 @@ export class World {
    */
   pressure(): { fraction: number; pool: string } {
     const pools: Array<[string, number, number]> = [
-      ["draw table", this.drawCount - this.freeSlots.length, this.maxDraws],
+      [
+        "draw table",
+        this.raster.drawCount - this.raster.freeSlots.length,
+        this.maxDraws,
+      ],
       [
         "transform table",
-        this.transformCount - this.freeTransforms.length,
+        this.scene.transformCount - this.scene.freeTransforms.length,
         this.maxTransforms,
       ],
-      ["instance table", this.instanceAllocator.used, this.maxInstances],
-      ["material table", this.materialByKey.size, this.maxMaterials],
+      ["instance table", this.raster.instanceAllocator.used, this.maxInstances],
+      ["material table", this.scene.materialByKey.size, this.maxMaterials],
       ["vertex arena", this.slabs.vertexUsed, this.slabs.options.vertexBudget],
       ["index arena", this.slabs.indexUsed, this.slabs.options.indexBudget],
       // Placeholders' only: terrain regions' blocks are set aside, and
       // evicting tiles wouldn't free them.
-      ["clip blocks", this.placeholderBlocks, this.placeholderCapacity],
-      ["point sets", this.pointDraws.size, this.maxPointSets],
+      [
+        "clip blocks",
+        this.scene.placeholderBlocks,
+        this.scene.placeholderCapacity,
+      ],
+      ["point sets", this.raster.pointDraws.size, this.maxPointSets],
     ];
     let fraction = 0;
     let pool = "none";
@@ -864,34 +573,8 @@ export class World {
 
   /** Live batches: indirect draws per view. */
   get batchCount(): number {
-    return this.batches.size;
+    return this.raster.batches.size;
   }
-
-  /**
-   * @internal Geometry written since the last frame, copied in one batch
-   * (`flushUploads`). A queue.writeBuffer per stream of every mesh went
-   * through the browser's transfer ring to the GPU process: a burst of
-   * tiles blocked the main thread in writeBuffer (NYC, vsync off: 1.2 s
-   * over 8 s of an orbit, r38).
-   */
-  readonly pendingUploads: Array<{
-    target: GPUBuffer;
-    offset: number;
-    source: GPUBuffer;
-    at: number;
-    size: number;
-  }> = [];
-  /**
-   * @internal Staging buffers mapped at creation, the queued bytes copied into them
-   * when queued (as writeBuffer copied them); destroyed after each flush,
-   * so nothing stays on this thread between bursts (a reused copy buffer
-   * kept its peak, 4 MB after NYC's load, r39).
-   */
-  readonly uploadChunks: Array<{
-    buffer: GPUBuffer;
-    bytes: Uint8Array;
-    used: number;
-  }> = [];
 
   /**
    * Copies the queued geometry into place: the mapped staging buffers
@@ -977,7 +660,7 @@ export class World {
 
   /** Materials in use: distinct records, after sharing. */
   get materialsInUse(): number {
-    return this.materialByKey.size;
+    return this.scene.materialByKey.size;
   }
 
   /** Frees a texture set (not its textures). Draws must be removed first. */
@@ -1062,7 +745,7 @@ export class World {
    */
   featureIdOf(handle: DrawHandle): number {
     return this.hasDraw(handle)
-      ? this.recordsU32[handle.index * RECORD_WORDS + FEATURE_ID_WORD]!
+      ? this.raster.recordsU32[handle.index * RECORD_WORDS + FEATURE_ID_WORD]!
       : 0;
   }
 
@@ -1072,7 +755,7 @@ export class World {
    */
   drawMaterial(handle: DrawHandle): number | undefined {
     return this.hasDraw(handle)
-      ? this.drawBatches[handle.index]!.material
+      ? this.raster.drawBatches[handle.index]!.material
       : undefined;
   }
 
@@ -1127,16 +810,18 @@ export class World {
     if (!this.hasDraw(handle)) {
       return "was removed";
     }
-    const { mesh, points, billboard } = this.drawBatches[handle.index]!;
+    const { mesh, points, billboard } = this.raster.drawBatches[handle.index]!;
     if (points || billboard) {
       return "is a point set or a billboard";
     }
     if (
-      this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_COUNT_WORD]! > 0
+      this.raster.recordsU32[
+        handle.index * RECORD_WORDS + INSTANCE_COUNT_WORD
+      ]! > 0
     ) {
       return "is instanced";
     }
-    const components = this.meshRanges.get(mesh.id)?.named?.get(semantic);
+    const components = this.scene.meshRanges.get(mesh.id)?.named?.get(semantic);
     return components !== undefined && components >= 3
       ? undefined
       : `has no ${semantic} attribute of 3 components`;
@@ -1204,8 +889,8 @@ export class World {
   /** Whether `handle` still names a live draw. */
   hasDraw(handle: DrawHandle): boolean {
     return (
-      this.drawBatches[handle.index] !== undefined &&
-      this.drawGeneration[handle.index] === handle.generation
+      this.raster.drawBatches[handle.index] !== undefined &&
+      this.raster.drawGeneration[handle.index] === handle.generation
     );
   }
 
@@ -1349,15 +1034,13 @@ export class World {
    * forget the placements it held for removed anchors.
    */
   get anchorRemovals(): number {
-    return this.anchorRemovals_;
+    return this.scene.anchorRemovals_;
   }
-  /** @internal */
-  anchorRemovals_ = 0;
 
   /** The world's anchors, by slot. */
   get anchors(): readonly AnchorHandle[] {
-    return (this.anchorList ??= Object.freeze(
-      this.anchorSlots.filter((a): a is AnchorHandle => a !== undefined),
+    return (this.scene.anchorList ??= Object.freeze(
+      this.scene.anchorSlots.filter((a): a is AnchorHandle => a !== undefined),
     ));
   }
 
@@ -1483,11 +1166,11 @@ export class World {
         this.removeLight({ index: i, generation: this.lightGenerations[i]! });
         continue;
       }
-      if (this.transformHiddenWorld[t.index] === 0) {
+      if (this.scene.transformHiddenWorld[t.index] === 0) {
         visit(
           light,
-          this.transformWorld.subarray(t.index * 16, t.index * 16 + 16),
-          this.transformAnchor[t.index]!,
+          this.scene.transformWorld.subarray(t.index * 16, t.index * 16 + 16),
+          this.scene.transformAnchor[t.index]!,
         );
       }
     }
@@ -1500,7 +1183,7 @@ export class World {
 
   /** @internal Largest axis scale of a composed transform. */
   transformsF32Scale(index: number): number {
-    return this.transforms.f32[index * TRANSFORM_WORDS + 3]!;
+    return this.raster.transforms.f32[index * TRANSFORM_WORDS + 3]!;
   }
 
   /**
@@ -1527,7 +1210,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    if (this.drawConstants.setLights(handle.index, packed)) {
+    if (this.raster.drawConstants.setLights(handle.index, packed)) {
       this.markDirty(handle.index);
     }
   }
@@ -1542,7 +1225,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    if (this.drawConstants.setImagery(handle.index, packed, unlit)) {
+    if (this.raster.drawConstants.setImagery(handle.index, packed, unlit)) {
       this.markDirty(handle.index);
     }
   }
@@ -1551,19 +1234,20 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const old = this.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+    const old =
+      this.raster.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     if (old !== mask >>> 0) {
-      this.contentRevision_++;
+      this.scene.contentRevision_++;
       this.changedViews |= old; // the views it left
-      this.drawConstants.setViewMask(handle.index, mask);
+      this.raster.drawConstants.setViewMask(handle.index, mask);
       this.markDirty(handle.index);
       if ((old === 0) !== (mask === 0)) {
         // Its batch joins or leaves the bundles: they're recorded again
         // (the batch table and item list stay as they are).
-        const batch = this.drawBatches[handle.index]!;
+        const batch = this.raster.drawBatches[handle.index]!;
         batch.shown += mask === 0 ? -1 : 1;
         if (batch.shown === (mask === 0 ? 0 : 1)) {
-          this.batchesShownChanged = true;
+          this.raster.batchesShownChanged = true;
         }
       }
     }
@@ -1580,17 +1264,17 @@ export class World {
       return;
     }
     const old =
-      this.recordsU32[handle.index * RECORD_WORDS + CASTER_MASK_WORD]!;
-    if (this.drawConstants.setCasterMask(handle.index, mask)) {
+      this.raster.recordsU32[handle.index * RECORD_WORDS + CASTER_MASK_WORD]!;
+    if (this.raster.drawConstants.setCasterMask(handle.index, mask)) {
       this.changedViews |= old | (mask >>> 0);
       this.markDirty(handle.index);
       if ((old === 0) !== (mask === 0)) {
-        const batch = this.drawBatches[handle.index]!;
+        const batch = this.raster.drawBatches[handle.index]!;
         batch.casters += mask === 0 ? -1 : 1;
         // Its first caster, or its last, with no view drawing it: it joins
         // the shadow bundle alone, or leaves it, and that is recorded again.
         if (batch.shown === 0 && batch.casters === (mask === 0 ? 0 : 1)) {
-          this.casters = undefined;
+          this.raster.casters = undefined;
         }
       }
     }
@@ -1676,12 +1360,13 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    const flags =
+      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     const next = ground
       ? flags & ~RecordFlags.notGround
       : flags | RecordFlags.notGround;
-    if (this.drawConstants.setFlags(handle.index, next)) {
-      this.uploadsPending = true;
+    if (this.raster.drawConstants.setFlags(handle.index, next)) {
+      this.raster.uploadsPending = true;
     }
   }
 
@@ -1690,12 +1375,13 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    const flags =
+      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     const next = collision
       ? flags | RecordFlags.collision
       : flags & ~RecordFlags.collision;
-    if (this.drawConstants.setFlags(handle.index, next)) {
-      this.uploadsPending = true;
+    if (this.raster.drawConstants.setFlags(handle.index, next)) {
+      this.raster.uploadsPending = true;
     }
   }
 
@@ -1767,7 +1453,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    this.drawConstants.setColor(handle.index, color);
+    this.raster.drawConstants.setColor(handle.index, color);
     this.markDirty(handle.index);
   }
 
@@ -1775,8 +1461,9 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
-    this.drawConstants.setFlags(
+    const flags =
+      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    this.raster.drawConstants.setFlags(
       handle.index,
       visible ? flags & ~RecordFlags.hidden : flags | RecordFlags.hidden,
     );
@@ -1785,7 +1472,7 @@ export class World {
 
   /** Resolves a picked global feature ID to its draw, local ID and properties. */
   feature(featureId: number): FeatureInfo | undefined {
-    const first = this.featureRangeFirst;
+    const first = this.scene.featureRangeFirst;
     if (featureId <= 0 || first.length === 0 || featureId < first[0]!) {
       return undefined;
     }
@@ -1799,30 +1486,30 @@ export class World {
         hi = mid - 1;
       }
     }
-    const index = this.featureRangeDraw[lo]!;
-    if (this.drawFeatureFirst[index] !== first[lo]) {
+    const index = this.scene.featureRangeDraw[lo]!;
+    if (this.scene.drawFeatureFirst[index] !== first[lo]) {
       return undefined; // removed draw
     }
     const localId = featureId - first[lo]!;
-    const table = this.featureTables[index];
+    const table = this.scene.featureTables[index];
     const draw = {
       index,
-      generation: this.drawGeneration[index]!,
-      name: this.names[index],
+      generation: this.raster.drawGeneration[index]!,
+      name: this.scene.names[index],
     };
     const item = this.itemOfDraw(draw);
     if (!table || localId >= table.count) {
       return {
         draw,
         localId,
-        name: this.names[index],
+        name: this.scene.names[index],
         ...(item && { item }),
       };
     }
     return {
       draw,
       localId,
-      name: featureName(table, localId) ?? this.names[index],
+      name: featureName(table, localId) ?? this.scene.names[index],
       properties: featureProperties(table, localId),
       ...(item && { item }),
     };
@@ -1851,10 +1538,6 @@ export class World {
   heightBundle(): GPURenderBundle {
     return heightBundle(this);
   }
-  /** @internal */
-  heights: GPURenderBundle | undefined;
-  /** @internal */
-  heightsFor: GPURenderBundle | undefined;
 
   /**
    * The bundle drawing this world into the depth and normal prepass (after
@@ -1896,18 +1579,20 @@ export class World {
    * the remover.
    */
   addFrameCompute(encode: (pass: GPUComputePassEncoder) => void): () => void {
-    this.frameComputes.push(encode);
+    this.raster.frameComputes.push(encode);
     return () => {
-      const i = this.frameComputes.indexOf(encode);
+      const i = this.raster.frameComputes.indexOf(encode);
       if (i >= 0) {
-        this.frameComputes.splice(i, 1);
+        this.raster.frameComputes.splice(i, 1);
       }
     };
   }
 
   /** A draw's first row in the instance table (`instanceBuffer`). */
   instanceFirst(handle: DrawHandle): number {
-    return this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
+    return this.raster.recordsU32[
+      handle.index * RECORD_WORDS + INSTANCE_FIRST_WORD
+    ]!;
   }
 
   /**
@@ -1916,22 +1601,15 @@ export class World {
    * bundle and draws everything — a baseline for measuring indirect overhead.
    */
   get submission(): SubmissionMode {
-    return this._submission;
+    return this.raster._submission;
   }
 
   set submission(mode: SubmissionMode) {
-    if (mode !== this._submission) {
-      this._submission = mode;
-      this.bundle = undefined;
+    if (mode !== this.raster._submission) {
+      this.raster._submission = mode;
+      this.raster.bundle = undefined;
     }
   }
-
-  /** @internal A custom shader's pipeline is ready: draw with it from now on. */
-  readonly shaderReady = () => {
-    this.bundle = undefined;
-    this.version++;
-    this.changedViews = ALL_VIEWS;
-  };
 
   /**
    * The nearest and farthest a blended surface may be from `eye` (the
@@ -1970,13 +1648,13 @@ export class World {
 
   /** @internal */
   markDirty(index: number): void {
-    this.drawConstants.mark(index);
-    this.uploadsPending = true;
+    this.raster.drawConstants.mark(index);
+    this.raster.uploadsPending = true;
     this.version++;
     // The views that draw it, and those whose cascades do.
     this.changedViews |=
-      this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]! |
-      this.recordsU32[index * RECORD_WORDS + CASTER_MASK_WORD]!;
+      this.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]! |
+      this.raster.recordsU32[index * RECORD_WORDS + CASTER_MASK_WORD]!;
   }
 
   /** The world was destroyed (`destroy`): its GPU resources are gone. */
@@ -1989,34 +1667,34 @@ export class World {
     this.destroyed_ = true;
     this.stopTracking();
     // Its tables' string ids go back to the shared table.
-    for (const uploaded of this.tableColumns.values()) {
+    for (const uploaded of this.scene.tableColumns.values()) {
       for (const value of uploaded.strings) {
         stringIds.release(value);
       }
     }
-    this.tableColumns.clear();
-    for (const chunk of this.uploadChunks) {
+    this.scene.tableColumns.clear();
+    for (const chunk of this.raster.uploadChunks) {
       chunk.buffer.destroy();
     }
-    for (const draw of this.pointDraws.values()) {
+    for (const draw of this.raster.pointDraws.values()) {
       draw.params.destroy();
     }
-    this.splats.depth.destroy();
-    this.splats.color.destroy();
-    this.splats.feature.destroy();
-    this.pointCounts.destroy();
-    this.drawConstants.destroy();
-    this.drawArguments.destroy();
-    this.placementTable.destroy();
-    this.transforms.destroy();
-    this.instances.destroy();
+    this.raster.splats.depth.destroy();
+    this.raster.splats.color.destroy();
+    this.raster.splats.feature.destroy();
+    this.raster.pointCounts.destroy();
+    this.raster.drawConstants.destroy();
+    this.raster.drawArguments.destroy();
+    this.raster.placementTable.destroy();
+    this.raster.transforms.destroy();
+    this.raster.instances.destroy();
     this.slabs.destroy();
     for (const buffer of [
       this.itemBuffer,
       this.materialBuffer,
       this.clipBuffer,
-      this.batchBuffer,
-      this.cullParams,
+      this.raster.batchBuffer,
+      this.raster.cullParams,
     ]) {
       buffer.destroy();
     }

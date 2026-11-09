@@ -15,7 +15,7 @@ import type { MaterialOptions, TextureSetOptions } from "./types.ts";
 import { reserveMaterials, growMaterials } from "../../render/world/tables.ts";
 
 export function addMaterial(world: World, options: MaterialOptions): number {
-  const scratch = world.materialScratch;
+  const scratch = world.scene.materialScratch;
   writeMaterial(scratch.f32, scratch.u32, 0, {
     baseColor: options.baseColor ?? [1, 1, 1, 1],
     emissive: options.emissive ?? [0, 0, 0],
@@ -35,46 +35,46 @@ function internMaterial(world: World, words: Uint32Array): number {
   // The record's words are the key (NaN payloads and -0 included, so
   // equal keys are bit-identical records).
   const key = words.join(",");
-  const shared = world.materialByKey.get(key);
+  const shared = world.scene.materialByKey.get(key);
   if (shared !== undefined) {
-    world.materialReferences[shared]!++;
+    world.scene.materialReferences[shared]!++;
     return shared;
   }
-  const index = world.freeMaterials.pop() ?? world.materialCount++;
+  const index = world.scene.freeMaterials.pop() ?? world.scene.materialCount++;
   if (index >= world.maxMaterials) {
-    world.materialCount--;
+    world.scene.materialCount--;
     throw new CapacityError("material table");
   }
   reserveMaterials(world, index + 1);
-  if (index >= world.materialRows) {
+  if (index >= world.raster.materialRows) {
     growMaterials(world, index + 1);
   }
-  world.materialsU32.set(words, index * MATERIAL_WORDS);
-  world.materialByKey.set(key, index);
-  world.materialKeys[index] = key;
-  world.materialReferences[index] = 1;
-  world.materialsDirty = true;
+  world.raster.materialsU32.set(words, index * MATERIAL_WORDS);
+  world.scene.materialByKey.set(key, index);
+  world.scene.materialKeys[index] = key;
+  world.scene.materialReferences[index] = 1;
+  world.raster.materialsDirty = true;
   world.version++;
   world.changedViews = ALL_VIEWS;
   return index;
 }
 
 export function removeMaterial(world: World, index: number): void {
-  const references = world.materialReferences[index] ?? 0;
+  const references = world.scene.materialReferences[index] ?? 0;
   if (references <= 0) {
     return;
   }
   if (references > 1) {
-    world.materialReferences[index] = references - 1;
+    world.scene.materialReferences[index] = references - 1;
     return;
   }
-  world.materialReferences[index] = 0;
-  const key = world.materialKeys[index];
+  world.scene.materialReferences[index] = 0;
+  const key = world.scene.materialKeys[index];
   if (key !== undefined) {
-    world.materialByKey.delete(key);
-    world.materialKeys[index] = undefined;
+    world.scene.materialByKey.delete(key);
+    world.scene.materialKeys[index] = undefined;
   }
-  world.freeMaterials.push(index);
+  world.scene.freeMaterials.push(index);
 }
 
 export function materialWithFlags(
@@ -82,12 +82,12 @@ export function materialWithFlags(
   material: number,
   flags: number,
 ): number {
-  if (world.materialReferences[material] === undefined || material < 0) {
+  if (world.scene.materialReferences[material] === undefined || material < 0) {
     throw new RangeError(`materialWithFlags: no material ${material}`);
   }
-  const scratch = world.materialScratch;
+  const scratch = world.scene.materialScratch;
   scratch.u32.set(
-    world.materialsU32.subarray(
+    world.raster.materialsU32.subarray(
       material * MATERIAL_WORDS,
       (material + 1) * MATERIAL_WORDS,
     ),
@@ -98,18 +98,18 @@ export function materialWithFlags(
 }
 
 export function removeTextureSet(world: World, index: number): void {
-  if (index > 0 && world.textureSets[index]) {
-    world.textureSets[index] = undefined;
-    world.textureSetEntries[index] = undefined;
-    for (const texture of world.textureSetTextures[index] ?? []) {
-      world.setsOfTexture.get(texture)?.delete(index);
+  if (index > 0 && world.raster.textureSets[index]) {
+    world.raster.textureSets[index] = undefined;
+    world.raster.textureSetEntries[index] = undefined;
+    for (const texture of world.raster.textureSetTextures[index] ?? []) {
+      world.raster.setsOfTexture.get(texture)?.delete(index);
     }
-    world.textureSetTextures[index] = undefined;
-    world.brokenTextureSets.delete(index);
-    world.freeTextureSets.push(index);
-    for (const key of world.shaderGroups.keys()) {
+    world.raster.textureSetTextures[index] = undefined;
+    world.raster.brokenTextureSets.delete(index);
+    world.raster.freeTextureSets.push(index);
+    for (const key of world.raster.shaderGroups.keys()) {
       if (key.startsWith(`${index}|`)) {
-        world.shaderGroups.delete(key);
+        world.raster.shaderGroups.delete(key);
       }
     }
   }
@@ -162,14 +162,14 @@ export function createTextureSet(
     layout: world.ctx.pipelines.textureSetLayout,
     entries: entries.filter((e) => e.binding < PROPERTY_TEXTURE_BINDING),
   });
-  let index = world.freeTextureSets.pop();
+  let index = world.raster.freeTextureSets.pop();
   if (index !== undefined) {
-    world.textureSets[index] = group;
-    world.textureSetEntries[index] = entries;
+    world.raster.textureSets[index] = group;
+    world.raster.textureSetEntries[index] = entries;
   } else {
-    world.textureSets.push(group);
-    world.textureSetEntries.push(entries);
-    index = world.textureSets.length - 1;
+    world.raster.textureSets.push(group);
+    world.raster.textureSetEntries.push(entries);
+    index = world.raster.textureSets.length - 1;
   }
   trackTextureSet(world, index, entries);
   return index;
@@ -186,14 +186,14 @@ function trackTextureSet(
     const texture = textureOf(entry.resource as GPUTextureView);
     if (texture && !textures.includes(texture)) {
       textures.push(texture);
-      let sets = world.setsOfTexture.get(texture);
+      let sets = world.raster.setsOfTexture.get(texture);
       if (!sets) {
         sets = new Set();
-        world.setsOfTexture.set(texture, sets);
+        world.raster.setsOfTexture.set(texture, sets);
       }
       sets.add(index);
       if (isDestroyed(texture)) {
-        world.brokenTextureSets.add(index);
+        world.raster.brokenTextureSets.add(index);
         world.ctx.errors.report(
           "resource",
           `texture "${texture.label}" was bound after it was destroyed: that set's draws are skipped`,
@@ -201,7 +201,7 @@ function trackTextureSet(
       }
     }
   }
-  world.textureSetTextures[index] = textures;
+  world.raster.textureSetTextures[index] = textures;
 }
 
 /**
@@ -211,11 +211,14 @@ function trackTextureSet(
  * not the frame.
  */
 export function textureDestroyed(world: World, texture: GPUTexture): void {
-  const sets = world.setsOfTexture.get(texture);
+  const sets = world.raster.setsOfTexture.get(texture);
   let broke = false;
   for (const set of sets ?? []) {
-    if (world.textureSets[set] && !world.brokenTextureSets.has(set)) {
-      world.brokenTextureSets.add(set);
+    if (
+      world.raster.textureSets[set] &&
+      !world.raster.brokenTextureSets.has(set)
+    ) {
+      world.raster.brokenTextureSets.add(set);
       broke = true;
       world.ctx.errors.report(
         "resource",
@@ -224,12 +227,12 @@ export function textureDestroyed(world: World, texture: GPUTexture): void {
     }
   }
   if (broke) {
-    world.bundle = undefined;
-    world.translucentDraws = undefined;
+    world.raster.bundle = undefined;
+    world.raster.translucentDraws = undefined;
     world.changedViews = ALL_VIEWS;
     world.version++;
   }
-  if (textureOf(world.imageryView) === texture) {
+  if (textureOf(world.raster.imageryView) === texture) {
     world.ctx.errors.report(
       "resource",
       `the imagery array "${texture.label}" was destroyed while bound: the world binds none`,

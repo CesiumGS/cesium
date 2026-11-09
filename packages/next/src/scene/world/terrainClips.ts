@@ -30,23 +30,23 @@ export function allocateClip(
   if (
     boxes.length === 0 ||
     boxes.length > CLIP_BOXES ||
-    world.placeholderBlocks >= world.placeholderCapacity
+    world.scene.placeholderBlocks >= world.scene.placeholderCapacity
   ) {
     return undefined;
   }
   const block =
-    world.freeClipBlocks.pop() ??
-    (world.clipBlockCount < world.maxClipBlocks
-      ? world.clipBlockCount++
+    world.scene.freeClipBlocks.pop() ??
+    (world.scene.clipBlockCount < world.scene.maxClipBlocks
+      ? world.scene.clipBlockCount++
       : blockFromRuns(world));
   if (block < 0) {
     return undefined;
   }
-  world.placeholderBlocks++;
-  if (block >= world.clipRows) {
+  world.scene.placeholderBlocks++;
+  if (block >= world.raster.clipRows) {
     growClips(world, block + 1);
   }
-  const f = world.clipScratch;
+  const f = world.raster.clipScratch;
   f.fill(0);
   boxes.forEach((box, i) => {
     const o = i * CLIP_BOX_FLOATS;
@@ -62,8 +62,8 @@ export function allocateClip(
 }
 
 export function freeClip(world: World, clip: ClipHandle): void {
-  world.freeClipBlocks.push(clip.block);
-  world.placeholderBlocks--;
+  world.scene.freeClipBlocks.push(clip.block);
+  world.scene.placeholderBlocks--;
 }
 
 /**
@@ -72,7 +72,7 @@ export function freeClip(world: World, clip: ClipHandle): void {
  * -1 when there is none.
  */
 function blockFromRuns(world: World): number {
-  const runs = world.freeClipRuns;
+  const runs = world.scene.freeClipRuns;
   let smallest = -1;
   for (let i = 0; i < runs.length; i++) {
     if (smallest < 0 || runs[i]!.blocks < runs[smallest]!.blocks) {
@@ -102,7 +102,7 @@ export function setPlaceholder(
   }
   const m = clip ? mask >>> 0 : 0;
   const packed = clip ? packClip(clip.block, clip.count) : 0;
-  if (world.drawConstants.setPlaceholder(handle.index, m, packed)) {
+  if (world.raster.drawConstants.setPlaceholder(handle.index, m, packed)) {
     world.markDirty(handle.index);
   }
 }
@@ -115,7 +115,7 @@ export function addTerrainClipRegion(
 ): number {
   checkTerrainOpacity(opacity);
   let slot = 0;
-  while (slot < MAX_TERRAIN_CLIPS && world.terrainClipRuns[slot]) {
+  while (slot < MAX_TERRAIN_CLIPS && world.scene.terrainClipRuns[slot]) {
     slot++;
   }
   if (slot === MAX_TERRAIN_CLIPS) {
@@ -125,7 +125,7 @@ export function addTerrainClipRegion(
   }
   const everywhere = rows.length === 0;
   if (everywhere) {
-    world.terrainClipRuns[slot] = {
+    world.scene.terrainClipRuns[slot] = {
       block: 0,
       blocks: 0,
       rows,
@@ -143,9 +143,9 @@ export function addTerrainClipRegion(
       `the region takes ${blocks} clip blocks, more than the ${MAX_TERRAIN_CLIP_BLOCKS} a region may; simplify the polygon, or split it.`,
     );
   }
-  if (world.terrainClipBlocks + blocks > world.terrainClipBudget) {
+  if (world.scene.terrainClipBlocks + blocks > world.scene.terrainClipBudget) {
     throw new TerrainRegionError(
-      `the world's terrain regions would take ${world.terrainClipBlocks + blocks} clip blocks, more than the ${world.terrainClipBudget} set aside for them (WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
+      `the world's terrain regions would take ${world.scene.terrainClipBlocks + blocks} clip blocks, more than the ${world.scene.terrainClipBudget} set aside for them (WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
     );
   }
   let block = allocateClipRun(world, blocks);
@@ -156,10 +156,10 @@ export function addTerrainClipRegion(
   }
   if (block < 0) {
     throw new TerrainRegionError(
-      `no run of ${blocks} clip blocks is free for the region (placeholders hold the rest of the world's ${world.maxClipBlocks}, WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
+      `no run of ${blocks} clip blocks is free for the region (placeholders hold the rest of the world's ${world.scene.maxClipBlocks}, WorldOptions.maxClipBlocks); simplify the polygon, or remove a region.`,
     );
   }
-  world.terrainClipRuns[slot] = {
+  world.scene.terrainClipRuns[slot] = {
     block,
     blocks,
     rows,
@@ -167,22 +167,22 @@ export function addTerrainClipRegion(
     ground,
     everywhere,
   };
-  world.terrainClipBlocks += blocks;
+  world.scene.terrainClipBlocks += blocks;
   writeTerrainClip(world, slot);
   world.version++;
-  world.contentRevision_++; // rays pass through clipped terrain
+  world.scene.contentRevision_++; // rays pass through clipped terrain
   return slot;
 }
 
 export function removeTerrainClipRegion(world: World, slot: number): void {
-  const run = world.terrainClipRuns[slot];
+  const run = world.scene.terrainClipRuns[slot];
   if (!run) {
     return;
   }
-  world.terrainClipRuns[slot] = undefined;
+  world.scene.terrainClipRuns[slot] = undefined;
   if (run.blocks > 0) {
-    world.terrainClipBlocks -= run.blocks;
-    world.contentRevision_++;
+    world.scene.terrainClipBlocks -= run.blocks;
+    world.scene.contentRevision_++;
     freeRun(world, run.block, run.blocks);
   }
   // An empty directory row: a stale mask bit would read a region of no
@@ -201,7 +201,7 @@ export function setTerrainClipOpacity(
   slot: number,
   opacity: number,
 ): void {
-  const run = world.terrainClipRuns[slot];
+  const run = world.scene.terrainClipRuns[slot];
   if (!run || run.opacity === opacity) {
     return;
   }
@@ -219,7 +219,7 @@ export function setTerrainClipGround(
   slot: number,
   ground: boolean,
 ): void {
-  const run = world.terrainClipRuns[slot];
+  const run = world.scene.terrainClipRuns[slot];
   if (!run || run.ground === ground) {
     return;
   }
@@ -227,13 +227,13 @@ export function setTerrainClipGround(
   writeDirectoryRow(world, slot);
   world.version++;
   // Height captures (and rays) read the world's content revision.
-  world.contentRevision_++;
+  world.scene.contentRevision_++;
   world.changedViews = ALL_VIEWS;
 }
 
 /** A region's rows into its run's blocks, and its directory row. */
 function writeTerrainClip(world: World, slot: number): void {
-  const run = world.terrainClipRuns[slot]!;
+  const run = world.scene.terrainClipRuns[slot]!;
   if (run.blocks > 0) {
     const floats = CLIP_BLOCK_ROWS * 4;
     const data = new Float32Array(run.blocks * floats);
@@ -253,7 +253,7 @@ function writeTerrainClip(world: World, slot: number): void {
  * its terrain is ground.
  */
 function writeDirectoryRow(world: World, slot: number): void {
-  const run = world.terrainClipRuns[slot]!;
+  const run = world.scene.terrainClipRuns[slot]!;
   const entry = new Uint32Array(4);
   entry[0] = run.block * CLIP_BLOCK_ROWS;
   new Float32Array(entry.buffer, 4, 1)[0] = run.opacity;
@@ -272,7 +272,7 @@ function freeRun(
   blocks: number,
   trim = true,
 ): void {
-  const runs = world.freeClipRuns;
+  const runs = world.scene.freeClipRuns;
   let i = 0;
   while (i < runs.length && runs[i]!.block < block) {
     i++;
@@ -293,10 +293,10 @@ function freeRun(
 
 /** A free run at the top lowers the blocks in use. */
 function trimClipRuns(world: World): void {
-  const runs = world.freeClipRuns;
+  const runs = world.scene.freeClipRuns;
   const last = runs[runs.length - 1];
-  if (last && last.block + last.blocks === world.clipBlockCount) {
-    world.clipBlockCount = last.block;
+  if (last && last.block + last.blocks === world.scene.clipBlockCount) {
+    world.scene.clipBlockCount = last.block;
     runs.pop();
   }
 }
@@ -308,16 +308,17 @@ function trimClipRuns(world: World): void {
  * and the writes are queued before any later draw.
  */
 function packTerrainClips(world: World): void {
-  const slots = world.terrainClipRuns
+  const slots = world.scene.terrainClipRuns
     .map((run, slot) => (run && run.blocks > 0 ? slot : -1))
     .filter((slot) => slot >= 0)
     .sort(
       (a, b) =>
-        world.terrainClipRuns[a]!.block - world.terrainClipRuns[b]!.block,
+        world.scene.terrainClipRuns[a]!.block -
+        world.scene.terrainClipRuns[b]!.block,
     );
-  const runs = world.freeClipRuns;
+  const runs = world.scene.freeClipRuns;
   for (const slot of slots) {
-    const run = world.terrainClipRuns[slot]!;
+    const run = world.scene.terrainClipRuns[slot]!;
     freeRun(world, run.block, run.blocks, false);
     // Its own blocks are free again, so some run holds it.
     const i = runs.findIndex((r) => r.blocks >= run.blocks);
@@ -344,7 +345,7 @@ export function setTerrainClip(
   if (!world.hasDraw(handle)) {
     return;
   }
-  if (world.drawConstants.setTerrainClip(handle.index, mask)) {
+  if (world.raster.drawConstants.setTerrainClip(handle.index, mask)) {
     world.markDirty(handle.index);
   }
 }
@@ -355,7 +356,7 @@ export function setTerrainClip(
  * free blocks, else new ones (the buffer grows). -1 when none is free.
  */
 function allocateClipRun(world: World, count: number): number {
-  const runs = world.freeClipRuns;
+  const runs = world.scene.freeClipRuns;
   let fit = -1;
   for (let i = 0; i < runs.length; i++) {
     if (
@@ -375,7 +376,7 @@ function allocateClipRun(world: World, count: number): number {
     }
     return block;
   }
-  const free = world.freeClipBlocks;
+  const free = world.scene.freeClipBlocks;
   if (free.length >= count) {
     free.sort((a, b) => a - b);
     for (let i = 0; i + count <= free.length; i++) {
@@ -386,12 +387,12 @@ function allocateClipRun(world: World, count: number): number {
       }
     }
   }
-  const block = world.clipBlockCount;
-  if (block + count > world.maxClipBlocks) {
+  const block = world.scene.clipBlockCount;
+  if (block + count > world.scene.maxClipBlocks) {
     return -1;
   }
-  world.clipBlockCount += count;
-  if (block + count > world.clipRows) {
+  world.scene.clipBlockCount += count;
+  if (block + count > world.raster.clipRows) {
     growClips(world, block + count);
   }
   return block;

@@ -102,15 +102,7 @@ function addQuad(): DrawHandle {
 }
 
 const words = (draw: DrawHandle) => {
-  const internal = world as unknown as {
-    recordsU32: ArrayLike<number>;
-    recordsF32: ArrayLike<number>;
-    placementTable: {
-      buffer: GPUBuffer;
-      words(at: number, rows: number): { f32: Float32Array; u32: Uint32Array };
-      parameter(word: number): number;
-    };
-  };
+  const internal = world.raster;
   const o = draw.index * RECORD_WORDS;
   return {
     placement: internal.recordsU32[o + PLACEMENT_WORD]!,

@@ -32,13 +32,12 @@ import { fakeEngine } from "./fakeGpu.ts";
 
 const R = Math.PI / 180;
 
-/** A world's private clip-block state, as the tests read it. */
-interface Blocks {
-  clipBlockCount: number;
-  clipBuffer: GPUBuffer;
-  recordsU32: Uint32Array;
-}
-const blocks = (world: World) => world as unknown as Blocks;
+/** A world's clip-block state, as the tests read it. */
+const blocks = (world: World) => ({
+  clipBlockCount: world.scene.clipBlockCount,
+  clipBuffer: world.clipBuffer,
+  recordsU32: world.raster.recordsU32,
+});
 
 /** Rows of a region taking `n` clip blocks. */
 const rowsOf = (n: number) => new Float32Array(n * CLIP_BLOCK_ROWS * 4);

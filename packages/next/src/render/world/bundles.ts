@@ -32,70 +32,82 @@ export function prepareFrame(world: World): GPURenderBundle {
   const queue = world.ctx.device.queue;
   world.flushUploads();
   resolveTransforms(world);
-  world.uploadsPending = true;
-  if (world.materialsDirty) {
+  world.raster.uploadsPending = true;
+  if (world.raster.materialsDirty) {
     queue.writeBuffer(
       world.materialBuffer,
       0,
-      world.materialsF32.buffer,
+      world.raster.materialsF32.buffer,
       0,
-      world.materialCount * MATERIAL_SIZE,
+      world.scene.materialCount * MATERIAL_SIZE,
     );
-    world.materialsDirty = false;
+    world.raster.materialsDirty = false;
   }
   // A custom shader's texture loaded or changed: its groups are new.
   const generation = world.ctx.shaderBindings.generation;
-  if (generation !== world.bindingsGeneration) {
-    world.bindingsGeneration = generation;
-    world.bundle = undefined;
-    world.translucentDraws = undefined;
+  if (generation !== world.raster.bindingsGeneration) {
+    world.raster.bindingsGeneration = generation;
+    world.raster.bundle = undefined;
+    world.raster.translucentDraws = undefined;
   }
-  if (!world.bundle) {
+  if (!world.raster.bundle) {
     writeBatches(world);
-    world.bundle = recordBundle(world);
-  } else if (world.batchesShownChanged) {
-    world.bundle = recordBundle(world);
+    world.raster.bundle = recordBundle(world);
+  } else if (world.raster.batchesShownChanged) {
+    world.raster.bundle = recordBundle(world);
   }
-  world.batchesShownChanged = false;
-  world.cullParamsData[0] = world.drawCount;
-  world.cullParamsData[1] = world.batchList.length;
-  world.cullParamsData[2] = world.instanceHighWater;
+  world.raster.batchesShownChanged = false;
+  world.raster.cullParamsData[0] = world.raster.drawCount;
+  world.raster.cullParamsData[1] = world.raster.batchList.length;
+  world.raster.cullParamsData[2] = world.raster.instanceHighWater;
   // Instance items follow the draw rows (cull.slang `firstInstanceItem`).
-  world.cullParamsData[3] = world.drawRows;
-  queue.writeBuffer(world.cullParams, 0, world.cullParamsData);
-  return world.bundle;
+  world.raster.cullParamsData[3] = world.raster.drawRows;
+  queue.writeBuffer(world.raster.cullParams, 0, world.raster.cullParamsData);
+  return world.raster.bundle;
 }
 
 export function shadowBundle(world: World): GPURenderBundle {
-  if (!world.casters || world.castersFor !== world.bundle) {
-    world.casters = recordBundle(world, "shadow");
-    world.castersFor = world.bundle;
+  if (
+    !world.raster.casters ||
+    world.raster.castersFor !== world.raster.bundle
+  ) {
+    world.raster.casters = recordBundle(world, "shadow");
+    world.raster.castersFor = world.raster.bundle;
   }
-  return world.casters;
+  return world.raster.casters;
 }
 
 export function heightBundle(world: World): GPURenderBundle {
-  if (!world.heights || world.heightsFor !== world.bundle) {
-    world.heights = recordBundle(world, "height");
-    world.heightsFor = world.bundle;
+  if (
+    !world.raster.heights ||
+    world.raster.heightsFor !== world.raster.bundle
+  ) {
+    world.raster.heights = recordBundle(world, "height");
+    world.raster.heightsFor = world.raster.bundle;
   }
-  return world.heights;
+  return world.raster.heights;
 }
 
 export function prepassBundle(world: World): GPURenderBundle {
-  if (!world.prepassBundle_ || world.prepassFor !== world.bundle) {
-    world.prepassBundle_ = recordBundle(world, "prepass");
-    world.prepassFor = world.bundle;
+  if (
+    !world.raster.prepassBundle_ ||
+    world.raster.prepassFor !== world.raster.bundle
+  ) {
+    world.raster.prepassBundle_ = recordBundle(world, "prepass");
+    world.raster.prepassFor = world.raster.bundle;
   }
-  return world.prepassBundle_;
+  return world.raster.prepassBundle_;
 }
 
 export function depthBundle(world: World): GPURenderBundle {
-  if (!world.depthBundle_ || world.depthFor !== world.bundle) {
-    world.depthBundle_ = recordBundle(world, "depth");
-    world.depthFor = world.bundle;
+  if (
+    !world.raster.depthBundle_ ||
+    world.raster.depthFor !== world.raster.bundle
+  ) {
+    world.raster.depthBundle_ = recordBundle(world, "depth");
+    world.raster.depthFor = world.raster.bundle;
   }
-  return world.depthBundle_;
+  return world.raster.depthBundle_;
 }
 
 export function encodeCull(
@@ -108,47 +120,53 @@ export function encodeCull(
   const { pipelines, currentViewBindGroup } = world.ctx;
   // The batches' instance counts start at zero (cull.slang `append`
   // counts into them); the rest of the arguments `writeDrawArgs` writes.
-  world.drawArguments.clear(encoder, world.batchList.length);
-  if (points && world.pointDraws.size) {
-    encoder.clearBuffer(world.pointCounts);
-    if ([...world.pointDraws.values()].some((d) => d.tiny > 0)) {
-      if (pixels > world.splats.pixels) {
+  world.raster.drawArguments.clear(encoder, world.raster.batchList.length);
+  if (points && world.raster.pointDraws.size) {
+    encoder.clearBuffer(world.raster.pointCounts);
+    if ([...world.raster.pointDraws.values()].some((d) => d.tiny > 0)) {
+      if (pixels > world.raster.splats.pixels) {
         // Larger buffers: every point draw's group binds them.
-        world.splats.depth.destroy();
-        world.splats.color.destroy();
-        world.splats.feature.destroy();
-        world.splats = createSplats(world, pixels);
-        for (const draw of world.pointDraws.values()) {
+        world.raster.splats.depth.destroy();
+        world.raster.splats.color.destroy();
+        world.raster.splats.feature.destroy();
+        world.raster.splats = createSplats(world, pixels);
+        for (const draw of world.raster.pointDraws.values()) {
           draw.group = pointGroup(world, draw);
         }
       }
-      encoder.clearBuffer(world.splats.depth, 0, Math.max(4, pixels * 4));
+      encoder.clearBuffer(
+        world.raster.splats.depth,
+        0,
+        Math.max(4, pixels * 4),
+      );
     }
   }
-  world.cullPassDesc.timestampWrites = timestampWrites;
-  const pass = encoder.beginComputePass(world.cullPassDesc);
+  world.raster.cullPassDesc.timestampWrites = timestampWrites;
+  const pass = encoder.beginComputePass(world.raster.cullPassDesc);
   // Once per frame, before any view's culling reads the tables.
   uploadTables(world, pass);
   pass.setBindGroup(0, currentViewBindGroup);
-  pass.setBindGroup(1, world.cullBindGroup);
+  pass.setBindGroup(1, world.raster.cullBindGroup);
   pass.setPipeline(pipelines.cullRecords);
-  pass.dispatchWorkgroups(Math.ceil(Math.max(world.drawCount, 1) / 64));
-  if (world.instanceHighWater > 0) {
+  pass.dispatchWorkgroups(Math.ceil(Math.max(world.raster.drawCount, 1) / 64));
+  if (world.raster.instanceHighWater > 0) {
     pass.setPipeline(pipelines.cullInstances);
     // Two dimensions past 65,535 groups (`cullInstances` reads them).
-    const groups = Math.ceil(world.instanceHighWater / 64);
+    const groups = Math.ceil(world.raster.instanceHighWater / 64);
     const x = Math.min(groups, 65535);
     pass.dispatchWorkgroups(x, Math.ceil(groups / x));
   }
   pass.setPipeline(pipelines.writeDrawArgs);
-  pass.dispatchWorkgroups(Math.ceil(Math.max(world.batchList.length, 1) / 64));
+  pass.dispatchWorkgroups(
+    Math.ceil(Math.max(world.raster.batchList.length, 1) / 64),
+  );
   // Point draws: their points in view into their lists (or splatted),
   // then their arguments (over `writeDrawArgs`'), with the narrower
   // world group their kernels read.
-  if (points && world.pointDraws.size) {
-    pass.setBindGroup(1, world.pointCullBindGroup);
+  if (points && world.raster.pointDraws.size) {
+    pass.setBindGroup(1, world.raster.pointCullBindGroup);
   }
-  for (const draw of points ? world.pointDraws.values() : []) {
+  for (const draw of points ? world.raster.pointDraws.values() : []) {
     pass.setBindGroup(2, draw.group);
     const groups = Math.ceil(Math.max(1, draw.mesh.points.capacity) / 64);
     const x = Math.min(groups, 65535);
@@ -167,15 +185,15 @@ export function encodeCull(
 
 /** Assigns each batch its slice of the item list and uploads the batch table. */
 function writeBatches(world: World): void {
-  const table = new Uint32Array(Math.max(1, world.batchList.length) * 4);
+  const table = new Uint32Array(Math.max(1, world.raster.batchList.length) * 4);
   let items = 0;
-  for (const batch of world.batchList) {
+  for (const batch of world.raster.batchList) {
     items += batch.items;
   }
   const direct = new Uint32Array(Math.max(1, items));
-  const fill = new Uint32Array(world.batchList.length);
+  const fill = new Uint32Array(world.raster.batchList.length);
   let base = 0;
-  for (const batch of world.batchList) {
+  for (const batch of world.raster.batchList) {
     batch.itemBase = base;
     const o = batch.index * 4;
     table[o] = base;
@@ -183,26 +201,28 @@ function writeBatches(world: World): void {
     table[o + 2] = batch.mesh.firstIndex;
     base += batch.items;
   }
-  for (let i = 0; i < world.drawCount; i++) {
-    const batch = world.drawBatches[i];
+  for (let i = 0; i < world.raster.drawCount; i++) {
+    const batch = world.raster.drawBatches[i];
     if (!batch) {
       continue;
     }
     const o = i * RECORD_WORDS;
-    const count = world.recordsU32[o + INSTANCE_COUNT_WORD]!;
+    const count = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
     if (count === 0) {
       direct[batch.itemBase + fill[batch.index]!++] = i;
     } else {
-      const first = world.drawRows + world.recordsU32[o + INSTANCE_FIRST_WORD]!;
+      const first =
+        world.raster.drawRows +
+        world.raster.recordsU32[o + INSTANCE_FIRST_WORD]!;
       for (let k = 0; k < count; k++) {
         direct[batch.itemBase + fill[batch.index]!++] = first + k;
       }
     }
   }
   const queue = world.ctx.device.queue;
-  queue.writeBuffer(world.batchBuffer, 0, table);
-  world.drawArguments.writeDirect(direct);
-  for (const [record, draw] of world.pointDraws) {
+  queue.writeBuffer(world.raster.batchBuffer, 0, table);
+  world.raster.drawArguments.writeDirect(direct);
+  for (const [record, draw] of world.raster.pointDraws) {
     writePointParams(world, draw, record);
   }
 }
@@ -247,7 +267,7 @@ export function recordBundle(
   // translucent (opaque.wgsl `cutOut`); the rest in the translucent
   // passes (`encodeTranslucent`). Glass lets the sun through.
   const masked = (batch: Batch) =>
-    (world.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+    (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
       (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
     0;
   const keyOf = (batch: Batch): SurfaceKey =>
@@ -295,14 +315,14 @@ export function recordBundle(
   // Only batches some view draws (`Batch.shown`), and for shadows those
   // some view's cascades alone do: the cache's resident tiles that no
   // view selected cost nothing here.
-  const order = world.batchList
+  const order = world.raster.batchList
     .filter(
       (batch) =>
         (batch.shown > 0 || (kind === "shadow" && batch.casters > 0)) &&
         // Only the translucent passes draw it (`encodeTranslucent`); lines
         // can't blend, and stay here.
         (batch.mesh.topology === "line-list" ||
-          (world.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+          (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
             MaterialFlags.blendedOnly) ===
             0),
     )
@@ -313,14 +333,14 @@ export function recordBundle(
         a.textureSet - b.textureSet ||
         a.mesh.slab - b.mesh.slab,
     );
-  const direct = world._submission === "direct";
+  const direct = world.raster._submission === "direct";
   let pipeline: GPURenderPipeline | undefined;
   let group: GPUBindGroup | undefined;
   let slab = -1;
   for (const batch of order) {
     if (
       batch.items === 0 ||
-      world.brokenTextureSets.has(batch.textureSet) ||
+      world.raster.brokenTextureSets.has(batch.textureSet) ||
       ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
       // Point sets and instances shade outside the opaque pass's depth
       // prepass; point sets aren't ground either (their strips are the
@@ -347,7 +367,7 @@ export function recordBundle(
       group = wantedGroup;
       encoder.setBindGroup(2, group);
     }
-    world.drawArguments.drawBatch(encoder, batch, direct);
+    world.raster.drawArguments.drawBatch(encoder, batch, direct);
   }
   return encoder.finish();
 }
@@ -379,7 +399,7 @@ function setGroup(
   key: SurfaceKey,
 ): GPUBindGroup {
   const shader = batch.shader;
-  const plain = world.textureSets[batch.textureSet]!;
+  const plain = world.raster.textureSets[batch.textureSet]!;
   if (!shader || pipeline === world.ctx.pipelines[key]) {
     return plain;
   }
@@ -389,13 +409,13 @@ function setGroup(
   }
   const own = world.ctx.shaderBindings.entries(shader);
   const groupKey = `${batch.textureSet}|${shader.id}|${own.version}`;
-  let group = world.shaderGroups.get(groupKey);
+  let group = world.raster.shaderGroups.get(groupKey);
   if (!group) {
     group = world.ctx.device.createBindGroup({
       label: `world.textureSet ${shader.label}`,
       layout,
       entries: [
-        ...world.textureSetEntries[batch.textureSet]!.filter(
+        ...world.raster.textureSetEntries[batch.textureSet]!.filter(
           (e) =>
             shader.readsPropertyTextures ||
             e.binding < PROPERTY_TEXTURE_BINDING,
@@ -404,12 +424,12 @@ function setGroup(
       ],
     });
     // Older versions of this shader's group are unused now.
-    for (const k of world.shaderGroups.keys()) {
+    for (const k of world.raster.shaderGroups.keys()) {
       if (k.startsWith(`${batch.textureSet}|${shader.id}|`)) {
-        world.shaderGroups.delete(k);
+        world.raster.shaderGroups.delete(k);
       }
     }
-    world.shaderGroups.set(groupKey, group);
+    world.raster.shaderGroups.set(groupKey, group);
   }
   return group;
 }
@@ -418,7 +438,7 @@ function setGroup(
 function translucent(world: World, batch: Batch): boolean {
   return (
     batch.mesh.topology !== "line-list" &&
-    (world.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+    (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
       MaterialFlags.alphaBlend) !==
       0
   );
@@ -429,21 +449,21 @@ export function translucentRange(
   eye: ArrayLike<number>,
   viewBit: number = ALL_VIEWS,
 ): { near: number; far: number } | undefined {
-  if (!owner.translucentDraws) {
-    owner.translucentDraws = [];
-    for (let i = 0; i < owner.drawCount; i++) {
-      const batch = owner.drawBatches[i];
+  if (!owner.raster.translucentDraws) {
+    owner.raster.translucentDraws = [];
+    for (let i = 0; i < owner.raster.drawCount; i++) {
+      const batch = owner.raster.drawBatches[i];
       if (batch && translucent(owner, batch)) {
-        owner.translucentDraws.push(i);
+        owner.raster.translucentDraws.push(i);
       }
     }
   }
-  if (owner.translucentDraws.length === 0) {
+  if (owner.raster.translucentDraws.length === 0) {
     return undefined;
   }
-  const u = owner.recordsU32;
-  const f = owner.recordsF32;
-  const world = owner.transformWorld;
+  const u = owner.raster.recordsU32;
+  const f = owner.raster.recordsF32;
+  const world = owner.scene.transformWorld;
   let near = Infinity;
   let far = 0;
   const sphere = (x: number, y: number, z: number, radius: number) => {
@@ -451,18 +471,18 @@ export function translucentRange(
     near = Math.min(near, d - radius);
     far = Math.max(far, d + radius);
   };
-  for (const i of owner.translucentDraws) {
+  for (const i of owner.raster.translucentDraws) {
     const o = i * RECORD_WORDS;
     const t = u[o + TRANSFORM_WORD]!;
     if (
       u[o + FLAGS_WORD]! & RecordFlags.hidden ||
       (u[o + VIEW_MASK_WORD]! & viewBit) === 0 ||
-      owner.transformHiddenWorld[t] === 1
+      owner.scene.transformHiddenWorld[t] === 1
     ) {
       continue;
     }
     const w = t * 16;
-    const scale = owner.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+    const scale = owner.raster.transforms.f32[t * TRANSFORM_WORDS + 3]!;
     const local = [f[o]!, f[o + 1]!, f[o + 2]!];
     const point = (p: readonly number[], k: number) =>
       world[w + k]! * p[0]! +
@@ -480,10 +500,10 @@ export function translucentRange(
       continue;
     }
     const first = u[o + INSTANCE_FIRST_WORD]!;
-    const it = owner.instances.f32;
+    const it = owner.raster.instances.f32;
     for (let j = first; j < first + count; j++) {
       const a = j * INSTANCE_WORDS;
-      if (owner.instances.u32[a + 14]! & 1) {
+      if (owner.raster.instances.u32[a + 14]! & 1) {
         continue;
       }
       const p = [0, 1, 2].map(
@@ -517,15 +537,15 @@ export function encodeTranslucent(
 ): void {
   pass.setBindGroup(0, world.ctx.currentViewBindGroup);
   pass.setBindGroup(3, group);
-  const direct = world._submission === "direct";
+  const direct = world.raster._submission === "direct";
   let current: GPURenderPipeline | undefined;
   let bound: GPUBindGroup | undefined;
   let slab = -1;
-  for (const batch of world.batchList) {
+  for (const batch of world.raster.batchList) {
     if (
       batch.shown === 0 ||
       !translucent(world, batch) ||
-      world.brokenTextureSets.has(batch.textureSet)
+      world.raster.brokenTextureSets.has(batch.textureSet)
     ) {
       continue;
     }
@@ -544,6 +564,6 @@ export function encodeTranslucent(
       bound = wantedGroup;
       pass.setBindGroup(2, bound);
     }
-    world.drawArguments.drawBatch(pass, batch, direct);
+    world.raster.drawArguments.drawBatch(pass, batch, direct);
   }
 }

@@ -65,11 +65,11 @@ function batchFor(
   },
 ): Batch {
   const key = `${f.mesh.id}|${f.material}|${f.textureSet}|${f.doubleSided ? 1 : 0}|${f.shader?.id ?? 0}|${f.billboard ? 1 : 0}|${f.instanced ? 1 : 0}${f.points ? `|${f.draw}` : ""}`;
-  let batch = world.batches.get(key);
+  let batch = world.raster.batches.get(key);
   if (batch) {
     return batch;
   }
-  const reused = world.freeBatches.pop();
+  const reused = world.raster.freeBatches.pop();
   if (reused) {
     batch = reused;
     batch.key = key;
@@ -85,7 +85,7 @@ function batchFor(
     batch.casters = 0;
   } else {
     batch = {
-      index: world.batchList.length,
+      index: world.raster.batchList.length,
       key,
       mesh: f.mesh,
       textureSet: f.textureSet,
@@ -100,9 +100,9 @@ function batchFor(
       shown: 0,
       casters: 0,
     };
-    world.batchList.push(batch);
+    world.raster.batchList.push(batch);
   }
-  world.batches.set(key, batch);
+  world.raster.batches.set(key, batch);
   return batch;
 }
 
@@ -158,15 +158,15 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
   let pointCounter: number | undefined;
   if (pointSet) {
     if (
-      world.freePointCounters.length === 0 &&
-      world.pointSetCount < world.maxPointSets
+      world.raster.freePointCounters.length === 0 &&
+      world.raster.pointSetCount < world.maxPointSets
     ) {
       growPointSets(
         world,
-        Math.min(world.maxPointSets, world.pointSetCount * 2),
+        Math.min(world.maxPointSets, world.raster.pointSetCount * 2),
       );
     }
-    pointCounter = world.freePointCounters.pop();
+    pointCounter = world.raster.freePointCounters.pop();
     const bytes = Math.max(4, pointSet.capacity * 4);
     // In the mesh's slab: the point cull reads anchors and list together.
     pointList =
@@ -175,7 +175,7 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
         : world.slabs.allocateVertex(world.slabs.get(options.mesh.slab), bytes);
     if (pointList === undefined) {
       if (pointCounter !== undefined) {
-        world.freePointCounters.push(pointCounter);
+        world.raster.freePointCounters.push(pointCounter);
       }
       throw new CapacityError(
         pointCounter === undefined ? "point sets" : "vertex arena",
@@ -188,16 +188,16 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
       world.slabs
         .get(options.mesh.slab)
         .vertex.release(pointList, Math.max(4, pointSet!.capacity * 4));
-      world.freePointCounters.push(pointCounter!);
+      world.raster.freePointCounters.push(pointCounter!);
     }
   };
-  const index = world.freeSlots.pop() ?? world.drawCount++;
+  const index = world.raster.freeSlots.pop() ?? world.raster.drawCount++;
   if (index >= world.maxDraws) {
-    world.drawCount--;
+    world.raster.drawCount--;
     releasePoints();
     throw new CapacityError("draw table");
   }
-  if (index >= world.drawRows) {
+  if (index >= world.raster.drawRows) {
     growDraws(world, index + 1);
   }
   reserveDraws(world, index + 1);
@@ -206,12 +206,12 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
   let transform: number;
   if (options.transform) {
     if (!world.transformAlive(options.transform)) {
-      world.freeSlots.push(index);
+      world.raster.freeSlots.push(index);
       releasePoints();
       throw new Error("addDraw: the transform was removed.");
     }
     transform = options.transform.index;
-    world.drawOwnedTransform[index] = -1;
+    world.raster.drawOwnedTransform[index] = -1;
   } else {
     const m = new Float64Array(16);
     m.set(options.model ?? IDENTITY);
@@ -222,11 +222,11 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
     try {
       transform = world.addTransform(m, options.parent).index;
     } catch (error) {
-      world.freeSlots.push(index);
+      world.raster.freeSlots.push(index);
       releasePoints();
       throw error;
     }
-    world.drawOwnedTransform[index] = transform;
+    world.raster.drawOwnedTransform[index] = transform;
   }
 
   // Instances: a range in the instance table, culled one by one.
@@ -235,23 +235,23 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
   let instanceFirst = 0;
   let instanceFeatures = 0;
   if (instances && instanceCount > 0) {
-    const first = world.instanceAllocator.allocate(instanceCount);
+    const first = world.raster.instanceAllocator.allocate(instanceCount);
     if (first === undefined) {
       releaseOwnedTransform(world, index);
-      world.freeSlots.push(index);
+      world.raster.freeSlots.push(index);
       releasePoints();
       throw new CapacityError("instance table");
     }
-    world.instances.reserve(first + instanceCount);
-    if (first + instanceCount > world.instances.gpuRows) {
+    world.raster.instances.reserve(first + instanceCount);
+    if (first + instanceCount > world.raster.instances.gpuRows) {
       growInstances(world, first + instanceCount);
     }
     instanceFirst = first;
-    world.instanceHighWater = Math.max(
-      world.instanceHighWater,
+    world.raster.instanceHighWater = Math.max(
+      world.raster.instanceHighWater,
       first + instanceCount,
     );
-    const { f32, u32 } = world.instances;
+    const { f32, u32 } = world.raster.instances;
     const distanceFlags = instanceDistanceFlags(
       instances.visibleWithin,
       instances.visibleBeyond,
@@ -272,13 +272,13 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
         distanceFlags,
         instances.tints ? packTint(instances.tints, k * 4) : 0xffffffff,
       );
-      world.instances.mark(first + k);
+      world.raster.instances.mark(first + k);
     }
   }
   let instanceStreams = NO_STREAM;
   let instanceStride = 0;
   let instanceDirectory = NO_STREAM;
-  world.instanceStreamRanges[index] = undefined;
+  world.raster.instanceStreamRanges[index] = undefined;
   if (instances?.streams && instanceCount > 0) {
     const data = instances.streams.data;
     // The fields' directory right after the data, in one range.
@@ -303,7 +303,7 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
     if (offset === undefined) {
       releaseInstances(world, instanceFirst, instanceCount);
       releaseOwnedTransform(world, index);
-      world.freeSlots.push(index);
+      world.raster.freeSlots.push(index);
       releasePoints();
       throw new CapacityError("vertex arena");
     }
@@ -317,7 +317,7 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
       );
       instanceDirectory = (offset + data.byteLength) / 4;
     }
-    world.instanceStreamRanges[index] = [
+    world.raster.instanceStreamRanges[index] = [
       offset,
       data.byteLength + directory.byteLength,
       data.byteLength,
@@ -351,7 +351,7 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
     draw: index,
   });
   batch.items += instanceCount > 0 ? instanceCount : 1;
-  world.drawBatches[index] = batch;
+  world.raster.drawBatches[index] = batch;
   if (shader) {
     warnUnavailable(world, mesh, shader);
   }
@@ -361,14 +361,14 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
   // A custom vertex stage's displacement (model units) pads them.
   resolveTransforms(world);
   const scale = world.transformsF32Scale(transform);
-  world.names[index] = options.name;
-  world.featureTables[index] = options.features;
-  const firstFeature = world.nextFeatureId;
-  world.nextFeatureId += Math.max(1, mesh.featureCount, instanceFeatures);
-  world.featureRangeFirst.push(firstFeature);
-  world.featureRangeDraw.push(index);
-  world.drawFeatureFirst[index] = firstFeature;
-  world.drawConstants.write(index, {
+  world.scene.names[index] = options.name;
+  world.scene.featureTables[index] = options.features;
+  const firstFeature = world.scene.nextFeatureId;
+  world.scene.nextFeatureId += Math.max(1, mesh.featureCount, instanceFeatures);
+  world.scene.featureRangeFirst.push(firstFeature);
+  world.scene.featureRangeDraw.push(index);
+  world.scene.drawFeatureFirst[index] = firstFeature;
+  world.raster.drawConstants.write(index, {
     transform,
     center: mesh.center,
     radius:
@@ -411,12 +411,12 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
       : {}),
     ...(mesh.skirtStart !== undefined ? { skirtStart: mesh.skirtStart } : {}),
   });
-  if (world.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD] !== 0) {
+  if (world.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD] !== 0) {
     batch.shown++;
   }
   world.markDirty(index);
-  world.bundle = undefined;
-  world.translucentDraws = undefined;
+  world.raster.bundle = undefined;
+  world.raster.translucentDraws = undefined;
   if (pointSet) {
     const params = world.ctx.device.createBuffer({
       label: "world.pointCull",
@@ -434,14 +434,14 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
       tiny: 0,
     };
     draw.group = pointGroup(world, draw);
-    world.pointDraws.set(index, draw);
+    world.raster.pointDraws.set(index, draw);
   }
   const handle: DrawHandle = {
     index,
-    generation: world.drawGeneration[index]!,
+    generation: world.raster.drawGeneration[index]!,
     name: options.name,
   };
-  world.contentRevision_++;
+  world.scene.contentRevision_++;
   world.acceleration.drawAdded(handle);
   return handle;
 }
@@ -455,7 +455,7 @@ export function setDrawShader(
     throw new Error("setDrawShader: the draw was removed");
   }
   const index = handle.index;
-  const old = world.drawBatches[index]!;
+  const old = world.raster.drawBatches[index]!;
   if (old.shader === shader) {
     return;
   }
@@ -463,7 +463,7 @@ export function setDrawShader(
     warnUnavailable(world, old.mesh, shader);
   }
   const o = index * RECORD_WORDS;
-  const instanceCount = world.recordsU32[o + INSTANCE_COUNT_WORD]!;
+  const instanceCount = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
   const items = instanceCount > 0 ? instanceCount : 1;
   const batch = batchFor(world, {
     mesh: old.mesh,
@@ -477,42 +477,42 @@ export function setDrawShader(
     draw: index,
   });
   old.items -= items;
-  if (world.recordsU32[o + VIEW_MASK_WORD] !== 0) {
+  if (world.raster.recordsU32[o + VIEW_MASK_WORD] !== 0) {
     old.shown--;
     batch.shown++;
   }
-  if (world.recordsU32[o + CASTER_MASK_WORD] !== 0) {
+  if (world.raster.recordsU32[o + CASTER_MASK_WORD] !== 0) {
     old.casters--;
     batch.casters++;
   }
   if (old.items === 0) {
-    world.batches.delete(old.key);
+    world.raster.batches.delete(old.key);
     old.key = "";
-    world.freeBatches.push(old);
+    world.raster.freeBatches.push(old);
   }
   batch.items += items;
-  world.drawBatches[index] = batch;
+  world.raster.drawBatches[index] = batch;
   // The bounds' padding for a vertex stage's displacement follows it.
-  const placed = world.drawPlacements[index];
+  const placed = world.scene.drawPlacements[index];
   if (placed) {
     placed.base +=
       (shader?.displacement ?? 0) - (old.shader?.displacement ?? 0);
   }
-  world.drawConstants.setBatch(
+  world.raster.drawConstants.setBatch(
     index,
     batch.index,
-    world.recordsF32[o + RADIUS_WORD]! -
+    world.raster.recordsF32[o + RADIUS_WORD]! -
       (old.shader?.displacement ?? 0) +
       (shader?.displacement ?? 0),
   );
-  const point = world.pointDraws.get(index);
+  const point = world.raster.pointDraws.get(index);
   if (point) {
     point.batch = batch;
     writePointParams(world, point, index);
   }
   world.markDirty(index);
-  world.bundle = undefined;
-  world.translucentDraws = undefined;
+  world.raster.bundle = undefined;
+  world.raster.translucentDraws = undefined;
   world.version++;
 }
 
@@ -524,16 +524,16 @@ export function setDrawMaterial(
   if (!world.hasDraw(handle)) {
     throw new Error("setDrawMaterial: the draw was removed");
   }
-  if (world.materialReferences[material] === undefined || material < 0) {
+  if (world.scene.materialReferences[material] === undefined || material < 0) {
     throw new RangeError(`setDrawMaterial: no material ${material}`);
   }
   const index = handle.index;
-  const old = world.drawBatches[index]!;
+  const old = world.raster.drawBatches[index]!;
   if (old.material === material) {
     return;
   }
   const o = index * RECORD_WORDS;
-  const instanceCount = world.recordsU32[o + INSTANCE_COUNT_WORD]!;
+  const instanceCount = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
   const items = instanceCount > 0 ? instanceCount : 1;
   const batch = batchFor(world, {
     mesh: old.mesh,
@@ -550,35 +550,35 @@ export function setDrawMaterial(
   // later change adds) must move with the record here, as in
   // `setDrawShader`.
   old.items -= items;
-  if (world.recordsU32[o + VIEW_MASK_WORD] !== 0) {
+  if (world.raster.recordsU32[o + VIEW_MASK_WORD] !== 0) {
     old.shown--;
     batch.shown++;
   }
-  if (world.recordsU32[o + CASTER_MASK_WORD] !== 0) {
+  if (world.raster.recordsU32[o + CASTER_MASK_WORD] !== 0) {
     old.casters--;
     batch.casters++;
   }
   if (old.items === 0) {
-    world.batches.delete(old.key);
+    world.raster.batches.delete(old.key);
     old.key = "";
-    world.freeBatches.push(old);
+    world.raster.freeBatches.push(old);
   }
   batch.items += items;
-  world.drawBatches[index] = batch;
-  world.drawConstants.setBatch(
+  world.raster.drawBatches[index] = batch;
+  world.raster.drawConstants.setBatch(
     index,
     batch.index,
-    world.recordsF32[o + RADIUS_WORD]!,
+    world.raster.recordsF32[o + RADIUS_WORD]!,
   );
-  world.drawConstants.setMaterial(index, material);
-  const point = world.pointDraws.get(index);
+  world.raster.drawConstants.setMaterial(index, material);
+  const point = world.raster.pointDraws.get(index);
   if (point) {
     point.batch = batch;
     writePointParams(world, point, index);
   }
   world.markDirty(index);
-  world.bundle = undefined;
-  world.translucentDraws = undefined;
+  world.raster.bundle = undefined;
+  world.raster.translucentDraws = undefined;
   world.version++;
 }
 
@@ -590,24 +590,24 @@ export function twinDraw(
     throw new Error("twinDraw: the draw was removed.");
   }
   const index = source.index;
-  const batch = world.drawBatches[index]!;
+  const batch = world.raster.drawBatches[index]!;
   const o = index * RECORD_WORDS;
   if (
     batch.points ||
     batch.billboard ||
-    world.recordsU32[o + INSTANCE_COUNT_WORD]! > 0
+    world.raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0
   ) {
     return undefined;
   }
-  const transform = world.recordsU32[o + TRANSFORM_WORD]!;
-  const flags = world.recordsU32[o + FLAGS_WORD]!;
-  const features = world.featureTables[index];
-  const name = world.names[index];
+  const transform = world.raster.recordsU32[o + TRANSFORM_WORD]!;
+  const flags = world.raster.recordsU32[o + FLAGS_WORD]!;
+  const features = world.scene.featureTables[index];
+  const name = world.scene.names[index];
   return world.addDraw({
     mesh: batch.mesh,
     transform: {
       index: transform,
-      generation: world.transformGeneration[transform]!,
+      generation: world.scene.transformGeneration[transform]!,
     },
     material: batch.material,
     textureSet: batch.textureSet,
@@ -626,38 +626,39 @@ export function removeDraw(world: World, handle: DrawHandle): void {
   if (!world.hasDraw(handle)) {
     return; // already removed
   }
-  world.contentRevision_++;
+  world.scene.contentRevision_++;
   world.acceleration.drawRemoved(handle);
-  const batch = world.drawBatches[handle.index]!;
+  const batch = world.raster.drawBatches[handle.index]!;
   const o = handle.index * RECORD_WORDS;
-  const instanceCount = world.recordsU32[o + INSTANCE_COUNT_WORD]!;
-  world.drawBatches[handle.index] = undefined;
-  world.drawGeneration[handle.index] = world.drawGeneration[handle.index]! + 1;
+  const instanceCount = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
+  world.raster.drawBatches[handle.index] = undefined;
+  world.raster.drawGeneration[handle.index] =
+    world.raster.drawGeneration[handle.index]! + 1;
   batch.items -= instanceCount > 0 ? instanceCount : 1;
-  if (world.recordsU32[o + VIEW_MASK_WORD] !== 0) {
+  if (world.raster.recordsU32[o + VIEW_MASK_WORD] !== 0) {
     batch.shown--;
   }
-  if (world.recordsU32[o + CASTER_MASK_WORD] !== 0) {
+  if (world.raster.recordsU32[o + CASTER_MASK_WORD] !== 0) {
     batch.casters--;
   }
   if (batch.items === 0) {
-    world.batches.delete(batch.key);
+    world.raster.batches.delete(batch.key);
     batch.key = "";
-    world.freeBatches.push(batch);
+    world.raster.freeBatches.push(batch);
   }
   // Slices of the item list follow batch sizes: rebuild them.
-  world.bundle = undefined;
-  world.translucentDraws = undefined;
+  world.raster.bundle = undefined;
+  world.raster.translucentDraws = undefined;
   if (instanceCount > 0) {
     releaseInstances(
       world,
-      world.recordsU32[o + INSTANCE_FIRST_WORD]!,
+      world.raster.recordsU32[o + INSTANCE_FIRST_WORD]!,
       instanceCount,
     );
   }
-  world.drawConstants.clear(handle.index);
+  world.raster.drawConstants.clear(handle.index);
   releasePlacement(world, handle.index);
-  const pointDraw = world.pointDraws.get(handle.index);
+  const pointDraw = world.raster.pointDraws.get(handle.index);
   if (pointDraw) {
     world.flushUploads();
     world.slabs
@@ -667,40 +668,40 @@ export function removeDraw(world: World, handle: DrawHandle): void {
         Math.max(4, pointDraw.mesh.points.capacity * 4),
       );
     pointDraw.params.destroy();
-    world.freePointCounters.push(pointDraw.counter);
-    world.pointDraws.delete(handle.index);
+    world.raster.freePointCounters.push(pointDraw.counter);
+    world.raster.pointDraws.delete(handle.index);
   }
-  const streams = world.instanceStreamRanges[handle.index];
+  const streams = world.raster.instanceStreamRanges[handle.index];
   if (streams) {
     world.flushUploads(); // before its range can be reused
     world.slabs.get(streams[3]).vertex.release(streams[0], streams[1]);
-    world.instanceStreamRanges[handle.index] = undefined;
+    world.raster.instanceStreamRanges[handle.index] = undefined;
   }
   releaseOwnedTransform(world, handle.index);
-  world.names[handle.index] = undefined;
-  world.featureTables[handle.index] = undefined;
+  world.scene.names[handle.index] = undefined;
+  world.scene.featureTables[handle.index] = undefined;
   // The slot may be reused; its old feature range must not resolve to it.
-  world.drawFeatureFirst[handle.index] = -1;
-  world.freeSlots.push(handle.index);
+  world.scene.drawFeatureFirst[handle.index] = -1;
+  world.raster.freeSlots.push(handle.index);
   world.markDirty(handle.index);
 }
 
 function releaseInstances(world: World, first: number, count: number): void {
   for (let k = first; k < first + count; k++) {
-    world.instances.u32[k * INSTANCE_WORDS + 12] = NO_RECORD;
-    world.instances.mark(k);
+    world.raster.instances.u32[k * INSTANCE_WORDS + 12] = NO_RECORD;
+    world.raster.instances.mark(k);
   }
-  world.instanceAllocator.release(first, count);
+  world.raster.instanceAllocator.release(first, count);
   world.version++;
 }
 
 function releaseOwnedTransform(world: World, draw: number): void {
-  const owned = world.drawOwnedTransform[draw]!;
+  const owned = world.raster.drawOwnedTransform[draw]!;
   if (owned >= 0) {
-    world.drawOwnedTransform[draw] = -1;
+    world.raster.drawOwnedTransform[draw] = -1;
     world.removeTransform({
       index: owned,
-      generation: world.transformGeneration[owned]!,
+      generation: world.scene.transformGeneration[owned]!,
     });
   }
 }
@@ -719,12 +720,12 @@ export function setInstance(
     return;
   }
   const o = handle.index * RECORD_WORDS;
-  const count = world.recordsU32[o + INSTANCE_COUNT_WORD]!;
+  const count = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
   if (instance < 0 || instance >= count) {
     throw new RangeError(`instance ${instance} of ${count}`);
   }
-  const slot = world.recordsU32[o + INSTANCE_FIRST_WORD]! + instance;
-  const { f32, u32 } = world.instances;
+  const slot = world.raster.recordsU32[o + INSTANCE_FIRST_WORD]! + instance;
+  const { f32, u32 } = world.raster.instances;
   const w = slot * INSTANCE_WORDS;
   if (change.matrix) {
     writeInstance(
@@ -746,9 +747,9 @@ export function setInstance(
   if (change.tint) {
     u32[w + 15] = packTint(change.tint);
   }
-  world.instances.mark(slot);
+  world.raster.instances.mark(slot);
   world.version++;
-  world.changedViews |= world.recordsU32[o + VIEW_MASK_WORD]!;
+  world.changedViews |= world.raster.recordsU32[o + VIEW_MASK_WORD]!;
 }
 
 export function setInstanceStreams(
@@ -760,9 +761,11 @@ export function setInstanceStreams(
   if (!world.hasDraw(handle)) {
     return;
   }
-  const range = world.instanceStreamRanges[handle.index];
+  const range = world.raster.instanceStreamRanges[handle.index];
   const stride =
-    world.recordsU32[handle.index * RECORD_WORDS + INSTANCE_STRIDE_WORD]!;
+    world.raster.recordsU32[
+      handle.index * RECORD_WORDS + INSTANCE_STRIDE_WORD
+    ]!;
   if (!range || stride === 0) {
     throw new Error("setInstanceStreams: the draw has no instance streams");
   }
@@ -784,5 +787,5 @@ export function setInstanceStreams(
   );
   world.version++;
   world.changedViews |=
-    world.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+    world.raster.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
 }

@@ -34,7 +34,7 @@ export function createPlacementParameter(
   value: number,
 ): PlacementParameter {
   checkParameterValue("createPlacementParameter", value);
-  const word = world.placementTable.allocateParameter(value);
+  const word = world.raster.placementTable.allocateParameter(value);
   const slot: ParameterSlot = { word, draws: new Set() };
   let current = value;
   const changed = (old: number) => parameterChanged(world, slot, old, current);
@@ -57,7 +57,7 @@ export function createPlacementParameter(
       }
     },
   });
-  world.parameters.set(parameter, slot);
+  world.scene.parameters.set(parameter, slot);
   return parameter;
 }
 
@@ -77,27 +77,27 @@ export function setPlacement(
   const o = index * RECORD_WORDS;
   if (next) {
     checkPlacement("setPlacement", next);
-    const flags = world.recordsU32[o + FLAGS_WORD]!;
+    const flags = world.raster.recordsU32[o + FLAGS_WORD]!;
     if (flags & (RecordFlags.billboard | RecordFlags.points)) {
       throw new Error(
         "setPlacement: a billboard or point draw's positions are offsets on screen; it has no per-vertex placement.",
       );
     }
-    if (world.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
+    if (world.raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
       throw new Error(
         "setPlacement: an instanced draw has no per-vertex placement: it would move a mesh's vertices before each instance's matrix, and not the instances.",
       );
     }
     for (const t of parametersOf(next)) {
-      if (!world.parameters.has(t)) {
+      if (!world.scene.parameters.has(t)) {
         throw new Error(
           "setPlacement: the placement's t isn't a parameter of this world (World.createPlacementParameter).",
         );
       }
     }
     if (next.kind === "dual") {
-      const mesh = world.drawBatches[index]!.mesh;
-      const components = world.meshRanges
+      const mesh = world.raster.drawBatches[index]!.mesh;
+      const components = world.scene.meshRanges
         .get(mesh.id)
         ?.named?.get(next.semantic);
       if (components === undefined || components < 3) {
@@ -107,8 +107,8 @@ export function setPlacement(
       }
     }
   }
-  const old = world.drawPlacements[index];
-  const base = old ? old.base : world.recordsF32[o + RADIUS_WORD]!;
+  const old = world.scene.drawPlacements[index];
+  const base = old ? old.base : world.raster.recordsF32[o + RADIUS_WORD]!;
   const reach = next ? placementReach(world, index, next, base) : 1;
   const pad = next ? maxDisplacement(next, reach) : 0;
   if (next) {
@@ -117,22 +117,22 @@ export function setPlacement(
   releasePlacement(world, index);
   if (!next) {
     if (old) {
-      world.drawConstants.setPlacement(index, NO_PLACEMENT);
-      world.drawConstants.setRadius(index, base);
-      world.contentRevision_++;
+      world.raster.drawConstants.setPlacement(index, NO_PLACEMENT);
+      world.raster.drawConstants.setRadius(index, base);
+      world.scene.contentRevision_++;
       world.markDirty(index);
     }
     return;
   }
-  const at = world.placementTable.add(
+  const at = world.raster.placementTable.add(
     next,
-    (t) => world.parameters.get(t)!.word,
+    (t) => world.scene.parameters.get(t)!.word,
   );
-  const slots = parametersOf(next).map((t) => world.parameters.get(t)!);
+  const slots = parametersOf(next).map((t) => world.scene.parameters.get(t)!);
   for (const slot of slots) {
     slot.draws.add(index);
   }
-  world.drawPlacements[index] = {
+  world.scene.drawPlacements[index] = {
     placement: next,
     at,
     base,
@@ -140,9 +140,9 @@ export function setPlacement(
     reach,
     slots,
   };
-  world.drawConstants.setPlacement(index, at);
-  world.drawConstants.setRadius(index, base + pad);
-  world.contentRevision_++;
+  world.raster.drawConstants.setPlacement(index, at);
+  world.raster.drawConstants.setRadius(index, base + pad);
+  world.scene.contentRevision_++;
   world.markDirty(index);
 }
 
@@ -151,7 +151,7 @@ export function drawPlacement(
   handle: DrawHandle,
 ): Placement | undefined {
   return world.hasDraw(handle)
-    ? world.drawPlacements[handle.index]?.placement
+    ? world.scene.drawPlacements[handle.index]?.placement
     : undefined;
 }
 
@@ -163,14 +163,14 @@ function parameterChanged(
   value: number,
 ): void {
   if (slot.draws.size === 0) {
-    world.placementTable.setParameter(slot.word, value);
+    world.raster.placementTable.setParameter(slot.word, value);
     return;
   }
   // Between 0 and 1 no kind's bounds move (a dual position's are fixed
   // for |t| ≤ 1, a blend's for 0 ≤ t ≤ 1): the float alone, and every
   // view redraws, with no walk over the draws (a morph's every tick).
   if (old >= 0 && old <= 1 && value >= 0 && value <= 1) {
-    world.placementTable.setParameter(slot.word, value);
+    world.raster.placementTable.setParameter(slot.word, value);
     world.version++;
     world.changedViews = ALL_VIEWS;
     return;
@@ -178,7 +178,7 @@ function parameterChanged(
   // The bounds first, all checked before anything is written.
   const pads: number[] = [];
   for (const index of slot.draws) {
-    const placed = world.drawPlacements[index]!;
+    const placed = world.scene.drawPlacements[index]!;
     const pad = maxDisplacement(placed.placement, placed.reach);
     finite32(
       "PlacementParameter",
@@ -187,18 +187,18 @@ function parameterChanged(
     );
     pads.push(pad);
   }
-  world.placementTable.setParameter(slot.word, value);
+  world.raster.placementTable.setParameter(slot.word, value);
   let views = 0;
   let k = 0;
   for (const index of slot.draws) {
-    const placed = world.drawPlacements[index]!;
+    const placed = world.scene.drawPlacements[index]!;
     const pad = pads[k++]!;
     if (pad !== placed.pad) {
       placed.pad = pad;
-      world.drawConstants.setRadius(index, placed.base + pad);
-      world.uploadsPending = true;
+      world.raster.drawConstants.setRadius(index, placed.base + pad);
+      world.raster.uploadsPending = true;
     }
-    views |= world.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+    views |= world.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
   world.version++;
   world.changedViews |= views;
@@ -206,15 +206,15 @@ function parameterChanged(
 
 /** Frees a draw's placement block and its parameters' links to it. */
 export function releasePlacement(world: World, index: number): void {
-  const placed = world.drawPlacements[index];
+  const placed = world.scene.drawPlacements[index];
   if (!placed) {
     return;
   }
-  world.placementTable.remove(placed.at, placed.placement);
+  world.raster.placementTable.remove(placed.at, placed.placement);
   for (const slot of placed.slots) {
     slot.draws.delete(index);
   }
-  world.drawPlacements[index] = undefined;
+  world.scene.drawPlacements[index] = undefined;
 }
 
 /**
@@ -229,7 +229,7 @@ function placementReach(
   radius: number,
 ): number {
   const o = index * RECORD_WORDS + CENTER_WORD;
-  const f32 = world.recordsF32;
+  const f32 = world.raster.recordsF32;
   const reach = (f: "identity" | FittedOperation) =>
     f === "identity"
       ? 1
@@ -254,9 +254,9 @@ export function releasePlacementParameter(
   world: World,
   parameter: PlacementParameter,
 ): void {
-  const slot = world.parameters.get(parameter);
+  const slot = world.scene.parameters.get(parameter);
   if (slot !== undefined) {
-    world.parameters.delete(parameter);
-    world.placementTable.releaseParameter(slot.word);
+    world.scene.parameters.delete(parameter);
+    world.raster.placementTable.releaseParameter(slot.word);
   }
 }

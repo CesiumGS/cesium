@@ -987,8 +987,7 @@ describe("globe terrain clips", () => {
     const world = engine.createWorld();
     const mesh = world.addMesh(createBox());
     const draw = world.addDraw({ mesh });
-    const records = (world as unknown as { recordsU32: Uint32Array })
-      .recordsU32;
+    const records = world.raster.recordsU32;
     const at = draw.index * RECORD_WORDS + TERRAIN_CLIP_WORD;
     expect(records[at]).toBe(0);
     world.setTerrainClip(draw, 0x80000005);

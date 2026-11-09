@@ -122,6 +122,17 @@ export function recordWritesOutsideSeam(text: string): number[] {
       }
     }
   }
+  // A record array taken by name out of a world's data or a context.
+  const named =
+    /\b(?:const|let|var)\s*\{([^}]*\brecords(?:U32|F32)\b[^}]*)\}\s*=/g;
+  for (const m of source.matchAll(named)) {
+    for (const part of m[1]!.split(",")) {
+      const [key, name] = part.split(":").map((s) => s.trim());
+      if (/^records(?:U32|F32)$/.test(key!)) {
+        local(name ?? key!, m.index);
+      }
+    }
+  }
   for (const { pattern, from, to } of targets) {
     for (const m of source.slice(0, to).matchAll(pattern)) {
       if (m.index < from) {
@@ -390,6 +401,21 @@ function other() {
   this.flags[o] = flags;
 }`;
     expect(recordWritesOutsideSeam(module)).toEqual([3, 4, 6, 8]);
+  });
+
+  it("record writes through a world's rasterizer data", () => {
+    const module = `function moved(world: DrawWorld) {
+  const u = world.raster.recordsU32;
+  u[o] |= 4;
+  world.raster.recordsF32[o] -= 2;
+  const { recordsU32 } = world.raster;
+  recordsU32[o] = 1;
+  const { recordsF32: f } = world.raster;
+  f[o] = 1;
+  const { u32 } = world.raster.drawConstants;
+  u32[o] = 3;
+}`;
+    expect(recordWritesOutsideSeam(module)).toEqual([3, 4, 6, 8, 10]);
   });
 
   it("CPU writes of the seams' GPU buffers", () => {
@@ -807,7 +833,7 @@ describe("DrawArguments.slotOf", () => {
       mesh: meshes[0]!,
       origin: new Float64Array([0, 1, 0]),
     });
-    const args = world.drawArguments;
+    const args = world.raster.drawArguments;
     const slots = draws.map((d) => args.slotOf(d.index));
     // Five 32-bit words (20 bytes) a batch.
     expect([...slots].sort((a, b) => a - b)).toEqual([0, 20, 40]);

@@ -73,28 +73,29 @@ export function addTransform(
   if (parent && !world.transformAlive(parent)) {
     throw new Error("addTransform: the parent was removed.");
   }
-  const index = world.freeTransforms.pop() ?? world.transformCount++;
+  const index =
+    world.scene.freeTransforms.pop() ?? world.scene.transformCount++;
   if (index >= world.maxTransforms) {
-    world.transformCount--;
+    world.scene.transformCount--;
     throw new CapacityError("transform table");
   }
   reserveTransforms(world, index + 1);
-  if (index >= world.transforms.gpuRows) {
+  if (index >= world.raster.transforms.gpuRows) {
     growTransforms(world, index + 1);
   }
-  world.transformLocal.set(matrix, index * 16);
-  world.transformParent[index] = parent ? parent.index : -1;
+  world.scene.transformLocal.set(matrix, index * 16);
+  world.scene.transformParent[index] = parent ? parent.index : -1;
   if (parent) {
-    (world.transformChildren[parent.index] ??= []).push(index);
+    (world.scene.transformChildren[parent.index] ??= []).push(index);
   }
-  world.transformChildren[index] = undefined;
-  world.transformLive[index] = 1;
-  world.transformHidden[index] = 0;
-  world.transformAnchor[index] = parent
-    ? world.transformAnchor[parent.index]!
+  world.scene.transformChildren[index] = undefined;
+  world.scene.transformLive[index] = 1;
+  world.scene.transformHidden[index] = 0;
+  world.scene.transformAnchor[index] = parent
+    ? world.scene.transformAnchor[parent.index]!
     : 0;
   pendTransform(world, index);
-  return { index, generation: world.transformGeneration[index]! };
+  return { index, generation: world.scene.transformGeneration[index]! };
 }
 
 export function setTransform(
@@ -111,9 +112,9 @@ export function setTransform(
       `setTransform: ${anchor.name} is an anchor, whose matrix is the identity; place it per view (View.setAnchorPlacement) or in the table root (placeAnchor).`,
     );
   }
-  world.transformLocal.set(matrix, handle.index * 16);
+  world.scene.transformLocal.set(matrix, handle.index * 16);
   pendTransform(world, handle.index);
-  world.transformRevision_++;
+  world.scene.transformRevision_++;
   world.changedViews = ALL_VIEWS;
 }
 
@@ -126,8 +127,8 @@ export function setTransformVisible(
     return;
   }
   const hidden = visible ? 0 : 1;
-  if (world.transformHidden[handle.index] !== hidden) {
-    world.transformHidden[handle.index] = hidden;
+  if (world.scene.transformHidden[handle.index] !== hidden) {
+    world.scene.transformHidden[handle.index] = hidden;
     pendTransform(world, handle.index);
     world.changedViews = ALL_VIEWS;
   }
@@ -139,7 +140,10 @@ export function localMatrix(
   out = new Float64Array(16),
 ): Float64Array {
   out.set(
-    world.transformLocal.subarray(handle.index * 16, handle.index * 16 + 16),
+    world.scene.transformLocal.subarray(
+      handle.index * 16,
+      handle.index * 16 + 16,
+    ),
   );
   return out;
 }
@@ -151,7 +155,10 @@ export function worldMatrix(
 ): Float64Array {
   resolveTransforms(world);
   out.set(
-    world.transformWorld.subarray(handle.index * 16, handle.index * 16 + 16),
+    world.scene.transformWorld.subarray(
+      handle.index * 16,
+      handle.index * 16 + 16,
+    ),
   );
   return out;
 }
@@ -164,9 +171,10 @@ export function drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
   if (!world.hasDraw(handle)) {
     return undefined;
   }
-  const t = world.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
+  const t =
+    world.raster.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
   resolveTransforms(world);
-  out.set(world.transformWorld.subarray(t * 16, t * 16 + 16));
+  out.set(world.scene.transformWorld.subarray(t * 16, t * 16 + 16));
   return out;
 }
 
@@ -181,9 +189,9 @@ export function removeTransform(world: World, handle: TransformHandle): void {
       `removeTransform: ${anchor.name} is an anchor; remove it with removeAnchor.`,
     );
   }
-  const parent = world.transformParent[index]!;
+  const parent = world.scene.transformParent[index]!;
   if (parent >= 0) {
-    const siblings = world.transformChildren[parent];
+    const siblings = world.scene.transformChildren[parent];
     const at = siblings?.indexOf(index) ?? -1;
     if (at >= 0) {
       siblings!.splice(at, 1);
@@ -194,23 +202,24 @@ export function removeTransform(world: World, handle: TransformHandle): void {
 
 export function transformAlive(world: World, handle: TransformHandle): boolean {
   return (
-    world.transformLive[handle.index] === 1 &&
-    world.transformGeneration[handle.index] === handle.generation
+    world.scene.transformLive[handle.index] === 1 &&
+    world.scene.transformGeneration[handle.index] === handle.generation
   );
 }
 
 function freeTransformTree(world: World, index: number): void {
-  world.transformRevision_++;
-  for (const child of world.transformChildren[index] ?? []) {
+  world.scene.transformRevision_++;
+  for (const child of world.scene.transformChildren[index] ?? []) {
     freeTransformTree(world, child);
   }
-  world.transformChildren[index] = undefined;
-  world.transformLive[index] = 0;
-  world.transformParent[index] = -1;
-  world.transformAnchor[index] = 0;
-  world.transformFrames.delete(index);
-  world.transformGeneration[index] = world.transformGeneration[index]! + 1;
-  world.freeTransforms.push(index);
+  world.scene.transformChildren[index] = undefined;
+  world.scene.transformLive[index] = 0;
+  world.scene.transformParent[index] = -1;
+  world.scene.transformAnchor[index] = 0;
+  world.scene.transformFrames.delete(index);
+  world.scene.transformGeneration[index] =
+    world.scene.transformGeneration[index]! + 1;
+  world.scene.freeTransforms.push(index);
 }
 
 export function addAnchor(
@@ -220,20 +229,20 @@ export function addAnchor(
 ): AnchorHandle {
   const body = options.body;
   const key = body ? bodyKey(body) : undefined;
-  if (key !== undefined && world.bodyAnchors.has(key)) {
+  if (key !== undefined && world.scene.bodyAnchors.has(key)) {
     throw new Error(
-      `addAnchor: ${body!.name} already has an anchor (${world.bodyAnchors.get(key)!.name}).`,
+      `addAnchor: ${body!.name} already has an anchor (${world.scene.bodyAnchors.get(key)!.name}).`,
     );
   }
   let slot = 1;
-  while (slot < MAX_ANCHORS && world.anchorSlots[slot]) {
+  while (slot < MAX_ANCHORS && world.scene.anchorSlots[slot]) {
     slot++;
   }
   if (slot === MAX_ANCHORS) {
     throw new CapacityError("anchor table");
   }
   const transform = world.addTransform(IDENTITY);
-  world.transformAnchor[transform.index] = slot;
+  world.scene.transformAnchor[transform.index] = slot;
   const anchor: AnchorHandle = Object.freeze({
     index: transform.index,
     generation: transform.generation,
@@ -241,18 +250,19 @@ export function addAnchor(
     slot,
     ...(body ? { body } : {}),
   });
-  world.anchorSlots[slot] = anchor;
-  world.anchorPlaces.set(IDENTITY, slot * 16);
+  world.scene.anchorSlots[slot] = anchor;
+  world.scene.anchorPlaces.set(IDENTITY, slot * 16);
   if (key !== undefined) {
-    world.bodyAnchors.set(key, anchor);
+    world.scene.bodyAnchors.set(key, anchor);
   }
-  world.anchorList = undefined;
+  world.scene.anchorList = undefined;
   return anchor;
 }
 
 export function bodyAnchor(world: World, body: Body): AnchorHandle {
   return (
-    world.bodyAnchors.get(bodyKey(body)) ?? world.addAnchor(body.name, { body })
+    world.scene.bodyAnchors.get(bodyKey(body)) ??
+    world.addAnchor(body.name, { body })
   );
 }
 
@@ -260,7 +270,7 @@ export function findBodyAnchor(
   world: World,
   key: string,
 ): AnchorHandle | undefined {
-  return world.bodyAnchors.get(key);
+  return world.scene.bodyAnchors.get(key);
 }
 
 export function anchorOf(
@@ -270,7 +280,7 @@ export function anchorOf(
   if (!world.transformAlive(handle)) {
     return undefined;
   }
-  return world.anchorSlots[world.transformAnchor[handle.index]!];
+  return world.scene.anchorSlots[world.scene.transformAnchor[handle.index]!];
 }
 
 export function drawAnchor(
@@ -280,8 +290,9 @@ export function drawAnchor(
   if (!world.hasDraw(handle)) {
     return undefined;
   }
-  const t = world.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
-  return world.anchorSlots[world.transformAnchor[t]!];
+  const t =
+    world.raster.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
+  return world.scene.anchorSlots[world.scene.transformAnchor[t]!];
 }
 
 export function placeAnchor(
@@ -297,11 +308,11 @@ export function placeAnchor(
     );
   }
   for (let i = 0; i < 16; i++) {
-    world.anchorPlaces[anchor.slot * 16 + i] = matrix[i]!;
+    world.scene.anchorPlaces[anchor.slot * 16 + i] = matrix[i]!;
   }
   // Views placed through the table resolver follow on the next tick.
-  world.transformRevision_++;
-  world.anchorPlaceRevision_++;
+  world.scene.transformRevision_++;
+  world.scene.anchorPlaceRevision_++;
   world.ctx.wake();
 }
 
@@ -311,30 +322,32 @@ export function anchorMatrix(
   out = new Float64Array(16),
 ): Float64Array {
   checkAnchor(world, anchor, "anchorMatrix");
-  out.set(world.anchorPlaces.subarray(anchor.slot * 16, anchor.slot * 16 + 16));
+  out.set(
+    world.scene.anchorPlaces.subarray(anchor.slot * 16, anchor.slot * 16 + 16),
+  );
   return out;
 }
 
 export function removeAnchor(world: World, anchor: AnchorHandle): void {
   if (
     !world.transformAlive(anchor) ||
-    world.anchorSlots[anchor.slot] !== anchor
+    world.scene.anchorSlots[anchor.slot] !== anchor
   ) {
     return;
   }
-  if ((world.transformChildren[anchor.index]?.length ?? 0) > 0) {
+  if ((world.scene.transformChildren[anchor.index]?.length ?? 0) > 0) {
     throw new Error(
       `removeAnchor: transforms still hang under ${anchor.name}; remove them first.`,
     );
   }
-  world.anchorSlots[anchor.slot] = undefined;
+  world.scene.anchorSlots[anchor.slot] = undefined;
   if (anchor.body) {
-    world.bodyAnchors.delete(bodyKey(anchor.body));
+    world.scene.bodyAnchors.delete(bodyKey(anchor.body));
   }
-  world.anchorList = undefined;
+  world.scene.anchorList = undefined;
   freeTransformTree(world, anchor.index);
-  world.anchorRemovals_++;
-  world.anchorPlaceRevision_++;
+  world.scene.anchorRemovals_++;
+  world.scene.anchorPlaceRevision_++;
   world.version++;
   world.changedViews = ALL_VIEWS;
 }
@@ -347,7 +360,7 @@ export function frameOf(
   if (!world.transformAlive(handle)) {
     throw new Error(`frameOf: the transform for ${name} was removed.`);
   }
-  const known = world.transformFrames.get(handle.index);
+  const known = world.scene.transformFrames.get(handle.index);
   if (known) {
     if (known.name !== name) {
       throw new Error(
@@ -364,7 +377,7 @@ export function frameOf(
       generation: handle.generation,
     }),
   });
-  world.transformFrames.set(handle.index, key);
+  world.scene.transformFrames.set(handle.index, key);
   return key;
 }
 
@@ -373,7 +386,7 @@ export function anchorAt(
   world: World,
   index: number,
 ): AnchorHandle | undefined {
-  const anchor = world.anchorSlots[world.transformAnchor[index]!];
+  const anchor = world.scene.anchorSlots[world.scene.transformAnchor[index]!];
   return anchor?.index === index ? anchor : undefined;
 }
 
@@ -383,7 +396,7 @@ export function checkAnchor(
   caller: string,
 ): void {
   if (
-    world.anchorSlots[anchor.slot] !== anchor ||
+    world.scene.anchorSlots[anchor.slot] !== anchor ||
     !world.transformAlive(anchor)
   ) {
     throw new Error(
@@ -393,48 +406,48 @@ export function checkAnchor(
 }
 
 function pendTransform(world: World, index: number): void {
-  if (world.transformPendingFlag[index] === 0) {
-    world.transformPendingFlag[index] = 1;
-    world.transformPending.push(index);
+  if (world.scene.transformPendingFlag[index] === 0) {
+    world.scene.transformPendingFlag[index] = 1;
+    world.scene.transformPending.push(index);
   }
   world.version++;
 }
 
 /** Composes changed transforms and their descendants, parents first. */
 export function resolveTransforms(world: World): void {
-  if (world.transformPending.length === 0) {
+  if (world.scene.transformPending.length === 0) {
     return;
   }
-  const stamp = ++world.transformResolve;
-  for (const index of world.transformPending) {
-    world.transformPendingFlag[index] = 0;
-    if (world.transformLive[index] === 1) {
+  const stamp = ++world.scene.transformResolve;
+  for (const index of world.scene.transformPending) {
+    world.scene.transformPendingFlag[index] = 0;
+    if (world.scene.transformLive[index] === 1) {
       // From the highest pending ancestor, so each subtree composes once.
       let top = index;
       for (
-        let p = world.transformParent[index]!;
+        let p = world.scene.transformParent[index]!;
         p >= 0;
-        p = world.transformParent[p]!
+        p = world.scene.transformParent[p]!
       ) {
         if (
-          world.transformPendingFlag[p] === 1 ||
-          world.transformStamp[p] === stamp
+          world.scene.transformPendingFlag[p] === 1 ||
+          world.scene.transformStamp[p] === stamp
         ) {
           top = p;
         }
       }
-      if (world.transformStamp[top] !== stamp) {
+      if (world.scene.transformStamp[top] !== stamp) {
         composeTransform(world, top, stamp);
       }
     }
   }
-  world.transformPending.length = 0;
+  world.scene.transformPending.length = 0;
 }
 
 function composeTransform(owner: World, index: number, stamp: number): void {
-  owner.transformStamp[index] = stamp;
-  const parent = owner.transformParent[index]!;
-  const world = owner.transformWorld;
+  owner.scene.transformStamp[index] = stamp;
+  const parent = owner.scene.transformParent[index]!;
+  const world = owner.scene.transformWorld;
   // An anchor's matrix is the identity: its children's are their own,
   // bit for bit (as before anchors, at the top level).
   if (parent >= 0 && anchorAt(owner, parent) === undefined) {
@@ -443,30 +456,30 @@ function composeTransform(owner: World, index: number, stamp: number): void {
       index * 16,
       world,
       parent * 16,
-      owner.transformLocal,
+      owner.scene.transformLocal,
       index * 16,
     );
   } else {
     world.set(
-      owner.transformLocal.subarray(index * 16, index * 16 + 16),
+      owner.scene.transformLocal.subarray(index * 16, index * 16 + 16),
       index * 16,
     );
   }
   const hidden =
-    owner.transformHidden[index] === 1 ||
-    (parent >= 0 && owner.transformHiddenWorld[parent] === 1);
-  owner.transformHiddenWorld[index] = hidden ? 1 : 0;
+    owner.scene.transformHidden[index] === 1 ||
+    (parent >= 0 && owner.scene.transformHiddenWorld[parent] === 1);
+  owner.scene.transformHiddenWorld[index] = hidden ? 1 : 0;
   writeTransform(
-    owner.transforms.f32,
-    owner.transforms.u32,
+    owner.raster.transforms.f32,
+    owner.raster.transforms.u32,
     index,
     world.subarray(index * 16, index * 16 + 16),
     hidden,
-    owner.transformAnchor[index],
+    owner.scene.transformAnchor[index],
   );
-  owner.transforms.mark(index);
-  owner.uploadsPending = true;
-  for (const child of owner.transformChildren[index] ?? []) {
+  owner.raster.transforms.mark(index);
+  owner.raster.uploadsPending = true;
+  for (const child of owner.scene.transformChildren[index] ?? []) {
     composeTransform(owner, child, stamp);
   }
 }

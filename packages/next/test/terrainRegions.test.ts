@@ -63,7 +63,7 @@ async function globeWithTiles() {
   const loaded = (globe as unknown as { loaded: Set<unknown> }).loaded;
   loaded.add(tile(7.4, under));
   loaded.add(tile(8.4, beside));
-  const u = (world as unknown as { recordsU32: Uint32Array }).recordsU32;
+  const u = world.raster.recordsU32;
   const mask = (draw: DrawHandle) =>
     u[draw.index * RECORD_WORDS + TERRAIN_CLIP_WORD];
   const done = () => {
@@ -358,10 +358,8 @@ describe("overlapping regions", () => {
     expect(world.drawMaterial(under)).not.toBe(own);
     // The least opacity is the shader's rule (surface.slang terrainOpacity);
     // here, the directory holds each region's own opacity.
-    const regions = (
-      world as unknown as { terrainClipRuns: Array<{ opacity: number }> }
-    ).terrainClipRuns;
-    expect(regions.map((r) => r.opacity)).toEqual([0.6, 0.2]);
+    const regions = world.scene.terrainClipRuns;
+    expect(regions.map((r) => r!.opacity)).toEqual([0.6, 0.2]);
     b.opacity = 1;
     expect(mask(under)).toBe(0b01);
     a.opacity = 1;
@@ -391,9 +389,7 @@ describe("everywhere", () => {
   it("takes a slot only while its opacity is below 1", async () => {
     const { world, globe, done } = await globeWithTiles();
     const slots = () =>
-      (
-        world as unknown as { terrainClipRuns: Array<unknown | undefined> }
-      ).terrainClipRuns.filter((run) => run !== undefined).length;
+      world.scene.terrainClipRuns.filter((run) => run !== undefined).length;
     const all = globe.terrain.addRegion("everywhere", { opacity: 0.5 });
     expect(slots()).toBe(1);
     all.opacity = 1;

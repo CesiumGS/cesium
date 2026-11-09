@@ -174,11 +174,11 @@ export function releaseTable(
   slab: Slab,
 ): number {
   const key = tableKey(world, table, slab.id);
-  const uploaded = world.tableColumns.get(key);
+  const uploaded = world.scene.tableColumns.get(key);
   if (!uploaded || --uploaded.meshes > 0) {
     return 0;
   }
-  world.tableColumns.delete(key);
+  world.scene.tableColumns.delete(key);
   for (const value of uploaded.strings) {
     stringIds.release(value);
   }
@@ -192,10 +192,10 @@ export function releaseTable(
 
 /** `tableColumns`' key: the table object's id and the slab. */
 function tableKey(world: World, table: FeatureTable, slabId: number): string {
-  let id = world.tableIds.get(table);
+  let id = world.scene.tableIds.get(table);
   if (id === undefined) {
-    id = world.nextTableId++;
-    world.tableIds.set(table, id);
+    id = world.scene.nextTableId++;
+    world.scene.tableIds.set(table, id);
   }
   return `${id}|${slabId}`;
 }
@@ -227,7 +227,7 @@ export function uploadTable(
   // Once per table object and slab: a table used from two slabs is
   // copied into each (rare: a table belongs to one tile's content).
   const key = tableKey(world, table, slab.id);
-  let uploaded = world.tableColumns.get(key);
+  let uploaded = world.scene.tableColumns.get(key);
   if (!uploaded) {
     const entries: number[][] = [];
     const ranges: Array<[number, number]> = [];
@@ -279,7 +279,7 @@ export function uploadTable(
       strings,
       skipped: plan.skipped,
     };
-    world.tableColumns.set(key, uploaded);
+    world.scene.tableColumns.set(key, uploaded);
   }
   uploaded.meshes++;
   return uploaded;
@@ -295,11 +295,11 @@ export function warnUnavailable(
   mesh: MeshHandle,
   shader: CustomShader,
 ): void {
-  const ranges = world.meshRanges.get(mesh.id);
+  const ranges = world.scene.meshRanges.get(mesh.id);
   if (!ranges?.table) {
     return;
   }
-  const skipped = world.tableColumns.get(
+  const skipped = world.scene.tableColumns.get(
     tableKey(world, ranges.table, ranges.slab),
   )?.skipped;
   if (!skipped || skipped.size === 0) {
@@ -319,16 +319,16 @@ export function warnUnavailable(
 
 /** Uploads changed table entries (a scatter is encoded into `pass`). */
 export function uploadTables(world: World, pass: GPUComputePassEncoder): void {
-  if (!world.uploadsPending) {
+  if (!world.raster.uploadsPending) {
     return;
   }
-  world.uploadsPending = false;
-  world.drawConstants.upload(pass);
-  world.transforms.upload(pass);
-  world.instances.upload(pass);
+  world.raster.uploadsPending = false;
+  world.raster.drawConstants.upload(pass);
+  world.raster.transforms.upload(pass);
+  world.raster.instances.upload(pass);
   // Kernels writing the tables each frame (tracks' instance rows), after
   // the uploads and before any view culls.
-  for (const encode of world.frameComputes) {
+  for (const encode of world.raster.frameComputes) {
     encode(pass);
   }
 }
