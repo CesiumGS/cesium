@@ -1395,14 +1395,24 @@ export class Viewer {
   }
 
   /**
-   * The tilesets with an item in the viewer's world that some view shows,
-   * whoever added them (`viewer.addTileset` or `world.add`): what their
-   * content requires is credited while they are.
+   * The tilesets with an item in the viewer's world that one of its views
+   * shows, whoever added them (`viewer.addTileset` or `world.add`): what their
+   * content requires is credited while they are. Not an item hidden, fully
+   * transparent, or masked to no view of the viewer's.
    */
   private shownTilesets(): Tileset3D[] {
+    let viewerViews = 0;
+    for (const view of this.views) {
+      viewerViews |= this.engine.viewBit(view);
+    }
     const tilesets = new Set<Tileset3D>();
     for (const item of this.world.items) {
-      if (item.viewMask !== 0) {
+      if (
+        item.tileset.show &&
+        item.show &&
+        item.opacity > 0 &&
+        (item.viewMask & viewerViews) !== 0
+      ) {
         tilesets.add(item.tileset);
       }
     }
@@ -1439,7 +1449,15 @@ export class Viewer {
       ...(options.loadStartedAt !== undefined
         ? { loadStartedAt: options.loadStartedAt }
         : {}),
-      tilesets: () => [...this.tilesets, this.globe_].filter((t) => !!t),
+      // Whoever added them (`viewer.addTileset` or `world.add`).
+      tilesets: () =>
+        [
+          ...new Set([
+            ...this.tilesets,
+            ...this.world.items.map((item) => item.tileset),
+            this.globe_,
+          ]),
+        ].filter((t) => !!t),
       views: () => {
         const views: Array<[string, View]> = [["main", this.view]];
         if (this.second) {

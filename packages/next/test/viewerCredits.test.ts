@@ -130,4 +130,45 @@ describe("a Viewer credits the content in its world", () => {
     viewer.remove(tileset);
     expect(viewer.credits().attributions).toEqual([]);
   });
+
+  it("credits follow what is visible: not a hidden or transparent item, nor a mask naming no view of the viewer", async () => {
+    const tileset = await engine.loadTileset(URL_, { attributions: [LOGO] });
+    const item = viewer.world.add(tileset);
+    expect(viewer.credits().attributions).toEqual([LOGO]);
+    item.show = false;
+    expect(viewer.credits().attributions).toEqual([]);
+    item.show = true;
+    item.opacity = 0;
+    expect(viewer.credits().attributions).toEqual([]);
+    item.opacity = 0.5;
+    expect(viewer.credits().attributions).toEqual([LOGO]);
+    // A view of the engine's, which the viewer doesn't draw.
+    const mine = engine.viewBit(viewer.view);
+    const other = (mine << 1) >>> 0;
+    item.viewMask = other;
+    expect(viewer.credits().attributions).toEqual([]);
+    item.viewMask = mine;
+    expect(viewer.credits().attributions).toEqual([LOGO]);
+    tileset.show = false;
+    expect(viewer.credits().attributions).toEqual([]);
+    engine.removeTileset(tileset);
+  });
+
+  it("the inspector lists a tileset added by world.add, once", async () => {
+    // Tiles known, summed over the tilesets inspected: one tileset's is `one`.
+    const known = () =>
+      (viewer.inspectable("viewer").snapshot() as { tiles?: { known: number } })
+        .tiles?.known;
+    const loaded = await engine.loadTileset(URL_);
+    viewer.world.add(loaded);
+    viewer.world.add(loaded, { opacity: 0.5 });
+    const one = known()!;
+    expect(one).toBeGreaterThan(0);
+    const added = await viewer.addTileset(URL_);
+    expect(known()).toBe(2 * one);
+    viewer.remove(added);
+    expect(known()).toBe(one);
+    engine.removeTileset(loaded);
+    expect(known()).toBeUndefined();
+  });
 });
