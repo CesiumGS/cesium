@@ -158,12 +158,13 @@ function Camera(scene) {
   /**
    * The region of space in view.
    *
-   * @type {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum}
+   * @type {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum|OrthographicOffCenterFrustum}
    * @default PerspectiveFrustum()
    *
    * @see PerspectiveFrustum
    * @see PerspectiveOffCenterFrustum
    * @see OrthographicFrustum
+   * @see OrthographicOffCenterFrustum
    */
   this.frustum = new PerspectiveFrustum();
   this.frustum.aspectRatio =

@@ -105,7 +105,7 @@ Buffer.createPixelBuffer = function (options) {
  * @param {ArrayBufferView} [options.typedArray] A typed array containing the data to copy to the buffer.
  * @param {number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
- * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
+ * @returns {Buffer} The vertex buffer, ready to be attached to a vertex array.
  *
  * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
  * @exception {DeveloperError} The buffer size must be greater than zero.
@@ -161,7 +161,7 @@ Buffer.createVertexBuffer = function (options) {
  * @param {number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
  * @param {IndexDatatype} options.indexDatatype The datatype of indices in the buffer.
- * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
+ * @returns {Buffer} The index buffer, ready to be attached to a vertex array.
  *
  * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
  * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system. Check context.elementIndexUint.

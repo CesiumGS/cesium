@@ -14,6 +14,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
  *
  * @type {number[]}
+ * @ignore
  */
 const includesReverseAxis = [
   3034, // ETRS89-extended / LCC Europe
@@ -27,6 +28,7 @@ const includesReverseAxis = [
  * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
  *
  * @type {number[]}
+ * @ignore
  */
 const excludesReverseAxis = [
   4471, // Mayotte

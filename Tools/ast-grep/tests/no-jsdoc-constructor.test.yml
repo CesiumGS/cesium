@@ -19,3 +19,15 @@ invalid:
      * @alias MyClass
      */
     class MyClass {}
+  - >
+    /**
+     * Class description.
+     * @constructor
+     */
+    export class MyClass {}
+  - >
+    /**
+     * Class description.
+     * @alias MyClass
+     */
+    export class MyClass {}

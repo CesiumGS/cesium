@@ -11,15 +11,15 @@ import {
   updateVersion,
 } from "../index.js";
 
-const gltf1Techniques = "/Data/Models/glTF-1.0/box/box.gltf";
+const gltf1Techniques = "./Data/Models/glTF-1.0/box/box.gltf";
 const gltf1TechniquesTextured =
-  "/Data/Models/glTF-1.0/box-textured-embedded/box-textured-embedded.gltf";
+  "./Data/Models/glTF-1.0/box-textured-embedded/box-textured-embedded.gltf";
 const gltf1MaterialsCommon =
-  "/Data/Models/glTF-1.0/box-materials-common/box-materials-common.gltf";
+  "./Data/Models/glTF-1.0/box-materials-common/box-materials-common.gltf";
 const gltf1MaterialsCommonTextured =
-  "/Data/Models/glTF-1.0/box-textured-materials-common/box-textured-materials-common.gltf";
+  "./Data/Models/glTF-1.0/box-textured-materials-common/box-textured-materials-common.gltf";
 const gltf2TechniquesTextured =
-  "/Data/Models/glTF-2.0/box-techniques-embedded/box-techniques-embedded.gltf";
+  "./Data/Models/glTF-2.0/box-techniques-embedded/box-techniques-embedded.gltf";
 
 function concatUint8Arrays(arrays) {
   const totalLength = arrays.reduce((sum, array) => sum + array.length, 0);
@@ -49,6 +49,9 @@ async function resolveBuffer(buffer, gltfUrl) {
   } else {
     const baseUrl = gltfUrl.substring(0, gltfUrl.lastIndexOf("/") + 1);
     const response = await fetch(baseUrl + uri);
+    if (!response.ok) {
+      throw new Error(`Failed to load ${baseUrl + uri}: ${response.status}`);
+    }
     source = new Uint8Array(await response.arrayBuffer());
   }
   buffer.extras._pipeline.source = source;
@@ -58,6 +61,9 @@ async function resolveBuffer(buffer, gltfUrl) {
 // buffer, mirroring what gltf-pipeline's readResources did for buffers.
 async function loadGltf(url) {
   const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load ${url}: ${response.status}`);
+  }
   const gltf = await response.json();
   addPipelineExtras(gltf);
   const promises = [];

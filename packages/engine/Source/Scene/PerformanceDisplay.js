@@ -8,7 +8,7 @@ import {
 import getElement from "../DataSources/getElement.js";
 
 /**
- * @private
+ * @internal
  */
 function PerformanceDisplay(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -81,6 +81,8 @@ Object.defineProperties(PerformanceDisplay.prototype, {
  * each call records a frame in the internal buffer and redraws the display.
  *
  * @param {boolean} [renderedThisFrame=true] If provided, the FPS count will only update and display if true.
+ *
+ * @internal
  */
 PerformanceDisplay.prototype.update = function (renderedThisFrame) {
   const time = getTimestamp();

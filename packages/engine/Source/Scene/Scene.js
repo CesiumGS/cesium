@@ -796,6 +796,7 @@ function Scene(options) {
 /**
  * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
  * This property relies on fragmentDepth being supported.
+ * @type {boolean}
  */
 Scene.defaultLogDepthBuffer = true;
 

@@ -2,6 +2,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Cartographic,
   Color,
   DeveloperError,
   FixedFrameTransforms,
@@ -477,6 +478,7 @@ function atmosphereNeedsUpdate(manager, frameState) {
 }
 
 const scratchCartesian = new Cartesian3();
+const scratchCartographic = new Cartographic();
 const scratchMatrix = new Matrix4();
 const scratchAdjustments = new Cartesian4();
 const scratchColor = new Color();
@@ -524,6 +526,11 @@ function updateRadianceMap(manager, frameState) {
       ellipsoid,
       scratchMatrix,
     );
+    const cartographic = ellipsoid.cartesianToCartographic(
+      position,
+      scratchCartographic,
+    );
+    const ellipsoidHeight = defined(cartographic) ? cartographic.height : 0.0;
 
     const adjustments = scratchAdjustments;
 
@@ -567,6 +574,7 @@ function updateRadianceMap(manager, frameState) {
           u_enuToFixedFrame: () => enuToFixedFrame,
           u_faceDirection: () => CubeMap.getDirection(face, scratchCartesian),
           u_positionWC: () => position,
+          u_ellipsoidHeight: () => ellipsoidHeight,
           u_brightnessSaturationGammaIntensity: () => adjustments,
           u_groundColor: () => {
             return manager.groundColor.withAlpha(

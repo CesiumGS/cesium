@@ -14,7 +14,7 @@ async function createTileset(exampleName) {
   }
   // Create the tileset, and move it to a certain position on the globe
   currentTileset = await Cesium.Cesium3DTileset.fromGltf(
-    `../../SampleData/Cesium3DTiles/gltf-2.1/BoundingBoxTests/${exampleName}/root.tileset.gltf`,
+    `../../SampleData/Cesium3DTiles/BoundingBoxTests/${exampleName}/root.tileset.gltf`,
     {
       debugShowBoundingVolume: true,
     },

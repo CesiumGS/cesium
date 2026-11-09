@@ -1,13 +1,11 @@
 // @ts-check
 
 import { readFile, writeFile } from "node:fs/promises";
+import { globSync, mkdirSync, rmSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 
 import esbuild from "esbuild";
-import { globby } from "globby";
-import { mkdirp } from "mkdirp";
-import { rimraf } from "rimraf";
 
 import {
   bundleWorkers,
@@ -31,7 +29,7 @@ import { copyWidgetsAssets } from "../packages/widgets/scripts/build.js";
 const scope = "cesium";
 
 /**
- * Source and spec file globs for each workspace bundled into the combined CesiumJS build.
+ * Source and spec files, relative to each workspace directory, for each workspace bundled into the combined CesiumJS build.
  * @returns {Promise<{sourceFiles: Partial<Record<Workspace, string[]>>, specFiles: Partial<Record<Workspace, string[]>>}>}
  */
 async function getCombinedWorkspaceFiles() {
@@ -47,9 +45,16 @@ async function getCombinedWorkspaceFiles() {
     const { sourceGlobs, combinedSourceGlobs, specGlobs } = await import(
       `../packages/${directory}/scripts/build.js`
     );
-    sourceFiles[/** @type {Workspace} */ (directory)] =
-      combinedSourceGlobs ?? sourceGlobs;
-    specFiles[/** @type {Workspace} */ (directory)] = specGlobs;
+    const sourceGlobsForCombined = combinedSourceGlobs ?? sourceGlobs;
+    const cwd = `packages/${directory}`;
+    sourceFiles[/** @type {Workspace} */ (directory)] = globSync(
+      sourceGlobsForCombined.patterns,
+      { cwd: cwd, exclude: sourceGlobsForCombined.exclude },
+    );
+    specFiles[/** @type {Workspace} */ (directory)] = globSync(
+      specGlobs.patterns,
+      { cwd: cwd, exclude: specGlobs.exclude },
+    );
   }
 
   return { sourceFiles, specFiles };
@@ -77,17 +82,20 @@ async function getCombinedWorkspaceFiles() {
  * @returns {Promise<CesiumBundles>}
  */
 export async function bundleCesiumJs(options) {
-  const buildConfig = defaultESBuildOptions();
-  buildConfig.entryPoints = ["Source/Cesium.js"];
-  buildConfig.minify = options.minify;
-  buildConfig.sourcemap = options.sourcemap;
-  buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
-  buildConfig.write = options.write;
-  buildConfig.banner = {
-    js: await getCopyrightHeader(),
+  /** @type {esbuild.BuildOptions} */
+  const buildConfig = {
+    ...defaultESBuildOptions(),
+    entryPoints: ["Source/Cesium.js"],
+    minify: options.minify,
+    sourcemap: options.sourcemap,
+    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
+    write: options.write,
+    banner: {
+      js: await getCopyrightHeader(),
+    },
+    // print errors immediately, and collect warnings so we can filter out known ones
+    logLevel: "info",
   };
-  // print errors immediately, and collect warnings so we can filter out known ones
-  buildConfig.logLevel = "info";
 
   /** @type {esbuild.BuildResult|esbuild.BuildContext|undefined} */
   let iife;
@@ -128,9 +136,6 @@ export async function bundleCesiumJs(options) {
       inject: [inlineWorkerPath],
       globalName: "Cesium",
       outfile: path.join(options.path, "Cesium.js"),
-      logOverride: {
-        "empty-import-meta": "silent",
-      },
     });
 
     if (incremental) {
@@ -138,7 +143,7 @@ export async function bundleCesiumJs(options) {
       iifeWorkers = /** @type {esbuild.BuildContext} */ (iifeWorkersResult);
     } else {
       handleBuildWarnings(/** @type {esbuild.BuildResult} */ (iifeResult));
-      rimraf.sync(inlineWorkerPath);
+      rmSync(inlineWorkerPath, { recursive: true, force: true });
     }
   }
 
@@ -147,9 +152,6 @@ export async function bundleCesiumJs(options) {
       ...buildConfig,
       format: "cjs",
       platform: "node",
-      logOverride: {
-        "empty-import-meta": "silent",
-      },
       define: {
         // TransformStream is a browser-only implementation depended on by zip.js
         TransformStream: "null",
@@ -203,11 +205,10 @@ export async function createCesiumJs() {
   // Iterate over each workspace and generate declarations for each file.
   const { sourceFiles } = await getCombinedWorkspaceFiles();
   for (const workspace of Object.keys(sourceFiles)) {
-    const sources = sourceFiles[/** @type {Workspace} */ (workspace)];
-    if (!sources) {
+    const files = sourceFiles[/** @type {Workspace} */ (workspace)];
+    if (!files) {
       continue;
     }
-    const files = await globby(sources);
     const declarations = files.map((file) =>
       generateDeclaration(workspace, file),
     );
@@ -229,13 +230,13 @@ export async function createCombinedSpecList() {
 
   const { specFiles } = await getCombinedWorkspaceFiles();
   for (const workspace of Object.keys(specFiles)) {
-    const sources = specFiles[/** @type {Workspace} */ (workspace)];
-    if (!sources) {
+    const files = specFiles[/** @type {Workspace} */ (workspace)];
+    if (!files) {
       continue;
     }
-    const files = await globby(sources);
-    for (const file of files) {
-      contents += `import '../${file}';\n`;
+    const moduleIds = files.map(filePathToModuleId).sort();
+    for (const moduleId of moduleIds) {
+      contents += `import '../packages/${workspace}/${moduleId}.js';\n`;
     }
   }
 
@@ -306,12 +307,12 @@ async function bundleCombinedSpecs(options) {
   const build = options.incremental ? esbuild.context : esbuild.build;
 
   return build({
+    ...defaultESBuildOptions(),
     entryPoints: [
       "Specs/spec-main.js",
       "Specs/SpecList.js",
       "Specs/karma-main.js",
     ],
-    bundle: true,
     format: "esm",
     sourcemap: true,
     outdir: path.join("Build", "Specs"),
@@ -322,7 +323,7 @@ async function bundleCombinedSpecs(options) {
 
 /**
  * Bundles test worker in used specs.
- * @param {object} options
+ * @param {object} [options]
  * @param {boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
  * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise<esbuild.BuildResult|esbuild.BuildContext>}
@@ -332,10 +333,10 @@ export async function bundleTestWorkers(options) {
 
   const build = options.incremental ? esbuild.context : esbuild.build;
 
-  const workers = await globby(["Specs/TestWorkers/**.js"]);
+  const workers = globSync("Specs/TestWorkers/*.js");
   return build({
+    ...defaultESBuildOptions(),
     entryPoints: workers,
-    bundle: true,
     format: "esm",
     sourcemap: true,
     outdir: path.join("Build", "Specs", "TestWorkers"),
@@ -355,19 +356,18 @@ export async function bundleTestWorkers(options) {
  * @param {string} options.outbase The
  */
 async function bundleCSS(options) {
-  // Configure options for esbuild.
-  const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.entryPoints = await globby(options.filePaths);
-  esBuildOptions.loader = {
-    ".gif": "text",
-    ".png": "text",
-  };
-  esBuildOptions.sourcemap = options.sourcemap;
-  esBuildOptions.minify = options.minify;
-  esBuildOptions.outdir = options.outdir;
-  esBuildOptions.outbase = options.outbase;
-
-  await esbuild.build(esBuildOptions);
+  await esbuild.build({
+    ...defaultESBuildOptions(),
+    entryPoints: globSync(options.filePaths),
+    loader: {
+      ".gif": "text",
+      ".png": "text",
+    },
+    sourcemap: options.sourcemap,
+    minify: options.minify,
+    outdir: options.outdir,
+    outbase: options.outbase,
+  });
 }
 
 /**
@@ -386,7 +386,7 @@ function cssGlobsFor(workspace) {
  * @param {boolean} [options.incremental=true] True if builds should be generated incrementally.
  * @param {boolean} [options.minify=false] True if bundles should be minified.
  * @param {boolean} [options.node=true] True if CommonJS bundle should be generated.
- * @param {string} options.outputDirectory The directory where the output should go.
+ * @param {string} [options.outputDirectory] The directory where the output should go.
  * @param {boolean} [options.removePragmas=false] True if debug pragmas should be removed.
  * @param {boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
@@ -402,11 +402,11 @@ export async function buildCesium(options) {
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
-  mkdirp.sync("Build");
+  mkdirSync("Build", { recursive: true });
   const outputDirectory =
     options.outputDirectory ??
     path.join("Build", `Cesium${!minify ? "Unminified" : ""}`);
-  rimraf.sync(outputDirectory);
+  rmSync(outputDirectory, { recursive: true, force: true });
 
   await writeFile(
     "Build/package.json",

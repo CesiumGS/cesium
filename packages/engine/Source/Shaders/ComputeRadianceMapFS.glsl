@@ -4,6 +4,7 @@ in vec2 v_textureCoordinates;
 
 uniform vec3 u_faceDirection; // Current cubemap face
 uniform vec3 u_positionWC;
+uniform float u_ellipsoidHeight;
 uniform mat4 u_enuToFixedFrame;
 uniform vec4 u_brightnessSaturationGammaIntensity;
 uniform vec4 u_groundColor; // alpha component represent albedo
@@ -21,12 +22,12 @@ vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
 }
 
 void main() {    
-    float height = length(u_positionWC);
     float atmosphereInnerRadius = u_radiiAndDynamicAtmosphereColor.y;
-    float ellipsoidHeight = max(height - atmosphereInnerRadius, 0.0);
 
-    // Scale the position to ensure the sky color is present, even when underground.
-    vec3 positionWC = u_positionWC / height * (ellipsoidHeight + atmosphereInnerRadius);
+    // Clamp the height to ensure the sky color is present, even when underground.
+    float ellipsoidHeight = max(u_ellipsoidHeight, 0.0);
+    float originRadius = atmosphereInnerRadius + ellipsoidHeight;
+    vec3 positionWC = normalize(u_positionWC) * originRadius;
 
     float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.x;
     float atmosphereHeight = atmosphereOuterRadius - atmosphereInnerRadius;
@@ -35,13 +36,19 @@ void main() {
     vec3 normalizedDirection = normalize(direction);
 
     czm_ray ray = czm_ray(positionWC, normalizedDirection);
-    czm_raySegment intersection = czm_raySphereIntersectionInterval(ray, vec3(0.0), atmosphereInnerRadius);
-    if (!czm_isEmpty(intersection)) {
-        intersection = czm_rayEllipsoidIntersectionInterval(ray, vec3(0.0), czm_ellipsoidInverseRadii);
-    }
 
-    bool onEllipsoid = intersection.start >= 0.0;
-    float rayLength = czm_branchFreeTernary(onEllipsoid, intersection.start, atmosphereOuterRadius);
+    // Approximate the ground as a sphere of radius atmosphereInnerRadius, tangent to the ellipsoid below the origin.
+    // The ray-sphere intersection is computed from the height and the angle to the geodetic normal, which avoids
+    // the catastrophic cancellation of subtracting squared world coordinate distances in single precision.
+    vec3 geodeticNormal = u_enuToFixedFrame[2].xyz;
+    float halfB = originRadius * dot(normalizedDirection, geodeticNormal);
+    float c = ellipsoidHeight * (2.0 * atmosphereInnerRadius + ellipsoidHeight);
+    float discriminant = halfB * halfB - c;
+    bool onEllipsoid = halfB < 0.0 && discriminant >= 0.0;
+    // Equivalent to -halfB - sqrt(discriminant), without cancellation when the height is small
+    float groundDistance = c / (-halfB + sqrt(max(discriminant, 0.0)));
+    // groundDistance may be NaN for rays that miss the ground, which czm_branchFreeTernary would propagate
+    float rayLength = onEllipsoid ? groundDistance : atmosphereOuterRadius;
 
     // Compute sky color for each position on a sphere at radius centered around the provided position's origin
     vec3 skyPositionWC = positionWC + normalizedDirection * rayLength;

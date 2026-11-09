@@ -141,6 +141,9 @@ const Cesium3DTileContentFactory = {
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
   },
   geoJson: function (tileset, tile, resource, json) {
+    if (tileset.vectorGeoJson) {
+      return VectorGltf3DTileContent.fromGeoJson(tileset, tile, resource, json);
+    }
     return Model3DTileContent.fromGeoJson(tileset, tile, resource, json);
   },
 };

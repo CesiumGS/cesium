@@ -21,6 +21,7 @@ import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
  * @alias ImageBasedLighting
  * @constructor
  *
+ * @param {object} [options] Object with the following properties:
  * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.

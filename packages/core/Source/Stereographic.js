@@ -12,9 +12,13 @@ import Ray from "./Ray.js";
 /**
  * Represents a point in stereographic coordinates, which can be obtained by projecting a cartesian coordinate from one pole onto a tangent plane at the other pole.
  * The stereographic projection faithfully represents the relative directions of all great circles passing through its center point.
- * To faithfully represents angles everywhere, this is a conformal projection, which means points are projected onto an arbrary sphere.
- * @param {Cartesian2} [position] The steroegraphic coordinates.
- * @param {EllipseGeometry} [tangentPlane] The tangent plane onto which the point was projected.
+ * To faithfully represent angles everywhere, this is a conformal projection, which means points are projected onto an arbitrary sphere.
+ *
+ * @alias Stereographic
+ * @constructor
+ *
+ * @param {Cartesian2} [position] The stereographic coordinates.
+ * @param {EllipsoidTangentPlane} [tangentPlane] The tangent plane onto which the point was projected.
  */
 function Stereographic(position, tangentPlane) {
   this.position = position;
@@ -33,6 +37,7 @@ Object.defineProperties(Stereographic.prototype, {
    * Gets the ellipsoid.
    * @memberof Stereographic.prototype
    * @type {Ellipsoid}
+   * @readonly
    */
   ellipsoid: {
     get: function () {
@@ -44,6 +49,7 @@ Object.defineProperties(Stereographic.prototype, {
    * Gets the x coordinate
    * @memberof Stereographic.prototype
    * @type {number}
+   * @readonly
    */
   x: {
     get: function () {
@@ -55,6 +61,7 @@ Object.defineProperties(Stereographic.prototype, {
    * Gets the y coordinate
    * @memberof Stereographic.prototype
    * @type {number}
+   * @readonly
    */
   y: {
     get: function () {
@@ -66,6 +73,7 @@ Object.defineProperties(Stereographic.prototype, {
    * Computes the conformal latitude, or the ellipsoidal latitude projected onto an arbitrary sphere.
    * @memberof Stereographic.prototype
    * @type {number}
+   * @readonly
    */
   conformalLatitude: {
     get: function () {
@@ -80,6 +88,7 @@ Object.defineProperties(Stereographic.prototype, {
    * Computes the longitude
    * @memberof Stereographic.prototype
    * @type {number}
+   * @readonly
    */
   longitude: {
     get: function () {
@@ -99,7 +108,7 @@ const scratchCartesian = new Cartesian3();
 /**
  * Computes the latitude based on an ellipsoid.
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which to compute the longitude.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which to compute the latitude.
  * @returns {number} The latitude
  */
 Stereographic.prototype.getLatitude = function (ellipsoid) {
@@ -127,7 +136,7 @@ const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
  *
  * @param {Cartesian3} cartesian The point to project.
  * @param {Stereographic} [result] The object onto which to store the result.
- * @returns {Sterographic} The modified result parameter or a new Sterographic instance if none was provided.
+ * @returns {Stereographic} The modified result parameter or a new Stereographic instance if none was provided.
  */
 Stereographic.fromCartesian = function (cartesian, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -177,7 +186,7 @@ Stereographic.fromCartesian = function (cartesian, result) {
  *
  * @param {Cartesian3[]} cartesians The points to project.
  * @param {Stereographic[]} [result] The object onto which to store the result.
- * @returns {Sterographic[]} The modified result parameter or a new Sterographic instance if none was provided.
+ * @returns {Stereographic[]} The modified result parameter or a new Stereographic instance if none was provided.
  */
 Stereographic.fromCartesianArray = function (cartesians, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -223,7 +232,7 @@ Stereographic.clone = function (stereographic, result) {
 /**
  * An Ellipsoid instance initialized to radii of (0.5, 0.5, 0.5).
  *
- * @type {Stereographic}
+ * @type {Ellipsoid}
  * @constant
  */
 Stereographic.HALF_UNIT_SPHERE = Object.freeze(new Ellipsoid(0.5, 0.5, 0.5));

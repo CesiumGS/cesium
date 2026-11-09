@@ -7,6 +7,7 @@ import {
   Matrix4,
   addAllToArray,
   defined,
+  oneTimeWarning,
 } from "@cesium/core";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
@@ -439,7 +440,13 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   if (defined(name)) {
     const model = sceneGraph._model;
     const publicNode = new ModelNode(model, runtimeNode);
-    model._nodesByName[name] = publicNode;
+    if (model._nodesByName.has(name)) {
+      oneTimeWarning(
+        "gltf-node-names-duplicate",
+        `Duplicate node name ("${name}") found in glTF`,
+      );
+    }
+    model._nodesByName.set(name, publicNode);
   }
 
   return index;
