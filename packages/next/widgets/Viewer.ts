@@ -26,10 +26,8 @@ import {
   BingImagery,
   Camera,
   CanvasTarget,
-  EARTH,
   IonTmsImagery,
   EYE,
-  Ellipsoid,
   DEFAULT_SKY,
   Emitter,
   Engine,
@@ -46,7 +44,7 @@ import {
   type Exposure,
   type ImageryProvider,
   type Attribution,
-  ModelPlacement,
+  type ModelPlacement,
   type ModelResource,
   type ModelResourceOptions,
   type PickResult,
@@ -74,12 +72,7 @@ import {
 import { Clock } from "@cesium/next/time";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
-import {
-  followZoom,
-  orbitState,
-  planOrbit,
-  type OrbitOptions,
-} from "./orbitFocus.ts";
+import { orbitState, planOrbit, type OrbitOptions } from "./orbitFocus.ts";
 import type { Inspectable } from "./inspectable.ts";
 import {
   attachInspector,
@@ -92,6 +85,14 @@ import {
   type TimeControlsOptions,
 } from "./timeControls.ts";
 import { attachWarnings, type WarningsHandle } from "./warnings.ts";
+import {
+  ellipsoid,
+  fromEarth,
+  placeCamera,
+  deg,
+  zoomTo,
+  earthCamera,
+} from "./viewerCamera.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -262,9 +263,6 @@ export type ZoomTarget =
   | { center: ArrayLike<number>; radius: number }
   | { longitude: number; latitude: number; range?: number };
 
-const ellipsoid = Ellipsoid.WGS84;
-const deg = Math.PI / 180;
-
 /** Endpoints `Viewer.create` starts resolving before the engine exists. */
 interface EarlyEndpoints {
   imagery?: Promise<BingImagery>;
@@ -281,8 +279,8 @@ export class Viewer {
   /** The main view (the left half in split view). */
   readonly view: View;
   readonly controller: GlobeController;
-  /** Orbit controls around the focus, when on (`setControls("orbit")`). */
-  private orbit_?: InspectController;
+  /** @internal Orbit controls around the focus, when on (`setControls("orbit")`). */
+  orbit_?: InspectController;
   /** Policy for the globe and tilesets added later. */
   policy: "budgeted" | "stepwise";
   /** Builds the globe; content added before it is ready still loads. */
@@ -298,15 +296,20 @@ export class Viewer {
   private terrainAttributions: Attribution[] = [];
   private readonly attributions = new Map<object, Attribution[]>();
   private readonly tilesets = new Set<Tileset3D>();
-  private second?: View;
-  private secondController?: GlobeController;
+  /** @internal */
+  second?: View;
+  /** @internal */
+  secondController?: GlobeController;
   private overview_?: View;
   private overviewLink?: ViewLink;
-  private readonly focusCenter = vec3.vec3();
-  private sun?: { azimuth: number; elevation: number };
+  /** @internal */
+  readonly focusCenter = vec3.vec3();
+  /** @internal */
+  sun?: { azimuth: number; elevation: number };
   /** The scene's time: the sun follows it unless placed by `setSun`. */
   readonly clock: Clock;
-  private sunFromClock_ = true;
+  /** @internal */
+  sunFromClock_ = true;
   /** The catalog in use (`frames`), replaced by `setFrameData`. */
   private frames_!: FrameCatalog;
   /** Aborts the catalogs' loads on `destroy`. */
@@ -350,11 +353,12 @@ export class Viewer {
   private readonly moon: boolean;
   /** Cesium Moon Terrain's map arrived (1.x's no longer wanted). */
   private moonMapSharp = false;
-  /** The clock was given or has been set to the first framing's morning. */
-  private clockPlaced: boolean;
-  private time_?: TimeControlsHandle;
-  /** Each `zoomTo`, so a late correction knows whether it still applies. */
-  private zoomToken = 0;
+  /** @internal The clock was given or has been set to the first framing's morning. */
+  clockPlaced: boolean;
+  /** @internal */
+  time_?: TimeControlsHandle;
+  /** @internal Each `zoomTo`, so a late correction knows whether it still applies. */
+  zoomToken = 0;
   private credits_?: CreditsHandle;
   private inspector?: InspectorHandle;
   /** Stops the viewer's per-frame work (`Engine.onTick`, `onAfterTick`). */
@@ -362,7 +366,8 @@ export class Viewer {
   /** New views (a split's second) get the main view's shadows and AO. */
   private readonly shadows: boolean;
   private readonly ambientOcclusion: boolean;
-  private destroyed = false;
+  /** @internal */
+  destroyed = false;
   /** Aborted on `destroy`: stops the Moon map's loads (and its worker). */
   private readonly moonMapLoad = new AbortController();
   private readonly accessToken: string | undefined;
@@ -428,7 +433,7 @@ export class Viewer {
       -Math.PI / 2,
       2e7,
     );
-    this.fromEarth(this.view);
+    fromEarth(this, this.view);
     // The camera stays above the globe's drawn surface.
     this.controller.surfaceHeight = (longitude, latitude) =>
       this.globe_?.show
@@ -535,7 +540,7 @@ export class Viewer {
         ...(options.timeControls === true || !options.timeControls
           ? {}
           : options.timeControls),
-        place: () => this.place(),
+        place: () => placeCamera(this),
       });
     }
     this.applyClockSun();
@@ -835,29 +840,8 @@ export class Viewer {
       this.engine.removeTileset(content as Tileset3D);
     }
   }
-
-  // ------------------------------------------------------------- camera
-
-  /**
-   * The main view's camera in the Earth's anchor (`View.anchorCamera`):
-   * Earth-fixed, whatever the view's render space. Reused: current until
-   * the next call.
-   */
-  private earthCamera(): Camera {
-    return this.view.anchorCamera(this.world.bodyAnchor(EARTH), this.earthPose);
-  }
-  private readonly earthPose = new Camera();
-
-  /**
-   * Re-expresses the pose a controller or `lookAt` just wrote into `view`'s
-   * camera, which is Earth-fixed, in its render space through the Earth's
-   * anchor (`View.setCameraFromAnchor`): framing shows the same Earth
-   * however the view places it. A copy while the anchor is at the
-   * identity.
-   */
-  private fromEarth(view: View): void {
-    view.setCameraFromAnchor(this.world.bodyAnchor(EARTH), view.camera);
-  }
+  /** @internal */
+  readonly earthPose = new Camera();
 
   /**
    * Frames content, a bounding sphere or a place (heading 35°, pitch -30°).
@@ -868,122 +852,7 @@ export class Viewer {
    * ground under the camera.
    */
   zoomTo(target: ZoomTarget, heading = 35 * deg, pitch = -30 * deg): void {
-    const token = ++this.zoomToken;
-    if (target instanceof ModelPlacement) {
-      const model = target;
-      const { center, radius } = model.bounds();
-      this.frame(Float64Array.from(center), radius, heading, pitch);
-      const inputs = this.controller.inputs;
-      if (model.clamp && !model.clamp.settled) {
-        void model.clamp.whenSettled().then(() => {
-          if (
-            token === this.zoomToken &&
-            inputs === this.controller.inputs &&
-            !this.destroyed
-          ) {
-            const { center, radius } = model.bounds();
-            this.frame(Float64Array.from(center), radius, heading, pitch);
-          }
-        });
-      }
-      return;
-    }
-    if ("longitude" in target) {
-      const range = target.range ?? 1500;
-      this.frame(
-        ellipsoid.cartographicToCartesian(
-          fromDegrees(target.longitude, target.latitude, 0),
-          vec3.vec3(),
-        ),
-        range / 2.6,
-        heading,
-        pitch,
-      );
-      return;
-    }
-    let sphere: { center: ArrayLike<number>; radius: number };
-    if ("root" in target) {
-      // The root's content volume when it has one (publishers often pad
-      // the root volume to a power of two).
-      const volume = target.root.contentVolume ?? target.root.volume;
-      sphere = {
-        center:
-          volume.kind === "box" ? volume.obb.center : volume.sphere.center,
-        radius: volume.sphere.radius,
-      };
-    } else {
-      sphere = target;
-    }
-    const center = Float64Array.from(sphere.center);
-    if (vec3.length(center) < 0.1 * ellipsoid.minimumRadius) {
-      // Planet-scale content (OSM Buildings' root is the whole globe) is
-      // centered near the Earth's center, where east-north-up is the
-      // direction of a small offset: the camera went below a pole, upside
-      // down, orbiting a point thousands of kilometers underground. Frame
-      // the globe instead from straight above the ground under the camera,
-      // north up, orbiting that ground point.
-      const ground = ellipsoid.scaleToGeodeticSurface(
-        this.earthCamera().position,
-        vec3.vec3(),
-      );
-      if (ground) {
-        const range = sphere.radius * 2.6 - vec3.length(ground);
-        this.frame(ground, Math.max(range, 1) / 2.6, 0, -Math.PI / 2 + 1e-4);
-        return;
-      }
-    }
-    this.frame(center, sphere.radius, heading, pitch);
-  }
-
-  /** Points both cameras at a sphere (the split view's from the other side). */
-  private frame(
-    center: Float64Array,
-    radius: number,
-    heading: number,
-    pitch: number,
-  ): void {
-    if (![...center, radius, heading, pitch].every(Number.isFinite)) {
-      // A NaN camera hung the page (a NaN range from a bad URL).
-      throw new RangeError("zoomTo: the target is not a finite place");
-    }
-    const range = radius * 2.6;
-    // 1.x's near plane (0.1 m), closer for small models. Fixed, not scaled
-    // to what is framed: zooming in from a globe-sized root kept a near
-    // plane kilometers out, cutting (and culling) the ground. Reverse-Z
-    // float depth is as precise whatever the near plane, so 1.x's per-frame
-    // near from drawn volumes isn't needed.
-    this.view.camera.near = Math.min(0.1, Math.max(0.001, radius * 0.002));
-    vec3.copy(this.focusCenter, center);
-    this.controller.focus(center, heading, pitch, range);
-    this.fromEarth(this.view);
-    if (this.orbit_) {
-      followZoom(this.orbit_, center, heading, pitch, range);
-    }
-    if (this.second && this.secondController) {
-      this.second.camera.near = this.view.camera.near;
-      this.secondController.focus(
-        center,
-        heading + (150 * Math.PI) / 180,
-        -0.25,
-        range * 0.4,
-      );
-      this.fromEarth(this.second);
-    }
-    if (this.sunFromClock_) {
-      if (!this.clockPlaced) {
-        // A first look in daylight: 10:30 local solar time today there.
-        this.clockPlaced = true;
-        const place = this.place();
-        const offset = place ? (place.longitude / Math.PI) * 12 * 3_600_000 : 0;
-        const day = 86_400_000;
-        const start = Math.floor((Date.now() + offset) / day) * day - offset;
-        this.clock.time = start + 10.5 * 3_600_000;
-      }
-      this.applyClockSun();
-      this.time_?.update();
-    } else if (this.sun) {
-      this.setSun(this.sun.azimuth, this.sun.elevation);
-    }
+    zoomTo(this, target, heading, pitch);
   }
 
   /**
@@ -1243,23 +1112,9 @@ export class Viewer {
     this.emit("warning", entry);
   }
 
-  /** The sun's direction at the clock's time. */
-  private applyClockSun(): void {
+  /** @internal The sun's direction at the clock's time. */
+  applyClockSun(): void {
     this.applySky();
-  }
-
-  /** What the time is about: what is framed, else below the camera. */
-  private place(): { longitude: number; latitude: number } | undefined {
-    const at =
-      vec3.length(this.focusCenter) > 0
-        ? this.focusCenter
-        : this.earthCamera().position;
-    const c = ellipsoid.cartesianToCartographic(at, {
-      longitude: 0,
-      latitude: 0,
-      height: 0,
-    });
-    return c ? { longitude: c.longitude, latitude: c.latitude } : undefined;
   }
 
   /**
@@ -1335,7 +1190,7 @@ export class Viewer {
         -0.25,
         this.controller.range * 0.4,
       );
-      this.fromEarth(second);
+      fromEarth(this, second);
     } else {
       this.secondController!.dispose();
       this.engine.removeView(this.second!);
@@ -1498,7 +1353,7 @@ export class Viewer {
       }
       const plan = planOrbit(orbit && orbitState(orbit), options ?? {}, {
         focusCenter: this.focusCenter,
-        cameraPosition: this.earthCamera().position,
+        cameraPosition: earthCamera(this).position,
         globeHeading: this.controller.heading,
       });
       if (!orbit) {
@@ -1513,7 +1368,7 @@ export class Viewer {
         orbit.maxRange = plan.maxRange;
       }
       orbit.focus(plan.target, plan.heading, plan.pitch, plan.range);
-      this.fromEarth(this.view);
+      fromEarth(this, this.view);
     } else if (mode === "globe" && this.orbit_) {
       this.orbit_.dispose();
       this.orbit_ = undefined;
