@@ -220,3 +220,43 @@ float4 fs(float4 frag : SV_Position) : SV_Target {
   }
   return float4(color, 1.0);
 }
+
+// `fs` in two halves, with `exposed` stages between them (render/post/chain.ts).
+// Only then: `fs` stays what runs otherwise.
+
+// fp16's largest value: light past it would be infinite in the exposed image.
+static const float FP16_MAX = 65504.0;
+
+// Scene light to exposed light: the same as `fs` up to its tone mapping. Its own
+// image, so `params.origin` isn't part of it.
+[shader("fragment")]
+float4 fsResponse(float4 frag : SV_Position) : SV_Target {
+  int2 coord = int2(frag.xy);
+  float4 shown = display.Load(int3(coord, 0));
+  float sceneCoverage = 1.0 - shown.a;
+  float3 scene = hdr.Load(int3(coord, 0)).rgb / max(sceneCoverage, 1e-4);
+  if (params.eye == 1u) {
+    uint2 size;
+    hdr.GetDimensions(size.x, size.y);
+    float2 uv = (float2(coord) + 0.5) / float2(size);
+    scene = eyeSees(max(scene, float3(0.0)), uv);
+  }
+  return float4(min(max(scene, float3(0.0)), float3(FP16_MAX)), 1.0);
+}
+
+// Exposed light to the target: the rest of `fs`, from `hdr` as `fsResponse` left it.
+[shader("fragment")]
+float4 fsTone(float4 frag : SV_Position) : SV_Target {
+  int2 coord = int2(frag.xy - params.origin);
+  float4 shown = display.Load(int3(coord, 0));
+  float sceneCoverage = 1.0 - shown.a;
+  float3 exposed = hdr.Load(int3(coord, 0)).rgb;
+  float3 color = toneMap(max(exposed, float3(0.0))) * sceneCoverage + shown.rgb;
+  color = clamp(color, float3(0.0), float3(1.0));
+  if (params.encoding == 1u) {
+    color = linearToSrgb(color);
+  } else if (params.encoding == 2u) {
+    color = pow(color, float3(1.0 / 2.2));
+  }
+  return float4(color, 1.0);
+}

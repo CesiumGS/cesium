@@ -6,6 +6,7 @@ export type { ShaderUnit } from "./unit.ts";
 export {
   POINT_STYLE_BOUNDARY,
   POOL_STYLE_BOUNDARY,
+  POST_STAGE_BOUNDARY,
   SURFACE_BOUNDARY,
   SURFACE_VERTEX_BOUNDARY,
 } from "./boundary.ts";

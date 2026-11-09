@@ -3,7 +3,7 @@
 // them.
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
-import type { TextureHandle } from "../FrameGraph.ts";
+import type { ResolveView, TextureHandle } from "../FrameGraph.ts";
 import { encodePick } from "./picks.ts";
 import { translucentInputs } from "./translucency.ts";
 import {
@@ -365,26 +365,33 @@ export function adaptationPass(
   };
 }
 
-export function presentPassBody(
+/**
+ * The present pass, and the two that join it when a view has post stages (see
+ * `buildViewFrame`): `response`, the first half of its shader, before the `exposed`
+ * stages; `present` itself; and `final`, after the `display` stages, which
+ * takes their image into the view's rectangle of the target.
+ */
+export function presentPasses(
   engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
   {
-    resolved,
     displayResolved,
     adaptation,
+    response,
     output,
     ldr,
   }: {
-    resolved: TextureHandle;
     displayResolved: TextureHandle;
     adaptation: TextureHandle;
+    response: TextureHandle;
     output: TextureHandle;
     ldr: TextureHandle;
   },
-): PassBody {
+): { response: PassBody; present: PassBody; final: PassBody } {
   const { device, pipelines } = engine.ctx;
-  const { x, y, width, height } = frame;
+  const { x, y, width, height, chain } = frame;
+  const { scene, exposed, display } = chain.slots;
 
   const presentColor: GPURenderPassColorAttachment = {
     view: undefined as never,
@@ -406,104 +413,204 @@ export function presentPassBody(
     label: "present.ldr",
     colorAttachments: [ldrColor],
   };
-  return (enc, get) => {
-    const fxaa = view.fxaa;
-    const srgbTarget = engine.ctx.outputFormat.endsWith("-srgb");
-    const params = engine.raster.presentData;
-    params.setFloat32(0, fxaa ? 0 : x, true);
-    params.setFloat32(4, fxaa ? 0 : y, true);
-    params.setUint32(8, TONE_MAPPINGS.indexOf(view.observer.toneMapping), true);
-    // FXAA reads encoded color (its edges are found in display luma);
-    // gamma 2.2 only where the target isn't -srgb, as without it.
-    const encoding =
-      srgbTarget && !fxaa
-        ? 0
-        : view.outputEncoding === "gamma2.2" && !srgbTarget
-          ? 2
-          : 1;
-    params.setUint32(12, encoding, true);
-    // The eye: its adaptation over the view (log10 cd/m²) and its
-    // brightening; per pixel it adapts partly to its region too.
-    const e = view.observer.exposure;
-    const state = view.autoExposure;
-    const eye = "eye" in e && state !== undefined;
-    params.setFloat32(16, view.exposureScale, true);
-    params.setUint32(20, eye ? 1 : 0, true);
-    params.setFloat32(24, eye ? state.cones : 0, true);
-    params.setFloat32(28, eye ? state.rods : 0, true);
-    params.setFloat32(32, "eye" in e ? (e.compensation ?? 0) : 0, true);
-    device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
-    // Pooled textures are stable from frame to frame, so the bind group
-    // is rebuilt only when the pool hands this view a different one.
-    const source = get(resolved);
-    const shown = get(displayResolved);
-    const adapted = get(adaptation);
-    if (
-      frame.presentSource !== source ||
-      frame.presentDisplay !== shown ||
-      frame.presentAdaptation !== adapted
-    ) {
-      frame.presentSource = source;
-      frame.presentDisplay = shown;
-      frame.presentAdaptation = adapted;
-      engine.raster.adaptSampler ??= device.createSampler({
-        label: "adaptation",
-        magFilter: "linear",
-        minFilter: "linear",
-      });
-      frame.presentGroup = device.createBindGroup({
-        layout: pipelines.present.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: source },
-          { binding: 1, resource: { buffer: frame.presentParams } },
-          { binding: 2, resource: shown },
-          { binding: 3, resource: adapted },
-          { binding: 4, resource: engine.raster.adaptSampler },
-        ],
-      });
-    }
-    if (fxaa) {
-      const image = get(ldr);
-      ldrColor.view = image;
-      const first = enc.beginRenderPass(ldrPass);
-      first.setPipeline(pipelines.presentLdr);
-      first.setBindGroup(0, frame.presentGroup!);
-      first.draw(3);
-      first.end();
-      const f = engine.raster.fxaaData;
-      f.setFloat32(0, x, true);
-      f.setFloat32(4, y, true);
-      f.setFloat32(8, 1 / width, true);
-      f.setFloat32(12, 1 / height, true);
-      f.setUint32(16, srgbTarget && encoding === 1 ? 1 : 0, true);
-      device.queue.writeBuffer(frame.fxaaParams, 0, f.buffer);
-      if (frame.fxaaImage !== image) {
-        frame.fxaaImage = image;
-        engine.raster.fxaaSampler ??= device.createSampler({
-          label: "fxaa",
-          magFilter: "linear",
-          minFilter: "linear",
-        });
-        frame.fxaaGroup = device.createBindGroup({
-          label: "fxaa",
-          layout: pipelines.fxaa.getBindGroupLayout(0),
-          entries: [
-            { binding: 0, resource: image },
-            { binding: 1, resource: engine.raster.fxaaSampler },
-            { binding: 2, resource: { buffer: frame.fxaaParams } },
-          ],
-        });
-      }
-    }
+  const responseColor: GPURenderPassColorAttachment = {
+    view: undefined as never,
+    clearValue: { r: 0, g: 0, b: 0, a: 1 },
+    loadOp: "clear",
+    storeOp: "store",
+  };
+  const responsePass: GPURenderPassDescriptor = {
+    label: "present.response",
+    colorAttachments: [responseColor],
+  };
+
+  /** The sampler for the eye's adaptation, shared by the present entries. */
+  const adaptationSampler = () =>
+    (engine.raster.adaptSampler ??= device.createSampler({
+      label: "adaptation",
+      magFilter: "linear",
+      minFilter: "linear",
+    }));
+
+  /** Draws `pipeline` into the view's rectangle of the target, then overlays. */
+  const toTarget = (
+    enc: GPUCommandEncoder,
+    get: ResolveView,
+    pipeline: GPURenderPipeline,
+    group: GPUBindGroup,
+  ) => {
     presentColor.view = get(output);
     presentColor.loadOp = frame.clearTarget ? "clear" : "load";
     const pass = enc.beginRenderPass(presentPass);
     pass.setViewport(x, y, width, height, 0, 1);
     pass.setScissorRect(x, y, width, height);
-    pass.setPipeline(fxaa ? pipelines.fxaa : pipelines.present);
-    pass.setBindGroup(0, fxaa ? frame.fxaaGroup! : frame.presentGroup!);
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, group);
     pass.draw(3);
     drawOverlays(engine, pass, view);
     pass.end();
+  };
+
+  /** FXAA's or the copy's parameters and group, for the encoded `image`. */
+  const imageGroup = (image: GPUTextureView): GPUBindGroup => {
+    const srgbTarget = engine.ctx.outputFormat.endsWith("-srgb");
+    const f = engine.raster.fxaaData;
+    f.setFloat32(0, x, true);
+    f.setFloat32(4, y, true);
+    f.setFloat32(8, 1 / width, true);
+    f.setFloat32(12, 1 / height, true);
+    // Encoded as sRGB (`encoding` 1 below), which a -srgb target encodes again.
+    f.setUint32(16, srgbTarget ? 1 : 0, true);
+    device.queue.writeBuffer(frame.fxaaParams, 0, f.buffer);
+    if (frame.fxaaImage !== image) {
+      frame.fxaaImage = image;
+      engine.raster.fxaaSampler ??= device.createSampler({
+        label: "fxaa",
+        magFilter: "linear",
+        minFilter: "linear",
+      });
+      frame.fxaaGroup = device.createBindGroup({
+        label: "fxaa",
+        layout: pipelines.fxaa.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: image },
+          { binding: 1, resource: engine.raster.fxaaSampler },
+          { binding: 2, resource: { buffer: frame.fxaaParams } },
+        ],
+      });
+    }
+    return frame.fxaaGroup!;
+  };
+
+  return {
+    // Reads `presentParams`, which the present pass writes this tick: a queue
+    // write lands before the encoder's commands run.
+    response: (enc, get) => {
+      if (!chain.splits) {
+        return;
+      }
+      const source = get(scene!.latest());
+      const shown = get(displayResolved);
+      const adapted = get(adaptation);
+      const inputs = chain.responseInputs;
+      if (
+        inputs[0] !== source ||
+        inputs[1] !== shown ||
+        inputs[2] !== adapted
+      ) {
+        chain.responseInputs = [source, shown, adapted];
+        chain.responseGroup = device.createBindGroup({
+          label: "present.response",
+          layout: pipelines.present.getBindGroupLayout(0),
+          entries: [
+            { binding: 0, resource: source },
+            { binding: 1, resource: { buffer: frame.presentParams } },
+            { binding: 2, resource: shown },
+            { binding: 3, resource: adapted },
+            { binding: 4, resource: adaptationSampler() },
+          ],
+        });
+      }
+      responseColor.view = get(response);
+      const pass = enc.beginRenderPass(responsePass);
+      pass.setPipeline(chain.pipelines!.response);
+      pass.setBindGroup(0, chain.responseGroup!);
+      pass.draw(3);
+      pass.end();
+    },
+    present: (enc, get) => {
+      const fxaa = view.fxaa;
+      const split = chain.splits;
+      const staged = chain.displays;
+      const encoded = fxaa || staged;
+      const srgbTarget = engine.ctx.outputFormat.endsWith("-srgb");
+      const params = engine.raster.presentData;
+      params.setFloat32(0, encoded ? 0 : x, true);
+      params.setFloat32(4, encoded ? 0 : y, true);
+      params.setUint32(
+        8,
+        TONE_MAPPINGS.indexOf(view.observer.toneMapping),
+        true,
+      );
+      // FXAA and display stages read encoded color (FXAA's edges are found in
+      // display luma); gamma 2.2 only where the target isn't -srgb, as without.
+      const encoding =
+        srgbTarget && !encoded
+          ? 0
+          : view.outputEncoding === "gamma2.2" && !srgbTarget
+            ? 2
+            : 1;
+      params.setUint32(12, encoding, true);
+      // The eye: its adaptation over the view (log10 cd/m²) and its
+      // brightening; per pixel it adapts partly to its region too.
+      const e = view.observer.exposure;
+      const state = view.autoExposure;
+      const eye = "eye" in e && state !== undefined;
+      params.setFloat32(16, view.exposureScale, true);
+      params.setUint32(20, eye ? 1 : 0, true);
+      params.setFloat32(24, eye ? state.cones : 0, true);
+      params.setFloat32(28, eye ? state.rods : 0, true);
+      params.setFloat32(32, "eye" in e ? (e.compensation ?? 0) : 0, true);
+      device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
+      // Pooled textures are stable from frame to frame, so the bind group
+      // is rebuilt only when the pool hands this view a different one.
+      const source = get(split ? exposed!.latest() : scene!.latest());
+      const shown = get(displayResolved);
+      const adapted = get(adaptation);
+      if (
+        frame.presentSource !== source ||
+        frame.presentDisplay !== shown ||
+        frame.presentAdaptation !== adapted
+      ) {
+        frame.presentSource = source;
+        frame.presentDisplay = shown;
+        frame.presentAdaptation = adapted;
+        frame.presentGroup = device.createBindGroup({
+          layout: pipelines.present.getBindGroupLayout(0),
+          entries: [
+            { binding: 0, resource: source },
+            { binding: 1, resource: { buffer: frame.presentParams } },
+            { binding: 2, resource: shown },
+            { binding: 3, resource: adapted },
+            { binding: 4, resource: adaptationSampler() },
+          ],
+        });
+      }
+      if (encoded) {
+        const image = get(ldr);
+        ldrColor.view = image;
+        const first = enc.beginRenderPass(ldrPass);
+        first.setPipeline(
+          split ? chain.pipelines!.toneLdr : pipelines.presentLdr,
+        );
+        first.setBindGroup(0, frame.presentGroup!);
+        first.draw(3);
+        first.end();
+        if (!staged) {
+          // `encoding` here is 1 where the target is -srgb.
+          toTarget(enc, get, pipelines.fxaa, imageGroup(image));
+        }
+        return;
+      }
+      toTarget(
+        enc,
+        get,
+        split ? chain.pipelines!.tone : pipelines.present,
+        frame.presentGroup!,
+      );
+    },
+    // After the `display` stages: FXAA last, so it smooths what they drew.
+    final: (enc, get) => {
+      if (!chain.displays) {
+        return;
+      }
+      const group = imageGroup(get(display!.latest()));
+      toTarget(
+        enc,
+        get,
+        view.fxaa ? pipelines.fxaa : chain.pipelines!.copy,
+        group,
+      );
+    },
   };
 }

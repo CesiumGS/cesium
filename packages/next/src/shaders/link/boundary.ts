@@ -83,6 +83,22 @@ export const POINT_STYLE_BOUNDARY: Boundary = {
   provides: ["pointF32", "pointU32", "styleTime"],
 };
 
+/**
+ * A post stage's (postStage.slang): the function the glue calls, what it
+ * gets, and what it may read of the image.
+ */
+export const POST_STAGE_BOUNDARY: Boundary = {
+  name: "post stage",
+  requires: [{ name: "postStage", params: ["PostInput"], result: "vec4<f32>" }],
+  provides: [
+    "PostInput",
+    "postColor",
+    "postColorAt",
+    "postDepthAt",
+    "postIdAt",
+  ],
+};
+
 /** The model pool's (modelPool.slang): a styled model layer's choices. */
 export const POOL_STYLE_BOUNDARY: Boundary = {
   name: "model pool style",

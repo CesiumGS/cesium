@@ -936,6 +936,7 @@ export class Engine {
     this.viewWatches.delete(view);
     view.wake = undefined;
     view.renderRoot = undefined;
+    view.releaseStages();
     dropPersistent(this, view);
     const probe = this.raster.probes.get(view);
     if (probe) {

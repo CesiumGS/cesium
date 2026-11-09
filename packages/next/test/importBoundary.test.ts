@@ -631,6 +631,18 @@ it("scene data doesn't import rasterizer data", () => {
     ).toEqual([]);
   }
 });
+it("the observer's settings and a stage's definition hold no GPU types", () => {
+  for (const file of ["src/scene/observer.ts", "src/scene/postStage.ts"]) {
+    const code = readFileSync(join(root, file), "utf8");
+    expect(code.match(/\bGPU[A-Z]\w*/g) ?? [], file).toEqual([]);
+    expect(
+      edgesOf(file)
+        .map((edge) => edge.to)
+        .filter((to) => /^src\/(gpu|render)\//.test(to)),
+      file,
+    ).toEqual([]);
+  }
+});
 it("package.json exports the entry points", () =>
   expect(Object.keys(pkg.exports)).toEqual([
     ".",

@@ -21,6 +21,8 @@ export interface TextureDesc {
   /** Its depth: a 3D texture (unset, a 2D one). */
   depth?: number;
   sampleCount?: number;
+  /** Mip levels (unset, one). `FrameGraph.mipView` gives a level's view. */
+  mipLevelCount?: number;
   usage: GPUTextureUsageFlags;
 }
 
@@ -71,6 +73,9 @@ function defaultView(texture: GPUTexture): GPUTextureView {
   }
   return view;
 }
+
+/** Views of pooled textures' single mip levels, created once per level. */
+const textureMipViews = new WeakMap<GPUTexture, GPUTextureView[]>();
 
 export class FrameGraph {
   private readonly resources: Resource[] = [];
@@ -140,6 +145,27 @@ export class FrameGraph {
   /** The texture behind a handle, once resolved in this frame's execution. */
   texture(handle: TextureHandle): GPUTexture | undefined {
     return this.resources[handle.id]!.texture;
+  }
+
+  /**
+   * A view of one mip level of a transient texture, acquiring it if this is
+   * its first use in this frame's execution, as resolving a handle does.
+   */
+  mipView(handle: TextureHandle, level: number): GPUTextureView {
+    this.resolve(handle);
+    const texture = this.resources[handle.id]!.texture;
+    if (!texture) {
+      throw new Error(`${handle.name}: an imported texture has no mip views.`);
+    }
+    let views = textureMipViews.get(texture);
+    if (!views) {
+      views = [];
+      textureMipViews.set(texture, views);
+    }
+    return (views[level] ??= texture.createView({
+      baseMipLevel: level,
+      mipLevelCount: 1,
+    }));
   }
 
   private readonly resolve: ResolveView = (handle) => {
@@ -218,13 +244,15 @@ const BYTES_PER_PIXEL: Partial<Record<GPUTextureFormat, number>> = {
 };
 
 function textureBytes(desc: TextureDesc): number {
-  return (
-    desc.width *
-    desc.height *
-    (desc.depth ?? 1) *
-    (BYTES_PER_PIXEL[desc.format] ?? 4) *
-    (desc.sampleCount ?? 1)
-  );
+  // Each level at least a pixel across (depth too, for a 3D texture).
+  let texels = 0;
+  for (let level = 0; level < (desc.mipLevelCount ?? 1); level++) {
+    texels +=
+      Math.max(desc.width >> level, 1) *
+      Math.max(desc.height >> level, 1) *
+      Math.max((desc.depth ?? 1) >> level, 1);
+  }
+  return texels * (BYTES_PER_PIXEL[desc.format] ?? 4) * (desc.sampleCount ?? 1);
 }
 
 interface PoolBucket {
@@ -280,6 +308,7 @@ export class TexturePool implements TextureAllocator {
       },
       dimension: desc.depth === undefined ? "2d" : "3d",
       sampleCount: desc.sampleCount ?? 1,
+      mipLevelCount: desc.mipLevelCount ?? 1,
       usage: desc.usage,
     });
     const bytes = textureBytes(desc);
@@ -414,7 +443,7 @@ export class TexturePool implements TextureAllocator {
   private keyOf(desc: TextureDesc): string {
     let key = this.keys.get(desc);
     if (key === undefined) {
-      key = `${desc.format}|${desc.width}x${desc.height}x${desc.depth ?? 0}|${desc.sampleCount ?? 1}|${desc.usage}`;
+      key = `${desc.format}|${desc.width}x${desc.height}x${desc.depth ?? 0}|${desc.sampleCount ?? 1}|${desc.mipLevelCount ?? 1}|${desc.usage}`;
       this.keys.set(desc, key);
     }
     return key;

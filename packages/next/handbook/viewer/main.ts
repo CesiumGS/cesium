@@ -582,12 +582,12 @@ export async function startReel(
         const opening = ramp(hours, 17, 22) * NIGHT_STOPS;
         if (Math.abs(opening - compensation) > 0.02) {
           compensation = opening;
-          view.exposure = { eye: true, compensation };
+          view.observer.exposure = { eye: true, compensation };
         }
       },
       exit() {
         compensation = 0;
-        view.exposure = EYE;
+        view.observer.exposure = EYE;
       },
       caption: () =>
         "The Sun comes from a reduced copy of JPL's DE440 embedded in this file, and Earth's rotation from a table. The terminator, the air and the night lights follow from them.",

@@ -734,22 +734,29 @@ export function readFrameGraph(root = packageRoot) {
         node.expression.name.text === "addPass"
       ) {
         const [name, setup] = node.arguments;
+        // A post stage's own pass is named by the stage, at run time.
+        const literal = ts.isStringLiteralLike(name);
         const named = (key) =>
-          (property(setup, key)?.elements ?? []).map((e) => {
-            const handle = handles.get(e.getText());
-            if (!handle) {
-              throw new Error(
-                `${path}: pass "${name.text}" names ${e.getText()}, not a graph texture; update readFrameGraph`,
-              );
-            }
-            return handle.name;
+          (property(setup, key)?.elements ?? [])
+            // A list of a slot's images (render/post/chain.ts), not one texture.
+            .filter((e) => !ts.isSpreadElement(e))
+            .map((e) => {
+              const handle = handles.get(e.getText());
+              if (!handle) {
+                throw new Error(
+                  `${path}: pass "${name.text}" names ${e.getText()}, not a graph texture; update readFrameGraph`,
+                );
+              }
+              return handle.name;
+            });
+        if (literal) {
+          passes.push({
+            name: name.text,
+            reads: named("reads"),
+            writes: named("writes"),
+            sideEffect: property(setup, "sideEffect") !== undefined,
           });
-        passes.push({
-          name: name.text,
-          reads: named("reads"),
-          writes: named("writes"),
-          sideEffect: property(setup, "sideEffect") !== undefined,
-        });
+        }
       }
       ts.forEachChild(node, collect);
     };

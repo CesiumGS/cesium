@@ -176,3 +176,14 @@ float4 fs(float4 frag : SV_Position) : SV_Target {
   }
   return float4(color, 1.0);
 }
+
+// With FXAA off and a display stage on: what the stages left, into the view's
+// rectangle (render/post/chain.ts), as `fs` would write it.
+[shader("fragment")]
+float4 fsCopy(float4 frag : SV_Position) : SV_Target {
+  float3 color = image.Load(int3(int2(frag.xy - params.origin), 0)).rgb;
+  if (params.decode == 1u) {
+    color = srgbToLinear(color);
+  }
+  return float4(color, 1.0);
+}

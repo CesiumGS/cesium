@@ -32,6 +32,7 @@ import {
   ev100ToScale,
   observerReadout,
 } from "./observer.ts";
+import { type PostStage, checkStageList } from "./postStage.ts";
 
 /** A line list drawn on top of a view. */
 export interface Overlay {
@@ -174,8 +175,13 @@ function watched<T extends object>(value: T, changed: () => void): T {
  * `watched`, for a value holding plain objects: those are copied and watched
  * too, however deep, on the way in and when written later. Arrays are copied
  * and frozen. Anything else, such as a class's instance, is kept as it is.
+ * `check` may refuse a write to one of `value`'s own fields, by throwing.
  */
-function watchedTree<T extends object>(value: T, changed: () => void): T {
+function watchedTree<T extends object>(
+  value: T,
+  changed: () => void,
+  check?: (key: PropertyKey, value: unknown) => void,
+): T {
   const copy = (v: unknown): unknown => {
     if (Array.isArray(v)) {
       return Object.freeze([...(v as unknown[])]);
@@ -193,6 +199,7 @@ function watchedTree<T extends object>(value: T, changed: () => void): T {
   }
   return new Proxy(target, {
     set(t, key, v) {
+      check?.(key, v);
       t[key] = copy(v);
       changed();
       return true;
@@ -279,9 +286,14 @@ export class View {
   private readonly changed = () => this.wake?.();
   private readonly observerChanged = () => {
     this.observerRevision_++;
+    this.syncStages();
     this.wake?.();
   };
   private observerRevision_ = 0;
+  /** The stages it listens to: their changes wake the loop too. */
+  private stages_: readonly PostStage[] = [];
+  /** @internal Counts changes to the list of stages: each rebuilds its graph. */
+  stagesRevision = 0;
 
   get world(): World {
     return this.state.world;
@@ -307,10 +319,44 @@ export class View {
     return this.state.observer;
   }
   set observer(value: ObserverSettings) {
-    this.state.observer = watchedTree(value, this.observerChanged);
+    checkStageList(value.stages);
+    this.state.observer = watchedTree(
+      value,
+      this.observerChanged,
+      (key, stages) => {
+        if (key === "stages") {
+          checkStageList(stages as readonly PostStage[]);
+        }
+      },
+    );
     this.observerChanged();
   }
-  /** Counts changes to `observer`, assigned or written in place. */
+  /** Follows the observer's list of stages, if it's a different list. */
+  private syncStages(): void {
+    const stages = this.state.observer.stages;
+    const old = this.stages_;
+    if (
+      stages.length === old.length &&
+      stages.every((stage, i) => stage === old[i])
+    ) {
+      return;
+    }
+    for (const stage of old) {
+      stage.unwatch(this.observerChanged);
+    }
+    for (const stage of stages) {
+      stage.watch(this.observerChanged);
+    }
+    this.stages_ = stages;
+    this.stagesRevision++;
+  }
+  /** @internal The view is gone: its stages may outlive it. */
+  releaseStages(): void {
+    for (const stage of this.stages_) {
+      stage.unwatch(this.observerChanged);
+    }
+  }
+  /** Counts changes to `observer`, assigned or written in place, and its stages'. */
   get observerRevision(): number {
     return this.observerRevision_;
   }

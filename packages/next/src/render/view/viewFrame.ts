@@ -27,10 +27,17 @@ import {
   hdrReadbackPass,
   pickPass,
   adaptationPass,
-  presentPassBody,
+  presentPasses,
 } from "./outputPasses.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
+import {
+  ChainSlot,
+  ViewChain,
+  chainOrder,
+  registerSlot,
+  type ChainView,
+} from "../post/chain.ts";
 
 /** Rasterizer side: a view's targets and passes, in registration order. */
 export interface ViewFrameEngine extends Pick<
@@ -38,6 +45,7 @@ export interface ViewFrameEngine extends Pick<
   | "bodyCamera"
   | "cameras"
   | "ctx"
+  | "requestRender"
   | "stats"
   | "sunDirection"
   | "tilesets"
@@ -98,7 +106,8 @@ export function viewFrameFor(
     frame.width !== rect.width ||
     frame.height !== rect.height ||
     frame.x !== rect.x ||
-    frame.y !== rect.y
+    frame.y !== rect.y ||
+    frame.stagesRevision !== view.stagesRevision
   ) {
     if (frame) {
       destroyViewFrame(frame);
@@ -195,6 +204,34 @@ function buildViewFrame(
   const depth = graph.importTexture("depth.msaa", depthView);
   // Rebound to this frame's target texture before every execute.
   const output = graph.importTexture("output", {} as GPUTextureView);
+  // Encoded: what the present pass leaves for FXAA or a display stage, then
+  // what FXAA or a copy takes into the view's rectangle of the target.
+  const ldr = graph.createTexture("ldr", {
+    width,
+    height,
+    format: "rgba8unorm",
+    usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+  });
+  // Exposed light, between the present pass's halves, for `exposed` stages.
+  const response = graph.createTexture("present.response", {
+    width,
+    height,
+    format: "rgba16float",
+    usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+  });
+  // The view's post stages, by slot; a slot with none has no passes.
+  const stages = chainOrder(view.observer.stages);
+  const chain = new ViewChain({
+    scene: new ChainSlot(resolved),
+    exposed: new ChainSlot(response),
+    display: new ChainSlot(ldr),
+  });
+  if (stages.exposed.length + stages.display.length > 0) {
+    void engine.ctx.pipelines.chain().then((pipelines) => {
+      chain.pipelines = pipelines;
+      engine.requestRender();
+    });
+  }
 
   const frame: ViewFrame = {
     x,
@@ -255,6 +292,9 @@ function buildViewFrame(
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     }),
     translucentGroups: [],
+    chain,
+    stagesRevision: view.stagesRevision,
+    tanY: 1,
   };
   engine.raster.sky.writeWeights(frame.sky);
   graph.addPass(
@@ -501,28 +541,58 @@ function buildViewFrame(
     }),
   );
 
-  // With FXAA, the present pass tonemaps into this (encoded), and FXAA
-  // reads it into the view's rectangle of the target.
-  const ldr = graph.createTexture("ldr", {
+  // The chain, after the meter and the adaptation, so neither sees a stage's
+  // result; the HDR readback has read the image by now too (§13.22).
+  const chainView: ChainView = {
     width,
     height,
-    format: "rgba8unorm",
-    usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    depth,
+    ids,
+    preExposure: () => view.exposureScale,
+    pixelAngle: () => (2 * frame.tanY) / height,
+  };
+  const { scene, exposed, display: shown } = chain.slots;
+  registerSlot(engine, graph, chain, scene!, stages.scene, chainView);
+  const present = presentPasses(engine, view, frame, {
+    displayResolved,
+    adaptation,
+    response,
+    output,
+    ldr,
   });
+  const sceneReads = scene!.handles;
+  if (stages.exposed.length > 0) {
+    graph.addPass(
+      "present.response",
+      {
+        reads: [...sceneReads, displayResolved, adaptation],
+        writes: [response],
+      },
+      present.response,
+    );
+    registerSlot(engine, graph, chain, exposed!, stages.exposed, chainView);
+  }
   graph.addPass(
     "present",
     {
-      reads: [resolved, displayResolved, adaptation],
+      reads: [
+        ...sceneReads,
+        ...(stages.exposed.length > 0 ? exposed!.handles : []),
+        displayResolved,
+        adaptation,
+      ],
       writes: [output, ldr],
     },
-    presentPassBody(engine, view, frame, {
-      resolved,
-      displayResolved,
-      adaptation,
-      output,
-      ldr,
-    }),
+    present.present,
   );
+  if (stages.display.length > 0) {
+    registerSlot(engine, graph, chain, shown!, stages.display, chainView);
+    graph.addPass(
+      "present.final",
+      { reads: shown!.handles, writes: [output] },
+      present.final,
+    );
+  }
 
   return frame;
 }

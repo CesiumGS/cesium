@@ -233,3 +233,65 @@ fn fs(@builtin(position) frag_0 : vec4<f32>) -> pixelOutput_0
     return _S16;
 }
 
+struct pixelOutput_1
+{
+    @location(0) output_2 : vec4<f32>,
+};
+
+@fragment
+fn fsResponse(@builtin(position) frag_1 : vec4<f32>) -> pixelOutput_1
+{
+    var _S17 : vec2<i32> = vec2<i32>(frag_1.xy);
+    var _S18 : vec3<i32> = vec3<i32>(_S17, i32(0));
+    var scene_2 : vec3<f32> = (textureLoad((hdr_0), ((_S18)).xy, ((_S18)).z)).xyz / vec3<f32>(max(1.0f - (textureLoad((display_0), ((_S18)).xy, ((_S18)).z)).w, 9.9999997473787516e-05f));
+    var scene_3 : vec3<f32>;
+    if((params_0.eye_0) == u32(1))
+    {
+        var size_1 : vec2<u32>;
+        var _S19 : u32 = size_1[i32(0)];
+        var _S20 : u32 = size_1[i32(1)];
+        {var dim = textureDimensions((hdr_0));((_S19)) = dim.x;((_S20)) = dim.y;};
+        size_1[i32(0)] = _S19;
+        size_1[i32(1)] = _S20;
+        scene_3 = eyeSees_0(max(scene_2, vec3<f32>(0.0f)), (vec2<f32>(_S17) + vec2<f32>(0.5f)) / vec2<f32>(size_1));
+    }
+    else
+    {
+        scene_3 = scene_2;
+    }
+    var _S21 : pixelOutput_1 = pixelOutput_1( vec4<f32>(min(max(scene_3, vec3<f32>(0.0f)), vec3<f32>(65504.0f)), 1.0f) );
+    return _S21;
+}
+
+struct pixelOutput_2
+{
+    @location(0) output_3 : vec4<f32>,
+};
+
+@fragment
+fn fsTone(@builtin(position) frag_2 : vec4<f32>) -> pixelOutput_2
+{
+    var _S22 : vec3<i32> = vec3<i32>(vec2<i32>(frag_2.xy - params_0.origin_0), i32(0));
+    var shown_1 : vec4<f32> = (textureLoad((display_0), ((_S22)).xy, ((_S22)).z));
+    var _S23 : vec3<f32> = vec3<f32>(0.0f);
+    var color_3 : vec3<f32> = clamp(toneMap_0(max((textureLoad((hdr_0), ((_S22)).xy, ((_S22)).z)).xyz, _S23)) * vec3<f32>((1.0f - shown_1.w)) + shown_1.xyz, _S23, vec3<f32>(1.0f));
+    var color_4 : vec3<f32>;
+    if((params_0.encoding_0) == u32(1))
+    {
+        color_4 = linearToSrgb_0(color_3);
+    }
+    else
+    {
+        if((params_0.encoding_0) == u32(2))
+        {
+            color_4 = pow(color_3, vec3<f32>(0.45454543828964233f));
+        }
+        else
+        {
+            color_4 = color_3;
+        }
+    }
+    var _S24 : pixelOutput_2 = pixelOutput_2( vec4<f32>(color_4, 1.0f) );
+    return _S24;
+}
+

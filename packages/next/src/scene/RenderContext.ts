@@ -17,6 +17,7 @@ import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/generated/raycast.wgsl?raw";
 import surfaceWgsl from "../shaders/generated/surface.wgsl?raw";
 import surfaceVertexWgsl from "../shaders/surfaceVertex.wgsl?raw";
+import type { ChainPipelines } from "../render/post/chain.ts";
 import presentWgsl from "../shaders/generated/present.wgsl?raw";
 import overlayWgsl from "../shaders/generated/overlay.wgsl?raw";
 import pickWgsl from "../shaders/generated/pick.wgsl?raw";
@@ -218,6 +219,8 @@ export interface Pipelines extends SurfacePipelines {
    * then FXAA from it into the target (`fxaa.slang`).
    */
   presentLdr: GPURenderPipeline;
+  /** What a chain of post stages adds, made when first asked for. */
+  chain(): Promise<ChainPipelines>;
   fxaa: GPURenderPipeline;
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
@@ -749,6 +752,19 @@ async function createPipelines(
             texture: { viewDimension: "3d" },
           },
           { binding: 4, visibility: FRAGMENT, sampler: { type: "filtering" } },
+        ],
+      }),
+    ],
+  });
+  // Shared by FXAA and the copy that takes its place after a display stage.
+  const fxaaLayout = device.createPipelineLayout({
+    bindGroupLayouts: [
+      device.createBindGroupLayout({
+        label: "fxaa",
+        entries: [
+          { binding: 0, visibility: FRAGMENT, texture: {} },
+          { binding: 1, visibility: FRAGMENT, sampler: { type: "filtering" } },
+          { binding: 2, visibility: FRAGMENT, buffer: { type: "uniform" } },
         ],
       }),
     ],
@@ -1439,7 +1455,7 @@ async function createPipelines(
     }),
     device.createRenderPipelineAsync({
       label: "fxaa",
-      layout: "auto",
+      layout: fxaaLayout,
       vertex: { module: module("fxaa", fxaaWgsl), entryPoint: "vs" },
       fragment: {
         module: module("fxaa", fxaaWgsl),
@@ -1530,6 +1546,46 @@ async function createPipelines(
     compositePipeline("composite.moments", "fsMoments"),
   ]);
 
+  let chainPipelines: Promise<ChainPipelines> | undefined;
+  const makeChainPipelines = async (): Promise<ChainPipelines> => {
+    const split = (
+      label: string,
+      layout: GPUPipelineLayout,
+      source: string,
+      entryPoint: string,
+      format: GPUTextureFormat,
+    ) =>
+      device.createRenderPipelineAsync({
+        label,
+        layout,
+        vertex: { module: module(label, source), entryPoint: "vs" },
+        fragment: {
+          module: module(label, source),
+          entryPoint,
+          targets: [{ format }],
+        },
+        primitive: { topology: "triangle-list" },
+      });
+    const [response, tone, toneLdr, copy] = await Promise.all([
+      split(
+        "present.response",
+        presentLayout,
+        presentWgsl,
+        "fsResponse",
+        "rgba16float",
+      ),
+      split("present.tone", presentLayout, presentWgsl, "fsTone", outputFormat),
+      split(
+        "present.tone.ldr",
+        presentLayout,
+        presentWgsl,
+        "fsTone",
+        "rgba8unorm",
+      ),
+      split("present.copy", fxaaLayout, fxaaWgsl, "fsCopy", outputFormat),
+    ]);
+    return { response, tone, toneLdr, copy };
+  };
   return {
     viewLayout,
     cullWorldLayout,
@@ -1552,6 +1608,7 @@ async function createPipelines(
     aoDenoise,
     present,
     presentLdr,
+    chain: () => (chainPipelines ??= makeChainPipelines()),
     fxaa,
     overlay,
     overlayLayout,

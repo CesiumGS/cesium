@@ -4,6 +4,7 @@ import type { FrameGraph, TextureHandle } from "../FrameGraph.ts";
 import type { View } from "../../scene/View.ts";
 import type { ToneMapping } from "../../scene/observer.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
+import type { ViewChain } from "../post/chain.ts";
 
 /** Tone mappings by their index in present.slang's `PresentParams`. */
 export const TONE_MAPPINGS: readonly ToneMapping[] = [
@@ -98,6 +99,12 @@ export interface ViewFrame {
   fxaaGroup: GPUBindGroup | undefined;
   fxaaImage: GPUTextureView | undefined;
   presentDisplay: GPUTextureView | undefined;
+  /** Its post stages' slots and buffers (`View.observer`'s `stages`). */
+  readonly chain: ViewChain;
+  /** `View.stagesRevision` it was built for. */
+  readonly stagesRevision: number;
+  /** The tangent of half its vertical field of view, this tick (`writeLights`). */
+  tanY: number;
   /** The sky's uniform for this view (`View.background` "atmosphere"). */
   readonly sky: SkyView;
   /** The sun's shadow maps were fitted for this view this frame. */
@@ -155,6 +162,7 @@ export function drawsAerialPerspective(view: View): boolean {
 }
 
 export function destroyViewFrame(frame: ViewFrame): void {
+  frame.chain.destroy();
   frame.presentParams.destroy();
   frame.adaptParams.destroy();
   frame.fxaaParams.destroy();

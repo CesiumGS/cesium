@@ -262,3 +262,26 @@ fn fs(@builtin(position) frag_0 : vec4<f32>) -> pixelOutput_0
     return _S22;
 }
 
+struct pixelOutput_1
+{
+    @location(0) output_2 : vec4<f32>,
+};
+
+@fragment
+fn fsCopy(@builtin(position) frag_1 : vec4<f32>) -> pixelOutput_1
+{
+    var _S23 : vec3<i32> = vec3<i32>(vec2<i32>(frag_1.xy - params_0.origin_0), i32(0));
+    var color_2 : vec3<f32> = (textureLoad((image_0), ((_S23)).xy, ((_S23)).z)).xyz;
+    var color_3 : vec3<f32>;
+    if((params_0.decode_0) == u32(1))
+    {
+        color_3 = srgbToLinear_0(color_2);
+    }
+    else
+    {
+        color_3 = color_2;
+    }
+    var _S24 : pixelOutput_1 = pixelOutput_1( vec4<f32>(color_3, 1.0f) );
+    return _S24;
+}
+

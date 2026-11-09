@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Observer Checks</title>
+  </head>
+  <body>
+    <!-- The sky and observer plan's check page: open with ?bench and call
+         runObserver(); ?group=stages runs one group. -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./observer.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runObserver");
+    </script>
+  </body>
+</html>

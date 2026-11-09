@@ -226,12 +226,28 @@ export const PASSES: Record<string, PassNote> = {
       "The image's log luminance at a sixteenth of its size by 16 levels, blurred, for the present pass.",
     skipped: "When the view's exposure isn't the \"eye\" kind.",
   },
+  "present.response": {
+    group: "To the screen",
+    kind: "render",
+    summary: "Scene light to exposed light, for the stages between them.",
+    detail:
+      "The first half of the present pass's shader, the camera's exposure or the eye's model, into a target of its own. Post stages in the `exposed` slot read it.",
+    skipped: "Unless an `exposed` post stage is on.",
+  },
   present: {
     group: "To the screen",
     kind: "render",
     summary: "Tone mapping to the target, with optional FXAA.",
     detail:
-      "Combines lit and unlit color, tone maps and encodes. With FXAA on, it tone maps into the ldr target first, and FXAA reads that into the view's rectangle.",
+      "Combines lit and unlit color, tone maps and encodes. With FXAA or a `display` post stage on, it tone maps into the ldr target first. With an `exposed` post stage on, only the second half of its shader runs.",
+  },
+  "present.final": {
+    group: "To the screen",
+    kind: "render",
+    summary: "What `display` post stages left, into the view's rectangle.",
+    detail:
+      "FXAA reads their image here if it's on. Otherwise a plain copy does. Overlays draw on top.",
+    skipped: "Unless a `display` post stage is on.",
   },
 };
 

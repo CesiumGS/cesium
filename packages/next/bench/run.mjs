@@ -71,6 +71,11 @@ const suites = {
   ibl: ["/spikes/ibl.html?bench", "runIbl"],
   // The real-time atmosphere vs the reference (plan §4.2).
   sky: ["/spikes/sky.html?bench", "runSky"],
+  // The observer's chain: stages, and later the sky and glare (sky and observer plan).
+  observer: [
+    `/spikes/observer.html?bench${process.env.GROUP ? `&group=${process.env.GROUP}` : ""}`,
+    "runObserver",
+  ],
   indirect: ["/spikes/indirect.html?bench", "runIndirect"],
   parity: ["/parity/?bench", "runParity"],
   models: [

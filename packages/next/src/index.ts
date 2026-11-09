@@ -101,6 +101,21 @@ export {
   scaleToEv100,
 } from "./scene/observer.ts";
 export {
+  PostStage,
+  PostStageError,
+  createPostStage,
+  type PostStageOptions,
+  type StageKind,
+  type StageRead,
+  type StageSlot,
+} from "./scene/postStage.ts";
+export {
+  POST_STAGE_BOUNDARY,
+  type Boundary,
+  type FunctionSignature,
+} from "./shaders/link/boundary.ts";
+export { wgslUnit, type ShaderUnit } from "./shaders/link/unit.ts";
+export {
   CanvasTarget,
   OffscreenTarget,
   type RenderTarget,

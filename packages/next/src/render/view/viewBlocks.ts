@@ -162,6 +162,7 @@ function writeLights(
   const frame = engine.raster.viewFrames.get(view)!;
   const camera = engine.bodyCamera(view);
   const tanY = Math.tan(camera.fovy(aspect) / 2);
+  frame.tanY = tanY;
   const count = packViewLights(
     engine.raster.lightData,
     0,

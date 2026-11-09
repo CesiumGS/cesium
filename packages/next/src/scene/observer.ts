@@ -3,6 +3,7 @@
 // output passes); nothing here reaches a scene or sky shader except the
 // pre-exposure, a matter of fp16's range, and the stars' point spread, which
 // keeps each star's energy (CESIUM2_WEBGPU_PLAN.md §13.32).
+import type { PostStage } from "./postStage.ts";
 
 /**
  * How a view turns the scene's light into an image (plan §4.2): as a
@@ -102,11 +103,6 @@ export interface GlareSettings {
   spikes: { aperture: Aperture; share: number; extent: number } | null;
 }
 
-/** A step of the chain from light to pixels (`ObserverSettings.stages`). */
-export interface PostStage {
-  readonly name: string;
-}
-
 /**
  * Who is looking: everything between the scene's light and a pixel, per
  * view. `eyeObserver` and `cameraObserver` give the two usual sets.
@@ -120,7 +116,10 @@ export interface ObserverSettings {
   pointSpread: PointSpread;
   /** Glare; null for none. */
   glare: GlareSettings | null;
-  /** Further steps of the chain, in order within each slot. */
+  /**
+   * Further steps of the chain, in order within each slot (`createPostStage`).
+   * A new list rebuilds the view's graph; `PostStage.enabled` doesn't.
+   */
   stages: readonly PostStage[];
 }
 

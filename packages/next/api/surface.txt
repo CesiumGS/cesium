@@ -10,6 +10,7 @@ entry	name	kind	tier
 .	BASE_CAPACITY_LIMITS	const	-
 .	BingImagery	class	-
 .	Body	interface	-
+.	Boundary	interface	-
 .	BudgetedOptions	interface	-
 .	BudgetedSelection	class	-
 .	CESIUM_MOON_TERRAIN	const	-
@@ -60,6 +61,7 @@ entry	name	kind	tier
 .	FrameResolver	interface	-
 .	FrameStats	interface	-
 .	FrameUnavailableError	class	-
+.	FunctionSignature	interface	-
 .	GlareSettings	interface	-
 .	GlareTier	type	-
 .	Globe	class	-
@@ -114,6 +116,7 @@ entry	name	kind	tier
 .	OutputEncoding	type	-
 .	PLACEMENT_MONOMIALS	const	-
 .	PLACEMENT_TERMS	const	-
+.	POST_STAGE_BOUNDARY	const	-
 .	PickCamera	interface	-
 .	PickInterpreter	interface	-
 .	PickResult	interface	-
@@ -127,6 +130,9 @@ entry	name	kind	tier
 .	PointSource	class	-
 .	PointSourceOptions	interface	-
 .	PointSpread	interface	-
+.	PostStage	class	-
+.	PostStageError	class	-
+.	PostStageOptions	interface	-
 .	PurposeStats	interface	-
 .	QueryAnswer	interface	-
 .	QueryHost	interface	-
@@ -149,12 +155,16 @@ entry	name	kind	tier
 .	SelectionView	interface	-
 .	ShaderControl	interface	-
 .	ShaderOverrides	interface	-
+.	ShaderUnit	interface	-
 .	SkyOptions	interface	-
 .	SlangCache	interface	-
 .	SlicePool	class	-
 .	SliceUser	interface	-
 .	SpatialQueries	interface	-
 .	Stage	type	-
+.	StageKind	type	-
+.	StageRead	type	-
+.	StageSlot	type	-
 .	StageStats	interface	-
 .	StandingQuery	interface	-
 .	StepwiseSelection	class	-
@@ -221,6 +231,7 @@ entry	name	kind	tier
 .	compileVectorStyle	function	-
 .	createBillboard	function	-
 .	createBox	function	-
+.	createPostStage	function	-
 .	createSpatialQueries	function	-
 .	createSurfacePatch	function	-
 .	defaultRig	function	-
@@ -281,6 +292,7 @@ entry	name	kind	tier
 .	vec3.set	function	-
 .	vec3.sub	function	-
 .	vec3.vec3	function	-
+.	wgslUnit	function	-
 frames	AreaOfInterest	interface	-
 frames	AttachSkyOptions	interface	-
 frames	CatalogFrameName	type	-
