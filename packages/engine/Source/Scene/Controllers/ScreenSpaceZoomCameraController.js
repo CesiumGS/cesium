@@ -139,8 +139,8 @@ class ScreenSpaceZoomCameraController {
     this.inertialDecay = 6.0;
 
     /**
-     * @private
-     * @type number
+     * The minimum distance from the zoom target used to scale the zoom speed. The camera zooms more slowly as it approaches the target and stops short of it when this is 0.0; a larger value keeps it moving, so it can zoom up to and past the target.
+     * @type {number}
      * @default 0.0
      */
     this.minimumZoomDistance = 0.0;
