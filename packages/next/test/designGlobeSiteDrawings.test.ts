@@ -2,7 +2,7 @@
 // Task 20): the solid item at the morph's parameter, the ghost at the other
 // end, the ground's opacity following.
 import { DUAL_POSITION_EXTENSION } from "../examples/design-globe/dualPosition.ts";
-import { DUAL_POSITION_EXTENSION as ENGINE_DUAL_POSITION_EXTENSION } from "../src/streaming/Tileset3D.ts";
+import { DUAL_POSITION_EXTENSION as ENGINE_DUAL_POSITION_EXTENSION } from "../src/streaming/dualPosition.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
