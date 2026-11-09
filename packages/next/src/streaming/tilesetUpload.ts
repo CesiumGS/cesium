@@ -45,22 +45,24 @@ const PIPELINE_WINDOW = 256;
  * frame while content is still waiting, and relaxes back below budget.
  */
 export function upload(tileset: Tileset3D): void {
-  const limit = tileset.cacheBytes + tileset.overflowBytes;
+  const limit = tileset.state.cacheBytes + tileset.state.overflowBytes;
   let exceeded = false;
   const budget = tileset.engine.scene.uploadBudget;
   // After a capacity failure that eviction couldn't relieve, wait before
   // retrying: each attempt creates (and rolls back) its textures.
-  if (tileset.capacityWait > 0) {
-    tileset.capacityWait--;
-    exceeded = tileset.ready.length > 0;
+  if (tileset.state.capacityWait > 0) {
+    tileset.state.capacityWait--;
+    exceeded = tileset.state.ready.length > 0;
   }
   for (
     let n = 0;
-    n < tileset.uploadsPerFrame && tileset.ready.length > 0 && !exceeded;
+    n < tileset.state.uploadsPerFrame &&
+    tileset.state.ready.length > 0 &&
+    !exceeded;
     n++
   ) {
     // Casters don't hold back what views need: they leave first.
-    if (tileset.stats.bytes - tileset.casterResident > limit) {
+    if (tileset.stats.bytes - tileset.state.casterResident > limit) {
       exceeded = true;
       break;
     }
@@ -69,16 +71,16 @@ export function upload(tileset: Tileset3D): void {
       break;
     }
     // Views' content first, in any tileset: the engine's budget is shared.
-    const next = tileset.ready.findIndex((r) => !isCaster(r.tile));
+    const next = tileset.state.ready.findIndex((r) => !isCaster(r.tile));
     if (
       next < 0 &&
       tileset.engine.tilesets.some((t) =>
-        t.ready.some((r) => !isCaster(r.tile)),
+        t.state.ready.some((r) => !isCaster(r.tile)),
       )
     ) {
       break;
     }
-    const { tile, asset, arrivedAt } = tileset.ready.splice(
+    const { tile, asset, arrivedAt } = tileset.state.ready.splice(
       Math.max(next, 0),
       1,
     )[0]!;
@@ -89,9 +91,9 @@ export function upload(tileset: Tileset3D): void {
     const pressure = caster ? tileset.world.pressure().fraction : 0;
     if (
       caster &&
-      (!tileset.casterLoad ||
+      (!tileset.state.casterLoad ||
         pressure > CASTER_PRESSURE ||
-        tile.touchedFrame < tileset.frame)
+        tile.touchedFrame < tileset.state.frame)
     ) {
       dropCaster(tileset, tile, asset);
       n--;
@@ -102,30 +104,31 @@ export function upload(tileset: Tileset3D): void {
     const summary = summarizeContent(asset);
     const uploadStart = performance.now();
     try {
-      const placing = tileset.source?.modelOptions(tile);
+      const placing = tileset.state.source?.modelOptions(tile);
       // The source kept until the placement succeeds: a capacity failure
       // anywhere leaves the asset whole for the retry.
       const model = tileset.engine.uploadModel(tileset.world, asset, {
-        axes: placing?.axes ?? tileset.contentAxes,
+        axes: placing?.axes ?? tileset.state.contentAxes,
         releaseSourceData: false,
       });
       let placement: ModelPlacement | undefined;
       try {
         const shader =
-          tileset.options.customShader ?? tileset.options.style?.shader;
+          tileset.state.options.customShader ??
+          tileset.state.options.style?.shader;
         placement = placeModel(model, {
           modelMatrix: placing?.modelMatrix ?? tile.transform,
           ...(placing?.underlay ? { underlay: true } : {}),
-          parent: tileset.transform,
+          parent: tileset.state.transform,
           viewMask: 0,
-          collision: tileset.collision,
+          collision: tileset.state.collision,
           ...(shader ? { shader } : {}),
         });
-        for (const item of tileset.itemList) {
+        for (const item of tileset.state.itemList) {
           item.place(tile, placement);
         }
       } catch (error) {
-        for (const item of tileset.itemList) {
+        for (const item of tileset.state.itemList) {
           item.unplace(tile);
         }
         placement?.remove();
@@ -138,19 +141,19 @@ export function upload(tileset: Tileset3D): void {
       tile.placement = placement;
       applySurface(tileset, tile);
       for (const draw of placement.draws) {
-        tileset.drawTiles.set(draw.index, {
+        tileset.state.drawTiles.set(draw.index, {
           generation: draw.generation,
           tile,
         });
       }
-      if (tileset.terrainRegions) {
+      if (tileset.state.terrainRegions) {
         applyTerrainClip(tileset, tile);
       }
       tile.bytes =
         model.bytes +
         TILE_OVERHEAD_BYTES +
         placement.draws.length * DRAW_OVERHEAD_BYTES;
-      for (const item of tileset.itemList) {
+      for (const item of tileset.state.itemList) {
         tile.bytes += item.bytes(tile);
       }
       if (tileset.retainGeometry) {
@@ -176,14 +179,14 @@ export function upload(tileset: Tileset3D): void {
             ? pressure
             : Infinity;
       } else {
-        tileset.viewCapacityWait = false;
+        tileset.state.viewCapacityWait = false;
       }
       budget.bytes -= model.bytes;
       budget.uploads++;
       const uploaded = performance.now();
       const network = asset.timing?.networkMs ?? 0;
       const decode = asset.timing?.decodeMs ?? 0;
-      tileset.recent.push({
+      tileset.state.recent.push({
         queued: tile.fetchStartAt - tile.wantedAt,
         network,
         worker: Math.max(0, arrivedAt - tile.fetchStartAt - network - decode),
@@ -191,10 +194,10 @@ export function upload(tileset: Tileset3D): void {
         uploadWait: uploadStart - arrivedAt,
         upload: uploaded - uploadStart,
       });
-      if (tileset.recent.length > PIPELINE_WINDOW) {
-        tileset.recent.shift();
+      if (tileset.state.recent.length > PIPELINE_WINDOW) {
+        tileset.state.recent.shift();
       }
-      const totals = tileset.recent
+      const totals = tileset.state.recent
         .slice(-32)
         .map(
           (r) =>
@@ -206,15 +209,15 @@ export function upload(tileset: Tileset3D): void {
             r.upload,
         )
         .sort((a, b) => a - b);
-      tileset.loadEstimateMs = totals[totals.length >> 1]!;
+      tileset.state.loadEstimateMs = totals[totals.length >> 1]!;
       tile.summary = summary;
       accumulate(tileset.resident, summary, 1);
       tileset.firstContentAt ??= uploaded;
       tile.copyright = asset.copyright;
       tile.appliedMask = 0;
       tile.state = "ready";
-      tileset.loaded.add(tile);
-      tileset.order.add(tile);
+      tileset.state.loaded.add(tile);
+      tileset.state.order.add(tile);
       tileset.markCastsOnly(tile, tile.purpose === "caster");
       for (let t = tile.parent; t; t = t.parent) {
         t.residentBelow++;
@@ -234,15 +237,15 @@ export function upload(tileset: Tileset3D): void {
         // A pool is full, not the content bad (§13.15): the upload took
         // nothing, so the tile waits at the front of the queue while
         // eviction frees room and the error threshold rises, as for bytes.
-        tileset.ready.unshift({ tile, asset, arrivedAt });
-        tileset.viewCapacityWait = true;
-        tileset.capacityFull = error.pool;
-        tileset.capacityFailed = true;
+        tileset.state.ready.unshift({ tile, asset, arrivedAt });
+        tileset.state.viewCapacityWait = true;
+        tileset.state.capacityFull = error.pool;
+        tileset.state.capacityFailed = true;
         exceeded = true;
         break;
       }
       tile.state = "failed";
-      tileset.viewCapacityWait &&= caster;
+      tileset.state.viewCapacityWait &&= caster;
       tileset.undrawnTile(
         `upload failed: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -257,8 +260,11 @@ export function upload(tileset: Tileset3D): void {
       );
     }
   }
-  const selection = tileset.policy;
-  if (tileset.stats.bytes - tileset.casterResident < tileset.cacheBytes) {
+  const selection = tileset.state.policy;
+  if (
+    tileset.stats.bytes - tileset.state.casterResident <
+    tileset.state.cacheBytes
+  ) {
     selection.memoryAdjustedScreenSpaceError = Math.max(
       selection.memoryAdjustedScreenSpaceError / 1.02,
       selection.maximumScreenSpaceError,
@@ -333,22 +339,22 @@ function retain(
  * neither. A globe's surface is no item and keeps its own.
  */
 export function applySurface(tileset: Tileset3D, tile: Tile): void {
-  if (tileset.source) {
+  if (tileset.state.source) {
     return;
   }
   let chosen: SceneItem | undefined;
   let best = 0;
-  for (const item of tileset.itemList) {
+  for (const item of tileset.state.itemList) {
     const rank = item.surfaceRank(tile);
     if (rank > best) {
       chosen = item;
       best = rank;
     }
   }
-  for (const item of tileset.itemList) {
-    item.setSurface(tile, item === chosen, tileset.collision);
+  for (const item of tileset.state.itemList) {
+    item.setSurface(tile, item === chosen, tileset.state.collision);
   }
-  if (tileset.baseItem === undefined) {
+  if (tileset.state.baseItem === undefined) {
     for (const draw of tile.placement?.draws ?? []) {
       tileset.world.setGround(draw, false);
       tileset.world.setCollision(draw, false);
@@ -362,7 +368,7 @@ export function applySurface(tileset: Tileset3D, tile: Tile): void {
  * twin where a region of opacity above 0 and below 1 reaches the tile.
  */
 export function applyTerrainClip(tileset: Tileset3D, tile: Tile): void {
-  const clips = tileset.source?.clips;
+  const clips = tileset.state.source?.clips;
   if (!clips || !tile.placement || !tile.globe) {
     return;
   }
@@ -374,14 +380,14 @@ export function applyTerrainClip(tileset: Tileset3D, tile: Tile): void {
     if (current === undefined) {
       continue;
     }
-    const own = tileset.ownMaterials.get(current) ?? current;
+    const own = tileset.state.ownMaterials.get(current) ?? current;
     let wanted = own;
     if (blended) {
-      let twin = tileset.blendedTwins.get(own);
+      let twin = tileset.state.blendedTwins.get(own);
       if (twin === undefined) {
         twin = tileset.world.materialWithFlags(own, MaterialFlags.alphaBlend);
-        tileset.blendedTwins.set(own, twin);
-        tileset.ownMaterials.set(twin, own);
+        tileset.state.blendedTwins.set(own, twin);
+        tileset.state.ownMaterials.set(twin, own);
       }
       wanted = twin;
     }

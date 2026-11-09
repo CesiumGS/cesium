@@ -117,14 +117,6 @@ const roof = (i = 0) =>
 const group = (children: Json[]) =>
   box(0, 0, 0, [5000, 5000, 5000], 1000, undefined, children);
 
-interface Internals {
-  frame: number;
-  cacheBytes: number;
-  coldAgeMs: number;
-  ready: unknown[];
-  inFlight: number;
-}
-
 interface SceneOptions {
   root: Json;
   bytes: (name: string) => number;
@@ -310,7 +302,7 @@ describe("casters on the on-demand loop", () => {
       view: views[0]!,
       look,
       stats,
-      internals: tileset as unknown as Internals,
+      internals: tileset.state,
       tiles: tileset.root.children as Tile[],
       /** Requests that views made: the reloads, against casters off. */
       viewRequests: () =>

@@ -152,7 +152,7 @@ describe("the acceleration-structure hook", () => {
     const r = recorder();
     world.acceleration = r.hook;
     const tileset = await Tileset3D.load(engine, world, URL_, {});
-    const loaded = (tileset as unknown as { loaded: Set<Tile> }).loaded;
+    const loaded = tileset.state.loaded;
     for (let tick = 0; tick < 30 && loaded.size < CHILDREN; tick++) {
       tileset.update([view()]);
       await new Promise((resolve) => setTimeout(resolve, 1));

@@ -106,15 +106,15 @@ function isIdentity(m: Mat4): boolean {
 }
 
 export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
-  tileset.casterWake = false;
-  if (tileset.destroyed) {
+  tileset.state.casterWake = false;
+  if (tileset.state.destroyed) {
     return;
   }
-  if (tileset.frozen) {
+  if (tileset.state.frozen) {
     updateDebug(tileset);
     return;
   }
-  const frame = ++tileset.frame;
+  const frame = ++tileset.state.frame;
   tileset.updateVolumePad();
   // Hidden, or no item draws it in a view: that view selects nothing (drawn
   // tiles leave it), and it asks for no ticks of its own.
@@ -122,7 +122,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   // item shows would otherwise fetch tiles that are never drawn, and its
   // bytes could evict tiles the shown views need.
   let wanted = 0;
-  for (const item of tileset.itemList) {
+  for (const item of tileset.state.itemList) {
     wanted |= item.views;
   }
   const views = tileset.show
@@ -131,7 +131,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   if (allViews.length === 0) {
     // No view yet (e.g. its world isn't shown yet): stay active, so the
     // first selection runs as soon as a view appears.
-    tileset.lastChange = frame;
+    tileset.state.lastChange = frame;
   }
   const before =
     tileset.stats.requestsTotal +
@@ -141,30 +141,31 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   const requests = new Map<Tile, number>();
   const purposes = new Map<Tile, RequestPurpose>();
   const nowMasked = new Set<Tile>();
-  for (const tile of tileset.masked) {
+  for (const tile of tileset.state.masked) {
     tile.viewMask = 0;
   }
   const nowPlaceholders = new Set<Tile>();
-  for (const tile of tileset.placeholders) {
+  for (const tile of tileset.state.placeholders) {
     tile.placeholderMask = 0;
     tile.holes = undefined;
   }
   const nowStandIns = new Set<Tile>();
-  for (const tile of tileset.standIns) {
+  for (const tile of tileset.state.standIns) {
     tile.standInMask = 0;
   }
   const nowCasters = new Set<Tile>();
-  for (const tile of tileset.casters) {
+  for (const tile of tileset.state.casters) {
     tile.casterMask = 0;
   }
-  tileset.policy.imageryReady =
+  tileset.state.policy.imageryReady =
     tileset.imagery || tileset.imageryPending
       ? tileset.imageryReady
       : undefined;
-  tileset.policy.imageryRefines = tileset.imagery
+  tileset.state.policy.imageryRefines = tileset.imagery
     ? tileset.imageryRefines
     : undefined;
-  tileset.policy.expectedLoadSeconds = tileset.loadEstimateMs / 1000;
+  tileset.state.policy.expectedLoadSeconds =
+    tileset.state.loadEstimateMs / 1000;
   const now = performance.now();
   let viewBytes = 0;
   // What a view uses this tick stays, and is the view's: counted once.
@@ -173,7 +174,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
       viewBytes += tile.bytes;
       tile.viewedAt = now;
     }
-    tileset.order.touch(tile, frame);
+    tileset.state.order.touch(tile, frame);
   };
   // A view drawing or asking for a tile after longer than the age: cold
   // tiles do come back.
@@ -182,9 +183,9 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
     if (
       tile.touchedFrame < frame - 1 &&
       tile.viewedAt > 0 &&
-      away > tileset.coldAgeMs
+      away > tileset.state.coldAgeMs
     ) {
-      tileset.coldAgeMs = Math.min(COLD_AGE_MAX_MS, 2 * away);
+      tileset.state.coldAgeMs = Math.min(COLD_AGE_MAX_MS, 2 * away);
     }
   };
   const addRequest = (
@@ -201,7 +202,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   };
   const waiting = new Set<Tile>();
   for (const view of views) {
-    const result = tileset.policy.select(
+    const result = tileset.state.policy.select(
       tileset.root,
       tileset.geometricError,
       view,
@@ -239,7 +240,11 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
       // a policy may supply its own priority.
       const priority =
         result.priority?.get(tile) ?? tile.viewState(view.id).distance;
-      addRequest(tile, priority, tileset.policy.purpose?.(priority) ?? "view");
+      addRequest(
+        tile,
+        priority,
+        tileset.state.policy.purpose?.(priority) ?? "view",
+      );
     }
     tileset.lastSelected.set(view.id, result.selected);
     tileset.stats.selected.set(view.id, result.selected.length);
@@ -252,12 +257,12 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
       tileset.stats.selected.delete(id);
     }
   }
-  tileset.viewBytes = viewBytes;
+  tileset.state.viewBytes = viewBytes;
   // Shadow casters, now that the bytes views use are known: only for the
   // views some item can cast in. Elsewhere a caster would be fetched and
   // counted, and its records would cast nothing.
   let castingIn = 0;
-  for (const item of tileset.itemList) {
+  for (const item of tileset.state.itemList) {
     castingIn |= item.castViews;
   }
   const casterViews = views.filter(
@@ -266,7 +271,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   const room = casterRoom(tileset, casterViews, frame, now);
   if (room) {
     for (const view of casterViews) {
-      const found = tileset.policy.selectCasters!(
+      const found = tileset.state.policy.selectCasters!(
         tileset.root,
         tileset.geometricError,
         view,
@@ -280,7 +285,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
       }
       for (const [tile, priority] of found.wanted) {
         // Kept from cancelling while it loads, as a view's tile is.
-        tileset.order.touch(tile, frame);
+        tileset.state.order.touch(tile, frame);
         if (tile.state === "unloaded") {
           addRequest(tile, priority, "caster");
         }
@@ -288,7 +293,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
     }
   }
   // View masks: only tiles whose mask changed touch their draw records.
-  for (const tile of new Set([...tileset.masked, ...nowMasked])) {
+  for (const tile of new Set([...tileset.state.masked, ...nowMasked])) {
     applyDebugColor(tileset, tile);
     if (tile.placement && tile.appliedMask !== tile.viewMask) {
       if (tile.viewMask !== 0 && tile.purpose) {
@@ -296,15 +301,15 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
         tile.purpose = undefined;
       }
       tile.appliedMask = tile.viewMask;
-      for (const item of tileset.itemList) {
+      for (const item of tileset.state.itemList) {
         item.applyViewMask(tile);
       }
     }
   }
-  tileset.masked = nowMasked;
+  tileset.state.masked = nowMasked;
   // Off-screen casters: as for view masks, and the tint's callback sees
   // them too (it may hide a tile, and a hidden draw doesn't cast).
-  for (const tile of new Set([...tileset.casters, ...nowCasters])) {
+  for (const tile of new Set([...tileset.state.casters, ...nowCasters])) {
     applyDebugColor(tileset, tile);
     if (tile.placement && tile.appliedCasterMask !== tile.casterMask) {
       if (tile.casterMask !== 0 && tile.purpose === "caster") {
@@ -312,12 +317,12 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
         tile.purpose = undefined;
       }
       tile.appliedCasterMask = tile.casterMask;
-      for (const item of tileset.itemList) {
+      for (const item of tileset.state.itemList) {
         item.applyCasterMask(tile);
       }
     }
   }
-  tileset.casters = nowCasters;
+  tileset.state.casters = nowCasters;
   tileset.stats.casters = nowCasters.size;
   tileset.stats.casterScale = room?.scale ?? 1;
   if (
@@ -329,7 +334,10 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   }
   // Mixed-LOD placeholders: clipped to their holes (unioned over views)
   // in the views where finer content draws beside them.
-  for (const tile of new Set([...tileset.placeholders, ...nowPlaceholders])) {
+  for (const tile of new Set([
+    ...tileset.state.placeholders,
+    ...nowPlaceholders,
+  ])) {
     if (
       tile.placement &&
       (tile.appliedPlaceholderMask !== tile.placeholderMask ||
@@ -344,32 +352,32 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
           [...tile.holes].map((hole) => clipBox(hole, tile.geometricError)),
         );
       }
-      for (const item of tileset.itemList) {
+      for (const item of tileset.state.itemList) {
         item.applyPlaceholder(tile);
       }
       tile.appliedPlaceholderMask = tile.placeholderMask;
       tile.appliedHoles = tile.holes;
     }
   }
-  tileset.placeholders = nowPlaceholders;
-  tileset.standIns = nowStandIns;
+  tileset.state.placeholders = nowPlaceholders;
+  tileset.state.standIns = nowStandIns;
   updateDebug(tileset);
   tileset.stats.placeholders = nowPlaceholders.size;
 
   // Queue time: since a still-unloaded tile was first wanted.
   for (const tile of requests.keys()) {
-    if (tile.state === "unloaded" && !tileset.wanted.has(tile)) {
-      tileset.wanted.set(tile, now);
+    if (tile.state === "unloaded" && !tileset.state.wanted.has(tile)) {
+      tileset.state.wanted.set(tile, now);
     }
   }
-  for (const tile of tileset.wanted.keys()) {
+  for (const tile of tileset.state.wanted.keys()) {
     if (!requests.has(tile)) {
-      tileset.wanted.delete(tile);
+      tileset.state.wanted.delete(tile);
     }
   }
   // Cancel requests no view has touched for a while (1.x cancels those
   // not touched this frame; a short grace absorbs jitter).
-  for (const [tile, controller] of tileset.loading) {
+  for (const [tile, controller] of tileset.state.loading) {
     if (
       !controller.signal.aborted &&
       tile.touchedFrame < frame - CANCEL_AFTER_FRAMES
@@ -379,8 +387,11 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   }
   serveQueries(tileset, frame, requests, purposes);
   request(tileset, requests, purposes);
-  tileset.engine.requests.backlog(tileset.origin, tileset.ready.length);
-  const window = tileset.engine.requests.stats(tileset.origin);
+  tileset.engine.requests.backlog(
+    tileset.state.origin,
+    tileset.state.ready.length,
+  );
+  const window = tileset.engine.requests.stats(tileset.state.origin);
   if (window) {
     tileset.stats.maxInFlight = window.window;
     tileset.stats.adaptive = window.adaptive;
@@ -409,7 +420,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
     // imagery needs only their rectangle, so it loads alongside the
     // terrain as in 1.x. After it arrived, the first view's imagery came
     // 0.4 s after its terrain (Rainier, r38).
-    for (const tile of tileset.loading.keys()) {
+    for (const tile of tileset.state.loading.keys()) {
       if (
         tile.globe &&
         !wanted.has(tile) &&
@@ -435,7 +446,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
       tileset.world.version !==
     before
   ) {
-    tileset.lastChange = frame;
+    tileset.state.lastChange = frame;
   }
   if (
     tileset.settledAt === undefined &&
@@ -444,34 +455,39 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
   ) {
     tileset.settledAt = performance.now();
   }
-  tileset.stats.casterBytes = tileset.casterResident;
+  tileset.stats.casterBytes = tileset.state.casterResident;
   tileset.stats.coldBytes = Math.max(
     0,
-    tileset.stats.bytes - tileset.viewBytes - tileset.casterResident,
+    tileset.stats.bytes -
+      tileset.state.viewBytes -
+      tileset.state.casterResident,
   );
-  tileset.stats.loading = tileset.inFlight + tileset.ready.length;
-  tileset.stats.inFlight = tileset.inFlight;
-  tileset.stats.uploadQueue = tileset.ready.length;
-  tileset.revisionSeen = tileset.world.contentRevision;
+  tileset.stats.loading = tileset.state.inFlight + tileset.state.ready.length;
+  tileset.stats.inFlight = tileset.state.inFlight;
+  tileset.stats.uploadQueue = tileset.state.ready.length;
+  tileset.state.revisionSeen = tileset.world.contentRevision;
 }
 
 /** Builds waiting external tilesets' trees within the frame's budget. */
 function buildExternals(tileset: Tileset3D): void {
   const budget = tileset.engine.scene.uploadBudget;
-  while (tileset.externals.length > 0) {
+  while (tileset.state.externals.length > 0) {
     if (budget.trees > 0 && budget.ms <= 0) {
       break;
     }
     // What views wait for first, as for uploads.
-    const next = tileset.externals.findIndex((e) => !isCaster(e.tile));
-    const { tile, json } = tileset.externals.splice(Math.max(next, 0), 1)[0]!;
+    const next = tileset.state.externals.findIndex((e) => !isCaster(e.tile));
+    const { tile, json } = tileset.state.externals.splice(
+      Math.max(next, 0),
+      1,
+    )[0]!;
     tile.purpose = undefined; // structure, never drawn itself
     const start = performance.now();
     try {
       const { root } = treeFromJson(json, tile.contentUrl!, tile, tileset);
       // Built in the load-time frame: move it to the current one.
-      if (!isIdentity(tileset.delta)) {
-        tileset.moveVolumes(root, tileset.delta);
+      if (!isIdentity(tileset.state.delta)) {
+        tileset.moveVolumes(root, tileset.state.delta);
       }
       tile.children.push(root);
       tile.state = "ready";

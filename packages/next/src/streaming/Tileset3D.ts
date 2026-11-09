@@ -13,10 +13,8 @@ import type {
   AnchorHandle,
   CastRay,
   DrawHandle,
-  TransformHandle,
 } from "../scene/world/types.ts";
 import type { ModelResourceOptions } from "../scene/gltfModel.ts";
-import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import type { TerrainRayTarget } from "../globe/terrainRay.ts";
@@ -48,14 +46,12 @@ import {
 } from "../scene/SceneItem.ts";
 import type { Attribution } from "../io/ion.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
-import { TouchOrder } from "./TouchOrder.ts";
 import {
   emptyTotals,
   stageStats,
   type ContentTotals,
   type Stage,
   type StageStats,
-  type StageTimes,
 } from "./pipeline.ts";
 import type {
   PurposeStats,
@@ -67,15 +63,11 @@ import type {
 import { readDualPosition, type DualDeclaration } from "./dualPosition.ts";
 import { applyDebugColor, updateDebug } from "./tilesetDebug.ts";
 import { evict, evictForCapacity, unload } from "./tilesetEviction.ts";
-import {
-  COLD_AGE_MS,
-  isCaster,
-  closeImages,
-  markCastsOnly,
-} from "./tilesetCasters.ts";
+import { isCaster, closeImages, markCastsOnly } from "./tilesetCasters.ts";
 import { applySurface, applyTerrainClip } from "./tilesetUpload.ts";
 import { undrawnTile } from "./tilesetLoad.ts";
 import { countTiles, update } from "./tilesetUpdate.ts";
+import { TilesetState } from "./tilesetState.ts";
 const DEGREES_TO_RADIANS = Math.PI / 180;
 /**
  * A 3D Tiles 1.0 tileset's `asset.gltfUpAxis` as its content's axes, read
@@ -88,7 +80,7 @@ function contentAxes(json: TileJson | undefined): ModelResourceOptions["axes"] {
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
 /** `Tileset3D.rootJson` of a tileset.json without a root (and of terrain). */
-const NO_ROOT_JSON: Tileset3D["rootJson"] = Object.freeze({});
+const NO_ROOT_JSON: TilesetState["rootJson"] = Object.freeze({});
 
 const NO_ITEMS: readonly SceneItem[] = Object.freeze([]);
 
@@ -102,6 +94,19 @@ function emptyPurposes(): Record<RequestPurpose, PurposeStats> {
 }
 
 export class Tileset3D implements TileTree {
+  /** @internal What the streaming functions share (`tilesetUpdate.ts` and its neighbours). */
+  readonly state: TilesetState = new TilesetState();
+  /** @internal How far items can move a vertex (`TileTree.volumePad`). */
+  volumePad = 0;
+  /** @internal An item moves vertices (`TileTree.movesVertices`). */
+  movesVertices = false;
+  /** @internal */
+  readonly imageryReady = (tile: Tile) =>
+    !this.imageryPending && (this.imagery?.hasImagery(tile) ?? true);
+  /** @internal */
+  readonly imageryRefines = (tile: Tile) =>
+    this.imagery?.refines(tile) ?? false;
+
   readonly warnings = new Set<string>();
   /**
    * Why tiles draw nothing (`TilesetStats.undrawn`): each reason with tile
@@ -119,16 +124,6 @@ export class Tileset3D implements TileTree {
    * proj entry's `tilesetGeoreference(tileset)` does.
    */
   readonly extensions: Readonly<Record<string, unknown>>;
-  /**
-   * @internal The root tile's `boundingVolume` and `transform` as
-   * tileset.json writes them (the parsed JSON itself; neither for terrain),
-   * for the proj entry's `tilesetGeoreference`, which derives an area of
-   * interest from them.
-   */
-  readonly rootJson: {
-    readonly boundingVolume?: unknown;
-    readonly transform?: unknown;
-  };
   /**
    * Where the tileset's design coordinates are drawn, and the way back
    * (`DesignPlacement`): set by the proj entry's `georeferenceTileset` from
@@ -153,10 +148,10 @@ export class Tileset3D implements TileTree {
    * never handed out.
    */
   get selection(): TileSelection {
-    if (this.watchedPolicy?.policy !== this.policy) {
+    if (this.watchedPolicy?.policy !== this.state.policy) {
       this.watchedPolicy = {
-        policy: this.policy,
-        proxy: new Proxy(this.policy, {
+        policy: this.state.policy,
+        proxy: new Proxy(this.state.policy, {
           set: (target, key, value) => {
             (target as unknown as Record<PropertyKey, unknown>)[key] = value;
             this.changed();
@@ -167,13 +162,7 @@ export class Tileset3D implements TileTree {
     }
     return this.watchedPolicy.proxy;
   }
-  /** @internal */
-  policy: TileSelection;
   private watchedPolicy?: { policy: TileSelection; proxy: TileSelection };
-  /** @internal */
-  readonly options: TilesetOptions;
-  /** @internal How its content is turned upright (`asset.gltfUpAxis`). */
-  readonly contentAxes: ModelResourceOptions["axes"];
   readonly stats: TilesetStats = {
     tiles: 0,
     loaded: 0,
@@ -204,15 +193,15 @@ export class Tileset3D implements TileTree {
    * hit it (1.x `enableCollision`).
    */
   get enableCollision(): boolean {
-    return this.collision;
+    return this.state.collision;
   }
   set enableCollision(value: boolean) {
-    if (value === this.collision) {
+    if (value === this.state.collision) {
       return;
     }
-    this.collision = value;
+    this.state.collision = value;
     this.changed();
-    if (this.source) {
+    if (this.state.source) {
       const visit = (tile: Tile) => {
         for (const draw of tile.placement?.draws ?? []) {
           this.world.setCollision(draw, value);
@@ -224,12 +213,10 @@ export class Tileset3D implements TileTree {
     }
     this.surfaceChanged();
   }
-  /** @internal */
-  collision = false;
 
   /** @internal The item that stands for the surface may have changed. */
   surfaceChanged(): void {
-    for (const tile of this.loaded) {
+    for (const tile of this.state.loaded) {
       if (tile.placement) {
         applySurface(this, tile);
       }
@@ -243,10 +230,10 @@ export class Tileset3D implements TileTree {
    * geographic and stay, as in 1.x). 3D Tiles only.
    */
   get modelMatrix(): Mat4 {
-    return m4.multiply(m4.mat4(), this.delta, this.loadMatrix);
+    return m4.multiply(m4.mat4(), this.state.delta, this.loadMatrix);
   }
   set modelMatrix(matrix: Mat4) {
-    if (this.source) {
+    if (this.state.source) {
       throw new Error("modelMatrix applies to 3D Tiles, not terrain");
     }
     const current = this.modelMatrix;
@@ -260,13 +247,13 @@ export class Tileset3D implements TileTree {
     const change = m4.multiply(
       m4.mat4(),
       delta,
-      m4.invertAffine(m4.mat4(), this.delta),
+      m4.invertAffine(m4.mat4(), this.state.delta),
     );
-    this.delta = delta;
+    this.state.delta = delta;
     if (this.world_ !== undefined) {
-      this.world_.setTransform(this.transform, delta);
+      this.world_.setTransform(this.state.transform, delta);
     }
-    for (const tile of this.loaded) {
+    for (const tile of this.state.loaded) {
       for (const g of tile.geometry ?? []) {
         this.world.drawMatrix(g.draw, g.matrix);
       }
@@ -280,7 +267,7 @@ export class Tileset3D implements TileTree {
       );
     }
     if (changed) {
-      this.secondPlacement = undefined;
+      this.state.secondPlacement = undefined;
     }
   }
   /**
@@ -290,10 +277,6 @@ export class Tileset3D implements TileTree {
   readonly attributions: readonly Attribution[];
   /** Load-time `modelMatrix`, built into tile transforms and volumes. */
   private readonly loadMatrix: Mat4;
-  /** @internal `modelMatrix` × loadMatrix⁻¹: the content root transform. */
-  delta: Mat4 = m4.mat4();
-  /** @internal Parent transform of all content: moves it with one write. */
-  transform!: TransformHandle;
   /**
    * The anchor its content hangs under (`TilesetOptions.anchor`; default
    * the Earth's): what its tiles' transforms and volumes are relative to.
@@ -342,16 +325,8 @@ export class Tileset3D implements TileTree {
    * ellipsoid, which are `Globe`s), false for 3D Tiles.
    */
   get isGlobe(): boolean {
-    return this.source !== undefined;
+    return this.state.source !== undefined;
   }
-
-  /**
-   * @internal The terrain material each tile draws with (shared by content), and
-   * its blended twin for tiles under a region that blends, both ways.
-   */
-  readonly blendedTwins = new Map<number, number>();
-  /** @internal */
-  readonly ownMaterials = new Map<number, number>();
 
   /**
    * Whether the globe's terrain is a hole for queries at a longitude and
@@ -361,7 +336,7 @@ export class Tileset3D implements TileTree {
    */
   terrainClipped(longitude: number, latitude: number, height = 0): boolean {
     return (
-      this.source?.clips?.clippedAt(
+      this.state.source?.clips?.clippedAt(
         longitude * DEGREES_TO_RADIANS,
         latitude * DEGREES_TO_RADIANS,
         height,
@@ -374,7 +349,7 @@ export class Tileset3D implements TileTree {
    * now (its loaded tiles').
    */
   ownsDraw(index: number): boolean {
-    return this.drawTiles.has(index);
+    return this.state.drawTiles.has(index);
   }
 
   /**
@@ -387,25 +362,22 @@ export class Tileset3D implements TileTree {
     reach: readonly Rectangle[],
     heights: readonly Rectangle[],
   ): void {
-    this.terrainRegions = (this.source?.clips?.size ?? 0) > 0;
+    this.state.terrainRegions = (this.state.source?.clips?.size ?? 0) > 0;
     if (reach.length > 0) {
-      for (const tile of this.loaded) {
+      for (const tile of this.state.loaded) {
         const r = tile.globe?.rectangle;
         if (r && reach.some((b) => rectanglesOverlap(b, r))) {
           applyTerrainClip(this, tile);
         }
       }
     }
-    for (const listener of this.source?.heightListeners ?? []) {
+    for (const listener of this.state.source?.heightListeners ?? []) {
       for (const r of heights) {
         listener(r);
       }
     }
     this.changed();
   }
-
-  /** @internal The globe has regions: loading tiles test them. */
-  terrainRegions = false;
 
   /**
    * Loads the most detailed content along rays (1.x
@@ -419,22 +391,14 @@ export class Tileset3D implements TileTree {
     rays: readonly CastRay[],
   ): Promise<{ draws: DrawHandle[]; release(): void }> {
     return new Promise((resolve, reject) => {
-      this.queries.push({ rays, resolve, reject, pinned: [] });
+      this.state.queries.push({ rays, resolve, reject, pinned: [] });
       this.changed();
     });
   }
-  /** @internal */
-  readonly queries: Array<{
-    rays: readonly CastRay[];
-    resolve: (result: { draws: DrawHandle[]; release(): void }) => void;
-    reject: (error: Error) => void;
-    pinned: Tile[];
-    done?: boolean;
-  }> = [];
 
   /** Frame counter value of the last change to what the tileset draws. */
   get changedAt(): number {
-    return this.lastChange;
+    return this.state.lastChange;
   }
 
   /** False hides the tileset in every view; it keeps its cache. */
@@ -454,34 +418,30 @@ export class Tileset3D implements TileTree {
    * `debugFreezeFrame`). The GPU still culls the drawn tiles per view.
    */
   get freezeSelection(): boolean {
-    return this.frozen;
+    return this.state.frozen;
   }
   set freezeSelection(value: boolean) {
-    if (value !== this.frozen) {
-      this.frozen = value;
+    if (value !== this.state.frozen) {
+      this.state.frozen = value;
       this.changed(); // select again as soon as it thaws
     }
   }
-  /** @internal */
-  frozen = false;
   /**
    * Tints each drawn tile by its depth in the tree, to see the levels a
    * selection picked (1.x `debugColorizeTiles`). Off restores white.
    */
   get debugColorizeTiles(): boolean {
-    return this.colorize;
+    return this.state.colorize;
   }
   set debugColorizeTiles(value: boolean) {
-    if (value !== this.colorize) {
-      this.colorize = value;
-      for (const tile of this.masked) {
+    if (value !== this.state.colorize) {
+      this.state.colorize = value;
+      for (const tile of this.state.masked) {
         applyDebugColor(this, tile);
       }
       this.changed();
     }
   }
-  /** @internal */
-  colorize = false;
   /**
    * Tints each drawn tile with the color this returns (linear RGBA; none
    * leaves it white), checked every frame, for inspection tools: tiles
@@ -489,51 +449,45 @@ export class Tileset3D implements TileTree {
    * `debugColorizeTiles`.
    */
   get debugTileColor(): ((tile: Tile) => DebugColor | undefined) | undefined {
-    return this.tileColor;
+    return this.state.tileColor;
   }
   set debugTileColor(fn: ((tile: Tile) => DebugColor | undefined) | undefined) {
-    this.tileColor = fn;
+    this.state.tileColor = fn;
     updateDebug(this);
     this.changed();
   }
-  /** @internal */
-  tileColor?: (tile: Tile) => DebugColor | undefined;
   /**
    * Wireframes of the drawn tiles' bounding volumes, colored as 1.x does:
    * white at final resolution, yellow while finer tiles load (drawn as a
    * placeholder), gray without content of its own.
    */
   get debugShowBoundingVolume(): boolean {
-    return this.boundingVolumes !== undefined;
+    return this.state.boundingVolumes !== undefined;
   }
   set debugShowBoundingVolume(value: boolean) {
     if (value !== this.debugShowBoundingVolume) {
-      this.boundingVolumes?.clear();
-      this.boundingVolumes = value
-        ? new DebugVolumes(this.world, this.transform)
+      this.state.boundingVolumes?.clear();
+      this.state.boundingVolumes = value
+        ? new DebugVolumes(this.world, this.state.transform)
         : undefined;
       updateDebug(this);
       this.changed();
     }
   }
-  /** @internal */
-  boundingVolumes?: DebugVolumes;
   /** Wireframes (blue) of the drawn tiles' content volumes, where given. */
   get debugShowContentBoundingVolume(): boolean {
-    return this.contentVolumes !== undefined;
+    return this.state.contentVolumes !== undefined;
   }
   set debugShowContentBoundingVolume(value: boolean) {
     if (value !== this.debugShowContentBoundingVolume) {
-      this.contentVolumes?.clear();
-      this.contentVolumes = value
-        ? new DebugVolumes(this.world, this.transform)
+      this.state.contentVolumes?.clear();
+      this.state.contentVolumes = value
+        ? new DebugVolumes(this.world, this.state.transform)
         : undefined;
       updateDebug(this);
       this.changed();
     }
   }
-  /** @internal */
-  contentVolumes?: DebugVolumes;
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
   /** The globe's night lights (`GlobeOptions.lights`), for the same tiles. */
@@ -543,20 +497,8 @@ export class Tileset3D implements TileTree {
    * meanwhile but none is shown bare.
    */
   imageryPending = false;
-  /** @internal */
-  readonly imageryReady = (tile: Tile) =>
-    !this.imageryPending && (this.imagery?.hasImagery(tile) ?? true);
-  /** @internal */
-  readonly imageryRefines = (tile: Tile) =>
-    this.imagery?.refines(tile) ?? false;
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
-  /** @internal */
-  frame = 0;
-  /** @internal A non-3D-Tiles source, when streaming one (`Globe.create`). */
-  source?: TileSource;
-  /** @internal Last frame in which an update changed anything. */
-  lastChange = 0;
 
   /**
    * @internal What the tileset draws changed: it stays `active` for the next updates,
@@ -564,88 +506,17 @@ export class Tileset3D implements TileTree {
    * wakes for them.
    */
   changed(): void {
-    this.lastChange = this.frame;
+    this.state.lastChange = this.state.frame;
     this.engine.wake();
   }
-  /** @internal */
-  readonly cacheBytes: number;
-  /** @internal The world pool an upload last found full (`CapacityError.pool`). */
-  capacityFull?: string;
-  /** @internal Frames to wait before retrying uploads after a capacity failure. */
-  capacityWait = 0;
-  /** @internal `capacityFull` came from a failed upload, not only from pressure. */
-  capacityFailed = false;
-  /** @internal */
-  readonly overflowBytes: number;
   private readonly fixedWindow?: number;
-  /** @internal The root's origin, and every origin this tileset requested from. */
-  readonly origin: string;
   private readonly origins = new Set<string>();
-  /** @internal */
-  readonly loading = new Map<Tile, AbortController>();
-  /** @internal */
-  readonly uploadsPerFrame: number;
-  /** @internal */
-  readonly headers?: Record<string, string>;
-  /** @internal */
-  readonly loaded = new Set<Tile>();
-  /** @internal The loaded tiles, least recently touched first (what eviction walks). */
-  readonly order = new TouchOrder<Tile>();
-  /** @internal */
-  readonly ready: Array<{
-    tile: Tile;
-    asset: GltfAsset;
-    arrivedAt: number;
-  }> = [];
-  /** @internal Unloaded tiles wanted by some view, since when (queue time). */
-  readonly wanted = new Map<Tile, number>();
-  /** @internal */
-  readonly recent: StageTimes[] = [];
-  /**
-   * @internal Median request-to-drawable time of recent loads, ms (until measured,
-   * a typical CDN load).
-   */
-  loadEstimateMs = 500;
   /** What resident content holds, summed over loaded tiles. */
   readonly resident: ContentTotals = emptyTotals();
   /** Load milestones (performance.now()): created, first content, idle. */
   readonly createdAt = performance.now();
   firstContentAt?: number;
   settledAt?: number;
-  /** @internal */
-  masked = new Set<Tile>();
-  /** @internal Tiles with a caster mask (`CasterSelection.casters`). */
-  casters = new Set<Tile>();
-  /** @internal Bytes of what views used in the last update. */
-  viewBytes = 0;
-  /** @internal How long a cold tile may yet come back, ms (`COLD_AGE_MS`). */
-  coldAgeMs = COLD_AGE_MS;
-  /** @internal The last update selected shadow casters. */
-  casting = false;
-  /** @internal `World.contentRevision` after the last update. */
-  revisionSeen = 0;
-  /** @internal The timer that wakes the loop for cold tiles going stale. */
-  casterTimer: ReturnType<typeof setTimeout> | undefined;
-  /** @internal That timer fired, and the next update is due. */
-  casterWake = false;
-  /** @internal Bytes of recent casters (`CASTER_BYTES_WINDOW`), and their median. */
-  readonly recentCasterBytes: number[] = [];
-  /** @internal */
-  casterBytesEstimate = 0;
-  /** @internal Whether casters may load this tick (`CasterRoom.load`). */
-  casterLoad = true;
-  /** @internal A view's tile found a pool full: casters wait until it has uploaded. */
-  viewCapacityWait = false;
-  /** @internal Bytes of loaded tiles that are `castsOnly`, drawn by cascades or not. */
-  casterResident = 0;
-  /** @internal */
-  placeholders = new Set<Tile>();
-  /** @internal Tiles drawn whole while finer content loads, in some view. */
-  standIns = new Set<Tile>();
-  /** @internal */
-  inFlight = 0;
-  /** @internal */
-  destroyed = false;
 
   protected constructor(
     /** @internal */ readonly engine: Engine,
@@ -660,26 +531,27 @@ export class Tileset3D implements TileTree {
     if (options.customShader && options.style) {
       throw new Error("Tileset3D: give a customShader or a style, not both.");
     }
-    this.options = options;
-    this.contentAxes = contentAxes(tilesetJson);
-    this.collision = options.enableCollision ?? false;
+    this.state.options = options;
+    this.state.contentAxes = contentAxes(tilesetJson);
+    this.state.collision = options.enableCollision ?? false;
     this.retainGeometry = options.retainGeometry ?? false;
     this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
     if (world !== undefined) {
       this.bindWorld(world);
     }
-    this.policy = createSelection(options, source);
-    this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
-    this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
+    this.state.policy = createSelection(options, source);
+    this.state.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
+    this.state.overflowBytes =
+      options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
     if (options.maximumRequests !== undefined) {
       this.fixedWindow = options.maximumRequests;
     }
-    this.origin = this.originOf(url);
-    this.useOrigin(this.origin);
-    this.uploadsPerFrame = options.uploadsPerFrame ?? 8;
-    this.headers = options.headers;
-    this.stats.budget = this.cacheBytes;
-    this.stats.overflow = this.overflowBytes;
+    this.state.origin = this.originOf(url);
+    this.useOrigin(this.state.origin);
+    this.state.uploadsPerFrame = options.uploadsPerFrame ?? 8;
+    this.state.headers = options.headers;
+    this.stats.budget = this.state.cacheBytes;
+    this.stats.overflow = this.state.overflowBytes;
     this.stats.adaptive = this.fixedWindow === undefined;
     const extensions: unknown = tilesetJson?.extensions;
     this.extensions =
@@ -689,7 +561,7 @@ export class Tileset3D implements TileTree {
         ? Object.freeze({ ...extensions })
         : NO_EXTENSIONS;
     const rootJson: unknown = tilesetJson?.root;
-    this.rootJson =
+    this.state.rootJson =
       typeof rootJson === "object" && rootJson !== null
         ? Object.freeze({
             boundingVolume: (rootJson as Record<string, unknown>)
@@ -708,9 +580,9 @@ export class Tileset3D implements TileTree {
       world: () => this.world,
       dualPosition: () => this.dualPosition_,
       designPlacement: () => this.placement,
-      secondPlacement: () => this.secondPlacement,
-      loadedTiles: () => this.loaded,
-      baseItem: () => this.baseItem,
+      secondPlacement: () => this.state.secondPlacement,
+      loadedTiles: () => this.state.loaded,
+      baseItem: () => this.state.baseItem,
     };
     this.itemHost = {
       tileset: this,
@@ -734,7 +606,7 @@ export class Tileset3D implements TileTree {
         return now.baseItem();
       },
       noteDraw: (tile, draw, item, source) => {
-        this.drawTiles.set(draw.index, {
+        this.state.drawTiles.set(draw.index, {
           generation: draw.generation,
           tile,
           item,
@@ -742,15 +614,15 @@ export class Tileset3D implements TileTree {
         });
       },
       forgetDraw: (draw, tile) => {
-        if (this.drawTiles.get(draw.index)?.tile === tile) {
-          this.drawTiles.delete(draw.index);
+        if (this.state.drawTiles.get(draw.index)?.tile === tile) {
+          this.state.drawTiles.delete(draw.index);
         }
       },
       tileBytes: (tile, delta) => {
         tile.bytes += delta;
         this.stats.bytes += delta;
         if (tile.castsOnly) {
-          this.casterResident += delta;
+          this.state.casterResident += delta;
         }
       },
       changed: () => this.changed(),
@@ -759,12 +631,12 @@ export class Tileset3D implements TileTree {
       },
       surfaceChanged: () => this.surfaceChanged(),
       removed: (item) => {
-        const at = this.itemList.indexOf(item);
+        const at = this.state.itemList.indexOf(item);
         if (at >= 0) {
-          this.itemList.splice(at, 1);
+          this.state.itemList.splice(at, 1);
         }
-        if (this.baseItem === item) {
-          this.baseItem = undefined;
+        if (this.state.baseItem === item) {
+          this.state.baseItem = undefined;
           item.holdsBase = false;
         }
         this.world.itemRemoved(item);
@@ -772,16 +644,16 @@ export class Tileset3D implements TileTree {
     };
     // A globe's surface isn't an item: its tiles draw as they load, always.
     if (source) {
-      this.baseItem = new SceneItem(this.itemHost, {}, true);
-      this.itemList.push(this.baseItem);
+      this.state.baseItem = new SceneItem(this.itemHost, {}, true);
+      this.state.itemList.push(this.state.baseItem);
     }
   }
 
   /** The world it draws in, from here on (`World.add`). */
   private bindWorld(world: World): void {
     this.world_ = world;
-    this.anchor_ = contentAnchor(world, this.options.anchor, "Tileset3D");
-    this.transform = world.addTransform(this.delta, this.anchor);
+    this.anchor_ = contentAnchor(world, this.state.options.anchor, "Tileset3D");
+    this.state.transform = world.addTransform(this.state.delta, this.anchor);
   }
 
   /**
@@ -790,15 +662,15 @@ export class Tileset3D implements TileTree {
    * (its slot's generation then no longer matches).
    */
   tileOfDraw(draw: DrawHandle): Tile | undefined {
-    const entry = this.drawTiles.get(draw.index);
+    const entry = this.state.drawTiles.get(draw.index);
     return entry?.generation === draw.generation ? entry.tile : undefined;
   }
 
   /** @internal Which of its items drew `draw`, while the tile is loaded. */
   itemOfDraw(draw: DrawHandle): SceneItem | undefined {
-    const entry = this.drawTiles.get(draw.index);
+    const entry = this.state.drawTiles.get(draw.index);
     return entry?.generation === draw.generation
-      ? (entry.item ?? this.baseItem)
+      ? (entry.item ?? this.state.baseItem)
       : undefined;
   }
 
@@ -807,23 +679,11 @@ export class Tileset3D implements TileTree {
    * tile's own): what a tile's retained geometry is listed under.
    */
   sourceOfDraw(draw: DrawHandle): DrawHandle | undefined {
-    const entry = this.drawTiles.get(draw.index);
+    const entry = this.state.drawTiles.get(draw.index);
     return entry?.generation === draw.generation
       ? (entry.source ?? draw)
       : undefined;
   }
-
-  /** @internal Loaded tiles by draw slot: kept with placing and unloading content. */
-  readonly drawTiles = new Map<
-    number,
-    {
-      readonly generation: number;
-      readonly tile: Tile;
-      /** Another item's draw of the tile, and the tile's own draw. */
-      readonly item?: SceneItem;
-      readonly source?: DrawHandle;
-    }
-  >();
 
   /**
    * The items drawing this tileset (`World.add`), in the order added. The one
@@ -832,15 +692,15 @@ export class Tileset3D implements TileTree {
    * A globe's surface isn't an item, so a globe's is empty.
    */
   get items(): readonly SceneItem[] {
-    return this.source ? NO_ITEMS : this.itemList;
+    return this.state.source ? NO_ITEMS : this.state.itemList;
   }
 
   /** @internal `World.add`. */
   addItem(world: World, options: SceneItemOptions): SceneItem {
-    if (this.destroyed) {
+    if (this.state.destroyed) {
       throw new Error("World.add: the tileset was destroyed.");
     }
-    if (this.source) {
+    if (this.state.source) {
       throw new Error(
         "World.add: a globe's surface isn't an item; it stays as it is.",
       );
@@ -858,11 +718,11 @@ export class Tileset3D implements TileTree {
     const item = new SceneItem(
       this.itemHost,
       options,
-      this.baseItem === undefined,
+      this.state.baseItem === undefined,
     );
     const placed: Tile[] = [];
     try {
-      for (const tile of this.loaded) {
+      for (const tile of this.state.loaded) {
         if (tile.placement) {
           item.place(tile, tile.placement);
           placed.push(tile);
@@ -870,7 +730,7 @@ export class Tileset3D implements TileTree {
       }
     } catch (error) {
       // A tile whose draws half-made are in `loaded` too: free every one.
-      item.discard(this.loaded);
+      item.discard(this.state.loaded);
       throw error;
     }
     for (const tile of placed) {
@@ -878,11 +738,11 @@ export class Tileset3D implements TileTree {
       tile.bytes += bytes;
       this.stats.bytes += bytes;
       if (tile.castsOnly) {
-        this.casterResident += bytes;
+        this.state.casterResident += bytes;
       }
     }
     if (item.holdsBase) {
-      this.baseItem = item;
+      this.state.baseItem = item;
       // The tile's own draws, hidden when the last base item left: a tile that
       // stays selected has masks that don't change, so `update` won't write
       // them. A plain item's `place` writes nothing, so it happens here.
@@ -891,7 +751,7 @@ export class Tileset3D implements TileTree {
         item.applyCasterMask(tile);
       }
     }
-    this.itemList.push(item);
+    this.state.itemList.push(item);
     this.surfaceChanged();
     this.changed();
     return item;
@@ -912,34 +772,16 @@ export class Tileset3D implements TileTree {
     return this.dualPosition_;
   }
   private readonly dualPosition_: DualDeclaration | undefined;
-
-  /**
-   * @internal Where the second position's points are drawn, for picks and
-   * snaps on an item at placement 1, as `placement` is for the positions at
-   * placement 0. `georeferenceTileset` sets it for a tileset with a second
-   * position. Without one, a hit at placement 1 has no content coordinates.
-   * Changing `modelMatrix` drops it.
-   */
-  secondPlacement?: DesignPlacement;
-
-  /** @internal How far items can move a vertex (`TileTree.volumePad`). */
-  volumePad = 0;
   /** @internal The views some item draws the tile in (`TileTree.shownViews`). */
   shownViews(tile: Tile): number {
     let views = 0;
-    for (const item of this.itemList) {
+    for (const item of this.state.itemList) {
       views |= item.shownIn(tile);
     }
     return views >>> 0;
   }
-  /** @internal An item moves vertices (`TileTree.movesVertices`). */
-  movesVertices = false;
   /** What an item needs of this tileset. */
   private readonly itemHost: SceneItemHost;
-  /** @internal The item drawing the tiles' own draws, if any. */
-  baseItem: SceneItem | undefined;
-  /** @internal */
-  readonly itemList: SceneItem[] = [];
 
   /**
    * @internal Bounds cover what every item draws, and a placement that moves vertices
@@ -949,7 +791,7 @@ export class Tileset3D implements TileTree {
   updateVolumePad(): void {
     let pad = 0;
     let moves = false;
-    for (const item of this.itemList) {
+    for (const item of this.state.itemList) {
       pad = Math.max(pad, item.reach);
       moves ||= item.moves;
     }
@@ -996,7 +838,7 @@ export class Tileset3D implements TileTree {
    * streams them through the same machinery (`Globe.create`).
    */
   protected attachSource(source: TileSource): void {
-    this.source = source;
+    this.state.source = source;
     source.tree = this;
     this.stats.tiles = countTiles(source.root);
     retarget(source.root, this);
@@ -1009,11 +851,11 @@ export class Tileset3D implements TileTree {
    */
   setPolicy(policy: "stepwise" | "budgeted"): void {
     const options = {
-      ...this.options,
+      ...this.state.options,
       policy,
-      maximumScreenSpaceError: this.policy.maximumScreenSpaceError,
+      maximumScreenSpaceError: this.state.policy.maximumScreenSpaceError,
     };
-    this.policy = createSelection(options, this.source);
+    this.state.policy = createSelection(options, this.state.source);
     // Per-tile selection state belongs to the old policy, whose pass
     // numbers the new one would mistake for its own.
     const reset = (tile: Tile) => {
@@ -1036,12 +878,12 @@ export class Tileset3D implements TileTree {
    * where nothing is loaded yet.
    */
   sampleHeight(longitude: number, latitude: number): number | undefined {
-    return this.source?.sampleHeight?.(longitude, latitude);
+    return this.state.source?.sampleHeight?.(longitude, latitude);
   }
 
   /** Height known without loading anything (the ellipsoid: 0), if any. */
   exactHeight(longitude: number, latitude: number): number | undefined {
-    return this.source?.exactHeight?.(longitude, latitude);
+    return this.state.source?.exactHeight?.(longitude, latitude);
   }
 
   /**
@@ -1050,7 +892,7 @@ export class Tileset3D implements TileTree {
    * stands on. Terrain and the ellipsoid; undefined elsewhere.
    */
   surfaceHeight(longitude: number, latitude: number): number | undefined {
-    return this.source?.surfaceHeight?.(longitude, latitude);
+    return this.state.source?.surfaceHeight?.(longitude, latitude);
   }
 
   /**
@@ -1060,7 +902,7 @@ export class Tileset3D implements TileTree {
    * triangles and are ray cast on the GPU (§13.10, `World.castRays`).
    */
   terrainRayTarget(viewMask?: number): TerrainRayTarget | undefined {
-    return this.source?.rayTarget?.(viewMask);
+    return this.state.source?.rayTarget?.(viewMask);
   }
 
   /**
@@ -1069,7 +911,7 @@ export class Tileset3D implements TileTree {
    * called for 3D Tiles.
    */
   onHeightsChanged(listener: (rectangle: Rectangle) => void): () => void {
-    const listeners = this.source?.heightListeners;
+    const listeners = this.state.source?.heightListeners;
     listeners?.add(listener);
     return () => listeners?.delete(listener);
   }
@@ -1085,24 +927,21 @@ export class Tileset3D implements TileTree {
    * settled while they load, and answers made then are final.
    */
   get idle(): boolean {
-    if (this.externals.some((e) => !isCaster(e.tile))) {
+    if (this.state.externals.some((e) => !isCaster(e.tile))) {
       return false;
     }
-    for (const tile of this.loading.keys()) {
+    for (const tile of this.state.loading.keys()) {
       if (!isCaster(tile)) {
         return false;
       }
     }
-    return this.ready.every((r) => isCaster(r.tile));
+    return this.state.ready.every((r) => isCaster(r.tile));
   }
 
   /** True when no shadow caster is loading or waiting to upload. */
   get casterIdle(): boolean {
-    return this.inFlight === 0 && this.ready.length === 0;
+    return this.state.inFlight === 0 && this.state.ready.length === 0;
   }
-
-  /** @internal External tileset JSON waiting for its tile tree to be built. */
-  readonly externals: Array<{ tile: Tile; json: TileJson }> = [];
 
   /**
    * Needs `update()` even with every camera still: loading, waiting for a
@@ -1112,10 +951,11 @@ export class Tileset3D implements TileTree {
    */
   get active(): boolean {
     return (
-      this.inFlight > 0 ||
+      this.state.inFlight > 0 ||
       this.settling ||
       // Another tileset's selection decides where its casters may stand.
-      (this.casting && this.world.contentRevision !== this.revisionSeen)
+      (this.state.casting &&
+        this.world.contentRevision !== this.state.revisionSeen)
     );
   }
 
@@ -1127,23 +967,23 @@ export class Tileset3D implements TileTree {
    * or the memory-adjusted SSE still moving.
    */
   get needsFrames(): boolean {
-    return this.queries.length > 0 || this.settling;
+    return this.state.queries.length > 0 || this.settling;
   }
 
   /** What both `active` and `needsFrames` wait on: work an update does now. */
   private get settling(): boolean {
     return (
-      this.ready.length > 0 ||
-      this.externals.length > 0 ||
+      this.state.ready.length > 0 ||
+      this.state.externals.length > 0 ||
       // Wanted tiles still waiting for a request slot (the origin's window,
       // shared with other tilesets, may be full).
-      this.wanted.size > 0 ||
-      this.frame - this.lastChange < 3 ||
-      this.casterWake ||
+      this.state.wanted.size > 0 ||
+      this.state.frame - this.state.lastChange < 3 ||
+      this.state.casterWake ||
       this.imagery?.busy === true ||
       this.imageryPending ||
-      this.policy.memoryAdjustedScreenSpaceError !==
-        this.policy.maximumScreenSpaceError
+      this.state.policy.memoryAdjustedScreenSpaceError !==
+        this.state.policy.maximumScreenSpaceError
     );
   }
 
@@ -1153,7 +993,10 @@ export class Tileset3D implements TileTree {
    * waiting for an upload slot, upload).
    */
   pipeline(): { samples: number; stages: Record<Stage, StageStats> } {
-    return { samples: this.recent.length, stages: stageStats(this.recent) };
+    return {
+      samples: this.state.recent.length,
+      stages: stageStats(this.state.recent),
+    };
   }
 
   /** One frame: select per view, apply view masks, request, upload, evict. */
@@ -1235,7 +1078,7 @@ export class Tileset3D implements TileTree {
 
   /** True once `destroy` has run (1.x `isDestroyed`). */
   isDestroyed(): boolean {
-    return this.destroyed;
+    return this.state.destroyed;
   }
 
   /**
@@ -1243,8 +1086,8 @@ export class Tileset3D implements TileTree {
    * @internal
    */
   protected releaseRegions(): void {
-    for (const entry of [...(this.source?.clips?.entries ?? [])]) {
-      this.source!.clips!.remove(entry.clip);
+    for (const entry of [...(this.state.source?.clips?.entries ?? [])]) {
+      this.state.source!.clips!.remove(entry.clip);
       if (entry.slot >= 0) {
         this.world.removeTerrainClipRegion(entry.slot);
       }
@@ -1253,8 +1096,8 @@ export class Tileset3D implements TileTree {
 
   /** Unloads all content. The tileset can't be used afterwards. */
   destroy(): void {
-    clearTimeout(this.casterTimer);
-    for (const controller of this.loading.values()) {
+    clearTimeout(this.state.casterTimer);
+    for (const controller of this.state.loading.values()) {
       controller.abort();
     }
     this.imagery?.destroy();
@@ -1265,28 +1108,28 @@ export class Tileset3D implements TileTree {
       this.engine.requests.unregister(origin);
     }
     this.origins.clear();
-    for (const tile of [...this.loaded]) {
+    for (const tile of [...this.state.loaded]) {
       unload(this, tile);
     }
-    for (const { asset } of this.ready) {
+    for (const { asset } of this.state.ready) {
       closeImages(asset);
     }
-    this.ready.length = 0;
-    this.boundingVolumes?.clear();
-    this.contentVolumes?.clear();
+    this.state.ready.length = 0;
+    this.state.boundingVolumes?.clear();
+    this.state.contentVolumes?.clear();
     this.releaseRegions();
     // Every tile is unloaded: no draw uses a blended twin now.
-    for (const twin of this.blendedTwins.values()) {
+    for (const twin of this.state.blendedTwins.values()) {
       this.world.removeMaterial(twin);
     }
-    this.blendedTwins.clear();
-    this.ownMaterials.clear();
-    for (const item of this.itemList) {
+    this.state.blendedTwins.clear();
+    this.state.ownMaterials.clear();
+    for (const item of this.state.itemList) {
       item.destroyed();
       this.world_?.itemRemoved(item);
     }
-    this.world_?.removeTransform(this.transform);
-    this.destroyed = true;
+    this.world_?.removeTransform(this.state.transform);
+    this.state.destroyed = true;
   }
 }
 

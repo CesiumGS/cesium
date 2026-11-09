@@ -31,11 +31,11 @@ export function serveQueries(
   requests: Map<Tile, number>,
   purposes: Map<Tile, RequestPurpose>,
 ): void {
-  for (let q = tileset.queries.length - 1; q >= 0; q--) {
-    const query = tileset.queries[q]!;
+  for (let q = tileset.state.queries.length - 1; q >= 0; q--) {
+    const query = tileset.state.queries[q]!;
     if (query.done) {
       for (const tile of query.pinned) {
-        tileset.order.touch(tile, frame);
+        tileset.state.order.touch(tile, frame);
       }
       continue;
     }
@@ -45,7 +45,7 @@ export function serveQueries(
     }
     let pending = false;
     for (const tile of tiles) {
-      tileset.order.touch(tile, frame);
+      tileset.state.order.touch(tile, frame);
       if (tile.state === "unloaded" || tile.state === "loading") {
         pending = true;
         if (tile.state === "unloaded") {
@@ -54,7 +54,7 @@ export function serveQueries(
         }
       }
     }
-    if (tileset.externals.length > 0) {
+    if (tileset.state.externals.length > 0) {
       pending = true; // children still to be built
     }
     if (!pending) {
@@ -63,9 +63,9 @@ export function serveQueries(
       query.resolve({
         draws: query.pinned.flatMap((t) => t.placement!.draws),
         release: () => {
-          const at = tileset.queries.indexOf(query);
+          const at = tileset.state.queries.indexOf(query);
           if (at >= 0) {
-            tileset.queries.splice(at, 1);
+            tileset.state.queries.splice(at, 1);
           }
         },
       });

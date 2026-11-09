@@ -60,7 +60,7 @@ async function globeWithTiles() {
       },
     },
   });
-  const loaded = (globe as unknown as { loaded: Set<unknown> }).loaded;
+  const loaded = globe.state.loaded as unknown as Set<unknown>;
   loaded.add(tile(7.4, under));
   loaded.add(tile(8.4, beside));
   const u = world.raster.recordsU32;
@@ -261,10 +261,10 @@ describe("ground", () => {
     const { globe, done } = await globeWithTiles();
     const listener = vi.fn();
     (
-      globe as unknown as {
-        source: { heightListeners: Set<(r: unknown) => void> };
+      globe.state.source as unknown as {
+        heightListeners: Set<(r: unknown) => void>;
       }
-    ).source.heightListeners.add(listener);
+    ).heightListeners.add(listener);
     const glass = globe.terrain.addRegion(SITE, { opacity: 0.5 });
     expect(listener).not.toHaveBeenCalled(); // ground: nothing changed
     glass.ground = false;
@@ -447,7 +447,7 @@ describe("a destroyed globe", () => {
   it("throws on addRegion, naming what to do, and its regions are removed", async () => {
     const { engine, globe } = await globeWithTiles();
     const region = globe.terrain.addRegion(SITE, { opacity: 0.5 });
-    (globe as unknown as { loaded: Set<unknown> }).loaded.clear();
+    globe.state.loaded.clear();
     engine.removeTileset(globe);
     expect(() => globe.terrain.addRegion(SITE)).toThrow(
       /destroyed; add regions to the globe that replaced it/,

@@ -24,8 +24,8 @@ export function applyDebugColor(tileset: Tileset3D, tile: Tile): void {
     return;
   }
   const color =
-    tileset.tileColor?.(tile) ??
-    (tileset.colorize
+    tileset.state.tileColor?.(tile) ??
+    (tileset.state.colorize
       ? DEPTH_COLORS[tile.depth % DEPTH_COLORS.length]!
       : undefined);
   const current = tile.debugColor;
@@ -36,22 +36,28 @@ export function applyDebugColor(tileset: Tileset3D, tile: Tile): void {
     return;
   }
   for (const draw of tile.placement.draws) {
-    tileset.world.setColor(draw, color ?? tileset.baseItem?.drawColor ?? WHITE);
+    tileset.world.setColor(
+      draw,
+      color ?? tileset.state.baseItem?.drawColor ?? WHITE,
+    );
   }
   tile.debugColor = color;
 }
 
 /** Debug tints and volumes for what is drawn now (also while frozen). */
 export function updateDebug(tileset: Tileset3D): void {
-  if (tileset.tileColor) {
-    for (const tile of tileset.masked) {
+  if (tileset.state.tileColor) {
+    for (const tile of tileset.state.masked) {
       applyDebugColor(tileset, tile);
     }
   }
-  if (!tileset.boundingVolumes && !tileset.contentVolumes) {
+  if (!tileset.state.boundingVolumes && !tileset.state.contentVolumes) {
     return;
   }
-  const drawn = new Set([...tileset.masked, ...tileset.placeholders]);
+  const drawn = new Set([
+    ...tileset.state.masked,
+    ...tileset.state.placeholders,
+  ]);
   type Want = Map<Tile, { volume: TileVolume; color: DebugColor }>;
   const bounding: Want = new Map();
   const content: Want = new Map();
@@ -72,6 +78,6 @@ export function updateDebug(tileset: Tileset3D): void {
       });
     }
   }
-  tileset.boundingVolumes?.update(bounding);
-  tileset.contentVolumes?.update(content);
+  tileset.state.boundingVolumes?.update(bounding);
+  tileset.state.contentVolumes?.update(content);
 }

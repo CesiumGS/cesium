@@ -325,7 +325,9 @@ describe("scene items", () => {
     expect(() =>
       s.world.add(
         Object.assign(Object.create(s.tileset) as Tileset3D, {
-          source: {},
+          state: Object.assign(Object.create(s.tileset.state) as object, {
+            source: {},
+          }),
         }),
       ),
     ).toThrow(/globe/);
@@ -720,7 +722,7 @@ describe("scene items", () => {
     const rigid = { mode: "rigid" } as never;
     const reprojected = { mode: "reprojected" } as never;
     s.tileset.placement = rigid;
-    s.tileset.secondPlacement = reprojected;
+    s.tileset.state.secondPlacement = reprojected;
     const item = s.world.add(s.tileset, { placement: 0 });
     expect(item.designPlacement).toBe(rigid);
     item.placement = 1;
@@ -733,7 +735,7 @@ describe("scene items", () => {
     const moved = m4.mat4();
     moved[12] = 1;
     s.tileset.modelMatrix = moved;
-    expect(s.tileset.secondPlacement).toBeUndefined();
+    expect(s.tileset.state.secondPlacement).toBeUndefined();
     s.remove();
   });
 

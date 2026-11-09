@@ -37,8 +37,8 @@ export function request(
   const full = new Set<string>();
   // Prefetch after everything visible (`prefetchAfterVisible`).
   let visibleWaiting = false;
-  if (tileset.policy.prefetchAfterVisible === true) {
-    for (const tile of tileset.loading.keys()) {
+  if (tileset.state.policy.prefetchAfterVisible === true) {
+    for (const tile of tileset.state.loading.keys()) {
       if (tile.purpose !== "prefetch" && tile.purpose !== "caster") {
         visibleWaiting = true;
         break;
@@ -48,8 +48,8 @@ export function request(
   // Casters wait as well for what a view has here and hasn't placed: its
   // next requests are a tick away, and a gap isn't the end of them.
   const casterWaiting =
-    tileset.ready.some((r) => !isCaster(r.tile)) ||
-    tileset.externals.some((e) => !isCaster(e.tile));
+    tileset.state.ready.some((r) => !isCaster(r.tile)) ||
+    tileset.state.externals.some((e) => !isCaster(e.tile));
   for (const [tile] of order) {
     if (tile.state !== "unloaded") {
       continue;
@@ -69,7 +69,7 @@ export function request(
         yieldToView(tileset, origin);
       }
       visibleWaiting ||=
-        !prefetch && tileset.policy.prefetchAfterVisible === true;
+        !prefetch && tileset.state.policy.prefetchAfterVisible === true;
       continue;
     }
     tileset.useOrigin(origin);
@@ -79,28 +79,28 @@ export function request(
         yieldToView(tileset, origin);
       }
       visibleWaiting ||=
-        !prefetch && tileset.policy.prefetchAfterVisible === true;
+        !prefetch && tileset.state.policy.prefetchAfterVisible === true;
       continue;
     }
     tile.state = "loading";
     tile.fetchStartAt = performance.now();
-    tile.wantedAt = tileset.wanted.get(tile) ?? tile.fetchStartAt;
-    tileset.wanted.delete(tile);
-    tileset.inFlight++;
+    tile.wantedAt = tileset.state.wanted.get(tile) ?? tile.fetchStartAt;
+    tileset.state.wanted.delete(tile);
+    tileset.state.inFlight++;
     tileset.stats.requestsTotal++;
     tile.purpose = purpose;
     if (!prefetch) {
-      visibleWaiting ||= tileset.policy.prefetchAfterVisible === true;
+      visibleWaiting ||= tileset.state.policy.prefetchAfterVisible === true;
     }
     tileset.stats.purposes[purpose].requests++;
     tileset.events.emit("request", { url: tile.contentUrl!, purpose });
     const controller = new AbortController();
-    tileset.loading.set(tile, controller);
+    tileset.state.loading.set(tile, controller);
     void loadContent(tileset, tile, controller.signal)
       .then((sample) => tileset.engine.requests.release(origin, sample))
       .finally(() => {
-        tileset.inFlight--;
-        tileset.loading.delete(tile);
+        tileset.state.inFlight--;
+        tileset.state.loading.delete(tile);
         // Any completion is a change, also one without content to upload
         // (an external tileset's children need selecting, a failure needs
         // reporting): stay active for the next updates.
@@ -115,7 +115,7 @@ export function request(
  */
 function yieldToView(owner: Tileset3D, origin: string): void {
   for (const tileset of owner.engine.tilesets) {
-    for (const [tile, controller] of tileset.loading) {
+    for (const [tile, controller] of tileset.state.loading) {
       if (
         !controller.signal.aborted &&
         tile.contentOrigin === origin &&
@@ -140,21 +140,21 @@ async function loadContent(
       // stalled frames).
       const json = await fetchTilesetJson(
         tile.contentUrl!,
-        tileset.headers,
+        tileset.state.headers,
         signal,
       );
-      if (!tileset.destroyed) {
-        tileset.externals.push({ tile, json });
+      if (!tileset.state.destroyed) {
+        tileset.state.externals.push({ tile, json });
       }
       return undefined;
     }
-    const asset = tileset.source
-      ? await tileset.source.loadTile(tile, signal)
+    const asset = tileset.state.source
+      ? await tileset.state.source.loadTile(tile, signal)
       : await tileset.engine.loadGltf(tile.contentUrl!, {
-          ...(tileset.headers ? { headers: tileset.headers } : {}),
+          ...(tileset.state.headers ? { headers: tileset.state.headers } : {}),
           signal,
         });
-    if (tileset.destroyed) {
+    if (tileset.state.destroyed) {
       closeImages(asset);
       return undefined;
     }
@@ -162,7 +162,7 @@ async function loadContent(
     if (tile.purpose) {
       tileset.stats.purposes[tile.purpose].bytes += asset.timing?.bytes ?? 0;
     }
-    tileset.ready.push({ tile, asset, arrivedAt: performance.now() });
+    tileset.state.ready.push({ tile, asset, arrivedAt: performance.now() });
     return asset.timing
       ? {
           bytes: asset.timing.bytes,

@@ -105,7 +105,7 @@ function readTilesetDeclaration(
   try {
     const georeference = readGeoreference({
       extensions,
-      root: tileset.rootJson,
+      root: tileset.state.rootJson,
     });
     for (const warning of georeference?.warnings ?? []) {
       tileset.warnings.add(warning);
@@ -433,7 +433,7 @@ export async function georeferenceTileset(
   if (placement.mode === "rigid" && tileset.dualPosition !== undefined) {
     // The second position is the frame's image of each design point: where
     // an item at placement 1 draws what the content's coordinates name.
-    tileset.secondPlacement = placeReprojected(frame);
+    tileset.state.secondPlacement = placeReprojected(frame);
   }
   return placement;
 }

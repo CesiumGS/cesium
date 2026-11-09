@@ -444,7 +444,7 @@ async function globeWithTiles() {
       },
     },
   });
-  const loaded = (globe as unknown as { loaded: Set<unknown> }).loaded;
+  const loaded = globe.state.loaded as unknown as Set<unknown>;
   const underTile = tile(7.4, under);
   loaded.add(underTile);
   loaded.add(tile(8.4, beside));
@@ -552,7 +552,7 @@ describe("a globe's regions that blend", () => {
     const { engine, world, globe, own } = await globeWithTiles();
     globe.terrain.addRegion(SITE, { opacity: 0.35 });
     globe.terrain.addRegion("everywhere", { opacity: 0.5 });
-    (globe as unknown as { loaded: Set<unknown> }).loaded.clear();
+    globe.state.loaded.clear();
     engine.removeTileset(globe);
     // All 32 slots are free again.
     for (let i = 0; i < 32; i++) {
@@ -574,8 +574,7 @@ describe("picks on translucent terrain (the CPU ray)", () => {
   };
   const setUp = async () => {
     const t = await globeWithTiles();
-    const source = (t.globe as unknown as { source: Record<string, unknown> })
-      .source;
+    const source = t.globe.state.source as unknown as Record<string, unknown>;
     const tile = gridTile(rect, 17, () => 100);
     source.rayTarget = () => stripTarget([{ rectangle: rect, tile }]);
     source.tileOf = (rayTile: unknown) =>
@@ -688,8 +687,7 @@ describe("picks from under the ground", () => {
     ]);
   const setUp = async () => {
     const t = await globeWithTiles();
-    const source = (t.globe as unknown as { source: Record<string, unknown> })
-      .source;
+    const source = t.globe.state.source as unknown as Record<string, unknown>;
     const tile = gridTile(rect, 161, () => 100);
     source.rayTarget = () => target(tile);
     source.tileOf = (rayTile: unknown) =>
@@ -823,8 +821,7 @@ describe("a region's opacity, ground and pickThrough, changed in place", () => {
 
   it("changes where picks stop, with pickThrough", async () => {
     const t = await globeWithTiles();
-    const source = (t.globe as unknown as { source: Record<string, unknown> })
-      .source;
+    const source = t.globe.state.source as unknown as Record<string, unknown>;
     const rect = {
       west: 7.3 * R,
       south: 46.8 * R,
@@ -847,7 +844,7 @@ describe("a region's opacity, ground and pickThrough, changed in place", () => {
   it("refuses to add a region to a destroyed globe, naming what to do", async () => {
     const { engine, globe } = await globeWithTiles();
     const glass = globe.terrain.addRegion(SITE, { opacity: 0.5 });
-    (globe as unknown as { loaded: Set<unknown> }).loaded.clear();
+    globe.state.loaded.clear();
     engine.removeTileset(globe);
     expect(() => globe.terrain.addRegion(SITE)).toThrow(
       /destroyed; add regions to the globe that replaced it/,

@@ -80,12 +80,6 @@ const json = (children: readonly TileJson[]) => ({
   },
 });
 
-interface Internals {
-  cacheBytes: number;
-  casterLoad: boolean;
-  ready: Array<{ tile: Tile; asset: GltfAsset; arrivedAt: number }>;
-}
-
 describe("casters share the cache", () => {
   let engine: Engine;
   beforeAll(async () => {
@@ -136,7 +130,7 @@ describe("casters share the cache", () => {
       view,
       frames,
       look,
-      internals: tileset as unknown as Internals,
+      internals: tileset.state,
       tiles: tileset.root.children as Tile[],
       remove() {
         engine.removeView(view);
@@ -277,13 +271,13 @@ describe("casters share the cache", () => {
         { tile: roof, asset: slab(5), arrivedAt: 0 },
         { tile: floor, asset: slab(5), arrivedAt: 0 },
       );
-      (s.tileset as unknown as { uploadsPerFrame: number }).uploadsPerFrame = 1;
+      s.tileset.state.uploadsPerFrame = 1;
       upload(s.tileset);
       expect(floor.state).toBe("ready");
       expect(roof.state).not.toBe("ready");
       expect(queue.length).toBe(1);
       // Over a pool's pressure, a decoded caster is dropped, not kept.
-      roof.touchedFrame = (s.tileset as unknown as { frame: number }).frame;
+      roof.touchedFrame = s.tileset.state.frame;
       s.internals.casterLoad = false;
       upload(s.tileset);
       expect(queue.length).toBe(0);

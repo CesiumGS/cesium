@@ -410,7 +410,7 @@ export class Globe extends Tileset3D {
 
   /** @internal The regions as the CPU tests them. */
   get clips(): TerrainClips {
-    return this.source!.clips!;
+    return this.state.source!.clips!;
   }
 
   /** @internal A region's value changed that tiles needn't hear of. */
@@ -433,7 +433,7 @@ export class Globe extends Tileset3D {
     direction: ArrayLike<number>,
     viewMask?: number,
   ): { distance: number; draw: DrawHandle | undefined } | undefined {
-    const source = this.source;
+    const source = this.state.source;
     const clips = source?.clips;
     if (!source || !clips || !source.rayTarget || !this.show) {
       return undefined;

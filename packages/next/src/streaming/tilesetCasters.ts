@@ -68,17 +68,17 @@ export function casterRoom(
 ): (CasterRoom & { nextStale: number }) | undefined {
   // A tileset that has drawn nothing yet but content this engine can't draw
   // (point clouds today: `deferredReason`) has no casters to load.
-  owner.casting =
-    owner.policy.castsShadows === true &&
+  owner.state.casting =
+    owner.state.policy.castsShadows === true &&
     views.some((view) => view.casterPlanes !== undefined) &&
     (owner.stats.undrawn === 0 || owner.stats.loaded > 0);
-  if (!owner.casting) {
+  if (!owner.state.casting) {
     return undefined;
   }
-  const heldSince = now - owner.coldAgeMs;
+  const heldSince = now - owner.state.coldAgeMs;
   let held = 0;
   let nextStale = Infinity;
-  for (const tile of owner.loaded) {
+  for (const tile of owner.state.loaded) {
     if (tile.castsOnly || tile.touchedFrame === frame) {
       continue;
     }
@@ -88,19 +88,19 @@ export function casterRoom(
     }
     if (tile.viewedAt > heldSince) {
       held += tile.bytes;
-      nextStale = Math.min(nextStale, tile.viewedAt + owner.coldAgeMs);
+      nextStale = Math.min(nextStale, tile.viewedAt + owner.state.coldAgeMs);
     }
   }
   const { fraction } = owner.world.pressure();
-  owner.casterLoad =
+  owner.state.casterLoad =
     fraction <= CASTER_PRESSURE &&
     !owner.engine.tilesets.some(
-      (other) => other.world === owner.world && other.viewCapacityWait,
+      (other) => other.world === owner.world && other.state.viewCapacityWait,
     );
   return {
-    bytes: Math.max(0, owner.cacheBytes - owner.viewBytes - held),
-    load: owner.casterLoad,
-    estimate: owner.casterBytesEstimate,
+    bytes: Math.max(0, owner.state.cacheBytes - owner.state.viewBytes - held),
+    load: owner.state.casterLoad,
+    estimate: owner.state.casterBytesEstimate,
     pressure: fraction,
     heldSince,
     receivers: (view, selected) => {
@@ -131,9 +131,9 @@ export function casterRoom(
 
 /** One tick when the next cold tile goes stale: the loop may be asleep. */
 export function wakeForStale(tileset: Tileset3D, delayMs: number): void {
-  tileset.casterTimer ??= setTimeout(() => {
-    tileset.casterTimer = undefined;
-    tileset.casterWake = true;
+  tileset.state.casterTimer ??= setTimeout(() => {
+    tileset.state.casterTimer = undefined;
+    tileset.state.casterWake = true;
     tileset.engine.wake();
   }, delayMs);
 }
@@ -157,7 +157,7 @@ export function markCastsOnly(
 ): void {
   if (tile.castsOnly !== value && tile.state === "ready") {
     tile.castsOnly = value;
-    tileset.casterResident += value ? tile.bytes : -tile.bytes;
+    tileset.state.casterResident += value ? tile.bytes : -tile.bytes;
   }
 }
 
@@ -167,13 +167,13 @@ export function markCastsOnly(
  * wrong guess corrects itself when the tile loads.
  */
 export function noteCasterBytes(tileset: Tileset3D, bytes: number): void {
-  const recent = tileset.recentCasterBytes;
+  const recent = tileset.state.recentCasterBytes;
   recent.push(bytes);
   if (recent.length > CASTER_BYTES_WINDOW) {
     recent.shift();
   }
   // Three first: one huge tile, or one that fails, isn't what casters cost.
-  tileset.casterBytesEstimate =
+  tileset.state.casterBytesEstimate =
     recent.length < 3
       ? 0
       : [...recent].sort((a, b) => a - b)[recent.length >> 1]!;

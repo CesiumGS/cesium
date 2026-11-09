@@ -333,7 +333,7 @@ describe("shadow casters off screen", () => {
 
   it("yields to what views draw over the byte budget", async () => {
     const s = await scene([FLOOR, ROOF]);
-    const t = s.tileset as unknown as { cacheBytes: number };
+    const t = s.tileset.state;
     try {
       const [floor, roof] = tiles(s) as [Tile, Tile];
       const threshold = s.tileset.selection.memoryAdjustedScreenSpaceError;

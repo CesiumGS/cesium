@@ -338,7 +338,7 @@ describe("tiles' masks as regions come and go", () => {
         },
       },
     });
-    const loaded = (globe as unknown as { loaded: Set<unknown> }).loaded;
+    const loaded = globe.state.loaded as unknown as Set<unknown>;
     loaded.add(tile(7.4, under));
     loaded.add(tile(8.4, beside));
     const u = blocks(world).recordsU32;

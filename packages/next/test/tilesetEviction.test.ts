@@ -81,20 +81,10 @@ function view(from: number, to: number): SelectionView {
 }
 
 /** The tileset's internals the comparison reads. */
-interface Internals {
-  loaded: Set<Tile>;
-  stats: { bytes: number };
-  cacheBytes: number;
-  overflowBytes: number;
-  uploadsPerFrame: number;
-  engine: { uploadBytesPerFrame: number };
-  evict(frame: number): void;
-  evictForCapacity(frame: number): void;
-}
 
 /** The old policy's candidates: every loaded tile, sorted each frame. */
-function oldCandidates(t: Internals, frame: number): Tile[] {
-  return [...t.loaded]
+function oldCandidates(t: Tileset3D, frame: number): Tile[] {
+  return [...t.state.loaded]
     .filter((x) => x.touchedFrame < frame)
     .sort((a, b) => a.touchedFrame - b.touchedFrame);
 }
@@ -158,7 +148,7 @@ describe("Tileset3D eviction: the same tiles as the old sort", () => {
 
   it("under pool pressure (evictForCapacity)", async () => {
     const tileset = await load({ uploadsPerFrame: 3 });
-    const t = tileset as unknown as Internals;
+    const t = tileset;
     // After the row has loaded, the world near a pool's ceiling on two
     // frames of three, as when the cache hovers at 90%.
     let frame = 0;
@@ -169,10 +159,10 @@ describe("Tileset3D eviction: the same tiles as the old sort", () => {
     const original = t.evictForCapacity.bind(t);
     let evictions = 0;
     t.evictForCapacity = (f: number) => {
-      const expected = oldCandidates(t, f).slice(0, t.uploadsPerFrame);
-      const before = [...t.loaded];
+      const expected = oldCandidates(t, f).slice(0, t.state.uploadsPerFrame);
+      const before = [...t.state.loaded];
       original(f);
-      const gone = before.filter((x) => !t.loaded.has(x));
+      const gone = before.filter((x) => !t.state.loaded.has(x));
       expect(gone).toEqual(expected);
       evictions += gone.length;
     };
@@ -181,7 +171,7 @@ describe("Tileset3D eviction: the same tiles as the old sort", () => {
     onFrame = () => {};
     expect(evictions).toBeGreaterThan(10);
     // What stays: the last (wide) view's tiles, and nothing it didn't touch.
-    for (const tile of t.loaded) {
+    for (const tile of t.state.loaded) {
       expect(tile.touchedFrame).toBeGreaterThan(0);
     }
     tileset.destroy();
@@ -189,28 +179,28 @@ describe("Tileset3D eviction: the same tiles as the old sort", () => {
 
   it("over the byte budget (evict)", async () => {
     const tileset = await load({ uploadsPerFrame: 4 });
-    const t = tileset as unknown as Internals;
+    const t = tileset;
     // A budget of about four tiles, no overflow: eviction runs most frames.
     let perTile = 0;
     const original = t.evict.bind(t);
     let evictions = 0;
     t.evict = (f: number) => {
-      const first = [...t.loaded][0];
+      const first = [...t.state.loaded][0];
       if (perTile === 0 && first) {
         perTile = first.bytes;
-        t.cacheBytes = 4 * perTile;
-        t.overflowBytes = 0;
+        t.state.cacheBytes = 4 * perTile;
+        t.state.overflowBytes = 0;
       }
       // The old loop, replayed on the candidates the old sort gave.
       const expected: Tile[] = [];
-      if (t.stats.bytes > t.cacheBytes) {
+      if (t.stats.bytes > t.state.cacheBytes) {
         let bytes = t.stats.bytes;
         let allowance = Math.max(
           2 * t.engine.uploadBytesPerFrame,
-          bytes - (t.cacheBytes + t.overflowBytes),
+          bytes - (t.state.cacheBytes + t.state.overflowBytes),
         );
         for (const tile of oldCandidates(t, f)) {
-          if (bytes <= t.cacheBytes || allowance <= 0) {
+          if (bytes <= t.state.cacheBytes || allowance <= 0) {
             break;
           }
           allowance -= tile.bytes;
@@ -218,9 +208,9 @@ describe("Tileset3D eviction: the same tiles as the old sort", () => {
           expected.push(tile);
         }
       }
-      const before = [...t.loaded];
+      const before = [...t.state.loaded];
       original(f);
-      const gone = before.filter((x) => !t.loaded.has(x));
+      const gone = before.filter((x) => !t.state.loaded.has(x));
       expect(gone).toEqual(expected);
       evictions += gone.length;
     };
@@ -231,14 +221,16 @@ describe("Tileset3D eviction: the same tiles as the old sort", () => {
 
   it("counts a fixed overhead per tile against the budget", async () => {
     const tileset = await load({});
-    const t = tileset as unknown as Internals;
+    const t = tileset;
     await run(tileset, 10);
-    const tile = [...t.loaded][0]!;
+    const tile = [...t.state.loaded][0]!;
     const content = tile.placement!.model.bytes;
     // About 3 KB for a one-draw tile: the table rows and heap objects.
     expect(tile.bytes - content).toBeGreaterThan(2_000);
     expect(tile.bytes - content).toBeLessThan(4_000);
-    expect(t.stats.bytes).toBe([...t.loaded].reduce((n, x) => n + x.bytes, 0));
+    expect(t.stats.bytes).toBe(
+      [...t.state.loaded].reduce((n, x) => n + x.bytes, 0),
+    );
     tileset.destroy();
   });
 });
