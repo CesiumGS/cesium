@@ -462,7 +462,11 @@ describe("the robot arm's pad and its walk (Task 7b fix 1)", () => {
 describe("earth-turns' angular case through the library's composer", () => {
   it("is the ITRF edge's angular sigma times the equatorial radius", () => {
     const instant = Instant.fromTdb(checkedTdb("earth-turns"));
-    const r = frames.itrf.accuracy(instant).radians!;
+    const figures = frames.itrf.accuracy(instant);
+    const r = Math.hypot(
+      figures.radians!,
+      ...(figures.parts ?? []).map((q) => q.radians ?? 0),
+    );
     expect(r).toBeGreaterThan(0);
     const a = orientation(context(), instant);
     expect(a.meters).toBeCloseTo(r * 6_378_137, 15);
@@ -470,9 +474,14 @@ describe("earth-turns' angular case through the library's composer", () => {
       framePoint(frames.itrf, [6_378_137, 0, 0], instant),
       frames.gcrf,
     );
-    expect(p.terms).toHaveLength(1);
-    expect(p.terms[0]).toMatchObject({ frame: "ITRF", kind: "angular" });
-    const t = p.terms[0]!;
-    expect(t.kind === "angular" && t.lever).toBe(6_378_137);
+    // ITRF states two figures since 5b: UT1 about +Z (the distance from the
+    // spin axis is the equatorial radius here) and polar motion (about no
+    // axis, the distance from the origin). Together they are the same bound.
+    expect(p.terms).toHaveLength(2);
+    expect(p.terms.map((t) => t.frame)).toEqual(["ITRF", "ITRF"]);
+    for (const t of p.terms) {
+      expect(t.kind === "angular" && t.lever).toBe(6_378_137);
+    }
+    expect(p.meters).toBeCloseTo(r * 6_378_137, 12);
   });
 });

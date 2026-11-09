@@ -294,6 +294,7 @@ describe("the frame catalog", () => {
     const row = catalog.treeInUse().find((r) => r.frame === orion)!;
     expect(row).toEqual({
       frame: orion,
+      parent: orion.parent,
       users: ["rig"],
       precision: "precise",
       standIn: false,
