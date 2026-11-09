@@ -28,17 +28,15 @@ import {
   AO_MAX_PIXELS,
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
-import { View, ev100ToScale, type HdrImage, type ViewOptions } from "./View.ts";
+import { View, type HdrImage, type ViewOptions } from "./View.ts";
 import {
   CanvasTarget,
   OffscreenTarget,
-  type PixelRect,
   type RenderTarget,
 } from "./renderTarget.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky } from "../atmosphere/Sky.ts";
-import { MOON_ALBEDO, moonPhaseBrightness } from "../atmosphere/moonLight.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
 import type { StarField } from "../atmosphere/stars.ts";
@@ -51,18 +49,12 @@ import {
   shadowRange,
   writeShadows,
 } from "./shadows.ts";
-import { CityLight } from "../globe/cityLight.ts";
-import {
-  LIGHTS_SIZE,
-  LIGHT_FLOATS,
-  LIGHT_HEADER_FLOATS,
-  packViewLights,
-} from "./lights.ts";
+import type { CityLight } from "../globe/cityLight.ts";
+import { LIGHTS_SIZE } from "./lights.ts";
 import { World, type AnchorHandle, type WorldOptions } from "./World.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
 import {
   ANCHOR_EYE_REACH,
-  computeAnchorEyes,
   createAnchorEyes,
   writeAnchorEyes,
 } from "./anchorEyes.ts";
@@ -98,10 +90,8 @@ import {
   type WorldFrame,
   type OverlayResources,
   type PersistentImage,
-  drawsSky,
   destroyViewFrame,
   TONE_MAPPINGS,
-  drawsAerialPerspective,
   LIST_HEADER,
 } from "../render/view/viewFrameData.ts";
 import { viewFrameFor } from "../render/view/viewFrame.ts";
@@ -113,17 +103,19 @@ import {
   halfToFloat,
 } from "../render/view/picks.ts";
 import { updateExposure, adaptExposure } from "../render/view/exposure.ts";
-import {
-  scratchFrame,
-  updateEnvironment,
-  environmentFrame,
-} from "../render/view/environment.ts";
-import { shadowLight, moonFrom } from "./lightSources.ts";
+import { scratchFrame, updateEnvironment } from "../render/view/environment.ts";
+import { shadowLight } from "./lightSources.ts";
 import {
   type ViewMotion,
   updateTilesets,
   rotateVector,
 } from "./tileSelection.ts";
+import {
+  scratchViewProj,
+  scratchView,
+  scratchPlanes,
+  writeView,
+} from "../render/view/viewBlocks.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -396,7 +388,8 @@ export class Engine {
   readonly timer: GpuTimer;
   /** @internal */
   readonly viewStaging: GPUBuffer;
-  private readonly viewData: Float32Array;
+  /** @internal */
+  readonly viewData: Float32Array;
   /**
    * Per view slot: a view block per shadow cascade (the sun's projection
    * and box, for culling and drawing the casters), and the receivers'
@@ -409,9 +402,10 @@ export class Engine {
   private readonly shadowData: Float32Array;
   /** @internal */
   readonly shadowStaging: GPUBuffer;
-  /** The night lights' mean around each view's camera (`cityLightAt`). */
-  private readonly cityLights = new WeakMap<ImageryProvider, CityLight>();
-  private readonly cityLightPlaces = new WeakMap<
+  /** @internal The night lights' mean around each view's camera (`cityLightAt`). */
+  readonly cityLights = new WeakMap<ImageryProvider, CityLight>();
+  /** @internal */
+  readonly cityLightPlaces = new WeakMap<
     View,
     { city: CityLight; longitude: number; latitude: number; light: number }
   >();
@@ -419,9 +413,11 @@ export class Engine {
   viewCityLight = 0;
   /** @internal Each drawn view's lights (lights.ts `packViewLights`), by slot. */
   readonly lightStaging: GPUBuffer;
-  private readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
+  /** @internal */
+  readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
   private readonly cascades = createShadowCascades();
-  private readonly viewDataU32: Uint32Array;
+  /** @internal */
+  readonly viewDataU32: Uint32Array;
   /** @internal Stable per-view bit index (0–31) for record view masks. */
   readonly viewIds = new Map<View, number>();
   /** @internal */
@@ -448,8 +444,8 @@ export class Engine {
    * written in place without `version++` is never drawn stale.
    */
   private cameraTick = 0;
-  /** The view being written's anchor table, float64 (`writeView`). */
-  private readonly anchorEyes = createAnchorEyes();
+  /** @internal The view being written's anchor table, float64 (`writeView`). */
+  readonly anchorEyes = createAnchorEyes();
   /** Per view, the anchors its eye was last too far from (reported once). */
   private readonly farAnchors = new WeakMap<View, Set<AnchorHandle>>();
   private readonly freeViewIds: number[] = [];
@@ -540,8 +536,8 @@ export class Engine {
   private readonly overlayColor = new Float32Array(4);
   /** @internal */
   readonly viewBlock: ViewBlock;
-  /** When the engine was created (`performance.now()`): views' `time`. */
-  private readonly startTime = performance.now();
+  /** @internal When the engine was created (`performance.now()`): views' `time`. */
+  readonly startTime = performance.now();
   /** @internal Height captures (`addHeightCapture`). */
   readonly captures: HeightCapture[] = [];
   /** @internal */
@@ -1150,10 +1146,10 @@ export class Engine {
   }
 
   /**
-   * Reports, once each time it happens, an anchor whose draws a view hides
+   * @internal Reports, once each time it happens, an anchor whose draws a view hides
    * because its eye is beyond `ANCHOR_EYE_REACH` of it.
    */
-  private reportFarAnchors(view: View): void {
+  reportFarAnchors(view: View): void {
     const eyes = this.anchorEyes;
     let far = this.farAnchors.get(view);
     for (let slot = 1; slot < eyes.hidden.length; slot++) {
@@ -2088,7 +2084,7 @@ export class Engine {
       // loop drew with a stale scale (a fixed exposure set later never
       // applied; automatic exposure never moved).
       updateExposure(this, view);
-      this.writeView(view, slots, rect);
+      writeView(this, view, slots, rect);
       updateEnvironment(this, view);
       slots++;
 
@@ -2263,196 +2259,10 @@ export class Engine {
     this.stats.draws = draws;
     this.stats.batches = batches;
   }
-
-  /**
-   * The light the ground around a view's camera emits, cd/m² (its
-   * world's globe's night lights, cityLight.ts), for the sky's glow and
-   * the environment's ground; 0 without them or `View.cityLights`. Read
-   * again as the camera moves half a kilometer, or a tile arrives.
-   */
-  private cityLightAt(view: View): number {
-    if (!view.cityLights) {
-      return 0;
-    }
-    const provider = this.tilesets.find(
-      (t) => t.world === view.world && t.lights,
-    )?.lights?.provider;
-    if (!provider) {
-      return 0;
-    }
-    let city = this.cityLights.get(provider);
-    if (!city) {
-      city = new CityLight(provider, () => {
-        this.cityLightRead++;
-        this.requestRender();
-      });
-      this.cityLights.set(provider, city);
-    }
-    const c = view.body.ellipsoid.cartesianToCartographic(
-      this.bodyCamera(view).position,
-      scratchCartographic,
-    );
-    if (!c) {
-      return 0;
-    }
-    const last = this.cityLightPlaces.get(view);
-    const moved = last
-      ? Math.hypot(
-          (c.longitude - last.longitude) * Math.cos(c.latitude),
-          c.latitude - last.latitude,
-        ) * 6_371_000
-      : Infinity;
-    if (
-      last?.city === city &&
-      moved < 500 &&
-      this.cityLightRead === this.cityLightSeen
-    ) {
-      return last.light;
-    }
-    this.cityLightSeen = this.cityLightRead;
-    const light = city.around(c.longitude, c.latitude);
-    if (light === undefined) {
-      // Its tiles on their way (they render again as they come).
-      return last?.light ?? 0;
-    }
-    this.cityLightPlaces.set(view, {
-      city,
-      longitude: c.longitude,
-      latitude: c.latitude,
-      light,
-    });
-    return light;
-  }
-  private cityLightRead = 0;
-  private cityLightSeen = 0;
-
-  /**
-   * A view's point and spot lights, culled to it, camera-relative, into
-   * its slot of the staging buffer (copied in before its opaque pass).
-   */
-  private writeLights(view: View, index: number, aspect: number): void {
-    const frame = this.viewFrames.get(view)!;
-    const camera = this.bodyCamera(view);
-    const tanY = Math.tan(camera.fovy(aspect) / 2);
-    const count = packViewLights(
-      this.lightData,
-      0,
-      (visit) => view.world.forEachLight(visit),
-      {
-        position: camera.position,
-        direction: camera.direction,
-        up: camera.up,
-        right: camera.right,
-        near: camera.near,
-        tanX: tanY * aspect,
-        tanY,
-      },
-      view.exposureScale,
-      this.anchorEyes,
-    );
-    frame.lightCount = count;
-    this.ctx.device.queue.writeBuffer(
-      this.lightStaging,
-      index * LIGHTS_SIZE,
-      this.lightData,
-      0,
-      LIGHT_HEADER_FLOATS + count * LIGHT_FLOATS,
-    );
-  }
-
-  private writeView(
-    view: View,
-    index: number,
-    rect: Readonly<PixelRect>,
-  ): void {
-    const aspect = rect.width / rect.height;
-    const camera = this.bodyCamera(view);
-    computeAnchorEyes(camera, view, this.anchorEyes);
-    this.reportFarAnchors(view);
-    camera.viewRotation(scratchView);
-    camera.projection(scratchProj, aspect);
-    m4.multiply(scratchViewProj, scratchProj, scratchView);
-    camera.frustumPlanes(scratchPlanes, aspect);
-    const block = this.viewBlock;
-    block.cameraPosition = camera.position;
-    block.near = camera.near;
-    block.aspect = aspect;
-    block.width = rect.width;
-    block.height = rect.height;
-    block.iblFrame = environmentFrame(camera.position, view.body.ellipsoid);
-    block.lighting = view.lighting;
-    block.specularMaxLod = this.ctx.environment.maxLod;
-    block.exposure = view.exposureScale;
-    block.body = view.body;
-    block.cityLights = view.cityLights;
-    block.time = (performance.now() - this.startTime) / 1000;
-    this.viewCityLight = this.cityLightAt(view);
-    block.aerial = undefined;
-    // The Moon's light: its full disk gives the albedo's share of the sun's
-    // light times its solid angle over π, then less by phase (Allen).
-    const moon = moonFrom(this, camera.position);
-    const moonShare = moon
-      ? MOON_ALBEDO *
-        moon.sinRadius *
-        moon.sinRadius *
-        moonPhaseBrightness(moon.phaseAngle)
-      : 0;
-    block.moon = moon && { direction: moon.direction, share: moonShare };
-    // The air's light by the Moon: only by night (by day the sun's is a
-    // million times more).
-    if (moon) {
-      const up = v3.normalize(scratchMoonAxis, camera.position);
-      moon.airShare = v3.dot(up, this.sunDirection) < 0 ? moonShare : 0;
-    }
-    block.moonAir = moon?.airShare ?? 0;
-    if (drawsSky(view)) {
-      const sky = this.viewFrames.get(view)!.sky;
-      this.sky.writeStars(this.icrfToFixed);
-      this.sky.write(
-        sky,
-        view.body.ellipsoid,
-        camera,
-        aspect,
-        rect.width,
-        rect.height,
-        this.sunDirection,
-        view.exposureScale,
-        view.sunDisk,
-        "eye" in view.exposure ? ev100ToScale(EYE_STARS_EV100) : 0,
-        moon,
-        this.viewCityLight,
-      );
-      if (drawsAerialPerspective(view)) {
-        block.aerial = {
-          start: sky.aerialStart,
-          end: sky.aerialEnd,
-          march: sky.march,
-          screen: sky.screenHaze,
-        };
-      }
-    }
-    writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
-    writeAnchorEyes(
-      this.viewData,
-      (index * VIEW_STRIDE) / 4,
-      camera,
-      view,
-      this.anchorEyes,
-    );
-    this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
-      this.viewBit(view);
-    const bytes = viewBlockBytes(this.anchorEyes.count);
-    this.viewFrames.get(view)!.viewBytes = bytes;
-    this.ctx.device.queue.writeBuffer(
-      this.viewStaging,
-      index * VIEW_STRIDE,
-      this.viewData,
-      (index * VIEW_STRIDE) / 4,
-      bytes / 4,
-    );
-    this.writeShadows(view, index, aspect);
-    this.writeLights(view, index, aspect);
-  }
+  /** @internal */
+  cityLightRead = 0;
+  /** @internal */
+  cityLightSeen = 0;
 
   /**
    * Whether a view draws blended surfaces this frame, and its translucent
@@ -2703,7 +2513,8 @@ export class Engine {
     }
   }
 
-  private writeShadows(view: View, index: number, aspect: number): void {
+  /** @internal */
+  writeShadows(view: View, index: number, aspect: number): void {
     const frame = this.viewFrames.get(view)!;
     const camera = this.bodyCamera(view);
     const light = shadowLight(this, view, camera.position, this.viewBlock.moon);
@@ -2920,21 +2731,11 @@ export class Engine {
 }
 
 const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
-const scratchMoonAxis = v3.vec3();
-/**
- * The stars as the eye sees them against a dark sky, EV100 (sky.slang
- * `starExposure`): shown where the view's own adaptation is less open
- * (from orbit by day); about as bright as 1.x draws its star map.
- */
-const EYE_STARS_EV100 = -3;
-
-const scratchView = m4.mat4();
 const scratchCartographic: Cartographic = {
   longitude: 0,
   latitude: 0,
   height: 0,
 };
-const scratchProj = m4.mat4();
 const scratchSelection = m4.mat4();
 const scratchSelectionInverse = m4.mat4();
 const scratchSelectionBody = new Float64Array(16);
@@ -2942,8 +2743,6 @@ const scratchCaptureAnchor = new Float64Array(16);
 const scratchCaptureOrigin = v3.vec3();
 const scratchCaptureAxes = [v3.vec3(), v3.vec3(), v3.vec3()] as const;
 const scratchAo = new Float32Array(16);
-const scratchViewProj = m4.mat4();
-const scratchPlanes = new Float32Array(20);
 
 /** A height capture (`Engine.addHeightCapture`). */
 export interface HeightCapture {
