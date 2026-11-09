@@ -33,7 +33,6 @@ import {
   Engine,
   GlobeController,
   InspectController,
-  defaultRig,
   fromDegrees,
   loadIonMoonMap,
   resolveIonAsset,
@@ -46,7 +45,6 @@ import {
   type ModelResource,
   type ModelResourceOptions,
   type PickResult,
-  type AnchorHandle,
   type Rig,
   type Tileset3D,
   type Globe,
@@ -55,17 +53,12 @@ import {
   type ViewLink,
   type World,
 } from "@cesium/next";
-import {
-  attachSky,
-  createFrameCatalog,
-  createFramesResolver,
-  type CatalogFrameName,
-  type Frame,
-  type FrameCatalog,
-  type FrameData,
-  type FrameDataWarning,
-  type FramesResolver,
-  type SkyInputs,
+import type {
+  FrameCatalog,
+  FrameData,
+  FrameDataWarning,
+  FramesResolver,
+  SkyInputs,
 } from "@cesium/next/frames";
 import { Clock } from "@cesium/next/time";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
@@ -92,7 +85,7 @@ import {
   earthCamera,
 } from "./viewerCamera.ts";
 import { applySky, applyClockSun, setSun } from "./viewerSky.ts";
-import { warn, showWarnings, emit } from "./viewerWarnings.ts";
+import { warn } from "./viewerWarnings.ts";
 import {
   tokenOptions,
   buildGlobe,
@@ -104,6 +97,7 @@ import {
   suspendPresentationUntil,
   resumePresentation,
 } from "./viewerPresentation.ts";
+import { frameCatalog, useFrames, setFrameData } from "./viewerFrames.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -215,9 +209,6 @@ export interface ViewerWarning {
   readonly message: string;
 }
 
-/** The sky's reference frames (`attachSky`), asked for at "precise" with `frameData`. */
-const SKY_FRAMES = ["GCRF", "ITRF", "HCRS", "MOON_ICRF", "MOON_ME"] as const;
-
 /** The Moon map's attributions' owner (`addAttributions`). */
 const MOON_CREDIT = {};
 
@@ -320,12 +311,12 @@ export class Viewer {
   readonly clock: Clock;
   /** @internal */
   sunFromClock_ = true;
-  /** The catalog in use (`frames`), replaced by `setFrameData`. */
-  private frames_!: FrameCatalog;
-  /** Aborts the catalogs' loads on `destroy`. */
-  private readonly framesAbort: AbortController;
-  /** Stops the sky and the warnings of the catalog in use. */
-  private offFrames?: () => void;
+  /** @internal The catalog in use (`frames`), replaced by `setFrameData`. */
+  frames_!: FrameCatalog;
+  /** @internal Aborts the catalogs' loads on `destroy`. */
+  readonly framesAbort: AbortController;
+  /** @internal Stops the sky and the warnings of the catalog in use. */
+  offFrames?: () => void;
   /**
    * @internal What `attachSky` writes, copied to the engine as it asks to render: the
    * stars' turn always, the sun while it follows the clock, the Moon when
@@ -350,10 +341,10 @@ export class Viewer {
     warning: ViewerWarning;
     warningsCleared: Viewer;
   }>();
-  /** The world's frame resolver the viewer set (an app may set its own). */
-  private ownResolver?: FramesResolver;
-  /** The rig the viewer sets on its views for the catalog in use. */
-  private ownRig?: Rig;
+  /** @internal The world's frame resolver the viewer set (an app may set its own). */
+  ownResolver?: FramesResolver;
+  /** @internal The rig the viewer sets on its views for the catalog in use. */
+  ownRig?: Rig;
   /**
    * Always a promise: it resolves to the frames data of
    * `ViewerOptions.frameData` once the catalog has it, or to `undefined`,
@@ -476,9 +467,9 @@ export class Viewer {
     // The frames module: the catalog, the world's resolver over it and the
     // clock its rigs read, each view's rig on ITRF, and the sky.
     engine.cameras.setClock(this.world, this.clock);
-    const frames = early.frames ?? Viewer.catalog(options.frameData);
+    const frames = early.frames ?? frameCatalog(options.frameData);
     this.framesAbort = frames.abort;
-    this.useFrames(frames.catalog, options.frameData !== undefined);
+    useFrames(this, frames.catalog, options.frameData !== undefined);
     const catalog = frames.catalog;
     this.frameData =
       options.frameData === undefined
@@ -627,7 +618,7 @@ export class Viewer {
     // The precise sky's data starts loading while the device is created;
     // data already in hand is in use by the time the viewer is returned.
     if (options.frameData !== undefined) {
-      early.frames = Viewer.catalog(options.frameData);
+      early.frames = frameCatalog(options.frameData);
     }
     const given =
       typeof options.frameData === "object"
@@ -645,27 +636,6 @@ export class Viewer {
       early.frames?.abort.abort();
       throw error;
     }
-  }
-
-  /**
-   * A catalog over `data` (default: the store's URL, loaded only when
-   * asked), its loads stopped by `abort`; with data, the sky's reference
-   * frames are asked for at "precise" at once, so their loads start.
-   */
-  private static catalog(
-    data: string | FrameData | undefined,
-    abort = new AbortController(),
-  ): { catalog: FrameCatalog; abort: AbortController } {
-    const catalog = createFrameCatalog({
-      ...(data !== undefined ? { data } : {}),
-      signal: abort.signal,
-    });
-    if (data !== undefined) {
-      for (const name of SKY_FRAMES) {
-        catalog.get(name, { precision: "precise" });
-      }
-    }
-    return { catalog, abort };
   }
 
   // ------------------------------------------------------------- globe
@@ -861,127 +831,7 @@ export class Viewer {
    * promise) still reports the creation option.
    */
   setFrameData(data: FrameData | undefined): void {
-    if (this.destroyed) {
-      return;
-    }
-    // Everything that can throw first: malformed data or a stranded
-    // binding changes nothing.
-    const bindings = this.carriedBindings();
-    const { catalog } = Viewer.catalog(data, this.framesAbort);
-    this.warningList.length = 0;
-    showWarnings(this);
-    emit(this, "warningsCleared", this);
-    this.useFrames(catalog, data !== undefined, bindings);
-  }
-
-  /**
-   * The anchor bindings of the viewer's own resolver, by reference frame
-   * name, for a new catalog; throws, naming them, for anchors bound to a
-   * reference frame that isn't one of the catalog's built-in ones. A body's
-   * anchor is skipped: the new resolver binds it to its body's fixed
-   * reference frame when it is first used (asking for it here would bind it,
-   * and throw for a body the catalog has no fixed reference frame for).
-   */
-  private carriedBindings(): Array<[AnchorHandle, CatalogFrameName]> {
-    const resolver = this.ownResolver;
-    if (!resolver || this.engine.cameras.resolver(this.world) !== resolver) {
-      return [];
-    }
-    const old = this.frames_;
-    const carried: Array<[AnchorHandle, CatalogFrameName]> = [];
-    const stranded: string[] = [];
-    for (const anchor of this.world.anchors) {
-      if (anchor.body) {
-        continue;
-      }
-      const frame: Frame | undefined = resolver.binding(anchor);
-      if (!frame) {
-        continue;
-      }
-      const name = frame.name as CatalogFrameName;
-      if (old.names.includes(name) && old.get(name) === frame) {
-        carried.push([anchor, name]);
-      } else {
-        stranded.push(`${anchor.name} (bound to ${frame.name})`);
-      }
-    }
-    if (stranded.length > 0) {
-      throw new Error(
-        `setFrameData: anchors bound to reference frames added to viewer.frames can't move to a new catalog: ${stranded.join(", ")}`,
-      );
-    }
-    return carried;
-  }
-
-  /**
-   * Puts the viewer on `catalog`: the world's frame resolver over it, each
-   * view's rig on its ITRF, the sky from it ("precise" with frames data, else
-   * "analytic") and its warnings.
-   */
-  private useFrames(
-    catalog: FrameCatalog,
-    precise: boolean,
-    bindings: ReadonlyArray<[AnchorHandle, CatalogFrameName]> = [],
-  ): void {
-    this.offFrames?.();
-    const cameras = this.engine.cameras;
-    // An application's frame resolver stays, and so do the rigs it places.
-    const appResolver =
-      this.ownResolver !== undefined &&
-      cameras.resolver(this.world) !== this.ownResolver;
-    // The views to put on the new ITRF: all at first, then those still on
-    // the viewer's own rig (an application's rig stays).
-    const own = appResolver
-      ? []
-      : this.views.filter(
-          (view) => !this.ownRig || cameras.rig(view) === this.ownRig,
-        );
-    if (this.ownRig) {
-      // Back to the table's root first, through the old resolver: the new
-      // one can't place the old catalog's ITRF.
-      for (const view of own) {
-        cameras.setRig(view, defaultRig(this.world));
-      }
-    }
-    this.frames_ = catalog;
-    this.ownRig = {
-      position: { frame: catalog.get("ITRF") },
-      orientation: { kind: "free" },
-    };
-    if (!appResolver) {
-      const resolver = createFramesResolver(catalog);
-      for (const [anchor, name] of bindings) {
-        resolver.bindAnchor(anchor, catalog.get(name));
-      }
-      this.ownResolver = resolver;
-      cameras.setResolver(this.world, resolver);
-    }
-    for (const view of own) {
-      cameras.setRig(view, this.ownRig);
-    }
-    // With frameData, one `frameDataFailed` says the load failed.
-    const listed = (warning: FrameDataWarning) =>
-      !(precise && warning.kind === "loadFailed");
-    // Notices from before: a FrameData object's came with it (its loader
-    // logged them), and a load that ended while the device was created
-    // logged its own (nothing listened yet).
-    for (const warning of catalog.warnings.filter(listed)) {
-      warn(this, warning, false);
-    }
-    const offWarning = catalog.events.on("warning", (warning) => {
-      if (listed(warning)) {
-        warn(this, warning, true);
-      }
-    });
-    const detachSky = attachSky(this.sky, {
-      catalog,
-      clock: this.clock,
-      precision: precise ? "precise" : "analytic",
-    });
-    this.offFrames = () => {
-      offWarning();
-      detachSky();
-    };
+    setFrameData(this, data);
   }
 
   /** The rig of the viewer's views (spec section 7.2's default): on ITRF, free. */
