@@ -13,6 +13,7 @@ import {
   type SkyOptions,
   type ToneMapping,
 } from "../../src/index.ts";
+import { ev100Text } from "../../widgets/observerPanel.ts";
 import type { ExampleContext } from "../types.ts";
 import { createContractView, createSlangEditor } from "./editor.ts";
 import { CONTRACT, SlangLanguageServer } from "./languageServer.ts";
@@ -739,7 +740,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     { flip = false, title = "" } = {},
   ) => {
     const sign = flip ? -1 : 1;
-    const shown = el("output", {}, looks[key].toFixed(1));
+    const text = (value: number) =>
+      key === "ev100" ? ev100Text(value) : value.toFixed(1);
+    const shown = el("output", {}, text(looks[key]));
     const input = el("input", {
       type: "range",
       min: String(flip ? -max : min),
@@ -750,7 +753,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       title,
       oninput: () => {
         looks[key] = sign * Number(input.value);
-        shown.textContent = looks[key].toFixed(1);
+        shown.textContent = text(looks[key]);
         write(key, String(looks[key]));
         applyLooks();
       },
@@ -761,7 +764,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     );
     return (value: number) => {
       input.value = String(sign * value);
-      shown.textContent = value.toFixed(1);
+      shown.textContent = text(value);
     };
   };
   const setCompensation = range(

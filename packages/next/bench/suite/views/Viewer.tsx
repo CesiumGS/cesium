@@ -42,6 +42,7 @@ import { ensureCesium } from "../cesium1x.ts";
 import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
 import { AEROSOLS, ionDefaults, type AerosolType } from "../../../src/index.ts";
 import { attachInspector } from "../../../widgets/index.ts";
+import { ev100Text } from "../../../widgets/observerPanel.ts";
 import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";
 import { useAvailableReleases } from "../releases.ts";
 import { limitsTier, reloadWithLimits } from "../limitsTier.ts";
@@ -702,15 +703,25 @@ export function Viewer() {
                           Exposure metered from the image.
                         </Typography>
                       ) : (
-                        <Range
-                          label="Exposure (EV100)"
-                          value={lighting.ev100}
-                          min={-12}
-                          max={18}
-                          step={0.1}
-                          text={lighting.ev100.toFixed(1)}
-                          onChange={(v) => light("ev100", v)}
-                        />
+                        <>
+                          <Range
+                            label="Exposure (EV100)"
+                            value={lighting.ev100}
+                            min={-12}
+                            max={18}
+                            step={0.1}
+                            flip
+                            text={ev100Text(lighting.ev100)}
+                            onChange={(v) => light("ev100", v)}
+                          />
+                          <Typography
+                            variant="caption-md"
+                            color="textSecondary"
+                          >
+                            Right is brighter. A higher EV100 expects a brighter
+                            scene, so it lets in less light.
+                          </Typography>
+                        </>
                       )}
                     </>
                   )}
@@ -1017,6 +1028,7 @@ function Range({
   max,
   step = 1,
   text = String(value),
+  flip = false,
   onChange,
 }: {
   label: string;
@@ -1025,8 +1037,14 @@ function Range({
   max: number;
   step?: number;
   text?: string;
+  /**
+   * The slider runs the other way: its right end is `min`. For a value
+   * where a higher number is darker (EV100), so right stays brighter.
+   */
+  flip?: boolean;
   onChange: (value: number) => void;
 }) {
+  const sign = flip ? -1 : 1;
   return (
     <div className="viewer-range">
       <div className="viewer-range-head">
@@ -1037,13 +1055,13 @@ function Range({
       </div>
       <Slider
         size="small"
-        value={value}
-        min={min}
-        max={max}
+        value={sign * value}
+        min={flip ? -max : min}
+        max={flip ? -min : max}
         step={step}
         aria-label={label}
         aria-valuetext={text}
-        onChange={(_, v) => onChange(v as number)}
+        onChange={(_, v) => onChange(sign * (v as number))}
       />
     </div>
   );

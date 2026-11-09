@@ -198,6 +198,12 @@ export interface ObserverReadout {
   cones?: number;
   /** The eye's adaptation, scotopic cd/m²: its rods'. */
   rods?: number;
+  /**
+   * The glare tier in use at the last render, and why: what `tier: "auto"`
+   * chose for this GPU and view size, or that the settings named it.
+   * Undefined until the view has rendered.
+   */
+  glare?: { tier: GlareTier; reason: string };
 }
 
 /**
@@ -208,12 +214,15 @@ export function observerReadout(
   exposure: Exposure,
   preExposure: number,
   adaptation?: { cones: number; rods: number },
+  glare?: { tier: GlareTier; reason: string },
 ): ObserverReadout {
+  const more = glare ? { glare } : {};
   if ("scale" in exposure) {
     return {
       ev100: undefined,
       equivalent: false,
       preExposure: exposure.scale,
+      ...more,
     };
   }
   if ("ev100" in exposure) {
@@ -221,11 +230,12 @@ export function observerReadout(
       ev100: exposure.ev100,
       equivalent: false,
       preExposure: ev100ToScale(exposure.ev100),
+      ...more,
     };
   }
   const ev100 = scaleToEv100(preExposure);
   if ("auto" in exposure) {
-    return { ev100, equivalent: false, preExposure };
+    return { ev100, equivalent: false, preExposure, ...more };
   }
   return {
     ev100,
@@ -235,5 +245,6 @@ export function observerReadout(
       cones: 10 ** adaptation.cones,
       rods: 10 ** adaptation.rods,
     }),
+    ...more,
   };
 }

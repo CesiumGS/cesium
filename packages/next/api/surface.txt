@@ -538,6 +538,10 @@ widgets	InspectorOptions	interface	-
 widgets	InspectorSnapshot	interface	-
 widgets	MemoryRow	interface	-
 widgets	ModelLoad	interface	-
+widgets	ObserverControlKind	type	-
+widgets	ObserverPanelHandle	interface	-
+widgets	ObserverPanelOptions	interface	-
+widgets	ObserverPanelSection	type	-
 widgets	OrbitContext	interface	-
 widgets	OrbitOptions	interface	-
 widgets	OrbitPlan	interface	-
@@ -554,6 +558,7 @@ widgets	ViewerWarning	interface	-
 widgets	ZoomTarget	type	-
 widgets	attachCredits	function	-
 widgets	attachInspector	function	-
+widgets	attachObserverPanel	function	-
 widgets	attachTimeControls	function	-
 widgets	engineSnapshot	function	-
 widgets	followZoom	function	-

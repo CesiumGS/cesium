@@ -1,6 +1,11 @@
 // Glare's tiers, presets and many views (sky and observer plan, Task 15).
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { glareFor, glareTier, resolveGlare } from "../src/render/post/glare.ts";
+import {
+  glareFor,
+  glareReason,
+  glareTier,
+  resolveGlare,
+} from "../src/render/post/glare.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import {
   cameraGlare,
@@ -273,5 +278,20 @@ describe("in an engine", () => {
       256,
     );
     expect(made).toBeUndefined();
+  });
+});
+
+describe("glareReason", () => {
+  it("says why a tier was chosen, for the readout", () => {
+    const auto = cameraGlare();
+    expect(glareReason(auto, intel, 2e6)).toMatch(/Intel.*reduced/);
+    expect(glareReason(auto, intel, 4e6)).toMatch(/Intel.*4\.0 million/);
+    expect(glareReason(auto, fallback, 1e6)).toMatch(/fallback/);
+    expect(glareReason(auto, apple, 9e6)).toMatch(/9\.0 million/);
+    expect(glareReason(auto, apple, 1e6)).toMatch(/room/);
+    expect(glareReason({ ...auto, tier: "full" }, intel, 1e6)).toMatch(
+      /settings/,
+    );
+    expect(glareReason(null, apple, 1e6)).toMatch(/no veil/);
   });
 });

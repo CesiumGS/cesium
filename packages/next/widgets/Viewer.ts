@@ -936,6 +936,11 @@ export class Viewer {
     return [...tilesets];
   }
 
+  /** The sky data pack in use, or undefined for 1.x's star map. */
+  get skyPackManifest(): SkyPackManifest | undefined {
+    return this.pack;
+  }
+
   /**
    * Takes a sky data pack for the stars and background (`ViewerOptions.skyPack`);
    * null goes back to the default map. Resolves with its manifest, or with

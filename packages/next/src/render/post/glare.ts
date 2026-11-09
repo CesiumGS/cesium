@@ -192,6 +192,32 @@ export function glareTier(adapter: GlareAdapter, pixels: number): GlareTier {
   return pixels > 8_300_000 ? "reduced" : "full";
 }
 
+/** Why `glareTier` chose, in a sentence, for a readout. */
+export function glareReason(
+  settings: GlareSettings | null,
+  adapter: GlareAdapter,
+  pixels: number,
+): string {
+  if (!settings || (!settings.veil && !settings.spikes)) {
+    return "no veil or spikes are on";
+  }
+  if (settings.tier !== "auto") {
+    return "chosen in the settings";
+  }
+  if (adapter.isFallbackAdapter) {
+    return "this GPU is a software fallback";
+  }
+  const megapixels = (pixels / 1e6).toFixed(1);
+  if (adapter.vendor.toLowerCase().includes("intel")) {
+    return pixels > 3_700_000
+      ? `an Intel GPU at ${megapixels} million pixels`
+      : "an Intel GPU, which starts reduced until it is measured";
+  }
+  return pixels > 8_300_000
+    ? `${megapixels} million pixels is a lot for one view`
+    : "this GPU has room for all of it";
+}
+
 /** What a view's glare settings mean on its adapter. */
 export interface ResolvedGlare {
   tier: GlareTier;
@@ -819,6 +845,14 @@ export function glareFor(
     engine.gpu.adapterInfo,
     width * height,
   );
+  view.glareResolved = {
+    tier: resolved.tier,
+    reason: glareReason(
+      view.observer.glare,
+      engine.gpu.adapterInfo,
+      width * height,
+    ),
+  };
   if (resolved.tier === "off") {
     return undefined;
   }

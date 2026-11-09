@@ -26,6 +26,7 @@ import {
 import { ViewAnchorState } from "./viewAnchorState.ts";
 import {
   DAYLIGHT_EXPOSURE,
+  type GlareTier,
   type ObserverReadout,
   type ObserverSettings,
   cameraObserver,
@@ -386,6 +387,7 @@ export class View {
       this.state.observer.exposure,
       this.exposureScale,
       this.autoExposure?.metered ? this.autoExposure : undefined,
+      this.glareResolved,
     );
   }
   /**
@@ -452,6 +454,8 @@ export class View {
     resolvePosition?: (p: Float64Array | undefined) => void;
     resolvePoint?: (p: CorePick | undefined) => void;
   }> = [];
+  /** @internal The glare tier at the last render, and why (`readout`). */
+  glareResolved?: { tier: GlareTier; reason: string };
   /** @internal Waiting for the view's next render (`readHdr`). */
   pendingHdrReads: Array<(image: HdrImage) => void> = [];
   /** @internal The same, after glare. */

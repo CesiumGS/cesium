@@ -33,6 +33,13 @@ export {
   type CreditsHandle,
 } from "./credits.ts";
 export {
+  attachObserverPanel,
+  type ObserverControlKind,
+  type ObserverPanelHandle,
+  type ObserverPanelOptions,
+  type ObserverPanelSection,
+} from "./observerPanel.ts";
+export {
   attachInspector,
   type InspectorHandle,
   type InspectorOptions,

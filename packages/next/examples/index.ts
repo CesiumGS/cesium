@@ -33,6 +33,19 @@ export const EXAMPLES: ExampleInfo[] = [
     source: () => import("./translucency/main.ts?raw").then((m) => m.default),
   },
   {
+    id: "night-sky",
+    title: "Night sky: the observer",
+    description:
+      "Stars, the Milky Way and the sun, seen by an eye or by a camera at an exposure: change who is looking and the light stays the same. Each control says whether it is physics, a model of an eye or a lens, or a look.",
+    labels: ["Sky", "Exposure", "Glare"],
+    globe: "ellipsoid",
+    layout: "side",
+    stackNarrow: true,
+    noWarningNotice: false,
+    load: () => import("./night-sky/main.ts"),
+    source: () => import("./night-sky/main.ts?raw").then((m) => m.default),
+  },
+  {
     id: "slang-playground",
     title: "Slang playground",
     description:
