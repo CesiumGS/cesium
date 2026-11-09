@@ -558,7 +558,9 @@ A placement is one of:
     or read glTF morph targets in plan 5 **(author's call)**. 4b's paired
     tilesets are paired by the design globe itself, which supplies the
     partner positions as the attribute, as it does today; a declared
-    pairing is a candidate upstream proposal, not plan 5's. `t` may be any
+    pairing is a candidate upstream proposal, not plan 5's. (Overtaken in
+    Task 20: the core now reads `CESIUM_dual_position` for scene items; see
+    the overall plan, §13.25.) `t` may be any
     finite number, so values past 1 extrapolate, which keeps the design
     globe's "exaggerate the error" control. Only at `t = 0` or `t = 1` does a
     pick give content coordinates;
@@ -798,7 +800,7 @@ are audited in 5i, which lists each seam, its bypass test, and any gap.
   tilesets stays in the example.
 - Each new WebGPU seam has its bypass test.
 - The surface-map tool for 5i is in place (section 15.2), and every later
-  sub-plan shows its surface diff.
+  sub-plan shows its surface diff. (Overtaken in Task 20: see the overall plan, §13.25.)
 
 ## 8. Sub-plan 5a, continued: the seam for later tessellation
 

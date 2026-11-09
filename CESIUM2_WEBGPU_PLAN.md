@@ -7965,7 +7965,42 @@ real work. The wording and test-strength nits the reviews raised are left out.
   resolver falls back per edge of a route. Settle which is right when the
   physical sky goes per body, together with the exposure tuning (the 0.18
   target and the highlight guard need more testing).
+- **Emission in nits (owner-approved, 2026-11-08; build after Task 20, before
+  5e).** A material with `KHR_materials_emissive_strength` emits in physical
+  units: nits = factor x strength x 1,000 cd/m2, multiplied by exposure and
+  metered. An explicit per-material option stays display-relative and out of
+  the meter. A material without the extension stays display-relative. Today
+  `surface.slang` treats all emission as display-relative.
 - **Plan 5i's list (the API review):**
+  - "placement" means five things: `SceneItemOptions.placement` (a number from
+    0 to 1), the `Placement` union, `Tileset3D.placement`, `ModelPlacement`,
+    and `/proj`'s `TilesetPlacement`, `PlacementMode` and `placeRigid`. An
+    item's number can't grow into a fitted operation, so rename it to a
+    position blend before anyone relies on it;
+  - `/proj` holds what a host needs (`placeHosted`, `pickDesign`, `Alignment`,
+    `SnapService`, `ClientSnapService`, `EngineeringFrame`), beside the `Pj*`
+    types. Split an engineering entry from `/proj` before 5f adds to it;
+  - "opacity" has two meanings: a region at 0.5 stops picks and can stay
+    ground, an item at 0.5 lets picks through, casts nothing, and is ground
+    only if nothing opaque draws;
+  - two ways in: `Engine.addTileset` against `loadTileset` plus `world.add`;
+    `TilesetOptions.customShader` and `style` against
+    `SceneItemOptions.shader`; `show` on both; `anchor` and `modelMatrix` on
+    the tileset though an item attaches to a reference frame;
+  - `SceneItem.surfaceRank` holds a rule from one example (a translucent item
+    counts as ground only where no opaque item draws), under a header saying
+    the engine gives items no meaning. A host may want otherwise;
+  - core names in the public surface: `castTerrainRay`, `TerrainRay*`,
+    `SlicePool`, `SliceUser`, `STAGES`, `MaterialFlags`, `BASE_*_LIMITS`,
+    `PLACEMENT_MONOMIALS`, `collectFullDetailContents`, `summarizeContent`,
+    `tileHeaderKey`. Ion's names belong behind the content source of §13.21;
+  - smaller: `FrameStats` beside `FrameResolver` and `FrameMotion`;
+    `PickCamera` in both core and `/proj`; a `Globe` takes degrees in
+    `terrainClipped`, radians in `sampleHeight`; `/frames` publishes
+    `toParentMatrix`, `rotationPart` and `frameBias`; `/proj` lists
+    `projTokenProblem` and `strictWkt2`; `/measure` re-exports `C` and `GM_*`;
+  - a view bit freed by removing a view can be reused, so an item masked to the
+    old view appears in the new one;
   - `eastNorthUpToFixedFrame`'s engine callers keep the normal at the point,
     for parity with the Earth, so two east-north-up conventions differ by
     about 0.13 microradians at 250 m;
@@ -8416,6 +8451,18 @@ So streaming's logic is already free of the GPU API. The tangle is in `Engine.ts
 
 **Measure before choosing.** Share of target browsers without core WebGPU, from the handbook's compatibility tab; whether compatibility mode covers most of that share; and the Slang to GLSL ES spike on two kernels and one material.
 
+**What the file split has to watch (from plan 5a's whole-branch review, 2026-11-08).**
+
+- Pass order is registration order. `FrameGraph` has no sort, and 20 `addPass` calls in `buildViewFrame` close over its locals. Keep the registration sequence in one function, and split only the bodies.
+- 89 test files reach privates by cast (`recordsU32`, `drawBatches`, `viewFrames`, `cascades`, `ready`, `loading`). A moved field fails at run time, or reads `undefined` in a comparison and turns an assertion vacuous. Change the tests in the same commit.
+- `Engine.ts` has 20 module-level scratch values, and `selectionViews` and `selectionCasters` share one array, safe only because of the order they run in. Give each moved function its own.
+- `Globe extends Tileset3D`, with 23 `this.source` branches in the base. The base's constructor builds `itemHost` and a `SceneItem` for a globe. Keep that order.
+- `Tileset3D.update` depends on order: casters follow view selection, and `receivers` reads other tilesets' `lastSelected`.
+- There's no import-cycle test. A helper importing back from `World` or `Tileset3D` could leave `class Globe extends Tileset3D` evaluated too early. Add the check before the first move.
+- Names that pin files or methods: the seams allowlist (`World.bindSlab`, `Engine.drawOverlays`), source pins in `test/shadowCasters.test.ts` and `test/terrainTranslucency.test.ts`, `handbook/src/pipeline.ts`, and the counts in this section. A seam detector that matches `records` names stops seeing a helper that renames them.
+- `sideEffects` lists no `src/` module, so a split-out module that must run on import gets tree-shaken. Run `scripts/checkBundle.mjs` and `test/libraryWidgets.test.ts` after each move.
+- Don't fix while moving. `setDrawShader` and `setDrawMaterial` duplicate the batch-move logic; merge them in a separate commit.
+
 ### 13.18 Colour in the styling language (owner, 2026-11-08)
 
 **Decided.** CSS notation (`#ff8800`, `rgb()`, `hsl()`, named colours) is sRGB, as CSS defines it, and is converted to linear where it enters the style. Shading stays linear. An opaque, unlit colour therefore looks as written and matches 1.x. Numeric values such as `vec4(...)` stay raw linear.
@@ -8502,6 +8549,7 @@ Do this around plan 5f's fitted operations, before building them. Goal: one eleg
 - **One model of a placement:** rigid, dual position and fitted operation as cases of a single idea, and what each layer owns: the frame tree (rigid), coordinate operations (non-rigid), content (precomputed results), and the renderer's placement seam (applying the mapping per vertex).
 - **Normals and tangents.** Today a dual-position vertex moves but keeps its rigid normal: 0.197 degrees on the 44 km corridor, 0.225 calculated at 50 km. Tried on 2026-11-08: deriving it per fragment from both positions. It fails, because the design position isn't in the fragment stage, a varying would cost every draw, and float32 derivative noise is estimated at about 0.13 degrees up close. Other options: a second normal, 12 bytes a vertex or about 4 octahedrally encoded; a displacement varying on placed draws; or dropping dual positions for a fitted operation with its Jacobian.
 - **Everything else carried per vertex or per instance:** instances, skins and morph targets when animation arrives, and what custom shaders see (`positionMC`, `normalMC`, design and placed).
+- **Recomputing a placement when the root changes.** The spec (§7.2 step 3, §7.6) has the frames module recomputing per-vertex placements for each root. No such hook exists: `FrameResolver` has no method for it, a placement is a model-space map, and `DrawPlacementInfo.root` names a root nothing is computed for. Harmless for dual positions, and 5f will need it.
 - **Bounds, picks and snaps, and shadow casters** through the same model, and the inter-stage varying budget, which is full.
 - **2D and Columbus view as design view (owner, 2026-11-08).** Design view (spec §13.2) is 2.0's route to this need: the render root in a projected CRS, tiles fitted flat, and an orthographic camera for the 2D look. As specified, it's regional, drawn within the CRS's area of use. Decide whether a whole-world flat map follows from the same mechanism, with a world-spanning CRS, tiling and wrapping across the antimeridian.
 - **What the tile format carries,** and how it relates to glTF 2.1 external assets and 3D Tiles (§13.25).
