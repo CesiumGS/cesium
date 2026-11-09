@@ -1,5 +1,5 @@
 import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
-import { TerrainSource, type TerrainLoader } from "../globe/TerrainSource.ts";
+import type { TerrainLoader } from "../globe/TerrainSource.ts";
 import type { TerrainTileInfo } from "../globe/quantizedMesh.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
@@ -45,21 +45,14 @@ import { ANCHOR_EYE_REACH, createAnchorEyes } from "./anchorEyes.ts";
 import { HeightClamping } from "./HeightClamping.ts";
 import { contentAnchor, earthAnchor } from "./earthAnchor.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
-import {
-  GlobeImagery,
-  type GlobeImageryOptions,
-} from "../globe/GlobeImagery.ts";
+import type { GlobeImageryOptions } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
-import { Tileset3D } from "../streaming/Tileset3D.ts";
+import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TilesetOptions } from "../streaming/tilesetTypes.ts";
-import { Globe } from "../globe/Globe.ts";
+import type { Globe } from "../globe/Globe.ts";
 import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
-import {
-  uploadModel,
-  type ModelResource,
-  type ModelResourceOptions,
-} from "./gltfModel.ts";
+import type { ModelResource, ModelResourceOptions } from "./gltfModel.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import {
   createSpatialQueries,
@@ -87,6 +80,18 @@ import {
   scratchPlanes,
 } from "../render/view/viewBlocks.ts";
 import { dropPersistent, render } from "../render/view/renderTick.ts";
+import {
+  loadGltfFile,
+  compileShader,
+  loadModel,
+  uploadModelTo,
+  loadTileset,
+  adoptTileset,
+  addTileset,
+  addTerrain,
+  addEllipsoid,
+  removeTileset,
+} from "./engineContent.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -348,7 +353,8 @@ export class Engine {
   readonly ctx: RenderContext;
   /** @internal The real-time atmosphere and the sky drawn from it. */
   readonly sky: Sky;
-  private readonly workers = new WorkerPool();
+  /** @internal */
+  readonly workers = new WorkerPool();
   /** Content request windows per origin, shared by all tilesets. */
   readonly requests = new RequestScheduler();
   /** @internal */
@@ -855,16 +861,7 @@ export class Engine {
     url: string | URL,
     options: { headers?: Record<string, string>; signal?: AbortSignal } = {},
   ): Promise<GltfAsset> {
-    return this.workers.request<GltfAsset>(
-      "gltf",
-      {
-        url: new URL(url, globalThis.location?.href).href,
-        headers: options.headers,
-        // KTX2/Basis textures are transcoded to a block format this device supports.
-        textureSupport: this.gpu.caps.textureCompression,
-      },
-      options.signal,
-    );
+    return loadGltfFile(this, url, options);
   }
 
   /**
@@ -873,7 +870,7 @@ export class Engine {
    * the compiler's messages.
    */
   async compileShader(shader: CustomShader): Promise<void> {
-    await this.ctx.shaders.compile(shader);
+    return compileShader(this, shader);
   }
 
   /**
@@ -891,16 +888,7 @@ export class Engine {
       signal?: AbortSignal;
     } = {},
   ): Promise<ModelResource> {
-    const { headers, signal, ...upload } = options;
-    const asset = await this.loadGltf(url, {
-      ...(headers ? { headers } : {}),
-      ...(signal ? { signal } : {}),
-    });
-    signal?.throwIfAborted();
-    return this.uploadModel(world, asset, {
-      name: String(url).split("/").pop(),
-      ...upload,
-    });
+    return loadModel(this, world, url, options);
   }
 
   /**
@@ -916,12 +904,7 @@ export class Engine {
     asset: GltfAsset,
     options: ModelResourceOptions = {},
   ): ModelResource {
-    return uploadModel(
-      { ctx: this.ctx, clamping: this.clamping },
-      world,
-      asset,
-      options,
-    );
+    return uploadModelTo(this, world, asset, options);
   }
 
   /**
@@ -933,18 +916,12 @@ export class Engine {
     url: string | URL,
     options?: TilesetOptions,
   ): Promise<Tileset3D> {
-    return Tileset3D.load(
-      this,
-      undefined,
-      new URL(url, globalThis.location?.href).href,
-      options,
-    );
+    return loadTileset(this, url, options);
   }
 
   /** @internal A tileset loaded alone was added to its world. */
   adoptTileset(tileset: Tileset3D): void {
-    this.tilesets.push(tileset);
-    this.wake();
+    adoptTileset(this, tileset);
   }
 
   /**
@@ -959,15 +936,7 @@ export class Engine {
     url: string | URL,
     options?: TilesetOptions,
   ): Promise<Tileset3D> {
-    const tileset = await Tileset3D.load(
-      this,
-      world,
-      new URL(url, globalThis.location?.href).href,
-      options,
-    );
-    this.tilesets.push(tileset);
-    this.wake();
-    return tileset;
+    return addTileset(this, world, url, options);
   }
 
   /**
@@ -982,18 +951,7 @@ export class Engine {
     url: string | URL,
     options: GlobeOptions = {},
   ): Promise<Globe> {
-    const base = new URL(url, globalThis.location?.href);
-    const layer = base.pathname.endsWith(".json")
-      ? base
-      : new URL("layer.json", base.href.endsWith("/") ? base : `${base.href}/`);
-    const headers = options.headers;
-    const source = await TerrainSource.create(
-      layer.href,
-      headers,
-      this.terrainLoader,
-      { warnings: new Set() },
-    );
-    return this.addGlobeSource(world, source, options);
+    return addTerrain(this, world, url, options);
   }
 
   /**
@@ -1003,13 +961,11 @@ export class Engine {
    * unless `options.anchor` names another.
    */
   addEllipsoid(world: World, options: GlobeOptions = {}): Globe {
-    const source = TerrainSource.ellipsoid(this.terrainLoader, {
-      warnings: new Set(),
-    });
-    return this.addGlobeSource(world, source, options);
+    return addEllipsoid(this, world, options);
   }
 
-  private readonly terrainLoader = (
+  /** @internal */
+  readonly terrainLoader = (
     request: Parameters<TerrainLoader>[0],
     signal: AbortSignal,
   ) =>
@@ -1019,72 +975,8 @@ export class Engine {
       signal,
     );
 
-  private addGlobeSource(
-    world: World,
-    source: TerrainSource,
-    options: GlobeOptions,
-  ): Globe {
-    const tileset = Globe.create(this, world, source, {
-      maximumScreenSpaceError: 2,
-      ...options,
-    });
-    const drape = (provider: ImageryProvider) =>
-      new GlobeImagery(
-        this.ctx,
-        world,
-        provider,
-        this.requests,
-        this.workers,
-        options.imageryOptions,
-      );
-    if (options.lights) {
-      void Promise.resolve(options.lights).then(
-        (provider) => {
-          if (provider && this.tilesets.includes(tileset)) {
-            tileset.lights = new GlobeImagery(
-              this.ctx,
-              world,
-              provider,
-              this.requests,
-              this.workers,
-              { role: "lights" },
-            );
-            this.requestRender();
-          }
-        },
-        () => undefined,
-      );
-    }
-    if (options.imagery instanceof Promise) {
-      tileset.imageryPending = true;
-      void options.imagery.then(
-        (provider) => {
-          if (this.tilesets.includes(tileset)) {
-            tileset.imagery = provider ? drape(provider) : undefined;
-          }
-          tileset.imageryPending = false;
-          this.requestRender();
-        },
-        () => {
-          tileset.imageryPending = false;
-          this.requestRender();
-        },
-      );
-    } else if (options.imagery) {
-      tileset.imagery = drape(options.imagery);
-    }
-    this.tilesets.push(tileset);
-    this.wake();
-    return tileset;
-  }
-
   removeTileset(tileset: Tileset3D): void {
-    const index = this.tilesets.indexOf(tileset);
-    if (index >= 0) {
-      this.tilesets.splice(index, 1);
-    }
-    tileset.destroy();
-    this.wake();
+    removeTileset(this, tileset);
   }
 
   /** Render-target pool usage (transient textures shared by all views). */
