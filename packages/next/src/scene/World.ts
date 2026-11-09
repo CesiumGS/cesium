@@ -10,15 +10,7 @@ import {
 } from "./MirroredTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
 import { DrawArguments } from "../render/drawArguments.ts";
-import {
-  checkParameterValue,
-  checkPlacement,
-  finite32,
-  maxDisplacement,
-  type FittedOperation,
-  type Placement,
-  type PlacementParameter,
-} from "./placement.ts";
+import type { Placement, PlacementParameter } from "./placement.ts";
 import { PlacementTable } from "./placementTable.ts";
 import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
@@ -40,8 +32,6 @@ import {
   TRANSFORM_WORDS,
   TRANSFORM_WORD,
   RADIUS_WORD,
-  CENTER_WORD,
-  NO_PLACEMENT,
   FEATURE_ID_WORD,
   FLAGS_WORD,
   CASTER_MASK_WORD,
@@ -146,6 +136,13 @@ import {
   setTerrainClip,
 } from "./world/terrainClips.ts";
 import { castRays } from "./world/rays.ts";
+import {
+  releasePlacementParameter,
+  releasePlacement,
+  createPlacementParameter,
+  setPlacement,
+  drawPlacement,
+} from "./world/placements.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -299,17 +296,14 @@ export class World {
   /** @internal */
   uploadsPending = false;
   /**
-   * The placements buffer (plan 5a's call 42): parameters and each placed
+   * @internal The placements buffer (plan 5a's call 42): parameters and each placed
    * draw's block, bound in the draw group for the vertex stage.
    */
-  private readonly placementTable: PlacementTable;
-  /** Each draw's per-vertex placement, by draw slot (`setPlacement`). */
-  private readonly drawPlacements: Array<DrawPlacement | undefined> = [];
-  /** This world's placement parameters: their float and their draws. */
-  private readonly parameters = new WeakMap<
-    PlacementParameter,
-    ParameterSlot
-  >();
+  readonly placementTable: PlacementTable;
+  /** @internal Each draw's per-vertex placement, by draw slot (`setPlacement`). */
+  readonly drawPlacements: Array<DrawPlacement | undefined> = [];
+  /** @internal This world's placement parameters: their float and their draws. */
+  readonly parameters = new WeakMap<PlacementParameter, ParameterSlot>();
   /** @internal */
   readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> = [];
   private materialsF32: Float32Array;
@@ -1775,11 +1769,7 @@ export class World {
    * Its draws must have left it.
    */
   releasePlacementParameter(parameter: PlacementParameter): void {
-    const slot = this.parameters.get(parameter);
-    if (slot !== undefined) {
-      this.parameters.delete(parameter);
-      this.placementTable.releaseParameter(slot.word);
-    }
+    releasePlacementParameter(this, parameter);
   }
 
   /**
@@ -1874,7 +1864,7 @@ export class World {
       );
     }
     this.drawConstants.clear(handle.index);
-    this.releasePlacement(handle.index);
+    releasePlacement(this, handle.index);
     const pointDraw = this.pointDraws.get(handle.index);
     if (pointDraw) {
       this.flushUploads();
@@ -2507,32 +2497,7 @@ export class World {
    * bounds (`maxDisplacement`) as it changes grows its draws' bounds too.
    */
   createPlacementParameter(value: number): PlacementParameter {
-    checkParameterValue("createPlacementParameter", value);
-    const word = this.placementTable.allocateParameter(value);
-    const slot: ParameterSlot = { word, draws: new Set() };
-    let current = value;
-    const changed = (old: number) => this.parameterChanged(slot, old, current);
-    const parameter: PlacementParameter = Object.seal({
-      get value() {
-        return current;
-      },
-      set value(next: number) {
-        checkParameterValue("PlacementParameter", next);
-        if (next === current) {
-          return;
-        }
-        const old = current;
-        current = next;
-        try {
-          changed(old);
-        } catch (error) {
-          current = old; // refused: nothing was written
-          throw error;
-        }
-      },
-    });
-    this.parameters.set(parameter, slot);
-    return parameter;
+    return createPlacementParameter(this, value);
   }
 
   /**
@@ -2558,184 +2523,12 @@ export class World {
    * after the mesh's vertices.
    */
   setPlacement(handle: DrawHandle, placement: Placement | undefined): void {
-    if (!this.hasDraw(handle)) {
-      throw new Error("setPlacement: the draw was removed.");
-    }
-    const index = handle.index;
-    const next =
-      placement !== undefined && placement.kind !== "affine"
-        ? placement
-        : undefined;
-    const o = index * RECORD_WORDS;
-    if (next) {
-      checkPlacement("setPlacement", next);
-      const flags = this.recordsU32[o + FLAGS_WORD]!;
-      if (flags & (RecordFlags.billboard | RecordFlags.points)) {
-        throw new Error(
-          "setPlacement: a billboard or point draw's positions are offsets on screen; it has no per-vertex placement.",
-        );
-      }
-      if (this.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
-        throw new Error(
-          "setPlacement: an instanced draw has no per-vertex placement: it would move a mesh's vertices before each instance's matrix, and not the instances.",
-        );
-      }
-      for (const t of parametersOf(next)) {
-        if (!this.parameters.has(t)) {
-          throw new Error(
-            "setPlacement: the placement's t isn't a parameter of this world (World.createPlacementParameter).",
-          );
-        }
-      }
-      if (next.kind === "dual") {
-        const mesh = this.drawBatches[index]!.mesh;
-        const components = this.meshRanges
-          .get(mesh.id)
-          ?.named?.get(next.semantic);
-        if (components === undefined || components < 3) {
-          throw new RangeError(
-            `setPlacement: the draw's mesh has no ${next.semantic} attribute of 3 components for its dual position.`,
-          );
-        }
-      }
-    }
-    const old = this.drawPlacements[index];
-    const base = old ? old.base : this.recordsF32[o + RADIUS_WORD]!;
-    const reach = next ? this.placementReach(index, next, base) : 1;
-    const pad = next ? maxDisplacement(next, reach) : 0;
-    if (next) {
-      finite32("setPlacement", "the draw's grown bounding radius", base + pad);
-    }
-    this.releasePlacement(index);
-    if (!next) {
-      if (old) {
-        this.drawConstants.setPlacement(index, NO_PLACEMENT);
-        this.drawConstants.setRadius(index, base);
-        this.contentRevision_++;
-        this.markDirty(index);
-      }
-      return;
-    }
-    const at = this.placementTable.add(
-      next,
-      (t) => this.parameters.get(t)!.word,
-    );
-    const slots = parametersOf(next).map((t) => this.parameters.get(t)!);
-    for (const slot of slots) {
-      slot.draws.add(index);
-    }
-    this.drawPlacements[index] = {
-      placement: next,
-      at,
-      base,
-      pad,
-      reach,
-      slots,
-    };
-    this.drawConstants.setPlacement(index, at);
-    this.drawConstants.setRadius(index, base + pad);
-    this.contentRevision_++;
-    this.markDirty(index);
+    setPlacement(this, handle, placement);
   }
 
   /** The draw's per-vertex placement (`setPlacement`), if any. */
   drawPlacement(handle: DrawHandle): Placement | undefined {
-    return this.hasDraw(handle)
-      ? this.drawPlacements[handle.index]?.placement
-      : undefined;
-  }
-
-  /** A parameter changed: its float, and its draws' bounds and views. */
-  private parameterChanged(
-    slot: ParameterSlot,
-    old: number,
-    value: number,
-  ): void {
-    if (slot.draws.size === 0) {
-      this.placementTable.setParameter(slot.word, value);
-      return;
-    }
-    // Between 0 and 1 no kind's bounds move (a dual position's are fixed
-    // for |t| ≤ 1, a blend's for 0 ≤ t ≤ 1): the float alone, and every
-    // view redraws, with no walk over the draws (a morph's every tick).
-    if (old >= 0 && old <= 1 && value >= 0 && value <= 1) {
-      this.placementTable.setParameter(slot.word, value);
-      this.version++;
-      this.changedViews = ALL_VIEWS;
-      return;
-    }
-    // The bounds first, all checked before anything is written.
-    const pads: number[] = [];
-    for (const index of slot.draws) {
-      const placed = this.drawPlacements[index]!;
-      const pad = maxDisplacement(placed.placement, placed.reach);
-      finite32(
-        "PlacementParameter",
-        "a draw's grown bounding radius",
-        placed.base + pad,
-      );
-      pads.push(pad);
-    }
-    this.placementTable.setParameter(slot.word, value);
-    let views = 0;
-    let k = 0;
-    for (const index of slot.draws) {
-      const placed = this.drawPlacements[index]!;
-      const pad = pads[k++]!;
-      if (pad !== placed.pad) {
-        placed.pad = pad;
-        this.drawConstants.setRadius(index, placed.base + pad);
-        this.uploadsPending = true;
-      }
-      views |= this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
-    }
-    this.version++;
-    this.changedViews |= views;
-  }
-
-  /** Frees a draw's placement block and its parameters' links to it. */
-  private releasePlacement(index: number): void {
-    const placed = this.drawPlacements[index];
-    if (!placed) {
-      return;
-    }
-    this.placementTable.remove(placed.at, placed.placement);
-    for (const slot of placed.slots) {
-      slot.draws.delete(index);
-    }
-    this.drawPlacements[index] = undefined;
-  }
-
-  /**
-   * How far a draw's vertices reach in a fitted operation's normalized
-   * coordinates (at least 1): its bounding sphere's farthest point from
-   * the operation's center over its scale.
-   */
-  private placementReach(
-    index: number,
-    placement: Placement,
-    radius: number,
-  ): number {
-    const o = index * RECORD_WORDS + CENTER_WORD;
-    const f32 = this.recordsF32;
-    const reach = (f: "identity" | FittedOperation) =>
-      f === "identity"
-        ? 1
-        : (Math.hypot(
-            f32[o]! - f.center[0]!,
-            f32[o + 1]! - f.center[1]!,
-            f32[o + 2]! - f.center[2]!,
-          ) +
-            radius) /
-          f.scale;
-    switch (placement.kind) {
-      case "fitted":
-        return Math.max(1, reach(placement));
-      case "blend":
-        return Math.max(1, reach(placement.from), reach(placement.to));
-      default:
-        return 1;
-    }
+    return drawPlacement(this, handle);
   }
 
   /** Changes a draw's tint (linear RGBA, multiplied with its material). */
@@ -3696,13 +3489,6 @@ export class World {
       buffer.destroy();
     }
   }
-}
-
-/** The parameters a placement reads. */
-function parametersOf(placement: Placement): PlacementParameter[] {
-  return placement.kind === "dual" || placement.kind === "blend"
-    ? [placement.t]
-    : [];
 }
 
 /** A point draw's cull parameters (pointCull.slang `PointCull`). */
