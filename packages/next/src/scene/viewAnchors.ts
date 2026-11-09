@@ -6,6 +6,23 @@ import { MAX_ANCHORS } from "../render/layout.ts";
 import { Camera, type CameraPose } from "./Camera.ts";
 import type { View } from "./View.ts";
 import type { AnchorHandle } from "./world/types.ts";
+import type { ViewAnchorState } from "./viewAnchorState.ts";
+
+/** @internal Scene side: a view's anchor placements. */
+export interface ViewAnchorContext extends Pick<
+  View,
+  "anchorPlacement" | "camera" | "wake" | "world"
+> {
+  readonly anchorState: Pick<
+    ViewAnchorState,
+    | "anchorRevision_"
+    | "anchorsRemovals"
+    | "anchorsWorld"
+    | "placed"
+    | "placementOwners"
+    | "placements"
+  >;
+}
 
 const IDENTITY_16 = Float64Array.of(
   1,
@@ -85,13 +102,13 @@ export function inverseRotate(
 }
 
 export function anchorPlacement(
-  view: View,
+  view: ViewAnchorContext,
   anchor: AnchorHandle | undefined,
   out = new Float64Array(16),
 ): Float64Array {
   const slot = placementSlot(view, anchor, "anchorPlacement");
-  if (view.placed[slot] === 1) {
-    out.set(view.placements.subarray(slot * 16, slot * 16 + 16));
+  if (view.anchorState.placed[slot] === 1) {
+    out.set(view.anchorState.placements.subarray(slot * 16, slot * 16 + 16));
   } else {
     out.fill(0);
     out[0] = out[5] = out[10] = out[15] = 1;
@@ -100,7 +117,7 @@ export function anchorPlacement(
 }
 
 export function setAnchorPlacement(
-  view: View,
+  view: ViewAnchorContext,
   anchor: AnchorHandle | undefined,
   matrix: ArrayLike<number>,
 ): void {
@@ -126,19 +143,19 @@ export function setAnchorPlacement(
   let identity = true;
   for (let i = 0; i < 16; i++) {
     const v = matrix[i]!;
-    view.placements[slot * 16 + i] = v;
+    view.anchorState.placements[slot * 16 + i] = v;
     if (v !== IDENTITY_16[i]) {
       identity = false;
     }
   }
-  view.placed[slot] = identity ? 0 : 1;
-  view.placementOwners[slot] = anchor;
-  view.anchorRevision_++;
+  view.anchorState.placed[slot] = identity ? 0 : 1;
+  view.anchorState.placementOwners[slot] = anchor;
+  view.anchorState.anchorRevision_++;
   view.wake?.();
 }
 
 export function anchorCamera(
-  view: View,
+  view: ViewAnchorContext,
   anchor: AnchorHandle | undefined,
   out = new Camera(),
 ): Camera {
@@ -159,7 +176,7 @@ export function anchorCamera(
 }
 
 export function setCameraFromAnchor(
-  view: View,
+  view: ViewAnchorContext,
   anchor: AnchorHandle | undefined,
   pose: CameraPose,
 ): void {
@@ -182,7 +199,7 @@ export function setCameraFromAnchor(
 }
 
 export function pickPlacements(
-  view: View,
+  view: ViewAnchorContext,
 ): Map<AnchorHandle | undefined, Float64Array | undefined> {
   const out = new Map<AnchorHandle | undefined, Float64Array | undefined>();
   const copy = (m: Float64Array | undefined) => m && Float64Array.from(m);
@@ -195,13 +212,13 @@ export function pickPlacements(
 
 /** An anchor's placement, or undefined at the identity. */
 export function placementOf(
-  view: View,
+  view: ViewAnchorContext,
   anchor: AnchorHandle | FrameKey | undefined,
   caller: string,
 ): Float64Array | undefined {
   const slot = placementSlot(view, anchor, caller);
-  return view.placed[slot] === 1
-    ? view.placements.subarray(slot * 16, slot * 16 + 16)
+  return view.anchorState.placed[slot] === 1
+    ? view.anchorState.placements.subarray(slot * 16, slot * 16 + 16)
     : undefined;
 }
 
@@ -210,7 +227,7 @@ export function placementOf(
  * (`undefined`, or the world's `root`).
  */
 function placementSlot(
-  view: View,
+  view: ViewAnchorContext,
   anchor: AnchorHandle | FrameKey | undefined,
   caller: string,
 ): number {
@@ -227,13 +244,13 @@ function placementSlot(
     );
   }
   const slot = (anchor as AnchorHandle).slot;
-  if (view.placementOwners[slot] !== anchor) {
+  if (view.anchorState.placementOwners[slot] !== anchor) {
     // The slot's last placement was for a removed anchor (normally
     // forgotten already, by syncAnchors).
-    view.placementOwners[slot] = anchor as AnchorHandle;
-    if (view.placed[slot] === 1) {
-      view.placed[slot] = 0;
-      view.anchorRevision_++;
+    view.anchorState.placementOwners[slot] = anchor as AnchorHandle;
+    if (view.anchorState.placed[slot] === 1) {
+      view.anchorState.placed[slot] = 0;
+      view.anchorState.anchorRevision_++;
       view.wake?.();
     }
   }
@@ -244,24 +261,27 @@ function placementSlot(
  * Forgets placements of anchors the world removed (or of another world's
  * anchors, after `world` was set), counting it in `anchorRevision`.
  */
-export function syncAnchors(view: View): void {
+export function syncAnchors(view: ViewAnchorContext): void {
   const world = view.world;
   const removals = world.anchorRemovals;
-  if (world === view.anchorsWorld && removals === view.anchorsRemovals) {
+  if (
+    world === view.anchorState.anchorsWorld &&
+    removals === view.anchorState.anchorsRemovals
+  ) {
     return;
   }
-  const first = view.anchorsWorld === undefined;
-  view.anchorsWorld = world;
-  view.anchorsRemovals = removals;
+  const first = view.anchorState.anchorsWorld === undefined;
+  view.anchorState.anchorsWorld = world;
+  view.anchorState.anchorsRemovals = removals;
   for (let slot = 1; slot < MAX_ANCHORS; slot++) {
-    const owner = view.placementOwners[slot];
+    const owner = view.anchorState.placementOwners[slot];
     if (owner && world.anchorOf(owner) !== owner) {
-      view.placementOwners[slot] = undefined;
-      view.placed[slot] = 0;
+      view.anchorState.placementOwners[slot] = undefined;
+      view.anchorState.placed[slot] = 0;
     }
   }
   if (!first) {
-    view.anchorRevision_++;
+    view.anchorState.anchorRevision_++;
     view.wake?.();
   }
 }

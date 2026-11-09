@@ -3,7 +3,7 @@ import type { World } from "./World.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
-import { MAX_ANCHORS, type ViewLighting } from "../render/layout.ts";
+import { type ViewLighting } from "../render/layout.ts";
 import { EARTH, bodyKey, type Body } from "./Body.ts";
 import type { CorePick } from "./pick.ts";
 import type { SceneItem } from "./SceneItem.ts";
@@ -23,6 +23,7 @@ import {
   placementOf,
   rotate,
 } from "./viewAnchors.ts";
+import { ViewAnchorState } from "./viewAnchorState.ts";
 
 /** A line list drawn on top of a view. */
 export interface Overlay {
@@ -235,6 +236,9 @@ function watched<T extends object>(value: T, changed: () => void): T {
  * cheap: they own no geometry, only per-view state.
  */
 export class View {
+  /** @internal Its anchors' placements (`viewAnchors.ts`). */
+  readonly anchorState: ViewAnchorState = new ViewAnchorState();
+
   readonly camera: Camera;
   readonly target: RenderTarget;
   /**
@@ -429,24 +433,6 @@ export class View {
   }
 
   private readonly rect: PixelRect = { x: 0, y: 0, width: 1, height: 1 };
-
-  // ------------------------------------------------------- anchor placements
-
-  /** @internal Render space ← anchor, by slot (16 float64 each); slot 0: no anchor. */
-  readonly placements = new Float64Array(MAX_ANCHORS * 16);
-  /**
-   * @internal The anchor each slot's placement was set for; a slot whose anchor was
-   * removed (and the slot reused) reads as the identity again.
-   */
-  readonly placementOwners: Array<AnchorHandle | undefined> = [];
-  /** @internal Slots whose placement is not the identity. */
-  readonly placed = new Uint8Array(MAX_ANCHORS);
-  /** @internal */
-  anchorRevision_ = 0;
-  /** @internal The world and its `anchorRemovals` the placements were last checked against. */
-  anchorsWorld: World | undefined;
-  /** @internal */
-  anchorsRemovals = 0;
   /** `bodyKey(body)`, for `bodyAnchor`. */
   private bodyKey_: string | undefined;
 
@@ -458,7 +444,7 @@ export class View {
    */
   get anchorRevision(): number {
     syncAnchors(this);
-    return this.anchorRevision_;
+    return this.anchorState.anchorRevision_;
   }
 
   /**
