@@ -92,6 +92,7 @@ import {
   earthCamera,
 } from "./viewerCamera.ts";
 import { applySky, applyClockSun, setSun } from "./viewerSky.ts";
+import { warn, showWarnings, emit } from "./viewerWarnings.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -202,14 +203,6 @@ export interface ViewerWarning {
   readonly kind: FrameDataWarning["kind"] | "frameDataFailed";
   readonly message: string;
 }
-
-/** Each warning kind in a few words, for the notice's collapsed line. */
-const WARNING_SUMMARY: Readonly<Record<ViewerWarning["kind"], string>> = {
-  frameDataFailed: "Frames data didn't load; the sky is approximate",
-  loadFailed: "Frames data didn't load",
-  eopEnded: "The Earth orientation data is out of date",
-  leapSecondsExpired: "The leap-second table has expired",
-};
 
 /** The sky's reference frames (`attachSky`), asked for at "precise" with `frameData`. */
 const SKY_FRAMES = ["GCRF", "ITRF", "HCRS", "MOON_ICRF", "MOON_ME"] as const;
@@ -327,8 +320,10 @@ export class Viewer {
     moonAxes: new Float64Array(6),
     requestRender: () => applySky(this),
   };
-  private readonly warningList: ViewerWarning[] = [];
-  private warnings_?: WarningsHandle;
+  /** @internal */
+  readonly warningList: ViewerWarning[] = [];
+  /** @internal */
+  warnings_?: WarningsHandle;
   /**
    * `warning`: each `ViewerWarning`, as it is added to `warnings`;
    * `warningsCleared`: the list was emptied (`setFrameData`).
@@ -473,7 +468,8 @@ export class Viewer {
             (tree) => tree.data,
             (error: unknown) => {
               if (!this.destroyed && catalog === this.frames_) {
-                this.warn(
+                warn(
+                  this,
                   {
                     kind: "frameDataFailed",
                     message: `Viewer: the frames data did not load, so the sky stays on the analytic models (${error instanceof Error ? error.message : String(error)})`,
@@ -934,8 +930,8 @@ export class Viewer {
     const bindings = this.carriedBindings();
     const { catalog } = Viewer.catalog(data, this.framesAbort);
     this.warningList.length = 0;
-    this.showWarnings();
-    this.emit("warningsCleared", this);
+    showWarnings(this);
+    emit(this, "warningsCleared", this);
     this.useFrames(catalog, data !== undefined, bindings);
   }
 
@@ -1031,11 +1027,11 @@ export class Viewer {
     // logged them), and a load that ended while the device was created
     // logged its own (nothing listened yet).
     for (const warning of catalog.warnings.filter(listed)) {
-      this.warn(warning, false);
+      warn(this, warning, false);
     }
     const offWarning = catalog.events.on("warning", (warning) => {
       if (listed(warning)) {
-        this.warn(warning, true);
+        warn(this, warning, true);
       }
     });
     const detachSky = attachSky(this.sky, {
@@ -1052,42 +1048,6 @@ export class Viewer {
   /** The rig of the viewer's views (spec section 7.2's default): on ITRF, free. */
   private rig(): Rig {
     return this.ownRig!;
-  }
-
-  /** Emits `name`; a listener that throws is reported, not passed on. */
-  private emit<K extends "warning" | "warningsCleared">(
-    name: K,
-    payload: K extends "warning" ? ViewerWarning : Viewer,
-  ): void {
-    try {
-      this.events.emit(name, payload as never);
-    } catch (error) {
-      console.error(`Viewer: a "${name}" listener threw`, error);
-    }
-  }
-
-  /** The notice's list, from `warnings`. */
-  private showWarnings(): void {
-    this.warnings_?.set(
-      this.warningList.map((w) => ({
-        message: w.message,
-        summary: WARNING_SUMMARY[w.kind],
-      })),
-    );
-  }
-
-  /** Adds a warning: listed, shown, emitted and (with `log`) logged. */
-  private warn(warning: FrameDataWarning | ViewerWarning, log: boolean): void {
-    const entry: ViewerWarning = {
-      kind: warning.kind,
-      message: warning.message,
-    };
-    this.warningList.push(entry);
-    if (log) {
-      console.warn(entry.message);
-    }
-    this.showWarnings();
-    this.emit("warning", entry);
   }
 
   /** @internal The sun's direction at the clock's time. */
