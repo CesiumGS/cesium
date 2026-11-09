@@ -11,6 +11,7 @@
     "noEmit": false,
     "declaration": true,
     "emitDeclarationOnly": true,
+    "stripInternal": true,
     "rewriteRelativeImportExtensions": true,
     "rootDir": "widgets",
     "outDir": "dist-lib/types/widgets",
