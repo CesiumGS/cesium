@@ -8507,6 +8507,15 @@ Do this around plan 5f's fitted operations, before building them. Goal: one eleg
 - **What the tile format carries,** and how it relates to glTF 2.1 external assets and 3D Tiles (§13.25).
 - **Curves through placement.** Vector geometry as render curves: an exact source (a circle or clothoid in its own CRS), then placement, then quadratic segments with an optional rational weight and a per-segment error bound, refined by view. A conic stays a conic only under projective maps, and a reprojection isn't one, so a circle is exact in design coordinates only, and a measure or snap goes back to the source. Quadratics through a perspective view become rational. Planar faces with curved trims and 3D Tiles 2.0's 3D-native vectors both meet this; curved surfaces meet the tessellation seam, and b-reps (§13.20).
 
+### 13.27 CAD display extensions, with the vector design (owner, 2026-11-08)
+
+Do soon, designed together with vector drawing, because they overlap with it. `BENTLEY_materials_planar_fill`, `BENTLEY_materials_line_style`, `BENTLEY_materials_point_style` and `EXT_mesh_primitive_edge_visibility` are implemented in 1.x and not in 2.0 (noted in §11's CAD display extensions). They read today's tiles and aren't optional for that content's look.
+
+- **One line and point path:** line width, dashes, points and edges should share what vector drawing uses, rather than a second quad expansion. A material's line style and a style expression's stroke should reach the same shader, so `line_style` could read as a style.
+- **Planar fill:** "behind" order for coplanar faces needs a depth or id approach. 1.x uses an id framebuffer (`PlanarFillIdFramebuffer.js`). Check what the depth prepass and translucency do, and whether it's cheap on a GPU-driven path.
+- **Edges and curves:** edges are currently mesh data, so exact edges from curves can come later (§13.26).
+- **Snap:** 1.x's `Scene.snap` prefers edges, and 2.0's snap should use these.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
