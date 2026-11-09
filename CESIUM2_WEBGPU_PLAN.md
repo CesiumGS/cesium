@@ -8703,7 +8703,7 @@ Read together, the recent sketches (§13.22, §13.28, §13.29, §13.30, §13.31,
 
 Don't build the interface until a second renderer needs it: the second pass only keeps scene data and rasterizer data apart, so the seam can open later. Two consumers (a tracer and a WebGL 2 renderer) will shape it better than guessing at one.
 
-**Order.** The second pass of the file split comes first, since its contexts and passes are the seams these plug into: it should be designed with this section open. Then the medium stack, starting from the `sky-measure` results; the observer with §13.22's design; the point pipeline from the star measurements. Settle 1 and 2 before 5e and the API review (5i), since they change public API.
+**Order.** The second pass of the file split comes first, since its contexts and passes are the seams these plug into: it should be designed with this section open. Then, before 5b (owner, 2026-11-08), a sky and observer plan, so the API has moved before 5d and 5e build on it: the observer stage on a first version of §13.22's interface, the sky data pack, star drawing, glare, and removing the fudges. Planets, the shutter and deep sky stay in 5e. The medium stack follows from the `sky-measure` results, and the point pipeline from the star measurements.
 
 ## 14. Follow-ups
 
