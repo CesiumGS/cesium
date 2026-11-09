@@ -13,6 +13,8 @@ import {
   PLACEMENT_WORD,
   RADIUS_WORD,
   RECORD_WORDS,
+  FLAGS_WORD,
+  RecordFlags,
   VIEW_MASK_WORD,
 } from "../src/render/layout.ts";
 import type { Engine } from "../src/scene/Engine.ts";
@@ -600,13 +602,118 @@ describe("scene items", () => {
     s.remove();
   });
 
-  it("a tile without the attribute isn't drawn by an item that moves it, and the tileset says so", async () => {
+  it("a tile that can't take a placement draws at its own position, and the tileset says which", async () => {
     contents = { "bare.gltf": () => slab(10, false) };
     const s = await scene([tile("bare.gltf", [R, 0, 50])], {}, true);
     const own = s.first().placement!.draws[0]!;
-    expect(s.record(own).viewMask).toBe(0);
-    expect([...s.tileset.warnings].join()).toMatch(/_SECOND/);
+    expect(s.record(own).viewMask & s.bit).not.toBe(0);
+    expect(s.record(own).placement).toBe(NO_PLACEMENT);
+    const warning = [...s.tileset.warnings].join();
+    expect(warning).toMatch(/has no _SECOND attribute/);
+    expect(warning).toMatch(/own position \(placement 0\)/);
+    // The base item asked for the second position still shows the tile, at
+    // its own; a further item would only lay a copy over it.
+    s.tileset.items[0]!.placement = 1;
+    const further = s.world.add(s.tileset, { placement: 1, opacity: 0.4 });
+    await frames(2);
+    expect(s.record(own).viewMask & s.bit).not.toBe(0);
+    expect(s.first().items!.get(further)!.draws.length).toBe(1);
+    const copy = s.first().items!.get(further)!.draws[0]!;
+    expect(s.record(copy).viewMask).toBe(0);
     s.remove();
+  });
+
+  describe("collision and ground follow what is in the scene", () => {
+    const rays = [
+      {
+        origin: Float64Array.of(R + 30, 0, 50),
+        direction: Float64Array.of(-1, 0, 0),
+        maxDistance: 100,
+      },
+    ];
+    const jobs = (s: { world: World; tileset: Tileset3D }) => {
+      const bySlab = (
+        s.world as unknown as {
+          rayJobs(
+            r: typeof rays,
+            o: object,
+          ): Map<number, Uint32Array<ArrayBuffer>>;
+        }
+      ).rayJobs(rays, { collisionOnly: true, anchor: s.tileset.anchor });
+      let count = 0;
+      for (const list of bySlab.values()) {
+        count += list.length / 4;
+      }
+      return count;
+    };
+    const flags = (s: ReturnType<typeof helpers>, draw: DrawHandle) =>
+      (s.world as unknown as { recordsU32: ArrayLike<number> }).recordsU32[
+        draw.index * RECORD_WORDS + FLAGS_WORD
+      ]!;
+    const ground = (s: ReturnType<typeof helpers>, draw: DrawHandle) =>
+      (flags(s, draw) & RecordFlags.notGround) === 0;
+    const solid = (s: ReturnType<typeof helpers>, draw: DrawHandle) =>
+      ground(s, draw) && (flags(s, draw) & RecordFlags.collision) !== 0;
+
+    it("moves to the next item when the base item is removed", async () => {
+      const s = await scene(
+        [tile("a.gltf", [R, 0, 50])],
+        { enableCollision: true },
+        true,
+      );
+      const own = s.first().placement!.draws[0]!;
+      expect(jobs(s)).toBe(1);
+      const second = s.world.add(s.tileset, { placement: 1 });
+      await frames(2);
+      const twin = s.first().items!.get(second)!.draws[0]!;
+      // The first opaque item stands for the tileset.
+      expect(solid(s, own)).toBe(true);
+      expect(solid(s, twin)).toBe(false);
+      s.tileset.items[0]!.remove();
+      await frames(2);
+      expect(solid(s, own)).toBe(false);
+      expect(solid(s, twin)).toBe(true);
+      expect(jobs(s)).toBe(1);
+      // Switching collision follows it.
+      s.tileset.enableCollision = false;
+      expect(ground(s, twin)).toBe(true);
+      expect((flags(s, twin) & RecordFlags.collision) !== 0).toBe(false);
+      s.tileset.enableCollision = true;
+      second.remove();
+      await frames(1);
+      expect(jobs(s)).toBe(0);
+      engine.removeView(s.view);
+      engine.removeTileset(s.tileset);
+    });
+
+    it("a translucent item doesn't count while an opaque one draws, and does when none does", async () => {
+      const s = await scene(
+        [tile("a.gltf", [R, 0, 50])],
+        { enableCollision: true },
+        true,
+      );
+      const own = s.first().placement!.draws[0]!;
+      const ghost = s.world.add(s.tileset, { placement: 1, opacity: 0.3 });
+      await frames(2);
+      const g = s.first().items!.get(ghost)!.draws[0]!;
+      expect(solid(s, own)).toBe(true);
+      expect(solid(s, g)).toBe(false);
+      // The base item turns translucent: now the first translucent one counts.
+      s.tileset.items[0]!.opacity = 0.5;
+      expect(solid(s, own)).toBe(true);
+      expect(solid(s, g)).toBe(false);
+      // An opaque item beats both.
+      const third = s.world.add(s.tileset, { placement: 0.5 });
+      await frames(2);
+      const t = s.first().items!.get(third)!.draws[0]!;
+      expect(solid(s, t)).toBe(true);
+      expect(solid(s, own)).toBe(false);
+      // Hidden: the next one stands in.
+      third.show = false;
+      expect(solid(s, own)).toBe(true);
+      expect(solid(s, t)).toBe(false);
+      s.remove();
+    });
   });
 
   it("the design placement: the tileset's at placement 0, its second at 1, none between", async () => {

@@ -2648,7 +2648,8 @@ export class World {
    * @internal A second draw of `source`'s mesh, on `source`'s transform and
    * with its features, to draw a tileset's tile again (`SceneItem`): the geometry and the transform are shared, so it
    * costs a record, a draw item and its feature IDs. Hidden until given a
-   * view mask. Not ground. Ray queries test each mesh and transform once, whichever draws show it. Undefined for a draw that
+   * view mask. Not ground or collision (`SceneItem` sets those for the item
+   * that stands for the tileset). Ray queries test each mesh and transform once, whichever draws show it. Undefined for a draw that
    * can't be drawn twice this way: instanced, points or a billboard, whose
    * records are tied to their instance or point tables. Remove it before
    * `source`'s transform goes.
@@ -2696,19 +2697,30 @@ export class World {
    * point set or a billboard.
    */
   drawHasPosition(handle: DrawHandle, semantic: string): boolean {
+    return this.positionRefusal(handle, semantic) === undefined;
+  }
+
+  /**
+   * @internal Why the draw can't take a dual position, as words that follow
+   * "the draw's mesh" or "the draw": undefined when it can.
+   */
+  positionRefusal(handle: DrawHandle, semantic: string): string | undefined {
     if (!this.hasDraw(handle)) {
-      return false;
+      return "was removed";
     }
     const { mesh, points, billboard } = this.drawBatches[handle.index]!;
+    if (points || billboard) {
+      return "is a point set or a billboard";
+    }
+    if (
+      this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_COUNT_WORD]! > 0
+    ) {
+      return "is instanced";
+    }
     const components = this.meshRanges.get(mesh.id)?.named?.get(semantic);
-    return (
-      !points &&
-      !billboard &&
-      this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_COUNT_WORD]! ===
-        0 &&
-      components !== undefined &&
-      components >= 3
-    );
+    return components !== undefined && components >= 3
+      ? undefined
+      : `has no ${semantic} attribute of 3 components`;
   }
 
   /**
@@ -3980,6 +3992,23 @@ export class World {
       this.growClips(block + count);
     }
     return block;
+  }
+
+  /**
+   * @internal Whether the draw is ground: what the height pass samples and
+   * clamping stands on (`RecordFlags.notGround` when it isn't).
+   */
+  setGround(handle: DrawHandle, ground: boolean): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    const next = ground
+      ? flags & ~RecordFlags.notGround
+      : flags | RecordFlags.notGround;
+    if (this.drawConstants.setFlags(handle.index, next)) {
+      this.uploadsPending = true;
+    }
   }
 
   /** Whether ray casts with `collisionOnly` may hit the draw. */

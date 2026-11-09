@@ -115,6 +115,8 @@ export interface SceneItemHost {
   warn(message: string): void;
   /** The item is leaving its tileset. */
   removed(item: SceneItem): void;
+  /** Which item stands for the surface may have changed (every tile). */
+  surfaceChanged(): void;
 }
 
 /**
@@ -285,6 +287,12 @@ export class SceneItem {
         this.applyCasterMask(tile);
       }
     });
+    if (
+      was >= OPAQUE_OPACITY !== opacity >= OPAQUE_OPACITY ||
+      (was === 0) !== (opacity === 0)
+    ) {
+      this.host.surfaceChanged();
+    }
     this.host.changed();
   }
 
@@ -366,6 +374,7 @@ export class SceneItem {
     }
     this.releaseDual();
     this.host.removed(this);
+    this.host.surfaceChanged();
     this.host.changed();
   }
 
@@ -499,6 +508,36 @@ export class SceneItem {
     this.releaseDual();
   }
 
+  /**
+   * @internal How well this item stands for its tileset's surface on `tile`,
+   * which collision and ground follow (`Tileset3D.enableCollision`, height
+   * queries, clamping): 0 if it isn't drawn there (hidden, in no view,
+   * transparent or refused), 1 if it is translucent, 2 if it is opaque. A
+   * translucent item is a ghost of the surface, so it counts only where no
+   * opaque item draws the tile.
+   */
+  surfaceRank(tile: Tile): 0 | 1 | 2 {
+    if (
+      this.removed_ ||
+      !this.show_ ||
+      this.opacity_ === 0 ||
+      this.viewMask_ === 0 ||
+      this.refusesTile(tile)
+    ) {
+      return 0;
+    }
+    return this.opacity_ >= OPAQUE_OPACITY ? 2 : 1;
+  }
+
+  /** @internal Marks its draws of `tile` as ground and collision, or not. */
+  setSurface(tile: Tile, surface: boolean, collision: boolean): void {
+    const world = this.host.world;
+    for (const draw of this.drawsOf(tile)) {
+      world.setGround(draw, surface);
+      world.setCollision(draw, surface && collision);
+    }
+  }
+
   /** @internal Frees its draws of a tile (its content is leaving, or it is). */
   unplace(tile: Tile): void {
     const entry = tile.items?.get(this);
@@ -608,15 +647,24 @@ export class SceneItem {
       this.applyViewMask(tile);
       this.applyCasterMask(tile);
     }
+    this.host.surfaceChanged();
     this.host.changed();
   }
 
   private shownMask(tile: Tile): number {
-    return !this.show_ ||
-      this.opacity_ === 0 ||
-      tile.items?.get(this)?.denied === true
+    return !this.show_ || this.opacity_ === 0 || this.refusesTile(tile)
       ? 0
       : this.viewMask_;
+  }
+
+  /**
+   * Whether it draws nothing of `tile`: a draw there can't take a placement
+   * (`applyPlacement`). The item that holds the tile's own draws still draws
+   * them, at their own position; a further item would only lay a second copy
+   * over them.
+   */
+  private refusesTile(tile: Tile): boolean {
+    return !this.holdsBase && tile.items?.get(this)?.denied === true;
   }
 
   private setColorWords(): void {
@@ -682,10 +730,14 @@ export class SceneItem {
     const dual = this.dual;
     entry.denied = false;
     for (const draw of entry.draws) {
-      if (dual !== undefined && !world.drawHasPosition(draw, dual.semantic)) {
+      const refusal =
+        dual === undefined
+          ? undefined
+          : world.positionRefusal(draw, dual.semantic);
+      if (refusal !== undefined) {
         entry.denied = true;
         this.host.warn(
-          `A tile's mesh has no ${dual.semantic} attribute of 3 components, or is instanced, so it has no second position and no item that moves it draws that tile`,
+          `A tile's draw ${refusal}, so it can't be drawn at its second position or between: it is drawn at its own position (placement 0) by the item that draws the tile itself, and a further item draws nothing of it`,
         );
         world.setPlacement(draw, undefined);
         continue;

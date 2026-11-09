@@ -532,15 +532,60 @@ export class Tileset3D implements TileTree {
     }
     this.collision = value;
     this.changed();
-    const visit = (tile: Tile) => {
-      for (const draw of tile.placement?.draws ?? []) {
-        this.world.setCollision(draw, value);
-      }
-      tile.children.forEach(visit);
-    };
-    visit(this.root);
+    if (this.source) {
+      const visit = (tile: Tile) => {
+        for (const draw of tile.placement?.draws ?? []) {
+          this.world.setCollision(draw, value);
+        }
+        tile.children.forEach(visit);
+      };
+      visit(this.root);
+      return;
+    }
+    this.surfaceChanged();
   }
   private collision = false;
+
+  /**
+   * Collision and ground follow what is in the scene: on each tile, the first
+   * opaque item (in the order added) that is drawn and not refused stands
+   * for the tileset, at its own placement; with none, the first translucent
+   * one does. Its draws are ground and take `enableCollision`; every other
+   * item's draws, and the tile's own draws when no item holds them, are
+   * neither. A globe's surface is no item and keeps its own.
+   */
+  private applySurface(tile: Tile): void {
+    if (this.source) {
+      return;
+    }
+    let chosen: SceneItem | undefined;
+    let best = 0;
+    for (const item of this.itemList) {
+      const rank = item.surfaceRank(tile);
+      if (rank > best) {
+        chosen = item;
+        best = rank;
+      }
+    }
+    for (const item of this.itemList) {
+      item.setSurface(tile, item === chosen, this.collision);
+    }
+    if (this.baseItem === undefined) {
+      for (const draw of tile.placement?.draws ?? []) {
+        this.world.setGround(draw, false);
+        this.world.setCollision(draw, false);
+      }
+    }
+  }
+
+  /** @internal The item that stands for the surface may have changed. */
+  surfaceChanged(): void {
+    for (const tile of this.loaded) {
+      if (tile.placement) {
+        this.applySurface(tile);
+      }
+    }
+  }
 
   /**
    * The tileset's `modelMatrix` (1.x `Cesium3DTileset.modelMatrix`).
@@ -1197,6 +1242,7 @@ export class Tileset3D implements TileTree {
       warn: (message) => {
         this.warnings.add(message);
       },
+      surfaceChanged: () => this.surfaceChanged(),
       removed: (item) => {
         const at = this.itemList.indexOf(item);
         if (at >= 0) {
@@ -1324,6 +1370,7 @@ export class Tileset3D implements TileTree {
       this.baseItem = item;
     }
     this.itemList.push(item);
+    this.surfaceChanged();
     this.changed();
     return item;
   }
@@ -2315,6 +2362,7 @@ export class Tileset3D implements TileTree {
         // The placement holds the model: freed when the tile unloads.
         model.release();
         tile.placement = placement;
+        this.applySurface(tile);
         for (const draw of placement.draws) {
           this.drawTiles.set(draw.index, {
             generation: draw.generation,
