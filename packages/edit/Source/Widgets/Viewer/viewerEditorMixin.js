@@ -3,6 +3,7 @@
 import { Check, DeveloperError, defined } from "@cesium/core";
 import SelectTool from "../../Editor/SelectTool.js";
 import TranslateTool from "../../Editor/TranslateTool.js";
+import EditorCameraControls from "./EditorCameraControls.js";
 import EditorOutliner from "../EditorOutliner/EditorOutliner.js";
 import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
 
@@ -64,6 +65,12 @@ const viewerPropertyNames = [
  * exposing them as <code>viewer.editor</code>, <code>viewer.editorTools</code>,
  * <code>viewer.editorToolbar</code> and <code>viewer.editorOutliner</code>.
  * Escape cancels the active tool's interaction.
+ * <p>
+ * Also replaces the camera's mouse input with controls that
+ * leave the left button to the editor: middle-drag orbits around the active
+ * meshes, or all meshes if none are active, Shift+middle-drag pans, and the
+ * wheel zooms toward the pointer.
+ * </p>
  *
  * @function viewerEditorMixin
  *
@@ -118,6 +125,7 @@ function viewerEditorMixin(viewer, options) {
   );
   let outliner;
   let removeKeyBindings;
+  let cameraControls;
   try {
     outliner = createWidget(
       viewer,
@@ -131,13 +139,20 @@ function viewerEditorMixin(viewer, options) {
       editor,
       options.keyBindings,
     );
+    cameraControls = new EditorCameraControls(viewer, editor);
   } catch (error) {
+    removeKeyBindings?.();
     destroyWidget(outliner);
     destroyWidget(toolbar);
     throw error;
   }
   defineViewerEditorProperties(viewer, editor, tools, toolbar, outliner);
-  installCleanup(viewer, [toolbar, outliner], removeKeyBindings);
+  installCleanup(
+    viewer,
+    [toolbar, outliner],
+    removeKeyBindings,
+    cameraControls,
+  );
 }
 
 /** @ignore */
@@ -240,11 +255,13 @@ function defineViewerEditorProperties(
  * @param {Viewer} viewer
  * @param {Array<ViewerEditorWidget|undefined>} widgets
  * @param {Function} removeKeyBindings
+ * @param {EditorCameraControls} cameraControls
  * @ignore
  */
-function installCleanup(viewer, widgets, removeKeyBindings) {
+function installCleanup(viewer, widgets, removeKeyBindings, cameraControls) {
   const destroyViewer = viewer.destroy;
   viewer.destroy = function () {
+    cameraControls.destroy();
     removeKeyBindings();
     for (const widget of widgets) {
       destroyWidget(widget);

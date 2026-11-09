@@ -69,10 +69,17 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     viewer = {
       container,
       scene: {
+        canvas: document.createElement("canvas"),
         primitives: {
           contains: (primitive) => primitive === editor,
         },
+        screenSpaceCameraController: {
+          enableInputs: true,
+          enableCollisionDetection: true,
+        },
       },
+      addController: jasmine.createSpy("addController"),
+      removeController: jasmine.createSpy("removeController"),
       destroy: viewerDestroy,
     };
   });
@@ -418,5 +425,38 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     viewer.destroy();
 
     expect(editor.destroy).not.toHaveBeenCalled();
+  });
+
+  describe("camera controls", function () {
+    it("replace the camera controller's inputs", function () {
+      viewerEditorMixin(viewer, { editor });
+
+      expect(viewer.addController).toHaveBeenCalledTimes(3);
+      expect(viewer.scene.screenSpaceCameraController.enableInputs).toBe(false);
+    });
+
+    it("are removed with the viewer", function () {
+      viewerEditorMixin(viewer, { editor });
+      const added = viewer.addController.calls.allArgs().map((args) => args[0]);
+
+      viewer.destroy();
+
+      expect(
+        viewer.removeController.calls.allArgs().map((args) => args[0]),
+      ).toEqual(added);
+      expect(viewer.scene.screenSpaceCameraController.enableInputs).toBe(true);
+    });
+
+    it("aren't added if the mixin fails", function () {
+      expect(() =>
+        viewerEditorMixin(viewer, {
+          editor,
+          keyBindings: { modes: { x: "missing" } },
+        }),
+      ).toThrowDeveloperError();
+
+      expect(viewer.addController).not.toHaveBeenCalled();
+      expect(viewer.scene.screenSpaceCameraController.enableInputs).toBe(true);
+    });
   });
 });
