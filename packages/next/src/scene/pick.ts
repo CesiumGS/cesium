@@ -8,7 +8,8 @@
 import type { FrameKey } from "../camera/frameResolver.ts";
 import { UNDERLAY_DEPTH } from "../render/layout.ts";
 import type { CameraPose } from "./Camera.ts";
-import { inverseRotate, type PickResult, type View } from "./View.ts";
+import { type PickResult, type View } from "./View.ts";
+import { inverseRotate } from "./viewAnchors.ts";
 import type { SceneItem } from "./SceneItem.ts";
 import type { AnchorHandle, DrawHandle, FeatureInfo, World } from "./World.ts";
 
