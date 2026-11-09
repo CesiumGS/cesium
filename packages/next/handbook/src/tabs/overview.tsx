@@ -53,9 +53,10 @@ const MILESTONES = [
 const CLONE =
   "git clone --branch cesium-2.0-webgpu-poc https://github.com/CesiumGS/cesium.git";
 
-const QUICK_START = `npm install
-npm run setup --workspace @cesium/next   # once per machine
-npm run dev --workspace @cesium/next     # then open http://127.0.0.1:5190`;
+const QUICK_START = `cd cesium
+npm install
+npm run setup --workspace @cesium/next
+npm run dev --workspace @cesium/next`;
 
 export function Overview() {
   const core = libraryEntry("core");
@@ -86,9 +87,15 @@ export function Overview() {
         </p>
         <CodeBlock language="shell" code={CLONE} />
         <p>
-          Then, from the new <C>cesium</C> folder:
+          Then run these from the repository root. You don't need to go into{" "}
+          <C>packages/next</C>, because <C>--workspace</C> does that:
         </p>
         <CodeBlock language="shell" code={QUICK_START} />
+        <p>
+          You only need <C>setup</C> once per machine. It fetches the tools and
+          builds this repository's 1.x if that build is missing. When the server
+          is up, open <a href="http://127.0.0.1:5190">http://127.0.0.1:5190</a>.
+        </p>
         <p>
           To load your own Cesium ion content, paste your token into{" "}
           <strong>ion token</strong> at the foot of Dyno's side rail. Without
