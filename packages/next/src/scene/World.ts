@@ -35,15 +35,11 @@ import {
   NO_FEATURE,
   NO_RECORD,
   NO_STREAM,
-  COMPONENT_TYPE_CODES,
   PROPERTY_TEXTURES,
   PROPERTY_TEXTURE_BINDING,
   instanceDistanceFlags,
-  TEXTURE_PROPERTY,
-  TEXTURE_PROPERTY_WORDS,
   MAX_DIRECTORY_ENTRIES,
   attributeHash,
-  metadataKey,
   DRAW_ITEM_SIZE,
   RECORD_WORDS,
   TRANSFORM_WORDS,
@@ -71,7 +67,6 @@ import {
   packTint,
   writeInstance,
   writeMaterial,
-  type MeshStreams,
 } from "../render/layout.ts";
 import { splitHigh, splitVec3 } from "../math/transforms.ts";
 import type { Body } from "./Body.ts";
@@ -137,15 +132,14 @@ import {
   frameOf,
   checkAnchor,
 } from "./world/transforms.ts";
-import {
-  plannedColumns,
-  tableBytes,
-  uploadTable,
-  releaseTable,
-  warnUnavailable,
-  uploadTables,
-} from "./world/featureTables.ts";
+import { warnUnavailable, uploadTables } from "./world/featureTables.ts";
 import { flushUploads, queueUpload } from "./world/uploads.ts";
+import {
+  addMesh,
+  addPointMesh,
+  setPointProperties,
+  removeMesh,
+} from "./world/meshes.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -446,7 +440,8 @@ export class World {
     | undefined
   > = [];
   private readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
-  private nextMeshId = 0;
+  /** @internal */
+  nextMeshId = 0;
   private drawCount = 0;
   private bundle?: GPURenderBundle;
   /**
@@ -890,172 +885,7 @@ export class World {
 
   /** Uploads geometry into the arena as separate attribute streams. */
   addMesh(mesh: MeshData): MeshHandle {
-    const vertexCount = mesh.positions.length / 3;
-    const vertexRanges: Array<[number, number]> = [];
-    // One slab holds all of it (and its draws' instance streams later):
-    // room for the streams, the directory and table columns together.
-    const named0 =
-      Object.keys(mesh.attributes ?? {}).length +
-      Object.keys(mesh.metadata ?? {}).length;
-    const streamBytes =
-      [
-        mesh.positions,
-        mesh.normals,
-        mesh.uvs,
-        mesh.colors,
-        mesh.tangents,
-        mesh.featureIds,
-        ...Object.values(mesh.attributes ?? {}).map((a) => a.data),
-        ...Object.values(mesh.metadata ?? {}).map((a) => a.data),
-      ].reduce((n, d) => n + (d ? align4(d.byteLength) : 0), 0) +
-      (mesh.propertyTextures?.length ?? 0) * TEXTURE_PROPERTY_WORDS * 4 +
-      4 *
-        (1 +
-          (named0 +
-            (mesh.propertyTextures?.length ?? 0) +
-            (mesh.featureTable
-              ? plannedColumns(mesh.featureTable).columns.length
-              : 0)) *
-            3) +
-      (mesh.featureTable ? tableBytes(this, mesh.featureTable) : 0);
-    const slab = this.slabs.pick(streamBytes, mesh.indices.byteLength);
-    if (!slab) {
-      throw new CapacityError("vertex arena");
-    }
-    const releaseRanges = () => {
-      for (const [o, size] of vertexRanges) {
-        slab.vertex.release(o, size);
-      }
-      this.slabs.tidy(slab);
-    };
-    const upload = (data: Float32Array | Uint32Array | undefined): number => {
-      if (!data) {
-        return NO_STREAM;
-      }
-      const offset = this.slabs.allocateVertex(slab, data.byteLength);
-      if (offset === undefined) {
-        releaseRanges();
-        throw new CapacityError("vertex arena");
-      }
-      vertexRanges.push([offset, data.byteLength]);
-      queueUpload(this, slab.vertexBuffer, offset, data);
-      return offset / 4;
-    };
-    const streams: MeshStreams = {
-      position: upload(mesh.positions),
-      normal: upload(mesh.normals),
-      uv: upload(mesh.uvs),
-      color: upload(mesh.colors),
-      tangent: upload(mesh.tangents),
-      featureId: upload(mesh.featureIds),
-      attributes: NO_STREAM,
-    };
-    // Metadata properties share the directory, their names prefixed.
-    const named = [
-      ...Object.entries(mesh.attributes ?? {}),
-      ...Object.entries(mesh.metadata ?? {}).map(
-        ([id, stream]) => [metadataKey(id), stream] as const,
-      ),
-    ];
-    const textured = mesh.propertyTextures ?? [];
-    let table: { entries: number[][] } | undefined;
-    try {
-      table = mesh.featureTable && uploadTable(this, mesh.featureTable, slab);
-    } catch (error) {
-      releaseRanges();
-      throw error;
-    }
-    const tableEntries = table?.entries ?? [];
-    const entries = named.length + textured.length + tableEntries.length;
-    if (entries > MAX_DIRECTORY_ENTRIES) {
-      // surface.slang `readNamed` reads this many at most.
-      releaseRanges();
-      if (mesh.featureTable) {
-        releaseTable(this, mesh.featureTable, slab);
-      }
-      throw new RangeError(
-        `addMesh: ${entries} named attributes, metadata properties and feature table columns; a mesh holds at most ${MAX_DIRECTORY_ENTRIES}.`,
-      );
-    }
-    if (entries > 0) {
-      const directory = new Uint32Array(1 + entries * 3);
-      directory[0] = entries;
-      named.forEach(([name, { data, components }], i) => {
-        directory[1 + i * 3] = attributeHash(name);
-        directory[2 + i * 3] = upload(data);
-        directory[3 + i * 3] = components;
-      });
-      // Properties in textures: a block saying how to decode them, read
-      // per fragment (opaque.wgsl `readFragmentProperty`).
-      textured.forEach((p, j) => {
-        const block = new Uint32Array(TEXTURE_PROPERTY_WORDS);
-        const f32 = new Float32Array(block.buffer);
-        block[0] = p.slot;
-        block[1] = p.channels.length;
-        block[2] = p.channels.reduce(
-          (packed, c, k) => packed | (c << (k * 8)),
-          0,
-        );
-        block[3] = COMPONENT_TYPE_CODES[p.componentType];
-        block[4] = p.components;
-        block[5] = p.normalized ? 1 : 0;
-        for (let c = 0; c < 4; c++) {
-          f32[6 + c] = p.offset?.[c] ?? 0;
-          f32[10 + c] = p.scale?.[c] ?? 1;
-        }
-        const i = named.length + j;
-        directory[1 + i * 3] = attributeHash(metadataKey(p.id));
-        directory[2 + i * 3] = upload(block);
-        directory[3 + i * 3] = TEXTURE_PROPERTY | p.components;
-      });
-      // Feature table columns, read by feature ID (`readNamed`).
-      tableEntries.forEach((entry, j) => {
-        directory.set(entry, 1 + (named.length + textured.length + j) * 3);
-      });
-      streams.attributes = upload(directory);
-    }
-    const indexOffset = this.slabs.allocateIndex(slab, mesh.indices.byteLength);
-    if (indexOffset === undefined) {
-      releaseRanges();
-      if (mesh.featureTable) {
-        releaseTable(this, mesh.featureTable, slab);
-      }
-      throw new CapacityError("index arena");
-    }
-    queueUpload(this, slab.indexBuffer, indexOffset, mesh.indices);
-    const { center, radius } = boundingSphere(mesh.positions);
-    const id = this.nextMeshId++;
-    this.meshRanges.set(id, {
-      slab: slab.id,
-      vertex: vertexRanges,
-      index: [indexOffset, mesh.indices.byteLength],
-      ...(table ? { table: mesh.featureTable } : {}),
-      ...(mesh.attributes
-        ? {
-            named: new Map(
-              Object.entries(mesh.attributes).map(([name, a]) => [
-                name,
-                a.components,
-              ]),
-            ),
-          }
-        : {}),
-    });
-    return {
-      id,
-      slab: slab.id,
-      firstIndex: indexOffset / 4,
-      indexCount: mesh.indices.length,
-      vertexCount,
-      streams,
-      featureCount: mesh.featureIds ? (mesh.featureCount ?? 1) : 1,
-      topology: mesh.topology ?? "triangle-list",
-      center,
-      radius,
-      ...(mesh.skirtStart !== undefined && mesh.skirtStart < vertexCount
-        ? { skirtStart: mesh.skirtStart }
-        : {}),
-    };
+    return addMesh(this, mesh);
   }
 
   /**
@@ -1077,94 +907,7 @@ export class World {
       layout?: Record<string, { offset: number; components: number }>;
     },
   ): PointMesh {
-    const fields = Object.entries(streams?.layout ?? {});
-    if (fields.length > MAX_DIRECTORY_ENTRIES) {
-      // surface.slang `readInstance` reads this many at most.
-      throw new RangeError(
-        `addPointMesh: ${fields.length} fields; a point set holds at most ${MAX_DIRECTORY_ENTRIES}.`,
-      );
-    }
-    for (const [name, { offset, components }] of fields) {
-      if (
-        components < 1 ||
-        components > 4 ||
-        offset < 0 ||
-        offset + components > streams!.stride
-      ) {
-        throw new RangeError(
-          `addPointMesh: field ${name} is outside the stride`,
-        );
-      }
-    }
-    const directory = new Uint32Array(
-      fields.length ? 1 + fields.length * 3 : 0,
-    );
-    if (fields.length) {
-      directory[0] = fields.length;
-      fields.forEach(([name, { offset, components }], i) => {
-        directory[1 + i * 3] = attributeHash(name);
-        directory[2 + i * 3] = offset;
-        directory[3 + i * 3] = components;
-      });
-    }
-    const stride = streams?.stride ?? 0;
-    const anchorBytes = Math.max(16, capacity * 16);
-    const streamBytes = capacity * stride * 4;
-    const bytes = anchorBytes + streamBytes + directory.byteLength;
-    // Its draws' point lists go in the same slab (a word a point each).
-    const wanted = bytes + Math.max(4, capacity * 4);
-    const slab = this.slabs.pick(wanted, 0);
-    const offset = slab && this.slabs.allocateVertex(slab, bytes);
-    if (!slab || offset === undefined) {
-      throw new CapacityError(
-        "vertex arena",
-        `a point set of ${capacity.toLocaleString("en-US")} points needs ${wanted.toLocaleString("en-US")} bytes; ${this.slabs.refusal(wanted, 0) ?? "no slab has a range that size free"}`,
-      );
-    }
-    if (directory.byteLength) {
-      queueUpload(
-        this,
-        slab.vertexBuffer,
-        offset + anchorBytes + streamBytes,
-        directory,
-      );
-    }
-    const id = this.nextMeshId++;
-    this.meshRanges.set(id, {
-      slab: slab.id,
-      vertex: [[offset, bytes]],
-      index: [0, 0],
-    });
-    const anchors = offset / 4;
-    return {
-      id,
-      slab: slab.id,
-      firstIndex: 0,
-      indexCount: capacity * 6,
-      vertexCount: capacity,
-      streams: {
-        position: anchors,
-        normal: NO_STREAM,
-        uv: NO_STREAM,
-        color: NO_STREAM,
-        tangent: NO_STREAM,
-        featureId: NO_STREAM,
-        attributes: NO_STREAM,
-      },
-      featureCount: Math.max(1, capacity),
-      topology: "triangle-list",
-      center: [0, 0, 0],
-      radius: 0,
-      points: {
-        capacity,
-        anchors,
-        streams: stride ? (offset + anchorBytes) / 4 : NO_STREAM,
-        stride,
-        directory: directory.byteLength
-          ? (offset + anchorBytes + streamBytes) / 4
-          : NO_STREAM,
-      },
-    };
+    return addPointMesh(this, capacity, streams);
   }
 
   /** Writes points' properties (`addPointMesh` streams) from `first` on. */
@@ -1173,25 +916,7 @@ export class World {
     first: number,
     data: Float32Array | Uint32Array,
   ): void {
-    const { stride, streams, capacity } = mesh.points;
-    if (
-      stride === 0 ||
-      first < 0 ||
-      data.length % stride !== 0 ||
-      first + data.length / stride > capacity
-    ) {
-      throw new RangeError(
-        `setPointProperties: ${data.length / Math.max(1, stride)} points from ${first} don't fit`,
-      );
-    }
-    queueUpload(
-      this,
-      this.slabs.get(mesh.slab).vertexBuffer,
-      (streams + first * stride) * 4,
-      data,
-    );
-    this.version++;
-    this.changedViews = ALL_VIEWS;
+    setPointProperties(this, mesh, first, data);
   }
 
   /**
@@ -1199,29 +924,7 @@ export class World {
    * Returns the bytes released.
    */
   removeMesh(mesh: MeshHandle): number {
-    const ranges = this.meshRanges.get(mesh.id);
-    if (!ranges) {
-      return 0;
-    }
-    // Its ranges may be reused before the next frame: its queued data
-    // must not land on their next owner's.
-    this.flushUploads();
-    this.meshRanges.delete(mesh.id);
-    const slab = this.slabs.get(ranges.slab);
-    let bytes = 0;
-    if (ranges.table) {
-      bytes += releaseTable(this, ranges.table, slab);
-    }
-    for (const [offset, size] of ranges.vertex) {
-      slab.vertex.release(offset, size);
-      bytes += size;
-    }
-    if (ranges.index[1] > 0) {
-      slab.index.release(ranges.index[0], ranges.index[1]);
-    }
-    // An emptied slab past the first closes.
-    this.slabs.tidy(slab);
-    return bytes + ranges.index[1];
+    return removeMesh(this, mesh);
   }
 
   /** Bytes in use in the vertex and index arenas. */
@@ -4738,42 +4441,6 @@ const POINT_MARGIN = 64;
 /** Hit distance bits meaning "no hit" (the largest finite float). */
 const NO_HIT = 0x7f7fffff;
 const ZERO = Float64Array.of(0, 0, 0);
-
-/** Ritter-style bounding sphere around the AABB center, tightened by a pass. */
-function boundingSphere(positions: Float32Array): {
-  center: [number, number, number];
-  radius: number;
-} {
-  if (positions.length === 0) {
-    return { center: [0, 0, 0], radius: 0 };
-  }
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i < positions.length; i += 3) {
-    for (let c = 0; c < 3; c++) {
-      const v = positions[i + c]!;
-      min[c] = Math.min(min[c]!, v);
-      max[c] = Math.max(max[c]!, v);
-    }
-  }
-  const center: [number, number, number] = [
-    (min[0]! + max[0]!) / 2,
-    (min[1]! + max[1]!) / 2,
-    (min[2]! + max[2]!) / 2,
-  ];
-  let r2 = 0;
-  for (let i = 0; i < positions.length; i += 3) {
-    const dx = positions[i]! - center[0];
-    const dy = positions[i + 1]! - center[1];
-    const dz = positions[i + 2]! - center[2];
-    r2 = Math.max(r2, dx * dx + dy * dy + dz * dz);
-  }
-  return { center, radius: Math.sqrt(r2) };
-}
-
-function align4(bytes: number): number {
-  return Math.ceil(bytes / 4) * 4;
-}
 
 /** Throws unless `opacity` is a terrain region's: 0 to 1, both included. */
 function checkTerrainOpacity(opacity: number): void {
