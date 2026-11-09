@@ -227,7 +227,7 @@ export async function startReel(
     target,
     world,
     shadows: true,
-    exposure: EYE,
+    observer: { exposure: EYE },
   });
   const controller = new GlobeController(view, canvas, engine);
   let second: { view: View; controller: GlobeController } | undefined;
@@ -736,7 +736,7 @@ export async function startReel(
           target,
           world,
           shadows: true,
-          exposure: EYE,
+          observer: { exposure: EYE },
           viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
         });
         second = {
