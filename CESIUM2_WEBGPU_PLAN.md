@@ -6327,9 +6327,9 @@ out, because none of them changes a result.
 - **Plan 5:** a unit test for the Viewer's `frameData` option. It would cover
   a URL or an object, data arriving late, and a load that fails with one
   warning.
-- **Plan 4 or later:** `measure` solves the downlink light time twice, once
+- ~~**Plan 4 or later:** `measure` solves the downlink light time twice, once
   inside `downlink` and again for line of sight. Return the solution from
-  the leg internally.
+  the leg internally.~~ Done (plan 5b, Task 10): the downlink's solution goes to the line of sight.
 - ~~**Plan 4b (owner's requirement, 2026-11-06): global geoid and
   height-system coverage, lazily loaded.**~~ Done in plan 4b (see "Frames 4b
   results" below): the catalog pin and grid store (Task 1), verified PROJ
@@ -6571,9 +6571,9 @@ because none of them changes a result.
   while listing; `test:data`'s PROJ lines went from 243 to 1). Listing
   candidates whose grids are missing made PROJ write to stderr (and the
   browser console).
-- **Plan 5:** `measureSpan` runs `gridFactors` twice per sample, a `proj_factors`
+- ~~**Plan 5:** `measureSpan` runs `gridFactors` twice per sample, a `proj_factors`
   call at each end. Cache the factors by design point, or compute them once for
-  a span's fixed ends.
+  a span's fixed ends.~~ Done (plan 5b, Task 10): a span computes its two ends' factors once; 100 samples make 2 `proj_factors` calls.
 - ~~**Frames example: PROJ object lifetimes.**~~ Neither build exposes
   `proj_destroy`, and the binding's glue uses a `FinalizationRegistry`. PROJ
   objects are probably freed on garbage collection. The example's cases make
@@ -6818,12 +6818,12 @@ asset 2: no access token`, on every example.~~ Done (ion token setting): the
   fetches. The example's report labels them "manifest SHA-256 (not verified
   in the browser)". Hash the bytes after the fetch, and refuse a mismatch, as
   setup already does in Node.
-- **Plan 5: explicit timeouts for slow data tests.** These pre-plan tests run
+- ~~**Plan 5: explicit timeouts for slow data tests.** These pre-plan tests run
   on vitest's 5 s default and can time out under heavy machine load:
   `test/data/trajectory.test.ts:147` (about 2.6 s),
   `test/data/trajectory.test.ts:197` (about 2.0 s) and
   `test/data/sky.test.ts:86` (about 1.2 s). One `test:data` run failed this
-  way during the example's final fix wave. Give each an explicit timeout.
+  way during the example's final fix wave. Give each an explicit timeout.~~ Done (plan 5b, Task 1): 30 s on each.
 - **Plan 5: a frame's revision (change) signal** (Task 7b, the robot arm).
   A frame whose matrix depends on state beyond the instant (a joint's angle)
   must be built with `cache: false`, and nothing tells a renderer or a cache
@@ -6832,12 +6832,12 @@ asset 2: no access token`, on every example.~~ Done (ion token setting): the
 - **Plan 3: velocities through app-defined frames.** `Frame` carries
   positions only; a joint turning at a rate, or a trajectory under a moving
   joint, has no velocity until plan 3's rates reach `toParent`.
-- **Plan 5: composed accuracy beyond 1σ, independent terms** (Task 7b,
+- ~~**Plan 5: composed accuracy beyond 1σ, independent terms** (Task 7b,
   `pointAccuracy`). Confidence levels, correlated terms (two encoders on one
   shaft, a survey shared by two bases) and per-direction error ellipsoids.
   Today an angular term scales by the point's distance from the frame's
   origin, an upper bound, because a `FrameAccuracy` names no axis; a stated
-  axis would give the exact lever (the distance to the axis).
+  axis would give the exact lever (the distance to the axis).~~ Done (plan 5b, Task 4): confidence, shared sources, a stated axis, covariance and an error ellipsoid.
 - **Plan 5: `accuracyOf` on `pointAccuracy`.** `accuracyOf` (measure)
   composes Earth orientation, ephemeris, trajectory and relativity terms on
   its own, apart from the edges' stated accuracy. The two agree on the ITRF
@@ -6870,6 +6870,7 @@ NAVD88 that made PROJ prefer GEOID99 plus NADCON5 (±1.14 m) over GEOID18
 (±2.015 m), though GEOID18 is NGS's current model and the one an engineer's
 data uses. Plan 4b pinned GEOID18 and ruled that a "better" candidate must
 keep the same geoid. Plan 5 designs the routing properly:
+_Plan 5b (Task 5) did part: the built-in edges state every term (the ephemeris edges' shared source, ITRF's UT1 and polar motion, MOON_ME's estimate as `MOON_ME_ORIENTATION_RADIANS`) and a trajectory's frame states its covariance. `accuracyOf` and the explorer's walk are not rebuilt on `separationAccuracy`; see "Frames 5b results"._
 
 - **Route to the frame tree's own root, not to WGS 84.** Relate a design CRS
   to ITRF2020 at the frame's epoch, through the published transformation for
@@ -7608,7 +7609,7 @@ are left out.
   walk, from an estimate that lives in the explorer (3 × 10⁻⁷ rad,
   `scenarios/stated.ts`), not in the library: the library's MOON_ME still
   states none, and `accuracyOf` still has no lever term for it. That, and a
-  published figure to replace the estimate, remain.
+  published figure to replace the estimate, remain. _Plan 5b (Task 5) did part: the built-in edges state every term (the ephemeris edges' shared source, ITRF's UT1 and polar motion, MOON_ME's estimate as `MOON_ME_ORIENTATION_RADIANS`) and a trajectory's frame states its covariance. `accuracyOf` and the explorer's walk are not rebuilt on `separationAccuracy`; see "Frames 5b results"._
 - **Plan 5: the API review of this plan's library additions.**
   - Whether `LEVEL_ZERO_ERROR` stays exported (it was exported for the test
     hill).
@@ -8047,6 +8048,73 @@ Owner-requested later work, written up as notes and designs, is §13.17 to
 §13.26: layers, scene items (§13.25), reference data (§13.24), the indirect
 draw risk on Intel integrated GPUs (§13.23) and the review of geometry
 through placement (§13.26).
+
+**Frames 5b results (2026-11-09).** Plan 5b
+(docs/superpowers/plans/2026-11-07-frames-5b-frames-library.md) built the
+frames library: two-vector reference frames with freezing and angular
+velocity, rig presets with `held(view)`, piecewise reference frames, accuracy
+composed beyond first order, rays through the reference frames (body,
+impostor and tileset targets, light time, terrain bands), bulk work in slices,
+`measureSpan` as bulk work with factors once, PROJ batches, and a time
+formatter the time controls now use.
+
+- **What was measured against SPICE** (twoVector fixture, 12 instants across
+  the Artemis II span). Axes: worst 7.6 × 10⁻⁹ rad (orbital, inertial and
+  level presets: 2.5 × 10⁻⁹, 2.4 × 10⁻¹¹ and 3 × 10⁻¹⁶ rad), inside call 6's
+  1 × 10⁻⁸. Angular velocity by ±0.5 s central differences misses call 6's
+  tolerance for ORION_LVLH (3.9 × 10⁻⁷ rad/s worst, against 1.6 × 10⁻³ rad/s)
+  and EARTH_MOON_ROT (2.5 × 10⁻⁸ against 2.4 × 10⁻⁶). A wider step cuts the
+  Earth-Moon error from 5 × 10⁻⁹ (0.5 s) to 2 × 10⁻¹¹ rad/s (60 s): the axes
+  carry about 10⁻⁹ rad of jitter, taken over one second. That is precision,
+  not an accuracy figure, and SPICE's own rate for a dynamic reference frame
+  is numerical too. The two cases stay as known misses in the data test, not
+  loosened. The plan's "0.001 rad/s within 1 × 10⁻¹²" cannot hold: the
+  difference's truncation is (rate × 0.5 s)² / 6 of the rate, 4 × 10⁻¹¹ rad/s.
+  The near-point frame (ORION_NADIR) needs NAIF's Earth PCK and the Moon frame
+  kernel, which are not on the machine that built this: its geometry is tested
+  analytically only.
+- **Accuracy moves.** None. The 384-row baseline (every scenario's composed
+  views and six `measure` cases) is unchanged, so `accuracyMoves.json` was not
+  needed. The edges' new statements are additive: the library's MOON_ME now
+  states the explorer's 3 × 10⁻⁷ rad (estimated); ITRF's two figures give the
+  tree the same root-sum-square in radians.
+- **Rulings.** The resolver's `motion` is left as it was (it already differenced
+  over the catalog). `BulkOptions.signal` collides with `MeasureOptions.signal`,
+  so `measureSpan` takes bulk options under `options.bulk`. Non-cockpit presets
+  keep `forward` and `up` for the preset's own axes (+X, +Z); `level`'s
+  `forward` picks the body axis. The tileset target reads a tile and a tileset
+  through two small structural interfaces, so it is tested without a GPU.
+  The widgets import the Intl helpers from `@cesium/next/time`, so the time
+  entry exports `ianaOffsetMinutes` and `ianaAbbreviation`.
+- **Not done: `accuracyOf` and the explorer's walk on `separationAccuracy`
+  (Task 5, second half).** Building them on the composer would make every
+  east-north-up reference frame without an accuracy unbounded in `accuracyOf`
+  (the DSN-station rows, many `measure` and design tests), and would drop the
+  Earth-orientation term for two Earth sites, because the route never crosses
+  ITRF. That is a wide behaviour change across `measure`, the design tests and
+  the explorer, so it needs a pass of its own, with its moves listed. One rule
+  to settle in it: the ephemeris edges share a "difference" source, but a
+  route from an Earth site to Orion crosses GCRF and EARTH_ICRF, both the
+  Earth's position, which cancels rather than counts once.
+- **Browser checks left to the owner's morning:** `parity` and `alloc` against
+  the base commit, and the time controls and design globe on their pages
+  (Tasks 9 and 12 name them). None was run in this session.
+
+_Carried forward from frames plan 5b._ Real deferred work only.
+
+- **`accuracyOf` and the explorer's walk on the composer,** with the moves
+  listed (above).
+- **Angular velocity at a precision the fixtures can hold:** a wider or adaptive
+  difference step for two-vector reference frames, or SPICE's own derivative
+  written out, so ORION_LVLH and EARTH_MOON_ROT meet call 6.
+- **The near-point fixture:** run `frameFixtures.py twoVector` with the frame
+  kernel and the Earth PCK to add ORION_NADIR.
+- **Rays:** the tileset target culls by `Tile.volume` boxes and treats a
+  sphere volume as covering the whole segment; a standing query with a frame
+  takes its revision from the world's content revision alone, not from the
+  frame resolver's routes.
+- **Terrain bands** are offset ellipsoids; the Earth's geodetic offsets differ
+  from them by metres near the poles.
 
 _Carried forward from the sky and observer plan._ These are deferred items that are real work. The nits are left out.
 

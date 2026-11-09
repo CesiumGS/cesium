@@ -817,3 +817,64 @@ WebGPU developer features (unquantized GPU timestamps) on the high-performance
 GPU. Pass suite names to run a subset (`precision indirect parity models
 slang-kernels baseline alloc tileset`); set `BENCH_CHANNEL` to use another installed browser and
 `BENCH_HEADED=1` to watch.
+
+**The frames library** (`@cesium/next/frames`, `@cesium/next/time`; plan 5b).
+What cameras, replay and measurements stand on. Float64 on the CPU throughout.
+
+- **Two-vector reference frames.** `twoVectorFrame(name, parent, definition)`
+  builds axes from two vectors, after SPICE's two-vector frames: a primary
+  axis along the first vector, the secondary in the plane of the two. Each
+  vector is `position`, `velocity`, `constant` or `nearPoint`, and all are
+  geometric (no light time). The origin is the parent's: `axesAt(name,
+origin, axes)` makes a parent with one reference frame's origin and
+  another's axes. With `freeze` the axes are the ones at that instant, and
+  are recomputed only when an input's revision goes up. When the two vectors
+  come closer than 1 mrad to parallel (or one is zero), it throws
+  `TwoVectorDegenerateError`. An input that can't answer (a trajectory past
+  its data, data still loading) gives its own error, never a matrix of NaNs.
+  `frameVelocity` and `angularVelocity` are central differences over ±0.5 s.
+- **Rig presets.** `rigPreset("cockpit" | "orbital" | "inertial" | "level",
+options)` builds two-vector reference frames, adds them to the catalog as
+  rig users, and returns a plain `Rig` (data you can read and change).
+  `engine.cameras.held(view)` says which reference frame and why while a rig
+  keeps its last good pose.
+- **Piecewise reference frames.** `piecewiseFrame(name, pieces)` is one
+  reference frame that is another over time. It hangs under a fixed hub, so
+  routes stay static; `parentAt(instant)` and `catalog.treeInUse(at)` say
+  the current piece's parent. Pieces are half-open. A change is checked
+  for continuity (0.01 m and 0.01 m/s) unless declared a `jump`; a piece may
+  be `simulated`, and a route across it makes no accuracy claim.
+- **Accuracy beyond first order.** A reference frame's `accuracy` states
+  figures: `meters`, `radians` (about an `axis`, or the origin), a
+  `covariance`, each at `"1σ"`, `"95%"` or `"max"` with a `distribution`;
+  further `parts`; a shared `source` with a rule (`"linear"`, or
+  `"difference"` for a bound on the difference of two edges); `predicted` and
+  `estimated` flags. `pointAccuracy(point, to)` and
+  `separationAccuracy(a, b)` compose a 1σ covariance per figure, rotate it
+  into the result's axes, and report the root of its trace, the error
+  ellipsoid (`ellipsoid`) and, with `confidence: "95%"`, 2.7955 times its
+  longest semi-axis. For independent figures with no axis that is the
+  root-sum-square, as before. A figure at 95% with no distribution is
+  refused, naming the edge (`refusedBy`); `routeTerms` add terms that are on
+  no edge. The built-in edges state every term (ITRF: UT1 about +Z and polar
+  motion; MOON_ME: 3 × 10⁻⁷ rad, estimated); a trajectory's reference frame
+  states its position covariance.
+- **Rays through the reference frames.** A `RayQuery` with a `frame` (and
+  its `world`) is carried into each target's anchor through the world's frame
+  resolver, answered there and reported in `reportIn`. Targets: `"terrain"`,
+  `"draws"`, `{ kind: "body", body }`, `{ kind: "impostor", body }` and
+  `{ kind: "tileset", tileset }` (a tileset that retains its geometry).
+  `correction: "lightTime"` places each target where it was when the light
+  left it. Each body has a `terrainBand`: above it a span is clear, below it
+  blocked, without tiles. A route the resolver can't answer is `unknown` with
+  reason `"route"`; the other targets still answer.
+- **Bulk work.** `runBulk(total, step, { signal, onProgress, scheduler })`
+  runs in slices (`timeSlices()`, 8 ms a task; `engine.bulk`, 4 ms a tick, no
+  tick listener while idle). Aborting rejects with `AbortError`.
+  `samplePath` and `accuracySpan` (frames), `measureSpan` (its bulk options
+  under `bulk`) and `EngineeringFrame.toBodyFixedBatch` use it.
+- **Showing time.** `timeParts(instant, zone)` gives the wall clock in UTC (a
+  leap second reads 23:59:60), a civil zone, solar or nominal time, or the
+  computer's zone. `placeZone(place, lookup)` gives a civil zone through an
+  application's `ZoneLookup`, else solar time, labelled so. The time controls
+  use it: with `zoneLookup` they offer and open on the place's civil zone.
