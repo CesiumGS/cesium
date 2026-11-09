@@ -93,6 +93,12 @@ import {
 } from "./viewerCamera.ts";
 import { applySky, applyClockSun, setSun } from "./viewerSky.ts";
 import { warn, showWarnings, emit } from "./viewerWarnings.ts";
+import {
+  tokenOptions,
+  buildGlobe,
+  setGlobe,
+  addTileset,
+} from "./viewerGlobe.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -278,16 +284,23 @@ export class Viewer {
   /** Builds the globe; content added before it is ready still loads. */
   readonly ready: Promise<void>;
 
-  private globe_?: Globe;
-  private globeKind: GlobeKind;
-  private globeShown = true;
-  private globeToken = 0;
-  private imagery?: ImageryProvider;
-  /** The default imagery while its metadata resolves. */
-  private imageryLoading?: Promise<ImageryProvider>;
-  private terrainAttributions: Attribution[] = [];
+  /** @internal */
+  globe_?: Globe;
+  /** @internal */
+  globeKind: GlobeKind;
+  /** @internal */
+  globeShown = true;
+  /** @internal */
+  globeToken = 0;
+  /** @internal */
+  imagery?: ImageryProvider;
+  /** @internal The default imagery while its metadata resolves. */
+  imageryLoading?: Promise<ImageryProvider>;
+  /** @internal */
+  terrainAttributions: Attribution[] = [];
   private readonly attributions = new Map<object, Attribution[]>();
-  private readonly tilesets = new Set<Tileset3D>();
+  /** @internal */
+  readonly tilesets = new Set<Tileset3D>();
   /** @internal */
   second?: View;
   /** @internal */
@@ -364,10 +377,11 @@ export class Viewer {
   destroyed = false;
   /** Aborted on `destroy`: stops the Moon map's loads (and its worker). */
   private readonly moonMapLoad = new AbortController();
-  private readonly accessToken: string | undefined;
+  /** @internal */
+  readonly accessToken: string | undefined;
 
-  /** Default globe endpoints, resolved while the device was created. */
-  private early: EarlyEndpoints;
+  /** @internal Default globe endpoints, resolved while the device was created. */
+  early: EarlyEndpoints;
 
   private constructor(
     readonly container: HTMLElement,
@@ -446,7 +460,7 @@ export class Viewer {
       // A public asset: without it in the token's account, no lights.
       this.lightsProvider = (
         lights === true
-          ? IonTmsImagery.fromIon(3812, this.tokenOptions())
+          ? IonTmsImagery.fromIon(3812, tokenOptions(this))
           : Promise.resolve(lights)
       ).catch(() => undefined);
     }
@@ -496,7 +510,7 @@ export class Viewer {
           image.close();
         })
         .catch(() => {});
-      void loadIonMoonMap({ ...this.tokenOptions(), signal })
+      void loadIonMoonMap({ ...tokenOptions(this), signal })
         .then(({ image, attributions, warnings, mean }) => {
           if (this.destroyed) {
             image.close();
@@ -546,7 +560,7 @@ export class Viewer {
         options.inspector === true ? {} : options.inspector,
       );
     }
-    this.ready = this.buildGlobe(options.imagery ?? true);
+    this.ready = buildGlobe(this, options.imagery ?? true);
     if (options.suspendPresentation) {
       // Nothing to keep before the first frame: hidden, so the container's
       // background (or a loading screen) shows.
@@ -692,8 +706,8 @@ export class Viewer {
     }
   }
 
-  /** The night lights' image, resolving (undefined: none). */
-  private lightsProvider?: Promise<ImageryProvider | undefined>;
+  /** @internal The night lights' image, resolving (undefined: none). */
+  lightsProvider?: Promise<ImageryProvider | undefined>;
 
   /** Whether the globe's night lights show (`ViewerOptions.cityLights`). */
   get cityLights(): boolean {
@@ -706,63 +720,9 @@ export class Viewer {
     this.engine.requestRender();
   }
 
-  private async buildGlobe(imagery: ImageryProvider | boolean): Promise<void> {
-    if (imagery === true) {
-      // Imagery and the terrain endpoint at once, not one after the other;
-      // the globe's tiles load while the imagery resolves (1.x starts
-      // terrain without waiting for it).
-      if (this.globeKind === "terrain") {
-        this.early.terrain ??= resolveIonAsset(1, this.tokenOptions());
-      }
-      this.imageryLoading = (
-        this.early.imagery ?? BingImagery.fromIon(2, this.tokenOptions())
-      ).then((provider) => (this.imagery = provider));
-      this.imageryLoading.catch(() => {}); // surfaces through `ready`
-    } else if (imagery) {
-      this.imagery = imagery;
-    }
-    await this.setGlobe(this.globeKind);
-    await this.imageryLoading;
-  }
-
   /** Switches the globe in place: content and camera stay. */
   async setGlobe(kind: GlobeKind): Promise<void> {
-    const token = ++this.globeToken;
-    this.globeKind = kind;
-    let next: Globe | undefined;
-    let attributions: Attribution[] = [];
-    const imagery = this.imagery ?? this.imageryLoading;
-    const options = {
-      policy: this.policy,
-      ...(imagery ? { imagery } : {}),
-      ...(this.lightsProvider ? { lights: this.lightsProvider } : {}),
-    };
-    if (kind === "terrain") {
-      const ion = await (this.early.terrain ??
-        resolveIonAsset(1, this.tokenOptions()));
-      this.early.terrain = undefined; // used once: later switches resolve anew
-      next = await this.engine.addTerrain(this.world, ion.url, {
-        headers: ion.headers,
-        ...options,
-      });
-      attributions = ion.attributions;
-    } else if (kind === "ellipsoid") {
-      next = this.engine.addEllipsoid(this.world, options);
-    }
-    if (token !== this.globeToken || this.destroyed) {
-      if (next) {
-        this.engine.removeTileset(next);
-      }
-      return;
-    }
-    if (next) {
-      next.show = this.globeShown;
-    }
-    if (this.globe_) {
-      this.engine.removeTileset(this.globe_);
-    }
-    this.globe_ = next;
-    this.terrainAttributions = attributions;
+    return setGlobe(this, kind);
   }
 
   // ------------------------------------------------------------- content
@@ -772,33 +732,7 @@ export class Viewer {
     source: TilesetSource,
     options: TilesetOptions = {},
   ): Promise<Tileset3D> {
-    let url: string | URL;
-    let headers: Record<string, string> | undefined;
-    let attributions: Attribution[] = [];
-    if (typeof source === "object" && "ion" in source) {
-      const ion = await resolveIonAsset(source.ion, {
-        ...this.tokenOptions(),
-        ...(source.accessToken ? { accessToken: source.accessToken } : {}),
-      });
-      if (ion.type !== "3DTILES") {
-        throw new Error(
-          `ion asset ${source.ion} is ${ion.type.toLowerCase()}, not 3D Tiles`,
-        );
-      }
-      url = ion.url;
-      headers = ion.headers;
-      attributions = ion.attributions;
-    } else {
-      url = source;
-    }
-    const tileset = await this.engine.addTileset(this.world, url, {
-      policy: this.policy,
-      ...(headers ? { headers } : {}),
-      ...(attributions.length > 0 ? { attributions } : {}),
-      ...options,
-    });
-    this.tilesets.add(tileset);
-    return tileset;
+    return addTileset(this, source, options);
   }
 
   /**
@@ -1427,9 +1361,5 @@ export class Viewer {
       this.target.destroy();
     }
     this.canvas.remove();
-  }
-
-  private tokenOptions(): { accessToken?: string } {
-    return this.accessToken ? { accessToken: this.accessToken } : {};
   }
 }
