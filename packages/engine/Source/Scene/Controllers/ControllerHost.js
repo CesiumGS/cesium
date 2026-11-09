@@ -28,6 +28,15 @@ class ControllerHost {
   }
 
   /**
+   * The controllers registered to this host, in the order they are updated. A new array each time, so changing it doesn't change the host.
+   * @type {Controller[]}
+   * @readonly
+   */
+  get controllers() {
+    return this._controllers.slice();
+  }
+
+  /**
    * Registers a controller implementation with this host.
    * @param {Controller} controller An implementation of the Controller interface to register with this host.
    * @param {HTMLElement} element The DOM element containing the Cesium scene.

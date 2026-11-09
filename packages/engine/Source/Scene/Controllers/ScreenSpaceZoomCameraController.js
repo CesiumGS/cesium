@@ -139,8 +139,8 @@ class ScreenSpaceZoomCameraController {
     this.inertialDecay = 6.0;
 
     /**
-     * @private
-     * @type number
+     * The minimum distance from the zoom target used to scale the zoom speed. The camera zooms more slowly as it approaches the target and stops short of it when this is 0.0; a larger value keeps it moving, so it can zoom up to and past the target.
+     * @type {number}
      * @default 0.0
      */
     this.minimumZoomDistance = 0.0;
@@ -195,6 +195,9 @@ class ScreenSpaceZoomCameraController {
     return this._enabled;
   }
   set enabled(value) {
+    if (value === this._enabled) {
+      return;
+    }
     this._enabled = value;
 
     if (value) {
@@ -202,6 +205,8 @@ class ScreenSpaceZoomCameraController {
       this._scrollDelta = 0.0;
       this._dragDelta.x = 0.0;
       this._dragDelta.y = 0.0;
+      this._zoomInputVelocity = 0.0;
+      this.zoomVelocity = 0.0;
     } else if (defined(this._dragInputState)) {
       this._dragInputState.isDragging = false;
     }
@@ -339,13 +344,12 @@ class ScreenSpaceZoomCameraController {
     const { camera, ellipsoid } = scene;
 
     let direction = camera.direction;
-    let distance =
-      Cartesian3.magnitude(camera.positionWC) - ellipsoid.maximumRadius;
+    let distance = 0.0;
 
     let windowPosition = this.isDragging
       ? this._screenSpaceDragPosition
       : this._screenSpaceScrollPosition;
-    if (!this.useDragPosition) {
+    if (!this.usePointerPosition) {
       windowPosition = this._screenSpaceOrigin;
       windowPosition.x = clientWidth / 2.0;
       windowPosition.y = clientHeight / 2.0;
@@ -359,12 +363,21 @@ class ScreenSpaceZoomCameraController {
       );
       direction = Cartesian3.normalize(direction, this._zoomDirection);
       distance = Cartesian3.distance(target, camera.positionWC);
+    } else {
+      // Without a target, scale the zoom by the camera's distance from the ellipsoid surface.
+      const surface = ellipsoid.scaleToGeodeticSurface(
+        camera.positionWC,
+        this._target,
+      );
+      if (defined(surface)) {
+        distance = Cartesian3.distance(surface, camera.positionWC);
+      }
     }
 
     distance = CesiumMath.clamp(
       distance,
-      distance > 0.0 ? this.minimumZoomDistance : -this.maximumZoomDistance,
-      distance > 0.0 ? this.maximumZoomDistance : -this.minimumZoomDistance,
+      this.minimumZoomDistance,
+      this.maximumZoomDistance,
     );
 
     const zoom = dz * distance * this.zoomDistanceRatio;
