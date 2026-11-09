@@ -4227,7 +4227,7 @@ export class Engine {
     // Translucency (translucent.wgsl): blended surfaces into per-pixel
     // lists ("exact"), or their moments and then their weighted light
     // ("moments"); then composited over the opaque pass's resolved targets
-    // (composite.slang), before anything reads them.
+    // (composite.slang), before anything but the meter reads them.
     // Read by the color pass as storage (translucent.wgsl), by the
     // composite as textures.
     const moments =

@@ -186,7 +186,16 @@ export const PASSES: Record<string, PassNote> = {
     group: "Translucency",
     kind: "render",
     summary: "Translucency over the opaque pass's resolved targets.",
-    detail: "A full-screen pass, before anything reads those targets.",
+    detail:
+      "A full-screen pass. Only the meter reads those targets before it does.",
+  },
+  meter: {
+    group: "Translucency",
+    kind: "compute",
+    summary: "A reading of the image, for automatic exposure.",
+    detail:
+      "It takes the scene's light alone: the surface writes light's share of each pixel to the target's alpha, so emission, added after exposure, doesn't pull the reading. It runs before the composite and puts the translucent layers' light, emission left out, over what the opaque pass drew. Read back later, and a reading that moves the state asks for a tick.",
+    skipped: "When the view's exposure is fixed.",
   },
   "depth-range": {
     group: "Read back",
@@ -200,14 +209,6 @@ export const PASSES: Record<string, PassNote> = {
     summary: "The image's HDR values, when something asks.",
     detail: "Copies what was asked for into a readback buffer.",
     skipped: "When no read is pending.",
-  },
-  meter: {
-    group: "Read back",
-    kind: "compute",
-    summary: "A reading of the image, for automatic exposure.",
-    detail:
-      "It takes the scene's light alone: the surface writes light's share of each pixel to the target's alpha, so emission, added after exposure, doesn't pull the reading. It runs before the composite and puts the translucent layers' light, emission left out, over what the opaque pass drew. Read back later, and a reading that moves the state asks for a tick.",
-    skipped: "When the view's exposure is fixed.",
   },
   pick: {
     group: "Read back",
