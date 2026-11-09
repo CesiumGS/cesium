@@ -11,6 +11,7 @@ import {
 } from "../src/scene/observer.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { View } from "../src/scene/View.ts";
+import { STAR_FLOATS } from "../src/atmosphere/stars.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const apple = { vendor: "apple", isFallbackAdapter: false };
@@ -164,6 +165,33 @@ describe("in an engine", () => {
       expect(label).toBe(first[i]![0]);
       expect(texture, String(label)).toBe(first[i]![1]);
     });
+  });
+
+  it("sends a star list that arrives after glare's first tick", () => {
+    addView(cameraGlare());
+    engine.renderFrame();
+    const { sky } = engine.raster;
+    const device = (sky as unknown as { device: { queue: object } }).device;
+    const written: unknown[] = [];
+    device.queue = new Proxy(device.queue, {
+      get(target, key) {
+        if (key === "writeBuffer") {
+          return (buffer: unknown) => written.push(buffer);
+        }
+        return (target as Record<string | symbol, unknown>)[key];
+      },
+    });
+    (
+      sky as unknown as { setGlareStars(stars: Float32Array): void }
+    ).setGlareStars(new Float32Array(STAR_FLOATS * 3));
+    engine.renderFrame();
+    const buffer = (sky as unknown as { glareStarsBuffer: unknown })
+      .glareStarsBuffer;
+    expect(buffer).toBeDefined();
+    expect(written).toContain(buffer);
+    written.length = 0;
+    engine.renderFrame();
+    expect(written).not.toContain(buffer);
   });
 
   it("frees a removed view's list", () => {

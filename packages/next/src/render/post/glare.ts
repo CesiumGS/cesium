@@ -353,6 +353,8 @@ export class GlareViewState {
   /** The list's pass: after the adaptation, reading depth. */
   private encode(enc: GPUCommandEncoder, depth: GPUTextureView): void {
     const { pipelines } = this;
+    // A field that arrived after the group was made goes up now: the buffer is the same.
+    const starBuffer = this.engine.raster.sky.glareStarBuffer();
     const fresh = this.fresh && (this.list.sun || this.list.stars > 0);
     this.fresh = false;
     if (!fresh) {
@@ -375,7 +377,7 @@ export class GlareViewState {
         { binding: 1, resource: depth },
         { binding: 2, resource: sky.sunLightView },
         { binding: 3, resource: sky.tableSampler },
-        { binding: 4, resource: { buffer: sky.glareStarBuffer() } },
+        { binding: 4, resource: { buffer: starBuffer } },
         { binding: 5, resource: { buffer: this.sources } },
       ],
     });
@@ -560,6 +562,9 @@ const SUN_VEIL = `fn glareSunVeil(uv: vec2<f32>, preExposure: f32) -> vec3<f32> 
   let t = (pixel - uniforms.viewSize * 0.5) * uniforms.pixelAngle;
   let z = 1.0 / sqrt(1.0 + dot(t, t));
   let solid = uniforms.pixelAngle * uniforms.pixelAngle * z * z * z;
+  if (solid <= 0.0) {
+    return vec3<f32>(0.0);
+  }
   let fade = smoothstep(0.05, 0.15, head.pixel.y);
   return sun.light * sun.visibility * uniforms.share * glareSpread(dot(offset, offset)) / solid * fade * preExposure;
 }`;

@@ -814,7 +814,7 @@ export class Sky {
     return this.glareStars.length / STAR_FLOATS;
   }
 
-  /** The bright stars' buffer, made when glare first asks. */
+  /** The bright stars' buffer: made when glare first asks, and sent again after a new list. */
   glareStarBuffer(): GPUBuffer {
     this.glareStarsBuffer ??= this.device.createBuffer({
       label: "sky.glareStars",
