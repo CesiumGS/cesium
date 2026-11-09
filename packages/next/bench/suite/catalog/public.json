@@ -759,6 +759,8 @@
         "src/scene/gltfModel.ts",
         "src/scene/meshes.ts",
         "src/scene/World.ts",
+        "src/scene/world/**",
+        "src/render/world/**",
         "src/gpu/RangeAllocator.ts",
         "src/gpu/MipGenerator.ts"
       ]
@@ -780,6 +782,8 @@
       "title": "Model instancing and transforms",
       "paths": [
         "src/scene/World.ts",
+        "src/scene/world/**",
+        "src/render/world/**",
         "src/scene/gltfModel.ts",
         "src/scene/HeightClamping.ts"
       ]
@@ -789,6 +793,12 @@
       "title": "Engine core and the measuring harness (a cross-section)",
       "paths": [
         "src/scene/Engine.ts",
+        "src/scene/engineContent.ts",
+        "src/scene/heightCaptures.ts",
+        "src/scene/lightSources.ts",
+        "src/scene/renderTarget.ts",
+        "src/scene/tileSelection.ts",
+        "src/scene/viewAnchors.ts",
         "src/core/**",
         "src/math/**",
         "src/index.ts",

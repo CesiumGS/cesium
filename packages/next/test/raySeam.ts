@@ -18,6 +18,7 @@ export const RAY_MODULES = {
   terrainBackend: join(src, "query", "terrainBackend.ts"),
   queries: join(src, "query", "queries.ts"),
   tile: join(src, "streaming", "Tile.ts"),
+  worldRays: join(src, "scene", "world", "rays.ts"),
 } as const;
 
 /** What `terrainBackend.ts` may give the examples and `measure`. */
@@ -94,7 +95,9 @@ export function rayBypasses(
       .resolvedModule?.resolvedFileName;
   const forbiddenModule = (path: string | undefined) =>
     path !== undefined &&
-    (same(path, RAY_MODULES.terrainRay) || same(path, RAY_MODULES.drawBackend));
+    (same(path, RAY_MODULES.terrainRay) ||
+      same(path, RAY_MODULES.drawBackend) ||
+      same(path, RAY_MODULES.worldRays));
 
   /** Whether a declaration is one the seam keeps to itself. */
   const forbidden = (declaration: ts.Declaration, name: string): boolean => {

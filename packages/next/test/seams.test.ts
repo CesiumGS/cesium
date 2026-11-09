@@ -526,6 +526,7 @@ describe("the ray seam's detector flags bypasses", () => {
       `import type { World } from "../src/scene/World.ts";`,
       `import type { Engine } from "../src/scene/Engine.ts";`,
       `export * from "../src/query/drawBackend.ts"; // rays`,
+      `export { castRays as moved } from "../src/scene/world/rays.ts"; // rays`,
       `export { globeTarget } from "../src/query/terrainBackend.ts"; // rays`,
       `declare const tile: Tile;`,
       `declare const world: World;`,
