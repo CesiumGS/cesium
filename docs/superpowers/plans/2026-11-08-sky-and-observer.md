@@ -658,7 +658,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - a synthetic star: the veil's profile against `veilSpread` is within 10% from 1° to 20°;
   - the sun at EV100 −12, 5, 15 and 18, and `{ scale: 1 }`: no NaN, no infinity, no pixel below 0; the display's probes are clean (Review Focus 3);
   - the meter's reading is the same with glare on and off, to 4 decimals (it reads earlier in the tick);
-  - a sun behind a truss, then at the limb, then just off screen: no pop by frame-to-frame differences across a scripted move;
+  - a sun behind a truss, then at the limb, then just off screen: no pop, by the differences between ticks across a scripted move;
   - time beside the spike's 2.75 ms; the target is under 1.5 ms on the M2.
 - [ ] **Step 6: Commit** with "render: the veil: equal energy per octave, and the sun in closed form".
 
@@ -675,7 +675,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
 - Produces (author's calls 38, 39, 41):
   - `type Aperture = "round" | "vanes" | "hex" | "blades7"`;
   - `computeKernel(aperture: Aperture, size: number): { texels: Float32Array; radii: Float32Array; size: number }`, no GPU: the pupil's |FFT|², resampled per wavelength over a constant 16 wavelengths and summed to RGB, with its core tapered out over a radial window and the rest normalized to 1. `radii` gives the visible radius in cells per log2 of display brightness, 32 entries. FFT here runs once, in a worker, and never in a tick;
-  - the kernel is uploaded as `rgba16float`, with `Sky`-independent ownership in `glare.ts`, one per aperture, on first use; until then spikes draw nothing, and the veil runs. Its arrival asks for one tick (Review Focus 5);
+  - `glare.ts` owns the kernels, one per aperture, uploaded as `rgba16float` on first use; until then spikes draw nothing, and the veil runs. Its arrival asks for one tick (Review Focus 5);
   - the sprite pass: `pass.draw(4, GLARE_SOURCES)`, blending additively into `glare.image` after the composite. The vertex shader gives a degenerate triangle for a slot past the count; the fragment takes one sample, and clamps at 200; `spikes.share` scales it, default 0.05; `spikes.extent` is the kernel's half-width in degrees, default 3, and a sprite's radius is at most 512 px.
 
 - [ ] **Step 1: Write the failing test** (`test/glareKernel.test.ts`, at `size` 128 so it runs in under a second):
@@ -719,3 +719,153 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
 - [ ] **Step 4: Run** the test, the Batch's other glare tests and tsc.
 - [ ] **Step 5: Commit** with "render: glare's tiers, its presets, and many views".
 - [ ] **Step 6: Batch D's gates,** with `alloc` both plain and `ALLOC_GLARE=1`. Expect no difference in `parity`, `translucency` or `customShader`, since glare's off there. Then the owner judges by looking (§13.28's test): the sun behind station structure, at the limb from orbit, and low over the sea; bright stars with the veil, then with spikes. A truss across the spikes is a known gap, since a sprite takes one visibility value (§13.22): say so beside the stills. Stills stay out of the repository.
+
+## Batch E: the rest
+
+### Task 16: The cost page, and the run on Intel
+
+**Files:**
+
+- Create: `bench/observerCost.html`, `bench/observerCost.ts`, `test/observerCost.test.ts`
+- Modify: `bench/run.mjs`, then `glareTier`'s table once results arrive
+
+**Interfaces:**
+
+- Consumes: everything above.
+- Produces:
+  - `syntheticStars(count: number, seed: number): StarField`: positions with a band like the Milky Way's, magnitudes from `magnitudeOfRank`, colors from a fixed spread, a flat background. No sky data, so it can run anywhere and its results can be kept;
+  - the page, at `?bench=1&runs=5` (and `&submission=direct`, `&pack=local`): five runs per row, each the median of 9 renders, at 2560×1440 whatever the window: quads (a test-only pipeline in the page), strips, cells by indirect draw, cells by the CPU path; wide, dense and long-lens views; each glare tier; each stage; the eye's point limit. It records adapter, architecture, driver string and device-loss events, shows a "Copy results" button, and stops at the first device loss, reporting it;
+  - suite `observerCost` in `bench/run.mjs`.
+
+- [ ] **Step 1: Write the failing test:** `syntheticStars` is deterministic for a seed, brightest first, its count of stars brighter than magnitude 6 within 15% of the 4,800 in `COUNTS`, and every value is finite; the results' JSON has a row per method and an adapter field; the page's source names no `.bin`, and with no `pack` parameter it makes no request to `/sky-pack/`.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.**
+- [ ] **Step 4: Run** the test and tsc. On the M2 (`BENCH_URL=http://127.0.0.1:5197 node bench/run.mjs observerCost`): compare with the spike's table. Report any row more than 2× off, which needs explaining. Read the star column first, as the spike's notes warn: on a tile-based GPU a pass's time can land in the sky pass.
+- [ ] **Step 5: Commit** with "bench: what the observer, stars and glare cost, with no data needed".
+- [ ] **Step 6: The owner's laptop** (see "Intel checks"). A person must run it. Don't mark this step done without the JSON. Other tasks may go on while waiting. When it arrives, update `glareTier`'s table and `test/glareTier.test.ts` from it, record the driver and results in §13.23 and §13.32, and commit with "render: glare's tiers, from a run on Intel". If device loss occurs, stop this plan's merge and report it.
+
+### Task 17: The observer's controls
+
+**Files:**
+
+- Create: `widgets/observerPanel.ts`, `examples/night-sky/main.ts`, `index.html`, `DESIGN.md`, `test/observerPanel.test.ts`
+- Modify: `widgets/index.ts`, `examples/index.ts`, `examples/slang-playground/main.ts`, `bench/suite/views/Viewer.tsx`, `api/surface.txt`
+
+**Interfaces:**
+
+- Consumes: `View.observer`, `View.readout`, `astrophotoCurveStage`, `eyeGlare`, `cameraGlare`, `Viewer.credits`.
+- Produces (author's call 42):
+  - `attachObserverPanel(container: HTMLElement, view: View, options?: { sections?: readonly ("exposure" | "optics" | "look" | "sky")[] }): ObserverPanelHandle`, public through the widgets entry, with `dispose()`;
+  - **Exposure** (tagged Physics): Eye, Camera fixed or Camera metered. The fixed slider's internal value is −EV100, so right is brighter, from EV100 18 at the left to −12 at the right. Its label and readout are in EV100 ("EV100 −3.0"), and it carries the playground's line: "Right is brighter. A higher EV100 expects a brighter scene, so it lets in less light." The eye's compensation, in stops, also runs right for brighter. The meter's and the eye's readout shows "≈ EV100 14.2" for an equivalent;
+  - **Optics** (tagged Model): the veil and its share, spikes and their aperture, and the tier in use and why;
+  - **Look** (tagged Look): tone mapping, and the astrophoto curve, each with one line saying it changes the picture and not the light. Glare and the eye's limit name themselves as models of an eye or a lens, not looks or physics;
+  - **Sky data:** the pack's name, or "1.x's star map"; its credits; and "Not cleared: local use only" while `distributable` is false.
+  - `examples/night-sky`: public API only. Presets are data (§13.30): a date, a place or direction, an observer. No pack needed; `?pack=local` uses one where the dev route has it. Orion, the core, the winter sky, the night limb, the sun low, and the sun behind a structure.
+
+- [ ] **Step 1: Write the failing test** (`test/observerPanel.test.ts`, the DOM setup `test/viewerCredits.test.ts` uses):
+  - moving the fixed slider one step right raises `view.exposureScale` (the sign is the point); `ArrowRight` does the same; its `aria-valuetext` reads "EV100 …"; no readout in the panel shows a scale or a stop count in place of EV100;
+  - the eye's readout starts with "≈", and a plain scale's says "no units";
+  - every control sits under a section tagged physics, model or look, and the astrophoto control's label contains "look";
+  - editing the view from outside updates the panel within one tick, and `dispose()` removes it and its listeners; no readout changes the layout's box size (fixed widths);
+  - the sky section shows "Not cleared" for an uncleared pack, and credits as text;
+  - the playground's and Dyno Viewer's EV100 sliders use the same direction: a source check on their `flip`. Dyno's runs the other way today, so it fails until changed.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** Write `DESIGN.md` first: its story, audience and layout. Move the playground and Dyno's Viewer to the panel or to its direction rule.
+- [ ] **Step 4: Run** the test, `npm test`'s example tests, tsc.
+- [ ] **Step 5: Design pass** (port 5198, one page). Check the real page in both themes, at desktop and 380 px wide, keyboard only, with reduced motion, and with a clean console. Run a UX review on it, with a fresh reviewer, and fix what it finds. Nothing cramped; every figure in context. Stills stay out of the repository if a pack is on.
+- [ ] **Step 6: Commit** with "widgets: the observer's controls: right is brighter, EV100 in readouts, and physics told from looks".
+
+### Task 18 (stretch, skippable): FXAA on the interface
+
+Skip this task if Batch E is short of time. Say so in the results. Nothing else depends on it.
+
+**Files:**
+
+- Create: `src/render/post/fxaaStage.ts`
+- Modify: the `present` pass (its FXAA special case), `View.fxaa`, the examples that set `fxaa`, `bench/suite/suite.ts`, `api/surface.txt`, `test/postStage.test.ts`
+
+**Interfaces:**
+
+- Consumes: Task 2's `display` slot.
+- Produces: `fxaaStage(): PostStage`: slot `display`, kind `look`, label `"FXAA"`. `fxaa.slang`'s body moves behind `POST_STAGE_BOUNDARY`. `ViewOptions.fxaa` and `View.fxaa` go; `frame.fxaaParams`, `frame.fxaaGroup` and `pipelines.fxaa` go.
+
+- [ ] **Step 1: Write the failing test:** with `fxaaStage()` in the list, the pass list holds `post.fxaa` after `present`, and the `ldr` target is used; `"fxaa" in view` is false; a host stage after it in the `display` slot reads its output.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.**
+- [ ] **Step 4: Browser check:** the `translucency` example with FXAA on against main: no differing pixel, or each one explained. `npm run surface`.
+- [ ] **Step 5: Commit** with "render: FXAA as a stage, to prove the interface".
+
+### Task 19: Docs, the plan's results, and every gate
+
+**Files:**
+
+- Create: `test/observerDocs.test.ts`
+- Modify: `packages/next/README.md`, `handbook/src/tabs/` (the scene tab's "Exposure and lighting", and its "checked" date), `handbook/src/apiMap.ts`, `handbook/src/sources.ts`, `handbook/DESIGN.md` if it names these, `packages/next/AGENTS.md` (the pack's rule), `CESIUM2_WEBGPU_PLAN.md`
+
+- [ ] **Step 1: Write the failing test** (`test/observerDocs.test.ts`): each value export of the observer, stages and pack in `api/surface.txt` is named in the README; the scene tab's "checked" date is no older than this task's; `handbook/` holds no image, file or string derived from a pack (no `CSKY` magic, and no `sky-pack` URL); `sources.ts` holds the paper, with the date read.
+- [ ] **Step 2: Docs.** The README covers the observer, stages (with what's a look), the pack, `npm run sky`, and that a pack isn't shipped. The handbook describes the engine as an embeddable rendering core, adds no roadmap, and shows no sky data. Read each outside page before adding it to `sources.ts`.
+- [ ] **Step 3: The overall plan.** A "Sky and observer results" note under §13.32: measured values, calls and rulings one line each, the Intel results, or that they're still owed. Correct what's now stale: §13.29's "5e removes it", §13.30's table row, §13.22's "Not designed" and the "60,000" (three clamps), §13.28's disc rule (ruling 1). Write the real deferred work to §13.14's "Carried forward" list before deleting any ledger: the veil's asymmetric form from the paper; a truss across spikes; the Moon and planets in the list; the eye's color for bright stars; ambient occlusion's slot; §13.32's graph-level slicing; a `Renderer` interface when a second one is chosen; and the terms, still unsettled. Licences get no conclusion.
+- [ ] **Step 4: Gates, once:**
+  - `npx tsc --noEmit -p .`, `npx tsc --noEmit -p tsconfig.lib.json`, `npx eslint .`, `npx prettier --check .`;
+  - `npm test`, `npm run test:data`, `SKY_DATA=1 npx vitest run test/data/skyPack.test.ts` where a pack exists;
+  - `npm run build`, `npm run build:lib`, `npm run handbook`, `npm run check:bundle`, `npm run shaders:check`;
+  - `parity`, `models`, `tileset`, `customShader`, `translucency`, `tracks`, `imagery`, and `alloc` plain and with `ALLOC_GLARE=1`, against main and against this branch's base, one suite at a time, on port 5194. Any pixel difference is explained or it's a bug;
+  - a check that the branch adds no data: `git diff --stat main -- . | grep -E "\.(bin|exr|png|jpg)"` is empty;
+  - `snyk_code_scan` on `src/render/post`, `src/scene/observer.ts`, `src/atmosphere/skyPack.ts`, `src/atmosphere/starCells.ts`, `scripts/skyPack.mjs`, `scripts/skyPack/`, `scripts/vitePluginSkyPack.ts`, `widgets/observerPanel.ts`, `bench/observerCost.ts`, `spikes/observer.ts` and `examples/night-sky`. Fix new findings, and rescan until clean. The dev route and the EXR reader are where a finding is most likely.
+- [ ] **Step 5: Commit** with "Plan: sky and observer results".
+
+## What other plans need
+
+For the owner to apply. This plan doesn't edit them. Line references are by symbol or task, as those plans may move.
+
+**5a (built).** Nothing to change in its code. Its plan's Step on "the stars, Sun and Moon match the base commit's to the eye" is history and no longer holds as a check: stars change here.
+
+**5b.** A search for exposure, stars, tone mapping, observer (the optical sense) and glare finds nothing it depends on. Change only its **Base** line, to follow this plan, and check its symbols against the split. Its `observer` in vector kinds (`{ kind: "position"; target; observer }`) is SPICE's sense and unrelated. Worth a note, since `view.observer` now also exists; no rename needed.
+
+**5c.**
+
+- Its "a view on another body" task: `Sky.writeStars(view, rows)` is already per view (Task 9). It only has to pass R · `icrfToFixed` there. Its test on "its star rotation" should read `SkyView.starUniform`. Star cells and glare's sources then follow with no more work.
+- Its `skyPixel` and `skyTablePixel` refactor: "keep their outputs exactly" now means against this plan's shader, which has no `starExposure`.
+- Its Moon impostor: `glareSources`' `tapVisible` reads `sky.moon` and `sky.moonSize`. When the Moon moves to the opaque pass, its depth blocks the taps by itself. Keep the eclipse check from Task 12 passing, and drop the analytic test if the uniform goes.
+- `ViewOptions` and `addView({ body })`: `observer`, not `exposure`. `Viewer.setSplit` with a body copies the observer. Its call 5's "same exposure" reads `view.observer.exposure`.
+- A view on a body with no air: `lightListFor`'s sun has no `sunLight` table to read for it. Use the outside-air value until 5e; add this to its Step 1.
+- Change its **Base** line.
+
+**5d.**
+
+- **`Camera.lens` should be renamed.** Its `Lens` holds tangents and half extents, which is projection. §13.22, §13.28 and §13.30 use "lens" for optics (a lens's spikes, a lens and camera in a preset), and those now live on the observer as `Aperture` and `spikes`. Two meanings of one word on neighboring objects will mislead. Recommended: `Camera.imagePlane(aspect): ImagePlane`, the same fields, in its calls 34 and 36, Tasks 14 and 15, and its seam's wording. It costs a rename now and more once built (question 5). This plan's API avoids the word either way.
+- **Its `.fovy` seam:** this plan adds no `.fovy` read. New code takes tangents from the sky's uniform, so its Task 14 has nothing more to move. Keep it that way in review.
+- **Its Task 15:** `Sky.write` no longer has a `starExposure` parameter. Add `glare` to what's off in an orthographic view, beside `frame.ambient`: there's no angle for a veil to spread over, and the narrowest dolly's tangents would make every star's radiance enormous. Add to its Step 1: `resolveGlare` gives `off` there; stars at the narrowest dolly's tangents have no NaN; `veilWeights` gives zeros. Star cells need no change, since they use the sky's tangents.
+- **Its global constraints:** add the sky's check page to the browser checks, and read `view.observer` for any exposure a task sets. Its Viewer tasks: `ViewerOptions.observer`.
+- **Its setters:** nothing is required. `view.observer.exposure.ev100` written through a setter wakes the loop, so `Timeline.bind` can animate EV100. Worth an example in its docs.
+- Change its **Base** line, and its "What 5d takes" table if a name moved.
+
+**5e (no plan yet; spec section 12, §13.29, §13.30).** Start from this plan:
+
+- Out of its scope now: finishing the star exposure's removal, better source data, sharper points, eye and camera looks, and a first glare.
+- Still its own: planets as points, deep-sky patches, the shutter and accumulation, and the sky per body.
+- Planets and the Moon join `lightListFor` and `glareSources`' records. That also ends the undercount where the Moon clips at a low EV100.
+- Patches: `format: 2` of the manifest, an optional `patches` block; the guard and credits already handle new files, as long as binaries get a magic.
+- The shutter: a camera's `Exposure` gains a duration, with EV100 still the unit. Accumulation sits in the `scene` slot, on the graph's resources, off by default, and changes nothing in the default path.
+- Per body: `faintStars` and the `sunLight` table become per body. The airglow on the night limb, which the spike found clipped at a long exposure, needs checking against real long exposures.
+- `EYE_TARGET` and the highlight guard's tuning remain with it. So do §13.28's glint (a source in the list, at last) and water.
+- 5f and 5g: a spacecraft camera is `cameraObserver` plus `cameraGlare`. 5g's replay should set observers as data.
+
+## Self-review
+
+- **Spec coverage.** Observer stage: Tasks 1 to 3, with EV100 readouts in 1 and 17, the meter unmoved in 2 and 13, FXAA in 18 and ambient occlusion in its section. Sky data pack: Tasks 4 to 7, with today's map as default (Task 4), a local script (6), refusal with a test (5), and credits (7). Star drawing: Tasks 8 to 10, with cells, strips, the core and the hybrid; raw catalogs off (call 15). Glare: Tasks 12 to 15, veil, sprites and tiers, per observer, no FFT live (a pin in Task 14), the sun's energy (call 32). Fudges: Task 11. Out-of-scope items appear only under "What other plans need".
+- **Requirements of the brief.** Failable tests end each task. Node first, with browser groups on `spikes/observer.html`. Gates are named per batch, and "Expected pixel differences" states what moves. Batching is its own section. Intel checks, tiers, hang safety and slicing have sections. UI rules: Task 17. Calls carry undo costs. Questions end the document. Review Focus lines each have their tests.
+- **Step scan.** No step says "handle" without saying what. The spike's bodies aren't copied. Formulas appear only where a signature can't determine them.
+- **Type consistency.** `ObserverSettings`, `PointSpread`, `GlareSettings`, `ObserverReadout` (Task 1); `PostStage`, `StageSlot`, `StageKind`, `createPostStage`, `POST_STAGE_BOUNDARY`, `chainOrder`, `chainSource`, `observerShadowGain` (2); `SkyPackManifest`, `parseManifest`, `readPoints`, `readBackground`, `isPackBinary`, `setSkyPack` (4); `skyPackGuard`, `skyPackDevRoute` (5); `starRadius` (8); `buildStarCells`, `cullCell`, `starCullInputs`, `starSubmission` (9); `eyePointLimit`, `eyeLimitStage` (11); `lightListFor`, `discTaps` (12); `veilWeights`, `veilSpread`, `sunVeil` (13); `computeKernel`, `Aperture` (14); `glareTier`, `resolveGlare`, `eyeGlare`, `cameraGlare` (15).
+- **Proportion.** The plan decides names, values and tests. Shader bodies are left to the implementer, except for formulas the spec leaves open.
+- **Not verified in writing this.** All GPU costs are the spike's, on an M2. Nothing here has run. The eye-limit values and the "stars fall by" table are computed from today's `eye.ts`. The slope check was run on the formula, not on a GPU.
+
+## Questions for the owner
+
+Most important first. Each has the default the plan follows.
+
+1. **Should the Viewer turn glare on by default?** A tight core with no glare makes bright stars stand out less, and a veil also lowers contrast in daylight scenes. *Default:* off until you've judged Batch D's renders; then it's one line.
+2. **HYG as the default pack's bright end.** The spike found a map alone can't do it, and HYG is the only catalog with a stated licence that we've read, but its inputs include Hipparcos, and its page doesn't say how those terms sit together. *Default:* use it locally, marked uncleared, with raw Hipparcos and Gaia supplied by hand only. Should it stay out until someone reads the terms? The plan then has no bright end to offer but what a developer supplies.
+3. **Stars beside a sunlit Earth from orbit.** With the rule gone, they vanish, as in photographs. *Default:* accept it, with no special path. A look stage could add them later, labelled.
+4. **The tight core on today's map.** §13.29 says a checkout with no pack draws what it draws now, and also says to drop the halo. *Default:* the data stays, the drawing improves (call 23). Say if the default look should hold until a pack is on.
+5. **Rename 5d's `Camera.lens` to `Camera.imagePlane`?** *Default:* yes, before 5d is built. See "What other plans need".
