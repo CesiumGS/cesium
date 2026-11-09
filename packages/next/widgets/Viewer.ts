@@ -99,6 +99,11 @@ import {
   setGlobe,
   addTileset,
 } from "./viewerGlobe.ts";
+import {
+  suspendPresentation,
+  suspendPresentationUntil,
+  resumePresentation,
+} from "./viewerPresentation.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -1270,34 +1275,7 @@ export class Viewer {
   suspendPresentation(
     options: { hide?: boolean } = {},
   ): (() => void) & Disposable {
-    let resumed = false;
-    if (this.suspensions++ === 0) {
-      this.view.enabled = false;
-      this.container.dataset.cesiumPresentationSuspended = "";
-      this.onPresentationChange?.(true);
-    }
-    const hide = options.hide === true;
-    if (hide && this.hidingSuspensions++ === 0) {
-      this.canvas.style.visibility = "hidden";
-    }
-    const resume = () => {
-      if (resumed) {
-        return;
-      }
-      resumed = true;
-      if (hide && --this.hidingSuspensions === 0) {
-        // Shown once a new frame is drawn (`onAfterTick`): shown now, the canvas
-        // would present its last frame, of what went away, for a frame.
-        this.unhideAfter = this.engine.stats.framesRendered;
-      }
-      if (--this.suspensions === 0) {
-        this.view.enabled = true;
-        delete this.container.dataset.cesiumPresentationSuspended;
-        this.engine.requestRender();
-        this.onPresentationChange?.(false);
-      }
-    };
-    return Object.assign(resume, { [Symbol.dispose]: resume });
+    return suspendPresentation(this, options);
   }
 
   /**
@@ -1305,12 +1283,7 @@ export class Viewer {
    * returns it: `await viewer.suspendPresentationUntil(loadScene())`.
    */
   async suspendPresentationUntil<T>(work: Promise<T>): Promise<T> {
-    const resume = this.suspendPresentation();
-    try {
-      return await work;
-    } finally {
-      resume();
-    }
+    return suspendPresentationUntil(this, work);
   }
 
   /** Whether presentation is suspended (`suspendPresentation`). */
@@ -1323,17 +1296,19 @@ export class Viewer {
    * other suspensions still hold presentation back).
    */
   resumePresentation(): void {
-    this.resumeStart?.();
-    this.resumeStart = undefined;
+    resumePresentation(this);
   }
 
   /** Called when presentation is suspended (true) or resumes (false). */
   onPresentationChange?: (suspended: boolean) => void;
-  private suspensions = 0;
-  private hidingSuspensions = 0;
-  /** Frames rendered when the last hiding suspension ended, until shown. */
-  private unhideAfter?: number;
-  private resumeStart?: () => void;
+  /** @internal */
+  suspensions = 0;
+  /** @internal */
+  hidingSuspensions = 0;
+  /** @internal Frames rendered when the last hiding suspension ended, until shown. */
+  unhideAfter?: number;
+  /** @internal */
+  resumeStart?: () => void;
 
   /** The current controls (`setControls`). */
   get controls(): "globe" | "orbit" {
