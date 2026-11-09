@@ -253,10 +253,11 @@ export const API_ROWS: readonly ApiRow[] = [
     group: "scene",
     old: ["SceneMode", "MapMode2D", "SceneTransforms"],
     next: [],
+    nextLabel: "Planned differently, in 5f: a design view",
     status: "absent",
     gap: "later",
-    note: "2D and Columbus view aren't built, so 2.0 has no scene modes. `View.toPixel` gives a point's pixel position.",
-    source: NON_GOALS,
+    note: "Plan 5f's design view is 2.0's approach to the same need, and it isn't built. The render root becomes a projected CRS's engineering frame, with straight axes, and terrain and imagery tiles are laid flat in that CRS by a per-tile fit with a stated error bound. A camera transition curves them down onto the globe, as 1.x's scene morph does between Columbus view and 3D, except that the flat space is the project's CRS, not a fixed map projection. An orthographic camera (5d) gives the 2D look. As designed it draws only within the CRS's area of use, so it's a regional view. `View.toPixel` gives a point's pixel position today.",
+    source: "Plan 5 spec, section 13.2",
   },
   {
     group: "scene",
@@ -1497,10 +1498,11 @@ export const API_ROWS: readonly ApiRow[] = [
   {
     group: "frames",
     old: ["GeographicProjection", "WebMercatorProjection", "MapProjection"],
+    nextLabel: "Planned differently, in 5f: the project's CRS",
     status: "absent",
     gap: "later",
-    note: "These map projections serve 2D and Columbus view, which aren't built.",
-    source: NON_GOALS,
+    note: "In 1.x these fixed projections serve 2D and Columbus view. Plan 5f's design view, not built, lays content flat in the project's own CRS instead. A whole-world flat map, as with Web Mercator, isn't in the spec and is an open point: it may follow from the same mechanism with a world-spanning CRS, but that's not decided, and it would need tiles and wrapping across the antimeridian.",
+    source: "Plan 5 spec, section 13.2",
   },
 
   // -------------------------------------------------------------------- Math

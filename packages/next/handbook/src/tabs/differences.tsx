@@ -48,6 +48,11 @@ const CONCEPTS = [
     next: "HDR with tonemapping by default for lit color, LDR as a per-view option. Unlit color is never tonemapped.",
   },
   {
+    topic: "Flat views",
+    old: "2D and Columbus view on a fixed map projection, with a scene morph to 3D, for the whole world",
+    next: "Planned in 5f, not built: a design view, flat in the project's own CRS by a per-tile fit with a stated error bound, with a morph to the globe. An orthographic camera (5d) gives the 2D look. It's regional, within the CRS's area of use. Whole-world flat maps are an open point.",
+  },
+  {
     topic: "Streaming",
     old: "Separate systems for the globe and for 3D Tiles",
     next: "One request scheduler and tile selection framework. Stepwise reproduces 1.x selection for comparisons; Budgeted is the default.",
@@ -215,8 +220,8 @@ export function Differences() {
       <Section title="What 2.0 doesn't do yet">
         <p>
           Not in the proof of concept: Entities and DataSources; Primitive,
-          Geometry and Appearance; 2D and Columbus view; CZML, KML and GeoJSON;
-          underground viewing; imagery draped on 3D Tiles.
+          Geometry and Appearance; CZML, KML and GeoJSON; underground viewing;
+          imagery draped on 3D Tiles.
         </p>
         <h3>Tileset and glTF extensions</h3>
         <DataTable

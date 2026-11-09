@@ -172,8 +172,15 @@ const GAPS: readonly {
   },
   {
     what: "2D and Columbus view",
+    state: "planned",
+    today:
+      "Planned differently, in 5f, and not built. In a design view the render root is a projected CRS's engineering frame, with straight axes, and terrain and imagery tiles are laid flat in that CRS by a per-tile fit with a stated error bound. A camera transition curves them down onto the globe, as 1.x's scene morph does, except that the flat space is the project's CRS. An orthographic camera (5d) gives the 2D look.",
+  },
+  {
+    what: "Whole-world flat maps",
     state: "unplanned",
-    today: "Out of scope for the proof of concept, with no design yet.",
+    today:
+      "An open point. The design view draws only within the CRS's area of use, so it's regional, and a whole-world map, as in 1.x's Columbus view or 2D with Web Mercator, isn't in the spec. It may follow from the same mechanism with a world-spanning CRS, but that's not decided, and it would need tiles and wrapping across the antimeridian.",
   },
   {
     what: "Imagery draped on 3D Tiles",
