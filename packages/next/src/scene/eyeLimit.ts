@@ -5,7 +5,7 @@
 // built only on the public stage interface.
 import { starPeakShare } from "../atmosphere/stars.ts";
 import { eyePointLimit } from "./eye.ts";
-import { observerPointSpread } from "./observer.ts";
+import { observerPointSpread } from "./pointSpread.ts";
 import { createPostStage, type PostStage } from "./postStage.ts";
 
 /** Above this adaptation, cd/m², nothing faint enough to matter shows. */

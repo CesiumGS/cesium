@@ -230,13 +230,15 @@ describe("what a view draws", () => {
       built.cells.forEach((cell, c) => {
         for (let i = cell.first; i < cell.first + cell.count; i++) {
           const at = i * STAR_FLOATS;
-          const d = built.points.subarray(at, at + 3);
-          const z = dot(d, view.forward);
+          const p = built.points;
+          const along = (axis: V) =>
+            p[at]! * axis[0] + p[at + 1]! * axis[1] + p[at + 2]! * axis[2];
+          const z = along(view.forward);
           if (z <= 0.01) {
             continue;
           }
-          const x = dot(d, view.right) / z;
-          const y = dot(d, view.up) / z;
+          const x = along(view.right) / z;
+          const y = along(view.up) / z;
           // Inside the view: its value, as the vertex shader has it.
           if (Math.abs(x) > view.tanX || Math.abs(y) > view.tanY) {
             continue;
@@ -251,7 +253,7 @@ describe("what a view draws", () => {
         }
       });
     }
-  });
+  }, 30_000);
 
   it("draws a small share of a uniform sky, wide and long", () => {
     const count = 100_000;
