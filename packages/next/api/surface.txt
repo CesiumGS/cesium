@@ -4,6 +4,7 @@ entry	name	kind	tier
 .	AerosolType	type	-
 .	AffinePlacement	interface	-
 .	AnchorHandle	interface	-
+.	Attribution	interface	-
 .	BASE_BINDING_LIMITS	const	-
 .	BASE_CAPACITY_LIMITS	const	-
 .	BingImagery	class	-
@@ -75,7 +76,6 @@ entry	name	kind	tier
 .	InspectControllerOptions	interface	-
 .	InstanceOptions	interface	-
 .	IonAsset	interface	-
-.	IonAttribution	interface	-
 .	IonOptions	interface	-
 .	IonTmsImagery	class	-
 .	LEVEL_ZERO_ERROR	const	-

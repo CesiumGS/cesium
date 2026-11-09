@@ -4,8 +4,12 @@
  * asset and everything it references carry the returned headers.
  */
 
-/** A required attribution, as HTML from the ion API. */
-export interface IonAttribution {
+/**
+ * A required attribution, as HTML: from the ion API, or from any content
+ * source. It belongs to the content (`Tileset3D.attributions`,
+ * `ImageryProvider.attributions`), so whatever shows the content credits it.
+ */
+export interface Attribution {
   html: string;
   /** False: must be shown on screen; true: may be listed behind a toggle. */
   collapsible: boolean;
@@ -21,7 +25,7 @@ export interface IonAsset {
    * Attributions the asset requires on screen, as HTML from the ion API
    * (e.g. the Cesium ion and Google logos).
    */
-  attributions: IonAttribution[];
+  attributions: Attribution[];
 }
 
 export interface IonOptions {

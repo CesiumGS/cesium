@@ -213,7 +213,7 @@ export {
   resolveIonAsset,
   resolveUri,
   type IonAsset,
-  type IonAttribution,
+  type Attribution,
   type IonOptions,
 } from "./io/ion.ts";
 export { resolveITwinIModel, type ITwinOptions } from "./io/itwin.ts";

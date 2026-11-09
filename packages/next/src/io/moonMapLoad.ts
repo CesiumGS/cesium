@@ -1,10 +1,6 @@
 // The Moon map worker's built URL (`?worker&url`, as WorkerPool's).
 import moonMapWorkerUrl from "./moonMapWorker.ts?worker&url";
-import {
-  type IonAttribution,
-  type IonOptions,
-  resolveIonAsset,
-} from "./ion.ts";
+import { type Attribution, type IonOptions, resolveIonAsset } from "./ion.ts";
 import { CESIUM_MOON_TERRAIN } from "./moonMap.ts";
 import type { MoonMapReply, MoonMapRequest } from "./moonMapWorker.ts";
 import { workerStart } from "./WorkerPool.ts";
@@ -16,7 +12,7 @@ export interface MoonMap {
    */
   image: ImageBitmap;
   /** What the map must credit on screen. */
-  attributions: IonAttribution[];
+  attributions: Attribution[];
   /**
    * What went wrong without failing the load: a polar cap that did not
    * load, the band's last row stretched over it instead.

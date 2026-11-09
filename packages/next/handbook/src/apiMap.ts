@@ -1705,7 +1705,7 @@ export const API_ROWS: readonly ApiRow[] = [
     supporting: [
       "widgets:CreditSource",
       "widgets:CreditsHandle",
-      "IonAttribution",
+      "Attribution",
     ],
     status: "changed",
     note: "Credits show through `attachCredits` or the `credits` option, drawn from each source's attributions.",

@@ -3,7 +3,7 @@
  * addressed (x, y, level) with y counted from the north, as Web Mercator
  * (XYZ, Bing quadkeys) and geographic (WMTS) schemes do.
  */
-import { ionDefaults, type IonAttribution } from "../io/ion.ts";
+import { ionDefaults, type Attribution } from "../io/ion.ts";
 import bingLogoUrl from "./assets/bing_maps_credit.png";
 
 export interface ImageryProvider {
@@ -16,7 +16,7 @@ export interface ImageryProvider {
   tileUrl(x: number, y: number, level: number): string;
   readonly headers?: Record<string, string>;
   /** Required on-screen credits (provider logos, ion). */
-  readonly attributions: IonAttribution[];
+  readonly attributions: Attribution[];
   /**
    * Data credits for one tile (1.x `getTileCredits`): the imagery
    * providers whose coverage includes it.
@@ -30,7 +30,7 @@ export class UrlTemplateImagery implements ImageryProvider {
   readonly tileSize: number;
   readonly minimumLevel: number;
   readonly maximumLevel: number;
-  readonly attributions: IonAttribution[];
+  readonly attributions: Attribution[];
 
   constructor(
     readonly name: string,
@@ -83,7 +83,7 @@ export class IonTmsImagery implements ImageryProvider {
     readonly maximumLevel: number,
     readonly tileSize: number,
     readonly headers: Record<string, string>,
-    readonly attributions: IonAttribution[],
+    readonly attributions: Attribution[],
   ) {}
 
   /**
@@ -172,7 +172,7 @@ export class BingImagery implements ImageryProvider {
     private readonly subdomains: string[],
     readonly maximumLevel: number,
     readonly tileSize: number,
-    readonly attributions: IonAttribution[],
+    readonly attributions: Attribution[],
     private readonly providers: BingProvider[],
   ) {}
 
@@ -225,7 +225,7 @@ export class BingImagery implements ImageryProvider {
     // ion's attributions and Bing's logo (1.x lists it in the credit
     // lightbox); the imagery providers are credited per tile drawn
     // (`tileCredits`).
-    const attributions: IonAttribution[] = (endpoint.attributions ?? []).map(
+    const attributions: Attribution[] = (endpoint.attributions ?? []).map(
       (a) => ({ html: a.html, collapsible: a.collapsible === true }),
     );
     attributions.push({

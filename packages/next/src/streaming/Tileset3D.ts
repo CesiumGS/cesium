@@ -62,6 +62,7 @@ import {
   type SceneItemHost,
   type SceneItemOptions,
 } from "../scene/SceneItem.ts";
+import type { Attribution } from "../io/ion.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import { TouchOrder } from "./TouchOrder.ts";
@@ -294,6 +295,14 @@ export interface TilesetOptions extends BudgetedOptions {
    * 1.x); geometric errors keep the load-time scale. 3D Tiles only.
    */
   modelMatrix?: Mat4;
+  /**
+   * What the content requires on screen, as its source states it (ion's
+   * attributions, say): `Tileset3D.attributions`. Whatever loads a tileset
+   * from a source that has them passes them here. A viewer shows them while
+   * an item of the tileset is in its world (`World.add`), so adding a tileset
+   * never loses its credit. The non-collapsible ones must stay on screen.
+   */
+  attributions?: readonly Attribution[];
   /**
    * Where its design coordinates are drawn (`Tileset3D.placement`), for a
    * tileset that declares none: the application supplies the placement
@@ -634,6 +643,11 @@ export class Tileset3D implements TileTree {
       this.secondPlacement = undefined;
     }
   }
+  /**
+   * What the content requires on screen (`TilesetOptions.attributions`). A
+   * viewer credits them while an item of this tileset is in its world.
+   */
+  readonly attributions: readonly Attribution[];
   /** Load-time `modelMatrix`, built into tile transforms and volumes. */
   private readonly loadMatrix: Mat4;
   /** `modelMatrix` × loadMatrix⁻¹: the content root transform. */
@@ -1183,6 +1197,7 @@ export class Tileset3D implements TileTree {
             transform: (rootJson as Record<string, unknown>).transform,
           })
         : NO_ROOT_JSON;
+    this.attributions = Object.freeze([...(options.attributions ?? [])]);
     this.dualPosition_ = readDualPosition(this.extensions, (message) =>
       this.warnings.add(message),
     );

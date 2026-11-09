@@ -4,8 +4,9 @@
  * call sets up what an app needs to look at content on the globe: a canvas,
  * the engine, a world and a view, a globe camera controller, the globe (the
  * ellipsoid or Cesium World Terrain, with the ion default imagery) and the
- * credits on screen; the inspector on request. Content is added through it
- * so its attributions are credited and it can be framed; everything else is
+ * credits on screen; the inspector on request. Content added through it
+ * can be framed. Credits belong to the content: whatever is drawn in its
+ * world (`world.add` too) is credited by its attributions. Everything else is
  * the engine's own API (`viewer.engine`, `viewer.world`, `viewer.view`).
  *
  *   const viewer = await Viewer.create(container);
@@ -44,7 +45,7 @@ import {
   type EngineOptions,
   type Exposure,
   type ImageryProvider,
-  type IonAttribution,
+  type Attribution,
   ModelPlacement,
   type ModelResource,
   type ModelResourceOptions,
@@ -294,8 +295,8 @@ export class Viewer {
   private imagery?: ImageryProvider;
   /** The default imagery while its metadata resolves. */
   private imageryLoading?: Promise<ImageryProvider>;
-  private terrainAttributions: IonAttribution[] = [];
-  private readonly attributions = new Map<object, IonAttribution[]>();
+  private terrainAttributions: Attribution[] = [];
+  private readonly attributions = new Map<object, Attribution[]>();
   private readonly tilesets = new Set<Tileset3D>();
   private second?: View;
   private secondController?: GlobeController;
@@ -729,7 +730,7 @@ export class Viewer {
     const token = ++this.globeToken;
     this.globeKind = kind;
     let next: Globe | undefined;
-    let attributions: IonAttribution[] = [];
+    let attributions: Attribution[] = [];
     const imagery = this.imagery ?? this.imageryLoading;
     const options = {
       policy: this.policy,
@@ -773,7 +774,7 @@ export class Viewer {
   ): Promise<Tileset3D> {
     let url: string | URL;
     let headers: Record<string, string> | undefined;
-    let attributions: IonAttribution[] = [];
+    let attributions: Attribution[] = [];
     if (typeof source === "object" && "ion" in source) {
       const ion = await resolveIonAsset(source.ion, {
         ...this.tokenOptions(),
@@ -793,10 +794,10 @@ export class Viewer {
     const tileset = await this.engine.addTileset(this.world, url, {
       policy: this.policy,
       ...(headers ? { headers } : {}),
+      ...(attributions.length > 0 ? { attributions } : {}),
       ...options,
     });
     this.tilesets.add(tileset);
-    this.attributions.set(tileset, attributions);
     return tileset;
   }
 
@@ -816,13 +817,16 @@ export class Viewer {
     return this.engine.loadModel(this.world, url, options);
   }
 
-  /** Credits that content added outside the viewer requires. */
-  addAttributions(owner: object, attributions: IonAttribution[]): void {
+  /**
+   * Credits for something that isn't a tileset or a provider the viewer
+   * knows (a tileset carries its own: `Tileset3D.attributions`).
+   */
+  addAttributions(owner: object, attributions: Attribution[]): void {
     this.attributions.set(owner, attributions);
   }
 
   /**
-   * Removes a tileset added through the viewer, or attributions' owner's
+   * Removes a tileset added through the viewer, or an attributions' owner's
    * credits. (A model placement removes itself: `placement.remove()`.)
    */
   remove(content: Tileset3D | object): void {
@@ -1390,17 +1394,33 @@ export class Viewer {
     return view.pick(px - area.x, py - area.y);
   }
 
+  /**
+   * The tilesets with an item in the viewer's world that some view shows,
+   * whoever added them (`viewer.addTileset` or `world.add`): what their
+   * content requires is credited while they are.
+   */
+  private shownTilesets(): Tileset3D[] {
+    const tilesets = new Set<Tileset3D>();
+    for (const item of this.world.items) {
+      if (item.viewMask !== 0) {
+        tilesets.add(item.tileset);
+      }
+    }
+    return [...tilesets];
+  }
+
   /** What the view must credit: providers' attributions and data credits. */
-  credits(): { attributions: IonAttribution[]; credits: string[] } {
+  credits(): { attributions: Attribution[]; credits: string[] } {
     return {
       attributions: [
         ...this.terrainAttributions,
         ...(this.imagery?.attributions ?? []),
         ...[...this.attributions.values()].flat(),
+        ...this.shownTilesets().flatMap((t) => t.attributions),
       ],
       credits: [
         ...new Set(
-          [this.globe_, ...this.tilesets]
+          [this.globe_, ...this.shownTilesets()]
             .filter((t) => !!t)
             .flatMap((t) => t.credits()),
         ),
