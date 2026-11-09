@@ -24,6 +24,7 @@ import {
   SHADOWS_STRIDE,
   SHADOWS_SIZE,
 } from "../../scene/shadows.ts";
+import { encodePick } from "./picks.ts";
 
 /** The view's frame graph for its current size, built on first use and on resize. */
 export function viewFrameFor(
@@ -922,7 +923,7 @@ function buildViewFrame(
     const request = frame.pick;
     if (request) {
       frame.pick = undefined;
-      engine.encodePick(enc, view, frame, request);
+      encodePick(engine, enc, view, frame, request);
     }
   });
 
