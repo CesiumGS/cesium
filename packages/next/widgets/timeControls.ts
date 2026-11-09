@@ -35,6 +35,8 @@
  * abbreviation ("BST"), as the browser's Intl knows it.
  */
 import {
+  ianaAbbreviation,
+  ianaOffsetMinutes,
   sunElevation,
   sunTimes,
   type Clock,
@@ -768,92 +770,7 @@ export function attachTimeControls(
 const zoneKey = (zone: Zone): string =>
   typeof zone === "object" ? `iana:${zone.iana}` : zone;
 
-const ianaFormats = new Map<string, Intl.DateTimeFormat>();
-
-/**
- * Minutes the IANA zone `iana` is ahead of UTC at `ms` (daylight saving
- * included), from the browser's Intl: its wall clock read back as UTC.
- * An unknown zone throws (Intl's RangeError).
- */
-export function ianaOffsetMinutes(ms: number, iana: string): number {
-  let format = ianaFormats.get(iana);
-  if (format === undefined) {
-    format = new Intl.DateTimeFormat("en-US", {
-      timeZone: iana,
-      hourCycle: "h23",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-    });
-    ianaFormats.set(iana, format);
-  }
-  const part: Record<string, number> = {};
-  for (const p of format.formatToParts(new Date(ms))) {
-    if (p.type !== "literal") {
-      part[p.type] = Number(p.value);
-    }
-  }
-  const wall = Date.UTC(
-    part.year!,
-    part.month! - 1,
-    part.day!,
-    part.hour!,
-    part.minute!,
-    part.second!,
-  );
-  const whole = Math.floor(ms / 1000) * 1000;
-  return Math.round((wall - whole) / 60_000);
-}
-
-/**
- * Locales whose short zone names are the abbreviations people there use
- * ("BST", "AEST", "JST"), tried in turn when the reader's own locale
- * names the zone only by its offset ("GMT+1").
- */
-const ABBREVIATION_LOCALES = [
-  "en-GB",
-  "en-AU",
-  "en-US",
-  "en-IN",
-  "en-NZ",
-  "ja-JP",
-  "id-ID",
-] as const;
-
-/**
- * The IANA zone's abbreviation at `ms` ("BST", "PDT", "AEDT"), by Intl:
- * the reader's locale's short name, else the first of a few English
- * locales' (and the zone's own country's) that isn't just an offset, else
- * the offset itself ("UTC+3").
- */
-export function ianaAbbreviation(
-  ms: number,
-  iana: string,
-  locale?: string,
-): string {
-  const shortName = (loc: string | undefined) =>
-    new Intl.DateTimeFormat(loc, { timeZone: iana, timeZoneName: "short" })
-      .formatToParts(new Date(ms))
-      .find((p) => p.type === "timeZoneName")?.value ?? "";
-  const offsetOnly = (name: string) => /^(GMT|UTC)[+−-]/.test(name);
-  for (const loc of [locale, ...ABBREVIATION_LOCALES]) {
-    const name = shortName(loc);
-    if (name !== "" && !offsetOnly(name) && !/^[+−-]/.test(name)) {
-      return name;
-    }
-  }
-  const minutes = ianaOffsetMinutes(ms, iana);
-  if (minutes === 0) {
-    return "UTC";
-  }
-  const sign = minutes > 0 ? "+" : "−";
-  const h = Math.floor(Math.abs(minutes) / 60);
-  const m = Math.abs(minutes) % 60;
-  return `UTC${sign}${h}${m === 0 ? "" : `:${String(m).padStart(2, "0")}`}`;
-}
+export { ianaAbbreviation, ianaOffsetMinutes };
 
 /**
  * The marked spans over the day starting at `start` (UTC ms) on a strip

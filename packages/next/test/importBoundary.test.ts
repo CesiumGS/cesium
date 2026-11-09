@@ -33,6 +33,7 @@ const TIME_FILES = new Set(
     "sun",
     "moon",
     "celestial",
+    "format",
     "index",
   ]
     .map((name) => `src/time/${name}.ts`)

@@ -1277,6 +1277,13 @@ export const API_ROWS: readonly ApiRow[] = [
     old: ["Simon1994PlanetaryPositions", "IauOrientationParameters"],
     next: [
       "time:moonPosition",
+      "time:TimeParts",
+      "time:TimeZone",
+      "time:ZoneLookup",
+      "time:ianaAbbreviation",
+      "time:ianaOffsetMinutes",
+      "time:placeZone",
+      "time:timeParts",
       "time:sunPosition",
       "time:sunDirection",
       "time:moonAxes",
