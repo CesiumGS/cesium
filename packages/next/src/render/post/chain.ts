@@ -195,7 +195,7 @@ function stagePipeline(
     cache = new Map();
     pipelineCaches.set(device, cache);
   }
-  const { module: linked, compute, reads, bindings, writes } = pass;
+  const { module: linked, compute, reads, bindings, writes, storage } = pass;
   const format = writes[0]!.texture.format;
   const hasUniforms = stage.uniformLayout.bytes > 0;
   const key = `${compute ? "compute" : format}|${reads.join()}|${hasUniforms}|${linked.code}`;
@@ -238,7 +238,7 @@ function stagePipeline(
   });
   const reading = bindings.some((b) => !b.write);
   const stageLayout =
-    hasUniforms || bindings.length > 0
+    hasUniforms || bindings.length > 0 || storage.length > 0
       ? device.createBindGroupLayout({
           label: `${linked.label}.stage`,
           entries: [
@@ -271,6 +271,14 @@ function stagePipeline(
                     } as const,
                   }
                 : { binding: b.binding, visibility, texture: {} },
+            ),
+            ...storage.map(
+              (b) =>
+                ({
+                  binding: b.binding,
+                  visibility,
+                  buffer: { type: "read-only-storage" },
+                }) as const,
             ),
           ],
         })
@@ -336,6 +344,11 @@ function stagePipeline(
 
 /** What a stage's or a chain's pass needs of the engine. */
 export interface ChainEngine {
+  readonly raster?: {
+    readonly timer: {
+      passWrites(label: string): GPUComputePassTimestampWrites | undefined;
+    };
+  };
   readonly ctx: {
     readonly device: GPUDevice;
     readonly errors: Pick<EngineErrors, "report">;
@@ -403,6 +416,7 @@ export class ViewChain {
   /** Filled by `registerStage`, freed with the view's graph. */
   private readonly buffers: GPUBuffer[] = [];
   private readonly images: GPUTexture[] = [];
+  private readonly sharedBuffers = new Map<string, GPUBuffer>();
   /** What runs a stage's `perView`, in the list's order. */
   private readonly perView: Array<(info: PostStageViewInfo) => void> = [];
   private readonly info: {
@@ -482,6 +496,19 @@ export class ViewChain {
       p[3] = pixelAngle;
       device.queue.writeBuffer(buffer, 0, p);
     }
+  }
+
+  /** Holds a buffer the view's stages read by name (`PostStagePass.storage`). */
+  share(name: string, buffer: GPUBuffer): void {
+    this.sharedBuffers.set(name, buffer);
+  }
+
+  shared(name: string): GPUBuffer {
+    const buffer = this.sharedBuffers.get(name);
+    if (!buffer) {
+      throw new Error(`A view's chain holds no buffer "${name}".`);
+    }
+    return buffer;
   }
 
   /** Follows `stage`'s `perView` in this view. Before any stage's pass, each tick. */
@@ -577,6 +604,8 @@ function linearSampler(device: GPUDevice): GPUSampler {
 const targetUsage = (storage: boolean) =>
   GPUTextureUsage.RENDER_ATTACHMENT |
   GPUTextureUsage.TEXTURE_BINDING |
+  // `View.readHdr`, after glare.
+  GPUTextureUsage.COPY_SRC |
   (storage ? GPUTextureUsage.STORAGE_BINDING : 0);
 
 /** A stage's result in a slot: the view's size. */
@@ -826,11 +855,17 @@ function registerStage(
                 binding: b.binding,
                 resource: stageViews[k]!,
               })),
+              ...pass.storage.map((b) => ({
+                binding: b.binding,
+                resource: { buffer: chain.shared(b.name) },
+              })),
             ],
           });
         }
+        const timed = engine.raster?.timer.passWrites(pass.label);
         if (pipeline.compute) {
           const [x, y] = pass.compute!;
+          computeDescriptor.timestampWrites = timed;
           const compute = enc.beginComputePass(computeDescriptor);
           compute.setPipeline(pipeline.compute);
           compute.setBindGroup(0, group!);
@@ -843,6 +878,7 @@ function registerStage(
           return;
         }
         color.view = viewOf(pass.writes[0]!, get);
+        descriptor.timestampWrites = timed;
         const render = enc.beginRenderPass(descriptor);
         render.setPipeline(pipeline.render!);
         render.setBindGroup(0, group!);

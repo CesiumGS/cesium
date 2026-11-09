@@ -18,7 +18,7 @@ export class GpuTimer {
    * with translucency on).
    */
   static readonly version = 2;
-  private static readonly maxPasses = 32;
+  private static readonly maxPasses = 48;
   /**
    * Smoothed GPU frame time in milliseconds, or NaN when unsupported: the
    * time any measured pass ran, passes that overlap counted once

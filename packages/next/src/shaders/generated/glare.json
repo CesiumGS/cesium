@@ -379,7 +379,7 @@
                             "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "pad",
+                            "name": "topRadius",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "float32",
@@ -771,7 +771,7 @@
                                 "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "topRadius",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "float32",
@@ -1326,7 +1326,7 @@
                                 "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "topRadius",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "float32",
@@ -1718,7 +1718,7 @@
                                     "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "pad",
+                                    "name": "topRadius",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "float32",

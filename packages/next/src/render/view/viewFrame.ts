@@ -40,7 +40,7 @@ import {
   registerSlot,
   type ChainView,
 } from "../post/chain.ts";
-import { glareFor } from "../post/glare.ts";
+import { GLARE_RECORDS, glareFor } from "../post/glare.ts";
 
 /** Rasterizer side: a view's targets and passes, in registration order. */
 export interface ViewFrameEngine extends Pick<
@@ -231,6 +231,9 @@ function buildViewFrame(
     exposed: new ChainSlot(response),
     display: new ChainSlot(ldr),
   });
+  if (glare) {
+    chain.share(GLARE_RECORDS, glare.state.sources);
+  }
   if (stages.exposed.length + stages.display.length > 0) {
     void engine.ctx.pipelines.chain().then((pipelines) => {
       chain.pipelines = pipelines;
@@ -561,6 +564,16 @@ function buildViewFrame(
   const { scene, exposed, display: shown } = chain.slots;
   registerPerView(graph, chain, entries, chainView);
   registerSlot(engine, graph, chain, scene!, stages.scene, chainView);
+  if (glare) {
+    graph.addPass(
+      "hdr-readback.glare",
+      { reads: scene!.handles, sideEffect: true },
+      hdrReadbackPass(engine, view, frame, {
+        resolved: scene!,
+        after: true,
+      }),
+    );
+  }
   const present = presentPasses(engine, view, frame, {
     displayResolved,
     adaptation,

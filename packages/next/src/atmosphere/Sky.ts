@@ -883,6 +883,7 @@ export class Sky {
     out[34] = nz / length;
     const p = this.atmosphere.parameters;
     out[35] = (distance - distance / scaled) / (p.topRadius - p.bottomRadius);
+    out[87] = p.topRadius / 1000;
     for (let i = 0; i < 12; i++) {
       out[36 + i] = this.starData[i]!;
     }

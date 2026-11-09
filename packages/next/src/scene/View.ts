@@ -449,6 +449,8 @@ export class View {
   }> = [];
   /** @internal Waiting for the view's next render (`readHdr`). */
   pendingHdrReads: Array<(image: HdrImage) => void> = [];
+  /** @internal The same, after glare. */
+  pendingGlareReads: Array<(image: HdrImage) => void> = [];
 
   constructor(options: ViewOptions) {
     this.target = options.target;
@@ -687,10 +689,15 @@ export class View {
   /**
    * This view's scene-referred image (before exposure and tonemapping),
    * from its next render: for measurements and references, not display.
-   * `Engine.renderFrame` renders now.
+   * `Engine.renderFrame` renders now. `after: "glare"` reads after the view's glare,
+   * for checks; it's the same image in a view with none.
    */
-  readHdr(): Promise<HdrImage> {
-    return new Promise((resolve) => this.pendingHdrReads.push(resolve));
+  readHdr(options?: { after?: "glare" }): Promise<HdrImage> {
+    const pending =
+      options?.after === "glare"
+        ? this.pendingGlareReads
+        : this.pendingHdrReads;
+    return new Promise((resolve) => pending.push(resolve));
   }
 
   /**

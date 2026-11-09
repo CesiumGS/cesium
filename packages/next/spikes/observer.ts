@@ -17,6 +17,11 @@ import {
   type World,
 } from "../src/index.ts";
 import { astroCurve } from "../src/render/post/astroCurve.ts";
+import {
+  VEIL_LEVELS,
+  veilSpread,
+  veilWeights,
+} from "../src/render/post/veilWeights.ts";
 import { cullCell, type StarCell } from "../src/atmosphere/starCells.ts";
 import {
   MAGNITUDE_ZERO_ILLUMINANCE,
@@ -1918,6 +1923,275 @@ async function sourcesGroup(engine: Engine, say: Say): Promise<void> {
   engine.sunDirection.set(saved);
 }
 
+/** A view's light after glare, once its passes are ready. */
+async function readAfterGlare(engine: Engine, view: View) {
+  const read = view.readHdr({ after: "glare" });
+  engine.renderFrame();
+  await engine.gpu.device.queue.onSubmittedWorkDone();
+  await ticks(engine, 2);
+  return read;
+}
+
+async function readBeforeGlare(engine: Engine, view: View) {
+  const read = view.readHdr();
+  engine.renderFrame();
+  await engine.gpu.device.queue.onSubmittedWorkDone();
+  await ticks(engine, 2);
+  return read;
+}
+
+/** Ticks until the view's chain draws its stages. */
+async function veilReady(engine: Engine, view: View): Promise<void> {
+  await engine.ctx.pipelines.glare();
+  await ticks(engine, 200, () => {
+    const { chain } = engine.raster.viewFrames.get(view) ?? {};
+    return !!chain && chain.slots.scene!.latest().name.startsWith("post.glare");
+  });
+}
+
+function imageRange(data: Float32Array): {
+  bad: number;
+  least: number;
+  most: number;
+} {
+  let bad = 0;
+  let least = Infinity;
+  let most = -Infinity;
+  for (let i = 0; i < data.length; i += 4) {
+    for (let c = 0; c < 3; c++) {
+      const v = data[i + c]!;
+      if (!Number.isFinite(v)) {
+        bad++;
+      } else {
+        least = Math.min(least, v);
+        most = Math.max(most, v);
+      }
+    }
+  }
+  return { bad, least, most };
+}
+
+async function veilGroup(engine: Engine, say: Say): Promise<void> {
+  const saved = Float64Array.from(engine.sunDirection);
+  // A synthetic star's veil against the formula.
+  {
+    const size = 1024;
+    const fov = 60;
+    const d = sky3.dir(84, 7);
+    const lux = 0.02; // Under the star's clamp (sky.slang STAR_MAX).
+    await setStars(engine, starField([{ d, lux }]));
+    const scene = glareScene(engine, { ev100: 5 }, size, size);
+    scene.aim({ ...inSpace(d, NORTH, fov, 5), fov });
+    await veilReady(engine, scene.view);
+    await ticks(engine, 4);
+    const before = await readBeforeGlare(engine, scene.view);
+    const after = await readAfterGlare(engine, scene.view);
+    const angle = (2 * Math.tan((fov * DEG) / 2)) / size;
+    const weights = veilWeights(angle, VEIL_LEVELS, 2);
+    const scale = (lux * 0.2) / (angle * angle);
+    const lines: string[] = [];
+    let worst = 0;
+    for (const degrees of [1, 2, 4, 8, 12, 16, 20]) {
+      const r = (Math.tan(degrees * DEG) / angle) | 0;
+      let sum = 0;
+      let count = 0;
+      for (let a = 0; a < 64; a++) {
+        const x = Math.round(size / 2 + r * Math.cos((a * Math.PI) / 32));
+        const y = Math.round(size / 2 + r * Math.sin((a * Math.PI) / 32));
+        const i = (y * size + x) * 4 + 1;
+        sum += after.data[i]! - before.data[i]!;
+        count++;
+      }
+      const seen = sum / count;
+      const wanted = scale * veilSpread(r, weights, 2);
+      worst = Math.max(worst, Math.abs(seen / wanted - 1));
+      lines.push(`${degrees}°: ${(seen / wanted).toFixed(3)}`);
+    }
+    say(
+      // Near the view's edge, clamping at it gives a little back (a flat image stays flat).
+      "a star's veil is the formula within 12%, 1° to 20°",
+      worst <= 0.12,
+      lines.join(", "),
+    );
+    const sum = (data: Float32Array) => {
+      let total = 0;
+      for (let i = 1; i < data.length; i += 4) {
+        total += data[i]!;
+      }
+      return total;
+    };
+    const [a, b] = [sum(before.data), sum(after.data)];
+    say(
+      "a star's summed light holds, less what leaves the view",
+      b <= a * 1.02 && b >= a * 0.9,
+      `after / before ${(b / a).toFixed(4)}`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+    engine.raster.sky.setStarField(null);
+  }
+  // The sun, at the exposures' limits.
+  for (const [name, exposure] of Object.entries({
+    "EV100 -12": { ev100: -12 },
+    "EV100 5": { ev100: 5 },
+    "EV100 15": { ev100: 15 },
+    "EV100 18": { ev100: 18 },
+    "a scale of 1": { scale: 1 },
+  }) as [string, Exposure][]) {
+    const scene = glareScene(engine, exposure);
+    scene.aim(groundSun(30, 60));
+    await veilReady(engine, scene.view);
+    await ticks(engine, 2);
+    const { data } = await readAfterGlare(engine, scene.view);
+    const { bad, least, most } = imageRange(data);
+    const shown = scene.target.read();
+    const probe = await shown;
+    say(
+      `the sun at ${name}: finite, not below 0`,
+      bad === 0 && least >= 0 && probe.length > 0,
+      `not finite ${bad}, from ${least.toExponential(2)} to ${most.toExponential(2)}`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // The meter doesn't see it.
+  {
+    const reading = async (glare: boolean) => {
+      const scene = new SkyScene(engine, 256, 256, {
+        auto: true,
+        speed: 1000,
+      });
+      if (glare) {
+        scene.view.observer.glare = { ...VEIL_ONLY, veil: { share: 0.2 } };
+      }
+      scene.aim(groundSun(30, 60));
+      if (glare) {
+        await veilReady(engine, scene.view);
+      }
+      await ticks(engine, 60);
+      const { ev100 } = scene.view.readout();
+      scene.dispose();
+      engine.removeView(scene.view);
+      return ev100!;
+    };
+    const [without, withGlare] = [await reading(false), await reading(true)];
+    say(
+      "the meter reads the same with glare on and off, to 4 decimals",
+      Math.abs(without - withGlare) < 5e-4,
+      `${without.toFixed(5)} v ${withGlare.toFixed(5)}`,
+    );
+  }
+  // Across things, tick by tick: no pop.
+  const moves: Record<string, (t: number) => SkyPose> = {
+    "at the Earth's limb from orbit": (t) => {
+      const altitude = 400_000;
+      const dip = Math.acos(RADIUS / (RADIUS + altitude));
+      const elevation = -dip + (0.00935 / 2) * (1.2 - t * 2.4);
+      const sun: V3 = [Math.sin(elevation), Math.cos(elevation), 0];
+      return {
+        position: [RADIUS + altitude, 0, 0],
+        direction: sky3.norm([-0.25, 1, 0]),
+        up: [1, 0.25, 0],
+        sun,
+        fov: 60,
+        ev100: 15,
+      };
+    },
+    "leaving the screen": (t) => {
+      const e = 30 * DEG;
+      const sun: V3 = [Math.sin(e), Math.cos(e), 0];
+      const up: V3 = [Math.cos(e), -Math.sin(e), 0];
+      return {
+        position: [RADIUS + 2, 0, 0],
+        direction: sky3.norm(sky3.add(sun, up, Math.tan((26 + t * 8) * DEG))),
+        up: [0, 0, 1],
+        sun,
+        fov: 60,
+        ev100: 15,
+      };
+    },
+  };
+  for (const [name, pose] of Object.entries(moves)) {
+    const scene = glareScene(engine, { ev100: 15 });
+    scene.aim(pose(0));
+    await veilReady(engine, scene.view);
+    // A ring around the sun: what the veil moves, with no disc's pixels.
+    const patch: number[] = [];
+    let bad = 0;
+    for (let i = 0; i <= 64; i++) {
+      scene.aim(pose(i / 64));
+      await ticks(engine, 1);
+      const { data } = await readAfterGlare(engine, scene.view);
+      bad += imageRange(data).bad;
+      const { pixel } = sunRecord(await readSources(engine, scene.view));
+      // Off the screen, a fixed patch: a ring would change which pixels it has.
+      const [cx, cy, radius] =
+        name === "leaving the screen"
+          ? [128, 128, 8]
+          : [pixel[0]!, pixel[1]!, 40];
+      let sum = 0;
+      let count = 0;
+      for (let a = 0; a < 32; a++) {
+        const x = Math.round(cx + radius * Math.cos((a * Math.PI) / 16));
+        const y = Math.round(cy + radius * Math.sin((a * Math.PI) / 16));
+        if (x >= 0 && y >= 0 && x < 256 && y < 256) {
+          sum += data[(y * 256 + x) * 4 + 1]!;
+          count++;
+        }
+      }
+      patch.push(sum / Math.max(count, 1));
+    }
+    let step = 0;
+    for (let i = 1; i < patch.length; i++) {
+      step = Math.max(step, Math.abs(patch[i]! - patch[i - 1]!));
+    }
+    const range = Math.max(...patch) - Math.min(...patch);
+    say(
+      `the sun ${name}: no pop`,
+      bad === 0 && step <= range * 0.12,
+      `not finite ${bad}; largest change between ticks ${((step / range) * 100).toFixed(1)}% of the whole, from ${patch[0]!.toFixed(1)} to ${patch[patch.length - 1]!.toFixed(1)} cd/m²`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // Its time, at 2560×1440, by its passes' timers.
+  {
+    const scene = glareScene(engine, { ev100: 15 }, 2560, 1440);
+    scene.aim(groundSun(30, 60));
+    await veilReady(engine, scene.view);
+    const times: number[] = [];
+    let parts = "";
+    for (let i = 0; i < 80; i++) {
+      await ticks(engine, 1);
+      let sum = 0;
+      parts = Object.entries(engine.gpuPasses)
+        .filter(([label]) => label.includes("glare"))
+        .map(
+          ([label, ms]) =>
+            `${label.replace("post.glare.", "")} ${ms.toFixed(2)}`,
+        )
+        .join(", ");
+      for (const [label, ms] of Object.entries(engine.gpuPasses)) {
+        if (label.includes("glare")) {
+          sum += ms;
+        }
+      }
+      if (i > 20 && sum > 0) {
+        times.push(sum);
+      }
+    }
+    scene.dispose();
+    engine.removeView(scene.view);
+    times.sort((a, b) => a - b);
+    say(
+      "the veil's time at 2560×1440 (target 1.5 ms; the spike's 2.75)",
+      true,
+      `${(times[times.length >> 1] ?? 0).toFixed(2)} ms: ${parts}`,
+    );
+  }
+  engine.sunDirection.set(saved);
+}
+
 const GROUPS: Record<
   string,
   (engine: Engine, say: Say, stills: Record<string, string>) => Promise<void>
@@ -1932,6 +2206,7 @@ const GROUPS: Record<
   times: starTimes,
   stills: stillsGroup,
   sources: sourcesGroup,
+  veil: veilGroup,
 };
 
 let root: HTMLElement;

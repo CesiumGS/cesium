@@ -124,6 +124,11 @@ export interface PostStagePass {
   writes?: readonly (string | PostStageLevel)[];
   /** Makes it a compute pass. Its workgroup's size is `[8, 8]` by default. */
   compute?: { workgroupSize?: readonly [number, number] };
+  /**
+   * @internal For the engine's own stages: storage buffers it reads, which the view's
+   * chain holds by name (`ViewChain.share`), as WGSL `name: type`.
+   */
+  storage?: readonly { name: string; type: string }[];
 }
 
 /** What a slot's images are. */
@@ -256,6 +261,8 @@ export interface ResolvedPostPass {
   readonly bindings: readonly PostStageBinding[];
   /** What it writes; a fragment pass's first is its target. */
   readonly writes: readonly PostStageBinding[];
+  /** What it reads of the chain's buffers, in group 1. */
+  readonly storage: readonly { name: string; binding: number }[];
 }
 
 /** A compute pass's entry point, around the stage's `postCompute`. */
@@ -650,6 +657,11 @@ function resolvePass(
         return { ...write, binding: binding++ };
       })
     : [];
+  const storage = (pass.storage ?? []).map(({ name, type }) => ({
+    name,
+    type,
+    binding: binding++,
+  }));
 
   const unit =
     typeof pass.shader === "string"
@@ -701,6 +713,10 @@ function resolvePass(
       (b) =>
         `@group(1) @binding(${b.binding}) var ${b.texture.name}: texture_storage_2d<${b.texture.format}, write>;`,
     ),
+    ...storage.map(
+      (b) =>
+        `@group(1) @binding(${b.binding}) var<storage, read> ${b.name}: ${b.type};`,
+    ),
   ];
   const module = new WgslLinker().link({
     label: `post stage "${context.unitName}"`,
@@ -730,6 +746,7 @@ function resolvePass(
     reads,
     bindings: [...bindings, ...stored],
     writes,
+    storage,
   };
 }
 

@@ -84,7 +84,7 @@ struct GlareFrame {
   float kernelScale;    // what a kernel's stored value is multiplied by
   float uvPerPixel;
   float kernelLevel;
-  float pad;
+  float topRadius;      // the air's, km
 };
 
 // A source. In record 0, the header: pixel.x the count of records in use, the sun's among
@@ -143,10 +143,30 @@ bool tapVisible(float3 direction) {
   return true;
 }
 
-// The table's light (linear sRGB lux) at the camera, toward `direction`.
-float3 tableLight(float3 direction) {
-  float2 uv = sunLightTableUv(dot(frame.geodeticUp, direction), frame.heightShare);
-  return sunLightTable.SampleLevel(tableSampler, uv, 0.0).rgb * 1e5;
+// The table's light, linear sRGB lux, at zenith cosine `mu`, `heightShare` up the air.
+float3 tableAt(float mu, float heightShare) {
+  float2 uv = sunLightTableUv(mu, heightShare);
+  return max(sunLightTable.SampleLevel(tableSampler, uv, 0.0).rgb * 1e5, float3(0.0));
+}
+
+// Light from `direction` at the camera, through the air, as a table's value. The table
+// stops at the top of the air, so from above it a ray that dips in crosses it twice: by
+// the table, from its lowest point out, then the same again.
+float3 throughAir(float3 direction) {
+  if (frame.heightShare < 1.0) {
+    return tableAt(dot(frame.geodeticUp, direction), frame.heightShare);
+  }
+  float3 outside = tableAt(1.0, 1.0);
+  float3 d = normalize(frame.shape * direction);
+  float r = length(frame.position);
+  float mu = dot(frame.position, d) / r;
+  float lowest = r * sqrt(max(0.0, 1.0 - mu * mu));
+  if (mu >= 0.0 || lowest >= frame.topRadius) {
+    return outside;
+  }
+  float share = (lowest - frame.bottomRadius) / (frame.topRadius - frame.bottomRadius);
+  float3 half = tableAt(0.0, share);
+  return half * half / max(outside, float3(1e-6));
 }
 
 // A sprite's radius, pixels, for pre-exposed light `brightest`; 0 for none.
@@ -194,7 +214,7 @@ void glareSources() {
     }
     sun.visibility = seen / float(GLARE_DISC_TAPS);
     // Out-of-gamut light at a low sun reads below 0 in sRGB; a veil can't take that.
-    sun.light = max(fixedLight ? float3(frame.sunFixed) : tableLight(frame.sun), float3(0.0));
+    sun.light = fixedLight ? float3(frame.sunFixed) : throughAir(frame.sun);
     sun.kind = 1.0;
     if (sun.visibility > 0.0) {
       sun.radius = spriteRadius(max(sun.light.r, max(sun.light.g, sun.light.b)) * frame.exposure);
@@ -205,7 +225,7 @@ void glareSources() {
 
   uint count = 1u;
   // The color of a star through the air, against the same light outside it.
-  float3 outside = fixedLight ? float3(1.0) : max(sunLightTable.SampleLevel(tableSampler, sunLightTableUv(1.0, 1.0), 0.0).rgb * 1e5, float3(1e-6));
+  float3 outside = fixedLight ? float3(1.0) : max(tableAt(1.0, 1.0), float3(1e-6));
   uint stars = min(uint(frame.starCount), GLARE_BRIGHT_STARS);
   for (uint i = 0u; i < stars; i++) {
     if (count >= uint(frame.spriteCap) || pixels >= frame.spritePixels) {
@@ -220,7 +240,7 @@ void glareSources() {
     }
     float3 light = a.w * color;
     if (!fixedLight) {
-      light *= max(tableLight(d), float3(0.0)) / outside;
+      light *= throughAir(d) / outside;
     }
     float radius = spriteRadius(max(light.r, max(light.g, light.b)) * frame.exposure);
     if (radius <= 0.0) {

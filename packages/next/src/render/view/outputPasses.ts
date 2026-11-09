@@ -4,6 +4,7 @@
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import type { ResolveView, TextureHandle } from "../FrameGraph.ts";
+import { ChainSlot } from "../post/chain.ts";
 import { encodePick } from "./picks.ts";
 import { translucentInputs } from "./translucency.ts";
 import {
@@ -262,17 +263,32 @@ export function hdrReadbackPass(
   engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
-  { resolved }: { resolved: TextureHandle },
+  {
+    resolved,
+    after = false,
+  }: {
+    /** What it reads: an image, or a slot's latest this tick. */
+    resolved: TextureHandle | ChainSlot;
+    /** It's the read after glare (`View.readHdr`). */
+    after?: boolean;
+  },
 ): PassBody {
   const { device } = engine.ctx;
   const { width, height } = frame;
   const { graph } = frame;
+  const glared = !!frame.glare;
 
   return (enc, get) => {
-    if (view.pendingHdrReads.length === 0) {
+    // A view with no glare answers both here.
+    if (!glared) {
+      view.pendingHdrReads.push(...view.pendingGlareReads.splice(0));
+    }
+    const reads = after ? view.pendingGlareReads : view.pendingHdrReads;
+    if (reads.length === 0) {
       return;
     }
-    get(resolved);
+    const image = resolved instanceof ChainSlot ? resolved.latest() : resolved;
+    get(image);
     const bytesPerRow = Math.ceil((width * 8) / 256) * 256;
     const buffer = device.createBuffer({
       label: "view.hdr.readback",
@@ -280,7 +296,7 @@ export function hdrReadbackPass(
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
     enc.copyTextureToBuffer(
-      { texture: graph.texture(resolved)! },
+      { texture: graph.texture(image)! },
       { buffer, bytesPerRow },
       [width, height],
     );
@@ -290,7 +306,7 @@ export function hdrReadbackPass(
       width,
       height,
       exposure: view.exposureScale,
-      resolvers: view.pendingHdrReads.splice(0),
+      resolvers: reads.splice(0),
     });
   };
 }
