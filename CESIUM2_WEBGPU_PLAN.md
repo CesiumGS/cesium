@@ -7965,12 +7965,22 @@ real work. The wording and test-strength nits the reviews raised are left out.
   resolver falls back per edge of a route. Settle which is right when the
   physical sky goes per body, together with the exposure tuning (the 0.18
   target and the highlight guard need more testing).
-- **Emission in nits (owner-approved, 2026-11-08; build after Task 20, before
-  5e).** A material with `KHR_materials_emissive_strength` emits in physical
-  units: nits = factor x strength x 1,000 cd/m2, multiplied by exposure and
-  metered. An explicit per-material option stays display-relative and out of
-  the meter. A material without the extension stays display-relative. Today
-  `surface.slang` treats all emission as display-relative.
+- **Emission in nits (owner, 2026-11-08; build after the file split, before
+  5e).** glTF 2.0 defines an emissive value of 1 as 1 cd/m2, and says adding it
+  directly to display pixels is incorrect. `KHR_materials_emissive_strength` is
+  a unitless multiplier that keeps those units. So a material with the
+  extension emits factor x strength nits, multiplied by exposure and metered,
+  with no scale of our own. A material without the extension stays
+  display-relative, which departs from the core spec on purpose: most models
+  treat 1 as "fully lit", and read literally they'd go black outside the night.
+  An override per item or material (`emission: "physical"` or `"display"`)
+  handles the jump this leaves between no extension and a strength just past 1;
+  display-relative stays out of the meter. A custom shader keeps
+  `custom.emissive` display-relative and gets `custom.emissiveNits` for
+  physical light. Emitters only show to the camera, and don't light their
+  surroundings. Try it on real models, since the default may change. Today
+  `gltfParse.ts` ignores the extension and `surface.slang` treats all emission
+  as display-relative.
 - **Exact lists and the meter.** A layer with emission writes a second list
   node for the meter, so the 32-node cap holds 16 such layers, and at the cut a
   layer's emission can stay without its body. The moments branch of `layersAt`
