@@ -8587,6 +8587,11 @@ Do soon, designed together with vector drawing, because they overlap with it. `B
 - **Choose what it models.** An eye and a camera differ: the eye's fine streaks and halo against an aperture's starburst. A spacecraft camera for the Artemis replay may want the second. Lens ghosts stay out by default.
 - **Judge by looking.** The owner decides from renders of the sun behind station structure, at the limb from orbit, and low over water. Water's sun glint (above) goes through the same path, so the two should be tuned together.
 
+### 13.29 Owner's calls for the later plans (2026-11-08)
+
+- **Stars in 5e.** The owner wants star rendering improved as part of the physical sky: it looks weak today. Plan 5e should start from what looks wrong on screen, and from the catalog design in this plan's sky section.
+- **Entity is retired as an engine concept; its ideas stay.** 2.0 has no `Entity` class or data-source layer in the engine. What people use Entity for (a time-varying property, a clamped label, a track with a path) is covered through scene items, styling and the bindings of 5d. Exact names and any compatibility layer belong to the vector design and the API review (5i).
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
