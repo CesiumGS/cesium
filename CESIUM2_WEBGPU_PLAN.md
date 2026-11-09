@@ -7976,8 +7976,10 @@ real work. The wording and test-strength nits the reviews raised are left out.
   An override per item or material (`emission: "physical"` or `"display"`)
   handles the jump this leaves between no extension and a strength just past 1;
   display-relative stays out of the meter. A custom shader has one field,
-  `custom.emissive`, in nits: a draw with a custom shader is physical unless its
-  item or material says `emission: "display"`, which a stylistic glow can use.
+  `material.emissive`, in nits: a draw with a custom shader is physical unless
+  its item or material says `emission: "display"`, which a stylistic glow can
+  use. Seven of the Slang playground's presets write it, and the handbook's reel
+  uses four of those shaders, so they need `emission: "display"` or new values.
   Emitters only show to the camera, and don't light their surroundings. Try it on real models, since the default may change. Today
   `gltfParse.ts` ignores the extension and `surface.slang` treats all emission
   as display-relative.
