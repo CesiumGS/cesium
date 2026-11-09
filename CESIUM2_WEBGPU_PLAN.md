@@ -7971,6 +7971,10 @@ real work. The wording and test-strength nits the reviews raised are left out.
   metered. An explicit per-material option stays display-relative and out of
   the meter. A material without the extension stays display-relative. Today
   `surface.slang` treats all emission as display-relative.
+- **Exact lists and the meter.** A layer with emission writes a second list
+  node for the meter, so the 32-node cap holds 16 such layers, and at the cut a
+  layer's emission can stay without its body. The moments branch of `layersAt`
+  has no Node port or pin.
 - **Plan 5i's list (the API review):**
   - "placement" means five things: `SceneItemOptions.placement` (a number from
     0 to 1), the `Placement` union, `Tileset3D.placement`, `ModelPlacement`,
