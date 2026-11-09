@@ -46,7 +46,6 @@ import { Camera } from "./Camera.ts";
 import {
   SHADOW_CASCADES,
   SHADOWS_STRIDE,
-  casterPlanes,
   createShadowCascades,
   fitShadowCascades,
   shadowRange,
@@ -120,6 +119,11 @@ import {
   environmentFrame,
 } from "../render/view/environment.ts";
 import { shadowLight, moonFrom } from "./lightSources.ts";
+import {
+  type ViewMotion,
+  updateTilesets,
+  rotateVector,
+} from "./tileSelection.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -165,35 +169,8 @@ export interface FrameStats {
 const VIEW_KEY_LENGTH = 30;
 /** Radians a degree (`Tileset3D.terrainClipped` takes degrees). */
 const DEGREES = Math.PI / 180;
-
-/**
- * Prefetching looks this far ahead: content the camera would reveal in
- * this time at its current velocity loads before it comes into view (about
- * a load's latency).
- */
-const PREFETCH_AHEAD_SECONDS = 1;
-/** The prefetch frustum's margin (tangent scale) around that view. */
-const PREFETCH_MARGIN = 1.1;
 /** Nodes a list's `next` word can address (28 bits, the node plus one). */
 const LIST_NODES_MAX = (1 << 28) - 2;
-
-/** A view's camera at its last selection, and its velocity per second. */
-interface ViewMotion {
-  at: number;
-  position: Vec3;
-  direction: Vec3;
-  up: Vec3;
-  velocity: { position: Vec3; direction: Vec3; up: Vec3 };
-  /** Speeds of the last estimate (position m/s, direction 1/s). */
-  speeds: [number, number];
-  /**
-   * The velocity continues the previous one: motion, not a jump. A camera
-   * set somewhere else in one frame (a teleport, a flight's end) reads as
-   * thousands of meters per second for that frame; prefetching a second
-   * ahead of it requested content nowhere near the view.
-   */
-  steady: boolean;
-}
 
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
@@ -447,8 +424,10 @@ export class Engine {
   private readonly viewDataU32: Uint32Array;
   /** @internal Stable per-view bit index (0–31) for record view masks. */
   readonly viewIds = new Map<View, number>();
-  private readonly viewMotion = new Map<View, ViewMotion>();
-  private readonly aheadCamera = new Camera();
+  /** @internal */
+  readonly viewMotion = new Map<View, ViewMotion>();
+  /** @internal */
+  readonly aheadCamera = new Camera();
   /**
    * Each view's camera in its body anchor (`bodyCamera`), and what it was
    * computed from.
@@ -1206,247 +1185,12 @@ export class Engine {
       }
     }
   }
-
-  /**
-   * The selection inputs of the tilesets under `anchor` in `world`, made
-   * once per update (`updateTilesets`) and shared by those tilesets: per
-   * view, a cost per anchor with tilesets, not per tileset (plan 5a's call
-   * 21).
-   */
-  private selectionFor(world: World, anchor: AnchorHandle): SelectionView[] {
-    let byAnchor = this.selections.get(world);
-    if (!byAnchor) {
-      byAnchor = new Map();
-      this.selections.set(world, byAnchor);
-    }
-    let views = byAnchor.get(anchor);
-    if (!views) {
-      views = this.selectionViews(world, anchor);
-      byAnchor.set(anchor, views);
-    }
-    return views;
-  }
-  /** `selectionFor`'s inputs of the current update, by world and anchor. */
-  private readonly selections = new Map<
-    World,
-    Map<AnchorHandle, SelectionView[]>
-  >();
-  /** The prefetch camera re-expressed in such an anchor. */
-  private readonly selectionAhead = new Camera();
-
-  /**
-   * Builds the selection inputs for every enabled view of `world`, with
-   * each view's camera in `anchor` (`View.anchorCamera`): positions,
-   * directions, planes and the camera's cartographic are in the anchor's
-   * coordinates (Earth-fixed for the Earth's). In the view's body anchor
-   * it is the body camera, as drawn.
-   */
-  private selectionViews(world: World, anchor: AnchorHandle): SelectionView[] {
-    const out: SelectionView[] = [];
-    for (const view of this.views) {
-      if (!view.enabled || view.world !== world) {
-        continue;
-      }
-      const rect = view.pixelRect();
-      const aspect = rect.width / rect.height;
-      const body = view.bodyAnchor;
-      const inBody = anchor === body;
-      // Each view its own camera: its SelectionView keeps the arrays.
-      const camera = inBody ? this.bodyCamera(view) : view.anchorCamera(anchor);
-      const p = camera.position;
-      const d = camera.direction;
-      // World-space planes in float64: camera-relative planes shifted by the
-      // camera position, plus 1.x's far plane (5e8 m).
-      const worldPlanes = (c: Camera, widen: number) => {
-        const planes = new Float64Array(24);
-        const cp = c.position;
-        const cd = c.direction;
-        c.frustumPlanes(planes, aspect, widen);
-        for (let k = 0; k < 5; k++) {
-          planes[k * 4 + 3] =
-            planes[k * 4 + 3]! -
-            (planes[k * 4]! * cp[0]! +
-              planes[k * 4 + 1]! * cp[1]! +
-              planes[k * 4 + 2]! * cp[2]!);
-        }
-        planes[20] = -cd[0]!;
-        planes[21] = -cd[1]!;
-        planes[22] = -cd[2]!;
-        planes[23] = cd[0]! * cp[0]! + cd[1]! * cp[1]! + cd[2]! * cp[2]! + 5e8;
-        return planes;
-      };
-      const planes = worldPlanes(camera, 1);
-      const casters = this.selectionCasters(view, anchor, camera, aspect);
-      // Prefetch: the view the camera will have shortly at its current
-      // velocity, so only content it is about to reveal loads ahead. None
-      // while it is still: a margin around a still view (r37) was half the
-      // bytes of a jump into OSM Philadelphia, rarely drawn (L1′).
-      let ahead = this.cameraAhead(view, PREFETCH_AHEAD_SECONDS);
-      let motion = ahead && this.motionOf(view);
-      if (ahead && motion && !inBody) {
-        // Measured in the body anchor: re-expressed in this one.
-        const m = m4.multiply(
-          scratchSelection,
-          m4.invertAffine(
-            scratchSelectionInverse,
-            view.anchorPlacement(anchor),
-          ),
-          view.anchorPlacement(body, scratchSelectionBody),
-        );
-        ahead = transformCamera(m, ahead, this.selectionAhead);
-        motion = {
-          velocity: rotateVector(m, motion.velocity, v3.vec3()),
-          angular: rotateVector(m, motion.angular, v3.vec3()),
-        };
-      }
-      const pixelRatio =
-        view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
-      out.push({
-        id: this.viewIds.get(view)!,
-        position: p,
-        direction: d,
-        cartographic: Ellipsoid.WGS84.cartesianToCartographic(p, {
-          longitude: 0,
-          latitude: 0,
-          height: 0,
-        }) ?? { longitude: 0, latitude: 0, height: 0 },
-        planes,
-        ...(casters ? { casterPlanes: casters } : {}),
-        ...(ahead && motion
-          ? {
-              prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
-              motion,
-            }
-          : {}),
-        sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
-        height: rect.height / pixelRatio,
-        pixelRatio,
-      });
-    }
-    return out;
-  }
-
-  /**
-   * Where `view`'s shadow casters may stand, for selection, in `anchor`'s
-   * coordinates (`camera`, the view's there): the cascades as fitted now,
-   * from the last depth range; undefined without shadows.
-   */
-  private selectionCasters(
-    view: View,
-    anchor: AnchorHandle,
-    camera: Camera,
-    aspect: number,
-  ): Float64Array | undefined {
-    const body = this.bodyCamera(view);
-    const light = shadowLight(
-      this,
-      view,
-      body.position,
-      moonFrom(this, body.position),
-    );
-    if (!light) {
-      return undefined;
-    }
-    let direction: ArrayLike<number> = light.direction;
-    if (anchor !== view.bodyAnchor) {
-      // The light is in the body anchor's axes: re-expressed in this one.
-      const m = m4.multiply(
-        scratchSelection,
-        m4.invertAffine(scratchSelectionInverse, view.anchorPlacement(anchor)),
-        view.anchorPlacement(view.bodyAnchor, scratchSelectionBody),
-      );
-      direction = rotateVector(m, light.direction, v3.vec3());
-    }
-    const height = view.body.ellipsoid.cartesianToCartographic(
-      body.position,
-      scratchCartographic,
-    )?.height;
-    const frame = this.viewFrames.get(view);
-    fitShadowCascades(
-      this.selectionCascades,
-      camera,
-      aspect,
-      direction,
-      Math.max(height ?? 0, 2),
-      frame?.cascadeRange,
-    );
-    return casterPlanes(this.selectionCascades, camera.position);
-  }
-  /** `selectionCasters`' fit (the frame's own is `cascades`). */
-  private readonly selectionCascades = createShadowCascades();
-
-  /**
-   * `view`'s camera extrapolated `seconds` ahead at its velocity (measured
-   * between selections at least 4 ms apart; still after a pause of over
-   * 250 ms, as on-demand rendering idles).
-   */
-  /** The view's steady motion (`cameraAhead` measured it this selection). */
-  private motionOf(view: View): { velocity: Vec3; angular: Vec3 } | undefined {
-    const motion = this.viewMotion.get(view);
-    return motion
-      ? {
-          velocity: motion.velocity.position,
-          angular: v3.cross(
-            v3.vec3(),
-            this.bodyCamera(view).direction,
-            motion.velocity.direction,
-          ),
-        }
-      : undefined;
-  }
-
-  private cameraAhead(view: View, seconds: number): Camera | undefined {
-    const camera = this.bodyCamera(view);
-    const now = performance.now();
-    let motion = this.viewMotion.get(view);
-    if (!motion) {
-      motion = {
-        at: now,
-        position: v3.copy(v3.vec3(), camera.position),
-        direction: v3.copy(v3.vec3(), camera.direction),
-        up: v3.copy(v3.vec3(), camera.up),
-        velocity: { position: v3.vec3(), direction: v3.vec3(), up: v3.vec3() },
-        speeds: [0, 0],
-        steady: false,
-      };
-      this.viewMotion.set(view, motion);
-    }
-    const dt = (now - motion.at) / 1000;
-    if (dt >= 0.004) {
-      const v = motion.velocity;
-      const still = dt > 0.25;
-      for (const key of ["position", "direction", "up"] as const) {
-        const current = camera[key];
-        for (let i = 0; i < 3; i++) {
-          v[key][i] = still ? 0 : (current[i]! - motion[key][i]!) / dt;
-        }
-        v3.copy(motion[key], current);
-      }
-      motion.at = now;
-      // Steady: each speed zero, or within 4x of the previous estimate's.
-      const speeds = [v3.length(v.position), v3.length(v.direction)];
-      motion.steady = speeds.every(
-        (s, i) =>
-          s === 0 ||
-          (motion!.speeds[i]! > 0 &&
-            s <= 4 * motion!.speeds[i]! &&
-            s >= motion!.speeds[i]! / 4),
-      );
-      motion.speeds = speeds as [number, number];
-    }
-    if (!motion.steady || motion.speeds.every((s) => s === 0)) {
-      return undefined;
-    }
-    const ahead = this.aheadCamera.copyFrom(camera);
-    const v = motion.velocity;
-    for (let i = 0; i < 3; i++) {
-      ahead.position[i] = camera.position[i]! + v.position[i]! * seconds;
-      ahead.direction[i] = camera.direction[i]! + v.direction[i]! * seconds;
-      ahead.up[i] = camera.up[i]! + v.up[i]! * seconds;
-    }
-    v3.normalize(ahead.direction, ahead.direction);
-    return ahead.orient(v3.normalize(ahead.up, ahead.up));
-  }
+  /** @internal `selectionFor`'s inputs of the current update, by world and anchor. */
+  readonly selections = new Map<World, Map<AnchorHandle, SelectionView[]>>();
+  /** @internal The prefetch camera re-expressed in such an anchor. */
+  readonly selectionAhead = new Camera();
+  /** @internal `selectionCasters`' fit (the frame's own is `cascades`). */
+  readonly selectionCascades = createShadowCascades();
 
   /** Removes a placed glTF and frees its geometry, materials and textures. */
   /**
@@ -1695,12 +1439,16 @@ export class Engine {
   /** Bounds of the adaptive upload budget, bytes per frame. */
   minimumUploadBytesPerFrame = 512 * 1024;
   maximumUploadBytesPerFrame = 32 * 1024 * 1024;
-  private lastUpdateAt = 0;
-  /** Time since the previous update, ms (60 Hz until measured). */
-  private lastUpdateInterval = 1000 / 60;
-  private budgetFilled = false;
-  private readonly frameIntervals = new Float64Array(31);
-  private frameIntervalCount = 0;
+  /** @internal */
+  lastUpdateAt = 0;
+  /** @internal Time since the previous update, ms (60 Hz until measured). */
+  lastUpdateInterval = 1000 / 60;
+  /** @internal */
+  budgetFilled = false;
+  /** @internal */
+  readonly frameIntervals = new Float64Array(31);
+  /** @internal */
+  frameIntervalCount = 0;
   /**
    * @internal What is left of this frame's budget: upload bytes, and main-
    * thread time for building external tilesets' tile trees (at least one
@@ -1709,72 +1457,8 @@ export class Engine {
   readonly uploadBudget = { bytes: 0, uploads: 0, ms: 0, trees: 0 };
   /** Main-thread time per frame for building tile trees, all tilesets. */
   treeBuildMsPerFrame = 4;
-  private tilesetRotation = 0;
-
-  /**
-   * Runs selection, requests and uploads for the tilesets `due` picks,
-   * starting with a different one each frame so none starves the others
-   * of the shared upload budget.
-   */
-  private updateTilesets(due: (tileset: Tileset3D) => boolean): void {
-    this.adaptUploadBudget(performance.now());
-    // Budgets are per 60 Hz frame; a faster loop gets its share by time.
-    const share = Math.min(1, this.lastUpdateInterval / (1000 / 60));
-    this.uploadBudget.bytes = this.uploadBytesPerFrame * share;
-    this.uploadBudget.uploads = 0;
-    this.uploadBudget.ms = this.treeBuildMsPerFrame * share;
-    this.uploadBudget.trees = 0;
-    const n = this.tilesets.length;
-    const start = n > 0 ? this.tilesetRotation++ % n : 0;
-    this.selections.clear();
-    for (let k = 0; k < n; k++) {
-      const tileset = this.tilesets[(start + k) % n]!;
-      if (due(tileset)) {
-        tileset.update(this.selectionFor(tileset.world, tileset.anchor));
-      }
-    }
-    this.selections.clear();
-    this.budgetFilled = this.uploadBudget.bytes <= 0;
-    // After the tilesets: their loads and unloads announce height changes.
-    this.clamping.update();
-  }
-
-  /**
-   * The upload budget from the time between updates: late (over 1.5× the
-   * recent median and 8 ms more) halves it; on time with the budget used
-   * up grows it by a quarter. Gaps over a second (hidden
-   * tab, paused loop) are ignored.
-   */
-  private adaptUploadBudget(now: number): void {
-    const interval = now - this.lastUpdateAt;
-    this.lastUpdateAt = now;
-    if (interval <= 0 || interval > 1000) {
-      return;
-    }
-    this.lastUpdateInterval = interval;
-    const intervals = this.frameIntervals;
-    intervals[this.frameIntervalCount++ % intervals.length] = interval;
-    const count = Math.min(this.frameIntervalCount, intervals.length);
-    if (count < 8) {
-      return;
-    }
-    const median = Float64Array.from(intervals.subarray(0, count)).sort()[
-      count >> 1
-    ]!;
-    if (interval > Math.max(1.5 * median, median + 8)) {
-      this.uploadBytesPerFrame = Math.max(
-        this.minimumUploadBytesPerFrame,
-        this.uploadBytesPerFrame / 2,
-      );
-    } else if (this.budgetFilled) {
-      // Proportional growth reaches what a big tileset needs within a few
-      // frames (a quarter MiB per frame left Google 1.1 s slower).
-      this.uploadBytesPerFrame = Math.min(
-        this.maximumUploadBytesPerFrame,
-        this.uploadBytesPerFrame * 1.25,
-      );
-    }
-  }
+  /** @internal */
+  tilesetRotation = 0;
 
   /**
    * Asks for a frame in on-demand mode, for changes the engine can't see:
@@ -2158,7 +1842,7 @@ export class Engine {
     }
     // Selection runs when a camera moved or content streams; a frame then
     // renders only for the views that can see what changed.
-    this.updateTilesets((tileset) => all || moved || tileset.active);
+    updateTilesets(this, (tileset) => all || moved || tileset.active);
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
       if (
@@ -2341,7 +2025,7 @@ export class Engine {
       links[i]!.evaluate();
     }
     if (!tilesetsUpdated) {
-      this.updateTilesets(() => true);
+      updateTilesets(this, () => true);
     }
 
     // Which views draw. On demand, a target shared by several views is
@@ -3257,27 +2941,6 @@ const scratchSelectionBody = new Float64Array(16);
 const scratchCaptureAnchor = new Float64Array(16);
 const scratchCaptureOrigin = v3.vec3();
 const scratchCaptureAxes = [v3.vec3(), v3.vec3(), v3.vec3()] as const;
-
-/** `m` (rigid, column-major) times a vector, without its translation. */
-function rotateVector(m: ArrayLike<number>, v: ArrayLike<number>, out: Vec3) {
-  const x = v[0]!,
-    y = v[1]!,
-    z = v[2]!;
-  out[0] = m[0]! * x + m[4]! * y + m[8]! * z;
-  out[1] = m[1]! * x + m[5]! * y + m[9]! * z;
-  out[2] = m[2]! * x + m[6]! * y + m[10]! * z;
-  return out;
-}
-
-/** A camera moved by `m` (rigid): written into `out`, which is returned. */
-function transformCamera(m: m4.Mat4, from: Camera, out: Camera): Camera {
-  out.copyFrom(from);
-  m4.transformPoint(out.position, m, from.position);
-  rotateVector(m, from.direction, out.direction);
-  rotateVector(m, from.up, out.up);
-  rotateVector(m, from.right, out.right);
-  return out;
-}
 const scratchAo = new Float32Array(16);
 const scratchViewProj = m4.mat4();
 const scratchPlanes = new Float32Array(20);
