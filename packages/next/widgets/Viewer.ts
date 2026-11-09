@@ -34,10 +34,8 @@ import {
   GlobeController,
   InspectController,
   defaultRig,
-  eastNorthUpToFixedFrame,
   fromDegrees,
   loadIonMoonMap,
-  mat4,
   resolveIonAsset,
   vec3,
   type EngineOptions,
@@ -93,6 +91,7 @@ import {
   zoomTo,
   earthCamera,
 } from "./viewerCamera.ts";
+import { applySky, applyClockSun, setSun } from "./viewerSky.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -317,16 +316,16 @@ export class Viewer {
   /** Stops the sky and the warnings of the catalog in use. */
   private offFrames?: () => void;
   /**
-   * What `attachSky` writes, copied to the engine as it asks to render: the
+   * @internal What `attachSky` writes, copied to the engine as it asks to render: the
    * stars' turn always, the sun while it follows the clock, the Moon when
    * it is drawn (`ViewerOptions.moon`).
    */
-  private readonly sky: SkyInputs = {
+  readonly sky: SkyInputs = {
     icrfToFixed: new Float64Array(9),
     sunDirection: new Float64Array(3),
     moonPosition: new Float64Array(3),
     moonAxes: new Float64Array(6),
-    requestRender: () => this.applySky(),
+    requestRender: () => applySky(this),
   };
   private readonly warningList: ViewerWarning[] = [];
   private warnings_?: WarningsHandle;
@@ -349,8 +348,8 @@ export class Viewer {
    * warning when loading failed. In both cases the sky stays analytic.
    */
   readonly frameData: Promise<FrameData | undefined>;
-  /** The Moon is drawn (`ViewerOptions.moon`). */
-  private readonly moon: boolean;
+  /** @internal The Moon is drawn (`ViewerOptions.moon`). */
+  readonly moon: boolean;
   /** Cesium Moon Terrain's map arrived (1.x's no longer wanted). */
   private moonMapSharp = false;
   /** @internal The clock was given or has been set to the first framing's morning. */
@@ -886,27 +885,6 @@ export class Viewer {
   }
 
   /**
-   * The sky `attachSky` computed at the clock's time, on the engine: the
-   * stars' turn, the Moon's place while it is drawn and, while the sun
-   * follows the clock, the sun.
-   */
-  private applySky(): void {
-    if (this.destroyed) {
-      return;
-    }
-    const sky = this.sky;
-    this.engine.icrfToFixed.set(sky.icrfToFixed);
-    if (this.sunFromClock_) {
-      this.engine.sunDirection.set(sky.sunDirection);
-    }
-    if (this.moon) {
-      (this.engine.moonPosition ??= new Float64Array(3)).set(sky.moonPosition!);
-      (this.engine.moonAxes ??= new Float64Array(6)).set(sky.moonAxes!);
-    }
-    this.engine.requestRender();
-  }
-
-  /**
    * The reference frames' catalog (spec section 7.7): the sky's, the view's
    * rig's and the world's frame resolver's. Asking it for a reference frame
    * at "precise" loads that frame's data (from `ViewerOptions.frameData`, or
@@ -1114,7 +1092,7 @@ export class Viewer {
 
   /** @internal The sun's direction at the clock's time. */
   applyClockSun(): void {
-    this.applySky();
+    applyClockSun(this);
   }
 
   /**
@@ -1122,28 +1100,7 @@ export class Viewer {
    * of from the clock (`sunFromClock` turns the clock back on).
    */
   setSun(azimuth: number, elevation: number): void {
-    this.sunFromClock_ = false;
-    this.time_?.show(false);
-    this.sun = { azimuth, elevation };
-    const enu = eastNorthUpToFixedFrame(
-      this.focusCenter,
-      ellipsoid,
-      mat4.mat4(),
-    );
-    const az = azimuth * deg;
-    const el = elevation * deg;
-    const e = Math.cos(el) * Math.sin(az);
-    const n = Math.cos(el) * Math.cos(az);
-    const u = Math.sin(el);
-    vec3.normalize(
-      this.engine.sunDirection,
-      vec3.vec3(
-        enu[0]! * e + enu[4]! * n + enu[8]! * u,
-        enu[1]! * e + enu[5]! * n + enu[9]! * u,
-        enu[2]! * e + enu[6]! * n + enu[10]! * u,
-      ),
-    );
-    this.engine.requestRender();
+    setSun(this, azimuth, elevation);
   }
 
   /** The views drawn: main, the split view's right half, the inset. */

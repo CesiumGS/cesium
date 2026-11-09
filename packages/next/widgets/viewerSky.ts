@@ -1,0 +1,58 @@
+// The Viewer's sun and sky: from the clock, or set by hand (Viewer's sky methods).
+import type { Viewer } from "./Viewer.ts";
+import { ellipsoid, deg } from "./viewerCamera.ts";
+import { eastNorthUpToFixedFrame, mat4, vec3 } from "@cesium/next";
+
+/**
+ * The sky `attachSky` computed at the clock's time, on the engine: the
+ * stars' turn, the Moon's place while it is drawn and, while the sun
+ * follows the clock, the sun.
+ */
+export function applySky(viewer: Viewer): void {
+  if (viewer.destroyed) {
+    return;
+  }
+  const sky = viewer.sky;
+  viewer.engine.icrfToFixed.set(sky.icrfToFixed);
+  if (viewer.sunFromClock_) {
+    viewer.engine.sunDirection.set(sky.sunDirection);
+  }
+  if (viewer.moon) {
+    (viewer.engine.moonPosition ??= new Float64Array(3)).set(sky.moonPosition!);
+    (viewer.engine.moonAxes ??= new Float64Array(6)).set(sky.moonAxes!);
+  }
+  viewer.engine.requestRender();
+}
+
+export function applyClockSun(viewer: Viewer): void {
+  applySky(viewer);
+}
+
+export function setSun(
+  viewer: Viewer,
+  azimuth: number,
+  elevation: number,
+): void {
+  viewer.sunFromClock_ = false;
+  viewer.time_?.show(false);
+  viewer.sun = { azimuth, elevation };
+  const enu = eastNorthUpToFixedFrame(
+    viewer.focusCenter,
+    ellipsoid,
+    mat4.mat4(),
+  );
+  const az = azimuth * deg;
+  const el = elevation * deg;
+  const e = Math.cos(el) * Math.sin(az);
+  const n = Math.cos(el) * Math.cos(az);
+  const u = Math.sin(el);
+  vec3.normalize(
+    viewer.engine.sunDirection,
+    vec3.vec3(
+      enu[0]! * e + enu[4]! * n + enu[8]! * u,
+      enu[1]! * e + enu[5]! * n + enu[9]! * u,
+      enu[2]! * e + enu[6]! * n + enu[10]! * u,
+    ),
+  );
+  viewer.engine.requestRender();
+}
