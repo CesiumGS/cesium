@@ -12,6 +12,7 @@ import {
 const TERRAIN_ACCEPT =
   "application/vnd.quantized-mesh;extensions=octvertexnormals-metadata,application/octet-stream;q=0.9,*/*;q=0.01";
 import type { TextureFormatSupport } from "./decoders.ts";
+import { loadSkyPack } from "../atmosphere/skyPack.ts";
 import { extractStars, type StarMapFace } from "../atmosphere/stars.ts";
 
 /**
@@ -144,7 +145,25 @@ self.onmessage = async (
       const field = extractStars(faces);
       self.postMessage({ id, ok: true, result: field }, [
         field.points.buffer,
-        ...field.background.map((face) => face.buffer),
+        ...field.backgroundLevels.flatMap((face) =>
+          face.map((level) => level.buffer),
+        ),
+      ]);
+      return;
+    }
+    if (type === "skyPack") {
+      // A sky data pack (atmosphere/skyPack.ts): read and checked here.
+      const loaded = await loadSkyPack(
+        event.data.url,
+        fetch,
+        controller.signal,
+      );
+      const { field } = loaded;
+      self.postMessage({ id, ok: true, result: loaded }, [
+        field.points.buffer,
+        ...field.backgroundLevels.flatMap((face) =>
+          face.map((level) => level.buffer),
+        ),
       ]);
       return;
     }

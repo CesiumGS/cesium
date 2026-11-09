@@ -24,11 +24,48 @@ export interface StarField {
   points: Float32Array;
   count: number;
   /**
-   * The rest of the sky: six faces (+x, −x, +y, −y, +z, −z, as the map),
-   * `backgroundSize`² texels each, linear sRGB rgba, cd/m².
+   * The rest of the sky: by face (+x, −x, +y, −y, +z, −z, as the map) and
+   * then by level (the first `backgroundSize`² texels, each next half
+   * across), linear sRGB rgba, cd/m².
    */
-  background: Float32Array[];
+  backgroundLevels: Float32Array[][];
   backgroundSize: number;
+  /** The background already holds the faint stars (a deep map). */
+  holdsFaintStars: boolean;
+  /** The background's mean luminance, cd/m²: 0 for today's map. */
+  meanBackground: number;
+}
+
+/**
+ * The levels of a square rgba image under a box filter: each next level
+ * half across (rounded down, at least 1), averaging the texels it covers.
+ */
+export function boxLevels(base: Float32Array, size: number): Float32Array[] {
+  const levels = [base];
+  let n = size;
+  let prev = base;
+  while (n > 1) {
+    const m = Math.max(1, n >> 1);
+    const next = new Float32Array(m * m * 4);
+    for (let y = 0; y < m; y++) {
+      for (let x = 0; x < m; x++) {
+        const x1 = Math.min(2 * x + 1, n - 1);
+        const y1 = Math.min(2 * y + 1, n - 1);
+        for (let c = 0; c < 4; c++) {
+          next[(y * m + x) * 4 + c] =
+            (prev[(2 * y * n + 2 * x) * 4 + c]! +
+              prev[(2 * y * n + x1) * 4 + c]! +
+              prev[(y1 * n + 2 * x) * 4 + c]! +
+              prev[(y1 * n + x1) * 4 + c]!) /
+            4;
+        }
+      }
+    }
+    levels.push(next);
+    prev = next;
+    n = m;
+  }
+  return levels;
 }
 
 /** One face of a star map: sRGB rgba8, square. */
@@ -276,5 +313,12 @@ export function extractStars(faces: readonly StarMapFace[]): StarField {
     }
     return out;
   });
-  return { points, count: found.length, background, backgroundSize: blocks };
+  return {
+    points,
+    count: found.length,
+    backgroundLevels: background.map((face) => boxLevels(face, blocks)),
+    backgroundSize: blocks,
+    holdsFaintStars: false,
+    meanBackground: 0,
+  };
 }

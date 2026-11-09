@@ -631,8 +631,12 @@ it("scene data doesn't import rasterizer data", () => {
     ).toEqual([]);
   }
 });
-it("the observer's settings and a stage's definition hold no GPU types", () => {
-  for (const file of ["src/scene/observer.ts", "src/scene/postStage.ts"]) {
+it("the observer's settings, a stage's definition and the sky pack's format hold no GPU types", () => {
+  for (const file of [
+    "src/scene/observer.ts",
+    "src/scene/postStage.ts",
+    "src/atmosphere/skyPack.ts",
+  ]) {
     const code = readFileSync(join(root, file), "utf8");
     expect(code.match(/\bGPU[A-Z]\w*/g) ?? [], file).toEqual([]);
     expect(

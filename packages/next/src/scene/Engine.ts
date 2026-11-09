@@ -25,6 +25,7 @@ import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky } from "../atmosphere/Sky.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
+import type { LoadedSkyPack, SkyPackManifest } from "../atmosphere/skyPack.ts";
 import type { StarField } from "../atmosphere/stars.ts";
 import { Camera } from "./Camera.ts";
 import { SHADOW_CASCADES, SHADOWS_STRIDE } from "./shadows.ts";
@@ -550,6 +551,8 @@ export class Engine {
    */
   setStarMap(faces: readonly (string | URL)[] | null): void {
     const token = ++this.starToken;
+    this.packToken++;
+    this.starMapFaces = faces;
     if (!faces) {
       this.raster.sky.setStarField(null);
       this.requestRender();
@@ -568,6 +571,79 @@ export class Engine {
   }
 
   private starToken = 0;
+  private packToken = 0;
+  private starMapFaces: readonly (string | URL)[] | null = null;
+  private readonly skyPackWarnings = new Set<string>();
+
+  /**
+   * The stars and background from a sky data pack (atmosphere/skyPack.ts),
+   * given its manifest's URL or its folder's (ending in a slash): read and
+   * checked in a worker, then uploaded a slice a tick while the stars
+   * drawn now stay. Resolves with the manifest, or with undefined if the
+   * pack was refused or replaced: it warns once, naming the file and the
+   * field, and what is drawn stays. A pack that isn't marked distributable
+   * loads here with one warning; builds refuse it. Null goes back to what
+   * `setStarMap` last set.
+   */
+  async setSkyPack(
+    url: string | URL | null,
+  ): Promise<SkyPackManifest | undefined> {
+    if (url === null) {
+      this.packToken++;
+      this.setStarMap(this.starMapFaces);
+      return undefined;
+    }
+    const token = ++this.packToken;
+    const href = new URL(url, location.href).href;
+    try {
+      const loaded = await this.scene.workers.request<LoadedSkyPack>(
+        "skyPack",
+        { url: href },
+      );
+      if (token !== this.packToken) {
+        return undefined;
+      }
+      for (const note of loaded.notes) {
+        this.warnSkyPack(note);
+      }
+      if (!loaded.manifest.distributable) {
+        this.warnSkyPack(
+          `${loaded.manifest.name} is not marked distributable: builds refuse it`,
+        );
+      }
+      this.starToken++; // a star map still being read is replaced
+      this.raster.sky.setStarField(loaded.field);
+      this.requestRender();
+      return loaded.manifest;
+    } catch (error) {
+      this.warnSkyPack(error instanceof Error ? error.message : String(error));
+      return undefined;
+    }
+  }
+
+  private warnSkyPack(message: string): void {
+    if (!this.skyPackWarnings.has(message)) {
+      this.skyPackWarnings.add(message);
+      console.warn(`[cesium/next] sky pack: ${message}`);
+    }
+  }
+
+  /**
+   * Writes the next slice of a star field that is being uploaded (one a
+   * tick, so a large pack never stalls one). While more remains the loop
+   * runs again; when it is complete the stars show in a frame of their own.
+   */
+  private advanceSkyUpload(): void {
+    const sky = this.raster.sky;
+    if (!sky.uploading) {
+      return;
+    }
+    if (sky.advanceUpload()) {
+      this.wokenInTick = true;
+    } else {
+      this.scene.renderRequested = true;
+    }
+  }
 
   /**
    * The Moon's albedo map: equirectangular, longitude 0 (the near side's
@@ -1313,6 +1389,7 @@ export class Engine {
   }
 
   private tick(): void {
+    this.advanceSkyUpload();
     if (this.renderMode === "continuous") {
       this.renderFrame();
       return;
@@ -1493,6 +1570,11 @@ export class Engine {
   renderFrame(): void {
     if (!this.ticking) {
       this.cameras.update();
+      // Outside the loop nothing slices the upload: finish it, so a
+      // capture shows the stars.
+      while (this.raster.sky.uploading) {
+        this.raster.sky.advanceUpload();
+      }
     }
     render(this, false);
   }

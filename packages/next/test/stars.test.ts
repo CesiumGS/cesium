@@ -75,6 +75,6 @@ describe("extractStars", () => {
   it("keeps the background low-passed, a uniform map flat", () => {
     const field = extractStars(blankFaces(10));
     expect(field.backgroundSize).toBe(SIZE / 16);
-    expect(field.background[0]![0]).toBe(0);
+    expect(field.backgroundLevels[0]![0]![0]).toBe(0);
   });
 });

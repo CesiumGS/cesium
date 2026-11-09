@@ -92,6 +92,18 @@ export interface MoonView {
   airShare: number;
 }
 
+/** Floats of points written a tick: 4 MB. */
+const STAR_UPLOAD_FLOATS = 1 << 20;
+
+/** A star field on its way to the GPU (`Sky.advanceUpload`). */
+interface StarUpload {
+  field: StarField;
+  points: GPUBuffer;
+  background: GPUTexture;
+  pointsDone: number;
+  faceDone: number;
+}
+
 export interface SkyView {
   buffer: GPUBuffer;
   /** The uniform alone (marching, and building the table). */
@@ -251,6 +263,7 @@ export class Sky {
   private starBackground: GPUTexture;
   private starPoints: GPUBuffer;
   private starCount = 0;
+  private upload: StarUpload | null = null;
   private starSplatGroup: GPUBindGroup;
   private readonly starLayout: GPUBindGroupLayout;
   private readonly starSplatLayout: GPUBindGroupLayout;
@@ -398,7 +411,7 @@ export class Sky {
       mipmapFilter: "linear",
       maxAnisotropy: 16,
     });
-    this.starBackground = this.createStarBackground(1);
+    this.starBackground = this.createStarBackground(1, 1);
     this.starPoints = this.createStarPoints(1);
     this.moonMap = this.createMoonMap(1, 1);
     device.queue.writeTexture(
@@ -478,55 +491,113 @@ export class Sky {
     this.airTransmittance.destroy();
     this.airScattering.destroy();
     this.starUniform.destroy();
+    this.cancelUpload();
     this.starBackground.destroy();
     this.starPoints.destroy();
     this.moonMap.destroy();
   }
 
   /**
-   * Sets the stars (atmosphere/stars.ts `extractStars`): their points and
-   * the background, its faces as the star map's (upside down to WebGPU's
-   * cube layout, as 1.x uploads them). Null: no stars.
+   * Sets the stars (atmosphere/stars.ts `extractStars`, or a sky pack): their
+   * points and the background, its faces as the star map's (upside down to
+   * WebGPU's cube layout, as 1.x uploads them). Null: no stars, at once.
+   * Otherwise the upload is sliced (`advanceUpload`, 4 MB of points or one
+   * face a tick); the stars drawn now stay until it is complete. A field set
+   * during an upload replaces it, and what was made of it is destroyed.
    */
   setStarField(field: StarField | null): void {
-    const oldBackground = this.starBackground;
-    const oldPoints = this.starPoints;
+    this.cancelUpload();
     if (!field || field.count === 0) {
-      this.starBackground = this.createStarBackground(1);
+      const oldBackground = this.starBackground;
+      const oldPoints = this.starPoints;
+      this.starBackground = this.createStarBackground(1, 1);
       this.starPoints = this.createStarPoints(1);
       this.starCount = 0;
       this.starsOn = 0;
-    } else {
-      const n = field.backgroundSize;
-      this.starBackground = this.createStarBackground(n);
-      const halves = new Uint16Array(n * n * 4);
-      field.background.forEach((face, f) => {
+      this.starSplatGroup = this.createStarSplatGroup();
+      oldBackground.destroy();
+      oldPoints.destroy();
+      return;
+    }
+    const levels = field.backgroundLevels[0]?.length ?? 1;
+    this.upload = {
+      field,
+      points: this.createStarPoints(field.count),
+      background: this.createStarBackground(field.backgroundSize, levels),
+      pointsDone: 0,
+      faceDone: 0,
+    };
+  }
+
+  /** A star field is still being uploaded (`advanceUpload`). */
+  get uploading(): boolean {
+    return this.upload !== null;
+  }
+
+  /**
+   * One slice of the star field's upload: 4 MB of points, or one face's
+   * levels. The last swaps the new stars in. True while more remains.
+   */
+  advanceUpload(): boolean {
+    const up = this.upload;
+    if (!up) {
+      return false;
+    }
+    const { field } = up;
+    const total = field.count * STAR_FLOATS;
+    if (up.pointsDone < total) {
+      const floats = Math.min(STAR_UPLOAD_FLOATS, total - up.pointsDone);
+      this.device.queue.writeBuffer(
+        up.points,
+        up.pointsDone * 4,
+        field.points,
+        up.pointsDone,
+        floats,
+      );
+      up.pointsDone += floats;
+    } else if (up.faceDone < 6) {
+      const f = up.faceDone++;
+      let n = field.backgroundSize;
+      field.backgroundLevels[f]!.forEach((level, mip) => {
+        const halves = new Uint16Array(n * n * 4);
         for (let y = 0; y < n; y++) {
           for (let k = 0; k < n * 4; k++) {
-            halves[y * n * 4 + k] = floatToHalf(face[(n - 1 - y) * n * 4 + k]!);
+            halves[y * n * 4 + k] = floatToHalf(
+              level[(n - 1 - y) * n * 4 + k]!,
+            );
           }
         }
         this.device.queue.writeTexture(
-          { texture: this.starBackground, origin: [0, 0, f] },
+          { texture: up.background, mipLevel: mip, origin: [0, 0, f] },
           halves,
           { bytesPerRow: n * 8 },
           [n, n],
         );
+        n = Math.max(1, n >> 1);
       });
-      this.starPoints = this.createStarPoints(field.count);
-      this.device.queue.writeBuffer(
-        this.starPoints,
-        0,
-        field.points,
-        0,
-        field.count * STAR_FLOATS,
-      );
-      this.starCount = field.count;
-      this.starsOn = 1;
     }
+    if (up.pointsDone < total || up.faceDone < 6) {
+      return true;
+    }
+    const oldBackground = this.starBackground;
+    const oldPoints = this.starPoints;
+    this.starBackground = up.background;
+    this.starPoints = up.points;
+    this.starCount = field.count;
+    this.starsOn = 1;
+    this.upload = null;
     this.starSplatGroup = this.createStarSplatGroup();
     oldBackground.destroy();
     oldPoints.destroy();
+    return false;
+  }
+
+  private cancelUpload(): void {
+    if (this.upload) {
+      this.upload.points.destroy();
+      this.upload.background.destroy();
+      this.upload = null;
+    }
   }
 
   /**
@@ -592,10 +663,11 @@ export class Sky {
     this.device.queue.writeBuffer(this.starUniform, 0, f);
   }
 
-  private createStarBackground(size: number): GPUTexture {
+  private createStarBackground(size: number, levels: number): GPUTexture {
     return this.device.createTexture({
       label: "sky.starBackground",
       size: [size, size, 6],
+      mipLevelCount: levels,
       dimension: "2d",
       format: "rgba16float",
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
