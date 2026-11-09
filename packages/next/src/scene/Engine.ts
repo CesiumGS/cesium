@@ -428,7 +428,8 @@ export class Engine {
   readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
   /** @internal */
   readonly worldFrames = new WeakMap<World, WorldFrame>();
-  private readonly overlayResources = new Map<View, OverlayResources>();
+  /** @internal */
+  readonly overlayResources = new Map<View, OverlayResources>();
   /**
    * @internal Views lit by their atmosphere's environment: its probe, and the local
    * sun direction and altitude it was built for.
@@ -509,7 +510,8 @@ export class Engine {
   fxaaSampler?: GPUSampler;
   /** @internal */
   readonly fxaaData = new DataView(new ArrayBuffer(32));
-  private readonly overlayColor = new Float32Array(4);
+  /** @internal */
+  readonly overlayColor = new Float32Array(4);
   /** @internal */
   readonly viewBlock: ViewBlock;
   /** @internal When the engine was created (`performance.now()`): views' `time`. */
@@ -1953,72 +1955,6 @@ export class Engine {
   cityLightRead = 0;
   /** @internal */
   cityLightSeen = 0;
-
-  /** @internal */
-  drawOverlays(pass: GPURenderPassEncoder, view: View): void {
-    const overlays = view.overlays;
-    let vertices = 0;
-    for (let i = 0; i < overlays.length; i++) {
-      vertices += overlays[i]!.count;
-    }
-    if (vertices === 0) {
-      return;
-    }
-    const device = this.ctx.device;
-    let resources = this.overlayResources.get(view);
-    if (!resources || resources.capacity < vertices) {
-      resources?.buffer.destroy();
-      const capacity = Math.max(vertices, 256);
-      const buffer = device.createBuffer({
-        size: capacity * 12,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-      });
-      const params =
-        resources?.params ??
-        device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-      const group =
-        resources?.group ??
-        device.createBindGroup({
-          layout: this.ctx.pipelines.overlayLayout,
-          entries: [{ binding: 0, resource: { buffer: params } }],
-        });
-      resources = {
-        buffer,
-        capacity,
-        params,
-        group,
-        staging: new Float32Array(capacity * 3),
-      };
-      this.overlayResources.set(view, resources);
-    }
-    // Camera-relative in float64, then float32: overlays share the
-    // precision scheme of the draw records.
-    const data = resources.staging;
-    const eye = this.bodyCamera(view).position;
-    const ex = eye[0]!,
-      ey = eye[1]!,
-      ez = eye[2]!;
-    let k = 0;
-    for (let i = 0; i < overlays.length; i++) {
-      const { positions, count } = overlays[i]!;
-      for (let j = 0; j < count * 3; j += 3) {
-        data[k++] = positions[j]! - ex;
-        data[k++] = positions[j + 1]! - ey;
-        data[k++] = positions[j + 2]! - ez;
-      }
-    }
-    device.queue.writeBuffer(resources.buffer, 0, data, 0, vertices * 3);
-    this.overlayColor.set(overlays[0]!.color);
-    device.queue.writeBuffer(resources.params, 0, this.overlayColor);
-    pass.setPipeline(this.ctx.pipelines.overlay);
-    pass.setBindGroup(0, this.ctx.currentViewBindGroup);
-    pass.setBindGroup(1, resources.group);
-    pass.setVertexBuffer(0, resources.buffer);
-    pass.draw(vertices);
-  }
 
   destroy(): void {
     this.stop();

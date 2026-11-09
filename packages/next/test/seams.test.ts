@@ -722,15 +722,20 @@ describe("the draw-arguments and geometry-submission seams", () => {
   it("binds vertex and index buffers only on the submission path", () => {
     // Slabs (index buffers) and the overlays; the batches' item lists are
     // bound by DrawArguments.drawBatch.
-    const allowed = new Set(["World.bindSlab", "Engine.drawOverlays"]);
+    const allowed = new Set([
+      "World.bindSlab",
+      "src/render/view/outputPasses.ts: drawOverlays",
+    ]);
     const violations: string[] = [];
     for (const path of files(src, /\.ts$/)) {
       if (path === seam) {
         continue;
       }
+      const file = relative(root, path).replaceAll("\\", "/");
       for (const where of bufferBinds(readFileSync(path, "utf8"))) {
-        if (!allowed.has(where)) {
-          violations.push(`${relative(root, path)}: ${where}`);
+        // A free function's name alone says nothing: its file counts too.
+        if (!allowed.has(where) && !allowed.has(`${file}: ${where}`)) {
+          violations.push(`${file}: ${where}`);
         }
       }
     }

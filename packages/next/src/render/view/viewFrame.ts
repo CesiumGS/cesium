@@ -32,6 +32,7 @@ import {
   keptGroup,
   compositeGroup,
 } from "./translucency.ts";
+import { drawOverlays } from "./outputPasses.ts";
 
 /** The view's frame graph for its current size, built on first use and on resize. */
 export function viewFrameFor(
@@ -1107,7 +1108,7 @@ function buildViewFrame(
       pass.setPipeline(fxaa ? pipelines.fxaa : pipelines.present);
       pass.setBindGroup(0, fxaa ? frame.fxaaGroup! : frame.presentGroup!);
       pass.draw(3);
-      engine.drawOverlays(pass, view);
+      drawOverlays(engine, pass, view);
       pass.end();
     },
   );
