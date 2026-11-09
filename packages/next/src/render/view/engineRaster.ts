@@ -3,6 +3,7 @@
 import { LIGHTS_SIZE } from "../../scene/lights.ts";
 import { createShadowCascades } from "../../scene/shadows.ts";
 import type { Sky } from "../../atmosphere/Sky.ts";
+import type { GlareKernels } from "../post/glare.ts";
 import type { TexturePool } from "../FrameGraph.ts";
 import type { GpuTimer } from "../../gpu/GpuTimer.ts";
 import type { ImageryProvider } from "../../globe/ImageryProvider.ts";
@@ -26,6 +27,8 @@ import type { HeightCapture } from "../../scene/heightCaptures.ts";
 export class EngineRaster {
   /** The real-time atmosphere and the sky drawn from it. */
   sky!: Sky;
+  /** Glare's kernels, one per aperture, from a worker on first use. */
+  glareKernels!: GlareKernels;
   pool!: TexturePool;
   timer!: GpuTimer;
   viewStaging!: GPUBuffer;

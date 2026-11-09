@@ -67,6 +67,7 @@ export interface ViewFrameEngine extends Pick<
     | "frameNumber"
     | "fxaaData"
     | "fxaaSampler"
+    | "glareKernels"
     | "hdrReads"
     | "lightStaging"
     | "listCountPending"

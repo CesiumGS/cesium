@@ -6,6 +6,7 @@ import { GLARE_BRIGHT_STARS } from "../../atmosphere/starCells.ts";
 import type { GpuTimer } from "../../gpu/GpuTimer.ts";
 import type { Camera } from "../../scene/Camera.ts";
 import { lightListFor, type LightList } from "../../scene/lightList.ts";
+import type { GlarePupil } from "../../scene/observer.ts";
 import type { View } from "../../scene/View.ts";
 import type { FrameGraph } from "../FrameGraph.ts";
 import {
@@ -14,6 +15,7 @@ import {
   type PostStagePass,
 } from "../../scene/postStage.ts";
 import type { ChainEntry, ChainEngine, ChainIo, GraphStage } from "./chain.ts";
+import type { GlareKernelImage } from "./glareKernel.ts";
 import { VEIL_LEVELS, veilWeights } from "./veilWeights.ts";
 
 export { GLARE_BRIGHT_STARS };
@@ -34,6 +36,10 @@ export const GLARE_SPRITE_CLAMP = 200;
 /** The buffer of sources, as the veil's passes name it. */
 export const GLARE_RECORDS = "glareRecords";
 const SOURCES_BUFFER = GLARE_RECORDS;
+
+/** The veil stage's result in a view's graph. */
+const GLARE_IMAGE = "post.glare";
+const DEG = Math.PI / 180;
 
 /** Bytes of a record; the header is one more. */
 const RECORD_BYTES = 32;
@@ -57,6 +63,91 @@ export function discTaps(n: number): [number, number][] {
 /** What glare adds to the engine's pipelines, made when first asked for. */
 export interface GlarePipelines {
   sources: GPUComputePipeline;
+  sprite: GPURenderPipeline;
+}
+
+/** A kernel's grid: the plan's GPU safety table holds a worker to one at this size. */
+const KERNEL_SIZE = 1024;
+
+/** A kernel on the GPU. */
+export interface LoadedKernel {
+  readonly view: GPUTextureView;
+  readonly image: GlareKernelImage;
+}
+
+/**
+ * The engine's kernels, one per aperture: computed once in a worker, on first use. Until
+ * one is here its spikes draw nothing, and the veil runs. Its arrival asks for one tick.
+ */
+export class GlareKernels {
+  private readonly loaded = new Map<GlarePupil, LoadedKernel | "waiting">();
+  private readonly textures: GPUTexture[] = [];
+  private sampler_: GPUSampler | undefined;
+
+  constructor(
+    private readonly device: GPUDevice,
+    private readonly request: (
+      aperture: GlarePupil,
+      size: number,
+    ) => Promise<GlareKernelImage>,
+    private readonly arrived: () => void,
+    private readonly failed: (message: string) => void,
+  ) {}
+
+  /** The aperture's kernel, if it's here. The first ask starts it. */
+  get(aperture: GlarePupil): LoadedKernel | undefined {
+    const known = this.loaded.get(aperture);
+    if (known !== undefined) {
+      return known === "waiting" ? undefined : known;
+    }
+    this.loaded.set(aperture, "waiting");
+    this.request(aperture, KERNEL_SIZE).then(
+      (image) => {
+        this.loaded.set(aperture, this.upload(aperture, image));
+        this.arrived();
+      },
+      (reason: unknown) => {
+        this.failed(`A ${aperture} kernel for glare: ${String(reason)}`);
+      },
+    );
+    return undefined;
+  }
+
+  get sampler(): GPUSampler {
+    return (this.sampler_ ??= this.device.createSampler({
+      label: "glare.kernel",
+      magFilter: "linear",
+      minFilter: "linear",
+      mipmapFilter: "linear",
+    }));
+  }
+
+  private upload(aperture: GlarePupil, image: GlareKernelImage): LoadedKernel {
+    const texture = this.device.createTexture({
+      label: `glare.kernel.${aperture}`,
+      size: [image.size, image.size],
+      format: "rgba16float",
+      mipLevelCount: image.levels.length,
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+    });
+    image.levels.forEach((level, mip) => {
+      const n = image.size >> mip;
+      this.device.queue.writeTexture(
+        { texture, mipLevel: mip },
+        level as Uint16Array<ArrayBuffer>,
+        { bytesPerRow: n * 8 },
+        [n, n],
+      );
+    });
+    this.textures.push(texture);
+    return { view: texture.createView(), image };
+  }
+
+  destroy(): void {
+    for (const texture of this.textures) {
+      texture.destroy();
+    }
+  }
 }
 
 /** What a view's glare needs of the engine. */
@@ -67,6 +158,7 @@ export interface GlareEngine {
   readonly raster: {
     readonly sky: Sky;
     readonly timer: Pick<GpuTimer, "passWrites">;
+    readonly glareKernels: GlareKernels;
   };
   requestRender(): void;
 }
@@ -80,6 +172,9 @@ export class GlareViewState {
   private readonly list: LightList = { sun: false, stars: 0 };
   private group: GPUBindGroup | undefined;
   private pipelines: GlarePipelines | undefined;
+  private kernel: LoadedKernel | undefined;
+  private spriteKernel: LoadedKernel | undefined;
+  private spriteGroup: GPUBindGroup | undefined;
   /** This tick wrote its frame: its sky was drawn. */
   private fresh = false;
   /** The list holds nothing, for a view with no sky. */
@@ -122,7 +217,29 @@ export class GlareViewState {
     data[22] = sun === "atmosphere" ? -1 : sun;
     data[23] = list.sun ? 1 : 0;
     // Sprites show nothing until a kernel says how far they reach.
-    data[31] = 0;
+    const spikes = view.observer.glare?.spikes;
+    const kernel = spikes
+      ? engine.raster.glareKernels.get(spikes.aperture)
+      : undefined;
+    this.kernel = kernel;
+    if (spikes && kernel) {
+      const { size, radii, scale } = kernel.image;
+      const pixelAngle = (2 * data[15]!) / data[21]!;
+      const cellAngle = (2 * spikes.extent * DEG) / size;
+      const pixelsPerCell = cellAngle / pixelAngle;
+      data[31] = list.stars;
+      data[50] = spikes.share / (cellAngle * cellAngle);
+      data[51] = pixelsPerCell;
+      data.set(radii, 52);
+      data[84] = scale;
+      data[85] = 1 / (size * pixelsPerCell);
+      data[86] = Math.max(-Math.log2(pixelsPerCell), 0);
+    } else {
+      data[31] = 0;
+      data[50] = 0;
+      data[51] = 0;
+      data.fill(0, 52, 84);
+    }
     data[48] = GLARE_SPRITE_PIXELS;
     data[49] = GLARE_SOURCES;
     engine.ctx.device.queue.writeBuffer(this.frameBuffer, 0, data);
@@ -169,6 +286,81 @@ export class GlareViewState {
   private readonly descriptor: GPUComputePassDescriptor = {
     label: "glare.sources",
   };
+
+  /** Draws the sprites: a degenerate triangle for each slot past the list's count. */
+  drawSprites(pass: GPURenderPassEncoder): void {
+    const { pipelines, kernel } = this;
+    if (pipelines && kernel) {
+      pass.setPipeline(pipelines.sprite);
+      pass.setBindGroup(0, this.spriteGroupFor(pipelines, kernel));
+    }
+    pass.draw(4, GLARE_SOURCES);
+  }
+
+  private spriteGroupFor(
+    pipelines: GlarePipelines,
+    kernel: LoadedKernel,
+  ): GPUBindGroup {
+    if (this.spriteKernel !== kernel) {
+      this.spriteKernel = kernel;
+      this.spriteGroup = this.engine.ctx.device.createBindGroup({
+        label: "glare.sprites",
+        layout: pipelines.sprite.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: this.frameBuffer } },
+          { binding: 6, resource: { buffer: this.sources } },
+          { binding: 7, resource: kernel.view },
+          { binding: 8, resource: this.engine.raster.glareKernels.sampler },
+        ],
+      });
+    }
+    return this.spriteGroup!;
+  }
+
+  /**
+   * The stage that draws the sprites, additively, into glare's image. It leaves no
+   * image of its own.
+   */
+  spritesStage(): GraphStage {
+    const color: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      loadOp: "load",
+      storeOp: "store",
+    };
+    const descriptor: GPURenderPassDescriptor = {
+      label: "glare.sprites",
+      colorAttachments: [color],
+    };
+    return {
+      name: "glare-sprites",
+      slot: "scene",
+      kind: "physics",
+      label: "Glare: a lens's spikes",
+      enabled: false,
+      register: (graph: FrameGraph, io: ChainIo) => {
+        graph.addPass(
+          "glare.sprites",
+          { reads: [...io.sources], sideEffect: true },
+          (enc, get) => {
+            const source = io.source();
+            if (
+              source.name !== GLARE_IMAGE ||
+              !this.kernel ||
+              !this.pipelines
+            ) {
+              return;
+            }
+            color.view = get(source);
+            descriptor.timestampWrites =
+              this.engine.raster.timer.passWrites("glare.sprites");
+            const pass = enc.beginRenderPass(descriptor);
+            this.drawSprites(pass);
+            pass.end();
+          },
+        );
+      },
+    };
+  }
 
   /** The stage that fills the list. It leaves no image. */
   sourcesStage(): GraphStage {
@@ -514,8 +706,12 @@ export function glareFor(
     return undefined;
   }
   const state = new GlareViewState(engine, view);
-  return {
-    entries: [state.sourcesStage(), veilStage(VEIL_LEVELS, 2)],
-    state,
-  };
+  const entries: ChainEntry[] = [
+    state.sourcesStage(),
+    veilStage(VEIL_LEVELS, 2),
+  ];
+  if (view.observer.glare.spikes) {
+    entries.push(state.spritesStage());
+  }
+  return { entries, state };
 }

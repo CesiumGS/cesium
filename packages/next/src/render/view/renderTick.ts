@@ -78,6 +78,7 @@ export interface RenderTickEngine extends Pick<
     | "frameNumber"
     | "fxaaData"
     | "fxaaSampler"
+    | "glareKernels"
     | "hdrReads"
     | "lightData"
     | "lightStaging"

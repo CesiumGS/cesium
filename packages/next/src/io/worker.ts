@@ -14,6 +14,8 @@ const TERRAIN_ACCEPT =
 import type { TextureFormatSupport } from "./decoders.ts";
 import { loadSkyPack } from "../atmosphere/skyPack.ts";
 import { withStarCells } from "../atmosphere/starCells.ts";
+import { computeKernel, kernelImage } from "../render/post/glareKernel.ts";
+import type { GlarePupil } from "../scene/observer.ts";
 import {
   extractStars,
   type StarField,
@@ -49,6 +51,9 @@ self.onmessage = async (
     upsample?: { rect: Rectangle; heights?: TerrainHeights; url?: string };
     /** "stars": the star map's six faces. */
     urls?: string[];
+    /** "glareKernel": the pupil, and its grid. */
+    aperture?: GlarePupil;
+    size?: number;
   }>,
 ) => {
   const { id, type } = event.data;
@@ -161,6 +166,17 @@ self.onmessage = async (
         { id, ok: true, result: field },
         starFieldBuffers(field),
       );
+      return;
+    }
+    if (type === "glareKernel") {
+      // A pupil's spikes (render/post/glareKernel.ts): computed once, here.
+      const image = kernelImage(
+        computeKernel(event.data.aperture!, event.data.size!),
+      );
+      self.postMessage({ id, ok: true, result: image }, [
+        ...image.levels.map((level) => level.buffer as ArrayBuffer),
+        image.radii.buffer as ArrayBuffer,
+      ]);
       return;
     }
     if (type === "skyPack") {

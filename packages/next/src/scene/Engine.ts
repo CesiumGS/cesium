@@ -51,6 +51,7 @@ import {
 } from "../query/queries.ts";
 import { globeTarget, terrainBackend } from "../query/terrainBackend.ts";
 import { drawBackend } from "../query/drawBackend.ts";
+import { GlareKernels } from "../render/post/glare.ts";
 import { destroyViewFrame } from "../render/view/viewFrameData.ts";
 import { serveIdlePick } from "../render/view/picks.ts";
 import { updateExposure } from "../render/view/exposure.ts";
@@ -428,6 +429,13 @@ export class Engine {
     const device = ctx.device;
     this.raster.pool = new TexturePool(device);
     this.raster.timer = new GpuTimer(device);
+    this.raster.glareKernels = new GlareKernels(
+      device,
+      (aperture, size) =>
+        this.scene.workers.request("glareKernel", { aperture, size }),
+      () => this.requestRender(),
+      (message) => this.ctx.errors.report("frame", message),
+    );
     this.raster.viewData = new Float32Array((maxViews * VIEW_STRIDE) / 4);
     this.raster.viewDataU32 = new Uint32Array(this.raster.viewData.buffer);
     for (let id = Math.min(maxViews, 32) - 1; id >= 0; id--) {
@@ -1618,6 +1626,7 @@ export class Engine {
     this.raster.pool.destroy();
     this.raster.lists?.destroy();
     this.raster.timer.destroy();
+    this.raster.glareKernels.destroy();
     this.raster.sky.atmosphere.destroy();
     this.raster.sky.destroy();
     this.scene.workers.destroy();

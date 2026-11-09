@@ -17,6 +17,7 @@ import {
   type World,
 } from "../src/index.ts";
 import { astroCurve } from "../src/render/post/astroCurve.ts";
+import { computeKernel } from "../src/render/post/glareKernel.ts";
 import {
   VEIL_LEVELS,
   veilSpread,
@@ -2192,6 +2193,209 @@ async function veilGroup(engine: Engine, say: Say): Promise<void> {
   engine.sunDirection.set(saved);
 }
 
+/** The kernel's levels as floats, from a box filter: the reference is here alone. */
+function kernelImageOf(kernel: {
+  texels: Float32Array;
+  size: number;
+}): Float32Array[] {
+  const levels = [kernel.texels];
+  let n = kernel.size;
+  while (n > 4) {
+    const from = levels[levels.length - 1]!;
+    const m = n >> 1;
+    const next = new Float32Array(m * m * 4);
+    for (let y = 0; y < m; y++) {
+      for (let x = 0; x < m; x++) {
+        for (let c = 0; c < 4; c++) {
+          next[(y * m + x) * 4 + c] =
+            (from[(y * 2 * n + x * 2) * 4 + c]! +
+              from[(y * 2 * n + x * 2 + 1) * 4 + c]! +
+              from[((y * 2 + 1) * n + x * 2) * 4 + c]! +
+              from[((y * 2 + 1) * n + x * 2 + 1) * 4 + c]!) /
+            4;
+        }
+      }
+    }
+    levels.push(next);
+    n = m;
+  }
+  return levels;
+}
+
+const SPIKES = { aperture: "vanes", share: 0.05, extent: 3 } as const;
+
+async function spritesReady(engine: Engine, view: View): Promise<void> {
+  await veilReady(engine, view);
+  await ticks(
+    engine,
+    2000,
+    () => !!engine.raster.glareKernels.get(SPIKES.aperture),
+  );
+  await ticks(engine, 3);
+}
+
+async function spritesGroup(engine: Engine, say: Say): Promise<void> {
+  const saved = Float64Array.from(engine.sunDirection);
+  const glare = {
+    tier: "full",
+    veil: { share: 0.2 },
+    spikes: { ...SPIKES },
+  } as const;
+  // A star's spikes against the same kernel's values, peak-normalized.
+  {
+    const size = 1024;
+    const fov = 20;
+    const d = sky3.dir(84, 7);
+    const lux = 0.002;
+    await setStars(engine, starField([{ d, lux }]));
+    const scene = new SkyScene(engine, size, size, { ev100: 0 });
+    scene.view.observer.glare = { ...glare, spikes: { ...SPIKES } };
+    scene.aim({ ...inSpace(d, NORTH, fov, 0), fov });
+    await spritesReady(engine, scene.view);
+    const { glare: state } = engine.raster.viewFrames.get(scene.view)!;
+    void state;
+    const list = await readSources(engine, scene.view);
+    const count = list[0]!;
+    const star = list.subarray(SOURCE_FLOATS * 2, SOURCE_FLOATS * 3);
+    const veilOnly = await (async () => {
+      const read = scene.view.readHdr({ after: "glare" });
+      engine.renderFrame();
+      await engine.gpu.device.queue.onSubmittedWorkDone();
+      await ticks(engine, 2);
+      return read;
+    })();
+    scene.view.observer.glare.spikes = null;
+    await veilReady(engine, scene.view);
+    await ticks(engine, 3);
+    const without = await readAfterGlare(engine, scene.view);
+    const kernel = kernelImageOf(computeKernel(SPIKES.aperture, 1024));
+    const angle = (2 * Math.tan((fov * DEG) / 2)) / size;
+    const cell = (2 * SPIKES.extent * DEG) / 1024;
+    const cellsPerPixel = angle / cell;
+    const lod = Math.max(Math.log2(cellsPerPixel), 0);
+    const bilinear = (level: number, u: number, v: number) => {
+      const n = 1024 >> level;
+      const [x, y] = [u * n - 0.5, v * n - 0.5];
+      const [x0, y0] = [Math.floor(x), Math.floor(y)];
+      const [fx, fy] = [x - x0, y - y0];
+      const at = (i: number, j: number) => kernel[level]![(j * n + i) * 4 + 1]!;
+      return (
+        (1 - fy) * ((1 - fx) * at(x0, y0) + fx * at(x0 + 1, y0)) +
+        fy * ((1 - fx) * at(x0, y0 + 1) + fx * at(x0 + 1, y0 + 1))
+      );
+    };
+    const lines: string[] = [];
+    let worst = 0;
+    let peak = 0;
+    const samples: { seen: number; wanted: number }[] = [];
+    // Along the spikes' axis: the image's diagonal, from the star.
+    for (const r of [30, 50, 70, 90, 110]) {
+      const px = Math.round(size / 2 + r * Math.SQRT1_2);
+      const py = Math.round(size / 2 + r * Math.SQRT1_2);
+      const seen =
+        veilOnly.data[(py * size + px) * 4 + 1]! -
+        without.data[(py * size + px) * 4 + 1]!;
+      const u = 0.5 + ((px + 0.5 - size / 2) * cellsPerPixel) / 1024;
+      const v = 0.5 + ((py + 0.5 - size / 2) * cellsPerPixel) / 1024;
+      const low = Math.floor(lod);
+      const f = lod - low;
+      const wanted =
+        (1 - f) * bilinear(low, u, v) + f * bilinear(low + 1, u, v);
+      samples.push({ seen, wanted });
+      peak = Math.max(peak, seen / wanted);
+    }
+    for (const { seen, wanted } of samples) {
+      const ratio = seen / wanted / peak;
+      worst = Math.max(worst, 1 - ratio);
+      lines.push(ratio.toFixed(2));
+    }
+    say(
+      "a star draws one sprite",
+      count === 2 && star[7] === 2,
+      `records ${count}, radius ${star[2]!.toFixed(0)} px`,
+    );
+    say(
+      "its spike follows the kernel, peak-normalized, within 10%",
+      worst <= 0.1,
+      lines.join(", "),
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // 300 bright stars.
+  {
+    const center = sky3.dir(84, 7);
+    const right = sky3.norm(sky3.cross(center, NORTH));
+    const up = sky3.cross(right, center);
+    const stars = Array.from({ length: 300 }, (_, i) => ({
+      d: sky3.norm(
+        sky3.add(
+          sky3.add(center, right, ((i % 20) - 10) * 0.03),
+          up,
+          (Math.floor(i / 20) - 8) * 0.03,
+        ),
+      ),
+      lux: 1e-4,
+    }));
+    await setStars(engine, starField(stars));
+    const scene = new SkyScene(engine, 1024, 1024, { ev100: 0 });
+    scene.view.observer.glare = { ...glare, spikes: { ...SPIKES } };
+    scene.aim({ ...inSpace(center, NORTH, 60, 0), fov: 60 });
+    await spritesReady(engine, scene.view);
+    const list = await readSources(engine, scene.view);
+    say(
+      "300 bright stars keep to 256 records and the pixel budget",
+      list[0]! <= 256 && list[3]! <= 4_000_000 + 4 * 512 * 512,
+      `records ${list[0]}, pixels ${list[3]}`,
+    );
+    const times: number[] = [];
+    for (let i = 0; i < 60; i++) {
+      await ticks(engine, 1);
+      const ms = engine.gpuPasses["glare.sprites"];
+      if (i > 20 && ms !== undefined) {
+        times.push(ms);
+      }
+    }
+    times.sort((a, b) => a - b);
+    say(
+      "sprites' time beside the spike's 0.13 ms",
+      true,
+      `${(times[times.length >> 1] ?? 0).toFixed(2)} ms, at 1024²`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // A star behind the limb.
+  {
+    const altitude = 400_000;
+    const dip = Math.acos(RADIUS / (RADIUS + altitude));
+    const elevation = -dip - 3 * DEG;
+    const d: V3 = [Math.sin(elevation), Math.cos(elevation), 0];
+    await setStars(engine, starField([{ d, lux: 0.01 }]));
+    const scene = new SkyScene(engine, 512, 512, { ev100: 0 });
+    scene.view.observer.glare = { ...glare, spikes: { ...SPIKES } };
+    scene.aim({
+      position: [RADIUS + altitude, 0, 0],
+      direction: d,
+      up: [0, 0, 1],
+      sun: sky3.scale(d, -1),
+      fov: 30,
+      ev100: 0,
+    });
+    await spritesReady(engine, scene.view);
+    const list = await readSources(engine, scene.view);
+    say(
+      "a star behind the limb has no sprite",
+      list[0] === 1,
+      `records ${list[0]}`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  engine.raster.sky.setStarField(null);
+  engine.sunDirection.set(saved);
+}
+
 const GROUPS: Record<
   string,
   (engine: Engine, say: Say, stills: Record<string, string>) => Promise<void>
@@ -2207,6 +2411,7 @@ const GROUPS: Record<
   stills: stillsGroup,
   sources: sourcesGroup,
   veil: veilGroup,
+  sprites: spritesGroup,
 };
 
 let root: HTMLElement;
