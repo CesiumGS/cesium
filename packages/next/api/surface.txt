@@ -157,6 +157,7 @@ entry	name	kind	tier
 .	ShaderOverrides	interface	-
 .	ShaderUnit	interface	-
 .	SkyOptions	interface	-
+.	SkyPackManifest	interface	-
 .	SlangCache	interface	-
 .	SlicePool	class	-
 .	SliceUser	interface	-

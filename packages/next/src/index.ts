@@ -123,6 +123,7 @@ export {
   type Viewport,
 } from "./scene/renderTarget.ts";
 export type { CorePick, PickCamera, PickInterpreter } from "./scene/pick.ts";
+export type { SkyPackManifest } from "./atmosphere/skyPack.ts";
 export {
   PLACEMENT_MONOMIALS,
   PLACEMENT_TERMS,

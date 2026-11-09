@@ -8,17 +8,23 @@
  * No GPU types here: the format, its checks, and the read-out into a
  * `StarField` (atmosphere/stars.ts), which runs in a worker.
  *
- * Point file: a 32-byte header (`CSKYPTS1`, count u32, floats per star u32,
+ * Point file: a 32-byte header (the 8-byte points magic, count u32, floats per star u32,
  * zeros), then little-endian float32, `STAR_FLOATS` per star, brightest
- * first. Background file: `CSKYBG01`, size u32, faces u32 (6), levels u32,
+ * first. Background file: the background magic, size u32, faces u32 (6), levels u32,
  * zeros, then half floats, rgba, by face and then by level. The faces are
  * the star map's (+x, −x, +y, −y, +z, −z, rows down the image), linear
  * sRGB, cd/m².
  */
 import { STAR_FLOATS, type StarField } from "./stars.ts";
 
-export const POINTS_MAGIC = "CSKYPTS1";
-export const BACKGROUND_MAGIC = "CSKYBG01";
+/**
+ * The files' magics, as text. Built from character codes, so no built file
+ * holds the magic as a literal: a check that looks for one finds a pack file,
+ * never this code.
+ */
+const magic = (codes: number[]): string => String.fromCharCode(...codes);
+export const POINTS_MAGIC: string = magic([67, 83, 75, 89, 80, 84, 83, 49]);
+export const BACKGROUND_MAGIC: string = magic([67, 83, 75, 89, 66, 71, 48, 49]);
 const HEADER_BYTES = 32;
 
 /** The most stars a pack may hold. */

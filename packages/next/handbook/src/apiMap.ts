@@ -826,7 +826,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "Sun",
       "Moon",
     ],
-    next: ["SkyOptions", "DEFAULT_SKY", "UNITLESS_SKY"],
+    next: ["SkyOptions", "SkyPackManifest", "DEFAULT_SKY", "UNITLESS_SKY"],
     supporting: [
       "AEROSOLS",
       "AerosolType",

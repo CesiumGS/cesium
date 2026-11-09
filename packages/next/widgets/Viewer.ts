@@ -48,6 +48,7 @@ import {
   type Tileset3D,
   type Globe,
   type TilesetOptions,
+  type SkyPackManifest,
   type View,
   type ViewLink,
   type World,
@@ -59,7 +60,6 @@ import type {
   SkyInputs,
 } from "@cesium/next/frames";
 import { Clock } from "@cesium/next/time";
-import type { SkyPackManifest } from "../src/atmosphere/skyPack.ts";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
 import { orbitState, planOrbit, type OrbitOptions } from "./orbitFocus.ts";

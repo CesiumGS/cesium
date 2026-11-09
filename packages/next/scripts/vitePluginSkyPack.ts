@@ -158,14 +158,16 @@ export function skyPackResponse(
     return undefined;
   }
   const name = url.slice(PREFIX.length).split(/[?#]/, 1)[0]!;
-  if (!Object.hasOwn(ROUTE_FILES, name)) {
+  // The file is one of the three fixed names, never the URL's own text.
+  const file = Object.keys(ROUTE_FILES).find((known) => known === name);
+  if (file === undefined) {
     return { status: 404 };
   }
   try {
     return {
       status: 200,
-      type: ROUTE_FILES[name]!,
-      body: fs.readFileSync(join(directory, name)),
+      type: ROUTE_FILES[file]!,
+      body: fs.readFileSync(join(directory, file)),
     };
   } catch {
     return { status: 404 };
