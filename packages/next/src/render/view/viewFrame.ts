@@ -42,6 +42,9 @@ import {
 } from "../post/chain.ts";
 import { GLARE_RECORDS, glareFor } from "../post/glare.ts";
 
+/** The same pass, later, in the eye's graph under glare. */
+const ADAPTATION_AFTER_GLARE = "adaptation";
+
 /** Rasterizer side: a view's targets and passes, in registration order. */
 export interface ViewFrameEngine extends Pick<
   Engine,
@@ -541,26 +544,23 @@ function buildViewFrame(
   };
   const adaptReduced = graph.createTexture("adapt.reduced", adaptSize);
   const adaptation = graph.createTexture("adapt.map", adaptSize);
-  const addAdaptation = (source: TextureHandle | ChainSlot) =>
-    graph.addPass(
-      "adaptation",
-      {
-        reads: source instanceof ChainSlot ? source.handles : [source],
-        writes: [adaptReduced, adaptation],
-      },
-      adaptationPass(engine, view, frame, {
-        resolved: source,
-        adaptReduced,
-        adaptation,
-        adaptSize,
-      }),
-    );
+  const adaptationBody = (source: TextureHandle | ChainSlot) =>
+    adaptationPass(engine, view, frame, {
+      resolved: source,
+      adaptReduced,
+      adaptation,
+      adaptSize,
+    });
   // The eye adapts to the light that reaches it: with glare, the veil's too. Its grid is
   // read at each pixel's own brightness, so without that the veil's levels are empty,
   // and draw rings. The view's overall adaptation stays the meter's, before glare.
   const eyeOnGlare = !!glare && "eye" in view.observer.exposure;
   if (!eyeOnGlare) {
-    addAdaptation(resolved);
+    graph.addPass(
+      "adaptation",
+      { reads: [resolved], writes: [adaptReduced, adaptation] },
+      adaptationBody(resolved),
+    );
   }
 
   // The chain, after the meter and (but for the eye under glare) the adaptation, so
@@ -579,7 +579,11 @@ function buildViewFrame(
   registerPerView(graph, chain, entries, chainView);
   registerSlot(engine, graph, chain, scene!, stages.scene, chainView);
   if (eyeOnGlare) {
-    addAdaptation(scene!);
+    graph.addPass(
+      ADAPTATION_AFTER_GLARE,
+      { reads: scene!.handles, writes: [adaptReduced, adaptation] },
+      adaptationBody(scene!),
+    );
   }
   if (glare) {
     graph.addPass(

@@ -41,6 +41,9 @@ export const GLARE_SPRITE_CLAMP = 200;
 export const GLARE_RECORDS = "glareRecords";
 const SOURCES_BUFFER = GLARE_RECORDS;
 
+/** Passes the chain registers, as a stage's are: named at run time. */
+const SOURCES_PASS = "glare.sources";
+const SPRITES_PASS = "glare.sprites";
 /** The veil stage's result in a view's graph. */
 const GLARE_IMAGE = "post.glare";
 const DEG = Math.PI / 180;
@@ -440,7 +443,7 @@ export class GlareViewState {
       enabled: false,
       register: (graph: FrameGraph, io: ChainIo) => {
         graph.addPass(
-          "glare.sprites",
+          SPRITES_PASS,
           { reads: [...io.sources], sideEffect: true },
           (enc, get) => {
             const source = io.source();
@@ -473,7 +476,7 @@ export class GlareViewState {
       enabled: false,
       register: (graph: FrameGraph, io: ChainIo) => {
         graph.addPass(
-          "glare.sources",
+          SOURCES_PASS,
           { reads: [io.depth], sideEffect: true },
           (enc, get) => this.encode(enc, get(io.depth)),
         );
