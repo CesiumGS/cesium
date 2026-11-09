@@ -73,7 +73,7 @@ Each is marked "(author's call N)" where it's used. One line each, then what und
 25. **384 cells (8 a face side), sorted brightest first, built in the worker at load** for any `StarField`. *Undo:* a constant.
 26. **Compute culling, with an identical CPU path** when `submission` is `"direct"` or `indirect-first-instance` is missing. *Undo:* drop a branch.
 27. **The cull's visibility threshold divides by the chain's largest `shadowGain`,** so a look that lifts shadows can't reveal a culled star's absence. *Undo:* one term.
-28. **The eye's point limit is a `model` stage, not a star gain.** It fades what stands above its surroundings below a limit: magnitude 6 dark-adapted, brighter in proportion to the rods' threshold at the eye's adaptation. It runs only with the eye. *Undo:* remove the stage.
+28. **The eye's point limit is a `model` stage, not a star gain.** Where nothing was drawn (depth at the far plane), it fades what stands above its surroundings below a limit: magnitude 6 dark-adapted, brighter in proportion to the rods' threshold at the eye's adaptation. Only with the eye, and skipped above 30 cd/m² of adaptation. *Undo:* remove the stage.
 29. **No special path for stars beside a sunlit Earth.** Physics shows none there, as photographs do (question 3). *Undo:* a look stage later.
 30. **`STARLIGHT` splits into a `faintStars` uniform:** all of it with today's map; half with a deep pack, in the sky seen and in the environment, plus the pack's mean background in the environment only. The half is the spike's guess at the zodiacal light's share, and is labelled a guess. *Undo:* one number.
 31. **Order:** the meter, the eye's local adaptation, the eye's point limit, the source list, the veil, the sprites, the composite, the response. Glare feeds neither the meter nor the adaptation (§13.22). `readHdr` stays before all of it. *Undo:* registration order.
@@ -86,7 +86,7 @@ Each is marked "(author's call N)" where it's used. One line each, then what und
 38. **Sprites use `draw(4, 256)` with a degenerate vertex for an unused slot,** not an indirect draw, so they avoid §13.23's risk. A pixel budget of 4 million per view bounds overdraw. *Undo:* one draw call.
 39. **Kernels come from a pupil, computed once in a worker, in angle.** Apertures: `round`, `vanes`, `hex`, `blades7`. The spike's streak stays out: it read most as an effect, and its grating failed. The eye gets a veil and no spikes for now. *Undo:* a list.
 40. **Tiers:** `full`, `reduced`, `sources` and `off`, chosen from the adapter and the pixel count, with an override. Intel starts at `reduced` until the owner's laptop says otherwise. *Undo:* a table.
-41. **The composite clamps at 60,000 and drops anything that isn't finite,** so glare can't reach the meter's NaN problem by another route. *Undo:* one line.
+41. **Glare's composite clamps the image at 10,000 and each sprite at 200, pre-exposed,** so 256 overlapping sprites can't pass fp16's 65,504 into infinity, and it replaces anything not finite with 0. All of those read as white. So glare can't reach the meter's old NaN problem by another route. *Undo:* two constants.
 42. **One shared `attachObserverPanel` in the widgets,** used by the playground, Dyno's Viewer and the new example, so the rules hold everywhere. *Undo:* inline it.
 
 ## Rulings
@@ -153,7 +153,7 @@ State these in the commit message, and check against them. "None" means zero dif
 | 9 Cells | Stars add in a new order, so stacked stars may differ by 1/255 in under 0.1% of star-layer pixels. Nothing else | |
 | 10 Bright end, background level | None without a pack, except the mip level below 30° field of view, which softens the background slightly | Long-lens background softer, with no pop |
 | 11 Fudges | Eye only. See its table. A camera or a plain scale: none | With a deep pack: the sky's faint-star term halves |
-| 12 to 15 Glare | None while off | Reads and adds. Pixels change everywhere the veil reaches. With `share` 0.2, a pixel far from anything bright falls by 20% in linear light. The meter's reading doesn't change |
+| 12 to 15 Glare | None while off | Pixels change wherever the veil reaches. A flat image doesn't change, since a pixel gives up only the light the veil spreads. A bright pixel falls by up to `share` in linear light, and what's near it rises. The meter's reading doesn't change |
 | 16 to 19 | None | |
 
 ## FXAA and ambient occlusion
@@ -467,3 +467,255 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
 - [ ] **Step 4: Run** the test, `test/libraryWidgets.test.ts` and tsc.
 - [ ] **Step 5: Commit** with "widgets: the Viewer takes a sky pack and shows its credits".
 - [ ] **Step 6: Batch B's gates.** Confirm a library build and a handbook build hold no pack file: `grep -rl CSKY dist-lib` and the handbook's output are empty. Commit no output.
+
+## Batch C: stars and fudges
+
+### Task 8: Strips and the observer's point spread
+
+**Files:**
+
+- Create: `test/starDraw.test.ts`
+- Modify: `sky.slang` (`Sky`, `starVertex`, `starFragment`), `Sky.ts` (`SKY_SIZE`, `write`, the `stars` pipeline, `encodeStars`), `test/sky.test.ts`
+
+**Interfaces:**
+
+- Consumes: `observer.pointSpread`.
+- Produces (author's calls 23, 24):
+  - `Sky` uniform fields `starCore`, `starWing`, `starWingShare`, in CSS pixels, as `starPixel` scales them. `STAR_CORE`, `STAR_HALO` and `STAR_HALO_SHARE` go;
+  - `starRadius(spread: PointSpread, brightest: number, pixelRatio: number): number`, pure, and the same rule in the vertex shader: at least 3.5 σ of the core, plus the wing's reach where it's on, at most 64 px;
+  - `starVertex` takes `SV_VertexID` 0 to 3 for a strip, `pass.draw(4, count)`.
+
+- [ ] **Step 1: Write the failing test** (`test/starDraw.test.ts`): a port of the pixel-integrated Gaussian, summed over `starRadius`'s footprint, holds at least 0.999 of the star's light for σ 0.55 and 0.85 at 20 subpixel offsets; with a wing of share 0.05, its sum is still 1 within 0.001; the centered peak shares are 0.354 at σ 0.6, 0.197 at σ 0.85 and 0.405 at σ 0.55; the shader's source has no `STAR_HALO` and no six-corner array; `encodeStars` calls `draw(4, n)`; `Sky.write` puts the observer's values in the uniform, and setting `pointSpread` wakes the view.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** `npm run shaders`, then read the Metal of `starVertex` and `starFragment`.
+- [ ] **Step 4: Run** the test, `test/sky.test.ts`, tsc.
+- [ ] **Step 5: Browser check** (port 5195, group `points`): one synthetic star at a known place. Its summed light in `readHdr` is the same within 1% for σ 0.55, σ 0.85 and today's spread, at both pixel ratios. With σ held at today's and the wing on, strips and today's quads give no differing pixel. Record the star time beside the spike's 2.49 ms.
+- [ ] **Step 6: Commit** with "sky: strips, and the observer's point spread in place of a fixed halo". State Task 8's expected difference.
+
+### Task 9: Sky cells, culled in compute
+
+**Files:**
+
+- Create: `src/atmosphere/starCells.ts`, `test/starCells.test.ts`
+- Modify: `sky.slang` (`starCull`), `Sky.ts` (`SkyView`, `writeStars`, `encodeStars`), the worker's star handling, the pipelines' layouts, `test/seams.test.ts`
+
+**Interfaces:**
+
+- Consumes: Task 8's `starRadius`; `Capabilities.indirectFirstInstance`; `World.submission`.
+- Produces (author's calls 25, 26):
+  - `CELLS_PER_SIDE = 8`; `buildStarCells(points: Float32Array, count: number): { points: Float32Array; cells: StarCell[]; table: Float32Array }`: a stable sort by cube-face cell, so each cell stays brightest first; `StarCell { center: [x, y, z]; sinRadius: number; first: number; count: number }`. Pure, in the worker, for any field;
+  - `cullCell(cell: StarCell, planes, minIlluminance, illuminance: Float32Array): number`, the number of stars to draw: the plain function the shader mirrors, with a binary search of at most 24 steps;
+  - `starCullInputs(forward, right, up, tanX, tanY, size, exposure, rows, shadowGain): { planes; minIlluminance }`. The tangents come from the sky's uniform values, so no new `.fovy` read is added. The planes are in ICRF, with a margin of the largest `starRadius` in angle. `minIlluminance` uses the smallest pixel solid angle in the view, at its corner;
+  - `SkyView.starUniform`, `SkyView.starArgs` (16 bytes a cell) and `Sky.writeStars(view: SkyView, rows)`, per view, since 5c needs a per-view rotation anyway;
+  - `starSubmission(mode, capabilities): "indirect" | "direct"`. With `"direct"`, `Sky` runs `cullCell` in TypeScript from a kept `Float32Array` of illuminance (2 MB at this count), and issues `pass.draw(4, n, 0, first)`, skipping empty cells.
+
+- [ ] **Step 1: Write the failing test** (`test/starCells.test.ts`):
+  - every star lands in exactly one cell, every cell's stars are brightest first, and each lies inside its cell's cone;
+  - **no star that should show is dropped:** for 200 random views over 100,000 synthetic stars, every star inside the view whose shown value passes the threshold is in its cell's drawn prefix (this fails if the corner's solid angle or the margin is wrong);
+  - a wide view draws under 20% of a uniform synthetic sky, and a 5° view under 1%;
+  - a bright star just off screen, within its radius, stays drawn;
+  - `cullCell` never returns more than `count`, and takes at most 24 steps with 4 million stars;
+  - `starSubmission` is `"direct"` with `World.submission` direct, or without `indirectFirstInstance`; on that path the fake pass records `draw`, with no `drawIndirect`;
+  - two views with different `rows` get different arguments, and neither view's write touches the other's;
+  - the seam: `test/seams.test.ts`'s draw detector allows `drawIndirect` in `Sky.ts`'s star path only, with a reason, and still flags a planted one elsewhere;
+  - a shader source pin: `starCull`'s bound is the constant 24, and its index is clamped.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** One dispatch of 6 workgroups before the star pass. Read the Metal of `starCull`.
+- [ ] **Step 4: Run** the test, `test/seams.test.ts`, `test/sky.test.ts`, tsc.
+- [ ] **Step 5: Browser check** (port 5195, group `cells`): for five views, compute's arguments, read back, match `cullCell`'s within 0.1%; the image with cells against without differs by at most 1/255, in under 0.1% of pixels; record cells-plus-strips time beside the spike's 0.66 ms, and the render-call CPU beside its 0.2 to 0.5 ms.
+- [ ] **Step 6: Commit** with "sky: stars in sky cells, culled in compute, with a CPU path".
+
+### Task 10: The hybrid sky on screen
+
+**Files:**
+
+- Modify: `sky.slang` (`starLight`), `Sky.ts` (the background's level), `spikes/observer.ts`, `test/starDraw.test.ts`
+
+**Interfaces:**
+
+- Consumes: Tasks 4 and 6 to 9.
+- Produces (author's call 18): `backgroundLevel(tanY: number, levels: number): number`, pure, in the `Sky` uniform as `starBackgroundLevel`: 0 at 30° of vertical field of view and wider, rising with `log2` as the field narrows, and continuous, at most `levels − 1`. The background's sampler gets a linear mip filter.
+
+- [ ] **Step 1: Write the failing test:** `backgroundLevel` is 0 at 60° and 30°, 1 at 15°, 2 at 7.5°, capped at `levels − 1`, finite at a `tanY` of 0, and it never jumps by over 0.01 between fields of view 0.1° apart; the shader's source has `SampleLevel(starSampler, d, sky.starBackgroundLevel)`, and today's `0.0` is gone.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.**
+- [ ] **Step 4: Run** the test and tsc.
+- [ ] **Step 5: Browser check with a real pack** (port 5195, group `pack`, `?pack=local`; if the store has none, stop and say so; stills stay out of the repository): a view of the winter sky shows Sirius, Rigel and Betelgeuse's summed light in `readHdr` in the ratios of their magnitudes within 5%; Betelgeuse's color against Rigel's holds, redder against bluer; no even spacing shows; the Milky Way core has no blocks at 1024²; a slow zoom from 60° to 5° doesn't pop. Record the timings. The owner looks at these at the end of Batch C.
+- [ ] **Step 6: Commit** with "sky: the background's level follows the field of view, and the hybrid pack draws".
+
+### Task 11: Removing the fudges
+
+**Files:**
+
+- Create: `src/render/post/eyeLimit.ts`, `test/noSceneGains.test.ts`, `test/eyeLimit.test.ts`
+- Modify: `EYE_STARS_EV100`'s definition and the call that passes it, `Sky.write`, `sky.slang` (`Sky`, `starExposure`, `starVertex`, `nightGlow`, `skyStarsFragment`, `skyFromTableFragment`), `scene/eye.ts`, `eyeObserver`, the environment's `Sky` faces, `test/exposureAdapt.test.ts`, `test/meterEmission.test.ts`, the `Viewer` docs on `Exposure` "eye", which say it sees stars "even where the scene is bright"
+
+**Interfaces:**
+
+- Consumes: Task 2, Task 4's `holdsFaintStars` and `meanBackground`, Task 9's `shadowGain` input.
+- Produces (author's calls 27 to 30):
+  - `EYE_STARS_EV100`, `Sky.write`'s `starExposure` parameter, the uniform's field and the shader's `starExposure` function are gone. Stars take `sky.exposure`, like everything else;
+  - `eyePointLimit(cones: number, rods: number): number`, lux, in `eye.ts`: magnitude 6's illuminance × `max(1, rodThreshold(rods) / rodThreshold(dark))`, with `dark` at 10⁻⁴ cd/m² of photopic adaptation. Tuned by nothing but the model's own threshold;
+  - `eyeLimitStage(): PostStage`: slot `scene`, kind `model`, label `"The eye's point limit (a model)"`, reads `depth`. Where depth is at the far plane, it compares each pixel with the darkest of a ring of 8 taps at about 6 px, turns the excess into illuminance at this pixel's solid angle and the observer's core share, and fades it over 1 magnitude around the limit. Other pixels pass through;
+  - `eyeObserver`'s `pointLimit?: boolean`, default true; the chain enables it only with the eye, a drawn sky and adaptation under 30 cd/m²;
+  - the uniform field `faintStars: float3`, in place of `STARLIGHT` in `nightGlow`: `STARLIGHT` with today's map; half of it with `holdsFaintStars`; in the environment faces only, plus `meanBackground`. `STARLIGHT`'s constant stays in TypeScript, with a comment that the half is a guess at the zodiacal light's share.
+
+**What changes.** The eye only, and only where the sky behind a star is dark. A camera and a plain scale see no change from the rule's removal.
+
+| Eye adapted to (cd/m²) | Example | Pre-exposure | Stars fall by |
+| --- | --- | --- | --- |
+| 4,000 | The sunlit Earth from orbit | 4.5 × 10⁻⁵ | 17.2 stops: gone |
+| 30 | Heavy overcast, or a bright dusk | 3.9 × 10⁻³ | 10.7 stops: gone |
+| 1 | Dusk | 0.064 | 6.7 stops |
+| 0.03 | Full moon | 1.5 | 2.2 stops |
+| 0.005 | Bright night | 5.4 | 0.3 stops |
+| 0.003 and darker | A moonless night | 7.0 and up | None |
+
+The examples are rough, from general knowledge. The numbers come from `eyeResponse`. **Separately,** the point limit takes away stars fainter than its limit: at 10⁻⁴ cd/m² the 86,000-star map falls to the roughly 5,000 stars to magnitude 6.
+
+- [ ] **Step 1: Write the failing tests:**
+  - `test/noSceneGains.test.ts` (the owner's rule as a seam): with `fakeEngine`, render a tick and record every byte of the sky's uniform and the view block; change `toneMapping`, `glare`, or add a look stage: not one byte changes. Change `pointSpread`: only `starCore`, `starWing` and `starWingShare` change. Change `exposure` to another EV100: only the exposure field and what's documented as pre-exposed changes. No `.slang` file under `src/atmosphere` or `src/shaders` holds `starExposure`, `EYE_STARS` or a uniform named with `gain` or `stretch` (a detector shown to flag a planted one);
+  - `test/eyeLimit.test.ts`: `eyePointLimit` at 10⁻⁴ is magnitude 6.0 ± 0.05; at 10⁻³, 5.4; at 0.03, 2.7; at 1, −1.2; at 30, −4.8, each ± 0.1 (computed for this plan; a change in the eye's thresholds shows here); the stage's kind is `model`, and it reads `depth`; the shader passes through where depth isn't at the far plane (a source pin); the ring is 8 taps, unrolled; the chain has it with the eye at night, and not with a camera, at 4,000 cd/m², or with `background: "color"`;
+  - the `Sky` uniform's `faintStars` equals `STARLIGHT` with today's map, half with a deep pack in the view's uniform, and half plus `meanBackground` in an environment face; the view block's night light doesn't change with today's map;
+  - the star cull's threshold: a look stage with `shadowGain` 2.89 draws more stars than none; at EV100 15 with the eye gone, no star's shown value passes it.
+- [ ] **Step 2: Run** and confirm they fail.
+- [ ] **Step 3: Implement.** `npm run shaders`. Read the Metal of `skyStarsFragment`, `skyFromTableFragment` and the eye limit.
+- [ ] **Step 4: Run** the tests, `test/sky.test.ts`, `test/exposureAdapt.test.ts`, `test/meterEmission.test.ts`, `test/frameSky.test.ts`, tsc. If a meter reading moves, explain it: star pixels were metered at the boosted value.
+- [ ] **Step 5: Browser check** (port 5195, group `fudges`). Read `view.readout()` as text, and take stills only for judgement:
+  - the table's rows, by scene: stars gone beside the sunlit Earth from orbit; present on a moonless night, with terrain pixels unchanged by the limit;
+  - **twilight against naked-eye limits (§13.29):** with the sun at −6°, −12° and −18° and a real pack or today's map, read the faintest of a list of named stars that shows above the sky at the zenith. Record the table in the commit. Published rule-of-thumb limits (from general knowledge; check them before quoting) are about magnitude 1, 3 to 4, and 6. Don't tune anything to match. A wide miss goes to the owner.
+- [ ] **Step 6: Commit** with "sky: stars take the view's exposure: remove the star exposure rule, and split STARLIGHT". State the table in the message.
+- [ ] **Step 7: Batch C's gates.** Then the owner looks: Eye and Camera on Orion, the core, the winter sky and a limb at night, and bright stars' color under the eye (ruling 5).
+
+## Batch D: glare
+
+### Task 12: The light list and glare's sources
+
+**Files:**
+
+- Create: `src/scene/lightList.ts`, `src/render/post/glare.ts`, `src/shaders/glare.slang`, `test/glareSources.test.ts`
+- Modify: `Sky.ts` (keeping the 2,048 brightest stars, `glareStars`), `buildViewFrame`
+
+**Interfaces:**
+
+- Consumes: `observer.glare`, the sky's uniform and `sunLight` table, the view's multisampled depth.
+- Produces (author's calls 31, 32, 36 to 38):
+  - `lightListFor(view): { sun: boolean; stars: number }`: this first version of §13.32's point 3 names what's in the list: the sun where the view draws it (`sunDisk`, with an atmosphere), and the star field's bright end. A comment says 5e adds the Moon and planets;
+  - constants `GLARE_SOURCES = 256`, `GLARE_BRIGHT_STARS = 2048`, `GLARE_DISC_TAPS = 32`, `GLARE_SPRITE_PIXELS = 4_000_000`, `GLARE_SPRITE_MAX_RADIUS = 512`, each with a source pin against the shader's;
+  - kernel `glareSources`: `[numthreads(1, 1, 1)]`, writing a per-view storage buffer of a header and `GlareSource { float2 pixel; float radius; float visibility; float3 light; float kind }`, in lux through the air. Record 0 is always the sun, with visibility 0 if there's none;
+  - `discTaps(n: number): [x, y][]`: a Vogel spiral in the unit disc, as a constant table, pure;
+  - `tapVisible`: depth at sample 0 at the far plane, off screen counts as visible, then the ray misses the body's ellipsoid (the same scaled-sphere test as `marchedSky`), then it isn't in the Moon's disc (`sky.moon`, `sky.moonSize`);
+  - the sun's `light` is the `sunLight` table's value at the camera, by the mapping `sunlightThroughAir` uses, shared rather than copied; with `lighting.sunIlluminance` set to a number, that number. A star's is its illuminance times the table's color at its direction over the sun's outside the air;
+  - a star becomes a source only if on screen within its radius, with visibility 1 from one tap, and bright enough at this exposure that its sprite shows: the `radii` table, from Task 14. The walk stops at 256 sources or the pixel budget, and the brightest come first, since `glareStars` is brightest first.
+
+- [ ] **Step 1: Write the failing test** (`test/glareSources.test.ts`). The fake GPU runs no shader, so ports of the rules are tested, with source pins on the constants, as `test/meterGuard.test.ts` does. A browser step tests the shader itself.
+  - `discTaps(32)`: all in the unit disc, with a centroid within 0.05 of the origin, and an even spread: half-disc coverage is within 2 taps of 16 at 8 angles;
+  - a port of `tapVisible`: a half-covered disc is 0.5 ± 0.07; two-disc overlap against the analytic eclipse fraction is within 0.05 at 10 separations; every tap off screen is 1; a sun below the horizon from the ground is 0 by the ellipsoid (Review Focus 1);
+  - moving the sun's disc across a limb in 64 steps, no step changes visibility by over 2/32 (no pop);
+  - the walk: with 3,000 bright stars it stops at 256 and keeps the 256 brightest; with four huge sprites it stops at the pixel budget; a star with a shown value below the table's cut isn't a source;
+  - `lightListFor`: no sun with `background: "color"` or `sunDisk` false; zero stars with no field;
+  - glare off: no pass acquires anything, and the buffer isn't written;
+  - the kernel is registered after `adaptation`, and it reads depth;
+  - no new `.fovy` read (5d's coming seam): the tangents come from the sky's uniform.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** `npm run shaders`. Read the Metal of `glareSources`, noting the guard on the star walk.
+- [ ] **Step 4: Run** the test and tsc.
+- [ ] **Step 5: Browser check** (port 5195, group `sources`, reading the buffer back): a box half across the sun gives 0.5 ± 0.07; a real solar eclipse date gives the overlap; the sun's color at elevation 2° against 45° matches the `sunLight` table within 1%; a sun just off screen reads 1; the Earth's limb from orbit goes to 0 smoothly.
+- [ ] **Step 6: Commit** with "render: glare's light list: the sun from its true illuminance, and the bright stars".
+
+### Task 13: The veil
+
+**Files:**
+
+- Create: `src/render/post/veilWeights.ts`, `test/veilWeights.test.ts`
+- Modify: `glare.ts`, `glare.slang`, the `present` pass's source, `View.readHdr`, `spikes/observer.ts`
+
+**Interfaces:**
+
+- Consumes: `FrameGraph.mipView`, Task 12's sun record.
+- Produces (author's calls 32 to 35, 41):
+  - `VEIL_LEVELS = 9`; `veilWeights(pixelAngle: number, levels: number, basePixels: number): Float32Array`: each level's share of the energy, equal per octave of angle from 0.1° to 60°. A level's σ is `basePixels × 2^i` pixels, or that times `pixelAngle` in angle. Octaves finer than level 0's go to level 0, and octaves wider than the top level are lost. Zeros, not NaN, for a `pixelAngle` that isn't positive and finite;
+  - `veilSpread(r: number, weights, basePixels): number`: per pixel², the closed form that the pyramid amounts to for a point, `Σ wᵢ exp(−r² / 2σᵢ²) / (2π σᵢ²)`, the same in `glare.slang`;
+  - `sunVeil(pixelOffset, pixelSolidAngle, light, visibility, share, weights, basePixels, z): [r, g, b]`, pure, with a fade from z 0.15 to 0.05, so the sun behind the camera adds nothing;
+  - **Passes:** `glare.input` writes level 0 of `glare.pyramid` (half size, `rgba16float`, mips): the image, clamped to 10,000, with pixels inside the sun's disc as zero; `glare.down.N`, 4 bilinear taps; `glare.veil`, half size: `share × Σ wᵢ bicubic(level i)` plus `sunVeil`; `glare.composite`, into `glare.image` (full size, `rgba16float`): `min(image, 10000) × (1 − share Σwᵢ) + veil`, with anything not finite replaced by 0;
+  - the `present` pass reads `glare.image` when glare ran, by `get()`, so nothing allocates when it's off; the eye's adaptation map still reads `resolved`;
+  - `View.readHdr(options?: { after?: "glare" })`, for checks; the default stays before glare.
+
+- [ ] **Step 1: Write the failing test** (`test/veilWeights.test.ts`):
+  - **the falloff:** `veilSpread`'s log-log slope is −2 ± 0.15 from 1° to 20° at a 60° view on 1,440 px (halved weights, kept in the test as a control, read −3, so the check can tell them apart);
+  - weights sum to at most 1, and exactly to the octaves covered at a 60° view;
+  - the same star's veil at 1° from it is within 15% between 60° and 20° fields of view, at the same pixel count;
+  - `pixelAngle` 0 or NaN gives zeros (5d's orthographic view and a 0 px canvas);
+  - `sunVeil`: linear in `light` and `visibility`; continuous as the sun moves off screen, with no step over 1% across the edge (Review Focus 1); zero behind the camera; fine at `light` of 150,000 lux, far beyond fp16, since only the result is written;
+  - energy: a port of composite on a flat image gives the image back within 10⁻⁶; on a point in the middle of a 1,024² grid, input plus veil holds the input's total within 2%, less what's outside the view;
+  - fp16: `10000 + 256 × 200 < 65504` as constants, pinned to the shader's; a port of the composite on infinity and NaN gives finite values (Review Focus 3);
+  - the graph: `meter` and `adaptation` come before `glare.input`, and neither reads a glare output; with glare off, no glare texture is acquired, and `present` binds `resolved`; the pyramid's desc has 9 mips at half size, and per-mip views are made once;
+  - the sun's mask: a port tests a pixel inside the disc's cosine as zero, and outside as itself.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** `[ForceUnroll]` on the levels. Read the Metal of the veil and the composite.
+- [ ] **Step 4: Run** the test and tsc.
+- [ ] **Step 5: Browser check** (port 5195, group `veil`, `readHdr({ after: "glare" })`):
+  - a synthetic star: the veil's profile against `veilSpread` is within 10% from 1° to 20°;
+  - the sun at EV100 −12, 5, 15 and 18, and `{ scale: 1 }`: no NaN, no infinity, no pixel below 0; the display's probes are clean (Review Focus 3);
+  - the meter's reading is the same with glare on and off, to 4 decimals (it reads earlier in the tick);
+  - a sun behind a truss, then at the limb, then just off screen: no pop by frame-to-frame differences across a scripted move;
+  - time beside the spike's 2.75 ms; the target is under 1.5 ms on the M2.
+- [ ] **Step 6: Commit** with "render: the veil: equal energy per octave, and the sun in closed form".
+
+### Task 14: Spike sprites from a precomputed kernel
+
+**Files:**
+
+- Create: `src/render/post/glareKernel.ts`, `test/glareKernel.test.ts`
+- Modify: `glare.ts`, `glare.slang`, the worker, `spikes/observer.ts`
+
+**Interfaces:**
+
+- Consumes: Task 12's sources, Task 13's `glare.image`.
+- Produces (author's calls 38, 39, 41):
+  - `type Aperture = "round" | "vanes" | "hex" | "blades7"`;
+  - `computeKernel(aperture: Aperture, size: number): { texels: Float32Array; radii: Float32Array; size: number }`, no GPU: the pupil's |FFT|², resampled per wavelength over a constant 16 wavelengths and summed to RGB, with its core tapered out over a radial window and the rest normalized to 1. `radii` gives the visible radius in cells per log2 of display brightness, 32 entries. FFT here runs once, in a worker, and never in a tick;
+  - the kernel is uploaded as `rgba16float`, with `Sky`-independent ownership in `glare.ts`, one per aperture, on first use; until then spikes draw nothing, and the veil runs. Its arrival asks for one tick (Review Focus 5);
+  - the sprite pass: `pass.draw(4, GLARE_SOURCES)`, blending additively into `glare.image` after the composite. The vertex shader gives a degenerate triangle for a slot past the count; the fragment takes one sample, and clamps at 200; `spikes.share` scales it, default 0.05; `spikes.extent` is the kernel's half-width in degrees, default 3, and a sprite's radius is at most 512 px.
+
+- [ ] **Step 1: Write the failing test** (`test/glareKernel.test.ts`, at `size` 128 so it runs in under a second):
+  - the kernel's total is 1 within 1%, with its core's center at 0 and no radial step over 5% across the taper (the spike saw a bright ring there);
+  - **it's a real aperture:** `vanes` has four-fold symmetry and at least 10 times more energy along its spike axes than between them; `hex` shows 6 spikes; `blades7`, 14; `round`, no spike: under 1.5 times between any two angles at a given radius;
+  - longer wavelengths spread wider: the red channel's radius holding half its energy is larger than the blue's;
+  - `radii` falls monotonically as brightness falls, and a cut below 2 cells gives no sprite;
+  - the sprite pass calls `draw(4, 256)`, and never an indirect draw;
+  - no `fft` name in any shader under `src/`, and nothing in the tick's code path imports `computeKernel` statically (a pin on the live path);
+  - unknown apertures are refused, naming the value.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** Use the spike's finding on pupils (a central obstruction and four thin vanes, turned from the axes). Read the Metal of the sprite's vertex and fragment.
+- [ ] **Step 4: Run** the test and tsc.
+- [ ] **Step 5: Browser check** (port 5195, group `sprites`): a star's spikes against an FFT reference kept in the check page only (not in `src/`), at the same kernel, peak-normalized, within 10% along the spike; 300 bright stars in view keep to 256 sprites and the pixel budget; a star behind the limb has no sprite; time beside the spike's 0.13 ms.
+- [ ] **Step 6: Commit** with "render: spike sprites from a kernel computed once in a worker".
+
+### Task 15: Tiers, settings and many views
+
+**Files:**
+
+- Modify: `glare.ts`, `observer.ts`, `GpuDevice`, `bench/alloc.ts`, `bench/run.mjs`, `Viewer`, `spikes/observer.ts`
+- Test: `test/glareTier.test.ts`
+
+**Interfaces:**
+
+- Consumes: Tasks 12 to 14.
+- Produces (author's call 40):
+  - `GpuDevice.adapterInfo: { vendor: string; architecture: string; isFallbackAdapter: boolean }`, read once from the adapter;
+  - `type GlareTier = "full" | "reduced" | "sources" | "off"`; `glareTier(adapter, pixels: number): GlareTier`, by the table in "GPU safety", pure; `resolveGlare(settings: GlareSettings | null, adapter, pixels): ResolvedGlare`: the levels, base, sprite and pixel caps it means;
+  - `eyeGlare(): GlareSettings`: a veil, no spikes, `tier: "auto"`; `cameraGlare(options?: { aperture?: Aperture }): GlareSettings`: a veil and spikes, default `vanes`;
+  - `Viewer` keeps `glare: null` (question 1).
+
+- [ ] **Step 1: Write the failing test** (`test/glareTier.test.ts`):
+  - the table's cases: a fallback adapter; Intel at 2 and 4 million pixels; another vendor at 3 and 9 million; an explicit `tier` beats `"auto"`;
+  - `resolveGlare` at `reduced` has base 4 and 7 levels, and at `sources` no pyramid: the pass list has no `glare.down`;
+  - **two views:** different settings on one engine stay separate; the same size shares pooled textures (the pool's texture count doesn't double); removing a view frees its source buffer (Review Focus 4);
+  - **on demand:** with glare on, an idle scene goes to sleep within 3 ticks; `view.observer.glare.veil.share = 0.1` wakes it; setting `glare` to null frees the targets to the pool (Review Focus 5);
+  - resizing a canvas during glare rebuilds with no stale bind group; a 0 px canvas has no glare passes (Review Focus 4).
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** `bench/alloc.ts` takes `?glare=1`, and `bench/run.mjs` reads `ALLOC_GLARE=1`.
+- [ ] **Step 4: Run** the test, the Batch's other glare tests and tsc.
+- [ ] **Step 5: Commit** with "render: glare's tiers, its presets, and many views".
+- [ ] **Step 6: Batch D's gates,** with `alloc` both plain and `ALLOC_GLARE=1`. Expect no difference in `parity`, `translucency` or `customShader`, since glare's off there. Then the owner judges by looking (§13.28's test): the sun behind station structure, at the limb from orbit, and low over the sea; bright stars with the veil, then with spikes. A truss across the spikes is a known gap, since a sprite takes one visibility value (§13.22): say so beside the stills. Stills stay out of the repository.
