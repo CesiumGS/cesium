@@ -4,12 +4,16 @@
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
 import {
+  Ellipsoid,
   Engine,
   OffscreenTarget,
   astrophotoCurveStage,
+  cameraObserver,
   createPostStage,
+  fromDegrees,
   eyeLimitStage,
   type Exposure,
+  type GlareSettings,
   type MeshData,
   type PostStage,
   type PostStageOptions,
@@ -29,7 +33,8 @@ import {
   type StarField,
 } from "../src/atmosphere/stars.ts";
 import { moonPosition } from "../src/time/moon.ts";
-import { sunPosition } from "../src/time/sun.ts";
+import { sunDirection, sunPosition } from "../src/time/sun.ts";
+import { Viewer } from "../widgets/Viewer.ts";
 import { eyePointLimit } from "../src/scene/eye.ts";
 import { ev100ToScale, type PointSpread } from "../src/scene/observer.ts";
 
@@ -2396,6 +2401,328 @@ async function spritesGroup(engine: Engine, say: Say): Promise<void> {
   engine.sunDirection.set(saved);
 }
 
+/** Flat-shaded boxes as one mesh, around an origin: axes `u`, `v`, `w`, meters. */
+function trussMesh(
+  u: V3,
+  v: V3,
+  w: V3,
+  boxes: readonly (readonly [number, number, number, number, number, number])[],
+): MeshData {
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const indices: number[] = [];
+  const at = (a: number, b: number, c: number): V3 => [
+    u[0] * a + v[0] * b + w[0] * c,
+    u[1] * a + v[1] * b + w[1] * c,
+    u[2] * a + v[2] * b + w[2] * c,
+  ];
+  for (const [cu, cv, cw, hu, hv, hw] of boxes) {
+    for (const [axis, sign] of [
+      [0, 1],
+      [0, -1],
+      [1, 1],
+      [1, -1],
+      [2, 1],
+      [2, -1],
+    ] as const) {
+      const n: [number, number, number] = [0, 0, 0];
+      n[axis] = sign;
+      const next = (axis + 1) % 3;
+      const last = (axis + 2) % 3;
+      const base = positions.length / 3;
+      for (const [p, q] of [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ] as const) {
+        const c: [number, number, number] = [0, 0, 0];
+        c[axis] = sign;
+        c[next] = p * sign;
+        c[last] = q;
+        positions.push(...at(cu + c[0] * hu, cv + c[1] * hv, cw + c[2] * hw));
+        normals.push(...at(n[0], n[1], n[2]));
+      }
+      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+  }
+  return {
+    positions: Float32Array.from(positions),
+    normals: Float32Array.from(normals),
+    indices: Uint32Array.from(indices),
+  };
+}
+
+/** The stills for Batch D's look: sun and stars, with glare off, a veil, and spikes. */
+async function glareStillsGroup(
+  engine: Engine,
+  say: Say,
+  stills: Record<string, string>,
+): Promise<void> {
+  if (!params.has("glarestills")) {
+    return;
+  }
+  const only = params.get("glarestills")!;
+  const wanted = (name: string) => only === "" || only.includes(name);
+  const variants = {
+    off: null,
+    veil: { tier: "full", veil: { share: 0.2 }, spikes: null },
+    spikes: {
+      tier: "full",
+      veil: { share: 0.2 },
+      spikes: { aperture: "vanes", share: 0.05, extent: 3 },
+    },
+  } as const;
+  const glareOf = (name: keyof typeof variants): GlareSettings | null => {
+    const v = variants[name];
+    return v
+      ? {
+          tier: v.tier,
+          veil: v.veil && { ...v.veil },
+          spikes: v.spikes && { ...v.spikes },
+        }
+      : null;
+  };
+  const saved = Float64Array.from(engine.sunDirection);
+  if (wanted("stars")) {
+    await skyStars(engine);
+    for (const name of ["orion", "core"]) {
+      for (const who of ["camera", "eye"] as const) {
+        const pose = SKY_POSES[name]!;
+        const exposure: Exposure =
+          who === "eye" ? { eye: true, speed: 1e6 } : { ev100: pose.ev100 };
+        for (const variant of Object.keys(
+          variants,
+        ) as (keyof typeof variants)[]) {
+          if (who === "eye" && variant === "spikes") {
+            continue;
+          }
+          const scene = new SkyScene(engine, 1280, 720, exposure);
+          scene.aim(pose);
+          if (who === "eye") {
+            scene.view.observer = { stages: [eyeLimitStage()] };
+          }
+          scene.view.observer.glare = glareOf(variant);
+          if (variant === "spikes") {
+            await spritesReady(engine, scene.view);
+          } else if (variant === "veil") {
+            await veilReady(engine, scene.view);
+          }
+          await ticks(engine, 40);
+          let drew = 1;
+          if (variant !== "off") {
+            drew = (await readSources(engine, scene.view))[0]!;
+          }
+          engine.renderFrame();
+          await engine.gpu.device.queue.onSubmittedWorkDone();
+          stills[`${name}-${who}-${variant}`] = await still(
+            await scene.target.read(),
+            1280,
+            720,
+          );
+          say(`${name}, ${who}, ${variant}`, true, `records ${drew}`);
+          scene.dispose();
+          engine.removeView(scene.view);
+        }
+      }
+    }
+    engine.raster.sky.setStarField(null);
+  }
+  if (wanted("sun")) {
+    await skyStars(engine);
+    const host = document.createElement("div");
+    host.style.cssText =
+      "position:fixed;left:0;top:0;width:1280px;height:720px";
+    document.body.append(host);
+    const token = (import.meta as unknown as { env: Record<string, string> })
+      .env.VITE_ION_TOKEN;
+    const viewer = await Viewer.create(host, {
+      engine,
+      globe: "terrain",
+      ...(token ? { accessToken: token } : {}),
+      observer: cameraObserver({ ev100: 14 }),
+      credits: false,
+      timeControls: false,
+    });
+    const { view } = viewer;
+    const canvas = host.querySelector("canvas")!;
+    const shot = async (name: string) => {
+      await ticks(engine, 6);
+      engine.renderFrame();
+      stills[name] = canvas.toDataURL("image/png");
+      await engine.gpu.device.queue.onSubmittedWorkDone();
+    };
+    const wait = async (seconds: number) => {
+      const until = performance.now() + seconds * 1000;
+      while (performance.now() < until) {
+        await ticks(engine, 1);
+      }
+    };
+    const aim = (position: V3, direction: V3, up: V3, fov: number) => {
+      const { camera } = view;
+      camera.position.set(position);
+      camera.direction.set(direction);
+      camera.fov = fov * DEG;
+      camera.orient(Float64Array.from(up));
+      camera.version++;
+    };
+    const set = async (exposure: Exposure, variant: keyof typeof variants) => {
+      view.observer.exposure = exposure;
+      view.observer.glare = glareOf(variant);
+      if (variant === "spikes") {
+        await spritesReady(engine, view);
+      } else if (variant === "veil") {
+        await veilReady(engine, view);
+      }
+    };
+    const sunAt = (ms: number): V3 => {
+      const d = sunDirection(ms, new Float64Array(3));
+      return [d[0]!, d[1]!, d[2]!];
+    };
+    // The sun low over the Alps, from 4,000 m: a summer evening, at 4° and 1.5° up.
+    const place = fromDegrees(7.75, 46.0, 4000);
+    const position = Ellipsoid.WGS84.cartographicToCartesian(
+      place,
+      new Float64Array(3),
+    );
+    const here: V3 = [position[0]!, position[1]!, position[2]!];
+    const zenith = sky3.norm(here);
+    const when = (elevation: number) => {
+      let ms = Date.UTC(2024, 5, 21, 17, 0, 0);
+      while (
+        Math.asin(sky3.dot(sunAt(ms), zenith)) / DEG > elevation &&
+        ms < Date.UTC(2024, 5, 21, 21, 0, 0)
+      ) {
+        ms += 15_000;
+      }
+      return ms;
+    };
+    for (const elevation of [4, 1.5]) {
+      if (!wanted(`terrain${elevation}`) && !wanted("terrain")) {
+        continue;
+      }
+      const ms = when(elevation);
+      viewer.clock.time = ms;
+      const sun = sunAt(ms);
+      const flat = sky3.norm(sky3.add(sun, zenith, -sky3.dot(sun, zenith)));
+      const direction = sky3.norm(sky3.add(flat, zenith, Math.tan(-1 * DEG)));
+      aim(here, direction, zenith, 60);
+      await set({ ev100: 13 }, "off");
+      await wait(elevation === 4 ? 25 : 10);
+      for (const variant of Object.keys(
+        variants,
+      ) as (keyof typeof variants)[]) {
+        await set({ ev100: 13 }, variant);
+        await shot(`terrain${elevation}-camera-${variant}`);
+      }
+      view.observer.toneMapping = "agx";
+      await set({ ev100: 13 }, "veil");
+      await shot(`terrain${elevation}-camera-veil-agx`);
+      view.observer.toneMapping = "pbrNeutral";
+      await set({ eye: true, speed: 1e6 }, "off");
+      await ticks(engine, 30);
+      await shot(`terrain${elevation}-eye-off`);
+      await set({ eye: true, speed: 1e6 }, "veil");
+      await ticks(engine, 30);
+      await shot(`terrain${elevation}-eye-veil`);
+      say(`terrain, the sun at ${elevation}°`, true, "");
+    }
+    // At the limb from orbit, 400 km up: above it, half behind it, then behind it.
+    const ms = Date.UTC(2024, 5, 21, 12, 0, 0);
+    viewer.clock.time = ms;
+    const sun = sunAt(ms);
+    const across = sky3.norm(sky3.cross(sun, [0, 0, 1]));
+    const altitude = 400_000;
+    const dip = Math.acos(RADIUS / (RADIUS + altitude));
+    const orbit = (above: number): { at: V3; up: V3 } => {
+      const e = -dip + above * DEG;
+      const n = sky3.add(sky3.scale(sun, Math.sin(e)), across, Math.cos(e));
+      return {
+        at: sky3.scale(sky3.norm(n), RADIUS + altitude),
+        up: sky3.norm(n),
+      };
+    };
+    if (wanted("limb")) {
+      const a = orbit(0.6);
+      aim(a.at, sky3.norm(sky3.add(sun, a.up, Math.tan(-12 * DEG))), a.up, 70);
+      await set({ ev100: 13 }, "off");
+      await wait(20);
+      for (const [name, above] of [
+        ["above", 0.6],
+        ["half", 0.0],
+        ["behind", -0.6],
+      ] as const) {
+        const { at, up } = orbit(above);
+        aim(at, sky3.norm(sky3.add(sun, up, Math.tan(-12 * DEG))), up, 70);
+        for (const variant of Object.keys(
+          variants,
+        ) as (keyof typeof variants)[]) {
+          await set({ ev100: 13 }, variant);
+          await wait(1);
+          await shot(`limb-${name}-${variant}`);
+        }
+      }
+      say("the limb from orbit", true, "");
+    }
+    // Behind a truss, 20 m away, the Earth below.
+    if (wanted("truss")) {
+      const { at, up } = orbit(8);
+      const direction = sun;
+      const right = sky3.norm(sky3.cross(direction, up));
+      const upward = sky3.cross(right, direction);
+      const beams: [number, number, number, number, number, number][] = [
+        // Uprights, each a beam's half-width of 0.4 m.
+        [-6, 0, 0, 0.4, 12, 0.4],
+        [0, 0, 0, 0.4, 12, 0.4],
+        [6, 0, 0, 0.4, 12, 0.4],
+        // Rails.
+        [0, 6, 0, 12, 0.4, 0.4],
+        [0, -6, 0, 12, 0.4, 0.4],
+      ];
+      const origin = sky3.add(at, direction, 20);
+      const world = viewer.world;
+      const mesh = world.addMesh(trussMesh(right, upward, direction, beams));
+      const place3 = (shift: number) =>
+        world.addDraw({
+          mesh,
+          origin: Float64Array.from(sky3.add(origin, right, shift)),
+          color: [0.55, 0.55, 0.58, 1],
+          doubleSided: true,
+        });
+      aim(at, direction, upward, 70);
+      await set({ ev100: 13 }, "off");
+      await wait(15);
+      const list: { dispose?: () => void; remove?: () => void }[] = [];
+      for (const [name, shift] of [
+        ["clear", 3],
+        ["half", 0.4],
+        ["behind", 0],
+      ] as const) {
+        const draw = place3(shift) as unknown as {
+          dispose?: () => void;
+          remove?: () => void;
+        };
+        list.push(draw);
+        for (const variant of Object.keys(
+          variants,
+        ) as (keyof typeof variants)[]) {
+          await set({ ev100: 13 }, variant);
+          await shot(`truss-${name}-${variant}`);
+          if (variant !== "off") {
+            const seen = sunRecord(await readSources(engine, view)).visibility;
+            say(`the truss, ${name}, ${variant}`, true, `visibility ${seen}`);
+          }
+        }
+        world.removeDraw(draw as never);
+      }
+    }
+    viewer.destroy();
+    host.remove();
+    engine.raster.sky.setStarField(null);
+  }
+  engine.sunDirection.set(saved);
+}
+
 const GROUPS: Record<
   string,
   (engine: Engine, say: Say, stills: Record<string, string>) => Promise<void>
@@ -2412,6 +2739,7 @@ const GROUPS: Record<
   sources: sourcesGroup,
   veil: veilGroup,
   sprites: spritesGroup,
+  glarestills: glareStillsGroup,
 };
 
 let root: HTMLElement;

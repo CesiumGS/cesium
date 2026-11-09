@@ -297,7 +297,8 @@ export class View {
   /**
    * @internal Counts changes to what's in the view's chain, each of which
    * rebuilds its graph: the list of stages, and glare's shape: on or off, its tier,
-   * whether it has a veil and spikes. A value within them, a share, doesn't.
+   * whether it has a veil and spikes, and whether it's on the eye. A value within them,
+   * a share, doesn't.
    */
   stagesRevision = 0;
 
@@ -343,9 +344,9 @@ export class View {
   private syncStages(): void {
     const stages = this.state.observer.stages;
     const old = this.stages_;
-    const { glare } = this.state.observer;
+    const { glare, exposure } = this.state.observer;
     const shape = glare
-      ? `${glare.tier}|${glare.veil ? 1 : 0}|${glare.spikes ? 1 : 0}`
+      ? `${glare.tier}|${glare.veil ? 1 : 0}|${glare.spikes ? 1 : 0}|${"eye" in exposure ? 1 : 0}`
       : "";
     if (shape !== this.glareShape_) {
       this.glareShape_ = shape;

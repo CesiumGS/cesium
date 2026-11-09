@@ -277,6 +277,26 @@ describe("the veil in a view's graph", () => {
     }
   });
 
+  it("with the eye, its local adaptation takes the veil, and its meter doesn't", () => {
+    const view = addView(veil);
+    view.observer.exposure = { eye: true };
+    engine.renderFrame();
+    const list = graphOf(view).compile();
+    expect(list.indexOf("meter")).toBeLessThan(
+      list.indexOf("post.glare.input"),
+    );
+    expect(list.indexOf("adaptation")).toBeGreaterThan(
+      list.indexOf("post.glare.composite"),
+    );
+    expect(list.indexOf("adaptation")).toBeLessThan(list.indexOf("present"));
+    view.observer.exposure = { ev100: 15 };
+    engine.renderFrame();
+    const camera = graphOf(view).compile();
+    expect(camera.indexOf("adaptation")).toBeLessThan(
+      camera.indexOf("post.glare.input"),
+    );
+  });
+
   it("acquires nothing with glare off, and present binds the image", () => {
     const acquire = vi.spyOn(engine.raster.pool, "acquire");
     const view = addView(null);

@@ -335,7 +335,8 @@ export function adaptationPass(
     adaptation,
     adaptSize,
   }: {
-    resolved: TextureHandle;
+    /** What it reads: the image, or a slot's latest this tick. */
+    resolved: TextureHandle | ChainSlot;
     adaptReduced: TextureHandle;
     adaptation: TextureHandle;
     adaptSize: { width: number; height: number; depth: number };
@@ -353,7 +354,12 @@ export function adaptationPass(
     const reduce = device.createBindGroup({
       layout: pipelines.adaptReduce.getBindGroupLayout(0),
       entries: [
-        { binding: 0, resource: get(resolved) },
+        {
+          binding: 0,
+          resource: get(
+            resolved instanceof ChainSlot ? resolved.latest() : resolved,
+          ),
+        },
         { binding: 1, resource: { buffer: frame.adaptParams } },
         { binding: 2, resource: get(adaptReduced) },
       ],

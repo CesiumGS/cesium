@@ -1,6 +1,6 @@
 // A view's render graph: its targets and its passes, in the order they run.
 // Pass order is registration order: FrameGraph has no sort.
-import { FrameGraph } from "../FrameGraph.ts";
+import { FrameGraph, type TextureHandle } from "../FrameGraph.ts";
 import { VIEW_SIZE } from "../layout.ts";
 import { type ViewFrame, destroyViewFrame } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
@@ -541,19 +541,31 @@ function buildViewFrame(
   };
   const adaptReduced = graph.createTexture("adapt.reduced", adaptSize);
   const adaptation = graph.createTexture("adapt.map", adaptSize);
-  graph.addPass(
-    "adaptation",
-    { reads: [resolved], writes: [adaptReduced, adaptation] },
-    adaptationPass(engine, view, frame, {
-      resolved,
-      adaptReduced,
-      adaptation,
-      adaptSize,
-    }),
-  );
+  const addAdaptation = (source: TextureHandle | ChainSlot) =>
+    graph.addPass(
+      "adaptation",
+      {
+        reads: source instanceof ChainSlot ? source.handles : [source],
+        writes: [adaptReduced, adaptation],
+      },
+      adaptationPass(engine, view, frame, {
+        resolved: source,
+        adaptReduced,
+        adaptation,
+        adaptSize,
+      }),
+    );
+  // The eye adapts to the light that reaches it: with glare, the veil's too. Its grid is
+  // read at each pixel's own brightness, so without that the veil's levels are empty,
+  // and draw rings. The view's overall adaptation stays the meter's, before glare.
+  const eyeOnGlare = !!glare && "eye" in view.observer.exposure;
+  if (!eyeOnGlare) {
+    addAdaptation(resolved);
+  }
 
-  // The chain, after the meter and the adaptation, so neither sees a stage's
-  // result; the HDR readback has read the image by now too (§13.22).
+  // The chain, after the meter and (but for the eye under glare) the adaptation, so
+  // neither sees a stage's result; the HDR readback has read the image by now too
+  // (§13.22).
   const chainView: ChainView = {
     width,
     height,
@@ -566,6 +578,9 @@ function buildViewFrame(
   const { scene, exposed, display: shown } = chain.slots;
   registerPerView(graph, chain, entries, chainView);
   registerSlot(engine, graph, chain, scene!, stages.scene, chainView);
+  if (eyeOnGlare) {
+    addAdaptation(scene!);
+  }
   if (glare) {
     graph.addPass(
       "hdr-readback.glare",
