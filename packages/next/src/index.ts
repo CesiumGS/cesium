@@ -84,7 +84,7 @@ export {
   type PickResult,
 } from "./scene/View.ts";
 export {
-  type Aperture,
+  type GlarePupil,
   type Exposure,
   type GlareSettings,
   type GlareTier,
@@ -105,16 +105,11 @@ export {
   PostStageError,
   createPostStage,
   type PostStageOptions,
-  type StageKind,
-  type StageRead,
-  type StageSlot,
+  type PostStageKind,
+  type PostStageRead,
+  type PostStageSlot,
 } from "./scene/postStage.ts";
-export { astroCurve, astrophotoCurveStage } from "./render/post/astroCurve.ts";
-export {
-  POST_STAGE_BOUNDARY,
-  type Boundary,
-  type FunctionSignature,
-} from "./shaders/link/boundary.ts";
+export { astrophotoCurveStage } from "./render/post/astroCurve.ts";
 export { wgslUnit, type ShaderUnit } from "./shaders/link/unit.ts";
 export {
   CanvasTarget,

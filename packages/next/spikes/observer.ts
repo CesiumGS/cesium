@@ -6,7 +6,6 @@ import type { Harness } from "../lab/harness.ts";
 import {
   Engine,
   OffscreenTarget,
-  astroCurve,
   astrophotoCurveStage,
   createPostStage,
   type Exposure,
@@ -16,6 +15,7 @@ import {
   type View,
   type World,
 } from "../src/index.ts";
+import { astroCurve } from "../src/render/post/astroCurve.ts";
 
 const TEMPLATE = `
 <h1>The observer's chain</h1>

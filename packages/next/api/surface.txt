@@ -4,13 +4,11 @@ entry	name	kind	tier
 .	AerosolType	type	-
 .	AffinePlacement	interface	-
 .	AnchorHandle	interface	-
-.	Aperture	type	-
 .	Attribution	interface	-
 .	BASE_BINDING_LIMITS	const	-
 .	BASE_CAPACITY_LIMITS	const	-
 .	BingImagery	class	-
 .	Body	interface	-
-.	Boundary	interface	-
 .	BudgetedOptions	interface	-
 .	BudgetedSelection	class	-
 .	CESIUM_MOON_TERRAIN	const	-
@@ -61,7 +59,7 @@ entry	name	kind	tier
 .	FrameResolver	interface	-
 .	FrameStats	interface	-
 .	FrameUnavailableError	class	-
-.	FunctionSignature	interface	-
+.	GlarePupil	type	-
 .	GlareSettings	interface	-
 .	GlareTier	type	-
 .	Globe	class	-
@@ -116,7 +114,6 @@ entry	name	kind	tier
 .	OutputEncoding	type	-
 .	PLACEMENT_MONOMIALS	const	-
 .	PLACEMENT_TERMS	const	-
-.	POST_STAGE_BOUNDARY	const	-
 .	PickCamera	interface	-
 .	PickInterpreter	interface	-
 .	PickResult	interface	-
@@ -132,7 +129,10 @@ entry	name	kind	tier
 .	PointSpread	interface	-
 .	PostStage	class	-
 .	PostStageError	class	-
+.	PostStageKind	type	-
 .	PostStageOptions	interface	-
+.	PostStageRead	type	-
+.	PostStageSlot	type	-
 .	PurposeStats	interface	-
 .	QueryAnswer	interface	-
 .	QueryHost	interface	-
@@ -163,9 +163,6 @@ entry	name	kind	tier
 .	SliceUser	interface	-
 .	SpatialQueries	interface	-
 .	Stage	type	-
-.	StageKind	type	-
-.	StageRead	type	-
-.	StageSlot	type	-
 .	StageStats	interface	-
 .	StandingQuery	interface	-
 .	StepwiseSelection	class	-
@@ -225,7 +222,6 @@ entry	name	kind	tier
 .	Viewport	interface	-
 .	World	class	-
 .	WorldMemory	interface	-
-.	astroCurve	function	-
 .	astrophotoCurveStage	function	-
 .	cameraObserver	function	-
 .	cartographic	function	-

@@ -28,24 +28,24 @@ import {
  *   before tone mapping. White is 1.
  * - "display": tone mapped and encoded, unlit color included, 0 to 1.
  */
-export type StageSlot = "scene" | "exposed" | "display";
+export type PostStageSlot = "scene" | "exposed" | "display";
 
 /**
  * What a stage claims to be, shown wherever it's shown, so a look can't pass
  * for physics: "physics" follows from the light, "model" from a stated model of
  * the observer, and "look" is taste.
  */
-export type StageKind = "physics" | "model" | "look";
+export type PostStageKind = "physics" | "model" | "look";
 
 /**
  * What a stage reads besides the image: "depth" for `postDepthAt`, "ids" for
  * `postIdAt`.
  */
-export type StageRead = "depth" | "ids";
+export type PostStageRead = "depth" | "ids";
 
-const SLOTS: readonly StageSlot[] = ["scene", "exposed", "display"];
-const KINDS: readonly StageKind[] = ["physics", "model", "look"];
-const READS: Readonly<Record<StageRead, string>> = {
+const SLOTS: readonly PostStageSlot[] = ["scene", "exposed", "display"];
+const KINDS: readonly PostStageKind[] = ["physics", "model", "look"];
+const READS: Readonly<Record<PostStageRead, string>> = {
   depth: "postDepthAt",
   ids: "postIdAt",
 };
@@ -67,8 +67,8 @@ export class PostStageError extends Error {
 export interface PostStageOptions {
   /** Unique within a view's list. */
   name: string;
-  slot: StageSlot;
-  kind: StageKind;
+  slot: PostStageSlot;
+  kind: PostStageKind;
   /** What to call it in a readout: "Astrophoto curve (a look)". */
   label: string;
   /**
@@ -79,7 +79,7 @@ export interface PostStageOptions {
    *   `size` (`vec2<f32>`, pixels), `preExposure`, `pixelAngle` (radians per
    *   pixel at the view's center);
    * - `postColor(uv)`, `postColorAt(pixel)`: the image so far, its slot says in
-   *   what terms (`StageSlot`);
+   *   what terms (`PostStageSlot`);
    * - `postDepthAt(pixel)`: reverse-Z depth, 0 where nothing was drawn, with
    *   `reads: ["depth"]`;
    * - `postIdAt(pixel)`: the feature ID, with `reads: ["ids"]`;
@@ -88,7 +88,7 @@ export interface PostStageOptions {
    * A result that isn't finite shows as 0 at that pixel.
    */
   shader: string | ShaderUnit;
-  reads?: readonly StageRead[];
+  reads?: readonly PostStageRead[];
   /** Values it reads as `uniforms.<name>`, set with `setUniform`. */
   uniforms?: Record<string, UniformDeclaration>;
   /**
@@ -105,12 +105,12 @@ export interface PostStageOptions {
  */
 export class PostStage {
   readonly name: string;
-  readonly slot: StageSlot;
-  readonly kind: StageKind;
+  readonly slot: PostStageSlot;
+  readonly kind: PostStageKind;
   readonly label: string;
   /** How far it lifts what's faint (`PostStageOptions.shadowGain`). */
   readonly shadowGain: number;
-  readonly reads: readonly StageRead[];
+  readonly reads: readonly PostStageRead[];
   /**
    * Why it isn't drawn, if the GPU's compiler refused its shader: each message
    * at its unit and line.
@@ -180,7 +180,7 @@ export class PostStage {
     for (const [read, used] of Object.entries(READS)) {
       if (
         new RegExp(`\\b${used}\\b`).test(code) &&
-        !reads.includes(read as StageRead)
+        !reads.includes(read as PostStageRead)
       ) {
         throw refuse(
           "reads",

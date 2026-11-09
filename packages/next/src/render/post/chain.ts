@@ -7,13 +7,13 @@ import { compileFailure } from "../../shaders/link/index.ts";
 import {
   PostStage,
   PostStageError,
-  type StageKind,
-  type StageSlot,
+  type PostStageKind,
+  type PostStageSlot,
 } from "../../scene/postStage.ts";
 import type { ObserverSettings } from "../../scene/observer.ts";
 
 /** A slot's targets are fp16 for light, 8 bits once encoded. */
-const SLOT_FORMAT: Readonly<Record<StageSlot, GPUTextureFormat>> = {
+const SLOT_FORMAT: Readonly<Record<PostStageSlot, GPUTextureFormat>> = {
   scene: "rgba16float",
   exposed: "rgba16float",
   display: "rgba8unorm",
@@ -39,8 +39,8 @@ export interface ChainIo {
 /** A built-in stage of several passes, registered in the same place. */
 export interface GraphStage {
   readonly name: string;
-  readonly slot: StageSlot;
-  readonly kind: StageKind;
+  readonly slot: PostStageSlot;
+  readonly kind: PostStageKind;
   readonly label: string;
   enabled: boolean;
   register(graph: FrameGraph, io: ChainIo): void;
@@ -49,7 +49,7 @@ export interface GraphStage {
 export type ChainEntry = PostStage | GraphStage;
 
 /** The slots' order: stable by list position. */
-export function chainOrder<T extends { readonly slot: StageSlot }>(
+export function chainOrder<T extends { readonly slot: PostStageSlot }>(
   stages: readonly T[],
 ): { scene: T[]; exposed: T[]; display: T[] } {
   return {
@@ -280,7 +280,7 @@ export class ChainSlot {
  * no buffer, no target.
  */
 export class ViewChain {
-  readonly slots: Readonly<Record<StageSlot, ChainSlot | undefined>>;
+  readonly slots: Readonly<Record<PostStageSlot, ChainSlot | undefined>>;
   /** Filled by `registerStage`, freed with the view's graph. */
   private readonly buffers: GPUBuffer[] = [];
   /** `PostInput`'s values as last written. */
@@ -292,7 +292,7 @@ export class ViewChain {
   responseGroup: GPUBindGroup | undefined;
   responseInputs: readonly GPUTextureView[] = [];
 
-  constructor(slots: Partial<Record<StageSlot, ChainSlot>> = {}) {
+  constructor(slots: Partial<Record<PostStageSlot, ChainSlot>> = {}) {
     this.slots = {
       scene: slots.scene,
       exposed: slots.exposed,
@@ -387,7 +387,7 @@ function linearSampler(device: GPUDevice): GPUSampler {
 function stageTarget(
   graph: FrameGraph,
   name: string,
-  slot: StageSlot,
+  slot: PostStageSlot,
   view: ChainView,
 ): TextureHandle {
   return graph.createTexture(`post.${name}`, {

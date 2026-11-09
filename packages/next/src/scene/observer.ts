@@ -92,7 +92,7 @@ export interface PointSpread {
 export type GlareTier = "full" | "reduced" | "sources" | "off";
 
 /** The pupil behind a lens's diffraction spikes. */
-export type Aperture = "round" | "vanes" | "hex" | "blades7";
+export type GlarePupil = "round" | "vanes" | "hex" | "blades7";
 
 /** Light scattered in the eye or the lens: a veil, and a lens's spikes. */
 export interface GlareSettings {
@@ -100,7 +100,7 @@ export interface GlareSettings {
   /** The veil, and the share of a pixel's light it spreads; null for none. */
   veil: { share: number } | null;
   /** Spikes: their pupil, their share of the light, and how far they reach, degrees. */
-  spikes: { aperture: Aperture; share: number; extent: number } | null;
+  spikes: { aperture: GlarePupil; share: number; extent: number } | null;
 }
 
 /**
