@@ -730,23 +730,28 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     "Metered ",
     meter,
   );
+  // `flip`: a higher EV100 is a darker image, so its slider runs backwards,
+  // to keep right as brighter on both.
   const range = (
     label: string,
     key: "compensation" | "ev100",
     min: number,
     max: number,
     host: HTMLElement,
+    { flip = false, title = "" } = {},
   ) => {
+    const sign = flip ? -1 : 1;
     const shown = el("output", {}, looks[key].toFixed(1));
     const input = el("input", {
       type: "range",
-      min: String(min),
-      max: String(max),
+      min: String(flip ? -max : min),
+      max: String(flip ? -min : max),
       step: "0.1",
-      value: String(looks[key]),
+      value: String(sign * looks[key]),
       ariaLabel: label,
+      title,
       oninput: () => {
-        looks[key] = Number(input.value);
+        looks[key] = sign * Number(input.value);
         shown.textContent = looks[key].toFixed(1);
         write(key, String(looks[key]));
         applyLooks();
@@ -757,7 +762,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       el("span", { className: "slang-row" }, input, shown),
     );
     return (value: number) => {
-      input.value = String(value);
+      input.value = String(sign * value);
       shown.textContent = value.toFixed(1);
     };
   };
@@ -767,8 +772,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     -3,
     3,
     compensationRow,
+    { title: "Right is brighter" },
   );
-  const setEv100 = range("Fixed EV100", "ev100", -12, 18, ev100Row);
+  const setEv100 = range("Fixed exposure (EV100)", "ev100", -12, 18, ev100Row, {
+    flip: true,
+    title:
+      "Right is brighter. A higher EV100 expects a brighter scene, so it lets in less light.",
+  });
   const toneSelect = select(
     TONE_MAPPINGS.map(([k]) => k),
     looks.toneMapping,
