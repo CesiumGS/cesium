@@ -47,9 +47,9 @@ function probeOf(engine: Engine, view: View): EnvironmentProbe {
   }
   if (!view.body.atmosphere) {
     // Never built: textures and buffers start as zeros.
-    return (engine.darkProbe ??= environment.createProbe("env.dark"));
+    return (engine.raster.darkProbe ??= environment.createProbe("env.dark"));
   }
-  return engine.probes.get(view)!.probe;
+  return engine.raster.probes.get(view)!.probe;
 }
 
 /**
@@ -68,7 +68,7 @@ export function updateEnvironment(engine: Engine, view: View): void {
   if (view.lighting.environment !== "atmosphere" || !view.body.atmosphere) {
     return;
   }
-  let entry = engine.probes.get(view);
+  let entry = engine.raster.probes.get(view);
   if (!entry) {
     entry = {
       probe: engine.ctx.environment.createProbe("env.view"),
@@ -76,7 +76,7 @@ export function updateEnvironment(engine: Engine, view: View): void {
       exposure: Number.NaN,
       pending: false,
     };
-    engine.probes.set(view, entry);
+    engine.raster.probes.set(view, entry);
   }
   const ellipsoid = view.body.ellipsoid;
   const position = engine.bodyCamera(view).position;
@@ -93,11 +93,14 @@ export function updateEnvironment(engine: Engine, view: View): void {
   const turned = Math.hypot(east - k[0]!, up - k[1]!, south - k[2]!);
   const climbed = Math.abs(Math.log(altitude / k[3]!));
   // The Moon by night (the air's share is 0 by day), and the exposure.
-  const moon = engine.viewBlock.moonAir > 0 ? engine.viewBlock.moon : undefined;
+  const moon =
+    engine.raster.viewBlock.moonAir > 0
+      ? engine.raster.viewBlock.moon
+      : undefined;
   const moonEast = moon ? v3.dot(frame[0], moon.direction) : 0;
   const moonUp = moon ? v3.dot(frame[1], moon.direction) : 0;
   const moonSouth = moon ? v3.dot(frame[2], moon.direction) : 0;
-  const moonLight = engine.viewBlock.moonAir;
+  const moonLight = engine.raster.viewBlock.moonAir;
   const moonTurned = Math.hypot(
     moonEast - k[4]!,
     moonUp - k[5]!,
@@ -109,7 +112,7 @@ export function updateEnvironment(engine: Engine, view: View): void {
       : !(Math.abs(Math.log(moonLight / k[7]!)) <= 0.1);
   const stops = Math.abs(Math.log2(view.exposureScale / entry.exposure));
   // The city's light (its glow, its ground) by 10%.
-  const city = engine.viewCityLight;
+  const city = engine.raster.viewCityLight;
   const cityChanged =
     city === 0 ? k[8] !== 0 : !(Math.abs(Math.log(city / k[8]!)) <= 0.1);
   // NaN (never built) compares false: rebuild.
@@ -147,12 +150,12 @@ export function encodeEnvironment(
   view: View,
   frame: ViewFrame,
 ): void {
-  const entry = engine.probes.get(view);
+  const entry = engine.raster.probes.get(view);
   if (entry?.pending) {
     entry.pending = false;
     const position = engine.bodyCamera(view).position;
     const ellipsoid = view.body.ellipsoid;
-    engine.sky.encodeEnvironment(
+    engine.raster.sky.encodeEnvironment(
       encoder,
       frame.sky,
       entry.probe.skyCube,

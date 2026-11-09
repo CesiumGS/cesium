@@ -457,7 +457,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
 
 /** Builds waiting external tilesets' trees within the frame's budget. */
 function buildExternals(tileset: Tileset3D): void {
-  const budget = tileset.engine.uploadBudget;
+  const budget = tileset.engine.scene.uploadBudget;
   while (tileset.externals.length > 0) {
     if (budget.trees > 0 && budget.ms <= 0) {
       break;

@@ -89,10 +89,10 @@ function selectionFor(
   world: World,
   anchor: AnchorHandle,
 ): SelectionView[] {
-  let byAnchor = engine.selections.get(world);
+  let byAnchor = engine.scene.selections.get(world);
   if (!byAnchor) {
     byAnchor = new Map();
-    engine.selections.set(world, byAnchor);
+    engine.scene.selections.set(world, byAnchor);
   }
   let views = byAnchor.get(anchor);
   if (!views) {
@@ -162,7 +162,7 @@ function selectionViews(
         m4.invertAffine(scratchSelectionInverse, view.anchorPlacement(anchor)),
         view.anchorPlacement(body, scratchSelectionBody),
       );
-      ahead = transformCamera(m, ahead, engine.selectionAhead);
+      ahead = transformCamera(m, ahead, engine.scene.selectionAhead);
       motion = {
         velocity: rotateVector(m, motion.velocity, v3.vec3()),
         angular: rotateVector(m, motion.angular, v3.vec3()),
@@ -171,7 +171,7 @@ function selectionViews(
     const pixelRatio =
       view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
     out.push({
-      id: engine.viewIds.get(view)!,
+      id: engine.scene.viewIds.get(view)!,
       position: p,
       direction: d,
       cartographic: Ellipsoid.WGS84.cartesianToCartographic(p, {
@@ -231,16 +231,16 @@ function selectionCasters(
     body.position,
     scratchCartographic,
   )?.height;
-  const frame = engine.viewFrames.get(view);
+  const frame = engine.raster.viewFrames.get(view);
   fitShadowCascades(
-    engine.selectionCascades,
+    engine.scene.selectionCascades,
     camera,
     aspect,
     direction,
     Math.max(height ?? 0, 2),
     frame?.cascadeRange,
   );
-  return casterPlanes(engine.selectionCascades, camera.position);
+  return casterPlanes(engine.scene.selectionCascades, camera.position);
 }
 
 /**
@@ -253,7 +253,7 @@ function motionOf(
   engine: Engine,
   view: View,
 ): { velocity: Vec3; angular: Vec3 } | undefined {
-  const motion = engine.viewMotion.get(view);
+  const motion = engine.scene.viewMotion.get(view);
   return motion
     ? {
         velocity: motion.velocity.position,
@@ -273,7 +273,7 @@ function cameraAhead(
 ): Camera | undefined {
   const camera = engine.bodyCamera(view);
   const now = performance.now();
-  let motion = engine.viewMotion.get(view);
+  let motion = engine.scene.viewMotion.get(view);
   if (!motion) {
     motion = {
       at: now,
@@ -284,7 +284,7 @@ function cameraAhead(
       speeds: [0, 0],
       steady: false,
     };
-    engine.viewMotion.set(view, motion);
+    engine.scene.viewMotion.set(view, motion);
   }
   const dt = (now - motion.at) / 1000;
   if (dt >= 0.004) {
@@ -312,7 +312,7 @@ function cameraAhead(
   if (!motion.steady || motion.speeds.every((s) => s === 0)) {
     return undefined;
   }
-  const ahead = engine.aheadCamera.copyFrom(camera);
+  const ahead = engine.scene.aheadCamera.copyFrom(camera);
   const v = motion.velocity;
   for (let i = 0; i < 3; i++) {
     ahead.position[i] = camera.position[i]! + v.position[i]! * seconds;
@@ -334,22 +334,22 @@ export function updateTilesets(
 ): void {
   adaptUploadBudget(engine, performance.now());
   // Budgets are per 60 Hz frame; a faster loop gets its share by time.
-  const share = Math.min(1, engine.lastUpdateInterval / (1000 / 60));
-  engine.uploadBudget.bytes = engine.uploadBytesPerFrame * share;
-  engine.uploadBudget.uploads = 0;
-  engine.uploadBudget.ms = engine.treeBuildMsPerFrame * share;
-  engine.uploadBudget.trees = 0;
+  const share = Math.min(1, engine.scene.lastUpdateInterval / (1000 / 60));
+  engine.scene.uploadBudget.bytes = engine.uploadBytesPerFrame * share;
+  engine.scene.uploadBudget.uploads = 0;
+  engine.scene.uploadBudget.ms = engine.treeBuildMsPerFrame * share;
+  engine.scene.uploadBudget.trees = 0;
   const n = engine.tilesets.length;
-  const start = n > 0 ? engine.tilesetRotation++ % n : 0;
-  engine.selections.clear();
+  const start = n > 0 ? engine.scene.tilesetRotation++ % n : 0;
+  engine.scene.selections.clear();
   for (let k = 0; k < n; k++) {
     const tileset = engine.tilesets[(start + k) % n]!;
     if (due(tileset)) {
       tileset.update(selectionFor(engine, tileset.world, tileset.anchor));
     }
   }
-  engine.selections.clear();
-  engine.budgetFilled = engine.uploadBudget.bytes <= 0;
+  engine.scene.selections.clear();
+  engine.scene.budgetFilled = engine.scene.uploadBudget.bytes <= 0;
   // After the tilesets: their loads and unloads announce height changes.
   engine.clamping.update();
 }
@@ -361,15 +361,15 @@ export function updateTilesets(
  * tab, paused loop) are ignored.
  */
 function adaptUploadBudget(engine: Engine, now: number): void {
-  const interval = now - engine.lastUpdateAt;
-  engine.lastUpdateAt = now;
+  const interval = now - engine.scene.lastUpdateAt;
+  engine.scene.lastUpdateAt = now;
   if (interval <= 0 || interval > 1000) {
     return;
   }
-  engine.lastUpdateInterval = interval;
-  const intervals = engine.frameIntervals;
-  intervals[engine.frameIntervalCount++ % intervals.length] = interval;
-  const count = Math.min(engine.frameIntervalCount, intervals.length);
+  engine.scene.lastUpdateInterval = interval;
+  const intervals = engine.scene.frameIntervals;
+  intervals[engine.scene.frameIntervalCount++ % intervals.length] = interval;
+  const count = Math.min(engine.scene.frameIntervalCount, intervals.length);
   if (count < 8) {
     return;
   }
@@ -381,7 +381,7 @@ function adaptUploadBudget(engine: Engine, now: number): void {
       engine.minimumUploadBytesPerFrame,
       engine.uploadBytesPerFrame / 2,
     );
-  } else if (engine.budgetFilled) {
+  } else if (engine.scene.budgetFilled) {
     // Proportional growth reaches what a big tileset needs within a few
     // frames (a quarter MiB per frame left Google 1.1 s slower).
     engine.uploadBytesPerFrame = Math.min(

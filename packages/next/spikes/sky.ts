@@ -318,7 +318,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     const encoder = device.createCommandEncoder();
     encoder.copyTextureToBuffer(
       // In-scatter: the volume's first 128 slices.
-      { texture: engine.sky.aerialVolume },
+      { texture: engine.raster.sky.aerialVolume },
       { buffer, bytesPerRow: n * 8, rowsPerImage: n },
       [n, n, slices],
     );
@@ -712,7 +712,7 @@ async function aerialPictures(
  */
 async function checkMarch(engine: Engine, view: View) {
   const render = async (march: number) => {
-    engine.sky.marchOverride = march;
+    engine.raster.sky.marchOverride = march;
     engine.renderFrame();
     const image = view.readHdr();
     engine.renderFrame();
@@ -720,7 +720,7 @@ async function checkMarch(engine: Engine, view: View) {
   };
   const volume = await render(0);
   const marched = await render(1);
-  engine.sky.marchOverride = undefined;
+  engine.raster.sky.marchOverride = undefined;
   const differences: number[] = [];
   for (let i = 0; i < volume.data.length; i += 4) {
     const a = luminance(volume.data, i / 4, 4);
@@ -748,7 +748,7 @@ async function checkSunLight(engine: Engine) {
   });
   const encoder = device.createCommandEncoder();
   encoder.copyTextureToBuffer(
-    { texture: engine.sky.sunLight },
+    { texture: engine.raster.sky.sunLight },
     { buffer, bytesPerRow: width * 8 },
     [width, height],
   );
@@ -777,7 +777,7 @@ async function checkSunLight(engine: Engine) {
       const rgb = [0, 1, 2].map((k) => halfToFloat(halves[i + k]!) * 1e5);
       const engineY = luminance(rgb, 0);
       const cpu = directSunIlluminance(
-        engine.sky.atmosphere.effectiveParameters,
+        engine.raster.sky.atmosphere.effectiveParameters,
         [0, 0, r],
         [Math.sqrt(1 - mu * mu), 0, mu],
       ).y;

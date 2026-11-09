@@ -226,11 +226,6 @@ function maxDiff(a: ArrayLike<number>, b: ArrayLike<number>): number {
   return m;
 }
 
-interface Internals {
-  viewData: Float32Array;
-  viewFrames: Map<View, { slot: number; viewBytes: number; sky: object }>;
-}
-
 /** One side: a world with a globe and a tileset, and a view whose rig is on `frame`. */
 interface Side {
   world: World;
@@ -268,7 +263,7 @@ beforeAll(async () => {
   // View.time is the engine's clock (performance.now): held still, so two
   // renders write the same block.
   vi.spyOn(performance, "now").mockReturnValue(1000);
-  const sky = engine.sky as unknown as {
+  const sky = engine.raster.sky as unknown as {
     write: (view: object, ...rest: unknown[]) => void;
     f32: Float32Array;
   };
@@ -342,12 +337,14 @@ async function side(name: "GCRF" | "ITRF"): Promise<Side> {
 /** Renders every view once; the view's block as written to the staging buffer. */
 function blocks(): Map<View, Float32Array> {
   engine.renderFrame();
-  const internals = engine as unknown as Internals;
   const out = new Map<View, Float32Array>();
   for (const view of [gcrf.view, itrf.view]) {
-    const frame = internals.viewFrames.get(view)!;
+    const frame = engine.raster.viewFrames.get(view)!;
     const start = (frame.slot * VIEW_STRIDE) / 4;
-    out.set(view, internals.viewData.slice(start, start + frame.viewBytes / 4));
+    out.set(
+      view,
+      engine.raster.viewData.slice(start, start + frame.viewBytes / 4),
+    );
   }
   return out;
 }
@@ -422,9 +419,12 @@ describe("a rig on GCRF draws what a rig on ITRF draws (plan 5a, Task 14)", () =
       expect(earthSlot.worst, earthSlot.field).toBeLessThanOrEqual(1);
       expect(gcrf.earth.slot).toBe(itrf.earth.slot);
       // The sky's own uniform.
-      const internals = engine as unknown as Internals;
-      const skyG = skyUniform.get(internals.viewFrames.get(gcrf.view)!.sky)!;
-      const skyI = skyUniform.get(internals.viewFrames.get(itrf.view)!.sky)!;
+      const skyG = skyUniform.get(
+        engine.raster.viewFrames.get(gcrf.view)!.sky,
+      )!;
+      const skyI = skyUniform.get(
+        engine.raster.viewFrames.get(itrf.view)!.sky,
+      )!;
       const sky = ulps(skyG, skyI, SKY);
       note("sky uniform ulps", sky.worst);
       expect(sky.worst, sky.field).toBeLessThanOrEqual(1);

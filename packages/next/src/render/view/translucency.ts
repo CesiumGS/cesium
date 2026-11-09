@@ -1,6 +1,7 @@
 // A view's translucency per tick: its parameters, its list buffer, and the bind
 // groups of its passes.
 import { LIST_HEADER, type ViewFrame } from "./viewFrameData.ts";
+import type { EngineRaster } from "./engineRaster.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 
@@ -13,7 +14,7 @@ const LIST_NODES_MAX = (1 << 28) - 2;
  * reading needed) or the moments' depth range.
  */
 export function writeTranslucency(engine: Engine, view: View): void {
-  const frame = engine.viewFrames.get(view)!;
+  const frame = engine.raster.viewFrames.get(view)!;
   // Only what this view draws: a blended draw in no view (viewMask) or
   // hidden switches none of the passes on.
   const range = view.world.translucentRange(
@@ -40,12 +41,15 @@ export function writeTranslucency(engine: Engine, view: View): void {
       LIST_NODES_MAX,
     );
     // Half a layer a pixel to start; more once a frame needs it.
-    engine.listNodes = Math.max(engine.listNodes, Math.ceil(pixels / 2));
-    capacity = Math.max(Math.min(engine.listNodes, most), 0);
+    engine.raster.listNodes = Math.max(
+      engine.raster.listNodes,
+      Math.ceil(pixels / 2),
+    );
+    capacity = Math.max(Math.min(engine.raster.listNodes, most), 0);
     const size = heads + capacity * 16;
-    if (!engine.lists || engine.lists.size < size) {
-      engine.lists?.destroy();
-      engine.lists = engine.ctx.device.createBuffer({
+    if (!engine.raster.lists || engine.raster.lists.size < size) {
+      engine.raster.lists?.destroy();
+      engine.raster.lists = engine.ctx.device.createBuffer({
         label: "translucent.lists",
         size,
         usage:
@@ -55,7 +59,7 @@ export function writeTranslucency(engine: Engine, view: View): void {
       });
     }
     capacity = Math.min(
-      Math.floor((engine.lists.size - heads) / 16),
+      Math.floor((engine.raster.lists.size - heads) / 16),
       LIST_NODES_MAX,
     );
   }
@@ -64,7 +68,7 @@ export function writeTranslucency(engine: Engine, view: View): void {
   // reaching kilometers past a model's centimeters speckled it).
   const near = Math.max(range.near, engine.bodyCamera(view).near, 1e-3);
   const far = Math.max(range.far, near * 1.01);
-  const d = engine.translucentData;
+  const d = engine.raster.translucentData;
   d.setUint32(0, frame.width, true);
   d.setUint32(4, frame.height, true);
   d.setUint32(8, LIST_HEADER + pixels, true);
@@ -78,8 +82,8 @@ export function writeTranslucency(engine: Engine, view: View): void {
 /** @internal What a translucent pass binds where it reads no lists or moments. */
 export function translucentInputs(
   engine: Engine,
-): NonNullable<Engine["translucentDummies"]> {
-  if (!engine.translucentDummies) {
+): NonNullable<EngineRaster["translucentDummies"]> {
+  if (!engine.raster.translucentDummies) {
     const { device, pipelines } = engine.ctx;
     const texture = (format: GPUTextureFormat) =>
       device
@@ -91,7 +95,7 @@ export function translucentInputs(
             GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
         })
         .createView();
-    engine.translucentDummies = {
+    engine.raster.translucentDummies = {
       buffer: device.createBuffer({
         label: "translucent.placeholder",
         size: 16,
@@ -102,7 +106,7 @@ export function translucentInputs(
       color: texture("rgba16float"),
     };
   }
-  return engine.translucentDummies;
+  return engine.raster.translucentDummies;
 }
 
 /**

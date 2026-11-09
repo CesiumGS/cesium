@@ -166,7 +166,7 @@ export function addHeightCapture(
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     }),
   };
-  engine.captures.push(capture);
+  engine.raster.captures.push(capture);
   engine.requestRender();
   return capture;
 }
@@ -175,9 +175,9 @@ export function removeHeightCapture(
   engine: Engine,
   capture: HeightCapture,
 ): void {
-  const i = engine.captures.indexOf(capture);
+  const i = engine.raster.captures.indexOf(capture);
   if (i >= 0) {
-    engine.captures.splice(i, 1);
+    engine.raster.captures.splice(i, 1);
     capture.texture.destroy();
     capture.block.destroy();
   }

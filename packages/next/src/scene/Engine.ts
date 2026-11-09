@@ -1,14 +1,11 @@
 import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
-import type { TerrainLoader } from "../globe/TerrainSource.ts";
-import type { TerrainTileInfo } from "../globe/quantizedMesh.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
 import { TexturePool } from "../render/FrameGraph.ts";
-import { VIEW_STRIDE, type ViewBlock } from "../render/layout.ts";
+import { VIEW_STRIDE } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
-import type { EnvironmentProbe } from "../gpu/Environment.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import {
   createRenderContext,
@@ -17,7 +14,7 @@ import {
   type ShaderOverrides,
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
-import { View, type HdrImage, type ViewOptions } from "./View.ts";
+import { View, type ViewOptions } from "./View.ts";
 import {
   CanvasTarget,
   OffscreenTarget,
@@ -30,25 +27,18 @@ import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
 import type { StarField } from "../atmosphere/stars.ts";
 import { Camera } from "./Camera.ts";
-import {
-  SHADOW_CASCADES,
-  SHADOWS_STRIDE,
-  createShadowCascades,
-} from "./shadows.ts";
-import type { CityLight } from "../globe/cityLight.ts";
+import { SHADOW_CASCADES, SHADOWS_STRIDE } from "./shadows.ts";
 import { LIGHTS_SIZE } from "./lights.ts";
 import { World } from "./World.ts";
 import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
-import { ANCHOR_EYE_REACH, createAnchorEyes } from "./anchorEyes.ts";
+import { ANCHOR_EYE_REACH } from "./anchorEyes.ts";
 import { HeightClamping } from "./HeightClamping.ts";
-import { WorkerPool } from "../io/WorkerPool.ts";
 import type { GlobeImageryOptions } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TilesetOptions } from "../streaming/tilesetTypes.ts";
 import type { Globe } from "../globe/Globe.ts";
-import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { ModelResource, ModelResourceOptions } from "./gltfModel.ts";
 import type { CustomShader } from "./CustomShader.ts";
@@ -60,18 +50,13 @@ import {
 import { globeTarget, terrainBackend } from "../query/terrainBackend.ts";
 import { drawBackend } from "../query/drawBackend.ts";
 import {
-  type ViewFrame,
-  type TargetFrame,
-  type WorldFrame,
-  type OverlayResources,
-  type PersistentImage,
   destroyViewFrame,
   TONE_MAPPINGS,
 } from "../render/view/viewFrameData.ts";
-import { type PendingPick, serveIdlePick } from "../render/view/picks.ts";
+import { serveIdlePick } from "../render/view/picks.ts";
 import { updateExposure } from "../render/view/exposure.ts";
 import { scratchFrame } from "../render/view/environment.ts";
-import { type ViewMotion, updateTilesets } from "./tileSelection.ts";
+import { updateTilesets } from "./tileSelection.ts";
 import {
   scratchViewProj,
   scratchView,
@@ -96,6 +81,8 @@ import {
   addHeightCapture,
   removeHeightCapture,
 } from "./heightCaptures.ts";
+import { EngineScene } from "./engineScene.ts";
+import { EngineRaster } from "../render/view/engineRaster.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -159,6 +146,11 @@ export interface GlobeOptions extends TilesetOptions {
 }
 
 export class Engine {
+  /** @internal Rasterizer data: staging buffers, view targets, picks, pass descriptors. */
+  readonly raster: EngineRaster = new EngineRaster();
+  /** @internal Scene data: view ids and motion, tick timing, selection scratch. */
+  readonly scene: EngineScene = new EngineScene();
+
   readonly gpu: GpuDevice;
   readonly worlds: World[] = [];
   readonly views: View[] = [];
@@ -280,7 +272,7 @@ export class Engine {
    * up): where `stats.gpuMs` goes. Empty without `timestamp-query`.
    */
   get gpuPasses(): Record<string, number> {
-    return this.timer.passes;
+    return this.raster.timer.passes;
   }
   /**
    * "onDemand" (default): `start()` renders a frame only when something
@@ -353,57 +345,8 @@ export class Engine {
 
   /** @internal */
   readonly ctx: RenderContext;
-  /** @internal The real-time atmosphere and the sky drawn from it. */
-  readonly sky: Sky;
-  /** @internal */
-  readonly workers = new WorkerPool();
   /** Content request windows per origin, shared by all tilesets. */
   readonly requests = new RequestScheduler();
-  /** @internal */
-  readonly pool: TexturePool;
-  /** @internal */
-  readonly timer: GpuTimer;
-  /** @internal */
-  readonly viewStaging: GPUBuffer;
-  /** @internal */
-  readonly viewData: Float32Array;
-  /**
-   * @internal Per view slot: a view block per shadow cascade (the sun's projection
-   * and box, for culling and drawing the casters), and the receivers'
-   * `Shadows` uniform; staged like the views' blocks.
-   */
-  readonly cascadeData: Float32Array;
-  /** @internal */
-  readonly cascadeDataU32: Uint32Array;
-  /** @internal */
-  readonly cascadeStaging: GPUBuffer;
-  /** @internal */
-  readonly shadowData: Float32Array;
-  /** @internal */
-  readonly shadowStaging: GPUBuffer;
-  /** @internal The night lights' mean around each view's camera (`cityLightAt`). */
-  readonly cityLights = new WeakMap<ImageryProvider, CityLight>();
-  /** @internal */
-  readonly cityLightPlaces = new WeakMap<
-    View,
-    { city: CityLight; longitude: number; latitude: number; light: number }
-  >();
-  /** @internal This frame's view's city light, cd/m² (`cityLightAt`). */
-  viewCityLight = 0;
-  /** @internal Each drawn view's lights (lights.ts `packViewLights`), by slot. */
-  readonly lightStaging: GPUBuffer;
-  /** @internal */
-  readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
-  /** @internal */
-  readonly cascades = createShadowCascades();
-  /** @internal */
-  readonly viewDataU32: Uint32Array;
-  /** @internal Stable per-view bit index (0–31) for record view masks. */
-  readonly viewIds = new Map<View, number>();
-  /** @internal */
-  readonly viewMotion = new Map<View, ViewMotion>();
-  /** @internal */
-  readonly aheadCamera = new Camera();
   /**
    * Each view's camera in its body anchor (`bodyCamera`), and what it was
    * computed from.
@@ -418,118 +361,10 @@ export class Engine {
       tick: number;
     }
   >();
-  /**
-   * @internal Counts the loop's ticks (after their listeners) and renders: a body
-   * camera computed in an earlier one is computed again, so a camera
-   * written in place without `version++` is never drawn stale.
-   */
-  cameraTick = 0;
-  /** @internal The view being written's anchor table, float64 (`writeView`). */
-  readonly anchorEyes = createAnchorEyes();
   /** Per view, the anchors its eye was last too far from (reported once). */
   private readonly farAnchors = new WeakMap<View, Set<AnchorHandle>>();
   private readonly freeViewIds: number[] = [];
   private readonly maxViews: number;
-  /** @internal */
-  readonly viewFrames = new Map<View, ViewFrame>();
-  /** @internal */
-  readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
-  /** @internal */
-  readonly worldFrames = new WeakMap<World, WorldFrame>();
-  /** @internal */
-  readonly overlayResources = new Map<View, OverlayResources>();
-  /**
-   * @internal Views lit by their atmosphere's environment: its probe, and the local
-   * sun direction and altitude it was built for.
-   */
-  readonly probes = new Map<
-    View,
-    {
-      probe: EnvironmentProbe;
-      key: Float64Array;
-      /** The exposure it was built at (its sky is pre-exposed). */
-      exposure: number;
-      pending: boolean;
-    }
-  >();
-  /** @internal The environment of a body without an atmosphere: black. */
-  darkProbe: EnvironmentProbe | undefined;
-  /** @internal */
-  readonly pickReadback: GPUBuffer[] = [];
-  /** @internal */
-  readonly pickParams: GPUBuffer;
-  /** @internal */
-  readonly pickResult: GPUBuffer;
-  /** @internal */
-  readonly pickParamsData = new Uint32Array(4);
-  /** @internal */
-  readonly picks: PendingPick[] = [];
-  /** @internal Exposure meter readings this frame, mapped after submit. */
-  readonly meters: Array<{
-    view: View;
-    readback: GPUBuffer;
-    scratch: GPUBuffer[];
-  }> = [];
-  /** @internal Depth ranges reduced this frame (`depthRange.slang`), mapped after submit. */
-  readonly depthRanges: Array<{
-    frame: ViewFrame;
-    readback: GPUBuffer;
-    scratch: GPUBuffer[];
-  }> = [];
-  /** @internal HDR images copied this frame (`View.readHdr`), mapped after submit. */
-  readonly hdrReads: Array<{
-    buffer: GPUBuffer;
-    bytesPerRow: number;
-    width: number;
-    height: number;
-    /** The pre-exposure of the frame read: divided out. */
-    exposure: number;
-    resolvers: Array<(image: HdrImage) => void>;
-  }> = [];
-  /**
-   * @internal Translucency's per-pixel lists ("exact", translucent.wgsl), shared by
-   * the views (each clears and fills them in turn): the nodes they hold,
-   * grown when a frame needed more (its count read back, one at a time).
-   */
-  lists?: GPUBuffer;
-  /** @internal */
-  listNodes = 0;
-  /** @internal */
-  listCountPending = false;
-  /** @internal */
-  readonly listCounts: GPUBuffer[] = [];
-  /** @internal Bound where a translucent pass doesn't read the lists or moments. */
-  translucentDummies?: {
-    buffer: GPUBuffer;
-    zero: GPUTextureView;
-    higher: GPUTextureView;
-    /** For the meter, where the view draws no layers. */
-    color: GPUTextureView;
-  };
-  /** @internal */
-  readonly translucentData = new DataView(new ArrayBuffer(32));
-  /** @internal */
-  readonly presentData = new DataView(new ArrayBuffer(48));
-  /** @internal */
-  readonly adaptData = new Float32Array(4);
-  /** @internal The eye's local adaptation grid, sampled trilinearly. */
-  adaptSampler?: GPUSampler;
-  /** @internal FXAA's image, sampled bilinearly. */
-  fxaaSampler?: GPUSampler;
-  /** @internal */
-  readonly fxaaData = new DataView(new ArrayBuffer(32));
-  /** @internal */
-  readonly overlayColor = new Float32Array(4);
-  /** @internal */
-  readonly viewBlock: ViewBlock;
-  /** @internal When the engine was created (`performance.now()`): views' `time`. */
-  readonly startTime = performance.now();
-  /** @internal Height captures (`addHeightCapture`). */
-  readonly captures: HeightCapture[] = [];
-  /** @internal */
-  readonly commandBuffers: GPUCommandBuffer[] = [];
-  /** @internal */
-  frameNumber = 0;
   private frameHandle = 0;
   /** An animation frame is requested for the loop (`start`). */
   private scheduled = false;
@@ -547,46 +382,12 @@ export class Engine {
   private readonly afterTickListeners: Array<(now: number) => void> = [];
   /** Per view: what stops watching its camera and canvas (`addView`). */
   private readonly viewWatches = new Map<View, () => void>();
-  /** @internal */
-  renderRequested = true;
   /** Fingerprints of the last rendered frame (see viewChanged). */
   private readonly viewKeys = new Map<View, Float64Array>();
   private readonly globalKey = new Float64Array(5).fill(Number.NaN);
   private readonly scratchKey = new Float64Array(VIEW_KEY_LENGTH);
   private readonly dirtyTargets = new Set<RenderTarget>();
   private readonly dirtyViews = new Set<View>();
-  /**
-   * @internal Views sharing a canvas, on demand: each one's last presented image, so
-   * a clean view is copied instead of re-rendered.
-   */
-  readonly persistent = new Map<View, PersistentImage>();
-  /** @internal */
-  readonly viewsPerTarget = new Map<RenderTarget, number>();
-  /** @internal */
-  readonly sharedTargets = new Set<RenderTarget>();
-  /** @internal */
-  readonly drawnViews = new Set<View>();
-  /** @internal */
-  readonly compositeClear: GPURenderPassColorAttachment = {
-    view: undefined as never,
-    clearValue: { r: 0, g: 0, b: 0, a: 1 },
-    loadOp: "clear",
-    storeOp: "store",
-  };
-  /** @internal */
-  readonly compositePass: GPURenderPassDescriptor = {
-    label: "composite.clear",
-    colorAttachments: [this.compositeClear],
-  };
-  /** @internal */
-  readonly copySource: GPUTexelCopyTextureInfo = {
-    texture: undefined as never,
-  };
-  /** @internal */
-  readonly copyDestination: GPUTexelCopyTextureInfo = {
-    texture: undefined as never,
-    origin: { x: 0, y: 0 },
-  };
 
   private constructor(
     gpu: GpuDevice,
@@ -596,7 +397,7 @@ export class Engine {
   ) {
     this.gpu = gpu;
     this.ctx = ctx;
-    this.sky = sky;
+    this.raster.sky = sky;
     ctx.wake = () => this.wake();
     ctx.shaderBindings.wake = ctx.wake;
     this.cameras = new CameraLayer({
@@ -610,39 +411,41 @@ export class Engine {
     );
     this.maxViews = maxViews;
     const device = ctx.device;
-    this.pool = new TexturePool(device);
-    this.timer = new GpuTimer(device);
-    this.viewData = new Float32Array((maxViews * VIEW_STRIDE) / 4);
-    this.viewDataU32 = new Uint32Array(this.viewData.buffer);
+    this.raster.pool = new TexturePool(device);
+    this.raster.timer = new GpuTimer(device);
+    this.raster.viewData = new Float32Array((maxViews * VIEW_STRIDE) / 4);
+    this.raster.viewDataU32 = new Uint32Array(this.raster.viewData.buffer);
     for (let id = Math.min(maxViews, 32) - 1; id >= 0; id--) {
       this.freeViewIds.push(id);
     }
-    this.viewStaging = device.createBuffer({
+    this.raster.viewStaging = device.createBuffer({
       label: "viewStaging",
       size: maxViews * VIEW_STRIDE,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.cascadeData = new Float32Array(
+    this.raster.cascadeData = new Float32Array(
       (maxViews * SHADOW_CASCADES * VIEW_STRIDE) / 4,
     );
-    this.cascadeDataU32 = new Uint32Array(this.cascadeData.buffer);
-    this.cascadeStaging = device.createBuffer({
+    this.raster.cascadeDataU32 = new Uint32Array(
+      this.raster.cascadeData.buffer,
+    );
+    this.raster.cascadeStaging = device.createBuffer({
       label: "cascadeStaging",
       size: maxViews * SHADOW_CASCADES * VIEW_STRIDE,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.shadowData = new Float32Array((maxViews * SHADOWS_STRIDE) / 4);
-    this.shadowStaging = device.createBuffer({
+    this.raster.shadowData = new Float32Array((maxViews * SHADOWS_STRIDE) / 4);
+    this.raster.shadowStaging = device.createBuffer({
       label: "shadowStaging",
       size: maxViews * SHADOWS_STRIDE,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.lightStaging = device.createBuffer({
+    this.raster.lightStaging = device.createBuffer({
       label: "lightStaging",
       size: maxViews * LIGHTS_SIZE,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.viewBlock = {
+    this.raster.viewBlock = {
       viewProj: scratchViewProj,
       viewRotation: scratchView,
       cameraPosition: this.sunDirection,
@@ -668,11 +471,11 @@ export class Engine {
       cityLights: true,
       time: 0,
     };
-    this.pickParams = device.createBuffer({
+    this.raster.pickParams = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
-    this.pickResult = device.createBuffer({
+    this.raster.pickResult = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -718,7 +521,7 @@ export class Engine {
    * submitted here, that work overlaps the app's own loading. Not awaited.
    */
   private warmUp(): void {
-    this.workers.warm();
+    this.scene.workers.warm();
     const world = this.createWorld({
       maxDraws: 1,
       maxMaterials: 1,
@@ -751,15 +554,15 @@ export class Engine {
   setStarMap(faces: readonly (string | URL)[] | null): void {
     const token = ++this.starToken;
     if (!faces) {
-      this.sky.setStarField(null);
+      this.raster.sky.setStarField(null);
       this.requestRender();
       return;
     }
     const urls = faces.map((url) => new URL(url, location.href).href);
-    void this.workers.request<StarField>("stars", { urls }).then(
+    void this.scene.workers.request<StarField>("stars", { urls }).then(
       (field) => {
         if (token === this.starToken) {
-          this.sky.setStarField(field);
+          this.raster.sky.setStarField(field);
           this.requestRender();
         }
       },
@@ -778,7 +581,7 @@ export class Engine {
    * closed once this returns.
    */
   setMoonMap(image: ImageBitmap | null, mean?: number): void {
-    this.sky.setMoonMap(image, mean);
+    this.raster.sky.setMoonMap(image, mean);
     this.requestRender();
   }
 
@@ -789,7 +592,7 @@ export class Engine {
    * value) is about 220 km, very clean air.
    */
   get visibility(): number | undefined {
-    return this.sky.atmosphere.visibility;
+    return this.raster.sky.atmosphere.visibility;
   }
 
   set visibility(kilometers: number | undefined) {
@@ -801,7 +604,7 @@ export class Engine {
    * particles by default (a bluish haze), urban, maritime or desert dust.
    */
   get aerosol(): AerosolType | undefined {
-    return this.sky.atmosphere.aerosol;
+    return this.raster.sky.atmosphere.aerosol;
   }
 
   set aerosol(aerosol: AerosolType | undefined) {
@@ -815,9 +618,9 @@ export class Engine {
     if (kilometers === this.visibility && aerosol === this.aerosol) {
       return;
     }
-    this.sky.setHaze(kilometers, aerosol);
+    this.raster.sky.setHaze(kilometers, aerosol);
     // Every view's environment from the new air.
-    for (const entry of this.probes.values()) {
+    for (const entry of this.raster.probes.values()) {
       entry.key.fill(Number.NaN);
     }
     this.requestRender();
@@ -966,24 +769,13 @@ export class Engine {
     return addEllipsoid(this, world, options);
   }
 
-  /** @internal */
-  readonly terrainLoader = (
-    request: Parameters<TerrainLoader>[0],
-    signal: AbortSignal,
-  ) =>
-    this.workers.request<{ asset: GltfAsset; info: TerrainTileInfo }>(
-      "terrain",
-      request,
-      signal,
-    );
-
   removeTileset(tileset: Tileset3D): void {
     removeTileset(this, tileset);
   }
 
   /** Render-target pool usage (transient textures shared by all views). */
   get renderTargetMemory() {
-    return this.pool.stats;
+    return this.raster.pool.stats;
   }
 
   /**
@@ -1011,7 +803,7 @@ export class Engine {
       this.bodyCameras.set(view, entry);
     }
     if (
-      entry.tick !== this.cameraTick ||
+      entry.tick !== this.scene.cameraTick ||
       entry.version !== version ||
       entry.revision !== revision ||
       entry.anchor !== anchor
@@ -1020,7 +812,7 @@ export class Engine {
       entry.version = version;
       entry.revision = revision;
       entry.anchor = anchor;
-      entry.tick = this.cameraTick;
+      entry.tick = this.scene.cameraTick;
     }
     return entry.camera;
   }
@@ -1030,7 +822,7 @@ export class Engine {
    * because its eye is beyond `ANCHOR_EYE_REACH` of it.
    */
   reportFarAnchors(view: View): void {
-    const eyes = this.anchorEyes;
+    const eyes = this.scene.anchorEyes;
     let far = this.farAnchors.get(view);
     for (let slot = 1; slot < eyes.hidden.length; slot++) {
       const anchor = eyes.anchors[slot];
@@ -1046,7 +838,7 @@ export class Engine {
           far.add(anchor);
           this.ctx.errors.report(
             "frame",
-            `The eye of view ${this.viewIds.get(view) ?? "?"} is more than ${ANCHOR_EYE_REACH.toLocaleString("en-US")} m (2^31 m) from the anchor ${anchor.name}: its draws are hidden in that view.`,
+            `The eye of view ${this.scene.viewIds.get(view) ?? "?"} is more than ${ANCHOR_EYE_REACH.toLocaleString("en-US")} m (2^31 m) from the anchor ${anchor.name}: its draws are hidden in that view.`,
           );
         }
       } else {
@@ -1061,12 +853,6 @@ export class Engine {
       }
     }
   }
-  /** @internal `selectionFor`'s inputs of the current update, by world and anchor. */
-  readonly selections = new Map<World, Map<AnchorHandle, SelectionView[]>>();
-  /** @internal The prefetch camera re-expressed in such an anchor. */
-  readonly selectionAhead = new Camera();
-  /** @internal `selectionCasters`' fit (the frame's own is `cascades`). */
-  readonly selectionCascades = createShadowCascades();
 
   /** Removes a placed glTF and frees its geometry, materials and textures. */
   /**
@@ -1126,14 +912,14 @@ export class Engine {
     }
     const view = new View(options);
     const atmosphere = view.body.atmosphere;
-    if (atmosphere && atmosphere !== this.sky.atmosphere.parameters) {
+    if (atmosphere && atmosphere !== this.raster.sky.atmosphere.parameters) {
       // Per-body atmospheres follow with per-body frames (plan §13.14).
       throw new Error(
         `Only the Earth's atmosphere is built so far (view body ${view.body.name}).`,
       );
     }
     this.views.push(view);
-    this.viewIds.set(view, id);
+    this.scene.viewIds.set(view, id);
     view.renderRoot = () => this.cameras.root(view);
     this.watchView(view);
     this.wake();
@@ -1145,7 +931,7 @@ export class Engine {
    * for the view's lifetime.
    */
   viewBit(view: View): number {
-    return (1 << this.viewIds.get(view)!) >>> 0;
+    return (1 << this.scene.viewIds.get(view)!) >>> 0;
   }
 
   removeView(view: View): void {
@@ -1154,10 +940,10 @@ export class Engine {
     view.wake = undefined;
     view.renderRoot = undefined;
     dropPersistent(this, view);
-    const probe = this.probes.get(view);
+    const probe = this.raster.probes.get(view);
     if (probe) {
       this.ctx.environment.destroyProbe(probe.probe);
-      this.probes.delete(view);
+      this.raster.probes.delete(view);
     }
     const index = this.views.indexOf(view);
     if (index >= 0) {
@@ -1168,20 +954,20 @@ export class Engine {
     )) {
       this.unlink(link);
     }
-    const id = this.viewIds.get(view);
+    const id = this.scene.viewIds.get(view);
     if (id !== undefined) {
-      this.viewIds.delete(view);
-      this.viewMotion.delete(view);
+      this.scene.viewIds.delete(view);
+      this.scene.viewMotion.delete(view);
       this.freeViewIds.push(id);
     }
-    const frame = this.viewFrames.get(view);
+    const frame = this.raster.viewFrames.get(view);
     if (frame) {
       destroyViewFrame(frame);
     }
-    this.viewFrames.delete(view);
-    this.overlayResources.get(view)?.buffer.destroy();
-    this.overlayResources.get(view)?.params.destroy();
-    this.overlayResources.delete(view);
+    this.raster.viewFrames.delete(view);
+    this.raster.overlayResources.get(view)?.buffer.destroy();
+    this.raster.overlayResources.get(view)?.params.destroy();
+    this.raster.overlayResources.delete(view);
     this.wake();
   }
 
@@ -1251,26 +1037,8 @@ export class Engine {
   /** Bounds of the adaptive upload budget, bytes per frame. */
   minimumUploadBytesPerFrame = 512 * 1024;
   maximumUploadBytesPerFrame = 32 * 1024 * 1024;
-  /** @internal */
-  lastUpdateAt = 0;
-  /** @internal Time since the previous update, ms (60 Hz until measured). */
-  lastUpdateInterval = 1000 / 60;
-  /** @internal */
-  budgetFilled = false;
-  /** @internal */
-  readonly frameIntervals = new Float64Array(31);
-  /** @internal */
-  frameIntervalCount = 0;
-  /**
-   * @internal What is left of this frame's budget: upload bytes, and main-
-   * thread time for building external tilesets' tile trees (at least one
-   * of each happens per frame).
-   */
-  readonly uploadBudget = { bytes: 0, uploads: 0, ms: 0, trees: 0 };
   /** Main-thread time per frame for building tile trees, all tilesets. */
   treeBuildMsPerFrame = 4;
-  /** @internal */
-  tilesetRotation = 0;
 
   /**
    * Asks for a frame in on-demand mode, for changes the engine can't see:
@@ -1278,7 +1046,7 @@ export class Engine {
    * place that it doesn't watch (`renderMode`).
    */
   requestRender(): void {
-    this.renderRequested = true;
+    this.scene.renderRequested = true;
     this.wake();
   }
 
@@ -1378,7 +1146,7 @@ export class Engine {
 
   /** Seconds since the engine started: `View.time`'s clock. */
   get time(): number {
-    return (performance.now() - this.startTime) / 1000;
+    return (performance.now() - this.scene.startTime) / 1000;
   }
 
   /**
@@ -1442,7 +1210,7 @@ export class Engine {
         void view.anchorRevision;
       }
       // Body cameras are computed afresh from here (`bodyCamera`).
-      this.cameraTick++;
+      this.scene.cameraTick++;
       // What the listeners changed renders in this tick: their wakes are
       // not needed. A listener they added runs from the next frame.
       this.wokenInTick = this.listenerAdded;
@@ -1532,7 +1300,7 @@ export class Engine {
       const view = views[i]!;
       if (
         view.enabled &&
-        (this.renderRequested || view.pendingPicks.length > 0)
+        (this.scene.renderRequested || view.pendingPicks.length > 0)
       ) {
         return true;
       }
@@ -1564,7 +1332,7 @@ export class Engine {
     // with none changed are skipped and keep their last image.
     // A custom shader's uniform or texture changed: everything may show it.
     const uniforms = this.ctx.shaderBindings.flush();
-    const all = this.globalChanged() || this.renderRequested || uniforms;
+    const all = this.globalChanged() || this.scene.renderRequested || uniforms;
     const dirty = this.dirtyTargets;
     const dirtyViews = this.dirtyViews;
     dirty.clear();
@@ -1583,7 +1351,8 @@ export class Engine {
       if (
         all ||
         changed ||
-        (view.pendingPicks.length > 0 && !this.viewFrames.get(view)?.rendered)
+        (view.pendingPicks.length > 0 &&
+          !this.raster.viewFrames.get(view)?.rendered)
       ) {
         dirty.add(view.target);
         dirtyViews.add(view);
@@ -1729,10 +1498,6 @@ export class Engine {
     }
     render(this, false);
   }
-  /** @internal */
-  cityLightRead = 0;
-  /** @internal */
-  cityLightSeen = 0;
 
   destroy(): void {
     this.stop();
@@ -1743,12 +1508,12 @@ export class Engine {
     for (const world of this.worlds) {
       world.destroy();
     }
-    this.pool.destroy();
-    this.lists?.destroy();
-    this.timer.destroy();
-    this.sky.atmosphere.destroy();
-    this.sky.destroy();
-    this.workers.destroy();
+    this.raster.pool.destroy();
+    this.raster.lists?.destroy();
+    this.raster.timer.destroy();
+    this.raster.sky.atmosphere.destroy();
+    this.raster.sky.destroy();
+    this.scene.workers.destroy();
     this.gpu.destroy();
   }
 }

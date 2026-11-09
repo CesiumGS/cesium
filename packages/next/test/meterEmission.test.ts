@@ -297,13 +297,9 @@ describe("the exposure meter and emission", () => {
         translucencyMethod: method,
       });
       view.camera.lookAt(v3.vec3(6_378_137, 0, 0), 0, -Math.PI / 2, 100);
-      const internals = engine as unknown as {
-        ctx: { device: { queue: GPUQueue } };
-        viewFrames: Map<unknown, { graph: { compile(): string[] } }>;
-      };
       // The fake's objects accept any call and keep none: record this one.
       const writes: unknown[] = [];
-      const device = internals.ctx.device;
+      const device = engine.ctx.device as { queue: GPUQueue };
       device.queue = new Proxy(device.queue, {
         get: (queue, key) =>
           key === "writeBuffer"
@@ -325,7 +321,7 @@ describe("the exposure meter and emission", () => {
       expect(params.length).toBe(1);
       return {
         layers: new Uint32Array(params[0]!)[3]!,
-        passes: internals.viewFrames.get(view)!.graph.compile(),
+        passes: engine.raster.viewFrames.get(view)!.graph.compile(),
       };
     }
 

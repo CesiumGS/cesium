@@ -32,15 +32,15 @@ export function render(
   dirtyViews?: ReadonlySet<View>,
 ): void {
   const start = performance.now();
-  engine.renderRequested = false;
-  engine.cameraTick++;
+  engine.scene.renderRequested = false;
+  engine.scene.cameraTick++;
   engine.stats.idle = false;
   // Custom shaders' uniforms changed since the tick (or no tick ran);
   // the tick still sees what changed for its views.
   engine.ctx.shaderBindings.flush(false);
   engine.stats.framesRendered++;
   const device = engine.ctx.device;
-  const stamp = ++engine.frameNumber;
+  const stamp = ++engine.raster.frameNumber;
 
   // Acquire each target first: acquiring a canvas resizes it to its CSS
   // size, and every view rectangle below (selection, frame graphs,
@@ -72,12 +72,12 @@ export function render(
   // dirty views (or ones without a current image) re-render, and every
   // view's image is copied into the target in view order. Otherwise views
   // draw straight into their target.
-  const shared = engine.sharedTargets;
-  const drawn = engine.drawnViews;
+  const shared = engine.raster.sharedTargets;
+  const drawn = engine.raster.drawnViews;
   shared.clear();
   drawn.clear();
   if (targets && dirtyViews) {
-    const counts = engine.viewsPerTarget;
+    const counts = engine.raster.viewsPerTarget;
     counts.clear();
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
@@ -117,7 +117,7 @@ export function render(
       continue;
     }
     const image = shared.has(view.target)
-      ? engine.persistent.get(view)
+      ? engine.raster.persistent.get(view)
       : undefined;
     const rect = image ? image.rect : view.pixelRect();
     const frame = viewFrameFor(engine, view, rect);
@@ -156,22 +156,24 @@ export function render(
   // The views' and cascades' blocks went up as they were written
   // (`writeView`, `writeShadows`: each to its anchor table's used slots).
   device.queue.writeBuffer(
-    engine.shadowStaging,
+    engine.raster.shadowStaging,
     0,
-    engine.shadowData,
+    engine.raster.shadowData,
     0,
     (slots * SHADOWS_STRIDE) / 4,
   );
 
   const encoder = device.createCommandEncoder(FRAME_ENCODER);
-  engine.timer.beginFrame();
+  engine.raster.timer.beginFrame();
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;
     if (drawn.has(view)) {
-      const frame = engine.viewFrames.get(view)!;
+      const frame = engine.raster.viewFrames.get(view)!;
       // One pick per frame keeps the shared params/result buffers simple.
       frame.pick =
-        engine.picks.length === 0 ? view.pendingPicks.shift() : undefined;
+        engine.raster.picks.length === 0
+          ? view.pendingPicks.shift()
+          : undefined;
       // The scene time of this image, for its picks (also idle ones).
       frame.seconds = engine.cameras.clock(view.world)?.seconds ?? 0;
       frame.graph.execute(encoder);
@@ -181,47 +183,48 @@ export function render(
   // Composite shared targets: clear, then each view's image in view order
   // (an inset lands over the view it overlaps).
   for (const target of shared) {
-    engine.compositeClear.view = targetFrame(engine, target).view!;
-    encoder.beginRenderPass(engine.compositePass).end();
-    engine.copyDestination.texture = target.texture!;
-    const origin = engine.copyDestination.origin as GPUOrigin3DDict;
+    engine.raster.compositeClear.view = targetFrame(engine, target).view!;
+    encoder.beginRenderPass(engine.raster.compositePass).end();
+    engine.raster.copyDestination.texture = target.texture!;
+    const origin = engine.raster.copyDestination.origin as GPUOrigin3DDict;
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
       const image =
         view.enabled && view.target === target
-          ? engine.persistent.get(view)
+          ? engine.raster.persistent.get(view)
           : undefined;
       if (!image) {
         continue;
       }
       const rect = view.pixelRect();
-      engine.copySource.texture = image.texture;
+      engine.raster.copySource.texture = image.texture;
       origin.x = rect.x;
       origin.y = rect.y;
-      encoder.copyTextureToTexture(engine.copySource, engine.copyDestination, [
-        image.rect.width,
-        image.rect.height,
-      ]);
+      encoder.copyTextureToTexture(
+        engine.raster.copySource,
+        engine.raster.copyDestination,
+        [image.rect.width, image.rect.height],
+      );
     }
   }
-  engine.timer.endFrame(encoder);
-  engine.commandBuffers[0] = encoder.finish();
+  engine.raster.timer.endFrame(encoder);
+  engine.raster.commandBuffers[0] = encoder.finish();
   // A rejected submit draws nothing: report it and bind the worlds again
   // from their state, rather than repeat a black frame unexplained.
   device.pushErrorScope("validation");
-  device.queue.submit(engine.commandBuffers);
+  device.queue.submit(engine.raster.commandBuffers);
   void device.popErrorScope().then((error) => {
     if (error) {
       frameRejected(engine, error);
     }
   });
-  engine.timer.afterSubmit();
-  engine.pool.endFrame();
-  if (engine.picks.length > 0) {
-    resolvePicks(engine, engine.picks);
-    engine.picks.length = 0;
+  engine.raster.timer.afterSubmit();
+  engine.raster.pool.endFrame();
+  if (engine.raster.picks.length > 0) {
+    resolvePicks(engine, engine.raster.picks);
+    engine.raster.picks.length = 0;
   }
-  for (const meter of engine.meters.splice(0)) {
+  for (const meter of engine.raster.meters.splice(0)) {
     whenMapped(meter.readback, () => {
       const [sum, count, rodSum, rodCount] = new Float32Array(
         meter.readback.getMappedRange(),
@@ -236,7 +239,7 @@ export function render(
       );
     });
   }
-  for (const range of engine.depthRanges.splice(0)) {
+  for (const range of engine.raster.depthRanges.splice(0)) {
     whenMapped(range.readback, () => {
       const [near, far] = new Float32Array(range.readback.getMappedRange());
       range.readback.destroy();
@@ -247,22 +250,22 @@ export function render(
         far! > 0 && near! <= far! ? { near: near!, far: far! } : undefined;
     });
   }
-  for (const readback of engine.listCounts.splice(0)) {
+  for (const readback of engine.raster.listCounts.splice(0)) {
     whenMapped(readback, () => {
       const needed = new Uint32Array(readback.getMappedRange())[0]!;
       readback.destroy();
-      engine.listCountPending = false;
+      engine.raster.listCountPending = false;
       // Room for a quarter more than the frame needed (`writeTranslucency`),
       // and a frame drawn with it: that one dropped what didn't fit, and
       // drawing on demand, nothing else might come (glass missing until
       // the camera moved).
-      if (needed > engine.listNodes) {
-        engine.listNodes = Math.ceil(needed * 1.25);
+      if (needed > engine.raster.listNodes) {
+        engine.raster.listNodes = Math.ceil(needed * 1.25);
         engine.requestRender();
       }
     });
   }
-  for (const read of engine.hdrReads.splice(0)) {
+  for (const read of engine.raster.hdrReads.splice(0)) {
     whenMapped(read.buffer, () => {
       const halves = new Uint16Array(read.buffer.getMappedRange());
       const data = new Float32Array(read.width * read.height * 4);
@@ -288,8 +291,8 @@ export function render(
     engine.stats.cpuMs === 0
       ? elapsed
       : engine.stats.cpuMs * 0.9 + elapsed * 0.1;
-  engine.stats.gpuMs = engine.timer.milliseconds;
-  engine.stats.gpuSpanMs = engine.timer.spanMilliseconds;
+  engine.stats.gpuMs = engine.raster.timer.milliseconds;
+  engine.stats.gpuSpanMs = engine.raster.timer.spanMilliseconds;
   engine.stats.views = slots;
   for (let i = 0; i < engine.worlds.length; i++) {
     engine.worlds[i]!.changedViews = 0;
@@ -311,7 +314,7 @@ function persistentImage(
   width: number,
   height: number,
 ): PersistentImage {
-  let image = engine.persistent.get(view);
+  let image = engine.raster.persistent.get(view);
   if (!image || image.rect.width !== width || image.rect.height !== height) {
     image?.texture.destroy();
     const texture = engine.ctx.device.createTexture({
@@ -326,33 +329,33 @@ function persistentImage(
       rect: { x: 0, y: 0, width, height },
       valid: false,
     };
-    engine.persistent.set(view, image);
+    engine.raster.persistent.set(view, image);
   }
   return image;
 }
 
 export function dropPersistent(engine: Engine, view: View): void {
-  const image = engine.persistent.get(view);
+  const image = engine.raster.persistent.get(view);
   if (image) {
     image.texture.destroy();
-    engine.persistent.delete(view);
+    engine.raster.persistent.delete(view);
   }
 }
 
 function targetFrame(engine: Engine, target: RenderTarget): TargetFrame {
-  let frame = engine.targetFrames.get(target);
+  let frame = engine.raster.targetFrames.get(target);
   if (!frame) {
     frame = { stamp: 0, view: undefined, clearedBy: undefined };
-    engine.targetFrames.set(target, frame);
+    engine.raster.targetFrames.set(target, frame);
   }
   return frame;
 }
 
 function worldFrame(engine: Engine, world: World): WorldFrame {
-  let frame = engine.worldFrames.get(world);
+  let frame = engine.raster.worldFrames.get(world);
   if (!frame) {
     frame = { stamp: 0, bundle: undefined };
-    engine.worldFrames.set(world, frame);
+    engine.raster.worldFrames.set(world, frame);
   }
   return frame;
 }

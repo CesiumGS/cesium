@@ -172,9 +172,7 @@ describe("shadow casters off screen", () => {
   /** What a cascade's cull draws (cull.slang `drawable`, `inFrustum`). */
   function casts({ world, view }: Scene, tile: Tile): boolean {
     const bit = engine.viewBit(view);
-    const { planes } = (
-      engine as unknown as { cascades: { planes: Float32Array[] } }
-    ).cascades;
+    const { planes } = engine.raster.cascades;
     const draws: readonly DrawHandle[] = tile.placement?.draws ?? [];
     return draws.some((draw) => {
       const u = world.raster.recordsU32;
@@ -506,14 +504,12 @@ describe("the cascades' block", () => {
       view.camera.version++;
       v3.normalize(engine.sunDirection, v3.vec3(1, 0, -1));
       engine.renderFrame();
-      const internals = engine as unknown as {
-        cascadeStaging: unknown;
-        viewStaging: unknown;
-      };
       const cascades = writes.filter(
-        (w) => w.buffer === internals.cascadeStaging,
+        (w) => w.buffer === engine.raster.cascadeStaging,
       );
-      const views = writes.filter((w) => w.buffer === internals.viewStaging);
+      const views = writes.filter(
+        (w) => w.buffer === engine.raster.viewStaging,
+      );
       expect(cascades.length).toBe(4);
       expect(cascades.every((w) => w.time === 1)).toBe(true);
       expect(views.length).toBeGreaterThan(0);

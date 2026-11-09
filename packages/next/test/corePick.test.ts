@@ -26,7 +26,6 @@ const WIDTH = 64;
 const HEIGHT = 48;
 
 interface Internals {
-  picks: Array<{ readback: GPUBuffer }>;
   tick(): void;
 }
 
@@ -55,7 +54,7 @@ let now: number;
  * next feature ID and depth, and maps when the test says so.
  */
 function answerPicks(): void {
-  const picks = (engine as unknown as Internals).picks;
+  const picks = engine.raster.picks;
   picks.push = (...items) => {
     const maps = mappers;
     for (const item of items) {

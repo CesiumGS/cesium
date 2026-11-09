@@ -84,9 +84,6 @@ function scene(): { world: World; view: View } {
 }
 
 interface Internals {
-  viewData: Float32Array;
-  lightData: Float32Array;
-  viewFrames: Map<View, { slot: number; viewBytes: number }>;
   scratchKey: Float64Array;
   viewKey(view: View): number;
 }
@@ -94,16 +91,15 @@ interface Internals {
 /** Renders the views once; the view's block as written to the staging buffer. */
 function block(view: View): Float32Array {
   engine.renderFrame();
-  const internals = engine as unknown as Internals;
-  const slot = internals.viewFrames.get(view)!.slot;
+  const slot = engine.raster.viewFrames.get(view)!.slot;
   const words = ViewLayout.size / 4;
   const stride = VIEW_STRIDE / 4;
-  return internals.viewData.slice(slot * stride, slot * stride + words);
+  return engine.raster.viewData.slice(slot * stride, slot * stride + words);
 }
 
 /** Bytes of the view's block uploaded and copied in the last render. */
 function uploaded(view: View): number {
-  return (engine as unknown as Internals).viewFrames.get(view)!.viewBytes;
+  return engine.raster.viewFrames.get(view)!.viewBytes;
 }
 
 /** The camera floats `writeView` wrote before anchors, from `camera`. */
@@ -311,7 +307,7 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
       ),
     });
     block(view);
-    const lights = (engine as unknown as Internals).lightData;
+    const lights = engine.raster.lightData;
     expect(lights[3]).toBe(1);
     // 100 m along x from the camera, to float64's rounding at 384,400 km
     // (about 60 nm), never float32's (about 30 m there).

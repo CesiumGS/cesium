@@ -53,14 +53,14 @@ const scratchSelectionBody = new Float64Array(16);
  * only), drawn by `view` (the `height-captures` pass).
  */
 function writeCaptures(engine: Engine, view: View): void {
-  const block = engine.viewBlock;
+  const block = engine.raster.viewBlock;
   const bodyCamera = engine.bodyCamera(view);
   const camera = bodyCamera.position;
-  for (const c of engine.captures) {
-    if (c.world !== view.world || c.stamp === engine.frameNumber) {
+  for (const c of engine.raster.captures) {
+    if (c.world !== view.world || c.stamp === engine.raster.frameNumber) {
       continue;
     }
-    c.stamp = engine.frameNumber;
+    c.stamp = engine.raster.frameNumber;
     c.by = view;
     let [e, n, u] = c.axes;
     let origin = c.origin;
@@ -119,13 +119,13 @@ function writeCaptures(engine: Engine, view: View): void {
     block.planes = p;
     block.aerial = undefined;
     writeViewBlock(c.data, 0, block);
-    writeAnchorEyes(c.data, 0, bodyCamera, view, engine.anchorEyes);
+    writeAnchorEyes(c.data, 0, bodyCamera, view, engine.scene.anchorEyes);
     block.viewProj = viewProj;
     block.planes = planes;
     block.aerial = aerial;
     new Uint32Array(c.data.buffer)[VIEW_BIT_WORD] = engine.viewBit(view);
     c.data[VIEW_TIME_WORD + 1] = 1; // View.time.y: ground only
-    c.viewBytes = viewBlockBytes(engine.anchorEyes.count);
+    c.viewBytes = viewBlockBytes(engine.scene.anchorEyes.count);
     engine.ctx.device.queue.writeBuffer(c.block, 0, c.data, 0, c.viewBytes / 4);
   }
 }
@@ -137,17 +137,17 @@ export function writeViewShadows(
   index: number,
   aspect: number,
 ): void {
-  const frame = engine.viewFrames.get(view)!;
+  const frame = engine.raster.viewFrames.get(view)!;
   const camera = engine.bodyCamera(view);
   const light = shadowLight(
     engine,
     view,
     camera.position,
-    engine.viewBlock.moon,
+    engine.raster.viewBlock.moon,
   );
   frame.shadowed = light !== undefined;
   const moonUp = light?.moon === true;
-  const cascades = engine.cascades;
+  const cascades = engine.raster.cascades;
   if (light) {
     const sun = light.direction;
     const c = view.body.ellipsoid.cartesianToCartographic(
@@ -162,7 +162,7 @@ export function writeViewShadows(
       Math.max(c?.height ?? 0, 2),
       (frame.cascadeRange = shadowRange(frame.cascadeRange, frame.depthRange)),
     );
-    const block = engine.viewBlock;
+    const block = engine.raster.viewBlock;
     const viewProj = block.viewProj;
     const planes = block.planes;
     const aerial = block.aerial;
@@ -171,14 +171,20 @@ export function writeViewShadows(
       const o = ((index * SHADOW_CASCADES + k) * VIEW_STRIDE) / 4;
       block.viewProj = cascades.matrices.subarray(k * 16, k * 16 + 16);
       block.planes = cascades.planes[k]!;
-      writeViewBlock(engine.cascadeData, o, block);
-      writeAnchorEyes(engine.cascadeData, o, camera, view, engine.anchorEyes);
-      engine.cascadeDataU32[o + VIEW_BIT_WORD] = engine.viewBit(view);
-      engine.cascadeData[o + VIEW_TIME_WORD + 2] = 1; // View.time.z: casters too
+      writeViewBlock(engine.raster.cascadeData, o, block);
+      writeAnchorEyes(
+        engine.raster.cascadeData,
+        o,
+        camera,
+        view,
+        engine.scene.anchorEyes,
+      );
+      engine.raster.cascadeDataU32[o + VIEW_BIT_WORD] = engine.viewBit(view);
+      engine.raster.cascadeData[o + VIEW_TIME_WORD + 2] = 1; // View.time.z: casters too
       engine.ctx.device.queue.writeBuffer(
-        engine.cascadeStaging,
+        engine.raster.cascadeStaging,
         o * 4,
-        engine.cascadeData,
+        engine.raster.cascadeData,
         o,
         frame.viewBytes / 4,
       );
@@ -207,7 +213,7 @@ export function writeViewShadows(
     engine.ctx.device.queue.writeBuffer(frame.aoParams, 0, a);
   }
   writeShadows(
-    engine.shadowData,
+    engine.raster.shadowData,
     (index * SHADOWS_STRIDE) / 4,
     cascades,
     camera.direction,

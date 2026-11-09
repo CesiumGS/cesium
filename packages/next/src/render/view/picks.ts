@@ -81,21 +81,25 @@ export function encodePick(
 ): void {
   const { device, pipelines } = engine.ctx;
   const { width, height } = frame;
-  engine.pickParamsData[0] = Math.min(
+  engine.raster.pickParamsData[0] = Math.min(
     Math.max(Math.floor(request.x), 0),
     width - 1,
   );
-  engine.pickParamsData[1] = Math.min(
+  engine.raster.pickParamsData[1] = Math.min(
     Math.max(Math.floor(request.y), 0),
     height - 1,
   );
-  device.queue.writeBuffer(engine.pickParams, 0, engine.pickParamsData);
+  device.queue.writeBuffer(
+    engine.raster.pickParams,
+    0,
+    engine.raster.pickParamsData,
+  );
   const group = device.createBindGroup({
     layout: pipelines.pick.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: frame.idsView },
-      { binding: 1, resource: { buffer: engine.pickParams } },
-      { binding: 2, resource: { buffer: engine.pickResult } },
+      { binding: 1, resource: { buffer: engine.raster.pickParams } },
+      { binding: 2, resource: { buffer: engine.raster.pickResult } },
       { binding: 3, resource: frame.depthView },
     ],
   });
@@ -105,17 +109,17 @@ export function encodePick(
   pass.dispatchWorkgroups(1);
   pass.end();
   const readback =
-    engine.pickReadback.pop() ??
+    engine.raster.pickReadback.pop() ??
     device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-  enc.copyBufferToBuffer(engine.pickResult, 0, readback, 0, 16);
+  enc.copyBufferToBuffer(engine.raster.pickResult, 0, readback, 0, 16);
   const tanY = Math.tan(view.camera.fovy(width / height) / 2);
   const tanX = tanY * (width / height);
-  const ndcX = ((engine.pickParamsData[0]! + 0.5) / width) * 2 - 1;
-  const ndcY = 1 - ((engine.pickParamsData[1]! + 0.5) / height) * 2;
-  engine.picks.push({
+  const ndcX = ((engine.raster.pickParamsData[0]! + 0.5) / width) * 2 - 1;
+  const ndcY = 1 - ((engine.raster.pickParamsData[1]! + 0.5) / height) * 2;
+  engine.raster.picks.push({
     view,
     readback,
     request,
@@ -164,7 +168,7 @@ function translucentTerrainPick(
       ndcX * tanX * camera.right[k]! +
       ndcY * tanY * camera.up[k]!,
   );
-  const id = engine.viewIds.get(view);
+  const id = engine.scene.viewIds.get(view);
   const mask = id === undefined ? undefined : 1 << id;
   let best: { depth: number; featureId: number } | undefined;
   for (const globe of globes) {
@@ -270,7 +274,7 @@ export function resolvePicks(engine: Engine, picks: PendingPick[]): void {
         featureId = translucent.featureId;
         depth = translucent.depth;
       }
-      engine.pickReadback.push(readback);
+      engine.raster.pickReadback.push(readback);
       if (request.resolvePoint) {
         request.resolvePoint(corePick(tick!, featureId, depth));
         return;
@@ -309,7 +313,7 @@ export function serveIdlePick(engine: Engine, rendering: Set<View>): void {
   const views = engine.views;
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;
-    const frame = engine.viewFrames.get(view);
+    const frame = engine.raster.viewFrames.get(view);
     if (
       !view.enabled ||
       rendering.has(view) ||
@@ -320,10 +324,10 @@ export function serveIdlePick(engine: Engine, rendering: Set<View>): void {
     }
     const encoder = engine.ctx.device.createCommandEncoder(PICK_ENCODER);
     encodePick(engine, encoder, view, frame, view.pendingPicks.shift()!);
-    engine.commandBuffers[0] = encoder.finish();
-    engine.ctx.device.queue.submit(engine.commandBuffers);
-    resolvePicks(engine, engine.picks);
-    engine.picks.length = 0;
+    engine.raster.commandBuffers[0] = encoder.finish();
+    engine.ctx.device.queue.submit(engine.raster.commandBuffers);
+    resolvePicks(engine, engine.raster.picks);
+    engine.raster.picks.length = 0;
     return; // one per tick: the params and result buffers are shared
   }
 }

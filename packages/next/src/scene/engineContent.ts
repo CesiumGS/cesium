@@ -20,7 +20,7 @@ export function loadGltfFile(
   url: string | URL,
   options: { headers?: Record<string, string>; signal?: AbortSignal } = {},
 ): Promise<GltfAsset> {
-  return engine.workers.request<GltfAsset>(
+  return engine.scene.workers.request<GltfAsset>(
     "gltf",
     {
       url: new URL(url, globalThis.location?.href).href,
@@ -123,7 +123,7 @@ export async function addTerrain(
   const source = await TerrainSource.create(
     layer.href,
     headers,
-    engine.terrainLoader,
+    engine.scene.terrainLoader,
     { warnings: new Set() },
   );
   return addGlobeSource(engine, world, source, options);
@@ -134,7 +134,7 @@ export function addEllipsoid(
   world: World,
   options: GlobeOptions = {},
 ): Globe {
-  const source = TerrainSource.ellipsoid(engine.terrainLoader, {
+  const source = TerrainSource.ellipsoid(engine.scene.terrainLoader, {
     warnings: new Set(),
   });
   return addGlobeSource(engine, world, source, options);
@@ -156,7 +156,7 @@ function addGlobeSource(
       world,
       provider,
       engine.requests,
-      engine.workers,
+      engine.scene.workers,
       options.imageryOptions,
     );
   if (options.lights) {
@@ -168,7 +168,7 @@ function addGlobeSource(
             world,
             provider,
             engine.requests,
-            engine.workers,
+            engine.scene.workers,
             { role: "lights" },
           );
           engine.requestRender();

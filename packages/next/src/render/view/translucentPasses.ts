@@ -65,10 +65,11 @@ export function translucentPass(
     const world = view.world;
     const dummies = translucentInputs(engine);
     if (view.translucencyMethod === "exact") {
-      const lists = engine.lists!;
+      const lists = engine.raster.lists!;
       enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
       listTarget.view = get(color);
-      listPass.timestampWrites = engine.timer.passWrites("translucent-lists");
+      listPass.timestampWrites =
+        engine.raster.timer.passWrites("translucent-lists");
       const pass = enc.beginRenderPass(listPass);
       world.encodeTranslucent(
         pass,
@@ -87,7 +88,7 @@ export function translucentPass(
       const unlit = get(accumulatedUnlit);
       const sort = enc.beginComputePass({
         label: "translucent.sort",
-        timestampWrites: engine.timer.passWrites("translucent-sort"),
+        timestampWrites: engine.raster.timer.passWrites("translucent-sort"),
       });
       sort.setPipeline(pipelines.translucentSort);
       sort.setBindGroup(
@@ -107,15 +108,15 @@ export function translucentPass(
       );
       sort.dispatchWorkgroups(Math.ceil(width / 8), Math.ceil(height / 4));
       sort.end();
-      if (!engine.listCountPending) {
-        engine.listCountPending = true;
+      if (!engine.raster.listCountPending) {
+        engine.raster.listCountPending = true;
         const readback = device.createBuffer({
           label: "translucent.count",
           size: 4,
           usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
         });
         enc.copyBufferToBuffer(lists, 0, readback, 0, 4);
-        engine.listCounts.push(readback);
+        engine.raster.listCounts.push(readback);
       }
       return;
     }
@@ -123,7 +124,9 @@ export function translucentPass(
     const higher = get(momentsHigher);
     momentTargets[0]!.view = zero;
     momentTargets[1]!.view = higher;
-    momentPass.timestampWrites = engine.timer.passWrites("translucent-moments");
+    momentPass.timestampWrites = engine.raster.timer.passWrites(
+      "translucent-moments",
+    );
     const first = enc.beginRenderPass(momentPass);
     world.encodeTranslucent(
       first,
@@ -138,7 +141,8 @@ export function translucentPass(
     first.end();
     colorTargets[0]!.view = get(accumulatedLit);
     colorTargets[1]!.view = get(accumulatedUnlit);
-    colorPass.timestampWrites = engine.timer.passWrites("translucent-color");
+    colorPass.timestampWrites =
+      engine.raster.timer.passWrites("translucent-color");
     const second = enc.beginRenderPass(colorPass);
     world.encodeTranslucent(
       second,
@@ -190,7 +194,7 @@ export function compositePassBody(
     }
     compositeScene.view = get(resolved);
     compositeDisplay.view = get(displayResolved);
-    compositePass.timestampWrites = engine.timer.passWrites(
+    compositePass.timestampWrites = engine.raster.timer.passWrites(
       "translucent-composite",
     );
     const pass = enc.beginRenderPass(compositePass);

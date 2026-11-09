@@ -62,13 +62,13 @@ function cityLightAt(engine: Engine, view: View): number {
   if (!provider) {
     return 0;
   }
-  let city = engine.cityLights.get(provider);
+  let city = engine.raster.cityLights.get(provider);
   if (!city) {
     city = new CityLight(provider, () => {
-      engine.cityLightRead++;
+      engine.raster.cityLightRead++;
       engine.requestRender();
     });
-    engine.cityLights.set(provider, city);
+    engine.raster.cityLights.set(provider, city);
   }
   const c = view.body.ellipsoid.cartesianToCartographic(
     engine.bodyCamera(view).position,
@@ -77,7 +77,7 @@ function cityLightAt(engine: Engine, view: View): number {
   if (!c) {
     return 0;
   }
-  const last = engine.cityLightPlaces.get(view);
+  const last = engine.raster.cityLightPlaces.get(view);
   const moved = last
     ? Math.hypot(
         (c.longitude - last.longitude) * Math.cos(c.latitude),
@@ -87,17 +87,17 @@ function cityLightAt(engine: Engine, view: View): number {
   if (
     last?.city === city &&
     moved < 500 &&
-    engine.cityLightRead === engine.cityLightSeen
+    engine.raster.cityLightRead === engine.raster.cityLightSeen
   ) {
     return last.light;
   }
-  engine.cityLightSeen = engine.cityLightRead;
+  engine.raster.cityLightSeen = engine.raster.cityLightRead;
   const light = city.around(c.longitude, c.latitude);
   if (light === undefined) {
     // Its tiles on their way (they render again as they come).
     return last?.light ?? 0;
   }
-  engine.cityLightPlaces.set(view, {
+  engine.raster.cityLightPlaces.set(view, {
     city,
     longitude: c.longitude,
     latitude: c.latitude,
@@ -116,11 +116,11 @@ function writeLights(
   index: number,
   aspect: number,
 ): void {
-  const frame = engine.viewFrames.get(view)!;
+  const frame = engine.raster.viewFrames.get(view)!;
   const camera = engine.bodyCamera(view);
   const tanY = Math.tan(camera.fovy(aspect) / 2);
   const count = packViewLights(
-    engine.lightData,
+    engine.raster.lightData,
     0,
     (visit) => view.world.forEachLight(visit),
     {
@@ -133,13 +133,13 @@ function writeLights(
       tanY,
     },
     view.exposureScale,
-    engine.anchorEyes,
+    engine.scene.anchorEyes,
   );
   frame.lightCount = count;
   engine.ctx.device.queue.writeBuffer(
-    engine.lightStaging,
+    engine.raster.lightStaging,
     index * LIGHTS_SIZE,
-    engine.lightData,
+    engine.raster.lightData,
     0,
     LIGHT_HEADER_FLOATS + count * LIGHT_FLOATS,
   );
@@ -153,13 +153,13 @@ export function writeView(
 ): void {
   const aspect = rect.width / rect.height;
   const camera = engine.bodyCamera(view);
-  computeAnchorEyes(camera, view, engine.anchorEyes);
+  computeAnchorEyes(camera, view, engine.scene.anchorEyes);
   engine.reportFarAnchors(view);
   camera.viewRotation(scratchView);
   camera.projection(scratchProj, aspect);
   m4.multiply(scratchViewProj, scratchProj, scratchView);
   camera.frustumPlanes(scratchPlanes, aspect);
-  const block = engine.viewBlock;
+  const block = engine.raster.viewBlock;
   block.cameraPosition = camera.position;
   block.near = camera.near;
   block.aspect = aspect;
@@ -171,8 +171,8 @@ export function writeView(
   block.exposure = view.exposureScale;
   block.body = view.body;
   block.cityLights = view.cityLights;
-  block.time = (performance.now() - engine.startTime) / 1000;
-  engine.viewCityLight = cityLightAt(engine, view);
+  block.time = (performance.now() - engine.scene.startTime) / 1000;
+  engine.raster.viewCityLight = cityLightAt(engine, view);
   block.aerial = undefined;
   // The Moon's light: its full disk gives the albedo's share of the sun's
   // light times its solid angle over π, then less by phase (Allen).
@@ -192,9 +192,9 @@ export function writeView(
   }
   block.moonAir = moon?.airShare ?? 0;
   if (drawsSky(view)) {
-    const sky = engine.viewFrames.get(view)!.sky;
-    engine.sky.writeStars(engine.icrfToFixed);
-    engine.sky.write(
+    const sky = engine.raster.viewFrames.get(view)!.sky;
+    engine.raster.sky.writeStars(engine.icrfToFixed);
+    engine.raster.sky.write(
       sky,
       view.body.ellipsoid,
       camera,
@@ -206,7 +206,7 @@ export function writeView(
       view.sunDisk,
       "eye" in view.exposure ? ev100ToScale(EYE_STARS_EV100) : 0,
       moon,
-      engine.viewCityLight,
+      engine.raster.viewCityLight,
     );
     if (drawsAerialPerspective(view)) {
       block.aerial = {
@@ -217,22 +217,22 @@ export function writeView(
       };
     }
   }
-  writeViewBlock(engine.viewData, (index * VIEW_STRIDE) / 4, block);
+  writeViewBlock(engine.raster.viewData, (index * VIEW_STRIDE) / 4, block);
   writeAnchorEyes(
-    engine.viewData,
+    engine.raster.viewData,
     (index * VIEW_STRIDE) / 4,
     camera,
     view,
-    engine.anchorEyes,
+    engine.scene.anchorEyes,
   );
-  engine.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
+  engine.raster.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
     engine.viewBit(view);
-  const bytes = viewBlockBytes(engine.anchorEyes.count);
-  engine.viewFrames.get(view)!.viewBytes = bytes;
+  const bytes = viewBlockBytes(engine.scene.anchorEyes.count);
+  engine.raster.viewFrames.get(view)!.viewBytes = bytes;
   engine.ctx.device.queue.writeBuffer(
-    engine.viewStaging,
+    engine.raster.viewStaging,
     index * VIEW_STRIDE,
-    engine.viewData,
+    engine.raster.viewData,
     (index * VIEW_STRIDE) / 4,
     bytes / 4,
   );

@@ -36,7 +36,7 @@ export function viewFrameFor(
   view: View,
   rect: Readonly<PixelRect>,
 ): ViewFrame {
-  let frame = engine.viewFrames.get(view);
+  let frame = engine.raster.viewFrames.get(view);
   if (
     !frame ||
     frame.width !== rect.width ||
@@ -49,7 +49,7 @@ export function viewFrameFor(
       releaseTargets(engine, view, frame);
     }
     frame = buildViewFrame(engine, view, rect);
-    engine.viewFrames.set(view, frame);
+    engine.raster.viewFrames.set(view, frame);
   }
   return frame;
 }
@@ -60,7 +60,7 @@ export function viewFrameFor(
  * leaves every intermediate size resident until the pool's idle timeout.
  */
 function releaseTargets(engine: Engine, view: View, old: ViewFrame): void {
-  for (const [other, frame] of engine.viewFrames) {
+  for (const [other, frame] of engine.raster.viewFrames) {
     if (
       other !== view &&
       frame.width === old.width &&
@@ -70,7 +70,7 @@ function releaseTargets(engine: Engine, view: View, old: ViewFrame): void {
     }
   }
   for (const desc of old.graph.transientDescs()) {
-    engine.pool.purge(desc);
+    engine.raster.pool.purge(desc);
   }
 }
 
@@ -81,7 +81,7 @@ function buildViewFrame(
 ): ViewFrame {
   const { device, pipelines, targets } = engine.ctx;
   const { x, y, width, height } = rect;
-  const graph = new FrameGraph(engine.pool);
+  const graph = new FrameGraph(engine.raster.pool);
   const attachment = GPUTextureUsage.RENDER_ATTACHMENT;
   const color = graph.createTexture("color.msaa", {
     width,
@@ -176,7 +176,7 @@ function buildViewFrame(
     }),
     fxaaGroup: undefined,
     fxaaImage: undefined,
-    sky: engine.sky.createView(),
+    sky: engine.raster.sky.createView(),
     shadowed: false,
     ambient: false,
     lightCount: 0,
@@ -196,7 +196,7 @@ function buildViewFrame(
     }),
     translucentGroups: [],
   };
-  engine.sky.writeWeights(frame.sky);
+  engine.raster.sky.writeWeights(frame.sky);
   graph.addPass(
     "shadows",
     { sideEffect: true },

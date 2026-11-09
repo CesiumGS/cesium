@@ -26,10 +26,6 @@ import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;
 
-interface EngineInternals {
-  meters: Array<{ view: View; readback: GPUBuffer; scratch: GPUBuffer[] }>;
-}
-
 describe("a view's exposure in renderFrame()", () => {
   let engine: Engine;
   let now = 0;
@@ -66,7 +62,7 @@ describe("a view's exposure in renderFrame()", () => {
   });
 
   it("moves automatic exposure toward its meter's reading", async () => {
-    const meters = (engine as unknown as EngineInternals).meters;
+    const meters = engine.raster.meters;
     // The meter reads 4 cd/m² (log2 average 2).
     meters.push = (...items) => {
       for (const meter of items) {
@@ -120,7 +116,7 @@ describe("adapting on demand, the loop asleep", () => {
     engine = await fakeEngine();
     // The meter's readbacks answer `scene` (meter.slang's layout: log2
     // sums and their weights).
-    const meters = (engine as unknown as EngineInternals).meters;
+    const meters = engine.raster.meters;
     meters.push = (...items) => {
       for (const meter of items) {
         const values = Float32Array.of(

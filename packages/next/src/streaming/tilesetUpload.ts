@@ -47,7 +47,7 @@ const PIPELINE_WINDOW = 256;
 export function upload(tileset: Tileset3D): void {
   const limit = tileset.cacheBytes + tileset.overflowBytes;
   let exceeded = false;
-  const budget = tileset.engine.uploadBudget;
+  const budget = tileset.engine.scene.uploadBudget;
   // After a capacity failure that eviction couldn't relieve, wait before
   // retrying: each attempt creates (and rolls back) its textures.
   if (tileset.capacityWait > 0) {

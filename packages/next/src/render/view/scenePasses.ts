@@ -48,7 +48,7 @@ export function shadowsPass(
     const casters = view.world.shadowBundle();
     for (let k = 0; k < SHADOW_CASCADES; k++) {
       enc.copyBufferToBuffer(
-        engine.cascadeStaging,
+        engine.raster.cascadeStaging,
         (frame.slot * SHADOW_CASCADES + k) * VIEW_STRIDE,
         engine.ctx.currentViewBuffer,
         0,
@@ -57,7 +57,7 @@ export function shadowsPass(
       // Point sets cast no shadows: their cull is the view's alone.
       view.world.encodeCull(enc, undefined, false);
       shadowDepth.view = engine.ctx.shadowLayers[k]!;
-      shadowPass.timestampWrites = engine.timer.passWrites("shadows");
+      shadowPass.timestampWrites = engine.raster.timer.passWrites("shadows");
       const pass = enc.beginRenderPass(shadowPass);
       pass.executeBundles([casters]);
       pass.end();
@@ -67,8 +67,8 @@ export function shadowsPass(
 
 export function heightCapturesPass(engine: Engine, view: View): PassBody {
   return (enc) => {
-    for (const c of engine.captures) {
-      if (c.by !== view || c.stamp !== engine.frameNumber) {
+    for (const c of engine.raster.captures) {
+      if (c.by !== view || c.stamp !== engine.raster.frameNumber) {
         continue;
       }
       enc.copyBufferToBuffer(
@@ -99,21 +99,21 @@ export function heightCapturesPass(engine: Engine, view: View): PassBody {
 export function selectViewPass(engine: Engine, frame: ViewFrame): PassBody {
   return (enc) => {
     enc.copyBufferToBuffer(
-      engine.viewStaging,
+      engine.raster.viewStaging,
       frame.slot * VIEW_STRIDE,
       engine.ctx.currentViewBuffer,
       0,
       frame.viewBytes,
     );
     enc.copyBufferToBuffer(
-      engine.shadowStaging,
+      engine.raster.shadowStaging,
       frame.slot * SHADOWS_STRIDE,
       engine.ctx.currentShadowsBuffer,
       0,
       SHADOWS_SIZE,
     );
     enc.copyBufferToBuffer(
-      engine.lightStaging,
+      engine.raster.lightStaging,
       frame.slot * LIGHTS_SIZE,
       engine.ctx.lightBuffer,
       0,
@@ -129,7 +129,7 @@ export function lightsPass(engine: Engine, frame: ViewFrame): PassBody {
     }
     const pass = enc.beginComputePass({
       label: "lights",
-      timestampWrites: engine.timer.passWrites("lights"),
+      timestampWrites: engine.raster.timer.passWrites("lights"),
     });
     pass.setPipeline(engine.ctx.pipelines.lightsAssign);
     pass.setBindGroup(0, engine.ctx.lightAssignGroup);
@@ -147,7 +147,7 @@ export function cullPass(
   return (enc) => {
     view.world.encodeCull(
       enc,
-      engine.timer.passWrites("cull"),
+      engine.raster.timer.passWrites("cull"),
       true,
       frame.width * frame.height,
     );
@@ -161,10 +161,10 @@ export function skyViewPass(
 ): PassBody {
   return (enc) => {
     if (drawsSky(view) && frame.sky.inside) {
-      engine.sky.encodeTable(
+      engine.raster.sky.encodeTable(
         enc,
         frame.sky,
-        engine.timer.passWrites("sky-view"),
+        engine.raster.timer.passWrites("sky-view"),
       );
     }
   };
@@ -188,14 +188,14 @@ export function aerialPerspectivePass(
   return (enc) => {
     // Marched per vertex instead from high up: no volume.
     if (drawsAerialPerspective(view) && frame.sky.march < 1) {
-      engine.sky.encodeAerial(
+      engine.raster.sky.encodeAerial(
         enc,
         frame.sky,
-        engine.timer.passWrites("aerial-perspective"),
+        engine.raster.timer.passWrites("aerial-perspective"),
       );
     }
     if (drawsAerialPerspective(view) && frame.sky.screenHaze > 0) {
-      engine.sky.encodeAerialScreen(enc, frame.sky);
+      engine.raster.sky.encodeAerialScreen(enc, frame.sky);
     }
   };
 }
@@ -232,7 +232,7 @@ export function prepassPassBody(
     }
     prepassColor.view = get(prepassNormal);
     prepassDepthAttachment.view = get(prepassDepth);
-    prepassPass.timestampWrites = engine.timer.passWrites("prepass");
+    prepassPass.timestampWrites = engine.raster.timer.passWrites("prepass");
     const pass = enc.beginRenderPass(prepassPass);
     pass.executeBundles([view.world.prepassBundle()]);
     pass.end();
@@ -277,7 +277,7 @@ export function ambientOcclusionPass(
         { binding: 5, resource: { buffer: engine.ctx.aoBuffer } },
       ],
     });
-    const timestampWrites = engine.timer.passWrites("ambient-occlusion");
+    const timestampWrites = engine.raster.timer.passWrites("ambient-occlusion");
     const pass = enc.beginComputePass({
       label: "ambient-occlusion",
       ...(timestampWrites ? { timestampWrites } : {}),
@@ -286,7 +286,7 @@ export function ambientOcclusionPass(
     pass.setBindGroup(0, trace);
     pass.dispatchWorkgroups(Math.ceil(width / 16), Math.ceil(height / 16));
     pass.end();
-    const blurWrites = engine.timer.passWrites("ambient-occlusion.blur");
+    const blurWrites = engine.raster.timer.passWrites("ambient-occlusion.blur");
     const second = enc.beginComputePass({
       label: "ambient-occlusion.blur",
       ...(blurWrites ? { timestampWrites: blurWrites } : {}),
@@ -309,7 +309,7 @@ export function starsPass(
 ): PassBody {
   return (enc, get) => {
     if (drawsSky(view)) {
-      engine.sky.encodeStars(enc, frame.sky, get(starLayer));
+      engine.raster.sky.encodeStars(enc, frame.sky, get(starLayer));
     }
   };
 }
@@ -380,7 +380,7 @@ export function opaquePassBody(
     opaqueDisplay.view = get(display);
     opaqueDisplay.resolveTarget = get(displayResolved);
     opaqueDepth.view = get(depth);
-    opaquePass.timestampWrites = engine.timer.passWrites("opaque");
+    opaquePass.timestampWrites = engine.raster.timer.passWrites("opaque");
     const pass = enc.beginRenderPass(opaquePass);
     // Its depth first, then its shading where that depth is (each
     // sample shaded once, not every fragment drawn over it).
@@ -394,7 +394,7 @@ export function opaquePassBody(
     // Tiny point symbols the cull rasterized, depth-tested over them.
     view.world.drawSplats(pass);
     if (atmosphere) {
-      engine.sky.draw(pass, frame.sky, get(starLayer));
+      engine.raster.sky.draw(pass, frame.sky, get(starLayer));
     }
     pass.end();
   };

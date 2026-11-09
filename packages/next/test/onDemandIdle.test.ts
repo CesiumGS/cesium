@@ -106,7 +106,6 @@ const TILESET = {
 
 interface EngineInternals {
   tick(): void;
-  meters: Array<{ view: View; readback: GPUBuffer; scratch: GPUBuffer[] }>;
 }
 
 describe("f16round (the test meter's fp16)", () => {
@@ -166,7 +165,7 @@ describe("on-demand rendering goes idle", () => {
    * renderTick.ts reads it after submit.
    */
   function meterAsTheGpu(): void {
-    const meters = (engine as unknown as EngineInternals).meters;
+    const meters = engine.raster.meters;
     meters.push = (...items) => {
       const seen = (l: number, scale: number) =>
         Math.log2(rounds ? f16round(l * scale) / scale : l);

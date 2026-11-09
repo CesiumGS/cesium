@@ -82,11 +82,7 @@ function blended(world: World, viewMask?: number) {
 function frame(views: View[]): boolean[] {
   passes.length = 0;
   engine.renderFrame();
-  const frames = (
-    engine as unknown as {
-      viewFrames: Map<View, { translucent: boolean }>;
-    }
-  ).viewFrames;
+  const frames = engine.raster.viewFrames;
   return views.map((view) => frames.get(view)!.translucent);
 }
 

@@ -27,7 +27,7 @@ function drawOverlays(
     return;
   }
   const device = engine.ctx.device;
-  let resources = engine.overlayResources.get(view);
+  let resources = engine.raster.overlayResources.get(view);
   if (!resources || resources.capacity < vertices) {
     resources?.buffer.destroy();
     const capacity = Math.max(vertices, 256);
@@ -54,7 +54,7 @@ function drawOverlays(
       group,
       staging: new Float32Array(capacity * 3),
     };
-    engine.overlayResources.set(view, resources);
+    engine.raster.overlayResources.set(view, resources);
   }
   // Camera-relative in float64, then float32: overlays share the
   // precision scheme of the draw records.
@@ -73,8 +73,8 @@ function drawOverlays(
     }
   }
   device.queue.writeBuffer(resources.buffer, 0, data, 0, vertices * 3);
-  engine.overlayColor.set(overlays[0]!.color);
-  device.queue.writeBuffer(resources.params, 0, engine.overlayColor);
+  engine.raster.overlayColor.set(overlays[0]!.color);
+  device.queue.writeBuffer(resources.params, 0, engine.raster.overlayColor);
   pass.setPipeline(engine.ctx.pipelines.overlay);
   pass.setBindGroup(0, engine.ctx.currentViewBindGroup);
   pass.setBindGroup(1, resources.group);
@@ -162,7 +162,7 @@ export function meterPass(
     pass.dispatchWorkgroups(1);
     pass.end();
     enc.copyBufferToBuffer(result, 0, readback, 0, 16);
-    engine.meters.push({ view, readback, scratch: [params, result] });
+    engine.raster.meters.push({ view, readback, scratch: [params, result] });
   };
 }
 
@@ -215,7 +215,11 @@ export function depthRangePass(
     pass.dispatchWorkgroups(8, 8);
     pass.end();
     enc.copyBufferToBuffer(result, 0, readback, 0, 8);
-    engine.depthRanges.push({ frame, readback, scratch: [params, result] });
+    engine.raster.depthRanges.push({
+      frame,
+      readback,
+      scratch: [params, result],
+    });
   };
 }
 
@@ -245,7 +249,7 @@ export function hdrReadbackPass(
       { buffer, bytesPerRow },
       [width, height],
     );
-    engine.hdrReads.push({
+    engine.raster.hdrReads.push({
       buffer,
       bytesPerRow,
       width,
@@ -292,9 +296,9 @@ export function adaptationPass(
     if (!("eye" in view.exposure)) {
       return;
     }
-    engine.adaptData[0] = view.exposureScale;
-    engine.adaptData[1] = view.autoExposure?.cones ?? 0;
-    device.queue.writeBuffer(frame.adaptParams, 0, engine.adaptData);
+    engine.raster.adaptData[0] = view.exposureScale;
+    engine.raster.adaptData[1] = view.autoExposure?.cones ?? 0;
+    device.queue.writeBuffer(frame.adaptParams, 0, engine.raster.adaptData);
     const reduce = device.createBindGroup({
       layout: pipelines.adaptReduce.getBindGroupLayout(0),
       entries: [
@@ -370,7 +374,7 @@ export function presentPassBody(
   return (enc, get) => {
     const fxaa = view.fxaa;
     const srgbTarget = engine.ctx.outputFormat.endsWith("-srgb");
-    const params = engine.presentData;
+    const params = engine.raster.presentData;
     params.setFloat32(0, fxaa ? 0 : x, true);
     params.setFloat32(4, fxaa ? 0 : y, true);
     params.setUint32(8, TONE_MAPPINGS.indexOf(view.toneMapping), true);
@@ -407,7 +411,7 @@ export function presentPassBody(
       frame.presentSource = source;
       frame.presentDisplay = shown;
       frame.presentAdaptation = adapted;
-      engine.adaptSampler ??= device.createSampler({
+      engine.raster.adaptSampler ??= device.createSampler({
         label: "adaptation",
         magFilter: "linear",
         minFilter: "linear",
@@ -419,7 +423,7 @@ export function presentPassBody(
           { binding: 1, resource: { buffer: frame.presentParams } },
           { binding: 2, resource: shown },
           { binding: 3, resource: adapted },
-          { binding: 4, resource: engine.adaptSampler },
+          { binding: 4, resource: engine.raster.adaptSampler },
         ],
       });
     }
@@ -431,7 +435,7 @@ export function presentPassBody(
       first.setBindGroup(0, frame.presentGroup!);
       first.draw(3);
       first.end();
-      const f = engine.fxaaData;
+      const f = engine.raster.fxaaData;
       f.setFloat32(0, x, true);
       f.setFloat32(4, y, true);
       f.setFloat32(8, 1 / width, true);
@@ -440,7 +444,7 @@ export function presentPassBody(
       device.queue.writeBuffer(frame.fxaaParams, 0, f.buffer);
       if (frame.fxaaImage !== image) {
         frame.fxaaImage = image;
-        engine.fxaaSampler ??= device.createSampler({
+        engine.raster.fxaaSampler ??= device.createSampler({
           label: "fxaa",
           magFilter: "linear",
           minFilter: "linear",
@@ -450,7 +454,7 @@ export function presentPassBody(
           layout: pipelines.fxaa.getBindGroupLayout(0),
           entries: [
             { binding: 0, resource: image },
-            { binding: 1, resource: engine.fxaaSampler },
+            { binding: 1, resource: engine.raster.fxaaSampler },
             { binding: 2, resource: { buffer: frame.fxaaParams } },
           ],
         });

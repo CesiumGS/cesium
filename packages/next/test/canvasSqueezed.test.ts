@@ -20,10 +20,6 @@ import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;
 
-interface EngineInternals {
-  meters: unknown[];
-}
-
 describe("a view on a canvas squeezed to 1 pixel", () => {
   let engine: Engine;
 
@@ -45,7 +41,7 @@ describe("a view on a canvas squeezed to 1 pixel", () => {
   }
 
   const metered = (view: View) => {
-    const meters = (engine as unknown as EngineInternals).meters;
+    const meters = engine.raster.meters;
     let count = 0;
     meters.push = () => ++count;
     engine.renderFrame();

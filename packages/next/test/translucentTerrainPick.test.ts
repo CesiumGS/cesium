@@ -54,8 +54,7 @@ function firstFeature(w: World, d: DrawHandle): number {
 
 /** Answers each pick pass as the GPU would (pick.slang). */
 function answerPicks(): void {
-  const picks = (engine as unknown as { picks: Array<{ readback: GPUBuffer }> })
-    .picks;
+  const picks = engine.raster.picks;
   picks.push = (...items) => {
     for (const item of items) {
       const words = new Uint32Array(4);
