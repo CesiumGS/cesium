@@ -114,6 +114,11 @@ import {
   halfToFloat,
 } from "../render/view/picks.ts";
 import { updateExposure, adaptExposure } from "../render/view/exposure.ts";
+import {
+  scratchFrame,
+  updateEnvironment,
+  environmentFrame,
+} from "../render/view/environment.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -432,8 +437,8 @@ export class Engine {
     View,
     { city: CityLight; longitude: number; latitude: number; light: number }
   >();
-  /** This frame's view's city light, cd/m² (`cityLightAt`). */
-  private viewCityLight = 0;
+  /** @internal This frame's view's city light, cd/m² (`cityLightAt`). */
+  viewCityLight = 0;
   /** @internal Each drawn view's lights (lights.ts `packViewLights`), by slot. */
   readonly lightStaging: GPUBuffer;
   private readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
@@ -475,10 +480,10 @@ export class Engine {
   private readonly worldFrames = new WeakMap<World, WorldFrame>();
   private readonly overlayResources = new Map<View, OverlayResources>();
   /**
-   * Views lit by their atmosphere's environment: its probe, and the local
+   * @internal Views lit by their atmosphere's environment: its probe, and the local
    * sun direction and altitude it was built for.
    */
-  private readonly probes = new Map<
+  readonly probes = new Map<
     View,
     {
       probe: EnvironmentProbe;
@@ -488,8 +493,8 @@ export class Engine {
       pending: boolean;
     }
   >();
-  /** The environment of a body without an atmosphere: black. */
-  private darkProbe: EnvironmentProbe | undefined;
+  /** @internal The environment of a body without an atmosphere: black. */
+  darkProbe: EnvironmentProbe | undefined;
   /** @internal */
   readonly pickReadback: GPUBuffer[] = [];
   /** @internal */
@@ -553,7 +558,8 @@ export class Engine {
   /** @internal */
   readonly fxaaData = new DataView(new ArrayBuffer(32));
   private readonly overlayColor = new Float32Array(4);
-  private readonly viewBlock: ViewBlock;
+  /** @internal */
+  readonly viewBlock: ViewBlock;
   /** When the engine was created (`performance.now()`): views' `time`. */
   private readonly startTime = performance.now();
   /** @internal Height captures (`addHeightCapture`). */
@@ -762,139 +768,6 @@ export class Engine {
     world.destroy();
     target.destroy();
     this.stats.cpuMs = 0;
-  }
-
-  /**
-   * The environment a view's lighting reads: its atmosphere's (rebuilt by
-   * `updateEnvironment`), black without one, or the procedural sky.
-   */
-  private probeOf(view: View): EnvironmentProbe {
-    const environment = this.ctx.environment;
-    if (view.lighting.environment !== "atmosphere") {
-      return environment.procedural;
-    }
-    if (!view.body.atmosphere) {
-      // Never built: textures and buffers start as zeros.
-      return (this.darkProbe ??= environment.createProbe("env.dark"));
-    }
-    return this.probes.get(view)!.probe;
-  }
-
-  /**
-   * Marks a view's environment for rebuilding from its atmosphere (this
-   * frame, `encodeEnvironment`) when the sun has
-   * moved by about 0.1° in its local frame (or the camera about 13 km
-   * along the ground), or its altitude by 10% (500 m and below count as
-   * 500 m: below the 8 km scale height the sky changes slowly with
-   * altitude); by night, when the Moon has moved as much or its light by
-   * 10%; and when the exposure has moved by a stop (the sky it's built
-   * from is pre-exposed: a night sky at a day's exposure is below fp16's
-   * smallest values). About 10 ms of GPU work each time (plan §4.2: to
-   * cut).
-   */
-  private updateEnvironment(view: View): void {
-    if (view.lighting.environment !== "atmosphere" || !view.body.atmosphere) {
-      return;
-    }
-    let entry = this.probes.get(view);
-    if (!entry) {
-      entry = {
-        probe: this.ctx.environment.createProbe("env.view"),
-        key: new Float64Array(9).fill(Number.NaN),
-        exposure: Number.NaN,
-        pending: false,
-      };
-      this.probes.set(view, entry);
-    }
-    const ellipsoid = view.body.ellipsoid;
-    const position = this.bodyCamera(view).position;
-    const frame = environmentFrame(position, ellipsoid);
-    const sun = this.sunDirection;
-    const east = v3.dot(frame[0], sun);
-    const up = v3.dot(frame[1], sun);
-    const south = v3.dot(frame[2], sun);
-    const height =
-      ellipsoid.cartesianToCartographic(position, scratchCartographic)
-        ?.height ?? 0;
-    const altitude = Math.max(height, 500);
-    const k = entry.key;
-    const turned = Math.hypot(east - k[0]!, up - k[1]!, south - k[2]!);
-    const climbed = Math.abs(Math.log(altitude / k[3]!));
-    // The Moon by night (the air's share is 0 by day), and the exposure.
-    const moon = this.viewBlock.moonAir > 0 ? this.viewBlock.moon : undefined;
-    const moonEast = moon ? v3.dot(frame[0], moon.direction) : 0;
-    const moonUp = moon ? v3.dot(frame[1], moon.direction) : 0;
-    const moonSouth = moon ? v3.dot(frame[2], moon.direction) : 0;
-    const moonLight = this.viewBlock.moonAir;
-    const moonTurned = Math.hypot(
-      moonEast - k[4]!,
-      moonUp - k[5]!,
-      moonSouth - k[6]!,
-    );
-    const moonChanged =
-      moonLight === 0
-        ? k[7] !== 0
-        : !(Math.abs(Math.log(moonLight / k[7]!)) <= 0.1);
-    const stops = Math.abs(Math.log2(view.exposureScale / entry.exposure));
-    // The city's light (its glow, its ground) by 10%.
-    const city = this.viewCityLight;
-    const cityChanged =
-      city === 0 ? k[8] !== 0 : !(Math.abs(Math.log(city / k[8]!)) <= 0.1);
-    // NaN (never built) compares false: rebuild.
-    if (
-      turned <= 0.002 &&
-      climbed <= 0.1 &&
-      moonTurned <= 0.002 &&
-      !moonChanged &&
-      !cityChanged &&
-      stops <= 1
-    ) {
-      return;
-    }
-    k[0] = east;
-    k[1] = up;
-    k[2] = south;
-    k[3] = altitude;
-    k[4] = moonEast;
-    k[5] = moonUp;
-    k[6] = moonSouth;
-    k[7] = moonLight;
-    k[8] = city;
-    entry.exposure = view.exposureScale;
-    entry.pending = true;
-  }
-
-  /**
-   * @internal Encodes a pending rebuild of a view's environment (after its sky-view
-   * table, which it reads when the view has one), then selects the view's
-   * environment for its draws.
-   */
-  encodeEnvironment(
-    encoder: GPUCommandEncoder,
-    view: View,
-    frame: ViewFrame,
-  ): void {
-    const entry = this.probes.get(view);
-    if (entry?.pending) {
-      entry.pending = false;
-      const position = this.bodyCamera(view).position;
-      const ellipsoid = view.body.ellipsoid;
-      this.sky.encodeEnvironment(
-        encoder,
-        frame.sky,
-        entry.probe.skyCube,
-        ellipsoid,
-        position,
-        environmentFrame(position, ellipsoid),
-        this.sunDirection,
-        drawsSky(view) && frame.sky.inside
-          ? { exposure: view.exposureScale }
-          : undefined,
-      );
-      this.ctx.environment.build(entry.probe, encoder);
-      this.stats.environmentBuilds++;
-    }
-    this.ctx.environment.select(encoder, this.probeOf(view));
   }
 
   /**
@@ -2605,7 +2478,7 @@ export class Engine {
       // applied; automatic exposure never moved).
       updateExposure(this, view);
       this.writeView(view, slots, rect);
-      this.updateEnvironment(view);
+      updateEnvironment(this, view);
       slots++;
 
       if (image) {
@@ -3462,22 +3335,6 @@ const EARTH_RADIUS = 6_371_009;
 const ASTRONOMICAL_UNIT = 1.495978707e11;
 /** The ecliptic's tilt to the equator (J2000), radians. */
 const OBLIQUITY = (23.4392911 * Math.PI) / 180;
-const scratchEnu = m4.mat4();
-const scratchEast = v3.vec3();
-const scratchUp = v3.vec3();
-const scratchSouth = v3.vec3();
-const scratchFrame: [Vec3, Vec3, Vec3] = [scratchEast, scratchUp, scratchSouth];
-
-export function environmentFrame(
-  position: Vec3,
-  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
-): [Vec3, Vec3, Vec3] {
-  const enu = eastNorthUpToFixedFrame(position, ellipsoid, scratchEnu);
-  v3.set(scratchEast, enu[0]!, enu[1]!, enu[2]!);
-  v3.set(scratchUp, enu[8]!, enu[9]!, enu[10]!);
-  v3.set(scratchSouth, -enu[4]!, -enu[5]!, -enu[6]!);
-  return scratchFrame;
-}
 
 const scratchView = m4.mat4();
 const scratchCartographic: Cartographic = {

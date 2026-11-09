@@ -25,6 +25,7 @@ import {
   SHADOWS_SIZE,
 } from "../../scene/shadows.ts";
 import { encodePick } from "./picks.ts";
+import { encodeEnvironment } from "./environment.ts";
 
 /** The view's frame graph for its current size, built on first use and on resize. */
 export function viewFrameFor(
@@ -366,7 +367,7 @@ function buildViewFrame(
 
   // The view's environment lighting, rebuilt from its sky if due.
   graph.addPass("environment", { sideEffect: true }, (enc) => {
-    engine.encodeEnvironment(enc, view, frame);
+    encodeEnvironment(engine, enc, view, frame);
   });
 
   // The air between the camera and the scene, for the opaque pass.
