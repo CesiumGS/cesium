@@ -4,8 +4,6 @@ import { Check, DeveloperError, defined } from "@cesium/core";
  * An enum describing the built-in vertex attribute semantics.
  *
  * @enum {string}
- *
- * @private
  */
 const VertexAttributeSemantic = {
   /**
