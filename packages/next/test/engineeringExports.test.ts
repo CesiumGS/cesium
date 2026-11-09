@@ -100,7 +100,7 @@ describe("proj entry: engineering frames", () => {
 
   it("exports the frames explorer's two internals only as @internal", () => {
     expect(read("../src/proj/index.ts")).toMatch(
-      /\/\/ @internal, both: [^\n]*\nexport \{ projTokenProblem \} from "\.\.\/engineering\/wkt2\.ts";\nexport \{ strictWkt2 \} from "\.\.\/engineering\/crs\.ts";/,
+      /\/\*\* @internal [^\n]*\*\/\nexport \{ projTokenProblem \} from "\.\.\/engineering\/wkt2\.ts";\n\/\*\* @internal [^\n]*\*\/\nexport \{ strictWkt2 \} from "\.\.\/engineering\/crs\.ts";/,
     );
     expect(read("../src/engineering/wkt2.ts")).toMatch(
       /@internal[^/]*\/\nexport function projTokenProblem/,
