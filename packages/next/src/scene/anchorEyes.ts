@@ -9,7 +9,8 @@
  *
  * With every anchor at the identity each slot's eye is the camera and its
  * rotation the identity: every float the GPU reads is what it was before
- * anchors.
+ * anchors. The results can still differ in the last bit: the kernels' code
+ * changed, and Metal may sum floats in another order when it does.
  */
 
 import { MAX_ANCHORS, writeAnchorEye } from "../render/layout.ts";

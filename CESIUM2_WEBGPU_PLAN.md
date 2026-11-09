@@ -7910,6 +7910,92 @@ _Engine fixes made alongside plan 4b (2026-11-07)._
 - **Dyno has one ion token setting** for every view (`d2cca2f34a`), and builds
   never embed `.env.local`'s token.
 
+**Frames 5a results (2026-11-09).** Plan 5a
+(docs/superpowers/plans/2026-11-07-frames-5a-core-and-camera-chain.md) built
+the core and the camera chain: the entry points and their dependency rule,
+render space with anchors and an eye per anchor, rigs, the camera layer and
+the reference frame resolver, the catalog, `attachSky`, picks and the pick
+interpreter, the coordinate service and `hosted`, per-vertex placements, the
+query interface, the seams with their bypass tests, and the surface map.
+Scene items (§13.25) replaced the design globe's pairing of two tilesets.
+Closed by Task 22.
+
+- **Parity.** On Metal, the parity suites the tasks ran (image, models,
+  tracks, heights, tileset) matched the base commit except the tileset
+  suite's row 16, `InstancedRTC` unlit. Its FLIP moved
+  from 0.015939687808453853 to 0.015947530756269895, with the other two
+  values at 0.015694062963991402 and 0.14132077991962433. The GPU's inputs
+  are bit-identical. Metal reorders a float sum when a kernel's code changes:
+  once `relativeMatrix` multiplies by the anchor's axes, even the identity,
+  even behind a branch that never runs, the compiler sums the instance's
+  translation in the order the code is written, and 14 of 75 components move
+  by one float32 ulp (3.6 to 22 micrometres at 40 to 380 m). That is not a
+  precision loss: against the exact sum the old order was closer, but
+  neither order is promised. One 4× sample at pixel (113, 152) flips. Plan call 18
+  promises the inputs, not the pixels, and no engine change was made. Whoever
+  re-baselines the gate takes these three values. Any later kernel edit can
+  move a row the same way, so explain a one-ulp difference before accepting
+  it.
+- **Draw records grew by 16 bytes** each, for the placement (about 4 MB at
+  the most draws).
+- **`castRays` and the terrain line of sight test unplaced triangles.** A
+  ray ignores a per-vertex placement. This is documented, and left for 5b or
+  the tessellation engine.
+- **Loops.** The Slang loops that ran to a count read from a buffer or a
+  local are now bounded by constants with an early `break`, and their buffer
+  indices clamped: the image-based lighting prefilter and irradiance
+  kernels, the light table's assignment and the surface's per-pixel light
+  list and sample loop. Tint still guards every loop it can't prove finite in
+  the Metal it makes, so the gain is the rule, not a faster kernel.
+
+_Carried forward from frames plan 5a._ These are deferred items that are
+real work. The wording and test-strength nits the reviews raised are left out.
+
+- **Tile selection and casters: measured costs, accepted for now.**
+  Selection takes 2.75 ms on Google's tileset at 150 m. The shadow casters'
+  bytes are 2.09 and 2.45 times the view's on one photogrammetry tileset. A
+  return after 60 s with a full cache can cost reloads, since cold tiles
+  are dropped only on evidence they are not coming back. The shadow pass's
+  own GPU time is unmeasured.
+- **Queries (5b).** Standing queries don't reach `measure` yet, and the
+  explorer's re-trace should subscribe to standing answers. Tile spheres are
+  wider than their tiles (use `Tile.volume` boxes), and a per-world revision
+  over-triggers standing queries.
+- **Sky (5e).** `attachSky` falls back for the whole sky at once, where the
+  resolver falls back per edge of a route. Settle which is right when the
+  physical sky goes per body, together with the exposure tuning (the 0.18
+  target and the highlight guard need more testing).
+- **Plan 5i's list (the API review):**
+  - `eastNorthUpToFixedFrame`'s engine callers keep the normal at the point,
+    for parity with the Earth, so two east-north-up conventions differ by
+    about 0.13 microradians at 250 m;
+  - `sampleHeight`, `exactHeight` and `surfaceHeight` work in
+    radians;
+  - what the geometry-submission check can't see: storage-bound vertex data,
+    a plain `pass.draw`, calls through a variable, and a second Slang
+    arguments buffer under another name;
+  - a hosted tileset gets design coordinates only through the pick
+    interpreter, not through `pickDesign` or snapping;
+  - `Sky.starsOn` is private, and the re-rooting page reads it;
+  - examples that import `src/` internals, for the review to list.
+- **Upsampling follow-ups.** No local imagery stop (an `upsampledFromParent`
+  rule); a refetch per child after eviction, which bypasses the terrain
+  request window; imagery slices sit outside the byte budget; the worker path
+  of upsampling has not been run.
+- **Smaller engine items.** `Ellipsoid.cartesianToCartographic` loses about
+  0.3 micrometres of height near the equator. Tile load, unload and slot reuse
+  have no clip tests. A thrown server error does not reset the snap run. The
+  design globe shows a thin line where its item switches to opaque, and its
+  rigid normals stay as they are until the §13.26 review.
+- **Content the engine doesn't load yet.** Implicit tiling, all of a tile's
+  multiple contents, S2 volumes, metadata and glTF 1.0 content; point clouds
+  and vector tiles (`pnts`, `vctr`, `geom`) wait for the vector renderer.
+
+Owner-requested later work, written up as notes and designs, is §13.17 to
+§13.26: layers, scene items (§13.25), reference data (§13.24), the indirect
+draw risk on Intel integrated GPUs (§13.23) and the review of geometry
+through placement (§13.26).
+
 ### 13.15 GPU resource limits and capacities (r50, design)
 
 **What broke.** The first run on a Mac (Apple M-series, Chrome) failed at

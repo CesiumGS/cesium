@@ -112,8 +112,10 @@ public AnchorEye anchorEye(Transform t) {
 // the transform's anchor is exact (SplitPosition), so the result keeps
 // float32 precision relative to the (small) camera distance; then the
 // anchor's axes turn it into the view's shading axes (the identity for the
-// view's body anchor, and for every anchor placed at the identity, which
-// leaves each float as it was). Rows: `linear` holds the rotation-scale by
+// view's body anchor, and for every anchor placed at the identity, whose
+// inputs are then the same as before anchors; the multiply by the identity
+// is still in the kernel, and Metal may sum floats in another order once the
+// kernel's code changes, so a result can differ in the last bit). Rows: `linear` holds the rotation-scale by
 // row as Slang indexes it (layout.ts writes columns, and the column-major
 // storage reads them back as this matrix).
 public float4x4 relativeMatrix(Transform t) {
