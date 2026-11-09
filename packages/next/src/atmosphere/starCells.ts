@@ -233,6 +233,33 @@ export const starCullStorage = (): StarCullInputs => ({
   minRadiance: 0,
 });
 
+/** A plane through the eye at `tangent` along `axis`, in ICRF: inward, unit. */
+function writePlane(
+  planes: Float32Array,
+  at: number,
+  forward: ArrayLike<number>,
+  tangent: number,
+  axis: ArrayLike<number>,
+  sign: number,
+  rows: ArrayLike<number>,
+): void {
+  let length = 0;
+  for (let i = 0; i < 3; i++) {
+    // Earth-fixed to ICRF: the transpose of `rows`.
+    let v = 0;
+    for (let j = 0; j < 3; j++) {
+      v += rows[j * 3 + i]! * (forward[j]! * tangent + sign * axis[j]!);
+    }
+    planes[at + i] = v;
+    length += v * v;
+  }
+  length = 1 / Math.sqrt(length);
+  for (let i = 0; i < 3; i++) {
+    planes[at + i]! *= length;
+  }
+  planes[at + 3] = 0;
+}
+
 /**
  * What a view's cull tests with: from the sky's uniform values, so there's no new
  * read of the field of view. `rows` is `icrfToFixed`, row by row. A star shows if
@@ -259,32 +286,10 @@ export function starCullInputs(
   const wideX = tanX * (1 + (2 * margin) / width);
   const wideY = tanY * (1 + (2 * margin) / height);
   const { planes } = out;
-  const plane = (
-    at: number,
-    ax: number,
-    a: ArrayLike<number>,
-    sign: number,
-  ) => {
-    let length = 0;
-    for (let i = 0; i < 3; i++) {
-      // Earth-fixed to ICRF: the transpose of `rows`.
-      let v = 0;
-      for (let j = 0; j < 3; j++) {
-        v += rows[j * 3 + i]! * (forward[j]! * ax + sign * a[j]!);
-      }
-      planes[at + i] = v;
-      length += v * v;
-    }
-    length = 1 / Math.sqrt(length);
-    for (let i = 0; i < 3; i++) {
-      planes[at + i]! *= length;
-    }
-    planes[at + 3] = 0;
-  };
-  plane(0, wideX, right, 1);
-  plane(4, wideX, right, -1);
-  plane(8, wideY, up, 1);
-  plane(12, wideY, up, -1);
+  writePlane(planes, 0, forward, wideX, right, 1, rows);
+  writePlane(planes, 4, forward, wideX, right, -1, rows);
+  writePlane(planes, 8, forward, wideY, up, 1, rows);
+  writePlane(planes, 12, forward, wideY, up, -1, rows);
   const pixelAngle = (2 * tanY) / height;
   const gain = Math.max(shadowGain, 1);
   out.minRadiance =

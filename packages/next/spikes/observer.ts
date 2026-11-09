@@ -992,9 +992,12 @@ const skyMapFaces = ["px", "mx", "py", "my", "pz", "mz"].map(
     ),
 );
 
-/** The stars this page draws: `?pack=local`'s, or today's map. */
+/** The stars this page draws: `?pack=local`'s, or today's map, loaded anew. */
 async function skyStars(engine: Engine): Promise<void> {
-  if (params.get("pack") !== "local") {
+  engine.raster.sky.setStarField(null);
+  if (params.get("pack") === "local") {
+    void engine.setSkyPack("/sky-pack/");
+  } else {
     engine.setStarMap(skyMapFaces);
   }
   const sky = engine.raster.sky as unknown as {
@@ -1617,11 +1620,8 @@ async function runObserver(): Promise<ObserverResult> {
   status.textContent = "checking…";
   $("results").replaceChildren();
   const engine = await Engine.create();
-  // ?pack=local: the sky pack `npm run sky -- build` made on this machine,
-  // offered by the dev server at /sky-pack/.
-  if (params.get("pack") === "local") {
-    await engine.setSkyPack("/sky-pack/");
-  }
+  // ?pack=local: the sky pack `npm run sky -- build` made on this machine, offered
+  // by the dev server at /sky-pack/. The groups that draw stars load it (`skyStars`).
   const deviceErrors: string[] = [];
   let lost: string | undefined;
   void engine.gpu.device.lost.then((info) => {

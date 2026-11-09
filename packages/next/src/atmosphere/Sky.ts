@@ -332,6 +332,9 @@ export class Sky {
   private readonly starSampler: GPUSampler;
   private readonly starData = new Float32Array(STARS_SIZE / 4);
   private readonly starCull = starCullStorage();
+  private readonly starCullPass: GPUComputePassDescriptor = {
+    label: "sky.starCull",
+  };
   private starsOn = 0;
   private readonly starPass: GPURenderPassDescriptor;
   private readonly starAttachment: GPURenderPassColorAttachment;
@@ -881,10 +884,8 @@ export class Sky {
       this.followStarPoints(view);
     }
     if (stars && indirect) {
-      const cull = encoder.beginComputePass({
-        label: "sky.starCull",
-        ...(cullWrites ? { timestampWrites: cullWrites } : {}),
-      });
+      this.starCullPass.timestampWrites = cullWrites;
+      const cull = encoder.beginComputePass(this.starCullPass);
       cull.setPipeline(this.starCullPipeline);
       cull.setBindGroup(0, this.empty);
       cull.setBindGroup(1, this.empty);
