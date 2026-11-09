@@ -36,6 +36,12 @@ import type {
   PointDraw,
 } from "./types.ts";
 import { queueUpload } from "./uploads.ts";
+import {
+  growPointSets,
+  growDraws,
+  reserveDraws,
+  growInstances,
+} from "../../render/world/tables.ts";
 
 const ZERO = Float64Array.of(0, 0, 0);
 
@@ -155,7 +161,8 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
       world.freePointCounters.length === 0 &&
       world.pointSetCount < world.maxPointSets
     ) {
-      world.growPointSets(
+      growPointSets(
+        world,
         Math.min(world.maxPointSets, world.pointSetCount * 2),
       );
     }
@@ -191,9 +198,9 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
     throw new CapacityError("draw table");
   }
   if (index >= world.drawRows) {
-    world.growDraws(index + 1);
+    growDraws(world, index + 1);
   }
-  world.reserveDraws(index + 1);
+  reserveDraws(world, index + 1);
   const mesh = options.mesh;
   // Placement: a shared transform, or one the draw owns.
   let transform: number;
@@ -237,7 +244,7 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
     }
     world.instances.reserve(first + instanceCount);
     if (first + instanceCount > world.instances.gpuRows) {
-      world.growInstances(first + instanceCount);
+      growInstances(world, first + instanceCount);
     }
     instanceFirst = first;
     world.instanceHighWater = Math.max(

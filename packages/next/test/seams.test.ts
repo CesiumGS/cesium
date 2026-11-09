@@ -738,7 +738,7 @@ describe("the draw-arguments and geometry-submission seams", () => {
     // Slabs (index buffers) and the overlays; the batches' item lists are
     // bound by DrawArguments.drawBatch.
     const allowed = new Set([
-      "World.bindSlab",
+      "src/render/world/tables.ts: bindSlab",
       "src/render/view/outputPasses.ts: drawOverlays",
     ]);
     const violations: string[] = [];

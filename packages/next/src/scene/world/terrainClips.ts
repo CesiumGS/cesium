@@ -14,6 +14,7 @@ import {
 } from "../../render/layout.ts";
 import type { World } from "../World.ts";
 import type { ClipBox, ClipHandle, DrawHandle } from "./types.ts";
+import { growClips } from "../../render/world/tables.ts";
 
 /** Throws unless `opacity` is a terrain region's: 0 to 1, both included. */
 function checkTerrainOpacity(opacity: number): void {
@@ -43,7 +44,7 @@ export function allocateClip(
   }
   world.placeholderBlocks++;
   if (block >= world.clipRows) {
-    world.growClips(block + 1);
+    growClips(world, block + 1);
   }
   const f = world.clipScratch;
   f.fill(0);
@@ -391,7 +392,7 @@ function allocateClipRun(world: World, count: number): number {
   }
   world.clipBlockCount += count;
   if (block + count > world.clipRows) {
-    world.growClips(block + count);
+    growClips(world, block + count);
   }
   return block;
 }

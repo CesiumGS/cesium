@@ -1,12 +1,7 @@
 import { onTextureDestroyed } from "../gpu/textureTracking.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
-import { Slabs, type Slab } from "./Slabs.ts";
-import {
-  INITIAL_ROWS,
-  MirroredTable,
-  grownSize,
-  resized,
-} from "./MirroredTable.ts";
+import { Slabs } from "./Slabs.ts";
+import { INITIAL_ROWS, MirroredTable } from "./MirroredTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
 import { DrawArguments } from "../render/drawArguments.ts";
 import type { Placement, PlacementParameter } from "./placement.ts";
@@ -146,6 +141,17 @@ import {
   setInstance,
   setInstanceStreams,
 } from "./world/draws.ts";
+import {
+  slabReplaced,
+  createBatchBuffer,
+  growPointSets,
+  createCullBindGroup,
+  tablesReplaced,
+  createDrawBindGroup,
+  rebind,
+  setImageryArray,
+  bindSlab,
+} from "../render/world/tables.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -310,7 +316,8 @@ export class World {
   readonly parameters = new WeakMap<PlacementParameter, ParameterSlot>();
   /** @internal */
   readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> = [];
-  private materialsF32: Float32Array;
+  /** @internal */
+  materialsF32: Float32Array;
   /** @internal */
   materialsU32: Uint32Array;
   /** @internal */
@@ -531,7 +538,8 @@ export class World {
     feature: GPUBuffer;
     group: GPUBindGroup;
   };
-  private batchBuffer: GPUBuffer;
+  /** @internal */
+  batchBuffer: GPUBuffer;
   /**
    * @internal GPU rows of the draw tables (records, batches, their counts and
    * arguments, the items' draw part); grows to `maxDraws`.
@@ -544,13 +552,16 @@ export class World {
   readonly maxPointSets: number;
   /** @internal */
   pointSetCount = 0;
-  private readonly cullParams: GPUBuffer;
-  private cullBindGroup!: GPUBindGroup;
-  private pointCullBindGroup!: GPUBindGroup;
+  /** @internal */
+  readonly cullParams: GPUBuffer;
+  /** @internal */
+  cullBindGroup!: GPUBindGroup;
+  /** @internal */
+  pointCullBindGroup!: GPUBindGroup;
   /** @internal Globe imagery array (a 1×1 placeholder until imagery is attached). */
   imageryView: GPUTextureView;
-  /** Bound while no imagery array is (no globe imagery in this world). */
-  private readonly imageryPlaceholder: GPUTextureView;
+  /** @internal Bound while no imagery array is (no globe imagery in this world). */
+  readonly imageryPlaceholder: GPUTextureView;
   /** @internal Each texture set's (tracked) textures, for `textureDestroyed`. */
   readonly textureSetTextures: Array<GPUTexture[] | undefined> = [];
   /** @internal */
@@ -561,7 +572,8 @@ export class World {
    */
   readonly brokenTextureSets = new Set<number>();
   private readonly stopTracking: () => void;
-  private readonly imagerySampler: GPUSampler;
+  /** @internal */
+  readonly imagerySampler: GPUSampler;
 
   constructor(
     /** @internal */ readonly ctx: RenderContext,
@@ -610,7 +622,7 @@ export class World {
         bindingBytes: binding,
       },
       () => this.flushUploads(),
-      (slab) => this.slabReplaced(slab),
+      (slab) => slabReplaced(this, slab),
     );
 
     this.drawConstants = new DrawConstants(ctx, this.maxDraws, this.drawRows);
@@ -692,17 +704,17 @@ export class World {
       this.drawRows,
       items,
     );
-    this.batchBuffer = this.createBatchBuffer(this.drawRows);
+    this.batchBuffer = createBatchBuffer(this, this.drawRows);
     this.cullParams = buffer(
       "cullParams",
       16,
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
     this.pointCounts = buffer("pointCounts", 64 * 4, storage);
-    this.growPointSets(64);
+    growPointSets(this, 64);
     this.splats = createSplats(this, 1);
 
-    this.createCullBindGroup();
+    createCullBindGroup(this);
     this.imageryPlaceholder = device
       .createTexture({
         label: "world.imagery.placeholder",
@@ -722,9 +734,9 @@ export class World {
       maxAnisotropy: 16,
     });
     this.placementTable = new PlacementTable(device, () =>
-      this.tablesReplaced(),
+      tablesReplaced(this),
     );
-    this.createDrawBindGroup();
+    createDrawBindGroup(this);
 
     this.addMaterial({}); // material 0: white, lit, untextured
     this.createTextureSet({}); // texture set 0: defaults
@@ -737,7 +749,7 @@ export class World {
    * something since replaced.
    */
   rebind(): void {
-    this.tablesReplaced();
+    rebind(this);
   }
 
   /** Number of record slots in use, including hidden and freed-but-trailing slots. */
@@ -929,45 +941,6 @@ export class World {
   /** Bytes in use in the vertex and index arenas. */
   get arenaBytes(): number {
     return this.slabs.vertexUsed + this.slabs.indexUsed;
-  }
-
-  /** @internal CPU room for draw slots below `count`. */
-  reserveDraws(count: number): void {
-    if (this.drawConstants.reserve(count)) {
-      const rows = this.drawConstants.rows;
-      this.drawGeneration = resized(this.drawGeneration, rows);
-      this.drawOwnedTransform = resized(this.drawOwnedTransform, rows, -1);
-    }
-  }
-
-  /** @internal CPU room for transforms below `count`. */
-  reserveTransforms(count: number): void {
-    if (this.transforms.reserve(count)) {
-      const t = this.transforms.rows;
-      this.transformLocal = resized(this.transformLocal, t * 16);
-      this.transformWorld = resized(this.transformWorld, t * 16);
-      this.transformParent = resized(this.transformParent, t, -1);
-      this.transformGeneration = resized(this.transformGeneration, t);
-      this.transformLive = resized(this.transformLive, t);
-      this.transformHidden = resized(this.transformHidden, t);
-      this.transformHiddenWorld = resized(this.transformHiddenWorld, t);
-      this.transformAnchor = resized(this.transformAnchor, t);
-      this.transformPendingFlag = resized(this.transformPendingFlag, t);
-      this.transformStamp = resized(this.transformStamp, t);
-    }
-  }
-
-  /** @internal CPU room for materials below `count`. */
-  reserveMaterials(count: number): void {
-    const rows = this.materialsF32.byteLength / MATERIAL_SIZE;
-    if (count > rows) {
-      const data = new ArrayBuffer(
-        grownSize(rows, count, this.maxMaterials) * MATERIAL_SIZE,
-      );
-      new Uint32Array(data).set(this.materialsU32);
-      this.materialsF32 = new Float32Array(data);
-      this.materialsU32 = new Uint32Array(data);
-    }
   }
 
   /**
@@ -1533,16 +1506,7 @@ export class World {
    * frame draws nothing).
    */
   setImageryArray(view: GPUTextureView | undefined): void {
-    view ??= this.imageryPlaceholder;
-    if (view === this.imageryView) {
-      return;
-    }
-    this.imageryView = view;
-    this.createDrawBindGroup();
-    // The cached bundle binds the old group (and its soon-destroyed array).
-    this.bundle = undefined;
-    this.changedViews = ALL_VIEWS;
-    this.version++;
+    setImageryArray(this, view);
   }
 
   /**
@@ -2226,7 +2190,7 @@ export class World {
       }
       if (batch.mesh.slab !== slab) {
         slab = batch.mesh.slab;
-        this.bindSlab(encoder, slab);
+        bindSlab(this, encoder, slab);
       }
       const key = keyOf(batch);
       const wanted = this.pipeline(batch, key);
@@ -2438,7 +2402,7 @@ export class World {
       }
       if (batch.mesh.slab !== slab) {
         slab = batch.mesh.slab;
-        this.bindSlab(pass, slab);
+        bindSlab(this, pass, slab);
       }
       const key = keyOf(batch.doubleSided);
       const wanted = this.pipeline(batch, key);
@@ -2453,240 +2417,6 @@ export class World {
       }
       this.drawArguments.drawBatch(pass, batch, direct);
     }
-  }
-
-  private createCullBindGroup(): void {
-    this.cullBindGroup = this.ctx.device.createBindGroup({
-      label: "world.cull",
-      layout: this.ctx.pipelines.cullWorldLayout,
-      // Binding 5 (batch counts) is gone: the cull counts into the
-      // arguments' instance counts.
-      entries: (
-        [
-          [0, this.recordBuffer],
-          [1, this.transformBuffer],
-          [2, this.instanceBuffer],
-          [3, this.itemBuffer],
-          [4, this.drawArguments.itemList],
-          [6, this.batchBuffer],
-          [7, this.drawArguments.buffer],
-          [8, this.cullParams],
-        ] as const
-      ).map(([binding, b]) => ({ binding, resource: { buffer: b } })),
-    });
-    this.pointCullBindGroup = this.ctx.device.createBindGroup({
-      label: "world.cull.points",
-      layout: this.ctx.pipelines.cullPointWorldLayout,
-      entries: [
-        { binding: 0, resource: { buffer: this.recordBuffer } },
-        { binding: 1, resource: { buffer: this.transformBuffer } },
-        { binding: 7, resource: { buffer: this.drawArguments.buffer } },
-      ],
-    });
-  }
-
-  /**
-   * @internal Room for instance rows below `count` on the GPU: the instance table and
-   * the per-item buffers double (up to `maxInstances`), and what binds them
-   * is rebuilt.
-   */
-  growInstances(count: number): void {
-    const rows = grownSize(this.instances.gpuRows, count, this.maxInstances);
-    this.instances.growGpu(rows);
-    this.instanceBuffer = this.instances.buffer;
-    this.recreateItemBuffers();
-    this.tablesReplaced();
-  }
-
-  /**
-   * @internal Room for draw slots below `count` on the GPU (§13.15, growable tables):
-   * the records double (copied), the per-batch buffers and the items are
-   * recreated (rewritten every frame or with the bundle), and what binds
-   * them is rebuilt.
-   */
-  growDraws(count: number): void {
-    const rows = grownSize(this.drawRows, count, this.maxDraws);
-    this.drawConstants.growGpu(rows);
-    this.recordBuffer = this.drawConstants.buffer;
-    this.batchBuffer.destroy();
-    this.batchBuffer = this.createBatchBuffer(rows);
-    this.drawArguments.growBatches(rows);
-    this.drawRows = rows;
-    this.recreateItemBuffers();
-    this.tablesReplaced();
-  }
-
-  /** @internal Room for transforms below `count` on the GPU (copied, rebound). */
-  growTransforms(count: number): void {
-    this.transforms.growGpu(
-      grownSize(this.transforms.gpuRows, count, this.maxTransforms),
-    );
-    this.transformBuffer = this.transforms.buffer;
-    this.tablesReplaced();
-  }
-
-  /** @internal Room for materials below `count` on the GPU (rewritten, rebound). */
-  growMaterials(count: number): void {
-    this.materialRows = grownSize(this.materialRows, count, this.maxMaterials);
-    this.materialBuffer.destroy();
-    this.materialBuffer = this.ctx.device.createBuffer({
-      label: "world.materials",
-      size: this.materialRows * MATERIAL_SIZE,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
-    // The whole table is written with the next frame.
-    this.materialsDirty = true;
-    this.tablesReplaced();
-  }
-
-  /** @internal Room for clip blocks below `count` on the GPU (copied, rebound). */
-  growClips(count: number): void {
-    const rows = grownSize(this.clipRows, count, this.maxClipBlocks);
-    const { device } = this.ctx;
-    const old = this.clipBuffer;
-    this.clipBuffer = device.createBuffer({
-      label: "world.clipBoxes",
-      size: rows * this.clipScratch.byteLength,
-      usage:
-        GPUBufferUsage.STORAGE |
-        GPUBufferUsage.COPY_DST |
-        GPUBufferUsage.COPY_SRC,
-    });
-    const encoder = device.createCommandEncoder({ label: "world.grow" });
-    encoder.copyBufferToBuffer(old, 0, this.clipBuffer, 0, old.size);
-    device.queue.submit([encoder.finish()]);
-    old.destroy();
-    this.clipRows = rows;
-    this.tablesReplaced();
-  }
-
-  /**
-   * @internal Point-draw counters up to `count` (cleared every frame, so the buffer is
-   * only recreated), and the point draws' groups that bind it.
-   */
-  growPointSets(count: number): void {
-    if (count <= this.pointSetCount) {
-      return;
-    }
-    if (this.pointCounts.size < count * 4) {
-      this.pointCounts.destroy();
-      this.pointCounts = this.ctx.device.createBuffer({
-        label: "world.pointCounts",
-        size: count * 4,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-      });
-      for (const draw of this.pointDraws.values()) {
-        draw.group = pointGroup(this, draw);
-      }
-    }
-    // The lowest counters first.
-    for (let k = count - 1; k >= this.pointSetCount; k--) {
-      this.freePointCounters.push(k);
-    }
-    this.pointSetCount = count;
-  }
-
-  /** The batch table for `rows` batches (their arguments: `drawArguments`). */
-  private createBatchBuffer(rows: number): GPUBuffer {
-    return this.ctx.device.createBuffer({
-      label: "world.batches",
-      size: rows * 16,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    });
-  }
-
-  /** The items and their lists for the current draw and instance rows. */
-  private recreateItemBuffers(): void {
-    const items = this.drawRows + this.instances.gpuRows;
-    const { device } = this.ctx;
-    this.itemBuffer.destroy();
-    this.itemBuffer = device.createBuffer({
-      label: "world.items",
-      size: items * DRAW_ITEM_SIZE,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    });
-    this.drawArguments.growItems(items);
-  }
-
-  /**
-   * A table's buffer was replaced: rebuild the groups that bind it, drop the
-   * bundles that baked them (the direct list is rewritten with the
-   * batches), and tell outside binders (`tableGeneration`).
-   */
-  private tablesReplaced(): void {
-    this.createCullBindGroup();
-    this.createDrawBindGroup();
-    this.bundle = undefined;
-    this.translucentDraws = undefined;
-    this.changedViews = ALL_VIEWS;
-    this.version++;
-    this.instanceGeneration++;
-  }
-
-  /** Every slab's draw group (the world's tables, the slab's arena). */
-  private createDrawBindGroup(): void {
-    for (const slab of this.slabs.slabs) {
-      if (slab) {
-        this.createSlabDrawGroup(slab);
-      }
-    }
-  }
-
-  private createSlabDrawGroup(slab: Slab): void {
-    const buffers = [
-      this.recordBuffer,
-      this.itemBuffer,
-      slab.vertexBuffer,
-      this.materialBuffer,
-      this.clipBuffer,
-    ];
-    slab.drawGroup = this.ctx.device.createBindGroup({
-      label: `world.draw.slab${slab.id}`,
-      layout: this.ctx.pipelines.drawWorldLayout,
-      entries: [
-        ...buffers.map((b, binding) => ({ binding, resource: { buffer: b } })),
-        { binding: 5, resource: this.imageryView },
-        { binding: 6, resource: this.imagerySampler },
-        // Placements (placement.slang): the vertex stage's.
-        { binding: 7, resource: { buffer: this.placementTable.buffer } },
-      ],
-    });
-  }
-
-  /** Binds a slab's group 1 and index buffer for its batches' draws. */
-  private bindSlab(
-    pass: GPURenderPassEncoder | GPURenderBundleEncoder,
-    id: number,
-  ): void {
-    const slab = this.slabs.get(id);
-    pass.setBindGroup(1, slab.drawGroup!);
-    pass.setIndexBuffer(slab.indexBuffer, "uint32");
-  }
-
-  /**
-   * A slab grew, opened or closed (scene/Slabs.ts): its group is rebuilt,
-   * point draws in it rebind their arena, bundles are recorded again, and
-   * outside binders (point sources, model pools) see `tableGeneration`.
-   */
-  private slabReplaced(slab: Slab): void {
-    if (this.slabs.slabs[slab.id] === slab) {
-      // The world's own tables exist once the constructor has made them.
-      if (this.recordBuffer) {
-        this.createSlabDrawGroup(slab);
-      }
-    } else {
-      slab.drawGroup = undefined;
-    }
-    for (const draw of this.pointDraws.values()) {
-      if (draw.mesh.slab === slab.id) {
-        draw.group = pointGroup(this, draw);
-      }
-    }
-    this.bundle = undefined;
-    this.translucentDraws = undefined;
-    this.changedViews = ALL_VIEWS;
-    this.version++;
-    this.instanceGeneration++;
   }
 
   /** The vertex arena buffer holding `mesh` (its slab's, scene/Slabs.ts). */

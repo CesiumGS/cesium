@@ -17,6 +17,10 @@ import type {
   AnchorHandle,
   TransformFrameKey,
 } from "./types.ts";
+import {
+  reserveTransforms,
+  growTransforms,
+} from "../../render/world/tables.ts";
 
 export const IDENTITY = Float64Array.of(
   1,
@@ -74,9 +78,9 @@ export function addTransform(
     world.transformCount--;
     throw new CapacityError("transform table");
   }
-  world.reserveTransforms(index + 1);
+  reserveTransforms(world, index + 1);
   if (index >= world.transforms.gpuRows) {
-    world.growTransforms(index + 1);
+    growTransforms(world, index + 1);
   }
   world.transformLocal.set(matrix, index * 16);
   world.transformParent[index] = parent ? parent.index : -1;

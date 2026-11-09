@@ -12,6 +12,7 @@ import {
 import { CapacityError } from "../CapacityError.ts";
 import type { World } from "../World.ts";
 import type { MaterialOptions, TextureSetOptions } from "./types.ts";
+import { reserveMaterials, growMaterials } from "../../render/world/tables.ts";
 
 export function addMaterial(world: World, options: MaterialOptions): number {
   const scratch = world.materialScratch;
@@ -44,9 +45,9 @@ function internMaterial(world: World, words: Uint32Array): number {
     world.materialCount--;
     throw new CapacityError("material table");
   }
-  world.reserveMaterials(index + 1);
+  reserveMaterials(world, index + 1);
   if (index >= world.materialRows) {
-    world.growMaterials(index + 1);
+    growMaterials(world, index + 1);
   }
   world.materialsU32.set(words, index * MATERIAL_WORDS);
   world.materialByKey.set(key, index);
