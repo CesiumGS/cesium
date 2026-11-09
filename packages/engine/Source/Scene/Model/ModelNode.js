@@ -1,8 +1,18 @@
-import { Check, defined } from "@cesium/core";
+import { Check, Matrix4, defined } from "@cesium/core";
+
+/**
+ * The shared, immutable children array used by nodes with no children, to avoid
+ * allocating an empty array for every leaf node.
+ *
+ * @type {ModelNode[]}
+ * @private
+ */
+const EMPTY_CHILDREN = Object.freeze([]);
 
 /**
  * <div class="notice">
- * Use {@link Model#getNode} to get a node from a loaded model. Do not call the constructor directly.
+ * Use {@link Model#nodes}, {@link Model#rootNodes}, or {@link Model#getNode} to
+ * get a node from a loaded model. Do not call the constructor directly.
  * </div>
  *
  * A model node with a modifiable transform to allow users to define their
@@ -10,6 +20,9 @@ import { Check, defined } from "@cesium/core";
  * a node's transform, this class allows users to change a node's transform
  * externally. In this way, animation can be driven by another source, not
  * just by the model's asset.
+ *
+ * Nodes also provide access to the model's node hierarchy through their
+ * {@link ModelNode#parent} and {@link ModelNode#children}.
  *
  * @alias ModelNode
  * @internalConstructor
@@ -19,6 +32,8 @@ import { Check, defined } from "@cesium/core";
  * const node = model.getNode("Hand");
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  *
+ * @see Model#nodes
+ * @see Model#rootNodes
  * @see Model#getNode
  */
 function ModelNode(model, runtimeNode) {
@@ -29,6 +44,8 @@ function ModelNode(model, runtimeNode) {
 
   this._model = model;
   this._runtimeNode = runtimeNode;
+  this._parent = undefined;
+  this._children = EMPTY_CHILDREN;
 }
 
 Object.defineProperties(ModelNode.prototype, {
@@ -47,7 +64,8 @@ Object.defineProperties(ModelNode.prototype, {
   },
 
   /**
-   * The index of the node in the glTF.
+   * The index of the node in the glTF. This is also the index of the node in
+   * {@link Model#nodes}.
    *
    * @memberof ModelNode.prototype
    *
@@ -57,6 +75,37 @@ Object.defineProperties(ModelNode.prototype, {
   id: {
     get: function () {
       return this._runtimeNode._id;
+    },
+  },
+
+  /**
+   * The parent of this node in the model's node hierarchy, or
+   * <code>undefined</code> if this is a root node.
+   *
+   * @memberof ModelNode.prototype
+   *
+   * @type {ModelNode|undefined}
+   * @readonly
+   *
+   * @see Model#rootNodes
+   */
+  parent: {
+    get: function () {
+      return this._parent;
+    },
+  },
+
+  /**
+   * The children of this node in the model's node hierarchy.
+   *
+   * @memberof ModelNode.prototype
+   *
+   * @type {ModelNode[]}
+   * @readonly
+   */
+  children: {
+    get: function () {
+      return this._children;
     },
   },
 
@@ -120,5 +169,27 @@ Object.defineProperties(ModelNode.prototype, {
     },
   },
 });
+
+/**
+ * Computes this node's transform from its local coordinates to the world
+ * (ECEF) coordinates of the scene, taking the model's transform and the node
+ * hierarchy into account. This is only supported in 3D.
+ *
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The modified result parameter.
+ */
+ModelNode.prototype.computeWorldMatrix = function (result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const computedModelMatrix = this._model.sceneGraph.computedModelMatrix;
+  const computedTransform = this._runtimeNode.computedTransform;
+  return Matrix4.multiplyTransformation(
+    computedModelMatrix,
+    computedTransform,
+    result,
+  );
+};
 
 export default ModelNode;
