@@ -8565,6 +8565,24 @@ Do soon, designed together with vector drawing, because they overlap with it. `B
 - **Edges and curves:** edges are currently mesh data, so exact edges from curves can come later (§13.26).
 - **Snap:** 1.x's `Scene.snap` prefers edges, and 2.0's snap should use these.
 
+### 13.28 Water and sun glare, for a later rendering plan (owner, 2026-11-08)
+
+**Water.** Reflections on the sea from orbit, and simulated waves up close. Quantized-mesh terrain can carry a water mask, and 1.x's documentation shows Cesium World Terrain requested with one (`requestWaterMask: true` in `createWorldTerrainAsync`). 2.0 doesn't request or decode it today: `TerrainSource` asks only for normals and metadata. Check the live `layer.json` before designing on it.
+
+- **The mask:** one byte for a tile that's all land or all water, otherwise 256 by 256 bytes. That's about 76 m a texel on a level 10 tile at the equator. How deep it's available decides how sharp coasts get up close, so measure that first. A child tile below the mask's levels reuses part of its parent's.
+- **1.x as the baseline, not the target:** `GlobeFS.glsl`'s `computeWaterColor` uses a mask, a scrolling normal map and specular from the sun. `Globe.showWaterEffect` turns it on.
+- **From orbit:** sun glint in physical units belongs with the physical sky and exposure (5e). It's very bright, so it has to work with the meter's highlight guard.
+- **Up close:** a compute-driven wave simulation suits WebGPU. What's open: how it fades in with distance, whether waves move geometry or only shade, what shore data it needs, and what a host application can replace.
+- **Reach beyond looks:** the mask could also address the over-stated terrain error over open sea (§13.16's follow-up), which would save tiles. It adds up to 64 KB per tile before compression, so request it only when something uses it.
+
+**Glare from the sun, if it can look non-cheesy.** What makes glare look cheap is mostly a sprite pasted over the image: fixed shapes, lens ghosts, and the same result whatever the scene does. So the test for this work is that it follows from the image:
+
+- **From real luminance.** Glare comes from the HDR scene in nits, before tone mapping (§13.22), so it needs the sun's disc to keep its true luminance rather than being clamped. It should keep energy roughly conserved, and fall with exposure as the sun's share of the image changes.
+- **Blocked by the scene.** A truss crossing the sun or the sun at the Earth's limb changes the glare per pixel, with no occlusion query and no pop.
+- **A convolution rather than a sprite.** A point-spread function applied to the bright part of the image. A large kernel by FFT in compute suits WebGPU, if its cost fits the budget. The usual reference is Spencer et al., "Physically-Based Glare Effects for Digital Images" (SIGGRAPH 1995), from general knowledge; read it before relying on it.
+- **Choose what it models.** An eye and a camera differ: the eye's fine streaks and halo against an aperture's starburst. A spacecraft camera for the Artemis replay may want the second. Lens ghosts stay out by default.
+- **Judge by looking.** The owner decides from renders of the sun behind station structure, at the limb from orbit, and low over water. Water's sun glint (above) goes through the same path, so the two should be tuned together.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
