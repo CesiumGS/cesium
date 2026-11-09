@@ -1,8 +1,4 @@
-import {
-  onTextureDestroyed,
-  textureOf,
-  isDestroyed,
-} from "../gpu/textureTracking.ts";
+import { onTextureDestroyed } from "../gpu/textureTracking.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { CapacityError } from "./CapacityError.ts";
 import { Slabs, type Slab } from "./Slabs.ts";
@@ -35,7 +31,6 @@ import {
   NO_FEATURE,
   NO_RECORD,
   NO_STREAM,
-  PROPERTY_TEXTURES,
   PROPERTY_TEXTURE_BINDING,
   instanceDistanceFlags,
   MAX_DIRECTORY_ENTRIES,
@@ -59,14 +54,11 @@ import {
   MAX_TERRAIN_CLIPS,
   MAX_TERRAIN_CLIP_BLOCKS,
   packClip,
-  MATERIAL_FLAGS_WORD,
   MATERIAL_WORDS,
-  NO_TEXTURE,
   MaterialFlags,
   RecordFlags,
   packTint,
   writeInstance,
-  writeMaterial,
 } from "../render/layout.ts";
 import { splitHigh, splitVec3 } from "../math/transforms.ts";
 import type { Body } from "./Body.ts";
@@ -140,6 +132,15 @@ import {
   setPointProperties,
   removeMesh,
 } from "./world/meshes.ts";
+import {
+  textureDestroyed,
+  addMaterial,
+  removeMaterial,
+  removeTextureSet,
+  textureRefs,
+  createTextureSet,
+  materialWithFlags,
+} from "./world/materials.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -305,9 +306,12 @@ export class World {
   /** @internal */
   readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> = [];
   private materialsF32: Float32Array;
-  private materialsU32: Uint32Array;
-  private materialCount = 0;
-  private materialsDirty = false;
+  /** @internal */
+  materialsU32: Uint32Array;
+  /** @internal */
+  materialCount = 0;
+  /** @internal */
+  materialsDirty = false;
   /**
    * Bumped by every change that can alter a rendered frame (records,
    * materials).
@@ -333,25 +337,30 @@ export class World {
     }
   }
   private changedViews_ = 0;
-  private readonly textureSets: Array<GPUBindGroup | undefined> = [];
-  /** Each texture set's entries, for custom shaders' groups beside them. */
-  private readonly textureSetEntries: Array<GPUBindGroupEntry[] | undefined> =
-    [];
-  private readonly freeTextureSets: number[] = [];
+  /** @internal */
+  readonly textureSets: Array<GPUBindGroup | undefined> = [];
+  /** @internal Each texture set's entries, for custom shaders' groups beside them. */
+  readonly textureSetEntries: Array<GPUBindGroupEntry[] | undefined> = [];
+  /** @internal */
+  readonly freeTextureSets: number[] = [];
   /**
-   * Group 2 of batches drawing with a custom shader that has uniforms:
+   * @internal Group 2 of batches drawing with a custom shader that has uniforms:
    * its texture set's entries and the shader's (ShaderBindings), by texture
    * set, shader and the shader's texture version.
    */
-  private readonly shaderGroups = new Map<string, GPUBindGroup>();
+  readonly shaderGroups = new Map<string, GPUBindGroup>();
   /** `ShaderBindings.generation` the bundles were recorded at. */
   private bindingsGeneration = 0;
-  private readonly freeMaterials: number[] = [];
-  /** Shared materials: slot by record key, key and references by slot. */
-  private readonly materialByKey = new Map<string, number>();
-  private readonly materialKeys: Array<string | undefined> = [];
-  private readonly materialReferences: number[] = [];
-  private readonly materialScratch = (() => {
+  /** @internal */
+  readonly freeMaterials: number[] = [];
+  /** @internal Shared materials: slot by record key, key and references by slot. */
+  readonly materialByKey = new Map<string, number>();
+  /** @internal */
+  readonly materialKeys: Array<string | undefined> = [];
+  /** @internal */
+  readonly materialReferences: number[] = [];
+  /** @internal */
+  readonly materialScratch = (() => {
     const data = new ArrayBuffer(MATERIAL_SIZE);
     return { f32: new Float32Array(data), u32: new Uint32Array(data) };
   })();
@@ -443,14 +452,15 @@ export class World {
   /** @internal */
   nextMeshId = 0;
   private drawCount = 0;
-  private bundle?: GPURenderBundle;
+  /** @internal */
+  bundle?: GPURenderBundle;
   /**
    * A batch gained its first shown record or lost its last (`Batch.shown`):
    * the bundles are recorded again, without rewriting the batch table.
    */
   private batchesShownChanged = false;
-  /** Draws of blended surfaces (`translucentRange`), until draws change. */
-  private translucentDraws?: number[];
+  /** @internal Draws of blended surfaces (`translucentRange`), until draws change. */
+  translucentDraws?: number[];
   /** The shadow casters' bundle, and the draw bundle it was recorded with. */
   private casters?: GPURenderBundle;
   private castersFor?: GPURenderBundle;
@@ -506,8 +516,8 @@ export class World {
    * arguments, the items' draw part); grows to `maxDraws`.
    */
   private drawRows: number;
-  /** GPU rows of the material table; grows to `maxMaterials`. */
-  private materialRows: number;
+  /** @internal GPU rows of the material table; grows to `maxMaterials`. */
+  materialRows: number;
   /** GPU blocks of clip boxes; grows to `maxClipBlocks`. */
   private clipRows: number;
   readonly maxPointSets: number;
@@ -515,18 +525,19 @@ export class World {
   private readonly cullParams: GPUBuffer;
   private cullBindGroup!: GPUBindGroup;
   private pointCullBindGroup!: GPUBindGroup;
-  /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
-  private imageryView: GPUTextureView;
+  /** @internal Globe imagery array (a 1×1 placeholder until imagery is attached). */
+  imageryView: GPUTextureView;
   /** Bound while no imagery array is (no globe imagery in this world). */
   private readonly imageryPlaceholder: GPUTextureView;
-  /** Each texture set's (tracked) textures, for `textureDestroyed`. */
-  private readonly textureSetTextures: Array<GPUTexture[] | undefined> = [];
-  private readonly setsOfTexture = new WeakMap<GPUTexture, Set<number>>();
+  /** @internal Each texture set's (tracked) textures, for `textureDestroyed`. */
+  readonly textureSetTextures: Array<GPUTexture[] | undefined> = [];
+  /** @internal */
+  readonly setsOfTexture = new WeakMap<GPUTexture, Set<number>>();
   /**
-   * Texture sets binding a destroyed texture: their batches are skipped
+   * @internal Texture sets binding a destroyed texture: their batches are skipped
    * (a bind group naming a destroyed texture fails the whole submit).
    */
-  private readonly brokenTextureSets = new Set<number>();
+  readonly brokenTextureSets = new Set<number>();
   private readonly stopTracking: () => void;
   private readonly imagerySampler: GPUSampler;
 
@@ -695,41 +706,7 @@ export class World {
 
     this.addMaterial({}); // material 0: white, lit, untextured
     this.createTextureSet({}); // texture set 0: defaults
-    this.stopTracking = onTextureDestroyed((t) => this.textureDestroyed(t));
-  }
-
-  /**
-   * A texture the engine made was destroyed: texture sets still binding it
-   * are skipped from now on, and an imagery array bound still is unbound,
-   * each reported (`Engine.errors`), so one bad resource costs its draws,
-   * not the frame.
-   */
-  private textureDestroyed(texture: GPUTexture): void {
-    const sets = this.setsOfTexture.get(texture);
-    let broke = false;
-    for (const set of sets ?? []) {
-      if (this.textureSets[set] && !this.brokenTextureSets.has(set)) {
-        this.brokenTextureSets.add(set);
-        broke = true;
-        this.ctx.errors.report(
-          "resource",
-          `texture "${texture.label}" was destroyed while a texture set still binds it: that set's draws are skipped until it is removed`,
-        );
-      }
-    }
-    if (broke) {
-      this.bundle = undefined;
-      this.translucentDraws = undefined;
-      this.changedViews = ALL_VIEWS;
-      this.version++;
-    }
-    if (textureOf(this.imageryView) === texture) {
-      this.ctx.errors.report(
-        "resource",
-        `the imagery array "${texture.label}" was destroyed while bound: the world binds none`,
-      );
-      this.setImageryArray(undefined);
-    }
+    this.stopTracking = onTextureDestroyed((t) => textureDestroyed(this, t));
   }
 
   /**
@@ -958,8 +935,8 @@ export class World {
     }
   }
 
-  /** CPU room for materials below `count`. */
-  private reserveMaterials(count: number): void {
+  /** @internal CPU room for materials below `count`. */
+  reserveMaterials(count: number): void {
     const rows = this.materialsF32.byteLength / MATERIAL_SIZE;
     if (count > rows) {
       const data = new ArrayBuffer(
@@ -983,48 +960,7 @@ export class World {
    * same way; sharing doesn't change when bindless arrives.
    */
   addMaterial(options: MaterialOptions): number {
-    const scratch = this.materialScratch;
-    writeMaterial(scratch.f32, scratch.u32, 0, {
-      baseColor: options.baseColor ?? [1, 1, 1, 1],
-      emissive: options.emissive ?? [0, 0, 0],
-      metallic: options.metallic ?? 0,
-      roughness: options.roughness ?? 1,
-      alphaCutoff: options.alphaCutoff ?? 0.5,
-      normalScale: options.normalScale ?? 1,
-      occlusionStrength: options.occlusionStrength ?? 1,
-      flags: options.flags ?? 0,
-      ...(options.textures ? { textures: options.textures } : {}),
-    });
-    return this.internMaterial(scratch.u32);
-  }
-
-  /** A material record's index, shared by content (`addMaterial`). */
-  private internMaterial(words: Uint32Array): number {
-    // The record's words are the key (NaN payloads and -0 included, so
-    // equal keys are bit-identical records).
-    const key = words.join(",");
-    const shared = this.materialByKey.get(key);
-    if (shared !== undefined) {
-      this.materialReferences[shared]!++;
-      return shared;
-    }
-    const index = this.freeMaterials.pop() ?? this.materialCount++;
-    if (index >= this.maxMaterials) {
-      this.materialCount--;
-      throw new CapacityError("material table");
-    }
-    this.reserveMaterials(index + 1);
-    if (index >= this.materialRows) {
-      this.growMaterials(index + 1);
-    }
-    this.materialsU32.set(words, index * MATERIAL_WORDS);
-    this.materialByKey.set(key, index);
-    this.materialKeys[index] = key;
-    this.materialReferences[index] = 1;
-    this.materialsDirty = true;
-    this.version++;
-    this.changedViews = ALL_VIEWS;
-    return index;
+    return addMaterial(this, options);
   }
 
   /**
@@ -1032,21 +968,7 @@ export class World {
    * freed with the last. Draws that use it must be removed first.
    */
   removeMaterial(index: number): void {
-    const references = this.materialReferences[index] ?? 0;
-    if (references <= 0) {
-      return;
-    }
-    if (references > 1) {
-      this.materialReferences[index] = references - 1;
-      return;
-    }
-    this.materialReferences[index] = 0;
-    const key = this.materialKeys[index];
-    if (key !== undefined) {
-      this.materialByKey.delete(key);
-      this.materialKeys[index] = undefined;
-    }
-    this.freeMaterials.push(index);
+    removeMaterial(this, index);
   }
 
   /** Materials in use: distinct records, after sharing. */
@@ -1056,21 +978,7 @@ export class World {
 
   /** Frees a texture set (not its textures). Draws must be removed first. */
   removeTextureSet(index: number): void {
-    if (index > 0 && this.textureSets[index]) {
-      this.textureSets[index] = undefined;
-      this.textureSetEntries[index] = undefined;
-      for (const texture of this.textureSetTextures[index] ?? []) {
-        this.setsOfTexture.get(texture)?.delete(index);
-      }
-      this.textureSetTextures[index] = undefined;
-      this.brokenTextureSets.delete(index);
-      this.freeTextureSets.push(index);
-      for (const key of this.shaderGroups.keys()) {
-        if (key.startsWith(`${index}|`)) {
-          this.shaderGroups.delete(key);
-        }
-      }
-    }
+    removeTextureSet(this, index);
   }
 
   /**
@@ -1084,83 +992,12 @@ export class World {
    * calls these, and no shader but opaque.wgsl `materialTexture`, changes.
    */
   textureRefs(options: TextureSetOptions): number[] {
-    return [
-      options.baseColor,
-      options.metallicRoughness,
-      options.normal,
-      options.occlusion,
-      options.emissive,
-    ].map((binding, slot) => (binding ? slot : NO_TEXTURE));
+    return textureRefs(this, options);
   }
 
   /** Binds up to five material textures; missing ones get 1×1 defaults. */
   createTextureSet(options: TextureSetOptions): number {
-    const { defaults } = this.ctx;
-    const slots = [
-      options.baseColor,
-      options.metallicRoughness,
-      options.normal,
-      options.occlusion,
-      options.emissive,
-    ];
-    const entries: GPUBindGroupEntry[] = [];
-    slots.forEach((slot, i) => {
-      entries.push({ binding: i, resource: slot?.view ?? defaults.whiteView });
-      entries.push({
-        binding: 5 + i,
-        resource: slot?.sampler ?? defaults.sampler,
-      });
-    });
-    // Property textures (opaque.wgsl `propertyTexture0`, `1`).
-    for (let k = 0; k < PROPERTY_TEXTURES; k++) {
-      entries.push({
-        binding: PROPERTY_TEXTURE_BINDING + k,
-        resource: options.properties?.[k]?.view ?? defaults.whiteView,
-      });
-    }
-    // The built-in pipelines' group has no property textures; custom
-    // shaders reading metadata get them in their own group (setGroup).
-    const group = this.ctx.device.createBindGroup({
-      label: "world.textureSet",
-      layout: this.ctx.pipelines.textureSetLayout,
-      entries: entries.filter((e) => e.binding < PROPERTY_TEXTURE_BINDING),
-    });
-    let index = this.freeTextureSets.pop();
-    if (index !== undefined) {
-      this.textureSets[index] = group;
-      this.textureSetEntries[index] = entries;
-    } else {
-      this.textureSets.push(group);
-      this.textureSetEntries.push(entries);
-      index = this.textureSets.length - 1;
-    }
-    this.trackTextureSet(index, entries);
-    return index;
-  }
-
-  /** Records a texture set's textures, for `textureDestroyed`. */
-  private trackTextureSet(index: number, entries: GPUBindGroupEntry[]): void {
-    const textures: GPUTexture[] = [];
-    for (const entry of entries) {
-      const texture = textureOf(entry.resource as GPUTextureView);
-      if (texture && !textures.includes(texture)) {
-        textures.push(texture);
-        let sets = this.setsOfTexture.get(texture);
-        if (!sets) {
-          sets = new Set();
-          this.setsOfTexture.set(texture, sets);
-        }
-        sets.add(index);
-        if (isDestroyed(texture)) {
-          this.brokenTextureSets.add(index);
-          this.ctx.errors.report(
-            "resource",
-            `texture "${texture.label}" was bound after it was destroyed: that set's draws are skipped`,
-          );
-        }
-      }
-    }
-    this.textureSetTextures[index] = textures;
+    return createTextureSet(this, options);
   }
 
   addDraw(options: DrawOptions): DrawHandle {
@@ -1838,19 +1675,7 @@ export class World {
    * balanced by one `removeMaterial`.
    */
   materialWithFlags(material: number, flags: number): number {
-    if (this.materialReferences[material] === undefined || material < 0) {
-      throw new RangeError(`materialWithFlags: no material ${material}`);
-    }
-    const scratch = this.materialScratch;
-    scratch.u32.set(
-      this.materialsU32.subarray(
-        material * MATERIAL_WORDS,
-        (material + 1) * MATERIAL_WORDS,
-      ),
-    );
-    scratch.u32[MATERIAL_FLAGS_WORD] =
-      (scratch.u32[MATERIAL_FLAGS_WORD]! | flags) >>> 0;
-    return this.internMaterial(scratch.u32);
+    return materialWithFlags(this, material, flags);
   }
 
   /**
@@ -4203,8 +4028,8 @@ export class World {
     this.tablesReplaced();
   }
 
-  /** Room for materials below `count` on the GPU (rewritten, rebound). */
-  private growMaterials(count: number): void {
+  /** @internal Room for materials below `count` on the GPU (rewritten, rebound). */
+  growMaterials(count: number): void {
     this.materialRows = grownSize(this.materialRows, count, this.maxMaterials);
     this.materialBuffer.destroy();
     this.materialBuffer = this.ctx.device.createBuffer({
