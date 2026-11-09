@@ -4,6 +4,29 @@ import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { SelectionView, CasterRoom } from "./Stepwise.ts";
 import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
+import type { TilesetState } from "./tilesetState.ts";
+
+/** @internal Content side: casters' share of streaming. */
+export interface TilesetCasters extends Pick<
+  Tileset3D,
+  "anchor" | "engine" | "stats" | "world"
+> {
+  readonly state: Pick<
+    TilesetState,
+    | "cacheBytes"
+    | "casterBytesEstimate"
+    | "casterLoad"
+    | "casterResident"
+    | "casterTimer"
+    | "casterWake"
+    | "casting"
+    | "coldAgeMs"
+    | "loaded"
+    | "policy"
+    | "recentCasterBytes"
+    | "viewBytes"
+  >;
+}
 
 /**
  * World pool pressure (World.pressure) past which shadow casters aren't
@@ -61,7 +84,7 @@ export function closeImages(asset: GltfAsset): void {
  * of stale cold tiles, which eviction then takes.
  */
 export function casterRoom(
-  owner: Tileset3D,
+  owner: TilesetCasters,
   views: readonly SelectionView[],
   frame: number,
   now: number,
@@ -130,7 +153,7 @@ export function casterRoom(
 }
 
 /** One tick when the next cold tile goes stale: the loop may be asleep. */
-export function wakeForStale(tileset: Tileset3D, delayMs: number): void {
+export function wakeForStale(tileset: TilesetCasters, delayMs: number): void {
   tileset.state.casterTimer ??= setTimeout(() => {
     tileset.state.casterTimer = undefined;
     tileset.state.casterWake = true;
@@ -140,7 +163,7 @@ export function wakeForStale(tileset: Tileset3D, delayMs: number): void {
 
 /** Drops decoded content of a caster that isn't wanted after all. */
 export function dropCaster(
-  tileset: Tileset3D,
+  tileset: TilesetCasters,
   tile: Tile,
   asset: GltfAsset,
 ): void {
@@ -151,7 +174,7 @@ export function dropCaster(
 }
 
 export function markCastsOnly(
-  tileset: Tileset3D,
+  tileset: TilesetCasters,
   tile: Tile,
   value: boolean,
 ): void {
@@ -166,7 +189,7 @@ export function markCastsOnly(
  * alone: one huge tile, or a view's, doesn't keep small ones out, and a
  * wrong guess corrects itself when the tile loads.
  */
-export function noteCasterBytes(tileset: Tileset3D, bytes: number): void {
+export function noteCasterBytes(tileset: TilesetCasters, bytes: number): void {
   const recent = tileset.state.recentCasterBytes;
   recent.push(bytes);
   if (recent.length > CASTER_BYTES_WINDOW) {

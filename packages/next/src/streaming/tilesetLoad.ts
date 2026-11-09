@@ -4,6 +4,33 @@ import type { RequestPurpose } from "./Stepwise.ts";
 import { type Tile, fetchTilesetJson } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import { isCaster, closeImages } from "./tilesetCasters.ts";
+import type { TilesetState } from "./tilesetState.ts";
+
+/** @internal Content side: requests and decoding. */
+export interface TilesetLoad extends Pick<
+  Tileset3D,
+  | "changed"
+  | "engine"
+  | "events"
+  | "stats"
+  | "undrawnReasons"
+  | "undrawnTile"
+  | "useOrigin"
+  | "warnings"
+> {
+  readonly state: Pick<
+    TilesetState,
+    | "destroyed"
+    | "externals"
+    | "headers"
+    | "inFlight"
+    | "loading"
+    | "policy"
+    | "ready"
+    | "source"
+    | "wanted"
+  >;
+}
 
 /** Most distinct reasons kept for tiles that draw nothing. */
 export const MAX_UNDRAWN_REASONS = 20;
@@ -20,7 +47,7 @@ export function undrawnKind(reason: string): string {
 }
 
 export function request(
-  tileset: Tileset3D,
+  tileset: TilesetLoad,
   requests: Map<Tile, number>,
   purposes: Map<Tile, RequestPurpose>,
 ): void {
@@ -113,7 +140,7 @@ export function request(
  * A view's request found the origin's window, which tilesets share, full:
  * cancels one shadow caster in flight there, whose slot comes back for it.
  */
-function yieldToView(owner: Tileset3D, origin: string): void {
+function yieldToView(owner: TilesetLoad, origin: string): void {
   for (const tileset of owner.engine.tilesets) {
     for (const [tile, controller] of tileset.state.loading) {
       if (
@@ -129,7 +156,7 @@ function yieldToView(owner: Tileset3D, origin: string): void {
 }
 
 async function loadContent(
-  tileset: Tileset3D,
+  tileset: TilesetLoad,
   tile: Tile,
   signal: AbortSignal,
 ): Promise<RequestSample | undefined> {
@@ -188,7 +215,7 @@ async function loadContent(
   }
 }
 
-export function undrawnTile(tileset: Tileset3D, reason: string): void {
+export function undrawnTile(tileset: TilesetLoad, reason: string): void {
   tileset.stats.undrawn++;
   const kind = undrawnKind(reason);
   if (
@@ -204,7 +231,7 @@ export function undrawnTile(tileset: Tileset3D, reason: string): void {
 }
 
 export function cancelLoad(
-  tileset: Tileset3D,
+  tileset: TilesetLoad,
   tile: Tile,
   controller: AbortController,
 ): void {

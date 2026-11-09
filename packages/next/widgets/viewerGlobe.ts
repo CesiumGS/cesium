@@ -9,15 +9,40 @@ import {
   type TilesetOptions,
   type Tileset3D,
 } from "@cesium/next";
+import type { ViewerState } from "./viewerState.ts";
 
-export function tokenOptions(viewer: Viewer): { accessToken?: string } {
+/** @internal The globe and tilesets. */
+export interface ViewerGlobeContext extends Pick<
+  Viewer,
+  "engine" | "policy" | "setGlobe" | "world"
+> {
+  readonly state: Pick<
+    ViewerState,
+    | "accessToken"
+    | "destroyed"
+    | "early"
+    | "globeKind"
+    | "globeShown"
+    | "globeToken"
+    | "globe_"
+    | "imagery"
+    | "imageryLoading"
+    | "lightsProvider"
+    | "terrainAttributions"
+    | "tilesets"
+  >;
+}
+
+export function tokenOptions(viewer: ViewerGlobeContext): {
+  accessToken?: string;
+} {
   return viewer.state.accessToken
     ? { accessToken: viewer.state.accessToken }
     : {};
 }
 
 export async function buildGlobe(
-  viewer: Viewer,
+  viewer: ViewerGlobeContext,
   imagery: ImageryProvider | boolean,
 ): Promise<void> {
   if (imagery === true) {
@@ -38,7 +63,10 @@ export async function buildGlobe(
   await viewer.state.imageryLoading;
 }
 
-export async function setGlobe(viewer: Viewer, kind: GlobeKind): Promise<void> {
+export async function setGlobe(
+  viewer: ViewerGlobeContext,
+  kind: GlobeKind,
+): Promise<void> {
   const token = ++viewer.state.globeToken;
   viewer.state.globeKind = kind;
   let next: Globe | undefined;
@@ -80,7 +108,7 @@ export async function setGlobe(viewer: Viewer, kind: GlobeKind): Promise<void> {
 }
 
 export async function addTileset(
-  viewer: Viewer,
+  viewer: ViewerGlobeContext,
   source: TilesetSource,
   options: TilesetOptions = {},
 ): Promise<Tileset3D> {

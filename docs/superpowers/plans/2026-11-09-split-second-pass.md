@@ -50,7 +50,7 @@ Every commit: both tsc configs, and the tests it changed. Each batch ends with o
 - [x] **2. World's state.** `WorldRaster`, `WorldScene`; class and free functions go through them; tests' casts become `world.raster.x`, typed, so a missing name is a compile error. Seam detectors widened and proved by a planted write. Tests: `seams`, `importCycles`, `sceneItems`, the terrain and bundle tests. Full suite.
 - [x] **3. Engine's state.** `EngineRaster`, `EngineScene`, likewise. Tests: `anchorEyes`, `rerooting`, `shadowCasters`, `meterEmission`, `translucencyGating`. Full suite.
 - [x] **4. Narrow contexts for World and Engine.** Function parameters become the contexts above. Tests: type checks; full suite once.
-- [ ] **5. Tileset and Viewer.** `TilesetState`, `ViewerState`, their contexts. `Globe`'s construction order checked: the state is the first field initializer, so it exists before `Tileset3D`'s own and before `Globe`'s. Tests: `casterBudget`, `casterLoop`, `tilesetEviction`, `sceneItems`, viewer tests. Full suite.
+- [x] **5. Tileset and Viewer.** `TilesetState`, `ViewerState`, their contexts. `Globe`'s construction order checked: the state is the first field initializer, so it exists before `Tileset3D`'s own and before `Globe`'s. Tests: `casterBudget`, `casterLoop`, `tilesetEviction`, `sceneItems`, viewer tests. Full suite.
 - [ ] **6. Real layers.** `DrawSink`, `TilesetHost`, constants; `test/importBoundary.test.ts` gets content, scene, renderer and GPU layers, with named exceptions that fail when stale. Full suite.
 - [ ] **7. End.** Stale pointers; note for post-processing; `translucency`, `customShader`, `parity`, `alloc`, `imagery` (bench, against main), `checkBundle`, `libraryWidgets`, `surface`, `shaders:check`, eslint, prettier, Snyk.
 

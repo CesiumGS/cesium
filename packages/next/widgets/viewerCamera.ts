@@ -11,6 +11,28 @@ import {
   fromDegrees,
   vec3,
 } from "@cesium/next";
+import type { ViewerState } from "./viewerState.ts";
+
+/** @internal Camera, zoom and the clock's sun. */
+export interface ViewerCameraContext extends Pick<
+  Viewer,
+  "applyClockSun" | "clock" | "controller" | "setSun" | "view" | "world"
+> {
+  readonly state: Pick<
+    ViewerState,
+    | "clockPlaced"
+    | "destroyed"
+    | "earthPose"
+    | "focusCenter"
+    | "orbit_"
+    | "second"
+    | "secondController"
+    | "sun"
+    | "sunFromClock_"
+    | "time_"
+    | "zoomToken"
+  >;
+}
 
 export const ellipsoid = Ellipsoid.WGS84;
 export const deg = Math.PI / 180;
@@ -22,7 +44,7 @@ export const deg = Math.PI / 180;
  * Earth-fixed, whatever the view's render space. Reused: current until
  * the next call.
  */
-export function earthCamera(viewer: Viewer): Camera {
+export function earthCamera(viewer: ViewerCameraContext): Camera {
   return viewer.view.anchorCamera(
     viewer.world.bodyAnchor(EARTH),
     viewer.state.earthPose,
@@ -36,12 +58,12 @@ export function earthCamera(viewer: Viewer): Camera {
  * however the view places it. A copy while the anchor is at the
  * identity.
  */
-export function fromEarth(viewer: Viewer, view: View): void {
+export function fromEarth(viewer: ViewerCameraContext, view: View): void {
   view.setCameraFromAnchor(viewer.world.bodyAnchor(EARTH), view.camera);
 }
 
 export function zoomTo(
-  viewer: Viewer,
+  viewer: ViewerCameraContext,
   target: ZoomTarget,
   heading = 35 * deg,
   pitch = -30 * deg,
@@ -127,7 +149,7 @@ export function zoomTo(
 
 /** Points both cameras at a sphere (the split view's from the other side). */
 function frameCamera(
-  viewer: Viewer,
+  viewer: ViewerCameraContext,
   center: Float64Array,
   radius: number,
   heading: number,
@@ -179,7 +201,7 @@ function frameCamera(
 
 /** What the time is about: what is framed, else below the camera. */
 export function placeCamera(
-  viewer: Viewer,
+  viewer: ViewerCameraContext,
 ): { longitude: number; latitude: number } | undefined {
   const at =
     vec3.length(viewer.state.focusCenter) > 0

@@ -18,6 +18,60 @@ import {
   dropCaster,
   noteCasterBytes,
 } from "./tilesetCasters.ts";
+import type { TilesetState } from "./tilesetState.ts";
+
+/** @internal Content side: uploads within the budget. */
+export interface TilesetUpload extends Pick<
+  Tileset3D,
+  | "anchor"
+  | "engine"
+  | "firstContentAt"
+  | "markCastsOnly"
+  | "resident"
+  | "retainGeometry"
+  | "stats"
+  | "undrawnTile"
+  | "warnings"
+  | "world"
+> {
+  readonly state: Pick<
+    TilesetState,
+    | "baseItem"
+    | "blendedTwins"
+    | "cacheBytes"
+    | "capacityFailed"
+    | "capacityFull"
+    | "capacityWait"
+    | "casterBytesEstimate"
+    | "casterLoad"
+    | "casterResident"
+    | "casterTimer"
+    | "casterWake"
+    | "casting"
+    | "coldAgeMs"
+    | "collision"
+    | "contentAxes"
+    | "drawTiles"
+    | "frame"
+    | "itemList"
+    | "loadEstimateMs"
+    | "loaded"
+    | "options"
+    | "order"
+    | "overflowBytes"
+    | "ownMaterials"
+    | "policy"
+    | "ready"
+    | "recent"
+    | "recentCasterBytes"
+    | "source"
+    | "terrainRegions"
+    | "transform"
+    | "uploadsPerFrame"
+    | "viewBytes"
+    | "viewCapacityWait"
+  >;
+}
 
 /**
  * Bytes a loaded tile costs besides its content, counted in `Tile.bytes`
@@ -44,7 +98,7 @@ const PIPELINE_WINDOW = 256;
  * while the cache exceeds budget + overflow, the threshold rises ×1.02 per
  * frame while content is still waiting, and relaxes back below budget.
  */
-export function upload(tileset: Tileset3D): void {
+export function upload(tileset: TilesetUpload): void {
   const limit = tileset.state.cacheBytes + tileset.state.overflowBytes;
   let exceeded = false;
   const budget = tileset.engine.scene.uploadBudget;
@@ -254,7 +308,8 @@ export function upload(tileset: Tileset3D): void {
     // not the upload's).
     if (tile.state === "ready" && tile.placement) {
       tileset.world.acceleration.tilePlaced(
-        tileset,
+        // The hook names the whole tileset (public API).
+        tileset as Tileset3D,
         tile,
         tile.placement.draws,
       );
@@ -282,7 +337,7 @@ export function upload(tileset: Tileset3D): void {
  * of one mesh share its arrays.
  */
 function retain(
-  tileset: Tileset3D,
+  tileset: TilesetUpload,
   asset: GltfAsset,
   placement: ModelPlacement,
 ): TileGeometry[] {
@@ -338,7 +393,7 @@ function retain(
  * item's draws, and the tile's own draws when no item holds them, are
  * neither. A globe's surface is no item and keeps its own.
  */
-export function applySurface(tileset: Tileset3D, tile: Tile): void {
+export function applySurface(tileset: TilesetUpload, tile: Tile): void {
   if (tileset.state.source) {
     return;
   }
@@ -367,7 +422,7 @@ export function applySurface(tileset: Tileset3D, tile: Tile): void {
  * how it draws), and its material: the terrain's own, or its blended
  * twin where a region of opacity above 0 and below 1 reaches the tile.
  */
-export function applyTerrainClip(tileset: Tileset3D, tile: Tile): void {
+export function applyTerrainClip(tileset: TilesetUpload, tile: Tile): void {
   const clips = tileset.state.source?.clips;
   if (!clips || !tile.placement || !tile.globe) {
     return;

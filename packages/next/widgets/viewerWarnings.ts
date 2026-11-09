@@ -1,6 +1,12 @@
 // The Viewer's warnings: kept once each, shown on the page and sent as events.
 import type { ViewerWarning, Viewer } from "./Viewer.ts";
 import type { FrameDataWarning } from "@cesium/next/frames";
+import type { ViewerState } from "./viewerState.ts";
+
+/** @internal Warnings. */
+export interface ViewerWarningsContext extends Pick<Viewer, "events"> {
+  readonly state: Pick<ViewerState, "warningList" | "warnings_">;
+}
 
 /** Each warning kind in a few words, for the notice's collapsed line. */
 const WARNING_SUMMARY: Readonly<Record<ViewerWarning["kind"], string>> = {
@@ -12,7 +18,7 @@ const WARNING_SUMMARY: Readonly<Record<ViewerWarning["kind"], string>> = {
 
 /** Emits `name`; a listener that throws is reported, not passed on. */
 export function emit<K extends "warning" | "warningsCleared">(
-  viewer: Viewer,
+  viewer: ViewerWarningsContext,
   name: K,
   payload: K extends "warning" ? ViewerWarning : Viewer,
 ): void {
@@ -24,7 +30,7 @@ export function emit<K extends "warning" | "warningsCleared">(
 }
 
 /** The notice's list, from `warnings`. */
-export function showWarnings(viewer: Viewer): void {
+export function showWarnings(viewer: ViewerWarningsContext): void {
   viewer.state.warnings_?.set(
     viewer.state.warningList.map((w) => ({
       message: w.message,
@@ -35,7 +41,7 @@ export function showWarnings(viewer: Viewer): void {
 
 /** Adds a warning: listed, shown, emitted and (with `log`) logged. */
 export function warn(
-  viewer: Viewer,
+  viewer: ViewerWarningsContext,
   warning: FrameDataWarning | ViewerWarning,
   log: boolean,
 ): void {

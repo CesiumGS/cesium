@@ -3,6 +3,12 @@ import type { CastRay } from "../scene/world/types.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
 import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
+import type { TilesetState } from "./tilesetState.ts";
+
+/** @internal Content side: rays through tiles. */
+export interface TilesetQueries extends Pick<Tileset3D, "root"> {
+  readonly state: Pick<TilesetState, "externals" | "order" | "queries">;
+}
 
 /** Whether a ray segment passes through a sphere. */
 function crossesSphere(
@@ -26,7 +32,7 @@ function crossesSphere(
  * pinned tiles count as touched (not evicted or cancelled).
  */
 export function serveQueries(
-  tileset: Tileset3D,
+  tileset: TilesetQueries,
   frame: number,
   requests: Map<Tile, number>,
   purposes: Map<Tile, RequestPurpose>,
@@ -75,7 +81,7 @@ export function serveQueries(
 
 /** Tiles a ray needs for its most detailed content. */
 function tilesAlongRay(
-  tileset: Tileset3D,
+  tileset: TilesetQueries,
   tile: Tile,
   ray: CastRay,
   out: Set<Tile>,

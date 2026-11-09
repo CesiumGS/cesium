@@ -1,8 +1,25 @@
 // Holding the Viewer's image while a host application changes the scene.
 import type { Viewer } from "./Viewer.ts";
+import type { ViewerState } from "./viewerState.ts";
+
+/** @internal Holding the image. */
+export interface ViewerHoldContext extends Pick<
+  Viewer,
+  | "canvas"
+  | "container"
+  | "engine"
+  | "onPresentationChange"
+  | "suspendPresentation"
+  | "view"
+> {
+  readonly state: Pick<
+    ViewerState,
+    "hidingSuspensions" | "resumeStart" | "suspensions" | "unhideAfter"
+  >;
+}
 
 export function suspendPresentation(
-  viewer: Viewer,
+  viewer: ViewerHoldContext,
   options: { hide?: boolean } = {},
 ): (() => void) & Disposable {
   let resumed = false;
@@ -36,7 +53,7 @@ export function suspendPresentation(
 }
 
 export async function suspendPresentationUntil<T>(
-  viewer: Viewer,
+  viewer: ViewerHoldContext,
   work: Promise<T>,
 ): Promise<T> {
   const resume = viewer.suspendPresentation();
@@ -47,7 +64,7 @@ export async function suspendPresentationUntil<T>(
   }
 }
 
-export function resumePresentation(viewer: Viewer): void {
+export function resumePresentation(viewer: ViewerHoldContext): void {
   viewer.state.resumeStart?.();
   viewer.state.resumeStart = undefined;
 }

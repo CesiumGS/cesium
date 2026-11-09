@@ -2,6 +2,40 @@
 import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import { accumulate } from "./pipeline.ts";
+import type { TilesetState } from "./tilesetState.ts";
+
+/** @internal Content side: what's evicted, and when. */
+export interface TilesetEviction extends Pick<
+  Tileset3D,
+  | "engine"
+  | "evictForCapacity"
+  | "markCastsOnly"
+  | "resident"
+  | "stats"
+  | "warnings"
+  | "world"
+> {
+  readonly state: Pick<
+    TilesetState,
+    | "cacheBytes"
+    | "capacityFailed"
+    | "capacityFull"
+    | "capacityWait"
+    | "casterResident"
+    | "casters"
+    | "coldAgeMs"
+    | "drawTiles"
+    | "itemList"
+    | "loaded"
+    | "masked"
+    | "order"
+    | "overflowBytes"
+    | "placeholders"
+    | "source"
+    | "standIns"
+    | "uploadsPerFrame"
+  >;
+}
 
 /**
  * World pool pressure (World.pressure) past which streaming evicts as if
@@ -9,7 +43,7 @@ import { accumulate } from "./pipeline.ts";
  */
 const CAPACITY_PRESSURE = 0.9;
 
-export function evict(tileset: Tileset3D, frame: number): void {
+export function evict(tileset: TilesetEviction, frame: number): void {
   // This frame's touches and loads, in the order eviction walks.
   tileset.state.order.seal(frame);
   // Another tileset's view tile is waiting for a pool: casters yield it.
@@ -91,7 +125,10 @@ export function evict(tileset: Tileset3D, frame: number): void {
   }
 }
 
-export function evictForCapacity(tileset: Tileset3D, frame: number): void {
+export function evictForCapacity(
+  tileset: TilesetEviction,
+  frame: number,
+): void {
   tileset.warnings.add(
     `capacity: world ${tileset.state.capacityFull} ${tileset.state.capacityFailed ? "full" : "nearly full"}, evicting`,
   );
@@ -117,9 +154,10 @@ export function evictForCapacity(tileset: Tileset3D, frame: number): void {
   tileset.state.capacityFailed = false;
 }
 
-export function unload(tileset: Tileset3D, tile: Tile): void {
+export function unload(tileset: TilesetEviction, tile: Tile): void {
   if (tile.placement) {
-    tileset.world.acceleration.tileUnloaded(tileset, tile);
+    // The hook names the whole tileset (public API).
+    tileset.world.acceleration.tileUnloaded(tileset as Tileset3D, tile);
   }
   tileset.state.source?.unloadTile?.(tile);
   if (tile.purpose) {

@@ -3,6 +3,21 @@ import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import { type DebugColor, VOLUME_COLORS } from "./debugVolumes.ts";
 import type { TileVolume } from "./volumes.ts";
+import type { TilesetState } from "./tilesetState.ts";
+
+/** @internal Content side: debug colors and volumes. */
+export interface TilesetDebug extends Pick<Tileset3D, "world"> {
+  readonly state: Pick<
+    TilesetState,
+    | "baseItem"
+    | "boundingVolumes"
+    | "colorize"
+    | "contentVolumes"
+    | "masked"
+    | "placeholders"
+    | "tileColor"
+  >;
+}
 
 /** Tile colors by tree depth for `debugColorizeTiles` (linear RGBA). */
 export const DEPTH_COLORS: ReadonlyArray<
@@ -19,7 +34,7 @@ export const DEPTH_COLORS: ReadonlyArray<
 ];
 const WHITE = [1, 1, 1, 1] as const;
 
-export function applyDebugColor(tileset: Tileset3D, tile: Tile): void {
+export function applyDebugColor(tileset: TilesetDebug, tile: Tile): void {
   if (!tile.placement) {
     return;
   }
@@ -45,7 +60,7 @@ export function applyDebugColor(tileset: Tileset3D, tile: Tile): void {
 }
 
 /** Debug tints and volumes for what is drawn now (also while frozen). */
-export function updateDebug(tileset: Tileset3D): void {
+export function updateDebug(tileset: TilesetDebug): void {
   if (tileset.state.tileColor) {
     for (const tile of tileset.state.masked) {
       applyDebugColor(tileset, tile);

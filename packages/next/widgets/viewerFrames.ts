@@ -13,12 +13,31 @@ import {
   attachSky,
   createFrameCatalog,
 } from "@cesium/next/frames";
+import type { ViewerState } from "./viewerState.ts";
+
+/** @internal Frame data and the catalog. */
+export interface ViewerFramesContext extends Pick<
+  Viewer,
+  "clock" | "engine" | "events" | "sky" | "views" | "world"
+> {
+  readonly state: Pick<
+    ViewerState,
+    | "destroyed"
+    | "framesAbort"
+    | "frames_"
+    | "offFrames"
+    | "ownResolver"
+    | "ownRig"
+    | "warningList"
+    | "warnings_"
+  >;
+}
 
 /** The sky's reference frames (`attachSky`), asked for at "precise" with `frameData`. */
 const SKY_FRAMES = ["GCRF", "ITRF", "HCRS", "MOON_ICRF", "MOON_ME"] as const;
 
 export function setFrameData(
-  viewer: Viewer,
+  viewer: ViewerFramesContext,
   data: FrameData | undefined,
 ): void {
   if (viewer.state.destroyed) {
@@ -30,7 +49,7 @@ export function setFrameData(
   const { catalog } = frameCatalog(data, viewer.state.framesAbort);
   viewer.state.warningList.length = 0;
   showWarnings(viewer);
-  emit(viewer, "warningsCleared", viewer);
+  emit(viewer, "warningsCleared", viewer as Viewer);
   useFrames(viewer, catalog, data !== undefined, bindings);
 }
 
@@ -43,7 +62,7 @@ export function setFrameData(
  * and throw for a body the catalog has no fixed reference frame for).
  */
 function carriedBindings(
-  viewer: Viewer,
+  viewer: ViewerFramesContext,
 ): Array<[AnchorHandle, CatalogFrameName]> {
   const resolver = viewer.state.ownResolver;
   if (!resolver || viewer.engine.cameras.resolver(viewer.world) !== resolver) {
@@ -81,7 +100,7 @@ function carriedBindings(
  * "analytic") and its warnings.
  */
 export function useFrames(
-  viewer: Viewer,
+  viewer: ViewerFramesContext,
   catalog: FrameCatalog,
   precise: boolean,
   bindings: ReadonlyArray<[AnchorHandle, CatalogFrameName]> = [],

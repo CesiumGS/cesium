@@ -2,13 +2,22 @@
 import type { Viewer } from "./Viewer.ts";
 import { ellipsoid, deg } from "./viewerCamera.ts";
 import { eastNorthUpToFixedFrame, mat4, vec3 } from "@cesium/next";
+import type { ViewerState } from "./viewerState.ts";
+
+/** @internal The sun and sky. */
+export interface ViewerSkyContext extends Pick<Viewer, "engine" | "sky"> {
+  readonly state: Pick<
+    ViewerState,
+    "destroyed" | "focusCenter" | "moon" | "sun" | "sunFromClock_" | "time_"
+  >;
+}
 
 /**
  * The sky `attachSky` computed at the clock's time, on the engine: the
  * stars' turn, the Moon's place while it is drawn and, while the sun
  * follows the clock, the sun.
  */
-export function applySky(viewer: Viewer): void {
+export function applySky(viewer: ViewerSkyContext): void {
   if (viewer.state.destroyed) {
     return;
   }
@@ -24,12 +33,12 @@ export function applySky(viewer: Viewer): void {
   viewer.engine.requestRender();
 }
 
-export function applyClockSun(viewer: Viewer): void {
+export function applyClockSun(viewer: ViewerSkyContext): void {
   applySky(viewer);
 }
 
 export function setSun(
-  viewer: Viewer,
+  viewer: ViewerSkyContext,
   azimuth: number,
   elevation: number,
 ): void {

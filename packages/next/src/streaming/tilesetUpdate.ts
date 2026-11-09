@@ -18,6 +18,98 @@ import { cancelLoad, request } from "./tilesetLoad.ts";
 import { serveQueries } from "./tilesetQueries.ts";
 import { upload } from "./tilesetUpload.ts";
 import { volumeObb } from "./volumes.ts";
+import type { TilesetState } from "./tilesetState.ts";
+
+/** @internal Content side: one tick's update of a tileset. */
+export interface TilesetUpdate extends Pick<
+  Tileset3D,
+  | "anchor"
+  | "changed"
+  | "engine"
+  | "events"
+  | "evict"
+  | "firstContentAt"
+  | "geometricError"
+  | "idle"
+  | "imagery"
+  | "imageryPending"
+  | "imageryReady"
+  | "imageryRefines"
+  | "lastSelected"
+  | "lights"
+  | "markCastsOnly"
+  | "moveVolumes"
+  | "resident"
+  | "retainGeometry"
+  | "root"
+  | "settledAt"
+  | "show"
+  | "stats"
+  | "undrawnReasons"
+  | "undrawnTile"
+  | "updateVolumePad"
+  | "useOrigin"
+  | "warnings"
+  | "world"
+> {
+  readonly state: Pick<
+    TilesetState,
+    | "baseItem"
+    | "blendedTwins"
+    | "boundingVolumes"
+    | "cacheBytes"
+    | "capacityFailed"
+    | "capacityFull"
+    | "capacityWait"
+    | "casterBytesEstimate"
+    | "casterLoad"
+    | "casterResident"
+    | "casterTimer"
+    | "casterWake"
+    | "casters"
+    | "casting"
+    | "coldAgeMs"
+    | "collision"
+    | "colorize"
+    | "contentAxes"
+    | "contentVolumes"
+    | "delta"
+    | "destroyed"
+    | "drawTiles"
+    | "externals"
+    | "frame"
+    | "frozen"
+    | "headers"
+    | "inFlight"
+    | "itemList"
+    | "lastChange"
+    | "loadEstimateMs"
+    | "loaded"
+    | "loading"
+    | "masked"
+    | "options"
+    | "order"
+    | "origin"
+    | "overflowBytes"
+    | "ownMaterials"
+    | "placeholders"
+    | "policy"
+    | "queries"
+    | "ready"
+    | "recent"
+    | "recentCasterBytes"
+    | "revisionSeen"
+    | "source"
+    | "standIns"
+    | "terrainRegions"
+    | "tileColor"
+    | "transform"
+    | "uploadsPerFrame"
+    | "viewBytes"
+    | "viewCapacityWait"
+    | "wanted"
+  >;
+}
 
 /** Imagery priority offset of loading tiles: after drawn and waiting ones. */
 const LOADING_IMAGERY = 1e15;
@@ -105,7 +197,10 @@ function isIdentity(m: Mat4): boolean {
   return true;
 }
 
-export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
+export function update(
+  tileset: TilesetUpdate,
+  allViews: SelectionView[],
+): void {
   tileset.state.casterWake = false;
   if (tileset.state.destroyed) {
     return;
@@ -469,7 +564,7 @@ export function update(tileset: Tileset3D, allViews: SelectionView[]): void {
 }
 
 /** Builds waiting external tilesets' trees within the frame's budget. */
-function buildExternals(tileset: Tileset3D): void {
+function buildExternals(tileset: TilesetUpdate): void {
   const budget = tileset.engine.scene.uploadBudget;
   while (tileset.state.externals.length > 0) {
     if (budget.trees > 0 && budget.ms <= 0) {
