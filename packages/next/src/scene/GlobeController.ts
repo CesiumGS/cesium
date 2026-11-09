@@ -763,9 +763,14 @@ export class GlobeController {
       const zooming =
         Math.abs(this.pendingZoom) > 1e-4 || Math.abs(this.zoomRate) > 1e-3;
       if (p && zooming && this.zoomPixel === pixel) {
+        // The point is under the center of the pixel the pick read, not
+        // under (x, y): pinning it to (x, y) moved the view by the offset,
+        // and the next pick read the moved view, so each step slid it again.
+        const center = this.pickedPixel(pixel[0], pixel[1]);
         v3.copy(this.zoomTarget, p);
         v3.copy(this.hover, p);
-        this.hoverPixel = [pixel[0], pixel[1]];
+        this.zoomPixel = center;
+        this.hoverPixel = [center[0], center[1]];
       }
     });
   }
@@ -781,7 +786,7 @@ export class GlobeController {
       this.hoverPending = false;
       if (p) {
         v3.copy(this.hover, p);
-        this.hoverPixel = [x, y];
+        this.hoverPixel = this.pickedPixel(x, y);
       } else {
         this.hoverPixel = undefined;
       }
@@ -802,6 +807,15 @@ export class GlobeController {
       return undefined;
     }
     return this.ellipsoid.rayIntersection(position, this.ray(x, y), out);
+  }
+
+  /**
+   * Center of the pixel a pick at (x, y) reads (`View.pickPosition` takes
+   * the pixel the position falls in): where the point it returns is.
+   */
+  private pickedPixel(x: number, y: number): [number, number] {
+    const r = this.view.pixelRect();
+    return [r.x + Math.floor(x - r.x) + 0.5, r.y + Math.floor(y - r.y) + 0.5];
   }
 
   /** World ray through a target pixel. */
