@@ -8620,6 +8620,41 @@ Do soon, designed together with vector drawing, because they overlap with it. `B
 - **Planets as points, then disks.** The planets aren't drawn yet, and the ephemeris pack holds only the Sun, the Earth-Moon barycenter and the Moon. Add their barycenters from DE440, magnitudes that follow phase and distance, and a point at ordinary fields of view (Jupiter is under a pixel at about 0.03° a pixel), growing into an impostor when a long lens resolves it, on 5c's impostor path. A view of Orion with a planet nearby should use a real date, found from the ephemeris.
 - **Entity is retired as an engine concept; its ideas stay.** 2.0 has no `Entity` class or data-source layer in the engine. What people use Entity for (a time-varying property, a clamped label, a track with a path) is covered through scene items, styling and 5d's time-bound values (`Timeline.bind`). Exact names and any compatibility layer belong to the vector design and the API review (5i).
 
+### 13.30 Sketch: a gallery example for the sun and sky model (owner, 2026-11-08)
+
+A Dyno example of beauty shots with presets, showing off the physical sky and driving the features it needs. A sketch, not a plan.
+
+**A preset is data:** a place, a time, a lens and camera, the air (aerosol type and visibility), a look (eye or camera), and content. Times are solved rather than typed where they can be: the Sun's azimuth along Manhattan's grid gives Manhattanhenge's dates, checked against published ones. Each preset shows what's real about it, what's modelled and what isn't, in keeping with the handbook's rule.
+
+**Shots to try (dates and facts to confirm from sources):**
+
+- **Sunrise and sunset:** Manhattanhenge, Stonehenge's solstice sunrise, Angkor Wat at the equinox, the Grand Canyon, alpenglow on Everest.
+- **The air:** one place across the aerosol types (continental, urban, maritime, desert) and a range of visibility: a clean mountain morning, a hazy city, a desert dusk, a sea sunset. The Belt of Venus and the Earth's shadow at twilight.
+- **The Moon:** a moonrise behind a skyline through a long lens, with its true size; a total solar eclipse from the ground, with stars and the Moon's shadow; the same eclipse's shadow from orbit.
+- **Astrophotography:** the Milky Way's core over a dark site, Orion with a planet, the zodiacal light, star trails.
+- **From space:** Earthrise (Apollo 8, 1968), the Blue Marble, the limb with airglow, the terminator over mountains, city lights from orbit, and Artemis II's views, whose trajectory we already have.
+- **Aurora:** from the ground and from orbit.
+
+**What it needs:**
+
+| Feature                                        | Where                 | Why                                                                                               |
+| ---------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
+| Moon tileset loading                           | 5c                    | Earthrise, lunar sites                                                                            |
+| Camera moves, long lenses, preset rigs         | 5d                    | Moving between shots, the Moon's size                                                             |
+| Stars, planets, deep sky, eye and camera looks | 5e, §13.29            | Astrophotography                                                                                  |
+| Glare and sun glint                            | §13.28                | Sunsets, the sun itself                                                                           |
+| Water, reflecting the sky                      | §13.28                | Sea sunsets, reflections                                                                          |
+| A wider ephemeris pack                         | Data                  | The pack covers 2000 to 2050, and Earthrise and the Blue Marble are earlier; `de440s` covers them |
+| Clouds, at least a 2D layer                    | Not planned yet       | A sunset without clouds is a thin picture                                                         |
+| Crepuscular rays                               | Volumetric fog, later | Optional                                                                                          |
+| Aurora                                         | New module            | Below                                                                                             |
+
+**Aurora, a first idea.** Emission only, with no scattering to solve, so it's cheap: a compute pass evolves a 2D field of curtains around the geomagnetic oval, and the sky marches a shell from 100 to about 300 km through it in a constant number of steps, at reduced resolution, adding green low (557.7 nm oxygen), red high (630 nm oxygen) and a purple lower edge. The air's transmittance dims it, and it's in cd/m² under the same exposure. A self-contained module, loaded only when used.
+
+**Limits to keep in mind:** Google's tiles are live-stream only here: publishing images isn't cleared, so presets using them stream with attribution and no stills go in the handbook. Sky data follows the R&D rules in §13.29. Content for specific sites needs its own license check.
+
+**Order:** a first slice can use what exists today (sky, aerosols, visibility, Moon and its phase, moonlight, city lights, exposure, solved dates). The rest grows as 5c, 5d, 5e and water land. Clouds and aurora are decisions of their own.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
