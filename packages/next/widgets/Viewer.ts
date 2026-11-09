@@ -59,7 +59,7 @@ import type {
   FrameDataWarning,
   SkyInputs,
 } from "@cesium/next/frames";
-import { Clock } from "@cesium/next/time";
+import { Clock, type ZoneLookup } from "@cesium/next/time";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
 import { orbitState, planOrbit, type OrbitOptions } from "./orbitFocus.ts";
@@ -142,6 +142,13 @@ export interface ViewerOptions {
   clock?: Clock;
   /** Show the time controls over the view (default true). */
   timeControls?: boolean | Omit<TimeControlsOptions, "place">;
+  /**
+   * The application's way to find a place's civil time zone. With one the
+   * time controls offer the place's civil zone and open on it (else its solar
+   * time, labelled so); without one they open on "nominal" as before.
+   * `timeControls.zoneLookup` is the same thing, and takes precedence.
+   */
+  zoneLookup?: ZoneLookup;
   /**
    * The stars behind the sky (default true: 1.x's Tycho star map, turned
    * by the clock); false: none.
@@ -501,6 +508,7 @@ export class Viewer {
     }
     if (options.timeControls !== false) {
       this.state.time_ = attachTimeControls(container, this.clock, {
+        ...(options.zoneLookup && { zoneLookup: options.zoneLookup }),
         ...(options.timeControls === true || !options.timeControls
           ? {}
           : options.timeControls),

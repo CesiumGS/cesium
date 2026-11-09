@@ -149,6 +149,35 @@ export function ianaAbbreviation(
   return `UTC${sign}${h}${m === 0 ? "" : `:${String(m).padStart(2, "0")}`}`;
 }
 
+const wallFormats = new Map<
+  string,
+  { dateFormat: Intl.DateTimeFormat; timeFormat: Intl.DateTimeFormat }
+>();
+
+/** The date and time formats of a locale, built once: `timeParts` is called often. */
+function formatsFor(locale: string | undefined) {
+  const key = locale ?? "";
+  let formats = wallFormats.get(key);
+  if (formats === undefined) {
+    formats = {
+      dateFormat: new Intl.DateTimeFormat(locale, {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+      }),
+      timeFormat: new Intl.DateTimeFormat(locale, {
+        timeZone: "UTC",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
+    };
+    wallFormats.set(key, formats);
+  }
+  return formats;
+}
+
 /** "UTC", "UTC+01:00", "UTC−07:00" for an offset in minutes (rounded to the minute). */
 function offsetLabel(minutes: number): string {
   const whole = Math.round(minutes);
@@ -267,18 +296,7 @@ export function timeParts(
   const wall = new Date(wallMs);
   const second = leapSecond ? 60 : wall.getUTCSeconds();
   const ms = leapSecond ? millisecond : wall.getUTCMilliseconds();
-  const dateFormat = new Intl.DateTimeFormat(locale, {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-  });
-  const timeFormat = new Intl.DateTimeFormat(locale, {
-    timeZone: "UTC",
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  const { dateFormat, timeFormat } = formatsFor(locale);
   const time = timeFormat
     .formatToParts(wall)
     .map((p) => (leapSecond && p.type === "second" ? "60" : p.value))

@@ -1743,6 +1743,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "widgets:TimeControlsOptions",
       "widgets:TimeMark",
       "widgets:TimeZoneChoice",
+      "widgets:zoneOf",
     ],
     status: "changed",
     note: "One set of time controls replaces the two widgets, turned on with `timeControls` or `attachTimeControls`.",

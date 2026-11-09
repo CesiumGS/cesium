@@ -22,6 +22,7 @@ export {
 } from "./orbitFocus.ts";
 export {
   attachTimeControls,
+  zoneOf,
   type TimeControlsHandle,
   type TimeControlsOptions,
   type TimeMark,

@@ -607,3 +607,4 @@ widgets	followZoom	function	-
 widgets	inspectEngine	function	-
 widgets	orbitState	function	-
 widgets	planOrbit	function	-
+widgets	zoneOf	function	-

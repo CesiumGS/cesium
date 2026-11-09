@@ -35,12 +35,18 @@
  * abbreviation ("BST"), as the browser's Intl knows it.
  */
 import {
+  Instant,
+  LeapSeconds,
   ianaAbbreviation,
   ianaOffsetMinutes,
+  placeZone,
   sunElevation,
   sunTimes,
+  timeParts,
   type Clock,
   type SunTimes,
+  type TimeZone,
+  type ZoneLookup,
 } from "@cesium/next/time";
 
 export interface TimeControlsOptions {
@@ -60,6 +66,13 @@ export interface TimeControlsOptions {
    * offers too.
    */
   zone?: TimeZoneChoice;
+  /**
+   * The application's way to find a place's civil zone (its time-zone
+   * database or service). With one, the controls offer `"place"` and open on
+   * it: the place's civil zone, else its solar time, labelled so. Without
+   * one they open on "nominal", as they always did.
+   */
+  zoneLookup?: ZoneLookup;
   /** The group's accessible name (default "Date and time of the sun"). */
   label?: string;
 }
@@ -101,7 +114,7 @@ export interface TimeMark {
  * which the app gives (`TimeControlsOptions.zone`, `setZone`).
  */
 export type TimeZoneChoice =
-  "nominal" | "solar" | "utc" | "local" | { readonly iana: string };
+  "nominal" | "solar" | "utc" | "local" | "place" | { readonly iana: string };
 type Zone = TimeZoneChoice;
 type NamedZone = Exclude<Zone, { readonly iana: string }>;
 
@@ -141,7 +154,43 @@ const ZONES: Record<NamedZone, { short: string; long: string }> = {
   },
   utc: { short: "UTC", long: "Coordinated Universal Time" },
   local: { short: "", long: "This computer's time zone" },
+  place: {
+    short: "",
+    long: "The place's civil time zone through the application's lookup, else its solar time",
+  },
 };
+
+/** The leap-second table the controls read the clock's UTC milliseconds by. */
+const LEAP = LeapSeconds.builtIn();
+
+/**
+ * The time library's zone for a choice in ⚙: `"utc"`, `"local"` and a civil
+ * `{ iana }` map directly; `"solar"` and `"nominal"` take the place's
+ * longitude (UTC without a place, as the controls always did); `"place"` is
+ * `placeZone`.
+ */
+export function zoneOf(
+  choice: TimeZoneChoice,
+  place: { longitude: number; latitude: number } | undefined,
+  lookup?: ZoneLookup,
+): TimeZone {
+  if (typeof choice === "object") {
+    return { kind: "civil", iana: choice.iana };
+  }
+  switch (choice) {
+    case "utc":
+      return { kind: "utc" };
+    case "local":
+      return { kind: "local" };
+    case "solar":
+    case "nominal":
+      return place
+        ? { kind: choice, longitude: place.longitude }
+        : { kind: "utc" };
+    case "place":
+      return place ? placeZone(place, lookup) : { kind: "utc" };
+  }
+}
 
 /** Below this view width the controls sit above the credits. */
 const NARROW = 640;
@@ -164,7 +213,7 @@ export function attachTimeControls(
     root.addEventListener(type, (e) => e.stopPropagation());
   }
   // By longitude until a time-zone map gives the place's legal zone.
-  let zone: Zone = options.zone ?? "nominal";
+  let zone: Zone = options.zone ?? (options.zoneLookup ? "place" : "nominal");
 
   // --- the bar ---
   const bar = el("div", "ct-bar");
@@ -259,6 +308,9 @@ export function attachTimeControls(
   const computerZone =
     Intl.DateTimeFormat().resolvedOptions().timeZone ?? "This computer";
   const civilOption = option(IANA_OPTION, "");
+  if (options.zoneLookup) {
+    zoneSelect.append(option("place", "The place's civil zone"));
+  }
   zoneSelect.append(
     option("nominal", "The place's (by longitude)"),
     option("solar", "Solar time at the place"),
@@ -340,25 +392,15 @@ export function attachTimeControls(
 
   // --- time in the chosen zone ---
   const place = () => options.place();
+  /** The time library's parts of `ms` in the zone chosen. */
+  const partsAt = (ms: number) =>
+    timeParts(
+      Instant.fromUtc(ms, LEAP),
+      zoneOf(zone, place(), options.zoneLookup),
+      { leapSeconds: LEAP },
+    );
   /** Minutes the zone is ahead of UTC at `ms`. */
-  const offset = (ms: number) => {
-    if (zone === "utc") {
-      return 0;
-    }
-    if (zone === "local") {
-      return -new Date(ms).getTimezoneOffset();
-    }
-    if (typeof zone === "object") {
-      return ianaOffsetMinutes(ms, zone.iana);
-    }
-    const p = place();
-    if (!p) {
-      return 0;
-    }
-    // Solar: 4 minutes per degree; nominal: that, in whole hours.
-    const solar = (p.longitude / deg) * 4;
-    return zone === "solar" ? solar : Math.round(solar / 60) * 60;
-  };
+  const offset = (ms: number) => partsAt(ms).offsetMinutes;
   /** Midnight starting the zone's day that contains `ms`. */
   const dayStart = (ms: number) => {
     const off = offset(ms) * MINUTE;
@@ -381,23 +423,13 @@ export function attachTimeControls(
     minute: "2-digit",
   });
   const zoneShort = () => {
-    if (typeof zone === "object") {
-      return ianaAbbreviation(clock.time, zone.iana);
+    if (zone === "solar" || zone === "utc") {
+      return ZONES[zone].short;
     }
-    if (zone === "local") {
-      return (
-        new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
-          .formatToParts(new Date(clock.time))
-          .find((p) => p.type === "timeZoneName")?.value ?? ""
-      );
+    if (zone === "nominal" && !place()) {
+      return "UTC";
     }
-    if (zone === "nominal") {
-      const hours = Math.round(offset(clock.time) / 60);
-      return hours === 0
-        ? "UTC"
-        : `UTC${hours > 0 ? "+" : "−"}${Math.abs(hours)}`;
-    }
-    return ZONES[zone].short;
+    return partsAt(clock.time).zoneShort;
   };
 
   /** Sets the time, keeping the time of day, on another day. */
@@ -580,6 +612,14 @@ export function attachTimeControls(
   let marks: readonly TimeMark[] = [];
   const baseTitle = strip.title;
 
+  /** The long name of the place's zone: the civil zone it found, or solar time, labelled so. */
+  function placeLong(ms: number): string {
+    const resolved = zoneOf(zone, place(), options.zoneLookup);
+    return resolved.kind === "civil"
+      ? `Civil time at the place (${resolved.iana})`
+      : partsAt(ms).zoneLong;
+  }
+
   function render(): void {
     const t = clock.time;
     const local = inZone(t);
@@ -589,7 +629,9 @@ export function attachTimeControls(
     const long =
       typeof zone === "object"
         ? `Civil time at the place (${zone.iana})`
-        : ZONES[zone].long;
+        : zone === "place"
+          ? placeLong(t)
+          : ZONES[zone].long;
     time.title =
       clock.mode === "live"
         ? `Now, following this computer's clock (${long})`
