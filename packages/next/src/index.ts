@@ -304,6 +304,15 @@ export {
   type TerrainRayTile,
 } from "./globe/terrainRay.ts";
 export { LEVEL_ZERO_ERROR } from "./globe/TerrainSource.ts";
+// Bulk work in slices, with an AbortSignal and progress (spec section 9.6;
+// Engine.bulk slices inside the loop's ticks).
+export {
+  runBulk,
+  timeSlices,
+  type BulkOptions,
+  type BulkProgress,
+  type SliceScheduler,
+} from "./core/bulk.ts";
 // One query interface for rays (spec section 7.10): Engine.queries, or
 // terrainQueries over a terrain built by hand; a later engine plugs in
 // through createSpatialQueries.

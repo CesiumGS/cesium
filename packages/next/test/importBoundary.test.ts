@@ -75,6 +75,8 @@ function layerOf(file: string): Layer {
 const FRAMES_CORE_VALUES = new Set([
   "src/scene/Body.ts",
   "src/camera/frameResolver.ts",
+  // The bulk shape (5b): neutral, it imports nothing.
+  "src/core/bulk.ts",
 ]);
 
 /** The layers each layer may import (values and types). */

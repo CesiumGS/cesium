@@ -11,6 +11,8 @@ entry	name	kind	tier
 .	Body	interface	-
 .	BudgetedOptions	interface	-
 .	BudgetedSelection	class	-
+.	BulkOptions	interface	-
+.	BulkProgress	interface	-
 .	CESIUM_MOON_TERRAIN	const	-
 .	Camera	class	-
 .	CameraExposure	type	-
@@ -170,6 +172,7 @@ entry	name	kind	tier
 .	SkyPackManifest	interface	-
 .	SlangCache	interface	-
 .	SlicePool	class	-
+.	SliceScheduler	interface	-
 .	SliceUser	interface	-
 .	SpatialQueries	interface	-
 .	Stage	type	-
@@ -283,12 +286,14 @@ entry	name	kind	tier
 .	resolveITwinIModel	function	-
 .	resolveIonAsset	function	-
 .	resolveUri	function	-
+.	runBulk	function	-
 .	scaleToEv100	const	-
 .	secondDerivativeBound	function	-
 .	summarizeContent	function	-
 .	tableResolver	function	-
 .	terrainQueries	function	-
 .	tileHeaderKey	function	-
+.	timeSlices	function	-
 .	vec3	namespace	-
 .	vec3.Vec3	type	-
 .	vec3.add	function	-
@@ -346,6 +351,7 @@ frames	FramesResolverOptions	interface	-
 frames	GridFactors	interface	-
 frames	MOON_ME_ORIENTATION_RADIANS	const	-
 frames	OemSegment	interface	-
+frames	PathSamples	interface	-
 frames	PiecewiseFrame	class	-
 frames	PiecewiseJumpError	class	-
 frames	PiecewiseOptions	interface	-
@@ -368,6 +374,7 @@ frames	TwoVectorDefinition	interface	-
 frames	TwoVectorDegenerateError	class	-
 frames	TwoVectorFrame	class	-
 frames	VectorDefinition	type	-
+frames	accuracySpan	function	-
 frames	angularVelocity	function	-
 frames	attachSky	function	-
 frames	axesAt	function	-
@@ -396,6 +403,7 @@ frames	rigPreset	function	-
 frames	rotationPart	function	-
 frames	routeLegs	function	-
 frames	routeRevision	function	-
+frames	samplePath	function	-
 frames	separationAccuracy	function	-
 frames	skyState	function	-
 frames	toParentMatrix	function	-

@@ -51,6 +51,11 @@ import {
 } from "../query/queries.ts";
 import { globeTarget, terrainBackend } from "../query/terrainBackend.ts";
 import { drawBackend } from "../query/drawBackend.ts";
+import {
+  tickSlices,
+  type SliceScheduler,
+  type TickSlices,
+} from "../core/bulk.ts";
 import { castFrameRays } from "../query/frameRays.ts";
 import { castTilesetRays } from "../query/geometryBackend.ts";
 import { GlareKernels } from "../render/post/glare.ts";
@@ -276,6 +281,16 @@ export class Engine {
       this.sampleHeightMostDetailed(world, positions, { tilesets }),
     () => this.wake(),
   );
+  /**
+   * Where bulk work runs (`runBulk`'s `scheduler`): in slices inside the
+   * loop's ticks, 4 ms a tick, keeping the loop awake while work is queued
+   * and registering no listener while idle. Destroying the engine rejects
+   * what is still queued with an `AbortError`.
+   */
+  private readonly bulkSlices: TickSlices = tickSlices((listener) =>
+    this.onTick(listener),
+  );
+  readonly bulk: SliceScheduler = this.bulkSlices;
   readonly stats: FrameStats = {
     cpuMs: 0,
     gpuMs: Number.NaN,
@@ -1651,6 +1666,7 @@ export class Engine {
     for (const world of this.worlds) {
       world.destroy();
     }
+    this.bulkSlices.dispose();
     this.raster.pool.destroy();
     this.raster.lists?.destroy();
     this.raster.timer.destroy();

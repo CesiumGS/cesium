@@ -64,6 +64,7 @@ export {
   type FramePiece,
   type PiecewiseOptions,
 } from "./piecewise.ts";
+export { samplePath, accuracySpan, type PathSamples } from "./bulk.ts";
 export { frameVelocity, angularVelocity } from "./motion.ts";
 export { createFrames, type Frames } from "./frames.ts";
 export {
