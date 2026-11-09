@@ -79,7 +79,7 @@ describe("astrophotoCurveStage", () => {
   });
 
   describe("its shader", () => {
-    const source = astrophotoCurveStage().module.code;
+    const source = astrophotoCurveStage().passes[0]!.module.code;
     const own = source.slice(source.indexOf("fn postStage(input: PostInput)"));
 
     it("holds the rule's constants", () => {

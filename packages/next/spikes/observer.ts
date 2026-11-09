@@ -556,11 +556,196 @@ async function still(data: Uint8ClampedArray<ArrayBuffer>): Promise<string> {
   return `data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`;
 }
 
+/** Stages of several passes, intermediate textures and compute, on a real GPU. */
+async function passesGroup(engine: Engine, say: Say): Promise<void> {
+  const near = (a: readonly number[], b: readonly number[], by = 1) =>
+    a.slice(0, 3).every((v, i) => Math.abs(v - b[i]!) <= by);
+  const scene = new Scene(engine, { background: "color" });
+  const before = await image(engine, scene);
+  const b = at(before, ...CORNER);
+  const options = {
+    kind: "look",
+    label: "A check (a look)",
+  } as const;
+  const run = async (stage: PostStage) => {
+    scene.view.observer.stages = [stage];
+    const after = await image(engine, scene);
+    return { after, error: stage.error?.message ?? "" };
+  };
+  {
+    const { after, error } = await run(
+      createPostStage({
+        ...options,
+        name: "two",
+        slot: "display",
+        textures: { half: { scale: 0.5 } },
+        passes: [
+          {
+            name: "down",
+            writes: ["half"],
+            shader: `fn postStage(input: PostInput) -> vec4<f32> {
+              return vec4<f32>(1.0) - postColor(input.uv);
+            }`,
+          },
+          {
+            name: "up",
+            reads: ["half"],
+            shader: `fn postStage(input: PostInput) -> vec4<f32> {
+              return vec4<f32>(textureSampleLevel(half, postSampler, input.uv, 0.0).rgb, 1.0);
+            }`,
+          },
+        ],
+      }),
+    );
+    const a = at(after, ...CORNER);
+    say(
+      "two passes through a half-size target",
+      !error && near(a, [255 - b[0]!, 255 - b[1]!, 255 - b[2]!], 2),
+      `${b.slice(0, 3).join()} → ${a.slice(0, 3).join()} ${error}`,
+    );
+  }
+  {
+    const { after, error } = await run(
+      createPostStage({
+        ...options,
+        name: "levels",
+        slot: "display",
+        textures: { pyramid: { scale: 0.5, mips: 3, format: "rgba16float" } },
+        passes: [
+          {
+            name: "zero",
+            writes: [{ texture: "pyramid", mip: 0 }],
+            shader: `fn postStage(input: PostInput) -> vec4<f32> {
+              return vec4<f32>(0.125, 0.0, 0.0, 1.0);
+            }`,
+          },
+          ...[1, 2].map((mip) => ({
+            name: `level${mip}`,
+            reads: [{ texture: "pyramid", mip: mip - 1 }],
+            writes: [{ texture: "pyramid", mip }],
+            shader: `fn postStage(input: PostInput) -> vec4<f32> {
+              let c = textureSampleLevel(pyramid, postSampler, input.uv, 0.0);
+              return vec4<f32>(c.r * 2.0, f32(input.size.x), 0.0, 1.0);
+            }`,
+          })),
+          {
+            name: "show",
+            reads: ["pyramid"],
+            shader: `fn postStage(input: PostInput) -> vec4<f32> {
+              let c = textureSampleLevel(pyramid, postSampler, input.uv, 2.0);
+              return vec4<f32>(c.r, c.g / 255.0, 0.0, 1.0);
+            }`,
+          },
+        ],
+      }),
+    );
+    const a = at(after, ...CORNER);
+    say(
+      "a pyramid, written level by level, read whole; each pass knows its size",
+      !error && near(a, [128, WIDTH / 2 / 4, 0], 2),
+      `${a.slice(0, 3).join()} (red 0.125 × 4; green ${WIDTH / 2 / 4}: level 2's width) ${error}`,
+    );
+  }
+  {
+    const { after, error } = await run(
+      createPostStage({
+        ...options,
+        name: "stored",
+        slot: "display",
+        passes: [
+          {
+            name: "swap",
+            compute: {},
+            shader: `fn postCompute(input: PostInput) {
+              let c = postColorAt(input.pixel);
+              textureStore(output, input.pixel, postFinite(vec4<f32>(c.b, c.g, c.r, c.a)));
+            }`,
+          },
+        ],
+      }),
+    );
+    const corner = at(after, ...CORNER);
+    const edge = at(after, WIDTH - 1, HEIGHT - 1);
+    const was = at(before, WIDTH - 1, HEIGHT - 1);
+    say(
+      "a compute pass stores every pixel, to the last corner",
+      !error &&
+        near(corner, [b[2]!, b[1]!, b[0]!]) &&
+        near(edge, [was[2]!, was[1]!, was[0]!]),
+      `${b.slice(0, 3).join()} → ${corner.slice(0, 3).join()}; last ${edge.slice(0, 3).join()} ${error}`,
+    );
+  }
+  {
+    const { after, error } = await run(
+      createPostStage({
+        ...options,
+        name: "scene-compute",
+        slot: "scene",
+        uniforms: { gain: { type: "f32", value: 1 } },
+        textures: { half: { scale: 0.5, format: "rgba16float" } },
+        passes: [
+          {
+            name: "fill",
+            compute: { workgroupSize: [4, 4] },
+            reads: ["depth"],
+            writes: ["half"],
+            shader: `fn postCompute(input: PostInput) {
+              let far = postDepthAt(input.pixel * 2) * 0.0;
+              textureStore(half, input.pixel, vec4<f32>(uniforms.gain + far));
+            }`,
+          },
+          {
+            name: "apply",
+            reads: ["half"],
+            shader: `fn postStage(input: PostInput) -> vec4<f32> {
+              return postColor(input.uv) * textureSampleLevel(half, postSampler, input.uv, 0.0);
+            }`,
+          },
+        ],
+      }),
+    );
+    const d = difference(after, before);
+    say(
+      "compute into a target with uniforms and depth, then a fragment pass reads it",
+      !error && d.largest <= 1,
+      `largest difference ${d.largest}/255 ${error}`,
+    );
+  }
+  {
+    const { after, error } = await run(
+      createPostStage({
+        ...options,
+        name: "lut",
+        slot: "display",
+        textures: {
+          lut: {
+            width: 2,
+            height: 1,
+            data: Uint8Array.of(10, 20, 30, 255, 200, 100, 50, 255),
+          },
+        },
+        reads: ["lut"],
+        shader: `fn postStage(input: PostInput) -> vec4<f32> {
+          return textureLoad(lut, vec2<i32>(1, 0), 0);
+        }`,
+      }),
+    );
+    const a = at(after, ...CORNER);
+    say(
+      "a fixed image reaches the shader",
+      !error && near(a, [200, 100, 50]),
+      `${a.slice(0, 3).join()} ${error}`,
+    );
+  }
+  scene.dispose();
+}
+
 const GROUPS: Record<
   string,
   (engine: Engine, say: Say, stills: Record<string, string>) => Promise<void>
 > = {
   stages: stagesGroup,
+  passes: passesGroup,
   curve: curveGroup,
 };
 

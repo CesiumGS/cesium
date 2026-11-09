@@ -25,6 +25,7 @@ import {
   PostStageError,
   createPostStage,
   type PostStageOptions,
+  type PostStagePass,
 } from "../src/scene/postStage.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { wgslUnit } from "../src/shaders/link/unit.ts";
@@ -91,7 +92,7 @@ describe("createPostStage", () => {
     ["a gain that isn't finite", { shadowGain: Infinity }, "shadowGain", /./],
     [
       "a texture uniform",
-      { uniforms: { map: { type: "texture2d", value: "a.png" } } },
+      { uniforms: { map: { type: "texture2d", value: "a.png" } as never } },
       "uniforms.map",
       /value uniforms/,
     ],
@@ -167,7 +168,7 @@ fn postStage(input: vec4<f32>) -> vec4<f32> {
         return postColorAt(input.pixel) * uniforms.strength;
       }`,
     });
-    expect(made.module.code).toContain("strength: f32");
+    expect(made.passes[0]!.module.code).toContain("strength: f32");
     expect(made.uniformData.getFloat32(0, true)).toBe(0.5);
     made.setUniform("strength", 2);
     expect(made.uniformData.getFloat32(0, true)).toBe(2);
@@ -756,6 +757,445 @@ describe("a view's chain", () => {
       shader: PASS_THROUGH,
     };
   }
+});
+
+describe("a stage of several passes", () => {
+  const FRAGMENT =
+    "fn postStage(input: PostInput) -> vec4<f32> { return vec4<f32>(0.0); }";
+  const LEVELS = 4;
+
+  /** The shape of the veil: a pyramid written level by level, composed at half size. */
+  const veil = (): Partial<PostStageOptions> => ({
+    textures: {
+      pyramid: { scale: 0.5, mips: LEVELS },
+      composed: { scale: 0.5 },
+    },
+    passes: [
+      {
+        name: "input",
+        writes: [{ texture: "pyramid", mip: 0 }],
+        shader: FRAGMENT,
+      },
+      ...[1, 2, 3].map((mip) => ({
+        name: `down.${mip}`,
+        reads: [{ texture: "pyramid", mip: mip - 1 }],
+        writes: [{ texture: "pyramid", mip }],
+        shader: `fn postStage(input: PostInput) -> vec4<f32> {
+          return textureSampleLevel(pyramid, postSampler, input.uv, 0.0);
+        }`,
+      })),
+      {
+        name: "compose",
+        reads: ["pyramid"],
+        writes: ["composed"],
+        shader: `fn postStage(input: PostInput) -> vec4<f32> {
+          return textureSampleLevel(pyramid, postSampler, input.uv, 2.0);
+        }`,
+      },
+      {
+        name: "add",
+        reads: ["composed"],
+        shader: `fn postStage(input: PostInput) -> vec4<f32> {
+          return postColor(input.uv) + textureSampleLevel(composed, postSampler, input.uv, 0.0);
+        }`,
+      },
+    ],
+  });
+
+  describe("what it declares", () => {
+    const pass = (more: Partial<PostStagePass>): PostStagePass => ({
+      name: "a",
+      shader: FRAGMENT,
+      ...more,
+    });
+    const onePass = (
+      more: Record<string, unknown>,
+      options: Partial<PostStageOptions> = {},
+    ): Partial<PostStageOptions> => ({
+      shader: undefined,
+      passes: [pass(more as never)],
+      ...options,
+    });
+
+    it("binds what a pass reads and writes, at their names", () => {
+      const made = stage("veil", "scene", { shader: undefined, ...veil() });
+      const [input, down, , , compose, add] = made.passes;
+      expect(input!.label).toBe("post.veil.input");
+      expect(input!.bindings).toEqual([]);
+      expect(down!.module.code).toContain(
+        "@group(1) @binding(2) var pyramid: texture_2d<f32>;",
+      );
+      expect(compose!.bindings[0]!.mip).toBeUndefined();
+      expect(add!.writes[0]!.texture.name).toBe("output");
+    });
+
+    it("a stage of one function is one pass writing its output", () => {
+      const [only, ...others] = stage("a").passes;
+      expect(others).toEqual([]);
+      expect(only!.label).toBe("post.a");
+      expect(only!.writes[0]!.texture.name).toBe("output");
+      expect(only!.compute).toBeUndefined();
+    });
+
+    it("takes an image, in the simple form too", () => {
+      const made = stage("lut", "exposed", {
+        textures: {
+          lut: { width: 2, height: 1, data: new Uint8Array(8) },
+        },
+        reads: ["lut"],
+        shader: `fn postStage(input: PostInput) -> vec4<f32> {
+          return textureSampleLevel(lut, postSampler, input.uv, 0.0);
+        }`,
+      });
+      expect(made.passes[0]!.bindings[0]!.texture.name).toBe("lut");
+    });
+
+    it.each<[string, Partial<PostStageOptions>, string, RegExp]>([
+      ["both forms", { passes: [] }, "shader", /not both/],
+      ["neither form", { shader: undefined }, "shader", /not both/],
+      [
+        "no passes",
+        { shader: undefined, passes: [] },
+        "passes",
+        /at least one/,
+      ],
+      [
+        "reads beside passes",
+        { shader: undefined, passes: [pass({})], reads: ["depth"] },
+        "reads",
+        /each pass/,
+      ],
+      [
+        "two passes of one name",
+        { shader: undefined, passes: [pass({}), pass({})] },
+        "passes",
+        /"a"/,
+      ],
+      [
+        "nothing writing the output",
+        onePass({ writes: ["t"] }, { textures: { t: {} } }),
+        "passes",
+        /"output"/,
+      ],
+      ["an unknown read", onePass({ reads: ["t"] }), "passes.a.reads", /"t"/],
+      [
+        "an unknown write",
+        onePass({ writes: ["t"] }),
+        "passes.a.writes",
+        /"t"/,
+      ],
+      [
+        "a read nothing wrote",
+        onePass({ reads: ["t"] }, { textures: { t: {} } }),
+        "passes.a.reads",
+        /earlier pass/,
+      ],
+      [
+        "a level nothing wrote",
+        {
+          shader: undefined,
+          textures: { t: { mips: 2 } },
+          passes: [
+            pass({ name: "b", writes: [{ texture: "t", mip: 0 }] }),
+            pass({ reads: [{ texture: "t", mip: 1 }] }),
+          ],
+        },
+        "passes.a.reads",
+        /level 1/,
+      ],
+      [
+        "a level it doesn't have",
+        onePass(
+          { writes: [{ texture: "t", mip: 2 }] },
+          { textures: { t: { mips: 2 } } },
+        ),
+        "passes.a.writes",
+        /no level 2/,
+      ],
+      [
+        "reading what it writes",
+        {
+          shader: undefined,
+          textures: { t: { mips: 2 } },
+          passes: [
+            pass({ name: "b", writes: ["t"] }),
+            pass({ reads: ["t"], writes: [{ texture: "t", mip: 1 }] }),
+          ],
+        },
+        "passes.a.writes",
+        /level of "t"/,
+      ],
+      [
+        "writing a fixed image",
+        onePass(
+          { writes: ["t"] },
+          {
+            textures: {
+              t: { width: 1, height: 1, data: new Uint8Array(4) },
+            },
+          },
+        ),
+        "passes.a.writes",
+        /fixed image/,
+      ],
+      [
+        "a fragment pass of two writes",
+        onePass({ writes: ["output", "t"] }, { textures: { t: {} } }),
+        "passes.a.writes",
+        /one thing/,
+      ],
+      [
+        "a compute pass with no postCompute",
+        onePass({ compute: {} }),
+        "passes.a.shader",
+        /postCompute/,
+      ],
+      [
+        "a workgroup over the limit",
+        onePass({ compute: { workgroupSize: [32, 32] } }),
+        "passes.a.compute",
+        /256/,
+      ],
+      [
+        "a scale over 1",
+        { textures: { t: { scale: 2 } } },
+        "textures.t",
+        /scale of 2/,
+      ],
+      ["no mips", { textures: { t: { mips: 0 } } }, "textures.t", /0 mips/],
+      [
+        "a format it can't have",
+        { textures: { t: { format: "r8unorm" as never } } },
+        "textures.t",
+        /"r8unorm"/,
+      ],
+      [
+        "a name that isn't one",
+        { textures: { "a b": {} } },
+        "textures.a b",
+        /name/,
+      ],
+      [
+        "the output's name",
+        { textures: { output: {} } },
+        "textures.output",
+        /name/,
+      ],
+      [
+        "an image of the wrong size",
+        { textures: { t: { width: 2, height: 2, data: new Uint8Array(4) } } },
+        "textures.t",
+        /16 bytes/,
+      ],
+      [
+        "an entry point of its own",
+        { shader: `@compute @workgroup_size(1) fn x() { } ${PASS_THROUGH}` },
+        "shader",
+        /@compute/,
+      ],
+    ])("refuses %s, naming the field", (_, options, field, message) => {
+      const error = refusal(options);
+      expect(error.field).toBe(field);
+      expect(error.message).toMatch(message);
+    });
+  });
+
+  describe("in a view", () => {
+    let engine: Engine;
+
+    beforeEach(async () => {
+      engine = await fakeEngine();
+    });
+    afterEach(() => {
+      engine.stop();
+      vi.restoreAllMocks();
+    });
+
+    function addView(
+      stages: readonly ReturnType<typeof stage>[],
+      width = 64,
+    ): View {
+      const view = engine.addView({
+        target: new OffscreenTarget(width, 36),
+        world: engine.createWorld(),
+        observer: { stages },
+      });
+      view.camera.lookAt(v3.vec3(6_378_137, 0, 0), 0, -Math.PI / 2, 100);
+      return view;
+    }
+
+    async function tick(): Promise<void> {
+      engine.renderFrame();
+      for (let i = 0; i < 4; i++) {
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+    }
+
+    const acquired = (spy: { mock: { calls: unknown[][] } }, label: string) =>
+      spy.mock.calls
+        .map(([d]) => d as TextureDesc)
+        .filter((d) => d.label === label);
+
+    it("orders its passes, each after what it reads, before what follows", async () => {
+      const made = stage("veil", "scene", { shader: undefined, ...veil() });
+      const view = addView([made]);
+      await tick();
+      const list = engine.raster.viewFrames.get(view)!.graph.compile();
+      const first = list.indexOf("post.veil.input");
+      expect(list.slice(first, first + 6)).toEqual([
+        "post.veil.input",
+        "post.veil.down.1",
+        "post.veil.down.2",
+        "post.veil.down.3",
+        "post.veil.compose",
+        "post.veil.add",
+      ]);
+      expect(list.indexOf("adaptation")).toBeLessThan(first);
+      expect(list.indexOf("present")).toBeGreaterThan(first + 5);
+    });
+
+    it("owns its textures at their scale, from the pool, and only while it runs", async () => {
+      const made = stage("veil", "scene", { shader: undefined, ...veil() });
+      addView([made]);
+      const acquire = vi.spyOn(engine.raster.pool, "acquire");
+      const release = vi.spyOn(engine.raster.pool, "release");
+      await tick();
+      await tick();
+      const [pyramid] = acquired(acquire, "post.veil.pyramid");
+      expect(pyramid).toMatchObject({
+        width: 32,
+        height: 18,
+        mipLevelCount: LEVELS,
+        format: "rgba16float",
+      });
+      expect(acquired(acquire, "post.veil.composed")[0]).toMatchObject({
+        width: 32,
+        height: 18,
+      });
+      expect(acquired(release, "post.veil.pyramid").length).toBeGreaterThan(0);
+      acquire.mockClear();
+      made.enabled = false;
+      await tick();
+      expect(acquired(acquire, "post.veil.pyramid")).toEqual([]);
+      expect(acquired(acquire, "post.veil")).toEqual([]);
+    });
+
+    it("tells each pass the size of what it writes", async () => {
+      const made = stage("veil", "scene", { shader: undefined, ...veil() });
+      const view = addView([made]);
+      await tick();
+      const chain = engine.raster.viewFrames.get(view)!.chain;
+      const write = vi.spyOn(chain, "writeParams");
+      await tick();
+      const sizes = write.mock.calls.map(([, w, h]) => [w, h]);
+      expect(sizes).toEqual([
+        [32, 18],
+        [16, 9],
+        [8, 4],
+        [4, 2],
+        [32, 18],
+        [64, 36],
+      ]);
+      // Radians per pixel of what it writes.
+      expect(write.mock.calls[1]![4]).toBeCloseTo(
+        write.mock.calls[5]![4] * 4,
+        6,
+      );
+    });
+
+    it("keeps its levels on a view squeezed smaller than they are", async () => {
+      const made = stage("veil", "scene", { shader: undefined, ...veil() });
+      addView([made], 1);
+      const acquire = vi.spyOn(engine.raster.pool, "acquire");
+      await tick();
+      await tick();
+      const [pyramid] = acquired(acquire, "post.veil.pyramid");
+      expect(pyramid!.width).toBeGreaterThanOrEqual(1 << (LEVELS - 1));
+    });
+
+    it("runs a compute pass over what it writes, and lets it be stored to", async () => {
+      const made = stage("compute", "scene", {
+        shader: undefined,
+        passes: [
+          {
+            name: "fill",
+            compute: {},
+            shader: `fn postCompute(input: PostInput) {
+              textureStore(output, input.pixel, postFinite(postColorAt(input.pixel)));
+            }`,
+          },
+        ],
+      });
+      const fragment = stage("fragment", "scene");
+      const device = engine.ctx.device;
+      const makeEncoder = device.createCommandEncoder.bind(device);
+      const dispatches: number[][] = [];
+      device.createCommandEncoder = ((d?: GPUCommandEncoderDescriptor) => {
+        const encoder = makeEncoder(d);
+        const begin = encoder.beginComputePass.bind(encoder);
+        encoder.beginComputePass = (descriptor?: GPUComputePassDescriptor) => {
+          const pass = begin(descriptor);
+          if (descriptor?.label === "post.compute.fill") {
+            pass.dispatchWorkgroups = (...size: number[]) => {
+              dispatches.push(size);
+            };
+          }
+          return pass;
+        };
+        return encoder;
+      }) as typeof device.createCommandEncoder;
+      const makeCompute = device.createComputePipelineAsync.bind(device);
+      const entryPoints: Array<string | undefined> = [];
+      device.createComputePipelineAsync = ((
+        d: GPUComputePipelineDescriptor,
+      ) => {
+        entryPoints.push(d.compute.entryPoint);
+        return makeCompute(d);
+      }) as typeof device.createComputePipelineAsync;
+      addView([made, fragment]);
+      const acquire = vi.spyOn(engine.raster.pool, "acquire");
+      await tick();
+      await tick();
+      expect(entryPoints).toContain("postComputeEntry");
+      expect(dispatches.at(-1)).toEqual([8, 5]);
+      expect(
+        acquired(acquire, "post.compute")[0]!.usage &
+          GPUTextureUsage.STORAGE_BINDING,
+      ).toBeTruthy();
+      expect(
+        acquired(acquire, "post.fragment")[0]!.usage &
+          GPUTextureUsage.STORAGE_BINDING,
+      ).toBeFalsy();
+    });
+
+    it("uploads a fixed image once per graph, and frees it with the graph", async () => {
+      const device = engine.ctx.device;
+      const makeTexture = device.createTexture.bind(device);
+      const images: GPUTexture[] = [];
+      device.createTexture = ((d: GPUTextureDescriptor) => {
+        const texture = makeTexture(d);
+        if (d.label === "post.lut.lut") {
+          images.push(texture);
+        }
+        return texture;
+      }) as typeof device.createTexture;
+      const made = stage("lut", "exposed", {
+        textures: { lut: { width: 2, height: 2, data: new Uint8Array(16) } },
+        reads: ["lut"],
+      });
+      const view = addView([made]);
+      await tick();
+      await tick();
+      expect(images.length).toBe(1);
+      let destroyed = 0;
+      images[0]!.destroy = () => {
+        destroyed++;
+      };
+      view.observer.stages = [];
+      await tick();
+      expect(destroyed).toBe(1);
+    });
+  });
 });
 
 describe("a built-in stage of several passes", () => {

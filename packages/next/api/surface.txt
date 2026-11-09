@@ -131,10 +131,15 @@ entry	name	kind	tier
 .	PointSpread	interface	-
 .	PostStage	class	-
 .	PostStageError	class	-
+.	PostStageFormat	type	-
+.	PostStageImage	interface	-
 .	PostStageKind	type	-
+.	PostStageLevel	interface	-
 .	PostStageOptions	interface	-
+.	PostStagePass	interface	-
 .	PostStageRead	type	-
 .	PostStageSlot	type	-
+.	PostStageTarget	interface	-
 .	PurposeStats	interface	-
 .	QueryAnswer	interface	-
 .	QueryHost	interface	-

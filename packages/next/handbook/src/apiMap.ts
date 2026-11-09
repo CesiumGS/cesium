@@ -898,6 +898,11 @@ export const API_ROWS: readonly ApiRow[] = [
     next: ["createPostStage", "PostStage"],
     supporting: [
       "PostStageOptions",
+      "PostStagePass",
+      "PostStageTarget",
+      "PostStageImage",
+      "PostStageLevel",
+      "PostStageFormat",
       "PostStageError",
       "astrophotoCurveStage",
       "PostStageSlot",

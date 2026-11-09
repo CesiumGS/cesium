@@ -10,6 +10,9 @@
 //   exposed  after the response (a camera's exposure or the eye's model), before
 //            tone mapping. White is 1.
 //   display  tone mapped and encoded, unlit color included, 0 to 1.
+//
+// `postParams` is the size of what the pass writes, so a pass's `uv` runs 0 to 1
+// whatever its target's size. A stage's own bindings are group 1 (scene/postStage.ts).
 
 struct PostParams {
   float2 size;       // the image, pixels
@@ -32,6 +35,17 @@ export __extern_cpp struct PostInput {
   __extern_cpp float preExposure;
   __extern_cpp float pixelAngle;
 };
+
+/** What a stage knows of a pixel of what it writes. */
+export __extern_cpp PostInput postInputAt(int2 pixel) {
+  PostInput input;
+  input.pixel = pixel;
+  input.size = postParams.size;
+  input.uv = (float2(pixel) + 0.5) / postParams.size;
+  input.preExposure = postParams.preExposure;
+  input.pixelAngle = postParams.pixelAngle;
+  return input;
+}
 
 // Defined by the stage.
 __target_intrinsic(wgsl, "postStage($0)")
@@ -73,14 +87,12 @@ float finite(float value) {
   return (asuint(value) & 0x7f800000u) == 0x7f800000u ? 0.0 : clamp(value, -FP16_MAX, FP16_MAX);
 }
 
+/** A color with what isn't finite as 0, as a fragment stage's result gets. */
+export __extern_cpp float4 postFinite(float4 color) {
+  return float4(finite(color.r), finite(color.g), finite(color.b), finite(color.a));
+}
+
 [shader("fragment")]
 float4 postStageFragment(float4 frag : SV_Position) : SV_Target {
-  PostInput input;
-  input.pixel = int2(frag.xy);
-  input.size = postParams.size;
-  input.uv = (float2(input.pixel) + 0.5) / postParams.size;
-  input.preExposure = postParams.preExposure;
-  input.pixelAngle = postParams.pixelAngle;
-  float4 color = postStage(input);
-  return float4(finite(color.r), finite(color.g), finite(color.b), finite(color.a));
+  return postFinite(postStage(postInputAt(int2(frag.xy))));
 }

@@ -95,8 +95,17 @@ export const POST_STAGE_BOUNDARY: Boundary = {
     "postColor",
     "postColorAt",
     "postDepthAt",
+    "postFinite",
     "postIdAt",
+    "postInputAt",
   ],
+};
+
+/** A post stage's compute pass: run once per pixel of what it writes. */
+export const POST_COMPUTE_BOUNDARY: Boundary = {
+  name: "post stage compute",
+  requires: [{ name: "postCompute", params: ["PostInput"] }],
+  provides: POST_STAGE_BOUNDARY.provides,
 };
 
 /** The model pool's (modelPool.slang): a styled model layer's choices. */
