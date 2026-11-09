@@ -46,12 +46,8 @@ import {
   type TileJson,
   type TileTree,
 } from "./Tile.ts";
-import { transformVolume, volumeObb, type TileVolume } from "./volumes.ts";
-import {
-  DebugVolumes,
-  VOLUME_COLORS,
-  type DebugColor,
-} from "./debugVolumes.ts";
+import { transformVolume, volumeObb } from "./volumes.ts";
+import { DebugVolumes, type DebugColor } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
 import type { DesignPlacement } from "./designPlacement.ts";
 import {
@@ -88,6 +84,7 @@ import type {
   TileSource,
 } from "./tilesetTypes.ts";
 import { readDualPosition, type DualDeclaration } from "./dualPosition.ts";
+import { applyDebugColor, updateDebug } from "./tilesetDebug.ts";
 
 /**
  * World pool pressure (World.pressure) past which streaming evicts as if
@@ -181,19 +178,6 @@ function emptyPurposes(): Record<RequestPurpose, PurposeStats> {
     ]),
   ) as Record<RequestPurpose, PurposeStats>;
 }
-
-/** Tile colors by tree depth for `debugColorizeTiles` (linear RGBA). */
-const DEPTH_COLORS: ReadonlyArray<readonly [number, number, number, number]> = [
-  [0.9, 0.2, 0.2, 1],
-  [0.95, 0.55, 0.1, 1],
-  [0.95, 0.85, 0.1, 1],
-  [0.3, 0.8, 0.25, 1],
-  [0.1, 0.7, 0.8, 1],
-  [0.2, 0.35, 0.95, 1],
-  [0.6, 0.3, 0.9, 1],
-  [0.9, 0.35, 0.75, 1],
-];
-const WHITE = [1, 1, 1, 1] as const;
 
 /** Most distinct reasons kept for tiles that draw nothing. */
 export const MAX_UNDRAWN_REASONS = 20;
@@ -717,12 +701,13 @@ export class Tileset3D implements TileTree {
     if (value !== this.colorize) {
       this.colorize = value;
       for (const tile of this.masked) {
-        this.applyDebugColor(tile);
+        applyDebugColor(this, tile);
       }
       this.changed();
     }
   }
-  private colorize = false;
+  /** @internal */
+  colorize = false;
   /**
    * Tints each drawn tile with the color this returns (linear RGBA; none
    * leaves it white), checked every frame, for inspection tools: tiles
@@ -734,31 +719,11 @@ export class Tileset3D implements TileTree {
   }
   set debugTileColor(fn: ((tile: Tile) => DebugColor | undefined) | undefined) {
     this.tileColor = fn;
-    this.updateDebug();
+    updateDebug(this);
     this.changed();
   }
-  private tileColor?: (tile: Tile) => DebugColor | undefined;
-  private applyDebugColor(tile: Tile): void {
-    if (!tile.placement) {
-      return;
-    }
-    const color =
-      this.tileColor?.(tile) ??
-      (this.colorize
-        ? DEPTH_COLORS[tile.depth % DEPTH_COLORS.length]!
-        : undefined);
-    const current = tile.debugColor;
-    if (
-      color === current ||
-      (color && current && color.every((c, i) => c === current[i]))
-    ) {
-      return;
-    }
-    for (const draw of tile.placement.draws) {
-      this.world.setColor(draw, color ?? this.baseItem?.drawColor ?? WHITE);
-    }
-    tile.debugColor = color;
-  }
+  /** @internal */
+  tileColor?: (tile: Tile) => DebugColor | undefined;
   /**
    * Wireframes of the drawn tiles' bounding volumes, colored as 1.x does:
    * white at final resolution, yellow while finer tiles load (drawn as a
@@ -773,11 +738,12 @@ export class Tileset3D implements TileTree {
       this.boundingVolumes = value
         ? new DebugVolumes(this.world, this.transform)
         : undefined;
-      this.updateDebug();
+      updateDebug(this);
       this.changed();
     }
   }
-  private boundingVolumes?: DebugVolumes;
+  /** @internal */
+  boundingVolumes?: DebugVolumes;
   /** Wireframes (blue) of the drawn tiles' content volumes, where given. */
   get debugShowContentBoundingVolume(): boolean {
     return this.contentVolumes !== undefined;
@@ -788,45 +754,12 @@ export class Tileset3D implements TileTree {
       this.contentVolumes = value
         ? new DebugVolumes(this.world, this.transform)
         : undefined;
-      this.updateDebug();
+      updateDebug(this);
       this.changed();
     }
   }
-  private contentVolumes?: DebugVolumes;
-  /** Debug tints and volumes for what is drawn now (also while frozen). */
-  private updateDebug(): void {
-    if (this.tileColor) {
-      for (const tile of this.masked) {
-        this.applyDebugColor(tile);
-      }
-    }
-    if (!this.boundingVolumes && !this.contentVolumes) {
-      return;
-    }
-    const drawn = new Set([...this.masked, ...this.placeholders]);
-    type Want = Map<Tile, { volume: TileVolume; color: DebugColor }>;
-    const bounding: Want = new Map();
-    const content: Want = new Map();
-    for (const tile of drawn) {
-      bounding.set(tile, {
-        volume: tile.volume,
-        color:
-          tile.placeholderMask !== 0
-            ? VOLUME_COLORS.refining
-            : tile.renderable
-              ? VOLUME_COLORS.final
-              : VOLUME_COLORS.empty,
-      });
-      if (tile.contentVolume) {
-        content.set(tile, {
-          volume: tile.contentVolume,
-          color: VOLUME_COLORS.content,
-        });
-      }
-    }
-    this.boundingVolumes?.update(bounding);
-    this.contentVolumes?.update(content);
-  }
+  /** @internal */
+  contentVolumes?: DebugVolumes;
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
   /** The globe's night lights (`GlobeOptions.lights`), for the same tiles. */
@@ -894,7 +827,8 @@ export class Tileset3D implements TileTree {
   readonly createdAt = performance.now();
   firstContentAt?: number;
   settledAt?: number;
-  private masked = new Set<Tile>();
+  /** @internal */
+  masked = new Set<Tile>();
   /** Tiles with a caster mask (`CasterSelection.casters`). */
   private casters = new Set<Tile>();
   /** Bytes of what views used in the last update. */
@@ -918,7 +852,8 @@ export class Tileset3D implements TileTree {
   private viewCapacityWait = false;
   /** Bytes of loaded tiles that are `castsOnly`, drawn by cascades or not. */
   private casterResident = 0;
-  private placeholders = new Set<Tile>();
+  /** @internal */
+  placeholders = new Set<Tile>();
   /** Tiles drawn whole while finer content loads, in some view. */
   private standIns = new Set<Tile>();
   private inFlight = 0;
@@ -1213,8 +1148,8 @@ export class Tileset3D implements TileTree {
   movesVertices = false;
   /** What an item needs of this tileset. */
   private readonly itemHost: SceneItemHost;
-  /** The item drawing the tiles' own draws, if any. */
-  private baseItem: SceneItem | undefined;
+  /** @internal The item drawing the tiles' own draws, if any. */
+  baseItem: SceneItem | undefined;
   private readonly itemList: SceneItem[] = [];
 
   /**
@@ -1472,7 +1407,7 @@ export class Tileset3D implements TileTree {
       return;
     }
     if (this.frozen) {
-      this.updateDebug();
+      updateDebug(this);
       return;
     }
     const frame = ++this.frame;
@@ -1642,7 +1577,7 @@ export class Tileset3D implements TileTree {
     }
     // View masks: only tiles whose mask changed touch their draw records.
     for (const tile of new Set([...this.masked, ...nowMasked])) {
-      this.applyDebugColor(tile);
+      applyDebugColor(this, tile);
       if (tile.placement && tile.appliedMask !== tile.viewMask) {
         if (tile.viewMask !== 0 && tile.purpose) {
           this.stats.purposes[tile.purpose].drawn++;
@@ -1658,7 +1593,7 @@ export class Tileset3D implements TileTree {
     // Off-screen casters: as for view masks, and the tint's callback sees
     // them too (it may hide a tile, and a hidden draw doesn't cast).
     for (const tile of new Set([...this.casters, ...nowCasters])) {
-      this.applyDebugColor(tile);
+      applyDebugColor(this, tile);
       if (tile.placement && tile.appliedCasterMask !== tile.casterMask) {
         if (tile.casterMask !== 0 && tile.purpose === "caster") {
           this.stats.purposes.caster.drawn++;
@@ -1706,7 +1641,7 @@ export class Tileset3D implements TileTree {
     }
     this.placeholders = nowPlaceholders;
     this.standIns = nowStandIns;
-    this.updateDebug();
+    updateDebug(this);
     this.stats.placeholders = nowPlaceholders.size;
 
     // Queue time: since a still-unloaded tile was first wanted.
