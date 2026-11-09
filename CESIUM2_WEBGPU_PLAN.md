@@ -8654,6 +8654,15 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 
 **Limits to keep in mind:** Google's tiles are live-stream only here: publishing images isn't cleared, so presets using them stream with attribution and no stills go in the handbook. Sky data follows the R&D rules in §13.29. Content for specific sites needs its own license check.
 
+**Clouds are in scope (owner, 2026-11-08),** and need a design of their own: a sunset's look comes from clouds lit from below by a low sun, which a 2D layer can't show well.
+
+**Shutter time, for star trails and more.** `View.exposure` today is one number, with no notion of duration. Add a camera shutter, so a long exposure has a length. Two ways to draw it, and they work together:
+
+- **Analytic in the sky:** the sky turns rigidly, so a star's path over the shutter is a known arc. Draw each star's light along its arc, spread by the time it spends on each pixel. It's cheap and real-time, and a star's trail keeps the same brightness however long the shutter, while the sky's glow builds up.
+- **Accumulation:** step the scene clock across the shutter and average in HDR. It handles anything that moves (traffic, shadows, tracks), but takes many renders, so it's a capture mode rather than a live one.
+
+Real-time motion blur from a velocity buffer is a separate effect, for post-processing (§13.22).
+
 **Order:** a first slice can use what exists today (sky, aerosols, visibility, Moon and its phase, moonlight, city lights, exposure, solved dates). The rest grows as 5c, 5d, 5e and water land. Clouds and aurora are decisions of their own.
 
 ## 14. Follow-ups
