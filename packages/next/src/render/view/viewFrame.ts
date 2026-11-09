@@ -1,31 +1,17 @@
 // A view's render graph: its targets and its passes, in the order they run.
 // Pass order is registration order: FrameGraph has no sort.
 import { FrameGraph } from "../FrameGraph.ts";
-import { VIEW_SIZE, VIEW_STRIDE } from "../layout.ts";
+import { VIEW_SIZE } from "../layout.ts";
 import {
   type ViewFrame,
   destroyViewFrame,
-  drawsSky,
-  drawsAerialPerspective,
   LIST_HEADER,
   TONE_MAPPINGS,
 } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
-import {
-  LIGHTS_SIZE,
-  LIGHT_HEADER_FLOATS,
-  LIGHT_FLOATS,
-  CLUSTERS,
-} from "../../scene/lights.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
-import {
-  SHADOW_CASCADES,
-  SHADOWS_STRIDE,
-  SHADOWS_SIZE,
-} from "../../scene/shadows.ts";
 import { encodePick } from "./picks.ts";
-import { encodeEnvironment } from "./environment.ts";
 import {
   translucentInputs,
   translucentGroup,
@@ -33,6 +19,20 @@ import {
   compositeGroup,
 } from "./translucency.ts";
 import { drawOverlays } from "./outputPasses.ts";
+import {
+  shadowsPass,
+  heightCapturesPass,
+  selectViewPass,
+  lightsPass,
+  cullPass,
+  skyViewPass,
+  environmentPass,
+  aerialPerspectivePass,
+  prepassPassBody,
+  ambientOcclusionPass,
+  starsPass,
+  opaquePassBody,
+} from "./scenePasses.ts";
 
 /** The view's frame graph for its current size, built on first use and on resize. */
 export function viewFrameFor(
@@ -139,40 +139,6 @@ function buildViewFrame(
   const depth = graph.importTexture("depth.msaa", depthView);
   // Rebound to this frame's target texture before every execute.
   const output = graph.importTexture("output", {} as GPUTextureView);
-
-  // Alpha 0 where nothing is drawn: the exposure meter leaves it out.
-  const clearColor: GPUColorDict = { r: 0, g: 0, b: 0, a: 0 };
-  const opaqueColor: GPURenderPassColorAttachment = {
-    view: undefined as never,
-    resolveTarget: undefined,
-    clearValue: clearColor,
-    loadOp: "clear",
-    storeOp: "discard",
-  };
-  const opaqueIds: GPURenderPassColorAttachment = {
-    view: undefined as never,
-    clearValue: { r: 0, g: 0, b: 0, a: 0 },
-    loadOp: "clear",
-    storeOp: "store",
-  };
-  const opaqueDisplay: GPURenderPassColorAttachment = {
-    view: undefined as never,
-    resolveTarget: undefined,
-    clearValue: { r: 0, g: 0, b: 0, a: 0 },
-    loadOp: "clear",
-    storeOp: "discard",
-  };
-  const opaqueDepth: GPURenderPassDepthStencilAttachment = {
-    view: undefined as never,
-    depthClearValue: 0, // reverse-Z: far is 0
-    depthLoadOp: "clear",
-    depthStoreOp: "store", // picks read it, also while the view is idle
-  };
-  const opaquePass: GPURenderPassDescriptor = {
-    label: "opaque",
-    colorAttachments: [opaqueColor, opaqueIds, opaqueDisplay],
-    depthStencilAttachment: opaqueDepth,
-  };
   const presentColor: GPURenderPassColorAttachment = {
     view: undefined as never,
     clearValue: { r: 0, g: 0, b: 0, a: 1 },
@@ -245,152 +211,50 @@ function buildViewFrame(
     translucentGroups: [],
   };
   engine.sky.writeWeights(frame.sky);
-
-  // The sun's shadow maps: per cascade, its block in place of the view's,
-  // the world culled to the sun's box and its casters drawn.
-  const shadowDepth: GPURenderPassDepthStencilAttachment = {
-    view: undefined as never,
-    depthClearValue: 0, // reverse-Z: farthest from the sun is 0
-    depthLoadOp: "clear",
-    depthStoreOp: "store",
-  };
-  const shadowPass: GPURenderPassDescriptor = {
-    label: "shadow",
-    colorAttachments: [],
-    depthStencilAttachment: shadowDepth,
-  };
-  graph.addPass("shadows", { sideEffect: true }, (enc) => {
-    if (!frame.shadowed) {
-      return;
-    }
-    const casters = view.world.shadowBundle();
-    for (let k = 0; k < SHADOW_CASCADES; k++) {
-      enc.copyBufferToBuffer(
-        engine.cascadeStaging,
-        (frame.slot * SHADOW_CASCADES + k) * VIEW_STRIDE,
-        engine.ctx.currentViewBuffer,
-        0,
-        frame.viewBytes,
-      );
-      // Point sets cast no shadows: their cull is the view's alone.
-      view.world.encodeCull(enc, undefined, false);
-      shadowDepth.view = engine.ctx.shadowLayers[k]!;
-      shadowPass.timestampWrites = engine.timer.passWrites("shadows");
-      const pass = enc.beginRenderPass(shadowPass);
-      pass.executeBundles([casters]);
-      pass.end();
-    }
-  });
+  graph.addPass(
+    "shadows",
+    { sideEffect: true },
+    shadowsPass(engine, view, frame),
+  );
 
   // Height captures this view draws: ground only, straight down.
-  graph.addPass("height-captures", { sideEffect: true }, (enc) => {
-    for (const c of engine.captures) {
-      if (c.by !== view || c.stamp !== engine.frameNumber) {
-        continue;
-      }
-      enc.copyBufferToBuffer(
-        c.block,
-        0,
-        engine.ctx.currentViewBuffer,
-        0,
-        c.viewBytes,
-      );
-      view.world.encodeCull(enc, undefined, false);
-      const pass = enc.beginRenderPass({
-        label: "heightCapture",
-        colorAttachments: [],
-        depthStencilAttachment: {
-          view: c.view,
-          depthClearValue: 0, // reverse-Z: nothing (below `bottom`) is 0
-          depthLoadOp: "clear",
-          depthStoreOp: "store",
-        },
-      });
-      pass.executeBundles([view.world.heightBundle()]);
-      pass.end();
-      c.captured++;
-    }
-  });
+  graph.addPass(
+    "height-captures",
+    { sideEffect: true },
+    heightCapturesPass(engine, view),
+  );
 
-  graph.addPass("select-view", { sideEffect: true }, (enc) => {
-    enc.copyBufferToBuffer(
-      engine.viewStaging,
-      frame.slot * VIEW_STRIDE,
-      engine.ctx.currentViewBuffer,
-      0,
-      frame.viewBytes,
-    );
-    enc.copyBufferToBuffer(
-      engine.shadowStaging,
-      frame.slot * SHADOWS_STRIDE,
-      engine.ctx.currentShadowsBuffer,
-      0,
-      SHADOWS_SIZE,
-    );
-    enc.copyBufferToBuffer(
-      engine.lightStaging,
-      frame.slot * LIGHTS_SIZE,
-      engine.ctx.lightBuffer,
-      0,
-      (LIGHT_HEADER_FLOATS + frame.lightCount * LIGHT_FLOATS) * 4,
-    );
-  });
+  graph.addPass(
+    "select-view",
+    { sideEffect: true },
+    selectViewPass(engine, frame),
+  );
 
   // Its point and spot lights into its froxels (lights.slang).
-  graph.addPass("lights", { sideEffect: true }, (enc) => {
-    if (frame.lightCount === 0) {
-      return;
-    }
-    const pass = enc.beginComputePass({
-      label: "lights",
-      timestampWrites: engine.timer.passWrites("lights"),
-    });
-    pass.setPipeline(engine.ctx.pipelines.lightsAssign);
-    pass.setBindGroup(0, engine.ctx.lightAssignGroup);
-    // A workgroup per tile, a thread per slice (lights.slang).
-    pass.dispatchWorkgroups(CLUSTERS[0], CLUSTERS[1]);
-    pass.end();
-  });
+  graph.addPass("lights", { sideEffect: true }, lightsPass(engine, frame));
 
-  graph.addPass("cull", { sideEffect: true }, (enc) => {
-    view.world.encodeCull(
-      enc,
-      engine.timer.passWrites("cull"),
-      true,
-      frame.width * frame.height,
-    );
-  });
+  graph.addPass("cull", { sideEffect: true }, cullPass(engine, view, frame));
 
   // The sky around the camera, before the opaque pass draws from it.
-  graph.addPass("sky-view", { sideEffect: true }, (enc) => {
-    if (drawsSky(view) && frame.sky.inside) {
-      engine.sky.encodeTable(
-        enc,
-        frame.sky,
-        engine.timer.passWrites("sky-view"),
-      );
-    }
-  });
+  graph.addPass(
+    "sky-view",
+    { sideEffect: true },
+    skyViewPass(engine, view, frame),
+  );
 
   // The view's environment lighting, rebuilt from its sky if due.
-  graph.addPass("environment", { sideEffect: true }, (enc) => {
-    encodeEnvironment(engine, enc, view, frame);
-  });
+  graph.addPass(
+    "environment",
+    { sideEffect: true },
+    environmentPass(engine, view, frame),
+  );
 
   // The air between the camera and the scene, for the opaque pass.
-  graph.addPass("aerial-perspective", { sideEffect: true }, (enc) => {
-    // Marched per vertex instead from high up: no volume.
-    if (drawsAerialPerspective(view) && frame.sky.march < 1) {
-      engine.sky.encodeAerial(
-        enc,
-        frame.sky,
-        engine.timer.passWrites("aerial-perspective"),
-      );
-    }
-    if (drawsAerialPerspective(view) && frame.sky.screenHaze > 0) {
-      engine.sky.encodeAerialScreen(enc, frame.sky);
-    }
-  });
+  graph.addPass(
+    "aerial-perspective",
+    { sideEffect: true },
+    aerialPerspectivePass(engine, view, frame),
+  );
 
   // Ambient occlusion: a single-sampled depth and normal prepass of what
   // the view culled, the horizon search, then the blur into the buffer
@@ -413,37 +277,10 @@ function buildViewFrame(
     format: "r32float",
     usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
   });
-  const prepassColor: GPURenderPassColorAttachment = {
-    view: undefined as never,
-    clearValue: { r: 0, g: 0, b: 1, a: 0 },
-    loadOp: "clear",
-    storeOp: "store",
-  };
-  const prepassDepthAttachment: GPURenderPassDepthStencilAttachment = {
-    view: undefined as never,
-    depthClearValue: 0,
-    depthLoadOp: "clear",
-    depthStoreOp: "store",
-  };
-  const prepassPass: GPURenderPassDescriptor = {
-    label: "prepass",
-    colorAttachments: [prepassColor],
-    depthStencilAttachment: prepassDepthAttachment,
-  };
   graph.addPass(
     "prepass",
     { writes: [prepassNormal, prepassDepth], sideEffect: true },
-    (enc, get) => {
-      if (!frame.ambient) {
-        return;
-      }
-      prepassColor.view = get(prepassNormal);
-      prepassDepthAttachment.view = get(prepassDepth);
-      prepassPass.timestampWrites = engine.timer.passWrites("prepass");
-      const pass = enc.beginRenderPass(prepassPass);
-      pass.executeBundles([view.world.prepassBundle()]);
-      pass.end();
-    },
+    prepassPassBody(engine, view, frame, { prepassNormal, prepassDepth }),
   );
   graph.addPass(
     "ambient-occlusion",
@@ -452,50 +289,7 @@ function buildViewFrame(
       writes: [rawAo],
       sideEffect: true,
     },
-    (enc, get) => {
-      if (!frame.ambient) {
-        return;
-      }
-      const trace = device.createBindGroup({
-        layout: pipelines.aoTrace.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: { buffer: frame.aoParams } },
-          { binding: 1, resource: get(prepassDepth) },
-          { binding: 2, resource: get(prepassNormal) },
-          { binding: 3, resource: get(rawAo) },
-        ],
-      });
-      const blur = device.createBindGroup({
-        layout: pipelines.aoDenoise.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: { buffer: frame.aoParams } },
-          { binding: 1, resource: get(prepassDepth) },
-          { binding: 4, resource: get(rawAo) },
-          { binding: 5, resource: { buffer: engine.ctx.aoBuffer } },
-        ],
-      });
-      const timestampWrites = engine.timer.passWrites("ambient-occlusion");
-      const pass = enc.beginComputePass({
-        label: "ambient-occlusion",
-        ...(timestampWrites ? { timestampWrites } : {}),
-      });
-      pass.setPipeline(pipelines.aoTrace);
-      pass.setBindGroup(0, trace);
-      pass.dispatchWorkgroups(Math.ceil(width / 16), Math.ceil(height / 16));
-      pass.end();
-      const blurWrites = engine.timer.passWrites("ambient-occlusion.blur");
-      const second = enc.beginComputePass({
-        label: "ambient-occlusion.blur",
-        ...(blurWrites ? { timestampWrites: blurWrites } : {}),
-      });
-      second.setPipeline(pipelines.aoDenoise);
-      second.setBindGroup(0, blur);
-      second.dispatchWorkgroups(
-        Math.ceil(Math.ceil(width / 4) / 8),
-        Math.ceil(height / 8),
-      );
-      second.end();
-    },
+    ambientOcclusionPass(engine, frame, { prepassNormal, prepassDepth, rawAo }),
   );
 
   // The stars, splatted as points into a layer the sky reads.
@@ -505,11 +299,11 @@ function buildViewFrame(
     format: "rgba16float",
     usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
   });
-  graph.addPass("stars", { writes: [starLayer] }, (enc, get) => {
-    if (drawsSky(view)) {
-      engine.sky.encodeStars(enc, frame.sky, get(starLayer));
-    }
-  });
+  graph.addPass(
+    "stars",
+    { writes: [starLayer] },
+    starsPass(engine, view, frame, { starLayer }),
+  );
 
   graph.addPass(
     "opaque",
@@ -517,35 +311,15 @@ function buildViewFrame(
       reads: [starLayer],
       writes: [color, resolved, ids, display, displayResolved, depth],
     },
-    (enc, get) => {
-      const atmosphere = drawsSky(view);
-      clearColor.r = atmosphere ? 0 : view.clearColor[0];
-      clearColor.g = atmosphere ? 0 : view.clearColor[1];
-      clearColor.b = atmosphere ? 0 : view.clearColor[2];
-      opaqueColor.view = get(color);
-      opaqueColor.resolveTarget = get(resolved);
-      opaqueIds.view = get(ids);
-      opaqueDisplay.view = get(display);
-      opaqueDisplay.resolveTarget = get(displayResolved);
-      opaqueDepth.view = get(depth);
-      opaquePass.timestampWrites = engine.timer.passWrites("opaque");
-      const pass = enc.beginRenderPass(opaquePass);
-      // Its depth first, then its shading where that depth is (each
-      // sample shaded once, not every fragment drawn over it).
-      if (engine.ctx.pipelines.depthPrepass) {
-        frame.bundles[0] = view.world.depthBundle();
-        frame.bundles[1] = frame.bundle!;
-      } else {
-        frame.bundles[0] = frame.bundle!;
-      }
-      pass.executeBundles(frame.bundles);
-      // Tiny point symbols the cull rasterized, depth-tested over them.
-      view.world.drawSplats(pass);
-      if (atmosphere) {
-        engine.sky.draw(pass, frame.sky, get(starLayer));
-      }
-      pass.end();
-    },
+    opaquePassBody(engine, view, frame, {
+      starLayer,
+      color,
+      resolved,
+      ids,
+      display,
+      displayResolved,
+      depth,
+    }),
   );
 
   // Translucency (translucent.wgsl): blended surfaces into per-pixel

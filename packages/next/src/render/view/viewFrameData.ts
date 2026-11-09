@@ -41,6 +41,9 @@ export interface PersistentImage {
 /** Words before the translucent lists' heads (translucent.wgsl `LIST_HEADER`). */
 export const LIST_HEADER = 4;
 
+/** What `FrameGraph.addPass` runs for a pass. */
+export type PassBody = Parameters<FrameGraph["addPass"]>[2];
+
 /** Per-view frame state: the frame graph plus inputs its passes read each frame. */
 export interface ViewFrame {
   /**
