@@ -32,7 +32,6 @@ import {
 import { Emitter } from "../core/Emitter.ts";
 import { BudgetedSelection } from "./Budgeted.ts";
 import {
-  fetchTilesetJson,
   loadTilesetJson,
   treeFromJson,
   type Tile,
@@ -50,7 +49,6 @@ import {
   type SceneItemOptions,
 } from "../scene/SceneItem.ts";
 import type { Attribution } from "../io/ion.ts";
-import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import { TouchOrder } from "./TouchOrder.ts";
 import {
@@ -83,6 +81,7 @@ import {
   markCastsOnly,
 } from "./tilesetCasters.ts";
 import { applySurface, applyTerrainClip, upload } from "./tilesetUpload.ts";
+import { cancelLoad, request, undrawnTile } from "./tilesetLoad.ts";
 const DEGREES_TO_RADIANS = Math.PI / 180;
 /** Imagery priority offset of loading tiles: after drawn and waiting ones. */
 const LOADING_IMAGERY = 1e15;
@@ -110,20 +109,6 @@ function emptyPurposes(): Record<RequestPurpose, PurposeStats> {
       { requests: 0, bytes: 0, drawn: 0, unused: 0, cancelled: 0 },
     ]),
   ) as Record<RequestPurpose, PurposeStats>;
-}
-
-/** Most distinct reasons kept for tiles that draw nothing. */
-export const MAX_UNDRAWN_REASONS = 20;
-
-/**
- * A reason a tile draws nothing, without the tile in it: URLs (which can
- * carry a query string) and an inner tile's number come out, so that a
- * thousand failed tiles are one reason, not a thousand.
- */
-export function undrawnKind(reason: string): string {
-  return reason
-    .replace(/[a-z][a-z0-9+.-]*:\/\/[^\s]*?(?=:\s|[\s;,)]|$)/gi, "<url>")
-    .replace(/composite inner tile \d+/g, "composite inner tile");
 }
 
 export class Tileset3D implements TileTree {
@@ -580,11 +565,11 @@ export class Tileset3D implements TileTree {
   private lastChange = 0;
 
   /**
-   * What the tileset draws changed: it stays `active` for the next updates,
+   * @internal What the tileset draws changed: it stays `active` for the next updates,
    * and the engine's frame loop (asleep on demand once nothing changes)
    * wakes for them.
    */
-  protected changed(): void {
+  changed(): void {
     this.lastChange = this.frame;
     this.engine.wake();
   }
@@ -602,10 +587,12 @@ export class Tileset3D implements TileTree {
   /** The root's origin, and every origin this tileset requested from. */
   private readonly origin: string;
   private readonly origins = new Set<string>();
-  private readonly loading = new Map<Tile, AbortController>();
+  /** @internal */
+  readonly loading = new Map<Tile, AbortController>();
   /** @internal */
   readonly uploadsPerFrame: number;
-  private readonly headers?: Record<string, string>;
+  /** @internal */
+  readonly headers?: Record<string, string>;
   /** @internal */
   readonly loaded = new Set<Tile>();
   /** @internal The loaded tiles, least recently touched first (what eviction walks). */
@@ -616,8 +603,8 @@ export class Tileset3D implements TileTree {
     asset: GltfAsset;
     arrivedAt: number;
   }> = [];
-  /** Unloaded tiles wanted by some view, since when (queue time). */
-  private readonly wanted = new Map<Tile, number>();
+  /** @internal Unloaded tiles wanted by some view, since when (queue time). */
+  readonly wanted = new Map<Tile, number>();
   /** @internal */
   readonly recent: StageTimes[] = [];
   /**
@@ -661,8 +648,10 @@ export class Tileset3D implements TileTree {
   placeholders = new Set<Tile>();
   /** @internal Tiles drawn whole while finer content loads, in some view. */
   standIns = new Set<Tile>();
-  private inFlight = 0;
-  private destroyed = false;
+  /** @internal */
+  inFlight = 0;
+  /** @internal */
+  destroyed = false;
 
   protected constructor(
     /** @internal */ readonly engine: Engine,
@@ -1468,11 +1457,11 @@ export class Tileset3D implements TileTree {
         !controller.signal.aborted &&
         tile.touchedFrame < frame - CANCEL_AFTER_FRAMES
       ) {
-        this.cancelLoad(tile, controller);
+        cancelLoad(this, tile, controller);
       }
     }
     serveQueries(this, frame, requests, purposes);
-    this.request(requests, purposes);
+    request(this, requests, purposes);
     this.engine.requests.backlog(this.origin, this.ready.length);
     const window = this.engine.requests.stats(this.origin);
     if (window) {
@@ -1549,195 +1538,9 @@ export class Tileset3D implements TileTree {
     this.revisionSeen = this.world.contentRevision;
   }
 
-  private cancelLoad(tile: Tile, controller: AbortController): void {
-    controller.abort();
-    this.engine.requests.cancelled(tile.contentOrigin);
-    this.stats.cancelled++;
-    if (tile.purpose) {
-      this.stats.purposes[tile.purpose].cancelled++;
-    }
-  }
-
-  /**
-   * A view's request found the origin's window, which tilesets share, full:
-   * cancels one shadow caster in flight there, whose slot comes back for it.
-   */
-  private yieldToView(origin: string): void {
-    for (const tileset of this.engine.tilesets) {
-      for (const [tile, controller] of tileset.loading) {
-        if (
-          !controller.signal.aborted &&
-          tile.contentOrigin === origin &&
-          isCaster(tile)
-        ) {
-          tileset.cancelLoad(tile, controller);
-          return;
-        }
-      }
-    }
-  }
-
-  private request(
-    requests: Map<Tile, number>,
-    purposes: Map<Tile, RequestPurpose>,
-  ): void {
-    const order = [...requests.entries()].sort(
-      (a, b) => a[1] - b[1] || a[0].depth - b[0].depth,
-    );
-    // A caster in flight that a view now wants is the view's from here on.
-    for (const tile of requests.keys()) {
-      const purpose = purposes.get(tile);
-      if (tile.state === "loading" && isCaster(tile) && purpose !== "caster") {
-        tile.purpose = purpose;
-      }
-    }
-    const full = new Set<string>();
-    // Prefetch after everything visible (`prefetchAfterVisible`).
-    let visibleWaiting = false;
-    if (this.policy.prefetchAfterVisible === true) {
-      for (const tile of this.loading.keys()) {
-        if (tile.purpose !== "prefetch" && tile.purpose !== "caster") {
-          visibleWaiting = true;
-          break;
-        }
-      }
-    }
-    // Casters wait as well for what a view has here and hasn't placed: its
-    // next requests are a tick away, and a gap isn't the end of them.
-    const casterWaiting =
-      this.ready.some((r) => !isCaster(r.tile)) ||
-      this.externals.some((e) => !isCaster(e.tile));
-    for (const [tile] of order) {
-      if (tile.state !== "unloaded") {
-        continue;
-      }
-      // Shadow casters wait with prefetch: never ahead of what views draw.
-      const purpose = purposes.get(tile) ?? "view";
-      const prefetch = purpose === "prefetch" || purpose === "caster";
-      if (
-        prefetch &&
-        (visibleWaiting || (casterWaiting && purpose === "caster"))
-      ) {
-        continue;
-      }
-      const origin = tile.contentOrigin;
-      if (full.has(origin)) {
-        if (!prefetch) {
-          this.yieldToView(origin);
-        }
-        visibleWaiting ||=
-          !prefetch && this.policy.prefetchAfterVisible === true;
-        continue;
-      }
-      this.useOrigin(origin);
-      if (!this.engine.requests.tryAcquire(origin)) {
-        full.add(origin);
-        if (!prefetch) {
-          this.yieldToView(origin);
-        }
-        visibleWaiting ||=
-          !prefetch && this.policy.prefetchAfterVisible === true;
-        continue;
-      }
-      tile.state = "loading";
-      tile.fetchStartAt = performance.now();
-      tile.wantedAt = this.wanted.get(tile) ?? tile.fetchStartAt;
-      this.wanted.delete(tile);
-      this.inFlight++;
-      this.stats.requestsTotal++;
-      tile.purpose = purpose;
-      if (!prefetch) {
-        visibleWaiting ||= this.policy.prefetchAfterVisible === true;
-      }
-      this.stats.purposes[purpose].requests++;
-      this.events.emit("request", { url: tile.contentUrl!, purpose });
-      const controller = new AbortController();
-      this.loading.set(tile, controller);
-      void this.loadContent(tile, controller.signal)
-        .then((sample) => this.engine.requests.release(origin, sample))
-        .finally(() => {
-          this.inFlight--;
-          this.loading.delete(tile);
-          // Any completion is a change, also one without content to upload
-          // (an external tileset's children need selecting, a failure needs
-          // reporting): stay active for the next updates.
-          this.changed();
-        });
-    }
-  }
-
-  private async loadContent(
-    tile: Tile,
-    signal: AbortSignal,
-  ): Promise<RequestSample | undefined> {
-    try {
-      if (tile.external) {
-        // Fetched and parsed here; its tile tree is built in update(),
-        // within the frame's budget (several large files finishing at once
-        // stalled frames).
-        const json = await fetchTilesetJson(
-          tile.contentUrl!,
-          this.headers,
-          signal,
-        );
-        if (!this.destroyed) {
-          this.externals.push({ tile, json });
-        }
-        return undefined;
-      }
-      const asset = this.source
-        ? await this.source.loadTile(tile, signal)
-        : await this.engine.loadGltf(tile.contentUrl!, {
-            ...(this.headers ? { headers: this.headers } : {}),
-            signal,
-          });
-      if (this.destroyed) {
-        closeImages(asset);
-        return undefined;
-      }
-      this.stats.bytesReceived += asset.timing?.bytes ?? 0;
-      if (tile.purpose) {
-        this.stats.purposes[tile.purpose].bytes += asset.timing?.bytes ?? 0;
-      }
-      this.ready.push({ tile, asset, arrivedAt: performance.now() });
-      return asset.timing
-        ? {
-            bytes: asset.timing.bytes,
-            ...(asset.timing.protocol
-              ? { protocol: asset.timing.protocol }
-              : {}),
-          }
-        : undefined;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        tile.state = "unloaded"; // cancelled: request again when needed
-        return undefined;
-      }
-      const message = error instanceof Error ? error.message : String(error);
-      if (/unsupported tile format/.test(message)) {
-        // Loaded but drawing nothing: selection and refinement behave as in
-        // 1.x, which does decode these formats.
-        tile.state = "ready";
-        this.undrawnTile(`${message} (drawn empty)`);
-        return undefined;
-      }
-      tile.state = "failed";
-      this.undrawnTile(`content failed: ${message}`);
-      return undefined;
-    }
-  }
-
   /** One more tile that draws nothing, and why (`TilesetStats.undrawn`). */
   undrawnTile(reason: string): void {
-    this.stats.undrawn++;
-    const kind = undrawnKind(reason);
-    if (
-      this.undrawnReasons.has(kind) ||
-      this.undrawnReasons.size < MAX_UNDRAWN_REASONS
-    ) {
-      this.undrawnReasons.set(kind, (this.undrawnReasons.get(kind) ?? 0) + 1);
-      this.warnings.add(kind);
-    }
+    undrawnTile(this, reason);
   }
 
   /**
@@ -1799,7 +1602,8 @@ export class Tileset3D implements TileTree {
     }
   }
 
-  private useOrigin(origin: string): void {
+  /** @internal */
+  useOrigin(origin: string): void {
     if (!this.origins.has(origin)) {
       this.origins.add(origin);
       this.engine.requests.register(origin, this.fixedWindow);

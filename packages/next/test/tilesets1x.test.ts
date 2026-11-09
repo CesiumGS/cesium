@@ -1,11 +1,11 @@
 // 3D Tiles 1.0's and 1.1's spellings in a tileset's JSON, read alike.
 import { describe, expect, it } from "vitest";
 import { treeFromJson, type TileJson } from "../src/streaming/Tile.ts";
+import { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import {
   MAX_UNDRAWN_REASONS,
-  Tileset3D,
   undrawnKind,
-} from "../src/streaming/Tileset3D.ts";
+} from "../src/streaming/tilesetLoad.ts";
 
 const BOX = { box: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1] };
 
