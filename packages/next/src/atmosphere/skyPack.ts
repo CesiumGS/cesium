@@ -410,6 +410,9 @@ export function readBackground(
   return faces;
 }
 
+/** The most bytes of points and background a pack may hold together. */
+export const MAX_PACK_BYTES = 1.5 * 2 ** 30;
+
 /** The largest manifest read. */
 export const MAX_MANIFEST_BYTES = 1 << 20;
 
@@ -462,7 +465,7 @@ async function readLimited(
       `${total} bytes, expected ${expected}`,
     );
   }
-  return out.buffer.slice(0, total);
+  return total === expected ? out.buffer : out.buffer.slice(0, total);
 }
 
 /** What `loadSkyPack` gives: the manifest, its notes and the field. */
@@ -483,12 +486,16 @@ export async function loadSkyPack(
   signal?: AbortSignal,
 ): Promise<LoadedSkyPack> {
   const manifestUrl = url.endsWith("/") ? `${url}${MANIFEST}` : url;
-  const get = async (target: string, file: string): Promise<Response> => {
+  const get = async (
+    target: string,
+    file: string,
+    abort: AbortSignal | undefined = signal,
+  ): Promise<Response> => {
     let response: Response;
     try {
-      response = await fetcher(target, signal ? { signal } : undefined);
+      response = await fetcher(target, abort ? { signal: abort } : undefined);
     } catch (error) {
-      if (signal?.aborted) {
+      if (abort?.aborted) {
         throw error;
       }
       throw new SkyPackError(file, "fetch", "the request failed");
@@ -518,23 +525,31 @@ export async function loadSkyPack(
   const notes: string[] = [];
   const manifest = parseManifest(json, notes);
   const beside = (file: string) => new URL(file, manifestUrl).href;
+  const pointsExpected = HEADER_BYTES + manifest.points.count * STAR_FLOATS * 4;
+  const backgroundExpected = backgroundBytes(
+    manifest.background.size,
+    manifest.background.levels,
+  );
+  if (pointsExpected + backgroundExpected > MAX_PACK_BYTES) {
+    throw new SkyPackError(
+      MANIFEST,
+      "points, background",
+      `${pointsExpected + backgroundExpected} bytes together is over the ${MAX_PACK_BYTES} a pack may hold`,
+    );
+  }
+  // One failed read cancels the other.
+  const both = new AbortController();
+  signal?.addEventListener("abort", () => both.abort(), { once: true });
+  const read = (file: string, expected: number) =>
+    get(beside(file), file, both.signal)
+      .then((r) => readLimited(r, expected, file, true))
+      .catch((error) => {
+        both.abort();
+        throw error;
+      });
   const [pointBytes, backgroundBytes_] = await Promise.all([
-    get(beside(manifest.points.file), manifest.points.file).then((r) =>
-      readLimited(
-        r,
-        HEADER_BYTES + manifest.points.count * STAR_FLOATS * 4,
-        manifest.points.file,
-        true,
-      ),
-    ),
-    get(beside(manifest.background.file), manifest.background.file).then((r) =>
-      readLimited(
-        r,
-        backgroundBytes(manifest.background.size, manifest.background.levels),
-        manifest.background.file,
-        true,
-      ),
-    ),
+    read(manifest.points.file, pointsExpected),
+    read(manifest.background.file, backgroundExpected),
   ]);
   const points = readPoints(pointBytes, manifest);
   const backgroundLevels = readBackground(backgroundBytes_, manifest);
