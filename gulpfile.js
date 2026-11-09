@@ -24,6 +24,7 @@ import { buildCore } from "./packages/core/scripts/build.js";
 import { buildGltf } from "./packages/gltf/scripts/build.js";
 import { buildEngine } from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
+import { buildEdit } from "./packages/edit/scripts/build.js";
 import {
   bundleWorkers,
   createCoverageFilter,
@@ -31,6 +32,7 @@ import {
   getWorkspaces,
   glslToJavaScript,
   shaderFiles,
+  shaderWorkspaces,
 } from "./scripts/build-utilities.js";
 import {
   buildCesium,
@@ -120,6 +122,8 @@ const sourceFiles = [
   "!packages/widgets/Source/*.js",
   "packages/core/Source/*.js",
   "packages/gltf/Source/*.js",
+  "packages/edit/Source/**/*.js",
+  "!packages/edit/Source/*.js",
   "!packages/engine/Source/Shaders/**",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
@@ -133,6 +137,8 @@ const watchedSpecFiles = [
   "!packages/widgets/Specs/SpecList.js",
   "packages/core/Specs/*Spec.js",
   "packages/gltf/Specs/*Spec.js",
+  "packages/edit/Specs/**/*Spec.js",
+  "!packages/edit/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
@@ -171,12 +177,15 @@ export async function build() {
     return buildEngine(packageBuildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(packageBuildOptions);
+  } else if (workspace === `@${scope}/edit`) {
+    return buildEdit(packageBuildOptions);
   }
 
   await buildCore(packageBuildOptions);
   await buildGltf(packageBuildOptions);
   await buildEngine(packageBuildOptions);
   await buildWidgets(packageBuildOptions);
+  await buildEdit(packageBuildOptions);
   await buildCesium(buildOptions);
 }
 export default build;
@@ -205,7 +214,9 @@ export async function buildWatch() {
   const specs = /** @type {BuildContext} */ (bundles.specs);
 
   gulp.watch(shaderFiles, async () => {
-    glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
+    for (const workspace of shaderWorkspaces) {
+      await glslToJavaScript(minify, "Build/minifyShaders.state", workspace);
+    }
     await esm.rebuild();
 
     if (iife) {
@@ -508,6 +519,7 @@ export async function websiteRelease() {
   await buildGltf({});
   await buildEngine({});
   await buildWidgets({});
+  await buildEdit({});
   // Generate Build/CesiumUnminified
   await buildCesium({
     minify: false,
@@ -535,6 +547,7 @@ export async function buildRelease() {
   await buildGltf({});
   await buildEngine({});
   await buildWidgets({});
+  await buildEdit({});
   // Generate Build/CesiumUnminified
   await buildCesium({
     minify: false,
@@ -930,6 +943,8 @@ export async function test() {
       await bundleTestWorkers();
     } else if (workspace === "widgets") {
       await buildWidgets({});
+    } else if (workspace === "edit") {
+      await buildEdit({});
     } else {
       await buildCesium({ iife: true });
     }

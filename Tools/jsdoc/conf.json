@@ -7,7 +7,8 @@
             "packages/core/Source",
             "packages/gltf/Source",
             "packages/engine/Source",
-            "packages/widgets/Source"
+            "packages/widgets/Source",
+            "packages/edit/Source"
         ],
         "exclude": [
             "packages/engine/Source/ThirdParty",
