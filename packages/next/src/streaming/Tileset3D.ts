@@ -85,6 +85,7 @@ import type {
 } from "./tilesetTypes.ts";
 import { readDualPosition, type DualDeclaration } from "./dualPosition.ts";
 import { applyDebugColor, updateDebug } from "./tilesetDebug.ts";
+import { serveQueries } from "./tilesetQueries.ts";
 
 /**
  * World pool pressure (World.pressure) past which streaming evicts as if
@@ -577,87 +578,14 @@ export class Tileset3D implements TileTree {
       this.changed();
     });
   }
-  private readonly queries: Array<{
+  /** @internal */
+  readonly queries: Array<{
     rays: readonly CastRay[];
     resolve: (result: { draws: DrawHandle[]; release(): void }) => void;
     reject: (error: Error) => void;
     pinned: Tile[];
     done?: boolean;
   }> = [];
-
-  /**
-   * Serves ray queries for one frame: wanted tiles go first in `requests`;
-   * pinned tiles count as touched (not evicted or cancelled).
-   */
-  private serveQueries(
-    frame: number,
-    requests: Map<Tile, number>,
-    purposes: Map<Tile, RequestPurpose>,
-  ): void {
-    for (let q = this.queries.length - 1; q >= 0; q--) {
-      const query = this.queries[q]!;
-      if (query.done) {
-        for (const tile of query.pinned) {
-          this.order.touch(tile, frame);
-        }
-        continue;
-      }
-      const tiles = new Set<Tile>();
-      for (const ray of query.rays) {
-        this.tilesAlongRay(this.root, ray, tiles);
-      }
-      let pending = false;
-      for (const tile of tiles) {
-        this.order.touch(tile, frame);
-        if (tile.state === "unloaded" || tile.state === "loading") {
-          pending = true;
-          if (tile.state === "unloaded") {
-            requests.set(tile, -1);
-            purposes.set(tile, "sample");
-          }
-        }
-      }
-      if (this.externals.length > 0) {
-        pending = true; // children still to be built
-      }
-      if (!pending) {
-        query.done = true;
-        query.pinned = [...tiles].filter((t) => t.placement);
-        query.resolve({
-          draws: query.pinned.flatMap((t) => t.placement!.draws),
-          release: () => {
-            const at = this.queries.indexOf(query);
-            if (at >= 0) {
-              this.queries.splice(at, 1);
-            }
-          },
-        });
-      }
-    }
-  }
-
-  /** Tiles a ray needs for its most detailed content. */
-  private tilesAlongRay(tile: Tile, ray: CastRay, out: Set<Tile>): void {
-    if (!crossesSphere(ray, tile.volume.sphere)) {
-      return;
-    }
-    if (tile.external) {
-      if (tile.state !== "ready") {
-        out.add(tile); // its tileset JSON, then its children
-        return;
-      }
-    } else if (tile.hasContent) {
-      const crossed = tile.children.some((c) =>
-        crossesSphere(ray, c.volume.sphere),
-      );
-      if (tile.refine === "ADD" || !crossed) {
-        out.add(tile);
-      }
-    }
-    for (const child of tile.children) {
-      this.tilesAlongRay(child, ray, out);
-    }
-  }
 
   /** Frame counter value of the last change to what the tileset draws. */
   get changedAt(): number {
@@ -806,8 +734,8 @@ export class Tileset3D implements TileTree {
   private readonly uploadsPerFrame: number;
   private readonly headers?: Record<string, string>;
   private readonly loaded = new Set<Tile>();
-  /** The loaded tiles, least recently touched first (what eviction walks). */
-  private readonly order = new TouchOrder<Tile>();
+  /** @internal The loaded tiles, least recently touched first (what eviction walks). */
+  readonly order = new TouchOrder<Tile>();
   private readonly ready: Array<{
     tile: Tile;
     asset: GltfAsset;
@@ -1312,8 +1240,8 @@ export class Tileset3D implements TileTree {
     return this.inFlight === 0 && this.ready.length === 0;
   }
 
-  /** External tileset JSON waiting for its tile tree to be built. */
-  private readonly externals: Array<{ tile: Tile; json: TileJson }> = [];
+  /** @internal External tileset JSON waiting for its tile tree to be built. */
+  readonly externals: Array<{ tile: Tile; json: TileJson }> = [];
 
   /** Builds waiting external tilesets' trees within the frame's budget. */
   private buildExternals(): void {
@@ -1665,7 +1593,7 @@ export class Tileset3D implements TileTree {
         this.cancelLoad(tile, controller);
       }
     }
-    this.serveQueries(frame, requests, purposes);
+    serveQueries(this, frame, requests, purposes);
     this.request(requests, purposes);
     this.engine.requests.backlog(this.origin, this.ready.length);
     const window = this.engine.requests.stats(this.origin);
@@ -2703,21 +2631,4 @@ function isIdentity(m: Mat4): boolean {
     }
   }
   return true;
-}
-
-/** Whether a ray segment passes through a sphere. */
-function crossesSphere(
-  ray: CastRay,
-  sphere: { center: ArrayLike<number>; radius: number },
-): boolean {
-  const dx = sphere.center[0]! - ray.origin[0]!;
-  const dy = sphere.center[1]! - ray.origin[1]!;
-  const dz = sphere.center[2]! - ray.origin[2]!;
-  const along =
-    dx * ray.direction[0]! + dy * ray.direction[1]! + dz * ray.direction[2]!;
-  const r = sphere.radius;
-  if (along < -r || along > ray.maxDistance + r) {
-    return false;
-  }
-  return dx * dx + dy * dy + dz * dz - along * along <= r * r;
 }
