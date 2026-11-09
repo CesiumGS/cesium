@@ -504,6 +504,27 @@ export const SOURCES = {
     checked: "2026-11-08",
     note: "The API gives no cause for a change between weeks.",
   },
+  gltf21: {
+    short: "glTF 2.1 tracking issue",
+    title: "KhronosGroup/glTF #2585: glTF 2.1",
+    url: "https://github.com/KhronosGroup/glTF/issues/2585",
+    pageDate: "opened 27 May 2026, open",
+    checked: "2026-11-08",
+  },
+  usdGlossary: {
+    short: "OpenUSD glossary",
+    title: "OpenUSD: USD Terms and Concepts",
+    url: "https://openusd.org/release/glossary.html",
+    pageDate: "version 26.11",
+    checked: "2026-11-08",
+  },
+  aousd: {
+    short: "Alliance for OpenUSD",
+    title: "Alliance for OpenUSD",
+    url: "https://aousd.org/",
+    pageDate: "updated 15 Jul 2026",
+    checked: "2026-11-08",
+  },
 } as const satisfies Record<string, Source>;
 
 export type SourceId = keyof typeof SOURCES;

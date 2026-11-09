@@ -29,6 +29,7 @@ import { Ion } from "./tabs/ion.tsx";
 import { Overview } from "./tabs/overview.tsx";
 import { Precision } from "./tabs/precision.tsx";
 import { Rendering } from "./tabs/rendering.tsx";
+import { Scene } from "./tabs/scene.tsx";
 import { Selection } from "./tabs/selection.tsx";
 import { Shadows } from "./tabs/shadows.tsx";
 import { Tessellation } from "./tabs/tessellation.tsx";
@@ -65,6 +66,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
   {
     title: "Deep dives",
     tabs: [
+      { id: "scene", label: "Scene representation", view: Scene },
       { id: "frames", label: "Frame tree", view: Frames },
       { id: "cameras", label: "Cameras", view: Cameras },
       { id: "rendering", label: "Rendering", view: Rendering },

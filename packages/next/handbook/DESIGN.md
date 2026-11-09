@@ -93,7 +93,7 @@ gains a good answer.
 
 ## Layout
 
-Nineteen tabs don't fit a horizontal strip, so they're a grouped side list on a
+Twenty tabs don't fit a horizontal strip, so they're a grouped side list on a
 desktop and a scrolling strip on a phone. A reading column of about 72 characters
 holds the prose; tables and figures may run to 1000 px. Nothing sits on a card:
 tables and figures sit on the page, separated by space and headings.
@@ -175,6 +175,7 @@ Details closed on screen print open.
 | Overview: the live view's still, `shots/live-globe.webp`                         | Captured by hand from the live view itself, in Edge. Holds only the globe                                                                                                      | 2026-11-08                   |
 | Dyno: how the pieces fit; each view by its job                                   | By hand, in `src/tabs/dyno.tsx`, from `bench/suite` and the overall plan, section 16                                                                                           | 2026-11-08                   |
 | Dyno: screenshots in `shots/`                                                    | Captured by hand from a short run of the one redistributable scene, in both themes where cheap. Check each by eye for tokens and account details. Licensed renders never go in | 2026-11-08                   |
+| Scene representation: what owns what                                             | By hand, in `src/tabs/scene.tsx`, from `SceneItem.ts`, `World.ts` and `Engine.ts`                                                                                              | 2026-11-08                   |
 | Tile selection: a tile's states; levels per policy; mixed LOD; cache levels      | By hand, in `src/flows.tsx` and `src/tabs/selection.tsx`                                                                                                                       | 2026-11-08                   |
 | Frame tree: the tree; one tick of answering                                      | By hand, in `src/tabs/frames.tsx` and `src/flows.tsx`                                                                                                                          | 2026-11-08                   |
 | Cameras: one tick down the chain                                                 | By hand, in `src/flows.tsx`                                                                                                                                                    | 2026-11-08                   |
