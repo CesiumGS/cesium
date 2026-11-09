@@ -112,16 +112,38 @@ function readTheme(): Scheme | undefined {
   }
 }
 
+function writeTheme(theme: Scheme | undefined): void {
+  try {
+    if (theme) {
+      localStorage.setItem(THEME_KEY, theme);
+    } else {
+      localStorage.removeItem(THEME_KEY);
+    }
+  } catch {
+    // Not remembered this time; it still changes.
+  }
+}
+
+/**
+ * The system's theme, unless the reader has chosen the other one. A choice
+ * lasts until the toggle comes back to the system's theme or the system's
+ * theme changes, so it can't leave the page stuck on one theme for good.
+ */
 function useScheme(): [Scheme, () => void] {
   const query = matchMedia("(prefers-color-scheme: dark)");
   const [stored, setStored] = useState(readTheme);
   const [systemDark, setSystemDark] = useState(query.matches);
   useEffect(() => {
-    const on = () => setSystemDark(query.matches);
+    const on = () => {
+      setSystemDark(query.matches);
+      writeTheme(undefined);
+      setStored(undefined);
+    };
     query.addEventListener("change", on);
     return () => query.removeEventListener("change", on);
   }, [query]);
-  const scheme = stored ?? (systemDark ? "dark" : "light");
+  const system: Scheme = systemDark ? "dark" : "light";
+  const scheme = stored ?? system;
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = scheme;
   }, [scheme]);
@@ -129,12 +151,9 @@ function useScheme(): [Scheme, () => void] {
     scheme,
     () => {
       const next = scheme === "dark" ? "light" : "dark";
-      try {
-        localStorage.setItem(THEME_KEY, next);
-      } catch {
-        // Not remembered this time; it still changes.
-      }
-      setStored(next);
+      const choice = next === system ? undefined : next;
+      writeTheme(choice);
+      setStored(choice);
     },
   ];
 }
