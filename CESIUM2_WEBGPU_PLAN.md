@@ -8277,6 +8277,11 @@ would resample them or need a virtual-texture page cache.
   last); ray casts dispatch per slab into one hit buffer; point sources
   and model pools bind their points' slab (`World.vertexBufferOf`) and
   rebind on `tableGeneration`. An emptied slab past the first closes.
+  A range larger than the cap (a point set of ten million, about
+  280 MB) gets a slab of its own, made at its size at once with no
+  doubling or copy, if it fits the device's binding and the budget, and
+  is destroyed when its range is released; past the binding or the
+  budget it fails with a `CapacityError` naming the bytes and the limit.
   The allocator stays first-fit for now (with growth and a free tail);
   size classes wait for a measurement of streaming churn (§13.6).
   Checked: OSM Buildings over terrain under `?limits=minimum` (128 MiB

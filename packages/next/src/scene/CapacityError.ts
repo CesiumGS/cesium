@@ -9,8 +9,10 @@ export class CapacityError extends Error {
   constructor(
     /** The pool: "materials", "draws", "vertex arena", and so on. */
     readonly pool: string,
+    /** Why, with the bytes asked for and the limit, when known. */
+    detail?: string,
   ) {
-    super(`World ${pool} is full.`);
+    super(`World ${pool} is full${detail ? `: ${detail}` : ""}.`);
     this.name = "CapacityError";
   }
 }

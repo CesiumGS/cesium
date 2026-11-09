@@ -323,18 +323,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     layer?.setParameter(name, value);
   };
 
-  /** A collection of `count` vehicles over `area` km, replacing the last. */
-  async function build() {
-    const token = ++building;
-    const half = (settings.area * 1000) / 2;
-    const n = settings.count;
-    feed.postMessage({ type: "stop" });
-    layer?.destroy();
-    source?.destroy();
-    layer = undefined;
-    follow = undefined;
-    // The ground's drop at the edge (the capture is flat).
-    const drop = (half * half) / (2 * 6371000);
+  function makeSource(n: number, half: number, drop: number) {
     const next = new PointSource(engine, world, {
       capacity: n,
       origin,
@@ -349,6 +338,35 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       },
     });
     next.count = n;
+    return next;
+  }
+
+  /** A collection of `count` vehicles over `area` km, replacing the last. */
+  async function build() {
+    const token = ++building;
+    const half = (settings.area * 1000) / 2;
+    const n = settings.count;
+    feed.postMessage({ type: "stop" });
+    layer?.destroy();
+    source?.destroy();
+    source = undefined;
+    layer = undefined;
+    follow = undefined;
+    // The ground's drop at the edge (the capture is flat).
+    const drop = (half * half) / (2 * 6371000);
+    notice.hidden = true;
+    let next: PointSource;
+    try {
+      next = makeSource(n, half, drop);
+    } catch (error) {
+      // Say why on screen and in the engine's errors, and leave the view
+      // empty on purpose, not by an uncaught rejection.
+      const why = `${n.toLocaleString()} vehicles can't be held: ${error instanceof Error ? error.message : String(error)}`;
+      engine.reportError("resource", why);
+      notice.textContent = why;
+      notice.hidden = false;
+      return;
+    }
     source = next;
     const created = await VectorLayer.create(engine, world, {
       source: next,
@@ -549,6 +567,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
   }
 
+  const notice = el("p", { className: "notice", role: "alert" });
+  notice.hidden = true;
   const readouts = el("dl");
   const readout = (term: string) => {
     const value = el("dd");
@@ -654,6 +674,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       ),
       el("button", { type: "button", onclick: overview }, "Overview"),
     ),
+    notice,
     readouts,
     el(
       "p",

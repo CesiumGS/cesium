@@ -90,6 +90,24 @@ describe("world pools", () => {
     expect(world.pressure().pool).toMatch(/arena/);
   });
 
+  it("holds a point set of ten million in one slab by default", async () => {
+    // A point set is one range in one slab: 16 bytes of anchor, 4 of list
+    // and the property words, about 280 MB here: past a 256 MiB slab, so it gets
+    // a slab of its own.
+    const world = engine.createWorld();
+    const layout = { affiliation: { offset: 0, components: 1 } };
+    expect(() =>
+      world.addPointMesh(10_000_000, { stride: 2, layout }),
+    ).not.toThrow();
+    // Where the device's binding is smaller, it is the device's limit.
+    const small = (
+      await fakeEngine({ maxStorageBufferBindingSize: 128 << 20 })
+    ).createWorld();
+    expect(() => small.addPointMesh(10_000_000, { stride: 2, layout })).toThrow(
+      /280,000,\d+ bytes.*134,217,728 bytes/,
+    );
+  });
+
   it("grows its GPU tables past their first rows", () => {
     const world = engine.createWorld();
     const mesh = world.addMesh(createBox());

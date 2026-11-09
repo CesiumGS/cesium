@@ -1,4 +1,4 @@
-import type { EngineError } from "../gpu/EngineErrors.ts";
+import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
 import { TerrainSource, type TerrainLoader } from "../globe/TerrainSource.ts";
 import type { TerrainTileInfo } from "../globe/quantizedMesh.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
@@ -1079,6 +1079,14 @@ export class Engine {
    */
   get errors(): readonly EngineError[] {
     return this.ctx.errors.all;
+  }
+
+  /**
+   * Adds an error to `errors` (once with a count, as the engine's own
+   * are), for what an application caught, a point set that didn't fit, say.
+   */
+  reportError(kind: EngineErrorKind, message: string): void {
+    this.ctx.errors.report(kind, message);
   }
 
   /** Hears every error the engine reports; returns the unsubscribe. */

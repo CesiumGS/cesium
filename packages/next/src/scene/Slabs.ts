@@ -14,7 +14,11 @@ import { RangeAllocator } from "../gpu/RangeAllocator.ts";
  *   instances' streams, its feature table's columns, a point set's anchors
  *   and lists) lives in its mesh's slab: offsets are slab-relative, and a
  *   batch (one mesh) binds its slab's group.
- * - An emptied slab other than the first is destroyed.
+ * - A range larger than a slab's cap (a ten-million-point set is about
+ *   280 MB) gets a slab of its own, made at that size at once (no doubling,
+ *   no copy), if it fits the device's largest binding and the budget.
+ * - An emptied slab other than the first is destroyed, a dedicated one
+ *   included, so its memory returns.
  *
  * Bindless: with buffer arrays (or device addresses) a draw could name its
  * slab by index in its record and every slab stay bound at once; the
@@ -36,8 +40,13 @@ export interface SlabOptions {
   /** Bytes of vertex data across slabs (the world's budget). */
   vertexBudget: number;
   indexBudget: number;
-  /** The most one slab's vertex or index buffer may hold. */
+  /** The most one slab's vertex or index buffer grows to by doubling. */
   slabCap: number;
+  /**
+   * The device's largest storage binding (default `slabCap`): the most a
+   * dedicated slab for one oversized range may hold.
+   */
+  bindingBytes?: number;
   /** A new slab's first sizes (it doubles from there). */
   initialVertexBytes?: number;
   initialIndexBytes?: number;
@@ -113,18 +122,44 @@ export class Slabs {
         return slab;
       }
     }
-    if (
-      this.vertexAllocated + Math.max(vertexBytes, this.initialVertex) >
-        this.options.vertexBudget ||
-      this.indexAllocated + Math.max(indexBytes, this.initialIndex) >
-        this.options.indexBudget ||
-      vertexBytes > this.options.slabCap ||
-      indexBytes > this.options.slabCap
-    ) {
+    if (this.refusal(vertexBytes, indexBytes) !== undefined) {
       return undefined;
     }
-    const slab = this.open();
+    // An oversized range's slab is its size, aligned, from the start.
+    const { slabCap } = this.options;
+    const slab = this.open(
+      vertexBytes > slabCap ? align(vertexBytes) : this.initialVertex,
+      indexBytes > slabCap ? align(indexBytes) : this.initialIndex,
+    );
     return this.reserve(slab, vertexBytes, indexBytes) ? slab : undefined;
+  }
+
+  /**
+   * Why `pick` can't open a slab for these sizes, naming the bytes asked
+   * for and the limit (a device's binding or the world's budget); undefined
+   * when it could.
+   */
+  refusal(vertexBytes: number, indexBytes: number): string | undefined {
+    const { vertexBudget, indexBudget } = this.options;
+    const binding = this.binding;
+    if (vertexBytes > binding || indexBytes > binding) {
+      return `a range of ${Math.max(vertexBytes, indexBytes).toLocaleString("en-US")} bytes is more than the device's largest storage binding, ${binding.toLocaleString("en-US")} bytes`;
+    }
+    const vertexNeed =
+      this.vertexAllocated + Math.max(vertexBytes, this.initialVertex);
+    if (vertexNeed > vertexBudget) {
+      return `${vertexBytes.toLocaleString("en-US")} bytes of vertex data with ${this.vertexAllocated.toLocaleString("en-US")} allocated is more than the budget, ${vertexBudget.toLocaleString("en-US")} bytes`;
+    }
+    const indexNeed =
+      this.indexAllocated + Math.max(indexBytes, this.initialIndex);
+    if (indexNeed > indexBudget) {
+      return `${indexBytes.toLocaleString("en-US")} bytes of indices with ${this.indexAllocated.toLocaleString("en-US")} allocated is more than the budget, ${indexBudget.toLocaleString("en-US")} bytes`;
+    }
+    return undefined;
+  }
+
+  private get binding(): number {
+    return Math.max(this.options.slabCap, this.options.bindingBytes ?? 0);
   }
 
   /** A vertex range in `slab` (growing it), or undefined. */
@@ -263,17 +298,20 @@ export class Slabs {
     this.replaced(slab);
   }
 
-  private open(): Slab {
+  private open(
+    vertexBytes = this.initialVertex,
+    indexBytes = this.initialIndex,
+  ): Slab {
     let id = this.slabs.findIndex((s) => s === undefined);
     if (id < 0) {
       id = this.slabs.length;
     }
     const slab: Slab = {
       id,
-      vertexBuffer: this.createVertex(id, this.initialVertex),
-      indexBuffer: this.createIndex(id, this.initialIndex),
-      vertex: new RangeAllocator(this.initialVertex, 4),
-      index: new RangeAllocator(this.initialIndex, 4),
+      vertexBuffer: this.createVertex(id, vertexBytes),
+      indexBuffer: this.createIndex(id, indexBytes),
+      vertex: new RangeAllocator(vertexBytes, 4),
+      index: new RangeAllocator(indexBytes, 4),
       generation: this.nextGeneration++,
     };
     this.slabs[id] = slab;

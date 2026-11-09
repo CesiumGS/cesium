@@ -116,8 +116,10 @@ export interface WorldOptions {
   vertexBytes?: number;
   indexBytes?: number;
   /**
-   * The most one slab's vertex or index buffer holds (default 256 MiB,
-   * and never past the device's largest storage binding).
+   * The most one slab's vertex or index buffer grows to by doubling
+   * (default 256 MiB, and never past the device's largest storage
+   * binding). A range larger than this gets a slab of its own, at its
+   * size, up to the binding.
    */
   slabBytes?: number;
   /**
@@ -887,6 +889,7 @@ export class World {
         vertexBudget: options.vertexBytes ?? 1 << 30,
         indexBudget: options.indexBytes ?? 1 << 29,
         slabCap: Math.min(binding, options.slabBytes ?? 256 << 20),
+        bindingBytes: binding,
       },
       () => this.flushUploads(),
       (slab) => this.slabReplaced(slab),
@@ -1472,10 +1475,14 @@ export class World {
     const streamBytes = capacity * stride * 4;
     const bytes = anchorBytes + streamBytes + directory.byteLength;
     // Its draws' point lists go in the same slab (a word a point each).
-    const slab = this.slabs.pick(bytes + Math.max(4, capacity * 4), 0);
+    const wanted = bytes + Math.max(4, capacity * 4);
+    const slab = this.slabs.pick(wanted, 0);
     const offset = slab && this.slabs.allocateVertex(slab, bytes);
     if (!slab || offset === undefined) {
-      throw new CapacityError("vertex arena");
+      throw new CapacityError(
+        "vertex arena",
+        `a point set of ${capacity.toLocaleString("en-US")} points needs ${wanted.toLocaleString("en-US")} bytes; ${this.slabs.refusal(wanted, 0) ?? "no slab has a range that size free"}`,
+      );
     }
     if (directory.byteLength) {
       this.queueUpload(
