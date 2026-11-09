@@ -140,8 +140,11 @@ describe("in an engine", () => {
     expect(release.mock.calls.length).toBe(acquire.mock.calls.length);
   });
 
-  it("gives each target the same texture tick after tick", () => {
-    const view = addView({ ...cameraGlare(), tier: "full" });
+  it("gives each target the same texture tick after tick", async () => {
+    addView({ ...cameraGlare(), tier: "full" });
+    engine.renderFrame();
+    // The stage's pipelines come in the background.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     engine.renderFrame();
     const acquire = vi.spyOn(engine.raster.pool, "acquire");
     const taken = () => {
@@ -161,7 +164,6 @@ describe("in an engine", () => {
       expect(label).toBe(first[i]![0]);
       expect(texture, String(label)).toBe(first[i]![1]);
     });
-    void view;
   });
 
   it("frees a removed view's list", () => {
