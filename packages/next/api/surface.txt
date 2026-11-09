@@ -333,6 +333,7 @@ frames	FrameDataWarning	interface	-
 frames	FrameInUse	interface	-
 frames	FrameLoadProgress	interface	-
 frames	FrameOptions	interface	-
+frames	FramePiece	interface	-
 frames	FramePoint	interface	-
 frames	FrameStandInWarning	interface	-
 frames	FrameUser	type	-
@@ -344,6 +345,9 @@ frames	FramesResolverOptions	interface	-
 frames	GridFactors	interface	-
 frames	MOON_ME_ORIENTATION_RADIANS	const	-
 frames	OemSegment	interface	-
+frames	PiecewiseFrame	class	-
+frames	PiecewiseJumpError	class	-
+frames	PiecewiseOptions	interface	-
 frames	PointAccuracy	interface	-
 frames	PointAccuracyOptions	interface	-
 frames	PointAccuracyTerm	type	-
@@ -383,6 +387,7 @@ frames	frameVelocity	function	-
 frames	loadFrameData	function	-
 frames	loadFrameRoles	function	-
 frames	parseOem	function	-
+frames	piecewiseFrame	function	-
 frames	placementOf	function	-
 frames	pointAccuracy	function	-
 frames	readSpk	function	-

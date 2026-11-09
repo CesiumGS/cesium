@@ -24,6 +24,7 @@ import {
   analyticEdges,
   type StandInName,
 } from "./analytic.ts";
+import type { Instant } from "../time/Instant.ts";
 import type { FrameEdge, PreciseEdge } from "./edges.ts";
 import { Frame } from "./Frame.ts";
 import { BUILT_IN_ACCURACY } from "./frameAccuracy.ts";
@@ -69,6 +70,11 @@ export interface FrameCatalogOptions {
 /** One reference frame of the tree in use. */
 export interface FrameInUse {
   readonly frame: Frame;
+  /**
+   * Its parent: `frame.parent`, or with `treeInUse(at)` the one `at` gives
+   * (`parentAt`: a piecewise reference frame's current piece's).
+   */
+  readonly parent: Frame | undefined;
   /** Who uses it directly; empty for an ancestor only. */
   readonly users: readonly FrameUser[];
   /**
@@ -128,7 +134,7 @@ export interface FrameCatalog {
    * The reference frames in use and their ancestors, root first (each
    * reference frame before its children). The root stays ICRF.
    */
-  treeInUse(): readonly FrameInUse[];
+  treeInUse(at?: Instant): readonly FrameInUse[];
   /** The reference frame fixed to `body` (ITRF, MOON_ME); throws, naming it, for any other. */
   bodyFixed(body: Body): Frame;
   /** The body whose fixed reference frame `frame` is or descends from. */
@@ -356,7 +362,11 @@ class Catalog implements FrameCatalog {
     this.mark(frame, user);
   }
 
-  treeInUse(): readonly FrameInUse[] {
+  treeInUse(at?: Instant): readonly FrameInUse[] {
+    // `at` asks for each reference frame's parent then (a piecewise one's
+    // current piece's); without it, the tree's own parent.
+    const up = (f: Frame): Frame | undefined =>
+      at === undefined ? f.parent : f.parentAt(at);
     // The used reference frames and their ancestors, each ranked: built-in
     // ones in catalog order, the rest in the order they were first seen.
     const rank = new Map<Frame, number>();
@@ -365,7 +375,7 @@ class Catalog implements FrameCatalog {
         continue;
       }
       const chain: Frame[] = [];
-      for (let f: Frame | undefined = frame; f; f = f.parent) {
+      for (let f: Frame | undefined = frame; f; f = up(f)) {
         chain.push(f);
       }
       for (const f of chain.reverse()) {
@@ -380,13 +390,14 @@ class Catalog implements FrameCatalog {
     const children = new Map<Frame, Frame[]>();
     let root: Frame | undefined;
     for (const f of rank.keys()) {
-      if (!f.parent) {
+      const parent = up(f);
+      if (!parent) {
         root = f;
         continue;
       }
-      const list = children.get(f.parent) ?? [];
+      const list = children.get(parent) ?? [];
       list.push(f);
-      children.set(f.parent, list);
+      children.set(parent, list);
     }
     const out: FrameInUse[] = [];
     const visit = (f: Frame) => {
@@ -394,6 +405,7 @@ class Catalog implements FrameCatalog {
       const own = entry?.frame === f ? entry : undefined;
       out.push({
         frame: f,
+        parent: up(f),
         users: [...(this.users.get(f) ?? [])],
         precision: own?.running ?? "precise",
         standIn:

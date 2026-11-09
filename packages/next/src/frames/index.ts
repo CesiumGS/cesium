@@ -57,6 +57,13 @@ export {
   type RigPresetName,
   type RigPresetOptions,
 } from "./presets.ts";
+export {
+  piecewiseFrame,
+  PiecewiseFrame,
+  PiecewiseJumpError,
+  type FramePiece,
+  type PiecewiseOptions,
+} from "./piecewise.ts";
 export { frameVelocity, angularVelocity } from "./motion.ts";
 export { createFrames, type Frames } from "./frames.ts";
 export {

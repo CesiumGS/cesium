@@ -21,6 +21,7 @@ import {
 } from "./frameAccuracy.ts";
 import { convertPoint, framePoint, type FramePoint } from "./local.ts";
 import { rotationPart } from "./matrix.ts";
+import { PiecewiseFrame } from "./piecewise.ts";
 
 /** What a figure carried over from its edge, beyond its size. */
 interface TermFlags {
@@ -206,7 +207,7 @@ function chainOf(frame: Frame): Frame[] {
 export function routeLegs(
   from: Frame,
   to: Frame,
-  _instant?: Instant,
+  instant?: Instant,
 ): { readonly up: readonly Frame[]; readonly down: readonly Frame[] } {
   const up = chainOf(from);
   const down = chainOf(to);
@@ -216,10 +217,36 @@ export function routeLegs(
       `pointAccuracy: no common ancestor of "${from.name}" and "${to.name}"`,
     );
   }
+  const leg = (edges: Frame[]): Frame[] =>
+    instant === undefined ? edges : edges.flatMap((e) => expand(e, instant, 0));
   return {
-    up: up.slice(0, up.indexOf(meet)),
-    down: down.slice(0, down.indexOf(meet)),
+    up: leg(up.slice(0, up.indexOf(meet))),
+    down: leg(down.slice(0, down.indexOf(meet))),
   };
+}
+
+/**
+ * An edge as the edges it stands for at `instant`: a piecewise reference
+ * frame's is its piece's route up to the hub, preceded, for a simulated
+ * piece, by the piecewise edge itself (which says so).
+ */
+function expand(edge: Frame, instant: Instant, depth: number): Frame[] {
+  if (!(edge instanceof PiecewiseFrame) || depth > 8) {
+    return [edge];
+  }
+  const piece = edge.pieceAt(instant);
+  if (piece === undefined) {
+    return [edge];
+  }
+  const own: Frame[] = [];
+  for (
+    let f: Frame | undefined = piece.frame;
+    f && f !== edge.hub;
+    f = f.parent
+  ) {
+    own.push(...expand(f, instant, depth + 1));
+  }
+  return piece.simulated === true ? [edge, ...own] : own;
 }
 
 /** A figure's size read as 1σ, or why it can't be. */
@@ -707,7 +734,9 @@ export function separationAccuracy(
     );
   }
   const { up, down } = routeLegs(a.frame, b.frame, at);
-  const meet = (up.length > 0 ? up.at(-1)!.parent : a.frame)!;
+  // Where the legs meet, whatever edges the legs expand to.
+  const raw = routeLegs(a.frame, b.frame).up;
+  const meet = (raw.length > 0 ? raw.at(-1)!.parent : a.frame)!;
   return compose(
     [
       { edges: up, point: a, sign: -1 },
