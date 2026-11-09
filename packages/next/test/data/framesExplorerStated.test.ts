@@ -6,141 +6,38 @@
 // gives the library (`Frame.accuracy`) what its tree edge shows; and where
 // the answer's ± carries an end the app defines, the walk (composed.ts,
 // `pointAccuracy`) states the same figure for it.
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { MessageChannel, type MessagePort } from "node:worker_threads";
-import { afterAll, describe, expect, it } from "vitest";
-import { framesDataDirectory } from "../../scripts/frameData.mjs";
+
+import { describe, expect, it } from "vitest";
+
 import { composedView } from "../../examples/frames-explorer/composed.ts";
-import {
-  createHost,
-  type HostPort,
-  type MakeContext,
-} from "../../examples/frames-explorer/host.ts";
-import {
-  createClient,
-  type ClientWorker,
-} from "../../examples/frames-explorer/protocol.ts";
-import type { ScenarioEvaluation } from "../../examples/frames-explorer/scenarios/evaluate.ts";
-import {
-  READY,
-  SCENES,
-  earthSiteFrame,
-  lunarSiteFrame,
-} from "../../examples/frames-explorer/scenarios/scenes.ts";
-import type {
-  KnobState,
-  ScenarioId,
-} from "../../examples/frames-explorer/scenarios/spec.ts";
-import { SCENARIOS } from "../../examples/frames-explorer/scenarios/specs.ts";
+
+import { READY } from "../../examples/frames-explorer/scenarios/scenes.ts";
+import type { ScenarioId } from "../../examples/frames-explorer/scenarios/spec.ts";
+
 import { MOON_ME_RADIANS } from "../../examples/frames-explorer/scenarios/stated.ts";
-import {
-  ORION_OEM,
-  STATIONS_SPK,
-  orionFromOem,
-  type StoreManifest,
-  type StressContext,
-} from "../../examples/frames-explorer/tests.ts";
+
 import {
   branchPath,
-  buildScenarioTree,
-  buildTree,
   type TreeNode,
 } from "../../examples/frames-explorer/tree.ts";
-import { catalogGridsFrom } from "../../examples/frames-explorer/stress/groups/global-geoids.ts";
-import { gridSource, loadProj } from "../../src/engineering/proj.ts";
-import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
-import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
+
+import { frameTransform } from "../../src/frames/Frame.ts";
 import { isUnstated } from "../../src/frames/frameAccuracy.ts";
-import { createFrames } from "../../src/frames/frames.ts";
+
 import { Instant } from "../../src/time/Instant.ts";
-import { EarthOrientationParameters } from "../../src/time/eop.ts";
-import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
-const dir = framesDataDirectory();
-/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
-const GRIDS = ["us_noaa_g2018u0.tif"];
-const bytes = (file: string): ArrayBuffer => {
-  const b = readFileSync(join(dir, file));
-  return b.buffer.slice(
-    b.byteOffset,
-    b.byteOffset + b.byteLength,
-  ) as ArrayBuffer;
-};
-const frames = createFrames({
-  leapSeconds: LeapSeconds.builtIn(),
-  eop: EarthOrientationParameters.fromCelestrakCsv(
-    readFileSync(join(dir, "EOP-All.csv"), "utf8"),
-  ),
-  ephemeris: Ephemeris.fromPacks(
-    bytes("planets-de440-2000-2050.pack"),
-    bytes("moon-pa-de440-2000-2050.pack"),
-  ),
-  warnings: [],
-} satisfies FrameData);
-const orion = orionFromOem(readFileSync(join(dir, ORION_OEM), "utf8"), frames);
-const context = (): StressContext => ({
+import {
+  checkedTdb,
+  connect,
   frames,
-  loadProj: () => loadProj({ base: `${join(dir, "proj")}/`, grids: GRIDS }),
-  // The PROJ-data catalog's grids, as the browser's /proj-grids/ serves them
-  // (EGM2008's opt-in is not taken here).
-  loadCatalogGrids: catalogGridsFrom(
-    () => loadProj({ base: `${join(dir, "proj")}/`, grids: GRIDS }),
-    () => gridSource({ base: `${join(dir, "grids")}/` }),
-  ),
-  loadOrion: () => Promise.resolve(orion),
-  loadStations: () => Promise.resolve(bytes(STATIONS_SPK)),
-  manifest: JSON.parse(
-    readFileSync(join(dir, "manifest.json"), "utf8"),
-  ) as StoreManifest,
-});
-
-const open: MessagePort[] = [];
-afterAll(() => {
-  for (const port of open) {
-    port.close();
-  }
-});
-
-function connect() {
-  const { port1, port2 } = new MessageChannel();
-  open.push(port1, port2);
-  const hostPort: HostPort = {
-    postMessage: (message, transfer) =>
-      port1.postMessage(message, transfer as never),
-    get onmessage() {
-      return null;
-    },
-    set onmessage(handler) {
-      port1.onmessage = handler as never;
-    },
-  };
-  const makeContext: MakeContext = async () => context();
-  createHost(hostPort, makeContext);
-  const worker: ClientWorker = {
-    postMessage: (message) => port2.postMessage(message),
-    get onmessage() {
-      return null;
-    },
-    set onmessage(handler) {
-      port2.onmessage = handler as never;
-    },
-    onerror: null,
-    onmessageerror: null,
-    terminate: () => port2.close(),
-  };
-  return createClient(worker, new AbortController().signal);
-}
+  pageFrames,
+  pageTree,
+  print,
+  spec,
+  nodes,
+} from "./explorerPages.ts";
 
 const client = connect();
-const print = (line: string) => process.stdout.write(`${line}\n`);
-const spec = (id: ScenarioId) => SCENARIOS.find((s) => s.id === id)!;
-const checkedTdb = (id: ScenarioId) =>
-  Instant.fromUtc(
-    Date.parse(spec(id).checked.epochUtc),
-    frames.data.leapSeconds,
-  ).tdb();
 
 /**
  * Built-in edges that truly state no accuracy, with the source that says
@@ -151,53 +48,6 @@ const STATES_NONE: Readonly<Record<string, string>> = {
   // estimates (stated.ts MOON_ME_ACCURACY, the coordinator's ruling,
   // 2026-11-07).
 };
-
-/** The page's own frames for a scenario, as the stage builds them (stage.ts `applySceneKnobs`). */
-function pageFrames(
-  id: ScenarioId,
-  knobs: KnobState,
-  e: ScenarioEvaluation,
-): Frame[] {
-  const scene = SCENES[id]!;
-  const latitude = scene.lunarSite?.(knobs);
-  return [
-    ...(latitude !== undefined
-      ? [lunarSiteFrame(frames.moonMe, latitude)]
-      : []),
-    ...(scene.earthSites?.(knobs) ?? []).map((s) =>
-      earthSiteFrame(frames.itrf, s),
-    ),
-    ...(scene.bodies?.(frames, knobs, e) ?? []),
-  ];
-}
-
-/** The tree the page draws, its own frames attached (treeState.ts) and Orion's. */
-function pageTree(
-  id: ScenarioId,
-  knobs: KnobState,
-  e: ScenarioEvaluation,
-  instant: Instant,
-): TreeNode {
-  const tree = buildScenarioTree(buildTree(frames, {}, instant), e.added);
-  const local = pageFrames(id, knobs, e);
-  const attach = (n: TreeNode) => {
-    const f = local.find((l) => l.name === n.id);
-    if (f) {
-      n.frame = f;
-    }
-    if (n.id === orion.name) {
-      n.frame = orion.frame;
-    }
-    n.children.forEach(attach);
-  };
-  attach(tree);
-  return tree;
-}
-
-const nodes = (tree: TreeNode): TreeNode[] => [
-  tree,
-  ...tree.children.flatMap(nodes),
-];
 
 const stated = (a: TreeNode["edge"]["accuracy"]) =>
   a.byDefinition === true || a.meters !== undefined || a.radians !== undefined;

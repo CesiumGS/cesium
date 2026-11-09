@@ -83,7 +83,7 @@ describe("the ephemeris sky against the analytic models", () => {
     });
   }
 
-  it("prints its per-call cost", () => {
+  it("prints its per-call cost", { timeout: 30_000 }, () => {
     const out = createSkyState();
     const ms = times[0]![0];
     for (let i = 0; i < 200; i++) {

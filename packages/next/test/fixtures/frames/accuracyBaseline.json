@@ -1,0 +1,1541 @@
+{
+ "commit": "c575d41806",
+ "rows": [
+  {
+   "key": "measure/barycentre-earth",
+   "meters": null
+  },
+  {
+   "key": "measure/dss43-orion",
+   "meters": 9.90690667597568
+  },
+  {
+   "key": "measure/earth-sites-1km",
+   "meters": 0.023454319544867694
+  },
+  {
+   "key": "measure/lunar-89.5S-earth",
+   "meters": 0.03163858403911275
+  },
+  {
+   "key": "measure/orion-dss14",
+   "meters": 9.906906671725435
+  },
+  {
+   "key": "measure/orion-moon",
+   "meters": 9.906942709604309
+  },
+  {
+   "key": "scenario/bim-site/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/bim-site/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/bim-site/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/bim-site/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/bim-site/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/bim-site/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/bim-site/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/bim-site/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/bim-site/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/bim-site/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/bim-site/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/bim-site/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/bim-site/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/bim-site/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/bim-site/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/corridor/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/corridor/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/corridor/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/corridor/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/corridor/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/corridor/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/corridor/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/corridor/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/corridor/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/corridor/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/corridor/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/corridor/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/corridor/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/corridor/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/corridor/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/DSS-43 ENU",
+   "meters": 0.10092588918767896
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/dish-tracks/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/DSS-43 ENU",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/DSS-43 ENU",
+   "meters": 0.1
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/dish-tracks/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/drone/GCRF/Camera mount",
+   "meters": 2.000045626236463
+  },
+  {
+   "key": "scenario/drone/GCRF/Drone body",
+   "meters": 2.000043912803895
+  },
+  {
+   "key": "scenario/drone/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/drone/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/drone/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/drone/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/drone/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/drone/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/drone/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/drone/ICRF/Camera mount",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/Drone body",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ITRF/Camera mount",
+   "meters": 2.0000017134722525
+  },
+  {
+   "key": "scenario/drone/ITRF/Drone body",
+   "meters": 2
+  },
+  {
+   "key": "scenario/drone/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/drone/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/drone/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/drone/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/drone/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/drone/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/drone/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/drone/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/earth-turns/GCRF/Sacramento ENU",
+   "meters": 0.013110766166879421
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ICRF/Sacramento ENU",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/earth-turns/ITRF/Sacramento ENU",
+   "meters": 0
+  },
+  {
+   "key": "scenario/everything/GCRF/Arm base",
+   "meters": 0.014768210067269609
+  },
+  {
+   "key": "scenario/everything/GCRF/Base yaw",
+   "meters": 0.014769609689127012
+  },
+  {
+   "key": "scenario/everything/GCRF/DSS-43 ENU",
+   "meters": 0.10092588918767896
+  },
+  {
+   "key": "scenario/everything/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/everything/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/everything/GCRF/Elbow",
+   "meters": 0.014937091045638628
+  },
+  {
+   "key": "scenario/everything/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/everything/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/everything/GCRF/LC-39A pad ENU",
+   "meters": 0.01463215734554988
+  },
+  {
+   "key": "scenario/everything/GCRF/Lunar site",
+   "meters": 0.5221784066772581
+  },
+  {
+   "key": "scenario/everything/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/everything/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/everything/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/everything/GCRF/Mast sensor",
+   "meters": 10.00952352968382
+  },
+  {
+   "key": "scenario/everything/GCRF/Ship body",
+   "meters": 10.00000877012173
+  },
+  {
+   "key": "scenario/everything/GCRF/Shoulder",
+   "meters": 0.014769609689127012
+  },
+  {
+   "key": "scenario/everything/GCRF/Tool",
+   "meters": 0.01532039511272974
+  },
+  {
+   "key": "scenario/everything/GCRF/Wrist",
+   "meters": 0.015250194379617887
+  },
+  {
+   "key": "scenario/everything/GCRF/orion",
+   "meters": 9.953909112924899
+  },
+  {
+   "key": "scenario/everything/ICRF/Arm base",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Base yaw",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/DSS-43 ENU",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Elbow",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/LC-39A pad ENU",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Lunar site",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Mast sensor",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Ship body",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Shoulder",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Tool",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/Wrist",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ICRF/orion",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ITRF/Arm base",
+   "meters": 0.002
+  },
+  {
+   "key": "scenario/everything/ITRF/Base yaw",
+   "meters": 0.002009975124224178
+  },
+  {
+   "key": "scenario/everything/ITRF/DSS-43 ENU",
+   "meters": 0.1
+  },
+  {
+   "key": "scenario/everything/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/everything/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/everything/ITRF/Elbow",
+   "meters": 0.0030024660198817704
+  },
+  {
+   "key": "scenario/everything/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/everything/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/everything/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/everything/ITRF/LC-39A pad ENU",
+   "meters": 0
+  },
+  {
+   "key": "scenario/everything/ITRF/Lunar site",
+   "meters": 0.5221784066772581
+  },
+  {
+   "key": "scenario/everything/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/everything/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/everything/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/everything/ITRF/Mast sensor",
+   "meters": 10.009514767827994
+  },
+  {
+   "key": "scenario/everything/ITRF/Ship body",
+   "meters": 10
+  },
+  {
+   "key": "scenario/everything/ITRF/Shoulder",
+   "meters": 0.002009975124224178
+  },
+  {
+   "key": "scenario/everything/ITRF/Tool",
+   "meters": 0.004540163249562206
+  },
+  {
+   "key": "scenario/everything/ITRF/Wrist",
+   "meters": 0.004297318548859916
+  },
+  {
+   "key": "scenario/everything/ITRF/orion",
+   "meters": 9.953909112924899
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/moon-from-here/GCRF/Sacramento ENU",
+   "meters": 0.013110766166879421
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ICRF/Sacramento ENU",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/moon-from-here/ITRF/Sacramento ENU",
+   "meters": 0
+  },
+  {
+   "key": "scenario/one-path/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/one-path/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/one-path/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/one-path/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/one-path/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/one-path/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/one-path/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/one-path/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/one-path/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/one-path/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/one-path/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/one-path/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/one-path/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/one-path/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/one-path/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/Arm base",
+   "meters": 0.014768210067269609
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/Base yaw",
+   "meters": 0.014769609689127012
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/Elbow",
+   "meters": 0.014937091045638628
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/LC-39A pad ENU",
+   "meters": 0.01463215734554988
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/Shoulder",
+   "meters": 0.014769609689127012
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/Tool",
+   "meters": 0.01532039511272974
+  },
+  {
+   "key": "scenario/robot-arm/GCRF/Wrist",
+   "meters": 0.015250194379617887
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/Arm base",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/Base yaw",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/Elbow",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/LC-39A pad ENU",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/Shoulder",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/Tool",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ICRF/Wrist",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/Arm base",
+   "meters": 0.002
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/Base yaw",
+   "meters": 0.002009975124224178
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/Elbow",
+   "meters": 0.0030024660198817704
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/LC-39A pad ENU",
+   "meters": 0
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/Shoulder",
+   "meters": 0.002009975124224178
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/Tool",
+   "meters": 0.004540163249562206
+  },
+  {
+   "key": "scenario/robot-arm/ITRF/Wrist",
+   "meters": 0.004297318548859916
+  },
+  {
+   "key": "scenario/ship/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/ship/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/ship/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/ship/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/ship/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/ship/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/ship/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/ship/GCRF/Mast sensor",
+   "meters": 10.00952353064328
+  },
+  {
+   "key": "scenario/ship/GCRF/Ship body",
+   "meters": 10.000008771086133
+  },
+  {
+   "key": "scenario/ship/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/Mast sensor",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ICRF/Ship body",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/ship/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/ship/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/ship/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/ship/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/ship/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/ship/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/ship/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/ship/ITRF/Mast sensor",
+   "meters": 10.009514767827994
+  },
+  {
+   "key": "scenario/ship/ITRF/Ship body",
+   "meters": 10
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/Lunar site",
+   "meters": 0.5221784066772581
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/stand-on-moon/GCRF/MOON_PA",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/EARTH_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/EME2000",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/GCRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/ITRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/Lunar site",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/MOON_ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/MOON_ME",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ICRF/MOON_PA",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/EARTH_ICRF",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/EME2000",
+   "meters": 0.01
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/GCRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/HCRS",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/ICRF",
+   "meters": null
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/ITRF",
+   "meters": 0
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/Lunar site",
+   "meters": 0.5221784066772581
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/MOON_ICRF",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/MOON_ME",
+   "meters": 0.03162277660168379
+  },
+  {
+   "key": "scenario/stand-on-moon/ITRF/MOON_PA",
+   "meters": 0.03162277660168379
+  }
+ ]
+}

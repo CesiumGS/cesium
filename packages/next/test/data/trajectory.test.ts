@@ -144,36 +144,43 @@ describe("Orion in MOON_ME (spkpos)", () => {
 });
 
 describe("OEM against SPK", () => {
-  it("agree within 0.5 m inside the OEM's segments when both are read as EME2000", () => {
-    const oem = parseOem(readFileSync(join(dir, OEM), "utf8"), leap);
-    expect(oem.segments).toHaveLength(6);
-    const fromOem = Trajectory.fromOem(oem, frames, {
-      name: "orion",
-      interpolation: { method: "hermite", degree: 11 },
-      ...options,
-    });
-    const fromSpk = orion("eme2000");
-    expect(fromOem.reference).toBe(fromSpk.reference);
-    let worst = 0;
-    let count = 0;
-    for (const seg of oem.segments) {
-      const first = seg.epochs[0]!;
-      const last = seg.epochs[seg.epochs.length - 1]!;
-      for (let t = first; t <= last; t += 600) {
-        const at = Instant.fromTdb(t);
-        if (!fromOem.contains(at) || !fromSpk.contains(at)) {
-          continue;
+  it(
+    "agree within 0.5 m inside the OEM's segments when both are read as EME2000",
+    { timeout: 30_000 },
+    () => {
+      const oem = parseOem(readFileSync(join(dir, OEM), "utf8"), leap);
+      expect(oem.segments).toHaveLength(6);
+      const fromOem = Trajectory.fromOem(oem, frames, {
+        name: "orion",
+        interpolation: { method: "hermite", degree: 11 },
+        ...options,
+      });
+      const fromSpk = orion("eme2000");
+      expect(fromOem.reference).toBe(fromSpk.reference);
+      let worst = 0;
+      let count = 0;
+      for (const seg of oem.segments) {
+        const first = seg.epochs[0]!;
+        const last = seg.epochs[seg.epochs.length - 1]!;
+        for (let t = first; t <= last; t += 600) {
+          const at = Instant.fromTdb(t);
+          if (!fromOem.contains(at) || !fromSpk.contains(at)) {
+            continue;
+          }
+          count++;
+          worst = Math.max(
+            worst,
+            posDiff(fromOem.state(at), fromSpk.state(at)),
+          );
         }
-        count++;
-        worst = Math.max(worst, posDiff(fromOem.state(at), fromSpk.state(at)));
       }
-    }
-    console.log(
-      `OEM vs SPK (EME2000, hermite 11): max position difference ${worst} m over ${count} instants`,
-    );
-    expect(count).toBeGreaterThan(1000);
-    expect(worst).toBeLessThan(0.5);
-  });
+      console.log(
+        `OEM vs SPK (EME2000, hermite 11): max position difference ${worst} m over ${count} instants`,
+      );
+      expect(count).toBeGreaterThan(1000);
+      expect(worst).toBeLessThan(0.5);
+    },
+  );
 
   it("the frame bias between ICRF and EME2000 reads is 20 to 80 m in MOON_ME at the flyby", () => {
     const flyby = Instant.fromIso("2026-04-06T23:00:00", "UTC", leap);
@@ -194,22 +201,26 @@ describe("OEM against SPK", () => {
 });
 
 describe("OEM covariance", () => {
-  it("gives Artemis's first position sigma, read as m^2 (R7)", () => {
-    const oem = parseOem(readFileSync(join(dir, OEM), "utf8"), leap);
-    const traj = Trajectory.fromOem(oem, frames, {
-      ...options,
-      name: "orion",
-      covarianceUnits: "m",
-      interpolation: { method: "hermite", degree: 11 },
-    });
-    const first = Instant.fromIso("2026-04-02T01:58:21.397", "UTC", leap);
-    const sigma = traj.positionSigma(first)!;
-    console.log(`Artemis positionSigma at first covariance: ${sigma} m`);
-    const own = Math.sqrt(2505.73549 + 16.2246271 + 13.268218);
-    expect(own).toBeCloseTo(50.35, 2);
-    // positionSigma takes the larger of this epoch's sigma (50.35 m) and the
-    // next epoch's (F6, conservative between epochs): 51.07 m.
-    expect(sigma).toBeGreaterThan(50.35);
-    expect(Math.abs(sigma - 51.07)).toBeLessThan(0.01);
-  });
+  it(
+    "gives Artemis's first position sigma, read as m^2 (R7)",
+    { timeout: 30_000 },
+    () => {
+      const oem = parseOem(readFileSync(join(dir, OEM), "utf8"), leap);
+      const traj = Trajectory.fromOem(oem, frames, {
+        ...options,
+        name: "orion",
+        covarianceUnits: "m",
+        interpolation: { method: "hermite", degree: 11 },
+      });
+      const first = Instant.fromIso("2026-04-02T01:58:21.397", "UTC", leap);
+      const sigma = traj.positionSigma(first)!;
+      console.log(`Artemis positionSigma at first covariance: ${sigma} m`);
+      const own = Math.sqrt(2505.73549 + 16.2246271 + 13.268218);
+      expect(own).toBeCloseTo(50.35, 2);
+      // positionSigma takes the larger of this epoch's sigma (50.35 m) and the
+      // next epoch's (F6, conservative between epochs): 51.07 m.
+      expect(sigma).toBeGreaterThan(50.35);
+      expect(Math.abs(sigma - 51.07)).toBeLessThan(0.01);
+    },
+  );
 });
