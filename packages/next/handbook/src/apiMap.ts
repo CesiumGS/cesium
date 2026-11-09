@@ -896,6 +896,8 @@ export const API_ROWS: readonly ApiRow[] = [
     supporting: [
       "PostStageOptions",
       "PostStageError",
+      "astrophotoCurveStage",
+      "astroCurve",
       "StageSlot",
       "StageKind",
       "StageRead",

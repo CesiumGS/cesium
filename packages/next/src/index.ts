@@ -109,6 +109,7 @@ export {
   type StageRead,
   type StageSlot,
 } from "./scene/postStage.ts";
+export { astroCurve, astrophotoCurveStage } from "./render/post/astroCurve.ts";
 export {
   POST_STAGE_BOUNDARY,
   type Boundary,

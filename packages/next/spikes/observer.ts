@@ -6,6 +6,8 @@ import type { Harness } from "../lab/harness.ts";
 import {
   Engine,
   OffscreenTarget,
+  astroCurve,
+  astrophotoCurveStage,
   createPostStage,
   type Exposure,
   type MeshData,
@@ -50,6 +52,8 @@ export interface ObserverResult {
   /** Validation errors and uncaptured ones from the device. */
   deviceErrors: string[];
   passed: boolean;
+  /** With `?stills`: PNG data URLs, for looking at. */
+  stills: Record<string, string>;
 }
 
 /** One small scene and its target: a quad filling the view's middle. */
@@ -400,8 +404,164 @@ async function stagesGroup(engine: Engine, say: Say): Promise<void> {
   }
 }
 
-const GROUPS: Record<string, (engine: Engine, say: Say) => Promise<void>> = {
+/** present.slang's `pbrNeutral`, for one color. */
+function pbrNeutral(c: readonly number[]): number[] {
+  const x = Math.min(...c);
+  const offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+  const color = c.map((v) => v - offset);
+  const peak = Math.max(...color);
+  if (peak < 0.76) {
+    return color;
+  }
+  const d = 1 - 0.76;
+  const newPeak = 1 - (d * d) / (peak + d - 0.76);
+  const g = 1 - 1 / (0.15 * (peak - newPeak) + 1);
+  return color.map(
+    (v) => (v * newPeak) / peak + g * (newPeak - (v * newPeak) / peak),
+  );
+}
+
+const srgb = (v: number) =>
+  255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+
+/** What the curve's shader does to an exposed color, at full strength. */
+function curved(c: readonly number[]): number[] {
+  const y = 0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!;
+  const out = astroCurve(y, 1);
+  const ratio = out / Math.max(y, 1e-6);
+  return c.map((v) => Math.max(out + (v * ratio - out) * 1.4, 0));
+}
+
+/** The largest difference between a pixel and a color we expect, /255. */
+const off = (pixel: readonly number[], color: readonly number[]) =>
+  Math.max(...color.map((v, k) => Math.abs(srgb(v) - pixel[k]!)));
+
+async function curveGroup(
+  engine: Engine,
+  say: Say,
+  stills: Record<string, string>,
+): Promise<void> {
+  {
+    // Known light at the slot's input, from a stage: no units, so exposed light
+    // is this. A bright pixel for the Earth, a faint one for a star.
+    const LEVELS = [
+      ["an Earth pixel", 0.4],
+      ["a star pixel", 0.012],
+    ] as const;
+    const scene = new Scene(engine, {
+      background: "color",
+      exposure: { scale: 1 },
+    });
+    scene.view.observer.stages = [
+      stage(
+        "pattern",
+        "scene",
+        `_ = c;
+        return vec4<f32>(vec3<f32>(select(${LEVELS[1][1]}, ${LEVELS[0][1]}, input.pixel.x < ${WIDTH / 2})), 1.0);`,
+      ),
+    ];
+    const before = await image(engine, scene);
+    const pattern = scene.view.observer.stages[0]!;
+    scene.view.observer.stages = [pattern, astrophotoCurveStage()];
+    const after = await image(engine, scene);
+    for (const [i, [name, level]] of LEVELS.entries()) {
+      // Above and below the quad: its unlit color isn't in the chain.
+      const x = i === 0 ? 4 : WIDTH - 4;
+      const was = at(before, x, 4);
+      const now = at(after, x, 4);
+      const gray = astroCurve(level, 1);
+      const wasOff = off(was, pbrNeutral([level, level, level]));
+      const nowOff = off(now, pbrNeutral([gray, gray, gray]));
+      say(
+        `${name} changes by what astroCurve says`,
+        wasOff <= 2 && nowOff <= 2,
+        `${level} → ${gray.toFixed(4)}: ${was[1]} → ${now[1]}; within ${nowOff.toFixed(2)}/255`,
+      );
+    }
+    scene.dispose();
+  }
+  {
+    // A real sky, by a camera: a colored pixel, saturation included, and the meter.
+    const scene = new Scene(engine, {
+      background: "atmosphere",
+      exposure: { ev100: 12 },
+    });
+    const read = scene.view.readHdr();
+    const before = await image(engine, scene);
+    const hdr = await read;
+    const curve = astrophotoCurveStage();
+    scene.view.observer.stages = [curve];
+    const after = await image(engine, scene);
+    const scale = 1 / (1.2 * 2 ** 12);
+    const i = (4 * WIDTH + 4) * 4;
+    const light = [hdr.data[i]!, hdr.data[i + 1]!, hdr.data[i + 2]!];
+    const exposed = light.map((v) => v * scale);
+    const wasOff = off(at(before, 4, 4), pbrNeutral(exposed));
+    const nowOff = off(at(after, 4, 4), pbrNeutral(curved(exposed)));
+    say(
+      "a sky pixel's color changes as the curve's rule says",
+      wasOff <= 2 && nowOff <= 2,
+      `exposed ${exposed.map((v) => v.toFixed(3)).join(", ")}: ${at(before, 4, 4).slice(0, 3).join(", ")} → ${at(after, 4, 4).slice(0, 3).join(", ")}; within ${nowOff.toFixed(2)}/255`,
+    );
+    scene.dispose();
+  }
+  {
+    const scene = new Scene(engine, {
+      background: "atmosphere",
+      exposure: { auto: true, speed: 1000 },
+    });
+    const settle = async () => {
+      for (let i = 0; i < 30; i++) {
+        engine.renderFrame();
+        await engine.gpu.device.queue.onSubmittedWorkDone();
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      return scene.view.readout().ev100!;
+    };
+    const before = await settle();
+    scene.view.observer.stages = [astrophotoCurveStage()];
+    await image(engine, scene);
+    const after = await settle();
+    say(
+      "the meter's reading doesn't change",
+      Math.abs(after - before) < 0.02,
+      `EV100 ${before.toFixed(3)} → ${after.toFixed(3)}`,
+    );
+    scene.dispose();
+  }
+  if (params.has("stills")) {
+    // A low sun, by a camera: for the owner's eye. Plain sky and a quad only.
+    const saved = Float64Array.from(engine.sunDirection);
+    engine.sunDirection.set([0.04, 1, 0.3]);
+    const scene = new Scene(engine, {
+      background: "atmosphere",
+      exposure: { ev100: 3 },
+    });
+    stills.before = await still(await image(engine, scene));
+    scene.view.observer.stages = [astrophotoCurveStage()];
+    stills.after = await still(await image(engine, scene));
+    scene.dispose();
+    engine.sunDirection.set(saved);
+  }
+}
+
+/** A target's image as a PNG data URL. */
+async function still(data: Uint8ClampedArray<ArrayBuffer>): Promise<string> {
+  const canvas = new OffscreenCanvas(WIDTH, HEIGHT);
+  canvas
+    .getContext("2d")!
+    .putImageData(new ImageData(data, WIDTH, HEIGHT), 0, 0);
+  const blob = await canvas.convertToBlob({ type: "image/png" });
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  return `data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`;
+}
+
+const GROUPS: Record<
+  string,
+  (engine: Engine, say: Say, stills: Record<string, string>) => Promise<void>
+> = {
   stages: stagesGroup,
+  curve: curveGroup,
 };
 
 let root: HTMLElement;
@@ -422,6 +582,7 @@ async function runObserver(): Promise<ObserverResult> {
     deviceErrors.push((event as GPUUncapturedErrorEvent).error.message);
   });
   const checks: Check[] = [];
+  const stills: Record<string, string> = {};
   const wanted = params.get("group");
   try {
     let current = "";
@@ -444,7 +605,7 @@ async function runObserver(): Promise<ObserverResult> {
         continue;
       }
       current = group;
-      await run(engine, say);
+      await run(engine, say, stills);
     }
   } finally {
     engine.stop();
@@ -458,6 +619,7 @@ async function runObserver(): Promise<ObserverResult> {
     checks,
     deviceErrors,
     passed,
+    stills,
   };
 }
 

@@ -224,6 +224,8 @@ entry	name	kind	tier
 .	Viewport	interface	-
 .	World	class	-
 .	WorldMemory	interface	-
+.	astroCurve	function	-
+.	astrophotoCurveStage	function	-
 .	cameraObserver	function	-
 .	cartographic	function	-
 .	castTerrainRay	function	-
