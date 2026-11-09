@@ -1,8 +1,9 @@
 // @ts-check
 
-import { Matrix4, destroyObject } from "@cesium/core";
+import { destroyObject } from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
 
+/** @import { OrientedBoundingBox } from "@cesium/core"; */
 /** @import { FrameState, GeometrySource } from "@cesium/engine"; */
 /** @import { OverlayViews } from "@cesium/mesh-editor"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
@@ -80,6 +81,7 @@ class Mesh {
       module: options.module,
       mesh: this,
       style: options.style,
+      modelMatrix: this.source.worldMatrix,
     });
 
     // TODO: consider an interface that guarantees the source can be shown/hidden.
@@ -111,9 +113,19 @@ class Mesh {
   }
 
   /**
-   * Places the overlay at the source's world matrix and updates the renderer.
-   * Draws nothing when <code>show</code> is false, but still uploads the
-   * overlay views.
+   * The mesh's world-space oriented bounding box, or <code>undefined</code> if
+   * it has no vertices. Don't modify it.
+   *
+   * @type {OrientedBoundingBox|undefined}
+   * @readonly
+   */
+  get orientedBoundingBox() {
+    return this._renderer.boundingVolume;
+  }
+
+  /**
+   * Updates the renderer. Draws nothing when <code>show</code> is false, but
+   * still uploads the overlay views.
    *
    * @param {FrameState} frameState The frame state.
    * @param {OverlayViews} [overlayViews] The mesh's overlay views, if the overlay changed. Read right before this call, with no calls into wasm in between.
@@ -122,8 +134,6 @@ class Mesh {
   _update(frameState, overlayViews) {
     const renderer = this._renderer;
     renderer.show = this.show;
-    // TODO: consider an event to notify when the mesh's world matrix changes.
-    Matrix4.clone(this.source.worldMatrix, renderer.modelMatrix);
     renderer.update(frameState, overlayViews);
   }
 
