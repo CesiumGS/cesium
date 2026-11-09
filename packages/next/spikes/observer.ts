@@ -16,6 +16,8 @@ import {
   type World,
 } from "../src/index.ts";
 import { astroCurve } from "../src/render/post/astroCurve.ts";
+import type { StarField } from "../src/atmosphere/stars.ts";
+import { ev100ToScale, type PointSpread } from "../src/scene/observer.ts";
 
 const TEMPLATE = `
 <h1>The observer's chain</h1>
@@ -1000,6 +1002,159 @@ async function skyStars(engine: Engine): Promise<void> {
   engine.removeView(scene.view);
 }
 
+/** A star field of these stars (direction, illuminance, color), over black. */
+function starField(
+  stars: readonly { d: V3; lux: number; color?: V3 }[],
+): StarField {
+  const points = new Float32Array(stars.length * 8);
+  stars.forEach(({ d, lux, color = [1, 1, 1] }, i) => {
+    points.set([...d, lux, ...color, 0], i * 8);
+  });
+  return {
+    points,
+    count: stars.length,
+    backgroundLevels: Array.from({ length: 6 }, () => [new Float32Array(4)]),
+    backgroundSize: 1,
+    holdsFaintStars: false,
+    meanBackground: 0,
+  };
+}
+
+async function setStars(engine: Engine, field: StarField): Promise<void> {
+  const sky = engine.raster.sky;
+  sky.setStarField(field);
+  while (sky.advanceUpload()) {
+    /* until complete */
+  }
+}
+
+/** Luminance around (x, y), over what the ring just outside it holds. */
+function lightAround(
+  image: { width: number; data: ArrayLike<number> },
+  x: number,
+  y: number,
+  radius: number,
+  channel = (i: number) =>
+    0.2126 * image.data[i]! +
+    0.7152 * image.data[i + 1]! +
+    0.0722 * image.data[i + 2]!,
+): number {
+  let sum = 0;
+  let count = 0;
+  let ring = 0;
+  let rings = 0;
+  const [cx, cy] = [Math.floor(x), Math.floor(y)];
+  for (let py = cy - radius - 2; py <= cy + radius + 2; py++) {
+    for (let px = cx - radius - 2; px <= cx + radius + 2; px++) {
+      const v = channel((py * image.width + px) * 4);
+      if (Math.abs(px - cx) <= radius && Math.abs(py - cy) <= radius) {
+        sum += v;
+        count++;
+      } else {
+        ring += v;
+        rings++;
+      }
+    }
+  }
+  return sum - (ring / rings) * count;
+}
+
+/** Sets what `Sky.write` reads as the display's density. */
+function setPixelRatio(ratio: number): void {
+  Object.defineProperty(globalThis, "devicePixelRatio", {
+    value: ratio,
+    configurable: true,
+  });
+}
+
+/** One star on the GPU: where its light goes, at each spread and density. */
+async function pointsGroup(engine: Engine, say: Say): Promise<void> {
+  const saved = Float64Array.from(engine.sunDirection);
+  const savedRatio = globalThis.devicePixelRatio;
+  const [W, H] = [640, 360];
+  const pose = SKY_POSES.orion!;
+  const scene = new SkyScene(engine, W, H, { ev100: 0 });
+  scene.aim(pose);
+  const tanY = Math.tan(scene.view.camera.fovy(W / H) / 2);
+  const tanX = tanY * (W / H);
+  const omega = ((2 * tanY) / H) ** 2;
+  const right = sky3.norm(sky3.cross(pose.direction, pose.up));
+  const place = (share: number) =>
+    sky3.norm(sky3.add(pose.direction, right, share * tanX));
+  const render = async () => {
+    const read = scene.view.readHdr();
+    engine.renderFrame();
+    await engine.gpu.device.queue.onSubmittedWorkDone();
+    return read;
+  };
+  const LUX = 1e-3;
+  const SPREADS: [string, PointSpread][] = [
+    ["σ 0.55", { core: 0.55 }],
+    ["σ 0.85", { core: 0.85 }],
+    ["today's", { core: 0.6, wing: { sigma: 3, share: 0.05 } }],
+  ];
+  await setStars(engine, starField([{ d: place(0), lux: LUX }]));
+  for (const ratio of [1, 2]) {
+    setPixelRatio(ratio);
+    for (const [name, spread] of SPREADS) {
+      scene.view.observer.pointSpread = spread;
+      const hdr = await render();
+      const found = lightAround(hdr, W / 2, H / 2, 24) * omega;
+      say(
+        `a star's summed light in readHdr: ${name}, ratio ${ratio}`,
+        Math.abs(found / LUX - 1) < 0.01,
+        `${(found / LUX).toFixed(4)} of its illuminance`,
+      );
+    }
+  }
+  setPixelRatio(savedRatio);
+  // The spike's edge figure: 1.71 against 1.49, through the picture, at 85% of the
+  // half-width. In linear light it's the pixel's solid angle; past that, the curve.
+  scene.view.observer.pointSpread = { core: 0.85 };
+  const share = 0.85;
+  const edgeD = place(share);
+  const z = sky3.dot(edgeD, pose.direction);
+  const expected = 1 / z ** 3;
+  const edgeX = (W / 2) * (1 + share);
+  const lit = async (lux: number, d: V3, x: number) => {
+    await setStars(engine, starField([{ d, lux }]));
+    const hdr = await render();
+    return {
+      hdr: lightAround(hdr, x, H / 2, 8),
+      // Through the same curve by hand, from the same light.
+      curve: lightAround(hdr, x, H / 2, 8, (i) => {
+        const k = ev100ToScale(0);
+        const c = pbrNeutral([
+          hdr.data[i]! * k,
+          hdr.data[i + 1]! * k,
+          hdr.data[i + 2]! * k,
+        ]);
+        return 0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!;
+      }),
+      picture: await scene.target.read().then((image) =>
+        lightAround({ width: W, data: image }, x, H / 2, 8, (i) => {
+          const v = image[i + 1]! / 255;
+          return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+        }),
+      ),
+    };
+  };
+  for (const peak of [0.005, 0.02, 0.06, 0.3]) {
+    // The light that shows this share of white at the center's peak pixel.
+    const lux = (peak / ev100ToScale(0) / 0.197) * omega;
+    const center = await lit(lux, place(0), W / 2);
+    const edge = await lit(lux, edgeD, edgeX);
+    say(
+      `the edge against the center, peak ${peak} of white`,
+      Math.abs(edge.hdr / center.hdr / expected - 1) < 0.02,
+      `linear ${(edge.hdr / center.hdr).toFixed(3)} (1/z³ ${expected.toFixed(3)}); the curve by hand ${(edge.curve / center.curve).toFixed(3)}; the picture ${(edge.picture / center.picture).toFixed(3)}`,
+    );
+  }
+  scene.dispose();
+  engine.removeView(scene.view);
+  engine.sunDirection.set(saved);
+}
+
 /** The stills for the owner's review: `?stills`. */
 async function stillsGroup(
   engine: Engine,
@@ -1017,6 +1172,13 @@ async function stillsGroup(
         who === "eye" ? { eye: true, speed: 1e6 } : { ev100: pose.ev100 };
       const scene = new SkyScene(engine, 1280, 720, exposure);
       scene.aim(pose);
+      if (params.get("spread") === "today") {
+        // The spread today's quads drew with, for comparing strips with them.
+        scene.view.observer.pointSpread = {
+          core: 0.6,
+          wing: { sigma: 3, share: 0.05 },
+        };
+      }
       await ticks(engine, 40);
       const image = await (async () => {
         engine.renderFrame();
@@ -1044,6 +1206,7 @@ const GROUPS: Record<
   stages: stagesGroup,
   passes: passesGroup,
   curve: curveGroup,
+  points: pointsGroup,
   stills: stillsGroup,
 };
 

@@ -16,8 +16,37 @@
  * its order counts. What is left, low-passed in float, is the background.
  */
 
+import type { PointSpread } from "../scene/observer.ts";
+
 /** Per star: direction (ICRF, unit), illuminance (lux), color (luminance 1). */
 export const STAR_FLOATS = 8;
+
+/** The most a star's quad reaches, pixels (sky.slang `STAR_RADIUS_MAX`). */
+export const STAR_RADIUS_MAX = 64;
+
+/**
+ * How far a star's quad reaches around it, device pixels: the rule sky.slang's
+ * `starReach` holds. `brightest` is its largest channel, pre-exposed. The core's
+ * 3.5 standard deviations are a distance past the last pixel's edge, so the half
+ * pixel keeps 0.999 of its light wherever the star falls; a wing reaches as far
+ * as it stays above 0.002 of white. At most `STAR_RADIUS_MAX`.
+ */
+export function starRadius(
+  spread: PointSpread,
+  brightest: number,
+  pixelRatio: number,
+): number {
+  let radius = 3.5 * spread.core * pixelRatio + 0.5;
+  if (spread.wing && spread.wing.share > 0) {
+    const wing = spread.wing.sigma * pixelRatio;
+    const peak = (brightest * spread.wing.share) / (2 * Math.PI * wing * wing);
+    radius = Math.max(
+      radius,
+      wing * Math.sqrt(2 * Math.log(Math.max(peak / 0.002, 1))),
+    );
+  }
+  return Math.min(radius, STAR_RADIUS_MAX);
+}
 
 export interface StarField {
   /** `STAR_FLOATS` per star, brightest first. */

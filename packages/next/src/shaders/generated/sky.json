@@ -373,10 +373,43 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 316, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "starCore",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "starWing",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "starWingShare",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 320, "alignment": 16}
+                        {"kind": "uniform", "value": 336, "alignment": 16}
                     ]
                 },
                 "containerVarLayout": {
@@ -750,13 +783,46 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 316, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starCore",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starWing",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starWingShare",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 320, "alignment": 16}
+                            {"kind": "uniform", "value": 336, "alignment": 16}
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 320, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 336, "elementStride": 0}
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -1785,10 +1851,43 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 316, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starCore",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starWing",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starWingShare",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 320, "alignment": 16}
+                            {"kind": "uniform", "value": 336, "alignment": 16}
                         ]
                     },
                     "containerVarLayout": {
@@ -2162,13 +2261,46 @@
                                         ]
                                     },
                                     "binding": {"kind": "uniform", "offset": 316, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "starCore",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "starWing",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "starWingShare",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
                                 }
                             ],
                             "sizes": [
-                                {"kind": "uniform", "value": 320, "alignment": 16}
+                                {"kind": "uniform", "value": 336, "alignment": 16}
                             ]
                         },
-                        "binding": {"kind": "uniform", "offset": 0, "size": 320, "elementStride": 0}
+                        "binding": {"kind": "uniform", "offset": 0, "size": 336, "elementStride": 0}
                     },
                     "sizes": [
                         {"kind": "descriptorTableSlot", "value": 1}

@@ -17,7 +17,7 @@ import { environmentFrame } from "./environment.ts";
 import { drawsSky, drawsAerialPerspective } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
-import { ev100ToScale } from "../../scene/observer.ts";
+import { ev100ToScale, observerPointSpread } from "../../scene/observer.ts";
 import { computeAnchorEyes, writeAnchorEyes } from "../../scene/anchorEyes.ts";
 import { moonFrom } from "../../scene/lightSources.ts";
 import {
@@ -248,6 +248,7 @@ export function writeView(
       engine.sunDirection,
       view.exposureScale,
       view.sunDisk,
+      observerPointSpread(view.observer),
       "eye" in view.observer.exposure ? ev100ToScale(EYE_STARS_EV100) : 0,
       moon,
       engine.raster.viewCityLight,

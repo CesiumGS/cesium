@@ -74,6 +74,12 @@ struct Sky {
   // Device pixels per CSS pixel: the stars' point spread is sized for the
   // display as it's seen (a star a CSS pixel or two, at any density).
   float starPixel;
+  // The stars' point spread, the observer's, in CSS pixels (`starPixel`):
+  // the core's standard deviation, and a wider part's and its share of the
+  // light (0: none). A star's energy doesn't change with it.
+  float starCore;
+  float starWing;
+  float starWingShare;
 };
 
 [[vk::binding(0, 2)]] ConstantBuffer<Sky> sky;
@@ -163,14 +169,15 @@ float3 starLight(float2 pixel, float3 direction) {
 
 // A star's point spread function, in CSS pixels (`starPixel`): a sharp
 // core (a Gaussian integrated over each pixel, so its light sums to the
-// same wherever it falls: no shimmer as the view turns) and a faint wide
-// halo, glare that shows only around the bright ones (Spencer et al.
-// 1995's bloom, the eye's or a lens's scatter): a bright star, its core
-// past white, is larger, as the eye sees it.
-static const float STAR_CORE = 0.6;
-static const float STAR_HALO = 3.0;
-static const float STAR_HALO_SHARE = 0.05;
+// same wherever it falls: no shimmer as the view turns) and, if the observer
+// has one, a faint wider part (`starWing`).
 static const float STAR_MAX = 60000.0;
+// How far a star's quad reaches: the core's standard deviations and half a
+// pixel, as `starRadius` says in atmosphere/stars.ts.
+static const float STAR_CORE_REACH = 3.5;
+// The wing is drawn out to this level of white.
+static const float STAR_WING_LEVEL = 0.002;
+static const float STAR_RADIUS_MAX = 64.0;
 
 // Read by field in `starFragment`: a varying `nointerpolation` struct
 // passed whole is copied with its interpolation where WGSL forbids it.
@@ -186,9 +193,20 @@ float erfApprox(float x) {
   return sign(x) * sqrt(1.0 - exp(-x2 * (1.2732395 + 0.147 * x2) / (1.0 + 0.147 * x2)));
 }
 
-// One star as a square around it, as large as its halo stays visible at
-// the most open exposure the stars get; off screen if behind the camera or
-// too faint to show at all.
+// How far a star of pre-exposed light `brightest` reaches, device pixels:
+// `starRadius` in atmosphere/stars.ts.
+float starReach(float brightest) {
+  float radius = STAR_CORE_REACH * sky.starCore * sky.starPixel + 0.5;
+  if (sky.starWingShare > 0.0) {
+    float wing = sky.starWing * sky.starPixel;
+    float peak = brightest * sky.starWingShare / (2.0 * PI * wing * wing);
+    radius = max(radius, wing * sqrt(2.0 * log(max(peak / STAR_WING_LEVEL, 1.0))));
+  }
+  return min(radius, STAR_RADIUS_MAX);
+}
+
+// One star as a strip of 4 vertices around it, as large as its light stays
+// visible; off screen if behind the camera or too faint to show at all.
 [shader("vertex")]
 StarSplat starVertex(uint corner : SV_VertexID, uint index : SV_InstanceID) {
   StarSplat out;
@@ -213,14 +231,9 @@ StarSplat starVertex(uint corner : SV_VertexID, uint index : SV_InstanceID) {
   if (brightest * 0.4 < 1e-4) {
     return out;
   }
-  float haloSize = STAR_HALO * sky.starPixel;
-  float halo = brightest * STAR_HALO_SHARE / (2.0 * PI * haloSize * haloSize);
-  float radius = clamp(haloSize * sqrt(2.0 * log(max(halo / 0.002, 1.0))), 2.0 * sky.starPixel, 64.0);
-  float2 corners[6] = {
-    float2(-1.0, -1.0), float2(1.0, -1.0), float2(-1.0, 1.0),
-    float2(-1.0, 1.0), float2(1.0, -1.0), float2(1.0, 1.0)
-  };
-  float2 p = pixel + corners[corner] * radius;
+  float radius = starReach(brightest);
+  float2 side = float2(float(corner & 1u), float(corner >> 1u)) * 2.0 - 1.0;
+  float2 p = pixel + side * radius;
   out.position = float4(p.x / sky.size.x * 2.0 - 1.0, 1.0 - p.y / sky.size.y * 2.0, 0.0, 1.0);
   out.center = pixel;
   out.light = light;
@@ -230,14 +243,16 @@ StarSplat starVertex(uint corner : SV_VertexID, uint index : SV_InstanceID) {
 [shader("fragment")]
 float4 starFragment(StarSplat in) : SV_Target0 {
   float2 d = in.position.xy - in.center;
-  float core = STAR_CORE * sky.starPixel;
-  float haloSize = STAR_HALO * sky.starPixel;
-  float s = 1.0 / (sqrt(2.0) * core);
+  float s = 1.0 / (sqrt(2.0) * sky.starCore * sky.starPixel);
   float sharp = 0.25
       * (erfApprox((d.x + 0.5) * s) - erfApprox((d.x - 0.5) * s))
       * (erfApprox((d.y + 0.5) * s) - erfApprox((d.y - 0.5) * s));
-  float halo = exp(-dot(d, d) / (2.0 * haloSize * haloSize)) / (2.0 * PI * haloSize * haloSize);
-  return float4(in.light * lerp(sharp, halo, STAR_HALO_SHARE), 0.0);
+  if (sky.starWingShare > 0.0) {
+    float wing = sky.starWing * sky.starPixel;
+    float halo = exp(-dot(d, d) / (2.0 * wing * wing)) / (2.0 * PI * wing * wing);
+    sharp = lerp(sharp, halo, sky.starWingShare);
+  }
+  return float4(in.light * sharp, 0.0);
 }
 
 // The exposure the stars are shown at against `background` (pre-exposed,

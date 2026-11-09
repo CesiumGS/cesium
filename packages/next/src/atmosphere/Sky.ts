@@ -7,6 +7,7 @@ import * as v3 from "../math/vec3.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Camera } from "../scene/Camera.ts";
+import type { PointSpread } from "../scene/observer.ts";
 import { STAR_FLOATS, type StarField } from "./stars.ts";
 import {
   MOON_ALBEDO,
@@ -18,7 +19,7 @@ import {
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the `Sky` uniform (sky.slang). */
-const SKY_SIZE = 320;
+const SKY_SIZE = 336;
 /** The Earth's geometric albedo (earthshine on the Moon). */
 const EARTH_ALBEDO = 0.367;
 /** Bytes between the environment faces' `Sky` uniforms. */
@@ -91,6 +92,9 @@ export interface MoonView {
    */
   airShare: number;
 }
+
+/** The narrowest point spread drawn, CSS pixels. */
+const MIN_SPREAD = 0.05;
 
 /** Floats of points written a tick: 4 MB. */
 const STAR_UPLOAD_FLOATS = 1 << 20;
@@ -740,7 +744,7 @@ export class Sky {
       pass.setBindGroup(1, this.empty);
       pass.setBindGroup(2, view.group);
       pass.setBindGroup(3, this.starSplatGroup);
-      pass.draw(6, this.starCount);
+      pass.draw(4, this.starCount);
     }
     pass.end();
   }
@@ -1158,7 +1162,7 @@ export class Sky {
             },
           ],
         },
-        primitive: { topology: "triangle-list" },
+        primitive: { topology: "triangle-strip" },
       }),
       device.createRenderPipelineAsync({
         label: "sky.aerialScreen",
@@ -1286,7 +1290,8 @@ export class Sky {
   /**
    * Writes a view's uniform: its camera (Earth-fixed, meters), the sun
    * (unit, Earth-fixed), the pre-exposure, whether the sun's disk shows,
-   * the stars' exposure against a dark sky (0: the view's) and the Moon
+   * the observer's point spread for the stars, the stars' exposure against
+   * a dark sky (0: the view's) and the Moon
    * as the camera sees it (undefined: none).
    *
    * The atmosphere is a sphere; the camera sits on it at its height above
@@ -1303,6 +1308,7 @@ export class Sky {
     sun: ArrayLike<number>,
     exposure: number,
     sunDisk: boolean,
+    pointSpread: PointSpread,
     starExposure = 0,
     moon?: MoonView,
     cityLight = 0,
@@ -1314,6 +1320,12 @@ export class Sky {
     // thin shell of atmosphere left above.
     view.inside = r < (p.topRadius - 1000) / 1000;
     f[79] = globalThis.devicePixelRatio ?? 1;
+    // Above 0, so a value set by hand can't divide by zero in the shader.
+    const { core, wing } = pointSpread;
+    const wingOn = wing !== undefined && wing.share > 0 && wing.sigma > 0;
+    f[80] = Math.max(core, MIN_SPREAD);
+    f[81] = wingOn ? Math.max(wing.sigma, MIN_SPREAD) : 0;
+    f[82] = wingOn ? Math.min(wing.share, 1) : 0;
     if (!view.inside) {
       // From above, the sky is marched where the ellipsoid is the ground
       // sphere (sky.slang `marchedSky`): the sphere under the camera alone
@@ -1397,7 +1409,7 @@ export class Sky {
     f[21] = height;
     f[22] = SKY_STEPS;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
-    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 96);
+    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 112);
   }
 
   /** The weights (bytes 96 on) are constant: written once per view. */
