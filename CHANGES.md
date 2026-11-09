@@ -14,11 +14,14 @@
 
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+- Added `ControllerHost.controllers` to get the controllers registered to a scene. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
 
 #### Fixes :wrench:
 
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
 - Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
+- Fixed camera controllers continuing to move with leftover inertia after being re-enabled, and `HybridScreenSpacePanCameraController.enabled` not enabling or disabling the map and elevator controllers it switches between. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
+- Fixed `ScreenSpaceZoomCameraController.usePointerPosition` having no effect and zooming in the wrong direction when nothing is picked near the ellipsoid surface. Fixed `ScreenSpaceTiltOrbitCameraController` misbehaving with damping enabled when `orbitMagnitude` or `tiltMagnitude` is negative; negative values now reverse the orbit or tilt direction. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
 
 ## 1.147 - 2026-11-02
 
