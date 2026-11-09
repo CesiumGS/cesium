@@ -8530,6 +8530,14 @@ Not designed. A question to take up in its own session, then add to this plan: e
 
 Not designed. Custom post-processing stages should be exposed through a proper public interface, and FXAA and ambient occlusion should be built on that interface, to flesh it out and prove it. Maybe this needs a graph-based compositing structure, as other engines have. `src/render/FrameGraph.ts` already orders the passes internally, so the question is what to expose and how a stage declares what it reads and writes. It should use the shader linker's named boundaries, and it replaces 1.x's `PostProcessStage`. Also consider where a stage sits relative to exposure and tone mapping (scene-referred or display-referred), and depth and id access.
 
+**Glare in the graph (owner, 2026-11-08; a sketch, to design with this section).** Glare isn't only a sky feature: sun glare on the Earth matters as much as the stars', so it belongs in post-processing, on the same public stage interface. What it has to settle:
+
+- **Order.** Scene and composite in linear HDR, the meter reads, then glare, then tone mapping, then FXAA. Glare doesn't feed the meter. Temporal passes, if clouds bring the first one, and any upscale need a place in this order too.
+- **Inputs.** The veil reads the HDR image. Spike sprites read a list of bright sources (stars, planets, the sun, the Moon, maybe glints), each with its own visibility. The sun is a known source with a true luminance, and the image clamps pre-exposed values at 60,000, so its energy can't come only from pixels.
+- **Sun spikes under occlusion.** A sprite takes one visibility value, and the sun is bright enough for a truss to show across its spikes. A directional blur over bright pixels is one option. To test.
+- **Who owns the settings.** The eye's veil and a lens's spikes differ, so the settings belong to the observer (eye or camera) on a view, per view, with a cost tier for each. Multiple views need their own pyramids, or shared ones where sizes match.
+- **What a host application can replace.** A stage declares what it reads and writes, as the rest of §13.22 asks.
+
 ### 13.23 Risk: indirect draws on Intel integrated GPUs (found 2026-11-08)
 
 Not yet tested. Intel's article 000102979 ("Simple WebGPU application Hangs with Indirect Draw Calls on UHD 700 and Iris Xe iGPUs", last reviewed July 2026) reports a hang with `DXGI_ERROR_DEVICE_REMOVED` on Windows 11, with no fix or workaround, and no driver or draw pattern named. This engine renders with indirect draws by default. All results so far come from two adapters, an NVIDIA RTX 3000 Ada laptop and an Apple M2, with none from Intel or AMD. Do before relying on any reach claim:
@@ -8630,7 +8638,8 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 
 - **Sunrise and sunset:** Manhattanhenge, Stonehenge's solstice sunrise, Angkor Wat at the equinox, the Grand Canyon, alpenglow on Everest.
 - **The air:** one place across the aerosol types (continental, urban, maritime, desert) and a range of visibility: a clean mountain morning, a hazy city, a desert dusk, a sea sunset. The Belt of Venus and the Earth's shadow at twilight.
-- **The Moon:** a moonrise behind a skyline through a long lens, with its true size; a total solar eclipse from the ground, with stars and the Moon's shadow; the same eclipse's shadow from orbit.
+- **The Moon:** a moonrise behind a skyline through a long lens, with its true size.
+- **Eclipses (owner):** a total solar eclipse from the ground, with stars and the Moon's shadow; the same shadow crossing the Earth from orbit; an annular eclipse; a total lunar eclipse, the Moon lit red by every sunset on Earth at once. Real dates from the ephemeris. The research found the zenith two to three orders too bright with today's sky terms, and the lunar one needs light refracted through the Earth's atmosphere, so both need work of their own.
 - **Astrophotography:** the Milky Way's core over a dark site, Orion with a planet, the zodiacal light, star trails.
 - **From space:** Earthrise (Apollo 8, 1968), the Blue Marble, the limb with airglow, the terminator over mountains, city lights from orbit, and Artemis II's views, whose trajectory we already have.
 - **Balloons:** a mass ascension at sunrise, in the manner of the Albuquerque International Balloon Fiesta: Cesium's balloon model instanced by the hundreds at varied heights and tints, over the Rio Grande valley with the Sandia Mountains behind, in low golden light with long shadows. Also Cappadocia. It shows instancing, shadows and the air together.
@@ -8655,6 +8664,8 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 **Limits to keep in mind:** Google's tiles are live-stream only here: publishing images isn't cleared, so presets using them stream with attribution and no stills go in the handbook. Sky data follows the R&D rules in §13.29. Content for specific sites needs its own license check.
 
 **Clouds are in scope (owner, 2026-11-08),** and need a design of their own: a sunset's look comes from clouds lit from below by a low sun, which a 2D layer can't show well.
+
+**Cloud types (owner).** The gallery wants many looks, so a preset needs to name what's in the sky: WMO's genera and useful species, at altitudes and with structure that's right for each. Research is under way, on how production systems encode type and which clouds need another method, such as thin ice clouds. Report: `.superpowers/reports/Clouds and crepuscular rays.md` (untracked).
 
 **Shutter time, for star trails and more.** `View.exposure` today is one number, with no notion of duration, so a long exposure needs a camera shutter with a length. How to draw it is undecided: accumulating renders in HDR across the shutter is the physical path and takes many renders, and drawing arcs analytically is cheap but the owner doubts it's physical and expects it to interact poorly with the rest of the system. Think it through when 5e gets there. Real-time motion blur from a velocity buffer is a separate effect (§13.22).
 
