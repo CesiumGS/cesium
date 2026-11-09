@@ -55,7 +55,7 @@ import type { FeatureTable } from "../io/gltfTypes.ts";
 import { featureName, featureProperties } from "../io/features.ts";
 import type { RenderContext, SurfaceKey } from "./RenderContext.ts";
 import type { CustomShader } from "./CustomShader.ts";
-import { PointCuller } from "./PointCuller.ts";
+import type { PointCuller } from "./PointCuller.ts";
 import { stringIds } from "./stringIds.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
 import type { LightHandle, LightOptions } from "./lights.ts";
@@ -143,6 +143,15 @@ import {
   setPlacement,
   drawPlacement,
 } from "./world/placements.ts";
+import {
+  createSplats,
+  POINT_CULL_BYTES,
+  pointGroup,
+  setPointCuller,
+  createPointCuller,
+  drawSplats,
+  writePointParams,
+} from "./world/points.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -505,12 +514,13 @@ export class World {
   get tableGeneration(): number {
     return this.instanceGeneration;
   }
-  /** Point draws by draw index: their per-view cull (pointCull.slang). */
-  private readonly pointDraws = new Map<number, PointDraw>();
-  private pointCounts: GPUBuffer;
+  /** @internal Point draws by draw index: their per-view cull (pointCull.slang). */
+  readonly pointDraws = new Map<number, PointDraw>();
+  /** @internal */
+  pointCounts: GPUBuffer;
   private readonly freePointCounters: number[] = [];
-  /** A view's point splats, a word per pixel each (pointCull.slang). */
-  private splats: {
+  /** @internal A view's point splats, a word per pixel each (pointCull.slang). */
+  splats: {
     pixels: number;
     depth: GPUBuffer;
     color: GPUBuffer;
@@ -685,7 +695,7 @@ export class World {
     );
     this.pointCounts = buffer("pointCounts", 64 * 4, storage);
     this.growPointSets(64);
-    this.splats = this.createSplats(1);
+    this.splats = createSplats(this, 1);
 
     this.createCullBindGroup();
     this.imageryPlaceholder = device
@@ -1331,7 +1341,7 @@ export class World {
         culler: undefined,
         tiny: 0,
       };
-      draw.group = this.pointGroup(draw);
+      draw.group = pointGroup(this, draw);
       this.pointDraws.set(index, draw);
     }
     const handle: DrawHandle = {
@@ -1357,13 +1367,7 @@ export class World {
     culler: PointCuller | undefined,
     tiny = 0,
   ): void {
-    const draw = this.pointDraws.get(handle.index);
-    if (!draw || !this.hasDraw(handle)) {
-      throw new Error("setPointCuller: not a point draw");
-    }
-    draw.culler = culler;
-    draw.tiny = culler ? tiny : 0;
-    this.writePointParams(draw, handle.index);
+    setPointCuller(this, handle, culler, tiny);
   }
 
   /**
@@ -1377,70 +1381,7 @@ export class World {
     uniforms: Record<string, UniformDeclaration>;
     label?: string;
   }): PointCuller {
-    return new PointCuller(this.ctx, options);
-  }
-
-  /** A point draw's group 2 (pointCull.slang), its splats the current ones. */
-  private pointGroup(draw: PointDraw): GPUBindGroup {
-    return this.ctx.device.createBindGroup({
-      label: "world.pointCull",
-      layout: this.ctx.pipelines.pointCullLayout,
-      entries: [
-        draw.params,
-        this.slabs.get(draw.mesh.slab).vertexBuffer,
-        this.pointCounts,
-        this.splats.depth,
-        this.splats.color,
-        this.splats.feature,
-      ].map((buffer, binding) => ({ binding, resource: { buffer } })),
-    });
-  }
-
-  /** Splat buffers for `pixels` (a word each), and the resolve's group. */
-  private createSplats(pixels: number): World["splats"] {
-    const { device } = this.ctx;
-    const make = (label: string) =>
-      device.createBuffer({
-        label: `world.splats.${label}`,
-        size: Math.max(4, pixels * 4),
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-      });
-    const depth = make("depth");
-    const color = make("color");
-    const feature = make("feature");
-    return {
-      pixels,
-      depth,
-      color,
-      feature,
-      group: device.createBindGroup({
-        label: "world.splats",
-        layout: this.ctx.pipelines.splatLayout,
-        entries: [depth, color, feature].map((buffer, binding) => ({
-          binding,
-          resource: { buffer },
-        })),
-      }),
-    };
-  }
-
-  /** A point draw's `PointCull` parameters. */
-  private writePointParams(draw: PointDraw, record: number): void {
-    const data = new Uint32Array(POINT_CULL_BYTES / 4);
-    const f32 = new Float32Array(data.buffer);
-    const p = draw.mesh.points;
-    data[0] = p.anchors;
-    data[1] = draw.list / 4;
-    data[2] = p.capacity;
-    data[3] = record;
-    data[4] = draw.counter;
-    data[5] = draw.batch.index;
-    data[6] = draw.tiny > 0 ? 1 : 0;
-    f32[7] = POINT_MARGIN;
-    f32[8] = draw.tiny;
-    data[9] = p.streams;
-    data[10] = p.stride;
-    this.ctx.device.queue.writeBuffer(draw.params, 0, data);
+    return createPointCuller(this, options);
   }
 
   /**
@@ -1448,13 +1389,7 @@ export class World {
    * opaque pass after them; nothing when no draw splats.
    */
   drawSplats(pass: GPURenderPassEncoder): void {
-    if (![...this.pointDraws.values()].some((d) => d.tiny > 0)) {
-      return;
-    }
-    pass.setPipeline(this.ctx.pipelines.splatResolve);
-    pass.setBindGroup(0, this.ctx.currentViewBindGroup);
-    pass.setBindGroup(1, this.splats.group);
-    pass.draw(3);
+    drawSplats(this, pass);
   }
 
   /**
@@ -1579,7 +1514,7 @@ export class World {
     const point = this.pointDraws.get(index);
     if (point) {
       point.batch = batch;
-      this.writePointParams(point, index);
+      writePointParams(this, point, index);
     }
     this.markDirty(index);
     this.bundle = undefined;
@@ -1668,7 +1603,7 @@ export class World {
     const point = this.pointDraws.get(index);
     if (point) {
       point.batch = batch;
-      this.writePointParams(point, index);
+      writePointParams(this, point, index);
     }
     this.markDirty(index);
     this.bundle = undefined;
@@ -2714,9 +2649,9 @@ export class World {
           this.splats.depth.destroy();
           this.splats.color.destroy();
           this.splats.feature.destroy();
-          this.splats = this.createSplats(pixels);
+          this.splats = createSplats(this, pixels);
           for (const draw of this.pointDraws.values()) {
-            draw.group = this.pointGroup(draw);
+            draw.group = pointGroup(this, draw);
           }
         }
         encoder.clearBuffer(this.splats.depth, 0, Math.max(4, pixels * 4));
@@ -2838,7 +2773,7 @@ export class World {
     queue.writeBuffer(this.batchBuffer, 0, table);
     this.drawArguments.writeDirect(direct);
     for (const [record, draw] of this.pointDraws) {
-      this.writePointParams(draw, record);
+      writePointParams(this, draw, record);
     }
   }
 
@@ -3318,7 +3253,7 @@ export class World {
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
       });
       for (const draw of this.pointDraws.values()) {
-        draw.group = this.pointGroup(draw);
+        draw.group = pointGroup(this, draw);
       }
     }
     // The lowest counters first.
@@ -3421,7 +3356,7 @@ export class World {
     }
     for (const draw of this.pointDraws.values()) {
       if (draw.mesh.slab === slab.id) {
-        draw.group = this.pointGroup(draw);
+        draw.group = pointGroup(this, draw);
       }
     }
     this.bundle = undefined;
@@ -3490,9 +3425,4 @@ export class World {
     }
   }
 }
-
-/** A point draw's cull parameters (pointCull.slang `PointCull`). */
-const POINT_CULL_BYTES = 48;
-/** Pixels past a view's edges a point's symbol may reach. */
-const POINT_MARGIN = 64;
 const ZERO = Float64Array.of(0, 0, 0);
