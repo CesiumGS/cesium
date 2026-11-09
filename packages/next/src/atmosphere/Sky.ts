@@ -858,7 +858,9 @@ export class Sky {
     position: ArrayLike<number>,
   ): void {
     const f = this.f32;
-    out.set(f.subarray(0, 19));
+    for (let i = 0; i < 19; i++) {
+      out[i] = f[i]!;
+    }
     out[19] = f[23]!;
     out[20] = f[20]!;
     out[21] = f[21]!;
@@ -870,13 +872,19 @@ export class Sky {
     out[29] = f[61]!;
     out[30] = f[62]!;
     const radii = ellipsoid.radii;
-    const [x, y, z] = [position[0]!, position[1]!, position[2]!];
+    const x = position[0]!;
+    const y = position[1]!;
+    const z = position[2]!;
     const distance = Math.sqrt(x * x + y * y + z * z);
-    const [ax, ay, az] = [radii[0]!, radii[1]!, radii[2]!];
+    const ax = radii[0]!;
+    const ay = radii[1]!;
+    const az = radii[2]!;
     const scaled = Math.sqrt(
       (x * x) / (ax * ax) + (y * y) / (ay * ay) + (z * z) / (az * az),
     );
-    const [nx, ny, nz] = [x / (ax * ax), y / (ay * ay), z / (az * az)];
+    const nx = x / (ax * ax);
+    const ny = y / (ay * ay);
+    const nz = z / (az * az);
     const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
     out[32] = nx / length;
     out[33] = ny / length;

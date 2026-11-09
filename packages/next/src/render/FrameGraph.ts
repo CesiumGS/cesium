@@ -32,7 +32,8 @@ export interface TextureHandle {
 }
 
 export interface TextureAllocator {
-  acquire(desc: TextureDesc): GPUTexture;
+  /** `preferred`: the texture to give back if it's free (what this handle had last). */
+  acquire(desc: TextureDesc, preferred?: GPUTexture): GPUTexture;
   release(desc: TextureDesc, texture: GPUTexture): void;
 }
 
@@ -51,6 +52,8 @@ interface Resource {
   imported?: GPUTextureView;
   texture?: GPUTexture;
   view?: GPUTextureView;
+  /** What it had last tick: bind groups made for it stay good if it has it again. */
+  last?: GPUTexture;
   lastUse: number;
 }
 
@@ -174,7 +177,8 @@ export class FrameGraph {
       return resource.imported;
     }
     if (!resource.view) {
-      resource.texture = this.allocator.acquire(resource.desc!);
+      resource.texture = this.allocator.acquire(resource.desc!, resource.last);
+      resource.last = resource.texture;
       resource.view = defaultView(resource.texture);
     }
     return resource.view;
@@ -291,8 +295,23 @@ export class TexturePool implements TextureAllocator {
     private readonly maxFreeBytes = 256 * 1024 * 1024,
   ) {}
 
-  acquire(desc: TextureDesc): GPUTexture {
-    const entry = this.bucket(desc).free.pop();
+  acquire(desc: TextureDesc, preferred?: GPUTexture): GPUTexture {
+    const { free } = this.bucket(desc);
+    // The same texture as last time, if it's free: two of one kind released in another
+    // order than they were taken would otherwise swap every tick, and every bind group
+    // holding them with them.
+    let entry: PoolEntry | undefined;
+    if (preferred) {
+      for (let i = free.length - 1; i >= 0; i--) {
+        if (free[i]!.texture === preferred) {
+          entry = free[i];
+          free[i] = free[free.length - 1]!;
+          free.pop();
+          break;
+        }
+      }
+    }
+    entry ??= free.pop();
     if (entry) {
       this.freeBytes -= entry.bytes;
       this.notePeak();

@@ -140,6 +140,30 @@ describe("in an engine", () => {
     expect(release.mock.calls.length).toBe(acquire.mock.calls.length);
   });
 
+  it("gives each target the same texture tick after tick", () => {
+    const view = addView({ ...cameraGlare(), tier: "full" });
+    engine.renderFrame();
+    const acquire = vi.spyOn(engine.raster.pool, "acquire");
+    const taken = () => {
+      acquire.mockClear();
+      engine.renderFrame();
+      return acquire.mock.calls.map(([desc], i) => [
+        desc.label,
+        acquire.mock.results[i]!.value,
+      ]);
+    };
+    const first = taken();
+    expect(first.some(([label]) => label === "post.glare.pyramid")).toBe(true);
+    expect(first.some(([label]) => label === "post.glare.veil")).toBe(true);
+    const second = taken();
+    expect(second.length).toBe(first.length);
+    second.forEach(([label, texture], i) => {
+      expect(label).toBe(first[i]![0]);
+      expect(texture, String(label)).toBe(first[i]![1]);
+    });
+    void view;
+  });
+
   it("frees a removed view's list", () => {
     const view = addView(cameraGlare());
     engine.renderFrame();
