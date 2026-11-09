@@ -15,6 +15,7 @@ import {
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import { View, type ViewOptions } from "./View.ts";
+import { PostStageError } from "./postStage.ts";
 import {
   CanvasTarget,
   OffscreenTarget,
@@ -284,8 +285,8 @@ export class Engine {
    *   bump);
    * - a view's fingerprinted state (its world, viewport, observer,
    *   lighting, background, sun disk, aerial perspective, clear color,
-   *   output encoding, tone mapping, enabled; viewport, exposure and
-   *   lighting also written in place) or a pick;
+   *   output encoding, enabled; viewport, observer and lighting also
+   *   written in place) or a pick;
    * - a world's draws, a custom shader's uniforms or textures;
    * - a tileset's content, settings or selection knobs
    *   (`tileset.selection.maximumScreenSpaceError`);
@@ -407,6 +408,22 @@ export class Engine {
     gpu.events.on("error", (error) =>
       ctx.errors.report("device", error.message),
     );
+    // A hung stage is one way to lose the device. Those that were on stay off.
+    gpu.events.on("lost", (info) => {
+      const stages = new Set(
+        this.views.flatMap((v) => v.observer.stages.filter((s) => s.enabled)),
+      );
+      const detail = `The GPU device was lost (${info.message}).`;
+      for (const stage of stages) {
+        stage.fail(new PostStageError(stage.name, "device", detail));
+        stage.enabled = false;
+      }
+      const names = [...stages].map((s) => `"${s.name}"`).join(", ");
+      ctx.errors.report(
+        "device",
+        names ? `${detail} Post stages on, now off: ${names}.` : detail,
+      );
+    });
     this.maxViews = maxViews;
     const device = ctx.device;
     this.raster.pool = new TexturePool(device);

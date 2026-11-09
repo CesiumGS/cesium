@@ -1,6 +1,7 @@
 // Shader composition (plan §3.4, step 5): units, boundaries, linkers.
 export { declarations, blankComments } from "./declarations.ts";
 export type { Declaration, DeclarationKind } from "./declarations.ts";
+export { MAX_LOOP_ITERATIONS, unguardedLoop } from "./loopGuard.ts";
 export { wgslUnit } from "./unit.ts";
 export type { ShaderUnit } from "./unit.ts";
 export {

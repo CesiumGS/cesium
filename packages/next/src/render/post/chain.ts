@@ -2,6 +2,7 @@
 // which of them feeds what in a tick. A disabled stage keeps its pass, which does
 // nothing, and acquires no texture: the next stage reads the latest one that ran.
 // Changing the list rebuilds the view's graph (`viewFrameFor`), as a resize does.
+import type { EngineErrors } from "../../gpu/EngineErrors.ts";
 import type { FrameGraph, TextureHandle } from "../FrameGraph.ts";
 import { compileFailure } from "../../shaders/link/index.ts";
 import {
@@ -105,11 +106,12 @@ const pipelineCaches = new WeakMap<GPUDevice, Map<string, StagePipeline>>();
 
 /**
  * A stage's pipeline, made once per shader, reads and slot: compiled in the
- * background, and `ready` called when it can draw. A shader the compiler refuses
- * leaves `stage.error` set, says so once, and stays undrawn.
+ * background, and `ready` called when it can draw. A shader the compiler refuses,
+ * or a pipeline the GPU does, leaves `stage.error` set, reports it in the engine's
+ * errors, and stays undrawn.
  */
 function stagePipeline(
-  device: GPUDevice,
+  { device, errors }: ChainEngine["ctx"],
   stage: PostStage,
   ready: () => void,
 ): StagePipeline {
@@ -124,8 +126,12 @@ function stagePipeline(
   const key = `${format}|${stage.reads.join()}|${linked.code}`;
   const known = cache.get(key);
   if (known) {
-    known.stages.add(stage);
-    stage.error ??= known.error;
+    if (known.error) {
+      const { field, detail } = known.error;
+      stage.fail(new PostStageError(stage.name, field, detail));
+    } else if (!known.pipeline) {
+      known.stages.add(stage);
+    }
     return known;
   }
   const FRAGMENT = GPUShaderStage.FRAGMENT;
@@ -182,7 +188,6 @@ function stagePipeline(
     if (failure !== undefined) {
       throw new PostStageError(stage.name, "shader", failure);
     }
-    entry.stages.clear();
     entry.pipeline = await device.createRenderPipelineAsync({
       label: linked.label,
       layout: device.createPipelineLayout({
@@ -199,19 +204,20 @@ function stagePipeline(
       },
       primitive: { topology: "triangle-list" },
     });
+    entry.stages.clear();
     ready();
   };
   make().catch((reason: unknown) => {
-    const error =
-      reason instanceof PostStageError
-        ? reason
-        : new PostStageError(stage.name, "shader", String(reason));
+    const compiled = reason instanceof PostStageError;
+    const error = compiled
+      ? reason
+      : new PostStageError(stage.name, "shader", String(reason));
     entry.error = error;
     for (const refused of entry.stages) {
-      refused.error = error;
+      refused.fail(new PostStageError(refused.name, error.field, error.detail));
     }
     entry.stages.clear();
-    console.error(error.message);
+    errors.report(compiled ? "shader" : "pipeline", error.message);
   });
   return entry;
 }
@@ -220,6 +226,7 @@ function stagePipeline(
 export interface ChainEngine {
   readonly ctx: {
     readonly device: GPUDevice;
+    readonly errors: Pick<EngineErrors, "report">;
     readonly pipelines: {
       chain(): Promise<ChainPipelines>;
     };
@@ -444,7 +451,7 @@ function registerStage(
   view: ChainView,
 ): void {
   const { device } = engine.ctx;
-  const made = stagePipeline(device, stage, () => engine.requestRender());
+  const made = stagePipeline(engine.ctx, stage, () => engine.requestRender());
   const sources = slot.handles;
   slot.nodes.push({
     get enabled() {

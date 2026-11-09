@@ -7,6 +7,7 @@ import {
   WgslLinker,
   blankComments,
   linkFailure,
+  unguardedLoop,
   wgslUnit,
   type LinkedModule,
   type ShaderUnit,
@@ -58,9 +59,10 @@ export class PostStageError extends Error {
     readonly stage: string,
     /** The option at fault: "slot", "shader", `uniforms.strength`. */
     readonly field: string,
-    message: string,
+    /** What's wrong with it. */
+    readonly detail: string,
   ) {
-    super(`Post stage "${stage}": ${field}: ${message}`);
+    super(`Post stage "${stage}": ${field}: ${detail}`);
   }
 }
 
@@ -86,8 +88,21 @@ export interface PostStageOptions {
    * - `uniforms.<name>`: its value `uniforms`.
    *
    * A result that isn't finite shows as 0 at that pixel.
+   *
+   * It runs on the GPU, per pixel, at full size. WebGPU can't stop a shader
+   * that doesn't end, and a hang can lose the GPU device for every
+   * application on the machine. So it's refused if it holds a `loop`, a
+   * `while`, or a `for` whose count can't be read from its header, or that
+   * runs over 256 times per pixel (`allowUnboundedLoops`). Its bindings are the
+   * engine's: a `@group` or `@binding` of its own is refused too.
    */
   shader: string | ShaderUnit;
+  /**
+   * Let the shader's loops past the check above. A hang is then on the
+   * application: the engine reports a device loss (`Engine.errors`), naming the
+   * stages that were on, and turns them off.
+   */
+  allowUnboundedLoops?: boolean;
   reads?: readonly PostStageRead[];
   /** Values it reads as `uniforms.<name>`, set with `setUniform`. */
   uniforms?: Record<string, UniformDeclaration>;
@@ -112,10 +127,13 @@ export class PostStage {
   readonly shadowGain: number;
   readonly reads: readonly PostStageRead[];
   /**
-   * Why it isn't drawn, if the GPU's compiler refused its shader: each message
-   * at its unit and line.
+   * Why it isn't drawn: what the GPU's compiler said, each message at its unit
+   * and line; why it refused the pipeline; or that the device was lost with it
+   * on. `Engine.errors` and `Engine.onError` have it too.
    */
-  error: PostStageError | undefined;
+  get error(): PostStageError | undefined {
+    return this.error_;
+  }
   /** @internal Its shader, linked with its glue and uniforms. */
   readonly module: LinkedModule;
   /** @internal Its value uniforms' layout, its contents, and their changes. */
@@ -124,6 +142,7 @@ export class PostStage {
   readonly uniformData: DataView<ArrayBuffer>;
   /** @internal */
   uniformVersion = 0;
+  private error_: PostStageError | undefined;
   private enabled_ = true;
   private readonly watchers = new Set<() => void>();
 
@@ -177,6 +196,22 @@ export class PostStage {
     const unit =
       typeof shader === "string" ? wgslUnit(`${name} shader`, shader) : shader;
     const code = blankComments(unit.code);
+    const bound = /@\s*(group|binding)\b/.exec(code);
+    if (bound) {
+      throw refuse(
+        "shader",
+        `it declares its own \`@${bound[1]}\`, and the pipeline's layout has no place for it; use \`uniforms\`.`,
+      );
+    }
+    if (!options.allowUnboundedLoops) {
+      const loop = unguardedLoop(unit.code);
+      if (loop !== undefined) {
+        throw refuse(
+          "shader",
+          `${loop}, and a shader that doesn't end can lose the GPU device. Bound it by a constant, or set \`allowUnboundedLoops\`.`,
+        );
+      }
+    }
     for (const [read, used] of Object.entries(READS)) {
       if (
         new RegExp(`\\b${used}\\b`).test(code) &&
@@ -217,6 +252,11 @@ export class PostStage {
     if (failure !== undefined) {
       throw refuse("shader", failure);
     }
+  }
+
+  /** @internal Says why it isn't drawn; a device loss turns it off too. */
+  fail(error: PostStageError): void {
+    this.error_ = error;
   }
 
   /** Whether it's drawn. A disabled stage's chain costs what it would without it. */

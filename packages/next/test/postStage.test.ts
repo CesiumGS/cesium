@@ -176,6 +176,82 @@ fn postStage(input: vec4<f32>) -> vec4<f32> {
   });
 });
 
+describe("what a stage's shader may hold", () => {
+  const body = (lines: string) => `fn postStage(input: PostInput) -> vec4<f32> {
+    ${lines}
+    return vec4<f32>(0.0);
+  }`;
+  const COUNTED = [
+    "for (var i = 0; i < 8; i++) { }",
+    "for (var i: i32 = 0; i < 8; i = i + 1) { }",
+    "for (var i = 8u; i > 0u; i -= 2u) { }",
+    "for (var i = 0; i <= 255; i++) { }",
+    "for (var i = 0; i < 16; i++) { for (var k = 0; k < 16; k++) { } }",
+  ];
+  it.each(COUNTED)("takes %s", (lines) => {
+    expect(() => stage("a", "scene", { shader: body(lines) })).not.toThrow();
+  });
+
+  it("takes a bound held in a const, and a loop named in a comment", () => {
+    const shader = `const TAPS: i32 = 12;
+    // A loop would be slower. while we're here: for (;;)
+    ${body("for (var i = 0; i < TAPS; i++) { }")}`;
+    expect(() => stage("a", "scene", { shader })).not.toThrow();
+  });
+
+  it.each<[string, string, RegExp]>([
+    [
+      "a loop that doesn't end",
+      "var n = 0u; loop { n = n | 1u; if (n == 0u) { break; } }",
+      /`loop`/,
+    ],
+    ["a while", "var n = 0; while (n < 8) { n++; }", /`while`/],
+    ["no test", "for (var i = 0; ; i++) { }", /`for` at line 2/],
+    [
+      "a bound that isn't constant",
+      "for (var i = 0; i < i32(input.size.x); i++) { }",
+      /`for` at line 2/,
+    ],
+    [
+      "a start that isn't constant",
+      "for (var i = input.pixel.x; i < 8; i++) { }",
+      /`for`/,
+    ],
+    ["a step the wrong way", "for (var i = 0; i < 8; i--) { }", /`for`/],
+    ["a step of none", "for (var i = 0; i < 8; i += 0) { }", /`for`/],
+    [
+      "a body that moves the counter",
+      "for (var i = 0; i < 8; i++) { i = 0; }",
+      /`for`/,
+    ],
+    ["too many", "for (var i = 0; i < 257; i++) { }", /257 times/],
+    [
+      "a nest of too many",
+      "for (var i = 0; i < 17; i++) { for (var k = 0; k < 16; k++) { } }",
+      /272 times/,
+    ],
+  ])("refuses %s, unless told", (_, lines, message) => {
+    const shader = body(lines);
+    const error = refusal({ shader });
+    expect(error.field).toBe("shader");
+    expect(error.message).toMatch(message);
+    expect(error.message).toContain("allowUnboundedLoops");
+    expect(() =>
+      stage("a", "scene", { shader, allowUnboundedLoops: true }),
+    ).not.toThrow();
+  });
+
+  it("refuses bindings of its own, even told about loops", () => {
+    const shader = `@group(1) @binding(0) var lut: texture_2d<f32>;
+    fn postStage(input: PostInput) -> vec4<f32> {
+      return textureLoad(lut, input.pixel, 0);
+    }`;
+    const error = refusal({ shader, allowUnboundedLoops: true });
+    expect(error.field).toBe("shader");
+    expect(error.message).toMatch(/@group/);
+  });
+});
+
 describe("the chain's order", () => {
   it("keeps list order within a slot", () => {
     const [a, b, c, d] = [
@@ -451,6 +527,63 @@ describe("a view's chain", () => {
       acquire.mock.calls.some(([d]) => (d as TextureDesc).label === "post.bad"),
     ).toBe(false);
     expect(passes(view)).toContain("post.bad");
+    expect(engine.errors).toMatchObject([
+      { kind: "shader", message: bad.error!.message },
+    ]);
+  });
+
+  it("a pipeline the GPU refuses is reported too, to the stage it was made for", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const device = engine.ctx.device;
+    const make = device.createRenderPipelineAsync.bind(device);
+    device.createRenderPipelineAsync = ((d: GPURenderPipelineDescriptor) =>
+      d.label?.includes("refused")
+        ? Promise.reject(new Error("the layout has no group 1"))
+        : make(d)) as typeof device.createRenderPipelineAsync;
+    const bad = stage("refused", "scene");
+    const view = addView();
+    view.observer.stages = [bad];
+    await tick();
+    await tick();
+    expect(bad.error).toBeInstanceOf(PostStageError);
+    expect(bad.error!.message).toContain("no group 1");
+    expect(engine.errors).toMatchObject([
+      { kind: "pipeline", message: bad.error!.message },
+    ]);
+    // One made later of the same code is told too, by its own name.
+    const same = createPostStage({
+      name: "refused too",
+      slot: "scene",
+      kind: "look",
+      label: "Refused too (a look)",
+      shader: PASS_THROUGH,
+    });
+    expect(same.error).toBeUndefined();
+    addView().observer.stages = [same];
+    await tick();
+    expect(same.error?.stage).toBe("refused too");
+    expect(same.error?.message).toContain("no group 1");
+  });
+
+  it("a lost device names the stages that were on, and they stay off", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const on = stage("on");
+    const off = stage("off");
+    off.enabled = false;
+    addView().observer.stages = [on, off];
+    await tick();
+    engine.gpu.events.emit("lost", {
+      message: "the GPU hung",
+      reason: "unknown",
+    } as GPUDeviceLostInfo);
+    const [report] = engine.errors;
+    expect(report).toMatchObject({ kind: "device" });
+    expect(report!.message).toContain("the GPU hung");
+    expect(report!.message).toContain('"on"');
+    expect(report!.message).not.toContain('"off"');
+    expect(on.enabled).toBe(false);
+    expect(on.error?.field).toBe("device");
+    expect(off.error).toBeUndefined();
   });
 
   describe("changing the list", () => {
