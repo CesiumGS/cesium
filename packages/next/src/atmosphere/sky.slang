@@ -80,6 +80,8 @@ struct Sky {
   float starCore;
   float starWing;
   float starWingShare;
+  // The star background's mip level: it softens as the field of view narrows.
+  float starBackgroundLevel;
 };
 
 [[vk::binding(0, 2)]] ConstantBuffer<Sky> sky;
@@ -175,7 +177,7 @@ float3 starLight(float2 pixel, float3 direction) {
       dot(stars.rows[0].xyz, direction),
       dot(stars.rows[1].xyz, direction),
       dot(stars.rows[2].xyz, direction));
-  float3 background = starBackground.SampleLevel(starSampler, d, 0.0).rgb * stars.rows[0].w;
+  float3 background = starBackground.SampleLevel(starSampler, d, sky.starBackgroundLevel).rgb * stars.rows[0].w;
   return starLayer.Load(int3(int2(pixel), 0)).rgb + background;
 }
 

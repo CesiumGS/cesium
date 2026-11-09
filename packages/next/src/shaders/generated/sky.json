@@ -406,6 +406,17 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "starBackgroundLevel",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
@@ -816,6 +827,17 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starBackgroundLevel",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
@@ -2015,6 +2037,17 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "starBackgroundLevel",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
@@ -2425,6 +2458,17 @@
                                         ]
                                     },
                                     "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "starBackgroundLevel",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
                                 }
                             ],
                             "sizes": [

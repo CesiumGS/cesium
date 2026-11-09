@@ -4,7 +4,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import type { Sky } from "../src/atmosphere/Sky.ts";
-import { STAR_FLOATS, starRadius } from "../src/atmosphere/stars.ts";
+import {
+  STAR_FLOATS,
+  backgroundLevel,
+  starRadius,
+} from "../src/atmosphere/stars.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { PointSpread } from "../src/scene/observer.ts";
 import { fakeEngine } from "./fakeGpu.ts";
@@ -123,6 +127,68 @@ describe("the shader", () => {
     expect(SOURCE).toMatch(
       /STAR_CORE_REACH \* sky\.starCore \* sky\.starPixel \+ 0\.5/,
     );
+  });
+});
+
+describe("the background's level", () => {
+  const tan = (fov: number) => Math.tan((fov * Math.PI) / 360);
+
+  it("is 0 at 30° and wider, and rises as the field narrows", () => {
+    expect(backgroundLevel(tan(60), 11)).toBe(0);
+    expect(backgroundLevel(tan(30), 11)).toBeCloseTo(0, 9);
+    expect(backgroundLevel(tan(15), 11)).toBeCloseTo(1, 9);
+    expect(backgroundLevel(tan(7.5), 11)).toBeCloseTo(2, 9);
+  });
+
+  it("stops at the last level, and stays finite at no field at all", () => {
+    expect(backgroundLevel(tan(0.001), 3)).toBe(2);
+    expect(backgroundLevel(0, 11)).toBe(10);
+    expect(backgroundLevel(tan(5), 1)).toBe(0);
+    expect(backgroundLevel(tan(5), 0)).toBe(0);
+  });
+
+  it("doesn't jump as the field narrows", () => {
+    // log2 steps by more than 0.01 per 0.1° below about 14°: each step is what
+    // log2 gives, and it meets 0 at 30° with no step at all.
+    for (let fov = 120; fov > 0.2; fov -= 0.1) {
+      const step = backgroundLevel(tan(fov - 0.1), 11);
+      const was = backgroundLevel(tan(fov), 11);
+      const limit = fov > 14.5 ? 0.01 : Math.log2(fov / (fov - 0.1)) + 1e-6;
+      expect(step - was).toBeLessThanOrEqual(limit);
+      expect(step).toBeGreaterThanOrEqual(was);
+    }
+  });
+
+  it("is what the shader reads, between two levels", () => {
+    expect(SOURCE).toMatch(
+      /SampleLevel\(starSampler, d, sky\.starBackgroundLevel\)/,
+    );
+    expect(SOURCE).not.toMatch(/SampleLevel\(starSampler, d, 0\.0\)/);
+    const sky = readFileSync(
+      join(import.meta.dirname, "../src/atmosphere/Sky.ts"),
+      "utf8",
+    );
+    expect(sky).toMatch(/mipmapFilter: "linear"/);
+  });
+
+  it("follows the camera in the uniform, and the field's own levels", async () => {
+    const { engine, sky, view } = await skyScene();
+    view.camera.fov = (10 * Math.PI) / 180;
+    view.camera.version++;
+    sky.setStarField({
+      points: new Float32Array(STAR_FLOATS),
+      count: 1,
+      backgroundLevels: Array.from({ length: 6 }, () => [
+        new Float32Array(16),
+        new Float32Array(4),
+      ]),
+      backgroundSize: 2,
+      holdsFaintStars: false,
+      meanBackground: 0,
+    });
+    engine.renderFrame();
+    // 64 × 36: the field of 10° is the larger, along the width.
+    expect(words(sky)[83]).toBe(1);
   });
 });
 

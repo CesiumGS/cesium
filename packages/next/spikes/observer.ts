@@ -1223,6 +1223,92 @@ async function cellsGroup(engine: Engine, say: Say): Promise<void> {
   engine.sunDirection.set(saved);
 }
 
+/** A real pack (`?pack=local`): named stars' light and color, and a slow zoom. */
+async function packGroup(engine: Engine, say: Say): Promise<void> {
+  if (params.get("pack") !== "local") {
+    say("needs ?pack=local", true, "skipped: no pack asked for");
+    return;
+  }
+  await skyStars(engine);
+  const saved = Float64Array.from(engine.sunDirection);
+  const [W, H] = [1280, 720];
+  const scene = new SkyScene(engine, W, H, { ev100: -3 });
+  const pose = { ...inSpace(sky3.dir(92, 2), NORTH, 95, -3) };
+  scene.aim(pose);
+  await ticks(engine, 3);
+  const hdrRead = scene.view.readHdr();
+  engine.renderFrame();
+  const hdr = await hdrRead;
+  const tanY = Math.tan(scene.view.camera.fovy(W / H) / 2);
+  const tanX = (tanY * W) / H;
+  const pixel = (2 * tanY) / H;
+  const right = sky3.norm(sky3.cross(pose.direction, pose.up));
+  const up = sky3.cross(right, pose.direction);
+  const light = (ra: number, dec: number) => {
+    const d = sky3.dir(ra, dec);
+    const z = sky3.dot(d, pose.direction);
+    const x = ((sky3.dot(d, right) / (z * tanX)) * 0.5 + 0.5) * W;
+    const y = (0.5 - (sky3.dot(d, up) / (z * tanY)) * 0.5) * H;
+    const omega = pixel * pixel * z * z * z;
+    const channel = (k: number) =>
+      lightAround(hdr, x, y, 6, (i) => hdr.data[i + k]!) * omega;
+    const lux = lightAround(hdr, x, y, 6) * omega;
+    return { lux, red: channel(0), blue: channel(2) };
+  };
+  // HYG v4.1's places and magnitudes, which the pack follows.
+  const sirius = light(101.28716, -16.71612);
+  const rigel = light(78.63447, -8.20164);
+  const betelgeuse = light(88.79294, 7.40706);
+  const ratio = (a: number, b: number) => 10 ** (0.4 * (b - a));
+  const close = (name: string, got: number, wanted: number) =>
+    say(
+      `${name}, summed light in readHdr`,
+      Math.abs(got / wanted - 1) < 0.05,
+      `${got.toFixed(3)} against ${wanted.toFixed(3)} from their magnitudes`,
+    );
+  close("Sirius to Rigel", sirius.lux / rigel.lux, ratio(-1.44, 0.18));
+  close("Rigel to Betelgeuse", rigel.lux / betelgeuse.lux, ratio(0.18, 0.45));
+  say(
+    "Betelgeuse is redder than Rigel",
+    betelgeuse.red / betelgeuse.blue > rigel.red / rigel.blue,
+    `red to blue: Betelgeuse ${(betelgeuse.red / betelgeuse.blue).toFixed(2)}, Rigel ${(rigel.red / rigel.blue).toFixed(2)}`,
+  );
+  scene.dispose();
+  engine.removeView(scene.view);
+
+  // 60° to 5°, a little at a time, in linear light: the largest step in the
+  // image's mean against the steps around it.
+  const zoom = new SkyScene(engine, 320, 180, { ev100: -3 });
+  const steps: number[] = [];
+  let was: number | undefined;
+  const core = { ...SKY_POSES.core! };
+  for (let fov = 60; fov >= 5; fov -= 0.5) {
+    zoom.aim({ ...core, fov });
+    const read = zoom.view.readHdr();
+    engine.renderFrame();
+    const { data } = await read;
+    let sum = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      sum += data[i + 1]!;
+    }
+    const mean = sum / (data.length / 4);
+    if (was !== undefined) {
+      steps.push(Math.abs(mean - was) / was);
+    }
+    was = mean;
+  }
+  const worst = Math.max(...steps);
+  const typical = [...steps].sort((a, b) => a - b)[steps.length >> 1]!;
+  say(
+    "a slow zoom from 60° to 5° doesn't pop",
+    worst < 0.1,
+    `largest step in the mean ${(100 * worst).toFixed(2)}%; the median ${(100 * typical).toFixed(2)}%`,
+  );
+  zoom.dispose();
+  engine.removeView(zoom.view);
+  engine.sunDirection.set(saved);
+}
+
 /** Star time: `?time`, with `?pack=local`. Bright poses, at the spike's size. */
 async function starTimes(engine: Engine, say: Say): Promise<void> {
   if (!params.has("time")) {
@@ -1315,6 +1401,7 @@ const GROUPS: Record<
   curve: curveGroup,
   points: pointsGroup,
   cells: cellsGroup,
+  pack: packGroup,
   times: starTimes,
   stills: stillsGroup,
 };

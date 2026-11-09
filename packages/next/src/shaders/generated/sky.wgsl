@@ -44,6 +44,7 @@ struct Sky_std140_0
     @align(16) starCore_0 : f32,
     @align(4) starWing_0 : f32,
     @align(8) starWingShare_0 : f32,
+    @align(4) starBackgroundLevel_0 : f32,
 };
 
 @binding(0) @group(2) var<uniform> sky_0 : Sky_std140_0;
@@ -1378,7 +1379,7 @@ fn moonDisk_0( direction_7 : vec3<f32>) -> MoonSample_0
 fn starLight_0( pixel_5 : vec2<f32>,  direction_8 : vec3<f32>) -> vec3<f32>
 {
     var _S77 : vec3<i32> = vec3<i32>(vec2<i32>(pixel_5), i32(0));
-    return (textureLoad((starLayer_0), ((_S77)).xy, ((_S77)).z)).xyz + (textureSampleLevel((starBackground_0), (starSampler_0), (vec3<f32>(dot(stars_0.rows_0[i32(0)].xyz, direction_8), dot(stars_0.rows_0[i32(1)].xyz, direction_8), dot(stars_0.rows_0[i32(2)].xyz, direction_8))), (0.0f))).xyz * vec3<f32>(stars_0.rows_0[i32(0)].w);
+    return (textureLoad((starLayer_0), ((_S77)).xy, ((_S77)).z)).xyz + (textureSampleLevel((starBackground_0), (starSampler_0), (vec3<f32>(dot(stars_0.rows_0[i32(0)].xyz, direction_8), dot(stars_0.rows_0[i32(1)].xyz, direction_8), dot(stars_0.rows_0[i32(2)].xyz, direction_8))), (sky_0.starBackgroundLevel_0))).xyz * vec3<f32>(stars_0.rows_0[i32(0)].w);
 }
 
 fn starExposure_1( background_0 : vec3<f32>,  share_0 : f32) -> f32

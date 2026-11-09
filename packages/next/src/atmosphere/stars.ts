@@ -71,6 +71,20 @@ export interface StarField {
   meanBackground: number;
 }
 
+/** At and above this vertical field of view, degrees, the background is its top level. */
+const BACKGROUND_FULL_FOV = 30;
+
+/**
+ * The background's mip level at a view's `tanY`: 0 at 30° of vertical field of view
+ * and wider, rising with `log2` as the field narrows, at most `levels − 1`. So a long
+ * lens stays soft, and a zoom doesn't pop.
+ */
+export function backgroundLevel(tanY: number, levels: number): number {
+  const fov = (2 * Math.atan(tanY) * 180) / Math.PI;
+  const level = Math.log2(BACKGROUND_FULL_FOV / fov);
+  return Math.min(Math.max(level, 0), Math.max(levels - 1, 0));
+}
+
 /** erf (sky.slang `erfApprox`: Winitzki's approximation, within 10⁻⁴). */
 const erf = (x: number): number => {
   const x2 = x * x;

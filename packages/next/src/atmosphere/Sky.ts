@@ -8,7 +8,7 @@ import { MipGenerator } from "../gpu/MipGenerator.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Camera } from "../scene/Camera.ts";
 import type { PointSpread } from "../scene/observer.ts";
-import { STAR_FLOATS, type StarField } from "./stars.ts";
+import { STAR_FLOATS, backgroundLevel, type StarField } from "./stars.ts";
 import {
   CELL_FLOATS,
   STAR_CELLS,
@@ -307,6 +307,8 @@ export class Sky {
   private readonly starCells: GPUBuffer;
   private cells: readonly StarCell[] = [];
   private illuminance: Float32Array = new Float32Array(0);
+  /** The drawn background's mip levels. */
+  private starLevels = 1;
   private readonly starCullPipeline: GPUComputePipeline;
   private readonly starCullLayout: GPUBindGroupLayout;
   private readonly starLayout: GPUBindGroupLayout;
@@ -452,8 +454,8 @@ export class Sky {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     // Filtered across the Moon map's levels, anisotropically (its disk's
-    // limb and poles squeeze it); the star background is read at its top
-    // level.
+    // limb and poles squeeze it); the star background is read at a level that
+    // follows the field of view, between two levels (`backgroundLevel`).
     this.starSampler = device.createSampler({
       magFilter: "linear",
       minFilter: "linear",
@@ -564,6 +566,7 @@ export class Sky {
       this.starsOn = 0;
       this.cells = [];
       this.illuminance = new Float32Array(0);
+      this.starLevels = 1;
       oldBackground.destroy();
       oldPoints.destroy();
       return;
@@ -639,6 +642,7 @@ export class Sky {
     this.upload = null;
     this.cells = cells.cells;
     this.illuminance = cells.illuminance;
+    this.starLevels = field.backgroundLevels[0]?.length ?? 1;
     this.device.queue.writeBuffer(
       this.starCells,
       0,
@@ -1598,6 +1602,7 @@ export class Sky {
     f[11] = tanY * aspect;
     f.set(camera.right, 12);
     f[15] = tanY;
+    f[83] = backgroundLevel(tanY, this.starLevels);
     f.set(camera.up, 16);
     f[19] = 2 * Math.PI * (1 - Math.cos(radius));
     f[20] = width;
