@@ -11,6 +11,7 @@ Rules for anyone working in this package, people and coding agents alike. The RE
   - Afterwards, check `git show --stat HEAD`. If another person's file went in, tell them rather than amending or reverting it: their working copy is still intact, and their next commit carries the rest.
 - If `.git/index.lock` exists, wait and retry rather than removing it.
 - Never commit screenshots, downloaded data, or secrets. Data lives in the setup store outside the repo (`npm run setup`; `FRAMES_DATA_DIR`). One exception: images under `handbook/` that the handbook embeds in its single HTML file. Keep them small, and check by eye that none shows a token or anything from an account.
+- A sky data pack (`npm run sky`) is derived data and never ships: it stays in the store outside the repo, and nothing made from one (an image, a binary, a base64 string, a `/sky-pack/` URL) goes in a commit, a build or the handbook. The guard in `scripts/vitePluginSkyPack.ts` refuses it in builds.
 - Never write an ion token into code, logs, URLs, test output, screenshots or builds. Examples get theirs from Dyno's token setting, or from `.env.local` in development only.
 - Node 24 (`engines`).
 

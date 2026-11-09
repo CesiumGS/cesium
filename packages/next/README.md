@@ -652,6 +652,42 @@ CRS and placement:
   throws a `GeoreferenceError` naming its JSON path, and nothing is guessed.
   The old name, `EXT_engineering_frame`, is still read, with a warning.
 
+**The observer** (`src/scene/observer.ts`, `src/render/post`). `view.observer`
+owns everything between the scene's light and a pixel: `exposure`, `toneMapping`,
+`glare` and a list of `stages`. Light stays in physical units; EV100 is the
+exposure's unit. `cameraObserver({ ev100: 15 })` is a camera set for direct sun,
+`eyeObserver()` is the eye (it adapts; its readout is an equivalent, shown as
+"≈ EV100 x"), and `view.readout()` says what the view is doing, including the
+glare tier in use and why. `DAYLIGHT_EXPOSURE`, `EYE` and `UNITLESS_EXPOSURE` are
+the usual exposures, `ev100ToScale` and `scaleToEv100` convert, and
+`observerPointSpread` gives the stars' point spread an exposure implies. Glare is
+`eyeGlare()` (a veil) or `cameraGlare()` (a veil and a lens's spikes), in tiers by
+GPU and view size. Only an M2 has been measured, and Intel figures are owed.
+
+**Post stages** (`createPostStage`, `PostStage`, `PostStageError`). A stage is one
+fullscreen WGSL function at its simplest, or declared passes over textures it
+owns, in the slot `scene` (linear, pre-exposed), `exposed` (after the response,
+before tone mapping) or `display`. Each says what it is: physics, a model of an
+eye or a lens, or a look. A look changes the picture and not the light, and
+nothing in the scene is lifted for looks. `astrophotoCurveStage()` is a look, and
+`eyeLimitStage()` is the eye's model of the faintest star it sees. A stage that
+could hang the GPU is refused at creation (loops need a constant bound), and a
+device loss turns the stages that were on off for good.
+
+**A sky pack's rule.** A pack is never shipped. Builds (`npm run build`, `build:lib`,
+`handbook`) refuse one that isn't marked `distributable: true` with a clearance,
+and the handbook holds no image or file made from one. The Viewer shows a pack's
+credits as text and warns once when it isn't cleared. `setSkyPack` takes a pack,
+`npm run sky` builds one locally.
+
+**Observer controls** (`attachObserverPanel`, `widgets/observerPanel.ts`).
+One panel for exposure (physics), optics (models: veil, spikes, the eye's limit)
+and look (tone mapping, the astrophoto curve), plus the sky data in use. Sliders
+run right for brighter, the exposure slider is in EV100, and every readout says
+EV100, never a bare scale. `examples/night-sky/` uses it. The cost of all of it
+is `bench/observerCost.html` (`node bench/run.mjs observerCost`), over synthetic
+stars that need no data.
+
 **Design globe example.** `examples/design-globe/` (in the gallery, "Design
 coordinates on the globe") shows why a long design can't be placed rigidly: a
 50 km highway in California zone 3 (US survey feet, NAVD88 through GEOID18),

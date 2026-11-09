@@ -26,78 +26,78 @@
 
 These facts drive the calls below. Where they correct an earlier note, that's said.
 
-| Finding | Evidence | Where it goes |
-| --- | --- | --- |
-| Cells plus strips is the cheapest way to draw stars at this count: 0.66 ms against 3.60 ms for today's quads | Spike, M2, 530,851 stars, 2560×1440, median of 5 runs | Tasks 8 and 9 |
-| Compute splatting doesn't pay at this count, and it needs a 44 MB buffer | Same | Not built |
-| Sprites cost 0.13 ms against 62.5 ms for the FFT, from the same kernel | Same | Task 14 |
-| The veil cost 2.75 ms composed at full size | Same; the spike notes it could be halved | Task 13 composes at half size |
-| The map clips at 1.0: Sirius, Canopus and Arcturus all read back as 0.08 | Spike | The hybrid, Task 6 |
-| A map-only pack still needs a reference catalog, since flux isn't linear in magnitude | Spike | Task 6 |
-| `STARLIGHT` counts faint stars that a deep map already holds | Spike, not isolated | Task 11 |
-| **Halved weights on a mip pyramid fall as 1/θ³, not 1/θ²** | Checked for this plan: a mip level conserves energy, so its peak falls by 4 per level. With level weights of 2⁻ⁱ, the summed profile's log-log slope is −3.00; with equal weights it's −2.00 (12 levels, r from 8 to 256 px). The paper's equation 3 has peak ∝ 1/σ², which is equal energy per level, while its section 5.1 and the spike's compose use halved weights | Task 13 uses equal energy per octave, with a test on the slope |
-| `EYE_STARS_EV100` does nothing on a moonless night | Computed from `eyeResponse`: dark-adapted, the view's pre-exposure is about 13.7, above the rule's 6.67 | The table in Task 11 |
-| The rule is 17.2 stops at a sunlit adaptation | Same: pre-exposure 4.5 × 10⁻⁵ at 4,000 cd/m² | Same |
-| An indirect draw's first instance is a silent no-op without `indirect-first-instance` | `Capabilities.indirectFirstInstance`. The spike's cells rely on it | Task 9's CPU path |
-| No gated parity suite draws the sky | `parity/main.ts`, `globe.ts`, `imagery.ts`, `tileset.ts` and `models.ts` use `background: "color"` and `UNITLESS_EXPOSURE` | So they must show no difference at any task |
-| The clamps are `SKY_MAX` 30,000 in the march and 60,000 from the table, pre-exposed, and `STAR_MAX` 60,000 cd/m² before exposure | `sky.slang`. §13.22's "60,000" is one of the three | Tasks 12 and 13 |
+| Finding                                                                                                                          | Evidence                                                                                                                                                                                                                                                                                                                                                                | Where it goes                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Cells plus strips is the cheapest way to draw stars at this count: 0.66 ms against 3.60 ms for today's quads                     | Spike, M2, 530,851 stars, 2560×1440, median of 5 runs                                                                                                                                                                                                                                                                                                                   | Tasks 8 and 9                                                  |
+| Compute splatting doesn't pay at this count, and it needs a 44 MB buffer                                                         | Same                                                                                                                                                                                                                                                                                                                                                                    | Not built                                                      |
+| Sprites cost 0.13 ms against 62.5 ms for the FFT, from the same kernel                                                           | Same                                                                                                                                                                                                                                                                                                                                                                    | Task 14                                                        |
+| The veil cost 2.75 ms composed at full size                                                                                      | Same; the spike notes it could be halved                                                                                                                                                                                                                                                                                                                                | Task 13 composes at half size                                  |
+| The map clips at 1.0: Sirius, Canopus and Arcturus all read back as 0.08                                                         | Spike                                                                                                                                                                                                                                                                                                                                                                   | The hybrid, Task 6                                             |
+| A map-only pack still needs a reference catalog, since flux isn't linear in magnitude                                            | Spike                                                                                                                                                                                                                                                                                                                                                                   | Task 6                                                         |
+| `STARLIGHT` counts faint stars that a deep map already holds                                                                     | Spike, not isolated                                                                                                                                                                                                                                                                                                                                                     | Task 11                                                        |
+| **Halved weights on a mip pyramid fall as 1/θ³, not 1/θ²**                                                                       | Checked for this plan: a mip level conserves energy, so its peak falls by 4 per level. With level weights of 2⁻ⁱ, the summed profile's log-log slope is −3.00; with equal weights it's −2.00 (12 levels, r from 8 to 256 px). The paper's equation 3 has peak ∝ 1/σ², which is equal energy per level, while its section 5.1 and the spike's compose use halved weights | Task 13 uses equal energy per octave, with a test on the slope |
+| `EYE_STARS_EV100` does nothing on a moonless night                                                                               | Computed from `eyeResponse`: dark-adapted, the view's pre-exposure is about 13.7, above the rule's 6.67                                                                                                                                                                                                                                                                 | The table in Task 11                                           |
+| The rule is 17.2 stops at a sunlit adaptation                                                                                    | Same: pre-exposure 4.5 × 10⁻⁵ at 4,000 cd/m²                                                                                                                                                                                                                                                                                                                            | Same                                                           |
+| An indirect draw's first instance is a silent no-op without `indirect-first-instance`                                            | `Capabilities.indirectFirstInstance`. The spike's cells rely on it                                                                                                                                                                                                                                                                                                      | Task 9's CPU path                                              |
+| No gated parity suite draws the sky                                                                                              | `parity/main.ts`, `globe.ts`, `imagery.ts`, `tileset.ts` and `models.ts` use `background: "color"` and `UNITLESS_EXPOSURE`                                                                                                                                                                                                                                              | So they must show no difference at any task                    |
+| The clamps are `SKY_MAX` 30,000 in the march and 60,000 from the table, pre-exposed, and `STAR_MAX` 60,000 cd/m² before exposure | `sky.slang`. §13.22's "60,000" is one of the three                                                                                                                                                                                                                                                                                                                      | Tasks 12 and 13                                                |
 
 ## Author's calls
 
 Each is marked "(author's call N)" where it's used. One line each, then what undoing it costs. In order: the observer (1 to 11), the pack (12 to 22), stars (23 to 27), removing fudges (28 to 30), glare (31 to 41), the UI (42).
 
-1. **`view.observer` replaces `view.exposure` and `view.toneMapping`, with no shim.** Nothing is released, and 5d and 5e haven't built on them yet. *Undo:* two getters.
-2. **The `Exposure` union stays as `observer.exposure`.** EV100 stays the unit. `{ scale }` stays only for scenes without units, which the parity pages use. *Undo:* a type.
-3. **`eyeObserver()` and `cameraObserver()` are functions that give settings, not classes.** `Camera` already names the pose and projection. *Undo:* renames.
-4. **The readout's EV100 for the eye is an equivalent:** the EV100 of its pre-exposure, flagged `equivalent: true` and shown as "≈". A plain scale has none. *Undo:* one function.
-5. **Engine defaults don't move:** a daylight camera, no glare, no stages. The `Viewer` stays on the eye, with glare off until the owner has judged it (question 1). *Undo:* one line.
-6. **Three slots:** `scene` (linear, pre-exposed, before the response), `exposed` (after the response, before tone mapping) and `display` (encoded). *Undo:* a union, before any host uses it.
-7. **`kind` is required on a stage:** `physics`, `model` or `look`, with a `label`. Readouts show it. So a look can't pass for physics. *Undo:* make it optional.
-8. **`present.slang`'s `fs` keeps running unchanged unless an `exposed` stage is on.** New entries `fsResponse` and `fsTone` split it only then, so the default path costs nothing and stays the same. *Undo:* one entry.
-9. **A public stage is one fullscreen fragment function at its simplest,** `postStage(input: PostInput) -> vec4<f32>`, joined through the shader linker with a `POST_STAGE_BOUNDARY`. Or it's declared `passes`, fragment or compute, over `textures` it owns (intermediate targets with a scale and mips, or fixed images), each naming what it reads and writes (§13.22; Batch A's review, finding 6). Slang goes through the existing offline compiler first. *Undo:* one boundary.
-10. **What a declaration can't carry yet uses an internal `GraphStage`:** an instanced draw, a storage buffer, a blend. So Task 13's veil is a declared stage, and Task 12's source list and Task 14's sprites are `GraphStage`s. It isn't public until a second user asks for it. 5i decides. *Undo:* nothing to undo; exporting it later is additive.
-11. **Ambient occlusion doesn't move.** It feeds shading before the opaque pass, so it isn't a post stage. See "FXAA and ambient occlusion". *Undo:* not needed.
-12. **A pack is a folder:** `manifest.json`, `points.bin`, `background.bin`. Each binary starts with a magic (`CSKYPTS1`, `CSKYBG01`), so a build can recognize one under any name. *Undo:* a reader.
-13. **The store is `~/.cesium-bench/sky`, or `SKY_DATA_DIR`,** beside the frames store. *Undo:* one path.
-14. **The default recipe is NASA SVS 4851's layers plus HYG v4.1 for the bright end,** both marked uncleared. The spike found no good pack without a catalog. HYG's own inputs include Hipparcos, so this needs the owner's say (question 2). *Undo:* one recipe.
-15. **There's no built-in download for raw Hipparcos or Gaia.** The script takes `--catalog <local file>` and an explicit `--allow-unsettled-terms`. Off by default. So nothing here fetches them until their terms are answered. *Undo:* a recipe.
-16. **Catalog at magnitude 7 and brighter, map below.** From the spike's "roughly magnitude 7". *Undo:* a constant.
-17. **The background defaults to 1024² a face, with mips,** 67 MB, since the spike found it "nearly enough"; `--background 2048` for 2048². *Undo:* a flag.
-18. **The background's mip level rises smoothly as the field of view narrows below 30°,** in place of the spike's switch, which popped. Long lenses stay soft until 5e. *Undo:* one function.
-19. **`distributable: true` also needs `clearance: { by, date, note }`.** The script never writes either. A person edits the manifest after review. A missing flag counts as false. *Undo:* one check.
-20. **At run time an uncleared pack loads, with one warning.** Builds refuse; a local run needs it. *Undo:* a throw.
-21. **Calibration stays out of the repository.** It's derived data, computed at build time and kept in the pack's manifest. Every committed test fixture is synthetic. *Undo:* not recommended.
-22. **Uploads are sliced:** 4 MB of points, or one face's top level, per tick. The old sky draws until the new one is complete. *Undo:* a constant.
-23. **The tight core applies to today's map too.** §13.29 says a checkout with no pack "draws what it draws now", and it also says to replace the fixed halo. *Ruling:* the first is about the data, and the point spread belongs to the observer. Task 8 states the difference. *Undo:* `observerPointSpread`'s two constants.
-24. **Point spread:** the eye σ 0.85 CSS px; a camera σ 0.55 CSS px. No wing by default, though `wing` stays in the type, since the spike's camera had one. From the spike. Energy per star doesn't change. *Undo:* constants.
-25. **384 cells (8 a face side), sorted brightest first, built in the worker at load** for any `StarField`. *Undo:* a constant.
-26. **Compute culling, with an identical CPU path** when `submission` is `"direct"` or `indirect-first-instance` is missing. *Undo:* drop a branch.
-27. **The cull's visibility threshold divides by the chain's largest `shadowGain`,** so a look that lifts shadows can't reveal a culled star's absence. *Undo:* one term.
-28. **The eye's point limit is a `model` stage, not a star gain.** Where nothing was drawn (depth at the far plane), it fades what stands above its surroundings below a limit: magnitude 6 dark-adapted, brighter in proportion to the rods' threshold at the eye's adaptation. Only with the eye, and skipped above 30 cd/m² of adaptation. *Undo:* remove the stage.
-29. **No special path for stars beside a sunlit Earth.** Physics shows none there, as photographs do (question 3). *Undo:* a look stage later.
-30. **`STARLIGHT` splits into a `faintStars` uniform:** all of it with today's map; half with a deep pack, in the sky seen and in the environment, plus the pack's mean background in the environment only. The half is the spike's guess at the zodiacal light's share, and is labelled a guess. *Undo:* one number.
-31. **Order:** the meter, the eye's local adaptation, the eye's point limit, the source list, the veil, the sprites, the composite, the response. Glare feeds neither the meter nor the adaptation (§13.22). `readHdr` stays before all of it. *Undo:* registration order.
-32. **The sun's energy.** In the veil's input, pixels inside the sun's disc count as zero. Its veil is `E × V × share × psf(r)` per pixel, in closed form, from the same level weights as the pyramid: `E` is its true illuminance through the air, from the `sunLight` table, and `V` its visibility. So it's the right size at any exposure, and it doesn't vanish as the sun leaves the screen. *Undo:* a shader branch, at the cost of the clamp.
-33. **Equal energy per octave of angle.** Each level's weight comes from the angle its σ covers at this field of view, over 0.1° to 60°, so a star's veil at 1° reads the same at a wide field and a long lens, and what falls outside the view is lost. *Undo:* one function.
-34. **The veil is composed at half size, from a half-size base, then added.** *Undo:* a target size.
-35. **`share` defaults to 0.2,** from the paper. It's a choice, not a measurement. *Undo:* a default.
-36. **`V` is 32 taps over the disc:** depth at sample 0, the body's ellipsoid and the Moon's disc, per tap. A tap off screen counts as visible. *Undo:* a constant.
-37. **Stars in the list are the 2,048 brightest,** walked by one thread in order, so the brightest always win a sprite. *Undo:* a constant.
-38. **Sprites use `draw(4, 256)` with a degenerate vertex for an unused slot,** not an indirect draw, so they avoid §13.23's risk. A pixel budget of 4 million per view bounds overdraw. *Undo:* one draw call.
-39. **Kernels come from a pupil, computed once in a worker, in angle.** Apertures: `round`, `vanes`, `hex`, `blades7`. The spike's streak stays out: it read most as an effect, and its grating failed. The eye gets a veil and no spikes for now. *Undo:* a list.
-40. **Tiers:** `full`, `reduced`, `sources` and `off`, chosen from the adapter and the pixel count, with an override. Intel starts at `reduced` until the owner's laptop says otherwise. *Undo:* a table.
-41. **Glare's composite clamps the image at 10,000 and each sprite at 200, pre-exposed,** so 256 overlapping sprites can't pass fp16's 65,504 into infinity, and it replaces anything not finite with 0. All of those read as white. So glare can't reach the meter's old NaN problem by another route. *Undo:* two constants.
-42. **One shared `attachObserverPanel` in the widgets,** used by the playground, Dyno's Viewer and the new example, so the rules hold everywhere. *Undo:* inline it.
+1. **`view.observer` replaces `view.exposure` and `view.toneMapping`, with no shim.** Nothing is released, and 5d and 5e haven't built on them yet. _Undo:_ two getters.
+2. **The `Exposure` union stays as `observer.exposure`.** EV100 stays the unit. `{ scale }` stays only for scenes without units, which the parity pages use. _Undo:_ a type.
+3. **`eyeObserver()` and `cameraObserver()` are functions that give settings, not classes.** `Camera` already names the pose and projection. _Undo:_ renames.
+4. **The readout's EV100 for the eye is an equivalent:** the EV100 of its pre-exposure, flagged `equivalent: true` and shown as "≈". A plain scale has none. _Undo:_ one function.
+5. **Engine defaults don't move:** a daylight camera, no glare, no stages. The `Viewer` stays on the eye, with glare off until the owner has judged it (question 1). _Undo:_ one line.
+6. **Three slots:** `scene` (linear, pre-exposed, before the response), `exposed` (after the response, before tone mapping) and `display` (encoded). _Undo:_ a union, before any host uses it.
+7. **`kind` is required on a stage:** `physics`, `model` or `look`, with a `label`. Readouts show it. So a look can't pass for physics. _Undo:_ make it optional.
+8. **`present.slang`'s `fs` keeps running unchanged unless an `exposed` stage is on.** New entries `fsResponse` and `fsTone` split it only then, so the default path costs nothing and stays the same. _Undo:_ one entry.
+9. **A public stage is one fullscreen fragment function at its simplest,** `postStage(input: PostInput) -> vec4<f32>`, joined through the shader linker with a `POST_STAGE_BOUNDARY`. Or it's declared `passes`, fragment or compute, over `textures` it owns (intermediate targets with a scale and mips, or fixed images), each naming what it reads and writes (§13.22; Batch A's review, finding 6). Slang goes through the existing offline compiler first. _Undo:_ one boundary.
+10. **What a declaration can't carry yet uses an internal `GraphStage`:** an instanced draw, a storage buffer, a blend. So Task 13's veil is a declared stage, and Task 12's source list and Task 14's sprites are `GraphStage`s. It isn't public until a second user asks for it. 5i decides. _Undo:_ nothing to undo; exporting it later is additive.
+11. **Ambient occlusion doesn't move.** It feeds shading before the opaque pass, so it isn't a post stage. See "FXAA and ambient occlusion". _Undo:_ not needed.
+12. **A pack is a folder:** `manifest.json`, `points.bin`, `background.bin`. Each binary starts with a magic (`CSKYPTS1`, `CSKYBG01`), so a build can recognize one under any name. _Undo:_ a reader.
+13. **The store is `~/.cesium-bench/sky`, or `SKY_DATA_DIR`,** beside the frames store. _Undo:_ one path.
+14. **The default recipe is NASA SVS 4851's layers plus HYG v4.1 for the bright end,** both marked uncleared. The spike found no good pack without a catalog. HYG's own inputs include Hipparcos, so this needs the owner's say (question 2). _Undo:_ one recipe.
+15. **There's no built-in download for raw Hipparcos or Gaia.** The script takes `--catalog <local file>` and an explicit `--allow-unsettled-terms`. Off by default. So nothing here fetches them until their terms are answered. _Undo:_ a recipe.
+16. **Catalog at magnitude 7 and brighter, map below.** From the spike's "roughly magnitude 7". _Undo:_ a constant.
+17. **The background defaults to 1024² a face, with mips,** 67 MB, since the spike found it "nearly enough"; `--background 2048` for 2048². _Undo:_ a flag.
+18. **The background's mip level rises smoothly as the field of view narrows below 30°,** in place of the spike's switch, which popped. Long lenses stay soft until 5e. _Undo:_ one function.
+19. **`distributable: true` also needs `clearance: { by, date, note }`.** The script never writes either. A person edits the manifest after review. A missing flag counts as false. _Undo:_ one check.
+20. **At run time an uncleared pack loads, with one warning.** Builds refuse; a local run needs it. _Undo:_ a throw.
+21. **Calibration stays out of the repository.** It's derived data, computed at build time and kept in the pack's manifest. Every committed test fixture is synthetic. _Undo:_ not recommended.
+22. **Uploads are sliced:** 4 MB of points, or one face's top level, per tick. The old sky draws until the new one is complete. _Undo:_ a constant.
+23. **The tight core applies to today's map too.** §13.29 says a checkout with no pack "draws what it draws now", and it also says to replace the fixed halo. _Ruling:_ the first is about the data, and the point spread belongs to the observer. Task 8 states the difference. _Undo:_ `observerPointSpread`'s two constants.
+24. **Point spread:** the eye σ 0.85 CSS px; a camera σ 0.55 CSS px. No wing by default, though `wing` stays in the type, since the spike's camera had one. From the spike. Energy per star doesn't change. _Undo:_ constants.
+25. **384 cells (8 a face side), sorted brightest first, built in the worker at load** for any `StarField`. _Undo:_ a constant.
+26. **Compute culling, with an identical CPU path** when `submission` is `"direct"` or `indirect-first-instance` is missing. _Undo:_ drop a branch.
+27. **The cull's visibility threshold divides by the chain's largest `shadowGain`,** so a look that lifts shadows can't reveal a culled star's absence. _Undo:_ one term.
+28. **The eye's point limit is a `model` stage, not a star gain.** Where nothing was drawn (depth at the far plane), it fades what stands above its surroundings below a limit: magnitude 6 dark-adapted, brighter in proportion to the rods' threshold at the eye's adaptation. Only with the eye, and skipped above 30 cd/m² of adaptation. _Undo:_ remove the stage.
+29. **No special path for stars beside a sunlit Earth.** Physics shows none there, as photographs do (question 3). _Undo:_ a look stage later.
+30. **`STARLIGHT` splits into a `faintStars` uniform:** all of it with today's map; half with a deep pack, in the sky seen and in the environment, plus the pack's mean background in the environment only. The half is the spike's guess at the zodiacal light's share, and is labelled a guess. _Undo:_ one number.
+31. **Order:** the meter, the eye's local adaptation, the eye's point limit, the source list, the veil, the sprites, the composite, the response. Glare feeds neither the meter nor the adaptation (§13.22). `readHdr` stays before all of it. _Undo:_ registration order.
+32. **The sun's energy.** In the veil's input, pixels inside the sun's disc count as zero. Its veil is `E × V × share × psf(r)` per pixel, in closed form, from the same level weights as the pyramid: `E` is its true illuminance through the air, from the `sunLight` table, and `V` its visibility. So it's the right size at any exposure, and it doesn't vanish as the sun leaves the screen. _Undo:_ a shader branch, at the cost of the clamp.
+33. **Equal energy per octave of angle.** Each level's weight comes from the angle its σ covers at this field of view, over 0.1° to 60°, so a star's veil at 1° reads the same at a wide field and a long lens, and what falls outside the view is lost. _Undo:_ one function.
+34. **The veil is composed at half size, from a half-size base, then added.** _Undo:_ a target size.
+35. **`share` defaults to 0.2,** from the paper. It's a choice, not a measurement. _Undo:_ a default.
+36. **`V` is 32 taps over the disc:** depth at sample 0, the body's ellipsoid and the Moon's disc, per tap. A tap off screen counts as visible. _Undo:_ a constant.
+37. **Stars in the list are the 2,048 brightest,** walked by one thread in order, so the brightest always win a sprite. _Undo:_ a constant.
+38. **Sprites use `draw(4, 256)` with a degenerate vertex for an unused slot,** not an indirect draw, so they avoid §13.23's risk. A pixel budget of 4 million per view bounds overdraw. _Undo:_ one draw call.
+39. **Kernels come from a pupil, computed once in a worker, in angle.** Apertures: `round`, `vanes`, `hex`, `blades7`. The spike's streak stays out: it read most as an effect, and its grating failed. The eye gets a veil and no spikes for now. _Undo:_ a list.
+40. **Tiers:** `full`, `reduced`, `sources` and `off`, chosen from the adapter and the pixel count, with an override. Intel starts at `reduced` until the owner's laptop says otherwise. _Undo:_ a table.
+41. **Glare's composite clamps the image at 10,000 and each sprite at 200, pre-exposed,** so 256 overlapping sprites can't pass fp16's 65,504 into infinity, and it replaces anything not finite with 0. All of those read as white. So glare can't reach the meter's old NaN problem by another route. _Undo:_ two constants.
+42. **One shared `attachObserverPanel` in the widgets,** used by the playground, Dyno's Viewer and the new example, so the rules hold everywhere. _Undo:_ inline it.
 
 ## Rulings
 
 Where the sources disagree.
 
-1. **§13.28 says glare "needs the sun's disc to keep its true luminance rather than being clamped". §13.32 says its energy comes "from the list and not from clamped pixels".** *Ruling:* §13.32, the later and the owner's. The disc stays clamped in the image (call 32).
-2. **§13.29 assigns the star exposure's removal to 5e. §13.32 moves it before 5b.** *Ruling:* §13.32, as the owner's order. See "What other plans need".
-3. **§13.29 holds raw Gaia and Hipparcos as optional and off. The hybrid needs a bright-end catalog, and HYG is built on Hipparcos.** *Ruling for now:* "raw" means the ESA files, so HYG may be the default in a local pack, uncleared, with its stacking written in its manifest (call 14). The terms stay unsettled, and this plan concludes nothing about them. The owner can change it (question 2).
-4. **The `Viewer` set `EYE_STARS_EV100` to −3 for "about 1.x's brightness" (r43). The owner's rule is no gains on scene light for looks.** *Ruling:* the owner's rule. Star brightness against 1.x's sky box isn't a parity target. No gated suite draws it. Dyno's side-by-side Viewer will differ, and the example says so.
-5. **§13.32's "taste belongs to post-processing" against the spike's Eye look,** which set a limit and color per star in the vertex shader. *Ruling:* a stage (call 28). The spike's own later version did this too. Color per star under the eye stays what `eyeSees` gives, so bright stars read gray-blue under dark adaptation (Betelgeuse's orange in the spike came from the tint that's gone). The owner judges that in Task 11.
+1. **§13.28 says glare "needs the sun's disc to keep its true luminance rather than being clamped". §13.32 says its energy comes "from the list and not from clamped pixels".** _Ruling:_ §13.32, the later and the owner's. The disc stays clamped in the image (call 32).
+2. **§13.29 assigns the star exposure's removal to 5e. §13.32 moves it before 5b.** _Ruling:_ §13.32, as the owner's order. See "What other plans need".
+3. **§13.29 holds raw Gaia and Hipparcos as optional and off. The hybrid needs a bright-end catalog, and HYG is built on Hipparcos.** _Ruling for now:_ "raw" means the ESA files, so HYG may be the default in a local pack, uncleared, with its stacking written in its manifest (call 14). The terms stay unsettled, and this plan concludes nothing about them. The owner can change it (question 2).
+4. **The `Viewer` set `EYE_STARS_EV100` to −3 for "about 1.x's brightness" (r43). The owner's rule is no gains on scene light for looks.** _Ruling:_ the owner's rule. Star brightness against 1.x's sky box isn't a parity target. No gated suite draws it. Dyno's side-by-side Viewer will differ, and the example says so.
+5. **§13.32's "taste belongs to post-processing" against the spike's Eye look,** which set a limit and color per star in the vertex shader. _Ruling:_ a stage (call 28). The spike's own later version did this too. Color per star under the eye stays what `eyeSees` gives, so bright stars read gray-blue under dark adaptation (Betelgeuse's orange in the spike came from the tint that's gone). The owner judges that in Task 11.
 
 ## Global Constraints
 
@@ -127,13 +127,13 @@ Plans batch: a type check per commit, the full suite and the gates once per batc
 
 **Per commit:** the task's focused tests, `npx tsc --noEmit -p .`, and `npx eslint` and `npx prettier --check` on the changed files. `npm run shaders:check` if a shader changed. Each task's gates below are run only at the end of its batch, unless the task says otherwise.
 
-| Batch | Tasks | At its end, once |
-| --- | --- | --- |
-| A: the observer | 1 to 3 | `npm test`, `tsc -p tsconfig.lib.json`, `parity`, `imagery`, `translucency`, `customShader`, `alloc`, `check:bundle` |
-| B: the pack | 4 to 7 | `npm test`, `npm run build`, `npm run build:lib`, `npm run handbook`, `check:bundle` |
-| C: stars and fudges | 8 to 11 | `npm test`, `parity`, `imagery`, `alloc`, the check page |
-| D: glare | 12 to 15 | `npm test`, `parity`, `translucency`, `customShader`, `alloc`, the check page |
-| E: the rest | 16 to 19 | Everything, in Task 19 |
+| Batch               | Tasks    | At its end, once                                                                                                     |
+| ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| A: the observer     | 1 to 3   | `npm test`, `tsc -p tsconfig.lib.json`, `parity`, `imagery`, `translucency`, `customShader`, `alloc`, `check:bundle` |
+| B: the pack         | 4 to 7   | `npm test`, `npm run build`, `npm run build:lib`, `npm run handbook`, `check:bundle`                                 |
+| C: stars and fudges | 8 to 11  | `npm test`, `parity`, `imagery`, `alloc`, the check page                                                             |
+| D: glare            | 12 to 15 | `npm test`, `parity`, `translucency`, `customShader`, `alloc`, the check page                                        |
+| E: the rest         | 16 to 19 | Everything, in Task 19                                                                                               |
 
 Gates compare with the batch's first commit and with main. Run one suite at a time. Which task can move which suite is in "Expected pixel differences".
 
@@ -143,18 +143,18 @@ Gates compare with the batch's first commit and with main. Run one suite at a ti
 
 State these in the commit message, and check against them. "None" means zero differing pixels against the previous commit, unless a reordered float sum is shown to be the cause.
 
-| Task | With no pack, no glare, no stage | When the new thing is on |
-| --- | --- | --- |
-| 1 Observer API | None | n/a |
-| 2 Stages | None. `fs` is unchanged | A no-op `exposed` stage differs by at most 1/255, from the round trip through fp16 |
-| 3 Astrophoto curve | None | The whole image: stars, Earth and clouds alike |
-| 4 to 7 Pack | None | Stars and background only. Terrain and models are unchanged, except through call 30 in Task 11 |
-| 8 Strips, point spread | In any view that draws stars: the 5% halo goes, so pixels 2 to 10 px around bright stars fall to the background. The eye's σ 0.85 takes a centered star's peak pixel from about 0.34 of its light to 0.20, about 0.8 stops down. A camera's σ 0.55 takes it to 0.41, about 0.3 stops up. Summed light per star is unchanged. Going from quads to strips alone is no difference | |
-| 9 Cells | Stars add in a new order, so stacked stars may differ by 1/255 in under 0.1% of star-layer pixels. Nothing else | |
-| 10 Bright end, background level | None without a pack, except the mip level below 30° field of view, which softens the background slightly | Long-lens background softer, with no pop |
-| 11 Fudges | Eye only. See its table. A camera or a plain scale: none | With a deep pack: the sky's faint-star term halves |
-| 12 to 15 Glare | None while off | Pixels change wherever the veil reaches. A flat image doesn't change, since a pixel gives up only the light the veil spreads. A bright pixel falls by up to `share` in linear light, and what's near it rises. The meter's reading doesn't change |
-| 16 to 19 | None | |
+| Task                            | With no pack, no glare, no stage                                                                                                                                                                                                                                                                                                                                               | When the new thing is on                                                                                                                                                                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Observer API                  | None                                                                                                                                                                                                                                                                                                                                                                           | n/a                                                                                                                                                                                                                                               |
+| 2 Stages                        | None. `fs` is unchanged                                                                                                                                                                                                                                                                                                                                                        | A no-op `exposed` stage differs by at most 1/255, from the round trip through fp16                                                                                                                                                                |
+| 3 Astrophoto curve              | None                                                                                                                                                                                                                                                                                                                                                                           | The whole image: stars, Earth and clouds alike                                                                                                                                                                                                    |
+| 4 to 7 Pack                     | None                                                                                                                                                                                                                                                                                                                                                                           | Stars and background only. Terrain and models are unchanged, except through call 30 in Task 11                                                                                                                                                    |
+| 8 Strips, point spread          | In any view that draws stars: the 5% halo goes, so pixels 2 to 10 px around bright stars fall to the background. The eye's σ 0.85 takes a centered star's peak pixel from about 0.34 of its light to 0.20, about 0.8 stops down. A camera's σ 0.55 takes it to 0.41, about 0.3 stops up. Summed light per star is unchanged. Going from quads to strips alone is no difference |                                                                                                                                                                                                                                                   |
+| 9 Cells                         | Stars add in a new order, so stacked stars may differ by 1/255 in under 0.1% of star-layer pixels. Nothing else                                                                                                                                                                                                                                                                |                                                                                                                                                                                                                                                   |
+| 10 Bright end, background level | None without a pack, except the mip level below 30° field of view, which softens the background slightly                                                                                                                                                                                                                                                                       | Long-lens background softer, with no pop                                                                                                                                                                                                          |
+| 11 Fudges                       | Eye only. See its table. A camera or a plain scale: none                                                                                                                                                                                                                                                                                                                       | With a deep pack: the sky's faint-star term halves                                                                                                                                                                                                |
+| 12 to 15 Glare                  | None while off                                                                                                                                                                                                                                                                                                                                                                 | Pixels change wherever the veil reaches. A flat image doesn't change, since a pixel gives up only the light the veil spreads. A bright pixel falls by up to `share` in linear light, and what's near it rises. The meter's reading doesn't change |
+| 16 to 19                        | None                                                                                                                                                                                                                                                                                                                                                                           |                                                                                                                                                                                                                                                   |
 
 ## FXAA and ambient occlusion
 
@@ -168,28 +168,28 @@ FXAA and ambient occlusion on this interface are a stretch. The interface must b
 
 Every kernel, its bounds and its worst case. Each task reads the Metal of its kernels with `node scripts/dumpMsl.mjs <module.wgsl> <entry>` before their first browser run. Slang's loops pay Tint's guard on Metal, so small constant loops take `[ForceUnroll]`.
 
-| Kernel or pass | Loops | Worst case | Bound by |
-| --- | --- | --- | --- |
-| `starCull` (compute, 64 threads) | 4 planes, unrolled; a binary search of at most 24 steps | 6 workgroups over 384 cells | `CELLS = 384`, clamped indices |
-| Star strips | None | 530,851 × 4 vertices, under 2.2 M; a 4 million cap in the pack's reader | Cap in `parseManifest`, call 27's threshold |
-| `glareSources` (compute, 1 thread) | 32 sun taps, unrolled; at most 2,048 stars, with a `break` at 256 sources or the pixel budget | One dispatch, one thread | `GLARE_BRIGHT_STARS`, `GLARE_SOURCES` |
-| Veil input and down | 4 taps | 9 passes at most, each smaller | `VEIL_LEVELS` |
-| Veil compose | 9 levels, unrolled, 4 bilinear taps each | Half-size | `VEIL_LEVELS` |
-| Sprites | None | 256 instances; 4 million pixels; radius at most 512 px | `GLARE_SPRITE_PIXELS` |
-| `eyeLimit` | 8 ring taps, unrolled | Full-size, fragment, eye only | Constant |
-| Uploads | n/a | 4 MB, or one face's level, per tick. Mips come from the pack or the worker, so no GPU mip pass runs | Call 22 |
-| Kernel | CPU only, in a worker | One pupil at a time, 1024² | Worker |
+| Kernel or pass                     | Loops                                                                                         | Worst case                                                                                          | Bound by                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `starCull` (compute, 64 threads)   | 4 planes, unrolled; a binary search of at most 24 steps                                       | 6 workgroups over 384 cells                                                                         | `CELLS = 384`, clamped indices              |
+| Star strips                        | None                                                                                          | 530,851 × 4 vertices, under 2.2 M; a 4 million cap in the pack's reader                             | Cap in `parseManifest`, call 27's threshold |
+| `glareSources` (compute, 1 thread) | 32 sun taps, unrolled; at most 2,048 stars, with a `break` at 256 sources or the pixel budget | One dispatch, one thread                                                                            | `GLARE_BRIGHT_STARS`, `GLARE_SOURCES`       |
+| Veil input and down                | 4 taps                                                                                        | 9 passes at most, each smaller                                                                      | `VEIL_LEVELS`                               |
+| Veil compose                       | 9 levels, unrolled, 4 bilinear taps each                                                      | Half-size                                                                                           | `VEIL_LEVELS`                               |
+| Sprites                            | None                                                                                          | 256 instances; 4 million pixels; radius at most 512 px                                              | `GLARE_SPRITE_PIXELS`                       |
+| `eyeLimit`                         | 8 ring taps, unrolled                                                                         | Full-size, fragment, eye only                                                                       | Constant                                    |
+| Uploads                            | n/a                                                                                           | 4 MB, or one face's level, per tick. Mips come from the pack or the worker, so no GPU mip pass runs | Call 22                                     |
+| Kernel                             | CPU only, in a worker                                                                         | One pupil at a time, 1024²                                                                          | Worker                                      |
 
 **Slicing.** §13.32 wants slicing to belong to the graph. This plan does less: its only heavy GPU work is uploads, which it slices itself, and every live pass is short and bounded. The graph-level mechanism stays with the temporal work.
 
 **Tiers (call 40), per view:**
 
-| Tier | Veil | Spikes | Sun's closed-form veil | Target cost at the view's size |
-| --- | --- | --- | --- | --- |
-| `full` | Half-size base, 9 levels | Yes | Yes | Under 1.5 ms |
-| `reduced` | Quarter-size base, 7 levels | Up to 64 sprites, 1 million pixels | Yes | Under 1 ms |
-| `sources` | None | Up to 16 sprites | Yes | Under 0.3 ms |
-| `off` | None | None | None | 0 |
+| Tier      | Veil                        | Spikes                             | Sun's closed-form veil | Target cost at the view's size |
+| --------- | --------------------------- | ---------------------------------- | ---------------------- | ------------------------------ |
+| `full`    | Half-size base, 9 levels    | Yes                                | Yes                    | Under 1.5 ms                   |
+| `reduced` | Quarter-size base, 7 levels | Up to 64 sprites, 1 million pixels | Yes                    | Under 1 ms                     |
+| `sources` | None                        | Up to 16 sprites                   | Yes                    | Under 0.3 ms                   |
+| `off`     | None                        | None                               | None                   | 0                              |
 
 `glareTier(adapter, pixels)`: a fallback adapter is `off`. Intel is `reduced`, and `sources` above 3.7 million pixels. Anything else is `full`, and `reduced` above 8.3 million pixels. These are starting values. Task 16's run on the owner's laptop replaces them. Nothing here has been measured on Intel, AMD or NVIDIA.
 
@@ -205,6 +205,8 @@ Carry the branch to the laptop the usual way, at a clean commit, then in `packag
 4. **Watch for device loss.** If the page reports one, stop, send the report, and don't retry. A hung shader resets the GPU for every app on the machine.
 5. **`http://127.0.0.1:5196/spikes/observer.html`,** and look at glare at each tier beside the Mac's: does `reduced` look acceptable?
 6. Optional, with a pack built on that machine: `npm run sky -- build`, then the same page with `?pack=local`.
+
+**From the laptop without a checkout there:** run the `vite` line on this Mac instead, tunnel with `ssh -L 5196:127.0.0.1:5196 <user>@<this Mac>` from the laptop, and open the same `127.0.0.1:5196` pages in the laptop's Chrome. Localhost is a secure context, so WebGPU works and the laptop's GPU draws. The cost page needs no data; `?pack=local` and the spike's pack come from this Mac's store through the tunnel.
 
 What it decides: `glareTier`'s table; whether cells keep indirect draws on Intel or go to the CPU path; and whether strips still beat quads on an immediate-mode GPU, which the spike couldn't test. Compute splatting isn't in the page: at this count it lost on the M2, and it may turn on count and GPU, so it stays with the point pipeline's measurements.
 
@@ -563,14 +565,14 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
 
 **What changes.** The eye only, and only where the sky behind a star is dark. A camera and a plain scale see no change from the rule's removal.
 
-| Eye adapted to (cd/m²) | Example | Pre-exposure | Stars fall by |
-| --- | --- | --- | --- |
-| 4,000 | The sunlit Earth from orbit | 4.5 × 10⁻⁵ | 17.2 stops: gone |
-| 30 | Heavy overcast, or a bright dusk | 3.9 × 10⁻³ | 10.7 stops: gone |
-| 1 | Dusk | 0.064 | 6.7 stops |
-| 0.03 | Full moon | 1.5 | 2.2 stops |
-| 0.005 | Bright night | 5.4 | 0.3 stops |
-| 0.003 and darker | A moonless night | 7.0 and up | None |
+| Eye adapted to (cd/m²) | Example                          | Pre-exposure | Stars fall by    |
+| ---------------------- | -------------------------------- | ------------ | ---------------- |
+| 4,000                  | The sunlit Earth from orbit      | 4.5 × 10⁻⁵   | 17.2 stops: gone |
+| 30                     | Heavy overcast, or a bright dusk | 3.9 × 10⁻³   | 10.7 stops: gone |
+| 1                      | Dusk                             | 0.064        | 6.7 stops        |
+| 0.03                   | Full moon                        | 1.5          | 2.2 stops        |
+| 0.005                  | Bright night                     | 5.4          | 0.3 stops        |
+| 0.003 and darker       | A moonless night                 | 7.0 and up   | None             |
 
 The examples are rough, from general knowledge. The numbers come from `eyeResponse`. **Separately,** the point limit takes away stars fainter than its limit: at 10⁻⁴ cd/m² the 86,000-star map falls to the roughly 5,000 stars to magnitude 6.
 
@@ -864,8 +866,8 @@ For the owner to apply. This plan doesn't edit them. Line references are by symb
 
 Most important first. Each has the default the plan follows.
 
-1. **Should the Viewer turn glare on by default?** A tight core with no glare makes bright stars stand out less, and a veil also lowers contrast in daylight scenes. *Default:* off until you've judged Batch D's renders; then it's one line.
-2. **HYG as the default pack's bright end.** The spike found a map alone can't do it. HYG's page states CC BY-SA 4.0. Its inputs include Hipparcos, whose ESA page states CC BY-NC 3.0 IGO, and its pages don't say how those sit together (both read 2026-11-08). *Default:* use it locally, marked uncleared, with raw Hipparcos and Gaia supplied by hand only. Should it stay out until someone reads the terms? The plan then has no bright end to offer but what a developer supplies.
-3. **Stars beside a sunlit Earth from orbit.** With the rule gone, they vanish, as in photographs. *Default:* accept it, with no special path. A look stage could add them later, labelled.
-4. **The tight core on today's map.** §13.29 says a checkout with no pack draws what it draws now, and also says to drop the halo. *Default:* the data stays, the drawing improves (call 23). Say if the default look should hold until a pack is on.
-5. **Rename 5d's `Camera.lens` to `Camera.imagePlane`?** *Default:* yes, before 5d is built. See "What other plans need".
+1. **Should the Viewer turn glare on by default?** A tight core with no glare makes bright stars stand out less, and a veil also lowers contrast in daylight scenes. _Default:_ off until you've judged Batch D's renders; then it's one line.
+2. **HYG as the default pack's bright end.** The spike found a map alone can't do it. HYG's page states CC BY-SA 4.0. Its inputs include Hipparcos, whose ESA page states CC BY-NC 3.0 IGO, and its pages don't say how those sit together (both read 2026-11-08). _Default:_ use it locally, marked uncleared, with raw Hipparcos and Gaia supplied by hand only. Should it stay out until someone reads the terms? The plan then has no bright end to offer but what a developer supplies.
+3. **Stars beside a sunlit Earth from orbit.** With the rule gone, they vanish, as in photographs. _Default:_ accept it, with no special path. A look stage could add them later, labelled.
+4. **The tight core on today's map.** §13.29 says a checkout with no pack draws what it draws now, and also says to drop the halo. _Default:_ the data stays, the drawing improves (call 23). Say if the default look should hold until a pack is on.
+5. **Rename 5d's `Camera.lens` to `Camera.imagePlane`?** _Default:_ yes, before 5d is built. See "What other plans need".

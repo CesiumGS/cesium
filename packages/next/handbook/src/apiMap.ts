@@ -922,7 +922,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "wgslUnit",
     ],
     status: "renamed",
-    note: "A stage is one fullscreen function in `view.observer.stages`, in a slot before or after exposure and tone mapping, marked physics, a model or a look. FXAA and ambient occlusion are still `View` settings, and multi-pass stages are internal for now.",
+    note: "A stage is one fullscreen function in `view.observer.stages`, in a slot before or after exposure and tone mapping, marked physics, a model or a look. FXAA and ambient occlusion are still `View` settings. A stage can also declare passes, fragment or compute, over textures it owns; what a declaration can't carry (an instanced draw, a storage buffer) stays internal.",
     source: "Overall plan, section 13.22",
   },
   {

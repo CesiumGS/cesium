@@ -146,7 +146,8 @@ const COMPAT_PIECES: { piece: string; today: ReactNode; change: ReactNode }[] =
       piece: "Stars",
       today: (
         <>
-          <C>sky.slang</C>'s <C>starVertex</C> reads <C>starPoints</C>.
+          <C>sky.slang</C>'s <C>starVertex</C> reads <C>starPoints</C>, one
+          strip a star, from the cells a compute pass culled.
         </>
       ),
       change: "Instance-step attributes.",

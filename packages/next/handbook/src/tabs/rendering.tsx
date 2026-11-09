@@ -4,12 +4,14 @@ import { Board, Tag, useLayers, type BoardStep } from "../diagram.tsx";
 import { TranslucentTerrainFlow } from "../flows.tsx";
 import {
   C,
+  Cite,
   DataTable,
   Figure,
   Generated,
   Note,
   Page,
   Section,
+  Sources,
   Written,
 } from "../parts.tsx";
 import {
@@ -853,6 +855,51 @@ export function Rendering() {
           }
           on="2026-11-08"
         />
+      </Section>
+
+      <Section title="The observer, the stars and glare">
+        <p>
+          A view's <C>observer</C> owns everything between the scene's light and
+          a pixel: its exposure, its tone mapping, glare and a list of post
+          stages. Light stays in physical units, and exposure is in EV100, the
+          unit of a camera's exposure value at ISO 100. The eye is the other
+          exposure: it adapts to the scene, loses colour in dim light, and shows
+          the stars the exposure lets through. Nothing in the scene is lifted
+          for looks. A stage says what it is: <em>physics</em> follows from the
+          light, a <em>model</em> is a stated model of an eye or a lens, and a{" "}
+          <em>look</em> is taste. The observer's controls say so beside each
+          setting, and run right for brighter.
+        </p>
+        <p>
+          Stars are drawn as sharp points, by strips of a few pixels each, from
+          sky cells that a compute pass culls to the view. The data can be 1.x's
+          star map, or a sky data pack a developer builds locally. A pack is
+          never shipped: builds refuse one that isn't marked cleared, and this
+          handbook carries no image or file made from one. A star's light is
+          kept whatever its spread, and the eye's limit for faint stars is a
+          model stage, not a gain on the stars.
+        </p>
+        <p>
+          Glare is a veil of light scattered across the image, from a pyramid of
+          blurs, and spikes from a lens's aperture, drawn from a list of the
+          brightest sources, each with its own visibility. It comes after the
+          meter and the eye's adaptation, so it doesn't move the exposure. It
+          has tiers by GPU and view size, and only an M2 has been measured: the
+          Intel figures are still owed. The idea of spreading a star's luminance
+          by a perception-based glare filter is in{" "}
+          <Cite id="smallerThanPixels" />.
+        </p>
+        <Written
+          from={
+            <>
+              <C>src/scene/observer.ts</C>, <C>src/render/post</C>,{" "}
+              <C>src/atmosphere/starCells.ts</C> and{" "}
+              <C>widgets/observerPanel.ts</C>
+            </>
+          }
+          on="2026-11-09"
+        />
+        <Sources ids={["smallerThanPixels"]} />
       </Section>
 
       <Section title="Precision and limits">

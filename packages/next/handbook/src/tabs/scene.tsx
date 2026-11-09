@@ -25,7 +25,7 @@ const OWNS = [
   },
   {
     what: "View",
-    owns: "A camera, a target, its exposure and lighting, and where each anchor sits in its render space.",
+    owns: "A camera, a target, its observer (exposure, tone mapping, glare and post stages) and lighting, and where each anchor sits in its render space.",
     relation:
       "Any number per engine. Each shows one world, and worlds can have several.",
   },
@@ -75,7 +75,7 @@ const SHARED = [
   {
     level: "One per view",
     things:
-      "The camera, target and exposure, a selection pass, the cull's results, where each anchor sits",
+      "The camera, target and observer, a selection pass, the cull's results, where each anchor sits",
   },
 ];
 
@@ -261,7 +261,7 @@ function SceneMap() {
           </text>
           {[
             "A camera and a target",
-            "Exposure and lighting",
+            "Observer and lighting",
             "A selection pass",
             "The cull's results",
             "Where each anchor sits",
@@ -356,7 +356,7 @@ export function Scene() {
               <C>src/streaming/Tileset3D.ts</C>
             </>
           }
-          on="2026-11-08"
+          on="2026-11-09"
         />
       </Section>
 

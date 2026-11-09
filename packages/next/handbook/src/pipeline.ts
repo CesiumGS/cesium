@@ -149,7 +149,8 @@ export const PASSES: Record<string, PassNote> = {
     group: "The opaque scene",
     kind: "render",
     summary: "The stars, into a layer the sky draws from.",
-    detail: "A layer of its own, read by the sky's draw in the opaque pass.",
+    detail:
+      "Strips of a few pixels a star, from the sky cells the cull found on screen, into a layer of its own that the sky's draw reads in the opaque pass. A star's light is kept whatever its spread.",
   },
   opaque: {
     group: "The opaque scene",
@@ -210,6 +211,13 @@ export const PASSES: Record<string, PassNote> = {
     detail: "Copies what was asked for into a readback buffer.",
     skipped: "When no read is pending.",
   },
+  "hdr-readback.glare": {
+    group: "Read back",
+    kind: "copy",
+    summary: "The image's HDR values after glare, when something asks.",
+    detail: "The same read as the one before glare, from the image glare left.",
+    skipped: "When no read is pending.",
+  },
   pick: {
     group: "Read back",
     kind: "compute",
@@ -223,8 +231,16 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute",
     summary: "The eye's local adaptation, as a bilateral grid.",
     detail:
-      "The image's log luminance at a sixteenth of its size by 16 levels, blurred, for the present pass.",
+      "The image's log luminance at a sixteenth of its size by 16 levels, blurred, for the present pass. With glare on it reads glare's image, so the veil is in what the eye adapts to; the meter still reads before glare.",
     skipped: "When the view's exposure isn't the \"eye\" kind.",
+  },
+  "post.perView": {
+    group: "To the screen",
+    kind: "compute",
+    summary: "A stage's values for this view, after the adaptation.",
+    detail:
+      "Runs each rendered tick, only if a stage has a per-view function. It can leave a stage out of this view, and sets the view's own copy of its uniforms.",
+    skipped: "Unless a stage has a per-view function.",
   },
   "present.response": {
     group: "To the screen",

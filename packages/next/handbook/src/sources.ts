@@ -525,6 +525,15 @@ export const SOURCES = {
     pageDate: "updated 15 Jul 2026",
     checked: "2026-11-08",
   },
+  smallerThanPixels: {
+    short: "Smaller than Pixels",
+    title:
+      "Schneegans, Kreskowski and Gerndt: Smaller than Pixels: Rendering Millions of Stars in Real-Time",
+    url: "https://www.uni-weimar.de/de/medien/professuren/medieninformatik/vr/research/real-time-rendering/smaller-than-pixels-rendering-millions-of-stars-in-real-tim/",
+    pageDate: "Eurographics 2025, short papers; the page gives no day",
+    checked: "2026-11-09",
+    note: "Its abstract was read, on this page and in a search result. The paper's body wasn't: its PDF came back as unreadable data, and its publisher's page refused the connection. So what it says of glare's pyramid and level weights isn't confirmed here.",
+  },
 } as const satisfies Record<string, Source>;
 
 export type SourceId = keyof typeof SOURCES;

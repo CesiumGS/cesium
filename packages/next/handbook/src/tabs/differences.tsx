@@ -45,7 +45,7 @@ const CONCEPTS = [
   {
     topic: "Color",
     old: "HDR off by default",
-    next: "HDR with tonemapping by default for lit color, LDR as a per-view option. Unlit color is never tonemapped.",
+    next: "HDR with tonemapping by default for lit color, LDR as a per-view option. Unlit color is never tonemapped. A view's observer sets the exposure in EV100 (a camera, metered or fixed, or the eye), the tone mapping, glare and post stages, each marked physics, a model or a look.",
   },
   {
     topic: "Flat views",
