@@ -18,6 +18,11 @@ vec2 topologyOverlay_viewportSize()
     return czm_viewport.zw;
 }
 
+float topologyOverlay_nearDistance()
+{
+    return czm_currentFrustum.x;
+}
+
 void topologyOverlay_setVertexOutputs(vec4 positionEC, uint componentIndex)
 {
     ivec2 coord = topologyOverlay_texelCoord(componentIndex, textureSize(u_pickColorTexture, 0));

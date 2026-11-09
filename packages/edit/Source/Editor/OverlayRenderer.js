@@ -242,7 +242,7 @@ class OverlayRenderer {
   #pickCommands = [];
 
   /** @type {Matrix4} */
-  #modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+  #modelMatrix = new Matrix4();
 
   /** @type {AxisAlignedBoundingBox | undefined} */
   #localBounds;
@@ -277,6 +277,7 @@ class OverlayRenderer {
    * @param {MeshEditorModule} options.module The loaded module, for its shaders and memory.
    * @param {object} options.mesh The mesh whose overlay this draws. Pick objects return it as their primitive.
    * @param {MeshEditorStyle} [options.style] Style object for the overlay overlay.
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The mesh's local-to-world transform.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -287,6 +288,7 @@ class OverlayRenderer {
 
     this.#module = options.module;
     this.#mesh = options.mesh;
+    Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY, this.#modelMatrix);
     const style = options.style ?? new MeshEditorStyle();
 
     const { shaders } = this.#module;

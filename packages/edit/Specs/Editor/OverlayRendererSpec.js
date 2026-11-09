@@ -219,7 +219,7 @@ function createOverlayViews(memory, overlay, options = {}) {
  * written by the specs instead of by wasm.
  */
 class OverlayTestPrimitive {
-  constructor(shaders) {
+  constructor(shaders, modelMatrix) {
     this._memory = { buffer: new ArrayBuffer(0) };
     this._overlayViews = undefined;
     this.mesh = {};
@@ -228,6 +228,7 @@ class OverlayTestPrimitive {
       module: { memory: this._memory, shaders },
       mesh: this.mesh,
       style: this.style,
+      modelMatrix,
     });
   }
 
@@ -443,6 +444,21 @@ describe(
         const commands = renderCommands(addSquare());
 
         expect(getInstanceCounts(commands)).toEqual([2, 5, 4]);
+      });
+
+      it("uses the model matrix from the constructor", function () {
+        const modelMatrix = Matrix4.fromTranslation(
+          new Cartesian3(1.0, 2.0, 3.0),
+        );
+        const overlay = new OverlayTestPrimitive(shaders, modelMatrix);
+        overlay.setOverlay(square);
+        scene.primitives.add(overlay);
+
+        expect(overlay.renderer.modelMatrix).toEqual(modelMatrix);
+        expect(overlay.renderer.modelMatrix).not.toBe(modelMatrix);
+        for (const command of renderCommands(overlay)) {
+          expect(command.modelMatrix).toEqual(modelMatrix);
+        }
       });
 
       it("uses the model matrix", function () {
@@ -793,6 +809,32 @@ describe(
         overlay.renderer.setLocalBounds(squareBounds);
 
         expectPixel(overlay, [0.5, -0.5, 0.0], faceColor);
+      });
+
+      // The square is flat, so the near plane is fit to its depth, and the
+      // depth bias pulls its points and edges in front of it.
+      function expectOutlineOfFlatSquare() {
+        const overlay = addSquare();
+        overlay.renderer.setLocalBounds(squareBounds);
+        overlay.renderer.outlined = true;
+        overlay.style.outlineColor = Color.RED;
+        overlay.style.outlineWidth = 4.0;
+
+        expectPixel(overlay, [1.0, 0.0, 0.0], [255, 0, 0, 255], 2);
+      }
+
+      it("draws points and edges biased in front of the near plane", function () {
+        expectOutlineOfFlatSquare();
+      });
+
+      it("draws points and edges biased in front of the near plane without a logarithmic depth buffer", function () {
+        const { logarithmicDepthBuffer } = scene;
+        scene.logarithmicDepthBuffer = false;
+        try {
+          expectOutlineOfFlatSquare();
+        } finally {
+          scene.logarithmicDepthBuffer = logarithmicDepthBuffer;
+        }
       });
     });
 
