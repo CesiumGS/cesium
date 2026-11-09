@@ -546,14 +546,20 @@ async function curveGroup(
 }
 
 /** A target's image as a PNG data URL. */
-async function still(data: Uint8ClampedArray<ArrayBuffer>): Promise<string> {
-  const canvas = new OffscreenCanvas(WIDTH, HEIGHT);
-  canvas
-    .getContext("2d")!
-    .putImageData(new ImageData(data, WIDTH, HEIGHT), 0, 0);
+async function still(
+  data: Uint8ClampedArray<ArrayBuffer>,
+  width = WIDTH,
+  height = HEIGHT,
+): Promise<string> {
+  const canvas = new OffscreenCanvas(width, height);
+  canvas.getContext("2d")!.putImageData(new ImageData(data, width), 0, 0);
   const blob = await canvas.convertToBlob({ type: "image/png" });
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  return `data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`;
+  let text = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return `data:image/png;base64,${btoa(text)}`;
 }
 
 /** Stages of several passes, intermediate textures and compute, on a real GPU. */
@@ -799,6 +805,238 @@ async function passesGroup(engine: Engine, say: Say): Promise<void> {
   scene.dispose();
 }
 
+// --- the sky -----------------------------------------------------------------------
+//
+// Real stars and the real sky, with no scene. Earth-fixed axes equal ICRF here
+// (`icrfToFixed` stays identity), so a view is aimed by right ascension and
+// declination, and the sun is set per view.
+
+type V3 = readonly [number, number, number];
+const DEG = Math.PI / 180;
+const sky3 = {
+  dir: (ra: number, dec: number): V3 => [
+    Math.cos(dec * DEG) * Math.cos(ra * DEG),
+    Math.cos(dec * DEG) * Math.sin(ra * DEG),
+    Math.sin(dec * DEG),
+  ],
+  add: (a: V3, b: V3, k = 1): V3 => [
+    a[0] + b[0] * k,
+    a[1] + b[1] * k,
+    a[2] + b[2] * k,
+  ],
+  scale: (a: V3, k: number): V3 => [a[0] * k, a[1] * k, a[2] * k],
+  dot: (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  norm: (a: V3): V3 => {
+    const k = 1 / Math.hypot(a[0], a[1], a[2]);
+    return [a[0] * k, a[1] * k, a[2] * k];
+  },
+  cross: (a: V3, b: V3): V3 => [
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0],
+  ],
+};
+
+interface SkyPose {
+  position: V3;
+  direction: V3;
+  up: V3;
+  sun: V3;
+  /** The larger field of view, degrees. */
+  fov: number;
+  /** A camera's EV100 for this view. */
+  ev100: number;
+}
+
+const NORTH: V3 = [0, 0, 1];
+const GALACTIC_NORTH = sky3.dir(192.85948, 27.12825);
+const orthoUp = (d: V3, up: V3) => sky3.norm(sky3.add(up, d, -sky3.dot(up, d)));
+
+/** Looking out from 2,000 km up, the sun behind the Earth. */
+const inSpace = (
+  direction: V3,
+  up: V3,
+  fov: number,
+  ev100: number,
+): SkyPose => ({
+  position: sky3.scale(direction, RADIUS + 2_000_000),
+  direction,
+  up,
+  sun: sky3.scale(direction, -1),
+  fov,
+  ev100,
+});
+
+/** From 400 km, the Milky Way's core over the limb. */
+function limbPose(sunAbove: boolean): SkyPose {
+  const direction = sky3.dir(266.4, -29);
+  const up = orthoUp(direction, GALACTIC_NORTH);
+  const tilt = 7.2 * DEG;
+  const radial = sky3.norm(
+    sky3.add(sky3.scale(up, Math.cos(tilt)), direction, -Math.sin(tilt)),
+  );
+  const horizontal = sky3.norm(sky3.add(direction, radial, Math.sin(tilt)));
+  const side = sky3.cross(horizontal, radial);
+  const across = sky3.norm(
+    sky3.add(
+      sky3.scale(horizontal, Math.cos(18 * DEG)),
+      side,
+      Math.sin(18 * DEG),
+    ),
+  );
+  const below = 45 * DEG;
+  return {
+    position: sky3.scale(radial, RADIUS + 400_000),
+    direction,
+    up,
+    sun: sunAbove
+      ? radial
+      : sky3.norm(
+          sky3.add(
+            sky3.scale(across, Math.cos(below)),
+            radial,
+            -Math.sin(below),
+          ),
+        ),
+    fov: 80,
+    ev100: sunAbove ? 13 : -6.5,
+  };
+}
+
+const SKY_POSES: Record<string, SkyPose> = {
+  orion: inSpace(sky3.dir(84, 7), NORTH, 66, -6.5),
+  core: inSpace(
+    sky3.dir(266.4, -29),
+    orthoUp(sky3.dir(266.4, -29), GALACTIC_NORTH),
+    100,
+    -6.5,
+  ),
+  limb: limbPose(false),
+  limbDay: limbPose(true),
+  // 2 m up, looking along the horizon, the sun 45° up behind the right shoulder.
+  day: {
+    position: [RADIUS + 2, 0, 0],
+    direction: [0, 1, 0],
+    up: [1, 0, 0],
+    sun: sky3.norm([1, -0.4, 0.8]),
+    fov: 66,
+    ev100: 15,
+  },
+};
+
+/** A view of the real sky, with no scene. */
+class SkyScene {
+  readonly target: OffscreenTarget;
+  readonly world: World;
+  readonly view: View;
+
+  constructor(
+    readonly engine: Engine,
+    width: number,
+    height: number,
+    exposure: Exposure,
+  ) {
+    this.target = new OffscreenTarget(width, height);
+    this.world = engine.createWorld({
+      maxDraws: 4,
+      vertexBytes: 1 << 16,
+      indexBytes: 1 << 16,
+    });
+    this.view = engine.addView({
+      target: this.target,
+      world: this.world,
+      background: "atmosphere",
+      sunDisk: true,
+      observer: { exposure },
+    });
+  }
+
+  /** Aims the view, and the engine's sun with it. */
+  aim(pose: SkyPose): void {
+    const { camera } = this.view;
+    camera.position.set(pose.position);
+    camera.direction.set(pose.direction);
+    camera.fov = pose.fov * DEG;
+    camera.orient(Float64Array.from(pose.up));
+    camera.version++;
+    this.engine.sunDirection.set(pose.sun);
+  }
+
+  dispose(): void {
+    this.engine.removeWorld(this.world);
+  }
+}
+
+/** Ticks until `done`, or the count runs out. */
+async function ticks(engine: Engine, count: number, done = () => false) {
+  for (let i = 0; i < count && !done(); i++) {
+    engine.renderFrame();
+    await engine.gpu.device.queue.onSubmittedWorkDone();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
+
+const skyMapFaces = ["px", "mx", "py", "my", "pz", "mz"].map(
+  (face) =>
+    new URL(
+      `../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_${face}.jpg`,
+      import.meta.url,
+    ),
+);
+
+/** The stars this page draws: `?pack=local`'s, or today's map. */
+async function skyStars(engine: Engine): Promise<void> {
+  if (params.get("pack") !== "local") {
+    engine.setStarMap(skyMapFaces);
+  }
+  const sky = engine.raster.sky as unknown as {
+    starCount: number;
+    uploading: boolean;
+  };
+  const scene = new SkyScene(engine, 16, 16, { ev100: 0 });
+  scene.aim(SKY_POSES.orion!);
+  await ticks(engine, 4000, () => sky.starCount > 0 && !sky.uploading);
+  scene.dispose();
+  engine.removeView(scene.view);
+}
+
+/** The stills for the owner's review: `?stills`. */
+async function stillsGroup(
+  engine: Engine,
+  say: Say,
+  stills: Record<string, string>,
+): Promise<void> {
+  if (!params.has("stills")) {
+    return;
+  }
+  await skyStars(engine);
+  const saved = Float64Array.from(engine.sunDirection);
+  for (const [name, pose] of Object.entries(SKY_POSES)) {
+    for (const who of ["eye", "camera"]) {
+      const exposure: Exposure =
+        who === "eye" ? { eye: true, speed: 1e6 } : { ev100: pose.ev100 };
+      const scene = new SkyScene(engine, 1280, 720, exposure);
+      scene.aim(pose);
+      await ticks(engine, 40);
+      const image = await (async () => {
+        engine.renderFrame();
+        await engine.gpu.device.queue.onSubmittedWorkDone();
+        return scene.target.read();
+      })();
+      stills[`${name}-${who}`] = await still(image, 1280, 720);
+      const r = scene.view.readout();
+      say(
+        `${name}, ${who}`,
+        true,
+        `EV100 ${r.ev100?.toFixed(2)}, cones ${r.cones?.toExponential(2)}`,
+      );
+      scene.dispose();
+      engine.removeView(scene.view);
+    }
+  }
+  engine.sunDirection.set(saved);
+}
+
 const GROUPS: Record<
   string,
   (engine: Engine, say: Say, stills: Record<string, string>) => Promise<void>
@@ -806,6 +1044,7 @@ const GROUPS: Record<
   stages: stagesGroup,
   passes: passesGroup,
   curve: curveGroup,
+  stills: stillsGroup,
 };
 
 let root: HTMLElement;
