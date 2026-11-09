@@ -30,6 +30,7 @@
   "dependencies": {
     "@cesium/core": "^0.1.0",
     "@cesium/engine": "^26.4.0",
+    "@cesium/mesh-editor": "file:../../../../wasm-mesh-editor/mesh-editor/pkg",
     "@cesium/widgets": "^16.3.0"
   },
   "type": "module",
