@@ -573,6 +573,11 @@ async function runObserver(): Promise<ObserverResult> {
   status.textContent = "checking…";
   $("results").replaceChildren();
   const engine = await Engine.create();
+  // ?pack=local: the sky pack `npm run sky -- build` made on this machine,
+  // offered by the dev server at /sky-pack/.
+  if (params.get("pack") === "local") {
+    await engine.setSkyPack("/sky-pack/");
+  }
   const deviceErrors: string[] = [];
   let lost: string | undefined;
   void engine.gpu.device.lost.then((info) => {

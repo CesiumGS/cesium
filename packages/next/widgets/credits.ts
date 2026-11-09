@@ -19,6 +19,11 @@ export interface CreditSource {
   attributions: ReadonlyArray<{ html: string; collapsible?: boolean }>;
   /** Data credits of the content on screen. */
   credits: readonly string[];
+  /**
+   * Credits kept on screen in the bar, as text (a sky data pack's): never
+   * parsed as HTML. They are also listed with `credits`.
+   */
+  pinned?: readonly string[];
 }
 
 export interface CreditsHandle {
@@ -88,8 +93,8 @@ export function attachCredits(
   let key = "";
   let shown = true;
   const refresh = () => {
-    const { attributions, credits } = source();
-    const next = JSON.stringify([attributions, credits]);
+    const { attributions, credits, pinned = [] } = source();
+    const next = JSON.stringify([attributions, credits, pinned]);
     if (next === key) {
       return;
     }
@@ -134,6 +139,17 @@ export function attachCredits(
       const inline = inlineText(doc);
       inline.title = text;
       logos.append(inline);
+    }
+    for (const text of pinned) {
+      if (!text || seen.has(text)) {
+        continue;
+      }
+      seen.add(text);
+      const span = document.createElement("span");
+      span.className = "cc-text";
+      span.title = text;
+      span.append(text); // a text node: markup in it shows as written
+      logos.append(span);
     }
     // The data credits come first in the panel, most frequent first, then
     // the providers' collapsible notices (1.x orders by frequency, and

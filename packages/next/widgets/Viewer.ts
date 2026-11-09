@@ -59,6 +59,7 @@ import type {
   SkyInputs,
 } from "@cesium/next/frames";
 import { Clock } from "@cesium/next/time";
+import type { SkyPackManifest } from "../src/atmosphere/skyPack.ts";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
 import { orbitState, planOrbit, type OrbitOptions } from "./orbitFocus.ts";
@@ -146,6 +147,14 @@ export interface ViewerOptions {
    * by the clock); false: none.
    */
   stars?: boolean;
+  /**
+   * A sky data pack (URL of its manifest, or of its folder with a slash at
+   * the end) for the stars and background, in place of the default map;
+   * its credits show on screen while it draws. A pack that fails to load,
+   * or isn't marked distributable, warns once (builds refuse such a pack).
+   * Ignored with `stars: false`.
+   */
+  skyPack?: string | URL;
   /**
    * The Moon in the sky and its light at night (default true: placed and
    * turned by the clock, with Cesium Moon Terrain's map when the ion token
@@ -314,6 +323,8 @@ export class Viewer {
   /** Cesium Moon Terrain's map arrived (1.x's no longer wanted). */
   private moonMapSharp = false;
   private credits_?: CreditsHandle;
+  private starsOn = true;
+  private pack: SkyPackManifest | undefined;
   private inspector?: InspectorHandle;
   /** Stops the viewer's per-frame work (`Engine.onTick`, `onAfterTick`). */
   private readonly offTick: () => void;
@@ -481,8 +492,12 @@ export class Viewer {
           );
         });
     }
-    if (options.stars !== false) {
+    this.starsOn = options.stars !== false;
+    if (this.starsOn) {
       this.engine.setStarMap(STAR_MAP);
+      if (options.skyPack) {
+        void this.setSkyPack(options.skyPack);
+      }
     }
     if (options.timeControls !== false) {
       this.state.time_ = attachTimeControls(container, this.clock, {
@@ -921,9 +936,39 @@ export class Viewer {
     return [...tilesets];
   }
 
+  /**
+   * Takes a sky data pack for the stars and background (`ViewerOptions.skyPack`);
+   * null goes back to the default map. Resolves with its manifest, or with
+   * undefined if it was refused (what is drawn stays, and one warning names
+   * the file and the field). Nothing happens with `stars: false`.
+   */
+  async setSkyPack(
+    url: string | URL | null,
+  ): Promise<SkyPackManifest | undefined> {
+    if (!this.starsOn) {
+      return undefined;
+    }
+    if (url === null) {
+      this.pack = undefined;
+      await this.engine.setSkyPack(null);
+      return undefined;
+    }
+    const manifest = await this.engine.setSkyPack(url);
+    if (manifest) {
+      this.pack = manifest;
+    }
+    return manifest;
+  }
+
   /** What the view must credit: providers' attributions and data credits. */
-  credits(): { attributions: Attribution[]; credits: string[] } {
+  credits(): {
+    attributions: Attribution[];
+    credits: string[];
+    pinned: string[];
+  } {
+    const pinned = this.pack ? [...this.pack.credits] : [];
     return {
+      pinned,
       attributions: [
         ...this.state.terrainAttributions,
         ...(this.state.imagery?.attributions ?? []),
@@ -931,11 +976,12 @@ export class Viewer {
         ...this.shownTilesets().flatMap((t) => t.attributions),
       ],
       credits: [
-        ...new Set(
-          [this.state.globe_, ...this.shownTilesets()]
+        ...new Set([
+          ...[this.state.globe_, ...this.shownTilesets()]
             .filter((t) => !!t)
             .flatMap((t) => t.credits()),
-        ),
+          ...pinned,
+        ]),
       ],
     };
   }
