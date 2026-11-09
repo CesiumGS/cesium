@@ -17,12 +17,8 @@ import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import {
-  EYE,
-  OffscreenTarget,
-  type Exposure,
-  type View,
-} from "../src/scene/View.ts";
+import { EYE, type Exposure, type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

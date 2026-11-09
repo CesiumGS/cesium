@@ -23,7 +23,8 @@ import {
 import { EARTH, MOON } from "../src/scene/Body.ts";
 import { Camera } from "../src/scene/Camera.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { AnchorHandle, World } from "../src/scene/World.ts";
 import type { SelectionView } from "../src/streaming/Stepwise.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";

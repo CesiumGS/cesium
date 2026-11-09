@@ -18,7 +18,7 @@ import { terrainBackend, terrainQueries } from "../src/query/terrainBackend.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
-import { OffscreenTarget } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { CastRay } from "../src/scene/World.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { A, at, gridTile, strip, stripTarget } from "./terrainRayFixtures.ts";

@@ -16,7 +16,8 @@ import type { Engine } from "../src/scene/Engine.ts";
 import { GlobeController } from "../src/scene/GlobeController.ts";
 import { InspectController } from "../src/scene/InspectController.ts";
 import { OrbitController } from "../src/scene/OrbitController.ts";
-import { OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { AnchorHandle, World } from "../src/scene/World.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

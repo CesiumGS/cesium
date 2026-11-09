@@ -20,7 +20,8 @@ import {
 } from "../src/render/layout.ts";
 import { CapacityError } from "../src/scene/CapacityError.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { DrawHandle, World } from "../src/scene/World.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import type { Tileset3D, TilesetOptions } from "../src/streaming/Tileset3D.ts";

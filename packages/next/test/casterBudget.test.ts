@@ -6,7 +6,7 @@ import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { OffscreenTarget } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import type { Tileset3D, TilesetOptions } from "../src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";

@@ -16,11 +16,8 @@ import { AtmosphereReference } from "../src/atmosphere/AtmosphereReference.ts";
 import { RealtimeAtmosphere } from "../src/atmosphere/RealtimeAtmosphere.ts";
 import { EARTH, directSunIlluminance } from "../src/atmosphere/model.ts";
 import { Engine } from "../src/scene/Engine.ts";
-import {
-  OffscreenTarget,
-  type HdrImage,
-  type View,
-} from "../src/scene/View.ts";
+import { type HdrImage, type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
 import * as v3 from "../src/math/vec3.ts";

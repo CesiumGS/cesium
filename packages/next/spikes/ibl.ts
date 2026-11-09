@@ -15,7 +15,8 @@ import {
   type HdrPixels,
 } from "../lab/hdr.ts";
 import { Engine, environmentFrame } from "../src/scene/Engine.ts";
-import { OffscreenTarget, type HdrImage } from "../src/scene/View.ts";
+import { type HdrImage } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import {
   IblReference,
   type ReferenceSphere,

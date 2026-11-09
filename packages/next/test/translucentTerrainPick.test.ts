@@ -12,7 +12,8 @@ import { EARTH } from "../src/scene/Body.ts";
 import { Camera } from "../src/scene/Camera.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
-import { OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { AnchorHandle, DrawHandle, World } from "../src/scene/World.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

@@ -18,7 +18,8 @@ import { CameraMoves, type Framing } from "../examples/design-globe/shots.ts";
 import { createStore } from "../examples/design-globe/stores.ts";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

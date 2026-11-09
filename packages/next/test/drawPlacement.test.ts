@@ -33,7 +33,8 @@ import {
   type PlacementParameter,
 } from "../src/scene/placement.ts";
 import { FITTED_ROWS, PLACEMENT_KIND } from "../src/scene/placementTable.ts";
-import { OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { DrawHandle, World } from "../src/scene/World.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

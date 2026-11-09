@@ -35,7 +35,7 @@ import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import type { World } from "../src/scene/World.ts";
 import { summarizeContent } from "../src/streaming/pipeline.ts";
-import { OffscreenTarget } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import {
   fakeDevice,
   installFakeNavigator,

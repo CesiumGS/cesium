@@ -16,11 +16,11 @@ import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import {
   EYE,
-  OffscreenTarget,
   ev100ToScale,
   type Exposure,
   type View,
 } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { eyeResponse, SCOTOPIC_WHITE } from "../src/scene/eye.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

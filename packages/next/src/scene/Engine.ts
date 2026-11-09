@@ -33,16 +33,18 @@ import {
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import {
-  CanvasTarget,
-  OffscreenTarget,
   View,
   ev100ToScale,
   type HdrImage,
-  type PixelRect,
-  type RenderTarget,
   type ToneMapping,
   type ViewOptions,
 } from "./View.ts";
+import {
+  CanvasTarget,
+  OffscreenTarget,
+  type PixelRect,
+  type RenderTarget,
+} from "./renderTarget.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky, type SkyView } from "../atmosphere/Sky.ts";

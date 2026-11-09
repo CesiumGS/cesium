@@ -3,7 +3,7 @@
 // its camera frames the gap. Plain functions; gapInset.ts adds the engine view
 // (`engine.addView`) and its frame in the HUD.
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
-import type { Viewport } from "../../src/scene/View.ts";
+import type { Viewport } from "../../src/scene/renderTarget.ts";
 import { NARROW_VIEW } from "./content.ts";
 
 /** Sizes, CSS px; `fill` is the share of the picture's height the gap takes. */

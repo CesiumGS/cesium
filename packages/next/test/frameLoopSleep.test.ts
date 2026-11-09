@@ -13,7 +13,8 @@ import * as m4 from "../src/math/mat4.ts";
 import * as v3 from "../src/math/vec3.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { CanvasTarget, OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { CanvasTarget, OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { Clock } from "../src/time/Clock.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 

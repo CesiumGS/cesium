@@ -25,7 +25,7 @@ import {
   VIEW_TIME_WORD,
 } from "../src/render/layout.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { OffscreenTarget } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { DrawHandle, World } from "../src/scene/World.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import type { TilesetOptions } from "../src/streaming/Tileset3D.ts";

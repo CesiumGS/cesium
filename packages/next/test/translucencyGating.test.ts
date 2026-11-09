@@ -1,7 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Engine } from "../src/scene/Engine.ts";
 import { MaterialFlags } from "../src/render/layout.ts";
-import { OffscreenTarget, type View } from "../src/scene/View.ts";
+import { type View } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
 import type { MeshData } from "../src/scene/meshes.ts";
 import { fakeEngine } from "./fakeGpu.ts";

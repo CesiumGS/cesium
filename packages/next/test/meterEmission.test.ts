@@ -20,11 +20,8 @@ import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import {
-  EYE,
-  OffscreenTarget,
-  type TranslucencyMethod,
-} from "../src/scene/View.ts";
+import { EYE, type TranslucencyMethod } from "../src/scene/View.ts";
+import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const LUMINANCE = [0.2126, 0.7152, 0.0722] as const;

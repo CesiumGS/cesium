@@ -77,8 +77,6 @@ export {
 } from "./scene/HeightClamping.ts";
 export {
   View,
-  CanvasTarget,
-  OffscreenTarget,
   type HdrImage,
   type Exposure,
   DAYLIGHT_EXPOSURE,
@@ -90,9 +88,13 @@ export {
   type TranslucencyMethod,
   type ViewBackground,
   type PickResult,
+} from "./scene/View.ts";
+export {
+  CanvasTarget,
+  OffscreenTarget,
   type RenderTarget,
   type Viewport,
-} from "./scene/View.ts";
+} from "./scene/renderTarget.ts";
 export type { CorePick, PickCamera, PickInterpreter } from "./scene/pick.ts";
 export {
   PLACEMENT_MONOMIALS,
