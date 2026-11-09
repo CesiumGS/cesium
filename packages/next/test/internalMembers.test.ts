@@ -22,7 +22,18 @@ it("both library configs strip internal members", () => {
   expect(libraryOptions("tsconfig.lib.widgets.json").stripInternal).toBe(true);
 });
 
-const OUT = "dist-lib/never-written";
+// In memory only. Outside `dist-lib`, whose package.json would claim the
+// package's name for anything under it: the check owes nothing to what's on disk.
+const OUT = "never-written-declarations";
+
+/** The package's entry points, as the program below emits them. */
+const ENTRIES: Readonly<Record<string, string>> = {
+  "@cesium/next": "src/index",
+  "@cesium/next/time": "src/time/index",
+  "@cesium/next/frames": "src/frames/index",
+  "@cesium/next/proj": "src/proj/index",
+  "@cesium/next/measure": "src/measure/index",
+};
 
 /** The declarations of every entry point, emitted in memory from one program. */
 function emitDeclarations(): {
@@ -32,11 +43,7 @@ function emitDeclarations(): {
 } {
   const options = libraryOptions("tsconfig.lib.json");
   const entries = [
-    "src/index.ts",
-    "src/time/index.ts",
-    "src/frames/index.ts",
-    "src/proj/index.ts",
-    "src/measure/index.ts",
+    ...Object.values(ENTRIES).map((entry) => `${entry}.ts`),
     "widgets/index.ts",
   ].map((entry) => join(root, entry));
   const program = ts.createProgram(entries, {
@@ -172,11 +179,23 @@ it("the published declarations compile with skipLibCheck off", () => {
       noEmit: true,
       skipLibCheck: false,
       rootDir: undefined,
-      paths: {},
+      // The widgets' `@cesium/next` is the declarations just emitted.
+      paths: Object.fromEntries(
+        Object.entries(ENTRIES).map(([name, entry]) => [
+          name,
+          [join(root, OUT, `${entry}.d.ts`)],
+        ]),
+      ),
       types: ["@webgpu/types"],
     },
     host,
   );
+  for (const [name, entry] of Object.entries(ENTRIES)) {
+    expect(
+      ts.resolveModuleName(name, consumer, program.getCompilerOptions(), host)
+        .resolvedModule?.resolvedFileName,
+    ).toBe(join(root, OUT, `${entry}.d.ts`));
+  }
   const errors = ts
     .getPreEmitDiagnostics(program)
     .filter((d) => d.file && virtual.has(d.file.fileName))
