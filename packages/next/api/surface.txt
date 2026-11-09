@@ -4,6 +4,7 @@ entry	name	kind	tier
 .	AerosolType	type	-
 .	AffinePlacement	interface	-
 .	AnchorHandle	interface	-
+.	Aperture	type	-
 .	Attribution	interface	-
 .	BASE_BINDING_LIMITS	const	-
 .	BASE_CAPACITY_LIMITS	const	-
@@ -59,6 +60,8 @@ entry	name	kind	tier
 .	FrameResolver	interface	-
 .	FrameStats	interface	-
 .	FrameUnavailableError	class	-
+.	GlareSettings	interface	-
+.	GlareTier	type	-
 .	Globe	class	-
 .	GlobeController	class	-
 .	GlobeImagery	class	-
@@ -102,6 +105,8 @@ entry	name	kind	tier
 .	MoonMap	interface	-
 .	NO_ACCELERATION	const	-
 .	NamedType	type	-
+.	ObserverReadout	interface	-
+.	ObserverSettings	interface	-
 .	OffscreenTarget	class	-
 .	OrbitBasis	interface	-
 .	OrbitController	class	-
@@ -121,6 +126,7 @@ entry	name	kind	tier
 .	PointPropertyType	type	-
 .	PointSource	class	-
 .	PointSourceOptions	interface	-
+.	PointSpread	interface	-
 .	PurposeStats	interface	-
 .	QueryAnswer	interface	-
 .	QueryHost	interface	-
@@ -208,6 +214,7 @@ entry	name	kind	tier
 .	Viewport	interface	-
 .	World	class	-
 .	WorldMemory	interface	-
+.	cameraObserver	function	-
 .	cartographic	function	-
 .	castTerrainRay	function	-
 .	collectFullDetailContents	function	-
@@ -220,6 +227,7 @@ entry	name	kind	tier
 .	eastNorthUpToFixedFrame	function	-
 .	enuBasis	function	-
 .	ev100ToScale	const	-
+.	eyeObserver	function	-
 .	fromDegrees	function	-
 .	ionDefaults	const	-
 .	isCapacityError	function	-
@@ -251,6 +259,7 @@ entry	name	kind	tier
 .	resolveITwinIModel	function	-
 .	resolveIonAsset	function	-
 .	resolveUri	function	-
+.	scaleToEv100	const	-
 .	secondDerivativeBound	function	-
 .	summarizeContent	function	-
 .	tableResolver	function	-

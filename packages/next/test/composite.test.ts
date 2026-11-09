@@ -757,7 +757,7 @@ describe("a composite placed as one tile's content", () => {
       const view = engine.addView({
         target: new OffscreenTarget(640, 360),
         world,
-        exposure: { ev100: 15 },
+        observer: { exposure: { ev100: 15 } },
       });
       view.camera.lookAt(new Float64Array([X, 0, 0]), 0, -Math.PI / 2, 300);
       const tileset = await engine.addTileset(
@@ -813,7 +813,7 @@ describe("a composite placed as one tile's content", () => {
     const view = engine.addView({
       target: new OffscreenTarget(640, 360),
       world,
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     view.camera.lookAt(new Float64Array([X, 0, 0]), 0, -Math.PI / 2, 300);
     const tileset = await engine.addTileset(
@@ -861,7 +861,7 @@ describe("a composite placed as one tile's content", () => {
     const view = engine.addView({
       target: new OffscreenTarget(640, 360),
       world,
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     view.camera.lookAt(new Float64Array([X, 0, 0]), 0, -Math.PI / 2, 300);
     const tileset = await engine.addTileset(

@@ -20,7 +20,8 @@ import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { EYE, type TranslucencyMethod } from "../src/scene/View.ts";
+import type { TranslucencyMethod } from "../src/scene/View.ts";
+import { EYE } from "../src/scene/observer.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
@@ -293,7 +294,7 @@ describe("the exposure meter and emission", () => {
       const view = engine.addView({
         target: new OffscreenTarget(64, 36),
         world,
-        exposure: EYE,
+        observer: { exposure: EYE },
         translucencyMethod: method,
       });
       view.camera.lookAt(v3.vec3(6_378_137, 0, 0), 0, -Math.PI / 2, 100);

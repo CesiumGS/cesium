@@ -216,7 +216,7 @@ darker ground under the overlay that is the subject.
   no imagery brightness or saturation control (checked: `GlobeImagery`,
   `ImageryProvider`), but the view's exposure is one: overlays are unlit,
   and unlit content is display-referred, added after exposure (View.ts,
-  `HdrImage`), so lowering `viewer.view.exposure`'s `compensation` dims
+  `HdrImage`), so lowering `viewer.view.observer.exposure`'s `compensation` dims
   the globe and leaves the lines at full strength. Use `{ eye: true,
 compensation: -0.6 }` (about 0.66× brightness) for those stops, eased
   over the flight, and restore it after. Desaturation isn't available; the

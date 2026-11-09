@@ -132,7 +132,7 @@ function fakeViewer(options: { lightingThrows?: boolean } = {}) {
         },
         camera: camera(),
         viewport: {},
-        exposure: {},
+        observer: { exposure: {} },
       };
       views.push(view);
       return view;
@@ -151,7 +151,7 @@ function fakeViewer(options: { lightingThrows?: boolean } = {}) {
       engine,
       target: {},
       world: {},
-      view: { lighting: {}, camera: camera(), exposure: {} },
+      view: { lighting: {}, camera: camera(), observer: { exposure: {} } },
     },
   };
 }

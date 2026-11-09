@@ -1,7 +1,8 @@
 // What a view keeps between ticks: its graph, its readbacks and its bind groups.
 import type { SkyView } from "../../atmosphere/Sky.ts";
 import type { FrameGraph, TextureHandle } from "../FrameGraph.ts";
-import type { ToneMapping, View } from "../../scene/View.ts";
+import type { View } from "../../scene/View.ts";
+import type { ToneMapping } from "../../scene/observer.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
 
 /** Tone mappings by their index in present.slang's `PresentParams`. */

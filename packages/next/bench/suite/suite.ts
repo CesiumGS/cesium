@@ -614,7 +614,7 @@ export class NextAdapter implements Adapter {
       }),
       world,
       // Compared with 1.x frame for frame: lit in 1.x's (unitless) terms.
-      exposure: UNITLESS_EXPOSURE,
+      observer: { exposure: UNITLESS_EXPOSURE },
       background: "color",
       lighting: {
         sunIlluminance: UNITLESS_SUN_ILLUMINANCE,

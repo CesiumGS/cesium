@@ -137,7 +137,8 @@ export function meterPass(
 
   return (enc, get) => {
     const auto = view.autoExposure;
-    const adapts = "auto" in view.exposure || "eye" in view.exposure;
+    const { exposure } = view.observer;
+    const adapts = "auto" in exposure || "eye" in exposure;
     // Not a column or a row: a canvas squeezed to 0 width draws 1 pixel
     // across, which says nothing of the view (stars alone, from a view
     // half full of a sunlit Earth, opened the eye: white on the way back).
@@ -327,7 +328,7 @@ export function adaptationPass(
   const { device, pipelines } = engine.ctx;
 
   return (enc, get) => {
-    if (!("eye" in view.exposure)) {
+    if (!("eye" in view.observer.exposure)) {
       return;
     }
     engine.raster.adaptData[0] = view.exposureScale;
@@ -411,7 +412,7 @@ export function presentPassBody(
     const params = engine.raster.presentData;
     params.setFloat32(0, fxaa ? 0 : x, true);
     params.setFloat32(4, fxaa ? 0 : y, true);
-    params.setUint32(8, TONE_MAPPINGS.indexOf(view.toneMapping), true);
+    params.setUint32(8, TONE_MAPPINGS.indexOf(view.observer.toneMapping), true);
     // FXAA reads encoded color (its edges are found in display luma);
     // gamma 2.2 only where the target isn't -srgb, as without it.
     const encoding =
@@ -423,7 +424,7 @@ export function presentPassBody(
     params.setUint32(12, encoding, true);
     // The eye: its adaptation over the view (log10 cd/m²) and its
     // brightening; per pixel it adapts partly to its region too.
-    const e = view.exposure;
+    const e = view.observer.exposure;
     const state = view.autoExposure;
     const eye = "eye" in e && state !== undefined;
     params.setFloat32(16, view.exposureScale, true);

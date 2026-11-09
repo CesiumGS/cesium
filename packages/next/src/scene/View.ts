@@ -24,6 +24,14 @@ import {
   rotate,
 } from "./viewAnchors.ts";
 import { ViewAnchorState } from "./viewAnchorState.ts";
+import {
+  DAYLIGHT_EXPOSURE,
+  type ObserverReadout,
+  type ObserverSettings,
+  cameraObserver,
+  ev100ToScale,
+  observerReadout,
+} from "./observer.ts";
 
 /** A line list drawn on top of a view. */
 export interface Overlay {
@@ -61,67 +69,16 @@ export interface PickResult {
   item?: SceneItem;
 }
 
-/**
- * How a view turns the scene's light into an image (plan §4.2): as a
- * camera records it (a fixed exposure, a plain scale, or metered), or as
- * the eye sees it (`EYE`). Light is in physical units by default (lux,
- * cd/m²), so the default is a camera set for daylight.
- */
-export type Exposure =
-  /**
-   * A camera's exposure value at ISO 100: about 15 in direct sun ("sunny
-   * 16"), 12 overcast, 7 in a lit interior. Scale 1 / (1.2 · 2^EV100).
-   */
-  | { ev100: number }
-  /** A plain multiplier, for scenes without physical units. */
-  | { scale: number }
-  /**
-   * Automatic: from the image's average luminance (reflected-light meter,
-   * K = 12.5), adapting over time. EV100 is kept within [min, max];
-   * `compensation` (stops) brightens when positive; `speed` is the
-   * adaptation rate per second.
-   */
-  | {
-      auto: true;
-      compensation?: number;
-      min?: number;
-      max?: number;
-      speed?: number;
-    }
-  /**
-   * The eye: the scene's light as a person there would see it
-   * (scene/eye.ts). Its cones and rods adapt to the scene, each showing
-   * what it sees as visible as it was (Ferwerda et al. 1996's thresholds):
-   * in dim light the rods take over, gray and a little blue (Thompson et
-   * al. 2002), colors fading; night looks darker than day (Tumblin and
-   * Rushmeier's brightness: 1.8 stops by moonlight); adapting to light
-   * takes a moment, to dark longer. It sees the stars against a dark sky
-   * even where the scene is bright (from orbit). `compensation` (stops)
-   * brightens when positive; `speed` is how many times faster than a
-   * real eye it adapts (1: to dark in minutes, as the eye does; default
-   * `EYE_ADAPTATION_SPEED`, 400: a few seconds).
-   */
-  | { eye: true; compensation?: number; speed?: number };
-
-/** The eye (`Exposure`): the `Viewer`'s default. */
-export const EYE: Exposure = { eye: true };
-
-/** No exposure: for scenes lit without units (1.x's terms). */
-export const UNITLESS_EXPOSURE: Exposure = { scale: 1 };
-
-/** Daylight: EV100 15. */
-export const DAYLIGHT_EXPOSURE: Exposure = { ev100: 15 };
-
-/** The exposure scale for an EV100 (Lagarde and de Rousiers 2014). */
-export const ev100ToScale = (ev100: number): number => 1 / (1.2 * 2 ** ev100);
-
 export interface ViewOptions {
   target: RenderTarget;
   world: World;
   camera?: Camera;
   viewport?: Viewport;
-  /** How light becomes an image (`Exposure`). Default: daylight, EV100 15. */
-  exposure?: Exposure;
+  /**
+   * Who is looking (`ObserverSettings`): over `cameraObserver({ ev100: 15 })`,
+   * a camera set for daylight.
+   */
+  observer?: Partial<ObserverSettings>;
   /** The body whose sky and light the view sees. Default: the Earth. */
   body?: Body;
   /**
@@ -171,8 +128,6 @@ export interface ViewOptions {
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
   outputEncoding?: OutputEncoding;
-  /** How exposed light becomes display color (`ToneMapping`). */
-  toneMapping?: ToneMapping;
   lighting?: Partial<ViewLighting>;
 }
 
@@ -191,27 +146,11 @@ export type OutputEncoding = "srgb" | "gamma2.2";
  */
 export type TranslucencyMethod = "moments" | "exact";
 
-/**
- * How exposed scene light becomes display color:
- *
- * - "pbrNeutral" (default): Khronos PBR Neutral. Base colors stay as
- *   authored up to about 0.8, then highlights compress toward white; the
- *   choice for design review and product color.
- * - "agx": Troy Sobotka's AgX (as Blender 4 and Filament ship it). A
- *   filmic curve in a wider gamut: bright saturated light desaturates
- *   toward white the way film and the eye see it (a sunset, a lamp), with
- *   lower contrast and a slightly lifted middle gray.
- * - "aces": the ACES filmic curve as CesiumJS 1.x applies it (Narkowicz's
- *   fit): more contrast and saturation, highlights clipping toward hue.
- */
-export type ToneMapping = "pbrNeutral" | "agx" | "aces";
-
 export type ViewBackground = "atmosphere" | "color";
 
 /**
- * A copy of `value` whose writes call `changed`: a view's viewport,
- * exposure and lighting edited in place wake the engine's loop, as
- * assigning them does.
+ * A copy of `value` whose writes call `changed`: a view's viewport and
+ * lighting edited in place wake the engine's loop, as assigning them does.
  */
 function watched<T extends object>(value: T, changed: () => void): T {
   return new Proxy(
@@ -232,6 +171,41 @@ function watched<T extends object>(value: T, changed: () => void): T {
 }
 
 /**
+ * `watched`, for a value holding plain objects: those are copied and watched
+ * too, however deep, on the way in and when written later. Arrays are copied
+ * and frozen. Anything else, such as a class's instance, is kept as it is.
+ */
+function watchedTree<T extends object>(value: T, changed: () => void): T {
+  const copy = (v: unknown): unknown => {
+    if (Array.isArray(v)) {
+      return Object.freeze([...(v as unknown[])]);
+    }
+    if (v === null || typeof v !== "object") {
+      return v;
+    }
+    return Object.getPrototypeOf(v) === Object.prototype
+      ? watchedTree(v, changed)
+      : v;
+  };
+  const target: Record<PropertyKey, unknown> = {};
+  for (const key of Object.keys(value)) {
+    target[key] = copy((value as Record<string, unknown>)[key]);
+  }
+  return new Proxy(target, {
+    set(t, key, v) {
+      t[key] = copy(v);
+      changed();
+      return true;
+    },
+    deleteProperty(t, key) {
+      delete t[key];
+      changed();
+      return true;
+    },
+  }) as T;
+}
+
+/**
  * A camera looking at a world through a rectangle of a target. Views are
  * cheap: they own no geometry, only per-view state.
  */
@@ -242,10 +216,11 @@ export class View {
   readonly camera: Camera;
   readonly target: RenderTarget;
   /**
-   * The multiplier from the light in the scene to what is tonemapped, as
-   * of the last frame (automatic exposure moves it). Shading applies it
-   * before writing the HDR target (pre-exposure: fp16 stops at 65,504, and
-   * a sunny day spans about 20 stops from night).
+   * @internal The multiplier from the light in the scene to what is
+   * tonemapped, as of the last tick (automatic exposure moves it). Shading
+   * applies it before writing the HDR target (pre-exposure: fp16 stops at
+   * 65,504, and a sunny day spans about 20 stops from night). `readout`
+   * gives it to an application.
    */
   exposureScale: number;
   /**
@@ -279,7 +254,7 @@ export class View {
   /**
    * @internal Wakes the engine's frame loop (it sleeps on demand when
    * nothing changes): set by `Engine.addView`, called when what the view's
-   * on-demand fingerprint reads is set (`viewport`, `exposure` and
+   * on-demand fingerprint reads is set (`viewport`, `observer` and
    * `lighting` also when written in place), and for a pick.
    */
   wake?: () => void;
@@ -292,17 +267,21 @@ export class View {
   private readonly state = {} as {
     world: World;
     viewport: Viewport;
-    exposure: Exposure;
+    observer: ObserverSettings;
     background: ViewBackground;
     sunDisk: boolean;
     aerialPerspective: boolean;
     clearColor: readonly [number, number, number];
     outputEncoding: OutputEncoding;
-    toneMapping: ToneMapping;
     enabled: boolean;
     lighting: ViewLighting;
   };
   private readonly changed = () => this.wake?.();
+  private readonly observerChanged = () => {
+    this.observerRevision_++;
+    this.wake?.();
+  };
+  private observerRevision_ = 0;
 
   get world(): World {
     return this.state.world;
@@ -318,16 +297,37 @@ export class View {
     this.state.viewport = watched(value, this.changed);
     this.wake?.();
   }
-  get exposure(): Exposure {
-    return this.state.exposure;
+  /**
+   * Who is looking: everything between the scene's light and a pixel. A
+   * copy of what is set, which belongs to this view alone: written in
+   * place too, at any depth (`view.observer.exposure.ev100 = 12`), it wakes
+   * the engine's loop.
+   */
+  get observer(): ObserverSettings {
+    return this.state.observer;
   }
-  set exposure(value: Exposure) {
-    this.state.exposure = watched(value, this.changed);
-    this.wake?.();
+  set observer(value: ObserverSettings) {
+    this.state.observer = watchedTree(value, this.observerChanged);
+    this.observerChanged();
+  }
+  /** Counts changes to `observer`, assigned or written in place. */
+  get observerRevision(): number {
+    return this.observerRevision_;
+  }
+  /**
+   * What the observer is doing now: its exposure in EV100, and the eye's
+   * adaptation. An adapting exposure reads as of the last tick.
+   */
+  readout(): ObserverReadout {
+    return observerReadout(
+      this.state.observer.exposure,
+      this.exposureScale,
+      this.autoExposure?.metered ? this.autoExposure : undefined,
+    );
   }
   /**
    * The sun's illuminance and image-based lighting factors. Like
-   * `viewport` and `exposure`, a copy of what is set: written in place
+   * `viewport` and `observer`, a copy of what is set: written in place
    * too, it wakes the engine's loop.
    */
   get lighting(): ViewLighting {
@@ -372,13 +372,6 @@ export class View {
     this.state.outputEncoding = value;
     this.wake?.();
   }
-  get toneMapping(): ToneMapping {
-    return this.state.toneMapping;
-  }
-  set toneMapping(value: ToneMapping) {
-    this.state.toneMapping = value;
-    this.wake?.();
-  }
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
   get enabled(): boolean {
     return this.state.enabled;
@@ -404,11 +397,15 @@ export class View {
     this.world = options.world;
     this.camera = options.camera ?? new Camera();
     this.viewport = options.viewport ?? { x: 0, y: 0, width: 1, height: 1 };
-    this.exposure = options.exposure ?? DAYLIGHT_EXPOSURE;
+    this.observer = {
+      ...cameraObserver(DAYLIGHT_EXPOSURE),
+      ...options.observer,
+    };
+    const exposure = this.observer.exposure;
     this.exposureScale =
-      "scale" in this.exposure
-        ? this.exposure.scale
-        : ev100ToScale("ev100" in this.exposure ? this.exposure.ev100 : 15);
+      "scale" in exposure
+        ? exposure.scale
+        : ev100ToScale("ev100" in exposure ? exposure.ev100 : 15);
     this.body = options.body ?? EARTH;
     this.background = options.background ?? "atmosphere";
     this.sunDisk = options.sunDisk ?? true;
@@ -421,7 +418,6 @@ export class View {
     this.cityLights = options.cityLights ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
-    this.toneMapping = options.toneMapping ?? "pbrNeutral";
     this.enabled = true;
     this.lighting = {
       sunIlluminance: "atmosphere",

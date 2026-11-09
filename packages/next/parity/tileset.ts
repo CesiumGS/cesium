@@ -618,7 +618,7 @@ async function runTileset(): Promise<Row[]> {
             camera,
             clearColor: [0, 0, 0],
             outputEncoding: colorTransfer === "srgb" ? "srgb" : "gamma2.2",
-            exposure: UNITLESS_EXPOSURE,
+            observer: { exposure: UNITLESS_EXPOSURE },
             background: "color",
             lighting: {
               sunIlluminance: UNITLESS_SUN_ILLUMINANCE,

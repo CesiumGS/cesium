@@ -48,7 +48,7 @@ describe("the design globe in the engine's frames", () => {
     view = engine.addView({
       target: new OffscreenTarget(640, 360),
       world: engine.createWorld(),
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -1, 100);
     engine.start();

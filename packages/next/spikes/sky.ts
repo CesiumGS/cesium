@@ -491,7 +491,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
   for (const [name, ev100, sun, altitude, pitch] of shots) {
     setSun(sun);
     lookWest(altitude, pitch);
-    view.exposure = { ev100 };
+    view.observer.exposure = { ev100 };
     const image = await render();
     // A grid of pixels against the tables' own per-direction march (what
     // the table interpolates), from the same point on their sphere (the

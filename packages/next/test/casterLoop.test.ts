@@ -269,7 +269,7 @@ describe("casters on the on-demand loop", () => {
           target: new OffscreenTarget(...(o.size ?? [1920, 1080])),
           world,
           shadows: true,
-          exposure: { ev100: 15 },
+          observer: { exposure: { ev100: 15 } },
         }),
       );
     }

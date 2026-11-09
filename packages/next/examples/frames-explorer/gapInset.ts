@@ -204,7 +204,7 @@ export class GapInset {
     const box = insetBox(size, hudBottom, avoid);
     place(this.frame, box.frame);
     view.viewport = insetViewport(box.view, size);
-    view.exposure = this.viewer.view.exposure;
+    view.observer.exposure = this.viewer.view.observer.exposure;
 
     const aspect = box.view.width / box.view.height;
     const pose = insetCamera(

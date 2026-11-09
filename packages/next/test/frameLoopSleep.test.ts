@@ -131,7 +131,7 @@ describe("the frame loop sleeps when settled", () => {
     const view = engine.addView({
       target: new OffscreenTarget(640, 360),
       world: engine.createWorld(),
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     return view;
@@ -172,7 +172,11 @@ describe("the frame loop sleeps when settled", () => {
       (view) => (view.viewport = { x: 0, y: 0, width: 0.5, height: 1 }),
       1,
     ],
-    ["a view's exposure", (view) => (view.exposure = { ev100: 14 }), 1],
+    [
+      "a view's exposure",
+      (view) => (view.observer.exposure = { ev100: 14 }),
+      1,
+    ],
     ["wake, with nothing changed", () => engine.wake(), 0],
     [
       "several wakes before the frame",
@@ -202,7 +206,7 @@ describe("the frame loop sleeps when settled", () => {
       (view) => (view.outputEncoding = "gamma2.2"),
       1,
     ],
-    ["a view's tone mapping", (view) => (view.toneMapping = "agx"), 1],
+    ["a view's tone mapping", (view) => (view.observer.toneMapping = "agx"), 1],
     [
       "a view's lighting",
       (view) => (view.lighting = { ...view.lighting, diffuseIbl: 0.5 }),
@@ -212,7 +216,7 @@ describe("the frame loop sleeps when settled", () => {
     ["a viewport written in place", (view) => (view.viewport.width = 0.5), 1],
     [
       "an exposure written in place",
-      (view) => ((view.exposure as { ev100: number }).ev100 = 13),
+      (view) => ((view.observer.exposure as { ev100: number }).ev100 = 13),
       1,
     ],
     [
@@ -284,7 +288,7 @@ describe("the frame loop sleeps when settled", () => {
     const view = engine.addView({
       target: new CanvasTarget(canvas as unknown as HTMLCanvasElement),
       world: engine.createWorld(),
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     engine.start();
@@ -575,7 +579,7 @@ describe("the frame loop sleeps when settled", () => {
     const view = engine.addView({
       target,
       world: engine.createWorld(),
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     engine.start();

@@ -14,12 +14,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import {
-  EYE,
-  ev100ToScale,
-  type Exposure,
-  type View,
-} from "../src/scene/View.ts";
+import type { View } from "../src/scene/View.ts";
+import { EYE, ev100ToScale, type Exposure } from "../src/scene/observer.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { eyeResponse, SCOTOPIC_WHITE } from "../src/scene/eye.ts";
 import { fakeEngine } from "./fakeGpu.ts";
@@ -43,7 +39,7 @@ describe("a view's exposure in renderFrame()", () => {
     const view = engine.addView({
       target: new OffscreenTarget(64, 36),
       world: engine.createWorld(),
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     return view;
@@ -53,10 +49,10 @@ describe("a view's exposure in renderFrame()", () => {
     const view = addView();
     engine.renderFrame();
     expect(view.exposureScale).toBe(ev100ToScale(15));
-    view.exposure = { ev100: 5 };
+    view.observer.exposure = { ev100: 5 };
     engine.renderFrame();
     expect(view.exposureScale).toBe(ev100ToScale(5));
-    view.exposure = { scale: 0.25 };
+    view.observer.exposure = { scale: 0.25 };
     engine.renderFrame();
     expect(view.exposureScale).toBe(0.25);
   });
@@ -75,7 +71,7 @@ describe("a view's exposure in renderFrame()", () => {
       return Array.prototype.push.apply(meters, items);
     };
     const view = addView();
-    view.exposure = { auto: true };
+    view.observer.exposure = { auto: true };
     for (let i = 0; i < 20; i++) {
       now += 1000 / 60;
       engine.renderFrame();
@@ -160,7 +156,7 @@ describe("adapting on demand, the loop asleep", () => {
   /** The scale the view's adapted state calls for. */
   function adaptedScale(view: View): number {
     const s = view.autoExposure!;
-    if ("eye" in view.exposure) {
+    if ("eye" in view.observer.exposure) {
       const r = eyeResponse(10 ** s.cones, 10 ** s.rods);
       return Math.max(r.cones, r.rods * SCOTOPIC_WHITE);
     }
@@ -174,7 +170,7 @@ describe("adapting on demand, the loop asleep", () => {
     const view = engine.addView({
       target: new OffscreenTarget(64, 36),
       world: engine.createWorld(),
-      exposure,
+      observer: { exposure },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     engine.start();
@@ -198,7 +194,7 @@ describe("adapting on demand, the loop asleep", () => {
     const view = engine.addView({
       target: new OffscreenTarget(64, 36),
       world: engine.createWorld(),
-      exposure: EYE,
+      observer: { exposure: EYE },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     engine.start();

@@ -17,7 +17,8 @@ import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { EYE, type Exposure, type View } from "../src/scene/View.ts";
+import type { View } from "../src/scene/View.ts";
+import { EYE, type Exposure } from "../src/scene/observer.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
@@ -216,7 +217,7 @@ describe("on-demand rendering goes idle", () => {
     const view = engine.addView({
       target: new OffscreenTarget(640, 360),
       world: engine.createWorld(),
-      exposure,
+      observer: { exposure },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     return view;
@@ -235,7 +236,7 @@ describe("on-demand rendering goes idle", () => {
   /** How far the scene is from the view's adapted state, in its band's units. */
   function offBand(view: View): number {
     const s = view.autoExposure!;
-    if ("eye" in view.exposure) {
+    if ("eye" in view.observer.exposure) {
       return (
         Math.max(
           Math.abs(Math.log10(scene.photopic) - s.cones),
@@ -251,7 +252,7 @@ describe("on-demand rendering goes idle", () => {
   /** The scene moved by `bands` of the view's band from its adapted state. */
   function sceneOff(view: View, bands: number): typeof scene {
     const s = view.autoExposure!;
-    if ("eye" in view.exposure) {
+    if ("eye" in view.observer.exposure) {
       const d = bands * EYE_BAND;
       return { photopic: 10 ** (s.cones + d), scotopic: 10 ** (s.rods + d) };
     }

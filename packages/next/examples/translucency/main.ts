@@ -313,7 +313,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         fxaa: settings.fxaa,
       });
       Object.assign(lower.lighting, view.lighting);
-      lower.exposure = view.exposure;
+      lower.observer.exposure = view.observer.exposure;
       lower.outputEncoding = view.outputEncoding;
       lower.camera.copyFrom(view.camera);
     } else if (!split && lower) {
@@ -334,7 +334,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   let raf = requestAnimationFrame(function follow() {
     if (lower) {
       lower.camera.copyFrom(view.camera);
-      lower.exposure = view.exposure;
+      lower.observer.exposure = view.observer.exposure;
     }
     raf = requestAnimationFrame(follow);
   });

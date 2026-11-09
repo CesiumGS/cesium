@@ -268,7 +268,7 @@ async function setup() {
     target,
     world: srgbWorld,
     clearColor: [0, 0, 0],
-    exposure: UNITLESS_EXPOSURE,
+    observer: { exposure: UNITLESS_EXPOSURE },
     background: "color",
     lighting: {
       sunIlluminance: UNITLESS_SUN_ILLUMINANCE,

@@ -1,6 +1,7 @@
 // A view's exposure: its meter's reading, and the adaptation toward it.
 import type { Engine } from "../../scene/Engine.ts";
-import { type View, ev100ToScale } from "../../scene/View.ts";
+import type { View } from "../../scene/View.ts";
+import { ev100ToScale } from "../../scene/observer.ts";
 import {
   SCOTOPIC_WHITE,
   eyeResponse,
@@ -26,7 +27,7 @@ const AUTO_SETTLED = 0.02;
  * (`adaptExposure`).
  */
 export function updateExposure(engine: ExposureEngine, view: View): number {
-  const e = view.exposure;
+  const e = view.observer.exposure;
   if ("scale" in e) {
     view.exposureScale = e.scale;
   } else if ("ev100" in e) {
@@ -82,7 +83,7 @@ export function adaptExposure(
   average: number | undefined,
   scotopic: number | undefined,
 ): void {
-  const e = view.exposure;
+  const e = view.observer.exposure;
   const state = view.autoExposure;
   if (!state) {
     return;

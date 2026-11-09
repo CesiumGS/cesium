@@ -14,7 +14,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
-import { EYE, type View } from "../src/scene/View.ts";
+import type { View } from "../src/scene/View.ts";
+import { EYE } from "../src/scene/observer.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
@@ -34,7 +35,7 @@ describe("a view on a canvas squeezed to 1 pixel", () => {
     const view = engine.addView({
       target: new OffscreenTarget(width, height),
       world: engine.createWorld(),
-      exposure: EYE,
+      observer: { exposure: EYE },
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     return view;

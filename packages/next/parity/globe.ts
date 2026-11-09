@@ -297,7 +297,7 @@ async function runGlobe(): Promise<Row[]> {
       const view = engine.addView({
         target: new OffscreenTarget(WIDTH, HEIGHT),
         world,
-        exposure: UNITLESS_EXPOSURE,
+        observer: { exposure: UNITLESS_EXPOSURE },
         background: "color",
         lighting: {
           sunIlluminance: UNITLESS_SUN_ILLUMINANCE,

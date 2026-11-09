@@ -298,7 +298,7 @@ async function coreOnly(engine: Engine, lost: () => void): Promise<Check> {
     world,
     background: "color",
     clearColor: [0, 0, 0],
-    exposure: UNITLESS_EXPOSURE,
+    observer: { exposure: UNITLESS_EXPOSURE },
   });
   const node = world.addTransform(translation(6_378_137, 0, 0));
   world.addDraw({
@@ -414,7 +414,11 @@ async function runRerooting(): Promise<RerootingResult> {
     const itrf = catalog.get("ITRF");
     const make = (frame: FrameKey, exposure = DAYLIGHT) => {
       const target = new OffscreenTarget(WIDTH, HEIGHT);
-      const view = engine.addView({ target, world, exposure });
+      const view = engine.addView({
+        target,
+        world,
+        observer: { exposure },
+      });
       engine.cameras.setRig(view, rigOn(frame));
       return { view, target };
     };

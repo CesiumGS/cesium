@@ -171,7 +171,7 @@ async function runPlacement(): Promise<PlacementResult> {
       world,
       background: "color",
       clearColor: [0, 0, 0],
-      exposure: UNITLESS_EXPOSURE,
+      observer: { exposure: UNITLESS_EXPOSURE },
     });
     view.camera.position.set(ORIGIN.map((o, i) => o + EYE[i]!));
     // Turned 7° about its axis, so no edge lies along a pixel row.

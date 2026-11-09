@@ -49,10 +49,7 @@ import {
 } from "../query/queries.ts";
 import { globeTarget, terrainBackend } from "../query/terrainBackend.ts";
 import { drawBackend } from "../query/drawBackend.ts";
-import {
-  destroyViewFrame,
-  TONE_MAPPINGS,
-} from "../render/view/viewFrameData.ts";
+import { destroyViewFrame } from "../render/view/viewFrameData.ts";
 import { serveIdlePick } from "../render/view/picks.ts";
 import { updateExposure } from "../render/view/exposure.ts";
 import { scratchFrame } from "../render/view/environment.ts";
@@ -284,7 +281,7 @@ export class Engine {
    * nothing is changing, and wakes (`wake`) for what changes:
    * - a camera (`Camera.version`, which `fov`, `near` and every method
    *   bump);
-   * - a view's fingerprinted state (its world, viewport, exposure,
+   * - a view's fingerprinted state (its world, viewport, observer,
    *   lighting, background, sun disk, aerial perspective, clear color,
    *   output encoding, tone mapping, enabled; viewport, exposure and
    *   lighting also written in place) or a pick;
@@ -1467,7 +1464,7 @@ export class Engine {
         ? (view.sunDisk ? 2 : 1) + (view.aerialPerspective ? 4 : 0)
         : 0;
     s[n++] = view.outputEncoding === "srgb" ? 0 : 1;
-    s[n++] = TONE_MAPPINGS.indexOf(view.toneMapping);
+    s[n++] = view.observerRevision;
     const sun = view.lighting.sunIlluminance;
     s[n++] = sun === "atmosphere" ? -1 : sun;
     s[n++] = view.lighting.diffuseIbl;

@@ -1104,7 +1104,7 @@ export class Globe {
     this.endDim?.();
     this.endDim = undefined;
     const { view } = this.viewer;
-    const exposure = view.exposure;
+    const { exposure } = view.observer;
     if (!("eye" in exposure)) {
       return;
     }
@@ -1113,7 +1113,10 @@ export class Globe {
     const start = performance.now();
     this.endDim = this.animate((now) => {
       const u = Math.min(1, Math.max(0, (now - start) / 600));
-      view.exposure = { ...exposure, compensation: from + (to - from) * u };
+      view.observer.exposure = {
+        ...exposure,
+        compensation: from + (to - from) * u,
+      };
       this.viewer.engine.requestRender();
       return u < 1;
     });

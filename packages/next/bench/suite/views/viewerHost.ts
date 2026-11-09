@@ -530,7 +530,7 @@ export class NextViewerHost implements ViewerHost {
       // Physically based: image-based lighting at its own strength.
       view.lighting.diffuseIbl = 1;
       view.lighting.specularIbl = 1;
-      view.exposure =
+      view.observer.exposure =
         lighting.rendering === "eye"
           ? {
               eye: true,
@@ -541,7 +541,7 @@ export class NextViewerHost implements ViewerHost {
             ? { auto: true }
             : { ev100: lighting.ev100 };
       view.outputEncoding = lighting.encoding;
-      view.toneMapping = lighting.toneMapping;
+      view.observer.toneMapping = lighting.toneMapping;
       view.translucencyMethod = lighting.translucency;
       view.fxaa = lighting.fxaa;
     }

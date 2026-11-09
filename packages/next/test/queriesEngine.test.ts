@@ -111,7 +111,7 @@ describe("Engine.queries on a running engine", () => {
     const view = engine.addView({
       target: new OffscreenTarget(640, 360),
       world,
-      exposure: { ev100: 15 },
+      observer: { exposure: { ev100: 15 } },
     });
     lookAtTile(view);
     // The GPU cast meets nothing unless a test says so (the fake device
@@ -377,7 +377,7 @@ describe("Engine.queries through a real globe, as one view draws it", () => {
     const globe = Globe.create(engine, world, source, {});
     engine.tilesets.push(globe);
     const view = (target: OffscreenTarget) =>
-      engine.addView({ target, world, exposure: { ev100: 15 } });
+      engine.addView({ target, world, observer: { exposure: { ev100: 15 } } });
     const a = view(new OffscreenTarget(64, 48));
     const b = view(new OffscreenTarget(64, 48));
     tile.viewMask = engine.viewBit(a);

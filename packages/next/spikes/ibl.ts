@@ -106,7 +106,7 @@ async function runIbl() {
     world,
     clearColor: [0, 0, 0],
     // The skies here are unitless: no exposure.
-    exposure: { scale: 1 },
+    observer: { exposure: { scale: 1 } },
     background: "color",
     lighting: {
       sunIlluminance: 0,

@@ -210,8 +210,6 @@ const VIEW_DEFAULTS = {
   compensation: 0,
   ev100: 15,
 };
-/** The EV100 an exposure scale stands for (the inverse of the public `ev100ToScale`). */
-const scaleToEv100 = (scale: number) => -Math.log2(1.2 * scale);
 
 const STORAGE = "dyno.slangPlayground";
 
@@ -302,8 +300,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     ev100: number("ev100", VIEW_DEFAULTS.ev100, -12, 18),
   };
   const applyLooks = () => {
-    view.toneMapping = looks.toneMapping;
-    view.exposure =
+    view.observer.toneMapping = looks.toneMapping;
+    view.observer.exposure =
       looks.exposureMode === "eye"
         ? { eye: true, compensation: looks.compensation }
         : looks.exposureMode === "camera"
@@ -818,8 +816,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     if (looks.exposureMode !== "camera") {
       return;
     }
-    // Public: the multiplier the view applied on its last frame.
-    const text = `EV100 ${scaleToEv100(view.exposureScale).toFixed(1)}`;
+    const { ev100 } = view.readout();
+    if (ev100 === undefined) {
+      return;
+    }
+    const text = `EV100 ${ev100.toFixed(1)}`;
     if (text !== shownEv100) {
       shownEv100 = text;
       meter.textContent = text;

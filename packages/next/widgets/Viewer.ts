@@ -26,7 +26,7 @@ import {
   BingImagery,
   CanvasTarget,
   IonTmsImagery,
-  EYE,
+  eyeObserver,
   DEFAULT_SKY,
   Emitter,
   Engine,
@@ -37,7 +37,7 @@ import {
   resolveIonAsset,
   vec3,
   type EngineOptions,
-  type Exposure,
+  type ObserverSettings,
   type ImageryProvider,
   type Attribution,
   type ModelPlacement,
@@ -171,10 +171,10 @@ export interface ViewerOptions {
    */
   warningNotice?: boolean;
   /**
-   * How light becomes an image (`Exposure`): default `EYE`, as a person
-   * there would see it; a camera's exposure for what a camera records.
+   * Who is looking (`ObserverSettings`): over `eyeObserver()`, as a person
+   * there would see it; `cameraObserver` for what a camera records.
    */
-  exposure?: Exposure;
+  observer?: Partial<ObserverSettings>;
   /**
    * The Earth's lights at night (default true: NASA's Black Marble, ion
    * asset 3812, when the token can reach it), or another night image;
@@ -370,7 +370,7 @@ export class Viewer {
       shadows: this.shadows,
       ambientOcclusion: this.ambientOcclusion,
       // As the eye sees the scene: adapting to it, night vision, the stars.
-      exposure: options.exposure ?? EYE,
+      observer: { ...eyeObserver(), ...options.observer },
     });
     this.controller = new GlobeController(this.view, canvas, engine);
     // The whole Earth until the app frames something, as 1.x starts: the
@@ -819,7 +819,7 @@ export class Viewer {
         viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
       }));
       Object.assign(second.lighting, this.view.lighting);
-      second.exposure = this.view.exposure;
+      second.observer = this.view.observer;
       second.cityLights = this.view.cityLights;
       second.outputEncoding = this.view.outputEncoding;
       const controller = (this.state.secondController = new GlobeController(
