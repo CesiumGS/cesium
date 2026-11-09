@@ -104,7 +104,7 @@ function above(): Camera {
 
 /**
  * Where the pick pass's pixel `(x, y)` at reverse-Z `depth` is, seen from
- * `camera` (as Engine.ts turns a pick's depth into a position): the depth
+ * `camera` (as src/render/view/picks.ts turns a pick's depth into a position): the depth
  * is near / distance along the view axis.
  */
 function expectedAt(

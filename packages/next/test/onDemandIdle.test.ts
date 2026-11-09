@@ -27,7 +27,7 @@ const URL_ = `${BASE}tileset.json`;
 /** Scene luminances (cd/m²), photopic and scotopic: OSM Buildings by day. */
 const DAY = { photopic: 17_188, scotopic: 39_296 };
 const DUSK = { photopic: 20, scotopic: 60 };
-/** Engine.ts `EYE_SETTLED` (log10 cd/m²) and `AUTO_SETTLED` (EV). */
+/** src/render/view/exposure.ts `EYE_SETTLED` (log10 cd/m²) and `AUTO_SETTLED` (EV). */
 const EYE_BAND = 0.005;
 const AUTO_BAND = 0.02;
 const AUTO: Exposure = { auto: true };
@@ -163,7 +163,7 @@ describe("on-demand rendering goes idle", () => {
    * pre-exposed light rounded to fp16, the exposure divided back out, log2
    * averaged in float32. The readback's layout is meter.slang's result
    * (`sum`, `count`, `rodSum`, `rodCount`: log2 sums and their counts) as
-   * Engine.ts reads it after submit.
+   * renderTick.ts reads it after submit.
    */
   function meterAsTheGpu(): void {
     const meters = (engine as unknown as EngineInternals).meters;

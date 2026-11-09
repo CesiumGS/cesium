@@ -517,7 +517,10 @@ export function Rendering() {
             edges={TICK_EDGES}
           />
         </Figure>
-        <Written from="src/scene/Engine.ts and World.ts" on="2026-11-08" />
+        <Written
+          from="src/scene/Engine.ts, src/render/view and src/render/world"
+          on="2026-11-08"
+        />
       </Section>
 
       <Section title="The frame graph, pass by pass">

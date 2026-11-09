@@ -351,7 +351,8 @@ export function Scene() {
           from={
             <>
               <C>src/scene/Engine.ts</C>, <C>src/scene/World.ts</C>,{" "}
-              <C>src/scene/View.ts</C>, <C>src/scene/SceneItem.ts</C> and{" "}
+              <C>src/scene/world</C>, <C>src/scene/View.ts</C>,{" "}
+              <C>src/scene/SceneItem.ts</C> and{" "}
               <C>src/streaming/Tileset3D.ts</C>
             </>
           }

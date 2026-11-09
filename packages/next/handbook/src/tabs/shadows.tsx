@@ -468,7 +468,8 @@ export function Shadows() {
         <Written
           from={
             <>
-              <C>src/scene/Engine.ts</C>, <C>src/scene/shadows.ts</C> and{" "}
+              <C>src/render/view/shadowBlocks.ts</C>,{" "}
+              <C>src/scene/shadows.ts</C> and{" "}
               <C>src/shaders/depthRange.slang</C>
             </>
           }
@@ -553,7 +554,7 @@ export function Shadows() {
         <Written
           from={
             <>
-              <C>recordBundle</C> in <C>src/scene/World.ts</C>, and{" "}
+              <C>recordBundle</C> in <C>src/render/world/bundles.ts</C>, and{" "}
               <C>shadowFs</C> and <C>shadowPlaceholderFs</C> in{" "}
               <C>src/shaders/surface.slang</C>
             </>

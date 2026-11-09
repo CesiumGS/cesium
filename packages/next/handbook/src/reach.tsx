@@ -240,13 +240,14 @@ const WEBGL_PIECES: { piece: string; today: ReactNode; change: ReactNode }[] = [
     piece: "A renderer interface",
     today: (
       <>
-        <C>Engine.ts</C> and <C>World.ts</C> hold the loop, the scene's
-        bookkeeping and the passes together. <C>src/streaming</C> and{" "}
+        The passes and other GPU work are in their own files (
+        <C>src/render/view</C>, <C>src/render/world</C>), but they take the
+        whole <C>Engine</C> or <C>World</C>. <C>src/streaming</C> and{" "}
         <C>src/globe</C> import from <C>scene</C> and <C>render</C>.
       </>
     ),
     change:
-      "Split them along the layers section 13.17 sketches, then write the interface against a real second renderer.",
+      "Narrow what those functions take, along the layers section 13.17 sketches, then write the interface against a real second renderer.",
   },
   {
     piece: "Shaders",
