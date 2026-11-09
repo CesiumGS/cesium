@@ -8561,6 +8561,7 @@ Do soon, designed together with vector drawing, because they overlap with it. `B
 
 - **One line and point path:** line width, dashes, points and edges should share what vector drawing uses, rather than a second quad expansion. A material's line style and a style expression's stroke should reach the same shader, so `line_style` could read as a style.
 - **Planar fill:** "behind" order for coplanar faces needs a depth or id approach. 1.x uses an id framebuffer (`PlanarFillIdFramebuffer.js`). 2.0 already writes a per-pixel feature id during the opaque pass, so §11 expects a later pass can apply the same-feature depth offset without that prepass. Check that holds with translucency.
+- **Coincident surfaces are for the content or the application (owner, 2026-11-08).** The engine adds no general depth shift or tie-break. `BENTLEY_materials_planar_fill` is how content declares the order of coplanar faces, so any offset above applies only where a material asks for it. Asset 2464651 has coincident faces with no such extension: teal and grey triangles in one primitive at the same height, in every vertex. They fight in 2.0 and in 1.x, and that stays. A trial with a depth offset per feature cleared them at three views and was dropped.
 - **Edges and curves:** edges are currently mesh data, so exact edges from curves can come later (§13.26).
 - **Snap:** 1.x's `Scene.snap` prefers edges, and 2.0's snap should use these.
 
