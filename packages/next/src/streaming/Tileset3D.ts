@@ -16,11 +16,7 @@ import type {
   TransformHandle,
   World,
 } from "../scene/World.ts";
-import {
-  placeModel,
-  type ModelPlacement,
-  type ModelResourceOptions,
-} from "../scene/gltfModel.ts";
+import type { ModelResourceOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
@@ -34,14 +30,12 @@ import {
   type TileSelection,
 } from "./Stepwise.ts";
 import { Emitter } from "../core/Emitter.ts";
-import { isCapacityError } from "../scene/CapacityError.ts";
 import { BudgetedSelection } from "./Budgeted.ts";
 import {
   fetchTilesetJson,
   loadTilesetJson,
   treeFromJson,
   type Tile,
-  type TileGeometry,
   type TileJson,
   type TileTree,
 } from "./Tile.ts";
@@ -60,16 +54,8 @@ import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import { TouchOrder } from "./TouchOrder.ts";
 import {
-  DRAW_ITEM_SIZE,
-  MaterialFlags,
-  RECORD_SIZE,
-  TRANSFORM_SIZE,
-} from "../render/layout.ts";
-import {
-  accumulate,
   emptyTotals,
   stageStats,
-  summarizeContent,
   type ContentTotals,
   type Stage,
   type StageStats,
@@ -94,30 +80,10 @@ import {
   wakeForStale,
   COLD_WAKE_MIN_MS,
   closeImages,
-  CASTER_PRESSURE,
-  dropCaster,
-  noteCasterBytes,
   markCastsOnly,
 } from "./tilesetCasters.ts";
+import { applySurface, applyTerrainClip, upload } from "./tilesetUpload.ts";
 const DEGREES_TO_RADIANS = Math.PI / 180;
-/**
- * Bytes a loaded tile costs besides its content, counted in `Tile.bytes`
- * and so against the byte budget. Per draw: its rows in the world's tables
- * (a draw record, a draw item, five words of indirect arguments, and two
- * transforms: the content root's and the node's), on the GPU and in their
- * CPU copies, about 800 bytes.
- */
-const DRAW_OVERHEAD_BYTES =
-  2 * (RECORD_SIZE + DRAW_ITEM_SIZE + 20 + 2 * TRANSFORM_SIZE);
-/**
- * Per tile: its objects on the heap (the tile, its placement and handles,
- * the map entries that find it), about 2 KB. Without these overheads the
- * ellipsoid's tiles (about 17 KB each) fit the 512 MiB budget by the 30,000,
- * and the transform table reached 90% before the budget did.
- */
-const TILE_OVERHEAD_BYTES = 2048;
-/** Recent content loads kept for stage percentiles. */
-const PIPELINE_WINDOW = 256;
 /** Imagery priority offset of loading tiles: after drawn and waiting ones. */
 const LOADING_IMAGERY = 1e15;
 /** Frames without any view touching an in-flight tile before it is cancelled. */
@@ -229,9 +195,10 @@ export class Tileset3D implements TileTree {
   /** @internal */
   policy: TileSelection;
   private watchedPolicy?: { policy: TileSelection; proxy: TileSelection };
-  private readonly options: TilesetOptions;
-  /** How its content is turned upright (`asset.gltfUpAxis`). */
-  private readonly contentAxes: ModelResourceOptions["axes"];
+  /** @internal */
+  readonly options: TilesetOptions;
+  /** @internal How its content is turned upright (`asset.gltfUpAxis`). */
+  readonly contentAxes: ModelResourceOptions["axes"];
   readonly stats: TilesetStats = {
     tiles: 0,
     loaded: 0,
@@ -282,45 +249,14 @@ export class Tileset3D implements TileTree {
     }
     this.surfaceChanged();
   }
-  private collision = false;
-
-  /**
-   * Collision and ground follow what is in the scene: on each tile, the first
-   * opaque item (in the order added) that is drawn and not refused stands
-   * for the tileset, at its own placement; with none, the first translucent
-   * one does. Its draws are ground and take `enableCollision`; every other
-   * item's draws, and the tile's own draws when no item holds them, are
-   * neither. A globe's surface is no item and keeps its own.
-   */
-  private applySurface(tile: Tile): void {
-    if (this.source) {
-      return;
-    }
-    let chosen: SceneItem | undefined;
-    let best = 0;
-    for (const item of this.itemList) {
-      const rank = item.surfaceRank(tile);
-      if (rank > best) {
-        chosen = item;
-        best = rank;
-      }
-    }
-    for (const item of this.itemList) {
-      item.setSurface(tile, item === chosen, this.collision);
-    }
-    if (this.baseItem === undefined) {
-      for (const draw of tile.placement?.draws ?? []) {
-        this.world.setGround(draw, false);
-        this.world.setCollision(draw, false);
-      }
-    }
-  }
+  /** @internal */
+  collision = false;
 
   /** @internal The item that stands for the surface may have changed. */
   surfaceChanged(): void {
     for (const tile of this.loaded) {
       if (tile.placement) {
-        this.applySurface(tile);
+        applySurface(this, tile);
       }
     }
   }
@@ -381,8 +317,8 @@ export class Tileset3D implements TileTree {
   private readonly loadMatrix: Mat4;
   /** `modelMatrix` × loadMatrix⁻¹: the content root transform. */
   private delta: Mat4 = m4.mat4();
-  /** Parent transform of all content: moves it with one write. */
-  private transform!: TransformHandle;
+  /** @internal Parent transform of all content: moves it with one write. */
+  transform!: TransformHandle;
   /**
    * The anchor its content hangs under (`TilesetOptions.anchor`; default
    * the Earth's): what its tiles' transforms and volumes are relative to.
@@ -434,11 +370,12 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * The terrain material each tile draws with (shared by content), and
+   * @internal The terrain material each tile draws with (shared by content), and
    * its blended twin for tiles under a region that blends, both ways.
    */
-  private readonly blendedTwins = new Map<number, number>();
-  private readonly ownMaterials = new Map<number, number>();
+  readonly blendedTwins = new Map<number, number>();
+  /** @internal */
+  readonly ownMaterials = new Map<number, number>();
 
   /**
    * Whether the globe's terrain is a hole for queries at a longitude and
@@ -479,7 +416,7 @@ export class Tileset3D implements TileTree {
       for (const tile of this.loaded) {
         const r = tile.globe?.rectangle;
         if (r && reach.some((b) => rectanglesOverlap(b, r))) {
-          this.applyTerrainClip(tile);
+          applyTerrainClip(this, tile);
         }
       }
     }
@@ -491,43 +428,8 @@ export class Tileset3D implements TileTree {
     this.changed();
   }
 
-  /** The globe has regions: loading tiles test them. */
-  private terrainRegions = false;
-
-  /**
-   * Which regions a globe tile's draws test (a bit per region that changes
-   * how it draws), and its material: the terrain's own, or its blended
-   * twin where a region of opacity above 0 and below 1 reaches the tile.
-   */
-  private applyTerrainClip(tile: Tile): void {
-    const clips = this.source?.clips;
-    if (!clips || !tile.placement || !tile.globe) {
-      return;
-    }
-    const mask = clips.maskFor(tile.globe.rectangle);
-    const blended = (mask & clips.blendedMask) !== 0;
-    for (const draw of tile.placement.draws) {
-      this.world.setTerrainClip(draw, mask);
-      const current = this.world.drawMaterial(draw);
-      if (current === undefined) {
-        continue;
-      }
-      const own = this.ownMaterials.get(current) ?? current;
-      let wanted = own;
-      if (blended) {
-        let twin = this.blendedTwins.get(own);
-        if (twin === undefined) {
-          twin = this.world.materialWithFlags(own, MaterialFlags.alphaBlend);
-          this.blendedTwins.set(own, twin);
-          this.ownMaterials.set(twin, own);
-        }
-        wanted = twin;
-      }
-      if (wanted !== current) {
-        this.world.setDrawMaterial(draw, wanted);
-      }
-    }
-  }
+  /** @internal The globe has regions: loading tiles test them. */
+  terrainRegions = false;
 
   /**
    * Loads the most detailed content along rays (1.x
@@ -670,7 +572,8 @@ export class Tileset3D implements TileTree {
     this.imagery?.refines(tile) ?? false;
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
-  private frame = 0;
+  /** @internal */
+  frame = 0;
   /** @internal A non-3D-Tiles source, when streaming one (`Globe.create`). */
   source?: TileSource;
   /** Last frame in which an update changed anything. */
@@ -707,19 +610,21 @@ export class Tileset3D implements TileTree {
   readonly loaded = new Set<Tile>();
   /** @internal The loaded tiles, least recently touched first (what eviction walks). */
   readonly order = new TouchOrder<Tile>();
-  private readonly ready: Array<{
+  /** @internal */
+  readonly ready: Array<{
     tile: Tile;
     asset: GltfAsset;
     arrivedAt: number;
   }> = [];
   /** Unloaded tiles wanted by some view, since when (queue time). */
   private readonly wanted = new Map<Tile, number>();
-  private readonly recent: StageTimes[] = [];
+  /** @internal */
+  readonly recent: StageTimes[] = [];
   /**
-   * Median request-to-drawable time of recent loads, ms (until measured,
+   * @internal Median request-to-drawable time of recent loads, ms (until measured,
    * a typical CDN load).
    */
-  private loadEstimateMs = 500;
+  loadEstimateMs = 500;
   /** What resident content holds, summed over loaded tiles. */
   readonly resident: ContentTotals = emptyTotals();
   /** Load milestones (performance.now()): created, first content, idle. */
@@ -1578,7 +1483,7 @@ export class Tileset3D implements TileTree {
       }
     }
     this.buildExternals();
-    this.upload();
+    upload(this);
     if (this.imagery) {
       // Imagery for the terrain tiles drawn in any view (placeholders too)
       // and those waiting for it to draw, nearest first.
@@ -1836,231 +1741,6 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * Uploads decoded content within the per-frame cap, then adjusts the
-   * screen-space error for memory as 1.x processTiles does: uploads stop
-   * while the cache exceeds budget + overflow, the threshold rises ×1.02 per
-   * frame while content is still waiting, and relaxes back below budget.
-   */
-  private upload(): void {
-    const limit = this.cacheBytes + this.overflowBytes;
-    let exceeded = false;
-    const budget = this.engine.uploadBudget;
-    // After a capacity failure that eviction couldn't relieve, wait before
-    // retrying: each attempt creates (and rolls back) its textures.
-    if (this.capacityWait > 0) {
-      this.capacityWait--;
-      exceeded = this.ready.length > 0;
-    }
-    for (
-      let n = 0;
-      n < this.uploadsPerFrame && this.ready.length > 0 && !exceeded;
-      n++
-    ) {
-      // Casters don't hold back what views need: they leave first.
-      if (this.stats.bytes - this.casterResident > limit) {
-        exceeded = true;
-        break;
-      }
-      // The engine-wide budget for this frame (one upload always goes).
-      if (budget.uploads > 0 && budget.bytes <= 0) {
-        break;
-      }
-      // Views' content first, in any tileset: the engine's budget is shared.
-      const next = this.ready.findIndex((r) => !isCaster(r.tile));
-      if (
-        next < 0 &&
-        this.engine.tilesets.some((t) => t.ready.some((r) => !isCaster(r.tile)))
-      ) {
-        break;
-      }
-      const { tile, asset, arrivedAt } = this.ready.splice(
-        Math.max(next, 0),
-        1,
-      )[0]!;
-      // A caster decoded while casters can't load, or that nothing wants
-      // any more, is dropped, not uploaded. One over the byte budget isn't:
-      // admission decided, and eviction makes the room.
-      const caster = isCaster(tile);
-      const pressure = caster ? this.world.pressure().fraction : 0;
-      if (
-        caster &&
-        (!this.casterLoad ||
-          pressure > CASTER_PRESSURE ||
-          tile.touchedFrame < this.frame)
-      ) {
-        dropCaster(this, tile, asset);
-        n--;
-        continue;
-      }
-      asset.warnings.forEach((w) => this.warnings.add(w));
-      // Before the upload, whose source data is released after placing.
-      const summary = summarizeContent(asset);
-      const uploadStart = performance.now();
-      try {
-        const placing = this.source?.modelOptions(tile);
-        // The source kept until the placement succeeds: a capacity failure
-        // anywhere leaves the asset whole for the retry.
-        const model = this.engine.uploadModel(this.world, asset, {
-          axes: placing?.axes ?? this.contentAxes,
-          releaseSourceData: false,
-        });
-        let placement: ModelPlacement | undefined;
-        try {
-          const shader =
-            this.options.customShader ?? this.options.style?.shader;
-          placement = placeModel(model, {
-            modelMatrix: placing?.modelMatrix ?? tile.transform,
-            ...(placing?.underlay ? { underlay: true } : {}),
-            parent: this.transform,
-            viewMask: 0,
-            collision: this.collision,
-            ...(shader ? { shader } : {}),
-          });
-          for (const item of this.itemList) {
-            item.place(tile, placement);
-          }
-        } catch (error) {
-          for (const item of this.itemList) {
-            item.unplace(tile);
-          }
-          placement?.remove();
-          model.release();
-          throw error;
-        }
-        model.releaseSourceData();
-        // The placement holds the model: freed when the tile unloads.
-        model.release();
-        tile.placement = placement;
-        this.applySurface(tile);
-        for (const draw of placement.draws) {
-          this.drawTiles.set(draw.index, {
-            generation: draw.generation,
-            tile,
-          });
-        }
-        if (this.terrainRegions) {
-          this.applyTerrainClip(tile);
-        }
-        tile.bytes =
-          model.bytes +
-          TILE_OVERHEAD_BYTES +
-          placement.draws.length * DRAW_OVERHEAD_BYTES;
-        for (const item of this.itemList) {
-          tile.bytes += item.bytes(tile);
-        }
-        if (this.retainGeometry) {
-          tile.geometry = this.retain(asset, placement);
-          // A mesh drawn by several nodes is kept, and counted, once.
-          const arrays = new Set<Float32Array | Uint32Array>();
-          for (const g of tile.geometry) {
-            arrays.add(g.positions).add(g.indices);
-            for (const a of Object.values(g.attributes ?? {})) {
-              arrays.add(a);
-            }
-          }
-          for (const a of arrays) {
-            tile.bytes += a.byteLength;
-          }
-        }
-        tile.lastBytes = tile.bytes;
-        if (caster) {
-          noteCasterBytes(this, tile.bytes);
-          // It stays while it may, and doesn't come back at this pressure.
-          tile.noFitAt =
-            this.world.pressure().fraction > CASTER_PRESSURE
-              ? pressure
-              : Infinity;
-        } else {
-          this.viewCapacityWait = false;
-        }
-        budget.bytes -= model.bytes;
-        budget.uploads++;
-        const uploaded = performance.now();
-        const network = asset.timing?.networkMs ?? 0;
-        const decode = asset.timing?.decodeMs ?? 0;
-        this.recent.push({
-          queued: tile.fetchStartAt - tile.wantedAt,
-          network,
-          worker: Math.max(0, arrivedAt - tile.fetchStartAt - network - decode),
-          decode,
-          uploadWait: uploadStart - arrivedAt,
-          upload: uploaded - uploadStart,
-        });
-        if (this.recent.length > PIPELINE_WINDOW) {
-          this.recent.shift();
-        }
-        const totals = this.recent
-          .slice(-32)
-          .map(
-            (r) =>
-              r.queued +
-              r.network +
-              r.worker +
-              r.decode +
-              r.uploadWait +
-              r.upload,
-          )
-          .sort((a, b) => a - b);
-        this.loadEstimateMs = totals[totals.length >> 1]!;
-        tile.summary = summary;
-        accumulate(this.resident, summary, 1);
-        this.firstContentAt ??= uploaded;
-        tile.copyright = asset.copyright;
-        tile.appliedMask = 0;
-        tile.state = "ready";
-        this.loaded.add(tile);
-        this.order.add(tile);
-        this.markCastsOnly(tile, tile.purpose === "caster");
-        for (let t = tile.parent; t; t = t.parent) {
-          t.residentBelow++;
-        }
-        this.stats.loaded++;
-        this.stats.bytes += tile.bytes;
-        this.stats.bytesTotal += model.bytes;
-      } catch (error) {
-        if (isCapacityError(error) && caster) {
-          // Casters yield: no wait, no eviction, nothing held in the queue,
-          // and no second try until the pools have more room.
-          tile.noFitAt = pressure;
-          dropCaster(this, tile, asset);
-          continue;
-        }
-        if (isCapacityError(error)) {
-          // A pool is full, not the content bad (§13.15): the upload took
-          // nothing, so the tile waits at the front of the queue while
-          // eviction frees room and the error threshold rises, as for bytes.
-          this.ready.unshift({ tile, asset, arrivedAt });
-          this.viewCapacityWait = true;
-          this.capacityFull = error.pool;
-          this.capacityFailed = true;
-          exceeded = true;
-          break;
-        }
-        tile.state = "failed";
-        this.viewCapacityWait &&= caster;
-        this.undrawnTile(
-          `upload failed: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-      // Placed: the one point that announces it (a hook's own error is
-      // not the upload's).
-      if (tile.state === "ready" && tile.placement) {
-        this.world.acceleration.tilePlaced(this, tile, tile.placement.draws);
-      }
-    }
-    const selection = this.policy;
-    if (this.stats.bytes - this.casterResident < this.cacheBytes) {
-      selection.memoryAdjustedScreenSpaceError = Math.max(
-        selection.memoryAdjustedScreenSpaceError / 1.02,
-        selection.maximumScreenSpaceError,
-      );
-    } else if (exceeded) {
-      selection.memoryAdjustedScreenSpaceError *= 1.02;
-    }
-    this.stats.screenSpaceError = selection.memoryAdjustedScreenSpaceError;
-  }
-
-  /**
    * Over the byte budget. Casters that don't cast this tick go first. Then
    * cold tiles, least recently touched first: as they would with casters off
    * while what views use and the cold tiles alone pass the budget, and
@@ -2084,57 +1764,6 @@ export class Tileset3D implements TileTree {
    */
   evictForCapacity(frame: number): void {
     evictForCapacity(this, frame);
-  }
-
-  /**
-   * A placed asset's triangles for `Tile.geometry`: per draw (placing
-   * keeps the asset's draw order), skipping lines and instanced draws.
-   * Views into a larger buffer are copied so they don't keep it alive; draws
-   * of one mesh share its arrays.
-   */
-  private retain(asset: GltfAsset, placement: ModelPlacement): TileGeometry[] {
-    const kept: TileGeometry[] = [];
-    if (asset.instances !== undefined) {
-      return kept;
-    }
-    const meshes = new Map<
-      number,
-      {
-        positions: Float32Array;
-        indices: Uint32Array;
-        attributes?: Record<string, Float32Array>;
-      }
-    >();
-    asset.draws.forEach((d, i) => {
-      const mesh = asset.meshes[d.mesh];
-      const draw = placement.draws[i];
-      const matrix = draw && this.world.drawMatrix(draw);
-      if (
-        mesh === undefined ||
-        matrix === undefined ||
-        d.instances !== undefined ||
-        // A composite's i3dm, as a lone one above.
-        (d.part !== undefined && asset.parts?.[d.part]?.instances) ||
-        (mesh.topology ?? "triangle-list") !== "triangle-list"
-      ) {
-        return;
-      }
-      const own = <T extends Float32Array | Uint32Array>(a: T): T =>
-        a.byteLength === a.buffer.byteLength ? a : (a.slice() as T);
-      let arrays = meshes.get(d.mesh);
-      if (arrays === undefined) {
-        arrays = { positions: own(mesh.positions), indices: own(mesh.indices) };
-        // Second positions, for a dual position (`TileGeometry`).
-        for (const [name, a] of Object.entries(mesh.attributes ?? {})) {
-          if (a.components === 3 && a.data instanceof Float32Array) {
-            (arrays.attributes ??= {})[name] = own(a.data);
-          }
-        }
-        meshes.set(d.mesh, arrays);
-      }
-      kept.push({ draw: draw!, ...arrays, matrix });
-    });
-    return kept;
   }
 
   /**

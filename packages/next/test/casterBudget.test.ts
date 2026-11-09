@@ -1,6 +1,7 @@
 // How off-screen shadow casters share the cache and the world's pools with
 // what views draw: through the real tileset on the fake engine, in
 // continuous mode. `casterLoop.test.ts` runs them on the on-demand loop.
+import { upload } from "../src/streaming/tilesetUpload.ts";
 import { unload } from "../src/streaming/tilesetEviction.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
@@ -265,9 +266,6 @@ describe("casters share the cache", () => {
       await s.frames(12);
       const [floor, roof] = s.tiles as [Tile, Tile];
       // Unload both and queue the caster's decoded asset first.
-      const t = s.tileset as unknown as {
-        upload(): void;
-      };
       unload(s.tileset, floor);
       unload(s.tileset, roof);
       roof.purpose = "caster";
@@ -280,14 +278,14 @@ describe("casters share the cache", () => {
         { tile: floor, asset: slab(5), arrivedAt: 0 },
       );
       (s.tileset as unknown as { uploadsPerFrame: number }).uploadsPerFrame = 1;
-      t.upload();
+      upload(s.tileset);
       expect(floor.state).toBe("ready");
       expect(roof.state).not.toBe("ready");
       expect(queue.length).toBe(1);
       // Over a pool's pressure, a decoded caster is dropped, not kept.
       roof.touchedFrame = (s.tileset as unknown as { frame: number }).frame;
       s.internals.casterLoad = false;
-      t.upload();
+      upload(s.tileset);
       expect(queue.length).toBe(0);
       expect(roof.state).toBe("unloaded");
     } finally {
