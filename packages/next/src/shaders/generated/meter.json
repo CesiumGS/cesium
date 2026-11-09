@@ -63,7 +63,7 @@
                             "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "pad",
+                            "name": "layers",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -120,7 +120,7 @@
                                 "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "layers",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -159,6 +159,63 @@
                     "sizes": [
                         {"kind": "uniform", "value": 16, "alignment": 16}
                     ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "layersLit",
+            "binding": {"kind": "descriptorTableSlot", "index": 3},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "layersUnlit",
+            "binding": {"kind": "descriptorTableSlot", "index": 4},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "layersAbsorbance",
+            "binding": {"kind": "descriptorTableSlot", "index": 5},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -231,7 +288,7 @@
                                 "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "layers",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -288,7 +345,7 @@
                                     "binding": {"kind": "uniform", "offset": 8, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "pad",
+                                    "name": "layers",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "uint32",
@@ -327,6 +384,63 @@
                         "sizes": [
                             {"kind": "uniform", "value": 16, "alignment": 16}
                         ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "layersLit",
+                "binding": {"kind": "descriptorTableSlot", "index": 3},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "layersUnlit",
+                "binding": {"kind": "descriptorTableSlot", "index": 4},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "layersAbsorbance",
+                "binding": {"kind": "descriptorTableSlot", "index": 5},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
                     },
                     "sizes": [
                         {"kind": "descriptorTableSlot", "value": 1}
@@ -411,6 +525,18 @@
                 {
                     "name": "result",
                     "binding": {"kind": "descriptorTableSlot", "index": 2}
+                },
+                {
+                    "name": "layersLit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 3}
+                },
+                {
+                    "name": "layersUnlit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 4}
+                },
+                {
+                    "name": "layersAbsorbance",
+                    "binding": {"kind": "descriptorTableSlot", "index": 5}
                 }
             ]
         }

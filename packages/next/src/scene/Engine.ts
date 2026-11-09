@@ -572,6 +572,8 @@ export class Engine {
     buffer: GPUBuffer;
     zero: GPUTextureView;
     higher: GPUTextureView;
+    /** For the meter, where the view draws no layers. */
+    color: GPUTextureView;
   };
   private readonly translucentData = new DataView(new ArrayBuffer(32));
   private readonly presentData = new DataView(new ArrayBuffer(48));
@@ -3094,7 +3096,8 @@ export class Engine {
             label: "translucent.placeholder",
             size: [1, 1],
             format,
-            usage: GPUTextureUsage.STORAGE_BINDING,
+            usage:
+              GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
           })
           .createView();
       this.translucentDummies = {
@@ -3105,6 +3108,7 @@ export class Engine {
         }),
         zero: texture(pipelines.momentFormats[0]),
         higher: texture(pipelines.momentFormats[1]),
+        color: texture("rgba16float"),
       };
     }
     return this.translucentDummies;
@@ -4393,6 +4397,80 @@ export class Engine {
         second.end();
       },
     );
+    // The exposure meter, before the composite: it reads the opaque pass's
+    // image, whose alpha is the scene's share of each pixel, and puts the
+    // layers over it itself (meter.slang). No later pass reads scene alpha.
+    graph.addPass(
+      "meter",
+      {
+        reads: [resolved, momentsZero, accumulatedLit, accumulatedUnlit],
+        sideEffect: true,
+      },
+      (enc, get) => {
+        const auto = view.autoExposure;
+        const adapts = "auto" in view.exposure || "eye" in view.exposure;
+        // Not a column or a row: a canvas squeezed to 0 width draws 1 pixel
+        // across, which says nothing of the view (stars alone, from a view
+        // half full of a sunlit Earth, opened the eye: white on the way back).
+        if (adapts && auto?.pending) {
+          auto.skipped = true;
+          return;
+        }
+        if (!adapts || !auto || width < 2 || height < 2) {
+          return;
+        }
+        auto.pending = true;
+        const params = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+        const data = new ArrayBuffer(16);
+        new Float32Array(data, 0, 1)[0] = view.exposureScale;
+        const exact = view.translucencyMethod === "exact";
+        const layers = !frame.translucent ? 0 : exact ? 1 : 2;
+        new Uint32Array(data, 4, 3).set([width, height, layers]);
+        device.queue.writeBuffer(params, 0, data);
+        const dummies = this.translucentInputs();
+        const result = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+        });
+        const readback = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+        const pass = enc.beginComputePass({ label: "meter" });
+        pass.setPipeline(pipelines.meter);
+        pass.setBindGroup(
+          0,
+          device.createBindGroup({
+            layout: pipelines.meter.getBindGroupLayout(0),
+            entries: [
+              { binding: 0, resource: get(resolved) },
+              { binding: 1, resource: { buffer: params } },
+              { binding: 2, resource: { buffer: result } },
+              {
+                binding: 3,
+                resource: layers ? get(accumulatedLit) : dummies.color,
+              },
+              {
+                binding: 4,
+                resource: layers ? get(accumulatedUnlit) : dummies.color,
+              },
+              {
+                binding: 5,
+                resource: layers === 2 ? get(momentsZero) : dummies.zero,
+              },
+            ],
+          }),
+        );
+        pass.dispatchWorkgroups(1);
+        pass.end();
+        enc.copyBufferToBuffer(result, 0, readback, 0, 16);
+        this.meters.push({ view, readback, scratch: [params, result] });
+      },
+    );
+
     const compositeScene: GPURenderPassColorAttachment = {
       view: undefined as never,
       loadOp: "load",
@@ -4524,59 +4602,6 @@ export class Engine {
           exposure: view.exposureScale,
           resolvers: view.pendingHdrReads.splice(0),
         });
-      },
-    );
-
-    graph.addPass(
-      "meter",
-      { reads: [resolved], sideEffect: true },
-      (enc, get) => {
-        const auto = view.autoExposure;
-        const adapts = "auto" in view.exposure || "eye" in view.exposure;
-        // Not a column or a row: a canvas squeezed to 0 width draws 1 pixel
-        // across, which says nothing of the view (stars alone, from a view
-        // half full of a sunlit Earth, opened the eye: white on the way back).
-        if (adapts && auto?.pending) {
-          auto.skipped = true;
-          return;
-        }
-        if (!adapts || !auto || width < 2 || height < 2) {
-          return;
-        }
-        auto.pending = true;
-        const params = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-        const data = new ArrayBuffer(16);
-        new Float32Array(data, 0, 1)[0] = view.exposureScale;
-        new Uint32Array(data, 4, 2).set([width, height]);
-        device.queue.writeBuffer(params, 0, data);
-        const result = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-        });
-        const readback = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-        });
-        const pass = enc.beginComputePass({ label: "meter" });
-        pass.setPipeline(pipelines.meter);
-        pass.setBindGroup(
-          0,
-          device.createBindGroup({
-            layout: pipelines.meter.getBindGroupLayout(0),
-            entries: [
-              { binding: 0, resource: get(resolved) },
-              { binding: 1, resource: { buffer: params } },
-              { binding: 2, resource: { buffer: result } },
-            ],
-          }),
-        );
-        pass.dispatchWorkgroups(1);
-        pass.end();
-        enc.copyBufferToBuffer(result, 0, readback, 0, 16);
-        this.meters.push({ view, readback, scratch: [params, result] });
       },
     );
 

@@ -1772,8 +1772,9 @@ struct TranslucentParams {
 // Word 0: the nodes used (past `capacity`: those that didn't fit);
 // from LIST_HEADER, each pixel's first node plus one (0: none); from
 // `nodesBase`, nodes of four words: color (rg, then b and alpha as halves,
-// alpha negative for display-referred color), depth, and the next node
-// plus one (low 28 bits) with the samples the node covers (top four).
+// alpha negative for display-referred color, `EMISSION_NODE` for a layer's
+// emission), depth, and the next node plus one (low 28 bits) with the samples
+// the node covers (top four).
 [[vk::binding(1, 3)]] RWStructuredBuffer<Atomic<uint>> lists;
 [[vk::binding(2, 3)]] DepthTexture2DMS opaqueDepth;
 // The moments pass's sums, read by the color pass: bindings 3 and 4,
@@ -1788,6 +1789,10 @@ float4 loadMomentsHigher(uint2 p);
 static const uint LIST_HEADER = 4u;
 // A node's `next` word: the next node plus one, below its samples' bits.
 static const uint LIST_SAMPLE_SHIFT = 28u;
+// In a node's alpha, past any alpha: its color is a layer's emission,
+// premultiplied, which hides nothing. A layer with no emission has no such
+// node, so emission costs list bytes only where it is drawn (`appendNode`).
+static const float EMISSION_NODE = 2.0;
 
 // Blended surfaces draw here below this alpha: a little past where the
 // opaque pass takes them (`OPAQUE_ALPHA`), so a pixel its depth and
@@ -1845,8 +1850,27 @@ float2 depthSlope(float4 position) {
   return float2(ddx(position.z), ddy(position.z));
 }
 
+// One node at the head of its pixel's list.
+void listNode(SurfaceVaryings in, float3 color, float alpha, uint visible) {
+  uint index = lists[0].add(1u);
+  if (index >= translucency.capacity) {
+    return;
+  }
+  uint node = translucency.nodesBase + index * 4u;
+  lists[node].store(packHalf2x16(color.rg));
+  lists[node + 1u].store(packHalf2x16(float2(color.b, alpha)));
+  lists[node + 2u].store(asuint(in.position.z));
+  uint pixel = uint(in.position.y) * translucency.width + uint(in.position.x);
+  uint next = lists[LIST_HEADER + pixel].exchange(index + 1u);
+  lists[node + 3u].store(next | (visible << LIST_SAMPLE_SHIFT));
+}
+
 // A fragment into its pixel's list, with the samples (of `mask`, those
-// it covers) it is in front of the opaque surfaces at.
+// it covers) it is in front of the opaque surfaces at. Its emission, if any,
+// is a node of its own, so `sortLists` can keep it out of the scene light the
+// exposure meter reads. That node goes in last: nodes of one depth sort in
+// list order, newest first, so the emission is seen through the layers in
+// front of it and not through its own layer.
 void appendNode(SurfaceVaryings in, float2 slope, Surface s, uint mask) {
   if (s.alpha >= TRANSLUCENT_ALPHA) {
     return; // drawn opaque (`cutOut`)
@@ -1856,17 +1880,14 @@ void appendNode(SurfaceVaryings in, float2 slope, Surface s, uint mask) {
   if (alpha <= 0.0 || visible == 0u) {
     return;
   }
-  uint index = lists[0].add(1u);
-  if (index >= translucency.capacity) {
+  if (s.unlit) {
+    listNode(in, s.color, -alpha, visible);
     return;
   }
-  uint node = translucency.nodesBase + index * 4u;
-  lists[node].store(packHalf2x16(s.color.rg));
-  lists[node + 1u].store(packHalf2x16(float2(s.color.b, s.unlit ? -alpha : alpha)));
-  lists[node + 2u].store(asuint(in.position.z));
-  uint pixel = uint(in.position.y) * translucency.width + uint(in.position.x);
-  uint next = lists[LIST_HEADER + pixel].exchange(index + 1u);
-  lists[node + 3u].store(next | (visible << LIST_SAMPLE_SHIFT));
+  listNode(in, s.color * s.sceneShare, alpha, visible);
+  if (s.sceneShare < 1.0) {
+    listNode(in, s.color * (1.0 - s.sceneShare) * alpha, EMISSION_NODE, visible);
+  }
 }
 
 // Once a pixel: the fragment and the samples it covers.
@@ -1994,7 +2015,8 @@ struct AccumulatedOut {
   // Scene-referred light weighted by the light reaching it (rgb), and the
   // weights summed (a, over every fragment, lit or not).
   float4 lit : SV_Target0;
-  // Display-referred (unlit) color, the same.
+  // Display-referred (unlit) color, the same (rgb), and the luminance of the
+  // scene's light in `lit`, emission left out, the same (a: the exposure meter).
   float4 unlit : SV_Target1;
 };
 
@@ -2014,6 +2036,7 @@ AccumulatedOut fsMomentColor(SurfaceVaryings in, bool frontFacing : SV_IsFrontFa
   float3 weighted = min(s.color * w, float3(16384.0));
   AccumulatedOut out;
   out.lit = float4(s.unlit ? float3(0.0) : weighted, w);
-  out.unlit = float4(s.unlit ? weighted : float3(0.0), 0.0);
+  float sceneLuminance = dot(weighted, float3(0.2126, 0.7152, 0.0722)) * s.sceneShare;
+  out.unlit = s.unlit ? float4(weighted, 0.0) : float4(float3(0.0), sceneLuminance);
   return out;
 }

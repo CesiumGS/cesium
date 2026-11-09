@@ -366,7 +366,8 @@ export interface HdrImage {
    * Emission is display-relative (added after exposure), so it appears
    * divided by the exposure scale here. Alpha is not divided: it is the
    * share of the pixel's luminance that is scene light (1 without
-   * emission), which the exposure meter takes of the color.
+   * emission). Where translucent layers draw it isn't: they blend coverage
+   * into it, so it says nothing of their emission.
    */
   data: Float32Array;
 }

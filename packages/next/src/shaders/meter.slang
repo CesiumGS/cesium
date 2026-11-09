@@ -17,6 +17,15 @@
 // takes that share of the color, so a pixel half emission and half light
 // reads the light alone, and pure emission (share 0) is left out.
 //
+// Translucent layers: "over" can't blend a share (it would have to weigh each
+// by luminance), so this reads the opaque pass's image before the composite
+// runs (alpha there is only ever the share), and puts the layers over it here.
+// What's seen of the scene's light is the layers' own, emission left out
+// (composite.slang, surface.slang `fsMomentColor`), plus the opaque pixel's
+// through them. A layer with no scene light adds none, and a pixel with no
+// scene light from either is left out, unlit glass over unlit ground too.
+// Reads are on the same 64 × 64 grid, and only in a view drawing layers.
+//
 // Highlight guard: a small bright part of a dark image (a crescent Earth
 // against the night, a lamp in a street) is under 35% of the pixels, so the
 // band averaged what was dark and the bright part burned out. The reading
@@ -28,14 +37,25 @@ struct MeterParams {
   float exposure;
   uint width;
   uint height;
-  uint pad;
+  uint layers; // the translucent layers to read: LAYERS_*
 };
+
+// A view drawing no layers; "exact"; "moments" (Engine `meter` pass).
+static const uint LAYERS_EXACT = 1u;
+static const uint LAYERS_MOMENTS = 2u;
 
 [[vk::binding(0, 0)]] Texture2D<float4> image;
 [[vk::binding(1, 0)]] ConstantBuffer<MeterParams> params;
 // x, y: photopic sum of log2 luminance and weight (in the band); z, w: the
 // same, scotopic. One element.
 [[vk::binding(2, 0)]] RWStructuredBuffer<float4> result;
+// The layers, as the composite is about to read them (composite.slang): light
+// (rgb), and what they hide ("exact") or their weights ("moments", a); the
+// luminance of the scene's light in that (a of the second); and their total
+// absorbance ("moments").
+[[vk::binding(3, 0)]] Texture2D<float4> layersLit;
+[[vk::binding(4, 0)]] Texture2D<float4> layersUnlit;
+[[vk::binding(5, 0)]] Texture2D<float4> layersAbsorbance;
 
 static const uint GRID = 64u;
 // log2 luminance from −24 to +24 (cd/m²), a third of a stop per bin.
@@ -73,6 +93,39 @@ float2 share(uint b, float count, float under, float total) {
   return float2((LOW + (float(b) + 0.5) * BIN_STOPS) * inBand, inBand);
 }
 
+struct Layers {
+  float3 light;  // the scene's light in them, pre-exposed, on screen
+  float through; // the share of what's behind them that shows
+};
+
+Layers layersAt(int3 p) {
+  Layers none;
+  none.light = float3(0.0);
+  none.through = 1.0;
+  if (params.layers == 0u) {
+    return none;
+  }
+  float4 lit = layersLit.Load(p);
+  float hidden = lit.a;
+  float toScreen = 1.0;
+  if (params.layers == LAYERS_MOMENTS) {
+    // As the composite's `fsMoments` normalizes them.
+    float b0 = layersAbsorbance.Load(p).r;
+    if (b0 < 0.00100050033 || !(lit.a > 0.0)) {
+      return none;
+    }
+    hidden = 1.0 - exp(-b0);
+    toScreen = hidden / lit.a;
+  }
+  float3 shown = max(lit.rgb, float3(0.0)) * toScreen;
+  float all = dot(shown, float3(0.2126, 0.7152, 0.0722));
+  float scene = layersUnlit.Load(p).a * toScreen;
+  Layers layers;
+  layers.light = all > 0.0 ? shown * min(scene / all, 1.0) : float3(0.0);
+  layers.through = 1.0 - hidden;
+  return layers;
+}
+
 [shader("compute")]
 [numthreads(16, 16, 1)]
 void main(uint index : SV_GroupIndex, uint3 local : SV_GroupThreadID) {
@@ -89,9 +142,12 @@ void main(uint index : SV_GroupIndex, uint3 local : SV_GroupThreadID) {
       float2 unit = (float2(float(gx), float(gy)) + 0.5) / float(GRID);
       uint2 pixel = uint2(min(uint(unit.x * float(params.width)), params.width - 1u),
                           min(uint(unit.y * float(params.height)), params.height - 1u));
-      float4 color = image.Load(int3(int2(pixel), 0));
-      if (color.a > 0.0) {
-        float3 light = max(color.rgb, float3(0.0)) * min(color.a, 1.0) / params.exposure;
+      int3 at = int3(int2(pixel), 0);
+      float4 color = image.Load(at);
+      Layers layers = layersAt(at);
+      float3 opaque = max(color.rgb, float3(0.0)) * min(color.a, 1.0);
+      if ((color.a > 0.0 && layers.through > 0.0) || any(layers.light > float3(0.0))) {
+        float3 light = (layers.light + opaque * layers.through) / params.exposure;
         float x = dot(light, float3(0.4124, 0.3576, 0.1805));
         float y = dot(light, float3(0.2126, 0.7152, 0.0722));
         float z = dot(light, float3(0.0193, 0.1192, 0.9505));

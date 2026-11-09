@@ -1045,7 +1045,8 @@ async function createPipelines(
     { format: "rgba16float", blend: added },
     { format: "rgba16float", blend: added },
   ];
-  // Premultiplied, alpha 1 - T: the scene's light and coverage "over";
+  // Premultiplied, alpha 1 - T: the scene's light "over" (its alpha, read by
+  // no later pass: the meter has read it, meter.slang);
   // the display's color the same, its alpha (the unlit share) times T.
   const over: GPUBlendComponent = {
     srcFactor: "one",

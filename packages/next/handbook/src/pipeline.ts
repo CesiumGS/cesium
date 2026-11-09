@@ -206,7 +206,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute",
     summary: "A reading of the image, for automatic exposure.",
     detail:
-      "It takes the scene's light alone: the surface writes light's share of each pixel to the target's alpha, so emission, added after exposure, doesn't pull the reading. Read back later, and a reading that moves the state asks for a tick.",
+      "It takes the scene's light alone: the surface writes light's share of each pixel to the target's alpha, so emission, added after exposure, doesn't pull the reading. It runs before the composite and puts the translucent layers' light, emission left out, over what the opaque pass drew. Read back later, and a reading that moves the state asks for a tick.",
     skipped: "When the view's exposure is fixed.",
   },
   pick: {

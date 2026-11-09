@@ -1,10 +1,12 @@
 // Translucency's composite (translucent.wgsl): per pixel, the translucent
 // layers' light C and the light T they let through, blended over the
 // opaque pass's resolved targets as premultiplied color with alpha 1 - T:
-// scene-referred light over the scene target (its alpha, coverage, as
-// "over"), display-referred (unlit) color over the display target, whose
-// alpha (the unlit share) only drops by T. The present pass then tonemaps
-// the glass's own light with what shows through it.
+// scene-referred light over the scene target, display-referred (unlit) color
+// over the display target, whose alpha (the unlit share) only drops by T. The
+// present pass then tonemaps the glass's own light with what shows through
+// it. No later pass reads the scene target's alpha: it is the opaque pass's
+// until this pass, and the exposure meter reads it, with what this pass is
+// about to blend, before this pass runs (meter.slang).
 
 struct TranslucentParams {
   uint width;
@@ -31,6 +33,9 @@ static const uint LIST_NEXT = (1u << LIST_SAMPLE_SHIFT) - 1u;
 static const uint SAMPLES = 4u;
 // Layers per pixel sorted; past these, the nearest are kept.
 static const uint MAX_LAYERS = 32u;
+// A node's alpha for a layer's emission (surface.slang `EMISSION_NODE`).
+static const float EMISSION_NODE = 2.0;
+static const float3 LUMINANCE = float3(0.2126, 0.7152, 0.0722);
 
 [shader("vertex")]
 float4 vs(uint i : SV_VertexID) : SV_Position {
@@ -50,7 +55,9 @@ struct CompositeOut {
 // `fsSorted` puts them over the opaque pass's. The sort is in workgroup
 // memory, each thread its own MAX_LAYERS slots: done in the fragment
 // shader, two private arrays of MAX_LAYERS held every pixel's registers,
-// light lists or none, and the pass took tens of milliseconds.
+// light lists or none, and the pass took tens of milliseconds. `sortedLit`'s
+// alpha is what the layers hide; `sortedUnlit`'s is the luminance of the
+// scene's light in `sortedLit`, emission left out, for the exposure meter.
 [[vk::binding(5, 0)]] [[vk::image_format("rgba16f")]] WTexture2D<float4> sortedLit;
 [[vk::binding(6, 0)]] [[vk::image_format("rgba16f")]] WTexture2D<float4> sortedUnlit;
 
@@ -101,6 +108,8 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
   float3 lit[SAMPLES];
   float3 unlit[SAMPLES];
   float4 through = float4(1.0);
+  // Of `lit`, the scene's light alone (its luminance): emission left out.
+  float4 sceneLuminance = float4(0.0);
   [ForceUnroll]
   for (uint s = 0u; s < SAMPLES; s++) {
     lit[s] = float3(0.0);
@@ -111,8 +120,12 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
     float2 rg = unpackHalf2x16ToFloat(lists[node]);
     float2 ba = unpackHalf2x16ToFloat(lists[node + 1u]);
     uint covers = lists[node + 3u] >> LIST_SAMPLE_SHIFT;
-    float alpha = abs(ba.y);
-    float3 color = float3(rg, ba.x) * alpha;
+    // A layer's emission (surface.slang `appendNode`) is premultiplied
+    // already, hides nothing and isn't scene light.
+    bool emission = ba.y == EMISSION_NODE;
+    float alpha = emission ? 0.0 : abs(ba.y);
+    float3 color = emission ? float3(rg, ba.x) : float3(rg, ba.x) * alpha;
+    float scene = emission ? 0.0 : dot(color, LUMINANCE);
     [ForceUnroll]
     for (uint s = 0u; s < SAMPLES; s++) {
       if ((covers & (1u << s)) != 0u) {
@@ -120,17 +133,19 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
           unlit[s] += color * through[s];
         } else {
           lit[s] += color * through[s];
+          sceneLuminance[s] += scene * through[s];
         }
         through[s] *= 1.0 - alpha;
       }
     }
   }
   // Every pixel written: no list, no light and nothing hidden (alpha 0).
-  float hidden = 1.0 - dot(through, float4(1.0 / float(SAMPLES)));
+  float4 oneSample = float4(1.0 / float(SAMPLES));
+  float hidden = 1.0 - dot(through, oneSample);
   float3 litSum = (lit[0] + lit[1] + lit[2] + lit[3]) / float(SAMPLES);
   float3 unlitSum = (unlit[0] + unlit[1] + unlit[2] + unlit[3]) / float(SAMPLES);
   sortedLit.Store(id.xy, float4(litSum, hidden));
-  sortedUnlit.Store(id.xy, float4(unlitSum, hidden));
+  sortedUnlit.Store(id.xy, float4(unlitSum, dot(sceneLuminance, oneSample)));
 }
 
 // The exact way's second step: what `sortLists` blended, over the opaque
@@ -144,7 +159,7 @@ CompositeOut fsSorted(float4 frag : SV_Position) {
   }
   CompositeOut out;
   out.scene = lit;
-  out.display = accumulatedUnlit.Load(p);
+  out.display = float4(accumulatedUnlit.Load(p).rgb, lit.a);
   return out;
 }
 
