@@ -69,7 +69,7 @@ function standIn(
     url: "https://tiles.test/corridor/tileset.json",
     warnings: new Set<string>(),
     extensions: { [ENGINEERING_FRAME_EXTENSION]: declaration, ...others },
-    rootJson: {},
+    state: { rootJson: {} },
     modelMatrix: m4.mat4(),
     root: { transform: rootTransform },
     placement: undefined,
