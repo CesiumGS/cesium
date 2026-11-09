@@ -54,8 +54,8 @@ Each is marked "(author's call N)" where it's used. One line each, then what und
 6. **Three slots:** `scene` (linear, pre-exposed, before the response), `exposed` (after the response, before tone mapping) and `display` (encoded). *Undo:* a union, before any host uses it.
 7. **`kind` is required on a stage:** `physics`, `model` or `look`, with a `label`. Readouts show it. So a look can't pass for physics. *Undo:* make it optional.
 8. **`present.slang`'s `fs` keeps running unchanged unless an `exposed` stage is on.** New entries `fsResponse` and `fsTone` split it only then, so the default path costs nothing and stays the same. *Undo:* one entry.
-9. **A public stage is one fullscreen fragment function,** `postStage(input: PostInput) -> vec4<f32>`, joined through the shader linker with a `POST_STAGE_BOUNDARY`. Slang goes through the existing offline compiler first. *Undo:* one boundary.
-10. **Multi-pass built-ins use an internal `GraphStage`,** which isn't public until a second user asks for it. 5i decides. *Undo:* nothing to undo; exporting it later is additive.
+9. **A public stage is one fullscreen fragment function at its simplest,** `postStage(input: PostInput) -> vec4<f32>`, joined through the shader linker with a `POST_STAGE_BOUNDARY`. Or it's declared `passes`, fragment or compute, over `textures` it owns (intermediate targets with a scale and mips, or fixed images), each naming what it reads and writes (§13.22; Batch A's review, finding 6). Slang goes through the existing offline compiler first. *Undo:* one boundary.
+10. **What a declaration can't carry yet uses an internal `GraphStage`:** an instanced draw, a storage buffer, a blend. So Task 13's veil is a declared stage, and Task 12's source list and Task 14's sprites are `GraphStage`s. It isn't public until a second user asks for it. 5i decides. *Undo:* nothing to undo; exporting it later is additive.
 11. **Ambient occlusion doesn't move.** It feeds shading before the opaque pass, so it isn't a post stage. See "FXAA and ambient occlusion". *Undo:* not needed.
 12. **A pack is a folder:** `manifest.json`, `points.bin`, `background.bin`. Each binary starts with a magic (`CSKYPTS1`, `CSKYBG01`), so a build can recognize one under any name. *Undo:* a reader.
 13. **The store is `~/.cesium-bench/sky`, or `SKY_DATA_DIR`,** beside the frames store. *Undo:* one path.
@@ -68,7 +68,7 @@ Each is marked "(author's call N)" where it's used. One line each, then what und
 20. **At run time an uncleared pack loads, with one warning.** Builds refuse; a local run needs it. *Undo:* a throw.
 21. **Calibration stays out of the repository.** It's derived data, computed at build time and kept in the pack's manifest. Every committed test fixture is synthetic. *Undo:* not recommended.
 22. **Uploads are sliced:** 4 MB of points, or one face's top level, per tick. The old sky draws until the new one is complete. *Undo:* a constant.
-23. **The tight core applies to today's map too.** §13.29 says a checkout with no pack "draws what it draws now", and it also says to replace the fixed halo. *Ruling:* the first is about the data, and the point spread belongs to the observer. Task 8 states the difference. *Undo:* the presets' `pointSpread`, one line each.
+23. **The tight core applies to today's map too.** §13.29 says a checkout with no pack "draws what it draws now", and it also says to replace the fixed halo. *Ruling:* the first is about the data, and the point spread belongs to the observer. Task 8 states the difference. *Undo:* `observerPointSpread`'s two constants.
 24. **Point spread:** the eye σ 0.85 CSS px; a camera σ 0.55 CSS px. No wing by default, though `wing` stays in the type, since the spike's camera had one. From the spike. Energy per star doesn't change. *Undo:* constants.
 25. **384 cells (8 a face side), sorted brightest first, built in the worker at load** for any `StarField`. *Undo:* a constant.
 26. **Compute culling, with an identical CPU path** when `submission` is `"direct"` or `indirect-first-instance` is missing. *Undo:* drop a branch.
@@ -215,6 +215,7 @@ What it decides: `glareTier`'s table; whether cells keep indirect draws on Intel
 3. **Exposure at its limits with glare on:** EV100 −12 and 18, `{ scale: 1 }`, an eye just adapted from noon to night, or a look stage returning NaN. Nothing overflows fp16 into infinity, no NaN reaches the display, and the meter still reads. Tests: Tasks 2 and 13.
 4. **Views that differ or change:** two views with different observers on one canvas, a stage added or removed while running, a canvas squeezed to 0 px, a view removed with a pack still uploading. Each view gets its own chain, its targets free, and no bind group is stale. Tests: Tasks 2, 4 and 15.
 5. **The on-demand loop:** a sleeping engine wakes when an observer's value is edited in place. An idle scene with the eye, glare or a stage on goes to sleep, and a kernel or pack arriving asks for one tick. Tests: Tasks 1, 4, 14 and 15.
+6. **A stage that hangs:** WebGPU can't make host WGSL fully safe. A `loop`, a `while`, or a `for` whose count can't be read, or over 256 iterations a pixel, is refused at creation unless the host sets `allowUnboundedLoops`. It's a guard on the text, not a proof: it doesn't follow calls. On a device loss, `Engine.errors` names the stages that were on, and they stay off. Tests: `test/postStage.test.ts`.
 
 ---
 
@@ -248,7 +249,7 @@ No picture changes. EV100 stays the unit.
   - `Exposure`, `EYE`, `UNITLESS_EXPOSURE`, `DAYLIGHT_EXPOSURE`, `ev100ToScale`, `ToneMapping` move here, unchanged, and `src/index.ts` keeps exporting them;
   - `scaleToEv100(scale: number): number`, the inverse of `ev100ToScale`;
   - `interface PointSpread { core: number; wing?: { sigma: number; share: number } }`, in CSS pixels;
-  - `interface ObserverSettings { exposure: Exposure; toneMapping: ToneMapping; pointSpread: PointSpread; glare: GlareSettings | null; stages: readonly PostStage[] }` (`GlareSettings`, `GlareTier` and `Aperture` are declared here, and used from Task 12: `{ tier: GlareTier | "auto"; veil: { share: number } | null; spikes: { aperture: Aperture; share: number; extent: number } | null }`, `extent` in degrees, `type GlareTier = "full" | "reduced" | "sources" | "off"`, `type Aperture = "round" | "vanes" | "hex" | "blades7"`; `PostStage` is a type import from Task 2, and `stages` is empty until then);
+  - `interface ObserverSettings { exposure: Exposure; toneMapping: ToneMapping; pointSpread?: PointSpread; glare: GlareSettings | null; stages: readonly PostStage[] }`, with `pointSpread` following the exposure unless it's set (`observerPointSpread`) (`GlareSettings`, `GlareTier` and `GlarePupil` are declared here, and used from Task 12: `{ tier: GlareTier | "auto"; veil: { share: number } | null; spikes: { aperture: GlarePupil; share: number; extent: number } | null }`, `extent` in degrees, `type GlareTier = "full" | "reduced" | "sources" | "off"`, `type GlarePupil = "round" | "vanes" | "hex" | "blades7"`; `PostStage` is a type import from Task 2, and `stages` is empty until then);
   - `eyeObserver(options?: { compensation?: number; speed?: number }): ObserverSettings`: exposure `{ eye: true, ... }`, core 0.85, glare null, no stages;
   - `cameraObserver(exposure: Exposure): ObserverSettings`: core 0.55, glare null, no stages;
   - `interface ObserverReadout { ev100: number | undefined; equivalent: boolean; preExposure: number; cones?: number; rods?: number }`;
@@ -479,7 +480,7 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
 
 **Interfaces:**
 
-- Consumes: `observer.pointSpread`.
+- Consumes: `observerPointSpread(view.observer)`.
 - Produces (author's calls 23, 24):
   - `Sky` uniform fields `starCore`, `starWing`, `starWingShare`, in CSS pixels, as `starPixel` scales them. `STAR_CORE`, `STAR_HALO` and `STAR_HALO_SHARE` go;
   - `starRadius(spread: PointSpread, brightest: number, pixelRatio: number): number`, pure, and the same rule in the vertex shader: at least 3.5 σ of the core, plus the wing's reach where it's on, at most 64 px;
@@ -557,7 +558,7 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
   - `EYE_STARS_EV100`, `Sky.write`'s `starExposure` parameter, the uniform's field and the shader's `starExposure` function are gone. Stars take `sky.exposure`, like everything else;
   - `eyePointLimit(cones: number, rods: number): number`, lux, in `eye.ts`: magnitude 6's illuminance × `max(1, rodThreshold(rods) / rodThreshold(dark))`, with `dark` at 10⁻⁴ cd/m² of photopic adaptation. Tuned by nothing but the model's own threshold;
   - `eyeLimitStage(): PostStage`: slot `scene`, kind `model`, label `"The eye's point limit (a model)"`, reads `depth`. Where depth is at the far plane, it compares each pixel with the darkest of a ring of 8 taps at about 6 px, turns the excess into illuminance at this pixel's solid angle and the observer's core share, and fades it over 1 magnitude around the limit. Other pixels pass through;
-  - `eyeObserver`'s `pointLimit?: boolean`, default true; the chain enables it only with the eye, a drawn sky and adaptation under 30 cd/m²;
+  - `eyeObserver`'s `pointLimit?: boolean`, default true; its `perView` leaves it out of a view unless it has the eye, a drawn sky and adaptation under 30 cd/m², and sets that view's limit, so a split view's two sides differ;
   - the uniform field `faintStars: float3`, in place of `STARLIGHT` in `nightGlow`: `STARLIGHT` with today's map; half of it with `holdsFaintStars`; in the environment faces only, plus `meanBackground`. `STARLIGHT`'s constant stays in TypeScript, with a comment that the half is a guess at the zodiacal light's share.
 
 **What changes.** The eye only, and only where the sky behind a star is dark. A camera and a plain scale see no change from the rule's removal.
@@ -637,7 +638,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - `VEIL_LEVELS = 9`; `veilWeights(pixelAngle: number, levels: number, basePixels: number): Float32Array`: each level's share of the energy, equal per octave of angle from 0.1° to 60°. A level's σ is `basePixels × 2^i` pixels, or that times `pixelAngle` in angle. Octaves finer than level 0's go to level 0, and octaves wider than the top level are lost. Zeros, not NaN, for a `pixelAngle` that isn't positive and finite;
   - `veilSpread(r: number, weights, basePixels): number`: per pixel², the closed form that the pyramid amounts to for a point, `Σ wᵢ exp(−r² / 2σᵢ²) / (2π σᵢ²)`, the same in `glare.slang`;
   - `sunVeil(pixelOffset, pixelSolidAngle, light, visibility, share, weights, basePixels, z): [r, g, b]`, pure, with a fade from z 0.15 to 0.05, so the sun behind the camera adds nothing;
-  - **Passes:** `glare.input` writes level 0 of `glare.pyramid` (half size, `rgba16float`, mips): the image, clamped to 10,000, with pixels inside the sun's disc as zero; `glare.down.N`, 4 bilinear taps; `glare.veil`, half size: `share × Σ wᵢ bicubic(level i)` plus `sunVeil`; `glare.composite`, into `glare.image` (full size, `rgba16float`): `min(image, 10000) × (1 − share Σwᵢ) + veil`, with anything not finite replaced by 0;
+  - **Passes,** declared as a `scene` stage's `passes` and `textures` (call 9), the sun's record and the weights set per view in `perView`: `glare.input` writes level 0 of `glare.pyramid` (half size, `rgba16float`, mips): the image, clamped to 10,000, with pixels inside the sun's disc as zero; `glare.down.N`, 4 bilinear taps; `glare.veil`, half size: `share × Σ wᵢ bicubic(level i)` plus `sunVeil`; `glare.composite`, into `glare.image` (full size, `rgba16float`): `min(image, 10000) × (1 − share Σwᵢ) + veil`, with anything not finite replaced by 0;
   - the `present` pass reads `glare.image` when glare ran, by `get()`, so nothing allocates when it's off; the eye's adaptation map still reads `resolved`;
   - `View.readHdr(options?: { after?: "glare" })`, for checks; the default stays before glare.
 
@@ -673,7 +674,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
 
 - Consumes: Task 12's sources, Task 13's `glare.image`.
 - Produces (author's calls 38, 39, 41):
-  - `computeKernel(aperture: Aperture, size: number): { texels: Float32Array; radii: Float32Array; size: number }`, no GPU: the pupil's |FFT|², resampled per wavelength over a constant 16 wavelengths and summed to RGB, with its core tapered out over a radial window and the rest normalized to 1. `radii` gives the visible radius in cells per log2 of display brightness, 32 entries. FFT here runs once, in a worker, and never in a tick;
+  - `computeKernel(aperture: GlarePupil, size: number): { texels: Float32Array; radii: Float32Array; size: number }`, no GPU: the pupil's |FFT|², resampled per wavelength over a constant 16 wavelengths and summed to RGB, with its core tapered out over a radial window and the rest normalized to 1. `radii` gives the visible radius in cells per log2 of display brightness, 32 entries. FFT here runs once, in a worker, and never in a tick;
   - `glare.ts` owns the kernels, one per aperture, uploaded as `rgba16float` on first use; until then spikes draw nothing, and the veil runs. Its arrival asks for one tick (Review Focus 5);
   - the sprite pass: `pass.draw(4, GLARE_SOURCES)`, blending additively into `glare.image` after the composite. The vertex shader gives a degenerate triangle for a slot past the count; the fragment takes one sample, and clamps at 200; `spikes.share` scales it, default 0.05; `spikes.extent` is the kernel's half-width in degrees, default 3, and a sprite's radius is at most 512 px.
 
@@ -704,7 +705,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
 - Produces (author's call 40):
   - `GpuDevice.adapterInfo: { vendor: string; architecture: string; isFallbackAdapter: boolean }`, read once from the adapter;
   - `glareTier(adapter, pixels: number): GlareTier`, by the table in "GPU safety", pure; `resolveGlare(settings: GlareSettings | null, adapter, pixels): ResolvedGlare`: the levels, base, sprite and pixel caps it means;
-  - `eyeGlare(): GlareSettings`: a veil, no spikes, `tier: "auto"`; `cameraGlare(options?: { aperture?: Aperture }): GlareSettings`: a veil and spikes, default `vanes`;
+  - `eyeGlare(): GlareSettings`: a veil, no spikes, `tier: "auto"`; `cameraGlare(options?: { aperture?: GlarePupil }): GlareSettings`: a veil and spikes, default `vanes`;
   - `Viewer` keeps `glare: null` (question 1).
 
 - [ ] **Step 1: Write the failing test** (`test/glareTier.test.ts`):
@@ -832,7 +833,7 @@ For the owner to apply. This plan doesn't edit them. Line references are by symb
 
 **5d.**
 
-- **`Camera.lens` should be renamed.** Its `Lens` holds tangents and half extents, which is projection. §13.22, §13.28 and §13.30 use "lens" for optics (a lens's spikes, a lens and camera in a preset), and those now live on the observer as `Aperture` and `spikes`. Two meanings of one word on neighboring objects will mislead. Recommended: `Camera.imagePlane(aspect): ImagePlane`, the same fields, in its calls 34 and 36, Tasks 14 and 15, and its seam's wording. It costs a rename now and more once built (question 5). This plan's API avoids the word either way.
+- **`Camera.lens` should be renamed.** Its `Lens` holds tangents and half extents, which is projection. §13.22, §13.28 and §13.30 use "lens" for optics (a lens's spikes, a lens and camera in a preset), and those now live on the observer as `GlarePupil` and `spikes`. Two meanings of one word on neighboring objects will mislead. Recommended: `Camera.imagePlane(aspect): ImagePlane`, the same fields, in its calls 34 and 36, Tasks 14 and 15, and its seam's wording. It costs a rename now and more once built (question 5). This plan's API avoids the word either way.
 - **Its `.fovy` seam:** this plan adds no `.fovy` read. New code takes tangents from the sky's uniform, so its Task 14 has nothing more to move. Keep it that way in review.
 - **Its Task 15:** `Sky.write` no longer has a `starExposure` parameter. Add `glare` to what's off in an orthographic view, beside `frame.ambient`: there's no angle for a veil to spread over, and the narrowest dolly's tangents would make every star's radiance enormous. Add to its Step 1: `resolveGlare` gives `off` there; stars at the narrowest dolly's tangents have no NaN; `veilWeights` gives zeros. Star cells need no change, since they use the sky's tangents.
 - **Its global constraints:** add the sky's check page to the browser checks, and read `view.observer` for any exposure a task sets. Its Viewer tasks: `ViewerOptions.observer`.
@@ -855,7 +856,7 @@ For the owner to apply. This plan doesn't edit them. Line references are by symb
 - **Spec coverage.** Observer stage: Tasks 1 to 3, with EV100 readouts in 1 and 17, the meter unmoved in 2 and 13, FXAA in 18 and ambient occlusion in its section. Sky data pack: Tasks 4 to 7, with today's map as default (Task 4), a local script (6), refusal with a test (5), and credits (7). Star drawing: Tasks 8 to 10, with cells, strips, the core and the hybrid; raw catalogs off (call 15). Glare: Tasks 12 to 15, veil, sprites and tiers, per observer, no FFT live (a pin in Task 14), the sun's energy (call 32). Fudges: Task 11. Out-of-scope items appear only under "What other plans need".
 - **Requirements of the brief.** Failable tests end each task. Node first, with browser groups on `spikes/observer.html`. Gates are named per batch, and "Expected pixel differences" states what moves. Batching is its own section. Intel checks, tiers, hang safety and slicing have sections. UI rules: Task 17. Calls carry undo costs. Questions end the document. Review Focus lines each have their tests.
 - **Step scan.** No step says "handle" without saying what. The spike's bodies aren't copied. Formulas appear only where a signature can't determine them.
-- **Type consistency.** `ObserverSettings`, `PointSpread`, `GlareSettings`, `ObserverReadout` (Task 1); `PostStage`, `StageSlot`, `StageKind`, `createPostStage`, `POST_STAGE_BOUNDARY`, `chainOrder`, `chainSource`, `observerShadowGain` (2); `SkyPackManifest`, `parseManifest`, `readPoints`, `readBackground`, `isPackBinary`, `setSkyPack` (4); `skyPackGuard`, `skyPackDevRoute` (5); `starRadius` (8); `buildStarCells`, `cullCell`, `starCullInputs`, `starSubmission` (9); `eyePointLimit`, `eyeLimitStage` (11); `lightListFor`, `discTaps` (12); `veilWeights`, `veilSpread`, `sunVeil` (13); `computeKernel`, `Aperture` (14); `glareTier`, `resolveGlare`, `eyeGlare`, `cameraGlare` (15).
+- **Type consistency.** `ObserverSettings`, `PointSpread`, `GlareSettings`, `ObserverReadout` (Task 1); `PostStage`, `PostStageSlot`, `PostStageKind`, `createPostStage`, `POST_STAGE_BOUNDARY`, `chainOrder`, `chainSource`, `observerShadowGain` (2); `SkyPackManifest`, `parseManifest`, `readPoints`, `readBackground`, `isPackBinary`, `setSkyPack` (4); `skyPackGuard`, `skyPackDevRoute` (5); `starRadius` (8); `buildStarCells`, `cullCell`, `starCullInputs`, `starSubmission` (9); `eyePointLimit`, `eyeLimitStage` (11); `lightListFor`, `discTaps` (12); `veilWeights`, `veilSpread`, `sunVeil` (13); `computeKernel`, `GlarePupil` (14); `glareTier`, `resolveGlare`, `eyeGlare`, `cameraGlare` (15).
 - **Proportion.** The plan decides names, values and tests. Shader bodies are left to the implementer, except for formulas the spec leaves open.
 - **Not verified in writing this.** All GPU costs are the spike's, on an M2. Nothing here has run. The eye-limit values and the "stars fall by" table are computed from today's `eye.ts`. The slope check was run on the formula, not on a GPU.
 
