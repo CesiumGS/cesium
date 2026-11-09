@@ -65,12 +65,12 @@ export class TilesetState {
   frame = 0;
   /** A non-3D-Tiles source, when streaming one (`Globe.create`). */
   source?: TileSource;
-  /** Last frame in which an update changed anything. */
+  /** Last tick in which an update changed anything. */
   lastChange = 0;
   cacheBytes!: number;
   /** The world pool an upload last found full (`CapacityError.pool`). */
   capacityFull?: string;
-  /** Frames to wait before retrying uploads after a capacity failure. */
+  /** Ticks to wait before retrying uploads after a capacity failure. */
   capacityWait = 0;
   /** `capacityFull` came from a failed upload, not only from pressure. */
   capacityFailed = false;

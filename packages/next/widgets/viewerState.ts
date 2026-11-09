@@ -44,7 +44,7 @@ export class ViewerState {
   offFrames?: () => void;
   readonly warningList: ViewerWarning[] = [];
   warnings_?: WarningsHandle;
-  /** The world's frame resolver the viewer set (an app may set its own). */
+  /** The world's reference frame resolver the viewer set (an app may set its own). */
   ownResolver?: FramesResolver;
   /** The rig the viewer sets on its views for the catalog in use. */
   ownRig?: Rig;
@@ -66,7 +66,7 @@ export class ViewerState {
   readonly earthPose = new Camera();
   suspensions = 0;
   hidingSuspensions = 0;
-  /** Frames rendered when the last hiding suspension ended, until shown. */
+  /** Ticks rendered when the last hiding suspension ended, until shown. */
   unhideAfter?: number;
   resumeStart?: () => void;
 }

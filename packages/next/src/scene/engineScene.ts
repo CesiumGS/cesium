@@ -46,7 +46,7 @@ export class EngineScene {
   readonly selections = new Map<World, Map<AnchorHandle, SelectionView[]>>();
   /** The prefetch camera re-expressed in such an anchor. */
   readonly selectionAhead = new Camera();
-  /** `selectionCasters`' fit (the frame's own is `cascades`). */
+  /** `selectionCasters`' fit (the tick's own is `cascades`). */
   readonly selectionCascades = createShadowCascades();
   lastUpdateAt = 0;
   /** Time since the previous update, ms (60 Hz until measured). */
@@ -55,9 +55,9 @@ export class EngineScene {
   readonly frameIntervals = new Float64Array(31);
   frameIntervalCount = 0;
   /**
-   * What is left of this frame's budget: upload bytes, and main-
+   * What is left of this tick's budget: upload bytes, and main-
    * thread time for building external tilesets' tile trees (at least one
-   * of each happens per frame).
+   * of each happens per tick).
    */
   readonly uploadBudget = { bytes: 0, uploads: 0, ms: 0, trees: 0 };
   tilesetRotation = 0;

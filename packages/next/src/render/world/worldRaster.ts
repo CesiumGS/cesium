@@ -142,7 +142,7 @@ export class WorldRaster {
   imagerySampler!: GPUSampler;
 
   /**
-   * Geometry written since the last frame, copied in one batch
+   * Geometry written since the last tick, copied in one batch
    * (`flushUploads`). A queue.writeBuffer per stream of every mesh went
    * through the browser's transfer ring to the GPU process: a burst of
    * tiles blocked the main thread in writeBuffer (NYC, vsync off: 1.2 s

@@ -46,7 +46,7 @@ export class EngineRaster {
     View,
     { city: CityLight; longitude: number; latitude: number; light: number }
   >();
-  /** This frame's view's city light, cd/m² (`cityLightAt`). */
+  /** This tick's view's city light, cd/m² (`cityLightAt`). */
   viewCityLight = 0;
   /** Each drawn view's lights (lights.ts `packViewLights`), by slot. */
   lightStaging!: GPUBuffer;
@@ -78,32 +78,32 @@ export class EngineRaster {
   pickResult!: GPUBuffer;
   readonly pickParamsData = new Uint32Array(4);
   readonly picks: PendingPick[] = [];
-  /** Exposure meter readings this frame, mapped after submit. */
+  /** Exposure meter readings this tick, mapped after submit. */
   readonly meters: Array<{
     view: View;
     readback: GPUBuffer;
     scratch: GPUBuffer[];
   }> = [];
-  /** Depth ranges reduced this frame (`depthRange.slang`), mapped after submit. */
+  /** Depth ranges reduced this tick (`depthRange.slang`), mapped after submit. */
   readonly depthRanges: Array<{
     frame: ViewFrame;
     readback: GPUBuffer;
     scratch: GPUBuffer[];
   }> = [];
-  /** HDR images copied this frame (`View.readHdr`), mapped after submit. */
+  /** HDR images copied this tick (`View.readHdr`), mapped after submit. */
   readonly hdrReads: Array<{
     buffer: GPUBuffer;
     bytesPerRow: number;
     width: number;
     height: number;
-    /** The pre-exposure of the frame read: divided out. */
+    /** The pre-exposure of the image read: divided out. */
     exposure: number;
     resolvers: Array<(image: HdrImage) => void>;
   }> = [];
   /**
    * Translucency's per-pixel lists ("exact", translucent.wgsl), shared by
    * the views (each clears and fills them in turn): the nodes they hold,
-   * grown when a frame needed more (its count read back, one at a time).
+   * grown when a tick needed more (its count read back, one at a time).
    */
   lists?: GPUBuffer;
   listNodes = 0;
