@@ -84,8 +84,115 @@ describe("eyeLimitStage", () => {
   });
 
   it("has a ring of 8 taps, unrolled", () => {
-    expect(source().match(/around = eyeLimitBrighter\(/g)?.length).toBe(8);
+    expect(source().match(/eyeLimitTake\(eyeLimitTap\(/g)?.length).toBe(8);
     expect(source()).not.toMatch(/\bfor\s*\(/);
+    // A drawn pixel is dark to the ring: never this pixel's own color.
+    expect(source()).toMatch(
+      /postDepthAt\(p\) != 0\.0\) \{\s*return vec3<f32>\(0\.0\);/,
+    );
+    expect(source()).toContain("let around = ringSecond;");
+  });
+
+  describe("the ring, ported on a small image", () => {
+    const N = 33;
+    const ring = 3;
+    const taps: [number, number][] = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+      [0.7071, 0.7071],
+      [-0.7071, 0.7071],
+      [0.7071, -0.7071],
+      [-0.7071, -0.7071],
+    ];
+    /** What the stage leaves of pixel (x, y): the shader's walk, on one channel. */
+    const stage = (
+      color: number[],
+      drawn: boolean[],
+      x: number,
+      y: number,
+      lux: number,
+      limit: number,
+    ) => {
+      const at = (i: number, j: number) => {
+        const k =
+          Math.min(Math.max(j, 0), N - 1) * N + Math.min(Math.max(i, 0), N - 1);
+        return drawn[k] ? 0 : color[k]!;
+      };
+      let first = 0;
+      let second = 0;
+      for (const [dx, dy] of taps) {
+        const t = at(x + Math.round(dx * ring), y + Math.round(dy * ring));
+        if (t > first) {
+          second = first;
+          first = t;
+        } else if (t > second) {
+          second = t;
+        }
+      }
+      const c = color[y * N + x]!;
+      const above = c - second;
+      if (above <= 0) {
+        return c;
+      }
+      const brighter =
+        1.0857362 * Math.log(Math.max((above * lux) / limit, 1e-6));
+      const u = Math.min(Math.max((brighter + 0.5) / 1, 0), 1);
+      return second + above * (u * u * (3 - 2 * u));
+    };
+    const image = (
+      paint: (x: number, y: number) => number,
+      drawn: (x: number, y: number) => boolean = () => false,
+    ) => {
+      const color: number[] = [];
+      const flags: boolean[] = [];
+      for (let y = 0; y < N; y++) {
+        for (let x = 0; x < N; x++) {
+          color.push(paint(x, y) + 0.001);
+          flags.push(drawn(x, y));
+        }
+      }
+      return { color, flags };
+    };
+    const mid = (N - 1) / 2;
+
+    it("takes away a lone faint star, and keeps a lone bright one", () => {
+      const star = (v: number) =>
+        image((x, y) => (x === mid && y === mid ? v : 0));
+      const faint = star(1);
+      const bright = star(1000);
+      expect(stage(faint.color, faint.flags, mid, mid, 1, 100)).toBeCloseTo(
+        0.001,
+        3,
+      );
+      expect(stage(bright.color, bright.flags, mid, mid, 1, 100)).toBeCloseTo(
+        1000.001,
+        2,
+      );
+    });
+
+    it("keeps a thin line, however faint", () => {
+      const line = image((x) => (x === mid ? 1 : 0));
+      expect(stage(line.color, line.flags, mid, mid, 1, 100)).toBeCloseTo(
+        1.001,
+        3,
+      );
+    });
+
+    it("takes away a faint star beside a silhouette, as far from one", () => {
+      const star = (drawn: (x: number, y: number) => boolean) =>
+        image(
+          (x, y) => (x === mid && y === mid ? 1 : drawn(x, y) ? 50 : 0),
+          drawn,
+        );
+      const clear = star(() => false);
+      const beside = star((x) => x > mid + 1);
+      const a = stage(clear.color, clear.flags, mid, mid, 1, 100);
+      const b = stage(beside.color, beside.flags, mid, mid, 1, 100);
+      expect(a).toBeCloseTo(0.001, 3);
+      expect(b).toBeCloseTo(0.001, 3);
+    });
   });
 
   it("is on with the eye at night", () => {

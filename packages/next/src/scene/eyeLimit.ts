@@ -16,20 +16,31 @@ const LIMIT_UP_TO = 30;
 const RING = 6;
 
 const ringTap = (x: number, y: number) =>
-  `around = eyeLimitBrighter(around, eyeLimitTap(input.pixel + vec2<i32>(i32(round(${x} * uniforms.ring)), i32(round(${y} * uniforms.ring))), size, c.rgb));`;
+  `eyeLimitTake(eyeLimitTap(input.pixel + vec2<i32>(i32(round(${x} * uniforms.ring)), i32(round(${y} * uniforms.ring))), size));`;
 
-const shader = `fn eyeLimitTap(at: vec2<i32>, size: vec2<i32>, here: vec3<f32>) -> vec3<f32> {
+const shader = `fn eyeLimitTap(at: vec2<i32>, size: vec2<i32>) -> vec3<f32> {
   let p = clamp(at, vec2<i32>(0), size - vec2<i32>(1));
-  // What was drawn there isn't this pixel's surroundings on the sky.
+  // What was drawn there isn't this pixel's surroundings on the sky: it counts as dark.
   if (postDepthAt(p) != 0.0) {
-    return here;
+    return vec3<f32>(0.0);
   }
   return postColorAt(p).rgb;
 }
 
-fn eyeLimitBrighter(a: vec3<f32>, b: vec3<f32>) -> vec3<f32> {
-  let lum = vec3<f32>(0.2126, 0.7152, 0.0722);
-  return select(a, b, dot(b, lum) > dot(a, lum));
+fn eyeLimitLum(a: vec3<f32>) -> f32 {
+  return dot(a, vec3<f32>(0.2126, 0.7152, 0.0722));
+}
+
+var<private> ringFirst: vec3<f32>;
+var<private> ringSecond: vec3<f32>;
+
+fn eyeLimitTake(t: vec3<f32>) {
+  if (eyeLimitLum(t) > eyeLimitLum(ringFirst)) {
+    ringSecond = ringFirst;
+    ringFirst = t;
+  } else if (eyeLimitLum(t) > eyeLimitLum(ringSecond)) {
+    ringSecond = t;
+  }
 }
 
 fn postStage(input: PostInput) -> vec4<f32> {
@@ -38,9 +49,11 @@ fn postStage(input: PostInput) -> vec4<f32> {
     return c;
   }
   let size = vec2<i32>(input.size);
-  // The brightest of a ring: a point stands above all of it. What's extended, the
-  // Milky Way or the airglow's line, doesn't, so it isn't a point and stays.
-  var around = vec3<f32>(0.0);
+  // The second brightest of a ring: a point stands above all of it, a stray star beside
+  // it or not. What's extended, the Milky Way or the airglow's line, has two taps as
+  // bright as itself, so it isn't a point and stays.
+  ringFirst = vec3<f32>(0.0);
+  ringSecond = vec3<f32>(0.0);
   ${ringTap(1, 0)}
   ${ringTap(-1, 0)}
   ${ringTap(0, 1)}
@@ -49,12 +62,12 @@ fn postStage(input: PostInput) -> vec4<f32> {
   ${ringTap(-0.7071, 0.7071)}
   ${ringTap(0.7071, -0.7071)}
   ${ringTap(-0.7071, -0.7071)}
+  let around = ringSecond;
   // What stands above them, as a point's illuminance at this pixel.
   let t = (vec2<f32>(input.pixel) + vec2<f32>(0.5) - input.size * 0.5) * input.pixelAngle;
   let z = 1.0 / sqrt(1.0 + dot(t, t));
   let omega = input.pixelAngle * input.pixelAngle * z * z * z;
-  let lum = vec3<f32>(0.2126, 0.7152, 0.0722);
-  let above = dot(c.rgb - around, lum) / input.preExposure;
+  let above = eyeLimitLum(c.rgb - around) / input.preExposure;
   if (above <= 0.0) {
     return c;
   }
