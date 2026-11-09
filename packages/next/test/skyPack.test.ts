@@ -267,6 +267,28 @@ describe("loadSkyPack", () => {
     expect(cancelled).toBe(true);
   });
 
+  it("refuses a maximum-size manifest before fetching its files", async () => {
+    const requested: string[] = [];
+    const big = manifestJson({
+      points: { file: "points.bin", count: 4_000_000, floatsPerStar: 8 },
+      background: {
+        file: "background.bin",
+        size: 4096,
+        levels: 13,
+        meanLuminance: 0,
+        holdsFaintStars: false,
+      },
+    });
+    const f = (async (input: RequestInfo | URL) => {
+      requested.push(String(input).split("/").pop()!);
+      return new Response(JSON.stringify(big));
+    }) as typeof fetch;
+    await expect(loadSkyPack("https://p.test/pack/", f)).rejects.toThrow(
+      "over the",
+    );
+    expect(requested).toEqual(["manifest.json"]);
+  });
+
   it("names the file of a 404", async () => {
     await expect(
       loadSkyPack("https://p.test/pack/manifest.json", fetcher({})),

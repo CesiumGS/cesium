@@ -45,7 +45,8 @@
     "handbook:data": "node scripts/handbookData.mjs",
     "handbook": "node scripts/handbookData.mjs && tsc -p handbook && vite build --config handbook/vite.config.ts",
     "handbook:dev": "node scripts/handbookData.mjs --no-bundles && vite --config handbook/vite.config.ts",
-    "setup": "node scripts/setup.mjs"
+    "setup": "node scripts/setup.mjs",
+    "sky": "node scripts/skyPack.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.4",

@@ -14,6 +14,13 @@ npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releas
 CesiumJS releases from npm into `~/.cesium-bench/cesium` (or
 `BENCH_CESIUM_DIR`), checked against the registry's integrity hash. The dev
 server also fetches a missing release the first time a page asks for it.
+
+**A sky data pack, optional** (local only; builds refuse it): `npm run sky --
+build` fetches NASA's star map layers and the HYG catalog into `~/.cesium-bench/sky`
+(or `SKY_DATA_DIR`), about 220 MB, and writes a pack to `packs/default`. The
+pack's manifest lists its sources, credits and terms as each page read, with
+`distributable: false`. The dev server offers it at `/sky-pack/`; the engine
+takes it with `setSkyPack`. `npm run sky -- info` lists what is there.
 It also fetches the Slang toolchain, pinned to one release in
 `scripts/slangTools.mjs` and checked against the release's SHA-256:
 

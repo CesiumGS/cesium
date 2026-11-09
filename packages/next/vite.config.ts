@@ -487,9 +487,15 @@ export default defineConfig({
   },
   test: {
     include: ["test/**/*.test.ts"],
+    // SKY_DATA=1 alone runs only the sky pack's data test.
     exclude: framesDataTests
       ? configDefaults.exclude
-      : [...configDefaults.exclude, "test/data/**"],
+      : [
+          ...configDefaults.exclude,
+          process.env.SKY_DATA === "1"
+            ? "test/data/!(skyPack).test.ts"
+            : "test/data/**",
+        ],
     environment: "node",
     // StrataKit's icons import their .svg files: inlined, Vite turns those
     // into URLs, so the frames explorer's panel parts render in Node

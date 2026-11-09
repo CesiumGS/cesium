@@ -410,8 +410,13 @@ export function readBackground(
   return faces;
 }
 
-/** The most bytes of points and background a pack may hold together. */
-export const MAX_PACK_BYTES = 1.5 * 2 ** 30;
+/**
+ * The most memory a pack's read may hold at its peak, bytes: the raw points
+ * and their decoded copy, and the raw background with its float32 decode
+ * (twice its size). A background of 4,096 texels with 4,000,000 stars is
+ * over it; one of 2,048 is not.
+ */
+export const MAX_PACK_PEAK_BYTES = 2 * 2 ** 30;
 
 /** The largest manifest read. */
 export const MAX_MANIFEST_BYTES = 1 << 20;
@@ -530,11 +535,12 @@ export async function loadSkyPack(
     manifest.background.size,
     manifest.background.levels,
   );
-  if (pointsExpected + backgroundExpected > MAX_PACK_BYTES) {
+  const peak = 2 * pointsExpected + 3 * backgroundExpected;
+  if (peak > MAX_PACK_PEAK_BYTES) {
     throw new SkyPackError(
       MANIFEST,
       "points, background",
-      `${pointsExpected + backgroundExpected} bytes together is over the ${MAX_PACK_BYTES} a pack may hold`,
+      `reading them would hold ${peak} bytes, over the ${MAX_PACK_PEAK_BYTES} allowed`,
     );
   }
   // One failed read cancels the other.
