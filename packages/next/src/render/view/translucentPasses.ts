@@ -12,7 +12,7 @@ import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 
-/** @internal Rasterizer side: translucent and composite pass bodies. */
+/** Rasterizer side: translucent and composite pass bodies. */
 export interface TranslucentPassEngine extends Pick<
   Engine,
   "bodyCamera" | "ctx" | "viewBit"

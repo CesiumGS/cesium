@@ -10,7 +10,7 @@ import type {
 import type { PlacementParameter } from "../placement.ts";
 import type { FeatureTable } from "../../io/gltfTypes.ts";
 
-/** @internal One per world, made once with it, and filled by its constructor. */
+/** One per world, made once with it, and filled by its constructor. */
 export class WorldScene {
   transformLocal!: Float64Array;
   transformWorld!: Float64Array;

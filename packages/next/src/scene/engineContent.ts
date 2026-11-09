@@ -16,7 +16,7 @@ import { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TilesetOptions } from "../streaming/tilesetTypes.ts";
 import type { EngineScene } from "./engineScene.ts";
 
-/** @internal Scene side: loading models and adopting tilesets. */
+/** Scene side: loading models and adopting tilesets. */
 export interface ContentEngine extends Pick<
   Engine,
   "clamping" | "ctx" | "gpu" | "loadGltf" | "tilesets" | "uploadModel" | "wake"

@@ -15,7 +15,7 @@ import {
 } from "@cesium/next/frames";
 import type { ViewerState } from "./viewerState.ts";
 
-/** @internal Frame data and the catalog. */
+/** Frame data and the catalog. */
 export interface ViewerFramesContext extends Pick<
   Viewer,
   "clock" | "engine" | "events" | "sky" | "views" | "world"

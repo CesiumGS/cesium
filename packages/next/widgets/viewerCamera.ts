@@ -13,7 +13,7 @@ import {
 } from "@cesium/next";
 import type { ViewerState } from "./viewerState.ts";
 
-/** @internal Camera, zoom and the clock's sun. */
+/** Camera, zoom and the clock's sun. */
 export interface ViewerCameraContext extends Pick<
   Viewer,
   "applyClockSun" | "clock" | "controller" | "setSun" | "view" | "world"

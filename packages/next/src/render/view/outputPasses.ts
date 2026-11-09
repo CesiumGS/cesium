@@ -14,7 +14,7 @@ import {
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
-/** @internal Rasterizer side: meter, readbacks, adaptation, present and overlay pass bodies. */
+/** Rasterizer side: meter, readbacks, adaptation, present and overlay pass bodies. */
 export interface OutputPassEngine extends Pick<
   Engine,
   "bodyCamera" | "cameras" | "ctx" | "tilesets" | "viewBit" | "views"

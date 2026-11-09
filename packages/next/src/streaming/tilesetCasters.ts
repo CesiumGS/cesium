@@ -7,7 +7,7 @@ import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
-/** @internal Content side: casters' share of streaming. */
+/** Content side: casters' share of streaming. */
 export interface TilesetCasters extends Pick<Tileset3D, "anchor" | "stats"> {
   readonly world: DrawSink;
   readonly engine: TilesetHost;

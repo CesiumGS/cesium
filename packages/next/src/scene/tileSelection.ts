@@ -17,7 +17,7 @@ import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 import type { EngineScene } from "./engineScene.ts";
 
-/** @internal Scene side, reading the rasterizer's view targets: what tilesets select for, and the tick's upload budget. */
+/** Scene side, reading the rasterizer's view targets: what tilesets select for, and the tick's upload budget. */
 export interface SelectionEngine extends Pick<
   Engine,
   | "bodyCamera"

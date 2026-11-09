@@ -5,7 +5,7 @@ import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
-/** @internal Content side: rays through tiles. */
+/** Content side: rays through tiles. */
 export interface TilesetQueries extends Pick<Tileset3D, "root"> {
   readonly state: Pick<TilesetState, "externals" | "order" | "queries">;
 }

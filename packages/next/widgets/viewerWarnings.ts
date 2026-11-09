@@ -3,7 +3,7 @@ import type { ViewerWarning, Viewer } from "./Viewer.ts";
 import type { FrameDataWarning } from "@cesium/next/frames";
 import type { ViewerState } from "./viewerState.ts";
 
-/** @internal Warnings. */
+/** Warnings. */
 export interface ViewerWarningsContext extends Pick<Viewer, "events"> {
   readonly state: Pick<ViewerState, "warningList" | "warnings_">;
 }

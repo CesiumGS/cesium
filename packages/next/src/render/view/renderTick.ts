@@ -19,7 +19,7 @@ import { updateTilesets } from "../../scene/tileSelection.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
-/** @internal Rasterizer side: one tick's targets and what persists between ticks. */
+/** Rasterizer side: one tick's targets and what persists between ticks. */
 export interface TickTargetEngine extends Pick<
   Engine,
   "ctx" | "stats" | "worlds"
@@ -30,7 +30,7 @@ export interface TickTargetEngine extends Pick<
   >;
 }
 
-/** @internal Crosses the sides: one tick's GPU work, updating what the scene selects first. */
+/** Crosses the sides: one tick's GPU work, updating what the scene selects first. */
 export interface RenderTickEngine extends Pick<
   Engine,
   | "bodyCamera"

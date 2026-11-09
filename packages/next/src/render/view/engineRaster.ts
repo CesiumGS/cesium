@@ -22,7 +22,7 @@ import type { PendingPick } from "./picks.ts";
 import type { ViewBlock } from "../layout.ts";
 import type { HeightCapture } from "../../scene/heightCaptures.ts";
 
-/** @internal One per engine, made once with it, and filled by its constructor. */
+/** One per engine, made once with it, and filled by its constructor. */
 export class EngineRaster {
   /** The real-time atmosphere and the sky drawn from it. */
   sky!: Sky;

@@ -24,7 +24,7 @@ import {
 } from "../../scene/shadows.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 
-/** @internal Rasterizer side: pass bodies up to the opaque image. */
+/** Rasterizer side: pass bodies up to the opaque image. */
 export interface ScenePassEngine extends Pick<
   Engine,
   "bodyCamera" | "ctx" | "stats" | "sunDirection"

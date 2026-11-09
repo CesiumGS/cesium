@@ -14,7 +14,7 @@ import { CanvasTarget } from "../../scene/renderTarget.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
-/** @internal Rasterizer side, reading the scene's view ids: encoding picks and reading their answers. */
+/** Rasterizer side, reading the scene's view ids: encoding picks and reading their answers. */
 export interface PickEngine extends Pick<
   Engine,
   "bodyCamera" | "cameras" | "ctx" | "tilesets" | "views"

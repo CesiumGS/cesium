@@ -16,7 +16,7 @@ import {
 } from "./tilesetCasters.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
-/** @internal Content side: uploads within the budget. */
+/** Content side: uploads within the budget. */
 export interface TilesetUpload extends Pick<
   Tileset3D,
   | "anchor"

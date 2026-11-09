@@ -45,7 +45,7 @@ import {
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Crosses the sides: changing draw records and batches (rasterizer) with what they name (scene). */
+/** Crosses the sides: changing draw records and batches (rasterizer) with what they name (scene). */
 export interface DrawWorld extends Pick<
   World,
   | "acceleration"
@@ -104,7 +104,7 @@ export interface DrawWorld extends Pick<
   >;
 }
 
-/** @internal Crosses the sides: a new draw touches nearly everything, in both. */
+/** Crosses the sides: a new draw touches nearly everything, in both. */
 export interface AddDrawWorld extends Pick<
   World,
   | "acceleration"

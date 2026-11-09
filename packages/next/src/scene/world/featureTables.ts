@@ -16,7 +16,7 @@ import { queueUpload } from "./uploads.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Scene side, uploading through the rasterizer's per-tick computes. */
+/** Scene side, uploading through the rasterizer's per-tick computes. */
 export interface FeatureTableWorld extends Pick<World, "ctx" | "slabs"> {
   readonly raster: Pick<
     WorldRaster,
@@ -43,7 +43,7 @@ const NOT_WATCHED =
   "a string column is uploaded only for a style made before its content: make the FeatureStyle first";
 
 /**
- * A feature table's columns as uploaded (`World.uploadTable`): numbers,
+ * A feature table's columns as uploaded (`uploadTable`): numbers,
  * booleans (0 or 1) and numeric arrays of up to 4 (shorter rows padded
  * with zero), as float32 rows by local feature ID; missing values (null)
  * read 0. A column whose first value is a string is a string column

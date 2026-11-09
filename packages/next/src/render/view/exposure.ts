@@ -8,7 +8,7 @@ import {
   adapt,
 } from "../../scene/eye.ts";
 
-/** @internal Rasterizer side: meter reading and adaptation. */
+/** Rasterizer side: meter reading and adaptation. */
 export type ExposureEngine = Pick<Engine, "requestRender">;
 
 /**

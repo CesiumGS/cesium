@@ -13,7 +13,7 @@ import { earthAnchor, contentAnchor } from "./earthAnchor.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 
-/** @internal Rasterizer side: height samples and captures. */
+/** Rasterizer side: height samples and captures. */
 export interface HeightCaptureEngine extends Pick<
   Engine,
   "ctx" | "requestRender" | "tilesets"

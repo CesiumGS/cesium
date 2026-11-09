@@ -2,7 +2,7 @@
 import type { Viewer } from "./Viewer.ts";
 import type { ViewerState } from "./viewerState.ts";
 
-/** @internal Holding the image. */
+/** Holding the image. */
 export interface ViewerHoldContext extends Pick<
   Viewer,
   | "canvas"

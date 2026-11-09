@@ -5,7 +5,7 @@ import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { UniformDeclaration } from "../uniforms.ts";
 import type { DrawHandle, PointDraw } from "./types.ts";
 
-/** @internal Rasterizer side: point draws' cull parameters and splats. */
+/** Rasterizer side: point draws' cull parameters and splats. */
 export interface PointWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
   readonly raster: Pick<WorldRaster, "pointCounts" | "pointDraws" | "splats">;
 }

@@ -79,7 +79,7 @@ function contentAxes(json: TileJson | undefined): ModelResourceOptions["axes"] {
 }
 /** `Tileset3D.extensions` of a tileset.json without any (and of terrain). */
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
-/** `Tileset3D.rootJson` of a tileset.json without a root (and of terrain). */
+/** `TilesetState.rootJson` of a tileset.json without a root (and of terrain). */
 const NO_ROOT_JSON: TilesetState["rootJson"] = Object.freeze({});
 
 const NO_ITEMS: readonly SceneItem[] = Object.freeze([]);

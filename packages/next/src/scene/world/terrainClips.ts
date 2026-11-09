@@ -18,7 +18,7 @@ import { growClips } from "../../render/world/tables.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Scene side, growing the rasterizer's clip table. */
+/** Scene side, growing the rasterizer's clip table. */
 export interface ClipWorld extends Pick<
   World,
   | "changedViews"

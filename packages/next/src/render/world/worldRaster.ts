@@ -12,7 +12,7 @@ import type { RangeAllocator } from "../../gpu/RangeAllocator.ts";
 import type { PlacementTable } from "../../scene/placementTable.ts";
 import type { DrawArguments } from "../drawArguments.ts";
 
-/** @internal One per world, made once with it, and filled by its constructor. */
+/** One per world, made once with it, and filled by its constructor. */
 export class WorldRaster {
   _submission: SubmissionMode = "indirect";
   // Per-slot CPU tables (records, transforms, instances, materials) start

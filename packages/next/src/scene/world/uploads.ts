@@ -2,7 +2,7 @@
 import type { World } from "../World.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 
-/** @internal Rasterizer side: the upload queue. */
+/** Rasterizer side: the upload queue. */
 export interface UploadWorld extends Pick<World, "ctx"> {
   readonly raster: Pick<WorldRaster, "pendingUploads" | "uploadChunks">;
 }

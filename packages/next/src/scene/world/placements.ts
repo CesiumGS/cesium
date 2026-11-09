@@ -24,7 +24,7 @@ import type { ParameterSlot, DrawHandle } from "./types.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Scene side, writing the rasterizer's placement table and records. */
+/** Scene side, writing the rasterizer's placement table and records. */
 export interface PlacementWorld extends Pick<
   World,
   "changedViews" | "hasDraw" | "markDirty" | "version"

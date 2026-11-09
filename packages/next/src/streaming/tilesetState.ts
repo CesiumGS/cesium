@@ -19,7 +19,7 @@ import type { StageTimes } from "./pipeline.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
 import type { DesignPlacement } from "./designPlacement.ts";
 
-/** @internal One per tileset, made once with it, and filled by its constructor. */
+/** One per tileset, made once with it, and filled by its constructor. */
 export class TilesetState {
   /**
    * The root tile's `boundingVolume` and `transform` as

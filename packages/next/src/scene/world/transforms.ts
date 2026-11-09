@@ -24,7 +24,7 @@ import {
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Scene side, growing the rasterizer's transform table: adding and removing transforms and anchors. */
+/** Scene side, growing the rasterizer's transform table: adding and removing transforms and anchors. */
 export interface TransformWorld extends Pick<
   World,
   | "addAnchor"
@@ -109,7 +109,7 @@ export interface TransformWorld extends Pick<
   >;
 }
 
-/** @internal Scene side, writing the rasterizer's transform table: moving transforms and resolving the tree. */
+/** Scene side, writing the rasterizer's transform table: moving transforms and resolving the tree. */
 export interface ResolveWorld extends Pick<
   World,
   | "addAnchor"
@@ -147,7 +147,7 @@ export interface ResolveWorld extends Pick<
   >;
 }
 
-/** @internal Scene side: looking up anchors and reference frames. */
+/** Scene side: looking up anchors and reference frames. */
 export interface AnchorWorld extends Pick<
   World,
   "addAnchor" | "hasDraw" | "transformAlive"

@@ -5,7 +5,7 @@ import { type DebugColor, VOLUME_COLORS } from "./debugVolumes.ts";
 import type { TileVolume } from "./volumes.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
-/** @internal Content side: debug colors and volumes. */
+/** Content side: debug colors and volumes. */
 export interface TilesetDebug {
   readonly world: DrawSink;
   readonly state: Pick<

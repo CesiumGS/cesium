@@ -1,7 +1,7 @@
 import type { DrawConstants } from "./drawConstants.ts";
 import { BATCH_WORD, INDIRECT_SIZE, RECORD_WORDS } from "./layout.ts";
 
-/** What a batch's draw needs to know of it (scene/World.ts `Batch`). */
+/** What a batch's draw needs to know of it (scene/world/types.ts `Batch`). */
 export interface ArgumentBatch {
   /** Its row in the batch table and the draw arguments. */
   readonly index: number;

@@ -8,7 +8,7 @@ import type { View } from "./View.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { ViewAnchorState } from "./viewAnchorState.ts";
 
-/** @internal Scene side: a view's anchor placements. */
+/** Scene side: a view's anchor placements. */
 export interface ViewAnchorContext extends Pick<
   View,
   "anchorPlacement" | "camera" | "wake" | "world"

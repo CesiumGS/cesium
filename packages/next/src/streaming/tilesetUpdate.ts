@@ -21,7 +21,7 @@ import { upload } from "./tilesetUpload.ts";
 import { volumeObb } from "./volumes.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
-/** @internal Content side: one tick's update of a tileset. */
+/** Content side: one tick's update of a tileset. */
 export interface TilesetUpdate extends Pick<
   Tileset3D,
   | "anchor"

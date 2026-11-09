@@ -30,7 +30,7 @@ import type { Batch } from "../../scene/world/types.ts";
 import type { WorldRaster } from "./worldRaster.ts";
 import type { WorldScene } from "../../scene/world/worldScene.ts";
 
-/** @internal Rasterizer side: recording bundles and encoding translucent draws. */
+/** Rasterizer side: recording bundles and encoding translucent draws. */
 export interface BundleWorld extends Pick<
   World,
   | "clipBuffer"
@@ -75,7 +75,7 @@ export interface BundleWorld extends Pick<
   readonly scene: Pick<WorldScene, "transformHiddenWorld" | "transformWorld">;
 }
 
-/** @internal Rasterizer side: writing the batch table and encoding the cull. */
+/** Rasterizer side: writing the batch table and encoding the cull. */
 export interface CullWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
   readonly raster: Pick<
     WorldRaster,
@@ -107,7 +107,7 @@ export interface CullWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
   >;
 }
 
-/** @internal Rasterizer side, resolving the scene's transforms first: one tick's preparation of the tables. */
+/** Rasterizer side, resolving the scene's transforms first: one tick's preparation of the tables. */
 export interface PrepareWorld extends Pick<
   World,
   | "addAnchor"

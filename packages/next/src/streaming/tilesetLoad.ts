@@ -7,7 +7,7 @@ import type { Tileset3D } from "./Tileset3D.ts";
 import { isCaster, closeImages } from "./tilesetCasters.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
-/** @internal Content side: requests and decoding. */
+/** Content side: requests and decoding. */
 export interface TilesetLoad extends Pick<
   Tileset3D,
   | "changed"

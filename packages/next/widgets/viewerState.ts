@@ -17,7 +17,7 @@ import type { FrameCatalog, FramesResolver } from "@cesium/next/frames";
 import type { WarningsHandle } from "./warnings.ts";
 import type { TimeControlsHandle } from "./timeControls.ts";
 
-/** @internal One per viewer, made once with it, and filled by its constructor. */
+/** One per viewer, made once with it, and filled by its constructor. */
 export class ViewerState {
   /** Orbit controls around the focus, when on (`setControls("orbit")`). */
   orbit_?: InspectController;

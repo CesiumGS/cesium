@@ -11,7 +11,7 @@ import {
 } from "@cesium/next";
 import type { ViewerState } from "./viewerState.ts";
 
-/** @internal The globe and tilesets. */
+/** The globe and tilesets. */
 export interface ViewerGlobeContext extends Pick<
   Viewer,
   "engine" | "policy" | "setGlobe" | "world"

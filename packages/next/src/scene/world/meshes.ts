@@ -24,7 +24,7 @@ import { queueUpload } from "./uploads.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Scene side: geometry into the world's slabs. */
+/** Scene side: geometry into the world's slabs. */
 export interface MeshWorld extends Pick<
   World,
   "changedViews" | "ctx" | "flushUploads" | "slabs" | "version"

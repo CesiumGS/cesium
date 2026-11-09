@@ -240,14 +240,15 @@ const WEBGL_PIECES: { piece: string; today: ReactNode; change: ReactNode }[] = [
     piece: "A renderer interface",
     today: (
       <>
-        The passes and other GPU work are in their own files (
-        <C>src/render/view</C>, <C>src/render/world</C>), but they take the
-        whole <C>Engine</C> or <C>World</C>. <C>src/streaming</C> and{" "}
-        <C>src/globe</C> import from <C>scene</C> and <C>render</C>.
+        The passes and other GPU work are in their own files, and take narrow
+        contexts that keep scene data and rasterizer data apart (
+        <C>WorldRaster</C>, <C>WorldScene</C>). <C>src/streaming</C> and{" "}
+        <C>src/globe</C> reach draws through <C>DrawSink</C>, and{" "}
+        <C>test/importBoundary.test.ts</C> holds them there.
       </>
     ),
     change:
-      "Narrow what those functions take, along the layers section 13.17 sketches, then write the interface against a real second renderer.",
+      "Write the interface against a real second renderer, from those contexts.",
   },
   {
     piece: "Shaders",

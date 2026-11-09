@@ -20,7 +20,7 @@ import type { CastRay, CastOptions } from "./types.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Scene side, reading the rasterizer's records to find what a ray can hit. */
+/** Scene side, reading the rasterizer's records to find what a ray can hit. */
 export interface RayWorld extends Pick<
   World,
   "addAnchor" | "hasDraw" | "transformAlive"
@@ -45,7 +45,7 @@ export interface RayWorld extends Pick<
   >;
 }
 
-/** @internal Scene side: casting rays, which resolves the tree and uploads feature tables first. */
+/** Scene side: casting rays, which resolves the tree and uploads feature tables first. */
 export interface CastWorld extends Pick<
   World,
   | "addAnchor"

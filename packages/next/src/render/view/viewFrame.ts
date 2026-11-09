@@ -32,7 +32,7 @@ import {
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
-/** @internal Rasterizer side: a view's targets and passes, in registration order. */
+/** Rasterizer side: a view's targets and passes, in registration order. */
 export interface ViewFrameEngine extends Pick<
   Engine,
   | "bodyCamera"
@@ -460,7 +460,7 @@ function buildViewFrame(
   );
 
   // The nearest and farthest surface shown, for the next frame's shadow
-  // cascades (`writeShadows`): read back a frame or so late.
+  // cascades (`writeViewShadows`): read back a frame or so late.
   graph.addPass(
     "depth-range",
     { reads: [depth], sideEffect: true },

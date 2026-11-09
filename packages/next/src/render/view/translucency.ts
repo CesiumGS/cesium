@@ -5,7 +5,7 @@ import type { EngineRaster } from "./engineRaster.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 
-/** @internal Rasterizer side: translucency parameters, list buffer and bind groups. */
+/** Rasterizer side: translucency parameters, list buffer and bind groups. */
 export interface TranslucencyEngine extends Pick<
   Engine,
   "bodyCamera" | "ctx" | "viewBit"

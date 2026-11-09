@@ -30,7 +30,7 @@ import { writeViewShadows } from "./shadowBlocks.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
-/** @internal Rasterizer side, reading the scene's anchors: a view's uniform blocks. */
+/** Rasterizer side, reading the scene's anchors: a view's uniform blocks. */
 export interface ViewBlockEngine extends Pick<
   Engine,
   | "bodyCamera"

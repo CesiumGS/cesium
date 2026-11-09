@@ -138,7 +138,7 @@ export class Tile {
 
   state: ContentState = "unloaded";
   /**
-   * Loaded descendants (`Tileset3D.loaded`), so selection finds resident
+   * Loaded descendants (`TilesetState.loaded`), so selection finds resident
    * finer content under a tile without walking its whole subtree.
    */
   residentBelow = 0;

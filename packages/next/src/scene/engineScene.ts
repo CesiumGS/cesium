@@ -14,7 +14,7 @@ import type { World } from "./World.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { SelectionView } from "../streaming/Stepwise.ts";
 
-/** @internal One per engine, made once with it, and filled by its constructor. */
+/** One per engine, made once with it, and filled by its constructor. */
 export class EngineScene {
   readonly workers = new WorkerPool();
   /** Stable per-view bit index (0–31) for record view masks. */

@@ -4,7 +4,7 @@ import { ellipsoid, deg } from "./viewerCamera.ts";
 import { eastNorthUpToFixedFrame, mat4, vec3 } from "@cesium/next";
 import type { ViewerState } from "./viewerState.ts";
 
-/** @internal The sun and sky. */
+/** The sun and sky. */
 export interface ViewerSkyContext extends Pick<Viewer, "engine" | "sky"> {
   readonly state: Pick<
     ViewerState,

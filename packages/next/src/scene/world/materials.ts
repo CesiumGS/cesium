@@ -16,7 +16,7 @@ import { reserveMaterials, growMaterials } from "../../render/world/tables.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 
-/** @internal Crosses the sides: material keys (scene) with the material table (rasterizer). */
+/** Crosses the sides: material keys (scene) with the material table (rasterizer). */
 export interface MaterialWorld extends Pick<
   World,
   | "changedViews"
@@ -89,7 +89,7 @@ export interface MaterialWorld extends Pick<
   >;
 }
 
-/** @internal Rasterizer side: texture sets' bind groups. */
+/** Rasterizer side: texture sets' bind groups. */
 export interface TextureSetWorld extends Pick<
   World,
   "changedViews" | "ctx" | "setImageryArray" | "version"

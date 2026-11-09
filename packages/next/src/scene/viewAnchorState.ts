@@ -4,7 +4,7 @@ import { MAX_ANCHORS } from "../render/layout.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { World } from "./World.ts";
 
-/** @internal One per view, made once with it. */
+/** One per view, made once with it. */
 export class ViewAnchorState {
   // ------------------------------------------------------- anchor placements
 

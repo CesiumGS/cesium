@@ -5,7 +5,7 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { Engine } from "./Engine.ts";
 import type { View } from "./View.ts";
 
-/** @internal Scene side: the Moon's place and the shadow light. */
+/** Scene side: the Moon's place and the shadow light. */
 export type LightSourceEngine = Pick<
   Engine,
   "icrfToFixed" | "moonAxes" | "moonPosition" | "sunDirection"

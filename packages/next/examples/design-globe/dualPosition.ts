@@ -17,7 +17,7 @@ export const STANDOFF_SEMANTIC = "_DG_STANDOFF";
 
 /**
  * The tileset-level extension stating the second position: the engine's own
- * (`Tileset3D.ts` `DUAL_POSITION_EXTENSION`, which a test holds this equal to),
+ * (`src/streaming/dualPosition.ts` `DUAL_POSITION_EXTENSION`, which a test holds this equal to),
  * `{ position, maxDistance }`. The engine reads it at load.
  */
 export const DUAL_POSITION_EXTENSION = "CESIUM_dual_position";

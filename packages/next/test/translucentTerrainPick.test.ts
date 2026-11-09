@@ -1,7 +1,7 @@
 // The engine's part of a pick on translucent terrain: the CPU ray's hit
 // (Globe.stoppingTerrainHit) is turned into a reverse-Z depth and a
 // feature, and stands in for the GPU's pick where it is nearer
-// (Engine.translucentTerrainPick, resolvePicks). The globe is a stub that
+// (`translucentTerrainPick` and `resolvePicks`, render/view/picks.ts). The globe is a stub that
 // answers the ray; test/terrainTranslucency.test.ts covers the real ray.
 // The engine runs on the fake device of test/fakeGpu.ts and the tests
 // answer each pick's readback as the GPU's pick pass would, as

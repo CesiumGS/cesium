@@ -103,7 +103,7 @@ function styled(
     options.show !== undefined ? expression(code, "show") : undefined;
   const color =
     options.color !== undefined ? expression(code, "color") : undefined;
-  // The tiles hold their strings' ids (World.uploadTable); numbers as
+  // The tiles hold their strings' ids (`uploadTable`, scene/world/featureTables.ts); numbers as
   // they are, and 0 where a property is missing.
   const held = new Set<string>();
   const ids = (row: Row) =>

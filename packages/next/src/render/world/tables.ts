@@ -8,7 +8,7 @@ import { pointGroup } from "../../scene/world/points.ts";
 import type { WorldRaster } from "./worldRaster.ts";
 import type { WorldScene } from "../../scene/world/worldScene.ts";
 
-/** @internal Rasterizer side: growing the GPU tables and rebinding them. */
+/** Rasterizer side: growing the GPU tables and rebinding them. */
 export interface TableWorld extends Pick<
   World,
   | "changedViews"
@@ -58,7 +58,7 @@ export interface TableWorld extends Pick<
   readonly scene: Pick<WorldScene, "maxClipBlocks">;
 }
 
-/** @internal Rasterizer side: a slab's bindings and the item buffers. */
+/** Rasterizer side: a slab's bindings and the item buffers. */
 export interface SlabBindWorld extends Pick<
   World,
   | "clipBuffer"
@@ -79,7 +79,7 @@ export interface SlabBindWorld extends Pick<
   >;
 }
 
-/** @internal Rasterizer side, growing the scene's arrays with its tables: room for more rows. */
+/** Rasterizer side, growing the scene's arrays with its tables: room for more rows. */
 export interface ReserveWorld extends Pick<World, "maxMaterials"> {
   readonly raster: Pick<
     WorldRaster,

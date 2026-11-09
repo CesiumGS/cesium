@@ -5,7 +5,7 @@ import type { Tileset3D } from "./Tileset3D.ts";
 import { accumulate } from "./pipeline.ts";
 import type { TilesetState } from "./tilesetState.ts";
 
-/** @internal Content side: what's evicted, and when. */
+/** Content side: what's evicted, and when. */
 export interface TilesetEviction extends Pick<
   Tileset3D,
   "evictForCapacity" | "markCastsOnly" | "resident" | "stats" | "warnings"

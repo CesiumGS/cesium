@@ -27,7 +27,7 @@ import { rotateVector } from "../../scene/tileSelection.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
-/** @internal Rasterizer side: the shadow cascades' and height captures' blocks. */
+/** Rasterizer side: the shadow cascades' and height captures' blocks. */
 export interface ShadowBlockEngine extends Pick<
   Engine,
   | "bodyCamera"

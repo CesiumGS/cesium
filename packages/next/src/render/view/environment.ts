@@ -11,7 +11,7 @@ import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 
-/** @internal Rasterizer side: environment probes. */
+/** Rasterizer side: environment probes. */
 export interface EnvironmentEngine extends Pick<
   Engine,
   "bodyCamera" | "ctx" | "stats" | "sunDirection"
