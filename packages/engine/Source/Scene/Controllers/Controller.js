@@ -14,6 +14,10 @@ import { DeveloperError } from "@cesium/core";
 class Controller {
   /**
    * Determines if the controller is enabled and should be updated by the host scene.
+   * <p>
+   * A disabled controller ignores input. Implementations should cancel any input in progress, such as a drag, when disabled,
+   * and discard any input received while disabled, along with any remaining motion such as inertia, when enabled again.
+   * </p>
    * @type {boolean}
    */
   get enabled() {

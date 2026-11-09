@@ -133,7 +133,7 @@ class ScreenSpaceTiltOrbitCameraController {
     this._axis = new Cartesian3();
 
     /**
-     * The amount at which the camera tilts per dragged pixel. A value of 1.0 means that dragging the mouse across the entire canvas will tilt the camera by 90 degrees.
+     * The amount at which the camera tilts per dragged pixel. A value of 1.0 means that dragging the mouse across the entire canvas will tilt the camera by 90 degrees. A negative value reverses the tilt direction.
      * @type {number}
      * @default 2.0
      */
@@ -168,7 +168,7 @@ class ScreenSpaceTiltOrbitCameraController {
     this.minimumTiltVelocity = CesiumMath.EPSILON20;
 
     /**
-     * The amount at which the camera orbits per dragged pixel. A value of 1.0 means that dragging the mouse across the entire canvas will orbit the camera by 180 degrees.
+     * The amount at which the camera orbits per dragged pixel. A value of 1.0 means that dragging the mouse across the entire canvas will orbit the camera by 180 degrees. A negative value reverses the orbit direction.
      * @type {number}
      * @default 2.0
      */
@@ -232,12 +232,17 @@ class ScreenSpaceTiltOrbitCameraController {
     return this._enabled;
   }
   set enabled(value) {
+    if (value === this._enabled) {
+      return;
+    }
     this._enabled = value;
 
     if (value) {
       this._lastUpdateTime = getTimestamp();
       this._dragDelta.x = 0.0;
       this._dragDelta.y = 0.0;
+      this.orbitVelocity = 0.0;
+      this.tiltVelocity = 0.0;
     } else if (defined(this._dragInputState)) {
       this._dragInputState.isDragging = false;
     }
@@ -414,7 +419,7 @@ class ScreenSpaceTiltOrbitCameraController {
 
     // Apply critical damping
     const maxSpeed = this.dampingEnabled
-      ? this.maximumOrbitVelocity * this.orbitMagnitude
+      ? this.maximumOrbitVelocity * Math.abs(this.orbitMagnitude)
       : undefined;
     const smoothTime = this.dampingEnabled
       ? this.orbitAnimationDuration
@@ -518,7 +523,7 @@ class ScreenSpaceTiltOrbitCameraController {
     const targetTiltAngle = currentTiltAngle + amount;
 
     const maxSpeed = this.dampingEnabled
-      ? this.maximumTiltVelocity * this.tiltMagnitude
+      ? this.maximumTiltVelocity * Math.abs(this.tiltMagnitude)
       : undefined;
     const smoothTime = this.dampingEnabled
       ? this.tiltAnimationDuration
@@ -630,6 +635,7 @@ class ScreenSpaceTiltOrbitCameraController {
           this.maximumMovementRatio,
         );
         dy *= this.tiltMagnitude * CesiumMath.PI;
+
         this.tilt(camera, target, axis, dy, dt, ellipsoid);
       }
     }
