@@ -8633,6 +8633,7 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 - **The Moon:** a moonrise behind a skyline through a long lens, with its true size; a total solar eclipse from the ground, with stars and the Moon's shadow; the same eclipse's shadow from orbit.
 - **Astrophotography:** the Milky Way's core over a dark site, Orion with a planet, the zodiacal light, star trails.
 - **From space:** Earthrise (Apollo 8, 1968), the Blue Marble, the limb with airglow, the terminator over mountains, city lights from orbit, and Artemis II's views, whose trajectory we already have.
+- **Balloons:** a mass ascension at sunrise, in the manner of the Albuquerque International Balloon Fiesta: Cesium's balloon model instanced by the hundreds at varied heights and tints, over the Rio Grande valley with the Sandia Mountains behind, in low golden light with long shadows. Also Cappadocia. It shows instancing, shadows and the air together.
 - **Aurora:** from the ground and from orbit.
 
 **What it needs:**
