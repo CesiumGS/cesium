@@ -18,6 +18,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { build, defineConfig, type Plugin } from "vite";
 import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
+import { skyPackGuard } from "../scripts/vitePluginSkyPack.ts";
 import { findSecrets, findUnembeddedImages } from "../scripts/handbookData.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -266,7 +267,7 @@ async function buildLiveEngine(): Promise<string> {
     envDir: false,
     publicDir: false,
     logLevel: "warn",
-    plugins: [liveViewModules(), basisTranscoderEsm()],
+    plugins: [liveViewModules(), basisTranscoderEsm(), skyPackGuard()],
     build: {
       write: false,
       target: "es2023",
@@ -323,7 +324,12 @@ export default defineConfig({
   // No env file reaches this build: the page is for handing out.
   envDir: false,
   publicDir: false,
-  plugins: [liveViewModules(), inlineIntoPage(), regenerateData()],
+  plugins: [
+    liveViewModules(),
+    skyPackGuard(),
+    inlineIntoPage(),
+    regenerateData(),
+  ],
   server: { host: "127.0.0.1", strictPort: true },
   build: {
     outDir: "dist",

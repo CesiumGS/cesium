@@ -18,13 +18,14 @@
 //   node scripts/checkBundle.mjs [--keep]
 //
 // `--keep` leaves the build in the temporary directory and prints where.
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import { build } from "vite";
 import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
+import { skyPackGuard } from "./vitePluginSkyPack.ts";
 import { sp } from "../src/time/erfa/s06Table.ts";
 import { xyp } from "../src/time/erfa/xy06Table.ts";
 
@@ -86,7 +87,7 @@ async function buildPage(work, name, code) {
     base: "./",
     publicDir: false,
     logLevel: "error",
-    plugins: [basisTranscoderEsm()],
+    plugins: [basisTranscoderEsm(), skyPackGuard()],
     build: {
       outDir,
       emptyOutDir: true,
@@ -189,6 +190,46 @@ try {
   } else {
     console.log(
       `checkBundle: the Slang compiler is in ${slangLazy.map((c) => `${c.fileName} (${kb(c.code)} KB)`).join(", ")}, loaded on demand; not in the main chunk or its static imports of an app that styles 3D Tiles`,
+    );
+  }
+  // A third build: a page that imports a synthetic sky pack that isn't
+  // cleared must fail with the guard's message (scripts/vitePluginSkyPack.ts),
+  // and the same page without it must build.
+  const packDir = join(work, "synthetic-pack");
+  mkdirSync(packDir);
+  const magic = Buffer.alloc(64);
+  magic.write("CSKYPTS1");
+  writeFileSync(join(packDir, "points.bin"), magic);
+  writeFileSync(
+    join(packDir, "manifest.json"),
+    JSON.stringify({
+      format: 1,
+      name: "synthetic",
+      distributable: false,
+      points: { file: "points.bin", count: 0, floatsPerStar: 8 },
+      background: { file: "background.bin", size: 1, levels: 1 },
+    }),
+  );
+  await buildPage(work, "noPackPage", "console.log(1);\n");
+  let refused = "";
+  try {
+    await buildPage(
+      work,
+      "packPage",
+      `import m from ${JSON.stringify(join(packDir, "manifest.json?url"))};\n` +
+        `import p from ${JSON.stringify(join(packDir, "points.bin?url"))};\n` +
+        `console.log(m, p);\n`,
+    );
+  } catch (error) {
+    refused = String(error?.message ?? error);
+  }
+  if (refused.includes("sky pack") && refused.includes("not cleared")) {
+    console.log(
+      "checkBundle: a page importing an uncleared sky pack fails to build, and the same page without it builds",
+    );
+  } else {
+    found.push(
+      `no refusal of an uncleared sky pack (the build ${refused ? `failed with: ${refused.slice(0, 200)}` : "succeeded"})`,
     );
   }
   if (found.length > 0) {

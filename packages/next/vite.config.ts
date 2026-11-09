@@ -21,6 +21,7 @@ import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
+import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
 import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
 import { slangWasmDirectory } from "./scripts/slangTools.mjs";
@@ -416,6 +417,9 @@ export default defineConfig({
     slangShaders(),
     // The ion token in .env.local is the dev server's only (ionToken.ts).
     keepEnvSecretsOut(),
+    // Sky data never ships uncleared (§13.29); the dev server offers the store's pack.
+    skyPackGuard(),
+    skyPackDevRoute(),
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
     serveBenchResults("/bench-results", benchResults),
@@ -437,7 +441,7 @@ export default defineConfig({
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   // Worker bundles take their own plugins (the Basis glue is decoded there).
-  worker: { plugins: () => [basisTranscoderEsm()] },
+  worker: { plugins: () => [basisTranscoderEsm(), skyPackGuard()] },
   build: {
     // StrataKit icons are SVG sprites referenced by URL (#icon), never inlined.
     assetsInlineLimit: (file: string) =>

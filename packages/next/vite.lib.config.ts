@@ -26,6 +26,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
+import { skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 
 /** The repository's license and third-party notices, beside the library. */
 function licenses(): Plugin {
@@ -94,7 +95,7 @@ export default defineConfig({
   // Asset URLs relative to the module that references them, not the page.
   base: "./",
   publicDir: false,
-  plugins: [basisTranscoderEsm(), licenses(), libraryPackage()],
+  plugins: [basisTranscoderEsm(), skyPackGuard(), licenses(), libraryPackage()],
   build: {
     outDir: "dist-lib",
     emptyOutDir: true,
@@ -125,7 +126,7 @@ export default defineConfig({
   worker: {
     format: "es",
     // Worker bundles take their own plugins (the Basis glue is decoded there).
-    plugins: () => [basisTranscoderEsm()],
+    plugins: () => [basisTranscoderEsm(), skyPackGuard()],
     rollupOptions: {
       output: {
         entryFileNames: "assets/[name]-[hash].mjs",

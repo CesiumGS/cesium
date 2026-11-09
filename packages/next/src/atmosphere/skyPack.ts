@@ -28,13 +28,13 @@ export const MAX_BACKGROUND_SIZE = 4096;
 
 /** A pack that is wrong: the file and the field are in the message. */
 export class SkyPackError extends Error {
-  constructor(
-    readonly file: string,
-    readonly field: string,
-    detail: string,
-  ) {
+  readonly file: string;
+  readonly field: string;
+  constructor(file: string, field: string, detail: string) {
     super(`sky pack ${file}, ${field}: ${detail}`);
     this.name = "SkyPackError";
+    this.file = file;
+    this.field = field;
   }
 }
 
