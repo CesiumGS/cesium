@@ -20,12 +20,21 @@ export {
   routeRevision,
   type FrameOptions,
 } from "./Frame.ts";
-export type { FrameAccuracy } from "./frameAccuracy.ts";
+export type {
+  AccuracyFigure,
+  Confidence,
+  FrameAccuracy,
+  SharedSource,
+} from "./frameAccuracy.ts";
 export {
   pointAccuracy,
+  separationAccuracy,
+  routeLegs,
   dominantTerm,
   type PointAccuracy,
+  type PointAccuracyOptions,
   type PointAccuracyTerm,
+  type RouteTerm,
 } from "./pointAccuracy.ts";
 export {
   earthOrientationSigma,

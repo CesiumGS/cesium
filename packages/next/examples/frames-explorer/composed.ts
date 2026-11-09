@@ -167,7 +167,7 @@ function statedView(
     meters = undefined;
     failed = error instanceof Error ? error.message : String(error);
   }
-  const shown = terms.filter((t) => t.kind === "unstated" || t.meters > 0);
+  const shown = terms.filter((t) => t.meters === undefined || t.meters > 0);
   const added = new Set(shown.map((t) => t.frame));
   const zeroAtOrigin = edges
     .filter((e) => !added.has(e))

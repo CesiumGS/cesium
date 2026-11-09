@@ -9,6 +9,7 @@ import type { Instant } from "../time/Instant.ts";
 import {
   NOT_STATED,
   checkedAccuracy,
+  type AccuracyFigure,
   type FrameAccuracy,
 } from "./frameAccuracy.ts";
 
@@ -175,26 +176,55 @@ export class Frame<N extends string = string> {
 /** 1 mm as a rotation, at the Earth's equatorial radius (plan's call 9). */
 const ONE_MM_RADIANS = 0.001 / 6378137;
 
-/** Whether `now` is worth publishing over `last` (see `publishedAccuracy`). */
+/** A figure's moved-by test, and the figures of an accuracy: the top level, then its parts. */
+function figuresOf(a: Readonly<FrameAccuracy>): AccuracyFigure[] {
+  const top =
+    a.meters !== undefined ||
+    a.radians !== undefined ||
+    a.covariance !== undefined
+      ? [a]
+      : [];
+  return [...top, ...(a.parts ?? [])];
+}
+
+/**
+ * Whether `now` is worth publishing over `last` (see `publishedAccuracy`):
+ * a change of kind or of the figures' count, or any figure moving past 1%
+ * or 1 mm.
+ */
 function differs(
   last: Readonly<FrameAccuracy>,
   now: Readonly<FrameAccuracy>,
 ): boolean {
   if (
-    (last.meters === undefined) !== (now.meters === undefined) ||
-    (last.radians === undefined) !== (now.radians === undefined) ||
-    (last.byDefinition === true) !== (now.byDefinition === true)
+    (last.byDefinition === true) !== (now.byDefinition === true) ||
+    (last.simulated === true) !== (now.simulated === true)
   ) {
+    return true;
+  }
+  const before = figuresOf(last);
+  const after = figuresOf(now);
+  if (before.length !== after.length) {
     return true;
   }
   const moved = (a: number | undefined, b: number | undefined, floor: number) =>
     a !== undefined &&
     b !== undefined &&
     Math.abs(b - a) > Math.max(0.01 * a, floor);
-  return (
-    moved(last.meters, now.meters, 0.001) ||
-    moved(last.radians, now.radians, ONE_MM_RADIANS)
-  );
+  for (let i = 0; i < before.length; i++) {
+    const x = before[i]!;
+    const y = after[i]!;
+    if (
+      (x.meters === undefined) !== (y.meters === undefined) ||
+      (x.radians === undefined) !== (y.radians === undefined) ||
+      (x.covariance === undefined) !== (y.covariance === undefined) ||
+      moved(x.meters, y.meters, 0.001) ||
+      moved(x.radians, y.radians, ONE_MM_RADIANS)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Scratch for frameTransform, one set per reentrancy level: a guard for a

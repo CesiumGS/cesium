@@ -261,6 +261,7 @@ function composed(
   terms.push(...frameTerms(frame, stop, coordinates, instant));
   const unstated = terms.find((t) => t.kind === "unstated");
   return {
+    confidence: "1σ",
     meters:
       unstated === undefined
         ? Math.hypot(...terms.map((t) => t.meters ?? NaN))
