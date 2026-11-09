@@ -138,11 +138,10 @@ describe("sunVeil", () => {
 
 /** glare.ts's composite, on one pixel. */
 function composite(image: number, veil: number, imageShare: number): number {
+  // The image is cleaned (glareImage); the veil isn't, so only the clamp bounds it.
   const finite = (v: number) => (Number.isFinite(v) ? v : 0);
   const c = Math.min(finite(image), GLARE_IMAGE_CLAMP);
-  return finite(
-    Math.min(c * (1 - imageShare) + finite(veil), GLARE_IMAGE_CLAMP),
-  );
+  return Math.min(c * (1 - imageShare) + veil, GLARE_IMAGE_CLAMP);
 }
 
 describe("the composite", () => {
@@ -150,7 +149,8 @@ describe("the composite", () => {
   const weights = veilWeights(pixelAngle(60, 1024), VEIL_LEVELS, BASE);
   const total = weights.reduce((a, b) => a + b, 0);
 
-  it("gives a flat image back, within 10⁻⁶", () => {
+  // The algebra only: the pyramid's own sum is checked on the GPU, not here.
+  it("gives a flat image back, within 10⁻⁶, if the veil sums to share × the weights", () => {
     const flat = 3.25;
     const veil = share * total * flat;
     expect(Math.abs(composite(flat, veil, share * total) - flat)).toBeLessThan(
@@ -172,10 +172,12 @@ describe("the composite", () => {
         }
       }
     }
-    const kept = point * (1 - share * total) + point * share * spread;
-    const lost = point * share * Math.max(total - spread, 0);
-    expect(Math.abs((kept + lost) / point - 1)).toBeLessThan(0.02);
+    // What the image keeps, plus what the spread puts back anywhere in the plane
+    // (counted by the grid above, not by `total`), is the point's energy.
+    const sum = point * (1 - share * total) + point * share * everywhere;
+    expect(Math.abs(sum / point - 1)).toBeLessThan(0.02);
     expect(everywhere).toBeLessThanOrEqual(total * 1.03);
+    expect(spread).toBeLessThan(everywhere);
   });
 
   it("can't reach fp16's infinity, with every sprite on one pixel", () => {
@@ -192,7 +194,8 @@ describe("the composite", () => {
   it("makes what isn't finite 0", () => {
     expect(composite(Infinity, 0, 0.1)).toBe(0);
     expect(composite(Number.NaN, 0, 0.1)).toBe(0);
-    expect(composite(1, Infinity, 0.1)).toBeCloseTo(0.9, 6);
+    // The shader doesn't clean the veil: its infinity meets the clamp.
+    expect(composite(1, Infinity, 0.1)).toBe(GLARE_IMAGE_CLAMP);
     expect(composite(1e9, 1e9, 0.1)).toBe(GLARE_IMAGE_CLAMP);
   });
 });

@@ -8,6 +8,7 @@ import { STAR_FLOATS, type StarField } from "../src/atmosphere/stars.ts";
 import { VIEW_TIME_WORD } from "../src/render/layout.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { createPostStage } from "../src/scene/postStage.ts";
+import { cameraGlare } from "../src/scene/observer.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const root = join(import.meta.dirname, "..");
@@ -90,7 +91,7 @@ describe("nothing of an observer reaches the scene but what's documented", () =>
     engine.renderFrame();
     expect(words(before.sky, blocks().sky)).toEqual([]);
     expect(words(before.block, blocks().block)).toEqual([]);
-    view.observer.glare = { tier: "off", veil: null, spikes: null };
+    view.observer.glare = { ...cameraGlare(), tier: "full" };
     engine.renderFrame();
     expect(words(before.sky, blocks().sky)).toEqual([]);
     expect(words(before.block, blocks().block)).toEqual([]);
