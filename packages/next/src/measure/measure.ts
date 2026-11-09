@@ -6,6 +6,7 @@ import {
   type DesignPoint,
   type EngineeringFrame,
 } from "../engineering/EngineeringFrame.ts";
+import { runBulk, type BulkOptions } from "../core/bulk.ts";
 import { gridFactors } from "../engineering/factors.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { cartographic } from "../math/ellipsoid.ts";
@@ -19,9 +20,9 @@ import {
   type AccuracyStatement,
   type WarningCode,
 } from "./accuracy.ts";
-import { downlink, uplink, type Leg } from "./doppler.ts";
+import { downlinkWithSolution, uplink, type Leg } from "./doppler.ts";
 import { lineOfSight } from "./lineOfSight.ts";
-import { solveLightTime, type ShapiroBody } from "./lightTime.ts";
+import type { ShapiroBody } from "./lightTime.ts";
 import { surfaceDistance } from "./surface.ts";
 
 /** Options for `measure` and `measureSpan`. */
@@ -136,11 +137,39 @@ function resolvePoint(p: MeasurePoint, frames: Frames): FramePoint {
     : p;
 }
 
+/** A span's grid factors, by engineering frame and design coordinates (the point's own array). */
+type FactorCache = Map<
+  EngineeringFrame<CoordinateOperation>,
+  Map<ArrayLike<number>, ReturnType<typeof gridFactors>>
+>;
+
+function factorsOf(
+  frame: EngineeringFrame<CoordinateOperation>,
+  design: ArrayLike<number>,
+  cache: FactorCache | undefined,
+): ReturnType<typeof gridFactors> {
+  if (cache === undefined) {
+    return gridFactors(frame, design);
+  }
+  let byPoint = cache.get(frame);
+  if (byPoint === undefined) {
+    byPoint = new Map();
+    cache.set(frame, byPoint);
+  }
+  let factors = byPoint.get(design);
+  if (factors === undefined) {
+    factors = gridFactors(frame, design);
+    byPoint.set(design, factors);
+  }
+  return factors;
+}
+
 /** The design result and alignment for two design points in one frame. */
 function designResult(
   a: DesignPoint<CoordinateOperation>,
   b: DesignPoint<CoordinateOperation>,
   options: MeasureOptions,
+  cache?: FactorCache,
 ): { design: DesignMeasurement; alignment?: AlignmentMeasurement } {
   const frame: EngineeringFrame<CoordinateOperation> = a.engineeringFrame;
   const { units } = frame;
@@ -152,8 +181,8 @@ function designResult(
   const horizontalDistance = Math.hypot(delta[0]!, delta[1]!);
   const vertical =
     (delta[2]! * frame.metersPerHeightUnit) / units.metersPerUnit;
-  const fa = gridFactors(frame, a.design);
-  const fb = gridFactors(frame, b.design);
+  const fa = factorsOf(frame, a.design, cache);
+  const fb = factorsOf(frame, b.design, cache);
   const design: DesignMeasurement = {
     unitName: units.horizontalUnitName,
     metersPerUnit: units.metersPerUnit,
@@ -254,6 +283,17 @@ export function measure(
   frames: Frames,
   options: MeasureOptions = {},
 ): Measurement {
+  return measureWith(pointA, pointB, instant, frames, options, undefined);
+}
+
+function measureWith(
+  pointA: MeasurePoint,
+  pointB: MeasurePoint,
+  instant: Instant,
+  frames: Frames,
+  options: MeasureOptions,
+  cache: FactorCache | undefined,
+): Measurement {
   checkTdb("measure", "instant", instant);
   checkInputs("measure", pointA, pointB, options);
   const a = resolvePoint(pointA, frames);
@@ -337,22 +377,21 @@ export function measure(
       ...(options.shapiro && { shapiro: options.shapiro }),
       ...(options.frequency !== undefined && { frequency: options.frequency }),
     };
+    // The downlink's light time is solved once, for both the signal and the
+    // line of sight.
+    const down = downlinkWithSolution(a, b, instant, frames, leg);
     signal = {
-      downlink: downlink(a, b, instant, frames, leg),
+      downlink: down.leg,
       uplink: uplink(a, b, instant, frames, leg),
     };
-    sight = lineOfSight(
-      solveLightTime(a, b, instant, "reception", frames, options.shapiro),
-      frames,
-      options.bodies,
-    );
+    sight = lineOfSight(down.solution, frames, options.bodies);
   }
 
   const designs =
     isDesign(pointA) &&
     isDesign(pointB) &&
     pointA.engineeringFrame === pointB.engineeringFrame
-      ? designResult(pointA, pointB, options)
+      ? designResult(pointA, pointB, options, cache)
       : undefined;
   if (options.alignment !== undefined && !designs) {
     warn(
@@ -389,20 +428,27 @@ export function measure(
 
 /**
  * Runs `measure` from `start` to `stop` inclusive every `step` seconds of
- * TDB. A sample that throws (a light path outside a trajectory's data, say)
- * records its message and the span continues; a TypeError or ReferenceError
- * propagates. Throws for a non-finite start, stop, step, coordinate or
- * frequency, and for more than 1,000,000 samples.
+ * TDB, as bulk work (plan 5b's call 36): in slices, with the `signal` and
+ * `onProgress` of `BulkOptions` under `options.bulk` (`MeasureOptions.signal`
+ * is already taken: it says whether to compute the signal). A sample that
+ * throws (a light path outside a trajectory's data, say) records its message
+ * and the span continues; a TypeError or ReferenceError rejects. Rejects for
+ * a non-finite start, stop, step, coordinate or frequency, and for more than
+ * 1,000,000 samples. Two design ends' grid factors are computed once for the
+ * span.
  */
-export function measureSpan(
+export async function measureSpan(
   a: MeasurePoint,
   b: MeasurePoint,
   start: Instant,
   stop: Instant,
   step: number,
   frames: Frames,
-  options: MeasureOptions = {},
-): Array<{ instant: Instant; measurement?: Measurement; error?: string }> {
+  options: MeasureOptions & { readonly bulk?: BulkOptions } = {},
+): Promise<
+  Array<{ instant: Instant; measurement?: Measurement; error?: string }>
+> {
+  const { bulk, ...measureOptions } = options;
   const from = checkTdb("measureSpan", "start", start);
   const length = checkTdb("measureSpan", "stop", stop) - from;
   if (!(Number.isFinite(step) && step > 0)) {
@@ -413,31 +459,41 @@ export function measureSpan(
   if (length < 0) {
     throw new Error("measureSpan: stop is before start");
   }
-  checkInputs("measureSpan", a, b, options);
+  checkInputs("measureSpan", a, b, measureOptions);
   const count = Math.floor(length / step + 1e-9) + 1;
   if (count > MAX_SAMPLES) {
     throw new Error(
       `measureSpan: ${count} samples exceeds the limit of ${MAX_SAMPLES}; use a longer step`,
     );
   }
-  const samples = [];
-  for (let i = 0; i < count; i++) {
-    const instant = i === 0 ? start : Instant.fromTdb(from + i * step);
-    try {
-      samples.push({
-        instant,
-        measurement: measure(a, b, instant, frames, options),
-      });
-    } catch (e) {
-      // A programming error is not a sample's failure (as in motion.ts).
-      if (e instanceof TypeError || e instanceof ReferenceError) {
-        throw e;
+  const cache: FactorCache = new Map();
+  return runBulk(
+    count,
+    (i) => {
+      const instant = i === 0 ? start : Instant.fromTdb(from + i * step);
+      try {
+        return {
+          instant,
+          measurement: measureWith(
+            a,
+            b,
+            instant,
+            frames,
+            measureOptions,
+            cache,
+          ),
+        };
+      } catch (e) {
+        // A programming error is not a sample's failure (as in motion.ts).
+        if (e instanceof TypeError || e instanceof ReferenceError) {
+          throw e;
+        }
+        return {
+          instant,
+          error: e instanceof Error ? e.message : String(e),
+        };
       }
-      samples.push({
-        instant,
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
-  }
-  return samples;
+    },
+    bulk,
+  );
 }

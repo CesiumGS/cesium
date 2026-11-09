@@ -2,7 +2,7 @@
 // 4a task 6). `npm run test:data` runs it.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   Alignment,
@@ -168,7 +168,7 @@ describe("measure in design terms", () => {
     expect(() =>
       measure(before, b, instant, frames, { alignment: "Road" }),
     ).toThrow(/outside the alignment/);
-    const span = measureSpan(before, b, instant, instant, 1, frames, {
+    const span = await measureSpan(before, b, instant, instant, 1, frames, {
       alignment: "Road",
     });
     expect(span[0]!.error).toMatch(/outside the alignment/);
@@ -862,5 +862,40 @@ describe("the Moon (plan 4a's carried-forward item)", () => {
     // Two quantities: the stereographic grid is not true length (its scale
     // at the pole is 1, rising away from it), so the body-fixed distance differs.
     expect(Math.abs(m.distance - m.design!.distance)).toBeGreaterThan(1e-6);
+  });
+});
+
+describe("a span of design measurements (frames 5b, Task 10)", () => {
+  it("computes the two ends' grid factors once for the span, and its samples equal single measurements", async () => {
+    const P = await loadProj({ base, grids: GRIDS });
+    const f = EngineeringFrame.create(
+      {
+        name: "CA3",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+        site,
+      },
+      P,
+    );
+    const a = designPoint(f, [2000, 1000, 25]);
+    const b = designPoint(f, [12_000, 1000, 25]);
+    const spy = vi.spyOn(P, "proj_factors");
+    const samples = await measureSpan(
+      a,
+      b,
+      instant,
+      Instant.fromTdb(instant.tdb() + 99),
+      1,
+      frames,
+    );
+    expect(samples).toHaveLength(100);
+    // Two ends, once each: not 200 calls.
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockClear();
+    const t = Instant.fromTdb(instant.tdb() + 37);
+    const single = measure(a, b, t, frames);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(samples[37]!.measurement!.design).toEqual(single.design);
+    expect(samples[37]!.measurement!.distance).toBe(single.distance);
   });
 });

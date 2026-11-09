@@ -103,14 +103,14 @@ function rateOf(
   return properTimeRate(position, velocity, instant, frames);
 }
 
-function leg(
+function legWithSolution(
   receiver: FramePoint,
   transmitter: FramePoint,
   at: Instant,
   fixed: "reception" | "emission",
   frames: Frames,
   options: LegOptions,
-): Leg {
+): { leg: Leg; solution: LightTimeSolution } {
   const solve = (instant: Instant): LightTimeSolution =>
     solveLightTime(
       receiver,
@@ -141,26 +141,62 @@ function leg(
       rateOf(receiver, solution.receiverPosition, solution.reception, frames)) *
     (fixed === "reception" ? 1 - dlt : 1 / (1 + dlt));
   return {
-    lightTime: solution.lightTime,
-    range: C * solution.lightTime,
-    rangeRate,
-    dopplerRatio: ratio,
-    ...(options.frequency === undefined
-      ? {}
-      : { dopplerShift: (ratio - 1) * options.frequency }),
-    transmitterDirection: apparentDirection(
-      solution,
-      "transmitter",
-      transmitter,
-      frames,
-    ),
-    receiverDirection: apparentDirection(
-      solution,
-      "receiver",
-      receiver,
-      frames,
-    ),
+    solution,
+    leg: {
+      lightTime: solution.lightTime,
+      range: C * solution.lightTime,
+      rangeRate,
+      dopplerRatio: ratio,
+      ...(options.frequency === undefined
+        ? {}
+        : { dopplerShift: (ratio - 1) * options.frequency }),
+      transmitterDirection: apparentDirection(
+        solution,
+        "transmitter",
+        transmitter,
+        frames,
+      ),
+      receiverDirection: apparentDirection(
+        solution,
+        "receiver",
+        receiver,
+        frames,
+      ),
+    },
   };
+}
+
+function leg(
+  receiver: FramePoint,
+  transmitter: FramePoint,
+  at: Instant,
+  fixed: "reception" | "emission",
+  frames: Frames,
+  options: LegOptions,
+): Leg {
+  return legWithSolution(receiver, transmitter, at, fixed, frames, options).leg;
+}
+
+/**
+ * `downlink` with the light-time solution it solved, for a caller that needs
+ * it too (line of sight): the downlink's light time is then solved once.
+ * Internal to `measure`.
+ */
+export function downlinkWithSolution(
+  receiver: FramePoint,
+  transmitter: FramePoint,
+  at: Instant,
+  frames: Frames,
+  options: LegOptions = {},
+): { leg: Leg; solution: LightTimeSolution } {
+  return legWithSolution(
+    receiver,
+    transmitter,
+    at,
+    "reception",
+    frames,
+    options,
+  );
 }
 
 /**

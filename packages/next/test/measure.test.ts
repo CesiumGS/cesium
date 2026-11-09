@@ -9,6 +9,7 @@ import {
 import { Frame } from "../src/frames/Frame.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { C } from "../src/measure/constants.ts";
+import { downlink, uplink } from "../src/measure/doppler.ts";
 import { measure, measureSpan } from "../src/measure/measure.ts";
 import { surfaceDistance } from "../src/measure/surface.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -269,8 +270,8 @@ describe("measureSpan", () => {
   );
   const b: FramePoint = framePoint(orion.frame, [0, 0, 0]);
 
-  it("records a sample in a gap as an error and carries on (Review Focus 1)", () => {
-    const samples = measureSpan(
+  it("records a sample in a gap as an error and carries on (Review Focus 1)", async () => {
+    const samples = await measureSpan(
       station,
       b,
       Instant.fromTdb(-60),
@@ -293,10 +294,10 @@ describe("measureSpan", () => {
     }
   });
 
-  it("records a light path that leaves the data", () => {
+  it("records a light path that leaves the data", async () => {
     // Orion is inside its segment at t = 30.001, but the downlink left it
     // about 2 ms earlier, in the gap: no extrapolation.
-    const [sample] = measureSpan(
+    const [sample] = await measureSpan(
       station,
       b,
       Instant.fromTdb(30.001),
@@ -308,44 +309,52 @@ describe("measureSpan", () => {
     expect(sample!.error).toMatch(/outside its data/);
   });
 
-  it("rejects non-finite input and too many samples before running any", () => {
+  it("rejects non-finite input and too many samples before running any", async () => {
     const t = Instant.fromTdb(0);
     const nan = Instant.fromTdb(Number.NaN);
     const inf = Instant.fromTdb(Infinity);
-    expect(() => measureSpan(station, b, t, nan, 1, frames)).toThrow(/stop/);
-    expect(() => measureSpan(station, b, t, inf, 1, frames)).toThrow(/stop/);
-    expect(() => measureSpan(station, b, nan, t, 1, frames)).toThrow(/start/);
-    expect(() => measureSpan(station, b, t, t, Number.NaN, frames)).toThrow(
-      /step/,
+    await expect(measureSpan(station, b, t, nan, 1, frames)).rejects.toThrow(
+      /stop/,
     );
-    expect(() => measureSpan(station, b, t, t, Infinity, frames)).toThrow(
-      /step/,
+    await expect(measureSpan(station, b, t, inf, 1, frames)).rejects.toThrow(
+      /stop/,
     );
+    await expect(measureSpan(station, b, nan, t, 1, frames)).rejects.toThrow(
+      /start/,
+    );
+    await expect(
+      measureSpan(station, b, t, t, Number.NaN, frames),
+    ).rejects.toThrow(/step/);
+    await expect(
+      measureSpan(station, b, t, t, Infinity, frames),
+    ).rejects.toThrow(/step/);
     const bad = framePoint(frames.itrf, [Number.NaN, 0, 0]);
-    expect(() => measureSpan(bad, b, t, t, 1, frames)).toThrow(/non-finite/);
-    expect(() =>
+    await expect(measureSpan(bad, b, t, t, 1, frames)).rejects.toThrow(
+      /non-finite/,
+    );
+    await expect(
       measureSpan(station, b, t, t, 1, frames, { frequency: Number.NaN }),
-    ).toThrow(/frequency/);
-    // 1e7 samples: it must throw at once, not run them.
+    ).rejects.toThrow(/frequency/);
+    // 1e7 samples: it must reject at once, not run them.
     const started = performance.now();
-    expect(() =>
+    await expect(
       measureSpan(station, b, t, Instant.fromTdb(1e7 - 1), 1, frames),
-    ).toThrow(/1,?000,?000|limit/);
+    ).rejects.toThrow(/1,?000,?000|limit/);
     expect(performance.now() - started).toBeLessThan(100);
   });
 
-  it("propagates a TypeError raised inside a sample", () => {
+  it("propagates a TypeError raised inside a sample", async () => {
     const broken = new Frame("broken", frames.itrf, () => {
       throw new TypeError("a programming error");
     });
     const t = Instant.fromTdb(0);
-    expect(() =>
+    await expect(
       measureSpan(station, framePoint(broken, [0, 0, 0]), t, t, 1, frames),
-    ).toThrow(TypeError);
+    ).rejects.toThrow(TypeError);
     const failing = new Frame("failing", frames.itrf, () => {
       throw new Error("outside the data");
     });
-    const [sample] = measureSpan(
+    const [sample] = await measureSpan(
       station,
       framePoint(failing, [0, 0, 0]),
       t,
@@ -356,11 +365,78 @@ describe("measureSpan", () => {
     expect(sample!.error).toBe("outside the data");
   });
 
-  it("rejects a non-positive step and a stop before the start", () => {
+  it("rejects a non-positive step and a stop before the start", async () => {
     const t = Instant.fromTdb(0);
-    expect(() => measureSpan(station, b, t, t, 0, frames)).toThrow(/step/);
-    expect(() =>
+    await expect(measureSpan(station, b, t, t, 0, frames)).rejects.toThrow(
+      /step/,
+    );
+    await expect(
       measureSpan(station, b, t, Instant.fromTdb(-1), 1, frames),
-    ).toThrow(/stop/);
+    ).rejects.toThrow(/stop/);
+  });
+
+  it("rejects with AbortError when aborted, and reports progress", async () => {
+    const controller = new AbortController();
+    const progress: number[] = [];
+    const run = measureSpan(
+      station,
+      framePoint(frames.itrf, [6378137, 0, 0]),
+      Instant.fromTdb(0),
+      Instant.fromTdb(50),
+      1,
+      frames,
+      {
+        bulk: {
+          signal: controller.signal,
+          onProgress: (p) => progress.push(p.done),
+        },
+      },
+    );
+    controller.abort();
+    await expect(run).rejects.toMatchObject({ name: "AbortError" });
+    const samples = await measureSpan(
+      station,
+      framePoint(frames.itrf, [6378137, 0, 0]),
+      Instant.fromTdb(0),
+      Instant.fromTdb(50),
+      1,
+      frames,
+      { bulk: { onProgress: (p) => progress.push(p.done) } },
+    );
+    expect(samples).toHaveLength(51);
+    expect(progress.at(-1)).toBe(51);
+  });
+});
+
+describe("one downlink light-time solve", () => {
+  it("measure evaluates the far end once fewer than the signal's legs and line of sight did before", () => {
+    let evaluations = 0;
+    const counted = new Frame(
+      "counted",
+      frames.itrf,
+      (_i, out) => {
+        evaluations++;
+        out.fill(0);
+        out[0] = out[5] = out[10] = out[15] = 1;
+      },
+      { cache: false },
+    );
+    const t = Instant.fromTdb(0);
+    const here = framePoint(frames.itrf, [6378137, 0, 0]);
+    const there = framePoint(counted, [1e6, 0, 0]);
+    const reference = () => {
+      evaluations = 0;
+      downlink(here, there, t, frames);
+      uplink(here, there, t, frames);
+      const solves = evaluations;
+      evaluations = 0;
+      measure(here, there, t, frames, { signal: false });
+      return { legs: solves, geometry: evaluations };
+    };
+    const { legs, geometry } = reference();
+    evaluations = 0;
+    measure(here, there, t, frames);
+    // The legs once, the geometry once: the line of sight's own solve is gone.
+    expect(evaluations).toBe(legs + geometry);
   });
 });

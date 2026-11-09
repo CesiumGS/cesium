@@ -14,6 +14,7 @@
 // body's geographic CRS, EPSG:4979 for the Earth and MOON_GEOGRAPHIC_CRS for
 // the Moon), or a host application's own. The engine's own `Ellipsoid` does
 // geodetic to body-fixed (R4).
+import { runBulk, type BulkOptions } from "../core/bulk.ts";
 import type { Body } from "../scene/Body.ts";
 import { cartographic, type Cartographic } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
@@ -671,6 +672,73 @@ export class EngineeringFrame<
       geographic[1]! * RADIANS_PER_DEGREE,
       geographic[2]!,
     );
+  }
+
+  /**
+   * `toBodyFixed` of many points: flat x, y, z in (design units), flat x, y, z
+   * out, equal to the per-point method; as bulk work, with the `signal` and
+   * `onProgress` of `BulkOptions`. Rejects with a `RangeError` naming the
+   * index for a length that is not a multiple of 3, or a non-finite
+   * coordinate.
+   */
+  toBodyFixedBatch(
+    design: ArrayLike<number>,
+    options?: BulkOptions,
+  ): Promise<Float64Array> {
+    return this.batch("toBodyFixedBatch", design, options, (p, out) =>
+      this.toBodyFixed(p, out),
+    );
+  }
+
+  /** `fromBodyFixed` of many points, as `toBodyFixedBatch`. */
+  fromBodyFixedBatch(
+    bodyFixed: ArrayLike<number>,
+    options?: BulkOptions,
+  ): Promise<Float64Array> {
+    return this.batch("fromBodyFixedBatch", bodyFixed, options, (p, out) =>
+      this.fromBodyFixed(p, out),
+    );
+  }
+
+  private batch(
+    who: string,
+    flat: ArrayLike<number>,
+    options: BulkOptions | undefined,
+    each: (
+      point: ArrayLike<number>,
+      out: Float64Array<ArrayBuffer>,
+    ) => Float64Array,
+  ): Promise<Float64Array> {
+    if (flat.length % 3 !== 0) {
+      return Promise.reject(
+        new RangeError(
+          `EngineeringFrame "${this.definition.name}".${who}: ${flat.length} numbers is not a multiple of 3 (flat x, y, z)`,
+        ),
+      );
+    }
+    for (let i = 0; i < flat.length; i++) {
+      if (!Number.isFinite(flat[i]!)) {
+        return Promise.reject(
+          new RangeError(
+            `EngineeringFrame "${this.definition.name}".${who}: coordinate ${i} (point ${Math.floor(i / 3)}) is not finite`,
+          ),
+        );
+      }
+    }
+    const out = new Float64Array(flat.length);
+    const point = new Float64Array(3);
+    const at = new Float64Array(3);
+    return runBulk(
+      flat.length / 3,
+      (n) => {
+        point[0] = flat[n * 3]!;
+        point[1] = flat[n * 3 + 1]!;
+        point[2] = flat[n * 3 + 2]!;
+        each(point, at);
+        out.set(at, n * 3);
+      },
+      options,
+    ).then(() => out);
   }
 
   /** Design units to body-fixed metres. */

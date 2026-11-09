@@ -156,7 +156,7 @@ describe("the published occultation, April 6 2026 (R10)", () => {
   it(
     "has the Moon block each visible complex within 2 minutes of 22:44 and clear within 2 minutes of 23:25",
     { timeout: 120_000 },
-    () => {
+    async () => {
       let checked = 0;
       for (const { complex, dish } of complexes) {
         const station = stationAt(dish, losTime);
@@ -170,7 +170,7 @@ describe("the published occultation, April 6 2026 (R10)", () => {
           );
           continue;
         }
-        const samples = measureSpan(
+        const samples = await measureSpan(
           station,
           orionPoint,
           at("22:20"),
