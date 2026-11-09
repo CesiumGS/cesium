@@ -38,7 +38,6 @@ import {
   COMPONENT_TYPE_CODES,
   PROPERTY_TEXTURES,
   PROPERTY_TEXTURE_BINDING,
-  TABLE_PROPERTY,
   instanceDistanceFlags,
   TEXTURE_PROPERTY,
   TEXTURE_PROPERTY_WORDS,
@@ -114,8 +113,6 @@ import type {
   CastRay,
   CastOptions,
   FeatureInfo,
-  TablePlan,
-  TableColumn,
 } from "./world/types.ts";
 import {
   anchorAt,
@@ -140,6 +137,14 @@ import {
   frameOf,
   checkAnchor,
 } from "./world/transforms.ts";
+import {
+  plannedColumns,
+  tableBytes,
+  uploadTable,
+  releaseTable,
+  warnUnavailable,
+  uploadTables,
+} from "./world/featureTables.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -283,7 +288,8 @@ export class World {
   readonly freeTransforms: number[] = [];
 
   // The instance table: ranges owned by instanced draws.
-  private readonly instances: MirroredTable;
+  /** @internal */
+  readonly instances: MirroredTable;
   private readonly instanceAllocator: RangeAllocator;
   /** Instance slots in use or freed below the highest (cull dispatch size). */
   private instanceHighWater = 0;
@@ -301,8 +307,8 @@ export class World {
     PlacementParameter,
     ParameterSlot
   >();
-  private readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> =
-    [];
+  /** @internal */
+  readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> = [];
   private materialsF32: Float32Array;
   private materialsU32: Uint32Array;
   private materialCount = 0;
@@ -359,8 +365,8 @@ export class World {
   /** Emptied batches, reused (index kept) so live records stay valid. */
   private readonly freeBatches: Batch[] = [];
   private readonly drawBatches: Array<Batch | undefined> = [];
-  /** Slab ranges per mesh id, as [byte offset, byte size]. */
-  private readonly meshRanges = new Map<
+  /** @internal Slab ranges per mesh id, as [byte offset, byte size]. */
+  readonly meshRanges = new Map<
     number,
     {
       slab: number;
@@ -373,10 +379,10 @@ export class World {
     }
   >();
   /**
-   * Feature tables' columns in the arena (directory entries: hash, offset,
+   * @internal Feature tables' columns in the arena (directory entries: hash, offset,
    * components with `TABLE_PROPERTY`), shared by the meshes using them.
    */
-  private readonly tableColumns = new Map<
+  readonly tableColumns = new Map<
     string,
     {
       entries: number[][];
@@ -388,9 +394,10 @@ export class World {
       skipped: Map<string, string>;
     }
   >();
-  /** An id per feature table object, for `tableColumns`' slab keys. */
-  private readonly tableIds = new WeakMap<FeatureTable, number>();
-  private nextTableId = 1;
+  /** @internal An id per feature table object, for `tableColumns`' slab keys. */
+  readonly tableIds = new WeakMap<FeatureTable, number>();
+  /** @internal */
+  nextTableId = 1;
   private readonly names: Array<string | undefined> = [];
   private readonly featureTables: Array<FeatureTable | undefined> = [];
   /**
@@ -870,8 +877,8 @@ export class World {
     used: number;
   }> = [];
 
-  /** Queues a write of `data` at `offset` in `target` (`flushUploads`). */
-  private queueUpload(
+  /** @internal Queues a write of `data` at `offset` in `target` (`flushUploads`). */
+  queueUpload(
     target: GPUBuffer,
     offset: number,
     data: Float32Array | Uint32Array,
@@ -962,7 +969,7 @@ export class World {
               ? plannedColumns(mesh.featureTable).columns.length
               : 0)) *
             3) +
-      (mesh.featureTable ? this.tableBytes(mesh.featureTable) : 0);
+      (mesh.featureTable ? tableBytes(this, mesh.featureTable) : 0);
     const slab = this.slabs.pick(streamBytes, mesh.indices.byteLength);
     if (!slab) {
       throw new CapacityError("vertex arena");
@@ -1005,7 +1012,7 @@ export class World {
     const textured = mesh.propertyTextures ?? [];
     let table: { entries: number[][] } | undefined;
     try {
-      table = mesh.featureTable && this.uploadTable(mesh.featureTable, slab);
+      table = mesh.featureTable && uploadTable(this, mesh.featureTable, slab);
     } catch (error) {
       releaseRanges();
       throw error;
@@ -1016,7 +1023,7 @@ export class World {
       // surface.slang `readNamed` reads this many at most.
       releaseRanges();
       if (mesh.featureTable) {
-        this.releaseTable(mesh.featureTable, slab);
+        releaseTable(this, mesh.featureTable, slab);
       }
       throw new RangeError(
         `addMesh: ${entries} named attributes, metadata properties and feature table columns; a mesh holds at most ${MAX_DIRECTORY_ENTRIES}.`,
@@ -1063,7 +1070,7 @@ export class World {
     if (indexOffset === undefined) {
       releaseRanges();
       if (mesh.featureTable) {
-        this.releaseTable(mesh.featureTable, slab);
+        releaseTable(this, mesh.featureTable, slab);
       }
       throw new CapacityError("index arena");
     }
@@ -1253,7 +1260,7 @@ export class World {
     const slab = this.slabs.get(ranges.slab);
     let bytes = 0;
     if (ranges.table) {
-      bytes += this.releaseTable(ranges.table, slab);
+      bytes += releaseTable(this, ranges.table, slab);
     }
     for (const [offset, size] of ranges.vertex) {
       slab.vertex.release(offset, size);
@@ -1265,147 +1272,6 @@ export class World {
     // An emptied slab past the first closes.
     this.slabs.tidy(slab);
     return bytes + ranges.index[1];
-  }
-
-  /** A mesh's reference to its table's columns in `slab` released. */
-  private releaseTable(table: FeatureTable, slab: Slab): number {
-    const key = this.tableKey(table, slab.id);
-    const uploaded = this.tableColumns.get(key);
-    if (!uploaded || --uploaded.meshes > 0) {
-      return 0;
-    }
-    this.tableColumns.delete(key);
-    for (const value of uploaded.strings) {
-      stringIds.release(value);
-    }
-    let bytes = 0;
-    for (const [offset, size] of uploaded.ranges) {
-      slab.vertex.release(offset, size);
-      bytes += size;
-    }
-    return bytes;
-  }
-
-  /** `tableColumns`' key: the table object's id and the slab. */
-  private tableKey(table: FeatureTable, slabId: number): string {
-    let id = this.tableIds.get(table);
-    if (id === undefined) {
-      id = this.nextTableId++;
-      this.tableIds.set(table, id);
-    }
-    return `${id}|${slabId}`;
-  }
-
-  /** The bytes a feature table's uploaded columns take (`uploadTable`). */
-  private tableBytes(table: FeatureTable): number {
-    return plannedColumns(table).columns.reduce(
-      (n, c) => n + columnBytes(table, c),
-      0,
-    );
-  }
-
-  /**
-   * A feature table's columns in the arena, uploaded once per table
-   * object: numbers, booleans (0 or 1) and numeric arrays of up to 4
-   * (shorter rows padded with zero), as float32 rows by local feature ID;
-   * missing values (null) read 0. A string column a style reads is
-   * uploaded as the ids of its strings (`stringIds`), held until the table
-   * is released; a column left out is recorded with its reason
-   * (`warnUnavailable`).
-   */
-  private uploadTable(
-    table: FeatureTable,
-    slab: Slab,
-  ): {
-    entries: number[][];
-  } {
-    // Once per table object and slab: a table used from two slabs is
-    // copied into each (rare: a table belongs to one tile's content).
-    const key = this.tableKey(table, slab.id);
-    let uploaded = this.tableColumns.get(key);
-    if (!uploaded) {
-      const entries: number[][] = [];
-      const ranges: Array<[number, number]> = [];
-      const strings: string[] = [];
-      const plan = plannedColumns(table);
-      const undo = () => {
-        for (const [o, size] of ranges) {
-          slab.vertex.release(o, size);
-        }
-        for (const value of strings) {
-          stringIds.release(value);
-        }
-      };
-      for (const column of plan.columns) {
-        let data = column.data;
-        let held: string[] = [];
-        if (!data) {
-          const ids = stringColumnData(table, column);
-          if ("skip" in ids) {
-            plan.skipped.set(column.name, ids.skip);
-            continue;
-          }
-          data = ids.data;
-          held = ids.held;
-        }
-        const offset = this.slabs.allocateVertex(slab, data.byteLength);
-        if (offset === undefined) {
-          for (const value of held) {
-            stringIds.release(value);
-          }
-          undo();
-          throw new CapacityError("vertex arena");
-        }
-        for (const value of held) {
-          strings.push(value); // not push(...held): a long column overflows the stack
-        }
-        ranges.push([offset, data.byteLength]);
-        this.queueUpload(slab.vertexBuffer, offset, data);
-        entries.push([
-          attributeHash(metadataKey(column.name)),
-          offset / 4,
-          TABLE_PROPERTY | column.components,
-        ]);
-      }
-      uploaded = {
-        entries,
-        ranges,
-        meshes: 0,
-        strings,
-        skipped: plan.skipped,
-      };
-      this.tableColumns.set(key, uploaded);
-    }
-    uploaded.meshes++;
-    return uploaded;
-  }
-
-  /**
-   * Says (`Engine.errors`, once per message) that a custom shader reads a
-   * property of a mesh's feature table that wasn't uploaded, naming it and
-   * why: it reads 0 there, which a comparison can't tell from a value.
-   */
-  private warnUnavailable(mesh: MeshHandle, shader: CustomShader): void {
-    const ranges = this.meshRanges.get(mesh.id);
-    if (!ranges?.table) {
-      return;
-    }
-    const skipped = this.tableColumns.get(
-      this.tableKey(ranges.table, ranges.slab),
-    )?.skipped;
-    if (!skipped || skipped.size === 0) {
-      return;
-    }
-    for (const field of Object.keys(shader.named.metadata)) {
-      const property = shader.named.properties[field] ?? field;
-      const reason = skipped.get(property);
-      if (reason !== undefined) {
-        this.ctx.errors.report(
-          "resource",
-          `${shader.label}: the property "${property}" of a feature table isn't uploaded (${reason}), so it reads 0 there`,
-        );
-      }
-    }
   }
 
   /** Bytes in use in the vertex and index arenas. */
@@ -1887,7 +1753,7 @@ export class World {
     batch.items += instanceCount > 0 ? instanceCount : 1;
     this.drawBatches[index] = batch;
     if (shader) {
-      this.warnUnavailable(mesh, shader);
+      warnUnavailable(this, mesh, shader);
     }
 
     // Bounds live in the transform's local frame, so moving or rotating
@@ -2167,7 +2033,7 @@ export class World {
       return;
     }
     if (shader) {
-      this.warnUnavailable(old.mesh, shader);
+      warnUnavailable(this, old.mesh, shader);
     }
     const o = index * RECORD_WORDS;
     const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
@@ -3504,7 +3370,7 @@ export class World {
     const encoder = device.createCommandEncoder({ label: "world.raycast" });
     const pass = encoder.beginComputePass({ label: "raycast" });
     // The tables as the CPU has them (draws added since the last frame).
-    this.uploadTables(pass);
+    uploadTables(this, pass);
     pass.setPipeline(pipeline);
     // Every slab's jobs into the same hits (an atomic min per ray).
     for (const [id, jobs] of bySlab) {
@@ -4140,7 +4006,7 @@ export class World {
     this.cullPassDesc.timestampWrites = timestampWrites;
     const pass = encoder.beginComputePass(this.cullPassDesc);
     // Once per frame, before any view's culling reads the tables.
-    this.uploadTables(pass);
+    uploadTables(this, pass);
     pass.setBindGroup(0, currentViewBindGroup);
     pass.setBindGroup(1, this.cullBindGroup);
     pass.setPipeline(pipelines.cullRecords);
@@ -4175,22 +4041,6 @@ export class World {
       pass.dispatchWorkgroups(1);
     }
     pass.end();
-  }
-
-  /** Uploads changed table entries (a scatter is encoded into `pass`). */
-  private uploadTables(pass: GPUComputePassEncoder): void {
-    if (!this.uploadsPending) {
-      return;
-    }
-    this.uploadsPending = false;
-    this.drawConstants.upload(pass);
-    this.transforms.upload(pass);
-    this.instances.upload(pass);
-    // Kernels writing the tables each frame (tracks' instance rows), after
-    // the uploads and before any view culls.
-    for (const encode of this.frameComputes) {
-      encode(pass);
-    }
   }
 
   /**
@@ -4969,159 +4819,6 @@ function boundingSphere(positions: Float32Array): {
     r2 = Math.max(r2, dx * dx + dy * dy + dz * dz);
   }
   return { center, radius: Math.sqrt(r2) };
-}
-
-const tableColumnCache = new WeakMap<FeatureTable, TablePlan>();
-
-/** Directory entries kept free of string columns (`plannedColumns`). */
-const DIRECTORY_RESERVE = 32;
-
-const NOT_WATCHED =
-  "a string column is uploaded only for a style made before its content: make the FeatureStyle first";
-
-/**
- * A feature table's columns as uploaded (`World.uploadTable`): numbers,
- * booleans (0 or 1) and numeric arrays of up to 4 (shorter rows padded
- * with zero), as float32 rows by local feature ID; missing values (null)
- * read 0. A column whose first value is a string is a string column
- * (`plannedColumns` decides whether it is uploaded). Computed once per
- * table; a column is told from its first value, so an unstyled scene's
- * string columns cost a look at one row each.
- */
-function tableColumnData(table: FeatureTable): TablePlan {
-  let plan = tableColumnCache.get(table);
-  if (plan) {
-    return plan;
-  }
-  plan = { columns: [], skipped: new Map() };
-  for (const [name, values] of Object.entries(table.columns)) {
-    if (typeof values.find((v) => v !== null) === "string") {
-      plan.columns.push({ name, components: 1, text: true });
-      continue;
-    }
-    let components = 0;
-    let numeric = true;
-    for (const v of values) {
-      if (typeof v === "number" || typeof v === "boolean") {
-        components = Math.max(components, 1);
-      } else if (Array.isArray(v) && v.every((x) => typeof x === "number")) {
-        components = Math.max(components, v.length);
-      } else if (v !== null) {
-        numeric = false;
-        break;
-      }
-    }
-    if (!numeric) {
-      plan.skipped.set(
-        name,
-        "its values aren't all numbers, booleans, numeric arrays or strings",
-      );
-      continue;
-    }
-    if (components === 0) {
-      continue;
-    }
-    if (components > 4) {
-      plan.skipped.set(name, "its arrays are longer than 4");
-      continue;
-    }
-    const data = new Float32Array(Math.max(1, table.count) * components);
-    values.forEach((v, row) => {
-      if (Array.isArray(v)) {
-        data.set(v as number[], row * components);
-      } else if (v !== null) {
-        data[row * components] = Number(v);
-      }
-    });
-    plan.columns.push({ name, components, data });
-  }
-  tableColumnCache.set(table, plan);
-  return plan;
-}
-
-/**
- * The columns of `table` to upload now: the numeric ones, and the string
- * columns a style reads (`stringIds.watch`) that fit a mesh's directory,
- * which holds MAX_DIRECTORY_ENTRIES in all: they take only the room the
- * numeric ones leave, less what attributes and properties in textures may
- * use, so a table that fit before still does.
- */
-function plannedColumns(table: FeatureTable): TablePlan {
-  const base = tableColumnData(table);
-  const skipped = new Map(base.skipped);
-  let room = Math.max(
-    0,
-    MAX_DIRECTORY_ENTRIES -
-      DIRECTORY_RESERVE -
-      base.columns.filter((c) => c.data).length,
-  );
-  const columns = base.columns.filter((c) => {
-    if (!c.text) {
-      return true;
-    }
-    if (!stringIds.isWatched(c.name)) {
-      skipped.set(c.name, NOT_WATCHED);
-      return false;
-    }
-    if (room-- <= 0) {
-      skipped.set(c.name, "past the room a mesh's directory has for columns");
-      return false;
-    }
-    return true;
-  });
-  return { columns, skipped };
-}
-
-/** The bytes a column takes in the arena. */
-function columnBytes(table: FeatureTable, column: TableColumn): number {
-  return column.data
-    ? column.data.byteLength
-    : Math.max(1, table.count) * Float32Array.BYTES_PER_ELEMENT;
-}
-
-/**
- * A string column as float32 ids, one per row (0 where missing), holding
- * a reference on each distinct string (`stringIds.retain`); the distinct
- * strings come back for the release. Or why it can't be: it mixes strings
- * with other values, or the string table is full (nothing is held then).
- */
-function stringColumnData(
-  table: FeatureTable,
-  column: TableColumn,
-): { data: Float32Array; held: string[] } | { skip: string } {
-  const values = table.columns[column.name]!;
-  const data = new Float32Array(Math.max(1, table.count));
-  const held = new Map<string, number>();
-  const giveBack = () => {
-    for (const value of held.keys()) {
-      stringIds.release(value);
-    }
-  };
-  try {
-    for (let row = 0; row < values.length && row < data.length; row++) {
-      const value = values[row];
-      if (value === null || value === undefined) {
-        continue;
-      }
-      if (typeof value !== "string") {
-        giveBack();
-        return { skip: "it mixes strings with other values" };
-      }
-      let id = held.get(value);
-      if (id === undefined) {
-        id = stringIds.retain(value);
-        held.set(value, id);
-      }
-      data[row] = id;
-    }
-  } catch (error) {
-    giveBack();
-    if (error instanceof CapacityError) {
-      return { skip: "the table of strings is full" };
-    }
-    throw error;
-  }
-  return { data, held: [...held.keys()] };
 }
 
 function align4(bytes: number): number {
