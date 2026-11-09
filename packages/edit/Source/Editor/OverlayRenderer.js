@@ -1,10 +1,13 @@
 // @ts-check
 
 import {
+  AxisAlignedBoundingBox,
+  Cartesian3,
   Check,
   Color,
   ComponentDatatype,
   Matrix4,
+  OrientedBoundingBox,
   PixelDatatype,
   PixelFormat,
   PrimitiveType,
@@ -110,6 +113,9 @@ const FACE_DEPTH_BIAS = 0.0;
 
 // Declared by TopologyOverlayHooksVS.
 const PICK_COLOR_UNIFORM = "u_pickColorTexture";
+
+const scratchBoundsSize = new Cartesian3();
+const scratchLocalBoxMatrix = new Matrix4();
 
 /**
  * @type {TextureFormat}
@@ -237,6 +243,16 @@ class OverlayRenderer {
 
   /** @type {Matrix4} */
   #modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+
+  /** @type {AxisAlignedBoundingBox | undefined} */
+  #localBounds;
+
+  /**
+   * Shared by all the commands, and updated in place.
+   *
+   * @type {OrientedBoundingBox}
+   */
+  #boundingVolume = new OrientedBoundingBox();
 
   /** @type {VertexArray | undefined} */
   #vertexArray;
@@ -368,15 +384,52 @@ class OverlayRenderer {
   }
 
   /**
-   * The mesh's local-to-world transform, shared by the draw commands. The
-   * identity by default. Write into it to move the overlay, e.g. with
-   * Matrix4.clone(matrix, renderer.modelMatrix).
+   * The mesh's local-to-world transform. The identity by default. Use
+   * {@link OverlayRenderer#setModelMatrix} to change it.
    *
    * @type {Matrix4}
    * @readonly
    */
   get modelMatrix() {
     return this.#modelMatrix;
+  }
+
+  /**
+   * The world-space bounding volume of the draw commands, or undefined without
+   * local bounds.
+   *
+   * @type {OrientedBoundingBox | undefined}
+   * @readonly
+   */
+  get boundingVolume() {
+    return defined(this.#localBounds) ? this.#boundingVolume : undefined;
+  }
+
+  /**
+   * Sets the mesh's local-to-world transform.
+   *
+   * @param {Matrix4} matrix The transform.
+   */
+  setModelMatrix(matrix) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("matrix", matrix);
+    //>>includeEnd('debug');
+
+    Matrix4.clone(matrix, this.#modelMatrix);
+    this.#updateBoundingVolume();
+  }
+
+  /**
+   * Sets the mesh's local-space bounds. Undefined for a mesh without vertices.
+   *
+   * @param {AxisAlignedBoundingBox | undefined} bounds The bounds.
+   */
+  setLocalBounds(bounds) {
+    this.#localBounds = defined(bounds)
+      ? AxisAlignedBoundingBox.clone(bounds, this.#localBounds)
+      : undefined;
+
+    this.#updateBoundingVolume();
   }
 
   /**
@@ -545,6 +598,40 @@ class OverlayRenderer {
     }
 
     this.#updateCommands();
+  }
+
+  /**
+   * Fits #boundingVolume to #localBounds transformed by #modelMatrix, and sets
+   * boundingVolume on the existing commands.
+   *
+   * @ignore
+   */
+  #updateBoundingVolume() {
+    const localBounds = this.#localBounds;
+    if (defined(localBounds)) {
+      const size = Cartesian3.subtract(
+        localBounds.maximum,
+        localBounds.minimum,
+        scratchBoundsSize,
+      );
+
+      const localBox = Matrix4.fromScale(size, scratchLocalBoxMatrix);
+      Matrix4.setTranslation(localBox, localBounds.center, localBox);
+      Matrix4.multiplyTransformation(this.#modelMatrix, localBox, localBox);
+
+      OrientedBoundingBox.fromTransformation(localBox, this.#boundingVolume);
+    }
+
+    const { boundingVolume } = this;
+    for (const { command, outlineCommand } of this.#componentOverlays) {
+      if (defined(command)) {
+        command.boundingVolume = boundingVolume;
+      }
+
+      if (defined(outlineCommand)) {
+        outlineCommand.boundingVolume = boundingVolume;
+      }
+    }
   }
 
   /**
@@ -854,6 +941,7 @@ class OverlayRenderer {
       pass: Pass.OPAQUE,
       pickId: "v_pickColor",
       owner: this,
+      boundingVolume: this.boundingVolume,
     });
   }
 

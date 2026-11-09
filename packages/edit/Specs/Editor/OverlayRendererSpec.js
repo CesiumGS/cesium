@@ -1,7 +1,10 @@
 import {
+  AxisAlignedBoundingBox,
   Cartesian3,
   Color,
+  Matrix3,
   Matrix4,
+  OrientedBoundingBox,
   PrimitiveType,
   destroyObject,
 } from "@cesium/core";
@@ -450,21 +453,21 @@ describe(
         const translation = Matrix4.fromTranslation(
           new Cartesian3(1.0, 2.0, 3.0),
         );
-        Matrix4.clone(translation, overlay.renderer.modelMatrix);
+        overlay.renderer.setModelMatrix(translation);
         expect(getModelMatrices()).toEqual([
           translation,
           translation,
           translation,
         ]);
 
-        Matrix4.fromTranslation(
+        const otherTranslation = Matrix4.fromTranslation(
           new Cartesian3(-1.0, 0.0, 0.0),
-          overlay.renderer.modelMatrix,
         );
+        overlay.renderer.setModelMatrix(otherTranslation);
         expect(getModelMatrices()).toEqual([
-          overlay.renderer.modelMatrix,
-          overlay.renderer.modelMatrix,
-          overlay.renderer.modelMatrix,
+          otherTranslation,
+          otherTranslation,
+          otherTranslation,
         ]);
       });
 
@@ -672,16 +675,124 @@ describe(
         const occluder = new OverlayTestPrimitive(shaders);
         occluder.setOverlay(square);
         occluder.renderer.setShownComponents(1 << ComponentType.Face);
-        Matrix4.multiply(
-          Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 1.0)),
-          Matrix4.fromUniformScale(2.0),
-          occluder.renderer.modelMatrix,
+        occluder.renderer.setModelMatrix(
+          Matrix4.multiply(
+            Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 1.0)),
+            Matrix4.fromUniformScale(2.0),
+            new Matrix4(),
+          ),
         );
         scene.primitives.add(occluder);
 
         const overlay = addOutlinedSquare();
 
         expectPixel(overlay, [1.0, 0.0, 0.0], faceColor, 2);
+      });
+    });
+
+    describe("bounding volume", function () {
+      const squareBounds = new AxisAlignedBoundingBox(
+        new Cartesian3(-1.0, -1.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+      );
+
+      function getBoundingVolumes(commands) {
+        return commands.map((command) => command.boundingVolume);
+      }
+
+      it("is undefined without local bounds", function () {
+        const overlay = addSquare();
+
+        expect(overlay.renderer.boundingVolume).toBeUndefined();
+        expect(getBoundingVolumes(renderCommands(overlay))).toEqual([
+          undefined,
+          undefined,
+          undefined,
+        ]);
+      });
+
+      it("fits the local bounds transformed by the model matrix", function () {
+        const overlay = addSquare();
+        overlay.renderer.setLocalBounds(squareBounds);
+        overlay.renderer.setModelMatrix(
+          Matrix4.multiply(
+            Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0)),
+            Matrix4.fromUniformScale(2.0),
+            new Matrix4(),
+          ),
+        );
+
+        expect(overlay.renderer.boundingVolume).toEqual(
+          new OrientedBoundingBox(
+            new Cartesian3(1.0, 2.0, 3.0),
+            Matrix3.fromScale(new Cartesian3(2.0, 2.0, 0.0)),
+          ),
+        );
+      });
+
+      it("is shared by commands created after the bounds are set", function () {
+        const overlay = addSquare();
+        overlay.renderer.outlined = true;
+        overlay.renderer.setLocalBounds(squareBounds);
+
+        const { boundingVolume } = overlay.renderer;
+        const commands = renderCommands(overlay);
+        expect(commands.length).toBe(5);
+        for (const command of commands) {
+          expect(command.boundingVolume).toBe(boundingVolume);
+        }
+      });
+
+      it("is set on existing commands when the bounds are set or cleared", function () {
+        const overlay = addSquare();
+        overlay.renderer.outlined = true;
+        renderCommands(overlay);
+
+        overlay.renderer.setLocalBounds(squareBounds);
+        for (const command of renderCommands(overlay)) {
+          expect(command.boundingVolume).toBe(overlay.renderer.boundingVolume);
+        }
+
+        overlay.renderer.setLocalBounds(undefined);
+        expect(overlay.renderer.boundingVolume).toBeUndefined();
+        expect(getBoundingVolumes(renderCommands(overlay))).toEqual([
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+        ]);
+      });
+
+      it("is updated in place when the model matrix changes", function () {
+        const overlay = addSquare();
+        overlay.renderer.setLocalBounds(squareBounds);
+        const { boundingVolume } = overlay.renderer;
+
+        overlay.renderer.setModelMatrix(
+          Matrix4.fromTranslation(new Cartesian3(5.0, 0.0, 0.0)),
+        );
+
+        expect(overlay.renderer.boundingVolume).toBe(boundingVolume);
+        expect(boundingVolume.center).toEqual(new Cartesian3(5.0, 0.0, 0.0));
+      });
+
+      it("copies the local bounds", function () {
+        const overlay = addSquare();
+        const bounds = AxisAlignedBoundingBox.clone(squareBounds);
+        overlay.renderer.setLocalBounds(bounds);
+
+        bounds.center.x = 10.0;
+        overlay.renderer.setModelMatrix(Matrix4.IDENTITY);
+
+        expect(overlay.renderer.boundingVolume.center).toEqual(Cartesian3.ZERO);
+      });
+
+      it("draws with local bounds", function () {
+        const overlay = addSquare();
+        overlay.renderer.setLocalBounds(squareBounds);
+
+        expectPixel(overlay, [0.5, -0.5, 0.0], faceColor);
       });
     });
 
