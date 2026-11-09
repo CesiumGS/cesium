@@ -29,12 +29,19 @@ class HybridScreenSpacePanCameraController {
     this.angleThreshold = CesiumMath.toRadians(125);
   }
 
+  /**
+   * Determines if the controller is enabled and should be updated by the host scene. Also enables or disables the
+   * {@link HybridScreenSpacePanCameraController#mapController} and {@link HybridScreenSpacePanCameraController#elevatorController}.
+   * @type {boolean}
+   */
   get enabled() {
     return this._enabled;
   }
 
   set enabled(value) {
     this._enabled = value;
+    this._elevatorController.enabled = value;
+    this._mapController.enabled = value;
   }
 
   /**

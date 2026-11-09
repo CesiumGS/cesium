@@ -132,12 +132,17 @@ class ScreenSpaceElevatorCameraController {
     return this._enabled;
   }
   set enabled(value) {
+    if (value === this._enabled) {
+      return;
+    }
     this._enabled = value;
 
     if (value) {
       this._lastUpdateTime = getTimestamp();
       this._panDelta.x = 0;
       this._panDelta.y = 0;
+      this._panVelocity.x = 0;
+      this._panVelocity.y = 0;
     } else if (defined(this._dragInputState)) {
       this._dragInputState.isDragging = false;
     }
