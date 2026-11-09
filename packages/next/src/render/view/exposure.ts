@@ -8,6 +8,9 @@ import {
   adapt,
 } from "../../scene/eye.ts";
 
+/** @internal Rasterizer side: meter reading and adaptation. */
+export type ExposureEngine = Pick<Engine, "requestRender">;
+
 /**
  * How near its meter reading an adapted exposure is settled: the eye's
  * cones and rods (log10 cd/m², about 1%) and automatic exposure (EV). A
@@ -22,7 +25,7 @@ const AUTO_SETTLED = 0.02;
  * automatic exposure and the eye move toward their meter reading
  * (`adaptExposure`).
  */
-export function updateExposure(engine: Engine, view: View): number {
+export function updateExposure(engine: ExposureEngine, view: View): number {
   const e = view.exposure;
   if ("scale" in e) {
     view.exposureScale = e.scale;
@@ -74,7 +77,7 @@ export function updateExposure(engine: Engine, view: View): number {
  * rendered indefinitely (OSM Buildings at the eye's exposure).
  */
 export function adaptExposure(
-  engine: Engine,
+  engine: ExposureEngine,
   view: View,
   average: number | undefined,
   scotopic: number | undefined,

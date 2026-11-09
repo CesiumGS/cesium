@@ -5,9 +5,108 @@ import { resized, grownSize } from "../../scene/MirroredTable.ts";
 import type { Slab } from "../../scene/Slabs.ts";
 import type { World } from "../../scene/World.ts";
 import { pointGroup } from "../../scene/world/points.ts";
+import type { WorldRaster } from "./worldRaster.ts";
+import type { WorldScene } from "../../scene/world/worldScene.ts";
+
+/** @internal Rasterizer side: growing the GPU tables and rebinding them. */
+export interface TableWorld extends Pick<
+  World,
+  | "changedViews"
+  | "clipBuffer"
+  | "ctx"
+  | "hasDraw"
+  | "instanceBuffer"
+  | "instanceGeneration"
+  | "itemBuffer"
+  | "materialBuffer"
+  | "maxDraws"
+  | "maxInstances"
+  | "maxMaterials"
+  | "maxTransforms"
+  | "recordBuffer"
+  | "slabs"
+  | "transformBuffer"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "batchBuffer"
+    | "bundle"
+    | "clipRows"
+    | "clipScratch"
+    | "cullBindGroup"
+    | "cullParams"
+    | "drawArguments"
+    | "drawConstants"
+    | "drawRows"
+    | "freePointCounters"
+    | "imageryPlaceholder"
+    | "imagerySampler"
+    | "imageryView"
+    | "instances"
+    | "materialRows"
+    | "materialsDirty"
+    | "placementTable"
+    | "pointCounts"
+    | "pointCullBindGroup"
+    | "pointDraws"
+    | "pointSetCount"
+    | "splats"
+    | "transforms"
+    | "translucentDraws"
+  >;
+  readonly scene: Pick<WorldScene, "maxClipBlocks">;
+}
+
+/** @internal Rasterizer side: a slab's bindings and the item buffers. */
+export interface SlabBindWorld extends Pick<
+  World,
+  | "clipBuffer"
+  | "ctx"
+  | "itemBuffer"
+  | "materialBuffer"
+  | "recordBuffer"
+  | "slabs"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "drawArguments"
+    | "drawRows"
+    | "imagerySampler"
+    | "imageryView"
+    | "instances"
+    | "placementTable"
+  >;
+}
+
+/** @internal Rasterizer side, growing the scene's arrays with its tables: room for more rows. */
+export interface ReserveWorld extends Pick<World, "maxMaterials"> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "drawConstants"
+    | "drawGeneration"
+    | "drawOwnedTransform"
+    | "materialsF32"
+    | "materialsU32"
+    | "transforms"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "transformAnchor"
+    | "transformGeneration"
+    | "transformHidden"
+    | "transformHiddenWorld"
+    | "transformLive"
+    | "transformLocal"
+    | "transformParent"
+    | "transformPendingFlag"
+    | "transformStamp"
+    | "transformWorld"
+  >;
+}
 
 /** @internal CPU room for draw slots below `count`. */
-export function reserveDraws(world: World, count: number): void {
+export function reserveDraws(world: ReserveWorld, count: number): void {
   if (world.raster.drawConstants.reserve(count)) {
     const rows = world.raster.drawConstants.rows;
     world.raster.drawGeneration = resized(world.raster.drawGeneration, rows);
@@ -20,7 +119,7 @@ export function reserveDraws(world: World, count: number): void {
 }
 
 /** @internal CPU room for transforms below `count`. */
-export function reserveTransforms(world: World, count: number): void {
+export function reserveTransforms(world: ReserveWorld, count: number): void {
   if (world.raster.transforms.reserve(count)) {
     const t = world.raster.transforms.rows;
     world.scene.transformLocal = resized(world.scene.transformLocal, t * 16);
@@ -46,7 +145,7 @@ export function reserveTransforms(world: World, count: number): void {
 }
 
 /** @internal CPU room for materials below `count`. */
-export function reserveMaterials(world: World, count: number): void {
+export function reserveMaterials(world: ReserveWorld, count: number): void {
   const rows = world.raster.materialsF32.byteLength / MATERIAL_SIZE;
   if (count > rows) {
     const data = new ArrayBuffer(
@@ -63,7 +162,7 @@ export function reserveMaterials(world: World, count: number): void {
  * the per-item buffers double (up to `maxInstances`), and what binds them
  * is rebuilt.
  */
-export function growInstances(world: World, count: number): void {
+export function growInstances(world: TableWorld, count: number): void {
   const rows = grownSize(
     world.raster.instances.gpuRows,
     count,
@@ -81,7 +180,7 @@ export function growInstances(world: World, count: number): void {
  * recreated (rewritten every frame or with the bundle), and what binds
  * them is rebuilt.
  */
-export function growDraws(world: World, count: number): void {
+export function growDraws(world: TableWorld, count: number): void {
   const rows = grownSize(world.raster.drawRows, count, world.maxDraws);
   world.raster.drawConstants.growGpu(rows);
   world.recordBuffer = world.raster.drawConstants.buffer;
@@ -94,7 +193,7 @@ export function growDraws(world: World, count: number): void {
 }
 
 /** @internal Room for transforms below `count` on the GPU (copied, rebound). */
-export function growTransforms(world: World, count: number): void {
+export function growTransforms(world: TableWorld, count: number): void {
   world.raster.transforms.growGpu(
     grownSize(world.raster.transforms.gpuRows, count, world.maxTransforms),
   );
@@ -103,7 +202,7 @@ export function growTransforms(world: World, count: number): void {
 }
 
 /** @internal Room for materials below `count` on the GPU (rewritten, rebound). */
-export function growMaterials(world: World, count: number): void {
+export function growMaterials(world: TableWorld, count: number): void {
   world.raster.materialRows = grownSize(
     world.raster.materialRows,
     count,
@@ -121,7 +220,7 @@ export function growMaterials(world: World, count: number): void {
 }
 
 /** @internal Room for clip blocks below `count` on the GPU (copied, rebound). */
-export function growClips(world: World, count: number): void {
+export function growClips(world: TableWorld, count: number): void {
   const rows = grownSize(
     world.raster.clipRows,
     count,
@@ -149,7 +248,7 @@ export function growClips(world: World, count: number): void {
  * @internal Point-draw counters up to `count` (cleared every frame, so the buffer is
  * only recreated), and the point draws' groups that bind it.
  */
-export function growPointSets(world: World, count: number): void {
+export function growPointSets(world: TableWorld, count: number): void {
   if (count <= world.raster.pointSetCount) {
     return;
   }
@@ -172,7 +271,10 @@ export function growPointSets(world: World, count: number): void {
 }
 
 /** The batch table for `rows` batches (their arguments: `drawArguments`). */
-export function createBatchBuffer(world: World, rows: number): GPUBuffer {
+export function createBatchBuffer(
+  world: SlabBindWorld,
+  rows: number,
+): GPUBuffer {
   return world.ctx.device.createBuffer({
     label: "world.batches",
     size: rows * 16,
@@ -181,7 +283,7 @@ export function createBatchBuffer(world: World, rows: number): GPUBuffer {
 }
 
 /** The items and their lists for the current draw and instance rows. */
-function recreateItemBuffers(world: World): void {
+function recreateItemBuffers(world: SlabBindWorld): void {
   const items = world.raster.drawRows + world.raster.instances.gpuRows;
   const { device } = world.ctx;
   world.itemBuffer.destroy();
@@ -198,7 +300,7 @@ function recreateItemBuffers(world: World): void {
  * bundles that baked them (the direct list is rewritten with the
  * batches), and tell outside binders (`tableGeneration`).
  */
-export function tablesReplaced(world: World): void {
+export function tablesReplaced(world: TableWorld): void {
   createCullBindGroup(world);
   createDrawBindGroup(world);
   world.raster.bundle = undefined;
@@ -208,7 +310,7 @@ export function tablesReplaced(world: World): void {
   world.instanceGeneration++;
 }
 
-export function createCullBindGroup(world: World): void {
+export function createCullBindGroup(world: TableWorld): void {
   world.raster.cullBindGroup = world.ctx.device.createBindGroup({
     label: "world.cull",
     layout: world.ctx.pipelines.cullWorldLayout,
@@ -239,7 +341,7 @@ export function createCullBindGroup(world: World): void {
 }
 
 /** Every slab's draw group (the world's tables, the slab's arena). */
-export function createDrawBindGroup(world: World): void {
+export function createDrawBindGroup(world: TableWorld): void {
   for (const slab of world.slabs.slabs) {
     if (slab) {
       createSlabDrawGroup(world, slab);
@@ -247,7 +349,7 @@ export function createDrawBindGroup(world: World): void {
   }
 }
 
-function createSlabDrawGroup(world: World, slab: Slab): void {
+function createSlabDrawGroup(world: SlabBindWorld, slab: Slab): void {
   const buffers = [
     world.recordBuffer,
     world.itemBuffer,
@@ -270,7 +372,7 @@ function createSlabDrawGroup(world: World, slab: Slab): void {
 
 /** Binds a slab's group 1 and index buffer for its batches' draws. */
 export function bindSlab(
-  world: World,
+  world: SlabBindWorld,
   pass: GPURenderPassEncoder | GPURenderBundleEncoder,
   id: number,
 ): void {
@@ -284,7 +386,7 @@ export function bindSlab(
  * point draws in it rebind their arena, bundles are recorded again, and
  * outside binders (point sources, model pools) see `tableGeneration`.
  */
-export function slabReplaced(world: World, slab: Slab): void {
+export function slabReplaced(world: TableWorld, slab: Slab): void {
   if (world.slabs.slabs[slab.id] === slab) {
     // The world's own tables exist once the constructor has made them.
     if (world.recordBuffer) {
@@ -305,12 +407,12 @@ export function slabReplaced(world: World, slab: Slab): void {
   world.instanceGeneration++;
 }
 
-export function rebind(world: World): void {
+export function rebind(world: TableWorld): void {
   tablesReplaced(world);
 }
 
 export function setImageryArray(
-  world: World,
+  world: TableWorld,
   view: GPUTextureView | undefined,
 ): void {
   view ??= world.raster.imageryPlaceholder;

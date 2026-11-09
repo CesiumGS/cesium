@@ -9,6 +9,18 @@ import type { Vec3 } from "../../math/vec3.ts";
 import { type ViewFrame, drawsSky } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+
+/** @internal Rasterizer side: environment probes. */
+export interface EnvironmentEngine extends Pick<
+  Engine,
+  "bodyCamera" | "ctx" | "stats" | "sunDirection"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    "darkProbe" | "probes" | "sky" | "viewBlock" | "viewCityLight"
+  >;
+}
 
 const scratchEnu = m4.mat4();
 const scratchEast = v3.vec3();
@@ -40,7 +52,7 @@ const scratchCartographic: Cartographic = {
  * The environment a view's lighting reads: its atmosphere's (rebuilt by
  * `updateEnvironment`), black without one, or the procedural sky.
  */
-function probeOf(engine: Engine, view: View): EnvironmentProbe {
+function probeOf(engine: EnvironmentEngine, view: View): EnvironmentProbe {
   const environment = engine.ctx.environment;
   if (view.lighting.environment !== "atmosphere") {
     return environment.procedural;
@@ -64,7 +76,7 @@ function probeOf(engine: Engine, view: View): EnvironmentProbe {
  * smallest values). About 10 ms of GPU work each time (plan §4.2: to
  * cut).
  */
-export function updateEnvironment(engine: Engine, view: View): void {
+export function updateEnvironment(engine: EnvironmentEngine, view: View): void {
   if (view.lighting.environment !== "atmosphere" || !view.body.atmosphere) {
     return;
   }
@@ -145,7 +157,7 @@ export function updateEnvironment(engine: Engine, view: View): void {
  * environment for its draws.
  */
 export function encodeEnvironment(
-  engine: Engine,
+  engine: EnvironmentEngine,
   encoder: GPUCommandEncoder,
   view: View,
   frame: ViewFrame,

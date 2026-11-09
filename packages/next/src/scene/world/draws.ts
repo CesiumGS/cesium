@@ -42,6 +42,182 @@ import {
   reserveDraws,
   growInstances,
 } from "../../render/world/tables.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
+
+/** @internal Crosses the sides: changing draw records and batches (rasterizer) with what they name (scene). */
+export interface DrawWorld extends Pick<
+  World,
+  | "acceleration"
+  | "addDraw"
+  | "changedViews"
+  | "ctx"
+  | "flushUploads"
+  | "hasDraw"
+  | "markDirty"
+  | "removeTransform"
+  | "slabs"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "batchList"
+    | "batches"
+    | "bundle"
+    | "drawBatches"
+    | "drawConstants"
+    | "drawGeneration"
+    | "drawOwnedTransform"
+    | "frameComputes"
+    | "freeBatches"
+    | "freePointCounters"
+    | "freeSlots"
+    | "instanceAllocator"
+    | "instanceStreamRanges"
+    | "instances"
+    | "pendingUploads"
+    | "placementTable"
+    | "pointCounts"
+    | "pointDraws"
+    | "recordsF32"
+    | "recordsU32"
+    | "splats"
+    | "transforms"
+    | "translucentDraws"
+    | "uploadChunks"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "contentRevision_"
+    | "drawFeatureFirst"
+    | "drawPlacements"
+    | "featureTables"
+    | "materialReferences"
+    | "meshRanges"
+    | "names"
+    | "nextTableId"
+    | "parameters"
+    | "tableColumns"
+    | "tableIds"
+    | "transformGeneration"
+  >;
+}
+
+/** @internal Crosses the sides: a new draw touches nearly everything, in both. */
+export interface AddDrawWorld extends Pick<
+  World,
+  | "acceleration"
+  | "addAnchor"
+  | "addDraw"
+  | "addTransform"
+  | "changedViews"
+  | "clipBuffer"
+  | "ctx"
+  | "flushUploads"
+  | "hasDraw"
+  | "instanceBuffer"
+  | "instanceGeneration"
+  | "itemBuffer"
+  | "markDirty"
+  | "materialBuffer"
+  | "maxDraws"
+  | "maxInstances"
+  | "maxMaterials"
+  | "maxPointSets"
+  | "maxTransforms"
+  | "recordBuffer"
+  | "removeTransform"
+  | "slabs"
+  | "transformAlive"
+  | "transformBuffer"
+  | "transformsF32Scale"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "batchBuffer"
+    | "batchList"
+    | "batches"
+    | "bundle"
+    | "clipRows"
+    | "clipScratch"
+    | "cullBindGroup"
+    | "cullParams"
+    | "drawArguments"
+    | "drawBatches"
+    | "drawConstants"
+    | "drawCount"
+    | "drawGeneration"
+    | "drawOwnedTransform"
+    | "drawRows"
+    | "frameComputes"
+    | "freeBatches"
+    | "freePointCounters"
+    | "freeSlots"
+    | "imageryPlaceholder"
+    | "imagerySampler"
+    | "imageryView"
+    | "instanceAllocator"
+    | "instanceHighWater"
+    | "instanceStreamRanges"
+    | "instances"
+    | "materialRows"
+    | "materialsDirty"
+    | "materialsF32"
+    | "materialsU32"
+    | "pendingUploads"
+    | "placementTable"
+    | "pointCounts"
+    | "pointCullBindGroup"
+    | "pointDraws"
+    | "pointSetCount"
+    | "recordsF32"
+    | "recordsU32"
+    | "splats"
+    | "transforms"
+    | "translucentDraws"
+    | "uploadChunks"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "anchorPlaceRevision_"
+    | "anchorPlaces"
+    | "anchorSlots"
+    | "bodyAnchors"
+    | "contentRevision_"
+    | "drawFeatureFirst"
+    | "drawPlacements"
+    | "featureRangeDraw"
+    | "featureRangeFirst"
+    | "featureTables"
+    | "materialReferences"
+    | "maxClipBlocks"
+    | "meshRanges"
+    | "names"
+    | "nextFeatureId"
+    | "nextTableId"
+    | "parameters"
+    | "tableColumns"
+    | "tableIds"
+    | "transformAnchor"
+    | "transformChildren"
+    | "transformFrames"
+    | "transformGeneration"
+    | "transformHidden"
+    | "transformHiddenWorld"
+    | "transformLive"
+    | "transformLocal"
+    | "transformParent"
+    | "transformPending"
+    | "transformPendingFlag"
+    | "transformResolve"
+    | "transformRevision_"
+    | "transformStamp"
+    | "transformWorld"
+  >;
+}
 
 const ZERO = Float64Array.of(0, 0, 0);
 
@@ -51,7 +227,7 @@ const ZERO = Float64Array.of(0, 0, 0);
  * are its set's list (cull.slang `writePointArgs`).
  */
 function batchFor(
-  world: World,
+  world: DrawWorld,
   f: {
     mesh: Batch["mesh"];
     material: number;
@@ -106,7 +282,7 @@ function batchFor(
   return batch;
 }
 
-export function addDraw(world: World, options: DrawOptions): DrawHandle {
+export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
   // Checked before anything is allocated.
   if (options.parent && options.transform) {
     throw new Error(
@@ -447,7 +623,7 @@ export function addDraw(world: World, options: DrawOptions): DrawHandle {
 }
 
 export function setDrawShader(
-  world: World,
+  world: DrawWorld,
   handle: DrawHandle,
   shader: CustomShader | undefined,
 ): void {
@@ -517,7 +693,7 @@ export function setDrawShader(
 }
 
 export function setDrawMaterial(
-  world: World,
+  world: DrawWorld,
   handle: DrawHandle,
   material: number,
 ): void {
@@ -583,7 +759,7 @@ export function setDrawMaterial(
 }
 
 export function twinDraw(
-  world: World,
+  world: DrawWorld,
   source: DrawHandle,
 ): DrawHandle | undefined {
   if (!world.hasDraw(source)) {
@@ -622,7 +798,7 @@ export function twinDraw(
   });
 }
 
-export function removeDraw(world: World, handle: DrawHandle): void {
+export function removeDraw(world: DrawWorld, handle: DrawHandle): void {
   if (!world.hasDraw(handle)) {
     return; // already removed
   }
@@ -686,7 +862,11 @@ export function removeDraw(world: World, handle: DrawHandle): void {
   world.markDirty(handle.index);
 }
 
-function releaseInstances(world: World, first: number, count: number): void {
+function releaseInstances(
+  world: DrawWorld,
+  first: number,
+  count: number,
+): void {
   for (let k = first; k < first + count; k++) {
     world.raster.instances.u32[k * INSTANCE_WORDS + 12] = NO_RECORD;
     world.raster.instances.mark(k);
@@ -695,7 +875,7 @@ function releaseInstances(world: World, first: number, count: number): void {
   world.version++;
 }
 
-function releaseOwnedTransform(world: World, draw: number): void {
+function releaseOwnedTransform(world: DrawWorld, draw: number): void {
   const owned = world.raster.drawOwnedTransform[draw]!;
   if (owned >= 0) {
     world.raster.drawOwnedTransform[draw] = -1;
@@ -707,7 +887,7 @@ function releaseOwnedTransform(world: World, draw: number): void {
 }
 
 export function setInstance(
-  world: World,
+  world: DrawWorld,
   handle: DrawHandle,
   instance: number,
   change: {
@@ -753,7 +933,7 @@ export function setInstance(
 }
 
 export function setInstanceStreams(
-  world: World,
+  world: DrawWorld,
   handle: DrawHandle,
   firstInstance: number,
   data: Float32Array | Uint32Array,

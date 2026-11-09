@@ -5,13 +5,18 @@ import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { UniformDeclaration } from "../uniforms.ts";
 import type { DrawHandle, PointDraw } from "./types.ts";
 
+/** @internal Rasterizer side: point draws' cull parameters and splats. */
+export interface PointWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
+  readonly raster: Pick<WorldRaster, "pointCounts" | "pointDraws" | "splats">;
+}
+
 /** A point draw's cull parameters (pointCull.slang `PointCull`). */
 export const POINT_CULL_BYTES = 48;
 /** Pixels past a view's edges a point's symbol may reach. */
 const POINT_MARGIN = 64;
 
 export function setPointCuller(
-  world: World,
+  world: PointWorld,
   handle: DrawHandle,
   culler: PointCuller | undefined,
   tiny = 0,
@@ -26,7 +31,7 @@ export function setPointCuller(
 }
 
 export function createPointCuller(
-  world: World,
+  world: PointWorld,
   options: {
     code: string;
     uniforms: Record<string, UniformDeclaration>;
@@ -37,7 +42,7 @@ export function createPointCuller(
 }
 
 /** A point draw's group 2 (pointCull.slang), its splats the current ones. */
-export function pointGroup(world: World, draw: PointDraw): GPUBindGroup {
+export function pointGroup(world: PointWorld, draw: PointDraw): GPUBindGroup {
   return world.ctx.device.createBindGroup({
     label: "world.pointCull",
     layout: world.ctx.pipelines.pointCullLayout,
@@ -54,7 +59,7 @@ export function pointGroup(world: World, draw: PointDraw): GPUBindGroup {
 
 /** Splat buffers for `pixels` (a word each), and the resolve's group. */
 export function createSplats(
-  world: World,
+  world: PointWorld,
   pixels: number,
 ): WorldRaster["splats"] {
   const { device } = world.ctx;
@@ -85,7 +90,7 @@ export function createSplats(
 
 /** A point draw's `PointCull` parameters. */
 export function writePointParams(
-  world: World,
+  world: PointWorld,
   draw: PointDraw,
   record: number,
 ): void {
@@ -106,7 +111,10 @@ export function writePointParams(
   world.ctx.device.queue.writeBuffer(draw.params, 0, data);
 }
 
-export function drawSplats(world: World, pass: GPURenderPassEncoder): void {
+export function drawSplats(
+  world: PointWorld,
+  pass: GPURenderPassEncoder,
+): void {
   if (![...world.raster.pointDraws.values()].some((d) => d.tiny > 0)) {
     return;
   }

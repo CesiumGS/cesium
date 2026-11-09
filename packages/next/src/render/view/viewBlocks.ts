@@ -27,6 +27,48 @@ import {
 } from "../../scene/lights.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
 import { writeViewShadows } from "./shadowBlocks.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+import type { EngineScene } from "../../scene/engineScene.ts";
+
+/** @internal Rasterizer side, reading the scene's anchors: a view's uniform blocks. */
+export interface ViewBlockEngine extends Pick<
+  Engine,
+  | "bodyCamera"
+  | "ctx"
+  | "icrfToFixed"
+  | "moonAxes"
+  | "moonPosition"
+  | "reportFarAnchors"
+  | "requestRender"
+  | "sunDirection"
+  | "tilesets"
+  | "viewBit"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "captures"
+    | "cascadeData"
+    | "cascadeDataU32"
+    | "cascadeStaging"
+    | "cascades"
+    | "cityLightPlaces"
+    | "cityLightRead"
+    | "cityLightSeen"
+    | "cityLights"
+    | "frameNumber"
+    | "lightData"
+    | "lightStaging"
+    | "shadowData"
+    | "sky"
+    | "viewBlock"
+    | "viewCityLight"
+    | "viewData"
+    | "viewDataU32"
+    | "viewFrames"
+    | "viewStaging"
+  >;
+  readonly scene: Pick<EngineScene, "anchorEyes" | "startTime">;
+}
 
 /**
  * The stars as the eye sees them against a dark sky, EV100 (sky.slang
@@ -52,7 +94,7 @@ const scratchCartographic: Cartographic = {
  * the environment's ground; 0 without them or `View.cityLights`. Read
  * again as the camera moves half a kilometer, or a tile arrives.
  */
-function cityLightAt(engine: Engine, view: View): number {
+function cityLightAt(engine: ViewBlockEngine, view: View): number {
   if (!view.cityLights) {
     return 0;
   }
@@ -111,7 +153,7 @@ function cityLightAt(engine: Engine, view: View): number {
  * its slot of the staging buffer (copied in before its opaque pass).
  */
 function writeLights(
-  engine: Engine,
+  engine: ViewBlockEngine,
   view: View,
   index: number,
   aspect: number,
@@ -146,7 +188,7 @@ function writeLights(
 }
 
 export function writeView(
-  engine: Engine,
+  engine: ViewBlockEngine,
   view: View,
   index: number,
   rect: Readonly<PixelRect>,

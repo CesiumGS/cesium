@@ -1,12 +1,18 @@
 // A world's upload queue: writes into its slabs, gathered and flushed in chunks.
 import type { World } from "../World.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+
+/** @internal Rasterizer side: the upload queue. */
+export interface UploadWorld extends Pick<World, "ctx"> {
+  readonly raster: Pick<WorldRaster, "pendingUploads" | "uploadChunks">;
+}
 
 /** Smallest staging buffer for queued uploads. */
 const UPLOAD_CHUNK_BYTES = 1 << 20;
 
 /** @internal Queues a write of `data` at `offset` in `target` (`flushUploads`). */
 export function queueUpload(
-  world: World,
+  world: UploadWorld,
   target: GPUBuffer,
   offset: number,
   data: Float32Array | Uint32Array,
@@ -41,7 +47,7 @@ export function queueUpload(
   chunk.used += size;
 }
 
-export function flushUploads(world: World): void {
+export function flushUploads(world: UploadWorld): void {
   if (world.raster.pendingUploads.length === 0) {
     return;
   }

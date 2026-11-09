@@ -24,6 +24,34 @@ import {
   SHADOWS_STRIDE,
 } from "../../scene/shadows.ts";
 import { rotateVector } from "../../scene/tileSelection.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+import type { EngineScene } from "../../scene/engineScene.ts";
+
+/** @internal Rasterizer side: the shadow cascades' and height captures' blocks. */
+export interface ShadowBlockEngine extends Pick<
+  Engine,
+  | "bodyCamera"
+  | "ctx"
+  | "icrfToFixed"
+  | "moonAxes"
+  | "moonPosition"
+  | "sunDirection"
+  | "viewBit"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "captures"
+    | "cascadeData"
+    | "cascadeDataU32"
+    | "cascadeStaging"
+    | "cascades"
+    | "frameNumber"
+    | "shadowData"
+    | "viewBlock"
+    | "viewFrames"
+  >;
+  readonly scene: Pick<EngineScene, "anchorEyes">;
+}
 
 const scratchCaptureAnchor = new Float64Array(16);
 const scratchCaptureOrigin = v3.vec3();
@@ -52,7 +80,7 @@ const scratchSelectionBody = new Float64Array(16);
  * the capture's square, its culling box, and View.time.y 1: ground
  * only), drawn by `view` (the `height-captures` pass).
  */
-function writeCaptures(engine: Engine, view: View): void {
+function writeCaptures(engine: ShadowBlockEngine, view: View): void {
   const block = engine.raster.viewBlock;
   const bodyCamera = engine.bodyCamera(view);
   const camera = bodyCamera.position;
@@ -132,7 +160,7 @@ function writeCaptures(engine: Engine, view: View): void {
 
 /** @internal */
 export function writeViewShadows(
-  engine: Engine,
+  engine: ShadowBlockEngine,
   view: View,
   index: number,
   aspect: number,

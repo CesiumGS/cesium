@@ -21,6 +21,143 @@ import {
   reserveTransforms,
   growTransforms,
 } from "../../render/world/tables.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
+
+/** @internal Scene side, growing the rasterizer's transform table: adding and removing transforms and anchors. */
+export interface TransformWorld extends Pick<
+  World,
+  | "addAnchor"
+  | "addTransform"
+  | "changedViews"
+  | "clipBuffer"
+  | "ctx"
+  | "hasDraw"
+  | "instanceBuffer"
+  | "instanceGeneration"
+  | "itemBuffer"
+  | "materialBuffer"
+  | "maxDraws"
+  | "maxInstances"
+  | "maxMaterials"
+  | "maxTransforms"
+  | "recordBuffer"
+  | "slabs"
+  | "transformAlive"
+  | "transformBuffer"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "batchBuffer"
+    | "bundle"
+    | "clipRows"
+    | "clipScratch"
+    | "cullBindGroup"
+    | "cullParams"
+    | "drawArguments"
+    | "drawConstants"
+    | "drawGeneration"
+    | "drawOwnedTransform"
+    | "drawRows"
+    | "freePointCounters"
+    | "imageryPlaceholder"
+    | "imagerySampler"
+    | "imageryView"
+    | "instances"
+    | "materialRows"
+    | "materialsDirty"
+    | "materialsF32"
+    | "materialsU32"
+    | "placementTable"
+    | "pointCounts"
+    | "pointCullBindGroup"
+    | "pointDraws"
+    | "pointSetCount"
+    | "recordsU32"
+    | "splats"
+    | "transforms"
+    | "translucentDraws"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "anchorList"
+    | "anchorPlaceRevision_"
+    | "anchorPlaces"
+    | "anchorRemovals_"
+    | "anchorSlots"
+    | "bodyAnchors"
+    | "freeTransforms"
+    | "maxClipBlocks"
+    | "transformAnchor"
+    | "transformChildren"
+    | "transformCount"
+    | "transformFrames"
+    | "transformGeneration"
+    | "transformHidden"
+    | "transformHiddenWorld"
+    | "transformLive"
+    | "transformLocal"
+    | "transformParent"
+    | "transformPending"
+    | "transformPendingFlag"
+    | "transformResolve"
+    | "transformRevision_"
+    | "transformStamp"
+    | "transformWorld"
+  >;
+}
+
+/** @internal Scene side, writing the rasterizer's transform table: moving transforms and resolving the tree. */
+export interface ResolveWorld extends Pick<
+  World,
+  | "addAnchor"
+  | "changedViews"
+  | "ctx"
+  | "hasDraw"
+  | "transformAlive"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    "recordsU32" | "transforms" | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "anchorPlaceRevision_"
+    | "anchorPlaces"
+    | "anchorSlots"
+    | "bodyAnchors"
+    | "transformAnchor"
+    | "transformChildren"
+    | "transformFrames"
+    | "transformGeneration"
+    | "transformHidden"
+    | "transformHiddenWorld"
+    | "transformLive"
+    | "transformLocal"
+    | "transformParent"
+    | "transformPending"
+    | "transformPendingFlag"
+    | "transformResolve"
+    | "transformRevision_"
+    | "transformStamp"
+    | "transformWorld"
+  >;
+}
+
+/** @internal Scene side: looking up anchors and reference frames. */
+export interface AnchorWorld extends Pick<
+  World,
+  "addAnchor" | "hasDraw" | "transformAlive"
+> {
+  readonly raster: Pick<WorldRaster, "recordsU32">;
+  readonly scene: Pick<
+    WorldScene,
+    "anchorSlots" | "bodyAnchors" | "transformAnchor"
+  >;
+}
 
 export const IDENTITY = Float64Array.of(
   1,
@@ -66,7 +203,7 @@ function multiplyInto(
 }
 
 export function addTransform(
-  world: World,
+  world: TransformWorld,
   matrix: ArrayLike<number>,
   parent?: TransformHandle,
 ): TransformHandle {
@@ -99,7 +236,7 @@ export function addTransform(
 }
 
 export function setTransform(
-  world: World,
+  world: ResolveWorld,
   handle: TransformHandle,
   matrix: ArrayLike<number>,
 ): void {
@@ -119,7 +256,7 @@ export function setTransform(
 }
 
 export function setTransformVisible(
-  world: World,
+  world: ResolveWorld,
   handle: TransformHandle,
   visible: boolean,
 ): void {
@@ -135,7 +272,7 @@ export function setTransformVisible(
 }
 
 export function localMatrix(
-  world: World,
+  world: ResolveWorld,
   handle: TransformHandle,
   out = new Float64Array(16),
 ): Float64Array {
@@ -149,7 +286,7 @@ export function localMatrix(
 }
 
 export function worldMatrix(
-  world: World,
+  world: ResolveWorld,
   handle: TransformHandle,
   out = new Float64Array(16),
 ): Float64Array {
@@ -164,7 +301,7 @@ export function worldMatrix(
 }
 
 export function drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
-  world: World,
+  world: ResolveWorld,
   handle: DrawHandle,
   out: T = new Float64Array(16) as T,
 ): T | undefined {
@@ -178,7 +315,10 @@ export function drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
   return out;
 }
 
-export function removeTransform(world: World, handle: TransformHandle): void {
+export function removeTransform(
+  world: TransformWorld,
+  handle: TransformHandle,
+): void {
   if (!world.transformAlive(handle)) {
     return;
   }
@@ -200,14 +340,17 @@ export function removeTransform(world: World, handle: TransformHandle): void {
   freeTransformTree(world, index);
 }
 
-export function transformAlive(world: World, handle: TransformHandle): boolean {
+export function transformAlive(
+  world: ResolveWorld,
+  handle: TransformHandle,
+): boolean {
   return (
     world.scene.transformLive[handle.index] === 1 &&
     world.scene.transformGeneration[handle.index] === handle.generation
   );
 }
 
-function freeTransformTree(world: World, index: number): void {
+function freeTransformTree(world: TransformWorld, index: number): void {
   world.scene.transformRevision_++;
   for (const child of world.scene.transformChildren[index] ?? []) {
     freeTransformTree(world, child);
@@ -223,7 +366,7 @@ function freeTransformTree(world: World, index: number): void {
 }
 
 export function addAnchor(
-  world: World,
+  world: TransformWorld,
   name: string,
   options: { body?: Body } = {},
 ): AnchorHandle {
@@ -259,7 +402,7 @@ export function addAnchor(
   return anchor;
 }
 
-export function bodyAnchor(world: World, body: Body): AnchorHandle {
+export function bodyAnchor(world: AnchorWorld, body: Body): AnchorHandle {
   return (
     world.scene.bodyAnchors.get(bodyKey(body)) ??
     world.addAnchor(body.name, { body })
@@ -267,14 +410,14 @@ export function bodyAnchor(world: World, body: Body): AnchorHandle {
 }
 
 export function findBodyAnchor(
-  world: World,
+  world: AnchorWorld,
   key: string,
 ): AnchorHandle | undefined {
   return world.scene.bodyAnchors.get(key);
 }
 
 export function anchorOf(
-  world: World,
+  world: AnchorWorld,
   handle: TransformHandle,
 ): AnchorHandle | undefined {
   if (!world.transformAlive(handle)) {
@@ -284,7 +427,7 @@ export function anchorOf(
 }
 
 export function drawAnchor(
-  world: World,
+  world: AnchorWorld,
   handle: DrawHandle,
 ): AnchorHandle | undefined {
   if (!world.hasDraw(handle)) {
@@ -296,7 +439,7 @@ export function drawAnchor(
 }
 
 export function placeAnchor(
-  world: World,
+  world: ResolveWorld,
   anchor: AnchorHandle,
   matrix: ArrayLike<number>,
 ): void {
@@ -317,7 +460,7 @@ export function placeAnchor(
 }
 
 export function anchorMatrix(
-  world: World,
+  world: ResolveWorld,
   anchor: AnchorHandle,
   out = new Float64Array(16),
 ): Float64Array {
@@ -328,7 +471,10 @@ export function anchorMatrix(
   return out;
 }
 
-export function removeAnchor(world: World, anchor: AnchorHandle): void {
+export function removeAnchor(
+  world: TransformWorld,
+  anchor: AnchorHandle,
+): void {
   if (
     !world.transformAlive(anchor) ||
     world.scene.anchorSlots[anchor.slot] !== anchor
@@ -383,7 +529,7 @@ export function frameOf(
 
 /** The anchor at a transform slot, if that transform is one. */
 export function anchorAt(
-  world: World,
+  world: AnchorWorld,
   index: number,
 ): AnchorHandle | undefined {
   const anchor = world.scene.anchorSlots[world.scene.transformAnchor[index]!];
@@ -391,7 +537,7 @@ export function anchorAt(
 }
 
 export function checkAnchor(
-  world: World,
+  world: AnchorWorld,
   anchor: AnchorHandle,
   caller: string,
 ): void {
@@ -405,7 +551,7 @@ export function checkAnchor(
   }
 }
 
-function pendTransform(world: World, index: number): void {
+function pendTransform(world: ResolveWorld, index: number): void {
   if (world.scene.transformPendingFlag[index] === 0) {
     world.scene.transformPendingFlag[index] = 1;
     world.scene.transformPending.push(index);
@@ -414,7 +560,7 @@ function pendTransform(world: World, index: number): void {
 }
 
 /** Composes changed transforms and their descendants, parents first. */
-export function resolveTransforms(world: World): void {
+export function resolveTransforms(world: ResolveWorld): void {
   if (world.scene.transformPending.length === 0) {
     return;
   }
@@ -444,7 +590,11 @@ export function resolveTransforms(world: World): void {
   world.scene.transformPending.length = 0;
 }
 
-function composeTransform(owner: World, index: number, stamp: number): void {
+function composeTransform(
+  owner: ResolveWorld,
+  index: number,
+  stamp: number,
+): void {
   owner.scene.transformStamp[index] = stamp;
   const parent = owner.scene.transformParent[index]!;
   const world = owner.scene.transformWorld;

@@ -21,6 +21,29 @@ import {
 } from "./featureTables.ts";
 import type { MeshHandle, PointMesh } from "./types.ts";
 import { queueUpload } from "./uploads.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
+
+/** @internal Scene side: geometry into the world's slabs. */
+export interface MeshWorld extends Pick<
+  World,
+  "changedViews" | "ctx" | "flushUploads" | "slabs" | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "drawConstants"
+    | "frameComputes"
+    | "instances"
+    | "pendingUploads"
+    | "transforms"
+    | "uploadChunks"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    "meshRanges" | "nextMeshId" | "nextTableId" | "tableColumns" | "tableIds"
+  >;
+}
 
 /** Ritter-style bounding sphere around the AABB center, tightened by a pass. */
 function boundingSphere(positions: Float32Array): {
@@ -58,7 +81,7 @@ function align4(bytes: number): number {
   return Math.ceil(bytes / 4) * 4;
 }
 
-export function addMesh(world: World, mesh: MeshData): MeshHandle {
+export function addMesh(world: MeshWorld, mesh: MeshData): MeshHandle {
   const vertexCount = mesh.positions.length / 3;
   const vertexRanges: Array<[number, number]> = [];
   // One slab holds all of it (and its draws' instance streams later):
@@ -228,7 +251,7 @@ export function addMesh(world: World, mesh: MeshData): MeshHandle {
 }
 
 export function addPointMesh(
-  world: World,
+  world: MeshWorld,
   capacity: number,
   streams?: {
     stride: number;
@@ -322,7 +345,7 @@ export function addPointMesh(
 }
 
 export function setPointProperties(
-  world: World,
+  world: MeshWorld,
   mesh: PointMesh,
   first: number,
   data: Float32Array | Uint32Array,
@@ -348,7 +371,7 @@ export function setPointProperties(
   world.changedViews = ALL_VIEWS;
 }
 
-export function removeMesh(world: World, mesh: MeshHandle): number {
+export function removeMesh(world: MeshWorld, mesh: MeshHandle): number {
   const ranges = world.scene.meshRanges.get(mesh.id);
   if (!ranges) {
     return 0;

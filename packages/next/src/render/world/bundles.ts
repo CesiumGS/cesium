@@ -27,8 +27,183 @@ import {
 } from "../../scene/world/points.ts";
 import { resolveTransforms } from "../../scene/world/transforms.ts";
 import type { Batch } from "../../scene/world/types.ts";
+import type { WorldRaster } from "./worldRaster.ts";
+import type { WorldScene } from "../../scene/world/worldScene.ts";
 
-export function prepareFrame(world: World): GPURenderBundle {
+/** @internal Rasterizer side: recording bundles and encoding translucent draws. */
+export interface BundleWorld extends Pick<
+  World,
+  | "clipBuffer"
+  | "ctx"
+  | "itemBuffer"
+  | "materialBuffer"
+  | "recordBuffer"
+  | "shaderReady"
+  | "slabs"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "_submission"
+    | "batchList"
+    | "brokenTextureSets"
+    | "bundle"
+    | "casters"
+    | "castersFor"
+    | "depthBundle_"
+    | "depthFor"
+    | "drawArguments"
+    | "drawBatches"
+    | "drawCount"
+    | "drawRows"
+    | "heights"
+    | "heightsFor"
+    | "imagerySampler"
+    | "imageryView"
+    | "instances"
+    | "materialsU32"
+    | "placementTable"
+    | "prepassBundle_"
+    | "prepassFor"
+    | "recordsF32"
+    | "recordsU32"
+    | "shaderGroups"
+    | "textureSetEntries"
+    | "textureSets"
+    | "transforms"
+    | "translucentDraws"
+  >;
+  readonly scene: Pick<WorldScene, "transformHiddenWorld" | "transformWorld">;
+}
+
+/** @internal Rasterizer side: writing the batch table and encoding the cull. */
+export interface CullWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "batchBuffer"
+    | "batchList"
+    | "cullBindGroup"
+    | "cullPassDesc"
+    | "drawArguments"
+    | "drawBatches"
+    | "drawConstants"
+    | "drawCount"
+    | "drawRows"
+    | "frameComputes"
+    | "instanceHighWater"
+    | "instances"
+    | "pendingUploads"
+    | "pointCounts"
+    | "pointCullBindGroup"
+    | "pointDraws"
+    | "recordsU32"
+    | "splats"
+    | "transforms"
+    | "uploadChunks"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    "meshRanges" | "nextTableId" | "tableColumns" | "tableIds"
+  >;
+}
+
+/** @internal Rasterizer side, resolving the scene's transforms first: one tick's preparation of the tables. */
+export interface PrepareWorld extends Pick<
+  World,
+  | "addAnchor"
+  | "changedViews"
+  | "clipBuffer"
+  | "ctx"
+  | "flushUploads"
+  | "hasDraw"
+  | "itemBuffer"
+  | "materialBuffer"
+  | "recordBuffer"
+  | "shaderReady"
+  | "slabs"
+  | "transformAlive"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "_submission"
+    | "batchBuffer"
+    | "batchList"
+    | "batchesShownChanged"
+    | "bindingsGeneration"
+    | "brokenTextureSets"
+    | "bundle"
+    | "casters"
+    | "castersFor"
+    | "cullBindGroup"
+    | "cullParams"
+    | "cullParamsData"
+    | "cullPassDesc"
+    | "depthBundle_"
+    | "depthFor"
+    | "drawArguments"
+    | "drawBatches"
+    | "drawConstants"
+    | "drawCount"
+    | "drawRows"
+    | "frameComputes"
+    | "heights"
+    | "heightsFor"
+    | "imagerySampler"
+    | "imageryView"
+    | "instanceHighWater"
+    | "instances"
+    | "materialsDirty"
+    | "materialsF32"
+    | "materialsU32"
+    | "pendingUploads"
+    | "placementTable"
+    | "pointCounts"
+    | "pointCullBindGroup"
+    | "pointDraws"
+    | "prepassBundle_"
+    | "prepassFor"
+    | "recordsF32"
+    | "recordsU32"
+    | "shaderGroups"
+    | "splats"
+    | "textureSetEntries"
+    | "textureSets"
+    | "transforms"
+    | "translucentDraws"
+    | "uploadChunks"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "anchorPlaceRevision_"
+    | "anchorPlaces"
+    | "anchorSlots"
+    | "bodyAnchors"
+    | "materialCount"
+    | "meshRanges"
+    | "nextTableId"
+    | "tableColumns"
+    | "tableIds"
+    | "transformAnchor"
+    | "transformChildren"
+    | "transformFrames"
+    | "transformGeneration"
+    | "transformHidden"
+    | "transformHiddenWorld"
+    | "transformLive"
+    | "transformLocal"
+    | "transformParent"
+    | "transformPending"
+    | "transformPendingFlag"
+    | "transformResolve"
+    | "transformRevision_"
+    | "transformStamp"
+    | "transformWorld"
+  >;
+}
+
+export function prepareFrame(world: PrepareWorld): GPURenderBundle {
   const queue = world.ctx.device.queue;
   world.flushUploads();
   resolveTransforms(world);
@@ -66,7 +241,7 @@ export function prepareFrame(world: World): GPURenderBundle {
   return world.raster.bundle;
 }
 
-export function shadowBundle(world: World): GPURenderBundle {
+export function shadowBundle(world: BundleWorld): GPURenderBundle {
   if (
     !world.raster.casters ||
     world.raster.castersFor !== world.raster.bundle
@@ -77,7 +252,7 @@ export function shadowBundle(world: World): GPURenderBundle {
   return world.raster.casters;
 }
 
-export function heightBundle(world: World): GPURenderBundle {
+export function heightBundle(world: BundleWorld): GPURenderBundle {
   if (
     !world.raster.heights ||
     world.raster.heightsFor !== world.raster.bundle
@@ -88,7 +263,7 @@ export function heightBundle(world: World): GPURenderBundle {
   return world.raster.heights;
 }
 
-export function prepassBundle(world: World): GPURenderBundle {
+export function prepassBundle(world: BundleWorld): GPURenderBundle {
   if (
     !world.raster.prepassBundle_ ||
     world.raster.prepassFor !== world.raster.bundle
@@ -99,7 +274,7 @@ export function prepassBundle(world: World): GPURenderBundle {
   return world.raster.prepassBundle_;
 }
 
-export function depthBundle(world: World): GPURenderBundle {
+export function depthBundle(world: BundleWorld): GPURenderBundle {
   if (
     !world.raster.depthBundle_ ||
     world.raster.depthFor !== world.raster.bundle
@@ -111,7 +286,7 @@ export function depthBundle(world: World): GPURenderBundle {
 }
 
 export function encodeCull(
-  world: World,
+  world: CullWorld,
   encoder: GPUCommandEncoder,
   timestampWrites?: GPUComputePassTimestampWrites,
   points = true,
@@ -184,7 +359,7 @@ export function encodeCull(
 }
 
 /** Assigns each batch its slice of the item list and uploads the batch table. */
-function writeBatches(world: World): void {
+function writeBatches(world: CullWorld): void {
   const table = new Uint32Array(Math.max(1, world.raster.batchList.length) * 4);
   let items = 0;
   for (const batch of world.raster.batchList) {
@@ -232,7 +407,7 @@ function writeBatches(world: World): void {
  * pass's, or the sun's shadow casters' (depth only; no lines).
  */
 export function recordBundle(
-  world: World,
+  world: BundleWorld,
   kind: "opaque" | "shadow" | "height" | "prepass" | "depth" = "opaque",
 ): GPURenderBundle {
   const { device, targets, currentViewBindGroup } = world.ctx;
@@ -377,7 +552,7 @@ export function recordBundle(
  * engine's (then recorded again when it is ready).
  */
 function batchPipeline(
-  world: World,
+  world: BundleWorld,
   batch: Batch,
   key: SurfaceKey,
 ): GPURenderPipeline {
@@ -393,7 +568,7 @@ function batchPipeline(
  * pipeline (not the engine's stand-in) and uniforms, beside the shader's.
  */
 function setGroup(
-  world: World,
+  world: BundleWorld,
   batch: Batch,
   pipeline: GPURenderPipeline,
   key: SurfaceKey,
@@ -435,7 +610,7 @@ function setGroup(
 }
 
 /** A batch of blended triangles (alpha mode "BLEND"); lines stay opaque. */
-function translucent(world: World, batch: Batch): boolean {
+function translucent(world: BundleWorld, batch: Batch): boolean {
   return (
     batch.mesh.topology !== "line-list" &&
     (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
@@ -445,7 +620,7 @@ function translucent(world: World, batch: Batch): boolean {
 }
 
 export function translucentRange(
-  owner: World,
+  owner: BundleWorld,
   eye: ArrayLike<number>,
   viewBit: number = ALL_VIEWS,
 ): { near: number; far: number } | undefined {
@@ -530,7 +705,7 @@ export function translucentRange(
 }
 
 export function encodeTranslucent(
-  world: World,
+  world: BundleWorld,
   pass: GPURenderPassEncoder,
   keyOf: (doubleSided: boolean) => SurfaceKey,
   group: GPUBindGroup,

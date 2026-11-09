@@ -21,6 +21,28 @@ import {
   type FittedOperation,
 } from "../placement.ts";
 import type { ParameterSlot, DrawHandle } from "./types.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
+
+/** @internal Scene side, writing the rasterizer's placement table and records. */
+export interface PlacementWorld extends Pick<
+  World,
+  "changedViews" | "hasDraw" | "markDirty" | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "drawBatches"
+    | "drawConstants"
+    | "placementTable"
+    | "recordsF32"
+    | "recordsU32"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    "contentRevision_" | "drawPlacements" | "meshRanges" | "parameters"
+  >;
+}
 
 /** The parameters a placement reads. */
 function parametersOf(placement: Placement): PlacementParameter[] {
@@ -30,7 +52,7 @@ function parametersOf(placement: Placement): PlacementParameter[] {
 }
 
 export function createPlacementParameter(
-  world: World,
+  world: PlacementWorld,
   value: number,
 ): PlacementParameter {
   checkParameterValue("createPlacementParameter", value);
@@ -62,7 +84,7 @@ export function createPlacementParameter(
 }
 
 export function setPlacement(
-  world: World,
+  world: PlacementWorld,
   handle: DrawHandle,
   placement: Placement | undefined,
 ): void {
@@ -147,7 +169,7 @@ export function setPlacement(
 }
 
 export function drawPlacement(
-  world: World,
+  world: PlacementWorld,
   handle: DrawHandle,
 ): Placement | undefined {
   return world.hasDraw(handle)
@@ -157,7 +179,7 @@ export function drawPlacement(
 
 /** A parameter changed: its float, and its draws' bounds and views. */
 function parameterChanged(
-  world: World,
+  world: PlacementWorld,
   slot: ParameterSlot,
   old: number,
   value: number,
@@ -205,7 +227,7 @@ function parameterChanged(
 }
 
 /** Frees a draw's placement block and its parameters' links to it. */
-export function releasePlacement(world: World, index: number): void {
+export function releasePlacement(world: PlacementWorld, index: number): void {
   const placed = world.scene.drawPlacements[index];
   if (!placed) {
     return;
@@ -223,7 +245,7 @@ export function releasePlacement(world: World, index: number): void {
  * the operation's center over its scale.
  */
 function placementReach(
-  world: World,
+  world: PlacementWorld,
   index: number,
   placement: Placement,
   radius: number,
@@ -251,7 +273,7 @@ function placementReach(
 }
 
 export function releasePlacementParameter(
-  world: World,
+  world: PlacementWorld,
   parameter: PlacementParameter,
 ): void {
   const slot = world.scene.parameters.get(parameter);

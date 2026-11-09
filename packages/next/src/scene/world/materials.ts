@@ -13,8 +13,106 @@ import { CapacityError } from "../CapacityError.ts";
 import type { World } from "../World.ts";
 import type { MaterialOptions, TextureSetOptions } from "./types.ts";
 import { reserveMaterials, growMaterials } from "../../render/world/tables.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
 
-export function addMaterial(world: World, options: MaterialOptions): number {
+/** @internal Crosses the sides: material keys (scene) with the material table (rasterizer). */
+export interface MaterialWorld extends Pick<
+  World,
+  | "changedViews"
+  | "clipBuffer"
+  | "ctx"
+  | "hasDraw"
+  | "instanceBuffer"
+  | "instanceGeneration"
+  | "itemBuffer"
+  | "materialBuffer"
+  | "maxDraws"
+  | "maxInstances"
+  | "maxMaterials"
+  | "maxTransforms"
+  | "recordBuffer"
+  | "slabs"
+  | "transformBuffer"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "batchBuffer"
+    | "bundle"
+    | "clipRows"
+    | "clipScratch"
+    | "cullBindGroup"
+    | "cullParams"
+    | "drawArguments"
+    | "drawConstants"
+    | "drawGeneration"
+    | "drawOwnedTransform"
+    | "drawRows"
+    | "freePointCounters"
+    | "imageryPlaceholder"
+    | "imagerySampler"
+    | "imageryView"
+    | "instances"
+    | "materialRows"
+    | "materialsDirty"
+    | "materialsF32"
+    | "materialsU32"
+    | "placementTable"
+    | "pointCounts"
+    | "pointCullBindGroup"
+    | "pointDraws"
+    | "pointSetCount"
+    | "splats"
+    | "transforms"
+    | "translucentDraws"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "freeMaterials"
+    | "materialByKey"
+    | "materialCount"
+    | "materialKeys"
+    | "materialReferences"
+    | "materialScratch"
+    | "maxClipBlocks"
+    | "transformAnchor"
+    | "transformGeneration"
+    | "transformHidden"
+    | "transformHiddenWorld"
+    | "transformLive"
+    | "transformLocal"
+    | "transformParent"
+    | "transformPendingFlag"
+    | "transformStamp"
+    | "transformWorld"
+  >;
+}
+
+/** @internal Rasterizer side: texture sets' bind groups. */
+export interface TextureSetWorld extends Pick<
+  World,
+  "changedViews" | "ctx" | "setImageryArray" | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "brokenTextureSets"
+    | "bundle"
+    | "freeTextureSets"
+    | "imageryView"
+    | "setsOfTexture"
+    | "shaderGroups"
+    | "textureSetEntries"
+    | "textureSetTextures"
+    | "textureSets"
+    | "translucentDraws"
+  >;
+}
+
+export function addMaterial(
+  world: MaterialWorld,
+  options: MaterialOptions,
+): number {
   const scratch = world.scene.materialScratch;
   writeMaterial(scratch.f32, scratch.u32, 0, {
     baseColor: options.baseColor ?? [1, 1, 1, 1],
@@ -31,7 +129,7 @@ export function addMaterial(world: World, options: MaterialOptions): number {
 }
 
 /** A material record's index, shared by content (`addMaterial`). */
-function internMaterial(world: World, words: Uint32Array): number {
+function internMaterial(world: MaterialWorld, words: Uint32Array): number {
   // The record's words are the key (NaN payloads and -0 included, so
   // equal keys are bit-identical records).
   const key = words.join(",");
@@ -59,7 +157,7 @@ function internMaterial(world: World, words: Uint32Array): number {
   return index;
 }
 
-export function removeMaterial(world: World, index: number): void {
+export function removeMaterial(world: MaterialWorld, index: number): void {
   const references = world.scene.materialReferences[index] ?? 0;
   if (references <= 0) {
     return;
@@ -78,7 +176,7 @@ export function removeMaterial(world: World, index: number): void {
 }
 
 export function materialWithFlags(
-  world: World,
+  world: MaterialWorld,
   material: number,
   flags: number,
 ): number {
@@ -97,7 +195,7 @@ export function materialWithFlags(
   return internMaterial(world, scratch.u32);
 }
 
-export function removeTextureSet(world: World, index: number): void {
+export function removeTextureSet(world: TextureSetWorld, index: number): void {
   if (index > 0 && world.raster.textureSets[index]) {
     world.raster.textureSets[index] = undefined;
     world.raster.textureSetEntries[index] = undefined;
@@ -116,7 +214,7 @@ export function removeTextureSet(world: World, index: number): void {
 }
 
 export function textureRefs(
-  world: World,
+  world: TextureSetWorld,
   options: TextureSetOptions,
 ): number[] {
   return [
@@ -129,7 +227,7 @@ export function textureRefs(
 }
 
 export function createTextureSet(
-  world: World,
+  world: TextureSetWorld,
   options: TextureSetOptions,
 ): number {
   const { defaults } = world.ctx;
@@ -177,7 +275,7 @@ export function createTextureSet(
 
 /** Records a texture set's textures, for `textureDestroyed`. */
 function trackTextureSet(
-  world: World,
+  world: TextureSetWorld,
   index: number,
   entries: GPUBindGroupEntry[],
 ): void {
@@ -210,7 +308,10 @@ function trackTextureSet(
  * each reported (`Engine.errors`), so one bad resource costs its draws,
  * not the frame.
  */
-export function textureDestroyed(world: World, texture: GPUTexture): void {
+export function textureDestroyed(
+  world: TextureSetWorld,
+  texture: GPUTexture,
+): void {
   const sets = world.raster.setsOfTexture.get(texture);
   let broke = false;
   for (const set of sets ?? []) {

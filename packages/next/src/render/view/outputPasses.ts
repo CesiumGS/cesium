@@ -11,10 +11,44 @@ import {
   type PassBody,
   TONE_MAPPINGS,
 } from "./viewFrameData.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+import type { EngineScene } from "../../scene/engineScene.ts";
+
+/** @internal Rasterizer side: meter, readbacks, adaptation, present and overlay pass bodies. */
+export interface OutputPassEngine extends Pick<
+  Engine,
+  "bodyCamera" | "cameras" | "ctx" | "tilesets" | "viewBit" | "views"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "adaptData"
+    | "adaptSampler"
+    | "commandBuffers"
+    | "depthRanges"
+    | "fxaaData"
+    | "fxaaSampler"
+    | "hdrReads"
+    | "listNodes"
+    | "lists"
+    | "meters"
+    | "overlayColor"
+    | "overlayResources"
+    | "pickParams"
+    | "pickParamsData"
+    | "pickReadback"
+    | "pickResult"
+    | "picks"
+    | "presentData"
+    | "translucentData"
+    | "translucentDummies"
+    | "viewFrames"
+  >;
+  readonly scene: Pick<EngineScene, "viewIds">;
+}
 
 /** @internal */
 function drawOverlays(
-  engine: Engine,
+  engine: OutputPassEngine,
   pass: GPURenderPassEncoder,
   view: View,
 ): void {
@@ -83,7 +117,7 @@ function drawOverlays(
 }
 
 export function meterPass(
-  engine: Engine,
+  engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
   {
@@ -167,7 +201,7 @@ export function meterPass(
 }
 
 export function depthRangePass(
-  engine: Engine,
+  engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
   { depth }: { depth: TextureHandle },
@@ -224,7 +258,7 @@ export function depthRangePass(
 }
 
 export function hdrReadbackPass(
-  engine: Engine,
+  engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
   { resolved }: { resolved: TextureHandle },
@@ -261,7 +295,7 @@ export function hdrReadbackPass(
 }
 
 export function pickPass(
-  engine: Engine,
+  engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
 ): PassBody {
@@ -275,7 +309,7 @@ export function pickPass(
 }
 
 export function adaptationPass(
-  engine: Engine,
+  engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
   {
@@ -331,7 +365,7 @@ export function adaptationPass(
 }
 
 export function presentPassBody(
-  engine: Engine,
+  engine: OutputPassEngine,
   view: View,
   frame: ViewFrame,
   {

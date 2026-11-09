@@ -14,6 +14,43 @@ import { CanvasTarget } from "./renderTarget.ts";
 import { fitShadowCascades, casterPlanes } from "./shadows.ts";
 import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import type { EngineRaster } from "../render/view/engineRaster.ts";
+import type { EngineScene } from "./engineScene.ts";
+
+/** @internal Scene side, reading the rasterizer's view targets: what tilesets select for, and the tick's upload budget. */
+export interface SelectionEngine extends Pick<
+  Engine,
+  | "bodyCamera"
+  | "clamping"
+  | "icrfToFixed"
+  | "maximumUploadBytesPerFrame"
+  | "minimumUploadBytesPerFrame"
+  | "moonAxes"
+  | "moonPosition"
+  | "sunDirection"
+  | "tilesets"
+  | "treeBuildMsPerFrame"
+  | "uploadBytesPerFrame"
+  | "views"
+> {
+  readonly raster: Pick<EngineRaster, "viewFrames">;
+  readonly scene: Pick<
+    EngineScene,
+    | "aheadCamera"
+    | "budgetFilled"
+    | "frameIntervalCount"
+    | "frameIntervals"
+    | "lastUpdateAt"
+    | "lastUpdateInterval"
+    | "selectionAhead"
+    | "selectionCascades"
+    | "selections"
+    | "tilesetRotation"
+    | "uploadBudget"
+    | "viewIds"
+    | "viewMotion"
+  >;
+}
 
 /**
  * Prefetching looks this far ahead: content the camera would reveal in
@@ -85,7 +122,7 @@ const scratchCastersBody = new Float64Array(16);
  * 21).
  */
 function selectionFor(
-  engine: Engine,
+  engine: SelectionEngine,
   world: World,
   anchor: AnchorHandle,
 ): SelectionView[] {
@@ -110,7 +147,7 @@ function selectionFor(
  * it is the body camera, as drawn.
  */
 function selectionViews(
-  engine: Engine,
+  engine: SelectionEngine,
   world: World,
   anchor: AnchorHandle,
 ): SelectionView[] {
@@ -201,7 +238,7 @@ function selectionViews(
  * from the last depth range; undefined without shadows.
  */
 function selectionCasters(
-  engine: Engine,
+  engine: SelectionEngine,
   view: View,
   anchor: AnchorHandle,
   camera: Camera,
@@ -250,7 +287,7 @@ function selectionCasters(
  */
 /** The view's steady motion (`cameraAhead` measured it this selection). */
 function motionOf(
-  engine: Engine,
+  engine: SelectionEngine,
   view: View,
 ): { velocity: Vec3; angular: Vec3 } | undefined {
   const motion = engine.scene.viewMotion.get(view);
@@ -267,7 +304,7 @@ function motionOf(
 }
 
 function cameraAhead(
-  engine: Engine,
+  engine: SelectionEngine,
   view: View,
   seconds: number,
 ): Camera | undefined {
@@ -329,7 +366,7 @@ function cameraAhead(
  * of the shared upload budget.
  */
 export function updateTilesets(
-  engine: Engine,
+  engine: SelectionEngine,
   due: (tileset: Tileset3D) => boolean,
 ): void {
   adaptUploadBudget(engine, performance.now());
@@ -360,7 +397,7 @@ export function updateTilesets(
  * up grows it by a quarter. Gaps over a second (hidden
  * tab, paused loop) are ignored.
  */
-function adaptUploadBudget(engine: Engine, now: number): void {
+function adaptUploadBudget(engine: SelectionEngine, now: number): void {
   const interval = now - engine.scene.lastUpdateAt;
   engine.scene.lastUpdateAt = now;
   if (interval <= 0 || interval > 1000) {

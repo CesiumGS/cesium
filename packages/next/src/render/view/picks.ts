@@ -11,6 +11,26 @@ import {
   pickResult,
 } from "../../scene/pick.ts";
 import { CanvasTarget } from "../../scene/renderTarget.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+import type { EngineScene } from "../../scene/engineScene.ts";
+
+/** @internal Rasterizer side, reading the scene's view ids: encoding picks and reading their answers. */
+export interface PickEngine extends Pick<
+  Engine,
+  "bodyCamera" | "cameras" | "ctx" | "tilesets" | "views"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "commandBuffers"
+    | "pickParams"
+    | "pickParamsData"
+    | "pickReadback"
+    | "pickResult"
+    | "picks"
+    | "viewFrames"
+  >;
+  readonly scene: Pick<EngineScene, "viewIds">;
+}
 
 /**
  * Maps a readback buffer for reading, then calls `then`. The mapping is
@@ -73,7 +93,7 @@ export function halfToFloat(h: number): number {
 
 /** @internal */
 export function encodePick(
-  engine: Engine,
+  engine: PickEngine,
   enc: GPUCommandEncoder,
   view: View,
   frame: ViewFrame,
@@ -142,7 +162,7 @@ export function encodePick(
  * such terrain on the ray.
  */
 function translucentTerrainPick(
-  engine: Engine,
+  engine: PickEngine,
   view: View,
   tanX: number,
   tanY: number,
@@ -194,7 +214,7 @@ function translucentTerrainPick(
  * `pickPosition`'s depth into a position.
  */
 function positionCamera(
-  engine: Engine,
+  engine: PickEngine,
   view: View,
   tanX: number,
   tanY: number,
@@ -224,7 +244,7 @@ function positionCamera(
  * that image's.
  */
 function pickTick(
-  engine: Engine,
+  engine: PickEngine,
   view: View,
   frame: ViewFrame,
   tanX: number,
@@ -259,7 +279,7 @@ function pickTick(
   };
 }
 
-export function resolvePicks(engine: Engine, picks: PendingPick[]): void {
+export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
   for (const pick of picks) {
     const { view, readback, request, camera: c, tick } = pick;
     whenMapped(readback, () => {
@@ -309,7 +329,7 @@ export function resolvePicks(engine: Engine, picks: PendingPick[]): void {
  * frame's feature IDs and depth, which still show what is on screen: just
  * the pick pass, no render (hovering picks on every pointer move).
  */
-export function serveIdlePick(engine: Engine, rendering: Set<View>): void {
+export function serveIdlePick(engine: PickEngine, rendering: Set<View>): void {
   const views = engine.views;
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;

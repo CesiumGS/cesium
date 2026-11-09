@@ -22,9 +22,32 @@ import {
   SHADOWS_STRIDE,
   SHADOWS_SIZE,
 } from "../../scene/shadows.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+
+/** @internal Rasterizer side: pass bodies up to the opaque image. */
+export interface ScenePassEngine extends Pick<
+  Engine,
+  "bodyCamera" | "ctx" | "stats" | "sunDirection"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "captures"
+    | "cascadeStaging"
+    | "darkProbe"
+    | "frameNumber"
+    | "lightStaging"
+    | "probes"
+    | "shadowStaging"
+    | "sky"
+    | "timer"
+    | "viewBlock"
+    | "viewCityLight"
+    | "viewStaging"
+  >;
+}
 
 export function shadowsPass(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
 ): PassBody {
@@ -65,7 +88,10 @@ export function shadowsPass(
   };
 }
 
-export function heightCapturesPass(engine: Engine, view: View): PassBody {
+export function heightCapturesPass(
+  engine: ScenePassEngine,
+  view: View,
+): PassBody {
   return (enc) => {
     for (const c of engine.raster.captures) {
       if (c.by !== view || c.stamp !== engine.raster.frameNumber) {
@@ -96,7 +122,10 @@ export function heightCapturesPass(engine: Engine, view: View): PassBody {
   };
 }
 
-export function selectViewPass(engine: Engine, frame: ViewFrame): PassBody {
+export function selectViewPass(
+  engine: ScenePassEngine,
+  frame: ViewFrame,
+): PassBody {
   return (enc) => {
     enc.copyBufferToBuffer(
       engine.raster.viewStaging,
@@ -122,7 +151,10 @@ export function selectViewPass(engine: Engine, frame: ViewFrame): PassBody {
   };
 }
 
-export function lightsPass(engine: Engine, frame: ViewFrame): PassBody {
+export function lightsPass(
+  engine: ScenePassEngine,
+  frame: ViewFrame,
+): PassBody {
   return (enc) => {
     if (frame.lightCount === 0) {
       return;
@@ -140,7 +172,7 @@ export function lightsPass(engine: Engine, frame: ViewFrame): PassBody {
 }
 
 export function cullPass(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
 ): PassBody {
@@ -155,7 +187,7 @@ export function cullPass(
 }
 
 export function skyViewPass(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
 ): PassBody {
@@ -171,7 +203,7 @@ export function skyViewPass(
 }
 
 export function environmentPass(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
 ): PassBody {
@@ -181,7 +213,7 @@ export function environmentPass(
 }
 
 export function aerialPerspectivePass(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
 ): PassBody {
@@ -201,7 +233,7 @@ export function aerialPerspectivePass(
 }
 
 export function prepassPassBody(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
   {
@@ -240,7 +272,7 @@ export function prepassPassBody(
 }
 
 export function ambientOcclusionPass(
-  engine: Engine,
+  engine: ScenePassEngine,
   frame: ViewFrame,
   {
     prepassNormal,
@@ -302,7 +334,7 @@ export function ambientOcclusionPass(
 }
 
 export function starsPass(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
   { starLayer }: { starLayer: TextureHandle },
@@ -315,7 +347,7 @@ export function starsPass(
 }
 
 export function opaquePassBody(
-  engine: Engine,
+  engine: ScenePassEngine,
   view: View,
   frame: ViewFrame,
   {

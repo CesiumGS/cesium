@@ -5,6 +5,21 @@ import type { EngineRaster } from "./engineRaster.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 
+/** @internal Rasterizer side: translucency parameters, list buffer and bind groups. */
+export interface TranslucencyEngine extends Pick<
+  Engine,
+  "bodyCamera" | "ctx" | "viewBit"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "listNodes"
+    | "lists"
+    | "translucentData"
+    | "translucentDummies"
+    | "viewFrames"
+  >;
+}
+
 /** Nodes a list's `next` word can address (28 bits, the node plus one). */
 const LIST_NODES_MAX = (1 << 28) - 2;
 
@@ -13,7 +28,10 @@ const LIST_NODES_MAX = (1 << 28) - 2;
  * passes' parameters: the lists' layout ("exact", grown to what the last
  * reading needed) or the moments' depth range.
  */
-export function writeTranslucency(engine: Engine, view: View): void {
+export function writeTranslucency(
+  engine: TranslucencyEngine,
+  view: View,
+): void {
   const frame = engine.raster.viewFrames.get(view)!;
   // Only what this view draws: a blended draw in no view (viewMask) or
   // hidden switches none of the passes on.
@@ -81,7 +99,7 @@ export function writeTranslucency(engine: Engine, view: View): void {
 
 /** @internal What a translucent pass binds where it reads no lists or moments. */
 export function translucentInputs(
-  engine: Engine,
+  engine: TranslucencyEngine,
 ): NonNullable<EngineRaster["translucentDummies"]> {
   if (!engine.raster.translucentDummies) {
     const { device, pipelines } = engine.ctx;
@@ -115,7 +133,7 @@ export function translucentInputs(
  * they stay the same.
  */
 export function translucentGroup(
-  engine: Engine,
+  engine: TranslucencyEngine,
   frame: ViewFrame,
   role: number,
   [lists, zero, higher]: [GPUBuffer, GPUTextureView, GPUTextureView],
@@ -140,7 +158,7 @@ export function translucentGroup(
  * (lit, unlit: bindings 3, 4), or the moments' zeroth and sums (2–4).
  */
 export function compositeGroup(
-  engine: Engine,
+  engine: TranslucencyEngine,
   frame: ViewFrame,
   role: number,
   pipeline: GPURenderPipeline,
@@ -161,7 +179,7 @@ export function compositeGroup(
 
 /** @internal */
 export function keptGroup(
-  engine: Engine,
+  engine: TranslucencyEngine,
   frame: ViewFrame,
   role: number,
   inputs: readonly (GPUBuffer | GPUTextureView)[],

@@ -13,6 +13,26 @@ import type { World } from "../World.ts";
 import { stringIds } from "../stringIds.ts";
 import type { TablePlan, TableColumn, MeshHandle } from "./types.ts";
 import { queueUpload } from "./uploads.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
+
+/** @internal Scene side, uploading through the rasterizer's per-tick computes. */
+export interface FeatureTableWorld extends Pick<World, "ctx" | "slabs"> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "drawConstants"
+    | "frameComputes"
+    | "instances"
+    | "pendingUploads"
+    | "transforms"
+    | "uploadChunks"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    "meshRanges" | "nextTableId" | "tableColumns" | "tableIds"
+  >;
+}
 
 const tableColumnCache = new WeakMap<FeatureTable, TablePlan>();
 
@@ -169,7 +189,7 @@ function stringColumnData(
 
 /** A mesh's reference to its table's columns in `slab` released. */
 export function releaseTable(
-  world: World,
+  world: FeatureTableWorld,
   table: FeatureTable,
   slab: Slab,
 ): number {
@@ -191,7 +211,11 @@ export function releaseTable(
 }
 
 /** `tableColumns`' key: the table object's id and the slab. */
-function tableKey(world: World, table: FeatureTable, slabId: number): string {
+function tableKey(
+  world: FeatureTableWorld,
+  table: FeatureTable,
+  slabId: number,
+): string {
   let id = world.scene.tableIds.get(table);
   if (id === undefined) {
     id = world.scene.nextTableId++;
@@ -201,7 +225,10 @@ function tableKey(world: World, table: FeatureTable, slabId: number): string {
 }
 
 /** The bytes a feature table's uploaded columns take (`uploadTable`). */
-export function tableBytes(world: World, table: FeatureTable): number {
+export function tableBytes(
+  world: FeatureTableWorld,
+  table: FeatureTable,
+): number {
   return plannedColumns(table).columns.reduce(
     (n, c) => n + columnBytes(table, c),
     0,
@@ -218,7 +245,7 @@ export function tableBytes(world: World, table: FeatureTable): number {
  * (`warnUnavailable`).
  */
 export function uploadTable(
-  world: World,
+  world: FeatureTableWorld,
   table: FeatureTable,
   slab: Slab,
 ): {
@@ -291,7 +318,7 @@ export function uploadTable(
  * why: it reads 0 there, which a comparison can't tell from a value.
  */
 export function warnUnavailable(
-  world: World,
+  world: FeatureTableWorld,
   mesh: MeshHandle,
   shader: CustomShader,
 ): void {
@@ -318,7 +345,10 @@ export function warnUnavailable(
 }
 
 /** Uploads changed table entries (a scatter is encoded into `pass`). */
-export function uploadTables(world: World, pass: GPUComputePassEncoder): void {
+export function uploadTables(
+  world: FeatureTableWorld,
+  pass: GPUComputePassEncoder,
+): void {
   if (!world.raster.uploadsPending) {
     return;
   }

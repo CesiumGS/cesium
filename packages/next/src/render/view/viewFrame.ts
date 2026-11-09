@@ -29,10 +29,66 @@ import {
   adaptationPass,
   presentPassBody,
 } from "./outputPasses.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+import type { EngineScene } from "../../scene/engineScene.ts";
+
+/** @internal Rasterizer side: a view's targets and passes, in registration order. */
+export interface ViewFrameEngine extends Pick<
+  Engine,
+  | "bodyCamera"
+  | "cameras"
+  | "ctx"
+  | "stats"
+  | "sunDirection"
+  | "tilesets"
+  | "viewBit"
+  | "views"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "adaptData"
+    | "adaptSampler"
+    | "captures"
+    | "cascadeStaging"
+    | "commandBuffers"
+    | "darkProbe"
+    | "depthRanges"
+    | "frameNumber"
+    | "fxaaData"
+    | "fxaaSampler"
+    | "hdrReads"
+    | "lightStaging"
+    | "listCountPending"
+    | "listCounts"
+    | "listNodes"
+    | "lists"
+    | "meters"
+    | "overlayColor"
+    | "overlayResources"
+    | "pickParams"
+    | "pickParamsData"
+    | "pickReadback"
+    | "pickResult"
+    | "picks"
+    | "pool"
+    | "presentData"
+    | "probes"
+    | "shadowStaging"
+    | "sky"
+    | "timer"
+    | "translucentData"
+    | "translucentDummies"
+    | "viewBlock"
+    | "viewCityLight"
+    | "viewFrames"
+    | "viewStaging"
+  >;
+  readonly scene: Pick<EngineScene, "viewIds">;
+}
 
 /** The view's frame graph for its current size, built on first use and on resize. */
 export function viewFrameFor(
-  engine: Engine,
+  engine: ViewFrameEngine,
   view: View,
   rect: Readonly<PixelRect>,
 ): ViewFrame {
@@ -59,7 +115,11 @@ export function viewFrameFor(
  * another view still renders at that size. Without this, a window resize
  * leaves every intermediate size resident until the pool's idle timeout.
  */
-function releaseTargets(engine: Engine, view: View, old: ViewFrame): void {
+function releaseTargets(
+  engine: ViewFrameEngine,
+  view: View,
+  old: ViewFrame,
+): void {
   for (const [other, frame] of engine.raster.viewFrames) {
     if (
       other !== view &&
@@ -75,7 +135,7 @@ function releaseTargets(engine: Engine, view: View, old: ViewFrame): void {
 }
 
 function buildViewFrame(
-  engine: Engine,
+  engine: ViewFrameEngine,
   view: View,
   rect: Readonly<PixelRect>,
 ): ViewFrame {

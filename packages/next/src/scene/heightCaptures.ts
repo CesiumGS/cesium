@@ -11,6 +11,15 @@ import type { World } from "./World.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import { earthAnchor, contentAnchor } from "./earthAnchor.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import type { EngineRaster } from "../render/view/engineRaster.ts";
+
+/** @internal Rasterizer side: height samples and captures. */
+export interface HeightCaptureEngine extends Pick<
+  Engine,
+  "ctx" | "requestRender" | "tilesets"
+> {
+  readonly raster: Pick<EngineRaster, "captures">;
+}
 
 /** Radians a degree (`Tileset3D.terrainClipped` takes degrees). */
 const DEGREES = Math.PI / 180;
@@ -42,7 +51,7 @@ export interface HeightCapture {
 }
 
 export async function sampleHeightMostDetailed(
-  engine: Engine,
+  engine: HeightCaptureEngine,
   world: World,
   positions: ReadonlyArray<{ longitude: number; latitude: number }>,
   options: { tilesets?: readonly Tileset3D[] } = {},
@@ -115,7 +124,7 @@ export async function sampleHeightMostDetailed(
 }
 
 export function addHeightCapture(
-  engine: Engine,
+  engine: HeightCaptureEngine,
   world: World,
   options: {
     origin: Vec3;
@@ -172,7 +181,7 @@ export function addHeightCapture(
 }
 
 export function removeHeightCapture(
-  engine: Engine,
+  engine: HeightCaptureEngine,
   capture: HeightCapture,
 ): void {
   const i = engine.raster.captures.indexOf(capture);

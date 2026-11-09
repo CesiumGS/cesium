@@ -16,6 +16,125 @@ import type { World } from "../../scene/World.ts";
 import type { RenderTarget } from "../../scene/renderTarget.ts";
 import { SHADOWS_STRIDE } from "../../scene/shadows.ts";
 import { updateTilesets } from "../../scene/tileSelection.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+import type { EngineScene } from "../../scene/engineScene.ts";
+
+/** @internal Rasterizer side: one tick's targets and what persists between ticks. */
+export interface TickTargetEngine extends Pick<
+  Engine,
+  "ctx" | "stats" | "worlds"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    "persistent" | "targetFrames" | "worldFrames"
+  >;
+}
+
+/** @internal Crosses the sides: one tick's GPU work, updating what the scene selects first. */
+export interface RenderTickEngine extends Pick<
+  Engine,
+  | "bodyCamera"
+  | "cameras"
+  | "clamping"
+  | "ctx"
+  | "icrfToFixed"
+  | "links"
+  | "maximumUploadBytesPerFrame"
+  | "minimumUploadBytesPerFrame"
+  | "moonAxes"
+  | "moonPosition"
+  | "reportFarAnchors"
+  | "requestRender"
+  | "stats"
+  | "sunDirection"
+  | "tilesets"
+  | "treeBuildMsPerFrame"
+  | "uploadBytesPerFrame"
+  | "viewBit"
+  | "views"
+  | "worlds"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "adaptData"
+    | "adaptSampler"
+    | "captures"
+    | "cascadeData"
+    | "cascadeDataU32"
+    | "cascadeStaging"
+    | "cascades"
+    | "cityLightPlaces"
+    | "cityLightRead"
+    | "cityLightSeen"
+    | "cityLights"
+    | "commandBuffers"
+    | "compositeClear"
+    | "compositePass"
+    | "copyDestination"
+    | "copySource"
+    | "darkProbe"
+    | "depthRanges"
+    | "drawnViews"
+    | "frameNumber"
+    | "fxaaData"
+    | "fxaaSampler"
+    | "hdrReads"
+    | "lightData"
+    | "lightStaging"
+    | "listCountPending"
+    | "listCounts"
+    | "listNodes"
+    | "lists"
+    | "meters"
+    | "overlayColor"
+    | "overlayResources"
+    | "persistent"
+    | "pickParams"
+    | "pickParamsData"
+    | "pickReadback"
+    | "pickResult"
+    | "picks"
+    | "pool"
+    | "presentData"
+    | "probes"
+    | "shadowData"
+    | "shadowStaging"
+    | "sharedTargets"
+    | "sky"
+    | "targetFrames"
+    | "timer"
+    | "translucentData"
+    | "translucentDummies"
+    | "viewBlock"
+    | "viewCityLight"
+    | "viewData"
+    | "viewDataU32"
+    | "viewFrames"
+    | "viewStaging"
+    | "viewsPerTarget"
+    | "worldFrames"
+  >;
+  readonly scene: Pick<
+    EngineScene,
+    | "aheadCamera"
+    | "anchorEyes"
+    | "budgetFilled"
+    | "cameraTick"
+    | "frameIntervalCount"
+    | "frameIntervals"
+    | "lastUpdateAt"
+    | "lastUpdateInterval"
+    | "renderRequested"
+    | "selectionAhead"
+    | "selectionCascades"
+    | "selections"
+    | "startTime"
+    | "tilesetRotation"
+    | "uploadBudget"
+    | "viewIds"
+    | "viewMotion"
+  >;
+}
 
 const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
 
@@ -26,7 +145,7 @@ const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
  * from their last image).
  */
 export function render(
-  engine: Engine,
+  engine: RenderTickEngine,
   tilesetsUpdated: boolean,
   targets?: ReadonlySet<RenderTarget>,
   dirtyViews?: ReadonlySet<View>,
@@ -309,7 +428,7 @@ export function render(
 
 /** A view's persistent image at its current size (recreated on resize). */
 function persistentImage(
-  engine: Engine,
+  engine: TickTargetEngine,
   view: View,
   width: number,
   height: number,
@@ -334,7 +453,7 @@ function persistentImage(
   return image;
 }
 
-export function dropPersistent(engine: Engine, view: View): void {
+export function dropPersistent(engine: TickTargetEngine, view: View): void {
   const image = engine.raster.persistent.get(view);
   if (image) {
     image.texture.destroy();
@@ -342,7 +461,10 @@ export function dropPersistent(engine: Engine, view: View): void {
   }
 }
 
-function targetFrame(engine: Engine, target: RenderTarget): TargetFrame {
+function targetFrame(
+  engine: TickTargetEngine,
+  target: RenderTarget,
+): TargetFrame {
   let frame = engine.raster.targetFrames.get(target);
   if (!frame) {
     frame = { stamp: 0, view: undefined, clearedBy: undefined };
@@ -351,7 +473,7 @@ function targetFrame(engine: Engine, target: RenderTarget): TargetFrame {
   return frame;
 }
 
-function worldFrame(engine: Engine, world: World): WorldFrame {
+function worldFrame(engine: TickTargetEngine, world: World): WorldFrame {
   let frame = engine.raster.worldFrames.get(world);
   if (!frame) {
     frame = { stamp: 0, bundle: undefined };
@@ -360,7 +482,7 @@ function worldFrame(engine: Engine, world: World): WorldFrame {
   return frame;
 }
 
-function frameRejected(engine: Engine, error: GPUError): void {
+function frameRejected(engine: TickTargetEngine, error: GPUError): void {
   engine.stats.rejectedFrames++;
   engine.ctx.errors.report(
     "frame",

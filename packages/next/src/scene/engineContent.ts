@@ -14,9 +14,18 @@ import {
 } from "./gltfModel.ts";
 import { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TilesetOptions } from "../streaming/tilesetTypes.ts";
+import type { EngineScene } from "./engineScene.ts";
+
+/** @internal Scene side: loading models and adopting tilesets. */
+export interface ContentEngine extends Pick<
+  Engine,
+  "clamping" | "ctx" | "gpu" | "loadGltf" | "tilesets" | "uploadModel" | "wake"
+> {
+  readonly scene: Pick<EngineScene, "workers">;
+}
 
 export function loadGltfFile(
-  engine: Engine,
+  engine: ContentEngine,
   url: string | URL,
   options: { headers?: Record<string, string>; signal?: AbortSignal } = {},
 ): Promise<GltfAsset> {
@@ -33,14 +42,14 @@ export function loadGltfFile(
 }
 
 export async function compileShader(
-  engine: Engine,
+  engine: ContentEngine,
   shader: CustomShader,
 ): Promise<void> {
   await engine.ctx.shaders.compile(shader);
 }
 
 export async function loadModel(
-  engine: Engine,
+  engine: ContentEngine,
   world: World,
   url: string | URL,
   options: ModelResourceOptions & {
@@ -61,7 +70,7 @@ export async function loadModel(
 }
 
 export function uploadModelTo(
-  engine: Engine,
+  engine: ContentEngine,
   world: World,
   asset: GltfAsset,
   options: ModelResourceOptions = {},
@@ -87,7 +96,7 @@ export async function loadTileset(
   );
 }
 
-export function adoptTileset(engine: Engine, tileset: Tileset3D): void {
+export function adoptTileset(engine: ContentEngine, tileset: Tileset3D): void {
   engine.tilesets.push(tileset);
   engine.wake();
 }
@@ -200,7 +209,7 @@ function addGlobeSource(
   return tileset;
 }
 
-export function removeTileset(engine: Engine, tileset: Tileset3D): void {
+export function removeTileset(engine: ContentEngine, tileset: Tileset3D): void {
   const index = engine.tilesets.indexOf(tileset);
   if (index >= 0) {
     engine.tilesets.splice(index, 1);

@@ -5,6 +5,12 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { Engine } from "./Engine.ts";
 import type { View } from "./View.ts";
 
+/** @internal Scene side: the Moon's place and the shadow light. */
+export type LightSourceEngine = Pick<
+  Engine,
+  "icrfToFixed" | "moonAxes" | "moonPosition" | "sunDirection"
+>;
+
 /** The Moon as a view sees it (`moonFrom`). */
 const scratchMoon = {
   direction: v3.vec3(),
@@ -31,7 +37,7 @@ const scratchMoonAxis = v3.vec3();
  * sky, and its light, for the scene; undefined without `moonPosition`.
  */
 export function moonFrom(
-  engine: Engine,
+  engine: LightSourceEngine,
   position: Vec3,
 ): typeof scratchMoon | undefined {
   const moon = engine.moonPosition;
@@ -86,7 +92,7 @@ export function moonFrom(
  * has no shadows or neither is up. `moon` is the Moon from there.
  */
 export function shadowLight(
-  engine: Engine,
+  engine: LightSourceEngine,
   view: View,
   position: Vec3,
   moon: { readonly direction: Vec3 } | undefined,

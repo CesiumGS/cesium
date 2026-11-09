@@ -10,9 +10,28 @@ import {
 import { type ViewFrame, type PassBody, LIST_HEADER } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
+import type { EngineRaster } from "./engineRaster.ts";
+
+/** @internal Rasterizer side: translucent and composite pass bodies. */
+export interface TranslucentPassEngine extends Pick<
+  Engine,
+  "bodyCamera" | "ctx" | "viewBit"
+> {
+  readonly raster: Pick<
+    EngineRaster,
+    | "listCountPending"
+    | "listCounts"
+    | "listNodes"
+    | "lists"
+    | "timer"
+    | "translucentData"
+    | "translucentDummies"
+    | "viewFrames"
+  >;
+}
 
 export function translucentPass(
-  engine: Engine,
+  engine: TranslucentPassEngine,
   view: View,
   frame: ViewFrame,
   {
@@ -155,7 +174,7 @@ export function translucentPass(
 }
 
 export function compositePassBody(
-  engine: Engine,
+  engine: TranslucentPassEngine,
   view: View,
   frame: ViewFrame,
   {

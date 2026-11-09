@@ -17,12 +17,96 @@ import type { World } from "../World.ts";
 import { uploadTables } from "./featureTables.ts";
 import { resolveTransforms, checkAnchor } from "./transforms.ts";
 import type { CastRay, CastOptions } from "./types.ts";
+import type { WorldRaster } from "../../render/world/worldRaster.ts";
+import type { WorldScene } from "./worldScene.ts";
+
+/** @internal Scene side, reading the rasterizer's records to find what a ray can hit. */
+export interface RayWorld extends Pick<
+  World,
+  "addAnchor" | "hasDraw" | "transformAlive"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "drawBatches"
+    | "drawCount"
+    | "instances"
+    | "recordsF32"
+    | "recordsU32"
+    | "transforms"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "anchorSlots"
+    | "bodyAnchors"
+    | "transformAnchor"
+    | "transformFrames"
+    | "transformHiddenWorld"
+    | "transformWorld"
+  >;
+}
+
+/** @internal Scene side: casting rays, which resolves the tree and uploads feature tables first. */
+export interface CastWorld extends Pick<
+  World,
+  | "addAnchor"
+  | "changedViews"
+  | "ctx"
+  | "flushUploads"
+  | "hasDraw"
+  | "instanceBuffer"
+  | "recordBuffer"
+  | "slabs"
+  | "transformAlive"
+  | "transformBuffer"
+  | "version"
+> {
+  readonly raster: Pick<
+    WorldRaster,
+    | "drawBatches"
+    | "drawConstants"
+    | "drawCount"
+    | "frameComputes"
+    | "instances"
+    | "pendingUploads"
+    | "recordsF32"
+    | "recordsU32"
+    | "transforms"
+    | "uploadChunks"
+    | "uploadsPending"
+  >;
+  readonly scene: Pick<
+    WorldScene,
+    | "anchorPlaceRevision_"
+    | "anchorPlaces"
+    | "anchorSlots"
+    | "bodyAnchors"
+    | "meshRanges"
+    | "nextTableId"
+    | "tableColumns"
+    | "tableIds"
+    | "transformAnchor"
+    | "transformChildren"
+    | "transformFrames"
+    | "transformGeneration"
+    | "transformHidden"
+    | "transformHiddenWorld"
+    | "transformLive"
+    | "transformLocal"
+    | "transformParent"
+    | "transformPending"
+    | "transformPendingFlag"
+    | "transformResolve"
+    | "transformRevision_"
+    | "transformStamp"
+    | "transformWorld"
+  >;
+}
 
 /** Hit distance bits meaning "no hit" (the largest finite float). */
 const NO_HIT = 0x7f7fffff;
 
 export async function castRays(
-  world: World,
+  world: CastWorld,
   rays: readonly CastRay[],
   options: CastOptions = {},
 ): Promise<Array<number | undefined>> {
@@ -133,7 +217,7 @@ export async function castRays(
  * on the CPU, and crossing draws are split into 64-triangle jobs.
  */
 export function rayJobs(
-  owner: World,
+  owner: RayWorld,
   rays: readonly CastRay[],
   options: CastOptions,
 ): Map<number, Uint32Array<ArrayBuffer>> {
