@@ -6,13 +6,13 @@ export function suspendPresentation(
   options: { hide?: boolean } = {},
 ): (() => void) & Disposable {
   let resumed = false;
-  if (viewer.suspensions++ === 0) {
+  if (viewer.state.suspensions++ === 0) {
     viewer.view.enabled = false;
     viewer.container.dataset.cesiumPresentationSuspended = "";
     viewer.onPresentationChange?.(true);
   }
   const hide = options.hide === true;
-  if (hide && viewer.hidingSuspensions++ === 0) {
+  if (hide && viewer.state.hidingSuspensions++ === 0) {
     viewer.canvas.style.visibility = "hidden";
   }
   const resume = () => {
@@ -20,12 +20,12 @@ export function suspendPresentation(
       return;
     }
     resumed = true;
-    if (hide && --viewer.hidingSuspensions === 0) {
+    if (hide && --viewer.state.hidingSuspensions === 0) {
       // Shown once a new frame is drawn (`onAfterTick`): shown now, the canvas
       // would present its last frame, of what went away, for a frame.
-      viewer.unhideAfter = viewer.engine.stats.framesRendered;
+      viewer.state.unhideAfter = viewer.engine.stats.framesRendered;
     }
-    if (--viewer.suspensions === 0) {
+    if (--viewer.state.suspensions === 0) {
       viewer.view.enabled = true;
       delete viewer.container.dataset.cesiumPresentationSuspended;
       viewer.engine.requestRender();
@@ -48,6 +48,6 @@ export async function suspendPresentationUntil<T>(
 }
 
 export function resumePresentation(viewer: Viewer): void {
-  viewer.resumeStart?.();
-  viewer.resumeStart = undefined;
+  viewer.state.resumeStart?.();
+  viewer.state.resumeStart = undefined;
 }

@@ -25,8 +25,8 @@ export function emit<K extends "warning" | "warningsCleared">(
 
 /** The notice's list, from `warnings`. */
 export function showWarnings(viewer: Viewer): void {
-  viewer.warnings_?.set(
-    viewer.warningList.map((w) => ({
+  viewer.state.warnings_?.set(
+    viewer.state.warningList.map((w) => ({
       message: w.message,
       summary: WARNING_SUMMARY[w.kind],
     })),
@@ -43,7 +43,7 @@ export function warn(
     kind: warning.kind,
     message: warning.message,
   };
-  viewer.warningList.push(entry);
+  viewer.state.warningList.push(entry);
   if (log) {
     console.warn(entry.message);
   }

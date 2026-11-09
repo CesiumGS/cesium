@@ -11,7 +11,9 @@ import {
 } from "@cesium/next";
 
 export function tokenOptions(viewer: Viewer): { accessToken?: string } {
-  return viewer.accessToken ? { accessToken: viewer.accessToken } : {};
+  return viewer.state.accessToken
+    ? { accessToken: viewer.state.accessToken }
+    : {};
 }
 
 export async function buildGlobe(
@@ -22,35 +24,37 @@ export async function buildGlobe(
     // Imagery and the terrain endpoint at once, not one after the other;
     // the globe's tiles load while the imagery resolves (1.x starts
     // terrain without waiting for it).
-    if (viewer.globeKind === "terrain") {
-      viewer.early.terrain ??= resolveIonAsset(1, tokenOptions(viewer));
+    if (viewer.state.globeKind === "terrain") {
+      viewer.state.early.terrain ??= resolveIonAsset(1, tokenOptions(viewer));
     }
-    viewer.imageryLoading = (
-      viewer.early.imagery ?? BingImagery.fromIon(2, tokenOptions(viewer))
-    ).then((provider) => (viewer.imagery = provider));
-    viewer.imageryLoading.catch(() => {}); // surfaces through `ready`
+    viewer.state.imageryLoading = (
+      viewer.state.early.imagery ?? BingImagery.fromIon(2, tokenOptions(viewer))
+    ).then((provider) => (viewer.state.imagery = provider));
+    viewer.state.imageryLoading.catch(() => {}); // surfaces through `ready`
   } else if (imagery) {
-    viewer.imagery = imagery;
+    viewer.state.imagery = imagery;
   }
-  await viewer.setGlobe(viewer.globeKind);
-  await viewer.imageryLoading;
+  await viewer.setGlobe(viewer.state.globeKind);
+  await viewer.state.imageryLoading;
 }
 
 export async function setGlobe(viewer: Viewer, kind: GlobeKind): Promise<void> {
-  const token = ++viewer.globeToken;
-  viewer.globeKind = kind;
+  const token = ++viewer.state.globeToken;
+  viewer.state.globeKind = kind;
   let next: Globe | undefined;
   let attributions: Attribution[] = [];
-  const imagery = viewer.imagery ?? viewer.imageryLoading;
+  const imagery = viewer.state.imagery ?? viewer.state.imageryLoading;
   const options = {
     policy: viewer.policy,
     ...(imagery ? { imagery } : {}),
-    ...(viewer.lightsProvider ? { lights: viewer.lightsProvider } : {}),
+    ...(viewer.state.lightsProvider
+      ? { lights: viewer.state.lightsProvider }
+      : {}),
   };
   if (kind === "terrain") {
-    const ion = await (viewer.early.terrain ??
+    const ion = await (viewer.state.early.terrain ??
       resolveIonAsset(1, tokenOptions(viewer)));
-    viewer.early.terrain = undefined; // used once: later switches resolve anew
+    viewer.state.early.terrain = undefined; // used once: later switches resolve anew
     next = await viewer.engine.addTerrain(viewer.world, ion.url, {
       headers: ion.headers,
       ...options,
@@ -59,20 +63,20 @@ export async function setGlobe(viewer: Viewer, kind: GlobeKind): Promise<void> {
   } else if (kind === "ellipsoid") {
     next = viewer.engine.addEllipsoid(viewer.world, options);
   }
-  if (token !== viewer.globeToken || viewer.destroyed) {
+  if (token !== viewer.state.globeToken || viewer.state.destroyed) {
     if (next) {
       viewer.engine.removeTileset(next);
     }
     return;
   }
   if (next) {
-    next.show = viewer.globeShown;
+    next.show = viewer.state.globeShown;
   }
-  if (viewer.globe_) {
-    viewer.engine.removeTileset(viewer.globe_);
+  if (viewer.state.globe_) {
+    viewer.engine.removeTileset(viewer.state.globe_);
   }
-  viewer.globe_ = next;
-  viewer.terrainAttributions = attributions;
+  viewer.state.globe_ = next;
+  viewer.state.terrainAttributions = attributions;
 }
 
 export async function addTileset(
@@ -105,6 +109,6 @@ export async function addTileset(
     ...(attributions.length > 0 ? { attributions } : {}),
     ...options,
   });
-  viewer.tilesets.add(tileset);
+  viewer.state.tilesets.add(tileset);
   return tileset;
 }

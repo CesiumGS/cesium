@@ -24,7 +24,6 @@
  */
 import {
   BingImagery,
-  Camera,
   CanvasTarget,
   IonTmsImagery,
   EYE,
@@ -57,7 +56,6 @@ import type {
   FrameCatalog,
   FrameData,
   FrameDataWarning,
-  FramesResolver,
   SkyInputs,
 } from "@cesium/next/frames";
 import { Clock } from "@cesium/next/time";
@@ -75,7 +73,7 @@ import {
   type TimeControlsHandle,
   type TimeControlsOptions,
 } from "./timeControls.ts";
-import { attachWarnings, type WarningsHandle } from "./warnings.ts";
+import { attachWarnings } from "./warnings.ts";
 import {
   ellipsoid,
   fromEarth,
@@ -98,6 +96,7 @@ import {
   resumePresentation,
 } from "./viewerPresentation.ts";
 import { frameCatalog, useFrames, setFrameData } from "./viewerFrames.ts";
+import { ViewerState } from "./viewerState.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -258,7 +257,7 @@ export type ZoomTarget =
   | { longitude: number; latitude: number; range?: number };
 
 /** Endpoints `Viewer.create` starts resolving before the engine exists. */
-interface EarlyEndpoints {
+export interface EarlyEndpoints {
   imagery?: Promise<BingImagery>;
   terrain?: ReturnType<typeof resolveIonAsset>;
   /** The catalog over `frameData`, its loads started. */
@@ -266,6 +265,9 @@ interface EarlyEndpoints {
 }
 
 export class Viewer {
+  /** @internal What the moved functions share (`viewerCamera.ts` and its neighbours). */
+  readonly state: ViewerState = new ViewerState();
+
   readonly engine: Engine;
   readonly canvas: HTMLCanvasElement;
   readonly target: CanvasTarget;
@@ -273,50 +275,15 @@ export class Viewer {
   /** The main view (the left half in split view). */
   readonly view: View;
   readonly controller: GlobeController;
-  /** @internal Orbit controls around the focus, when on (`setControls("orbit")`). */
-  orbit_?: InspectController;
   /** Policy for the globe and tilesets added later. */
   policy: "budgeted" | "stepwise";
   /** Builds the globe; content added before it is ready still loads. */
   readonly ready: Promise<void>;
-
-  /** @internal */
-  globe_?: Globe;
-  /** @internal */
-  globeKind: GlobeKind;
-  /** @internal */
-  globeShown = true;
-  /** @internal */
-  globeToken = 0;
-  /** @internal */
-  imagery?: ImageryProvider;
-  /** @internal The default imagery while its metadata resolves. */
-  imageryLoading?: Promise<ImageryProvider>;
-  /** @internal */
-  terrainAttributions: Attribution[] = [];
   private readonly attributions = new Map<object, Attribution[]>();
-  /** @internal */
-  readonly tilesets = new Set<Tileset3D>();
-  /** @internal */
-  second?: View;
-  /** @internal */
-  secondController?: GlobeController;
   private overview_?: View;
   private overviewLink?: ViewLink;
-  /** @internal */
-  readonly focusCenter = vec3.vec3();
-  /** @internal */
-  sun?: { azimuth: number; elevation: number };
   /** The scene's time: the sun follows it unless placed by `setSun`. */
   readonly clock: Clock;
-  /** @internal */
-  sunFromClock_ = true;
-  /** @internal The catalog in use (`frames`), replaced by `setFrameData`. */
-  frames_!: FrameCatalog;
-  /** @internal Aborts the catalogs' loads on `destroy`. */
-  readonly framesAbort: AbortController;
-  /** @internal Stops the sky and the warnings of the catalog in use. */
-  offFrames?: () => void;
   /**
    * @internal What `attachSky` writes, copied to the engine as it asks to render: the
    * stars' turn always, the sun while it follows the clock, the Moon when
@@ -329,10 +296,6 @@ export class Viewer {
     moonAxes: new Float64Array(6),
     requestRender: () => applySky(this),
   };
-  /** @internal */
-  readonly warningList: ViewerWarning[] = [];
-  /** @internal */
-  warnings_?: WarningsHandle;
   /**
    * `warning`: each `ViewerWarning`, as it is added to `warnings`;
    * `warningsCleared`: the list was emptied (`setFrameData`).
@@ -341,10 +304,6 @@ export class Viewer {
     warning: ViewerWarning;
     warningsCleared: Viewer;
   }>();
-  /** @internal The world's frame resolver the viewer set (an app may set its own). */
-  ownResolver?: FramesResolver;
-  /** @internal The rig the viewer sets on its views for the catalog in use. */
-  ownRig?: Rig;
   /**
    * Always a promise: it resolves to the frames data of
    * `ViewerOptions.frameData` once the catalog has it, or to `undefined`,
@@ -352,16 +311,8 @@ export class Viewer {
    * warning when loading failed. In both cases the sky stays analytic.
    */
   readonly frameData: Promise<FrameData | undefined>;
-  /** @internal The Moon is drawn (`ViewerOptions.moon`). */
-  readonly moon: boolean;
   /** Cesium Moon Terrain's map arrived (1.x's no longer wanted). */
   private moonMapSharp = false;
-  /** @internal The clock was given or has been set to the first framing's morning. */
-  clockPlaced: boolean;
-  /** @internal */
-  time_?: TimeControlsHandle;
-  /** @internal Each `zoomTo`, so a late correction knows whether it still applies. */
-  zoomToken = 0;
   private credits_?: CreditsHandle;
   private inspector?: InspectorHandle;
   /** Stops the viewer's per-frame work (`Engine.onTick`, `onAfterTick`). */
@@ -369,15 +320,8 @@ export class Viewer {
   /** New views (a split's second) get the main view's shadows and AO. */
   private readonly shadows: boolean;
   private readonly ambientOcclusion: boolean;
-  /** @internal */
-  destroyed = false;
   /** Aborted on `destroy`: stops the Moon map's loads (and its worker). */
   private readonly moonMapLoad = new AbortController();
-  /** @internal */
-  readonly accessToken: string | undefined;
-
-  /** @internal Default globe endpoints, resolved while the device was created. */
-  early: EarlyEndpoints;
 
   private constructor(
     readonly container: HTMLElement,
@@ -386,7 +330,7 @@ export class Viewer {
     early: EarlyEndpoints = {},
     private readonly ownsEngine = true,
   ) {
-    this.early = early;
+    this.state.early = early;
     this.engine = engine;
     if (!ownsEngine) {
       // A shared engine's own settings as a new viewer expects them, not
@@ -394,8 +338,8 @@ export class Viewer {
       engine.environment.setSky(DEFAULT_SKY);
     }
     this.policy = options.policy ?? "budgeted";
-    this.globeKind = options.globe ?? "ellipsoid";
-    this.accessToken = options.accessToken;
+    this.state.globeKind = options.globe ?? "ellipsoid";
+    this.state.accessToken = options.accessToken;
     if (getComputedStyle(container).position === "static") {
       container.style.position = "relative";
     }
@@ -440,21 +384,21 @@ export class Viewer {
     fromEarth(this, this.view);
     // The camera stays above the globe's drawn surface.
     this.controller.surfaceHeight = (longitude, latitude) =>
-      this.globe_?.show
-        ? this.globe_.surfaceHeight(longitude, latitude)
+      this.state.globe_?.show
+        ? this.state.globe_.surfaceHeight(longitude, latitude)
         : undefined;
     this.controller.ignore = (x, y) => this.overview_?.contains(x, y) ?? false;
     engine.renderMode = options.renderMode ?? "onDemand";
     if (options.credits !== false) {
       this.credits_ = attachCredits(container, () => this.credits());
     }
-    this.clockPlaced = options.clock !== undefined;
+    this.state.clockPlaced = options.clock !== undefined;
     this.clock = options.clock ?? new Clock({ mode: "paused" });
-    this.moon = options.moon !== false;
+    this.state.moon = options.moon !== false;
     const lights = options.cityLights ?? true;
     if (lights !== false) {
       // A public asset: without it in the token's account, no lights.
-      this.lightsProvider = (
+      this.state.lightsProvider = (
         lights === true
           ? IonTmsImagery.fromIon(3812, tokenOptions(this))
           : Promise.resolve(lights)
@@ -462,13 +406,13 @@ export class Viewer {
     }
     this.clock.events.on("change", () => this.engine.requestRender());
     if (options.warningNotice !== false) {
-      this.warnings_ = attachWarnings(container);
+      this.state.warnings_ = attachWarnings(container);
     }
     // The frames module: the catalog, the world's resolver over it and the
     // clock its rigs read, each view's rig on ITRF, and the sky.
     engine.cameras.setClock(this.world, this.clock);
     const frames = early.frames ?? frameCatalog(options.frameData);
-    this.framesAbort = frames.abort;
+    this.state.framesAbort = frames.abort;
     useFrames(this, frames.catalog, options.frameData !== undefined);
     const catalog = frames.catalog;
     this.frameData =
@@ -477,7 +421,7 @@ export class Viewer {
         : catalog.tree().then(
             (tree) => tree.data,
             (error: unknown) => {
-              if (!this.destroyed && catalog === this.frames_) {
+              if (!this.state.destroyed && catalog === this.state.frames_) {
                 warn(
                   this,
                   {
@@ -490,7 +434,7 @@ export class Viewer {
               return undefined;
             },
           );
-    if (this.moon) {
+    if (this.state.moon) {
       const signal = this.moonMapLoad.signal;
       void fetch(MOON_MAP, { signal })
         .then(async (response) =>
@@ -499,7 +443,7 @@ export class Viewer {
           }),
         )
         .then((image) => {
-          if (!this.destroyed && !this.moonMapSharp) {
+          if (!this.state.destroyed && !this.moonMapSharp) {
             this.engine.setMoonMap(image);
           }
           // Uploaded, or not wanted (destroyed, or the sharp map won).
@@ -508,7 +452,7 @@ export class Viewer {
         .catch(() => {});
       void loadIonMoonMap({ ...tokenOptions(this), signal })
         .then(({ image, attributions, warnings, mean }) => {
-          if (this.destroyed) {
+          if (this.state.destroyed) {
             image.close();
             return;
           }
@@ -526,7 +470,7 @@ export class Viewer {
             error instanceof Error ? error.message : String(error);
           // Destroyed, or no token (expected): 1.x's map, quietly.
           if (
-            this.destroyed ||
+            this.state.destroyed ||
             (error instanceof DOMException && error.name === "AbortError") ||
             /no access token/.test(message)
           ) {
@@ -541,7 +485,7 @@ export class Viewer {
       this.engine.setStarMap(STAR_MAP);
     }
     if (options.timeControls !== false) {
-      this.time_ = attachTimeControls(container, this.clock, {
+      this.state.time_ = attachTimeControls(container, this.clock, {
         ...(options.timeControls === true || !options.timeControls
           ? {}
           : options.timeControls),
@@ -560,31 +504,31 @@ export class Viewer {
     if (options.suspendPresentation) {
       // Nothing to keep before the first frame: hidden, so the container's
       // background (or a loading screen) shows.
-      this.resumeStart = this.suspendPresentation({ hide: true });
+      this.state.resumeStart = this.suspendPresentation({ hide: true });
     }
     // The viewer's per-frame work runs in the engine's frames (one
     // animation frame loop, which sleeps on demand once nothing changes):
     // the controllers and the clock before the engine renders, busy while
     // the clock runs; the canvas shown after, once a frame is drawn.
     const offTick = engine.onTick((now) => {
-      if (this.destroyed) {
+      if (this.state.destroyed) {
         return false;
       }
       this.controller.update();
-      this.secondController?.update();
+      this.state.secondController?.update();
       this.clock.tick(now);
       return this.clock.mode !== "paused";
     });
     const offAfter = engine.onAfterTick(() => {
       if (
-        this.unhideAfter !== undefined &&
-        (this.hidingSuspensions > 0 ||
-          this.engine.stats.framesRendered > this.unhideAfter)
+        this.state.unhideAfter !== undefined &&
+        (this.state.hidingSuspensions > 0 ||
+          this.engine.stats.framesRendered > this.state.unhideAfter)
       ) {
-        if (this.hidingSuspensions === 0) {
+        if (this.state.hidingSuspensions === 0) {
           this.canvas.style.visibility = "";
         }
-        this.unhideAfter = undefined;
+        this.state.unhideAfter = undefined;
       }
     });
     this.offTick = () => {
@@ -650,7 +594,7 @@ export class Viewer {
         "setMarks" | "setZone" | "zone" | "setLabel" | "label"
       >
     | undefined {
-    const t = this.time_;
+    const t = this.state.time_;
     return (
       t && {
         setMarks: (marks) => t.setMarks(marks),
@@ -667,22 +611,19 @@ export class Viewer {
    * `terrain` holds the regions that cut or fade the terrain.
    */
   get globe(): Globe | undefined {
-    return this.globe_;
+    return this.state.globe_;
   }
 
   /** Whether the globe draws (it stays loaded while hidden). */
   get showGlobe(): boolean {
-    return this.globeShown;
+    return this.state.globeShown;
   }
   set showGlobe(on: boolean) {
-    this.globeShown = on;
-    if (this.globe_) {
-      this.globe_.show = on;
+    this.state.globeShown = on;
+    if (this.state.globe_) {
+      this.state.globe_.show = on;
     }
   }
-
-  /** @internal The night lights' image, resolving (undefined: none). */
-  lightsProvider?: Promise<ImageryProvider | undefined>;
 
   /** Whether the globe's night lights show (`ViewerOptions.cityLights`). */
   get cityLights(): boolean {
@@ -740,12 +681,10 @@ export class Viewer {
    */
   remove(content: Tileset3D | object): void {
     this.attributions.delete(content);
-    if (this.tilesets.delete(content as Tileset3D)) {
+    if (this.state.tilesets.delete(content as Tileset3D)) {
       this.engine.removeTileset(content as Tileset3D);
     }
   }
-  /** @internal */
-  readonly earthPose = new Camera();
 
   /**
    * Frames content, a bounding sphere or a place (heading 35°, pitch -30°).
@@ -778,12 +717,12 @@ export class Viewer {
    * The time controls show while it follows the clock.
    */
   get sunFromClock(): boolean {
-    return this.sunFromClock_;
+    return this.state.sunFromClock_;
   }
 
   set sunFromClock(on: boolean) {
-    this.sunFromClock_ = on;
-    this.time_?.show(on);
+    this.state.sunFromClock_ = on;
+    this.state.time_?.show(on);
     if (on) {
       this.applyClockSun();
     }
@@ -798,7 +737,7 @@ export class Viewer {
    * (`add`) don't carry over to the new one.
    */
   get frames(): FrameCatalog {
-    return this.frames_;
+    return this.state.frames_;
   }
 
   /**
@@ -807,7 +746,7 @@ export class Viewer {
    * notice over the view lists them (`ViewerOptions.warningNotice`).
    */
   get warnings(): readonly ViewerWarning[] {
-    return this.warningList;
+    return this.state.warningList;
   }
 
   /**
@@ -836,7 +775,7 @@ export class Viewer {
 
   /** The rig of the viewer's views (spec section 7.2's default): on ITRF, free. */
   private rig(): Rig {
-    return this.ownRig!;
+    return this.state.ownRig!;
   }
 
   /** @internal The sun's direction at the clock's time. */
@@ -854,7 +793,7 @@ export class Viewer {
 
   /** The views drawn: main, the split view's right half, the inset. */
   get views(): View[] {
-    return [this.view, this.second, this.overview_].filter((v) => !!v);
+    return [this.view, this.state.second, this.overview_].filter((v) => !!v);
   }
 
   // ------------------------------------------------------------- layout
@@ -864,7 +803,7 @@ export class Viewer {
    * selected per view from one shared cache and draw table.
    */
   get split(): boolean {
-    return !!this.second;
+    return !!this.state.second;
   }
   set split(on: boolean) {
     if (on === this.split) {
@@ -872,7 +811,7 @@ export class Viewer {
     }
     if (on) {
       this.view.viewport = { x: 0, y: 0, width: 0.5, height: 1 };
-      const second = (this.second = this.engine.addView({
+      const second = (this.state.second = this.engine.addView({
         target: this.target,
         world: this.world,
         shadows: this.shadows,
@@ -883,7 +822,7 @@ export class Viewer {
       second.exposure = this.view.exposure;
       second.cityLights = this.view.cityLights;
       second.outputEncoding = this.view.outputEncoding;
-      const controller = (this.secondController = new GlobeController(
+      const controller = (this.state.secondController = new GlobeController(
         second,
         this.canvas,
         this.engine,
@@ -898,9 +837,9 @@ export class Viewer {
       );
       fromEarth(this, second);
     } else {
-      this.secondController!.dispose();
-      this.engine.removeView(this.second!);
-      this.second = this.secondController = undefined;
+      this.state.secondController!.dispose();
+      this.engine.removeView(this.state.second!);
+      this.state.second = this.state.secondController = undefined;
       this.view.viewport = { x: 0, y: 0, width: 1, height: 1 };
     }
     if (this.overview_) {
@@ -935,7 +874,7 @@ export class Viewer {
   }
 
   private overviewViewport() {
-    return this.second
+    return this.state.second
       ? { x: 0.27, y: 0.02, width: 0.21, height: 0.3 }
       : { x: 0.7, y: 0.02, width: 0.28, height: 0.3 };
   }
@@ -950,7 +889,9 @@ export class Viewer {
     if (this.overview_?.contains(px, py)) {
       return undefined;
     }
-    const view = this.second?.contains(px, py) ? this.second : this.view;
+    const view = this.state.second?.contains(px, py)
+      ? this.state.second
+      : this.view;
     const area = view.pixelRect();
     return view.pick(px - area.x, py - area.y);
   }
@@ -984,14 +925,14 @@ export class Viewer {
   credits(): { attributions: Attribution[]; credits: string[] } {
     return {
       attributions: [
-        ...this.terrainAttributions,
-        ...(this.imagery?.attributions ?? []),
+        ...this.state.terrainAttributions,
+        ...(this.state.imagery?.attributions ?? []),
         ...[...this.attributions.values()].flat(),
         ...this.shownTilesets().flatMap((t) => t.attributions),
       ],
       credits: [
         ...new Set(
-          [this.globe_, ...this.shownTilesets()]
+          [this.state.globe_, ...this.shownTilesets()]
             .filter((t) => !!t)
             .flatMap((t) => t.credits()),
         ),
@@ -1014,15 +955,15 @@ export class Viewer {
       tilesets: () =>
         [
           ...new Set([
-            ...this.tilesets,
+            ...this.state.tilesets,
             ...this.world.items.map((item) => item.tileset),
-            this.globe_,
+            this.state.globe_,
           ]),
         ].filter((t) => !!t),
       views: () => {
         const views: Array<[string, View]> = [["main", this.view]];
-        if (this.second) {
-          views.push(["right", this.second]);
+        if (this.state.second) {
+          views.push(["right", this.state.second]);
         }
         if (this.overview_) {
           views.push(["inset", this.overview_]);
@@ -1053,12 +994,12 @@ export class Viewer {
    */
   setControls(mode: "globe" | "orbit", options?: OrbitOptions): void {
     if (mode === "orbit") {
-      let orbit = this.orbit_;
+      let orbit = this.state.orbit_;
       if (orbit && !options) {
         return;
       }
       const plan = planOrbit(orbit && orbitState(orbit), options ?? {}, {
-        focusCenter: this.focusCenter,
+        focusCenter: this.state.focusCenter,
         cameraPosition: earthCamera(this).position,
         globeHeading: this.controller.heading,
       });
@@ -1066,7 +1007,7 @@ export class Viewer {
         orbit = new InspectController(this.view, this.canvas, plan);
         orbit.ignore = this.controller.ignore;
         orbit.onChange = () => this.onOrbitChange?.();
-        this.orbit_ = orbit;
+        this.state.orbit_ = orbit;
         this.controller.enabled = false;
       } else {
         orbit.frame = plan.frame;
@@ -1075,9 +1016,9 @@ export class Viewer {
       }
       orbit.focus(plan.target, plan.heading, plan.pitch, plan.range);
       fromEarth(this, this.view);
-    } else if (mode === "globe" && this.orbit_) {
-      this.orbit_.dispose();
-      this.orbit_ = undefined;
+    } else if (mode === "globe" && this.state.orbit_) {
+      this.state.orbit_.dispose();
+      this.state.orbit_ = undefined;
       this.controller.enabled = true;
       this.onOrbitChange?.();
     }
@@ -1089,12 +1030,14 @@ export class Viewer {
    * it, or `orbitDragging`, may have changed.
    */
   get orbitPivot(): Float64Array | undefined {
-    return this.orbit_ && vec3.copy(vec3.vec3(), this.orbit_.target);
+    return (
+      this.state.orbit_ && vec3.copy(vec3.vec3(), this.state.orbit_.target)
+    );
   }
 
   /** Whether the orbit controls are being dragged (rotating or panning). */
   get orbitDragging(): boolean {
-    return this.orbit_?.dragging ?? false;
+    return this.state.orbit_?.dragging ?? false;
   }
 
   /**
@@ -1138,7 +1081,7 @@ export class Viewer {
 
   /** Whether presentation is suspended (`suspendPresentation`). */
   get presentationSuspended(): boolean {
-    return this.suspensions > 0;
+    return this.state.suspensions > 0;
   }
 
   /**
@@ -1151,32 +1094,24 @@ export class Viewer {
 
   /** Called when presentation is suspended (true) or resumes (false). */
   onPresentationChange?: (suspended: boolean) => void;
-  /** @internal */
-  suspensions = 0;
-  /** @internal */
-  hidingSuspensions = 0;
-  /** @internal Frames rendered when the last hiding suspension ended, until shown. */
-  unhideAfter?: number;
-  /** @internal */
-  resumeStart?: () => void;
 
   /** The current controls (`setControls`). */
   get controls(): "globe" | "orbit" {
-    return this.orbit_ ? "orbit" : "globe";
+    return this.state.orbit_ ? "orbit" : "globe";
   }
 
   destroy(): void {
-    this.destroyed = true;
+    this.state.destroyed = true;
     this.moonMapLoad.abort();
-    this.offFrames?.();
-    this.framesAbort.abort();
-    this.warnings_?.dispose();
-    this.orbit_?.dispose();
+    this.state.offFrames?.();
+    this.state.framesAbort.abort();
+    this.state.warnings_?.dispose();
+    this.state.orbit_?.dispose();
     this.offTick();
     this.credits_?.dispose();
     this.inspector?.dispose();
-    this.time_?.dispose();
-    this.secondController?.dispose();
+    this.state.time_?.dispose();
+    this.state.secondController?.dispose();
     this.controller.dispose();
     if (this.ownsEngine) {
       this.engine.destroy();

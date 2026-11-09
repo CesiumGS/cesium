@@ -9,15 +9,15 @@ import { eastNorthUpToFixedFrame, mat4, vec3 } from "@cesium/next";
  * follows the clock, the sun.
  */
 export function applySky(viewer: Viewer): void {
-  if (viewer.destroyed) {
+  if (viewer.state.destroyed) {
     return;
   }
   const sky = viewer.sky;
   viewer.engine.icrfToFixed.set(sky.icrfToFixed);
-  if (viewer.sunFromClock_) {
+  if (viewer.state.sunFromClock_) {
     viewer.engine.sunDirection.set(sky.sunDirection);
   }
-  if (viewer.moon) {
+  if (viewer.state.moon) {
     (viewer.engine.moonPosition ??= new Float64Array(3)).set(sky.moonPosition!);
     (viewer.engine.moonAxes ??= new Float64Array(6)).set(sky.moonAxes!);
   }
@@ -33,11 +33,11 @@ export function setSun(
   azimuth: number,
   elevation: number,
 ): void {
-  viewer.sunFromClock_ = false;
-  viewer.time_?.show(false);
-  viewer.sun = { azimuth, elevation };
+  viewer.state.sunFromClock_ = false;
+  viewer.state.time_?.show(false);
+  viewer.state.sun = { azimuth, elevation };
   const enu = eastNorthUpToFixedFrame(
-    viewer.focusCenter,
+    viewer.state.focusCenter,
     ellipsoid,
     mat4.mat4(),
   );

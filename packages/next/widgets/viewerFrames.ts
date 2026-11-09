@@ -21,14 +21,14 @@ export function setFrameData(
   viewer: Viewer,
   data: FrameData | undefined,
 ): void {
-  if (viewer.destroyed) {
+  if (viewer.state.destroyed) {
     return;
   }
   // Everything that can throw first: malformed data or a stranded
   // binding changes nothing.
   const bindings = carriedBindings(viewer);
-  const { catalog } = frameCatalog(data, viewer.framesAbort);
-  viewer.warningList.length = 0;
+  const { catalog } = frameCatalog(data, viewer.state.framesAbort);
+  viewer.state.warningList.length = 0;
   showWarnings(viewer);
   emit(viewer, "warningsCleared", viewer);
   useFrames(viewer, catalog, data !== undefined, bindings);
@@ -45,11 +45,11 @@ export function setFrameData(
 function carriedBindings(
   viewer: Viewer,
 ): Array<[AnchorHandle, CatalogFrameName]> {
-  const resolver = viewer.ownResolver;
+  const resolver = viewer.state.ownResolver;
   if (!resolver || viewer.engine.cameras.resolver(viewer.world) !== resolver) {
     return [];
   }
-  const old = viewer.frames_;
+  const old = viewer.state.frames_;
   const carried: Array<[AnchorHandle, CatalogFrameName]> = [];
   const stranded: string[] = [];
   for (const anchor of viewer.world.anchors) {
@@ -86,28 +86,29 @@ export function useFrames(
   precise: boolean,
   bindings: ReadonlyArray<[AnchorHandle, CatalogFrameName]> = [],
 ): void {
-  viewer.offFrames?.();
+  viewer.state.offFrames?.();
   const cameras = viewer.engine.cameras;
   // An application's frame resolver stays, and so do the rigs it places.
   const appResolver =
-    viewer.ownResolver !== undefined &&
-    cameras.resolver(viewer.world) !== viewer.ownResolver;
+    viewer.state.ownResolver !== undefined &&
+    cameras.resolver(viewer.world) !== viewer.state.ownResolver;
   // The views to put on the new ITRF: all at first, then those still on
   // the viewer's own rig (an application's rig stays).
   const own = appResolver
     ? []
     : viewer.views.filter(
-        (view) => !viewer.ownRig || cameras.rig(view) === viewer.ownRig,
+        (view) =>
+          !viewer.state.ownRig || cameras.rig(view) === viewer.state.ownRig,
       );
-  if (viewer.ownRig) {
+  if (viewer.state.ownRig) {
     // Back to the table's root first, through the old resolver: the new
     // one can't place the old catalog's ITRF.
     for (const view of own) {
       cameras.setRig(view, defaultRig(viewer.world));
     }
   }
-  viewer.frames_ = catalog;
-  viewer.ownRig = {
+  viewer.state.frames_ = catalog;
+  viewer.state.ownRig = {
     position: { frame: catalog.get("ITRF") },
     orientation: { kind: "free" },
   };
@@ -116,11 +117,11 @@ export function useFrames(
     for (const [anchor, name] of bindings) {
       resolver.bindAnchor(anchor, catalog.get(name));
     }
-    viewer.ownResolver = resolver;
+    viewer.state.ownResolver = resolver;
     cameras.setResolver(viewer.world, resolver);
   }
   for (const view of own) {
-    cameras.setRig(view, viewer.ownRig);
+    cameras.setRig(view, viewer.state.ownRig);
   }
   // With frameData, one `frameDataFailed` says the load failed.
   const listed = (warning: FrameDataWarning) =>
@@ -141,7 +142,7 @@ export function useFrames(
     clock: viewer.clock,
     precision: precise ? "precise" : "analytic",
   });
-  viewer.offFrames = () => {
+  viewer.state.offFrames = () => {
     offWarning();
     detachSky();
   };

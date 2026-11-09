@@ -25,7 +25,7 @@ export const deg = Math.PI / 180;
 export function earthCamera(viewer: Viewer): Camera {
   return viewer.view.anchorCamera(
     viewer.world.bodyAnchor(EARTH),
-    viewer.earthPose,
+    viewer.state.earthPose,
   );
 }
 
@@ -46,7 +46,7 @@ export function zoomTo(
   heading = 35 * deg,
   pitch = -30 * deg,
 ): void {
-  const token = ++viewer.zoomToken;
+  const token = ++viewer.state.zoomToken;
   if (target instanceof ModelPlacement) {
     const model = target;
     const { center, radius } = model.bounds();
@@ -55,9 +55,9 @@ export function zoomTo(
     if (model.clamp && !model.clamp.settled) {
       void model.clamp.whenSettled().then(() => {
         if (
-          token === viewer.zoomToken &&
+          token === viewer.state.zoomToken &&
           inputs === viewer.controller.inputs &&
-          !viewer.destroyed
+          !viewer.state.destroyed
         ) {
           const { center, radius } = model.bounds();
           frameCamera(
@@ -144,26 +144,26 @@ function frameCamera(
   // float depth is as precise whatever the near plane, so 1.x's per-frame
   // near from drawn volumes isn't needed.
   viewer.view.camera.near = Math.min(0.1, Math.max(0.001, radius * 0.002));
-  vec3.copy(viewer.focusCenter, center);
+  vec3.copy(viewer.state.focusCenter, center);
   viewer.controller.focus(center, heading, pitch, range);
   fromEarth(viewer, viewer.view);
-  if (viewer.orbit_) {
-    followZoom(viewer.orbit_, center, heading, pitch, range);
+  if (viewer.state.orbit_) {
+    followZoom(viewer.state.orbit_, center, heading, pitch, range);
   }
-  if (viewer.second && viewer.secondController) {
-    viewer.second.camera.near = viewer.view.camera.near;
-    viewer.secondController.focus(
+  if (viewer.state.second && viewer.state.secondController) {
+    viewer.state.second.camera.near = viewer.view.camera.near;
+    viewer.state.secondController.focus(
       center,
       heading + (150 * Math.PI) / 180,
       -0.25,
       range * 0.4,
     );
-    fromEarth(viewer, viewer.second);
+    fromEarth(viewer, viewer.state.second);
   }
-  if (viewer.sunFromClock_) {
-    if (!viewer.clockPlaced) {
+  if (viewer.state.sunFromClock_) {
+    if (!viewer.state.clockPlaced) {
       // A first look in daylight: 10:30 local solar time today there.
-      viewer.clockPlaced = true;
+      viewer.state.clockPlaced = true;
       const place = placeCamera(viewer);
       const offset = place ? (place.longitude / Math.PI) * 12 * 3_600_000 : 0;
       const day = 86_400_000;
@@ -171,9 +171,9 @@ function frameCamera(
       viewer.clock.time = start + 10.5 * 3_600_000;
     }
     viewer.applyClockSun();
-    viewer.time_?.update();
-  } else if (viewer.sun) {
-    viewer.setSun(viewer.sun.azimuth, viewer.sun.elevation);
+    viewer.state.time_?.update();
+  } else if (viewer.state.sun) {
+    viewer.setSun(viewer.state.sun.azimuth, viewer.state.sun.elevation);
   }
 }
 
@@ -182,8 +182,8 @@ export function placeCamera(
   viewer: Viewer,
 ): { longitude: number; latitude: number } | undefined {
   const at =
-    vec3.length(viewer.focusCenter) > 0
-      ? viewer.focusCenter
+    vec3.length(viewer.state.focusCenter) > 0
+      ? viewer.state.focusCenter
       : earthCamera(viewer).position;
   const c = ellipsoid.cartesianToCartographic(at, {
     longitude: 0,
