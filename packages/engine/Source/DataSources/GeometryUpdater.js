@@ -259,7 +259,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   },
   /**
    * Gets a value indicating if the geometry should be drawn on terrain.
-   * @memberof EllipseGeometryUpdater.prototype
+   * @memberof GeometryUpdater.prototype
    *
    * @type {boolean}
    * @readonly

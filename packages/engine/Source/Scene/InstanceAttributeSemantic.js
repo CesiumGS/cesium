@@ -44,6 +44,7 @@ const InstanceAttributeSemantic = {
 /**
  * Gets the instance attribute semantic matching the glTF attribute semantic.
  *
+ * @param {string} gltfSemantic The glTF attribute semantic.
  * @returns {InstanceAttributeSemantic} The instance attribute semantic, or undefined if there is no match.
  *
  * @private

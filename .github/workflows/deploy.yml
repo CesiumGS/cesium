@@ -25,12 +25,7 @@ jobs:
       DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     steps:
       - uses: actions/checkout@v7
-      - name: install node 22
-        uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-      - name: npm install
-        run: npm install
+      - uses: ./.github/actions/install-dependencies
       - name: set the version in package.json
         run: npm run deploy-set-version -- --buildVersion $BUILD_VERSION
       - name: create release zip

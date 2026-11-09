@@ -24,6 +24,9 @@ const scaleToGeodeticHeightP = new Cartesian3();
 const PolygonPipeline = {};
 
 /**
+ * @param {Cartesian2[]} positions The vertices of the polygon.
+ * @returns {number} The signed area of the polygon.
+ *
  * @exception {DeveloperError} At least three positions are required.
  */
 PolygonPipeline.computeArea2D = function (positions) {
@@ -50,6 +53,7 @@ PolygonPipeline.computeArea2D = function (positions) {
 };
 
 /**
+ * @param {Cartesian2[]} positions The vertices of the polygon.
  * @returns {WindingOrder} The winding order.
  *
  * @exception {DeveloperError} At least three positions are required.
