@@ -4,7 +4,7 @@ import type { TerrainTileInfo } from "../globe/quantizedMesh.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
-import { FrameGraph, TexturePool } from "../render/FrameGraph.ts";
+import { TexturePool } from "../render/FrameGraph.ts";
 import {
   VIEW_BIT_WORD,
   VIEW_SIZE,
@@ -51,7 +51,6 @@ import type { StarField } from "../atmosphere/stars.ts";
 import { Camera } from "./Camera.ts";
 import {
   SHADOW_CASCADES,
-  SHADOWS_SIZE,
   SHADOWS_STRIDE,
   casterPlanes,
   createShadowCascades,
@@ -61,7 +60,6 @@ import {
 } from "./shadows.ts";
 import { CityLight } from "../globe/cityLight.ts";
 import {
-  CLUSTERS,
   LIGHTS_SIZE,
   LIGHT_FLOATS,
   LIGHT_HEADER_FLOATS,
@@ -114,6 +112,7 @@ import {
   drawsAerialPerspective,
   LIST_HEADER,
 } from "../render/view/viewFrameData.ts";
+import { viewFrameFor } from "../render/view/viewFrame.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -420,15 +419,19 @@ export class Engine {
    */
   moonAxes: Float64Array | undefined = undefined;
 
-  private readonly ctx: RenderContext;
+  /** @internal */
+  readonly ctx: RenderContext;
   /** @internal The real-time atmosphere and the sky drawn from it. */
   readonly sky: Sky;
   private readonly workers = new WorkerPool();
   /** Content request windows per origin, shared by all tilesets. */
   readonly requests = new RequestScheduler();
-  private readonly pool: TexturePool;
-  private readonly timer: GpuTimer;
-  private readonly viewStaging: GPUBuffer;
+  /** @internal */
+  readonly pool: TexturePool;
+  /** @internal */
+  readonly timer: GpuTimer;
+  /** @internal */
+  readonly viewStaging: GPUBuffer;
   private readonly viewData: Float32Array;
   /**
    * Per view slot: a view block per shadow cascade (the sun's projection
@@ -437,9 +440,11 @@ export class Engine {
    */
   private readonly cascadeData: Float32Array;
   private readonly cascadeDataU32: Uint32Array;
-  private readonly cascadeStaging: GPUBuffer;
+  /** @internal */
+  readonly cascadeStaging: GPUBuffer;
   private readonly shadowData: Float32Array;
-  private readonly shadowStaging: GPUBuffer;
+  /** @internal */
+  readonly shadowStaging: GPUBuffer;
   /** The night lights' mean around each view's camera (`cityLightAt`). */
   private readonly cityLights = new WeakMap<ImageryProvider, CityLight>();
   private readonly cityLightPlaces = new WeakMap<
@@ -448,8 +453,8 @@ export class Engine {
   >();
   /** This frame's view's city light, cd/m² (`cityLightAt`). */
   private viewCityLight = 0;
-  /** Each drawn view's lights (lights.ts `packViewLights`), by slot. */
-  private readonly lightStaging: GPUBuffer;
+  /** @internal Each drawn view's lights (lights.ts `packViewLights`), by slot. */
+  readonly lightStaging: GPUBuffer;
   private readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
   private readonly cascades = createShadowCascades();
   private readonly viewDataU32: Uint32Array;
@@ -483,7 +488,8 @@ export class Engine {
   private readonly farAnchors = new WeakMap<View, Set<AnchorHandle>>();
   private readonly freeViewIds: number[] = [];
   private readonly maxViews: number;
-  private readonly viewFrames = new Map<View, ViewFrame>();
+  /** @internal */
+  readonly viewFrames = new Map<View, ViewFrame>();
   private readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
   private readonly worldFrames = new WeakMap<World, WorldFrame>();
   private readonly overlayResources = new Map<View, OverlayResources>();
@@ -508,20 +514,20 @@ export class Engine {
   private readonly pickResult: GPUBuffer;
   private readonly pickParamsData = new Uint32Array(4);
   private readonly picks: PendingPick[] = [];
-  /** Exposure meter readings this frame, mapped after submit. */
-  private readonly meters: Array<{
+  /** @internal Exposure meter readings this frame, mapped after submit. */
+  readonly meters: Array<{
     view: View;
     readback: GPUBuffer;
     scratch: GPUBuffer[];
   }> = [];
-  /** Depth ranges reduced this frame (`depthRange.slang`), mapped after submit. */
-  private readonly depthRanges: Array<{
+  /** @internal Depth ranges reduced this frame (`depthRange.slang`), mapped after submit. */
+  readonly depthRanges: Array<{
     frame: ViewFrame;
     readback: GPUBuffer;
     scratch: GPUBuffer[];
   }> = [];
-  /** HDR images copied this frame (`View.readHdr`), mapped after submit. */
-  private readonly hdrReads: Array<{
+  /** @internal HDR images copied this frame (`View.readHdr`), mapped after submit. */
+  readonly hdrReads: Array<{
     buffer: GPUBuffer;
     bytesPerRow: number;
     width: number;
@@ -531,14 +537,16 @@ export class Engine {
     resolvers: Array<(image: HdrImage) => void>;
   }> = [];
   /**
-   * Translucency's per-pixel lists ("exact", translucent.wgsl), shared by
+   * @internal Translucency's per-pixel lists ("exact", translucent.wgsl), shared by
    * the views (each clears and fills them in turn): the nodes they hold,
    * grown when a frame needed more (its count read back, one at a time).
    */
-  private lists?: GPUBuffer;
+  lists?: GPUBuffer;
   private listNodes = 0;
-  private listCountPending = false;
-  private readonly listCounts: GPUBuffer[] = [];
+  /** @internal */
+  listCountPending = false;
+  /** @internal */
+  readonly listCounts: GPUBuffer[] = [];
   /** Bound where a translucent pass doesn't read the lists or moments. */
   private translucentDummies?: {
     buffer: GPUBuffer;
@@ -548,21 +556,25 @@ export class Engine {
     color: GPUTextureView;
   };
   private readonly translucentData = new DataView(new ArrayBuffer(32));
-  private readonly presentData = new DataView(new ArrayBuffer(48));
-  private readonly adaptData = new Float32Array(4);
-  /** The eye's local adaptation grid, sampled trilinearly. */
-  private adaptSampler?: GPUSampler;
-  /** FXAA's image, sampled bilinearly. */
-  private fxaaSampler?: GPUSampler;
-  private readonly fxaaData = new DataView(new ArrayBuffer(32));
+  /** @internal */
+  readonly presentData = new DataView(new ArrayBuffer(48));
+  /** @internal */
+  readonly adaptData = new Float32Array(4);
+  /** @internal The eye's local adaptation grid, sampled trilinearly. */
+  adaptSampler?: GPUSampler;
+  /** @internal FXAA's image, sampled bilinearly. */
+  fxaaSampler?: GPUSampler;
+  /** @internal */
+  readonly fxaaData = new DataView(new ArrayBuffer(32));
   private readonly overlayColor = new Float32Array(4);
   private readonly viewBlock: ViewBlock;
   /** When the engine was created (`performance.now()`): views' `time`. */
   private readonly startTime = performance.now();
-  /** Height captures (`addHeightCapture`). */
-  private readonly captures: HeightCapture[] = [];
+  /** @internal Height captures (`addHeightCapture`). */
+  readonly captures: HeightCapture[] = [];
   private readonly commandBuffers: GPUCommandBuffer[] = [];
-  private frameNumber = 0;
+  /** @internal */
+  frameNumber = 0;
   private frameHandle = 0;
   /** An animation frame is requested for the loop (`start`). */
   private scheduled = false;
@@ -866,11 +878,11 @@ export class Engine {
   }
 
   /**
-   * Encodes a pending rebuild of a view's environment (after its sky-view
+   * @internal Encodes a pending rebuild of a view's environment (after its sky-view
    * table, which it reads when the view has one), then selects the view's
    * environment for its draws.
    */
-  private encodeEnvironment(
+  encodeEnvironment(
     encoder: GPUCommandEncoder,
     view: View,
     frame: ViewFrame,
@@ -1312,7 +1324,7 @@ export class Engine {
   }
 
   /**
-   * The view's camera in its body anchor (`View.anchorCamera(view.
+   * @internal The view's camera in its body anchor (`View.anchorCamera(view.
    * bodyAnchor)`; the table's root while the world has none): what the
    * engine shades, culls, clamps and clips the body with, since the
    * shading axes are the body anchor's (plan 5a's call 18). Recomputed
@@ -1320,7 +1332,7 @@ export class Engine {
    * placements (`View.anchorRevision`) or the body anchor change. With the body
    * anchor at the identity it equals `view.camera`, bit for bit.
    */
-  private bodyCamera(view: View): Camera {
+  bodyCamera(view: View): Camera {
     const anchor = view.bodyAnchor;
     const version = view.camera.version;
     const revision = view.anchorRevision;
@@ -2626,7 +2638,7 @@ export class Engine {
         ? this.persistent.get(view)
         : undefined;
       const rect = image ? image.rect : view.pixelRect();
-      const frame = this.viewFrame(view, rect);
+      const frame = viewFrameFor(this, view, rect);
       frame.slot = slots;
       // Every frame takes the view's exposure as it is now: only the
       // on-demand check computed it, so `renderFrame()` and the continuous
@@ -3066,8 +3078,8 @@ export class Engine {
     this.ctx.device.queue.writeBuffer(frame.translucentParams, 0, d.buffer);
   }
 
-  /** What a translucent pass binds where it reads no lists or moments. */
-  private translucentInputs(): NonNullable<Engine["translucentDummies"]> {
+  /** @internal What a translucent pass binds where it reads no lists or moments. */
+  translucentInputs(): NonNullable<Engine["translucentDummies"]> {
     if (!this.translucentDummies) {
       const { device, pipelines } = this.ctx;
       const texture = (format: GPUTextureFormat) =>
@@ -3095,11 +3107,11 @@ export class Engine {
   }
 
   /**
-   * A view's translucent pass's group 3 (translucent.wgsl): its parameters
+   * @internal A view's translucent pass's group 3 (translucent.wgsl): its parameters
    * and depth, with the lists and the moments given; kept by role while
    * they stay the same.
    */
-  private translucentGroup(
+  translucentGroup(
     frame: ViewFrame,
     role: number,
     [lists, zero, higher]: [GPUBuffer, GPUTextureView, GPUTextureView],
@@ -3120,10 +3132,10 @@ export class Engine {
   }
 
   /**
-   * A view's composite's group (composite.slang): what "exact" blended
+   * @internal A view's composite's group (composite.slang): what "exact" blended
    * (lit, unlit: bindings 3, 4), or the moments' zeroth and sums (2–4).
    */
-  private compositeGroup(
+  compositeGroup(
     frame: ViewFrame,
     role: number,
     pipeline: GPURenderPipeline,
@@ -3142,7 +3154,8 @@ export class Engine {
     );
   }
 
-  private keptGroup(
+  /** @internal */
+  keptGroup(
     frame: ViewFrame,
     role: number,
     inputs: readonly (GPUBuffer | GPUTextureView)[],
@@ -3523,7 +3536,8 @@ export class Engine {
     }
   }
 
-  private encodePick(
+  /** @internal */
+  encodePick(
     enc: GPUCommandEncoder,
     view: View,
     frame: ViewFrame,
@@ -3702,1079 +3716,8 @@ export class Engine {
     };
   }
 
-  /** The view's frame graph for its current size, built on first use and on resize. */
-  private viewFrame(view: View, rect: Readonly<PixelRect>): ViewFrame {
-    let frame = this.viewFrames.get(view);
-    if (
-      !frame ||
-      frame.width !== rect.width ||
-      frame.height !== rect.height ||
-      frame.x !== rect.x ||
-      frame.y !== rect.y
-    ) {
-      if (frame) {
-        destroyViewFrame(frame);
-        this.releaseTargets(view, frame);
-      }
-      frame = this.buildViewFrame(view, rect);
-      this.viewFrames.set(view, frame);
-    }
-    return frame;
-  }
-
-  /**
-   * Frees a view's render targets at its old size when it resizes, unless
-   * another view still renders at that size. Without this, a window resize
-   * leaves every intermediate size resident until the pool's idle timeout.
-   */
-  private releaseTargets(view: View, old: ViewFrame): void {
-    for (const [other, frame] of this.viewFrames) {
-      if (
-        other !== view &&
-        frame.width === old.width &&
-        frame.height === old.height
-      ) {
-        return;
-      }
-    }
-    for (const desc of old.graph.transientDescs()) {
-      this.pool.purge(desc);
-    }
-  }
-
-  private buildViewFrame(view: View, rect: Readonly<PixelRect>): ViewFrame {
-    const { device, pipelines, targets } = this.ctx;
-    const { x, y, width, height } = rect;
-    const graph = new FrameGraph(this.pool);
-    const attachment = GPUTextureUsage.RENDER_ATTACHMENT;
-    const color = graph.createTexture("color.msaa", {
-      width,
-      height,
-      format: "rgba16float",
-      sampleCount: targets.sampleCount,
-      usage: attachment,
-    });
-    const resolved = graph.createTexture("color", {
-      width,
-      height,
-      format: "rgba16float",
-      // COPY_SRC: `View.readHdr`.
-      usage:
-        attachment | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC,
-    });
-    // Display-referred (unlit) color, resolved for the present pass.
-    const display = graph.createTexture("display.msaa", {
-      width,
-      height,
-      format: "rgba8unorm-srgb",
-      sampleCount: targets.sampleCount,
-      usage: attachment,
-    });
-    const displayResolved = graph.createTexture("display", {
-      width,
-      height,
-      format: "rgba8unorm-srgb",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    // Feature IDs and depth are the view's own, not pooled: what the last
-    // frame left in them serves picks while the view is idle, without a
-    // render. Read by the pick pass (features, positions).
-    const idsTexture = device.createTexture({
-      label: "featureId.msaa",
-      size: [width, height],
-      format: "rg16uint",
-      sampleCount: targets.sampleCount,
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    const depthTexture = device.createTexture({
-      label: "depth.msaa",
-      size: [width, height],
-      format: targets.depthFormat,
-      sampleCount: targets.sampleCount,
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    const idsView = idsTexture.createView();
-    const depthView = depthTexture.createView();
-    const ids = graph.importTexture("featureId.msaa", idsView);
-    const depth = graph.importTexture("depth.msaa", depthView);
-    // Rebound to this frame's target texture before every execute.
-    const output = graph.importTexture("output", {} as GPUTextureView);
-
-    // Alpha 0 where nothing is drawn: the exposure meter leaves it out.
-    const clearColor: GPUColorDict = { r: 0, g: 0, b: 0, a: 0 };
-    const opaqueColor: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      resolveTarget: undefined,
-      clearValue: clearColor,
-      loadOp: "clear",
-      storeOp: "discard",
-    };
-    const opaqueIds: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      clearValue: { r: 0, g: 0, b: 0, a: 0 },
-      loadOp: "clear",
-      storeOp: "store",
-    };
-    const opaqueDisplay: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      resolveTarget: undefined,
-      clearValue: { r: 0, g: 0, b: 0, a: 0 },
-      loadOp: "clear",
-      storeOp: "discard",
-    };
-    const opaqueDepth: GPURenderPassDepthStencilAttachment = {
-      view: undefined as never,
-      depthClearValue: 0, // reverse-Z: far is 0
-      depthLoadOp: "clear",
-      depthStoreOp: "store", // picks read it, also while the view is idle
-    };
-    const opaquePass: GPURenderPassDescriptor = {
-      label: "opaque",
-      colorAttachments: [opaqueColor, opaqueIds, opaqueDisplay],
-      depthStencilAttachment: opaqueDepth,
-    };
-    const presentColor: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      clearValue: { r: 0, g: 0, b: 0, a: 1 },
-      loadOp: "clear",
-      storeOp: "store",
-    };
-    const presentPass: GPURenderPassDescriptor = {
-      label: "present",
-      colorAttachments: [presentColor],
-    };
-
-    const frame: ViewFrame = {
-      x,
-      y,
-      width,
-      height,
-      graph,
-      output,
-      slot: 0,
-      viewBytes: VIEW_SIZE,
-      clearTarget: true,
-      bundle: undefined,
-      bundles: [],
-      pick: undefined,
-      seconds: 0,
-      ids: idsTexture,
-      depth: depthTexture,
-      idsView,
-      depthView,
-      rendered: false,
-      presentParams: device.createBuffer({
-        label: "presentParams",
-        size: 48,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-      }),
-      presentGroup: undefined,
-      presentSource: undefined,
-      presentDisplay: undefined,
-      presentAdaptation: undefined,
-      adaptParams: device.createBuffer({
-        label: "adaptParams",
-        size: 16,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-      }),
-      fxaaParams: device.createBuffer({
-        label: "fxaaParams",
-        size: 32,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-      }),
-      fxaaGroup: undefined,
-      fxaaImage: undefined,
-      sky: this.sky.createView(),
-      shadowed: false,
-      ambient: false,
-      lightCount: 0,
-      depthRange: undefined,
-      rangePending: false,
-      cascadeRange: undefined,
-      aoParams: device.createBuffer({
-        label: "aoParams",
-        size: 64,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-      }),
-      translucent: false,
-      translucentParams: device.createBuffer({
-        label: "translucentParams",
-        size: 32,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-      }),
-      translucentGroups: [],
-    };
-    this.sky.writeWeights(frame.sky);
-
-    // The sun's shadow maps: per cascade, its block in place of the view's,
-    // the world culled to the sun's box and its casters drawn.
-    const shadowDepth: GPURenderPassDepthStencilAttachment = {
-      view: undefined as never,
-      depthClearValue: 0, // reverse-Z: farthest from the sun is 0
-      depthLoadOp: "clear",
-      depthStoreOp: "store",
-    };
-    const shadowPass: GPURenderPassDescriptor = {
-      label: "shadow",
-      colorAttachments: [],
-      depthStencilAttachment: shadowDepth,
-    };
-    graph.addPass("shadows", { sideEffect: true }, (enc) => {
-      if (!frame.shadowed) {
-        return;
-      }
-      const casters = view.world.shadowBundle();
-      for (let k = 0; k < SHADOW_CASCADES; k++) {
-        enc.copyBufferToBuffer(
-          this.cascadeStaging,
-          (frame.slot * SHADOW_CASCADES + k) * VIEW_STRIDE,
-          this.ctx.currentViewBuffer,
-          0,
-          frame.viewBytes,
-        );
-        // Point sets cast no shadows: their cull is the view's alone.
-        view.world.encodeCull(enc, undefined, false);
-        shadowDepth.view = this.ctx.shadowLayers[k]!;
-        shadowPass.timestampWrites = this.timer.passWrites("shadows");
-        const pass = enc.beginRenderPass(shadowPass);
-        pass.executeBundles([casters]);
-        pass.end();
-      }
-    });
-
-    // Height captures this view draws: ground only, straight down.
-    graph.addPass("height-captures", { sideEffect: true }, (enc) => {
-      for (const c of this.captures) {
-        if (c.by !== view || c.stamp !== this.frameNumber) {
-          continue;
-        }
-        enc.copyBufferToBuffer(
-          c.block,
-          0,
-          this.ctx.currentViewBuffer,
-          0,
-          c.viewBytes,
-        );
-        view.world.encodeCull(enc, undefined, false);
-        const pass = enc.beginRenderPass({
-          label: "heightCapture",
-          colorAttachments: [],
-          depthStencilAttachment: {
-            view: c.view,
-            depthClearValue: 0, // reverse-Z: nothing (below `bottom`) is 0
-            depthLoadOp: "clear",
-            depthStoreOp: "store",
-          },
-        });
-        pass.executeBundles([view.world.heightBundle()]);
-        pass.end();
-        c.captured++;
-      }
-    });
-
-    graph.addPass("select-view", { sideEffect: true }, (enc) => {
-      enc.copyBufferToBuffer(
-        this.viewStaging,
-        frame.slot * VIEW_STRIDE,
-        this.ctx.currentViewBuffer,
-        0,
-        frame.viewBytes,
-      );
-      enc.copyBufferToBuffer(
-        this.shadowStaging,
-        frame.slot * SHADOWS_STRIDE,
-        this.ctx.currentShadowsBuffer,
-        0,
-        SHADOWS_SIZE,
-      );
-      enc.copyBufferToBuffer(
-        this.lightStaging,
-        frame.slot * LIGHTS_SIZE,
-        this.ctx.lightBuffer,
-        0,
-        (LIGHT_HEADER_FLOATS + frame.lightCount * LIGHT_FLOATS) * 4,
-      );
-    });
-
-    // Its point and spot lights into its froxels (lights.slang).
-    graph.addPass("lights", { sideEffect: true }, (enc) => {
-      if (frame.lightCount === 0) {
-        return;
-      }
-      const pass = enc.beginComputePass({
-        label: "lights",
-        timestampWrites: this.timer.passWrites("lights"),
-      });
-      pass.setPipeline(this.ctx.pipelines.lightsAssign);
-      pass.setBindGroup(0, this.ctx.lightAssignGroup);
-      // A workgroup per tile, a thread per slice (lights.slang).
-      pass.dispatchWorkgroups(CLUSTERS[0], CLUSTERS[1]);
-      pass.end();
-    });
-
-    graph.addPass("cull", { sideEffect: true }, (enc) => {
-      view.world.encodeCull(
-        enc,
-        this.timer.passWrites("cull"),
-        true,
-        frame.width * frame.height,
-      );
-    });
-
-    // The sky around the camera, before the opaque pass draws from it.
-    graph.addPass("sky-view", { sideEffect: true }, (enc) => {
-      if (drawsSky(view) && frame.sky.inside) {
-        this.sky.encodeTable(enc, frame.sky, this.timer.passWrites("sky-view"));
-      }
-    });
-
-    // The view's environment lighting, rebuilt from its sky if due.
-    graph.addPass("environment", { sideEffect: true }, (enc) => {
-      this.encodeEnvironment(enc, view, frame);
-    });
-
-    // The air between the camera and the scene, for the opaque pass.
-    graph.addPass("aerial-perspective", { sideEffect: true }, (enc) => {
-      // Marched per vertex instead from high up: no volume.
-      if (drawsAerialPerspective(view) && frame.sky.march < 1) {
-        this.sky.encodeAerial(
-          enc,
-          frame.sky,
-          this.timer.passWrites("aerial-perspective"),
-        );
-      }
-      if (drawsAerialPerspective(view) && frame.sky.screenHaze > 0) {
-        this.sky.encodeAerialScreen(enc, frame.sky);
-      }
-    });
-
-    // Ambient occlusion: a single-sampled depth and normal prepass of what
-    // the view culled, the horizon search, then the blur into the buffer
-    // the opaque pass reads.
-    const prepassNormal = graph.createTexture("prepass.normal", {
-      width,
-      height,
-      format: "rgba16float",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    const prepassDepth = graph.createTexture("prepass.depth", {
-      width,
-      height,
-      format: "depth32float",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    const rawAo = graph.createTexture("ao.raw", {
-      width: Math.ceil(width / 2),
-      height: Math.ceil(height / 2),
-      format: "r32float",
-      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    const prepassColor: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      clearValue: { r: 0, g: 0, b: 1, a: 0 },
-      loadOp: "clear",
-      storeOp: "store",
-    };
-    const prepassDepthAttachment: GPURenderPassDepthStencilAttachment = {
-      view: undefined as never,
-      depthClearValue: 0,
-      depthLoadOp: "clear",
-      depthStoreOp: "store",
-    };
-    const prepassPass: GPURenderPassDescriptor = {
-      label: "prepass",
-      colorAttachments: [prepassColor],
-      depthStencilAttachment: prepassDepthAttachment,
-    };
-    graph.addPass(
-      "prepass",
-      { writes: [prepassNormal, prepassDepth], sideEffect: true },
-      (enc, get) => {
-        if (!frame.ambient) {
-          return;
-        }
-        prepassColor.view = get(prepassNormal);
-        prepassDepthAttachment.view = get(prepassDepth);
-        prepassPass.timestampWrites = this.timer.passWrites("prepass");
-        const pass = enc.beginRenderPass(prepassPass);
-        pass.executeBundles([view.world.prepassBundle()]);
-        pass.end();
-      },
-    );
-    graph.addPass(
-      "ambient-occlusion",
-      {
-        reads: [prepassNormal, prepassDepth],
-        writes: [rawAo],
-        sideEffect: true,
-      },
-      (enc, get) => {
-        if (!frame.ambient) {
-          return;
-        }
-        const trace = device.createBindGroup({
-          layout: pipelines.aoTrace.getBindGroupLayout(0),
-          entries: [
-            { binding: 0, resource: { buffer: frame.aoParams } },
-            { binding: 1, resource: get(prepassDepth) },
-            { binding: 2, resource: get(prepassNormal) },
-            { binding: 3, resource: get(rawAo) },
-          ],
-        });
-        const blur = device.createBindGroup({
-          layout: pipelines.aoDenoise.getBindGroupLayout(0),
-          entries: [
-            { binding: 0, resource: { buffer: frame.aoParams } },
-            { binding: 1, resource: get(prepassDepth) },
-            { binding: 4, resource: get(rawAo) },
-            { binding: 5, resource: { buffer: this.ctx.aoBuffer } },
-          ],
-        });
-        const timestampWrites = this.timer.passWrites("ambient-occlusion");
-        const pass = enc.beginComputePass({
-          label: "ambient-occlusion",
-          ...(timestampWrites ? { timestampWrites } : {}),
-        });
-        pass.setPipeline(pipelines.aoTrace);
-        pass.setBindGroup(0, trace);
-        pass.dispatchWorkgroups(Math.ceil(width / 16), Math.ceil(height / 16));
-        pass.end();
-        const blurWrites = this.timer.passWrites("ambient-occlusion.blur");
-        const second = enc.beginComputePass({
-          label: "ambient-occlusion.blur",
-          ...(blurWrites ? { timestampWrites: blurWrites } : {}),
-        });
-        second.setPipeline(pipelines.aoDenoise);
-        second.setBindGroup(0, blur);
-        second.dispatchWorkgroups(
-          Math.ceil(Math.ceil(width / 4) / 8),
-          Math.ceil(height / 8),
-        );
-        second.end();
-      },
-    );
-
-    // The stars, splatted as points into a layer the sky reads.
-    const starLayer = graph.createTexture("stars", {
-      width,
-      height,
-      format: "rgba16float",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    graph.addPass("stars", { writes: [starLayer] }, (enc, get) => {
-      if (drawsSky(view)) {
-        this.sky.encodeStars(enc, frame.sky, get(starLayer));
-      }
-    });
-
-    graph.addPass(
-      "opaque",
-      {
-        reads: [starLayer],
-        writes: [color, resolved, ids, display, displayResolved, depth],
-      },
-      (enc, get) => {
-        const atmosphere = drawsSky(view);
-        clearColor.r = atmosphere ? 0 : view.clearColor[0];
-        clearColor.g = atmosphere ? 0 : view.clearColor[1];
-        clearColor.b = atmosphere ? 0 : view.clearColor[2];
-        opaqueColor.view = get(color);
-        opaqueColor.resolveTarget = get(resolved);
-        opaqueIds.view = get(ids);
-        opaqueDisplay.view = get(display);
-        opaqueDisplay.resolveTarget = get(displayResolved);
-        opaqueDepth.view = get(depth);
-        opaquePass.timestampWrites = this.timer.passWrites("opaque");
-        const pass = enc.beginRenderPass(opaquePass);
-        // Its depth first, then its shading where that depth is (each
-        // sample shaded once, not every fragment drawn over it).
-        if (this.ctx.pipelines.depthPrepass) {
-          frame.bundles[0] = view.world.depthBundle();
-          frame.bundles[1] = frame.bundle!;
-        } else {
-          frame.bundles[0] = frame.bundle!;
-        }
-        pass.executeBundles(frame.bundles);
-        // Tiny point symbols the cull rasterized, depth-tested over them.
-        view.world.drawSplats(pass);
-        if (atmosphere) {
-          this.sky.draw(pass, frame.sky, get(starLayer));
-        }
-        pass.end();
-      },
-    );
-
-    // Translucency (translucent.wgsl): blended surfaces into per-pixel
-    // lists ("exact"), or their moments and then their weighted light
-    // ("moments"); then composited over the opaque pass's resolved targets
-    // (composite.slang), before anything but the meter reads them.
-    // Read by the color pass as storage (translucent.wgsl), by the
-    // composite as textures.
-    const moments =
-      attachment |
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.STORAGE_BINDING;
-    const momentsZero = graph.createTexture("moments.zero", {
-      width,
-      height,
-      format: pipelines.momentFormats[0],
-      usage: moments,
-    });
-    const momentsHigher = graph.createTexture("moments.higher", {
-      width,
-      height,
-      format: pipelines.momentFormats[1],
-      usage: moments,
-    });
-    // The moments' weighted light, or what "exact" blended (`sortLists`).
-    const blended =
-      attachment |
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.STORAGE_BINDING;
-    const accumulatedLit = graph.createTexture("translucent.lit", {
-      width,
-      height,
-      format: "rgba16float",
-      usage: blended,
-    });
-    const accumulatedUnlit = graph.createTexture("translucent.unlit", {
-      width,
-      height,
-      format: "rgba16float",
-      usage: blended,
-    });
-    const cleared = (): GPURenderPassColorAttachment => ({
-      view: undefined as never,
-      clearValue: { r: 0, g: 0, b: 0, a: 0 },
-      loadOp: "clear",
-      storeOp: "store",
-    });
-    const listTarget: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      clearValue: { r: 0, g: 0, b: 0, a: 0 },
-      loadOp: "clear",
-      storeOp: "discard",
-    };
-    const listPass: GPURenderPassDescriptor = {
-      label: "translucent.lists",
-      colorAttachments: [listTarget],
-    };
-    const momentTargets = [cleared(), cleared()];
-    const momentPass: GPURenderPassDescriptor = {
-      label: "translucent.moments",
-      colorAttachments: momentTargets,
-    };
-    const colorTargets = [cleared(), cleared()];
-    const colorPass: GPURenderPassDescriptor = {
-      label: "translucent.color",
-      colorAttachments: colorTargets,
-    };
-    graph.addPass(
-      "translucent",
-      {
-        reads: [depth],
-        writes: [
-          momentsZero,
-          momentsHigher,
-          accumulatedLit,
-          accumulatedUnlit,
-          color,
-        ],
-        sideEffect: true,
-      },
-      (enc, get) => {
-        if (!frame.translucent) {
-          return;
-        }
-        const world = view.world;
-        const dummies = this.translucentInputs();
-        if (view.translucencyMethod === "exact") {
-          const lists = this.lists!;
-          enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
-          listTarget.view = get(color);
-          listPass.timestampWrites = this.timer.passWrites("translucent-lists");
-          const pass = enc.beginRenderPass(listPass);
-          world.encodeTranslucent(
-            pass,
-            (doubleSided) =>
-              doubleSided ? "translucentListDoubleSided" : "translucentList",
-            this.translucentGroup(frame, 0, [
-              lists,
-              dummies.zero,
-              dummies.higher,
-            ]),
-          );
-          pass.end();
-          // Each pixel's list sorted and blended, into the accumulation
-          // targets (composite.slang `sortLists`).
-          const lit = get(accumulatedLit);
-          const unlit = get(accumulatedUnlit);
-          const sort = enc.beginComputePass({
-            label: "translucent.sort",
-            timestampWrites: this.timer.passWrites("translucent-sort"),
-          });
-          sort.setPipeline(pipelines.translucentSort);
-          sort.setBindGroup(
-            0,
-            this.keptGroup(frame, 5, [lists, lit, unlit], () =>
-              device.createBindGroup({
-                label: "translucent.sort",
-                layout: pipelines.translucentSort.getBindGroupLayout(0),
-                entries: [
-                  { binding: 0, resource: { buffer: frame.translucentParams } },
-                  { binding: 1, resource: { buffer: lists } },
-                  { binding: 5, resource: lit },
-                  { binding: 6, resource: unlit },
-                ],
-              }),
-            ),
-          );
-          sort.dispatchWorkgroups(Math.ceil(width / 8), Math.ceil(height / 4));
-          sort.end();
-          if (!this.listCountPending) {
-            this.listCountPending = true;
-            const readback = device.createBuffer({
-              label: "translucent.count",
-              size: 4,
-              usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-            });
-            enc.copyBufferToBuffer(lists, 0, readback, 0, 4);
-            this.listCounts.push(readback);
-          }
-          return;
-        }
-        const zero = get(momentsZero);
-        const higher = get(momentsHigher);
-        momentTargets[0]!.view = zero;
-        momentTargets[1]!.view = higher;
-        momentPass.timestampWrites = this.timer.passWrites(
-          "translucent-moments",
-        );
-        const first = enc.beginRenderPass(momentPass);
-        world.encodeTranslucent(
-          first,
-          (doubleSided) =>
-            doubleSided
-              ? "translucentMomentsDoubleSided"
-              : "translucentMoments",
-          this.translucentGroup(frame, 1, [
-            dummies.buffer,
-            dummies.zero,
-            dummies.higher,
-          ]),
-        );
-        first.end();
-        colorTargets[0]!.view = get(accumulatedLit);
-        colorTargets[1]!.view = get(accumulatedUnlit);
-        colorPass.timestampWrites = this.timer.passWrites("translucent-color");
-        const second = enc.beginRenderPass(colorPass);
-        world.encodeTranslucent(
-          second,
-          (doubleSided) =>
-            doubleSided ? "translucentColorDoubleSided" : "translucentColor",
-          this.translucentGroup(frame, 2, [dummies.buffer, zero, higher]),
-        );
-        second.end();
-      },
-    );
-    // The exposure meter, before the composite: it reads the opaque pass's
-    // image, whose alpha is the scene's share of each pixel, and puts the
-    // layers over it itself (meter.slang). No later pass reads scene alpha.
-    graph.addPass(
-      "meter",
-      {
-        reads: [resolved, momentsZero, accumulatedLit, accumulatedUnlit],
-        sideEffect: true,
-      },
-      (enc, get) => {
-        const auto = view.autoExposure;
-        const adapts = "auto" in view.exposure || "eye" in view.exposure;
-        // Not a column or a row: a canvas squeezed to 0 width draws 1 pixel
-        // across, which says nothing of the view (stars alone, from a view
-        // half full of a sunlit Earth, opened the eye: white on the way back).
-        if (adapts && auto?.pending) {
-          auto.skipped = true;
-          return;
-        }
-        if (!adapts || !auto || width < 2 || height < 2) {
-          return;
-        }
-        auto.pending = true;
-        const params = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-        const data = new ArrayBuffer(16);
-        new Float32Array(data, 0, 1)[0] = view.exposureScale;
-        const exact = view.translucencyMethod === "exact";
-        const layers = !frame.translucent ? 0 : exact ? 1 : 2;
-        new Uint32Array(data, 4, 3).set([width, height, layers]);
-        device.queue.writeBuffer(params, 0, data);
-        const dummies = this.translucentInputs();
-        const result = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-        });
-        const readback = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-        });
-        const pass = enc.beginComputePass({ label: "meter" });
-        pass.setPipeline(pipelines.meter);
-        pass.setBindGroup(
-          0,
-          device.createBindGroup({
-            layout: pipelines.meter.getBindGroupLayout(0),
-            entries: [
-              { binding: 0, resource: get(resolved) },
-              { binding: 1, resource: { buffer: params } },
-              { binding: 2, resource: { buffer: result } },
-              {
-                binding: 3,
-                resource: layers ? get(accumulatedLit) : dummies.color,
-              },
-              {
-                binding: 4,
-                resource: layers ? get(accumulatedUnlit) : dummies.color,
-              },
-              {
-                binding: 5,
-                resource: layers === 2 ? get(momentsZero) : dummies.zero,
-              },
-            ],
-          }),
-        );
-        pass.dispatchWorkgroups(1);
-        pass.end();
-        enc.copyBufferToBuffer(result, 0, readback, 0, 16);
-        this.meters.push({ view, readback, scratch: [params, result] });
-      },
-    );
-
-    const compositeScene: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      loadOp: "load",
-      storeOp: "store",
-    };
-    const compositeDisplay: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      loadOp: "load",
-      storeOp: "store",
-    };
-    const compositePass: GPURenderPassDescriptor = {
-      label: "composite",
-      colorAttachments: [compositeScene, compositeDisplay],
-    };
-    graph.addPass(
-      "composite",
-      {
-        reads: [momentsZero, momentsHigher, accumulatedLit, accumulatedUnlit],
-        writes: [resolved, displayResolved],
-      },
-      (enc, get) => {
-        if (!frame.translucent) {
-          return;
-        }
-        compositeScene.view = get(resolved);
-        compositeDisplay.view = get(displayResolved);
-        compositePass.timestampWrites = this.timer.passWrites(
-          "translucent-composite",
-        );
-        const pass = enc.beginRenderPass(compositePass);
-        if (view.translucencyMethod === "exact") {
-          pass.setPipeline(pipelines.compositeExact);
-          pass.setBindGroup(
-            0,
-            this.compositeGroup(frame, 3, pipelines.compositeExact, [
-              get(accumulatedLit),
-              get(accumulatedUnlit),
-            ]),
-          );
-        } else {
-          pass.setPipeline(pipelines.compositeMoments);
-          pass.setBindGroup(
-            0,
-            this.compositeGroup(frame, 4, pipelines.compositeMoments, [
-              get(momentsZero),
-              get(accumulatedLit),
-              get(accumulatedUnlit),
-            ]),
-          );
-        }
-        pass.draw(3);
-        pass.end();
-      },
-    );
-
-    // The nearest and farthest surface shown, for the next frame's shadow
-    // cascades (`writeShadows`): read back a frame or so late.
-    graph.addPass(
-      "depth-range",
-      { reads: [depth], sideEffect: true },
-      (enc, get) => {
-        if (!frame.shadowed || frame.rangePending) {
-          return;
-        }
-        frame.rangePending = true;
-        const params = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-        const data = new ArrayBuffer(16);
-        new Float32Array(data, 0, 1)[0] = this.bodyCamera(view).near;
-        new Uint32Array(data, 4, 2).set([width, height]);
-        device.queue.writeBuffer(params, 0, data);
-        const result = device.createBuffer({
-          size: 8,
-          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-          mappedAtCreation: true,
-        });
-        new Uint32Array(result.getMappedRange()).set([0x7f7fffff, 0]);
-        result.unmap();
-        const readback = device.createBuffer({
-          size: 8,
-          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-        });
-        const pass = enc.beginComputePass({ label: "depth-range" });
-        pass.setPipeline(pipelines.depthRange);
-        pass.setBindGroup(
-          0,
-          device.createBindGroup({
-            layout: pipelines.depthRange.getBindGroupLayout(0),
-            entries: [
-              { binding: 0, resource: get(depth) },
-              { binding: 1, resource: { buffer: params } },
-              { binding: 2, resource: { buffer: result } },
-            ],
-          }),
-        );
-        pass.dispatchWorkgroups(8, 8);
-        pass.end();
-        enc.copyBufferToBuffer(result, 0, readback, 0, 8);
-        this.depthRanges.push({ frame, readback, scratch: [params, result] });
-      },
-    );
-
-    graph.addPass(
-      "hdr-readback",
-      { reads: [resolved], sideEffect: true },
-      (enc, get) => {
-        if (view.pendingHdrReads.length === 0) {
-          return;
-        }
-        get(resolved);
-        const bytesPerRow = Math.ceil((width * 8) / 256) * 256;
-        const buffer = device.createBuffer({
-          label: "view.hdr.readback",
-          size: bytesPerRow * height,
-          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-        });
-        enc.copyTextureToBuffer(
-          { texture: graph.texture(resolved)! },
-          { buffer, bytesPerRow },
-          [width, height],
-        );
-        this.hdrReads.push({
-          buffer,
-          bytesPerRow,
-          width,
-          height,
-          exposure: view.exposureScale,
-          resolvers: view.pendingHdrReads.splice(0),
-        });
-      },
-    );
-
-    graph.addPass("pick", { reads: [ids, depth], sideEffect: true }, (enc) => {
-      const request = frame.pick;
-      if (request) {
-        frame.pick = undefined;
-        this.encodePick(enc, view, frame, request);
-      }
-    });
-
-    // The eye's local adaptation: a bilateral grid of the image's log
-    // luminance, a sixteenth of its size by 16 levels, blurred (adapt.slang).
-    const adaptSize = {
-      width: Math.ceil(width / 16),
-      height: Math.ceil(height / 16),
-      depth: 16,
-      format: "rgba16float" as const,
-      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
-    };
-    const adaptReduced = graph.createTexture("adapt.reduced", adaptSize);
-    const adaptation = graph.createTexture("adapt.map", adaptSize);
-    graph.addPass(
-      "adaptation",
-      { reads: [resolved], writes: [adaptReduced, adaptation] },
-      (enc, get) => {
-        if (!("eye" in view.exposure)) {
-          return;
-        }
-        this.adaptData[0] = view.exposureScale;
-        this.adaptData[1] = view.autoExposure?.cones ?? 0;
-        device.queue.writeBuffer(frame.adaptParams, 0, this.adaptData);
-        const reduce = device.createBindGroup({
-          layout: pipelines.adaptReduce.getBindGroupLayout(0),
-          entries: [
-            { binding: 0, resource: get(resolved) },
-            { binding: 1, resource: { buffer: frame.adaptParams } },
-            { binding: 2, resource: get(adaptReduced) },
-          ],
-        });
-        const blur = device.createBindGroup({
-          layout: pipelines.adaptBlur.getBindGroupLayout(0),
-          entries: [
-            { binding: 3, resource: get(adaptReduced) },
-            { binding: 4, resource: get(adaptation) },
-          ],
-        });
-        const pass = enc.beginComputePass({ label: "adaptation" });
-        const groups = [
-          Math.ceil(adaptSize.width / 8),
-          Math.ceil(adaptSize.height / 8),
-        ] as const;
-        pass.setPipeline(pipelines.adaptReduce);
-        pass.setBindGroup(0, reduce);
-        // A workgroup a cell (adapt.slang `reduce`).
-        pass.dispatchWorkgroups(adaptSize.width, adaptSize.height);
-        pass.setPipeline(pipelines.adaptBlur);
-        pass.setBindGroup(0, blur);
-        pass.dispatchWorkgroups(...groups, adaptSize.depth);
-        pass.end();
-      },
-    );
-
-    // With FXAA, the present pass tonemaps into this (encoded), and FXAA
-    // reads it into the view's rectangle of the target.
-    const ldr = graph.createTexture("ldr", {
-      width,
-      height,
-      format: "rgba8unorm",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    const ldrColor: GPURenderPassColorAttachment = {
-      view: undefined as never,
-      clearValue: { r: 0, g: 0, b: 0, a: 1 },
-      loadOp: "clear",
-      storeOp: "store",
-    };
-    const ldrPass: GPURenderPassDescriptor = {
-      label: "present.ldr",
-      colorAttachments: [ldrColor],
-    };
-    graph.addPass(
-      "present",
-      {
-        reads: [resolved, displayResolved, adaptation],
-        writes: [output, ldr],
-      },
-      (enc, get) => {
-        const fxaa = view.fxaa;
-        const srgbTarget = this.ctx.outputFormat.endsWith("-srgb");
-        const params = this.presentData;
-        params.setFloat32(0, fxaa ? 0 : x, true);
-        params.setFloat32(4, fxaa ? 0 : y, true);
-        params.setUint32(8, TONE_MAPPINGS.indexOf(view.toneMapping), true);
-        // FXAA reads encoded color (its edges are found in display luma);
-        // gamma 2.2 only where the target isn't -srgb, as without it.
-        const encoding =
-          srgbTarget && !fxaa
-            ? 0
-            : view.outputEncoding === "gamma2.2" && !srgbTarget
-              ? 2
-              : 1;
-        params.setUint32(12, encoding, true);
-        // The eye: its adaptation over the view (log10 cd/m²) and its
-        // brightening; per pixel it adapts partly to its region too.
-        const e = view.exposure;
-        const state = view.autoExposure;
-        const eye = "eye" in e && state !== undefined;
-        params.setFloat32(16, view.exposureScale, true);
-        params.setUint32(20, eye ? 1 : 0, true);
-        params.setFloat32(24, eye ? state.cones : 0, true);
-        params.setFloat32(28, eye ? state.rods : 0, true);
-        params.setFloat32(32, "eye" in e ? (e.compensation ?? 0) : 0, true);
-        device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
-        // Pooled textures are stable from frame to frame, so the bind group
-        // is rebuilt only when the pool hands this view a different one.
-        const source = get(resolved);
-        const shown = get(displayResolved);
-        const adapted = get(adaptation);
-        if (
-          frame.presentSource !== source ||
-          frame.presentDisplay !== shown ||
-          frame.presentAdaptation !== adapted
-        ) {
-          frame.presentSource = source;
-          frame.presentDisplay = shown;
-          frame.presentAdaptation = adapted;
-          this.adaptSampler ??= device.createSampler({
-            label: "adaptation",
-            magFilter: "linear",
-            minFilter: "linear",
-          });
-          frame.presentGroup = device.createBindGroup({
-            layout: pipelines.present.getBindGroupLayout(0),
-            entries: [
-              { binding: 0, resource: source },
-              { binding: 1, resource: { buffer: frame.presentParams } },
-              { binding: 2, resource: shown },
-              { binding: 3, resource: adapted },
-              { binding: 4, resource: this.adaptSampler },
-            ],
-          });
-        }
-        if (fxaa) {
-          const image = get(ldr);
-          ldrColor.view = image;
-          const first = enc.beginRenderPass(ldrPass);
-          first.setPipeline(pipelines.presentLdr);
-          first.setBindGroup(0, frame.presentGroup!);
-          first.draw(3);
-          first.end();
-          const f = this.fxaaData;
-          f.setFloat32(0, x, true);
-          f.setFloat32(4, y, true);
-          f.setFloat32(8, 1 / width, true);
-          f.setFloat32(12, 1 / height, true);
-          f.setUint32(16, srgbTarget && encoding === 1 ? 1 : 0, true);
-          device.queue.writeBuffer(frame.fxaaParams, 0, f.buffer);
-          if (frame.fxaaImage !== image) {
-            frame.fxaaImage = image;
-            this.fxaaSampler ??= device.createSampler({
-              label: "fxaa",
-              magFilter: "linear",
-              minFilter: "linear",
-            });
-            frame.fxaaGroup = device.createBindGroup({
-              label: "fxaa",
-              layout: pipelines.fxaa.getBindGroupLayout(0),
-              entries: [
-                { binding: 0, resource: image },
-                { binding: 1, resource: this.fxaaSampler },
-                { binding: 2, resource: { buffer: frame.fxaaParams } },
-              ],
-            });
-          }
-        }
-        presentColor.view = get(output);
-        presentColor.loadOp = frame.clearTarget ? "clear" : "load";
-        const pass = enc.beginRenderPass(presentPass);
-        pass.setViewport(x, y, width, height, 0, 1);
-        pass.setScissorRect(x, y, width, height);
-        pass.setPipeline(fxaa ? pipelines.fxaa : pipelines.present);
-        pass.setBindGroup(0, fxaa ? frame.fxaaGroup! : frame.presentGroup!);
-        pass.draw(3);
-        this.drawOverlays(pass, view);
-        pass.end();
-      },
-    );
-
-    return frame;
-  }
-
-  private drawOverlays(pass: GPURenderPassEncoder, view: View): void {
+  /** @internal */
+  drawOverlays(pass: GPURenderPassEncoder, view: View): void {
     const overlays = view.overlays;
     let vertices = 0;
     for (let i = 0; i < overlays.length; i++) {
