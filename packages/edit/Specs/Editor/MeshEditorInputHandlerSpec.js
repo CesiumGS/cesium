@@ -58,7 +58,23 @@ describe(
     afterEach(function () {
       // Destroys the editor.
       scene.primitives.removeAll();
+      for (const controller of scene.controllerHost.controllers) {
+        scene.controllerHost.unregisterController(controller, scene.canvas);
+      }
     });
+
+    // Registers a stub controller with the scene's controller host.
+    function addController(enabled = true) {
+      const controller = {
+        enabled,
+        connectedCallback() {},
+        disconnectedCallback() {},
+        firstUpdate() {},
+        update() {},
+      };
+      scene.controllerHost.registerController(controller, scene.canvas);
+      return controller;
+    }
 
     function getWindowPosition(position) {
       return SceneTransforms.worldToWindowCoordinates(
@@ -162,10 +178,24 @@ describe(
       it("leaves the camera alone when no tool handles the press", function () {
         // Nothing is selected, so the translate tool doesn't start a drag.
         editor.activeTool = TranslateTool.addTo(editor);
+        const controller = addController();
 
         firePointer("Down", getWindowPosition(cornerPosition));
 
         expect(scene.screenSpaceCameraController.enableInputs).toBe(true);
+        expect(controller.enabled).toBe(true);
+      });
+
+      it("disables the scene's controllers when a tool starts a drag", function () {
+        const controllers = [addController(), addController()];
+        prepareDrag();
+
+        firePointer("Down", getWindowPosition(cornerPosition));
+
+        // The WebGL stub doesn't pick, so nothing is selected to drag.
+        if (!window.webglStub) {
+          expect(controllers.map((c) => c.enabled)).toEqual([false, false]);
+        }
       });
     });
 
@@ -228,6 +258,21 @@ describe(
         firePointer("Up", end);
 
         expect(scene.screenSpaceCameraController.enableInputs).toBe(false);
+      });
+
+      it("restores each controller's previous enabled setting after a drag", function () {
+        const enabledController = addController(true);
+        const disabledController = addController(false);
+        prepareDrag();
+        const start = getWindowPosition(cornerPosition);
+        const end = new Cartesian2(start.x + 20.0, start.y);
+
+        firePointer("Down", start);
+        firePointer("Move", end);
+        firePointer("Up", end);
+
+        expect(enabledController.enabled).toBe(true);
+        expect(disabledController.enabled).toBe(false);
       });
 
       it("leaves no camera inertia after a short drag", function () {
@@ -360,12 +405,14 @@ describe(
 
     describe("destroy", function () {
       it("lets the camera react to the pointer again", function () {
+        const controller = addController();
         prepareDrag();
         firePointer("Down", getWindowPosition(cornerPosition));
 
         scene.primitives.remove(editor);
 
         expect(scene.screenSpaceCameraController.enableInputs).toBe(true);
+        expect(controller.enabled).toBe(true);
       });
     });
   },
