@@ -1,6 +1,5 @@
 import { onTextureDestroyed } from "../gpu/textureTracking.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
-import { CapacityError } from "./CapacityError.ts";
 import { Slabs, type Slab } from "./Slabs.ts";
 import {
   INITIAL_ROWS,
@@ -17,21 +16,13 @@ import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
   INSTANCE_WORDS,
   INSTANCE_COUNT_WORD,
-  INSTANCE_STRIDE_WORD,
   INSTANCE_FIRST_WORD,
   MATERIAL_SIZE,
-  NO_FEATURE,
-  NO_RECORD,
-  NO_STREAM,
   PROPERTY_TEXTURE_BINDING,
-  instanceDistanceFlags,
-  MAX_DIRECTORY_ENTRIES,
-  attributeHash,
   DRAW_ITEM_SIZE,
   RECORD_WORDS,
   TRANSFORM_WORDS,
   TRANSFORM_WORD,
-  RADIUS_WORD,
   FEATURE_ID_WORD,
   FLAGS_WORD,
   CASTER_MASK_WORD,
@@ -45,8 +36,6 @@ import {
   MATERIAL_WORDS,
   MaterialFlags,
   RecordFlags,
-  packTint,
-  writeInstance,
 } from "../render/layout.ts";
 import type { Body } from "./Body.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
@@ -87,8 +76,6 @@ import type {
   FeatureInfo,
 } from "./world/types.ts";
 import {
-  anchorAt,
-  IDENTITY,
   resolveTransforms,
   addTransform,
   setTransform,
@@ -108,8 +95,8 @@ import {
   removeAnchor,
   frameOf,
 } from "./world/transforms.ts";
-import { warnUnavailable, uploadTables } from "./world/featureTables.ts";
-import { flushUploads, queueUpload } from "./world/uploads.ts";
+import { uploadTables } from "./world/featureTables.ts";
+import { flushUploads } from "./world/uploads.ts";
 import {
   addMesh,
   addPointMesh,
@@ -138,20 +125,27 @@ import {
 import { castRays } from "./world/rays.ts";
 import {
   releasePlacementParameter,
-  releasePlacement,
   createPlacementParameter,
   setPlacement,
   drawPlacement,
 } from "./world/placements.ts";
 import {
   createSplats,
-  POINT_CULL_BYTES,
   pointGroup,
   setPointCuller,
   createPointCuller,
   drawSplats,
   writePointParams,
 } from "./world/points.ts";
+import {
+  addDraw,
+  setDrawShader,
+  setDrawMaterial,
+  twinDraw,
+  removeDraw,
+  setInstance,
+  setInstanceStreams,
+} from "./world/draws.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -190,12 +184,12 @@ export class World {
   get recordsF32(): ArrayLike<number> {
     return this.drawConstants.f32;
   }
-  /** Generation per draw slot (`DrawHandle.generation`). */
-  private drawGeneration: Uint32Array;
-  /** Transform a draw owns (placed by origin and model), or -1. */
-  private drawOwnedTransform: Int32Array;
-  /** Per-instance stream ranges in their mesh's slab, by draw slot. */
-  private readonly instanceStreamRanges: Array<
+  /** @internal Generation per draw slot (`DrawHandle.generation`). */
+  drawGeneration: Uint32Array;
+  /** @internal Transform a draw owns (placed by origin and model), or -1. */
+  drawOwnedTransform: Int32Array;
+  /** @internal Per-instance stream ranges in their mesh's slab, by draw slot. */
+  readonly instanceStreamRanges: Array<
     [offset: number, size: number, dataBytes: number, slab: number] | undefined
   > = [];
 
@@ -299,9 +293,10 @@ export class World {
   // The instance table: ranges owned by instanced draws.
   /** @internal */
   readonly instances: MirroredTable;
-  private readonly instanceAllocator: RangeAllocator;
-  /** Instance slots in use or freed below the highest (cull dispatch size). */
-  private instanceHighWater = 0;
+  /** @internal */
+  readonly instanceAllocator: RangeAllocator;
+  /** @internal Instance slots in use or freed below the highest (cull dispatch size). */
+  instanceHighWater = 0;
   /** @internal */
   uploadsPending = false;
   /**
@@ -374,10 +369,12 @@ export class World {
     const data = new ArrayBuffer(MATERIAL_SIZE);
     return { f32: new Float32Array(data), u32: new Uint32Array(data) };
   })();
-  private readonly batches = new Map<string, Batch>();
-  private readonly batchList: Batch[] = [];
-  /** Emptied batches, reused (index kept) so live records stay valid. */
-  private readonly freeBatches: Batch[] = [];
+  /** @internal */
+  readonly batches = new Map<string, Batch>();
+  /** @internal */
+  readonly batchList: Batch[] = [];
+  /** @internal Emptied batches, reused (index kept) so live records stay valid. */
+  readonly freeBatches: Batch[] = [];
   /** @internal */
   readonly drawBatches: Array<Batch | undefined> = [];
   /** @internal Slab ranges per mesh id, as [byte offset, byte size]. */
@@ -413,17 +410,23 @@ export class World {
   readonly tableIds = new WeakMap<FeatureTable, number>();
   /** @internal */
   nextTableId = 1;
-  private readonly names: Array<string | undefined> = [];
-  private readonly featureTables: Array<FeatureTable | undefined> = [];
+  /** @internal */
+  readonly names: Array<string | undefined> = [];
+  /** @internal */
+  readonly featureTables: Array<FeatureTable | undefined> = [];
   /**
-   * Global feature-ID ranges in allocation order (so sorted by first ID):
+   * @internal Global feature-ID ranges in allocation order (so sorted by first ID):
    * first ID and draw index, for resolving picks by binary search.
    */
-  private readonly featureRangeFirst: number[] = [];
-  private readonly featureRangeDraw: number[] = [];
-  private readonly drawFeatureFirst: number[] = [];
-  private nextFeatureId = 1;
-  private readonly freeSlots: number[] = [];
+  readonly featureRangeFirst: number[] = [];
+  /** @internal */
+  readonly featureRangeDraw: number[] = [];
+  /** @internal */
+  readonly drawFeatureFirst: number[] = [];
+  /** @internal */
+  nextFeatureId = 1;
+  /** @internal */
+  readonly freeSlots: number[] = [];
   /** @internal */
   readonly maxClipBlocks: number;
   /**
@@ -518,7 +521,8 @@ export class World {
   readonly pointDraws = new Map<number, PointDraw>();
   /** @internal */
   pointCounts: GPUBuffer;
-  private readonly freePointCounters: number[] = [];
+  /** @internal */
+  readonly freePointCounters: number[] = [];
   /** @internal A view's point splats, a word per pixel each (pointCull.slang). */
   splats: {
     pixels: number;
@@ -529,16 +533,17 @@ export class World {
   };
   private batchBuffer: GPUBuffer;
   /**
-   * GPU rows of the draw tables (records, batches, their counts and
+   * @internal GPU rows of the draw tables (records, batches, their counts and
    * arguments, the items' draw part); grows to `maxDraws`.
    */
-  private drawRows: number;
+  drawRows: number;
   /** @internal GPU rows of the material table; grows to `maxMaterials`. */
   materialRows: number;
   /** @internal GPU blocks of clip boxes; grows to `maxClipBlocks`. */
   clipRows: number;
   readonly maxPointSets: number;
-  private pointSetCount = 0;
+  /** @internal */
+  pointSetCount = 0;
   private readonly cullParams: GPUBuffer;
   private cullBindGroup!: GPUBindGroup;
   private pointCullBindGroup!: GPUBindGroup;
@@ -926,8 +931,8 @@ export class World {
     return this.slabs.vertexUsed + this.slabs.indexUsed;
   }
 
-  /** CPU room for draw slots below `count`. */
-  private reserveDraws(count: number): void {
+  /** @internal CPU room for draw slots below `count`. */
+  reserveDraws(count: number): void {
     if (this.drawConstants.reserve(count)) {
       const rows = this.drawConstants.rows;
       this.drawGeneration = resized(this.drawGeneration, rows);
@@ -1018,340 +1023,7 @@ export class World {
   }
 
   addDraw(options: DrawOptions): DrawHandle {
-    // Checked before anything is allocated.
-    if (options.parent && options.transform) {
-      throw new Error(
-        "addDraw: a parent is for the transform a draw owns (origin and model), not with a shared transform.",
-      );
-    }
-    if (options.parent && !this.transformAlive(options.parent)) {
-      throw new Error("addDraw: the parent was removed.");
-    }
-    const onAnchor = options.transform
-      ? anchorAt(this, options.transform.index)
-      : undefined;
-    if (onAnchor && this.transformAlive(options.transform!)) {
-      throw new Error(
-        `addDraw: ${onAnchor.name} is an anchor; hang the draw under it with parent (and origin or model), or under a transform added under it.`,
-      );
-    }
-    const streams = options.instances?.streams;
-    const fieldCount = Object.keys(streams?.layout ?? {}).length;
-    if (fieldCount > MAX_DIRECTORY_ENTRIES) {
-      // surface.slang `readInstance` reads this many at most.
-      throw new RangeError(
-        `addDraw: ${fieldCount} instance fields; a draw holds at most ${MAX_DIRECTORY_ENTRIES}.`,
-      );
-    }
-    for (const [name, { offset, components }] of Object.entries(
-      streams?.layout ?? {},
-    )) {
-      if (
-        components < 1 ||
-        components > 4 ||
-        offset < 0 ||
-        offset + components > streams!.stride
-      ) {
-        throw new RangeError(
-          `addDraw: instance field ${name} is outside the stride`,
-        );
-      }
-    }
-    const pointSet = (options.mesh as Partial<PointMesh>).points;
-    if (pointSet && (!options.billboard || options.instances)) {
-      throw new Error(
-        "addDraw: a point mesh draws as a billboard, without instances",
-      );
-    }
-    // A point draw's own list of points to draw (each view's cull writes
-    // it), and its slot among the per-view counts.
-    let pointList: number | undefined;
-    let pointCounter: number | undefined;
-    if (pointSet) {
-      if (
-        this.freePointCounters.length === 0 &&
-        this.pointSetCount < this.maxPointSets
-      ) {
-        this.growPointSets(Math.min(this.maxPointSets, this.pointSetCount * 2));
-      }
-      pointCounter = this.freePointCounters.pop();
-      const bytes = Math.max(4, pointSet.capacity * 4);
-      // In the mesh's slab: the point cull reads anchors and list together.
-      pointList =
-        pointCounter === undefined
-          ? undefined
-          : this.slabs.allocateVertex(this.slabs.get(options.mesh.slab), bytes);
-      if (pointList === undefined) {
-        if (pointCounter !== undefined) {
-          this.freePointCounters.push(pointCounter);
-        }
-        throw new CapacityError(
-          pointCounter === undefined ? "point sets" : "vertex arena",
-        );
-      }
-    }
-    // Nothing taken may outlive a failure below (transactional, §13.15).
-    const releasePoints = () => {
-      if (pointList !== undefined) {
-        this.slabs
-          .get(options.mesh.slab)
-          .vertex.release(pointList, Math.max(4, pointSet!.capacity * 4));
-        this.freePointCounters.push(pointCounter!);
-      }
-    };
-    const index = this.freeSlots.pop() ?? this.drawCount++;
-    if (index >= this.maxDraws) {
-      this.drawCount--;
-      releasePoints();
-      throw new CapacityError("draw table");
-    }
-    if (index >= this.drawRows) {
-      this.growDraws(index + 1);
-    }
-    this.reserveDraws(index + 1);
-    const mesh = options.mesh;
-    // Placement: a shared transform, or one the draw owns.
-    let transform: number;
-    if (options.transform) {
-      if (!this.transformAlive(options.transform)) {
-        this.freeSlots.push(index);
-        releasePoints();
-        throw new Error("addDraw: the transform was removed.");
-      }
-      transform = options.transform.index;
-      this.drawOwnedTransform[index] = -1;
-    } else {
-      const m = new Float64Array(16);
-      m.set(options.model ?? IDENTITY);
-      const origin = options.origin ?? ZERO;
-      m[12] = origin[0]! + m[12]!;
-      m[13] = origin[1]! + m[13]!;
-      m[14] = origin[2]! + m[14]!;
-      try {
-        transform = this.addTransform(m, options.parent).index;
-      } catch (error) {
-        this.freeSlots.push(index);
-        releasePoints();
-        throw error;
-      }
-      this.drawOwnedTransform[index] = transform;
-    }
-
-    // Instances: a range in the instance table, culled one by one.
-    const instances = options.instances;
-    const instanceCount = instances ? instances.matrices.length / 16 : 0;
-    let instanceFirst = 0;
-    let instanceFeatures = 0;
-    if (instances && instanceCount > 0) {
-      const first = this.instanceAllocator.allocate(instanceCount);
-      if (first === undefined) {
-        this.releaseOwnedTransform(index);
-        this.freeSlots.push(index);
-        releasePoints();
-        throw new CapacityError("instance table");
-      }
-      this.instances.reserve(first + instanceCount);
-      if (first + instanceCount > this.instances.gpuRows) {
-        this.growInstances(first + instanceCount);
-      }
-      instanceFirst = first;
-      this.instanceHighWater = Math.max(
-        this.instanceHighWater,
-        first + instanceCount,
-      );
-      const { f32, u32 } = this.instances;
-      const distanceFlags = instanceDistanceFlags(
-        instances.visibleWithin,
-        instances.visibleBeyond,
-      );
-      for (let k = 0; k < instanceCount; k++) {
-        const feature = instances.featureIds?.[k] ?? NO_FEATURE;
-        if (feature !== NO_FEATURE) {
-          instanceFeatures = Math.max(instanceFeatures, feature + 1);
-        }
-        writeInstance(
-          f32,
-          u32,
-          first + k,
-          instances.matrices,
-          k * 16,
-          index,
-          feature,
-          distanceFlags,
-          instances.tints ? packTint(instances.tints, k * 4) : 0xffffffff,
-        );
-        this.instances.mark(first + k);
-      }
-    }
-    let instanceStreams = NO_STREAM;
-    let instanceStride = 0;
-    let instanceDirectory = NO_STREAM;
-    this.instanceStreamRanges[index] = undefined;
-    if (instances?.streams && instanceCount > 0) {
-      const data = instances.streams.data;
-      // The fields' directory right after the data, in one range.
-      const fields = Object.entries(instances.streams.layout ?? {});
-      const directory = new Uint32Array(
-        fields.length ? 1 + fields.length * 3 : 0,
-      );
-      if (fields.length) {
-        directory[0] = fields.length;
-        fields.forEach(([name, { offset, components }], i) => {
-          directory[1 + i * 3] = attributeHash(name);
-          directory[2 + i * 3] = offset;
-          directory[3 + i * 3] = components;
-        });
-      }
-      // In the mesh's slab: the vertex shader reads both from its arena.
-      const slab = this.slabs.get(mesh.slab);
-      const offset = this.slabs.allocateVertex(
-        slab,
-        data.byteLength + directory.byteLength,
-      );
-      if (offset === undefined) {
-        this.releaseInstances(instanceFirst, instanceCount);
-        this.releaseOwnedTransform(index);
-        this.freeSlots.push(index);
-        releasePoints();
-        throw new CapacityError("vertex arena");
-      }
-      queueUpload(this, slab.vertexBuffer, offset, data);
-      if (fields.length) {
-        queueUpload(
-          this,
-          slab.vertexBuffer,
-          offset + data.byteLength,
-          directory,
-        );
-        instanceDirectory = (offset + data.byteLength) / 4;
-      }
-      this.instanceStreamRanges[index] = [
-        offset,
-        data.byteLength + directory.byteLength,
-        data.byteLength,
-        slab.id,
-      ];
-      instanceStreams = offset / 4;
-      instanceStride = instances.streams.stride;
-    }
-    // A point set's properties are its mesh's, shared by its draws.
-    if (pointSet) {
-      instanceStreams = pointSet.streams;
-      instanceStride = pointSet.stride;
-      instanceDirectory = pointSet.directory;
-    }
-
-    const material = options.material ?? 0;
-    const textureSet = options.textureSet ?? 0;
-    const doubleSided = options.doubleSided ?? false;
-    const shader = options.shader;
-    const billboard = options.billboard !== undefined;
-    const instanced = instanceCount > 0;
-    const batch = this.batchFor({
-      mesh,
-      material,
-      textureSet,
-      doubleSided,
-      shader,
-      billboard,
-      points: pointSet !== undefined,
-      instanced,
-      draw: index,
-    });
-    batch.items += instanceCount > 0 ? instanceCount : 1;
-    this.drawBatches[index] = batch;
-    if (shader) {
-      warnUnavailable(this, mesh, shader);
-    }
-
-    // Bounds live in the transform's local frame, so moving or rotating
-    // the transform never stales them; an explicit radius is in meters.
-    // A custom vertex stage's displacement (model units) pads them.
-    resolveTransforms(this);
-    const scale = this.transformsF32Scale(transform);
-    this.names[index] = options.name;
-    this.featureTables[index] = options.features;
-    const firstFeature = this.nextFeatureId;
-    this.nextFeatureId += Math.max(1, mesh.featureCount, instanceFeatures);
-    this.featureRangeFirst.push(firstFeature);
-    this.featureRangeDraw.push(index);
-    this.drawFeatureFirst[index] = firstFeature;
-    this.drawConstants.write(index, {
-      transform,
-      center: mesh.center,
-      radius:
-        (options.radius !== undefined
-          ? options.radius / (scale || 1)
-          : mesh.radius) + (shader?.displacement ?? 0),
-      color: options.color ?? [1, 1, 1, 1],
-      indexCount: mesh.indexCount,
-      firstIndex: mesh.firstIndex,
-      // A point draw's list where its uv would be (points have none).
-      streams:
-        pointList !== undefined
-          ? { ...mesh.streams, uv: pointList / 4 }
-          : mesh.streams,
-      materialIndex: material,
-      textureSet,
-      batch: batch.index,
-      featureId: firstFeature,
-      viewMask: options.viewMask,
-      // Lines have no surface to light; 1.x draws them unlit too.
-      flags:
-        (options.unlit || mesh.topology === "line-list" || options.billboard
-          ? RecordFlags.unlit
-          : 0) |
-        (options.billboard ? RecordFlags.billboard : 0) |
-        (pointSet ? RecordFlags.points : 0) |
-        (options.ground === false ? RecordFlags.notGround : 0) |
-        (options.collision ? RecordFlags.collision : 0) |
-        (options.underlay ? RecordFlags.underlay : 0),
-      instanceFirst,
-      instanceCount,
-      instanceStreams,
-      instanceStride,
-      instanceDirectory,
-      ...(options.billboard
-        ? {
-            billboardSize: options.billboard.size,
-            billboardDepthTest: options.billboard.depthTestDistance ?? 0,
-          }
-        : {}),
-      ...(mesh.skirtStart !== undefined ? { skirtStart: mesh.skirtStart } : {}),
-    });
-    if (this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD] !== 0) {
-      batch.shown++;
-    }
-    this.markDirty(index);
-    this.bundle = undefined;
-    this.translucentDraws = undefined;
-    if (pointSet) {
-      const params = this.ctx.device.createBuffer({
-        label: "world.pointCull",
-        size: POINT_CULL_BYTES,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-      });
-      const draw: PointDraw = {
-        mesh: mesh as PointMesh,
-        list: pointList!,
-        counter: pointCounter!,
-        params,
-        group: undefined as never,
-        batch,
-        culler: undefined,
-        tiny: 0,
-      };
-      draw.group = pointGroup(this, draw);
-      this.pointDraws.set(index, draw);
-    }
-    const handle: DrawHandle = {
-      index,
-      generation: this.drawGeneration[index]!,
-      name: options.name,
-    };
-    this.contentRevision_++;
-    this.acceleration.drawAdded(handle);
-    return handle;
+    return addDraw(this, options);
   }
 
   /**
@@ -1393,133 +1065,13 @@ export class World {
   }
 
   /**
-   * The batch for draws of these fields, made (or a free one reused) when
-   * none exists. A point set's draws batch alone: each batch's arguments
-   * are its set's list (cull.slang `writePointArgs`).
-   */
-  private batchFor(f: {
-    mesh: Batch["mesh"];
-    material: number;
-    textureSet: number;
-    doubleSided: boolean;
-    shader: CustomShader | undefined;
-    billboard: boolean;
-    points: boolean;
-    instanced: boolean;
-    draw: number;
-  }): Batch {
-    const key = `${f.mesh.id}|${f.material}|${f.textureSet}|${f.doubleSided ? 1 : 0}|${f.shader?.id ?? 0}|${f.billboard ? 1 : 0}|${f.instanced ? 1 : 0}${f.points ? `|${f.draw}` : ""}`;
-    let batch = this.batches.get(key);
-    if (batch) {
-      return batch;
-    }
-    const reused = this.freeBatches.pop();
-    if (reused) {
-      batch = reused;
-      batch.key = key;
-      batch.mesh = f.mesh;
-      batch.textureSet = f.textureSet;
-      batch.material = f.material;
-      batch.doubleSided = f.doubleSided;
-      batch.shader = f.shader;
-      batch.billboard = f.billboard;
-      batch.points = f.points;
-      batch.instanced = f.instanced;
-      batch.shown = 0;
-      batch.casters = 0;
-    } else {
-      batch = {
-        index: this.batchList.length,
-        key,
-        mesh: f.mesh,
-        textureSet: f.textureSet,
-        material: f.material,
-        doubleSided: f.doubleSided,
-        shader: f.shader,
-        billboard: f.billboard,
-        points: f.points,
-        instanced: f.instanced,
-        items: 0,
-        itemBase: 0,
-        shown: 0,
-        casters: 0,
-      };
-      this.batchList.push(batch);
-    }
-    this.batches.set(key, batch);
-    return batch;
-  }
-
-  /**
    * Changes a draw's custom shader (undefined: the engine's) in place: the
    * draw moves to the batch for its new shader, keeping its record,
    * instances, features and handle. Until the new shader's pipelines
    * compile it draws with the engine's, as a new draw would.
    */
   setDrawShader(handle: DrawHandle, shader: CustomShader | undefined): void {
-    if (!this.hasDraw(handle)) {
-      throw new Error("setDrawShader: the draw was removed");
-    }
-    const index = handle.index;
-    const old = this.drawBatches[index]!;
-    if (old.shader === shader) {
-      return;
-    }
-    if (shader) {
-      warnUnavailable(this, old.mesh, shader);
-    }
-    const o = index * RECORD_WORDS;
-    const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
-    const items = instanceCount > 0 ? instanceCount : 1;
-    const batch = this.batchFor({
-      mesh: old.mesh,
-      material: old.material,
-      textureSet: old.textureSet,
-      doubleSided: old.doubleSided,
-      shader,
-      billboard: old.billboard,
-      points: old.points,
-      instanced: old.instanced,
-      draw: index,
-    });
-    old.items -= items;
-    if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
-      old.shown--;
-      batch.shown++;
-    }
-    if (this.recordsU32[o + CASTER_MASK_WORD] !== 0) {
-      old.casters--;
-      batch.casters++;
-    }
-    if (old.items === 0) {
-      this.batches.delete(old.key);
-      old.key = "";
-      this.freeBatches.push(old);
-    }
-    batch.items += items;
-    this.drawBatches[index] = batch;
-    // The bounds' padding for a vertex stage's displacement follows it.
-    const placed = this.drawPlacements[index];
-    if (placed) {
-      placed.base +=
-        (shader?.displacement ?? 0) - (old.shader?.displacement ?? 0);
-    }
-    this.drawConstants.setBatch(
-      index,
-      batch.index,
-      this.recordsF32[o + RADIUS_WORD]! -
-        (old.shader?.displacement ?? 0) +
-        (shader?.displacement ?? 0),
-    );
-    const point = this.pointDraws.get(index);
-    if (point) {
-      point.batch = batch;
-      writePointParams(this, point, index);
-    }
-    this.markDirty(index);
-    this.bundle = undefined;
-    this.translucentDraws = undefined;
-    this.version++;
+    setDrawShader(this, handle, shader);
   }
 
   /**
@@ -1550,65 +1102,7 @@ export class World {
    * material's reference while the draw uses it.
    */
   setDrawMaterial(handle: DrawHandle, material: number): void {
-    if (!this.hasDraw(handle)) {
-      throw new Error("setDrawMaterial: the draw was removed");
-    }
-    if (this.materialReferences[material] === undefined || material < 0) {
-      throw new RangeError(`setDrawMaterial: no material ${material}`);
-    }
-    const index = handle.index;
-    const old = this.drawBatches[index]!;
-    if (old.material === material) {
-      return;
-    }
-    const o = index * RECORD_WORDS;
-    const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
-    const items = instanceCount > 0 ? instanceCount : 1;
-    const batch = this.batchFor({
-      mesh: old.mesh,
-      material,
-      textureSet: old.textureSet,
-      doubleSided: old.doubleSided,
-      shader: old.shader,
-      billboard: old.billboard,
-      points: old.points,
-      instanced: old.instanced,
-      draw: index,
-    });
-    // Any count a batch keeps per draw (items, shown, casters, and one a
-    // later change adds) must move with the record here, as in
-    // `setDrawShader`.
-    old.items -= items;
-    if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
-      old.shown--;
-      batch.shown++;
-    }
-    if (this.recordsU32[o + CASTER_MASK_WORD] !== 0) {
-      old.casters--;
-      batch.casters++;
-    }
-    if (old.items === 0) {
-      this.batches.delete(old.key);
-      old.key = "";
-      this.freeBatches.push(old);
-    }
-    batch.items += items;
-    this.drawBatches[index] = batch;
-    this.drawConstants.setBatch(
-      index,
-      batch.index,
-      this.recordsF32[o + RADIUS_WORD]!,
-    );
-    this.drawConstants.setMaterial(index, material);
-    const point = this.pointDraws.get(index);
-    if (point) {
-      point.batch = batch;
-      writePointParams(this, point, index);
-    }
-    this.markDirty(index);
-    this.bundle = undefined;
-    this.translucentDraws = undefined;
-    this.version++;
+    setDrawMaterial(this, handle, material);
   }
 
   /**
@@ -1631,40 +1125,7 @@ export class World {
    * `source`'s transform goes.
    */
   twinDraw(source: DrawHandle): DrawHandle | undefined {
-    if (!this.hasDraw(source)) {
-      throw new Error("twinDraw: the draw was removed.");
-    }
-    const index = source.index;
-    const batch = this.drawBatches[index]!;
-    const o = index * RECORD_WORDS;
-    if (
-      batch.points ||
-      batch.billboard ||
-      this.recordsU32[o + INSTANCE_COUNT_WORD]! > 0
-    ) {
-      return undefined;
-    }
-    const transform = this.recordsU32[o + TRANSFORM_WORD]!;
-    const flags = this.recordsU32[o + FLAGS_WORD]!;
-    const features = this.featureTables[index];
-    const name = this.names[index];
-    return this.addDraw({
-      mesh: batch.mesh,
-      transform: {
-        index: transform,
-        generation: this.transformGeneration[transform]!,
-      },
-      material: batch.material,
-      textureSet: batch.textureSet,
-      doubleSided: batch.doubleSided,
-      ...(batch.shader !== undefined && { shader: batch.shader }),
-      unlit: (flags & RecordFlags.unlit) !== 0,
-      underlay: (flags & RecordFlags.underlay) !== 0,
-      ground: false,
-      viewMask: 0,
-      ...(name !== undefined && { name }),
-      ...(features !== undefined && { features }),
-    });
+    return twinDraw(this, source);
   }
 
   /**
@@ -1767,85 +1228,7 @@ export class World {
   }
 
   removeDraw(handle: DrawHandle): void {
-    if (!this.hasDraw(handle)) {
-      return; // already removed
-    }
-    this.contentRevision_++;
-    this.acceleration.drawRemoved(handle);
-    const batch = this.drawBatches[handle.index]!;
-    const o = handle.index * RECORD_WORDS;
-    const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
-    this.drawBatches[handle.index] = undefined;
-    this.drawGeneration[handle.index] = this.drawGeneration[handle.index]! + 1;
-    batch.items -= instanceCount > 0 ? instanceCount : 1;
-    if (this.recordsU32[o + VIEW_MASK_WORD] !== 0) {
-      batch.shown--;
-    }
-    if (this.recordsU32[o + CASTER_MASK_WORD] !== 0) {
-      batch.casters--;
-    }
-    if (batch.items === 0) {
-      this.batches.delete(batch.key);
-      batch.key = "";
-      this.freeBatches.push(batch);
-    }
-    // Slices of the item list follow batch sizes: rebuild them.
-    this.bundle = undefined;
-    this.translucentDraws = undefined;
-    if (instanceCount > 0) {
-      this.releaseInstances(
-        this.recordsU32[o + INSTANCE_FIRST_WORD]!,
-        instanceCount,
-      );
-    }
-    this.drawConstants.clear(handle.index);
-    releasePlacement(this, handle.index);
-    const pointDraw = this.pointDraws.get(handle.index);
-    if (pointDraw) {
-      this.flushUploads();
-      this.slabs
-        .get(pointDraw.mesh.slab)
-        .vertex.release(
-          pointDraw.list,
-          Math.max(4, pointDraw.mesh.points.capacity * 4),
-        );
-      pointDraw.params.destroy();
-      this.freePointCounters.push(pointDraw.counter);
-      this.pointDraws.delete(handle.index);
-    }
-    const streams = this.instanceStreamRanges[handle.index];
-    if (streams) {
-      this.flushUploads(); // before its range can be reused
-      this.slabs.get(streams[3]).vertex.release(streams[0], streams[1]);
-      this.instanceStreamRanges[handle.index] = undefined;
-    }
-    this.releaseOwnedTransform(handle.index);
-    this.names[handle.index] = undefined;
-    this.featureTables[handle.index] = undefined;
-    // The slot may be reused; its old feature range must not resolve to it.
-    this.drawFeatureFirst[handle.index] = -1;
-    this.freeSlots.push(handle.index);
-    this.markDirty(handle.index);
-  }
-
-  private releaseInstances(first: number, count: number): void {
-    for (let k = first; k < first + count; k++) {
-      this.instances.u32[k * INSTANCE_WORDS + 12] = NO_RECORD;
-      this.instances.mark(k);
-    }
-    this.instanceAllocator.release(first, count);
-    this.version++;
-  }
-
-  private releaseOwnedTransform(draw: number): void {
-    const owned = this.drawOwnedTransform[draw]!;
-    if (owned >= 0) {
-      this.drawOwnedTransform[draw] = -1;
-      this.removeTransform({
-        index: owned,
-        generation: this.transformGeneration[owned]!,
-      });
-    }
+    removeDraw(this, handle);
   }
 
   /**
@@ -1861,40 +1244,7 @@ export class World {
       tint?: ArrayLike<number>;
     },
   ): void {
-    if (!this.hasDraw(handle)) {
-      return;
-    }
-    const o = handle.index * RECORD_WORDS;
-    const count = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
-    if (instance < 0 || instance >= count) {
-      throw new RangeError(`instance ${instance} of ${count}`);
-    }
-    const slot = this.recordsU32[o + INSTANCE_FIRST_WORD]! + instance;
-    const { f32, u32 } = this.instances;
-    const w = slot * INSTANCE_WORDS;
-    if (change.matrix) {
-      writeInstance(
-        f32,
-        u32,
-        slot,
-        change.matrix,
-        0,
-        u32[w + 12]!,
-        u32[w + 13]!,
-        u32[w + 14]!,
-        u32[w + 15]!,
-      );
-    }
-    if (change.visible !== undefined) {
-      // Its distance rule stays (InstanceFlags).
-      u32[w + 14] = (u32[w + 14]! & ~1) | (change.visible ? 0 : 1);
-    }
-    if (change.tint) {
-      u32[w + 15] = packTint(change.tint);
-    }
-    this.instances.mark(slot);
-    this.version++;
-    this.changedViews |= this.recordsU32[o + VIEW_MASK_WORD]!;
+    setInstance(this, handle, instance, change);
   }
 
   /**
@@ -1907,34 +1257,7 @@ export class World {
     firstInstance: number,
     data: Float32Array | Uint32Array,
   ): void {
-    if (!this.hasDraw(handle)) {
-      return;
-    }
-    const range = this.instanceStreamRanges[handle.index];
-    const stride =
-      this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_STRIDE_WORD]!;
-    if (!range || stride === 0) {
-      throw new Error("setInstanceStreams: the draw has no instance streams");
-    }
-    const at = firstInstance * stride * 4;
-    if (
-      firstInstance < 0 ||
-      data.length % stride !== 0 ||
-      at + data.byteLength > range[2]
-    ) {
-      throw new RangeError(
-        `setInstanceStreams: ${data.length / stride} instances from ${firstInstance} don't fit`,
-      );
-    }
-    queueUpload(
-      this,
-      this.slabs.get(range[3]).vertexBuffer,
-      range[0] + at,
-      data,
-    );
-    this.version++;
-    this.changedViews |=
-      this.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+    setInstanceStreams(this, handle, firstInstance, data);
   }
 
   // ------------------------------------------------------------ transforms
@@ -2193,8 +1516,8 @@ export class World {
     this.changedViews = ALL_VIEWS;
   }
 
-  /** Largest axis scale of a composed transform. */
-  private transformsF32Scale(index: number): number {
+  /** @internal Largest axis scale of a composed transform. */
+  transformsF32Scale(index: number): number {
     return this.transforms.f32[index * TRANSFORM_WORDS + 3]!;
   }
 
@@ -3163,11 +2486,11 @@ export class World {
   }
 
   /**
-   * Room for instance rows below `count` on the GPU: the instance table and
+   * @internal Room for instance rows below `count` on the GPU: the instance table and
    * the per-item buffers double (up to `maxInstances`), and what binds them
    * is rebuilt.
    */
-  private growInstances(count: number): void {
+  growInstances(count: number): void {
     const rows = grownSize(this.instances.gpuRows, count, this.maxInstances);
     this.instances.growGpu(rows);
     this.instanceBuffer = this.instances.buffer;
@@ -3176,12 +2499,12 @@ export class World {
   }
 
   /**
-   * Room for draw slots below `count` on the GPU (§13.15, growable tables):
+   * @internal Room for draw slots below `count` on the GPU (§13.15, growable tables):
    * the records double (copied), the per-batch buffers and the items are
    * recreated (rewritten every frame or with the bundle), and what binds
    * them is rebuilt.
    */
-  private growDraws(count: number): void {
+  growDraws(count: number): void {
     const rows = grownSize(this.drawRows, count, this.maxDraws);
     this.drawConstants.growGpu(rows);
     this.recordBuffer = this.drawConstants.buffer;
@@ -3238,10 +2561,10 @@ export class World {
   }
 
   /**
-   * Point-draw counters up to `count` (cleared every frame, so the buffer is
+   * @internal Point-draw counters up to `count` (cleared every frame, so the buffer is
    * only recreated), and the point draws' groups that bind it.
    */
-  private growPointSets(count: number): void {
+  growPointSets(count: number): void {
     if (count <= this.pointSetCount) {
       return;
     }
@@ -3425,4 +2748,3 @@ export class World {
     }
   }
 }
-const ZERO = Float64Array.of(0, 0, 0);
