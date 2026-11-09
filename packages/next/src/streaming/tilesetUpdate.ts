@@ -2,7 +2,7 @@
 // uploads and eviction. The order matters: casters follow view selection, and
 // `receivers` reads other tilesets' `lastSelected`.
 import type { Mat4 } from "../math/mat4.ts";
-import type { ClipBox } from "../scene/World.ts";
+import type { ClipBox } from "../scene/world/types.ts";
 import type { SelectionView, RequestPurpose } from "./Stepwise.ts";
 import { type Tile, treeFromJson } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";

@@ -7,7 +7,8 @@ import type { Vec3 } from "../math/vec3.ts";
 import { VIEW_SIZE } from "../render/layout.ts";
 import type { Engine } from "./Engine.ts";
 import type { View } from "./View.ts";
-import type { World, AnchorHandle } from "./World.ts";
+import type { World } from "./World.ts";
+import type { AnchorHandle } from "./world/types.ts";
 import { earthAnchor, contentAnchor } from "./earthAnchor.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 

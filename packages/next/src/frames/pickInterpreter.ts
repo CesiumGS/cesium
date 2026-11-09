@@ -6,7 +6,7 @@ import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Body } from "../scene/Body.ts";
 import type { CorePick, PickInterpreter } from "../scene/pick.ts";
 import type { Placement } from "../scene/placement.ts";
-import type { AnchorHandle, DrawHandle } from "../scene/World.ts";
+import type { AnchorHandle, DrawHandle } from "../scene/world/types.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { DesignPlacement } from "../streaming/designPlacement.ts";
 import type { CatalogFrameName, FrameCatalog } from "./catalog.ts";

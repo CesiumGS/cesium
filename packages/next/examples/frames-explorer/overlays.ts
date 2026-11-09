@@ -22,12 +22,12 @@ import type { Frames } from "../../src/frames/frames.ts";
 import { rotationPart } from "../../src/frames/matrix.ts";
 import type { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { MeshData } from "../../src/scene/meshes.ts";
+import type { World } from "../../src/scene/World.ts";
 import type {
   DrawHandle,
   MeshHandle,
   TransformHandle,
-  World,
-} from "../../src/scene/World.ts";
+} from "../../src/scene/world/types.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
 

@@ -14,7 +14,8 @@ import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { type View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
-import type { AnchorHandle, DrawHandle, World } from "../src/scene/World.ts";
+import type { World } from "../src/scene/World.ts";
+import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

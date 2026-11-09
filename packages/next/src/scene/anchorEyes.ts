@@ -16,7 +16,7 @@
 import { MAX_ANCHORS, writeAnchorEye } from "../render/layout.ts";
 import type { CameraPose } from "./Camera.ts";
 import type { View } from "./View.ts";
-import type { AnchorHandle } from "./World.ts";
+import type { AnchorHandle } from "./world/types.ts";
 
 /**
  * Farther than this from an anchor (meters, 2^31), the eye's split

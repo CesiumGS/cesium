@@ -11,7 +11,8 @@ import type { CameraPose } from "./Camera.ts";
 import { type PickResult, type View } from "./View.ts";
 import { inverseRotate } from "./viewAnchors.ts";
 import type { SceneItem } from "./SceneItem.ts";
-import type { AnchorHandle, DrawHandle, FeatureInfo, World } from "./World.ts";
+import type { World } from "./World.ts";
+import type { AnchorHandle, DrawHandle, FeatureInfo } from "./world/types.ts";
 
 /**
  * The camera a pick's position and feature were read with, for projecting

@@ -16,7 +16,8 @@
  * costs its slot and blocks only, and nothing a tick.
  */
 import type { Engine } from "../scene/Engine.ts";
-import type { DrawHandle, World } from "../scene/World.ts";
+import type { World } from "../scene/World.ts";
+import type { DrawHandle } from "../scene/world/types.ts";
 import { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
   type TileSource,

@@ -35,7 +35,8 @@ import {
 import { FITTED_ROWS, PLACEMENT_KIND } from "../src/scene/placementTable.ts";
 import { type View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
-import type { DrawHandle, World } from "../src/scene/World.ts";
+import type { World } from "../src/scene/World.ts";
+import type { DrawHandle } from "../src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const PARTNER = "_PARTNER";

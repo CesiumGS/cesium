@@ -3,7 +3,8 @@ import type { Vec3 } from "../math/vec3.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
-import type { TransformHandle, World } from "./World.ts";
+import type { World } from "./World.ts";
+import type { TransformHandle } from "./world/types.ts";
 import { earthAnchor } from "./earthAnchor.ts";
 
 /**

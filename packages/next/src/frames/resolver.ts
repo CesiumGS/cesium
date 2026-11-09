@@ -14,7 +14,7 @@ import {
 import { Emitter } from "../core/Emitter.ts";
 import * as m4 from "../math/mat4.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
-import type { AnchorHandle, TransformFrameKey } from "../scene/World.ts";
+import type { AnchorHandle, TransformFrameKey } from "../scene/world/types.ts";
 import { Instant } from "../time/Instant.ts";
 import type { LeapSeconds } from "../time/leapSeconds.ts";
 import {

@@ -12,7 +12,7 @@ import * as m4 from "../src/math/mat4.ts";
 import type { PickView } from "../src/engineering/pick.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { Camera, projectToPixel } from "../src/scene/Camera.ts";
-import type { DrawHandle } from "../src/scene/World.ts";
+import type { DrawHandle } from "../src/scene/world/types.ts";
 import type { TileGeometry } from "../src/streaming/Tile.ts";
 import {
   CORRIDOR_ALIGNMENT,

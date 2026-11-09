@@ -6,7 +6,8 @@
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { FittedOperation, Placement } from "../scene/placement.ts";
 import type { View } from "../scene/View.ts";
-import type { DrawHandle, World } from "../scene/World.ts";
+import type { World } from "../scene/World.ts";
+import type { DrawHandle } from "../scene/world/types.ts";
 import type { FramesResolver } from "./resolver.ts";
 
 /** What `placementOf` answers. */

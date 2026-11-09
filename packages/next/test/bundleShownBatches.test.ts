@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Engine } from "../src/scene/Engine.ts";
-import type { DrawHandle, World } from "../src/scene/World.ts";
+import type { World } from "../src/scene/World.ts";
+import type { DrawHandle } from "../src/scene/world/types.ts";
 import type { MeshData } from "../src/scene/meshes.ts";
 import { CustomShader } from "../src/scene/CustomShader.ts";
 import { fakeEngine } from "./fakeGpu.ts";

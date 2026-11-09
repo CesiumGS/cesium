@@ -33,7 +33,8 @@ import { createBox } from "../src/scene/meshes.ts";
 import type { CorePick } from "../src/scene/pick.ts";
 import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
-import type { AnchorHandle, DrawHandle, World } from "../src/scene/World.ts";
+import type { World } from "../src/scene/World.ts";
+import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 import type { PlacementMode } from "../src/streaming/designPlacement.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

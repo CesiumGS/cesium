@@ -9,7 +9,8 @@
  * isn't drawn yet, or only a coarser tile stands in, nothing was tested,
  * so those spans are unknown, never clear (`untestedSpans`).
  */
-import type { CastOptions, CastRay, World } from "../scene/World.ts";
+import type { World } from "../scene/World.ts";
+import type { CastOptions, CastRay } from "../scene/world/types.ts";
 import type { Tile } from "../streaming/Tile.ts";
 import type {
   RayAnswer,

@@ -47,8 +47,8 @@ export {
   type FeatureStyleOptions,
   type StyleExpression,
 } from "./scene/FeatureStyle.ts";
+export { World } from "./scene/World.ts";
 export {
-  World,
   type DrawHandle,
   type DrawOptions,
   type MaterialOptions,
@@ -64,7 +64,7 @@ export {
   type InstanceOptions,
   type CastRay,
   type CastOptions,
-} from "./scene/World.ts";
+} from "./scene/world/types.ts";
 export {
   lightReach,
   type LightHandle,

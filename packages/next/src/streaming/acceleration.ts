@@ -11,7 +11,7 @@
  * placement is announced, and its unload is announced before they are
  * removed.
  */
-import type { DrawHandle } from "../scene/World.ts";
+import type { DrawHandle } from "../scene/world/types.ts";
 import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
 

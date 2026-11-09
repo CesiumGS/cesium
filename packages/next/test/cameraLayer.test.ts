@@ -18,7 +18,8 @@ import { InspectController } from "../src/scene/InspectController.ts";
 import { OrbitController } from "../src/scene/OrbitController.ts";
 import { type View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
-import type { AnchorHandle, World } from "../src/scene/World.ts";
+import type { World } from "../src/scene/World.ts";
+import type { AnchorHandle } from "../src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /** Column-major translation by (x, y, z). */

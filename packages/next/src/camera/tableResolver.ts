@@ -2,7 +2,8 @@
 // module"): the transform table's root, its anchors and its nodes are the
 // only reference frames, so a rig can follow a moving node.
 import * as m4 from "../math/mat4.ts";
-import type { AnchorHandle, TransformFrameKey, World } from "../scene/World.ts";
+import type { World } from "../scene/World.ts";
+import type { AnchorHandle, TransformFrameKey } from "../scene/world/types.ts";
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
 /**

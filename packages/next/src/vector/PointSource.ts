@@ -5,7 +5,8 @@ import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Engine } from "../scene/Engine.ts";
 import type { HeightCapture } from "../scene/heightCaptures.ts";
-import type { AnchorHandle, PointMesh, World } from "../scene/World.ts";
+import type { World } from "../scene/World.ts";
+import type { AnchorHandle, PointMesh } from "../scene/world/types.ts";
 import { contentAnchor } from "../scene/earthAnchor.ts";
 
 /**

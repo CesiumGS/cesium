@@ -1,6 +1,6 @@
 import type { Body } from "../scene/Body.ts";
 import type { PickResult } from "../scene/View.ts";
-import type { DrawHandle } from "../scene/World.ts";
+import type { DrawHandle } from "../scene/world/types.ts";
 import type { Tile } from "../streaming/Tile.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";

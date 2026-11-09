@@ -1,6 +1,7 @@
 import { EARTH, bodyKey } from "./Body.ts";
 import type { View } from "./View.ts";
-import type { AnchorHandle, World } from "./World.ts";
+import type { World } from "./World.ts";
+import type { AnchorHandle } from "./world/types.ts";
 
 /**
  * The anchor content hangs under (plan 5a's call 19): `anchor` when given,

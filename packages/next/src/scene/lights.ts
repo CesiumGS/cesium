@@ -7,7 +7,7 @@
  * the lights of its froxel (opaque.wgsl). Unshadowed.
  */
 
-import type { TransformHandle } from "./World.ts";
+import type { TransformHandle } from "./world/types.ts";
 import { ANCHOR_EYE_VALUES, type AnchorEyes } from "./anchorEyes.ts";
 
 export interface LightOptions {

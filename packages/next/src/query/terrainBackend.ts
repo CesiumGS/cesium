@@ -7,7 +7,8 @@
  */
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import { castTerrainRay, type TerrainRayTarget } from "../globe/terrainRay.ts";
-import type { AnchorHandle, World } from "../scene/World.ts";
+import type { World } from "../scene/World.ts";
+import type { AnchorHandle } from "../scene/world/types.ts";
 import {
   createSpatialQueries,
   type QueryHost,

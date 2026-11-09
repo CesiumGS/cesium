@@ -7,7 +7,7 @@ import type { Attribution } from "../io/ion.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { CustomShader } from "../scene/CustomShader.ts";
 import type { FeatureStyle } from "../scene/FeatureStyle.ts";
-import type { AnchorHandle } from "../scene/World.ts";
+import type { AnchorHandle } from "../scene/world/types.ts";
 import type { ModelResourceOptions } from "../scene/gltfModel.ts";
 import type { BudgetedOptions } from "./Budgeted.ts";
 import type { TileSelection, RequestPurpose } from "./Stepwise.ts";

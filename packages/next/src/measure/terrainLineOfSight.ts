@@ -1,6 +1,6 @@
 import type { SpatialQueries } from "../query/queries.ts";
 import type { View } from "../scene/View.ts";
-import type { AnchorHandle } from "../scene/World.ts";
+import type { AnchorHandle } from "../scene/world/types.ts";
 
 export interface TerrainLineOfSightOptions {
   /**

@@ -1,5 +1,6 @@
 import { Camera, projectToPixel, type CameraPose } from "./Camera.ts";
-import type { AnchorHandle, World } from "./World.ts";
+import type { World } from "./World.ts";
+import type { AnchorHandle } from "./world/types.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
 import { MAX_ANCHORS, type ViewLighting } from "../render/layout.ts";

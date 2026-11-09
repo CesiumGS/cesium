@@ -24,7 +24,8 @@ import {
 import type { Engine } from "../src/scene/Engine.ts";
 import { HeightClamping } from "../src/scene/HeightClamping.ts";
 import { createBox } from "../src/scene/meshes.ts";
-import type { CastRay, ClipBox, World } from "../src/scene/World.ts";
+import type { World } from "../src/scene/World.ts";
+import type { CastRay, ClipBox } from "../src/scene/world/types.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";

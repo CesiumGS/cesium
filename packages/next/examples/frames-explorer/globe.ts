@@ -13,7 +13,7 @@ import type {
   AnchorHandle,
   MeshHandle,
   TransformHandle,
-} from "../../src/scene/World.ts";
+} from "../../src/scene/world/types.ts";
 import type { Instant } from "../../src/time/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import { clearOfPanels, overlaps, panelBoxes } from "./labelPanels.ts";

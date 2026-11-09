@@ -5,12 +5,12 @@
  * placed under the tileset's transform so a runtime `modelMatrix` moves
  * them with the content.
  */
+import type { World } from "../scene/World.ts";
 import type {
   DrawHandle,
   MeshHandle,
   TransformHandle,
-  World,
-} from "../scene/World.ts";
+} from "../scene/world/types.ts";
 import type { Tile } from "./Tile.ts";
 import type { TileVolume } from "./volumes.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";

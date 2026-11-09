@@ -8,7 +8,8 @@ import * as m4 from "../math/mat4.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
 import * as v3 from "../math/vec3.ts";
 import type { View } from "../scene/View.ts";
-import type { AnchorHandle, TransformFrameKey, World } from "../scene/World.ts";
+import type { World } from "../scene/World.ts";
+import type { AnchorHandle, TransformFrameKey } from "../scene/world/types.ts";
 import {
   FrameUnavailableError,
   type FrameKey,

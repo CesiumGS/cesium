@@ -37,7 +37,8 @@ import {
 } from "./shadows.ts";
 import type { CityLight } from "../globe/cityLight.ts";
 import { LIGHTS_SIZE } from "./lights.ts";
-import { World, type AnchorHandle, type WorldOptions } from "./World.ts";
+import { World } from "./World.ts";
+import { type AnchorHandle, type WorldOptions } from "./world/types.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
 import { ANCHOR_EYE_REACH, createAnchorEyes } from "./anchorEyes.ts";
 import { HeightClamping } from "./HeightClamping.ts";

@@ -11,7 +11,7 @@ import { TerrainRegionError } from "../src/globe/terrainClip.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { RECORD_WORDS, TERRAIN_CLIP_WORD } from "../src/render/layout.ts";
 import { createBox } from "../src/scene/meshes.ts";
-import type { DrawHandle } from "../src/scene/World.ts";
+import type { DrawHandle } from "../src/scene/world/types.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

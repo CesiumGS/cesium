@@ -24,7 +24,7 @@
  * the Earth's anchor); carrying rays through the frame tree is 5b's.
  */
 import type { View } from "../scene/View.ts";
-import type { AnchorHandle } from "../scene/World.ts";
+import type { AnchorHandle } from "../scene/world/types.ts";
 
 /** What a ray may meet: the drawn terrain, or the world's draws. */
 export type RayTarget = "terrain" | "draws";

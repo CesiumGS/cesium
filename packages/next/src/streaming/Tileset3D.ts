@@ -8,13 +8,13 @@
  */
 import type { Engine } from "../scene/Engine.ts";
 import { contentAnchor } from "../scene/earthAnchor.ts";
+import type { World } from "../scene/World.ts";
 import type {
   AnchorHandle,
   CastRay,
   DrawHandle,
   TransformHandle,
-  World,
-} from "../scene/World.ts";
+} from "../scene/world/types.ts";
 import type { ModelResourceOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";

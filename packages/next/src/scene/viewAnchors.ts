@@ -5,7 +5,7 @@ import { rigidMatrixError } from "../math/transforms.ts";
 import { MAX_ANCHORS } from "../render/layout.ts";
 import { Camera, type CameraPose } from "./Camera.ts";
 import type { View } from "./View.ts";
-import type { AnchorHandle } from "./World.ts";
+import type { AnchorHandle } from "./world/types.ts";
 
 const IDENTITY_16 = Float64Array.of(
   1,

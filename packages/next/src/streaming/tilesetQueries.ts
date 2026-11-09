@@ -1,5 +1,5 @@
 // Rays through a tileset's tiles: the query interface's tiles to load and read.
-import type { CastRay } from "../scene/World.ts";
+import type { CastRay } from "../scene/world/types.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
 import type { Tile } from "./Tile.ts";
 import type { Tileset3D } from "./Tileset3D.ts";

@@ -18,7 +18,8 @@ import {
   maxDisplacement,
   type DualPosition,
 } from "./placement.ts";
-import type { AnchorHandle, DrawHandle, World } from "./World.ts";
+import type { World } from "./World.ts";
+import type { AnchorHandle, DrawHandle } from "./world/types.ts";
 import type { DesignPlacement } from "../streaming/designPlacement.ts";
 import type { ItemDraws, Tile } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";

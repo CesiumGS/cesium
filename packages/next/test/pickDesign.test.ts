@@ -8,7 +8,7 @@ import {
   type PickView,
 } from "../src/engineering/pick.ts";
 import type { CorePick } from "../src/scene/pick.ts";
-import type { DrawHandle } from "../src/scene/World.ts";
+import type { DrawHandle } from "../src/scene/world/types.ts";
 import type { View } from "../src/scene/View.ts";
 import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import type { TilesetPlacement } from "../src/engineering/placement.ts";

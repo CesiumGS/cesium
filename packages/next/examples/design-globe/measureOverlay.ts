@@ -18,7 +18,8 @@ import type {
   DualPosition,
   PlacementParameter,
 } from "../../src/scene/placement.ts";
-import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
+import type { World } from "../../src/scene/World.ts";
+import type { DrawHandle, MeshHandle } from "../../src/scene/world/types.ts";
 import { hexLinear } from "./colors.ts";
 import { REPROJECTED_SEMANTIC } from "./dualPosition.ts";
 import {

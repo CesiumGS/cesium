@@ -3,7 +3,7 @@
  * bounding volumes in Earth-fixed coordinates (see volumes.ts). Content
  * state lives here too; selection policies only read the tree.
  */
-import type { ClipHandle, DrawHandle } from "../scene/World.ts";
+import type { ClipHandle, DrawHandle } from "../scene/world/types.ts";
 import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";

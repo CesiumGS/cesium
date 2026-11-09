@@ -26,6 +26,7 @@ import type {
 } from "./HeightClamping.ts";
 import type { LightHandle } from "./lights.ts";
 import { contentAnchor, earthAnchor } from "./earthAnchor.ts";
+import type { World } from "./World.ts";
 import type {
   AnchorHandle,
   DrawHandle,
@@ -35,8 +36,7 @@ import type {
   TextureBinding,
   TextureSetOptions,
   TransformHandle,
-  World,
-} from "./World.ts";
+} from "./world/types.ts";
 import type { CustomShader } from "./CustomShader.ts";
 
 /**
