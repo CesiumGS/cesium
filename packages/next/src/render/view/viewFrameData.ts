@@ -75,6 +75,7 @@ export interface ViewFrame {
   bundle: GPURenderBundle | undefined;
   /** One-element list handed to executeBundles. */
   readonly bundles: GPURenderBundle[];
+  /** @internal */
   pick: View["pendingPicks"][number] | undefined;
   /** The scene clock's seconds when it last rendered (its picks'). */
   seconds: number;

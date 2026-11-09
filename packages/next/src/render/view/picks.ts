@@ -14,7 +14,7 @@ import { CanvasTarget } from "../../scene/renderTarget.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
-/** Rasterizer side, reading the scene's view ids: encoding picks and reading their answers. */
+/** @internal Rasterizer side, reading the scene's view ids: encoding picks and reading their answers. */
 export interface PickEngine extends Pick<
   Engine,
   "bodyCamera" | "cameras" | "ctx" | "tilesets" | "views"
@@ -44,6 +44,7 @@ export function whenMapped(buffer: GPUBuffer, then: () => void): void {
   });
 }
 
+/** @internal A pick the pass encoded, awaiting its readback. */
 export interface PendingPick {
   view: View;
   readback: GPUBuffer;
@@ -279,6 +280,7 @@ function pickTick(
   };
 }
 
+/** @internal */
 export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
   for (const pick of picks) {
     const { view, readback, request, camera: c, tick } = pick;
@@ -328,6 +330,7 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
  * Serves one pick of a view that doesn't render this tick from its last
  * frame's feature IDs and depth, which still show what is on screen: just
  * the pick pass, no render (hovering picks on every pointer move).
+ * @internal
  */
 export function serveIdlePick(engine: PickEngine, rendering: Set<View>): void {
   const views = engine.views;

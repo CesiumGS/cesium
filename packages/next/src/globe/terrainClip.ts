@@ -230,6 +230,7 @@ function frame(
 /**
  * Projects an Earth-fixed point into a region's plane (x, y in `out`);
  * false when it lies behind the projection's center (the far side).
+ * @internal
  */
 export function clipPlane(
   shape: Pick<ClipShape, "anchor" | "east" | "north" | "up" | "radius">,
@@ -986,7 +987,7 @@ function crosses(
   return ay > qy !== by > qy && qx < ax + ((qy - ay) * (bx - ax)) / (by - ay);
 }
 
-/** Whether a plane point lies inside a region's polygon (crossing number). */
+/** @internal Whether a plane point lies inside a region's polygon (crossing number). */
 export function insideClipShape(
   shape: ClipShape,
   x: number,

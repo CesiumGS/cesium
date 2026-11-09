@@ -22,7 +22,14 @@ it("both library configs strip internal members", () => {
   expect(libraryOptions("tsconfig.lib.widgets.json").stripInternal).toBe(true);
 });
 
-it("no published declaration carries an @internal member", () => {
+const OUT = "dist-lib/never-written";
+
+/** The declarations of every entry point, emitted in memory from one program. */
+function emitDeclarations(): {
+  options: ts.CompilerOptions;
+  entries: string[];
+  emitted: Map<string, string>;
+} {
   const options = libraryOptions("tsconfig.lib.json");
   const entries = [
     "src/index.ts",
@@ -35,7 +42,7 @@ it("no published declaration carries an @internal member", () => {
   const program = ts.createProgram(entries, {
     ...options,
     rootDir: root,
-    outDir: join(root, "dist-lib/never-written"),
+    outDir: join(root, OUT),
     paths: {},
     noEmitOnError: false,
   });
@@ -44,13 +51,18 @@ it("no published declaration carries an @internal member", () => {
     undefined,
     (path, text) => {
       if (path.endsWith(".d.ts")) {
-        const from = relative(join(root, "dist-lib/never-written"), path);
+        const from = relative(join(root, OUT), path);
         emitted.set(from.split(sep).join("/"), text);
       }
     },
     undefined,
     true,
   );
+  return { options, entries, emitted };
+}
+
+it("no published declaration carries an @internal member", () => {
+  const { emitted } = emitDeclarations();
   // The detector works only if the classes it names were emitted at all.
   const classes = {
     "src/scene/Engine.d.ts": "class Engine",
@@ -62,6 +74,42 @@ it("no published declaration carries an @internal member", () => {
   for (const [file, declaration] of Object.entries(classes)) {
     expect(emitted.get(file), file).toContain(declaration);
   }
+  // Members that only the engine's other modules reach. Each is tagged
+  // `@internal` where it is declared; a tag removed there, or a new member
+  // added without one, would publish the type it holds, and the check above
+  // reads only tags that survive, so it can't see either.
+  const engineOnly = new Set([
+    "raster",
+    "scene",
+    "state",
+    "anchorState",
+    "ctx",
+  ]);
+  const published: string[] = [];
+  for (const file of Object.keys(classes)) {
+    const source = ts.createSourceFile(
+      file,
+      emitted.get(file)!,
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    ts.forEachChild(source, (node) => {
+      if (!ts.isClassDeclaration(node)) {
+        return;
+      }
+      for (const member of node.members) {
+        const name = member.name?.getText();
+        // A `private` member is emitted by name alone, with no type.
+        const hidden = ts
+          .getModifiers(member as ts.ClassElement & ts.HasModifiers)
+          ?.some((m) => m.kind === ts.SyntaxKind.PrivateKeyword);
+        if (!hidden && name !== undefined && engineOnly.has(name)) {
+          published.push(`${file}: ${node.name?.text}.${name}`);
+        }
+      }
+    });
+  }
+  expect(published).toEqual([]);
   const tagged: string[] = [];
   for (const [file, text] of emitted) {
     const source = ts.createSourceFile(
@@ -84,3 +132,60 @@ it("no published declaration carries an @internal member", () => {
   }
   expect(tagged).toEqual([]);
 }, 120_000);
+
+it("the published declarations compile with skipLibCheck off", () => {
+  const { options, entries, emitted } = emitDeclarations();
+  // A consumer that imports every entry point, over the emitted declarations
+  // alone: an exported declaration naming a stripped member is an error here.
+  const consumer = join(root, OUT, "consumer.ts");
+  const virtual = new Map<string, string>();
+  for (const [file, text] of emitted) {
+    virtual.set(join(root, OUT, file), text);
+  }
+  virtual.set(
+    consumer,
+    entries
+      .map((entry, i) => {
+        const from = relative(root, entry).split(sep).join("/");
+        return `import * as e${i} from "./${from.replace(/\.ts$/, ".js")}";\nvoid e${i};`;
+      })
+      .join("\n"),
+  );
+  const host = ts.createCompilerHost({ ...options, skipLibCheck: false });
+  const { fileExists, readFile, getSourceFile } = host;
+  host.fileExists = (f) => virtual.has(f) || fileExists(f);
+  const out = join(root, OUT) + sep;
+  const directoryExists = host.directoryExists?.bind(host);
+  host.directoryExists = (d) =>
+    (d + sep).startsWith(out) || (directoryExists?.(d) ?? false);
+  host.readFile = (f) => virtual.get(f) ?? readFile(f);
+  host.getSourceFile = (f, languageVersion, ...rest) =>
+    virtual.has(f)
+      ? ts.createSourceFile(f, virtual.get(f)!, languageVersion, true)
+      : getSourceFile(f, languageVersion, ...rest);
+  const program = ts.createProgram(
+    [consumer],
+    {
+      ...options,
+      declaration: false,
+      emitDeclarationOnly: false,
+      noEmit: true,
+      skipLibCheck: false,
+      rootDir: undefined,
+      paths: {},
+      types: ["@webgpu/types"],
+    },
+    host,
+  );
+  const errors = ts
+    .getPreEmitDiagnostics(program)
+    .filter((d) => d.file && virtual.has(d.file.fileName))
+    .map(
+      (d) =>
+        `${relative(join(root, OUT), d.file!.fileName)}: ${ts.flattenDiagnosticMessageText(
+          d.messageText,
+          " ",
+        )}`,
+    );
+  expect(errors).toEqual([]);
+}, 240_000);

@@ -44,8 +44,9 @@ export {
   tilesetGeoreference,
 } from "../engineering/georeferenceTileset.ts";
 export { WKT2_CRS_KEYWORDS, wkt2Problem } from "../engineering/wkt2.ts";
-// @internal, both: for the frames explorer, whose catalog uses only the index.
+/** @internal For the frames explorer, whose catalog uses only the index. */
 export { projTokenProblem } from "../engineering/wkt2.ts";
+/** @internal For the frames explorer, whose catalog uses only the index. */
 export { strictWkt2 } from "../engineering/crs.ts";
 export {
   Alignment,

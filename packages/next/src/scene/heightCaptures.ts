@@ -13,7 +13,7 @@ import { earthAnchor, contentAnchor } from "./earthAnchor.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 
-/** Rasterizer side: height samples and captures. */
+/** @internal Rasterizer side: height samples and captures. */
 export interface HeightCaptureEngine extends Pick<
   Engine,
   "ctx" | "requestRender" | "tilesets"
@@ -50,6 +50,7 @@ export interface HeightCapture {
   viewBytes: number;
 }
 
+/** @internal */
 export async function sampleHeightMostDetailed(
   engine: HeightCaptureEngine,
   world: World,
@@ -123,6 +124,7 @@ export async function sampleHeightMostDetailed(
   return heights;
 }
 
+/** @internal */
 export function addHeightCapture(
   engine: HeightCaptureEngine,
   world: World,
@@ -180,6 +182,7 @@ export function addHeightCapture(
   return capture;
 }
 
+/** @internal */
 export function removeHeightCapture(
   engine: HeightCaptureEngine,
   capture: HeightCapture,
