@@ -1,6 +1,7 @@
 // Scene items: a tileset drawn more than once in its world. The same loaded
 // tiles, one selection, one cache, one set of bounds. Through the real tileset
 // on the fake engine (test/fakeGpu.ts).
+import { rayJobs } from "../src/scene/world/rays.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
@@ -637,14 +638,10 @@ describe("scene items", () => {
       },
     ];
     const jobs = (s: { world: World; tileset: Tileset3D }) => {
-      const bySlab = (
-        s.world as unknown as {
-          rayJobs(
-            r: typeof rays,
-            o: object,
-          ): Map<number, Uint32Array<ArrayBuffer>>;
-        }
-      ).rayJobs(rays, { collisionOnly: true, anchor: s.tileset.anchor });
+      const bySlab = rayJobs(s.world, rays, {
+        collisionOnly: true,
+        anchor: s.tileset.anchor,
+      });
       let count = 0;
       for (const list of bySlab.values()) {
         count += list.length / 4;

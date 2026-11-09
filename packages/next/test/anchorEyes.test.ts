@@ -1,3 +1,5 @@
+import type { CastOptions } from "../src/scene/world/types.ts";
+import { rayJobs } from "../src/scene/world/rays.ts";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { EARTH, MOON } from "../src/scene/Body.ts";
 import { Camera } from "../src/scene/Camera.ts";
@@ -363,14 +365,7 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
       },
     ];
     const jobs = (anchor?: typeof earth) => {
-      const bySlab = (
-        world as unknown as {
-          rayJobs(
-            r: typeof rays,
-            o: object,
-          ): Map<number, Uint32Array<ArrayBuffer>>;
-        }
-      ).rayJobs(rays, anchor ? { anchor } : {});
+      const bySlab = rayJobs(world, rays, anchor ? { anchor } : {});
       const records = new Set<number>();
       for (const list of bySlab.values()) {
         for (let i = 0; i < list.length; i += 4) {
@@ -383,11 +378,11 @@ describe("an eye per anchor (plan 5a, Task 9)", () => {
     expect(jobs()).toEqual([root.index]);
     // A listed draw must be under the cast's anchor.
     const listed = (anchor: typeof earth | undefined, draws: unknown[]) =>
-      (
-        world as unknown as {
-          rayJobs(r: typeof rays, o: object): unknown;
-        }
-      ).rayJobs(rays, anchor ? { anchor, draws } : { draws });
+      rayJobs(
+        world,
+        rays,
+        (anchor ? { anchor, draws } : { draws }) as CastOptions,
+      );
     expect(() => listed(earth, [under])).not.toThrow();
     expect(() => listed(earth, [under, root])).toThrow(
       `castRays: draw ${root.index} is under no anchor (the table's root); the cast's rays are under the anchor Earth.`,
