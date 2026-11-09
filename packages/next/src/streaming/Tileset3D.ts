@@ -86,12 +86,7 @@ import type {
 import { readDualPosition, type DualDeclaration } from "./dualPosition.ts";
 import { applyDebugColor, updateDebug } from "./tilesetDebug.ts";
 import { serveQueries } from "./tilesetQueries.ts";
-
-/**
- * World pool pressure (World.pressure) past which streaming evicts as if
- * over its byte budget (§13.15).
- */
-const CAPACITY_PRESSURE = 0.9;
+import { evict, evictForCapacity, unload } from "./tilesetEviction.ts";
 const DEGREES_TO_RADIANS = Math.PI / 180;
 /**
  * Bytes a loaded tile costs besides its content, counted in `Tile.bytes`
@@ -704,8 +699,8 @@ export class Tileset3D implements TileTree {
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
-  /** A non-3D-Tiles source, when streaming one (`Globe.create`). */
-  protected source?: TileSource;
+  /** @internal A non-3D-Tiles source, when streaming one (`Globe.create`). */
+  source?: TileSource;
   /** Last frame in which an update changed anything. */
   private lastChange = 0;
 
@@ -718,22 +713,26 @@ export class Tileset3D implements TileTree {
     this.lastChange = this.frame;
     this.engine.wake();
   }
-  private readonly cacheBytes: number;
-  /** The world pool an upload last found full (`CapacityError.pool`). */
-  private capacityFull?: string;
-  /** Frames to wait before retrying uploads after a capacity failure. */
-  private capacityWait = 0;
-  /** `capacityFull` came from a failed upload, not only from pressure. */
-  private capacityFailed = false;
-  private readonly overflowBytes: number;
+  /** @internal */
+  readonly cacheBytes: number;
+  /** @internal The world pool an upload last found full (`CapacityError.pool`). */
+  capacityFull?: string;
+  /** @internal Frames to wait before retrying uploads after a capacity failure. */
+  capacityWait = 0;
+  /** @internal `capacityFull` came from a failed upload, not only from pressure. */
+  capacityFailed = false;
+  /** @internal */
+  readonly overflowBytes: number;
   private readonly fixedWindow?: number;
   /** The root's origin, and every origin this tileset requested from. */
   private readonly origin: string;
   private readonly origins = new Set<string>();
   private readonly loading = new Map<Tile, AbortController>();
-  private readonly uploadsPerFrame: number;
+  /** @internal */
+  readonly uploadsPerFrame: number;
   private readonly headers?: Record<string, string>;
-  private readonly loaded = new Set<Tile>();
+  /** @internal */
+  readonly loaded = new Set<Tile>();
   /** @internal The loaded tiles, least recently touched first (what eviction walks). */
   readonly order = new TouchOrder<Tile>();
   private readonly ready: Array<{
@@ -757,12 +756,12 @@ export class Tileset3D implements TileTree {
   settledAt?: number;
   /** @internal */
   masked = new Set<Tile>();
-  /** Tiles with a caster mask (`CasterSelection.casters`). */
-  private casters = new Set<Tile>();
+  /** @internal Tiles with a caster mask (`CasterSelection.casters`). */
+  casters = new Set<Tile>();
   /** Bytes of what views used in the last update. */
   private viewBytes = 0;
-  /** How long a cold tile may yet come back, ms (`COLD_AGE_MS`). */
-  private coldAgeMs = COLD_AGE_MS;
+  /** @internal How long a cold tile may yet come back, ms (`COLD_AGE_MS`). */
+  coldAgeMs = COLD_AGE_MS;
   /** The last update selected shadow casters. */
   private casting = false;
   /** `World.contentRevision` after the last update. */
@@ -776,19 +775,19 @@ export class Tileset3D implements TileTree {
   private casterBytesEstimate = 0;
   /** Whether casters may load this tick (`CasterRoom.load`). */
   private casterLoad = true;
-  /** A view's tile found a pool full: casters wait until it has uploaded. */
-  private viewCapacityWait = false;
-  /** Bytes of loaded tiles that are `castsOnly`, drawn by cascades or not. */
-  private casterResident = 0;
+  /** @internal A view's tile found a pool full: casters wait until it has uploaded. */
+  viewCapacityWait = false;
+  /** @internal Bytes of loaded tiles that are `castsOnly`, drawn by cascades or not. */
+  casterResident = 0;
   /** @internal */
   placeholders = new Set<Tile>();
-  /** Tiles drawn whole while finer content loads, in some view. */
-  private standIns = new Set<Tile>();
+  /** @internal Tiles drawn whole while finer content loads, in some view. */
+  standIns = new Set<Tile>();
   private inFlight = 0;
   private destroyed = false;
 
   protected constructor(
-    private readonly engine: Engine,
+    /** @internal */ readonly engine: Engine,
     world: World | undefined,
     readonly url: string,
     options: TilesetOptions,
@@ -953,8 +952,8 @@ export class Tileset3D implements TileTree {
       : undefined;
   }
 
-  /** Loaded tiles by draw slot: kept with placing and unloading content. */
-  private readonly drawTiles = new Map<
+  /** @internal Loaded tiles by draw slot: kept with placing and unloading content. */
+  readonly drawTiles = new Map<
     number,
     {
       readonly generation: number;
@@ -1078,7 +1077,8 @@ export class Tileset3D implements TileTree {
   private readonly itemHost: SceneItemHost;
   /** @internal The item drawing the tiles' own draws, if any. */
   baseItem: SceneItem | undefined;
-  private readonly itemList: SceneItem[] = [];
+  /** @internal */
+  readonly itemList: SceneItem[] = [];
 
   /**
    * Bounds cover what every item draws, and a placement that moves vertices
@@ -2179,83 +2179,7 @@ export class Tileset3D implements TileTree {
    * on the next tick, as what is left shrinks.
    */
   private evict(frame: number): void {
-    // This frame's touches and loads, in the order eviction walks.
-    this.order.seal(frame);
-    // Another tileset's view tile is waiting for a pool: casters yield it.
-    if (
-      this.casterResident > 0 &&
-      this.engine.tilesets.some(
-        (other) =>
-          other !== this &&
-          other.world === this.world &&
-          other.viewCapacityWait,
-      )
-    ) {
-      let count = 0;
-      for (const tile of this.order.coldest(frame)) {
-        if (count >= this.uploadsPerFrame) {
-          break;
-        }
-        if (tile.castsOnly) {
-          this.unload(tile);
-          count++;
-        }
-      }
-    }
-    // A world pool at capacity (an upload's CapacityError), or nearly so
-    // (World.pressure), evicts as being over the byte budget does, until
-    // uploads fit again.
-    if (this.capacityFull === undefined) {
-      const { fraction, pool } = this.world.pressure();
-      if (fraction >= CAPACITY_PRESSURE) {
-        this.capacityFull = pool;
-      }
-    }
-    if (this.capacityFull !== undefined) {
-      this.evictForCapacity(frame);
-      return;
-    }
-    // Eviction starts at the budget; the overflow is for content in use.
-    if (this.stats.bytes <= this.cacheBytes) {
-      return;
-    }
-    // Spread over frames, as uploads are: after a camera jump everything
-    // shown before becomes evictable at once, and freeing it all in one
-    // frame (textures and buffers by the hundred) stalls that frame. Past
-    // the hard limit (budget + overflow), whatever is needed goes now.
-    let allowance = Math.max(
-      2 * this.engine.uploadBytesPerFrame,
-      this.stats.bytes - (this.cacheBytes + this.overflowBytes),
-    );
-    const evict = (tile: Tile): void => {
-      allowance -= tile.bytes;
-      this.unload(tile);
-    };
-    if (this.casterResident > 0) {
-      for (const tile of this.order.coldest(frame)) {
-        if (this.stats.bytes <= this.cacheBytes || allowance <= 0) {
-          return;
-        }
-        if (tile.castsOnly && tile.casterMask === 0) {
-          evict(tile);
-        }
-      }
-    }
-    const heldSince = performance.now() - this.coldAgeMs;
-    for (const tile of this.order.coldest(frame)) {
-      if (this.stats.bytes <= this.cacheBytes || allowance <= 0) {
-        return;
-      }
-      if (tile.castsOnly) {
-        continue;
-      }
-      if (
-        this.stats.bytes - this.casterResident > this.cacheBytes ||
-        (tile.casterMask === 0 && tile.viewedAt <= heldSince)
-      ) {
-        evict(tile);
-      }
-    }
+    evict(this, frame);
   }
 
   /** Drops decoded content of a caster that isn't wanted after all. */
@@ -2266,8 +2190,8 @@ export class Tileset3D implements TileTree {
     tile.purpose = undefined;
   }
 
-  /** Counts a loaded tile in or out of the caster class (`castsOnly`). */
-  private markCastsOnly(tile: Tile, value: boolean): void {
+  /** @internal Counts a loaded tile in or out of the caster class (`castsOnly`). */
+  markCastsOnly(tile: Tile, value: boolean): void {
     if (tile.castsOnly !== value && tile.state === "ready") {
       tile.castsOnly = value;
       this.casterResident += value ? tile.bytes : -tile.bytes;
@@ -2293,33 +2217,12 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * Frees room in a full world pool: the least recently touched tiles not
+   * @internal Frees room in a full world pool: the least recently touched tiles not
    * touched this frame, a few per frame (as for bytes, so a frame doesn't
    * stall on frees). The pool's warning is kept for the session's stats.
    */
-  private evictForCapacity(frame: number): void {
-    this.warnings.add(
-      `capacity: world ${this.capacityFull} ${this.capacityFailed ? "full" : "nearly full"}, evicting`,
-    );
-    this.capacityFull = undefined;
-    let count = 0;
-    // Casters first, casting or not: they yield the pools.
-    for (const castsOnly of [true, false]) {
-      for (const tile of this.order.coldest(frame)) {
-        if (count >= this.uploadsPerFrame) {
-          break;
-        }
-        if (tile.castsOnly === castsOnly) {
-          this.unload(tile);
-          count++;
-        }
-      }
-    }
-    // After a failed upload with nothing to free here (everything is in
-    // view, or another tileset holds the pool): retry in half a second,
-    // while the error threshold rises. Pressure alone doesn't hold uploads.
-    this.capacityWait = this.capacityFailed && count === 0 ? 30 : 0;
-    this.capacityFailed = false;
+  evictForCapacity(frame: number): void {
+    evictForCapacity(this, frame);
   }
 
   /**
@@ -2371,60 +2274,6 @@ export class Tileset3D implements TileTree {
       kept.push({ draw: draw!, ...arrays, matrix });
     });
     return kept;
-  }
-
-  private unload(tile: Tile): void {
-    if (tile.placement) {
-      this.world.acceleration.tileUnloaded(this, tile);
-    }
-    this.source?.unloadTile?.(tile);
-    if (tile.purpose) {
-      this.stats.purposes[tile.purpose].unused++;
-      tile.purpose = undefined;
-    }
-    if (tile.placement) {
-      for (const item of this.itemList) {
-        item.unplace(tile);
-      }
-      for (const draw of tile.placement.draws) {
-        if (this.drawTiles.get(draw.index)?.tile === tile) {
-          this.drawTiles.delete(draw.index);
-        }
-      }
-      tile.placement.remove();
-      tile.placement = undefined;
-    }
-    tile.geometry = undefined;
-    this.markCastsOnly(tile, false);
-    this.stats.bytes -= tile.bytes;
-    this.stats.loaded--;
-    if (tile.summary) {
-      accumulate(this.resident, tile.summary, -1);
-      tile.summary = undefined;
-    }
-    tile.bytes = 0;
-    tile.state = "unloaded";
-    tile.appliedMask = -1;
-    tile.casterMask = tile.appliedCasterMask = 0;
-    this.casters.delete(tile);
-    tile.debugColor = undefined;
-    tile.appliedPlaceholderMask = 0;
-    tile.placeholderMask = 0;
-    tile.standInMask = 0;
-    this.standIns.delete(tile);
-    tile.holes = tile.appliedHoles = undefined;
-    if (tile.clip) {
-      this.world.freeClip(tile.clip);
-      tile.clip = undefined;
-    }
-    this.placeholders.delete(tile);
-    this.order.remove(tile);
-    if (this.loaded.delete(tile)) {
-      for (let t = tile.parent; t; t = t.parent) {
-        t.residentBelow--;
-      }
-    }
-    this.masked.delete(tile);
   }
 
   /**
@@ -2500,7 +2349,7 @@ export class Tileset3D implements TileTree {
     }
     this.origins.clear();
     for (const tile of [...this.loaded]) {
-      this.unload(tile);
+      unload(this, tile);
     }
     for (const { asset } of this.ready) {
       closeImages(asset);

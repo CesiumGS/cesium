@@ -1,6 +1,7 @@
 // How off-screen shadow casters share the cache and the world's pools with
 // what views draw: through the real tileset on the fake engine, in
 // continuous mode. `casterLoop.test.ts` runs them on the on-demand loop.
+import { unload } from "../src/streaming/tilesetEviction.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
@@ -265,11 +266,10 @@ describe("casters share the cache", () => {
       const [floor, roof] = s.tiles as [Tile, Tile];
       // Unload both and queue the caster's decoded asset first.
       const t = s.tileset as unknown as {
-        unload(tile: Tile): void;
         upload(): void;
       };
-      t.unload(floor);
-      t.unload(roof);
+      unload(s.tileset, floor);
+      unload(s.tileset, roof);
       roof.purpose = "caster";
       floor.purpose = "view";
       floor.viewMask = 1;
