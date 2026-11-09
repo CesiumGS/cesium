@@ -72,11 +72,10 @@ import {
   packTint,
   writeInstance,
   writeMaterial,
-  writeTransform,
   type MeshStreams,
 } from "../render/layout.ts";
-import { rigidMatrixError, splitHigh, splitVec3 } from "../math/transforms.ts";
-import { bodyKey, type Body } from "./Body.ts";
+import { splitHigh, splitVec3 } from "../math/transforms.ts";
+import type { Body } from "./Body.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import { TerrainRegionError } from "../globe/terrainClip.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -118,6 +117,29 @@ import type {
   TablePlan,
   TableColumn,
 } from "./world/types.ts";
+import {
+  anchorAt,
+  IDENTITY,
+  resolveTransforms,
+  addTransform,
+  setTransform,
+  setTransformVisible,
+  localMatrix,
+  worldMatrix,
+  drawMatrix,
+  removeTransform,
+  transformAlive,
+  addAnchor,
+  bodyAnchor,
+  findBodyAnchor,
+  anchorOf,
+  drawAnchor,
+  placeAnchor,
+  anchorMatrix,
+  removeAnchor,
+  frameOf,
+  checkAnchor,
+} from "./world/transforms.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -148,8 +170,8 @@ export class World {
    * record write goes through it.
    */
   readonly drawConstants: DrawConstants;
-  /** The records' words, to read (written through `drawConstants`). */
-  private get recordsU32(): ArrayLike<number> {
+  /** @internal The records' words, to read (written through `drawConstants`). */
+  get recordsU32(): ArrayLike<number> {
     return this.drawConstants.u32;
   }
   private get recordsF32(): ArrayLike<number> {
@@ -166,29 +188,39 @@ export class World {
 
   // The transform table: float64 local and world matrices on the CPU,
   // composed parents first; GPU entries mirror the world matrices.
-  private readonly transforms: MirroredTable;
-  private transformLocal: Float64Array;
-  private transformWorld: Float64Array;
-  private transformParent: Int32Array;
-  private readonly transformChildren: Array<number[] | undefined> = [];
-  private transformGeneration: Uint32Array;
-  private transformLive: Uint8Array;
-  /** Hidden by itself, and by itself or an ancestor. */
-  private transformHidden: Uint8Array;
-  private transformHiddenWorld: Uint8Array;
+  /** @internal */
+  readonly transforms: MirroredTable;
+  /** @internal */
+  transformLocal: Float64Array;
+  /** @internal */
+  transformWorld: Float64Array;
+  /** @internal */
+  transformParent: Int32Array;
+  /** @internal */
+  readonly transformChildren: Array<number[] | undefined> = [];
+  /** @internal */
+  transformGeneration: Uint32Array;
+  /** @internal */
+  transformLive: Uint8Array;
+  /** @internal Hidden by itself, and by itself or an ancestor. */
+  transformHidden: Uint8Array;
+  /** @internal */
+  transformHiddenWorld: Uint8Array;
   /**
-   * The anchor slot a transform hangs under (0: none), inherited from its
+   * @internal The anchor slot a transform hangs under (0: none), inherited from its
    * parent; an anchor's own slot for an anchor.
    */
-  private transformAnchor: Uint8Array;
-  /** Anchors by slot; slot 0 ("no anchor") stays empty. */
-  private readonly anchorSlots: Array<AnchorHandle | undefined> = [];
-  /** Anchors' places in the table root, by slot (16 float64 each). */
-  private readonly anchorPlaces = new Float64Array(MAX_ANCHORS * 16);
-  private readonly bodyAnchors = new Map<string, AnchorHandle>();
-  private anchorList: readonly AnchorHandle[] | undefined;
-  /** `frameOf`'s keys by transform slot. */
-  private readonly transformFrames = new Map<number, TransformFrameKey>();
+  transformAnchor: Uint8Array;
+  /** @internal Anchors by slot; slot 0 ("no anchor") stays empty. */
+  readonly anchorSlots: Array<AnchorHandle | undefined> = [];
+  /** @internal Anchors' places in the table root, by slot (16 float64 each). */
+  readonly anchorPlaces = new Float64Array(MAX_ANCHORS * 16);
+  /** @internal */
+  readonly bodyAnchors = new Map<string, AnchorHandle>();
+  /** @internal */
+  anchorList: readonly AnchorHandle[] | undefined;
+  /** @internal `frameOf`'s keys by transform slot. */
+  readonly transformFrames = new Map<number, TransformFrameKey>();
   /**
    * The transform table's own top level, where transforms under no anchor
    * sit (render space, as every draw was before anchors).
@@ -203,7 +235,8 @@ export class World {
   get transformRevision(): number {
     return this.transformRevision_;
   }
-  private transformRevision_ = 0;
+  /** @internal */
+  transformRevision_ = 0;
   /**
    * Counts changes to the anchors' places in the table root: `placeAnchor`
    * and `removeAnchor` only. A route between anchors and the root changes
@@ -212,7 +245,8 @@ export class World {
   get anchorPlaceRevision(): number {
     return this.anchorPlaceRevision_;
   }
-  private anchorPlaceRevision_ = 0;
+  /** @internal */
+  anchorPlaceRevision_ = 0;
   /**
    * Counts changes to what a ray may meet: draws added and removed
    * (`addDraw`, `removeDraw`), a draw's views changed (`setViewMask`, as
@@ -235,19 +269,26 @@ export class World {
   private readonly lights: Array<LightOptions | undefined> = [];
   private readonly lightGenerations: number[] = [];
   private readonly freeLights: number[] = [];
-  private readonly transformPending: number[] = [];
-  private transformPendingFlag: Uint8Array;
-  private transformStamp: Uint32Array;
-  private transformResolve = 0;
-  private transformCount = 0;
-  private readonly freeTransforms: number[] = [];
+  /** @internal */
+  readonly transformPending: number[] = [];
+  /** @internal */
+  transformPendingFlag: Uint8Array;
+  /** @internal */
+  transformStamp: Uint32Array;
+  /** @internal */
+  transformResolve = 0;
+  /** @internal */
+  transformCount = 0;
+  /** @internal */
+  readonly freeTransforms: number[] = [];
 
   // The instance table: ranges owned by instanced draws.
   private readonly instances: MirroredTable;
   private readonly instanceAllocator: RangeAllocator;
   /** Instance slots in use or freed below the highest (cull dispatch size). */
   private instanceHighWater = 0;
-  private uploadsPending = false;
+  /** @internal */
+  uploadsPending = false;
   /**
    * The placements buffer (plan 5a's call 42): parameters and each placed
    * draw's block, bound in the draw group for the vertex stage.
@@ -487,7 +528,7 @@ export class World {
   private readonly imagerySampler: GPUSampler;
 
   constructor(
-    private readonly ctx: RenderContext,
+    /** @internal */ readonly ctx: RenderContext,
     options: WorldOptions = {},
   ) {
     const device = ctx.device;
@@ -1381,8 +1422,8 @@ export class World {
     }
   }
 
-  /** CPU room for transforms below `count`. */
-  private reserveTransforms(count: number): void {
+  /** @internal CPU room for transforms below `count`. */
+  reserveTransforms(count: number): void {
     if (this.transforms.reserve(count)) {
       const t = this.transforms.rows;
       this.transformLocal = resized(this.transformLocal, t * 16);
@@ -1614,7 +1655,7 @@ export class World {
       throw new Error("addDraw: the parent was removed.");
     }
     const onAnchor = options.transform
-      ? this.anchorAt(options.transform.index)
+      ? anchorAt(this, options.transform.index)
       : undefined;
     if (onAnchor && this.transformAlive(options.transform!)) {
       throw new Error(
@@ -1852,7 +1893,7 @@ export class World {
     // Bounds live in the transform's local frame, so moving or rotating
     // the transform never stales them; an explicit radius is in meters.
     // A custom vertex stage's displacement (model units) pads them.
-    this.resolveTransforms();
+    resolveTransforms(this);
     const scale = this.transformsF32Scale(transform);
     this.names[index] = options.name;
     this.featureTables[index] = options.features;
@@ -2625,61 +2666,17 @@ export class World {
     matrix: ArrayLike<number>,
     parent?: TransformHandle,
   ): TransformHandle {
-    if (parent && !this.transformAlive(parent)) {
-      throw new Error("addTransform: the parent was removed.");
-    }
-    const index = this.freeTransforms.pop() ?? this.transformCount++;
-    if (index >= this.maxTransforms) {
-      this.transformCount--;
-      throw new CapacityError("transform table");
-    }
-    this.reserveTransforms(index + 1);
-    if (index >= this.transforms.gpuRows) {
-      this.growTransforms(index + 1);
-    }
-    this.transformLocal.set(matrix, index * 16);
-    this.transformParent[index] = parent ? parent.index : -1;
-    if (parent) {
-      (this.transformChildren[parent.index] ??= []).push(index);
-    }
-    this.transformChildren[index] = undefined;
-    this.transformLive[index] = 1;
-    this.transformHidden[index] = 0;
-    this.transformAnchor[index] = parent
-      ? this.transformAnchor[parent.index]!
-      : 0;
-    this.pendTransform(index);
-    return { index, generation: this.transformGeneration[index]! };
+    return addTransform(this, matrix, parent);
   }
 
   /** Replaces a transform's matrix (relative to its parent). */
   setTransform(handle: TransformHandle, matrix: ArrayLike<number>): void {
-    if (!this.transformAlive(handle)) {
-      return;
-    }
-    const anchor = this.anchorAt(handle.index);
-    if (anchor) {
-      throw new Error(
-        `setTransform: ${anchor.name} is an anchor, whose matrix is the identity; place it per view (View.setAnchorPlacement) or in the table root (placeAnchor).`,
-      );
-    }
-    this.transformLocal.set(matrix, handle.index * 16);
-    this.pendTransform(handle.index);
-    this.transformRevision_++;
-    this.changedViews = ALL_VIEWS;
+    setTransform(this, handle, matrix);
   }
 
   /** Hides or shows a transform and everything below it. */
   setTransformVisible(handle: TransformHandle, visible: boolean): void {
-    if (!this.transformAlive(handle)) {
-      return;
-    }
-    const hidden = visible ? 0 : 1;
-    if (this.transformHidden[handle.index] !== hidden) {
-      this.transformHidden[handle.index] = hidden;
-      this.pendTransform(handle.index);
-      this.changedViews = ALL_VIEWS;
-    }
+    setTransformVisible(this, handle, visible);
   }
 
   /** A transform's matrix relative to its parent. */
@@ -2687,10 +2684,7 @@ export class World {
     handle: TransformHandle,
     out = new Float64Array(16),
   ): Float64Array {
-    out.set(
-      this.transformLocal.subarray(handle.index * 16, handle.index * 16 + 16),
-    );
-    return out;
+    return localMatrix(this, handle, out);
   }
 
   /**
@@ -2703,11 +2697,7 @@ export class World {
     handle: TransformHandle,
     out = new Float64Array(16),
   ): Float64Array {
-    this.resolveTransforms();
-    out.set(
-      this.transformWorld.subarray(handle.index * 16, handle.index * 16 + 16),
-    );
-    return out;
+    return worldMatrix(this, handle, out);
   }
 
   /**
@@ -2719,13 +2709,7 @@ export class World {
     handle: DrawHandle,
     out: T = new Float64Array(16) as T,
   ): T | undefined {
-    if (!this.hasDraw(handle)) {
-      return undefined;
-    }
-    const t = this.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
-    this.resolveTransforms();
-    out.set(this.transformWorld.subarray(t * 16, t * 16 + 16));
-    return out;
+    return drawMatrix(this, handle, out);
   }
 
   /**
@@ -2733,47 +2717,12 @@ export class World {
    * removed first. An anchor goes through `removeAnchor`.
    */
   removeTransform(handle: TransformHandle): void {
-    if (!this.transformAlive(handle)) {
-      return;
-    }
-    const index = handle.index;
-    const anchor = this.anchorAt(index);
-    if (anchor) {
-      throw new Error(
-        `removeTransform: ${anchor.name} is an anchor; remove it with removeAnchor.`,
-      );
-    }
-    const parent = this.transformParent[index]!;
-    if (parent >= 0) {
-      const siblings = this.transformChildren[parent];
-      const at = siblings?.indexOf(index) ?? -1;
-      if (at >= 0) {
-        siblings!.splice(at, 1);
-      }
-    }
-    this.freeTransformTree(index);
+    removeTransform(this, handle);
   }
 
   /** Whether `handle` still names a live transform. */
   transformAlive(handle: TransformHandle): boolean {
-    return (
-      this.transformLive[handle.index] === 1 &&
-      this.transformGeneration[handle.index] === handle.generation
-    );
-  }
-
-  private freeTransformTree(index: number): void {
-    this.transformRevision_++;
-    for (const child of this.transformChildren[index] ?? []) {
-      this.freeTransformTree(child);
-    }
-    this.transformChildren[index] = undefined;
-    this.transformLive[index] = 0;
-    this.transformParent[index] = -1;
-    this.transformAnchor[index] = 0;
-    this.transformFrames.delete(index);
-    this.transformGeneration[index] = this.transformGeneration[index]! + 1;
-    this.freeTransforms.push(index);
+    return transformAlive(this, handle);
   }
 
   // --------------------------------------------------------------- anchors
@@ -2787,36 +2736,7 @@ export class World {
    * `CapacityError("anchor table")`.
    */
   addAnchor(name: string, options: { body?: Body } = {}): AnchorHandle {
-    const body = options.body;
-    const key = body ? bodyKey(body) : undefined;
-    if (key !== undefined && this.bodyAnchors.has(key)) {
-      throw new Error(
-        `addAnchor: ${body!.name} already has an anchor (${this.bodyAnchors.get(key)!.name}).`,
-      );
-    }
-    let slot = 1;
-    while (slot < MAX_ANCHORS && this.anchorSlots[slot]) {
-      slot++;
-    }
-    if (slot === MAX_ANCHORS) {
-      throw new CapacityError("anchor table");
-    }
-    const transform = this.addTransform(IDENTITY);
-    this.transformAnchor[transform.index] = slot;
-    const anchor: AnchorHandle = Object.freeze({
-      index: transform.index,
-      generation: transform.generation,
-      name,
-      slot,
-      ...(body ? { body } : {}),
-    });
-    this.anchorSlots[slot] = anchor;
-    this.anchorPlaces.set(IDENTITY, slot * 16);
-    if (key !== undefined) {
-      this.bodyAnchors.set(key, anchor);
-    }
-    this.anchorList = undefined;
-    return anchor;
+    return addAnchor(this, name, options);
   }
 
   /**
@@ -2824,9 +2744,7 @@ export class World {
    * body, by its name and NAIF id (plan 5a's call 19).
    */
   bodyAnchor(body: Body): AnchorHandle {
-    return (
-      this.bodyAnchors.get(bodyKey(body)) ?? this.addAnchor(body.name, { body })
-    );
+    return bodyAnchor(this, body);
   }
 
   /**
@@ -2834,7 +2752,7 @@ export class World {
    * world has made it (`View.bodyAnchor`).
    */
   findBodyAnchor(key: string): AnchorHandle | undefined {
-    return this.bodyAnchors.get(key);
+    return findBodyAnchor(this, key);
   }
 
   /**
@@ -2844,7 +2762,8 @@ export class World {
   get anchorRemovals(): number {
     return this.anchorRemovals_;
   }
-  private anchorRemovals_ = 0;
+  /** @internal */
+  anchorRemovals_ = 0;
 
   /** The world's anchors, by slot. */
   get anchors(): readonly AnchorHandle[] {
@@ -2855,19 +2774,12 @@ export class World {
 
   /** The anchor a transform hangs under (itself for an anchor), or undefined under none. */
   anchorOf(handle: TransformHandle): AnchorHandle | undefined {
-    if (!this.transformAlive(handle)) {
-      return undefined;
-    }
-    return this.anchorSlots[this.transformAnchor[handle.index]!];
+    return anchorOf(this, handle);
   }
 
   /** The anchor a draw hangs under, or undefined under none (or once removed). */
   drawAnchor(handle: DrawHandle): AnchorHandle | undefined {
-    if (!this.hasDraw(handle)) {
-      return undefined;
-    }
-    const t = this.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
-    return this.anchorSlots[this.transformAnchor[t]!];
+    return drawAnchor(this, handle);
   }
 
   /**
@@ -2878,29 +2790,12 @@ export class World {
    * itself. Default: the identity.
    */
   placeAnchor(anchor: AnchorHandle, matrix: ArrayLike<number>): void {
-    this.checkAnchor(anchor, "placeAnchor");
-    const error = rigidMatrixError(matrix);
-    if (error) {
-      throw new Error(
-        `placeAnchor: ${anchor.name}'s place is not rigid: ${error}.`,
-      );
-    }
-    for (let i = 0; i < 16; i++) {
-      this.anchorPlaces[anchor.slot * 16 + i] = matrix[i]!;
-    }
-    // Views placed through the table resolver follow on the next tick.
-    this.transformRevision_++;
-    this.anchorPlaceRevision_++;
-    this.ctx.wake();
+    placeAnchor(this, anchor, matrix);
   }
 
   /** An anchor's place in the table root (`placeAnchor`), float64. */
   anchorMatrix(anchor: AnchorHandle, out = new Float64Array(16)): Float64Array {
-    this.checkAnchor(anchor, "anchorMatrix");
-    out.set(
-      this.anchorPlaces.subarray(anchor.slot * 16, anchor.slot * 16 + 16),
-    );
-    return out;
+    return anchorMatrix(this, anchor, out);
   }
 
   /**
@@ -2910,27 +2805,7 @@ export class World {
    * placements of it (`View.anchorRevision` counts that).
    */
   removeAnchor(anchor: AnchorHandle): void {
-    if (
-      !this.transformAlive(anchor) ||
-      this.anchorSlots[anchor.slot] !== anchor
-    ) {
-      return;
-    }
-    if ((this.transformChildren[anchor.index]?.length ?? 0) > 0) {
-      throw new Error(
-        `removeAnchor: transforms still hang under ${anchor.name}; remove them first.`,
-      );
-    }
-    this.anchorSlots[anchor.slot] = undefined;
-    if (anchor.body) {
-      this.bodyAnchors.delete(bodyKey(anchor.body));
-    }
-    this.anchorList = undefined;
-    this.freeTransformTree(anchor.index);
-    this.anchorRemovals_++;
-    this.anchorPlaceRevision_++;
-    this.version++;
-    this.changedViews = ALL_VIEWS;
+    removeAnchor(this, anchor);
   }
 
   /**
@@ -2942,124 +2817,7 @@ export class World {
    * view's last good placement and pose.
    */
   frameOf(handle: TransformHandle, name: string): TransformFrameKey {
-    if (!this.transformAlive(handle)) {
-      throw new Error(`frameOf: the transform for ${name} was removed.`);
-    }
-    const known = this.transformFrames.get(handle.index);
-    if (known) {
-      if (known.name !== name) {
-        throw new Error(
-          `frameOf: the transform is already the reference frame ${known.name}, not ${name}.`,
-        );
-      }
-      return known;
-    }
-    const key: TransformFrameKey = Object.freeze({
-      name,
-      world: this,
-      transform: Object.freeze({
-        index: handle.index,
-        generation: handle.generation,
-      }),
-    });
-    this.transformFrames.set(handle.index, key);
-    return key;
-  }
-
-  /** The anchor at a transform slot, if that transform is one. */
-  private anchorAt(index: number): AnchorHandle | undefined {
-    const anchor = this.anchorSlots[this.transformAnchor[index]!];
-    return anchor?.index === index ? anchor : undefined;
-  }
-
-  private checkAnchor(anchor: AnchorHandle, caller: string): void {
-    if (
-      this.anchorSlots[anchor.slot] !== anchor ||
-      !this.transformAlive(anchor)
-    ) {
-      throw new Error(
-        `${caller}: ${anchor.name} is not an anchor of this world.`,
-      );
-    }
-  }
-
-  private pendTransform(index: number): void {
-    if (this.transformPendingFlag[index] === 0) {
-      this.transformPendingFlag[index] = 1;
-      this.transformPending.push(index);
-    }
-    this.version++;
-  }
-
-  /** Composes changed transforms and their descendants, parents first. */
-  private resolveTransforms(): void {
-    if (this.transformPending.length === 0) {
-      return;
-    }
-    const stamp = ++this.transformResolve;
-    for (const index of this.transformPending) {
-      this.transformPendingFlag[index] = 0;
-      if (this.transformLive[index] === 1) {
-        // From the highest pending ancestor, so each subtree composes once.
-        let top = index;
-        for (
-          let p = this.transformParent[index]!;
-          p >= 0;
-          p = this.transformParent[p]!
-        ) {
-          if (
-            this.transformPendingFlag[p] === 1 ||
-            this.transformStamp[p] === stamp
-          ) {
-            top = p;
-          }
-        }
-        if (this.transformStamp[top] !== stamp) {
-          this.composeTransform(top, stamp);
-        }
-      }
-    }
-    this.transformPending.length = 0;
-  }
-
-  private composeTransform(index: number, stamp: number): void {
-    this.transformStamp[index] = stamp;
-    const parent = this.transformParent[index]!;
-    const world = this.transformWorld;
-    // An anchor's matrix is the identity: its children's are their own,
-    // bit for bit (as before anchors, at the top level).
-    if (parent >= 0 && this.anchorAt(parent) === undefined) {
-      multiplyInto(
-        world,
-        index * 16,
-        world,
-        parent * 16,
-        this.transformLocal,
-        index * 16,
-      );
-    } else {
-      world.set(
-        this.transformLocal.subarray(index * 16, index * 16 + 16),
-        index * 16,
-      );
-    }
-    const hidden =
-      this.transformHidden[index] === 1 ||
-      (parent >= 0 && this.transformHiddenWorld[parent] === 1);
-    this.transformHiddenWorld[index] = hidden ? 1 : 0;
-    writeTransform(
-      this.transforms.f32,
-      this.transforms.u32,
-      index,
-      world.subarray(index * 16, index * 16 + 16),
-      hidden,
-      this.transformAnchor[index],
-    );
-    this.transforms.mark(index);
-    this.uploadsPending = true;
-    for (const child of this.transformChildren[index] ?? []) {
-      this.composeTransform(child, stamp);
-    }
+    return frameOf(this, handle, name);
   }
 
   // ---------------------------------------------------------------- lights
@@ -3125,7 +2883,7 @@ export class World {
     if (this.lightCount === 0) {
       return;
     }
-    this.resolveTransforms();
+    resolveTransforms(this);
     for (let i = 0; i < this.lights.length; i++) {
       const light = this.lights[i];
       if (!light) {
@@ -3695,7 +3453,7 @@ export class World {
       return out;
     }
     this.flushUploads();
-    this.resolveTransforms();
+    resolveTransforms(this);
     // Jobs by slab: each slab's triangles are bound with its own group.
     const bySlab = this.rayJobs(rays, options);
     if (bySlab.size === 0) {
@@ -3807,7 +3565,7 @@ export class World {
     const mask = options.viewMask ?? ALL_VIEWS;
     let anchorSlot = 0;
     if (options.anchor) {
-      this.checkAnchor(options.anchor, "castRays");
+      checkAnchor(this, options.anchor, "castRays");
       anchorSlot = options.anchor.slot;
     }
     const only = options.draws
@@ -4261,7 +4019,7 @@ export class World {
   prepareFrame(): GPURenderBundle {
     const queue = this.ctx.device.queue;
     this.flushUploads();
-    this.resolveTransforms();
+    resolveTransforms(this);
     this.uploadsPending = true;
     if (this.materialsDirty) {
       queue.writeBuffer(
@@ -4931,8 +4689,8 @@ export class World {
     this.tablesReplaced();
   }
 
-  /** Room for transforms below `count` on the GPU (copied, rebound). */
-  private growTransforms(count: number): void {
+  /** @internal Room for transforms below `count` on the GPU (copied, rebound). */
+  growTransforms(count: number): void {
     this.transforms.growGpu(
       grownSize(this.transforms.gpuRows, count, this.maxTransforms),
     );
@@ -5179,49 +4937,7 @@ const POINT_MARGIN = 64;
 const NO_HIT = 0x7f7fffff;
 /** Smallest staging buffer for queued uploads. */
 const UPLOAD_CHUNK_BYTES = 1 << 20;
-const IDENTITY = Float64Array.of(
-  1,
-  0,
-  0,
-  0,
-  0,
-  1,
-  0,
-  0,
-  0,
-  0,
-  1,
-  0,
-  0,
-  0,
-  0,
-  1,
-);
 const ZERO = Float64Array.of(0, 0, 0);
-
-/** out[o..o+16) = a[ao..] × b[bo..] (column-major); `out` may alias `a`'s slot only via distinct offsets. */
-function multiplyInto(
-  out: Float64Array,
-  o: number,
-  a: Float64Array,
-  ao: number,
-  b: Float64Array,
-  bo: number,
-): void {
-  for (let c = 0; c < 4; c++) {
-    const b0 = b[bo + c * 4]!;
-    const b1 = b[bo + c * 4 + 1]!;
-    const b2 = b[bo + c * 4 + 2]!;
-    const b3 = b[bo + c * 4 + 3]!;
-    for (let r = 0; r < 4; r++) {
-      out[o + c * 4 + r] =
-        a[ao + r]! * b0 +
-        a[ao + 4 + r]! * b1 +
-        a[ao + 8 + r]! * b2 +
-        a[ao + 12 + r]! * b3;
-    }
-  }
-}
 
 /** Ritter-style bounding sphere around the AABB center, tightened by a pass. */
 function boundingSphere(positions: Float32Array): {
