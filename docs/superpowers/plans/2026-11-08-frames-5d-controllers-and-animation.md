@@ -903,7 +903,7 @@ A browser check (port 5193).
 
 ## Questions for the owner
 
-Most important first. Each has the default the plan follows if the owner says nothing.
+Most important first. Each has the default the plan follows. The owner took all four defaults on 2026-11-08, to be tweaked after trying them.
 
 1. **§13.29 says Entity's uses are covered by "the bindings of 5d", and section 11.4's bindings are gesture maps.** Did you mean values bound to time? *Default:* yes: `Timeline.bind` plus setters, with the names provisional for the vector design and 5i (ruling 1).
 2. **Renaming `InspectController` to `OrbitController` now, ahead of 5i, and dropping the old proof-of-concept of that name.** Fine to do it here, or should the names wait for the API review? *Default:* rename now (call 18).
