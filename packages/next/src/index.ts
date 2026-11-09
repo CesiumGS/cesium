@@ -113,6 +113,8 @@ export {
   type PostStageOptions,
   type PostStagePass,
   type PostStageTarget,
+  type PostStageViewInfo,
+  type PostStageViewValues,
   type PostStageKind,
   type PostStageRead,
   type PostStageSlot,

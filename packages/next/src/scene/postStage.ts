@@ -15,6 +15,7 @@ import {
   type ShaderUnit,
 } from "../shaders/link/index.ts";
 import postStageWgsl from "../shaders/generated/postStage.wgsl?raw";
+import type { View } from "./View.ts";
 import {
   type UniformLayout,
   type ValueUniform,
@@ -45,6 +46,26 @@ export type PostStageKind = "physics" | "model" | "look";
  * `postIdAt`.
  */
 export type PostStageRead = "depth" | "ids";
+
+/** What `PostStageOptions.perView` is told of a view, this tick. */
+export interface PostStageViewInfo {
+  readonly view: View;
+  /** The view's size, pixels. */
+  readonly width: number;
+  readonly height: number;
+  /** The multiplier on the scene's light in the HDR target. */
+  readonly preExposure: number;
+  /** Radians per pixel at the view's center. */
+  readonly pixelAngle: number;
+}
+
+/** What `PostStageOptions.perView` can set for a view, this tick. */
+export interface PostStageViewValues {
+  /** False leaves the stage out of this view; the chain goes around it. */
+  enabled: boolean;
+  /** As `PostStage.setUniform`, in this view alone. It lasts until it's set again. */
+  setUniform(name: string, value: number | readonly number[]): void;
+}
 
 /** A format of a texture a stage owns. Both filter, and both take compute's writes. */
 export type PostStageFormat = "rgba16float" | "rgba8unorm";
@@ -188,6 +209,15 @@ export interface PostStageOptions {
   /** Values it reads as `uniforms.<name>`, set with `setUniform`. */
   uniforms?: Record<string, ValueUniform>;
   /**
+   * What differs from view to view. A stage may be in several views' lists, and
+   * `enabled` and `setUniform` apply to them all. This runs once per tick for
+   * each view that draws it while it's enabled, after the meter and the eye's
+   * adaptation and before the view's first stage: from a view's adaptation
+   * (`view.readout()`), say. Keep it cheap, and don't allocate. It runs only in
+   * a tick that's happening anyway, and doesn't ask for one.
+   */
+  perView?: (info: PostStageViewInfo, values: PostStageViewValues) => void;
+  /**
    * The largest slope of its curve near black, for an `exposed` stage: how far
    * it can lift what's faint. Default 1.
    */
@@ -250,7 +280,8 @@ const BYTES_PER_TEXEL: Readonly<Record<PostStageFormat, number>> = {
 /**
  * A step of a view's chain (`ObserverSettings.stages`). Made by
  * `createPostStage`. It may be in several views' lists: each draws it with its
- * own targets.
+ * own targets and uniform buffer. `enabled` and `setUniform` here apply to all
+ * of them; `PostStageOptions.perView` is how they differ.
  */
 export class PostStage {
   readonly name: string;
@@ -269,6 +300,8 @@ export class PostStage {
   get error(): PostStageError | undefined {
     return this.error_;
   }
+  /** @internal `PostStageOptions.perView`. */
+  readonly perView: PostStageOptions["perView"];
   /** @internal Its passes: one, for a stage of one function. */
   readonly passes: readonly ResolvedPostPass[];
   /** @internal What it owns, and "output". */
@@ -332,6 +365,7 @@ export class PostStage {
     this.kind = kind;
     this.label = label;
     this.shadowGain = shadowGain;
+    this.perView = options.perView;
 
     this.uniformLayout = uniformLayout(uniforms);
     this.uniformData = new DataView(new ArrayBuffer(this.uniformLayout.bytes));
@@ -411,6 +445,17 @@ export class PostStage {
 
   /** Sets a value uniform: a number, or the components (matrices column-major). */
   setUniform(name: string, value: number | readonly number[]): void {
+    this.writeUniform(this.uniformData, name, value);
+    this.uniformVersion++;
+    this.notify();
+  }
+
+  /** @internal Writes a uniform into a copy of its values: one view's, say. */
+  writeUniform(
+    data: DataView<ArrayBuffer>,
+    name: string,
+    value: number | readonly number[],
+  ): void {
     const field = this.uniformLayout.fields.find((f) => f.name === name);
     if (!field) {
       throw new PostStageError(
@@ -419,9 +464,7 @@ export class PostStage {
         "it declares no such uniform.",
       );
     }
-    writeUniform(this.uniformData, field, value, false);
-    this.uniformVersion++;
-    this.notify();
+    writeUniform(data, field, value, false);
   }
 
   /** @internal Calls `listener` when it changes; a view wakes its loop. */

@@ -903,6 +903,8 @@ export const API_ROWS: readonly ApiRow[] = [
       "PostStageImage",
       "PostStageLevel",
       "PostStageFormat",
+      "PostStageViewInfo",
+      "PostStageViewValues",
       "PostStageError",
       "astrophotoCurveStage",
       "PostStageSlot",

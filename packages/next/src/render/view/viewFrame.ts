@@ -34,7 +34,9 @@ import type { EngineScene } from "../../scene/engineScene.ts";
 import {
   ChainSlot,
   ViewChain,
+  chainEntries,
   chainOrder,
+  registerPerView,
   registerSlot,
   type ChainView,
 } from "../post/chain.ts";
@@ -220,7 +222,8 @@ function buildViewFrame(
     usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
   });
   // The view's post stages, by slot; a slot with none has no passes.
-  const stages = chainOrder(view.observer.stages);
+  const entries = chainEntries(view.observer);
+  const stages = chainOrder(entries);
   const chain = new ViewChain({
     scene: new ChainSlot(resolved),
     exposed: new ChainSlot(response),
@@ -548,10 +551,12 @@ function buildViewFrame(
     height,
     depth,
     ids,
+    view,
     preExposure: () => view.exposureScale,
     pixelAngle: () => (2 * frame.tanY) / height,
   };
   const { scene, exposed, display: shown } = chain.slots;
+  registerPerView(graph, chain, entries, chainView);
   registerSlot(engine, graph, chain, scene!, stages.scene, chainView);
   const present = presentPasses(engine, view, frame, {
     displayResolved,

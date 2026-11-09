@@ -140,6 +140,8 @@ entry	name	kind	tier
 .	PostStageRead	type	-
 .	PostStageSlot	type	-
 .	PostStageTarget	interface	-
+.	PostStageViewInfo	interface	-
+.	PostStageViewValues	interface	-
 .	PurposeStats	interface	-
 .	QueryAnswer	interface	-
 .	QueryHost	interface	-

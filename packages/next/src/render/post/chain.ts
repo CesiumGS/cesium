@@ -13,9 +13,12 @@ import {
   type PostStageKind,
   type PostStageSlot,
   type PostStageTexture,
+  type PostStageViewInfo,
+  type PostStageViewValues,
   type ResolvedPostPass,
 } from "../../scene/postStage.ts";
 import type { ObserverSettings } from "../../scene/observer.ts";
+import type { View } from "../../scene/View.ts";
 
 /**
  * What a built-in stage is given (`GraphStage.register`). For what `PostStagePass`
@@ -48,6 +51,17 @@ export interface GraphStage {
 }
 
 export type ChainEntry = PostStage | GraphStage;
+
+/**
+ * What a view's chain holds. The engine's own stages join here, before the
+ * application's in each slot: a host's `scene` stage sees the veil, and not the
+ * reverse. What decides that they're here counts in `View.stagesRevision`.
+ */
+export function chainEntries(
+  observer: ObserverSettings,
+): readonly ChainEntry[] {
+  return observer.stages;
+}
 
 /** The slots' order: stable by list position. */
 export function chainOrder<T extends { readonly slot: PostStageSlot }>(
@@ -88,6 +102,49 @@ export function observerShadowGain(settings: ObserverSettings): number {
     }
   }
   return gain;
+}
+
+/** One view's values of a stage: its own uniforms, and whether it's left out. */
+class StageViewValues implements PostStageViewValues {
+  enabled = true;
+  private readonly data: DataView<ArrayBuffer>;
+  private readonly bytes: Uint8Array<ArrayBuffer>;
+  /** What the buffer holds. */
+  private readonly sent: Uint8Array<ArrayBuffer>;
+  private version = -1;
+
+  constructor(private readonly stage: PostStage) {
+    const size = stage.uniformLayout.bytes;
+    this.data = new DataView(new ArrayBuffer(size));
+    this.bytes = new Uint8Array(this.data.buffer);
+    this.sent = new Uint8Array(size);
+  }
+
+  setUniform(name: string, value: number | readonly number[]): void {
+    this.follow();
+    this.stage.writeUniform(this.data, name, value);
+  }
+
+  /** Takes up the stage's own values, when they've changed. */
+  private follow(): void {
+    if (this.version !== this.stage.uniformVersion) {
+      this.version = this.stage.uniformVersion;
+      this.bytes.set(new Uint8Array(this.stage.uniformData.buffer));
+    }
+  }
+
+  /** Writes what moved to the view's buffer. */
+  upload(device: GPUDevice, buffer: GPUBuffer): void {
+    this.follow();
+    const { bytes, sent } = this;
+    for (let i = 0; i < bytes.length; i++) {
+      if (bytes[i] !== sent[i]) {
+        sent.set(bytes);
+        device.queue.writeBuffer(buffer, 0, this.data.buffer);
+        return;
+      }
+    }
+  }
 }
 
 /** A pass's pipeline; neither until the GPU has it. */
@@ -332,6 +389,17 @@ export class ViewChain {
   /** Filled by `registerStage`, freed with the view's graph. */
   private readonly buffers: GPUBuffer[] = [];
   private readonly images: GPUTexture[] = [];
+  /** What runs a stage's `perView`, in the list's order. */
+  private readonly perView: Array<(info: PostStageViewInfo) => void> = [];
+  private readonly info: {
+    -readonly [K in keyof PostStageViewInfo]: PostStageViewInfo[K];
+  } = {
+    view: undefined as never,
+    width: 0,
+    height: 0,
+    preExposure: 1,
+    pixelAngle: 0,
+  };
   /** `PostInput`'s values as last written, per size that passes write. */
   private readonly params = new Map<
     number,
@@ -402,6 +470,24 @@ export class ViewChain {
     }
   }
 
+  /** Follows `stage`'s `perView` in this view. Before any stage's pass, each tick. */
+  addPerView(run: (info: PostStageViewInfo) => void): void {
+    this.perView.push(run);
+  }
+
+  /** Each stage's `perView`, for this tick. */
+  runPerView(view: ChainView): void {
+    const { info } = this;
+    info.view = view.view;
+    info.width = view.width;
+    info.height = view.height;
+    info.preExposure = view.preExposure();
+    info.pixelAngle = view.pixelAngle();
+    for (let i = 0; i < this.perView.length; i++) {
+      this.perView[i]!(info);
+    }
+  }
+
   /** A stage's fixed image, uploaded for this view's graph. */
   image(
     device: GPUDevice,
@@ -454,6 +540,7 @@ export interface ChainView {
   readonly height: number;
   readonly depth: TextureHandle;
   readonly ids: TextureHandle;
+  readonly view: View;
   preExposure(): number;
   pixelAngle(): number;
 }
@@ -494,6 +581,24 @@ function stageTarget(
     format: SLOT_FORMAT[slot],
     usage: targetUsage(storage),
   });
+}
+
+/**
+ * The pass that runs stages' `perView`, if any has one: before the first slot, so
+ * what it decides holds for all of them this tick. After that nothing's added, so
+ * a view with none has the pass list it always had.
+ */
+export function registerPerView(
+  graph: FrameGraph,
+  chain: ViewChain,
+  entries: readonly ChainEntry[],
+  view: ChainView,
+): void {
+  if (entries.some((e) => e instanceof PostStage && e.perView)) {
+    graph.addPass("post.perView", { sideEffect: true }, () =>
+      chain.runPerView(view),
+    );
+  }
 }
 
 /** Registers a slot's stages in list order, each after the last. */
@@ -562,9 +667,28 @@ function registerStage(
   const made = stage.passes.map((pass) =>
     stagePipeline(engine.ctx, stage, pass, () => engine.requestRender()),
   );
+  const values = new StageViewValues(stage);
+  const { perView } = stage;
+  if (perView) {
+    chain.addPerView((info) => {
+      values.enabled = true;
+      if (!stage.enabled) {
+        return;
+      }
+      try {
+        perView(info, values);
+      } catch (reason) {
+        // Off for every view: it would throw again each tick.
+        const error = new PostStageError(stage.name, "perView", String(reason));
+        stage.fail(error);
+        stage.enabled = false;
+        engine.ctx.errors.report("frame", error.message);
+      }
+    });
+  }
   const node: ChainNode = {
     get enabled() {
-      return stage.enabled && made.every(isReady);
+      return stage.enabled && values.enabled && made.every(isReady);
     },
     output,
   };
@@ -578,14 +702,7 @@ function registerStage(
   }
   const uniforms =
     stage.uniformLayout.bytes > 0
-      ? {
-          buffer: chain.buffer(
-            device,
-            `post.${stage.name}`,
-            stage.uniformLayout.bytes,
-          ),
-          version: -1,
-        }
+      ? chain.buffer(device, `post.${stage.name}`, stage.uniformLayout.bytes)
       : undefined;
   stage.passes.forEach((pass, i) => {
     const { width, height } = levelSize(
@@ -645,13 +762,8 @@ function registerStage(
           view.preExposure(),
           (view.pixelAngle() * view.height) / height,
         );
-        if (uniforms && uniforms.version !== stage.uniformVersion) {
-          uniforms.version = stage.uniformVersion;
-          device.queue.writeBuffer(
-            uniforms.buffer,
-            0,
-            stage.uniformData.buffer,
-          );
+        if (uniforms) {
+          values.upload(device, uniforms);
         }
         const source = get(slot.source(index));
         // Pooled textures are stable from tick to tick, so a group is rebuilt
@@ -692,7 +804,7 @@ function registerStage(
             layout: pipeline.stageLayout!,
             entries: [
               ...(uniforms
-                ? [{ binding: 0, resource: { buffer: uniforms.buffer } }]
+                ? [{ binding: 0, resource: { buffer: uniforms } }]
                 : []),
               ...(pass.bindings.some((b) => !b.write)
                 ? [{ binding: 1, resource: linearSampler(device) }]

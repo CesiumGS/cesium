@@ -292,7 +292,12 @@ export class View {
   private observerRevision_ = 0;
   /** The stages it listens to: their changes wake the loop too. */
   private stages_: readonly PostStage[] = [];
-  /** @internal Counts changes to the list of stages: each rebuilds its graph. */
+  /** Glare was on when `stagesRevision` last moved. */
+  private glared_ = false;
+  /**
+   * @internal Counts changes to what's in the view's chain, each of which
+   * rebuilds its graph: the list of stages, and glare turned on or off.
+   */
   stagesRevision = 0;
 
   get world(): World {
@@ -337,6 +342,11 @@ export class View {
   private syncStages(): void {
     const stages = this.state.observer.stages;
     const old = this.stages_;
+    const glared = this.state.observer.glare !== null;
+    if (glared !== this.glared_) {
+      this.glared_ = glared;
+      this.stagesRevision++;
+    }
     if (
       stages.length === old.length &&
       stages.every((stage, i) => stage === old[i])

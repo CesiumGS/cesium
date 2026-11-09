@@ -737,6 +737,65 @@ async function passesGroup(engine: Engine, say: Say): Promise<void> {
       `${a.slice(0, 3).join()} ${error}`,
     );
   }
+  {
+    // One stage in two views: each its own value, and only one left out.
+    const right = engine.addView({
+      target: scene.target,
+      world: scene.world,
+      background: "color",
+      clearColor: CLEAR,
+      viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
+      observer: { exposure: { ev100: 12 } },
+    });
+    scene.view.viewport = { x: 0, y: 0, width: 0.5, height: 1 };
+    right.camera.position.set(scene.view.camera.position);
+    right.camera.direction.set(scene.view.camera.direction);
+    right.camera.orient(Float64Array.of(1, 0, 0));
+    right.camera.version++;
+    const plain = await image(engine, scene);
+    const shared = createPostStage({
+      ...options,
+      name: "per-view",
+      slot: "display",
+      uniforms: { red: { type: "f32", value: 0 } },
+      shader: `fn postStage(input: PostInput) -> vec4<f32> {
+        let c = postColorAt(input.pixel);
+        return vec4<f32>(uniforms.red, c.g, c.b, c.a);
+      }`,
+      perView: ({ view: v }, values) => {
+        values.setUniform("red", v === right ? 1 : 0);
+      },
+    });
+    scene.view.observer.stages = [shared];
+    right.observer.stages = [shared];
+    const both = await image(engine, scene);
+    const [lx, rx] = [4, WIDTH / 2 + 4];
+    say(
+      "one stage, two views: each draws its own value",
+      at(both, lx, 4)[0] === 0 && at(both, rx, 4)[0] === 255,
+      `left red ${at(both, lx, 4)[0]}, right red ${at(both, rx, 4)[0]}`,
+    );
+    const leaving = createPostStage({
+      ...options,
+      name: "per-view-off",
+      slot: "display",
+      shader: `fn postStage(input: PostInput) -> vec4<f32> {
+        return vec4<f32>(1.0, 0.0, 1.0, 1.0);
+      }`,
+      perView: ({ view: v }, values) => {
+        values.enabled = v !== right;
+      },
+    });
+    scene.view.observer.stages = [leaving];
+    right.observer.stages = [leaving];
+    const one = await image(engine, scene);
+    say(
+      "one stage, two views: left out of one, the other still draws it",
+      at(one, lx, 4)[1] === 0 && at(one, rx, 4)[1] === at(plain, rx, 4)[1],
+      `left green ${at(one, lx, 4)[1]}, right green ${at(one, rx, 4)[1]} (was ${at(plain, rx, 4)[1]})`,
+    );
+    engine.removeView(right);
+  }
   scene.dispose();
 }
 

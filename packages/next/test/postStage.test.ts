@@ -26,6 +26,7 @@ import {
   createPostStage,
   type PostStageOptions,
   type PostStagePass,
+  type PostStageViewInfo,
 } from "../src/scene/postStage.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import { wgslUnit } from "../src/shaders/link/unit.ts";
@@ -690,6 +691,159 @@ describe("a view's chain", () => {
     });
   });
 
+  describe("what differs from view to view", () => {
+    const shared = (perView: PostStageOptions["perView"]) =>
+      stage("shared", "scene", {
+        uniforms: { limit: { type: "f32", value: 1 } },
+        shader: `fn postStage(input: PostInput) -> vec4<f32> {
+          return postColorAt(input.pixel) * uniforms.limit;
+        }`,
+        perView,
+      });
+    const node = (view: View) =>
+      engine.raster.viewFrames.get(view)!.chain.slots.scene!.nodes[0]!;
+
+    /** The values written to a stage's one-float uniform buffers, in order. */
+    function writes(): number[] {
+      const seen: number[] = [];
+      // The stand-in makes a queue per reading: keep this one.
+      const device = engine.ctx.device as { queue: GPUQueue };
+      const queue = device.queue;
+      queue.writeBuffer = ((_b: GPUBuffer, _o: number, data: ArrayBuffer) => {
+        if (data instanceof ArrayBuffer && data.byteLength === 16) {
+          seen.push(new Float32Array(data)[0]!);
+        }
+      }) as typeof queue.writeBuffer;
+      device.queue = queue;
+      return seen;
+    }
+
+    it("gives each view its own uniform and its own enabled, from one stage", async () => {
+      const seen = writes();
+      const [left, right] = [addView(), addView()];
+      const limits = new Map([
+        [left, 0.25],
+        [right, 0.75],
+      ]);
+      const off = new Set<View>();
+      const made = shared(({ view }, values) => {
+        values.setUniform("limit", limits.get(view)!);
+        values.enabled = !off.has(view);
+      });
+      left.observer.stages = [made];
+      right.observer = left.observer;
+      await tick();
+      await tick();
+      expect(right.observer.stages[0]).toBe(made);
+      expect(seen).toEqual([0.25, 0.75]);
+      expect(node(left).enabled).toBe(true);
+      expect(node(right).enabled).toBe(true);
+      // Only what moved is written; one view leaving doesn't touch the other.
+      seen.length = 0;
+      limits.set(left, 0.5);
+      off.add(right);
+      await tick();
+      expect(seen).toEqual([0.5]);
+      expect(node(left).enabled).toBe(true);
+      expect(node(right).enabled).toBe(false);
+      off.clear();
+      await tick();
+      expect(node(right).enabled).toBe(true);
+    });
+
+    it("runs before the first stage, told the view's values", async () => {
+      const seen: PostStageViewInfo[] = [];
+      const view = addView();
+      view.observer.exposure = { ev100: 15 };
+      view.observer.stages = [shared((info) => seen.push({ ...info }))];
+      await tick();
+      const list = passes(view);
+      expect(list.indexOf("post.perView")).toBeGreaterThan(
+        list.indexOf("adaptation"),
+      );
+      expect(list.indexOf("post.perView")).toBeLessThan(
+        list.indexOf("post.shared"),
+      );
+      expect(seen[0]).toMatchObject({
+        view,
+        width: 64,
+        height: 36,
+        preExposure: view.exposureScale,
+      });
+      expect(seen[0]!.pixelAngle).toBeGreaterThan(0);
+    });
+
+    it("isn't asked while the stage is off, and the switch holds for every view", async () => {
+      const perView = vi.fn();
+      const made = shared(perView);
+      const view = addView();
+      view.observer.stages = [made];
+      await tick();
+      perView.mockClear();
+      made.enabled = false;
+      await tick();
+      expect(perView).not.toHaveBeenCalled();
+      expect(node(view).enabled).toBe(false);
+    });
+
+    it("the stage's own setUniform still reaches every view", async () => {
+      const seen = writes();
+      const made = shared(undefined);
+      const [left, right] = [addView(), addView()];
+      left.observer.stages = [made];
+      right.observer.stages = [made];
+      await tick();
+      await tick();
+      expect(seen).toEqual([1, 1]);
+      seen.length = 0;
+      made.setUniform("limit", 2);
+      await tick();
+      expect(seen).toEqual([2, 2]);
+    });
+
+    it("one that throws is reported once, by name, and turned off", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const made = shared(() => {
+        throw new Error("no such thing");
+      });
+      const view = addView();
+      view.observer.stages = [made];
+      await tick();
+      await tick();
+      expect(made.enabled).toBe(false);
+      expect(made.error?.field).toBe("perView");
+      expect(engine.errors).toMatchObject([{ kind: "frame", count: 1 }]);
+      expect(engine.errors[0]!.message).toContain("no such thing");
+      expect(passes(view)).toContain("post.shared");
+    });
+
+    it("no perView, no pass for it", async () => {
+      const view = addView();
+      view.observer.stages = [stage("a", "scene")];
+      await tick();
+      expect(passes(view)).not.toContain("post.perView");
+    });
+  });
+
+  it("rebuilds the graph when glare goes on or off, and not for its values", async () => {
+    const view = addView();
+    await tick();
+    const built = engine.raster.viewFrames.get(view);
+    view.observer.toneMapping = "agx";
+    await tick();
+    expect(engine.raster.viewFrames.get(view)).toBe(built);
+    view.observer.glare = { tier: "auto", veil: { share: 0.2 }, spikes: null };
+    await tick();
+    const glared = engine.raster.viewFrames.get(view);
+    expect(glared).not.toBe(built);
+    view.observer.glare.veil!.share = 0.1;
+    await tick();
+    expect(engine.raster.viewFrames.get(view)).toBe(glared);
+    view.observer.glare = null;
+    await tick();
+    expect(engine.raster.viewFrames.get(view)).not.toBe(glared);
+  });
+
   it("two views hold separate chains", async () => {
     const a = stage("a", "scene");
     const one = addView();
@@ -1245,6 +1399,7 @@ describe("a built-in stage of several passes", () => {
         height: 8,
         depth,
         ids,
+        view: undefined as never,
         preExposure: () => 1,
         pixelAngle: () => 0.001,
       },
