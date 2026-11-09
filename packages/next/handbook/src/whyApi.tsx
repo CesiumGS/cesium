@@ -169,6 +169,26 @@ const REASONS: Reason[] = [
     task: "shader",
   },
   {
+    title: "One tileset, one look",
+    shape: (
+      <>
+        A <C>Cesium3DTileset</C> is its tree and cache, and also its{" "}
+        <C>style</C>, <C>modelMatrix</C> and <C>show</C>, which is simple when
+        content is drawn once. Drawing it two ways means loading it twice, with
+        two selections and two caches.
+      </>
+    ),
+    next: (
+      <>
+        <C>engine.loadTileset</C> gives the content, and <C>world.add</C> a{" "}
+        <C>SceneItem</C> with its own placement, tint, opacity and view mask.
+        After the first item, each adds about 550 bytes a draw, by the code's
+        reckoning. The Scene representation tab spells this out.
+      </>
+    ),
+    open: "A tileset belongs to one world, and models and the globe aren't items yet. Those, and groups, are for a later brainstorm before or with the API review.",
+  },
+  {
     title: "Where assets come from",
     shape: (
       <>

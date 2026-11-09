@@ -526,7 +526,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "widgets:ContentMix",
     ],
     status: "changed",
-    note: "`viewer.addTileset({ ion: id })` adds and loads in one step, and the settings are new: byte and request budgets replace most of `Cesium3DTileset`'s options.",
+    note: "`viewer.addTileset({ ion: id })` adds and loads in one step, and the settings are new: byte and request budgets replace most of `Cesium3DTileset`'s options. Without a viewer, `engine.loadTileset` gives the content and `world.add` draws it as a `SceneItem`, with its own placement, tint, opacity and view mask; `engine.addTileset` does both, with one item.",
     snippet: "tileset",
   },
   {
@@ -1708,7 +1708,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "Attribution",
     ],
     status: "changed",
-    note: "Credits show through `attachCredits` or the `credits` option, drawn from each source's attributions.",
+    note: "Credits show through `attachCredits` or the `credits` option, drawn from each source's attributions. A tileset carries its own (`Tileset3D.attributions`), and the Viewer credits every tileset with an item some view shows, however it was added.",
     inFlight: "The import path is becoming `@cesium/next/widgets`.",
   },
   {

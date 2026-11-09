@@ -38,6 +38,7 @@ const PRINCIPLES = [
   "No update(frameState) contract: objects register with the world, and changes mark them dirty.",
   "Ownership is explicit: dispose(), and using where the language has it.",
   "Engine, World and View are separate, with any number of views per engine.",
+  "Content is apart from being in the scene: engine.loadTileset gives the content, and world.add draws it, as often as asked.",
   "The core touches no DOM. A smoke test runs it in a worker with an OffscreenCanvas.",
   "Math works on typed arrays, with required out parameters.",
   "Shaders extend through a versioned WGSL-level contract, with Slang as the first-class authoring language.",

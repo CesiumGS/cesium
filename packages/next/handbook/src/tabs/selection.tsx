@@ -552,6 +552,24 @@ export function Selection() {
             per update, per anchor with tilesets, not per tileset.
           </li>
         </ul>
+        <h3>Several items, one selection</h3>
+        <p>
+          A tileset can be drawn by several scene items, and they share one
+          tree, one selection and one cache. An item adds draws, not tiles, so
+          its tiles load once. A view draws an item's tile only where selection
+          chose that tile for the view too, and a view no item shows selects and
+          fetches nothing. With no items at all, a tileset selects nothing and
+          sleeps, and its tiles stay cached until eviction.
+        </p>
+        <p>
+          A tile's bounds grow by the farthest any item can move its vertices,
+          so a tile drawn away from where it was written stays selected. A
+          hidden item doesn't pad them, and each draw is still culled by its own
+          item's bounds. While vertices can move, tiles swap whole, never as
+          clipped placeholders. The first opaque item to draw a tile carries its
+          ground and collision flags, so removing an item doesn't drop content
+          from height queries. The Scene representation tab shows how these fit.
+        </p>
         <h3>When nothing has changed</h3>
         <p>
           A tileset's update runs only if a camera moved, something global
@@ -918,15 +936,6 @@ export function Selection() {
           from="the overall plan, sections 8, 12, 13 and M2"
           on="2026-11-08"
         />
-      </Section>
-
-      <Section title="In progress, not in this build">
-        <ul>
-          <li>
-            <strong>Presentations of a tileset:</strong> one selection with
-            several draws. It's planned, and not started.
-          </li>
-        </ul>
       </Section>
 
       <Section title="Still to write">

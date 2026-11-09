@@ -71,7 +71,8 @@ const TICK: BoardStep[] = [
     body: (
       <>
         <C>Tileset3D.update</C>, one pass per view over a shared tree, when a
-        camera moved or content streams. The Tile selection tab covers it.
+        camera moved or content streams. Each of a tileset's scene items has
+        draws of the same tiles. The Tile selection tab covers it.
       </>
     ),
     tags: seamTag("S8"),

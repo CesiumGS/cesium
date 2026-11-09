@@ -173,7 +173,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "compute, render",
     summary: "Per-pixel lists, or moments, chosen per view.",
     detail:
-      'In "exact" mode, blended fragments go into per-pixel lists, and a compute pass sorts and blends each list. In "moments" mode, one pass writes their moments and a second their weighted light. Translucent terrain is drawn here like any other blended surface, with no pass of its own.',
+      'A scene item below opacity 1 draws only here, so it writes no depth, casts no shadow and takes no ambient occlusion. In "exact" mode, blended fragments go into per-pixel lists, and a compute pass sorts and blends each list. In "moments" mode, one pass writes their moments and a second their weighted light. Translucent terrain is drawn here like any other blended surface, with no pass of its own.',
     reads: [
       "view block",
       "draw records",
@@ -555,7 +555,6 @@ export const DECISIONS: readonly DecisionNote[] = [
 ];
 
 export const COMING = [
-  "Presentations of a tileset: one selection with several draws.",
   "A GPU tessellation engine, later: not built, with its seam (S4 and S2) kept open. The Tessellation tab holds its place.",
 ];
 

@@ -388,6 +388,10 @@ const WHAT_CASTS: [string, string][] = [
     "A coarse tile kept while its children load",
     "Only outside the children's boxes, so it doesn't shadow what's drawn beside it.",
   ],
+  [
+    "A translucent scene item",
+    "None: it draws only in the translucent passes, on screen or off.",
+  ],
   ["Point sets", "None: the shadow pass's cull leaves them out."],
   ["Billboards and lines", "None: they aren't in the casters' bundle."],
   [
@@ -564,10 +568,11 @@ export function Shadows() {
           isn't selected though its shadow falls in view. So a budgeted 3D
           tileset looks for casters too, after every view's walk.
         </p>
-        <Note title="Not judged yet">
+        <Note title="What's been checked">
           <p>
-            Nobody has yet judged the shadow pixels on real content, so nothing
-            here claims how they look.
+            One case has been checked by eye: shadows in the station model, from
+            inside it. No other real content has been judged, and the GPU cost
+            of casters remains unmeasured.
           </p>
         </Note>
         <h3>Which tiles cast</h3>
@@ -621,6 +626,10 @@ export function Shadows() {
           view mask, so they never see a caster. A batch that only cascades draw
           is in the shadow bundle alone.
         </p>
+        <p>
+          Each opaque scene item of a tileset casts from off screen too. The
+          bytes are counted once, as items share their tiles.
+        </p>
         <h3>What it costs</h3>
         <DataTable
           label="Measured costs of off-screen casters"
@@ -631,6 +640,7 @@ export function Shadows() {
           ]}
           rows={CASTER_COSTS}
         />
+        <p>The GPU time casters add hasn't been measured.</p>
         <p className="provenance">
           From the engine's <C>lod</C> bench, as the commits and the code's own
           comment record them. They aren't in this page's generated results, and

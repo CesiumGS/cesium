@@ -770,7 +770,7 @@ const ION: BoardStep[] = [
     lane: 1,
     row: 1,
     title: "Show attributions",
-    body: "Those not marked collapsible stay on screen.",
+    body: "Those not marked collapsible stay on screen. A tileset carries them, and the Viewer credits it while one of its items is shown in a view.",
   },
   {
     id: "schedule",

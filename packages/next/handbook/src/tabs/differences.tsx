@@ -18,6 +18,11 @@ const CONCEPTS = [
     next: "Any number of views of one world, on one device and tile cache, with links between them (ViewLink).",
   },
   {
+    topic: "Content and what's drawn",
+    old: "A Cesium3DTileset is both: its tree and cache, and its style, modelMatrix and show",
+    next: "engine.loadTileset gives the content, and world.add a SceneItem: that content in a world, with its own placement, tint, opacity and view mask. Several items share one selection and one cache.",
+  },
+  {
     topic: "Each tick's work",
     old: "Primitives' update(frameState) rebuilds a command list",
     next: "Objects register with the world and mark themselves dirty. Draws live in tables mirrored to GPU buffers, with culling in compute.",
@@ -91,6 +96,11 @@ const CONCEPTS = [
     topic: "ion token",
     old: "A default token is built in",
     next: "None built in: the application sets ionDefaults.accessToken or passes one.",
+  },
+  {
+    topic: "Credits",
+    old: "A primitive's credits go to the frame state, and CreditDisplay shows them",
+    next: "A tileset carries its attributions, and the Viewer credits every tileset with an item some view shows.",
   },
 ];
 
