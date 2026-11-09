@@ -8660,6 +8660,10 @@ A Dyno example of beauty shots with presets, showing off the physical sky and dr
 
 **Order:** a first slice can use what exists today (sky, aerosols, visibility, Moon and its phase, moonlight, city lights, exposure, solved dates). The rest grows as 5c, 5d, 5e and water land. Clouds and aurora are decisions of their own.
 
+### 13.31 Sketch: an orbits example (owner, 2026-11-08)
+
+A Dyno example of what's around the Earth: a database of satellites and near-Earth objects, with their orbits. It would use the live points path of §13.11 for tens of thousands of objects, propagated from a catalog: published orbital elements for satellites (for example CelesTrak or Space-Track, with SGP4) and JPL's small-body data for near-Earth objects, heliocentric rather than Earth-bound, so reference frames matter here. Orbits as lines lean on the vector design. Terms and fetch limits need reading per source, and data follows §13.29's rule: fetched, not shipped.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
