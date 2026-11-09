@@ -328,7 +328,6 @@ interface Spied {
 }
 
 type SkyInternals = {
-  starSplatGroup: unknown;
   starPoints: unknown;
   uploading: boolean;
   advanceUpload(): boolean;
@@ -371,7 +370,7 @@ describe("the sliced upload", () => {
   it("takes at least 5 ticks for 20 MB, none over 4 MB, and swaps on the last", async () => {
     const { engine, writes } = await spied();
     const sky = skyOf(engine);
-    const before = sky.starSplatGroup;
+    const before = sky.starPoints;
     const stars = (20 * 1024 * 1024) / (STAR_FLOATS * 4);
     sky.setStarField(field(stars));
     expect(sky.uploading).toBe(true);
@@ -379,14 +378,15 @@ describe("the sliced upload", () => {
     let changedEarly = false;
     while (sky.advanceUpload()) {
       ticks++;
-      changedEarly ||= sky.starSplatGroup !== before;
+      changedEarly ||= sky.starPoints !== before;
     }
     ticks++;
-    expect(writes.length).toBe(5);
+    // Five of points; the last swap writes the cells' table.
+    expect(writes.length).toBe(6);
     expect(Math.max(...writes)).toBeLessThanOrEqual(4 * 1024 * 1024);
     expect(ticks).toBeGreaterThanOrEqual(5);
     expect(changedEarly).toBe(false);
-    expect(sky.starSplatGroup).not.toBe(before);
+    expect(sky.starPoints).not.toBe(before);
     expect(sky.uploading).toBe(false);
   });
 

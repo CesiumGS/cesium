@@ -28,6 +28,8 @@ import {
 } from "../../scene/lights.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
 import { writeViewShadows } from "./shadowBlocks.ts";
+import { starSubmission } from "../../atmosphere/starCells.ts";
+import { observerShadowGain } from "../post/chain.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
@@ -237,7 +239,6 @@ export function writeView(
   block.moonAir = moon?.airShare ?? 0;
   if (drawsSky(view)) {
     const sky = engine.raster.viewFrames.get(view)!.sky;
-    engine.raster.sky.writeStars(engine.icrfToFixed);
     engine.raster.sky.write(
       sky,
       view.body.ellipsoid,
@@ -252,6 +253,12 @@ export function writeView(
       "eye" in view.observer.exposure ? ev100ToScale(EYE_STARS_EV100) : 0,
       moon,
       engine.raster.viewCityLight,
+    );
+    engine.raster.sky.writeStars(
+      sky,
+      engine.icrfToFixed,
+      starSubmission(view.world.submission, engine.ctx.caps),
+      observerShadowGain(view.observer),
     );
     if (drawsAerialPerspective(view)) {
       block.aerial = {

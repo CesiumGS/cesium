@@ -147,6 +147,13 @@ float sunDisk(float3 direction) {
 struct Stars {
   // Earth-fixed to ICRF, by rows; rows[0].w: 1 with stars, 0 without.
   float4 rows[3];
+  // What this view's cull tests with (atmosphere/starCells.ts `starCullInputs`):
+  // four planes through the eye, in ICRF; the illuminance (lux) under which a
+  // star can't show in this view, and the radiance (cd/m²) under which it doesn't
+  // show at a pixel.
+  float4 planes[4];
+  float minIlluminance;
+  float minRadiance;
 };
 
 [[vk::binding(0, 3)]] ConstantBuffer<Stars> stars;
@@ -156,6 +163,11 @@ struct Stars {
 [[vk::binding(4, 3)]] Texture2D<float4> starLayer;
 // Per star: direction (ICRF) and illuminance (lux), then color.
 [[vk::binding(5, 3)]] StructuredBuffer<float4> starPoints;
+// Per sky cell (atmosphere/starCells.ts): center and the sine of its cone's half
+// angle, then first and count.
+[[vk::binding(6, 3)]] StructuredBuffer<float4> starCells;
+// A strip's indirect draw per cell, what `starCull` leaves.
+[[vk::binding(7, 3)]] RWStructuredBuffer<uint> starArgs;
 
 // The stars' light at a pixel looking along `direction` (cd/m²).
 float3 starLight(float2 pixel, float3 direction) {
@@ -226,11 +238,11 @@ StarSplat starVertex(uint corner : SV_VertexID, uint index : SV_InstanceID) {
   // Its illuminance over the pixel's solid angle there: radiance.
   float pixelAngle = 2.0 * sky.tanY / sky.size.y;
   float omega = pixelAngle * pixelAngle * z * z * z;
-  float3 light = min(b.xyz * (a.w / omega), float3(STAR_MAX));
-  float brightest = max(light.r, max(light.g, light.b)) * max(sky.exposure, sky.starExposure);
-  if (brightest * 0.4 < 1e-4) {
+  if (a.w / omega < stars.minRadiance) {
     return out;
   }
+  float3 light = min(b.xyz * (a.w / omega), float3(STAR_MAX));
+  float brightest = max(light.r, max(light.g, light.b)) * max(sky.exposure, sky.starExposure);
   float radius = starReach(brightest);
   float2 side = float2(float(corner & 1u), float(corner >> 1u)) * 2.0 - 1.0;
   float2 p = pixel + side * radius;
@@ -253,6 +265,45 @@ float4 starFragment(StarSplat in) : SV_Target0 {
     sharp = lerp(sharp, halo, sky.starWingShare);
   }
   return float4(in.light * sharp, 0.0);
+}
+
+// Which stars a view draws (`cullCell` in atmosphere/starCells.ts is the same):
+// none of a cell whose cone is outside a plane, and of the others, each brightest
+// first, those that can show. 64 threads, 6 workgroups, one per cell.
+static const uint STAR_CELLS = 384u;
+static const uint STAR_SEARCH_STEPS = 24u;
+
+[shader("compute")]
+[numthreads(64, 1, 1)]
+void starCull(uint3 id : SV_DispatchThreadID) {
+  uint cell = min(id.x, STAR_CELLS - 1u);
+  float4 cone = starCells[cell * 2u];
+  float4 span = starCells[cell * 2u + 1u];
+  uint first = uint(span.x);
+  uint drawn = 0u;
+  if (dot(stars.planes[0].xyz, cone.xyz) >= -cone.w
+      && dot(stars.planes[1].xyz, cone.xyz) >= -cone.w
+      && dot(stars.planes[2].xyz, cone.xyz) >= -cone.w
+      && dot(stars.planes[3].xyz, cone.xyz) >= -cone.w) {
+    uint low = 0u;
+    uint high = uint(span.y);
+    [ForceUnroll]
+    for (uint step = 0u; step < STAR_SEARCH_STEPS; step++) {
+      if (low < high) {
+        uint middle = (low + high) >> 1u;
+        if (starPoints[(first + middle) * 2u].w >= stars.minIlluminance) {
+          low = middle + 1u;
+        } else {
+          high = middle;
+        }
+      }
+    }
+    drawn = low;
+  }
+  starArgs[cell * 4u] = 4u;
+  starArgs[cell * 4u + 1u] = drawn;
+  starArgs[cell * 4u + 2u] = 0u;
+  starArgs[cell * 4u + 3u] = first;
 }
 
 // The exposure the stars are shown at against `background` (pre-exposed,

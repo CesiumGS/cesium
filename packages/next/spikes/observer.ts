@@ -16,6 +16,7 @@ import {
   type World,
 } from "../src/index.ts";
 import { astroCurve } from "../src/render/post/astroCurve.ts";
+import { cullCell, type StarCell } from "../src/atmosphere/starCells.ts";
 import type { StarField } from "../src/atmosphere/stars.ts";
 import { ev100ToScale, type PointSpread } from "../src/scene/observer.ts";
 
@@ -1155,6 +1156,112 @@ async function pointsGroup(engine: Engine, say: Say): Promise<void> {
   engine.sunDirection.set(saved);
 }
 
+/** What compute leaves for each cell against `cullCell`, and the CPU path's image. */
+async function cellsGroup(engine: Engine, say: Say): Promise<void> {
+  await skyStars(engine);
+  const sky = engine.raster.sky as unknown as {
+    cells: readonly StarCell[];
+    illuminance: Float32Array;
+    starData: Float32Array;
+  };
+  const saved = Float64Array.from(engine.sunDirection);
+  const { device } = engine.gpu;
+  const views: [string, SkyPose][] = [
+    ["Orion", SKY_POSES.orion!],
+    ["the core", SKY_POSES.core!],
+    ["the limb", SKY_POSES.limb!],
+    ["a long lens", { ...SKY_POSES.orion!, fov: 5 }],
+    ["a dim camera", { ...SKY_POSES.core!, ev100: 6 }],
+  ];
+  for (const [name, pose] of views) {
+    const scene = new SkyScene(engine, 1280, 720, { ev100: pose.ev100 });
+    scene.aim(pose);
+    await ticks(engine, 3);
+    const frame = engine.raster.viewFrames.get(scene.view)!;
+    const read = device.createBuffer({
+      size: 384 * 16,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+    engine.renderFrame();
+    const encoder = device.createCommandEncoder();
+    encoder.copyBufferToBuffer(frame.sky.starArgs, 0, read, 0, 384 * 16);
+    device.queue.submit([encoder.finish()]);
+    await read.mapAsync(GPUMapMode.READ);
+    const args = new Uint32Array(read.getMappedRange().slice(0));
+    read.destroy();
+    const planes = sky.starData.subarray(12, 28);
+    const minIlluminance = sky.starData[28]!;
+    let cpu = 0;
+    let gpu = 0;
+    let wrong = 0;
+    sky.cells.forEach((cell, c) => {
+      const expected = cullCell(cell, planes, minIlluminance, sky.illuminance);
+      const got = args[c * 4 + 1]!;
+      cpu += expected;
+      gpu += got;
+      wrong += Math.abs(expected - got);
+      wrong += args[c * 4]! === 4 && args[c * 4 + 3]! === cell.first ? 0 : 1e9;
+    });
+    say(
+      `compute's arguments against cullCell: ${name}`,
+      wrong <= 0.001 * Math.max(cpu, 1),
+      `${gpu} stars against ${cpu}, of ${sky.illuminance.length}; ${wrong} off`,
+    );
+    const indirect = await scene.target.read();
+    scene.world.submission = "direct";
+    await ticks(engine, 2);
+    const direct = await scene.target.read();
+    const d = difference(indirect, direct);
+    say(
+      `the CPU path's image: ${name}`,
+      d.largest <= 1 && d.pixels < 0.001 * indirect.length,
+      `${d.pixels} pixels differ, by at most ${d.largest}/255`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  engine.sunDirection.set(saved);
+}
+
+/** Star time: `?time`, with `?pack=local`. Bright poses, at the spike's size. */
+async function starTimes(engine: Engine, say: Say): Promise<void> {
+  if (!params.has("time")) {
+    return;
+  }
+  await skyStars(engine);
+  const saved = Float64Array.from(engine.sunDirection);
+  for (const [name, fov, who] of [
+    ["core", 100, "camera"],
+    ["orion", 66, "camera"],
+    ["orion", 66, "eye"],
+    ["orion", 5, "camera"],
+  ] as const) {
+    const pose = { ...SKY_POSES[name]!, fov };
+    const exposure: Exposure =
+      who === "eye" ? { eye: true, speed: 1e6 } : { ev100: pose.ev100 };
+    const scene = new SkyScene(engine, 2560, 1440, exposure);
+    scene.aim(pose);
+    await ticks(engine, 60);
+    const passes = engine.gpuPasses;
+    const started = performance.now();
+    let cpu = 0;
+    for (let i = 0; i < 30; i++) {
+      const t = performance.now();
+      engine.renderFrame();
+      cpu += performance.now() - t;
+      await engine.gpu.device.queue.onSubmittedWorkDone();
+    }
+    say(
+      `star time: ${name}, ${fov}°, ${who}`,
+      true,
+      `stars ${passes.stars?.toFixed(2)} ms, cull ${passes["star-cull"]?.toFixed(2) ?? "-"} ms, tick's CPU ${(cpu / 30).toFixed(2)} ms, over ${(performance.now() - started).toFixed(0)} ms`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  engine.sunDirection.set(saved);
+}
+
 /** The stills for the owner's review: `?stills`. */
 async function stillsGroup(
   engine: Engine,
@@ -1207,6 +1314,8 @@ const GROUPS: Record<
   passes: passesGroup,
   curve: curveGroup,
   points: pointsGroup,
+  cells: cellsGroup,
+  times: starTimes,
   stills: stillsGroup,
 };
 

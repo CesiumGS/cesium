@@ -17,6 +17,7 @@
  */
 
 import type { PointSpread } from "../scene/observer.ts";
+import type { StarCells } from "./starCells.ts";
 
 /** Per star: direction (ICRF, unit), illuminance (lux), color (luminance 1). */
 export const STAR_FLOATS = 8;
@@ -49,9 +50,14 @@ export function starRadius(
 }
 
 export interface StarField {
-  /** `STAR_FLOATS` per star, brightest first. */
+  /** `STAR_FLOATS` per star, brightest first (by cell, with `cells`). */
   points: Float32Array;
   count: number;
+  /**
+   * The stars by sky cell (atmosphere/starCells.ts), as the worker sends them;
+   * `points` is then in the same order. Sky builds them if they aren't here.
+   */
+  cells?: StarCells;
   /**
    * The rest of the sky: by face (+x, −x, +y, −y, +z, −z, as the map) and
    * then by level (the first `backgroundSize`² texels, each next half
@@ -64,6 +70,19 @@ export interface StarField {
   /** The background's mean luminance, cd/m²: 0 for today's map. */
   meanBackground: number;
 }
+
+/** erf (sky.slang `erfApprox`: Winitzki's approximation, within 10⁻⁴). */
+const erf = (x: number): number => {
+  const x2 = x * x;
+  return (
+    Math.sign(x) *
+    Math.sqrt(1 - Math.exp((-x2 * (1.2732395 + 0.147 * x2)) / (1 + 0.147 * x2)))
+  );
+};
+
+/** The share of a star's light on its centered pixel, for a core of `sigma` pixels. */
+export const starPeakShare = (sigma: number): number =>
+  erf(0.5 / (Math.SQRT2 * sigma)) ** 2;
 
 /**
  * The levels of a square rgba image under a box filter: each next level

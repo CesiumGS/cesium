@@ -13,7 +13,12 @@ const TERRAIN_ACCEPT =
   "application/vnd.quantized-mesh;extensions=octvertexnormals-metadata,application/octet-stream;q=0.9,*/*;q=0.01";
 import type { TextureFormatSupport } from "./decoders.ts";
 import { loadSkyPack } from "../atmosphere/skyPack.ts";
-import { extractStars, type StarMapFace } from "../atmosphere/stars.ts";
+import { withStarCells } from "../atmosphere/starCells.ts";
+import {
+  extractStars,
+  type StarField,
+  type StarMapFace,
+} from "../atmosphere/stars.ts";
 
 /**
  * Content worker. Each request is `{ id, type, ...payload }`; each reply is
@@ -21,6 +26,14 @@ import { extractStars, type StarMapFace } from "../atmosphere/stars.ts";
  * `{ id, type: "cancel" }` aborts request `id` (its fetches stop).
  */
 const controllers = new Map<number, AbortController>();
+
+/** What a star field's reply hands over rather than copies. */
+const starFieldBuffers = (field: StarField): ArrayBuffer[] =>
+  [
+    field.points,
+    ...(field.cells ? [field.cells.table, field.cells.illuminance] : []),
+    ...field.backgroundLevels.flat(),
+  ].map((array) => array.buffer as ArrayBuffer);
 
 self.onmessage = async (
   event: MessageEvent<{
@@ -142,13 +155,11 @@ self.onmessage = async (
           };
         }),
       );
-      const field = extractStars(faces);
-      self.postMessage({ id, ok: true, result: field }, [
-        field.points.buffer,
-        ...field.backgroundLevels.flatMap((face) =>
-          face.map((level) => level.buffer),
-        ),
-      ]);
+      const field = withStarCells(extractStars(faces));
+      self.postMessage(
+        { id, ok: true, result: field },
+        starFieldBuffers(field),
+      );
       return;
     }
     if (type === "skyPack") {
@@ -158,13 +169,11 @@ self.onmessage = async (
         fetch,
         controller.signal,
       );
-      const { field } = loaded;
-      self.postMessage({ id, ok: true, result: loaded }, [
-        field.points.buffer,
-        ...field.backgroundLevels.flatMap((face) =>
-          face.map((level) => level.buffer),
-        ),
-      ]);
+      const result = { ...loaded, field: withStarCells(loaded.field) };
+      self.postMessage(
+        { id, ok: true, result },
+        starFieldBuffers(result.field),
+      );
       return;
     }
     if (type === "image") {

@@ -155,7 +155,7 @@ function stars(sky: Sky, count: number): void {
 }
 
 describe("Sky and the observer", () => {
-  it("encodeStars draws a strip of 4 vertices per star", async () => {
+  it("encodeStars draws strips of 4 vertices", async () => {
     const { sky } = await skyScene();
     stars(sky, 17);
     const draw = vi.fn();
@@ -171,8 +171,14 @@ describe("Sky and the observer", () => {
       beginRenderPass: () => pass,
       beginComputePass: () => pass,
     } as unknown as GPUCommandEncoder;
-    sky.encodeStars(encoder, sky.createView(), {} as GPUTextureView);
-    expect(draw).toHaveBeenCalledWith(4, 17);
+    const view = sky.createView();
+    view.starMode = "direct";
+    view.starDrawn.fill(1, 0, 3);
+    sky.encodeStars(encoder, view, {} as GPUTextureView);
+    expect(draw).toHaveBeenCalledTimes(3);
+    for (const call of draw.mock.calls) {
+      expect(call[0]).toBe(4);
+    }
   });
 
   it("the observer's point spread reaches the uniform", async () => {

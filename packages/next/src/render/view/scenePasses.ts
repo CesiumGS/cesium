@@ -341,7 +341,13 @@ export function starsPass(
 ): PassBody {
   return (enc, get) => {
     if (drawsSky(view)) {
-      engine.raster.sky.encodeStars(enc, frame.sky, get(starLayer));
+      engine.raster.sky.encodeStars(
+        enc,
+        frame.sky,
+        get(starLayer),
+        engine.raster.timer.passWrites("star-cull"),
+        engine.raster.timer.passWrites("stars"),
+      );
     }
   };
 }

@@ -724,6 +724,8 @@ describe("the placements buffer", () => {
 
 describe("the draw-arguments and geometry-submission seams", () => {
   const seam = join(src, "render", "drawArguments.ts");
+  const stars = join(src, "atmosphere", "Sky.ts");
+  const STAR_DRAW = "pass.drawIndirect(view.starArgs,";
 
   it("issues indexed and indirect draws only in src/render/drawArguments.ts", () => {
     const violations: string[] = [];
@@ -731,12 +733,26 @@ describe("the draw-arguments and geometry-submission seams", () => {
       if (path === seam) {
         continue;
       }
-      for (const line of contentDraws(readFileSync(path, "utf8"))) {
+      const text = readFileSync(path, "utf8");
+      const lines = stripComments(text).split("\n");
+      for (const line of contentDraws(text)) {
+        // The stars' strips aren't content: no index buffer and no draw record, and
+        // their own compute pass writes the arguments (Sky.starCull).
+        if (path === stars && lines[line - 1]!.includes(STAR_DRAW)) {
+          continue;
+        }
         violations.push(`${relative(root, path)}:${line}`);
       }
     }
     expect(violations).toEqual([]);
     expect(contentDraws(readFileSync(seam, "utf8")).length).toBeGreaterThan(0);
+    // The exception holds for that one call, and only there.
+    expect(readFileSync(stars, "utf8")).toContain(STAR_DRAW);
+    expect(
+      contentDraws(
+        `pass.drawIndirect(view.starArgs, 0);\npass.drawIndirect(args, 0);`,
+      ),
+    ).toHaveLength(2);
   });
 
   it("reaches draw arguments in Slang only through cullTables' accessors", () => {

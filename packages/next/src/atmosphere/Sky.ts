@@ -10,6 +10,17 @@ import type { Camera } from "../scene/Camera.ts";
 import type { PointSpread } from "../scene/observer.ts";
 import { STAR_FLOATS, type StarField } from "./stars.ts";
 import {
+  CELL_FLOATS,
+  STAR_CELLS,
+  buildStarCells,
+  cullCell,
+  starCullInputs,
+  starCullStorage,
+  type StarCell,
+  type StarCells,
+  type StarSubmission,
+} from "./starCells.ts";
+import {
   MOON_ALBEDO,
   lommelSeeliger,
   moonPhaseBrightness,
@@ -96,12 +107,19 @@ export interface MoonView {
 /** The narrowest point spread drawn, CSS pixels. */
 const MIN_SPREAD = 0.05;
 
+/** Bytes of a view's `Stars` uniform (sky.slang). */
+const STARS_SIZE = 128;
+/** Bytes of a sky cell's indirect draw. */
+const STAR_ARGS_STRIDE = 16;
+
 /** Floats of points written a tick: 4 MB. */
 const STAR_UPLOAD_FLOATS = 1 << 20;
 
 /** A star field on its way to the GPU (`Sky.advanceUpload`). */
 interface StarUpload {
   field: StarField;
+  /** The field by cell, and so the order its points are sent in. */
+  cells: StarCells;
   points: GPUBuffer;
   background: GPUTexture;
   pointsDone: number;
@@ -149,6 +167,18 @@ export interface SkyView {
   starLayer?: GPUTextureView;
   starFor?: GPUBuffer;
   starMoon?: GPUTexture;
+  /** The view's `Stars` uniform: its rotation and what it culls with. */
+  starUniform: GPUBuffer;
+  /** Per sky cell, an indirect draw's four words (16 bytes), from `starCull`. */
+  starArgs: GPUBuffer;
+  /** The splat's and the cull's groups, for the points they were made with. */
+  starSplatGroup?: GPUBindGroup;
+  starCullGroup?: GPUBindGroup;
+  starGroupsFor?: GPUBuffer;
+  /** How this tick's stars are submitted (`writeStars`). */
+  starMode: StarSubmission;
+  /** With "direct": how many of each cell's stars to draw this tick. */
+  starDrawn: Uint32Array;
 }
 
 type Pipelines = Record<
@@ -222,6 +252,12 @@ export class Sky {
   private readonly empty: GPUBindGroup;
   private readonly data = new ArrayBuffer(SKY_SIZE);
   private readonly f32 = new Float32Array(this.data);
+  /** The uniform's camera axes, and its point spread as `writeStars` reads it. */
+  private readonly forward = this.f32.subarray(8, 11);
+  private readonly right = this.f32.subarray(12, 15);
+  private readonly up = this.f32.subarray(16, 19);
+  private readonly spreadWing = { sigma: 0, share: 0 };
+  private readonly spread: PointSpread = { core: 1 };
   private readonly tablePass: GPURenderPassDescriptor;
   private readonly tableAttachment: GPURenderPassColorAttachment;
   /**
@@ -263,16 +299,21 @@ export class Sky {
    * placeholder until set), the background (a cube in the celestial frame,
    * cd/m²; black until set), and the groups splatting and reading them.
    */
-  private readonly starUniform: GPUBuffer;
   private starBackground: GPUTexture;
   private starPoints: GPUBuffer;
   private starCount = 0;
   private upload: StarUpload | null = null;
-  private starSplatGroup: GPUBindGroup;
+  /** The drawn field's cells: on the GPU, and for culling on the CPU. */
+  private readonly starCells: GPUBuffer;
+  private cells: readonly StarCell[] = [];
+  private illuminance: Float32Array = new Float32Array(0);
+  private readonly starCullPipeline: GPUComputePipeline;
+  private readonly starCullLayout: GPUBindGroupLayout;
   private readonly starLayout: GPUBindGroupLayout;
   private readonly starSplatLayout: GPUBindGroupLayout;
   private readonly starSampler: GPUSampler;
-  private readonly starData = new Float32Array(12);
+  private readonly starData = new Float32Array(STARS_SIZE / 4);
+  private readonly starCull = starCullStorage();
   private starsOn = 0;
   private readonly starPass: GPURenderPassDescriptor;
   private readonly starAttachment: GPURenderPassColorAttachment;
@@ -294,6 +335,7 @@ export class Sky {
     readonly atmosphere: RealtimeAtmosphere,
     pipelines: Pipelines,
     aerialPipelines: [GPUComputePipeline, GPUComputePipeline],
+    starCull: GPUComputePipeline,
     layouts: Record<
       | "atmosphere"
       | "tables"
@@ -302,12 +344,15 @@ export class Sky {
       | "empty"
       | "aerial"
       | "stars"
-      | "starSplat",
+      | "starSplat"
+      | "starCull",
       GPUBindGroupLayout
     >,
   ) {
     this.pipelines = pipelines;
     this.starLayout = layouts.stars;
+    this.starCullLayout = layouts.starCull;
+    this.starCullPipeline = starCull;
     this.starSplatLayout = layouts.starSplat;
     this.starAttachment = {
       view: undefined as never,
@@ -401,10 +446,10 @@ export class Sky {
     this.airTransmittance = layers("sky.airTransmittance", 256, 64);
     this.airScattering = layers("sky.airScattering", 32, 32);
     this.buildAir();
-    this.starUniform = device.createBuffer({
-      label: "sky.stars",
-      size: 48,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    this.starCells = device.createBuffer({
+      label: "sky.starCells",
+      size: STAR_CELLS * CELL_FLOATS * 4,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     // Filtered across the Moon map's levels, anisotropically (its disk's
     // limb and poles squeeze it); the star background is read at its top
@@ -424,7 +469,6 @@ export class Sky {
       {},
       [1, 1],
     );
-    this.starSplatGroup = this.createStarSplatGroup();
     const volume = (label: string, extra = 0) =>
       device.createTexture({
         label,
@@ -494,7 +538,7 @@ export class Sky {
     this.air.destroy();
     this.airTransmittance.destroy();
     this.airScattering.destroy();
-    this.starUniform.destroy();
+    this.starCells.destroy();
     this.cancelUpload();
     this.starBackground.destroy();
     this.starPoints.destroy();
@@ -518,7 +562,8 @@ export class Sky {
       this.starPoints = this.createStarPoints(1);
       this.starCount = 0;
       this.starsOn = 0;
-      this.starSplatGroup = this.createStarSplatGroup();
+      this.cells = [];
+      this.illuminance = new Float32Array(0);
       oldBackground.destroy();
       oldPoints.destroy();
       return;
@@ -526,6 +571,8 @@ export class Sky {
     const levels = field.backgroundLevels[0]?.length ?? 1;
     this.upload = {
       field,
+      // A worker builds these; a field made by hand comes here without them.
+      cells: field.cells ?? buildStarCells(field.points, field.count),
       points: this.createStarPoints(field.count),
       background: this.createStarBackground(field.backgroundSize, levels),
       pointsDone: 0,
@@ -547,14 +594,14 @@ export class Sky {
     if (!up) {
       return false;
     }
-    const { field } = up;
+    const { field, cells } = up;
     const total = field.count * STAR_FLOATS;
     if (up.pointsDone < total) {
       const floats = Math.min(STAR_UPLOAD_FLOATS, total - up.pointsDone);
       this.device.queue.writeBuffer(
         up.points,
         up.pointsDone * 4,
-        field.points,
+        cells.points,
         up.pointsDone,
         floats,
       );
@@ -590,7 +637,15 @@ export class Sky {
     this.starCount = field.count;
     this.starsOn = 1;
     this.upload = null;
-    this.starSplatGroup = this.createStarSplatGroup();
+    this.cells = cells.cells;
+    this.illuminance = cells.illuminance;
+    this.device.queue.writeBuffer(
+      this.starCells,
+      0,
+      cells.table,
+      0,
+      cells.table.length,
+    );
     oldBackground.destroy();
     oldPoints.destroy();
     return false;
@@ -651,11 +706,19 @@ export class Sky {
   }
 
   /**
-   * Turns the stars: `icrfToFixed`, the celestial frame's rotation to
-   * Earth-fixed axes (row-major, `icrfToFixed` in time/celestial.ts).
+   * A view's stars, after its `write`, whose values it reads: `icrfToFixed`, the
+   * celestial frame's rotation to Earth-fixed axes (row-major, `icrfToFixed` in
+   * time/celestial.ts), how they're submitted, and how far the view's chain lifts
+   * what's faint (`observerShadowGain`).
    */
-  writeStars(icrfToFixed: ArrayLike<number>): void {
+  writeStars(
+    view: SkyView,
+    icrfToFixed: ArrayLike<number>,
+    mode: StarSubmission = "indirect",
+    shadowGain = 1,
+  ): void {
     const f = this.starData;
+    const words = this.f32;
     // The shader turns Earth-fixed directions back: the transpose, by rows.
     for (let i = 0; i < 3; i++) {
       f[i * 4] = icrfToFixed[i]!;
@@ -664,7 +727,41 @@ export class Sky {
       f[i * 4 + 3] = 0;
     }
     f[3] = this.starsOn;
-    this.device.queue.writeBuffer(this.starUniform, 0, f);
+    this.spread.core = words[80]!;
+    const wing = this.spreadWing;
+    wing.sigma = words[81]!;
+    wing.share = words[82]!;
+    this.spread.wing = wing.share > 0 ? wing : undefined;
+    const inputs = starCullInputs(
+      this.forward,
+      this.right,
+      this.up,
+      words[11]!,
+      words[15]!,
+      words[20]!,
+      words[21]!,
+      words[3]!,
+      icrfToFixed,
+      shadowGain,
+      this.spread,
+      words[79]!,
+      this.starCull,
+    );
+    f.set(inputs.planes, 12);
+    f[28] = inputs.minIlluminance;
+    f[29] = inputs.minRadiance;
+    this.device.queue.writeBuffer(view.starUniform, 0, f);
+    view.starMode = mode;
+    if (mode === "direct") {
+      for (let c = 0; c < this.cells.length; c++) {
+        view.starDrawn[c] = cullCell(
+          this.cells[c]!,
+          inputs.planes,
+          inputs.minIlluminance,
+          this.illuminance,
+        );
+      }
+    }
   }
 
   private createStarBackground(size: number, levels: number): GPUTexture {
@@ -686,13 +783,28 @@ export class Sky {
     });
   }
 
-  private createStarSplatGroup(): GPUBindGroup {
-    return this.device.createBindGroup({
+  /** The view's splat and cull groups, for the points drawn now. */
+  private followStarPoints(view: SkyView): void {
+    if (view.starGroupsFor === this.starPoints) {
+      return;
+    }
+    view.starGroupsFor = this.starPoints;
+    view.starSplatGroup = this.device.createBindGroup({
       label: "sky.starSplat",
       layout: this.starSplatLayout,
       entries: [
-        { binding: 0, resource: { buffer: this.starUniform } },
+        { binding: 0, resource: { buffer: view.starUniform } },
         { binding: 5, resource: { buffer: this.starPoints } },
+      ],
+    });
+    view.starCullGroup = this.device.createBindGroup({
+      label: "sky.starCull",
+      layout: this.starCullLayout,
+      entries: [
+        { binding: 0, resource: { buffer: view.starUniform } },
+        { binding: 5, resource: { buffer: this.starPoints } },
+        { binding: 6, resource: { buffer: this.starCells } },
+        { binding: 7, resource: { buffer: view.starArgs } },
       ],
     });
   }
@@ -712,7 +824,7 @@ export class Sky {
         label: "sky.stars",
         layout: this.starLayout,
         entries: [
-          { binding: 0, resource: { buffer: this.starUniform } },
+          { binding: 0, resource: { buffer: view.starUniform } },
           {
             binding: 1,
             resource: this.starBackground.createView({ dimension: "cube" }),
@@ -729,22 +841,55 @@ export class Sky {
   /**
    * Splats the stars into a view's star layer (`layer`, rgba16float at the
    * view's size; cleared): each through its point spread function, in
-   * cd/m², for the sky to read (`draw`).
+   * cd/m², for the sky to read (`draw`). A dispatch first picks each cell's stars
+   * (`starCull`); or `writeStars` did, on the CPU.
    */
   encodeStars(
     encoder: GPUCommandEncoder,
     view: SkyView,
     layer: GPUTextureView,
+    cullWrites?: GPUComputePassTimestampWrites,
+    timestampWrites?: GPURenderPassTimestampWrites,
   ): void {
+    const stars = this.starCount > 0;
+    const indirect = view.starMode === "indirect";
+    if (stars) {
+      this.followStarPoints(view);
+    }
+    if (stars && indirect) {
+      const cull = encoder.beginComputePass({
+        label: "sky.starCull",
+        ...(cullWrites ? { timestampWrites: cullWrites } : {}),
+      });
+      cull.setPipeline(this.starCullPipeline);
+      cull.setBindGroup(0, this.empty);
+      cull.setBindGroup(1, this.empty);
+      cull.setBindGroup(2, this.empty);
+      cull.setBindGroup(3, view.starCullGroup!);
+      cull.dispatchWorkgroups(STAR_CELLS / 64);
+      cull.end();
+    }
     this.starAttachment.view = layer;
+    this.starPass.timestampWrites = timestampWrites;
     const pass = encoder.beginRenderPass(this.starPass);
-    if (this.starCount > 0) {
+    if (stars) {
       pass.setPipeline(this.pipelines.stars);
       pass.setBindGroup(0, this.empty);
       pass.setBindGroup(1, this.empty);
       pass.setBindGroup(2, view.group);
-      pass.setBindGroup(3, this.starSplatGroup);
-      pass.draw(4, this.starCount);
+      pass.setBindGroup(3, view.starSplatGroup!);
+      if (indirect) {
+        for (let c = 0; c < STAR_CELLS; c++) {
+          pass.drawIndirect(view.starArgs, c * STAR_ARGS_STRIDE);
+        }
+      } else {
+        for (let c = 0; c < this.cells.length; c++) {
+          const drawn = view.starDrawn[c]!;
+          if (drawn > 0) {
+            pass.draw(4, drawn, 0, this.cells[c]!.first);
+          }
+        }
+      }
     }
     pass.end();
   }
@@ -1030,6 +1175,27 @@ export class Sky {
           },
         ],
       }),
+      starCull: device.createBindGroupLayout({
+        label: "sky.starCull",
+        entries: [
+          { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {} },
+          {
+            binding: 5,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: { type: "read-only-storage" },
+          },
+          {
+            binding: 6,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: { type: "read-only-storage" },
+          },
+          {
+            binding: 7,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: { type: "storage" },
+          },
+        ],
+      }),
     };
     const module = device.createShaderModule({
       label: "sky",
@@ -1095,6 +1261,7 @@ export class Sky {
       aerial1,
       stars,
       aerialScreen,
+      starCull,
     ] = await Promise.all([
       device.createRenderPipelineAsync(
         scene("skyStarsFragment", [...marching, layouts.stars]),
@@ -1180,6 +1347,18 @@ export class Sky {
         },
         primitive: { topology: "triangle-list" },
       }),
+      device.createComputePipelineAsync({
+        label: "sky.starCull",
+        layout: device.createPipelineLayout({
+          bindGroupLayouts: [
+            layouts.empty,
+            layouts.empty,
+            layouts.empty,
+            layouts.starCull,
+          ],
+        }),
+        compute: { module, entryPoint: "starCull" },
+      }),
     ]);
     return new Sky(
       device,
@@ -1195,6 +1374,7 @@ export class Sky {
         aerialScreen: aerialScreen as GPURenderPipeline,
       },
       [aerial0 as GPUComputePipeline, aerial1 as GPUComputePipeline],
+      starCull as GPUComputePipeline,
       layouts,
     );
   }
@@ -1226,6 +1406,21 @@ export class Sky {
     });
     const tableView = table.createView();
     return {
+      starUniform: device.createBuffer({
+        label: "sky.stars",
+        size: STARS_SIZE,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      }),
+      starArgs: device.createBuffer({
+        label: "sky.starArgs",
+        size: STAR_CELLS * STAR_ARGS_STRIDE,
+        usage:
+          GPUBufferUsage.STORAGE |
+          GPUBufferUsage.INDIRECT |
+          GPUBufferUsage.COPY_SRC,
+      }),
+      starMode: "indirect",
+      starDrawn: new Uint32Array(STAR_CELLS),
       buffer,
       group: device.createBindGroup({
         label: "sky.view",

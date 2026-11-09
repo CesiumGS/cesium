@@ -860,10 +860,55 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 16}
+                        },
+                        {
+                            "name": "planes",
+                            "type": {
+                                "kind": "array",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "uniformStride": 16,
+                                "sizes": [
+                                    {"kind": "uniform", "value": 64, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 64, "elementStride": 16}
+                        },
+                        {
+                            "name": "minIlluminance",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "minRadiance",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 48, "alignment": 16}
+                        {"kind": "uniform", "value": 128, "alignment": 16}
                     ]
                 },
                 "containerVarLayout": {
@@ -896,13 +941,58 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 16}
+                            },
+                            {
+                                "name": "planes",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 16,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 64, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 64, "elementStride": 16}
+                            },
+                            {
+                                "name": "minIlluminance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "minRadiance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 48, "alignment": 16}
+                            {"kind": "uniform", "value": 128, "alignment": 16}
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 128, "elementStride": 0}
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -972,6 +1062,47 @@
                     },
                     "sizes": [
                         {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "starCells",
+            "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "starArgs",
+            "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "access": "readWrite",
+                "resultType": {
+                    "kind": "scalar",
+                    "scalarType": "uint32",
+                    "sizes": [
+                        {"kind": "uniform", "value": 4, "alignment": 4}
                     ]
                 },
                 "sizes": [
@@ -2338,10 +2469,55 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 16}
+                            },
+                            {
+                                "name": "planes",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 16,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 64, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 64, "elementStride": 16}
+                            },
+                            {
+                                "name": "minIlluminance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "minRadiance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 48, "alignment": 16}
+                            {"kind": "uniform", "value": 128, "alignment": 16}
                         ]
                     },
                     "containerVarLayout": {
@@ -2374,13 +2550,58 @@
                                         ]
                                     },
                                     "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 16}
+                                },
+                                {
+                                    "name": "planes",
+                                    "type": {
+                                        "kind": "array",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "vector",
+                                            "elementCount": 4,
+                                            "elementType": {
+                                                "kind": "scalar",
+                                                "scalarType": "float32"
+                                            },
+                                            "sizes": [
+                                                {"kind": "uniform", "value": 16, "alignment": 16}
+                                            ]
+                                        },
+                                        "uniformStride": 16,
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 64, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 48, "size": 64, "elementStride": 16}
+                                },
+                                {
+                                    "name": "minIlluminance",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "minRadiance",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
                                 }
                             ],
                             "sizes": [
-                                {"kind": "uniform", "value": 48, "alignment": 16}
+                                {"kind": "uniform", "value": 128, "alignment": 16}
                             ]
                         },
-                        "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 0}
+                        "binding": {"kind": "uniform", "offset": 0, "size": 128, "elementStride": 0}
                     },
                     "sizes": [
                         {"kind": "descriptorTableSlot", "value": 1}
@@ -2450,6 +2671,47 @@
                         },
                         "sizes": [
                             {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "starCells",
+                "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        },
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "starArgs",
+                "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "access": "readWrite",
+                    "resultType": {
+                        "kind": "scalar",
+                        "scalarType": "uint32",
+                        "sizes": [
+                            {"kind": "uniform", "value": 4, "alignment": 4}
                         ]
                     },
                     "sizes": [
@@ -3077,6 +3339,14 @@
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
                 },
                 {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
+                },
+                {
                     "name": "moonMap",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 3}
                 },
@@ -3255,6 +3525,14 @@
                 {
                     "name": "starPoints",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
+                },
+                {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
                 },
                 {
                     "name": "moonMap",
@@ -3473,6 +3751,127 @@
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
                 },
                 {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
+                },
+                {
+                    "name": "moonMap",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 3}
+                },
+                {
+                    "name": "skyView",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1}
+                },
+                {
+                    "name": "skyViewSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 2}
+                },
+                {
+                    "name": "aerialPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 5}
+                },
+                {
+                    "name": "aerialOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "atmosphere",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "transmittanceTable",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "tableSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "multipleScatteringTable",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3}
+                }
+            ]
+        },
+        {
+            "name": "starCull",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [64, 1, 1],
+            "bindings": [
+                {
+                    "name": "sky",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0}
+                },
+                {
+                    "name": "stars",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 0}
+                },
+                {
+                    "name": "starBackground",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 1}
+                },
+                {
+                    "name": "starSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 2}
+                },
+                {
+                    "name": "starLayer",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 4}
+                },
+                {
+                    "name": "starPoints",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
+                },
+                {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
+                },
+                {
                     "name": "moonMap",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 3}
                 },
@@ -3645,6 +4044,14 @@
                 {
                     "name": "starPoints",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
+                },
+                {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
                 },
                 {
                     "name": "moonMap",
@@ -3821,6 +4228,14 @@
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
                 },
                 {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
+                },
+                {
                     "name": "moonMap",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 3}
                 },
@@ -3993,6 +4408,14 @@
                 {
                     "name": "starPoints",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
+                },
+                {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
                 },
                 {
                     "name": "moonMap",
@@ -4169,6 +4592,14 @@
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
                 },
                 {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
+                },
+                {
                     "name": "moonMap",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 3}
                 },
@@ -4341,6 +4772,14 @@
                 {
                     "name": "starPoints",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
+                },
+                {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
                 },
                 {
                     "name": "moonMap",
@@ -4517,6 +4956,14 @@
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
                 },
                 {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
+                },
+                {
                     "name": "moonMap",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 3}
                 },
@@ -4644,6 +5091,14 @@
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
                 },
                 {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
+                },
+                {
                     "name": "moonMap",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 3}
                 },
@@ -4769,6 +5224,14 @@
                 {
                     "name": "starPoints",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
+                },
+                {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
                 },
                 {
                     "name": "moonMap",
@@ -4975,6 +5438,14 @@
                 {
                     "name": "starPoints",
                     "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 5}
+                },
+                {
+                    "name": "starCells",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 6}
+                },
+                {
+                    "name": "starArgs",
+                    "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 7}
                 },
                 {
                     "name": "moonMap",

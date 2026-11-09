@@ -169,6 +169,8 @@ export function destroyViewFrame(frame: ViewFrame): void {
   frame.aoParams.destroy();
   frame.translucentParams.destroy();
   frame.sky.buffer.destroy();
+  frame.sky.starUniform.destroy();
+  frame.sky.starArgs.destroy();
   frame.sky.table.destroy();
   frame.sky.faceUniforms.destroy();
   frame.ids.destroy();
