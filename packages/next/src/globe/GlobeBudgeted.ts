@@ -54,6 +54,8 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
   private passDensity = 0;
   /** When this pass's expansion budget runs out (performance.now). */
   private expandUntil = 0;
+  /** Metadata tiles this pass's views wait on, for the request list. */
+  private readonly metadataWanted = new Set<Tile>();
   imageryReady?: (tile: Tile) => boolean;
   imageryRefines?: (tile: Tile) => boolean;
 
@@ -89,9 +91,19 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     return this.imageryRefines?.(parent) === true;
   }
 
-  /** Not expanded yet: its children's availability is still loading. */
+  /**
+   * Not expanded yet: its children's availability is still loading. If a
+   * metadata tile holds it, that tile is requested with this pass's.
+   */
   protected override refinementPending(tile: Tile): boolean {
-    return tile.globe !== undefined && !tile.globe.expanded;
+    if (tile.globe === undefined || tile.globe.expanded) {
+      return false;
+    }
+    const metadata = this.source.metadataTile(tile);
+    if (metadata) {
+      this.metadataWanted.add(metadata);
+    }
+    return true;
   }
 
   /**
@@ -131,7 +143,16 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
   ): SelectionResult {
     this.passDensity = this.fog ? fogDensity(view) : 0;
     this.expandUntil = performance.now() + EXPAND_MS;
-    return super.select(root, rootGeometricError, view);
+    this.metadataWanted.clear();
+    const result = super.select(root, rootGeometricError, view);
+    // Ahead of the pass's other requests: what finer terrain waits for.
+    for (const tile of this.metadataWanted) {
+      if (tile.state === "unloaded" && !result.priority!.has(tile)) {
+        result.requested.push(tile);
+        result.priority!.set(tile, 0);
+      }
+    }
+    return result;
   }
 
   /** 1.x QuadtreePrimitive screenSpaceError (perspective) with fog. */

@@ -620,13 +620,40 @@ export class TerrainSource {
     if (per === 0 || level < this.layerLevels) {
       return true;
     }
-    // Listed by the tile at the last multiple of `per` above `level`.
-    const source = Math.floor((level - 1) / per) * per;
+    return this.listing(tile, level)?.globe!.metadata === true;
+  }
+
+  /**
+   * The tile whose metadata lists the availability of `level` under `tile`:
+   * the one at the last multiple of `per` above `level`, if `tile` is under
+   * it.
+   */
+  private listing(tile: Tile, level: number): Tile | undefined {
+    const source =
+      Math.floor((level - 1) / this.metadataAvailability) *
+      this.metadataAvailability;
     let t: Tile | undefined = tile;
     while (t?.globe && t.globe.level > source) {
       t = t.parent;
     }
-    return t?.globe?.level === source && t.globe.metadata;
+    return t?.globe?.level === source ? t : undefined;
+  }
+
+  /**
+   * The metadata tile `tile`'s children wait for, if it hasn't loaded.
+   * Selection skips levels, so nothing else asks for it: without it a tile
+   * past the levels `layer.json` lists is never expanded, and the terrain
+   * and its imagery stop there.
+   */
+  metadataTile(tile: Tile): Tile | undefined {
+    const level = tile.globe!.level + 1;
+    if (this.metadataAvailability === 0 || level < this.layerLevels) {
+      return undefined;
+    }
+    const t = this.listing(tile, level);
+    return t && !t.globe!.metadata && t.contentUrl !== undefined
+      ? t
+      : undefined;
   }
 
   /**

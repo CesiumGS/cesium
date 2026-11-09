@@ -544,3 +544,89 @@ describe("terrain past its data", () => {
     expect(source.upsampleContent(tile)).toBe(false);
   });
 });
+
+// Cesium World Terrain lists availability to level 15 in layer.json and the
+// rest in the metadata of the tiles at levels 0, 10, 20 and so on. Selection
+// skips levels, so nothing loaded the level 10 tile over the camera: a level
+// 15 tile could not tell whether finer data existed, was never expanded or
+// upsampled, and the terrain, and with it the imagery, stopped at level 15
+// (the milk truck's ground, at Bing's level 16, against the ellipsoid's 21).
+describe("terrain whose finer availability is in a metadata tile", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  async function metadataTerrain(requests: string[]): Promise<TerrainSource> {
+    const whole = (l: number): TileRange => ({
+      startX: 0,
+      startY: 0,
+      endX: 2 ** (l + 1) - 1,
+      endY: 2 ** l - 1,
+    });
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(
+          JSON.stringify({
+            format: "quantized-mesh-1.0",
+            tiles: ["{z}/{x}/{y}.terrain"],
+            extensions: ["metadata"],
+            metadataAvailability: 10,
+            available: Array.from({ length: 16 }, (_, l) => [whole(l)]),
+          }),
+        ),
+    );
+    const loader: TerrainLoader = async (request) => {
+      const level = Number(
+        /\/(\d+)\/\d+\/\d+\.terrain(\?|$)/.exec(request.url)?.[1],
+      );
+      requests.push(request.url);
+      return {
+        asset: EMPTY_ASSET,
+        info: {
+          minimumHeight: 50,
+          maximumHeight: 50,
+          sphere: { center: [0, 0, 0], radius: 1 },
+          quadrants: [
+            [50, 50],
+            [50, 50],
+            [50, 50],
+            [50, 50],
+          ],
+          heights: gridTile(request.rect, 9, () => 50).heights,
+          // A metadata tile lists the ten levels below it: data to 25.
+          ...(level % 10 === 0
+            ? {
+                available: Array.from({ length: 10 }, (_, i) => [
+                  whole(level + 1 + i),
+                ]),
+              }
+            : {}),
+        },
+      };
+    };
+    return TerrainSource.create(
+      "https://terrain.test/layer.json",
+      undefined,
+      loader,
+      { warnings: new Set() },
+    );
+  }
+
+  it("budgeted: requests the metadata tile a finer level waits for", async () => {
+    const requests: string[] = [];
+    const source = await metadataTerrain(requests);
+    // The globe's own limit, 2 px (1.x's), not 3D Tiles' 16.
+    const selection = new GlobeBudgetedSelection(source, {
+      maximumScreenSpaceError: 2,
+    });
+    selection.imageryRefines = () => true;
+    const selected = await settle(source, selection);
+    // 300 m up, level 15's error (2.3 m) is above 2 px: the data below it
+    // is used once its availability is known.
+    expect(Math.max(...selected.map((t) => t.globe!.level))).toBeGreaterThan(
+      16,
+    );
+    expect(requests.some((u) => /\/10\/\d+\/\d+\.terrain(\?|$)/.test(u))).toBe(
+      true,
+    );
+  });
+});
