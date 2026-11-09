@@ -32,6 +32,7 @@ struct InstanceValues_0
 struct VertexInput_0
 {
      positionMC_0 : vec3<f32>,
+     designPositionMC_0 : vec3<f32>,
      normalMC_0 : vec3<f32>,
      texCoord0_0 : vec2<f32>,
      color0_0 : vec4<f32>,
@@ -58,7 +59,7 @@ fn vertexMain_0( vsInput_0 : VertexInput_0,  vsOutput_0 : ptr<function, VertexOu
     return;
 }
 
-fn cesiumSlangVertex( in_positionMC_0 : vec3<f32>,  in_normalMC_0 : vec3<f32>,  in_texCoord0_0 : vec2<f32>,  in_color0_0 : vec4<f32>,  in_featureId0_0 : u32,  in_vertexIndex_0 : u32,  in_instanceIndex_0 : u32,  in_time_0 : f32,  out_positionMC_0 : ptr<function, vec3<f32>>,  out_normalMC_0 : ptr<function, vec3<f32>>)
+fn cesiumSlangVertex( in_positionMC_0 : vec3<f32>,  in_designPositionMC_0 : vec3<f32>,  in_normalMC_0 : vec3<f32>,  in_texCoord0_0 : vec2<f32>,  in_color0_0 : vec4<f32>,  in_featureId0_0 : u32,  in_vertexIndex_0 : u32,  in_instanceIndex_0 : u32,  in_time_0 : f32,  out_positionMC_0 : ptr<function, vec3<f32>>,  out_normalMC_0 : ptr<function, vec3<f32>>)
 {
     var _S3 : vec3<f32> = vec3<f32>(0.0f);
     var _S4 : vec2<f32> = vec2<f32>(0.0f);
@@ -68,6 +69,7 @@ fn cesiumSlangVertex( in_positionMC_0 : vec3<f32>,  in_normalMC_0 : vec3<f32>,  
     var _S8 : InstanceValues_0 = InstanceValues_0( u32(0) );
     var i_0 : VertexInput_0;
     i_0.positionMC_0 = _S3;
+    i_0.designPositionMC_0 = _S3;
     i_0.normalMC_0 = _S3;
     i_0.texCoord0_0 = _S4;
     i_0.color0_0 = _S5;
@@ -79,6 +81,7 @@ fn cesiumSlangVertex( in_positionMC_0 : vec3<f32>,  in_normalMC_0 : vec3<f32>,  
     i_0.metadata_0 = _S7;
     i_0.instance_0 = _S8;
     i_0.positionMC_0 = in_positionMC_0;
+    i_0.designPositionMC_0 = in_designPositionMC_0;
     i_0.normalMC_0 = in_normalMC_0;
     i_0.texCoord0_0 = in_texCoord0_0;
     i_0.color0_0 = in_color0_0;

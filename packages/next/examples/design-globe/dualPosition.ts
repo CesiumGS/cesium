@@ -5,7 +5,7 @@
 
 /**
  * The attribute carrying each vertex's reprojected position, in the rigid
- * tile's model space: its second position (`Tileset3D.dualPosition`).
+ * tile's model space: its second position (`DUAL_POSITION_EXTENSION`).
  */
 export const REPROJECTED_SEMANTIC = "_DG_REPROJECTED";
 
@@ -15,16 +15,12 @@ export const REPROJECTED_SEMANTIC = "_DG_REPROJECTED";
  */
 export const STANDOFF_SEMANTIC = "_DG_STANDOFF";
 
-/** The tileset-level extension stating the dual position. */
-export const DUAL_POSITION_EXTENSION = "DESIGN_GLOBE_dual_position";
-
-/** `DUAL_POSITION_EXTENSION`'s content. */
-export interface DualPositionDeclaration {
-  /** The attribute holding the second position. */
-  readonly semantic: string;
-  /** The farthest any vertex is from its second position, in model units. */
-  readonly maxDistance: number;
-}
+/**
+ * The tileset-level extension stating the second position: the engine's own
+ * (`Tileset3D.ts` `DUAL_POSITION_EXTENSION`, which a test holds this equal to),
+ * `{ position, maxDistance }`. The engine reads it at load.
+ */
+export const DUAL_POSITION_EXTENSION = "CESIUM_dual_position";
 
 /**
  * The points of `xyz` (three numbers each) at least `spacing` apart, greedily

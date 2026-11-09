@@ -300,7 +300,9 @@ const isIdentity = (m: ArrayLike<number>) => {
  * frame (`EngineeringFrame.load`, named by the declaration, else the
  * tileset's URL, with its declared pipeline or geoid fallback), builds the
  * declared placement, checks a rigid one against `tileset.root.transform`
- * (`checkRigidTransform`), and sets `tileset.placement`. PROJ is used
+ * (`checkRigidTransform`), and sets `tileset.placement` (and, for a rigid
+ * placement on a tileset with a second position, the second's: the frame's
+ * reprojected placement). PROJ is used
  * here, never by `Tileset3D.load`.
  *
  * Every refusal is an error and a `warnings` entry:
@@ -428,5 +430,10 @@ export async function georeferenceTileset(
     );
   }
   tileset.placement = placement;
+  if (placement.mode === "rigid" && tileset.dualPosition !== undefined) {
+    // The second position is the frame's image of each design point: where
+    // an item at placement 1 draws what the content's coordinates name.
+    tileset.secondPlacement = placeReprojected(frame);
+  }
   return placement;
 }

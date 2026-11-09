@@ -461,6 +461,38 @@ describe("World placements", () => {
     expect(() => world.setPlacement(draw, fitted({}))).toThrow(/removed/);
   });
 
+  it("refuses an instanced draw: a placement runs before the instance's matrix", () => {
+    const draw = world.addDraw({
+      mesh: world.addMesh(quad),
+      origin: Float64Array.of(0, 0, 0),
+      instances: {
+        matrices: Float64Array.of(
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          5,
+          0,
+          0,
+          1,
+        ),
+      },
+    });
+    expect(world.drawHasPosition(draw, PARTNER)).toBe(false);
+    expect(() => world.setPlacement(draw, dual(t(1)))).toThrow(
+      /instanced draw/,
+    );
+    expect(world.drawHasPosition(addQuad(), PARTNER)).toBe(true);
+  });
+
   it("writes each kind's block as placement.slang reads it", () => {
     const draw = addQuad();
     const p = t(0.75);

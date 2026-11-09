@@ -38,9 +38,25 @@ public struct LabelAttribute { string text; };
 // `cesiumModule`); `none` alone when it declares none.
 // @named
 
-// A vertex as the mesh stores it, before its transform.
+// A vertex in model coordinates, before the draw's transform. A draw with a
+// placement (a scene item at a placement other than 0, `SceneItem.placement`)
+// moves each vertex in model space first, at whatever its parameter is now:
+//  - positionMC is the PLACED position: the point as the item draws it, a
+//    blend of the design position and the second position, or past either
+//    end. At placement 0, or without a placement, it is the mesh's own.
+//  - designPositionMC is the position as the mesh stores it (the design
+//    position), whatever the placement. It equals positionMC when there is
+//    no placement.
+//  - normalMC is the normal as the mesh stores it. A placement doesn't turn
+//    it: where the surface is turned by the move, the shading normal is off by
+//    that turn (0.197 degrees at most on the 44 km design globe corridor).
+// The fragment stage has only the placed position (`FragmentInput.positionMC`):
+// a design position there would cost one more interpolated value on every
+// draw, and the engine's inter-stage locations are all in use. To use the
+// design position in a fragment, carry what is needed in a named attribute.
 public struct VertexInput {
   public float3 positionMC;
+  public float3 designPositionMC;
   public float3 normalMC;
   public float2 texCoord0;   // (0, 0) without TEXCOORD_0
   public float4 color0;      // white without COLOR_0
@@ -61,7 +77,7 @@ public struct VertexOutput {
 
 // A surface point as the fragment stage sees it.
 public struct FragmentInput {
-  public float3 positionMC;  // model coordinates, interpolated
+  public float3 positionMC;  // model coordinates as drawn (placed, for an item with a placement), interpolated
   public float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
   public float3 positionWC;  // Earth-fixed (float32: about a meter)
   public float3 normal;      // geometric normal, toward the viewer

@@ -28,6 +28,15 @@
  * float64 but not in float32 (past about 3.4 × 10^38), where the GPU
  * reads it.
  *
+ * A placement moves positions only. A vertex keeps the normal and tangent
+ * the mesh stores, so where the move turns the surface the shading normal is
+ * off by that turn (0.197 degrees at most on the design globe's 44 km
+ * corridor). A fitted operation's Jacobian (plan 5f) would turn them, by its
+ * inverse transpose: `placePosition` in shaders/placement.slang is where the
+ * vertex stage would take it from the fit, and the design globe generator
+ * (scripts/designTiles.mjs) is where reprojected normals were written before
+ * scene items.
+ *
  * Rays don't see placements: `World.castRays`, and terrain line of sight
  * through the query interface, test a placed draw's triangles where its
  * vertex buffers have them, unplaced (its bounds do grow). Picks read the

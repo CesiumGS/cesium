@@ -14,6 +14,7 @@ export interface BoundaryField {
 export const ENGINE_STRUCTS = {
   CesiumVertex: [
     { name: "positionMC", type: "vec3f" },
+    { name: "designPositionMC", type: "vec3f" },
     { name: "normalMC", type: "vec3f" },
     { name: "texCoord0", type: "vec2f" },
     { name: "color0", type: "vec4f" },
@@ -84,6 +85,7 @@ export const ENGINE_STRUCTS = {
 export const CONTRACT_STRUCTS = {
   VertexInput: [
     { name: "positionMC", type: "vec3f" },
+    { name: "designPositionMC", type: "vec3f" },
     { name: "normalMC", type: "vec3f" },
     { name: "texCoord0", type: "vec2f" },
     { name: "color0", type: "vec4f" },

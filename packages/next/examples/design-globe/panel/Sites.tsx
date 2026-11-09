@@ -84,6 +84,11 @@ export function SiteFacts({ site }: { site: SiteView }) {
                 <dd className="dg-num">{frame.parts}</dd>
               </>
             )}
+            <dt>Shading</dt>
+            <dd>
+              A moved surface keeps its rigid normals: its lighting is off by
+              0.197° at most on the 44 km corridor, less on smaller sites.
+            </dd>
             {frame.credits.length > 0 && (
               <>
                 <dt>Grids</dt>

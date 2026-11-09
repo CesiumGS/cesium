@@ -29,7 +29,7 @@ import {
 import type { SiteView } from "./panel/model.ts";
 import {
   SiteDrawings,
-  dualPositionOf,
+  hasSecondPosition,
   type PlacementLook,
 } from "./siteDrawings.ts";
 
@@ -151,14 +151,8 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
         }
         site.tileset = tileset;
         scope.defer(() => viewer.remove(tileset));
-        const dual = dualPositionOf(tileset);
-        if (dual !== undefined) {
-          site.drawings = new SiteDrawings(
-            viewer.world,
-            tileset,
-            dual,
-            deps.look,
-          );
+        if (hasSecondPosition(tileset)) {
+          site.drawings = new SiteDrawings(viewer.world, tileset, deps.look);
           scope.defer(() => site.drawings?.dispose());
           deps.paired(site);
         }
@@ -383,7 +377,6 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
             if (site.drawings !== undefined) {
               // The second position is the frame's image of each design point.
               site.reprojectedPlacement = placeReprojected(placed.frame);
-              site.drawings.setReprojectedPlacement(site.reprojectedPlacement);
             }
           }
           report({

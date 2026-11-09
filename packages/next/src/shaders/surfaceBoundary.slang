@@ -25,7 +25,8 @@ module surfaceBoundary;
 // named values are read from (the draw's attribute directory, the row of
 // its feature table).
 public export __extern_cpp struct CesiumVertex {
-  public __extern_cpp float3 positionMC;
+  public __extern_cpp float3 positionMC;        // placed (`VertexInput`'s doc)
+  public __extern_cpp float3 designPositionMC;  // as the mesh stores it
   public __extern_cpp float3 normalMC;
   public __extern_cpp float2 texCoord0;   // (0, 0) without TEXCOORD_0
   public __extern_cpp float4 color0;      // white without COLOR_0

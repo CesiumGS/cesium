@@ -2648,15 +2648,12 @@ export class World {
    * @internal A second draw of `source`'s mesh, on `source`'s transform and
    * with its features, to draw a tileset's tile again (`SceneItem`): the geometry and the transform are shared, so it
    * costs a record, a draw item and its feature IDs. Hidden until given a
-   * view mask. Not ground, and rays don't test it. Undefined for a draw that
+   * view mask. Not ground. Ray queries test each mesh and transform once, whichever draws show it. Undefined for a draw that
    * can't be drawn twice this way: instanced, points or a billboard, whose
    * records are tied to their instance or point tables. Remove it before
    * `source`'s transform goes.
    */
-  twinDraw(
-    source: DrawHandle,
-    name: string | undefined,
-  ): DrawHandle | undefined {
+  twinDraw(source: DrawHandle): DrawHandle | undefined {
     if (!this.hasDraw(source)) {
       throw new Error("twinDraw: the draw was removed.");
     }
@@ -2673,6 +2670,7 @@ export class World {
     const transform = this.recordsU32[o + TRANSFORM_WORD]!;
     const flags = this.recordsU32[o + FLAGS_WORD]!;
     const features = this.featureTables[index];
+    const name = this.names[index];
     return this.addDraw({
       mesh: batch.mesh,
       transform: {
@@ -2693,8 +2691,9 @@ export class World {
   }
 
   /**
-   * @internal Whether the draw's mesh has the named attribute, with at least
-   * 3 components: what a dual position needs.
+   * @internal Whether the draw can take a dual position: its mesh has the
+   * named attribute, with at least 3 components, and it isn't instanced, a
+   * point set or a billboard.
    */
   drawHasPosition(handle: DrawHandle, semantic: string): boolean {
     if (!this.hasDraw(handle)) {
@@ -2702,22 +2701,14 @@ export class World {
     }
     const { mesh, points, billboard } = this.drawBatches[handle.index]!;
     const components = this.meshRanges.get(mesh.id)?.named?.get(semantic);
-    return !points && !billboard && components !== undefined && components >= 3;
-  }
-
-  /** @internal Lights the draw, or shows its colour as it is (lines always). */
-  setUnlit(handle: DrawHandle, unlit: boolean): void {
-    if (!this.hasDraw(handle)) {
-      return;
-    }
-    const flags = this.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
-    const next =
-      unlit || this.drawBatches[handle.index]!.mesh.topology === "line-list"
-        ? flags | RecordFlags.unlit
-        : flags & ~RecordFlags.unlit;
-    if (this.drawConstants.setFlags(handle.index, next)) {
-      this.markDirty(handle.index);
-    }
+    return (
+      !points &&
+      !billboard &&
+      this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_COUNT_WORD]! ===
+        0 &&
+      components !== undefined &&
+      components >= 3
+    );
   }
 
   /**
@@ -2745,7 +2736,7 @@ export class World {
    * world, a destroyed one, a globe's (its surface isn't an item), and what
    * the options refuse: an opacity outside 0 to 1, a tint that isn't three
    * finite numbers, a placement that isn't finite or, on a tileset with no
-   * second position (`Tileset3D.dualPosition`), isn't 0. Throws a
+   * second position (a `CESIUM_dual_position` declaration), isn't 0. Throws a
    * `CapacityError` where a loaded tile's draws don't fit the world's tables,
    * leaving nothing behind.
    */
@@ -2772,7 +2763,7 @@ export class World {
     }
   }
 
-  /** The item that drew `draw`, if an item did. */
+  /** @internal The item that drew `draw`, if an item did. */
   itemOfDraw(draw: DrawHandle): SceneItem | undefined {
     for (const item of this.sceneItems) {
       const hit = item.tileset.itemOfDraw(draw);
@@ -4163,6 +4154,7 @@ export class World {
       }
     }
     const center = new Float64Array(3);
+    const drawn = new Set<string>();
     const world = this.transformWorld;
     const test = (record: number, instance: number, radius: number) => {
       const triangles = Math.floor(u[record * RECORD_WORDS + 11]! / 3);
@@ -4223,6 +4215,13 @@ export class World {
       const radius = f[o + 3]!;
       const count = u[o + INSTANCE_COUNT_WORD]!;
       if (count === 0) {
+        // Scene items draw one mesh on one transform more than once: the
+        // same triangles, so test them once.
+        const once = `${batch.mesh.id}:${t}`;
+        if (drawn.has(once)) {
+          continue;
+        }
+        drawn.add(once);
         for (let k = 0; k < 3; k++) {
           center[k] =
             world[w + k]! * local[0]! +
@@ -4327,8 +4326,9 @@ export class World {
    * range where the GPU reads it, naming its field (plan 5a's Review Focus
    * 4); a parameter of another world; a dual position
    * whose semantic isn't one of the draw's mesh's attributes of 3
-   * components; and a billboard or point draw, whose positions are
-   * offsets on screen.
+   * components; a billboard or point draw, whose positions are
+   * offsets on screen; and an instanced draw, whose instances' matrices come
+   * after the mesh's vertices.
    */
   setPlacement(handle: DrawHandle, placement: Placement | undefined): void {
     if (!this.hasDraw(handle)) {
@@ -4346,6 +4346,11 @@ export class World {
       if (flags & (RecordFlags.billboard | RecordFlags.points)) {
         throw new Error(
           "setPlacement: a billboard or point draw's positions are offsets on screen; it has no per-vertex placement.",
+        );
+      }
+      if (this.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
+        throw new Error(
+          "setPlacement: an instanced draw has no per-vertex placement: it would move a mesh's vertices before each instance's matrix, and not the instances.",
         );
       }
       for (const t of parametersOf(next)) {

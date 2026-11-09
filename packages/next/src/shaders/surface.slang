@@ -740,10 +740,12 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   }
   // The draw's placement (placement.slang), before the custom vertex
   // stage, in model space: the transform carries the large offset.
+  float3 designPosition = position;
   position = placePosition(r.placement, position, vertexIndex, r.attributes, tableFeature);
   // The custom shader's vertex stage (CustomShader.ts's defaults: unchanged).
   CesiumVertex v;
   v.positionMC = position;
+  v.designPositionMC = designPosition;
   v.normalMC = normal;
   v.texCoord0 = out.uv;
   v.color0 = vertexColor;

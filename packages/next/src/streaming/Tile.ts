@@ -526,6 +526,12 @@ export interface TileTree {
    * placeholders, whose boxes don't move with it (`Budgeted.mixedLod`).
    */
   movesVertices?: boolean;
+  /**
+   * The views in which the tileset's items draw `tile`'s content: its
+   * selected views, less what each item's `show`, `viewMask`, opacity and
+   * second position leave out. Without it, the selected views.
+   */
+  shownViews?(tile: Tile): number;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */

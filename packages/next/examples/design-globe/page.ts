@@ -369,7 +369,7 @@ export interface SiteEntry {
   readonly tileset: string;
   /**
    * The tileset carries both placements (it declares so itself,
-   * siteDrawings.ts `dualPositionOf`): false, drawn rigid only.
+   * siteDrawings.ts `hasSecondPosition`): false, drawn rigid only.
    */
   readonly dual: boolean;
   /** The model's footprint corners at its ground, design units. */

@@ -228,7 +228,7 @@ export function untestedSpans(
       tile.renderable &&
       tile.state === "ready" &&
       tile.placement !== undefined &&
-      (tile.appliedMask & mask) !== 0;
+      ((tile.tileset.shownViews?.(tile) ?? tile.appliedMask) & mask) !== 0;
     if (drawn) {
       if ((tile.standInMask & mask) !== 0) {
         found.notRefined.push(span); // drawn whole for finer tiles loading

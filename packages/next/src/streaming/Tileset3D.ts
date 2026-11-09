@@ -56,9 +56,9 @@ import {
 } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
 import type { DesignPlacement } from "./designPlacement.ts";
-import { finite32 } from "../scene/placement.ts";
 import {
   SceneItem,
+  checkItemOptions,
   type SceneItemHost,
   type SceneItemOptions,
 } from "../scene/SceneItem.ts";
@@ -163,28 +163,49 @@ function isCaster(tile: Tile): boolean {
 const NO_EXTENSIONS: Readonly<Record<string, unknown>> = Object.freeze({});
 /** `Tileset3D.rootJson` of a tileset.json without a root (and of terrain). */
 const NO_ROOT_JSON: Tileset3D["rootJson"] = Object.freeze({});
-/** The tiles' second position (`Tileset3D.dualPosition`). */
-export interface TilesetDualPosition {
-  /** The named attribute of each mesh holding it (3 components, model space). */
+/**
+ * The tileset-level extension that states the tiles' second position. Its
+ * content is `{ "position": <attribute name>, "maxDistance": <number> }`: each
+ * mesh's named attribute (3 components, in the mesh's own model space) holds
+ * the vertex's second position, and no vertex is farther from it than
+ * `maxDistance` model units. The engine reads it at load; a `SceneItem`
+ * chooses between the positions by its placement alone.
+ */
+export const DUAL_POSITION_EXTENSION = "CESIUM_dual_position";
+
+/** What `DUAL_POSITION_EXTENSION` states, once read and checked. */
+interface DualDeclaration {
   readonly semantic: string;
-  /** The farthest any vertex in the tileset is from it, in model units. */
   readonly maxDistance: number;
 }
 
-const NO_ITEMS: readonly SceneItem[] = Object.freeze([]);
-
-/** Refuses a second position with a number the GPU can't hold. */
-function checkDualPosition(dual: TilesetDualPosition): void {
-  if (typeof dual.semantic !== "string" || dual.semantic === "") {
-    throw new RangeError("Tileset3D.dualPosition: it needs a semantic.");
+/** The declaration in `extensions`, or undefined; warns of one it refuses. */
+function readDualPosition(
+  extensions: Readonly<Record<string, unknown>>,
+  warn: (message: string) => void,
+): DualDeclaration | undefined {
+  const declared = extensions[DUAL_POSITION_EXTENSION] as
+    { position?: unknown; maxDistance?: unknown } | undefined;
+  if (declared === undefined) {
+    return undefined;
   }
-  finite32("Tileset3D.dualPosition", "maxDistance", dual.maxDistance);
-  if (dual.maxDistance < 0) {
-    throw new RangeError(
-      `Tileset3D.dualPosition: maxDistance is ${dual.maxDistance}; a distance is not negative.`,
+  const { position, maxDistance } = declared ?? {};
+  if (
+    typeof position !== "string" ||
+    position === "" ||
+    typeof maxDistance !== "number" ||
+    !Number.isFinite(Math.fround(maxDistance)) ||
+    maxDistance < 0
+  ) {
+    warn(
+      `${DUAL_POSITION_EXTENSION}: it needs a position (an attribute name) and a maxDistance (a distance, not negative); its second position is ignored`,
     );
+    return undefined;
   }
+  return { semantic: position, maxDistance };
 }
+
+const NO_ITEMS: readonly SceneItem[] = Object.freeze([]);
 
 /**
  * A hierarchical content source other than a 3D Tiles tileset.json (plan
@@ -273,10 +294,6 @@ export interface TilesetOptions extends BudgetedOptions {
    * 1.x); geometric errors keep the load-time scale. 3D Tiles only.
    */
   modelMatrix?: Mat4;
-  /**
-   * The tiles' second position (`Tileset3D.dualPosition`), when known at load.
-   */
-  dualPosition?: TilesetDualPosition;
   /**
    * Where its design coordinates are drawn (`Tileset3D.placement`), for a
    * tileset that declares none: the application supplies the placement
@@ -581,8 +598,17 @@ export class Tileset3D implements TileTree {
   /**
    * The anchor its content hangs under (`TilesetOptions.anchor`; default
    * the Earth's): what its tiles' transforms and volumes are relative to.
+   * Reading it before the tileset has a world (`World.add`) throws.
    */
-  anchor!: AnchorHandle;
+  get anchor(): AnchorHandle {
+    if (this.anchor_ === undefined) {
+      throw new Error(
+        "Tileset3D.anchor: the tileset has no world yet; add it with world.add first.",
+      );
+    }
+    return this.anchor_;
+  }
+  private anchor_: AnchorHandle | undefined;
 
   /**
    * The world it draws in: the first it is added to (`World.add`), or the one
@@ -1080,10 +1106,6 @@ export class Tileset3D implements TileTree {
     this.collision = options.enableCollision ?? false;
     this.retainGeometry = options.retainGeometry ?? false;
     this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
-    if (options.dualPosition !== undefined) {
-      checkDualPosition(options.dualPosition);
-      this.dualPosition_ = options.dualPosition;
-    }
     if (world !== undefined) {
       this.bindWorld(world);
     }
@@ -1116,6 +1138,9 @@ export class Tileset3D implements TileTree {
             transform: (rootJson as Record<string, unknown>).transform,
           })
         : NO_ROOT_JSON;
+    this.dualPosition_ = readDualPosition(this.extensions, (message) =>
+      this.warnings.add(message),
+    );
     if (options.placement !== undefined) {
       this.placement = options.placement;
     }
@@ -1164,6 +1189,9 @@ export class Tileset3D implements TileTree {
       tileBytes: (tile, delta) => {
         tile.bytes += delta;
         this.stats.bytes += delta;
+        if (tile.castsOnly) {
+          this.casterResident += delta;
+        }
       },
       changed: () => this.changed(),
       warn: (message) => {
@@ -1191,7 +1219,7 @@ export class Tileset3D implements TileTree {
   /** The world it draws in, from here on (`World.add`). */
   private bindWorld(world: World): void {
     this.world_ = world;
-    this.anchor = contentAnchor(world, this.options.anchor, "Tileset3D");
+    this.anchor_ = contentAnchor(world, this.options.anchor, "Tileset3D");
     this.transform = world.addTransform(this.delta, this.anchor);
   }
 
@@ -1205,7 +1233,7 @@ export class Tileset3D implements TileTree {
     return entry?.generation === draw.generation ? entry.tile : undefined;
   }
 
-  /** Which of its items drew `draw`, while the tile is loaded. */
+  /** @internal Which of its items drew `draw`, while the tile is loaded. */
   itemOfDraw(draw: DrawHandle): SceneItem | undefined {
     const entry = this.drawTiles.get(draw.index);
     return entry?.generation === draw.generation
@@ -1261,6 +1289,7 @@ export class Tileset3D implements TileTree {
         "World.add: this tileset belongs to another world. A tileset belongs to one world: load it again for this one.",
       );
     }
+    checkItemOptions(options, this.dualPosition_ !== undefined);
     if (this.world_ === undefined) {
       this.bindWorld(world);
       this.engine.adoptTileset(this);
@@ -1279,15 +1308,17 @@ export class Tileset3D implements TileTree {
         }
       }
     } catch (error) {
-      for (const tile of placed) {
-        item.unplace(tile);
-      }
+      // A tile whose draws half-made are in `loaded` too: free every one.
+      item.discard(this.loaded);
       throw error;
     }
     for (const tile of placed) {
       const bytes = item.bytes(tile);
       tile.bytes += bytes;
       this.stats.bytes += bytes;
+      if (tile.castsOnly) {
+        this.casterResident += bytes;
+      }
     }
     if (item.holdsBase) {
       this.baseItem = item;
@@ -1298,40 +1329,40 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * The tiles' second position, for a `SceneItem`'s placement: each mesh's
-   * named attribute `semantic` (3 components, model space), and `maxDistance`,
-   * how far any vertex in the tileset is from it, in model units, stated by
-   * whoever made the attribute. All tiles' bounds grow by that much, so a tile
-   * drawn away from where it was written is still selected, and each item's
-   * draws are culled by their own placement's bounds. A tile whose mesh lacks
-   * the attribute isn't drawn by its items, and the tileset warns. While a
-   * tileset has one, tiles swap whole (`BudgetedOptions.mixedLod`).
+   * @internal The tiles' second position, read at load from the tileset's
+   * `CESIUM_dual_position` extension (`DUAL_POSITION_EXTENSION`): each mesh's
+   * named attribute (3 components, model space) and `maxDistance`, how far any
+   * vertex is from it, in model units. All tiles' bounds grow by that much, so
+   * a tile drawn away from where it was written is still selected. A tile whose
+   * mesh lacks the attribute isn't drawn by an item that moves it, and the
+   * tileset warns. While a tileset has one, tiles swap whole
+   * (`BudgetedOptions.mixedLod`). An item chooses between the positions by its
+   * `placement`.
    */
-  get dualPosition(): TilesetDualPosition | undefined {
+  get dualPosition(): DualDeclaration | undefined {
     return this.dualPosition_;
   }
-  set dualPosition(dual: TilesetDualPosition | undefined) {
-    if (dual !== undefined) {
-      checkDualPosition(dual);
-    }
-    this.dualPosition_ = dual;
-    for (const item of this.itemList) {
-      item.dualChanged();
-    }
-    this.changed();
-  }
-  private dualPosition_: TilesetDualPosition | undefined;
+  private readonly dualPosition_: DualDeclaration | undefined;
 
   /**
-   * Where the second position's points are drawn, for picks and snaps on an
-   * item at placement 1, as `placement` is for the positions at placement 0.
-   * Without one, a hit at placement 1 has no content coordinates. Changing
-   * `modelMatrix` drops it.
+   * @internal Where the second position's points are drawn, for picks and
+   * snaps on an item at placement 1, as `placement` is for the positions at
+   * placement 0. `georeferenceTileset` sets it for a tileset with a second
+   * position. Without one, a hit at placement 1 has no content coordinates.
+   * Changing `modelMatrix` drops it.
    */
   secondPlacement?: DesignPlacement;
 
   /** @internal How far items can move a vertex (`TileTree.volumePad`). */
   volumePad = 0;
+  /** @internal The views some item draws the tile in (`TileTree.shownViews`). */
+  shownViews(tile: Tile): number {
+    let views = 0;
+    for (const item of this.itemList) {
+      views |= item.shownIn(tile);
+    }
+    return views >>> 0;
+  }
   /** @internal An item moves vertices (`TileTree.movesVertices`). */
   movesVertices = false;
   /** What an item needs of this tileset. */
@@ -1600,9 +1631,18 @@ export class Tileset3D implements TileTree {
     }
     const frame = ++this.frame;
     this.updateVolumePad();
-    // Hidden, or no item draws it: no view selects anything (drawn tiles leave
-    // every view), and it asks for no ticks of its own.
-    const views = this.show && this.itemList.length > 0 ? allViews : [];
+    // Hidden, or no item draws it in a view: that view selects nothing (drawn
+    // tiles leave it), and it asks for no ticks of its own.
+    // Only the views some item can draw in (`SceneItem.viewMask`): a view no
+    // item shows would otherwise fetch tiles that are never drawn, and its
+    // bytes could evict tiles the shown views need.
+    let wanted = 0;
+    for (const item of this.itemList) {
+      wanted |= item.views;
+    }
+    const views = this.show
+      ? allViews.filter((view) => ((wanted >>> view.id) & 1) !== 0)
+      : [];
     if (allViews.length === 0) {
       // No view yet (e.g. its world isn't shown yet): stay active, so the
       // first selection runs as soon as a view appears.

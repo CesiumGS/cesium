@@ -2621,6 +2621,7 @@ struct SurfaceVertex
 struct CesiumVertex
 {
      positionMC : vec3<f32>,
+     designPositionMC : vec3<f32>,
      normalMC : vec3<f32>,
      texCoord0 : vec2<f32>,
      color0 : vec4<f32>,
@@ -3065,6 +3066,7 @@ fn vertexOut_0( vertexIndex_2 : u32,  item_0 : u32,  withAir_0 : bool) -> Surfac
     var position_16 : vec3<f32> = placePosition_0(records_0[_S297].placement_0, position_15, vertexIndex_2, records_0[_S297].attributes_0, tableFeature_0);
     var v_7 : CesiumVertex;
     v_7.positionMC = position_16;
+    v_7.designPositionMC = position_15;
     v_7.normalMC = normal_13;
     v_7.texCoord0 = out_4.uv;
     v_7.color0 = vertexColor_0;

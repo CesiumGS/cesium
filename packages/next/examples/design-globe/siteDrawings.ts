@@ -9,15 +9,10 @@
 // tile cache, and neither can show a tile the other doesn't.
 import { CustomShader } from "../../src/scene/CustomShader.ts";
 import type { World } from "../../src/scene/World.ts";
-import type { DesignPlacement } from "../../src/streaming/designPlacement.ts";
 import type { SceneItem } from "../../src/scene/SceneItem.ts";
 import type { Tileset3D } from "../../src/streaming/Tileset3D.ts";
 import type { Rgba } from "./colors.ts";
-import {
-  DUAL_POSITION_EXTENSION,
-  STANDOFF_SEMANTIC,
-  type DualPositionDeclaration,
-} from "./dualPosition.ts";
+import { DUAL_POSITION_EXTENSION, STANDOFF_SEMANTIC } from "./dualPosition.ts";
 import {
   morphParameter,
   rigidEndParameter,
@@ -84,6 +79,7 @@ fn ghostApart(standOff: f32) -> f32 {
  */
 const GHOST_WGSL = /* wgsl */ `${APART_WGSL}
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
+  (*material).unlit = true;
   (*material).alpha *= ghostApart(fsInput.attributes.standOff);
 }
 `;
@@ -97,6 +93,7 @@ const GHOST_HATCH_WGSL = /* wgsl */ `${APART_WGSL}
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   let apart = ghostApart(fsInput.attributes.standOff);
   let stripe = fract((fsInput.screen.x + fsInput.screen.y) / ${HATCH_PERIOD.toFixed(1)});
+  (*material).unlit = true;
   (*material).alpha = select(0.0, 0.99, stripe < ${HATCH_COVER} * apart);
 }
 `;
@@ -107,19 +104,12 @@ export const reducedTransparency = (): boolean =>
   matchMedia("(prefers-reduced-transparency: reduce)").matches;
 
 /**
- * The tileset's declared dual position (the generator's), or undefined: a
- * tileset with one placement.
+ * Whether the tileset's content has a second position (the generator's): false
+ * for a tileset with one placement. The engine reads the declaration itself;
+ * this only asks whether there is one.
  */
-export function dualPositionOf(
-  tileset: Tileset3D,
-): DualPositionDeclaration | undefined {
-  const declared = tileset.extensions[DUAL_POSITION_EXTENSION] as
-    DualPositionDeclaration | undefined;
-  return declared !== undefined &&
-    typeof declared.semantic === "string" &&
-    Number.isFinite(declared.maxDistance)
-    ? declared
-    : undefined;
+export function hasSecondPosition(tileset: Tileset3D): boolean {
+  return DUAL_POSITION_EXTENSION in tileset.extensions;
 }
 
 /**
@@ -150,7 +140,6 @@ export class SiteDrawings {
   constructor(
     private readonly world: World,
     readonly tileset: Tileset3D,
-    declaration: DualPositionDeclaration,
     private readonly look: PlacementLook,
   ) {
     this.solidShader = new CustomShader({
@@ -174,27 +163,16 @@ export class SiteDrawings {
         presence: { type: "f32", value: 1 },
       },
     });
-    tileset.dualPosition = declaration;
     // `Viewer.addTileset`'s default item.
     this.solid = tileset.items[0]!;
     this.solid.shader = this.solidShader;
     this.ghost = world.add(tileset, {
-      name: "design globe ghost",
       placement: 1,
       opacity: GHOST_OPACITY.reprojected,
       tint: tintOf(look.reprojectedGhost),
-      unlit: true,
       shader: this.ghostShader,
     });
     this.apply();
-  }
-
-  /**
-   * Where the second positions are drawn (the tileset's own placement is
-   * rigid's): a pick at the reprojected end reads its design coordinates here.
-   */
-  setReprojectedPlacement(placement: DesignPlacement): void {
-    this.tileset.secondPlacement = placement;
   }
 
   setState(next: PlacementState): void {

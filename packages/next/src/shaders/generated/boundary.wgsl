@@ -5,6 +5,7 @@
 struct CesiumVertex_std430_0
 {
     @align(16) positionMC : vec3<f32>,
+    @align(16) designPositionMC : vec3<f32>,
     @align(16) normalMC : vec3<f32>,
     @align(16) texCoord0 : vec2<f32>,
     @align(16) color0 : vec4<f32>,
@@ -91,6 +92,7 @@ struct SurfaceVertex_std430_0
 struct CesiumVertex
 {
      positionMC : vec3<f32>,
+     designPositionMC : vec3<f32>,
      normalMC : vec3<f32>,
      texCoord0 : vec2<f32>,
      color0 : vec4<f32>,

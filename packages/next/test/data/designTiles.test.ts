@@ -548,7 +548,7 @@ describe("the design globe's generated tiles", () => {
       }
     }
     const stated = rigidJson.extensions[DUAL_POSITION_EXTENSION];
-    expect(stated.semantic).toBe(REPROJECTED_SEMANTIC);
+    expect(stated.position).toBe(REPROJECTED_SEMANTIC);
     // float32 rounding of the two positions apart, a millimetre at most.
     expect(Math.abs(stated.maxDistance - farthest)).toBeLessThan(1e-2);
     // The corridor's largest rigid error, about 38 m, in US survey feet.

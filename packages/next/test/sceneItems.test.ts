@@ -22,7 +22,10 @@ import type { Tile } from "../src/streaming/Tile.ts";
 import type { Tileset3D, TilesetOptions } from "../src/streaming/Tileset3D.ts";
 import { pickInFrame } from "../src/engineering/pick.ts";
 import { ClientSnapService } from "../src/engineering/snap.ts";
+import { FeatureStyle } from "../src/scene/FeatureStyle.ts";
+import { untestedSpans } from "../src/query/drawBackend.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+const world = (w: World): World => w;
 
 const R = 6_378_137;
 const BASE = "https://tiles.test/site/";
@@ -30,7 +33,10 @@ const URL_ = `${BASE}tileset.json`;
 const SECOND = "_SECOND";
 /** How far each tile's vertices are from their second position, m. */
 const OFF = 500;
-const DUAL = { semantic: SECOND, maxDistance: OFF } as const;
+/** The tileset.json extension that gives the content its second position. */
+const DUAL_EXTENSION = {
+  CESIUM_dual_position: { position: SECOND, maxDistance: OFF },
+};
 
 /** A square slab of `half` metres, its second position `OFF` m to the north. */
 function slab(half: number, withSecond = true): GltfAsset {
@@ -61,8 +67,9 @@ function slab(half: number, withSecond = true): GltfAsset {
   };
 }
 
-const tilesetJson = (children: unknown[]) => ({
+const tilesetJson = (children: unknown[], second: boolean) => ({
   asset: { version: "1.1", gltfUpAxis: "Z" },
+  ...(second && { extensions: DUAL_EXTENSION }),
   geometricError: 1000,
   root: {
     geometricError: 1000,
@@ -98,7 +105,7 @@ describe("scene items", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  function serve(children: unknown[]) {
+  function serve(children: unknown[], second = false) {
     contents = {
       "a.gltf": () => slab(10),
       "bare.gltf": () => slab(10, false),
@@ -106,7 +113,7 @@ describe("scene items", () => {
     };
     vi.stubGlobal("fetch", async (input: string | URL) =>
       String(input) === URL_
-        ? new Response(JSON.stringify(tilesetJson(children)), {
+        ? new Response(JSON.stringify(tilesetJson(children, second)), {
             headers: { "Content-Type": "application/json" },
           })
         : new Response("not found", { status: 404 }),
@@ -137,8 +144,9 @@ describe("scene items", () => {
   async function scene(
     children: unknown[] = [tile("a.gltf", [R, 0, 50])],
     options: TilesetOptions = {},
+    second = false,
   ) {
-    serve(children);
+    serve(children, second);
     const world: World = engine.createWorld({ maxDraws: 64 });
     const tileset = await engine.addTileset(world, URL_, options);
     const view = aimed(world);
@@ -205,9 +213,9 @@ describe("scene items", () => {
   });
 
   it("loadTileset draws nothing, fetches no content and takes no ticks until world.add", async () => {
-    serve([tile("a.gltf", [R, 0, 50])]);
+    serve([tile("a.gltf", [R, 0, 50])], true);
     const loads = vi.mocked(engine.loadGltf).mock.calls.length;
-    const site = await engine.loadTileset(URL_, { dualPosition: DUAL });
+    const site = await engine.loadTileset(URL_);
     expect(site.items).toEqual([]);
     expect(() => site.world).toThrow(/world\.add/);
     const world = engine.createWorld({ maxDraws: 64 });
@@ -273,7 +281,7 @@ describe("scene items", () => {
   });
 
   it("removing the first item hands back the tile's own draws as loaded; the others keep drawing", async () => {
-    const s = await scene([tile("a.gltf", [R, 0, 50])], { dualPosition: DUAL });
+    const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
     const first = s.tileset.items[0]!;
     const second = s.world.add(s.tileset, { placement: 1, opacity: 0.5 });
     await frames(2);
@@ -314,25 +322,55 @@ describe("scene items", () => {
         }),
       ),
     ).toThrow(/globe/);
-    s.tileset.dualPosition = DUAL;
-    const item = s.tileset.items[0]!;
-    expect(() => (item.placement = Number.NaN)).toThrow(RangeError);
-    expect(item.placement).toBe(0);
-    expect(() => {
-      s.tileset.dualPosition = { semantic: SECOND, maxDistance: Infinity };
-    }).toThrow(/maxDistance/);
     s.remove();
     expect(() => s.world.add(s.tileset)).toThrow(/destroyed/);
   });
 
+  it("refuses an item's non-finite placement, and a refused add binds nothing", async () => {
+    const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
+    const item = s.tileset.items[0]!;
+    expect(() => (item.placement = Number.NaN)).toThrow(RangeError);
+    expect(item.placement).toBe(0);
+    s.remove();
+    serve([tile("a.gltf", [R, 0, 50])], true);
+    const site = await engine.loadTileset(URL_);
+    const world = engine.createWorld({ maxDraws: 8 });
+    expect(() => world.add(site, { placement: Number.NaN })).toThrow(
+      RangeError,
+    );
+    // Not bound: another world may still take it.
+    expect(() => site.world).toThrow(/world\.add/);
+    expect(world.items).toEqual([]);
+    engine.createWorld({ maxDraws: 8 }).add(site).remove();
+    engine.removeTileset(site);
+  });
+
+  it("a declaration the engine can't read is ignored, and the tileset warns", async () => {
+    serve([tile("a.gltf", [R, 0, 50])], true);
+    const text = (await (await fetch(URL_)).text()).replace(
+      /"maxDistance":\d+/,
+      '"maxDistance":-1',
+    );
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(text, { headers: { "Content-Type": "application/json" } }),
+    );
+    const site = await engine.loadTileset(URL_);
+    expect([...site.warnings].join()).toMatch(/CESIUM_dual_position/);
+    const world = engine.createWorld({ maxDraws: 8 });
+    expect(() => world.add(site, { placement: 1 })).toThrow(
+      /no second position/,
+    );
+    engine.removeTileset(site);
+  });
+
   it("draws the same loaded tile again: same mesh and transform, its own record, nothing loaded twice", async () => {
-    const s = await scene();
+    const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
     const loads = vi.mocked(engine.loadGltf).mock.calls.length;
     const bytes = s.tileset.stats.bytes;
     const before = s.first().bytes;
-    s.tileset.dualPosition = DUAL;
     const item = s.world.add(s.tileset, {
-      name: "second",
       placement: 1,
       tint: [0, 1, 1],
       opacity: 0.3,
@@ -367,8 +405,8 @@ describe("scene items", () => {
   });
 
   it("a tile that loads later gets every item's draws, and removing the tileset frees them", async () => {
-    serve([tile("a.gltf", [R, 0, 50])]);
-    const site = await engine.loadTileset(URL_, { dualPosition: DUAL });
+    serve([tile("a.gltf", [R, 0, 50])], true);
+    const site = await engine.loadTileset(URL_);
     const world = engine.createWorld({ maxDraws: 64 });
     const a = world.add(site, { placement: 0 });
     const b = world.add(site, { placement: 1 });
@@ -414,7 +452,7 @@ describe("scene items", () => {
   });
 
   it("each item is culled by its own placement's bounds", async () => {
-    const s = await scene([tile("a.gltf", [R, 0, 50])], { dualPosition: DUAL });
+    const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
     const own = s.first().placement!.draws[0]!;
     const moved = s.world.add(s.tileset, { placement: 1 });
     const still = s.world.add(s.tileset, { placement: 0 });
@@ -435,10 +473,11 @@ describe("scene items", () => {
     // position is 500 m on from there: in the view. Without growing the
     // volumes the tile isn't selected, and its copy never shows.
     contents = { "far.gltf": () => slab(10) };
-    const s = await scene([tile("far.gltf", [R, 0, -200])]);
+    const plain = await scene([tile("far.gltf", [R, 0, -200])]);
+    expect(plain.first().viewMask).toBe(0);
+    plain.remove();
+    const s = await scene([tile("far.gltf", [R, 0, -200])], {}, true);
     const t = s.first();
-    expect(t.viewMask).toBe(0);
-    s.tileset.dualPosition = DUAL;
     await frames(4);
     expect(t.viewMask & s.bit).not.toBe(0);
     expect(s.tileset.volumePad).toBe(OFF);
@@ -452,22 +491,22 @@ describe("scene items", () => {
     expect(s.tileset.volumePad).toBe(OFF);
     // The own volume, for what isn't about drawing, is as written.
     expect(t.ownVolume.sphere.radius).toBeLessThan(20);
-    // And it comes back when nothing moves.
-    s.tileset.dualPosition = undefined;
+    // A hidden item pads nothing: its last placement is no reason to look
+    // that far.
+    s.tileset.items[0]!.show = false;
     await frames(4);
     expect(s.tileset.volumePad).toBe(0);
     expect(t.volume).toBe(t.ownVolume);
-    expect(t.viewMask).toBe(0);
     s.remove();
   });
 
   it("a second position makes tiles swap whole, never as clipped placeholders", async () => {
-    const s = await scene();
-    expect(s.tileset.movesVertices).toBe(false);
-    s.tileset.dualPosition = DUAL;
-    await frames(1);
+    const plain = await scene();
+    expect(plain.tileset.movesVertices).toBe(false);
+    plain.remove();
+    const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
     expect(s.tileset.movesVertices).toBe(true);
-    s.tileset.dualPosition = undefined;
+    s.tileset.items[0]!.show = false;
     await frames(1);
     expect(s.tileset.movesVertices).toBe(false);
     s.remove();
@@ -563,9 +602,7 @@ describe("scene items", () => {
 
   it("a tile without the attribute isn't drawn by an item that moves it, and the tileset says so", async () => {
     contents = { "bare.gltf": () => slab(10, false) };
-    const s = await scene([tile("bare.gltf", [R, 0, 50])], {
-      dualPosition: DUAL,
-    });
+    const s = await scene([tile("bare.gltf", [R, 0, 50])], {}, true);
     const own = s.first().placement!.draws[0]!;
     expect(s.record(own).viewMask).toBe(0);
     expect([...s.tileset.warnings].join()).toMatch(/_SECOND/);
@@ -573,7 +610,7 @@ describe("scene items", () => {
   });
 
   it("the design placement: the tileset's at placement 0, its second at 1, none between", async () => {
-    const s = await scene([tile("a.gltf", [R, 0, 50])], { dualPosition: DUAL });
+    const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
     const rigid = { mode: "rigid" } as never;
     const reprojected = { mode: "reprojected" } as never;
     s.tileset.placement = rigid;
@@ -595,10 +632,11 @@ describe("scene items", () => {
   });
 
   it("a pick and a snap report the item they hit", async () => {
-    const s = await scene([tile("a.gltf", [R, 0, 50])], {
-      retainGeometry: true,
-      dualPosition: DUAL,
-    });
+    const s = await scene(
+      [tile("a.gltf", [R, 0, 50])],
+      { retainGeometry: true },
+      true,
+    );
     const placed = s.world.add(s.tileset, { placement: 1 });
     const twin = s.first().items!.get(placed)!.draws[0]!;
     const here = Float64Array.from([R, 0, 50 + OFF]);
@@ -652,5 +690,151 @@ describe("scene items", () => {
       10.001,
     );
     s.remove();
+  });
+
+  describe("fixes from the review", () => {
+    const live = (world: World) => {
+      const w = world as unknown as { freeSlots: number[] };
+      return world.recordCount - w.freeSlots.length;
+    };
+
+    it("a setter on a removed item does nothing, and no draw outlives removeTileset", async () => {
+      const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
+      const g = s.world.add(s.tileset, { placement: 1, opacity: 0.3 });
+      await frames(2);
+      const before = live(s.world);
+      g.remove();
+      const after = live(s.world);
+      expect(after).toBe(before - 1);
+      g.tint = [1, 0, 0];
+      g.opacity = 0.5;
+      g.shader = undefined;
+      g.viewMask = 1;
+      g.show = false;
+      g.placement = 0.5;
+      expect(g.placement).toBe(0.5);
+      expect(g.tint).toEqual([1, 0, 0]);
+      expect(live(s.world)).toBe(after);
+      // The base item too.
+      const base = s.tileset.items[0]!;
+      base.remove();
+      base.opacity = 0.5;
+      expect(live(s.world)).toBe(after);
+      engine.removeView(s.view);
+      engine.removeTileset(s.tileset);
+      expect(live(s.world)).toBe(0);
+    });
+
+    it("a full material table in world.add throws a CapacityError and leaves nothing behind", async () => {
+      serve([tile("a.gltf", [R, 0, 50])]);
+      let failed = false;
+      for (const maxMaterials of [1, 2, 3, 4]) {
+        const world = engine.createWorld({ maxDraws: 16, maxMaterials });
+        const site = await engine.addTileset(world, URL_);
+        const view = aimed(world);
+        await frames();
+        const draws = live(world);
+        const bytes = site.stats.bytes;
+        try {
+          world.add(site, { opacity: 0.5 });
+        } catch (error) {
+          failed = true;
+          expect((error as Error).name).toBe("CapacityError");
+          expect(live(world)).toBe(draws);
+          expect(site.stats.bytes).toBe(bytes);
+          expect(site.items.length).toBe(1);
+          expect((site.root.children[0] as Tile).items).toBeUndefined();
+        }
+        engine.removeView(view);
+        engine.removeTileset(site);
+        expect(live(world)).toBe(0);
+        if (failed) {
+          break;
+        }
+      }
+      expect(failed).toBe(true);
+    });
+
+    it("an item that's hidden makes a ray query's span unknown, as a hidden tileset does", async () => {
+      const s = await scene([tile("a.gltf", [R, 0, 50])]);
+      const from = [R - 20, 0, 50];
+      const to = [R + 20, 0, 50];
+      const spans = () => untestedSpans([s.tileset.root], from, to, s.bit);
+      expect(spans()).toEqual([]);
+      s.tileset.items[0]!.show = false;
+      expect(spans().length).toBeGreaterThan(0);
+      s.tileset.items[0]!.show = true;
+      expect(spans()).toEqual([]);
+      s.tileset.items[0]!.viewMask = 0;
+      expect(spans().length).toBeGreaterThan(0);
+      s.remove();
+    });
+
+    it("a view no item shows selects and fetches nothing for it", async () => {
+      contents = { "b.gltf": () => slab(10) };
+      serve([tile("a.gltf", [R, 0, 50]), tile("b.gltf", [R, 0, -5000], 10)]);
+      const world = engine.createWorld({ maxDraws: 64 });
+      const site = await engine.addTileset(world, URL_);
+      const first = aimed(world);
+      const second = engine.addView({
+        target: new OffscreenTarget(64, 48),
+        world,
+      });
+      second.camera.position.set([R + 2, 0, -5000 + 50]);
+      second.camera.direction.set([0, 0, -1]);
+      second.camera.orient(Float64Array.of(1, 0, 0));
+      second.camera.version++;
+      site.items[0]!.viewMask = engine.viewBit(first);
+      await frames();
+      const a = site.root.children[0] as Tile;
+      const b = site.root.children[1] as Tile;
+      expect(a.viewMask & engine.viewBit(first)).not.toBe(0);
+      expect(b.state === "ready").toBe(false);
+      expect(vi.mocked(engine.loadGltf).mock.calls.at(-1)?.[0]).not.toMatch(
+        /b\.gltf/,
+      );
+      // Shown in both views, the second view's tile loads.
+      site.items[0]!.viewMask = 0xffffffff;
+      await frames();
+      expect(b.state).toBe("ready");
+      engine.removeView(first);
+      engine.removeView(second);
+      engine.removeTileset(site);
+    });
+
+    it("an item's own shader, and a FeatureStyle's, replaces the tileset's for that item", async () => {
+      const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
+      const style = new FeatureStyle({ color: "color('red')" });
+      const item = s.world.add(s.tileset, {
+        placement: 1,
+        shader: style.shader,
+      });
+      await frames(2);
+      const own = s.first().placement!.draws[0]!;
+      const twin = s.first().items!.get(item)!.draws[0]!;
+      const shaderOf = (draw: DrawHandle) =>
+        (
+          world(s.world) as unknown as {
+            drawBatches: { shader?: unknown }[];
+          }
+        ).drawBatches[draw.index]!.shader;
+      expect(shaderOf(twin)).toBe(style.shader);
+      expect(shaderOf(own)).toBeUndefined();
+      item.shader = undefined;
+      expect(shaderOf(twin)).toBeUndefined();
+      s.remove();
+    });
+
+    it("a twin keeps its source's draw name", async () => {
+      const s = await scene([tile("a.gltf", [R, 0, 50])], {}, true);
+      const item = s.world.add(s.tileset, { placement: 1 });
+      await frames(2);
+      const own = s.first().placement!.draws[0]!;
+      const twin = s.first().items!.get(item)!.draws[0]!;
+      const names = (s.world as unknown as { names: (string | undefined)[] })
+        .names;
+      expect(names[twin.index]).toBe(names[own.index]);
+      s.remove();
+    });
   });
 });

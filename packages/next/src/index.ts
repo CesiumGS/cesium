@@ -135,7 +135,6 @@ export {
   type TilesetEvents,
   type TilesetOptions,
   type TilesetStats,
-  type TilesetDualPosition,
 } from "./streaming/Tileset3D.ts";
 export type {
   DesignPlacement,

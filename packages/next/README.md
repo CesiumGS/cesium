@@ -56,9 +56,10 @@ also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
   size and SHA-256. `--grids portfolio,tests` is the default; `--grids
 egm2008` adds EGM2008 (80.6 MB), and `--grids all` every grid in the
   catalog (about 0.9 GB). See "Grids" below.
-- The design globe's tilesets and exact answers under `design-globe/`,
+- The design globe's tilesets and exact answers under `design-globe-dual/`,
   written by `scripts/designTiles.mjs` from the frames data and grids above
-  (about 80 MB). They are regenerated only when an input changes.
+  (about 96 MB). An older `design-globe/` is left where it is, and can be
+  deleted. They are regenerated only when an input changes.
 
 NAIF's generic kernels are public, but what the runtime loads are packs,
 derived excerpts of them (each pack's manifest names its source file, that

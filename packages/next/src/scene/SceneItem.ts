@@ -13,7 +13,11 @@
 import { MaterialFlags } from "../render/layout.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import type { ModelPlacement } from "./gltfModel.ts";
-import { maxDisplacement, type DualPosition } from "./placement.ts";
+import {
+  checkParameterValue,
+  maxDisplacement,
+  type DualPosition,
+} from "./placement.ts";
 import type { AnchorHandle, DrawHandle, World } from "./World.ts";
 import type { DesignPlacement } from "../streaming/designPlacement.ts";
 import type { ItemDraws, Tile } from "../streaming/Tile.ts";
@@ -31,9 +35,10 @@ const WHITE = [1, 1, 1] as const;
 export interface SceneItemOptions {
   /**
    * Where each vertex is drawn, between the tile's position (0) and its second
-   * position (1; `Tileset3D.dualPosition`). Past those it extrapolates. A
-   * finite number. Default 0. Anything but 0 needs the tileset to have a
-   * second position. Setting it writes 4 bytes.
+   * position (1), when its content has one (a `CESIUM_dual_position`
+   * declaration in its tileset.json). Past those it extrapolates. A finite
+   * number. Default 0. Anything but 0 needs the tileset to have a second
+   * position. Setting it writes 4 bytes.
    */
   placement?: number;
   /**
@@ -57,33 +62,37 @@ export interface SceneItemOptions {
   /**
    * The views that draw it, a bit per view (`Engine.viewBit`). Default all. A
    * view draws an item's tile only where selection chose that tile for the
-   * view too.
+   * view too. A view that no item of the tileset shows selects and fetches
+   * nothing for it.
    */
   viewMask?: number;
-  /** Whether it is drawn at all. Default true. Its tiles stay selected. */
-  show?: boolean;
-  /** Shows its colour without lighting. Default false: lit as its content is. */
-  unlit?: boolean;
   /**
-   * Its custom shader. Default the tileset's (`TilesetOptions.customShader`
-   * or `style`), or none. Until a new shader's pipelines compile it draws
-   * with the engine's.
+   * Whether it is drawn at all. Default true. Its tiles stay selected, in the
+   * views of its `viewMask`, but its placement no longer pads their bounds.
+   */
+  show?: boolean;
+  /**
+   * Its custom shader: full control of how this item looks, the same
+   * `CustomShader` a tileset takes. A `FeatureStyle`'s shader (`style.shader`)
+   * works here too, per item. Default the tileset's (`TilesetOptions.customShader`
+   * or `style`), or none; an item's own shader replaces the tileset's, and
+   * doesn't combine with it. A shader that wants no lighting sets
+   * `material.unlit`. Until a new shader's pipelines compile it draws with the
+   * engine's.
    */
   shader?: CustomShader;
-  /** A name, returned by picks as a feature's draw name. */
-  name?: string;
 }
 
 /** @internal What an item needs of its tileset. */
 export interface SceneItemHost {
   readonly tileset: Tileset3D;
   readonly world: World;
-  /** Its second position, if it has one (`Tileset3D.dualPosition`). */
+  /** Its second position, if its content has one. */
   readonly dualPosition:
     { readonly semantic: string; readonly maxDistance: number } | undefined;
   /** Where its positions are drawn (`Tileset3D.placement`). */
   readonly designPlacement: DesignPlacement | undefined;
-  /** Where its second positions are drawn (`Tileset3D.secondPlacement`). */
+  /** Where its second positions are drawn. */
   readonly secondPlacement: DesignPlacement | undefined;
   /** Its shader as a tile is placed with it, if any. */
   readonly contentShader: CustomShader | undefined;
@@ -108,6 +117,31 @@ export interface SceneItemHost {
   removed(item: SceneItem): void;
 }
 
+/**
+ * Throws what the item's constructor would refuse, before it exists: so a
+ * refused `World.add` binds nothing. `hasSecond`: its tileset has a second
+ * position.
+ */
+export function checkItemOptions(
+  options: SceneItemOptions,
+  hasSecond: boolean,
+): void {
+  if (options.opacity !== undefined) {
+    checkOpacity(options.opacity);
+  }
+  if (options.tint !== undefined) {
+    checkTint(options.tint);
+  }
+  if (options.placement !== undefined) {
+    checkParameterValue("SceneItem.placement", options.placement);
+    if (!hasSecond && options.placement !== 0) {
+      throw new RangeError(
+        `SceneItem: placement is ${options.placement}, but its tileset has no second position; it can only be 0.`,
+      );
+    }
+  }
+}
+
 /** Throws unless `opacity` is a number from 0 to 1. */
 function checkOpacity(opacity: number): void {
   if (!(opacity >= 0 && opacity <= 1)) {
@@ -130,16 +164,15 @@ function checkTint(tint: readonly number[]): void {
  * A tileset drawn once in its world (`World.add`). See `SceneItemOptions` for
  * what each property means and costs. A property reads as it was last set. A
  * change applies to every loaded tile at once, and to each tile that loads
- * later.
+ * later. After `remove` (or the tileset's destruction) a setter keeps its
+ * value and does nothing else: the item draws nothing, and nothing brings it
+ * back; `World.add` makes a new one.
  */
 export class SceneItem {
-  /** A name, for an application's own use and a feature's draw name. */
-  readonly name: string | undefined;
   private tint_: readonly [number, number, number];
   private opacity_: number;
   private viewMask_: number;
   private show_: boolean;
-  private unlit_: boolean;
   private shader_: CustomShader | undefined;
   private removed_ = false;
   /** The placement's value; with a second position, also its parameter. */
@@ -161,13 +194,11 @@ export class SceneItem {
     if (options.tint !== undefined) {
       checkTint(options.tint);
     }
-    this.name = options.name;
     this.placementValue = 0;
     this.tint_ = options.tint ?? WHITE;
     this.opacity_ = options.opacity ?? 1;
     this.viewMask_ = (options.viewMask ?? ALL_VIEWS) >>> 0;
     this.show_ = options.show ?? true;
-    this.unlit_ = options.unlit ?? false;
     this.shader_ = options.shader;
     this.setColorWords();
     this.makeDual();
@@ -194,10 +225,16 @@ export class SceneItem {
     return this.placementValue;
   }
   set placement(value: number) {
+    if (this.removed_) {
+      // Stored and nothing more: the item draws nothing, and has no parameter.
+      checkParameterValue("SceneItem.placement", value);
+      this.placementValue = value;
+      return;
+    }
     if (this.dual === undefined) {
       if (value !== 0) {
         throw new RangeError(
-          `SceneItem: placement is ${value}, but its tileset has no second position (Tileset3D.dualPosition); it can only be 0.`,
+          `SceneItem: placement is ${value}, but its tileset has no second position ; it can only be 0.`,
         );
       }
       return;
@@ -276,19 +313,6 @@ export class SceneItem {
     this.applyMasks();
   }
 
-  /** See `SceneItemOptions.unlit`. */
-  get unlit(): boolean {
-    return this.unlit_;
-  }
-  set unlit(unlit: boolean) {
-    if (unlit === this.unlit_) {
-      return;
-    }
-    this.unlit_ = unlit;
-    this.forEachLoaded((_tile, entry) => this.applyUnlit(entry));
-    this.host.changed();
-  }
-
   /** See `SceneItemOptions.shader`. */
   get shader(): CustomShader | undefined {
     return this.shader_;
@@ -353,29 +377,29 @@ export class SceneItem {
 
   /** @internal How far it can move a vertex now, in model units. */
   get reach(): number {
-    return this.dual === undefined ? 0 : maxDisplacement(this.dual);
+    return this.moves ? maxDisplacement(this.dual!) : 0;
   }
 
-  /** @internal Whether it moves vertices at all. */
+  /**
+   * @internal Whether it moves vertices that are drawn: not while it is hidden,
+   * fully transparent or shown in no view, so a hidden item's last placement
+   * pads no bounds.
+   */
   get moves(): boolean {
-    return this.dual !== undefined;
+    return (
+      this.dual !== undefined &&
+      this.show_ &&
+      this.opacity_ > 0 &&
+      this.viewMask_ !== 0
+    );
   }
 
-  /** @internal Its tileset's second position changed. */
-  dualChanged(): void {
-    const value = this.placementValue;
-    this.releaseDual();
-    this.placementValue = 0;
-    this.makeDual();
-    if (this.dual !== undefined) {
-      this.placement = value;
-    }
-    this.forEachLoaded((tile, entry) => {
-      this.applyPlacement(entry);
-      this.applyViewMask(tile);
-      this.applyCasterMask(tile);
-    });
-    this.host.changed();
+  /**
+   * @internal The views it may draw in, even while hidden (a hidden item's
+   * tiles stay selected, as `SceneItemOptions.show` says).
+   */
+  get views(): number {
+    return this.removed_ ? 0 : this.viewMask_;
   }
 
   /** Whether it draws tiles as they load, changing nothing. */
@@ -385,7 +409,6 @@ export class SceneItem {
       this.dual === undefined &&
       this.opacity_ === 1 &&
       this.tint_ === WHITE &&
-      this.unlit_ === false &&
       this.shader_ === undefined
     );
   }
@@ -417,7 +440,7 @@ export class SceneItem {
       let skipped = false;
       try {
         placement.draws.forEach((source, i) => {
-          const draw = world.twinDraw(source, this.name);
+          const draw = world.twinDraw(source);
           if (draw === undefined) {
             skipped = true;
             return;
@@ -453,13 +476,27 @@ export class SceneItem {
     this.applyShader(entry);
     this.applyMaterials(entry);
     this.applyColor(entry);
-    this.applyUnlit(entry);
     this.applyPlacement(entry);
     this.applyViewMask(tile);
     this.applyCasterMask(tile);
     if (tile.placeholderMask !== 0 || tile.clip !== undefined) {
       this.applyPlaceholder(tile);
     }
+  }
+
+  /**
+   * @internal A refused `World.add`: frees whatever it made on `tiles` (a base
+   * item's tiles' own draws go back to hidden) and its parameter.
+   */
+  discard(tiles: Iterable<Tile>): void {
+    this.removed_ = true;
+    for (const tile of tiles) {
+      if (this.holdsBase && tile.items?.has(this)) {
+        this.releaseBase(tile);
+      }
+      this.unplace(tile);
+    }
+    this.releaseDual();
   }
 
   /** @internal Frees its draws of a tile (its content is leaving, or it is). */
@@ -500,7 +537,6 @@ export class SceneItem {
         world.setDrawShader(draw, shader);
         world.setDrawMaterial(draw, entry.materials[i]!);
         world.setColor(draw, [1, 1, 1, 1]);
-        world.setUnlit(draw, false);
       });
     }
     for (const draw of tile.placement?.draws ?? []) {
@@ -521,6 +557,12 @@ export class SceneItem {
     return this.holdsBase
       ? (tile.placement?.draws ?? [])
       : (tile.items?.get(this)?.draws ?? []);
+  }
+
+  /** @internal The views this item draws the tile in. */
+  shownIn(tile: Tile): number {
+    const mask = tile.appliedMask === -1 ? 0 : tile.appliedMask;
+    return (mask & this.shownMask(tile)) >>> 0;
   }
 
   /** @internal The tile's selected views, as its draws show them. */
@@ -559,6 +601,9 @@ export class SceneItem {
   }
 
   private applyMasks(): void {
+    if (this.removed_) {
+      return;
+    }
     for (const tile of this.host.loadedTiles) {
       this.applyViewMask(tile);
       this.applyCasterMask(tile);
@@ -610,6 +655,9 @@ export class SceneItem {
 
   /** Runs `each` for every loaded tile, its entry made where it had none. */
   private forEachLoaded(each: (tile: Tile, entry: ItemDraws) => void): void {
+    if (this.removed_) {
+      return;
+    }
     for (const tile of this.host.loadedTiles) {
       if (tile.placement === undefined) {
         continue;
@@ -637,7 +685,7 @@ export class SceneItem {
       if (dual !== undefined && !world.drawHasPosition(draw, dual.semantic)) {
         entry.denied = true;
         this.host.warn(
-          `A tile's mesh has no ${dual.semantic} attribute of 3 components for its second position, so no item that moves it draws that tile`,
+          `A tile's mesh has no ${dual.semantic} attribute of 3 components, or is instanced, so it has no second position and no item that moves it draws that tile`,
         );
         world.setPlacement(draw, undefined);
         continue;
@@ -649,12 +697,6 @@ export class SceneItem {
   private applyColor(entry: ItemDraws): void {
     for (const draw of entry.draws) {
       this.host.world.setColor(draw, this.color);
-    }
-  }
-
-  private applyUnlit(entry: ItemDraws): void {
-    for (const draw of entry.draws) {
-      this.host.world.setUnlit(draw, this.unlit_);
     }
   }
 

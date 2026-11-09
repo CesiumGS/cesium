@@ -1,6 +1,8 @@
 // The design globe's morph is the core's placement on scene items (plan 5a
 // Task 20): the solid item at the morph's parameter, the ghost at the other
 // end, the ground's opacity following.
+import { DUAL_POSITION_EXTENSION } from "../examples/design-globe/dualPosition.ts";
+import { DUAL_POSITION_EXTENSION as ENGINE_DUAL_POSITION_EXTENSION } from "../src/streaming/Tileset3D.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -10,7 +12,7 @@ import {
 import {
   GHOST_OPACITY,
   SiteDrawings,
-  dualPositionOf,
+  hasSecondPosition,
   ghostPresence,
   type PlacementLook,
 } from "../examples/design-globe/siteDrawings.ts";
@@ -52,15 +54,17 @@ describe("the design globe's placements", () => {
     expect(ghostPresence(0.5)).toBe(0);
   });
 
+  it("names the extension the engine reads", () => {
+    expect(DUAL_POSITION_EXTENSION).toBe(ENGINE_DUAL_POSITION_EXTENSION);
+  });
+
   it("reads a tileset's declared second position", () => {
     const of = (extensions: Record<string, unknown>) =>
-      dualPositionOf({ extensions } as never);
-    expect(of({})).toBeUndefined();
+      hasSecondPosition({ extensions } as never);
+    expect(of({})).toBe(false);
     expect(
-      of({
-        DESIGN_GLOBE_dual_position: { semantic: "_A", maxDistance: 3 },
-      }),
-    ).toEqual({ semantic: "_A", maxDistance: 3 });
+      of({ CESIUM_dual_position: { position: "_A", maxDistance: 3 } }),
+    ).toBe(true);
   });
 
   it("moves the items with the morph: one tileset, the solid at the parameter, the ghost at the other end", async () => {
@@ -72,6 +76,12 @@ describe("the design globe's placements", () => {
         new Response(
           JSON.stringify({
             asset: { version: "1.1" },
+            extensions: {
+              CESIUM_dual_position: {
+                position: "_DG_REPROJECTED",
+                maxDistance: 100,
+              },
+            },
             geometricError: 1,
             root: {
               geometricError: 0,
@@ -87,12 +97,7 @@ describe("the design globe's placements", () => {
       "https://t.test/tileset.json",
     );
     vi.unstubAllGlobals();
-    const site = new SiteDrawings(
-      world,
-      tileset,
-      { semantic: "_DG_REPROJECTED", maxDistance: 100 },
-      LOOK,
-    );
+    const site = new SiteDrawings(world, tileset, LOOK);
     expect(tileset.items).toEqual([site.solid, site.ghost]);
     expect(site.ghost.opacity).toBe(GHOST_OPACITY.reprojected);
     expect(site.ghost.placement).toBe(1);

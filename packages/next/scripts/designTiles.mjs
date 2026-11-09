@@ -5,7 +5,7 @@
 //    placements (plan 5a Task 20). POSITION is design units under one root
 //    transform, the rigid placement's matrix at its anchor (near the middle);
 //    `_DG_REPROJECTED` is every vertex through the frame, in that same model
-//    space, its second position (`Tileset3D.dualPosition`), so a scene item's
+//    space, its second position (`CESIUM_dual_position`), so a scene item's
 //    placement draws either (or anything between);
 //  - site-building/: the site-grid building, rigid at its footprint's
 //    centre, with no second position;
@@ -394,6 +394,12 @@ function tileContents(mesh, frame, rigid) {
           (fixed[2] - at[2]) * normal[2],
       ) / length;
   }
+  // The reprojected end keeps these rigid normals (a placed vertex moves but
+  // isn't turned: 0.197 degrees at most on the corridor). Before scene items
+  // the generator also wrote reprojected normals, from the frame's Jacobian at
+  // each tile's centre, inverse transpose; `git show b2f8c3ae0e:packages/next/
+  // scripts/designTiles.mjs` has it (`tileContents`). Plan 5f's review
+  // (CESIUM2_WEBGPU_PLAN.md section 13.26) decides where it comes back.
   return {
     drawn,
     centre,
@@ -635,7 +641,7 @@ function writeTileset({
         }),
         ...(dual && {
           [DUAL_POSITION_EXTENSION]: {
-            semantic: REPROJECTED_SEMANTIC,
+            position: REPROJECTED_SEMANTIC,
             maxDistance,
           },
         }),
