@@ -91,6 +91,7 @@ describe("createPostStage", () => {
     ["no label", { label: "" }, "label", /readout/],
     ["an unknown read", { reads: ["normal" as never] }, "reads", /"normal"/],
     ["a gain that isn't finite", { shadowGain: Infinity }, "shadowGain", /./],
+    ["a gain outside `exposed`", { shadowGain: 8 }, "shadowGain", /exposed/],
     [
       "a texture uniform",
       { uniforms: { map: { type: "texture2d", value: "a.png" } as never } },
@@ -284,7 +285,7 @@ describe("the chain's order", () => {
     expect(observerShadowGain(settings)).toBe(1);
     const a = stage("a", "exposed", { shadowGain: 2 });
     const b = stage("b", "exposed", { shadowGain: 3 });
-    const c = stage("c", "scene", { shadowGain: 5 });
+    const c = stage("c", "scene");
     const list = { ...settings, stages: [a, b, c] };
     expect(observerShadowGain(list)).toBe(6);
     b.enabled = false;

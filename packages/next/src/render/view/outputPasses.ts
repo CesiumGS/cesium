@@ -552,7 +552,7 @@ export function presentPasses(
       params.setFloat32(28, eye ? state.rods : 0, true);
       params.setFloat32(32, "eye" in e ? (e.compensation ?? 0) : 0, true);
       device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
-      // Pooled textures are stable from frame to frame, so the bind group
+      // Pooled textures are stable from tick to tick, so the bind group
       // is rebuilt only when the pool hands this view a different one.
       const source = get(split ? exposed!.latest() : scene!.latest());
       const shown = get(displayResolved);

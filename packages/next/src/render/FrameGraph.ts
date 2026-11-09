@@ -142,14 +142,14 @@ export class FrameGraph {
     }
   }
 
-  /** The texture behind a handle, once resolved in this frame's execution. */
+  /** The texture behind a handle, once resolved in this tick's execution. */
   texture(handle: TextureHandle): GPUTexture | undefined {
     return this.resources[handle.id]!.texture;
   }
 
   /**
    * A view of one mip level of a transient texture, acquiring it if this is
-   * its first use in this frame's execution, as resolving a handle does.
+   * its first use in this tick's execution, as resolving a handle does.
    */
   mipView(handle: TextureHandle, level: number): GPUTextureView {
     this.resolve(handle);

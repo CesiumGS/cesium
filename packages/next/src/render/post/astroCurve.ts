@@ -25,9 +25,11 @@ export function astroCurve(y: number, strength: number): number {
   );
 }
 
-const SHADER = `fn postStage(input: PostInput) -> vec4<f32> {
+const shader = (
+  strength: number,
+) => `fn postStage(input: PostInput) -> vec4<f32> {
   let c = postColorAt(input.pixel);
-  let s = uniforms.strength;
+  const s: f32 = ${strength};
   let y = dot(c.rgb, vec3<f32>(0.2126, 0.7152, 0.0722));
   let q = max(8.0 * s, 0.001);
   let curved = asinh(q * max(y - 0.004 * s, 0.0)) / asinh(q);
@@ -40,8 +42,8 @@ const SHADER = `fn postStage(input: PostInput) -> vec4<f32> {
 /**
  * An astrophoto's tone curve, for `view.observer.stages`: lifts what's faint and
  * adds color, over the whole image, after the meter. It's a look, and says so: it
- * changes the picture, not the light. `strength` (default 1) stays as made: make
- * another stage for another, so its `shadowGain` holds.
+ * changes the picture, not the light. `strength` (default 1) is fixed in its
+ * shader: make another stage for another, so its `shadowGain` holds.
  */
 export function astrophotoCurveStage(
   options: { strength?: number } = {},
@@ -61,8 +63,7 @@ export function astrophotoCurveStage(
     slot: "exposed",
     kind: "look",
     label: "Astrophoto curve (a look)",
-    uniforms: { strength: { type: "f32", value: strength } },
     shadowGain: q / Math.asinh(q),
-    shader: SHADER,
+    shader: shader(strength),
   });
 }

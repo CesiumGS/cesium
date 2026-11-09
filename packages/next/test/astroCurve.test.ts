@@ -45,6 +45,14 @@ describe("astroCurve", () => {
 });
 
 describe("astrophotoCurveStage", () => {
+  it("is a simple user of the interface: one function, no uniform to go stale", () => {
+    const stage = astrophotoCurveStage();
+    expect(stage.passes.length).toBe(1);
+    expect(stage.textures.map((t) => t.name)).toEqual(["output"]);
+    expect(stage.uniformLayout.fields).toEqual([]);
+    expect(() => stage.setUniform("strength", 4)).toThrow(/uniforms\.strength/);
+  });
+
   it("says what it is", () => {
     const stage = astrophotoCurveStage();
     expect(stage.kind).toBe("look");
@@ -69,10 +77,10 @@ describe("astrophotoCurveStage", () => {
   });
 
   it("defaults to full strength, and refuses one that makes no sense", () => {
-    expect(astrophotoCurveStage().uniformData.getFloat32(0, true)).toBe(1);
-    expect(
-      astrophotoCurveStage({ strength: 0.5 }).uniformData.getFloat32(0, true),
-    ).toBe(0.5);
+    const code = (options?: { strength: number }) =>
+      astrophotoCurveStage(options).passes[0]!.module.code;
+    expect(code()).toContain("const s: f32 = 1;");
+    expect(code({ strength: 0.5 })).toContain("const s: f32 = 0.5;");
     for (const strength of [-1, Number.NaN, Infinity]) {
       expect(() => astrophotoCurveStage({ strength })).toThrow(PostStageError);
     }

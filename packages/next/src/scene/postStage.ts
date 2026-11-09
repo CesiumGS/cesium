@@ -218,8 +218,8 @@ export interface PostStageOptions {
    */
   perView?: (info: PostStageViewInfo, values: PostStageViewValues) => void;
   /**
-   * The largest slope of its curve near black, for an `exposed` stage: how far
-   * it can lift what's faint. Default 1.
+   * The largest slope of its curve near black: how far it can lift what's
+   * faint. Only an `exposed` stage can have one. Default 1.
    */
   shadowGain?: number;
 }
@@ -341,6 +341,12 @@ export class PostStage {
       throw refuse(
         "shadowGain",
         `${shadowGain} isn't a positive, finite number.`,
+      );
+    }
+    if (shadowGain !== 1 && slot !== "exposed") {
+      throw refuse(
+        "shadowGain",
+        "it says how far an `exposed` stage lifts what's faint, and this stage's slot isn't that.",
       );
     }
     for (const [key, declaration] of Object.entries(uniforms)) {
