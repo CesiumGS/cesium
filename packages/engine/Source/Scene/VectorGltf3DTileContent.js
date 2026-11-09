@@ -163,6 +163,10 @@ class VectorGltf3DTileContent {
   }
 
   get batchTableByteLength() {
+    // GeoJSON content has no model; its properties stay in the parsed JSON.
+    if (!defined(this._model)) {
+      return 0;
+    }
     // @ts-expect-error Requires Model conversion to ES6 class.
     const statistics = this._model.statistics;
     return (

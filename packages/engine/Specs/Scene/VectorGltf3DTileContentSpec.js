@@ -424,6 +424,14 @@ describe("Scene/VectorGltf3DTileContent", () => {
       content.destroy();
     });
 
+    it("batchTableByteLength", () => {
+      content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
+
+      expect(content.batchTableByteLength).toBe(0);
+
+      content.destroy();
+    });
+
     it("exposes GeoJSON properties on features", () => {
       content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
 
