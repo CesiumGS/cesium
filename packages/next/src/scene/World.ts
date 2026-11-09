@@ -13,11 +13,9 @@ import {
   INSTANCE_COUNT_WORD,
   INSTANCE_FIRST_WORD,
   MATERIAL_SIZE,
-  PROPERTY_TEXTURE_BINDING,
   DRAW_ITEM_SIZE,
   RECORD_WORDS,
   TRANSFORM_WORDS,
-  TRANSFORM_WORD,
   FEATURE_ID_WORD,
   FLAGS_WORD,
   CASTER_MASK_WORD,
@@ -28,8 +26,6 @@ import {
   MAX_ANCHORS,
   MAX_TERRAIN_CLIPS,
   MAX_TERRAIN_CLIP_BLOCKS,
-  MATERIAL_WORDS,
-  MaterialFlags,
   RecordFlags,
 } from "../render/layout.ts";
 import type { Body } from "./Body.ts";
@@ -90,7 +86,6 @@ import {
   removeAnchor,
   frameOf,
 } from "./world/transforms.ts";
-import { uploadTables } from "./world/featureTables.ts";
 import { flushUploads } from "./world/uploads.ts";
 import {
   addMesh,
@@ -126,11 +121,9 @@ import {
 } from "./world/placements.ts";
 import {
   createSplats,
-  pointGroup,
   setPointCuller,
   createPointCuller,
   drawSplats,
-  writePointParams,
 } from "./world/points.ts";
 import {
   addDraw,
@@ -150,8 +143,17 @@ import {
   createDrawBindGroup,
   rebind,
   setImageryArray,
-  bindSlab,
 } from "../render/world/tables.ts";
+import {
+  prepareFrame,
+  shadowBundle,
+  heightBundle,
+  prepassBundle,
+  depthBundle,
+  encodeCull,
+  translucentRange,
+  encodeTranslucent,
+} from "../render/world/bundles.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -171,7 +173,8 @@ export class World {
   readonly maxTransforms: number;
   readonly maxInstances: number;
   readonly maxMaterials: number;
-  private _submission: SubmissionMode = "indirect";
+  /** @internal */
+  _submission: SubmissionMode = "indirect";
   /** Geometry, in slabs of one storage binding each (scene/Slabs.ts). */
   readonly slabs: Slabs;
   // Per-slot CPU tables (records, transforms, instances, materials) start
@@ -361,8 +364,8 @@ export class World {
    * set, shader and the shader's texture version.
    */
   readonly shaderGroups = new Map<string, GPUBindGroup>();
-  /** `ShaderBindings.generation` the bundles were recorded at. */
-  private bindingsGeneration = 0;
+  /** @internal `ShaderBindings.generation` the bundles were recorded at. */
+  bindingsGeneration = 0;
   /** @internal */
   readonly freeMaterials: number[] = [];
   /** @internal Shared materials: slot by record key, key and references by slot. */
@@ -481,22 +484,28 @@ export class World {
   /** @internal */
   bundle?: GPURenderBundle;
   /**
-   * A batch gained its first shown record or lost its last (`Batch.shown`):
+   * @internal A batch gained its first shown record or lost its last (`Batch.shown`):
    * the bundles are recorded again, without rewriting the batch table.
    */
-  private batchesShownChanged = false;
+  batchesShownChanged = false;
   /** @internal Draws of blended surfaces (`translucentRange`), until draws change. */
   translucentDraws?: number[];
-  /** The shadow casters' bundle, and the draw bundle it was recorded with. */
-  private casters?: GPURenderBundle;
-  private castersFor?: GPURenderBundle;
-  /** The depth and normal prepass's bundle, likewise. */
-  private prepassBundle_?: GPURenderBundle;
-  private depthBundle_?: GPURenderBundle;
-  private depthFor?: GPURenderBundle;
-  private prepassFor?: GPURenderBundle;
-  private readonly cullParamsData = new Uint32Array(4);
-  private readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
+  /** @internal The shadow casters' bundle, and the draw bundle it was recorded with. */
+  casters?: GPURenderBundle;
+  /** @internal */
+  castersFor?: GPURenderBundle;
+  /** @internal The depth and normal prepass's bundle, likewise. */
+  prepassBundle_?: GPURenderBundle;
+  /** @internal */
+  depthBundle_?: GPURenderBundle;
+  /** @internal */
+  depthFor?: GPURenderBundle;
+  /** @internal */
+  prepassFor?: GPURenderBundle;
+  /** @internal */
+  readonly cullParamsData = new Uint32Array(4);
+  /** @internal */
+  readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
 
   /** Replaced as the tables grow (`tableGeneration`). */
   recordBuffer: GPUBuffer;
@@ -1824,41 +1833,7 @@ export class World {
    * bundle; table changes upload in the first view's cull pass.
    */
   prepareFrame(): GPURenderBundle {
-    const queue = this.ctx.device.queue;
-    this.flushUploads();
-    resolveTransforms(this);
-    this.uploadsPending = true;
-    if (this.materialsDirty) {
-      queue.writeBuffer(
-        this.materialBuffer,
-        0,
-        this.materialsF32.buffer,
-        0,
-        this.materialCount * MATERIAL_SIZE,
-      );
-      this.materialsDirty = false;
-    }
-    // A custom shader's texture loaded or changed: its groups are new.
-    const generation = this.ctx.shaderBindings.generation;
-    if (generation !== this.bindingsGeneration) {
-      this.bindingsGeneration = generation;
-      this.bundle = undefined;
-      this.translucentDraws = undefined;
-    }
-    if (!this.bundle) {
-      this.writeBatches();
-      this.bundle = this.recordBundle();
-    } else if (this.batchesShownChanged) {
-      this.bundle = this.recordBundle();
-    }
-    this.batchesShownChanged = false;
-    this.cullParamsData[0] = this.drawCount;
-    this.cullParamsData[1] = this.batchList.length;
-    this.cullParamsData[2] = this.instanceHighWater;
-    // Instance items follow the draw rows (cull.slang `firstInstanceItem`).
-    this.cullParamsData[3] = this.drawRows;
-    queue.writeBuffer(this.cullParams, 0, this.cullParamsData);
-    return this.bundle;
+    return prepareFrame(this);
   }
 
   /**
@@ -1866,11 +1841,7 @@ export class World {
    * cull for the shadow map's cascade), current with `prepareFrame`'s.
    */
   shadowBundle(): GPURenderBundle {
-    if (!this.casters || this.castersFor !== this.bundle) {
-      this.casters = this.recordBundle("shadow");
-      this.castersFor = this.bundle;
-    }
-    return this.casters;
+    return shadowBundle(this);
   }
 
   /**
@@ -1878,25 +1849,19 @@ export class World {
    * casters, without depth bias; Engine `addHeightCapture`).
    */
   heightBundle(): GPURenderBundle {
-    if (!this.heights || this.heightsFor !== this.bundle) {
-      this.heights = this.recordBundle("height");
-      this.heightsFor = this.bundle;
-    }
-    return this.heights;
+    return heightBundle(this);
   }
-  private heights: GPURenderBundle | undefined;
-  private heightsFor: GPURenderBundle | undefined;
+  /** @internal */
+  heights: GPURenderBundle | undefined;
+  /** @internal */
+  heightsFor: GPURenderBundle | undefined;
 
   /**
    * The bundle drawing this world into the depth and normal prepass (after
    * the view's cull), current with `prepareFrame`'s.
    */
   prepassBundle(): GPURenderBundle {
-    if (!this.prepassBundle_ || this.prepassFor !== this.bundle) {
-      this.prepassBundle_ = this.recordBundle("prepass");
-      this.prepassFor = this.bundle;
-    }
-    return this.prepassBundle_;
+    return prepassBundle(this);
   }
 
   /**
@@ -1905,11 +1870,7 @@ export class World {
    * `prepareFrame`'s.
    */
   depthBundle(): GPURenderBundle {
-    if (!this.depthBundle_ || this.depthFor !== this.bundle) {
-      this.depthBundle_ = this.recordBundle("depth");
-      this.depthFor = this.bundle;
-    }
-    return this.depthBundle_;
+    return depthBundle(this);
   }
 
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
@@ -1924,64 +1885,7 @@ export class World {
     points = true,
     pixels = 0,
   ): void {
-    const { pipelines, currentViewBindGroup } = this.ctx;
-    // The batches' instance counts start at zero (cull.slang `append`
-    // counts into them); the rest of the arguments `writeDrawArgs` writes.
-    this.drawArguments.clear(encoder, this.batchList.length);
-    if (points && this.pointDraws.size) {
-      encoder.clearBuffer(this.pointCounts);
-      if ([...this.pointDraws.values()].some((d) => d.tiny > 0)) {
-        if (pixels > this.splats.pixels) {
-          // Larger buffers: every point draw's group binds them.
-          this.splats.depth.destroy();
-          this.splats.color.destroy();
-          this.splats.feature.destroy();
-          this.splats = createSplats(this, pixels);
-          for (const draw of this.pointDraws.values()) {
-            draw.group = pointGroup(this, draw);
-          }
-        }
-        encoder.clearBuffer(this.splats.depth, 0, Math.max(4, pixels * 4));
-      }
-    }
-    this.cullPassDesc.timestampWrites = timestampWrites;
-    const pass = encoder.beginComputePass(this.cullPassDesc);
-    // Once per frame, before any view's culling reads the tables.
-    uploadTables(this, pass);
-    pass.setBindGroup(0, currentViewBindGroup);
-    pass.setBindGroup(1, this.cullBindGroup);
-    pass.setPipeline(pipelines.cullRecords);
-    pass.dispatchWorkgroups(Math.ceil(Math.max(this.drawCount, 1) / 64));
-    if (this.instanceHighWater > 0) {
-      pass.setPipeline(pipelines.cullInstances);
-      // Two dimensions past 65,535 groups (`cullInstances` reads them).
-      const groups = Math.ceil(this.instanceHighWater / 64);
-      const x = Math.min(groups, 65535);
-      pass.dispatchWorkgroups(x, Math.ceil(groups / x));
-    }
-    pass.setPipeline(pipelines.writeDrawArgs);
-    pass.dispatchWorkgroups(Math.ceil(Math.max(this.batchList.length, 1) / 64));
-    // Point draws: their points in view into their lists (or splatted),
-    // then their arguments (over `writeDrawArgs`'), with the narrower
-    // world group their kernels read.
-    if (points && this.pointDraws.size) {
-      pass.setBindGroup(1, this.pointCullBindGroup);
-    }
-    for (const draw of points ? this.pointDraws.values() : []) {
-      pass.setBindGroup(2, draw.group);
-      const groups = Math.ceil(Math.max(1, draw.mesh.points.capacity) / 64);
-      const x = Math.min(groups, 65535);
-      const y = Math.ceil(groups / x);
-      if (draw.culler) {
-        draw.culler.encode(pass, x, y);
-        continue;
-      }
-      pass.setPipeline(pipelines.cullPoints);
-      pass.dispatchWorkgroups(x, y);
-      pass.setPipeline(pipelines.writePointArgs);
-      pass.dispatchWorkgroups(1);
-    }
-    pass.end();
+    encodeCull(this, encoder, timestampWrites, points, pixels);
   }
 
   /**
@@ -2022,265 +1926,12 @@ export class World {
     }
   }
 
-  /** Assigns each batch its slice of the item list and uploads the batch table. */
-  private writeBatches(): void {
-    const table = new Uint32Array(Math.max(1, this.batchList.length) * 4);
-    let items = 0;
-    for (const batch of this.batchList) {
-      items += batch.items;
-    }
-    const direct = new Uint32Array(Math.max(1, items));
-    const fill = new Uint32Array(this.batchList.length);
-    let base = 0;
-    for (const batch of this.batchList) {
-      batch.itemBase = base;
-      const o = batch.index * 4;
-      table[o] = base;
-      table[o + 1] = batch.mesh.indexCount;
-      table[o + 2] = batch.mesh.firstIndex;
-      base += batch.items;
-    }
-    for (let i = 0; i < this.drawCount; i++) {
-      const batch = this.drawBatches[i];
-      if (!batch) {
-        continue;
-      }
-      const o = i * RECORD_WORDS;
-      const count = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
-      if (count === 0) {
-        direct[batch.itemBase + fill[batch.index]!++] = i;
-      } else {
-        const first = this.drawRows + this.recordsU32[o + INSTANCE_FIRST_WORD]!;
-        for (let k = 0; k < count; k++) {
-          direct[batch.itemBase + fill[batch.index]!++] = first + k;
-        }
-      }
-    }
-    const queue = this.ctx.device.queue;
-    queue.writeBuffer(this.batchBuffer, 0, table);
-    this.drawArguments.writeDirect(direct);
-    for (const [record, draw] of this.pointDraws) {
-      writePointParams(this, draw, record);
-    }
-  }
-
-  /**
-   * One draw per batch, grouped by cull mode and texture set: the opaque
-   * pass's, or the sun's shadow casters' (depth only; no lines).
-   */
-  private recordBundle(
-    kind: "opaque" | "shadow" | "height" | "prepass" | "depth" = "opaque",
-  ): GPURenderBundle {
-    const { device, targets, currentViewBindGroup } = this.ctx;
-    // Height captures draw the casters, with their own pipelines.
-    const height = kind === "height";
-    const shadow = kind === "shadow" || height;
-    const prepass = kind === "prepass";
-    const depth = kind === "depth";
-    const encoder = device.createRenderBundleEncoder(
-      shadow || prepass
-        ? {
-            label: `world.${kind}Bundle`,
-            colorFormats: prepass ? ["rgba16float"] : [],
-            depthStencilFormat: "depth32float",
-            sampleCount: 1,
-          }
-        : {
-            label: depth ? "world.depthBundle" : "world.bundle",
-            colorFormats: targets.colorFormats,
-            depthStencilFormat: targets.depthFormat,
-            sampleCount: targets.sampleCount,
-          },
-    );
-    encoder.setBindGroup(
-      0,
-      shadow ? this.ctx.shadowViewBindGroup : currentViewBindGroup,
-    );
-    // Group 1 and the index buffer are the batch's slab's (set below).
-    // Casters: depth, the fragment stage clipping placeholders, and where
-    // a material cuts out (alpha mask) its cutoff too.
-    // Blended surfaces draw their opaque parts here, cut out where they're
-    // translucent (opaque.wgsl `cutOut`); the rest in the translucent
-    // passes (`encodeTranslucent`). Glass lets the sun through.
-    const masked = (batch: Batch) =>
-      (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
-        (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
-      0;
-    const keyOf = (batch: Batch): SurfaceKey =>
-      prepass
-        ? batch.doubleSided
-          ? "prepassDoubleSided"
-          : "prepass"
-        : depth
-          ? masked(batch)
-            ? batch.doubleSided
-              ? "depthMaskedDoubleSided"
-              : "depthMasked"
-            : batch.doubleSided
-              ? "depthDoubleSided"
-              : "depth"
-          : height
-            ? masked(batch)
-              ? batch.doubleSided
-                ? "heightMaskedDoubleSided"
-                : "heightMasked"
-              : batch.doubleSided
-                ? "heightDoubleSided"
-                : "height"
-            : shadow
-              ? masked(batch)
-                ? batch.doubleSided
-                  ? "shadowMaskedDoubleSided"
-                  : "shadowMasked"
-                : batch.doubleSided
-                  ? "shadowDoubleSided"
-                  : "shadow"
-              : batch.points
-                ? "opaquePoints"
-                : batch.mesh.topology === "line-list"
-                  ? "opaqueLines"
-                  : batch.instanced
-                    ? batch.doubleSided
-                      ? "opaqueInstancedDoubleSided"
-                      : "opaqueInstanced"
-                    : batch.doubleSided
-                      ? "opaqueDoubleSided"
-                      : "opaque";
-    const rank = (batch: Batch) =>
-      batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
-    // Only batches some view draws (`Batch.shown`), and for shadows those
-    // some view's cascades alone do: the cache's resident tiles that no
-    // view selected cost nothing here.
-    const order = this.batchList
-      .filter(
-        (batch) =>
-          (batch.shown > 0 || (kind === "shadow" && batch.casters > 0)) &&
-          // Only the translucent passes draw it (`encodeTranslucent`); lines
-          // can't blend, and stay here.
-          (batch.mesh.topology === "line-list" ||
-            (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
-              MaterialFlags.blendedOnly) ===
-              0),
-      )
-      .sort(
-        (a, b) =>
-          rank(a) - rank(b) ||
-          (a.shader?.id ?? 0) - (b.shader?.id ?? 0) ||
-          a.textureSet - b.textureSet ||
-          a.mesh.slab - b.mesh.slab,
-      );
-    const direct = this._submission === "direct";
-    let pipeline: GPURenderPipeline | undefined;
-    let group: GPUBindGroup | undefined;
-    let slab = -1;
-    for (const batch of order) {
-      if (
-        batch.items === 0 ||
-        this.brokenTextureSets.has(batch.textureSet) ||
-        ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
-        // Point sets and instances shade outside the opaque pass's depth
-        // prepass; point sets aren't ground either (their strips are the
-        // opaque pass's alone).
-        (depth && (batch.points || batch.instanced)) ||
-        (height && batch.points) ||
-        // Billboards face the camera: no shadows, no ambient occlusion.
-        ((shadow || prepass) && batch.billboard)
-      ) {
-        continue;
-      }
-      if (batch.mesh.slab !== slab) {
-        slab = batch.mesh.slab;
-        bindSlab(this, encoder, slab);
-      }
-      const key = keyOf(batch);
-      const wanted = this.pipeline(batch, key);
-      if (wanted !== pipeline) {
-        pipeline = wanted;
-        encoder.setPipeline(pipeline);
-      }
-      const wantedGroup = this.setGroup(batch, wanted, key);
-      if (wantedGroup !== group) {
-        group = wantedGroup;
-        encoder.setBindGroup(2, group);
-      }
-      this.drawArguments.drawBatch(encoder, batch, direct);
-    }
-    return encoder.finish();
-  }
-
-  /**
-   * A batch's pipeline for a pass: its custom shader's once made, else the
-   * engine's (then recorded again when it is ready).
-   */
-  private pipeline(batch: Batch, key: SurfaceKey): GPURenderPipeline {
-    return (
-      (batch.shader &&
-        this.ctx.shaders.pipeline(batch.shader, key, this.shaderReady)) ??
-      this.ctx.pipelines[key]
-    );
-  }
-
-  /**
-   * A batch's group 2: its texture set's, or with its custom shader's
-   * pipeline (not the engine's stand-in) and uniforms, beside the shader's.
-   */
-  private setGroup(
-    batch: Batch,
-    pipeline: GPURenderPipeline,
-    key: SurfaceKey,
-  ): GPUBindGroup {
-    const shader = batch.shader;
-    const plain = this.textureSets[batch.textureSet]!;
-    if (!shader || pipeline === this.ctx.pipelines[key]) {
-      return plain;
-    }
-    const layout = this.ctx.pipelines.setLayout(shader);
-    if (!layout) {
-      return plain;
-    }
-    const own = this.ctx.shaderBindings.entries(shader);
-    const groupKey = `${batch.textureSet}|${shader.id}|${own.version}`;
-    let group = this.shaderGroups.get(groupKey);
-    if (!group) {
-      group = this.ctx.device.createBindGroup({
-        label: `world.textureSet ${shader.label}`,
-        layout,
-        entries: [
-          ...this.textureSetEntries[batch.textureSet]!.filter(
-            (e) =>
-              shader.readsPropertyTextures ||
-              e.binding < PROPERTY_TEXTURE_BINDING,
-          ),
-          ...own.entries,
-        ],
-      });
-      // Older versions of this shader's group are unused now.
-      for (const k of this.shaderGroups.keys()) {
-        if (k.startsWith(`${batch.textureSet}|${shader.id}|`)) {
-          this.shaderGroups.delete(k);
-        }
-      }
-      this.shaderGroups.set(groupKey, group);
-    }
-    return group;
-  }
-
-  /** A custom shader's pipeline is ready: draw with it from now on. */
-  private readonly shaderReady = () => {
+  /** @internal A custom shader's pipeline is ready: draw with it from now on. */
+  readonly shaderReady = () => {
     this.bundle = undefined;
     this.version++;
     this.changedViews = ALL_VIEWS;
   };
-
-  /** A batch of blended triangles (alpha mode "BLEND"); lines stay opaque. */
-  private translucent(batch: Batch): boolean {
-    return (
-      batch.mesh.topology !== "line-list" &&
-      (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
-        MaterialFlags.alphaBlend) !==
-        0
-    );
-  }
 
   /**
    * The nearest and farthest a blended surface may be from `eye` (the
@@ -2295,84 +1946,7 @@ export class World {
     eye: ArrayLike<number>,
     viewBit: number = ALL_VIEWS,
   ): { near: number; far: number } | undefined {
-    if (!this.translucentDraws) {
-      this.translucentDraws = [];
-      for (let i = 0; i < this.drawCount; i++) {
-        const batch = this.drawBatches[i];
-        if (batch && this.translucent(batch)) {
-          this.translucentDraws.push(i);
-        }
-      }
-    }
-    if (this.translucentDraws.length === 0) {
-      return undefined;
-    }
-    const u = this.recordsU32;
-    const f = this.recordsF32;
-    const world = this.transformWorld;
-    let near = Infinity;
-    let far = 0;
-    const sphere = (x: number, y: number, z: number, radius: number) => {
-      const d = Math.hypot(x - eye[0]!, y - eye[1]!, z - eye[2]!);
-      near = Math.min(near, d - radius);
-      far = Math.max(far, d + radius);
-    };
-    for (const i of this.translucentDraws) {
-      const o = i * RECORD_WORDS;
-      const t = u[o + TRANSFORM_WORD]!;
-      if (
-        u[o + FLAGS_WORD]! & RecordFlags.hidden ||
-        (u[o + VIEW_MASK_WORD]! & viewBit) === 0 ||
-        this.transformHiddenWorld[t] === 1
-      ) {
-        continue;
-      }
-      const w = t * 16;
-      const scale = this.transforms.f32[t * TRANSFORM_WORDS + 3]!;
-      const local = [f[o]!, f[o + 1]!, f[o + 2]!];
-      const point = (p: readonly number[], k: number) =>
-        world[w + k]! * p[0]! +
-        world[w + 4 + k]! * p[1]! +
-        world[w + 8 + k]! * p[2]! +
-        world[w + 12 + k]!;
-      const count = u[o + INSTANCE_COUNT_WORD]!;
-      if (count === 0) {
-        sphere(
-          point(local, 0),
-          point(local, 1),
-          point(local, 2),
-          f[o + 3]! * scale,
-        );
-        continue;
-      }
-      const first = u[o + INSTANCE_FIRST_WORD]!;
-      const it = this.instances.f32;
-      for (let j = first; j < first + count; j++) {
-        const a = j * INSTANCE_WORDS;
-        if (this.instances.u32[a + 14]! & 1) {
-          continue;
-        }
-        const p = [0, 1, 2].map(
-          (row) =>
-            it[a + row * 4]! * local[0]! +
-            it[a + row * 4 + 1]! * local[1]! +
-            it[a + row * 4 + 2]! * local[2]! +
-            it[a + row * 4 + 3]!,
-        );
-        const instanceScale = Math.max(
-          Math.hypot(it[a]!, it[a + 4]!, it[a + 8]!),
-          Math.hypot(it[a + 1]!, it[a + 5]!, it[a + 9]!),
-          Math.hypot(it[a + 2]!, it[a + 6]!, it[a + 10]!),
-        );
-        sphere(
-          point(p, 0),
-          point(p, 1),
-          point(p, 2),
-          f[o + 3]! * scale * instanceScale,
-        );
-      }
-    }
-    return far > 0 ? { near: Math.max(near, 0), far } : undefined;
+    return translucentRange(this, eye, viewBit);
   }
 
   /**
@@ -2386,37 +1960,7 @@ export class World {
     keyOf: (doubleSided: boolean) => SurfaceKey,
     group: GPUBindGroup,
   ): void {
-    pass.setBindGroup(0, this.ctx.currentViewBindGroup);
-    pass.setBindGroup(3, group);
-    const direct = this._submission === "direct";
-    let current: GPURenderPipeline | undefined;
-    let bound: GPUBindGroup | undefined;
-    let slab = -1;
-    for (const batch of this.batchList) {
-      if (
-        batch.shown === 0 ||
-        !this.translucent(batch) ||
-        this.brokenTextureSets.has(batch.textureSet)
-      ) {
-        continue;
-      }
-      if (batch.mesh.slab !== slab) {
-        slab = batch.mesh.slab;
-        bindSlab(this, pass, slab);
-      }
-      const key = keyOf(batch.doubleSided);
-      const wanted = this.pipeline(batch, key);
-      if (wanted !== current) {
-        current = wanted;
-        pass.setPipeline(wanted);
-      }
-      const wantedGroup = this.setGroup(batch, wanted, key);
-      if (wantedGroup !== bound) {
-        bound = wantedGroup;
-        pass.setBindGroup(2, bound);
-      }
-      this.drawArguments.drawBatch(pass, batch, direct);
-    }
+    encodeTranslucent(this, pass, keyOf, group);
   }
 
   /** The vertex arena buffer holding `mesh` (its slab's, scene/Slabs.ts). */

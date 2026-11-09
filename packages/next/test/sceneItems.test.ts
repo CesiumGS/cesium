@@ -1,6 +1,7 @@
 // Scene items: a tileset drawn more than once in its world. The same loaded
 // tiles, one selection, one cache, one set of bounds. Through the real tileset
 // on the fake engine (test/fakeGpu.ts).
+import { recordBundle } from "../src/render/world/bundles.ts";
 import { rayJobs } from "../src/scene/world/rays.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
@@ -557,16 +558,21 @@ describe("scene items", () => {
     const twin = s.first().items!.get(item)!.draws[0]!;
     const internals = s.world as unknown as {
       drawBatches: Array<{ material: number; shown: number } | undefined>;
-      recordBundle(kind: string): GPURenderBundle;
       drawArguments: { drawBatch(...args: unknown[]): void };
     };
     expect(internals.drawBatches[twin.index]!.shown).toBe(1);
     // A blended surface all the same: the view runs its translucent passes.
     expect(s.world.translucentRange([R, 0, 0], s.bit)).toBeDefined();
     const spy = vi.spyOn(internals.drawArguments, "drawBatch");
-    for (const kind of ["opaque", "shadow", "prepass", "depth", "height"]) {
+    for (const kind of [
+      "opaque",
+      "shadow",
+      "prepass",
+      "depth",
+      "height",
+    ] as const) {
       spy.mockClear();
-      internals.recordBundle(kind);
+      recordBundle(s.world, kind);
       // The tile's own draw only.
       expect(spy.mock.calls.length, kind).toBe(1);
     }
