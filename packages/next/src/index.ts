@@ -316,6 +316,7 @@ export {
   type RayBackend,
   type RayQuery,
   type RayTarget,
+  type RayTargetName,
   type RayVerdict,
   type SpatialQueries,
   type StandingQuery,

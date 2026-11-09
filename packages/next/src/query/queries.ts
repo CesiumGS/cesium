@@ -23,11 +23,41 @@
  * The 5a backends take rays in one anchor's coordinates (Earth-fixed under
  * the Earth's anchor); carrying rays through the frame tree is 5b's.
  */
+import type { FrameKey } from "../camera/frameResolver.ts";
+import type { Body } from "../scene/Body.ts";
 import type { View } from "../scene/View.ts";
+import type { World } from "../scene/World.ts";
 import type { AnchorHandle } from "../scene/world/types.ts";
+import type { Tileset3D } from "../streaming/Tileset3D.ts";
 
-/** What a ray may meet: the drawn terrain, or the world's draws. */
-export type RayTarget = "terrain" | "draws";
+/** The targets the anchor-level backends answer: the drawn terrain, or the world's draws. */
+export type RayTargetName = "terrain" | "draws";
+
+/**
+ * What a ray may meet: the drawn terrain, or the world's draws (a string,
+ * as in 5a); a body's ellipsoid; an impostor of a body (its ellipsoid with
+ * the relief of its terrain band as the error); or a tileset's retained
+ * geometry. The object kinds, and any query with a `frame`, are carried
+ * through the frame tree (`castFrameRays`).
+ */
+export type RayTarget =
+  | RayTargetName
+  | { readonly kind: "body"; readonly body: Body }
+  | { readonly kind: "impostor"; readonly body: Body }
+  | { readonly kind: "tileset"; readonly tileset: Tileset3D };
+
+/** A target's name for words: "terrain", "draws", "body Moon", "tileset". */
+export function targetName(target: RayTarget | undefined): string {
+  if (target === undefined) {
+    return "no target";
+  }
+  if (typeof target === "string") {
+    return target;
+  }
+  return target.kind === "tileset"
+    ? "tileset"
+    : `${target.kind} ${target.body.name}`;
+}
 
 /** A segment, metres in the query's anchor's coordinates. */
 export interface QueryRay {
@@ -57,9 +87,25 @@ export interface TerrainQueryOptions {
 export interface RayQuery {
   /**
    * The anchor whose coordinates the rays are in (the Earth's anchor:
-   * Earth-fixed); undefined for the transform table's root.
+   * Earth-fixed); undefined for the transform table's root. Ignored when
+   * `frame` is given.
    */
   readonly anchor: AnchorHandle | undefined;
+  /**
+   * The reference frame the rays are in. With it, `world` is required, and
+   * the rays are carried into each target's anchor through the world's
+   * frame resolver (`castFrameRays`).
+   */
+  readonly frame?: FrameKey;
+  readonly world?: World;
+  /**
+   * `"lightTime"` places each target where it was when the light left it:
+   * at `seconds − τ`, with τ the light time to the ray's closest point to
+   * the target's anchor origin (iterated twice). Default `"geometric"`.
+   */
+  readonly correction?: "geometric" | "lightTime";
+  /** The reference frame the answers' positions are in (default `frame`, or the anchor). */
+  readonly reportIn?: FrameKey;
   /** The scene time the rays are at, UTC seconds since 1970. */
   readonly seconds: number;
   readonly rays: readonly QueryRay[];
@@ -84,7 +130,12 @@ export type RayVerdict = "clear" | "blocked" | "unknown";
  * the data; or no engine here answers that target there.
  */
 export type UnknownReason =
-  "notLoaded" | "notRefined" | "withinError" | "outsideData" | "unsupported";
+  | "notLoaded"
+  | "notRefined"
+  | "withinError"
+  | "outsideData"
+  | "unsupported"
+  | "route";
 
 /** A stretch of a ray (fractions of the way from `from` to `to`) it couldn't decide. */
 export interface UnknownSpan {
@@ -100,7 +151,16 @@ export interface RayAnswer {
    * way, and the position in the query's anchor's coordinates. Present
    * when blocked.
    */
-  readonly hit?: { readonly t: number; readonly position: Float64Array };
+  readonly hit?: {
+    readonly t: number;
+    readonly position: Float64Array;
+    /** The reference frame `position` is in (frame rays: `reportIn`). */
+    readonly frame?: FrameKey;
+    /** What was hit (frame rays). */
+    readonly target?: RayTarget;
+    /** When the target was placed, UTC seconds since 1970 (frame rays). */
+    readonly seconds?: number;
+  };
   /**
    * The spans it couldn't decide, nearest first. A ray that is blocked may
    * have some (beyond, or before, the block); "unknown" has at least one.
@@ -194,7 +254,19 @@ export interface QueryHost {
   check?(query: RayQuery): void;
   /** Reports a standing query's failure or its listener's error. */
   report?(error: unknown): void;
+  /**
+   * Answers a query carried through the frame tree (one with a `frame`, or
+   * a target that is an object): `castFrameRays`.
+   */
+  frameRays?(
+    query: RayQuery,
+    signal: AbortSignal | undefined,
+  ): Promise<QueryAnswer>;
 }
+
+/** Whether `query` goes through the frame tree rather than a backend. */
+const viaFrames = (query: RayQuery): boolean =>
+  query.frame !== undefined || query.targets.some((t) => typeof t !== "string");
 
 interface Pending {
   query: RayQuery;
@@ -222,7 +294,7 @@ function settle(p: Pending): boolean {
  * "unknown", `"unsupported"`), in the scene `host` describes.
  */
 export function createSpatialQueries(
-  backends: Partial<Record<RayTarget, RayBackend>>,
+  backends: Partial<Record<RayTargetName, RayBackend>>,
   host: QueryHost,
 ): SpatialQueries {
   let pending: Pending[] = [];
@@ -287,8 +359,13 @@ export function createSpatialQueries(
     if (batch.length === 0) {
       return;
     }
-    const targets = [...new Set(batch.flatMap((p) => p.query.targets))];
-    const parts = new Map<RayTarget, Array<RayAnswer[] | { error: unknown }>>();
+    const targets = [...new Set(batch.flatMap((p) => p.query.targets))].filter(
+      (t): t is RayTargetName => typeof t === "string",
+    );
+    const parts = new Map<
+      RayTargetName,
+      Array<RayAnswer[] | { error: unknown }>
+    >();
     await Promise.all(
       targets.map(async (target) => {
         const routed = batch
@@ -303,12 +380,12 @@ export function createSpatialQueries(
         );
       }),
     );
-    const index = new Map<RayTarget, number>();
+    const index = new Map<RayTargetName, number>();
     batch.forEach((p, i) => {
       const { query } = p;
       const answers: RayAnswer[][] = [];
       let failed: { error: unknown } | undefined;
-      for (const target of query.targets) {
+      for (const target of query.targets as readonly RayTargetName[]) {
         const k = index.get(target) ?? 0;
         index.set(target, k + 1);
         const part = parts.get(target)![k]!;
@@ -348,6 +425,21 @@ export function createSpatialQueries(
     const signal = options.signal;
     if (signal?.aborted) {
       return Promise.reject(signal.reason);
+    }
+    if (viaFrames(query)) {
+      if (!host.frameRays) {
+        return Promise.reject(
+          new Error(
+            "castRays: this engine does not carry rays through reference frames",
+          ),
+        );
+      }
+      try {
+        host.check?.(query);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+      return host.frameRays(query, signal);
     }
     try {
       if (new Set(query.targets).size !== query.targets.length) {
@@ -484,7 +576,7 @@ export function unsupported(target: RayTarget | undefined): RayAnswer {
       note:
         target === undefined
           ? "no targets asked for: nothing traced"
-          : `no engine here answers rays against the ${target === "terrain" ? "terrain" : "draws"}: not traced`,
+          : `no engine here answers rays against the ${targetName(target)}: not traced`,
     },
   };
 }
@@ -523,7 +615,7 @@ export function combineRayAnswers(
     .map((p) => p.accuracy.meters)
     .filter((m): m is number => m !== undefined);
   const note = parts
-    .map((p, i) => `${targets[i]}: ${p.accuracy.note}`)
+    .map((p, i) => `${targetName(targets[i])}: ${p.accuracy.note}`)
     .join("; ");
   // Heights above one target's surface: kept only when that target
   // decides (its block is the nearest), or when nothing blocks.

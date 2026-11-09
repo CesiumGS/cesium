@@ -24,6 +24,12 @@ export interface Body {
   readonly naifId?: number;
   /** Its atmosphere; none: a black sky and the sun's light unfiltered. */
   readonly atmosphere?: Readonly<AtmosphereParameters>;
+  /**
+   * The lowest and highest terrain, m above the ellipsoid: a span above the
+   * band is clear of terrain and one below it is blocked, with no tiles
+   * (plan 5b's call 30).
+   */
+  readonly terrainBand?: { readonly min: number; readonly max: number };
 }
 
 /**
@@ -38,6 +44,8 @@ export const EARTH: Body = {
   ellipsoid: Ellipsoid.WGS84,
   naifId: 399,
   atmosphere: EARTH_ATMOSPHERE,
+  // The Mariana Trench's floor to Everest's summit, rounded out.
+  terrainBand: { min: -11_000, max: 9_000 },
 };
 
 /** The Moon: a 1,737.4 km sphere and no atmosphere (a black sky). */
@@ -45,6 +53,8 @@ export const MOON: Body = {
   name: "Moon",
   ellipsoid: Ellipsoid.MOON,
   naifId: 301,
+  // The lunar datum is the 1,737.4 km sphere: the South Pole-Aitken floor to the highest rim, rounded out.
+  terrainBand: { min: -9_200, max: 10_800 },
 };
 
 /** @internal Names a body by its name and NAIF id (`World.bodyAnchor`). */

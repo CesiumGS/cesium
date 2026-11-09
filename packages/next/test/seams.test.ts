@@ -546,6 +546,8 @@ describe("the ray seam's detector flags bypasses", () => {
       `import * as next from "../src/index.ts";`,
       `import type { TerrainRayTarget } from "../src/globe/terrainRay.ts"; // rays`,
       `import { drawBackend } from "../src/query/drawBackend.ts"; // rays`,
+      `import { castEllipsoid } from "../src/query/ellipsoidBackend.ts"; // rays`,
+      `import { castFrameRays } from "../src/query/frameRays.ts"; // rays`,
       `import { terrainQueries, terrainBackend } from "../src/query/terrainBackend.ts"; // rays`,
       `import { terrainQueries as fine } from "../src/query/terrainBackend.ts";`,
       `import type { Tile } from "../src/streaming/Tile.ts";`,
@@ -582,6 +584,7 @@ describe("the ray seam's detector flags bypasses", () => {
       `void (await import("../src/globe/terrainRay.ts")); // rays`,
       `void fine; void target;`,
       `void terrainQueries; void terrainBackend; // rays`,
+      `void castEllipsoid; void castFrameRays; // rays`,
       `export {};`,
     ];
     const marked = (mark: string) =>

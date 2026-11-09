@@ -51,6 +51,7 @@ import {
 } from "../query/queries.ts";
 import { globeTarget, terrainBackend } from "../query/terrainBackend.ts";
 import { drawBackend } from "../query/drawBackend.ts";
+import { castFrameRays } from "../query/frameRays.ts";
 import { GlareKernels } from "../render/post/glare.ts";
 import { destroyViewFrame } from "../render/view/viewFrameData.ts";
 import { serveIdlePick } from "../render/view/picks.ts";
@@ -232,6 +233,18 @@ export class Engine {
         );
       },
       onTick: (listener) => this.onAfterTick(() => listener()),
+      frameRays: (query, signal) => {
+        const { world } = this.queryRoute(query);
+        return castFrameRays(
+          query,
+          {
+            world,
+            resolver: this.cameras.resolver(world),
+            anchorQueries: this.queries,
+          },
+          signal,
+        );
+      },
       check: (query) => void this.queryRoute(query),
       report: (error) => this.reportLoopError("a standing query", error),
     },
@@ -1364,8 +1377,15 @@ export class Engine {
   } {
     const { view, anchor } = query;
     let world: World | undefined;
+    if (query.frame !== undefined && query.world === undefined) {
+      throw new Error(
+        "queries: a query with a reference frame names its world (RayQuery.world).",
+      );
+    }
     if (view) {
       world = view.world;
+    } else if (query.world) {
+      world = query.world;
     } else if (anchor) {
       world = this.worlds.find((w) => w.anchorOf(anchor) === anchor);
     } else if (this.worlds.length === 1) {

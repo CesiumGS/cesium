@@ -16,6 +16,9 @@ export const RAY_MODULES = {
   terrainRay: join(src, "globe", "terrainRay.ts"),
   drawBackend: join(src, "query", "drawBackend.ts"),
   terrainBackend: join(src, "query", "terrainBackend.ts"),
+  ellipsoidBackend: join(src, "query", "ellipsoidBackend.ts"),
+  geometryBackend: join(src, "query", "geometryBackend.ts"),
+  frameRays: join(src, "query", "frameRays.ts"),
   queries: join(src, "query", "queries.ts"),
   tile: join(src, "streaming", "Tile.ts"),
   worldRays: join(src, "scene", "world", "rays.ts"),
@@ -97,6 +100,9 @@ export function rayBypasses(
     path !== undefined &&
     (same(path, RAY_MODULES.terrainRay) ||
       same(path, RAY_MODULES.drawBackend) ||
+      same(path, RAY_MODULES.ellipsoidBackend) ||
+      same(path, RAY_MODULES.geometryBackend) ||
+      same(path, RAY_MODULES.frameRays) ||
       same(path, RAY_MODULES.worldRays));
 
   /** Whether a declaration is one the seam keeps to itself. */
@@ -105,6 +111,9 @@ export function rayBypasses(
     return (
       (same(at, RAY_MODULES.terrainRay) && name === "castTerrainRay") ||
       same(at, RAY_MODULES.drawBackend) ||
+      same(at, RAY_MODULES.ellipsoidBackend) ||
+      same(at, RAY_MODULES.geometryBackend) ||
+      same(at, RAY_MODULES.frameRays) ||
       (same(at, RAY_MODULES.terrainBackend) &&
         !ALLOWED_FROM_TERRAIN_BACKEND.has(name))
     );

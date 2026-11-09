@@ -997,6 +997,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "RayBackend",
       "RayQuery",
       "RayTarget",
+      "RayTargetName",
       "RayVerdict",
       "StandingQuery",
       "SurfacePatch",

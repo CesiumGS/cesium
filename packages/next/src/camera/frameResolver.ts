@@ -83,6 +83,18 @@ export interface FrameResolver {
     out: FrameMotion,
   ): FrameMotion;
   /**
+   * How accurately a point in `frame` (metres, in its axes) is placed in
+   * `base` at `seconds`, 1σ: `meters` is `undefined` when the route states
+   * none, and `note` says why or from what. Without it a route is taken as
+   * exact: "the transform table states no error".
+   */
+  accuracy?(
+    point: ArrayLike<number>,
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+  ): { readonly meters: number | undefined; readonly note: string };
+  /**
    * Goes up when the inputs of the route from `frame` to `base` change
    * (data arriving, a transform set), never with time alone: the camera
    * layer skips a tick's work while the time, the root and every route's

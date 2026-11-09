@@ -26,7 +26,9 @@ import type { CatalogFrameName, FrameCatalog, Precision } from "./catalog.ts";
 import type { FrameEdge } from "./edges.ts";
 import { Frame, routeRevision } from "./Frame.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
+import { framePoint } from "./local.ts";
 import { rotationPart } from "./matrix.ts";
+import { pointAccuracy } from "./pointAccuracy.ts";
 
 /**
  * A reference frame drawn on its analytic stand-in because the instant is
@@ -73,6 +75,12 @@ export interface FramesResolver extends FrameResolver {
     seconds: number,
     out: FrameMotion,
   ): FrameMotion;
+  accuracy(
+    point: ArrayLike<number>,
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+  ): { readonly meters: number | undefined; readonly note: string };
   watch(listener: () => void): () => void;
   /** The stand-in warnings so far, in order. */
   readonly warnings: readonly FrameStandInWarning[];
@@ -266,6 +274,50 @@ class Resolver implements FramesResolver {
       record.revision++;
     }
     return record.revision;
+  }
+
+  accuracy(
+    point: ArrayLike<number>,
+    frame: FrameKey,
+    base: FrameKey,
+    seconds: number,
+  ): { readonly meters: number | undefined; readonly note: string } {
+    const a = this.reference(frame, this.localA);
+    const aLocal = this.hasLocal;
+    const b = this.reference(base, this.localB);
+    if (!a || !b) {
+      return {
+        meters: 0,
+        note: "an end bound to no reference frame sits at the other's origin: exact by definition",
+      };
+    }
+    // A node under an anchor: its place in the anchor's frame first.
+    const x = point[0]!;
+    const y = point[1]!;
+    const z = point[2]!;
+    const l = this.localA;
+    const p = aLocal
+      ? [
+          l[0]! * x + l[4]! * y + l[8]! * z + l[12]!,
+          l[1]! * x + l[5]! * y + l[9]! * z + l[13]!,
+          l[2]! * x + l[6]! * y + l[10]! * z + l[14]!,
+        ]
+      : [x, y, z];
+    const instant = this.instant(seconds);
+    const result = pointAccuracy(framePoint(a, p, instant), b, instant);
+    return {
+      meters: result.meters,
+      note:
+        result.meters === undefined
+          ? `not bounded: ${result.unboundedBy ?? result.refusedBy ?? result.simulatedBy ?? "a route term"} states no accuracy the route can use`
+          : `route ${a.name} to ${b.name}: ${result.terms
+              .filter((t) => t.meters !== undefined && t.meters > 0)
+              .map(
+                (t) =>
+                  `${t.frame}${"estimated" in t && t.estimated ? " (estimated)" : ""} ±${t.meters!.toPrecision(3)} m`,
+              )
+              .join(", ")}; ${result.combination}`,
+    };
   }
 
   motion(

@@ -151,6 +151,7 @@ entry	name	kind	tier
 .	RayBackend	interface	-
 .	RayQuery	interface	-
 .	RayTarget	type	-
+.	RayTargetName	type	-
 .	RayVerdict	type	-
 .	RenderTarget	interface	-
 .	RequestPurpose	type	-
