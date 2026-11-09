@@ -106,14 +106,14 @@ export function recordWritesOutsideSeam(text: string): number[] {
       to: blockEnd(source, from),
     });
   const alias = new RegExp(
-    String.raw`\b(?:const|let|var)\s+(\w+)\s*=\s*(?:this\.)?${ARRAY.source}(?!\s*[[.])`,
+    String.raw`\b(?:const|let|var)\s+(\w+)\s*=\s*(?:\w+[?!]?\.)*${ARRAY.source}(?!\s*[[.])`,
     "g",
   );
   for (const m of source.matchAll(alias)) {
     local(m[1]!, m.index);
   }
   const destructured =
-    /\b(?:const|let|var)\s*\{([^}]*)\}\s*=\s*(?:this\.)?(?:records|drawConstants|constants)\b(?!\s*[[.])/g;
+    /\b(?:const|let|var)\s*\{([^}]*)\}\s*=\s*(?:\w+[?!]?\.)*(?:records|drawConstants|constants)\b(?!\s*[[.])/g;
   for (const m of source.matchAll(destructured)) {
     for (const part of m[1]!.split(",")) {
       const name = part.split(":").pop()!.trim();
@@ -375,6 +375,21 @@ function other() {
     expect(recordWritesOutsideSeam(module)).toEqual([
       3, 5, 7, 9, 11, 13, 14, 15, 23, 24,
     ]);
+  });
+
+  it("record writes in a helper that takes the world as an argument", () => {
+    const module = `function moved(world: World, engine: Engine) {
+  const u = world.recordsU32;
+  u[o] |= 4;
+  world.recordsF32[o + RADIUS_WORD] -= 2;
+  const { u32 } = world.drawConstants;
+  u32[o] = 3;
+  const c = engine.world!.recordsU32;
+  c[o] = 1;
+  const flags = world.recordsU32[o]!;
+  this.flags[o] = flags;
+}`;
+    expect(recordWritesOutsideSeam(module)).toEqual([3, 4, 6, 8]);
   });
 
   it("CPU writes of the seams' GPU buffers", () => {
