@@ -410,6 +410,61 @@ export function readBackground(
   return faces;
 }
 
+/** The largest manifest read. */
+export const MAX_MANIFEST_BYTES = 1 << 20;
+
+/**
+ * Reads a body as a stream into a buffer of the expected length (`exact`:
+ * the body must fill it) or up to a limit. A mismatched Content-Length is
+ * refused before any byte is read, and a body that passes the length is
+ * cancelled at once, so a response never grows past what the manifest says.
+ */
+async function readLimited(
+  response: Response,
+  expected: number,
+  file: string,
+  exact: boolean,
+): Promise<ArrayBuffer> {
+  const declared = response.headers.get("content-length");
+  if (declared !== null) {
+    const n = Number(declared);
+    if (exact ? n !== expected : n > expected) {
+      throw new SkyPackError(
+        file,
+        "length",
+        `Content-Length ${declared}, expected ${exact ? "" : "at most "}${expected}`,
+      );
+    }
+  }
+  const out = new Uint8Array(expected);
+  let total = 0;
+  const reader = response.body?.getReader();
+  while (reader) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    if (total + value.length > expected) {
+      await reader.cancel();
+      throw new SkyPackError(
+        file,
+        "length",
+        `the body is longer than the expected ${expected} bytes`,
+      );
+    }
+    out.set(value, total);
+    total += value.length;
+  }
+  if (exact && total !== expected) {
+    throw new SkyPackError(
+      file,
+      "length",
+      `${total} bytes, expected ${expected}`,
+    );
+  }
+  return out.buffer.slice(0, total);
+}
+
 /** What `loadSkyPack` gives: the manifest, its notes and the field. */
 export interface LoadedSkyPack {
   manifest: SkyPackManifest;
@@ -445,7 +500,15 @@ export async function loadSkyPack(
   };
   let json: unknown;
   try {
-    json = await (await get(manifestUrl, MANIFEST)).json();
+    const text = new TextDecoder().decode(
+      await readLimited(
+        await get(manifestUrl, MANIFEST),
+        MAX_MANIFEST_BYTES,
+        MANIFEST,
+        false,
+      ),
+    );
+    json = JSON.parse(text);
   } catch (error) {
     if (error instanceof SkyPackError || signal?.aborted) {
       throw error;
@@ -457,10 +520,20 @@ export async function loadSkyPack(
   const beside = (file: string) => new URL(file, manifestUrl).href;
   const [pointBytes, backgroundBytes_] = await Promise.all([
     get(beside(manifest.points.file), manifest.points.file).then((r) =>
-      r.arrayBuffer(),
+      readLimited(
+        r,
+        HEADER_BYTES + manifest.points.count * STAR_FLOATS * 4,
+        manifest.points.file,
+        true,
+      ),
     ),
     get(beside(manifest.background.file), manifest.background.file).then((r) =>
-      r.arrayBuffer(),
+      readLimited(
+        r,
+        backgroundBytes(manifest.background.size, manifest.background.levels),
+        manifest.background.file,
+        true,
+      ),
     ),
   ]);
   const points = readPoints(pointBytes, manifest);

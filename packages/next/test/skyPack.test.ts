@@ -203,14 +203,16 @@ describe("readPoints and readBackground", () => {
 
 describe("loadSkyPack", () => {
   const bytes = (b: ArrayBuffer) => new Response(b);
-  const fetcher = (files: Record<string, Response | number>) =>
+  const fetcher = (
+    files: Record<string, Response | (() => Response) | number>,
+  ) =>
     (async (input: RequestInfo | URL) => {
       const name = String(input).split("/").pop()!;
       const hit = files[name];
       if (typeof hit === "number" || hit === undefined) {
         return new Response("", { status: hit ?? 404 });
       }
-      return hit.clone();
+      return typeof hit === "function" ? hit() : hit.clone();
     }) as typeof fetch;
 
   it("reads a pack beside its manifest", async () => {
@@ -224,6 +226,45 @@ describe("loadSkyPack", () => {
     expect(loaded.field.backgroundLevels[0]).toHaveLength(3);
     expect(loaded.field.holdsFaintStars).toBe(false);
     expect(loaded.field.meanBackground).toBeCloseTo(1e-4, 12);
+  });
+
+  it("refuses an oversized response early or while streaming", async () => {
+    const manifestResponse = () => new Response(JSON.stringify(manifestJson()));
+    const ok = backgroundFile(4, 3);
+    // A declared length that doesn't match: refused before reading.
+    const declared = new Response(pointsFile(10), {
+      headers: { "content-length": "999999999" },
+    });
+    await expect(
+      loadSkyPack(
+        "https://p.test/pack/",
+        fetcher({
+          "manifest.json": manifestResponse(),
+          "points.bin": declared,
+          "background.bin": bytes(ok),
+        }),
+      ),
+    ).rejects.toThrow("points.bin, length: Content-Length");
+    // No declared length: the stream is cancelled past the expected size.
+    let cancelled = false;
+    const chunk = new Uint8Array(1000);
+    const stream = new ReadableStream<Uint8Array>({
+      pull: (c) => c.enqueue(chunk),
+      cancel: () => {
+        cancelled = true;
+      },
+    });
+    await expect(
+      loadSkyPack(
+        "https://p.test/pack/",
+        fetcher({
+          "manifest.json": manifestResponse(),
+          "points.bin": () => new Response(stream),
+          "background.bin": bytes(ok),
+        }),
+      ),
+    ).rejects.toThrow("longer than the expected");
+    expect(cancelled).toBe(true);
   });
 
   it("names the file of a 404", async () => {

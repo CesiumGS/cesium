@@ -552,6 +552,8 @@ export class Engine {
   setStarMap(faces: readonly (string | URL)[] | null): void {
     const token = ++this.starToken;
     this.packToken++;
+    this.packLoad?.abort();
+    this.packLoad = null;
     this.starMapFaces = faces;
     if (!faces) {
       this.raster.sky.setStarField(null);
@@ -572,6 +574,7 @@ export class Engine {
 
   private starToken = 0;
   private packToken = 0;
+  private packLoad: AbortController | null = null;
   private starMapFaces: readonly (string | URL)[] | null = null;
   private readonly skyPackWarnings = new Set<string>();
 
@@ -588,6 +591,8 @@ export class Engine {
   async setSkyPack(
     url: string | URL | null,
   ): Promise<SkyPackManifest | undefined> {
+    this.packLoad?.abort();
+    this.packLoad = null;
     if (url === null) {
       this.packToken++;
       this.setStarMap(this.starMapFaces);
@@ -595,10 +600,12 @@ export class Engine {
     }
     const token = ++this.packToken;
     const href = new URL(url, location.href).href;
+    const load = (this.packLoad = new AbortController());
     try {
       const loaded = await this.scene.workers.request<LoadedSkyPack>(
         "skyPack",
         { url: href },
+        load.signal,
       );
       if (token !== this.packToken) {
         return undefined;
@@ -616,6 +623,9 @@ export class Engine {
       this.requestRender();
       return loaded.manifest;
     } catch (error) {
+      if (load.signal.aborted) {
+        return undefined; // replaced
+      }
       this.warnSkyPack(error instanceof Error ? error.message : String(error));
       return undefined;
     }
