@@ -41,6 +41,12 @@ export {
   type TwoVectorDefinition,
   type VectorDefinition,
 } from "./twoVector.ts";
+export {
+  rigPreset,
+  type RigPreset,
+  type RigPresetName,
+  type RigPresetOptions,
+} from "./presets.ts";
 export { frameVelocity, angularVelocity } from "./motion.ts";
 export { createFrames, type Frames } from "./frames.ts";
 export {

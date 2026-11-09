@@ -67,6 +67,8 @@ interface ViewState {
    * `POSE`, `RIG`): the failure reported (its kind and message).
    */
   readonly reported: Map<FrameKey | string, string>;
+  /** The same episodes, as what `held` says: the reference frame's name and the message. */
+  readonly held: Map<FrameKey | string, { frame: string; reason: string }>;
 }
 
 /**
@@ -125,7 +127,7 @@ export class CameraLayer {
     }
     for (const view of this.host.views) {
       if (view.world === world) {
-        this.states.get(view)?.reported.clear();
+        this.clearReports(this.states.get(view));
       }
     }
     this.host.wake();
@@ -177,6 +179,28 @@ export class CameraLayer {
     return state?.explicit ? state.rig : defaultRig(view.world);
   }
 
+  /**
+   * The reference frame and the reason, while the layer keeps this view's
+   * last good pose or placement because a reference frame threw or gave a
+   * matrix that is not finite and rigid (the failure is also reported once
+   * in the engine's errors). `undefined` once every reference frame the
+   * rig reads resolves again, on the next good tick.
+   */
+  held(
+    view: View,
+  ): { readonly frame: string; readonly reason: string } | undefined {
+    const state = this.states.get(view);
+    if (!state || state.held.size === 0) {
+      return undefined;
+    }
+    return state.held.values().next().value;
+  }
+
+  private clearReports(state: ViewState | undefined): void {
+    state?.reported.clear();
+    state?.held.clear();
+  }
+
   /** The view's render root: the reference frame its camera's numbers are in. */
   root(view: View): FrameKey {
     const state = this.states.get(view);
@@ -202,7 +226,7 @@ export class CameraLayer {
     state.explicit = true;
     state.isDefault = isDefaultRig(rig, state.world);
     state.rerootTo = undefined;
-    state.reported.clear();
+    this.clearReports(state);
     this.evaluateSafely(view, state, true);
     this.host.wake();
   }
@@ -262,6 +286,7 @@ export class CameraLayer {
         rerootRevision: Number.NaN,
         rerootSeconds: Number.NaN,
         reported: new Map(),
+        held: new Map(),
       };
       this.states.set(view, state);
     }
@@ -293,7 +318,7 @@ export class CameraLayer {
       state.isDefault = isDefaultRig(state.rig, world);
       state.root = state.rig.position.frame;
       state.rerootTo = undefined;
-      state.reported.clear();
+      this.clearReports(state);
       force = true;
     }
     const resolver = this.resolver(world);
@@ -715,6 +740,17 @@ export class CameraLayer {
       return;
     }
     state.reported.set(key, failure);
+    state.held.set(key, {
+      // The reference frame that failed, when the error names it.
+      frame:
+        error instanceof Error &&
+        typeof (error as { frame?: unknown }).frame === "string"
+          ? (error as unknown as { frame: string }).frame
+          : typeof key === "string"
+            ? state.rig.position.frame.name
+            : key.name,
+      reason,
+    });
     this.host.errors.report("camera", `${what}${kind}: ${reason}`);
   }
 
@@ -722,6 +758,7 @@ export class CameraLayer {
   private recovered(state: ViewState, key: FrameKey | string): void {
     if (state.reported.size > 0) {
       state.reported.delete(key);
+      state.held.delete(key);
     }
   }
 }

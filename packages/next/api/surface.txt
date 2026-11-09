@@ -345,6 +345,9 @@ frames	PointAccuracy	interface	-
 frames	PointAccuracyTerm	type	-
 frames	Precision	type	-
 frames	ResolvedCoordinates	interface	-
+frames	RigPreset	interface	-
+frames	RigPresetName	type	-
+frames	RigPresetOptions	interface	-
 frames	SkyInputs	type	-
 frames	SkyState	interface	-
 frames	StateSegment	interface	-
@@ -377,6 +380,7 @@ frames	parseOem	function	-
 frames	placementOf	function	-
 frames	pointAccuracy	function	-
 frames	readSpk	function	-
+frames	rigPreset	function	-
 frames	rotationPart	function	-
 frames	routeRevision	function	-
 frames	skyState	function	-
