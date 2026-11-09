@@ -26,6 +26,7 @@ import {
   LIGHT_FLOATS,
 } from "../../scene/lights.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
+import { writeViewShadows } from "./shadowBlocks.ts";
 
 /**
  * The stars as the eye sees them against a dark sky, EV100 (sky.slang
@@ -235,6 +236,6 @@ export function writeView(
     (index * VIEW_STRIDE) / 4,
     bytes / 4,
   );
-  engine.writeShadows(view, index, aspect);
+  writeViewShadows(engine, view, index, aspect);
   writeLights(engine, view, index, aspect);
 }

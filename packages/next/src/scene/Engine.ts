@@ -5,18 +5,10 @@ import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
 import { TexturePool } from "../render/FrameGraph.ts";
-import {
-  VIEW_BIT_WORD,
-  VIEW_SIZE,
-  VIEW_STRIDE,
-  VIEW_TIME_WORD,
-  viewBlockBytes,
-  writeViewBlock,
-  type ViewBlock,
-} from "../render/layout.ts";
+import { VIEW_SIZE, VIEW_STRIDE, type ViewBlock } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
-import { Ellipsoid, type Cartographic } from "../math/ellipsoid.ts";
+import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { EnvironmentProbe } from "../gpu/Environment.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -25,7 +17,6 @@ import {
   SCENE_TARGETS,
   type RenderContext,
   type ShaderOverrides,
-  AO_MAX_PIXELS,
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import { View, type HdrImage, type ViewOptions } from "./View.ts";
@@ -45,19 +36,12 @@ import {
   SHADOW_CASCADES,
   SHADOWS_STRIDE,
   createShadowCascades,
-  fitShadowCascades,
-  shadowRange,
-  writeShadows,
 } from "./shadows.ts";
 import type { CityLight } from "../globe/cityLight.ts";
 import { LIGHTS_SIZE } from "./lights.ts";
 import { World, type AnchorHandle, type WorldOptions } from "./World.ts";
 import { CameraLayer } from "../camera/CameraLayer.ts";
-import {
-  ANCHOR_EYE_REACH,
-  createAnchorEyes,
-  writeAnchorEyes,
-} from "./anchorEyes.ts";
+import { ANCHOR_EYE_REACH, createAnchorEyes } from "./anchorEyes.ts";
 import { HeightClamping } from "./HeightClamping.ts";
 import { contentAnchor, earthAnchor } from "./earthAnchor.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
@@ -104,12 +88,7 @@ import {
 } from "../render/view/picks.ts";
 import { updateExposure, adaptExposure } from "../render/view/exposure.ts";
 import { scratchFrame, updateEnvironment } from "../render/view/environment.ts";
-import { shadowLight } from "./lightSources.ts";
-import {
-  type ViewMotion,
-  updateTilesets,
-  rotateVector,
-} from "./tileSelection.ts";
+import { type ViewMotion, updateTilesets } from "./tileSelection.ts";
 import {
   scratchViewProj,
   scratchView,
@@ -391,15 +370,17 @@ export class Engine {
   /** @internal */
   readonly viewData: Float32Array;
   /**
-   * Per view slot: a view block per shadow cascade (the sun's projection
+   * @internal Per view slot: a view block per shadow cascade (the sun's projection
    * and box, for culling and drawing the casters), and the receivers'
    * `Shadows` uniform; staged like the views' blocks.
    */
-  private readonly cascadeData: Float32Array;
-  private readonly cascadeDataU32: Uint32Array;
+  readonly cascadeData: Float32Array;
+  /** @internal */
+  readonly cascadeDataU32: Uint32Array;
   /** @internal */
   readonly cascadeStaging: GPUBuffer;
-  private readonly shadowData: Float32Array;
+  /** @internal */
+  readonly shadowData: Float32Array;
   /** @internal */
   readonly shadowStaging: GPUBuffer;
   /** @internal The night lights' mean around each view's camera (`cityLightAt`). */
@@ -415,7 +396,8 @@ export class Engine {
   readonly lightStaging: GPUBuffer;
   /** @internal */
   readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
-  private readonly cascades = createShadowCascades();
+  /** @internal */
+  readonly cascades = createShadowCascades();
   /** @internal */
   readonly viewDataU32: Uint32Array;
   /** @internal Stable per-view bit index (0–31) for record view masks. */
@@ -2424,175 +2406,6 @@ export class Engine {
     return group;
   }
 
-  /**
-   * A view's shadow cascades (when it has shadows and the sun is up where
-   * the camera is): their view blocks, copies of the view's with the sun's
-   * projection and box, and the receivers' uniform.
-   */
-  /**
-   * The height captures of `view`'s world not yet drawn this frame: their
-   * block (the view's, with a straight-down orthographic projection over
-   * the capture's square, its culling box, and View.time.y 1: ground
-   * only), drawn by `view` (the `height-captures` pass).
-   */
-  private writeCaptures(view: View): void {
-    const block = this.viewBlock;
-    const bodyCamera = this.bodyCamera(view);
-    const camera = bodyCamera.position;
-    for (const c of this.captures) {
-      if (c.world !== view.world || c.stamp === this.frameNumber) {
-        continue;
-      }
-      c.stamp = this.frameNumber;
-      c.by = view;
-      let [e, n, u] = c.axes;
-      let origin = c.origin;
-      const body = view.bodyAnchor;
-      if (c.anchor !== body) {
-        // The block is in the body anchor's axes (the shading axes): the
-        // capture's square re-expressed there, in float64.
-        const m = m4.multiply(
-          scratchSelection,
-          m4.invertAffine(
-            scratchSelectionInverse,
-            view.anchorPlacement(body, scratchSelectionBody),
-          ),
-          view.anchorPlacement(c.anchor, scratchCaptureAnchor),
-        );
-        origin = m4.transformPoint(scratchCaptureOrigin, m, c.origin);
-        e = rotateVector(m, e, scratchCaptureAxes[0]);
-        n = rotateVector(m, n, scratchCaptureAxes[1]);
-        u = rotateVector(m, u, scratchCaptureAxes[2]);
-      }
-      const rel = v3.sub(v3.vec3(), origin, camera);
-      const h = c.halfExtent;
-      const depth = c.top - c.bottom;
-      const ce = v3.dot(e, rel);
-      const cn = v3.dot(n, rel);
-      const cu = v3.dot(u, rel);
-      // Column-major: clip = M · (camera-relative p, 1), reverse-Z (top 1).
-      const m = scratchCapture;
-      m.fill(0);
-      for (let k = 0; k < 3; k++) {
-        m[k * 4] = e[k]! / h;
-        m[k * 4 + 1] = n[k]! / h;
-        m[k * 4 + 2] = u[k]! / depth;
-      }
-      m[12] = -ce / h;
-      m[13] = -cn / h;
-      m[14] = (-cu - c.bottom) / depth;
-      m[15] = 1;
-      // Culling: the square's four sides and its bottom.
-      const p = scratchCapturePlanes;
-      const plane = (i: number, a: Vec3, sign: number, w: number) => {
-        p[i * 4] = a[0]! * sign;
-        p[i * 4 + 1] = a[1]! * sign;
-        p[i * 4 + 2] = a[2]! * sign;
-        p[i * 4 + 3] = w;
-      };
-      plane(0, e, 1, -(ce - h));
-      plane(1, e, -1, ce + h);
-      plane(2, n, 1, -(cn - h));
-      plane(3, n, -1, cn + h);
-      plane(4, u, 1, -(cu + c.bottom));
-      const viewProj = block.viewProj;
-      const planes = block.planes;
-      const aerial = block.aerial;
-      block.viewProj = m;
-      block.planes = p;
-      block.aerial = undefined;
-      writeViewBlock(c.data, 0, block);
-      writeAnchorEyes(c.data, 0, bodyCamera, view, this.anchorEyes);
-      block.viewProj = viewProj;
-      block.planes = planes;
-      block.aerial = aerial;
-      new Uint32Array(c.data.buffer)[VIEW_BIT_WORD] = this.viewBit(view);
-      c.data[VIEW_TIME_WORD + 1] = 1; // View.time.y: ground only
-      c.viewBytes = viewBlockBytes(this.anchorEyes.count);
-      this.ctx.device.queue.writeBuffer(c.block, 0, c.data, 0, c.viewBytes / 4);
-    }
-  }
-
-  /** @internal */
-  writeShadows(view: View, index: number, aspect: number): void {
-    const frame = this.viewFrames.get(view)!;
-    const camera = this.bodyCamera(view);
-    const light = shadowLight(this, view, camera.position, this.viewBlock.moon);
-    frame.shadowed = light !== undefined;
-    const moonUp = light?.moon === true;
-    const cascades = this.cascades;
-    if (light) {
-      const sun = light.direction;
-      const c = view.body.ellipsoid.cartesianToCartographic(
-        camera.position,
-        scratchCartographic,
-      );
-      fitShadowCascades(
-        cascades,
-        camera,
-        aspect,
-        sun,
-        Math.max(c?.height ?? 0, 2),
-        (frame.cascadeRange = shadowRange(
-          frame.cascadeRange,
-          frame.depthRange,
-        )),
-      );
-      const block = this.viewBlock;
-      const viewProj = block.viewProj;
-      const planes = block.planes;
-      const aerial = block.aerial;
-      block.aerial = undefined;
-      for (let k = 0; k < SHADOW_CASCADES; k++) {
-        const o = ((index * SHADOW_CASCADES + k) * VIEW_STRIDE) / 4;
-        block.viewProj = cascades.matrices.subarray(k * 16, k * 16 + 16);
-        block.planes = cascades.planes[k]!;
-        writeViewBlock(this.cascadeData, o, block);
-        writeAnchorEyes(this.cascadeData, o, camera, view, this.anchorEyes);
-        this.cascadeDataU32[o + VIEW_BIT_WORD] = this.viewBit(view);
-        this.cascadeData[o + VIEW_TIME_WORD + 2] = 1; // View.time.z: casters too
-        this.ctx.device.queue.writeBuffer(
-          this.cascadeStaging,
-          o * 4,
-          this.cascadeData,
-          o,
-          frame.viewBytes / 4,
-        );
-      }
-      block.viewProj = viewProj;
-      block.planes = planes;
-      block.aerial = aerial;
-    }
-    this.writeCaptures(view);
-    // Ambient occlusion: its prepass and kernels' parameters.
-    frame.ambient =
-      view.ambientOcclusion && frame.width * frame.height <= AO_MAX_PIXELS;
-    if (frame.ambient) {
-      const tanY = Math.tan(camera.fovy(aspect) / 2);
-      const a = scratchAo;
-      a.set(camera.right, 0);
-      a[3] = tanY * aspect;
-      a.set(camera.up, 4);
-      a[7] = tanY;
-      a.set(camera.direction, 8);
-      a[11] = camera.near;
-      a[12] = frame.width;
-      a[13] = frame.height;
-      a[14] = view.ambientOcclusionRadius;
-      a[15] = Math.max(32, 0.15 * frame.height);
-      this.ctx.device.queue.writeBuffer(frame.aoParams, 0, a);
-    }
-    writeShadows(
-      this.shadowData,
-      (index * SHADOWS_STRIDE) / 4,
-      cascades,
-      camera.direction,
-      frame.shadowed,
-      frame.ambient,
-      frame.shadowed && moonUp,
-    );
-  }
-
   /** A view's persistent image at its current size (recreated on resize). */
   private persistentImage(
     view: View,
@@ -2731,18 +2544,6 @@ export class Engine {
 }
 
 const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
-const scratchCartographic: Cartographic = {
-  longitude: 0,
-  latitude: 0,
-  height: 0,
-};
-const scratchSelection = m4.mat4();
-const scratchSelectionInverse = m4.mat4();
-const scratchSelectionBody = new Float64Array(16);
-const scratchCaptureAnchor = new Float64Array(16);
-const scratchCaptureOrigin = v3.vec3();
-const scratchCaptureAxes = [v3.vec3(), v3.vec3(), v3.vec3()] as const;
-const scratchAo = new Float32Array(16);
 
 /** A height capture (`Engine.addHeightCapture`). */
 export interface HeightCapture {
@@ -2769,6 +2570,3 @@ export interface HeightCapture {
   /** @internal Bytes of `data` written for its last draw (`viewBlockBytes`). */
   viewBytes: number;
 }
-
-const scratchCapture = m4.mat4();
-const scratchCapturePlanes = new Float32Array(20);
