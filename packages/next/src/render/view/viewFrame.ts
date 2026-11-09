@@ -26,6 +26,12 @@ import {
 } from "../../scene/shadows.ts";
 import { encodePick } from "./picks.ts";
 import { encodeEnvironment } from "./environment.ts";
+import {
+  translucentInputs,
+  translucentGroup,
+  keptGroup,
+  compositeGroup,
+} from "./translucency.ts";
 
 /** The view's frame graph for its current size, built on first use and on resize. */
 export function viewFrameFor(
@@ -624,7 +630,7 @@ function buildViewFrame(
         return;
       }
       const world = view.world;
-      const dummies = engine.translucentInputs();
+      const dummies = translucentInputs(engine);
       if (view.translucencyMethod === "exact") {
         const lists = engine.lists!;
         enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
@@ -635,7 +641,7 @@ function buildViewFrame(
           pass,
           (doubleSided) =>
             doubleSided ? "translucentListDoubleSided" : "translucentList",
-          engine.translucentGroup(frame, 0, [
+          translucentGroup(engine, frame, 0, [
             lists,
             dummies.zero,
             dummies.higher,
@@ -653,7 +659,7 @@ function buildViewFrame(
         sort.setPipeline(pipelines.translucentSort);
         sort.setBindGroup(
           0,
-          engine.keptGroup(frame, 5, [lists, lit, unlit], () =>
+          keptGroup(engine, frame, 5, [lists, lit, unlit], () =>
             device.createBindGroup({
               label: "translucent.sort",
               layout: pipelines.translucentSort.getBindGroupLayout(0),
@@ -692,7 +698,7 @@ function buildViewFrame(
         first,
         (doubleSided) =>
           doubleSided ? "translucentMomentsDoubleSided" : "translucentMoments",
-        engine.translucentGroup(frame, 1, [
+        translucentGroup(engine, frame, 1, [
           dummies.buffer,
           dummies.zero,
           dummies.higher,
@@ -707,7 +713,7 @@ function buildViewFrame(
         second,
         (doubleSided) =>
           doubleSided ? "translucentColorDoubleSided" : "translucentColor",
-        engine.translucentGroup(frame, 2, [dummies.buffer, zero, higher]),
+        translucentGroup(engine, frame, 2, [dummies.buffer, zero, higher]),
       );
       second.end();
     },
@@ -745,7 +751,7 @@ function buildViewFrame(
       const layers = !frame.translucent ? 0 : exact ? 1 : 2;
       new Uint32Array(data, 4, 3).set([width, height, layers]);
       device.queue.writeBuffer(params, 0, data);
-      const dummies = engine.translucentInputs();
+      const dummies = translucentInputs(engine);
       const result = device.createBuffer({
         size: 16,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
@@ -820,7 +826,7 @@ function buildViewFrame(
         pass.setPipeline(pipelines.compositeExact);
         pass.setBindGroup(
           0,
-          engine.compositeGroup(frame, 3, pipelines.compositeExact, [
+          compositeGroup(engine, frame, 3, pipelines.compositeExact, [
             get(accumulatedLit),
             get(accumulatedUnlit),
           ]),
@@ -829,7 +835,7 @@ function buildViewFrame(
         pass.setPipeline(pipelines.compositeMoments);
         pass.setBindGroup(
           0,
-          engine.compositeGroup(frame, 4, pipelines.compositeMoments, [
+          compositeGroup(engine, frame, 4, pipelines.compositeMoments, [
             get(momentsZero),
             get(accumulatedLit),
             get(accumulatedUnlit),
