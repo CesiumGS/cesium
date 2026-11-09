@@ -120,6 +120,7 @@ export {
   type PostStageSlot,
 } from "./scene/postStage.ts";
 export { astrophotoCurveStage } from "./render/post/astroCurve.ts";
+export { eyeLimitStage } from "./scene/eyeLimit.ts";
 export { wgslUnit, type ShaderUnit } from "./shaders/link/unit.ts";
 export {
   CanvasTarget,

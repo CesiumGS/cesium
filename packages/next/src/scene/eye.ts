@@ -26,6 +26,8 @@
  * physically, and is unchanged.
  */
 
+import { MAGNITUDE_ZERO_ILLUMINANCE } from "../atmosphere/stars.ts";
+
 /** A display's white, cd/m² (sRGB's reference display: 80-100). */
 export const DISPLAY_WHITE = 100;
 /** The viewer's adaptation at the display, cd/m²: half its white (Ferwerda). */
@@ -98,6 +100,20 @@ const CALIBRATION =
 
 /** Scotopic luminance of white light per unit of luminance (D65). */
 export const SCOTOPIC_WHITE = 2.573;
+
+/** The illuminance of a star of magnitude 6, lux: a dark sky's limit by eye. */
+const MAGNITUDE_6 = MAGNITUDE_ZERO_ILLUMINANCE * 10 ** (-0.4 * 6);
+/** The rods' threshold, dark-adapted: at 10⁻⁴ cd/m². */
+const DARK_THRESHOLD = rodThreshold(1e-4 * SCOTOPIC_WHITE);
+
+/**
+ * The faintest point of light the eye sees, lux, at rods adapted to `rods` (scotopic
+ * cd/m²): magnitude 6 dark-adapted, brighter in proportion to the rods' threshold.
+ * Nothing tunes it but the model's own threshold.
+ */
+export function eyePointLimit(rods: number): number {
+  return MAGNITUDE_6 * Math.max(1, rodThreshold(rods) / DARK_THRESHOLD);
+}
 
 /**
  * The display's response to the world's light for an eye adapted to

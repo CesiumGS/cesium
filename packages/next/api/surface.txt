@@ -246,6 +246,7 @@ entry	name	kind	tier
 .	eastNorthUpToFixedFrame	function	-
 .	enuBasis	function	-
 .	ev100ToScale	const	-
+.	eyeLimitStage	function	-
 .	eyeObserver	function	-
 .	fromDegrees	function	-
 .	ionDefaults	const	-

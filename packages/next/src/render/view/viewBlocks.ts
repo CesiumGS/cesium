@@ -17,7 +17,7 @@ import { environmentFrame } from "./environment.ts";
 import { drawsSky, drawsAerialPerspective } from "./viewFrameData.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
-import { ev100ToScale, observerPointSpread } from "../../scene/observer.ts";
+import { observerPointSpread } from "../../scene/observer.ts";
 import { computeAnchorEyes, writeAnchorEyes } from "../../scene/anchorEyes.ts";
 import { moonFrom } from "../../scene/lightSources.ts";
 import {
@@ -72,13 +72,6 @@ export interface ViewBlockEngine extends Pick<
   >;
   readonly scene: Pick<EngineScene, "anchorEyes" | "startTime">;
 }
-
-/**
- * The stars as the eye sees them against a dark sky, EV100 (sky.slang
- * `starExposure`): shown where the view's own adaptation is less open
- * (from orbit by day); about as bright as 1.x draws its star map.
- */
-const EYE_STARS_EV100 = -3;
 
 export const scratchView = m4.mat4();
 const scratchProj = m4.mat4();
@@ -250,7 +243,6 @@ export function writeView(
       view.exposureScale,
       view.sunDisk,
       observerPointSpread(view.observer),
-      "eye" in view.observer.exposure ? ev100ToScale(EYE_STARS_EV100) : 0,
       moon,
       engine.raster.viewCityLight,
     );

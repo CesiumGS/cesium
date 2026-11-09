@@ -30,7 +30,7 @@ import {
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the `Sky` uniform (sky.slang). */
-const SKY_SIZE = 336;
+const SKY_SIZE = 352;
 /** The Earth's geometric albedo (earthshine on the Moon). */
 const EARTH_ALBEDO = 0.367;
 /** Bytes between the environment faces' `Sky` uniforms. */
@@ -103,6 +103,19 @@ export interface MoonView {
    */
   airShare: number;
 }
+
+/**
+ * The stars too faint for 1.x's star map and the zodiacal light, as a glow beyond the
+ * atmosphere, linear sRGB, cd/m²: warm white, luminance 0.8 × 10⁻⁴. With a field
+ * whose background already holds the faint stars, `HOLDS_FAINT_SHARE` of it stays.
+ */
+export const STARLIGHT: readonly [number, number, number] = [
+  Math.fround(Math.fround(1.07) * Math.fround(0.8e-4)),
+  Math.fround(Math.fround(0.99) * Math.fround(0.8e-4)),
+  Math.fround(Math.fround(0.86) * Math.fround(0.8e-4)),
+];
+/** A guess at the zodiacal light's share of `STARLIGHT`, not a measurement. */
+const HOLDS_FAINT_SHARE = 0.5;
 
 /** The narrowest point spread drawn, CSS pixels. */
 const MIN_SPREAD = 0.05;
@@ -309,6 +322,9 @@ export class Sky {
   private illuminance: Float32Array = new Float32Array(0);
   /** The drawn background's mip levels. */
   private starLevels = 1;
+  /** What the drawn field leaves to a glow (`STARLIGHT`), and its mean, cd/m². */
+  private faintShare = 1;
+  private meanBackground = 0;
   private readonly starCullPipeline: GPUComputePipeline;
   private readonly starCullLayout: GPUBindGroupLayout;
   private readonly starLayout: GPUBindGroupLayout;
@@ -567,6 +583,8 @@ export class Sky {
       this.cells = [];
       this.illuminance = new Float32Array(0);
       this.starLevels = 1;
+      this.faintShare = 1;
+      this.meanBackground = 0;
       oldBackground.destroy();
       oldPoints.destroy();
       return;
@@ -643,6 +661,8 @@ export class Sky {
     this.cells = cells.cells;
     this.illuminance = cells.illuminance;
     this.starLevels = field.backgroundLevels[0]?.length ?? 1;
+    this.faintShare = field.holdsFaintStars ? HOLDS_FAINT_SHARE : 1;
+    this.meanBackground = field.meanBackground;
     this.device.queue.writeBuffer(
       this.starCells,
       0,
@@ -926,6 +946,12 @@ export class Sky {
     f[6] = sun[2]!;
     f[7] = 2; // no disk
     f[63] = 0; // nor the Moon
+    // The background's mean light isn't otherwise in the environment. From the
+    // table, the view's faint stars already are.
+    for (let i = 0; i < 3; i++) {
+      const mean = (this.meanBackground * STARLIGHT[i]!) / 0.8e-4;
+      f[84 + i] = mean + (fromTable ? 0 : STARLIGHT[i]! * this.faintShare);
+    }
     f[11] = 1;
     f[15] = 1;
     f[19] = 1;
@@ -1489,8 +1515,7 @@ export class Sky {
   /**
    * Writes a view's uniform: its camera (Earth-fixed, meters), the sun
    * (unit, Earth-fixed), the pre-exposure, whether the sun's disk shows,
-   * the observer's point spread for the stars, the stars' exposure against
-   * a dark sky (0: the view's) and the Moon
+   * the observer's point spread for the stars, and the Moon
    * as the camera sees it (undefined: none).
    *
    * The atmosphere is a sphere; the camera sits on it at its height above
@@ -1508,7 +1533,6 @@ export class Sky {
     exposure: number,
     sunDisk: boolean,
     pointSpread: PointSpread,
-    starExposure = 0,
     moon?: MoonView,
     cityLight = 0,
   ): void {
@@ -1561,8 +1585,7 @@ export class Sky {
       Math.sqrt(top * top - bottom * bottom);
     f[56] = view.aerialStart;
     f[57] = view.aerialEnd;
-    f[58] = starExposure;
-    f[59] = moon?.airShare ?? 0;
+    f[58] = moon?.airShare ?? 0;
     // The light the ground around emits (cities), cd/m² (cityLight.ts).
     f[75] = cityLight;
     if (moon) {
@@ -1603,13 +1626,16 @@ export class Sky {
     f.set(camera.right, 12);
     f[15] = tanY;
     f[83] = backgroundLevel(tanY, this.starLevels);
+    for (let i = 0; i < 3; i++) {
+      f[84 + i] = STARLIGHT[i]! * this.faintShare;
+    }
     f.set(camera.up, 16);
     f[19] = 2 * Math.PI * (1 - Math.cos(radius));
     f[20] = width;
     f[21] = height;
     f[22] = SKY_STEPS;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
-    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 112);
+    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 128);
   }
 
   /** The weights (bytes 96 on) are constant: written once per view. */

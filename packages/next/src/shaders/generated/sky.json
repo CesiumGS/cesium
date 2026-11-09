@@ -223,17 +223,6 @@
                             "binding": {"kind": "uniform", "offset": 228, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "starExposure",
-                            "type": {
-                                "kind": "scalar",
-                                "scalarType": "float32",
-                                "sizes": [
-                                    {"kind": "uniform", "value": 4, "alignment": 4}
-                                ]
-                            },
-                            "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
-                        },
-                        {
                             "name": "moonLight",
                             "type": {
                                 "kind": "scalar",
@@ -242,7 +231,7 @@
                                     {"kind": "uniform", "value": 4, "alignment": 4}
                                 ]
                             },
-                            "binding": {"kind": "uniform", "offset": 236, "size": 4, "elementStride": 0}
+                            "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
                         },
                         {
                             "name": "moon",
@@ -417,10 +406,25 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "faintStars",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 336, "size": 12, "elementStride": 4}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 336, "alignment": 16}
+                        {"kind": "uniform", "value": 352, "alignment": 16}
                     ]
                 },
                 "containerVarLayout": {
@@ -644,17 +648,6 @@
                                 "binding": {"kind": "uniform", "offset": 228, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "starExposure",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "float32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
-                            },
-                            {
                                 "name": "moonLight",
                                 "type": {
                                     "kind": "scalar",
@@ -663,7 +656,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 236, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "moon",
@@ -838,13 +831,28 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "faintStars",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 336, "size": 12, "elementStride": 4}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 336, "alignment": 16}
+                            {"kind": "uniform", "value": 352, "alignment": 16}
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 336, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 352, "elementStride": 0}
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -1854,17 +1862,6 @@
                                 "binding": {"kind": "uniform", "offset": 228, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "starExposure",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "float32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
-                            },
-                            {
                                 "name": "moonLight",
                                 "type": {
                                     "kind": "scalar",
@@ -1873,7 +1870,7 @@
                                         {"kind": "uniform", "value": 4, "alignment": 4}
                                     ]
                                 },
-                                "binding": {"kind": "uniform", "offset": 236, "size": 4, "elementStride": 0}
+                                "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
                             },
                             {
                                 "name": "moon",
@@ -2048,10 +2045,25 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "faintStars",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 336, "size": 12, "elementStride": 4}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 336, "alignment": 16}
+                            {"kind": "uniform", "value": 352, "alignment": 16}
                         ]
                     },
                     "containerVarLayout": {
@@ -2275,17 +2287,6 @@
                                     "binding": {"kind": "uniform", "offset": 228, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "starExposure",
-                                    "type": {
-                                        "kind": "scalar",
-                                        "scalarType": "float32",
-                                        "sizes": [
-                                            {"kind": "uniform", "value": 4, "alignment": 4}
-                                        ]
-                                    },
-                                    "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
-                                },
-                                {
                                     "name": "moonLight",
                                     "type": {
                                         "kind": "scalar",
@@ -2294,7 +2295,7 @@
                                             {"kind": "uniform", "value": 4, "alignment": 4}
                                         ]
                                     },
-                                    "binding": {"kind": "uniform", "offset": 236, "size": 4, "elementStride": 0}
+                                    "binding": {"kind": "uniform", "offset": 232, "size": 4, "elementStride": 0}
                                 },
                                 {
                                     "name": "moon",
@@ -2469,13 +2470,28 @@
                                         ]
                                     },
                                     "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "faintStars",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 12, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 336, "size": 12, "elementStride": 4}
                                 }
                             ],
                             "sizes": [
-                                {"kind": "uniform", "value": 336, "alignment": 16}
+                                {"kind": "uniform", "value": 352, "alignment": 16}
                             ]
                         },
-                        "binding": {"kind": "uniform", "offset": 0, "size": 336, "elementStride": 0}
+                        "binding": {"kind": "uniform", "offset": 0, "size": 352, "elementStride": 0}
                     },
                     "sizes": [
                         {"kind": "descriptorTableSlot", "value": 1}

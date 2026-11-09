@@ -42,9 +42,6 @@ struct Sky {
   // edge past the horizon.
   float aerialStart;
   float aerialEnd;
-  // The stars' exposure scale against a dark sky, when more open than the
-  // view's (`starExposure`); 0: the view's.
-  float starExposure;
   // The Moon's illuminance as a share of the sun's above the atmosphere,
   // for the light the air scatters by night (the sky's, the haze's); 0
   // while the sun is up, or without the Moon.
@@ -82,6 +79,11 @@ struct Sky {
   float starWingShare;
   // The star background's mip level: it softens as the field of view narrows.
   float starBackgroundLevel;
+  // The stars too faint for the star field, and the zodiacal light, as a glow in
+  // cd/m² (`STARLIGHT` in atmosphere/Sky.ts). Less with a field whose background
+  // already holds them; an environment face's also takes the background's mean,
+  // which isn't otherwise in it.
+  float3 faintStars;
 };
 
 [[vk::binding(0, 2)]] ConstantBuffer<Sky> sky;
@@ -244,7 +246,7 @@ StarSplat starVertex(uint corner : SV_VertexID, uint index : SV_InstanceID) {
     return out;
   }
   float3 light = min(b.xyz * (a.w / omega), float3(STAR_MAX));
-  float brightest = max(light.r, max(light.g, light.b)) * max(sky.exposure, sky.starExposure);
+  float brightest = max(light.r, max(light.g, light.b)) * sky.exposure;
   float radius = starReach(brightest);
   float2 side = float2(float(corner & 1u), float(corner >> 1u)) * 2.0 - 1.0;
   float2 p = pixel + side * radius;
@@ -306,17 +308,6 @@ void starCull(uint3 id : SV_DispatchThreadID) {
   starArgs[cell * 4u + 1u] = drawn;
   starArgs[cell * 4u + 2u] = 0u;
   starArgs[cell * 4u + 3u] = first;
-}
-
-// The exposure the stars are shown at against `background` (pre-exposed,
-// this group's share of the sky, `share` of the whole): the view's, or
-// the stars' own (`View.starExposure`, the eye's view of them) where the
-// sky is dark, fading out as the sky brightens toward a few percent of
-// white (twilight's blue hides them, as it does to the eye).
-float starExposure(float3 background, float share) {
-  float y = dot(background, float3(0.2126, 0.7152, 0.0722)) / share;
-  float dark = 1.0 - smoothstep(0.002, 0.03, y);
-  return sky.exposure + max(sky.starExposure - sky.exposure, 0.0) * dark;
 }
 
 // --- the moon -------------------------------------------------------------------
@@ -428,13 +419,12 @@ float luminanceShare(float4 t, uint group) {
 // longer through the shell (van Rhijn), and from orbit a thin line along
 // the planet's edge; a mild yellow-green (the green line over the red
 // lines and the continuum, as long exposures show it); and from beyond the
-// atmosphere, the zodiacal light and the stars too faint for the star map,
-// warm white, 0.8e-4 cd/m², dimmed by the air like the stars. Linear sRGB,
-// cd/m² (per km of the shell for airglow); a day sky is 10⁷ times brighter.
+// atmosphere, the zodiacal light and the stars too faint for the star field
+// (`sky.faintStars`), dimmed by the air like the stars. Linear sRGB, cd/m² (per
+// km of the shell for airglow); a day sky is 10⁷ times brighter.
 static const float AIRGLOW_BOTTOM = 87.0;
 static const float AIRGLOW_TOP = 97.0;
 static const float3 AIRGLOW = float3(0.855, 1.069, 0.748) * 1.4e-5;
-static const float3 STARLIGHT = float3(1.07, 0.99, 0.86) * 0.8e-4;
 
 // How much of [a, b] along a ray (from radius r, zenith cosine mu) is
 // inside a sphere.
@@ -486,7 +476,7 @@ float3 nightGlow(float r, float mu, bool ground, float toSpace) {
   float r2 = bottom + AIRGLOW_TOP;
   float near = sphereSpan(r, mu, r2, 0.0, lowest) - sphereSpan(r, mu, r1, 0.0, lowest);
   float far = sphereSpan(r, mu, r2, lowest, end) - sphereSpan(r, mu, r1, lowest, end);
-  return AIRGLOW * (near * 0.5 + far * (ground ? 0.5 : toSpace)) + STARLIGHT * toSpace
+  return AIRGLOW * (near * 0.5 + far * (ground ? 0.5 : toSpace)) + sky.faintStars * toSpace
       + cityGlow(r - bottom, mu, ground);
 }
 
@@ -574,7 +564,7 @@ float4 skyStarsFragment(SkyVarying in) : SV_Target0 {
   float3 direction = viewDirection(in.position.xy);
   MoonSample moon = moonDisk(direction);
   float3 moonLight = toRgb(atmosphere.solarIrradiance * moon.radiance * m.transmittance, in.group) * sky.exposure;
-  float3 starry = starLight(in.position.xy, direction) * m.toSpace * starExposure(m.color, 0.5) * (1.0 - moon.coverage);
+  float3 starry = starLight(in.position.xy, direction) * m.toSpace * sky.exposure * (1.0 - moon.coverage);
   return float4(min(m.color + moonLight + starry, float3(SKY_MAX)), 1.0);
 }
 
@@ -772,18 +762,19 @@ float4 skyFromTableFragment(SkyVarying in) : SV_Target0 {
       float3 light = skyView.Load(int3(1, int(SKY_VIEW_SIZE.y), 0)).rgb / MOON_ROW_SCALE;
       color += light * moon.radiance * sky.exposure;
     }
-    color += starLight(in.position.xy, direction) * s.toSpace * starExposure(s.color, 1.0) * (1.0 - moon.coverage);
+    color += starLight(in.position.xy, direction) * s.toSpace * sky.exposure * (1.0 - moon.coverage);
   }
   return float4(min(color, float3(2.0 * SKY_MAX)), 1.0);
 }
 
 // A face of the environment cube from the view's table: the uniform is a
 // 90° face view at the same camera, its exposure the reciprocal of the
-// view's (the table is pre-exposed; the environment is in cd/m²).
+// view's (the table is pre-exposed; the environment is in cd/m²). The table
+// has the view's faint stars; the face's `faintStars` is what it adds to them.
 [shader("fragment")]
 float4 environmentFromTableFragment(SkyVarying in) : SV_Target0 {
   TableSky s = skyFromTable(viewDirection(in.position.xy));
-  return float4(s.color * sky.exposure, 1.0);
+  return float4(s.color * sky.exposure + sky.faintStars * s.toSpace, 1.0);
 }
 
 // --- the sun's light on the scene ----------------------------------------------

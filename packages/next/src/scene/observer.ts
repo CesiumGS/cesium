@@ -4,6 +4,7 @@
 // pre-exposure, a matter of fp16's range, and the stars' point spread, which
 // keeps each star's energy (CESIUM2_WEBGPU_PLAN.md §13.32).
 import type { PostStage } from "./postStage.ts";
+import { eyeLimitStage } from "./eyeLimit.ts";
 
 /**
  * How a view turns the scene's light into an image (plan §4.2): as a
@@ -39,9 +40,9 @@ export type Exposure =
    * in dim light the rods take over, gray and a little blue (Thompson et
    * al. 2002), colors fading; night looks darker than day (Tumblin and
    * Rushmeier's brightness: 1.8 stops by moonlight); adapting to light
-   * takes a moment, to dark longer. It sees the stars against a dark sky
-   * even where the scene is bright (from orbit). `compensation` (stops)
-   * brightens when positive; `speed` is how many times faster than a
+   * takes a moment, to dark longer. Stars take the same exposure as all else,
+   * so beside a sunlit Earth they're gone, as in a photograph. `compensation`
+   * (stops) brightens when positive; `speed` is how many times faster than a
    * real eye it adapts (1: to dark in minutes, as the eye does; default
    * `EYE_ADAPTATION_SPEED`, 400: a few seconds).
    */
@@ -150,16 +151,23 @@ export function observerPointSpread(
 /**
  * A person looking (`Exposure`'s "eye"): `compensation` (stops) brightens
  * when positive, and `speed` is how many times faster than a real eye it
- * adapts.
+ * adapts. `pointLimit` (default true) has the eye's limit on faint points, a
+ * model (`eyeLimitStage`); a new stage each time, so turning it off here touches
+ * no other observer.
  */
 export function eyeObserver(
-  options: { compensation?: number; speed?: number } = {},
+  options: {
+    compensation?: number;
+    speed?: number;
+    pointLimit?: boolean;
+  } = {},
 ): ObserverSettings {
+  const { pointLimit = true, ...exposure } = options;
   return {
-    exposure: { eye: true, ...options },
+    exposure: { eye: true, ...exposure },
     toneMapping: "pbrNeutral",
     glare: null,
-    stages: [],
+    stages: pointLimit ? [eyeLimitStage()] : [],
   };
 }
 

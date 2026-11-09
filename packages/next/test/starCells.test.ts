@@ -351,6 +351,18 @@ describe("what a view draws", () => {
   });
 });
 
+describe("with the star exposure rule gone", () => {
+  it("at EV100 15 on a 60° view, at most the two brightest pass", () => {
+    const built = buildStarCells(sky(50_000, 7), 50_000);
+    const view = viewOf([0, 1, 0], 60, { ev100: 15 });
+    // A shown value of 10⁻⁴ of white: about magnitude −0.8 at this size, in the
+    // view's corner.
+    expect(drawnBy(built, view)).toBeLessThanOrEqual(2);
+    const dark = viewOf([0, 1, 0], 60, { ev100: -3 });
+    expect(drawnBy(built, dark)).toBeGreaterThan(1000);
+  });
+});
+
 describe("how they're submitted", () => {
   it("is direct with a direct world, or without indirect's first instance", () => {
     const on = { indirectFirstInstance: true };

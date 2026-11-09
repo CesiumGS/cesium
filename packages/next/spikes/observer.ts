@@ -8,6 +8,7 @@ import {
   OffscreenTarget,
   astrophotoCurveStage,
   createPostStage,
+  eyeLimitStage,
   type Exposure,
   type MeshData,
   type PostStage,
@@ -17,7 +18,11 @@ import {
 } from "../src/index.ts";
 import { astroCurve } from "../src/render/post/astroCurve.ts";
 import { cullCell, type StarCell } from "../src/atmosphere/starCells.ts";
-import type { StarField } from "../src/atmosphere/stars.ts";
+import {
+  MAGNITUDE_ZERO_ILLUMINANCE,
+  type StarField,
+} from "../src/atmosphere/stars.ts";
+import { eyePointLimit } from "../src/scene/eye.ts";
 import { ev100ToScale, type PointSpread } from "../src/scene/observer.ts";
 
 const TEMPLATE = `
@@ -1309,6 +1314,196 @@ async function packGroup(engine: Engine, say: Say): Promise<void> {
   engine.sunDirection.set(saved);
 }
 
+/** Until a scene's stages can draw, and once more. */
+async function ticksWithStages(engine: Engine, scene: Scene): Promise<void> {
+  await image(engine, scene);
+}
+
+/** The fudges gone: the eye by scene, with the point limit, and the twilight table. */
+async function fudgesGroup(engine: Engine, say: Say): Promise<void> {
+  await skyStars(engine);
+  const saved = Float64Array.from(engine.sunDirection);
+  const [W, H] = [1280, 720];
+  const eye: Exposure = { eye: true, speed: 1e6 };
+  const shoot = async (pose: SkyPose, exposure: Exposure, limit = true) => {
+    const scene = new SkyScene(engine, W, H, exposure);
+    if (limit) {
+      scene.view.observer = { stages: [eyeLimitStage()] };
+    }
+    scene.aim(pose);
+    await ticks(engine, 60);
+    engine.renderFrame();
+    await engine.gpu.device.queue.onSubmittedWorkDone();
+    const image = await scene.target.read();
+    const read = scene.view.readout();
+    scene.dispose();
+    engine.removeView(scene.view);
+    return { image, read };
+  };
+  /** Pixels at least this far above their row's median green, off the Earth. */
+  const brightPoints = (image: Uint8ClampedArray, above = 12) => {
+    let found = 0;
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const i = (y * W + x) * 4;
+        const v = image[i + 1]!;
+        if (
+          v >= above &&
+          v > image[i + 1 - 4]! &&
+          v >= image[i + 1 + 4]! &&
+          v > image[i + 1 - W * 4]! &&
+          v >= image[i + 1 + W * 4]!
+        ) {
+          found++;
+        }
+      }
+    }
+    return found;
+  };
+  const night = await shoot(SKY_POSES.orion!, eye);
+  say(
+    "a moonless night: stars show",
+    brightPoints(night.image) > 50,
+    `${brightPoints(night.image)} points; EV100 ${night.read.ev100?.toFixed(2)}, cones ${night.read.cones?.toExponential(2)}`,
+  );
+  const noLimit = await shoot(SKY_POSES.orion!, eye, false);
+  say(
+    "the limit takes away points fainter than it",
+    brightPoints(night.image, 4) < brightPoints(noLimit.image, 4),
+    `${brightPoints(noLimit.image, 4)} points without it, ${brightPoints(night.image, 4)} with`,
+  );
+  const sunlit = await shoot(SKY_POSES.limbDay!, eye);
+  // Above the limb, where the sky is black.
+  let brightest = 0;
+  for (let y = 0; y < 40; y++) {
+    for (let x = 0; x < W; x++) {
+      brightest = Math.max(brightest, sunlit.image[(y * W + x) * 4 + 1]!);
+    }
+  }
+  say(
+    "the sunlit Earth from orbit: stars gone",
+    brightest <= 2,
+    `the brightest pixel above the limb ${brightest}/255; EV100 ${sunlit.read.ev100?.toFixed(2)}, cones ${sunlit.read.cones?.toExponential(2)}`,
+  );
+
+  // Terrain under the eye at night: the limit leaves what was drawn alone.
+  {
+    const sun: V3 = [-1, 0, 0.1];
+    engine.sunDirection.set(sun);
+    const shot = async (stages: PostStage[]) => {
+      const scene = new Scene(engine, {
+        background: "atmosphere",
+        exposure: eye,
+        unlit: false,
+      });
+      scene.view.observer = { stages };
+      await ticks(engine, 30);
+      const image = await (async () => {
+        await ticksWithStages(engine, scene);
+        return scene.target.read();
+      })();
+      scene.dispose();
+      engine.removeView(scene.view);
+      return image;
+    };
+    const without = await shot([]);
+    const withIt = await shot([eyeLimitStage()]);
+    const middle = (data: Uint8ClampedArray) => {
+      const out: number[] = [];
+      for (let y = 30; y < 42; y++) {
+        for (let x = 54; x < 74; x++) {
+          out.push(...at(data, x, y).slice(0, 3));
+        }
+      }
+      return out;
+    };
+    const d = difference(middle(without), middle(withIt));
+    say(
+      "terrain under the eye at night isn't touched by the limit",
+      d.largest === 0,
+      `${d.pixels} of its pixels differ, by at most ${d.largest}/255`,
+    );
+  }
+
+  // The twilight table: the faintest of a list that shows at the zenith, the sun at
+  // each depth. Its places and magnitudes are HYG v4.1's. Nothing's tuned to it.
+  const NAMED: [string, number, number, number][] = [
+    ["Vega", 279.2346, 38.7837, 0.03],
+    ["Altair", 297.6958, 8.8683, 0.76],
+    ["Deneb", 310.358, 45.2803, 1.25],
+    ["Sadr", 305.5571, 40.2567, 2.23],
+    ["Aljanah", 311.5527, 33.9703, 2.48],
+    ["Okab", 286.3525, 13.8635, 2.99],
+    ["γ Sge", 299.6893, 19.4921, 3.51],
+    ["41 Cyg", 307.3489, 30.3686, 4.01],
+    ["23 Vul", 303.9422, 27.8142, 4.5],
+    ["a star of 5.0", 271.8698, 43.4619, 5],
+    ["10 Vul", 295.9289, 25.7719, 5.5],
+    ["a star of 6.0", 293.4234, 49.2623, 6],
+  ];
+  const zenith = sky3.dir(287, 30);
+  const here = sky3.scale(zenith, RADIUS + 2);
+  const pole: V3 = NORTH;
+  const east = sky3.norm(sky3.cross(pole, zenith));
+  for (const depth of [-6, -12, -18]) {
+    const sun = sky3.norm(
+      sky3.add(
+        sky3.scale(east, Math.cos(depth * DEG)),
+        zenith,
+        Math.sin(depth * DEG),
+      ),
+    );
+    const pose: SkyPose = {
+      position: here,
+      direction: zenith,
+      up: orthoUp(zenith, pole),
+      sun,
+      fov: 80,
+      ev100: 0,
+    };
+    const { image, read } = await shoot(pose, eye);
+    const tanX = Math.tan(40 * DEG);
+    const tanY = tanX * (H / W);
+    const right = sky3.norm(sky3.cross(pose.direction, pose.up));
+    const up = sky3.cross(right, pose.direction);
+    const shown: string[] = [];
+    let faintest = -Infinity;
+    for (const [name, ra, dec, mag] of NAMED) {
+      const d = sky3.dir(ra, dec);
+      const z = sky3.dot(d, zenith);
+      const x = Math.round(((sky3.dot(d, right) / (z * tanX)) * 0.5 + 0.5) * W);
+      const y = Math.round((0.5 - (sky3.dot(d, up) / (z * tanY)) * 0.5) * H);
+      if (z <= 0 || x < 12 || y < 12 || x >= W - 12 || y >= H - 12) {
+        continue;
+      }
+      // Its peak in a 5 × 5 box, against the median of the ring at 8 px.
+      let peak = 0;
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          peak = Math.max(peak, image[((y + dy) * W + x + dx) * 4 + 1]!);
+        }
+      }
+      const ring: number[] = [];
+      for (let a = 0; a < 16; a++) {
+        const px = x + Math.round(8 * Math.cos((a * Math.PI) / 8));
+        const py = y + Math.round(8 * Math.sin((a * Math.PI) / 8));
+        ring.push(image[(py * W + px) * 4 + 1]!);
+      }
+      ring.sort((p, q) => p - q);
+      if (peak >= ring[8]! + 2) {
+        shown.push(`${name} ${mag}`);
+        faintest = Math.max(faintest, mag);
+      }
+    }
+    say(
+      `the sun at ${depth}°: the faintest named star at the zenith`,
+      true,
+      `magnitude ${faintest === -Infinity ? "none" : faintest}; ${shown.length} of ${NAMED.length} show; the model's limit is magnitude ${(-2.5 * Math.log10(eyePointLimit(read.rods!) / MAGNITUDE_ZERO_ILLUMINANCE)).toFixed(1)}; cones ${read.cones?.toExponential(2)} cd/m², rods ${read.rods?.toExponential(2)}, EV100 ${read.ev100?.toFixed(2)}`,
+    );
+  }
+  engine.sunDirection.set(saved);
+}
+
 /** Star time: `?time`, with `?pack=local`. Bright poses, at the spike's size. */
 async function starTimes(engine: Engine, say: Say): Promise<void> {
   if (!params.has("time")) {
@@ -1327,6 +1522,9 @@ async function starTimes(engine: Engine, say: Say): Promise<void> {
       who === "eye" ? { eye: true, speed: 1e6 } : { ev100: pose.ev100 };
     const scene = new SkyScene(engine, 2560, 1440, exposure);
     scene.aim(pose);
+    if (who === "eye") {
+      scene.view.observer = { stages: [eyeLimitStage()] };
+    }
     await ticks(engine, 60);
     const passes = engine.gpuPasses;
     const started = performance.now();
@@ -1340,7 +1538,7 @@ async function starTimes(engine: Engine, say: Say): Promise<void> {
     say(
       `star time: ${name}, ${fov}°, ${who}`,
       true,
-      `stars ${passes.stars?.toFixed(2)} ms, cull ${passes["star-cull"]?.toFixed(2) ?? "-"} ms, tick's CPU ${(cpu / 30).toFixed(2)} ms, over ${(performance.now() - started).toFixed(0)} ms`,
+      `stars ${passes.stars?.toFixed(2)} ms, cull ${passes["star-cull"]?.toFixed(2) ?? "-"} ms, the limit ${passes["post.eye-point-limit"]?.toFixed(2) ?? "-"} ms, tick's CPU ${(cpu / 30).toFixed(2)} ms, over ${(performance.now() - started).toFixed(0)} ms`,
     );
     scene.dispose();
     engine.removeView(scene.view);
@@ -1365,6 +1563,9 @@ async function stillsGroup(
         who === "eye" ? { eye: true, speed: 1e6 } : { ev100: pose.ev100 };
       const scene = new SkyScene(engine, 1280, 720, exposure);
       scene.aim(pose);
+      if (who === "eye" && params.has("limit")) {
+        scene.view.observer = { stages: [eyeLimitStage()] };
+      }
       if (params.get("spread") === "today") {
         // The spread today's quads drew with, for comparing strips with them.
         scene.view.observer.pointSpread = {
@@ -1402,6 +1603,7 @@ const GROUPS: Record<
   points: pointsGroup,
   cells: cellsGroup,
   pack: packGroup,
+  fudges: fudgesGroup,
   times: starTimes,
   stills: stillsGroup,
 };
