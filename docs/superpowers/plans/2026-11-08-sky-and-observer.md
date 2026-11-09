@@ -46,7 +46,7 @@ These facts drive the calls below. Where they correct an earlier note, that's sa
 
 Each is marked "(author's call N)" where it's used. One line each, then what undoing it costs. In order: the observer (1 to 11), the pack (12 to 22), stars (23 to 27), removing fudges (28 to 30), glare (31 to 41), the UI (42).
 
-1. **`view.observer` replaces `view.exposure` and `view.toneMapping`, with no shim.** It's a prototype, and 5d and 5e haven't built on them yet. *Undo:* two getters.
+1. **`view.observer` replaces `view.exposure` and `view.toneMapping`, with no shim.** Nothing is released, and 5d and 5e haven't built on them yet. *Undo:* two getters.
 2. **The `Exposure` union stays as `observer.exposure`.** EV100 stays the unit. `{ scale }` stays only for scenes without units, which the parity pages use. *Undo:* a type.
 3. **`eyeObserver()` and `cameraObserver()` are functions that give settings, not classes.** `Camera` already names the pose and projection. *Undo:* renames.
 4. **The readout's EV100 for the eye is an equivalent:** the EV100 of its pre-exposure, flagged `equivalent: true` and shown as "≈". A plain scale has none. *Undo:* one function.
@@ -104,7 +104,7 @@ Where the sources disagree.
 Copied from 5d where they apply, with this plan's additions.
 
 - **The simulated world stays physically correct (owner, §13.32):** "no gains or tone changes on scene light for looks". Nothing derived from an observer reaches a scene or sky shader except `exposure` (pre-exposure, a matter of fp16's range) and `pointSpread`, which keeps each star's energy. Task 11 adds a seam test for this.
-- **Scene data and rasterizer data stay apart:** `src/scene/observer.ts`, `src/atmosphere/skyPack.ts`, `src/atmosphere/starCells.ts` and `glareKernel.ts` hold no GPU types, and `test/importBoundary.test.ts` says so. Don't add a renderer interface.
+- **Scene data and rasterizer data stay apart:** `src/scene/observer.ts`, `src/scene/postStage.ts`, `src/atmosphere/skyPack.ts`, `src/atmosphere/starCells.ts`, `veilWeights.ts` and `glareKernel.ts` hold no GPU types, and `test/importBoundary.test.ts` says so. Don't add a renderer interface.
 - **Earth-only scenes with no sky are unchanged:** the parity suites show no pixel difference at any task. Metal can reorder a float sum when a kernel's code changes, so explain any difference before accepting it.
 - **Sky data during R&D (§13.29):** no sky data, derived data or derived images in the repository, on a server of ours, in a library build, or in the handbook's file. Fetched by a script into the store, on the developer's machine. Stills and pack files never go in a commit. Numbers do.
 - **Licences:** describe what a page says, with the date read. Don't write a legal conclusion, and don't describe the situation as resolved.
@@ -214,7 +214,7 @@ What it decides: `glareTier`'s table; whether cells keep indirect draws on Intel
 2. **A pack that's wrong:** a truncated binary, a count that doesn't match, a manifest with no `distributable`, non-finite values, a count over the cap, a 404, credits holding HTML. The sky keeps today's map, with one warning naming the file and field. Credits show as text. Tests: Tasks 4 and 7.
 3. **Exposure at its limits with glare on:** EV100 −12 and 18, `{ scale: 1 }`, an eye just adapted from noon to night, or a look stage returning NaN. Nothing overflows fp16 into infinity, no NaN reaches the display, and the meter still reads. Tests: Tasks 2 and 13.
 4. **Views that differ or change:** two views with different observers on one canvas, a stage added or removed while running, a canvas squeezed to 0 px, a view removed with a pack still uploading. Each view gets its own chain, its targets free, and no bind group is stale. Tests: Tasks 2, 4 and 15.
-5. **The on-demand loop:** a sleeping engine wakes when an observer's value is edited in place. An idle scene with the eye, glare or a stage on goes to sleep, and a kernel or pack arriving asks for one tick. Tests: Tasks 1, 7 and 15.
+5. **The on-demand loop:** a sleeping engine wakes when an observer's value is edited in place. An idle scene with the eye, glare or a stage on goes to sleep, and a kernel or pack arriving asks for one tick. Tests: Tasks 1, 4, 14 and 15.
 
 ---
 
@@ -223,7 +223,7 @@ What it decides: `glareTier`'s table; whether cells keep indirect draws on Intel
 New files, by responsibility. Modified code is named by symbol in each task.
 
 - **The observer:** `src/scene/observer.ts` (settings, presets, readout; no GPU types).
-- **Stages:** `src/render/post/postStage.ts` (the public definition, validation), `src/render/post/chain.ts` (registering a chain in the graph), `src/render/post/astroCurve.ts`, `src/render/post/eyeLimit.ts`, `src/shaders/postStage.slang`.
+- **Stages:** `src/scene/postStage.ts` (the public definition and validation; plain data, no GPU types), `src/render/post/chain.ts` (registering a chain in the graph), `src/render/post/astroCurve.ts`, `src/render/post/eyeLimit.ts`, `src/shaders/postStage.slang`.
 - **The pack:** `src/atmosphere/skyPack.ts` (manifest, readers), `src/atmosphere/starCells.ts` (sort into cells; no GPU types), `scripts/vitePluginSkyPack.ts` (the build's refusal), `scripts/skyPack.mjs` (fetch and build), `scripts/skyPack/exr.mjs`, `peaks.mjs`, `calibrate.mjs`, `recipes.mjs`, `background.mjs`.
 - **Glare:** `src/render/post/glare.ts` (tiers, settings to passes), `src/render/post/veilWeights.ts` (weights and the closed-form spread; no GPU types), `src/render/post/glareKernel.ts` (pupil to kernel, CPU), `src/shaders/glare.slang`.
 - **UI:** `widgets/observerPanel.ts`, `examples/night-sky/` (with `DESIGN.md`).
@@ -248,7 +248,7 @@ No picture changes. EV100 stays the unit.
   - `Exposure`, `EYE`, `UNITLESS_EXPOSURE`, `DAYLIGHT_EXPOSURE`, `ev100ToScale`, `ToneMapping` move here, unchanged, and `src/index.ts` keeps exporting them;
   - `scaleToEv100(scale: number): number`, the inverse of `ev100ToScale`;
   - `interface PointSpread { core: number; wing?: { sigma: number; share: number } }`, in CSS pixels;
-  - `interface ObserverSettings { exposure: Exposure; toneMapping: ToneMapping; pointSpread: PointSpread; glare: GlareSettings | null; stages: readonly PostStage[] }` (`GlareSettings` is declared here, used from Task 12: `{ tier: GlareTier | "auto"; veil: { share: number } | null; spikes: { aperture: Aperture; share: number; extent: number } | null }`, `extent` in degrees; `PostStage` as a type import from Task 2, and `stages` is empty until then);
+  - `interface ObserverSettings { exposure: Exposure; toneMapping: ToneMapping; pointSpread: PointSpread; glare: GlareSettings | null; stages: readonly PostStage[] }` (`GlareSettings`, `GlareTier` and `Aperture` are declared here, and used from Task 12: `{ tier: GlareTier | "auto"; veil: { share: number } | null; spikes: { aperture: Aperture; share: number; extent: number } | null }`, `extent` in degrees, `type GlareTier = "full" | "reduced" | "sources" | "off"`, `type Aperture = "round" | "vanes" | "hex" | "blades7"`; `PostStage` is a type import from Task 2, and `stages` is empty until then);
   - `eyeObserver(options?: { compensation?: number; speed?: number }): ObserverSettings`: exposure `{ eye: true, ... }`, core 0.85, glare null, no stages;
   - `cameraObserver(exposure: Exposure): ObserverSettings`: core 0.55, glare null, no stages;
   - `interface ObserverReadout { ev100: number | undefined; equivalent: boolean; preExposure: number; cones?: number; rods?: number }`;
@@ -274,7 +274,7 @@ No picture changes. EV100 stays the unit.
 
 **Files:**
 
-- Create: `src/render/post/postStage.ts`, `src/render/post/chain.ts`, `src/shaders/postStage.slang`, `test/postStage.test.ts`, `spikes/observer.html`, `spikes/observer.ts`
+- Create: `src/scene/postStage.ts`, `src/render/post/chain.ts`, `src/shaders/postStage.slang`, `test/postStage.test.ts`, `spikes/observer.html`, `spikes/observer.ts`
 - Modify: `TextureDesc`, `FrameGraph`, `TexturePool`, `present.slang` (new entries only), the `present` pass and pipelines, `buildViewFrame`, `src/shaders/link/boundary.ts`, `src/index.ts`, `api/surface.txt`
 
 **Interfaces:**
@@ -577,7 +577,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - `test/noSceneGains.test.ts` (the owner's rule as a seam): with `fakeEngine`, render a tick and record every byte of the sky's uniform and the view block; change `toneMapping`, `glare`, or add a look stage: not one byte changes. Change `pointSpread`: only `starCore`, `starWing` and `starWingShare` change. Change `exposure` to another EV100: only the exposure field and what's documented as pre-exposed changes. No `.slang` file under `src/atmosphere` or `src/shaders` holds `starExposure`, `EYE_STARS` or a uniform named with `gain` or `stretch` (a detector shown to flag a planted one);
   - `test/eyeLimit.test.ts`: `eyePointLimit` at 10⁻⁴ is magnitude 6.0 ± 0.05; at 10⁻³, 5.4; at 0.03, 2.7; at 1, −1.2; at 30, −4.8, each ± 0.1 (computed for this plan; a change in the eye's thresholds shows here); the stage's kind is `model`, and it reads `depth`; the shader passes through where depth isn't at the far plane (a source pin); the ring is 8 taps, unrolled; the chain has it with the eye at night, and not with a camera, at 4,000 cd/m², or with `background: "color"`;
   - the `Sky` uniform's `faintStars` equals `STARLIGHT` with today's map, half with a deep pack in the view's uniform, and half plus `meanBackground` in an environment face; the view block's night light doesn't change with today's map;
-  - the star cull's threshold: a look stage with `shadowGain` 2.89 draws more stars than none; at EV100 15 with the eye gone, no star's shown value passes it.
+  - the star cull's threshold: a look stage with `shadowGain` 2.89 draws more stars than none; at EV100 15 on a 60° view, with the rule gone, at most the two brightest stars of a synthetic sky pass it (a shown value of 10⁻⁴ of white needs about magnitude −0.8).
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement.** `npm run shaders`. Read the Metal of `skyStarsFragment`, `skyFromTableFragment` and the eye limit.
 - [ ] **Step 4: Run** the tests, `test/sky.test.ts`, `test/exposureAdapt.test.ts`, `test/meterEmission.test.ts`, `test/frameSky.test.ts`, tsc. If a meter reading moves, explain it: star pixels were metered at the boosted value.
@@ -606,13 +606,13 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - `discTaps(n: number): [x, y][]`: a Vogel spiral in the unit disc, as a constant table, pure;
   - `tapVisible`: depth at sample 0 at the far plane, off screen counts as visible, then the ray misses the body's ellipsoid (the same scaled-sphere test as `marchedSky`), then it isn't in the Moon's disc (`sky.moon`, `sky.moonSize`);
   - the sun's `light` is the `sunLight` table's value at the camera, by the mapping `sunlightThroughAir` uses, shared rather than copied; with `lighting.sunIlluminance` set to a number, that number. A star's is its illuminance times the table's color at its direction over the sun's outside the air;
-  - a star becomes a source only if on screen within its radius, with visibility 1 from one tap, and bright enough at this exposure that its sprite shows: the `radii` table, from Task 14. The walk stops at 256 sources or the pixel budget, and the brightest come first, since `glareStars` is brightest first.
+  - a star becomes a source only if on screen within its radius, with visibility 1 from one tap, and bright enough at this exposure that its sprite shows: the `radii` table, from Task 14. Until then the table is empty, so only the sun is a source. The walk stops at 256 sources or the pixel budget, and the brightest come first, since `glareStars` is brightest first.
 
 - [ ] **Step 1: Write the failing test** (`test/glareSources.test.ts`). The fake GPU runs no shader, so ports of the rules are tested, with source pins on the constants, as `test/meterGuard.test.ts` does. A browser step tests the shader itself.
   - `discTaps(32)`: all in the unit disc, with a centroid within 0.05 of the origin, and an even spread: half-disc coverage is within 2 taps of 16 at 8 angles;
   - a port of `tapVisible`: a half-covered disc is 0.5 ± 0.07; two-disc overlap against the analytic eclipse fraction is within 0.05 at 10 separations; every tap off screen is 1; a sun below the horizon from the ground is 0 by the ellipsoid (Review Focus 1);
   - moving the sun's disc across a limb in 64 steps, no step changes visibility by over 2/32 (no pop);
-  - the walk: with 3,000 bright stars it stops at 256 and keeps the 256 brightest; with four huge sprites it stops at the pixel budget; a star with a shown value below the table's cut isn't a source;
+  - the walk: with 3,000 bright stars it stops at 256 and keeps the 256 brightest; with four huge sprites it stops at the pixel budget; with a test table, a star with a shown value below its cut isn't a source;
   - `lightListFor`: no sun with `background: "color"` or `sunDisk` false; zero stars with no field;
   - glare off: no pass acquires anything, and the buffer isn't written;
   - the kernel is registered after `adaptation`, and it reads depth;
@@ -673,7 +673,6 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
 
 - Consumes: Task 12's sources, Task 13's `glare.image`.
 - Produces (author's calls 38, 39, 41):
-  - `type Aperture = "round" | "vanes" | "hex" | "blades7"`;
   - `computeKernel(aperture: Aperture, size: number): { texels: Float32Array; radii: Float32Array; size: number }`, no GPU: the pupil's |FFT|², resampled per wavelength over a constant 16 wavelengths and summed to RGB, with its core tapered out over a radial window and the rest normalized to 1. `radii` gives the visible radius in cells per log2 of display brightness, 32 entries. FFT here runs once, in a worker, and never in a tick;
   - `glare.ts` owns the kernels, one per aperture, uploaded as `rgba16float` on first use; until then spikes draw nothing, and the veil runs. Its arrival asks for one tick (Review Focus 5);
   - the sprite pass: `pass.draw(4, GLARE_SOURCES)`, blending additively into `glare.image` after the composite. The vertex shader gives a degenerate triangle for a slot past the count; the fragment takes one sample, and clamps at 200; `spikes.share` scales it, default 0.05; `spikes.extent` is the kernel's half-width in degrees, default 3, and a sprite's radius is at most 512 px.
@@ -704,7 +703,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
 - Consumes: Tasks 12 to 14.
 - Produces (author's call 40):
   - `GpuDevice.adapterInfo: { vendor: string; architecture: string; isFallbackAdapter: boolean }`, read once from the adapter;
-  - `type GlareTier = "full" | "reduced" | "sources" | "off"`; `glareTier(adapter, pixels: number): GlareTier`, by the table in "GPU safety", pure; `resolveGlare(settings: GlareSettings | null, adapter, pixels): ResolvedGlare`: the levels, base, sprite and pixel caps it means;
+  - `glareTier(adapter, pixels: number): GlareTier`, by the table in "GPU safety", pure; `resolveGlare(settings: GlareSettings | null, adapter, pixels): ResolvedGlare`: the levels, base, sprite and pixel caps it means;
   - `eyeGlare(): GlareSettings`: a veil, no spikes, `tier: "auto"`; `cameraGlare(options?: { aperture?: Aperture }): GlareSettings`: a veil and spikes, default `vanes`;
   - `Viewer` keeps `glare: null` (question 1).
 
@@ -716,7 +715,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - resizing a canvas during glare rebuilds with no stale bind group; a 0 px canvas has no glare passes (Review Focus 4).
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.** `bench/alloc.ts` takes `?glare=1`, and `bench/run.mjs` reads `ALLOC_GLARE=1`.
-- [ ] **Step 4: Run** the test, the Batch's other glare tests and tsc.
+- [ ] **Step 4: Run** the test, the batch's other glare tests and tsc.
 - [ ] **Step 5: Commit** with "render: glare's tiers, its presets, and many views".
 - [ ] **Step 6: Batch D's gates,** with `alloc` both plain and `ALLOC_GLARE=1`. Expect no difference in `parity`, `translucency` or `customShader`, since glare's off there. Then the owner judges by looking (§13.28's test): the sun behind station structure, at the limb from orbit, and low over the sea; bright stars with the veil, then with spikes. A truss across the spikes is a known gap, since a sprite takes one visibility value (§13.22): say so beside the stills. Stills stay out of the repository.
 
@@ -865,7 +864,7 @@ For the owner to apply. This plan doesn't edit them. Line references are by symb
 Most important first. Each has the default the plan follows.
 
 1. **Should the Viewer turn glare on by default?** A tight core with no glare makes bright stars stand out less, and a veil also lowers contrast in daylight scenes. *Default:* off until you've judged Batch D's renders; then it's one line.
-2. **HYG as the default pack's bright end.** The spike found a map alone can't do it, and HYG is the only catalog with a stated licence that we've read, but its inputs include Hipparcos, and its page doesn't say how those terms sit together. *Default:* use it locally, marked uncleared, with raw Hipparcos and Gaia supplied by hand only. Should it stay out until someone reads the terms? The plan then has no bright end to offer but what a developer supplies.
+2. **HYG as the default pack's bright end.** The spike found a map alone can't do it. HYG's page states CC BY-SA 4.0. Its inputs include Hipparcos, whose ESA page states CC BY-NC 3.0 IGO, and its pages don't say how those sit together (both read 2026-11-08). *Default:* use it locally, marked uncleared, with raw Hipparcos and Gaia supplied by hand only. Should it stay out until someone reads the terms? The plan then has no bright end to offer but what a developer supplies.
 3. **Stars beside a sunlit Earth from orbit.** With the rule gone, they vanish, as in photographs. *Default:* accept it, with no special path. A look stage could add them later, labelled.
 4. **The tight core on today's map.** §13.29 says a checkout with no pack draws what it draws now, and also says to drop the halo. *Default:* the data stays, the drawing improves (call 23). Say if the default look should hold until a pack is on.
 5. **Rename 5d's `Camera.lens` to `Camera.imagePlane`?** *Default:* yes, before 5d is built. See "What other plans need".
