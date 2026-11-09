@@ -17,14 +17,14 @@ export interface BundleWorld {
 
 The keys say the side: a context with only `scene` is scene data, and one with both shows a crossing on its face. No object per tick: `world.raster` is one object, made in the field initializer. A function needing what another group needs has that group's context as a part of its own.
 
-| State | File | Side | Holds |
-| --- | --- | --- | --- |
-| `WorldRaster` | `src/render/world/worldRaster.ts` | Rasterizer | Records, batches, bundles, cull, draw arguments, GPU tables and their rows, point draws, texture sets' bind groups, upload queue |
-| `WorldScene` | `src/scene/world/worldScene.ts` | Scene | Transform tree, anchors, revisions, material keys and counts, placements, mesh ranges, feature tables, names, clip block allocation |
-| `EngineRaster` | `src/render/view/engineRaster.ts` | Rasterizer | Staging buffers, view frames, picks, meters, lists, probes, samplers, pool, timer, sky, per-tick pass descriptors |
-| `EngineScene` | `src/scene/engineScene.ts` | Scene | View ids and motion, cameras ahead, anchor eyes, tick timing, selection scratch, upload budget |
-| `TilesetState` | `src/streaming/tilesetState.ts` | Content | What the moved streaming functions read and write |
-| `ViewerState` | `widgets/viewerState.ts` | Widgets | What the moved viewer functions read and write |
+| State          | File                              | Side       | Holds                                                                                                                               |
+| -------------- | --------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `WorldRaster`  | `src/render/world/worldRaster.ts` | Rasterizer | Records, batches, bundles, cull, draw arguments, GPU tables and their rows, point draws, texture sets' bind groups, upload queue    |
+| `WorldScene`   | `src/scene/world/worldScene.ts`   | Scene      | Transform tree, anchors, revisions, material keys and counts, placements, mesh ranges, feature tables, names, clip block allocation |
+| `EngineRaster` | `src/render/view/engineRaster.ts` | Rasterizer | Staging buffers, view frames, picks, meters, lists, probes, samplers, pool, timer, sky, per-tick pass descriptors                   |
+| `EngineScene`  | `src/scene/engineScene.ts`        | Scene      | View ids and motion, cameras ahead, anchor eyes, tick timing, selection scratch, upload budget                                      |
+| `TilesetState` | `src/streaming/tilesetState.ts`   | Content    | What the moved streaming functions read and write                                                                                   |
+| `ViewerState`  | `widgets/viewerState.ts`          | Widgets    | What the moved viewer functions read and write                                                                                      |
 
 `View`'s 12 stay for last; they're few and shared by Engine's own loop.
 
@@ -52,7 +52,7 @@ Every commit: both tsc configs, and the tests it changed. Each batch ends with o
 - [x] **4. Narrow contexts for World and Engine.** Function parameters become the contexts above. Tests: type checks; full suite once.
 - [x] **5. Tileset and Viewer.** `TilesetState`, `ViewerState`, their contexts. `Globe`'s construction order checked: the state is the first field initializer, so it exists before `Tileset3D`'s own and before `Globe`'s. Tests: `casterBudget`, `casterLoop`, `tilesetEviction`, `sceneItems`, viewer tests. Full suite.
 - [x] **6. Real layers.** `DrawSink`, `TilesetHost`, constants; `test/importBoundary.test.ts` gets content, scene, renderer and GPU layers, with named exceptions that fail when stale. Full suite.
-- [ ] **7. End.** Stale pointers; note for post-processing; `translucency`, `customShader`, `parity`, `alloc`, `imagery` (bench, against main), `checkBundle`, `libraryWidgets`, `surface`, `shaders:check`, eslint, prettier, Snyk.
+- [x] **7. End.** Stale pointers; note for post-processing; `translucency`, `customShader`, `parity`, `alloc`, `imagery` (bench, against main), `checkBundle`, `libraryWidgets`, `surface`, `shaders:check`, eslint, prettier, Snyk.
 
 ## Calls, and what undoing costs
 
