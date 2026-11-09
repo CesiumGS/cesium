@@ -59,6 +59,11 @@ export interface StarField {
    */
   cells?: StarCells;
   /**
+   * Glare's bright end: the brightest over the whole sky, brightest first, as points.
+   * The worker sends them; Sky picks them if they aren't here.
+   */
+  glareStars?: Float32Array;
+  /**
    * The rest of the sky: by face (+x, −x, +y, −y, +z, −z, as the map) and
    * then by level (the first `backgroundSize`² texels, each next half
    * across), linear sRGB rgba, cd/m².

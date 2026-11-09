@@ -1179,14 +1179,18 @@ fn sunShadow_0( relPosition_7 : vec3<f32>,  n_5 : vec3<f32>) -> f32
     return mix(lit_1, 1.0f, clamp((depth_0 - shadows_0.fade_0.x) / max(shadows_0.fade_0.y - shadows_0.fade_0.x, 0.0010000000474974513f), 0.0f, 1.0f));
 }
 
+fn sunLightTableUv_0( mu_0 : f32,  heightShare_0 : f32) -> vec2<f32>
+{
+    const size_1 : vec2<f32> = vec2<f32>(256.0f, 64.0f);
+    return (vec2<f32>(0.5f) + vec2<f32>(0.5f + 0.5f * f32((i32(sign((mu_0))))) * sqrt(abs(mu_0)), sqrt(clamp(heightShare_0, 0.0f, 1.0f))) * (size_1 - vec2<f32>(1.0f))) / size_1;
+}
+
 fn sunlightThroughAir_0( relPosition_8 : vec3<f32>,  direction_0 : vec3<f32>) -> vec3<f32>
 {
     var p_3 : vec3<f32> = relPosition_8 + cameraPosition_0();
     var radii_0 : vec3<f32> = view_0.bodyRadii_0.xyz;
     var distance_0 : f32 = length(p_3);
-    var mu_0 : f32 = dot(normalize(p_3 / (radii_0 * radii_0)), direction_0);
-    const size_1 : vec2<f32> = vec2<f32>(256.0f, 64.0f);
-    return (textureSampleLevel((sunLightTable_0), (environmentSampler_0), ((vec2<f32>(0.5f) + vec2<f32>(0.5f + 0.5f * f32((i32(sign((mu_0))))) * sqrt(abs(mu_0)), sqrt(clamp((distance_0 - distance_0 / length(p_3 / radii_0)) / 1000.0f / (view_0.sunLight_0.y - view_0.sunLight_0.x), 0.0f, 1.0f))) * (size_1 - vec2<f32>(1.0f))) / size_1), (0.0f))).xyz * vec3<f32>((1.0e+05f * view_0.sunIlluminance_0));
+    return (textureSampleLevel((sunLightTable_0), (environmentSampler_0), (sunLightTableUv_0(dot(normalize(p_3 / (radii_0 * radii_0)), direction_0), (distance_0 - distance_0 / length(p_3 / radii_0)) / 1000.0f / (view_0.sunLight_0.y - view_0.sunLight_0.x))), (0.0f))).xyz * vec3<f32>((1.0e+05f * view_0.sunIlluminance_0));
 }
 
 fn sunIlluminance_1( relPosition_9 : vec3<f32>) -> vec3<f32>

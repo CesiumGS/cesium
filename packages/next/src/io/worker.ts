@@ -32,6 +32,7 @@ const starFieldBuffers = (field: StarField): ArrayBuffer[] =>
   [
     field.points,
     ...(field.cells ? [field.cells.table, field.cells.illuminance] : []),
+    ...(field.glareStars ? [field.glareStars] : []),
     ...field.backgroundLevels.flat(),
   ].map((array) => array.buffer as ArrayBuffer);
 

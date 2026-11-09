@@ -9,6 +9,16 @@ module common;
 // transform table's root (no anchor).
 public static const uint MAX_ANCHORS = 32u;
 
+// Where the sun-light table holds a light at zenith cosine `mu`, at `heightShare` of the
+// way up the air (sky.slang `sunLightFragment` is the inverse).
+public float2 sunLightTableUv(float mu, float heightShare) {
+  float2 size = float2(256.0, 64.0);
+  float2 unit = float2(
+      0.5 + 0.5 * sign(mu) * sqrt(abs(mu)),
+      sqrt(clamp(heightShare, 0.0, 1.0)));
+  return (0.5 + unit * (size - 1.0)) / size;
+}
+
 // The view's eye in one anchor's coordinates, and the rotation from that
 // anchor's axes to the view's shading axes (its body anchor's), both
 // computed in float64 on the CPU (scene/anchorEyes.ts). `eyeHi.w` is 1

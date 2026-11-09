@@ -14,6 +14,8 @@ import {
 export const CELLS_PER_SIDE = 8;
 /** Cells in the sky (sky.slang `STAR_CELLS`). */
 export const STAR_CELLS = 6 * CELLS_PER_SIDE * CELLS_PER_SIDE;
+/** The stars glare's light list walks (glare.slang `GLARE_BRIGHT_STARS`). */
+export const GLARE_BRIGHT_STARS = 2048;
 /** Floats per cell in `StarCells.table`. */
 export const CELL_FLOATS = 8;
 /** The binary search's bound (sky.slang `STAR_SEARCH_STEPS`): 2²⁴ stars. */
@@ -153,6 +155,29 @@ export function buildStarCells(points: Float32Array, count: number): StarCells {
   return { points: sorted, cells, table, illuminance };
 }
 
+/**
+ * The field's brightest stars over the whole sky, brightest first, as points: glare's
+ * list walks them, while the field's own order is by cell.
+ */
+export function brightestStars(
+  points: Float32Array,
+  count: number,
+  limit = GLARE_BRIGHT_STARS,
+): Float32Array {
+  const order = Array.from({ length: count }, (_, i) => i);
+  order.sort(
+    (a, b) =>
+      points[b * STAR_FLOATS + 3]! - points[a * STAR_FLOATS + 3]! || a - b,
+  );
+  const kept = Math.min(limit, count);
+  const out = new Float32Array(kept * STAR_FLOATS);
+  for (let i = 0; i < kept; i++) {
+    const from = order[i]! * STAR_FLOATS;
+    out.set(points.subarray(from, from + STAR_FLOATS), i * STAR_FLOATS);
+  }
+  return out;
+}
+
 /** Puts a cell brightest first, if it isn't already. */
 function sortCell(
   points: Float32Array,
@@ -180,7 +205,12 @@ function sortCell(
 /** A field with its cells: its points replaced by their sorted order. */
 export function withStarCells(field: StarField): StarField {
   const built = buildStarCells(field.points, field.count);
-  return { ...field, points: built.points, cells: built };
+  return {
+    ...field,
+    points: built.points,
+    cells: built,
+    glareStars: brightestStars(built.points, field.count),
+  };
 }
 
 /**

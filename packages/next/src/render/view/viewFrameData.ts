@@ -5,6 +5,7 @@ import type { View } from "../../scene/View.ts";
 import type { ToneMapping } from "../../scene/observer.ts";
 import type { PixelRect } from "../../scene/renderTarget.ts";
 import type { ViewChain } from "../post/chain.ts";
+import type { GlareViewState } from "../post/glare.ts";
 
 /** Tone mappings by their index in present.slang's `PresentParams`. */
 export const TONE_MAPPINGS: readonly ToneMapping[] = [
@@ -101,6 +102,8 @@ export interface ViewFrame {
   presentDisplay: GPUTextureView | undefined;
   /** Its post stages' slots and buffers (`View.observer`'s `stages`). */
   readonly chain: ViewChain;
+  /** Its glare's list, with glare on. */
+  readonly glare: GlareViewState | undefined;
   /** `View.stagesRevision` it was built for. */
   readonly stagesRevision: number;
   /** The tangent of half its vertical field of view, this tick (`writeLights`). */
@@ -163,6 +166,7 @@ export function drawsAerialPerspective(view: View): boolean {
 
 export function destroyViewFrame(frame: ViewFrame): void {
   frame.chain.destroy();
+  frame.glare?.destroy();
   frame.presentParams.destroy();
   frame.adaptParams.destroy();
   frame.fxaaParams.destroy();

@@ -252,6 +252,7 @@ export function writeView(
       starSubmission(view.world.submission, engine.ctx.caps),
       observerShadowGain(view.observer),
     );
+    engine.raster.viewFrames.get(view)!.glare?.writeFrame(camera);
     if (drawsAerialPerspective(view)) {
       block.aerial = {
         start: sky.aerialStart,

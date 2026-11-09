@@ -18,6 +18,7 @@ import {
   type PostStageViewValues,
   type ResolvedPostPass,
 } from "../../scene/postStage.ts";
+import { EYE_LIMIT_STAGE } from "../../scene/eyeLimit.ts";
 import type { ObserverSettings } from "../../scene/observer.ts";
 import type { View } from "../../scene/View.ts";
 
@@ -60,8 +61,18 @@ export type ChainEntry = PostStage | GraphStage;
  */
 export function chainEntries(
   observer: ObserverSettings,
+  glare: readonly ChainEntry[] = [],
 ): readonly ChainEntry[] {
-  return observer.stages;
+  if (glare.length === 0) {
+    return observer.stages;
+  }
+  // The eye's point limit comes first: what it fades can't glare.
+  const after = observer.stages.findIndex((s) => s.name === EYE_LIMIT_STAGE);
+  return [
+    ...observer.stages.slice(0, after + 1),
+    ...glare,
+    ...observer.stages.slice(after + 1),
+  ];
 }
 
 /** The slots' order: stable by list position. */

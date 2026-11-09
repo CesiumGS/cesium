@@ -40,6 +40,7 @@ import {
   registerSlot,
   type ChainView,
 } from "../post/chain.ts";
+import { glareFor } from "../post/glare.ts";
 
 /** Rasterizer side: a view's targets and passes, in registration order. */
 export interface ViewFrameEngine extends Pick<
@@ -222,7 +223,8 @@ function buildViewFrame(
     usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
   });
   // The view's post stages, by slot; a slot with none has no passes.
-  const entries = chainEntries(view.observer);
+  const glare = glareFor(engine, view, width, height);
+  const entries = chainEntries(view.observer, glare?.entries);
   const stages = chainOrder(entries);
   const chain = new ViewChain({
     scene: new ChainSlot(resolved),
@@ -296,6 +298,7 @@ function buildViewFrame(
     }),
     translucentGroups: [],
     chain,
+    glare: glare?.state,
     stagesRevision: view.stagesRevision,
     tanY: 1,
   };

@@ -14,6 +14,8 @@ import {
   STAR_CELLS,
   buildStarCells,
   cullCell,
+  GLARE_BRIGHT_STARS,
+  brightestStars,
   starCullInputs,
   starCullStorage,
   type StarCell,
@@ -336,6 +338,12 @@ export class Sky {
     label: "sky.starCull",
   };
   private starsOn = 0;
+  /** The bright end, brightest first over the whole sky: for glare's list. */
+  private glareStars: Float32Array = new Float32Array(0);
+  private glareStarsBuffer: GPUBuffer | undefined;
+  private glareStarsSent = true;
+  private sunLightView_: GPUTextureView | undefined;
+  private tableSampler_: GPUSampler | undefined;
   private readonly starPass: GPURenderPassDescriptor;
   private readonly starAttachment: GPURenderPassColorAttachment;
   /** The Moon's albedo map (white until one is set) and its mean albedo. */
@@ -552,6 +560,7 @@ export class Sky {
   destroy(): void {
     this.aerialScreen.destroy();
     this.sunLight.destroy();
+    this.glareStarsBuffer?.destroy();
     this.aerialVolume.destroy();
     {
       this.aerialPartial.destroy();
@@ -585,6 +594,7 @@ export class Sky {
       this.starsOn = 0;
       this.cells = [];
       this.illuminance = new Float32Array(0);
+      this.setGlareStars(new Float32Array(0));
       this.starLevels = 1;
       this.faintShare = 1;
       this.meanBackground = 0;
@@ -663,6 +673,9 @@ export class Sky {
     this.upload = null;
     this.cells = cells.cells;
     this.illuminance = cells.illuminance;
+    this.setGlareStars(
+      field.glareStars ?? brightestStars(cells.points, field.count),
+    );
     this.starLevels = field.backgroundLevels[0]?.length ?? 1;
     this.faintShare = field.holdsFaintStars ? HOLDS_FAINT_SHARE : 1;
     this.meanBackground = field.meanBackground;
@@ -789,6 +802,91 @@ export class Sky {
         );
       }
     }
+  }
+
+  private setGlareStars(stars: Float32Array): void {
+    this.glareStars = stars;
+    this.glareStarsSent = false;
+  }
+
+  /** The bright stars in glare's list. */
+  get glareStarCount(): number {
+    return this.glareStars.length / STAR_FLOATS;
+  }
+
+  /** The bright stars' buffer, made when glare first asks. */
+  glareStarBuffer(): GPUBuffer {
+    this.glareStarsBuffer ??= this.device.createBuffer({
+      label: "sky.glareStars",
+      size: GLARE_BRIGHT_STARS * STAR_FLOATS * 4,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+    if (!this.glareStarsSent) {
+      this.glareStarsSent = true;
+      this.device.queue.writeBuffer(
+        this.glareStarsBuffer,
+        0,
+        this.glareStars as Float32Array<ArrayBuffer>,
+      );
+    }
+    return this.glareStarsBuffer;
+  }
+
+  /** The sun-light table, for glare's list. */
+  get sunLightView(): GPUTextureView {
+    return (this.sunLightView_ ??= this.sunLight.createView());
+  }
+
+  /** A linear, clamped sampler for that table. */
+  get tableSampler(): GPUSampler {
+    return (this.tableSampler_ ??= this.device.createSampler({
+      label: "sky.sunLight",
+      magFilter: "linear",
+      minFilter: "linear",
+    }));
+  }
+
+  /**
+   * glare.slang's `GlareFrame`, as far as it's the sky's: from this uniform and the
+   * stars', as they were last written, for the view written last. Then the camera's
+   * place in the air for the sun-light table, as surface.slang's `sunlightThroughAir`
+   * takes it: `position` is Earth-fixed, meters.
+   */
+  writeGlareFrame(
+    out: Float32Array,
+    ellipsoid: Ellipsoid,
+    position: ArrayLike<number>,
+  ): void {
+    const f = this.f32;
+    out.set(f.subarray(0, 19));
+    out[19] = f[23]!;
+    out[20] = f[20]!;
+    out[21] = f[21]!;
+    out[24] = f[76]!;
+    out[25] = f[77]!;
+    out[26] = f[78]!;
+    out[27] = f[63]!;
+    out[28] = f[60]!;
+    out[29] = f[61]!;
+    out[30] = f[62]!;
+    const radii = ellipsoid.radii;
+    const [x, y, z] = [position[0]!, position[1]!, position[2]!];
+    const distance = Math.sqrt(x * x + y * y + z * z);
+    const [ax, ay, az] = [radii[0]!, radii[1]!, radii[2]!];
+    const scaled = Math.sqrt(
+      (x * x) / (ax * ax) + (y * y) / (ay * ay) + (z * z) / (az * az),
+    );
+    const [nx, ny, nz] = [x / (ax * ax), y / (ay * ay), z / (az * az)];
+    const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    out[32] = nx / length;
+    out[33] = ny / length;
+    out[34] = nz / length;
+    const p = this.atmosphere.parameters;
+    out[35] = (distance - distance / scaled) / (p.topRadius - p.bottomRadius);
+    for (let i = 0; i < 12; i++) {
+      out[36 + i] = this.starData[i]!;
+    }
+    // Their w is the stars' switch: the kernel reads only xyz.
   }
 
   private createStarBackground(size: number, levels: number): GPUTexture {

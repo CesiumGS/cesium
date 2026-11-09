@@ -18,6 +18,7 @@ import raycastWgsl from "../shaders/generated/raycast.wgsl?raw";
 import surfaceWgsl from "../shaders/generated/surface.wgsl?raw";
 import surfaceVertexWgsl from "../shaders/surfaceVertex.wgsl?raw";
 import type { ChainPipelines } from "../render/post/chain.ts";
+import type { GlarePipelines } from "../render/post/glare.ts";
 import presentWgsl from "../shaders/generated/present.wgsl?raw";
 import overlayWgsl from "../shaders/generated/overlay.wgsl?raw";
 import pickWgsl from "../shaders/generated/pick.wgsl?raw";
@@ -25,6 +26,7 @@ import meterWgsl from "../shaders/generated/meter.wgsl?raw";
 import adaptWgsl from "../shaders/generated/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/generated/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/generated/depthRange.wgsl?raw";
+import glareWgsl from "../shaders/generated/glare.wgsl?raw";
 import compositeWgsl from "../shaders/generated/composite.wgsl?raw";
 import fxaaWgsl from "../shaders/generated/fxaa.wgsl?raw";
 import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
@@ -221,6 +223,8 @@ export interface Pipelines extends SurfacePipelines {
   presentLdr: GPURenderPipeline;
   /** What a chain of post stages adds, made when first asked for. */
   chain(): Promise<ChainPipelines>;
+  /** What glare adds, made when first asked for. */
+  glare(): Promise<GlarePipelines>;
   fxaa: GPURenderPipeline;
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
@@ -1586,6 +1590,18 @@ async function createPipelines(
     ]);
     return { response, tone, toneLdr, copy };
   };
+  let glarePipelines: Promise<GlarePipelines> | undefined;
+  const makeGlarePipelines = async (): Promise<GlarePipelines> => {
+    const sources = await device.createComputePipelineAsync({
+      label: "glare.sources",
+      layout: "auto",
+      compute: {
+        module: module("glare", glareWgsl),
+        entryPoint: "glareSources",
+      },
+    });
+    return { sources };
+  };
   return {
     viewLayout,
     cullWorldLayout,
@@ -1609,6 +1625,7 @@ async function createPipelines(
     present,
     presentLdr,
     chain: () => (chainPipelines ??= makeChainPipelines()),
+    glare: () => (glarePipelines ??= makeGlarePipelines()),
     fxaa,
     overlay,
     overlayLayout,

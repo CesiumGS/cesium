@@ -22,6 +22,8 @@ import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   type StarField,
 } from "../src/atmosphere/stars.ts";
+import { moonPosition } from "../src/time/moon.ts";
+import { sunPosition } from "../src/time/sun.ts";
 import { eyePointLimit } from "../src/scene/eye.ts";
 import { ev100ToScale, type PointSpread } from "../src/scene/observer.ts";
 
@@ -1596,6 +1598,326 @@ async function stillsGroup(
   engine.sunDirection.set(saved);
 }
 
+// --- glare -------------------------------------------------------------------------
+
+const SOURCE_FLOATS = 8;
+
+/** The view's list as it stands: the header, the sun, and the records after it. */
+async function readSources(engine: Engine, view: View): Promise<Float32Array> {
+  const { device } = engine.gpu;
+  const list = engine.raster.viewFrames.get(view)!.glare!.sources;
+  const staging = device.createBuffer({
+    size: list.size,
+    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+  });
+  const encoder = device.createCommandEncoder();
+  encoder.copyBufferToBuffer(list, 0, staging, 0, list.size);
+  device.queue.submit([encoder.finish()]);
+  await staging.mapAsync(GPUMapMode.READ);
+  const out = new Float32Array(staging.getMappedRange().slice(0));
+  staging.unmap();
+  staging.destroy();
+  return out;
+}
+
+const sunRecord = (list: Float32Array) => ({
+  count: list[0]!,
+  z: list[1]!,
+  pixel: [list[SOURCE_FLOATS]!, list[SOURCE_FLOATS + 1]!],
+  visibility: list[SOURCE_FLOATS + 3]!,
+  light: [
+    list[SOURCE_FLOATS + 4]!,
+    list[SOURCE_FLOATS + 5]!,
+    list[SOURCE_FLOATS + 6]!,
+  ],
+  kind: list[SOURCE_FLOATS + 7]!,
+});
+
+const VEIL_ONLY = { tier: "full", veil: { share: 0.2 }, spikes: null } as const;
+
+/** A view with glare, of the real sky; the sun set by the pose. */
+function glareScene(
+  engine: Engine,
+  exposure: Exposure,
+  width = 256,
+  height = 256,
+): SkyScene {
+  const scene = new SkyScene(engine, width, height, exposure);
+  scene.view.observer.glare = { ...VEIL_ONLY, veil: { share: 0.2 } };
+  return scene;
+}
+
+/** The sun's light from the table itself, at zenith cosine `mu` from the ground. */
+async function tableAt(engine: Engine, mu: number): Promise<number[]> {
+  const { device } = engine.gpu;
+  const staging = device.createBuffer({
+    size: 256 * 8 * 64,
+    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+  });
+  const encoder = device.createCommandEncoder();
+  encoder.copyTextureToBuffer(
+    { texture: engine.raster.sky.sunLight },
+    { buffer: staging, bytesPerRow: 256 * 8 },
+    [256, 64],
+  );
+  device.queue.submit([encoder.finish()]);
+  await staging.mapAsync(GPUMapMode.READ);
+  const halves = new Uint16Array(staging.getMappedRange());
+  const half = (h: number) => {
+    const e = (h >> 10) & 31;
+    const m = h & 1023;
+    const v =
+      e === 0
+        ? m / 2 ** 24
+        : e === 31
+          ? Infinity
+          : (1 + m / 1024) * 2 ** (e - 15);
+    return h & 0x8000 ? -v : v;
+  };
+  const u = (0.5 + 0.5 * Math.sign(mu) * Math.sqrt(Math.abs(mu))) * 255;
+  const [i, f] = [Math.floor(u), u - Math.floor(u)];
+  const out = [0, 1, 2].map((c) => {
+    const a = half(halves[i * 4 + c]!);
+    const b = half(halves[(i + 1) * 4 + c]!);
+    return (a + (b - a) * f) * 1e5;
+  });
+  staging.unmap();
+  staging.destroy();
+  return out;
+}
+
+/** A pose on the ground at elevation `degrees`, the sun straight ahead. */
+const groundSun = (degrees: number, fov = 3): SkyPose => {
+  const e = degrees * DEG;
+  const direction: V3 = [Math.sin(e), Math.cos(e), 0];
+  return {
+    position: [RADIUS + 2, 0, 0],
+    direction,
+    up: [0, 0, 1],
+    sun: direction,
+    fov,
+    ev100: 15,
+  };
+};
+
+/** The share of a disc of radius `r` a disc of radius `m` covers, `d` from it. */
+function discOverlap(r: number, m: number, d: number): number {
+  if (d >= r + m) {
+    return 0;
+  }
+  if (d <= Math.abs(m - r)) {
+    return Math.min(1, (m * m) / (r * r));
+  }
+  return (
+    (r * r * Math.acos((d * d + r * r - m * m) / (2 * d * r)) +
+      m * m * Math.acos((d * d + m * m - r * r) / (2 * d * m)) -
+      0.5 * Math.sqrt((-d + r + m) * (d + r - m) * (d - r + m) * (d + r + m))) /
+    (Math.PI * r * r)
+  );
+}
+
+async function sourcesGroup(engine: Engine, say: Say): Promise<void> {
+  const saved = Float64Array.from(engine.sunDirection);
+  await engine.ctx.pipelines.glare();
+  // A box half across the sun.
+  {
+    const scene = glareScene(engine, { ev100: 15 });
+    const pose = groundSun(30);
+    scene.aim(pose);
+    scene.view.camera.direction.set(pose.direction);
+    scene.view.camera.orient(Float64Array.from(pose.up));
+    await ticks(engine, 10);
+    const open = sunRecord(await readSources(engine, scene.view));
+    say(
+      "nothing across the sun: it's all seen",
+      open.visibility === 1 && open.kind === 1,
+      `visibility ${open.visibility}, kind ${open.kind}`,
+    );
+    const along = 3 / Math.cos(30 * DEG);
+    scene.world.addDraw({
+      mesh: scene.world.addMesh(quad),
+      origin: Float64Array.of(RADIUS + 2 + along * Math.sin(30 * DEG), 3, 1),
+      color: [0.5, 0.5, 0.5, 1],
+      unlit: true,
+      doubleSided: true,
+    });
+    await ticks(engine, 10);
+    const half = sunRecord(await readSources(engine, scene.view));
+    say(
+      "a box half across the sun: 0.5 ± 0.07",
+      Math.abs(half.visibility - 0.5) <= 0.07,
+      `visibility ${half.visibility}`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // The eclipse of 2024-04-08: the sun and Moon of that date, with the Earth's axes
+  // taken as the ICRF's at that moment, from the line of totality and away from it.
+  {
+    const scene = glareScene(engine, { ev100: 15 });
+    const when = Date.UTC(2024, 3, 8, 18, 18, 0);
+    const sun = sunPosition(when, new Float64Array(3));
+    const moon = moonPosition(when, new Float64Array(3));
+    const toSun = sky3.norm([sun[0]!, sun[1]!, sun[2]!]);
+    const moonAt: V3 = [moon[0]!, moon[1]!, moon[2]!];
+    // Where the line from the sun through the Moon meets the Earth.
+    const along = -sky3.dot(moonAt, toSun);
+    const foot = sky3.add(moonAt, toSun, along);
+    const off = Math.hypot(foot[0], foot[1], foot[2]);
+    const center = sky3.add(
+      foot,
+      toSun,
+      Math.sqrt(Math.max(RADIUS * RADIUS - off * off, 0)),
+    );
+    const side = sky3.norm(sky3.cross(toSun, NORTH));
+    const seenAt: string[] = [];
+    let worst = 0;
+    const sunDistance = Math.hypot(sun[0]!, sun[1]!, sun[2]!);
+    for (const shift of [0, 1_500_000, 2_500_000, 3_500_000]) {
+      const position = sky3.scale(
+        sky3.norm(sky3.add(center, side, shift)),
+        RADIUS + 2,
+      );
+      const towardMoon = sky3.add(moonAt, position, -1);
+      const moonDistance = Math.hypot(...towardMoon);
+      const moonDir = sky3.norm(towardMoon);
+      scene.aim({
+        position,
+        direction: toSun,
+        up: side,
+        sun: toSun,
+        fov: 3,
+        ev100: 15,
+      });
+      engine.moonPosition = Float64Array.from(moonAt);
+      await ticks(engine, 4);
+      const { visibility } = sunRecord(await readSources(engine, scene.view));
+      const d = Math.acos(Math.min(sky3.dot(moonDir, toSun), 1));
+      const overlap = discOverlap(
+        0.00935 / 2,
+        Math.asin(1_737_400 / moonDistance),
+        d,
+      );
+      worst = Math.max(worst, Math.abs(1 - visibility - overlap));
+      seenAt.push(
+        `${shift / 1000} km: ${visibility.toFixed(3)} v ${(1 - overlap).toFixed(3)}`,
+      );
+    }
+    void sunDistance;
+    engine.moonPosition = undefined;
+    say(
+      "the eclipse of 2024-04-08: the overlap within 0.08",
+      worst <= 0.08,
+      seenAt.join(", "),
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // The table's color.
+  {
+    const scene = glareScene(engine, { ev100: 15 });
+    for (const elevation of [2, 45]) {
+      scene.aim(groundSun(elevation));
+      await ticks(engine, 4);
+      const { light } = sunRecord(await readSources(engine, scene.view));
+      const table = await tableAt(engine, Math.sin(elevation * DEG));
+      const worst = Math.max(
+        ...light.map((v, i) =>
+          table[i]! > 0 ? Math.abs(v / table[i]! - 1) : v === 0 ? 0 : 1,
+        ),
+      );
+      say(
+        `the sun's light at ${elevation}° is the table's within 1%`,
+        worst < 0.01,
+        `${light.map((v) => v.toFixed(0)).join(", ")} v ${table.map((v) => v.toFixed(0)).join(", ")}`,
+      );
+    }
+    scene.view.lighting.sunIlluminance = 50_000;
+    await ticks(engine, 4);
+    const set = sunRecord(await readSources(engine, scene.view));
+    say(
+      "a set illuminance is that number",
+      set.light.every((v) => v === 50_000),
+      set.light.join(", "),
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // Just off screen, and behind the camera.
+  {
+    const scene = glareScene(engine, { ev100: 15 });
+    const pose = groundSun(30, 20);
+    const e = 30 * DEG;
+    const up: V3 = [Math.cos(e), -Math.sin(e), 0];
+    scene.aim({
+      ...pose,
+      direction: sky3.norm(sky3.add(pose.sun, up, Math.tan(11 * DEG))),
+    });
+    await ticks(engine, 4);
+    const off = sunRecord(await readSources(engine, scene.view));
+    say(
+      "a sun just off screen reads 1",
+      off.visibility === 1 && (off.pixel[0]! < 0 || off.pixel[0]! > 256),
+      `visibility ${off.visibility}, at ${off.pixel.map((p) => p.toFixed(0)).join(", ")}`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // Across the Earth's limb from orbit: no step over 3/32.
+  {
+    const scene = glareScene(engine, { ev100: 15 });
+    const altitude = 400_000;
+    const position: V3 = [RADIUS + altitude, 0, 0];
+    const dip = Math.acos(RADIUS / (RADIUS + altitude));
+    const sunRadius = 0.00935 / 2;
+    let last = -1;
+    let worst = 0;
+    const seen: number[] = [];
+    for (let i = 0; i <= 64; i++) {
+      // The sun's center from 2 radii above the limb to 2 below it.
+      const elevation = -dip + sunRadius * (2 - (i / 64) * 4);
+      const sun: V3 = [Math.sin(elevation), Math.cos(elevation), 0];
+      scene.aim({
+        position,
+        direction: sun,
+        up: [0, 0, 1],
+        sun,
+        fov: 10,
+        ev100: 15,
+      });
+      await ticks(engine, 2);
+      const { visibility } = sunRecord(await readSources(engine, scene.view));
+      seen.push(visibility);
+      if (last >= 0) {
+        worst = Math.max(worst, Math.abs(visibility - last));
+      }
+      last = visibility;
+    }
+    say(
+      "across the Earth's limb from orbit it goes from 1 to 0, in small steps",
+      seen[0] === 1 && seen[seen.length - 1] === 0 && worst <= 3 / 32 + 1e-6,
+      `first ${seen[0]}, last ${seen[seen.length - 1]}, largest step ${worst.toFixed(3)}`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  // No sky.
+  {
+    const scene = new Scene(engine, { background: "color" });
+    scene.view.observer.glare = { ...VEIL_ONLY, veil: { share: 0.2 } };
+    await ticks(engine, 4);
+    const none = sunRecord(await readSources(engine, scene.view));
+    say(
+      "with no sky there's no source",
+      none.visibility === 0 && none.kind === 0,
+      `visibility ${none.visibility}, kind ${none.kind}`,
+    );
+    scene.dispose();
+    engine.removeView(scene.view);
+  }
+  engine.sunDirection.set(saved);
+}
+
 const GROUPS: Record<
   string,
   (engine: Engine, say: Say, stills: Record<string, string>) => Promise<void>
@@ -1609,6 +1931,7 @@ const GROUPS: Record<
   fudges: fudgesGroup,
   times: starTimes,
   stills: stillsGroup,
+  sources: sourcesGroup,
 };
 
 let root: HTMLElement;

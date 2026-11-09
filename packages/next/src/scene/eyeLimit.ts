@@ -8,6 +8,8 @@ import { eyePointLimit } from "./eye.ts";
 import { observerPointSpread } from "./pointSpread.ts";
 import { createPostStage, type PostStage } from "./postStage.ts";
 
+/** The stage's name: glare comes after it (render/post/chain.ts). */
+export const EYE_LIMIT_STAGE = "eye-point-limit";
 /** Above this adaptation, cd/m², nothing faint enough to matter shows. */
 const LIMIT_UP_TO = 30;
 /** The ring's radius, CSS pixels: outside a star's core at the eye's spread. */
@@ -70,7 +72,7 @@ fn postStage(input: PostInput) -> vec4<f32> {
  */
 export function eyeLimitStage(): PostStage {
   return createPostStage({
-    name: "eye-point-limit",
+    name: EYE_LIMIT_STAGE,
     slot: "scene",
     kind: "model",
     label: "The eye's point limit (a model)",

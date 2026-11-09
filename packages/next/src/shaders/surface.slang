@@ -361,11 +361,7 @@ float3 sunlightThroughAir(float3 relPosition, float3 direction) {
   float mu = dot(up, direction);
   float bottom = view.sunLight.x;
   float top = view.sunLight.y;
-  float2 size = float2(256.0, 64.0);
-  float2 unit = float2(
-      0.5 + 0.5 * sign(mu) * sqrt(abs(mu)),
-      sqrt(clamp(height / (top - bottom), 0.0, 1.0)));
-  float2 uv = (0.5 + unit * (size - 1.0)) / size;
+  float2 uv = sunLightTableUv(mu, height / (top - bottom));
   float3 light = sunLightTable.SampleLevel(environmentSampler, uv, 0.0).rgb;
   return light * (1e5 * view.sunIlluminance);
 }
