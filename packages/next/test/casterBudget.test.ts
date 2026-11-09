@@ -8,7 +8,8 @@ import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
-import type { Tileset3D, TilesetOptions } from "../src/streaming/Tileset3D.ts";
+import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import type { TilesetOptions } from "../src/streaming/tilesetTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

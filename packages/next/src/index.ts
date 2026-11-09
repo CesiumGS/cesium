@@ -131,13 +131,13 @@ export {
   collectFullDetailContents,
   type TileContent,
 } from "./tiles/fullDetail.ts";
+export { Tileset3D } from "./streaming/Tileset3D.ts";
 export {
-  Tileset3D,
   type PurposeStats,
   type TilesetEvents,
   type TilesetOptions,
   type TilesetStats,
-} from "./streaming/Tileset3D.ts";
+} from "./streaming/tilesetTypes.ts";
 export type {
   DesignPlacement,
   PlacementMode,

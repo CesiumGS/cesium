@@ -20,7 +20,8 @@ import * as m4 from "../src/math/mat4.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import type { SelectionView } from "../src/streaming/Stepwise.ts";
-import { Tileset3D, type TilesetOptions } from "../src/streaming/Tileset3D.ts";
+import { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import { type TilesetOptions } from "../src/streaming/tilesetTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

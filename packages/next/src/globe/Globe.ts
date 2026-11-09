@@ -17,11 +17,11 @@
  */
 import type { Engine } from "../scene/Engine.ts";
 import type { DrawHandle, World } from "../scene/World.ts";
+import { Tileset3D } from "../streaming/Tileset3D.ts";
 import {
-  Tileset3D,
   type TileSource,
   type TilesetOptions,
-} from "../streaming/Tileset3D.ts";
+} from "../streaming/tilesetTypes.ts";
 import {
   TerrainRegionError,
   compileTerrainClip,

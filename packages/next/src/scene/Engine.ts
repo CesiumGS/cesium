@@ -93,7 +93,8 @@ import {
   type GlobeImageryOptions,
 } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
-import { Tileset3D, type TilesetOptions } from "../streaming/Tileset3D.ts";
+import { Tileset3D } from "../streaming/Tileset3D.ts";
+import { type TilesetOptions } from "../streaming/tilesetTypes.ts";
 import { Globe } from "../globe/Globe.ts";
 import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";

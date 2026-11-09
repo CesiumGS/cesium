@@ -25,7 +25,7 @@
 import { Tile, type TileJson, type TileTree } from "../streaming/Tile.ts";
 import { volumeFromJson } from "../streaming/volumes.ts";
 import type { TileSelection } from "../streaming/Stepwise.ts";
-import type { TilesetOptions } from "../streaming/Tileset3D.ts";
+import type { TilesetOptions } from "../streaming/tilesetTypes.ts";
 import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";

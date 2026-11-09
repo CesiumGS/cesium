@@ -12,7 +12,8 @@ import { type View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
-import type { Tileset3D, TilesetOptions } from "../src/streaming/Tileset3D.ts";
+import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
+import type { TilesetOptions } from "../src/streaming/tilesetTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 // Long runs of simulated ticks, some on and off.
