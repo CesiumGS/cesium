@@ -7,7 +7,6 @@ const FUNCTION_TYPES = new Set([
   "ArrowFunctionExpression",
 ]);
 
-// meta.code.node is usually the assigned value; the assignment is its parent.
 function isThisMemberAssignment(node) {
   let target = node;
   if (node.type === "AssignmentExpression") {
@@ -15,6 +14,7 @@ function isThisMemberAssignment(node) {
   } else if (node.parent && node.parent.type === "AssignmentExpression") {
     target = node.parent.left;
   }
+
   return (
     target &&
     target.type === "MemberExpression" &&
@@ -23,20 +23,26 @@ function isThisMemberAssignment(node) {
   );
 }
 
-// True for comments on code inside a function body, such as type annotations on
-// local variables and inline casts. Constructor members (`this.x = ...`) and
-// comments that name their parent with @memberof, @name, or @alias are kept.
+/**
+ * Returns true for doclets scoped function-local, otherwise false. Examples
+ * include type annotations on local variables and inline casts. Constructor
+ * members (`this.x = ...`) and comments that name their parent with `@memberof`,
+ * `@name`, or `@alias` are kept.
+ */
 function isFunctionLocal(doclet) {
-  const node = doclet.meta && doclet.meta.code && doclet.meta.code.node;
+  const node = doclet.meta?.code?.node;
   if (!node || !node.enclosingScope) {
     return false;
   }
+
   if (!FUNCTION_TYPES.has(node.enclosingScope.type)) {
     return false;
   }
+
   if (/@(memberof|name|alias)\b/.test(doclet.comment || "")) {
     return false;
   }
+
   return !isThisMemberAssignment(node);
 }
 
@@ -46,10 +52,12 @@ exports.handlers = {
     if (doclet.undocumented) {
       return;
     }
+
     if (isFunctionLocal(doclet)) {
       doclet.ignore = true;
       return;
     }
+
     // A comment on `export default ...` documents "module.exports", which has
     // no parent unless the file declares a @module.
     if (doclet.longname === "module.exports" && doclet.memberof === "module") {
@@ -57,27 +65,34 @@ exports.handlers = {
     }
   },
 
-  // Members of a @private parent are unreachable in the output; mark them
-  // private too, so they're handled the same way as their parent. A longname
-  // may be shared by several doclets, so a parent counts as hidden only if
-  // none of them is visible.
+  /**
+   * Members of a @private parent are unreachable in the output; mark them
+   * private too, so they're handled the same way as their parent. A longname
+   * may be shared by several doclets, so a parent counts as hidden only if
+   * none of them is visible.
+   */
   processingComplete: function (e) {
-    const documented = e.doclets.filter((d) => !d.undocumented);
     const isVisible = (d) => !d.ignore && d.access !== "private";
-    const existing = new Set(documented.map((d) => d.longname));
+
+    const documentedDoclets = e.doclets.filter((d) => !d.undocumented);
+    const existingLongnames = new Set(documentedDoclets.map((d) => d.longname));
+
     let changed = true;
+
     while (changed) {
       changed = false;
-      const visible = new Set(
-        documented.filter(isVisible).map((d) => d.longname),
+
+      const visibleLongnames = new Set(
+        documentedDoclets.filter(isVisible).map((d) => d.longname),
       );
-      for (const d of documented) {
+
+      for (const d of documentedDoclets) {
         if (
           isVisible(d) &&
           d.access === undefined &&
           d.memberof &&
-          existing.has(d.memberof) &&
-          !visible.has(d.memberof)
+          existingLongnames.has(d.memberof) &&
+          !visibleLongnames.has(d.memberof)
         ) {
           d.access = "private";
           changed = true;
