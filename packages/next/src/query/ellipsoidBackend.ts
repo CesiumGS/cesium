@@ -7,14 +7,14 @@ import type { QueryRay, RayAnswer } from "./queries.ts";
 const OWN_GROUND = 1e-3;
 
 /** Where a segment meets the ellipsoid with the given radii: entry and exit as fractions, or none. */
-interface Crossing {
+export interface Crossing {
   readonly entry: number;
   readonly exit: number;
   /** The segment starts inside the ellipsoid. */
   readonly startsInside: boolean;
 }
 
-function crossing(
+export function crossing(
   from: ArrayLike<number>,
   to: ArrayLike<number>,
   radii: ArrayLike<number>,

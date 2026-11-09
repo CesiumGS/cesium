@@ -52,6 +52,7 @@ import {
 import { globeTarget, terrainBackend } from "../query/terrainBackend.ts";
 import { drawBackend } from "../query/drawBackend.ts";
 import { castFrameRays } from "../query/frameRays.ts";
+import { castTilesetRays } from "../query/geometryBackend.ts";
 import { GlareKernels } from "../render/post/glare.ts";
 import { destroyViewFrame } from "../render/view/viewFrameData.ts";
 import { serveIdlePick } from "../render/view/picks.ts";
@@ -241,6 +242,13 @@ export class Engine {
             world,
             resolver: this.cameras.resolver(world),
             anchorQueries: this.queries,
+            tilesetRays: (tileset, rays) => {
+              const body = tileset.anchor.body;
+              return castTilesetRays(tileset, rays, {
+                ...(body?.terrainBand && { band: body.terrainBand }),
+                ...(body && { ellipsoid: body.ellipsoid }),
+              });
+            },
           },
           signal,
         );

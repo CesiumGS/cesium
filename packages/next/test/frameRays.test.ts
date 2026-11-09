@@ -12,6 +12,8 @@ import type { QueryRay } from "../src/query/queries.ts";
 import { EARTH, MOON } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import type { World } from "../src/scene/World.ts";
+import { obb, sphereFromObb } from "../src/streaming/volumes.ts";
+import type { Tileset3D } from "../src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R_EARTH = 6_378_137;
@@ -265,5 +267,64 @@ describe("rays through the frame tree", () => {
         targets: [{ kind: "body", body: MOON }],
       }),
     ).rejects.toThrow(/names its world/);
+  });
+
+  it("a tileset target answers from its retained geometry, in the rays' reference frame", async () => {
+    setup();
+    const moon = world.bodyAnchor(MOON);
+    const o = obb(
+      Float64Array.from([MOON_R, 0, 0]),
+      Float64Array.from([20_000, 0, 0, 0, 20_000, 0, 0, 0, 20_000]),
+    );
+    const fake = {
+      anchor: moon,
+      retainGeometry: true,
+      root: {
+        children: [],
+        volume: { kind: "box", obb: o, sphere: sphereFromObb(o) },
+        viewMask: 1,
+        standInMask: 0,
+        geometricError: 0,
+        geometry: [
+          {
+            positions: Float32Array.from([
+              0, -5000, -5000, 0, 5000, -5000, 0, 5000, 5000, 0, -5000, 5000,
+            ]),
+            indices: Uint32Array.from([0, 1, 2, 0, 2, 3]),
+            matrix: Float64Array.from([
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              MOON_R,
+              0,
+              0,
+              1,
+            ]),
+          },
+        ],
+      },
+    } as unknown as Tileset3D;
+    const answer = await engine.queries.castRays({
+      anchor: undefined,
+      world,
+      frame: moon,
+      seconds: 0,
+      rays: [{ from: [MOON_R + 3000, 0, 0], to: [MOON_R - 3000, 0, 0] }],
+      targets: [{ kind: "tileset", tileset: fake }],
+    });
+    const ray = answer.rays[0]!;
+    expect(ray.verdict).toBe("blocked");
+    expect(ray.hit!.position[0]).toBeCloseTo(MOON_R, 6);
+    expect(ray.hit!.frame).toBe(moon);
+    expect(ray.hit!.target).toMatchObject({ kind: "tileset" });
   });
 });
