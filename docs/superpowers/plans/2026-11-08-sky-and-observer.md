@@ -177,7 +177,7 @@ Every kernel, its bounds and its worst case. Each task reads the Metal of its ke
 | Veil compose | 9 levels, unrolled, 4 bilinear taps each | Half-size | `VEIL_LEVELS` |
 | Sprites | None | 256 instances; 4 million pixels; radius at most 512 px | `GLARE_SPRITE_PIXELS` |
 | `eyeLimit` | 8 ring taps, unrolled | Full-size, fragment, eye only | Constant |
-| Uploads | n/a | 4 MB, or one face, per tick; then the mip generator on one face per tick | Call 22 |
+| Uploads | n/a | 4 MB, or one face's level, per tick. Mips come from the pack or the worker, so no GPU mip pass runs | Call 22 |
 | Kernel | CPU only, in a worker | One pupil at a time, 1024² | Worker |
 
 **Slicing.** §13.32 wants slicing to belong to the graph. This plan does less: its only heavy GPU work is uploads, which it slices itself, and every live pass is short and bounded. The graph-level mechanism stays with the temporal work.
@@ -230,3 +230,240 @@ New files, by responsibility. Modified code is named by symbol in each task.
 - **Checks:** `spikes/observer.html`, `spikes/observer.ts`, `bench/observerCost.html`, `bench/observerCost.ts`.
 
 ---
+
+## Batch A: the observer
+
+### Task 1: `view.observer` replaces the exposure settings
+
+No picture changes. EV100 stays the unit.
+
+**Files:**
+
+- Create: `src/scene/observer.ts`, `test/observer.test.ts`
+- Modify: `View` (`ViewOptions`, `exposure`, `toneMapping`, state, constructor), `updateExposure`, `adaptExposure`, the `meter`, `adaptation` and `present` passes, the on-demand fingerprint, the `Sky.write` call, `lights.ts`'s callers if they read the mode, `Viewer` (`ViewerOptions.exposure`, `setSplit`), `src/index.ts`, `examples/` (frames-explorer's `globe.ts` and `scenarios/stage.ts`, translucency, the slang playground), `bench/suite/` (`suite.ts`, `viewerHost.ts`, `Viewer.tsx`), `parity/*`, `handbook/src/apiMap.ts`, tests that set `exposure` (find them: `grep -rnE "\.exposure\b|exposure:|toneMapping" src widgets examples bench parity lab test`), `api/surface.txt`
+
+**Interfaces:**
+
+- Produces (author's calls 1 to 5), in `src/scene/observer.ts`, with no GPU types:
+  - `Exposure`, `EYE`, `UNITLESS_EXPOSURE`, `DAYLIGHT_EXPOSURE`, `ev100ToScale`, `ToneMapping` move here, unchanged, and `src/index.ts` keeps exporting them;
+  - `scaleToEv100(scale: number): number`, the inverse of `ev100ToScale`;
+  - `interface PointSpread { core: number; wing?: { sigma: number; share: number } }`, in CSS pixels;
+  - `interface ObserverSettings { exposure: Exposure; toneMapping: ToneMapping; pointSpread: PointSpread; glare: GlareSettings | null; stages: readonly PostStage[] }` (`GlareSettings` is declared here, used from Task 12: `{ tier: GlareTier | "auto"; veil: { share: number } | null; spikes: { aperture: Aperture; share: number; extent: number } | null }`, `extent` in degrees; `PostStage` as a type import from Task 2, and `stages` is empty until then);
+  - `eyeObserver(options?: { compensation?: number; speed?: number }): ObserverSettings`: exposure `{ eye: true, ... }`, core 0.85, glare null, no stages;
+  - `cameraObserver(exposure: Exposure): ObserverSettings`: core 0.55, glare null, no stages;
+  - `interface ObserverReadout { ev100: number | undefined; equivalent: boolean; preExposure: number; cones?: number; rods?: number }`;
+  - `ViewOptions.observer?: Partial<ObserverSettings>`, over `cameraObserver({ ev100: 15 })`; `ViewOptions.exposure` and `.toneMapping` go;
+  - `View.observer: ObserverSettings`: get and set, a watched copy as `viewport` is today. Writing a field, or a field of `exposure`, `pointSpread` or `glare`, in place wakes the loop and bumps `view.observerRevision`. `View.readout(): ObserverReadout`;
+  - `View.exposureScale` stays, marked `@internal`. It's the pre-exposure, a matter of fp16's range. `ViewerOptions.observer` replaces `ViewerOptions.exposure`, default `eyeObserver()`.
+
+- [ ] **Step 1: Write the failing test** (`test/observer.test.ts`, `fakeEngine`):
+  - `"exposure" in view` and `"toneMapping" in view` are false;
+  - the default view's `observer.exposure` is `{ ev100: 15 }`, tone mapping `pbrNeutral`, core 0.55, glare null;
+  - `eyeObserver()`'s core is 0.85, and `eyeObserver({ compensation: 1 }).exposure.compensation` is 1;
+  - each of `view.observer = …`, `view.observer.toneMapping = "agx"`, `view.observer.exposure.compensation = 1` calls `view.wake` once, and moves the on-demand fingerprint (Review Focus 5);
+  - `updateExposure` gives the same numbers as before for `{ ev100: 15 }`, `{ scale: 1 }`, and an eye with adaptation set: 2.54 × 10⁻⁵, 1, and `eyeResponse`'s maximum;
+  - readouts: `{ ev100: 15 }` reads 15, not equivalent; `{ scale: 1 }` reads `ev100` undefined; an eye adapted to 4,000 cd/m² reads 14.18 ± 0.01, equivalent, and at 10⁻⁴ cd/m² −4.04 ± 0.01, with `cones` and `rods` set;
+  - the bytes the `present` pass writes to `frame.presentParams` for a daylight camera and an adapted eye equal numbers recorded in the test before the change;
+  - `Viewer.setSplit`'s second view gets a separate copy of the observer: editing one doesn't touch the other.
+- [ ] **Step 2: Run** `npx vitest run test/observer.test.ts` and confirm it fails.
+- [ ] **Step 3: Implement.** Move the types, then the callers, in one commit; the compiler finds them. Use `view.observer.exposure` in every pass. In the playground, replace its own `scaleToEv100` with the public one.
+- [ ] **Step 4: Run** the test, `test/exposureAdapt.test.ts`, `test/onDemandIdle.test.ts`, `test/frameLoopSleep.test.ts`, tsc. `npm run surface`.
+- [ ] **Step 5: Commit** with "scene: one observer on a view: exposure and tone mapping move to it".
+
+### Task 2: The post stage interface
+
+**Files:**
+
+- Create: `src/render/post/postStage.ts`, `src/render/post/chain.ts`, `src/shaders/postStage.slang`, `test/postStage.test.ts`, `spikes/observer.html`, `spikes/observer.ts`
+- Modify: `TextureDesc`, `FrameGraph`, `TexturePool`, `present.slang` (new entries only), the `present` pass and pipelines, `buildViewFrame`, `src/shaders/link/boundary.ts`, `src/index.ts`, `api/surface.txt`
+
+**Interfaces:**
+
+- Consumes: Task 1's `ObserverSettings.stages`.
+- Produces (author's calls 6 to 10):
+  - `type StageSlot = "scene" | "exposed" | "display"`; `type StageKind = "physics" | "model" | "look"`; `type StageRead = "depth" | "ids"`;
+  - `createPostStage(options: { name: string; slot: StageSlot; kind: StageKind; label: string; shader: string | ShaderUnit; reads?: readonly StageRead[]; uniforms?: Record<string, UniformDeclaration>; shadowGain?: number }): PostStage`; `class PostStage { readonly name; readonly slot; readonly kind; readonly label; enabled: boolean; readonly shadowGain: number; setUniform(name: string, value: number | readonly number[]): void }`. `shadowGain` is the largest slope near black, default 1;
+  - `class PostStageError extends Error`, naming the stage and the field;
+  - `POST_STAGE_BOUNDARY: Boundary`: requires `postStage(PostInput) -> vec4<f32>`; provides `postColor`, `postColorAt`, `postDepthAt`, `postIdAt`, and `PostInput { uv, pixel, size, preExposure, pixelAngle }`;
+  - internal `interface GraphStage { name; slot; kind; label; register(graph: FrameGraph, io: ChainIo): void }`;
+  - `chainOrder(stages): { scene: …; exposed: …; display: … }` and `chainSource(stages, index): number`, pure: the slots' order (stable by list position) and the latest enabled stage before `index`;
+  - `observerShadowGain(settings: ObserverSettings): number`: the product of enabled `exposed` stages' gains;
+  - `TextureDesc.mipLevelCount?: number`; `FrameGraph.mipView(handle, level): GPUTextureView`, created once per texture; the pool's key and `textureBytes` count mips;
+  - `present.slang` entries `fsResponse` (scene light to exposed, with the eye's model when on) and `fsTone` (tone mapping, coverage and encoding). `fs` isn't edited.
+
+- [ ] **Step 1: Write the failing test** (`test/postStage.test.ts`):
+  - `createPostStage` refuses, naming the field: no `kind`, an unknown slot, an empty name, an unknown `reads` entry, and a shader that doesn't define `postStage` (a link diagnostic with its unit and line);
+  - two stages of one name in a list are refused when the list is set, naming the name;
+  - `chainOrder` keeps list order within a slot; `chainSource` skips disabled stages, and gives the slot's input with none;
+  - with a `scene` stage and a `display` stage, the graph's `compile()` lists `meter` before `adaptation`, `adaptation` before `post.a`, `post.a` before `present`, and `post.b` after `present`; with none, the pass list is as before;
+  - the meter's and adaptation's `reads` hold no stage's output;
+  - a disabled stage's pass acquires no texture (count `allocator.acquire`), and with no stage the `present` pass binds `pipelines.present` with `fs`, not the split entries;
+  - setting `view.observer.stages` to a new list rebuilds the view's graph once; setting the same list doesn't; the old stage targets are returned to the pool (Review Focus 4);
+  - two views hold separate chains: enabling a stage on one leaves the other's pass list alone;
+  - a canvas squeezed to 0 px wide with a stage on: no throw, no zero-size texture (Review Focus 4);
+  - `FrameGraph`: a 5-level desc's bytes are 1.33 × the base's, within 1%; descs that differ only in mips don't share a bucket; `mipView` returns the same object twice;
+  - `observerShadowGain` is 1 with no stage, and the product with two.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** Write the shader glue in `postStage.slang`; link at pipeline creation; a link diagnostic throws `PostStageError`. A stage's pipeline comes from the existing pipeline cache, keyed by its unit. `ids` and `depth` go in the pass's `reads`. Register the chain in `buildViewFrame`'s one registration function (§13.17). Rebuild the view's graph by the same path a resize takes.
+- [ ] **Step 4: Run** the test, `npm run shaders`, `npm run shaders:check`, tsc. Read the Metal of `fsResponse` and `fsTone`.
+- [ ] **Step 5: Browser check** (port 5195, `spikes/observer.html`, group `stages`): a stage that inverts red changes a known pixel; a no-op `exposed` stage differs from none by at most 1/255 on every pixel; a stage reading `depth` shows the terrain's outline; a stage returning NaN shows as 0 at that pixel only, since the chain's glue replaces a non-finite result (Review Focus 3); two views with different stages; a clean console. Stop the server.
+- [ ] **Step 6: Commit** with "render: post stages: a first public interface, with slots, kinds and declared reads".
+
+### Task 3: The astrophoto tone curve, labelled
+
+A look, as a stage, over the whole image. It's built only on Task 2's public interface, which is part of what it proves.
+
+**Files:**
+
+- Create: `src/render/post/astroCurve.ts`, `test/astroCurve.test.ts`
+- Modify: `src/index.ts`, `api/surface.txt`, `spikes/observer.ts`
+
+**Interfaces:**
+
+- Consumes: `createPostStage`.
+- Produces:
+  - `astroCurve(y: number, strength: number): number`, pure, the function the shader holds: on exposed luminance, `asinh(q × max(y − 0.004 s, 0)) / asinh(q)`, with `q = max(8 s, 0.001)`;
+  - `astrophotoCurveStage(options?: { strength?: number }): PostStage`: slot `exposed`, kind `look`, label `"Astrophoto curve (a look)"`, default strength 1, `shadowGain` `q / asinh(q)`.
+
+- [ ] **Step 1: Write the failing test:** `astroCurve(1, 1)` is 1; `astroCurve(0, 1)` is 0; below the black point (y 0.004, s 1) it's 0; it's monotonic over 1,000 samples; at strength 0 it's within 10⁻³ of `y`; `shadowGain` at strength 1 is 2.89 ± 0.01; the stage's kind is `look`, and its label contains "look"; the shader's source holds 8.0 and 0.004 (a source pin, as `test/meterGuard.test.ts` does), and scales RGB by one ratio, so hue holds before the saturation term; the stage's slot isn't `scene`, so it can't touch light before the response.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** WGSL text in the stage, from the spike's finding (asinh on luminance, black point, 1.4× saturation at full strength). The spike's stretch inside the sky shader isn't carried over.
+- [ ] **Step 4: Run** the test and tsc. Browser check (port 5195, group `curve`): with the stage, an Earth pixel and a star pixel both change by what `astroCurve` says, within 2/255, with the meter's reading unchanged.
+- [ ] **Step 5: Commit** with "render: the astrophoto curve, a labelled look over the whole image".
+- [ ] **Step 6: Batch A's gates** (see "Batches and gates"). Expect no pixel difference in any suite. Report the `alloc` numbers.
+
+## Batch B: the sky data pack
+
+### Task 4: The pack's format and how the sky takes it
+
+**Files:**
+
+- Create: `src/atmosphere/skyPack.ts`, `test/skyPack.test.ts`
+- Modify: `StarField`, `Sky.setStarField`, `Engine` (`setStarMap`, a new `setSkyPack`), the worker's `stars` handler, `api/surface.txt`
+
+**Interfaces:**
+
+- Produces (author's calls 12, 19, 20, 22), with no GPU types:
+  - ```ts
+    interface SkyPackManifest {
+      format: 1;
+      name: string;
+      distributable: boolean; // false unless a person cleared it
+      clearance?: { by: string; date: string; note: string };
+      sources: ReadonlyArray<{
+        name: string;
+        url: string;
+        credit: string;
+        terms: string; // what its page says, with the date read
+      }>;
+      credits: readonly string[]; // shown by the Viewer, as text
+      modelled: readonly string[]; // what is modelled rather than measured
+      points: { file: string; count: number; floatsPerStar: 8 };
+      background: {
+        file: string;
+        size: number;
+        levels: number;
+        meanLuminance: number; // cd/m²
+        holdsFaintStars: boolean;
+      };
+      calibration?: Record<string, number>;
+    }
+    ```
+  - `parseManifest(json: unknown): SkyPackManifest`: a missing or non-boolean `distributable` reads as false, with a note; anything else wrong throws `SkyPackError` naming the field; a count over `MAX_PACK_STARS` (4,000,000), a size that isn't a power of two up to 4,096, or more levels than the size allows is refused;
+  - `readPoints(bytes: ArrayBuffer, manifest): Float32Array` and `readBackground(bytes, manifest): Float32Array[][]`, by face then level: check the magic, the header and the exact length; refuse non-finite values, naming the file and the star's index;
+  - `isPackBinary(bytes: Uint8Array): boolean` (used by Task 5);
+  - `StarField` gains `backgroundLevels: Float32Array[][]` in place of `background`, plus `holdsFaintStars: boolean` and `meanBackground: number`. Today's map gets a CPU box filter in the worker, `holdsFaintStars` false, and mean 0, so it uses no new light;
+  - `Engine.setSkyPack(url: string | URL | null): Promise<SkyPackManifest | undefined>`: reads it in the worker. On any failure it warns once, naming the file and the field, and leaves what's drawn. `null` goes back to what `setStarMap` last set;
+  - `Sky.setStarField` starts a sliced upload; `Sky.advanceUpload(): boolean` writes 4 MB of points or one face's level per tick, called from the tick; bind groups swap when it's complete, and the old field draws until then; a new `setStarField` during an upload destroys the part made;
+  - **Point file:** 32-byte header: `CSKYPTS1`, count u32, floats-per-star u32, zeros; then little-endian float32, brightest first. **Background file:** `CSKYBG01`, size u32, faces u32 = 6, levels u32, zeros; then half floats, RGBA, by face, then level.
+
+- [ ] **Step 1: Write the failing test** (`test/skyPack.test.ts`, synthetic bytes only, built in the test):
+  - a good manifest round-trips, and one with no `distributable` reads false (Review Focus 2);
+  - each of these is refused, naming its field or file: a truncated `points.bin`, a count one off, a NaN at star 7, a bad magic, a count of 5,000,000, a size of 100, and a `format` of 2;
+  - with a 404 or a refused pack, `setSkyPack` resolves undefined, warns once, and `sky`'s star buffer is the same object (Review Focus 2);
+  - uploading a 20 MB field takes at least 5 ticks' `writeBuffer` calls, none over 4 MB, and the bind group changes only on the last;
+  - `setSkyPack` during an upload: the first field's partial buffer is destroyed, and the second completes; a view removed during an upload: no throw (Review Focus 4);
+  - a pack arriving asks the on-demand loop for one tick, and the loop then sleeps (Review Focus 5);
+  - `setStarMap` still gives today's field: `test/stars.test.ts` passes, with its first level's numbers the same as today's `background`;
+  - no file named in this task imports a GPU type (`test/importBoundary.test.ts`).
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** The manifest and points come over `workers.request`, as transferables. Don't touch drawing yet: until Task 8, a pack's stars draw with today's quads.
+- [ ] **Step 4: Run** the test, `test/stars.test.ts`, `test/sky.test.ts` and tsc.
+- [ ] **Step 5: Commit** with "sky: a source-neutral data pack: format, checks and sliced uploads".
+
+### Task 5: Builds refuse an uncleared pack
+
+**Files:**
+
+- Create: `scripts/vitePluginSkyPack.ts`, `test/skyPackGuard.test.ts`
+- Modify: `vite.config.ts`, `vite.lib.config.ts`, `handbook/vite.config.ts`, `scripts/checkBundle.mjs`
+
+**Interfaces:**
+
+- Consumes: `parseManifest`, `isPackBinary`.
+- Produces (author's call 19):
+  - `skyPackGuard(): Plugin`, with `generateBundle`: for each emitted asset, a JSON asset holding `format` and `points` and `background` is taken as a manifest, and any asset `isPackBinary` passes is a pack file. It throws unless a manifest in the bundle reads `distributable: true` with a complete `clearance`, and it names the file, the pack and §13.29's rule. A binary with no manifest beside it counts as uncleared. It's in the main, worker and handbook plugin lists;
+  - `skyPackDevRoute(): Plugin`, with `apply: "serve"`: serves `/sky-pack/manifest.json`, `points.bin` and `background.bin` from the store's chosen pack, by those three fixed names only. No part of the URL reaches a path. Only `vite.config.ts` has it.
+
+- [ ] **Step 1: Write the failing test** (`test/skyPackGuard.test.ts`):
+  - the plugin's `generateBundle`, with a fake bundle, refuses: an uncleared manifest; a manifest with no flag; `distributable: true` with no `clearance`; `points.bin` renamed `x.dat` with no manifest; the same with `distributable` false in a JSON asset of another name. Each error names the file. It passes a bundle with no pack, and a cleared fixture;
+  - `vite.config.ts`, `vite.lib.config.ts` and `handbook/vite.config.ts` each hold `skyPackGuard()`, in their main and worker plugins where they have both (a source pin), and a detector shown to flag a config without it;
+  - **repository guard:** of `git ls-files packages/next`, no file starts with a pack magic, and no JSON holds the manifest's shape, skipping none but this test's own in-memory fixtures; a detector shown to flag a planted buffer;
+  - the dev route's handler: `/sky-pack/../../secret` and `/sky-pack/other.bin` give 404, and it reads no file outside the store (the fake `fs` records paths);
+  - the route isn't in the build: `apply` is `"serve"`.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** In `scripts/checkBundle.mjs`, add a third build: a page that imports a synthetic uncleared pack by `?url` must fail with the plugin's message, and the same page without it must pass.
+- [ ] **Step 4: Run** the test, tsc, and `npm run check:bundle`.
+- [ ] **Step 5: Commit** with "build: refuse a sky pack that isn't cleared, with a guard on the repository".
+
+### Task 6: The script that builds a pack locally
+
+**Files:**
+
+- Create: `scripts/skyPack.mjs`, `scripts/skyPack/exr.mjs`, `peaks.mjs`, `calibrate.mjs`, `background.mjs`, `recipes.mjs`, `test/skyPackBuild.test.ts`, `test/data/skyPack.test.ts`
+- Modify: `package.json` (`"sky": "node scripts/skyPack.mjs"`), README's "Setup"
+
+**Interfaces:**
+
+- Consumes: `verifiedDownload`; `magnitudeOfRank`'s table for the check; Task 4's formats.
+- Produces (author's calls 13 to 17, 21):
+  - `npm run sky -- fetch`, `build [--recipe id] [--background 1024|2048] [--catalog file --allow-unsettled-terms]`, `info`. Into `SKY_DATA_DIR`, default `~/.cesium-bench/sky`. It refuses an output inside any git worktree;
+  - `readExr(bytes): { width; height; channels: Record<string, Float32Array> }`: scanline, half or float, ZIP compression (`compression` 3, as the NASA files use; checked for this plan). Others are refused, naming the compression. All sizes are checked before allocating, and a width or height over 32,768 is refused;
+  - `findPeaks(luminance, width, height): Peak[]`: local maxima with the window stretched in x with latitude; flat tops merged to one (clipped discs); a centroid per peak, in RA and Dec; threshold 0.0035; findings from the spike's `c_points.py`, rewritten without its dependencies;
+  - `fitFluxCurve(pairs: { flux; magnitude }[]): (flux) => magnitude`: monotonic and piecewise linear, by binned medians;
+  - `mergeHybrid(catalog, mapStars, split = 7): Star[]`: catalog stars at the split or brighter; map stars below it that match no catalog star within 2 arcminutes; brightest first;
+  - `starColor(bv: number): [r, g, b]`, luminance 1: Ballesteros 2012's temperature, a blackbody through the CIE functions;
+  - `buildBackground(layer, size, levels)`: equirectangular to a cube, with a box filter for mips; absolute level from the fitted magnitude-0 flux, with `meanLuminance` recorded;
+  - `RECIPES`: `"svs4851-hyg41"` is the default. Each source has a URL, SHA-256, size, credit, and `terms` in the words of `Star data licenses.md`, with its date. Every recipe sets `distributable: false`. No code path writes true or `clearance`. Gaia and Hipparcos have no recipe (call 15).
+
+- [ ] **Step 1: Write the failing test** (`test/skyPackBuild.test.ts`, all fixtures synthetic, made in the test; injected `fetch`, no network):
+  - an EXR written by the test (ZIP, half float, 3 channels) reads back within half-float rounding; a PIZ header is refused by name; a claimed 100,000 × 100,000 is refused before allocating;
+  - `findPeaks` finds Gaussians placed at known RA and Dec within 0.3 texels; a flat-topped disc counts once; a disc stretched in x at Dec 85° counts once, while two peaks 3 texels apart at the equator stay two; a star on the RA seam counts once;
+  - `fitFluxCurve` recovers a known non-linear curve within 0.05 magnitudes (accuracy against a truth the test chose), and is monotonic with noisy pairs;
+  - `mergeHybrid`: a bright star in both comes from the catalog only; a faint one in the map stays; a catalog star at magnitude 8 isn't used; output is brightest first;
+  - `starColor`: B−V 1.85 is redder than B−V −0.03, luminance 1 within 10⁻⁶;
+  - `build` on a tiny synthetic source: its output passes `parseManifest`, `readPoints` and `readBackground`; `distributable` is false, and the sources and credits are listed; a run with the output inside the repository is refused; `--catalog` without `--allow-unsettled-terms` is refused, naming the flag, and with it the source shows in the manifest as supplied locally;
+  - `RECIPES`: every recipe's flag is false; no recipe's URL holds `gea.esac.esa.int`, `cosmos.esa.int` or `cds.unistra.fr`; every source has `terms` with a date.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** The URLs come from NASA SVS 4851's page and HYG's repository. Read each page again before writing its `terms`: the licence report warns that its quotes are pointers. If `scratchpad/star-spike-data/` still holds the files, take the SHA-256 and sizes from them; otherwise pin them on the first fetch and say so in the commit. Treat downloads as untrusted: `verifiedDownload`, and the reader's checks.
+- [ ] **Step 4: Run** the test and tsc.
+- [ ] **Step 5: A real run on this machine** (it fetches about 300 MB; a heavy job, so run it when nothing else is measuring): `npm run sky -- fetch`, `npm run sky -- build`, then `SKY_DATA=1 npx vitest run test/data/skyPack.test.ts`. That data test checks: between 450,000 and 700,000 stars; counts brighter than magnitude 8 within 15% of Allen's 41,000, and 9 within 15% of 120,000; Sirius, Canopus and Arcturus within 0.1 magnitudes of −1.46, −0.74 and −0.05; the mean background between 0.5 and 2.5 × 10⁻⁴ cd/m², since the spike's level is good to maybe a factor of 2. Those are published facts, and the test holds no pack data. These counts agree with what the calibration used, so they are a check of the build, not independent proof.
+- [ ] **Step 6: Commit** with "scripts: build a local sky pack, never distributable, from fetched sources".
+
+### Task 7: The Viewer takes a pack and shows its credits
+
+**Files:**
+
+- Modify: `Viewer` (`ViewerOptions`, `credits()`), `widgets/credits.ts` if it needs it, `test/viewerCredits.test.ts`, `spikes/observer.ts`, `api/surface.txt`
+
+**Interfaces:**
+
+- Consumes: `Engine.setSkyPack`, `SkyPackManifest`.
+- Produces: `ViewerOptions.skyPack?: string | URL`; `Viewer.setSkyPack(url | null): Promise<SkyPackManifest | undefined>`; `Viewer.credits()` lists the manifest's `credits`, on screen rather than behind "Data attribution", while the pack draws. Today's map adds no credit line, as now. An uncleared pack warns once, naming the pack (author's call 20).
+
+- [ ] **Step 1: Write the failing test** (`test/viewerCredits.test.ts`): with a synthetic pack, `credits().credits` holds each manifest credit, and the on-screen bar's text holds them; `<img src=x onerror=…>` in a credit shows as text, with no element made (Review Focus 2); after `setSkyPack(null)`, or `stars: false`, they're gone; a failed pack leaves today's map, no credit, and one warning; an uncleared pack warns once across two renders; with no `skyPack`, a Viewer makes no new request and `credits()` is as it was.
+- [ ] **Step 2: Run** and confirm it fails.
+- [ ] **Step 3: Implement.** Credits are text nodes, and they don't go through the HTML attribution parser.
+- [ ] **Step 4: Run** the test, `test/libraryWidgets.test.ts` and tsc.
+- [ ] **Step 5: Commit** with "widgets: the Viewer takes a sky pack and shows its credits".
+- [ ] **Step 6: Batch B's gates.** Confirm a library build and a handbook build hold no pack file: `grep -rl CSKY dist-lib` and the handbook's output are empty. Commit no output.
