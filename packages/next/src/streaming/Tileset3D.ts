@@ -11,7 +11,6 @@ import { contentAnchor } from "../scene/earthAnchor.ts";
 import type {
   AnchorHandle,
   CastRay,
-  ClipBox,
   DrawHandle,
   TransformHandle,
   World,
@@ -33,12 +32,11 @@ import { Emitter } from "../core/Emitter.ts";
 import { BudgetedSelection } from "./Budgeted.ts";
 import {
   loadTilesetJson,
-  treeFromJson,
   type Tile,
   type TileJson,
   type TileTree,
 } from "./Tile.ts";
-import { transformVolume, volumeObb } from "./volumes.ts";
+import { transformVolume } from "./volumes.ts";
 import { DebugVolumes, type DebugColor } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
 import type { DesignPlacement } from "./designPlacement.ts";
@@ -68,25 +66,17 @@ import type {
 } from "./tilesetTypes.ts";
 import { readDualPosition, type DualDeclaration } from "./dualPosition.ts";
 import { applyDebugColor, updateDebug } from "./tilesetDebug.ts";
-import { serveQueries } from "./tilesetQueries.ts";
 import { evict, evictForCapacity, unload } from "./tilesetEviction.ts";
 import {
   COLD_AGE_MS,
   isCaster,
-  COLD_AGE_MAX_MS,
-  casterRoom,
-  wakeForStale,
-  COLD_WAKE_MIN_MS,
   closeImages,
   markCastsOnly,
 } from "./tilesetCasters.ts";
-import { applySurface, applyTerrainClip, upload } from "./tilesetUpload.ts";
-import { cancelLoad, request, undrawnTile } from "./tilesetLoad.ts";
+import { applySurface, applyTerrainClip } from "./tilesetUpload.ts";
+import { undrawnTile } from "./tilesetLoad.ts";
+import { countTiles, update } from "./tilesetUpdate.ts";
 const DEGREES_TO_RADIANS = Math.PI / 180;
-/** Imagery priority offset of loading tiles: after drawn and waiting ones. */
-const LOADING_IMAGERY = 1e15;
-/** Frames without any view touching an in-flight tile before it is cancelled. */
-const CANCEL_AFTER_FRAMES = 30;
 /**
  * A 3D Tiles 1.0 tileset's `asset.gltfUpAxis` as its content's axes, read
  * from the root tileset only (as 1.x). The default is Y.
@@ -300,8 +290,8 @@ export class Tileset3D implements TileTree {
   readonly attributions: readonly Attribution[];
   /** Load-time `modelMatrix`, built into tile transforms and volumes. */
   private readonly loadMatrix: Mat4;
-  /** `modelMatrix` × loadMatrix⁻¹: the content root transform. */
-  private delta: Mat4 = m4.mat4();
+  /** @internal `modelMatrix` × loadMatrix⁻¹: the content root transform. */
+  delta: Mat4 = m4.mat4();
   /** @internal Parent transform of all content: moves it with one write. */
   transform!: TransformHandle;
   /**
@@ -333,7 +323,8 @@ export class Tileset3D implements TileTree {
   }
   private world_: World | undefined;
 
-  private moveVolumes(tile: Tile, change: Mat4): void {
+  /** @internal */
+  moveVolumes(tile: Tile, change: Mat4): void {
     tile.volume = transformVolume(tile.ownVolume, change);
     if (tile.ownContentVolume) {
       tile.contentVolume = transformVolume(tile.ownContentVolume, change);
@@ -471,7 +462,8 @@ export class Tileset3D implements TileTree {
       this.changed(); // select again as soon as it thaws
     }
   }
-  private frozen = false;
+  /** @internal */
+  frozen = false;
   /**
    * Tints each drawn tile by its depth in the tree, to see the levels a
    * selection picked (1.x `debugColorizeTiles`). Off restores white.
@@ -551,9 +543,11 @@ export class Tileset3D implements TileTree {
    * meanwhile but none is shown bare.
    */
   imageryPending = false;
-  private readonly imageryReady = (tile: Tile) =>
+  /** @internal */
+  readonly imageryReady = (tile: Tile) =>
     !this.imageryPending && (this.imagery?.hasImagery(tile) ?? true);
-  private readonly imageryRefines = (tile: Tile) =>
+  /** @internal */
+  readonly imageryRefines = (tile: Tile) =>
     this.imagery?.refines(tile) ?? false;
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
@@ -561,8 +555,8 @@ export class Tileset3D implements TileTree {
   frame = 0;
   /** @internal A non-3D-Tiles source, when streaming one (`Globe.create`). */
   source?: TileSource;
-  /** Last frame in which an update changed anything. */
-  private lastChange = 0;
+  /** @internal Last frame in which an update changed anything. */
+  lastChange = 0;
 
   /**
    * @internal What the tileset draws changed: it stays `active` for the next updates,
@@ -584,8 +578,8 @@ export class Tileset3D implements TileTree {
   /** @internal */
   readonly overflowBytes: number;
   private readonly fixedWindow?: number;
-  /** The root's origin, and every origin this tileset requested from. */
-  private readonly origin: string;
+  /** @internal The root's origin, and every origin this tileset requested from. */
+  readonly origin: string;
   private readonly origins = new Set<string>();
   /** @internal */
   readonly loading = new Map<Tile, AbortController>();
@@ -628,8 +622,8 @@ export class Tileset3D implements TileTree {
   coldAgeMs = COLD_AGE_MS;
   /** @internal The last update selected shadow casters. */
   casting = false;
-  /** `World.contentRevision` after the last update. */
-  private revisionSeen = 0;
+  /** @internal `World.contentRevision` after the last update. */
+  revisionSeen = 0;
   /** @internal The timer that wakes the loop for cold tiles going stale. */
   casterTimer: ReturnType<typeof setTimeout> | undefined;
   /** @internal That timer fired, and the next update is due. */
@@ -948,11 +942,11 @@ export class Tileset3D implements TileTree {
   readonly itemList: SceneItem[] = [];
 
   /**
-   * Bounds cover what every item draws, and a placement that moves vertices
+   * @internal Bounds cover what every item draws, and a placement that moves vertices
    * swaps tiles whole: both follow the items' placements and parameters, read
    * here, before selection.
    */
-  private updateVolumePad(): void {
+  updateVolumePad(): void {
     let pad = 0;
     let moves = false;
     for (const item of this.itemList) {
@@ -1110,39 +1104,6 @@ export class Tileset3D implements TileTree {
   /** @internal External tileset JSON waiting for its tile tree to be built. */
   readonly externals: Array<{ tile: Tile; json: TileJson }> = [];
 
-  /** Builds waiting external tilesets' trees within the frame's budget. */
-  private buildExternals(): void {
-    const budget = this.engine.uploadBudget;
-    while (this.externals.length > 0) {
-      if (budget.trees > 0 && budget.ms <= 0) {
-        break;
-      }
-      // What views wait for first, as for uploads.
-      const next = this.externals.findIndex((e) => !isCaster(e.tile));
-      const { tile, json } = this.externals.splice(Math.max(next, 0), 1)[0]!;
-      tile.purpose = undefined; // structure, never drawn itself
-      const start = performance.now();
-      try {
-        const { root } = treeFromJson(json, tile.contentUrl!, tile, this);
-        // Built in the load-time frame: move it to the current one.
-        if (!isIdentity(this.delta)) {
-          this.moveVolumes(root, this.delta);
-        }
-        tile.children.push(root);
-        tile.state = "ready";
-        this.stats.tiles += countTiles(root);
-      } catch (error) {
-        tile.state = "failed";
-        this.undrawnTile(
-          `tileset JSON failed: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-      budget.ms -= performance.now() - start;
-      budget.trees++;
-      this.changed();
-    }
-  }
-
   /**
    * Needs `update()` even with every camera still: loading, waiting for a
    * request slot, changed in the last few frames (an upload can enable
@@ -1197,345 +1158,7 @@ export class Tileset3D implements TileTree {
 
   /** One frame: select per view, apply view masks, request, upload, evict. */
   update(allViews: SelectionView[]): void {
-    this.casterWake = false;
-    if (this.destroyed) {
-      return;
-    }
-    if (this.frozen) {
-      updateDebug(this);
-      return;
-    }
-    const frame = ++this.frame;
-    this.updateVolumePad();
-    // Hidden, or no item draws it in a view: that view selects nothing (drawn
-    // tiles leave it), and it asks for no ticks of its own.
-    // Only the views some item can draw in (`SceneItem.viewMask`): a view no
-    // item shows would otherwise fetch tiles that are never drawn, and its
-    // bytes could evict tiles the shown views need.
-    let wanted = 0;
-    for (const item of this.itemList) {
-      wanted |= item.views;
-    }
-    const views = this.show
-      ? allViews.filter((view) => ((wanted >>> view.id) & 1) !== 0)
-      : [];
-    if (allViews.length === 0) {
-      // No view yet (e.g. its world isn't shown yet): stay active, so the
-      // first selection runs as soon as a view appears.
-      this.lastChange = frame;
-    }
-    const before =
-      this.stats.requestsTotal +
-      this.stats.bytesTotal +
-      this.stats.loaded +
-      this.world.version;
-    const requests = new Map<Tile, number>();
-    const purposes = new Map<Tile, RequestPurpose>();
-    const nowMasked = new Set<Tile>();
-    for (const tile of this.masked) {
-      tile.viewMask = 0;
-    }
-    const nowPlaceholders = new Set<Tile>();
-    for (const tile of this.placeholders) {
-      tile.placeholderMask = 0;
-      tile.holes = undefined;
-    }
-    const nowStandIns = new Set<Tile>();
-    for (const tile of this.standIns) {
-      tile.standInMask = 0;
-    }
-    const nowCasters = new Set<Tile>();
-    for (const tile of this.casters) {
-      tile.casterMask = 0;
-    }
-    this.policy.imageryReady =
-      this.imagery || this.imageryPending ? this.imageryReady : undefined;
-    this.policy.imageryRefines = this.imagery ? this.imageryRefines : undefined;
-    this.policy.expectedLoadSeconds = this.loadEstimateMs / 1000;
-    const now = performance.now();
-    let viewBytes = 0;
-    // What a view uses this tick stays, and is the view's: counted once.
-    const useInView = (tile: Tile): void => {
-      if (tile.touchedFrame < frame) {
-        viewBytes += tile.bytes;
-        tile.viewedAt = now;
-      }
-      this.order.touch(tile, frame);
-    };
-    // A view drawing or asking for a tile after longer than the age: cold
-    // tiles do come back.
-    const cameBack = (tile: Tile): void => {
-      const away = now - tile.viewedAt;
-      if (
-        tile.touchedFrame < frame - 1 &&
-        tile.viewedAt > 0 &&
-        away > this.coldAgeMs
-      ) {
-        this.coldAgeMs = Math.min(COLD_AGE_MAX_MS, 2 * away);
-      }
-    };
-    const addRequest = (
-      tile: Tile,
-      priority: number,
-      purpose: RequestPurpose,
-    ): void => {
-      const previous = requests.get(tile);
-      if (previous === undefined || priority < previous) {
-        // The most urgent view's purpose.
-        requests.set(tile, priority);
-        purposes.set(tile, purpose);
-      }
-    };
-    const waiting = new Set<Tile>();
-    for (const view of views) {
-      const result = this.policy.select(this.root, this.geometricError, view);
-      const bit = (1 << view.id) >>> 0;
-      for (const tile of result.selected) {
-        tile.viewMask = (tile.viewMask | bit) >>> 0;
-        nowMasked.add(tile);
-        cameBack(tile);
-        useInView(tile);
-        this.markCastsOnly(tile, false);
-      }
-      for (const [tile, holes] of result.placeholders ?? []) {
-        tile.placeholderMask = (tile.placeholderMask | bit) >>> 0;
-        tile.holes ??= new Set();
-        for (const hole of holes) {
-          tile.holes.add(hole);
-        }
-        nowPlaceholders.add(tile);
-      }
-      for (const tile of result.standIns ?? []) {
-        tile.standInMask = (tile.standInMask | bit) >>> 0;
-        nowStandIns.add(tile);
-      }
-      for (const tile of result.touched) {
-        useInView(tile);
-      }
-      for (const tile of result.waiting ?? []) {
-        waiting.add(tile);
-      }
-      for (const tile of result.requested) {
-        cameBack(tile);
-        useInView(tile);
-        // Nearest first across views (1.x orders by distance for REPLACE);
-        // a policy may supply its own priority.
-        const priority =
-          result.priority?.get(tile) ?? tile.viewState(view.id).distance;
-        addRequest(tile, priority, this.policy.purpose?.(priority) ?? "view");
-      }
-      this.lastSelected.set(view.id, result.selected);
-      this.stats.selected.set(view.id, result.selected.length);
-    }
-    // A view that left has no selection: other tilesets' casters look for
-    // their receivers in this list, and credits read it.
-    for (const id of this.lastSelected.keys()) {
-      if (!views.some((view) => view.id === id)) {
-        this.lastSelected.delete(id);
-        this.stats.selected.delete(id);
-      }
-    }
-    this.viewBytes = viewBytes;
-    // Shadow casters, now that the bytes views use are known: only for the
-    // views some item can cast in. Elsewhere a caster would be fetched and
-    // counted, and its records would cast nothing.
-    let castingIn = 0;
-    for (const item of this.itemList) {
-      castingIn |= item.castViews;
-    }
-    const casterViews = views.filter(
-      (view) => ((castingIn >>> view.id) & 1) !== 0,
-    );
-    const room = casterRoom(this, casterViews, frame, now);
-    if (room) {
-      for (const view of casterViews) {
-        const found = this.policy.selectCasters!(
-          this.root,
-          this.geometricError,
-          view,
-          this.lastSelected.get(view.id)!,
-          room,
-        );
-        const bit = (1 << view.id) >>> 0;
-        for (const tile of found.casters) {
-          tile.casterMask = (tile.casterMask | bit) >>> 0;
-          nowCasters.add(tile);
-        }
-        for (const [tile, priority] of found.wanted) {
-          // Kept from cancelling while it loads, as a view's tile is.
-          this.order.touch(tile, frame);
-          if (tile.state === "unloaded") {
-            addRequest(tile, priority, "caster");
-          }
-        }
-      }
-    }
-    // View masks: only tiles whose mask changed touch their draw records.
-    for (const tile of new Set([...this.masked, ...nowMasked])) {
-      applyDebugColor(this, tile);
-      if (tile.placement && tile.appliedMask !== tile.viewMask) {
-        if (tile.viewMask !== 0 && tile.purpose) {
-          this.stats.purposes[tile.purpose].drawn++;
-          tile.purpose = undefined;
-        }
-        tile.appliedMask = tile.viewMask;
-        for (const item of this.itemList) {
-          item.applyViewMask(tile);
-        }
-      }
-    }
-    this.masked = nowMasked;
-    // Off-screen casters: as for view masks, and the tint's callback sees
-    // them too (it may hide a tile, and a hidden draw doesn't cast).
-    for (const tile of new Set([...this.casters, ...nowCasters])) {
-      applyDebugColor(this, tile);
-      if (tile.placement && tile.appliedCasterMask !== tile.casterMask) {
-        if (tile.casterMask !== 0 && tile.purpose === "caster") {
-          this.stats.purposes.caster.drawn++;
-          tile.purpose = undefined;
-        }
-        tile.appliedCasterMask = tile.casterMask;
-        for (const item of this.itemList) {
-          item.applyCasterMask(tile);
-        }
-      }
-    }
-    this.casters = nowCasters;
-    this.stats.casters = nowCasters.size;
-    this.stats.casterScale = room?.scale ?? 1;
-    if (
-      room &&
-      room.nextStale < Infinity &&
-      (room.denied > 0 || room.scale > 1)
-    ) {
-      wakeForStale(this, Math.max(room.nextStale - now, COLD_WAKE_MIN_MS));
-    }
-    // Mixed-LOD placeholders: clipped to their holes (unioned over views)
-    // in the views where finer content draws beside them.
-    for (const tile of new Set([...this.placeholders, ...nowPlaceholders])) {
-      if (
-        tile.placement &&
-        (tile.appliedPlaceholderMask !== tile.placeholderMask ||
-          !sameTiles(tile.appliedHoles, tile.holes))
-      ) {
-        if (tile.clip) {
-          this.world.freeClip(tile.clip);
-          tile.clip = undefined;
-        }
-        if (tile.placeholderMask !== 0 && tile.holes) {
-          tile.clip = this.world.allocateClip(
-            [...tile.holes].map((hole) => clipBox(hole, tile.geometricError)),
-          );
-        }
-        for (const item of this.itemList) {
-          item.applyPlaceholder(tile);
-        }
-        tile.appliedPlaceholderMask = tile.placeholderMask;
-        tile.appliedHoles = tile.holes;
-      }
-    }
-    this.placeholders = nowPlaceholders;
-    this.standIns = nowStandIns;
-    updateDebug(this);
-    this.stats.placeholders = nowPlaceholders.size;
-
-    // Queue time: since a still-unloaded tile was first wanted.
-    for (const tile of requests.keys()) {
-      if (tile.state === "unloaded" && !this.wanted.has(tile)) {
-        this.wanted.set(tile, now);
-      }
-    }
-    for (const tile of this.wanted.keys()) {
-      if (!requests.has(tile)) {
-        this.wanted.delete(tile);
-      }
-    }
-    // Cancel requests no view has touched for a while (1.x cancels those
-    // not touched this frame; a short grace absorbs jitter).
-    for (const [tile, controller] of this.loading) {
-      if (
-        !controller.signal.aborted &&
-        tile.touchedFrame < frame - CANCEL_AFTER_FRAMES
-      ) {
-        cancelLoad(this, tile, controller);
-      }
-    }
-    serveQueries(this, frame, requests, purposes);
-    request(this, requests, purposes);
-    this.engine.requests.backlog(this.origin, this.ready.length);
-    const window = this.engine.requests.stats(this.origin);
-    if (window) {
-      this.stats.maxInFlight = window.window;
-      this.stats.adaptive = window.adaptive;
-      if (window.protocol) {
-        this.stats.protocol = window.protocol;
-      }
-    }
-    this.buildExternals();
-    upload(this);
-    if (this.imagery) {
-      // Imagery for the terrain tiles drawn in any view (placeholders too)
-      // and those waiting for it to draw, nearest first.
-      const wanted = new Map<Tile, number>();
-      for (const tile of new Set([
-        ...nowMasked,
-        ...nowPlaceholders,
-        ...waiting,
-      ])) {
-        let priority = Infinity;
-        for (const view of views) {
-          priority = Math.min(priority, tile.viewState(view.id).distance);
-        }
-        wanted.set(tile, priority);
-      }
-      // Then tiles still loading (not prefetch or height samples): their
-      // imagery needs only their rectangle, so it loads alongside the
-      // terrain as in 1.x. After it arrived, the first view's imagery came
-      // 0.4 s after its terrain (Rainier, r38).
-      for (const tile of this.loading.keys()) {
-        if (
-          tile.globe &&
-          !wanted.has(tile) &&
-          tile.purpose !== undefined &&
-          tile.purpose !== "prefetch" &&
-          tile.purpose !== "sample"
-        ) {
-          let priority = Infinity;
-          for (const view of views) {
-            priority = Math.min(priority, tile.viewState(view.id).distance);
-          }
-          wanted.set(tile, LOADING_IMAGERY + priority);
-        }
-      }
-      this.imagery.update(wanted);
-      this.lights?.update(wanted);
-    }
-    this.evict(frame);
-    if (
-      this.stats.requestsTotal +
-        this.stats.bytesTotal +
-        this.stats.loaded +
-        this.world.version !==
-      before
-    ) {
-      this.lastChange = frame;
-    }
-    if (
-      this.settledAt === undefined &&
-      this.firstContentAt !== undefined &&
-      this.idle
-    ) {
-      this.settledAt = performance.now();
-    }
-    this.stats.casterBytes = this.casterResident;
-    this.stats.coldBytes = Math.max(
-      0,
-      this.stats.bytes - this.viewBytes - this.casterResident,
-    );
-    this.stats.loading = this.inFlight + this.ready.length;
-    this.stats.inFlight = this.inFlight;
-    this.stats.uploadQueue = this.ready.length;
-    this.revisionSeen = this.world.contentRevision;
+    update(this, allViews);
   }
 
   /** One more tile that draws nothing, and why (`TilesetStats.undrawn`). */
@@ -1544,14 +1167,14 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * Over the byte budget. Casters that don't cast this tick go first. Then
+   * @internal Over the byte budget. Casters that don't cast this tick go first. Then
    * cold tiles, least recently touched first: as they would with casters off
    * while what views use and the cold tiles alone pass the budget, and
    * otherwise only those gone stale (`COLD_AGE_MS`), for casters that took
    * their room. A caster still casting goes when admission stops admitting it,
    * on the next tick, as what is left shrinks.
    */
-  private evict(frame: number): void {
+  evict(frame: number): void {
     evict(this, frame);
   }
 
@@ -1685,85 +1308,4 @@ function createSelection(
       ? new StepwiseSelection(options)
       : new BudgetedSelection(options))
   );
-}
-
-function countTiles(tile: Tile): number {
-  return 1 + tile.children.reduce((n, c) => n + countTiles(c), 0);
-}
-
-function sameTiles(a?: Set<Tile>, b?: Set<Tile>): boolean {
-  if (a === b) {
-    return true;
-  }
-  if (!a || !b || a.size !== b.size) {
-    return false;
-  }
-  for (const t of a) {
-    if (!b.has(t)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
- * A hole's bounding box as a clip box, grown vertically by `margin`: the
- * placeholder's geometric error bounds how far its surface may lie above or
- * below the finer content's box. Sideways it stays tight, so it doesn't
- * spill over finer neighbors.
- */
-function clipBox(tile: Tile, margin: number): ClipBox {
-  const box = volumeObb(tile.ownVolume);
-  const sphere = tile.ownVolume.sphere;
-  const center = box ? box.center : sphere.center;
-  const h = box
-    ? box.halfAxes
-    : Float64Array.of(
-        sphere.radius,
-        0,
-        0,
-        0,
-        sphere.radius,
-        0,
-        0,
-        0,
-        sphere.radius,
-      );
-  const up = [center[0]!, center[1]!, center[2]!];
-  const upLength = Math.hypot(up[0]!, up[1]!, up[2]!) || 1;
-  const axes = [0, 3, 6].map((o) => [h[o]!, h[o + 1]!, h[o + 2]!]);
-  const rows = new Float64Array(9);
-  axes.forEach((a, i) => {
-    let length = Math.hypot(a[0]!, a[1]!, a[2]!);
-    let u = a;
-    if (length < 1e-9) {
-      // Flat box: the normal of the other two axes.
-      const [p, q] = axes.filter((_, j) => j !== i) as [number[], number[]];
-      u = [
-        p[1]! * q[2]! - p[2]! * q[1]!,
-        p[2]! * q[0]! - p[0]! * q[2]!,
-        p[0]! * q[1]! - p[1]! * q[0]!,
-      ];
-      length = 0;
-    }
-    const ul = Math.hypot(u[0]!, u[1]!, u[2]!) || 1;
-    const dir = u.map((x) => x / ul);
-    const vertical = Math.abs(
-      (dir[0]! * up[0]! + dir[1]! * up[1]! + dir[2]! * up[2]!) / upLength,
-    );
-    const grown = length + margin * vertical + 1e-3 * length + 0.01;
-    for (let k = 0; k < 3; k++) {
-      rows[i * 3 + k] = dir[k]! / grown;
-    }
-  });
-  return { center, rows };
-}
-
-function isIdentity(m: Mat4): boolean {
-  for (let i = 0; i < 16; i++) {
-    if (m[i] !== (i % 5 === 0 ? 1 : 0)) {
-      return false;
-    }
-  }
-  return true;
 }
