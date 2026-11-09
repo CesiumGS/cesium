@@ -145,6 +145,7 @@ import {
   warnUnavailable,
   uploadTables,
 } from "./world/featureTables.ts";
+import { flushUploads, queueUpload } from "./world/uploads.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -852,13 +853,13 @@ export class World {
   }
 
   /**
-   * Geometry written since the last frame, copied in one batch
+   * @internal Geometry written since the last frame, copied in one batch
    * (`flushUploads`). A queue.writeBuffer per stream of every mesh went
    * through the browser's transfer ring to the GPU process: a burst of
    * tiles blocked the main thread in writeBuffer (NYC, vsync off: 1.2 s
    * over 8 s of an orbit, r38).
    */
-  private readonly pendingUploads: Array<{
+  readonly pendingUploads: Array<{
     target: GPUBuffer;
     offset: number;
     source: GPUBuffer;
@@ -866,52 +867,16 @@ export class World {
     size: number;
   }> = [];
   /**
-   * Staging buffers mapped at creation, the queued bytes copied into them
+   * @internal Staging buffers mapped at creation, the queued bytes copied into them
    * when queued (as writeBuffer copied them); destroyed after each flush,
    * so nothing stays on this thread between bursts (a reused copy buffer
    * kept its peak, 4 MB after NYC's load, r39).
    */
-  private readonly uploadChunks: Array<{
+  readonly uploadChunks: Array<{
     buffer: GPUBuffer;
     bytes: Uint8Array;
     used: number;
   }> = [];
-
-  /** @internal Queues a write of `data` at `offset` in `target` (`flushUploads`). */
-  queueUpload(
-    target: GPUBuffer,
-    offset: number,
-    data: Float32Array | Uint32Array,
-  ): void {
-    const size = data.byteLength;
-    let chunk = this.uploadChunks.at(-1);
-    if (!chunk || chunk.used + size > chunk.bytes.length) {
-      const buffer = this.ctx.device.createBuffer({
-        label: "world.uploads",
-        size: Math.max(UPLOAD_CHUNK_BYTES, Math.ceil(size / 4) * 4),
-        usage: GPUBufferUsage.COPY_SRC,
-        mappedAtCreation: true,
-      });
-      chunk = {
-        buffer,
-        bytes: new Uint8Array(buffer.getMappedRange()),
-        used: 0,
-      };
-      this.uploadChunks.push(chunk);
-    }
-    chunk.bytes.set(
-      new Uint8Array(data.buffer, data.byteOffset, size),
-      chunk.used,
-    );
-    this.pendingUploads.push({
-      target,
-      offset,
-      source: chunk.buffer,
-      at: chunk.used,
-      size,
-    });
-    chunk.used += size;
-  }
 
   /**
    * Copies the queued geometry into place: the mapped staging buffers
@@ -920,24 +885,7 @@ export class World {
    * any other write to them or a release of their ranges.
    */
   flushUploads(): void {
-    if (this.pendingUploads.length === 0) {
-      return;
-    }
-    for (const chunk of this.uploadChunks) {
-      chunk.buffer.unmap();
-    }
-    const encoder = this.ctx.device.createCommandEncoder({
-      label: "world.uploads",
-    });
-    for (const { target, offset, source, at, size } of this.pendingUploads) {
-      encoder.copyBufferToBuffer(source, at, target, offset, size);
-    }
-    this.ctx.device.queue.submit([encoder.finish()]);
-    for (const chunk of this.uploadChunks) {
-      chunk.buffer.destroy(); // released once the copies have run
-    }
-    this.uploadChunks.length = 0;
-    this.pendingUploads.length = 0;
+    flushUploads(this);
   }
 
   /** Uploads geometry into the arena as separate attribute streams. */
@@ -990,7 +938,7 @@ export class World {
         throw new CapacityError("vertex arena");
       }
       vertexRanges.push([offset, data.byteLength]);
-      this.queueUpload(slab.vertexBuffer, offset, data);
+      queueUpload(this, slab.vertexBuffer, offset, data);
       return offset / 4;
     };
     const streams: MeshStreams = {
@@ -1074,7 +1022,7 @@ export class World {
       }
       throw new CapacityError("index arena");
     }
-    this.queueUpload(slab.indexBuffer, indexOffset, mesh.indices);
+    queueUpload(this, slab.indexBuffer, indexOffset, mesh.indices);
     const { center, radius } = boundingSphere(mesh.positions);
     const id = this.nextMeshId++;
     this.meshRanges.set(id, {
@@ -1174,7 +1122,8 @@ export class World {
       );
     }
     if (directory.byteLength) {
-      this.queueUpload(
+      queueUpload(
+        this,
         slab.vertexBuffer,
         offset + anchorBytes + streamBytes,
         directory,
@@ -1235,7 +1184,8 @@ export class World {
         `setPointProperties: ${data.length / Math.max(1, stride)} points from ${first} don't fit`,
       );
     }
-    this.queueUpload(
+    queueUpload(
+      this,
       this.slabs.get(mesh.slab).vertexBuffer,
       (streams + first * stride) * 4,
       data,
@@ -1708,9 +1658,10 @@ export class World {
         releasePoints();
         throw new CapacityError("vertex arena");
       }
-      this.queueUpload(slab.vertexBuffer, offset, data);
+      queueUpload(this, slab.vertexBuffer, offset, data);
       if (fields.length) {
-        this.queueUpload(
+        queueUpload(
+          this,
           slab.vertexBuffer,
           offset + data.byteLength,
           directory,
@@ -2509,7 +2460,8 @@ export class World {
         `setInstanceStreams: ${data.length / stride} instances from ${firstInstance} don't fit`,
       );
     }
-    this.queueUpload(
+    queueUpload(
+      this,
       this.slabs.get(range[3]).vertexBuffer,
       range[0] + at,
       data,
@@ -4785,8 +4737,6 @@ const POINT_MARGIN = 64;
 
 /** Hit distance bits meaning "no hit" (the largest finite float). */
 const NO_HIT = 0x7f7fffff;
-/** Smallest staging buffer for queued uploads. */
-const UPLOAD_CHUNK_BYTES = 1 << 20;
 const ZERO = Float64Array.of(0, 0, 0);
 
 /** Ritter-style bounding sphere around the AABB center, tightened by a pass. */

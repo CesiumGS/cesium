@@ -12,6 +12,7 @@ import type { Slab } from "../Slabs.ts";
 import type { World } from "../World.ts";
 import { stringIds } from "../stringIds.ts";
 import type { TablePlan, TableColumn, MeshHandle } from "./types.ts";
+import { queueUpload } from "./uploads.ts";
 
 const tableColumnCache = new WeakMap<FeatureTable, TablePlan>();
 
@@ -264,7 +265,7 @@ export function uploadTable(
         strings.push(value); // not push(...held): a long column overflows the stack
       }
       ranges.push([offset, data.byteLength]);
-      world.queueUpload(slab.vertexBuffer, offset, data);
+      queueUpload(world, slab.vertexBuffer, offset, data);
       entries.push([
         attributeHash(metadataKey(column.name)),
         offset / 4,
