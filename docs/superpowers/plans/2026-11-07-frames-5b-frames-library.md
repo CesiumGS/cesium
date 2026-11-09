@@ -1,5 +1,7 @@
 # Frames 5b: The Frames Library Implementation Plan
 
+**Before starting (2026-11-09):** the file split, its second pass and the sky and observer work landed after this plan was written. Check paths by symbol, and read "What other plans need" in `docs/superpowers/plans/2026-11-08-sky-and-observer.md`, which lists what changes here.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
 
 **Goal:** Give `packages/next`'s frames module what plan 5's cameras, replay and measurements stand on: two-vector reference frames with freezing, rig presets on them, piecewise reference frames that change at an instant, accuracy composed beyond first order, rays carried through the frame tree behind 5a's query interface, bulk operations that can be cancelled and report progress, and a time formatter, while closing 5b's carried-forward items.

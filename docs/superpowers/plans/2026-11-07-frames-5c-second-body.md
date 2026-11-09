@@ -1,5 +1,7 @@
 # Frames 5c: The Second Body Implementation Plan
 
+**Before starting (2026-11-09):** the file split, its second pass and the sky and observer work landed after this plan was written. Check paths by symbol, and read "What other plans need" in `docs/superpowers/plans/2026-11-08-sky-and-observer.md`, which lists what changes here.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
 
 **Goal:** Put the Moon's content in one world with the Earth's: every Earth-only path takes its body from the content it serves, the Moon draws as an impostor that hands over to its tileset by level of detail with no hole and no jump, Cesium Moon is declared and fetched lazily from ion only when the camera nears the Moon, two views of one world can stand on two bodies, and depth is right across bodies, while every Earth-only scene renders the same pixels.

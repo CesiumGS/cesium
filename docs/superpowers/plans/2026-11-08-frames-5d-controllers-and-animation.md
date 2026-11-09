@@ -1,5 +1,7 @@
 # Frames 5d: Controllers, Bindings, Transitions and the Animation Core Implementation Plan
 
+**Before starting (2026-11-09):** the file split, its second pass and the sky and observer work landed after this plan was written. Check paths by symbol, and read "What other plans need" in `docs/superpowers/plans/2026-11-08-sky-and-observer.md`, which lists what changes here.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
 >
 > **Check every existing path before Task 1.** A file split is moving `Engine.ts`, `World.ts`, `Tileset3D.ts`, `widgets/Viewer.ts` and `View.ts` as pure moves. This plan names existing code by symbol, and gives paths for new files only. Where a task needs an existing file, find it by symbol (`grep -rn "class CameraLayer" packages/next/src`) against the split as it landed, and say in the commit message if a name moved. Also: when this plan was written, a separate fix was changing `GlobeController`'s wheel zoom. This plan depends on no detail of `refreshZoomTarget` or `pin`. Task 9 keeps the motion code as it finds it.
