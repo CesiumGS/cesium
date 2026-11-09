@@ -86,10 +86,7 @@ export function Overview() {
           repository:
         </p>
         <CodeBlock language="shell" code={CLONE} />
-        <p>
-          Then run these from the repository root. You don't need to go into{" "}
-          <C>packages/next</C>, because <C>--workspace</C> does that:
-        </p>
+        <p>Then:</p>
         <CodeBlock language="shell" code={QUICK_START} />
         <p>
           You only need <C>setup</C> once per machine. It fetches the tools and
