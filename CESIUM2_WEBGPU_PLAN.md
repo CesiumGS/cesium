@@ -8096,9 +8096,12 @@ formatter the time controls now use.
   to settle in it: the ephemeris edges share a "difference" source, but a
   route from an Earth site to Orion crosses GCRF and EARTH_ICRF, both the
   Earth's position, which cancels rather than counts once.
-- **Browser checks left to the owner's morning:** `parity` and `alloc` against
-  the base commit, and the time controls and design globe on their pages
-  (Tasks 9 and 12 name them). None was run in this session.
+- **Browser checks.** `parity` and `alloc` ran at the end on port 5193: the
+  parity numbers are identical to the three runs before this branch (Apple M2,
+  Metal), and the allocation gate shows 16,878 bytes a tick against 16,702 and
+  16,787 on the base, with no new site (an idle `Engine.bulk` registers no
+  tick listener). Not run: the time controls and the design globe on their
+  pages (Task 12), and the bulk task's own browser page (Task 9).
 
 _Carried forward from frames plan 5b._ Real deferred work only.
 
