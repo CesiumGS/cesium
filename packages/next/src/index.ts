@@ -211,11 +211,11 @@ export {
 export {
   ionDefaults,
   resolveIonAsset,
-  resolveUri,
   type IonAsset,
   type Attribution,
   type IonOptions,
 } from "./io/ion.ts";
+export { resolveUri } from "./io/resolveUri.ts";
 export { resolveITwinIModel, type ITwinOptions } from "./io/itwin.ts";
 export {
   STAGES,

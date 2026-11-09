@@ -5,7 +5,7 @@
  * parity page and the viewer until M2's streaming and tile selection.
  */
 import * as m4 from "../math/mat4.ts";
-import { resolveUri } from "../io/ion.ts";
+import { resolveUri } from "../io/resolveUri.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */
 type Json = any;

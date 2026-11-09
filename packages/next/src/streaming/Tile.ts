@@ -11,7 +11,7 @@ import type { RequestPurpose } from "./Stepwise.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
-import { resolveUri } from "../io/ion.ts";
+import { resolveUri } from "../io/resolveUri.ts";
 import type { ModelPlacement } from "../scene/gltfModel.ts";
 import {
   compactVolume,

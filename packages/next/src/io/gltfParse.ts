@@ -23,7 +23,7 @@ import {
   splitComposite,
 } from "./composite.ts";
 import { splitGlb } from "./glb.ts";
-import { resolveUri } from "./ion.ts";
+import { resolveUri } from "./resolveUri.ts";
 import type {
   GltfAsset,
   GltfDraw,

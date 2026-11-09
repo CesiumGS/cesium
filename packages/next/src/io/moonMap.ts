@@ -24,7 +24,7 @@
 
 import { unwrapB3dm } from "./features.ts";
 import { splitGlb } from "./glb.ts";
-import { resolveUri } from "./ion.ts";
+import { resolveUri } from "./resolveUri.ts";
 
 /** Cesium Moon Terrain's ion asset. */
 export const CESIUM_MOON_TERRAIN = 2684829;
