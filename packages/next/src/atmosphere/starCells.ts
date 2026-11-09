@@ -224,6 +224,13 @@ export interface StarCullInputs {
   minIlluminance: number;
   /** Fainter than this at a pixel, a star doesn't show there, cd/m². */
   minRadiance: number;
+  /** A spread's reach and peak, kept: its erf boxes numbers every tick otherwise. */
+  spreadCore: number;
+  spreadWing: number;
+  spreadShare: number;
+  spreadRatio: number;
+  margin: number;
+  peak: number;
 }
 
 /** The set of planes and thresholds to reuse each tick. */
@@ -231,6 +238,12 @@ export const starCullStorage = (): StarCullInputs => ({
   planes: new Float32Array(16),
   minIlluminance: 0,
   minRadiance: 0,
+  spreadCore: Number.NaN,
+  spreadWing: 0,
+  spreadShare: 0,
+  spreadRatio: 0,
+  margin: 0,
+  peak: 0,
 });
 
 /** A plane through the eye at `tangent` along `axis`, in ICRF: inward, unit. */
@@ -282,7 +295,22 @@ export function starCullInputs(
   pixelRatio: number,
   out: StarCullInputs = starCullStorage(),
 ): StarCullInputs {
-  const margin = starRadius(spread, Infinity, pixelRatio);
+  const wingSigma = spread.wing?.sigma ?? 0;
+  const wingShare = spread.wing?.share ?? 0;
+  if (
+    out.spreadCore !== spread.core ||
+    out.spreadWing !== wingSigma ||
+    out.spreadShare !== wingShare ||
+    out.spreadRatio !== pixelRatio
+  ) {
+    out.spreadCore = spread.core;
+    out.spreadWing = wingSigma;
+    out.spreadShare = wingShare;
+    out.spreadRatio = pixelRatio;
+    out.margin = starRadius(spread, Infinity, pixelRatio);
+    out.peak = starPeakShare(spread.core * pixelRatio);
+  }
+  const margin = out.margin;
   const wideX = tanX * (1 + (2 * margin) / width);
   const wideY = tanY * (1 + (2 * margin) / height);
   const { planes } = out;
@@ -292,10 +320,10 @@ export function starCullInputs(
   writePlane(planes, 12, forward, wideY, up, -1, rows);
   const pixelAngle = (2 * tanY) / height;
   const gain = Math.max(shadowGain, 1);
-  out.minRadiance =
-    STAR_VISIBLE / (exposure * starPeakShare(spread.core * pixelRatio) * gain);
+  out.minRadiance = STAR_VISIBLE / (exposure * out.peak * gain);
   const cornerZ = 1 / Math.sqrt(1 + wideX * wideX + wideY * wideY);
-  out.minIlluminance = out.minRadiance * pixelAngle * pixelAngle * cornerZ ** 3;
+  out.minIlluminance =
+    out.minRadiance * pixelAngle * pixelAngle * cornerZ * cornerZ * cornerZ;
   return out;
 }
 

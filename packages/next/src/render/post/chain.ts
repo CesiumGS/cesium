@@ -96,8 +96,10 @@ export function chainSource(
  * the product of their `shadowGain`s, 1 with none.
  */
 export function observerShadowGain(settings: ObserverSettings): number {
+  const { stages } = settings;
   let gain = 1;
-  for (const stage of settings.stages) {
+  for (let i = 0; i < stages.length; i++) {
+    const stage = stages[i]!;
     if (stage.slot === "exposed" && stage.enabled) {
       gain *= stage.shadowGain;
     }
