@@ -77,24 +77,16 @@ import {
   destroyViewFrame,
   TONE_MAPPINGS,
 } from "../render/view/viewFrameData.ts";
-import { viewFrameFor } from "../render/view/viewFrame.ts";
-import {
-  type PendingPick,
-  serveIdlePick,
-  resolvePicks,
-  whenMapped,
-  halfToFloat,
-} from "../render/view/picks.ts";
-import { updateExposure, adaptExposure } from "../render/view/exposure.ts";
-import { scratchFrame, updateEnvironment } from "../render/view/environment.ts";
+import { type PendingPick, serveIdlePick } from "../render/view/picks.ts";
+import { updateExposure } from "../render/view/exposure.ts";
+import { scratchFrame } from "../render/view/environment.ts";
 import { type ViewMotion, updateTilesets } from "./tileSelection.ts";
 import {
   scratchViewProj,
   scratchView,
   scratchPlanes,
-  writeView,
 } from "../render/view/viewBlocks.ts";
-import { writeTranslucency } from "../render/view/translucency.ts";
+import { dropPersistent, render } from "../render/view/renderTick.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -419,11 +411,11 @@ export class Engine {
     }
   >();
   /**
-   * Counts the loop's ticks (after their listeners) and renders: a body
+   * @internal Counts the loop's ticks (after their listeners) and renders: a body
    * camera computed in an earlier one is computed again, so a camera
    * written in place without `version++` is never drawn stale.
    */
-  private cameraTick = 0;
+  cameraTick = 0;
   /** @internal The view being written's anchor table, float64 (`writeView`). */
   readonly anchorEyes = createAnchorEyes();
   /** Per view, the anchors its eye was last too far from (reported once). */
@@ -432,8 +424,10 @@ export class Engine {
   private readonly maxViews: number;
   /** @internal */
   readonly viewFrames = new Map<View, ViewFrame>();
-  private readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
-  private readonly worldFrames = new WeakMap<World, WorldFrame>();
+  /** @internal */
+  readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
+  /** @internal */
+  readonly worldFrames = new WeakMap<World, WorldFrame>();
   private readonly overlayResources = new Map<View, OverlayResources>();
   /**
    * @internal Views lit by their atmosphere's environment: its probe, and the local
@@ -543,7 +537,8 @@ export class Engine {
   private readonly afterTickListeners: Array<(now: number) => void> = [];
   /** Per view: what stops watching its camera and canvas (`addView`). */
   private readonly viewWatches = new Map<View, () => void>();
-  private renderRequested = true;
+  /** @internal */
+  renderRequested = true;
   /** Fingerprints of the last rendered frame (see viewChanged). */
   private readonly viewKeys = new Map<View, Float64Array>();
   private readonly globalKey = new Float64Array(5).fill(Number.NaN);
@@ -551,27 +546,34 @@ export class Engine {
   private readonly dirtyTargets = new Set<RenderTarget>();
   private readonly dirtyViews = new Set<View>();
   /**
-   * Views sharing a canvas, on demand: each one's last presented image, so
+   * @internal Views sharing a canvas, on demand: each one's last presented image, so
    * a clean view is copied instead of re-rendered.
    */
-  private readonly persistent = new Map<View, PersistentImage>();
-  private readonly viewsPerTarget = new Map<RenderTarget, number>();
-  private readonly sharedTargets = new Set<RenderTarget>();
-  private readonly drawnViews = new Set<View>();
-  private readonly compositeClear: GPURenderPassColorAttachment = {
+  readonly persistent = new Map<View, PersistentImage>();
+  /** @internal */
+  readonly viewsPerTarget = new Map<RenderTarget, number>();
+  /** @internal */
+  readonly sharedTargets = new Set<RenderTarget>();
+  /** @internal */
+  readonly drawnViews = new Set<View>();
+  /** @internal */
+  readonly compositeClear: GPURenderPassColorAttachment = {
     view: undefined as never,
     clearValue: { r: 0, g: 0, b: 0, a: 1 },
     loadOp: "clear",
     storeOp: "store",
   };
-  private readonly compositePass: GPURenderPassDescriptor = {
+  /** @internal */
+  readonly compositePass: GPURenderPassDescriptor = {
     label: "composite.clear",
     colorAttachments: [this.compositeClear],
   };
-  private readonly copySource: GPUTexelCopyTextureInfo = {
+  /** @internal */
+  readonly copySource: GPUTexelCopyTextureInfo = {
     texture: undefined as never,
   };
-  private readonly copyDestination: GPUTexelCopyTextureInfo = {
+  /** @internal */
+  readonly copyDestination: GPUTexelCopyTextureInfo = {
     texture: undefined as never,
     origin: { x: 0, y: 0 },
   };
@@ -1319,7 +1321,7 @@ export class Engine {
     this.viewWatches.delete(view);
     view.wake = undefined;
     view.renderRoot = undefined;
-    this.dropPersistent(view);
+    dropPersistent(this, view);
     const probe = this.probes.get(view);
     if (probe) {
       this.ctx.environment.destroyProbe(probe.probe);
@@ -1764,17 +1766,6 @@ export class Engine {
     return this.clamping.busy;
   }
 
-  private frameRejected(error: GPUError): void {
-    this.stats.rejectedFrames++;
-    this.ctx.errors.report(
-      "frame",
-      `the GPU rejected a frame, which drew nothing: ${error.message}`,
-    );
-    for (const world of this.worlds) {
-      world.rebind();
-    }
-  }
-
   private tick(): void {
     if (this.renderMode === "continuous") {
       this.renderFrame();
@@ -1839,7 +1830,7 @@ export class Engine {
       this.stats.idle = true;
       return;
     }
-    this.render(true, dirty, dirtyViews);
+    render(this, true, dirty, dirtyViews);
   }
 
   /** The sun and the set of enabled views changed (affects every view). */
@@ -1956,347 +1947,12 @@ export class Engine {
     if (!this.ticking) {
       this.cameras.update();
     }
-    this.render(false);
-  }
-
-  /**
-   * `tilesetsUpdated`: the tick already ran selection this frame.
-   * `targets`: render only the views on these targets (on demand), and on a
-   * target shared by several views only `dirtyViews` (the others are copied
-   * from their last image).
-   */
-  private render(
-    tilesetsUpdated: boolean,
-    targets?: ReadonlySet<RenderTarget>,
-    dirtyViews?: ReadonlySet<View>,
-  ): void {
-    const start = performance.now();
-    this.renderRequested = false;
-    this.cameraTick++;
-    this.stats.idle = false;
-    // Custom shaders' uniforms changed since the tick (or no tick ran);
-    // the tick still sees what changed for its views.
-    this.ctx.shaderBindings.flush(false);
-    this.stats.framesRendered++;
-    const device = this.ctx.device;
-    const stamp = ++this.frameNumber;
-
-    // Acquire each target first: acquiring a canvas resizes it to its CSS
-    // size, and every view rectangle below (selection, frame graphs,
-    // viewport/scissor) must use this frame's size, not last frame's.
-    const views = this.views;
-    for (let i = 0; i < views.length; i++) {
-      const view = views[i]!;
-      if (!view.enabled || (targets && !targets.has(view.target))) {
-        continue;
-      }
-      const target = this.targetFrame(view.target);
-      if (target.stamp !== stamp) {
-        target.stamp = stamp;
-        target.view = view.target.acquire(device, this.ctx.outputFormat);
-        target.clearedBy = undefined;
-      }
-    }
-
-    const links = this.links;
-    for (let i = 0; i < links.length; i++) {
-      links[i]!.evaluate();
-    }
-    if (!tilesetsUpdated) {
-      updateTilesets(this, () => true);
-    }
-
-    // Which views draw. On demand, a target shared by several views is
-    // composited: each view presents into its own persistent image, only
-    // dirty views (or ones without a current image) re-render, and every
-    // view's image is copied into the target in view order. Otherwise views
-    // draw straight into their target.
-    const shared = this.sharedTargets;
-    const drawn = this.drawnViews;
-    shared.clear();
-    drawn.clear();
-    if (targets && dirtyViews) {
-      const counts = this.viewsPerTarget;
-      counts.clear();
-      for (let i = 0; i < views.length; i++) {
-        const view = views[i]!;
-        if (view.enabled) {
-          counts.set(view.target, (counts.get(view.target) ?? 0) + 1);
-        }
-      }
-      for (const [target, n] of counts) {
-        if (n > 1 && targets.has(target) && target.texture) {
-          shared.add(target);
-        }
-      }
-    }
-    for (let i = 0; i < views.length; i++) {
-      const view = views[i]!;
-      if (!view.enabled || (targets && !targets.has(view.target))) {
-        continue;
-      }
-      if (shared.has(view.target)) {
-        const rect = view.pixelRect();
-        const image = this.persistentImage(view, rect.width, rect.height);
-        if (!image.valid || dirtyViews!.has(view)) {
-          drawn.add(view);
-        }
-      } else {
-        drawn.add(view);
-        this.dropPersistent(view);
-      }
-    }
-
-    // Assign each drawn view a slot (the first view drawn into a target
-    // clears it) and prepare each world once.
-    let slots = 0;
-    for (let i = 0; i < views.length; i++) {
-      const view = views[i]!;
-      if (!drawn.has(view)) {
-        continue;
-      }
-      const image = shared.has(view.target)
-        ? this.persistent.get(view)
-        : undefined;
-      const rect = image ? image.rect : view.pixelRect();
-      const frame = viewFrameFor(this, view, rect);
-      frame.slot = slots;
-      // Every frame takes the view's exposure as it is now: only the
-      // on-demand check computed it, so `renderFrame()` and the continuous
-      // loop drew with a stale scale (a fixed exposure set later never
-      // applied; automatic exposure never moved).
-      updateExposure(this, view);
-      writeView(this, view, slots, rect);
-      updateEnvironment(this, view);
-      slots++;
-
-      if (image) {
-        frame.clearTarget = true;
-        frame.graph.setImported(frame.output, image.view);
-        image.valid = true;
-      } else {
-        const target = this.targetFrame(view.target);
-        frame.clearTarget = target.clearedBy === undefined;
-        if (frame.clearTarget) {
-          target.clearedBy = view;
-        }
-        frame.graph.setImported(frame.output, target.view!);
-      }
-
-      const world = this.worldFrame(view.world);
-      if (world.stamp !== stamp) {
-        world.stamp = stamp;
-        world.bundle = view.world.prepareFrame();
-      }
-      frame.bundle = world.bundle;
-      // After the world's transforms are resolved for the frame.
-      writeTranslucency(this, view);
-    }
-    // The views' and cascades' blocks went up as they were written
-    // (`writeView`, `writeShadows`: each to its anchor table's used slots).
-    device.queue.writeBuffer(
-      this.shadowStaging,
-      0,
-      this.shadowData,
-      0,
-      (slots * SHADOWS_STRIDE) / 4,
-    );
-
-    const encoder = device.createCommandEncoder(FRAME_ENCODER);
-    this.timer.beginFrame();
-    for (let i = 0; i < views.length; i++) {
-      const view = views[i]!;
-      if (drawn.has(view)) {
-        const frame = this.viewFrames.get(view)!;
-        // One pick per frame keeps the shared params/result buffers simple.
-        frame.pick =
-          this.picks.length === 0 ? view.pendingPicks.shift() : undefined;
-        // The scene time of this image, for its picks (also idle ones).
-        frame.seconds = this.cameras.clock(view.world)?.seconds ?? 0;
-        frame.graph.execute(encoder);
-        frame.rendered = true;
-      }
-    }
-    // Composite shared targets: clear, then each view's image in view order
-    // (an inset lands over the view it overlaps).
-    for (const target of shared) {
-      this.compositeClear.view = this.targetFrame(target).view!;
-      encoder.beginRenderPass(this.compositePass).end();
-      this.copyDestination.texture = target.texture!;
-      const origin = this.copyDestination.origin as GPUOrigin3DDict;
-      for (let i = 0; i < views.length; i++) {
-        const view = views[i]!;
-        const image =
-          view.enabled && view.target === target
-            ? this.persistent.get(view)
-            : undefined;
-        if (!image) {
-          continue;
-        }
-        const rect = view.pixelRect();
-        this.copySource.texture = image.texture;
-        origin.x = rect.x;
-        origin.y = rect.y;
-        encoder.copyTextureToTexture(this.copySource, this.copyDestination, [
-          image.rect.width,
-          image.rect.height,
-        ]);
-      }
-    }
-    this.timer.endFrame(encoder);
-    this.commandBuffers[0] = encoder.finish();
-    // A rejected submit draws nothing: report it and bind the worlds again
-    // from their state, rather than repeat a black frame unexplained.
-    device.pushErrorScope("validation");
-    device.queue.submit(this.commandBuffers);
-    void device.popErrorScope().then((error) => {
-      if (error) {
-        this.frameRejected(error);
-      }
-    });
-    this.timer.afterSubmit();
-    this.pool.endFrame();
-    if (this.picks.length > 0) {
-      resolvePicks(this, this.picks);
-      this.picks.length = 0;
-    }
-    for (const meter of this.meters.splice(0)) {
-      whenMapped(meter.readback, () => {
-        const [sum, count, rodSum, rodCount] = new Float32Array(
-          meter.readback.getMappedRange(),
-        );
-        meter.readback.destroy();
-        meter.scratch.forEach((b) => b.destroy());
-        adaptExposure(
-          this,
-          meter.view,
-          count! > 0 ? 2 ** (sum! / count!) : undefined,
-          rodCount! > 0 ? 2 ** (rodSum! / rodCount!) : undefined,
-        );
-      });
-    }
-    for (const range of this.depthRanges.splice(0)) {
-      whenMapped(range.readback, () => {
-        const [near, far] = new Float32Array(range.readback.getMappedRange());
-        range.readback.destroy();
-        range.scratch.forEach((b) => b.destroy());
-        range.frame.rangePending = false;
-        // Nothing but sky: no range.
-        range.frame.depthRange =
-          far! > 0 && near! <= far! ? { near: near!, far: far! } : undefined;
-      });
-    }
-    for (const readback of this.listCounts.splice(0)) {
-      whenMapped(readback, () => {
-        const needed = new Uint32Array(readback.getMappedRange())[0]!;
-        readback.destroy();
-        this.listCountPending = false;
-        // Room for a quarter more than the frame needed (`writeTranslucency`),
-        // and a frame drawn with it: that one dropped what didn't fit, and
-        // drawing on demand, nothing else might come (glass missing until
-        // the camera moved).
-        if (needed > this.listNodes) {
-          this.listNodes = Math.ceil(needed * 1.25);
-          this.requestRender();
-        }
-      });
-    }
-    for (const read of this.hdrReads.splice(0)) {
-      whenMapped(read.buffer, () => {
-        const halves = new Uint16Array(read.buffer.getMappedRange());
-        const data = new Float32Array(read.width * read.height * 4);
-        const rowHalves = read.bytesPerRow / 2;
-        const unexpose = 1 / read.exposure;
-        for (let y = 0; y < read.height; y++) {
-          for (let i = 0; i < read.width * 4; i++) {
-            const value = halfToFloat(halves[y * rowHalves + i]!);
-            data[y * read.width * 4 + i] =
-              i % 4 === 3 ? value : value * unexpose;
-          }
-        }
-        read.buffer.unmap();
-        read.buffer.destroy();
-        const image = { width: read.width, height: read.height, data };
-        for (const resolve of read.resolvers) {
-          resolve(image);
-        }
-      });
-    }
-
-    const elapsed = performance.now() - start;
-    this.stats.cpuMs =
-      this.stats.cpuMs === 0 ? elapsed : this.stats.cpuMs * 0.9 + elapsed * 0.1;
-    this.stats.gpuMs = this.timer.milliseconds;
-    this.stats.gpuSpanMs = this.timer.spanMilliseconds;
-    this.stats.views = slots;
-    for (let i = 0; i < this.worlds.length; i++) {
-      this.worlds[i]!.changedViews = 0;
-    }
-    let draws = 0;
-    let batches = 0;
-    for (let i = 0; i < this.worlds.length; i++) {
-      draws += this.worlds[i]!.recordCount;
-      batches += this.worlds[i]!.batchCount;
-    }
-    this.stats.draws = draws;
-    this.stats.batches = batches;
+    render(this, false);
   }
   /** @internal */
   cityLightRead = 0;
   /** @internal */
   cityLightSeen = 0;
-
-  /** A view's persistent image at its current size (recreated on resize). */
-  private persistentImage(
-    view: View,
-    width: number,
-    height: number,
-  ): PersistentImage {
-    let image = this.persistent.get(view);
-    if (!image || image.rect.width !== width || image.rect.height !== height) {
-      image?.texture.destroy();
-      const texture = this.ctx.device.createTexture({
-        label: "view.image",
-        size: [width, height],
-        format: this.ctx.outputFormat,
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-      });
-      image = {
-        texture,
-        view: texture.createView(),
-        rect: { x: 0, y: 0, width, height },
-        valid: false,
-      };
-      this.persistent.set(view, image);
-    }
-    return image;
-  }
-
-  private dropPersistent(view: View): void {
-    const image = this.persistent.get(view);
-    if (image) {
-      image.texture.destroy();
-      this.persistent.delete(view);
-    }
-  }
-
-  private targetFrame(target: RenderTarget): TargetFrame {
-    let frame = this.targetFrames.get(target);
-    if (!frame) {
-      frame = { stamp: 0, view: undefined, clearedBy: undefined };
-      this.targetFrames.set(target, frame);
-    }
-    return frame;
-  }
-
-  private worldFrame(world: World): WorldFrame {
-    let frame = this.worldFrames.get(world);
-    if (!frame) {
-      frame = { stamp: 0, bundle: undefined };
-      this.worldFrames.set(world, frame);
-    }
-    return frame;
-  }
 
   /** @internal */
   drawOverlays(pass: GPURenderPassEncoder, view: View): void {
@@ -2382,8 +2038,6 @@ export class Engine {
     this.gpu.destroy();
   }
 }
-
-const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
 
 /** A height capture (`Engine.addHeightCapture`). */
 export interface HeightCapture {
