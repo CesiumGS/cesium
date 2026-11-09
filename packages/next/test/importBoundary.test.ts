@@ -500,11 +500,100 @@ it("refuses a content file that imports the renderer or a whole class", () => {
   ]);
   expect(tierOf("src/streaming/sample.ts")).toBe("content");
 });
-it("content never reads a world's rasterizer data", () => {
+/**
+ * The rasterizer-side members `text` reads off something: `x.raster`,
+ * `x["raster"]`, and `raster` taken out by destructuring (a declaration, a
+ * parameter or an assignment), for each name in `names`. Syntax alone: it
+ * can't tell a World's from another class's, so a name that content uses
+ * for its own must stay off `names`.
+ */
+function readsMembers(text: string, names: readonly string[]): string[] {
+  const source = ts.createSourceFile(
+    "sample.ts",
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const found = new Set<string>();
+  const note = (name: string | undefined) => {
+    if (name !== undefined && names.includes(name)) {
+      found.add(name);
+    }
+  };
+  const visit = (node: ts.Node) => {
+    if (ts.isPropertyAccessExpression(node)) {
+      note(node.name.text);
+    } else if (
+      ts.isElementAccessExpression(node) &&
+      ts.isStringLiteralLike(node.argumentExpression)
+    ) {
+      note(node.argumentExpression.text);
+    } else if (ts.isBindingElement(node)) {
+      const key = node.propertyName ?? node.name;
+      if (
+        ts.isObjectBindingPattern(node.parent) &&
+        (ts.isIdentifier(key) || ts.isStringLiteralLike(key))
+      ) {
+        note(key.text);
+      }
+    } else if (
+      (ts.isShorthandPropertyAssignment(node) ||
+        ts.isPropertyAssignment(node)) &&
+      ts.isObjectLiteralExpression(node.parent) &&
+      ts.isBinaryExpression(node.parent.parent) &&
+      node.parent.parent.left === node.parent &&
+      (ts.isIdentifier(node.name) || ts.isStringLiteralLike(node.name))
+    ) {
+      note(node.name.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return [...found];
+}
+
+/** What content may not read off a World or an Engine: their rasterizer data and GPU context. */
+const ENGINE_ONLY = ["raster", "ctx"];
+
+it("content never reads a world's rasterizer data or an engine's GPU context", () => {
   const reads = files
     .filter((f) => tierOf(f) === "content")
-    .filter((f) => /\.raster\b/.test(readFileSync(join(root, f), "utf8")));
+    .flatMap((f) => {
+      // `GlobeImagery` holds a `RenderContext` of its own (a named
+      // exception above) and reads its `ctx`; its `raster` stays refused.
+      const own = edgesOf(f).some((e) => e.to === "src/scene/RenderContext.ts");
+      return readsMembers(
+        readFileSync(join(root, f), "utf8"),
+        own ? ["raster"] : ENGINE_ONLY,
+      ).map((name) => `${f}: ${name}`);
+    });
   expect(reads).toEqual([]);
+});
+it("refuses a read of a member through a destructure, an index or a path", () => {
+  const plants = [
+    "const { raster } = t.world;",
+    "const { raster: r } = t.world;",
+    "function f({ raster }: World) {}",
+    "let raster; ({ raster } = t.world);",
+    "const r = t.world['raster'];",
+    "const r = t.world.raster.drawCount;",
+    "t.world.ctx.device.createBuffer(d);",
+  ];
+  for (const plant of plants) {
+    expect(readsMembers(plant, ENGINE_ONLY), plant).not.toEqual([]);
+  }
+  expect(readsMembers("const raster = 1; f({ raster });", ["raster"])).toEqual(
+    [],
+  );
+});
+it("only the renderer and World import the draw bundles", () => {
+  // `World` rebuilds and culls its bundle; no other scene or content file may.
+  const importers = files
+    .filter((f) => tierOf(f) !== "renderer" && f !== "src/scene/World.ts")
+    .filter((f) =>
+      edgesOf(f).some((e) => e.to === "src/render/world/bundles.ts"),
+    );
+  expect(importers).toEqual([]);
 });
 it("the GPU layer imports nothing above it, but for the environment kernel", () =>
   expect(
@@ -519,16 +608,26 @@ it("the renderer reaches content only where named", () =>
     tierViolations("renderer", (to) => tierOf(to) === "content").sort(),
   ).toEqual(RENDERER_READS_CONTENT));
 it("scene data doesn't import rasterizer data", () => {
-  const scenes = ["src/scene/world/worldScene.ts", "src/scene/engineScene.ts"];
+  // Every file of the scene side's state: what its tick keeps of a world, an
+  // engine and a view, apart from what the renderer keeps.
+  const scenes = [
+    "src/scene/world/worldScene.ts",
+    "src/scene/engineScene.ts",
+    "src/scene/viewAnchorState.ts",
+  ];
   const rasters = new Set([
     "src/render/world/worldRaster.ts",
     "src/render/view/engineRaster.ts",
+    "src/render/view/viewFrameData.ts",
+    "src/render/world/bundles.ts",
   ]);
   for (const file of scenes) {
+    expect(tierOf(file), file).toBe("scene");
     expect(
       edgesOf(file)
         .map((edge) => edge.to)
         .filter((to) => rasters.has(to)),
+      file,
     ).toEqual([]);
   }
 });
