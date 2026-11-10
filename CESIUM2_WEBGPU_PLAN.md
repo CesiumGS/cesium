@@ -8865,7 +8865,7 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 **Order.**
 
 1. Spike: SMLib in WebAssembly (size, startup, threads, exceptions; converting a USD BRep sample to the render form). Done for the kernel; see the result below.
-2. Spike: one trimmed NURBS face on the GPU (tessellation by screen-space error and the per-pixel trim), against SMLib's tessellation for accuracy and cost. It also tests the shared fill idea. Both spikes are decision tools.
+2. Spike: one trimmed NURBS face on the GPU (tessellation by screen-space error and the per-pixel trim), against SMLib's tessellation for accuracy and cost. It also tests the shared fill idea. Both spikes are decision tools. Done; see the result below.
 3. The query interface, with the mesh adapter and an f-rep slot.
 4. The render b-rep form and the glTF extension draft, with the TypeScript loader and analytic surfaces.
 5. The GPU tessellation engine: edges first, patches, planar faces as fills.
@@ -8894,7 +8894,20 @@ The extensions here are drafts for this proof of concept and free to change, so 
 
 The conversion half of the spike remains: one real trimmed NURBS solid (an SMLib native file or one built by hand), with positions, normals and indices extracted to typed arrays, timed against native, and the size options tried.
 
-**Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib on real trimmed models (speed, correctness, memory); the USD input path.
+**Spike B result (2026-11-09).** One rational bicubic NURBS face (100 m square, 3x3 Bézier spans, one control point of weight 2) with a circular hole in (u, v), drawn in Chrome on an Apple GPU. The vertex shader evaluates an n x n grid per span. The pixel shader computes the exact normal and cuts the hole by signed distance in (u, v). n is chosen per view from the bound 0.75·D/n² on the second differences of the Bézier net, converted to pixels, with a target of 0.5 px. Measured:
+
+| Distance | n   | Triangles | Bound   | Measured error | GPU time |
+| -------- | --- | --------- | ------- | -------------- | -------- |
+| 150 m    | 9   | 1,458     | 0.41 px | 0.40 px        | 0.18 ms  |
+| 600 m    | 4   | 288       | 0.48 px | 0.38 px        | 0.03 ms  |
+| 3000 m   | 2   | 72        | 0.38 px | 0.23 px        | 0.01 ms  |
+
+- The bound was never exceeded, and over-tessellates by at most about 1.6x in pixels. With almost no margin at 150 m, a stronger weight could exceed it: the engine needs a bound that accounts for weights, or a safety factor.
+- Cutting the hole per pixel cost nothing measurable, but a circle is one distance test. General trim curves need a lookup per pixel and wait for the shared coverage kernel. Its effect on MSAA, a depth-only pass, shadows and picking (each needs the same test) was reasoned about, not run.
+- SMLib, at the same tolerance from 600 m: 209 triangles, 0.498 px, 9.6 ms to tessellate, and about 270 ms more to build and trim the face (WebAssembly, one thread, Node). Both meshes lie within the target of the true surface; the distance between the two meshes wasn't measured. This supports tessellating on the GPU, with SMLib for conversion and reference.
+- Not covered: 32-bit evaluation in a globe position (the engine must evaluate relative to a nearby origin, as it does elsewhere); cracks between spans; compute-driven tessellation, which one face can't judge and step 5 measures with many patches.
+
+**Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib on real trimmed models (speed, correctness, memory); the USD input path; an error bound that is safe for rational surfaces; crack-free edges between patches of different density.
 
 ## 14. Follow-ups
 
