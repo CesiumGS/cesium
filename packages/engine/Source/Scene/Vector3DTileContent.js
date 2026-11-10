@@ -207,7 +207,6 @@ class Vector3DTileContent {
     if (defined(this._points)) {
       this._points.applyStyle(style, this._features);
     }
-    this.applyShow(this.show);
   }
 
   update(tileset, frameState) {
