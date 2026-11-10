@@ -262,8 +262,12 @@ describe("TouchGestures, once per displayed frame", () => {
     expect(log).toEqual([]);
     queued.splice(0).forEach((run) => run());
     expect(log).toEqual(["two~ combined"]);
-    expect(moves[0]!.scale).toBeCloseTo(140 / 120, 12);
-    expect(moves[0]!.dx).toBeCloseTo(0, 12);
+    const move = moves[0]!;
+    if (move.kind !== "combined") {
+      throw new Error(`expected a combined move, got ${move.kind}`);
+    }
+    expect(move.scale).toBeCloseTo(140 / 120, 12);
+    expect(move.dx).toBeCloseTo(0, 12);
   });
 
   it("reports a waiting move before a finger lifts, and skips the stale report", () => {
