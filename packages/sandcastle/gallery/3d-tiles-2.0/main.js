@@ -53,12 +53,6 @@ async function loadModels(leftUrl, rightUrl, modelMatrix, heading = 0.0) {
     left.modelMatrix = modelMatrix;
     left.splitDirection = Cesium.SplitDirection.LEFT;
     viewer.scene.primitives.add(left);
-    console.log(
-      `left.boundingSphere = ${Cesium.BoundingSphere.pack(left.boundingSphere, [])}`,
-    );
-    console.log(
-      `left root computedTransform: ${Cesium.Matrix4.pack(left.root.computedTransform, [])}`,
-    );
 
     viewer.zoomTo(
       left,
@@ -69,12 +63,6 @@ async function loadModels(leftUrl, rightUrl, modelMatrix, heading = 0.0) {
     right.modelMatrix = modelMatrix;
     right.splitDirection = Cesium.SplitDirection.RIGHT;
     viewer.scene.primitives.add(right);
-    console.log(
-      `right.boundingSphere = ${Cesium.BoundingSphere.pack(right.boundingSphere, [])}`,
-    );
-    console.log(
-      `right root computedTransform: ${Cesium.Matrix4.pack(right.root.computedTransform, [])}`,
-    );
   } catch (error) {
     console.log(`Error loading tileset: ${error}`);
   }
