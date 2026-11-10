@@ -66,6 +66,16 @@
   border-left: 1px solid #444;
 }
 
+/* Only keyboard focus gets the focus border. A clicked button keeping it would
+   look selected after Shift+click deselects it. :where() keeps this as
+   specific as .cesium-button:focus, so the hover, active and selected borders
+   below still win. */
+.cesium-button:focus:where(.cesium-editor-toolbar *):where(
+    :not(:focus-visible, :hover)
+  ) {
+  border-color: #444;
+}
+
 .cesium-editor-toolbar-group > .cesium-editor-toolbar-active {
   border-color: #2e2;
 }
