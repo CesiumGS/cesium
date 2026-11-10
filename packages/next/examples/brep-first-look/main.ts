@@ -461,7 +461,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     wireLines: 0,
     edgeLines: 0,
     ms: 0,
+    /** The worst chordal error on screen, m: each shape's error × its scale. */
     error: 0,
+    /** Shapes whose grid cap leaves more than the tolerance. */
+    capped: [] as string[],
   };
   const prepared: Array<Prepared | undefined> = [];
 
@@ -470,10 +473,14 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   // Tessellates every shape: when the tolerance changes.
   const tessellate = () => {
     const start = performance.now();
+    stats.error = 0;
+    stats.capped = [];
     shapes.forEach((shape, s) => {
       try {
+        // The slider is millimetres in the scene: the shape is drawn at
+        // `scale`, so its b-rep is tessellated at tolerance ÷ scale.
         const mesh = tessellateBrep(shape.form, {
-          tolerance: settings.tolerance,
+          tolerance: settings.tolerance / shape.scale,
         });
         const p = mesh.faces.positions;
         let lowest = Infinity;
@@ -487,6 +494,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             : mesh.edges.positions,
         );
         prepared[s] = { mesh, lift: size * LIFT, lowest };
+        stats.error = Math.max(stats.error, mesh.error * shape.scale);
+        if (mesh.error > (settings.tolerance / shape.scale) * 1.0000001) {
+          stats.capped.push(shape.name);
+        }
       } catch (error) {
         console.warn(`tessellating ${shape.name}:`, error);
         prepared[s] = undefined;
@@ -504,7 +515,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     stats.triangles = 0;
     stats.wireLines = 0;
     stats.edgeLines = 0;
-    stats.error = 0;
     const showFaces = settings.mode !== "wire";
     const showWire = settings.mode !== "shaded";
     shapes.forEach((shape, s) => {
@@ -513,7 +523,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         return;
       }
       const mesh = prep.mesh;
-      stats.error = Math.max(stats.error, mesh.error);
       // Relative positions, then the mesh's own centre, then scaled, then
       // stood on the ground at the shape's place.
       const centre = mesh.origin;
@@ -749,14 +758,14 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         ),
       ),
       el("dt", {}, "tessellateBrep took"),
-      el("dd", {}, `${stats.ms.toFixed(1)} ms for all four`),
-      el("dt", {}, "Largest chordal error"),
+      el("dd", {}, `${stats.ms.toFixed(1)} ms for ${shapes.length} shapes`),
+      el("dt", {}, "Largest chordal error on screen"),
       el(
         "dd",
         {},
-        stats.error > settings.tolerance * 1.0000001
-          ? `${mm(stats.error)} (the grid cap binds)`
-          : `${mm(stats.error)} (the tolerance)`,
+        stats.capped.length > 0
+          ? `${mm(stats.error)}, over the tolerance: the grid cap binds on ${stats.capped.join(", ")}`
+          : `${mm(stats.error)}, within the tolerance`,
       ),
     );
   };
@@ -803,9 +812,18 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el(
       "label",
       { className: "slider" },
-      "Tolerance",
+      "Chordal tolerance, mm in the scene",
       toleranceInput,
       toleranceOut,
+    ),
+    el(
+      "p",
+      {},
+      el(
+        "small",
+        {},
+        "Each shape is drawn at a scale and tessellated at the tolerance divided by it, so the slider is millimetres on screen in the scene's units.",
+      ),
     ),
     statsOut,
     check(
