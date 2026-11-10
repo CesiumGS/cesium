@@ -8663,6 +8663,8 @@ Not built. Air-gapped and offline use can't download data at runtime, so ephemer
 
 Do this before b-rep step 5, the GPU tessellation engine (§13.33), which evaluates placements at points the content never had and takes normals from the placement's Jacobian: a dual position can do neither (moved up by the owner, 2026-11-09). It also has to come before plan 5f's fitted operations are built. Goal: one elegant way of handling reference frames and reprojection through the geometry pipeline, without patched-together machinery. Things it has to settle:
 
+- **Also (§13.34):** vertical exaggeration as part of the one model of a placement, and clip and section planes in the same coordinates.
+
 - **One model of a placement:** rigid, dual position and fitted operation as cases of a single idea, and what each layer owns: the frame tree (rigid), coordinate operations (non-rigid), content (precomputed results), and the renderer's placement seam (applying the mapping per vertex).
 - **Normals and tangents.** Today a dual-position vertex moves but keeps its rigid normal: 0.197 degrees on the 44 km corridor, 0.225 calculated at 50 km. Tried on 2026-11-08: deriving it per fragment from both positions. It fails, because the design position isn't in the fragment stage, a varying would cost every draw, and float32 derivative noise is estimated at about 0.13 degrees up close. Other options: a second normal, 12 bytes a vertex or about 4 octahedrally encoded; a displacement varying on placed draws; or dropping dual positions for a fitted operation with its Jacobian.
 - **Everything else carried per vertex or per instance:** instances, skins and morph targets when animation arrives, and what custom shaders see (`positionMC`, `normalMC`, design and placed).
@@ -8894,6 +8896,8 @@ The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, tor
 - **First, a spike:** box minus cylinder in each kernel in WebAssembly, converted to `BrepForm` and drawn in the first-look example. It measures each boolean's time and checks that both results validate, and for OCCT records the build's size (a full build is tens of megabytes; a custom one with modeling and STEP only is smaller), whether it needs threads and so cross-origin isolation, and how actively its WebAssembly build is maintained. Its conversion (SMLib's b-rep to `BrepForm`) is the one `fromUsd` needs too, so step 8's start moves here, with SMLib's pinned setup step and build script (above).
 - **Open:** both kernels' boolean speed and robustness in WebAssembly (not yet measured: Spike A only tessellated primitives); whether each exposes face provenance (SM_API; OCCT's history of a boolean); the worker protocol for a re-evaluated solid; OCCT's licence (LGPL 2.1 with Open CASCADE's exception, unlike SMLib's Apache 2.0): kept as a separate, lazily loaded WebAssembly module in the example only, and checked before anything built with it is distributed. If OCCT proves too heavy, or its licence doesn't fit, the sample runs on SMLib alone and the interface costs nothing extra.
 
+**Also (§13.34):** step 3's queries respect clipping and read scalar fields, step 5 draws section caps on B-reps, and step 7's exact picks work through a cut.
+
 **Sequencing with the vector design (owner, 2026-11-09).** B-reps go first, but the kernels they share with vectors are set by vectors, their harder user: per-pixel coverage under glyph and label density with the band cap under pressure, strokes with the styling language's full control, and the owner's measured prototype as evidence. A trim loop is a small glyph in (u, v). So:
 
 1. B-rep work that doesn't touch the shared kernels starts first: both spikes, the query interface, the render form, GPU patch tessellation through placement, and exact picks, snapping and measurement. Spike B's trim coverage test is throwaway.
@@ -8952,6 +8956,50 @@ The conversion half of the spike remains: one real trimmed NURBS solid (an SMLib
 5. The `BENTLEY_` prefix, and the name.
 
 **Open:** the extension's name, and review of its schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib on real trimmed models (speed, correctness, memory); the USD input path; an error bound that is safe for rational surfaces; crack-free edges between patches of different density.
+
+### 13.34 Capabilities the infrastructure and geoscience domains need (owner, 2026-11-10)
+
+**Recorded to plan around, not designed.** A review of what the engine needs to serve as the rendering core for engineering, construction, reality capture, analysis, geoscience and operations work, beyond what is built or planned above. Each capability below recurs across several domains. The table after it says which upcoming steps should leave room for each, so later work doesn't have to undo earlier choices.
+
+**Domains, and what each adds beyond the plan:**
+
+- **Geoscience and the subsurface:** implicit geological surfaces (the f-rep slot in §13.33), block models (sub-blocked voxel grids with attributes, very large), drillholes as tubes coloured by interval, geophysical grids, volume rendering and isosurfaces, vertical exaggeration, and seeing and moving below the terrain.
+- **Reality capture:** billion-point clouds with classification colours and eye-dome lighting, Gaussian splats, 360° and oriented imagery projected onto models, mobile-mapping trajectories, and comparing captures from two dates.
+- **Infrastructure design:** CAD display (§13.27), exact B-reps (§13.33), alignments and corridors (built), cut and fill against existing ground, plan and profile views, federated models of millions of elements, and isolating, hiding and emphasising elements.
+- **Construction scheduling (4D):** each element's visibility and appearance over time, animated equipment, progress colouring and clash display.
+- **Structural and geotechnical analysis:** results on meshes (deformed shapes at a scale, scalar contours with colour ramps and legends, vector glyphs, diagrams along members, animated mode shapes) and line members extruded by their cross-section.
+- **Water and flood:** time-varying water surfaces and depth rasters over terrain, flow arrows and particles, and pipe networks with attributes.
+- **Power lines:** wire catenaries as exact curves, clearance envelopes, classified lidar and vegetation encroachment.
+- **Operations:** live sensor data, labels and billboards carrying data, heat maps, time-series playback, GIS feature services and vector tiles, and building floors.
+- **Detections and simulation:** many geolocated detections linked to their source images, and thousands of moving agents with density maps (the live-points path, §13.11).
+
+**Capabilities that recur, and are not yet planned:**
+
+1. **Scalar fields on any geometry:** values per vertex, per element or per cell on meshes, B-reps, terrain, point clouds and volumes, drawn through colour ramps and transfer functions, with legends, and readable by a pick. A layer of its own, not a per-content feature.
+2. **Section planes and clip volumes with capped faces,** across every representation, with picks, snaps, measurements and ray queries that respect the cut.
+3. **Point clouds and Gaussian splats** at billion scale, with classification, eye-dome lighting, and splats' ordering against other translucent content.
+4. **Volumes:** voxel grids with attributes, ray-marched or as isosurfaces, sharing ray marching with f-reps.
+5. **Per-element overrides at scale:** colour, transparency, visibility and emphasis for millions of elements, keyed by stable 64-bit element IDs across tiles, and changing over time (4D).
+6. **Vertical exaggeration,** consistent across terrain, models, measurements and picks, with measurements stating whether they are exaggerated.
+7. **Printing to scale:** orthographic plan and profile views, exact line weights, and output at a resolution beyond the screen.
+8. **AR and VR through WebXR,** including aligning a model with a physical site.
+9. **Comparison:** a swipe, a split view or a coloured difference between two captures or designs.
+
+**Where upcoming steps should allow for them:**
+
+| Step                                               | Allow for                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5c, bodies in one world                            | Exaggeration (6) in per-body volumes, clamping and impostors, as a factor they read rather than assume is 1                                                                                                                                                                       |
+| 5d, controllers and animation                      | Time-bound values that scale to millions of elements (5), evaluated on the GPU rather than per element in JavaScript; comparison views (9) as linked views; the orthographic camera as the base for printing (7); an XR camera and its controller (8) as one more controller kind |
+| §13.26, the placement review (before B-rep step 5) | Exaggeration (6) as part of the one model of a placement, not a scene hack; clip and section planes (2) in the same coordinates as placement                                                                                                                                      |
+| 5f, design space                                   | Plan and profile views and printing to scale (7) as design view's deliverable; the GPU snap pass respecting clipping (2)                                                                                                                                                          |
+| §13.33, B-reps, steps 3, 5 and 7                   | Queries that respect clipping (2) and read scalar fields (1); section caps (2) on B-reps in tessellation; exact picks through a cut                                                                                                                                               |
+| The vector design (§13.27, §13.29)                 | The columnar store as the home of per-element overrides (5); labels and billboards carrying data; GIS feature services and vector tiles; drillhole intervals as styled lines; catenaries through curves through placement                                                         |
+| The frame graph and later rendering plans          | Point clouds and splats (3) and their translucency; a volume pass (4) shared with f-rep ray marching; eye-dome lighting as a post stage; the mobile profile (tile-based GPUs, in the handbook's Mobile tab)                                                                       |
+| §13.16, ray queries                                | Clipping (2) in ray answers; point clouds and volumes as ray targets                                                                                                                                                                                                              |
+| 5i, the API review                                 | Element IDs and the override API (5); the scalar field layer (1); one section and clip API across representations (2); the XR entry point (8)                                                                                                                                     |
+
+**Gallery examples that would each prove one:** a drillhole and geological-surface scene (f-reps, interval tubes, translucent terrain, exaggeration); a block model cut by a moving section with a colour ramp; a bridge's analysis results (deformation, a stress contour, a moment diagram); a classified point cloud beside a splat capture of the same site, with a swipe; a 4D sequence on a timeline; a flood's depth animated over terrain with flow arrows; a transmission line with catenaries, clearances and classified lidar; and a road corridor's plan view printed to scale.
 
 ## 14. Follow-ups
 

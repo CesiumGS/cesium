@@ -110,6 +110,15 @@ Places where the spec, read against the code and the earlier plans, is contradic
 9. **§13.25 lists "models and per-node transforms (5d)" among things to take up as items,** and section 11.5 adds them to `ModelPlacement`. _Ruling:_ section 11.5. They are a method on `ModelPlacement` now, and a later item can wrap it (call 11).
 10. **"Within a pixel at the target"** (section 11.6) names no resolution. _Ruling:_ at the transition's end, on a view 1,024 px tall, the target's origin lands within 1 px of where the target rig's own evaluation puts it (Tasks 10 and 20).
 
+## Leave room for (overall plan §13.34)
+
+- Time-bound values that scale to millions of elements (per-element appearance over time, for construction scheduling): evaluated on the GPU, not per element in JavaScript. Keep the animation core's value types able to target a GPU column.
+- Comparison views (a swipe or split between two captures or designs) as linked views.
+- The orthographic camera as the base for printing to scale.
+- An XR camera and its controller (WebXR) as one more controller kind: the controller interface shouldn't assume a mouse, a single view or a fixed projection.
+
+Nothing here is built in 5d; these are constraints on its interfaces.
+
 ## Global Constraints
 
 Copied from the earlier plans where they apply, with 5d's additions.

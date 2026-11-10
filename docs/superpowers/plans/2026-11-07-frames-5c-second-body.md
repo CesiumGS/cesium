@@ -75,6 +75,10 @@ Places where the spec, read against the code and the 5a and 5b plans, is contrad
 10. **Section 18 asks that Cesium Moon's access be checked before the handover is built.** *Ruling:* Task 6's probe (call 32) records what ion's endpoint returns for a good token and a bad one. The case "the asset isn't in My Assets" can be seen only from an account without it; if the owner's account has it, the 404 mapping stays the plan's reading and is listed for the owner.
 11. **"The impostor … sits at infinity behind everything, placed from the sky inputs"** is also a public API today (`engine.moonPosition`, `engine.moonAxes`). *Ruling:* call 21.
 
+## Leave room for (overall plan §13.34)
+
+Vertical exaggeration: per-body volumes, clamping and impostors read an exaggeration factor rather than assume it is 1, so a later exaggeration doesn't have to revisit them. Nothing to build here.
+
 ## Global Constraints
 
 Copied from 5a's and 5b's plans where they apply, with 5c's additions.
