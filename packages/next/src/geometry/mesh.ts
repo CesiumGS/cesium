@@ -293,10 +293,14 @@ export function meshGeometry(
     placed[3 * v + 1]!,
     placed[3 * v + 2]!,
   ];
-  const faceRef = (t: number): EntityRef =>
-    featureIds === undefined
-      ? { kind: "face", index: t }
-      : { kind: "face", index: t, feature: featureIds[indices[3 * t]!]! };
+  const faceRef = (t: number): EntityRef => {
+    const feature = featureIds?.[indices[3 * t]!];
+    return {
+      kind: "face",
+      index: t,
+      ...(feature !== undefined && { feature }),
+    };
+  };
 
   const edgeRef = (t: number, side: number): EntityRef => {
     const face = faceRef(t);
@@ -306,11 +310,19 @@ export function meshGeometry(
       ...(face.feature !== undefined && { feature: face.feature }),
     };
   };
-  const vertexRef = (v: number): EntityRef => ({
-    kind: "vertex",
-    index: v,
-    ...(featureIds !== undefined && { feature: featureIds[v]! }),
-  });
+  const vertexRef = (v: number): EntityRef => {
+    const feature = featureIds?.[v];
+    return {
+      kind: "vertex",
+      index: v,
+      ...(feature !== undefined && { feature }),
+    };
+  };
+  /** True when the placed triangle has no normal (a singular matrix). */
+  const flat = (a: V3, b: V3, c: V3): boolean => {
+    const n = cross(sub(b, a), sub(c, a));
+    return !(Math.hypot(n[0], n[1], n[2]) > 0);
+  };
 
   const bounds = (): GeometryBounds => {
     const placed = place();
@@ -346,21 +358,23 @@ export function meshGeometry(
       ray.from[1]! - (origin?.[1] ?? 0),
       ray.from[2]! - (origin?.[2] ?? 0),
     ];
-    const d = sub(ray.to, ray.from);
+    const to: V3 = [
+      ray.to[0]! - (origin?.[0] ?? 0),
+      ray.to[1]! - (origin?.[1] ?? 0),
+      ray.to[2]! - (origin?.[2] ?? 0),
+    ];
+    const d = sub(to, from);
     let best: number | undefined;
     let bestTriangle = -1;
     for (let t = 0; t < triangleCount; t++) {
       if (!usable[t]) {
         continue;
       }
-      const hit = hitTriangle(
-        from,
-        d,
-        corner(placed, indices[3 * t]!),
-        corner(placed, indices[3 * t + 1]!),
-        corner(placed, indices[3 * t + 2]!),
-      );
-      if (hit === undefined || hit < tMin || hit > tMax) {
+      const ta = corner(placed, indices[3 * t]!);
+      const tb = corner(placed, indices[3 * t + 1]!);
+      const tc = corner(placed, indices[3 * t + 2]!);
+      const hit = hitTriangle(from, d, ta, tb, tc);
+      if (hit === undefined || hit < tMin || hit > tMax || flat(ta, tb, tc)) {
         continue;
       }
       if (best === undefined || hit < best) {
@@ -446,6 +460,9 @@ export function meshGeometry(
       }
       const ids = [indices[3 * t]!, indices[3 * t + 1]!, indices[3 * t + 2]!];
       const [a, b, c] = ids.map((v) => corner(placed, v)) as [V3, V3, V3];
+      if (flat(a, b, c)) {
+        continue;
+      }
       const cs = [a, b, c];
       if (wantFace) {
         // The most specific kind allowed: a vertex or an edge of the face
@@ -553,6 +570,9 @@ export function meshGeometry(
   };
 
   const entity = (ref: EntityRef): EntityInfo | undefined => {
+    if (!Number.isInteger(ref.index)) {
+      return undefined;
+    }
     const placed = place();
     const point = (v: number): Float64Array =>
       Float64Array.from(corner(placed, v));

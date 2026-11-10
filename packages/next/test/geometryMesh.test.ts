@@ -254,6 +254,66 @@ describe("meshGeometry closest point, segment distance and topology", () => {
     near(c.position, off([0.75, 0.25, 0]), 1e-6);
   });
 
+  it("places a rotated and translated mesh, answering in the rotated frame", () => {
+    // Rotates 90 degrees about z ((x, y) -> (-y, x)), then translates by T.
+    const turned = Float64Array.from([
+      0,
+      1,
+      0,
+      0,
+      -1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      ...T,
+      1,
+    ]);
+    const r = meshGeometry({ positions, indices, matrix: turned });
+    const at = (v: number[]) => [v[0]! + T[0], v[1]!, v[2]!];
+    const o = { origin: T };
+    // Untranslated answer (0.75, 0.25, 0) turns to (-0.25, 0.75, 0).
+    const a = r.rayHit(
+      { from: at([-0.25, 0.75, 1]), to: at([-0.25, 0.75, -1]) },
+      o,
+    );
+    expect(a.verdict).toBe("hit");
+    if (a.verdict === "hit") {
+      expect(a.hit.t).toBeCloseTo(0.5, 12);
+      near(a.hit.position, at([-0.25, 0.75, 0]), 1e-6);
+      near(a.hit.normal, [0, 0, 1]);
+      expect(a.hit.entity).toMatchObject({ kind: "face", index: 0 });
+    }
+    // The point (0.75, 0.25, 2) turns to (-0.25, 0.75, 2).
+    const c = r.closestPoint(at([-0.25, 0.75, 2]), o)!;
+    near(c.position, at([-0.25, 0.75, 0]), 1e-6);
+    expect(c.distance).toBeCloseTo(2, 6);
+    expect(c.entity).toMatchObject({ kind: "face", index: 0 });
+    near(c.normal!, [0, 0, 1], 1e-9);
+  });
+
+  it("answers the vertex when only edges and vertices are allowed", () => {
+    const g2 = meshGeometry({ positions, indices });
+    const v = g2.closestPoint([2, -1, 0], { kinds: ["edge", "vertex"] })!;
+    expect(v.entity).toMatchObject({ kind: "vertex", index: 1 });
+    near(v.position, [1, 0, 0]);
+  });
+
+  it("leaves the feature out when the ids are shorter than the vertices", () => {
+    const f = meshGeometry({
+      positions,
+      indices,
+      featureIds: Uint32Array.from([5, 6]),
+    });
+    const ref = f.entity({ kind: "vertex", index: 3 })!.ref;
+    expect("feature" in ref).toBe(false);
+    expect(f.entity({ kind: "face", index: 1 })!.ref.feature).toBe(5);
+    expect(f.entity({ kind: "face", index: 0.5 })).toBeUndefined();
+  });
+
   it("gives vertices and edges a feature when the mesh has one", () => {
     const f = meshGeometry({
       positions,

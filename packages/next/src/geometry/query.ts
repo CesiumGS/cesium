@@ -104,6 +104,7 @@ export interface GeometryQueries {
     point: ArrayLike<number>,
     options?: ClosestPointOptions,
   ): ClosestPoint | undefined;
+  /** The least distance from the segment to the surface, in m; `Infinity` when there is no geometry. */
   segmentDistance(
     from: ArrayLike<number>,
     to: ArrayLike<number>,
