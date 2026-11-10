@@ -16,6 +16,22 @@ interface Scratch {
 }
 const levels: Scratch[] = [];
 let depth = 0;
+/** The instant each active difference is centred on, by depth. */
+const centers: Instant[] = [];
+
+/**
+ * The instant the innermost difference in progress is centred on, when
+ * `instant` is one of its samples (within its step), or undefined. A frame
+ * that changes by jumps uses it to sample one piece across the step, so a
+ * jump isn't read as speed.
+ */
+export function differenceCenter(instant: Instant): Instant | undefined {
+  const center = depth > 0 ? centers[depth - 1] : undefined;
+  return center !== undefined &&
+    Math.abs(center.tdb() - instant.tdb()) <= H * (1 + 1e-12)
+    ? center
+    : undefined;
+}
 const scratchFor = (level: number): Scratch =>
   (levels[level] ??= {
     ahead: new Float64Array(3),
@@ -128,6 +144,7 @@ export function derivative(
   dimension: number,
   out: Float64Array,
 ): Float64Array {
+  centers[depth] = instant;
   const scratch = scratchFor(depth++);
   try {
     return differentiate(sample, instant, dimension, out, scratch);

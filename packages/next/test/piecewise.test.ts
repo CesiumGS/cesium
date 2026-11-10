@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { FrameUnavailableError } from "../src/camera/frameResolver.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { Frame, frameTransform } from "../src/frames/Frame.ts";
+import { frameVelocity } from "../src/frames/motion.ts";
 import { framePoint } from "../src/frames/local.ts";
 import { PiecewiseJumpError, piecewiseFrame } from "../src/frames/piecewise.ts";
 import { pointAccuracy } from "../src/frames/pointAccuracy.ts";
@@ -89,6 +90,21 @@ describe("piecewiseFrame", () => {
       { frame: far, from: at(CHANGE), jump: true },
     ]);
     expect(frameTransform(stage, root, at(150))[12]).toBeCloseTo(165, 9);
+  });
+
+  it("takes velocity within one piece next to a declared jump", () => {
+    const { root, offset, moving } = scene();
+    const far = moving("far", root, (t) => t + 1015);
+    const stage = piecewiseFrame("stage", [
+      { frame: offset, from: at(0) },
+      { frame: far, from: at(CHANGE), jump: true },
+    ]);
+    // A central difference across the change read the 1 km jump as speed.
+    expect(frameVelocity(stage, root, at(CHANGE + 0.25))[0]).toBeCloseTo(1, 6);
+    expect(frameVelocity(stage, root, at(CHANGE - 0.25))[0]).toBeCloseTo(
+      frameVelocity(offset, root, at(CHANGE - 0.25))[0]!,
+      6,
+    );
   });
 
   it("draws its parent per piece", () => {

@@ -1,7 +1,7 @@
 import { FrameUnavailableError } from "../camera/frameResolver.ts";
 import type { Instant } from "../time/Instant.ts";
 import { Frame, frameTransform, routeRevision } from "./Frame.ts";
-import { frameVelocity } from "./motion.ts";
+import { differenceCenter, frameVelocity } from "./motion.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 
 /** One piece of a piecewise reference frame. */
@@ -108,7 +108,10 @@ export class PiecewiseFrame<N extends string = string> extends Frame<N> {
       name,
       hub,
       (instant, out) => {
-        const piece = box.self!.pieceAt(instant);
+        // Inside a difference, the piece at its centre: across a declared
+        // jump, a central difference spanning both pieces read the jump as
+        // speed. A sample the piece can't give falls back one-sided.
+        const piece = box.self!.pieceAt(differenceCenter(instant) ?? instant);
         if (piece === undefined) {
           throw new FrameUnavailableError(
             name,

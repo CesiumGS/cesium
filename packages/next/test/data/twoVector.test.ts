@@ -195,10 +195,18 @@ describe("two-vector reference frames against SPICE", () => {
   // step drops the Earth-Moon error from 5e-9 (0.5 s) to 2e-11 rad/s (60 s).
   // SPICE's own rate for a dynamic reference frame is also numerical. The
   // plan's tolerance is kept, so these show as known misses.
-  it.fails.each(["ORION_LVLH", "EARTH_MOON_ROT"])(
-    "%s's angular velocity is within 1e-6 of its size plus 1e-12 rad/s (a known miss: see the ledger)",
-    (name) => {
-      expect(rateExcess(name)).toBeLessThan(0);
+  // `it.fails` passed on any failure, an exception included, so the miss is
+  // stated instead: over the plan's tolerance, but within the measured worst.
+  it.each([
+    ["ORION_LVLH", 1e-6],
+    ["EARTH_MOON_ROT", 1e-7],
+  ] as const)(
+    "%s's angular velocity misses the plan's tolerance by under %s rad/s (a known miss: see the ledger)",
+    (name, bound) => {
+      const excess = rateExcess(name);
+      expect(Number.isFinite(excess)).toBe(true);
+      expect(excess).toBeGreaterThan(0);
+      expect(excess).toBeLessThan(bound);
     },
   );
 });
