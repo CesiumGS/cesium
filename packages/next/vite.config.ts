@@ -17,6 +17,7 @@ import {
   sep,
 } from "node:path";
 import { fileURLToPath } from "node:url";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
@@ -372,6 +373,12 @@ const projGrids = existsSync(
   ? join(framesDataDirectory(), "grids")
   : undefined;
 
+// DEV_HTTPS=1 serves the dev server over HTTPS with a self-signed
+// certificate made at startup, so a phone on the same network gets a secure
+// context, which WebGPU needs (http to a LAN address isn't one). Accept the
+// browser's warning once per address. Pair it with `--host 0.0.0.0`.
+const devHttps = !["", "0"].includes(process.env.DEV_HTTPS ?? "");
+
 const framesDataTests = !["", "0"].includes(process.env.FRAMES_DATA ?? "");
 
 export default defineConfig({
@@ -413,6 +420,7 @@ export default defineConfig({
     ],
   },
   plugins: [
+    ...(devHttps ? [basicSsl()] : []),
     basisTranscoderEsm(),
     slangShaders(),
     // The ion token in .env.local is the dev server's only (ionToken.ts).
