@@ -1,6 +1,6 @@
 # Frames 5c: The Second Body Implementation Plan
 
-**Before starting (2026-11-09):** the file split, its second pass and the sky and observer work landed after this plan was written. Check paths by symbol, and read "What other plans need" in `docs/superpowers/plans/2026-11-08-sky-and-observer.md`, which lists what changes here.
+**Updated 2026-11-09.** The file split, its second pass, the sky and observer work and 5b landed after this plan was written. Check paths by symbol. The sky plan's notes for 5c (its "What other plans need") are folded in here: Tasks 3, 7 and 9 and ruling 5 say what changed. Exposure is `view.observer.exposure` now, and `ViewOptions` takes `observer`, not `exposure`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
 
@@ -20,7 +20,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md`, section 10 (sub-plan 5c) and its done-when list, with sections 5 to 8 for terms and 5a's seams, section 12 for what 5e expects, and section 14 for what 5g expects. **Builds on:** `docs/superpowers/plans/2026-11-07-frames-5a-core-and-camera-chain.md` and `docs/superpowers/plans/2026-11-07-frames-5b-frames-library.md`; every 5a and 5b name below is those plans' Interfaces blocks'.
 
-**Base:** the commit that closes 5b (its Task 13, "Plan: frames 5b results"). If an executed 5a or 5b name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the files it will change and waits for the owner of any uncommitted edit.
+**Base:** the current tip of `cesium-2.0-webgpu-poc`. 5b is built and merged (44c03b94cf); the old `frames-5c` branch holds no work. If an executed 5a or 5b name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the files it will change and waits for the owner of any uncommitted edit.
 
 ## Calls made by this plan
 
@@ -67,7 +67,7 @@ Places where the spec, read against the code and the 5a and 5b plans, is contrad
 2. **"The ion resource layer refreshes the endpoint's short-lived access token, as it does for other ion assets"** (section 10.4). Nothing refreshes today: `resolveIonAsset` caches the endpoint for 45 minutes, and a loaded tileset keeps the headers it was given. *Ruling:* call 17, for 3D Tiles and terrain.
 3. **"The Viewer's default is the impostor only: no token, no download"** (section 10.4) and the anti-goal of ion traffic in a globe-only app (section 3). Today the Viewer composes the Moon's map from Cesium Moon Terrain's tiles (`loadIonMoonMap`) whenever a token is set. *Ruling:* call 24: the default map is the bundled one; the ion map is its own opt-in.
 4. **"A tileset on that body refines from it"** (section 10.4). Read literally, a lunar lander's own tileset would vanish until the camera came within about 2,000 km. *Ruling:* call 13: a body's surface tilesets refine from its impostor; other content is ordinary.
-5. **"Both use the same reflectance model … and the same exposure"** (section 10.4) against 5e owning the Moon's material (section 12.2). Tiles today go through the engine's physically based path, which would jump in brightness at the handover. *Ruling:* call 22: 5c gives surface tiles the impostor's Lommel–Seeliger function, which section 10.4 allows; 5e replaces that one function with Hapke's for both.
+5. **"Both use the same reflectance model … and the same exposure"** (section 10.4; the exposure is the view's, `view.observer.exposure`) against 5e owning the Moon's material (section 12.2). Tiles today go through the engine's physically based path, which would jump in brightness at the handover. *Ruling:* call 22: 5c gives surface tiles the impostor's Lommel–Seeliger function, which section 10.4 allows; 5e replaces that one function with Hapke's for both.
 6. **"One tile cache and one budget across bodies"** (section 10.2). Each tileset has its own cache budget today (`TilesetOptions.cacheBytes`) and every tileset shares the engine's request scheduler. *Ruling:* read as "nothing per body": 5c adds no per-body cache or budget. A single budget across tilesets is renderer work outside 5c, recorded as carried forward.
 7. **"The same works for any body: the Earth seen from far away without a globe"** (section 10.4). The impostor is built for any body with an appearance, but the Earth's look from far away is mostly its atmosphere, which 5e builds. *Ruling:* call 10.
 8. **Sky inputs for a view on the Moon.** 5a keeps the sky's inputs in the Earth anchor's axes (5a call 30) and shades each view in its body anchor's axes (5a call 18), so a view on the Moon would get the sun from the wrong axes. *Ruling:* call 8.
@@ -237,19 +237,21 @@ it("an anchor with no body gets no horizon culling", ...);
 **Files:**
 
 - Create: `src/scene/viewSky.ts`, `test/viewOnBody.test.ts`
-- Modify: `src/scene/Engine.ts` (the view block's sky inputs, `environmentFrame` with the view's body, `updateEnvironment`, `moonFrom`), `src/atmosphere/Sky.ts` (`write` takes per-view inputs), `src/scene/View.ts` (doc of `body`)
+- Modify: `src/scene/Engine.ts` (the view block's sky inputs, `environmentFrame` with the view's body, `updateEnvironment`, `moonFrom`), `src/atmosphere/Sky.ts` (`write` takes per-view inputs; `writeStars` is already per view since the star cells, so it only needs R · `icrfToFixed`), `src/scene/lightList.ts` (an airless body's sun), `src/scene/View.ts` (doc of `body`)
 
 **Interfaces:**
 
 - Consumes: 5a's shading axes (call 18), `view.bodyAnchor`, `view.anchorPlacement`, the engine's internal `bodyCamera(view)`, the sky inputs in the Earth anchor's axes (`engine.sunDirection`, `icrfToFixed`, `moonPosition`, `moonAxes`).
 - Produces:
   - `viewSkyInputs(view: View, engine: Engine, out: ViewSkyInputs): ViewSkyInputs` in `src/scene/viewSky.ts` (plan's call 8), `interface ViewSkyInputs { sunDirection: Float64Array; icrfToShading: Float64Array; moonPosition?: Float64Array; moonAxes?: Float64Array }`: the engine's inputs turned, in float64, from the Earth anchor's axes into the view's shading axes by the rotation part of `anchorPlacement(view.bodyAnchor)⁻¹ · anchorPlacement(earthAnchor)`, and the Moon's position re-expressed in the view's body anchor. For a view on the Earth it returns the inputs unchanged (identical floats). A view on the Moon has no Moon in its sky.
-  - The view block's `sunDirection`, star rotation, `iblFrame` (`environmentFrame(camera, view.body.ellipsoid)`), `bodyRadii` and the sky's `write` read them. A view whose body has no atmosphere draws no sky (as today) and throws nothing.
+  - The view block's `sunDirection`, star rotation, `iblFrame` (`environmentFrame(camera, view.body.ellipsoid)`), `bodyRadii` and the sky's `write` read them. A view whose body has no atmosphere draws no sky (as today) and throws nothing. Star cells and glare's sources follow the star rotation with no more work.
+  - `lightListFor`'s sun, in a view on a body with no air, has no `sunLight` table to read: it takes the outside-air value until 5e.
 
 - [ ] **Step 1: Write the failing test** (`fakeEngine`, the core's table resolver, the Moon's anchor placed by hand 384,400 km away and turned 0.4 rad about Z):
-  - a view on the Moon (`addView({ body: MOON })`, rig on `world.bodyAnchor(MOON)`): its block's `sunDirection` equals R · `engine.sunDirection` within float32 rounding, its star rotation R · `icrfToFixed`, its `bodyRadii` the Moon's, and its `iblFrame` the Moon's ENU at the camera;
+  - a view on the Moon (`addView({ body: MOON })`, rig on `world.bodyAnchor(MOON)`): its block's `sunDirection` equals R · `engine.sunDirection` within float32 rounding, its star rotation R · `icrfToFixed` (read from its `SkyView.starUniform`), its `bodyRadii` the Moon's, and its `iblFrame` the Moon's ENU at the camera;
   - an Earth view in the same world: every float of its block equals a world without the Moon view;
   - the Moon view renders a tick with no thrown error and no sky pass;
+  - its light list's sun has the outside-air radiance, finite and positive;
   - the Earth's tilesets' selection view for the Moon view is that view's camera in the Earth's anchor (5a's per-anchor selection).
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.**
@@ -440,12 +442,13 @@ A browser check (port 5192).
 
 - Consumes: Tasks 3 to 5; 5a's `writeAnchorEyes`, `CorePick`, the pick readback; 5b's impostor ray rule (relief as accuracy).
 - Produces:
-  - `sky.slang`: `skyStarsFragment` and `skyFromTableFragment` keep their outputs exactly; their bodies become `skyPixel(position, direction, group, moon: MoonSample)` and `skyTablePixel(direction, position, moon)`, which `impostor.slang` imports.
+  - `sky.slang`: `skyStarsFragment` and `skyFromTableFragment` keep their outputs exactly (against today's shader, which has no `starExposure`); their bodies become `skyPixel(position, direction, group, moon: MoonSample)` and `skyTablePixel(direction, position, moon)`, which `impostor.slang` imports.
   - `impostor.slang` (plan's calls 18 and 19), no loops:
     - vertex: a full-viewport triangle;
     - fragment: the impostor's ellipsoid in its scaled space from the eye-relative centre direction and sine of the angular radius, as `moonDisk` does; `discard` outside; the colour is the sky's pixel at that direction with the impostor's disk sample (with the view's air when the view draws its sky, without it otherwise), premultiplied by the coverage and blended over; depth `near / viewZ × depthScale` written where the coverage is at least ½; target 1 the feature `IMPOSTOR_FEATURE_BASE + slot`;
     - `"floor"` uses the floor radius, `"full"` the ellipsoid.
   - `Impostors` (in `src/atmosphere/Impostors.ts`), drawn by the engine in the opaque pass after `drawSplats` and before `sky.draw`: per view and impostor not `"off"`, an `ImpostorBlock` uniform written in float64 then stored as float32 (`impostorBlock(view, impostor, eye, out)`): the centre's direction in shading axes, the angular radius's sine, the body's axes in shading axes, the radii ratios, the floor scale, the direction to the sun from the body, the disk's brightness scale and earthshine as `Sky.write` computes them today, the depth scale (Task 4) and the feature id. The scissor is the projected bounding sphere plus one pixel, clipped to the viewport; empty means no draw.
+  - Glare: `glareSources`' `tapVisible` reads `sky.moon` and `sky.moonSize`. With the Moon in the opaque pass, its depth blocks the taps by itself. The sky plan's eclipse check (its Task 12) keeps passing; its analytic test goes if the uniform does.
   - The Moon's impostor's map is `engine.setMoonMap`'s. With a Moon impostor in its world, the sky's disk for a view is placed from the impostor's anchor; without one, from `engine.moonPosition` as today (plan's call 21).
   - `IMPOSTOR_FEATURE_BASE = 0xffff_ff00` (plan's call 20). A pick reading such an id resolves `CorePick.impostor = body`, `anchor` that slot's anchor, `draw` and `feature` undefined. The frames interpreter adds an accuracy term `"impostor"`, the body's relief in metres, noted "the body's ellipsoid, not its terrain".
 
@@ -516,7 +519,7 @@ A browser check (port 5194).
   - `ViewerWarning.kind` gains `"moonTileset"`: a declared Moon's failure, with its message.
   - `addAttributions(owner: object, attributions: IonAttribution[], options?: { shown?: () => boolean })` (plan's call 25). The Moon tileset's attributions show while `declared.drawing`; the ion map's while `impostor.drawing`; the bundled map needs none (its source is checked here and written in the doc comment; if none is found, it goes to the owner's list).
   - `zoomTo`, `flyTo` and framing of content on another body set the view's rig on `viewer.frames.bodyFixed(body)` and fit the content with the camera in that body's anchor; Earth content sets it back on ITRF (plan's call 26).
-  - `setSplit(on: boolean, options?: { body?: Body }): void` (plan's call 27): the second view is made with that body and a rig on its body-fixed frame.
+  - `setSplit(on: boolean, options?: { body?: Body }): void` (plan's call 27): the second view is made with that body and a rig on its body-fixed frame, and copies the first view's observer.
   - `ViewLink`'s body is the source view's (plan's call 28); `orbitFocus` takes the view's body.
   - `place()` is undefined for a view off the Earth (plan's call 29).
 
@@ -526,7 +529,7 @@ A browser check (port 5194).
   - `moon: "ion"` with no token: no request on the ground; nearing the Moon gives one `"moonTileset"` warning naming the cause, and the impostor keeps drawing;
   - `credits()` lacks Cesium Moon's attributions until its tiles draw, has them while they draw, and drops them when the camera leaves;
   - `zoomTo(moonTileset)` leaves `engine.cameras.root(view).name === "MOON_ME"`; `zoomTo` an Earth tileset after it gives `"ITRF"`;
-  - `setSplit(true, { body: MOON })` makes a second view on the Moon with its rig on MOON_ME;
+  - `setSplit(true, { body: MOON })` makes a second view on the Moon with its rig on MOON_ME and the first view's `observer`;
   - a link from a Moon view copies the pose in the Moon's anchor within 1 × 10⁻⁹ m, and its footprint lies on the Moon's ellipsoid;
   - `place()` on a Moon view is undefined.
 - [ ] **Step 2: Run** and confirm they fail.

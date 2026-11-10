@@ -1,6 +1,6 @@
 # Frames 5d: Controllers, Bindings, Transitions and the Animation Core Implementation Plan
 
-**Before starting (2026-11-09):** the file split, its second pass and the sky and observer work landed after this plan was written. Check paths by symbol, and read "What other plans need" in `docs/superpowers/plans/2026-11-08-sky-and-observer.md`, which lists what changes here.
+**Updated 2026-11-09.** The file split, its second pass, the sky and observer work and 5b landed after this plan was written. Check paths by symbol. The sky plan's notes for 5d (its "What other plans need") are folded in here: `Camera.lens` is renamed `Camera.imagePlane` (owner, its question 5), Task 15 turns glare off in an orthographic view, and the global constraints read `view.observer` for exposure.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
 >
@@ -14,13 +14,13 @@
 - **The rig stays a pose.** It gains an optional kind, damping per part, and a reference (an up and a heading direction from a reference frame) for a free orientation. `evaluateRig` is the one place a rig becomes a pose, used by the layer and by transitions.
 - **Controllers are policies behind one interface** (`CameraController`), kept by the camera layer, one per view. Each owns its constraints, and each constraint has an off switch. Gestures reach them only as named actions through `GestureInput`, which reads a plain, serializable binding map.
 - **A transition is the camera layer's, built on one animation.** Each tick it evaluates both live rigs at the scene time, blends them in the blend reference frame, and writes the camera there. That reference frame is the view's root while it runs. At the end the target rig becomes the view's rig and its controller takes over.
-- **The orthographic camera goes through one seam,** `Camera.lens`, with a bypass test, so perspective code can't creep back in. A perspective view's numbers don't change.
+- **The orthographic camera goes through one seam,** `Camera.imagePlane`, with a bypass test, so perspective code can't creep back in. A perspective view's numbers don't change.
 
 **Tech Stack:** TypeScript (float64 on the CPU), Slang compiled to checked-in WGSL (`npm run shaders`), WebGPU, Vitest, Playwright (`bench/run.mjs`), the Vite dev server for one check page. No new npm dependencies.
 
 **Spec:** `docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md`, section 11 (sub-plan 5d) as the authority, with sections 6 to 8 for the layers and rigs, section 13 for what 5f expects, and section 14 for what 5g expects. **Builds on:** `docs/superpowers/plans/2026-11-07-frames-5a-core-and-camera-chain.md`, `...-5b-frames-library.md`, `...-5c-second-body.md`.
 
-**Base:** the commit that closes 5c (its Task 11, "Plan: frames 5c results"). Plans 5b and 5c are written but were not built when this plan was written. If an executed name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the code it will change, and waits for the owner of any uncommitted edit.
+**Base:** the commit that closes 5c (its Task 11, "Plan: frames 5c results"). 5b is built and merged (44c03b94cf); 5c is written but not built. If an executed name differs from its plan, follow `api/surface.txt` and the code, and say so in the task's commit message. Other agents share this checkout: each task starts with `git status` for the code it will change, and waits for the owner of any uncommitted edit.
 
 ## What 5d takes from 5b and 5c
 
@@ -80,7 +80,7 @@ In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23),
 31. **The hand-over:** below 0.02 of the body's maximum radius, free-fly offers the body's globe controls (`handOver: "offer"`, the default, calls `onOffer({ body, accept })`; `"auto"` accepts at once; `"off"` never offers). It re-arms above 0.03. Accepting starts a transition, never a jump. *Undo:* constants and a default.
 32. **The level assist** turns roll toward the nearest body's up with a 1 s time constant, off by default, and changes nothing else. *Undo:* a constant.
 33. **`Camera.orthographic: { height: number; far?: number } | undefined`.** `height` is the view's height in metres. Reverse-Z over a finite range: `z = (far − d) / (far − near)`. `far` defaults to the larger of 1,000 m and 100 × `height`. See ruling 6. *Undo:* a default.
-34. **`Camera.lens(aspect)`** is the one place that reads the projection: `{ orthographic, tanX, tanY, halfX, halfY }`. A bypass test fails on reading `.fovy` anywhere else in `src/` and `widgets/`. *Undo:* a test.
+34. **`Camera.imagePlane(aspect)`** is the one place that reads the projection: `{ orthographic, tanX, tanY, halfX, halfY }`. A bypass test fails on reading `.fovy` anywhere else in `src/` and `widgets/`. *Undo:* a test.
 35. **In an orthographic view, ambient occlusion is off and the light grid is one cell** (every light in every pixel's list, within the grid's capacity). Carried forward. *Undo:* each is local.
 36. **The sky sees an orthographic view as its narrowest dolly perspective** (call 37's field of view). So it needs no second form, it can't divide by zero, and a dolly's last step shows the same sky. *Undo:* one function.
 37. **The dolly's narrowest field of view is 0.1°.** On a square view 1,024 px tall, content within one view height of the focus plane moves under a pixel when the projection switches. *Undo:* a constant.
@@ -123,6 +123,7 @@ Copied from the earlier plans where they apply, with 5d's additions.
 - **No constraint where a controller can't turn it off** (spec section 3). "Underground visualization is a first-class case."
 - **Browser only.** No server-side computation. Data lives outside the repo (`~/.cesium-bench/…`, `FRAMES_DATA_DIR`). Nothing new is committed or shipped.
 - **No ion tokens** anywhere in code, logs, URLs, reports, screenshots, storage or the DOM.
+- **Exposure is the observer's:** any exposure a task sets or reads is `view.observer.exposure` (EV100 at the API); a Viewer task takes `ViewerOptions.observer`. No task adds a `.fovy` read: new code takes tangents from the sky's uniform or `Camera.imagePlane`. `view.observer.exposure.ev100` written through a setter wakes the loop, so `Timeline.bind` can animate it; worth an example in the animation core's docs.
 - **Examples are documentation:** public API only. Where an example or check page reaches past it, record it for 5i in the task's commit message.
 - **Repository practice:**
   - Commands run in `packages/next`.
@@ -657,14 +658,14 @@ New files, by responsibility (modified code is named by symbol in each task):
 **Files:**
 
 - Create: `test/orthographic.test.ts`
-- Modify: `Camera` (`orthographic`, `lens`, `metresPerPixel`, `rayOrigin`, `rayDirection`, `projection`, `frustumPlanes`, `copyFrom`), `projectToPixel`, `View.anchorCamera`, `View.setCameraFromAnchor`, `View`'s `project`, `m4` (`orthographicReverseZ`), `depthDistance`, `alongRay`, `PickCamera`, `PickTick`, `PendingCamera`, `corePick`, `pickInterpreter`, the engineering `pick` and `snap`, `Engine`'s selection views, `writeLights`, `positionCamera`, `pickTick`, `Stepwise`, `GlobeStepwise`, `Budgeted`, `GlobeBudgeted`, `isScaledSpacePointVisible`'s callers, `fitCascades`, `packViewLights`, `ViewLink.groundPoint`, `OrbitController` (its wheel scales `height`), the globe and free-fly guards, the seams test, the core entry point, `api/surface.txt`
+- Modify: `Camera` (`orthographic`, `imagePlane`, `metresPerPixel`, `rayOrigin`, `rayDirection`, `projection`, `frustumPlanes`, `copyFrom`), `projectToPixel`, `View.anchorCamera`, `View.setCameraFromAnchor`, `View`'s `project`, `m4` (`orthographicReverseZ`), `depthDistance`, `alongRay`, `PickCamera`, `PickTick`, `PendingCamera`, `corePick`, `pickInterpreter`, the engineering `pick` and `snap`, `Engine`'s selection views, `writeLights`, `positionCamera`, `pickTick`, `Stepwise`, `GlobeStepwise`, `Budgeted`, `GlobeBudgeted`, `isScaledSpacePointVisible`'s callers, `fitCascades`, `packViewLights`, `ViewLink.groundPoint`, `OrbitController` (its wheel scales `height`), the globe and free-fly guards, the seams test, the core entry point, `api/surface.txt`
 
 **Interfaces:**
 
 - Consumes: nothing of 5d's but the guard names.
 - Produces (author's calls 33 to 35):
   - `interface Orthographic { readonly height: number; readonly far?: number }`; `Camera.orthographic: Orthographic | undefined`, setting it bumps `version`, and refuses a height that isn't positive and finite, naming it (Review Focus 5);
-  - `Camera.lens(aspect: number): Lens`, `interface Lens { readonly orthographic: boolean; readonly tanX: number; readonly tanY: number; readonly halfX: number; readonly halfY: number }`: a perspective lens's `half` are 0, an orthographic lens's `tan` are 0;
+  - `Camera.imagePlane(aspect: number): ImagePlane`, `interface ImagePlane { readonly orthographic: boolean; readonly tanX: number; readonly tanY: number; readonly halfX: number; readonly halfY: number }`: a perspective image plane's `half` are 0, an orthographic one's `tan` are 0. Not "lens": the observer's glare uses that word for optics (`GlarePupil`, `spikes`);
   - `Camera.far(): number`; `Camera.metresPerPixel(distance: number, pixelHeight: number, aspect: number): number`; `Camera.rayOrigin(ndcX, ndcY, aspect, out: Vec3): Vec3`;
   - `m4.orthographicReverseZ(out, halfX, halfY, near, far)`;
   - `isScaledSpacePointVisibleParallel(direction, occludee, minimumHeight)`, beside the existing test, for an eye at infinity;
@@ -683,16 +684,16 @@ New files, by responsibility (modified code is named by symbol in each task):
   - fog off in an orthographic selection view;
   - the horizon: a point on the far side is hidden, a near-limb point visible; 1,000 sampled points agree with the perspective test from an eye 10⁹ radii out along −direction;
   - depth: `depthDistance` at near, far and the middle, within 10⁻⁶ m; underlay scaling holds;
-  - picks: `corePick` at a pixel gives the point that projects there, and its `camera` carries the lens; pick tolerance in `pickInterpreter` is `metresPerPixel`;
+  - picks: `corePick` at a pixel gives the point that projects there, and its `camera` carries the image plane; pick tolerance in `pickInterpreter` is `metresPerPixel`;
   - copies: `copyFrom`, `anchorCamera`, `setCameraFromAnchor` and a re-root keep `orthographic`;
   - cascades: every cascade's sphere contains its slice's 8 corners;
   - lights: `packViewLights` writes a one-cell grid, and a light outside the extents is dropped;
   - `ViewLink`'s ground point works from `rayOrigin`;
   - a perspective camera's `projection`, `frustumPlanes`, `rayDirection`, `projectToPixel`, and a selection view's numbers are exactly today's (numbers recorded in the test before the change);
   - the seam test: a `.fovy` read planted in a fixture fails naming its line;
-  - Review Focus 5: a viewport 0 px tall: `lens` at an aspect that isn't positive and finite answers as for an aspect of 1, so no plane is NaN; an orthographic height of 0 or NaN is refused, named.
+  - Review Focus 5: a viewport 0 px tall: `imagePlane` at an aspect that isn't positive and finite answers as for an aspect of 1, so no plane is NaN; an orthographic height of 0 or NaN is refused, named.
 - [ ] **Step 2: Run** and confirm it fails.
-- [ ] **Step 3: Implement.** Every `.fovy` read moves to `lens`, `metresPerPixel` or `pickMetresPerPixel`. Resolve Tasks 8, 9 and 13's `it.todo`s here.
+- [ ] **Step 3: Implement.** Every `.fovy` read moves to `imagePlane`, `metresPerPixel` or `pickMetresPerPixel`. Resolve Tasks 8, 9 and 13's `it.todo`s here.
 - [ ] **Step 4: Run** the test, `npm test`, `npm run test:data` (`pickInterpreter`), tsc, eslint, prettier.
 - [ ] **Step 5: Surface and commit** with "camera: the orthographic camera: picking, culling, horizon culling and screen-space error in their orthographic forms".
 
@@ -713,13 +714,14 @@ A browser check (port 5191, author's call 47).
   - the surface shader's view vector is the camera's −forward there, and `-normalize(relPosition)` otherwise;
   - `depthRange`'s parameters carry `far` (0 in perspective): distance is `far − d × (far − near)` when set;
   - `frame.ambient` is false in an orthographic view;
-  - `Sky.write` reads `camera.lens`, and in an orthographic view gives the sky the narrowest dolly's tangents.
+  - `Sky.write` reads `camera.imagePlane`, and in an orthographic view gives the sky the narrowest dolly's tangents (it has no `starExposure` parameter now; star cells take the sky's tangents and need no change);
+  - glare is off in an orthographic view, beside `frame.ambient`: `resolveGlare` gives `off` there. There's no angle for a veil to spread over, and the narrowest dolly's tangents would make every star's radiance enormous.
 
-- [ ] **Step 1: Write the failing Node test** (`fakeEngine`): the view block's `time[2]` is 1 only when orthographic; a perspective view's block is byte-for-byte today's; `frame.ambient` is false; the depth range's parameters; the sky's `tanY` equals tan(0.05°), positive and finite.
+- [ ] **Step 1: Write the failing Node test** (`fakeEngine`): the view block's `time[2]` is 1 only when orthographic; a perspective view's block is byte-for-byte today's; `frame.ambient` is false; the depth range's parameters; the sky's `tanY` equals tan(0.05°), positive and finite; `resolveGlare` gives `off`; stars at the narrowest dolly's tangents have no NaN; `veilWeights` gives zeros.
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.** `npm run shaders`. Read the Metal of each changed entry with `node scripts/dumpMsl.mjs`.
 - [ ] **Step 4: Run** the test, `npm run shaders:check`, tsc, eslint, prettier, `npm test`.
-- [ ] **Step 5: Browser check.** `spikes/controllers.html`, group `orthographic`: two equal boxes at different depths under a top view draw the same size within 1 px; nearer occludes farther; a pick round-trips within 1 mm at a 1 km view; a light's and a shadow's presence read from the image; the sky has no NaN (no magenta probe pixel); the console is clean. Then `parity` and `alloc` against the base commit, one at a time. Explain any one-ulp row. Record the metrics in the commit message. Stop the server.
+- [ ] **Step 5: Browser check.** `spikes/controllers.html`, group `orthographic`: two equal boxes at different depths under a top view draw the same size within 1 px; nearer occludes farther; a pick round-trips within 1 mm at a 1 km view; a light's and a shadow's presence read from the image; the sky has no NaN (no magenta probe pixel); the console is clean. Then the sky's check page, `spikes/observer.html`, unchanged in a perspective view. Then `parity` and `alloc` against the base commit, one at a time. Explain any one-ulp row. Record the metrics in the commit message. Stop the server.
 - [ ] **Step 6: Commit** with "render: orthographic views: the view vector, depth range and sky; ambient occlusion off for now".
 
 ### Task 16: `fitBounds`, and the dolly between projections
@@ -899,7 +901,7 @@ A browser check (port 5193).
 
 - **Spec coverage.** 11.2: not camera-specific, timing and playback, `finished` (Task 3); easing (1); glTF samplers (2); per-animation clock, scrubbing, one timeline, awake rules (3); setters (4). 11.3: constraints with off switches (8, 9, 13, 17); policies over the rig (6); free flight, its speed, re-attach, hand-over, level (13); CAD with standard views and `fitBounds` (16, 17); full replacement (6); any body (9, 20); orbit with no pick (8); rolled reference frames (5, 8); damping (5); orthographic with its forms (14, 15). 11.4: actions, the serializable map, presets, custom actions, grammar, refusal, skipping (7). 11.5: configurable timing, live blend, cut (10); paths (11); interruption (12); three levels (11); blend reference frame (10); slerp and field of view (10); the dolly (16); the end (10); per-node transforms (4). 11.6: injected clocks (3 and throughout); every controller by synthetic input on three settings (20); Orion at 3,600× (20); free flight (13, 20); the explorer (19).
 - **For later sub-plans.** 5f: a named `blendFrame`, `onWeight`, `placementBlendSetter`, the CAD and globe controllers at each end, `Camera.orthographic` and the dolly. 5g: wall and scene clocks side by side, per-node transforms, transitions as the directors' moves, `running`, `held`, separate stops for camera and clock, the table of rig and controller per reference frame.
-- **Type consistency.** `RigReference`, `RigDamping`, `freeRig`, `RigPose`, `evaluateRig` (Task 5); `ActionEvent`, `ControllerContext`, `CameraController` (6); `BindingMap`, `GestureInput`, `BINDING_PRESETS`, `STANDARD_ACTIONS` (7); `TargetPose`, `TransitionOptions`, `Transition`, `TransitionEnd` (10); `TransitionPath`, `TransitionDefaults` (11); `FlyBody`, `FreeFlyOptions` (13); `Orthographic`, `Lens` (14); `Bounds`, `fitPose` (16); `CadControllerOptions` (17).
+- **Type consistency.** `RigReference`, `RigDamping`, `freeRig`, `RigPose`, `evaluateRig` (Task 5); `ActionEvent`, `ControllerContext`, `CameraController` (6); `BindingMap`, `GestureInput`, `BINDING_PRESETS`, `STANDARD_ACTIONS` (7); `TargetPose`, `TransitionOptions`, `Transition`, `TransitionEnd` (10); `TransitionPath`, `TransitionDefaults` (11); `FlyBody`, `FreeFlyOptions` (13); `Orthographic`, `ImagePlane` (14); `Bounds`, `fitPose` (16); `CadControllerOptions` (17).
 - **Review Focus.** Each line's test sits in its owning task's Step 1 and is marked there.
 - **Proportion.** The plan decides names, values and tests. It gives no bodies except the formulas the spec leaves open.
 
