@@ -37,7 +37,7 @@ export interface BezierCurves {
   readonly points: Float64Array;
 }
 
-/** A boundary representation as typed arrays. */
+/** A solid's boundary, as faces, edges and vertices in typed arrays. */
 export interface BrepForm {
   /** The content version: goes up when the geometry changes. */
   readonly version: number;
