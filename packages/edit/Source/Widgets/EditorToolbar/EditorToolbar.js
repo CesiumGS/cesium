@@ -5,7 +5,7 @@ import { knockout } from "@cesium/widgets";
 import EditorToolbarViewModel from "./EditorToolbarViewModel.js";
 
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
-/** @import { EditorToolbarOptions, EditorToolbarModeEntry, EditorToolbarToolEntry } from "./EditorToolbarViewModel.js"; */
+/** @import { EditorToolbarOptions, EditorToolbarToolEntry } from "./EditorToolbarViewModel.js"; */
 
 /** @ignore */
 const objectIconPath =
@@ -13,23 +13,146 @@ const objectIconPath =
   "M 9 20 L 31 31 L 31 57 L 9 46 Z " +
   "M 33 31 L 55 20 L 55 46 L 33 57 Z";
 
-/** @ignore */
-const editIconPath = "M 44 8 L 56 20 L 24 52 L 8 56 L 12 40 Z";
+// The visible corners of the wireframe cube in the Edit Mode and component
+// icons, matching the Object Mode cube's outline.
+const cubeTop = [32, 8];
+const cubeRight = [55, 19.5];
+const cubeRightBottom = [55, 45.5];
+const cubeBottom = [32, 57];
+const cubeLeftBottom = [9, 45.5];
+const cubeLeft = [9, 19.5];
+const cubeCenter = [32, 31];
+
+const cubeCorners = [
+  cubeTop,
+  cubeRight,
+  cubeRightBottom,
+  cubeBottom,
+  cubeLeftBottom,
+  cubeLeft,
+  cubeCenter,
+];
+
+const cubeEdges = [
+  [cubeTop, cubeRight],
+  [cubeRight, cubeRightBottom],
+  [cubeRightBottom, cubeBottom],
+  [cubeBottom, cubeLeftBottom],
+  [cubeLeftBottom, cubeLeft],
+  [cubeLeft, cubeTop],
+  [cubeCenter, cubeLeft],
+  [cubeCenter, cubeRight],
+  [cubeCenter, cubeBottom],
+];
 
 /**
+ * @param {number} value
+ * @returns {number}
+ * @ignore
+ */
+function round(value) {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * Creates a polygon path. Icons are filled with the nonzero rule, so every
+ * shape winds clockwise to keep overlaps filled.
+ * @param {number[][]} points
+ * @returns {string}
+ * @ignore
+ */
+function polygonPath(points) {
+  let area = 0;
+  for (let i = 0; i < points.length; i++) {
+    const [x0, y0] = points[i];
+    const [x1, y1] = points[(i + 1) % points.length];
+    area += x0 * y1 - x1 * y0;
+  }
+  const clockwise = area < 0 ? [...points].reverse() : points;
+  return `M ${clockwise.map(([x, y]) => `${round(x)} ${round(y)}`).join(" L ")} Z`;
+}
+
+/**
+ * Creates a path for a line, as a rectangle.
+ * @param {number[]} start
+ * @param {number[]} end
+ * @param {number} width
+ * @returns {string}
+ * @ignore
+ */
+function linePath([x0, y0], [x1, y1], width) {
+  const scale = width / 2 / Math.hypot(x1 - x0, y1 - y0);
+  const nx = -(y1 - y0) * scale;
+  const ny = (x1 - x0) * scale;
+  return polygonPath([
+    [x0 + nx, y0 + ny],
+    [x1 + nx, y1 + ny],
+    [x1 - nx, y1 - ny],
+    [x0 - nx, y0 - ny],
+  ]);
+}
+
+/**
+ * Creates a clockwise circle path.
+ * @param {number[]} center
+ * @param {number} radius
+ * @returns {string}
+ * @ignore
+ */
+function dotPath([x, y], radius) {
+  const r = radius;
+  return `M ${x - r} ${y} A ${r} ${r} 0 1 1 ${x + r} ${y} A ${r} ${r} 0 1 1 ${x - r} ${y} Z`;
+}
+
+/**
+ * Creates a path for the cube's visible edges, with rounded corners.
+ * @param {number} width
+ * @returns {string}
+ * @ignore
+ */
+function cubeWireframePath(width) {
+  return [
+    ...cubeEdges.map(([start, end]) => linePath(start, end, width)),
+    ...cubeCorners.map((corner) => dotPath(corner, width / 2)),
+  ].join(" ");
+}
+
+/** @ignore */
+const wireframePath = cubeWireframePath(2.5);
+
+/**
+ * The Object Mode and Edit Mode icons.
  * @type {Object<string, {path: string, width: number, height: number}>}
  * @ignore
  */
 const modeIcons = {
   none: { path: objectIconPath, width: 64, height: 64 },
-  edit: { path: editIconPath, width: 64, height: 64 },
+  edit: { path: wireframePath, width: 64, height: 64 },
+};
+
+/**
+ * The component icons: a dimmed cube, and the highlighted components drawn
+ * over it.
+ * @type {Object<string, {cube: string, highlight: string}>}
+ * @ignore
+ */
+const componentIcons = {
   vertex: {
-    path: "M 32 22 A 10 10 0 1 0 32 42 A 10 10 0 1 0 32 22 Z",
-    width: 64,
-    height: 64,
+    cube: wireframePath,
+    highlight: cubeCorners.map((corner) => dotPath(corner, 6)).join(" "),
   },
-  edge: { path: "M 10 28 L 54 28 L 54 36 L 10 36 Z", width: 64, height: 64 },
-  face: { path: "M 32 10 L 56 52 L 8 52 Z", width: 64, height: 64 },
+  edge: {
+    cube: wireframePath,
+    highlight: [
+      linePath(cubeCenter, cubeBottom, 9),
+      dotPath(cubeCenter, 4.5),
+      dotPath(cubeBottom, 4.5),
+    ].join(" "),
+  },
+  face: {
+    cube: wireframePath,
+    highlight: polygonPath([cubeTop, cubeRight, cubeCenter, cubeLeft]),
+  },
 };
 
 /**
@@ -133,8 +256,9 @@ class EditorToolbar {
   }
 
   /**
-   * Creates the Object/Edit toggle, the component buttons and the tool
-   * dropdown.
+   * Creates the tool dropdown, the Object/Edit toggle and the component
+   * buttons. The tool dropdown comes first, so it doesn't move when the
+   * component buttons appear.
    * @ignore
    */
   #createToolbar() {
@@ -143,8 +267,6 @@ class EditorToolbar {
     wrapper.className = "cesium-editor-toolbar";
     wrapper.setAttribute("role", "group");
     wrapper.setAttribute("aria-label", "Mesh editor");
-    wrapper.appendChild(this.#createModeToggle());
-    wrapper.appendChild(this.#createComponentButtons());
     if (this.#viewModel.toolEntries.length > 0) {
       wrapper.appendChild(
         document.createComment(" ko if: viewModel.toolId !== undefined "),
@@ -152,6 +274,8 @@ class EditorToolbar {
       wrapper.appendChild(this.#createToolDropdown());
       wrapper.appendChild(document.createComment(" /ko "));
     }
+    wrapper.appendChild(this.#createModeToggle());
+    wrapper.appendChild(this.#createComponentButtons());
     this.#container.appendChild(wrapper);
     this.#wrapper = wrapper;
   }
@@ -181,17 +305,47 @@ class EditorToolbar {
    * @ignore
    */
   #createModeToggle() {
-    const group = this.#container.ownerDocument.createElement("span");
+    const document = this.#container.ownerDocument;
+    const group = document.createElement("span");
     group.className = "cesium-editor-toolbar-group cesium-editor-toolbar-mode";
-    const button = this.#createButton(
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "cesium-button cesium-editor-toolbar-mode-button";
+    // The button's accessible name comes from the visible mode name.
+    button.setAttribute(
+      "data-bind",
       `click: function() { viewModel.toggleEditMode(); },
-       attr: { title: viewModel.editing ? 'Edit Mode' : 'Object Mode',
-         'aria-pressed': String(viewModel.editing) },
-       cesiumSvgPath: { path: viewModel.editing ? icons.edit.path : icons.none.path,
+       attr: { title: viewModel.editing
+         ? 'Switch to Object Mode' : 'Switch to Edit Mode' }`,
+    );
+
+    const icon = document.createElement("span");
+    icon.className = "cesium-editor-toolbar-mode-icon";
+    icon.setAttribute(
+      "data-bind",
+      `cesiumSvgPath: { path: viewModel.editing ? icons.edit.path : icons.none.path,
          width: 64, height: 64 }`,
     );
-    // A toggle button's accessible name stays fixed while aria-pressed changes.
-    button.setAttribute("aria-label", "Edit Mode");
+    button.appendChild(icon);
+
+    // Both names share a grid cell, so the button is as wide as the longer one.
+    const labels = document.createElement("span");
+    labels.className = "cesium-editor-toolbar-mode-labels";
+    for (const [name, hidden] of [
+      ["Object Mode", "viewModel.editing"],
+      ["Edit Mode", "!viewModel.editing"],
+    ]) {
+      const label = document.createElement("span");
+      label.textContent = name;
+      label.setAttribute(
+        "data-bind",
+        `css: { 'cesium-editor-toolbar-mode-label-hidden': ${hidden} }`,
+      );
+      labels.appendChild(label);
+    }
+    button.appendChild(labels);
+
     group.appendChild(button);
     return group;
   }
@@ -208,28 +362,55 @@ class EditorToolbar {
       "cesium-editor-toolbar-group cesium-editor-toolbar-components";
     group.setAttribute("role", "group");
     group.setAttribute("aria-label", "Components");
-    group.setAttribute(
-      "data-bind",
-      "visible: viewModel.editing, foreach: componentEntries",
-    );
-    group.appendChild(
-      this.#createButton(
-        `click: function(entry, event) {
+    group.setAttribute("data-bind", "visible: viewModel.editing");
+    this.#viewModel.componentEntries.forEach((entry, index) => {
+      const data = `viewModel.componentEntries[${index}]`;
+      const button = this.#createButton(
+        `click: function(_, event) {
            if (event.shiftKey) {
-             $parent.viewModel.toggleComponentEntry(entry);
+             viewModel.toggleComponentEntry(${data});
            } else {
-             $parent.viewModel.selectModeEntry(entry);
+             viewModel.selectModeEntry(${data});
            }
          },
-         attr: { title: label, 'aria-label': label,
-           'aria-pressed': String($parent.viewModel.isComponentActive($data)) },
+         attr: { 'aria-pressed': String(viewModel.isComponentActive(${data})) },
          css: {
-           'cesium-editor-toolbar-active': $parent.viewModel.isComponentActive($data),
-         },
-         cesiumSvgPath: { path: iconPath, width: iconWidth, height: iconHeight }`,
-      ),
-    );
+           'cesium-editor-toolbar-active': viewModel.isComponentActive(${data}),
+         }`,
+        entry.label,
+      );
+      button.appendChild(this.#createComponentIcon(componentIcons[entry.id]));
+      group.appendChild(button);
+    });
     return group;
+  }
+
+  /**
+   * Creates a component icon with a dimmed cube under the highlighted
+   * components.
+   * @param {{cube: string, highlight: string}} icon
+   * @returns {SVGSVGElement}
+   * @ignore
+   */
+  #createComponentIcon(icon) {
+    const document = this.#container.ownerDocument;
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("class", "cesium-svgPath-svg");
+    svg.setAttribute("viewBox", "0 0 64 64");
+    svg.setAttribute("aria-hidden", "true");
+    for (const [path, className] of [
+      [icon.cube, "cesium-editor-toolbar-icon-dimmed"],
+      [icon.highlight, undefined],
+    ]) {
+      const pathElement = document.createElementNS(svgNS, "path");
+      pathElement.setAttribute("d", path);
+      if (className) {
+        pathElement.setAttribute("class", className);
+      }
+      svg.appendChild(pathElement);
+    }
+    return svg;
   }
 
   /**
@@ -279,9 +460,6 @@ class EditorToolbar {
    */
   #applyViewModelBindings() {
     const viewModel = this.#viewModel;
-    const componentEntries = viewModel.componentEntries.map((entry) =>
-      this.#withEntryIcon(entry, modeIcons),
-    );
     const toolEntries = viewModel.toolEntries.map((entry) =>
       this.#withEntryIcon(entry, toolIcons),
     );
@@ -290,7 +468,6 @@ class EditorToolbar {
       {
         viewModel,
         icons: modeIcons,
-        componentEntries,
         toolEntries,
         selectedTool: () =>
           toolEntries.find((entry) => entry.id === viewModel.toolId),
@@ -301,7 +478,7 @@ class EditorToolbar {
 
   /**
    * Copies an entry, filling in a default icon and icon size.
-   * @param {EditorToolbarModeEntry|EditorToolbarToolEntry} entry
+   * @param {EditorToolbarToolEntry} entry
    * @param {Object<string, {path: string, width: number, height: number}>} icons The default icons by entry ID.
    * @returns {{id: string, label: string, iconPath: string, iconWidth: number, iconHeight: number}}
    * @ignore
