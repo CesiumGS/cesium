@@ -27,6 +27,7 @@ import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
+import { isSpzSemantic } from "./GltfSpzLoader.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import hasExtension from "./hasExtension.js";
@@ -1295,7 +1296,15 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
+  // SPZ decompression only handles a fixed set of Gaussian splat semantics.
+  // Non-SPZ attributes (e.g. _FEATURE_ID_0) whose accessors lack a
+  // bufferView must fall through to the zero-initialized default rather than
+  // being routed through the SPZ loader (which would leave them undefined).
+  // isSpzSemantic is the shared source of truth (see GltfSpzLoader).
+  const isSpzDecodable = defined(spz) && isSpzSemantic(gltfSemantic);
+  const effectiveSpz = isSpzDecodable ? spz : undefined;
+
+  if (!defined(draco) && !defined(bufferViewId) && !defined(effectiveSpz)) {
     return attribute;
   }
 
@@ -1305,7 +1314,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
-    spz,
+    effectiveSpz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1331,7 +1340,7 @@ function loadAttribute(
         loadBuffer,
         loadTypedArray,
       );
-    } else if (defined(spz)) {
+    } else if (defined(effectiveSpz)) {
       finalizeSpzAttribute(
         attribute,
         vertexBufferLoader,
@@ -1894,6 +1903,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
   const planarFill = extensions.BENTLEY_materials_planar_fill;
+  const pbrEmissiveStrength = extensions.KHR_materials_emissive_strength;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
@@ -1946,6 +1956,11 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     );
   }
   material.emissiveFactor = fromArray(Cartesian3, gltfMaterial.emissiveFactor);
+
+  if (defined(pbrEmissiveStrength)) {
+    material.emissiveStrength = pbrEmissiveStrength;
+  }
+
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
@@ -2889,6 +2904,8 @@ function loadNode(loader, gltfNode, frameState) {
   if (defined(meshVectorExtension)) {
     node.meshVector = meshVectorExtension;
   }
+
+  node.nodeVisibility = nodeExtensions.KHR_node_visibility;
 
   // EXT_voxels defines its attributes and extensions the same way a primitive does.
   if (defined(voxelsExtension)) {
