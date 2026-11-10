@@ -354,6 +354,35 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
       expect(getToolDropdown().style.display).toBe("none");
     });
 
+    it("shows shortcuts in tooltips but not accessible names", function () {
+      editor.mode = EditMode.VERTEX;
+      toolbar = new EditorToolbar(container, editor, { tools });
+      const [vertexButton, edgeButton] = getComponents().children;
+      const [selectButton, translateButton] = getToolDropdown().children;
+      expect(vertexButton.title).toBe("Vertex");
+      expect(vertexButton.hasAttribute("aria-keyshortcuts")).toBe(false);
+
+      toolbar.viewModel.modeShortcuts = { none: ["0"], vertex: ["1"] };
+      toolbar.viewModel.toolShortcuts = { select: ["s"], translate: ["g"] };
+
+      expect(vertexButton.title).toBe("Vertex (1)");
+      expect(vertexButton.getAttribute("aria-label")).toBe("Vertex");
+      expect(vertexButton.getAttribute("aria-keyshortcuts")).toBe("1");
+      expect(edgeButton.title).toBe("Edge");
+      expect(edgeButton.hasAttribute("aria-keyshortcuts")).toBe(false);
+      expect(getModeButton().title).toBe("Switch to Object Mode (0)");
+      expect(getModeButton().getAttribute("aria-keyshortcuts")).toBe("0");
+      expect(getToolButton().title).toBe("Select (S)");
+      expect(getToolButton().getAttribute("aria-label")).toBe("Select");
+      expect(selectButton.title).toBe("Select (S)");
+      expect(selectButton.getAttribute("aria-label")).toBe("Select");
+      expect(translateButton.getAttribute("aria-keyshortcuts")).toBe("g");
+
+      editor.mode = EditMode.NONE;
+      expect(getModeButton().title).toBe("Switch to Edit Mode");
+      expect(getModeButton().hasAttribute("aria-keyshortcuts")).toBe(false);
+    });
+
     it("puts the tool dropdown before the mode buttons", function () {
       toolbar = new EditorToolbar(container, editor, { tools });
 

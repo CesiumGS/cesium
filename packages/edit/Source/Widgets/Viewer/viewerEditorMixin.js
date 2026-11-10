@@ -29,7 +29,7 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
  * @property {EditorToolbarOptions} [toolbar] The toolbar's options, or undefined for no toolbar. Without <code>tools</code>, the toolbar offers the {@link ViewerEditorTools}.
  * @property {boolean} [outliner=false] Whether to add an outliner, showing the editor's meshes and groups.
  * @property {EditorGridOptions} [grid] The options of an {@link EditorGrid} to add to the scene, or undefined for no grid.
- * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them. Mode and tool shortcuts require a toolbar.
+ * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them. Mode and tool shortcuts require a toolbar, and are shown in its tooltips.
  */
 
 /**
@@ -435,14 +435,19 @@ function createShortcuts(toolbar, editor, keyBindings) {
   );
 
   // Earlier shortcuts win: Escape, then modes, then tools.
+  /** @type {Object<string, string[]>} */
+  const modeShortcuts = {};
   for (const [key, entry] of modeEntries) {
     if (!shortcuts.has(key)) {
       shortcuts.set(key, () => {
         callCommand(viewModel.selectModeEntry, entry);
         return true;
       });
+      (modeShortcuts[entry.id] ??= []).push(key);
     }
   }
+  /** @type {Object<string, string[]>} */
+  const toolShortcuts = {};
   for (const [key, entry] of toolEntries) {
     if (!shortcuts.has(key)) {
       shortcuts.set(key, () => {
@@ -452,8 +457,13 @@ function createShortcuts(toolbar, editor, keyBindings) {
         callCommand(viewModel.selectToolEntry, entry);
         return true;
       });
+      (toolShortcuts[entry.id] ??= []).push(key);
     }
   }
+
+  // Shows the shortcuts in the toolbar's tooltips.
+  viewModel.modeShortcuts = modeShortcuts;
+  viewModel.toolShortcuts = toolShortcuts;
   return shortcuts;
 }
 
