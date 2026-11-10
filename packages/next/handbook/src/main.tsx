@@ -27,6 +27,7 @@ import { Differences } from "./tabs/differences.tsx";
 import { Dyno } from "./tabs/dyno.tsx";
 import { Frames } from "./tabs/frames.tsx";
 import { Ion } from "./tabs/ion.tsx";
+import { Mobile } from "./tabs/mobile.tsx";
 import { Overview } from "./tabs/overview.tsx";
 import { Precision } from "./tabs/precision.tsx";
 import { Rendering } from "./tabs/rendering.tsx";
@@ -82,6 +83,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
         label: "Tessellation",
         view: Tessellation,
       },
+      { id: "mobile", label: "Mobile", view: Mobile },
       { id: "ion", label: "Cesium ion", view: Ion },
     ],
   },
