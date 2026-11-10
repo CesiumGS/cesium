@@ -197,8 +197,10 @@ export function Mobile() {
             it starts only when both fingers begin moving vertically together.
           </li>
           <li>
-            A second finger ends a one-finger gesture without a jump. Lifting
-            back to one finger carries on from where it is.
+            A second finger ends a one-finger gesture without a jump. When one
+            finger of a pair lifts, the other moves nothing until it lifts too:
+            fingers never lift at quite the same moment, and the last one off
+            would otherwise flick a pan.
           </li>
           <li>
             The globe never rolls. Twisting turns the heading, as it does on a

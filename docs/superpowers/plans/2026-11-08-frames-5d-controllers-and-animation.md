@@ -26,15 +26,15 @@
 
 Only what those plans' Interfaces blocks produce. Anything else 5d needs, it adds itself, and the last column says where.
 
-| Needed | From | Used by |
-| --- | --- | --- |
-| `rigPreset`, `RigPreset`, `RigPresetName` (a preset's rig is `axes` on its own reference frame, with no offset) | 5b Task 3 | Tasks 5 and 20 |
-| `CameraLayer.held(view)` | 5b Task 3 | Tasks 10 and 20 |
-| `twoVectorFrame`, `piecewiseFrame`, `Frame.parentAt` (routes stay on the static hub) | 5b Tasks 2 and 6 | Tasks 10 and 20 |
-| `addView({ body })` on another body, drawing without error | 5c Task 3 | Tasks 9 and 20 |
-| `CorePick.body`, `sampleHeightMostDetailed(world, positions, { body })` | 5c Task 2 | Tasks 17 and 18 |
-| `Viewer.moon`, the Viewer's `zoomTo` moving the rig to the content's body-fixed frame, `setSplit` with a body, `orbitFocus` taking the view's body | 5c Task 9 | Task 18 |
-| Controllers left to 5d (5c's call 5), and `Camera.lookAt` already taking an ellipsoid | 5c | Task 9 |
+| Needed                                                                                                                                             | From             | Used by         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | --------------- |
+| `rigPreset`, `RigPreset`, `RigPresetName` (a preset's rig is `axes` on its own reference frame, with no offset)                                    | 5b Task 3        | Tasks 5 and 20  |
+| `CameraLayer.held(view)`                                                                                                                           | 5b Task 3        | Tasks 10 and 20 |
+| `twoVectorFrame`, `piecewiseFrame`, `Frame.parentAt` (routes stay on the static hub)                                                               | 5b Tasks 2 and 6 | Tasks 10 and 20 |
+| `addView({ body })` on another body, drawing without error                                                                                         | 5c Task 3        | Tasks 9 and 20  |
+| `CorePick.body`, `sampleHeightMostDetailed(world, positions, { body })`                                                                            | 5c Task 2        | Tasks 17 and 18 |
+| `Viewer.moon`, the Viewer's `zoomTo` moving the rig to the content's body-fixed frame, `setSplit` with a body, `orbitFocus` taking the view's body | 5c Task 9        | Task 18         |
+| Controllers left to 5d (5c's call 5), and `Camera.lookAt` already taking an ellipsoid                                                              | 5c               | Task 9          |
 
 **Not produced by either, so 5d adds it:** a resolver's common ancestor (Task 10), quaternions (Task 2), a retained glTF node tree (Task 4), a rig's kind, damping and reference (Task 5), the body-fixed guard (Task 6).
 
@@ -47,68 +47,68 @@ Only what those plans' Interfaces blocks produce. Anything else 5d needs, it add
 Each is marked "(author's call N)" where it is used. One line each, then what undoing it costs.
 In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23), bindings (24 to 28), free flight (29 to 32), the orthographic camera (33 to 37), transitions (38 to 47).
 
-1. **`src/animation/` imports only `src/core` and `src/math`,** enforced in `test/importBoundary.test.ts`. *Undo:* one rule.
-2. **`Engine.timeline`** advances in the loop after the tick listeners (so the clock has moved) and before `cameras.update`, and at the start of `renderFrame()` outside the loop. *Undo:* one call site.
-3. **An animation's clock** is `"wall"` (the default) or a `SceneClock` object. A transition's `"scene"` means its world's clock (`cameras.clock(world)`). *Undo:* a type.
-4. **A scene-clock animation is a pure function of `clock.seconds`.** It stays on the timeline until cancelled, keeps no loop awake by itself outside its active span, and its `finished` re-arms when the clock is scrubbed back across its end, as the Web Animations API does. *Undo:* one state rule.
-5. **`finished` never rejects.** It resolves to `"finished"` or `"cancelled"`, so an interrupted flight is no unhandled rejection. *Undo:* a promise's shape.
-6. **No iterations, fill modes or composition.** The spec lists duration, delay, easing, play, pause, reverse, rate and `finished`. An animation's value stays where its setter last wrote it. *Undo:* additive.
-7. **Easing presets are CSS's values** (`linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`). A spring is `{ kind: "spring", response, dampingRatio?, velocity? }`: `response` is its time constant in seconds, `dampingRatio` defaults to 1. With no `duration`, a spring's animation lasts until it settles within 0.001 of 1, in value and in value per second. *Undo:* a type.
-8. **Samplers read glTF 2.0's definitions** (step, linear with slerp for rotations, cubic spline with its in-tangent, value, out-tangent layout), with time in seconds, held at the ends. *Undo:* none; it's the format.
-9. **Time-varying properties have their home in `Timeline.bind`:** a value read from a scene clock's seconds and written through a setter whenever the clock moves. Names stay provisional for the vector design and 5i (§13.29). See ruling 1. *Undo:* one method.
-10. **The core's setters live in a new `src/scene/animationSetters.ts`,** so the animation folder stays free of the scene. *Undo:* a file.
-11. **Per-node transforms keep today's flat transforms.** A placement keeps one table transform per node that holds draws or lights. `setNodeTransform` recomputes that subtree's local matrices on the CPU from a retained node tree and writes them with `World.setTransform`. Nothing changes on the GPU. An instanced placement refuses it. *Undo:* one method.
-12. **`{ kind: "free", reference? }`:** a free orientation may name a `reference` (an `up`, and optionally a `forward` for heading 0, in a reference frame's axes), which a controller reads as its up. `freeRig(rig)` turns any rig into the form a controller can own: `axes` keeps its `frame`, `up` and `forward` as the reference; `aim` keeps `upFrame` and `up`; the offset goes, and `anchor` stays (the orbit's default pivot). It returns the same object when nothing changes, so `Viewer`'s comparison with its own rig still holds. *Undo:* a type and a function.
-13. **`Rig.kind?: string`** labels a rig for the transition table, and is plain data. `rigPreset` sets it to the preset's name. *Undo:* an optional field.
-14. **Damping is `Rig.damping?: { position?: number; orientation?: number }`** in seconds. A damped view keeps a hidden goal `Camera`: the rig's evaluation and the controller write the goal, and a critically damped spring (ω = 1/τ) moves `view.camera` toward it, on the wall clock, in the render root's axes. It snaps and stops being busy within 1 mm and 1 mm/s, and 10⁻⁶ rad and 10⁻⁶ rad/s. An undamped view has no goal and costs nothing. *Undo:* one state field.
-15. **`evaluateRig` is extracted from the layer's `pose`** as a pure function, so transitions evaluate two rigs the same way. *Undo:* a move.
-16. **The table's root slot is hidden past `ANCHOR_EYE_REACH`,** with the same one report anchors get, in `computeAnchorEyes`. See ruling 7. Within reach nothing changes. *Undo:* one condition.
-17. **`CameraController` is kept by the layer, one per view.** Each tick, per view, the layer steps the controller (`update(seconds)`), then the carry, then the rig. Input never reaches a controller except as an action. *Undo:* the seam's shape.
-18. **Controllers live in a new `src/camera/controllers/`.** `InspectController` becomes `OrbitController` (with `InspectControllerOptions` becoming `OrbitControllerOptions`). The Earth-only proof-of-concept that holds that name today goes: only `demo/main.ts` and a layer test use it. A surface move ahead of 5i; see the questions at the end. *Undo:* a rename.
-19. **A controller's body is its options', else `view.body`.** `earthFixed` and `EarthFixedGuard` become `bodyFixed(view, body)` and `BodyFixedGuard`. An orbit's up is, in order: its `frame` option; the rig's `reference`; east-north-up on `body` if a `body` option is given; else +Z of the position reference frame. *Undo:* one order.
-20. **Constraints are data, and `false` is off:** `GlobeConstraints` (`minimumHeight`, `maximumHeight`, `collision`, `pitch`, `level`), and on orbit `minRange`, `maxRange`, `pitchLimit`, on free-fly `rangeLimit`, on CAD `minDistance`. With `collision: false`, a zoom doesn't stop at the point it zooms toward. *Undo:* option shapes.
-21. **The globe's momentum stays the controller's own** (spin inertia and the wheel's glide, as 1.x), stepped by `update(seconds)`. Rig damping is off by default. See ruling 5. *Undo:* none needed.
-22. **The globe and free-fly controllers ignore input in an orthographic view,** warning once through the same guard. Orbit and CAD work in both projections. *Undo:* two guards.
-23. **A body with no synchronous height source** gets `cachedSurfaceHeight(sample, { cellRadians? })`, in the widgets: answers from a grid of cells (default 0.001 rad), filled one asynchronous sample at a time and at most one per 250 ms, `undefined` until known. The Viewer uses it on the Moon with `sampleHeightMostDetailed`. *Undo:* a helper.
-24. **Known actions** are `STANDARD_ACTIONS` plus registered custom ones. A map's value is one action or a list, and the first the active controller has runs, so one map gives free-fly `look` where the globe has `orbit`. See ruling 2. *Undo:* a type.
-25. **`GestureInput` is per view and element** (`cameras.bindInput`). Keys are listened to on the element, never `window`, so a host's own keys stay its own. Losing focus ends held keys. *Undo:* a listener's target.
-26. **Touch:** a second finger ends a one-finger gesture. Two fingers pinch, twist and pan together at every move, unthresholded; only a vertical slide of both fingers together, decided within the first 10 CSS px, is a tilt, and it stays one until a finger lifts. *Undo:* a threshold (owner, 2026-11-10, after trying the phone).
-27. **Preset contents** are in Task 7's Interfaces. `default` keeps today's globe gestures. `cad` is the spec's, with `key:f` and `key:1` to `key:4` added. *Undo:* data.
-28. **The Viewer's orbit mode merges `{ "drag:right": "pan" }`** over the default map, so `setControls("orbit")` pages don't change. See the questions at the end. *Undo:* one line.
-29. **Speed** is 0.5 of the height above the nearest body's ellipsoid per second, at least 1 m/s, reached through a 0.15 s spring on the input. With no bodies, a constant `speed` (default 100 m/s). *Undo:* constants.
-30. **Re-attaching:** free flight attaches to the body with the lowest height ÷ maximum radius, and changes only when another's figure is under 0.8 of the current one's, so it doesn't flip at the boundary. Between bodies it stays on the last body-fixed frame. It is a controller policy over `context.setRig`. *Undo:* a constant.
-31. **The hand-over:** below 0.02 of the body's maximum radius, free-fly offers the body's globe controls (`handOver: "offer"`, the default, calls `onOffer({ body, accept })`; `"auto"` accepts at once; `"off"` never offers). It re-arms above 0.03. Accepting starts a transition, never a jump. *Undo:* constants and a default.
-32. **The level assist** turns roll toward the nearest body's up with a 1 s time constant, off by default, and changes nothing else. *Undo:* a constant.
-33. **`Camera.orthographic: { height: number; far?: number } | undefined`.** `height` is the view's height in metres. Reverse-Z over a finite range: `z = (far − d) / (far − near)`. `far` defaults to the larger of 1,000 m and 100 × `height`. See ruling 6. *Undo:* a default.
-34. **`Camera.imagePlane(aspect)`** is the one place that reads the projection: `{ orthographic, tanX, tanY, halfX, halfY }`. A bypass test fails on reading `.fovy` anywhere else in `src/` and `widgets/`. *Undo:* a test.
-35. **In an orthographic view, ambient occlusion is off and the light grid is one cell** (every light in every pixel's list, within the grid's capacity). Carried forward. *Undo:* each is local.
-36. **The sky sees an orthographic view as its narrowest dolly perspective** (call 37's field of view). So it needs no second form, it can't divide by zero, and a dolly's last step shows the same sky. *Undo:* one function.
-37. **The dolly's narrowest field of view is 0.1°.** On a square view 1,024 px tall, content within one view height of the focus plane moves under a pixel when the projection switches. *Undo:* a constant.
-38. **`cameras.transition(view, options)`.** A target rig with a free position needs `pose.position` unless both rigs share a position reference frame, and is refused otherwise, naming its position reference frame. Free parts of the source are snapshotted at the start in its position reference frame, so they ride along with it. *Undo:* a refusal.
-39. **`FrameResolver.commonAncestor?(a, b)`.** The frames resolver and table resolver answer it. A host's resolver without it blends in the source rig's position reference frame. See ruling 3. *Undo:* an optional method.
-40. **While a rig in a transition can't be evaluated, the transition pauses:** the camera holds its last good pose, the weight holds, `held(view)` says why, one report goes out, and it resumes when the rig answers. It never times out. An application can cancel it. *Undo:* one state.
-41. **Built-in defaults:** `duration: "auto"`, `easing: "ease-in-out"`, `clock: "wall"`, `path: "straight"`, `interrupt: "stop"`. `"auto"` is `clamp(1.2 + 0.35 · log₁₀(1 + span / 1000 m), 1.2, 3.5)` seconds, where `span` is the distance between the two poses at the start. *Undo:* defaults.
-42. **An arc's peak** defaults to the larger of both ends' heights and min(0.25 × the arc's length along the sphere, 2 × `radius`). Height is `(1−w)h₀ + w·h₁ + 4w(1−w)·max(0, peak − max(h₀, h₁))`. Direction slerps about the arc's centre. A spline is a centripetal Catmull-Rom through its points, parameterized by chord length, with live ends. *Undo:* formulas.
-43. **Interruptions.** `stop`: the rig becomes `freeRig` of the nearer of the two (weight below 0.5: the source), the camera stays, and that rig's controller takes over and receives the input. `handover`: `stop`, plus a carry: the camera's velocity, kept in the layer and re-expressed on a change of root, decaying with a 0.4 s time constant, so any controller gets it. `finish`: input is dropped, not queued. A programmatic `transition` over a running one follows the running one's policy; under `finish`, the latest waits and earlier waiters end `"cancelled"`. *Undo:* each policy is local.
-44. **The pair table's keys** are `"<from kind>><to kind>"`, with `*` for either side. A rig's kind is `rig.kind`, else its controller's `kind`, else `"free"`. *Undo:* a string format.
-45. **The Viewer's defaults for flights:** an arc over the view's body when both ends are on it, straight otherwise, and an app-wide duration of 0 when `prefers-reduced-motion` matches. The camera layer reads no DOM. *Undo:* two lines.
-46. **CAD's standard views animate on the timeline,** turning the camera about the focus at a constant distance. A straight blend would dip through the model. Any input stops them. *Undo:* local.
-47. **One check page,** `spikes/controllers.html`, with `runControllers(group)` on `globalThis`. **Ports:** Task 15 on 5191, Task 19 on 5192, Task 20 on 5193, Task 21 on 5194. *Undo:* none.
+1. **`src/animation/` imports only `src/core` and `src/math`,** enforced in `test/importBoundary.test.ts`. _Undo:_ one rule.
+2. **`Engine.timeline`** advances in the loop after the tick listeners (so the clock has moved) and before `cameras.update`, and at the start of `renderFrame()` outside the loop. _Undo:_ one call site.
+3. **An animation's clock** is `"wall"` (the default) or a `SceneClock` object. A transition's `"scene"` means its world's clock (`cameras.clock(world)`). _Undo:_ a type.
+4. **A scene-clock animation is a pure function of `clock.seconds`.** It stays on the timeline until cancelled, keeps no loop awake by itself outside its active span, and its `finished` re-arms when the clock is scrubbed back across its end, as the Web Animations API does. _Undo:_ one state rule.
+5. **`finished` never rejects.** It resolves to `"finished"` or `"cancelled"`, so an interrupted flight is no unhandled rejection. _Undo:_ a promise's shape.
+6. **No iterations, fill modes or composition.** The spec lists duration, delay, easing, play, pause, reverse, rate and `finished`. An animation's value stays where its setter last wrote it. _Undo:_ additive.
+7. **Easing presets are CSS's values** (`linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`). A spring is `{ kind: "spring", response, dampingRatio?, velocity? }`: `response` is its time constant in seconds, `dampingRatio` defaults to 1. With no `duration`, a spring's animation lasts until it settles within 0.001 of 1, in value and in value per second. _Undo:_ a type.
+8. **Samplers read glTF 2.0's definitions** (step, linear with slerp for rotations, cubic spline with its in-tangent, value, out-tangent layout), with time in seconds, held at the ends. _Undo:_ none; it's the format.
+9. **Time-varying properties have their home in `Timeline.bind`:** a value read from a scene clock's seconds and written through a setter whenever the clock moves. Names stay provisional for the vector design and 5i (§13.29). See ruling 1. _Undo:_ one method.
+10. **The core's setters live in a new `src/scene/animationSetters.ts`,** so the animation folder stays free of the scene. _Undo:_ a file.
+11. **Per-node transforms keep today's flat transforms.** A placement keeps one table transform per node that holds draws or lights. `setNodeTransform` recomputes that subtree's local matrices on the CPU from a retained node tree and writes them with `World.setTransform`. Nothing changes on the GPU. An instanced placement refuses it. _Undo:_ one method.
+12. **`{ kind: "free", reference? }`:** a free orientation may name a `reference` (an `up`, and optionally a `forward` for heading 0, in a reference frame's axes), which a controller reads as its up. `freeRig(rig)` turns any rig into the form a controller can own: `axes` keeps its `frame`, `up` and `forward` as the reference; `aim` keeps `upFrame` and `up`; the offset goes, and `anchor` stays (the orbit's default pivot). It returns the same object when nothing changes, so `Viewer`'s comparison with its own rig still holds. _Undo:_ a type and a function.
+13. **`Rig.kind?: string`** labels a rig for the transition table, and is plain data. `rigPreset` sets it to the preset's name. _Undo:_ an optional field.
+14. **Damping is `Rig.damping?: { position?: number; orientation?: number }`** in seconds. A damped view keeps a hidden goal `Camera`: the rig's evaluation and the controller write the goal, and a critically damped spring (ω = 1/τ) moves `view.camera` toward it, on the wall clock, in the render root's axes. It snaps and stops being busy within 1 mm and 1 mm/s, and 10⁻⁶ rad and 10⁻⁶ rad/s. An undamped view has no goal and costs nothing. _Undo:_ one state field.
+15. **`evaluateRig` is extracted from the layer's `pose`** as a pure function, so transitions evaluate two rigs the same way. _Undo:_ a move.
+16. **The table's root slot is hidden past `ANCHOR_EYE_REACH`,** with the same one report anchors get, in `computeAnchorEyes`. See ruling 7. Within reach nothing changes. _Undo:_ one condition.
+17. **`CameraController` is kept by the layer, one per view.** Each tick, per view, the layer steps the controller (`update(seconds)`), then the carry, then the rig. Input never reaches a controller except as an action. _Undo:_ the seam's shape.
+18. **Controllers live in a new `src/camera/controllers/`.** `InspectController` becomes `OrbitController` (with `InspectControllerOptions` becoming `OrbitControllerOptions`). The Earth-only proof-of-concept that holds that name today goes: only `demo/main.ts` and a layer test use it. A surface move ahead of 5i; see the questions at the end. _Undo:_ a rename.
+19. **A controller's body is its options', else `view.body`.** `earthFixed` and `EarthFixedGuard` become `bodyFixed(view, body)` and `BodyFixedGuard`. An orbit's up is, in order: its `frame` option; the rig's `reference`; east-north-up on `body` if a `body` option is given; else +Z of the position reference frame. _Undo:_ one order.
+20. **Constraints are data, and `false` is off:** `GlobeConstraints` (`minimumHeight`, `maximumHeight`, `collision`, `pitch`, `level`), and on orbit `minRange`, `maxRange`, `pitchLimit`, on free-fly `rangeLimit`, on CAD `minDistance`. With `collision: false`, a zoom doesn't stop at the point it zooms toward. _Undo:_ option shapes.
+21. **The globe's momentum stays the controller's own** (spin inertia and the wheel's glide, as 1.x), stepped by `update(seconds)`. Rig damping is off by default. See ruling 5. _Undo:_ none needed.
+22. **The globe and free-fly controllers ignore input in an orthographic view,** warning once through the same guard. Orbit and CAD work in both projections. _Undo:_ two guards.
+23. **A body with no synchronous height source** gets `cachedSurfaceHeight(sample, { cellRadians? })`, in the widgets: answers from a grid of cells (default 0.001 rad), filled one asynchronous sample at a time and at most one per 250 ms, `undefined` until known. The Viewer uses it on the Moon with `sampleHeightMostDetailed`. _Undo:_ a helper.
+24. **Known actions** are `STANDARD_ACTIONS` plus registered custom ones. A map's value is one action or a list, and the first the active controller has runs, so one map gives free-fly `look` where the globe has `orbit`. See ruling 2. _Undo:_ a type.
+25. **`GestureInput` is per view and element** (`cameras.bindInput`). Keys are listened to on the element, never `window`, so a host's own keys stay its own. Losing focus ends held keys. _Undo:_ a listener's target.
+26. **Touch:** a second finger ends a one-finger gesture. Two fingers pinch, twist and pan together at every move, unthresholded; only a vertical slide of both fingers together, decided within the first 10 CSS px, is a tilt, and it stays one until a finger lifts. When one of the pair lifts, the other moves nothing until it lifts too, so the last finger off can't flick a pan. _Undo:_ a threshold (owner, 2026-11-10, after trying the phone).
+27. **Preset contents** are in Task 7's Interfaces. `default` keeps today's globe gestures. `cad` is the spec's, with `key:f` and `key:1` to `key:4` added. _Undo:_ data.
+28. **The Viewer's orbit mode merges `{ "drag:right": "pan" }`** over the default map, so `setControls("orbit")` pages don't change. See the questions at the end. _Undo:_ one line.
+29. **Speed** is 0.5 of the height above the nearest body's ellipsoid per second, at least 1 m/s, reached through a 0.15 s spring on the input. With no bodies, a constant `speed` (default 100 m/s). _Undo:_ constants.
+30. **Re-attaching:** free flight attaches to the body with the lowest height ÷ maximum radius, and changes only when another's figure is under 0.8 of the current one's, so it doesn't flip at the boundary. Between bodies it stays on the last body-fixed frame. It is a controller policy over `context.setRig`. _Undo:_ a constant.
+31. **The hand-over:** below 0.02 of the body's maximum radius, free-fly offers the body's globe controls (`handOver: "offer"`, the default, calls `onOffer({ body, accept })`; `"auto"` accepts at once; `"off"` never offers). It re-arms above 0.03. Accepting starts a transition, never a jump. _Undo:_ constants and a default.
+32. **The level assist** turns roll toward the nearest body's up with a 1 s time constant, off by default, and changes nothing else. _Undo:_ a constant.
+33. **`Camera.orthographic: { height: number; far?: number } | undefined`.** `height` is the view's height in metres. Reverse-Z over a finite range: `z = (far − d) / (far − near)`. `far` defaults to the larger of 1,000 m and 100 × `height`. See ruling 6. _Undo:_ a default.
+34. **`Camera.imagePlane(aspect)`** is the one place that reads the projection: `{ orthographic, tanX, tanY, halfX, halfY }`. A bypass test fails on reading `.fovy` anywhere else in `src/` and `widgets/`. _Undo:_ a test.
+35. **In an orthographic view, ambient occlusion is off and the light grid is one cell** (every light in every pixel's list, within the grid's capacity). Carried forward. _Undo:_ each is local.
+36. **The sky sees an orthographic view as its narrowest dolly perspective** (call 37's field of view). So it needs no second form, it can't divide by zero, and a dolly's last step shows the same sky. _Undo:_ one function.
+37. **The dolly's narrowest field of view is 0.1°.** On a square view 1,024 px tall, content within one view height of the focus plane moves under a pixel when the projection switches. _Undo:_ a constant.
+38. **`cameras.transition(view, options)`.** A target rig with a free position needs `pose.position` unless both rigs share a position reference frame, and is refused otherwise, naming its position reference frame. Free parts of the source are snapshotted at the start in its position reference frame, so they ride along with it. _Undo:_ a refusal.
+39. **`FrameResolver.commonAncestor?(a, b)`.** The frames resolver and table resolver answer it. A host's resolver without it blends in the source rig's position reference frame. See ruling 3. _Undo:_ an optional method.
+40. **While a rig in a transition can't be evaluated, the transition pauses:** the camera holds its last good pose, the weight holds, `held(view)` says why, one report goes out, and it resumes when the rig answers. It never times out. An application can cancel it. _Undo:_ one state.
+41. **Built-in defaults:** `duration: "auto"`, `easing: "ease-in-out"`, `clock: "wall"`, `path: "straight"`, `interrupt: "stop"`. `"auto"` is `clamp(1.2 + 0.35 · log₁₀(1 + span / 1000 m), 1.2, 3.5)` seconds, where `span` is the distance between the two poses at the start. _Undo:_ defaults.
+42. **An arc's peak** defaults to the larger of both ends' heights and min(0.25 × the arc's length along the sphere, 2 × `radius`). Height is `(1−w)h₀ + w·h₁ + 4w(1−w)·max(0, peak − max(h₀, h₁))`. Direction slerps about the arc's centre. A spline is a centripetal Catmull-Rom through its points, parameterized by chord length, with live ends. _Undo:_ formulas.
+43. **Interruptions.** `stop`: the rig becomes `freeRig` of the nearer of the two (weight below 0.5: the source), the camera stays, and that rig's controller takes over and receives the input. `handover`: `stop`, plus a carry: the camera's velocity, kept in the layer and re-expressed on a change of root, decaying with a 0.4 s time constant, so any controller gets it. `finish`: input is dropped, not queued. A programmatic `transition` over a running one follows the running one's policy; under `finish`, the latest waits and earlier waiters end `"cancelled"`. _Undo:_ each policy is local.
+44. **The pair table's keys** are `"<from kind>><to kind>"`, with `*` for either side. A rig's kind is `rig.kind`, else its controller's `kind`, else `"free"`. _Undo:_ a string format.
+45. **The Viewer's defaults for flights:** an arc over the view's body when both ends are on it, straight otherwise, and an app-wide duration of 0 when `prefers-reduced-motion` matches. The camera layer reads no DOM. _Undo:_ two lines.
+46. **CAD's standard views animate on the timeline,** turning the camera about the focus at a constant distance. A straight blend would dip through the model. Any input stops them. _Undo:_ local.
+47. **One check page,** `spikes/controllers.html`, with `runControllers(group)` on `globalThis`. **Ports:** Task 15 on 5191, Task 19 on 5192, Task 20 on 5193, Task 21 on 5194. _Undo:_ none.
 
 ## Rulings on the spec
 
 Places where the spec, read against the code and the earlier plans, is contradictory or can't be built as written, and what this plan does.
 
-1. **"Bindings" means two things.** Spec section 11.4's bindings are gesture maps. §13.29 says what people use Entity for "is covered through scene items, styling and the bindings of 5d". Gesture maps can't hold a time-varying property. *Ruling:* section 11.4's meaning stands for the word "binding" in the code's gesture API. Time-varying values, tracks and clamping get their home in the animation core and what exists: `Timeline.bind` (call 9) for a value over time, `ModelPlacement.setTransform` or `PointSource.update` for where it goes, a rig's `anchor` with `World.frameOf` to follow it, and `PointSource`'s `clamp` to stand on the ground. The first question at the end asks whether that's what was meant. A moving clamped model has no path today (`Clamp` anchors at one place), and goes on the carried-forward list.
-2. **"Unknown inputs and actions are refused at bind time" against "an action an active controller doesn't have is skipped"** (section 11.4). *Ruling:* "unknown" means outside the vocabulary (`STANDARD_ACTIONS` and registered custom actions). A known action the active controller lacks is skipped at dispatch (call 24).
-3. **"The deepest common ancestor"** (section 11.5) needs a tree, and `FrameResolver` knows none. *Ruling:* call 39. `Frame.ts` and the frames resolver already have the walk.
-4. **"Damping per rig part"** (sections 7.5 and 11.3) against a rig whose free parts are written by the controller, so the rig has nothing to damp. *Ruling:* call 14: the controller writes the goal.
-5. **"Damping is a critically damped spring per rig part"** against the globe's inertia and wheel glide, tuned against 1.x. *Ruling:* call 21. They are controller motions, not rig damping.
-6. **"Reverse-Z, as the perspective one"** (section 11.3). Today's reverse-Z has an infinite far plane, and code reads depth as `near / depth`. An orthographic projection has no infinite form. *Ruling:* call 33. Linear reverse-Z in float32 is coarsest near the camera: about 6 × 10⁻⁸ of the range, so 6 mm at 100 km. A `far` an application or `fitBounds` sets tightens it.
+1. **"Bindings" means two things.** Spec section 11.4's bindings are gesture maps. §13.29 says what people use Entity for "is covered through scene items, styling and the bindings of 5d". Gesture maps can't hold a time-varying property. _Ruling:_ section 11.4's meaning stands for the word "binding" in the code's gesture API. Time-varying values, tracks and clamping get their home in the animation core and what exists: `Timeline.bind` (call 9) for a value over time, `ModelPlacement.setTransform` or `PointSource.update` for where it goes, a rig's `anchor` with `World.frameOf` to follow it, and `PointSource`'s `clamp` to stand on the ground. The first question at the end asks whether that's what was meant. A moving clamped model has no path today (`Clamp` anchors at one place), and goes on the carried-forward list.
+2. **"Unknown inputs and actions are refused at bind time" against "an action an active controller doesn't have is skipped"** (section 11.4). _Ruling:_ "unknown" means outside the vocabulary (`STANDARD_ACTIONS` and registered custom actions). A known action the active controller lacks is skipped at dispatch (call 24).
+3. **"The deepest common ancestor"** (section 11.5) needs a tree, and `FrameResolver` knows none. _Ruling:_ call 39. `Frame.ts` and the frames resolver already have the walk.
+4. **"Damping per rig part"** (sections 7.5 and 11.3) against a rig whose free parts are written by the controller, so the rig has nothing to damp. _Ruling:_ call 14: the controller writes the goal.
+5. **"Damping is a critically damped spring per rig part"** against the globe's inertia and wheel glide, tuned against 1.x. _Ruling:_ call 21. They are controller motions, not rig damping.
+6. **"Reverse-Z, as the perspective one"** (section 11.3). Today's reverse-Z has an infinite far plane, and code reads depth as `near / depth`. An orthographic projection has no infinite form. _Ruling:_ call 33. Linear reverse-Z in float32 is coarsest near the camera: about 6 × 10⁻⁸ of the range, so 6 mm at 100 km. A `far` an application or `fitBounds` sets tightens it.
 7. **"Earth to a lunar site blends in ICRF"** (section 11.5) puts the eye about 1.5 × 10¹¹ m from render space's origin. Anchors are safe: each has its own eye. Two things are not. Draws under no anchor would wrap past hi/lo's ±2³¹ m, since slot 0 is never hidden; call 16 hides them. And float64's step at that size is about 30 µm, which is the precision of the blended pose while it runs: well under a pixel for content more than a few centimetres away. A test states it (Task 10).
-8. **§14.4's "GCRF gets an orbit rig about the Earth's centre on the `"inertial"` preset".** 5b's `inertial` takes its primary vector as the target's position from the central body, and with GCRF's origin at the Earth that vector is zero, so the preset is degenerate. *Ruling for 5d:* GCRF needs no preset: an orbit rig on GCRF with reference up +Z holds the stars still. Task 20 pins it, and 5g's table should say so.
-9. **§13.25 lists "models and per-node transforms (5d)" among things to take up as items,** and section 11.5 adds them to `ModelPlacement`. *Ruling:* section 11.5. They are a method on `ModelPlacement` now, and a later item can wrap it (call 11).
-10. **"Within a pixel at the target"** (section 11.6) names no resolution. *Ruling:* at the transition's end, on a view 1,024 px tall, the target's origin lands within 1 px of where the target rig's own evaluation puts it (Tasks 10 and 20).
+8. **§14.4's "GCRF gets an orbit rig about the Earth's centre on the `"inertial"` preset".** 5b's `inertial` takes its primary vector as the target's position from the central body, and with GCRF's origin at the Earth that vector is zero, so the preset is degenerate. _Ruling for 5d:_ GCRF needs no preset: an orbit rig on GCRF with reference up +Z holds the stars still. Task 20 pins it, and 5g's table should say so.
+9. **§13.25 lists "models and per-node transforms (5d)" among things to take up as items,** and section 11.5 adds them to `ModelPlacement`. _Ruling:_ section 11.5. They are a method on `ModelPlacement` now, and a later item can wrap it (call 11).
+10. **"Within a pixel at the target"** (section 11.6) names no resolution. _Ruling:_ at the transition's end, on a view 1,024 px tall, the target's origin lands within 1 px of where the target rig's own evaluation puts it (Tasks 10 and 20).
 
 ## Global Constraints
 
@@ -140,7 +140,7 @@ Copied from the earlier plans where they apply, with 5d's additions.
   - Every shader loop is bounded by a constant, with an early `break`. Read each changed shader's Metal with `node scripts/dumpMsl.mjs <module.wgsl> <entry>` before its first browser run. If the WebGPU device is lost, stop and find out why.
 - **Snyk:** each task runs `snyk_code_scan` on the first-party files it adds or changes before it commits, fixes what the scan finds in its own code, and rescans until clean. Findings that predate 5d are reported, not fixed.
 - **Wording:**
-  - "Frame" is never used alone: a *reference frame*, a *tick* ("per tick", never "per frame"), *render space*, *render root*, *blend reference frame*. Compounds that can't be misread keep their names (the frame tree, the frames module, a body-fixed frame, a keyframe). Code names (`Frame`, `blendFrame`) keep theirs.
+  - "Frame" is never used alone: a _reference frame_, a _tick_ ("per tick", never "per frame"), _render space_, _render root_, _blend reference frame_. Compounds that can't be misread keep their names (the frame tree, the frames module, a body-fixed frame, a keyframe). Code names (`Frame`, `blendFrame`) keep theirs.
   - House style for docs, comments and UI text: plain, short sentences, units and datums named, no e-notation in prose. Keep precision and accuracy distinct.
   - Describe the purpose in generic words ("an embeddable rendering core", "a host application's own services").
 
@@ -349,8 +349,10 @@ New files, by responsibility (modified code is named by symbol in each task):
       readonly input: string; // the binding's input, "shift+drag:left"
       readonly gesture: "drag" | "wheel" | "pinch" | "rotate" | "key" | "click";
       readonly phase: "start" | "move" | "end" | "once";
-      readonly x: number; readonly y: number; // target pixels
-      readonly dx: number; readonly dy: number; // target pixels since the last event
+      readonly x: number;
+      readonly y: number; // target pixels
+      readonly dx: number;
+      readonly dy: number; // target pixels since the last event
       readonly amount: number; // wheel: pixels; pinch: log of the scale; rotate: radians
     }
     interface ControllerContext {
@@ -620,7 +622,10 @@ New files, by responsibility (modified code is named by symbol in each task):
 - Produces (author's calls 22 and 29 to 32):
   - `class FreeFlyController implements CameraController`, `kind: "freeFly"`, constructed `new FreeFlyController(options?: FreeFlyOptions)`.
   - ```ts
-    interface FlyBody { readonly body: Body; readonly frame: FrameKey }
+    interface FlyBody {
+      readonly body: Body;
+      readonly frame: FrameKey;
+    }
     interface FreeFlyOptions {
       readonly bodies?: readonly FlyBody[]; // none: constant `speed`, no re-attaching
       readonly speed?: number; // m/s with no bodies; default 100
@@ -630,7 +635,10 @@ New files, by responsibility (modified code is named by symbol in each task):
       readonly level?: boolean; // default false
       readonly handOver?: "offer" | "auto" | "off"; // default "offer"
       readonly handOverHeight?: number; // of the maximum radius; default 0.02
-      readonly onOffer?: (offer: { readonly body: Body; accept(): void }) => void;
+      readonly onOffer?: (offer: {
+        readonly body: Body;
+        accept(): void;
+      }) => void;
       readonly globeController?: (body: Body) => CameraController; // default a GlobeController on it
     }
     ```
@@ -909,7 +917,7 @@ A browser check (port 5193).
 
 Most important first. Each has the default the plan follows. The owner took all four defaults on 2026-11-08, to be tweaked after trying them.
 
-1. **§13.29 says Entity's uses are covered by "the bindings of 5d", and section 11.4's bindings are gesture maps.** Did you mean values bound to time? *Default:* yes: `Timeline.bind` plus setters, with the names provisional for the vector design and 5i (ruling 1).
-2. **Renaming `InspectController` to `OrbitController` now, ahead of 5i, and dropping the old proof-of-concept of that name.** Fine to do it here, or should the names wait for the API review? *Default:* rename now (call 18).
-3. **What "offers" means for free flight near a body.** The plan calls an application's `onOffer`, and shows nothing itself. Should the Viewer take the hand-over automatically or show a prompt? *Default:* the Viewer leaves it at `"offer"`, with no prompt, so near a body the camera stays in free flight until the application accepts (call 31).
-4. **One gesture set against today's orbit pages.** Under the one `default` map, a right drag zooms everywhere, but in the Viewer's orbit mode it pans today. *Default:* the Viewer keeps panning there through an override (call 28). Say if you'd rather have the one set.
+1. **§13.29 says Entity's uses are covered by "the bindings of 5d", and section 11.4's bindings are gesture maps.** Did you mean values bound to time? _Default:_ yes: `Timeline.bind` plus setters, with the names provisional for the vector design and 5i (ruling 1).
+2. **Renaming `InspectController` to `OrbitController` now, ahead of 5i, and dropping the old proof-of-concept of that name.** Fine to do it here, or should the names wait for the API review? _Default:_ rename now (call 18).
+3. **What "offers" means for free flight near a body.** The plan calls an application's `onOffer`, and shows nothing itself. Should the Viewer take the hand-over automatically or show a prompt? _Default:_ the Viewer leaves it at `"offer"`, with no prompt, so near a body the camera stays in free flight until the application accepts (call 31).
+4. **One gesture set against today's orbit pages.** Under the one `default` map, a right drag zooms everywhere, but in the Viewer's orbit mode it pans today. _Default:_ the Viewer keeps panning there through an override (call 28). Say if you'd rather have the one set.

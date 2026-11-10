@@ -203,7 +203,7 @@ describe("TouchGestures", () => {
     expect(log).toEqual(["one+ 0,0", "one-", "two+"]);
   });
 
-  it("starts a fresh one-finger drag where the finger is when one lifts, and decides again for the next pair", () => {
+  it("leaves the last finger of a pair spent: it moves nothing and ends nothing, so no flick", () => {
     const { touch, log, ev } = record();
     touch.down(ev(1, 0, 0));
     touch.down(ev(2, 100, 0));
@@ -214,19 +214,35 @@ describe("TouchGestures", () => {
     expect(touch.twoFingerMode).toBeUndefined();
     log.length = 0;
     touch.move(ev(2, 110, 3));
-    expect(log).toEqual(["one~ 110,3"]);
-    log.length = 0;
-    touch.up(ev(2, 110, 3));
-    expect(log).toEqual(["one-"]);
+    touch.move(ev(2, 140, 9));
+    touch.up(ev(2, 140, 9));
+    expect(log).toEqual([]);
   });
 
-  it("a finger lifting during two ends them and restarts one at the other's place", () => {
+  it("a finger lifting during two ends them and starts no one-finger gesture", () => {
     const { touch, log, ev } = record();
     touch.down(ev(1, 0, 0));
     touch.down(ev(2, 100, 7));
     log.length = 0;
     touch.up(ev(1, 0, 0));
-    expect(log).toEqual(["two-", "one+ 100,7"]);
+    expect(log).toEqual(["two-"]);
+  });
+
+  it("a finger joining a spent one starts two fingers again, and a fresh touch after all lift is one finger", () => {
+    const { touch, log, ev } = record();
+    touch.down(ev(1, 0, 0));
+    touch.down(ev(2, 100, 0));
+    touch.up(ev(1, 0, 0));
+    log.length = 0;
+    touch.down(ev(3, 50, 50));
+    expect(log[0]).toMatch(/^two\+/);
+    expect(log).not.toContain("one-");
+    touch.up(ev(2, 100, 0));
+    touch.up(ev(3, 50, 50));
+    log.length = 0;
+    touch.down(ev(4, 10, 10));
+    touch.move(ev(4, 20, 10));
+    expect(log).toEqual(["one+ 10,10", "one~ 20,10"]);
   });
 });
 

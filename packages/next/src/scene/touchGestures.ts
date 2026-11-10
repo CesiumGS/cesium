@@ -95,7 +95,10 @@ export interface TouchGestureListener {
    */
   twoBegin?(mode: TwoFingerMode, x: number, y: number): void;
   twoMove?(move: TwoFingerMove): void;
-  /** A finger of the pair lifted. A fresh one-finger gesture follows (`oneStart`). */
+  /**
+   * A finger of the pair lifted. The other one does nothing until it lifts
+   * too, or a second finger joins it again.
+   */
   twoEnd?(): void;
 }
 
@@ -117,9 +120,11 @@ interface Finger extends TouchPoint {
  * one-finger gesture, so nothing jumps. Two fingers pinch, twist and pan at
  * every move, unthresholded, unless both start sliding up or down together
  * within the first 10 px of movement: that is a tilt, and only tilt applies
- * until a finger lifts. A third finger is ignored. Lifting back to one
- * finger starts a fresh one-finger gesture where that finger is. Pointers
- * of other types are ignored.
+ * until a finger lifts. A third finger is ignored. When one of the pair
+ * lifts, the other is spent: it moves nothing until it lifts too, so the
+ * last finger off the glass can't flick a pan (fingers never lift at quite
+ * the same moment). A finger that joins it starts two fingers again.
+ * Pointers of other types are ignored.
  */
 export class TouchGestures {
   private fingers: Finger[] = [];
@@ -131,6 +136,8 @@ export class TouchGestures {
   ];
   /** The pair's midpoint, distance and angle at the last report. */
   private last = { x: 0, y: 0, distance: 0, angle: 0 };
+  /** The finger left over from a pair: it moves nothing until it lifts. */
+  private spent = false;
 
   constructor(private readonly listener: TouchGestureListener) {}
 
@@ -158,7 +165,10 @@ export class TouchGestures {
       this.listener.oneStart?.(e.clientX, e.clientY);
       return true;
     }
-    this.listener.oneEnd?.();
+    if (!this.spent) {
+      this.listener.oneEnd?.();
+    }
+    this.spent = false;
     const [a, b] = this.fingers as [Finger, Finger];
     this.mode = undefined;
     this.start = [
@@ -180,7 +190,9 @@ export class TouchGestures {
     finger.x = e.clientX;
     finger.y = e.clientY;
     if (this.fingers.length === 1) {
-      this.listener.oneMove?.(finger.x, finger.y);
+      if (!this.spent) {
+        this.listener.oneMove?.(finger.x, finger.y);
+      }
       return;
     }
     const [a, b] = this.fingers as [Finger, Finger];
@@ -240,8 +252,9 @@ export class TouchGestures {
     this.mode = undefined;
     if (wasTwo) {
       this.listener.twoEnd?.();
-      const rest = this.fingers[0]!;
-      this.listener.oneStart?.(rest.x, rest.y);
+      this.spent = true;
+    } else if (this.spent) {
+      this.spent = false;
     } else {
       this.listener.oneEnd?.();
     }
