@@ -12,6 +12,7 @@ entry	name	kind	tier
 .	Body	interface	-
 .	BrepBuilder	class	-
 .	BrepForm	interface	-
+.	BrepMesh	interface	-
 .	BrepProblem	interface	-
 .	BrepUse	interface	-
 .	BudgetedOptions	interface	-
@@ -225,6 +226,7 @@ entry	name	kind	tier
 .	TerrainRegionPosition	interface	-
 .	TerrainRegionRectangle	interface	-
 .	TerrainRegionShape	type	-
+.	TessellateOptions	interface	-
 .	TextureBinding	interface	-
 .	TextureSetOptions	interface	-
 .	TextureSource	type	-
@@ -331,6 +333,7 @@ entry	name	kind	tier
 .	surfaceCount	function	-
 .	tableResolver	function	-
 .	terrainQueries	function	-
+.	tessellateBrep	function	-
 .	tileHeaderKey	function	-
 .	timeSlices	function	-
 .	validateBrep	function	-

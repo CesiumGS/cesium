@@ -59,6 +59,19 @@ export const EXAMPLES: ExampleInfo[] = [
       import("./slang-playground/main.ts?raw").then((m) => m.default),
   },
   {
+    id: "brep-first-look",
+    title: "B-reps: a first look",
+    description:
+      "Exact CAD shapes as B-reps: a box, a capped cylinder and a trimmed NURBS face, tessellated on the CPU for now, with their edges. Tap a face or an edge for its ID.",
+    labels: ["B-reps", "CAD"],
+    globe: false,
+    layout: "side",
+    stackNarrow: true,
+    load: () => import("./brep-first-look/main.ts"),
+    source: () =>
+      import("./brep-first-look/main.ts?raw").then((m) => m.default),
+  },
+  {
     id: "frames-explorer",
     title: "Frames and projections",
     description:

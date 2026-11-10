@@ -1,6 +1,6 @@
 // B-reps (overall plan §13.33): the engine's render form as typed arrays,
 // exact evaluation, the exact NURBS split, a builder and a validator, and the
-// draft glTF extension BENTLEY_brep. Nothing draws them yet. A draft before
+// draft glTF extension BENTLEY_brep, and a small CPU tessellator. A draft before
 // the API review.
 export {
   SurfaceKind,
@@ -27,3 +27,8 @@ export {
 export { BrepBuilder, type BrepUse } from "./build.ts";
 export { validateBrep, type BrepProblem } from "./validate.ts";
 export { readBrepExtension, writeBrepExtension } from "./gltf.ts";
+export {
+  tessellateBrep,
+  type BrepMesh,
+  type TessellateOptions,
+} from "./tessellate.ts";
