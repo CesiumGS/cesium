@@ -210,6 +210,22 @@ class VectorProvider {
   }
 
   /**
+   * Number of texture samplers a surface shader binds to drape the given
+   * vector data, including the pick color texture used by the pick pass.
+   *
+   * @param {VectorTileData|undefined} vectorData
+   * @returns {number}
+   */
+  static getTextureCount(vectorData) {
+    if (!defined(vectorData) || !vectorData.show) {
+      return 0;
+    }
+    return (
+      2 + (vectorData.hasPolylines ? 4 : 0) + (vectorData.hasPolygons ? 3 : 0)
+    );
+  }
+
+  /**
    * Marks a collection as draped for this frame; collections not marked are
    * pruned next frame, keeping the draped set aligned with the rendered LOD.
    *

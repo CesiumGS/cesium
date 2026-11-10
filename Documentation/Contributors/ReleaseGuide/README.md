@@ -28,6 +28,11 @@ The remainder of this guide exists to make that shared release ownership clear, 
      - If an update is incompatible, open a new issue tagged with the `dependencies` label
      - If an update can be resolved, commit the changes and open a PR for review
    - Update PRs should be merged before starting the release process
+3. **Update dependency install scripts permissions**
+   - Run `npm approve-scripts --allow-scripts-pending` to list any new install scripts that are not currently allowed in the package.json's `allowScripts` field.
+     - For any new install scripts, verify the install script is safe: check what it does, and if it is from a reputable source.
+     - If safe, allow it: `npm approve-scripts <packageName>`. This will add a line to `allowScripts` for every installed version of the package.
+   - Clean up unused script permissions (e.g., from removed dependencies, or newer versions that no longer use an install script): `npm install-scripts prune`.
 
 > [!IMPORTANT]
 > We pin an exact version of **`prettier`**. If the version of `prettier` should be incremented, use an exact version by running `npm install prettier@latest --save-exact`.
