@@ -71,6 +71,16 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     );
   }
 
+  function shiftClick(button) {
+    button.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        shiftKey: true,
+      }),
+    );
+  }
+
   function isPressed(button) {
     return (
       button.getAttribute("aria-pressed") === "true" &&
@@ -176,16 +186,48 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
       expect(editor.mode).toBe(EditMode.FACE);
     });
 
-    it("presses no component button for a combined mode", function () {
+    it("presses each component button of a combined mode", function () {
       toolbar = new EditorToolbar(container, editor);
+      const [vertexButton, edgeButton, faceButton] = getComponents().children;
 
-      editor.mode = EditMode.VERTEX | EditMode.EDGE;
+      editor.mode = EditMode.VERTEX | EditMode.FACE;
 
       expect(getModeButton().getAttribute("aria-pressed")).toBe("true");
-      expect(
-        getComponents().querySelectorAll(".cesium-editor-toolbar-active")
-          .length,
-      ).toBe(0);
+      expect(isPressed(vertexButton)).toBe(true);
+      expect(isPressed(edgeButton)).toBe(false);
+      expect(isPressed(faceButton)).toBe(true);
+    });
+
+    it("combines component modes with Shift+click", function () {
+      editor.mode = EditMode.VERTEX;
+      toolbar = new EditorToolbar(container, editor);
+      const [vertexButton, edgeButton, faceButton] = getComponents().children;
+
+      shiftClick(edgeButton);
+      expect(editor.mode).toBe(EditMode.VERTEX | EditMode.EDGE);
+      expect(isPressed(vertexButton)).toBe(true);
+      expect(isPressed(edgeButton)).toBe(true);
+
+      shiftClick(faceButton);
+      expect(editor.mode).toBe(EditMode.VERTEX | EditMode.EDGE | EditMode.FACE);
+
+      shiftClick(vertexButton);
+      expect(editor.mode).toBe(EditMode.EDGE | EditMode.FACE);
+      expect(isPressed(vertexButton)).toBe(false);
+
+      faceButton.click();
+      expect(editor.mode).toBe(EditMode.FACE);
+      expect(isPressed(edgeButton)).toBe(false);
+    });
+
+    it("keeps the last component when Shift+clicking it", function () {
+      editor.mode = EditMode.EDGE;
+      toolbar = new EditorToolbar(container, editor);
+
+      shiftClick(getComponents().children[1]);
+
+      expect(editor.mode).toBe(EditMode.EDGE);
+      expect(isPressed(getComponents().children[1])).toBe(true);
     });
   });
 

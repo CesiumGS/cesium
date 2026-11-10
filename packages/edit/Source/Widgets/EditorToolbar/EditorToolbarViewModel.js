@@ -66,6 +66,9 @@ class EditorToolbarViewModel {
   #selectModeEntry;
 
   /** @type {Command} */
+  #toggleComponentEntry;
+
+  /** @type {Command} */
   #enterEditMode;
 
   /** @type {Command} */
@@ -166,6 +169,16 @@ class EditorToolbarViewModel {
   }
 
   /**
+   * Adds a component entry's mode to the editor's mode, or removes it unless
+   * it's the only component left, so modes like
+   * <code>EditMode.VERTEX | EditMode.EDGE</code> can be combined.
+   * @type {Command}
+   */
+  get toggleComponentEntry() {
+    return this.#toggleComponentEntry;
+  }
+
+  /**
    * Leaves {@link EditMode.NONE} for the last component mode, initially
    * {@link EditMode.VERTEX}. Does nothing if already editing.
    * @type {Command}
@@ -204,6 +217,16 @@ class EditorToolbarViewModel {
   }
 
   /**
+   * Whether the editor's mode includes a component entry's mode.
+   *
+   * @param {EditorToolbarModeEntry} entry The component entry.
+   * @returns {boolean} Whether the entry's components are being edited.
+   */
+  isComponentActive(entry) {
+    return (this.#mode() & entry.mode) !== 0;
+  }
+
+  /**
    * Whether a tool entry can be selected in the editor's current mode.
    *
    * @param {EditorToolbarToolEntry} entry The tool entry.
@@ -229,6 +252,16 @@ class EditorToolbarViewModel {
       /** @param {EditorToolbarModeEntry} entry */
       (entry) => {
         this.#editor.mode = entry.mode;
+      },
+    );
+
+    this.#toggleComponentEntry = createCommand(
+      /** @param {EditorToolbarModeEntry} entry */
+      (entry) => {
+        const mode = this.#editor.mode ^ entry.mode;
+        if (mode !== EditMode.NONE) {
+          this.#editor.mode = mode;
+        }
       },
     );
 

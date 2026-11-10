@@ -39,8 +39,9 @@ The APIs in this package are experimental and are expected to evolve as CesiumJS
 ### Editor toolbar
 
 `EditorToolbar` adds an Object Mode/Edit Mode toggle, Vertex, Edge and Face
-buttons shown in Edit Mode, and a tool dropdown for an editor. It requires the
-widgets' stylesheet and its own:
+buttons shown in Edit Mode, and a tool dropdown for an editor. Shift+click a
+Vertex, Edge or Face button to combine it with the current mode. It requires
+the widgets' stylesheet and its own:
 
 ```js
 import { EditorToolbar, MeshEditor, SelectTool } from "@cesium/edit";
