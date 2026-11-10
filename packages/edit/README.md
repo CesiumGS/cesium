@@ -47,17 +47,17 @@ import "@cesium/widgets/Source/widgets.css";
 import "@cesium/edit/Source/Widgets/EditorToolbar/EditorToolbar.css";
 
 const editor = await MeshEditor.addToScene(viewer.scene);
+const selectTool = SelectTool.addTo(editor);
+editor.activeTool = selectTool;
 const toolbar = new EditorToolbar("editorToolbarContainer", editor, {
-  tools: [
-    { id: "none", label: "Tools", tool: undefined },
-    { id: "select", label: "Select", tool: SelectTool.addTo(editor) },
-  ],
+  tools: [{ id: "select", label: "Select", tool: selectTool }],
 });
 ```
 
 Pass `modes` or `tools` to replace the default entries. The toolbar doesn't add
-tools to the editor, so pass the tools it should offer. `viewerEditorMixin`
-adds a select and a translate tool, exposed as `viewer.editorTools`.
+tools to the editor, so pass the tools it should offer; without any, it has no
+tool dropdown. `viewerEditorMixin` adds a select and a translate tool, exposed
+as `viewer.editorTools`, and activates the select tool.
 
 ## Community
 

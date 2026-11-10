@@ -13,25 +13,6 @@ const objectIconPath =
   "M 9 20 L 31 31 L 31 57 L 9 46 Z " +
   "M 33 31 L 55 20 L 55 46 L 33 57 Z";
 
-/** @ignore */
-const toolsIconPath =
-  "M162.41,59.41 L161.45,69.10 L152.08,63.29 L160.80,75.56 L158.22,85.24 " +
-  "L154.66,84.27 L143.04,72.65 L132.06,62.32 S122.05,54.25 118.18,52.63 " +
-  "C114.30,51.02 109.46,48.11 105.59,47.46 C101.71,46.82 96.55,46.17 " +
-  "95.25,47.14 C93.96,48.11 91.06,57.15 91.06,57.15 L91.38,64.25 " +
-  "L89.77,67.48 L91.06,147.88 L94.93,149.82 L99.45,187.60 L99.13,229.25 " +
-  "L100.10,241.84 L100.74,243.46 L100.42,249.59 S96.22,257.02 92.99,257.99 " +
-  "C89.77,258.95 83.95,258.95 80.72,258.31 C77.50,257.66 72.01,255.40 " +
-  "70.07,253.14 S67.16,245.39 67.16,245.39 L69.42,240.55 L69.75,220.85 " +
-  "L67.49,185.66 L69.42,150.14 L71.68,146.91 L69.75,68.45 L67.81,66.84 " +
-  "L67.49,61.35 L60.06,47.46 S54.57,41.65 51.02,40.04 C47.47,38.42 " +
-  "40.69,35.20 36.17,35.20 S24.87,37.46 24.87,37.46 L18.73,37.78 " +
-  "L5.17,35.52 S1.94,33.58 0.65,30.35 S0.00,11.95 1.30,9.69 " +
-  "C2.59,7.43 6.46,1.29 8.72,0.00 S27.77,2.91 27.77,2.91 L34.88,9.04 " +
-  "S41.01,10.98 44.24,10.98 S56.19,6.14 56.19,6.14 L61.67,3.23 " +
-  "L74.59,4.52 S95.25,9.04 98.81,10.01 C102.36,10.98 116.24,17.44 " +
-  "120.76,19.70 S138.84,32.94 140.78,35.20 S162.09,59.73 162.41,59.41 Z";
-
 /**
  * @type {Object<string, Object<string, {path: string, width: number, height: number}>>}
  * @ignore
@@ -48,7 +29,6 @@ const defaultIcons = {
     face: { path: "M 32 10 L 56 52 L 8 52 Z", width: 64, height: 64 },
   },
   tool: {
-    none: { path: toolsIconPath, width: 163, height: 259 },
     select: {
       path: "M 17 12 L 17 52 L 27 43 L 33 56 L 41 52 L 35 39 L 49 39 Z",
       width: 64,
@@ -154,8 +134,17 @@ class EditorToolbar {
     wrapper.className = "cesium-editor-toolbar";
     wrapper.setAttribute("role", "group");
     wrapper.setAttribute("aria-label", "Mesh editor");
-    wrapper.appendChild(this.#createDropdown("mode"));
-    wrapper.appendChild(this.#createDropdown("tool"));
+    if (this.#viewModel.modeEntries.length > 0) {
+      wrapper.appendChild(this.#createDropdown("mode"));
+    }
+    if (this.#viewModel.toolEntries.length > 0) {
+      const document = this.#container.ownerDocument;
+      wrapper.appendChild(
+        document.createComment(" ko if: viewModel.toolId !== undefined "),
+      );
+      wrapper.appendChild(this.#createDropdown("tool"));
+      wrapper.appendChild(document.createComment(" /ko "));
+    }
     this.#container.appendChild(wrapper);
     this.#wrapper = wrapper;
   }
@@ -256,8 +245,7 @@ class EditorToolbar {
           modeEntries.find((entry) => entry.id === viewModel.modeId) ??
           this.#withEntryIcon({ id: "none", label: "Custom Mode" }, "mode"),
         selectedTool: () =>
-          toolEntries.find((entry) => entry.id === viewModel.toolId) ??
-          this.#withEntryIcon({ id: "none", label: "Custom Tool" }, "tool"),
+          toolEntries.find((entry) => entry.id === viewModel.toolId),
       },
       this.#wrapper,
     );
