@@ -49,13 +49,12 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     spyOn(TranslateTool, "addTo").and.returnValue(translateTool);
   });
 
-  function createViewModel(options) {
+  function createViewModel() {
     return new EditorToolbarViewModel(editor, {
       tools: [
         { id: "select", label: "Select", tool: selectTool },
         { id: "translate", label: "Translate", tool: translateTool },
       ],
-      ...options,
     });
   }
 
@@ -78,9 +77,10 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
       { id: "edge", label: "Edge", mode: EditMode.EDGE },
       { id: "face", label: "Face", mode: EditMode.FACE },
     ]);
+    expect(viewModel.componentEntries).toEqual(viewModel.modeEntries.slice(1));
     expect(viewModel.modeId).toBe("none");
+    expect(viewModel.editing).toBe(false);
     expect(viewModel.toolId).toBeUndefined();
-    expect(viewModel.modeDropDownVisible).toBe(false);
     expect(viewModel.toolDropDownVisible).toBe(false);
   });
 
@@ -92,12 +92,10 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     expect(TranslateTool.addTo).not.toHaveBeenCalled();
   });
 
-  it("uses custom mode and tool entries without registering default tools", function () {
-    const modes = [{ id: "points", label: "Points", mode: EditMode.VERTEX }];
+  it("uses custom tool entries without registering default tools", function () {
     const tools = [{ id: "custom", label: "Custom", tool: selectTool }];
-    viewModel = new EditorToolbarViewModel(editor, { modes, tools });
+    viewModel = new EditorToolbarViewModel(editor, { tools });
 
-    expect(viewModel.modeEntries).toBe(modes);
     expect(viewModel.toolEntries).toBe(tools);
     expect(SelectTool.addTo).not.toHaveBeenCalled();
     expect(TranslateTool.addTo).not.toHaveBeenCalled();
@@ -109,6 +107,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     viewModel = createViewModel();
 
     expect(viewModel.modeId).toBe("edge");
+    expect(viewModel.editing).toBe(true);
     expect(viewModel.toolId).toBe("translate");
   });
 
@@ -152,16 +151,89 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     editor.activeTool = {};
 
     expect(viewModel.modeId).toBeUndefined();
+    expect(viewModel.editing).toBe(true);
     expect(viewModel.toolId).toBeUndefined();
   });
 
-  it("accepts empty custom entries without creating defaults", function () {
-    viewModel = new EditorToolbarViewModel(editor, { modes: [], tools: [] });
+  describe("edit mode", function () {
+    it("enters vertex mode initially", function () {
+      viewModel = createViewModel();
 
-    expect(viewModel.modeId).toBeUndefined();
-    expect(viewModel.toolId).toBeUndefined();
-    expect(SelectTool.addTo).not.toHaveBeenCalled();
-    expect(TranslateTool.addTo).not.toHaveBeenCalled();
+      viewModel.enterEditMode();
+
+      expect(editor.mode).toBe(EditMode.VERTEX);
+      expect(viewModel.editing).toBe(true);
+    });
+
+    it("restores the last component mode", function () {
+      viewModel = createViewModel();
+      editor.mode = EditMode.FACE;
+      viewModel.exitEditMode();
+      expect(editor.mode).toBe(EditMode.NONE);
+      expect(viewModel.editing).toBe(false);
+
+      viewModel.enterEditMode();
+
+      expect(editor.mode).toBe(EditMode.FACE);
+    });
+
+    it("restores a component mode the editor started in", function () {
+      editor.mode = EditMode.EDGE;
+      viewModel = createViewModel();
+      viewModel.exitEditMode();
+
+      viewModel.enterEditMode();
+
+      expect(editor.mode).toBe(EditMode.EDGE);
+    });
+
+    it("restores a combined component mode", function () {
+      viewModel = createViewModel();
+      editor.mode = EditMode.VERTEX | EditMode.FACE;
+      editor.mode = EditMode.NONE;
+
+      viewModel.enterEditMode();
+
+      expect(editor.mode).toBe(EditMode.VERTEX | EditMode.FACE);
+    });
+
+    it("leaves a component mode unchanged when entering edit mode", function () {
+      viewModel = createViewModel();
+      editor.mode = EditMode.EDGE;
+      const modeListener = jasmine.createSpy();
+      editor.modeChanged.addEventListener(modeListener);
+
+      viewModel.enterEditMode();
+
+      expect(editor.mode).toBe(EditMode.EDGE);
+      expect(modeListener).not.toHaveBeenCalled();
+    });
+
+    it("toggles edit mode", function () {
+      viewModel = createViewModel();
+
+      viewModel.toggleEditMode();
+      expect(editor.mode).toBe(EditMode.VERTEX);
+      editor.mode = EditMode.EDGE;
+      viewModel.toggleEditMode();
+      expect(editor.mode).toBe(EditMode.NONE);
+      viewModel.toggleEditMode();
+      expect(editor.mode).toBe(EditMode.EDGE);
+    });
+
+    it("updates editing observably", function () {
+      viewModel = createViewModel();
+      const listener = jasmine.createSpy();
+      const subscription = knockout
+        .getObservable(viewModel, "editing")
+        .subscribe(listener);
+
+      editor.mode = EditMode.EDGE;
+      expect(listener).toHaveBeenCalledWith(true);
+      editor.mode = EditMode.NONE;
+      expect(listener).toHaveBeenCalledWith(false);
+      subscription.dispose();
+    });
   });
 
   it("changes modes and tools through its commands", function () {
@@ -190,7 +262,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   });
 
   it("updates observable availability even when no mode entry matches", function () {
-    viewModel = createViewModel({ modes: [] });
+    viewModel = createViewModel();
     const availability = knockout.pureComputed(() =>
       viewModel.isToolEnabled(viewModel.toolEntries[1]),
     );
@@ -198,7 +270,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     const subscription = availability.subscribe(listener);
 
     expect(availability()).toBe(false);
-    editor.mode = EditMode.FACE;
+    editor.mode = EditMode.EDGE | EditMode.FACE;
 
     expect(viewModel.modeId).toBeUndefined();
     expect(availability()).toBe(true);
@@ -232,29 +304,18 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     expect(viewModel.toolDropDownVisible).toBe(false);
   });
 
-  it("closes the other dropdown when opening a dropdown", function () {
+  it("toggles the tool dropdown", function () {
     viewModel = createViewModel();
 
-    viewModel.toggleModeDropDown();
-    expect(viewModel.modeDropDownVisible).toBe(true);
     viewModel.toggleToolDropDown();
     expect(viewModel.toolDropDownVisible).toBe(true);
-    expect(viewModel.modeDropDownVisible).toBe(false);
-    viewModel.toggleModeDropDown();
-    expect(viewModel.modeDropDownVisible).toBe(true);
-    expect(viewModel.toolDropDownVisible).toBe(false);
-    viewModel.toggleModeDropDown();
-    expect(viewModel.modeDropDownVisible).toBe(false);
-    viewModel.toggleToolDropDown();
     viewModel.toggleToolDropDown();
     expect(viewModel.toolDropDownVisible).toBe(false);
   });
 
-  it("closes a dropdown after selecting an entry", function () {
+  it("closes the tool dropdown after selecting a tool", function () {
     viewModel = createViewModel();
-    viewModel.modeDropDownVisible = true;
     viewModel.selectModeEntry(viewModel.modeEntries[1]);
-    expect(viewModel.modeDropDownVisible).toBe(false);
 
     viewModel.toolDropDownVisible = true;
     viewModel.selectToolEntry(viewModel.toolEntries[1]);

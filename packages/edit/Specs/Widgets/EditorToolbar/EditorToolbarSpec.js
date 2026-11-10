@@ -15,13 +15,32 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     container.id = "editorToolbarTest";
     document.body.appendChild(container);
     selectTool = { supportsMode: () => true };
+    translateTool = { supportsMode: (mode) => mode !== EditMode.NONE };
+    let mode = EditMode.NONE;
+    let activeTool = selectTool;
     editor = {
-      mode: EditMode.NONE,
-      activeTool: selectTool,
       modeChanged: new Event(),
       activeToolChanged: new Event(),
+      get mode() {
+        return mode;
+      },
+      set mode(value) {
+        const previous = mode;
+        mode = value;
+        if (activeTool && !activeTool.supportsMode(mode)) {
+          this.activeTool = undefined;
+        }
+        this.modeChanged.raiseEvent(mode, previous);
+      },
+      get activeTool() {
+        return activeTool;
+      },
+      set activeTool(value) {
+        const previous = activeTool;
+        activeTool = value;
+        this.activeToolChanged.raiseEvent(value, previous);
+      },
     };
-    translateTool = { supportsMode: (mode) => mode !== EditMode.NONE };
     tools = [
       { id: "select", label: "Select", tool: selectTool },
       { id: "translate", label: "Translate", tool: translateTool },
@@ -34,34 +53,38 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     container.remove();
   });
 
-  function getMainButton(kind) {
-    return container.querySelector(`.cesium-editor-toolbar-${kind} > button`);
+  function getModeButton() {
+    return container.querySelector(".cesium-editor-toolbar-mode > button");
   }
 
-  function getDropdown(kind) {
+  function getComponents() {
+    return container.querySelector(".cesium-editor-toolbar-components");
+  }
+
+  function getToolButton() {
+    return container.querySelector(".cesium-editor-toolbar-tool > button");
+  }
+
+  function getToolDropdown() {
     return container.querySelector(
-      `.cesium-editor-toolbar-${kind} .cesium-editor-toolbar-dropdown`,
+      ".cesium-editor-toolbar-tool .cesium-editor-toolbar-dropdown",
     );
   }
 
-  function changeMode(mode) {
-    const previous = editor.mode;
-    editor.mode = mode;
-    editor.modeChanged.raiseEvent(mode, previous);
-  }
-
-  function changeTool(tool) {
-    const previous = editor.activeTool;
-    editor.activeTool = tool;
-    editor.activeToolChanged.raiseEvent(tool, previous);
+  function isPressed(button) {
+    return (
+      button.getAttribute("aria-pressed") === "true" &&
+      button.classList.contains("cesium-editor-toolbar-active")
+    );
   }
 
   it("creates the toolbar in the supplied element or element ID", function () {
     toolbar = new EditorToolbar(container, editor, { tools });
     expect(toolbar.container).toBe(container);
     expect(container.querySelectorAll(".cesium-editor-toolbar").length).toBe(1);
-    expect(getDropdown("mode").children.length).toBe(4);
-    expect(getDropdown("tool").children.length).toBe(2);
+    expect(getModeButton()).not.toBeNull();
+    expect(getComponents().children.length).toBe(3);
+    expect(getToolDropdown().children.length).toBe(2);
 
     toolbar.destroy();
     toolbar = new EditorToolbar(container.id, editor, { tools });
@@ -78,201 +101,249 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     expect(container.children.length).toBe(0);
   });
 
-  it("shows the current mode and tool icons and labels", function () {
-    toolbar = new EditorToolbar(container, editor, { tools });
-    const modeButton = getMainButton("mode");
-    const toolButton = getMainButton("tool");
-    const initialModeIcon = modeButton.querySelector("path").getAttribute("d");
-    const initialToolIcon = toolButton.querySelector("path").getAttribute("d");
-    expect(modeButton.title).toBe("Object Mode");
-    expect(toolButton.title).toBe("Select");
+  describe("modes", function () {
+    it("toggles between Object Mode and Edit Mode with one button", function () {
+      toolbar = new EditorToolbar(container, editor);
+      const modeButton = getModeButton();
+      const objectIcon = modeButton.querySelector("path").getAttribute("d");
 
-    changeMode(EditMode.EDGE);
-    changeTool(translateTool);
+      expect(
+        container.querySelectorAll(".cesium-editor-toolbar-mode > button")
+          .length,
+      ).toBe(1);
+      expect(modeButton.title).toBe("Object Mode");
+      expect(modeButton.getAttribute("aria-label")).toBe("Edit Mode");
+      expect(modeButton.getAttribute("aria-pressed")).toBe("false");
+      expect(getComponents().style.display).toBe("none");
 
-    expect(modeButton.title).toBe("Edge");
-    expect(modeButton.querySelector("path").getAttribute("d")).not.toBe(
-      initialModeIcon,
-    );
-    expect(toolButton.title).toBe("Translate");
-    expect(toolButton.querySelector("path").getAttribute("d")).not.toBe(
-      initialToolIcon,
-    );
-    expect(getDropdown("mode").children[2].getAttribute("aria-pressed")).toBe(
-      "true",
-    );
-    expect(getDropdown("tool").children[1].getAttribute("aria-pressed")).toBe(
-      "true",
-    );
-  });
+      modeButton.click();
 
-  it("uses custom entry icons and view box sizes without mutating entries", function () {
-    const entry = Object.freeze({
-      id: "custom",
-      label: "Custom selection",
-      tool: selectTool,
-      iconPath: "M 0 0 L 10 20 Z",
-      iconWidth: 10,
-      iconHeight: 20,
-    });
-    toolbar = new EditorToolbar(container, editor, { tools: [entry] });
-
-    const button = getMainButton("tool");
-    expect(button.title).toBe(entry.label);
-    expect(button.querySelector("path").getAttribute("d")).toBe(entry.iconPath);
-    expect(button.querySelector("svg").getAttribute("viewBox")).toBe(
-      "0 0 10 20",
-    );
-    expect(toolbar.viewModel.toolEntries[0]).toBe(entry);
-  });
-
-  it("defaults custom icon dimensions to 64", function () {
-    toolbar = new EditorToolbar(container, editor, {
-      modes: [
-        {
-          id: "custom",
-          label: "Custom",
-          mode: EditMode.NONE,
-          iconPath: "M 0 0 Z",
-        },
-      ],
-    });
-    expect(
-      getMainButton("mode").querySelector("svg").getAttribute("viewBox"),
-    ).toBe("0 0 64 64");
-  });
-
-  it("rejects unknown entry IDs without icons and cleans up", function () {
-    expect(
-      () =>
-        new EditorToolbar(container, editor, {
-          modes: [{ id: "custom", label: "Custom", mode: EditMode.NONE }],
-        }),
-    ).toThrowDeveloperError();
-
-    expect(container.children.length).toBe(0);
-    expect(editor.modeChanged.numberOfListeners).toBe(0);
-    expect(editor.activeToolChanged.numberOfListeners).toBe(0);
-  });
-
-  it("displays a neutral mode label when the mode is not represented", function () {
-    toolbar = new EditorToolbar(container, editor, { tools });
-
-    changeMode(EditMode.VERTEX | EditMode.EDGE);
-
-    expect(getMainButton("mode").title).toBe("Custom Mode");
-    expect(
-      getDropdown("mode").querySelectorAll(".cesium-editor-toolbar-active")
-        .length,
-    ).toBe(0);
-  });
-
-  it("hides the tool dropdown while the active tool isn't an entry", function () {
-    editor.activeTool = undefined;
-    toolbar = new EditorToolbar(container, editor, { tools });
-    expect(getMainButton("tool")).toBeNull();
-
-    changeTool(selectTool);
-    expect(getMainButton("tool").title).toBe("Select");
-    getMainButton("tool").click();
-    expect(toolbar.viewModel.toolDropDownVisible).toBe(true);
-
-    changeTool({});
-    expect(getMainButton("tool")).toBeNull();
-    expect(toolbar.viewModel.toolDropDownVisible).toBe(false);
-
-    changeTool(undefined);
-    expect(getMainButton("tool")).toBeNull();
-
-    changeTool(translateTool);
-    expect(getMainButton("tool").title).toBe("Translate");
-    expect(getDropdown("tool").style.display).toBe("none");
-  });
-
-  it("omits dropdowns without entries", function () {
-    toolbar = new EditorToolbar(container, editor, { modes: [], tools: [] });
-
-    expect(container.querySelector(".cesium-editor-toolbar")).not.toBeNull();
-    expect(getMainButton("mode")).toBeNull();
-    expect(getMainButton("tool")).toBeNull();
-  });
-
-  it("omits the tool dropdown by default", function () {
-    toolbar = new EditorToolbar(container, editor);
-
-    expect(getDropdown("mode").children.length).toBe(4);
-    expect(getMainButton("tool")).toBeNull();
-  });
-
-  it("opens and closes the dropdowns", function () {
-    toolbar = new EditorToolbar(container, editor, { tools });
-    const modeButton = getMainButton("mode");
-    const toolButton = getMainButton("tool");
-
-    expect(getDropdown("mode").style.display).toBe("none");
-    modeButton.click();
-    expect(getDropdown("mode").style.display).not.toBe("none");
-    expect(modeButton.getAttribute("aria-expanded")).toBe("true");
-    expect(
-      modeButton.classList.contains("cesium-editor-toolbar-selected"),
-    ).toBe(true);
-
-    toolButton.click();
-    expect(getDropdown("mode").style.display).toBe("none");
-    expect(getDropdown("tool").style.display).not.toBe("none");
-    toolButton.click();
-    expect(getDropdown("tool").style.display).toBe("none");
-  });
-
-  it("selects entries and closes their dropdowns", function () {
-    toolbar = new EditorToolbar(container, editor, { tools });
-
-    getMainButton("mode").click();
-    getDropdown("mode").children[1].click();
-    expect(editor.mode).toBe(EditMode.VERTEX);
-    expect(getDropdown("mode").style.display).toBe("none");
-    editor.modeChanged.raiseEvent(editor.mode, EditMode.NONE);
-
-    getMainButton("tool").click();
-    getDropdown("tool").children[1].click();
-    expect(editor.activeTool).toBe(translateTool);
-    expect(getDropdown("tool").style.display).toBe("none");
-  });
-
-  it("disables unsupported tool buttons", function () {
-    toolbar = new EditorToolbar(container, editor, { tools });
-    const buttons = getDropdown("tool").children;
-
-    expect(buttons[0].disabled).toBe(false);
-    expect(buttons[1].disabled).toBe(true);
-    buttons[1].click();
-    expect(editor.activeTool).toBe(selectTool);
-  });
-
-  it("updates tool availability after a mode change", function () {
-    toolbar = new EditorToolbar(container, editor, { tools });
-    const translateButton = getDropdown("tool").children[1];
-
-    changeMode(EditMode.VERTEX);
-    expect(translateButton.disabled).toBe(false);
-    changeMode(EditMode.NONE);
-    expect(translateButton.disabled).toBe(true);
-  });
-
-  ["pointerdown", "mousedown", "touchstart"].forEach(function (type) {
-    it(`closes dropdowns on outside ${type} but not inside`, function () {
-      toolbar = new EditorToolbar(container, editor, { tools });
-      toolbar.viewModel.modeDropDownVisible = true;
-      getMainButton("mode").dispatchEvent(
-        new window.Event(type, { bubbles: true }),
+      expect(editor.mode).toBe(EditMode.VERTEX);
+      expect(modeButton.title).toBe("Edit Mode");
+      expect(modeButton.getAttribute("aria-label")).toBe("Edit Mode");
+      expect(modeButton.getAttribute("aria-pressed")).toBe("true");
+      expect(modeButton.querySelector("path").getAttribute("d")).not.toBe(
+        objectIcon,
       );
-      expect(toolbar.viewModel.modeDropDownVisible).toBe(true);
+      expect(getComponents().style.display).not.toBe("none");
 
-      document.body.dispatchEvent(new window.Event(type, { bubbles: true }));
-      expect(toolbar.viewModel.modeDropDownVisible).toBe(false);
-      toolbar.viewModel.toolDropDownVisible = true;
-      document.body.dispatchEvent(new window.Event(type, { bubbles: true }));
+      modeButton.click();
+
+      expect(editor.mode).toBe(EditMode.NONE);
+      expect(modeButton.title).toBe("Object Mode");
+      expect(modeButton.querySelector("path").getAttribute("d")).toBe(
+        objectIcon,
+      );
+      expect(getComponents().style.display).toBe("none");
+    });
+
+    it("labels the component buttons with distinct icons", function () {
+      toolbar = new EditorToolbar(container, editor);
+
+      expect(
+        Array.from(getComponents().children).map((button) => button.title),
+      ).toEqual(["Vertex", "Edge", "Face"]);
+      const icons = Array.from(
+        container.querySelectorAll(".cesium-editor-toolbar-group path"),
+      ).map((path) => path.getAttribute("d"));
+      expect(new Set(icons).size).toBe(4);
+    });
+
+    it("shows the current component mode in Edit Mode", function () {
+      editor.mode = EditMode.EDGE;
+      toolbar = new EditorToolbar(container, editor);
+      const [vertexButton, edgeButton, faceButton] = getComponents().children;
+
+      expect(getModeButton().title).toBe("Edit Mode");
+      expect(getComponents().style.display).not.toBe("none");
+      expect(isPressed(vertexButton)).toBe(false);
+      expect(isPressed(edgeButton)).toBe(true);
+      expect(isPressed(faceButton)).toBe(false);
+    });
+
+    it("enters Edit Mode in the last component mode", function () {
+      toolbar = new EditorToolbar(container, editor);
+
+      getModeButton().click();
+      getComponents().children[2].click();
+      expect(editor.mode).toBe(EditMode.FACE);
+      expect(isPressed(getComponents().children[2])).toBe(true);
+
+      getModeButton().click();
+      expect(editor.mode).toBe(EditMode.NONE);
+
+      getModeButton().click();
+      expect(editor.mode).toBe(EditMode.FACE);
+    });
+
+    it("presses no component button for a combined mode", function () {
+      toolbar = new EditorToolbar(container, editor);
+
+      editor.mode = EditMode.VERTEX | EditMode.EDGE;
+
+      expect(getModeButton().getAttribute("aria-pressed")).toBe("true");
+      expect(
+        getComponents().querySelectorAll(".cesium-editor-toolbar-active")
+          .length,
+      ).toBe(0);
+    });
+  });
+
+  describe("tools", function () {
+    it("shows the active tool's icon and label", function () {
+      toolbar = new EditorToolbar(container, editor, { tools });
+      const toolButton = getToolButton();
+      const initialIcon = toolButton.querySelector("path").getAttribute("d");
+      expect(toolButton.title).toBe("Select");
+
+      editor.mode = EditMode.EDGE;
+      editor.activeTool = translateTool;
+
+      expect(toolButton.title).toBe("Translate");
+      expect(toolButton.querySelector("path").getAttribute("d")).not.toBe(
+        initialIcon,
+      );
+      expect(isPressed(getToolDropdown().children[1])).toBe(true);
+    });
+
+    it("uses custom entry icons and view box sizes without mutating entries", function () {
+      const entry = Object.freeze({
+        id: "custom",
+        label: "Custom selection",
+        tool: selectTool,
+        iconPath: "M 0 0 L 10 20 Z",
+        iconWidth: 10,
+        iconHeight: 20,
+      });
+      toolbar = new EditorToolbar(container, editor, { tools: [entry] });
+
+      const button = getToolButton();
+      expect(button.title).toBe(entry.label);
+      expect(button.querySelector("path").getAttribute("d")).toBe(
+        entry.iconPath,
+      );
+      expect(button.querySelector("svg").getAttribute("viewBox")).toBe(
+        "0 0 10 20",
+      );
+      expect(toolbar.viewModel.toolEntries[0]).toBe(entry);
+    });
+
+    it("defaults custom icon dimensions to 64", function () {
+      toolbar = new EditorToolbar(container, editor, {
+        tools: [
+          {
+            id: "custom",
+            label: "Custom",
+            tool: selectTool,
+            iconPath: "M 0 0 Z",
+          },
+        ],
+      });
+      expect(getToolButton().querySelector("svg").getAttribute("viewBox")).toBe(
+        "0 0 64 64",
+      );
+    });
+
+    it("rejects unknown entry IDs without icons and cleans up", function () {
+      expect(
+        () =>
+          new EditorToolbar(container, editor, {
+            tools: [{ id: "custom", label: "Custom", tool: selectTool }],
+          }),
+      ).toThrowDeveloperError();
+
+      expect(container.children.length).toBe(0);
+      expect(editor.modeChanged.numberOfListeners).toBe(0);
+      expect(editor.activeToolChanged.numberOfListeners).toBe(0);
+    });
+
+    it("hides the tool dropdown while the active tool isn't an entry", function () {
+      editor.activeTool = undefined;
+      toolbar = new EditorToolbar(container, editor, { tools });
+      expect(getToolButton()).toBeNull();
+
+      editor.activeTool = selectTool;
+      expect(getToolButton().title).toBe("Select");
+      getToolButton().click();
+      expect(toolbar.viewModel.toolDropDownVisible).toBe(true);
+
+      editor.activeTool = {};
+      expect(getToolButton()).toBeNull();
       expect(toolbar.viewModel.toolDropDownVisible).toBe(false);
+
+      editor.activeTool = undefined;
+      expect(getToolButton()).toBeNull();
+
+      editor.mode = EditMode.VERTEX;
+      editor.activeTool = translateTool;
+      expect(getToolButton().title).toBe("Translate");
+      expect(getToolDropdown().style.display).toBe("none");
+    });
+
+    it("omits the tool dropdown without tool entries", function () {
+      toolbar = new EditorToolbar(container, editor);
+
+      expect(getModeButton()).not.toBeNull();
+      expect(getToolButton()).toBeNull();
+    });
+
+    it("opens and closes the tool dropdown", function () {
+      toolbar = new EditorToolbar(container, editor, { tools });
+      const toolButton = getToolButton();
+
+      expect(getToolDropdown().style.display).toBe("none");
+      toolButton.click();
+      expect(getToolDropdown().style.display).not.toBe("none");
+      expect(toolButton.getAttribute("aria-expanded")).toBe("true");
+      expect(
+        toolButton.classList.contains("cesium-editor-toolbar-selected"),
+      ).toBe(true);
+      toolButton.click();
+      expect(getToolDropdown().style.display).toBe("none");
+    });
+
+    it("selects tools and closes the dropdown", function () {
+      editor.mode = EditMode.VERTEX;
+      toolbar = new EditorToolbar(container, editor, { tools });
+
+      getToolButton().click();
+      getToolDropdown().children[1].click();
+      expect(editor.activeTool).toBe(translateTool);
+      expect(getToolDropdown().style.display).toBe("none");
+    });
+
+    it("disables unsupported tool buttons", function () {
+      toolbar = new EditorToolbar(container, editor, { tools });
+      const buttons = getToolDropdown().children;
+
+      expect(buttons[0].disabled).toBe(false);
+      expect(buttons[1].disabled).toBe(true);
+      buttons[1].click();
+      expect(editor.activeTool).toBe(selectTool);
+    });
+
+    it("updates tool availability after a mode change", function () {
+      toolbar = new EditorToolbar(container, editor, { tools });
+      const translateButton = getToolDropdown().children[1];
+
+      editor.mode = EditMode.VERTEX;
+      expect(translateButton.disabled).toBe(false);
+      editor.mode = EditMode.NONE;
+      expect(translateButton.disabled).toBe(true);
+    });
+
+    ["pointerdown", "mousedown", "touchstart"].forEach(function (type) {
+      it(`closes the dropdown on outside ${type} but not inside`, function () {
+        toolbar = new EditorToolbar(container, editor, { tools });
+        toolbar.viewModel.toolDropDownVisible = true;
+        getToolButton().dispatchEvent(
+          new window.Event(type, { bubbles: true }),
+        );
+        expect(toolbar.viewModel.toolDropDownVisible).toBe(true);
+
+        document.body.dispatchEvent(new window.Event(type, { bubbles: true }));
+        expect(toolbar.viewModel.toolDropDownVisible).toBe(false);
+      });
     });
   });
 
@@ -282,7 +353,7 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
     toolbar = new EditorToolbar(container, editor, { tools });
     const viewModel = toolbar.viewModel;
     const wrapper = container.querySelector(".cesium-editor-toolbar");
-    const modeButton = getMainButton("mode");
+    const components = getComponents();
     const cleanNode = spyOn(knockout, "cleanNode").and.callThrough();
     const removeListener = spyOn(
       document,
@@ -304,12 +375,12 @@ describe("Widgets/EditorToolbar/EditorToolbar", function () {
         true,
       );
     }
-    viewModel.modeDropDownVisible = true;
+    viewModel.toolDropDownVisible = true;
     document.body.dispatchEvent(
       new window.Event("pointerdown", { bubbles: true }),
     );
-    expect(viewModel.modeDropDownVisible).toBe(true);
-    changeMode(EditMode.FACE);
-    expect(modeButton.title).toBe("Object Mode");
+    expect(viewModel.toolDropDownVisible).toBe(true);
+    editor.mode = EditMode.FACE;
+    expect(components.style.display).toBe("none");
   });
 });
