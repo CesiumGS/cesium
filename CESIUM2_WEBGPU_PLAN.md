@@ -8813,6 +8813,70 @@ What the sky and observer plan (`docs/superpowers/plans/2026-11-08-sky-and-obser
 
 **Intel.** Not run: it needs the owner's laptop. The cost page and `spikes/gpu-check.html` are ready; `glareTier`'s table, §13.23's adapter and driver, and this section's Intel figures are owed. Until then Intel starts at `reduced`, and above 3.7 million pixels at `sources`. To run it from the laptop without a checkout there, serve the page from this Mac's dev server and tunnel to it (`ssh -L 5196:127.0.0.1:5196`), then open `127.0.0.1:5196` in the laptop's Chrome: localhost is a secure context, so WebGPU works, and `?pack=local` reads the Mac's pack.
 
+### 13.33 B-reps and a geometry query interface (owner, 2026-11-09)
+
+**Decided to plan.** Not designed in detail or built. The engine evaluates exact geometry but never models it: booleans, fillets, healing as an edit, feature history and constraints belong to the application, or to a kernel it brings. Builds on §13.26 (curves through placement), §13.27 (CAD display), §13.20 (editing), the tessellation design input in §13.14 and the vector design.
+
+**One query interface for every representation.** Meshes, b-reps and implicit surfaces (f-reps) each answer the same queries, and every answer states its accuracy: bounds, ray hit, closest point and distance, topology (face, edge and vertex IDs), and display at a tolerance. A mesh is the case where the exact and displayed geometry are the same, so today's picks, snapping and measurement move onto it first with no change in results. Every query names its reference frame and instant, as the ray-query seam in §13.14 already requires. F-reps are designed in from the start and built later: answers come from the distance field, and they draw by ray marching bounded by a constant step count, writing depth.
+
+**One render b-rep form, produced two ways.** The engine defines its own form, as custom shaders take precompiled WGSL or Slang compiled at runtime:
+
+- **Tiles:** a glTF 2.1 extension (a draft, for 3D Tiles 2.0) carries the render b-rep beside a fallback mesh, so a client without the extension still draws. Coarse tiles can stay plain meshes, with exact b-reps only at the finer levels. The tiler converts offline.
+- **Host, kernel-neutral:** `World.addBrep` (a working name) takes the form as typed arrays. An application with its own kernel writes it directly and loads no WebAssembly.
+- **Host, batteries included:** `BrepSource.fromUsd` (a working name) converts USD BRep or NURBS through SMLib built to WebAssembly in a worker, imported only on first use.
+
+The form: analytic surfaces kept as they are (plane, cylinder, cone, sphere, torus); NURBS, split into rational Bézier patches by the loader in TypeScript (exact, no kernel); trim loops in each face's parameter space; face, loop, edge and vertex tables, each edge with its exact 3D curve and its two faces; stable source IDs for every entity; per-entity tolerances as accuracy terms; and a content version.
+
+**SMLib's jobs** (NVIDIA's USD BRep, Apache 2.0, includes SMLib; noted in §13.14): conversion from what applications export, including surfaces that aren't NURBS (offsets, sweeps); healing; surface intersection for sections and clashes; and a reference tessellation to test the GPU path against. Never in the core.
+
+**View-based GPU tessellation from the start,** in the one tessellation engine §13.14 describes:
+
+- **Edges first.** Each topological edge is tessellated once at the view's tolerance, and both faces take their boundary from it, so faces don't crack apart. This is the vector pipeline's curve refinement.
+- **Patches by screen-space error,** evaluated with the draw's placement in compute and drawn with indirect draws.
+- **Trims per pixel.** The patch's whole parameter domain is tessellated, and the fragment stage tests inside or outside the trim with the same per-pixel coverage of quadratic curves the vector fill uses, in (u, v) instead of on screen. Exact, antialiased trim edges, no trim textures, no triangulation on the CPU, and a cap on curves per band as for glyphs. Each face's trim comes from its own parameter space, so pixel slivers along shared edges are possible: cover half a pixel extra, and draw edges on top.
+- **Planar faces** are vector polygons on a plane: one quad and the coverage test, while the placement is close to affine over the face.
+
+**What b-reps and vectors share:** the curve pipeline (exact source, placement, quadratic segments with an error bound, refined by view) for vector lines and outlines and for b-rep edges, silhouettes, sections and trims; per-pixel fill coverage for polygons, glyphs and trimmed faces; stroke styles for vector strokes and CAD edge styles (`BENTLEY_materials_line_style`); feature IDs and picking; and the exact source kept for snapping. Curved-surface tessellation is shared with reprojected meshes instead. Design the fill and curve kernels once, in the vector design.
+
+**Exact queries, mostly without a kernel.** The winning pick fragment writes the face ID and (u, v). The CPU evaluates the surface there in float64 with one Newton step, so a pick is exact with no ray-surface solve. Closest point and ray hits: closed form on analytic surfaces, subdivision and Newton on Bézier patches in a worker. The kernel only for intersections, healing and conversion.
+
+**Queries answered by a server,** as one of the host application's own services behind the same interface:
+
+- **In stages:** the client answers at once from what it has, exact if exact data is loaded, otherwise provisional with the tessellation's chordal error stated. It then asks the service with the stable entity ID, the ray, a tolerance in meters and the reference frame and instant, and upgrades the marker without a jump when the answer arrives. Answers are cached per entity, and a moving cursor aborts stale requests.
+- **Two kinds of service, both allowed:** answers on demand (the server holds the kernel: proprietary or huge data, sections, clashes, areas and volumes), or exact data on demand (the server returns the one element's b-rep and the client evaluates it).
+- **The tiles must carry** stable source IDs for elements, faces, edges and vertices, not only tile-local feature indices, and a content version, so an answer from a newer model is detected.
+
+**Editing.** Modeling, undo, persistence and collaboration are the application's. The engine shows changing geometry fast and correctly:
+
+- **Overrides on tiles:** an edited element hides its tiled version by stable ID across every tile that holds it and draws a live version, until republished tiles replace it. This is how edits coexist with immutable tiles (§13.20).
+- **Incremental updates** at face granularity: only changed patches upload, and the GPU re-tessellates them on the next tick.
+- **Transient geometry** for drag previews and handles, with picking optional.
+- **Queries see the edit,** live geometry and tiles both, excluding the element being dragged.
+- **Stable topology names** from the kernel, carried rather than invented, so a selection survives an edit that splits a face.
+
+**Reprojection, for b-reps and vectors together.**
+
+- **Evaluate in source coordinates, then place** each evaluated point. Subdivision measures error after placement, including how far the placement bends across a patch.
+- **Normals** are the surface's derivatives times the placement's Jacobian: exact, which avoids the dual-position normal error in §13.26.
+- **Trims and fills are tested in intrinsic coordinates,** (u, v) or the source plane, which reprojection can't change. The rule for both: tessellate the domain by curvature plus placement error, test coverage in intrinsic coordinates. A large planar face under a non-rigid reprojection isn't planar once placed, so it subdivides; its coverage test doesn't change.
+- **Quadratic segments are made after placement,** with their error measured there; snaps and measurements go back to the exact source.
+- **Measurements name their reference frame:** a distance in design coordinates and on the ground differ by the projection's scale factor.
+
+**Order.**
+
+1. Spike: SMLib in WebAssembly (size, startup, threads, exceptions; converting a USD BRep sample to the render form).
+2. Spike: one trimmed NURBS face on the GPU (tessellation by screen-space error and the per-pixel trim), against SMLib's tessellation for accuracy and cost. It also tests the shared fill idea. Both spikes are decision tools.
+3. The query interface, with the mesh adapter and an f-rep slot.
+4. The render b-rep form and the glTF extension draft, with the TypeScript loader and analytic surfaces.
+5. The GPU tessellation engine: edges first, patches, planar faces as fills.
+6. Trims and edges on the shared vector kernels, from the vector design.
+7. Exact picks, snapping and measurement, then the server-backed queries.
+8. SMLib as a module: `fromUsd`, healing, sections.
+9. The tiler: USD BRep to 3D Tiles 2.0, coarse levels as meshes; overrides for editing.
+10. F-reps.
+
+**Open:** the extension's name and schema; whether tiles store NURBS or pre-split Bézier patches (size against loader work); how b-rep edges meet the vector design's exact circles and clothoids; SMLib's WebAssembly size.
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
