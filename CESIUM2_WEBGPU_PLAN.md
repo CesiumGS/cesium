@@ -8894,6 +8894,8 @@ The extensions here are drafts for this proof of concept and free to change, so 
 
 The conversion half of the spike remains: one real trimmed NURBS solid (an SMLib native file or one built by hand), with positions, normals and indices extracted to typed arrays, timed against native, and the size options tried.
 
+**SMLib's build, to pin when it enters the repository.** Nothing in the engine uses SMLib yet: steps 3, 4 and 4b are TypeScript, and `npm run setup` fetches nothing for it. The spike built from NVIDIA-Omniverse/usd-brep at commit `3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5` (2026-10-22) with Emscripten 7.0.0, its build files kept outside the repository in `.superpowers/reports/smlib-spike-files/` (the serial TBB stand-in, the compile and link scripts). When step 5's comparison tests or step 8 need it, `npm run setup` should fetch that commit and a pinned emsdk into the setup store, as it does the Slang toolchain (`scripts/slangTools.mjs`), and build `smlib.wasm` there, outside version control, with the build script and the stand-in committed.
+
 **Spike B result (2026-11-09).** One rational bicubic NURBS face (100 m square, 3x3 Bézier spans, one control point of weight 2) with a circular hole in (u, v), drawn in Chrome on an Apple GPU. The vertex shader evaluates an n x n grid per span. The pixel shader computes the exact normal and cuts the hole by signed distance in (u, v). n is chosen per view from the bound 0.75·D/n² on the second differences of the Bézier net, converted to pixels, with a target of 0.5 px. Measured:
 
 | Distance | n   | Triangles | Bound   | Measured error | GPU time |
