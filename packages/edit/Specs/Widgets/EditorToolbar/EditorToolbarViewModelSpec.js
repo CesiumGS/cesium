@@ -209,6 +209,53 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
       expect(modeListener).not.toHaveBeenCalled();
     });
 
+    it("adds and removes components", function () {
+      viewModel = createViewModel();
+      editor.mode = EditMode.VERTEX;
+      const [vertex, edge, face] = viewModel.componentEntries;
+
+      viewModel.toggleComponentEntry(face);
+      expect(editor.mode).toBe(EditMode.VERTEX | EditMode.FACE);
+      expect(viewModel.modeId).toBeUndefined();
+      viewModel.toggleComponentEntry(edge);
+      expect(editor.mode).toBe(EditMode.VERTEX | EditMode.EDGE | EditMode.FACE);
+      viewModel.toggleComponentEntry(vertex);
+      expect(editor.mode).toBe(EditMode.EDGE | EditMode.FACE);
+    });
+
+    it("keeps the last component", function () {
+      viewModel = createViewModel();
+      editor.mode = EditMode.EDGE;
+      const modeListener = jasmine.createSpy();
+      editor.modeChanged.addEventListener(modeListener);
+
+      viewModel.toggleComponentEntry(viewModel.componentEntries[1]);
+
+      expect(editor.mode).toBe(EditMode.EDGE);
+      expect(modeListener).not.toHaveBeenCalled();
+    });
+
+    it("reports active components observably", function () {
+      viewModel = createViewModel();
+      const [vertex, edge, face] = viewModel.componentEntries;
+      const active = knockout.pureComputed(() =>
+        viewModel.componentEntries.map((entry) =>
+          viewModel.isComponentActive(entry),
+        ),
+      );
+      const listener = jasmine.createSpy();
+      const subscription = active.subscribe(listener);
+
+      expect(active()).toEqual([false, false, false]);
+      editor.mode = EditMode.VERTEX | EditMode.FACE;
+      expect(listener).toHaveBeenCalledWith([true, false, true]);
+      expect(viewModel.isComponentActive(vertex)).toBe(true);
+      expect(viewModel.isComponentActive(edge)).toBe(false);
+      expect(viewModel.isComponentActive(face)).toBe(true);
+      subscription.dispose();
+      active.dispose();
+    });
+
     it("toggles edit mode", function () {
       viewModel = createViewModel();
 
