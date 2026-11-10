@@ -17,6 +17,7 @@ import {
   nurbsSurfaceToPatches,
   type NurbsSurface,
 } from "../src/brep/nurbs.ts";
+import { spikeBSurface as spikeB } from "./brepFixtures.ts";
 
 /** A seeded linear congruential generator in [0, 1), so failures repeat. */
 function lcg(seed: number): () => number {
@@ -24,39 +25,6 @@ function lcg(seed: number): () => number {
   return () => {
     s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
     return s / 4294967296;
-  };
-}
-
-/**
- * Spike B's surface: a 6 × 6 net over x, y in [0, 100] m, a saddle of
- * amplitude 8 m plus 15 m at the four middle control points. The control
- * point (2, 3) has weight 2.
- */
-function spikeB(weights?: (i: number, j: number) => number): NurbsSurface {
-  const n = 6;
-  const points = new Float64Array(n * n * 3);
-  const w = new Float64Array(n * n).fill(1);
-  const clamped = [0, 0, 0, 0, 1 / 3, 2 / 3, 1, 1, 1, 1];
-  for (let j = 0; j < n; j++) {
-    for (let i = 0; i < n; i++) {
-      const x = (i / (n - 1)) * 100;
-      const y = (j / (n - 1)) * 100;
-      const sx = (x - 50) / 50;
-      const sy = (y - 50) / 50;
-      const bump = (i === 2 || i === 3) && (j === 2 || j === 3) ? 15 : 0;
-      points.set([x, y, 8 * (sx * sx - sy * sy) + bump], (j * n + i) * 3);
-      w[j * n + i] = weights ? weights(i, j) : i === 2 && j === 3 ? 2 : 1;
-    }
-  }
-  return {
-    degreeU: 3,
-    degreeV: 3,
-    knotsU: Float64Array.from(clamped),
-    knotsV: Float64Array.from(clamped),
-    countU: n,
-    countV: n,
-    points,
-    weights: w,
   };
 }
 
