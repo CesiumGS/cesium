@@ -1,6 +1,7 @@
 // Exact float64 evaluation of the b-rep form's surfaces (overall plan
 // §13.33). Positions are metres, derivatives are metres per parameter unit.
-import { SurfaceKind, type BrepForm } from "./form.ts";
+import { evaluatePatch, evaluateSegment } from "./bezier.ts";
+import { SurfaceKind, type BezierCurves, type BrepForm } from "./form.ts";
 
 /** A surface point and its first derivatives, m and m per parameter unit. */
 export interface SurfaceSample {
@@ -18,7 +19,7 @@ export function evaluateSurface(
 ): SurfaceSample {
   const kind = form.surfaceKind[surface] as SurfaceKind;
   if (kind === SurfaceKind.Bezier) {
-    throw new Error("evaluateSurface: Bézier surfaces come in Task 2");
+    return evaluateBezierSurface(form, surface, u, v);
   }
   const f = form.surfaceFrame;
   const b = surface * 9;
@@ -127,4 +128,98 @@ export function faceNormal(
   }
   const s = (form.faceReversed[face] === 1 ? -1 : 1) / length;
   return new Float64Array([nx * s, ny * s, nz * s]);
+}
+
+/**
+ * A Bézier surface at (u, v): the lowest-index patch whose domain holds the
+ * point, so a shared boundary takes the lower patch and its derivatives.
+ * A point outside every patch takes the nearest patch, clamped to its edge.
+ * Derivatives are scaled from patch parameters to surface parameters.
+ */
+function evaluateBezierSurface(
+  form: BrepForm,
+  surface: number,
+  u: number,
+  v: number,
+): SurfaceSample {
+  const first = form.surfacePatches[surface * 2]!;
+  const count = form.surfacePatches[surface * 2 + 1]!;
+  if (count === 0) {
+    throw new Error(`evaluateSurface: surface ${surface} has no patches`);
+  }
+  const d = form.patchDomain;
+  let best = first;
+  let bestMiss = Infinity;
+  for (let patch = first; patch < first + count; patch++) {
+    const u0 = d[patch * 4]!;
+    const u1 = d[patch * 4 + 1]!;
+    const v0 = d[patch * 4 + 2]!;
+    const v1 = d[patch * 4 + 3]!;
+    const missU = Math.max(u0 - u, u - u1, 0);
+    const missV = Math.max(v0 - v, v - v1, 0);
+    const miss = Math.max(missU, missV);
+    if (miss < bestMiss) {
+      best = patch;
+      bestMiss = miss;
+      if (miss === 0) {
+        break;
+      }
+    }
+  }
+  const u0 = d[best * 4]!;
+  const u1 = d[best * 4 + 1]!;
+  const v0 = d[best * 4 + 2]!;
+  const v1 = d[best * 4 + 3]!;
+  const widthU = u1 - u0;
+  const widthV = v1 - v0;
+  const s = widthU > 0 ? Math.min(Math.max((u - u0) / widthU, 0), 1) : 0;
+  const t = widthV > 0 ? Math.min(Math.max((v - v0) / widthV, 0), 1) : 0;
+  const sample = evaluatePatch(
+    form.patchPoints,
+    form.patchFirst[best]!,
+    form.patchDegree[best * 2]!,
+    form.patchDegree[best * 2 + 1]!,
+    s,
+    t,
+  );
+  const scaleU = widthU > 0 ? 1 / widthU : 0;
+  const scaleV = widthV > 0 ? 1 / widthV : 0;
+  for (let k = 0; k < 3; k++) {
+    sample.du[k] = sample.du[k]! * scaleU;
+    sample.dv[k] = sample.dv[k]! * scaleV;
+  }
+  return sample;
+}
+
+function evaluateCurve(
+  curves: BezierCurves,
+  dimension: 2 | 3,
+  segment: number,
+  t: number,
+): { position: Float64Array; derivative: Float64Array } {
+  return evaluateSegment(
+    curves.points,
+    curves.first[segment]!,
+    curves.degree[segment]!,
+    dimension,
+    t,
+  );
+}
+
+/** A 2D (u, v) curve segment at t in [0, 1]: position and derivative per unit t. */
+export function evaluateCurve2(
+  form: BrepForm,
+  segment: number,
+  t: number,
+): { position: Float64Array; derivative: Float64Array } {
+  return evaluateCurve(form.curves2, 2, segment, t);
+}
+
+/** A 3D curve segment at t in [0, 1]: position (m) and derivative (m per unit t). */
+export function evaluateCurve3(
+  form: BrepForm,
+  segment: number,
+  t: number,
+): { position: Float64Array; derivative: Float64Array } {
+  return evaluateCurve(form.curves3, 3, segment, t);
 }
