@@ -1,0 +1,7 @@
+title: 3D Tiles GeoJSON Vector - Dev
+description: Load MAXAR_content_geojson tile content as vector primitives with the vectorGeoJson tileset option, and compare it with loading the same content as a model.
+labels:
+  - 3D Tiles
+  - Vector Tiles
+  - Development
+development: true

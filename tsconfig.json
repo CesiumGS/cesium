@@ -1,5 +1,5 @@
 {
-  "include": ["scripts/*.js"],
+  "include": ["scripts/*.js", "gulpfile*.js"],
   "compilerOptions": {
     // Module configuration.
     "moduleResolution": "bundler",
