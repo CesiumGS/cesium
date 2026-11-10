@@ -995,7 +995,7 @@ function parseActiveBufferViews(bufferViewHeaders, buffersU8) {
       continue;
     }
 
-    const start = bufferViewHeader.byteOffset;
+    const start = bufferViewHeader.byteOffset ?? 0;
     const end = start + bufferViewHeader.byteLength;
     const buffer = buffersU8[bufferViewHeader.buffer];
     const bufferView = buffer.subarray(start, end);
