@@ -53,7 +53,7 @@ const toolIcons = {
 };
 
 /**
- * Dropdowns for choosing a {@link MeshEditor}'s mode and active tool.
+ * Buttons for choosing a {@link MeshEditor}'s mode and active tool.
  * Requires <code>EditorToolbar.css</code>.
  *
  * @alias EditorToolbar
@@ -197,7 +197,8 @@ class EditorToolbar {
   }
 
   /**
-   * Creates the Vertex, Edge and Face buttons, shown in Edit Mode.
+   * Creates the Vertex, Edge and Face buttons, shown in Edit Mode. Clicking
+   * one selects its mode, and Shift+clicking one adds or removes it.
    * @returns {HTMLSpanElement}
    * @ignore
    */
@@ -213,10 +214,18 @@ class EditorToolbar {
     );
     group.appendChild(
       this.#createButton(
-        `click: function() { $parent.viewModel.selectModeEntry($data); },
+        `click: function(entry, event) {
+           if (event.shiftKey) {
+             $parent.viewModel.toggleComponentEntry(entry);
+           } else {
+             $parent.viewModel.selectModeEntry(entry);
+           }
+         },
          attr: { title: label, 'aria-label': label,
-           'aria-pressed': String(id === $parent.viewModel.modeId) },
-         css: { 'cesium-editor-toolbar-active': id === $parent.viewModel.modeId },
+           'aria-pressed': String($parent.viewModel.isComponentActive($data)) },
+         css: {
+           'cesium-editor-toolbar-active': $parent.viewModel.isComponentActive($data),
+         },
          cesiumSvgPath: { path: iconPath, width: iconWidth, height: iconHeight }`,
       ),
     );
