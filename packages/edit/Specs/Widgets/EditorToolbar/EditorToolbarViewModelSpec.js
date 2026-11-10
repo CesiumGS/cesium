@@ -52,7 +52,6 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   function createViewModel(options) {
     return new EditorToolbarViewModel(editor, {
       tools: [
-        { id: "none", label: "Tools", tool: undefined },
         { id: "select", label: "Select", tool: selectTool },
         { id: "translate", label: "Translate", tool: translateTool },
       ],
@@ -80,7 +79,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
       { id: "face", label: "Face", mode: EditMode.FACE },
     ]);
     expect(viewModel.modeId).toBe("none");
-    expect(viewModel.toolId).toBe("none");
+    expect(viewModel.toolId).toBeUndefined();
     expect(viewModel.modeDropDownVisible).toBe(false);
     expect(viewModel.toolDropDownVisible).toBe(false);
   });
@@ -88,9 +87,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
   it("doesn't add tools to the editor by default", function () {
     viewModel = new EditorToolbarViewModel(editor);
 
-    expect(viewModel.toolEntries).toEqual([
-      { id: "none", label: "Tools", tool: undefined },
-    ]);
+    expect(viewModel.toolEntries).toEqual([]);
     expect(SelectTool.addTo).not.toHaveBeenCalled();
     expect(TranslateTool.addTo).not.toHaveBeenCalled();
   });
@@ -145,7 +142,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     editor.mode = EditMode.NONE;
 
     expect(viewModel.modeId).toBe("none");
-    expect(viewModel.toolId).toBe("none");
+    expect(viewModel.toolId).toBeUndefined();
   });
 
   it("leaves the selected ID undefined when no entry matches", function () {
@@ -171,7 +168,7 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     viewModel = createViewModel();
 
     viewModel.selectModeEntry(viewModel.modeEntries[1]);
-    viewModel.selectToolEntry(viewModel.toolEntries[2]);
+    viewModel.selectToolEntry(viewModel.toolEntries[1]);
 
     expect(editor.mode).toBe(EditMode.VERTEX);
     expect(editor.activeTool).toBe(translateTool);
@@ -179,34 +176,23 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     expect(viewModel.toolId).toBe("translate");
   });
 
-  it("clears the active tool through the no-tool entry", function () {
-    editor.activeTool = selectTool;
-    viewModel = createViewModel();
-
-    viewModel.selectToolEntry(viewModel.toolEntries[0]);
-
-    expect(editor.activeTool).toBeUndefined();
-    expect(viewModel.toolId).toBe("none");
-  });
-
   it("disables unsupported tools using supportsMode", function () {
     viewModel = createViewModel();
 
     expect(viewModel.isToolEnabled(viewModel.toolEntries[0])).toBe(true);
-    expect(viewModel.isToolEnabled(viewModel.toolEntries[1])).toBe(true);
-    expect(viewModel.isToolEnabled(viewModel.toolEntries[2])).toBe(false);
+    expect(viewModel.isToolEnabled(viewModel.toolEntries[1])).toBe(false);
     expect(translateTool.supportsMode).toHaveBeenCalledWith(EditMode.NONE);
 
     editor.mode = EditMode.EDGE;
 
-    expect(viewModel.isToolEnabled(viewModel.toolEntries[2])).toBe(true);
+    expect(viewModel.isToolEnabled(viewModel.toolEntries[1])).toBe(true);
     expect(translateTool.supportsMode).toHaveBeenCalledWith(EditMode.EDGE);
   });
 
   it("updates observable availability even when no mode entry matches", function () {
     viewModel = createViewModel({ modes: [] });
     const availability = knockout.pureComputed(() =>
-      viewModel.isToolEnabled(viewModel.toolEntries[2]),
+      viewModel.isToolEnabled(viewModel.toolEntries[1]),
     );
     const listener = jasmine.createSpy();
     const subscription = availability.subscribe(listener);
@@ -227,12 +213,23 @@ describe("Widgets/EditorToolbar/EditorToolbarViewModel", function () {
     viewModel.toolDropDownVisible = true;
 
     expect(() =>
-      viewModel.selectToolEntry(viewModel.toolEntries[2]),
+      viewModel.selectToolEntry(viewModel.toolEntries[1]),
     ).toThrowDeveloperError();
 
     expect(editor.activeTool).toBe(selectTool);
     expect(viewModel.toolId).toBe("select");
     expect(viewModel.toolDropDownVisible).toBe(true);
+  });
+
+  it("closes the tool dropdown when the active tool isn't an entry", function () {
+    editor.activeTool = selectTool;
+    viewModel = createViewModel();
+    viewModel.toolDropDownVisible = true;
+
+    editor.activeTool = undefined;
+
+    expect(viewModel.toolId).toBeUndefined();
+    expect(viewModel.toolDropDownVisible).toBe(false);
   });
 
   it("closes the other dropdown when opening a dropdown", function () {

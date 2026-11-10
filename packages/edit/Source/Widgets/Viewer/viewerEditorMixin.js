@@ -10,6 +10,7 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
 
 /** @import { Viewer } from "@cesium/widgets"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
+/** @import MeshEditorTool from "../../Editor/MeshEditorTool.js"; */
 /** @import { EditorToolbarOptions, EditorToolbarModeEntry, EditorToolbarToolEntry } from "../EditorToolbar/EditorToolbarViewModel.js"; */
 /** @import { Command } from "@cesium/widgets"; */
 /** @import { EditorGridOptions } from "./EditorGrid.js"; */
@@ -96,7 +97,9 @@ const viewerPropertyNames = [
  *   outliner: true,
  *   grid: { origin: Cesium.Cartesian3.fromDegrees(-123.07, 44.05) },
  * });
- * editor.activeTool = viewer.editorTools.select;
+ * // With the mixin, these settings can be controlled via UI, or programmatically:
+ * editor.mode = Cesium.EditMode.VERTEX;
+ * editor.activeTool = viewer.editorTools.translate;
  */
 function viewerEditorMixin(viewer, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -165,6 +168,8 @@ function viewerEditorMixin(viewer, options) {
 
   const { grid, removeGrid } = addGrid(viewer, options.grid);
 
+  const removeDefaultTool = activateDefaultTool(editor, tools.select);
+
   defineViewerEditorProperties(viewer, editor, tools, toolbar, outliner, grid);
 
   installCleanup(
@@ -173,6 +178,7 @@ function viewerEditorMixin(viewer, options) {
     removeKeyBindings,
     cameraControls,
     removeGrid,
+    removeDefaultTool,
   );
 }
 
@@ -191,10 +197,29 @@ const defaultKeyBindings = Object.freeze({
  */
 function createToolEntries(tools) {
   return [
-    { id: "none", label: "Tools", tool: undefined },
     { id: "select", label: "Select", tool: tools.select },
     { id: "translate", label: "Translate", tool: tools.translate },
   ];
+}
+
+/**
+ * Activates a tool if none is active, and again whenever a mode change
+ * deactivates the active tool.
+ *
+ * @param {MeshEditor} editor
+ * @param {MeshEditorTool} tool The tool to activate.
+ * @returns {Function} Removes the mode listener.
+ * @ignore
+ */
+function activateDefaultTool(editor, tool) {
+  const activate = () => {
+    if (!defined(editor.activeTool)) {
+      editor.activeTool = tool;
+    }
+  };
+
+  activate();
+  return editor.modeChanged.addEventListener(activate);
 }
 
 /**
@@ -283,6 +308,7 @@ function defineViewerEditorProperties(
  * @param {Function} removeKeyBindings
  * @param {EditorCameraControls} cameraControls
  * @param {Function} removeGrid
+ * @param {Function} removeDefaultTool
  * @ignore
  */
 function installCleanup(
@@ -291,9 +317,11 @@ function installCleanup(
   removeKeyBindings,
   cameraControls,
   removeGrid,
+  removeDefaultTool,
 ) {
   const destroyViewer = viewer.destroy;
   viewer.destroy = function () {
+    removeDefaultTool();
     cameraControls.destroy();
     removeKeyBindings();
     for (const widget of widgets) {

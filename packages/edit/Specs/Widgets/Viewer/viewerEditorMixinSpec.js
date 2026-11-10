@@ -37,6 +37,9 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
       set mode(value) {
         const previous = mode;
         mode = value;
+        if (activeTool && !activeTool.supportsMode(mode)) {
+          this.activeTool = undefined;
+        }
         this.modeChanged.raiseEvent(value, previous);
       },
       get activeTool() {
@@ -135,7 +138,8 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
     expect(Object.isFrozen(viewer.editorTools)).toBe(true);
     expect(
       viewer.editorToolbar.viewModel.toolEntries.map((entry) => entry.tool),
-    ).toEqual([undefined, selectTool, translateTool]);
+    ).toEqual([selectTool, translateTool]);
+    expect(viewer.editorToolbar.viewModel.toolId).toBe("select");
   });
 
   it("exposes the default tools without a toolbar", function () {
@@ -143,6 +147,57 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
     expect(viewer.editorTools.select).toBe(selectTool);
     expect(viewer.editorTools.translate).toBe(translateTool);
+  });
+
+  describe("default tool", function () {
+    it("activates the select tool", function () {
+      viewerEditorMixin(viewer, { editor });
+
+      expect(editor.activeTool).toBe(selectTool);
+    });
+
+    it("keeps an already active tool", function () {
+      const otherTool = createTool(() => true);
+      editor.activeTool = otherTool;
+
+      viewerEditorMixin(viewer, { editor, toolbar: {} });
+
+      expect(editor.activeTool).toBe(otherTool);
+    });
+
+    it("reactivates the select tool when a mode change deactivates the active tool", function () {
+      viewerEditorMixin(viewer, { editor, toolbar: {} });
+      editor.mode = EditMode.VERTEX;
+      editor.activeTool = translateTool;
+
+      editor.mode = EditMode.NONE;
+
+      expect(editor.activeTool).toBe(selectTool);
+      expect(viewer.editorToolbar.viewModel.toolId).toBe("select");
+    });
+
+    it("keeps a tool that supports the new mode", function () {
+      viewerEditorMixin(viewer, { editor });
+      editor.mode = EditMode.VERTEX;
+      editor.activeTool = translateTool;
+
+      editor.mode = EditMode.FACE;
+
+      expect(editor.activeTool).toBe(translateTool);
+    });
+
+    it("stops reactivating the select tool after the viewer is destroyed", function () {
+      viewerEditorMixin(viewer, { editor });
+      const listenerCount = editor.modeChanged.numberOfListeners;
+
+      viewer.destroy();
+
+      expect(editor.modeChanged.numberOfListeners).toBe(listenerCount - 1);
+      editor.mode = EditMode.VERTEX;
+      editor.activeTool = translateTool;
+      editor.mode = EditMode.NONE;
+      expect(editor.activeTool).toBeUndefined();
+    });
   });
 
   it("requires a viewer and an editor in its scene", function () {
@@ -353,7 +408,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
     const event = press("g");
     expect(event.defaultPrevented).toBe(false);
-    expect(editor.activeTool).toBeUndefined();
+    expect(editor.activeTool).toBe(selectTool);
   });
 
   it("cancels the active tool with Escape without changing mode", function () {
@@ -369,6 +424,7 @@ describe("Widgets/Viewer/viewerEditorMixin", function () {
 
   it("ignores Escape when there is no active tool", function () {
     viewerEditorMixin(viewer, { editor, toolbar: {} });
+    editor.activeTool = undefined;
 
     expect(press("Escape").defaultPrevented).toBe(false);
     expect(selectTool.cancel).not.toHaveBeenCalled();

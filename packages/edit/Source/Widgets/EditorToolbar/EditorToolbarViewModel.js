@@ -24,7 +24,7 @@ import EditMode from "../../Editor/EditMode.js";
  * @typedef {object} EditorToolbarToolEntry
  * @property {string} id The entry's identifier.
  * @property {string} label The tooltip text.
- * @property {MeshEditorTool|undefined} tool The tool to select, or undefined to clear it.
+ * @property {MeshEditorTool} tool The tool to select.
  * @property {string} [iconPath] The SVG icon path.
  * @property {number} [iconWidth=64] The SVG view box width.
  * @property {number} [iconHeight=64] The SVG view box height.
@@ -34,7 +34,7 @@ import EditMode from "../../Editor/EditMode.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @typedef {object} EditorToolbarOptions
  * @property {EditorToolbarModeEntry[]} [modes] Entries replacing the default modes.
- * @property {EditorToolbarToolEntry[]} [tools] Entries replacing the default tools. The toolbar doesn't add tools to the editor, so by default it only offers clearing the active tool.
+ * @property {EditorToolbarToolEntry[]} [tools] The tool entries. The toolbar doesn't add tools to the editor, so by default it offers none.
  */
 
 /**
@@ -85,7 +85,7 @@ class EditorToolbarViewModel {
 
     this.#editor = editor;
     this.#modeEntries = options?.modes ?? this.#createModeEntries();
-    this.#toolEntries = options?.tools ?? this.#createToolEntries();
+    this.#toolEntries = options?.tools ?? [];
 
     /**
      * The selected mode entry's identifier, or undefined if no entry matches.
@@ -166,7 +166,7 @@ class EditorToolbarViewModel {
    * @returns {boolean} Whether the entry is enabled.
    */
   isToolEnabled(entry) {
-    return entry.tool?.supportsMode(this.#mode()) ?? true;
+    return entry.tool.supportsMode(this.#mode());
   }
 
   /**
@@ -181,15 +181,6 @@ class EditorToolbarViewModel {
       { id: "edge", label: "Edge", mode: EditMode.EDGE },
       { id: "face", label: "Face", mode: EditMode.FACE },
     ];
-  }
-
-  /**
-   * Creates the default tool entries.
-   * @returns {EditorToolbarToolEntry[]} The tool entries.
-   * @ignore
-   */
-  #createToolEntries() {
-    return [{ id: "none", label: "Tools", tool: undefined }];
   }
 
   /**
@@ -251,6 +242,9 @@ class EditorToolbarViewModel {
     this.toolId = this.#toolEntries.find(
       (entry) => entry.tool === activeTool,
     )?.id;
+    if (this.toolId === undefined) {
+      this.toolDropDownVisible = false;
+    }
     this.#mode(mode);
   }
 
