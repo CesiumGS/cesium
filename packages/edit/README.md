@@ -38,7 +38,8 @@ The APIs in this package are experimental and are expected to evolve as CesiumJS
 
 ### Editor toolbar
 
-`EditorToolbar` adds mode and tool dropdowns for an editor. It requires the
+`EditorToolbar` adds an Object Mode/Edit Mode toggle, Vertex, Edge and Face
+buttons shown in Edit Mode, and a tool dropdown for an editor. It requires the
 widgets' stylesheet and its own:
 
 ```js
@@ -54,9 +55,8 @@ const toolbar = new EditorToolbar("editorToolbarContainer", editor, {
 });
 ```
 
-Pass `modes` or `tools` to replace the default entries. The toolbar doesn't add
-tools to the editor, so pass the tools it should offer; without any, it has no
-tool dropdown. `viewerEditorMixin` adds a select and a translate tool, exposed
+The toolbar doesn't add tools to the editor, so pass the tools it should offer;
+without any, it has no tool dropdown. `viewerEditorMixin` adds a select and a translate tool, exposed
 as `viewer.editorTools`, and activates the select tool.
 
 ## Community
