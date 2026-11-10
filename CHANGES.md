@@ -23,6 +23,7 @@
 - Fixed `WebGL: INVALID_VALUE: uniform3fv: no array` errors on drivers that list a uniform array as active but return no location for its elements. [#13980](https://github.com/CesiumGS/cesium/issues/13980)
 - `metadataClass` and `metadataStatistics` values are now only added to a model's shader for the properties a `CustomShader` reads through `fsInput.metadataClass` / `fsInput.metadataStatistics` (or the `vsInput` equivalents). Since these values are baked into the GLSL, tilesets whose tiles embed different class definitions or statistics previously compiled a separate shader program for each variant. [#14008](https://github.com/CesiumGS/cesium/pull/14008)
 - Fixed `Heap.insert` keeping a reference to the element it removes once the heap is full. Through `RequestScheduler`, a destroyed `Cesium3DTileset` could stay in memory with its whole tile tree. [#13894](https://github.com/CesiumGS/cesium/issues/13894)
+- Fixed the page hanging, or polylines being drawn with the wrong translucency, when the color of polylines with different depth fail materials changed between opaque and translucent. [#13952](https://github.com/CesiumGS/cesium/issues/13952)
 
 ## 1.147 - 2026-11-02
 
