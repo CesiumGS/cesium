@@ -34,6 +34,7 @@ import { Rendering } from "./tabs/rendering.tsx";
 import { Scene } from "./tabs/scene.tsx";
 import { Selection } from "./tabs/selection.tsx";
 import { Shadows } from "./tabs/shadows.tsx";
+import { Unified } from "./tabs/unified.tsx";
 import { Tessellation } from "./tabs/tessellation.tsx";
 import { Shading } from "./tabs/shading.tsx";
 import { Specs } from "./tabs/specs.tsx";
@@ -51,6 +52,7 @@ const GROUPS: { title: string; tabs: Tab[] }[] = [
     tabs: [
       { id: "overview", label: "Overview", view: Overview },
       { id: "architecture", label: "System architecture", view: Architecture },
+      { id: "unified", label: "One core, many uses", view: Unified },
       { id: "api", label: "Public API", view: Api },
       { id: "differences", label: "Differences from 1.x", view: Differences },
       { id: "compare", label: "1.x to 2.0 API", view: Compare },
