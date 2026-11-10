@@ -169,7 +169,7 @@ describe(
         scene.globe = globe;
         globe.depthTestAgainstTerrain = true;
         return pollToPromise(function () {
-          scene.render();
+          scene.renderForSpecs();
           return globe.tilesLoaded;
         });
       }
@@ -563,6 +563,19 @@ describe(
             expect(pickedObjects[1].primitive).toEqual(rectangle3);
             expect(pickedObjects[2].primitive).toEqual(rectangle2);
           }, 3);
+        });
+
+        it("stops drill picking when a picked object cannot be hidden", function () {
+          const rectangle = createLargeRectangle(0.0);
+          Object.defineProperty(rectangle, "show", {
+            get: () => true,
+            set: () => {},
+          });
+
+          expect(scene).toDrillPickAndCall(function (pickedObjects) {
+            expect(pickedObjects.length).toEqual(1);
+            expect(pickedObjects[0].primitive).toEqual(rectangle);
+          });
         });
       });
 
@@ -1445,7 +1458,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1468,7 +1481,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1490,7 +1503,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1508,7 +1521,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -2654,7 +2667,7 @@ describe(
 
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed === 2;
         }).then(function () {
           expect(results[0][0]).toBeDefined();

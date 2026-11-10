@@ -81,6 +81,7 @@ PointCloudStylingPipelineStage.process = function (
 
   const hasBatchTable = !defined(propertyAttributes) && hasFeatureTable;
 
+  let hasShowStyle = false;
   if (defined(style) && !hasBatchTable) {
     const variableSubstitutionMap =
       getVariableSubstitutionMap(propertyAttributes);
@@ -89,6 +90,7 @@ PointCloudStylingPipelineStage.process = function (
       variableSubstitutionMap,
     );
     addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo);
+    hasShowStyle = defined(shaderFunctionInfo.showStyleFunction);
 
     const propertyNames = getPropertyNames(shaderFunctionInfo);
 
@@ -130,8 +132,13 @@ PointCloudStylingPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_BACK_FACE_CULLING",
       undefined,
-      ShaderDestination.VERTEX,
+      ShaderDestination.BOTH,
     );
+  }
+
+  // Hidden points are discarded in the fragment shader. See ModelVS.glsl
+  if (hasShowStyle || pointCloudShading.backFaceCulling) {
+    shaderBuilder.addVarying("float", "v_pointCloudShow");
   }
 
   let content;
@@ -334,7 +341,6 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
       ShaderDestination.BOTH,
     );
     shaderBuilder.addVertexLines(showStyleFunction);
-    shaderBuilder.addVarying("float", "v_pointCloudShow");
   }
 
   const pointSizeStyleFunction = shaderFunctionInfo.pointSizeStyleFunction;

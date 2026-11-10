@@ -7,7 +7,7 @@ import { Check, defined } from "@cesium/core";
  * @alias ResourceCacheStatistics
  * @constructor
  *
- * @private
+ * @internal
  */
 function ResourceCacheStatistics() {
   /**
