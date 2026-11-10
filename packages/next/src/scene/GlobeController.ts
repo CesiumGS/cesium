@@ -374,10 +374,14 @@ export class GlobeController {
           return;
         }
         if (m.kind === "tilt" && this.mode === "tilt") {
+          this.anchoring++;
           // The pitch changes by the angle the midpoint's slide covers in
           // the view; the heading stays.
           this.tiltBy(this.pixelAngle(m.dy));
         } else if (m.kind === "combined" && this.mode === "two") {
+          // A pick answering after the fingers have moved would shift the
+          // point they hold mid-gesture: keep the one they started on.
+          this.anchoring++;
           const [x, y] = this.clientPixel(m.x, m.y);
           if (m.angle !== 0) {
             this.twist(m.angle);

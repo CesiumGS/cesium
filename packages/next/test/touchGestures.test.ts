@@ -40,7 +40,7 @@ describe("isTilt", () => {
 });
 
 /** Records what a tracker tells its listener. */
-function record() {
+function record(schedule?: (run: () => void) => void) {
   const log: string[] = [];
   const moves: TwoFingerMove[] = [];
   const listener: TouchGestureListener = {
@@ -55,7 +55,7 @@ function record() {
     },
     twoEnd: () => log.push("two-"),
   };
-  const touch = new TouchGestures(listener);
+  const touch = new TouchGestures(listener, schedule ? { schedule } : {});
   const ev = (id: number, x: number, y: number, pointerType = "touch") => ({
     pointerId: id,
     pointerType,
@@ -243,6 +243,41 @@ describe("TouchGestures", () => {
     touch.down(ev(4, 10, 10));
     touch.move(ev(4, 20, 10));
     expect(log).toEqual(["one+ 10,10", "one~ 20,10"]);
+  });
+});
+
+describe("TouchGestures, once per displayed frame", () => {
+  it("reports both fingers' moves as one, from their latest positions", () => {
+    const queued: (() => void)[] = [];
+    const { touch, log, moves, ev } = record((run) => queued.push(run));
+    touch.down(ev(1, 0, 0));
+    touch.down(ev(2, 100, 0));
+    touch.move(ev(1, -10, 0));
+    touch.move(ev(2, 110, 0));
+    queued.splice(0).forEach((run) => run());
+    log.length = 0;
+    moves.length = 0;
+    touch.move(ev(1, -20, 0));
+    touch.move(ev(2, 120, 0));
+    expect(log).toEqual([]);
+    queued.splice(0).forEach((run) => run());
+    expect(log).toEqual(["two~ combined"]);
+    expect(moves[0]!.scale).toBeCloseTo(140 / 120, 12);
+    expect(moves[0]!.dx).toBeCloseTo(0, 12);
+  });
+
+  it("reports a waiting move before a finger lifts, and skips the stale report", () => {
+    const queued: (() => void)[] = [];
+    const { touch, log, ev } = record((run) => queued.push(run));
+    touch.down(ev(1, 0, 0));
+    touch.down(ev(2, 100, 0));
+    touch.move(ev(1, -10, 0));
+    touch.move(ev(2, 110, 0));
+    log.length = 0;
+    touch.up(ev(1, -10, 0));
+    expect(log).toEqual(["begin combined", "two~ combined", "two-"]);
+    queued.splice(0).forEach((run) => run());
+    expect(log).toEqual(["begin combined", "two~ combined", "two-"]);
   });
 });
 

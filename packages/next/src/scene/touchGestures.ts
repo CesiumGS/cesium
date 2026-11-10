@@ -139,7 +139,29 @@ export class TouchGestures {
   /** The finger left over from a pair: it moves nothing until it lifts. */
   private spent = false;
 
-  constructor(private readonly listener: TouchGestureListener) {}
+  /** A move is waiting to be reported (`process`). */
+  private pending = false;
+  /** Bumped when pending moves are reported early, so a scheduled report skips. */
+  private generation = 0;
+  private readonly schedule: (run: () => void) => void;
+
+  /**
+   * Moves are reported once per displayed frame, from every finger's latest
+   * position (`schedule`, default `requestAnimationFrame` where there is one,
+   * else at once). Fingers' moves arrive as separate events, and reporting
+   * each with the other finger a step behind made the midpoint, spread and
+   * angle zigzag.
+   */
+  constructor(
+    private readonly listener: TouchGestureListener,
+    options: { schedule?: (run: () => void) => void } = {},
+  ) {
+    this.schedule =
+      options.schedule ??
+      (typeof requestAnimationFrame === "function"
+        ? (run) => void requestAnimationFrame(run)
+        : (run) => run());
+  }
 
   /** The fingers followed (at most two). */
   get count(): number {
@@ -160,6 +182,7 @@ export class TouchGestures {
     ) {
       return false;
     }
+    this.flush();
     this.fingers.push({ id: e.pointerId, x: e.clientX, y: e.clientY });
     if (this.fingers.length === 1) {
       this.listener.oneStart?.(e.clientX, e.clientY);
@@ -189,7 +212,34 @@ export class TouchGestures {
     }
     finger.x = e.clientX;
     finger.y = e.clientY;
+    if (this.pending) {
+      return;
+    }
+    this.pending = true;
+    const generation = this.generation;
+    this.schedule(() => {
+      if (generation === this.generation) {
+        this.process();
+      }
+    });
+  }
+
+  /** Reports a waiting move now, before the fingers change. */
+  private flush(): void {
+    if (this.pending) {
+      this.process();
+    }
+  }
+
+  /** Reports the fingers' latest positions as one move. */
+  private process(): void {
+    this.pending = false;
+    this.generation++;
+    if (this.fingers.length === 0) {
+      return;
+    }
     if (this.fingers.length === 1) {
+      const finger = this.fingers[0]!;
       if (!this.spent) {
         this.listener.oneMove?.(finger.x, finger.y);
       }
@@ -247,6 +297,7 @@ export class TouchGestures {
     if (!finger) {
       return;
     }
+    this.flush();
     const wasTwo = this.fingers.length === 2;
     this.fingers = this.fingers.filter((f) => f !== finger);
     this.mode = undefined;
