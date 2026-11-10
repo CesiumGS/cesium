@@ -5,6 +5,11 @@ import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { View } from "./View.ts";
 import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
+import {
+  TouchGestures,
+  holdBrowserGestures,
+  type TouchGestureListener,
+} from "./touchGestures.ts";
 
 /**
  * Globe camera input in the manner of CesiumJS 1.x's 3D
@@ -19,6 +24,11 @@ import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
  *   center;
  * - shift-drag: look around from where the camera is;
  * - spin keeps its momentum after release (1.x inertia); wheel zoom glides.
+ *
+ * Touch: one finger grabs like the left button; two fingers pinch (zoom
+ * toward the point under their midpoint), drag (tilt and turn like the
+ * middle button) or rotate (turn the heading about the point under the
+ * midpoint); see `touchGestures.ts`.
  *
  * The camera never rolls (1.x constrains it to the Earth's axis): every
  * motion levels it about its view direction. A zoom keeps the heading and
@@ -91,7 +101,9 @@ export class GlobeController {
   inputs = 0;
 
   /** `sky`: a drag begun off the globe, which moves nothing. */
-  private mode: "none" | "grab" | "sky" | "zoom" | "tilt" | "look" = "none";
+  private mode:
+    "none" | "grab" | "sky" | "zoom" | "tilt" | "look" | "pinch" | "twist" =
+    "none";
   private lastX = 0;
   private lastY = 0;
   /** Point held under the cursor while grabbing, or the zoom/tilt pivot. */
@@ -118,6 +130,7 @@ export class GlobeController {
   private readonly abort = new AbortController();
   private readonly ellipsoid = Ellipsoid.WGS84;
   private readonly guard: EarthFixedGuard;
+  private readonly touch: TouchGestures;
 
   /**
    * `frames`: the engine's frame loop (`Engine.onTick`), for the momentum
@@ -135,6 +148,10 @@ export class GlobeController {
   ) {
     this.guard = new EarthFixedGuard(view, "GlobeController");
     const signal = this.abort.signal;
+    this.touch = new TouchGestures(this.touchListener());
+    signal.addEventListener("abort", holdBrowserGestures(element), {
+      once: true,
+    });
     element.addEventListener("pointerdown", (e) => this.onDown(e), { signal });
     element.addEventListener("pointermove", (e) => this.onMove(e), { signal });
     element.addEventListener("pointerup", (e) => this.onUp(e), { signal });
@@ -196,10 +213,11 @@ export class GlobeController {
     } catch {
       // Synthetic pointers (tests) can't be captured.
     }
-    this.stop();
-    this.lastX = x;
-    this.lastY = y;
-    this.lastTime = performance.now();
+    if (e.pointerType === "touch") {
+      this.touch.down(e);
+      return;
+    }
+    this.startGesture(x, y);
     if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
       this.mode = "tilt";
       const r = this.view.pixelRect();
@@ -222,16 +240,30 @@ export class GlobeController {
     }
   }
 
+  /** Begins any gesture at (x, y): momentum stops. */
+  private startGesture(x: number, y: number): void {
+    this.stop();
+    this.lastX = x;
+    this.lastY = y;
+    this.lastTime = performance.now();
+  }
+
   private onMove(e: PointerEvent): void {
+    if (e.pointerType === "touch") {
+      this.touch.move(e);
+      return;
+    }
     const [x, y] = this.targetPixel(e);
     if (this.mode === "none") {
       this.trackHover(x, y);
       return;
     }
-    if (!earthFixed(this.view)) {
-      // The view re-rooted off the Earth mid-drag: the drag ends.
-      this.mode = "none";
-      this.stop();
+    this.dragTo(x, y);
+  }
+
+  /** A drag's pointer is now at (x, y). */
+  private dragTo(x: number, y: number): void {
+    if (!this.stillOnEarth()) {
       return;
     }
     const dx = x - this.lastX;
@@ -258,12 +290,42 @@ export class GlobeController {
     }
   }
 
+  /**
+   * False, ending the gesture, when the view re-rooted off the Earth
+   * mid-drag.
+   */
+  private stillOnEarth(): boolean {
+    if (earthFixed(this.view)) {
+      return true;
+    }
+    this.mode = "none";
+    this.stop();
+    return false;
+  }
+
   private onUp(e: PointerEvent): void {
+    if (e.pointerType === "touch") {
+      try {
+        this.element.releasePointerCapture(e.pointerId);
+      } catch {
+        // Not captured (synthetic pointers, tests).
+      }
+      this.touch.up(e);
+      return;
+    }
     if (this.mode === "none") {
       return;
     }
     if (this.element.hasPointerCapture(e.pointerId)) {
       this.element.releasePointerCapture(e.pointerId);
+    }
+    this.finish();
+  }
+
+  /** The last pointer of a gesture is up. */
+  private finish(): void {
+    if (this.mode === "none") {
+      return;
     }
     // Momentum only if the pointer was still moving when released.
     if (performance.now() - this.lastTime > 80) {
@@ -271,6 +333,74 @@ export class GlobeController {
     }
     this.mode = "none";
     this.animate();
+  }
+
+  /** What the touch tracker's gestures do (the mouse's, in touch's terms). */
+  private touchListener(): TouchGestureListener {
+    return {
+      oneStart: (cx, cy) => {
+        const [x, y] = this.clientPixel(cx, cy);
+        this.startGesture(x, y);
+        this.anchorAt(x, y);
+        this.mode = this.hasAnchor ? "grab" : "sky";
+      },
+      oneMove: (cx, cy) => {
+        if (this.mode !== "none") {
+          const [x, y] = this.clientPixel(cx, cy);
+          this.dragTo(x, y);
+        }
+      },
+      oneEnd: () => this.finish(),
+      // The one-finger turn's momentum must not carry on under two fingers.
+      twoStart: () => this.stop(),
+      twoBegin: (kind, cx, cy) => {
+        const [x, y] = this.clientPixel(cx, cy);
+        this.startGesture(x, y);
+        if (kind === "pinch") {
+          this.mode = "pinch";
+          this.zoomPixel = [x, y];
+          this.anchorAt(x, y);
+          if (!this.hasAnchor) {
+            this.zoomPixel = undefined;
+            this.ground(this.anchor);
+          }
+        } else if (kind === "drag") {
+          this.mode = "tilt";
+          const r = this.view.pixelRect();
+          this.anchorAt(r.x + r.width / 2, r.y + r.height / 2);
+        } else {
+          this.mode = "twist";
+          this.anchorAt(x, y);
+          if (!this.hasAnchor) {
+            this.ground(this.anchor);
+          }
+        }
+      },
+      twoMove: (m) => {
+        if (!this.stillOnEarth()) {
+          return;
+        }
+        const [x, y] = this.clientPixel(m.x, m.y);
+        if (m.kind === "pinch" && this.mode === "pinch") {
+          // The distance shrinks by the ratio the fingers spread by; the
+          // point under the midpoint stays under it as it moves.
+          if (this.zoomPixel) {
+            this.zoomPixel = [x, y];
+          }
+          this.zoomToward(this.anchor, 1 - 1 / m.scale, this.zoomPixel);
+        } else if (m.kind === "drag" && this.mode === "tilt") {
+          const [sx, sy] = this.pixelScale();
+          const height = this.view.pixelRect().height;
+          this.tilt((m.dx * sx) / height, (m.dy * sy) / height);
+        } else if (m.kind === "rotate" && this.mode === "twist") {
+          this.twist(m.angle);
+        }
+      },
+      twoEnd: () => {
+        this.mode = "none";
+        this.stop();
+      },
+    };
   }
 
   private onWheel(e: WheelEvent): void {
@@ -567,6 +697,22 @@ export class GlobeController {
     this.keepAboveGround();
   }
 
+  /**
+   * Turns the heading about the anchor by a clockwise turn of the fingers
+   * (radians): the globe turns with them, so the camera goes the other way
+   * about the local up. The camera stays level.
+   */
+  private twist(angle: number): void {
+    const camera = this.view.camera;
+    const up = this.ellipsoid.geodeticSurfaceNormal(this.anchor, v3.vec3());
+    if (!up) {
+      return;
+    }
+    rotateAbout(camera, this.anchor, up, angle);
+    this.level();
+    this.keepAboveGround();
+  }
+
   /** Turns the view direction about the local up and the camera's right. */
   private look(dx: number, dy: number): void {
     const camera = this.view.camera;
@@ -832,10 +978,23 @@ export class GlobeController {
   }
 
   private targetPixel(e: PointerEvent | WheelEvent): [number, number] {
+    return this.clientPixel(e.clientX, e.clientY);
+  }
+
+  /** The target pixel under a client position (CSS pixels). */
+  private clientPixel(cx: number, cy: number): [number, number] {
     const rect = this.element.getBoundingClientRect();
-    const sx = this.view.target.width / rect.width;
-    const sy = this.view.target.height / rect.height;
-    return [(e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy];
+    const [sx, sy] = this.pixelScale();
+    return [(cx - rect.left) * sx, (cy - rect.top) * sy];
+  }
+
+  /** Target pixels per CSS pixel, across and down. */
+  private pixelScale(): [number, number] {
+    const rect = this.element.getBoundingClientRect();
+    return [
+      this.view.target.width / rect.width,
+      this.view.target.height / rect.height,
+    ];
   }
 
   private accepts(x: number, y: number): boolean {

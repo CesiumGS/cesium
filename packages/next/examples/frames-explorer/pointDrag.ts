@@ -11,6 +11,7 @@
 import { Alignment } from "../../src/engineering/alignment.ts";
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import { vec3 } from "../../src/math/vec3.ts";
+import { holdBrowserGestures } from "../../src/scene/touchGestures.ts";
 import { createFramesPickInterpreter } from "../../src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../../src/frames/resolver.ts";
 import type { Viewer } from "@cesium/next/widgets";
@@ -149,6 +150,8 @@ export function createPointDrag(deps: {
 
   const ac = new AbortController();
   const signal = ac.signal;
+  // A finger on the target drags it; the page neither scrolls nor zooms.
+  signal.addEventListener("abort", holdBrowserGestures(target), { once: true });
   target.addEventListener(
     "pointerdown",
     (e) => {

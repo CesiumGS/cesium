@@ -292,6 +292,7 @@ entry	name	kind	tier
 .	faceNormal	function	-
 .	faceTrim	function	-
 .	fromDegrees	function	-
+.	holdBrowserGestures	function	-
 .	ionDefaults	const	-
 .	isCapacityError	function	-
 .	lightReach	function	-

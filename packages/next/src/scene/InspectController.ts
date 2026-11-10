@@ -5,6 +5,11 @@ import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { View } from "./View.ts";
 import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
+import {
+  TouchGestures,
+  holdBrowserGestures,
+  type TouchGestureListener,
+} from "./touchGestures.ts";
 
 /**
  * A reference frame to orbit in, instead of the ellipsoid's east-north-up
@@ -122,7 +127,9 @@ export function orbitPose(
 /**
  * Orbits the view's camera around a focus point, for inspecting models and
  * tilesets: drag rotates (heading/pitch), right- or shift-drag pans in the
- * local east-north plane, wheel zooms the range. Only reacts inside the
+ * local east-north plane, wheel zooms the range. On touch, one finger
+ * rotates, a pinch zooms the range, a two-finger drag pans and a two-finger
+ * rotation turns the heading (`touchGestures.ts`). Only reacts inside the
  * view's rectangle; a drag starts anywhere in it (nothing is picked).
  *
  * With a `frame`, heading turns about the frame's up (clockwise from
@@ -150,7 +157,7 @@ export class InspectController {
   /** Called after the controller moves the camera, and when a drag starts or ends. */
   onChange?: () => void;
   private frame_?: OrbitBasis;
-  private mode: "none" | "rotate" | "pan" = "none";
+  private mode: "none" | "rotate" | "pan" | "pinch" | "twist" = "none";
   private lastX = 0;
   private lastY = 0;
   /** The camera's version after this controller last placed it. */
@@ -158,6 +165,7 @@ export class InspectController {
   private readonly abort = new AbortController();
   private readonly ellipsoid = Ellipsoid.WGS84;
   private readonly guard: EarthFixedGuard;
+  private readonly touch = new TouchGestures(this.touchListener());
 
   constructor(
     readonly view: View,
@@ -169,10 +177,21 @@ export class InspectController {
     this.minRange = options.minRange ?? this.minRange;
     this.maxRange = options.maxRange ?? this.maxRange;
     const signal = this.abort.signal;
+    signal.addEventListener("abort", holdBrowserGestures(element), {
+      once: true,
+    });
     element.addEventListener("pointerdown", (e) => this.onDown(e), { signal });
     element.addEventListener("pointermove", (e) => this.onMove(e), { signal });
-    element.addEventListener("pointerup", () => this.end(), { signal });
-    element.addEventListener("pointerleave", () => this.end(), { signal });
+    element.addEventListener("pointerup", (e) => this.onUp(e), { signal });
+    element.addEventListener("pointercancel", (e) => this.onUp(e, true), {
+      signal,
+    });
+    // A finger's leave follows its up, which has already been handled.
+    element.addEventListener(
+      "pointerleave",
+      (e) => e.pointerType === "touch" || this.end(),
+      { signal },
+    );
     element.addEventListener("contextmenu", (e) => e.preventDefault(), {
       signal,
     });
@@ -306,10 +325,91 @@ export class InspectController {
   }
 
   private targetPixel(e: PointerEvent | WheelEvent): [number, number] {
+    return this.clientPixel(e.clientX, e.clientY);
+  }
+
+  /** The target pixel under a client position (CSS pixels). */
+  private clientPixel(cx: number, cy: number): [number, number] {
     const rect = this.element.getBoundingClientRect();
-    const sx = this.view.target.width / rect.width;
-    const sy = this.view.target.height / rect.height;
-    return [(e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy];
+    const [sx, sy] = this.pixelScale();
+    return [(cx - rect.left) * sx, (cy - rect.top) * sy];
+  }
+
+  /** Target pixels per CSS pixel, across and down. */
+  private pixelScale(): [number, number] {
+    const rect = this.element.getBoundingClientRect();
+    return [
+      this.view.target.width / rect.width,
+      this.view.target.height / rect.height,
+    ];
+  }
+
+  private onUp(e: PointerEvent, cancelled = false): void {
+    if (e.pointerType === "touch") {
+      this.touch.up(e);
+    } else if (!cancelled) {
+      this.end();
+    }
+  }
+
+  /** What the touch tracker's gestures do. */
+  private touchListener(): TouchGestureListener {
+    return {
+      oneStart: (cx, cy) => {
+        const [x, y] = this.clientPixel(cx, cy);
+        this.resync();
+        this.mode = "rotate";
+        this.lastX = x;
+        this.lastY = y;
+        this.onChange?.();
+      },
+      oneMove: (cx, cy) => {
+        if (this.mode !== "rotate") {
+          return;
+        }
+        if (!earthFixed(this.view)) {
+          this.end();
+          return;
+        }
+        const [x, y] = this.clientPixel(cx, cy);
+        const dx = x - this.lastX;
+        const dy = y - this.lastY;
+        this.lastX = x;
+        this.lastY = y;
+        this.moveBy(dx, dy);
+      },
+      oneEnd: () => this.end(),
+      twoStart: () => this.end(),
+      twoBegin: (kind) => {
+        this.resync();
+        this.mode =
+          kind === "pinch" ? "pinch" : kind === "drag" ? "pan" : "twist";
+        this.onChange?.();
+      },
+      twoMove: (m) => {
+        if (!earthFixed(this.view)) {
+          this.end();
+          return;
+        }
+        if (m.kind === "pinch" && this.mode === "pinch") {
+          this.range = Math.min(
+            Math.max(this.range / m.scale, this.minRange),
+            this.maxRange,
+          );
+        } else if (m.kind === "drag" && this.mode === "pan") {
+          const [sx, sy] = this.pixelScale();
+          this.pan(m.dx * sx, m.dy * sy);
+        } else if (m.kind === "rotate" && this.mode === "twist") {
+          // The scene turns with the fingers, so the heading goes the
+          // other way (a heading grows clockwise seen from above).
+          this.heading -= m.angle;
+        } else {
+          return;
+        }
+        this.apply();
+      },
+      twoEnd: () => this.end(),
+    };
   }
 
   private accepts(x: number, y: number): boolean {
@@ -323,6 +423,10 @@ export class InspectController {
     if (!this.accepts(x, y)) {
       return;
     }
+    if (e.pointerType === "touch") {
+      this.touch.down(e);
+      return;
+    }
     this.resync();
     this.mode = e.button === 2 || e.shiftKey ? "pan" : "rotate";
     this.lastX = x;
@@ -331,6 +435,10 @@ export class InspectController {
   }
 
   private onMove(e: PointerEvent): void {
+    if (e.pointerType === "touch") {
+      this.touch.move(e);
+      return;
+    }
     if (this.mode === "none") {
       return;
     }
@@ -343,30 +451,40 @@ export class InspectController {
     const dy = y - this.lastY;
     this.lastX = x;
     this.lastY = y;
-    const height = this.view.pixelRect().height;
+    this.moveBy(dx, dy);
+  }
+
+  /** Rotates or pans by a drag of (dx, dy) target pixels, and places the camera. */
+  private moveBy(dx: number, dy: number): void {
     if (this.mode === "rotate") {
+      const height = this.view.pixelRect().height;
       this.heading += (dx / height) * Math.PI;
       this.pitch = Math.min(
         Math.max(this.pitch - (dy / height) * Math.PI, -maxPitch),
         maxPitch,
       );
     } else {
-      // Pan in the plane perpendicular to up (the target's local
-      // east-north plane without a frame), rotated by the heading.
-      const { east: eastAxis, north: northAxis } = this.basis();
-      const scale = (this.range * 1.2) / height;
-      const c = Math.cos(this.heading);
-      const s = Math.sin(this.heading);
-      // Screen right/up mapped to east/north for the current heading.
-      const east = -dx * c + dy * s;
-      const north = dx * s + dy * c;
-      for (let i = 0; i < 3; i++) {
-        this.target[i] =
-          this.target[i]! +
-          (eastAxis[i]! * east + northAxis[i]! * north) * scale;
-      }
+      this.pan(dx, dy);
     }
     this.apply();
+  }
+
+  /** Pans the target by a drag of (dx, dy) target pixels. */
+  private pan(dx: number, dy: number): void {
+    const height = this.view.pixelRect().height;
+    // Pan in the plane perpendicular to up (the target's local
+    // east-north plane without a frame), rotated by the heading.
+    const { east: eastAxis, north: northAxis } = this.basis();
+    const scale = (this.range * 1.2) / height;
+    const c = Math.cos(this.heading);
+    const s = Math.sin(this.heading);
+    // Screen right/up mapped to east/north for the current heading.
+    const east = -dx * c + dy * s;
+    const north = dx * s + dy * c;
+    for (let i = 0; i < 3; i++) {
+      this.target[i] =
+        this.target[i]! + (eastAxis[i]! * east + northAxis[i]! * north) * scale;
+    }
   }
 
   private onWheel(e: WheelEvent): void {

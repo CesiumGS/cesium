@@ -9,6 +9,8 @@ html,
 body {
   margin: 0;
   height: 100%;
+  /* No bounce or pull to refresh around the views on a phone. */
+  overscroll-behavior: none;
 }
 #root,
 .dyno-root {

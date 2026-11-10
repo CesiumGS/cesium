@@ -236,6 +236,7 @@ export const API_ROWS: readonly ApiRow[] = [
     next: ["GlobeController", "InspectController", "OrbitController"],
     supporting: [
       "InspectControllerOptions",
+      "holdBrowserGestures",
       "OrbitBasis",
       "orbitBasis",
       "orbitPose",

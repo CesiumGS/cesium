@@ -10,6 +10,7 @@ import {
   type ObserverSettings,
   vec3,
 } from "../../src/index.ts";
+import { holdBrowserGestures } from "../../src/scene/touchGestures.ts";
 import { attachObserverPanel } from "../../widgets/observerPanel.ts";
 import type { ExampleContext } from "../types.ts";
 
@@ -460,6 +461,8 @@ export async function run({
     aim();
   };
   const opts = { signal } as const;
+  // The sky takes drags and pinches: the browser keeps its own off the canvas.
+  const releaseGestures = holdBrowserGestures(canvas);
   canvas.addEventListener("pointerdown", onDown, opts);
   canvas.addEventListener("pointermove", onMove, opts);
   canvas.addEventListener("pointerup", onUp, opts);
@@ -470,6 +473,7 @@ export async function run({
   apply(current);
 
   return () => {
+    releaseGestures();
     observerPanel.dispose();
     clearBeams();
     panel.replaceChildren();

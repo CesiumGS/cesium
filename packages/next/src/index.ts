@@ -163,6 +163,7 @@ export {
   type OrbitFrame,
 } from "./scene/InspectController.ts";
 export { GlobeController } from "./scene/GlobeController.ts";
+export { holdBrowserGestures } from "./scene/touchGestures.ts";
 export {
   collectFullDetailContents,
   type TileContent,
