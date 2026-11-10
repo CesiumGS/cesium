@@ -6,6 +6,7 @@
 // undecided, each with its reason.
 import type { Ellipsoid } from "../math/ellipsoid.ts";
 import { volumeObb, type Obb, type TileVolume } from "../streaming/volumes.ts";
+import { dot, hitTriangle, sub, type V3 } from "../geometry/mesh.ts";
 import { crossing } from "./ellipsoidBackend.ts";
 import type { QueryRay, RayAnswer, UnknownSpan } from "./queries.ts";
 
@@ -37,21 +38,6 @@ export interface TilesetRayOptions {
   /** Hits this close (m) to either end are the observer's own ground (default 1 mm). */
   readonly endTolerance?: number;
 }
-
-type V3 = [number, number, number];
-
-const sub = (a: ArrayLike<number>, b: ArrayLike<number>): V3 => [
-  a[0]! - b[0]!,
-  a[1]! - b[1]!,
-  a[2]! - b[2]!,
-];
-const dot = (a: ArrayLike<number>, b: ArrayLike<number>): number =>
-  a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
-const cross = (a: ArrayLike<number>, b: ArrayLike<number>): V3 => [
-  a[1]! * b[2]! - a[2]! * b[1]!,
-  a[2]! * b[0]! - a[0]! * b[2]!,
-  a[0]! * b[1]! - a[1]! * b[0]!,
-];
 
 /** The part of the segment `[0, 1]` inside `obb` grown by `grow` m, or undefined. */
 function overlap(
@@ -92,36 +78,6 @@ function overlap(
     }
   }
   return [lo, hi];
-}
-
-/** The segment's parameter at the triangle (Möller–Trumbore), or undefined. */
-function hitTriangle(
-  from: ArrayLike<number>,
-  d: ArrayLike<number>,
-  a: V3,
-  b: V3,
-  c: V3,
-): number | undefined {
-  const e1 = sub(b, a);
-  const e2 = sub(c, a);
-  const p = cross(d, e2);
-  const det = dot(e1, p);
-  if (Math.abs(det) < 1e-18) {
-    return undefined;
-  }
-  const inv = 1 / det;
-  const s = sub(from, a);
-  const u = dot(s, p) * inv;
-  if (u < 0 || u > 1) {
-    return undefined;
-  }
-  const q = cross(s, e1);
-  const v = dot(d, q) * inv;
-  if (v < 0 || u + v > 1) {
-    return undefined;
-  }
-  const t = dot(e2, q) * inv;
-  return t >= 0 && t <= 1 ? t : undefined;
 }
 
 /** The distance between two segments. */

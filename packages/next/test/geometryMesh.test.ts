@@ -1,0 +1,166 @@
+// The mesh adapter of the geometry query interface: ray hits, bounds and
+// display (brep 3, Task 1). A unit square at z = 0 of two triangles, plain or
+// placed by a translation of an Earth radius.
+import { describe, expect, it } from "vitest";
+import { meshGeometry } from "../src/geometry/mesh.ts";
+
+const T = [6_378_137, 0, 0] as const;
+const positions = Float32Array.from([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]);
+const indices = Uint32Array.from([0, 1, 2, 0, 2, 3]);
+const identity = Float64Array.from([
+  1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+]);
+const placed = Float64Array.from([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, ...T, 1]);
+
+const down = { from: [0.75, 0.25, 1], to: [0.75, 0.25, -1] };
+const up = { from: [0.75, 0.25, -1], to: [0.75, 0.25, 1] };
+
+function near(a: ArrayLike<number>, b: ArrayLike<number>, tol = 1e-12): void {
+  for (let i = 0; i < 3; i++) {
+    expect(Math.abs(a[i]! - b[i]!)).toBeLessThanOrEqual(tol);
+  }
+}
+
+describe("meshGeometry rays", () => {
+  const g = meshGeometry({ positions, indices });
+
+  it("reports its kind and version", () => {
+    expect(g.kind).toBe("mesh");
+    expect(g.version).toBe(0);
+    expect(meshGeometry({ positions, indices }, { version: 4 }).version).toBe(
+      4,
+    );
+  });
+
+  it("hits the nearest face, with its normal turned to the ray's start", () => {
+    const a = g.rayHit(down);
+    expect(a.verdict).toBe("hit");
+    if (a.verdict !== "hit") {
+      return;
+    }
+    expect(a.hit.t).toBeCloseTo(0.5, 12);
+    near(a.hit.position, [0.75, 0.25, 0]);
+    near(a.hit.normal, [0, 0, 1]);
+    expect(a.hit.entity).toEqual({ kind: "face", index: 0 });
+    expect(a.hit.accuracy).toMatchObject({ meters: 0, exact: true });
+  });
+
+  it("turns the normal toward a ray from below", () => {
+    const a = g.rayHit(up);
+    expect(a.verdict).toBe("hit");
+    if (a.verdict === "hit") {
+      near(a.hit.normal, [0, 0, -1]);
+    }
+  });
+
+  it("misses off the square, and outside the searched part", () => {
+    expect(g.rayHit({ from: [2, 0.25, 1], to: [2, 0.25, -1] }).verdict).toBe(
+      "miss",
+    );
+    expect(g.rayHit(down, { tMax: 0.4 }).verdict).toBe("miss");
+    expect(g.rayHit(down, { tMin: 0.6 }).verdict).toBe("miss");
+    expect(g.rayHit(down, { tMin: 0.4, tMax: 0.6 }).verdict).toBe("hit");
+  });
+
+  it("takes a hit's feature from its first corner", () => {
+    const f = meshGeometry({
+      positions,
+      indices,
+      featureIds: Uint32Array.from([5, 6, 7, 9]),
+    });
+    const a = f.rayHit({ from: [0.25, 0.75, 1], to: [0.25, 0.75, -1] });
+    expect(a.verdict).toBe("hit");
+    if (a.verdict === "hit") {
+      expect(a.hit.entity.index).toBe(1);
+      expect(a.hit.entity.feature).toBe(5);
+    }
+  });
+
+  it("stays precise far from the origin when given one", () => {
+    const p = meshGeometry({ positions, indices, matrix: placed });
+    const ray = {
+      from: [down.from[0]! + T[0], down.from[1]!, down.from[2]!],
+      to: [down.to[0]! + T[0], down.to[1]!, down.to[2]!],
+    };
+    const a = p.rayHit(ray, { origin: T });
+    expect(a.verdict).toBe("hit");
+    if (a.verdict === "hit") {
+      near(a.hit.position, [T[0] + 0.75, 0.25, 0], 1e-6);
+      expect(Math.abs(a.hit.t - 0.5)).toBeLessThan(1e-9);
+    }
+  });
+
+  it("ignores degenerate and out-of-range triangles", () => {
+    const bad = meshGeometry({
+      positions,
+      indices: Uint32Array.from([0, 1, 2, 0, 2, 3, 0, 0, 1, 0, 1, 99]),
+    });
+    for (const r of [down, up]) {
+      const x = g.rayHit(r);
+      const y = bad.rayHit(r);
+      expect(y).toEqual(x);
+    }
+    expect(bad.rayHit({ from: [2, 0, 1], to: [2, 0, -1] }).verdict).toBe(
+      "miss",
+    );
+    const b = bad.bounds();
+    expect(Array.from(b.min)).toEqual([0, 0, 0]);
+    expect(Array.from(b.max)).toEqual([1, 1, 0]);
+  });
+
+  it("answers an any-hit query with a hit", () => {
+    expect(g.rayHit(down, { anyHit: true }).verdict).toBe("hit");
+    expect(
+      g.rayHit({ from: [2, 0, 1], to: [2, 0, -1] }, { anyHit: true }).verdict,
+    ).toBe("miss");
+  });
+});
+
+describe("meshGeometry bounds and display", () => {
+  it("bounds the placed vertices", () => {
+    const b = meshGeometry({ positions, indices }).bounds();
+    expect(Array.from(b.min)).toEqual([0, 0, 0]);
+    expect(Array.from(b.max)).toEqual([1, 1, 0]);
+    const p = meshGeometry({ positions, indices, matrix: placed }).bounds();
+    expect(Array.from(p.min)).toEqual([...T]);
+    expect(Array.from(p.max)).toEqual([T[0] + 1, 1, 0]);
+  });
+
+  it("displays the source's own arrays, with its error", () => {
+    for (const error of [0, 0.25]) {
+      const g = meshGeometry({ positions, indices }, { error });
+      const d = g.display(0.1)!;
+      expect(d.positions).toBe(positions);
+      expect(d.indices).toBe(indices);
+      expect(Array.from(d.matrix)).toEqual(Array.from(identity));
+      expect(d.error).toBe(error);
+    }
+    const m = meshGeometry({ positions, indices, matrix: placed }).display(1)!;
+    expect(m.matrix).toBe(placed);
+  });
+
+  it("states its accuracy", () => {
+    const g = meshGeometry(
+      { positions, indices },
+      { error: 0.25, note: "lod 3" },
+    );
+    const a = g.rayHit(down);
+    expect(a.verdict).toBe("hit");
+    if (a.verdict === "hit") {
+      expect(a.hit.accuracy).toEqual({
+        meters: 0.25,
+        exact: false,
+        note: "lod 3",
+      });
+    }
+    expect(g.bounds().accuracy.meters).toBe(0.25);
+    expect(meshGeometry({ positions, indices }).bounds().accuracy.note).toBe(
+      "the mesh as stored (float32 positions)",
+    );
+  });
+
+  it("leaves the later queries for the next step", () => {
+    const g = meshGeometry({ positions, indices });
+    expect(() => g.closestPoint([0, 0, 0])).toThrow("meshGeometry: not yet");
+  });
+});
